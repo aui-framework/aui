@@ -247,9 +247,9 @@ Stylesheet::Stylesheet()
 	BOOL blending;
 	DwmGetColorizationColor(&c, &blending);
 	c |= 0xff000000;
-	setVariable("WIN_THEME_COLOR", AColor::fromAARRGGBB(static_cast<unsigned>(c)).toString());
+	setVariable("OS_THEME_COLOR", AColor::fromAARRGGBB(static_cast<unsigned>(c)).toString());
 #else
-    setVariable("WIN_THEME_COLOR", "#000");
+    setVariable("OS_THEME_COLOR", "#3e3e3e");
 #endif
 }
 

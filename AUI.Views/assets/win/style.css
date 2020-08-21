@@ -7,7 +7,7 @@ AWindow {
     background: #f0f0f0;
 }
 CustomWindow {
-    border: 1px solid $WIN_THEME_COLOR;
+    border: 1px solid $OS_THEME_COLOR;
     padding: 1px;
 }
 
@@ -59,7 +59,7 @@ AButton[disabled] {
 }
 
 .window-title {
-    background: $WIN_THEME_COLOR;
+    background: $OS_THEME_COLOR;
     height: 30dp;
     padding: 0 0 1dp 7dp;
 }

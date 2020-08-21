@@ -1,5 +1,5 @@
 .topbar {
-    background: $WIN_THEME_COLOR;
+    background: $OS_THEME_COLOR;
     padding: 0;
 }
 .topbar ALabel {
