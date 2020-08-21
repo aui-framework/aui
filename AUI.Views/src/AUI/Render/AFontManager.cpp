@@ -1,4 +1,5 @@
-﻿#include "AFontManager.h"
+﻿#include <AUI/Url/AUrl.h>
+#include "AFontManager.h"
 #include "AUI/Platform/Platform.h"
 #include "FreeType.h"
 
@@ -12,6 +13,10 @@ AFontManager::~AFontManager() {
 }
 
 _<AFont> AFontManager::newItem(const AString& name) {
+    if (name.contains(":")) {
+        // url
+        return _new<AFont>(this, AUrl(name));
+    }
 	return _new<AFont>(this, Platform::getFontPath(name));
 }
 

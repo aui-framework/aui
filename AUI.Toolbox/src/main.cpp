@@ -54,8 +54,9 @@ int main(int argc, char** argv)
 									try
 									{
 										AString filePath = AString::path(entry.path());
+										filePath = filePath.mid(args[0].length() + 1);
 										filePath = filePath.replaceAll("\\", '/');
-										
+
 										buffer << filePath.toStdString();
 										auto fis = _new<FileInputStream>(AString::path(entry.path()));
 

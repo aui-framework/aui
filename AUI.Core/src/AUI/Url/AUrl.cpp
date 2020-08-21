@@ -34,8 +34,7 @@ AUrl::AUrl(const AString& full)
 	}
 }
 
-_<IInputStream> AUrl::open()
-{
+_<IInputStream> AUrl::open() const {
 	static AMap<AString, std::function<_<IInputStream>(const AUrl&)>> resolvers = {
 		{"builtin", [](const AUrl& u)
 		{

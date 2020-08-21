@@ -11,8 +11,17 @@ AFont::AFont(AFontManager* fm, const AString& path) :
 	ft(fm->mFreeType)
 {
 	if (FT_New_Face(fm->mFreeType->getFt(), path.toStdString().c_str(), 0, &face)) {
-		throw AString(("Could not load font: " + path).toStdString());
+		throw AException(("Could not load font: " + path).toStdString());
 	}
+}
+
+AFont::AFont(AFontManager *fm, const AUrl& url):
+    ft(fm->mFreeType) {
+    mFontDataBuffer = ByteBuffer::fromStream(url.open());
+
+    if (FT_New_Memory_Face(fm->mFreeType->getFt(), (const FT_Byte*)mFontDataBuffer->getBuffer(), mFontDataBuffer->getSize(), 0, &face)) {
+        throw AException(("Could not load font: " + url.getFull()).toStdString());
+    }
 }
 
 AFont::~AFont() {
@@ -239,3 +248,4 @@ int AFont::getDescenderHeight(long size) const
 _<Util::SimpleTexturePacker> AFont::texturePackerOf(long size, FontRendering fr) {
 	return getCharsetBySize(size, fr).tp;
 }
+

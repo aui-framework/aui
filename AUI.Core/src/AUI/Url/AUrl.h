@@ -13,7 +13,7 @@ private:
 public:
 	AUrl(const AString& full);
 
-	_<IInputStream> open();
+	_<IInputStream> open() const;
 	
 	const AString& getHost() const
 	{
@@ -27,5 +27,8 @@ public:
 	{
 		return mProtocol;
 	}
-	
+
+	AString getFull() const {
+	    return mProtocol + "://" + mHost + "/" + mPath;
+	}
 };

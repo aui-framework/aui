@@ -36,5 +36,6 @@ _<IInputStream> BuiltinFiles::open(const AString& file)
 }
 
 void BuiltinFiles::load(const unsigned char* data, size_t size) {
-    printf("adssa");
+    ByteBuffer b(data, size);
+    instance().loadBuffer(b);
 }

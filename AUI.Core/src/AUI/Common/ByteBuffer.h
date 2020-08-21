@@ -58,7 +58,7 @@ public:
 	const ByteBuffer& operator>>(std::string& dst) const {
 		uint32_t s;
 		*this >> s;
-		if (s > 64)
+		if (s > 128)
 			throw std::runtime_error(std::string("illegal string size: ") + std::to_string(s));
 		dst.resize(s);
 		get(&(dst[0]), s);

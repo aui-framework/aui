@@ -19,6 +19,7 @@
 
 #include <Model/Course.h>
 #include <AUI/Layout/AHorizontalLayout.h>
+#include <AUI/Url/AUrl.h>
 
 MainWindow::MainWindow() : AWindow("Words", 300, 400) {
     setLayout(_new<AStackedLayout>());
@@ -30,7 +31,7 @@ MainWindow::MainWindow() : AWindow("Words", 300, 400) {
                         _new<ALabel>(u8"\uf1ce")
                               (&ALabel::addCssName, ".icon")
                               (&ALabel::setFont,
-                               AFontManager::instance().get("fas.otf"))
+                               AFontManager::instance().get(":words/fas.otf"))
                               (&ALabel::setFontSize, 50dp)
                               (&ALabel::setExpanding, glm::ivec2(0))
                               (&ALabel::setAnimator,
@@ -51,7 +52,7 @@ MainWindow::MainWindow() : AWindow("Words", 300, 400) {
                     t.varchar("name");
                     t.text("description");
 
-                    auto json = AJson::read(_new<FileInputStream>("courses.json"));
+                    auto json = AJson::read(AUrl(":words/courses.json").open());
                     for (auto &course : json.asArray()) {
                         Course::make(course["courseName"].asString(), course["courseDescription"].asString());
                     }

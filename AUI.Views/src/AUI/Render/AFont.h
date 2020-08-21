@@ -2,6 +2,7 @@
 
 #include <string>
 #include <glm/glm.hpp>
+#include <AUI/Url/AUrl.h>
 
 #include "FontRendering.h"
 #include "AUI/GL/Texture.h"
@@ -27,6 +28,7 @@ public:
 	};
 private:
 	_<FreeType> ft;
+    _<ByteBuffer> mFontDataBuffer;
 	FT_Face face;
 
 	struct FontData {
@@ -43,6 +45,7 @@ private:
 	Character* renderGlyph(FontData& fs, FT_ULong glyph, long size, FontRendering fr);
 public:
 	AFont(AFontManager* fm, const AString& path);
+	AFont(AFontManager* fm, const AUrl& url);
 	~AFont();
 	glm::vec2 getKerning(wchar_t left, wchar_t right);
 	AFont(const AFont&) = delete;
