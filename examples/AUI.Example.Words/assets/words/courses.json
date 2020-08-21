@@ -1,0 +1,22 @@
+[
+  {
+    "courseName": "A1",
+    "courseId": 1,
+    "courseDescription": "Набор слов уровня: Beginner English"
+  },
+  {
+    "courseName": "A2",
+    "courseId": 2,
+    "courseDescription": "Набор слов уровня: Elementary English"
+  },
+  {
+    "courseName": "B1",
+    "courseId": 3,
+    "courseDescription": "Набор слов уровня: Pre-Intermediate English"
+  },
+  {
+    "courseName": "B2",
+    "courseId": 4,
+    "courseDescription": "Набор слов уровня: Intermediate English"
+  }
+]
