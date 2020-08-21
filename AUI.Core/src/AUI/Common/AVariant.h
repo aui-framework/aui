@@ -1,0 +1,270 @@
+﻿#pragma once
+
+#include <AUI/Core.h>
+
+#include "AString.h"
+#include "SharedPtr.h"
+#include "AUI/Reflect/AClass.h"
+
+namespace AVariantType {
+    enum Type {
+        AV_UNKNOWN,
+        AV_NULL,
+        AV_INT,
+        AV_UINT,
+        AV_FLOAT,
+        AV_DOUBLE,
+        AV_STRING,
+        AV_BOOL,
+    };
+
+    template<typename T>
+    inline Type getTypeOf() {
+        return AV_UNKNOWN;
+    }
+
+    template<>
+    inline Type getTypeOf<int>() {
+        return AV_INT;
+    }
+    template<>
+    inline Type getTypeOf<unsigned>() {
+        return AV_UINT;
+    }
+    template<>
+    inline Type getTypeOf<float>() {
+        return AV_FLOAT;
+    }
+    template<>
+    inline Type getTypeOf<double>() {
+        return AV_DOUBLE;
+    }
+    template<>
+    inline Type getTypeOf<AString>() {
+        return AV_STRING;
+    }
+    template<>
+    inline Type getTypeOf<bool>() {
+        return AV_BOOL;
+    }
+
+};
+
+struct API_AUI_CORE AVariantHelperBase
+{
+	virtual ~AVariantHelperBase() = default;
+
+	virtual int toInt() = 0;
+	virtual unsigned toUInt() = 0;
+	virtual float toFloat() = 0;
+	virtual double toDouble() = 0;
+	virtual bool toBool() = 0;
+	virtual AString toString() = 0;
+	virtual size_t hash() = 0;
+	virtual AVariantType::Type getType() = 0;
+};
+
+
+
+template <typename T>
+struct AVariantHelper : AVariantHelperBase
+{
+private:
+	T mStored;
+
+public:
+	AVariantHelper(T stored)
+		: mStored(std::move(stored))
+	{
+	}
+	
+	~AVariantHelper() override = default;
+	int toInt() override
+	{
+		return mStored;
+	}
+	unsigned toUInt() override
+	{
+		return mStored;
+	}
+	float toFloat() override
+	{
+		return mStored;
+	}
+	double toDouble() override
+	{
+		return mStored;
+	}
+	bool toBool() override
+	{
+		return mStored;
+	}
+	AString toString() override
+	{
+		return AClass<T>::name();
+	}
+
+	size_t hash() override
+	{
+		return std::hash<T>()(mStored);
+	}
+
+    AVariantType::Type getType() override {
+        return AVariantType::getTypeOf<T>();
+	}
+};
+
+
+#include "AVariantHelpers.h"
+
+class API_AUI_CORE AVariant
+{
+private:
+	_<AVariantHelperBase> mStored;
+	
+public:
+	template<typename T>
+	AVariant(const T& object)
+	{
+		mStored = _new<AVariantHelper<T>>(object);
+	}
+
+	AVariant(const char* object) {
+        mStored = _new<AVariantHelper<AString>>(object);
+	}
+	
+	AVariant(const _<AVariantHelperBase>& variant_helper_base)
+		: mStored(variant_helper_base)
+	{
+	}
+
+	template<typename T>
+	AVariant(const _<AVariantHelper<T>>& variant_helper)
+		: mStored(variant_helper)
+	{
+	}
+
+
+	AVariant(): AVariant(nullptr)
+	{
+		
+	}
+
+	[[nodiscard]]
+    inline int toInt() const noexcept
+	{
+		return mStored->toInt();
+	}
+
+	[[nodiscard]]
+	unsigned toUInt() const noexcept
+	{
+		return mStored->toInt();
+	}
+
+	[[nodiscard]]
+    inline float toFloat() const noexcept
+	{
+		return mStored->toFloat();
+	}
+	
+	[[nodiscard]]
+    inline double toDouble() const noexcept
+	{
+		return mStored->toDouble();
+	}
+
+	[[nodiscard]]
+    inline bool toBool() const noexcept
+	{
+		return mStored->toBool();
+	}
+
+	[[nodiscard]]
+    inline AString toString() const noexcept
+	{
+		return mStored->toString();
+	}
+
+	[[nodiscard]]
+    inline size_t hash() const noexcept
+	{
+		return mStored->hash();
+	}
+
+    inline AVariantType::Type getType() const {
+        return mStored->getType();
+    }
+
+    template<typename T>
+    T to() const;
+
+    template<typename T>
+    operator T() const {
+        return to<T>();
+    }
+    template<typename T>
+    bool operator==(const T& other) const {
+        return to<T>() == other;
+    }
+
+    bool operator==(const char* other) const;
+    template<typename T>
+    bool operator!=(const T& other) const {
+        return !(to<T>() == other);
+    }
+};
+
+template<>
+inline int AVariant::to<int>() const {
+    return toInt();
+}
+template<>
+inline long AVariant::to<long>() const {
+    return toInt();
+}
+template<>
+inline long long AVariant::to<long long>() const {
+    return toInt();
+}
+
+template<>
+inline unsigned AVariant::to<unsigned>() const {
+    return toUInt();
+}
+template<>
+inline unsigned long AVariant::to<unsigned long>() const {
+    return toUInt();
+}
+template<>
+inline unsigned long long AVariant::to<unsigned long long>() const {
+    return toUInt();
+}
+
+template<>
+inline float AVariant::to<float>() const {
+    return toFloat();
+}
+
+template<>
+inline double AVariant::to<double>() const {
+    return toFloat();
+}
+
+template<>
+inline AString AVariant::to<AString>() const {
+    return toString();
+}
+template<>
+inline bool AVariant::to<bool>() const {
+    return toBool();
+}
+
+inline std::ostream& operator<<(std::ostream& o, const AVariant& v) {
+    o << v.toString();
+    return o;
+}
+
+inline bool AVariant::operator==(const char* other) const {
+    return to<AString>() == other;
+}

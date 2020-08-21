@@ -1,0 +1,48 @@
+#pragma once
+
+#include <AUI/Json.h>
+#include "AUI/Common/SharedPtrTypes.h"
+#include "AUI/Common/AVariant.h"
+#include "AUI/Common/AMap.h"
+#include "AUI/Common/AVector.h"
+
+class IJsonElement;
+
+class API_AUI_JSON AJsonElement {
+private:
+	_<IJsonElement> mJson;
+
+public:
+	explicit AJsonElement(const _<IJsonElement>& json_element);
+	AJsonElement() {}
+
+
+	[[nodiscard]] bool isVariant() const;
+	[[nodiscard]] bool isObject() const;
+	[[nodiscard]] bool isArray() const;
+
+	[[nodiscard]] const AVariant& asVariant() const;
+	[[nodiscard]] int asInt() const;
+	[[nodiscard]] AString asString() const;
+	[[nodiscard]] const AMap<AString, AJsonElement>& asObject() const;
+	[[nodiscard]] const AVector<AJsonElement>& asArray() const;
+	
+	[[nodiscard]] const AJsonElement& operator[](size_t index) const;
+	[[nodiscard]] const AJsonElement& operator[](const AString& key) const;
+};
+
+class API_AUI_JSON AJsonValue: public AJsonElement
+{
+public:
+	AJsonValue(const AVariant& value);
+};
+class API_AUI_JSON AJsonObject: public AJsonElement
+{
+public:
+	AJsonObject(const AMap<AString, AJsonElement>& value);
+};
+class API_AUI_JSON AJsonArray: public AJsonElement
+{
+public:
+	AJsonArray(const AVector<AJsonElement>& value);
+};

@@ -1,0 +1,16 @@
+cmake_minimum_required(VERSION 3.14)
+
+AUI_Module(AUI.Core)
+
+
+
+find_package(ZLIB)
+
+add_subdirectory(3rdparty/glm)
+target_link_libraries(AUI.Core glm)
+target_link_libraries(AUI.Core ZLIB::ZLIB)
+
+if (UNIX)
+SET(CMAKE_CXX_FLAGS -pthread)
+	target_link_libraries(AUI.Core dl)
+endif()

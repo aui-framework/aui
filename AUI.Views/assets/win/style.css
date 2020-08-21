@@ -1,0 +1,210 @@
+AView {
+    font-size: 9pt;
+    -aui-font-rendering: subpixel;
+}
+
+AWindow {
+    background: #f0f0f0;
+}
+CustomWindow {
+    border: 1px solid $WIN_THEME_COLOR;
+    padding: 1px;
+}
+
+ALabel {
+    padding: 1dp 0 2dp;
+}
+ATitleLabel {
+    font-size: 12pt;
+	margin: 4dp 8dp;
+}
+ALabel[disabled] {
+	color: #6d6d6d;
+}
+
+ALabel, .input-field, AListView {
+    margin: 2dp 4dp;
+}
+
+AButton {
+    background-color: #e1e1e1;
+    border: 1px solid #adadad;
+    padding: 4dp 8dp 2dp;
+    min-width: 65dp;
+    min-height: 17dp;
+    text-align: center;
+    transition: 0.25s;
+    margin: 2dp 4dp;
+}
+
+AButton[default] {
+    border: 2px solid #0078d7;
+}
+
+AButton:hover {
+    background-color: #e5f1fb;
+    border: 1px solid #0078d7;
+}
+
+AButton:active {
+    transition: 0.05s;
+    background-color: #cce4f7;
+    border: 1px solid #005499;
+}
+
+AButton[disabled] {
+    background-color: #cccccc;
+    border: 1px solid #bfbfbf;
+    color: #838383;
+}
+
+.window-title {
+    background: $WIN_THEME_COLOR;
+    height: 30dp;
+    padding: 0 0 1dp 7dp;
+}
+.window-title ALabel {
+    color: #fff;
+    padding: 7dp 0;
+    margin: 0;
+}
+
+.window-title .default {
+    transition: none;
+    border: none;
+    min-width: 45dp;
+    min-height: 29dp;
+    margin: 0;
+    padding: 0;
+}
+.window-title .minimize {
+    background-color: none;
+    background: url(':assets/win/caption/minimize.svg');
+}
+.window-title .middle {
+    background-color: none;
+    background: url(':assets/win/caption/maximize.svg');
+}
+.window-title .close {
+    background-color: none;
+    background: url(':assets/win/caption/close.svg');
+}
+
+.window-title AButton:hover {
+    background-color: #fff2;
+}
+.window-title AButton:active {
+    background-color: #fff3;
+}
+.window-title .close:hover {
+    background-color: #e81123;
+}
+.window-title .close:active {
+    background-color: #e8112380;
+}
+
+.window-content {
+    background: #fff;
+    min-width: 200dp;
+}
+
+AWindow, .window-content {
+    padding: 4dp 3dp;
+}
+
+AAbstractTextField {
+    padding: 3dp 6dp;
+    cursor: text;
+}
+
+.input-field {
+    color: #000;
+    background: #fff;
+    border: 1dp solid #7a7a7a;
+    margin: 2dp 4dp;
+    min-width: 100dp;
+    min-height: 17dp;
+    transition: 1s;
+    overflow: hidden;
+}
+
+.input-field:hover {
+    border: 1dp solid #000;
+    transition: 0.3s;
+}
+.input-field:focus {
+    border: 1dp solid #0078d7;
+    transition: 0.3s;
+}
+
+ANumberPicker .up-down-wrapper {
+    padding: 1px;
+    margin: 1px;
+    -aui-spacing: 1px;
+    background: #f0f0f0;
+}
+
+ANumberPicker AButton {
+    margin: 0;
+    padding: 0;
+    width: 19dp;
+    min-height: 9dp;
+}
+ACheckBox {
+    margin: 1dp 4dp;
+}
+ACheckBox ALabel {
+    padding: 0;
+    margin: 0 0 0 2dp;
+}
+ACheckBoxInner {
+    background-color: #fff;
+    margin: 1px;
+    border: 1px solid #333333;
+    width: 13dp;
+    height: 13dp;
+    transition: 0.1s;
+}
+ACheckBox:hover ACheckBoxInner {
+    border: 1px solid #0078d7;
+}
+ACheckBox:active ACheckBoxInner {
+    background-color: #cce4f7;
+    border: 1px solid #005499;
+}
+
+ACheckBox[checked] ACheckBoxInner {
+    background: url(':assets/win/svg/checkbox.svg');
+}
+
+AListView {
+    background: #fff;
+    border: 1px solid #828790;
+    padding: 2px;
+    overflow: hidden;
+}
+AListView ALabel {
+    margin: 0;
+    padding: 1dp 4dp 4dp;
+}
+AListView ALabel:hover {
+    background: #e5f3ff;
+}
+AListView ALabel[selected] {
+    background: #cde8ff;
+}
+.dialog-button-box {
+    padding: 4dp 3dp;
+    background: none;
+}
+.window-no-padding {
+    padding: 0;
+}
+ATableView {
+    background: #eee;
+    padding: 1px 0 0 1px;
+}
+ATableView AView {
+    background: #fff;
+    margin: 0 1px 1px 0;
+}

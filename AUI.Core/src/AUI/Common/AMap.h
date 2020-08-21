@@ -1,0 +1,140 @@
+﻿#pragma once
+#include <map>
+#include "AUI/Core.h"
+#include "AException.h"
+#include <AUI/Common/AVector.h>
+#include <AUI/Reflect/AClass.h>
+
+template <class KeyType, class ValueType, class Predicate = std::less<KeyType>, class Allocator = std::allocator<std::pair<const KeyType, ValueType>>>
+class AMap: public std::map<KeyType, ValueType, Predicate, Allocator>
+{
+public:
+	using parent = std::map<KeyType, ValueType, Predicate, Allocator>;
+	using iterator = typename parent::iterator;
+	using const_iterator = typename parent::const_iterator;
+
+	AMap()
+	{
+	}
+
+	AMap(const typename parent::allocator_type& _Al)
+		: parent(_Al)
+	{
+	}
+
+	AMap(const parent& _Right)
+		: parent(_Right)
+	{
+	}
+
+	AMap(const parent& _Right, const typename parent::allocator_type& _Al)
+		: parent(_Right, _Al)
+	{
+	}
+
+	AMap(const typename parent::key_compare& _Pred)
+		: parent(_Pred)
+	{
+	}
+
+	AMap(const typename parent::key_compare& _Pred,
+		const typename parent::allocator_type& _Al)
+		: parent(_Pred, _Al)
+	{
+	}
+
+	AMap(parent&& _Right)
+		: parent(_Right)
+	{
+	}
+
+	AMap(parent&& _Right, const typename parent::allocator_type& _Al)
+		: parent(_Right, _Al)
+	{
+	}
+
+	AMap(std::initializer_list<std::pair<const KeyType, ValueType>> _Ilist)
+		: parent(std::move(_Ilist))
+	{
+	}
+
+	ValueType& operator[](KeyType&& k)
+	{
+		return parent::operator[](k);
+	}
+
+	ValueType& operator[](const KeyType& k)
+	{
+		return parent::operator[](k);
+	}
+
+	// ================
+
+	struct contains_iterator
+	{
+	private:
+		const_iterator mIterator;
+		bool mValid;
+		
+	public:
+		contains_iterator(const const_iterator& p, bool valid):
+			mIterator(p),
+			mValid(valid)
+		{
+			
+		}
+		contains_iterator(const contains_iterator& c):
+			mIterator(c.mIterator),
+			mValid(c.mValid)
+		{
+			
+		}
+
+		operator bool() const noexcept {
+			return mValid;
+		}
+
+		const_iterator operator->() const noexcept
+		{
+			return mIterator;
+		}
+		const_iterator operator*() const noexcept
+		{
+			return mIterator;
+		}
+	};
+
+	ValueType& at(const KeyType& key) {
+	    auto it = parent::find(key);
+	    if (it == parent::end())
+	        throw AException("no such element: " + AClass<KeyType>::toString(key));
+	    return it->second;
+	}
+	const ValueType& at(const KeyType& key) const {
+	    auto it = parent::cfind(key);
+	    if (it == parent::cend())
+	        throw AException("no such element: " + AClass<KeyType>::toString(key));
+	    return it->second;
+	}
+
+	contains_iterator contains(const KeyType& key) const
+	{
+		auto it = parent::find(key);
+		return contains_iterator(it, it != parent::end());
+	}
+
+	AVector<KeyType> keyVector() {
+        AVector<KeyType> r;
+        for (auto& p : *this) {
+            r << p.first;
+        }
+        return r;
+	}
+	AVector<ValueType> valueVector() {
+        AVector<ValueType> r;
+        for (auto& p : *this) {
+            r << p.second;
+        }
+        return r;
+	}
+};

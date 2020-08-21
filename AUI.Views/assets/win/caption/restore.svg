@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg viewBox="0 0 10 10"
+     xmlns = "http://www.w3.org/2000/svg" 
+     xmlns:xlink = "http://www.w3.org/1999/xlink"
+     xmlns:ev = "http://www.w3.org/2001/xml-events"><path fill="#fff" d="M2.1,0v2H0v8.1h8.2v-2h2V0H2.1z M7.2,9.2H1.1V3h6.1V9.2z M9.2,7.1h-1V2H3.1V1h6.1V7.1z" /></svg>

@@ -1,0 +1,37 @@
+CellView {
+    border: 3px outset #fff;
+    background-color: #cecece;
+    width: 26dp;
+    height: 26dp;
+}
+CellView:hover {
+    background-color: #ddd;
+}
+
+CellView[flag="false"]:active, CellView[open="true"] {
+    border: 1px solid #8c8c8c;
+    background-color: #cecece;
+}
+CellView[flag="true"] {
+    background: url(':assets/minesweeper/flag.svg');
+}
+.grid {
+    border: 3dp inset #fff;
+    padding: 3dp;
+}
+MinesweeperWindow[dead] CellView[bomb="true"] {
+    background: url(':assets/minesweeper/bomb.svg');
+}
+MinesweeperWindow[dead] CellView[bomb="true"][flag="true"] {
+    background: url(':assets/minesweeper/bomb_flag.svg');
+}
+MinesweeperWindow[dead] CellView[bomb="false"][flag="true"] {
+    background: url(':assets/minesweeper/no_bomb_flag.svg');
+}
+CellView[red] {
+    background-color: #f00;
+    border: none;
+}
+.window_title_content AButton {
+    margin: 4px 2px;
+}

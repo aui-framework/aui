@@ -1,0 +1,729 @@
+#include "AView.h"
+#include "AUI/Render/Render.h"
+#include "AUI/Util/Tokenizer.h"
+#include "AUI/Platform/AWindow.h"
+#include "AUI/Url/AUrl.h"
+#include "AUI/Image/Drawables.h"
+#include "AUI/Render/RenderHints.h"
+#include "AUI/Animator/AAnimator.h"
+
+#include <glm/gtc/matrix_transform.hpp>
+
+#include "AUI/Platform/Desktop.h"
+#include "AUI/Render/AFontManager.h"
+#include "AUI/Util/AMetric.h"
+#include "AUI/Util/Factory.h"
+
+// windows.h
+#undef max
+#undef min
+
+AWindow* AView::getWindow()
+{
+
+	AView* parent = nullptr;
+
+	for (AView* target = this; target; target = target->mParent) {
+		parent = target;
+	}
+
+	return dynamic_cast<AWindow*>(parent);
+}
+
+AView::AView()
+{
+	AVIEW_CSS;
+}
+
+void AView::redraw()
+{
+	if (auto w = getWindow()) {
+		w->flagRedraw();
+	}
+}
+
+void AView::drawStencilMask()
+{
+	Render::instance().setFill(Render::FILL_SOLID);
+	Render::instance().drawRect(mPadding.left, mPadding.top,
+		getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical());
+}
+
+extern unsigned char stencilDepth;
+void AView::render()
+{
+	{
+		ensureCSSUpdated();
+
+		for (auto& e : mBackgroundEffects)
+		{
+			e->draw([&]()
+			{
+				Render::instance().drawRect(0, 0, getWidth(), getHeight());
+			});
+		}
+
+		// список отрисовки.
+		if (mHasTransitions) {
+			mTransitionValue = glm::clamp(mTransitionValue, 0.f, 1.f);
+			for (auto& item : mCssDrawListBack)
+				item();
+
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			RenderHints::PushColor c;
+			Render::instance().setColor({ 1, 1, 1, mTransitionValue });
+			for (auto& item : mCssDrawListFront)
+				item();
+
+			auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+				std::chrono::high_resolution_clock::now().time_since_epoch());
+			mTransitionValue += (now - mLastFrameTime).count() / (1000.f * mTransitionDuration);
+			if (mTransitionValue >= 1.f) {
+				mHasTransitions = false;
+			}
+			else {
+				AWindow::current()->flagRedraw();
+				mLastFrameTime = now;
+			}
+		}
+		else
+		{
+			for (auto& item : mCssDrawListFront)
+				item();
+		}
+	}
+    if (mAnimator)
+        mAnimator->animate();
+
+	// stencil
+	if (mOverflow == OF_HIDDEN)
+	{
+		glStencilFunc(GL_ALWAYS, 0, 0xff);
+		glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
+		glStencilMask(0xff);
+		glColorMask(false, false, false, false);
+
+		drawStencilMask();
+
+		glColorMask(true, true, true, true);
+		glStencilMask(0x00);
+		glStencilFunc(GL_EQUAL, ++stencilDepth, 0xff);
+	}
+}
+
+void AView::recompileCSS()
+{
+	// соберём полный список свойств CSS.
+	ADeque<_<Stylesheet::Entry>> entries;
+	entries.insert(entries.end(), mCssEntries.begin(), mCssEntries.end());
+
+	for (auto& possibleEntry : mCssPossibleEntries)
+	{
+		if (possibleEntry->selectorMatches(this, false) == Stylesheet::Entry::M_MATCH)
+		{
+			entries << possibleEntry;
+		}
+	}
+
+	// некоторая вспомогательная хрень
+	auto processStylesheet = [&](css type, const std::function<void(property)>& callback)
+	{
+
+		for (auto i = entries.rbegin(); i != entries.rend(); ++i)
+		{
+			if (auto x = (*i)->getSheet().contains(type))
+			{
+				callback(x->second);
+				break;
+			}
+		}
+	};
+
+	userProcessStyleSheet(processStylesheet);
+
+	processStylesheet(css::T_TRANSITION, [&](property p)
+	{
+		if (p->getArgs().size() == 1)
+		{
+			auto string = p->getArgs()[0];
+			if (string == "none")
+			{
+				mHasTransitions = false;
+				return;
+			}
+			if (string.endsWith("s"))
+			{
+				string = string.mid(0, string.length() - 1);
+			}
+			auto duration = string.toFloat();
+			if (duration > 0)
+			{
+				// господи, за что это дерьмо
+				if (!mHasTransitions) {
+					mHasTransitions = true;
+					mCssDrawListBack = std::move(mCssDrawListFront);
+					mTransitionValue = 1.f - glm::clamp(mTransitionValue, 0.f, 1.f);
+					mLastFrameTime = std::chrono::duration_cast<std::chrono::milliseconds>(
+						std::chrono::high_resolution_clock::now().time_since_epoch());
+				}
+				mTransitionDuration = duration;
+			}
+		}
+	});
+
+	if (!mHasTransitions)
+	{
+		mCssDrawListBack.clear();
+		mTransitionValue = 1.f;
+	}
+
+	mCursor = ACursor::DEFAULT;
+	mOverflow = OF_VISIBLE;
+	mMargin = {};
+	mMinSize = {};
+	mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+	mFixedSize = {};
+	mFontStyle = {AFontManager::instance().getDefault(), 12, false, ALIGN_LEFT, AColor(0, 0, 0, 1.f) };
+	mBackgroundEffects.clear();
+
+	// общий обработчик для margin и padding.
+	auto fieldProcessor = [&](property p) -> ABoxFields
+	{
+		switch (p->getArgs().size())
+		{
+		case 1:
+		{
+			float all = AMetric(p->getArgs()[0]).getValuePx();
+			return { all, all, all, all };
+		}
+		case 2:
+		{
+			float vertical = AMetric(p->getArgs()[0]).getValuePx();
+			float horizontal = AMetric(p->getArgs()[1]).getValuePx();
+			return { horizontal, horizontal, vertical ,vertical };
+		}
+		case 3:
+		{
+			float top = AMetric(p->getArgs()[0]).getValuePx();
+			float horizontal = AMetric(p->getArgs()[1]).getValuePx();
+			float bottom = AMetric(p->getArgs()[2]).getValuePx();
+			return { horizontal, horizontal, top ,bottom };
+		}
+		case 4:
+		{
+			float top = AMetric(p->getArgs()[0]).getValuePx();
+			float right = AMetric(p->getArgs()[1]).getValuePx();
+			float bottom = AMetric(p->getArgs()[2]).getValuePx();
+			float left = AMetric(p->getArgs()[3]).getValuePx();
+			return { left, right, top ,bottom };
+		}
+		}
+		return {};
+	};
+
+	processStylesheet(css::T_MARGIN, [&](property p)
+	{
+		mMargin = fieldProcessor(p);
+	});
+	processStylesheet(css::T_PADDING, [&](property p)
+	{
+		mPadding = fieldProcessor(p);
+	});
+
+	processStylesheet(css::T_OVERFLOW, [&](property p)
+	{
+		if (p->getArgs().size() == 1) {
+			if (p->getArgs()[0] == "hidden")
+				mOverflow = OF_HIDDEN;
+		}
+	});
+
+	processStylesheet(css::T_WIDTH_MIN, [&](property p)
+	{
+		if (p->getArgs().size() == 1) {
+			mMinSize.x = AMetric(p->getArgs()[0]).getValuePx();
+		}
+	});
+	processStylesheet(css::T_HEIGHT_MIN, [&](property p)
+	{
+		if (p->getArgs().size() == 1) {
+			mMinSize.y = AMetric(p->getArgs()[0]).getValuePx();
+		}
+	});
+
+	processStylesheet(css::T_WIDTH_MAX, [&](property p)
+	{
+		if (p->getArgs().size() == 1) {
+			mMaxSize.x = AMetric(p->getArgs()[0]).getValuePx();
+		}
+	});
+	processStylesheet(css::T_HEIGHT_MAX, [&](property p)
+	{
+		if (p->getArgs().size() == 1) {
+			mMaxSize.y = AMetric(p->getArgs()[0]).getValuePx();
+		}
+	});
+
+	processStylesheet(css::T_WIDTH, [&](property p)
+	{
+		if (p->getArgs().size() == 1) {
+			mFixedSize.x = AMetric(p->getArgs()[0]).getValuePx();
+		}
+	});
+	processStylesheet(css::T_HEIGHT, [&](property p)
+	{
+		if (p->getArgs().size() == 1) {
+			mFixedSize.y = AMetric(p->getArgs()[0]).getValuePx();
+		}
+	});
+
+	processStylesheet(css::T_COLOR, [&](property p)
+	{
+		if (p->getArgs().size() == 1) {
+			mFontStyle.color = p->getArgs()[0];
+		}
+	});
+	processStylesheet(css::T_FONT_SIZE, [&](property p)
+	{
+		if (p->getArgs().size() == 1) {
+			mFontStyle.size = AMetric(p->getArgs()[0]).getValuePx();
+		}
+	});
+
+	processStylesheet(css::T_CURSOR, [&](property p)
+	{
+		if (p->getArgs().size() == 1)
+		{
+			static AMap<AString, ACursor> cursors = {
+				{"default", ACursor::DEFAULT},
+				{"pointer", ACursor::POINTER},
+				{"text", ACursor::TEXT},
+			};
+			if (auto c = cursors.contains(p->getArgs()[0]))
+			{
+				mCursor = c->second;
+			}
+		}
+	});
+
+	processStylesheet(css::T_TEXT_ALIGN, [&](property p)
+	{
+		if (p->getArgs().size() == 1) {
+			if (p->getArgs()[0] == "left")
+				mFontStyle.align = ALIGN_LEFT;
+			else if (p->getArgs()[0] == "center")
+				mFontStyle.align = ALIGN_CENTER;
+			else if (p->getArgs()[0] == "right")
+				mFontStyle.align = ALIGN_RIGHT;
+		}
+	});
+	processStylesheet(css::T_AUI_FONT_RENDERING, [&](property p)
+	{
+		if (p->getArgs().size() == 1) {
+			if (p->getArgs()[0] == "nearest")
+				mFontStyle.fontRendering = FR_NEAREST;
+			else if (p->getArgs()[0] == "antialiasing")
+				mFontStyle.fontRendering = FR_ANTIALIASING;
+			else if (p->getArgs()[0] == "subpixel")
+				mFontStyle.fontRendering = FR_SUBPIXEL;
+		}
+	});
+
+	// составление списка отрисовки.
+	mCssDrawListFront.clear();
+	processStylesheet(css::T_BACKGROUND_COLOR, [&](property p)
+	{
+		AColor color = p->getArgs()[0];
+		mCssDrawListFront << [&, color]() {
+			RenderHints::PushColor x;
+			Render::instance().setFill(Render::FILL_SOLID);
+			Render::instance().setColor(color);
+			Render::instance().drawRect(0, 0, getWidth(), getHeight());
+		};
+	});
+	processStylesheet(css::T_BACKGROUND_EFFECT, [&](property p)
+	{
+		for (auto a : p->getArgs()) {
+			mBackgroundEffects << Autumn::get<Factory<IShadingEffect>>(a)->createObject();
+		}
+	});
+	processStylesheet(css::T_BACKGROUND, [&](property p)
+	{
+		auto& last = p->getArgs().back();
+		if (last.last() == ')')
+		{
+			if (last.startsWith("url("))
+			{
+				auto urlString = last.mid(4, last.length() - 5);
+				if ((urlString.startsWith("'") && urlString.endsWith("'")) ||
+					(urlString.startsWith("\"") && urlString.endsWith("\"")))
+				{
+					urlString = urlString.mid(1, urlString.length() - 2);
+				}
+				if (auto drawable = Drawables::get(urlString))
+				{
+					AString sizing;
+					processStylesheet(css::T_BACKGROUND_SIZE, [&](property p)
+					{
+						if (p->getArgs().size() == 1)
+							sizing = p->getArgs()[0];
+					});
+
+					if (sizing == "fit")
+					{
+						mCssDrawListFront << [&, drawable]()
+						{
+							drawable->draw(getSize());
+						};
+					}
+					else {
+						mCssDrawListFront << [&, drawable]()
+						{
+							auto imageSize = glm::vec2(drawable->getSizeHint());
+							if (drawable->isDpiDependent())
+								imageSize *= AWindow::current()->getDpiRatio();
+
+							RenderHints::PushMatrix m;
+							Render::instance().setTransform(
+								glm::translate(glm::mat4(1.f),
+									glm::vec3((glm::vec2(mSize) - imageSize) / 2.f, 0.f)));
+							drawable->draw(imageSize);
+						};
+					}
+				}
+			}
+		}
+		else {
+			AColor color = p->getArgs()[0];
+			mCssDrawListFront << [&, color]() {
+				RenderHints::PushColor x;
+				Render::instance().setFill(Render::FILL_SOLID);
+				Render::instance().setColor(color);
+				Render::instance().drawRect(0, 0, getWidth(), getHeight());
+			};
+		}
+	});
+
+	processStylesheet(css::T_BORDER, [&](property p)
+	{
+		float width = 1.f;
+		AColor c;
+
+		enum
+		{
+			B_SOLID,
+			B_INSET,
+			B_OUTSET,
+		} style = B_SOLID;
+
+		switch (p->getArgs().size())
+		{
+		case 0:
+			return;
+		case 1:
+			if (p->getArgs()[0] == "none")
+				return;
+			width = AMetric(p->getArgs()[0]).getValuePx();
+			break;
+
+		case 3:
+			width = AMetric(p->getArgs()[0]).getValuePx();
+			c = AColor(p->getArgs()[2]);
+			if (p->getArgs()[1] == "outset")
+			{
+				style = B_OUTSET;
+			}
+			else if (p->getArgs()[1] == "inset")
+			{
+				style = B_INSET;
+			}
+			break;
+
+		case 2:
+			c = AColor(p->getArgs()[1]);
+			break;
+		}
+
+		switch (style)
+		{
+		case B_SOLID:
+			mCssDrawListFront << [&, c, width]() {
+				RenderHints::PushColor x;
+				Render::instance().setFill(Render::FILL_SOLID);
+				Render::instance().setColor(c);
+				Render::instance().drawRectBorder(0, 0, getWidth(), getHeight(), width);
+			};
+			break;
+		case B_INSET:
+			mCssDrawListFront << [&, c, width]() {
+				RenderHints::PushColor x;
+				Render::instance().setFill(Render::FILL_SOLID);
+				Render::instance().setColor(c);
+				Render::instance().drawRectBorder(0, 0, getWidth(), getHeight(), width);
+
+				Render::instance().setColor({ 0.55f, 0.55f, 0.55f, 1 });
+				Render::instance().drawRectBorderSide(0, 0, getWidth(), getHeight(), width, S_CORNER_TOPLEFT);
+			};
+			break;
+		case B_OUTSET:
+			mCssDrawListFront << [&, c, width]() {
+				RenderHints::PushColor x;
+				Render::instance().setFill(Render::FILL_SOLID);
+				Render::instance().setColor(c);
+				Render::instance().drawRectBorder(0, 0, getWidth(), getHeight(), width);
+
+				Render::instance().setColor({ 0.55f, 0.55f, 0.55f, 1 });
+				Render::instance().drawRectBorderSide(0, 0, getWidth(), getHeight(), width, S_CORNER_BOTTOMRIGHT);
+			};
+			break;
+		}
+	});
+}
+
+void AView::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)
+{
+}
+
+
+float AView::getTotalFieldHorizontal() const
+{
+	return mPadding.horizontal() + mMargin.horizontal();
+}
+
+float AView::getTotalFieldVertical() const
+{
+	return mPadding.vertical() + mMargin.vertical();
+}
+
+int AView::getContentMinimumWidth()
+{
+	return 0;
+}
+
+int AView::getContentMinimumHeight()
+{
+	return 0;
+}
+
+bool AView::hasFocus() const
+{
+	return mHasFocus;
+}
+
+int AView::getMinimumWidth()
+{
+	ensureCSSUpdated();
+	return (mFixedSize.x == 0 ? ((glm::max)(getContentMinimumWidth(), mMinSize.x) + mPadding.horizontal()) : mFixedSize.x);
+}
+
+int AView::getMinimumHeight()
+{
+	ensureCSSUpdated();
+	return (mFixedSize.y == 0 ? ((glm::max)(getContentMinimumHeight(), mMinSize.y) + mPadding.vertical()) : mFixedSize.y);
+}
+
+void AView::getTransform(glm::mat4& transform) const
+{
+	transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
+}
+
+FontStyle& AView::getFontStyle()
+{
+	if (mFontStyle.font == nullptr)
+		mFontStyle.font = AFontManager::instance().getDefault();
+	return mFontStyle;
+}
+
+
+void AView::setSize(int width, int height)
+{
+	if (mFixedSize.x != 0)
+	{
+		mSize.x = mFixedSize.x;
+	}
+	else
+	{
+		mSize.x = width;
+		if (mMinSize.x != 0)
+			mSize.x = glm::max(mMinSize.x, mSize.x);
+	}
+	if (mFixedSize.y != 0)
+	{
+		mSize.y = mFixedSize.y;
+	}
+	else
+	{
+		mSize.y = height;
+		if (mMinSize.y != 0)
+			mSize.y = glm::max(mMinSize.y, mSize.y);
+	}
+	mSize = glm::min(mSize, mMaxSize);
+}
+
+void AView::pack()
+{
+	setSize(getMinimumWidth(), getMinimumHeight());
+}
+
+const ADeque<AString>& AView::getCssNames() const
+{
+	return mCssNames;
+}
+
+void AView::addCssName(const AString& css)
+{
+	mCssNames << css;
+	mCssHelper = nullptr;
+}
+
+void AView::ensureCSSUpdated()
+{
+	if (mCssHelper == nullptr)
+	{
+		mCssHelper = _new<ACSSHelper>();
+		connect(customCssPropertyChanged, mCssHelper,
+			&ACSSHelper::onCheckPossiblyMatchCss);
+		connect(mCssHelper->invalidateViewCss, this, [&]()
+		{
+			mCssHelper = nullptr;
+		});
+
+		connect(AWindow::current()->dpiChanged, this, [&]()
+		{
+			mCssHelper = nullptr;
+		});
+		connect(mCssHelper->checkPossiblyMatchCss, this, &AView::recompileCSS);
+		connect(mCssHelper->checkPossiblyMatchCss, this, &AView::redraw);
+		mCssEntries.clear();
+
+		for (auto& entry : Stylesheet::instance().getEntries())
+		{
+			switch (entry->selectorMatches(this))
+			{
+			case Stylesheet::Entry::M_MATCH:
+				mCssEntries << entry;
+				break;
+			case Stylesheet::Entry::M_POSSIBLY_MATCH:
+				mCssPossibleEntries << entry;
+				break;
+			}
+		}
+
+		recompileCSS();
+	}
+}
+
+void AView::onMouseEnter()
+{
+	mHovered = true;
+}
+
+
+void AView::onMouseMove(glm::ivec2 pos)
+{
+}
+
+void AView::onMouseLeave()
+{
+	mHovered = false;
+}
+
+
+void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
+{
+	mPressed = true;
+	if (auto w = getWindow())
+	{
+		if (w != this) {
+			connect(w->mouseReleased, this, [&]()
+			{
+				AThread::current()->enqueue([&]()
+				{
+					// чтобы быть точно уверенным, что isPressed будет равно false.
+					mPressed = false;
+				});
+				disconnect();
+			});
+		}
+	}
+}
+
+void AView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
+{
+	mPressed = false;
+	emit clickedButton(button);
+	switch (button)
+	{
+	case AInput::LButton:
+		emit clicked;
+		break;
+	case AInput::RButton:
+		emit clickedRight;
+		break;
+	}
+}
+
+void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
+{
+	emit doubleClicked(button);
+}
+
+void AView::onKeyDown(AInput::Key key)
+{
+}
+
+void AView::onKeyRepeat(AInput::Key key)
+{
+}
+
+void AView::onKeyUp(AInput::Key key)
+{
+}
+
+void AView::onFocusAcquired()
+{
+	mHasFocus = true;
+}
+
+void AView::onFocusLost()
+{
+	mHasFocus = false;
+}
+
+void AView::onCharEntered(wchar_t c)
+{
+
+}
+
+void AView::getCustomCssAttributes(AMap<AString, AVariant>& map)
+{
+	if (mEnabled)
+	{
+		map["enabled"] = true;
+	}
+	else
+	{
+		map["disabled"] = true;
+	}
+}
+
+void AView::setEnabled(bool enabled)
+{
+	mEnabled = enabled;
+	setSignalsEnabled(mEnabled);
+	emit customCssPropertyChanged();
+}
+
+void AView::setDisabled(bool disabled)
+{
+	mEnabled = !disabled;
+	emit customCssPropertyChanged();
+	setSignalsEnabled(mEnabled);
+}
+
+void AView::setAnimator(const _<AAnimator>& animator) {
+    mAnimator = animator;
+    mAnimator->setView(this);
+}
+
