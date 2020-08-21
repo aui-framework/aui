@@ -57,14 +57,14 @@ public:
 	{
 		if (mValue != t) {
 			mValue = t;
-			mSignal(t);
+			mSignal(t).invokeSignal();
 			if (t)
 			{
-				mSignalTrue();
+				mSignalTrue().invokeSignal();
 			}
 			else
 			{
-				mSignalFalse();
+				mSignalFalse().invokeSignal();
 			}
 		}
 		return *this;
