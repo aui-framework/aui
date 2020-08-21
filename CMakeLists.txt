@@ -18,7 +18,7 @@ endif()
 function(AUI_Executable AUI_MODULE_NAME)
     project(${AUI_MODULE_NAME})
 
-    file(GLOB_RECURSE SRCS src/*.cpp src/*.c src/*.h)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
     add_executable(${AUI_MODULE_NAME} ${SRCS})
 
     target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
@@ -30,7 +30,7 @@ endfunction(AUI_Executable)
 function(AUI_Module AUI_MODULE_NAME)
     project(${AUI_MODULE_NAME})
 	
-    file(GLOB_RECURSE SRCS src/*.cpp src/*.c src/*.h)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
     add_library(${AUI_MODULE_NAME} SHARED ${SRCS} ${ARGN})
 
     target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
@@ -46,6 +46,12 @@ function(AUI_Module AUI_MODULE_NAME)
 	target_compile_definitions(${AUI_MODULE_NAME} PRIVATE ${BUILD_DEF_NAME}=AUI_EXPORT)
 
 endfunction(AUI_Module)
+
+function(AUI_Compile_Assets AUI_MODULE_NAME)
+	set(TARGET_NAME "${AUI_MODULE_NAME}.Assets")
+	add_custom_target(${TARGET_NAME} COMMAND ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/AUI.Toolbox pack ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/autogen/assets.cpp)
+	add_dependencies(${AUI_MODULE_NAME} AUI.Toolbox ${TARGET_NAME})
+endfunction(AUI_Compile_Assets)
 
 if(MSVC)
 	set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /force")

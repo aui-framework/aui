@@ -16,5 +16,6 @@ private:
 	
 public:
 	static void loadBuffer(ByteBuffer& data);
+	static void load(const unsigned char* data, size_t size);
 	static _<IInputStream> open(const AString& file);
 };
