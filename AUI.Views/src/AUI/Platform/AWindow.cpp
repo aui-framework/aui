@@ -14,7 +14,6 @@
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
-#include <Windows.h>
 
 AWindow::Context AWindow::context = {};
 

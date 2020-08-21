@@ -2,8 +2,6 @@ cmake_minimum_required(VERSION 3.14)
 
 AUI_Module(AUI.Core)
 
-
-
 find_package(ZLIB)
 
 add_subdirectory(3rdparty/glm)

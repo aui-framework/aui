@@ -2,8 +2,8 @@ cmake_minimum_required(VERSION 3.14)
 
 AUI_Module(AUI.Mysql)
 
-set(MYSQL_INCLUDE_DIRS CACHE FILEPATH "")
-set(MYSQL_LIBRARIES CACHE FILEPATH "")
+set(MYSQL_INCLUDE_DIRS "/usr/include" CACHE FILEPATH "")
+set(MYSQL_LIBRARIES "/usr/lib/x86_64-linux-gnu/libmysqlclient.so" CACHE FILEPATH "")
 
 target_link_libraries(AUI.Mysql AUI.Core)
 target_link_libraries(AUI.Mysql AUI.Data)

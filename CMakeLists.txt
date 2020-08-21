@@ -72,6 +72,6 @@ add_subdirectory(AUI.Toolbox)
 add_subdirectory(tests)
 
 
-add_subdirectory(examples/AUI.Example.Sowlonya)
+#add_subdirectory(examples/AUI.Example.Sowlonya)
 add_subdirectory(examples/AUI.Example.Views)
 add_subdirectory(examples/AUI.Example.Words)
