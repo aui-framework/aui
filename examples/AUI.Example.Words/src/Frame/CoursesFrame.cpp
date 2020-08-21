@@ -19,8 +19,21 @@ CoursesFrame::CoursesFrame() {
     setLayout(_new<AVerticalLayout>());
     setExpanding({1, 1});
 
+    addView(_container<AHorizontalLayout>({
+        _new<ASpacer>(),
+        _new<ALabel>(u8"Изучение")(&AView::addCssName, ".selected"),
+        _new<ALabel>(u8"Словарь"),
+        _new<ALabel>(u8"Сасистика"),
+        _new<ASpacer>(),
+    })(&AView::addCssName, ".topbar"));
+
+    auto list = _container<AVerticalLayout>({})
+                         (&AView::addCssName, ".list")
+                         (&AView::setExpanding, glm::ivec2{1, 1});
+    addView(list);
+
     for (auto& course : Course::all()->get()) {
-        addView(_container<AHorizontalLayout>({
+        list->addView(_container<AHorizontalLayout>({
             _container<AVerticalLayout>({
                 _new<ALabel>(course.name)
                         (&ALabel::setFontSize, 20dp),

@@ -1,0 +1,20 @@
+.topbar {
+    background: $WIN_THEME_COLOR;
+    padding: 0;
+}
+.topbar ALabel {
+    color: #fff;
+    padding: 5dp 8dp 12dp;
+    margin: 6dp 4dp 0;
+}
+.list {
+    background: #fff;
+    padding: 2dp 8dp 2dp 4dp;
+}
+.selected {
+    color: #000;
+    background: #fff;
+}
+AWindow {
+    padding: 0px;
+}
