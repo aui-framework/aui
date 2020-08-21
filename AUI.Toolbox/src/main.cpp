@@ -67,7 +67,7 @@ int main(int argc, char** argv)
 										{
 											data.put(buf, r);
 										}
-										buffer << data.getSize();
+										buffer << uint32_t(data.getSize());
 										buffer << data;
 										std::cout << ": packed " << filePath << std::endl;
 									}
