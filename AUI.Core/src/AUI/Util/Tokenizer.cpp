@@ -156,15 +156,15 @@ int Tokenizer::readInt()
 
 AString Tokenizer::readStringUntilUnescaped(char c)
 {
-	AString result;
+	std::string result;
 	for (char current; (current = readChar()) != c;)
 	{
 		if (current == '\\')
 		{
-			result << readChar();
+			result += readChar();
 		} else
 		{
-			result << current;
+			result += current;
 		}
 	}
 	return result;

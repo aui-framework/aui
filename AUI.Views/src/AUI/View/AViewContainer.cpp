@@ -223,7 +223,17 @@ _<AView> AViewContainer::getViewAtRecusrive(glm::ivec2 pos)
 
 void AViewContainer::updateLayout()
 {
-	if (mLayout)
-		mLayout->onResize(mPadding.left, mPadding.top,
-			getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+    if (mLayout)
+        mLayout->onResize(mPadding.left, mPadding.top,
+                          getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+}
+
+void AViewContainer::recompileCSS() {
+    AView::recompileCSS();
+    updateLayout();
+}
+
+void AViewContainer::setGeometry(int x, int y, int width, int height) {
+    AView::setGeometry(x, y, width, height);
+    updateLayout();
 }

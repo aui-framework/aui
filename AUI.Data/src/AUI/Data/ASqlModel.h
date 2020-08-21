@@ -66,12 +66,14 @@ struct ASqlModel {
 
         IncompleteSelectRequest& where(const ASqlBuilder::WhereStatement::WhereExpr& w) {
             auto[exprString, whereParams] = ASqlBuilder::WhereStatement::WhereExpr::unpack(w);
-            if (mWhereExpr.empty()) {
-                mWhereExpr = "WHERE " + exprString;
-                mWhereParams = whereParams;
-            } else {
-                mWhereExpr += "AND " + exprString;
-                mWhereParams << whereParams;
+            if (!exprString.empty()) {
+                if (mWhereExpr.empty()) {
+                    mWhereExpr = "WHERE " + exprString;
+                    mWhereParams = whereParams;
+                } else {
+                    mWhereExpr += "AND " + exprString;
+                    mWhereParams << whereParams;
+                }
             }
             return *this;
         }
@@ -124,7 +126,8 @@ struct ASqlModel {
         AStringVector columnNames;
         columnNames << "id";
         columnNames << Meta::getFields().keyVector();
-        return _<IncompleteSelectRequest>(new IncompleteSelectRequest("SELECT " + (columnNames.empty() ? '*' : columnNames.join(',')) + " FROM " + AModelMeta<Model>::getSqlTable(), expression));
+        return _<IncompleteSelectRequest>(new IncompleteSelectRequest("SELECT " + (columnNames.empty() ? '*'
+            : columnNames.join(',')) + " FROM " + AModelMeta<Model>::getSqlTable(), expression));
     }
 
     /**
@@ -144,6 +147,14 @@ struct ASqlModel {
             throw NoSuchRowException();
         assert(result.size() == 1);
         return result.first();
+    }
+
+    static _<IncompleteSelectRequest> all() {
+        AStringVector columnNames;
+        columnNames << "id";
+        columnNames << Meta::getFields().keyVector();
+        return _<IncompleteSelectRequest>(new IncompleteSelectRequest("SELECT " + (columnNames.empty() ? '*'
+            : columnNames.join(',')) + " FROM " + AModelMeta<Model>::getSqlTable(), {}));
     }
 
 

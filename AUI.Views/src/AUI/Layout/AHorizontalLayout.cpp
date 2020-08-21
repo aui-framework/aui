@@ -23,6 +23,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 	
 	for (auto& view : mViews)
 	{
+		view->ensureCSSUpdated();
 		int e = view->getExpandingHorizontal();
 		int minSpace = view->getMinimumWidth() + view->getMargin().horizontal();
 		sum += e;

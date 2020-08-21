@@ -155,9 +155,9 @@ void ASignal<Args...>::invokeSignal()
 	{
 		try
 		{
-			if (i->object->thread() != AThread::current())
+			if (i->object->getThread() != AThread::current())
 			{
-				i->object->thread()->enqueue([=]()
+				i->object->getThread()->enqueue([=]()
 				{
 					std::apply(i->func, mArgs);
 				});

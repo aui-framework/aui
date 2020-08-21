@@ -34,7 +34,7 @@ public:
 	{
 	}
 	AString(const std::string& other) noexcept
-		: AString(other.begin(), other.end())
+		: AString(other.c_str())
 	{
 	}
 	

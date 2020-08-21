@@ -69,7 +69,7 @@ void ALabel::render()
 			break;
 		}
 		if (mPrerendered.mVao) {
-			Render::instance().drawString(leftPadding, mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)), mPrerendered);
+			Render::instance().drawString(leftPadding, mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)) + 1, mPrerendered);
 		}
 	}
 }

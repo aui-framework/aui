@@ -25,8 +25,3 @@ void AObject::clearSignals()
 		a->onObjectHasDestroyed(this);
 	}
 }
-
-const _<AAbstractThread>& AObject::thread() const
-{
-	return mAttachedThread;
-}

@@ -33,11 +33,11 @@ private:
 	/**
 	 * \brief Мьютекс для потокобезопасности очереди сообщений
 	 */
-	AMutex mQueueLock;
+	std::recursive_mutex mQueueLock;
 	/**
 	 * \brief Мьютекс для потокобезопасности поля mCurrentEventLoop.
 	 */
-	AMutex mEventLoopLock;
+    std::recursive_mutex mEventLoopLock;
 
 	/**
 	 * \brief Идентификатор этого потока.

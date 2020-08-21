@@ -3,8 +3,7 @@
 
 int main()
 {
-    AString a = ".icon { padding: 0; -aui-font-rendering: antialiasing;}";
-    Stylesheet::instance().load(a);
+    Stylesheet::instance().load(AUrl(":words/style.css").open());
 	auto w = _new<MainWindow>();
 	w->loop();
 	return 0;

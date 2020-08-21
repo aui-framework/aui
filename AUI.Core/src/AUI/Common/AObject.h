@@ -50,8 +50,6 @@ public:
 		mSignalsEnabled = enabled;
 	}
 
-	const _<AAbstractThread>& thread() const;
-
     template<typename T>
 	void operator^(T& t) {
 	    if (mSignalsEnabled) {
@@ -60,7 +58,7 @@ public:
 	}
 
 
-    _<AAbstractThread> getThread() {
+    const _<AAbstractThread>& getThread() const {
         return mAttachedThread;
     }
 };

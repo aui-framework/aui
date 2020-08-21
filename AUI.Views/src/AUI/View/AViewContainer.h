@@ -27,8 +27,9 @@ protected:
 		}
 	}
 
+    void recompileCSS() override;
 
-	void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)
+    void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)
 	override;
 public:
 	AViewContainer();
@@ -66,8 +67,10 @@ public:
 	
 	void updateLayout();
 
+    void setGeometry(int x, int y, int width, int height) override;
 
-	const AVector<_<AView>>& getViews() const
+
+    const AVector<_<AView>>& getViews() const
 	{
 		return mViews;
 	}

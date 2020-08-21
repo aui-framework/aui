@@ -13,9 +13,9 @@ inline auto _new(Args&& ... args)
 		return _<T>(o, [](T* obj)
 		{
 			obj->clearSignals();
-			static_cast<AObject*>(obj)->thread()->enqueue([obj]()
+			static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
 			{
-				static_cast<AObject*>(obj)->thread()->enqueue([obj]()
+				static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
 				{
 					delete obj;
 				});

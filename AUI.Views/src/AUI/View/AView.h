@@ -226,7 +226,7 @@ protected:
 	 *		  маргинов, паддингов и прочих бордеров из таблицы
 	 *		  стилей.
 	 */
-	void recompileCSS();
+	virtual void recompileCSS();
 
 	using property = const _<Stylesheet::Entry::Property>&;
 
