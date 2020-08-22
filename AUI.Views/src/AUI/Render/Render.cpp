@@ -13,6 +13,24 @@ Render::Render()
 		"void main(void) {gl_Position = vec4(pos, 1);}", 
 		"uniform vec4 color;"
 		"void main(void) {gl_FragColor = color;}");
+
+	mRoundedSolidShader.load(
+		"attribute vec3 pos;"
+        "attribute vec2 uv;"
+		"varying vec2 pass_uv;"
+		"void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv;}",
+		"uniform vec4 color;"
+        "varying vec2 pass_uv;"
+		"void main(void) {"
+            "vec4 tmp_color = color;"
+            "vec2 tmp = pass_uv * 2.f - vec2(1, 1);"
+            "if ((pow(abs(tmp.x), 5.f) + pow(abs(tmp.y), 5.f)) > 1)"
+                "discard;"
+            "if ((pow(abs(tmp.x), 5.f) + pow(abs(tmp.y), 5.f)) > 0.8f)"
+                "tmp_color = vec4(1, 0, 0, 1);"
+            "gl_FragColor = tmp_color;"
+        "}");
+
 	mSolidTransformShader.load(
 		"attribute vec3 pos;"
 		"uniform mat4 transform;"
@@ -209,6 +227,9 @@ void Render::setFill(Filling t)
 	{
 	case FILL_SOLID:
 		mSolidShader.use();
+		break;
+	case FILL_ROUNDED_SOLID:
+		mRoundedSolidShader.use();
 		break;
 	case FILL_TEXTURED:
 		mTexturedShader.use();

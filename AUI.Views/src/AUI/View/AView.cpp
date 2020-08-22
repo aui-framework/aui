@@ -337,7 +337,7 @@ void AView::recompileCSS()
 		AColor color = p->getArgs()[0];
 		mCssDrawListFront << [&, color]() {
 			RenderHints::PushColor x;
-			Render::instance().setFill(Render::FILL_SOLID);
+			Render::instance().setFill(Render::FILL_ROUNDED_SOLID);
 			Render::instance().setColor(color);
 			Render::instance().drawRect(0, 0, getWidth(), getHeight());
 		};
@@ -348,6 +348,7 @@ void AView::recompileCSS()
 			mBackgroundEffects << Autumn::get<Factory<IShadingEffect>>(a)->createObject();
 		}
 	});
+	/*
 	processStylesheet(css::T_BACKGROUND, [&](property p)
 	{
 		auto& last = p->getArgs().back();
@@ -478,7 +479,7 @@ void AView::recompileCSS()
 			};
 			break;
 		}
-	});
+	});*/
 }
 
 void AView::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)

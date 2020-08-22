@@ -19,6 +19,7 @@ public:
 	enum Filling
 	{
 		FILL_SOLID,
+        FILL_ROUNDED_SOLID,
 
 		/**
 		 * \brief �� �� �����, ��� � FILL_SOLID, ������ �������������
@@ -50,6 +51,7 @@ private:
 	AWindow* mWindow = nullptr;
 	AColor mColor = 1.f;
 	GL::Shader mSolidShader;
+	GL::Shader mRoundedSolidShader;
 	GL::Shader mSolidTransformShader;
 	GL::Shader mTexturedShader;
 	GL::Shader mSymbolShader;
