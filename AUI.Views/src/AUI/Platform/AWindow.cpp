@@ -422,8 +422,10 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
                        GLX_ALPHA_SIZE, 8,
                        GLX_DEPTH_SIZE, 24,
                        GLX_STENCIL_SIZE, 8,
-                       GLX_DOUBLEBUFFER, false,
+                       GLX_DOUBLEBUFFER, true,
                        GLX_STENCIL_SIZE, 8,
+                       GLX_SAMPLE_BUFFERS  , 1,
+                       GLX_SAMPLES         , 16,
                        None};
 
         int fbcount;
