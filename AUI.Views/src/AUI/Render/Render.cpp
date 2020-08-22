@@ -104,7 +104,7 @@ AVector<glm::vec3> Render::getVerticesForRect(float x, float y, float width, flo
 	
 	return
 	{
-		glm::vec3(mTransform * glm::vec4{ x + 10, h, 1, 1 }),
+		glm::vec3(mTransform * glm::vec4{ x, h, 1, 1 }),
 		glm::vec3(mTransform * glm::vec4{ w, h, 1, 1 }),
 		glm::vec3(mTransform * glm::vec4{ x, y, 1, 1 }),
 		glm::vec3(mTransform * glm::vec4{ w, y, 1, 1 }),
