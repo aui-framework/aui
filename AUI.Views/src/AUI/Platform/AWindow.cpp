@@ -21,8 +21,7 @@ AWindow::Context AWindow::context = {};
 
 #include <GL/wglew.h>
 
-struct painter
-{
+struct painter {
 private:
     HWND mHandle;
     PAINTSTRUCT mPaint;
@@ -32,8 +31,7 @@ public:
     static thread_local bool painting;
 
     painter(HWND handle) :
-        mHandle(handle)
-    {
+            mHandle(handle) {
         assert(!painting);
         painting = true;
         mHdc = BeginPaint(mHandle, &mPaint);
@@ -41,8 +39,7 @@ public:
         assert(ok);
     }
 
-    ~painter()
-    {
+    ~painter() {
         assert(painting);
         painting = false;
         //SwapBuffers(hdc);
@@ -51,8 +48,8 @@ public:
         EndPaint(mHandle, &mPaint);
     }
 };
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
+
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     AWindow* window = reinterpret_cast<AWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
     if (window)
         return window->winProc(hwnd, uMsg, wParam, lParam);
@@ -60,8 +57,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
-LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
+LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
 #define POS glm::ivec2(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))
@@ -70,8 +66,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     currentWindowStorage() = this;
 
-    switch (uMsg)
-    {
+    switch (uMsg) {
         /*
     case WM_SIZING:
         {
@@ -79,82 +74,71 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         break;*/
 
-    case WM_SETFOCUS:
-        onFocusAcquired();
-        return 0;
+        case WM_SETFOCUS:
+            onFocusAcquired();
+            return 0;
 
-    case WM_KILLFOCUS:
-        onFocusLost();
-        return 0;
+        case WM_KILLFOCUS:
+            onFocusLost();
+            return 0;
 
-    case WM_PAINT:
-        {
+        case WM_PAINT: {
             redraw();
 
             return 0;
         }
-    case WM_KEYDOWN:
-        if (lParam & (1 << 30))
-        {
-            // автоповторение
-            onKeyRepeat(AInput::fromNative(wParam));
-        }
-        else
-        {
-            onKeyDown(AInput::fromNative(wParam));
-        }
-        return 0;
+        case WM_KEYDOWN:
+            if (lParam & (1 << 30)) {
+                // автоповторение
+                onKeyRepeat(AInput::fromNative(wParam));
+            } else {
+                onKeyDown(AInput::fromNative(wParam));
+            }
+            return 0;
 
-    case WM_KEYUP:
-        onKeyUp(AInput::fromNative(wParam));
-        return 0;
+        case WM_KEYUP:
+            onKeyUp(AInput::fromNative(wParam));
+            return 0;
 
-    case WM_CHAR:
-        {
+        case WM_CHAR: {
             onCharEntered(wParam);
             return 0;
         }
 
-    case WM_SIZE:
-        emit resized(LOWORD(lParam), HIWORD(lParam));
-        AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
-        return 0;
+        case WM_SIZE:
+            emit resized(LOWORD(lParam), HIWORD(lParam));
+            AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
+            return 0;
 
-    case WM_MOUSEMOVE:
-        onMouseMove(POS);
+        case WM_MOUSEMOVE:
+            onMouseMove(POS);
 
-        TRACKMOUSEEVENT tme;
-        tme.cbSize = sizeof(tme);
-        tme.hwndTrack = hwnd;
-        tme.dwFlags = TME_LEAVE;
-        TrackMouseEvent(&tme);
+            TRACKMOUSEEVENT tme;
+            tme.cbSize = sizeof(tme);
+            tme.hwndTrack = hwnd;
+            tme.dwFlags = TME_LEAVE;
+            TrackMouseEvent(&tme);
 
-        return 0;
+            return 0;
 
-    case WM_MOUSELEAVE:
-        onMouseLeave();
-        return 0;
+        case WM_MOUSELEAVE:
+            onMouseLeave();
+            return 0;
 
-    case WM_SETCURSOR:
-        {
-            if (LOWORD(lParam) == HTCLIENT)
-            {
-                switch (mCursor)
-                {
-                case ACursor::DEFAULT:
-                    {
+        case WM_SETCURSOR: {
+            if (LOWORD(lParam) == HTCLIENT) {
+                switch (mCursor) {
+                    case ACursor::DEFAULT: {
                         static auto cursor = LoadCursor(nullptr, IDC_ARROW);
                         SetCursor(cursor);
                         return true;
                     }
-                case ACursor::POINTER:
-                    {
+                    case ACursor::POINTER: {
                         static auto cursor = LoadCursor(nullptr, IDC_PERSON);
                         SetCursor(cursor);
                         return true;
                     }
-                case ACursor::TEXT:
-                    {
+                    case ACursor::TEXT: {
                         static auto cursor = LoadCursor(nullptr, IDC_IBEAM);
                         SetCursor(cursor);
                         return true;
@@ -165,37 +149,36 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
 
 
-    case WM_CLOSE:
-        emit closed;
-        return 0;
+        case WM_CLOSE:
+            emit closed;
+            return 0;
 
-    case WM_LBUTTONDOWN:
-        onMousePressed(POS, AInput::LButton);
-        SetCapture(mHandle);
-        return 0;
-    case WM_LBUTTONUP:
-        onMouseReleased(POS, AInput::LButton);
-        ReleaseCapture();
-        return 0;
-    case WM_RBUTTONDOWN:
-        onMousePressed(POS, AInput::RButton);
-        SetCapture(mHandle);
-        return 0;
-    case WM_RBUTTONUP:
-        onMouseReleased(POS, AInput::RButton);
-        ReleaseCapture();
-        return 0;
+        case WM_LBUTTONDOWN:
+            onMousePressed(POS, AInput::LButton);
+            SetCapture(mHandle);
+            return 0;
+        case WM_LBUTTONUP:
+            onMouseReleased(POS, AInput::LButton);
+            ReleaseCapture();
+            return 0;
+        case WM_RBUTTONDOWN:
+            onMousePressed(POS, AInput::RButton);
+            SetCapture(mHandle);
+            return 0;
+        case WM_RBUTTONUP:
+            onMouseReleased(POS, AInput::RButton);
+            ReleaseCapture();
+            return 0;
 
-    case WM_LBUTTONDBLCLK:
-        onMouseDoubleClicked(POS, AInput::LButton);
-        return 0;
+        case WM_LBUTTONDBLCLK:
+            onMouseDoubleClicked(POS, AInput::LButton);
+            return 0;
 
-    case WM_DPICHANGED:
-        updateDpi();
-        return 0;
+        case WM_DPICHANGED:
+            updateDpi();
+            return 0;
 
-    case WM_GETMINMAXINFO:
-        {
+        case WM_GETMINMAXINFO: {
             MINMAXINFO* info = reinterpret_cast<MINMAXINFO*>(lParam);
 
             RECT r = {0, 0, getMinimumWidth(), getMinimumHeight()};
@@ -203,9 +186,9 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             info->ptMinTrackSize.x = r.right - r.left;
             info->ptMinTrackSize.y = r.bottom - r.top;
         }
-        return 0;
-    case WM_ERASEBKGND:
-        return TRUE;
+            return 0;
+        case WM_ERASEBKGND:
+            return TRUE;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 
@@ -213,6 +196,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #undef GET_Y_LPARAM
 #undef POS
 }
+
 #else
 
 Display* gDisplay;
@@ -284,8 +268,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
     mInst = GetModuleHandle(nullptr);
 
     Random r;
-    for (;;)
-    {
+    for (;;) {
         mWindowClass = "AUI-" + AString::number(r.nextInt());
         winClass.lpszClassName = mWindowClass.c_str();
         winClass.cbSize = sizeof(WNDCLASSEX);
@@ -301,8 +284,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
         winClass.lpszMenuName = mWindowClass.c_str();
         winClass.cbClsExtra = 0;
         winClass.cbWndExtra = 0;
-        if (RegisterClassEx(&winClass))
-        {
+        if (RegisterClassEx(&winClass)) {
             break;
         }
     }
@@ -316,73 +298,90 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
 
     SetWindowLongPtr(mHandle, GWLP_USERDATA, reinterpret_cast<LONG>(this));
 
-    if (mParentWindow)
-    {
+    if (mParentWindow) {
         EnableWindow(mParentWindow->mHandle, false);
     }
 
     mDC = GetDC(mHandle);
 
     // INITIALIZE OPENGL
-    PIXELFORMATDESCRIPTOR pfd;
-    memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
-    pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-    pfd.nVersion = 1;
-    pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_SUPPORT_COMPOSITION;
-    pfd.iPixelType = PFD_TYPE_RGBA;
-    pfd.cColorBits = 8;
-    pfd.cStencilBits = 8;
-    size_t iPixelFormat = ChoosePixelFormat(mDC, &pfd);
-    DescribePixelFormat(mDC, iPixelFormat, sizeof(pfd), &pfd);
-    SetPixelFormat(mDC, iPixelFormat, &pfd);
+    if (context.hrc == nullptr) {
+        struct FakeWindow {
+            HWND mHwnd;
+            HDC mDC;
 
-    if (context.hrc == nullptr)
-    {
+            explicit FakeWindow(HWND hwnd) : mHwnd(hwnd) {
+                mDC = GetDC(mHwnd);
+            }
+
+            ~FakeWindow() {
+                ReleaseDC(mHwnd, mDC);
+                DestroyWindow(mHwnd);
+            }
+        } fakeWindow(CreateWindowEx(WS_EX_DLGMODALFRAME, mWindowClass.c_str(), name.c_str(), style,
+                                    GetSystemMetrics(SM_CXSCREEN) / 2 - width / 2,
+                                    GetSystemMetrics(SM_CYSCREEN) / 2 - height / 2, width, height,
+                                    parent != nullptr ? parent->mHandle : nullptr, nullptr, mInst, nullptr));
+
+        PIXELFORMATDESCRIPTOR pfd;
+        memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+        pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+        pfd.nVersion = 1;
+        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_SUPPORT_COMPOSITION;
+        pfd.iPixelType = PFD_TYPE_RGBA;
+        pfd.cColorBits = 8;
+        pfd.cStencilBits = 8;
+        size_t iPixelFormat = ChoosePixelFormat(fakeWindow.mDC, &pfd);
+        DescribePixelFormat(fakeWindow.mDC, iPixelFormat, sizeof(pfd), &pfd);
+        SetPixelFormat(fakeWindow.mDC, iPixelFormat, &pfd);
+
         // инициализация контекста
-        context.hrc = wglCreateContext(mDC);
-        wglMakeCurrent(mDC, context.hrc);
+        context.hrc = wglCreateContext(fakeWindow.mDC);
+        wglMakeCurrent(fakeWindow.mDC, context.hrc);
 
 
-        if (!glewExperimental)
-        {
+        if (!glewExperimental) {
             glewExperimental = true;
-            if (glewInit() != GLEW_OK)
-            {
+            if (glewInit() != GLEW_OK) {
                 throw std::runtime_error("glewInit failed");
             }
         }
 
         const int iPixelFormatAttribList[] =
-        {
-            WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-            WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-            WGL_DOUBLE_BUFFER_ARB, GL_FALSE,
-            WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
-            WGL_COLOR_BITS_ARB, 24,
-            WGL_ALPHA_BITS_ARB, 8,
-            WGL_DEPTH_BITS_ARB, 24,
-            WGL_STENCIL_BITS_ARB, 8,
-            0
-        };
+                {
+                        WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+                        WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+                        WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+                        WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+                        WGL_COLOR_BITS_ARB, 24,
+                        WGL_ALPHA_BITS_ARB, 8,
+                        WGL_DEPTH_BITS_ARB, 24,
+                        WGL_STENCIL_BITS_ARB, 8,
+                        WGL_SAMPLE_BUFFERS_ARB, GL_TRUE,
+                        WGL_SAMPLES_ARB, 16,
+                        0
+                };
+
         int pxf;
         UINT iNumFormats;
         wglChoosePixelFormatARB(mDC, iPixelFormatAttribList, nullptr, 1, &pxf, &iNumFormats);
-        SetPixelFormat(mDC, iPixelFormat, &pfd);
+        assert(iNumFormats);
+        DescribePixelFormat(mDC, pxf, sizeof(pfd), &pfd);
+        bool k = SetPixelFormat(mDC, pxf, &pfd);
+        assert(k);
         GLint attribs[] =
-        {
-            WGL_CONTEXT_MAJOR_VERSION_ARB, 2,
-            WGL_CONTEXT_MINOR_VERSION_ARB, 0,
-            WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-            0
-        };
+                {
+                        WGL_CONTEXT_MAJOR_VERSION_ARB, 2,
+                        WGL_CONTEXT_MINOR_VERSION_ARB, 0,
+                        WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+                        0
+                };
         {
             HGLRC CompHRC = wglCreateContextAttribsARB(mDC, nullptr, attribs);
-            if (CompHRC && wglMakeCurrent(mDC, CompHRC))
-            {
+            if (CompHRC && wglMakeCurrent(mDC, CompHRC)) {
                 wglDeleteContext(context.hrc);
                 context.hrc = CompHRC;
-            }
-            else
+            } else
                 throw std::runtime_error("Failed to create OpenGL 2.0 context");
         }
 
@@ -390,6 +389,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
     }
 
     wglMakeCurrent(mDC, context.hrc);
+
 #else
     struct DisplayInstance {
 
@@ -500,7 +500,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
 #ifdef _WIN32
     RECT clientRect;
     GetClientRect(mHandle, &clientRect);
-    mSize = { clientRect.right - clientRect.left, clientRect.bottom - clientRect.top };
+    mSize = {clientRect.right - clientRect.left, clientRect.bottom - clientRect.top};
 #endif
 }
 
@@ -550,6 +550,7 @@ void AWindow::redraw() {
         Render::instance().setWindow(this);
         glViewport(0, 0, getWidth(), getHeight());
 
+        glEnable(GL_MULTISAMPLE);
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
         glEnable(GL_BLEND);
@@ -580,10 +581,8 @@ void AWindow::loop() {
 
 #ifdef _WIN32
     MSG msg;
-    for (mLoopRunning = true; mLoopRunning;)
-    {
-        if (GetMessage(&msg, nullptr, 0, 0) == 0)
-        {
+    for (mLoopRunning = true; mLoopRunning;) {
+        if (GetMessage(&msg, nullptr, 0, 0) == 0) {
             break;
         }
         AThread::current()->processMessages();
@@ -626,8 +625,7 @@ void AWindow::loop() {
 void AWindow::quit() {
 #ifdef _WIN32
     // родительское окно должно быть активировано до закрытия дочернего.
-    if (mParentWindow)
-    {
+    if (mParentWindow) {
         EnableWindow(mParentWindow->mHandle, true);
     }
     ShowWindow(mHandle, SW_HIDE);
@@ -643,33 +641,27 @@ void AWindow::quit() {
 
 void AWindow::setWindowStyle(WindowStyle ws) {
 #ifdef _WIN32
-    if (ws & WS_NO_RESIZE)
-    {
+    if (ws & WS_NO_RESIZE) {
         SetWindowLongPtr(mHandle, GWL_STYLE,
-            GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME | WS_THICKFRAME |
-            WS_SYSMENU | WS_CAPTION);
-    }
-    else
-    {
+                         GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME | WS_THICKFRAME |
+                         WS_SYSMENU | WS_CAPTION);
+    } else {
         SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) & ~WS_DLGFRAME | WS_OVERLAPPEDWINDOW);
     }
-    if (ws & WS_SIMPLIFIED_WINDOW)
-    {
+    if (ws & WS_SIMPLIFIED_WINDOW) {
         SetWindowLongPtr(mHandle, GWL_STYLE,
-            GetWindowLong(mHandle, GWL_STYLE) & ~WS_THICKFRAME |
-            WS_SYSMENU | WS_CAPTION);
-    }
-    else
-    {
+                         GetWindowLong(mHandle, GWL_STYLE) & ~WS_THICKFRAME |
+                         WS_SYSMENU | WS_CAPTION);
+    } else {
         SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) | WS_THICKFRAME);
     }
 
-    if (ws & WS_NO_DECORATORS)
-    {
+    if (ws & WS_NO_DECORATORS) {
         LONG lExStyle = GetWindowLong(mHandle, GWL_EXSTYLE);
         lExStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
         SetWindowLong(mHandle, GWL_EXSTYLE, lExStyle);
-        SetWindowPos(mHandle, NULL, 0, 0, 0, 0, SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+        SetWindowPos(mHandle, NULL, 0, 0, 0, 0,
+                     SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
     }
 #else
     // TODO
@@ -701,7 +693,7 @@ glm::ivec2 AWindow::getPos() const {
 #ifdef _WIN32
     RECT r;
     GetWindowRect(mHandle, &r);
-    return { r.left, r.top };
+    return {r.left, r.top};
 #else
     int x, y;
     Window child;
