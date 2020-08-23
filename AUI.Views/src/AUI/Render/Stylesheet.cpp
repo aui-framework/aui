@@ -251,6 +251,7 @@ Stylesheet::Stylesheet()
 #else
     setVariable("OS_THEME_COLOR", "#3e3e3e");
 #endif
+    load(AUrl(":win/style.css").open());
 }
 
 void Stylesheet::load(const AString& css) noexcept
@@ -260,6 +261,7 @@ void Stylesheet::load(const AString& css) noexcept
 
 void Stylesheet::load(const _<IInputStream>& css) noexcept
 {
+    assert(css);
 	Tokenizer p(css);
 	AMap<AString, Entry::Property::Type> items = {
 		{"background", Entry::Property::T_BACKGROUND},
@@ -275,6 +277,7 @@ void Stylesheet::load(const _<IInputStream>& css) noexcept
 		{"font-size", Entry::Property::T_FONT_SIZE},
 		
 		{"border", Entry::Property::T_BORDER},
+		{"border-radius", Entry::Property::T_BORDER_RADIUS},
 		{"margin", Entry::Property::T_MARGIN},
 		{"padding", Entry::Property::T_PADDING},
 

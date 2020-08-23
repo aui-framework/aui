@@ -39,6 +39,7 @@ public:
 				T_FONT_SIZE,
 
 				// Fields
+				T_BORDER_RADIUS,
 				T_BORDER,
 				T_MARGIN,
 				T_PADDING,

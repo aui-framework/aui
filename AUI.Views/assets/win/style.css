@@ -35,6 +35,7 @@ AButton {
     text-align: center;
     transition: 0.25s;
     margin: 2dp 4dp;
+    border-radius: 4px;
 }
 
 AButton[default] {
@@ -79,15 +80,15 @@ AButton[disabled] {
 }
 .window-title .minimize {
     background-color: none;
-    background: url(':assets/win/caption/minimize.svg');
+    background: url(':win/caption/minimize.svg');
 }
 .window-title .middle {
     background-color: none;
-    background: url(':assets/win/caption/maximize.svg');
+    background: url(':win/caption/maximize.svg');
 }
 .window-title .close {
     background-color: none;
-    background: url(':assets/win/caption/close.svg');
+    background: url(':win/caption/close.svg');
 }
 
 .window-title AButton:hover {

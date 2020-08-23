@@ -44,71 +44,85 @@ void AView::redraw()
 
 void AView::drawStencilMask()
 {
-	Render::instance().setFill(Render::FILL_SOLID);
-	Render::instance().drawRect(mPadding.left, mPadding.top,
-		getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical());
+    if (mBorderRadius > 0) {
+        Render::instance().drawRoundedRect(mPadding.left, mPadding.top, getWidth() - mPadding.horizontal(),
+                                           getHeight() - mPadding.vertical(), mBorderRadius);
+    } else {
+        Render::instance().setFill(Render::FILL_SOLID);
+        Render::instance().drawRect(mPadding.left, mPadding.top,getWidth() - mPadding.horizontal(),
+                                    getHeight() - mPadding.vertical());
+    }
 }
 
-extern unsigned char stencilDepth;
 void AView::render()
 {
+    if (mAnimator)
+        mAnimator->animate();
 	{
 		ensureCSSUpdated();
 
-		for (auto& e : mBackgroundEffects)
-		{
-			e->draw([&]()
-			{
-				Render::instance().drawRect(0, 0, getWidth(), getHeight());
-			});
-		}
+		auto doDraw = [&]() {
+            for (auto& e : mBackgroundEffects)
+            {
+                e->draw([&]()
+                        {
+                            Render::instance().drawRect(0, 0, getWidth(), getHeight());
+                        });
+            }
 
-		// список отрисовки.
-		if (mHasTransitions) {
-			mTransitionValue = glm::clamp(mTransitionValue, 0.f, 1.f);
-			for (auto& item : mCssDrawListBack)
-				item();
+            // список отрисовки.
+            if (mHasTransitions) {
+                mTransitionValue = glm::clamp(mTransitionValue, 0.f, 1.f);
+                for (auto& item : mCssDrawListBack)
+                    item();
 
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			RenderHints::PushColor c;
-			Render::instance().setColor({ 1, 1, 1, mTransitionValue });
-			for (auto& item : mCssDrawListFront)
-				item();
+                glEnable(GL_BLEND);
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+                RenderHints::PushColor c;
+                Render::instance().setColor({ 1, 1, 1, mTransitionValue });
+                for (auto& item : mCssDrawListFront)
+                    item();
 
-			auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
-				std::chrono::high_resolution_clock::now().time_since_epoch());
-			mTransitionValue += (now - mLastFrameTime).count() / (1000.f * mTransitionDuration);
-			if (mTransitionValue >= 1.f) {
-				mHasTransitions = false;
-			}
-			else {
-				AWindow::current()->flagRedraw();
-				mLastFrameTime = now;
-			}
-		}
-		else
-		{
-			for (auto& item : mCssDrawListFront)
-				item();
+                auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        std::chrono::high_resolution_clock::now().time_since_epoch());
+                mTransitionValue += (now - mLastFrameTime).count() / (1000.f * mTransitionDuration);
+                if (mTransitionValue >= 1.f) {
+                    mHasTransitions = false;
+                }
+                else {
+                    AWindow::current()->flagRedraw();
+                    mLastFrameTime = now;
+                }
+            }
+            else
+            {
+                for (auto& item : mCssDrawListFront)
+                    item();
+            }
+		};
+
+		/*
+		 * если у нашего AView есть border-radius, но при этом не требуется клиппинг, то нам нужно включить этот
+		 * клиппинг на время отрисовки фона. в противном случае drawStencilMask и так учтёт наше скругление
+		 */
+		if (mBorderRadius > 0 && mOverflow != OF_HIDDEN) {
+		    //RenderHints::PushAntialiasing antialiasing;
+		    RenderHints::PushMask mask([&]() {
+                Render::instance().drawRoundedRect(0, 0, getWidth(),
+                                                   getHeight(), mBorderRadius);
+		    });
+		    doDraw();
+		} else {
+		    doDraw();
 		}
 	}
-    if (mAnimator)
-        mAnimator->animate();
 
 	// stencil
 	if (mOverflow == OF_HIDDEN)
 	{
-		glStencilFunc(GL_ALWAYS, 0, 0xff);
-		glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
-		glStencilMask(0xff);
-		glColorMask(false, false, false, false);
-
-		drawStencilMask();
-
-		glColorMask(true, true, true, true);
-		glStencilMask(0x00);
-		glStencilFunc(GL_EQUAL, ++stencilDepth, 0xff);
+		RenderHints::PushMask::pushMask([&]() {
+		    drawStencilMask();
+		});
 	}
 }
 
@@ -182,6 +196,7 @@ void AView::recompileCSS()
 	mOverflow = OF_VISIBLE;
 	mMargin = {};
 	mMinSize = {};
+    mBorderRadius = 0.f;
 	mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
 	mFixedSize = {};
 	mFontStyle = {AFontManager::instance().getDefault(), 12, false, ALIGN_LEFT, AColor(0, 0, 0, 1.f) };
@@ -337,7 +352,8 @@ void AView::recompileCSS()
 		AColor color = p->getArgs()[0];
 		mCssDrawListFront << [&, color]() {
 			RenderHints::PushColor x;
-			Render::instance().setFill(Render::FILL_ROUNDED_SOLID);
+
+			Render::instance().setFill(Render::FILL_SOLID);
 			Render::instance().setColor(color);
 			Render::instance().drawRect(0, 0, getWidth(), getHeight());
 		};
@@ -348,7 +364,7 @@ void AView::recompileCSS()
 			mBackgroundEffects << Autumn::get<Factory<IShadingEffect>>(a)->createObject();
 		}
 	});
-	/*
+
 	processStylesheet(css::T_BACKGROUND, [&](property p)
 	{
 		auto& last = p->getArgs().back();
@@ -479,7 +495,14 @@ void AView::recompileCSS()
 			};
 			break;
 		}
-	});*/
+	});
+
+    processStylesheet(css::T_BORDER_RADIUS, [&](property p)
+    {
+        if (p->getArgs().size() == 1) {
+            mBorderRadius = AMetric(p->getArgs()[0]).getValuePx();
+        }
+    });
 }
 
 void AView::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)

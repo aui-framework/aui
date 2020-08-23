@@ -22,8 +22,7 @@ public:
         FILL_ROUNDED_SOLID,
 
 		/**
-		 * \brief �� �� �����, ��� � FILL_SOLID, ������ �������������
-		 *		  ������������� �� ����������
+		 * \brief как FILL_SOLID, только с трансформацией
 		 */
 		FILL_SOLID_TRANSFORM,
 		FILL_TEXTURED,
@@ -58,6 +57,7 @@ private:
 	GL::Shader mSymbolShaderSubPixel;
 	GL::Vao mTempVao;
 	glm::mat4 mTransform;
+    Filling mCurrentFill;
 	
 	glm::mat4 getProjectionMatrix() const;
 	AVector<glm::vec3> getVerticesForRect(float x, float y, float width, float height);
@@ -67,6 +67,7 @@ public:
 	Render();
 
 	void drawRect(float x, float y, float width, float height);
+	void drawRoundedRect(float x, float y, float width, float height, float radius);
 	void drawLines(const AVector<glm::vec3>& lines);
 	void drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s);
 	void drawRectBorder(float x, float y, float width, float height, float lineWidth = 1.f);
@@ -89,18 +90,11 @@ public:
 	void drawString(int x, int y, PrerendereredString& f);
 	PrerendereredString preRendererString(const AString& text, FontStyle& fs);
 
-
-	/**
-	 * \brief �������� ��������� ���� ��� ����� ������������� �����.
-	 */
 	void setColorForced(const AColor& color)
 	{
 		mColor = color;
 	}
 
-	/**
-	 * \brief ��������� ����. ������������ ������ � RenderHints::PushColor
-	 */
 	void setColor(const AColor& color)
 	{
 		setColorForced(mColor * color);
@@ -111,17 +105,11 @@ public:
 		return mColor;
 	}
 
-
-	/**
-	 * \brief ��������� �������������. ������������ ������ � RenderHints::PushMatrix
-	 */
 	void setTransform(const glm::mat4& transform)
 	{
 		mTransform *= transform;
 	}
-	/**
-	 * \brief �������� ��������� ���� ��� ����� ������������ �������������.
-	 */
+
 	void setTransformForced(const glm::mat4& transform)
 	{
 		mTransform = transform;
@@ -132,6 +120,6 @@ public:
 		return mTransform;
 	}
 
-	void uploadToShader();	
+	void uploadToShader();
 };
 

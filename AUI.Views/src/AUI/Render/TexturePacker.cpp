@@ -49,8 +49,10 @@ bool TexturePacker_Lol::noCollision(const Rect& r) {
 }
 
 bool TexturePacker_Lol::check(Rect& res, Rect r) {
+    res = r;
+    r.width += 1;
+    r.height += 1;
 	if (noCollision(r)) {
-		res = r;
 		mRects.push_back(res);
 		return true;
 	}
@@ -60,9 +62,10 @@ bool TexturePacker_Lol::check(Rect& res, Rect r) {
 bool TexturePacker_Lol::allocateRect(Rect& t, dim width, dim height) {
 	// Выделение
 	if (mRects.empty()) {
-		t = Rect(0, 0, width, height); // Тупо в (0, 0) влепить
-		mRects.push_back(t);
-		return true;
+        Rect r(0, 0, width + 1, height + 1); // Тупо в (0, 0) влепить
+        mRects.push_back(r);
+        t = Rect(0, 0, width, height);
+        return true;
 	}
 
 	for (Rect& r : mRects) {

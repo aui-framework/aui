@@ -69,7 +69,6 @@ public:
 			
 			mDrawable->mDrawList << [vao, color]()
 			{
-				RenderHints::PushAntialiasing s;
 				RenderHints::PushColor c;
 				Render::instance().setColor(color);
 				Render::instance().uploadToShader();
@@ -271,7 +270,6 @@ public:
 
 				mDrawable->mDrawList << [vao, color]()
 				{
-					RenderHints::PushAntialiasing s;
 					RenderHints::PushColor c;
 					Render::instance().setColor(color);
 					Render::instance().uploadToShader();

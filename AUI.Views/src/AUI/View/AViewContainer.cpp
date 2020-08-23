@@ -24,16 +24,16 @@ void AViewContainer::drawView(const _<AView>& view)
 
 		if (view->getOverflow() == OF_HIDDEN)
 		{
-			glStencilFunc(GL_ALWAYS, 0, 0xff);
-			glStencilOp(GL_KEEP, GL_DECR, GL_DECR);
-			glStencilMask(0xff);
-			glColorMask(false, false, false, false);
-
-			drawStencilMask();
-
-			glColorMask(true, true, true, true);
-			glStencilMask(0x00);
-			glStencilFunc(GL_EQUAL, --stencilDepth, 0xff);
+		    /*
+		     * Если у AView есть ограничение по Overflow, то он запушил свою маску в буфер трафарета, но он не может
+		     * вернуть буфер трафарета к прежнему состоянию из-за ограничений C++, поэтому заносить маску нужно
+		     * после обновлений преобразований (позиция, поворот), но перед непосредственным рендером содержимого AView
+		     * (то есть, в <code>AView::render</code>), а возвращать трафарет к предыдущему состоянию можно только
+		     * здесь, после того, как AView будет полностью отрендерен.
+		     */
+		    RenderHints::PushMask::popMask([&]() {
+		       view->drawStencilMask();
+		    });
 		}
 	}
 }

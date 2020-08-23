@@ -1,5 +1,6 @@
 #ifdef _WIN32
 #include <Windows.h>
+#include <AUI/Url/AUrl.h>
 
 
 BOOL WINAPI DllMain(
@@ -37,8 +38,6 @@ BOOL WINAPI DllMain(
 #include "AUI/Util/BuiltinFiles.h"
 #include "Render/Stylesheet.h"
 
-#include "assets_views.h"
-
 struct initialize
 {
     initialize() {
@@ -47,11 +46,5 @@ struct initialize
 #endif
 
         aui::importPlugin("Svg");
-
-        BuiltinFiles f;
-        ByteBuffer b(AUI_PACKED_assets_view, sizeof(AUI_PACKED_assets_view));
-        f.loadBuffer(b);
-
-        Stylesheet::instance().load(f.open("assets/win/style.css"));
     }
 } init;

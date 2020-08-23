@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.14)
 
 AUI_Module(AUI.Views)
 
+AUI_Compile_Assets(AUI.Views)
+
 if(MSVC)
 	set(GLEW_USE_STATIC_LIBS true)
 endif()

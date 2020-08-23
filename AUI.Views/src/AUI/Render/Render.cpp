@@ -18,17 +18,14 @@ Render::Render()
 		"attribute vec3 pos;"
         "attribute vec2 uv;"
 		"varying vec2 pass_uv;"
-		"void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv;}",
-		"uniform vec4 color;"
+		"void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv * 2.f - vec2(1, 1);}",
+        "uniform vec2 size;"
         "varying vec2 pass_uv;"
 		"void main(void) {"
-            "vec4 tmp_color = color;"
-            "vec2 tmp = pass_uv * 2.f - vec2(1, 1);"
-            "if ((pow(abs(tmp.x), 5.f) + pow(abs(tmp.y), 5.f)) > 1)"
-                "discard;"
-            "if ((pow(abs(tmp.x), 5.f) + pow(abs(tmp.y), 5.f)) > 0.8f)"
-                "tmp_color = vec4(1, 0, 0, 1);"
-            "gl_FragColor = tmp_color;"
+            "vec2 tmp = abs(pass_uv);"
+            "if ((tmp.x - 1) * (size.y) / (-size.x) < tmp.y - (1 - size.y) &&"
+                "(pow(tmp.x - (1.f - size.x), 2.f) / pow(size.x, 2.f) +"
+                 "pow(tmp.y - (1.f - size.y), 2.f) / pow(size.y, 2.f)) > 1.f) discard;"
         "}");
 
 	mSolidTransformShader.load(
@@ -122,6 +119,14 @@ void Render::drawRect(float x, float y, float width, float height)
 	mTempVao.draw();
 }
 
+void Render::drawRoundedRect(float x, float y, float width, float height, float radius) {
+    auto prevFill = mCurrentFill;
+    setFill(FILL_ROUNDED_SOLID);
+    mRoundedSolidShader.set("size", 2.f * radius / glm::vec2{width, height});
+    drawRect(x, y, width, height);
+    setFill(prevFill);
+}
+
 void Render::drawLines(const AVector<glm::vec3>& lines)
 {
 
@@ -199,19 +204,15 @@ void Render::drawRectBorder(float x, float y, float width, float height, float l
 
 	mTempVao.insert(0,
 		AVector<glm::vec3>{
-			// �������
 			glm::vec3(mTransform * glm::vec4{ x + lineWidth, y + lineDelta, 1, 1 }),
 			glm::vec3(mTransform * glm::vec4{ w,             y + lineDelta, 1, 1 }),
 
-			// ������
 			glm::vec3(mTransform * glm::vec4{ w - lineDelta, y + lineWidth, 1, 1 }),
 			glm::vec3(mTransform * glm::vec4{ w - lineDelta, h            , 1, 1 }),
 
-			// ������
 			glm::vec3(mTransform * glm::vec4{ w - lineWidth, h - lineDelta - 0.15f, 1, 1 }),
 			glm::vec3(mTransform * glm::vec4{ x            , h - lineDelta - 0.15f, 1, 1 }),
 
-			// �����
 			glm::vec3(mTransform * glm::vec4{ x + lineDelta, h - lineWidth - 0.15f, 1, 1 }),
 			glm::vec3(mTransform * glm::vec4{ x + lineDelta, y            , 1, 1 }),
 		});
@@ -223,6 +224,7 @@ void Render::drawRectBorder(float x, float y, float width, float height, float l
 
 void Render::setFill(Filling t)
 {
+    mCurrentFill = t;
 	switch (t)
 	{
 	case FILL_SOLID:
@@ -351,7 +353,7 @@ Render::PrerendereredString Render::preRendererString(const AString& text, FontS
 				indices.push_back(in + 1);
 				indices.push_back(in + 3);
 
-				float posX = advance + ch->bearingX;
+				int posX = advance + ch->bearingX;
 
 				pos.push_back(glm::vec3(posX, int(ch->advanceY) + int(ch->height) + advanceY, 0));
 				pos.push_back(glm::vec3(posX + ch->width, int(ch->advanceY) + int(ch->height) + advanceY, 0));
@@ -374,7 +376,7 @@ Render::PrerendereredString Render::preRendererString(const AString& text, FontS
 			}
 
 			advance += ch->advanceX;
-			advance = glm::floor(advance);
+			//advance = glm::ceil(advance);
 		}
 	}
 	auto vao = _new<GL::Vao>();
@@ -395,3 +397,4 @@ void Render::uploadToShader()
 	GL::Shader::currentShader()->set("color", mColor);
 	GL::Shader::currentShader()->set("transform", mTransform);
 }
+

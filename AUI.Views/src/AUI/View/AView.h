@@ -129,6 +129,11 @@ private:
 	bool mHasTransitions = false;
 
 	/**
+	 * \brief border-radius, заданный в CSS
+	 */
+    float mBorderRadius = 0;
+
+	/**
 	 * \brief Стиль шрифта для этого AView.
 	 */
 	FontStyle mFontStyle;

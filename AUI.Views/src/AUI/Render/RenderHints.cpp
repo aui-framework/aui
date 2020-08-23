@@ -1,40 +1,34 @@
 ﻿#include "RenderHints.h"
 #include "AUI/GL/gl.h"
-#include "Render.h"
 
-RenderHints::PushAntialiasing::PushAntialiasing()
-{
-    /*
-	glEnable(GL_LINE_SMOOTH);
-	glEnable(GL_POLYGON_SMOOTH);
-	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-	glHint(GL_POLYGON_SMOOTH_HINT, GL_NICEST);*/
+
+extern unsigned char stencilDepth;
+
+void RenderHints::PushMask::pushMask(const std::function<void()>& maskRenderer) {
+
+    glStencilFunc(GL_ALWAYS, 0, 0xff);
+    glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
+    glStencilMask(0xff);
+    glColorMask(false, false, false, false);
+
+    maskRenderer();
+
+    glColorMask(true, true, true, true);
+    glStencilMask(0x00);
+    glStencilFunc(GL_EQUAL, ++stencilDepth, 0xff);
+
 }
 
-RenderHints::PushAntialiasing::~PushAntialiasing()
-{
-    /*
-	glDisable(GL_LINE_SMOOTH);
-	glDisable(GL_POLYGON_SMOOTH);
-     */
-}
+void RenderHints::PushMask::popMask(const std::function<void()>& maskRenderer) {
 
-RenderHints::PushMatrix::PushMatrix()
-{
-	mStored = Render::instance().getTransform();
-}
+    glStencilFunc(GL_ALWAYS, 0, 0xff);
+    glStencilOp(GL_KEEP, GL_DECR, GL_DECR);
+    glStencilMask(0xff);
+    glColorMask(false, false, false, false);
 
-RenderHints::PushMatrix::~PushMatrix()
-{
-	Render::instance().setTransformForced(mStored);
-}
+    maskRenderer();
 
-RenderHints::PushColor::PushColor()
-{
-	mStored = Render::instance().getColor();
-}
-
-RenderHints::PushColor::~PushColor()
-{
-	Render::instance().setColorForced(mStored);
+    glColorMask(true, true, true, true);
+    glStencilMask(0x00);
+    glStencilFunc(GL_EQUAL, --stencilDepth, 0xff);
 }
