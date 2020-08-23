@@ -127,11 +127,6 @@ void Render::drawRoundedRect(float x, float y, float width, float height, float 
     setFill(prevFill);
 }
 
-void Render::drawLines(const AVector<glm::vec3>& lines)
-{
-
-}
-
 void Render::drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s)
 {
 	uploadToShader();

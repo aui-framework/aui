@@ -32,3 +32,12 @@ void RenderHints::PushMask::popMask(const std::function<void()>& maskRenderer) {
     glStencilMask(0x00);
     glStencilFunc(GL_EQUAL, --stencilDepth, 0xff);
 }
+
+RenderHints::PushMask::Layer::Layer(RenderHints::PushMask::Layer::Direction direction): mPrevLayerValue(stencilDepth) {
+    stencilDepth += direction;
+    glStencilFunc(GL_EQUAL, stencilDepth, 0xff);
+}
+
+RenderHints::PushMask::Layer::~Layer() {
+    glStencilFunc(GL_EQUAL, stencilDepth = mPrevLayerValue, 0xff);
+}

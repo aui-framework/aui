@@ -23,6 +23,20 @@ namespace RenderHints
             popMask(mMaskRenderer);
         }
 
+        class Layer {
+        private:
+            uint8_t mPrevLayerValue;
+
+        public:
+            enum Direction {
+                INCREASE = 1,
+                DECREASE = -1,
+            };
+            explicit Layer(Direction direction);
+            ~Layer();
+
+        };
+
         /**
          * \brief Увеличить стек маски без объекта. Используется для AView.
          * \note Не используйте эту функцию без крайней необходимости. Быстрее, проще, удобнее и безопаснее использовать

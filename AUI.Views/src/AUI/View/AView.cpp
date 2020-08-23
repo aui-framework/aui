@@ -101,12 +101,7 @@ void AView::render()
             }
 		};
 
-		/*
-		 * если у нашего AView есть border-radius, но при этом не требуется клиппинг, то нам нужно включить этот
-		 * клиппинг на время отрисовки фона. в противном случае drawStencilMask и так учтёт наше скругление
-		 */
-		if (mBorderRadius > 0 && mOverflow != OF_HIDDEN) {
-		    //RenderHints::PushAntialiasing antialiasing;
+		if (mForceStencilForBackground && mOverflow != OF_HIDDEN) {
 		    RenderHints::PushMask mask([&]() {
                 Render::instance().drawRoundedRect(0, 0, getWidth(),
                                                    getHeight(), mBorderRadius);
@@ -197,6 +192,7 @@ void AView::recompileCSS()
 	mMargin = {};
 	mMinSize = {};
     mBorderRadius = 0.f;
+    mForceStencilForBackground = false;
 	mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
 	mFixedSize = {};
 	mFontStyle = {AFontManager::instance().getDefault(), 12, false, ALIGN_LEFT, AColor(0, 0, 0, 1.f) };
@@ -461,15 +457,24 @@ void AView::recompileCSS()
 			c = AColor(p->getArgs()[1]);
 			break;
 		}
-
 		switch (style)
 		{
 		case B_SOLID:
 			mCssDrawListFront << [&, c, width]() {
 				RenderHints::PushColor x;
+				RenderHints::PushMask mask([&]() {
+				    if (mBorderRadius > 0) {
+				        Render::instance().drawRoundedRect(width, width, getWidth() - width * 2,
+                                        getHeight() - width * 2, glm::max(mBorderRadius - width, 0.f));
+				    } else {
+                        Render::instance().drawRect(width, width, getWidth() - width * 2,
+                                                    getHeight() - width * 2);
+				    }
+				});
+				RenderHints::PushMask::Layer maskLayer(RenderHints::PushMask::Layer::DECREASE);
 				Render::instance().setFill(Render::FILL_SOLID);
-				Render::instance().setColor(c);
-				Render::instance().drawRectBorder(0, 0, getWidth(), getHeight(), width);
+                Render::instance().setColor(c);
+				Render::instance().drawRect(0, 0, getWidth(), getHeight());
 			};
 			break;
 		case B_INSET:
@@ -495,11 +500,13 @@ void AView::recompileCSS()
 			};
 			break;
 		}
+		mForceStencilForBackground = true;
 	});
 
     processStylesheet(css::T_BORDER_RADIUS, [&](property p)
     {
         if (p->getArgs().size() == 1) {
+            mForceStencilForBackground = true;
             mBorderRadius = AMetric(p->getArgs()[0]).getValuePx();
         }
     });

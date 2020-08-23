@@ -68,7 +68,6 @@ public:
 
 	void drawRect(float x, float y, float width, float height);
 	void drawRoundedRect(float x, float y, float width, float height, float radius);
-	void drawLines(const AVector<glm::vec3>& lines);
 	void drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s);
 	void drawRectBorder(float x, float y, float width, float height, float lineWidth = 1.f);
 	
