@@ -273,6 +273,7 @@ void Stylesheet::load(const _<IInputStream>& css) noexcept
 		{"transition", Entry::Property::T_TRANSITION},
 		{"cursor", Entry::Property::T_CURSOR},
 		{"overflow", Entry::Property::T_OVERFLOW},
+		{"box-shadow", Entry::Property::T_BOX_SHADOW},
 
 		{"font-size", Entry::Property::T_FONT_SIZE},
 		

@@ -36,6 +36,7 @@ AButton {
     transition: 0.25s;
     margin: 2dp 4dp;
     border-radius: 4px;
+    box-shadow: 0 0 10px #000;
 }
 
 AButton[default] {

@@ -34,6 +34,7 @@ public:
 				T_TRANSITION,
 				T_CURSOR,
 				T_OVERFLOW,
+				T_BOX_SHADOW,
 
 				// Fonts
 				T_FONT_SIZE,

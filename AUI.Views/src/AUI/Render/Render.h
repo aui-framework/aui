@@ -19,7 +19,6 @@ public:
 	enum Filling
 	{
 		FILL_SOLID,
-        FILL_ROUNDED_SOLID,
 
 		/**
 		 * \brief как FILL_SOLID, только с трансформацией
@@ -52,6 +51,7 @@ private:
 	GL::Shader mSolidShader;
 	GL::Shader mRoundedSolidShader;
 	GL::Shader mSolidTransformShader;
+	GL::Shader mBoxShadowShader;
 	GL::Shader mTexturedShader;
 	GL::Shader mSymbolShader;
 	GL::Shader mSymbolShaderSubPixel;
@@ -85,6 +85,7 @@ public:
 		FontStyle fs;
 		drawString(x, y, text, fs);
 	}
+	void drawBoxShadow(float x, float y, float width, float height, float radius, float blur, const glm::vec4& color);
 	void drawString(int x, int y, const AString& text, FontStyle& fs);
 	void drawString(int x, int y, PrerendereredString& f);
 	PrerendereredString preRendererString(const AString& text, FontStyle& fs);

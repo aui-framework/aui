@@ -10,7 +10,12 @@ Render::Render()
 {
 	mSolidShader.load(
 		"attribute vec3 pos;"
-		"void main(void) {gl_Position = vec4(pos, 1);}", 
+		"void main(void) {gl_Position = vec4(pos, 1);}",
+		"uniform vec4 color;"
+		"void main(void) {gl_FragColor = color;}");
+    mBoxShadowShader.load(
+		"attribute vec3 pos;"
+		"void main(void) {gl_Position = vec4(pos, 1);}",
 		"uniform vec4 color;"
 		"void main(void) {gl_FragColor = color;}");
 
@@ -34,17 +39,17 @@ Render::Render()
 		"void main(void) {gl_Position = transform * vec4(pos, 1);}",
 		"uniform vec4 color;"
 		"void main(void) {gl_FragColor = color;}");
-	
+
 	mTexturedShader.load(
 		"attribute vec3 pos;"
 		"attribute vec2 uv;"
 		"varying vec2 pass_uv;"
-		"void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv;}", 
+		"void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv;}",
 		"uniform sampler2D tex;"
 		"varying vec2 pass_uv;"
 		"void main(void) {gl_FragColor = texture2D(tex, pass_uv);}",
 		{"pos", "uv"});
-	
+
 	mSymbolShader.load(
 		"attribute vec3 pos;"
 		"attribute vec2 uv;"
@@ -53,13 +58,13 @@ Render::Render()
 		"uniform int pos_x;"
 		"uniform int pos_y;"
 
-		"void main(void) {gl_Position = mat * vec4(pos + vec3(pos_x, pos_y, 0), 1); pass_uv = uv;}", 
+		"void main(void) {gl_Position = mat * vec4(pos + vec3(pos_x, pos_y, 0), 1); pass_uv = uv;}",
 		"varying vec2 pass_uv;"
 		"uniform sampler2D tex;"
 		"uniform vec4 color;"
 		"void main(void) {float sample = pow(texture2D(tex, pass_uv).r, 1.f / 1.2f); gl_FragColor = vec4(color.rgb, color.a * sample);}",
 		{"pos", "uv"});
-	
+
 	mSymbolShaderSubPixel.load(
 		"attribute vec3 pos;"
 		"attribute vec2 uv;"
@@ -68,7 +73,7 @@ Render::Render()
 		"uniform int pos_x;"
 		"uniform int pos_y;"
 
-		"void main(void) {gl_Position = mat * vec4(pos + vec3(pos_x, pos_y, 0), 1); pass_uv = uv;}", 
+		"void main(void) {gl_Position = mat * vec4(pos + vec3(pos_x, pos_y, 0), 1); pass_uv = uv;}",
 		"varying vec2 pass_uv;"
 		"uniform sampler2D tex;"
 		"uniform vec4 color;"
@@ -98,7 +103,7 @@ AVector<glm::vec3> Render::getVerticesForRect(float x, float y, float width, flo
 {
 	float w = x + width;
 	float h = y + height;
-	
+
 	return
 	{
 		glm::vec3(mTransform * glm::vec4{ x, h, 1, 1 }),
@@ -114,17 +119,16 @@ void Render::drawRect(float x, float y, float width, float height)
 	mTempVao.bind();
 
 	mTempVao.insert(0, getVerticesForRect(x, y, width, height));
-	
+
 	mTempVao.indices({ 0, 1, 2, 2, 1, 3 });
 	mTempVao.draw();
 }
 
 void Render::drawRoundedRect(float x, float y, float width, float height, float radius) {
-    auto prevFill = mCurrentFill;
-    setFill(FILL_ROUNDED_SOLID);
+    mRoundedSolidShader.use();
     mRoundedSolidShader.set("size", 2.f * radius / glm::vec2{width, height});
     drawRect(x, y, width, height);
-    setFill(prevFill);
+    setFill(mCurrentFill);
 }
 
 void Render::drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s)
@@ -174,7 +178,7 @@ void Render::drawRectBorderSide(float x, float y, float width, float height, flo
 		{
 			result << glm::vec3(getTransform() * glm::vec4(e.x, e.y, 0, 1));
 		}
-		
+
 		mTempVao.insert(0, result);
 		mTempVao.indices({ 0, 1, 2, 2, 1, 3 });
 		mTempVao.draw();
@@ -217,6 +221,13 @@ void Render::drawRectBorder(float x, float y, float width, float height, float l
 	mTempVao.draw(GL_LINES);
 }
 
+void Render::drawBoxShadow(float x, float y, float width, float height, float radius, float blur,
+                           const glm::vec4& color) {
+    mBoxShadowShader.use();
+    drawRect(x, y, width, height);
+    setFill(mCurrentFill);
+}
+
 void Render::setFill(Filling t)
 {
     mCurrentFill = t;
@@ -225,18 +236,19 @@ void Render::setFill(Filling t)
 	case FILL_SOLID:
 		mSolidShader.use();
 		break;
-	case FILL_ROUNDED_SOLID:
-		mRoundedSolidShader.use();
-		break;
+
 	case FILL_TEXTURED:
 		mTexturedShader.use();
 		break;
+
 	case FILL_SYMBOL:
 		mSymbolShader.use();
 		break;
+
 	case FILL_SYMBOL_SUBPIXEL:
 		mSymbolShaderSubPixel.use();
 		break;
+
 	case FILL_SOLID_TRANSFORM:
 		mSolidTransformShader.use();
 		break;
@@ -253,7 +265,7 @@ void Render::drawString(int x, int y, PrerendereredString& f) {
 	auto img = f.fs.font->texturePackerOf(f.fs.size, f.fs.fontRendering);
 	if (!img->getImage())
 		return;
-	
+
 	auto width = img->getImage()->getWidth();
 	if (width != f.side) {
 		f.side = width;
@@ -276,7 +288,7 @@ void Render::drawString(int x, int y, PrerendereredString& f) {
 		mSymbolShaderSubPixel.set("pos_x", x);
 		mSymbolShaderSubPixel.set("pos_y", y);
 		mSymbolShaderSubPixel.set("mat", mTransform);
-		
+
 		mSymbolShaderSubPixel.set("color", glm::vec4(1, 1, 1, finalColor.a));
 		glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
 		f.mVao->draw(GL_TRIANGLES);
@@ -392,4 +404,5 @@ void Render::uploadToShader()
 	GL::Shader::currentShader()->set("color", mColor);
 	GL::Shader::currentShader()->set("transform", mTransform);
 }
+
 
