@@ -88,11 +88,11 @@ AStringVector AString::split(wchar_t c) const noexcept
     return result;
 }
 
-AString AString::trimLeft() const noexcept
+AString AString::trimLeft(wchar_t symbol) const noexcept
 {
     for (auto i = begin(); i != end(); ++i)
     {
-        if (*i != ' ')
+        if (*i != symbol)
         {
             return { i, end() };
         }
@@ -100,11 +100,11 @@ AString AString::trimLeft() const noexcept
     return {};
 }
 
-AString AString::trimRight() const noexcept
+AString AString::trimRight(wchar_t symbol) const noexcept
 {
     for (auto i = rbegin(); i != rend(); ++i)
     {
-        if (*i != ' ')
+        if (*i != symbol)
         {
             return { begin(),i.base() };
         }

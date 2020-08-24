@@ -15,6 +15,18 @@ class AString;
 class API_AUI_VIEWS Stylesheet: public Singleton<Stylesheet>
 {
 public:
+    enum PreferredStyle {
+        /**
+         * \brief В этом режиме приложение старается выглядеть максимально нативно, насколько это возможно.
+         */
+        PREFER_NATIVE_LOOK,
+
+        /**
+         * \brief В этом режиме приложение старается выглядеть максимально одинаково на разных платформах.
+         */
+        PREFER_UNIVERSAL_LOOK,
+    };
+
 	class Entry
 	{
 		friend class Stylesheet;
@@ -35,8 +47,10 @@ public:
 				T_CURSOR,
 				T_OVERFLOW,
 				T_BOX_SHADOW,
+				T_VERTICAL_ALIGN,
 
 				// Fonts
+				T_FONT_FAMILY,
 				T_FONT_SIZE,
 
 				// Fields
@@ -123,10 +137,12 @@ public:
 private:
 	ADeque<_<Entry>> mEntries;
 	AMap<AString, AString> mVariables;
-
+	static PreferredStyle ourPrefferedStyle;
 	
 public:
 	Stylesheet();
+
+	static void setPreferredStyle(PreferredStyle style);
 
 	const ADeque<_<Entry>>& getEntries() const noexcept
 	{

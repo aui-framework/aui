@@ -5,6 +5,7 @@
 
 int main()
 {
+    Stylesheet::setPreferredStyle(Stylesheet::PREFER_UNIVERSAL_LOOK);
 	{
 		BuiltinFiles f;
 		ByteBuffer b(AUI_PACKED_asset, sizeof(AUI_PACKED_asset));

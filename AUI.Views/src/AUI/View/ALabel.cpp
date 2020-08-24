@@ -69,7 +69,11 @@ void ALabel::render()
 			break;
 		}
 		if (mPrerendered.mVao) {
-			Render::instance().drawString(leftPadding, mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)) + 1, mPrerendered);
+		    int y = mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)) + 1;
+		    if (mVerticalAlign == ALIGN_CENTER) {
+		        y = glm::max(y, (getHeight() - getFontStyleLabel().size) / 2 - 1);
+		    }
+			Render::instance().drawString(leftPadding, y, mPrerendered);
 		}
 	}
 }
@@ -145,4 +149,17 @@ FontStyle ALabel::getFontStyleLabel() {
     if (mFontSizeOverride)
         fs.size = mFontSizeOverride;
     return fs;
+}
+
+void ALabel::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) {
+    mVerticalAlign = ALIGN_LEFT;
+    processor(css::T_VERTICAL_ALIGN, [&](property p)
+    {
+        if (p->getArgs().size() == 1) {
+            if (p->getArgs()[0] == "middle")
+                mVerticalAlign = ALIGN_CENTER;
+            else
+                mVerticalAlign = ALIGN_LEFT;
+        }
+    });
 }

@@ -183,12 +183,12 @@ public:
 	{
 		return std::wstring::length();
 	}
-	AString trimLeft() const noexcept;
-	AString trimRight() const noexcept;
+	AString trimLeft(wchar_t symbol = ' ') const noexcept;
+	AString trimRight(wchar_t symbol = ' ') const noexcept;
 
-	AString trim() const noexcept
+	AString trim(wchar_t symbol = ' ') const noexcept
 	{
-		return trimRight().trimLeft();
+		return trimRight(symbol).trimLeft(symbol);
 	}
 
 	void reserve(size_t s)

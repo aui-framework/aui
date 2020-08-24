@@ -41,7 +41,7 @@ CoursesFrame::CoursesFrame() {
                         (&ALabel::setMultiline, true)
                         (&ALabel::setExpanding, glm::ivec2{1, 0}),
             })(&AView::setExpanding, glm::ivec2{1, 0}),
-            _container<AStackedLayout>({_new<AButton>(u8"Изучать")})
+            _container<AStackedLayout>({_new<AButton>(u8"ИЗУЧАТЬ")})
         }));
     }
 }

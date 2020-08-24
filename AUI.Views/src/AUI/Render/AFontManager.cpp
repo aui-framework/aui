@@ -17,6 +17,7 @@ _<AFont> AFontManager::newItem(const AString& name) {
         // url
         return _new<AFont>(this, AUrl(name));
     }
+
 	return _new<AFont>(this, Platform::getFontPath(name));
 }
 

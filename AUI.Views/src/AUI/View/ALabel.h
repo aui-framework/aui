@@ -12,6 +12,7 @@ private:
 	_<IDrawable> mIcon;
     _<AFont> mFontOverride;
     uint8_t mFontSizeOverride = 0;
+    Align mVerticalAlign;
 
 	bool mMultiline = false;
 	AStringVector mLines;
@@ -35,13 +36,18 @@ public:
 		return mIcon;
 	}
 
-	void setIcon(const _<IDrawable>& drawable)
-	{
-		mIcon = drawable;
-		redraw();
-	}
+	void setIcon(const _<IDrawable>& drawable) {
+        mIcon = drawable;
+        redraw();
+    }
 
-	void setText(const AString& newText);
+protected:
+    void
+    userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
+
+public:
+
+    void setText(const AString& newText);
 
 
 	[[nodiscard]] bool isMultiline() const

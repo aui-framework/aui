@@ -3,6 +3,7 @@
 
 int main()
 {
+    Stylesheet::setPreferredStyle(Stylesheet::PREFER_UNIVERSAL_LOOK);
     Stylesheet::instance().load(AUrl(":words/style.less").open());
 	auto w = _new<MainWindow>();
 	w->loop();

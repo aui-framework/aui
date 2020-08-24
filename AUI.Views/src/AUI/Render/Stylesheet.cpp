@@ -15,6 +15,8 @@
 #include <dwmapi.h>
 #endif
 
+Stylesheet::PreferredStyle Stylesheet::ourPrefferedStyle = Stylesheet::PREFER_NATIVE_LOOK;
+
 Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool forcePossibleEntries)
 {
 	/*
@@ -247,12 +249,20 @@ Stylesheet::Stylesheet()
 	BOOL blending;
 	DwmGetColorizationColor(&c, &blending);
 	c |= 0xff000000;
-	setVariable("OS_THEME_COLOR", AColor::fromAARRGGBB(static_cast<unsigned>(c)).toString());
-    load(AUrl(":win/style.less").open());
+    setVariable("OS_THEME_COLOR", AColor::fromAARRGGBB(static_cast<unsigned>(c)).toString());
 #else
     setVariable("OS_THEME_COLOR", "#3e3e3e");
-    load(AUrl(":uni/style.less").open());
 #endif
+    if (ourPrefferedStyle == PREFER_NATIVE_LOOK) {
+#ifdef _WIN32
+        load(AUrl(":win/style.less").open());
+#else
+        load(AUrl(":uni/style.less").open());
+#endif
+    } else {
+        setVariable("COLOR_ACCENT", AColor::fromAARRGGBB(0xffff2147u).toString());
+        load(AUrl(":uni/style.less").open());
+    }
 }
 
 void Stylesheet::load(const AString& css) noexcept
@@ -275,9 +285,11 @@ void Stylesheet::load(const _<IInputStream>& css) noexcept
 		{"cursor", Entry::Property::T_CURSOR},
 		{"overflow", Entry::Property::T_OVERFLOW},
 		{"box-shadow", Entry::Property::T_BOX_SHADOW},
+		{"vertical-align", Entry::Property::T_VERTICAL_ALIGN},
 
+		{"font-family", Entry::Property::T_FONT_FAMILY},
 		{"font-size", Entry::Property::T_FONT_SIZE},
-		
+
 		{"border", Entry::Property::T_BORDER},
 		{"border-radius", Entry::Property::T_BORDER_RADIUS},
 		{"margin", Entry::Property::T_MARGIN},
@@ -405,6 +417,10 @@ void Stylesheet::load(const _<IInputStream>& css) noexcept
 		{
 		}
 	}
+}
+
+void Stylesheet::setPreferredStyle(Stylesheet::PreferredStyle style) {
+    ourPrefferedStyle = style;
 }
 /*
 void Stylesheet::invalidateCache()

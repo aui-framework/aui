@@ -27,33 +27,44 @@ ALabel, .input-field, AListView {
 }
 
 AButton {
-    background-color: #e1e1e1;
-    border: 1px solid #adadad;
-    padding: 4em 8em 2em;
-    min-width: 65em;
-    min-height: 17em;
-    text-align: center;
-    transition: 0.25s;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 4em 8em;
+    min-width: 60em;
+    min-height: 14em;
     margin: 2em 4em;
-}
-
-AButton[default] {
-    border: 2px solid #0078d7;
+    border-radius: 4em;
+    box-shadow: 0 1em 3em -2em #0008;
+    text-align: center;
 }
 
 AButton:hover {
-    background-color: #e5f1fb;
-    border: 1px solid #0078d7;
+    border: 1px solid $OS_THEME_COLOR;
+}
+AButton:active {
+    background-color: #fafafa;
+}
+
+AButton[default] {
+    background-color: $OS_THEME_COLOR;
+    box-shadow: 0 1em 3em -2em $OS_THEME_COLOR;
+    border: none;
+    color: #fff;
+}
+AButton[default]:hover {
+    border: none;
+    box-shadow: 0 1em 6em -1em $OS_THEME_COLOR;
 }
 
 AButton:active {
-    transition: 0.05s;
-    background-color: #cce4f7;
-    border: 1px solid #005499;
+    padding: 5em 8em 3em;
+    box-shadow: none;
 }
+
 
 AButton[disabled] {
     background-color: #cccccc;
+    box-shadow: none;
     border: 1px solid #bfbfbf;
     color: #838383;
 }
@@ -120,20 +131,21 @@ AAbstractTextField {
 .input-field {
     color: #000;
     background: #fff;
-    border: 1em solid #7a7a7a;
+    border: 1em solid #aaa;
     margin: 2em 4em;
     min-width: 100em;
     min-height: 17em;
     transition: 1s;
     overflow: hidden;
+    border-radius: 4em;
 }
 
 .input-field:hover {
-    border: 1em solid #000;
+    border: 1em solid #444;
     transition: 0.3s;
 }
 .input-field:focus {
-    border: 1em solid #0078d7;
+    border: 1em solid $OS_THEME_COLOR;
     transition: 0.3s;
 }
 
@@ -174,7 +186,7 @@ ACheckBox:active ACheckBoxInner {
 }
 
 ACheckBox[checked] ACheckBoxInner {
-    background: url(':assets/win/svg/checkbox.svg');
+    background: url(':win/svg/checkbox.svg');
 }
 
 AListView {

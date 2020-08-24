@@ -13,20 +13,20 @@ CellView[flag="false"]:active, CellView[open="true"] {
     background-color: #cecece;
 }
 CellView[flag="true"] {
-    background: url(':assets/minesweeper/flag.svg');
+    background: url(':minesweeper/flag.svg');
 }
 .grid {
     border: 3dp inset #fff;
     padding: 3dp;
 }
 MinesweeperWindow[dead] CellView[bomb="true"] {
-    background: url(':assets/minesweeper/bomb.svg');
+    background: url(':minesweeper/bomb.svg');
 }
 MinesweeperWindow[dead] CellView[bomb="true"][flag="true"] {
-    background: url(':assets/minesweeper/bomb_flag.svg');
+    background: url(':minesweeper/bomb_flag.svg');
 }
 MinesweeperWindow[dead] CellView[bomb="false"][flag="true"] {
-    background: url(':assets/minesweeper/no_bomb_flag.svg');
+    background: url(':minesweeper/no_bomb_flag.svg');
 }
 CellView[red] {
     background-color: #f00;
