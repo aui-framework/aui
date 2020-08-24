@@ -11,7 +11,7 @@ public:
 	{
 		T_UNKNOWN,
 		T_PX,
-		T_DP,
+		T_EM,
 		T_PT,
 	};
 	
@@ -41,5 +41,5 @@ public:
 // ReSharper disable once CppUserDefinedLiteralSuffixDoesNotStartWithUnderscore
 inline float operator"" dp(unsigned long long v)
 {
-	return AMetric(static_cast<float>(v), AMetric::T_DP).getValuePx();
+	return AMetric(static_cast<float>(v), AMetric::T_EM).getValuePx();
 }

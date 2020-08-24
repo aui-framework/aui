@@ -248,10 +248,11 @@ Stylesheet::Stylesheet()
 	DwmGetColorizationColor(&c, &blending);
 	c |= 0xff000000;
 	setVariable("OS_THEME_COLOR", AColor::fromAARRGGBB(static_cast<unsigned>(c)).toString());
+    load(AUrl(":win/style.less").open());
 #else
     setVariable("OS_THEME_COLOR", "#3e3e3e");
+    load(AUrl(":uni/style.less").open());
 #endif
-    load(AUrl(":win/style.css").open());
 }
 
 void Stylesheet::load(const AString& css) noexcept

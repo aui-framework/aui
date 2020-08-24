@@ -26,7 +26,7 @@ AMetric::AMetric(const AString& text)
 	else {
 		AMap<AString, Unit> unitMapping = {
 			{ "px", T_PX },
-			{ "dp", T_DP },
+			{ "em", T_EM },
 			{ "pt", T_PT },
 		};
 
@@ -50,7 +50,7 @@ float AMetric::getValuePx() const
 	{
 	case T_PX:
 		return mValue;
-	case T_DP:
+	case T_EM:
 		return mValue * dpi;
 	case T_PT:
 		return mValue * dpi / 3.f * 4.f;

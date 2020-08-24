@@ -3,7 +3,7 @@
 
 int main()
 {
-    Stylesheet::instance().load(AUrl(":words/style.css").open());
+    Stylesheet::instance().load(AUrl(":words/style.less").open());
 	auto w = _new<MainWindow>();
 	w->loop();
 	return 0;
