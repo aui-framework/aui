@@ -356,7 +356,6 @@ void AView::recompileCSS()
 	            color = p->getArgs()[3];
 	            break;
 	    }
-	    stretch += radius;
         mCssDrawListFront << [&, offset, radius, stretch, color]() {
 	        auto doDrawShadow = [&]() {
                 Render::instance().drawBoxShadow(offset.x - stretch, offset.y - stretch, getWidth() + stretch * 2,

@@ -1,10 +1,10 @@
 #include "Render.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include "AUI/Common/AColor.h"
 #include "AFontManager.h"
-#include "AUI/Common/ASide.h"
-#include "AUI/Platform/AWindow.h"
+#include <AUI/Common/AColor.h>
+#include <AUI/Common/ASide.h>
+#include <AUI/Platform/AWindow.h>
 
 Render::Render()
 {
@@ -15,18 +15,27 @@ Render::Render()
 		"void main(void) {gl_FragColor = color;}");
     mBoxShadowShader.load(
             "attribute vec3 pos;"
-            "attribute vec2 uv;"
+            "uniform mat4 transform;"
             "varying vec2 pass_uv;"
-            "void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv * 2.f - vec2(1, 1);}",
+            "void main(void) {gl_Position = transform * vec4(pos, 1); pass_uv = pos.xy;}",
         "varying vec2 pass_uv;"
         "uniform vec4 color;"
-        "uniform vec2 size;"
+        "uniform vec2 lower;"
+        "uniform vec2 upper;"
+        "uniform float sigma;"
+        "vec4 erf(vec4 x) {"
+            "vec4 s = sign(x), a = abs(x);"
+            "x = 1.0 + (0.278393 + (0.230389 + 0.078108 * (a * a)) * a) * a;"
+            "x *= x;"
+            "return s - s / (x * x);"
+        "}"
         "void main(void) {"
-            "gl_FragColor = vec4(1,0,0,1);"
-            "vec2 tmp = abs(pass_uv);"
-            "vec2 inv_size = 1.f - size;"
-            "vec2 delta = (1.f - tmp) / inv_size / 2.f;"
-            "gl_FragColor.a *= length(delta);"
+            "gl_FragColor = color;"
+
+            "vec4 query = vec4(pass_uv - vec2(lower), pass_uv - vec2(upper));"
+            "vec4 integral = 0.5 + 0.5 * erf(query * (sqrt(0.5) / sigma));"
+            "gl_FragColor.a *= clamp((integral.z - integral.x) * (integral.w - integral.y), 0.f, 1.f);"
+            //"gl_FragColor.a = query.x + query.y;"
          "}");
 
 	mRoundedSolidShader.load(
@@ -233,9 +242,32 @@ void Render::drawRectBorder(float x, float y, float width, float height, float l
 
 void Render::drawBoxShadow(float x, float y, float width, float height, float blurRadius, const AColor& color) {
     mBoxShadowShader.use();
-    mBoxShadowShader.set("size", blurRadius / glm::vec2(width, height));
-    mBoxShadowShader.set("color", color);
-    drawRect(x, y, width, height);
+    mBoxShadowShader.set("sigma", blurRadius / 2.f);
+    mBoxShadowShader.set("lower", glm::vec2(x, y) + glm::vec2(width, height));
+    mBoxShadowShader.set("upper", glm::vec2(x, y));
+    mBoxShadowShader.set("transform", mTransform);
+    mBoxShadowShader.set("color", mColor * color);
+
+    mTempVao.bind();
+
+    float w = x + width;
+    float h = y + height;
+
+    x -= blurRadius;
+    y -= blurRadius;
+    w += blurRadius;
+    h += blurRadius;
+
+    mTempVao.insert(0, AVector<glm::vec2>{
+            glm::vec2{ x, h },
+            glm::vec2{ w, h },
+            glm::vec2{ x, y },
+            glm::vec2{ w, y },
+    });
+
+    mTempVao.indices({ 0, 1, 2, 2, 1, 3 });
+    mTempVao.draw();
+
     setFill(mCurrentFill);
 }
 

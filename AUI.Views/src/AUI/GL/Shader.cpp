@@ -69,6 +69,8 @@ void GL::Shader::use() const {
 }
 
 void GL::Shader::bindAttribute(GLuint index, const AString& name) {
+    if (name.empty())
+        return;
 	glBindAttribLocation(mProgram, index, name.toStdString().c_str());
 }
 

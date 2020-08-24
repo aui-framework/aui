@@ -65,8 +65,8 @@ void GL::Vao::insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint
 
 	if (newFlag) {
 		glEnableVertexAttribArray(index);
-		glVertexAttribPointer(index, vertexSize, dataType, GL_FALSE, 0, nullptr);
 	}
+    glVertexAttribPointer(index, vertexSize, dataType, GL_TRUE, 0, nullptr);
 }
 
 /*!
