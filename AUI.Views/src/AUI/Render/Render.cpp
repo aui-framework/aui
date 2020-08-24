@@ -14,10 +14,20 @@ Render::Render()
 		"uniform vec4 color;"
 		"void main(void) {gl_FragColor = color;}");
     mBoxShadowShader.load(
-		"attribute vec3 pos;"
-		"void main(void) {gl_Position = vec4(pos, 1);}",
-		"uniform vec4 color;"
-		"void main(void) {gl_FragColor = color;}");
+            "attribute vec3 pos;"
+            "attribute vec2 uv;"
+            "varying vec2 pass_uv;"
+            "void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv * 2.f - vec2(1, 1);}",
+        "varying vec2 pass_uv;"
+        "uniform vec4 color;"
+        "uniform vec2 size;"
+        "void main(void) {"
+            "gl_FragColor = vec4(1,0,0,1);"
+            "vec2 tmp = abs(pass_uv);"
+            "vec2 inv_size = 1.f - size;"
+            "vec2 delta = (1.f - tmp) / inv_size / 2.f;"
+            "gl_FragColor.a *= length(delta);"
+         "}");
 
 	mRoundedSolidShader.load(
 		"attribute vec3 pos;"
@@ -221,9 +231,10 @@ void Render::drawRectBorder(float x, float y, float width, float height, float l
 	mTempVao.draw(GL_LINES);
 }
 
-void Render::drawBoxShadow(float x, float y, float width, float height, float radius, float blur,
-                           const glm::vec4& color) {
+void Render::drawBoxShadow(float x, float y, float width, float height, float blurRadius, const AColor& color) {
     mBoxShadowShader.use();
+    mBoxShadowShader.set("size", blurRadius / glm::vec2(width, height));
+    mBoxShadowShader.set("color", color);
     drawRect(x, y, width, height);
     setFill(mCurrentFill);
 }

@@ -343,6 +343,33 @@ void AView::recompileCSS()
 
 	// составление списка отрисовки.
 	mCssDrawListFront.clear();
+	processStylesheet(css::T_BOX_SHADOW, [&](property p)
+	{
+	    glm::vec2 offset;
+	    float radius = 0.f, stretch = 0.f;
+	    AColor color;
+	    switch (p->getArgs().size()) {
+	        case 4: // x y radius color
+	            offset.x = AMetric(p->getArgs()[0]).getValuePx();
+	            offset.y = AMetric(p->getArgs()[1]).getValuePx();
+	            radius = AMetric(p->getArgs()[2]).getValuePx();
+	            color = p->getArgs()[3];
+	            break;
+	    }
+	    stretch += radius;
+        mCssDrawListFront << [&, offset, radius, stretch, color]() {
+	        auto doDrawShadow = [&]() {
+                Render::instance().drawBoxShadow(offset.x - stretch, offset.y - stretch, getWidth() + stretch * 2,
+                                                 getHeight() + stretch * 2, radius, color);
+	        };
+	        if (mForceStencilForBackground) {
+                RenderHints::PushMask::Layer layer(RenderHints::PushMask::Layer::DECREASE, GL_GEQUAL);
+	            doDrawShadow();
+	        } else {
+                doDrawShadow();
+	        }
+        };
+	});
 	processStylesheet(css::T_BACKGROUND_COLOR, [&](property p)
 	{
 		AColor color = p->getArgs()[0];

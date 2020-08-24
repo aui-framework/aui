@@ -85,7 +85,7 @@ public:
 		FontStyle fs;
 		drawString(x, y, text, fs);
 	}
-	void drawBoxShadow(float x, float y, float width, float height, float radius, float blur, const glm::vec4& color);
+	void drawBoxShadow(float x, float y, float width, float height, float blurRadius, const AColor& color);
 	void drawString(int x, int y, const AString& text, FontStyle& fs);
 	void drawString(int x, int y, PrerendereredString& f);
 	PrerendereredString preRendererString(const AString& text, FontStyle& fs);

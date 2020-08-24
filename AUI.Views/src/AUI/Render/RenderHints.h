@@ -32,7 +32,7 @@ namespace RenderHints
                 INCREASE = 1,
                 DECREASE = -1,
             };
-            explicit Layer(Direction direction);
+            explicit Layer(Direction direction, GLenum strencilComparsion = GL_EQUAL);
             ~Layer();
 
         };
