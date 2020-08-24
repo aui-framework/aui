@@ -58,6 +58,7 @@ void AView::render()
 {
     if (mAnimator)
         mAnimator->animate();
+
 	{
 		ensureCSSUpdated();
 
@@ -101,7 +102,7 @@ void AView::render()
             }
 		};
 
-		if (mForceStencilForBackground && mOverflow != OF_HIDDEN) {
+		if (mForceStencilForBackground) {
 		    RenderHints::PushMask mask([&]() {
                 Render::instance().drawRoundedRect(0, 0, getWidth(),
                                                    getHeight(), mBorderRadius);
@@ -112,13 +113,13 @@ void AView::render()
 		}
 	}
 
-	// stencil
-	if (mOverflow == OF_HIDDEN)
-	{
-		RenderHints::PushMask::pushMask([&]() {
-		    drawStencilMask();
-		});
-	}
+    // stencil
+    if (mOverflow == OF_HIDDEN)
+    {
+        RenderHints::PushMask::pushMask([&]() {
+            drawStencilMask();
+        });
+    }
 }
 
 void AView::recompileCSS()
