@@ -178,4 +178,6 @@ signals:
 	emits<> dpiChanged;
 	emits<> redrawn;
 	emits<> shown;
+
+	emits<AInput::Key> keyDown;
 };

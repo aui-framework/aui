@@ -21,6 +21,7 @@ private:
 	unsigned mCursorBlinkCount = 0;
 	bool mCursorBlinkVisible = true;
 	bool mTextChangedFlag = false;
+    bool mIsPasswordTextField = false;
 
 	int mHorizontalScroll = 0;
 
@@ -29,6 +30,7 @@ private:
 	unsigned getCursorIndexByPos(int posX);
 	int getPosByIndex(int index);
 	bool hasSelection();
+    AString getContentsPasswordWrap();
 	
 protected:
 	virtual bool isValidText(const AString& text) = 0;
@@ -51,7 +53,11 @@ public:
 	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 	void onMouseMove(glm::ivec2 pos) override;
 	void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
-	
+
+	void setPasswordMode(bool isPasswordMode) {
+        mIsPasswordTextField = isPasswordMode;
+	}
+
 	void setText(const AString& t);
 
 	const AString& getText() const

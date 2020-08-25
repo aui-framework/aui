@@ -751,6 +751,7 @@ void AWindow::onFocusLost() {
 }
 
 void AWindow::onKeyDown(AInput::Key key) {
+    emit keyDown(key);
     if (auto v = getFocusedView())
         v->onKeyDown(key);
 }

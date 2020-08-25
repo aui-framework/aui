@@ -43,4 +43,21 @@ public:
 	}
 
 	AString toString();
+
+    float readabilityOfForegroundColor(const AColor &foreground);
+
+    /**
+     * \brief Умножить цветовую часть (кроме альфа канала), (xyz * d, a)
+     * @param d
+     * @return
+     */
+    inline AColor mul(float d) {
+        return AColor(r * d, g * d, b * d, a);
+    }
+    inline AColor darker(float d) {
+        return mul(1.f - d);
+    }
+    inline AColor lighter(float d) {
+        return mul(1.f + d);
+    }
 };

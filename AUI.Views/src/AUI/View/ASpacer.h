@@ -10,5 +10,6 @@ public:
 	}
 	virtual ~ASpacer() = default;
 
-	
+    int getContentMinimumWidth() override;
+    int getContentMinimumHeight() override;
 };

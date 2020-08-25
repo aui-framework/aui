@@ -77,3 +77,8 @@ AString AColor::toString()
 										    static_cast<unsigned char>(a * 255.f));
 	return buf;
 }
+
+float AColor::readabilityOfForegroundColor(const AColor& foreground) {
+    auto delta = glm::abs(glm::vec3(foreground) - glm::vec3(*this));
+    return delta.x + delta.y + delta.z;
+}

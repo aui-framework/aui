@@ -24,7 +24,7 @@ void AAbstractTextField::updateCursorBlinking()
 
 void AAbstractTextField::updateCursorPos()
 {
-	auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(mContents.mid(0, mCursorIndex)));
+	auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getContentsPasswordWrap().mid(0, mCursorIndex)));
 
 	const int SCROLL_ADVANCEMENT = getContentWidth() * 4 / 10;
 
@@ -36,7 +36,7 @@ void AAbstractTextField::updateCursorPos()
 	{
 		mHorizontalScroll += absoluteCursorPos - getContentWidth() + SCROLL_ADVANCEMENT;
 	}
-	mHorizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getFontStyle().getWidth(mContents)) - getContentWidth() + 1, 0));
+	mHorizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getFontStyle().getWidth(getContentsPasswordWrap())) - getContentWidth() + 1, 0));
 }
 
 unsigned AAbstractTextField::getCursorIndexByPos(int posX)
@@ -44,12 +44,12 @@ unsigned AAbstractTextField::getCursorIndexByPos(int posX)
 	posX = posX - (mPadding.left - mHorizontalScroll);
 	if (posX <= 0)
 		return 0;
-	return getFontStyle().font->trimStringToWidth(mContents, posX, getFontStyle().size, getFontStyle().fontRendering).length();
+	return getFontStyle().font->trimStringToWidth(getContentsPasswordWrap(), posX, getFontStyle().size, getFontStyle().fontRendering).length();
 }
 
 int AAbstractTextField::getPosByIndex(int index)
 {
-	return -mHorizontalScroll + int(getFontStyle().getWidth(mContents.mid(0, index)));
+    return -mHorizontalScroll + int(getFontStyle().getWidth(getContentsPasswordWrap().mid(0, index)));
 }
 
 bool AAbstractTextField::hasSelection()
@@ -156,6 +156,9 @@ void AAbstractTextField::onCharEntered(wchar_t c)
 {
 	if (AInput::isKeyDown(AInput::LButton))
 		return;
+	if (c == '\n' || c == '\r')
+        return;
+
 	mTextChangedFlag = true;
 	AString contentsCopy = mContents;
 	auto cursorIndexCopy = mCursorIndex;
@@ -224,9 +227,7 @@ void AAbstractTextField::render()
 		Render::instance().setColor(AColor(1.f) - AColor(0x0078d700u));
 		Render::instance().drawRect(mPadding.left + absoluteBegin, mPadding.top, absoluteEnd - absoluteBegin + 1, getFontStyle().size + 3);
 	}
-
-	Render::instance().drawString(mPadding.left - mHorizontalScroll, mPadding.top, mContents, getFontStyle());
-	
+	Render::instance().drawString(mPadding.left - mHorizontalScroll, mPadding.top, getContentsPasswordWrap(), getFontStyle());
 	Render::instance().setFill(Render::FILL_SOLID);
 	Render::instance().setColor({ 1, 1, 1, 1 });
 	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
@@ -292,4 +293,14 @@ void AAbstractTextField::setText(const AString& t)
 	updateCursorBlinking();
 
 	emit textChanged;
+}
+
+AString AAbstractTextField::getContentsPasswordWrap() {
+    if (mIsPasswordTextField) {
+        AString s;
+        for (auto c : mContents)
+            s += "•";
+        return s;
+    }
+    return mContents;
 }

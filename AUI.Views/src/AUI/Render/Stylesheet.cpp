@@ -249,7 +249,12 @@ Stylesheet::Stylesheet()
 	BOOL blending;
 	DwmGetColorizationColor(&c, &blending);
 	c |= 0xff000000;
-    setVariable("OS_THEME_COLOR", AColor::fromAARRGGBB(static_cast<unsigned>(c)).toString());
+	AColor osThemeColor = AColor::fromAARRGGBB(static_cast<unsigned>(c));
+	float readability = osThemeColor.readabilityOfForegroundColor(0xffffffff);
+	if (readability < 0.3f)  {
+	    osThemeColor = osThemeColor.darker(1.f - readability * 0.5f);
+	}
+    setVariable("OS_THEME_COLOR", osThemeColor.toString());
 #else
     setVariable("OS_THEME_COLOR", "#3e3e3e");
 #endif
