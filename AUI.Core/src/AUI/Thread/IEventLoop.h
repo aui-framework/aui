@@ -4,16 +4,24 @@
 
 class API_AUI_CORE IEventLoop
 {
-private:
-	IEventLoop* mPrevEventLoop;
-	
 public:
-	IEventLoop();
-	virtual ~IEventLoop();
+	IEventLoop() {}
+	virtual ~IEventLoop() {}
 
 	/**
 	 * \brief Поток этого IEventLoop получил новое сообщение,
 	 *		  которое необходимо обработать.
 	 */
 	virtual void notifyProcessMessages() = 0;
+
+
+    class API_AUI_CORE Handle {
+	private:
+        IEventLoop* mPrevEventLoop;
+	    IEventLoop* mCurrentEventLoop;
+
+	public:
+        explicit Handle(IEventLoop* loop);
+        ~Handle();
+    };
 };

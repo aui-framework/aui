@@ -305,6 +305,8 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
     mDC = GetDC(mHandle);
 
     // INITIALIZE OPENGL
+    static PIXELFORMATDESCRIPTOR pfd;
+    static int pxf;
     if (context.hrc == nullptr) {
         struct FakeWindow {
             HWND mHwnd;
@@ -323,7 +325,6 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
                                     GetSystemMetrics(SM_CYSCREEN) / 2 - height / 2, width, height,
                                     parent != nullptr ? parent->mHandle : nullptr, nullptr, mInst, nullptr));
 
-        PIXELFORMATDESCRIPTOR pfd;
         memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
         pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
         pfd.nVersion = 1;
@@ -362,7 +363,6 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
                         0
                 };
 
-        int pxf;
         UINT iNumFormats;
         wglChoosePixelFormatARB(mDC, iPixelFormatAttribList, nullptr, 1, &pxf, &iNumFormats);
         assert(iNumFormats);
@@ -386,6 +386,9 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
         }
 
         //wglMakeCurrent(mDC, nullptr);
+    } else {
+        bool k = SetPixelFormat(mDC, pxf, &pfd);
+        assert(k);
     }
 
     wglMakeCurrent(mDC, context.hrc);
@@ -580,6 +583,8 @@ void AWindow::redraw() {
 
 void AWindow::loop() {
     show();
+
+    IEventLoop::Handle h(this);
 
 #ifdef _WIN32
     MSG msg;
