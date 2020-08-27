@@ -278,7 +278,7 @@ void Stylesheet::load(const AString& css) noexcept
 void Stylesheet::load(const _<IInputStream>& css) noexcept
 {
     assert(css);
-	Tdokenizer p(css);
+	Tokenizer p(css);
 	AMap<AString, Entry::Property::Type> items = {
 		{"background", Entry::Property::T_BACKGROUND},
 		{"background-color", Entry::Property::T_BACKGROUND_COLOR},
