@@ -14,7 +14,7 @@ InputStreamAsync::InputStreamAsync(_<IInputStream> inputStream):
 		{
 			
 		}
-		emit finished;
+		emit finished();
 	}))
 {
 	auto t = mReadThread;

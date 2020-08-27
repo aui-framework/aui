@@ -24,7 +24,7 @@ public:
 	void setChecked(const bool checked)
 	{
 		mChecked = checked;
-		emit customCssPropertyChanged;
+		emit customCssPropertyChanged();
 	}
 
 	void getCustomCssAttributes(AMap<AString, AVariant>& map) override;

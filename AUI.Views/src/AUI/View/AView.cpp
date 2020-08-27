@@ -726,10 +726,10 @@ void AView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 	switch (button)
 	{
 	case AInput::LButton:
-		emit clicked;
+		emit clicked();
 		break;
 	case AInput::RButton:
-		emit clickedRight;
+		emit clickedRight();
 		break;
 	}
 }

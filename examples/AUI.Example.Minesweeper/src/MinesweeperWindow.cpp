@@ -81,7 +81,7 @@ void MinesweeperWindow::openCell(int x, int y, bool doGameLoseIfBomb)
 			if (doGameLoseIfBomb) {
 				c |= F_RED_BG;
 				mDead = true;
-				emit customCssPropertyChanged;
+				emit customCssPropertyChanged();
 				redraw();
 				AMessageBox::show(this, u8"Ты лох!", u8"ТЫ ПРОДУЛ!!! АЗЗАЗАЗАЗАЗЗА");
 

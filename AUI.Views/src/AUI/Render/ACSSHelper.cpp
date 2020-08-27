@@ -2,10 +2,10 @@
 
 void ACSSHelper::onInvalidateViewCss()
 {
-	emit invalidateViewCss;
+	emit invalidateViewCss();
 }
 
 void ACSSHelper::onCheckPossiblyMatchCss()
 {
-	emit checkPossiblyMatchCss;
+	emit checkPossiblyMatchCss();
 }

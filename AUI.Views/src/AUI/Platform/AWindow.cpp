@@ -150,7 +150,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 
         case WM_CLOSE:
-            emit closed;
+            emit closed();
             return 0;
 
         case WM_LBUTTONDOWN:
@@ -578,7 +578,7 @@ void AWindow::redraw() {
         glXSwapBuffers(gDisplay, mHandle);
 #endif
     }
-    emit redrawn;
+    emit redrawn();
 }
 
 void AWindow::loop() {
@@ -609,7 +609,7 @@ void AWindow::loop() {
                 break;
             }
             case DestroyNotify: {
-                emit closed;
+                emit closed();
                 break;
             }
             case MotionNotify:
@@ -620,7 +620,7 @@ void AWindow::loop() {
                 break;
             }
             case ButtonRelease: {
-                onMouseReleased({ev.xbutton.x, ev.xbutton.y}, (AInput::Key)(AInput::LButton + ev.xbutton.button));
+                onMouseReleased({ev.xbutton.x, ev.xbutton.y}, (AInput::Key)(AInput::LButton + ev.xbutton.button - 1));
                 break;
             }
         }
@@ -795,7 +795,10 @@ void AWindow::notifyProcessMessages() {
     PostMessage(mHandle, WM_USER, 0, 0);
 #else
     XEvent e = {0};
+    e.xexpose.window = mHandle;
+    e.type = Expose;
     XSendEvent(gDisplay, mHandle, false, 0, &e);
+    XFlush(gDisplay);
 #endif
 }
 
@@ -825,5 +828,5 @@ void AWindow::show() {
     ShowWindow(mHandle, SW_SHOWNORMAL);
 #else
 #endif
-    emit shown;
+    emit shown();
 }

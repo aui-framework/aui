@@ -17,6 +17,9 @@ public:
 
 	void start();
 	void stop();
+	void setPeriodMs(unsigned period) {
+	    mMsPeriod = period;
+	}
 	bool isStarted();
 
 	signals:

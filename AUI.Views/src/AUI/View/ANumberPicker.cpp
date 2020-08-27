@@ -79,7 +79,7 @@ ANumberPicker::ANumberPicker()
 
 	connect(mTextField->textChanging, this, [&]()
 	{
-		emit valueChanging;
+		emit valueChanging();
 	});
 	
 	addView(c);

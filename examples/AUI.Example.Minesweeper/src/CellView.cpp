@@ -11,7 +11,7 @@ CellView::CellView(FieldCell& cell)
 	connect(clickedButton, this, [&]()
 	{
 		mOpen = true;
-		emit customCssPropertyChanged;
+		emit customCssPropertyChanged();
 	});
 }
 

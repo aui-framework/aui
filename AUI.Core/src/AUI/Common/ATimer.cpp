@@ -23,7 +23,7 @@ void ATimer::start()
 		for (;;) {
 			try {
 				AThread::sleep(mMsPeriod);
-				emit fired;
+				emit fired();
 			}
 			catch (...)
 			{
@@ -44,8 +44,10 @@ void ATimer::start()
 void ATimer::stop()
 {
 	mResetFlag = false;
-	mThread->interrupt();
-	mThread = nullptr;
+	if (mThread) {
+        mThread->interrupt();
+        mThread = nullptr;
+    }
 }
 
 bool ATimer::isStarted()
