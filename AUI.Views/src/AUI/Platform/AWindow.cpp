@@ -7,10 +7,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 
-#include "AUI/Util/Random.h"
+#include "AUI/Util/ARandom.h"
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
 #include "Platform.h"
+#include "AMessageBox.h"
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
@@ -157,10 +158,12 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             onMousePressed(POS, AInput::LButton);
             SetCapture(mHandle);
             return 0;
-        case WM_LBUTTONUP:
+        case WM_LBUTTONUP: {
+            auto context = acquireTemporaryRenderingContext();
             onMouseReleased(POS, AInput::LButton);
             ReleaseCapture();
             return 0;
+        }
         case WM_RBUTTONDOWN:
             onMousePressed(POS, AInput::RButton);
             SetCapture(mHandle);
@@ -267,7 +270,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
 
     mInst = GetModuleHandle(nullptr);
 
-    Random r;
+    ARandom r;
     for (;;) {
         mWindowClass = "AUI-" + AString::number(r.nextInt());
         winClass.lpszClassName = mWindowClass.c_str();
@@ -308,6 +311,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
     static PIXELFORMATDESCRIPTOR pfd;
     static int pxf;
     if (context.hrc == nullptr) {
+        ALogger::info("Creating OpenGL context...");
         struct FakeWindow {
             HWND mHwnd;
             HDC mDC;
@@ -340,35 +344,55 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
         context.hrc = wglCreateContext(fakeWindow.mDC);
         wglMakeCurrent(fakeWindow.mDC, context.hrc);
 
+        ALogger::info("Initialized temporary GL context");
 
         if (!glewExperimental) {
+            ALogger::info((const char*) glGetString(GL_VERSION));
+            ALogger::info((const char*) glGetString(GL_VENDOR));
+            ALogger::info((const char*) glGetString(GL_RENDERER));
             glewExperimental = true;
             if (glewInit() != GLEW_OK) {
+                AMessageBox::show(nullptr, "OpenGL", "Could not initialize OpenGL context");
                 throw std::runtime_error("glewInit failed");
             }
         }
+        bool k;
 
-        const int iPixelFormatAttribList[] =
-                {
-                        WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-                        WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-                        WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-                        WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
-                        WGL_COLOR_BITS_ARB, 24,
-                        WGL_ALPHA_BITS_ARB, 8,
-                        WGL_DEPTH_BITS_ARB, 24,
-                        WGL_STENCIL_BITS_ARB, 8,
-                        WGL_SAMPLE_BUFFERS_ARB, GL_TRUE,
-                        WGL_SAMPLES_ARB, 16,
-                        0
-                };
+        auto makeContext = [&](unsigned i) {
+            const int iPixelFormatAttribList[] =
+                    {
+                            WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
+                            WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
+                            WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
+                            WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
+                            WGL_COLOR_BITS_ARB, 24,
+                            WGL_ALPHA_BITS_ARB, 8,
+                            WGL_DEPTH_BITS_ARB, 24,
+                            WGL_STENCIL_BITS_ARB, 8,
+                            WGL_SAMPLE_BUFFERS_ARB, GL_TRUE,
+                            WGL_SAMPLES_ARB, i,
+                            0
+                    };
 
-        UINT iNumFormats;
-        wglChoosePixelFormatARB(mDC, iPixelFormatAttribList, nullptr, 1, &pxf, &iNumFormats);
-        assert(iNumFormats);
-        DescribePixelFormat(mDC, pxf, sizeof(pfd), &pfd);
-        bool k = SetPixelFormat(mDC, pxf, &pfd);
-        assert(k);
+            UINT iNumFormats;
+            wglChoosePixelFormatARB(mDC, iPixelFormatAttribList, nullptr, 1, &pxf, &iNumFormats);
+            assert(iNumFormats);
+            DescribePixelFormat(mDC, pxf, sizeof(pfd), &pfd);
+            k = SetPixelFormat(mDC, pxf, &pfd);
+        };
+        makeContext(16);
+        if (!k) {
+            ALogger::info("Could not set pixel format with MSAA; trying to do the same but without MSAA");
+            makeContext(0);
+            if (!k) {
+                ALogger::info("Could not set pixel format even without MSAA. Giving up.");
+                throw AException("Could set pixel format");
+            } else {
+                ALogger::info("Successfully set pixel format without MSAA");
+            }
+        } else {
+            ALogger::info("Successfully set pixel format with MSAA");
+        }
         GLint attribs[] =
                 {
                         WGL_CONTEXT_MAJOR_VERSION_ARB, 2,
@@ -384,6 +408,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
             } else
                 throw std::runtime_error("Failed to create OpenGL 2.0 context");
         }
+        ALogger::info("OpenGL context is ready");
 
         //wglMakeCurrent(mDC, nullptr);
     } else {
@@ -392,7 +417,6 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
     }
 
     wglMakeCurrent(mDC, context.hrc);
-
 #else
     struct DisplayInstance {
 

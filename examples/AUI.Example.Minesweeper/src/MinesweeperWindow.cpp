@@ -7,7 +7,7 @@
 #include "AUI/Layout/AStackedLayout.h"
 #include "AUI/Layout/AVerticalLayout.h"
 #include "AUI/Platform/AMessageBox.h"
-#include "AUI/Util/Random.h"
+#include "AUI/Util/ARandom.h"
 #include "AUI/View/AButton.h"
 #include "AUI/View/ALabel.h"
 #include "AUI/View/ASpacer.h"

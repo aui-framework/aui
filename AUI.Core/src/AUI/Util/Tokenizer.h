@@ -5,7 +5,7 @@
 #include "AUI/IO/IInputStream.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Common/AColor.h"
-#include "AUI/Common/Set.h"
+#include "AUI/Common/ASet.h"
 
 class API_AUI_CORE Tokenizer
 {
@@ -38,7 +38,7 @@ public:
 	 *		  Читает строку, пока isalnum == true.
 	 * \return строка
 	 */
-	AString readString(const Set<char>& applicableChars);
+	AString readString(const ASet<char>& applicableChars);
 
 
 	/**

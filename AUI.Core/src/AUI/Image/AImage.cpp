@@ -27,7 +27,7 @@ AVector<uint8_t>& AImage::getData() {
 
 _<AImage> AImage::addAlpha(const _<AImage>& src)
 {
-	auto dst = _new<AImage>(AVector<uint8_t>(), src->getWidth(), src->getHeight(), RGBA);
+	auto dst = _new<AImage>(AVector<uint8_t>(), src->getWidth(), src->getHeight(), RGBA | BYTE);
 	dst->getData().resize(src->getWidth() * src->getHeight() * dst->getBytesPerPixel());
 	memset(dst->getData().data(), 255, dst->getData().size());
 

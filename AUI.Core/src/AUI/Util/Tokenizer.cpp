@@ -1,7 +1,7 @@
 ﻿#include "Tokenizer.h"
 #include "AUI/Common/AStringVector.h"
 #include "AUI/Common/AMap.h"
-#include "AUI/Common/Set.h"
+#include "AUI/Common/ASet.h"
 #include "AUI/IO/StringStream.h"
 
 Tokenizer::Tokenizer(const AString& fromString):
@@ -34,7 +34,7 @@ AString Tokenizer::readString()
 	}
 	return res;
 }
-AString Tokenizer::readString(const Set<char>& applicableChars)
+AString Tokenizer::readString(const ASet<char>& applicableChars)
 {
 	AString res;
 	res.reserve(128);

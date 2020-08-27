@@ -185,7 +185,7 @@ protected:
 	/**
 	 * \brief Значения максимального размера CSS.
 	 */
-	glm::ivec2 mMaxSize = {0, 0};
+	glm::ivec2 mMaxSize = {0x7fffffff, 0x7fffffff};
 
 	/**
 	 * \brief Значения абсолютного размера CSS (и не только).

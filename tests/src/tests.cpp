@@ -9,7 +9,7 @@
 #include <AUI/Data/AModelMeta.h>
 #include <AUI/Data/ASqlModel.h>
 #include "AUI/Common/AString.h"
-#include "AUI/Util/Random.h"
+#include "AUI/Util/ARandom.h"
 #include "AUI/Crypt/ARsa.h"
 #include "AUI/Crypt/AX509.h"
 #include "AUI/IO/FileInputStream.h"
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(EncryptDecrypt)
 	for (uint32_t i = 0; i < 4; ++i, bits <<= 1) {
 		auto r = ARsa::generate();
 		for (auto size : { 10, 1000, 5000 }) {
-			auto someData = Random().nextBytes(size);
+			auto someData = ARandom().nextBytes(size);
 
 			auto encrypted = r->encrypt(someData);
 			auto decrypted = r->decrypt(encrypted);
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(PEM_PrivateRead)
 	auto both = ARsa::generate();
 	auto priv = ARsa::fromPrivateKeyPEM(both->getPrivateKeyPEM());
 
-	auto someData = Random().nextBytes(10000);
+	auto someData = ARandom().nextBytes(10000);
 	auto result = priv->decrypt(both->encrypt(someData));
 
 	BOOST_CHECK_EQUAL(*someData, *result);
@@ -237,7 +237,7 @@ BOOST_AUTO_TEST_CASE(PEM_PublicRead)
 	auto both = ARsa::generate();
 	auto pub = ARsa::fromPublicKeyPEM(both->getPublicKeyPEM());
 
-	auto someData = Random().nextBytes(10000);
+	auto someData = ARandom().nextBytes(10000);
 	auto result = both->decrypt(pub->encrypt(someData));
 
 	BOOST_CHECK_EQUAL(*someData, *result);

@@ -67,7 +67,8 @@ public:
 	Render();
 
 	void drawRect(float x, float y, float width, float height);
-	void drawTexturedRect(float x, float y, float width, float height, const glm::vec2& uv1, const glm::vec2& uv2);
+	void drawTexturedRect(float x, float y, float width, float height,
+                       const glm::vec2& uv1 = {0, 0}, const glm::vec2& uv2 = {1, 1});
 	void drawRoundedRect(float x, float y, float width, float height, float radius);
 	void drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s);
 	void drawRectBorder(float x, float y, float width, float height, float lineWidth = 1.f);
