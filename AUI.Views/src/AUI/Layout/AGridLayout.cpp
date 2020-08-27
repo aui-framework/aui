@@ -21,7 +21,7 @@ int& AGridLayout::indexAt(int x, int y)
 
 AVector<_<AView>> AGridLayout::getRow(int row)
 {
-	Set<int> indices;
+	ASet<int> indices;
 	AVector<_<AView>> result;
 
 	for (auto i : mIndices)
@@ -42,7 +42,7 @@ AVector<_<AView>> AGridLayout::getRow(int row)
 
 AVector<_<AView>> AGridLayout::getColumn(int column)
 {
-	Set<int> indices;
+	ASet<int> indices;
 	AVector<_<AView>> result;
 
 	for (auto i : mIndices)

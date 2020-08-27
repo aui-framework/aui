@@ -1,9 +1,9 @@
 ﻿#include "ASpacer.h"
 
 int ASpacer::getContentMinimumWidth() {
-    return 20;
+    return mMinimumSize.x;
 }
 
 int ASpacer::getContentMinimumHeight() {
-    return 20;
+    return mMinimumSize.y;
 }

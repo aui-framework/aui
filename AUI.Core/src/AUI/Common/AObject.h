@@ -2,7 +2,7 @@
 
 #include "SharedPtrTypes.h"
 #include "AUI/Core.h"
-#include "AUI/Common/Set.h"
+#include "AUI/Common/ASet.h"
 
 class AString;
 class AAbstractSignal;
@@ -13,7 +13,7 @@ class API_AUI_CORE AObject
 	friend class AAbstractSignal;
 private:
 	_<AAbstractThread> mAttachedThread;
-	Set<AAbstractSignal*> mSignals;
+	ASet<AAbstractSignal*> mSignals;
 	bool mSignalsEnabled = true;
 	
 protected:

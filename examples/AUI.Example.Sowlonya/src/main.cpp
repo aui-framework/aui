@@ -7,7 +7,7 @@
 #include <AUI/Platform/Desktop.h>
 #include <AUI/View/AButton.h>
 #include <AUI/Render/Stylesheet.h>
-#include <AUI/Util/Random.h>
+#include <AUI/Util/ARandom.h>
 #include <AUI/View/ASpacer.h>
 #include <glm/glm.hpp>
 #include <AUI/Image/AImageLoaderRegistry.h>

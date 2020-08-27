@@ -119,10 +119,11 @@ void GL::Texture::bind(uint8_t index) const {
 
 void GL::Texture::tex2D(_<AImage> image) {
 	bind();
-
 	Result types = recognize(image);
 
+	glGetError();
 	glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image->getWidth(), image->getHeight(), 0, types.format, types.type, image->getData().empty() ? nullptr : image->getData().data());
+	assert(glGetError() == 0);
 }
 
 GL::Texture::operator bool() const {

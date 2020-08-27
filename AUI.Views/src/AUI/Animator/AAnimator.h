@@ -10,13 +10,13 @@ class API_AUI_VIEWS AAnimator {
 private:
     AView* mView = nullptr;
 
-    float mCurrentTheta = 1.f;
+    float mCurrentTheta = 0;
     float mDuration = 1;
 
     bool mIsPlaying = true;
     bool mIsRepeating = false;
 
-    std::chrono::milliseconds mLastFrameTime;
+    std::chrono::milliseconds mLastFrameTime = std::chrono::milliseconds(0);
 
 protected:
     /**

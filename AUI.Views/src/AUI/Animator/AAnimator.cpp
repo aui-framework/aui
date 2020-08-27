@@ -6,9 +6,8 @@
 #include "AAnimator.h"
 
 void AAnimator::animate() {
-    AWindow::current()->flagRedraw();
-
     if (mIsPlaying) {
+        AWindow::current()->flagRedraw();
         auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::high_resolution_clock::now().time_since_epoch());
 
