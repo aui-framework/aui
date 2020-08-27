@@ -80,7 +80,8 @@ int AHorizontalLayout::getMinimumHeight()
 	int minHeight = 0;
 	for (auto& v : mViews)
 	{
-		minHeight = glm::max(minHeight, int(v->getMinimumHeight() + v->getMargin().vertical()));
+	    auto h = v->getMinimumHeight();
+		minHeight = glm::max(minHeight, int(h + v->getMargin().vertical()));
 	}
 	return minHeight;
 }

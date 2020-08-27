@@ -7,7 +7,7 @@
 _<IDrawable> Drawables::load(const AString& key)
 {
 	return AImageLoaderRegistry::instance()
-			.loadImage(ByteBuffer::fromStream(AUrl(key).open()));
+            .loadVectorImage(ByteBuffer::fromStream(AUrl(key).open()));
 }
 
 Drawables::~Drawables()

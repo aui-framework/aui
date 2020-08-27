@@ -7,7 +7,7 @@ void AImageLoaderRegistry::registerImageLoader(_<IImageLoader> imageLoader)
 	mImageLoaders << imageLoader;
 }
 
-_<IDrawable> AImageLoaderRegistry::loadImage(_<ByteBuffer> buffer)
+_<IDrawable> AImageLoaderRegistry::loadVectorImage(_<ByteBuffer> buffer)
 {
 	for (auto& loader : mImageLoaders)
 	{
@@ -28,4 +28,26 @@ _<IDrawable> AImageLoaderRegistry::loadImage(_<ByteBuffer> buffer)
 		}
 	}
 	return nullptr;
+}
+
+_<AImage> AImageLoaderRegistry::loadRasterImage(_<ByteBuffer> buffer) {
+    for (auto& loader : mImageLoaders)
+    {
+        try {
+            bool matches = loader->matches(buffer);
+            buffer->setCurrentPos(0);
+            if (matches)
+            {
+                if (auto drawable = loader->getRasterImage(buffer))
+                {
+                    return drawable;
+                }
+                buffer->setCurrentPos(0);
+            }
+        } catch(...)
+        {
+            buffer->setCurrentPos(0);
+        }
+    }
+    return nullptr;
 }

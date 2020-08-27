@@ -127,8 +127,10 @@ void ALabel::setMultiline(const bool multiline)
 
 void ALabel::setGeometry(int x, int y, int width, int height)
 {
-	bool refresh = mMultiline && width != getWidth();
+    auto oldWidth = getWidth();
 	AView::setGeometry(x, y, width, height);
+
+    bool refresh = mMultiline && oldWidth != getWidth();
 
 	if (mMultiline)
 		updateMultiline();

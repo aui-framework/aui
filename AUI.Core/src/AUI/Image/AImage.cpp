@@ -25,31 +25,19 @@ AVector<uint8_t>& AImage::getData() {
 	return mData;
 }
 
-uint16_t AImage::getWidth() const {
-	return mWidth;
-}
-
-uint16_t AImage::getHeight() const {
-	return mHeight;
-}
-
-int AImage::getFormat() const {
-	return mFormat;
-}
-
 _<AImage> AImage::addAlpha(const _<AImage>& src)
 {
 	auto dst = _new<AImage>(AVector<uint8_t>(), src->getWidth(), src->getHeight(), RGBA);
-	dst->getData().resize(src->getWidth() * src->getHeight() * dst->getBPP());
+	dst->getData().resize(src->getWidth() * src->getHeight() * dst->getBytesPerPixel());
 	memset(dst->getData().data(), 255, dst->getData().size());
 
 	// https://stackoverflow.com/questions/9900854/opengl-creating-texture-atlas-at-run-time
 	for (int sourceY = 0; sourceY < src->mHeight; ++sourceY) {
 		for (int sourceX = 0; sourceX < src->mWidth; ++sourceX) {
-			int from = (sourceY * src->mWidth * src->getBPP()) + (sourceX * src->getBPP()); // 4 bytes per pixel (assuming RGBA)
-			int to = ((sourceY)* dst->mWidth * dst->getBPP()) + ((sourceX)* dst->getBPP()); // same format as source
+			int from = (sourceY * src->mWidth * src->getBytesPerPixel()) + (sourceX * src->getBytesPerPixel()); // 4 bytes per pixel (assuming RGBA)
+			int to = ((sourceY)* dst->mWidth * dst->getBytesPerPixel()) + ((sourceX)* dst->getBytesPerPixel()); // same format as source
 
-			for (int channel = 0; channel < src->getBPP(); ++channel) {
+			for (int channel = 0; channel < src->getBytesPerPixel(); ++channel) {
 				dst->mData[to + channel] = src->mData[from + channel];
 			}
 		}
@@ -59,7 +47,7 @@ _<AImage> AImage::addAlpha(const _<AImage>& src)
 
 _<AImage> AImage::resize(_<AImage> src, uint16_t width, uint16_t height) {
 	auto n = _new<AImage>(AVector<uint8_t>(), width, height, src->getFormat());
-	n->getData().resize(width * height * n->getBPP());
+	n->getData().resize(width * height * n->getBytesPerPixel());
 	copy(src, n, 0, 0);
 	return n;
 }
@@ -67,7 +55,7 @@ _<AImage> AImage::resize(_<AImage> src, uint16_t width, uint16_t height) {
 glm::ivec4 AImage::getPixelAt(uint16_t x, uint16_t y)
 {
 	uint8_t* dataPtr = &mData[mHeight * glm::clamp(y, uint16_t(0), mHeight) + glm::clamp(x, uint16_t(0), mWidth)];
-	switch (getBPP())
+	switch (getBytesPerPixel())
 	{
 	case 1:
 		return { dataPtr[0], 0, 0, 0 };
@@ -83,7 +71,7 @@ glm::ivec4 AImage::getPixelAt(uint16_t x, uint16_t y)
 void AImage::setPixelAt(uint16_t x, uint16_t y, const glm::ivec4& val)
 {
 	uint8_t* dataPtr = &mData[mHeight * glm::clamp(y, uint16_t(0), mHeight) + glm::clamp(x, uint16_t(0), mWidth)];
-	switch (getBPP())
+	switch (getBytesPerPixel())
 	{
 	case 4:
 		dataPtr[3] = val.w;
@@ -99,7 +87,7 @@ void AImage::setPixelAt(uint16_t x, uint16_t y, const glm::ivec4& val)
 _<AImage> AImage::resizeLinearDownscale(_<AImage> src, uint16_t width, uint16_t height)
 {
 	auto n = _new<AImage>(AVector<uint8_t>(), width, height, src->getFormat());
-	n->getData().resize(width * height * n->getBPP());
+	n->getData().resize(width * height * n->getBytesPerPixel());
 
 	uint16_t deltaX = src->getWidth() / width;
 	uint16_t deltaY = src->getHeight() / height;
@@ -130,23 +118,12 @@ void AImage::copy(_<AImage> src, _<AImage> dst, uint16_t x, uint16_t y) {
 	// https://stackoverflow.com/questions/9900854/opengl-creating-texture-atlas-at-run-time
 	for (uint16_t sourceY = 0; sourceY < glm::min(src->mHeight, dst->mHeight); ++sourceY) {
 		for (uint16_t sourceX = 0; sourceX < glm::min(src->mWidth, dst->mWidth); ++sourceX) {
-			uint16_t from = (sourceY * src->mWidth * src->getBPP()) + (sourceX * src->getBPP()); // 4 bytes per pixel (assuming RGBA)
-			uint16_t to = ((y + sourceY) * dst->mWidth * dst->getBPP()) + ((x + sourceX) * dst->getBPP()); // same format as source
+			uint16_t from = (sourceY * src->mWidth * src->getBytesPerPixel()) + (sourceX * src->getBytesPerPixel()); // 4 bytes per pixel (assuming RGBA)
+			uint16_t to = ((y + sourceY) * dst->mWidth * dst->getBytesPerPixel()) + ((x + sourceX) * dst->getBytesPerPixel()); // same format as source
 
-			for (uint16_t channel = 0; channel < dst->getBPP(); ++channel) {
+			for (uint16_t channel = 0; channel < dst->getBytesPerPixel(); ++channel) {
 				dst->mData[to + channel] = src->mData[from + channel];
 			}
 		}
 	}
-}
-
-/*!
- * @return Количество байт на пиксель.
- */
-uint8_t AImage::getBPP() const {
-	uint8_t b = static_cast<uint8_t>(mFormat & 15);
-	if (mFormat & FLOAT) {
-		b *= 4;
-	}
-	return b;
 }

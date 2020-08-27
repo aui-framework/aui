@@ -380,3 +380,7 @@ _<IDrawable> SvgImageLoader::getDrawable(_<ByteBuffer> buffer)
 	
 	return drawable;
 }
+
+_<AImage> SvgImageLoader::getRasterImage(_<ByteBuffer> buffer) {
+    return nullptr;
+}

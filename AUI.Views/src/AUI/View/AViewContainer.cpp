@@ -237,3 +237,12 @@ void AViewContainer::setGeometry(int x, int y, int width, int height) {
     AView::setGeometry(x, y, width, height);
     updateLayout();
 }
+
+void AViewContainer::removeAllViews() {
+    if (mLayout) {
+        for (auto& x : getViews()) {
+            mLayout->removeView(x);
+        }
+    }
+    mViews.clear();
+}

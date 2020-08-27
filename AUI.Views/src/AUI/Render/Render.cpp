@@ -67,7 +67,7 @@ Render::Render()
 		"uniform sampler2D tex;"
 		"varying vec2 pass_uv;"
 		"void main(void) {gl_FragColor = texture2D(tex, pass_uv);}",
-		{"pos", "uv"});
+		{"pos", "", "uv"});
 
 	mSymbolShader.load(
 		"attribute vec3 pos;"
@@ -141,6 +141,24 @@ void Render::drawRect(float x, float y, float width, float height)
 
 	mTempVao.indices({ 0, 1, 2, 2, 1, 3 });
 	mTempVao.draw();
+}
+
+void Render::drawTexturedRect(float x, float y, float width, float height, const glm::vec2& uv1, const glm::vec2& uv2) {
+    uploadToShader();
+    mTempVao.bind();
+    glEnableVertexAttribArray(2);
+
+    mTempVao.insert(0, getVerticesForRect(x, y, width, height));
+    mTempVao.insert(2, {
+        glm::vec2{uv1.x, uv2.y},
+        glm::vec2{uv2.x, uv2.y},
+        glm::vec2{uv1.x, uv1.y},
+        glm::vec2{uv2.x, uv1.y},
+    });
+
+    mTempVao.indices({ 0, 1, 2, 2, 1, 3 });
+    mTempVao.draw();
+    glDisableVertexAttribArray(2);
 }
 
 void Render::drawRoundedRect(float x, float y, float width, float height, float radius) {
@@ -447,5 +465,6 @@ void Render::uploadToShader()
 	GL::Shader::currentShader()->set("color", mColor);
 	GL::Shader::currentShader()->set("transform", mTransform);
 }
+
 
 

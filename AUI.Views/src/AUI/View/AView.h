@@ -180,17 +180,17 @@ protected:
 	/**
 	 * \brief Значения минимального размера CSS.
 	 */
-	glm::ivec2 mMinSize;
+	glm::ivec2 mMinSize = {0, 0};
 
 	/**
 	 * \brief Значения максимального размера CSS.
 	 */
-	glm::ivec2 mMaxSize;
+	glm::ivec2 mMaxSize = {0, 0};
 
 	/**
-	 * \brief Значения абсолютного размера CSS.
+	 * \brief Значения абсолютного размера CSS (и не только).
 	 */
-	glm::ivec2 mFixedSize;
+	glm::ivec2 mFixedSize = {0, 0};
 
 	/**
 	 * \brief CSS margin. Подсказывает менеджеру компоновки,
@@ -413,6 +413,10 @@ public:
 	FontStyle& getFontStyle();
 
 	virtual void setSize(int width, int height);
+
+	void setFixedSize(const glm::ivec2& size) {
+	    mFixedSize = size;
+	}
 
 	virtual void setGeometry(int x, int y, int width, int height)
 	{

@@ -5,7 +5,7 @@
 #include "AUI/Image/AImage.h"
 
 namespace GL {
-	class Texture {
+	class API_AUI_VIEWS Texture {
 	private:
 		uint32_t mTexture = 0;
 	public:

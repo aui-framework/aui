@@ -10,7 +10,7 @@
 
 class API_AUI_CORE AImage {
 public:
-	enum Format {
+	enum Format : unsigned {
 		UNKNOWN = 0,
 		R = 1,
 		RG = 2,
@@ -23,7 +23,7 @@ private:
 	AVector<uint8_t> mData;
 	uint16_t mWidth;
 	uint16_t mHeight;
-	int mFormat = UNKNOWN;
+	unsigned mFormat = UNKNOWN;
 	
 public:
 	AImage();
@@ -31,15 +31,39 @@ public:
 	AImage(AVector<uint8_t> mData, uint16_t mWidth, uint16_t mHeight, int mFormat);
 
 	AVector<uint8_t>& getData();
-	uint16_t getWidth() const;
-	uint16_t getHeight() const;
-	uint8_t getBPP() const;
 
-	int getFormat() const;
+    [[nodiscard]] inline uint16_t getWidth() const {
+	    return mWidth;
+	}
+    [[nodiscard]] inline uint16_t getHeight() const {
+	    return mHeight;
+	}
+
+    inline unsigned getFormat() const {
+        return mFormat;
+    }
+
+    /**
+     * \return Количество байт на пиксель.
+     */
+    inline uint8_t getBytesPerPixel() const {
+        auto b = static_cast<uint8_t>(mFormat & 15u);
+        if (mFormat & FLOAT) {
+            b *= 4;
+        }
+        return b;
+    }
+
+
+    inline glm::ivec2 getSize() const {
+	    return {getWidth(), getHeight()};
+	}
+
+    glm::ivec4 getPixelAt(uint16_t x, uint16_t y);
+    void setPixelAt(uint16_t x, uint16_t y, const glm::ivec4& val);
+
 	static _<AImage> addAlpha(const _<AImage>& AImage);
 	static _<AImage> resize(_<AImage> src, uint16_t width, uint16_t height);
-	glm::ivec4 getPixelAt(uint16_t x, uint16_t y);
-	void setPixelAt(uint16_t x, uint16_t y, const glm::ivec4& val);
 	static _<AImage> resizeLinearDownscale(_<AImage> src, uint16_t width, uint16_t height);
 	static void copy(_<AImage> src, _<AImage> dst, uint16_t x, uint16_t y);
 };

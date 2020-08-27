@@ -30,6 +30,7 @@ _<IInputStream> BuiltinFiles::open(const AString& file)
 {
 	if (auto c = instance().mBuffers.contains(file))
 	{
+	    c->second->setCurrentPos(0);
 		return _new<ByteBufferInputStream>(c->second);
 	}
 	return nullptr;

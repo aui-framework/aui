@@ -36,6 +36,7 @@ public:
 	virtual ~AViewContainer();
 	void addView(_<AView> view);
 	void removeView(_<AView> view);
+	void removeAllViews();
 
 	void render() override;
 

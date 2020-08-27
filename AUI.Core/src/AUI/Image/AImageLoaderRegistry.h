@@ -1,4 +1,6 @@
 ﻿#pragma once
+
+#include <AUI/Url/AUrl.h>
 #include "IImageLoader.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/SharedPtr.h"
@@ -16,5 +18,12 @@ public:
 
 	void registerImageLoader(_<IImageLoader> imageLoader);
 
-	_<IDrawable> loadImage(_<ByteBuffer> buffer);
+	_<IDrawable> loadVectorImage(_<ByteBuffer> buffer);
+	_<AImage> loadRasterImage(_<ByteBuffer> buffer);
+	inline _<IDrawable> loadVectorImage(const AUrl& url) {
+	    return loadVectorImage(ByteBuffer::fromStream(url.open()));
+	}
+	inline _<AImage> loadRasterImage(const AUrl& url) {
+        return loadRasterImage(ByteBuffer::fromStream(url.open()));
+	}
 };

@@ -9,4 +9,6 @@ public:
 
 	bool matches(_<ByteBuffer> buffer) override;
 	_<IDrawable> getDrawable(_<ByteBuffer> buffer) override;
+
+    _<AImage> getRasterImage(_<ByteBuffer> buffer) override;
 };

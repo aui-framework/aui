@@ -12,6 +12,7 @@ private:
 	
 public:
 	AUrl(const AString& full);
+	inline AUrl(const char* full): AUrl(AString(full)) {}
 
 	_<IInputStream> open() const;
 	

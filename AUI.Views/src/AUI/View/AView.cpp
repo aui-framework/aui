@@ -195,7 +195,6 @@ void AView::recompileCSS()
     mBorderRadius = 0.f;
     mForceStencilForBackground = false;
 	mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-	mFixedSize = {};
 	mFontStyle = {AFontManager::instance().getDefault(), 12, false, ALIGN_LEFT, AColor(0, 0, 0, 1.f) };
 	mBackgroundEffects.clear();
 

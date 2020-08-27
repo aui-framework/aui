@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "IDrawable.h"
 #include "AUI/Common/SharedPtr.h"
+#include "AImage.h"
 
 class ByteBuffer;
 
@@ -18,8 +19,17 @@ public:
 
 	/**
 	 * \brief Вызывается тогда и только тогда, когда matches вернёт true.
-	 *        Непосредственно загрузчик изображения.
-	 * 
+	 *        Непосредственно загрузчик изображения (векторный).
+	 * \return векторное изображение (nullable)
 	 */
 	virtual _<IDrawable> getDrawable(_<ByteBuffer> buffer) = 0;
+
+	/**
+	 * \brief Вызывается тогда и только тогда, когда matches вернёт true.
+	 *        Непосредственно загрузчик изображения (растровый)
+	 * \return растровое изображение (nullable)
+	 */
+	virtual _<AImage> getRasterImage(_<ByteBuffer> buffer) = 0;
 };
+
+#include "AUI/Common/ByteBuffer.h"

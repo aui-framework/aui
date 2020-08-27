@@ -218,7 +218,7 @@ AString AFont::trimStringToWidth(const AString& text, size_t width, long size, F
 AStringVector AFont::trimStringToMultiline(const AString& text, int width, long scale, FontRendering fr) {
 	AStringVector v;
 	AString currentText = text;
-	while (text.length()) {
+	while (currentText.length()) {
 		AString l = trimStringToWidth(currentText, width, scale, fr);
 		v.push_back(l);
 		size_t len = l.length();

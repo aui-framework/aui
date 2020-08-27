@@ -15,7 +15,7 @@ void Util::SimpleTexturePacker::onResize(_<AImage> data, Util::dim side) {
 	}
 	else {
 		AVector<uint8_t> c;
-		c.resize(static_cast<size_t>(side * side * data->getBPP()));
+		c.resize(static_cast<size_t>(side * side * data->getBytesPerPixel()));
 		mImage = _new<AImage>(c, side, side, data->getFormat());
 	}
 }
