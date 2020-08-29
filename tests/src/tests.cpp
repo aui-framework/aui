@@ -8,6 +8,7 @@
 #include <AUI/Data/ASqlBuilder.h>
 #include <AUI/Data/AModelMeta.h>
 #include <AUI/Data/ASqlModel.h>
+#include <AUI/Common/ASignal.h>
 #include "AUI/Common/AString.h"
 #include "AUI/Util/ARandom.h"
 #include "AUI/Crypt/ARsa.h"
@@ -364,6 +365,34 @@ BOOST_AUTO_TEST_CASE(NullSafety)
 	BOOST_CHECK_EQUAL(persons[0]->getName(), "Loh");
 	BOOST_CHECK_EQUAL(persons[1]->getName(), "Loh");
 	BOOST_CHECK_EQUAL(persons[2], nullptr);
+}
+class SendObject: public AObject {
+public:
+    void invokeSignal() {
+        emit someSignal();
+    }
+
+signals:
+    emits<> someSignal;
+};
+class ReceiverObject: public AObject {
+public:
+    void receiverSignal() {
+        mSignalInvoked = true;
+    }
+
+    bool mSignalInvoked = false;
+};
+BOOST_AUTO_TEST_CASE(ConnectBuilder)
+{
+    auto receiver = _new<ReceiverObject>();
+
+    auto sender = _new<SendObject>()
+            .connect(&SendObject::someSignal, receiver, &ReceiverObject::receiverSignal);
+
+    sender->invokeSignal();
+
+    BOOST_TEST(receiver->mSignalInvoked);
 }
 BOOST_AUTO_TEST_SUITE_END()
 

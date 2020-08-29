@@ -52,6 +52,9 @@ public:
 		return *this;
 	}
 
+	template<typename SignalField, typename Object, typename Function>
+	_<T>& connect(SignalField signalField, Object object, Function function);
+
 	auto operator~()
 	{
 		return SafeCallWrapper(*this);

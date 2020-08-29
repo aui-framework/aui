@@ -26,3 +26,11 @@ inline auto _new(Args&& ... args)
 		return _<T>(std::make_shared<T>(args...));
 	}
 }
+
+
+template<typename T>
+template<typename SignalField, typename Object, typename Function>
+_<T>& _<T>::connect(SignalField signalField, Object object, Function function) {
+    AObject::connect(parent::get()->*signalField, object, function);
+    return *this;
+}
