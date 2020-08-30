@@ -30,6 +30,13 @@ inline auto _new(Args&& ... args)
 
 template<typename T>
 template<typename SignalField, typename Object, typename Function>
+inline _<T>& _<T>::connect(SignalField signalField, Object object, Function function) {
+    AObject::connect(parent::get()->*signalField, object, function);
+    return *this;
+}
+
+template<typename T>
+template<typename SignalField, typename Object, typename Function>
 _<T>& _<T>::connect(SignalField signalField, Object object, Function function) {
     AObject::connect(parent::get()->*signalField, object, function);
     return *this;

@@ -48,16 +48,16 @@ public:
 
 
 	template<typename MemberFunction, typename... Args>
-	_<T>& operator()(MemberFunction memberFunction, Args&&... args) {
+	inline _<T>& operator()(MemberFunction memberFunction, Args&&... args) {
 		(parent::get()->*memberFunction)(std::forward<Args>(args)...);
 		return *this;
 	}
 
 	template<typename SignalField, typename Object, typename Function>
-	_<T>& connect(SignalField signalField, Object object, Function function);
+	inline _<T>& connect(SignalField signalField, Object object, Function function);
 
 	template<typename Functor>
-	_<T>& apply() {
+	inline _<T>& apply() {
         (*reinterpret_cast<Functor*>(get()))();
 	    return *this;
 	}
@@ -67,7 +67,7 @@ public:
 	 *        не равен null.
 	 * \return безопасный builder
 	 */
-	auto safe()
+    inline auto safe()
 	{
 		return SafeCallWrapper(*this);
 	}

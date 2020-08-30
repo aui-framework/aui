@@ -15,14 +15,14 @@
  * };<br />
  * ...<br />
  * auto worker = _new&lt;Worker&gt;();<br />
- * with(worker, {<br />
+ * apply(worker, {<br />
  * &#09;buildHouse();<br />
  * &#09;plantTree();<br />
  * &#09;raiseSon();<br />
  * });<br />
  * </code>
  */
-#define with(object, lambda)                                                   \
+#define apply(object, lambda)                                                   \
     struct __with ## __FUNCTION__ ## __LINE__   : decltype(object)::stored_t { \
         void operator()() {                                                    \
             ([&]() lambda )();                                                 \
