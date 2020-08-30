@@ -12,6 +12,7 @@ private:
 	using parent = std::shared_ptr<T>;
 	
 public:
+    using stored_t = T;
 
 	class SafeCallWrapper
 	{
@@ -55,7 +56,18 @@ public:
 	template<typename SignalField, typename Object, typename Function>
 	_<T>& connect(SignalField signalField, Object object, Function function);
 
-	auto operator~()
+	template<typename Functor>
+	_<T>& apply() {
+        (*reinterpret_cast<Functor*>(get()))();
+	    return *this;
+	}
+
+	/**
+	 * \brief Гарантирует, что дальнейшие builder-вызовы будут выполняться тогда и только тогда, когда этот указатель
+	 *        не равен null.
+	 * \return безопасный builder
+	 */
+	auto safe()
 	{
 		return SafeCallWrapper(*this);
 	}

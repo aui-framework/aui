@@ -355,7 +355,7 @@ BOOST_AUTO_TEST_CASE(NullSafety)
 
 	for (auto& person : persons)
 	{
-		(~person)
+        person.safe()
 			(&Person::setAge, 80)
 			(&Person::setName, "Loh")
 		;
@@ -377,20 +377,24 @@ signals:
 };
 class ReceiverObject: public AObject {
 public:
-    void receiverSignal() {
+    void receiveSignal() {
         mSignalInvoked = true;
     }
 
     bool mSignalInvoked = false;
 };
+
 BOOST_AUTO_TEST_CASE(ConnectBuilder)
 {
     auto receiver = _new<ReceiverObject>();
 
     auto sender = _new<SendObject>()
-            .connect(&SendObject::someSignal, receiver, &ReceiverObject::receiverSignal);
+            .connect(&SendObject::someSignal, receiver, &ReceiverObject::receiveSignal);
 
-    sender->invokeSignal();
+
+    with(sender, {
+       invokeSignal();
+    });
 
     BOOST_TEST(receiver->mSignalInvoked);
 }

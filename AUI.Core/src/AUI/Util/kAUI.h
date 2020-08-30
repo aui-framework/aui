@@ -2,6 +2,33 @@
 
 #include <AUI/Thread/AThreadPool.h>
 
+/**
+ * \brief Выполнить несколько операций над одним объектом, не повторяя его имени.
+ * \note аналог <code>with</code>, <code>apply</code> в Kotlin
+ * \example
+ * <code>
+ * class Worker {<br />
+ * public:<br />
+ * &#09;void buildHouse();<br />
+ * &#09;void plantTree();<br />
+ * &#09;void raiseSon();<br />
+ * };<br />
+ * ...<br />
+ * auto worker = _new&lt;Worker&gt;();<br />
+ * with(worker, {<br />
+ * &#09;buildHouse();<br />
+ * &#09;plantTree();<br />
+ * &#09;raiseSon();<br />
+ * });<br />
+ * </code>
+ */
+#define with(object, lambda)                                                   \
+    struct __with ## __FUNCTION__ ## __LINE__   : decltype(object)::stored_t { \
+        void operator()() {                                                    \
+            ([&]() lambda )();                                                 \
+        }                                                                      \
+    };                                                                         \
+    object.apply<__with ## __FUNCTION__ ## __LINE__>();
 
 #define async AThreadPool::global() * [=]()
 #define ui (*getThread()) * [=]()
