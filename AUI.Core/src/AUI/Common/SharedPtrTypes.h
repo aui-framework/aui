@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <functional>
 
 class AObject;
 
@@ -56,8 +57,7 @@ public:
 	template<typename SignalField, typename Object, typename Function>
 	inline _<T>& connect(SignalField signalField, Object object, Function function);
 
-	template<typename Functor>
-	inline _<T>& applyOnFunctor(Functor functor) {
+	inline _<T>& applyOnFunctor(const std::function<void(_<T>)>& functor) {
         functor(*this);
 	    return *this;
 	}
