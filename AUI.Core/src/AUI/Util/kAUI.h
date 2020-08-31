@@ -22,13 +22,13 @@
  * });<br />
  * </code>
  */
-#define apply(object, lambda)                                                   \
-    struct __with ## __FUNCTION__ ## __LINE__   : decltype(object)::stored_t { \
+#define apply(object, lambda)                                                  \
+    struct __apply ## __FUNCTION__ ## __LINE__   : decltype(object)::stored_t { \
         void operator()() {                                                    \
             ([&]() lambda )();                                                 \
         }                                                                      \
     };                                                                         \
-    object.apply<__with ## __FUNCTION__ ## __LINE__>();
+    object.apply<__apply ## __FUNCTION__ ## __LINE__>();
 
 #define async AThreadPool::global() * [=]()
 #define ui (*getThread()) * [=]()
