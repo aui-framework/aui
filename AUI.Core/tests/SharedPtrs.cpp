@@ -3,46 +3,57 @@
 //
 
 #include <boost/test/unit_test.hpp>
+#include <AUI/Util/kAUI.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/ASignal.h>
-#include <AUI/Util/kAUI.h>
 
 using namespace boost::unit_test;
 
+class SomeBuilderClass {
+private:
+    AString mUsername;
+    int mAge = -1;
+public:
+    SomeBuilderClass() {}
+
+    void setUsername(const AString& username) {
+        mUsername = username;
+    }
+
+    void setAge(int age) {
+        mAge = age;
+    }
+
+
+    const AString& getUsername() const {
+        return mUsername;
+    }
+
+    int getAge() const {
+        return mAge;
+    }
+};
+
 BOOST_AUTO_TEST_SUITE(SharedPtrs)
 
-    BOOST_AUTO_TEST_CASE(Builder) {
-        class SomeBuilderClass {
-        private:
-            AString mUsername;
-            int mAge = -1;
-        public:
-            SomeBuilderClass() {}
-
-            void setUsername(const AString& username) {
-                mUsername = username;
-            }
-
-            void setAge(int age) {
-                mAge = age;
-            }
-
-
-            const AString& getUsername() const {
-                return mUsername;
-            }
-
-            int getAge() const {
-                return mAge;
-            }
-        };
+    BOOST_AUTO_TEST_CASE(Builder1) {
 
         auto builder = _new<SomeBuilderClass>();
         apply(builder, {
            setUsername("John");
            setAge(23);
         });
+
+        BOOST_CHECK_EQUAL(builder->getUsername(), "John");
+        BOOST_CHECK_EQUAL(builder->getAge(), 23);
+    }
+
+    BOOST_AUTO_TEST_CASE(Builder2) {
+        auto builder = _new<SomeBuilderClass>() by ({
+            setUsername("John");
+        });
+
 
         BOOST_CHECK_EQUAL(builder->getUsername(), "John");
         BOOST_CHECK_EQUAL(builder->getAge(), 23);

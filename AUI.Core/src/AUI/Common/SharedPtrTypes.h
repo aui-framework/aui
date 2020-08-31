@@ -57,8 +57,8 @@ public:
 	inline _<T>& connect(SignalField signalField, Object object, Function function);
 
 	template<typename Functor>
-	inline _<T>& apply() {
-        (*reinterpret_cast<Functor*>(parent::get()))();
+	inline _<T>& applyOnFunctor(Functor functor) {
+        functor(*this);
 	    return *this;
 	}
 

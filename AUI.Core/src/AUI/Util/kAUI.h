@@ -28,7 +28,12 @@
             ([&]() lambda )();                                                 \
         }                                                                      \
     };                                                                         \
-    object.apply<__apply ## __FUNCTION__ ## __LINE__>();
+    (*reinterpret_cast<__apply ## __FUNCTION__ ## __LINE__ *>(object.get()))()
+
+#define by(lambda)               \
+    .applyOnFunctor([&](_<auto> object) { \
+        apply(object, lambda);   \
+    })
 
 #define async AThreadPool::global() * [=]()
 #define ui (*getThread()) * [=]()

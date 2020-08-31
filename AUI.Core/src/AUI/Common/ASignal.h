@@ -159,12 +159,12 @@ void ASignal<Args...>::invokeSignal()
 			{
 				i->object->getThread()->enqueue([=]()
 				{
-					std::apply(i->func, mArgs);
+                    (std::apply)(i->func, mArgs);
 				});
 			}
 			else
 			{
-                std::apply(i->func, mArgs);
+                (std::apply)(i->func, mArgs);
 			}
 			++i;
 		}
