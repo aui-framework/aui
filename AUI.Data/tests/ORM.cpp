@@ -2,9 +2,7 @@
 // Created by alex2 on 31.08.2020.
 //
 
-#define BOOST_TEST_MODULE ORM
-
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <AUI/Data/ASqlDatabase.h>
 #include <AUI/Autumn/Autumn.h>
 #include <AUI/Data/AMigrationManager.h>

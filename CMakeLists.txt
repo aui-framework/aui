@@ -39,7 +39,7 @@ function(AUI_Add_Properties AUI_MODULE_NAME)
 endfunction(AUI_Add_Properties)
 
 function(AUI_Tests TESTS_MODULE_NAME)
-	add_executable(${TESTS_MODULE_NAME} ${ARGV})
+	add_executable(${ARGV})
 	set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
 	target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
 	find_package(Boost REQUIRED)

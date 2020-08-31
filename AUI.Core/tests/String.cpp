@@ -2,9 +2,7 @@
 // Created by alex2 on 30.08.2020.
 //
 
-#define BOOST_TEST_MODULE String
-
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <AUI/Common/AString.h>
 
 using namespace boost::unit_test;

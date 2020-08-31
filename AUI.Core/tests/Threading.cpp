@@ -2,9 +2,7 @@
 // Created by alex2 on 30.08.2020.
 //
 
-#define BOOST_TEST_MODULE Threads
-
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Util/kAUI.h>

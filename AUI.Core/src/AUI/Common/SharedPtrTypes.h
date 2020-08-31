@@ -58,7 +58,7 @@ public:
 
 	template<typename Functor>
 	inline _<T>& apply() {
-        (*reinterpret_cast<Functor*>(get()))();
+        (*reinterpret_cast<Functor*>(parent::get()))();
 	    return *this;
 	}
 

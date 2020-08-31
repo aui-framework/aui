@@ -2,10 +2,7 @@
 // Created by alex2 on 31.08.2020.
 //
 
-
-#define BOOST_TEST_MODULE DependencyInjection
-
-#include <boost/test/included/unit_test.hpp>
+#include <boost/test/unit_test.hpp>
 #include <AUI/Autumn/Autumn.h>
 
 using namespace boost::unit_test;
