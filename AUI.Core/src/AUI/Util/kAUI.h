@@ -30,8 +30,8 @@
     };                                                                         \
     (*reinterpret_cast<__apply ## __FUNCTION__ ## __LINE__ *>(object.get()))()
 
-#define by(lambda)               \
-    .applyOnFunctor([&](_<auto> object) { \
+#define by(T, lambda)               \
+    .applyOnFunctor([&](_<T> object) { \
         apply(object, lambda);   \
     })
 

@@ -7,6 +7,7 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/ASignal.h>
+#include <AUI/Reflect/AClass.h>
 
 using namespace boost::unit_test;
 
@@ -35,6 +36,7 @@ public:
     }
 };
 
+
 BOOST_AUTO_TEST_SUITE(SharedPtrs)
 
     BOOST_AUTO_TEST_CASE(Builder1) {
@@ -50,8 +52,9 @@ BOOST_AUTO_TEST_SUITE(SharedPtrs)
     }
 
     BOOST_AUTO_TEST_CASE(Builder2) {
-        auto builder = _new<SomeBuilderClass>() by ({
+        auto builder = _new<SomeBuilderClass>() by(SomeBuilderClass, {
             setUsername("John");
+            setAge(23);
         });
 
 

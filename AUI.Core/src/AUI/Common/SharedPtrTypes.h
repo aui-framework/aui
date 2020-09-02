@@ -11,7 +11,7 @@ class _ : public std::shared_ptr<T>
 {
 private:
 	using parent = std::shared_ptr<T>;
-	
+
 public:
     using stored_t = T;
 
@@ -19,7 +19,7 @@ public:
 	{
 	private:
 		_<T>& mPtr;
-		
+
 	public:
 		SafeCallWrapper(_<T>& ptr)
 			: mPtr(ptr)
@@ -33,7 +33,7 @@ public:
 			return *this;
 		}
 	};
-	
+
 	_() = default;
 
 	template<typename X>
@@ -57,8 +57,10 @@ public:
 	template<typename SignalField, typename Object, typename Function>
 	inline _<T>& connect(SignalField signalField, Object object, Function function);
 
-	inline _<T>& applyOnFunctor(const std::function<void(_<T>)>& functor) {
-        functor(*this);
+
+	template <typename Functor>
+	inline _<T>& applyOnFunctor(Functor functor) {
+	    functor(*this);
 	    return *this;
 	}
 
