@@ -25,7 +25,7 @@
  * </code>
  */
 #define apply(object, lambda)                                                  \
-    struct __apply ## __FUNCTION__ ## __LINE__   : decltype(object)::stored_t { \
+    struct __apply ## __FUNCTION__ ## __LINE__   : std::decay_t<decltype(object)>::stored_t { \
         void operator()() {                                                    \
             ([&]() lambda )();                                                 \
         }                                                                      \
@@ -54,7 +54,7 @@
  * </code>
  */
 #define by(T, lambda)               \
-    .applyOnFunctor([&](_<T> object) { \
+    .applyOnFunctor([&](const _<T>& object) { \
         apply(object, lambda);   \
     })
 

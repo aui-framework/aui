@@ -30,14 +30,16 @@ MainWindow::MainWindow() : AWindow("Words", 300, 400) {
                 _container<AHorizontalLayout>(
                 {
                         _new<ASpacer>(),
-                        _new<ALabel>(u8"\uf1ce")
-                           (&ALabel::addCssName, ".icon")
-                           (&ALabel::setFont, AFontManager::instance().get(":words/fas.otf"))
-                           (&ALabel::setFontSize,50dp)
-                           (&ALabel::setExpanding, glm::ivec2(0))
-                           (&ALabel::setAnimator, _new<ARotationAnimator>()
-                                                     (&ARotationAnimator::setRepeating, true)
-                                                     (&ARotationAnimator::setDuration, 1.5f)),
+                        _new<ALabel>(u8"\uf1ce") by(ALabel, {
+                           addCssName(".icon");
+                           setFont(AFontManager::instance().get(":words/fas.otf"));
+                           setFontSize(50dp);
+                           setExpanding(glm::ivec2(0));
+                           setAnimator(_new<ARotationAnimator>() by(ARotationAnimator, {
+                               setRepeating(true);
+                               setDuration(1.5f);
+                           }));
+                        }),
                         _new<ASpacer>()
                 }),
                 _new<ALabel>(u8"Запуск...")
