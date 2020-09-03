@@ -81,6 +81,14 @@ public:
 	auto end() {
 	    return parent::operator->()->end();
 	}
+
+	// операторы
+
+    template<typename Arg>
+	_<T>& operator<<(Arg&& value) {
+        (*parent::get()) << std::forward<Arg>(value);
+        return *this;
+    }
 };
 
 template<typename T>
