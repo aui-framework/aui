@@ -45,9 +45,14 @@ public:
     template <class Iterator>
     inline AListModel(Iterator first, Iterator end): p(first, end) {}
     
-    void push_back(const StoredType& data) override {
+    void push_back(const StoredType& data) {
         p::push_back(data);
         emit this->dataInserted(AModelRange{AModelIndex(p::size()-1), AModelIndex(p::size()), this});
+    }
+
+    AListModel& operator<<(const StoredType& data) {
+        push_back(data);
+        return *this;
     }
 
     size_t listSize() override {

@@ -66,7 +66,7 @@ public:
 		}), this->end());
 	}
 
-    virtual void push_back(const StoredType& data) {
+    void push_back(const StoredType& data) {
         p::push_back(data);
     }
 
