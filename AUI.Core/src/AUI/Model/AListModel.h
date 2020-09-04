@@ -47,7 +47,7 @@ public:
     
     void push_back(const StoredType& data) override {
         p::push_back(data);
-        emit this->dataInserted({{p::size()-1}, {p::size()}, this});
+        emit this->dataInserted(AModelRange{AModelIndex(p::size()-1), AModelIndex(p::size()), this});
     }
 
     size_t listSize() override {
