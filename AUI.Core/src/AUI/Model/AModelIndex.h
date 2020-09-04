@@ -13,7 +13,7 @@ public:
 	{
 	}
 
-	explicit AModelIndex(int row)
+	AModelIndex(int row)
 		: mRow(row)
 	{
 	}
@@ -29,4 +29,12 @@ public:
 	{
 		return mColumn;
 	}
+
+	inline bool operator==(const AModelIndex& other) const {
+	    return mRow == other.mRow && mColumn == other.mColumn;
+	}
+	inline bool operator!=(const AModelIndex& other) const {
+	    return mRow != other.mRow || mColumn != other.mColumn;
+	}
+
 };

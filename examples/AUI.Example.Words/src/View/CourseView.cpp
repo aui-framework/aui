@@ -6,7 +6,7 @@
 #include <AUI/View/AButton.h>
 #include "CourseView.h"
 
-CourseView::CourseView() {
+NoteView::NoteView() {
     setLayout(_new<AHorizontalLayout>());
     addView(_container<AVerticalLayout>({
         _new<ALabel>("Заголовок") by(ALabel, {
@@ -19,10 +19,10 @@ CourseView::CourseView() {
 
     addView(_container<AStackedLayout>({
         _new<AButton>("Изучать")
-                .connect(&AButton::clicked, this, &CourseView::learn)
+                .connect(&AButton::clicked, this, &NoteView::learn)
     }));
 }
 
-void CourseView::learn() {
+void NoteView::learn() {
 
 }

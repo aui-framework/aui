@@ -8,7 +8,7 @@ class AListItem: public ALabel
 {
 private:
 	bool mSelected = false;
-	
+
 public:
 	AListItem()
 	{
@@ -39,17 +39,6 @@ public:
 
 
 
-AListView::AListView(const _<IListModel>& model): mModel(model)
-{
-	AVIEW_CSS;
-
-	setLayout(_new<AVerticalLayout>());
-	for (size_t i = 0; i < model->listSize(); ++i)
-	{
-		addView(_new<AListItem>(model->listItemAt(i).toString()));
-	}
-}
-
 int AListView::getContentMinimumHeight()
 {
 	return 40;
@@ -60,7 +49,7 @@ void AListView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 	AViewContainer::onMousePressed(pos, button);
 
 	auto target = _cast<AListItem>(getViewAt(pos));
-	if (target) {		
+	if (target) {
 		if (mSelected != nullptr)
 			mSelected->setSelected(false);
 		mSelected = target;
@@ -72,4 +61,21 @@ void AListView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 
 AListView::~AListView()
 {
+}
+
+AListView::AListView(const _<IListModel<AVariant>>& model): mModel(model) {
+    AVIEW_CSS;
+
+    setLayout(_new<AVerticalLayout>());
+    for (size_t i = 0; i < model->listSize(); ++i)
+    {
+        addView(_new<AListItem>(model->listItemAt(i).toString()));
+    }
+
+    connect(mModel->dataInserted, this, [&](const AModelRange<AVariant>& data) {
+        for (const auto& row : data) {
+            addView(_new<AListItem>(row.toString()));
+        }
+        updateLayout();
+    });
 }

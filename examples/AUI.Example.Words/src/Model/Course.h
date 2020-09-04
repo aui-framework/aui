@@ -4,12 +4,12 @@
 #include <AUI/Data/AModelMeta.h>
 #include <AUI/Data/ASqlModel.h>
 
-struct Course: ASqlModel<Course> {
+struct Note: ASqlModel<Note> {
     AString name;
     AString description;
 };
 
-A_META(Course) {
+A_META(Note) {
     A_SQL_TABLE("courses")
     A_FIELDS {
         return {

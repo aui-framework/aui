@@ -3,11 +3,11 @@
 
 #include <AUI/View/AViewContainer.h>
 
-class CourseView: public AViewContainer {
+class NoteView: public AViewContainer {
 private:
 
     void learn();
 public:
-    CourseView();
+    NoteView();
 };
 
