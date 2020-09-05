@@ -50,12 +50,17 @@ void AListView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 
 	auto target = _cast<AListItem>(getViewAt(pos));
 	if (target) {
-		if (mSelected != nullptr)
-			mSelected->setSelected(false);
-		mSelected = target;
-		mSelected->setSelected(true);
+	    if (!AInput::isKeyDown(AInput::LControl)) {
+	        for (auto& s : mSelectionModel) {
+                _cast<AListItem>(getViews()[s.getRow()])->setSelected(false);
+	        }
 
-		emit itemSelected(AModelIndex(getViews().indexOf(target)));
+	        mSelectionModel.clear();
+	    }
+	    mSelectionModel << AModelIndex(getViews().indexOf(target));
+	    target->setSelected(true);
+
+        emit selectionChanged(getSelectionModel());
 	}
 }
 

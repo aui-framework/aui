@@ -41,12 +41,18 @@ MainWindow::MainWindow() : AWindow("Notes", 300, 400) {
             _new<AButton>("Добавить").connect(&AButton::clicked, this, [](){
                 Autumn::get<AListModel<Note>>() << Note{7, "Azaza", ""};
             }),
-            _new<AButton>("Удалить"),
+            mDeleteButton = _new<AButton>("Удалить") by(AButton, {
+                setDisabled();
+            }).connect(&AButton::clicked, this, [&]() {
+
+            }),
         }),
         _new<AListView>(AAdapter::make(_cast<IListModel<Note>>(Autumn::get<AListModel<Note>>()), [](const Note& n) {
-            return n.name;
+            return n.name + " (" + AString::number(n.id) + ")";
         })) by(AListView, {
             setExpanding({2, 2});
+        }).connect(&AListView::selectionChanged, this, [&](const AModelSelection<AVariant>& selection) {
+            mDeleteButton->setDisabled(selection.empty());
         })
     }));
 
