@@ -68,6 +68,10 @@ public:
     IListModel<T>* getModel() const {
         return mModel;
     }
+
+    const ASet<AModelIndex>& getIndices() const {
+        return mIndices;
+    }
 };
 
 #include "IListModel.h"

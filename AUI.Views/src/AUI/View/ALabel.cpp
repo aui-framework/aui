@@ -154,6 +154,7 @@ FontStyle ALabel::getFontStyleLabel() {
 }
 
 void ALabel::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) {
+    mPrerendered.mVao = nullptr;
     mVerticalAlign = ALIGN_LEFT;
     processor(css::T_VERTICAL_ALIGN, [&](property p)
     {
