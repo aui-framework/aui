@@ -58,7 +58,7 @@ public:
 	}
 
 
-    const _<AAbstractThread>& getThread() const {
+    _<AAbstractThread> getThread() const {
         return mAttachedThread;
     }
 };

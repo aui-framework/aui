@@ -47,7 +47,7 @@ void ALabel::render()
 			{
 				auto requiredSpace = mIcon->getSizeHint();
 				RenderHints::PushState s;
-				Render::instance().setTransform(glm::translate(glm::mat4(),
+				Render::instance().setTransform(glm::translate(glm::mat4(1.f),
 					glm::vec3(leftPadding, (getContentHeight() - requiredSpace.y) / 2, 0)));
 				mIcon->draw(requiredSpace);
 				leftPadding += requiredSpace.x + 1;
@@ -60,7 +60,7 @@ void ALabel::render()
 			{
 				auto requiredSpace = mIcon->getSizeHint();
 				RenderHints::PushState s;
-				Render::instance().setTransform(glm::translate(glm::mat4(),
+				Render::instance().setTransform(glm::translate(glm::mat4(1.f),
 					glm::vec3(leftPadding - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
 					(getContentHeight() - requiredSpace.y) / 2, 0)));
 				mIcon->draw(requiredSpace);

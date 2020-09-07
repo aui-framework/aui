@@ -235,8 +235,11 @@ thread_local bool painter::painting = false;
 
 
 AWindow*& AWindow::currentWindowStorage() {
-    thread_local AWindow* w = nullptr;
-    return w;
+    thread_local AWindow* threadLocal = nullptr;
+    static AWindow* global = nullptr;
+    if (threadLocal)
+        return threadLocal;
+    return global;
 }
 
 AWindow::Context::~Context() {
