@@ -17,27 +17,42 @@
 #include <AUI/Data/ASqlBlueprint.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 
-#include <Model/Course.h>
+#include <Model/Note.h>
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/Url/AUrl.h>
 #include <Frame/CoursesFrame.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/ATextField.h>
+#include <AUI/Model/AListModel.h>
+#include <AUI/Model/AListModelAdapter.h>
 
 MainWindow::MainWindow() : AWindow("Notes", 300, 400) {
     setLayout(_new<AHorizontalLayout>());
 
-    auto x = _new<AStringVector>();
-    x << "Kek" << "Lol";
+    Autumn::put(_new<AListModel<Note>>(AListModel<Note>{
+        Note{0, "Kek", "lol"},
+        Note{1, "Kek", "lol"},
+    }));
+
 
     addView(_container<AVerticalLayout>({
         _container<AHorizontalLayout>({
-            _new<AButton>("Добавить"),
-            _new<AButton>("Удалить"),
+            _new<AButton>("Добавить").connect(&AButton::clicked, this, [](){
+                Autumn::get<AListModel<Note>>() << Note{7, "Azaza", ""};
+            }),
+            mDeleteButton = _new<AButton>("Удалить") by(AButton, {
+                setDisabled();
+            }).connect(&AButton::clicked, this, [&]() {
+                //Autumn::get<AListModel<Note>>()->remove(mList->getSelectionModel()->);
+            }),
         }),
-        _new<AListView>(x) by(AListView, {
+        mList = _new<AListView>(AAdapter::make(_cast<IListModel<Note>>(Autumn::get<AListModel<Note>>()), [](const Note& n) {
+            return n.name + " (" + AString::number(n.id) + ")";
+        })) by(AListView, {
             setExpanding({2, 2});
+        }).connect(&AListView::selectionChanged, this, [&](const AModelSelection<AVariant>& selection) {
+            mDeleteButton->setDisabled(selection.empty());
         })
     }));
 
