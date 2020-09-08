@@ -34,6 +34,6 @@ CoursesFrame::CoursesFrame() {
     addView(list);
 
     for (auto& course : Note::all()->get()) {
-        list->addView(_new<NoteView>());
+        list->addView(_new<CourseView>());
     }
 }

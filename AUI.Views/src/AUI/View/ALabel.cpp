@@ -105,9 +105,9 @@ void ALabel::setText(const AString& newText)
 	if (mMultiline)
 	{
 		updateMultiline();
-		if (getParent())
-			getParent()->updateLayout();
 	}
+    if (getParent())
+        getParent()->updateLayout();
 	redraw();
 }
 

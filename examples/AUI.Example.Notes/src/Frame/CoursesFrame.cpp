@@ -15,6 +15,7 @@
 #include <AUI/Layout/AStackedLayout.h>
 #include <View/NoteView.h>
 
+
 CoursesFrame::CoursesFrame() {
     AVIEW_CSS;
     setLayout(_new<AVerticalLayout>());
@@ -34,6 +35,6 @@ CoursesFrame::CoursesFrame() {
     addView(list);
 
     for (auto& course : Note::all()->get()) {
-        list->addView(_new<NoteView>());
+        list->addView(_new<CourseView>());
     }
 }
