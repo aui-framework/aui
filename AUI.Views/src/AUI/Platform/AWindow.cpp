@@ -206,6 +206,16 @@ Display* gDisplay;
 Screen* gScreen;
 int gScreenId;
 
+
+struct DisplayLock {
+    DisplayLock() {
+        XLockDisplay(gDisplay);
+    }
+    ~DisplayLock() {
+        XUnlockDisplay(gDisplay);
+    }
+};
+
 struct painter {
 private:
 
@@ -433,6 +443,10 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
             XSetErrorHandler(xerrorhandler);
             gScreen = DefaultScreenOfDisplay(gDisplay);
             gScreenId = DefaultScreen(gDisplay);
+
+            if (!XInitThreads()) {
+                throw AException("Your X server does not support multithreading; abort");
+            }
         }
 
         ~DisplayInstance() {
@@ -442,6 +456,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
         }
     };
     static DisplayInstance display;
+    DisplayLock displayLock;
 
     static XVisualInfo* vi;
     static XSetWindowAttributes swa;
@@ -650,6 +665,7 @@ void AWindow::loop() {
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning;) {
         XNextEvent(gDisplay, &ev);
+        DisplayLock displayLock;
         switch (ev.type) {
             case KeyPress:
             {
@@ -864,6 +880,7 @@ void AWindow::notifyProcessMessages() {
 #ifdef _WIN32
     PostMessage(mHandle, WM_USER, 0, 0);
 #else
+    DisplayLock displayLock;
     XEvent e = {0};
     e.xexpose.window = mHandle;
     e.type = Expose;
