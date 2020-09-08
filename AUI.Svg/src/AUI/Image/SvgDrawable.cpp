@@ -10,7 +10,7 @@ void SvgDrawable::draw(const glm::ivec2& size)
 {
 	RenderHints::PushState x;
 	Render::instance().setFill(Render::FILL_SOLID_TRANSFORM);
-	Render::instance().setTransform(glm::scale(glm::mat4(), { size.x, size.y, 1.f }));
+	Render::instance().setTransform(glm::scale(glm::mat4(1.f), glm::vec3{ size.x, size.y, 1.f }));
 
 	for (auto& e : mDrawList)
 	{

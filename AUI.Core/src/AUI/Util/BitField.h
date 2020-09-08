@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 
 /**
  * \brief Битовое поле.

@@ -235,8 +235,11 @@ thread_local bool painter::painting = false;
 
 
 AWindow*& AWindow::currentWindowStorage() {
-    thread_local AWindow* w = nullptr;
-    return w;
+    thread_local AWindow* threadLocal = nullptr;
+    static AWindow* global = nullptr;
+    if (threadLocal)
+        return threadLocal;
+    return global;
 }
 
 AWindow::Context::~Context() {
@@ -418,6 +421,13 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
 
     wglMakeCurrent(mDC, context.hrc);
 #else
+    static struct once {
+        once() {
+            if (!XSupportsLocale() || XSetLocaleModifiers("@im=none") == NULL) {
+                throw AException("Your X server does not support locales.");
+            }
+        }
+    } once;
     struct DisplayInstance {
 
     public:
@@ -438,6 +448,9 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
 
     static XVisualInfo* vi;
     static XSetWindowAttributes swa;
+    static XIM im;
+    static XIMStyles *styles;
+
     if (context.context == nullptr) {
         GLint att[] = {GLX_X_RENDERABLE, True,
                        GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
@@ -486,12 +499,28 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
         vi = glXGetVisualFromFBConfig(gDisplay, bestFbc);
         auto cmap = XCreateColormap(gDisplay, gScreen->root, vi->visual, AllocNone);
         swa.colormap = cmap;
-        swa.event_mask = ExposureMask | KeyPressMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask
-                | PointerMotionMask;
+        swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask
+                | PointerMotionMask | StructureNotifyMask;
         context.context = glXCreateContext(gDisplay, vi, nullptr, true);
+
+        im = XOpenIM(gDisplay, NULL, NULL, NULL);
+        if (im == NULL) {
+            throw AException("Could not open input method");
+        }
+
+        if (XGetIMValues(im, XNQueryInputStyle, &styles, NULL)) {
+            throw AException("XIM Can't get styles");
+        }
     }
     mHandle = XCreateWindow(gDisplay, gScreen->root, 0, 0, width, height, 0, vi->depth, InputOutput, vi->visual,
                             CWColormap | CWEventMask | CWCursor, &swa);
+
+
+    mIC = XCreateIC(im, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, mHandle, NULL);
+    if (mIC == NULL) {
+        throw AException("Could not get IC");
+    }
+    XSetICFocus(mIC);
 
 
     XMapWindow(gDisplay, mHandle);
@@ -625,6 +654,26 @@ void AWindow::loop() {
     for (mLoopRunning = true; mLoopRunning;) {
         XNextEvent(gDisplay, &ev);
         switch (ev.type) {
+            case KeyPress:
+            {
+                int count = 0;
+                KeySym keysym = 0;
+                char buf[0x20];
+                Status status = 0;
+                count = Xutf8LookupString(mIC, (XKeyPressedEvent*)&ev, buf, sizeof(buf), &keysym, &status);
+
+                if (count) {
+                    AString s(buf);
+                    assert(!s.empty());
+                    onCharEntered(s[0]);
+                }
+                break;
+            }
+
+            case MappingNotify:
+                XRefreshKeyboardMapping(&ev.xmapping);
+                break;
+
             case Expose: {
                 glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
                 if (size.x >= 10 && size.y >= 10 && size != getSize())

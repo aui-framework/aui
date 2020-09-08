@@ -13,6 +13,8 @@ define_property(GLOBAL PROPERTY TESTS_DEPS
 
 set_property(GLOBAL PROPERTY TESTS_SRCS "")
 
+add_custom_target(CompileAssets)
+
 set(AUI_3RDPARTY_LIBS_DIR NOTFOUND CACHE PATH "")
 if (AUI_3RDPARTY_LIBS_DIR)
 	FILE(GLOB children RELATIVE ${AUI_3RDPARTY_LIBS_DIR} ${AUI_3RDPARTY_LIBS_DIR}/*)
@@ -106,6 +108,7 @@ function(AUI_Compile_Assets AUI_MODULE_NAME)
 	set(CMD_STRING ${TARGET_DIR}/AUI.Toolbox pack ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/autogen)
 	add_custom_target(${TARGET_NAME} COMMAND ${CMD_STRING})
 	add_dependencies(${TARGET_NAME} AUI.Toolbox)
+	add_dependencies(CompileAssets ${TARGET_NAME})
 	#add_dependencies(${AUI_MODULE_NAME} ${TARGET_NAME})
 endfunction(AUI_Compile_Assets)
 

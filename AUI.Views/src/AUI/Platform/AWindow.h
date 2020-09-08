@@ -107,6 +107,7 @@ protected:
     virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #else
     Window mHandle;
+    XIC mIC;
 #endif
 
 	virtual void doDrawWindow();
