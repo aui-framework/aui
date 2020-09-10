@@ -5,7 +5,7 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Common/AException.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <Windows.h>
 #else
 #include <dlfcn.h>

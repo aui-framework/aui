@@ -1,6 +1,6 @@
 ﻿#include "ATcpServerSocket.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <WS2tcpip.h>
 #else
 
@@ -27,7 +27,7 @@ _<ATcpSocket> ATcpServerSocket::accept()
 
 	sockaddr_in addr;
 	unsigned addrlen = sizeof(addr);
-#ifdef _WIN32
+#if defined(_WIN32) || defined(ANDROID)
 	int s = ::accept(getHandle(), reinterpret_cast<sockaddr*>(&addr), (int*)&addrlen);
 #else
 	int s = ::accept(getHandle(), reinterpret_cast<sockaddr*>(&addr), (unsigned*)&addrlen);

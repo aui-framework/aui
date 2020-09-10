@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
 
 
 file(GLOB_RECURSE SQLITE3_SRCS 3rdparty/*.c)

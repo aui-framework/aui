@@ -3,7 +3,7 @@
 
 #include "Exceptions.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <WS2tcpip.h>
 #else
 
@@ -64,14 +64,14 @@ void AUdpSocket::read(ByteBuffer& buf, AInet4Address& dst) {
 	unsigned l = sizeof(from);
 	int res;
 	for (;;) {
-#ifdef _WIN32
+#if defined(_WIN32) || defined(ANDROID)
 		res = recvfrom(getHandle(), buf.getBuffer(), 32768, 0, (sockaddr*)& from, (int*)&l);
 #else
 		res = recvfrom(getHandle(), buf.getBuffer(), 32768, 0, (sockaddr*)& from, (unsigned*)&l);
 #endif
 		if (res <= 0) {
 			AString msg = AString("recvfrom error ") + getErrorString();
-#ifdef _WIN32
+#if defined(_WIN32)
 			switch (WSAGetLastError()) {
 			case WSAEINTR:
 				throw AThread::AInterrupted();

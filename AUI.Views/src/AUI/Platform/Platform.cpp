@@ -1,7 +1,7 @@
 ﻿#include "Platform.h"
 #include "AUI/Common/AString.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <Windows.h>
 
 AString Platform::getFontPath(const AString& font)

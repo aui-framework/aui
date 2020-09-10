@@ -1,7 +1,7 @@
 ﻿#include "Desktop.h"
 #include "ACursor.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <Windows.h>
 glm::ivec2 Desktop::getMousePos()
 {

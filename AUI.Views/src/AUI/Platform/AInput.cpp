@@ -1,6 +1,6 @@
 ﻿#include "AInput.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <windows.h>
 
 AInput::Key AInput::fromNative(int key) {
@@ -242,6 +242,7 @@ bool AInput::isKeyDown(Key k) {
 	return GetAsyncKeyState(toNative(k)) & 32768;
 }
 
+#elif defined(ANDROID)
 #else
 #include <X11/Xlib.h>
 #include <X11/keysym.h>

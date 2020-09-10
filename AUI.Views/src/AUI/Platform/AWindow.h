@@ -1,4 +1,5 @@
 #pragma once
+
 #include "AUI/Views.h"
 #include "AUI/Common/AString.h"
 
@@ -9,16 +10,16 @@
 #include "AUI/Thread/IEventLoop.h"
 #include "AUI/Util/AMetric.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <Windows.h>
+#elif defined(ANDROID)
+#include <jni.h>
 #else
-
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysymdef.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
-
 #endif
 
 class Render;
@@ -64,7 +65,7 @@ class API_AUI_VIEWS AWindow: public AViewContainer, public IEventLoop, public st
 	friend struct painter;
 private:
 	static AWindow*& currentWindowStorage();
-#ifdef _WIN32
+#if defined(_WIN32)
 	HMODULE mInst;
 	HDC mDC;
 #endif
@@ -80,8 +81,9 @@ private:
 
 	struct Context
 	{
-#ifdef _WIN32
+#if defined(_WIN32)
 		HGLRC hrc = 0;
+#elif defined(ANDROID)
 #else
         GLXContext context;
 #endif
@@ -95,16 +97,18 @@ private:
 	
 	_weak<AView> mFocusedView;
 
-#ifdef _WIN32
+#if defined(_WIN32)
 	friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif
 
 	void updateDpi();
 	
 protected:
-#ifdef _WIN32
+#if defined(_WIN32)
 	HWND mHandle;
     virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#elif defined(ANDROID)
+    jobject mHandle;
 #else
     Window mHandle;
     XIC mIC;
@@ -131,7 +135,7 @@ public:
 	void show();
 	void close();
 
-	#ifdef _WIN32
+	#if defined(_WIN32)
 	HWND getNativeHandle() { return mHandle; }
 #endif
 

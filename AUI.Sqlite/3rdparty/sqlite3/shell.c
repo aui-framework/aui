@@ -644,7 +644,7 @@ static int strlenChar(const char *z){
 /*
 ** Return true if zFile does not exist or if it is not an ordinary file.
 */
-#ifdef _WIN32
+#if defined(_WIN32)
 # define notNormalFile(X) 0
 #else
 static int notNormalFile(const char *zFile){
@@ -2080,7 +2080,7 @@ static void sha3QueryFunc(
 }
 
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #endif
 int sqlite3_shathree_init(
@@ -3086,7 +3086,7 @@ static int fsdirRegister(sqlite3 *db){
 # define fsdirRegister(x) SQLITE_OK
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #endif
 int sqlite3_fileio_init(
@@ -3602,7 +3602,7 @@ int sqlite3CompletionVtabInit(sqlite3 *db){
   return rc;
 }
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #endif
 int sqlite3_completion_init(
@@ -4156,7 +4156,7 @@ static const char *apndNextSystemCall(sqlite3_vfs *pVfs, const char *zName){
 }
 
   
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #endif
 /* 
@@ -4380,7 +4380,7 @@ static int uintCollFunc(
   return (nKey1 - i) - (nKey2 - j);
 }
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #endif
 int sqlite3_uint_init(
@@ -4987,7 +4987,7 @@ mul_end:
   decimal_free(pB);
 }
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #endif
 int sqlite3_decimal_init(
@@ -5279,7 +5279,7 @@ static void ieee754func_to_blob(
 }
 
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #endif
 int sqlite3_ieee_init(
@@ -7493,7 +7493,7 @@ static int zipfileRegister(sqlite3 *db){
 # define zipfileRegister(x) SQLITE_OK
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #endif
 int sqlite3_zipfile_init(
@@ -7611,7 +7611,7 @@ static void sqlarUncompressFunc(
 }
 
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #endif
 int sqlite3_sqlar_init(
@@ -10610,7 +10610,7 @@ static int sqlite3DbdataRegister(sqlite3 *db){
   return rc;
 }
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #endif
 int sqlite3_dbdata_init(
@@ -15166,7 +15166,7 @@ static int optionMatch(const char *zStr, const char *zOpt){
 */
 int shellDeleteFile(const char *zFilename){
   int rc;
-#ifdef _WIN32
+#if defined(_WIN32)
   wchar_t *z = sqlite3_win32_utf8_to_unicode(zFilename);
   rc = _wunlink(z);
   sqlite3_free(z);
@@ -15207,7 +15207,7 @@ static void newTempFile(ShellState *p, const char *zSuffix){
     zTemp = getenv("TEMP");
     if( zTemp==0 ) zTemp = getenv("TMP");
     if( zTemp==0 ){
-#ifdef _WIN32
+#if defined(_WIN32)
       zTemp = "\\tmp";
 #else
       zTemp = "/tmp";
@@ -20259,7 +20259,7 @@ static void main_init(ShellState *data) {
 /*
 ** Output text to the console in a font that attracts extra attention.
 */
-#ifdef _WIN32
+#if defined(_WIN32)
 static void printBold(const char *zText){
 #if !SQLITE_OS_WINRT
   HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);

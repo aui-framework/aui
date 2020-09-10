@@ -22,7 +22,7 @@ _<AFont> AFontManager::newItem(const AString& name) {
 }
 
 _<AFont> AFontManager::getDefault() {
-#ifdef _WIN32
+#if defined(_WIN32)
 	return get("segoeui");
 #else
 	return get("ubuntu/Ubuntu-R.ttf");

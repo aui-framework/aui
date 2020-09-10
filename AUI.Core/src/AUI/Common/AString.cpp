@@ -48,16 +48,16 @@ _<ByteBuffer> AString::toUtf8() const
             if (c >= 0x800)
             {
                 char b[] = {
-                        0b11100000 | (c >> 12 & 0b1111),
-                        0b10000000 | (c >> 6 & 0b111111),
-                        0b10000000 | (c & 0b111111),
+                        static_cast<char>(0b11100000 | (c >> 12 & 0b1111)),
+                        static_cast<char>(0b10000000 | (c >> 6 & 0b111111)),
+                        static_cast<char>(0b10000000 | (c & 0b111111)),
                 };
                 buf->put(b, sizeof(b));
             } else if (c >= 0x80)
             {
                 char b[] = {
-                        0b11000000 | (c >> 6 & 0b11111),
-                        0b10000000 | (c & 0b111111),
+                        static_cast<char>(0b11000000 | (c >> 6 & 0b11111)),
+                        static_cast<char>(0b10000000 | (c & 0b111111)),
                 };
                 buf->put(b, sizeof(b));
             }

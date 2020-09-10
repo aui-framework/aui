@@ -1,7 +1,7 @@
 #include "Dll.h"
 #include "AUI/Common/AString.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #else
 #include <unistd.h>
 #endif
@@ -9,7 +9,7 @@
 _<Dll> Dll::load(const AString& path)
 {
 	auto fullpath = path + "." + getDllExtension();
-#ifdef _WIN32
+#if defined(_WIN32)
 	auto lib = LoadLibrary(fullpath.c_str());
 	if (!lib)
 	{
@@ -30,7 +30,7 @@ _<Dll> Dll::load(const AString& path)
 
 AString Dll::getDllExtension()
 {
-#ifdef _WIN32
+#if defined(_WIN32)
 	return "dll";
 #else
 	return "so";
@@ -39,7 +39,7 @@ AString Dll::getDllExtension()
 
 void(*Dll::getProcAddressRawPtr(const AString& name) const noexcept)()
 {
-#ifdef _WIN32
+#if defined(_WIN32)
 	return reinterpret_cast<void(*)()>(
 		GetProcAddress(mHandle, name.toStdString().c_str()));
 #else

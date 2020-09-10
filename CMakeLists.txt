@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
 
 project(AUI)
 
@@ -33,11 +33,12 @@ function(AUI_Add_Properties AUI_MODULE_NAME)
 				COMPILE_FLAGS "/MP /utf-8")
 	endif()
 
-	set_target_properties(${AUI_MODULE_NAME} PROPERTIES
-			ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-			LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-			RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-
+    if(NOT ANDROID)
+        set_target_properties(${AUI_MODULE_NAME} PROPERTIES
+                ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+                LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    endif()
 endfunction(AUI_Add_Properties)
 
 function(AUI_Tests TESTS_MODULE_NAME)
@@ -61,6 +62,9 @@ function(AUI_Common AUI_MODULE_NAME)
 			set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${child})
 		endforeach()
 	endif()
+    if(AUI_STATIC OR ANDROID)
+        target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_STATIC)
+    endif()
 endfunction(AUI_Common)
 
 function(AUI_Executable AUI_MODULE_NAME)
@@ -88,6 +92,9 @@ function(AUI_Module AUI_MODULE_NAME)
     target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
 	if (UNIX)
 		target_link_libraries(${AUI_MODULE_NAME} stdc++fs)
+	endif()
+	if (ANDROID)
+		target_link_libraries(${AUI_MODULE_NAME} c++fs)
 	endif()
 
 	# AUI.Core -> BUILD_AUI_CORE
@@ -133,9 +140,11 @@ add_subdirectory(examples/AUI.Example.Notes)
 add_subdirectory(examples/AUI.Example.Words)
 
 get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
-AUI_Tests(Tests ${TESTS_SRCS})
 
-get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
-foreach(child ${TESTS_DEPS})
-	target_link_libraries(Tests PRIVATE ${child})
-endforeach()
+if (NOT ANDROID)
+	AUI_Tests(Tests ${TESTS_SRCS})
+	get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
+	foreach(child ${TESTS_DEPS})
+		target_link_libraries(Tests PRIVATE ${child})
+	endforeach()
+endif()

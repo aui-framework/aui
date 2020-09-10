@@ -8,7 +8,7 @@
 #include "AUI/Thread/AThread.h"
 
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <WS2tcpip.h>
 #include <Windows.h>
 
@@ -43,7 +43,7 @@ void aui_wsa_init()
 
 void AAbstractSocket::init()
 {
-#ifdef _WIN32
+#if defined(_WIN32)
 	aui_wsa_init();
 	if ((mHandle = createSocket()) == INVALID_SOCKET) {
 		throw IOException(
@@ -65,7 +65,7 @@ void AAbstractSocket::init()
 
 AString AAbstractSocket::getErrorString()
 {
-#ifdef _WIN32
+#if defined(_WIN32)
 	long error = WSAGetLastError();
 	wchar_t* str;
 	FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, static_cast<DWORD>(error), 0,
@@ -91,7 +91,7 @@ AString AAbstractSocket::getErrorString()
 void AAbstractSocket::handleError(const AString& message, int code)
 {
 	AString msg = message + ": " + getErrorString();
-#ifdef _WIN32
+#if defined(_WIN32)
 	switch (WSAGetLastError()) {
 	case WSAEINTR:
 		throw AThread::AInterrupted();
@@ -137,7 +137,7 @@ AAbstractSocket::~AAbstractSocket()
 void AAbstractSocket::close()
 {
 	if (mHandle) {
-#ifdef _WIN32
+#if defined(_WIN32)
 		closesocket(mHandle);
 #else
 		shutdown(mHandle, 2);
