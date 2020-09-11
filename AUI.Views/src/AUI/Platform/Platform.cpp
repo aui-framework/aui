@@ -1,5 +1,6 @@
 ﻿#include "Platform.h"
 #include "AUI/Common/AString.h"
+#include "AUI/IO/APath.h"
 
 #ifdef _WIN32
 #include <Windows.h>
@@ -7,7 +8,7 @@
 AString Platform::getFontPath(const AString& font)
 {
     try {
-        if (std::filesystem::is_regular_file(font.toStdString()))
+        if (APath(font.toStdString()).isRegularFileExists())
             return font;
     } catch(...) {}
     try {
@@ -73,7 +74,7 @@ float Platform::getDpiRatio()
 
 AString Platform::getFontPath(const AString& font)
 {
-    if (std::filesystem::is_regular_file(font.toStdString()))
+    if (APath(font.toStdString()).isRegularFileExists())
         return font;
 
     return "/usr/share/fonts/truetype/" + font;

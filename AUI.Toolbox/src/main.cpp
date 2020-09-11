@@ -1,6 +1,7 @@
 #include <filesystem>
 #include <functional>
 #include <iostream>
+#include <AUI/IO/APath.h>
 
 
 #include "AUI/Common/AString.h"
@@ -45,9 +46,7 @@ int main(int argc, char** argv)
 					else
 					{
 					    try {
-					        auto path = std::filesystem::path(args[1].toStdString());
-                            std::filesystem::remove_all(path);
-                            std::filesystem::create_directories(path);
+					        APath(args[1].toStdString()).removeFileRecursive();
                         } catch (...) {
 
                         }
