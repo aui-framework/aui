@@ -74,9 +74,6 @@ function(AUI_Executable AUI_MODULE_NAME)
     add_executable(${AUI_MODULE_NAME} ${SRCS})
 
     target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
-	if (UNIX)
-		target_link_libraries(${AUI_MODULE_NAME} stdc++fs)
-	endif()
 
 	AUI_Add_Properties(${AUI_MODULE_NAME})
 
@@ -90,12 +87,6 @@ function(AUI_Module AUI_MODULE_NAME)
     add_library(${AUI_MODULE_NAME} SHARED ${SRCS} ${ARGN})
 
     target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
-	if (UNIX)
-		target_link_libraries(${AUI_MODULE_NAME} stdc++fs)
-	endif()
-	if (ANDROID)
-		target_link_libraries(${AUI_MODULE_NAME} c++fs)
-	endif()
 
 	# AUI.Core -> BUILD_AUI_CORE
 	string(REPLACE "." "_" BUILD_DEF_NAME ${AUI_MODULE_NAME})

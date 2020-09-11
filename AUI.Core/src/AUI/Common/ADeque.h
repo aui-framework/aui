@@ -9,7 +9,12 @@ class ADeque: public std::deque<StoredType, Allocator>
 {
 	using parent = std::deque<StoredType, Allocator>;
 public:
-	void remove(const StoredType& item)
+    ADeque() {}
+
+    template<typename Iterator>
+    ADeque(Iterator first, Iterator last) : parent(first, last) {}
+
+    void remove(const StoredType& item)
 	{
 		parent::erase(std::remove_if(parent::begin(), parent::end(), [&](const StoredType& probe)
 		{

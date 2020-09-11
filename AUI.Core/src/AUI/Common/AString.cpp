@@ -231,8 +231,3 @@ std::string AString::toStdString() const noexcept
 
     return dst;
 }
-
-AString AString::path(const std::filesystem::path& path) noexcept {
-    return path.wstring();
-}
-

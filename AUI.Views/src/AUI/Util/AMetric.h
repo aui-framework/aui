@@ -37,8 +37,6 @@ public:
 };
 
 
-#pragma warning( disable : 4455 )
-// ReSharper disable once CppUserDefinedLiteralSuffixDoesNotStartWithUnderscore
 inline float operator"" dp(unsigned long long v)
 {
 	return AMetric(static_cast<float>(v), AMetric::T_EM).getValuePx();
