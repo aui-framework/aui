@@ -25,6 +25,22 @@ ENUM_FLAG(ListFlags) {
      */
     LF_REGULAR_FILES = 4,
 
+    /**
+     * \brief Обойти папку рекурсивно (т.е. включать содержимое дочерних папок). Пути дочерних файлов задаются
+     *        относительно папки, у которой вызывается listDir().
+     * \example
+     * <ul>
+     *     <li>/home</li>
+     *     <li>/home/user</li>
+     *     <li>/home/user/file1.txt</li>
+     *     <li>/home/user/file2.txt</li>
+     *     <li>/home/other</li>
+     *     <li>/home/other/code1.cpp</li>
+     *     <li>/home/other/code2.cpp</li>
+     * </ul>
+     */
+    LF_RECURSIVE = 8,
+
     LF_DEFAULT_FLAGS = LF_DIRS | LF_REGULAR_FILES
 };
 
@@ -55,6 +71,12 @@ public:
     APath(const wchar_t * str): AString(str) {}
 
     /**
+     * \brief Получить абсолютный (полный) путь до файла.
+     * \return абсолютный (полный) путь
+     */
+    APath absolute();
+
+    /**
      * \brief Составить список имён файлов
      * \note Некоторые файловые системы включают "." и ".." в список файлов. В AUI по умолчанию пропускаются эти
      *       элементы. Используйте L_DONT_IGNORE_DOTS, чтобы отменить пропуск папок "." и ".."
@@ -66,7 +88,7 @@ public:
      * \example <pre>/home/user -> /home</pre>
      * \return путь родительской папки
      */
-    [[nodiscard]] APath up() const;
+    [[nodiscard]] APath parent() const;
 
     /**
      * \brief Путь дочернего элемента. Актуально только для папок.
@@ -90,13 +112,13 @@ public:
      */
     bool exists() const;
 
+
     /**
      * \return true, если обычный файл существует
      * \note файл может существовать как обычный файл, как папка, или и то, и другое. Эта функция вернёт true только
      *       в том случае, если по этому пути существует именно обычный файл.
      */
     bool isRegularFileExists() const;
-
 
     /**
      * \return true, если папка существует
@@ -116,5 +138,17 @@ public:
      * \return this
      */
     const APath& removeFileRecursive() const;
+
+    /**
+     * \brief Создать папку.
+     * \return this
+     */
+    const APath& makeDir() const;
+
+    /**
+     * \brief Создать все папки по пути.
+     * \return this
+     */
+    const APath& makeDirs() const;
 };
 

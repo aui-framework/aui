@@ -11,7 +11,7 @@
 
 APath::APath(AString&& other) : AString(other) {}
 
-APath APath::up() const {
+APath APath::parent() const {
     auto c = ensureNonSlashEnding().rfind(L'/');
     if (c != NPOS) {
         return mid(0, c);
@@ -74,9 +74,12 @@ const APath& APath::removeFile() const {
 
 const APath& APath::removeFileRecursive() const {
     if (isDirectoryExists()) {
-
+        for (auto& l : listDir()) {
+            file(l).removeFileRecursive();
+        }
     }
-    removeFile();
+    if (exists())
+        removeFile();
     return *this;
 }
 
@@ -85,20 +88,60 @@ ADeque<AString> APath::listDir(ListFlags f) const {
 
     DIR* dir = opendir(toStdString().c_str());
 
+    if (!dir)
+        throw FileNotFoundException("could not list " + *this + ": " + strerror(errno));
+
     for (dirent* i; (i = readdir(dir));) {
         if (!(f & LF_DONT_IGNORE_DOTS)) {
             if ("."_as == i->d_name || ".."_as == i->d_name) {
                 continue;
             }
         }
-        if (!(f & LF_DIRS) && i->d_type & DT_DIR) {
-            continue;
+        if ((f & LF_DIRS && i->d_type & DT_DIR) || (f & LF_REGULAR_FILES && i->d_type & DT_REG)) {
+            list << i->d_name;
         }
-        if (!(f & LF_REGULAR_FILES) && i->d_type & DT_REG) {
-            continue;
+        if (f & LF_RECURSIVE && i->d_type & DT_DIR) {
+            auto childDir = file(i->d_name);
+            for (auto& file : childDir.listDir(f)) {
+                if (file.startsWith(childDir)) {
+                    // абсолютный путь
+                    auto p = file.mid(childDir.length());
+                    if (p.startsWith("/")) {
+                        p = p.mid(1);
+                    }
+                    list << childDir.file(p);
+                } else {
+                    list << childDir.file(file);
+                }
+            }
         }
-        list << i->d_name;
     }
     closedir(dir);
     return list;
+}
+
+APath APath::absolute() {
+    char buf[0x1000];
+    if (realpath(toStdString().c_str(), buf) == nullptr) {
+        throw IOException(strerror(errno));
+    }
+
+    return buf;
+}
+
+const APath& APath::makeDir() const {
+    if (::mkdir(toStdString().c_str(), 0755) != 0) {
+        throw IOException("could not create directory: "_as + strerror(errno));
+    }
+    return *this;
+}
+
+const APath& APath::makeDirs() const {
+    if (!empty()) {
+        if (!isDirectoryExists()) {
+            parent().makeDirs();
+            makeDir();
+        }
+    }
+    return *this;
 }

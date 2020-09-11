@@ -100,6 +100,7 @@ function(AUI_Compile_Assets AUI_MODULE_NAME)
 
 	get_target_property(TARGET_DIR ${AUI_MODULE_NAME} ARCHIVE_OUTPUT_DIRECTORY)
 	set(CMD_STRING ${TARGET_DIR}/AUI.Toolbox pack ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/autogen)
+	message("INFO ${TARGET_DIR}/AUI.Toolbox pack ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/autogen")
 	add_custom_target(${TARGET_NAME} COMMAND ${CMD_STRING})
 	add_dependencies(${TARGET_NAME} AUI.Toolbox)
 	add_dependencies(CompileAssets ${TARGET_NAME})

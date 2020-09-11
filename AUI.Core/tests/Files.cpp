@@ -12,11 +12,11 @@ BOOST_AUTO_TEST_SUITE(Path)
 
     BOOST_AUTO_TEST_CASE(Unix) {
         APath p = "/home";
-        BOOST_CHECK_EQUAL(p.up(), "");
-        BOOST_CHECK_EQUAL(p.up().up(), "");
+        BOOST_CHECK_EQUAL(p.parent(), "");
+        BOOST_CHECK_EQUAL(p.parent().parent(), "");
         for (auto str: {"/home/user/work/", "/home/user/work"}) {
             p = str;
-            BOOST_CHECK_EQUAL(p.up(), "/home/user");
+            BOOST_CHECK_EQUAL(p.parent(), "/home/user");
             BOOST_CHECK_EQUAL(p.file("one.cpp"), "/home/user/work/one.cpp");
         }
 
@@ -24,11 +24,11 @@ BOOST_AUTO_TEST_SUITE(Path)
     }
     BOOST_AUTO_TEST_CASE(Windows) {
         APath p = "C:/home";
-        BOOST_CHECK_EQUAL(p.up(), "C:");
-        BOOST_CHECK_EQUAL(p.up().up(), "");
+        BOOST_CHECK_EQUAL(p.parent(), "C:");
+        BOOST_CHECK_EQUAL(p.parent().parent(), "");
         for (auto str: {"C:/home/user/work/", "C:/home/user/work"}) {
             p = str;
-            BOOST_CHECK_EQUAL(p.up(), "C:/home/user");
+            BOOST_CHECK_EQUAL(p.parent(), "C:/home/user");
             BOOST_CHECK_EQUAL(p.file("one.cpp"), "C:/home/user/work/one.cpp");
         }
         BOOST_CHECK_EQUAL(APath("C:/home/user/file.txt").filename(), "file.txt");
