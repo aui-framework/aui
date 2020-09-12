@@ -2,7 +2,6 @@
 
 #include <iterator>
 #include <AUI/Common/AString.h>
-#include <dirent.h>
 #include <AUI/Util/EnumUtil.h>
 
 

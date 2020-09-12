@@ -9,6 +9,16 @@
 #include "IOException.h"
 #include "FileNotFoundException.h"
 
+#ifdef WIN32
+#include <Windows.h>
+#include <direct.h>
+
+#define ERROR_DESCRIPTION
+#else
+#include <dirent.h>
+#define ERROR_DESCRIPTION  + ": " + strerror(errno)
+#endif
+
 APath::APath(AString&& other) : AString(other) {}
 
 APath APath::parent() const {
@@ -46,28 +56,28 @@ APath APath::ensureNonSlashEnding() const {
 }
 
 bool APath::exists() const {
-    struct stat s;
+    struct stat s = {0};
     stat(toStdString().c_str(), &s);
 
-    return S_ISDIR(s.st_mode) || S_ISREG(s.st_mode);
+    return s.st_mode & (S_IFDIR | S_IFREG);
 }
 bool APath::isRegularFileExists() const {
-    struct stat s;
+    struct stat s = {0};
     stat(toStdString().c_str(), &s);
 
-    return S_ISREG(s.st_mode);
+    return s.st_mode & S_IFREG;
 }
 
 bool APath::isDirectoryExists() const {
-    struct stat s;
+    struct stat s = {0};
     stat(toStdString().c_str(), &s);
 
-    return S_ISDIR(s.st_mode);
+    return s.st_mode & S_IFDIR;
 }
 
 const APath& APath::removeFile() const {
     if (::remove(toStdString().c_str()) != 0) {
-        throw IOException(strerror(errno));
+        throw IOException("could not remove file " + *this ERROR_DESCRIPTION);
     }
     return *this;
 }
@@ -86,22 +96,35 @@ const APath& APath::removeFileRecursive() const {
 ADeque<AString> APath::listDir(ListFlags f) const {
     ADeque<AString> list;
 
+#ifdef WIN32
+    WIN32_FIND_DATA fd;
+    HANDLE dir = FindFirstFile(file("*").c_str(), &fd);
+
+    if (dir == INVALID_HANDLE_VALUE)
+#else
     DIR* dir = opendir(toStdString().c_str());
-
     if (!dir)
-        throw FileNotFoundException("could not list " + *this + ": " + strerror(errno));
+#endif
+        throw FileNotFoundException("could not list " + *this ERROR_DESCRIPTION);
 
+#ifdef WIN32
+    for (bool t = true; t; t = FindNextFile(dir, &fd)) {
+        auto& filename = fd.cFileName;
+#else
     for (dirent* i; (i = readdir(dir));) {
+        auto& filename = i->d_name;
+#endif
+
         if (!(f & LF_DONT_IGNORE_DOTS)) {
-            if ("."_as == i->d_name || ".."_as == i->d_name) {
+            if ("."_as == filename || ".."_as == filename) {
                 continue;
             }
         }
         if ((f & LF_DIRS && i->d_type & DT_DIR) || (f & LF_REGULAR_FILES && i->d_type & DT_REG)) {
-            list << i->d_name;
+            list << filename;
         }
         if (f & LF_RECURSIVE && i->d_type & DT_DIR) {
-            auto childDir = file(i->d_name);
+            auto childDir = file(filename);
             for (auto& file : childDir.listDir(f)) {
                 if (file.startsWith(childDir)) {
                     // абсолютный путь
@@ -123,7 +146,7 @@ ADeque<AString> APath::listDir(ListFlags f) const {
 APath APath::absolute() {
     char buf[0x1000];
     if (realpath(toStdString().c_str(), buf) == nullptr) {
-        throw IOException(strerror(errno));
+        throw IOException("could not find absolute file" + *this ERROR_DESCRIPTION);
     }
 
     return buf;
@@ -131,7 +154,7 @@ APath APath::absolute() {
 
 const APath& APath::makeDir() const {
     if (::mkdir(toStdString().c_str(), 0755) != 0) {
-        throw IOException("could not create directory: "_as + strerror(errno));
+        throw IOException("could not create directory: "_as ERROR_DESCRIPTION);
     }
     return *this;
 }
