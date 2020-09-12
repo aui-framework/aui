@@ -110,9 +110,13 @@ ADeque<AString> APath::listDir(ListFlags f) const {
 #ifdef WIN32
     for (bool t = true; t; t = FindNextFile(dir, &fd)) {
         auto& filename = fd.cFileName;
+        bool isFile = !(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);
+        bool isDirectory = fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
 #else
     for (dirent* i; (i = readdir(dir));) {
         auto& filename = i->d_name;
+        bool isFile = i->d_type & DT_REG;
+        bool isDirectory = i->d_type & DT_DIR;
 #endif
 
         if (!(f & LF_DONT_IGNORE_DOTS)) {
@@ -120,10 +124,10 @@ ADeque<AString> APath::listDir(ListFlags f) const {
                 continue;
             }
         }
-        if ((f & LF_DIRS && i->d_type & DT_DIR) || (f & LF_REGULAR_FILES && i->d_type & DT_REG)) {
+        if ((f & LF_DIRS && isDirectory) || (f & LF_REGULAR_FILES && isFile)) {
             list << filename;
         }
-        if (f & LF_RECURSIVE && i->d_type & DT_DIR) {
+        if (f & LF_RECURSIVE && isDirectory) {
             auto childDir = file(filename);
             for (auto& file : childDir.listDir(f)) {
                 if (file.startsWith(childDir)) {
@@ -139,13 +143,21 @@ ADeque<AString> APath::listDir(ListFlags f) const {
             }
         }
     }
+#ifdef WIN32
+    FindClose(dir);
+#else
     closedir(dir);
+#endif
     return list;
 }
 
 APath APath::absolute() {
     char buf[0x1000];
+#ifdef WIN32
+    if (_fullpath(buf, toStdString().c_str(), sizeof(buf)) == nullptr) {
+#else
     if (realpath(toStdString().c_str(), buf) == nullptr) {
+#endif
         throw IOException("could not find absolute file" + *this ERROR_DESCRIPTION);
     }
 
@@ -153,7 +165,11 @@ APath APath::absolute() {
 }
 
 const APath& APath::makeDir() const {
+#ifdef WIN32
+    if (::mkdir(toStdString().c_str()) != 0) {
+#else
     if (::mkdir(toStdString().c_str(), 0755) != 0) {
+#endif
         throw IOException("could not create directory: "_as ERROR_DESCRIPTION);
     }
     return *this;
