@@ -20,7 +20,7 @@ w->setSize(width, height);
 extern "C"
 JNIEXPORT void JNICALL
 Java_ru_alex2772_aui_MyGLRenderer_handleInit(JNIEnv *env, jclass clazz) {
-    
+
 }
 
 #endif
