@@ -7,12 +7,8 @@ class API_AUI_VIEWS ATextField: public AAbstractTextField
 {
 public:
 	ATextField();
-	virtual ~ATextField() = default;
-
+	~ATextField() override;
 
 protected:
-	bool isValidText(const AString& text) override
-	{
-		return true;
-	}
+	bool isValidText(const AString& text) override;
 };

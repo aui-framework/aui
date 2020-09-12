@@ -2,7 +2,6 @@
 
 #include <iterator>
 #include <AUI/Common/AString.h>
-#include <dirent.h>
 #include <AUI/Util/EnumUtil.h>
 
 
@@ -58,7 +57,7 @@ ENUM_FLAG(ListFlags) {
  * \note В большинстве файловых систем по одному пути может существовать и обычный файл, и папка с одинаковымиъ
  *       названиями.
  */
-class APath: public AString {
+class API_AUI_CORE APath: public AString {
 private:
     APath ensureSlashEnding() const;
     APath ensureNonSlashEnding() const;
