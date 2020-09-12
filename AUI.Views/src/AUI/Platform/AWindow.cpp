@@ -211,6 +211,7 @@ public:
     painter(jobject handle) :
             mHandle(handle) {
         assert(!painting);
+        painting = true;
     }
 
     ~painter() {
@@ -451,6 +452,9 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
     wglMakeCurrent(mDC, context.hrc);
 
 #elif defined(ANDROID)
+    ALogger::info((const char*) glGetString(GL_VERSION));
+    ALogger::info((const char*) glGetString(GL_VENDOR));
+    ALogger::info((const char*) glGetString(GL_RENDERER));
 #else
     static struct once {
         once() {
@@ -648,7 +652,12 @@ void AWindow::redraw() {
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
+#ifndef ANDROID
         glEnable(GL_MULTISAMPLE);
+#else
+        glClearColor(1.f, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#endif
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -691,6 +700,7 @@ void AWindow::loop() {
     }
 
 #elif defined(ANDROID)
+    AThread::current()->processMessages();
 #else
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning;) {

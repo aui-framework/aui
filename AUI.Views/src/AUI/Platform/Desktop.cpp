@@ -14,6 +14,16 @@ void Desktop::setMousePos(const glm::ivec2& pos)
 {
 	SetCursorPos(pos.x, pos.y);
 }
+#elif defined(ANDROID)
+glm::ivec2 Desktop::getMousePos()
+{
+    glm::ivec2 p;
+    return p;
+}
+
+void Desktop::setMousePos(const glm::ivec2& pos)
+{
+}
 #else
 
 #include <X11/Xlib.h>

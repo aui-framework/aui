@@ -17,6 +17,13 @@ public:
 		if (name.endsWith(" &"))
 			name = name.mid(0, name.length() - 2);
 		return name;
+#elif defined(__ANDROID__)
+		AString s = __PRETTY_FUNCTION__;
+		auto b = s.find("=") + 1;
+		auto e = s.find("&", b);
+		auto result = s.mid(b, e - b);
+		result = result.trim();
+		return result;
 #else
 		AString s = __PRETTY_FUNCTION__;
 		auto b = s.find("with T = ") + 9;

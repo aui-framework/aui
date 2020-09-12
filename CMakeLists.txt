@@ -82,7 +82,7 @@ endfunction(AUI_Executable)
 
 function(AUI_Module AUI_MODULE_NAME)
     project(${AUI_MODULE_NAME})
-	
+
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
     add_library(${AUI_MODULE_NAME} SHARED ${SRCS} ${ARGN})
 
@@ -102,12 +102,19 @@ endfunction(AUI_Module)
 function(AUI_Compile_Assets AUI_MODULE_NAME)
 	set(TARGET_NAME "${AUI_MODULE_NAME}.Assets")
 
-	get_target_property(TARGET_DIR ${AUI_MODULE_NAME} ARCHIVE_OUTPUT_DIRECTORY)
+	if(ANDROID)
+		set(TARGET_DIR ${AUI_SDK_BIN})
+	else()
+		get_target_property(TARGET_DIR ${AUI_MODULE_NAME} ARCHIVE_OUTPUT_DIRECTORY)
+	endif()
 	set(CMD_STRING ${TARGET_DIR}/AUI.Toolbox pack ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/autogen)
 	add_custom_target(${TARGET_NAME} COMMAND ${CMD_STRING})
-	add_dependencies(${TARGET_NAME} AUI.Toolbox)
 	add_dependencies(CompileAssets ${TARGET_NAME})
-	#add_dependencies(${AUI_MODULE_NAME} ${TARGET_NAME})
+	if(ANDROID)
+		add_dependencies(${AUI_MODULE_NAME} ${TARGET_NAME})
+	else()
+		add_dependencies(${TARGET_NAME} AUI.Toolbox)
+	endif()
 endfunction(AUI_Compile_Assets)
 
 add_subdirectory(AUI.Core)

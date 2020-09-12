@@ -243,6 +243,21 @@ bool AInput::isKeyDown(Key k) {
 }
 
 #elif defined(ANDROID)
+
+AInput::Key AInput::fromNative(int k) {
+    return Unknown;
+}
+int AInput::toNative(Key key) {
+    return 0;
+}
+bool AInput::isKeyDown(Key k) {
+    return false;
+}
+AString AInput::getName(Key k)
+{
+    return "?";
+}
+
 #else
 #include <X11/Xlib.h>
 #include <X11/keysym.h>

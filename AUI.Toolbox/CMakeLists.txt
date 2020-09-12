@@ -1,5 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
-AUI_Executable(AUI.Toolbox)
-
-target_link_libraries(AUI.Toolbox AUI.Core)
+if(NOT ANDROID)
+    AUI_Executable(AUI.Toolbox)
+    target_link_libraries(AUI.Toolbox AUI.Core)
+else()
+    message("Not building AUI.Toolbox because of not native platform. Please specify AUI_SDK_BIN with containing folder
+             of your AUI.Toolbox.")
+endif()

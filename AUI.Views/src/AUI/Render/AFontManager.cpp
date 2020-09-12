@@ -24,6 +24,8 @@ _<AFont> AFontManager::newItem(const AString& name) {
 _<AFont> AFontManager::getDefault() {
 #if defined(_WIN32)
 	return get("segoeui");
+#elif defined(ANDROID)
+	return get(":and/font/Roboto-Medium.ttf");
 #else
 	return get("ubuntu/Ubuntu-R.ttf");
 #endif

@@ -38,8 +38,17 @@ AMessageBox::Button AMessageBox::show(AWindow* parent, const AString& title, con
     }
     return B_INVALID;
 }
-#else
+#elif defined(ANDROID)
+#include "AMessageBox.h"
+#include "AWindow.h"
 
+AMessageBox::Button
+AMessageBox::show(AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,
+                  AMessageBox::Button b) {
+
+    return B_INVALID;
+}
+#else
 #include <gtk/gtk.h>
 #include "AMessageBox.h"
 #include "AWindow.h"

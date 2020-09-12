@@ -108,7 +108,7 @@ protected:
 	HWND mHandle;
     virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #elif defined(ANDROID)
-    jobject mHandle;
+    jobject mHandle = nullptr;
 #else
     Window mHandle;
     XIC mIC;

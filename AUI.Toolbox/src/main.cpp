@@ -12,6 +12,7 @@
 #include "AUI/IO/FileOutputStream.h"
 #include "AUI/Util/BuiltinFiles.h"
 #include "AUI/Util/LZ.h"
+#include <AUI/Platform/Entry.h>
 
 void printHelp()
 {
@@ -20,7 +21,7 @@ void printHelp()
 	exit(-1);
 }
 
-int main(int argc, char** argv)
+AUI_ENTRY
 {	
 	std::cout << "Alex2772 Universal Interface toolbox" << std::endl;
 	if (argc <= 1)
@@ -29,6 +30,12 @@ int main(int argc, char** argv)
 	}
 	else
 	{
+	    std::cout << "Command line:" << std::endl;
+	    for (int i = 0; i < argc; ++i) {
+            std::cout << argv[i] << " ";
+        }
+	    std::cout << std::endl;
+
 		AStringVector args;
 		for (int i = 2; i < argc; ++i)
 		{

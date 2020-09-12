@@ -61,14 +61,10 @@ void AUdpSocket::read(ByteBuffer& buf, AInet4Address& dst) {
 	buf.reserve(32768);
 	sockaddr_in from;
 	memset(&from, 0, sizeof(sockaddr_in));
-	unsigned l = sizeof(from);
+	socklen_t  l = sizeof(from);
 	int res;
 	for (;;) {
-#if defined(_WIN32) || defined(ANDROID)
-		res = recvfrom(getHandle(), buf.getBuffer(), 32768, 0, (sockaddr*)& from, (int*)&l);
-#else
-		res = recvfrom(getHandle(), buf.getBuffer(), 32768, 0, (sockaddr*)& from, (unsigned*)&l);
-#endif
+		res = recvfrom(getHandle(), buf.getBuffer(), 32768, 0, (sockaddr*)& from, (socklen_t *)&l);
 		if (res <= 0) {
 			AString msg = AString("recvfrom error ") + getErrorString();
 #if defined(_WIN32)

@@ -7,6 +7,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <AUI/Logging/ALogger.h>
 
 
 GL::Shader::Shader() {
@@ -15,9 +16,14 @@ GL::Shader::Shader() {
 
 void GL::Shader::load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs)
 {
+#ifdef __ANDROID__
+	mVertex = load(vertex, GL_VERTEX_SHADER);
+	mFragment = load(fragment, GL_FRAGMENT_SHADER);
+#else
 	AString version = "#version 120\n";
 	mVertex = load(version + vertex, GL_VERTEX_SHADER);
 	mFragment = load(version + fragment, GL_FRAGMENT_SHADER);
+#endif
 
 	unsigned index = 0;
 	for (auto& s : attribs)
@@ -50,8 +56,11 @@ GLuint GL::Shader::load(const AString& data, GLenum type) {
 		GLsizei len;
 		glGetShaderInfoLog(shader, sizeof(buf), &len, buf);
 		if (len) {
-			std::cout << buf << std::endl;
+			ALogger::warn(buf);
 		}
+	}
+	if (!st) {
+		throw AException("Failed to compile shader:\n" + data);
 	}
 
 	return shader;

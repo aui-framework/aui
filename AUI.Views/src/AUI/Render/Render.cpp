@@ -42,12 +42,12 @@ Render::Render()
 		"attribute vec3 pos;"
         "attribute vec2 uv;"
 		"varying vec2 pass_uv;"
-		"void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv * 2.f - vec2(1, 1);}",
+		"void main(void) {gl_Position = vec4(pos, 1.f); pass_uv = uv * 2.f - vec2(1.f, 1.f);}",
         "uniform vec2 size;"
         "varying vec2 pass_uv;"
 		"void main(void) {"
             "vec2 tmp = abs(pass_uv);"
-            "if ((tmp.x - 1) * (size.y) / (-size.x) < tmp.y - (1 - size.y) &&"
+            "if ((tmp.x - 1.f) * (size.y) / (-size.x) < tmp.y - (1.f - size.y) &&"
                 "(pow(tmp.x - (1.f - size.x), 2.f) / pow(size.x, 2.f) +"
                  "pow(tmp.y - (1.f - size.y), 2.f) / pow(size.y, 2.f)) > 1.f) discard;"
         "}");

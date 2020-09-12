@@ -19,7 +19,7 @@ private:
 	ALogger();
 	static ALogger& instance();
 	AMutex mSync;
-	_<FileOutputStream> mLogFile = _new<FileOutputStream>("latest.log");
+	_<FileOutputStream> mLogFile;
 	
 	void log(Level level, const AString& str);
 

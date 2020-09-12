@@ -30,6 +30,7 @@ BOOL WINAPI DllMain(
 	}
 	return TRUE;  // Successful DLL_PROCESS_ATTACH.
 }
+#elif defined(ANDROID)
 #else
 #include <gtk/gtk.h>
 #endif
@@ -41,10 +42,13 @@ BOOL WINAPI DllMain(
 struct initialize
 {
     initialize() {
-#ifdef __linux
+#if defined(__linux)
+#elif defined(ANDROID)
         gtk_init(nullptr, nullptr);
 #endif
 
+#ifndef ANDROID
         aui::importPlugin("Svg");
+#endif
     }
 } init;
