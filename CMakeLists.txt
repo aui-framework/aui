@@ -70,9 +70,6 @@ function(AUI_Executable AUI_MODULE_NAME)
     add_executable(${AUI_MODULE_NAME} ${SRCS})
 
     target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
-	if (UNIX)
-		target_link_libraries(${AUI_MODULE_NAME} stdc++fs)
-	endif()
 
 	AUI_Add_Properties(${AUI_MODULE_NAME})
 
@@ -86,9 +83,6 @@ function(AUI_Module AUI_MODULE_NAME)
     add_library(${AUI_MODULE_NAME} SHARED ${SRCS} ${ARGN})
 
     target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
-	if (UNIX)
-		target_link_libraries(${AUI_MODULE_NAME} stdc++fs)
-	endif()
 
 	# AUI.Core -> BUILD_AUI_CORE
 	string(REPLACE "." "_" BUILD_DEF_NAME ${AUI_MODULE_NAME})
@@ -106,6 +100,7 @@ function(AUI_Compile_Assets AUI_MODULE_NAME)
 
 	get_target_property(TARGET_DIR ${AUI_MODULE_NAME} ARCHIVE_OUTPUT_DIRECTORY)
 	set(CMD_STRING ${TARGET_DIR}/AUI.Toolbox pack ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/autogen)
+	message("INFO ${TARGET_DIR}/AUI.Toolbox pack ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/autogen")
 	add_custom_target(${TARGET_NAME} COMMAND ${CMD_STRING})
 	add_dependencies(${TARGET_NAME} AUI.Toolbox)
 	add_dependencies(CompileAssets ${TARGET_NAME})

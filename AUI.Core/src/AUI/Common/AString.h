@@ -1,9 +1,6 @@
 #pragma once
-#include <filesystem>
 #include <string>
 #include <iostream>
-
-
 #include "ByteBuffer.h"
 #include "AUI/Core.h"
 
@@ -236,7 +233,6 @@ public:
 
 	static AString fromLatin1(_<ByteBuffer> buffer);
 
-	static AString path(const std::filesystem::path& path) noexcept;
 	static AString number(int i) noexcept;
 	static AString number(unsigned i) noexcept;
 	static AString number(float i) noexcept;
@@ -478,6 +474,11 @@ inline AString API_AUI_CORE operator+(char lhs, const AString& cs) noexcept
 	AString s(lhs);
 	s += cs;
 	return s;
+}
+
+inline AString operator"" _as(const char* str, size_t len)
+{
+    return AString(str, str + len);
 }
 
 inline std::ostream& operator<<(std::ostream& o, const AString& s)
