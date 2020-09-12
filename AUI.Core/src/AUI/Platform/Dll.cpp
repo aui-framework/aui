@@ -1,3 +1,4 @@
+#include <cassert>
 #include "Dll.h"
 #include "AUI/Common/AString.h"
 
@@ -40,10 +41,12 @@ AString Dll::getDllExtension()
 void(*Dll::getProcAddressRawPtr(const AString& name) const noexcept)()
 {
 #if defined(_WIN32)
-	return reinterpret_cast<void(*)()>(
+	auto r = reinterpret_cast<void(*)()>(
 		GetProcAddress(mHandle, name.toStdString().c_str()));
 #else
-    return reinterpret_cast<void(*)()>(
+    auto r = reinterpret_cast<void(*)()>(
             dlsym(mHandle, name.toStdString().c_str()));
 #endif
+    assert(r);
+    return r;
 }

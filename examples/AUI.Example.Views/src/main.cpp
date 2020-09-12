@@ -7,4 +7,5 @@ AUI_ENTRY
     Stylesheet::instance().load(AUrl(":views/style.css").open());
 	ExampleWindow w;
 	w.loop();
+	return 0;
 }

@@ -30,13 +30,13 @@ class API_AUI_CORE Dll
 private:
 	HMODULE mHandle;
 
-	Dll(HMODULE handle) noexcept
-		: mHandle(handle)
-	{
-	}
 	Dll(const Dll&) = delete;
 	
 public:
+    Dll(HMODULE handle) noexcept
+            : mHandle(handle)
+    {
+    }
 
 	[[nodiscard]]
 	void(*getProcAddressRawPtr(const AString& name) const noexcept)();
