@@ -21,5 +21,5 @@
 } \
 AUI_EXPORT int aui_entry(const AStringVector& args)
 #else
-    #define AUI_ENTRY AUI_EXPORT extern "C" int aui_entry(const AStringVector& args)
+    #define AUI_ENTRY AUI_EXPORT int aui_entry(const AStringVector& args)
 #endif
