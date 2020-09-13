@@ -71,7 +71,11 @@ function(AUI_Executable AUI_MODULE_NAME)
     project(${AUI_MODULE_NAME})
 
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
-    add_executable(${AUI_MODULE_NAME} ${SRCS})
+    if(ANDROID)
+		add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
+	else()
+		add_executable(${AUI_MODULE_NAME} ${SRCS})
+	endif()
 
     target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
 
@@ -132,10 +136,12 @@ add_subdirectory(AUI.Xml)
 add_subdirectory(AUI.Toolbox)
 
 
-#add_subdirectory(examples/AUI.Example.Sowlonya)
-add_subdirectory(examples/AUI.Example.Views)
-add_subdirectory(examples/AUI.Example.Notes)
-add_subdirectory(examples/AUI.Example.Words)
+if(NOT ANDROID)
+	#add_subdirectory(examples/AUI.Example.Sowlonya)
+	add_subdirectory(examples/AUI.Example.Views)
+	add_subdirectory(examples/AUI.Example.Notes)
+	add_subdirectory(examples/AUI.Example.Words)
+endif()
 
 get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
 

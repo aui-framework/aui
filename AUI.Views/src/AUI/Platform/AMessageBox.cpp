@@ -39,12 +39,25 @@ AMessageBox::Button AMessageBox::show(AWindow* parent, const AString& title, con
     return B_INVALID;
 }
 #elif defined(ANDROID)
+
+#include <AUI/Platform/OSAndroid.h>
 #include "AMessageBox.h"
 #include "AWindow.h"
 
 AMessageBox::Button
 AMessageBox::show(AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,
                   AMessageBox::Button b) {
+
+    auto j = AAndroid::getJNI();
+    auto klazzAUI = j->FindClass("ru/alex2772/aui/AUI");
+    auto methodShowMessageBox = j->GetStaticMethodID(klazzAUI, "showMessageBox", "(Ljava/lang/String;Ljava/lang/String;)V");
+    auto strTitle = j->NewStringUTF(title.toStdString().c_str());
+    auto strMessage = j->NewStringUTF(message.toStdString().c_str());
+
+    j->CallStaticVoidMethod(klazzAUI, methodShowMessageBox, strTitle, strMessage);
+
+    j->DeleteLocalRef(strTitle);
+    j->DeleteLocalRef(strMessage);
 
     return B_INVALID;
 }

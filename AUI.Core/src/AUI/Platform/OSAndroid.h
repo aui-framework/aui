@@ -1,7 +1,8 @@
 #pragma once
+#include <jni.h>
 
 
-class OSAndroid {
-
+namespace AAndroid {
+    JNIEnv* getJNI();
 };
 

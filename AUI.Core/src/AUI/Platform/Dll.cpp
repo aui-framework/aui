@@ -16,6 +16,13 @@ _<Dll> Dll::load(const AString& path)
 	{
 		throw DllLoadException("Could not load shared library: " + fullpath);
 	}
+#elif defined(__ANDROID__)
+	auto name = ("lib" + fullpath).toStdString();
+	auto lib = dlopen(name.c_str(), RTLD_LAZY);
+	if (!lib)
+	{
+		throw DllLoadException("Could not load shared library: " + fullpath + ": " + dlerror());
+	}
 #else
 	char buf[0x2000];
 	getcwd(buf, sizeof(buf));

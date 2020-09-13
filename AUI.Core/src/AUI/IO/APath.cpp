@@ -125,7 +125,7 @@ ADeque<AString> APath::listDir(ListFlags f) const {
             }
         }
         if ((f & LF_DIRS && isDirectory) || (f & LF_REGULAR_FILES && isFile)) {
-            list << filename;
+            list << file(filename);
         }
         if (f & LF_RECURSIVE && isDirectory) {
             auto childDir = file(filename);

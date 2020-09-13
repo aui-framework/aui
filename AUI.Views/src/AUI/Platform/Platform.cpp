@@ -88,7 +88,7 @@ void Platform::playSystemSound(Sound s)
 float Platform::getDpiRatio()
 {
 #ifdef __ANDROID__
-    return
+    return 5.f;
 #else
     return 1.f;
 #endif

@@ -8,12 +8,26 @@
 #include "OSAndroid.h"
 #include "Entry.h"
 
-AUI_IMPORT int aui_entry(const AStringVector& args);
+JavaVM* _gVM;
+int(*_gEntry)(const AStringVector&);
+
+AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(const AStringVector&)) {
+    _gVM = vm;
+    _gEntry = aui_entry;
+    return 0;
+}
+
+JNIEnv* AAndroid::getJNI() {
+    JNIEnv* env;
+    _gVM->GetEnv((void**)&env, JNI_VERSION_1_2);
+
+    return env;
+}
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_ru_alex2772_aui_AUI_entry(JNIEnv *env, jclass clazz) {
-    aui_entry({});
+Java_ru_alex2772_aui_MyGLRenderer_handleInit(JNIEnv *env, jclass clazz) {
+    _gEntry({});
 }
 
 #endif
