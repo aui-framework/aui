@@ -157,9 +157,16 @@ void ASignal<Args...>::invokeSignal()
 		{
 			if (i->object->getThread() != AThread::current())
 			{
-				i->object->getThread()->enqueue([=]()
-				{
-                    (std::apply)(i->func, mArgs);
+				i->object->getThread()->enqueue([=]() {
+					try {
+						(std::apply)(i->func, mArgs);
+					}
+					catch (Disconnect)
+					{
+						std::unique_lock lock(mSlotsLock);
+						unlinkSlot(i->object);
+						mSlots.erase(i);
+					}
 				});
 			}
 			else

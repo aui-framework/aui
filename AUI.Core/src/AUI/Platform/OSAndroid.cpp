@@ -31,6 +31,13 @@ float AAndroid::getDpiRatio() {
     return j->CallStaticFloatMethod(klazzAUI, methodGetDpiRatio);
 }
 
+void AAndroid::requestRedraw() {
+    auto j = getJNI();
+    auto klazzAUI = j->FindClass("ru/alex2772/aui/MyGLSurfaceView");
+    auto methodGetDpiRatio = j->GetStaticMethodID(klazzAUI, "requestRedraw", "()V");
+    j->CallStaticVoidMethod(klazzAUI, methodGetDpiRatio);
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_ru_alex2772_aui_MyGLRenderer_handleInit(JNIEnv *env, jclass clazz) {

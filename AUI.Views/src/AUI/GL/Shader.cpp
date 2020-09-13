@@ -17,13 +17,16 @@ GL::Shader::Shader() {
 void GL::Shader::load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs)
 {
 #ifdef __ANDROID__
-	mVertex = load(vertex, GL_VERTEX_SHADER);
-	mFragment = load(fragment, GL_FRAGMENT_SHADER);
+	AString prefix = "precision mediump float;"
+					 "precision mediump int;"
+					 "precision mediump sampler2D;"
+					 "precision mediump samplerCube;"
+					 ;
 #else
-	AString version = "#version 120\n";
-	mVertex = load(version + vertex, GL_VERTEX_SHADER);
-	mFragment = load(version + fragment, GL_FRAGMENT_SHADER);
+	AString prefix = "#version 120\n";
 #endif
+	mVertex = load(prefix + vertex, GL_VERTEX_SHADER);
+	mFragment = load(prefix + fragment, GL_FRAGMENT_SHADER);
 
 	unsigned index = 0;
 	for (auto& s : attribs)

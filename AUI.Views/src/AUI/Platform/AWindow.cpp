@@ -201,6 +201,8 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 #elif defined(ANDROID)
 
+#include <AUI/Platform/OSAndroid.h>
+
 struct painter {
 private:
     jobject mHandle;
@@ -686,7 +688,6 @@ void AWindow::redraw() {
 void AWindow::loop() {
     show();
 
-    IEventLoop::Handle h(this);
 
 #if defined(_WIN32)
     MSG msg;
@@ -943,7 +944,7 @@ void AWindow::flagRedraw() {
 #if defined(_WIN32)
     InvalidateRect(mHandle, nullptr, true);
 #elif defined(ANDROID)
-
+    AAndroid::requestRedraw();
 #else
     XEvent e = {0};
     e.type = Expose;
