@@ -24,6 +24,13 @@ JNIEnv* AAndroid::getJNI() {
     return env;
 }
 
+float AAndroid::getDpiRatio() {
+    auto j = getJNI();
+    auto klazzAUI = j->FindClass("ru/alex2772/aui/AUI");
+    auto methodGetDpiRatio = j->GetStaticMethodID(klazzAUI, "getDpiRatio", "()F");
+    return j->CallStaticFloatMethod(klazzAUI, methodGetDpiRatio);
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_ru_alex2772_aui_MyGLRenderer_handleInit(JNIEnv *env, jclass clazz) {

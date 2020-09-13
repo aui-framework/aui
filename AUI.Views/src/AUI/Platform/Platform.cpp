@@ -72,6 +72,10 @@ float Platform::getDpiRatio()
 }
 #else
 
+#if defined(__ANDROID__)
+#include <AUI/Platform/OSAndroid.h>
+#endif
+
 AString Platform::getFontPath(const AString& font)
 {
     if (APath(font.toStdString()).isRegularFileExists())
@@ -88,7 +92,7 @@ void Platform::playSystemSound(Sound s)
 float Platform::getDpiRatio()
 {
 #ifdef __ANDROID__
-    return 5.f;
+    return AAndroid::getDpiRatio();
 #else
     return 1.f;
 #endif

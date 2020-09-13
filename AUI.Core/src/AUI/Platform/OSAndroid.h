@@ -4,5 +4,7 @@
 
 namespace AAndroid {
     JNIEnv* getJNI();
+
+    float getDpiRatio();
 };
 
