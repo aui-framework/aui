@@ -96,7 +96,7 @@ Render::Render()
 		"varying vec2 pass_uv;"
 		"uniform sampler2D tex;"
 		"uniform vec4 color;"
-		"void main(void) {vec3 sample = pow(texture2D(tex, vec2(pass_uv.x, 1.0 - pass_uv.y)).rgb, vec3(1.0 / 1.2)); gl_FragColor = vec4(sample * color.rgb * color.a, 1);}",
+		"void main(void) {vec3 sample = pow(texture2D(tex, pass_uv).rgb, vec3(1.0 / 1.2)); gl_FragColor = vec4(sample * color.rgb * color.a, 1);}",
 		{"pos", "uv"});
 
 	mTempVao.bind();
