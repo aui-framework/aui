@@ -152,7 +152,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 
         case WM_CLOSE:
-            emit closed();
+            onCloseButtonClicked();
             return 0;
 
         case WM_LBUTTONDOWN:
@@ -606,8 +606,6 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
 }
 
 AWindow::~AWindow() {
-    getWindowManager().mWindows.remove(shared_from_this());
-
 #if defined(_WIN32)
     wglMakeCurrent(mDC, nullptr);
     ReleaseDC(mHandle, mDC);
@@ -689,8 +687,9 @@ void AWindow::redraw() {
 }
 
 void AWindow::quit() {
+    getWindowManager().mWindows.remove(shared_from_this());
 #if defined(_WIN32)
-    // родительское окно должно быть активировано до закрытия дочернего.
+    // родительское окно должно быть активировано ДО закрытия дочернего.
     if (mParentWindow) {
         EnableWindow(mParentWindow->mHandle, true);
     }
@@ -735,7 +734,6 @@ void AWindow::setWindowStyle(WindowStyle ws) {
 
 void AWindow::close() {
     onClosed();
-    emit closed();
 }
 
 void AWindow::updateDpi() {
@@ -892,6 +890,10 @@ AWindowManager& AWindow::getWindowManager() const {
     return ourWindowManager;
 }
 
+void AWindow::onCloseButtonClicked() {
+    emit closed();
+}
+
 //
 // Created by alex2772 on 9/14/20.
 //
@@ -972,7 +974,7 @@ void AWindowManager::loop() {
                 break;
             }
             case DestroyNotify: {
-                window->close();
+                window->onCloseButtonClicked();
                 break;
             }
             case MotionNotify:

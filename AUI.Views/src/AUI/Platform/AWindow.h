@@ -116,12 +116,17 @@ protected:
 
 	virtual void doDrawWindow();
 	virtual void onClosed();
+    void onCloseButtonClicked();
 	
 public:
 	AWindow(const AString& name = "My window", int width = 854, int height = 500, AWindow* parent = nullptr);
 	virtual ~AWindow();
 
 	void redraw();
+
+	/**
+	 * \brief Удаляет окно из AWindowManager.
+	 */
 	void quit();
 
 	void setWindowStyle(WindowStyle ws);
@@ -183,4 +188,5 @@ signals:
 	emits<> shown;
 
 	emits<AInput::Key> keyDown;
+
 };
