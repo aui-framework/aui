@@ -134,6 +134,7 @@ void AAbstractThread::processMessages()
 	}
 }
 
+
 AThread::~AThread()
 {
 	if (mThread) {

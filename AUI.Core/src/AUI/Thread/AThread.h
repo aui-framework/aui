@@ -98,8 +98,12 @@ public:
 	 */
 	virtual void resetInterrupted();
 
+	IEventLoop* getCurrentEventLoop() const {
+		return mCurrentEventLoop;
+	}
 
-    template <class Callable>
+
+	template <class Callable>
     inline void operator<<(Callable fun)
     {
         enqueue(fun);

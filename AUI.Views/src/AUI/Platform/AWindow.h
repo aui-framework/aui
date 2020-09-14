@@ -23,6 +23,7 @@
 #endif
 
 class Render;
+class AWindowManager;
 
 ENUM_FLAG(WindowStyle)
 {	
@@ -60,8 +61,9 @@ private:
 public:
 };
 
-class API_AUI_VIEWS AWindow: public AViewContainer, public IEventLoop, public std::enable_shared_from_this<AWindow>
+class API_AUI_VIEWS AWindow: public AViewContainer, public std::enable_shared_from_this<AWindow>
 {
+    friend class AWindowManager;
 	friend struct painter;
 private:
 	static AWindow*& currentWindowStorage();
@@ -77,7 +79,6 @@ private:
 	 * \brief Удержание ссылки окна.
 	 */
 	_<AWindow> mSelfHolder;
-	
 
 	struct Context
 	{
@@ -93,7 +94,6 @@ private:
 	static Context context;
 
 	AString mWindowTitle;
-	bool mLoopRunning = false;
 	
 	_weak<AView> mFocusedView;
 
@@ -122,7 +122,6 @@ public:
 	virtual ~AWindow();
 
 	void redraw();
-	void loop();
 	void quit();
 
 	void setWindowStyle(WindowStyle ws);
@@ -148,6 +147,7 @@ public:
 	{
 		return mWindowTitle;
 	}
+	AWindowManager& getWindowManager() const;
 
 	glm::ivec2 getPos() const;
 
@@ -169,8 +169,6 @@ public:
 	{
 		return mFocusedView.lock();
 	}
-
-	void notifyProcessMessages() override;
 
 	/**
 	 * \brief Получить текущее окно для данного потока.

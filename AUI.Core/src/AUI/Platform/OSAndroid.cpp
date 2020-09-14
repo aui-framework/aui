@@ -5,15 +5,25 @@
 #if defined(__ANDROID__)
 
 #include <jni.h>
+#include <AUI/Logging/ALogger.h>
 #include "OSAndroid.h"
 #include "Entry.h"
 
 JavaVM* _gVM;
+
+//_<AThread> _gMainThread;
+
+
 int(*_gEntry)(const AStringVector&);
 
 AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(const AStringVector&)) {
     _gVM = vm;
     _gEntry = aui_entry;
+    /*
+    _gMainThread = _new<AThread>([aui_entry]() {
+        ALogger::info("Application exited with exit code " + AString::number(aui_entry({})));
+    });
+    _gMainThread->start();*/
     return 0;
 }
 
