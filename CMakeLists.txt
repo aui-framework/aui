@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
 
 project(AUI)
 
@@ -33,11 +33,12 @@ function(AUI_Add_Properties AUI_MODULE_NAME)
 				COMPILE_FLAGS "/MP /utf-8")
 	endif()
 
-	set_target_properties(${AUI_MODULE_NAME} PROPERTIES
-			ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-			LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
-			RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-
+    if(NOT ANDROID)
+        set_target_properties(${AUI_MODULE_NAME} PROPERTIES
+                ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+                LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin"
+                RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+    endif()
 endfunction(AUI_Add_Properties)
 
 function(AUI_Tests TESTS_MODULE_NAME)
@@ -61,13 +62,21 @@ function(AUI_Common AUI_MODULE_NAME)
 			set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${child})
 		endforeach()
 	endif()
+    if(AUI_STATIC OR ANDROID)
+        target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_STATIC)
+    endif()
 endfunction(AUI_Common)
 
 function(AUI_Executable AUI_MODULE_NAME)
     project(${AUI_MODULE_NAME})
 
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
-    add_executable(${AUI_MODULE_NAME} ${SRCS})
+	#message("ASSDIR ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp")
+    if(ANDROID)
+		add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
+	else()
+		add_executable(${AUI_MODULE_NAME} ${SRCS})
+	endif()
 
     target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
 
@@ -78,7 +87,7 @@ endfunction(AUI_Executable)
 
 function(AUI_Module AUI_MODULE_NAME)
     project(${AUI_MODULE_NAME})
-	
+
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
     add_library(${AUI_MODULE_NAME} SHARED ${SRCS} ${ARGN})
 
@@ -98,13 +107,19 @@ endfunction(AUI_Module)
 function(AUI_Compile_Assets AUI_MODULE_NAME)
 	set(TARGET_NAME "${AUI_MODULE_NAME}.Assets")
 
-	get_target_property(TARGET_DIR ${AUI_MODULE_NAME} ARCHIVE_OUTPUT_DIRECTORY)
+	if(ANDROID)
+		set(TARGET_DIR ${AUI_SDK_BIN})
+	else()
+		get_target_property(TARGET_DIR ${AUI_MODULE_NAME} ARCHIVE_OUTPUT_DIRECTORY)
+	endif()
 	set(CMD_STRING ${TARGET_DIR}/AUI.Toolbox pack ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/autogen)
-	message("INFO ${TARGET_DIR}/AUI.Toolbox pack ${CMAKE_CURRENT_SOURCE_DIR}/assets ${CMAKE_CURRENT_BINARY_DIR}/autogen")
 	add_custom_target(${TARGET_NAME} COMMAND ${CMD_STRING})
-	add_dependencies(${TARGET_NAME} AUI.Toolbox)
 	add_dependencies(CompileAssets ${TARGET_NAME})
-	#add_dependencies(${AUI_MODULE_NAME} ${TARGET_NAME})
+	if(ANDROID)
+		add_dependencies(${AUI_MODULE_NAME} ${TARGET_NAME})
+	else()
+		add_dependencies(${TARGET_NAME} AUI.Toolbox)
+	endif()
 endfunction(AUI_Compile_Assets)
 
 add_subdirectory(AUI.Core)
@@ -122,15 +137,19 @@ add_subdirectory(AUI.Xml)
 add_subdirectory(AUI.Toolbox)
 
 
-#add_subdirectory(examples/AUI.Example.Sowlonya)
-add_subdirectory(examples/AUI.Example.Views)
-add_subdirectory(examples/AUI.Example.Notes)
-add_subdirectory(examples/AUI.Example.Words)
+if(NOT ANDROID)
+	#add_subdirectory(examples/AUI.Example.Sowlonya)
+	add_subdirectory(examples/AUI.Example.Views)
+	add_subdirectory(examples/AUI.Example.Notes)
+	add_subdirectory(examples/AUI.Example.Words)
+endif()
 
 get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
-AUI_Tests(Tests ${TESTS_SRCS})
 
-get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
-foreach(child ${TESTS_DEPS})
-	target_link_libraries(Tests PRIVATE ${child})
-endforeach()
+if (NOT ANDROID)
+	AUI_Tests(Tests ${TESTS_SRCS})
+	get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
+	foreach(child ${TESTS_DEPS})
+		target_link_libraries(Tests PRIVATE ${child})
+	endforeach()
+endif()

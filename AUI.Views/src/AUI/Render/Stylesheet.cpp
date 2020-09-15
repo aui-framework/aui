@@ -10,7 +10,7 @@
 #include "AUI/View/ATextField.h"
 #include "AUI/View/AViewContainer.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #undef max
 #include <dwmapi.h>
 #endif
@@ -244,7 +244,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 
 Stylesheet::Stylesheet()
 {
-#ifdef _WIN32
+#if defined(_WIN32)
 	DWORD c = 0;
 	BOOL blending;
 	DwmGetColorizationColor(&c, &blending);
@@ -259,7 +259,7 @@ Stylesheet::Stylesheet()
     setVariable("OS_THEME_COLOR", "#3e3e3e");
 #endif
     if (ourPrefferedStyle == PREFER_NATIVE_LOOK) {
-#ifdef _WIN32
+#if defined(_WIN32)
         load(AUrl(":win/style.less").open());
 #else
         load(AUrl(":uni/style.less").open());

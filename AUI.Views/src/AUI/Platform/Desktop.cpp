@@ -1,7 +1,7 @@
 ﻿#include "Desktop.h"
 #include "ACursor.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <Windows.h>
 glm::ivec2 Desktop::getMousePos()
 {
@@ -13,6 +13,16 @@ glm::ivec2 Desktop::getMousePos()
 void Desktop::setMousePos(const glm::ivec2& pos)
 {
 	SetCursorPos(pos.x, pos.y);
+}
+#elif defined(ANDROID)
+glm::ivec2 Desktop::getMousePos()
+{
+    glm::ivec2 p;
+    return p;
+}
+
+void Desktop::setMousePos(const glm::ivec2& pos)
+{
 }
 #else
 

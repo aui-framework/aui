@@ -3,7 +3,7 @@
 
 #include "Exceptions.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <WS2tcpip.h>
 #else
 

@@ -65,6 +65,6 @@ public:
 	static _<AImage> addAlpha(const _<AImage>& AImage);
 	static _<AImage> resize(_<AImage> src, uint16_t width, uint16_t height);
 	static _<AImage> resizeLinearDownscale(_<AImage> src, uint16_t width, uint16_t height);
-	static void copy(_<AImage> src, _<AImage> dst, uint16_t x, uint16_t y);
+	static void copy(_<AImage> src, _<AImage> dst, uint32_t x, uint32_t y);
 };
 

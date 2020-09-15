@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
 
 set(MYSQL_INCLUDE_DIRS NOTFOUND CACHE FILEPATH "")
 set(MYSQL_LIBRARIES NOTFOUND CACHE FILEPATH "")
@@ -20,4 +20,7 @@ if (MYSQL_INCLUDE_DIRS AND MYSQL_LIBRARIES)
 
 	target_include_directories(AUI.Mysql PRIVATE ${MYSQL_INCLUDE_DIRS})
 	target_link_libraries(AUI.Mysql ${MYSQL_LIBRARIES})
+
+else()
+	message("MySQL library was not found. Disabling AUI.Mysql")
 endif()

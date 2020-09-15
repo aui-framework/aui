@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.10)
 
 AUI_Executable(AUI.Example.Words)
 AUI_Compile_Assets(AUI.Example.Words)

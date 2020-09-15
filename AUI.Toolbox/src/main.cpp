@@ -12,6 +12,7 @@
 #include "AUI/IO/FileOutputStream.h"
 #include "AUI/Util/BuiltinFiles.h"
 #include "AUI/Util/LZ.h"
+#include <AUI/Platform/Entry.h>
 
 void printHelp()
 {
@@ -20,33 +21,39 @@ void printHelp()
 	exit(-1);
 }
 
-int main(int argc, char** argv)
+AUI_ENTRY
 {	
 	std::cout << "Alex2772 Universal Interface toolbox" << std::endl;
-	if (argc <= 1)
+	if (args.size() <= 1)
 	{
 		printHelp();
 	}
 	else
 	{
-		AStringVector args;
-		for (int i = 2; i < argc; ++i)
+	    std::cout << "Command line:" << std::endl;
+	    for (int i = 0; i < args.size(); ++i) {
+            std::cout << args[i] << " ";
+        }
+	    std::cout << std::endl;
+
+		AStringVector actualArgs;
+		for (int i = 2; i < args.size(); ++i)
 		{
-			args << argv[i];
+			actualArgs << args[i];
 		}
 
 		AMap<AString, std::function<void()>> commands = {
 			{
 				"pack", [&]()
 				{
-					if (args.size() != 2)
+					if (actualArgs.size() != 2)
 					{
 						printHelp();
 					}
 					else
 					{
 					    try {
-					        APath p(args[1]);
+					        APath p(actualArgs[1]);
 					        p.removeFileRecursive();
 					        p.makeDirs();
                         } catch (...) {
@@ -55,14 +62,14 @@ int main(int argc, char** argv)
 						unsigned index = 0;
 						try
 						{
-							for (auto& entry : APath(args[0]).listDir(LF_REGULAR_FILES | LF_RECURSIVE))
+							for (auto& entry : APath(actualArgs[0]).listDir(LF_REGULAR_FILES | LF_RECURSIVE))
 							{
 							    ++index;
                                 try
                                 {
                                     ByteBuffer buffer;
                                     AString filePath = entry;
-                                    filePath = filePath.mid(args[0].length() + 1);
+                                    filePath = filePath.mid(actualArgs[0].length() + 1);
                                     filePath = filePath.replaceAll("\\", '/');
 
                                     buffer << filePath.toStdString();
@@ -82,9 +89,9 @@ int main(int argc, char** argv)
                                     LZ::compress(buffer, packed);
 
 
-                                    uint32_t hash = std::hash<AString>()(args[0] + args[1]) ^ index;
+                                    uint32_t hash = std::hash<AString>()(actualArgs[0] + actualArgs[1]) ^index;
 
-                                    auto path = APath(args[1])
+                                    auto path = APath(actualArgs[1])
                                             .file(("assets" + AString::number(hash) + ".cpp"));
 
                                     AString name(path);
@@ -129,7 +136,7 @@ int main(int argc, char** argv)
 						}
 						catch (...)
 						{
-							std::cout << "Could not open directory: " << APath(args[0]).absolute() << std::endl;
+							std::cout << "Could not open directory: " << APath(actualArgs[0]).absolute() << std::endl;
 							exit(-2);
 						}
 					}
@@ -137,7 +144,7 @@ int main(int argc, char** argv)
 
 			}
 		};
-		if (auto c = commands.contains(argv[1]))
+		if (auto c = commands.contains(args[1]))
 		{
 			c->second();
 		}

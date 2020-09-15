@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include "AWindow.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 class API_AUI_VIEWS CustomWindow: public AWindow
 {

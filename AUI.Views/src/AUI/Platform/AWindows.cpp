@@ -12,13 +12,14 @@
 #include "AUI/Thread/AThread.h"
 #include "Platform.h"
 #include "AMessageBox.h"
+#include "AWindowManager.h"
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
 
 AWindow::Context AWindow::context = {};
 
-#ifdef _WIN32
+#if defined(_WIN32)
 
 #include <GL/wglew.h>
 
@@ -151,7 +152,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 
         case WM_CLOSE:
-            emit closed();
+            onCloseButtonClicked();
             return 0;
 
         case WM_LBUTTONDOWN:
@@ -199,7 +200,28 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #undef GET_Y_LPARAM
 #undef POS
 }
+#elif defined(ANDROID)
 
+#include <AUI/Platform/OSAndroid.h>
+
+struct painter {
+private:
+    jobject mHandle;
+
+public:
+    static thread_local bool painting;
+
+    painter(jobject handle) :
+            mHandle(handle) {
+        assert(!painting);
+        painting = true;
+    }
+
+    ~painter() {
+        assert(painting);
+        painting = false;
+    }
+};
 #else
 
 Display* gDisplay;
@@ -253,8 +275,9 @@ AWindow*& AWindow::currentWindowStorage() {
 }
 
 AWindow::Context::~Context() {
-#ifdef _WIN32
+#if defined(_WIN32)
     wglDeleteContext(hrc);
+#elif defined(ANDROID)
 #else
     glXDestroyContext(gDisplay, context);
 #endif
@@ -277,7 +300,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
 
     connect(closed, this, &AWindow::close);
 
-#ifdef _WIN32
+#if defined(_WIN32)
     // CREATE WINDOW
     WNDCLASSEX winClass;
 
@@ -430,6 +453,11 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
     }
 
     wglMakeCurrent(mDC, context.hrc);
+
+#elif defined(ANDROID)
+    ALogger::info((const char*) glGetString(GL_VERSION));
+    ALogger::info((const char*) glGetString(GL_VENDOR));
+    ALogger::info((const char*) glGetString(GL_RENDERER));
 #else
     static struct once {
         once() {
@@ -570,7 +598,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
         assert(stencilBits > 0);
     }
 
-#ifdef _WIN32
+#if defined(_WIN32)
     RECT clientRect;
     GetClientRect(mHandle, &clientRect);
     mSize = {clientRect.right - clientRect.left, clientRect.bottom - clientRect.top};
@@ -578,12 +606,14 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
 }
 
 AWindow::~AWindow() {
-#ifdef _WIN32
+#if defined(_WIN32)
     wglMakeCurrent(mDC, nullptr);
     ReleaseDC(mHandle, mDC);
 
     DestroyWindow(mHandle);
     UnregisterClass(mWindowClass.c_str(), mInst);
+#elif defined(ANDROID)
+    // TODO close
 #else
     XDestroyWindow(gDisplay, mHandle);
 #endif
@@ -625,7 +655,12 @@ void AWindow::redraw() {
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
+#ifndef ANDROID
         glEnable(GL_MULTISAMPLE);
+#else
+        glClearColor(1.f, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#endif
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -640,8 +675,10 @@ void AWindow::redraw() {
 
         doDrawWindow();
 
-#ifdef _WIN32
+#if defined(_WIN32)
         SwapBuffers(p.mHdc);
+#elif defined(ANDROID)
+
 #else
         glXSwapBuffers(gDisplay, mHandle);
 #endif
@@ -649,78 +686,10 @@ void AWindow::redraw() {
     emit redrawn();
 }
 
-void AWindow::loop() {
-    show();
-
-    IEventLoop::Handle h(this);
-
-#ifdef _WIN32
-    MSG msg;
-    for (mLoopRunning = true; mLoopRunning;) {
-        if (GetMessage(&msg, nullptr, 0, 0) == 0) {
-            break;
-        }
-        AThread::current()->processMessages();
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-#else
-    XEvent ev;
-    for (mLoopRunning = true; mLoopRunning;) {
-        XNextEvent(gDisplay, &ev);
-        DisplayLock displayLock;
-        switch (ev.type) {
-            case KeyPress:
-            {
-                int count = 0;
-                KeySym keysym = 0;
-                char buf[0x20];
-                Status status = 0;
-                count = Xutf8LookupString(mIC, (XKeyPressedEvent*)&ev, buf, sizeof(buf), &keysym, &status);
-
-                if (count) {
-                    AString s(buf);
-                    assert(!s.empty());
-                    onCharEntered(s[0]);
-                }
-                break;
-            }
-
-            case MappingNotify:
-                XRefreshKeyboardMapping(&ev.xmapping);
-                break;
-
-            case Expose: {
-                glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
-                if (size.x >= 10 && size.y >= 10 && size != getSize())
-                    AViewContainer::setSize(size.x, size.y);
-                redraw();
-                break;
-            }
-            case DestroyNotify: {
-                emit closed();
-                break;
-            }
-            case MotionNotify:
-                onMouseMove({ev.xmotion.x, ev.xmotion.y});
-                break;
-            case ButtonPress: {
-                onMousePressed({ev.xbutton.x, ev.xbutton.y}, (AInput::Key)(AInput::LButton + ev.xbutton.button - 1));
-                break;
-            }
-            case ButtonRelease: {
-                onMouseReleased({ev.xbutton.x, ev.xbutton.y}, (AInput::Key)(AInput::LButton + ev.xbutton.button - 1));
-                break;
-            }
-        }
-        AThread::current()->processMessages();
-    }
-#endif
-}
-
 void AWindow::quit() {
-#ifdef _WIN32
-    // родительское окно должно быть активировано до закрытия дочернего.
+    getWindowManager().mWindows.remove(shared_from_this());
+#if defined(_WIN32)
+    // родительское окно должно быть активировано ДО закрытия дочернего.
     if (mParentWindow) {
         EnableWindow(mParentWindow->mHandle, true);
     }
@@ -729,14 +698,13 @@ void AWindow::quit() {
 
 #endif
 
-    mLoopRunning = false;
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;
     });
 }
 
 void AWindow::setWindowStyle(WindowStyle ws) {
-#ifdef _WIN32
+#if defined(_WIN32)
     if (ws & WS_NO_RESIZE) {
         SetWindowLongPtr(mHandle, GWL_STYLE,
                          GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME | WS_THICKFRAME |
@@ -770,7 +738,7 @@ void AWindow::close() {
 
 void AWindow::updateDpi() {
     emit dpiChanged;
-#ifdef _WIN32
+#if defined(_WIN32)
     mDpiRatio = GetDpiForWindow(mHandle) / 96.f;
 #else
     mDpiRatio = Platform::getDpiRatio();
@@ -778,18 +746,21 @@ void AWindow::updateDpi() {
 }
 
 void AWindow::minimize() {
-#ifdef _WIN32
+#if defined(_WIN32)
     ShowWindow(mHandle, SW_MINIMIZE);
+#elif defined(ANDROID)
 #else
     XIconifyWindow(gDisplay, mHandle, 0);
 #endif
 }
 
 glm::ivec2 AWindow::getPos() const {
-#ifdef _WIN32
+#if defined(_WIN32)
     RECT r;
     GetWindowRect(mHandle, &r);
     return {r.left, r.top};
+
+#elif defined(ANDROID)
 #else
     int x, y;
     Window child;
@@ -811,12 +782,13 @@ TemporaryRenderingContext AWindow::acquireTemporaryRenderingContext() {
 
 void AWindow::setSize(int width, int height) {
     AViewContainer::setSize(width, height);
-#ifdef _WIN32
+#if defined(_WIN32)
     auto pos = getPos();
 
     RECT r = {0, 0, width, height};
     AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
     MoveWindow(mHandle, pos.x, pos.y, r.right - r.left, r.bottom - r.top, false);
+#elif defined(ANDROID)
 #else
     XResizeWindow(gDisplay, mHandle, width, height);
 #endif
@@ -879,26 +851,15 @@ void AWindow::setFocusedView(_<AView> view) {
     }
 }
 
-void AWindow::notifyProcessMessages() {
-#ifdef _WIN32
-    PostMessage(mHandle, WM_USER, 0, 0);
-#else
-    DisplayLock displayLock;
-    XEvent e = {0};
-    e.xexpose.window = mHandle;
-    e.type = Expose;
-    XSendEvent(gDisplay, mHandle, false, 0, &e);
-    XFlush(gDisplay);
-#endif
-}
-
 AWindow* AWindow::current() {
     return currentWindowStorage();
 }
 
 void AWindow::flagRedraw() {
-#ifdef _WIN32
+#if defined(_WIN32)
     InvalidateRect(mHandle, nullptr, true);
+#elif defined(ANDROID)
+    AAndroid::requestRedraw();
 #else
     XEvent e = {0};
     e.type = Expose;
@@ -907,16 +868,133 @@ void AWindow::flagRedraw() {
 }
 
 void AWindow::show() {
+    if (!getWindowManager().mWindows.contains(shared_from_this())) {
+        getWindowManager().mWindows << shared_from_this();
+    }
     try {
         mSelfHolder = shared_from_this();
     } catch (...) {
         mSelfHolder = nullptr;
     }
     redraw();
-#ifdef _WIN32
+#if defined(_WIN32)
     UpdateWindow(mHandle);
     ShowWindow(mHandle, SW_SHOWNORMAL);
 #else
 #endif
     emit shown();
+}
+
+AWindowManager& AWindow::getWindowManager() const {
+    thread_local AWindowManager ourWindowManager;
+    return ourWindowManager;
+}
+
+void AWindow::onCloseButtonClicked() {
+    emit closed();
+}
+
+//
+// Created by alex2772 on 9/14/20.
+//
+
+#include "AWindowManager.h"
+
+AWindowManager::AWindowManager(): mHandle(this) {}
+
+AWindowManager::~AWindowManager() {
+
+}
+
+void AWindowManager::notifyProcessMessages() {
+#if defined(ANDROID)
+    AAndroid::requestRedraw();
+#else
+    if (!mWindows.empty()) {
+        auto handle = mWindows.back()->mHandle;
+#if defined(_WIN32)
+        PostMessage(handle, WM_USER, 0, 0);
+#else
+        DisplayLock displayLock;
+        XEvent e = {0};
+        e.xexpose.window = handle;
+        e.type = Expose;
+        XSendEvent(gDisplay, handle, false, 0, &e);
+        XFlush(gDisplay);
+#endif
+    }
+#endif
+}
+
+void AWindowManager::loop() {
+
+#if defined(_WIN32)
+    MSG msg;
+    for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
+        if (GetMessage(&msg, nullptr, 0, 0) == 0) {
+            break;
+        }
+        AThread::current()->processMessages();
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+#elif defined(ANDROID)
+    AThread::current()->processMessages();
+    if (!mWindows.empty()) {
+        mWindows.back()->redraw();
+    }
+#else
+    XEvent ev;
+    for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
+        XNextEvent(gDisplay, &ev);
+        auto window = mWindows.front();
+        DisplayLock displayLock;
+        switch (ev.type) {
+            case KeyPress:
+            {
+                int count = 0;
+                KeySym keysym = 0;
+                char buf[0x20];
+                Status status = 0;
+                count = Xutf8LookupString(window->mIC, (XKeyPressedEvent*)&ev, buf, sizeof(buf), &keysym, &status);
+
+                if (count) {
+                    AString s(buf);
+                    assert(!s.empty());
+                    window->onCharEntered(s[0]);
+                }
+                break;
+            }
+
+            case MappingNotify:
+                XRefreshKeyboardMapping(&ev.xmapping);
+                break;
+
+            case Expose: {
+                glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
+                if (size.x >= 10 && size.y >= 10 && size != window->getSize())
+                    window->AViewContainer::setSize(size.x, size.y);
+                window->redraw();
+                break;
+            }
+            case DestroyNotify: {
+                window->onCloseButtonClicked();
+                break;
+            }
+            case MotionNotify:
+                window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
+                break;
+            case ButtonPress: {
+                window->onMousePressed({ev.xbutton.x, ev.xbutton.y}, (AInput::Key)(AInput::LButton + ev.xbutton.button - 1));
+                break;
+            }
+            case ButtonRelease: {
+                window->onMouseReleased({ev.xbutton.x, ev.xbutton.y}, (AInput::Key)(AInput::LButton + ev.xbutton.button - 1));
+                break;
+            }
+        }
+        AThread::current()->processMessages();
+    }
+#endif
 }

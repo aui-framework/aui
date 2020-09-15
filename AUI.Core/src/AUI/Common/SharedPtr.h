@@ -2,8 +2,8 @@
 
 #include "SharedPtrTypes.h"
 
-#include "AUI/Common/AObject.h"
-#include "AUI/Thread/AThread.h"
+#include <AUI/Common/AObject.h>
+#include <AUI/Thread/AThread.h>
 
 template<typename T, typename... Args>
 inline auto _new(Args&& ... args)

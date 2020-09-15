@@ -1,6 +1,6 @@
 ﻿#include "AInput.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <windows.h>
 
 AInput::Key AInput::fromNative(int key) {
@@ -240,6 +240,22 @@ AString AInput::getName(Key k)
 
 bool AInput::isKeyDown(Key k) {
 	return GetAsyncKeyState(toNative(k)) & 32768;
+}
+
+#elif defined(ANDROID)
+
+AInput::Key AInput::fromNative(int k) {
+    return Unknown;
+}
+int AInput::toNative(Key key) {
+    return 0;
+}
+bool AInput::isKeyDown(Key k) {
+    return false;
+}
+AString AInput::getName(Key k)
+{
+    return "?";
 }
 
 #else

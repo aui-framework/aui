@@ -10,7 +10,7 @@ int main()
 	return 0;
 }
 /*
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <Windows.h>
 int __stdcall WinMain(
 	HINSTANCE hInstance,
