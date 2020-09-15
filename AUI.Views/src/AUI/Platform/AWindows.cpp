@@ -907,12 +907,13 @@ AWindowManager::~AWindowManager() {
 }
 
 void AWindowManager::notifyProcessMessages() {
+#if defined(ANDROID)
+    AAndroid::requestRedraw();
+#else
     if (!mWindows.empty()) {
         auto handle = mWindows.back()->mHandle;
 #if defined(_WIN32)
         PostMessage(handle, WM_USER, 0, 0);
-
-#elif defined(ANDROID)
 #else
         DisplayLock displayLock;
         XEvent e = {0};
@@ -922,6 +923,7 @@ void AWindowManager::notifyProcessMessages() {
         XFlush(gDisplay);
 #endif
     }
+#endif
 }
 
 void AWindowManager::loop() {
@@ -939,6 +941,9 @@ void AWindowManager::loop() {
 
 #elif defined(ANDROID)
     AThread::current()->processMessages();
+    if (!mWindows.empty()) {
+        mWindows.back()->redraw();
+    }
 #else
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {

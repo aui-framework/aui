@@ -6,8 +6,8 @@
 extern "C"
 JNIEXPORT void JNICALL
 Java_ru_alex2772_aui_MyGLRenderer_handleRedraw(JNIEnv *env, jclass clazz) {
-    if (auto w = AWindow::current())
-        w->loop();
+    if (auto el = AThread::current()->getCurrentEventLoop())
+        el->loop();
 }
 
 extern "C"
