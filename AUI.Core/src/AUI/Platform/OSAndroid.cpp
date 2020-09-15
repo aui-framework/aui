@@ -74,9 +74,10 @@ Java_ru_alex2772_aui_MyGLRenderer_handleInit(JNIEnv *env, jclass clazz) {
     _gEntry({});
 }
 
-#endif
 
 AAndroid::Ref &AAndroid::Ref::operator=(jobject object) {
     mObject = object ? AAndroid::getJNI()->NewGlobalRef(object) : nullptr;
     return *this;
 }
+
+#endif
