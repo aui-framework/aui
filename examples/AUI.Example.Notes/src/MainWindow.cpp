@@ -26,6 +26,7 @@
 #include <AUI/View/ATextField.h>
 #include <AUI/Model/AListModel.h>
 #include <AUI/Model/AListModelAdapter.h>
+#include <AUI/Util/ADataBinding.h>
 
 MainWindow::MainWindow() : AWindow("Notes", 300, 400) {
     setLayout(_new<AHorizontalLayout>());
@@ -56,14 +57,20 @@ MainWindow::MainWindow() : AWindow("Notes", 300, 400) {
         })
     }));
 
+    static auto binding = _new<ADataBinding<Note>>();
+
     addView(_container<AVerticalLayout>({
         _container<AHorizontalLayout>({
-            _new<ALabel>("Название"),
-            _new<ATextField>(),
+            _new<ALabel>("Название") && binding->link(&Note::name, &ALabel::setText),
+            _new<ATextField>() && binding->link(&Note::name, &ATextField::textChanged, &ATextField::setText),
         }),
         _new<ALabel>("Текст"),
         _new<ATextField>() by(ATextField, {
             setExpanding({2, 2});
         })
     }));
+
+    Note m;
+    m.name = "ASdas";
+    binding->setModel(m);
 }

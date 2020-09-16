@@ -56,7 +56,7 @@ MainWindow::MainWindow() : AWindow("Words", 300, 400) {
 
             auto json = AJson::read(AUrl(":words/courses.json").open());
             for (auto& course : json.asArray()) {
-                Course::make(course["courseName"].asString(), course["courseDescription"].asString());
+                Note::make(course["courseName"].asString(), course["courseDescription"].asString());
             }
 
         });

@@ -23,16 +23,3 @@ AString AStringVector::join(wchar_t w) const
 	return res;
 }
 
-AStringVector::~AStringVector()
-{
-}
-
-size_t AStringVector::listSize()
-{
-	return size();
-}
-
-AVariant AStringVector::listItemAt(size_t index)
-{
-	return (*this)[index];
-}

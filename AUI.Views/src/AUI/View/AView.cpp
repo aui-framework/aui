@@ -792,8 +792,8 @@ void AView::setEnabled(bool enabled)
 void AView::setDisabled(bool disabled)
 {
 	mEnabled = !disabled;
-	emit customCssPropertyChanged();
-	setSignalsEnabled(mEnabled);
+    setSignalsEnabled(mEnabled);
+    emit customCssPropertyChanged();
 }
 
 void AView::setAnimator(const _<AAnimator>& animator) {

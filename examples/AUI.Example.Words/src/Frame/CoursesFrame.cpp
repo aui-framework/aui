@@ -33,7 +33,7 @@ CoursesFrame::CoursesFrame() {
                          (&AView::setExpanding, glm::ivec2{1, 1});
     addView(list);
 
-    for (auto& course : Course::all()->get()) {
+    for (auto& course : Note::all()->get()) {
         list->addView(_new<CourseView>());
     }
 }

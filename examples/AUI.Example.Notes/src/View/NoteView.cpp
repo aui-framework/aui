@@ -4,7 +4,7 @@
 
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
-#include "CourseView.h"
+#include "NoteView.h"
 
 CourseView::CourseView() {
     setLayout(_new<AHorizontalLayout>());

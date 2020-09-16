@@ -253,7 +253,7 @@ void AAbstractTextField::onFocusLost()
 	if (mTextChangedFlag)
 	{
 		mTextChangedFlag = false;
-		emit textChanged();
+		emit textChanged(mContents);
 	}
 	
 }

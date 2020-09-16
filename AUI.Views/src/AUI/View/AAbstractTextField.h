@@ -70,7 +70,7 @@ signals:
 	 * \brief содержимое текстового поля изменено (в том числе при
 	 *        вызове функции \code AAbstractTextField::setText \endcode)
 	 */
-	emits<> textChanged;
+	emits<AString> textChanged;
 
 	/**
 	 * \brief содержимое текстового поля изменяется пользователем.

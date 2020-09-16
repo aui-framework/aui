@@ -7,13 +7,14 @@
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/Data/ASqlModel.h>
 #include "CoursesFrame.h"
-#include <Model/Course.h>
+#include <Model/Note.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/ASpacer.h>
 #include <AUI/View/AButton.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/Layout/AStackedLayout.h>
-#include <View/CourseView.h>
+#include <View/NoteView.h>
+
 
 CoursesFrame::CoursesFrame() {
     AVIEW_CSS;
@@ -33,7 +34,7 @@ CoursesFrame::CoursesFrame() {
                          (&AView::setExpanding, glm::ivec2{1, 1});
     addView(list);
 
-    for (auto& course : Course::all()->get()) {
+    for (auto& course : Note::all()->get()) {
         list->addView(_new<CourseView>());
     }
 }
