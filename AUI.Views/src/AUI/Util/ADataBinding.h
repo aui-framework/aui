@@ -54,9 +54,11 @@ public:
     ADataBindingLinker<Model, Klass, Data> link(std::decay_t<Data>(Model::*field), void(Klass::*setterFunc)(Data)) {
         return ADataBindingLinker<Model, Klass, Data>(this, nullptr, setterFunc, field);
     }
-    template<typename Klass, typename Data>
-    ADataBindingLinker<Model, Klass, Data> link(std::decay_t<Data>(Model::*field), ASignal<std::decay_t<Data>>(Klass::*getter), void(Klass::*setterFunc)(Data)) {
-        return ADataBindingLinker<Model, Klass, Data>(this, getter, setterFunc, field);
+    template<typename Klass, typename Data1, typename Data2>
+    ADataBindingLinker<Model, Klass, Data1> link(std::decay_t<Data1>(Model::*field), ASignal<Data2>(Klass::*getter), void(Klass::*setterFunc)(Data1)) {
+        static_assert(std::is_same_v<std::decay_t<Data2>, std::decay_t<Data1>>, "ASignal argument, field and setter"
+                                                                                "argument types must be the same");
+        return ADataBindingLinker<Model, Klass, Data1>(this, getter, setterFunc, field);
     }
 
     const Model& getModel() const {
