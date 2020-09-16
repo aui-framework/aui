@@ -1,25 +1,11 @@
 #include "ExampleWindow.h"
-#include "AUI/Common/ByteBuffer.h"
-#include "AUI/Util/BuiltinFiles.h"
+#include <AUI/Platform/Entry.h>
 
-int main()
+AUI_ENTRY
 {
     Stylesheet::setPreferredStyle(Stylesheet::PREFER_UNIVERSAL_LOOK);
     Stylesheet::instance().load(AUrl(":views/style.css").open());
-	ExampleWindow w;
-	w.loop();
+	auto w = _new<ExampleWindow>();
+	w->show();
 	return 0;
 }
-
-#ifdef _WIN32
-#include <Windows.h>
-int __stdcall WinMain(
-	HINSTANCE hInstance,
-	HINSTANCE hPrevInstance,
-	LPSTR     lpCmdLine,
-	int       nShowCmd
-)
-{
-	return main();
-}
-#endif

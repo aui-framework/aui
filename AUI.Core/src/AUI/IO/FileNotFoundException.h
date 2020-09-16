@@ -4,8 +4,5 @@
 class FileNotFoundException: public IOException
 {
 public:
-	FileNotFoundException(char const* _Message)
-		: IOException(_Message)
-	{
-	}
+	FileNotFoundException(const AString& message);
 };

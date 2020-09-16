@@ -39,11 +39,10 @@ public:
         mStorage &= ~flag;
         return *this;
     }
-
     /**
      * \brief Определяет, есть ли флаг в BitField и сбрасывает флаг, если он есть.
-     * \param flag Флаг
-     * \return true, если флаг поднят в битовом поле
+     * \param flag флаг
+     * \return true, если флаг был поднят и сброшен этим вызовом
      */
     bool checkAndTake(T flag) {
         if (mStorage & flag) {
@@ -53,6 +52,20 @@ public:
         return false;
     }
 
+    /**
+     * \brief Определяет, есть ли флаг в BitField и поднимает флаг, если его нет.
+     * \param flag флаг
+     * \return true, если флаг был опущен и поднят этим вызовом
+     */
+    bool checkAndPut(T flag)
+    {
+        if (mStorage & flag)
+        {
+            return false;
+        }
+        mStorage |= flag;
+        return true;
+    }
     /**
      * \brief Проверить, поднят ли флаг в битовом поле.
      * \param flags Флаг

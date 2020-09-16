@@ -1,10 +1,10 @@
 ﻿#pragma once
 #include <thread>
 #include <utility>
-#include "AUI/Common/AObject.h"
 #include "AUI/Common/ADeque.h"
 #include "AMutex.h"
 #include "AConditionVariable.h"
+#include "AUI/Common/SharedPtrTypes.h"
 #include <functional>
 
 class IEventLoop;
@@ -98,8 +98,12 @@ public:
 	 */
 	virtual void resetInterrupted();
 
+	IEventLoop* getCurrentEventLoop() const {
+		return mCurrentEventLoop;
+	}
 
-    template <class Callable>
+
+	template <class Callable>
     inline void operator<<(Callable fun)
     {
         enqueue(fun);
@@ -110,6 +114,8 @@ public:
         enqueue(fun);
     }
 };
+
+#include "AUI/Common/AObject.h"
 
 /**
  * \brief Поток.

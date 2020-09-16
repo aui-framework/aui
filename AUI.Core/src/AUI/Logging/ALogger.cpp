@@ -1,8 +1,16 @@
 #include "ALogger.h"
+#ifdef __ANDROID__
+#include <android/log.h>
+#else
 #include <ctime>
+#endif
 
 ALogger::ALogger()
+#ifndef __ANDROID__
+    : mLogFile(_new<FileOutputStream>("latest.log"))
+#endif
 {
+
 }
 
 ALogger& ALogger::instance()
@@ -13,6 +21,24 @@ ALogger& ALogger::instance()
 
 void ALogger::log(Level level, const AString& str)
 {
+#ifdef __ANDROID__
+
+    int prio;
+    switch (level) {
+        case INFO:
+            prio = ANDROID_LOG_INFO;
+            break;
+        case WARN:
+            prio = ANDROID_LOG_WARN;
+            break;
+        case ERR:
+            prio = ANDROID_LOG_ERROR;
+            break;
+        default:
+            assert(0);
+    }
+    __android_log_print(prio, "AUI", "%ls", str.c_str());
+#else
     const char* levelName = "UNKNOWN";
 
     switch (level)
@@ -39,7 +65,8 @@ void ALogger::log(Level level, const AString& str)
     std::cout << '[' << timebuf << "] " << levelName << ": " << str << std::endl;
     *mLogFile << '[';
     mLogFile->write(timebuf, strlen(timebuf));
-	*mLogFile << "] ";
+    *mLogFile << "] ";
     mLogFile->write(levelName, strlen(levelName));
     *mLogFile << ": " << str << "\n";
+#endif
 }

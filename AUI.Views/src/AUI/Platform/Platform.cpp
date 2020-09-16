@@ -1,13 +1,14 @@
 ﻿#include "Platform.h"
 #include "AUI/Common/AString.h"
+#include "AUI/IO/APath.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <Windows.h>
 
 AString Platform::getFontPath(const AString& font)
 {
     try {
-        if (std::filesystem::is_regular_file(font.toStdString()))
+        if (APath(font.toStdString()).isRegularFileExists())
             return font;
     } catch(...) {}
     try {
@@ -71,9 +72,13 @@ float Platform::getDpiRatio()
 }
 #else
 
+#if defined(__ANDROID__)
+#include <AUI/Platform/OSAndroid.h>
+#endif
+
 AString Platform::getFontPath(const AString& font)
 {
-    if (std::filesystem::is_regular_file(font.toStdString()))
+    if (APath(font.toStdString()).isRegularFileExists())
         return font;
 
     return "/usr/share/fonts/truetype/" + font;
@@ -86,7 +91,11 @@ void Platform::playSystemSound(Sound s)
 
 float Platform::getDpiRatio()
 {
+#ifdef __ANDROID__
+    return AAndroid::getDpiRatio();
+#else
     return 1.f;
+#endif
 }
 
 #endif

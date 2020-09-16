@@ -1,4 +1,5 @@
 #pragma once
+
 #include "AUI/Views.h"
 #include "AUI/Common/AString.h"
 
@@ -9,19 +10,20 @@
 #include "AUI/Thread/IEventLoop.h"
 #include "AUI/Util/AMetric.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <Windows.h>
+#elif defined(ANDROID)
+#include <jni.h>
 #else
-
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysymdef.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
-
 #endif
 
 class Render;
+class AWindowManager;
 
 ENUM_FLAG(WindowStyle)
 {	
@@ -59,12 +61,13 @@ private:
 public:
 };
 
-class API_AUI_VIEWS AWindow: public AViewContainer, public IEventLoop, public std::enable_shared_from_this<AWindow>
+class API_AUI_VIEWS AWindow: public AViewContainer, public std::enable_shared_from_this<AWindow>
 {
+    friend class AWindowManager;
 	friend struct painter;
 private:
 	static AWindow*& currentWindowStorage();
-#ifdef _WIN32
+#if defined(_WIN32)
 	HMODULE mInst;
 	HDC mDC;
 #endif
@@ -76,12 +79,12 @@ private:
 	 * \brief Удержание ссылки окна.
 	 */
 	_<AWindow> mSelfHolder;
-	
 
 	struct Context
 	{
-#ifdef _WIN32
+#if defined(_WIN32)
 		HGLRC hrc = 0;
+#elif defined(ANDROID)
 #else
         GLXContext context;
 #endif
@@ -91,20 +94,21 @@ private:
 	static Context context;
 
 	AString mWindowTitle;
-	bool mLoopRunning = false;
 	
 	_weak<AView> mFocusedView;
 
-#ifdef _WIN32
+#if defined(_WIN32)
 	friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #endif
 
 	void updateDpi();
 	
 protected:
-#ifdef _WIN32
+#if defined(_WIN32)
 	HWND mHandle;
     virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#elif defined(ANDROID)
+    jobject mHandle = nullptr;
 #else
     Window mHandle;
     XIC mIC;
@@ -112,13 +116,17 @@ protected:
 
 	virtual void doDrawWindow();
 	virtual void onClosed();
+    void onCloseButtonClicked();
 	
 public:
 	AWindow(const AString& name = "My window", int width = 854, int height = 500, AWindow* parent = nullptr);
 	virtual ~AWindow();
 
 	void redraw();
-	void loop();
+
+	/**
+	 * \brief Удаляет окно из AWindowManager.
+	 */
 	void quit();
 
 	void setWindowStyle(WindowStyle ws);
@@ -131,7 +139,7 @@ public:
 	void show();
 	void close();
 
-	#ifdef _WIN32
+	#if defined(_WIN32)
 	HWND getNativeHandle() { return mHandle; }
 #endif
 
@@ -144,6 +152,7 @@ public:
 	{
 		return mWindowTitle;
 	}
+	AWindowManager& getWindowManager() const;
 
 	glm::ivec2 getPos() const;
 
@@ -166,8 +175,6 @@ public:
 		return mFocusedView.lock();
 	}
 
-	void notifyProcessMessages() override;
-
 	/**
 	 * \brief Получить текущее окно для данного потока.
 	 */
@@ -181,4 +188,5 @@ signals:
 	emits<> shown;
 
 	emits<AInput::Key> keyDown;
+
 };

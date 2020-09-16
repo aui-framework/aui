@@ -1,6 +1,6 @@
 ﻿#include "CustomWindow.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "AUI/Render/Render.h"

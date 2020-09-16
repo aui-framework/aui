@@ -343,7 +343,11 @@ void AView::recompileCSS()
 			else if (p->getArgs()[0] == "antialiasing")
 				mFontStyle.fontRendering = FR_ANTIALIASING;
 			else if (p->getArgs()[0] == "subpixel")
-				mFontStyle.fontRendering = FR_SUBPIXEL;
+#ifdef __ANDROID__
+			    mFontStyle.fontRendering = FR_ANTIALIASING;
+#else
+			    mFontStyle.fontRendering = FR_SUBPIXEL;
+#endif
 		}
 	});
 

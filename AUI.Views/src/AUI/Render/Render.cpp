@@ -34,7 +34,7 @@ Render::Render()
 
             "vec4 query = vec4(pass_uv - vec2(lower), pass_uv - vec2(upper));"
             "vec4 integral = 0.5 + 0.5 * erf(query * (sqrt(0.5) / sigma));"
-            "gl_FragColor.a *= clamp((integral.z - integral.x) * (integral.w - integral.y), 0.f, 1.f);"
+            "gl_FragColor.a *= clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0);"
             //"gl_FragColor.a = query.x + query.y;"
          "}");
 
@@ -42,14 +42,14 @@ Render::Render()
 		"attribute vec3 pos;"
         "attribute vec2 uv;"
 		"varying vec2 pass_uv;"
-		"void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv * 2.f - vec2(1, 1);}",
+		"void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
         "uniform vec2 size;"
         "varying vec2 pass_uv;"
 		"void main(void) {"
             "vec2 tmp = abs(pass_uv);"
-            "if ((tmp.x - 1) * (size.y) / (-size.x) < tmp.y - (1 - size.y) &&"
-                "(pow(tmp.x - (1.f - size.x), 2.f) / pow(size.x, 2.f) +"
-                 "pow(tmp.y - (1.f - size.y), 2.f) / pow(size.y, 2.f)) > 1.f) discard;"
+            "if ((tmp.x - 1.0) * (size.y) / (-size.x) < tmp.y - (1.0 - size.y) &&"
+                "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
+                 "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
         "}");
 
 	mSolidTransformShader.load(
@@ -81,7 +81,7 @@ Render::Render()
 		"varying vec2 pass_uv;"
 		"uniform sampler2D tex;"
 		"uniform vec4 color;"
-		"void main(void) {float sample = pow(texture2D(tex, pass_uv).r, 1.f / 1.2f); gl_FragColor = vec4(color.rgb, color.a * sample);}",
+		"void main(void) {float sample = pow(texture2D(tex, pass_uv).r, 1.0 / 1.2); gl_FragColor = vec4(color.rgb, color.a * sample);}",
 		{"pos", "uv"});
 
 	mSymbolShaderSubPixel.load(
@@ -96,7 +96,7 @@ Render::Render()
 		"varying vec2 pass_uv;"
 		"uniform sampler2D tex;"
 		"uniform vec4 color;"
-		"void main(void) {vec3 sample = pow(texture2D(tex, pass_uv).rgb, vec3(1.f / 1.2f)); gl_FragColor = vec4(sample * color.rgb * color.a, 1);}",
+		"void main(void) {vec3 sample = pow(texture2D(tex, pass_uv).rgb, vec3(1.0 / 1.2)); gl_FragColor = vec4(sample * color.rgb * color.a, 1);}",
 		{"pos", "uv"});
 
 	mTempVao.bind();
