@@ -20,6 +20,7 @@ AObject::~AObject()
 
 void AObject::clearSignals()
 {
+    std::unique_lock lock(mSignalsLock);
 	for (auto& a : mSignals)
 	{
 		a->onObjectHasDestroyed(this);

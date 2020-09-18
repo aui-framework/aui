@@ -145,7 +145,7 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
 		return;
 	}
 
-	emit textChanging();
+	emit textChanging(mContents);
 	
 	updateCursorPos();
 	
@@ -195,7 +195,7 @@ void AAbstractTextField::onCharEntered(wchar_t c)
 			Platform::playSystemSound(Platform::S_ASTERISK);
 		}
 	}
-	emit textChanging();
+	emit textChanging(mContents);
 	updateCursorBlinking();
 	updateCursorPos();
 
