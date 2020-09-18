@@ -62,7 +62,7 @@ MainWindow::MainWindow() : AWindow("Notes", 300, 400) {
     addView(_container<AVerticalLayout>({
         _container<AHorizontalLayout>({
             _new<ALabel>("Название") && binding->link(&Note::name, &ALabel::setText),
-            _new<ATextField>() && binding->link(&Note::name, &ATextField::textChanged, &ATextField::setText),
+            _new<ATextField>() && binding->link(&Note::name, &ATextField::textChanging, &ATextField::setText),
         }),
         _new<ALabel>("Текст"),
         _new<ATextField>() by(ATextField, {

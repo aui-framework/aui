@@ -6,7 +6,6 @@ AUI_ENTRY
 {
     Stylesheet::setPreferredStyle(Stylesheet::PREFER_UNIVERSAL_LOOK);
     Stylesheet::instance().load(AUrl(":words/style.less").open());
-	auto w = _new<MainWindow>();
-	w->loop();
+	_new<MainWindow>()->show();
 	return 0;
 }

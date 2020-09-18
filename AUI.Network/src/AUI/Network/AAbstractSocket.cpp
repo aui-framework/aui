@@ -50,7 +50,7 @@ void AAbstractSocket::init()
 			(AString("Failed to create ASocket. Error code: ") + AString::number(WSAGetLastError())).c_str());
 	}
 #else
-	if ((mHandle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+	if ((mHandle = createSocket()) < 0)
 	{
 		throw IOException("Failed to create ASocket.");
 	}
@@ -84,7 +84,7 @@ AString AAbstractSocket::getErrorString()
 	}
 	return s + ": " + AString(str);
 #else
-	return "unknown error";
+	return strerror(errno);
 #endif
 }
 

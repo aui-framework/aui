@@ -67,13 +67,13 @@ public:
 
 signals:
 	/**
-	 * \brief содержимое текстового поля изменено (в том числе при
-	 *        вызове функции \code AAbstractTextField::setText \endcode)
+	 * \brief изменение текстового поля завершено
+	 * \note этот сигнал порождается в том числе при вызове функции AAbstractTextField::setText
 	 */
 	emits<AString> textChanged;
 
 	/**
 	 * \brief содержимое текстового поля изменяется пользователем.
 	 */
-	emits<> textChanging;
+	emits<AString> textChanging;
 };

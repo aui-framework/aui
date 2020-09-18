@@ -33,5 +33,11 @@ AVariant AMeta::get(const AString& key)
 void AMeta::set(const AString& key, const AVariant& value)
 {
 	ensureMetaTableExists();
-	Autumn::get<ASqlDatabase>()->execute("INSERT OR REPLACE INTO aui_meta (meta_key, meta_value) VALUES (?, ?)", { key, value });
+	if (Autumn::get<ASqlDatabase>()->getDriverType() == DT_SQLITE)
+	    Autumn::get<ASqlDatabase>()->execute(
+	            "INSERT OR REPLACE INTO aui_meta (meta_key, meta_value) VALUES (?, ?)", { key, value });
+	else
+        Autumn::get<ASqlDatabase>()->execute(
+                "INSERT INTO aui_meta (meta_key, meta_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE meta_value = ?",
+                { key, value, value });
 }

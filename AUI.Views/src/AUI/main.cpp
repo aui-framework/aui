@@ -42,11 +42,6 @@ BOOL WINAPI DllMain(
 struct initialize
 {
     initialize() {
-#if defined(__linux)
-#elif defined(ANDROID)
-        gtk_init(nullptr, nullptr);
-#endif
-
 #ifndef ANDROID
         aui::importPlugin("Svg");
 #endif

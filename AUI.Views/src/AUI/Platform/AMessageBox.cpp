@@ -71,16 +71,26 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
                   AMessageBox::Button b) {
     unsigned iconFlags = 0;
 
+    struct once {
+        once() {
+            gtk_init(nullptr, nullptr);
+        }
+    };
+    static once o;
+
+
     // Icons
-    if (icon & I_INFO) {
-        iconFlags |= GTK_MESSAGE_INFO;
-    }
-    if (icon & I_WARNING) {
-        iconFlags |= GTK_MESSAGE_WARNING;
-    }
-    if (icon & I_CRITICAL) {
-        iconFlags |= GTK_MESSAGE_ERROR;
-    }
+    switch (icon) {
+        case I_INFO:
+            iconFlags |= GTK_MESSAGE_INFO;
+            break;
+        case I_WARNING:
+            iconFlags |= GTK_MESSAGE_WARNING;
+            break;
+        case I_CRITICAL:
+            iconFlags |= GTK_MESSAGE_ERROR;
+            break;
+}
 
     unsigned buttonFlags = 0;
 
