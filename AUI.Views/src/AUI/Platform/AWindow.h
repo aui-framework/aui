@@ -70,6 +70,7 @@ private:
 #if defined(_WIN32)
 	HMODULE mInst;
 	HDC mDC;
+	bool mRedrawFlag = true;
 #endif
 	AString mWindowClass;
 	AWindow* mParentWindow;

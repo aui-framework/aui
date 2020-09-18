@@ -57,7 +57,7 @@ void AView::drawStencilMask()
 void AView::render()
 {
     if (mAnimator)
-        mAnimator->animate();
+        mAnimator->animate(this);
 
 	{
 		ensureCSSUpdated();
@@ -800,4 +800,3 @@ void AView::setAnimator(const _<AAnimator>& animator) {
     mAnimator = animator;
     mAnimator->setView(this);
 }
-

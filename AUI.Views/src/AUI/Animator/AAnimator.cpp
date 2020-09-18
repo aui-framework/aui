@@ -5,7 +5,7 @@
 #include <AUI/Platform/AWindow.h>
 #include "AAnimator.h"
 
-void AAnimator::animate() {
+void AAnimator::animate(AView* view) {
     if (mIsPlaying) {
         AWindow::current()->flagRedraw();
         auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -25,7 +25,7 @@ void AAnimator::animate() {
 
         mLastFrameTime = now;
     }
-    doAnimation(mCurrentTheta);
+    doAnimation(view, mCurrentTheta);
 }
 
 void AAnimator::pause() {

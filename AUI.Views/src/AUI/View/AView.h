@@ -437,7 +437,6 @@ public:
 		return mEnabled;
 	}
 
-
 	Visibility getVisibility() const
 	{
 		return mVisibility;

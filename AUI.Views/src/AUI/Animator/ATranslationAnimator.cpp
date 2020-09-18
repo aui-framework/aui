@@ -8,7 +8,7 @@
 
 ATranslationAnimator::ATranslationAnimator(const glm::vec2& from, const glm::vec2& to) : mFrom(from), mTo(to) {}
 
-void ATranslationAnimator::doAnimation(float theta) {
+void ATranslationAnimator::doAnimation(AView* view, float theta) {
     Render::instance().setTransform(glm::translate(glm::mat4(1.f),
                                                    glm::vec3(glm::mix(mFrom, mTo, theta), 0.f)));
 }

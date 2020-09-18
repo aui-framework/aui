@@ -23,14 +23,14 @@ protected:
      * \brief Выполнить непосредственно анимацию (выставить матрицы, цвета и так далее)
      * \param theta число [0;1], где 0 - начало анимации, 1 - конец анимации
      */
-    virtual void doAnimation(float theta) = 0;
+    virtual void doAnimation(AView* view, float theta) = 0;
 
     void translateToCenter();
     void translateToCorner();
 
 public:
 
-    void animate();
+    void animate(AView* view);
     void pause();
 
     void setDuration(float period) {

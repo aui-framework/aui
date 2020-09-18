@@ -68,6 +68,12 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     currentWindowStorage() = this;
 
+    if (uMsg != WM_PAINT && !mRedrawFlag) {
+        // НАПОМНИТЬ ВЕНДЕ, ЧТО Я ОЧЕНЬ ХОЧУ ПЕРЕРИСОВАТЬ СРАНОЕ ОКНО!!!
+        mRedrawFlag = true;
+        flagRedraw();
+    }
+
     switch (uMsg) {
         /*
     case WM_SIZING:
@@ -622,6 +628,9 @@ AWindow::~AWindow() {
 extern unsigned char stencilDepth;
 
 void AWindow::redraw() {
+#ifdef WIN32
+    mRedrawFlag = true;
+#endif
     {
 
         // ограничение фпс
@@ -857,7 +866,10 @@ AWindow* AWindow::current() {
 
 void AWindow::flagRedraw() {
 #if defined(_WIN32)
-    InvalidateRect(mHandle, nullptr, true);
+    if (mRedrawFlag) {
+        InvalidateRect(mHandle, nullptr, true);
+        mRedrawFlag = false;
+    }
 #elif defined(ANDROID)
     AAndroid::requestRedraw();
 #else
@@ -934,9 +946,9 @@ void AWindowManager::loop() {
         if (GetMessage(&msg, nullptr, 0, 0) == 0) {
             break;
         }
-        AThread::current()->processMessages();
         TranslateMessage(&msg);
         DispatchMessage(&msg);
+        AThread::current()->processMessages();
     }
 
 #elif defined(ANDROID)

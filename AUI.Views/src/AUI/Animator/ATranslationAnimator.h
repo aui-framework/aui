@@ -14,6 +14,6 @@ private:
 public:
     ATranslationAnimator(const glm::vec2& from, const glm::vec2& to = {0.f, 0.f});
 
-    void doAnimation(float theta) override;
+    void doAnimation(AView* view, float theta) override;
 };
 

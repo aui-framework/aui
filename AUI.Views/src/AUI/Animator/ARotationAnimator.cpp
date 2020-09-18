@@ -5,7 +5,7 @@
 #include "ARotationAnimator.h"
 #include <AUI/Render/Render.h>
 
-void ARotationAnimator::doAnimation(float theta) {
+void ARotationAnimator::doAnimation(AView* view, float theta) {
 
     translateToCenter();
     Render::instance().setTransform(
