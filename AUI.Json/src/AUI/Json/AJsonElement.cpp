@@ -77,8 +77,15 @@ AJsonObject::AJsonObject(const AMap<AString, AJsonElement>& value):
 {
 }
 
+AJsonObject::AJsonObject():
+    AJsonElement(_new<JsonObject>())
+{
+
+}
+
 AJsonArray::AJsonArray(const AVector<AJsonElement>& value) :
 	AJsonElement(_new<JsonArray>(value))
 {
 }
+
 

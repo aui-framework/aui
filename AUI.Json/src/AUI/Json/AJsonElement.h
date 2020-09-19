@@ -7,6 +7,7 @@
 #include "AUI/Common/AVector.h"
 #include <AUI/IO/IOutputStream.h>
 #include <AUI/Thread/AThreadPool.h>
+#include <AUI/Model/IListModel.h>
 
 class IJsonElement;
 class AJsonElement;
@@ -54,9 +55,32 @@ class API_AUI_JSON AJsonObject: public AJsonElement
 {
 public:
 	AJsonObject(const AMap<AString, AJsonElement>& value);
+	AJsonObject();
 };
+
+template<>
+inline AJsonElement AVariant::to<AJsonElement>() const {
+    return AJsonValue(*this);
+}
+
 class API_AUI_JSON AJsonArray: public AJsonElement
 {
 public:
 	AJsonArray(const AVector<AJsonElement>& value);
+
+    template<typename Model>
+	_<IListModel<Model>> asModelList(const AStringVector& columns) const {
+	    auto list = _new<AListModel<Model>>();
+	    auto fields = AModelMeta<Model>::getFields();
+	    for (AJsonElement i : asArray()) {
+	        auto jsonRow = i.asArray();
+	        Model modelRow;
+            assert(columns.size() == jsonRow.size());
+            for (size_t i = 0; i < columns.size(); ++i) {
+                fields[columns[i]]->set(modelRow, jsonRow[i].asVariant());
+            }
+            list << modelRow;
+	    }
+	    return list;
+	}
 };

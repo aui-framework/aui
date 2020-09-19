@@ -1,6 +1,7 @@
 ﻿#include "AListView.h"
 #include "ALabel.h"
 #include "AUI/Layout/AVerticalLayout.h"
+#include "AUI/Platform/AWindow.h"
 
 
 
@@ -68,19 +69,27 @@ AListView::~AListView()
 {
 }
 
-AListView::AListView(const _<IListModel<AVariant>>& model): mModel(model) {
+AListView::AListView(const _<IListModel<AVariant>>& model) {
     AVIEW_CSS;
+    setModel(model);
+}
 
+void AListView::setModel(const _<IListModel<AVariant>>& model) {
+    mModel = model;
     setLayout(_new<AVerticalLayout>());
-    for (size_t i = 0; i < model->listSize(); ++i)
-    {
-        addView(_new<AListItem>(model->listItemAt(i).toString()));
-    }
 
-    connect(mModel->dataInserted, this, [&](const AModelRange<AVariant>& data) {
-        for (const auto& row : data) {
-            addView(_new<AListItem>(row.toString()));
+    if (mModel) {
+        for (size_t i = 0; i < model->listSize(); ++i) {
+            addView(_new<AListItem>(model->listItemAt(i).toString()));
         }
-        updateLayout();
-    });
+
+        connect(mModel->dataInserted, this, [&](const AModelRange<AVariant>& data) {
+            for (const auto& row : data) {
+                addView(_new<AListItem>(row.toString()));
+            }
+            updateLayout();
+        });
+    }
+    updateLayout();
+    AWindow::current()->flagRedraw();
 }

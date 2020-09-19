@@ -112,6 +112,10 @@ public:
     AVariantType::Type getType() override {
         return AVariantType::getTypeOf<T>();
 	}
+
+	T& getData() {
+	    return mStored;
+	}
 };
 
 

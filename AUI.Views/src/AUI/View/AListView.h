@@ -14,10 +14,13 @@ private:
 	ASet<AModelIndex> mSelectionModel;
 	
 public:
+    AListView(): AListView(nullptr) {}
 	explicit AListView(const _<IListModel<AVariant>>& model);
     virtual ~AListView();
 
-	int getContentMinimumHeight() override;
+    void setModel(const _<IListModel<AVariant>>& model);
+
+    int getContentMinimumHeight() override;
 	
 	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 

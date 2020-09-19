@@ -36,6 +36,13 @@ public:
 
 					switch (m.buffer_type)
 					{
+					case MYSQL_TYPE_LONG: {
+                        auto o = _new<AVariantHelper<int>>(0);
+                        m.buffer = (void*)&o->getData();
+                        m.buffer_length = sizeof(o->getData());
+                        mResultVariant << o;
+                        break;
+                    }
 					case MYSQL_TYPE_STRING:
 					case MYSQL_TYPE_VAR_STRING:
 					{
