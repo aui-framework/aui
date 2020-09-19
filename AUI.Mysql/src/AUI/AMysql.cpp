@@ -4,7 +4,7 @@
 #include <mysql.h>
 #include "AUI/Data/SQLException.h"
 #include <cassert>
-
+#include <AUI/Logging/ALogger.h>
 
 class MysqlStmtResult : public ISqlDriverResult
 {
@@ -192,6 +192,7 @@ private:
 		}
 		if (mysql_stmt_execute(s.mHandle))
 		{
+		    ALogger::debug("error in query:" + query + ": " + mysql_error(&mMysql));
 			throw SQLException(AString("Could not execute prepared statement: ") + mysql_error(&mMysql));
 		}
 	}

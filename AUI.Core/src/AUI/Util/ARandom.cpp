@@ -31,9 +31,9 @@ glm::vec2 ARandom::nextVec2(float min, float max)
 	return { nextFloat(min, max), nextFloat(min, max) };
 }
 
-_<ByteBuffer> ARandom::nextBytes(unsigned count)
+_<AByteBuffer> ARandom::nextBytes(unsigned count)
 {
-	auto buf = _new<ByteBuffer>();
+	auto buf = _new<AByteBuffer>();
 	buf->reserve(count);
 	for (unsigned i = 0; i < count; ++i)
 	{

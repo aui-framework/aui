@@ -10,7 +10,7 @@ public:
 	virtual ~IOutputStream() = default;
 	virtual int write(const char* dst, int size) = 0;
 
-	inline void write(const _<ByteBuffer>& buffer)
+	inline void write(const _<AByteBuffer>& buffer)
 	{
 		write(buffer->getCurrentPosAddress(), buffer->getAvailable());
 	}
@@ -40,7 +40,7 @@ public:
 	}
 
 
-	inline void writeSizedBuffer(const _<ByteBuffer>& buffer)
+	inline void writeSizedBuffer(const _<AByteBuffer>& buffer)
 	{
 		*this << uint32_t(buffer->getSize());
 		write(buffer->data(), buffer->getSize());

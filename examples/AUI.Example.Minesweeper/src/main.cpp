@@ -1,5 +1,5 @@
 #include "CellView.h"
-#include "AUI/Common/ByteBuffer.h"
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Platform/CustomCaptionWindow.h"
 #include "AUI/Util/BuiltinFiles.h"
 #include "AUI/View/AButton.h"

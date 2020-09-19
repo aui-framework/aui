@@ -1,3 +1,4 @@
+#include <AUI/IO/IOutputStream.h>
 #include "AJsonElement.h"
 #include "JsonValue.h"
 #include "JsonObject.h"
@@ -56,6 +57,14 @@ const AJsonElement& AJsonElement::operator[](size_t index) const
 const AJsonElement& AJsonElement::operator[](const AString& key) const
 {
 	return mJson->asObject().at(key);
+}
+
+void AJsonElement::serialize(_<IOutputStream> param) const {
+    mJson->serialize(param);
+}
+
+AJsonElement& AJsonElement::operator[](const AString& key) {
+    return mJson->asObject()[key];
 }
 
 AJsonValue::AJsonValue(const AVariant& value):

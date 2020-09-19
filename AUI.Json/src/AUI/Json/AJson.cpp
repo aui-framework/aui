@@ -82,3 +82,7 @@ AJsonElement AJson::read(_<IInputStream> is)
 
 	return AJsonElement(read());
 }
+
+void API_AUI_JSON AJson::write(_<IOutputStream> os, const AJsonElement& json) {
+    json.serialize(os);
+}

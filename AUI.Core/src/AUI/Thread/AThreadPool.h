@@ -74,7 +74,7 @@ public:
 			run(fun);
 		} else
 		{
-			return _new<AFuture<std::invoke_result_t<Callable>>>(*this, fun);
+			return AFuture<std::invoke_result_t<Callable>>::make(*this, fun);
 		}
 	}
 	template <class Callable>

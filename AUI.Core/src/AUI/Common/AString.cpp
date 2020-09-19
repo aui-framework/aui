@@ -38,9 +38,9 @@ AString::AString(const char* str) noexcept
     }
 }
 
-_<ByteBuffer> AString::toUtf8() const
+_<AByteBuffer> AString::toUtf8() const
 {
-    auto buf = _new<ByteBuffer>();
+    auto buf = _new<AByteBuffer>();
     for (wchar_t c : *this)
     {
         if (c >= 0x80)
@@ -166,7 +166,7 @@ bool AString::toBool() const noexcept
     return *this == "true";
 }
 
-AString AString::fromLatin1(_<ByteBuffer> buffer)
+AString AString::fromLatin1(_<AByteBuffer> buffer)
 {
     AString result;
 

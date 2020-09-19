@@ -23,4 +23,6 @@ public:
 	AVariant& asVariant() override;
 	AMap<AString, AJsonElement>& asObject() override;
 	AVector<AJsonElement>& asArray() override;
+
+    void serialize(const _<IOutputStream>& os) const override;
 };

@@ -2,7 +2,7 @@
 #include <random>
 #include <glm/glm.hpp>
 #include "AUI/Core.h"
-#include "AUI/Common/ByteBuffer.h"
+#include "AUI/Common/AByteBuffer.h"
 
 class API_AUI_CORE ARandom
 {
@@ -18,5 +18,5 @@ public:
 	glm::vec2 nextVec2();
 	glm::vec2 nextVec2(float min, float max);
 
-	_<ByteBuffer> nextBytes(unsigned count);
+	_<AByteBuffer> nextBytes(unsigned count);
 };

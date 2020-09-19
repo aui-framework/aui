@@ -4,9 +4,9 @@
 #include "AUI/Common/AString.h"
 #include "AUI/IO/ByteBufferInputStream.h"
 
-void BuiltinFiles::loadBuffer(ByteBuffer& data)
+void BuiltinFiles::loadBuffer(AByteBuffer& data)
 {
-	ByteBuffer unpacked;
+	AByteBuffer unpacked;
 	LZ::decompress(data, unpacked);
 
 	while (unpacked.getAvailable())
@@ -17,7 +17,7 @@ void BuiltinFiles::loadBuffer(ByteBuffer& data)
 		uint32_t s;
 		unpacked >> s;
 
-		auto b = _new<ByteBuffer>();
+		auto b = _new<AByteBuffer>();
 		b->reserve(s);
 		b->setSize(s);
 
@@ -37,6 +37,6 @@ _<IInputStream> BuiltinFiles::open(const AString& file)
 }
 
 void BuiltinFiles::load(const unsigned char* data, size_t size) {
-    ByteBuffer b(data, size);
+    AByteBuffer b(data, size);
     instance().loadBuffer(b);
 }

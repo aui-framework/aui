@@ -1,13 +1,13 @@
 ﻿#include "AImageLoaderRegistry.h"
 
-#include "AUI/Common/ByteBuffer.h"
+#include "AUI/Common/AByteBuffer.h"
 
 void AImageLoaderRegistry::registerImageLoader(_<IImageLoader> imageLoader)
 {
 	mImageLoaders << imageLoader;
 }
 
-_<IDrawable> AImageLoaderRegistry::loadVectorImage(_<ByteBuffer> buffer)
+_<IDrawable> AImageLoaderRegistry::loadVectorImage(_<AByteBuffer> buffer)
 {
 	for (auto& loader : mImageLoaders)
 	{
@@ -30,7 +30,7 @@ _<IDrawable> AImageLoaderRegistry::loadVectorImage(_<ByteBuffer> buffer)
 	return nullptr;
 }
 
-_<AImage> AImageLoaderRegistry::loadRasterImage(_<ByteBuffer> buffer) {
+_<AImage> AImageLoaderRegistry::loadRasterImage(_<AByteBuffer> buffer) {
     for (auto& loader : mImageLoaders)
     {
         try {

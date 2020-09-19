@@ -13,7 +13,8 @@ public:
 	{
 		INFO,
 		WARN,
-		ERR
+		ERR,
+        DEBUG,
 	};
 private:
 	ALogger();
@@ -35,5 +36,9 @@ public:
 	static void err(const AString& str)
 	{
 		instance().log(ERR, str);
+	}
+	static void debug(const AString& str)
+	{
+		instance().log(DEBUG, str);
 	}
 };

@@ -36,7 +36,7 @@ class AAnimator;
  * \note  Для корректной работы CSS в конструкторах всех ваших
  *        классов, наследующих AView следует написать AVIEW_CSS
  */
-class API_AUI_VIEWS AView : public AObject
+class API_AUI_VIEWS AView: public AObject
 {
 	friend class AViewContainer;
 	friend class Stylesheet::Entry;

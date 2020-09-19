@@ -12,7 +12,7 @@
 
 #include "AInet4Address.h"
 
-class ByteBuffer;
+class AByteBuffer;
 
 class API_AUI_NETWORK AUdpSocket : public AAbstractSocket
 {
@@ -23,8 +23,8 @@ public:
 	AUdpSocket();
 	~AUdpSocket() override = default;
 
-	void write(const ByteBuffer& buf, const AInet4Address& dst);
-	void read(ByteBuffer& buf, AInet4Address& dst);
+	void write(const AByteBuffer& buf, const AInet4Address& dst);
+	void read(AByteBuffer& buf, AInet4Address& dst);
 
 protected:
 	int createSocket() override;

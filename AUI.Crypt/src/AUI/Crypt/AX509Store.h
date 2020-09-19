@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "AUI/Crypt.h"
-#include "AUI/Common/ByteBuffer.h"
+#include "AUI/Common/AByteBuffer.h"
 #include "AX509.h"
 
 class API_AUI_CRYPT AX509Store

@@ -11,6 +11,6 @@ public:
 	InputStreamAsync(_<IInputStream> inputStream);
 	
 signals:
-	emits<_<ByteBuffer>> read;
+	emits<_<AByteBuffer>> read;
 	emits<> finished;
 };

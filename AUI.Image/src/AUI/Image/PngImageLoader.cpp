@@ -3,24 +3,24 @@
 //
 
 #include "PngImageLoader.h"
-#include <AUI/Common/ByteBuffer.h>
+#include <AUI/Common/AByteBuffer.h>
 
 #define STBI_ONLY_PNG
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-bool PngImageLoader::matches(_<ByteBuffer> buffer) {
+bool PngImageLoader::matches(_<AByteBuffer> buffer) {
     const uint8_t png_header[] = {0x89, 0x50, 0x4e, 0x47};
     uint8_t read_header[sizeof(png_header)];
     buffer->get((char*) read_header, sizeof(read_header));
     return memcmp(png_header, read_header, sizeof(read_header)) == 0;
 }
 
-_<IDrawable> PngImageLoader::getDrawable(_<ByteBuffer> buffer) {
+_<IDrawable> PngImageLoader::getDrawable(_<AByteBuffer> buffer) {
     return nullptr;
 }
 
-_<AImage> PngImageLoader::getRasterImage(_<ByteBuffer> buffer) {
+_<AImage> PngImageLoader::getRasterImage(_<AByteBuffer> buffer) {
     int x, y, channels;
     if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer->getCurrentPosAddress(), buffer->getAvailable(),
                                               &x, &y, &channels, 0)) {

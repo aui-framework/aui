@@ -34,6 +34,9 @@ void ALogger::log(Level level, const AString& str)
         case ERR:
             prio = ANDROID_LOG_ERROR;
             break;
+        case DEBUG:
+            prio = ANDROID_LOG_DEBUG;
+            break;
         default:
             assert(0);
     }
@@ -51,6 +54,9 @@ void ALogger::log(Level level, const AString& str)
         break;
     case ERR:
         levelName = "ERR";
+        break;
+    case DEBUG:
+        levelName = "DEBUG";
         break;
     }
 

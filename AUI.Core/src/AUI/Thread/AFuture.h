@@ -4,6 +4,7 @@
 #include <functional>
 #include "AConditionVariable.h"
 #include "AMutex.h"
+#include <AUI/Common/SharedPtrTypes.h>
 
 class AThreadPool;
 
@@ -23,11 +24,18 @@ private:
 			delete mValue;
 		}
 	}
-	
+
+	void notify() {
+        mNotify.notify_one();
+	}
+
+
+    AFuture() {}
+
 public:
 
-	template<typename Callable>
-	AFuture(AThreadPool& tp, Callable func);
+    template<typename Callable>
+    static _<AFuture> make(AThreadPool& tp, Callable func);
 
 	Value& operator*() {
 		if (mRefCount == 2) {
@@ -55,13 +63,15 @@ public:
 
 template <typename Value>
 template <typename Callable>
-AFuture<Value>::AFuture(AThreadPool& tp, Callable func)
+_<AFuture<Value>> AFuture<Value>::make(AThreadPool& tp, Callable func)
 {
-	tp.run([&, func]()
+    auto future = _<AFuture<Value>>(new AFuture<Value>);
+	tp.run([future, func]()
 	{
-		std::unique_lock lock(mMutex);
-		*mValue = func();
-		decRef();
-		mNotify.notify_one();
+		std::unique_lock lock(future->mMutex);
+		*future->mValue = func();
+        future->decRef();
+        future->notify();
 	});
+	return future;
 }

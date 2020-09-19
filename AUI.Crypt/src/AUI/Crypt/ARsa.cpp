@@ -18,9 +18,9 @@ ARsa::~ARsa()
 	RSA_free(static_cast<RSA*>(mRsa));
 }
 
-_<ByteBuffer> ARsa::encrypt(_<ByteBuffer> in)
+_<AByteBuffer> ARsa::encrypt(_<AByteBuffer> in)
 {
-	auto buf = _new<ByteBuffer>();
+	auto buf = _new<AByteBuffer>();
 	buf->reserve(in->getAvailable() + 0x1000);
 	while (in->getAvailable()) {
 		auto toRead = glm::min(in->getAvailable(), getKeyLength() - RSA_PKCS1_PADDING_SIZE);
@@ -35,12 +35,13 @@ _<ByteBuffer> ARsa::encrypt(_<ByteBuffer> in)
 		
 		buf->setSize(buf->getSize() + r);
 	}
+
 	return buf;
 }
 
-_<ByteBuffer> ARsa::decrypt(_<ByteBuffer> in)
+_<AByteBuffer> ARsa::decrypt(_<AByteBuffer> in)
 {
-	auto buf = _new<ByteBuffer>();
+	auto buf = _new<AByteBuffer>();
 	buf->reserve(in->getAvailable() + 0x1000);
 	while (in->getAvailable()) {
 		auto toRead = glm::min(in->getAvailable(), getKeyLength());
@@ -61,11 +62,11 @@ size_t ARsa::getKeyLength() const
 	return RSA_size(static_cast<RSA*>(mRsa));
 }
 
-_<ByteBuffer> ARsa::getPrivateKeyPEM() const
+_<AByteBuffer> ARsa::getPrivateKeyPEM() const
 {
 	BIO* bioKey = BIO_new(BIO_s_mem());
 	PEM_write_bio_RSAPrivateKey(bioKey, (RSA*)mRsa, EVP_des_ede3_cbc(), nullptr, 0, nullptr, gKey);
-	auto byteBuffer = _new<ByteBuffer>();
+	auto byteBuffer = _new<AByteBuffer>();
 	char* data;
 	long size = BIO_get_mem_data(bioKey, &data);
 
@@ -74,11 +75,11 @@ _<ByteBuffer> ARsa::getPrivateKeyPEM() const
 
 	return byteBuffer;
 }
-_<ByteBuffer> ARsa::getPublicKeyPEM() const
+_<AByteBuffer> ARsa::getPublicKeyPEM() const
 {
 	BIO* bioKey = BIO_new(BIO_s_mem());
 	PEM_write_bio_RSAPublicKey(bioKey, (RSA*)mRsa);
-	auto byteBuffer = _new<ByteBuffer>();
+	auto byteBuffer = _new<AByteBuffer>();
 	char* data;
 	long size = BIO_get_mem_data(bioKey, &data);
 
@@ -93,7 +94,7 @@ _<ARsa> ARsa::generate(int bits)
 	return _<ARsa>(new ARsa(RSA_generate_key(bits, RSA_F4, nullptr, nullptr)));
 }
 
-_<ARsa> ARsa::fromPrivateKeyPEM(_<ByteBuffer> buffer)
+_<ARsa> ARsa::fromPrivateKeyPEM(_<AByteBuffer> buffer)
 {
 	BIO* inputBuffer = BIO_new_mem_buf(buffer->getCurrentPosAddress(), buffer->getAvailable());
 	RSA* rsa = nullptr;
@@ -106,7 +107,7 @@ _<ARsa> ARsa::fromPrivateKeyPEM(_<ByteBuffer> buffer)
 	return _<ARsa>(new ARsa(rsa));
 }
 
-_<ARsa> ARsa::fromPublicKeyPEM(_<ByteBuffer> buffer)
+_<ARsa> ARsa::fromPublicKeyPEM(_<AByteBuffer> buffer)
 {
 	BIO* inputBuffer = BIO_new_mem_buf(buffer->getCurrentPosAddress(), buffer->getAvailable());
 	RSA* rsa = nullptr;

@@ -5,12 +5,25 @@
 #include "AUI/Common/AVariant.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/Common/AVector.h"
+#include <AUI/IO/IOutputStream.h>
+#include <AUI/Thread/AThreadPool.h>
 
 class IJsonElement;
+class AJsonElement;
+
+namespace AJson
+{
+    void API_AUI_JSON write(_<IOutputStream> os, const AJsonElement& json);
+}
+
 
 class API_AUI_JSON AJsonElement {
+friend void AJson::write(_<IOutputStream> os, const AJsonElement& json);
 private:
 	_<IJsonElement> mJson;
+
+protected:
+    void serialize(_<IOutputStream> param) const;
 
 public:
 	explicit AJsonElement(const _<IJsonElement>& json_element);
@@ -29,6 +42,7 @@ public:
 	
 	[[nodiscard]] const AJsonElement& operator[](size_t index) const;
 	[[nodiscard]] const AJsonElement& operator[](const AString& key) const;
+	[[nodiscard]] AJsonElement& operator[](const AString& key);
 };
 
 class API_AUI_JSON AJsonValue: public AJsonElement

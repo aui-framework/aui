@@ -1,6 +1,6 @@
 #include <Windows.h>
 #include "ExampleWindow.h"
-#include "AUI/Common/ByteBuffer.h"
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Util/BuiltinFiles.h"
 
 int main()

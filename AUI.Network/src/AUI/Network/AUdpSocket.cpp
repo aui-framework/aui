@@ -41,7 +41,7 @@ AUdpSocket::AUdpSocket() :
  * \param buf Буфер
  * \param dst Адрес доставки
  */
-void AUdpSocket::write(const ByteBuffer& buf, const AInet4Address& dst) {
+void AUdpSocket::write(const AByteBuffer& buf, const AInet4Address& dst) {
 	assert(buf.getSize() < 32768);
 	//static boost::mutex m;
 	//boost::unique_lock lock(m);
@@ -57,7 +57,7 @@ void AUdpSocket::write(const ByteBuffer& buf, const AInet4Address& dst) {
  * \param buf
  * \param dst
  */
-void AUdpSocket::read(ByteBuffer& buf, AInet4Address& dst) {
+void AUdpSocket::read(AByteBuffer& buf, AInet4Address& dst) {
 	buf.reserve(32768);
 	sockaddr_in from;
 	memset(&from, 0, sizeof(sockaddr_in));

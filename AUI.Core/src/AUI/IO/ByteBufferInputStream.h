@@ -1,15 +1,15 @@
 ﻿#pragma once
 #include "IInputStream.h"
-#include "AUI/Common/ByteBuffer.h"
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Common/SharedPtr.h"
 
 class API_AUI_CORE ByteBufferInputStream: public IInputStream
 {
 private:
-	_<ByteBuffer> mBuffer;
+	_<AByteBuffer> mBuffer;
 	
 public:
-	ByteBufferInputStream(const _<ByteBuffer>& buffer)
+	ByteBufferInputStream(const _<AByteBuffer>& buffer)
 		: mBuffer(buffer)
 	{
 	}

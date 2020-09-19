@@ -6,7 +6,7 @@
 
 #include "AUI/Common/AString.h"
 #include "AUI/Common/AStringVector.h"
-#include "AUI/Common/ByteBuffer.h"
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/IO/FileInputStream.h"
 #include "AUI/IO/FileOutputStream.h"
@@ -67,7 +67,7 @@ AUI_ENTRY
 							    ++index;
                                 try
                                 {
-                                    ByteBuffer buffer;
+                                    AByteBuffer buffer;
                                     AString filePath = entry;
                                     filePath = filePath.mid(actualArgs[0].length() + 1);
                                     filePath = filePath.replaceAll("\\", '/');
@@ -75,7 +75,7 @@ AUI_ENTRY
                                     buffer << filePath.toStdString();
                                     auto fis = _new<FileInputStream>(entry);
 
-                                    ByteBuffer data;
+                                    AByteBuffer data;
 
                                     char buf[0x1000];
                                     for (int r; (r = fis->read(buf, sizeof(buf))) > 0;)
@@ -85,7 +85,7 @@ AUI_ENTRY
                                     buffer << uint32_t(data.getSize());
                                     buffer << data;
 
-                                    ByteBuffer packed;
+                                    AByteBuffer packed;
                                     LZ::compress(buffer, packed);
 
 

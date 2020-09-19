@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "AUI/Crypt.h"
-#include "AUI/Common/ByteBuffer.h"
+#include "AUI/Common/AByteBuffer.h"
 
 class API_AUI_CRYPT AX509
 {
@@ -17,5 +17,5 @@ public:
 	bool checkHost(const AString& name) const;
 	bool checkTrust() const;
 	
-	static _<AX509> fromPEM(_<ByteBuffer> buffer);
+	static _<AX509> fromPEM(_<AByteBuffer> buffer);
 };

@@ -1,10 +1,10 @@
 #pragma once
 #include "EOFException.h"
 
-#include <AUI/Common/ByteBuffer.h>
+#include <AUI/Common/AByteBuffer.h>
 #include <glm/glm.hpp>
 
-class ByteBuffer;
+class AByteBuffer;
 
 class API_AUI_CORE IInputStream
 {
@@ -19,7 +19,7 @@ public:
 	 */
 	virtual int read(char* dst, int size) = 0;
 
-	inline void read(const _<ByteBuffer>& dst)
+	inline void read(const _<AByteBuffer>& dst)
 	{
 		const size_t BUFFER_SIZE = 0x10000;
 
@@ -57,15 +57,16 @@ public:
 	}
 
 
-	inline _<ByteBuffer> readSizedBuffer() {
-		auto buf = _new<ByteBuffer>();
+	inline _<AByteBuffer> readSizedBuffer() {
+		auto buf = _new<AByteBuffer>();
 		uint32_t length;
 		*this >> length;
-		buf->reserve(length);
-		buf->setSize(length);
-		int r = read(buf->data(), length);
-		assert(r == length);  // NOLINT(clang-diagnostic-sign-compare)
-
+		if (length) {
+            buf->reserve(length);
+            buf->setSize(length);
+            int r = read(buf->data(), length);
+            assert(r == length);  // NOLINT(clang-diagnostic-sign-compare)
+        }
 		return buf;
 	}
 };

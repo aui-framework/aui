@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 #include <iostream>
-#include "ByteBuffer.h"
+#include "AByteBuffer.h"
 #include "AUI/Core.h"
 
 class API_AUI_CORE AStringVector;
@@ -231,7 +231,7 @@ public:
 		return find(other) != npos;
 	}
 
-	static AString fromLatin1(_<ByteBuffer> buffer);
+	static AString fromLatin1(_<AByteBuffer> buffer);
 
 	static AString number(int i) noexcept;
 	static AString number(unsigned i) noexcept;
@@ -264,7 +264,7 @@ public:
 		return *this;
 	}
 
-	_<ByteBuffer> toUtf8() const;
+	_<AByteBuffer> toUtf8() const;
 
 	void removeAt(unsigned index)
 	{

@@ -9,10 +9,10 @@
 
 class PngImageLoader: public IImageLoader {
 public:
-    bool matches(_<ByteBuffer> buffer) override;
+    bool matches(_<AByteBuffer> buffer) override;
 
-    _<IDrawable> getDrawable(_<ByteBuffer> buffer) override;
-    _<AImage> getRasterImage(_<ByteBuffer> buffer) override;
+    _<IDrawable> getDrawable(_<AByteBuffer> buffer) override;
+    _<AImage> getRasterImage(_<AByteBuffer> buffer) override;
 };
 
 

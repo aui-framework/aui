@@ -15,7 +15,7 @@ private:
 	void onDataReceived(char* ptr, size_t size);
 	static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata);
 
-	std::queue<_<ByteBuffer>> mDataQueue;
+	std::queue<_<AByteBuffer>> mDataQueue;
 	AMutex mDataQueueLock;
 	AConditionVariable mDataWaiter;
 

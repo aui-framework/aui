@@ -13,7 +13,7 @@ AFocusAnimator::AFocusAnimator() {
 }
 
 void AFocusAnimator::doAnimation(AView* view, float theta) {
-    const float SIZE = 10.f;
+    const float SIZE = 4.f;
     if (theta < 0.99999f) {
         RenderHints::PushColor c;
         Render::instance().setFill(Render::FILL_SOLID);

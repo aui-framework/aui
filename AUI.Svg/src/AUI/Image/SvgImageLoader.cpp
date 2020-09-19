@@ -2,7 +2,7 @@
 
 #include "SvgDrawable.h"
 #include "AUI/Common/AColor.h"
-#include "AUI/Common/ByteBuffer.h"
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Common/AStringVector.h"
 #include "AUI/GL/Vao.h"
@@ -20,7 +20,7 @@ SvgImageLoader::SvgImageLoader()
 {
 }
 
-bool SvgImageLoader::matches(_<ByteBuffer> buffer)
+bool SvgImageLoader::matches(_<AByteBuffer> buffer)
 {
 	char buf[8];
 	buffer->get(buf, 5);
@@ -372,7 +372,7 @@ public:
 };
 
 
-_<IDrawable> SvgImageLoader::getDrawable(_<ByteBuffer> buffer)
+_<IDrawable> SvgImageLoader::getDrawable(_<AByteBuffer> buffer)
 {
 	auto context = AWindow::current()->acquireTemporaryRenderingContext();
 	auto drawable = _new<SvgDrawable>();
@@ -381,6 +381,6 @@ _<IDrawable> SvgImageLoader::getDrawable(_<ByteBuffer> buffer)
 	return drawable;
 }
 
-_<AImage> SvgImageLoader::getRasterImage(_<ByteBuffer> buffer) {
+_<AImage> SvgImageLoader::getRasterImage(_<AByteBuffer> buffer) {
     return nullptr;
 }

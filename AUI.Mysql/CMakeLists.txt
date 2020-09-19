@@ -37,13 +37,12 @@ else()
 			/usr/mysql/include
 			$ENV{MYSQL_DIR}/include
 			)
-	set(MYSQL_NAMES mysqlclient mysqlclient_r)
+	set(MYSQL_NAMES mysqlclient mysqlclient_r libmysql mysql)
 	find_library(MYSQL_LIBRARY NAMES ${MYSQL_NAMES}
 			PATHS /usr/local/mysql/lib /usr/local/lib /usr/lib $ENV{MYSQL_DIR}/lib $ENV{MYSQL_DIR}/lib/opt
 			)
 	set(MYSQL_LIBRARIES ${MYSQL_LIBRARY})
 endif()
-
 if(MYSQL_INCLUDE_DIR AND MYSQL_LIBRARIES)
 	set(MYSQL_FOUND TRUE)
 	if(WIN32)

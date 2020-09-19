@@ -18,12 +18,12 @@ public:
 
 	void registerImageLoader(_<IImageLoader> imageLoader);
 
-	_<IDrawable> loadVectorImage(_<ByteBuffer> buffer);
-	_<AImage> loadRasterImage(_<ByteBuffer> buffer);
+	_<IDrawable> loadVectorImage(_<AByteBuffer> buffer);
+	_<AImage> loadRasterImage(_<AByteBuffer> buffer);
 	inline _<IDrawable> loadVectorImage(const AUrl& url) {
-	    return loadVectorImage(ByteBuffer::fromStream(url.open()));
+	    return loadVectorImage(AByteBuffer::fromStream(url.open()));
 	}
 	inline _<AImage> loadRasterImage(const AUrl& url) {
-        return loadRasterImage(ByteBuffer::fromStream(url.open()));
+        return loadRasterImage(AByteBuffer::fromStream(url.open()));
 	}
 };

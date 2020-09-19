@@ -85,7 +85,7 @@ int ACurl::read(char* dst, int size)
 
 void ACurl::onDataReceived(char* ptr, size_t size)
 {
-	auto buffer = _new<ByteBuffer>();
+	auto buffer = _new<AByteBuffer>();
 	buffer->put(ptr, size);
 	{
 		std::unique_lock lock(mDataQueueLock);

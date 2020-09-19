@@ -28,7 +28,7 @@ public:
 	};
 private:
 	_<FreeType> ft;
-    _<ByteBuffer> mFontDataBuffer;
+    _<AByteBuffer> mFontDataBuffer;
 	FT_Face face;
 
 	struct FontData {
