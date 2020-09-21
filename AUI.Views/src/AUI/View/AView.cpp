@@ -504,6 +504,7 @@ void AView::recompileCSS()
 		{
 		case B_SOLID:
 			mCssDrawListFront << [&, c, width]() {
+                Render::instance().setFill(Render::FILL_SOLID);
 				RenderHints::PushColor x;
 				RenderHints::PushMask mask([&]() {
 				    if (mBorderRadius > 0) {
@@ -515,7 +516,6 @@ void AView::recompileCSS()
 				    }
 				});
 				RenderHints::PushMask::Layer maskLayer(RenderHints::PushMask::Layer::DECREASE);
-				Render::instance().setFill(Render::FILL_SOLID);
                 Render::instance().setColor(c);
 				Render::instance().drawRect(0, 0, getWidth(), getHeight());
 			};

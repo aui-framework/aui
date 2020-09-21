@@ -673,9 +673,10 @@ void AWindow::redraw() {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-
         // stencil
         glClearStencil(0);
+        glStencilMask(0xff);
+        glDisable(GL_SCISSOR_TEST);
         glClear(GL_STENCIL_BUFFER_BIT);
         glEnable(GL_STENCIL_TEST);
         glStencilMask(0x00);

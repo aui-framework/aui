@@ -1,3 +1,4 @@
+#include <AUI/View/ARadioButton.h>
 #include "ExampleWindow.h"
 #include "AUI/Layout/AVerticalLayout.h"
 #include "AUI/View/AButton.h"
@@ -63,6 +64,13 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 			c->addView(_new<ALabel>(u8"Флажки"));
 			c->addView(_new<ACheckBox>(u8"Флажок снят"));
 			auto checked = _new<ACheckBox>(u8"Флажок установлен");
+			checked->setChecked(true);
+			c->addView(checked);
+		}
+		{
+			c->addView(_new<ALabel>(u8"Радил"));
+			c->addView(_new<ARadioButton>(u8"Флажок снят"));
+			auto checked = _new<ARadioButton>(u8"Флажок установлен");
 			checked->setChecked(true);
 			c->addView(checked);
 		}

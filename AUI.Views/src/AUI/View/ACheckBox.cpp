@@ -14,6 +14,10 @@ public:
 	{
 		emit customCssPropertyChanged;
 	}
+
+    void render() override {
+        AView::render();
+    }
 };
 
 
