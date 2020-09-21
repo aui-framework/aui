@@ -1,4 +1,5 @@
 #include <AUI/IO/ByteBufferOutputStream.h>
+#include <AUI/IO/ByteBufferInputStream.h>
 #include "AJson.h"
 #include "AUI/Util/Tokenizer.h"
 #include "JsonArray.h"
@@ -15,8 +16,8 @@ AJsonElement AJson::read(_<IInputStream> is)
 	auto unexpectedCharacter = [&]()
 	{
 		throw JsonException(
-			AString("unexpected character ") + t.getLastCharacter() + " at " + t.getRow() + ":" + t.
-			getColumn());
+			AString("unexpected character ") + t.getLastCharacter() + " at " + AString::number(t.getRow()) + ":"
+			+ AString::number(t.getColumn()));
 	};
 	
 	read = [&]() -> _<IJsonElement>
@@ -92,4 +93,12 @@ AString AJson::toString(const AJsonElement& json) {
     auto bb = _new<AByteBuffer>();
     write(_new<ByteBufferOutputStream>(bb), json);
     return {bb->data(), bb->data() + bb->getSize()};
+}
+
+AJsonElement AJson::fromString(const AString& json) {
+    auto bb = _new<AByteBuffer>();
+    auto s = json.toStdString();
+    bb->put(s.c_str(), s.length());
+    bb->setCurrentPos(0);
+    return read(_new<ByteBufferInputStream>(bb));
 }

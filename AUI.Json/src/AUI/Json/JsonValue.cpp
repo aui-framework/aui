@@ -36,12 +36,15 @@ AVector<AJsonElement>& JsonValue::asArray()
 }
 
 void JsonValue::serialize(const _<IOutputStream>& os) const {
-    auto s = mValue.toString().toStdString();
+    auto myStr = mValue.toString();
     if (mValue.getType() == AVariantType::AV_STRING) {
         os->write("\"", 1);
+        myStr = myStr.replaceAll("\"", "\\\"");
+        auto s = myStr.toStdString();
         os->write(s.c_str(), s.length());
         os->write("\"", 1);
     } else {
+        auto s = myStr.toStdString();
         os->write(s.c_str(), s.length());
     }
 }

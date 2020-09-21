@@ -31,6 +31,15 @@ BOOST_AUTO_TEST_CASE(ObjectAssignObject)
 
     BOOST_CHECK_EQUAL(AJson::toString(root), "{\"user\":{\"name\":\"Alex2772\",\"year\":2020}}");
 }
+BOOST_AUTO_TEST_CASE(StringEscape)
+{
+    AJsonObject root;
+    root["user"] = "u\"";
+    auto s = AJson::toString(root);
+    BOOST_CHECK_EQUAL(s, "{\"user\":\"u\\\"\"}");
+    auto deserialized = AJson::fromString(s);
+    BOOST_CHECK_EQUAL(deserialized["user"].asString(), "u\"");
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

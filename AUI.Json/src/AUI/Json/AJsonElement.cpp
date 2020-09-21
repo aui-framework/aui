@@ -90,7 +90,7 @@ AJsonElement& AJsonObject::operator[](const AString& key) {
     return mJson->asObject()[key];
 }
 const AJsonElement& AJsonObject::operator[](const AString& key) const {
-    return mJson->asObject()[key];
+    return mJson->asObject().at(key);
 }
 
 AJsonArray::AJsonArray(const AVector<AJsonElement>& value) :

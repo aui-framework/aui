@@ -72,6 +72,10 @@ public:
     const ASet<AModelIndex>& getIndices() const {
         return mIndices;
     }
+
+    AModelIndex one() {
+        return *mIndices.begin();
+    }
 };
 
 #include "IListModel.h"
