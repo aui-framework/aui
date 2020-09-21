@@ -19,12 +19,11 @@ public:
     ~AComboBox() override = default;
 
     void setModel(const _<IListModel<AString>>& model);
-
     void render() override;
-
     void setSelectionId(int id);
-
     int getContentMinimumWidth() override;
+
+    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 };
 
 

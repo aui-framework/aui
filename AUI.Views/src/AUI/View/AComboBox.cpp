@@ -44,3 +44,8 @@ int AComboBox::getContentMinimumWidth() {
     return ALabel::getContentMinimumWidth() + 20;
 }
 
+void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+    AView::onMousePressed(pos, button);
+
+}
+

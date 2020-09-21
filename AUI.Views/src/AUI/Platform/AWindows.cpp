@@ -889,7 +889,9 @@ void AWindow::show() {
     } catch (...) {
         mSelfHolder = nullptr;
     }
-    redraw();
+    AThread::current() << [&]() {
+        redraw();
+    };
 #if defined(_WIN32)
     UpdateWindow(mHandle);
     ShowWindow(mHandle, SW_SHOWNORMAL);
