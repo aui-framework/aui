@@ -399,11 +399,18 @@ void AView::recompileCSS()
 	});
 	processStylesheet(css::T_BACKGROUND_EFFECT, [&](property p)
 	{
-		for (auto a : p->getArgs()) {
+		for (auto& a : p->getArgs()) {
 			mBackgroundEffects << Autumn::get<Factory<IShadingEffect>>(a)->createObject();
 		}
 	});
 
+	AColor backgroundImageOverlay(1.f);
+	processStylesheet(css::T_AUI_BACKGROUND_OVERLAY, [&](property p)
+	{
+	    if (p->getArgs().size() == 1) {
+            backgroundImageOverlay = AColor(p->getArgs()[0]);
+	    }
+	});
 	processStylesheet(css::T_BACKGROUND, [&](property p)
 	{
 		auto& last = p->getArgs().back();
@@ -426,15 +433,21 @@ void AView::recompileCSS()
 							sizing = p->getArgs()[0];
 					});
 
+					auto drawableDrawWrapper = [drawable, backgroundImageOverlay](const glm::ivec2& size) {
+                        RenderHints::PushColor c;
+                        Render::instance().setColor(backgroundImageOverlay);
+					    drawable->draw(size);
+					};
+
 					if (sizing == "fit")
 					{
-						mCssDrawListFront << [&, drawable]()
+						mCssDrawListFront << [&, drawableDrawWrapper]()
 						{
-							drawable->draw(getSize());
+                            drawableDrawWrapper(getSize());
 						};
 					}
 					else {
-						mCssDrawListFront << [&, drawable]()
+						mCssDrawListFront << [&, drawable, drawableDrawWrapper]()
 						{
 							auto imageSize = glm::vec2(drawable->getSizeHint());
 							if (drawable->isDpiDependent())
@@ -444,7 +457,7 @@ void AView::recompileCSS()
 							Render::instance().setTransform(
 								glm::translate(glm::mat4(1.f),
 									glm::vec3((glm::vec2(mSize) - imageSize) / 2.f, 0.f)));
-							drawable->draw(imageSize);
+                            drawableDrawWrapper(imageSize);
 						};
 					}
 				}

@@ -170,13 +170,16 @@ ACheckBoxInner {
     width: 13em;
     height: 13em;
     transition: 0.1s;
+    -aui-background-overlay: #333333;
 }
 ACheckBox:hover ACheckBoxInner {
     border: 1em solid #0078d7;
+    -aui-background-overlay: #0078d7;
 }
 ACheckBox:active ACheckBoxInner {
     background-color: #cce4f7;
     border: 1em solid #005499;
+    -aui-background-overlay: #005499;
 }
 
 ACheckBox[checked] ACheckBoxInner {
@@ -197,13 +200,16 @@ ARadioButtonInner {
     height: 13em;
     transition: 0.1s;
     border-radius: 6.5em;
+    -aui-background-overlay: #333333;
 }
 ARadioButton:hover ARadioButtonInner {
     border: 1em solid #0078d7;
+    -aui-background-overlay: #0078d7;
 }
 ARadioButton:active ARadioButtonInner {
     background-color: #cce4f7;
     border: 1em solid #005499;
+    -aui-background-overlay: #005499;
 }
 
 ARadioButton[checked] ARadioButtonInner {

@@ -71,7 +71,8 @@ public:
 
 				// AUI
 				T_AUI_SPACING,
-				T_AUI_FONT_RENDERING
+				T_AUI_FONT_RENDERING,
+                T_AUI_BACKGROUND_OVERLAY,
 			};
 			
 		private:

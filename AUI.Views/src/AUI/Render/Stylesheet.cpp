@@ -309,6 +309,7 @@ void Stylesheet::load(const _<IInputStream>& css) noexcept
 
 		{"-aui-spacing", Entry::Property::T_AUI_SPACING},
 		{"-aui-font-rendering", Entry::Property::T_AUI_FONT_RENDERING},
+        {"-aui-background-overlay", Entry::Property::T_AUI_BACKGROUND_OVERLAY},
 	};
 
 
