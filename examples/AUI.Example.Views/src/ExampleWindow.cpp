@@ -14,6 +14,7 @@
 #include "AUI/View/ASpacer.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include <AUI/Model/AListModel.h>
+#include <AUI/View/AComboBox.h>
 
 void fillWindow(_<AWindow> w)
 {
@@ -84,6 +85,21 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 			    getViews()[3]->setDisabled();
 			}));
 		}
+        {
+            c->addView(_new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{
+                "Комбобокс 1",
+                "Комбобокс 2",
+                "Комбобокс 3",
+                "Комбобокс 4",
+                "Комбобокс 5",
+                "Комбобокс 6",
+            })));
+            c->addView(_new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{
+                "Отключённый комбобокс"
+            })) by(AComboBox, {
+                setDisabled();
+            }));
+        }
 		
 		horizontal->addView(c);
 	}

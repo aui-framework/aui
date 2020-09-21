@@ -19,6 +19,9 @@ ATitleLabel {
 	margin: 4em 8em;
 }
 
+ALabel[disabled] {
+    color: #6d6d6d;
+}
 ALabel, .input-field, AListView {
     margin: 2em 4em;
 }
@@ -47,6 +50,12 @@ AButton:active {
     transition: 0.05s;
     background-color: #cce4f7;
     border: 1em solid #005499;
+}
+
+AButton[disabled] {
+    background-color: #cccccc;
+    border: 1em solid #bfbfbf;
+    color: #838383;
 }
 
 .window-title {
@@ -128,6 +137,11 @@ AAbstractTextField {
     transition: 0.3s;
 }
 
+.input-field[disabled] {
+    color: #444;
+    border: 1em solid #999;
+    background: #eee;
+}
 
 ANumberPicker .up-down-wrapper {
     padding: 1px;
@@ -216,6 +230,9 @@ ARadioButton[disabled] ALabel {
 }
 ARadioButton[checked] ARadioButtonInner {
     background: url(':win/svg/radio.svg');
+}
+AComboBox {
+    text-align: left;
 }
 
 AListView {
