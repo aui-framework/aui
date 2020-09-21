@@ -164,6 +164,74 @@ public:
 		
 	}
 };
+class CircleVisitor: public IXmlEntityVisitor
+{
+private:
+	_<SvgDrawable> mDrawable;
+	AColor mColor;
+	glm::vec2 mPoints;
+    float mRadius = 1.f;
+
+public:
+	CircleVisitor(const _<SvgDrawable>& drawable)
+		: mDrawable(drawable)
+	{
+	}
+	virtual ~CircleVisitor()
+	{
+		auto color = mColor;
+
+		auto vao = _new<GL::Vao>();
+		glm::vec2 offset(mDrawable->mViewBox.x, mDrawable->mViewBox.y);
+		glm::vec2 delta = glm::vec2(mDrawable->mViewBox.z, mDrawable->mViewBox.w) - offset;
+
+		AVector<glm::vec2> points;
+		points << ((mPoints - offset) / delta);
+
+		const unsigned segmentCount = (glm::max)(delta.x, delta.y);
+		const float alphaDelta = glm::pi<float>() * 2.f / segmentCount;
+		for (unsigned segment = 0; segment <= segmentCount; ++segment) {
+            points << (glm::vec2{mPoints.x + glm::sin(alphaDelta * segment) * mRadius,
+                                 mPoints.y + glm::cos(alphaDelta * segment) * mRadius} - offset) / delta;
+        }
+        vao->insert(0, points);
+        auto count = points.size();
+		mDrawable->mDrawList << [color, vao, count]()
+		{
+			RenderHints::PushColor c;
+			Render::instance().setColor(color);
+			Render::instance().uploadToShader();
+			vao->bind();
+			vao->draw(GL_TRIANGLE_FAN, count);
+		};
+	}
+
+	void visitAttribute(const AString& name, const AString& value) override
+	{
+		if (name == "fill")
+		{
+			mColor = AColor(value);
+		} else if (name == "cx")
+		{
+			mPoints.x = value.toFloat();
+		} else if (name == "cy")
+		{
+			mPoints.y = value.toFloat();
+		} else if (name == "r")
+		{
+			mRadius = value.toFloat();
+		}
+	}
+	_<IXmlEntityVisitor> visitEntity(const AString& entityName) override
+	{
+		return nullptr;
+	}
+	void visitTextEntity(const AString& entity) override
+	{
+
+	}
+
+};
 
 class PathVisitor: public IXmlEntityVisitor
 {
@@ -340,6 +408,10 @@ public:
 		if (entityName == "rect")
 		{
 			return _new<RectVisitor>(mDrawable);
+		}
+		if (entityName == "circle")
+		{
+			return _new<CircleVisitor>(mDrawable);
 		}
 		return nullptr;
 	}

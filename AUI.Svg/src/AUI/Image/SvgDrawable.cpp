@@ -14,8 +14,6 @@ void SvgDrawable::draw(const glm::ivec2& size)
 
 	for (auto& e : mDrawList)
 	{
-		// FIXME рисуем дважды, чтобы линии были чётче
-		e();
 		e();
 	}
 }

@@ -182,6 +182,33 @@ ACheckBox:active ACheckBoxInner {
 ACheckBox[checked] ACheckBoxInner {
     background: url(':win/svg/checkbox.svg');
 }
+ARadioButton {
+    margin: 1em 4em;
+}
+ARadioButton ALabel {
+    padding: 0;
+    margin: 0 0 0 2em;
+}
+ARadioButtonInner {
+    background-color: #fff;
+    margin: 1px;
+    border: 1em solid #333333;
+    width: 13em;
+    height: 13em;
+    transition: 0.1s;
+    border-radius: 6.5em;
+}
+ARadioButton:hover ARadioButtonInner {
+    border: 1em solid #0078d7;
+}
+ARadioButton:active ARadioButtonInner {
+    background-color: #cce4f7;
+    border: 1em solid #005499;
+}
+
+ARadioButton[checked] ARadioButtonInner {
+    background: url(':win/svg/radio.svg');
+}
 
 AListView {
     background: #fff;
