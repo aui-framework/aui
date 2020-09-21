@@ -63,17 +63,20 @@ void AJsonElement::serialize(_<IOutputStream> param) const {
     mJson->serialize(param);
 }
 
-AJsonElement& AJsonElement::operator[](const AString& key) {
-    return mJson->asObject()[key];
+
+AJsonElement& AJsonElement::operator=(const AVariant& value) {
+    mJson = _new<JsonValue>(value);
+    return *this;
 }
 
+
 AJsonValue::AJsonValue(const AVariant& value):
-	AJsonElement(_new<JsonValue>(value))
+        AJsonElement(_new<JsonValue>(value))
 {
 }
 
 AJsonObject::AJsonObject(const AMap<AString, AJsonElement>& value):
-	AJsonElement(_new<JsonObject>(value))
+        AJsonElement(_new<JsonObject>(value))
 {
 }
 
@@ -83,9 +86,31 @@ AJsonObject::AJsonObject():
 
 }
 
+AJsonElement& AJsonObject::operator[](const AString& key) {
+    return mJson->asObject()[key];
+}
+const AJsonElement& AJsonObject::operator[](const AString& key) const {
+    return mJson->asObject()[key];
+}
+
 AJsonArray::AJsonArray(const AVector<AJsonElement>& value) :
 	AJsonElement(_new<JsonArray>(value))
 {
+}
+
+AJsonArray& AJsonArray::operator<<(const AJsonElement& value) {
+    mJson->asArray().push_back(value);
+    return *this;
+}
+
+void AJsonArray::push_back(const AJsonElement& value) {
+    mJson->asArray().push_back(value);
+}
+
+AJsonArray::AJsonArray():
+    AJsonElement(_new<JsonArray>())
+{
+
 }
 
 

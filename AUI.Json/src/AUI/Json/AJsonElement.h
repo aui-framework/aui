@@ -8,6 +8,8 @@
 #include <AUI/IO/IOutputStream.h>
 #include <AUI/Thread/AThreadPool.h>
 #include <AUI/Model/IListModel.h>
+#include <AUI/Model/AListModel.h>
+#include <AUI/Common/AStringVector.h>
 
 class IJsonElement;
 class AJsonElement;
@@ -19,17 +21,19 @@ namespace AJson
 
 
 class API_AUI_JSON AJsonElement {
-friend void AJson::write(_<IOutputStream> os, const AJsonElement& json);
-private:
-	_<IJsonElement> mJson;
+
+    friend void AJson::write(_<IOutputStream> os, const AJsonElement& json);
 
 protected:
     void serialize(_<IOutputStream> param) const;
 
+    _<IJsonElement> mJson;
 public:
 	explicit AJsonElement(const _<IJsonElement>& json_element);
 	AJsonElement() {}
 
+	AJsonElement& operator=(const AVariant& value);
+	AJsonElement& operator=(const AJsonElement& value) = default;
 
 	[[nodiscard]] bool isVariant() const;
 	[[nodiscard]] bool isObject() const;
@@ -40,10 +44,25 @@ public:
 	[[nodiscard]] AString asString() const;
 	[[nodiscard]] const AMap<AString, AJsonElement>& asObject() const;
 	[[nodiscard]] const AVector<AJsonElement>& asArray() const;
-	
+
 	[[nodiscard]] const AJsonElement& operator[](size_t index) const;
 	[[nodiscard]] const AJsonElement& operator[](const AString& key) const;
-	[[nodiscard]] AJsonElement& operator[](const AString& key);
+
+    template<typename Model>
+    _<IListModel<Model>> asModelList(const AStringVector& columns) const {
+        auto list = _new<AListModel<Model>>();
+        auto fields = AModelMeta<Model>::getFields();
+        for (AJsonElement i : asArray()) {
+            auto jsonRow = i.asArray();
+            Model modelRow;
+            assert(columns.size() == jsonRow.size());
+            for (size_t i = 0; i < columns.size(); ++i) {
+                fields[columns[i]]->set(modelRow, jsonRow[i].asVariant());
+            }
+            list << modelRow;
+        }
+        return list;
+    }
 };
 
 class API_AUI_JSON AJsonValue: public AJsonElement
@@ -56,6 +75,8 @@ class API_AUI_JSON AJsonObject: public AJsonElement
 public:
 	AJsonObject(const AMap<AString, AJsonElement>& value);
 	AJsonObject();
+    [[nodiscard]] AJsonElement& operator[](const AString& key);
+    [[nodiscard]] const AJsonElement& operator[](const AString& key) const;
 };
 
 template<>
@@ -67,20 +88,8 @@ class API_AUI_JSON AJsonArray: public AJsonElement
 {
 public:
 	AJsonArray(const AVector<AJsonElement>& value);
+	AJsonArray();
 
-    template<typename Model>
-	_<IListModel<Model>> asModelList(const AStringVector& columns) const {
-	    auto list = _new<AListModel<Model>>();
-	    auto fields = AModelMeta<Model>::getFields();
-	    for (AJsonElement i : asArray()) {
-	        auto jsonRow = i.asArray();
-	        Model modelRow;
-            assert(columns.size() == jsonRow.size());
-            for (size_t i = 0; i < columns.size(); ++i) {
-                fields[columns[i]]->set(modelRow, jsonRow[i].asVariant());
-            }
-            list << modelRow;
-	    }
-	    return list;
-	}
+	void push_back(const AJsonElement& value);
+	AJsonArray& operator<<(const AJsonElement& value);
 };

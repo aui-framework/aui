@@ -1,3 +1,4 @@
+#include <AUI/IO/ByteBufferOutputStream.h>
 #include "AJson.h"
 #include "AUI/Util/Tokenizer.h"
 #include "JsonArray.h"
@@ -85,4 +86,10 @@ AJsonElement AJson::read(_<IInputStream> is)
 
 void API_AUI_JSON AJson::write(_<IOutputStream> os, const AJsonElement& json) {
     json.serialize(os);
+}
+
+AString AJson::toString(const AJsonElement& json) {
+    auto bb = _new<AByteBuffer>();
+    write(_new<ByteBufferOutputStream>(bb), json);
+    return {bb->data(), bb->data() + bb->getSize()};
 }

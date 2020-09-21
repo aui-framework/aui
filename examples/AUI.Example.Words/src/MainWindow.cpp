@@ -33,7 +33,7 @@ MainWindow::MainWindow() : AWindow("Words", 300, 400) {
                         _new<ALabel>(u8"\uf1ce") by(ALabel, {
                            addCssName(".icon");
                            setFont(AFontManager::instance().get(":words/fas.otf"));
-                           setFontSize(50dp);
+                           setFontSize(50_dp);
                            setExpanding(glm::ivec2(0));
                            setAnimator(_new<ARotationAnimator>() by(ARotationAnimator, {
                                setRepeating(true);

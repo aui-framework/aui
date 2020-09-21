@@ -9,6 +9,10 @@
 
 namespace AJson
 {
-	AJsonElement API_AUI_JSON read(_<IInputStream> is);
-    void API_AUI_JSON write(_<IOutputStream> os, const AJsonElement& json);
+    API_AUI_JSON AJsonElement read(_<IInputStream> is);
+    API_AUI_JSON void write(_<IOutputStream> os, const AJsonElement& json);
+
+
+    API_AUI_JSON AString toString(const AJsonElement& json);
+
 }
