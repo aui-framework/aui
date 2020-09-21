@@ -123,5 +123,7 @@ public:
 	}
 
 	void uploadToShader();
+
+    glm::vec2 getCurrentPos();
 };
 

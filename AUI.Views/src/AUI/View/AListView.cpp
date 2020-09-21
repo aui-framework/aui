@@ -93,3 +93,7 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
     updateLayout();
     AWindow::current()->flagRedraw();
 }
+
+void AListView::setSize(int width, int height) {
+    AViewContainer::setSize(width, height);
+}

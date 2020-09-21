@@ -623,31 +623,6 @@ FontStyle& AView::getFontStyle()
 }
 
 
-void AView::setSize(int width, int height)
-{
-	if (mFixedSize.x != 0)
-	{
-		mSize.x = mFixedSize.x;
-	}
-	else
-	{
-		mSize.x = width;
-		if (mMinSize.x != 0)
-			mSize.x = glm::max(mMinSize.x, mSize.x);
-	}
-	if (mFixedSize.y != 0)
-	{
-		mSize.y = mFixedSize.y;
-	}
-	else
-	{
-		mSize.y = height;
-		if (mMinSize.y != 0)
-			mSize.y = glm::max(mMinSize.y, mSize.y);
-	}
-	mSize = glm::min(mSize, mMaxSize);
-}
-
 void AView::pack()
 {
 	setSize(getMinimumWidth(), getMinimumHeight());
@@ -814,4 +789,46 @@ void AView::setDisabled(bool disabled)
 void AView::setAnimator(const _<AAnimator>& animator) {
     mAnimator = animator;
     mAnimator->setView(this);
+}
+
+glm::ivec2 AView::getAbsolutePosition() {
+    glm::ivec2 p(0);
+    for (AView* i = this; i && i->getParent(); i = i->getParent()) {
+        p += i->getPosition();
+    }
+    return p;
+}
+
+void AView::setPosition(const glm::ivec2& position) {
+    mPosition = position;
+}
+
+
+void AView::setSize(int width, int height)
+{
+    if (mFixedSize.x != 0)
+    {
+        mSize.x = mFixedSize.x;
+    }
+    else
+    {
+        mSize.x = width;
+        if (mMinSize.x != 0)
+            mSize.x = glm::max(mMinSize.x, mSize.x);
+    }
+    if (mFixedSize.y != 0)
+    {
+        mSize.y = mFixedSize.y;
+    }
+    else
+    {
+        mSize.y = height;
+        if (mMinSize.y != 0)
+            mSize.y = glm::max(mMinSize.y, mSize.y);
+    }
+    mSize = glm::min(mSize, mMaxSize);
+}
+void AView::setGeometry(int x, int y, int width, int height) {
+    setPosition({ x, y });
+    setSize(width, height);
 }

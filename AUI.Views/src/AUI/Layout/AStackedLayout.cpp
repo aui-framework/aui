@@ -25,7 +25,7 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
 			finalY = 0;
 			finalHeight = height;
 		}
-		v->setGeometry(finalX, finalY, finalWidth, finalHeight);
+		v->setGeometry(finalX + x, finalY + y, finalWidth, finalHeight);
 	}
 }
 int ::AStackedLayout::getMinimumWidth()

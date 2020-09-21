@@ -26,7 +26,8 @@ class Render;
 class AWindowManager;
 
 ENUM_FLAG(WindowStyle)
-{	
+{
+    WS_DEFAULT = 0,
 	/**
 	 * \brief Окно без кнопок сворачивания и раскрытия.
 	 */
@@ -46,6 +47,11 @@ ENUM_FLAG(WindowStyle)
 	 * \brief Без стандартных декораторов окна.
 	 */
 	WS_NO_DECORATORS = 0x4,
+
+	/**
+	 * \brief Окно для вывода системного меню (выпадающий список дропбокса)
+	 */
+	WS_SYS = 0x8
 };
 
 class TemporaryRenderingContext
@@ -120,7 +126,7 @@ protected:
     void onCloseButtonClicked();
 	
 public:
-	AWindow(const AString& name = "My window", int width = 854, int height = 500, AWindow* parent = nullptr);
+	AWindow(const AString& name = "My window", int width = 854, int height = 500, AWindow* parent = nullptr, WindowStyle ws = WS_DEFAULT);
 	virtual ~AWindow();
 
 	void redraw();
@@ -155,12 +161,16 @@ public:
 	}
 	AWindowManager& getWindowManager() const;
 
-	glm::ivec2 getPos() const;
+	glm::ivec2 getWindowPosition() const;
 
 	TemporaryRenderingContext acquireTemporaryRenderingContext();
 
-	void setSize(int width, int height) override;
-	void onMouseMove(glm::ivec2 pos) override;
+    void setPosition(const glm::ivec2& position) override;
+    void setSize(int width, int height) override;
+    void setGeometry(int x, int y, int width, int height) override;
+
+
+    void onMouseMove(glm::ivec2 pos) override;
 
 
 	void onFocusAcquired() override;
@@ -180,6 +190,28 @@ public:
 	 * \brief Получить текущее окно для данного потока.
 	 */
 	static AWindow* current();
+
+	/**
+	 * \brief Перевести координаты из координатного пространства этого окна в координатное пространство другого окна.
+	 * \param position координаты в пространстве этого окна
+	 * \param other другое окно
+	 * \return координаты в пространстве окна other
+	 */
+	[[nodiscard]] glm::ivec2 mapPositionTo(const glm::ivec2& position, _<AWindow> other);
+
+    /**
+     * \brief Перевести координаты из координатного пространства этого окна в координатное пространство монитора.
+     * \param position координаты в пространстве этого окна
+     * \return координаты в пространстве монитора
+     */
+    [[nodiscard]] glm::ivec2 unmapPosition(const glm::ivec2& position);
+
+    /**
+     * \brief Перевести координаты из координатного пространства монитора в координатное пространство этого окна.
+     * \param position координаты в пространстве монитора
+     * \return координаты в пространстве этого окна
+     */
+    [[nodiscard]] glm::ivec2 mapPosition(const glm::ivec2& position);
 
 signals:
 	emits<> closed;

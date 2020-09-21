@@ -466,5 +466,9 @@ void Render::uploadToShader()
 	GL::Shader::currentShader()->set("transform", mTransform);
 }
 
+glm::vec2 Render::getCurrentPos() {
+    return glm::vec2(mTransform * glm::vec4(0, 0, 0, 1.f));
+}
+
 
 

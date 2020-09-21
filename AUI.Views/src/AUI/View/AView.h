@@ -412,16 +412,12 @@ public:
 
 	FontStyle& getFontStyle();
 
+	virtual void setPosition(const glm::ivec2& position);
 	virtual void setSize(int width, int height);
+    virtual void setGeometry(int x, int y, int width, int height);
 
 	void setFixedSize(const glm::ivec2& size) {
 	    mFixedSize = size;
-	}
-
-	virtual void setGeometry(int x, int y, int width, int height)
-	{
-		mPosition = { x, y };
-		setSize(width, height);
 	}
 
 	bool isMouseHover() const
@@ -452,6 +448,12 @@ public:
 	 * \brief выставить минимально возможный размер AView.
 	 */
 	void pack();
+
+
+	/**
+	 * \return координаты этого AView относительно левого верхнего угла окна
+	 */
+    [[nodiscard]] glm::ivec2 getAbsolutePosition();
 
 	const ADeque<AString>& getCssNames() const;
 	void addCssName(const AString& css);

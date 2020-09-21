@@ -153,7 +153,7 @@ CustomWindow::~CustomWindow()
 void CustomWindow::setSize(int width, int height)
 {
     AViewContainer::setSize(width, height);
-    auto pos = getPos();
+    auto pos = getWindowPosition();
 
     MoveWindow(mHandle, pos.x, pos.y, width, height, false);
 }

@@ -297,7 +297,7 @@ void AWindow::doDrawWindow() {
     render();
 }
 
-AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
+AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) :
         mWindowTitle(name),
         mParentWindow(parent) {
     AVIEW_CSS;
@@ -343,7 +343,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
 
     SetWindowLongPtr(mHandle, GWLP_USERDATA, reinterpret_cast<LONG>(this));
 
-    if (mParentWindow) {
+    if (mParentWindow && ws & WS_DIALOG) {
         EnableWindow(mParentWindow->mHandle, false);
     }
 
@@ -609,6 +609,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent) :
     GetClientRect(mHandle, &clientRect);
     mSize = {clientRect.right - clientRect.left, clientRect.bottom - clientRect.top};
 #endif
+    setWindowStyle(ws);
 }
 
 AWindow::~AWindow() {
@@ -715,27 +716,43 @@ void AWindow::quit() {
 
 void AWindow::setWindowStyle(WindowStyle ws) {
 #if defined(_WIN32)
-    if (ws & WS_NO_RESIZE) {
-        SetWindowLongPtr(mHandle, GWL_STYLE,
-                         GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME | WS_THICKFRAME |
-                         WS_SYSMENU | WS_CAPTION);
-    } else {
-        SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) & ~WS_DLGFRAME | WS_OVERLAPPEDWINDOW);
-    }
-    if (ws & WS_SIMPLIFIED_WINDOW) {
-        SetWindowLongPtr(mHandle, GWL_STYLE,
-                         GetWindowLong(mHandle, GWL_STYLE) & ~WS_THICKFRAME |
-                         WS_SYSMENU | WS_CAPTION);
-    } else {
-        SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) | WS_THICKFRAME);
-    }
-
-    if (ws & WS_NO_DECORATORS) {
-        LONG lExStyle = GetWindowLong(mHandle, GWL_EXSTYLE);
-        lExStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
-        SetWindowLong(mHandle, GWL_EXSTYLE, lExStyle);
+    if (ws & WS_SYS) {
+        SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) & ~(WS_CAPTION | WS_THICKFRAME
+            | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU) | WS_CHILD);
+        {
+            LONG lExStyle = GetWindowLong(mHandle, GWL_EXSTYLE);
+            lExStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+            SetWindowLong(mHandle, GWL_EXSTYLE, lExStyle);
+        }
         SetWindowPos(mHandle, NULL, 0, 0, 0, 0,
                      SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+
+        // small shadow
+        SetClassLong(mHandle, GCL_STYLE, GetClassLong(mHandle, GCL_STYLE) | CS_DROPSHADOW);
+    } else {
+        if (ws & WS_NO_RESIZE) {
+            SetWindowLongPtr(mHandle, GWL_STYLE,
+                             GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME | WS_THICKFRAME |
+                             WS_SYSMENU | WS_CAPTION);
+        } else {
+            SetWindowLongPtr(mHandle, GWL_STYLE,
+                             GetWindowLong(mHandle, GWL_STYLE) & ~WS_DLGFRAME | WS_OVERLAPPEDWINDOW);
+        }
+        if (ws & WS_SIMPLIFIED_WINDOW) {
+            SetWindowLongPtr(mHandle, GWL_STYLE,
+                             GetWindowLong(mHandle, GWL_STYLE) & ~WS_THICKFRAME |
+                             WS_SYSMENU | WS_CAPTION);
+        } else {
+            SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) | WS_THICKFRAME);
+        }
+
+        if (ws & WS_NO_DECORATORS) {
+            LONG lExStyle = GetWindowLong(mHandle, GWL_EXSTYLE);
+            lExStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
+            SetWindowLong(mHandle, GWL_EXSTYLE, lExStyle);
+            SetWindowPos(mHandle, NULL, 0, 0, 0, 0,
+                         SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+        }
     }
 #else
     // TODO
@@ -764,7 +781,7 @@ void AWindow::minimize() {
 #endif
 }
 
-glm::ivec2 AWindow::getPos() const {
+glm::ivec2 AWindow::getWindowPosition() const {
 #if defined(_WIN32)
     RECT r;
     GetWindowRect(mHandle, &r);
@@ -788,20 +805,6 @@ TemporaryRenderingContext AWindow::acquireTemporaryRenderingContext() {
     }
 
     return TemporaryRenderingContext(_new<painter>(mHandle));
-}
-
-void AWindow::setSize(int width, int height) {
-    AViewContainer::setSize(width, height);
-#if defined(_WIN32)
-    auto pos = getPos();
-
-    RECT r = {0, 0, width, height};
-    AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
-    MoveWindow(mHandle, pos.x, pos.y, r.right - r.left, r.bottom - r.top, false);
-#elif defined(ANDROID)
-#else
-    XResizeWindow(gDisplay, mHandle, width, height);
-#endif
 }
 
 void AWindow::onMouseMove(glm::ivec2 pos) {
@@ -907,6 +910,43 @@ AWindowManager& AWindow::getWindowManager() const {
 
 void AWindow::onCloseButtonClicked() {
     emit closed();
+}
+
+void AWindow::setSize(int width, int height) {
+    setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
+}
+
+void AWindow::setPosition(const glm::ivec2& position) {
+    setGeometry(position.x, position.y, getWidth(), getHeight());
+}
+
+void AWindow::setGeometry(int x, int y, int width, int height) {
+    AViewContainer::setPosition({x, y});
+    AViewContainer::setSize(width, height);
+
+#if defined(_WIN32)
+    RECT r = {0, 0, width, height};
+    AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
+    MoveWindow(mHandle, x, y, r.right - r.left, r.bottom - r.top, false);
+#elif defined(ANDROID)
+    #else
+    XResizeWindow(gDisplay, mHandle, width, height);
+#endif
+}
+
+glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
+    POINT p = {position.x, position.y};
+    ScreenToClient(mHandle, &p);
+    return {p.x, p.y};
+}
+glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
+    POINT p = {position.x, position.y};
+    ClientToScreen(mHandle, &p);
+    return {p.x, p.y};
+}
+
+glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) {
+    return other->mapPosition(unmapPosition(position));
 }
 
 //

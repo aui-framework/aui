@@ -132,9 +132,8 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		auto modal = _new<AButton>(u8"Модальное окно");
 		connect(modal->clicked, this, [&]()
 		{
-			auto w = _new<AWindow>(u8"Модальное окно", 400, 300, this);
+			auto w = _new<AWindow>(u8"Модальное окно", 400, 300, this, WS_DIALOG);
 			fillWindow(w);
-			w->setWindowStyle(WS_DIALOG);
 			w->show();
 			mWindows << w;
 		});

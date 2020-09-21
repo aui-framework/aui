@@ -21,6 +21,9 @@ public:
     void setModel(const _<IListModel<AString>>& model);
 
     int getContentMinimumHeight() override;
+    int getContentFullHeight() {
+        return getLayout()->getMinimumHeight() + 4;
+    }
 	
 	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 
@@ -28,6 +31,7 @@ public:
 	    return AModelSelection<AString>(mSelectionModel, mModel.get());
 	}
 
+    void setSize(int width, int height) override;
 
 signals:
 	emits<AModelSelection<AString>> selectionChanged;
