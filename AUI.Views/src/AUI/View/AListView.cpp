@@ -69,23 +69,23 @@ AListView::~AListView()
 {
 }
 
-AListView::AListView(const _<IListModel<AVariant>>& model) {
+AListView::AListView(const _<IListModel<AString>>& model) {
     AVIEW_CSS;
     setModel(model);
 }
 
-void AListView::setModel(const _<IListModel<AVariant>>& model) {
+void AListView::setModel(const _<IListModel<AString>>& model) {
     mModel = model;
     setLayout(_new<AVerticalLayout>());
 
     if (mModel) {
         for (size_t i = 0; i < model->listSize(); ++i) {
-            addView(_new<AListItem>(model->listItemAt(i).toString()));
+            addView(_new<AListItem>(model->listItemAt(i)));
         }
 
-        connect(mModel->dataInserted, this, [&](const AModelRange<AVariant>& data) {
+        connect(mModel->dataInserted, this, [&](const AModelRange<AString>& data) {
             for (const auto& row : data) {
-                addView(_new<AListItem>(row.toString()));
+                addView(_new<AListItem>(row));
             }
             updateLayout();
         });

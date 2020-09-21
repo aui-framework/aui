@@ -33,6 +33,27 @@ public:
     void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
+    class Group: public AObject {
+    private:
+        AVector<_<ARadioButton>> mButtons;
+        _weak<ARadioButton> mSelected;
+
+    public:
+        Group() = default;
+        ~Group() override = default;
+
+        void addRadioButton(_<ARadioButton> radio);
+
+        [[nodiscard]] _<ARadioButton> getSelectedRadio() const;
+        [[nodiscard]] int getSelectedId() const;
+
+        [[nodiscard]] bool isSelected() const {
+            return mSelected.lock() != nullptr;
+        }
+    signals:
+        emits<int> selectionChanged;
+    };
+
 signals:
     emits<bool> checked;
 };

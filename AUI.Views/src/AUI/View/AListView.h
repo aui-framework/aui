@@ -10,25 +10,25 @@ class AListItem;
 class API_AUI_VIEWS AListView: public AViewContainer
 {
 private:
-	_<IListModel<AVariant>> mModel;
+	_<IListModel<AString>> mModel;
 	ASet<AModelIndex> mSelectionModel;
 	
 public:
     AListView(): AListView(nullptr) {}
-	explicit AListView(const _<IListModel<AVariant>>& model);
+	explicit AListView(const _<IListModel<AString>>& model);
     virtual ~AListView();
 
-    void setModel(const _<IListModel<AVariant>>& model);
+    void setModel(const _<IListModel<AString>>& model);
 
     int getContentMinimumHeight() override;
 	
 	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 
-	[[nodiscard]] AModelSelection<AVariant> getSelectionModel() const {
-	    return AModelSelection<AVariant>(mSelectionModel, mModel.get());
+	[[nodiscard]] AModelSelection<AString> getSelectionModel() const {
+	    return AModelSelection<AString>(mSelectionModel, mModel.get());
 	}
 
 
 signals:
-	emits<AModelSelection<AVariant>> selectionChanged;
+	emits<AModelSelection<AString>> selectionChanged;
 };

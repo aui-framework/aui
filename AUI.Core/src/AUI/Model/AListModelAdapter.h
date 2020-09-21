@@ -3,7 +3,7 @@
 #include <AUI/Model/IListModel.h>
 
 template<typename T, typename Adapter>
-class AListModelAdapter: public IListModel<AVariant>, public AObject {
+class AListModelAdapter: public IListModel<AString>, public AObject {
 private:
     _<IListModel<T>> mOther;
     Adapter mAdapter;
@@ -27,7 +27,7 @@ public:
         return mOther->listSize();
     }
 
-    AVariant listItemAt(const AModelIndex& index) override {
+    AString listItemAt(const AModelIndex& index) override {
         return mAdapter(mOther->listItemAt(index));
     }
 };

@@ -1,4 +1,6 @@
 #include <AUI/View/ARadioButton.h>
+#include <AUI/View/ARadioGroup.h>
+#include <AUI/Model/AListModel.h>
 #include "ExampleWindow.h"
 #include "AUI/Layout/AVerticalLayout.h"
 #include "AUI/View/AButton.h"
@@ -11,6 +13,7 @@
 #include "AUI/View/ANumberPicker.h"
 #include "AUI/View/ASpacer.h"
 #include "AUI/Util/UIBuildingHelpers.h"
+#include <AUI/Model/AListModel.h>
 
 void fillWindow(_<AWindow> w)
 {
@@ -66,13 +69,20 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 			auto checked = _new<ACheckBox>(u8"Флажок установлен");
 			checked->setChecked(true);
 			c->addView(checked);
+			auto disabled = _new<ACheckBox>(u8"Неактивный флажок");
+			disabled->setDisabled();
+			c->addView(disabled);
 		}
 		{
-			c->addView(_new<ALabel>(u8"Радил"));
-			c->addView(_new<ARadioButton>(u8"Флажок снят"));
-			auto checked = _new<ARadioButton>(u8"Флажок установлен");
-			checked->setChecked(true);
-			c->addView(checked);
+			c->addView(_new<ALabel>(u8"Радио кнопка"));
+			c->addView(_new<ARadioGroup>(_new<AListModel<AString>>(AVector<AString>{
+			    "Радио 1",
+			    "Радио 2",
+			    "Радио 3",
+			    "Неактивная кнопка",
+			})) by(ARadioGroup, {
+			    getViews()[3]->setDisabled();
+			}));
 		}
 		
 		horizontal->addView(c);

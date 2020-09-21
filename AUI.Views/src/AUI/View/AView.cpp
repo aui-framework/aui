@@ -798,13 +798,15 @@ void AView::getCustomCssAttributes(AMap<AString, AVariant>& map)
 void AView::setEnabled(bool enabled)
 {
 	mEnabled = enabled;
+    emit customCssPropertyChanged();
 	setSignalsEnabled(mEnabled);
 	emit customCssPropertyChanged();
 }
 
 void AView::setDisabled(bool disabled)
 {
-	mEnabled = !disabled;
+    mEnabled = !disabled;
+    emit customCssPropertyChanged();
     setSignalsEnabled(mEnabled);
     emit customCssPropertyChanged();
 }
