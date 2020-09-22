@@ -24,6 +24,11 @@ public:
 
     void setModel(const _<IListModel<AString>>& model);
     void render() override;
+
+    [[nodiscard]] int getSelectionId() const {
+        return mSelectionId;
+    }
+
     void setSelectionId(int id);
     int getContentMinimumWidth() override;
 
@@ -32,6 +37,9 @@ public:
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 
     void destroyWindow();
+
+signals:
+    emits<int> selectionChanged;
 };
 
 

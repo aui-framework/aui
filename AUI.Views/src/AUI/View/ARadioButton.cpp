@@ -55,7 +55,8 @@ void ARadioButton::getCustomCssAttributes(AMap<AString, AVariant>& map)
 void ARadioButton::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
     AView::onMouseReleased(pos, button);
-    emit checked(mChecked = !mChecked);
+    if (!mChecked)
+        emit checked(mChecked = true);
 }
 
 void ARadioButton::Group::addRadioButton(_<ARadioButton> radio) {

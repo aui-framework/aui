@@ -49,6 +49,7 @@ void AComboBox::setSelectionId(int id) {
     if (mModel->listSize() > id) {
         setText(mModel->listItemAt(id));
     }
+    emit selectionChanged(id);
 }
 
 void AComboBox::render() {
