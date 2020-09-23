@@ -935,14 +935,22 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
+#ifdef _WIN32
     POINT p = {position.x, position.y};
     ScreenToClient(mHandle, &p);
     return {p.x, p.y};
+#else
+    return position;
+#endif
 }
 glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
+#ifdef _WIN32
     POINT p = {position.x, position.y};
     ClientToScreen(mHandle, &p);
     return {p.x, p.y};
+#else
+    return position;
+#endif
 }
 
 glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) {
@@ -1002,54 +1010,73 @@ void AWindowManager::loop() {
 #else
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
-        XNextEvent(gDisplay, &ev);
-        auto window = mWindows.front();
-        DisplayLock displayLock;
-        switch (ev.type) {
-            case KeyPress:
-            {
-                int count = 0;
-                KeySym keysym = 0;
-                char buf[0x20];
-                Status status = 0;
-                count = Xutf8LookupString(window->mIC, (XKeyPressedEvent*)&ev, buf, sizeof(buf), &keysym, &status);
+        struct NotFound {};
+        auto locateWindow = [&](Window xWindow) -> _<AWindow> {
+            for (auto& w : mWindows) {
+                if (w->mHandle == xWindow)
+                    return w;
+            }
+            throw NotFound();
+        };
+        try {
+            XNextEvent(gDisplay, &ev);
+            DisplayLock displayLock;
+            switch (ev.type) {
+                case KeyPress: {
+                    auto window = locateWindow(ev.xkey.window);
+                    int count = 0;
+                    KeySym keysym = 0;
+                    char buf[0x20];
+                    Status status = 0;
+                    count = Xutf8LookupString(window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym, &status);
 
-                if (count) {
-                    AString s(buf);
-                    assert(!s.empty());
-                    window->onCharEntered(s[0]);
+                    if (count) {
+                        AString s(buf);
+                        assert(!s.empty());
+                        window->onCharEntered(s[0]);
+                    }
+                    break;
                 }
-                break;
-            }
 
-            case MappingNotify:
-                XRefreshKeyboardMapping(&ev.xmapping);
-                break;
+                case MappingNotify:
+                    XRefreshKeyboardMapping(&ev.xmapping);
+                    break;
 
-            case Expose: {
-                glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
-                if (size.x >= 10 && size.y >= 10 && size != window->getSize())
-                    window->AViewContainer::setSize(size.x, size.y);
-                window->redraw();
-                break;
+                case Expose: {
+                    auto window = locateWindow(ev.xexpose.window);
+                    glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
+                    if (size.x >= 10 && size.y >= 10 && size != window->getSize())
+                        window->AViewContainer::setSize(size.x, size.y);
+                    window->redraw();
+                    break;
+                }
+                case DestroyNotify: {
+                    auto window = locateWindow(ev.xdestroywindow.window);
+                    window->onCloseButtonClicked();
+                    break;
+                }
+                case MotionNotify: {
+                    auto window = locateWindow(ev.xmotion.window);
+                    window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
+                    break;
+                }
+                case ButtonPress: {
+                    auto window = locateWindow(ev.xbutton.window);
+                    window->onMousePressed({ev.xbutton.x, ev.xbutton.y},
+                                           (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
+                    break;
+                }
+                case ButtonRelease: {
+                    auto window = locateWindow(ev.xbutton.window);
+                    window->onMouseReleased({ev.xbutton.x, ev.xbutton.y},
+                                            (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
+                    break;
+                }
             }
-            case DestroyNotify: {
-                window->onCloseButtonClicked();
-                break;
-            }
-            case MotionNotify:
-                window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
-                break;
-            case ButtonPress: {
-                window->onMousePressed({ev.xbutton.x, ev.xbutton.y}, (AInput::Key)(AInput::LButton + ev.xbutton.button - 1));
-                break;
-            }
-            case ButtonRelease: {
-                window->onMouseReleased({ev.xbutton.x, ev.xbutton.y}, (AInput::Key)(AInput::LButton + ev.xbutton.button - 1));
-                break;
-            }
+            AThread::current()->processMessages();
+        } catch(NotFound e) {
+
         }
-        AThread::current()->processMessages();
     }
 #endif
 }
