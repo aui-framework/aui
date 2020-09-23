@@ -234,6 +234,17 @@ Display* gDisplay;
 Screen* gScreen;
 int gScreenId;
 
+struct {
+    Atom wmProtocols;
+    Atom wmDeleteWindow;
+
+    void init() {
+        wmProtocols = XInternAtom(gDisplay, "WM_PROTOCOLS", False);
+        wmDeleteWindow = XInternAtom(gDisplay, "WM_DELETE_WINDOW", False);
+    }
+
+} gAtoms;
+
 
 struct DisplayLock {
     DisplayLock() {
@@ -251,9 +262,11 @@ public:
     static thread_local bool painting;
 
     painter(Window window) {
+        glXMakeCurrent(gDisplay, window, AWindow::context.context);
     }
 
     ~painter() {
+
     }
 };
 
@@ -484,12 +497,13 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
             if (!XInitThreads()) {
                 throw AException("Your X server does not support multithreading; abort");
             }
+            gAtoms.init();
         }
 
         ~DisplayInstance() {
-            XFree(gScreen);
+            //XCloseDisplay(gDisplay);
+            //XFree(gScreen);
 
-            XCloseDisplay(gDisplay);
         }
     };
     static DisplayInstance display;
@@ -579,6 +593,10 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
     XChangeProperty(gDisplay, mHandle, XInternAtom(gDisplay, "_NET_WM_NAME", false),
                     XInternAtom(gDisplay, "UTF8_STRING", false), 8, PropModeReplace,
                     reinterpret_cast<const unsigned char*>(title.c_str()), title.length());
+
+    XSetWMProtocols(gDisplay, mHandle, &gAtoms.wmDeleteWindow, 1);
+
+
     glXMakeCurrent(gDisplay, mHandle, context.context);
 
     if (!glewExperimental) {
@@ -705,8 +723,9 @@ void AWindow::quit() {
         EnableWindow(mParentWindow->mHandle, true);
     }
     ShowWindow(mHandle, SW_HIDE);
+#elif (__ANDROID__)
 #else
-
+    XUnmapWindow(gDisplay, mHandle);
 #endif
 
     AThread::current()->enqueue([&]() {
@@ -1019,9 +1038,18 @@ void AWindowManager::loop() {
             throw NotFound();
         };
         try {
-            XNextEvent(gDisplay, &ev);
             DisplayLock displayLock;
+            XNextEvent(gDisplay, &ev);
             switch (ev.type) {
+                case ClientMessage: {
+                    if (ev.xclient.message_type == gAtoms.wmProtocols &&
+                        ev.xclient.data.l[0] == gAtoms.wmDeleteWindow)  {
+                        // клик по кнопке закрытия окна
+                        auto window = locateWindow(ev.xclient.window);
+                        window->onCloseButtonClicked();
+                    }
+                    break;
+                }
                 case KeyPress: {
                     auto window = locateWindow(ev.xkey.window);
                     int count = 0;
@@ -1048,11 +1076,6 @@ void AWindowManager::loop() {
                     if (size.x >= 10 && size.y >= 10 && size != window->getSize())
                         window->AViewContainer::setSize(size.x, size.y);
                     window->redraw();
-                    break;
-                }
-                case DestroyNotify: {
-                    auto window = locateWindow(ev.xdestroywindow.window);
-                    window->onCloseButtonClicked();
                     break;
                 }
                 case MotionNotify: {
