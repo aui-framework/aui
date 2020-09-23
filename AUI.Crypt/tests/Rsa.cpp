@@ -10,7 +10,7 @@
 using namespace boost::unit_test;
 
 
-BOOST_AUTO_TEST_SUITE(Crypt)
+BOOST_AUTO_TEST_SUITE(Rsa)
 
     BOOST_AUTO_TEST_CASE(EncryptDecrypt) {
         unsigned bits = 512;

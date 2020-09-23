@@ -22,7 +22,7 @@ public:
 
     int getContentMinimumHeight() override;
     int getContentFullHeight() {
-        return getLayout()->getMinimumHeight() + 4;
+        return getLayout()->getMinimumHeight() + 8;
     }
 	
 	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
