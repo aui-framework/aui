@@ -77,6 +77,8 @@ public:
 	AJsonObject();
     [[nodiscard]] AJsonElement& operator[](const AString& key);
     [[nodiscard]] const AJsonElement& operator[](const AString& key) const;
+
+    bool contains(const AString& key) const;
 };
 
 template<>

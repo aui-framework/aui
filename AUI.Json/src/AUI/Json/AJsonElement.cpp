@@ -93,6 +93,10 @@ const AJsonElement& AJsonObject::operator[](const AString& key) const {
     return mJson->asObject().at(key);
 }
 
+bool AJsonObject::contains(const AString& key) const {
+    return asObject().contains(key);
+}
+
 AJsonArray::AJsonArray(const AVector<AJsonElement>& value) :
 	AJsonElement(_new<JsonArray>(value))
 {

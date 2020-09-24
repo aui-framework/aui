@@ -312,7 +312,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
 
     mInst = GetModuleHandle(nullptr);
 
-    ARandom r;
+    ACrypto r;
     for (;;) {
         mWindowClass = "AUI-" + AString::number(r.nextInt());
         winClass.lpszClassName = mWindowClass.c_str();

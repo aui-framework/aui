@@ -43,6 +43,13 @@ public:
                         mResultVariant << o;
                         break;
                     }
+					case MYSQL_TYPE_LONGLONG: {
+                        auto o = _new<AVariantHelper<uint64_t>>(0);
+                        m.buffer = (void*)&o->getData();
+                        m.buffer_length = sizeof(o->getData());
+                        mResultVariant << o;
+                        break;
+                    }
 					case MYSQL_TYPE_STRING:
 					case MYSQL_TYPE_VAR_STRING:
 					{
