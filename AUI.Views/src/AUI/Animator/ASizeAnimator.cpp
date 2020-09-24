@@ -5,7 +5,8 @@
 #include "ASizeAnimator.h"
 #include <AUI/View/AView.h>
 
-ASizeAnimator::ASizeAnimator(const glm::ivec2& beginSize) : mBeginSize(beginSize), mEndSize(0) {
+ASizeAnimator::ASizeAnimator(const glm::ivec2& beginSize, const glm::ivec2& endSize):
+    mBeginSize(beginSize), mEndSize(endSize) {
 
 }
 

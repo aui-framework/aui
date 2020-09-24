@@ -246,14 +246,6 @@ struct {
 } gAtoms;
 
 
-struct DisplayLock {
-    DisplayLock() {
-        XLockDisplay(gDisplay);
-    }
-    ~DisplayLock() {
-        XUnlockDisplay(gDisplay);
-    }
-};
 
 struct painter {
 private:
@@ -493,10 +485,6 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
             XSetErrorHandler(xerrorhandler);
             gScreen = DefaultScreenOfDisplay(gDisplay);
             gScreenId = DefaultScreen(gDisplay);
-
-            if (!XInitThreads()) {
-                throw AException("Your X server does not support multithreading; abort");
-            }
             gAtoms.init();
         }
 
@@ -507,7 +495,6 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
         }
     };
     static DisplayInstance display;
-    DisplayLock displayLock;
 
     static XVisualInfo* vi;
     static XSetWindowAttributes swa;
@@ -896,9 +883,7 @@ void AWindow::flagRedraw() {
 #elif defined(ANDROID)
     AAndroid::requestRedraw();
 #else
-    XEvent e = {0};
-    e.type = Expose;
-    XSendEvent(gDisplay, mHandle, false, 0, &e);
+    mRedrawFlag = true;
 #endif
 }
 
@@ -993,16 +978,11 @@ void AWindowManager::notifyProcessMessages() {
     AAndroid::requestRedraw();
 #else
     if (!mWindows.empty()) {
-        auto handle = mWindows.back()->mHandle;
 #if defined(_WIN32)
+        auto handle = mWindows.back()->mHandle;
         PostMessage(handle, WM_USER, 0, 0);
 #else
-        DisplayLock displayLock;
-        XEvent e = {0};
-        e.xexpose.window = handle;
-        e.type = Expose;
-        XSendEvent(gDisplay, handle, false, 0, &e);
-        XFlush(gDisplay);
+
 #endif
     }
 #endif
@@ -1038,8 +1018,8 @@ void AWindowManager::loop() {
             throw NotFound();
         };
         try {
-            DisplayLock displayLock;
             XNextEvent(gDisplay, &ev);
+            _<AWindow> window;
             switch (ev.type) {
                 case ClientMessage: {
                     if (ev.xclient.message_type == gAtoms.wmProtocols &&
@@ -1051,7 +1031,7 @@ void AWindowManager::loop() {
                     break;
                 }
                 case KeyPress: {
-                    auto window = locateWindow(ev.xkey.window);
+                    window = locateWindow(ev.xkey.window);
                     int count = 0;
                     KeySym keysym = 0;
                     char buf[0x20];
@@ -1071,32 +1051,36 @@ void AWindowManager::loop() {
                     break;
 
                 case Expose: {
-                    auto window = locateWindow(ev.xexpose.window);
+                    window = locateWindow(ev.xexpose.window);
                     glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
                     if (size.x >= 10 && size.y >= 10 && size != window->getSize())
                         window->AViewContainer::setSize(size.x, size.y);
-                    window->redraw();
+                    window->mRedrawFlag = true;
                     break;
                 }
                 case MotionNotify: {
-                    auto window = locateWindow(ev.xmotion.window);
+                    window = locateWindow(ev.xmotion.window);
                     window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
                     break;
                 }
                 case ButtonPress: {
-                    auto window = locateWindow(ev.xbutton.window);
+                    window = locateWindow(ev.xbutton.window);
                     window->onMousePressed({ev.xbutton.x, ev.xbutton.y},
                                            (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
                     break;
                 }
                 case ButtonRelease: {
-                    auto window = locateWindow(ev.xbutton.window);
+                    window = locateWindow(ev.xbutton.window);
                     window->onMouseReleased({ev.xbutton.x, ev.xbutton.y},
                                             (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
                     break;
                 }
             }
             AThread::current()->processMessages();
+            if (window && window->mRedrawFlag) {
+                window->mRedrawFlag = false;
+                window->redraw();
+            }
         } catch(NotFound e) {
 
         }

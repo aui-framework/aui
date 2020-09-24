@@ -76,8 +76,8 @@ private:
 #if defined(_WIN32)
 	HMODULE mInst;
 	HDC mDC;
-	bool mRedrawFlag = true;
 #endif
+    bool mRedrawFlag = true;
 	AString mWindowClass;
 	AWindow* mParentWindow;
 	float mDpiRatio = 1.f;
