@@ -30,10 +30,12 @@ BOOL WINAPI DllMain(
 }
 #endif
 
+#include <mysql.h>
 #include "AUI/Common/Plugin.h"
 #include "AUI/Data/ASqlDatabase.h"
 #include "AMysql.h"
 
 AUI_PLUGIN_ENTRY {
-	ASqlDatabase::registerDriver(_new<AMysql>());
+    mysql_library_init(0, nullptr, nullptr);
+    ASqlDatabase::registerDriver(_new<AMysql>());
 }

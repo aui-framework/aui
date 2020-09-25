@@ -741,7 +741,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         if (ws & WS_SIMPLIFIED_WINDOW) {
             SetWindowLongPtr(mHandle, GWL_STYLE,
                              GetWindowLong(mHandle, GWL_STYLE) & ~(WS_THICKFRAME |
-                             WS_SYSMENU | WS_CAPTION));
+                             WS_SYSMENU) | WS_CAPTION);
         } else {
             SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) | WS_THICKFRAME);
         }
