@@ -982,7 +982,7 @@ void AWindowManager::notifyProcessMessages() {
         auto handle = mWindows.back()->mHandle;
         PostMessage(handle, WM_USER, 0, 0);
 #else
-
+    mXNotifyCV.notify_all();
 #endif
     }
 #endif
@@ -1018,68 +1018,80 @@ void AWindowManager::loop() {
             throw NotFound();
         };
         try {
-            XNextEvent(gDisplay, &ev);
-            _<AWindow> window;
-            switch (ev.type) {
-                case ClientMessage: {
-                    if (ev.xclient.message_type == gAtoms.wmProtocols &&
-                        ev.xclient.data.l[0] == gAtoms.wmDeleteWindow)  {
-                        // клик по кнопке закрытия окна
-                        auto window = locateWindow(ev.xclient.window);
-                        window->onCloseButtonClicked();
+            while (XPending(gDisplay)) {
+                XNextEvent(gDisplay, &ev);
+                _<AWindow> window;
+                switch (ev.type) {
+                    case ClientMessage: {
+                        if (ev.xclient.message_type == gAtoms.wmProtocols &&
+                            ev.xclient.data.l[0] == gAtoms.wmDeleteWindow) {
+                            // клик по кнопке закрытия окна
+                            auto window = locateWindow(ev.xclient.window);
+                            window->onCloseButtonClicked();
+                        }
+                        break;
                     }
-                    break;
-                }
-                case KeyPress: {
-                    window = locateWindow(ev.xkey.window);
-                    int count = 0;
-                    KeySym keysym = 0;
-                    char buf[0x20];
-                    Status status = 0;
-                    count = Xutf8LookupString(window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym, &status);
+                    case KeyPress: {
+                        window = locateWindow(ev.xkey.window);
+                        int count = 0;
+                        KeySym keysym = 0;
+                        char buf[0x20];
+                        Status status = 0;
+                        count = Xutf8LookupString(window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
+                                                  &status);
 
-                    if (count) {
-                        AString s(buf);
-                        assert(!s.empty());
-                        window->onCharEntered(s[0]);
+                        if (count) {
+                            AString s(buf);
+                            assert(!s.empty());
+                            window->onCharEntered(s[0]);
+                        }
+                        break;
                     }
-                    break;
-                }
 
-                case MappingNotify:
-                    XRefreshKeyboardMapping(&ev.xmapping);
-                    break;
+                    case MappingNotify:
+                        XRefreshKeyboardMapping(&ev.xmapping);
+                        break;
 
-                case Expose: {
-                    window = locateWindow(ev.xexpose.window);
-                    glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
-                    if (size.x >= 10 && size.y >= 10 && size != window->getSize())
-                        window->AViewContainer::setSize(size.x, size.y);
-                    window->mRedrawFlag = true;
-                    break;
+                    case Expose: {
+                        window = locateWindow(ev.xexpose.window);
+                        glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
+                        if (size.x >= 10 && size.y >= 10 && size != window->getSize())
+                            window->AViewContainer::setSize(size.x, size.y);
+                        window->mRedrawFlag = true;
+                        break;
+                    }
+                    case MotionNotify: {
+                        window = locateWindow(ev.xmotion.window);
+                        window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
+                        break;
+                    }
+                    case ButtonPress: {
+                        window = locateWindow(ev.xbutton.window);
+                        window->onMousePressed({ev.xbutton.x, ev.xbutton.y},
+                                               (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
+                        break;
+                    }
+                    case ButtonRelease: {
+                        window = locateWindow(ev.xbutton.window);
+                        window->onMouseReleased({ev.xbutton.x, ev.xbutton.y},
+                                                (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
+                        break;
+                    }
                 }
-                case MotionNotify: {
-                    window = locateWindow(ev.xmotion.window);
-                    window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
-                    break;
-                }
-                case ButtonPress: {
-                    window = locateWindow(ev.xbutton.window);
-                    window->onMousePressed({ev.xbutton.x, ev.xbutton.y},
-                                           (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
-                    break;
-                }
-                case ButtonRelease: {
-                    window = locateWindow(ev.xbutton.window);
-                    window->onMouseReleased({ev.xbutton.x, ev.xbutton.y},
-                                            (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
-                    break;
+                AThread::current()->processMessages();
+                if (window && window->mRedrawFlag) {
+                    window->mRedrawFlag = false;
+                    window->redraw();
                 }
             }
+            std::unique_lock lock(mXNotifyLock);
+            mXNotifyCV.wait_for(lock, std::chrono::microseconds(1000));
             AThread::current()->processMessages();
-            if (window && window->mRedrawFlag) {
-                window->mRedrawFlag = false;
-                window->redraw();
+            for (auto& window : mWindows) {
+                if (window->mRedrawFlag) {
+                    window->mRedrawFlag = false;
+                    window->redraw();
+                }
             }
         } catch(NotFound e) {
 

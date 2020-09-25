@@ -9,6 +9,10 @@ private:
     IEventLoop::Handle mHandle;
     ADeque<_<AWindow>> mWindows;
     bool mLoopRunning = false;
+#ifdef __linux
+    AMutex mXNotifyLock;
+    AConditionVariable mXNotifyCV;
+#endif
 
 public:
     AWindowManager();
