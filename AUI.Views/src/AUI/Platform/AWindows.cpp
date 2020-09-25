@@ -312,7 +312,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
 
     mInst = GetModuleHandle(nullptr);
 
-    ACrypto r;
+    ARandom r;
     for (;;) {
         mWindowClass = "AUI-" + AString::number(r.nextInt());
         winClass.lpszClassName = mWindowClass.c_str();
@@ -740,8 +740,8 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         }
         if (ws & WS_SIMPLIFIED_WINDOW) {
             SetWindowLongPtr(mHandle, GWL_STYLE,
-                             GetWindowLong(mHandle, GWL_STYLE) & ~WS_THICKFRAME |
-                             WS_SYSMENU | WS_CAPTION);
+                             GetWindowLong(mHandle, GWL_STYLE) & ~(WS_THICKFRAME |
+                             WS_SYSMENU | WS_CAPTION));
         } else {
             SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) | WS_THICKFRAME);
         }

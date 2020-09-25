@@ -8,7 +8,7 @@
 #include <AUI/Common/AByteBuffer.h>
 
 namespace ACrypto {
-    _<AByteBuffer> safeRandom();
+    API_AUI_CRYPT _<AByteBuffer> safeRandom();
 };
 
 

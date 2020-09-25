@@ -6,10 +6,6 @@ AView {
 AWindow {
     background: #f0f0f0;
 }
-CustomWindow {
-    border: 1em solid $OS_THEME_COLOR;
-    padding: 1px;
-}
 
 ALabel {
     padding: 1em 0 2em;
@@ -70,6 +66,7 @@ AButton[disabled] {
     color: #fff;
     padding: 7em 0;
     margin: 0;
+    -aui-font-rendering: antialiasing;
 }
 
 .window-title .default {
@@ -276,4 +273,8 @@ ATableView {
 ATableView AView {
     background: #fff;
     margin: 0 1px 1px 0;
+}
+ACustomWindow {
+    border: 1em solid $OS_THEME_COLOR;
+    padding: 1px;
 }

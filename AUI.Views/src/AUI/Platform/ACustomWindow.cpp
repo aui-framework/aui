@@ -1,4 +1,4 @@
-﻿#include "CustomWindow.h"
+﻿#include "ACustomWindow.h"
 
 #if defined(_WIN32)
 #include <glm/gtc/matrix_transform.hpp>
@@ -11,7 +11,7 @@
 #include <dwmapi.h>
 
 
-LRESULT CustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
@@ -27,11 +27,7 @@ LRESULT CustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         return 0;
     }
     case WM_NCCALCSIZE:
-    {
-        //this kills the window frame and title bar we added with
-        //WS_THICKFRAME and WS_CAPTION
         return 0;
-    }
     case WM_NCHITTEST:
     {
         unsigned result = 0;
@@ -110,6 +106,7 @@ LRESULT CustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
         if (result)
             return result;
     } //end case WM_NCHITTEST
+
     }
     return AWindow::winProc(hwnd, uMsg, wParam, lParam);
 
@@ -117,17 +114,16 @@ LRESULT CustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 #undef GET_Y_LPARAM
 }
 
-void CustomWindow::doDrawWindow()
+void ACustomWindow::doDrawWindow()
 {
     // Frame
     AWindow::doDrawWindow();
 }
 
-CustomWindow::CustomWindow(const AString& name, int width, int height): AWindow(name, width, height)
+ACustomWindow::ACustomWindow(const AString& name, int width, int height): AWindow(name, width, height)
 {
     AVIEW_CSS;
-    LONG_PTR d = GetWindowLongPtr(getNativeHandle(), GWL_STYLE);
-    SetWindowLongPtr(getNativeHandle(), GWL_STYLE, d | WS_POPUP | WS_CAPTION | WS_THICKFRAME | WS_MAXIMIZEBOX | WS_MINIMIZEBOX);
+
     const MARGINS shadow = { 1, 1, 1, 1 };
     DwmExtendFrameIntoClientArea((HWND)getNativeHandle(), &shadow);
 
@@ -139,18 +135,18 @@ CustomWindow::CustomWindow(const AString& name, int width, int height): AWindow(
         NULL,
         rcClient.left, rcClient.top,
         rcClient.right - rcClient.left, rcClient.bottom - rcClient.top,
-        SWP_FRAMECHANGED);
+                 SWP_FRAMECHANGED);
 }
 
-CustomWindow::CustomWindow(): CustomWindow("My custom window", 854, 500)
+ACustomWindow::ACustomWindow(): ACustomWindow("My custom window", 854, 500)
 {
 }
 
-CustomWindow::~CustomWindow()
+ACustomWindow::~ACustomWindow()
 {
 }
 
-void CustomWindow::setSize(int width, int height)
+void ACustomWindow::setSize(int width, int height)
 {
     AViewContainer::setSize(width, height);
     auto pos = getWindowPosition();
@@ -159,7 +155,7 @@ void CustomWindow::setSize(int width, int height)
 }
 #else
 
-CustomWindow::CustomWindow(const AString& name, int width, int height) :
+ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
         AWindow(name, width, height) {
 
 }

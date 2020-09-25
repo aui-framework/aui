@@ -5,7 +5,7 @@
 #include "AUI/Layout/AVerticalLayout.h"
 #include "AUI/View/AButton.h"
 #include "AUI/Layout/AHorizontalLayout.h"
-#include "AUI/Platform/CustomCaptionWindow.h"
+#include "AUI/Platform/ACustomCaptionWindow.h"
 #include "AUI/View/ALabel.h"
 #include "AUI/Layout/AStackedLayout.h"
 #include "AUI/View/ACheckBox.h"
@@ -141,17 +141,17 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		auto customWindowWithCaption = _new<AButton>(u8"Кастомное окно с заголовком");
 		connect(customWindowWithCaption->clicked, this, [&]()
 		{
-			auto w = _new<CustomCaptionWindow>(u8"Кастомное окно", 400, 300);
+			auto w = _new<ACustomCaptionWindow>(u8"Кастомное окно", 400, 300);
 			fillWindow(w);
 			w->show();
-			w->setWindowStyle(WS_DIALOG);
+			//w->setWindowStyle(WS_DIALOG);
 			mWindows << w;
 		});
 		
 		auto customWindow = _new<AButton>(u8"Кастомное окно без заголовка");
 		connect(customWindow->clicked, this, [&]()
 		{
-			auto w = _new<CustomWindow>(u8"Кастомное окно", 400, 300);
+			auto w = _new<ACustomWindow>(u8"Кастомное окно", 400, 300);
 			fillWindow(w);
 			w->show();
 			w->setWindowStyle(WS_DIALOG);

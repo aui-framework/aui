@@ -1,5 +1,5 @@
 #include <AUI/IO/FileInputStream.h>
-#include <AUI/Platform/CustomWindow.h>
+#include <AUI/Platform/ACustomWindow.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/View/ALabel.h>
 #include <AUI/Layout/AHorizontalLayout.h>
@@ -12,7 +12,7 @@
 #include <glm/glm.hpp>
 #include <AUI/Image/AImageLoaderRegistry.h>
 
-#include "AUI/Platform/CustomCaptionWindow.h"
+#include "AUI/Platform/ACustomCaptionWindow.h"
 
 int main()
 {

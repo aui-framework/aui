@@ -4,7 +4,7 @@
 #include "AUI/Layout/AVerticalLayout.h"
 #include "AUI/View/AButton.h"
 #include "AUI/Layout/AHorizontalLayout.h"
-#include "AUI/Platform/CustomCaptionWindow.h"
+#include "AUI/Platform/ACustomCaptionWindow.h"
 #include "AUI/View/ALabel.h"
 #include "AUI/Layout/AStackedLayout.h"
 #include "AUI/Network/ATcpSocket.h"
@@ -15,7 +15,7 @@
 #include "AUI/View/ANumberPicker.h"
 #include "AUI/View/ASpacer.h"
 
-ExampleWindow::ExampleWindow(): AWindow(u8"Сеть")
+ExampleWindow::ExampleWindow(): AWindow(u8"пїЅпїЅпїЅпїЅ")
 {
 	setLayout(_new<AVerticalLayout>());
 	addCssName(".window-no-padding");
@@ -31,7 +31,7 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Сеть")
 	label->setExpanding({ 1, 1 });
 	label->setMultiline(true);
 	
-	auto downloadASock = _new<AButton>(u8"Загрузить, используя ASocket");
+	auto downloadASock = _new<AButton>(u8"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ ASocket");
 	connect(downloadASock->clicked, this, [&, addr, downloadASock, label]()
 	{
 		auto input = addr->getText();
@@ -46,7 +46,7 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Сеть")
 
 		if (url.getProtocol() != "http")
 		{
-			AMessageBox::show(this, u8"AUI", u8"Поддерживается только протокол HTTP.");
+			AMessageBox::show(this, u8"AUI", u8"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ HTTP.");
 			return;
 		}
 		
@@ -69,7 +69,7 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Сеть")
 			downloadASock->setEnabled(true);
 		});
 	});
-	auto downloadCurl = _new<AButton>(u8"Загрузить, используя cURL");
+	auto downloadCurl = _new<AButton>(u8"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ cURL");
 	connect(downloadCurl->clicked, this, [&, addr, downloadCurl, label]()
 	{
 		auto input = addr->getText();

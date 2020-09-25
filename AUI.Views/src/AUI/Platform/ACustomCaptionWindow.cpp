@@ -1,11 +1,11 @@
-﻿#include "CustomCaptionWindow.h"
+﻿#include "ACustomCaptionWindow.h"
 
 #include "AUI/Layout/AHorizontalLayout.h"
 #include "AUI/Layout/AVerticalLayout.h"
 #include "AUI/View/AButton.h"
 #include "AUI/View/ALabel.h"
 
-CustomCaptionWindow::CustomCaptionWindow(const AString& name, int width, int height): CustomWindow(name, width, height)
+ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int height): ACustomWindow(name, width, height)
 {
 	setLayout(_new<AVerticalLayout>());
 	
