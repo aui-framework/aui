@@ -237,10 +237,13 @@ int gScreenId;
 struct {
     Atom wmProtocols;
     Atom wmDeleteWindow;
+    Atom wmHints;
+
 
     void init() {
         wmProtocols = XInternAtom(gDisplay, "WM_PROTOCOLS", False);
         wmDeleteWindow = XInternAtom(gDisplay, "WM_DELETE_WINDOW", False);
+        wmHints = XInternAtom(gDisplay, "_MOTIF_WM_HINTS", true);;
     }
 
 } gAtoms;
@@ -761,7 +764,25 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         }
     }
 #else
-    // TODO
+    if (ws & (WS_SIMPLIFIED_WINDOW | WS_SYS | WS_NO_DECORATORS)) {
+        //note the struct is declared elsewhere, is here just for clarity.
+//code is from [http://tonyobryan.com/index.php?article=9][1]
+        typedef struct Hints
+        {
+            unsigned long   flags;
+            unsigned long   functions;
+            unsigned long   decorations;
+            long            inputMode;
+            unsigned long   status;
+        } Hints;
+
+//code to remove decoration
+        Hints hints;
+        hints.flags = 2;
+        hints.decorations = 0;
+        XChangeProperty(gDisplay, mHandle, gAtoms.wmHints, gAtoms.wmHints, 32, PropModeReplace,
+                (unsigned char *)&hints, 5);
+    }
 #endif
 }
 

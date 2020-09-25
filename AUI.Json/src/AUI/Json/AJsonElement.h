@@ -10,6 +10,7 @@
 #include <AUI/Model/IListModel.h>
 #include <AUI/Model/AListModel.h>
 #include <AUI/Common/AStringVector.h>
+#include <AUI/Data/AModelMeta.h>
 
 class IJsonElement;
 class AJsonElement;
