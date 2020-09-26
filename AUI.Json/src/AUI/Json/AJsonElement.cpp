@@ -3,6 +3,7 @@
 #include "JsonValue.h"
 #include "JsonObject.h"
 #include "JsonArray.h"
+#include "JsonNull.h"
 
 AJsonElement::AJsonElement(const _<IJsonElement>& json_element): mJson(json_element)
 {
@@ -67,6 +68,12 @@ void AJsonElement::serialize(_<IOutputStream> param) const {
 AJsonElement& AJsonElement::operator=(const AVariant& value) {
     mJson = _new<JsonValue>(value);
     return *this;
+}
+
+AJsonElement::AJsonElement():
+    mJson(_new<JsonNull>())
+{
+
 }
 
 

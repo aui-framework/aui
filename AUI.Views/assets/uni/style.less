@@ -172,22 +172,74 @@ ACheckBox ALabel {
 }
 ACheckBoxInner {
     background-color: #fff;
-    margin: 1px;
+    margin: 1em 1em 1em 3em;
     border: 1em solid #333333;
     width: 13em;
     height: 13em;
     transition: 0.1s;
+    -aui-background-overlay: #333333;
 }
 ACheckBox:hover ACheckBoxInner {
     border: 1em solid #0078d7;
+    -aui-background-overlay: #0078d7;
 }
 ACheckBox:active ACheckBoxInner {
     background-color: #cce4f7;
     border: 1em solid #005499;
+    -aui-background-overlay: #005499;
 }
 
 ACheckBox[checked] ACheckBoxInner {
     background: url(':win/svg/checkbox.svg');
+}
+ACheckBox[disabled] ACheckBoxInner {
+    background: #e5e5e5;
+    -aui-background-overlay: #aaa;
+    border: 1em solid #aaa;
+}
+ACheckBox[disabled] ALabel {
+    color: #aaa;
+}
+ARadioButton {
+    margin: 1em 4em;
+}
+ARadioButton ALabel {
+    padding: 0;
+    margin: 0 0 0 2em;
+}
+ARadioButtonInner {
+    background-color: #fff;
+    margin: 1em 1em 1em 3em;
+    border: 1em solid #333333;
+    width: 13em;
+    height: 13em;
+    transition: 0.1s;
+    border-radius: 6.5em;
+    -aui-background-overlay: #333333;
+}
+ARadioButton:hover ARadioButtonInner {
+    border: 1em solid #0078d7;
+    -aui-background-overlay: #0078d7;
+}
+ARadioButton:active ARadioButtonInner {
+    background-color: #cce4f7;
+    border: 1em solid #005499;
+    -aui-background-overlay: #005499;
+}
+
+ARadioButton[disabled] ARadioButtonInner {
+    background: #e5e5e5;
+    -aui-background-overlay: #aaa;
+    border: 1em solid #aaa;
+}
+ARadioButton[disabled] ALabel {
+    color: #aaa;
+}
+ARadioButton[checked] ARadioButtonInner {
+    background: url(':win/svg/radio.svg');
+}
+AComboBox {
+    text-align: left;
 }
 
 AListView {

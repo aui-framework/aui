@@ -5,7 +5,10 @@
 #include "JsonArray.h"
 #include "JsonValue.h"
 #include "JsonObject.h"
+#include "JsonNull.h"
 #include "JsonException.h"
+#include "AJsonElement.h"
+
 
 AJsonElement AJson::read(_<IInputStream> is)
 {
@@ -77,6 +80,13 @@ AJsonElement AJson::read(_<IInputStream> is)
 				t.reverseByte();
 				return _new<JsonValue>(t.readInt());
 			}
+
+            t.reverseByte();
+            AString keyword = t.readString();
+            if (keyword == "null") {
+                return _new<JsonNull>();
+            }
+            t.readChar();
 		}
 		assert(!isspace(t.getLastCharacter()));
 		return result;
@@ -87,6 +97,16 @@ AJsonElement AJson::read(_<IInputStream> is)
 
 void API_AUI_JSON AJson::write(_<IOutputStream> os, const AJsonElement& json) {
     json.serialize(os);
+}
+
+AJsonElement::AJsonElement(std::nullptr_t):
+    mJson(_new<JsonNull>())
+{
+
+}
+
+bool AJsonElement::isNull() const {
+    return mJson->isNull();
 }
 
 AString AJson::toString(const AJsonElement& json) {
