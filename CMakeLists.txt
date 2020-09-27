@@ -144,9 +144,9 @@ add_subdirectory(AUI.Toolbox)
 
 if(NOT ANDROID)
 	#add_subdirectory(examples/AUI.Example.Sowlonya)
-	add_subdirectory(examples/AUI.Example.Views)
-	add_subdirectory(examples/AUI.Example.Notes)
-	add_subdirectory(examples/AUI.Example.Words)
+	#add_subdirectory(examples/AUI.Example.Views)
+	#add_subdirectory(examples/AUI.Example.Notes)
+	#add_subdirectory(examples/AUI.Example.Words)
 endif()
 
 get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)

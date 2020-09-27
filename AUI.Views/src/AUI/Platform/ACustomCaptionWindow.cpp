@@ -1,17 +1,15 @@
 ﻿#include "ACustomCaptionWindow.h"
-
-#include "AUI/Layout/AHorizontalLayout.h"
-#include "AUI/Layout/AVerticalLayout.h"
+#include <AUI/Util/UIBuildingHelpers.h>
 #include "AUI/View/AButton.h"
-#include "AUI/View/ALabel.h"
 
-ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int height): ACustomWindow(name, width, height)
+ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int height, bool stacked):
+	ACustomWindow(name, width, height)
 {
-	setLayout(_new<AVerticalLayout>());
 	
 	auto caption = _new<AViewContainer>();
 	caption->setLayout(_new<AHorizontalLayout>());
 	caption->addCssName(".window-title");
+	caption->setExpanding({1, 0});
 
 	auto titleLabel = _new<ALabel>(name);
 	caption->addView(titleLabel);
@@ -40,5 +38,16 @@ ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int h
 	connect(close->clickedButton, this, &AWindow::quit);
 	caption->addView(close);
 
-	addView(caption);
+	if (stacked) {
+		setLayout(_new<AStackedLayout>());
+		addView(_container<AVerticalLayout>({
+			caption,
+			_new<ASpacer>(),
+		}) by(AViewContainer, {
+			setExpanding({1, 1});
+		}));
+	} else {
+		setLayout(_new<AVerticalLayout>());
+		addView(caption);
+	}
 }

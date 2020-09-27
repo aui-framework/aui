@@ -5,7 +5,7 @@
 #include <variant>
 #include "AUI/View/AViewContainer.h"
 #include "AUI/View/ALabel.h"
-
+#include <AUI/Common/SharedPtr.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/View/ASpacer.h>

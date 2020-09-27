@@ -247,103 +247,107 @@ public:
 	}
 	virtual ~PathVisitor()
 	{
-		if (!mPathData.empty())
-		{
-			AVector<glm::vec2> vertices;
-			try {				
-				Tokenizer t(mPathData);
+		if (!mPathData.empty()) {
+            AVector<AVector<glm::vec2>> model;
+            {
+                AVector<glm::vec2> vertices;
+                try {
+                    Tokenizer t(mPathData);
 
-				glm::vec2 penPos;
-				unsigned pathBeginIndex = 0;
-				
-				auto pushPos = [&]()
-				{
-					if (vertices.empty() || glm::distance2(vertices.back(), penPos) > 0.0001f)
-					{
-						vertices << penPos;
-					}
-				};
-				
-				for (;;) {
-					switch (t.readChar())
-					{
-					// ������������� � �����
-					case 'M': 
-						penPos = t.readVec2();
-						break;
-					case 'm':
-						penPos += t.readVec2();
-						break;
+                    glm::vec2 penPos;
+                    unsigned pathBeginIndex = 0;
 
-					// ������������� � ����� � ���������� �����
-					case 'L':
-						pushPos();
-						penPos = t.readVec2();
-						pushPos();
-						break;
-					case 'l':
-						pushPos();
-						penPos += t.readVec2();
-						pushPos();
-						break;
-						
-					// ������������� � ����� � ���������� ����� (�����������)
-					case 'V':
-						pushPos();
-						penPos.y = t.readFloat();
-						pushPos();
-						break;
-					case 'v':
-						pushPos();
-						penPos.y += t.readFloat();
-						pushPos();
-						break;
-						
-					// ������������� � ����� � ���������� ����� (�������������)
-					case 'H':
-						pushPos();
-						penPos.x = t.readFloat();
-						pushPos();
-						break;
-					case 'h':
-						pushPos();
-						penPos.x += t.readFloat();
-						pushPos();
-						break;
+                    auto pushPos = [&]() {
+                        if (vertices.empty() || glm::distance2(vertices.back(), penPos) > 0.0001f) {
+                            vertices << penPos;
+                        }
+                    };
 
-					case 'z':
-					case 'Z':
-						//vertices << vertices.at(pathBeginIndex);
-						pathBeginIndex = vertices.size();
-						break;
-					}
-				}
-			} catch (...) {}
-			if (!vertices.empty())
+                    for (;;) {
+                        switch (t.readChar()) {
+                            case 'M':
+                                penPos = t.readVec2();
+                                break;
+                            case 'm':
+                                penPos += t.readVec2();
+                                break;
+
+                            case 'L':
+                                pushPos();
+                                penPos = t.readVec2();
+                                pushPos();
+                                break;
+                            case 'l':
+                                pushPos();
+                                penPos += t.readVec2();
+                                pushPos();
+                                break;
+
+                            case 'V':
+                                pushPos();
+                                penPos.y = t.readFloat();
+                                pushPos();
+                                break;
+                            case 'v':
+                                pushPos();
+                                penPos.y += t.readFloat();
+                                pushPos();
+                                break;
+
+                            case 'H':
+                                pushPos();
+                                penPos.x = t.readFloat();
+                                pushPos();
+                                break;
+                            case 'h':
+                                pushPos();
+                                penPos.x += t.readFloat();
+                                pushPos();
+                                break;
+
+                            case 'z':
+                            case 'Z':
+                                //vertices << vertices.at(pathBeginIndex);
+                                pathBeginIndex = vertices.size();
+                                break;
+
+                            case ' ':
+                                model << std::move(vertices);
+                                vertices.clear();
+                                break;
+                        }
+                    }
+                } catch (...) {}
+                if (!vertices.empty()) {
+                    model << std::move(vertices);
+                }
+            }
+			if (!model.empty())
 			{
-				auto offset = glm::vec2(mDrawable->mViewBox.x, mDrawable->mViewBox.y);
-				auto delta = glm::vec2(mDrawable->mViewBox.z, mDrawable->mViewBox.w) - offset;
-				for (auto& v : vertices)
-				{
-					v = v / delta + offset;
-				}
-				
-				AVector<unsigned> indices;
-				Triangles::optimize(vertices);
-				Triangles::triangulate(vertices, indices);
-				auto vao = _new<GL::Vao>();
-				vao->insert(0, vertices);
-				vao->indices(indices);
-				auto color = mColor;
+			    AVector<std::function<void()>> drawList;
+			    for (auto& vertices : model) {
+                    auto offset = glm::vec2(mDrawable->mViewBox.x, mDrawable->mViewBox.y);
+                    auto delta = glm::vec2(mDrawable->mViewBox.z, mDrawable->mViewBox.w) - offset;
+                    for (auto& v : vertices) {
+                        v = v / delta + offset;
+                    }
 
-				mDrawable->mDrawList << [vao, color]()
-				{
-					RenderHints::PushColor c;
-					Render::instance().setColor(color);
-					Render::instance().uploadToShader();
-					vao->bind();
-					vao->draw(GL_TRIANGLES);
-				};
+                    AVector<unsigned> indices;
+                    Triangles::optimize(vertices);
+                    Triangles::triangulate(vertices, indices);
+                    auto vao = _new<GL::Vao>();
+                    vao->insert(0, vertices);
+                    vao->indices(indices);
+                    auto color = mColor;
+
+                    drawList << [vao, color]() {
+                        RenderHints::PushColor c;
+                        Render::instance().setColor(color);
+                        Render::instance().uploadToShader();
+                        vao->bind();
+                        vao->draw(GL_TRIANGLES);
+                    };
+                }
 			}
 		}
 	}

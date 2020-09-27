@@ -8,7 +8,7 @@ private:
 	
 public:
 	
-	ACustomCaptionWindow(const AString& name, int width, int height);
+	ACustomCaptionWindow(const AString& name, int width, int height, bool stacked = false);
 
 	ACustomCaptionWindow():
             ACustomCaptionWindow("Custom Caption Window", 240, 124)
