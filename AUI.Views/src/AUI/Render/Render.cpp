@@ -65,8 +65,9 @@ Render::Render()
 		"varying vec2 pass_uv;"
 		"void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv;}",
 		"uniform sampler2D tex;"
+		"uniform vec4 color;"
 		"varying vec2 pass_uv;"
-		"void main(void) {gl_FragColor = texture2D(tex, pass_uv);}",
+		"void main(void) {gl_FragColor = texture2D(tex, pass_uv) * color;}",
 		{"pos", "", "uv"});
 
 	mSymbolShader.load(

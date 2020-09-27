@@ -30,6 +30,10 @@ public:
 	AImage(Format f);
 	AImage(AVector<uint8_t> mData, uint16_t mWidth, uint16_t mHeight, int mFormat);
 
+	void allocate() {
+	    mData.resize(mWidth * mHeight * getBytesPerPixel());
+	}
+
 	AVector<uint8_t>& getData();
 
     [[nodiscard]] inline uint16_t getWidth() const {

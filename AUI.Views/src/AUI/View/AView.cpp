@@ -456,7 +456,7 @@ void AView::recompileCSS()
 							RenderHints::PushMatrix m;
 							Render::instance().setTransform(
 								glm::translate(glm::mat4(1.f),
-									glm::vec3((glm::vec2(mSize) - imageSize) / 2.f, 0.f)));
+									glm::vec3(glm::ivec2((glm::vec2(mSize) - imageSize) / 2.f), 0.f)));
                             drawableDrawWrapper(imageSize);
 						};
 					}

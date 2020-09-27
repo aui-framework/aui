@@ -29,5 +29,8 @@ public:
 	{
 		Singleton<Container>::instance().mContainer[key] = value;
 	}
-	
+
+    static void cleanup() {
+        Singleton<Container>::instance(). mContainer.clear();
+    }
 };

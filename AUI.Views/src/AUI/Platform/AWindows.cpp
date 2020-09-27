@@ -16,12 +16,14 @@
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
+#include <AUI/Image/Drawables.h>
 
 AWindow::Context AWindow::context = {};
 
 #if defined(_WIN32)
 
 #include <GL/wglew.h>
+#include <AUI/Util/Cache.h>
 
 struct painter {
 private:
@@ -287,6 +289,7 @@ AWindow::Context::~Context() {
 #else
     glXDestroyContext(gDisplay, context);
 #endif
+    Drawables::cleanup();
 }
 
 void AWindow::onClosed() {
