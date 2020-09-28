@@ -8,4 +8,8 @@ ADividerView::ADividerView() {
     AVIEW_CSS;
 }
 
+bool ADividerView::consumesClick(const glm::ivec2& pos) {
+    return false;
+}
+
 ADividerView::~ADividerView() = default;

@@ -832,3 +832,7 @@ void AView::setGeometry(int x, int y, int width, int height) {
     setPosition({ x, y });
     setSize(width, height);
 }
+
+bool AView::consumesClick(const glm::ivec2& pos) {
+    return true;
+}

@@ -17,6 +17,8 @@ public:
         mMinimumSize = minimumSize;
     }
 
+    bool consumesClick(const glm::ivec2& pos) override;
+
     int getContentMinimumWidth() override;
     int getContentMinimumHeight() override;
 };

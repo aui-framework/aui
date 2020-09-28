@@ -7,3 +7,7 @@ int ASpacer::getContentMinimumWidth() {
 int ASpacer::getContentMinimumHeight() {
     return mMinimumSize.y;
 }
+
+bool ASpacer::consumesClick(const glm::ivec2& pos) {
+    return false;
+}

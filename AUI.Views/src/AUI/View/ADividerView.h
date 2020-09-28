@@ -7,10 +7,12 @@
 
 #include "AView.h"
 
-class ADividerView: public AView {
+class API_AUI_VIEWS ADividerView: public AView {
 public:
     ADividerView();
     ~ADividerView() override;
+
+    bool consumesClick(const glm::ivec2& pos) override;
 };
 
 
