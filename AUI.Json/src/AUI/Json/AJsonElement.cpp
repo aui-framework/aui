@@ -102,6 +102,7 @@ AJsonArray::AJsonArray(const AVector<AJsonElement>& value) :
 {
 }
 
+
 AJsonArray& AJsonArray::operator<<(const AJsonElement& value) {
     mJson->asArray().push_back(value);
     return *this;
@@ -116,5 +117,15 @@ AJsonArray::AJsonArray():
 {
 
 }
+
+AJsonArray AJsonArray::fromVariantArray(const AVector<AVariant>& value) {
+    AVector<AJsonElement> a;
+    a.reserve(value.size());
+    for (auto& v : value) {
+        a << AJsonValue(v);
+    }
+    return AJsonArray(a);
+}
+
 
 

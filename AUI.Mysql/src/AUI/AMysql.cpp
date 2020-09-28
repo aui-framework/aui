@@ -182,7 +182,7 @@ private:
 
 	void doRequest(STMT& s, const AString& query, const AVector<AVariant>& params)
 	{
-        auto mysql = getMysql();
+        auto& mysql = getMysql();
 		auto stdQuery = query.toStdString();
 		if (mysql_stmt_prepare(s.mHandle, stdQuery.c_str(), stdQuery.length()))
 			throw SQLException(AString("Could not prepare statement: ") + mysql_error(&mysql));
@@ -268,15 +268,17 @@ public:
 
 	_<ISqlDriverResult> query(const AString& query, const AVector<AVariant>& params) override
 	{
-		STMT s(&getMysql());
+	    auto& mysql = getMysql();
+		STMT s(&mysql);
 
 		doRequest(s, query, params);
 
 		if (mysql_stmt_field_count(s.mHandle) == 0)
 			return nullptr;
-		
+
 		auto r = _new<MysqlStmtResult>(s.mHandle);
 		s.mHandle = nullptr;
+        mysql_store_result(&mysql);
 		return r;
 	}
 
