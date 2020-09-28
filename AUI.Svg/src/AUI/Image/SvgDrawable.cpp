@@ -58,7 +58,8 @@ void SvgDrawable::draw(const glm::ivec2& size) {
     image->allocate();
     auto rasterizer = nsvgCreateRasterizer();
     assert(rasterizer);
-    nsvgRasterize(rasterizer, mImage, 0, 0, 1.f, image->getData().data(), size.x, size.y, size.x * 4);
+    nsvgRasterize(rasterizer, mImage, 0, 0, glm::max(size.x / mImage->width, size.y / mImage->height),
+                  image->getData().data(), size.x, size.y, size.x * 4);
 
     texture->tex2D(image);
     nsvgDeleteRasterizer(rasterizer);
