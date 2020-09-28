@@ -5,7 +5,7 @@
 ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int height, bool stacked):
 	ACustomWindow(name, width, height)
 {
-	
+
 	auto caption = _new<AViewContainer>();
 	caption->setLayout(_new<AHorizontalLayout>());
 	caption->addCssName(".window-title");
@@ -14,11 +14,11 @@ ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int h
 	auto titleLabel = _new<ALabel>(name);
 	caption->addView(titleLabel);
 
-	mCaptionContent = _new<AViewContainer>();
-	mCaptionContent->setLayout(_new<AHorizontalLayout>());
-	mCaptionContent->setExpanding({ 1, 0 });
-	mCaptionContent->addCssName(".window_title_content");
-	caption->addView(mCaptionContent);
+    mCaptionContainer = _new<AViewContainer>();
+	mCaptionContainer->setLayout(_new<AHorizontalLayout>());
+	mCaptionContainer->setExpanding({1, 0 });
+	mCaptionContainer->addCssName(".window_title_content");
+	caption->addView(mCaptionContainer);
 
 	auto minimize = _new<AButton>();
 	minimize->addCssName(".minimize");
@@ -40,6 +40,7 @@ ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int h
 
 	if (stacked) {
 		setLayout(_new<AStackedLayout>());
+		addView(mContentContainer = _new<AViewContainer>());
 		addView(_container<AVerticalLayout>({
 			caption,
 			_new<ASpacer>(),
@@ -49,5 +50,7 @@ ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int h
 	} else {
 		setLayout(_new<AVerticalLayout>());
 		addView(caption);
+        addView(mContentContainer = _new<AViewContainer>());
 	}
+	mContentContainer->setExpanding({1, 1});
 }

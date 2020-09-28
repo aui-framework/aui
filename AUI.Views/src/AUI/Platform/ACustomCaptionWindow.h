@@ -4,8 +4,9 @@
 class API_AUI_VIEWS ACustomCaptionWindow: public ACustomWindow
 {
 private:
-	_<AViewContainer> mCaptionContent;
-	
+	_<AViewContainer> mCaptionContainer;
+    _<AViewContainer> mContentContainer;
+
 public:
 	
 	ACustomCaptionWindow(const AString& name, int width, int height, bool stacked = false);
@@ -18,8 +19,13 @@ public:
 	virtual ~ACustomCaptionWindow() = default;
 
 
-	[[nodiscard]] const _<AViewContainer>& getCaptionContent() const
+	[[nodiscard]] const _<AViewContainer>& getCaptionContainer() const
 	{
-		return mCaptionContent;
+		return mCaptionContainer;
 	}
+	[[nodiscard]] const _<AViewContainer>& getContentContainer() const
+	{
+		return mContentContainer;
+	}
+
 };
