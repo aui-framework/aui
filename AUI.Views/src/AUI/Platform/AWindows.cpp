@@ -236,15 +236,21 @@ Display* gDisplay;
 Screen* gScreen;
 int gScreenId;
 
+struct {
+    Atom wmProtocols;
+    Atom wmDeleteWindow;
+    Atom wmHints;
 
-struct DisplayLock {
-    DisplayLock() {
-        XLockDisplay(gDisplay);
+
+    void init() {
+        wmProtocols = XInternAtom(gDisplay, "WM_PROTOCOLS", False);
+        wmDeleteWindow = XInternAtom(gDisplay, "WM_DELETE_WINDOW", False);
+        wmHints = XInternAtom(gDisplay, "_MOTIF_WM_HINTS", true);;
     }
-    ~DisplayLock() {
-        XUnlockDisplay(gDisplay);
-    }
-};
+
+} gAtoms;
+
+
 
 struct painter {
 private:
@@ -253,9 +259,11 @@ public:
     static thread_local bool painting;
 
     painter(Window window) {
+        glXMakeCurrent(gDisplay, window, AWindow::context.context);
     }
 
     ~painter() {
+
     }
 };
 
@@ -483,20 +491,16 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
             XSetErrorHandler(xerrorhandler);
             gScreen = DefaultScreenOfDisplay(gDisplay);
             gScreenId = DefaultScreen(gDisplay);
-
-            if (!XInitThreads()) {
-                throw AException("Your X server does not support multithreading; abort");
-            }
+            gAtoms.init();
         }
 
         ~DisplayInstance() {
-            XFree(gScreen);
+            //XCloseDisplay(gDisplay);
+            //XFree(gScreen);
 
-            XCloseDisplay(gDisplay);
         }
     };
     static DisplayInstance display;
-    DisplayLock displayLock;
 
     static XVisualInfo* vi;
     static XSetWindowAttributes swa;
@@ -582,6 +586,10 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
     XChangeProperty(gDisplay, mHandle, XInternAtom(gDisplay, "_NET_WM_NAME", false),
                     XInternAtom(gDisplay, "UTF8_STRING", false), 8, PropModeReplace,
                     reinterpret_cast<const unsigned char*>(title.c_str()), title.length());
+
+    XSetWMProtocols(gDisplay, mHandle, &gAtoms.wmDeleteWindow, 1);
+
+
     glXMakeCurrent(gDisplay, mHandle, context.context);
 
     if (!glewExperimental) {
@@ -708,8 +716,9 @@ void AWindow::quit() {
         EnableWindow(mParentWindow->mHandle, true);
     }
     ShowWindow(mHandle, SW_HIDE);
+#elif (__ANDROID__)
 #else
-
+    XUnmapWindow(gDisplay, mHandle);
 #endif
 
     AThread::current()->enqueue([&]() {
@@ -758,7 +767,25 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         }
     }
 #else
-    // TODO
+    if (ws & (WS_SIMPLIFIED_WINDOW | WS_SYS | WS_NO_DECORATORS)) {
+        //note the struct is declared elsewhere, is here just for clarity.
+//code is from [http://tonyobryan.com/index.php?article=9][1]
+        typedef struct Hints
+        {
+            unsigned long   flags;
+            unsigned long   functions;
+            unsigned long   decorations;
+            long            inputMode;
+            unsigned long   status;
+        } Hints;
+
+//code to remove decoration
+        Hints hints;
+        hints.flags = 2;
+        hints.decorations = 0;
+        XChangeProperty(gDisplay, mHandle, gAtoms.wmHints, gAtoms.wmHints, 32, PropModeReplace,
+                (unsigned char *)&hints, 5);
+    }
 #endif
 }
 
@@ -880,9 +907,7 @@ void AWindow::flagRedraw() {
 #elif defined(ANDROID)
     AAndroid::requestRedraw();
 #else
-    XEvent e = {0};
-    e.type = Expose;
-    XSendEvent(gDisplay, mHandle, false, 0, &e);
+    mRedrawFlag = true;
 #endif
 }
 
@@ -938,14 +963,22 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
+#ifdef _WIN32
     POINT p = {position.x, position.y};
     ScreenToClient(mHandle, &p);
     return {p.x, p.y};
+#else
+    return position;
+#endif
 }
 glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
+#ifdef _WIN32
     POINT p = {position.x, position.y};
     ClientToScreen(mHandle, &p);
     return {p.x, p.y};
+#else
+    return position;
+#endif
 }
 
 glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) {
@@ -969,16 +1002,11 @@ void AWindowManager::notifyProcessMessages() {
     AAndroid::requestRedraw();
 #else
     if (!mWindows.empty()) {
-        auto handle = mWindows.back()->mHandle;
 #if defined(_WIN32)
+        auto handle = mWindows.back()->mHandle;
         PostMessage(handle, WM_USER, 0, 0);
 #else
-        DisplayLock displayLock;
-        XEvent e = {0};
-        e.xexpose.window = handle;
-        e.type = Expose;
-        XSendEvent(gDisplay, handle, false, 0, &e);
-        XFlush(gDisplay);
+    mXNotifyCV.notify_all();
 #endif
     }
 #endif
@@ -1005,54 +1033,93 @@ void AWindowManager::loop() {
 #else
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
-        XNextEvent(gDisplay, &ev);
-        auto window = mWindows.front();
-        DisplayLock displayLock;
-        switch (ev.type) {
-            case KeyPress:
-            {
-                int count = 0;
-                KeySym keysym = 0;
-                char buf[0x20];
-                Status status = 0;
-                count = Xutf8LookupString(window->mIC, (XKeyPressedEvent*)&ev, buf, sizeof(buf), &keysym, &status);
+        struct NotFound {};
+        auto locateWindow = [&](Window xWindow) -> _<AWindow> {
+            for (auto& w : mWindows) {
+                if (w->mHandle == xWindow)
+                    return w;
+            }
+            throw NotFound();
+        };
+        try {
+            while (XPending(gDisplay)) {
+                XNextEvent(gDisplay, &ev);
+                _<AWindow> window;
+                switch (ev.type) {
+                    case ClientMessage: {
+                        if (ev.xclient.message_type == gAtoms.wmProtocols &&
+                            ev.xclient.data.l[0] == gAtoms.wmDeleteWindow) {
+                            // клик по кнопке закрытия окна
+                            auto window = locateWindow(ev.xclient.window);
+                            window->onCloseButtonClicked();
+                        }
+                        break;
+                    }
+                    case KeyPress: {
+                        window = locateWindow(ev.xkey.window);
+                        int count = 0;
+                        KeySym keysym = 0;
+                        char buf[0x20];
+                        Status status = 0;
+                        count = Xutf8LookupString(window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
+                                                  &status);
 
-                if (count) {
-                    AString s(buf);
-                    assert(!s.empty());
-                    window->onCharEntered(s[0]);
+                        if (count) {
+                            AString s(buf);
+                            assert(!s.empty());
+                            window->onCharEntered(s[0]);
+                        }
+                        break;
+                    }
+
+                    case MappingNotify:
+                        XRefreshKeyboardMapping(&ev.xmapping);
+                        break;
+
+                    case Expose: {
+                        window = locateWindow(ev.xexpose.window);
+                        glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
+                        if (size.x >= 10 && size.y >= 10 && size != window->getSize())
+                            window->AViewContainer::setSize(size.x, size.y);
+                        window->mRedrawFlag = true;
+                        break;
+                    }
+                    case MotionNotify: {
+                        window = locateWindow(ev.xmotion.window);
+                        window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
+                        break;
+                    }
+                    case ButtonPress: {
+                        window = locateWindow(ev.xbutton.window);
+                        window->onMousePressed({ev.xbutton.x, ev.xbutton.y},
+                                               (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
+                        break;
+                    }
+                    case ButtonRelease: {
+                        window = locateWindow(ev.xbutton.window);
+                        window->onMouseReleased({ev.xbutton.x, ev.xbutton.y},
+                                                (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
+                        break;
+                    }
                 }
-                break;
+                AThread::current()->processMessages();
+                if (window && window->mRedrawFlag) {
+                    window->mRedrawFlag = false;
+                    window->redraw();
+                }
             }
+            std::unique_lock lock(mXNotifyLock);
+            mXNotifyCV.wait_for(lock, std::chrono::microseconds(1000));
+            AThread::current()->processMessages();
+            for (auto& window : mWindows) {
+                if (window->mRedrawFlag) {
+                    window->mRedrawFlag = false;
+                    window->redraw();
+                }
+            }
+        } catch(NotFound e) {
 
-            case MappingNotify:
-                XRefreshKeyboardMapping(&ev.xmapping);
-                break;
-
-            case Expose: {
-                glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
-                if (size.x >= 10 && size.y >= 10 && size != window->getSize())
-                    window->AViewContainer::setSize(size.x, size.y);
-                window->redraw();
-                break;
-            }
-            case DestroyNotify: {
-                window->onCloseButtonClicked();
-                break;
-            }
-            case MotionNotify:
-                window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
-                break;
-            case ButtonPress: {
-                window->onMousePressed({ev.xbutton.x, ev.xbutton.y}, (AInput::Key)(AInput::LButton + ev.xbutton.button - 1));
-                break;
-            }
-            case ButtonRelease: {
-                window->onMouseReleased({ev.xbutton.x, ev.xbutton.y}, (AInput::Key)(AInput::LButton + ev.xbutton.button - 1));
-                break;
-            }
         }
-        AThread::current()->processMessages();
     }
 #endif
 }

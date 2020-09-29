@@ -121,7 +121,7 @@ AComboBox::~AComboBox() {
 
 void AComboBox::destroyWindow() {
     mPopup = false;
-    mComboWindow->close();
+    mComboWindow->quit();
     mComboWindow = nullptr;
     emit customCssPropertyChanged();
 }

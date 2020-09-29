@@ -67,7 +67,7 @@ public:
 	static void enqueue(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
 	static AThreadPool& global();
 
-	template <class Callable>
+	template <typename Callable>
 	typename aui::detail::future_helper<std::invoke_result_t<Callable>>::return_type operator<<(Callable fun)
 	{
 		if constexpr (std::is_void_v<std::invoke_result_t<Callable>>) {
@@ -77,7 +77,7 @@ public:
 			return AFuture<std::invoke_result_t<Callable>>::make(*this, fun);
 		}
 	}
-	template <class Callable>
+	template <typename Callable>
 	inline auto operator*(Callable fun)
 	{
 		return *this << fun;

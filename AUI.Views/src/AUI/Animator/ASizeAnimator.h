@@ -12,7 +12,7 @@ private:
     glm::ivec2 mEndSize;
 
 public:
-    ASizeAnimator(const glm::ivec2& beginSize = {0, 0});
+    ASizeAnimator(const glm::ivec2& beginSize = {0, 0}, const glm::ivec2& endSize = {0, 0});
 
     void doAnimation(AView* view, float theta) override;
 };

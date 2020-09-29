@@ -14,6 +14,9 @@ public:
 	virtual bool isVariant() = 0;
 	virtual bool isObject() = 0;
 	virtual bool isArray() = 0;
+	virtual bool isNull() {
+	    return false;
+	}
 
 	[[nodiscard]] virtual AVariant& asVariant() = 0;
 	[[nodiscard]] virtual AMap<AString, AJsonElement>& asObject() = 0;

@@ -14,7 +14,7 @@ public:
 	void setDefault();
 	
 	void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
-	
+
 signals:
 	emits<bool> defaultState;
 	emits<> becameDefault;

@@ -10,6 +10,7 @@
 #include <AUI/Model/IListModel.h>
 #include <AUI/Model/AListModel.h>
 #include <AUI/Common/AStringVector.h>
+#include <AUI/Data/AModelMeta.h>
 
 class IJsonElement;
 class AJsonElement;
@@ -30,7 +31,8 @@ protected:
     _<IJsonElement> mJson;
 public:
 	explicit AJsonElement(const _<IJsonElement>& json_element);
-	AJsonElement() {}
+	AJsonElement(std::nullptr_t);
+	AJsonElement();
 
 	AJsonElement& operator=(const AVariant& value);
 	AJsonElement& operator=(const AJsonElement& value) = default;
@@ -38,6 +40,7 @@ public:
 	[[nodiscard]] bool isVariant() const;
 	[[nodiscard]] bool isObject() const;
 	[[nodiscard]] bool isArray() const;
+	[[nodiscard]] bool isNull() const;
 
 	[[nodiscard]] const AVariant& asVariant() const;
 	[[nodiscard]] int asInt() const;

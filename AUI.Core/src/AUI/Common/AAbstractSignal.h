@@ -8,13 +8,22 @@ class AObject;
 
 class API_AUI_CORE AAbstractSignal
 {
+private:
+    bool mDestroyed = false;
+
 protected:
 	void linkSlot(AObject* object);
 	void unlinkSlot(AObject* object);
 	
 public:
 	virtual void onObjectHasDestroyed(AObject* object) = 0;
-	virtual ~AAbstractSignal() = default;
+	virtual ~AAbstractSignal() {
+	    mDestroyed = true;
+	}
 
-	class Disconnect: public std::exception {};
+    [[nodiscard]] bool isDestroyed() const {
+        return mDestroyed;
+    }
+
+    class Disconnect: public std::exception {};
 };
