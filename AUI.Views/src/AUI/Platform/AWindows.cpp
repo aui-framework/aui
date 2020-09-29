@@ -13,11 +13,14 @@
 #include "Platform.h"
 #include "AMessageBox.h"
 #include "AWindowManager.h"
+#include "Desktop.h"
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Image/Drawables.h>
+#include <AUI/Util/kAUI.h>
 
+constexpr bool AUI_DISPLAY_BOUNDS = true;
 AWindow::Context AWindow::context = {};
 
 #if defined(_WIN32)
@@ -697,6 +700,44 @@ void AWindow::redraw() {
 
         doDrawWindow();
 
+
+        if constexpr (AUI_DISPLAY_BOUNDS) {
+            if (auto v = getViewAtRecusrive(mapPosition(Desktop::getMousePos()))) {
+                v by(AView, {
+                    RenderHints::PushMatrix m;
+                    Render::instance().setTransform(glm::translate(glm::mat4(1.f), {getAbsolutePosition(), 0.f}));
+                    glDisable(GL_STENCIL_TEST);
+                    Render::instance().setFill(Render::FILL_SOLID);
+
+                    // margin
+                    {
+                        RenderHints::PushColor c;
+                        Render::instance().setColor(0xffcca4a0u);
+                        Render::instance().drawRect(-getMargin().left, -getMargin().top,
+                                                    getWidth() + getMargin().horizontal(),
+                                                    getHeight() + getMargin().vertical());
+                    }
+
+                    // padding
+                    {
+                        RenderHints::PushColor c;
+                        Render::instance().setColor(0xbccf9180u);
+                        Render::instance().drawRect(0, 0,getWidth(), getHeight());
+                    }
+
+                    // content
+                    {
+                        RenderHints::PushColor c;
+                        Render::instance().setColor(0x7cb6c180u);
+                        Render::instance().drawRect(getPadding().left, getPadding().top,
+                                                    getWidth() - getPadding().horizontal(), getHeight() - getPadding().vertical());
+                    }
+
+                    glEnable(GL_STENCIL_TEST);
+                });
+            }
+        }
+
 #if defined(_WIN32)
         SwapBuffers(p.mHdc);
 #elif defined(ANDROID)
@@ -843,6 +884,10 @@ void AWindow::onMouseMove(glm::ivec2 pos) {
     if (auto v = getViewAtRecusrive(pos)) {
         mCursor = v->getCursor();
     }
+
+    if constexpr (AUI_DISPLAY_BOUNDS) {
+        flagRedraw();
+    }
 }
 
 void AWindow::onFocusAcquired() {
@@ -968,7 +1013,7 @@ glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
     ScreenToClient(mHandle, &p);
     return {p.x, p.y};
 #else
-    return position;
+    return position - getWindowPosition();
 #endif
 }
 glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
@@ -977,7 +1022,7 @@ glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
     ClientToScreen(mHandle, &p);
     return {p.x, p.y};
 #else
-    return position;
+    return position + getWindowPosition();
 #endif
 }
 

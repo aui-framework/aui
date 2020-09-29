@@ -33,7 +33,10 @@ extern Display* gDisplay;
 glm::ivec2 Desktop::getMousePos()
 {
     glm::ivec2 p;
-    XQueryPointer(gDisplay, XRootWindow(gDisplay, 0), nullptr, nullptr, &p.x, &p.y, nullptr, nullptr, nullptr);
+    Window w;
+    int unused1;
+    unsigned unused2;
+    XQueryPointer(gDisplay, XRootWindow(gDisplay, 0), &w, &w, &p.x, &p.y, &unused1, &unused1, &unused2);
     return p;
 }
 
