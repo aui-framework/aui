@@ -12,9 +12,9 @@ inline auto _new(Args&& ... args)
 		auto o = new T(args...);
 		return _<T>(o, [](T* obj)
 		{
-			obj->clearSignals();
 			static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
 			{
+                obj->clearSignals();
 				static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
 				{
 					delete obj;
