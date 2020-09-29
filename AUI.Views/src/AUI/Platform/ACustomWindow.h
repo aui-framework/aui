@@ -18,11 +18,11 @@ public:
 };
 
 #else
-class API_AUI_VIEWS CustomWindow: public AWindow
+class API_AUI_VIEWS ACustomWindow: public AWindow
 {
 public:
-    CustomWindow(const AString& name, int width, int height);
-    CustomWindow() = default;
-    ~CustomWindow() override = default;
+    ACustomWindow(const AString& name, int width, int height);
+    ACustomWindow() = default;
+    ~ACustomWindow() override = default;
 };
 #endif

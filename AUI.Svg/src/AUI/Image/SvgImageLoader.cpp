@@ -1,3 +1,4 @@
+#include <cstring>
 #include "SvgImageLoader.h"
 
 #include "SvgDrawable.h"

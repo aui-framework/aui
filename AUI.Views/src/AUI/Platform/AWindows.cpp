@@ -291,13 +291,13 @@ AWindow*& AWindow::currentWindowStorage() {
 }
 
 AWindow::Context::~Context() {
+    Drawables::cleanup();
 #if defined(_WIN32)
     wglDeleteContext(hrc);
 #elif defined(ANDROID)
 #else
     glXDestroyContext(gDisplay, context);
 #endif
-    Drawables::cleanup();
 }
 
 void AWindow::onClosed() {
@@ -885,7 +885,7 @@ void AWindow::setFocusedView(_<AView> view) {
     if (mFocusedView.lock() == view) {
         return;
     }
-    if (auto c = getFocusedView()) {
+    if (auto c = mFocusedView.lock()) {
         c->onFocusLost();
     }
     mFocusedView = view;
