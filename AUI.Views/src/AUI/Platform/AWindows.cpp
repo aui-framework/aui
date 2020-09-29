@@ -20,7 +20,7 @@
 #include <AUI/Image/Drawables.h>
 #include <AUI/Util/kAUI.h>
 
-constexpr bool AUI_DISPLAY_BOUNDS = true;
+constexpr bool AUI_DISPLAY_BOUNDS = false;
 AWindow::Context AWindow::context = {};
 
 #if defined(_WIN32)
@@ -702,40 +702,41 @@ void AWindow::redraw() {
 
 
         if constexpr (AUI_DISPLAY_BOUNDS) {
-            if (auto v = getViewAtRecusrive(mapPosition(Desktop::getMousePos()))) {
-                v by(AView, {
-                    RenderHints::PushMatrix m;
-                    Render::instance().setTransform(glm::translate(glm::mat4(1.f), {getAbsolutePosition(), 0.f}));
-                    glDisable(GL_STENCIL_TEST);
-                    Render::instance().setFill(Render::FILL_SOLID);
+            auto v = getViewAtRecusrive(mapPosition(Desktop::getMousePos()));
+            if (v == nullptr)
+                v = shared_from_this();
+            v by(AView, {
+                RenderHints::PushMatrix m;
+                Render::instance().setTransform(glm::translate(glm::mat4(1.f), {getAbsolutePosition(), 0.f}));
+                glDisable(GL_STENCIL_TEST);
+                Render::instance().setFill(Render::FILL_SOLID);
 
-                    // margin
-                    {
-                        RenderHints::PushColor c;
-                        Render::instance().setColor(0xffcca4a0u);
-                        Render::instance().drawRect(-getMargin().left, -getMargin().top,
-                                                    getWidth() + getMargin().horizontal(),
-                                                    getHeight() + getMargin().vertical());
-                    }
+                // margin
+                {
+                    RenderHints::PushColor c;
+                    Render::instance().setColor(0xffcca4a0u);
+                    Render::instance().drawRect(-getMargin().left, -getMargin().top,
+                                                getWidth() + getMargin().horizontal(),
+                                                getHeight() + getMargin().vertical());
+                }
 
-                    // padding
-                    {
-                        RenderHints::PushColor c;
-                        Render::instance().setColor(0xbccf9180u);
-                        Render::instance().drawRect(0, 0,getWidth(), getHeight());
-                    }
+                // padding
+                {
+                    RenderHints::PushColor c;
+                    Render::instance().setColor(0xbccf9180u);
+                    Render::instance().drawRect(0, 0,getWidth(), getHeight());
+                }
 
-                    // content
-                    {
-                        RenderHints::PushColor c;
-                        Render::instance().setColor(0x7cb6c180u);
-                        Render::instance().drawRect(getPadding().left, getPadding().top,
-                                                    getWidth() - getPadding().horizontal(), getHeight() - getPadding().vertical());
-                    }
+                // content
+                {
+                    RenderHints::PushColor c;
+                    Render::instance().setColor(0x7cb6c180u);
+                    Render::instance().drawRect(getPadding().left, getPadding().top,
+                                                getWidth() - getPadding().horizontal(), getHeight() - getPadding().vertical());
+                }
 
-                    glEnable(GL_STENCIL_TEST);
-                });
-            }
+                glEnable(GL_STENCIL_TEST);
+            });
         }
 
 #if defined(_WIN32)
