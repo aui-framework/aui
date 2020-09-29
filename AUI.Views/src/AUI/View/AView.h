@@ -316,6 +316,8 @@ public:
 		return mMargin;
 	}
 
+	virtual bool consumesClick(const glm::ivec2& pos);
+
 
 	/**
 	 * \note каждый <class ?: AView> должен сам

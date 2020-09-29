@@ -53,8 +53,10 @@ public:
 	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 	void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
 	void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
-	
-	void setSize(int width, int height) override;
+
+    bool consumesClick(const glm::ivec2& pos) override;
+
+    void setSize(int width, int height) override;
 
 	/**
 	 * \brief выставить компоновщик для этого контейнера. УНИЧТОЖАЕТ СТАРЫЙ

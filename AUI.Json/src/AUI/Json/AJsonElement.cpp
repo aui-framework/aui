@@ -100,10 +100,15 @@ const AJsonElement& AJsonObject::operator[](const AString& key) const {
     return mJson->asObject().at(key);
 }
 
+bool AJsonObject::contains(const AString& key) const {
+    return asObject().contains(key);
+}
+
 AJsonArray::AJsonArray(const AVector<AJsonElement>& value) :
 	AJsonElement(_new<JsonArray>(value))
 {
 }
+
 
 AJsonArray& AJsonArray::operator<<(const AJsonElement& value) {
     mJson->asArray().push_back(value);
@@ -119,5 +124,15 @@ AJsonArray::AJsonArray():
 {
 
 }
+
+AJsonArray AJsonArray::fromVariantArray(const AVector<AVariant>& value) {
+    AVector<AJsonElement> a;
+    a.reserve(value.size());
+    for (auto& v : value) {
+        a << AJsonValue(v);
+    }
+    return AJsonArray(a);
+}
+
 
 

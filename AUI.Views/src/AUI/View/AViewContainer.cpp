@@ -171,6 +171,12 @@ void AViewContainer::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
 		p->onMouseDoubleClicked(pos - p->getPosition(), button);
 }
 
+bool AViewContainer::consumesClick(const glm::ivec2& pos) {
+    auto p = getViewAt(pos);
+    if (p)
+        return p->consumesClick(pos - p->getPosition());
+    return false;
+}
 
 void AViewContainer::setSize(int width, int height)
 {
@@ -192,6 +198,7 @@ _<ALayout> AViewContainer::getLayout() const
 
 _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 {
+    _<AView> possibleOutput = nullptr;
 	for (auto it = mViews.rbegin(); it != mViews.rend(); ++it)
 	{
 		auto view = *it;
@@ -199,11 +206,14 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 
 		if (mousePos.x >= 0 && mousePos.y >= 0 && mousePos.x < view->getSize().x && mousePos.y < view->getSize().y)
 		{
-			if (!ignoreGone || view->getVisibility() != V_GONE)
-				return view;
+			if (!ignoreGone || view->getVisibility() != V_GONE) {
+			    possibleOutput = view;
+                if (view->consumesClick(mousePos))
+			        return view;
+            }
 		}
 	}
-	return nullptr;
+	return possibleOutput;
 }
 
 _<AView> AViewContainer::getViewAtRecusrive(glm::ivec2 pos)
@@ -246,3 +256,4 @@ void AViewContainer::removeAllViews() {
     }
     mViews.clear();
 }
+

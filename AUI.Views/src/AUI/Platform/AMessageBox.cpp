@@ -6,7 +6,7 @@ AMessageBox::Button AMessageBox::show(AWindow* parent, const AString& title, con
 {
     HWND window = parent ? parent->getNativeHandle() : nullptr;
 
-    unsigned flags = 0;
+    long flags = 0;
 
     // Icons
     if (icon & I_INFO)
@@ -19,7 +19,7 @@ AMessageBox::Button AMessageBox::show(AWindow* parent, const AString& title, con
     }
     if (icon & I_CRITICAL)
     {
-        flags |= MB_ICONERROR;
+        flags |= MB_ICONSTOP;
     }
 
     // Flags

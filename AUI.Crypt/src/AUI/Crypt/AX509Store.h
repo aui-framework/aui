@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "AUI/Crypt.h"
+#include "AUI/Rsa.h"
 #include "AUI/Common/AByteBuffer.h"
 #include "AX509.h"
 

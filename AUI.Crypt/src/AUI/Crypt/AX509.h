@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "AUI/Crypt.h"
+#include "AUI/Rsa.h"
 #include "AUI/Common/AByteBuffer.h"
 
 class API_AUI_CRYPT AX509

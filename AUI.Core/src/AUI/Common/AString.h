@@ -459,6 +459,12 @@ inline AString API_AUI_CORE operator+(const AString& l, const AString& r) noexce
 	x.append(r);
 	return x;
 }
+inline AString API_AUI_CORE operator+(const AString& l, wchar_t r) noexcept
+{
+	auto x = l;
+	x.append(r);
+	return x;
+}
 inline AString API_AUI_CORE operator+(const AString& one, const char* other) noexcept
 {
 	return one + AString(other);

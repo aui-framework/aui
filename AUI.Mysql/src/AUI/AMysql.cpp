@@ -43,6 +43,13 @@ public:
                         mResultVariant << o;
                         break;
                     }
+					case MYSQL_TYPE_LONGLONG: {
+                        auto o = _new<AVariantHelper<uint64_t>>(0);
+                        m.buffer = (void*)&o->getData();
+                        m.buffer_length = sizeof(o->getData());
+                        mResultVariant << o;
+                        break;
+                    }
 					case MYSQL_TYPE_STRING:
 					case MYSQL_TYPE_VAR_STRING:
 					{
@@ -149,7 +156,12 @@ public:
 class MysqlDatabase : public ISqlDatabase
 {
 private:
-	MYSQL mMysql;
+    AString mAddress;
+    uint64_t mPort;
+    AString mDatabaseName;
+    AString mUsername;
+    AString mPassword;
+    AMap<AAbstractThread*, MYSQL> mMysqls;
 
 	struct STMT
 	{
@@ -170,10 +182,10 @@ private:
 
 	void doRequest(STMT& s, const AString& query, const AVector<AVariant>& params)
 	{
-
+        auto& mysql = getMysql();
 		auto stdQuery = query.toStdString();
 		if (mysql_stmt_prepare(s.mHandle, stdQuery.c_str(), stdQuery.length()))
-			throw SQLException(AString("Could not prepare statement: ") + mysql_error(&mMysql));
+			throw SQLException(AString("Could not prepare statement: ") + mysql_error(&mysql));
 
 		AVector<MYSQL_BIND> b;
 		AVector<std::string> strings;
@@ -199,34 +211,55 @@ private:
 		}
 		if (mysql_stmt_execute(s.mHandle))
 		{
-		    ALogger::debug("error in query:" + query + ": " + mysql_error(&mMysql));
-			throw SQLException(AString("Could not execute prepared statement: ") + mysql_error(&mMysql));
+		    ALogger::debug("error in query:" + query + ": " + mysql_error(&getMysql()));
+			throw SQLException(AString("Could not execute prepared statement: ") + mysql_error(&mysql));
 		}
+	}
+
+	MYSQL& getMysql() {
+	    if (auto c = mMysqls.contains(AThread::current().get())) {
+	        return const_cast<MYSQL&>(c->second);
+	    }
+	    auto& mysql = mMysqls[AThread::current().get()];
+
+        if (!mysql_init(&mysql))
+            throw SQLException(AString("Could not init mysql"));
+
+        auto r = mysql_set_character_set(&mysql, "utf8");
+
+        if (!mysql_real_connect(&mysql, mAddress.toStdString().c_str(), mUsername.toStdString().c_str(),
+                                mPassword.toStdString().c_str(), mDatabaseName.toStdString().c_str(), mPort,
+                                nullptr, 0))
+            throw SQLException(AString("Could not connect to the database: ") + mysql_error(&mysql));
+        return mysql;
 	}
 	
 public:
 	MysqlDatabase(const AString& address, uint16_t port, const AString& databaseName,
-	              const AString& username, const AString& password)
+	              const AString& username, const AString& password):
+	              mAddress(address),
+	              mPort(port),
+	              mDatabaseName(databaseName),
+	              mUsername(username),
+                  mPassword(password)
 	{
-		if (!mysql_init(&mMysql))
-			throw SQLException(AString("Could not init mysql"));
-
-		auto r = mysql_set_character_set(&mMysql, "utf8");
-		
-		if (!mysql_real_connect(&mMysql, address.toStdString().c_str(), username.toStdString().c_str(),
-		                        password.toStdString().c_str(), databaseName.toStdString().c_str(), port, nullptr, 0))
-			throw SQLException(AString("Could not connect to the database: ") + mysql_error(&mMysql));
 	}
 
 	~MysqlDatabase() override
 	{
-		mysql_close(&mMysql);
+	    for (auto& a : mMysqls) {
+            auto mysql = a.second;
+	        a.first->enqueue([mysql]() {
+	            auto m = mysql;
+                mysql_close(&m);
+            });
+        }
 	}
 
 
 	int execute(const AString& query, const AVector<AVariant>& params) override
 	{
-		STMT s(&mMysql);
+		STMT s(&getMysql());
 
 		doRequest(s, query, params);
 
@@ -235,15 +268,17 @@ public:
 
 	_<ISqlDriverResult> query(const AString& query, const AVector<AVariant>& params) override
 	{
-		STMT s(&mMysql);
+	    auto& mysql = getMysql();
+		STMT s(&mysql);
 
 		doRequest(s, query, params);
 
 		if (mysql_stmt_field_count(s.mHandle) == 0)
 			return nullptr;
-		
+
 		auto r = _new<MysqlStmtResult>(s.mHandle);
 		s.mHandle = nullptr;
+        mysql_store_result(&mysql);
 		return r;
 	}
 

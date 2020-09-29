@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include "FieldCell.h"
-#include "AUI/Platform/CustomCaptionWindow.h"
+#include "AUI/Platform/ACustomCaptionWindow.h"
 
 
 class MinesweeperWindow: public CustomCaptionWindow

@@ -102,6 +102,7 @@ GL::Texture::Texture() {
 }
 
 GL::Texture::~Texture() {
+
 	glDeleteTextures(1, &mTexture);
 	GL::State::bindTexture(GL_TEXTURE_2D, 0);
 }

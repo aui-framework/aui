@@ -5,7 +5,7 @@
 #include <variant>
 #include "AUI/View/AViewContainer.h"
 #include "AUI/View/ALabel.h"
-
+#include <AUI/Common/SharedPtr.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/View/ASpacer.h>
@@ -13,6 +13,7 @@
 #include <AUI/Layout/AVerticalLayout.h>
 #include <AUI/Layout/AStackedLayout.h>
 #include <AUI/Layout/AGridLayout.h>
+
 
 template<typename Layout, typename... Args>
 inline auto _container(const AVector<_<AView>>& views, Args&&... args)

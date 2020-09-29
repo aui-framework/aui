@@ -45,6 +45,13 @@ public:
 	[[nodiscard]] const AVariant& asVariant() const;
 	[[nodiscard]] int asInt() const;
 	[[nodiscard]] AString asString() const;
+	[[nodiscard]] AString asStringOrDefault(const AString& d = "") const {
+	    try {
+	        return asString();
+	    } catch (...) {
+	        return d;
+        }
+	}
 	[[nodiscard]] const AMap<AString, AJsonElement>& asObject() const;
 	[[nodiscard]] const AVector<AJsonElement>& asArray() const;
 
@@ -80,6 +87,8 @@ public:
 	AJsonObject();
     [[nodiscard]] AJsonElement& operator[](const AString& key);
     [[nodiscard]] const AJsonElement& operator[](const AString& key) const;
+
+    bool contains(const AString& key) const;
 };
 
 template<>
@@ -95,4 +104,6 @@ public:
 
 	void push_back(const AJsonElement& value);
 	AJsonArray& operator<<(const AJsonElement& value);
+
+    static AJsonArray fromVariantArray(const AVector<AVariant>& value);
 };

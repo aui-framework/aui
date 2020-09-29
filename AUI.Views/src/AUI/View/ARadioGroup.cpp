@@ -8,20 +8,17 @@
 #include <AUI/Platform/AWindow.h>
 
 ARadioGroup::ARadioGroup(const _<IListModel<AString>>& model):
-    mGroup(_new<ARadioButton::Group>())
+    ARadioGroup()
 {
     setModel(model);
-
-    connect(mGroup->selectionChanged, this, [&](int id) {
-        emit selectionChanged(AModelIndex(id));
-    });
-
 }
 
 ARadioGroup::ARadioGroup():
         mGroup(_new<ARadioButton::Group>())
 {
-
+    connect(mGroup->selectionChanged, this, [&](int id) {
+        emit selectionChanged(AModelIndex(id));
+    });
 }
 
 
@@ -49,6 +46,8 @@ void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
             updateLayout();
         });
     }
-    updateLayout();
+
+    if (auto w = getWindow())
+        w->updateLayout();
     AWindow::current()->flagRedraw();
 }

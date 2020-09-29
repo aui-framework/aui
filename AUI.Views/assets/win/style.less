@@ -6,10 +6,6 @@ AView {
 AWindow {
     background: #f0f0f0;
 }
-CustomWindow {
-    border: 1em solid $OS_THEME_COLOR;
-    padding: 1px;
-}
 
 ALabel {
     padding: 1em 0 2em;
@@ -22,7 +18,10 @@ ATitleLabel {
 ALabel[disabled] {
     color: #6d6d6d;
 }
-ALabel, .input-field, AListView {
+ALabel {
+    margin: 0em 4em;
+}
+.input-field, AListView {
     margin: 2em 4em;
 }
 
@@ -34,7 +33,7 @@ AButton {
     min-height: 17em;
     text-align: center;
     transition: 0.25s;
-    margin: 2em 4em;
+    margin: 4em;
 }
 
 AButton[default] {
@@ -65,8 +64,9 @@ AButton[disabled] {
 }
 .window-title ALabel {
     color: #fff;
-    padding: 7em 0;
+    padding: 8em 0 6em;
     margin: 0;
+    font-size: 12em;
 }
 
 .window-title .default {
@@ -106,9 +106,11 @@ AButton[disabled] {
 .window-content {
     background: #fff;
     min-width: 200em;
+    padding: 7em;
+    -aui-spacing: 6em;
 }
 
-AWindow, .window-content {
+AWindow {
     padding: 4em 3em;
 }
 AComboBoxWindow {
@@ -127,7 +129,6 @@ AAbstractTextField {
     color: #000;
     background: #fff;
     border: 1em solid #7a7a7a;
-    margin: 2em 4em;
     min-width: 100em;
     min-height: 17em;
     transition: 1s;
@@ -171,7 +172,7 @@ ACheckBox ALabel {
 }
 ACheckBoxInner {
     background-color: #fff;
-    margin: 1em 1em 1em 3em;
+    margin: 1em 1em 1em 0;
     border: 1em solid #333333;
     width: 13em;
     height: 13em;
@@ -208,7 +209,7 @@ ARadioButton ALabel {
 }
 ARadioButtonInner {
     background-color: #fff;
-    margin: 1em 1em 1em 3em;
+    margin: 1em 1em 1em 0;
     border: 1em solid #333333;
     width: 13em;
     height: 13em;
@@ -239,6 +240,7 @@ ARadioButton[checked] ARadioButtonInner {
 }
 AComboBox {
     text-align: left;
+    margin: 2em 4em;
 }
 
 AListView {
@@ -258,7 +260,7 @@ AListView ALabel[selected] {
     background: #cde8ff;
 }
 .dialog-button-box {
-    padding: 4em 3em;
+    padding: 7em 4em;
     background: none;
 }
 .window-no-padding {
@@ -271,4 +273,18 @@ ATableView {
 ATableView AView {
     background: #fff;
     margin: 0 1px 1px 0;
+}
+ACustomWindow {
+    border: 1em solid $OS_THEME_COLOR;
+    padding: 1px;
+}
+
+ADividerView {
+    background: #fff4;
+}
+AVDividerView {
+    width: 1em;
+}
+AHDividerView {
+    height: 1em;
 }
