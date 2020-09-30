@@ -99,7 +99,7 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         }
 
         //TODO: allow move?
-        if (!result && y - winrect.top <= AUI_TITLE_HEGIHT) {
+        if (!result && y - winrect.top <= AUI_TITLE_HEIGHT) {
             if (auto v = getViewAtRecusrive({ x - winrect.left, y - winrect.top })) {
                 if (!v->getCssNames().contains("AButton") && !v->getCssNames().contains(".override-title-dragging")) {
                     result = HTCAPTION;

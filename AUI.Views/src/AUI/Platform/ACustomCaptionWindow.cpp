@@ -29,9 +29,17 @@ ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int h
 	mMiddle->addCssName(".middle");
 	mMiddle->addCssName(".default");
 	connect(mMiddle->clickedButton, this, [&]() {
-	    maximize();
-        updateMiddleButtonIcon();
+	    if (isMaximized()) {
+            restore();
+	    } else {
+            maximize();
+        }
 	});
+
+	connect(minimized, this, &ACustomCaptionWindow::updateMiddleButtonIcon);
+	connect(restored, this, &ACustomCaptionWindow::updateMiddleButtonIcon);
+	connect(maximized, this, &ACustomCaptionWindow::updateMiddleButtonIcon);
+
 	caption->addView(mMiddle);
 
 	auto close = _new<AButton>();

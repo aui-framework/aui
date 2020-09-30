@@ -121,6 +121,19 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE:
             emit resized(LOWORD(lParam), HIWORD(lParam));
             AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
+
+            switch (wParam) {
+                case SIZE_MAXIMIZED:
+                    emit maximized();
+                    break;
+                case SIZE_MINIMIZED:
+                    emit minimized();
+                    break;
+                case SIZE_RESTORED:
+                    emit restored();
+                    break;
+            }
+
             return 0;
 
         case WM_MOUSEMOVE:
@@ -853,6 +866,23 @@ void AWindow::updateDpi() {
 #endif
 }
 
+void AWindow::restore() {
+#if defined(_WIN32)
+    ShowWindow(mHandle, SW_RESTORE);
+#else
+    if (gAtoms.netWmState &&
+        gAtoms.netWmStateMaximizedVert &&
+        gAtoms.netWmStateMaximizedHorz)
+        {
+            xSendEventToWM(gAtoms.netWmState,
+                           0,
+                           gAtoms.netWmStateMaximizedVert,
+                           gAtoms.netWmStateMaximizedHorz,
+                           1, 0);
+        }
+#endif
+}
+
 void AWindow::minimize() {
 #if defined(_WIN32)
     ShowWindow(mHandle, SW_MINIMIZE);
@@ -866,7 +896,6 @@ bool AWindow::isMinimized() const {
 #ifdef _WIN32
     return IsIconic(mHandle);
 #else
-
     int result = WithdrawnState;
     struct {
         uint32_t state;
@@ -922,6 +951,7 @@ bool AWindow::isMaximized() const {
 
 void AWindow::maximize() {
 #ifdef _WIN32
+    ShowWindow(mHandle, SW_MAXIMIZE);
 #else
     // https://github.com/glfw/glfw/blob/master/src/x11_window.c#L2355
 

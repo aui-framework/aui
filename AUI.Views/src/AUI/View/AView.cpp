@@ -849,5 +849,5 @@ void AView::setCss(const AString& cssCode) {
         mCustomStylesheet = std::make_unique<Stylesheet::Cache>();
         mCustomStylesheet->load(Stylesheet::instance(), _new<StringStream>(cssCode), true);
     }
-    ensureCSSUpdated();
+    recompileCSS();
 }

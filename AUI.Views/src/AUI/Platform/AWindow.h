@@ -163,11 +163,16 @@ public:
 	 */
 	bool isMaximized() const;
 
+	/**
+	 * \brief Вывести окно из панели задач и вывести его из ра
+	 */
+	void restore();
+
 	void flagRedraw();
 	void show();
 	void close();
 
-	#if defined(_WIN32)
+#if defined(_WIN32)
 	HWND getNativeHandle() { return mHandle; }
 #endif
 
@@ -240,6 +245,21 @@ signals:
 	emits<> dpiChanged;
 	emits<> redrawn;
 	emits<> shown;
+
+	/**
+	 * \brief Окно было развёрнуто на весь экран.
+	 */
+	emits<> maximized;
+
+	/**
+	 * \brief Окно было свёрнуто в панель задач (iconified).
+	 */
+	emits<> minimized;
+
+	/**
+	 * \brief Окно было развёрнуто из панели задач, или перестало быть развёрнутым на весь экран.
+	 */
+	emits<> restored;
 
 	emits<AInput::Key> keyDown;
 
