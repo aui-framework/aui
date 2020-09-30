@@ -32,6 +32,6 @@ CellView[red] {
     background-color: #f00;
     border: none;
 }
-.window_title_content AButton {
+.window-title-content AButton {
     margin: 4px 2px;
 }

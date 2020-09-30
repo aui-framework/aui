@@ -1,6 +1,5 @@
 ﻿#include "ACustomCaptionWindow.h"
 #include <AUI/Util/UIBuildingHelpers.h>
-#include "AUI/View/AButton.h"
 
 ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int height, bool stacked):
 	ACustomWindow(name, width, height)
@@ -17,7 +16,7 @@ ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int h
     mCaptionContainer = _new<AViewContainer>();
 	mCaptionContainer->setLayout(_new<AHorizontalLayout>());
 	mCaptionContainer->setExpanding({1, 0 });
-	mCaptionContainer->addCssName(".window_title_content");
+	mCaptionContainer->addCssName(".window-title-content");
 	caption->addView(mCaptionContainer);
 
 	auto minimize = _new<AButton>();
@@ -26,11 +25,14 @@ ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int h
 	connect(minimize->clickedButton, this, &AWindow::minimize);
 	caption->addView(minimize);
 
-	auto middle = _new<AButton>();
-	middle->addCssName(".middle");
-	middle->addCssName(".default");
-	//connect(middle->clickedButton, &w, &Window::quit);
-	caption->addView(middle);
+	mMiddle = _new<AButton>();
+	mMiddle->addCssName(".middle");
+	mMiddle->addCssName(".default");
+	connect(mMiddle->clickedButton, this, [&]() {
+	    maximize();
+        updateMiddleButtonIcon();
+	});
+	caption->addView(mMiddle);
 
 	auto close = _new<AButton>();
 	close->addCssName(".close");
@@ -39,18 +41,28 @@ ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int h
 	caption->addView(close);
 
 	if (stacked) {
-		setLayout(_new<AStackedLayout>());
-		addView(mContentContainer = _new<AViewContainer>());
-		addView(_container<AVerticalLayout>({
-			caption,
-			_new<ASpacer>(),
-		}) by(AViewContainer, {
-			setExpanding({1, 1});
-		}));
+        setLayout(_new<AStackedLayout>());
+        addView(mContentContainer = _new<AViewContainer>());
+        addView(_container<AVerticalLayout>({
+                                                    caption,
+                                                    _new<ASpacer>(),
+                                            }) by(AViewContainer, {
+            setExpanding({1, 1});
+        }));
 	} else {
 		setLayout(_new<AVerticalLayout>());
 		addView(caption);
         addView(mContentContainer = _new<AViewContainer>());
 	}
 	mContentContainer->setExpanding({1, 1});
+
+	updateMiddleButtonIcon();
+}
+
+void ACustomCaptionWindow::updateMiddleButtonIcon() {
+    if (isMaximized()) {
+        mMiddle->setCss("background: url(':win/caption/restore.svg')");
+    } else {
+        mMiddle->setCss("background: url(':win/caption/maximize.svg')");
+    }
 }

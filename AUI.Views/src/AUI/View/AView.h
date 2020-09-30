@@ -145,6 +145,8 @@ private:
 	 */
 	FontStyle mFontStyle;
 
+	_unique<Stylesheet::Cache> mCustomStylesheet;
+
 
 protected:
 	/**
@@ -459,6 +461,7 @@ public:
 
 	const ADeque<AString>& getCssNames() const;
 	void addCssName(const AString& css);
+	void setCss(const AString& cssCode);
 	void ensureCSSUpdated();
 
 	virtual void onMouseEnter();

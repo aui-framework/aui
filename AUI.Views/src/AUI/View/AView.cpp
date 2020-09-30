@@ -8,6 +8,8 @@
 #include "AUI/Animator/AAnimator.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <memory>
+#include <AUI/IO/StringStream.h>
 
 #include "AUI/Platform/Desktop.h"
 #include "AUI/Render/AFontManager.h"
@@ -135,6 +137,9 @@ void AView::recompileCSS()
 			entries << possibleEntry;
 		}
 	}
+	if (mCustomStylesheet) {
+        entries.insert(entries.end(), mCustomStylesheet->getEntries().begin(), mCustomStylesheet->getEntries().end());
+    }
 
 	// некоторая вспомогательная хрень
 	auto processStylesheet = [&](css type, const std::function<void(property)>& callback)
@@ -835,4 +840,14 @@ void AView::setGeometry(int x, int y, int width, int height) {
 
 bool AView::consumesClick(const glm::ivec2& pos) {
     return true;
+}
+
+void AView::setCss(const AString& cssCode) {
+    if (cssCode.empty()) {
+        mCustomStylesheet = nullptr;
+    } else {
+        mCustomStylesheet = std::make_unique<Stylesheet::Cache>();
+        mCustomStylesheet->load(Stylesheet::instance(), _new<StringStream>(cssCode), true);
+    }
+    ensureCSSUpdated();
 }

@@ -243,12 +243,20 @@ struct {
     Atom wmProtocols;
     Atom wmDeleteWindow;
     Atom wmHints;
+    Atom wmState;
+    Atom netWmState;
+    Atom netWmStateMaximizedVert;
+    Atom netWmStateMaximizedHorz;
 
 
     void init() {
         wmProtocols = XInternAtom(gDisplay, "WM_PROTOCOLS", False);
         wmDeleteWindow = XInternAtom(gDisplay, "WM_DELETE_WINDOW", False);
-        wmHints = XInternAtom(gDisplay, "_MOTIF_WM_HINTS", true);;
+        wmHints = XInternAtom(gDisplay, "_MOTIF_WM_HINTS", true);
+        wmState = XInternAtom(gDisplay, "WM_STATE", true);
+        netWmState = XInternAtom(gDisplay, "_NET_WM_STATE", false);
+        netWmStateMaximizedVert = XInternAtom(gDisplay, "_NET_WM_STATE_MAXIMIZED_VERT", false);
+        netWmStateMaximizedHorz = XInternAtom(gDisplay, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
     }
 
 } gAtoms;
@@ -854,6 +862,127 @@ void AWindow::minimize() {
 #endif
 }
 
+bool AWindow::isMinimized() const {
+#ifdef _WIN32
+    return IsIconic(mHandle);
+#else
+
+    int result = WithdrawnState;
+    struct {
+        uint32_t state;
+        Window icon;
+    } *state = NULL;
+
+    if (xGetWindowProperty(gAtoms.wmState, gAtoms.wmState, (unsigned char**) &state) >= 2)
+    {
+        result = state->state;
+    }
+
+    if (state)
+        XFree(state);
+
+    return result == IconicState;
+#endif
+}
+
+
+bool AWindow::isMaximized() const {
+#ifdef _WIN32
+    return IsZoomed(mHandle);
+#else
+    Atom* states;
+    unsigned long i;
+    bool maximized = false;
+
+    if (!gAtoms.netWmState ||
+        !gAtoms.netWmStateMaximizedVert ||
+        !gAtoms.netWmStateMaximizedHorz)
+    {
+        return maximized;
+    }
+
+    const unsigned long count = xGetWindowProperty(gAtoms.netWmState, XA_ATOM, (unsigned char**) &states);
+
+    for (i = 0;  i < count;  i++)
+    {
+        if (states[i] == gAtoms.netWmStateMaximizedVert ||
+            states[i] == gAtoms.netWmStateMaximizedHorz)
+        {
+            maximized = true;
+            break;
+        }
+    }
+
+    if (states)
+        XFree(states);
+
+    return maximized;
+#endif
+}
+
+void AWindow::maximize() {
+#ifdef _WIN32
+#else
+    // https://github.com/glfw/glfw/blob/master/src/x11_window.c#L2355
+
+    if (!gAtoms.netWmState ||
+        !gAtoms.netWmStateMaximizedVert ||
+        !gAtoms.netWmStateMaximizedHorz)
+    {
+        return;
+    }
+
+    XWindowAttributes wa;
+    XGetWindowAttributes(gDisplay, mHandle, &wa);
+
+    if (wa.map_state == IsViewable) {
+        xSendEventToWM(gAtoms.netWmState, 1, gAtoms.netWmStateMaximizedHorz, gAtoms.netWmStateMaximizedVert, 0, 0);
+    } else {
+
+        Atom* states = NULL;
+        unsigned long count =
+                xGetWindowProperty(gAtoms.netWmState,
+                                          XA_ATOM,
+                                          (unsigned char**) &states);
+
+        // NOTE: We don't check for failure as this property may not exist yet
+        //       and that's fine (and we'll create it implicitly with append)
+
+        Atom missing[2] =
+                {
+                        gAtoms.netWmStateMaximizedVert,
+                        gAtoms.netWmStateMaximizedHorz
+                };
+        unsigned long missingCount = 2;
+
+        for (unsigned long i = 0;  i < count;  i++)
+        {
+            for (unsigned long j = 0;  j < missingCount;  j++)
+            {
+                if (states[i] == missing[j])
+                {
+                    missing[j] = missing[missingCount - 1];
+                    missingCount--;
+                }
+            }
+        }
+
+        if (states)
+            XFree(states);
+
+        if (!missingCount)
+            return;
+
+        XChangeProperty(gDisplay, mHandle,
+                        gAtoms.netWmState, XA_ATOM, 32,
+                        PropModeAppend,
+                        (unsigned char*) missing,
+                        missingCount);
+    }
+    XFlush(gDisplay);
+#endif
+}
+
 glm::ivec2 AWindow::getWindowPosition() const {
 #if defined(_WIN32)
     RECT r;
@@ -1004,7 +1133,7 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
     MoveWindow(mHandle, x, y, r.right - r.left, r.bottom - r.top, false);
 #elif defined(ANDROID)
-    #else
+#else
     XResizeWindow(gDisplay, mHandle, width, height);
 #endif
 }
@@ -1031,6 +1160,42 @@ glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
 glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) {
     return other->mapPosition(unmapPosition(position));
 }
+
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ для XLIB
+
+#ifdef __linux
+
+unsigned long AWindow::xGetWindowProperty(Atom property, Atom type, unsigned char** value) const {
+    Atom actualType;
+    int actualFormat;
+    unsigned long itemCount, bytesAfter;
+
+    XGetWindowProperty(gDisplay, mHandle, property, 0, std::numeric_limits<long>::max(), false, type, &actualType,
+                       &actualFormat, &itemCount, &bytesAfter, value);
+
+    return itemCount;
+}
+
+void AWindow::xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) const {
+    XEvent event = { 0 };
+    event.type = ClientMessage;
+    event.xclient.window = mHandle;
+    event.xclient.format = 32; // Data is 32-bit longs
+    event.xclient.message_type = atom;
+    event.xclient.data.l[0] = a;
+    event.xclient.data.l[1] = b;
+    event.xclient.data.l[2] = c;
+    event.xclient.data.l[3] = d;
+    event.xclient.data.l[4] = e;
+
+    XSendEvent(gDisplay, DefaultRootWindow(gDisplay),
+               False,
+               SubstructureNotifyMask | SubstructureRedirectMask,
+               &event);
+}
+
+#endif
+
 
 //
 // Created by alex2772 on 9/14/20.

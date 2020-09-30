@@ -56,6 +56,8 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 
 	for (auto& subSelector : subSelectors)
 	{
+	    if (subSelector == "*")
+	        return M_MATCH;
 		subSelector = subSelector.trim();
 		try
 		{
@@ -275,7 +277,11 @@ void Stylesheet::load(const AString& css) noexcept
 	load(_new<StringStream>(css));
 }
 
-void Stylesheet::load(const _<IInputStream>& css) noexcept
+void Stylesheet::load(const _<IInputStream>& css) noexcept {
+    mGlobalCache.load(*this, css);
+}
+
+void Stylesheet::Cache::load(Stylesheet& ss, const _<IInputStream>& css, bool skipSelector) noexcept
 {
     assert(css);
 	Tokenizer p(css);
@@ -312,117 +318,129 @@ void Stylesheet::load(const _<IInputStream>& css) noexcept
         {"-aui-background-overlay", Entry::Property::T_AUI_BACKGROUND_OVERLAY},
 	};
 
+    char c;
+    AString selector;
 
-	AString selector;
+	auto beginReadingBody = [&]() {
+        // entry
+        AMap<Entry::Property::Type, _<Entry::Property>> properties;
+        AString propertyName;
 
+        for (;;)
+        {
+            c = p.readChar();
+            switch (c)
+            {
+                case '}':
+                    if (!properties.empty())
+                    {
+                        mEntries << _new<Entry>(selector, properties);
+                        properties.clear();
+                    }
+                    selector.clear();
+                    throw 0;
 
-	char c;
-	for (;;)
-	{
-		try
-		{
-			c = p.readChar();
-			if (isalnum(c) || c == ',' || c == '.' || c == '#' || c == ' ' || c == ':' || c == '[' || c == ']' || c == '=' || c == '_')
-			{
-				// selector
-				selector += c + p.readString({'-', '_'});
-			}
-			else if (c == '{')
-			{
-				selector = selector.trim();
-				// entry
-				AMap<Entry::Property::Type, _<Entry::Property>> properties;
-				AString propertyName;
+                case '\t':
+                case '\n':
+                case '\r':
+                case ' ':
+                    break;
+                case ':':
+                    if (!propertyName.empty())
+                    {
+                        auto propertyType = items.find(propertyName);
+                        propertyName.clear();
+                        if (propertyType == items.end())
+                            continue;
 
-				for (;;)
-				{
-					c = p.readChar();
-					switch (c)
-					{
-					case '}':
-						if (!properties.empty())
-						{
-							mEntries << _new<Entry>(selector, properties);
-							properties.clear();
-						}
-						selector.clear();
-						throw 0;
+                        AString propertyValue;
 
-					case '\t':
-					case '\n':
-					case '\r':
-					case ' ':
-						break;
-					case ':':
-						if (!propertyName.empty())
-						{
-							auto propertyType = items.find(propertyName);
-							propertyName.clear();
-							if (propertyType == items.end())
-								continue;
+                        auto insertProperty = [&]()
+                        {
+                            if (!propertyValue.empty())
+                            {
+                                auto args = propertyValue.split(' ').noEmptyStrings();
 
-							AString propertyValue;
+                                for (auto& a : args)
+                                {
+                                    if (a.startsWith("$"))
+                                    {
+                                        a = ss.getVariable(a.mid(1));
+                                    }
+                                }
 
-							auto insertProperty = [&]()
-							{
-								if (!propertyValue.empty())
-								{
-									auto args = propertyValue.split(' ').noEmptyStrings();
+                                properties[propertyType->second] = _new<Entry::Property>
+                                        (propertyType->second, args);
+                            }
+                        };
 
-									for (auto& a : args)
-									{
-										if (a.startsWith("$"))
-										{
-											a = getVariable(a.mid(1));
-										}
-									}
-									
-									properties[propertyType->second] = _new<Entry::Property>
-										(propertyType->second, args);
-								}
-							};
+                        for (;;) {
+                            try {
+                                c = p.readChar();
+                            } catch (const IOException&) {
+                                c = 0;
+                            }
+                            if (c == '}' || c == 0) {
+                                insertProperty();
+                                mEntries << _new<Entry>(selector, properties);
+                                selector.clear();
+                                properties.clear();
+                                throw 0;
+                            }
+                            if (c == ';') {
+                                break;
+                            }
+                            if (c != '\n')
+                                propertyValue += c;
+                        }
+                        insertProperty();
+                    }
+                    break;
+                default:
+                    if (isalnum(c) || c == '-' || c == '_')
+                    {
+                        propertyName += c;
+                    }
+            }
+        }
+	};
 
-							for (;;)
-							{
-								c = p.readChar();
-								if (c == '}')
-								{
-									insertProperty();
-									mEntries << _new<Entry>(selector, properties);
-									selector.clear();
-									properties.clear();
-									throw 0;
-								}
-								if (c == ';')
-								{
-									break;
-								}
-								if (c != '\n')
-									propertyValue += c;
-							}
-							insertProperty();
-						}
-						break;
-					default:
-						if (isalnum(c) || c == '-' || c == '_')
-						{
-							propertyName += c;
-						}
-					}
-				}
-			}
-		}
-		catch (int)
-		{
-		}
-		catch (const IOException&)
-		{
-			break;
-		}
-		catch (...)
-		{
-		}
-	}
+	if (skipSelector) {
+	    selector = "*";
+	    try {
+            beginReadingBody();
+        } catch (...) {}
+	} else {
+        for (;;) {
+            try {
+                c = p.readChar();
+                if (isalnum(c) ||
+                    c == ',' ||
+                    c == '.' ||
+                    c == '#' ||
+                    c == ' ' ||
+                    c == ':' ||
+                    c == '[' ||
+                    c == ']' ||
+                    c == '=' ||
+                    c == '_' ||
+                    c == '*') {
+                    // selector
+                    selector += c + p.readString({'-', '_'});
+                } else if (c == '{') {
+                    selector = selector.trim();
+                    beginReadingBody();
+                }
+            }
+            catch (int) {
+            }
+            catch (const IOException&) {
+                break;
+            }
+            catch (...) {
+            }
+        }
+    }
 }
 
 void Stylesheet::setPreferredStyle(Stylesheet::PreferredStyle style) {

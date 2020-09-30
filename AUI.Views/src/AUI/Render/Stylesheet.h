@@ -135,19 +135,34 @@ public:
 		Matching selectorMatches(AView* view, bool forcePossibleEntries = true);
 	};
 
+	class Cache {
+    private:
+        ADeque<_<Entry>> mEntries;
+
+    public:
+	    void clear() {
+	        mEntries.clear();
+	    }
+
+        [[nodiscard]] const ADeque<_<Entry>>& getEntries() const {
+            return mEntries;
+        }
+        void load(Stylesheet& ss, const _<IInputStream>& css, bool skipSelector = false) noexcept;
+    };
+
 private:
-	ADeque<_<Entry>> mEntries;
 	AMap<AString, AString> mVariables;
 	static PreferredStyle ourPrefferedStyle;
-	
+	Cache mGlobalCache;
+
 public:
 	Stylesheet();
 
 	static void setPreferredStyle(PreferredStyle style);
 
-	const ADeque<_<Entry>>& getEntries() const noexcept
+	[[nodiscard]] const ADeque<_<Entry>>& getEntries() const noexcept
 	{
-		return mEntries;
+		return mGlobalCache.getEntries();
 	}
 
 	void load(const AString& css) noexcept;

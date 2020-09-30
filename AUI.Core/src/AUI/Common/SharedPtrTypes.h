@@ -94,6 +94,9 @@ public:
 template<typename T>
 using _weak = std::weak_ptr<T>;
 
+template<typename T>
+using _unique = std::unique_ptr<T>;
+
 
 template<typename TO, typename FROM>
 inline _<TO> _cast(_<FROM> object)

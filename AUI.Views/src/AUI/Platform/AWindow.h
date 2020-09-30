@@ -20,6 +20,7 @@
 #include <X11/keysymdef.h>
 #include <GL/gl.h>
 #include <GL/glx.h>
+#include <X11/Xatom.h>
 #endif
 
 class Render;
@@ -106,6 +107,10 @@ private:
 
 #if defined(_WIN32)
 	friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+#else
+    unsigned long xGetWindowProperty(Atom property, Atom type, unsigned char** value) const;
+    void xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) const;
 #endif
 
 	void updateDpi();
@@ -142,6 +147,22 @@ public:
 	 * \brief Спрятать окно в панель задач.
 	 */
 	void minimize();
+
+	/**
+	 * \return true, если окно спрятано в панель задач
+	 */
+	bool isMinimized() const;
+
+	/**
+	 * \brief Развернуть окно на весь экран.
+	 */
+	void maximize();
+
+	/**
+	 * \return true, если окно раскрыто на весь экран
+	 */
+	bool isMaximized() const;
+
 	void flagRedraw();
 	void show();
 	void close();
