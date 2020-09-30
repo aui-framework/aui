@@ -158,6 +158,7 @@ void ACustomWindow::setSize(int width, int height)
 ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
         AWindow(name, width, height) {
 
+    setWindowStyle(WS_NO_DECORATORS);
 }
 
 #endif

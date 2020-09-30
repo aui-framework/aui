@@ -708,24 +708,11 @@ void AWindow::redraw() {
             v by(AView, {
                 RenderHints::PushMatrix m;
                 Render::instance().setTransform(glm::translate(glm::mat4(1.f), {getAbsolutePosition(), 0.f}));
-                glDisable(GL_STENCIL_TEST);
                 Render::instance().setFill(Render::FILL_SOLID);
-
-                // margin
-                {
-                    RenderHints::PushColor c;
-                    Render::instance().setColor(0xffcca4a0u);
-                    Render::instance().drawRect(-getMargin().left, -getMargin().top,
-                                                getWidth() + getMargin().horizontal(),
-                                                getHeight() + getMargin().vertical());
-                }
-
-                // padding
-                {
-                    RenderHints::PushColor c;
-                    Render::instance().setColor(0xbccf9180u);
-                    Render::instance().drawRect(0, 0,getWidth(), getHeight());
-                }
+                glEnable(GL_STENCIL_TEST);
+                glStencilMask(0xff);
+                glStencilOp(GL_INCR, GL_INCR, GL_INCR);
+                glStencilFunc(GL_EQUAL, 0, 0xff);
 
                 // content
                 {
@@ -735,7 +722,21 @@ void AWindow::redraw() {
                                                 getWidth() - getPadding().horizontal(), getHeight() - getPadding().vertical());
                 }
 
-                glEnable(GL_STENCIL_TEST);
+                // padding
+                {
+                    RenderHints::PushColor c;
+                    Render::instance().setColor(0xbccf9180u);
+                    Render::instance().drawRect(0, 0,getWidth(), getHeight());
+                }
+
+                // margin
+                {
+                    RenderHints::PushColor c;
+                    Render::instance().setColor(0xffcca4a0u);
+                    Render::instance().drawRect(-getMargin().left, -getMargin().top,
+                                                getWidth() + getMargin().horizontal(),
+                                                getHeight() + getMargin().vertical());
+                }
             });
         }
 
