@@ -580,7 +580,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
         auto cmap = XCreateColormap(gDisplay, gScreen->root, vi->visual, AllocNone);
         swa.colormap = cmap;
         swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask
-                | PointerMotionMask | StructureNotifyMask;
+                | PointerMotionMask | StructureNotifyMask | PropertyChangeMask;
         context.context = glXCreateContext(gDisplay, vi, nullptr, true);
 
         im = XOpenIM(gDisplay, NULL, NULL, NULL);
@@ -1341,6 +1341,24 @@ void AWindowManager::loop() {
                         window = locateWindow(ev.xbutton.window);
                         window->onMouseReleased({ev.xbutton.x, ev.xbutton.y},
                                                 (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
+                        break;
+                    }
+
+                    case PropertyNotify: {
+                        window = locateWindow(ev.xbutton.window);
+                        if (ev.xproperty.atom == gAtoms.netWmState) {
+                            auto maximized = window->isMaximized();
+                            if (maximized != window->mWasMaximized) {
+                                window by(AWindow, {
+                                    if (mWasMaximized) {
+                                        emit restored();
+                                    } else {
+                                        emit maximized();
+                                    }
+                                });
+                                window->mWasMaximized = maximized;
+                            }
+                        }
                         break;
                     }
                 }

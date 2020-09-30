@@ -77,6 +77,8 @@ private:
 #if defined(_WIN32)
 	HMODULE mInst;
 	HDC mDC;
+#else
+    bool mWasMaximized = false;
 #endif
     bool mRedrawFlag = true;
 	AString mWindowClass;
