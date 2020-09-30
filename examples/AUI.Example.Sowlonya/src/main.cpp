@@ -45,7 +45,7 @@ int main()
 	auto no = _new<AButton>(u8"Пошёл в жопу");
 	AObject::connect(no->mouseEnter, no, [&]()
 	{
-		auto pos = Desktop::getMousePos();
+		auto pos = Desktop::getMousePosition();
 		Desktop::setMousePos(pos + glm::ivec2((rand.nextVec2(0.2f, 1.f) * 2.f - 1.f) * 10.f * glm::vec2(no->getSize())));
 	});
 	AObject::connect(no->clickedButton, no, [&]()

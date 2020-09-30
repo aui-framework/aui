@@ -702,7 +702,7 @@ void AWindow::redraw() {
 
 
         if constexpr (AUI_DISPLAY_BOUNDS) {
-            auto v = getViewAtRecusrive(mapPosition(Desktop::getMousePos()));
+            auto v = getViewAtRecusrive(mapPosition(ADesktop::getMousePosition()));
             if (v == nullptr)
                 v = shared_from_this();
             v by(AView, {

@@ -1,4 +1,7 @@
 ﻿#include "ACustomWindow.h"
+#include "Desktop.h"
+
+const int AUI_TITLE_HEIGHT = 30;
 
 #if defined(_WIN32)
 #include <glm/gtc/matrix_transform.hpp>
@@ -96,9 +99,9 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         }
 
         //TODO: allow move?
-        if (!result && y - winrect.top <= 30) {
+        if (!result && y - winrect.top <= AUI_TITLE_HEGIHT) {
             if (auto v = getViewAtRecusrive({ x - winrect.left, y - winrect.top })) {
-                if (!v->getCssNames().contains("AButton") && !v->getCssNames().contains(".override_title_dragging")) {
+                if (!v->getCssNames().contains("AButton") && !v->getCssNames().contains(".override-title-dragging")) {
                     result = HTCAPTION;
                 }
             }
@@ -155,10 +158,38 @@ void ACustomWindow::setSize(int width, int height)
 }
 #else
 
+extern Display* gDisplay;
+
 ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
         AWindow(name, width, height) {
+    AVIEW_CSS;
 
     setWindowStyle(WS_NO_DECORATORS);
+}
+
+void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+    if (pos.y < AUI_TITLE_HEIGHT) {
+        auto v = getViewAtRecusrive(pos);
+        if (!v || !v->getCssNames().contains("AButton")) {
+            XClientMessageEvent xclient;
+            memset(&xclient, 0, sizeof(XClientMessageEvent));
+            XUngrabPointer(gDisplay, 0);
+            XFlush(gDisplay);
+            xclient.type = ClientMessage;
+            xclient.window = mHandle;
+            xclient.message_type = XInternAtom(gDisplay, "_NET_WM_MOVERESIZE", False);
+            xclient.format = 32;
+            auto newPos = ADesktop::getMousePosition();
+            xclient.data.l[0] = newPos.x;
+            xclient.data.l[1] = newPos.y;
+            xclient.data.l[2] = 8;
+            xclient.data.l[3] = 0;
+            xclient.data.l[4] = 0;
+            XSendEvent(gDisplay, XRootWindow(gDisplay, 0), False, SubstructureRedirectMask | SubstructureNotifyMask,
+                       (XEvent*) &xclient);
+        }
+    }
+    AViewContainer::onMousePressed(pos, button);
 }
 
 #endif

@@ -24,5 +24,7 @@ public:
     ACustomWindow(const AString& name, int width, int height);
     ACustomWindow() = default;
     ~ACustomWindow() override = default;
+
+    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 };
 #endif
