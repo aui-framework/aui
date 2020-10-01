@@ -56,7 +56,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 			view->setGeometry(glm::round(posX) + margins.left, y + margins.top, viewWidth - margins.horizontal(), glm::min(height - margins.vertical(), float(maxSize.y)));
 			posX += viewWidth + mSpacing;
 
-			availableSpace += viewWidth - view->getSize().x;
+			availableSpace += viewWidth - (view->getSize().x + view->getMargin().horizontal());
 		}
 	}
 	//assert(width == x);

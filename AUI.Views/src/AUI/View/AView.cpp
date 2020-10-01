@@ -416,6 +416,29 @@ void AView::recompileCSS()
             backgroundImageOverlay = AColor(p->getArgs()[0]);
 	    }
 	});
+
+	enum Repeat {
+	    REPEAT_NONE,
+	    REPEAT,
+	    REPEAT_X,
+	    REPEAT_Y,
+	} repeat = REPEAT_NONE;
+
+	// TODO можно попробовать напрямую изменять координаты UV в рендерере текстуры.е
+
+    processStylesheet(css::T_BACKGROUND_REPEAT, [&](property p)
+    {
+        if (p->getArgs().size() == 1) {
+            if (p->getArgs()[0] == "repeat") {
+                repeat = REPEAT;
+            } else if (p->getArgs()[0] == "repeat-x") {
+                repeat = REPEAT_X;
+            } else if (p->getArgs()[0] == "repeat-y") {
+                repeat = REPEAT_Y;
+            }
+        }
+    });
+
 	processStylesheet(css::T_BACKGROUND, [&](property p)
 	{
 		auto& last = p->getArgs().back();

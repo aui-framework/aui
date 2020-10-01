@@ -21,7 +21,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 {
 	/*
 	size_t hash = reinterpret_cast<size_t>(view->getParent());
-	
+
 	hash ^= std::hash<Set<AString>>()(Set<AString>(view->getCssNames().begin(), view->getCssNames().end()));
 	hash ^= view->isEnabled() * 71245 | view->isMouseHover() * 876126 | view->isMousePressed() * 999125;
 	Map<AString, AVariant> attrs;
@@ -31,7 +31,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 		hash ^= std::hash<AString>()(attr.first);
 		hash ^= attr.second.hash();
 	}
-	
+
 	if (auto c = mCache.contains(hash))
 	{
 		if (c->second.classes.isSubsetOf(view->getCssNames()) &&
@@ -48,7 +48,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 	};
 	auto targetView = view;
 
-	
+
 	int finalResult = M_MISMATCH;
 
 
@@ -99,7 +99,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 				if (!view)
 					return M_MISMATCH;
 
-				
+
 				if (nameMatches)
 				{
 					try {
@@ -111,7 +111,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 								p.reverseByte();
 								c = false;
 								break;
-								
+
 							case '[':
 							{
 								auto attributeName = p.readString({ '_', '-', '.' });
@@ -121,7 +121,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 								if (forcePossibleEntries && view != targetView)
 									AObject::connect(view->customCssPropertyChanged, targetView->mCssHelper,
 										&ACSSHelper::onCheckPossiblyMatchCss);
-									
+
 								view->getCustomCssAttributes(attrs);
 
 								switch (p.readChar())
@@ -153,7 +153,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 								auto pseudoClass = p.readString();
 								if (forcePossibleEntries)
 								{
-									
+
 									if (pseudoClass == "hover")
 									{
 										AObject::connect(view->hoveredState, targetView->mCssHelper,
@@ -218,7 +218,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 				result = processToken(token);
 				if (result == 0)
 					throw 0;
-				
+
 				view = reinterpret_cast<AView*>(view->getParent());
 				if (!view)
 					return cache(M_MISMATCH);
@@ -289,6 +289,7 @@ void Stylesheet::Cache::load(Stylesheet& ss, const _<IInputStream>& css, bool sk
 		{"background", Entry::Property::T_BACKGROUND},
 		{"background-color", Entry::Property::T_BACKGROUND_COLOR},
 		{"background-size", Entry::Property::T_BACKGROUND_SIZE},
+		{"background-repeat", Entry::Property::T_BACKGROUND_REPEAT},
 		{"background-effect", Entry::Property::T_BACKGROUND_EFFECT},
 		{"color", Entry::Property::T_COLOR},
 		{"text-align", Entry::Property::T_TEXT_ALIGN},
