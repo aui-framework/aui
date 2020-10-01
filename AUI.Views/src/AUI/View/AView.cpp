@@ -417,28 +417,6 @@ void AView::recompileCSS()
 	    }
 	});
 
-	enum Repeat {
-	    REPEAT_NONE,
-	    REPEAT,
-	    REPEAT_X,
-	    REPEAT_Y,
-	} repeat = REPEAT_NONE;
-
-	// TODO можно попробовать напрямую изменять координаты UV в рендерере текстуры.е
-
-    processStylesheet(css::T_BACKGROUND_REPEAT, [&](property p)
-    {
-        if (p->getArgs().size() == 1) {
-            if (p->getArgs()[0] == "repeat") {
-                repeat = REPEAT;
-            } else if (p->getArgs()[0] == "repeat-x") {
-                repeat = REPEAT_X;
-            } else if (p->getArgs()[0] == "repeat-y") {
-                repeat = REPEAT_Y;
-            }
-        }
-    });
-
 	processStylesheet(css::T_BACKGROUND, [&](property p)
 	{
 		auto& last = p->getArgs().back();
@@ -461,13 +439,32 @@ void AView::recompileCSS()
 							sizing = p->getArgs()[0];
 					});
 
-					auto drawableDrawWrapper = [drawable, backgroundImageOverlay](const glm::ivec2& size) {
+
+                    Repeat repeat = REPEAT_NONE;
+
+                    processStylesheet(css::T_BACKGROUND_REPEAT, [&](property p)
+                    {
+                        if (p->getArgs().size() == 1) {
+                            if (p->getArgs()[0] == "repeat") {
+                                repeat = REPEAT;
+                            } else if (p->getArgs()[0] == "repeat-x") {
+                                repeat = REPEAT_X;
+                            } else if (p->getArgs()[0] == "repeat-y") {
+                                repeat = REPEAT_Y;
+                            }
+                        }
+                    });
+
+
+                    auto drawableDrawWrapper = [repeat, drawable, backgroundImageOverlay](const glm::ivec2& size) {
                         RenderHints::PushColor c;
                         Render::instance().setColor(backgroundImageOverlay);
-					    drawable->draw(size);
-					};
+                        Render::instance().setRepeat(repeat);
+                        drawable->draw(size);
+                        Render::instance().setRepeat(REPEAT_NONE);
+                    };
 
-					if (sizing == "fit")
+                    if (sizing == "fit")
 					{
 						mCssDrawListFront << [&, drawableDrawWrapper]()
 						{

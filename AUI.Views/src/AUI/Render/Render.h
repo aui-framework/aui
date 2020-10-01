@@ -13,6 +13,15 @@
 class AColor;
 class AWindow;
 
+
+
+ENUM_FLAG(Repeat) {
+    REPEAT_NONE = 0,
+    REPEAT = 0b11,
+    REPEAT_X = 0b01,
+    REPEAT_Y = 0b10,
+};
+
 class API_AUI_VIEWS Render: public Singleton<Render>
 {
 public:
@@ -28,6 +37,7 @@ public:
 		FILL_SYMBOL,
 		FILL_SYMBOL_SUBPIXEL,
 	};
+
 	class PrerendereredString {
 	public:
 		PrerendereredString():
@@ -58,6 +68,11 @@ private:
 	GL::Vao mTempVao;
 	glm::mat4 mTransform;
     Filling mCurrentFill;
+
+    /**
+     * \brief Повторение. Обрабатываются IDrawabl'ами самостоятельно.
+     */
+    Repeat mRepeat = REPEAT_NONE;
 	
 	glm::mat4 getProjectionMatrix() const;
 	AVector<glm::vec3> getVerticesForRect(float x, float y, float width, float height);
@@ -120,6 +135,13 @@ public:
 	const glm::mat4& getTransform()
 	{
 		return mTransform;
+	}
+
+	Repeat getRepeat() const {
+	    return mRepeat;
+	}
+	void setRepeat(Repeat repeat) {
+	    mRepeat = repeat;
 	}
 
 	void uploadToShader();

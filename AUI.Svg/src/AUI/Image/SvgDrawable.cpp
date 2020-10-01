@@ -37,9 +37,18 @@ glm::ivec2 SvgDrawable::getSizeHint() {
 
 void SvgDrawable::draw(const glm::ivec2& size) {
     auto key = asKey(size);
-    auto doDraw = [&size]() {
+    auto doDraw = [&]() {
         Render::instance().setFill(Render::FILL_TEXTURED);
-        Render::instance().drawTexturedRect(0, 0, size.x, size.y);
+        glm::vec2 uv = {1, 1};
+
+        if (Render::instance().getRepeat() & REPEAT_X) {
+            uv.x = float(size.x) / getSizeHint().x;
+        }
+        if (Render::instance().getRepeat() & REPEAT_Y) {
+            uv.y = float(size.y) / getSizeHint().y;
+        }
+
+        Render::instance().drawTexturedRect(0, 0, size.x, size.y, {0, 0}, uv);
     };
     for (auto& p : mRasterized) {
         if (p.key == key) {
@@ -52,14 +61,23 @@ void SvgDrawable::draw(const glm::ivec2& size) {
         mRasterized.pop_front();
     }
 
+    glm::ivec2 textureSize = size;
+
+    if (Render::instance().getRepeat() & REPEAT_X) {
+        textureSize.x = getSizeHint().x;
+    }
+    if (Render::instance().getRepeat() & REPEAT_Y) {
+        textureSize.y = getSizeHint().y;
+    }
+
     // растеризация
     auto texture = _new<GL::Texture>();
-    auto image = _new<AImage>(AVector<uint8_t>{}, size.x, size.y, AImage::RGBA | AImage::BYTE);
+    auto image = _new<AImage>(AVector<uint8_t>{}, textureSize.x, textureSize.y, AImage::RGBA | AImage::BYTE);
     image->allocate();
     auto rasterizer = nsvgCreateRasterizer();
     assert(rasterizer);
-    nsvgRasterize(rasterizer, mImage, 0, 0, glm::max(size.x / mImage->width, size.y / mImage->height),
-                  image->getData().data(), size.x, size.y, size.x * 4);
+    nsvgRasterize(rasterizer, mImage, 0, 0, glm::max(textureSize.x / mImage->width, textureSize.y / mImage->height),
+                  image->getData().data(), textureSize.x, textureSize.y, textureSize.x * 4);
 
     texture->tex2D(image);
     nsvgDeleteRasterizer(rasterizer);

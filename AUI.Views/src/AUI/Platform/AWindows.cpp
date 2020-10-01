@@ -1278,8 +1278,10 @@ void AWindowManager::loop() {
         struct NotFound {};
         auto locateWindow = [&](Window xWindow) -> _<AWindow> {
             for (auto& w : mWindows) {
-                if (w->mHandle == xWindow)
+                if (w->mHandle == xWindow) {
+                    AWindow::currentWindowStorage() = w.get();
                     return w;
+                }
             }
             throw NotFound();
         };
