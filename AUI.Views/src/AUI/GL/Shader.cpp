@@ -19,8 +19,6 @@ void GL::Shader::load(const AString& vertex, const AString& fragment, const AVec
 #ifdef __ANDROID__
 	AString prefix = "precision mediump float;"
 					 "precision mediump int;"
-					 "precision mediump sampler2D;"
-					 "precision mediump samplerCube;"
 					 ;
 #else
 	AString prefix = "#version 120\n";
