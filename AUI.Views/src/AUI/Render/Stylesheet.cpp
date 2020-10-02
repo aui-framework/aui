@@ -373,6 +373,7 @@ void Stylesheet::Cache::load(Stylesheet& ss, const _<IInputStream>& css, bool sk
                                 properties[propertyType->second] = _new<Entry::Property>
                                         (propertyType->second, args);
                             }
+                            mEntries << _new<Entry>(selector, properties);
                         };
 
                         for (;;) {
@@ -383,7 +384,6 @@ void Stylesheet::Cache::load(Stylesheet& ss, const _<IInputStream>& css, bool sk
                             }
                             if (c == '}' || c == 0) {
                                 insertProperty();
-                                mEntries << _new<Entry>(selector, properties);
                                 selector.clear();
                                 properties.clear();
                                 throw 0;
