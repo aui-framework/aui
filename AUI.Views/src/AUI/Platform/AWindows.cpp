@@ -1347,7 +1347,7 @@ void AWindowManager::loop() {
                     }
 
                     case PropertyNotify: {
-                        window = locateWindow(ev.xbutton.window);
+                        window = locateWindow(ev.xproperty.window);
                         if (ev.xproperty.atom == gAtoms.netWmState) {
                             auto maximized = window->isMaximized();
                             if (maximized != window->mWasMaximized) {

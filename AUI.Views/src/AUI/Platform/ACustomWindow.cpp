@@ -103,6 +103,8 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
             if (auto v = getViewAtRecusrive({ x - winrect.left, y - winrect.top })) {
                 if (!v->getCssNames().contains("AButton") && !v->getCssNames().contains(".override-title-dragging")) {
                     result = HTCAPTION;
+                    mDragging = true;
+                    emit dragBegin({x, y});
                 }
             }
         }
@@ -187,9 +189,20 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
             xclient.data.l[4] = 0;
             XSendEvent(gDisplay, XRootWindow(gDisplay, 0), False, SubstructureRedirectMask | SubstructureNotifyMask,
                        (XEvent*) &xclient);
+
+            mDragging = true;
+            emit dragBegin(pos);
         }
     }
     AViewContainer::onMousePressed(pos, button);
 }
 
 #endif
+
+void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
+    AViewContainer::onMouseReleased(pos, button);
+    if (mDragging) {
+        mDragging = false;
+        emit dragEnd();
+    }
+}
