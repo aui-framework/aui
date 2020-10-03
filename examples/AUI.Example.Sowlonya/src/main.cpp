@@ -4,7 +4,7 @@
 #include <AUI/View/ALabel.h>
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/Layout/AVerticalLayout.h>
-#include <AUI/Platform/Desktop.h>
+#include <AUI/Platform/ADesktop.h>
 #include <AUI/View/AButton.h>
 #include <AUI/Render/Stylesheet.h>
 #include <AUI/Util/ARandom.h>

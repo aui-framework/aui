@@ -66,8 +66,27 @@ public:
 	_<ALayout> getLayout() const;
 
 	_<AView> getViewAt(glm::ivec2 pos, bool ignoreGone = true);
-	_<AView> getViewAtRecusrive(glm::ivec2 pos);
-	
+	_<AView> getViewAtRecursive(glm::ivec2 pos);
+
+	template<typename T>
+	_<T> getViewAtRecursiveOf(glm::ivec2 pos) {
+        _<AView> target = getViewAt(pos);
+
+        while (target)
+        {
+            if (auto applicable = _cast<T>(target)) {
+                return applicable;
+            }
+            auto container = _cast<AViewContainer>(target);
+            if (!container) {
+                return nullptr;
+            }
+            pos -= container->getPosition();
+            target = container->getViewAt(pos);
+        }
+        return nullptr;
+	}
+
 	void updateLayout();
 
     void setGeometry(int x, int y, int width, int height) override;

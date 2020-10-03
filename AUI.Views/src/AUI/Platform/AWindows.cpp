@@ -13,7 +13,7 @@
 #include "Platform.h"
 #include "AMessageBox.h"
 #include "AWindowManager.h"
-#include "Desktop.h"
+#include "ADesktop.h"
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
@@ -27,6 +27,7 @@ AWindow::Context AWindow::context = {};
 
 #include <GL/wglew.h>
 #include <AUI/Util/Cache.h>
+#include <AUI/Util/AError.h>
 
 struct painter {
 private:
@@ -58,9 +59,12 @@ public:
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     AWindow* window = reinterpret_cast<AWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-    if (window)
-        return window->winProc(hwnd, uMsg, wParam, lParam);
-
+    try {
+        if (window)
+            return window->winProc(hwnd, uMsg, wParam, lParam);
+    } catch (const AException& e) {
+        AError::handle(e);
+    }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
@@ -108,6 +112,12 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 onKeyDown(AInput::fromNative(wParam));
             }
             return 0;
+
+        case WM_MOVING: {
+            auto r = (LPRECT)lParam;
+            emit moving(glm::ivec2{r->left, r->top});
+            return 0;
+        }
 
         case WM_KEYUP:
             onKeyUp(AInput::fromNative(wParam));
@@ -723,7 +733,7 @@ void AWindow::redraw() {
 
 
         if constexpr (AUI_DISPLAY_BOUNDS) {
-            auto v = getViewAtRecusrive(mapPosition(ADesktop::getMousePosition()));
+            auto v = getViewAtRecursive(mapPosition(ADesktop::getMousePosition()));
             if (v == nullptr)
                 v = shared_from_this();
             v by(AView, {
@@ -1042,7 +1052,7 @@ TemporaryRenderingContext AWindow::acquireTemporaryRenderingContext() {
 void AWindow::onMouseMove(glm::ivec2 pos) {
     AViewContainer::onMouseMove(pos);
 
-    if (auto v = getViewAtRecusrive(pos)) {
+    if (auto v = getViewAtRecursive(pos)) {
         mCursor = v->getCursor();
     }
 

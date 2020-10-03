@@ -249,6 +249,12 @@ signals:
 	emits<> shown;
 
 	/**
+	 * \brief Окно перемещается.
+	 * \param позиция client-area.
+	 */
+	 emits<glm::vec2> moving;
+
+	/**
 	 * \brief Окно было развёрнуто на весь экран.
 	 */
 	emits<> maximized;

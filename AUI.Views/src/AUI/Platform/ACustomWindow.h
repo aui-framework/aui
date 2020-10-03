@@ -16,14 +16,11 @@ public:
 	ACustomWindow(const AString& name, int width, int height);
 	ACustomWindow();
 	~ACustomWindow() override;
-
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
-
 	void setSize(int width, int height) override;
 
 signals:
-    emits<glm::vec2> dragBegin;
-    emits<> dragEnd;
+    emits<> moveBegin;
+    emits<> moveEnd;
 };
 
 #else

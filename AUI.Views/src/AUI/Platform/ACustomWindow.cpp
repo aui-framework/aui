@@ -1,5 +1,5 @@
 ﻿#include "ACustomWindow.h"
-#include "Desktop.h"
+#include "ADesktop.h"
 
 const int AUI_TITLE_HEIGHT = 30;
 
@@ -30,6 +30,18 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         return 0;
     }
     case WM_NCCALCSIZE:
+        return 0;
+    case WM_MOVING:
+        if (!mDragging) {
+            mDragging = true;
+            emit moveBegin();
+        }
+        break;
+    case WM_EXITSIZEMOVE:
+        if (mDragging) {
+            mDragging = false;
+            emit moveEnd();
+        }
         return 0;
     case WM_NCHITTEST:
     {
@@ -100,11 +112,9 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
         //TODO: allow move?
         if (!result && y - winrect.top <= AUI_TITLE_HEIGHT) {
-            if (auto v = getViewAtRecusrive({ x - winrect.left, y - winrect.top })) {
+            if (auto v = getViewAtRecursive({x - winrect.left, y - winrect.top})) {
                 if (!v->getCssNames().contains("AButton") && !v->getCssNames().contains(".override-title-dragging")) {
                     result = HTCAPTION;
-                    mDragging = true;
-                    emit dragBegin({x, y});
                 }
             }
         }
@@ -197,12 +207,8 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     AViewContainer::onMousePressed(pos, button);
 }
 
-#endif
-
 void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     AViewContainer::onMouseReleased(pos, button);
-    if (mDragging) {
-        mDragging = false;
-        emit dragEnd();
-    }
 }
+
+#endif

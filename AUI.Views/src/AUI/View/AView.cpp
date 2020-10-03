@@ -11,7 +11,7 @@
 #include <memory>
 #include <AUI/IO/StringStream.h>
 
-#include "AUI/Platform/Desktop.h"
+#include "AUI/Platform/ADesktop.h"
 #include "AUI/Render/AFontManager.h"
 #include "AUI/Util/AMetric.h"
 #include "AUI/Util/Factory.h"

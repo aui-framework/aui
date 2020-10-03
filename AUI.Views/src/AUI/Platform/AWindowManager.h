@@ -20,5 +20,22 @@ public:
 
     void notifyProcessMessages() override;
     void loop() override;
+
+    const ADeque<_<AWindow>>& getWindows() const {
+        return mWindows;
+    }
+
+    template<typename T>
+    [[nodiscard]] ADeque<_<AWindow>> getWindowsOfType() const {
+        ADeque<_<AWindow>> result;
+        for (auto& w : mWindows) {
+            if (auto c = _cast<T>(w)) {
+                result << c;
+            }
+        }
+
+        return std::move(result);
+    }
+
 };
 

@@ -216,7 +216,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 	return possibleOutput;
 }
 
-_<AView> AViewContainer::getViewAtRecusrive(glm::ivec2 pos)
+_<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos)
 {
 	_<AView> target = getViewAt(pos);
 	if (!target)
