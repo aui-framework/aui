@@ -470,6 +470,15 @@ void AView::recompileCSS()
 						{
                             drawableDrawWrapper(getSize());
 						};
+					} else if (sizing == "fit-padding")
+					{
+						mCssDrawListFront << [&, drawableDrawWrapper]()
+						{
+                            RenderHints::PushMatrix m;
+                            Render::instance().setTransform(
+                                    glm::translate(glm::mat4(1.f), glm::vec3{mPadding.left, mPadding.top, 0.f}));
+                            drawableDrawWrapper(getSize() - glm::ivec2{mPadding.horizontal(), mPadding.vertical()});
+						};
 					}
 					else {
 						mCssDrawListFront << [&, drawable, drawableDrawWrapper]()
