@@ -47,8 +47,16 @@ void SvgDrawable::draw(const glm::ivec2& size) {
         if (Render::instance().getRepeat() & REPEAT_Y) {
             uv.y = float(size.y) / getSizeHint().y;
         }
+        if (Render::instance().getRepeat() == REPEAT_NONE) {
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        }
+        float scale = glm::min(size.x / mImage->width, size.y / mImage->height);
 
-        Render::instance().drawTexturedRect(0, 0, size.x, size.y, {0, 0}, uv);
+        Render::instance().drawTexturedRect(glm::round((size.x - mImage->width * scale) / 2.f),
+                                            glm::round((size.y - mImage->height * scale) / 2.f),
+                                            size.x,
+                                            size.y, {0, 0}, uv);
     };
     for (auto& p : mRasterized) {
         if (p.key == key) {
@@ -76,7 +84,7 @@ void SvgDrawable::draw(const glm::ivec2& size) {
     image->allocate();
     auto rasterizer = nsvgCreateRasterizer();
     assert(rasterizer);
-    nsvgRasterize(rasterizer, mImage, 0, 0, glm::max(textureSize.x / mImage->width, textureSize.y / mImage->height),
+    nsvgRasterize(rasterizer, mImage, 0, 0, glm::min(textureSize.x / mImage->width, textureSize.y / mImage->height),
                   image->getData().data(), textureSize.x, textureSize.y, textureSize.x * 4);
 
     texture->tex2D(image);

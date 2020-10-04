@@ -181,7 +181,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
 
 void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     if (pos.y < AUI_TITLE_HEIGHT) {
-        auto v = getViewAtRecusrive(pos);
+        auto v = getViewAtRecursive(pos);
         if (!v || !v->getCssNames().contains("AButton")) {
             XClientMessageEvent xclient;
             memset(&xclient, 0, sizeof(XClientMessageEvent));
