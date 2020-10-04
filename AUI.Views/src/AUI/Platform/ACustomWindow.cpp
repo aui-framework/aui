@@ -34,13 +34,13 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     case WM_MOVING:
         if (!mDragging) {
             mDragging = true;
-            emit moveBegin();
+            emit dragBegin();
         }
         break;
     case WM_EXITSIZEMOVE:
         if (mDragging) {
             mDragging = false;
-            emit moveEnd();
+            emit dragEnd();
         }
         return 0;
     case WM_NCHITTEST:

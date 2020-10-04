@@ -19,8 +19,8 @@ public:
 	void setSize(int width, int height) override;
 
 signals:
-    emits<> moveBegin;
-    emits<> moveEnd;
+    emits<> dragBegin;
+    emits<> dragEnd;
 };
 
 #else

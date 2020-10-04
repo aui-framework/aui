@@ -12,7 +12,8 @@ bool SvgImageLoader::matches(_<AByteBuffer> buffer)
 	char buf[8];
 	buffer->get(buf, 5);
 
-	return memcmp(buf, "<?xml", 5) == 0;
+	return memcmp(buf, "<?xml", 5) == 0 ||
+           memcmp(buf, "<svg", 4) == 0;
 }
 
 
