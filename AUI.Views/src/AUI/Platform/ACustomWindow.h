@@ -26,8 +26,11 @@ signals:
 #else
 class API_AUI_VIEWS ACustomWindow: public AWindow
 {
+    friend class AWindowManager;
 private:
     bool mDragging = false;
+
+    void handleXConfigureNotify();
 
 public:
     ACustomWindow(const AString& name, int width, int height);

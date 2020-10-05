@@ -1,5 +1,7 @@
 #pragma once
 #include <AUI/Thread/IEventLoop.h>
+#include "ACustomWindow.h"
+
 
 class AWindow;
 
@@ -38,4 +40,3 @@ public:
     }
 
 };
-

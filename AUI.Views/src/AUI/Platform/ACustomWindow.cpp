@@ -210,5 +210,10 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
 void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     AViewContainer::onMouseReleased(pos, button);
 }
+void ACustomWindow::handleXConfigureNotify() {
+    emit dragEnd();
+}
+
+
 
 #endif

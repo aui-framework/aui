@@ -1242,6 +1242,7 @@ void AWindow::xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) 
 //
 
 #include "AWindowManager.h"
+#include "ACustomWindow.h"
 
 AWindowManager::AWindowManager(): mHandle(this) {}
 
@@ -1325,6 +1326,11 @@ void AWindowManager::loop() {
                         }
                         break;
                     }
+
+                    case ConfigureNotify:
+                        if (auto w = _cast<ACustomWindow>(window = locateWindow(ev.xconfigure.window))) {
+                            w->handleXConfigureNotify();
+                        }
 
                     case MappingNotify:
                         XRefreshKeyboardMapping(&ev.xmapping);
