@@ -41,20 +41,28 @@ void SvgDrawable::draw(const glm::ivec2& size) {
         Render::instance().setFill(Render::FILL_TEXTURED);
         glm::vec2 uv = {1, 1};
 
+        float posX, posY;
+        float scale = glm::min(size.x / mImage->width, size.y / mImage->height);
+
         if (Render::instance().getRepeat() & REPEAT_X) {
             uv.x = float(size.x) / getSizeHint().x;
+            posX = 0;
+        } else {
+            posX = glm::round((size.x - mImage->width * scale) / 2.f);
         }
         if (Render::instance().getRepeat() & REPEAT_Y) {
             uv.y = float(size.y) / getSizeHint().y;
+            posY = 0;
+        } else {
+            posY = glm::round((size.y - mImage->height * scale) / 2.f);
         }
         if (Render::instance().getRepeat() == REPEAT_NONE) {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
         }
-        float scale = glm::min(size.x / mImage->width, size.y / mImage->height);
 
-        Render::instance().drawTexturedRect(glm::round((size.x - mImage->width * scale) / 2.f),
-                                            glm::round((size.y - mImage->height * scale) / 2.f),
+        Render::instance().drawTexturedRect(posX,
+                                            posY,
                                             size.x,
                                             size.y, {0, 0}, uv);
     };
