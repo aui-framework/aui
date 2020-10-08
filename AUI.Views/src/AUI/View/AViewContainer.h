@@ -69,21 +69,25 @@ public:
 	_<AView> getViewAtRecursive(glm::ivec2 pos);
 
 	template<typename T>
-	_<T> getViewAtRecursiveOf(glm::ivec2 pos) {
-        _<AView> target = getViewAt(pos);
+	_<T> getViewAtRecursiveOf(glm::ivec2 pos, bool ignoreGone = true) {
+		for (auto it = mViews.rbegin(); it != mViews.rend(); ++it)
+		{
+			auto view = *it;
+			auto targetPos = pos - view->getPosition();
 
-        while (target)
-        {
-            if (auto applicable = _cast<T>(target)) {
-                return applicable;
-            }
-            auto container = _cast<AViewContainer>(target);
-            if (!container) {
-                return nullptr;
-            }
-            pos -= container->getPosition();
-            target = container->getViewAt(pos);
-        }
+			if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x && targetPos.y < view->getSize().y)
+			{
+				if (!ignoreGone || view->getVisibility() != V_GONE) {
+					if (auto applicable = _cast<T>(view))
+						return applicable;
+					if (auto container = _cast<AViewContainer>(view)) {
+						if (auto applicable = container->getViewAtRecursiveOf<T>(targetPos, ignoreGone)) {
+							return applicable;
+						}
+					}
+				}
+			}
+		}
         return nullptr;
 	}
 

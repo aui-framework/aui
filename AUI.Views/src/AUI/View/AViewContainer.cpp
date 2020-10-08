@@ -202,13 +202,14 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 	for (auto it = mViews.rbegin(); it != mViews.rend(); ++it)
 	{
 		auto view = *it;
-		auto mousePos = pos - view->getPosition();
+		auto targetPos = pos - view->getPosition();
 
-		if (mousePos.x >= 0 && mousePos.y >= 0 && mousePos.x < view->getSize().x && mousePos.y < view->getSize().y)
+		if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x && targetPos.y < view->getSize().y)
 		{
 			if (!ignoreGone || view->getVisibility() != V_GONE) {
-			    possibleOutput = view;
-                if (view->consumesClick(mousePos))
+			    if (!possibleOutput)
+			        possibleOutput = view;
+                if (view->consumesClick(targetPos))
 			        return view;
             }
 		}

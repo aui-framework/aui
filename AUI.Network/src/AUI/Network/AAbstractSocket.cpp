@@ -39,6 +39,9 @@ void aui_wsa_init()
 #include <netinet/in.h>
 #include <cstring>
 #include <netdb.h>
+#include <AUI/Logging/ALogger.h>
+#include <AUI/Util/AError.h>
+
 #endif
 
 void AAbstractSocket::init()
@@ -114,13 +117,22 @@ void AAbstractSocket::handleError(const AString& message, int code)
 
 void AAbstractSocket::bind(uint16_t bindingPort)
 {
-	mSelfAddress = AInet4Address(0u, bindingPort );
+	mSelfAddress = AInet4Address(0u, bindingPort);
 	auto addr = mSelfAddress.addr();
-	const int res = ::bind(getHandle(), reinterpret_cast<const sockaddr*>(&addr), sizeof(sockaddr_in));
-	if (res < 0)
-	{
-		handleError("failed to bind to port: " + AString::number(bindingPort), res);
-	}
+	for (unsigned i = 5; i >= 0; --i) {
+        const int res = ::bind(getHandle(), reinterpret_cast<const sockaddr*>(&addr), sizeof(sockaddr_in));
+        if (res < 0) {
+            if (i == 0) {
+                ALogger::err("failed to bind to port: " + AString::number(bindingPort) + ", giving up.");
+                handleError("failed to bind to port: " + AString::number(bindingPort), res);
+            } else {
+                ALogger::err("failed to bind to port: " + AString::number(bindingPort) + ", trying again");
+                AThread::sleep(3000);
+            }
+        } else {
+            break;
+        }
+    }
 }
 
 AAbstractSocket::AAbstractSocket()
