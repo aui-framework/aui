@@ -1,6 +1,7 @@
 ﻿#pragma once
 
 #include <AUI/Url/AUrl.h>
+#include <AUI/Logging/ALogger.h>
 #include "IImageLoader.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/SharedPtr.h"
@@ -24,6 +25,9 @@ public:
 	    return loadVectorImage(AByteBuffer::fromStream(url.open()));
 	}
 	inline _<AImage> loadRasterImage(const AUrl& url) {
-        return loadRasterImage(AByteBuffer::fromStream(url.open()));
+	    if (auto r = loadRasterImage(AByteBuffer::fromStream(url.open())))
+            return r;
+        ALogger::warn("No applicable image loader for " + url.getFull());
+        return nullptr;
 	}
 };

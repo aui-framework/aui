@@ -39,6 +39,8 @@ ACurl::ACurl(const AString& url)
 	
 	res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
+	res = curl_easy_setopt(mCURL, CURLOPT_SSL_VERIFYPEER, false);
+	assert(res == 0);
 
 	mWorkerThread = _new<AThread>([&]()
 	{

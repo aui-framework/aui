@@ -127,6 +127,7 @@ protected:
     Window mHandle;
     XIC mIC;
 #endif
+    WindowStyle mWindowStyle = WS_DEFAULT;
 
 	virtual void doDrawWindow();
 	virtual void onClosed();
@@ -270,5 +271,4 @@ signals:
 	emits<> restored;
 
 	emits<AInput::Key> keyDown;
-
 };

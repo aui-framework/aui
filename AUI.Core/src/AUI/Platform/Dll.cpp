@@ -14,7 +14,7 @@ _<Dll> Dll::load(const AString& path)
 	auto lib = LoadLibrary(fullpath.c_str());
 	if (!lib)
 	{
-		throw DllLoadException("Could not load shared library: " + fullpath);
+		throw DllLoadException("Could not load shared library: " + fullpath + ": " + AString::number(int(GetLastError())));
 	}
 #elif defined(__ANDROID__)
 	auto name = ("lib" + fullpath).toStdString();

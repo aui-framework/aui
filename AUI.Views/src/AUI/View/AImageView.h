@@ -9,6 +9,7 @@
 class API_AUI_VIEWS AImageView: public AView {
 private:
     _<GL::Texture> mTexture;
+    glm::ivec2 mImageSize = {10, 10};
 
 public:
     explicit AImageView(const _<GL::Texture>& texture);
@@ -17,10 +18,8 @@ public:
     void render() override;
 
     int getContentMinimumWidth() override;
-
     int getContentMinimumHeight() override;
 
-    void setSize(int width, int height) override;
 };
 
 

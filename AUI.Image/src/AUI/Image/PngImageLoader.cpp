@@ -23,11 +23,22 @@ _<IDrawable> PngImageLoader::getDrawable(_<AByteBuffer> buffer) {
 _<AImage> PngImageLoader::getRasterImage(_<AByteBuffer> buffer) {
     int x, y, channels;
     if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer->getCurrentPosAddress(), buffer->getAvailable(),
-                                              &x, &y, &channels, 0)) {
-        assert(channels == 3 || channels == 4);
+                                              &x, &y, &channels, 4)) {
+        channels = 4;
+        uint32_t format = AImage::BYTE;
+        switch (channels) {
+            case 3:
+                format |= AImage::RGB;
+                break;
+            case 4:
+                format |= AImage::RGBA;
+                break;
+            default:
+                assert(0);
+        }
         auto img = _new<AImage>(
                 AVector<uint8_t>{static_cast<uint8_t*>(data), static_cast<uint8_t*>(data + x * y * channels)}, x, y,
-                channels | AImage::BYTE);
+                format);
         stbi_image_free(data);
         return img;
     }

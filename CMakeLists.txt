@@ -93,7 +93,7 @@ endfunction(AUI_Executable)
 function(AUI_Module AUI_MODULE_NAME)
     project(${AUI_MODULE_NAME})
 
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h src/*.manifest)
     add_library(${AUI_MODULE_NAME} SHARED ${SRCS} ${ARGN})
 
     target_include_directories(${AUI_MODULE_NAME} PUBLIC src)

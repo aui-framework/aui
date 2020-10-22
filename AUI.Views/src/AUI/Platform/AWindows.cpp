@@ -212,9 +212,15 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             onMouseDoubleClicked(POS, AInput::LButton);
             return 0;
 
-        case WM_DPICHANGED:
+        case WM_DPICHANGED: {
+            float newDpi = GetDpiForWindow(mHandle) / 96.f;
+
+            setSize(getWidth() * newDpi / mDpiRatio, getHeight() * newDpi / mDpiRatio);
+            mDpiRatio = newDpi;
             updateDpi();
+            flagRedraw();
             return 0;
+        }
 
         case WM_GETMINMAXINFO: {
             MINMAXINFO* info = reinterpret_cast<MINMAXINFO*>(lParam);
@@ -801,6 +807,7 @@ void AWindow::quit() {
 }
 
 void AWindow::setWindowStyle(WindowStyle ws) {
+    mWindowStyle = ws;
 #if defined(_WIN32)
     if (ws & WS_SYS) {
         SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) & ~(WS_CAPTION | WS_THICKFRAME
@@ -816,14 +823,6 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         // small shadow
         SetClassLong(mHandle, GCL_STYLE, GetClassLong(mHandle, GCL_STYLE) | CS_DROPSHADOW);
     } else {
-        if (ws & WS_NO_RESIZE) {
-            SetWindowLongPtr(mHandle, GWL_STYLE,
-                             GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME | WS_THICKFRAME |
-                             WS_SYSMENU | WS_CAPTION);
-        } else {
-            SetWindowLongPtr(mHandle, GWL_STYLE,
-                             GetWindowLong(mHandle, GWL_STYLE) & ~WS_DLGFRAME | WS_OVERLAPPEDWINDOW);
-        }
         if (ws & WS_SIMPLIFIED_WINDOW) {
             SetWindowLongPtr(mHandle, GWL_STYLE,
                              GetWindowLong(mHandle, GWL_STYLE) & ~(WS_THICKFRAME |
@@ -832,6 +831,11 @@ void AWindow::setWindowStyle(WindowStyle ws) {
             SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) | WS_THICKFRAME);
         }
 
+        if (ws & WS_NO_RESIZE) {
+            SetWindowLongPtr(mHandle, GWL_STYLE,
+                             GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME | WS_THICKFRAME |
+                             WS_SYSMENU | WS_CAPTION);
+        }
         if (ws & WS_NO_DECORATORS) {
             LONG lExStyle = GetWindowLong(mHandle, GWL_EXSTYLE);
             lExStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);

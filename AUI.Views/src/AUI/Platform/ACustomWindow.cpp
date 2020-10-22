@@ -53,8 +53,8 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         auto x = GET_X_LPARAM(lParam);
         auto y = GET_Y_LPARAM(lParam);
 
-        bool resizeWidth = true;//window->minimumWidth() != window->maximumWidth();
-        bool resizeHeight = true;//window->minimumHeight() != window->maximumHeight();
+        bool resizeWidth = !(mWindowStyle & WS_NO_RESIZE);//window->minimumWidth() != window->maximumWidth();
+        bool resizeHeight = resizeWidth;//window->minimumHeight() != window->maximumHeight();
 
         if (resizeWidth)
         {
