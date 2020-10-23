@@ -1,7 +1,7 @@
 #include <AUI/IO/ByteBufferOutputStream.h>
 #include <AUI/IO/ByteBufferInputStream.h>
 #include "AJson.h"
-#include "AUI/Util/Tokenizer.h"
+#include "AUI/Util/ATokenizer.h"
 #include "JsonArray.h"
 #include "JsonValue.h"
 #include "JsonObject.h"
@@ -12,7 +12,7 @@
 
 AJsonElement AJson::read(_<IInputStream> is)
 {
-	Tokenizer t(is);
+	ATokenizer t(is);
 
 	std::function<_<IJsonElement>()> read;
 

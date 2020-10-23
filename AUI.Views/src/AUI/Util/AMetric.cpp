@@ -1,7 +1,7 @@
 ﻿#include "AMetric.h"
 
 #include "AUI/IO/StringStream.h"
-#include "AUI/Util/Tokenizer.h"
+#include "AUI/Util/ATokenizer.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Platform/AWindow.h"
@@ -14,7 +14,7 @@ AMetric::AMetric(float value, Unit unit): mValue(value),
 
 AMetric::AMetric(const AString& text)
 {
-	Tokenizer p(_new<StringStream>(text));
+	ATokenizer p(_new<StringStream>(text));
 	mValue = p.readFloat();
 
 	auto unitName = p.readString();

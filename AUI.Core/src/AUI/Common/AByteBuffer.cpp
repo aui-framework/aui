@@ -179,3 +179,25 @@ AString AByteBuffer::toHexString() {
     return result;
 }
 
+uint8_t hexCharToNumber(char c) {
+    if (c >= '0' && c <= '9')
+        return c - '0';
+    if (c >= 'a' && c <= 'f')
+        return 10 + c - 'a';
+    if (c >= 'A' && c <= 'F')
+        return 10 + c - 'A';
+    return -1;
+}
+
+_<AByteBuffer> AByteBuffer::fromHexString(const AString& string) {
+    auto result = _new<AByteBuffer>();
+    result->reserve(string.length() / 2);
+
+    for (int i = 0; i < string.length(); i += 2) {
+        uint8_t byte = (hexCharToNumber(char(string[i])) << 4u) | hexCharToNumber(char(string[i + 1]));
+        *result << byte;
+    }
+
+    return result;
+}
+

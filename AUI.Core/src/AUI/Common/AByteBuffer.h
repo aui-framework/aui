@@ -102,6 +102,7 @@ public:
 
 	static _<AByteBuffer> fromStream(_<IInputStream> is);
     static _<AByteBuffer> fromString(const AString& string);
+    static _<AByteBuffer> fromHexString(const AString& string);
 };
 
 API_AUI_CORE std::ostream& operator<<(std::ostream& o, const AByteBuffer& r);

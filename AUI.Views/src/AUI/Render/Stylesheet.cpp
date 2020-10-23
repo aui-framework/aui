@@ -1,7 +1,7 @@
 ﻿#include "Stylesheet.h"
 
 #include <utility>
-#include "AUI/Util/Tokenizer.h"
+#include "AUI/Util/ATokenizer.h"
 #include "AUI/IO/StringStream.h"
 #include "AUI/Util/EnumUtil.h"
 #include "AUI/Common/AMap.h"
@@ -76,7 +76,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 
 			auto processToken = [&](const AString& token) -> int
 			{
-				Tokenizer p(_new<StringStream>(token));
+				ATokenizer p(_new<StringStream>(token));
 
 				auto name = p.readString({ '_', '-', '.' });
 
@@ -284,7 +284,7 @@ void Stylesheet::load(const _<IInputStream>& css) noexcept {
 void Stylesheet::Cache::load(Stylesheet& ss, const _<IInputStream>& css, bool skipSelector) noexcept
 {
     assert(css);
-	Tokenizer p(css);
+	ATokenizer p(css);
 	AMap<AString, Entry::Property::Type> items = {
 		{"background", Entry::Property::T_BACKGROUND},
 		{"background-color", Entry::Property::T_BACKGROUND_COLOR},
