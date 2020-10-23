@@ -1,6 +1,8 @@
 #if defined(_WIN32)
 #include <Windows.h>
 #include <AUI/Url/AUrl.h>
+#include <AUI/Image/Drawables.h>
+#include <AUI/Util/ImageDrawable.h>
 
 
 BOOL WINAPI DllMain(
@@ -39,9 +41,15 @@ BOOL WINAPI DllMain(
 #include "AUI/Util/BuiltinFiles.h"
 #include "Render/Stylesheet.h"
 
+
+
 struct initialize
 {
     initialize() {
+        Drawables::setImageToDrawable([](const _<AImage>& image) -> _<IDrawable> {
+            return _new<ImageDrawable>(image);
+        });
+
 #ifndef ANDROID
         aui::importPlugin("Svg");
 #endif

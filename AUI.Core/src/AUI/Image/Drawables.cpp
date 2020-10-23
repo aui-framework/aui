@@ -6,8 +6,14 @@
 
 _<IDrawable> Drawables::load(const AString& key)
 {
-	return AImageLoaderRegistry::instance()
-            .loadVectorImage(AByteBuffer::fromStream(AUrl(key).open()));
+    auto buffer = AByteBuffer::fromStream(AUrl(key).open());
+	auto d =  AImageLoaderRegistry::instance()
+            .loadDrawable(buffer);
+	if (d)
+	    return d;
+    if (mImageToDrawable)
+	    return mImageToDrawable(AImageLoaderRegistry::instance().loadImage(buffer));
+    return nullptr;
 }
 
 Drawables::~Drawables()

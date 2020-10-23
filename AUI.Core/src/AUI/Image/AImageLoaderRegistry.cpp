@@ -7,7 +7,7 @@ void AImageLoaderRegistry::registerImageLoader(_<IImageLoader> imageLoader)
 	mImageLoaders << imageLoader;
 }
 
-_<IDrawable> AImageLoaderRegistry::loadVectorImage(_<AByteBuffer> buffer)
+_<IDrawable> AImageLoaderRegistry::loadDrawable(_<AByteBuffer> buffer)
 {
 	for (auto& loader : mImageLoaders)
 	{
@@ -30,7 +30,7 @@ _<IDrawable> AImageLoaderRegistry::loadVectorImage(_<AByteBuffer> buffer)
 	return nullptr;
 }
 
-_<AImage> AImageLoaderRegistry::loadRasterImage(_<AByteBuffer> buffer) {
+_<AImage> AImageLoaderRegistry::loadImage(_<AByteBuffer> buffer) {
     for (auto& loader : mImageLoaders)
     {
         try {
@@ -49,5 +49,12 @@ _<AImage> AImageLoaderRegistry::loadRasterImage(_<AByteBuffer> buffer) {
             buffer->setCurrentPos(0);
         }
     }
+    return nullptr;
+}
+
+_<AImage> AImageLoaderRegistry::loadImage(const AUrl& url) {
+    if (auto r = loadImage(AByteBuffer::fromStream(url.open())))
+        return r;
+    ALogger::warn("No applicable image loader for " + url.getFull());
     return nullptr;
 }

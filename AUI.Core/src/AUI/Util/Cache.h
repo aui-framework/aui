@@ -6,7 +6,7 @@
 #include "Singleton.h"
 
 template<typename T, typename Container>
-class Cache: Singleton<Container>
+class Cache: protected Singleton<Container>
 {
 private:
 	AMap<AString, _<T>> mContainer;

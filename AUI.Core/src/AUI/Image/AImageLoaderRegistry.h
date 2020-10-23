@@ -19,15 +19,10 @@ public:
 
 	void registerImageLoader(_<IImageLoader> imageLoader);
 
-	_<IDrawable> loadVectorImage(_<AByteBuffer> buffer);
-	_<AImage> loadRasterImage(_<AByteBuffer> buffer);
-	inline _<IDrawable> loadVectorImage(const AUrl& url) {
-	    return loadVectorImage(AByteBuffer::fromStream(url.open()));
+	_<IDrawable> loadDrawable(_<AByteBuffer> buffer);
+	_<AImage> loadImage(_<AByteBuffer> buffer);
+	inline _<IDrawable> loadDrawable(const AUrl& url) {
+	    return loadDrawable(AByteBuffer::fromStream(url.open()));
 	}
-	inline _<AImage> loadRasterImage(const AUrl& url) {
-	    if (auto r = loadRasterImage(AByteBuffer::fromStream(url.open())))
-            return r;
-        ALogger::warn("No applicable image loader for " + url.getFull());
-        return nullptr;
-	}
+	_<AImage> loadImage(const AUrl& url);
 };

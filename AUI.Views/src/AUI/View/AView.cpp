@@ -394,13 +394,15 @@ void AView::recompileCSS()
 	processStylesheet(css::T_BACKGROUND_COLOR, [&](property p)
 	{
 		AColor color = p->getArgs()[0];
-		mCssDrawListFront << [&, color]() {
-			RenderHints::PushColor x;
+		if (color.a > 0.001) {
+            mCssDrawListFront << [&, color]() {
+                RenderHints::PushColor x;
 
-			Render::instance().setFill(Render::FILL_SOLID);
-			Render::instance().setColor(color);
-			Render::instance().drawRect(0, 0, getWidth(), getHeight());
-		};
+                Render::instance().setFill(Render::FILL_SOLID);
+                Render::instance().setColor(color);
+                Render::instance().drawRect(0, 0, getWidth(), getHeight());
+            };
+        }
 	});
 	processStylesheet(css::T_BACKGROUND_EFFECT, [&](property p)
 	{
