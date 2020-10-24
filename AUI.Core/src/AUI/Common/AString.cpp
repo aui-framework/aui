@@ -231,3 +231,17 @@ std::string AString::toStdString() const noexcept
 
     return dst;
 }
+
+AString AString::uppercase() const {
+    auto& f = std::use_facet<std::ctype<wchar_t>>(std::locale());
+    AString result = *this;
+    f.toupper(&result[0], &result[0] + result.size());
+    return result;
+}
+
+AString AString::lowercase() const {
+    auto& f = std::use_facet<std::ctype<wchar_t>>(std::locale());
+    AString result = *this;
+    f.tolower(&result[0], &result[0] + result.size());
+    return AString();
+}

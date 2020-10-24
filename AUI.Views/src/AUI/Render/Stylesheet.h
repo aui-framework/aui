@@ -53,10 +53,12 @@ public:
 				// Fonts
 				T_FONT_FAMILY,
 				T_FONT_SIZE,
+				T_TEXT_TRANSFORM,
 
 				// Fields
 				T_BORDER_RADIUS,
 				T_BORDER,
+				T_BORDER_BOTTOM,
 				T_MARGIN,
 				T_PADDING,
 

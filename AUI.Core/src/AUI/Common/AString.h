@@ -130,7 +130,10 @@ public:
 	{
 		std::wstring::pop_back();
 	}
-	
+
+    AString uppercase() const;
+    AString lowercase() const;
+
 	bool startsWith(const AString& other) const noexcept
 	{
 		return rfind(other, 0) == 0;

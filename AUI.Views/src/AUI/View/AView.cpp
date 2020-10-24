@@ -594,6 +594,49 @@ void AView::recompileCSS()
 		}
 		mForceStencilForBackground = true;
 	});
+	processStylesheet(css::T_BORDER_BOTTOM, [&](property p)
+	{
+		float width = 1.f;
+		AColor c;
+
+
+		switch (p->getArgs().size())
+		{
+		case 0:
+			return;
+		case 1:
+			if (p->getArgs()[0] == "none")
+				return;
+			width = AMetric(p->getArgs()[0]).getValuePx();
+			break;
+
+		case 3:
+			width = AMetric(p->getArgs()[0]).getValuePx();
+			c = AColor(p->getArgs()[2]);
+			break;
+
+		case 2:
+			c = AColor(p->getArgs()[1]);
+			break;
+		}
+        mCssDrawListFront << [&, c, width]() {
+            Render::instance().setFill(Render::FILL_SOLID);
+            RenderHints::PushColor x;
+            RenderHints::PushMask mask([&]() {
+                if (mBorderRadius > 0) {
+                    Render::instance().drawRoundedRect(0, 0, getWidth(),
+                                                       getHeight() - width, glm::max(mBorderRadius - width, 0.f));
+                } else {
+                    Render::instance().drawRect(0, 0, getWidth(),
+                                                getHeight() - width);
+                }
+            });
+            RenderHints::PushMask::Layer maskLayer(RenderHints::PushMask::Layer::DECREASE);
+            Render::instance().setColor(c);
+            Render::instance().drawRect(0, 0, getWidth(), getHeight());
+        };
+		mForceStencilForBackground = true;
+	});
 
     processStylesheet(css::T_BORDER_RADIUS, [&](property p)
     {

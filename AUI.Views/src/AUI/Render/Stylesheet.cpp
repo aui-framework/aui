@@ -301,8 +301,10 @@ void Stylesheet::Cache::load(Stylesheet& ss, const _<IInputStream>& css, bool sk
 
 		{"font-family", Entry::Property::T_FONT_FAMILY},
 		{"font-size", Entry::Property::T_FONT_SIZE},
+		{"text-transform", Entry::Property::T_TEXT_TRANSFORM},
 
 		{"border", Entry::Property::T_BORDER},
+		{"border-bottom", Entry::Property::T_BORDER_BOTTOM},
 		{"border-radius", Entry::Property::T_BORDER_RADIUS},
 		{"margin", Entry::Property::T_MARGIN},
 		{"padding", Entry::Property::T_PADDING},

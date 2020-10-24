@@ -13,6 +13,11 @@ private:
     _<AFont> mFontOverride;
     uint8_t mFontSizeOverride = 0;
     Align mVerticalAlign;
+    enum {
+        TT_NORMAL,
+        TT_UPPERCASE,
+        TT_LOWERCASE
+    } mTextTransform = TT_NORMAL;
 
 	bool mMultiline = false;
 	AStringVector mLines;

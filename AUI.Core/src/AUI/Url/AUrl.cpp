@@ -42,5 +42,7 @@ _<IInputStream> AUrl::open() const {
 		}}
 	};
 
-	return resolvers[mProtocol](*this);
+	if (auto is = resolvers[mProtocol](*this))
+	    return is;
+	throw IOException("could not open url: " + getFull());
 }

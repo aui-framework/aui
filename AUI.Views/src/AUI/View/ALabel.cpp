@@ -28,12 +28,22 @@ void ALabel::render()
 	if (!mPrerendered.mVao && !mText.empty())
 	{
 	    auto fs = getFontStyleLabel();
-		if (mMultiline) {			
-			mPrerendered = Render::instance().preRendererString(mLines.join('\n'), fs);
+	    AString targetString;
+		if (mMultiline) {
+            targetString = mLines.join('\n');
 		} else
 		{
-			mPrerendered = Render::instance().preRendererString(mText, fs);
+            targetString = mText;
 		}
+        switch (mTextTransform) {
+		    case TT_UPPERCASE:
+                targetString = targetString.uppercase();
+		        break;
+		    case TT_LOWERCASE:
+                targetString = targetString.lowercase();
+		        break;
+        }
+        mPrerendered = Render::instance().preRendererString(targetString, fs);
 	}
 
 	
@@ -163,6 +173,16 @@ void ALabel::userProcessStyleSheet(const std::function<void(css, const std::func
                 mVerticalAlign = ALIGN_CENTER;
             else
                 mVerticalAlign = ALIGN_LEFT;
+        }
+    });
+    mTextTransform = TT_NORMAL;
+    processor(css::T_TEXT_TRANSFORM, [&](property p)
+    {
+        if (p->getArgs().size() == 1) {
+            if (p->getArgs()[0] == "uppercase")
+                mTextTransform = TT_UPPERCASE;
+            else if (p->getArgs()[0] == "lowercase")
+                mTextTransform = TT_LOWERCASE;
         }
     });
 }

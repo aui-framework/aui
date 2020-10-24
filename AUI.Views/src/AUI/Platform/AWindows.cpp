@@ -146,7 +146,8 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
             return 0;
 
-        case WM_MOUSEMOVE:
+        case WM_MOUSEMOVE: {
+            auto context = acquireTemporaryRenderingContext();
             onMouseMove(POS);
 
             TRACKMOUSEEVENT tme;
@@ -156,7 +157,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             TrackMouseEvent(&tme);
 
             return 0;
-
+        }
         case WM_MOUSELEAVE:
             onMouseLeave();
             return 0;
