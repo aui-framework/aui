@@ -67,8 +67,23 @@ Render::Render()
 		"uniform sampler2D tex;"
 		"uniform vec4 color;"
 		"varying vec2 pass_uv;"
-		"void main(void) {gl_FragColor = texture2D(tex, pass_uv) * color;}",
+		"void main(void) {gl_FragColor = texture2D(tex, pass_uv) * color; if (gl_FragColor.a < 0.01) discard;}",
 		{"pos", "", "uv"});
+
+	mGradientShader.load(
+		"attribute vec3 pos;"
+		"attribute vec2 uv;"
+		"varying vec2 pass_uv;"
+		"void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv;}",
+		"uniform sampler2D tex;"
+		"uniform vec4 color;"
+		"uniform vec4 color_tl;"
+		"uniform vec4 color_tr;"
+		"uniform vec4 color_bl;"
+		"uniform vec4 color_br;"
+		"varying vec2 pass_uv;"
+		"void main(void) {gl_FragColor = mix(mix(color_tl, color_tr, pass_uv.x), mix(color_bl, color_br, pass_uv.x), pass_uv.y) * color;}",
+		{"pos", "uv"});
 
 	mSymbolShader.load(
 		"attribute vec3 pos;"
@@ -82,7 +97,7 @@ Render::Render()
 		"varying vec2 pass_uv;"
 		"uniform sampler2D tex;"
 		"uniform vec4 color;"
-		"void main(void) {float sample = pow(texture2D(tex, pass_uv).r, 1.0 / 1.2); gl_FragColor = vec4(color.rgb, color.a * sample);}",
+		"void main(void) {float sample = pow(texture2D(tex, pass_uv).r, 1.0 / 1.2); gl_FragColor = vec4(color.rgb, color.a * sample); if (gl_FragColor.a < 0.01) discard;}",
 		{"pos", "uv"});
 
 	mSymbolShaderSubPixel.load(
@@ -299,6 +314,10 @@ void Render::setFill(Filling t)
 		mSolidShader.use();
 		break;
 
+	case FILL_GRADIENT:
+		mGradientShader.use();
+		break;
+
 	case FILL_TEXTURED:
 		mTexturedShader.use();
 		break;
@@ -469,6 +488,15 @@ void Render::uploadToShader()
 
 glm::vec2 Render::getCurrentPos() {
     return glm::vec2(mTransform * glm::vec4(0, 0, 0, 1.f));
+}
+
+void Render::setGradientColors(const AColor& tl, const AColor& tr,
+                               const AColor& bl, const AColor& br) {
+    mGradientShader.use();
+    mGradientShader.set("color_tl", tl);
+    mGradientShader.set("color_tr", tr);
+    mGradientShader.set("color_bl", bl);
+    mGradientShader.set("color_br", br);
 }
 
 

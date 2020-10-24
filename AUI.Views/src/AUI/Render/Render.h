@@ -34,6 +34,7 @@ public:
 		 */
 		FILL_SOLID_TRANSFORM,
 		FILL_TEXTURED,
+		FILL_GRADIENT,
 		FILL_SYMBOL,
 		FILL_SYMBOL_SUBPIXEL,
 	};
@@ -59,6 +60,7 @@ private:
 	AWindow* mWindow = nullptr;
 	AColor mColor = 1.f;
 	GL::Shader mSolidShader;
+	GL::Shader mGradientShader;
 	GL::Shader mRoundedSolidShader;
 	GL::Shader mSolidTransformShader;
 	GL::Shader mBoxShadowShader;
@@ -89,7 +91,10 @@ public:
 	void drawRectBorder(float x, float y, float width, float height, float lineWidth = 1.f);
 	
 	void setFill(Filling t);
-	
+
+	void setGradientColors(const AColor& tl, const AColor& tr,
+						   const AColor& bl, const AColor& br);
+
 	void setWindow(AWindow* const window)
 	{
 		mWindow = window;

@@ -61,3 +61,10 @@ public:
         return mul(1.f + d);
     }
 };
+
+
+inline AColor operator"" _argb(unsigned long long v)
+{
+    return AColor::fromAARRGGBB(unsigned(v));
+}
+

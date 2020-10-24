@@ -41,3 +41,7 @@ inline float operator"" _dp(unsigned long long v)
 {
 	return AMetric(static_cast<float>(v), AMetric::T_EM).getValuePx();
 }
+inline float operator"" _pt(unsigned long long v)
+{
+	return AMetric(static_cast<float>(v), AMetric::T_PT).getValuePx();
+}

@@ -32,7 +32,7 @@ int ::AStackedLayout::getMinimumWidth()
 {
 	int m = 0;
 	for (auto& v : mViews)
-		m = glm::max(v->getMinimumWidth(), m);
+		m = glm::max(int(v->getMinimumWidth() + v->getMargin().horizontal()), m);
 	return m;
 }
 
@@ -40,7 +40,7 @@ int ::AStackedLayout::getMinimumHeight()
 {
 	int m = 0;
 	for (auto& v : mViews) {
-		m = glm::max(v->getMinimumHeight(), m);
+		m = glm::max(int(v->getMinimumHeight() + v->getMargin().vertical()), m);
 	}
 	return m;
 }
