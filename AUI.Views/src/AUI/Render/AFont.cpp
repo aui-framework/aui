@@ -162,6 +162,8 @@ float AFont::length(const AString& text, long size, FontRendering fr)
 	for (AString::const_iterator i = text.begin(); i != text.end(); i++) {
 		if (*i == ' ')
 			advance += float(size) / 2.3f;
+		else if (*i == '\n')
+		    advance = 0;
 		else {
 			Character* ch = getCharacter(*i, size, fr);
 			if (ch)

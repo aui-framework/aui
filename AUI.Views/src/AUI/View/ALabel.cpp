@@ -93,6 +93,10 @@ int ALabel::getContentMinimumWidth()
 {
 	if (mMultiline)
 		return 10;
+
+	if (mPrerendered.mVao) {
+	    return mPrerendered.length;
+	}
 	return getFontStyleLabel().getWidth(mText);
 }
 
@@ -135,23 +139,22 @@ void ALabel::setMultiline(const bool multiline)
 	redraw();
 }
 
-void ALabel::setGeometry(int x, int y, int width, int height)
-{
+void ALabel::setSize(int width, int height) {
     auto oldWidth = getWidth();
-	AView::setGeometry(x, y, width, height);
+    AView::setSize(width, height);
 
     bool refresh = mMultiline && oldWidth != getWidth();
 
-	if (mMultiline)
-		updateMultiline();
-	
-	if (refresh) {
-		AThread::current()->enqueue([&]()
-		{
-			if (getParent())
-				getParent()->updateLayout();
-		});
-	}
+    if (mMultiline)
+        updateMultiline();
+
+    if (refresh) {
+        AThread::current()->enqueue([&]()
+        {
+            if (getParent())
+                getParent()->updateLayout();
+        });
+    }
 }
 
 FontStyle ALabel::getFontStyleLabel() {

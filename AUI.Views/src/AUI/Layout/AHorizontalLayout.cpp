@@ -19,7 +19,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 	cache.reserve(mViews.size());
 	
 	int sum = 0;
-	int availableSpace = width;
+	int availableSpace = width - x;
 	
 	for (auto& view : mViews)
 	{
@@ -43,11 +43,14 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 		auto maxSize = view->getMaxSize();
 		auto& e = cache[index++];
 		auto margins = view->getMargin();
+		auto cmin = view->getMinimumWidth();
+		//assert(cmin == e.minSpace - margins.horizontal());
 
 		if (view == last)
 		{
 			// последний элемент должен находиться идеально ровно на границе.
 			int viewPosX = glm::round(posX) + margins.left;
+			//assert(int(width - viewPosX - margins.right) >= e.minSpace - margins.horizontal());
 			view->setGeometry(viewPosX, y + margins.top, width - viewPosX - margins.right, height - margins.vertical());
 		}
 		else {

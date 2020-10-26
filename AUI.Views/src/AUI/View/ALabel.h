@@ -70,8 +70,8 @@ public:
 	    mFontOverride = font;
 	}
 	void setFontSize(uint8_t size) {
-	    mFontSizeOverride = size;
-	}
+        mFontSizeOverride = size;
+    }
 
-	void setGeometry(int x, int y, int width, int height) override;
+    void setSize(int width, int height) override;
 };

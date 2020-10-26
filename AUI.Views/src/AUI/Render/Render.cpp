@@ -464,7 +464,7 @@ Render::PrerendereredString Render::preRendererString(const AString& text, FontS
 			}
 
 			advance += ch->advanceX;
-			//advance = glm::ceil(advance);
+			advance = glm::floor(advance);
 		}
 	}
 	auto vao = _new<GL::Vao>();
@@ -477,7 +477,10 @@ Render::PrerendereredString Render::preRendererString(const AString& text, FontS
 	if (prevWidth != -1 && fs.font->texturePackerOf(fs.size, fs.fontRendering)->getImage()->getWidth() != prevWidth) {
 		return preRendererString(text, fs); // ������ ��������
 	}
-	return { vao, fs, fs.font->length(text, fs.size, fs.fontRendering), uint16_t(prevWidth), text };
+
+    assert(advance == fs.font->length(text, fs.size, fs.fontRendering));
+
+	return { vao, fs, advance, uint16_t(prevWidth), text };
 }
 
 void Render::uploadToShader()

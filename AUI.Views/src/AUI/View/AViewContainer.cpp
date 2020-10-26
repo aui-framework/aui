@@ -178,13 +178,6 @@ bool AViewContainer::consumesClick(const glm::ivec2& pos) {
     return false;
 }
 
-void AViewContainer::setSize(int width, int height)
-{
-	AView::setSize(width, height);
-	updateLayout();
-}
-
-
 void AViewContainer::setLayout(_<ALayout> layout)
 {
 	mViews.clear();
@@ -232,21 +225,25 @@ _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos)
 	return target;
 }
 
+
+void AViewContainer::setSize(int width, int height)
+{
+    mSizeSet = true;
+    AView::setSize(width, height);
+    updateLayout();
+}
+
+void AViewContainer::recompileCSS() {
+    AView::recompileCSS();
+    if (mSizeSet)
+        updateLayout();
+}
+
 void AViewContainer::updateLayout()
 {
     if (mLayout)
         mLayout->onResize(mPadding.left, mPadding.top,
                           getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
-}
-
-void AViewContainer::recompileCSS() {
-    AView::recompileCSS();
-    updateLayout();
-}
-
-void AViewContainer::setGeometry(int x, int y, int width, int height) {
-    AView::setGeometry(x, y, width, height);
-    updateLayout();
 }
 
 void AViewContainer::removeAllViews() {
