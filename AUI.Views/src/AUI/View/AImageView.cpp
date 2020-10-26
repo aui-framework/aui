@@ -22,9 +22,9 @@ void AImageView::render() {
 
 
 int AImageView::getContentMinimumWidth() {
-    return mImageSize.x;
+    return 0;
 }
 
 int AImageView::getContentMinimumHeight() {
-    return glm::max(mImageSize.y, getContentWidth() * mImageSize.y / mImageSize.x);
+    return getContentWidth() * mImageSize.y / mImageSize.x;
 }
