@@ -48,6 +48,16 @@ void AViewContainer::userProcessStyleSheet(
 			mLayout->setSpacing(AMetric(p->getArgs()[0]).getValuePx());
 		}
 	});
+
+	mHasBackground = false;
+	auto bg = [&](property p)
+	{
+		if (p->getArgs().size() > 0 && p->getArgs()[0] != "none") {
+			mHasBackground = true;
+		}
+	};
+	processor(css::T_BACKGROUND, bg);
+	processor(css::T_BACKGROUND_COLOR, bg);
 }
 
 AViewContainer::AViewContainer()
@@ -172,6 +182,8 @@ void AViewContainer::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
 }
 
 bool AViewContainer::consumesClick(const glm::ivec2& pos) {
+	if (mHasBackground)
+		return true;
     auto p = getViewAt(pos);
     if (p)
         return p->consumesClick(pos - p->getPosition());
@@ -254,4 +266,3 @@ void AViewContainer::removeAllViews() {
     }
     mViews.clear();
 }
-

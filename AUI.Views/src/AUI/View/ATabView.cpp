@@ -34,7 +34,7 @@ ATabView::ATabView() {
 
     mButtonsRow->addCssName(".tabview_row");
 
-    connect(mPageView->pageChanged, this, [&](unsigned pageId) {
+    connect(mPageView->pageChanging, this, [&](unsigned pageId) {
         _cast<ATabButtonView>(mButtonsRow->getViews()[mPageView->getPageId()])->setCurrent(false);
         _cast<ATabButtonView>(mButtonsRow->getViews()[pageId])->setCurrent(true);
     });

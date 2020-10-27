@@ -11,10 +11,11 @@ APageView::APageView() {
 
 void APageView::setPageId(unsigned int pageId) {
     assert(pageId < getViews().size());
-    emit pageChanged(pageId);
+    emit pageChanging(pageId);
     getViews()[mPageId]->setVisibility(V_GONE);
     getViews()[pageId]->setVisibility(V_VISIBLE);
     mPageId = pageId;
+    emit pageChanged();
 }
 
 void APageView::addPage(const _<AView>& view) {

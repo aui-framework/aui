@@ -27,23 +27,7 @@ void ALabel::render()
 	
 	if (!mPrerendered.mVao && !mText.empty())
 	{
-	    auto fs = getFontStyleLabel();
-	    AString targetString;
-		if (mMultiline) {
-            targetString = mLines.join('\n');
-		} else
-		{
-            targetString = mText;
-		}
-        switch (mTextTransform) {
-		    case TT_UPPERCASE:
-                targetString = targetString.uppercase();
-		        break;
-		    case TT_LOWERCASE:
-                targetString = targetString.lowercase();
-		        break;
-        }
-        mPrerendered = Render::instance().preRendererString(targetString, fs);
+	    doPrerender();
 	}
 
 	
@@ -93,11 +77,15 @@ int ALabel::getContentMinimumWidth()
 {
 	if (mMultiline)
 		return 10;
-
+	if (!mPrerendered.mVao) {
+	    doPrerender();
+	}
+    return mPrerendered.length;
+	/*
 	if (mPrerendered.mVao) {
 	    return mPrerendered.length;
 	}
-	return getFontStyleLabel().getWidth(mText);
+	return getFontStyleLabel().getWidth(mText);*/
 }
 
 int ALabel::getContentMinimumHeight()
@@ -188,4 +176,24 @@ void ALabel::userProcessStyleSheet(const std::function<void(css, const std::func
                 mTextTransform = TT_LOWERCASE;
         }
     });
+}
+
+void ALabel::doPrerender() {
+    auto fs = getFontStyleLabel();
+    AString targetString;
+    if (mMultiline) {
+        targetString = mLines.join('\n');
+    } else
+    {
+        targetString = mText;
+    }
+    switch (mTextTransform) {
+        case TT_UPPERCASE:
+            targetString = targetString.uppercase();
+            break;
+        case TT_LOWERCASE:
+            targetString = targetString.lowercase();
+            break;
+    }
+    mPrerendered = Render::instance().preRendererString(targetString, fs);
 }

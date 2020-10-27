@@ -45,6 +45,7 @@ public:
         mIcon = drawable;
         redraw();
     }
+    void doPrerender();
 
 protected:
     void
@@ -74,4 +75,5 @@ public:
     }
 
     void setSize(int width, int height) override;
+
 };

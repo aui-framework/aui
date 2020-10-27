@@ -166,12 +166,13 @@ float AFont::length(const AString& text, long size, FontRendering fr)
 		    advance = 0;
 		else {
 			Character* ch = getCharacter(*i, size, fr);
-			if (ch)
-				advance += ch->advanceX;
+			if (ch) {
+                advance += ch->advanceX;
+                advance = glm::floor(advance);
+            }
 			else
 				advance += float(size) / 2.3f;
 		}
-		advance = glm::floor(advance);
 	}
 	return advance;
 }

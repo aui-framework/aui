@@ -487,7 +487,7 @@ inline AString API_AUI_CORE operator+(char lhs, const AString& cs) noexcept
 
 inline AString operator"" _as(const char* str, size_t len)
 {
-    return AString(str, str + len);
+    return {str};
 }
 
 inline std::ostream& operator<<(std::ostream& o, const AString& s)

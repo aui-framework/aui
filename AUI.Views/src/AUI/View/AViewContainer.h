@@ -13,6 +13,7 @@ class API_AUI_VIEWS AViewContainer: public AView
 private:
 	_<ALayout> mLayout;
     bool mSizeSet = false;
+    bool mHasBackground = false;
 	
 protected:
 	AVector<_<AView>> mViews;
@@ -94,6 +95,7 @@ public:
 
 	void updateLayout();
 
+public:
 
     const AVector<_<AView>>& getViews() const
 	{

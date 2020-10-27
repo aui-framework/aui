@@ -20,6 +20,7 @@ public:
     int getContentMinimumWidth() override;
     int getContentMinimumHeight() override;
 
+    void setSize(int width, int height) override;
 };
 
 

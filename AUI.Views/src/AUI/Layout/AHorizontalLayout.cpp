@@ -25,7 +25,8 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 	{
 		view->ensureCSSUpdated();
 		int e = view->getExpandingHorizontal();
-		int minSpace = view->getMinimumWidth() + view->getMargin().horizontal();
+		auto m = view->getMinimumWidth();
+		int minSpace = m + view->getMargin().horizontal();
 		sum += e;
 		if (e == 0)
 			availableSpace -= (minSpace + mSpacing);
@@ -43,7 +44,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 		auto maxSize = view->getMaxSize();
 		auto& e = cache[index++];
 		auto margins = view->getMargin();
-		auto cmin = view->getMinimumWidth();
+		//auto cmin = view->getMinimumWidth();
 		//assert(cmin == e.minSpace - margins.horizontal());
 
 		if (view == last)

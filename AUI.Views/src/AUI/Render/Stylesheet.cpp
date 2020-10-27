@@ -317,6 +317,8 @@ void Stylesheet::Cache::load(Stylesheet& ss, const _<IInputStream>& css, bool sk
 		{"height", Entry::Property::T_HEIGHT},
 
 		{"-aui-spacing", Entry::Property::T_AUI_SPACING},
+		{"-aui-offset", Entry::Property::T_AUI_OFFSET},
+		{"-aui-scale", Entry::Property::T_AUI_SCALE},
 		{"-aui-font-rendering", Entry::Property::T_AUI_FONT_RENDERING},
         {"-aui-background-overlay", Entry::Property::T_AUI_BACKGROUND_OVERLAY},
 	};

@@ -237,7 +237,6 @@ void AView::recompileCSS()
 		}
 		return {};
 	};
-
 	processStylesheet(css::T_MARGIN, [&](property p)
 	{
 		mMargin = fieldProcessor(p);
@@ -358,6 +357,45 @@ void AView::recompileCSS()
 
 	// составление списка отрисовки.
 	mCssDrawListFront.clear();
+
+    processStylesheet(css::T_AUI_SCALE, [&](property p)
+    {
+        float oX, oY;
+        switch (p->getArgs().size()) {
+            case 1:
+                oX = oY = p->getArgs()[0].toFloat();
+                break;
+            case 2:
+                oX = p->getArgs()[0].toFloat();
+                oY = p->getArgs()[1].toFloat();
+                break;
+            default:
+                return;
+        }
+        mCssDrawListFront << [&, oX, oY]() {
+            Render::instance().setTransform(glm::scale(glm::mat4(1.f), glm::vec3{oX, oY, 1.0}));
+        };
+    });
+
+    processStylesheet(css::T_AUI_OFFSET, [&](property p)
+    {
+        int oX, oY;
+        switch (p->getArgs().size()) {
+            case 1:
+                oX = oY = AMetric(p->getArgs()[0]).getValuePx();
+                break;
+            case 2:
+                oX = AMetric(p->getArgs()[0]).getValuePx();
+                oY = AMetric(p->getArgs()[1]).getValuePx();
+                break;
+            default:
+                return;
+        }
+        mCssDrawListFront << [&, oX, oY]() {
+            Render::instance().setTransform(glm::translate(glm::mat4(1.f), glm::vec3{oX, oY, 0.0}));
+        };
+    });
+
 	processStylesheet(css::T_BOX_SHADOW, [&](property p)
 	{
         glm::vec2 offset;

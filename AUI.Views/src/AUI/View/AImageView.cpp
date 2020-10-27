@@ -4,6 +4,7 @@
 
 #include "AImageView.h"
 #include <AUI/Render/Render.h>
+#include <AUI/View/AViewContainer.h>
 
 AImageView::AImageView(const _<GL::Texture>& texture) : mTexture(texture) {}
 
@@ -27,4 +28,11 @@ int AImageView::getContentMinimumWidth() {
 
 int AImageView::getContentMinimumHeight() {
     return getContentWidth() * mImageSize.y / mImageSize.x;
+}
+
+void AImageView::setSize(int width, int height) {
+    auto w = getSize().x != width;
+    AView::setSize(width, height);
+    if (w)
+        getParent()->updateLayout();
 }

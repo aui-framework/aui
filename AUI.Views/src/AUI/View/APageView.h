@@ -22,7 +22,9 @@ public:
     }
 
 signals:
-    emits<unsigned> pageChanged;
+    emits<unsigned> pageChanging;
+    emits<> pageChanged;
+
 };
 
 
