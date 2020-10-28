@@ -68,7 +68,7 @@ void Platform::playSystemSound(Sound s)
 
 float Platform::getDpiRatio()
 {
-	return GetDpiForSystem() / 96.f;
+	return GetDpiForSystem() / 96.f * AViews::DPI_RATIO;
 }
 #else
 

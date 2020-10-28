@@ -252,6 +252,12 @@ protected:
 	 */
 	virtual void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor);
 
+
+	/**
+	 * \brief Попробовать определить std::shared_ptr для этого объекта.
+	 */
+    _<AView> determineSharedPointer() const;
+
 public:
 	AView();
 	virtual ~AView() = default;
@@ -449,10 +455,15 @@ public:
 	}
 
 	/**
-	 * \brief выставить минимально возможный размер AView.
+	 * \brief Выставить минимально возможный размер AView.
 	 */
 	void pack();
 
+
+	/**
+	 * \brief Выставить фокус на этот AView.
+	 */
+	 void focus();
 
 	/**
 	 * \return координаты этого AView относительно левого верхнего угла окна

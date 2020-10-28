@@ -10,6 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <AUI/IO/StringStream.h>
+#include <AUI/Util/kAUI.h>
 
 #include "AUI/Platform/ADesktop.h"
 #include "AUI/Render/AFontManager.h"
@@ -962,4 +963,23 @@ void AView::setCss(const AString& cssCode) {
         mCustomStylesheet->load(Stylesheet::instance(), _new<StringStream>(cssCode), true);
     }
     recompileCSS();
+}
+
+_<AView> AView::determineSharedPointer() const {
+    if (mParent) {
+        for (auto& p : mParent->getViews()) {
+            if (p.get() == this) {
+                return p;
+            }
+        }
+    }
+    return nullptr;
+}
+
+void AView::focus() {
+    uiX [&]() {
+        auto s = determineSharedPointer();
+        assert(s);
+        AWindow::current()->setFocusedView(s);
+    };
 }

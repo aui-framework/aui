@@ -12,6 +12,7 @@ const int AUI_TITLE_HEIGHT = 30;
 #include "AUI/Render/AFontManager.h"
 
 #include <dwmapi.h>
+#include <AUI/Util/kAUI.h>
 
 
 LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -142,14 +143,14 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height): AWindo
     const MARGINS shadow = { 1, 1, 1, 1 };
     DwmExtendFrameIntoClientArea((HWND)getNativeHandle(), &shadow);
 
+    // обновить размер окна
     RECT rcClient;
     GetWindowRect(getNativeHandle(), &rcClient);
 
-    // Inform the application of the frame change.
     SetWindowPos(getNativeHandle(),
-        NULL,
-        rcClient.left, rcClient.top,
-        rcClient.right - rcClient.left, rcClient.bottom - rcClient.top,
+                 NULL,
+                 rcClient.left, rcClient.top,
+                 rcClient.right - rcClient.left, rcClient.bottom - rcClient.top,
                  SWP_FRAMECHANGED);
 }
 

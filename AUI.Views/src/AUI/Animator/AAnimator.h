@@ -1,7 +1,6 @@
 #pragma once
 
 #include <AUI/Common/AObject.h>
-#include <AUI/Views.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 class AView;

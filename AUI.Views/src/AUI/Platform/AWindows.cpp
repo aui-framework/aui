@@ -20,7 +20,7 @@
 #include <AUI/Image/Drawables.h>
 #include <AUI/Util/kAUI.h>
 
-constexpr bool AUI_DISPLAY_BOUNDS = true;
+constexpr bool AUI_DISPLAY_BOUNDS = false;
 AWindow::Context AWindow::context = {};
 
 #if defined(_WIN32)
@@ -128,7 +128,8 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
 
-        case WM_SIZE:
+        case WM_SIZE: {
+            wglMakeCurrent(mDC, context.hrc);
             emit resized(LOWORD(lParam), HIWORD(lParam));
             AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
 
@@ -145,7 +146,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             }
 
             return 0;
-
+        }
         case WM_MOUSEMOVE: {
             auto context = acquireTemporaryRenderingContext();
             onMouseMove(POS);
@@ -214,7 +215,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
 
         case WM_DPICHANGED: {
-            float newDpi = GetDpiForWindow(mHandle) / 96.f;
+            float newDpi = GetDpiForWindow(mHandle) / 96.f * AViews::DPI_RATIO;
 
             setSize(getWidth() * newDpi / mDpiRatio, getHeight() * newDpi / mDpiRatio);
             mDpiRatio = newDpi;
@@ -875,7 +876,7 @@ void AWindow::close() {
 void AWindow::updateDpi() {
     emit dpiChanged;
 #if defined(_WIN32)
-    mDpiRatio = GetDpiForWindow(mHandle) / 96.f;
+    mDpiRatio = GetDpiForWindow(mHandle) / 96.f * AViews::DPI_RATIO;
 #else
     mDpiRatio = Platform::getDpiRatio();
 #endif
