@@ -4,6 +4,7 @@
 
 #include <AUI/Layout/AStackedLayout.h>
 #include "APageView.h"
+#include <AUI/Platform/AWindow.h>
 
 APageView::APageView() {
     setLayout(_new<AStackedLayout>());
@@ -16,6 +17,8 @@ void APageView::setPageId(unsigned int pageId) {
     getViews()[pageId]->setVisibility(V_VISIBLE);
     mPageId = pageId;
     emit pageChanged();
+
+    AWindow::current()->updateLayout();
 }
 
 void APageView::addPage(const _<AView>& view) {

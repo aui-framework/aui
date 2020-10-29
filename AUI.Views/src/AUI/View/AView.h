@@ -388,6 +388,9 @@ public:
 	int getMinimumWidth();
 	int getMinimumHeight();
 
+	glm::ivec2 getMinimumSize() {
+	    return {getMinimumWidth(), getMinimumHeight()};
+	}
 
 	[[nodiscard]] const glm::ivec2& getMaxSize() const
 	{

@@ -256,6 +256,7 @@ void AViewContainer::updateLayout()
     if (mLayout)
         mLayout->onResize(mPadding.left, mPadding.top,
                           getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+    updateParentsLayoutIfNecessary();
 }
 
 void AViewContainer::removeAllViews() {
@@ -265,4 +266,13 @@ void AViewContainer::removeAllViews() {
         }
     }
     mViews.clear();
+}
+
+void AViewContainer::updateParentsLayoutIfNecessary() {
+	if (mPreviousSize != mSize) {
+		mPreviousSize = mSize;
+		if (mParent) {
+			mParent->updateLayout();
+		}
+	}
 }

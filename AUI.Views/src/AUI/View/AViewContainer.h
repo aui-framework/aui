@@ -14,7 +14,8 @@ private:
 	_<ALayout> mLayout;
     bool mSizeSet = false;
     bool mHasBackground = false;
-	
+	glm::ivec2 mPreviousSize = mSize;
+
 protected:
 	AVector<_<AView>> mViews;
 	
@@ -33,6 +34,12 @@ protected:
 
     void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)
 	override;
+
+    /**
+     * \brief Обновляет макет родительского AView, если размер этого элемента был изменён.
+     */
+    void updateParentsLayoutIfNecessary();
+
 public:
 	AViewContainer();
 	virtual ~AViewContainer();

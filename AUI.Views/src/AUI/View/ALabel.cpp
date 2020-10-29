@@ -24,7 +24,10 @@ ALabel::ALabel(const AString& text):
 void ALabel::render()
 {
 	AView::render();
-	
+
+	if (mMultiline && mLines.empty()) {
+	    updateMultiline();
+	}
 	if (!mPrerendered.mVao && !mText.empty())
 	{
 	    doPrerender();
@@ -65,7 +68,11 @@ void ALabel::render()
 		if (mPrerendered.mVao) {
 		    int y = mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)) + 1;
 		    if (mVerticalAlign == ALIGN_CENTER) {
-		        y = glm::max(y, (getHeight() - getFontStyleLabel().size) / 2 - 1);
+		        if (mMultiline) {
+		            y = glm::max(y, (getHeight() - getMinimumHeight()) / 2 - 1);
+		        } else {
+                    y = glm::max(y, (getHeight() - getFontStyleLabel().size) / 2 - 1);
+                }
 		    }
 			Render::instance().drawString(leftPadding, y, mPrerendered);
 		}
@@ -120,7 +127,7 @@ void ALabel::setMultiline(const bool multiline)
 	if (multiline) {
 		if (getParent())
 			getParent()->updateLayout();
-		updateMultiline();
+		//updateMultiline();
 	}
 	else
 		mLines.clear();
@@ -131,7 +138,7 @@ void ALabel::setSize(int width, int height) {
     auto oldWidth = getWidth();
     AView::setSize(width, height);
 
-    bool refresh = mMultiline && oldWidth != getWidth();
+    bool refresh = mMultiline && (mLines.empty() || oldWidth != getWidth());
 
     if (mMultiline)
         updateMultiline();

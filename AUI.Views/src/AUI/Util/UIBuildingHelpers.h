@@ -14,6 +14,7 @@
 #include <AUI/Layout/AStackedLayout.h>
 #include <AUI/Layout/AGridLayout.h>
 #include <AUI/Layout/AAdvancedGridLayout.h>
+#include <AUI/Image/AImageLoaderRegistry.h>
 
 
 template<typename Layout, typename... Args>
