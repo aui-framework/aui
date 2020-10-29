@@ -776,6 +776,27 @@ void AWindow::redraw() {
                                                 getWidth() + getMargin().horizontal(),
                                                 getHeight() + getMargin().vertical());
                 }
+
+                glDisable(GL_STENCIL_TEST);
+                // Подписи
+                {
+                    int x = -getMargin().left;
+                    int y = getHeight() + getMargin().bottom + 2_dp;
+
+                    FontStyle fs;
+                    fs.color = 0xffffffffu;
+                    fs.fontRendering = FR_ANTIALIASING;
+                    fs.size = 9_pt;
+                    auto s = Render::instance().preRendererString(getCssNames().back() + "\n"_as +
+                                                                  AString::number(getSize().x) + "x"_as + AString::number(getSize().y), fs);
+
+                    {
+                        RenderHints::PushColor c;
+                        Render::instance().setColor(0x00000070u);
+                        Render::instance().drawRect(x, y, s.length + 4_dp, fs.size * 2.5 + 2_dp);
+                    }
+                    Render::instance().drawString(x + 2_dp, y + 1_dp, s);
+                }
             });
         }
 

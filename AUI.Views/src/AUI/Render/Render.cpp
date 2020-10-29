@@ -399,6 +399,7 @@ Render::PrerendereredString Render::preRendererString(const AString& text, FontS
 	if (!fs.font)
 		fs.font = d;
 	float advance = 0;
+	float advanceMax = 0;
 	int advanceY = 0;
 
 
@@ -423,6 +424,7 @@ Render::PrerendereredString Render::preRendererString(const AString& text, FontS
 			advance += fs.size / 2.3f;
 		}
 		else if (*i == '\n') {
+            advanceMax = (glm::max)(advanceMax, advance);
 			advance = 0;
 			advanceY += fs.font->getAscenderHeight(fs.size) * (1.f + fs.lineSpacing);
 		}
@@ -477,10 +479,11 @@ Render::PrerendereredString Render::preRendererString(const AString& text, FontS
 	if (prevWidth != -1 && fs.font->texturePackerOf(fs.size, fs.fontRendering)->getImage()->getWidth() != prevWidth) {
 		return preRendererString(text, fs); // ������ ��������
 	}
+    advanceMax = (glm::max)(advanceMax, advance);
 
-    assert(advance == fs.font->length(text, fs.size, fs.fontRendering));
+    //assert(advanceMax == fs.font->length(text, fs.size, fs.fontRendering));
 
-	return { vao, fs, advance, uint16_t(prevWidth), text };
+	return { vao, fs, advanceMax, uint16_t(prevWidth), text };
 }
 
 void Render::uploadToShader()
