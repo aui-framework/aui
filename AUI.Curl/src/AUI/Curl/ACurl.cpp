@@ -67,7 +67,7 @@ int ACurl::read(char* dst, int size)
 	while (mDataQueue.empty())
 	{
 		if (mFinished)
-			return -1;
+			return 0;
 		mDataWaiter.wait(lock);
 	}
 

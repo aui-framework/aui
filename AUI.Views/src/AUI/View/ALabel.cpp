@@ -140,8 +140,11 @@ void ALabel::setSize(int width, int height) {
 
     bool refresh = mMultiline && (mLines.empty() || oldWidth != getWidth());
 
-    if (mMultiline)
+    if (mMultiline) {
         updateMultiline();
+        if (mLines.empty())
+            return;
+    }
 
     if (refresh) {
         AThread::current()->enqueue([&]()

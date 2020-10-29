@@ -1,19 +1,47 @@
 ﻿#include "ADesktop.h"
 #include "ACursor.h"
+#include "AWindow.h"
 
 #if defined(_WIN32)
+
 #include <Windows.h>
-glm::ivec2 ADesktop::getMousePosition()
-{
-	POINT p;
-	GetCursorPos(&p);
-	return { p.x, p.y };
+#include <Shlobj.h>
+#include <AUI/Traits/memory.h>
+#include <AUI/Util/kAUI.h>
+
+glm::ivec2 ADesktop::getMousePosition() {
+    POINT p;
+    GetCursorPos(&p);
+    return {p.x, p.y};
 }
 
-void ADesktop::setMousePos(const glm::ivec2& pos)
-{
-	SetCursorPos(pos.x, pos.y);
+void ADesktop::setMousePos(const glm::ivec2& pos) {
+    SetCursorPos(pos.x, pos.y);
 }
+
+_<AFuture<APath>> ADesktop::browseForFolder() {
+    return async {
+        APath result;
+        BROWSEINFO info;
+        aui::zero(info);
+        info.ulFlags = BIF_USENEWUI;
+        ::OleInitialize(NULL);
+
+        if (AWindow::current()) {
+            info.hwndOwner = AWindow::current()->getNativeHandle();
+        }
+        auto ret = SHBrowseForFolder(&info);
+        if (ret) {
+            result.resize(4096);
+            SHGetPathFromIDList(ret, result.data());
+            CoTaskMemFree(ret);
+            result.fitLengthToNullTerminator();
+        }
+        OleUninitialize();
+        return result;
+    };
+}
+
 #elif defined(ANDROID)
 glm::ivec2 ADesktop::getMousePosition()
 {

@@ -54,7 +54,7 @@ ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int h
         addView(_container<AVerticalLayout>({
                                                     caption,
                                                     _new<ASpacer>(),
-                                            }) by(AViewContainer, {
+                                            }) let (AViewContainer, {
             setExpanding({1, 1});
         }));
 	} else {

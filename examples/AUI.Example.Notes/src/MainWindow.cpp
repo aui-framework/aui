@@ -42,7 +42,7 @@ MainWindow::MainWindow() : AWindow("Notes", 300, 400) {
             _new<AButton>("Добавить").connect(&AButton::clicked, this, [](){
                 Autumn::get<AListModel<Note>>() << Note{7, "Azaza", ""};
             }),
-            mDeleteButton = _new<AButton>("Удалить") by(AButton, {
+            mDeleteButton = _new<AButton>("Удалить") let (AButton, {
                 setDisabled();
             }).connect(&AButton::clicked, this, [&]() {
                 //Autumn::get<AListModel<Note>>()->remove(mList->getSelectionModel()->);
@@ -50,7 +50,7 @@ MainWindow::MainWindow() : AWindow("Notes", 300, 400) {
         }),
         mList = _new<AListView>(AAdapter::make(_cast<IListModel<Note>>(Autumn::get<AListModel<Note>>()), [](const Note& n) {
             return n.name + " (" + AString::number(n.id) + ")";
-        })) by(AListView, {
+        })) let (AListView, {
             setExpanding({2, 2});
         }).connect(&AListView::selectionChanged, this, [&](const AModelSelection<AVariant>& selection) {
             mDeleteButton->setDisabled(selection.empty());
@@ -65,7 +65,7 @@ MainWindow::MainWindow() : AWindow("Notes", 300, 400) {
             _new<ATextField>() && binding->link(&Note::name, &ATextField::textChanging, &ATextField::setText),
         }),
         _new<ALabel>("Текст"),
-        _new<ATextField>() by(ATextField, {
+        _new<ATextField>() let (ATextField, {
             setExpanding({2, 2});
         })
     }));

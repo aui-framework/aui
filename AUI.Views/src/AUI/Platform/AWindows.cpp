@@ -20,7 +20,7 @@
 #include <AUI/Image/Drawables.h>
 #include <AUI/Util/kAUI.h>
 
-constexpr bool AUI_DISPLAY_BOUNDS = true;
+constexpr bool AUI_DISPLAY_BOUNDS = false;
 AWindow::Context AWindow::context = {};
 
 #if defined(_WIN32)
@@ -72,6 +72,8 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
 #define POS glm::ivec2(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))
+
+    assert(mHandle == hwnd);
 
     static glm::ivec2 lastWindowSize;
 
@@ -215,6 +217,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
 
         case WM_DPICHANGED: {
+            auto context = acquireTemporaryRenderingContext();
             float newDpi = GetDpiForWindow(mHandle) / 96.f * AViews::DPI_RATIO;
 
             setSize(getWidth() * newDpi / mDpiRatio, getHeight() * newDpi / mDpiRatio);
@@ -744,7 +747,7 @@ void AWindow::redraw() {
             auto v = getViewAtRecursive(mapPosition(ADesktop::getMousePosition()));
             if (v == nullptr)
                 v = shared_from_this();
-            v by(AView, {
+            apply(v, {
                 RenderHints::PushMatrix m;
                 Render::instance().setTransform(glm::translate(glm::mat4(1.f), {getAbsolutePosition(), 0.f}));
                 Render::instance().setFill(Render::FILL_SOLID);
@@ -1394,7 +1397,7 @@ void AWindowManager::loop() {
                         if (ev.xproperty.atom == gAtoms.netWmState) {
                             auto maximized = window->isMaximized();
                             if (maximized != window->mWasMaximized) {
-                                window by(AWindow, {
+                                window let (AWindow, {
                                     if (mWasMaximized) {
                                         emit restored();
                                     } else {

@@ -15,6 +15,7 @@ private:
 	Value* mValue = new Value;
 	AMutex mMutex;
 	AConditionVariable mNotify;
+	std::function<void(const Value&)> mOnDone;
 	std::atomic_int mRefCount = 2;
 
 	void decRef()
@@ -27,6 +28,9 @@ private:
 
 	void notify() {
         mNotify.notify_one();
+        if (mOnDone) {
+            mOnDone(*mValue);
+        }
 	}
 
 
@@ -46,6 +50,29 @@ public:
 			}
 		}
 		return *mValue;
+	}
+
+    template<typename Object, typename Member>
+	void onDone(const _<Object>& object, Member memberFunc) {
+        std::unique_lock lock(mMutex);
+	    mOnDone = [object, memberFunc](const Value& t) {
+            (object.get()->*memberFunc)(t);
+	    };
+	}
+
+    template<typename Object, typename Member>
+	void onDone(const Object* object, Member memberFunc) {
+        std::unique_lock lock(mMutex);
+	    mOnDone = [object, memberFunc](const Value& t) {
+            (object->*memberFunc)(t);
+	    };
+	}
+    template<typename Callback>
+	void onDone(const Callback& callable) {
+        std::unique_lock lock(mMutex);
+	    mOnDone = [callable](const Value& t) {
+            callable(t);
+	    };
 	}
 
 	inline Value& get()

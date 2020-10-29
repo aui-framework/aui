@@ -49,7 +49,7 @@ public:
 		for (int r = 0; accumulator; dst += r, accumulator -= r) {
 			r = read(dst, accumulator);
 			if (r < 0)
-				throw IOException();
+				throw IOException("something went wrong while reading from the stream");
 			if (r == 0)
 				throw EOFException();
 		}

@@ -149,5 +149,7 @@ public:
      * \return this
      */
     const APath& makeDirs() const;
+
+    void fitLengthToNullTerminator();
 };
 

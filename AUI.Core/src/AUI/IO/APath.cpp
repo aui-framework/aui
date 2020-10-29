@@ -184,3 +184,9 @@ const APath& APath::makeDirs() const {
     }
     return *this;
 }
+
+void APath::fitLengthToNullTerminator() {
+    wchar_t* i;
+    for (i = data(); *i; ++i);
+    resize(i - data());
+}

@@ -30,12 +30,12 @@ MainWindow::MainWindow() : AWindow("Words", 300, 400) {
                 _container<AHorizontalLayout>(
                 {
                         _new<ASpacer>(),
-                        _new<ALabel>(u8"\uf1ce") by(ALabel, {
+                        _new<ALabel>(u8"\uf1ce") let (ALabel, {
                            addCssName(".icon");
                            setFont(AFontManager::instance().get(":words/fas.otf"));
                            setFontSize(50_dp);
                            setExpanding(glm::ivec2(0));
-                           setAnimator(_new<ARotationAnimator>() by(ARotationAnimator, {
+                           setAnimator(_new<ARotationAnimator>() let (ARotationAnimator, {
                                setRepeating(true);
                                setDuration(1.5f);
                            }));

@@ -46,14 +46,14 @@
  * &#09;void raiseSon();<br />
  * };<br />
  * ...<br />
- * auto worker = _new&lt;Worker&gt;() by(Worker, {<br />
+ * auto worker = _new&lt;Worker&gt;() let (Worker, {<br />
  * &#09;buildHouse();<br />
  * &#09;plantTree();<br />
  * &#09;raiseSon();<br />
  * });<br />
  * </code>
  */
-#define by(T, lambda)               \
+#define let(T, lambda)               \
     .applyOnFunctor([&](const _<T>& object) { \
         apply(object, lambda);   \
     })

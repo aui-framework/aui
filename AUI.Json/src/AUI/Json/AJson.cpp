@@ -10,98 +10,94 @@
 #include "AJsonElement.h"
 
 
-AJsonElement AJson::read(_<IInputStream> is)
-{
-	ATokenizer t(is);
+AJsonElement AJson::read(_<IInputStream> is) {
+    ATokenizer t(is);
+    try {
 
-	std::function<_<IJsonElement>()> read;
+        std::function < _<IJsonElement>() > read;
 
-	auto unexpectedCharacter = [&]()
-	{
-		throw JsonException(
-			AString("unexpected character ") + t.getLastCharacter() + " at " + AString::number(t.getRow()) + ":"
-			+ AString::number(t.getColumn()));
-	};
-	
-	read = [&]() -> _<IJsonElement>
-	{
-		_<IJsonElement> result;
+        auto unexpectedCharacter = [&]() {
+            throw JsonException(
+                    AString("unexpected character ") + t.getLastCharacter() + " at " + AString::number(t.getRow()) + ":"
+                    + AString::number(t.getColumn()));
+        };
 
-		for (;;)
-		{
-			switch (t.readChar())
-			{
-			case '[':
-				result = _new<JsonArray>();
-				do
-				{
-					if (!isspace(t.getLastCharacter()))
-						result->asArray() << AJsonElement(read());
-				}
-				while (t.readChar() != ']');
+        read = [&]() -> _<IJsonElement> {
+            _<IJsonElement> result;
 
-				return result;
-			case '{':
-				result = _new<JsonObject>();
-				while (t.readChar() != '}')
-				{
-					if (!isspace(t.getLastCharacter()))
-					{
-						if (t.getLastCharacter() == '\"')
-						{
-							AString key = t.readStringUntilUnescaped('\"');
+            for (;;) {
+                switch (t.readChar()) {
+                    case '[':
+                        result = _new<JsonArray>();
+                        while (t.readChar() != ']') {
+                            t.reverseByte();
+                            result->asArray() << AJsonElement(read());
+                            char c = t.readChar();
+                            for (; c != ',' && c != ']'; c = t.readChar()) {
+                                if (!isspace(c))
+                                    unexpectedCharacter();
+                            }
+                            if (c == ']')
+                                break;
+                        }
+                        return result;
+                    case '{':
+                        result = _new<JsonObject>();
+                        while (t.readChar() != '}') {
+                            if (!isspace(t.getLastCharacter())) {
+                                if (t.getLastCharacter() == '\"') {
+                                    AString key = t.readStringUntilUnescaped('\"');
 
-							for (char c = 0; ;)
-							{
-								c = t.readChar();
-								if (c == ':')
-									break;
-								if (!isspace(c))
-									unexpectedCharacter();
-							}
-							result->asObject()[key] = AJsonElement(read());
-						}
-						else if (t.getLastCharacter() != ',')
-						{
-							unexpectedCharacter();
-						}
-					}
-				}
+                                    for (char c = 0;;) {
+                                        c = t.readChar();
+                                        if (c == ':')
+                                            break;
+                                        if (!isspace(c))
+                                            unexpectedCharacter();
+                                    }
+                                    result->asObject()[key] = AJsonElement(read());
+                                } else if (t.getLastCharacter() != ',') {
+                                    unexpectedCharacter();
+                                }
+                            }
+                        }
 
-				return result;
+                        return result;
 
-			case '\"':
-				result = _new<JsonValue>(t.readStringUntilUnescaped('\"'));
-				return result;
-			}
+                    case '\"':
+                        result = _new<JsonValue>(t.readStringUntilUnescaped('\"'));
+                        return result;
+                }
 
-			if (isdigit(t.getLastCharacter()))
-			{
-				t.reverseByte();
-				return _new<JsonValue>(t.readInt());
-			}
+                if (isdigit(t.getLastCharacter())) {
+                    t.reverseByte();
+                    return _new<JsonValue>(t.readInt());
+                }
 
-            t.reverseByte();
-            AString keyword = t.readString();
-            if (keyword == "null") {
-                return _new<JsonNull>();
+                t.reverseByte();
+                AString keyword = t.readString();
+                if (keyword == "null") {
+                    return _new<JsonNull>();
+                }
+                t.readChar();
             }
-            t.readChar();
-		}
-		assert(!isspace(t.getLastCharacter()));
-		return result;
-	};
+            assert(!isspace(t.getLastCharacter()));
+            return result;
+        };
 
-	return AJsonElement(read());
+        return AJsonElement(read());
+    } catch (const AException& e) {
+        throw AException(AString::number(t.getRow()) + ":" + AString::number(t.getColumn()) + ": " + e.getMessage());
+    }
+    return AJsonElement();
 }
 
 void API_AUI_JSON AJson::write(_<IOutputStream> os, const AJsonElement& json) {
     json.serialize(os);
 }
 
-AJsonElement::AJsonElement(std::nullptr_t):
-    mJson(_new<JsonNull>())
-{
+AJsonElement::AJsonElement(std::nullptr_t) :
+        mJson(_new<JsonNull>()) {
 
 }
 
