@@ -14,6 +14,11 @@ namespace aui {
         return t;
     };
 
+    template<>
+    AString to_string(const APath& t) {
+        return t;
+    };
+
 
     namespace detail::format {
         template<typename T>
@@ -37,6 +42,12 @@ namespace aui {
         template<>
         struct type_length<AString> {
             inline static size_t format_length(const AString& t) {
+                return t.length();
+            }
+        };
+        template<>
+        struct type_length<APath> {
+            inline static size_t format_length(const APath& t) {
                 return t.length();
             }
         };

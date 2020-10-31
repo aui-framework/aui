@@ -182,6 +182,15 @@ AString AString::fromLatin1(_<AByteBuffer> buffer)
     return result;
 }
 
+AString AString::fromLatin1(const char* buffer) {
+    AString s;
+    for (; *buffer; ++buffer)
+        s.push_back(*buffer);
+
+    return s;
+}
+
+
 AString AString::number(int i) noexcept
 {
     return std::to_wstring(i);

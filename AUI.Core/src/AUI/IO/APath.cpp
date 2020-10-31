@@ -215,6 +215,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
             assert(0);
     }
     result.resizeToNullTerminator();
+    result.removeBackSlashes();
     return result;
 }
 #else

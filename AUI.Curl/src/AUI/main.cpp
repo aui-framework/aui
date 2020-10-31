@@ -30,3 +30,17 @@ BOOL WINAPI DllMain(
 	return TRUE;  // Successful DLL_PROCESS_ATTACH.
 }
 #endif
+
+#include <AUI/Url/AUrl.h>
+#include <AUI/Curl/ACurl.h>
+
+struct main {
+    main() {
+        AUrl::registerResolver("http", [](const AUrl& u) {
+            return _new<ACurl>(u.getFull());
+        });
+        AUrl::registerResolver("https", [](const AUrl& u) {
+            return _new<ACurl>(u.getFull());
+        });
+    }
+} m;

@@ -236,6 +236,7 @@ public:
 	}
 
 	static AString fromLatin1(_<AByteBuffer> buffer);
+	static AString fromLatin1(const char* buffer);
 
 	static AString number(int i) noexcept;
 	static AString number(unsigned i) noexcept;

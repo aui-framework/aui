@@ -199,6 +199,8 @@ void ALabel::doPrerender() {
     {
         targetString = mText;
     }
+    if (targetString.empty())
+        return;
     switch (mTextTransform) {
         case TT_UPPERCASE:
             targetString = targetString.uppercase();
