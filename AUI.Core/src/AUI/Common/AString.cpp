@@ -245,3 +245,16 @@ AString AString::lowercase() const {
     f.tolower(&result[0], &result[0] + result.size());
     return AString();
 }
+
+void AString::replaceAll(wchar_t from, wchar_t to) noexcept {
+    for (auto& s : *this) {
+        if (s == from)
+            s = to;
+    }
+}
+
+void AString::resizeToNullTerminator() {
+    wchar_t* i;
+    for (i = data(); *i; ++i);
+    resize(i - data());
+}

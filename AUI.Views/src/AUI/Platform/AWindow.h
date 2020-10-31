@@ -140,6 +140,13 @@ public:
 	void redraw();
 
 	/**
+	 * \brief Если какой-то объект часто плюётся сигналами в UI поток для отображения каких-то данных, он может
+	 *        спросить, а целесообразно ли выплёвывать очередной сигнал, если окно даже перерисоваться не успевает...
+	 * \return true, если с момента последнего кадра прошло более 16 миллисекунд
+	 */
+	static bool isRedrawWillBeEfficient();
+
+	/**
 	 * \brief Удаляет окно из AWindowManager.
 	 */
 	void quit();
@@ -191,8 +198,6 @@ public:
 	AWindowManager& getWindowManager() const;
 
 	glm::ivec2 getWindowPosition() const;
-
-	TemporaryRenderingContext acquireTemporaryRenderingContext();
 
     void setPosition(const glm::ivec2& position) override;
     void setSize(int width, int height) override;

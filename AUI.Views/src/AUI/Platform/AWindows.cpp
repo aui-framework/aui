@@ -79,10 +79,12 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     currentWindowStorage() = this;
 
-    if (uMsg != WM_PAINT && !mRedrawFlag) {
-        // НАПОМНИТЬ ВЕНДЕ, ЧТО Я ОЧЕНЬ ХОЧУ ПЕРЕРИСОВАТЬ СРАНОЕ ОКНО!!!
-        mRedrawFlag = true;
-        flagRedraw();
+    if (uMsg != WM_PAINT) {
+        if (!mRedrawFlag) {
+            // НАПОМНИТЬ ВЕНДЕ, ЧТО Я ОЧЕНЬ ХОЧУ ПЕРЕРИСОВАТЬ СРАНОЕ ОКНО!!!
+            mRedrawFlag = true;
+            flagRedraw();
+        }
     }
 
     switch (uMsg) {
@@ -102,7 +104,9 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
 
         case WM_PAINT: {
-            redraw();
+            if (!painter::painting) {
+                redraw();
+            }
 
             return 0;
         }
@@ -150,7 +154,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
         case WM_MOUSEMOVE: {
-            auto context = acquireTemporaryRenderingContext();
             onMouseMove(POS);
 
             TRACKMOUSEEVENT tme;
@@ -198,7 +201,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             SetCapture(mHandle);
             return 0;
         case WM_LBUTTONUP: {
-            auto context = acquireTemporaryRenderingContext();
             onMouseReleased(POS, AInput::LButton);
             ReleaseCapture();
             return 0;
@@ -217,7 +219,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
 
         case WM_DPICHANGED: {
-            auto context = acquireTemporaryRenderingContext();
             float newDpi = GetDpiForWindow(mHandle) / 96.f * AViews::DPI_RATIO;
 
             setSize(getWidth() * newDpi / mDpiRatio, getHeight() * newDpi / mDpiRatio);
@@ -684,6 +685,18 @@ AWindow::~AWindow() {
 
 extern unsigned char stencilDepth;
 
+using namespace std::chrono;
+using namespace std::chrono_literals;
+
+
+// ограничение 16мс = не более 60 кадров в секунду
+static auto _gLastFrameTime = 0ms;
+
+bool AWindow::isRedrawWillBeEfficient() {
+    auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+    auto delta = now - _gLastFrameTime;
+    return 50ms < delta;
+}
 void AWindow::redraw() {
 #ifdef WIN32
     mRedrawFlag = true;
@@ -693,21 +706,14 @@ void AWindow::redraw() {
         // ограничение фпс
 
         {
-            using namespace std::chrono;
-            using namespace std::chrono_literals;
-
-            // ограничение 16мс = не более 60 кадров в секунду
+            auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+            auto delta = now - _gLastFrameTime;
             const auto FRAME_DURATION = 16ms;
 
-            static auto lastFrameTime = 0ms;
-            auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-
-
-            auto delta = now - lastFrameTime;
             if (FRAME_DURATION > delta) {
                 std::this_thread::sleep_for(FRAME_DURATION - delta);
             }
-            lastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+            _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         }
 
         painter p(mHandle);
@@ -811,6 +817,9 @@ void AWindow::redraw() {
         glXSwapBuffers(gDisplay, mHandle);
 #endif
     }
+#if defined(_WIN32)
+    wglMakeCurrent(mDC, context.hrc);
+#endif
     emit redrawn();
 }
 
@@ -1070,7 +1079,7 @@ glm::ivec2 AWindow::getWindowPosition() const {
     return {x - xwa.x, y - xwa.y};
 #endif
 }
-
+/*
 TemporaryRenderingContext AWindow::acquireTemporaryRenderingContext() {
     if (painter::painting) {
         return TemporaryRenderingContext(nullptr);
@@ -1078,7 +1087,7 @@ TemporaryRenderingContext AWindow::acquireTemporaryRenderingContext() {
 
     return TemporaryRenderingContext(_new<painter>(mHandle));
 }
-
+*/
 void AWindow::onMouseMove(glm::ivec2 pos) {
     AViewContainer::onMouseMove(pos);
 

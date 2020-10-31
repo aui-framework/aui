@@ -210,7 +210,8 @@ public:
 		return std::wstring::data();
 	}
 	AString replaceAll(const AString& from, const AString& to) const noexcept;
-	
+	void replaceAll(wchar_t from, wchar_t to) noexcept;
+
 	[[nodiscard]]
 	float toFloat() const noexcept;
 
@@ -246,6 +247,8 @@ public:
 	int toNumberHex() const noexcept;
 
 	std::string toStdString() const noexcept;
+
+    void resizeToNullTerminator();
 
 	iterator erase(const_iterator begin, const_iterator end)
 	{
@@ -453,6 +456,11 @@ public:
 	bool operator!=(const char* other) const noexcept
 	{
 		return *this != AString(other);
+	}
+
+    template<typename... Args>
+    AString format(Args&&... args) {
+	    return aui::format(*this, std::forward<Args>(args)...);
 	}
 };
 

@@ -62,18 +62,28 @@ private:
     APath ensureSlashEnding() const;
     APath ensureNonSlashEnding() const;
 
+    void removeBackSlashes();
+
 public:
     APath() = default;
-    APath(AString&& other);
-    APath(const AString& other): AString(other) {}
-    APath(const char* str): AString(str) {}
-    APath(const wchar_t * str): AString(str) {}
+    APath(AString&& other): AString(other) {
+        removeBackSlashes();
+    }
+    APath(const AString& other): AString(other) {
+        removeBackSlashes();
+    }
+    APath(const char* str): AString(str) {
+        removeBackSlashes();
+    }
+    APath(const wchar_t * str): AString(str) {
+        removeBackSlashes();
+    }
 
     /**
      * \brief Получить абсолютный (полный) путь до файла.
      * \return абсолютный (полный) путь
      */
-    APath absolute();
+    APath absolute() const;
 
     /**
      * \brief Составить список имён файлов
@@ -150,6 +160,27 @@ public:
      */
     const APath& makeDirs() const;
 
-    void fitLengthToNullTerminator();
+    enum DefaultPath {
+        /**
+         * \brief Папка для данных по умолчанию.
+         * Windows: C:/Users/%user%/.appdata/Roaming/
+         * Linux: %homedir%/.local/share/
+         */
+        APPDATA,
+
+        /**
+         * \brief Папка для временных файлов.
+         * Windows: Папка TEMP пользователя
+         * Linux: /tmp
+         */
+        TEMP,
+    };
+
+    /**
+     * \brief Вернуть путь по умолчанию
+     * \note См. объявление APath::DefaultPath
+     * \return полный путь по умолчанию
+     */
+    static APath getDefaultPath(DefaultPath path);
 };
 

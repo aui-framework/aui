@@ -5,8 +5,8 @@
 namespace aui {
     /**
      * \brief Заполнить нулями объект.
-     * @tparam T тип объекта
-     * @param data объект
+     * \tparam T тип объекта
+     * \param data объект
      */
     template<typename T>
     inline void zero(T& data) {

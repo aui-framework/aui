@@ -28,4 +28,6 @@ public:
 	~ACurl();
 
 	int read(char* dst, int size) override;
+
+	int64_t getContentLength() const;
 };

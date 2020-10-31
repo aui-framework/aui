@@ -8,6 +8,7 @@
 #include "APath.h"
 #include "IOException.h"
 #include "FileNotFoundException.h"
+#include "InsufficientPermissionsException.h"
 
 #ifdef WIN32
 #include <Windows.h>
@@ -18,8 +19,6 @@
 #include <dirent.h>
 #define ERROR_DESCRIPTION  + ": " + strerror(errno)
 #endif
-
-APath::APath(AString&& other) : AString(other) {}
 
 APath APath::parent() const {
     auto c = ensureNonSlashEnding().rfind(L'/');
@@ -151,7 +150,7 @@ ADeque<AString> APath::listDir(ListFlags f) const {
     return list;
 }
 
-APath APath::absolute() {
+APath APath::absolute() const {
     char buf[0x1000];
 #ifdef WIN32
     if (_fullpath(buf, toStdString().c_str(), sizeof(buf)) == nullptr) {
@@ -167,11 +166,21 @@ APath APath::absolute() {
 const APath& APath::makeDir() const {
 #ifdef WIN32
     if (::mkdir(toStdString().c_str()) != 0) {
+        auto s = "could not create directory: "_as + absolute() ERROR_DESCRIPTION;
+        auto et = GetLastError();
+        switch (et) {
+            case ERROR_ACCESS_DENIED:
+                throw InsufficientPermissionsException(s);
+                break;
+            default:
+                throw IOException(s);
+        }
+    }
 #else
     if (::mkdir(toStdString().c_str(), 0755) != 0) {
-#endif
-        throw IOException("could not create directory: "_as ERROR_DESCRIPTION);
+        throw IOException("could not create directory: "_as + absolute() ERROR_DESCRIPTION);
     }
+#endif
     return *this;
 }
 
@@ -184,9 +193,42 @@ const APath& APath::makeDirs() const {
     }
     return *this;
 }
-
-void APath::fitLengthToNullTerminator() {
-    wchar_t* i;
-    for (i = data(); *i; ++i);
-    resize(i - data());
+void APath::removeBackSlashes() {
+    replaceAll('\\', '/');
 }
+
+#ifdef _WIN32
+#include <ShlObj_core.h>
+#include <ShlObj.h>
+
+APath APath::getDefaultPath(APath::DefaultPath path) {
+    APath result;
+    result.resize(0x800);
+    switch (path) {
+        case APPDATA:
+            SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_DEFAULT, result.data());
+            break;
+        case TEMP:
+            GetTempPath(result.length(), result.data());
+            break;
+        default:
+            assert(0);
+    }
+    result.resizeToNullTerminator();
+    return result;
+}
+#else
+
+APath APath::getDefaultPath(APath::DefaultPath path) {
+    switch (path) {
+        case APPDATA:
+            SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_DEFAULT, result.data());
+            break;
+        case TEMP:
+            return "/tmp";
+        default:
+            assert(0);
+    }
+    return {};
+}
+#endif

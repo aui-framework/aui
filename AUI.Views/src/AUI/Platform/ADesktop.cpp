@@ -35,7 +35,7 @@ _<AFuture<APath>> ADesktop::browseForFolder() {
             result.resize(4096);
             SHGetPathFromIDList(ret, result.data());
             CoTaskMemFree(ret);
-            result.fitLengthToNullTerminator();
+            result.resizeToNullTerminator();
         }
         OleUninitialize();
         return result;

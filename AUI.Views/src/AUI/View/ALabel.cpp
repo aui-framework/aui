@@ -4,6 +4,8 @@
 
 #include "AViewContainer.h"
 
+#include <AUI/Platform/AWindow.h>
+
 void ALabel::updateMultiline()
 {
 	mLines = getFontStyleLabel().font->trimStringToMultiline(mText, getWidth(), getFontStyleLabel().size, getFontStyleLabel().fontRendering);
@@ -69,9 +71,9 @@ void ALabel::render()
 		    int y = mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)) + 1;
 		    if (mVerticalAlign == ALIGN_CENTER) {
 		        if (mMultiline) {
-		            y = glm::max(y, (getHeight() - getMinimumHeight()) / 2 - 1);
+		            y = (glm::max)(y, (getHeight() - getMinimumHeight()) / 2 - 1);
 		        } else {
-                    y = glm::max(y, (getHeight() - getFontStyleLabel().size) / 2 - 1);
+                    y = (glm::max)(y, (getHeight() - getFontStyleLabel().size) / 2 - 1);
                 }
 		    }
 			Render::instance().drawString(leftPadding, y, mPrerendered);
