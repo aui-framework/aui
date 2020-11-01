@@ -38,19 +38,36 @@ Render::Render()
             //"gl_FragColor.a = query.x + query.y;"
          "}");
 
-	mRoundedSolidShader.load(
-		"attribute vec3 pos;"
-        "attribute vec2 uv;"
-		"varying vec2 pass_uv;"
-		"void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
-        "uniform vec2 size;"
-        "varying vec2 pass_uv;"
-		"void main(void) {"
-            "vec2 tmp = abs(pass_uv);"
-            "if ((tmp.x - 1.0) * (size.y) / (-size.x) < tmp.y - (1.0 - size.y) &&"
+    if (glewGetExtension("ARB_multisample")) {
+        mRoundedSolidShader.load(
+                "attribute vec3 pos;"
+                "attribute vec2 uv;"
+                "varying vec2 pass_uv;"
+                "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
+                "uniform vec2 size;"
+                "varying vec2 pass_uv;"
+                "void main(void) {"
+                "vec2 tmp = abs(pass_uv);"
+                "if ((tmp.x - 1.0) * (size.y) / (-size.x) < tmp.y - (1.0 - size.y) &&"
                 "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
-                 "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
-        "}");
+                "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
+                "}");
+    } else {
+        // без сглаживания скруглённые края выглядят убого. исправим это
+        mRoundedSolidShader.load(
+                "attribute vec3 pos;"
+                "attribute vec2 uv;"
+                "varying vec2 pass_uv;"
+                "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
+                "uniform vec2 size;"
+                "varying vec2 pass_uv;"
+                "void main(void) {"
+                "vec2 tmp = abs(pass_uv);"
+                "if ((tmp.x - 1.0) * (size.y) / (-size.x) < tmp.y - (1.0 - size.y) &&"
+                "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
+                "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
+                "}");
+    }
 
 	mSolidTransformShader.load(
 		"attribute vec3 pos;"

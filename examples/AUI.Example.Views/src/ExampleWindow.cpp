@@ -192,9 +192,6 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		horizontal->addView(c);
 	}
 
-	horizontal->addView(_new<ALabel>(u8"Сжать этот диск для экономии пространства"));
-
-	
 	addView(_container<AHorizontalLayout>({
 		_new<ASpacer>(),
 		_new<ALabel>(u8"\u00a9 Alex2772 2020, alex2772.ru")
