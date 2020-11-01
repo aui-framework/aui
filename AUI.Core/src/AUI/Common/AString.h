@@ -1,12 +1,11 @@
 #pragma once
+
 #include <string>
 #include <iostream>
 #include "AByteBuffer.h"
 #include "AUI/Core.h"
 
 class API_AUI_CORE AStringVector;
-
-
 
 class API_AUI_CORE AString: std::wstring
 {
@@ -462,9 +461,7 @@ public:
 	}
 
     template<typename... Args>
-    AString format(Args&&... args) {
-	    return aui::format(*this, std::forward<Args>(args)...);
-	}
+    inline AString format(Args&&... args);
 };
 
 inline AString API_AUI_CORE operator+(const AString& l, const AString& r) noexcept

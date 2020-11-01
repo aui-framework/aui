@@ -76,12 +76,12 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		}
 		{
 			c->addView(_new<ALabel>(u8"Радио кнопка"));
-			c->addView(let(_new<ARadioGroup>(_new<AListModel<AString>>(AVector<AString>{
+			c->addView(_new<ARadioGroup>(_new<AListModel<AString>>(AVector<AString>{
 			    "Радио 1",
 			    "Радио 2",
 			    "Радио 3",
 			    "Неактивная кнопка",
-			})), {
+			})) let (ARadioGroup, {
 			    getViews()[3]->setDisabled();
 			}));
 		}
@@ -94,9 +94,9 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
                 "Комбобокс 5",
                 "Комбобокс 6",
             })));
-            c->addView(let(_new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{
+            c->addView(_new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{
                 "Отключённый комбобокс"
-            })), {
+            })) let(AComboBox, {
                 setDisabled();
             }));
         }

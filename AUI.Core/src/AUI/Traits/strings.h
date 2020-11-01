@@ -1,5 +1,6 @@
 #pragma once
 #include <AUI/Common/AString.h>
+#include <AUI/IO/APath.h>
 #include <glm/glm.hpp>
 
 namespace aui {
@@ -119,4 +120,9 @@ namespace aui {
 
         return result;
     }
+}
+
+template<typename... Args>
+AString format(Args&& ... args) {
+    return aui::format(*this, std::forward<Args>(args)...);
 }

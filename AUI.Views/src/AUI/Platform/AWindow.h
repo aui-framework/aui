@@ -134,7 +134,7 @@ protected:
     void onCloseButtonClicked();
 	
 public:
-	AWindow(const AString& name = "My window", int width = 854, int height = 500, AWindow* parent = nullptr, WindowStyle ws = WS_DEFAULT);
+	AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WS_DEFAULT);
 	virtual ~AWindow();
 
 	void redraw();

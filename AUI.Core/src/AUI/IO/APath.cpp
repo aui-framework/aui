@@ -219,12 +219,15 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
     return result;
 }
 #else
+#include <unistd.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 APath APath::getDefaultPath(APath::DefaultPath path) {
     switch (path) {
         case APPDATA:
-            SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_DEFAULT, result.data());
-            break;
+            return APath(getpwuid(getuid())->pw_dir).file(".local/share");
+
         case TEMP:
             return "/tmp";
         default:
