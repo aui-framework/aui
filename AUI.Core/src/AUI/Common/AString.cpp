@@ -267,3 +267,10 @@ void AString::resizeToNullTerminator() {
     for (i = data(); *i; ++i);
     resize(i - data());
 }
+
+AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
+    if (length() > s) {
+        return mid(0, s) + stringAtEnd;
+    }
+    return *this;
+}

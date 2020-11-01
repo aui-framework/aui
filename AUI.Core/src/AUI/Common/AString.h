@@ -200,6 +200,8 @@ public:
 		std::wstring::resize(s);
 	}
 
+	AString restrictLength(size_t s, const AString& stringAtEnd = "...") const;
+
 	wchar_t* data() noexcept
 	{
 		return std::wstring::data();
