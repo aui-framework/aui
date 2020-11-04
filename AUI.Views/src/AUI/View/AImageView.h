@@ -14,6 +14,7 @@ private:
 public:
     explicit AImageView(const _<GL::Texture>& texture);
     explicit AImageView(const _<AImage>& img);
+    AImageView();
 
     void render() override;
 

@@ -14,13 +14,19 @@ AImageView::AImageView(const _<AImage>& img) {
     mImageSize = img->getSize();
 }
 
-void AImageView::render() {
-    AView::render();
-    mTexture->bind();
-    Render::instance().setFill(Render::FILL_TEXTURED);
-    Render::instance().drawTexturedRect(0, 0, getContentWidth(), getContentHeight());
+AImageView::AImageView() {
+
 }
 
+
+void AImageView::render() {
+    AView::render();
+    if (mTexture) {
+        mTexture->bind();
+        Render::instance().setFill(Render::FILL_TEXTURED);
+        Render::instance().drawTexturedRect(0, 0, getContentWidth(), getContentHeight());
+    }
+}
 
 int AImageView::getContentMinimumWidth() {
     return 0;
@@ -33,6 +39,6 @@ int AImageView::getContentMinimumHeight() {
 void AImageView::setSize(int width, int height) {
     auto w = getSize().x != width;
     AView::setSize(width, height);
-    if (w)
+    if (w && mFixedSize.x == 0)
         getParent()->updateLayout();
 }
