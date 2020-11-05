@@ -16,7 +16,8 @@ protected:
 	void unlinkSlot(AObject* object);
 	
 public:
-	virtual void onObjectHasDestroyed(AObject* object) = 0;
+	virtual void clearAllConnectionsWith(AObject* object) = 0;
+	virtual void clearAllConnections() = 0;
 	virtual ~AAbstractSignal() {
 	    mDestroyed = true;
 	}

@@ -24,6 +24,6 @@ void AObject::clearSignals()
 	for (auto& a : mSignals)
 	{
 	    if (!a->isDestroyed())
-		    a->onObjectHasDestroyed(this);
+		    a->clearAllConnectionsWith(this);
 	}
 }

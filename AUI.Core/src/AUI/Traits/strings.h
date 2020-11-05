@@ -123,6 +123,6 @@ namespace aui {
 }
 
 template<typename... Args>
-AString format(Args&& ... args) {
+inline AString AString::format(Args&& ... args) {
     return aui::format(*this, std::forward<Args>(args)...);
 }

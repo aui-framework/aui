@@ -37,6 +37,7 @@ Render::Render()
             "gl_FragColor.a *= clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0);"
             //"gl_FragColor.a = query.x + query.y;"
          "}");
+    /*
 
     if (glewGetExtension("ARB_multisample")) {
         mRoundedSolidShader.load(
@@ -52,7 +53,7 @@ Render::Render()
                 "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
                 "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
                 "}");
-    } else {
+    } else */ {
         // без сглаживания скруглённые края выглядят убого. исправим это
         mRoundedSolidShader.load(
                 "attribute vec3 pos;"
