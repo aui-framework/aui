@@ -2,6 +2,7 @@
 #include "AView.h"
 #include "AUI/Render/Render.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <utility>
 
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/AMetric.h"
@@ -193,7 +194,7 @@ bool AViewContainer::consumesClick(const glm::ivec2& pos) {
 void AViewContainer::setLayout(_<ALayout> layout)
 {
 	mViews.clear();
-	mLayout = layout;
+	mLayout = std::move(layout);
 }
 
 _<ALayout> AViewContainer::getLayout() const

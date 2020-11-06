@@ -27,22 +27,6 @@ private:
 	AMutex mSlotsLock;
 	ADeque<slot> mSlots;
 
-	virtual void onObjectHasDestroyed(AObject* object)
-	{
-		std::unique_lock lock(mSlotsLock);
-		for (auto it = mSlots.begin(); it != mSlots.end();)
-		{
-			if (it->object == object)
-			{
-				it = mSlots.erase(it);
-			}
-			else
-			{
-				++it;
-			}
-		}
-	}
-
 	void invokeSignal();
 
 	template<typename Lambda, typename... A>
@@ -144,6 +128,28 @@ public:
 			unlinkSlot(slot.object);
 		}
 	}
+
+
+    void clearAllConnections() override
+    {
+        std::unique_lock lock(mSlotsLock);
+        mSlots.clear();
+    }
+    void clearAllConnectionsWith(AObject* object) override
+    {
+        std::unique_lock lock(mSlotsLock);
+        for (auto it = mSlots.begin(); it != mSlots.end();)
+        {
+            if (it->object == object)
+            {
+                it = mSlots.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
 };
 #include <AUI/Thread/AThread.h>
 

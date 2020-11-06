@@ -28,6 +28,11 @@ public:
 		parent::push_back(rhs);
 		return *this;
 	}
+	ADeque<StoredType, Allocator>& operator<<(StoredType&& rhs)
+	{
+		parent::push_back(std::forward<StoredType>(rhs));
+		return *this;
+	}
 
 	bool contains(const StoredType& value) const
 	{

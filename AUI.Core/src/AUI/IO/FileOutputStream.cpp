@@ -4,9 +4,9 @@
 #include "FileNotFoundException.h"
 #include "AUI/Common/AString.h"
 
-FileOutputStream::FileOutputStream(const AString& path)
+FileOutputStream::FileOutputStream(const AString& path, bool append)
 {
-	mFile = fopen(path.toStdString().c_str(), "wb");
+	mFile = fopen(path.toStdString().c_str(), append ? "a+b" : "wb");
 	if (!mFile)
 	{
 		throw FileNotFoundException(path.toStdString().c_str());

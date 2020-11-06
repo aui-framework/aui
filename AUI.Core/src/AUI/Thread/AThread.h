@@ -93,10 +93,19 @@ public:
 	 * \return true, если для потока запрошено прерывание.
 	 */
 	virtual bool isInterrupted();
+
 	/**
 	 * \brief сбросить флаг прерывания.
 	 */
-	virtual void resetInterrupted();
+	virtual void resetInterruptFlag();
+
+    /**
+     * \brief Прервать выполнение потока.
+     *	      Естественно, так как С++ - компилируемый язык, то для
+     *	      корректной работы этой функции прерываемый код должен
+     *	      содержать вызовы функции AThread::interruptionPoint().
+     */
+    virtual void interrupt();
 
 	IEventLoop* getCurrentEventLoop() const {
 		return mCurrentEventLoop;
@@ -163,14 +172,6 @@ public:
 	 */
 	void start();
 
-	/**
-	 * \brief Прервать выполнение потока.
-	 *	      Естественно, так как С++ - компилируемый язык, то для
-	 *	      корректной работы этой функции прерываемый код должен
-	 *	      содержать вызовы функции AThread::interruptionPoint().
-	 */
-	void interrupt();
-
 
 	/**
 	 * \brief Заснуть на указаную длительность.
@@ -195,7 +196,8 @@ public:
 	static void interruptionPoint();
 
 	bool isInterrupted() override;
-	void resetInterrupted() override;
+	void resetInterruptFlag() override;
+    void interrupt() override;
 	
 	void join();
 

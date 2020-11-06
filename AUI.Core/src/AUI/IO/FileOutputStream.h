@@ -11,7 +11,7 @@ private:
 	FILE* mFile;
 
 public:
-	FileOutputStream(const AString& path);
+	FileOutputStream(const AString& path, bool append = false);
 	virtual ~FileOutputStream();
 
 	int write(const char* dst, int size) override;

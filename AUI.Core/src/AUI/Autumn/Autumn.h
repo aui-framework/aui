@@ -53,6 +53,34 @@ namespace Autumn
 	}
 
 
+
+    /**
+     * \brief Временно сохранить объект в Autumn.
+     * @tparam T
+     */
+    template <typename T>
+    class Temporary {
+    private:
+        _<T> mPrevValue;
+        std::function<void()> mOnDeleteCallback;
+
+    public:
+        Temporary(const _<T>& newValue) {
+            mPrevValue = Autumn::get<T>();
+            Autumn::put(newValue);
+        }
+
+        ~Temporary() {
+            Autumn::put(mPrevValue);
+            if (mOnDeleteCallback)
+                mOnDeleteCallback();
+        }
+
+        void onDelete(const std::function<void()>& callback) {
+            mOnDeleteCallback = callback;
+        }
+    };
+
     template <class T>
     struct construct {
         template<typename... Args>

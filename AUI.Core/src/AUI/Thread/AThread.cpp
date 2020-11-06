@@ -25,7 +25,11 @@ bool AAbstractThread::isInterrupted()
 	return false;
 }
 
-void AAbstractThread::resetInterrupted()
+void AAbstractThread::interrupt() {
+
+}
+
+void AAbstractThread::resetInterruptFlag()
 {
 }
 
@@ -39,7 +43,7 @@ void AThread::start()
 		auto f = mFunctor;
 		mFunctor = nullptr;
 		mId = std::this_thread::get_id();
-		
+
 		try {
 			f();
 		} catch (const AException& e) {
@@ -47,7 +51,7 @@ void AThread::start()
             abort();
         } catch (AInterrupted)
 		{
-			
+
 		}
 	});
 }
@@ -86,7 +90,7 @@ void AThread::interruptionPoint()
 {
 	if (current()->isInterrupted())
 	{
-		current()->resetInterrupted();
+        current()->resetInterruptFlag();
 		throw AInterrupted();
 	}
 }
@@ -96,7 +100,7 @@ bool AThread::isInterrupted()
 	return mInterrupted;
 }
 
-void AThread::resetInterrupted()
+void AThread::resetInterruptFlag()
 {
 	mInterrupted = false;
 }
