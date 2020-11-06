@@ -2,6 +2,7 @@
 #include <AUI/Common/AString.h>
 #include <AUI/IO/APath.h>
 #include <glm/glm.hpp>
+#include <cstring>
 
 namespace aui {
 

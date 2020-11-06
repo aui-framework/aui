@@ -4,7 +4,7 @@
 
 #include <AUI/IO/APath.h>
 #include "Lang.h"
-
+#include <AUI/Traits/strings.h>
 
 AString Lang::getName() {
     return "lang";
@@ -30,10 +30,10 @@ void Lang::run(Toolbox& t) {
     }
 
     if (t.args[1] == "generate") {
-        if (t.args.size() != 2) {
+        if (t.args.size() != 3) {
             throw IllegalArgumentsException("lang generate requires a language argument");
         }
-        auto path = APath(t.args[0]).file("assets/lang/{}.lang"_as.format(t.args[2]));
+        auto path = APath(t.args[0]).absolute().file("assets/lang/{}.lang"_as.format(t.args[2]));
         std::cout << "target file: " << path << std::endl;
 
     } else if (t.args[1] == "update") {
