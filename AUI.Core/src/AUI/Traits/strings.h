@@ -57,11 +57,11 @@ namespace aui {
 
         template <typename Arg>
         inline size_t format_length(Arg&& arg) {
-            return type_length<Arg>::format_length(std::forward<Arg>(arg));
+            return type_length<std::remove_reference_t<Arg>>::format_length(std::forward<Arg>(arg));
         }
         template <typename Arg, typename... Args>
         inline size_t format_length(Arg&& arg, Args&&... args) {
-            return type_length<Arg>::format_length(std::forward<Arg>(arg)) + format_length(std::forward<Args>(args)...);
+            return type_length<std::remove_reference_t<Arg>>::format_length(std::forward<Arg>(arg)) + format_length(std::forward<Args>(args)...);
         }
 
 
