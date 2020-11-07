@@ -1,6 +1,25 @@
 #pragma once
 
 #include <AUI/Thread/AThreadPool.h>
+#include <type_traits>
+
+/**
+ * \brief Получить тип текущего класса. Удобно использовать в связке с функцией connect:
+ * \example
+ * <code>
+ * class MyObject: public AView {<br />
+ * private:<br />
+ * &#09;void handleClicked() { ... }<br />
+ * <br />
+ * <br />
+ * public:<br />
+ * &#09;Class() {<br />
+ * &#09;&#09;connect(clicked, me::handleClicked);<br />
+  *&#09;}<br />
+ * };
+ * </code>
+ */
+#define me this, &std::remove_reference_t<decltype(*this)>
 
 /**
  * \brief Выполнить несколько операций над одним объектом, не повторяя его имени.
