@@ -5,7 +5,7 @@
 
 #include "AUI/Autumn/Autumn.h"
 #include "AUI/Logging/ALogger.h"
-#include "AUI/i18n/i18n.h"
+#include "AUI/i18n/AI18n.h"
 
 
 class AException;

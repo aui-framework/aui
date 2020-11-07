@@ -8,6 +8,7 @@
 #include <AUI/IO/FileInputStream.h>
 #include <AUI/IO/FileOutputStream.h>
 #include <AUI/Util/ATokenizer.h>
+#include <AUI/i18n/ALanguageCode.h>
 
 AString Lang::getName() {
     return "lang";
@@ -63,18 +64,18 @@ void Lang::run(Toolbox& t) {
             throw IllegalArgumentsException("lang requires subcommand (generate|update)");
 
     }
+    auto srcDir = APath(t.args[0]).absolute().file("src");
 
     if (t.args[1] == "generate") {
         if (t.args.size() != 3) {
             throw IllegalArgumentsException("lang generate requires a language argument");
         }
-        auto langFile = APath(t.args[0]).absolute().file("assets/lang/{}.lang"_as.format(t.args[2]));
+        auto langFile = APath(t.args[0]).absolute().file("assets/lang/{}.lang"_as.format(ALanguageCode(t.args[2]).toString()));
         if (langFile.isRegularFileExists()) {
             std::cout << "target file " << langFile << " already exists - use lang update to update this file" << std::endl;
-            //return;
+            return;
         }
         langFile.parent().makeDirs();
-        auto srcDir = APath(t.args[0]).absolute().file("src");
         AMap<AString, AString> dst;
         scanSrcDir(srcDir, dst);
         saveLangFile(langFile, dst);
