@@ -8,14 +8,19 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AMap.h>
 #include <AUI/IO/IInputStream.h>
+#include "ALanguageCode.h"
 
 class API_AUI_CORE AI18n: public Singleton<AI18n> {
 private:
     AMap<AString, AString> mLangData;
 
 public:
-    void loadFromLang(const AString& languageName);
+    AI18n();
+
+    void loadFromLang(const ALanguageCode& languageCode);
     void loadFromStream(const _<IInputStream>& iis);
+
+    static ALanguageCode userLanguage();
 };
 
 

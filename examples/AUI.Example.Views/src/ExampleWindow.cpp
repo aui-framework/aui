@@ -15,7 +15,7 @@
 #include "AUI/Util/UIBuildingHelpers.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/AComboBox.h>
-#include <AUI/i18n/i18n.h>
+#include <AUI/i18n/AI18n.h>
 
 void fillWindow(_<AWindow> w)
 {
