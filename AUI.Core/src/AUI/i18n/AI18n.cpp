@@ -99,11 +99,7 @@ AI18n::AI18n() {
     }
 }
 
-void AI18n::loadFromLang(const ALanguageCode& languageCode) {
-    loadFromStream(AUrl(":lang/{}.lang"_as.format(languageCode.toString())).open());
-}
-
-void AI18n::loadFromStream(const _<IInputStream>& iis) {
+void AI18n::loadFromStreamInto(const _<IInputStream>& iis, AMap<AString, AString>& langData) {
     ATokenizer t(iis);
     try {
         for (;;) {
@@ -117,12 +113,19 @@ void AI18n::loadFromStream(const _<IInputStream>& iis) {
                 auto key = t.readStringUntilUnescaped('=');
                 auto value = t.readStringUntilUnescaped('\n');
 
-                mLangData[key] = value;
+                langData[key] = value;
             }
         }
     } catch (...) {
 
     }
+}
+void AI18n::loadFromLang(const ALanguageCode& languageCode) {
+    loadFromStream(AUrl(":lang/{}.lang"_as.format(languageCode.toString())).open());
+}
+
+void AI18n::loadFromStream(const _<IInputStream>& iis) {
+    loadFromStreamInto(iis, mLangData);
 }
 
 #ifdef _WIN32
@@ -134,7 +137,9 @@ ALanguageCode AI18n::userLanguage() {
     GetUserDefaultLocaleName(buf, sizeof(buf) / 2);
     return AString(buf);
 }
+
 #else
+
 #include <langinfo.h>
 
 ALanguageCode AI18n::userLanguage() {

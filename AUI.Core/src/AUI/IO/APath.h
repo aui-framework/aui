@@ -91,7 +91,7 @@ public:
      *       элементы. Используйте L_DONT_IGNORE_DOTS, чтобы отменить пропуск папок "." и ".."
      * \return Список путей к файлам
      */
-    ADeque<AString> listDir(ListFlags f = LF_DEFAULT_FLAGS) const;
+    ADeque<APath> listDir(ListFlags f = LF_DEFAULT_FLAGS) const;
 
     /**
      * \example <pre>/home/user -> /home</pre>

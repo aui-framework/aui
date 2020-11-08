@@ -92,8 +92,8 @@ const APath& APath::removeFileRecursive() const {
     return *this;
 }
 
-ADeque<AString> APath::listDir(ListFlags f) const {
-    ADeque<AString> list;
+ADeque<APath> APath::listDir(ListFlags f) const {
+    ADeque<APath> list;
 
 #ifdef WIN32
     WIN32_FIND_DATA fd;

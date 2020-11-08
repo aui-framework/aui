@@ -11,13 +11,16 @@
 #include "ALanguageCode.h"
 
 class API_AUI_CORE AI18n: public Singleton<AI18n> {
+    friend class Lang;
 private:
     AMap<AString, AString> mLangData;
 
+    static void loadFromStreamInto(const _<IInputStream>& iis, AMap<AString, AString>& langData);
 public:
-    AI18n();
 
+    AI18n();
     void loadFromLang(const ALanguageCode& languageCode);
+
     void loadFromStream(const _<IInputStream>& iis);
 
     static ALanguageCode userLanguage();

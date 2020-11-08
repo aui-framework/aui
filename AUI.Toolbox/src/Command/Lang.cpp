@@ -9,6 +9,7 @@
 #include <AUI/IO/FileOutputStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include <AUI/i18n/ALanguageCode.h>
+#include <AUI/i18n/AI18n.h>
 
 AString Lang::getName() {
     return "lang";
@@ -91,7 +92,28 @@ void Lang::run(Toolbox& t) {
         std::cout << "created file " << langFile << std::endl
                   << "don't forget to add your new language files to your version control." << std::endl;
     } else if (t.args[1] == "update") {
+        AMap<AString, AString> dst;
+        scanSrcDir(srcDir, dst);
+        auto langDir = APath(t.args[0]).absolute().file("assets/lang/");
+        for (auto& l : langDir.listDir()) {
+            auto filename = l.filename();
+            auto dotPos = filename.find('.');
+            if (dotPos == AString::NPOS)
+                continue;
 
+            AString langName;
+
+            try {
+                langName = ALanguageCode(filename.mid(0, dotPos)).toString();
+            } catch (...) {
+                continue;
+            }
+
+            AMap<AString, AString> dstForThisLang = dst;
+            AI18n::loadFromStreamInto(_new<FileInputStream>(l), dstForThisLang);
+            saveLangFile(l, dstForThisLang);
+            std::cout << "updated: " << l << std::endl;
+        }
     } else {
         throw IllegalArgumentsException("lang accepts generate or update subcommand");
     }
