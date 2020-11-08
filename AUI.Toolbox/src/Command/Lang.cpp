@@ -70,9 +70,18 @@ void Lang::run(Toolbox& t) {
         if (t.args.size() != 3) {
             throw IllegalArgumentsException("lang generate requires a language argument");
         }
-        auto langFile = APath(t.args[0]).absolute().file("assets/lang/{}.lang"_as.format(ALanguageCode(t.args[2]).toString()));
+        APath langFile;
+        try {
+            langFile = APath(t.args[0]).absolute().file(
+                    "assets/lang/{}.lang"_as.format(ALanguageCode(t.args[2]).toString()));
+        } catch (const AException& e) {
+            std::cout << e.getMessage() << std::endl
+                      << "note: AUI follows the ISO 639-1 format of language codes (en-US, ru-RU, ru-UA etc...)"
+                      << std::endl;
+            return;
+        }
         if (langFile.isRegularFileExists()) {
-            std::cout << "target file " << langFile << " already exists - use lang update to update this file" << std::endl;
+            std::cout << "target file " << langFile << " already exists - use 'lang update' to update this file" << std::endl;
             return;
         }
         langFile.parent().makeDirs();

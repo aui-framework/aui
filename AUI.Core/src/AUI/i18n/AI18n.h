@@ -21,10 +21,14 @@ public:
     void loadFromStream(const _<IInputStream>& iis);
 
     static ALanguageCode userLanguage();
+
+    const AMap<AString, AString>& getLangData() const {
+        return mLangData;
+    }
 };
 
 
 inline AString operator"" _i18n(const char* input, size_t s)
 {
-    return input;
+    return AI18n::instance().getLangData().at(AString(input));
 }
