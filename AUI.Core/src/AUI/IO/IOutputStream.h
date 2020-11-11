@@ -28,7 +28,8 @@ public:
 	{
 		if (out.empty())
 			return *this;
-		write(out.toStdString().c_str(), out.length());
+		auto st = out.toStdString();
+		write(st.c_str(), st.length());
 		return *this;
 	}
 	IOutputStream& operator<<(const char* out)

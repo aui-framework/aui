@@ -157,6 +157,16 @@ int ATokenizer::readInt()
 	return tmp.toInt();
 }
 
+void ATokenizer::skipUntilUnescaped(char c) {
+    for (char current; (current = readChar()) != c;)
+    {
+        if (current == '\\')
+        {
+            readChar();
+        }
+    }
+}
+
 AString ATokenizer::readStringUntilUnescaped(char c)
 {
 	std::string result;

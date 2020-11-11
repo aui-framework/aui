@@ -88,6 +88,7 @@ public:
 		return mColumn;
 	}
 
+	void skipUntilUnescaped(char c);
 	AString readStringUntilUnescaped(char c);
 
 	/**

@@ -111,8 +111,8 @@ public:
 	    return it->second;
 	}
 	const ValueType& at(const KeyType& key) const {
-	    auto it = parent::cfind(key);
-	    if (it == parent::cend())
+	    auto it = parent::find(key);
+	    if (it == parent::end())
 	        throw AException("no such element: " + AClass<KeyType>::toString(key));
 	    return it->second;
 	}
