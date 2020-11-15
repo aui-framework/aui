@@ -45,11 +45,14 @@ ACurl::ACurl(const AString& url)
 	mWorkerThread = _new<AThread>([&]()
 	{
 		CURLcode r = curl_easy_perform(mCURL);
-		assert(r == 0);
+		//assert(r == 0 || r == CURLE_PARTIAL_FILE);
 
+		mCURLcode = r;
 		mFinished = true;
-		
-		mDataWaiter.notify_all();
+
+        curl_easy_cleanup(mCURL);
+
+        mPipe.close();
 	});
 	mWorkerThread->start();
 	
@@ -57,51 +60,32 @@ ACurl::ACurl(const AString& url)
 
 ACurl::~ACurl()
 {
+    mDestructorFlag = true;
+    mPipe.close();
 	mWorkerThread->join();
-	curl_easy_cleanup(mCURL);
 }
 
 int ACurl::read(char* dst, int size)
 {
-	std::unique_lock<std::mutex> lock(mDataQueueLock);
-	while (mDataQueue.empty())
-	{
-		if (mFinished)
-			return 0;
-		mDataWaiter.wait(lock);
-	}
-
-	auto obj = mDataQueue.front();
-	int available = obj->getAvailable();
-	if (available > size)
-	{
-		lock.unlock();
-		obj->get(dst, size);
-		return size;
-	}
-	mDataQueue.pop();
-	lock.unlock();
-	obj->get(dst, available);
-	return available;
+    if (mFinished && !mPipe.available()) {
+        if (mCURLcode == CURLE_WRITE_ERROR)
+            return -1;
+        return 0;
+    }
+    return mPipe.read(dst, size);
 }
 
-void ACurl::onDataReceived(char* ptr, size_t size)
+size_t ACurl::onDataReceived(char* ptr, size_t size)
 {
-	auto buffer = _new<AByteBuffer>();
-	buffer->put(ptr, size);
-	{
-		std::unique_lock lock(mDataQueueLock);
-		mDataQueue.push(buffer);
-	}
-	mDataWaiter.notify_all();
+    if (mDestructorFlag)
+        return -1;
+    return mPipe.write(ptr, size);
 }
 
 size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata)
 {
 	ACurl* c = static_cast<ACurl*>(userdata);
-	c->onDataReceived(ptr, nmemb);
-
-	return nmemb;
+	return c->onDataReceived(ptr, nmemb);;
 }
 
 int64_t ACurl::getContentLength() const {

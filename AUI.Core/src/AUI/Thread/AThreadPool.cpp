@@ -21,7 +21,7 @@ bool AThreadPool::Worker::processQueue(Queue<std::function<void()>>& queue)
 		}
 		catch (const AThread::AInterrupted&)
 		{
-			AThread::current()->resetInterruptFlag();
+			//AThread::current()->resetInterruptFlag();
 		}
 		catch (const TryLaterException&)
 		{

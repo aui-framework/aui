@@ -8,7 +8,7 @@ class API_AUI_CORE IOutputStream
 {
 public:
 	virtual ~IOutputStream() = default;
-	virtual int write(const char* dst, int size) = 0;
+	virtual int write(const char* src, int size) = 0;
 
 	inline void write(const _<AByteBuffer>& buffer)
 	{

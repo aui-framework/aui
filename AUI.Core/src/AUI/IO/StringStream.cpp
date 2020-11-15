@@ -7,7 +7,7 @@ StringStream::StringStream(const AString& string): mString(string), mIterator(mS
 int StringStream::read(char* dst, int size)
 {
 	if (mIterator == mString.end())
-		return -1;
+		return 0;
 
 	int r = 0;
 	for (; mIterator != mString.end() && r < size; ++r, ++mIterator)

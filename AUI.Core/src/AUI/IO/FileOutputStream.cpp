@@ -18,7 +18,7 @@ FileOutputStream::~FileOutputStream()
 	fclose(mFile);
 }
 
-int FileOutputStream::write(const char* dst, int size)
+int FileOutputStream::write(const char* src, int size)
 {
-	return fwrite(dst, 1, size, mFile);
+	return fwrite(src, 1, size, mFile);
 }

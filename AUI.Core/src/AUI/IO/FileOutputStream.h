@@ -14,5 +14,5 @@ public:
 	FileOutputStream(const AString& path, bool append = false);
 	virtual ~FileOutputStream();
 
-	int write(const char* dst, int size) override;
+	int write(const char* src, int size) override;
 };
