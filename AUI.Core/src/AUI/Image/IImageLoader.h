@@ -15,21 +15,21 @@ public:
 	 * \return true, если этот загрузчик может загрузить изображение, находящееся в
 	 *	       этом буфере.
 	 */
-	virtual bool matches(_<AByteBuffer> buffer) = 0;
+	virtual bool matches(AByteBuffer& buffer) = 0;
 
 	/**
 	 * \brief Вызывается тогда и только тогда, когда matches вернёт true.
 	 *        Непосредственно загрузчик изображения (векторный).
 	 * \return векторное изображение (nullable)
 	 */
-	virtual _<IDrawable> getDrawable(_<AByteBuffer> buffer) = 0;
+	virtual _<IDrawable> getDrawable(AByteBuffer& buffer) = 0;
 
 	/**
 	 * \brief Вызывается тогда и только тогда, когда matches вернёт true.
 	 *        Непосредственно загрузчик изображения (растровый)
 	 * \return растровое изображение (nullable)
 	 */
-	virtual _<AImage> getRasterImage(_<AByteBuffer> buffer) = 0;
+	virtual _<AImage> getRasterImage(AByteBuffer& buffer) = 0;
 };
 
 #include "AUI/Common/AByteBuffer.h"

@@ -7,21 +7,21 @@ SvgImageLoader::SvgImageLoader()
 {
 }
 
-bool SvgImageLoader::matches(_<AByteBuffer> buffer)
+bool SvgImageLoader::matches(AByteBuffer& buffer)
 {
 	char buf[8];
-	buffer->get(buf, 5);
+	buffer.get(buf, 5);
 
 	return memcmp(buf, "<?xml", 5) == 0 ||
            memcmp(buf, "<svg", 4) == 0;
 }
 
 
-_<IDrawable> SvgImageLoader::getDrawable(_<AByteBuffer> buffer)
+_<IDrawable> SvgImageLoader::getDrawable(AByteBuffer& buffer)
 {
 	return _new<SvgDrawable>(buffer);
 }
 
-_<AImage> SvgImageLoader::getRasterImage(_<AByteBuffer> buffer) {
+_<AImage> SvgImageLoader::getRasterImage(AByteBuffer& buffer) {
     return nullptr;
 }

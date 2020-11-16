@@ -19,7 +19,7 @@ AFont::AFont(AFontManager *fm, const AUrl& url):
     ft(fm->mFreeType) {
     mFontDataBuffer = AByteBuffer::fromStream(url.open());
 
-    if (FT_New_Memory_Face(fm->mFreeType->getFt(), (const FT_Byte*)mFontDataBuffer->getBuffer(), mFontDataBuffer->getSize(), 0, &face)) {
+    if (FT_New_Memory_Face(fm->mFreeType->getFt(), (const FT_Byte*)mFontDataBuffer.getBuffer(), mFontDataBuffer.getSize(), 0, &face)) {
         throw AException(("Could not load font: " + url.getFull()).toStdString());
     }
 }

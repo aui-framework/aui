@@ -9,20 +9,20 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-bool PngImageLoader::matches(_<AByteBuffer> buffer) {
+bool PngImageLoader::matches(AByteBuffer& buffer) {
     const uint8_t png_header[] = {0x89, 0x50, 0x4e, 0x47};
     uint8_t read_header[sizeof(png_header)];
-    buffer->get((char*) read_header, sizeof(read_header));
+    buffer.get((char*) read_header, sizeof(read_header));
     return memcmp(png_header, read_header, sizeof(read_header)) == 0;
 }
 
-_<IDrawable> PngImageLoader::getDrawable(_<AByteBuffer> buffer) {
+_<IDrawable> PngImageLoader::getDrawable(AByteBuffer& buffer) {
     return nullptr;
 }
 
-_<AImage> PngImageLoader::getRasterImage(_<AByteBuffer> buffer) {
+_<AImage> PngImageLoader::getRasterImage(AByteBuffer& buffer) {
     int x, y, channels;
-    if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer->getCurrentPosAddress(), buffer->getAvailable(),
+    if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer.getCurrentPosAddress(), buffer.getAvailable(),
                                               &x, &y, &channels, 4)) {
         channels = 4;
         uint32_t format = AImage::BYTE;

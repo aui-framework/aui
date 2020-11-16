@@ -15,10 +15,10 @@ inline uint64_t asKey(const glm::ivec2 size) {
     return result;
 }
 
-SvgDrawable::SvgDrawable(_<AByteBuffer>& data) {
-    data->setCurrentPos(data->getSize());
+SvgDrawable::SvgDrawable(AByteBuffer& data) {
+    data.setCurrentPos(data.getSize());
     data << '\0';
-    mImage = nsvgParse(data->data(), "px", 96.f);
+    mImage = nsvgParse(data.data(), "px", 96.f);
 
 }
 

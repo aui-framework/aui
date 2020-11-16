@@ -22,7 +22,7 @@ AByteBuffer::AByteBuffer(const unsigned char* buffer, size_t size)
 	put(reinterpret_cast<const char*>(buffer), size);
 }
 
-AByteBuffer::AByteBuffer(const AByteBuffer& other) {
+AByteBuffer::AByteBuffer(const AByteBuffer& other) noexcept {
 	reserve(other.mReserved);
 	memcpy(mBuffer, other.mBuffer, other.mSize);
 	mSize = other.mSize;
@@ -31,16 +31,7 @@ AByteBuffer::AByteBuffer(const AByteBuffer& other) {
 
 AByteBuffer::AByteBuffer(AByteBuffer&& other) noexcept
 {
-	mBuffer = other.mBuffer;
-	mIndex = other.mIndex;
-	mReserved = other.mReserved;
-	mSize = other.mSize;
-
-	other.mBuffer = 0;
-	other.mIndex = 0;
-	other.mReserved = 0;
-	other.mSize = 0;
-	other.reserve(64);
+    AByteBuffer::operator=(std::move(other));
 }
 
 void AByteBuffer::reserve(size_t size) {
@@ -127,25 +118,25 @@ bool AByteBuffer::operator!=(const AByteBuffer& r) const {
 	return !(*this == r);
 }
 
-_<AByteBuffer> AByteBuffer::fromStream(_<IInputStream> is)
+AByteBuffer AByteBuffer::fromStream(const _<IInputStream>& is)
 {
-	auto buf = _new<AByteBuffer>();
+    AByteBuffer buf;
 	char tmp[4096];
 	int last;
 	while ((last = is->read(tmp, sizeof(tmp))) > 0)
 	{
-		buf->put(tmp, last);
+		buf.put(tmp, last);
 	}
 	return buf;
 }
 
-_<AByteBuffer> AByteBuffer::fromStream(_<IInputStream> is, size_t sizeRestriction) {
-    auto buf = _new<AByteBuffer>();
+AByteBuffer AByteBuffer::fromStream(const _<IInputStream>& is, size_t sizeRestriction) {
+    AByteBuffer buf;
     char tmp[4096];
     int last;
-    while ((last = is->read(tmp, sizeof(tmp))) > 0 && buf->getSize() < sizeRestriction)
+    while ((last = is->read(tmp, sizeof(tmp))) > 0 && buf.getSize() < sizeRestriction)
     {
-        buf->put(tmp, last);
+        buf.put(tmp, last);
     }
     return buf;
 }
@@ -171,11 +162,11 @@ AByteBuffer::~AByteBuffer() {
 	mBuffer = nullptr;
 }
 
-_<AByteBuffer> AByteBuffer::fromString(const AString& string) {
-    auto b = _new<AByteBuffer>();
+AByteBuffer AByteBuffer::fromString(const AString& string) {
+    AByteBuffer b;
     auto s = string.toStdString();
-    b->put(s.data(), s.length());
-    b->setCurrentPos(0);
+    b.put(s.data(), s.length());
+    b.setCurrentPos(0);
     return b;
 }
 
@@ -201,13 +192,13 @@ uint8_t hexCharToNumber(char c) {
     return -1;
 }
 
-_<AByteBuffer> AByteBuffer::fromHexString(const AString& string) {
-    auto result = _new<AByteBuffer>();
-    result->reserve(string.length() / 2);
+AByteBuffer AByteBuffer::fromHexString(const AString& string) {
+    AByteBuffer result;
+    result.reserve(string.length() / 2);
 
     for (int i = 0; i < string.length(); i += 2) {
         uint8_t byte = (hexCharToNumber(char(string[i])) << 4u) | hexCharToNumber(char(string[i + 1]));
-        *result << byte;
+        result << byte;
     }
 
     return result;
@@ -221,13 +212,13 @@ static const std::string BASE64_CHARS =
 static inline bool is_base64(unsigned char c) {
     return (isalnum(c) || (c == '+') || (c == '/'));
 }
-_<AByteBuffer> AByteBuffer::fromBase64String(const AString& encodedString) {
+AByteBuffer AByteBuffer::fromBase64String(const AString& encodedString) {
     int in_len = encodedString.size();
     int i = 0;
     int j = 0;
     int in_ = 0;
     unsigned char char_array_4[4], char_array_3[3];
-    auto ret = _new<AByteBuffer>();
+    AByteBuffer ret;
 
     while (in_len-- && ( encodedString[in_] != '=') && is_base64(encodedString[in_])) {
         char_array_4[i++] = encodedString[in_]; in_++;
@@ -240,7 +231,7 @@ _<AByteBuffer> AByteBuffer::fromBase64String(const AString& encodedString) {
             char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
 
             for (i = 0; (i < 3); i++)
-                *ret << char_array_3[i];
+                ret << char_array_3[i];
             i = 0;
         }
     }
@@ -256,7 +247,7 @@ _<AByteBuffer> AByteBuffer::fromBase64String(const AString& encodedString) {
         char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
         char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
 
-        for (j = 0; (j < i - 1); j++) *ret << char_array_3[j];
+        for (j = 0; (j < i - 1); j++) ret << char_array_3[j];
     }
 
     return ret;

@@ -20,7 +20,7 @@ private:
     ADeque<Pair> mRasterized;
 
 public:
-    explicit SvgDrawable(_<AByteBuffer>& data);
+    explicit SvgDrawable(AByteBuffer& data);
     ~SvgDrawable();
 
 	void draw(const glm::ivec2& size) override;

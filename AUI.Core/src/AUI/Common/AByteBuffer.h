@@ -22,7 +22,7 @@ public:
 	AByteBuffer(const unsigned char* buffer, size_t size);
 	~AByteBuffer();
 	
-	AByteBuffer(const AByteBuffer& other);
+	AByteBuffer(const AByteBuffer& other) noexcept;
 	AByteBuffer(AByteBuffer&& other) noexcept;
 	void reserve(size_t size);
 	void put(const char* buffer, size_t size);
@@ -86,6 +86,20 @@ public:
 	void setCurrentPos(size_t p);
 	size_t getCurrentPos() const;
 
+	AByteBuffer& operator=(AByteBuffer&& other) {
+        mBuffer = other.mBuffer;
+        mIndex = other.mIndex;
+        mReserved = other.mReserved;
+        mSize = other.mSize;
+
+        other.mBuffer = nullptr;
+        other.mIndex = 0;
+        other.mReserved = 0;
+        other.mSize = 0;
+        other.reserve(64);
+        return *this;
+	}
+
 	bool operator==(const AByteBuffer& r) const;
 	bool operator!=(const AByteBuffer& r) const;
 
@@ -100,11 +114,11 @@ public:
 
 	AString toHexString();
 
-	static _<AByteBuffer> fromStream(_<IInputStream> is);
-	static _<AByteBuffer> fromStream(_<IInputStream> is, size_t sizeRestriction);
-    static _<AByteBuffer> fromString(const AString& string);
-    static _<AByteBuffer> fromHexString(const AString& string);
-    static _<AByteBuffer> fromBase64String(const AString& encodedString);
+	static AByteBuffer fromStream(const _<IInputStream>& is);
+	static AByteBuffer fromStream(const _<IInputStream>& is, size_t sizeRestriction);
+    static AByteBuffer fromString(const AString& string);
+    static AByteBuffer fromHexString(const AString& string);
+    static AByteBuffer fromBase64String(const AString& encodedString);
 };
 
 API_AUI_CORE std::ostream& operator<<(std::ostream& o, const AByteBuffer& r);

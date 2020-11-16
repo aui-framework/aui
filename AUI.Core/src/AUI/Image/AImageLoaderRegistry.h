@@ -19,8 +19,8 @@ public:
 
 	void registerImageLoader(_<IImageLoader> imageLoader);
 
-	_<IDrawable> loadDrawable(_<AByteBuffer> buffer);
-	_<AImage> loadImage(_<AByteBuffer> buffer);
+	_<IDrawable> loadDrawable(AByteBuffer& buffer);
+	_<AImage> loadImage(AByteBuffer& buffer);
 	inline _<IDrawable> loadDrawable(const AUrl& url) {
 	    return loadDrawable(AByteBuffer::fromStream(url.open()));
 	}
