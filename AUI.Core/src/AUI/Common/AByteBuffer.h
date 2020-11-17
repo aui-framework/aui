@@ -96,7 +96,6 @@ public:
         other.mIndex = 0;
         other.mReserved = 0;
         other.mSize = 0;
-        other.reserve(64);
         return *this;
 	}
 
