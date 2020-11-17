@@ -52,12 +52,12 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 
 		// кнопки
 		{
-			c->addView(_new<ALabel>("Кнопки"_i18n));
+			c->addView(_new<ALabel>("Кнопки"));
 
-			auto button = _new<AButton>(u8"Обычная кнопка"_i18n);
-			auto def = _new<AButton>(u8"Дефолтная кнопка"_i18n);
+			auto button = _new<AButton>(u8"Обычная кнопка");
+			auto def = _new<AButton>(u8"Дефолтная кнопка");
 			def->setDefault();
-			auto disabled = _new<AButton>(u8"Неактивная кнопка"_i18n);
+			auto disabled = _new<AButton>(u8"Неактивная кнопка");
 			disabled->setEnabled(false);
 
 			c->addView(button);
@@ -66,37 +66,37 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		}
 		// Флажки
 		{
-			c->addView(_new<ALabel>(u8"Флажки"_i18n));
-			c->addView(_new<ACheckBox>(u8"Флажок снят"_i18n));
-			auto checked = _new<ACheckBox>(u8"Флажок установлен"_i18n);
+			c->addView(_new<ALabel>(u8"Флажки"));
+			c->addView(_new<ACheckBox>(u8"Флажок снят"));
+			auto checked = _new<ACheckBox>(u8"Флажок установлен");
 			checked->setChecked(true);
 			c->addView(checked);
-			auto disabled = _new<ACheckBox>(u8"Неактивный флажок"_i18n);
+			auto disabled = _new<ACheckBox>(u8"Неактивный флажок");
 			disabled->setDisabled();
 			c->addView(disabled);
 		}
 		{
-			c->addView(_new<ALabel>(u8"Радио кнопка"_i18n));
+			c->addView(_new<ALabel>(u8"Радио кнопка"));
 			c->addView(_new<ARadioGroup>(_new<AListModel<AString>>(AVector<AString>{
-			    "Радио 1"_i18n,
-			    "Радио 2"_i18n,
-			    "Радио 3"_i18n,
-			    "Неактивная кнопка"_i18n,
+			    "Радио 1",
+			    "Радио 2",
+			    "Радио 3",
+			    "Неактивная кнопка",
 			})) let (ARadioGroup, {
 			    getViews()[3]->setDisabled();
 			}));
 		}
         {
             c->addView(_new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{
-                "Комбобокс 1"_i18n,
-                "Комбобокс 2"_i18n,
-                "Комбобокс 3"_i18n,
-                "Комбобокс 4"_i18n,
-                "Комбобокс 5"_i18n,
-                "Комбобокс 6"_i18n,
+                "Комбобокс 1",
+                "Комбобокс 2",
+                "Комбобокс 3",
+                "Комбобокс 4",
+                "Комбобокс 5",
+                "Комбобокс 6",
             })));
             c->addView(_new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{
-                "Отключённый комбобокс"_i18n
+                "Отключённый комбобокс"
             })) let(AComboBox, {
                 setDisabled();
             }));
@@ -111,55 +111,55 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		auto c = _new<AViewContainer>();
 		c->setLayout(_new<AVerticalLayout>());
 		
-		c->addView(_new<ALabel>(u8"Окна"_i18n));
+		c->addView(_new<ALabel>(u8"Окна"));
 		
-		auto def = _new<AButton>(u8"Обычное окно"_i18n);
+		auto def = _new<AButton>(u8"Обычное окно");
 		connect(def->clicked, this, [&]()
 		{
-			auto w = _new<AWindow>(u8"Диалоговое окно"_i18n, 400, 300);
+			auto w = _new<AWindow>(u8"Диалоговое окно", 400, 300);
 			fillWindow(w);
 			w->show();
 			mWindows << w;
 		});
-		auto dialog = _new<AButton>(u8"Диалоговое окно"_i18n);
+		auto dialog = _new<AButton>(u8"Диалоговое окно");
 		connect(dialog->clicked, this, [&]()
 		{
-			auto w = _new<AWindow>(u8"Диалоговое окно"_i18n, 400, 300);
+			auto w = _new<AWindow>(u8"Диалоговое окно", 400, 300);
 			fillWindow(w);
 			w->show();
 			w->setWindowStyle(WS_DIALOG);
 			mWindows << w;
 		});
-		auto modal = _new<AButton>(u8"Модальное окно"_i18n);
+		auto modal = _new<AButton>(u8"Модальное окно");
 		connect(modal->clicked, this, [&]()
 		{
-			auto w = _new<AWindow>(u8"Модальное окно"_i18n, 400, 300, this, WS_DIALOG);
+			auto w = _new<AWindow>(u8"Модальное окно", 400, 300, this, WS_DIALOG);
 			fillWindow(w);
 			w->show();
 			mWindows << w;
 		});
 		
-		auto customWindowWithCaption = _new<AButton>(u8"Кастомное окно с заголовком"_i18n);
+		auto customWindowWithCaption = _new<AButton>(u8"Кастомное окно с заголовком");
 		connect(customWindowWithCaption->clicked, this, [&]()
 		{
-			auto w = _new<ACustomCaptionWindow>(u8"Кастомное окно"_i18n, 400, 300);
+			auto w = _new<ACustomCaptionWindow>(u8"Кастомное окно", 400, 300);
 			fillWindow(w);
 			w->show();
 			//w->setWindowStyle(WS_DIALOG);
 			mWindows << w;
 		});
 		
-		auto customWindow = _new<AButton>(u8"Кастомное окно без заголовка"_i18n);
+		auto customWindow = _new<AButton>(u8"Кастомное окно без заголовка");
 		connect(customWindow->clicked, this, [&]()
 		{
-			auto w = _new<ACustomWindow>(u8"Кастомное окно"_i18n, 400, 300);
+			auto w = _new<ACustomWindow>(u8"Кастомное окно", 400, 300);
 			fillWindow(w);
 			w->show();
 			w->setWindowStyle(WS_DIALOG);
 			mWindows << w;
 		});
 		
-		auto closeAll = _new<AButton>(u8"Закрыть все окна"_i18n);
+		auto closeAll = _new<AButton>(u8"Закрыть все окна");
 		connect(closeAll->clicked, this, [&]()
 		{
 			for (auto& w : mWindows)
@@ -182,12 +182,12 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		auto c = _new<AViewContainer>();
 		c->setLayout(_new<AVerticalLayout>());
 
-		c->addView(_new<ALabel>(u8"Текстовые поля"_i18n));
+		c->addView(_new<ALabel>(u8"Текстовые поля"));
 
-		c->addView(_new<ALabel>(u8"Обычное поле"_i18n));
+		c->addView(_new<ALabel>(u8"Обычное поле"));
 		c->addView(_new<ATextField>());
 
-		c->addView(_new<ALabel>(u8"Числовое поле"_i18n));
+		c->addView(_new<ALabel>(u8"Числовое поле"));
 		c->addView(_new<ANumberPicker>()); 
 
 		horizontal->addView(c);

@@ -22,7 +22,8 @@ public:
 	_<IDrawable> loadDrawable(AByteBuffer& buffer);
 	_<AImage> loadImage(AByteBuffer& buffer);
 	inline _<IDrawable> loadDrawable(const AUrl& url) {
-	    return loadDrawable(AByteBuffer::fromStream(url.open()));
+	    auto s = AByteBuffer::fromStream(url.open());
+	    return loadDrawable(s);
 	}
 	_<AImage> loadImage(const AUrl& url);
 };
