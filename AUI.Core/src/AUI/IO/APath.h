@@ -182,5 +182,7 @@ public:
      * \return полный путь по умолчанию
      */
     static APath getDefaultPath(DefaultPath path);
+
+    size_t fileSize();
 };
 

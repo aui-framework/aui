@@ -26,7 +26,7 @@ namespace aui {
     namespace detail::format {
         template<typename T>
         struct type_length {
-            inline static constexpr size_t format_length(T&& t) {
+            inline static constexpr size_t format_length(T t) {
                 return glm::pow(2llu, sizeof(T)) + 1;
             }
         };

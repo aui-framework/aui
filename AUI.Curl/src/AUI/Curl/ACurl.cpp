@@ -9,8 +9,7 @@
 
 #undef min
 
-ACurl::ACurl(const AString& url)
-{
+ACurl::Builder::Builder(const AString& url) {
 	class Global
 	{
 	public:
@@ -26,20 +25,49 @@ ACurl::ACurl(const AString& url)
 
 	static Global g;
 
-	
+
 	mCURL = curl_easy_init();
 	assert(mCURL);
 	CURLcode res;
-	
+
 	res = curl_easy_setopt(mCURL, CURLOPT_URL, url.toStdString().c_str());
 	assert(res == 0);
 
 	res = curl_easy_setopt(mCURL, CURLOPT_WRITEFUNCTION, writeCallback);
 	assert(res == 0);
-	
-	res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
-	assert(res == 0);
 	res = curl_easy_setopt(mCURL, CURLOPT_SSL_VERIFYPEER, false);
+	assert(res == 0);
+}
+
+ACurl::Builder& ACurl::Builder::setRanges(size_t begin, size_t end) {
+	if (begin || end) {
+		std::string s = std::to_string(begin) + "-";
+		if (end) {
+			s += std::to_string(end);
+		}
+		curl_easy_setopt(mCURL, CURLOPT_RANGE, s.c_str());
+	}
+	return *this;
+}
+
+ACurl::Builder::~Builder() {
+	assert(mCURL == nullptr);
+}
+
+
+ACurl::ACurl(const AString& url):
+	ACurl(Builder(url))
+{
+
+}
+
+ACurl::ACurl(Builder&& url):
+	mCURLcode(0)
+{
+	mCURL = url.mCURL;
+	url.mCURL = nullptr;
+
+	CURLcode res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
 
 	mWorkerThread = _new<AThread>([&]()
@@ -55,7 +83,7 @@ ACurl::ACurl(const AString& url)
         mPipe.close();
 	});
 	mWorkerThread->start();
-	
+
 }
 
 ACurl::~ACurl()

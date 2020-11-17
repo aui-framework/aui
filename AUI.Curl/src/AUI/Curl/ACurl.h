@@ -12,7 +12,7 @@ typedef void CURL;
 class API_AUI_CURL ACurl: public IInputStream {
 private:
 	CURL* mCURL;
-    int mCURLcode;
+    int mCURLcode{};
     APipe mPipe;
 
 	size_t onDataReceived(char* ptr, size_t size);
@@ -24,7 +24,32 @@ private:
 	bool mDestructorFlag = false;
 
 public:
-	ACurl(const AString& url);
+    class API_AUI_CORE Builder {
+    friend class ACurl;
+    private:
+        CURL* mCURL;
+
+    public:
+        explicit Builder(const AString& url);
+        Builder(const Builder&) = delete;
+        ~Builder();
+
+        /**
+         * \brief Установить аттрибут Accept-Ranges: begin-end (загрузка куска файла)
+         * \param begin позиция начала
+         * \param end позиция конца. Может быть 0 для обозначения конца
+         * \return this
+         */
+        Builder& setRanges(size_t begin, size_t end);
+    };
+
+    explicit ACurl(const AString& url);
+	explicit ACurl(Builder& builder):
+	    ACurl(std::move(builder))
+	{
+
+	}
+	explicit ACurl(Builder&& builder);
 	~ACurl();
 
 	int read(char* dst, int size) override;

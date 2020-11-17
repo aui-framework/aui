@@ -15,4 +15,5 @@ public:
 	virtual ~FileOutputStream();
 
 	int write(const char* src, int size) override;
+	void close();
 };

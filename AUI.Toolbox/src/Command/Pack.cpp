@@ -19,7 +19,6 @@ void Pack::run(Toolbox& t) {
     {
         try {
             APath p(t.args[1]);
-            p.removeFileRecursive();
             p.makeDirs();
         } catch (...) {
 

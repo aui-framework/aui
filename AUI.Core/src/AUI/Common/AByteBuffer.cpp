@@ -121,7 +121,7 @@ bool AByteBuffer::operator!=(const AByteBuffer& r) const {
 AByteBuffer AByteBuffer::fromStream(const _<IInputStream>& is)
 {
     AByteBuffer buf;
-	char tmp[4096];
+	char tmp[0x10000];
 	int last;
 	while ((last = is->read(tmp, sizeof(tmp))) > 0)
 	{

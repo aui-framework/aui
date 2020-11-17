@@ -84,7 +84,7 @@ const APath& APath::removeFile() const {
 const APath& APath::removeFileRecursive() const {
     if (isDirectoryExists()) {
         for (auto& l : listDir()) {
-            file(l).removeFileRecursive();
+            l.removeFileRecursive();
         }
     }
     if (exists())
@@ -218,6 +218,13 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
     result.removeBackSlashes();
     return result;
 }
+
+size_t APath::fileSize() {
+    struct stat s = {0};
+    stat(toStdString().c_str(), &s);
+    return s.st_size;
+}
+
 #else
 #include <unistd.h>
 #include <sys/types.h>

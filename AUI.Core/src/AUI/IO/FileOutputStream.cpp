@@ -15,10 +15,17 @@ FileOutputStream::FileOutputStream(const AString& path, bool append)
 
 FileOutputStream::~FileOutputStream()
 {
-	fclose(mFile);
+    close();
 }
 
 int FileOutputStream::write(const char* src, int size)
 {
 	return fwrite(src, 1, size, mFile);
+}
+
+void FileOutputStream::close() {
+    if (mFile) {
+        fclose(mFile);
+        mFile = nullptr;
+    }
 }

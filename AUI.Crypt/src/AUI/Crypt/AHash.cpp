@@ -24,7 +24,7 @@ inline AByteBuffer sha_impl(FInit init, FUpdate update, FFinal final, size_t s, 
     result.reserve(s);
     result.setSize(s);
 
-    char tmp[0x1000];
+    char tmp[0x10000];
 
     CTX ctx;
     init(&ctx);
