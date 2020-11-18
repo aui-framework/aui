@@ -449,6 +449,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
             ALogger::info((const char*) glGetString(GL_VERSION));
             ALogger::info((const char*) glGetString(GL_VENDOR));
             ALogger::info((const char*) glGetString(GL_RENDERER));
+            ALogger::info((const char*) glGetString(GL_EXTENSIONS));
             glewExperimental = true;
             if (glewInit() != GLEW_OK) {
                 AMessageBox::show(nullptr, "OpenGL", "Could not initialize OpenGL context");
@@ -521,6 +522,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
     ALogger::info((const char*) glGetString(GL_VERSION));
     ALogger::info((const char*) glGetString(GL_VENDOR));
     ALogger::info((const char*) glGetString(GL_RENDERER));
+    ALogger::info((const char*) glGetString(GL_EXTENSIONS));
 #else
     static struct once {
         once() {
@@ -642,6 +644,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
         ALogger::info((const char*) glGetString(GL_VERSION));
         ALogger::info((const char*) glGetString(GL_VENDOR));
         ALogger::info((const char*) glGetString(GL_RENDERER));
+        ALogger::info((const char*) glGetString(GL_EXTENSIONS));
         glewExperimental = true;
         if (glewInit() != GLEW_OK) {
             throw AException("glewInit failed");
