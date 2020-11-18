@@ -551,7 +551,7 @@ void AView::recompileCSS()
 
 	processStylesheet(css::T_BORDER, [&](property p)
 	{
-		float width = 1.f;
+		int width = 1;
 		AColor c;
 
 		enum

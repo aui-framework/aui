@@ -201,6 +201,12 @@ void Render::drawRoundedRect(float x, float y, float width, float height, float 
     drawRect(x, y, width, height);
     setFill(mCurrentFill);
 }
+void Render::drawRoundedBorder(float x, float y, float width, float height, float radius, float borderWidth) {
+    mRoundedSolidShader.use();
+    mRoundedSolidShader.set("size", 2.f * radius / glm::vec2{width, height});
+    drawRect(x, y, width, height);
+    setFill(mCurrentFill);
+}
 
 void Render::drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s)
 {

@@ -5,7 +5,7 @@
 AUI_ENTRY
 {
     AI18n::instance();
-    //Stylesheet::setPreferredStyle(Stylesheet::PREFER_UNIVERSAL_LOOK);
+    Stylesheet::setPreferredStyle(Stylesheet::PREFER_UNIVERSAL_LOOK);
     Stylesheet::instance().load(AUrl(":views/style.css").open());
 	auto w = _new<ExampleWindow>();
 	w->show();

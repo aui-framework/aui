@@ -85,10 +85,11 @@ public:
 	void drawRect(float x, float y, float width, float height);
 	void drawTexturedRect(float x, float y, float width, float height,
                        const glm::vec2& uv1 = {0, 0}, const glm::vec2& uv2 = {1, 1});
-	void drawRoundedRect(float x, float y, float width, float height, float radius);
-	void drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s);
+    void drawRoundedRect(float x, float y, float width, float height, float radius);
+    void drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s);
 	void drawRectBorder(float x, float y, float width, float height, float lineWidth = 1.f);
-	
+    void drawRoundedBorder(float x, float y, float width, float height, float radius, float borderWidth);
+
 	void setFill(Filling t);
 
 	void setGradientColors(const AColor& tl, const AColor& tr,
@@ -100,15 +101,15 @@ public:
 		setColorForced(1.f);
 		setTransformForced(getProjectionMatrix());
 	}
-
-	inline void drawString(int x, int y, const AString& text)
+    inline void drawString(int x, int y, const AString& text)
 	{
 		FontStyle fs;
 		drawString(x, y, text, fs);
 	}
-	void drawBoxShadow(float x, float y, float width, float height, float blurRadius, const AColor& color);
-	void drawString(int x, int y, const AString& text, FontStyle& fs);
-	void drawString(int x, int y, PrerendereredString& f);
+    void drawBoxShadow(float x, float y, float width, float height, float blurRadius, const AColor& color);
+    void drawString(int x, int y, const AString& text, FontStyle& fs);
+    void drawString(int x, int y, PrerendereredString& f);
+
 	PrerendereredString preRendererString(const AString& text, FontStyle& fs);
 
 	void setColorForced(const AColor& color)
@@ -140,10 +141,10 @@ public:
 	{
 		return mTransform;
 	}
-
-	Repeat getRepeat() const {
+    Repeat getRepeat() const {
 	    return mRepeat;
 	}
+
 	void setRepeat(Repeat repeat) {
 	    mRepeat = repeat;
 	}
