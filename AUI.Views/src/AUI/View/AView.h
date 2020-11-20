@@ -133,13 +133,6 @@ private:
 	 */
     float mBorderRadius = 0;
 
-    /**
-     * \brief если у нашего AView есть border или border-radius, но при этом не требуется клиппинг, то нам нужно
-     *        включить этот клиппинг на время отрисовки фона. в противном случае drawStencilMask и так учтёт наше
-     *        скругление
-     */
-    bool mForceStencilForBackground = false;
-
 	/**
 	 * \brief Стиль шрифта для этого AView.
 	 */

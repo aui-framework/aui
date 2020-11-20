@@ -48,8 +48,11 @@ void AView::redraw()
 void AView::drawStencilMask()
 {
     if (mBorderRadius > 0) {
-        Render::instance().drawRoundedRect(mPadding.left, mPadding.top, getWidth() - mPadding.horizontal(),
-                                           getHeight() - mPadding.vertical(), mBorderRadius);
+        Render::instance().drawRoundedRect(mPadding.left,
+                                           mPadding.top,
+                                           getWidth() - mPadding.horizontal(),
+                                           getHeight() - mPadding.vertical(),
+                                           mBorderRadius);
     } else {
         Render::instance().setFill(Render::FILL_SOLID);
         Render::instance().drawRect(mPadding.left, mPadding.top,getWidth() - mPadding.horizontal(),
@@ -65,55 +68,43 @@ void AView::render()
 	{
 		ensureCSSUpdated();
 
-		auto doDraw = [&]() {
-            for (auto& e : mBackgroundEffects)
-            {
-                e->draw([&]()
-                        {
-                            Render::instance().drawRect(0, 0, getWidth(), getHeight());
-                        });
+        for (auto& e : mBackgroundEffects)
+        {
+            e->draw([&]()
+                    {
+                        Render::instance().drawRect(0, 0, getWidth(), getHeight());
+                    });
+        }
+
+        // список отрисовки.
+        if (mHasTransitions) {
+            mTransitionValue = glm::clamp(mTransitionValue, 0.f, 1.f);
+            for (auto& item : mCssDrawListBack)
+                item();
+
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            RenderHints::PushColor c;
+            Render::instance().setColor({ 1, 1, 1, mTransitionValue });
+            for (auto& item : mCssDrawListFront)
+                item();
+
+            auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::high_resolution_clock::now().time_since_epoch());
+            mTransitionValue += (now - mLastFrameTime).count() / (1000.f * mTransitionDuration);
+            if (mTransitionValue >= 1.f) {
+                mHasTransitions = false;
             }
-
-            // список отрисовки.
-            if (mHasTransitions) {
-                mTransitionValue = glm::clamp(mTransitionValue, 0.f, 1.f);
-                for (auto& item : mCssDrawListBack)
-                    item();
-
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                RenderHints::PushColor c;
-                Render::instance().setColor({ 1, 1, 1, mTransitionValue });
-                for (auto& item : mCssDrawListFront)
-                    item();
-
-                auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        std::chrono::high_resolution_clock::now().time_since_epoch());
-                mTransitionValue += (now - mLastFrameTime).count() / (1000.f * mTransitionDuration);
-                if (mTransitionValue >= 1.f) {
-                    mHasTransitions = false;
-                }
-                else {
-                    AWindow::current()->flagRedraw();
-                    mLastFrameTime = now;
-                }
+            else {
+                AWindow::current()->flagRedraw();
+                mLastFrameTime = now;
             }
-            else
-            {
-                for (auto& item : mCssDrawListFront)
-                    item();
-            }
-		};
-
-		if (mForceStencilForBackground) {
-		    RenderHints::PushMask mask([&]() {
-                Render::instance().drawRoundedRect(0, 0, getWidth(),
-                                                   getHeight(), mBorderRadius);
-		    });
-		    doDraw();
-		} else {
-		    doDraw();
-		}
+        }
+        else
+        {
+            for (auto& item : mCssDrawListFront)
+                item();
+        }
 	}
 
     // stencil
@@ -199,7 +190,7 @@ void AView::recompileCSS()
 	mMargin = {};
 	mMinSize = {};
     mBorderRadius = 0.f;
-    mForceStencilForBackground = false;
+    //mForceStencilForBackground = false;
 	mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
 	mFontStyle = {AFontManager::instance().getDefault(), 12, false, ALIGN_LEFT, AColor(0, 0, 0, 1.f) };
 	mBackgroundEffects.clear();
@@ -418,16 +409,8 @@ void AView::recompileCSS()
                 break;
         }
         mCssDrawListFront << [&, offset, radius, stretch, color]() {
-            auto doDrawShadow = [&]() {
-                Render::instance().drawBoxShadow(offset.x - stretch, offset.y - stretch, getWidth() + stretch * 2,
-                                                 getHeight() + stretch * 2, radius, color);
-            };
-            if (mForceStencilForBackground) {
-                RenderHints::PushMask::Layer layer(RenderHints::PushMask::Layer::DECREASE, GL_GEQUAL);
-                doDrawShadow();
-            } else {
-                doDrawShadow();
-            }
+            Render::instance().drawBoxShadow(offset.x - stretch, offset.y - stretch, getWidth() + stretch * 2,
+                                             getHeight() + stretch * 2, radius, color);
         };
 	});
 	processStylesheet(css::T_BACKGROUND_COLOR, [&](property p)
@@ -644,7 +627,7 @@ void AView::recompileCSS()
 			};
 			break;
 		}
-		mForceStencilForBackground = true;
+		//mForceStencilForBackground = true;
 	});
 	processStylesheet(css::T_BORDER_BOTTOM, [&](property p)
 	{
@@ -687,13 +670,13 @@ void AView::recompileCSS()
             Render::instance().setColor(c);
             Render::instance().drawRect(0, 0, getWidth(), getHeight());
         };
-		mForceStencilForBackground = true;
+		//mForceStencilForBackground = true;
 	});
 
     processStylesheet(css::T_BORDER_RADIUS, [&](property p)
     {
         if (p->getArgs().size() == 1) {
-            mForceStencilForBackground = true;
+            //mForceStencilForBackground = true;
             mBorderRadius = AMetric(p->getArgs()[0]).getValuePx();
         }
     });

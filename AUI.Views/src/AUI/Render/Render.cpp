@@ -252,8 +252,6 @@ void Render::drawRoundedBorder(float x, float y, float width, float height, floa
     float innerWidth = width - borderWidth * 2;
     float innerHeight = height - borderWidth * 2;
 
-    glDisable(GL_STENCIL_TEST);
-
     mRoundedSolidShaderAntialiased.use();
     mRoundedSolidShaderAntialiased.set("outerSize", 2.f * radius / glm::vec2{width, height});
     mRoundedSolidShaderAntialiased.set("innerSize", 2.f * (radius - borderWidth) / glm::vec2{innerWidth, innerHeight});
@@ -264,7 +262,6 @@ void Render::drawRoundedBorder(float x, float y, float width, float height, floa
     drawRect(x, y, width, height);
     setFill(mCurrentFill);
 
-    glEnable(GL_STENCIL_TEST);
 }
 
 void Render::drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s)

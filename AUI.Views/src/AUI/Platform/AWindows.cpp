@@ -652,7 +652,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
     }
 
 #endif
-    assert(glGetError() == 0);
+    //assert(glGetError() == 0);
 
     updateDpi();
     Render::instance().setWindow(this);
