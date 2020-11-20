@@ -114,6 +114,7 @@ _<GL::Texture> AFont::textureOf(long size, FontRendering fr) {
 	if (!chars.texture)
 	{
 		chars.texture = _new<GL::Texture>();
+		chars.texture->setupNearest();
 	}
 	if (chars.isDirty)
 	{

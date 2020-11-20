@@ -407,6 +407,8 @@ void AView::recompileCSS()
                 stretch = AMetric(p->getArgs()[3]).getValuePx();
                 color = p->getArgs()[4];
                 break;
+            default:
+                return;
         }
         mCssDrawListFront << [&, offset, radius, stretch, color]() {
             Render::instance().drawBoxShadow(offset.x - stretch, offset.y - stretch, getWidth() + stretch * 2,
@@ -424,6 +426,7 @@ void AView::recompileCSS()
                 if (mBorderRadius > 0) {
                     Render::instance().drawRoundedRectAntialiased(0, 0, getWidth(), getHeight(), mBorderRadius);
                 } else  {
+                    Render::instance().setFill(Render::FILL_SOLID);
                     Render::instance().drawRect(0, 0, getWidth(), getHeight());
                 }
             };
@@ -533,6 +536,7 @@ void AView::recompileCSS()
 				if (mBorderRadius > 0) {
                     Render::instance().drawRoundedRectAntialiased(0, 0, getWidth(), getHeight(), mBorderRadius);
 				} else  {
+                    Render::instance().setFill(Render::FILL_SOLID);
                     Render::instance().drawRect(0, 0, getWidth(), getHeight());
                 }
 			};

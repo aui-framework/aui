@@ -11,7 +11,7 @@ namespace GL {
 	public:
 		Texture();
 		~Texture();
-		static void setupLinear();
+		static void setupNearest();
 		Texture(const Texture&) = delete;
 		void bind(uint8_t index = 0) const;
 		void tex2D(_<AImage> image);
