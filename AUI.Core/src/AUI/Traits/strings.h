@@ -13,6 +13,10 @@ namespace aui {
     };
 
     template<>
+    AString to_string(const char* const& t) {
+        return t;
+    };
+    template<>
     AString to_string(const AString& t) {
         return t;
     };

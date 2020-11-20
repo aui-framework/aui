@@ -10,7 +10,7 @@ CourseView::CourseView() {
     setLayout(_new<AHorizontalLayout>());
     addView(_container<AVerticalLayout>({
         _new<ALabel>("Заголовок") let (ALabel, {
-            setFontSize(18dp);
+            setFontSize(18_dp);
         }),
         _new<ALabel>("Описание")
     }));

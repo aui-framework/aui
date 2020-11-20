@@ -22,7 +22,7 @@
 #include <AUI/Url/AUrl.h>
 #include <Frame/CoursesFrame.h>
 
-MainWindow::MainWindow() : AWindow("Words", 300, 400) {
+MainWindow::MainWindow() : AWindow("Words", 300_dp, 400_dp) {
     setLayout(_new<AStackedLayout>());
 
     auto loadingScreen = _container<AVerticalLayout>(

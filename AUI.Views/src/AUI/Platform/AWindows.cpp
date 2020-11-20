@@ -1,5 +1,6 @@
 
 #include "AUI/GL/gl.h"
+#include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Render/Render.h"
@@ -652,6 +653,10 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
     }
 
 #endif
+
+#if defined(_DEBUG)
+    GL::setupDebug();
+#endif
     //assert(glGetError() == 0);
 
     updateDpi();
@@ -670,6 +675,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
     mSize = {clientRect.right - clientRect.left, clientRect.bottom - clientRect.top};
 #endif
     setWindowStyle(ws);
+
 }
 
 AWindow::~AWindow() {
