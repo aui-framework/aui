@@ -61,6 +61,7 @@ private:
 	GL::Shader mSolidShader;
 	GL::Shader mGradientShader;
 	GL::Shader mRoundedSolidShader;
+	GL::Shader mRoundedSolidShaderAntialiased;
 	GL::Shader mSolidTransformShader;
 	GL::Shader mBoxShadowShader;
 	GL::Shader mTexturedShader;
@@ -86,9 +87,10 @@ public:
 	void drawTexturedRect(float x, float y, float width, float height,
                        const glm::vec2& uv1 = {0, 0}, const glm::vec2& uv2 = {1, 1});
     void drawRoundedRect(float x, float y, float width, float height, float radius);
+    void drawRoundedRectAntialiased(float x, float y, float width, float height, float radius);
     void drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s);
 	void drawRectBorder(float x, float y, float width, float height, float lineWidth = 1.f);
-    void drawRoundedBorder(float x, float y, float width, float height, float radius, float borderWidth);
+    void drawRoundedBorder(float x, float y, float width, float height, float radius, int borderWidth);
 
 	void setFill(Filling t);
 

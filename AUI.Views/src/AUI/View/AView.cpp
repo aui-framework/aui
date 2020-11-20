@@ -437,9 +437,12 @@ void AView::recompileCSS()
             mCssDrawListFront << [&, color]() {
                 RenderHints::PushColor x;
 
-                Render::instance().setFill(Render::FILL_SOLID);
                 Render::instance().setColor(color);
-                Render::instance().drawRect(0, 0, getWidth(), getHeight());
+                if (mBorderRadius > 0) {
+                    Render::instance().drawRoundedRectAntialiased(0, 0, getWidth(), getHeight(), mBorderRadius);
+                } else  {
+                    Render::instance().drawRect(0, 0, getWidth(), getHeight());
+                }
             };
         }
 	});
@@ -542,9 +545,13 @@ void AView::recompileCSS()
 			AColor color = p->getArgs()[0];
 			mCssDrawListFront << [&, color]() {
 				RenderHints::PushColor x;
-				Render::instance().setFill(Render::FILL_SOLID);
 				Render::instance().setColor(color);
-				Render::instance().drawRect(0, 0, getWidth(), getHeight());
+
+				if (mBorderRadius > 0) {
+                    Render::instance().drawRoundedRectAntialiased(0, 0, getWidth(), getHeight(), mBorderRadius);
+				} else  {
+                    Render::instance().drawRect(0, 0, getWidth(), getHeight());
+                }
 			};
 		}
 	});
@@ -592,20 +599,26 @@ void AView::recompileCSS()
 		{
 		case B_SOLID:
 			mCssDrawListFront << [&, c, width]() {
-                Render::instance().setFill(Render::FILL_SOLID);
-				RenderHints::PushColor x;
-				RenderHints::PushMask mask([&]() {
-				    if (mBorderRadius > 0) {
-				        Render::instance().drawRoundedRect(width, width, getWidth() - width * 2,
-                                        getHeight() - width * 2, glm::max(mBorderRadius - width, 0.f));
-				    } else {
+                RenderHints::PushColor x;
+                if (mBorderRadius > 0) {
+                    Render::instance().setColor(c);
+                    Render::instance().drawRoundedBorder(0, 0, getWidth(), getHeight(), mBorderRadius, width);
+                } else {
+                    Render::instance().setFill(Render::FILL_SOLID);
+                    RenderHints::PushMask mask([&]() {
+                        /*
+                        if (mBorderRadius > 0) {
+                            Render::instance().drawRoundedRect(width, width, getWidth() - width * 2,
+                                            getHeight() - width * 2, glm::max(mBorderRadius - width, 0.f));
+                        } else */ {
                         Render::instance().drawRect(width, width, getWidth() - width * 2,
                                                     getHeight() - width * 2);
-				    }
-				});
-				RenderHints::PushMask::Layer maskLayer(RenderHints::PushMask::Layer::DECREASE);
-                Render::instance().setColor(c);
-				Render::instance().drawRect(0, 0, getWidth(), getHeight());
+                    }
+                    });
+                    RenderHints::PushMask::Layer maskLayer(RenderHints::PushMask::Layer::DECREASE);
+                    Render::instance().setColor(c);
+                    Render::instance().drawRect(0, 0, getWidth(), getHeight());
+                }
 			};
 			break;
 		case B_INSET:
