@@ -17,18 +17,8 @@
 #include <AUI/View/AComboBox.h>
 #include <AUI/i18n/AI18n.h>
 
-void fillWindow(_<AWindow> w)
+void fillWindow(_<AViewContainer> t)
 {
-	_<AViewContainer> t;
-	if (w->getLayout() == nullptr)
-	{
-		t = w;
-	} else
-	{
-		t = _new<AViewContainer>();
-		w->addView(t);
-	}
-	t->setExpanding({ 1, 1 });
 	t->setLayout(_new<AStackedLayout>());
 	t->addView(_new<ALabel>(u8"Контент окна"));
 }
@@ -116,7 +106,7 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		auto def = _new<AButton>(u8"Обычное окно");
 		connect(def->clicked, this, [&]()
 		{
-			auto w = _new<AWindow>(u8"Диалоговое окно", 400, 300);
+			auto w = _new<AWindow>(u8"Диалоговое окно", 400_dp, 300_dp);
 			fillWindow(w);
 			w->show();
 			mWindows << w;
@@ -124,7 +114,7 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		auto dialog = _new<AButton>(u8"Диалоговое окно");
 		connect(dialog->clicked, this, [&]()
 		{
-			auto w = _new<AWindow>(u8"Диалоговое окно", 400, 300);
+			auto w = _new<AWindow>(u8"Диалоговое окно", 400_dp, 300_dp);
 			fillWindow(w);
 			w->show();
 			w->setWindowStyle(WS_DIALOG);
@@ -133,7 +123,7 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		auto modal = _new<AButton>(u8"Модальное окно");
 		connect(modal->clicked, this, [&]()
 		{
-			auto w = _new<AWindow>(u8"Модальное окно", 400, 300, this, WS_DIALOG);
+			auto w = _new<AWindow>(u8"Модальное окно", 400_dp, 300_dp, this, WS_DIALOG);
 			fillWindow(w);
 			w->show();
 			mWindows << w;
@@ -142,8 +132,8 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		auto customWindowWithCaption = _new<AButton>(u8"Кастомное окно с заголовком");
 		connect(customWindowWithCaption->clicked, this, [&]()
 		{
-			auto w = _new<ACustomCaptionWindow>(u8"Кастомное окно", 400, 300);
-			fillWindow(w);
+			auto w = _new<ACustomCaptionWindow>(u8"Кастомное окно", 400_dp, 300_dp);
+			fillWindow(w->getContentContainer());
 			w->show();
 			//w->setWindowStyle(WS_DIALOG);
 			mWindows << w;
@@ -152,7 +142,7 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		auto customWindow = _new<AButton>(u8"Кастомное окно без заголовка");
 		connect(customWindow->clicked, this, [&]()
 		{
-			auto w = _new<ACustomWindow>(u8"Кастомное окно", 400, 300);
+			auto w = _new<ACustomWindow>(u8"Кастомное окно", 400_dp, 300_dp);
 			fillWindow(w);
 			w->show();
 			w->setWindowStyle(WS_DIALOG);

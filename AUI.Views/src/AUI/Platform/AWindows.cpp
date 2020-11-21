@@ -21,7 +21,7 @@
 #include <AUI/Image/Drawables.h>
 #include <AUI/Util/kAUI.h>
 
-constexpr bool AUI_DISPLAY_BOUNDS = false;
+constexpr bool AUI_DISPLAY_BOUNDS = true;
 AWindow::Context AWindow::context = {};
 
 #if defined(_WIN32)
