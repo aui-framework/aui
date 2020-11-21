@@ -33,5 +33,8 @@ public:
 
 inline AString operator"" _i18n(const char* input, size_t s)
 {
-    return AI18n::instance().getLangData().at(AString(input));
+    auto i = AI18n::instance().getLangData().find(AString(input));
+    if (i == AI18n::instance().getLangData().end())
+        return input;
+    return i->second;
 }
