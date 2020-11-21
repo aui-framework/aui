@@ -34,6 +34,7 @@ static void GLAPIENTRY debugProc(GLenum source,
 
 void GL::setupDebug() {
     if (glDebugMessageCallback) {
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(debugProc, nullptr);
     }

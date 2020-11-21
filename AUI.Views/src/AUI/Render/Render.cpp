@@ -142,10 +142,8 @@ Render::Render()
 		"attribute vec2 uv;"
 		"varying vec2 pass_uv;"
 		"uniform mat4 mat;"
-		"uniform int pos_x;"
-		"uniform int pos_y;"
 
-		"void main(void) {gl_Position = mat * vec4(pos + vec3(pos_x, pos_y, 0), 1); pass_uv = uv;}",
+		"void main(void) {gl_Position = mat * vec4(pos, 1); pass_uv = uv;}",
 		"varying vec2 pass_uv;"
 		"uniform sampler2D tex;"
 		"uniform vec4 color;"
@@ -157,10 +155,8 @@ Render::Render()
 		"attribute vec2 uv;"
 		"varying vec2 pass_uv;"
 		"uniform mat4 mat;"
-		"uniform int pos_x;"
-		"uniform int pos_y;"
 
-		"void main(void) {gl_Position = mat * vec4(pos + vec3(pos_x, pos_y, 0), 1); pass_uv = uv;}",
+		"void main(void) {gl_Position = mat * vec4(pos, 1); pass_uv = uv;}",
 		"varying vec2 pass_uv;"
 		"uniform sampler2D tex;"
 		"uniform vec4 color;"
@@ -446,9 +442,7 @@ void Render::drawString(int x, int y, PrerendereredString& f) {
 	auto finalColor = mColor * f.fs.color;
 	if (f.fs.fontRendering & FR_SUBPIXEL) {
 		setFill(FILL_SYMBOL_SUBPIXEL);
-		mSymbolShaderSubPixel.set("pos_x", x);
-		mSymbolShaderSubPixel.set("pos_y", y);
-		mSymbolShaderSubPixel.set("mat", mTransform);
+		mSymbolShaderSubPixel.set("mat", glm::translate(mTransform, glm::vec3{x, y, 0}));
 
 		mSymbolShaderSubPixel.set("color", glm::vec4(1, 1, 1, finalColor.a));
 		glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
@@ -466,7 +460,7 @@ void Render::drawString(int x, int y, PrerendereredString& f) {
 		setFill(FILL_SYMBOL);
 		mSymbolShader.set("pos_x", x);
 		mSymbolShader.set("pos_y", y);
-		mSymbolShader.set("mat", mTransform);
+        mSymbolShader.set("mat", glm::translate(mTransform, glm::vec3{x, y, 0}));
 		mSymbolShader.set("color", finalColor);
 		f.mVao->draw(GL_TRIANGLES);
 	}
