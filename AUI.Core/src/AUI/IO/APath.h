@@ -115,6 +115,13 @@ public:
     [[nodiscard]] AString filename() const;
 
     /**
+     * \brief Убрать самую верхнюю папку из пути.
+     * \return тот же путь, только без верхней папки
+     * \example v1.0.0/client/azaza.zip -> client/azaza.zip
+     */
+    [[nodiscard]] APath withoutUppermostFolder() const;
+
+    /**
      * \return true, если обычный файл или папка существует
      * \note файл может существовать как обычный файл, как папка, или и то, и другое. Эта функция вернёт false только
      *       в том случае, если ни папки, ни файла по этому пути не существует.

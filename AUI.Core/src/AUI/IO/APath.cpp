@@ -225,6 +225,13 @@ size_t APath::fileSize() {
     return s.st_size;
 }
 
+APath APath::withoutUppermostFolder() const {
+    auto r = find('/');
+    if (r == NPOS)
+        return *this;
+    return mid(r + 1);
+}
+
 #else
 #include <unistd.h>
 #include <sys/types.h>
