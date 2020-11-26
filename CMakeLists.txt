@@ -81,11 +81,6 @@ function(AUI_Executable AUI_MODULE_NAME)
     if(ANDROID)
 		add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
 	else()
-		if(CMAKE_BUILD_TYPE STREQUAL "Release")
-			if (MSVC)
-				set(SRCS WIN32 ${SRCS})
-			endif()
-		endif()
 		add_executable(${AUI_MODULE_NAME} ${SRCS})
 	endif()
 
@@ -95,6 +90,24 @@ function(AUI_Executable AUI_MODULE_NAME)
 
 	AUI_Common(${AUI_MODULE_NAME})
 endfunction(AUI_Executable)
+
+function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
+    project(${AUI_MODULE_NAME})
+
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
+	#message("ASSDIR ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp")
+    if(ANDROID)
+		add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
+	else()
+		add_executable(${AUI_MODULE_NAME} ${ADDITIONAL_SRCS} ${SRCS})
+	endif()
+
+    target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
+
+	AUI_Add_Properties(${AUI_MODULE_NAME})
+
+	AUI_Common(${AUI_MODULE_NAME})
+endfunction(AUI_Executable_Advanced)
 
 function(AUI_Static_Link AUI_MODULE_NAME LIBRARY_NAME)
 	target_include_directories(${AUI_MODULE_NAME} PUBLIC "3rdparty/${LIBRARY_NAME}")
