@@ -120,6 +120,7 @@ private:
 protected:
 #if defined(_WIN32)
 	HWND mHandle;
+	HICON mIcon = nullptr;
     virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #elif defined(ANDROID)
     jobject mHandle = nullptr;
@@ -145,6 +146,8 @@ public:
 	 * \return true, если с момента последнего кадра прошло более 16 миллисекунд
 	 */
 	static bool isRedrawWillBeEfficient();
+
+	void setIcon(const AImage& image);
 
 	/**
 	 * \brief Удаляет окно из AWindowManager.

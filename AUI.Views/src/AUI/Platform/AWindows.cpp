@@ -1249,6 +1249,55 @@ glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) 
     return other->mapPosition(unmapPosition(position));
 }
 
+void AWindow::setIcon(const AImage& image) {
+    assert(image.getFormat() & AImage::BYTE);
+
+    if (mIcon) {
+        DestroyIcon(mIcon);
+    }
+
+    HDC hdcScreen = GetDC(nullptr);
+
+    HDC hdcMemColor = CreateCompatibleDC(hdcScreen);
+    HBITMAP hbmpColor = CreateCompatibleBitmap(hdcScreen, image.getWidth(), image.getHeight());
+    auto hbmpOldColor = (HBITMAP)SelectObject(hdcMemColor, hbmpColor);
+
+    HDC hdcMemMask = CreateCompatibleDC(hdcScreen);
+    HBITMAP hbmpMask = CreateCompatibleBitmap(hdcMemMask, image.getWidth(), image.getHeight());
+    auto hbmpOldMask = (HBITMAP)SelectObject(hdcMemMask, hbmpMask);
+
+    for (int y = 0; y < image.getHeight(); ++y) {
+        for (int x = 0; x < image.getWidth(); ++x) {
+            const uint8_t* color = &image.at(x, y);
+            if (image.getFormat() & AImage::RGBA) {
+                uint8_t a = 0xffu - color[3];
+                SetPixel(hdcMemMask, x, y, RGB(a, a, a));
+            }
+            SetPixel(hdcMemColor, x, y, RGB(color[0], color[1], color[2]));
+        }
+    }
+
+    SelectObject(hdcMemColor, hbmpOldColor);
+    DeleteObject(hdcMemColor);
+    SelectObject(hdcMemMask, hbmpOldMask);
+    DeleteObject(hdcMemMask);
+
+    ICONINFO ii;
+    ii.fIcon = TRUE;
+    ii.hbmMask = hbmpMask;
+    ii.hbmColor = hbmpColor;
+    mIcon = CreateIconIndirect(&ii);
+    DeleteObject(hbmpColor);
+
+    // Clean-up.
+    SelectObject(hdcMemColor, hbmpOldColor);
+    DeleteObject(hbmpColor);
+    DeleteDC(hdcMemColor);
+    ReleaseDC(NULL, hdcScreen);
+
+    SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon);
+}
+
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ для XLIB
 
 #ifdef __linux

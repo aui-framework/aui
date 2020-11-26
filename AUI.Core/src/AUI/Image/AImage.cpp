@@ -127,3 +127,4 @@ void AImage::copy(_<AImage> src, _<AImage> dst, uint32_t x, uint32_t y) {
 		}
 	}
 }
+
