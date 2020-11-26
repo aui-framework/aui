@@ -232,6 +232,13 @@ APath APath::withoutUppermostFolder() const {
     return mid(r + 1);
 }
 
+APath APath::workingDir() {
+    APath p;
+    p.resize(0x800);
+    p.resize(GetCurrentDirectory(0x800, p.data()));
+    return p;
+}
+
 #else
 #include <unistd.h>
 #include <sys/types.h>

@@ -190,6 +190,8 @@ public:
      */
     static APath getDefaultPath(DefaultPath path);
 
+    static APath workingDir();
+
     size_t fileSize();
 };
 
