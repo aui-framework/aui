@@ -98,14 +98,12 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
 		return;
 
 
-	if (!AInput::isKeyDown(AInput::LShift) && !AInput::isKeyDown(AInput::RShift))
-	{
-		mCursorSelection = -1;
-	}
-	else if (mCursorSelection == -1)
-	{
-		mCursorSelection = mCursorIndex;
-	}
+	auto fastenSelection = [&]() {
+        if ((AInput::isKeyDown(AInput::LShift) || AInput::isKeyDown(AInput::RShift)) && mCursorSelection == -1)
+        {
+            mCursorSelection = mCursorIndex;
+        }
+	};
 	
 	mTextChangedFlag = true;
 	switch (key)
@@ -126,35 +124,52 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
 		break;
 
 	case AInput::Left:
+        fastenSelection();
 		if (mCursorIndex)
 			mCursorIndex -= 1;
 		break;
 
 	case AInput::Right:
+        fastenSelection();
 		if (mCursorIndex < mContents.length())
 			mCursorIndex += 1;
 		break;
 
 	case AInput::Home:
+        fastenSelection();
 		mCursorIndex = 0;
 		break;
 	case AInput::End:
+        fastenSelection();
 		mCursorIndex = mContents.length();
 		break;
-	default:
-		return;
+
+    default:
+		if (AInput::isKeyDown(AInput::LControl) || AInput::isKeyDown(AInput::RControl)) {
+            switch (key) {
+                case AInput::A: // выделить всё
+                    mCursorSelection = 0;
+                    mCursorIndex = getText().length();
+                    break;
+                default:
+                    return;
+            }
+		} else {
+            return;
+		}
 	}
 
 	emit textChanging(mContents);
 	
 	updateCursorPos();
+	updateCursorBlinking();
 	
 	redraw();
 }
 
 void AAbstractTextField::onCharEntered(wchar_t c)
 {
-	if (AInput::isKeyDown(AInput::LButton))
+	if (AInput::isKeyDown(AInput::LButton) || AInput::isKeyDown(AInput::LControl) || AInput::isKeyDown(AInput::RControl))
 		return;
 	if (c == '\n' || c == '\r')
         return;
@@ -249,7 +264,6 @@ void AAbstractTextField::render()
 void AAbstractTextField::onFocusLost()
 {
 	AView::onFocusLost();
-	mCursorSelection = -1;
 	if (mTextChangedFlag)
 	{
 		mTextChangedFlag = false;
