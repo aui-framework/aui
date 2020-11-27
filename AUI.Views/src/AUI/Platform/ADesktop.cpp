@@ -8,6 +8,7 @@
 #include <Shlobj.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
+#include <AUI/Logging/ALogger.h>
 
 glm::ivec2 ADesktop::getMousePosition() {
     POINT p;
@@ -19,24 +20,53 @@ void ADesktop::setMousePos(const glm::ivec2& pos) {
     SetCursorPos(pos.x, pos.y);
 }
 
-_<AFuture<APath>> ADesktop::browseForFolder() {
+_<AFuture<APath>> ADesktop::browseForFolder(const APath& startingLocation) {
     return async {
         APath result;
-        BROWSEINFO info;
-        aui::zero(info);
-        info.ulFlags = BIF_USENEWUI;
-        ::OleInitialize(NULL);
+        OleInitialize(0);
+        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+        assert(SUCCEEDED(hr));
+        IFileOpenDialog *pFileOpen;
 
-        if (AWindow::current()) {
-            info.hwndOwner = AWindow::current()->getNativeHandle();
+        // Create the FileOpenDialog object.
+        hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+                              IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+
+        assert(SUCCEEDED(hr));
+
+        pFileOpen->SetOptions(FOS_PICKFOLDERS);
+        IShellItem* psiFolder = nullptr;
+        for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
+            APath current = i;
+            current.replaceAll('/', '\\');
+            SHCreateItemFromParsingName(current.data(), nullptr, IID_IShellItem, reinterpret_cast<void**>(&psiFolder));
         }
-        auto ret = SHBrowseForFolder(&info);
-        if (ret) {
-            result.resize(4096);
-            SHGetPathFromIDList(ret, result.data());
-            CoTaskMemFree(ret);
-            result.resizeToNullTerminator();
+        pFileOpen->SetFolder(psiFolder);
+        psiFolder->Release();
+
+        hr = pFileOpen->Show(NULL);
+
+        // Get the file name from the dialog box.
+        if (SUCCEEDED(hr))
+        {
+            IShellItem *pItem;
+            hr = pFileOpen->GetResult(&pItem);
+            if (SUCCEEDED(hr))
+            {
+                PWSTR pszFilePath;
+                hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+                // Display the file name to the user.
+                if (SUCCEEDED(hr))
+                {
+                    result = pszFilePath;
+                    CoTaskMemFree(pszFilePath);
+                }
+                pItem->Release();
+            }
         }
+        pFileOpen->Release();
+        CoUninitialize();
         OleUninitialize();
         return result;
     };

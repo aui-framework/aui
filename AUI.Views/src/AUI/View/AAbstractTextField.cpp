@@ -337,6 +337,7 @@ void AAbstractTextField::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 
 void AAbstractTextField::setText(const AString& t)
 {
+    mHorizontalScroll = 0;
 	mContents = t;
 	mCursorIndex = t.length();
 	mCursorSelection = 0;
