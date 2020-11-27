@@ -39,7 +39,6 @@ public:
 	AAbstractTextField();
 	virtual ~AAbstractTextField();
 
-	Selection getSelection();
 	int getContentMinimumHeight() override;
 
 	void onKeyDown(AInput::Key key) override;
@@ -60,10 +59,16 @@ public:
 
 	void setText(const AString& t);
 
-	const AString& getText() const
+	[[nodiscard]] const AString& getText() const
 	{
 		return mContents;
 	}
+	[[nodiscard]] AString getSelectedText() const
+	{
+		return {getText().begin() + getSelection().begin, getText().begin() + getSelection().end};
+	}
+
+    [[nodiscard]] Selection getSelection() const;
 
 signals:
 	/**

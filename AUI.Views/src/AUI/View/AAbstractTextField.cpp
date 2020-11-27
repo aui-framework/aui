@@ -1,4 +1,5 @@
-﻿#include "AAbstractTextField.h"
+﻿#include <AUI/Platform/AClipboard.h>
+#include "AAbstractTextField.h"
 
 
 #include "AUI/Platform/Platform.h"
@@ -76,11 +77,6 @@ AAbstractTextField::~AAbstractTextField()
 {
 }
 
-AAbstractTextField::Selection AAbstractTextField::getSelection()
-{
-	return { glm::min(mCursorIndex, mCursorSelection), glm::max(mCursorIndex, mCursorSelection) };
-}
-
 
 int AAbstractTextField::getContentMinimumHeight()
 {
@@ -99,7 +95,9 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
 
 
 	auto fastenSelection = [&]() {
-        if ((AInput::isKeyDown(AInput::LShift) || AInput::isKeyDown(AInput::RShift)) && mCursorSelection == -1)
+        if (!AInput::isKeyDown(AInput::LShift) && !AInput::isKeyDown(AInput::RShift)) {
+            mCursorSelection = -1;
+        } else if (mCursorSelection == -1)
         {
             mCursorSelection = mCursorIndex;
         }
@@ -151,6 +149,34 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
                     mCursorSelection = 0;
                     mCursorIndex = getText().length();
                     break;
+
+                case AInput::C: // копировать
+                    AClipboard::copyToClipboard(getSelectedText());
+                    break;
+
+                case AInput::X: // вырезать
+                {
+                    auto sel = getSelection();
+                    AClipboard::copyToClipboard(getSelectedText());
+                    mContents.erase(mContents.begin() + sel.begin, mContents.begin() + sel.end);
+                    mCursorSelection = -1;
+                }
+                    break;
+
+                case AInput::V: // вставить
+                {
+                    auto pastePos = mCursorIndex;
+                    if (mCursorSelection != -1) {
+                        auto sel = getSelection();
+                        pastePos = sel.begin;
+                        mContents.erase(mContents.begin() + sel.begin, mContents.begin() + sel.end);
+                    }
+                    auto toPaste = AClipboard::pasteFromClipboard();
+                    mContents.insert(pastePos, toPaste);
+                    mCursorIndex = pastePos + toPaste.length();
+                    mCursorSelection = -1;
+                    break;
+                }
                 default:
                     return;
             }
@@ -317,4 +343,8 @@ AString AAbstractTextField::getContentsPasswordWrap() {
         return s;
     }
     return mContents;
+}
+
+AAbstractTextField::Selection AAbstractTextField::getSelection() const {
+    return { glm::min(mCursorIndex, mCursorSelection), glm::max(mCursorIndex, mCursorSelection) };
 }

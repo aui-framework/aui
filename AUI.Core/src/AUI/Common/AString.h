@@ -283,6 +283,10 @@ public:
 	{
 		return std::wstring::insert(begin() + at, 1, c);
 	}
+	iterator insert(size_type at, const AString& c)
+	{
+		return std::wstring::insert(begin() + at, c.begin(), c.end());
+	}
 	
 	template<typename Iterator>
 	iterator insert(const_iterator at, Iterator begin, Iterator end)
