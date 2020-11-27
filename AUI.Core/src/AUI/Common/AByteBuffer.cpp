@@ -47,7 +47,7 @@ void AByteBuffer::reserve(size_t size) {
 void AByteBuffer::put(const char* buffer, size_t size) {
 	if (size) {
 		if (mSize + size > mReserved) {
-			reserve(mSize + size);
+			reserve(mSize * 2 + size);
 		}
 		memcpy(mBuffer + mSize, buffer, size);
 		mSize += size;

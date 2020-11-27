@@ -23,7 +23,7 @@ inline auto _new(Args&& ... args)
 		});
 	}
 	else {
-		return _<T>(std::make_shared<T>(args...));
+		return _<T>(std::make_shared<T>(std::forward<Args>(args)...));
 	}
 }
 
@@ -33,4 +33,20 @@ template<typename SignalField, typename Object, typename Function>
 inline _<T>& _<T>::connect(SignalField signalField, Object object, Function function) {
     AObject::connect(parent::get()->*signalField, object, function);
     return *this;
+}
+
+
+struct shared_t {};
+
+#define shared shared_t()
+
+template<typename T>
+inline auto operator>>(T& object, shared_t)
+{
+    return _new<T>(std::move(object));
+}
+template<typename T>
+inline auto operator>>(T&& object, shared_t)
+{
+    return _new<T>(std::forward<T>(object));
 }
