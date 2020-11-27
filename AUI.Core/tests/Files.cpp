@@ -37,21 +37,21 @@ BOOST_AUTO_TEST_SUITE(Path)
     BOOST_AUTO_TEST_CASE(List) {
         auto l = APath(".").listDir();
 #ifdef WIN32
-        BOOST_TEST(l.contains("Tests.exe"));
+        BOOST_TEST(l.contains("./Tests.exe"));
 #else
         BOOST_TEST(l.contains("tests"));
 #endif
-        BOOST_TEST(!l.contains("."));
-        BOOST_TEST(!l.contains(".."));
+        BOOST_TEST(!l.contains("./."));
+        BOOST_TEST(!l.contains("./.."));
 
         l = APath(".").listDir(LF_DEFAULT_FLAGS | LF_DONT_IGNORE_DOTS);
 #ifdef WIN32
-        BOOST_TEST(l.contains("Tests.exe"));
+        BOOST_TEST(l.contains("./Tests.exe"));
 #else
         BOOST_TEST(l.contains("tests"));
 #endif
-        BOOST_TEST(l.contains("."));
-        BOOST_TEST(l.contains(".."));
+        BOOST_TEST(l.contains("./."));
+        BOOST_TEST(l.contains("./.."));
 
         l = APath(".").listDir(LF_DIRS);
         BOOST_TEST(l.empty());
