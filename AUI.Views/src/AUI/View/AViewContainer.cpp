@@ -108,17 +108,14 @@ void AViewContainer::onMouseMove(glm::ivec2 pos)
 		
 		auto mousePos = pos - view->getPosition();
 		bool hovered = mousePos.x >= 0 && mousePos.y >= 0 && mousePos.x < view->getSize().x && mousePos.y < view->getSize().y;
-		if (view->isMouseHover() != hovered)
-		{
-			if (hovered)
-			{
-				view->onMouseEnter();
-			} else
-			{
+        if (view->isMouseHover() != hovered) {
+            if (hovered) {
+                view->onMouseEnter();
+            } else {
 
-				view->onMouseLeave();
-			}
-		}
+                view->onMouseLeave();
+            }
+        }
 		if (hovered)
 		{
 			view->onMouseMove(mousePos);

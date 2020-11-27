@@ -167,6 +167,8 @@ public:
      */
     const APath& makeDirs() const;
 
+    size_t fileSize() const;
+
     enum DefaultPath {
         /**
          * \brief Папка для данных по умолчанию.
@@ -191,7 +193,5 @@ public:
     static APath getDefaultPath(DefaultPath path);
 
     static APath workingDir();
-
-    size_t fileSize();
 };
 

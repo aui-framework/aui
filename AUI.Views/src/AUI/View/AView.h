@@ -464,7 +464,7 @@ public:
 	/**
 	 * \return координаты этого AView относительно левого верхнего угла окна
 	 */
-    [[nodiscard]] glm::ivec2 getAbsolutePosition();
+    [[nodiscard]] glm::ivec2 getPositionInWindow();
 
 	const ADeque<AString>& getCssNames() const;
 	void addCssName(const AString& css);

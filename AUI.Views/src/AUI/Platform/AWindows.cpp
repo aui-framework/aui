@@ -764,7 +764,7 @@ void AWindow::redraw() {
                 v = shared_from_this();
             apply(v, {
                 RenderHints::PushMatrix m;
-                Render::instance().setTransform(glm::translate(glm::mat4(1.f), {getAbsolutePosition(), 0.f}));
+                Render::instance().setTransform(glm::translate(glm::mat4(1.f), {getPositionInWindow(), 0.f}));
                 Render::instance().setFill(Render::FILL_SOLID);
                 glEnable(GL_STENCIL_TEST);
                 glStencilMask(0xff);
@@ -1099,9 +1099,16 @@ TemporaryRenderingContext AWindow::acquireTemporaryRenderingContext() {
 */
 void AWindow::onMouseMove(glm::ivec2 pos) {
     AViewContainer::onMouseMove(pos);
-
-    if (auto v = getViewAtRecursive(pos)) {
+    auto v = getViewAtRecursive(pos);
+    if (v) {
         mCursor = v->getCursor();
+    }
+    if (!AWindow::shouldDisplayHoverAnimations()) {
+        if (auto focused = mFocusedView.lock()) {
+            if (focused != v) {
+                focused->onMouseMove(pos - focused->getPositionInWindow());
+            }
+        }
     }
 
     if constexpr (AUI_DISPLAY_BOUNDS) {
@@ -1110,6 +1117,7 @@ void AWindow::onMouseMove(glm::ivec2 pos) {
 }
 
 void AWindow::onFocusAcquired() {
+    mIsFocused = true;
     AViewContainer::onFocusAcquired();
     if (auto v = getFocusedView()) {
         v->onFocusAcquired();
@@ -1117,6 +1125,7 @@ void AWindow::onFocusAcquired() {
 }
 
 void AWindow::onFocusLost() {
+    mIsFocused = false;
     AViewContainer::onFocusLost();
     if (auto v = getFocusedView()) {
         v->onFocusLost();
@@ -1160,6 +1169,12 @@ void AWindow::setFocusedView(_<AView> view) {
 
 AWindow* AWindow::current() {
     return currentWindowStorage();
+}
+
+bool AWindow::shouldDisplayHoverAnimations() {
+    return current()->isFocused() && !AInput::isKeyDown(AInput::LButton)
+                                  && !AInput::isKeyDown(AInput::CButton)
+                                  && !AInput::isKeyDown(AInput::RButton);
 }
 
 void AWindow::flagRedraw() {

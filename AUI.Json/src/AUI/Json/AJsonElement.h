@@ -89,6 +89,10 @@ public:
     [[nodiscard]] const AJsonElement& operator[](const AString& key) const;
 
     bool contains(const AString& key) const;
+
+    using Iterator = AMap<AString, AJsonElement>::iterator;
+    using ConstIterator = AMap<AString, AJsonElement>::const_iterator;
+    using Pair = AMap<AString, AJsonElement>::value_type;
 };
 
 template<>

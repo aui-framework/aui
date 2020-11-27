@@ -81,6 +81,7 @@ private:
     bool mWasMaximized = false;
 #endif
     bool mRedrawFlag = true;
+    bool mIsFocused = true;
 	AString mWindowClass;
 	AWindow* mParentWindow;
 	float mDpiRatio = 1.f;
@@ -223,10 +224,19 @@ public:
 		return mFocusedView.lock();
 	}
 
-	/**
-	 * \brief Получить текущее окно для данного потока.
-	 */
+    bool isFocused() const {
+        return mIsFocused;
+    }
+
+    /**
+     * \brief Получить текущее окно для данного потока.
+     */
 	static AWindow* current();
+
+	/**
+	 * \return false, когда хотя-бы одна клавиша мыши зажата
+	 */
+	static bool shouldDisplayHoverAnimations();
 
 	/**
 	 * \brief Перевести координаты из координатного пространства этого окна в координатное пространство другого окна.

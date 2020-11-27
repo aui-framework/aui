@@ -13,6 +13,9 @@ protected:
 	
 public:
 
+    using Iterator = typename p::iterator;
+    using ConstIterator = typename p::const_iterator;
+
 	inline AVector() = default;
 
 	inline AVector(const Allocator& allocator)

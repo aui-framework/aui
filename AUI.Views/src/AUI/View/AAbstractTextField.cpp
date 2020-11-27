@@ -280,6 +280,16 @@ void AAbstractTextField::render()
 	
 	// курсор
 	if (hasFocus() && mCursorBlinkVisible) {
+	    if (AInput::isKeyDown(AInput::LControl)) {
+	        printf("");
+	    }
+	    if (absoluteCursorPos < 0) {
+	        mHorizontalScroll += absoluteCursorPos;
+	        redraw();
+	    } else if (getWidth() < absoluteCursorPos + mPadding.horizontal() + 1) {
+	        mHorizontalScroll += absoluteCursorPos - getWidth() + mPadding.horizontal() + 1;
+            redraw();
+	    }
 
 		Render::instance().drawRect(mPadding.left + absoluteCursorPos,
 			mPadding.top, 1, getFontStyle().size + 3);

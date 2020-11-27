@@ -219,7 +219,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
     return result;
 }
 
-size_t APath::fileSize() {
+size_t APath::fileSize() const {
     struct stat s = {0};
     stat(toStdString().c_str(), &s);
     return s.st_size;

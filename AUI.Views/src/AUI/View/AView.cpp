@@ -47,7 +47,7 @@ void AView::redraw()
 
 void AView::drawStencilMask()
 {
-    if (mBorderRadius > 0) {
+    if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
         Render::instance().drawRoundedRect(mPadding.left,
                                            mPadding.top,
                                            getWidth() - mPadding.horizontal(),
@@ -796,7 +796,9 @@ void AView::ensureCSSUpdated()
 
 void AView::onMouseEnter()
 {
-	mHovered = true;
+    if (AWindow::shouldDisplayHoverAnimations()) {
+        mHovered = true;
+    }
 }
 
 
@@ -806,7 +808,9 @@ void AView::onMouseMove(glm::ivec2 pos)
 
 void AView::onMouseLeave()
 {
-	mHovered = false;
+    if (AWindow::shouldDisplayHoverAnimations()) {
+        mHovered = false;
+    }
 }
 
 
@@ -909,7 +913,7 @@ void AView::setAnimator(const _<AAnimator>& animator) {
     mAnimator->setView(this);
 }
 
-glm::ivec2 AView::getAbsolutePosition() {
+glm::ivec2 AView::getPositionInWindow() {
     glm::ivec2 p(0);
     for (AView* i = this; i && i->getParent(); i = i->getParent()) {
         p += i->getPosition();
