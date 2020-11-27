@@ -55,27 +55,47 @@ APath APath::ensureNonSlashEnding() const {
 }
 
 bool APath::exists() const {
+#ifdef _WIN32
+    struct _stat64 s = {0};
+    _wstat64(c_str(), &s);
+#else
     struct stat s = {0};
     stat(toStdString().c_str(), &s);
+#endif
 
     return s.st_mode & (S_IFDIR | S_IFREG);
 }
 bool APath::isRegularFileExists() const {
+#ifdef _WIN32
+    struct _stat64 s = {0};
+    _wstat64(c_str(), &s);
+#else
     struct stat s = {0};
     stat(toStdString().c_str(), &s);
+#endif
 
     return s.st_mode & S_IFREG;
 }
 
 bool APath::isDirectoryExists() const {
+#ifdef _WIN32
+    struct _stat64 s = {0};
+    _wstat64(c_str(), &s);
+#else
     struct stat s = {0};
     stat(toStdString().c_str(), &s);
+#endif
 
     return s.st_mode & S_IFDIR;
 }
 
 const APath& APath::removeFile() const {
+#ifdef _WIN32
+    if (::_wremove(c_str()) != 0) {
+#else
+    }
     if (::remove(toStdString().c_str()) != 0) {
+#endif
         throw IOException("could not remove file " + *this ERROR_DESCRIPTION);
     }
     return *this;
@@ -151,26 +171,31 @@ ADeque<APath> APath::listDir(ListFlags f) const {
 }
 
 APath APath::absolute() const {
-    char buf[0x1000];
+    APath r;
+    r.resize(0x1000);
 #ifdef WIN32
-    if (_fullpath(buf, toStdString().c_str(), sizeof(buf)) == nullptr) {
+    if (_wfullpath(r.data(), c_str(), r.length()) == nullptr) {
 #else
     if (realpath(toStdString().c_str(), buf) == nullptr) {
 #endif
         throw IOException("could not find absolute file" + *this ERROR_DESCRIPTION);
     }
 
-    return buf;
+    r.resizeToNullTerminator();
+
+    return r;
 }
 
 const APath& APath::makeDir() const {
 #ifdef WIN32
-    if (::mkdir(toStdString().c_str()) != 0) {
+    //                           VV - КОЗЛЫ, МЛЯТЬ!
+    if (::_wmkdir(c_str()) == 0) {
         auto s = "could not create directory: "_as + absolute() ERROR_DESCRIPTION;
         auto et = GetLastError();
         switch (et) {
             case ERROR_ACCESS_DENIED:
                 throw InsufficientPermissionsException(s);
+            case ERROR_ALREADY_EXISTS:
                 break;
             default:
                 throw IOException(s);
@@ -220,8 +245,13 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
 }
 
 size_t APath::fileSize() const {
+#ifdef _WIN32
+    struct _stat64 s = {0};
+    _wstat64(c_str(), &s);
+#else
     struct stat s = {0};
     stat(toStdString().c_str(), &s);
+#endif
     return s.st_size;
 }
 

@@ -6,7 +6,12 @@
 
 FileOutputStream::FileOutputStream(const AString& path, bool append)
 {
+#ifdef _WIN32
+	// КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
+	_wfopen_s(&mFile, path.c_str(), append ? L"a+b" : L"wb");
+#else
 	mFile = fopen(path.toStdString().c_str(), append ? "a+b" : "wb");
+#endif
 	if (!mFile)
 	{
 		throw FileNotFoundException(path.toStdString().c_str());
