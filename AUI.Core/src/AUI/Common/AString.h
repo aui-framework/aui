@@ -239,8 +239,14 @@ public:
 	static AString fromLatin1(_<AByteBuffer> buffer);
 	static AString fromLatin1(const char* buffer);
 
-	static AString number(int i) noexcept;
-	static AString number(unsigned i) noexcept;
+	static AString number(int8_t i) noexcept;
+	static AString number(int16_t i) noexcept;
+	static AString number(int32_t i) noexcept;
+	static AString number(int64_t i) noexcept;
+	static AString number(uint8_t i) noexcept;
+	static AString number(uint16_t i) noexcept;
+	static AString number(uint32_t i) noexcept;
+	static AString number(uint64_t i) noexcept;
 	static AString number(float i) noexcept;
 	static AString number(double i) noexcept;
 	static AString number(bool i) noexcept;

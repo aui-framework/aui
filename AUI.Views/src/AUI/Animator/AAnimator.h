@@ -22,7 +22,9 @@ protected:
      * \brief Выполнить непосредственно анимацию (выставить матрицы, цвета и так далее)
      * \param theta число [0;1], где 0 - начало анимации, 1 - конец анимации
      */
-    virtual void doAnimation(AView* view, float theta) = 0;
+    virtual void doAnimation(AView* view, float theta) {};
+
+    virtual void doPostRender(AView* view, float theta) {};
 
     void translateToCenter();
     void translateToCorner();
@@ -30,6 +32,7 @@ protected:
 public:
 
     void animate(AView* view);
+    void postRender(AView* view);
     void pause();
 
     void setDuration(float period) {

@@ -66,6 +66,20 @@ void ALabel::render()
 			}
 			
 			break;
+
+		case ALIGN_RIGHT:
+			leftPadding += getContentWidth();
+			if (mIcon)
+			{
+				auto requiredSpace = mIcon->getSizeHint();
+				RenderHints::PushState s;
+				Render::instance().setTransform(glm::translate(glm::mat4(1.f),
+					glm::vec3(leftPadding - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
+					(getContentHeight() - requiredSpace.y) / 2, 0)));
+				mIcon->draw(requiredSpace);
+			}
+
+			break;
 		}
 		if (mPrerendered.mVao) {
 		    int y = mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)) + 1;

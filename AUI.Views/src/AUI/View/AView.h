@@ -261,12 +261,17 @@ public:
 	void redraw();
 
 
-	void drawStencilMask();
+	virtual void drawStencilMask();
+
 	/**
 	 * \brief Отрисовка этого AView. Эта фукнция не должна
 	 *		  вызываться никем, кроме как рендерером.
 	 */
 	virtual void render();
+
+	virtual void postRender();
+
+	void popStencilIfNeeded();
 
 	/**
 	 * \return позиция этого AView относительно левого верхнего
@@ -404,6 +409,9 @@ public:
 		mExpanding = expanding;
 	}
 
+    const _<AAnimator>& getAnimator() const {
+	    return mAnimator;
+	}
     void setAnimator(const _<AAnimator>& animator);
 
     void getTransform(glm::mat4& transform) const;

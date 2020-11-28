@@ -28,6 +28,10 @@ void AAnimator::animate(AView* view) {
     doAnimation(view, mCurrentTheta);
 }
 
+void AAnimator::postRender(AView* view) {
+    doPostRender(view, mCurrentTheta);
+}
+
 void AAnimator::pause() {
     mLastFrameTime = std::chrono::milliseconds(0);
     mIsPlaying = false;

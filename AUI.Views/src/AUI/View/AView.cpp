@@ -60,6 +60,27 @@ void AView::drawStencilMask()
     }
 }
 
+void AView::postRender() {
+    if (mAnimator)
+        mAnimator->postRender(this);
+    popStencilIfNeeded();
+}
+
+void AView::popStencilIfNeeded() {
+    if (getOverflow() == OF_HIDDEN)
+    {
+        /*
+         * Если у AView есть ограничение по Overflow, то он запушил свою маску в буфер трафарета, но он не может
+         * вернуть буфер трафарета к прежнему состоянию из-за ограничений C++, поэтому заносить маску нужно
+         * после обновлений преобразований (позиция, поворот), но перед непосредственным рендером содержимого AView
+         * (то есть, в <code>AView::render</code>), а возвращать трафарет к предыдущему состоянию можно только
+         * здесь, после того, как AView будет полностью отрендерен.
+         */
+        RenderHints::PushMask::popMask([&]() {
+            drawStencilMask();
+        });
+    }
+}
 void AView::render()
 {
     if (mAnimator)
@@ -910,7 +931,8 @@ void AView::setDisabled(bool disabled)
 
 void AView::setAnimator(const _<AAnimator>& animator) {
     mAnimator = animator;
-    mAnimator->setView(this);
+    if (mAnimator)
+        mAnimator->setView(this);
 }
 
 glm::ivec2 AView::getPositionInWindow() {
@@ -987,3 +1009,4 @@ void AView::focus() {
         AWindow::current()->setFocusedView(s);
     };
 }
+

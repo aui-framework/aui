@@ -704,7 +704,7 @@ static auto _gLastFrameTime = 0ms;
 bool AWindow::isRedrawWillBeEfficient() {
     auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
     auto delta = now - _gLastFrameTime;
-    return 50ms < delta;
+    return 8ms < delta;
 }
 void AWindow::redraw() {
 #ifdef WIN32
