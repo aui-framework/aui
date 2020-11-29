@@ -136,22 +136,23 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_SIZE: {
-            wglMakeCurrent(mDC, context.hrc);
-            emit resized(LOWORD(lParam), HIWORD(lParam));
-            AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
+            if (!isMinimized()) {
+                wglMakeCurrent(mDC, context.hrc);
+                emit resized(LOWORD(lParam), HIWORD(lParam));
+                AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
 
-            switch (wParam) {
-                case SIZE_MAXIMIZED:
-                    emit maximized();
-                    break;
-                case SIZE_MINIMIZED:
-                    emit minimized();
-                    break;
-                case SIZE_RESTORED:
-                    emit restored();
-                    break;
+                switch (wParam) {
+                    case SIZE_MAXIMIZED:
+                        emit maximized();
+                        break;
+                    case SIZE_MINIMIZED:
+                        emit minimized();
+                        break;
+                    case SIZE_RESTORED:
+                        emit restored();
+                        break;
+                }
             }
-
             return 0;
         }
         case WM_MOUSEMOVE: {

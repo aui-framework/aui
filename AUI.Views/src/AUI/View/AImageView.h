@@ -21,6 +21,8 @@ public:
     int getContentMinimumWidth() override;
     int getContentMinimumHeight() override;
 
+    bool consumesClick(const glm::ivec2& pos) override;
+
     void setSize(int width, int height) override;
 };
 

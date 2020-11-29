@@ -42,3 +42,7 @@ void AImageView::setSize(int width, int height) {
     if (w && mFixedSize.x == 0)
         getParent()->updateLayout();
 }
+
+bool AImageView::consumesClick(const glm::ivec2& pos) {
+    return false;
+}
