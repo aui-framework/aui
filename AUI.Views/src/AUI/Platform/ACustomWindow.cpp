@@ -112,11 +112,9 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         }
 
         //TODO: allow move?
-        if (!result && y - winrect.top <= AUI_TITLE_HEIGHT) {
-            if (auto v = getViewAtRecursive({x - winrect.left, y - winrect.top})) {
-                if (!v->getCssNames().contains("AButton") && !v->getCssNames().contains(".override-title-dragging")) {
-                    result = HTCAPTION;
-                }
+        if (!result) {
+            if (isCaptionAt({x - winrect.left, y - winrect.top})) {
+                result = HTCAPTION;
             }
         }
         if (result)
@@ -169,6 +167,19 @@ void ACustomWindow::setSize(int width, int height)
 
     MoveWindow(mHandle, pos.x, pos.y, width, height, false);
 }
+
+bool ACustomWindow::isCaptionAt(const glm::ivec2& pos) {
+    if (pos.y <= AUI_TITLE_HEIGHT) {
+        if (auto v = getViewAtRecursive(pos)) {
+            if (!v->getCssNames().contains("AButton") &&
+                !v->getCssNames().contains(".override-title-dragging")) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 #else
 
 extern Display* gDisplay;

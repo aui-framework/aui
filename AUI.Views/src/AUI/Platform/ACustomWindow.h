@@ -18,6 +18,8 @@ public:
 	~ACustomWindow() override;
 	void setSize(int width, int height) override;
 
+	virtual bool isCaptionAt(const glm::ivec2& pos);
+
 signals:
     emits<> dragBegin;
     emits<> dragEnd;
