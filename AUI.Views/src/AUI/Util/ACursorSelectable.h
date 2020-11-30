@@ -20,7 +20,7 @@ protected:
 
     virtual glm::ivec2 getMouseSelectionPadding() = 0;
     virtual glm::ivec2 getMouseSelectionScroll() = 0;
-    virtual const FontStyle& getMouseSelectionFont() = 0;
+    virtual FontStyle getMouseSelectionFont() = 0;
     virtual AString getMouseSelectionText() = 0;
     virtual void doRedraw() = 0;
 
@@ -51,10 +51,12 @@ public:
     [[nodiscard]] Selection getSelection() const;
     bool hasSelection();
 
-    unsigned getCursorIndexByPos(const glm::ivec2& pos);
-    int getPosByIndex(int index);
+    unsigned getCursorIndexByPos(glm::ivec2 pos);
+    int getPosByIndex(int end, int begin = 0);
 
     void selectAll();
+
+    void drawSelectionRects();
 };
 
 

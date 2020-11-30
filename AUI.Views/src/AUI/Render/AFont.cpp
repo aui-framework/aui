@@ -219,6 +219,34 @@ AString AFont::trimStringToWidth(const AString& text, size_t width, long size, F
 	return s;
 }
 
+size_t AFont::indexOfX(const AString& text, size_t width, long size, FontRendering fr) {
+    float advance = 0;
+    size_t index = 0;
+
+    for (auto c : text) {
+        float widthOfChar;
+        if (c == ' ') {
+            widthOfChar = size / 2.3f;
+        } else {
+            auto characterInfo = getCharacter(c, size, fr);
+            if (!characterInfo) {
+                continue;
+            }
+
+            widthOfChar = characterInfo->advanceX;
+        }
+
+        if (advance + widthOfChar / 2.f > width) {
+            break;
+        }
+        advance += widthOfChar;
+        advance = glm::floor(advance);
+        index += 1;
+    }
+
+    return index;
+}
+
 AStringVector AFont::trimStringToMultiline(const AString& text, int width, long scale, FontRendering fr) {
 	AStringVector v;
 	AString currentText = text;
@@ -243,11 +271,11 @@ int AFont::getAscenderHeight(long size) const
 	return int(face->ascender) * size / face->height;
 }
 
+
 int AFont::getDescenderHeight(long size) const
 {
 	return -int(face->descender) * size / face->height;
 }
-
 
 _<Util::SimpleTexturePacker> AFont::texturePackerOf(long size, FontRendering fr) {
 	return getCharsetBySize(size, fr).tp;

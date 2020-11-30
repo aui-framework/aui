@@ -54,6 +54,7 @@ public:
 	_<GL::Texture> textureOf(long size, FontRendering fr);
 	_<Util::SimpleTexturePacker> texturePackerOf(long size, FontRendering fr);
 	AString trimStringToWidth(const AString& text, size_t width, long size, FontRendering fr);
+	size_t indexOfX(const AString& text, size_t x, long size, FontRendering fr);
 	AStringVector trimStringToMultiline(const AString& text, int width, long size, FontRendering fr);
 	bool isHasKerning();
 

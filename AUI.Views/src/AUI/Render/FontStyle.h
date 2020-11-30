@@ -19,4 +19,5 @@ struct FontStyle {
 	float lineSpacing = 0.5f;
 
 	size_t getWidth(const AString& text) const;
+	size_t getLineHeight() const;
 };

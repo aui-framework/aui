@@ -494,16 +494,16 @@ Render::PrerendereredString Render::preRendererString(const AString& text, FontS
 
 	for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
 		wchar_t c = *i;
-		if (*i == ' ') {
+		if (c == ' ') {
 			advance += fs.size / 2.3f;
 		}
-		else if (*i == '\n') {
+		else if (c == '\n') {
             advanceMax = (glm::max)(advanceMax, advance);
 			advance = 0;
-			advanceY += fs.font->getAscenderHeight(fs.size) * (1.f + fs.lineSpacing);
+			advanceY += fs.getLineHeight();
 		}
 		else {
-			AFont::Character* ch = fs.font->getCharacter(*i, fs.size, fs.fontRendering);
+			AFont::Character* ch = fs.font->getCharacter(c, fs.size, fs.fontRendering);
 			if (!ch) {
 				advance += fs.size / 2.3f;
 				continue;
@@ -534,7 +534,7 @@ Render::PrerendereredString Render::preRendererString(const AString& text, FontS
 				auto next = std::next(i);
 				if (next != text.end())
 				{
-					auto kerning = fs.font->getKerning(*i, *next);
+					auto kerning = fs.font->getKerning(c, *next);
 					advance += kerning.x;
 				}
 			}

@@ -15,14 +15,44 @@ bool ACursorSelectable::hasSelection() {
     return mCursorIndex != mCursorSelection && mCursorSelection != -1;
 }
 
-unsigned ACursorSelectable::getCursorIndexByPos(const glm::ivec2& pos) {
+unsigned ACursorSelectable::getCursorIndexByPos(glm::ivec2 pos) {
+    if (AInput::isKeyDown(AInput::LControl)) {
+        printf("");
+    }
+    if (pos.y < 0)
+        return 0;
+    auto text = getMouseSelectionText();
+    if (text.empty()) {
+        return 0;
+    }
+
     const auto& f = getMouseSelectionFont();
 
-    auto posX = pos.x;
-    posX = posX - (getMouseSelectionPadding().x + getMouseSelectionScroll().x);
-    if (posX <= 0)
-        return 0;
-    return f.font->trimStringToWidth(getMouseSelectionText(), posX, f.size, f.fontRendering).length();
+    pos = pos - (getMouseSelectionPadding() - getMouseSelectionScroll());
+
+    auto fs = getMouseSelectionFont();
+    int row = pos.y / fs.getLineHeight();
+    if (row < 0) {
+        row = 0;
+    }
+
+    if (row == 0) {
+        return f.font->indexOfX(text, pos.x, f.size, f.fontRendering);
+    }
+
+    // твою мышь! теперь ещё надо найти эту строчку...
+    size_t targetLineIndex = 0;
+    for (size_t r = 0; r < row; ++r) {
+        targetLineIndex = text.find('\n', targetLineIndex);
+        if (targetLineIndex == AString::NPOS) {
+            // курсор вышел за границу выделяемого AView. нетрудно догадаться, что в этом случае мы можем схалявить
+            // и вернуть просто индекс последнего элемента
+            return text.length() - 1;
+        }
+        targetLineIndex += 1;
+    }
+
+    return targetLineIndex + f.font->indexOfX(text.mid(targetLineIndex, text.find('\n', targetLineIndex)), pos.x, f.size, f.fontRendering);
 }
 
 void ACursorSelectable::handleMousePressed(const glm::ivec2& pos, AInput::Key button) {
@@ -64,17 +94,14 @@ int ACursorSelectable::drawSelectionPre() {
         Render::instance().setColor(AColor(1.f) - AColor(0x0078d700u));
         
         auto padding = getMouseSelectionPadding();
-        Render::instance().drawRect(padding.x + mAbsoluteBegin, padding.y, mAbsoluteEnd - mAbsoluteBegin + 1, getMouseSelectionFont().size + 3);
+        drawSelectionRects();
 
-        
-        Render::instance().drawRect(padding.x + mAbsoluteBegin, padding.y, mAbsoluteEnd - mAbsoluteBegin + 1,
-                                    getMouseSelectionFont().size + 3);
     }
     return absoluteCursorPos;
 }
 
-int ACursorSelectable::getPosByIndex(int index) {
-    return -getMouseSelectionScroll().x + int(getMouseSelectionFont().getWidth(getMouseSelectionText().mid(0, index)));
+int ACursorSelectable::getPosByIndex(int end, int begin) {
+    return -getMouseSelectionScroll().x + int(getMouseSelectionFont().getWidth(getMouseSelectionText().mid(begin, end - begin)));
 }
 
 void ACursorSelectable::drawSelectionPost() {
@@ -84,16 +111,49 @@ void ACursorSelectable::drawSelectionPost() {
     glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
     if (hasSelection())
     {
-        auto p = getMouseSelectionPadding();
-        Render::instance().drawRect(p.x + mAbsoluteBegin,
-                                    p.y,
-                                    mAbsoluteEnd - mAbsoluteBegin + 1,
-                                    getMouseSelectionFont().size + 3);
+        drawSelectionRects();
     }
 }
 
 void ACursorSelectable::selectAll() {
     mCursorSelection = 0;
     mCursorIndex = getText().length();
+}
+
+void ACursorSelectable::drawSelectionRects() {
+    auto p = getMouseSelectionPadding();
+
+    int absoluteBeginPos = mAbsoluteBegin;
+    int absoluteEndPos = mAbsoluteEnd;
+
+    int row = 0;
+
+    auto draw = [&]() {
+        auto fs = getMouseSelectionFont();
+        Render::instance().drawRect(p.x + absoluteBeginPos,
+                                    p.y + row * fs.getLineHeight(),
+                                    absoluteEndPos - absoluteBeginPos + 1,
+                                    getMouseSelectionFont().size + 2);
+    };
+
+    auto t = getMouseSelectionText();
+    auto sel = getSelection();
+    size_t lineBeginIndex = 0;
+    for (size_t i = 0; i != sel.begin; ++i) {
+        if (t[i] == '\n') {
+            ++row;
+        }
+    }
+    for (size_t i = sel.begin; i != sel.end; ++i) {
+        if (t[i] == '\n') {
+            absoluteEndPos = getPosByIndex(i, lineBeginIndex);
+            draw();
+            absoluteBeginPos = -getMouseSelectionScroll().x;
+            lineBeginIndex = i;
+            ++row;
+        }
+    }
+    absoluteEndPos = getPosByIndex(sel.end, lineBeginIndex);
+    draw();
 }
 

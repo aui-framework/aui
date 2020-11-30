@@ -5,6 +5,7 @@
 #include "AUI/Platform/Platform.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Render/RenderHints.h"
+#include <AUI/Util/AMetric.h>
 
 ATimer& AAbstractTextField::blinkTimer()
 {
@@ -256,7 +257,7 @@ void AAbstractTextField::render()
             }
 
             Render::instance().drawRect(mPadding.left + absoluteCursorPos,
-                                        mPadding.top, 1, getFontStyle().size + 3);
+                                        mPadding.top, glm::ceil(1_dp), getFontStyle().size + 3);
         }
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     } else {
@@ -323,7 +324,7 @@ glm::ivec2 AAbstractTextField::getMouseSelectionScroll() {
     return {mHorizontalScroll, 0};
 }
 
-const FontStyle& AAbstractTextField::getMouseSelectionFont() {
+FontStyle AAbstractTextField::getMouseSelectionFont() {
     return getFontStyle();
 }
 

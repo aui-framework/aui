@@ -20,12 +20,21 @@ private:
     } mTextTransform = TT_NORMAL;
 
 	bool mMultiline = false;
+
+protected:
 	AStringVector mLines;
 
 	void updateMultiline();
-
 	FontStyle getFontStyleLabel();
-	
+
+	const Render::PrerendereredString& getPrerendered() {
+	    return mPrerendered;
+	}
+
+    void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
+    void doRenderText();
+    AString getTargetText();
+
 public:
 	ALabel();
 	explicit ALabel(const AString& text);
@@ -47,11 +56,6 @@ public:
     }
     void doPrerender();
 
-protected:
-    void
-    userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
-
-    void doRenderText();
 
 public:
 

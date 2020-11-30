@@ -31,7 +31,7 @@ public:
 protected:
     glm::ivec2 getMouseSelectionPadding() override;
     glm::ivec2 getMouseSelectionScroll() override;
-    const FontStyle& getMouseSelectionFont() override;
+    FontStyle getMouseSelectionFont() override;
     AString getMouseSelectionText() override;
     void doRedraw() override;
 

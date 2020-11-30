@@ -17,12 +17,12 @@ glm::ivec2 ASelectableLabel::getMouseSelectionScroll() {
     return {0, 0};
 }
 
-const FontStyle& ASelectableLabel::getMouseSelectionFont() {
-    return getFontStyle();
+FontStyle ASelectableLabel::getMouseSelectionFont() {
+    return getPrerendered().fs;
 }
 
 AString ASelectableLabel::getMouseSelectionText() {
-    return getText();
+    return getTargetText();
 }
 
 void ASelectableLabel::doRedraw() {
@@ -51,7 +51,7 @@ void ASelectableLabel::onMouseMove(glm::ivec2 pos) {
 void ASelectableLabel::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     AView::onMousePressed(pos, button);
     handleMousePressed(pos, button);
-}
+ }
 
 void ASelectableLabel::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     AView::onMouseReleased(pos, button);
