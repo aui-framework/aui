@@ -27,72 +27,7 @@ void ALabel::render()
 {
 	AView::render();
 
-	if (mMultiline && mLines.empty()) {
-	    updateMultiline();
-	}
-	if (!mPrerendered.mVao && !mText.empty())
-	{
-	    doPrerender();
-	}
-
-	
-	if (mPrerendered.mVao || mIcon)
-	{
-		int leftPadding = mPadding.left;
-		switch (getFontStyleLabel().align)
-		{
-		case ALIGN_LEFT:
-			if (mIcon)
-			{
-				auto requiredSpace = mIcon->getSizeHint();
-				RenderHints::PushState s;
-				Render::instance().setTransform(glm::translate(glm::mat4(1.f),
-					glm::vec3(leftPadding, (getContentHeight() - requiredSpace.y) / 2, 0)));
-				mIcon->draw(requiredSpace);
-				leftPadding += requiredSpace.x + 1;
-			}
-			break;
-			
-		case ALIGN_CENTER:
-			leftPadding += getContentWidth() / 2;
-			if (mIcon)
-			{
-				auto requiredSpace = mIcon->getSizeHint();
-				RenderHints::PushState s;
-				Render::instance().setTransform(glm::translate(glm::mat4(1.f),
-					glm::vec3(leftPadding - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
-					(getContentHeight() - requiredSpace.y) / 2, 0)));
-				mIcon->draw(requiredSpace);
-			}
-			
-			break;
-
-		case ALIGN_RIGHT:
-			leftPadding += getContentWidth();
-			if (mIcon)
-			{
-				auto requiredSpace = mIcon->getSizeHint();
-				RenderHints::PushState s;
-				Render::instance().setTransform(glm::translate(glm::mat4(1.f),
-					glm::vec3(leftPadding - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
-					(getContentHeight() - requiredSpace.y) / 2, 0)));
-				mIcon->draw(requiredSpace);
-			}
-
-			break;
-		}
-		if (mPrerendered.mVao) {
-		    int y = mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)) + 1;
-		    if (mVerticalAlign == ALIGN_CENTER) {
-		        if (mMultiline) {
-		            y = (glm::max)(y, (getHeight() - getMinimumHeight()) / 2 - 1);
-		        } else {
-                    y = (glm::max)(y, (getHeight() - getFontStyleLabel().size) / 2 - 1);
-                }
-		    }
-			Render::instance().drawString(leftPadding, y, mPrerendered);
-		}
-	}
+	doRenderText();
 }
 
 
@@ -224,4 +159,73 @@ void ALabel::doPrerender() {
             break;
     }
     mPrerendered = Render::instance().preRendererString(targetString, fs);
+}
+
+void ALabel::doRenderText() {
+    if (mMultiline && mLines.empty()) {
+        updateMultiline();
+    }
+    if (!mPrerendered.mVao && !mText.empty())
+    {
+        doPrerender();
+    }
+
+
+    if (mPrerendered.mVao || mIcon)
+    {
+        int leftPadding = mPadding.left;
+        switch (getFontStyleLabel().align)
+        {
+            case ALIGN_LEFT:
+                if (mIcon)
+                {
+                    auto requiredSpace = mIcon->getSizeHint();
+                    RenderHints::PushState s;
+                    Render::instance().setTransform(glm::translate(glm::mat4(1.f),
+                                                                   glm::vec3(leftPadding, (getContentHeight() - requiredSpace.y) / 2, 0)));
+                    mIcon->draw(requiredSpace);
+                    leftPadding += requiredSpace.x + 1;
+                }
+                break;
+
+            case ALIGN_CENTER:
+                leftPadding += getContentWidth() / 2;
+                if (mIcon)
+                {
+                    auto requiredSpace = mIcon->getSizeHint();
+                    RenderHints::PushState s;
+                    Render::instance().setTransform(glm::translate(glm::mat4(1.f),
+                                                                   glm::vec3(leftPadding - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
+                                                                             (getContentHeight() - requiredSpace.y) / 2, 0)));
+                    mIcon->draw(requiredSpace);
+                }
+
+                break;
+
+            case ALIGN_RIGHT:
+                leftPadding += getContentWidth();
+                if (mIcon)
+                {
+                    auto requiredSpace = mIcon->getSizeHint();
+                    RenderHints::PushState s;
+                    Render::instance().setTransform(glm::translate(glm::mat4(1.f),
+                                                                   glm::vec3(leftPadding - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
+                                                                             (getContentHeight() - requiredSpace.y) / 2, 0)));
+                    mIcon->draw(requiredSpace);
+                }
+
+                break;
+        }
+        if (mPrerendered.mVao) {
+            int y = mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)) + 1;
+            if (mVerticalAlign == ALIGN_CENTER) {
+                if (mMultiline) {
+                    y = (glm::max)(y, (getHeight() - getMinimumHeight()) / 2 - 1);
+                } else {
+                    y = (glm::max)(y, (getHeight() - getFontStyleLabel().size) / 2 - 1);
+                }
+            }
+            Render::instance().drawString(leftPadding, y, mPrerendered);
+        }
+    }
 }

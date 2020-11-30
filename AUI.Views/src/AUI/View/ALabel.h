@@ -51,6 +51,8 @@ protected:
     void
     userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
 
+    void doRenderText();
+
 public:
 
     void setText(const AString& newText);

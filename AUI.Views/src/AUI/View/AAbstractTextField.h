@@ -1,22 +1,15 @@
 ﻿#pragma once
 
+#include <AUI/Util/ACursorSelectable.h>
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
 
-class API_AUI_VIEWS AAbstractTextField : public AView
+class API_AUI_VIEWS AAbstractTextField : public AView, public ACursorSelectable
 {
-public:
-	struct Selection
-	{
-		unsigned begin;
-		unsigned end;
-	};
 private:
 	AString mContents;
 
 	static ATimer& blinkTimer();
-	unsigned mCursorIndex = 0;
-	unsigned mCursorSelection = -1;
 	
 	unsigned mCursorBlinkCount = 0;
 	bool mCursorBlinkVisible = true;
@@ -27,14 +20,19 @@ private:
 
 	void updateCursorBlinking();
 	void updateCursorPos();
-	unsigned getCursorIndexByPos(int posX);
-	int getPosByIndex(int index);
-	bool hasSelection();
+
     AString getContentsPasswordWrap();
 	
 protected:
 	virtual bool isValidText(const AString& text) = 0;
-	
+
+    glm::ivec2 getMouseSelectionPadding() override;
+    glm::ivec2 getMouseSelectionScroll() override;
+    const FontStyle& getMouseSelectionFont() override;
+    AString getMouseSelectionText() override;
+
+    void doRedraw() override;
+
 public:
 	AAbstractTextField();
 	virtual ~AAbstractTextField();
@@ -59,16 +57,10 @@ public:
 
 	void setText(const AString& t);
 
-	[[nodiscard]] const AString& getText() const
+	[[nodiscard]] const AString& getText() const override
 	{
 		return mContents;
 	}
-	[[nodiscard]] AString getSelectedText() const
-	{
-		return {getText().begin() + getSelection().begin, getText().begin() + getSelection().end};
-	}
-
-    [[nodiscard]] Selection getSelection() const;
 
 signals:
 	/**

@@ -2,7 +2,7 @@
 
 #include "AFontManager.h"
 
-size_t FontStyle::getWidth(const AString& text)
+size_t FontStyle::getWidth(const AString& text) const
 {
 	if (!font)
 		font = AFontManager::instance().getDefault();

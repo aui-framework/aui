@@ -40,23 +40,6 @@ void AAbstractTextField::updateCursorPos()
 	mHorizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getFontStyle().getWidth(getContentsPasswordWrap())) - getContentWidth() + 1, 0));
 }
 
-unsigned AAbstractTextField::getCursorIndexByPos(int posX)
-{
-	posX = posX - (mPadding.left - mHorizontalScroll);
-	if (posX <= 0)
-		return 0;
-	return getFontStyle().font->trimStringToWidth(getContentsPasswordWrap(), posX, getFontStyle().size, getFontStyle().fontRendering).length();
-}
-
-int AAbstractTextField::getPosByIndex(int index)
-{
-    return -mHorizontalScroll + int(getFontStyle().getWidth(getContentsPasswordWrap().mid(0, index)));
-}
-
-bool AAbstractTextField::hasSelection()
-{
-	return mCursorIndex != mCursorSelection && mCursorSelection != -1;
-}
 
 
 AAbstractTextField::AAbstractTextField()
@@ -146,8 +129,7 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
 		if (AInput::isKeyDown(AInput::LControl) || AInput::isKeyDown(AInput::RControl)) {
             switch (key) {
                 case AInput::A: // выделить всё
-                    mCursorSelection = 0;
-                    mCursorIndex = getText().length();
+                    ACursorSelectable::selectAll();
                     break;
 
                 case AInput::C: // копировать
@@ -252,49 +234,37 @@ void AAbstractTextField::render()
 {
 	AView::render();
 
-	int absoluteBegin, absoluteEnd;
-	auto absoluteCursorPos = getPosByIndex(mCursorIndex);
+	if (hasFocus()) {
+	    auto absoluteCursorPos = ACursorSelectable::drawSelectionPre();
 
-	// выделение
-	if (hasSelection() && hasFocus())
-	{
-		auto absoluteSelectionPos = getPosByIndex(mCursorSelection);
+	    // текст
+        Render::instance().drawString(mPadding.left - mHorizontalScroll, mPadding.top, getContentsPasswordWrap(), getFontStyle());
 
-		absoluteBegin = glm::min(absoluteCursorPos, absoluteSelectionPos);
-		absoluteEnd = glm::max(absoluteCursorPos, absoluteSelectionPos);
+        ACursorSelectable::drawSelectionPost();
 
-		Render::instance().setFill(Render::FILL_SOLID);
-		RenderHints::PushColor c;
-		Render::instance().setColor(AColor(1.f) - AColor(0x0078d700u));
-		Render::instance().drawRect(mPadding.left + absoluteBegin, mPadding.top, absoluteEnd - absoluteBegin + 1, getFontStyle().size + 3);
+        // курсор
+        if (hasFocus() && mCursorBlinkVisible) {
+            if (AInput::isKeyDown(AInput::LControl)) {
+                printf("");
+            }
+            if (absoluteCursorPos < 0) {
+                mHorizontalScroll += absoluteCursorPos;
+                redraw();
+            } else if (getWidth() < absoluteCursorPos + mPadding.horizontal() + 1) {
+                mHorizontalScroll += absoluteCursorPos - getWidth() + mPadding.horizontal() + 1;
+                redraw();
+            }
+
+            Render::instance().drawRect(mPadding.left + absoluteCursorPos,
+                                        mPadding.top, 1, getFontStyle().size + 3);
+        }
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    } else {
+	    Render::instance().drawString(mPadding.left - mHorizontalScroll, mPadding.top, getContentsPasswordWrap(), getFontStyle());
+        Render::instance().setFill(Render::FILL_SOLID);
+        Render::instance().setColor({ 1, 1, 1, 1 });
 	}
-	Render::instance().drawString(mPadding.left - mHorizontalScroll, mPadding.top, getContentsPasswordWrap(), getFontStyle());
-	Render::instance().setFill(Render::FILL_SOLID);
-	Render::instance().setColor({ 1, 1, 1, 1 });
-	glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
-	
-	if (hasSelection() && hasFocus())
-	{
-		Render::instance().drawRect(mPadding.left + absoluteBegin, mPadding.top, absoluteEnd - absoluteBegin + 1, getFontStyle().size + 3);
-	}
-	
-	// курсор
-	if (hasFocus() && mCursorBlinkVisible) {
-	    if (AInput::isKeyDown(AInput::LControl)) {
-	        printf("");
-	    }
-	    if (absoluteCursorPos < 0) {
-	        mHorizontalScroll += absoluteCursorPos;
-	        redraw();
-	    } else if (getWidth() < absoluteCursorPos + mPadding.horizontal() + 1) {
-	        mHorizontalScroll += absoluteCursorPos - getWidth() + mPadding.horizontal() + 1;
-            redraw();
-	    }
 
-		Render::instance().drawRect(mPadding.left + absoluteCursorPos,
-			mPadding.top, 1, getFontStyle().size + 3);
-	}
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void AAbstractTextField::onFocusLost()
@@ -310,29 +280,18 @@ void AAbstractTextField::onFocusLost()
 
 void AAbstractTextField::onMousePressed(glm::ivec2 pos, AInput::Key button)
 {
-	if (button == AInput::LButton) {
-		mCursorSelection = mCursorIndex = getCursorIndexByPos(pos.x);
-	}
+    ACursorSelectable::handleMousePressed(pos, button);
 	updateCursorBlinking();
 }
 
 void AAbstractTextField::onMouseMove(glm::ivec2 pos)
 {
-	if (AInput::isKeyDown(AInput::LButton)) {
-		mCursorIndex = getCursorIndexByPos(pos.x);
-		redraw();
-	}
+	ACursorSelectable::handleMouseMove(pos);
 }
 
 void AAbstractTextField::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
-	if (button == AInput::LButton)
-	{
-		if (mCursorSelection == mCursorIndex)
-		{
-			mCursorSelection = -1;
-		}
-	}
+    ACursorSelectable::handleMouseReleased(pos, button);
 }
 
 void AAbstractTextField::setText(const AString& t)
@@ -356,6 +315,22 @@ AString AAbstractTextField::getContentsPasswordWrap() {
     return mContents;
 }
 
-AAbstractTextField::Selection AAbstractTextField::getSelection() const {
-    return { glm::min(mCursorIndex, mCursorSelection), glm::max(mCursorIndex, mCursorSelection) };
+glm::ivec2 AAbstractTextField::getMouseSelectionPadding() {
+    return {mPadding.left, mPadding.top};
+}
+
+glm::ivec2 AAbstractTextField::getMouseSelectionScroll() {
+    return {mHorizontalScroll, 0};
+}
+
+const FontStyle& AAbstractTextField::getMouseSelectionFont() {
+    return getFontStyle();
+}
+
+AString AAbstractTextField::getMouseSelectionText() {
+    return getContentsPasswordWrap();
+}
+
+void AAbstractTextField::doRedraw() {
+    redraw();
 }

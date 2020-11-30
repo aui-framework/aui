@@ -9,7 +9,7 @@ class AString;
 
 
 struct FontStyle {
-	_<AFont> font;
+	mutable _<AFont> font;
 	uint8_t size = 12;
 	bool formatting = false;
 	Align align = ALIGN_LEFT;
@@ -18,5 +18,5 @@ struct FontStyle {
 	FontRendering fontRendering = FR_SUBPIXEL;
 	float lineSpacing = 0.5f;
 
-	size_t getWidth(const AString& text);
+	size_t getWidth(const AString& text) const;
 };

@@ -16,6 +16,7 @@
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/AComboBox.h>
 #include <AUI/i18n/AI18n.h>
+#include <AUI/View/ASelectableLabel.h>
 
 void fillWindow(_<AViewContainer> t)
 {
@@ -27,7 +28,7 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 {
 	setLayout(_new<AVerticalLayout>());
 
-	addView(_new<ALabel>(u8"Давай я тебе расскажу, что ты не прав, когда говоришь, что на чистом С++ невозможно делать красивые программы"));
+	addView(_new<ASelectableLabel>(u8"Давай я тебе расскажу, что ты не прав, когда говоришь, что на чистом С++ невозможно делать красивые программы"));
 
 	auto horizontal = _new<AViewContainer>();
 	horizontal->addCssName(".contents");
