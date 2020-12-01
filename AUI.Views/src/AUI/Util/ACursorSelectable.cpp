@@ -153,6 +153,7 @@ void ACursorSelectable::drawSelectionRects() {
             ++row;
         }
     }
+
     absoluteEndPos = getPosByIndex(sel.end, lineBeginIndex);
     draw();
 }
