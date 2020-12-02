@@ -16,9 +16,6 @@ bool ACursorSelectable::hasSelection() {
 }
 
 unsigned ACursorSelectable::getCursorIndexByPos(glm::ivec2 pos) {
-    if (AInput::isKeyDown(AInput::LControl)) {
-        printf("");
-    }
     if (pos.y < 0)
         return 0;
     auto text = getMouseSelectionText();

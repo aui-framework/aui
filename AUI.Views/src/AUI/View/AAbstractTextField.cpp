@@ -245,9 +245,6 @@ void AAbstractTextField::render()
 
         // курсор
         if (hasFocus() && mCursorBlinkVisible) {
-            if (AInput::isKeyDown(AInput::LControl)) {
-                printf("");
-            }
             if (absoluteCursorPos < 0) {
                 mHorizontalScroll += absoluteCursorPos;
                 redraw();
