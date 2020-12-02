@@ -39,7 +39,7 @@ BOOST_AUTO_TEST_SUITE(Path)
 #ifdef WIN32
         BOOST_TEST(l.contains("./Tests.exe"));
 #else
-        BOOST_TEST(l.contains("tests"));
+        BOOST_TEST(l.contains("./Tests"));
 #endif
         BOOST_TEST(!l.contains("./."));
         BOOST_TEST(!l.contains("./.."));
@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_SUITE(Path)
 #ifdef WIN32
         BOOST_TEST(l.contains("./Tests.exe"));
 #else
-        BOOST_TEST(l.contains("tests"));
+        BOOST_TEST(l.contains("./Tests"));
 #endif
         BOOST_TEST(l.contains("./."));
         BOOST_TEST(l.contains("./.."));

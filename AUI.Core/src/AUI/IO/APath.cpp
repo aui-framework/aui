@@ -93,7 +93,6 @@ const APath& APath::removeFile() const {
 #ifdef _WIN32
     if (::_wremove(c_str()) != 0) {
 #else
-    }
     if (::remove(toStdString().c_str()) != 0) {
 #endif
         throw IOException("could not remove file " + *this ERROR_DESCRIPTION);
@@ -171,19 +170,24 @@ ADeque<APath> APath::listDir(ListFlags f) const {
 }
 
 APath APath::absolute() const {
+#ifdef WIN32
     APath r;
     r.resize(0x1000);
-#ifdef WIN32
     if (_wfullpath(r.data(), c_str(), r.length()) == nullptr) {
-#else
-    if (realpath(toStdString().c_str(), buf) == nullptr) {
-#endif
         throw IOException("could not find absolute file" + *this ERROR_DESCRIPTION);
     }
 
     r.resizeToNullTerminator();
 
     return r;
+#else
+    char buf[0x1000];
+    if (realpath(toStdString().c_str(), buf) == nullptr) {
+#endif
+        throw IOException("could not find absolute file" + *this ERROR_DESCRIPTION);
+    }
+
+    return buf;
 }
 
 const APath& APath::makeDir() const {
