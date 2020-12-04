@@ -1,12 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
 if (OPENGL_FOUND)
-	AUI_Module(AUI.Views)
-
-	AUI_Compile_Assets(AUI.Views)
-
-
-	find_package(Freetype)
 
 	if(NOT ANDROID)
 		include_directories (/usr/include/freetype2)
@@ -19,6 +13,20 @@ if (OPENGL_FOUND)
 				message("Could not find GTK3; Disabling AUI.Views")
 				return()
 			endif()
+		endif ()
+	endif()
+
+	AUI_Module(AUI.Views)
+
+	AUI_Compile_Assets(AUI.Views)
+
+
+	find_package(Freetype)
+
+	if(NOT ANDROID)
+		include_directories (/usr/include/freetype2)
+
+		if (NOT WIN32)
 			include_directories (${GTK3_INCLUDE_DIRS})
 			link_directories (${GTK3_LIBRARY_DIRS})
 			target_link_libraries(AUI.Views PRIVATE gtk-3)
