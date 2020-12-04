@@ -10,10 +10,28 @@
 - MVC
 - Работа с БД на языке SQL, в том числе генератор запросов
 - Компилятор ресурсов
+
 ## Поддерживаемые платформы
-- Windows (7 и выше)
-- Linux
-- Android
+| Операционная система | Поддержка      |
+|----------------------|----------------|
+| Android              | Частичная      |
+| iOS                  | Не планируется |
+| Linux                | Полная         |
+| Mac                  | Не планируется |
+| Windows 2000/Me      | Не планируется |
+| Windows XP           | Планируется    | 
+| Windows 7            | Полная         |
+| Windows 8/8.1        | Полная         |
+| Windows 10           | Полная         |
+| Windows 10           | Полная         |
+
+| Компилятор                   | Поддержка      |
+|------------------------------|----------------|
+| MSVC 16+ (Visual Studio 19+) | Полная         |
+| gcc (8+)                     | Полная         |
+| MinGW (8+)                   | Полная         |
+| clang                        | Не проверялось |
+
 ## Используемые библиотеки
 - `libcurl` для http/https запросов
 - `OpenSSL` для шифрования
@@ -21,6 +39,7 @@
 - `glm` для линейной алгебры
 - `stbimage` для загрузки изображений
 - `freetype2` для рендеринга шрифтов
+
 ## Список модулей
 Каждый модуль в AUI решает свою конкретную задачу.
 - `AUI.Core` - базовые типы - `_`, строки, потоки, IO и т.д.
@@ -36,6 +55,42 @@
 - `AUI.Toolbox` - компилятор ресурсов
 - `AUI.Views` - UI-движок с аппаратным ускорением
 - `AUI.Xml` - парсер XML
+
+## Примеры
+В папке `examples/` находятся примеры проектов, использующие AUI.
+
+### Шаблон проекта
+`CMakeLists.txt`
+```cmake
+# Стандартная рутина
+cmake_minimum_required(VERSION 3.16)
+project(project_template)
+
+# Подключаем AUI
+find_package(AUI REQUIRED)
+
+# Создаём испольняемый файл. Данная функция автоматически подключит все нужные исходники из папки src, создаст цель
+# CMake и расположит исполнямый файл в папку bin/.
+AUI_Executable(project_template)
+
+# Подключаем требуемые библиотеки
+target_link_libraries(project_template PRIVATE AUI.Core)
+#target_link_libraries(project_template PRIVATE AUI.Views)
+#target_link_libraries(project_template PRIVATE AUI.Network)
+#target_link_libraries(project_template PRIVATE AUI.Data)
+```
+
+`src/main.cpp`
+```c++
+#include <AUI/Platform/Entry.h>
+#include <AUI/Logging/ALogger.h>
+
+AUI_ENTRY {
+    ALogger::info("Hello world!");
+    return 0;
+}
+```
+
 ## Контрибьютинг
 Ветка `master` содержит код release-кандидата. Код в этой ветке должен компилироваться без ошибок и проходить все тесты
 для всех поддерживаемых платформ. Если произошёл форс-мажор и вышеуказаные требования перестали выполняться:
