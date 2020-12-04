@@ -9,6 +9,10 @@ if (MINGW)
     add_compile_definitions(WINVER=0x601)
 endif()
 
+if (UNIX OR MINGW)
+    set(CMAKE_EXE_LINKER_FLAGS " -static")
+endif()
+
 set(AUI_3RDPARTY_LIBS_DIR NOTFOUND CACHE PATH "")
 if (AUI_3RDPARTY_LIBS_DIR)
     FILE(GLOB children RELATIVE ${AUI_3RDPARTY_LIBS_DIR} ${AUI_3RDPARTY_LIBS_DIR}/*)
@@ -78,6 +82,10 @@ function(AUI_Common AUI_MODULE_NAME)
         target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_DEBUG)
     else()
         target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_RELEASE)
+    endif()
+
+    if (UNIX OR MINGW)
+        target_link_libraries(${AUI_MODULE_NAME} PRIVATE -static-libgcc -static-libstdc++)
     endif()
 endfunction(AUI_Common)
 
