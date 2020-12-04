@@ -9,10 +9,6 @@ if (MINGW)
     add_compile_definitions(WINVER=0x601)
 endif()
 
-if (UNIX OR MINGW)
-    set(CMAKE_EXE_LINKER_FLAGS " -static")
-endif()
-
 set(AUI_3RDPARTY_LIBS_DIR NOTFOUND CACHE PATH "")
 if (AUI_3RDPARTY_LIBS_DIR)
     FILE(GLOB children RELATIVE ${AUI_3RDPARTY_LIBS_DIR} ${AUI_3RDPARTY_LIBS_DIR}/*)
