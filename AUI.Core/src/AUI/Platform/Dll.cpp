@@ -9,12 +9,12 @@
 
 _<Dll> Dll::load(const AString& path)
 {
-#if defined(_WIN32)
-#ifdef __MINGW32__
-    auto fullpath = "lib" + path + "." + getDllExtension();
-#else
+#ifdef _MSC_VER
     auto fullpath = path + "." + getDllExtension();
+#else
+    auto fullpath = "lib" + path + "." + getDllExtension();
 #endif
+#if defined(_WIN32)
 	auto lib = LoadLibrary(fullpath.c_str());
 	if (!lib)
 	{
@@ -30,7 +30,7 @@ _<Dll> Dll::load(const AString& path)
 #else
 	char buf[0x2000];
 	getcwd(buf, sizeof(buf));
-	auto name = (AString(buf) + "/lib" + fullpath).toStdString();
+	auto name = (AString(buf) + "/" + fullpath).toStdString();
 	auto lib = dlopen(name.c_str(), RTLD_LAZY);
 	if (!lib)
 	{
