@@ -11,14 +11,18 @@ if (OPENGL_FOUND)
 	if(NOT ANDROID)
 		include_directories (/usr/include/freetype2)
 
-		if (UNIX)
+		if (NOT WIN32)
 			FIND_PACKAGE(PkgConfig REQUIRED)
-			PKG_CHECK_MODULES(GTK3 REQUIRED gtk+-3.0)
+			PKG_CHECK_MODULES(GTK3 gtk+-3.0)
 
+			if (NOT GTK3_FOUND)
+				message("Could not find GTK3; Disabling AUI.Views")
+				return()
+			endif()
 			include_directories (${GTK3_INCLUDE_DIRS})
 			link_directories (${GTK3_LIBRARY_DIRS})
 			target_link_libraries(AUI.Views PRIVATE gtk-3)
-		endif (UNIX)
+		endif ()
 	endif()
 
 
