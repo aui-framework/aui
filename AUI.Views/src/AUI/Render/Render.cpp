@@ -5,6 +5,7 @@
 #include <AUI/Common/AColor.h>
 #include <AUI/Common/ASide.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Render/AFontCharacter.h>
 
 Render::Render()
 {
@@ -577,6 +578,13 @@ void Render::setGradientColors(const AColor& tl, const AColor& tr,
     mGradientShader.set("color_tr", tr);
     mGradientShader.set("color_bl", bl);
     mGradientShader.set("color_br", br);
+}
+
+void Render::applyTextureRepeat() {
+    if (Render::instance().getRepeat() == REPEAT_NONE) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    }
 }
 
 

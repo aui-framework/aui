@@ -56,10 +56,7 @@ void SvgDrawable::draw(const glm::ivec2& size) {
         } else {
             posY = glm::round((size.y - mImage->height * scale) / 2.f);
         }
-        if (Render::instance().getRepeat() == REPEAT_NONE) {
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-        }
+        Render::instance().applyTextureRepeat();
 
         Render::instance().drawTexturedRect(posX,
                                             posY,

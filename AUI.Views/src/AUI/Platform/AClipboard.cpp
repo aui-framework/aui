@@ -4,7 +4,8 @@
 
 #include "AClipboard.h"
 
-#include <Windows.h>
+#ifdef _WIN32
+#include <windows.h>
 
 void AClipboard::copyToClipboard(const AString& text) {
     const size_t len = text.length() * 2 + 2;
@@ -25,3 +26,12 @@ AString AClipboard::pasteFromClipboard() {
     CloseClipboard();
     return s;
 }
+#else
+void AClipboard::copyToClipboard(const AString& text) {
+
+}
+
+AString AClipboard::pasteFromClipboard() {
+    return "unsupported";
+}
+#endif

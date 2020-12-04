@@ -6,7 +6,7 @@
 
 #if defined(_WIN32)
 extern void aui_wsa_init();
-#include <WS2tcpip.h>
+#include <ws2tcpip.h>
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>

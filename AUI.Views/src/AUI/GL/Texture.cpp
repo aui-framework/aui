@@ -7,6 +7,7 @@
 #include "Texture.h"
 #include "gl.h"
 #include "State.h"
+#include "gl.h"
 
 struct Result
 {

@@ -15,4 +15,5 @@ void ICommand::printHelp() {
             std::cout << std::endl << "\t";
         }
     }
+    std::cout << std::endl;
 }

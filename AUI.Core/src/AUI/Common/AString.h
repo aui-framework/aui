@@ -210,7 +210,31 @@ public:
 	{
 		return std::wstring::data();
 	}
-	AString replaceAll(const AString& from, const AString& to) const noexcept;
+	AString replacedAll(const AString& from, const AString& to) const noexcept;
+	AString replacedAll(wchar_t from, wchar_t to) const noexcept {
+	    AString copy;
+	    copy.reserve(length() + 10);
+	    for (auto c : *this) {
+	        if (c == from) {
+	            copy << to;
+	        } else {
+	            copy << c;
+	        }
+	    }
+        return copy;
+	}
+	AString replacedAll(const ASet<wchar_t> from, wchar_t to) const noexcept {
+	    AString copy;
+	    copy.reserve(length() + 10);
+	    for (auto c : *this) {
+	        if (from.contains(c)) {
+	            copy << to;
+	        } else {
+	            copy << c;
+	        }
+	    }
+        return copy;
+	}
 	void replaceAll(wchar_t from, wchar_t to) noexcept;
 
 	[[nodiscard]]
@@ -476,29 +500,29 @@ public:
     inline AString format(Args&&... args);
 };
 
-inline AString API_AUI_CORE operator+(const AString& l, const AString& r) noexcept
+inline AString operator+(const AString& l, const AString& r) noexcept
 {
 	auto x = l;
 	x.append(r);
 	return x;
 }
-inline AString API_AUI_CORE operator+(const AString& l, wchar_t r) noexcept
+inline AString operator+(const AString& l, wchar_t r) noexcept
 {
 	auto x = l;
 	x.append(r);
 	return x;
 }
-inline AString API_AUI_CORE operator+(const AString& one, const char* other) noexcept
+inline AString operator+(const AString& one, const char* other) noexcept
 {
 	return one + AString(other);
 }
 
-inline AString API_AUI_CORE operator+(const char* other, const AString& one) noexcept
+inline AString operator+(const char* other, const AString& one) noexcept
 {
 	return AString(other) + one;
 }
 
-inline AString API_AUI_CORE operator+(char lhs, const AString& cs) noexcept
+inline AString operator+(char lhs, const AString& cs) noexcept
 {
 	AString s(lhs);
 	s += cs;

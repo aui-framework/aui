@@ -4,7 +4,7 @@
 
 class AString;
 
-class API_AUI_CORE AMetric
+class API_AUI_VIEWS AMetric
 {
 public:
 	enum Unit

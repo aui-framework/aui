@@ -9,7 +9,7 @@ class AClass
 public:
 	static AString name()
 	{
-#if defined(_WIN32)
+#if defined(_MSC_VER)
 		AString s = __FUNCSIG__;
 		auto openTag = s.find('<') + 7;
 		auto closeTag = s.find('>');

@@ -1,11 +1,17 @@
-﻿#include "ADesktop.h"
+﻿#ifdef __MINGW32__
+// Explicitly setting NTDDI version, this is necessary for the MinGW compiler
+#define NTDDI_VERSION NTDDI_VISTA
+#define _WIN32_WINNT _WIN32_WINNT_VISTA
+#endif
+
+#include "ADesktop.h"
 #include "ACursor.h"
 #include "AWindow.h"
 
 #if defined(_WIN32)
 
-#include <Windows.h>
-#include <Shlobj.h>
+#include <windows.h>
+#include <shlobj.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Logging/ALogger.h>

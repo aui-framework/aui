@@ -11,7 +11,7 @@
 #include "InsufficientPermissionsException.h"
 
 #ifdef WIN32
-#include <Windows.h>
+#include <windows.h>
 #include <direct.h>
 
 #define ERROR_DESCRIPTION
@@ -34,6 +34,15 @@ AString APath::filename() const {
          return *this;
      }
     return mid(i + 1);
+}
+
+AString APath::filenameWithoutExtension() const {
+    auto name = filename();
+    auto it = name.rfind('.');
+    if (it == NPOS) {
+        return name;
+    }
+    return name.mid(0, it);
 }
 
 APath APath::file(const AString& fileName) const {
@@ -183,11 +192,11 @@ APath APath::absolute() const {
 #else
     char buf[0x1000];
     if (realpath(toStdString().c_str(), buf) == nullptr) {
-#endif
         throw IOException("could not find absolute file" + *this ERROR_DESCRIPTION);
     }
 
     return buf;
+#endif
 }
 
 const APath& APath::makeDir() const {
@@ -227,8 +236,7 @@ void APath::removeBackSlashes() {
 }
 
 #ifdef _WIN32
-#include <ShlObj_core.h>
-#include <ShlObj.h>
+#include <shlobj.h>
 
 APath APath::getDefaultPath(APath::DefaultPath path) {
     APath result;

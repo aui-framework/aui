@@ -60,7 +60,7 @@ void AI18n::loadFromStream(const _<IInputStream>& iis) {
 
 #ifdef _WIN32
 
-#include <Windows.h>
+#include <windows.h>
 
 ALanguageCode AI18n::userLanguage() {
     wchar_t buf[64];

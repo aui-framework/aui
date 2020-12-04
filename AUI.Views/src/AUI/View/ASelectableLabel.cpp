@@ -4,6 +4,7 @@
 
 #include <AUI/Platform/AClipboard.h>
 #include "ASelectableLabel.h"
+#include <AUI/GL/gl.h>
 
 ASelectableLabel::ASelectableLabel() {}
 

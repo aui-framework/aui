@@ -1,5 +1,5 @@
 #if defined(_WIN32)
-#include <Windows.h>
+#include <windows.h>
 
 BOOL WINAPI DllMain(
 	HINSTANCE hinstDLL,  // handle to DLL module

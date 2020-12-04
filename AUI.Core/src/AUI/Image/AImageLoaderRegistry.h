@@ -26,4 +26,6 @@ public:
 	    return loadDrawable(s);
 	}
 	_<AImage> loadImage(const AUrl& url);
+
+	static AImageLoaderRegistry& instance();
 };

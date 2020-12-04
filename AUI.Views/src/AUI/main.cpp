@@ -2,7 +2,7 @@
 #include <AUI/Image/Drawables.h>
 #include <AUI/Util/ImageDrawable.h>
 #if defined(_WIN32)
-#include <Windows.h>
+#include <windows.h>
 #include <AUI/Url/AUrl.h>
 
 
@@ -33,6 +33,7 @@ BOOL WINAPI DllMain(
 	}
 	return TRUE;  // Successful DLL_PROCESS_ATTACH.
 }
+
 #elif defined(ANDROID)
 #else
 #include <gtk/gtk.h>
@@ -52,10 +53,20 @@ struct initialize
         });
 
 #ifndef ANDROID
-        aui::importPlugin("Svg");
+        try {
+            aui::importPlugin("Svg");
+        } catch (...) {
+
+        }
 #endif
 #ifdef _WIN32
-        SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
+        typedef BOOL(WINAPI *SetProcessDpiAwarenessContext_t)(HANDLE);
+        auto SetProcessDpiAwarenessContext = (SetProcessDpiAwarenessContext_t)GetProcAddress(GetModuleHandleA("User32.dll"), "SetProcessDpiAwarenessContext");
+
+        if (SetProcessDpiAwarenessContext) {
+            // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+            SetProcessDpiAwarenessContext((HANDLE) -4);
+        }
 #endif
     }
 } init;

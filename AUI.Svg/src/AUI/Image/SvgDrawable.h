@@ -8,6 +8,7 @@
 #include <nanosvgrast.h>
 #include <AUI/GL/Texture.h>
 
+
 class SvgDrawable: public IDrawable
 {
 private:

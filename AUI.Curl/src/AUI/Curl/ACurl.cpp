@@ -118,6 +118,6 @@ size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata
 
 int64_t ACurl::getContentLength() const {
     curl_off_t s;
-    curl_easy_getinfo(mCURL, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &s);
+    curl_easy_getinfo(mCURL, CURLINFO_CONTENT_LENGTH_DOWNLOAD, &s);
     return s;
 }

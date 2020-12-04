@@ -1,11 +1,12 @@
 ﻿#include <ft2build.h>
 #include <freetype/freetype.h>
-#include "AFont.h"
+#include "FreeType.h"
+#include "AFontCharacter.h"
 #include "AFontManager.h"
 #include <fstream>
 #include <string>
-
 #include "AUI/Common/AStringVector.h"
+
 
 AFont::AFont(AFontManager* fm, const AString& path) :
 	ft(fm->mFreeType)
@@ -59,7 +60,7 @@ AFont::FontData& AFont::getCharsetBySize(long size, FontRendering fr) {
 	//renderGlyphs(size);
 	return data[data.size() - 1];
 }
-AFont::Character* AFont::renderGlyph(FontData& fs, FT_ULong glyph, long size, FontRendering fr) {
+AFont::Character* AFont::renderGlyph(FontData& fs, long glyph, long size, FontRendering fr) {
 	FT_Set_Pixel_Sizes(face, 0, size);
 
 	FT_Int32 flags = FT_LOAD_RENDER;// | FT_LOAD_FORCE_AUTOHINT;
@@ -141,7 +142,7 @@ _<GL::Texture> AFont::textureOf(long size, FontRendering fr) {
 	}
 	return chars.texture;
 }
-AFont::Character* AFont::getCharacter(FT_ULong id, long size, FontRendering fr) {
+AFont::Character* AFont::getCharacter(long id, long size, FontRendering fr) {
 	FontData& chars = getCharsetBySize(size, fr);
 	if (chars.chars.size() > id && chars.chars[id]) {
 		return chars.chars[id];

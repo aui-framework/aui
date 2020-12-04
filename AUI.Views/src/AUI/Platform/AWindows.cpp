@@ -179,7 +179,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                         return true;
                     }
                     case ACursor::POINTER: {
-                        static auto cursor = LoadCursor(nullptr, IDC_PERSON);
+                        static auto cursor = LoadCursor(nullptr, IDC_HAND);
                         SetCursor(cursor);
                         return true;
                     }
@@ -221,8 +221,14 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
 
         case WM_DPICHANGED: {
-            float newDpi = GetDpiForWindow(mHandle) / 96.f * AViews::DPI_RATIO;
-
+            typedef UINT(WINAPI *GetDpiForWindow_t)(_In_ HWND);
+            static auto GetDpiForWindow = (GetDpiForWindow_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForWindow");
+            float newDpi;
+            if (GetDpiForWindow) {
+                newDpi = GetDpiForWindow(mHandle) / 96.f;
+            } else {
+                newDpi = Platform::getDpiRatio();
+            }
             setSize(getWidth() * newDpi / mDpiRatio, getHeight() * newDpi / mDpiRatio);
             mDpiRatio = newDpi;
             updateDpi();
@@ -400,7 +406,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
                              GetSystemMetrics(SM_CYSCREEN) / 2 - height / 2, width, height,
                              parent != nullptr ? parent->mHandle : nullptr, nullptr, mInst, nullptr);
 
-    SetWindowLongPtr(mHandle, GWLP_USERDATA, reinterpret_cast<LONG>(this));
+    SetWindowLongPtr(mHandle, GWLP_USERDATA, reinterpret_cast<long long int>(this));
 
     if (mParentWindow && ws & WS_DIALOG) {
         EnableWindow(mParentWindow->mHandle, false);
@@ -765,7 +771,7 @@ void AWindow::redraw() {
                 v = shared_from_this();
             apply(v, {
                 RenderHints::PushMatrix m;
-                Render::instance().setTransform(glm::translate(glm::mat4(1.f), {getPositionInWindow(), 0.f}));
+                Render::instance().setTransform(glm::translate(glm::mat4(1.f), glm::vec3{getPositionInWindow(), 0.f}));
                 Render::instance().setFill(Render::FILL_SOLID);
                 glEnable(GL_STENCIL_TEST);
                 glStencilMask(0xff);
@@ -919,7 +925,13 @@ void AWindow::close() {
 void AWindow::updateDpi() {
     emit dpiChanged;
 #if defined(_WIN32)
-    mDpiRatio = GetDpiForWindow(mHandle) / 96.f * AViews::DPI_RATIO;
+    typedef UINT(WINAPI *GetDpiForWindow_t)(_In_ HWND);
+    static auto GetDpiForWindow = (GetDpiForWindow_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForWindow");
+    if (GetDpiForWindow) {
+        mDpiRatio = GetDpiForWindow(mHandle) / 96.f;
+    } else {
+        mDpiRatio = Platform::getDpiRatio();
+    }
 #else
     mDpiRatio = Platform::getDpiRatio();
 #endif
@@ -1266,6 +1278,7 @@ glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) 
 }
 
 void AWindow::setIcon(const AImage& image) {
+#ifdef _WIN32
     assert(image.getFormat() & AImage::BYTE);
 
     if (mIcon) {
@@ -1312,6 +1325,7 @@ void AWindow::setIcon(const AImage& image) {
     ReleaseDC(NULL, hdcScreen);
 
     SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon);
+#endif
 }
 
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ для XLIB

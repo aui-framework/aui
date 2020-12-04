@@ -21,7 +21,7 @@ _<AByteBuffer> ACrypto::safeRandom() {
     std::default_random_engine re(seed1 ^ seed2);
 
     for (size_t i = 0; i < 10; ++i) {
-        bb << std::uniform_int_distribution()(re);
+        bb << std::uniform_int_distribution<size_t>()(re);
     }
     auto seed3 = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     bb << seed3 << seed1 << seed2;

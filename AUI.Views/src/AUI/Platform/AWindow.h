@@ -11,7 +11,7 @@
 #include "AUI/Util/AMetric.h"
 
 #if defined(_WIN32)
-#include <Windows.h>
+#include <windows.h>
 #elif defined(ANDROID)
 #include <jni.h>
 #else

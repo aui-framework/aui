@@ -9,8 +9,6 @@
 
 namespace AViews
 {
-    constexpr float DPI_RATIO = 1.f;
-
 	API_AUI_VIEWS void mergeAutumnObjects(const AMap<AString, _<Factory<IShadingEffect>>>& data);
 	inline void mergeAutumnObjects()
 	{

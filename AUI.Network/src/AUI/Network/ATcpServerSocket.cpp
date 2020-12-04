@@ -1,7 +1,7 @@
 ﻿#include "ATcpServerSocket.h"
 
 #if defined(_WIN32)
-#include <WS2tcpip.h>
+#include <ws2tcpip.h>
 #else
 
 #include <sys/socket.h>

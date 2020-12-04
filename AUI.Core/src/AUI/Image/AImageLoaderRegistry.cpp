@@ -59,3 +59,7 @@ _<AImage> AImageLoaderRegistry::loadImage(const AUrl& url) {
     ALogger::warn("No applicable image loader for " + url.getFull());
     return nullptr;
 }
+
+AImageLoaderRegistry& AImageLoaderRegistry::instance() {
+    return Singleton<AImageLoaderRegistry>::instance();
+}

@@ -42,8 +42,8 @@ GL::Shader::~Shader() {
 }
 
 
-GLuint GL::Shader::load(const AString& data, GLenum type) {
-	GLuint shader = glCreateShader(type);
+uint32_t GL::Shader::load(const AString& data, uint32_t type) {
+	uint32_t shader = glCreateShader(type);
 	std::string code = data.toStdString();
 	assert(!code.empty());
 	const char* c = code.c_str();
@@ -78,16 +78,16 @@ void GL::Shader::use() const {
 	currentShader() = const_cast<GL::Shader*>(this);
 }
 
-void GL::Shader::bindAttribute(GLuint index, const AString& name) {
+void GL::Shader::bindAttribute(uint32_t index, const AString& name) {
     if (name.empty())
         return;
 	glBindAttribLocation(mProgram, index, name.toStdString().c_str());
 }
 
-GLint GL::Shader::getLocation(const AString& name) const {
+int32_t GL::Shader::getLocation(const AString& name) const {
 	auto it = mUniforms.find(name);
 	if (it == mUniforms.end()) {
-		GLint loc = glGetUniformLocation(mProgram, name.toStdString().c_str());
+		int32_t loc = glGetUniformLocation(mProgram, name.toStdString().c_str());
 		mUniforms[name] = loc;
 		return loc;
 	}

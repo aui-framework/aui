@@ -24,16 +24,4 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
     }
     return r;
 }
-#if defined(__WIN32)
-#include <Windows.h>
-AUI_EXPORT int __stdcall WinMain(
-	HINSTANCE hInstance,
-	HINSTANCE hPrevInstance,
-	LPSTR     lpCmdLine,
-	int       nShowCmd
-) {
-    return main(0, nullptr);
-}
-#endif
-
 #endif

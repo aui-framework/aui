@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include "gl.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Image/AImage.h"
 

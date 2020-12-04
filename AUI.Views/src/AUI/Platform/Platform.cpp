@@ -3,7 +3,7 @@
 #include "AUI/IO/APath.h"
 
 #if defined(_WIN32)
-#include <Windows.h>
+#include <windows.h>
 
 AString Platform::getFontPath(const AString& font)
 {
@@ -68,7 +68,12 @@ void Platform::playSystemSound(Sound s)
 
 float Platform::getDpiRatio()
 {
-	return GetDpiForSystem() / 96.f * AViews::DPI_RATIO;
+    typedef UINT(WINAPI *GetDpiForSystem_t)();
+    static auto GetDpiForSystem = (GetDpiForSystem_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForSystem");
+	if (GetDpiForSystem) {
+        return GetDpiForSystem() / 96.f;
+    }
+	return 1.f;
 }
 #else
 

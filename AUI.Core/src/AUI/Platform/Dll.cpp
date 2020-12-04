@@ -9,8 +9,12 @@
 
 _<Dll> Dll::load(const AString& path)
 {
-	auto fullpath = path + "." + getDllExtension();
 #if defined(_WIN32)
+#ifdef __MINGW32__
+    auto fullpath = "lib" + path + "." + getDllExtension();
+#else
+    auto fullpath = path + "." + getDllExtension();
+#endif
 	auto lib = LoadLibrary(fullpath.c_str());
 	if (!lib)
 	{

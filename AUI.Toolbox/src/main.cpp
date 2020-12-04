@@ -37,11 +37,12 @@ AUI_ENTRY
 	}
 	else
 	{
+	    /*
 	    std::cout << "Command line:" << std::endl;
 	    for (int i = 0; i < args.size(); ++i) {
             std::cout << args[i] << " ";
         }
-	    std::cout << std::endl;
+	    std::cout << std::endl;*/
 		for (int i = 2; i < args.size(); ++i)
 		{
 			toolbox.args << args[i];

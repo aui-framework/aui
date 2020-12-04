@@ -4,6 +4,6 @@ AUI_Module(AUI.Svg)
 
 target_include_directories(AUI.Svg PRIVATE 3rdparty/nanosvg/src)
 
-target_link_libraries(AUI.Svg AUI.Core)
-target_link_libraries(AUI.Svg AUI.Views)
-target_link_libraries(AUI.Svg AUI.Xml)
+target_link_libraries(AUI.Svg PRIVATE AUI.Core)
+target_link_libraries(AUI.Svg PRIVATE AUI.Views)
+target_link_libraries(AUI.Svg PRIVATE AUI.Xml)

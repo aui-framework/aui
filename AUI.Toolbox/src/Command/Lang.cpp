@@ -52,7 +52,7 @@ void saveLangFile(const APath& path, const AMap<AString, AString>& data) {
     *fos << "# AUI lang file\n";
 
     for (auto& i : data) {
-        *fos << i.first.replaceAll("=", "\\=") << "=" << i.second.replaceAll("=", "\\=") << "\n";
+        *fos << i.first.replacedAll("=", "\\=") << "=" << i.second.replacedAll("=", "\\=") << "\n";
     }
 }
 

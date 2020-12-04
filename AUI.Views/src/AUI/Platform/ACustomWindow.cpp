@@ -1,5 +1,6 @@
 ﻿#include "ACustomWindow.h"
 #include "ADesktop.h"
+#include <cstring>
 
 const int AUI_TITLE_HEIGHT = 30;
 

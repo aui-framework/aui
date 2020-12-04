@@ -9,6 +9,7 @@
 #include "AUI/Common/ASide.h"
 #include "AUI/Util/Singleton.h"
 
+
 class AColor;
 class AWindow;
 
@@ -154,5 +155,7 @@ public:
 	void uploadToShader();
 
     glm::vec2 getCurrentPos();
+
+    void applyTextureRepeat();
 };
 

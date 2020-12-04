@@ -1,5 +1,5 @@
 ﻿#if defined(_WIN32)
-#include <Windows.h>
+#include <windows.h>
 #include "AMessageBox.h"
 #include "AWindow.h"
 AMessageBox::Button AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b)

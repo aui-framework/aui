@@ -112,7 +112,7 @@ AString AString::trimRight(wchar_t symbol) const noexcept
     return {};
 }
 
-AString AString::replaceAll(const AString& from, const AString& to) const noexcept
+AString AString::replacedAll(const AString& from, const AString& to) const noexcept
 {
     AString result;
     for (size_type pos = 0;;)

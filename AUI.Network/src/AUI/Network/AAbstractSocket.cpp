@@ -9,8 +9,8 @@
 
 
 #if defined(_WIN32)
-#include <WS2tcpip.h>
-#include <Windows.h>
+#include <ws2tcpip.h>
+#include <windows.h>
 #include <AUI/Logging/ALogger.h>
 
 void aui_wsa_init()
@@ -70,7 +70,7 @@ void AAbstractSocket::init()
 AString AAbstractSocket::getErrorString()
 {
 #if defined(_WIN32)
-	long error = WSAGetLastError();
+	int error = WSAGetLastError();
 	wchar_t* str;
 	FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, static_cast<DWORD>(error), 0,
 	               (LPWSTR)&str, 0, nullptr);

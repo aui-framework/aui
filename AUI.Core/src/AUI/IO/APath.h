@@ -115,6 +115,13 @@ public:
     [[nodiscard]] AString filename() const;
 
     /**
+     * \brief Название без расширения.
+     * \example <pre>/home/user/file.cpp -> file
+     * \return название файла без расширения
+     */
+    [[nodiscard]] AString filenameWithoutExtension() const;
+
+    /**
      * \brief Убрать самую верхнюю папку из пути.
      * \return тот же путь, только без верхней папки
      * \example v1.0.0/client/azaza.zip -> client/azaza.zip

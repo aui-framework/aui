@@ -1,4 +1,4 @@
-#include <Windows.h>
+#include <windows.h>
 #include "ExampleWindow.h"
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/Util/BuiltinFiles.h"

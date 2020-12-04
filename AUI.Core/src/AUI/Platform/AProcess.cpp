@@ -5,7 +5,7 @@
 #include "AProcess.h"
 
 #ifdef _WIN32
-#include <Windows.h>
+#include <windows.h>
 #include <AUI/Traits/memory.h>
 
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {

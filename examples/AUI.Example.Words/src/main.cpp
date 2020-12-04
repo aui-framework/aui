@@ -12,7 +12,7 @@ AUI_ENTRY
 }
 /*
 #if defined(_WIN32)
-#include <Windows.h>
+#include <windows.h>
 int __stdcall WinMain(
 	HINSTANCE hInstance,
 	HINSTANCE hPrevInstance,
