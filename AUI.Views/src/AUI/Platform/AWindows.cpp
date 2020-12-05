@@ -532,13 +532,11 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
     ALogger::info((const char*) glGetString(GL_RENDERER));
     ALogger::info((const char*) glGetString(GL_EXTENSIONS));
 #else
-    static struct once {
-        once() {
-            if (!XSupportsLocale() || XSetLocaleModifiers("@im=none") == NULL) {
-                throw AException("Your X server does not support locales.");
-            }
+    do_once {
+        if (!XSupportsLocale() || XSetLocaleModifiers("@im=none") == NULL) {
+            throw AException("Your X server does not support locales.");
         }
-    } once;
+    }
     struct DisplayInstance {
 
     public:

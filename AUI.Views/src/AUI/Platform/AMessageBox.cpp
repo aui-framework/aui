@@ -71,12 +71,7 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
                   AMessageBox::Button b) {
     unsigned iconFlags = 0;
 
-    struct once {
-        once() {
-            gtk_init(nullptr, nullptr);
-        }
-    };
-    static once o;
+    do_once gtk_init(nullptr, nullptr);
 
 
     // Icons

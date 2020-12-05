@@ -133,16 +133,16 @@
  * \example
  * <p>Пример с фигурными скобками</p>
  * <code>
- * once {<br />
+ * do_once {<br />
  * &#09;aui::importPlugin("MyPlugin");<br />
  * }<br />
  * </code>
  * <p>Пример без фигурных скобок</p>
  * <code>
- * once aui::importPlugin("MyPlugin");
+ * do_once aui::importPlugin("MyPlugin");
  * </code>
  */
-#define once static uint8_t _aui_once = 0; if(!_aui_once++)
+#define do_once static uint8_t _aui_once = 0; if(!_aui_once++)
 
 #define ui (*getThread()) * [=]()
 #define uiX (*getThread()) *
