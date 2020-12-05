@@ -476,6 +476,22 @@ public:
 
 	const ADeque<AString>& getCssNames() const;
 	void addCssName(const AString& css);
+
+	/**
+	 * \brief добавить CSS класс к AView. Эта функция служит для упрощения создания элементов с кастомными классами
+	 * \example
+	 * <code>
+	 * ...
+	 * _new<ALabel>("Компоненты) << ".components_title"
+	 * ...
+	 * </code>
+	 * \param cssName класс CSS, который нужно добавить к этому AView
+	 */
+	inline AView& operator<<(const AString& cssName) {
+	    addCssName(cssName);
+	    return *this;
+	}
+
 	void setCss(const AString& cssCode);
 	void ensureCSSUpdated();
 
