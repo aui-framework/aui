@@ -127,6 +127,23 @@
  * </code>
  */
 #define asyncX AThreadPool::global() *
+
+/**
+ * \brief Выполнить следующий блок один раз за один запуск программы.
+ * \example
+ * <p>Пример с фигурными скобками</p>
+ * <code>
+ * once {<br />
+ * &#09;aui::importPlugin("MyPlugin");<br />
+ * }<br />
+ * </code>
+ * <p>Пример без фигурных скобок</p>
+ * <code>
+ * once aui::importPlugin("MyPlugin");
+ * </code>
+ */
+#define once static uint8_t _aui_once = 0; if(!_aui_once++)
+
 #define ui (*getThread()) * [=]()
 #define uiX (*getThread()) *
 #define repeat(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex)
