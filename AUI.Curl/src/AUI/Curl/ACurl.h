@@ -24,7 +24,7 @@ private:
 	bool mDestructorFlag = false;
 
 public:
-    class API_AUI_CORE Builder {
+    class API_AUI_CURL Builder {
     friend class ACurl;
     private:
         CURL* mCURL;
