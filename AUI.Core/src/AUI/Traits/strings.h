@@ -8,21 +8,21 @@
 namespace aui {
 
     template<typename T>
-    AString to_string(const T& t) {
+    inline AString to_string(const T& t) {
         return std::to_wstring(t);
     };
 
     template<>
-    AString to_string(const char* const& t) {
+    inline AString to_string(const char* const& t) {
         return t;
     };
     template<>
-    AString to_string(const AString& t) {
+    inline AString to_string(const AString& t) {
         return t;
     };
 
     template<>
-    AString to_string(const APath& t) {
+    inline AString to_string(const APath& t) {
         return t;
     };
 
@@ -89,7 +89,7 @@ namespace aui {
      * @return отформатированная строка
      */
     template <typename... Args>
-    AString format(const AString& format, Args&&... args) {
+    inline AString format(const AString& format, Args&&... args) {
         AStringVector stringArgs;
         stringArgs.reserve(sizeof...(Args));
         detail::format::to_string_array(stringArgs, std::forward<Args>(args)...);
