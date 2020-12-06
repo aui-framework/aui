@@ -6,7 +6,7 @@ if (OPENSSL_FOUND)
 	AUI_Module(AUI.Crypt)
 	target_link_libraries(AUI.Crypt PRIVATE AUI.Core)
 
-	target_include_directories(AUI.Crypt PUBLIC ${OPENSSL_INCLUDE_DIR})
+	target_include_directories(AUI.Crypt PRIVATE ${OPENSSL_INCLUDE_DIR})
 
 	if(WIN32)
 		target_link_libraries(AUI.Crypt PRIVATE ${OPENSSL_LIBRARIES} crypt32 wsock32 ws2_32)

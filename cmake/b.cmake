@@ -130,7 +130,7 @@ function(AUI_Static_Link AUI_MODULE_NAME LIBRARY_NAME)
     project(${LIBRARY_NAME})
     file(GLOB_RECURSE SRCS "3rdparty/${LIBRARY_NAME}/*.cpp" "3rdparty/${LIBRARY_NAME}/*.c" "3rdparty/${LIBRARY_NAME}/*.h")
     add_library(${LIBRARY_NAME} STATIC ${SRCS})
-    target_link_libraries(${AUI_MODULE_NAME} ${LIBRARY_NAME})
+    target_link_libraries(${AUI_MODULE_NAME} PRIVATE ${LIBRARY_NAME})
 endfunction(AUI_Static_Link)
 
 
