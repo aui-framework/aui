@@ -96,7 +96,7 @@ install(
 install(
 		FILES
 			cmake/b.cmake
-		RENAME aui-build.cmake
+		RENAME AUI.Build.cmake
 		DESTINATION "cmake/")
 install(EXPORT AUI DESTINATION "cmake/")
 
