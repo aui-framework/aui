@@ -138,8 +138,6 @@ function(AUI_Executable AUI_MODULE_NAME)
                          DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
                     )
                 endforeach()
-
-                endforeach()
         ]])
     endif()
     install(
