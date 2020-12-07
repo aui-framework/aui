@@ -143,9 +143,9 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
                 endforeach()
 
                 list(LENGTH RESOLVED RESOLVED_LENGTH)
-                if (RESOLVED EQUALS 0)
+                if (${RESOLVED_LENGTH} EQUAL 0)
                     message(WARNING "Count of dependencies of ${AUI_MODULE_NAME} equals to zero which means that "
-                                    "something gone wrong in dependency copy script in 99% cases.")
+                                    "something gone wrong in dependency copy script.")
                 endif()
         ]])
     endif()
