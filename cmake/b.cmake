@@ -150,16 +150,17 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
                         message("skipping ${V}")
                         list(REMOVE_ITEM UNRESOLVED ${V})
                     else()
-						#set(CMAKE_FIND_DEBUG_MODE TRUE)
+						# clear cache entry
+					    unset(TARGET_FILE CACHE)
 						find_file(
 							TARGET_FILE
-								${V}
+								"${V}"
 							PATH_SUFFIXES
 								"bin/"
 								"lib/"
 						)
 						if (EXISTS ${TARGET_FILE})
-							message(STATUS "Found ${V}")
+							message(STATUS "Found ${V} - ${TARGET_FILE}")
 							list(APPEND RESOLVED ${TARGET_FILE})
 							list(REMOVE_ITEM UNRESOLVED ${V})
 						endif()
@@ -174,7 +175,7 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
                 endif()
                 foreach (V ${RESOLVED})
                     file(INSTALL
-                         FILES "${V}"
+                         FILES ${V}
                          TYPE SHARED_LIBRARY
                          FOLLOW_SYMLINK_CHAIN
                          DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
