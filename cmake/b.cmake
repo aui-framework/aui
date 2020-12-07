@@ -1,6 +1,11 @@
 # CMake AUI building functions
 
-cmake_minimum_required(VERSION 3.10)
+# generator expressions for install(CODE [[ ... ]])
+set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
+
+
+cmake_minimum_required(VERSION 3.14)
+
 
 ADD_DEFINITIONS(-DUNICODE)
 
@@ -85,6 +90,12 @@ function(AUI_Common AUI_MODULE_NAME)
     if (UNIX OR MINGW)
         target_link_libraries(${AUI_MODULE_NAME} PRIVATE -static-libgcc -static-libstdc++)
     endif()
+
+    install(CODE "set(AUI_MODULE_NAME \"${AUI_MODULE_NAME}\")")
+    install(CODE "set(AUI_MODULE_PATH \"$<TARGET_FILE:${AUI_MODULE_NAME}>\")")
+    install(CODE [[
+            message(STATUS "Installing ${AUI_MODULE_NAME}")
+    ]])
 endfunction(AUI_Common)
 
 function(AUI_Executable AUI_MODULE_NAME)
@@ -102,6 +113,35 @@ function(AUI_Executable AUI_MODULE_NAME)
 
     AUI_Common(${AUI_MODULE_NAME})
 
+    if (WIN32)
+        install(CODE [[
+                file(GET_RUNTIME_DEPENDENCIES
+                     EXECUTABLES
+                         ${AUI_MODULE_PATH}
+                     PRE_EXCLUDE_REGEXES "^[Cc]:[\\/\\][Ww]indows[\\/\\].*$"
+                     POST_EXCLUDE_REGEXES "^[Cc]:[\\/\\][Ww]indows[\\/\\].*$"
+                     UNRESOLVED_DEPENDENCIES_VAR UNRESOLVED
+                     RESOLVED_DEPENDENCIES_VAR RESOLVED
+                )
+                list(LENGTH UNRESOLVED UNRESOLVED_LENGTH)
+                if (UNRESOLVED_LENGTH GREATER 0)
+                    message("There are some unresolved libraries:")
+                    foreach (V ${UNRESOLVED})
+                        message("UNRESOLVED ${V}")
+                    endforeach()
+                endif()
+                foreach (V ${RESOLVED})
+                    file(INSTALL
+                         FILES "${V}"
+                         TYPE SHARED_LIBRARY
+                         FOLLOW_SYMLINK_CHAIN
+                         DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+                    )
+                endif()
+
+                endforeach()
+        ]])
+    endif()
     install(
             TARGETS ${AUI_MODULE_NAME}
             DESTINATION "bin"
