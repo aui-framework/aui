@@ -98,13 +98,16 @@ function(AUI_Common AUI_MODULE_NAME)
     ]])
 endfunction(AUI_Common)
 
-function(AUI_Executable AUI_MODULE_NAME)
+
+function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
+    project(${AUI_MODULE_NAME})
+
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
     #message("ASSDIR ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp")
     if(ANDROID)
         add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
     else()
-        add_executable(${AUI_MODULE_NAME} ${SRCS})
+        add_executable(${AUI_MODULE_NAME} ${ADDITIONAL_SRCS} ${SRCS})
     endif()
 
     target_include_directories(${AUI_MODULE_NAME} PRIVATE src)
@@ -140,30 +143,16 @@ function(AUI_Executable AUI_MODULE_NAME)
                 endforeach()
         ]])
     endif()
+
     install(
             TARGETS ${AUI_MODULE_NAME}
             DESTINATION "bin"
     )
-
-endfunction(AUI_Executable)
-
-function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
-    project(${AUI_MODULE_NAME})
-
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
-    #message("ASSDIR ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp")
-    if(ANDROID)
-        add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
-    else()
-        add_executable(${AUI_MODULE_NAME} ${ADDITIONAL_SRCS} ${SRCS})
-    endif()
-
-    target_include_directories(${AUI_MODULE_NAME} PRIVATE src)
-
-    AUI_Add_Properties(${AUI_MODULE_NAME})
-
-    AUI_Common(${AUI_MODULE_NAME})
 endfunction(AUI_Executable_Advanced)
+
+function(AUI_Executable AUI_MODULE_NAME)
+    AUI_Executable_Advanced(${AUI_MODULE_NAME} "")
+endfunction(AUI_Executable)
 
 function(AUI_Static_Link AUI_MODULE_NAME LIBRARY_NAME)
     target_include_directories(${AUI_MODULE_NAME} PRIVATE "3rdparty/${LIBRARY_NAME}")
