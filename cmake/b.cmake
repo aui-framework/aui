@@ -68,6 +68,8 @@ function(AUI_Tests TESTS_MODULE_NAME)
 endfunction(AUI_Tests)
 
 function(AUI_Common AUI_MODULE_NAME)
+    string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
+    set_target_properties(${AUI_MODULE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
     set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 17)
     file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
     if (SRCS_TESTS_TMP)
@@ -93,6 +95,9 @@ function(AUI_Common AUI_MODULE_NAME)
 
     install(CODE "set(AUI_MODULE_NAME \"${AUI_MODULE_NAME}\")")
     install(CODE "set(AUI_MODULE_PATH \"$<TARGET_FILE:${AUI_MODULE_NAME}>\")")
+    install(CODE "set(CMAKE_INSTALL_PATH \"${CMAKE_INSTALL_PATH}\")")
+    install(CODE "set(CMAKE_PREFIX_PATH \"${CMAKE_PREFIX_PATH}\")")
+    install(CODE "set(CMAKE_C_COMPILER \"${CMAKE_C_COMPILER}\")")
     install(CODE [[
             message(STATUS "Installing ${AUI_MODULE_NAME}")
     ]])
@@ -139,6 +144,27 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
                      UNRESOLVED_DEPENDENCIES_VAR UNRESOLVED
                      RESOLVED_DEPENDENCIES_VAR RESOLVED
                 )
+                # try to resolve unresolved dependencies
+                foreach (V ${UNRESOLVED})
+                    if (V MATCHES "^(kernel32|msvcrt)\\.dll")
+                        message("skipping ${V}")
+                        list(REMOVE_ITEM UNRESOLVED ${V})
+                    else()
+						#set(CMAKE_FIND_DEBUG_MODE TRUE)
+						find_file(
+							TARGET_FILE
+								${V}
+							PATH_SUFFIXES
+								"bin/"
+								"lib/"
+						)
+						if (EXISTS ${TARGET_FILE})
+							message(STATUS "Found ${V}")
+							list(APPEND RESOLVED ${TARGET_FILE})
+							list(REMOVE_ITEM UNRESOLVED ${V})
+						endif()
+                    endif()
+                endforeach()
                 list(LENGTH UNRESOLVED UNRESOLVED_LENGTH)
                 if (UNRESOLVED_LENGTH GREATER 0)
                     message("There are some unresolved libraries:")
@@ -216,5 +242,9 @@ function(AUI_Compile_Assets AUI_MODULE_NAME)
     endif()
 endfunction(AUI_Compile_Assets)
 if (MINGW)
+    # get rid of libgcc_s<whatever>.dll
     set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libgcc -static-libstdc++ -lwsock32 -lws2_32 ${CMAKE_CXX_STANDARD_LIBRARIES}")
+
+    # get rid of libwinpthread<whatever>.dll
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
 endif()
