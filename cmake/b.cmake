@@ -137,7 +137,7 @@ function(AUI_Executable AUI_MODULE_NAME)
                          FOLLOW_SYMLINK_CHAIN
                          DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
                     )
-                endif()
+                endforeach()
 
                 endforeach()
         ]])
