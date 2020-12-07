@@ -4,7 +4,7 @@
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 
 
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16)
 
 
 ADD_DEFINITIONS(-DUNICODE)
@@ -117,6 +117,19 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
     AUI_Common(${AUI_MODULE_NAME})
 
     if (WIN32)
+        if (MINGW AND CMAKE_CROSSCOMPILING)
+            # workaround for crosscompiling on linux/mingw for windows
+            # thanks to this thread https://gitlab.kitware.com/cmake/cmake/-/issues/20753
+            install(CODE [[
+                set(CMAKE_GET_RUNTIME_DEPENDENCIES_PLATFORM "windows+pe")
+                set(CMAKE_GET_RUNTIME_DEPENDENCIES_TOOL "objdump")
+                set(CMAKE_GET_RUNTIME_DEPENDENCIES_COMMAND "./objdump_unix2dos.sh")
+
+                file(WRITE "objdump_unix2dos.sh" "${CMAKE_OBJDUMP} $@ | unix2dos")
+                file(CHMOD "objdump_unix2dos.sh" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+            ]])
+        endif()
+
         install(CODE [[
                 file(GET_RUNTIME_DEPENDENCIES
                      EXECUTABLES
