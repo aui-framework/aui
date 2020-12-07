@@ -16,7 +16,7 @@ void AViewContainer::drawView(const _<AView>& view)
 		RenderHints::PushState s;
 		glm::mat4 t(1.f);
 		view->getTransform(t);
-		Render::instance().setTransform(t);
+        Render::inst().setTransform(t);
 
 		try {
 			view->render();
@@ -58,7 +58,7 @@ AViewContainer::AViewContainer()
 
 AViewContainer::~AViewContainer()
 {
-	//Stylesheet::instance().invalidateCache();
+	//Stylesheet::inst().invalidateCache();
 }
 
 void AViewContainer::addView(_<AView> view)

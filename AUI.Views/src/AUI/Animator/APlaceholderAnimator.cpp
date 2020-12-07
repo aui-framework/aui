@@ -21,17 +21,17 @@ void APlaceholderAnimator::doPostRender(AView* view, float theta) {
     width = glm::max(width, 80.f);
     setDuration(width / float(200_dp));
 
-    Render::instance().setFill(Render::FILL_GRADIENT);
+    Render::inst().setFill(Render::FILL_GRADIENT);
     auto BRIGHT_COLOR = 0x40ffffff_argb;
-    Render::instance().setGradientColors(0x00ffffff_argb, BRIGHT_COLOR,
-                                         0x00ffffff_argb, BRIGHT_COLOR);
+    Render::inst().setGradientColors(0x00ffffff_argb, BRIGHT_COLOR,
+                                     0x00ffffff_argb, BRIGHT_COLOR);
 
     const float WIDTH = 200;
     float posX = theta * (view->getWidth() + WIDTH * 2.f) - WIDTH;
 
-    Render::instance().drawRect(posX, 0, WIDTH / 2, view->getHeight());
+    Render::inst().drawRect(posX, 0, WIDTH / 2, view->getHeight());
 
-    Render::instance().setGradientColors(BRIGHT_COLOR, 0x00ffffff_argb,
-                                         BRIGHT_COLOR, 0x00ffffff_argb);
-    Render::instance().drawRect(posX + WIDTH / 2, 0, WIDTH / 2, view->getHeight());
+    Render::inst().setGradientColors(BRIGHT_COLOR, 0x00ffffff_argb,
+                                     BRIGHT_COLOR, 0x00ffffff_argb);
+    Render::inst().drawRect(posX + WIDTH / 2, 0, WIDTH / 2, view->getHeight());
 }

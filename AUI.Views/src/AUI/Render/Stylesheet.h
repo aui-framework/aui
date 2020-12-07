@@ -5,14 +5,13 @@
 #include "AUI/Common/AStringVector.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/IO/IInputStream.h"
-#include "AUI/Util/Singleton.h"
 #include "AUI/Views.h"
 
 class AView;
 class AViewContainer;
 class AString;
 
-class API_AUI_VIEWS Stylesheet: public Singleton<Stylesheet>
+class API_AUI_VIEWS Stylesheet
 {
 public:
     enum PreferredStyle {
@@ -162,6 +161,8 @@ private:
 
 public:
 	Stylesheet();
+
+	static Stylesheet& inst();
 
 	static void setPreferredStyle(PreferredStyle style);
 

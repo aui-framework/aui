@@ -7,7 +7,6 @@
 #include "FontStyle.h"
 #include "AUI/Common/AColor.h"
 #include "AUI/Common/ASide.h"
-#include "AUI/Util/Singleton.h"
 
 
 class AColor;
@@ -22,7 +21,7 @@ ENUM_FLAG(Repeat) {
     REPEAT_Y = 0b10,
 };
 
-class API_AUI_VIEWS Render: public Singleton<Render>
+class API_AUI_VIEWS Render
 {
 public:
 	enum Filling
@@ -83,6 +82,8 @@ private:
 	
 public:	
 	Render();
+
+	static Render& inst();
 
 	void drawRect(float x, float y, float width, float height);
 	void drawTexturedRect(float x, float y, float width, float height,

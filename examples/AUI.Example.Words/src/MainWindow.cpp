@@ -32,7 +32,7 @@ MainWindow::MainWindow() : AWindow("Words", 300_dp, 400_dp) {
                         _new<ASpacer>(),
                         _new<ALabel>(u8"\uf1ce") let (ALabel, {
                            addCssName(".icon");
-                           setFont(AFontManager::instance().get(":words/fas.otf"));
+                           setFont(AFontManager::inst().get(":words/fas.otf"));
                            setFontSize(50_dp);
                            setExpanding(glm::ivec2(0));
                            setAnimator(_new<ARotationAnimator>() let (ARotationAnimator, {

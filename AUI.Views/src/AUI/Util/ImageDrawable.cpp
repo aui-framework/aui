@@ -16,8 +16,8 @@ ImageDrawable::~ImageDrawable() {
 
 void ImageDrawable::draw(const glm::ivec2& size) {
     mTexture.bind();
-    Render::instance().setFill(Render::FILL_TEXTURED);
-    Render::instance().drawTexturedRect(0, 0, size.x, size.y);
+    Render::inst().setFill(Render::FILL_TEXTURED);
+    Render::inst().drawTexturedRect(0, 0, size.x, size.y);
 }
 
 glm::ivec2 ImageDrawable::getSizeHint() {

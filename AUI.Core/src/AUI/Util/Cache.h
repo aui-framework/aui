@@ -3,10 +3,9 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/Common/SharedPtr.h"
-#include "Singleton.h"
 
 template<typename T, typename Container>
-class Cache: protected Singleton<Container>
+class Cache
 {
 private:
 	AMap<AString, _<T>> mContainer;
@@ -16,21 +15,21 @@ public:
 	
 	static _<T> get(const AString& key)
 	{
-		if (auto i = Singleton<Container>::instance().mContainer.contains(key))
+		if (auto i = Container::inst().mContainer.contains(key))
 		{
 			return i->second;
 		}
-		auto value = Singleton<Container>::instance().load(key);
+		auto value = Container::inst().load(key);
 		put(key, value);
 		return value;
 	}
 	
 	static void put(const AString& key, _<T> value)
 	{
-		Singleton<Container>::instance().mContainer[key] = value;
+        Container::inst().mContainer[key] = value;
 	}
 
     static void cleanup() {
-        Singleton<Container>::instance(). mContainer.clear();
+        Container::inst(). mContainer.clear();
     }
 };

@@ -470,7 +470,7 @@ void Render::drawString(int x, int y, PrerendereredString& f) {
 
 
 Render::PrerendereredString Render::preRendererString(const AString& text, FontStyle& fs) {
-	static _<AFont> d = AFontManager::instance().getDefault();
+	static _<AFont> d = AFontManager::inst().getDefault();
 	if (!fs.font)
 		fs.font = d;
 	float advance = 0;
@@ -581,10 +581,15 @@ void Render::setGradientColors(const AColor& tl, const AColor& tr,
 }
 
 void Render::applyTextureRepeat() {
-    if (Render::instance().getRepeat() == REPEAT_NONE) {
+    if (Render::inst().getRepeat() == REPEAT_NONE) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     }
+}
+
+Render& Render::inst() {
+    static Render r;
+    return r;
 }
 
 

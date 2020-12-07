@@ -1,25 +1,28 @@
 #include "Drawables.h"
-
-#include "AImageLoaderRegistry.h"
-#include "AUI/Common/AByteBuffer.h"
-#include "AUI/Url/AUrl.h"
+#include <AUI/Image/AImageLoaderRegistry.h>
+#include <AUI/Util/ImageDrawable.h>
 
 _<IDrawable> Drawables::load(const AString& key)
 {
     try {
         auto buffer = AByteBuffer::fromStream(AUrl(key).open(), 0x100000);
-        auto d = AImageLoaderRegistry::instance()
+        auto d = AImageLoaderRegistry::inst()
                 .loadDrawable(buffer);
         if (d)
             return d;
-        if (mImageToDrawable)
-            if (auto raster = AImageLoaderRegistry::instance().loadImage(buffer))
-                return mImageToDrawable(raster);
+
+        if (auto raster = AImageLoaderRegistry::inst().loadImage(buffer))
+            return _new<ImageDrawable>(raster);
     } catch (const AException& e) {
         ALogger::err("Could not load image: " + key + ": " + e.getMessage());
     }
     return nullptr;
 }
 
-Drawables::~Drawables()
-= default;
+Drawables& Drawables::inst() {
+    static Drawables s;
+    return s;
+}
+
+
+Drawables::~Drawables() = default;

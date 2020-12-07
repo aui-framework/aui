@@ -239,7 +239,7 @@ void AAbstractTextField::render()
 	    auto absoluteCursorPos = ACursorSelectable::drawSelectionPre();
 
 	    // текст
-        Render::instance().drawString(mPadding.left - mHorizontalScroll, mPadding.top, getContentsPasswordWrap(), getFontStyle());
+        Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, getContentsPasswordWrap(), getFontStyle());
 
         ACursorSelectable::drawSelectionPost();
 
@@ -253,14 +253,14 @@ void AAbstractTextField::render()
                 redraw();
             }
 
-            Render::instance().drawRect(mPadding.left + absoluteCursorPos,
-                                        mPadding.top, glm::ceil(1_dp), getFontStyle().size + 3);
+            Render::inst().drawRect(mPadding.left + absoluteCursorPos,
+                                    mPadding.top, glm::ceil(1_dp), getFontStyle().size + 3);
         }
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     } else {
-	    Render::instance().drawString(mPadding.left - mHorizontalScroll, mPadding.top, getContentsPasswordWrap(), getFontStyle());
-        Render::instance().setFill(Render::FILL_SOLID);
-        Render::instance().setColor({ 1, 1, 1, 1 });
+        Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, getContentsPasswordWrap(), getFontStyle());
+        Render::inst().setFill(Render::FILL_SOLID);
+        Render::inst().setColor({1, 1, 1, 1 });
 	}
 
 }

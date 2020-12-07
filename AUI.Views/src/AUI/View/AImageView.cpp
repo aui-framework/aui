@@ -23,8 +23,8 @@ void AImageView::render() {
     AView::render();
     if (mTexture) {
         mTexture->bind();
-        Render::instance().setFill(Render::FILL_TEXTURED);
-        Render::instance().drawTexturedRect(0, 0, getContentWidth(), getContentHeight());
+        Render::inst().setFill(Render::FILL_TEXTURED);
+        Render::inst().drawTexturedRect(0, 0, getContentWidth(), getContentHeight());
     }
 }
 

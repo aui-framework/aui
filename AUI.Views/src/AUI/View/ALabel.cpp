@@ -144,7 +144,7 @@ void ALabel::doPrerender() {
     auto t = getTargetText();
     if (t.empty())
         return;
-    mPrerendered = Render::instance().preRendererString(t, fs);
+    mPrerendered = Render::inst().preRendererString(t, fs);
 }
 
 void ALabel::doRenderText() {
@@ -167,8 +167,8 @@ void ALabel::doRenderText() {
                 {
                     auto requiredSpace = mIcon->getSizeHint();
                     RenderHints::PushState s;
-                    Render::instance().setTransform(glm::translate(glm::mat4(1.f),
-                                                                   glm::vec3(leftPadding, (getContentHeight() - requiredSpace.y) / 2, 0)));
+                    Render::inst().setTransform(glm::translate(glm::mat4(1.f),
+                                                               glm::vec3(leftPadding, (getContentHeight() - requiredSpace.y) / 2, 0)));
                     mIcon->draw(requiredSpace);
                     leftPadding += requiredSpace.x + 1;
                 }
@@ -180,8 +180,8 @@ void ALabel::doRenderText() {
                 {
                     auto requiredSpace = mIcon->getSizeHint();
                     RenderHints::PushState s;
-                    Render::instance().setTransform(glm::translate(glm::mat4(1.f),
-                                                                   glm::vec3(leftPadding - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
+                    Render::inst().setTransform(glm::translate(glm::mat4(1.f),
+                                                               glm::vec3(leftPadding - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
                                                                              (getContentHeight() - requiredSpace.y) / 2, 0)));
                     mIcon->draw(requiredSpace);
                 }
@@ -194,8 +194,8 @@ void ALabel::doRenderText() {
                 {
                     auto requiredSpace = mIcon->getSizeHint();
                     RenderHints::PushState s;
-                    Render::instance().setTransform(glm::translate(glm::mat4(1.f),
-                                                                   glm::vec3(leftPadding - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
+                    Render::inst().setTransform(glm::translate(glm::mat4(1.f),
+                                                               glm::vec3(leftPadding - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
                                                                              (getContentHeight() - requiredSpace.y) / 2, 0)));
                     mIcon->draw(requiredSpace);
                 }
@@ -211,7 +211,7 @@ void ALabel::doRenderText() {
                     y = (glm::max)(y, (getHeight() - getFontStyleLabel().size) / 2 - 1);
                 }
             }
-            Render::instance().drawString(leftPadding, y, mPrerendered);
+            Render::inst().drawString(leftPadding, y, mPrerendered);
         }
     }
 }

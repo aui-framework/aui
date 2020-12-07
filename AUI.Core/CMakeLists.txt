@@ -4,11 +4,10 @@ AUI_Module(AUI.Core)
 
 find_package(ZLIB REQUIRED)
 
-get_filename_component(GLM_INCLUDE_DIR 3rdparty/glm REALPATH BASE_DIR ${CMAKE_SOURCE_DIR}/AUI.Core)
+get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+set(GLM_INCLUDE_DIR "${SELF_DIR}/3rdparty/glm")
 target_include_directories(AUI.Core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>)
 target_link_libraries(AUI.Core PRIVATE ZLIB::ZLIB)
-
-
 
 install(
 		DIRECTORY ${GLM_INCLUDE_DIR}/glm

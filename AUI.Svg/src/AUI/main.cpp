@@ -34,5 +34,5 @@ BOOL WINAPI DllMain(
 #include "AUI/Image/AImageLoaderRegistry.h"
 #include "Image/SvgImageLoader.h"
 AUI_PLUGIN_ENTRY {
-	AImageLoaderRegistry::instance().registerImageLoader(_new<SvgImageLoader>());
+	AImageLoaderRegistry::inst().registerImageLoader(_new<SvgImageLoader>());
 }

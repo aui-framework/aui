@@ -11,7 +11,7 @@ ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable)
 
 void ADrawableView::render() {
     AView::render();
-    Render::instance().setColor(mColorOverlay);
+    Render::inst().setColor(mColorOverlay);
     if (mDrawable)
         mDrawable->draw(getSize());
 }

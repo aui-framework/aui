@@ -1,6 +1,5 @@
 ﻿#pragma once
 
-#include "Singleton.h"
 #include "AUI/Core.h"
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/Common/AMap.h"
@@ -9,11 +8,14 @@
 
 class AString;
 
-class API_AUI_CORE BuiltinFiles: Singleton<BuiltinFiles>
+class API_AUI_CORE BuiltinFiles
 {
 private:
 	AMap<AString, _<AByteBuffer>> mBuffers;
-	
+
+	static BuiltinFiles& inst();
+	BuiltinFiles() = default;
+
 public:
 	static void loadBuffer(AByteBuffer& data);
 	static void load(const unsigned char* data, size_t size);

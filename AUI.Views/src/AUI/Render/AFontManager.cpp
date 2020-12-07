@@ -30,3 +30,8 @@ _<AFont> AFontManager::getDefault() {
 	return get("ubuntu/Ubuntu-R.ttf");
 #endif
 }
+
+AFontManager& AFontManager::inst() {
+    static AFontManager f;
+    return f;
+}

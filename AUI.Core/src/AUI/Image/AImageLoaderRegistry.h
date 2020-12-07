@@ -5,9 +5,8 @@
 #include "IImageLoader.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/SharedPtr.h"
-#include "AUI/Util/Singleton.h"
 
-class API_AUI_CORE AImageLoaderRegistry: public Singleton<AImageLoaderRegistry>
+class API_AUI_CORE AImageLoaderRegistry
 {
 private:
 	ADeque<_<IImageLoader>> mImageLoaders;
@@ -27,5 +26,5 @@ public:
 	}
 	_<AImage> loadImage(const AUrl& url);
 
-	static AImageLoaderRegistry& instance();
+	static AImageLoaderRegistry& inst();
 };

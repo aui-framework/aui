@@ -62,10 +62,10 @@ namespace RenderHints
 		
 	public:
         inline PushMatrix() {
-            mStored = Render::instance().getTransform();
+            mStored = Render::inst().getTransform();
 		}
 		inline ~PushMatrix() {
-            Render::instance().setTransformForced(mStored);
+            Render::inst().setTransformForced(mStored);
 		}
 	};
 	class PushColor
@@ -75,10 +75,10 @@ namespace RenderHints
 		
 	public:
         inline PushColor() {
-            mStored = Render::instance().getColor();
+            mStored = Render::inst().getColor();
 		}
 		inline ~PushColor() {
-            Render::instance().setColorForced(mStored);
+            Render::inst().setColorForced(mStored);
 		}
 	};
 	class PushState: PushColor, PushMatrix

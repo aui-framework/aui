@@ -665,7 +665,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
     //assert(glGetError() == 0);
 
     updateDpi();
-    Render::instance().setWindow(this);
+    Render::inst().setWindow(this);
 
     {
         // проверим, а дали ли нам вообще биты трафарета
@@ -736,7 +736,7 @@ void AWindow::redraw() {
         GL::State::bindVertexArray(0);
         GL::State::useProgram(0);
 
-        Render::instance().setWindow(this);
+        Render::inst().setWindow(this);
         glViewport(0, 0, getWidth(), getHeight());
 
         glDisable(GL_DEPTH_TEST);
@@ -769,8 +769,8 @@ void AWindow::redraw() {
                 v = shared_from_this();
             apply(v, {
                 RenderHints::PushMatrix m;
-                Render::instance().setTransform(glm::translate(glm::mat4(1.f), glm::vec3{getPositionInWindow(), 0.f}));
-                Render::instance().setFill(Render::FILL_SOLID);
+                Render::inst().setTransform(glm::translate(glm::mat4(1.f), glm::vec3{getPositionInWindow(), 0.f}));
+                Render::inst().setFill(Render::FILL_SOLID);
                 glEnable(GL_STENCIL_TEST);
                 glStencilMask(0xff);
                 glStencilOp(GL_INCR, GL_INCR, GL_INCR);
@@ -779,23 +779,23 @@ void AWindow::redraw() {
                 // content
                 {
                     RenderHints::PushColor c;
-                    Render::instance().setColor(0x7cb6c180u);
-                    Render::instance().drawRect(getPadding().left, getPadding().top,
+                    Render::inst().setColor(0x7cb6c180u);
+                    Render::inst().drawRect(getPadding().left, getPadding().top,
                                                 getWidth() - getPadding().horizontal(), getHeight() - getPadding().vertical());
                 }
 
                 // padding
                 {
                     RenderHints::PushColor c;
-                    Render::instance().setColor(0xbccf9180u);
-                    Render::instance().drawRect(0, 0,getWidth(), getHeight());
+                    Render::inst().setColor(0xbccf9180u);
+                    Render::inst().drawRect(0, 0, getWidth(), getHeight());
                 }
 
                 // margin
                 {
                     RenderHints::PushColor c;
-                    Render::instance().setColor(0xffcca4a0u);
-                    Render::instance().drawRect(-getMargin().left, -getMargin().top,
+                    Render::inst().setColor(0xffcca4a0u);
+                    Render::inst().drawRect(-getMargin().left, -getMargin().top,
                                                 getWidth() + getMargin().horizontal(),
                                                 getHeight() + getMargin().vertical());
                 }
@@ -810,15 +810,15 @@ void AWindow::redraw() {
                     fs.color = 0xffffffffu;
                     fs.fontRendering = FR_ANTIALIASING;
                     fs.size = 9_pt;
-                    auto s = Render::instance().preRendererString(getCssNames().back() + "\n"_as +
-                                                                  AString::number(getSize().x) + "x"_as + AString::number(getSize().y), fs);
+                    auto s = Render::inst().preRendererString(getCssNames().back() + "\n"_as +
+                                                              AString::number(getSize().x) + "x"_as + AString::number(getSize().y), fs);
 
                     {
                         RenderHints::PushColor c;
-                        Render::instance().setColor(0x00000070u);
-                        Render::instance().drawRect(x, y, s.length + 4_dp, fs.size * 2.5 + 2_dp);
+                        Render::inst().setColor(0x00000070u);
+                        Render::inst().drawRect(x, y, s.length + 4_dp, fs.size * 2.5 + 2_dp);
                     }
-                    Render::instance().drawString(x + 2_dp, y + 1_dp, s);
+                    Render::inst().drawString(x + 2_dp, y + 1_dp, s);
                 }
             });
         }

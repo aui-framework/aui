@@ -35,5 +35,5 @@ BOOL WINAPI DllMain(
 #include "AUI/Image/PngImageLoader.h"
 
 AUI_PLUGIN_ENTRY {
-	AImageLoaderRegistry::instance().registerImageLoader(_new<PngImageLoader>());
+	AImageLoaderRegistry::inst().registerImageLoader(_new<PngImageLoader>());
 }

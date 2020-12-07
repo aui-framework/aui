@@ -50,6 +50,12 @@ void AI18n::loadFromStreamInto(const _<IInputStream>& iis, AMap<AString, AString
 
     }
 }
+
+AI18n& AI18n::inst() {
+    static AI18n a;
+    return a;
+}
+
 void AI18n::loadFromLang(const ALanguageCode& languageCode) {
     loadFromStream(AUrl(":lang/{}.lang"_as.format(languageCode.toString())).open());
 }

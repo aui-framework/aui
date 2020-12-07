@@ -86,9 +86,9 @@ int ACursorSelectable::drawSelectionPre() {
         mAbsoluteBegin = glm::min(absoluteCursorPos, absoluteSelectionPos);
         mAbsoluteEnd = glm::max(absoluteCursorPos, absoluteSelectionPos);
 
-        Render::instance().setFill(Render::FILL_SOLID);
+        Render::inst().setFill(Render::FILL_SOLID);
         RenderHints::PushColor c;
-        Render::instance().setColor(AColor(1.f) - AColor(0x0078d700u));
+        Render::inst().setColor(AColor(1.f) - AColor(0x0078d700u));
         
         auto padding = getMouseSelectionPadding();
         drawSelectionRects();
@@ -102,8 +102,8 @@ int ACursorSelectable::getPosByIndex(int end, int begin) {
 }
 
 void ACursorSelectable::drawSelectionPost() {
-    Render::instance().setFill(Render::FILL_SOLID);
-    Render::instance().setColor({ 1, 1, 1, 1 });
+    Render::inst().setFill(Render::FILL_SOLID);
+    Render::inst().setColor({1, 1, 1, 1 });
 
     glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
     if (hasSelection())
@@ -127,7 +127,7 @@ void ACursorSelectable::drawSelectionRects() {
 
     auto draw = [&]() {
         auto fs = getMouseSelectionFont();
-        Render::instance().drawRect(p.x + absoluteBeginPos,
+        Render::inst().drawRect(p.x + absoluteBeginPos,
                                     p.y + row * fs.getLineHeight(),
                                     absoluteEndPos - absoluteBeginPos + 1,
                                     getMouseSelectionFont().size + 2);

@@ -10,7 +10,7 @@ int main()
 		BuiltinFiles f;
 		ByteBuffer b(AUI_PACKED_asset, sizeof(AUI_PACKED_asset));
 		f.loadBuffer(b);
-		Stylesheet::instance().load(f.open("assets/views/style.css"));
+		Stylesheet::inst().load(f.open("assets/views/style.css"));
 	}*/
 	ExampleWindow w;
 	w.loop();

@@ -5,7 +5,7 @@
 size_t FontStyle::getWidth(const AString& text) const
 {
 	if (!font)
-		font = AFontManager::instance().getDefault();
+		font = AFontManager::inst().getDefault();
 
 	return font->length(text, size, fontRendering);
 }

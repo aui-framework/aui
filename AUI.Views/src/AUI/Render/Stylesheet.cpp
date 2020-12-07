@@ -451,6 +451,11 @@ void Stylesheet::Cache::load(Stylesheet& ss, const _<IInputStream>& css, bool sk
 void Stylesheet::setPreferredStyle(Stylesheet::PreferredStyle style) {
     ourPrefferedStyle = style;
 }
+
+Stylesheet& Stylesheet::inst() {
+    static Stylesheet s;
+    return s;
+}
 /*
 void Stylesheet::invalidateCache()
 {

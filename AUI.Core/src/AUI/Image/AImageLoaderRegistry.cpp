@@ -60,6 +60,7 @@ _<AImage> AImageLoaderRegistry::loadImage(const AUrl& url) {
     return nullptr;
 }
 
-AImageLoaderRegistry& AImageLoaderRegistry::instance() {
-    return Singleton<AImageLoaderRegistry>::instance();
+AImageLoaderRegistry& AImageLoaderRegistry::inst() {
+    static AImageLoaderRegistry a;
+    return a;
 }
