@@ -61,6 +61,8 @@ AUI_ENTRY
 		    std::cerr << std::endl << e.getMessage() << std::endl;
 		    command->printHelp();
 		    return -1;
+        } catch (...) {
+		    return -1;
         }
 	}
 

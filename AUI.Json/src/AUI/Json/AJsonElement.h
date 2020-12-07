@@ -23,7 +23,7 @@ namespace AJson
 
 class API_AUI_JSON AJsonElement {
 
-    friend void AJson::write(_<IOutputStream> os, const AJsonElement& json);
+    API_AUI_JSON friend void AJson::write(_<IOutputStream> os, const AJsonElement& json);
 
 protected:
     void serialize(_<IOutputStream> param) const;

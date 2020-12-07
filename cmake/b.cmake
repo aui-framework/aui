@@ -78,6 +78,8 @@ function(AUI_Common AUI_MODULE_NAME)
         target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_DEBUG)
     else()
         target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_RELEASE)
+        # Strip binary for release builds
+        #add_custom_command(TARGET ${AUI_MODULE_NAME} POST_BUILD COMMAND ${CMAKE_STRIP} ${PROJECT_NAME})
     endif()
 
     if (UNIX OR MINGW)
