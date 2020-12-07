@@ -2,7 +2,6 @@
 // Created by alex2 on 27.08.2020.
 //
 
-#include <AUI/Util/Singleton.h>
 #include "ATranslationAnimator.h"
 #include <AUI/Render/Render.h>
 

@@ -2,7 +2,6 @@
 // Created by alex2 on 18.09.2020.
 //
 
-#include <AUI/Util/Singleton.h>
 #include "AFocusAnimator.h"
 #include <AUI/Render/Render.h>
 #include <AUI/View/AView.h>
