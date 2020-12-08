@@ -163,7 +163,7 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
                      RESOLVED_DEPENDENCIES_VAR RESOLVED
                 )
 
-                if ("${MODULE_NAME}" STREQUAL "${AUI_MODULE_NAME}")
+                if ("${MODULE_NAME}" STREQUAL "${AUI_MODULE_PATH}")
                     # put additional dependencies
                     foreach (V ${ADDITIONAL_DEPENDENCIES})
                         list(APPEND UNRESOLVED ${V})
