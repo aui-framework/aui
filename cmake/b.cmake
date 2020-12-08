@@ -126,6 +126,13 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
 
     AUI_Common(${AUI_MODULE_NAME})
 
+    # strip
+    if (CMAKE_BUILD_TYPE EQUAL "Release")
+        install(CODE [[
+            set(CMAKE_INSTALL_DO_STRIP TRUE)
+        ]])
+    endif()
+
     if (WIN32)
         if (MINGW AND CMAKE_CROSSCOMPILING)
             # workaround for crosscompiling on linux/mingw for windows
@@ -136,7 +143,10 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
                 set(CMAKE_GET_RUNTIME_DEPENDENCIES_COMMAND "./objdump_unix2dos.sh")
 
                 file(WRITE "objdump_unix2dos.sh" "${CMAKE_OBJDUMP} $@ | unix2dos")
-                file(CHMOD "objdump_unix2dos.sh" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+                if (MINGW)
+                    cmake_minimum_required(VERSION 3.19)
+                    file(CHMOD "objdump_unix2dos.sh" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
+                endif()
             ]])
         endif()
         install(CODE [[
