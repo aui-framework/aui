@@ -104,6 +104,11 @@ function(AUI_Common AUI_MODULE_NAME)
 endfunction(AUI_Common)
 
 
+function(AUI_Deploy_Library AUI_MODULE_NAME)
+    string(TOLOWER ${AUI_MODULE_NAME} AUI_MODULE_NAME_LOWERED)
+    install(CODE "list(APPEND ADDITIONAL_DEPENDENCIES ${CMAKE_SHARED_LIBRARY_PREFIX}${AUI_MODULE_NAME_LOWERED}${CMAKE_SHARED_LIBRARY_SUFFIX})")
+endfunction(AUI_Deploy_Library)
+
 function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
     project(${AUI_MODULE_NAME})
 
@@ -134,59 +139,97 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
                 file(CHMOD "objdump_unix2dos.sh" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE)
             ]])
         endif()
-
         install(CODE [[
+            set_property(GLOBAL PROPERTY AUI_RESOLVED "")
+			set_property(GLOBAL PROPERTY AUI_UNRESOLVED "")
+
+            message(STATUS "Installing dependencies for ${AUI_MODULE_NAME}")
+
+            function(install_dependencies_for MODULE_NAME)
                 file(GET_RUNTIME_DEPENDENCIES
                      EXECUTABLES
-                         ${AUI_MODULE_PATH}
+                         ${MODULE_NAME}
                      PRE_EXCLUDE_REGEXES "^[Cc]:[\\/\\][Ww]indows[\\/\\].*$"
                      POST_EXCLUDE_REGEXES "^[Cc]:[\\/\\][Ww]indows[\\/\\].*$"
                      UNRESOLVED_DEPENDENCIES_VAR UNRESOLVED
                      RESOLVED_DEPENDENCIES_VAR RESOLVED
                 )
-                # try to resolve unresolved dependencies
-                foreach (V ${UNRESOLVED})
-                    if (V MATCHES "^(kernel32|msvcrt)\\.dll")
-                        message("skipping ${V}")
-                        list(REMOVE_ITEM UNRESOLVED ${V})
-                    else()
-						# clear cache entry
-					    unset(TARGET_FILE CACHE)
-						find_file(
-							TARGET_FILE
-								"${V}"
-							PATH_SUFFIXES
-								"bin/"
-								"lib/"
-						)
-						if (EXISTS ${TARGET_FILE})
-							message(STATUS "Found ${V} - ${TARGET_FILE}")
-							list(APPEND RESOLVED ${TARGET_FILE})
-							list(REMOVE_ITEM UNRESOLVED ${V})
-						endif()
-                    endif()
-                endforeach()
-                list(LENGTH UNRESOLVED UNRESOLVED_LENGTH)
-                if (UNRESOLVED_LENGTH GREATER 0)
-                    message("There are some unresolved libraries:")
-                    foreach (V ${UNRESOLVED})
-                        message("UNRESOLVED ${V}")
+
+                if ("${MODULE_NAME}" STREQUAL "${AUI_MODULE_NAME}")
+                    # put additional dependencies
+                    foreach (V ${ADDITIONAL_DEPENDENCIES})
+                        list(APPEND UNRESOLVED ${V})
                     endforeach()
                 endif()
-                foreach (V ${RESOLVED})
-                    file(INSTALL
-                         FILES ${V}
-                         TYPE SHARED_LIBRARY
-                         FOLLOW_SYMLINK_CHAIN
-                         DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
-                    )
-                endforeach()
 
-                list(LENGTH RESOLVED RESOLVED_LENGTH)
-                if (${RESOLVED_LENGTH} EQUAL 0)
-                    message(WARNING "Count of dependencies of ${AUI_MODULE_NAME} equals to zero which means that "
-                                    "something gone wrong in dependency copy script.")
-                endif()
+                # try to resolve unresolved dependencies
+                foreach (V ${UNRESOLVED})
+					# avoid duplicates
+					get_property(_tmp GLOBAL PROPERTY AUI_RESOLVED)
+					list (FIND _tmp ${V} _index)
+					if (${_index} EQUAL -1)
+						if (V MATCHES "^((shell|user|kernel|advapi|ws2_|crypt|wldap|gdi|ole|opengl)32|winmm|dwmapi|msvcrt)\\.dll")
+							list(REMOVE_ITEM UNRESOLVED ${V})
+						else()
+							# clear cache entry
+							unset(TARGET_FILE CACHE)
+							find_file(
+								TARGET_FILE
+									"${V}"
+								PATH_SUFFIXES
+									"bin/"
+									"lib/"
+							)
+							if (EXISTS ${TARGET_FILE})
+								# add to global resolved items
+								list(APPEND RESOLVED ${TARGET_FILE})
+								list(REMOVE_ITEM UNRESOLVED ${V})
+							else()
+								# add to global unresolved items
+								# avoid duplicates
+								get_property(_tmp GLOBAL PROPERTY AUI_UNRESOLVED)
+								list (FIND _tmp ${V} _index)
+								if (${_index} EQUAL -1)
+									list(APPEND _tmp ${V})
+									set_property(GLOBAL PROPERTY AUI_UNRESOLVED ${_tmp})
+								endif()
+							endif()
+						endif()
+					endif()
+                endforeach()
+				get_property(_tmp GLOBAL PROPERTY AUI_RESOLVED)
+                foreach (V ${RESOLVED})
+					list (FIND _tmp ${V} _index)
+					if (${_index} EQUAL -1)
+						list(APPEND _tmp ${V})
+						set_property(GLOBAL PROPERTY AUI_RESOLVED ${_tmp})
+						file(INSTALL
+							 FILES ${V}
+							 TYPE SHARED_LIBRARY
+							 FOLLOW_SYMLINK_CHAIN
+							 DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
+						)
+						install_dependencies_for(${V})
+						get_property(_tmp GLOBAL PROPERTY AUI_RESOLVED)
+					endif()
+                endforeach()
+            endfunction()
+            install_dependencies_for(${AUI_MODULE_PATH})
+			get_property(G_RESOLVED GLOBAL PROPERTY AUI_RESOLVED)
+			get_property(G_UNRESOLVED GLOBAL PROPERTY AUI_UNRESOLVED)
+			list(LENGTH G_RESOLVED RESOLVED_LENGTH)
+			if (RESOLVED_LENGTH EQUAL 0)
+				message(WARNING "Count of dependencies of ${AUI_MODULE_NAME} equals to zero which means that "
+								"something gone wrong in dependency copy script.")
+			endif()
+
+			list(LENGTH G_UNRESOLVED UNRESOLVED_LENGTH)
+			if (UNRESOLVED_LENGTH GREATER 0)
+				message("There are some unresolved libraries:")
+				foreach (V ${G_UNRESOLVED})
+					message("UNRESOLVED ${V}")
+				endforeach()
+			endif()
         ]])
     endif()
 
