@@ -1449,8 +1449,13 @@ void AWindowManager::loop() {
                             assert(!s.empty());
                             window->onCharEntered(s[0]);
                         }
+                        window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
                         break;
                     }
+                    case KeyRelease:
+                        window = locateWindow(ev.xkey.window);
+                        window->onKeyUp(AInput::fromNative(ev.xkey.keycode));
+                        break;
 
                     case ConfigureNotify:
                         if (auto w = _cast<ACustomWindow>(window = locateWindow(ev.xconfigure.window))) {

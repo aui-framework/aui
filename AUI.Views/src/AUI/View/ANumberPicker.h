@@ -21,8 +21,9 @@ private:
 
 		virtual ~ANumberPickerField() = default;
 
+        void onKeyRepeat(AInput::Key key) override;
 
-	protected:
+    protected:
 		bool isValidText(const AString& text) override;
 	};
 	
@@ -50,7 +51,8 @@ public:
 		return mMax;
 	}
 
-	void setMin(const int min);
+
+    void setMin(const int min);
 	void setMax(const int max);
 
 signals:

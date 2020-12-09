@@ -63,6 +63,7 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
 }
 #else
 #include <gtk/gtk.h>
+#include <AUI/Util/kAUI.h>
 #include "AMessageBox.h"
 #include "AWindow.h"
 
