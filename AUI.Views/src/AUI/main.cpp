@@ -47,7 +47,7 @@ struct initialize
     initialize() {
 #ifndef ANDROID
         try {
-            aui::importPlugin("Svg");
+            aui::importPlugin("svg");
         } catch (...) {
 
         }
