@@ -17,7 +17,7 @@ void aui::importPlugin(const AString& name)
 		importedPlugins << path;
 
         path[0] = toupper(path[0]);
-		Dll::load("aui." + path)->getProcAddress<void()>("aui_plugin_init")();
+		Dll::load("aui." + path.lowercase())->getProcAddress<void()>("aui_plugin_init")();
 	}
 	
 }

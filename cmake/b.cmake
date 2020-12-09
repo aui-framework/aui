@@ -274,7 +274,7 @@ function(AUI_Compile_Assets AUI_MODULE_NAME)
     if (TARGET AUI.Toolbox AND NOT CMAKE_CROSSCOMPILING)
         set(AUI_TOOLBOX_EXE $<TARGET_FILE:AUI.Toolbox>)
     else()
-        set(AUI_TOOLBOX_EXE AUI.Toolbox)
+        set(AUI_TOOLBOX_EXE aui.toolbox)
     endif()
 
     foreach(ASSET_PATH ${ASSETS})
