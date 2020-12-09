@@ -60,11 +60,11 @@ add_subdirectory(AUI.Json)
 add_subdirectory(AUI.Mysql)
 add_subdirectory(AUI.Sqlite)
 add_subdirectory(AUI.Network)
-add_subdirectory(AUI.Views)
 add_subdirectory(AUI.Svg)
 add_subdirectory(AUI.Image)
 add_subdirectory(AUI.Xml)
 add_subdirectory(AUI.Toolbox)
+add_subdirectory(AUI.Views)
 
 
 if(NOT ANDROID)

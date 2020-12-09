@@ -277,7 +277,7 @@ AString AString::lowercase() const {
     auto& f = std::use_facet<std::ctype<wchar_t>>(std::locale());
     AString result = *this;
     f.tolower(&result[0], &result[0] + result.size());
-    return AString();
+    return result;
 }
 
 void AString::replaceAll(wchar_t from, wchar_t to) noexcept {
