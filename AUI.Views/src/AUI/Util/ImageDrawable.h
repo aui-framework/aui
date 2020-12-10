@@ -8,11 +8,11 @@
 #include <AUI/Image/IDrawable.h>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Image/AImage.h>
-#include <AUI/GL/Texture.h>
+#include <AUI/GL/Texture2D.h>
 
 class ImageDrawable: public IDrawable {
 private:
-    GL::Texture mTexture;
+    GL::Texture2D mTexture;
     glm::ivec2 mSize;
 
 public:

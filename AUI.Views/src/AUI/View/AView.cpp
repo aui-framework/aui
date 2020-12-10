@@ -874,6 +874,10 @@ void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
 	emit doubleClicked(button);
 }
 
+void AView::onMouseWheel(glm::ivec2 pos, int delta) {
+
+}
+
 void AView::onKeyDown(AInput::Key key)
 {
 }
@@ -943,11 +947,10 @@ glm::ivec2 AView::getPositionInWindow() {
     return p;
 }
 
+
 void AView::setPosition(const glm::ivec2& position) {
     mPosition = position;
 }
-
-
 void AView::setSize(int width, int height)
 {
     if (mFixedSize.x != 0)
@@ -972,6 +975,7 @@ void AView::setSize(int width, int height)
     }
     mSize = glm::min(mSize, mMaxSize);
 }
+
 void AView::setGeometry(int x, int y, int width, int height) {
     setPosition({ x, y });
     setSize(width, height);

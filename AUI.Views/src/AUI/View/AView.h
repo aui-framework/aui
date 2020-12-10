@@ -312,6 +312,22 @@ public:
 	}
 
 	/**
+	 * \return количество пикселей, занимаемое этим AView по горизонтали, с учётом размера, паддинга и маргина.
+	 */
+	float getTotalOccupiedWidth() const
+	{
+		return mSize.x + getTotalFieldHorizontal();
+	}
+
+    /**
+     * \return количество пикселей, занимаемое этим AView по вертикали, с учётом размера, паддинга и маргина.
+     */
+    float getTotalOccupiedHeight() const
+	{
+        return mSize.y + getTotalFieldVertical();
+	}
+
+	/**
 	 * \note каждый менеджер компоновки должен
 	 *		 обрабатывать этот отступ.
 	 * \return внешние отступы.
@@ -383,8 +399,8 @@ public:
 
 	bool hasFocus() const;
 
-	int getMinimumWidth();
-	int getMinimumHeight();
+	virtual int getMinimumWidth();
+    virtual int getMinimumHeight();
 
 	glm::ivec2 getMinimumSize() {
 	    return {getMinimumWidth(), getMinimumHeight()};
@@ -501,8 +517,9 @@ public:
 
 	virtual void onMousePressed(glm::ivec2 pos, AInput::Key button);
 	virtual void onMouseReleased(glm::ivec2 pos, AInput::Key button);
-	virtual void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button);
-	virtual void onKeyDown(AInput::Key key);
+    virtual void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button);
+    virtual void onMouseWheel(glm::ivec2 pos, int delta);
+    virtual void onKeyDown(AInput::Key key);
 	virtual void onKeyRepeat(AInput::Key key);
 	virtual void onKeyUp(AInput::Key key);
 	virtual void onFocusAcquired();

@@ -6,7 +6,7 @@
 #include "AUI/Image/IDrawable.h"
 #include <nanosvg.h>
 #include <nanosvgrast.h>
-#include <AUI/GL/Texture.h>
+#include <AUI/GL/Texture2D.h>
 
 
 class SvgDrawable: public IDrawable
@@ -14,7 +14,7 @@ class SvgDrawable: public IDrawable
 private:
     struct Pair {
         uint64_t key;
-        _<GL::Texture> texture;
+        _<GL::Texture2D> texture;
     };
 
     NSVGimage* mImage;

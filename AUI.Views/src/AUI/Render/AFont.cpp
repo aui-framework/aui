@@ -110,11 +110,11 @@ AFont::Character* AFont::renderGlyph(FontData& fs, long glyph, long size, FontRe
 	return nullptr;
 }
 
-_<GL::Texture> AFont::textureOf(long size, FontRendering fr) {
+_<GL::Texture2D> AFont::textureOf(long size, FontRendering fr) {
 	FontData& chars = getCharsetBySize(size, fr);
 	if (!chars.texture)
 	{
-		chars.texture = _new<GL::Texture>();
+		chars.texture = _new<GL::Texture2D>();
 		chars.texture->setupNearest();
 	}
 	if (chars.isDirty)

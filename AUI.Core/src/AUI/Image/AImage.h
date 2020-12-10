@@ -6,7 +6,8 @@
 
 #include <cstdint>
 #include <glm/glm.hpp>
-#include "AUI/Common/AVector.h"
+#include <AUI/Common/AVector.h>
+#include <AUI/Url/AUrl.h>
 
 class API_AUI_CORE AImage {
 public:
@@ -77,5 +78,7 @@ public:
     const uint8_t& at(uint16_t x, uint16_t y) const {
         return mData[(y * getWidth() + x) * getBytesPerPixel()];
     }
+
+    static _<AImage> fromUrl(const AUrl& url);
 };
 

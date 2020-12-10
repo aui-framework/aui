@@ -169,6 +169,13 @@ void AViewContainer::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
 		p->onMouseDoubleClicked(pos - p->getPosition(), button);
 }
 
+void AViewContainer::onMouseWheel(glm::ivec2 pos, int delta) {
+    AView::onMouseWheel(pos, delta);
+    auto p = getViewAt(pos);
+    if (p && p->isEnabled())
+        p->onMouseWheel(pos - p->getPosition(), delta);
+}
+
 bool AViewContainer::consumesClick(const glm::ivec2& pos) {
 	if (mHasBackground)
 		return true;
@@ -210,6 +217,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 	return possibleOutput;
 }
 
+
 _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos)
 {
 	_<AView> target = getViewAt(pos);
@@ -224,7 +232,6 @@ _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos)
 	}
 	return target;
 }
-
 
 void AViewContainer::setSize(int width, int height)
 {

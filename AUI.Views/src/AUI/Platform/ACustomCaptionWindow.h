@@ -1,15 +1,15 @@
 ﻿#pragma once
 #include "ACustomWindow.h"
 #include <AUI/View/AButton.h>
+#include "CustomCaptionWindowImplWin32.h"
 
-class API_AUI_VIEWS ACustomCaptionWindow: public ACustomWindow
+using CustomCaptionWindowImplCurrent = CustomCaptionWindowImplWin32;
+
+class API_AUI_VIEWS ACustomCaptionWindow: public ACustomWindow, public CustomCaptionWindowImplCurrent
 {
-private:
-    _<AViewContainer> mCaptionContainer;
-    _<AViewContainer> mContentContainer;
-    _<AButton> mMiddle;
 
-    void updateMiddleButtonIcon();
+protected:
+    bool isCustomCaptionMaximized() override;
 
 public:
 
@@ -21,14 +21,6 @@ public:
 	}
 
 
-	virtual ~ACustomCaptionWindow() = default;
-    [[nodiscard]] const _<AViewContainer>& getCaptionContainer() const
-	{
-		return mCaptionContainer;
-	}
 
-	[[nodiscard]] const _<AViewContainer>& getContentContainer() const
-	{
-		return mContentContainer;
-	}
+	virtual ~ACustomCaptionWindow() = default;
 };

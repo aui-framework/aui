@@ -4,7 +4,7 @@
 #include <type_traits>
 
 /**
- * \brief Получить тип текущего класса. Удобно использовать в связке с функцией connect:
+ * \brief Получить текущий класс и тип текущего класса. Удобно использовать в связке с функцией connect:
  * \example
  * <code>
  * class MyObject: public AView {<br />
@@ -20,6 +20,23 @@
  * </code>
  */
 #define me this, &std::remove_reference_t<decltype(*this)>
+
+/**
+ * \brief Получить AObject и тип этого AObject. Удобно использовать в связке с функцией connect:
+ * \example
+ * <code>
+ * class MyObject: public AView {<br />
+ * private:<br />
+ * &#09;void handleClicked() { ... }<br />
+ * };<br />
+ * ...<br />
+ * SomeOtherClass::SomeOtherClass() {<br />
+ * &#09;auto myObject = _new<MyObject>();<br />
+ * &#09;connect(clicked, slot(myObject)::handleClicked);<br />
+  *}
+ * </code>
+ */
+#define slot(v) v, &decltype(v)::stored_t
 
 /**
  * \brief Выполнить несколько операций над одним объектом, не повторяя его имени.

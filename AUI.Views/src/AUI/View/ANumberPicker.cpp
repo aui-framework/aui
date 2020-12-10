@@ -23,12 +23,20 @@ void ANumberPicker::ANumberPickerField::onKeyRepeat(AInput::Key key) {
     switch (key) {
         case AInput::Down:
             if (mPicker.getValue() > mPicker.getMin()) {
-                mPicker.setValue(mPicker.getValue() - 1);
+                if (AInput::isKeyDown(AInput::LControl)) {
+                    mPicker.setValue(glm::max(mPicker.getValue() - 10, mPicker.getMin()));
+                } else {
+                    mPicker.setValue(mPicker.getValue() - 1);
+                }
             }
             break;
         case AInput::Up:
             if (mPicker.getValue() < mPicker.getMax()) {
-                mPicker.setValue(mPicker.getValue() + 1);
+                if (AInput::isKeyDown(AInput::LControl)) {
+                    mPicker.setValue(glm::min(mPicker.getValue() + 10, mPicker.getMax()));
+                } else {
+                    mPicker.setValue(mPicker.getValue() + 1);
+                }
             }
             break;
         default:

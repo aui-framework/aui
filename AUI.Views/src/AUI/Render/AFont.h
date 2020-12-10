@@ -5,7 +5,7 @@
 #include <AUI/Url/AUrl.h>
 
 #include "FontRendering.h"
-#include "AUI/GL/Texture.h"
+#include "AUI/GL/Texture2D.h"
 
 #include "SimpleTexturePacker.h"
 
@@ -33,7 +33,7 @@ private:
 		long size;
 		AVector<Character*> chars;
 		_<Util::SimpleTexturePacker> tp = _new<Util::SimpleTexturePacker>();
-		_<GL::Texture> texture;
+		_<GL::Texture2D> texture;
 		bool isDirty = true;
 		FontRendering fontRendering;
 	};
@@ -49,7 +49,7 @@ public:
 	AFont(const AFont&) = delete;
 	Character* getCharacter(long id, long size, FontRendering fr);
 	float length(const AString& text, long size, FontRendering fr);
-	_<GL::Texture> textureOf(long size, FontRendering fr);
+	_<GL::Texture2D> textureOf(long size, FontRendering fr);
 	_<Util::SimpleTexturePacker> texturePackerOf(long size, FontRendering fr);
 	AString trimStringToWidth(const AString& text, size_t width, long size, FontRendering fr);
 	size_t indexOfX(const AString& text, size_t x, long size, FontRendering fr);

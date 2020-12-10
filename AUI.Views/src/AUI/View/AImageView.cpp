@@ -6,10 +6,10 @@
 #include <AUI/Render/Render.h>
 #include <AUI/View/AViewContainer.h>
 
-AImageView::AImageView(const _<GL::Texture>& texture) : mTexture(texture) {}
+AImageView::AImageView(const _<GL::Texture2D>& texture) : mTexture(texture) {}
 
 AImageView::AImageView(const _<AImage>& img) {
-    mTexture = _new<GL::Texture>();
+    mTexture = _new<GL::Texture2D>();
     mTexture->tex2D(img);
     mImageSize = img->getSize();
 }

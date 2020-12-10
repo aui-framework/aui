@@ -2,7 +2,7 @@
 
 #include "AUI/GL/Vao.h"
 #include "AUI/GL/Shader.h"
-#include "AUI/GL/Texture.h"
+#include "AUI/GL/Texture2D.h"
 #include "AFont.h"
 #include "FontStyle.h"
 #include "AUI/Common/AColor.h"

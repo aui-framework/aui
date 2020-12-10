@@ -14,14 +14,19 @@ GL::Shader::Shader() {
 	mProgram = glCreateProgram();
 }
 
-void GL::Shader::load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs)
+void GL::Shader::load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs, const AString& version)
 {
 #ifdef __ANDROID__
 	AString prefix = "precision mediump float;"
 					 "precision mediump int;"
 					 ;
 #else
-	AString prefix = "#version 120\n";
+	AString prefix;
+	if (version.empty()) {
+	    prefix = "#version 120\n";
+	} else {
+        prefix = "#version " + version + "\n";
+    }
 #endif
 	mVertex = load(prefix + vertex, GL_VERTEX_SHADER);
 	mFragment = load(prefix + fragment, GL_FRAGMENT_SHADER);
@@ -100,6 +105,12 @@ void GL::Shader::set(const AString& uniform, glm::mat4 value) const {
 		glUniformMatrix4fv(loc, 1, GL_FALSE, &(value[0][0]));
 }
 
+void GL::Shader::set(const AString& uniform, glm::dmat4 value) const {
+	auto loc = getLocation(uniform);
+	if (loc >= 0)
+		glUniformMatrix4dv(loc, 1, GL_FALSE, &(value[0][0]));
+}
+
 void GL::Shader::set(const AString& uniform, float value) const {
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
@@ -128,6 +139,12 @@ void GL::Shader::set(const AString& uniform, int value) const {
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniform1i(loc, value);
+}
+
+void GL::Shader::set(const AString& uniform, double value) const {
+    auto loc = getLocation(uniform);
+    if (loc >= 0)
+        glUniform1d(loc, value);
 }
 
 /*

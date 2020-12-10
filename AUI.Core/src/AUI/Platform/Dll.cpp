@@ -34,7 +34,13 @@ _<Dll> Dll::load(const AString& path)
 	auto lib = dlopen(name.c_str(), RTLD_LAZY);
 	if (!lib)
 	{
-		throw DllLoadException("Could not load shared library: " + fullpath + ": " + dlerror());
+	    // ../lib/
+
+        name = (AString(buf) + "/../lib/" + fullpath).toStdString();
+        lib = dlopen(name.c_str(), RTLD_LAZY);
+        if (!lib) {
+		    throw DllLoadException("Could not load shared library: " + fullpath + ": " + dlerror());
+        }
 	}
 #endif
 	return _<Dll>(new Dll(lib));

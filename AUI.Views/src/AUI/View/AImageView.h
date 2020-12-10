@@ -8,11 +8,11 @@
 
 class API_AUI_VIEWS AImageView: public AView {
 private:
-    _<GL::Texture> mTexture;
+    _<GL::Texture2D> mTexture;
     glm::ivec2 mImageSize = {10, 10};
 
 public:
-    explicit AImageView(const _<GL::Texture>& texture);
+    explicit AImageView(const _<GL::Texture2D>& texture);
     explicit AImageView(const _<AImage>& img);
     AImageView();
 

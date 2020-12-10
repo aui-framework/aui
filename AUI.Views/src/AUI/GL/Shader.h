@@ -24,7 +24,7 @@ namespace GL {
 		
 	public:
 		Shader();
-		void load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs = {});
+		void load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs = {}, const AString& version = {});
 		void compile();
 		void bindAttribute(uint32_t index, const AString& name);
 		void use() const;
@@ -33,7 +33,9 @@ namespace GL {
 
 		void set(const AString& uniform, int value) const;
 		void set(const AString& uniform, float value) const;
+		void set(const AString& uniform, double value) const;
 		void set(const AString& uniform, glm::mat4 value) const;
+		void set(const AString& uniform, glm::dmat4 value) const;
 		void set(const AString& uniform, glm::vec2 value) const;
 		void set(const AString& uniform, glm::vec3 value) const;
 		void set(const AString& uniform, glm::vec4 value) const;

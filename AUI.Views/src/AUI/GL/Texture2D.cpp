@@ -4,10 +4,11 @@
 
 #include <cassert>
 #include <cstring>
-#include "Texture.h"
+#include "Texture2D.h"
 #include "gl.h"
-#include "State.h"
-#include "gl.h"
+#include "TextureImpl.h"
+
+template class GL::Texture<GL::TEXTURE_2D>;
 
 struct Result
 {
@@ -93,33 +94,7 @@ Result recognize(const _<AImage>& image)
 	return res;
 }
 
-GL::Texture::Texture() {
-	glGenTextures(1, &mTexture);
-	bind();
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-}
-
-GL::Texture::~Texture() {
-
-	glDeleteTextures(1, &mTexture);
-	GL::State::bindTexture(GL_TEXTURE_2D, 0);
-}
-
-void GL::Texture::setupNearest()
-{
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-}
-
-void GL::Texture::bind(uint8_t index) const {
-	GL::State::activeTexture(index);
-	GL::State::bindTexture(GL_TEXTURE_2D, mTexture);
-}
-
-void GL::Texture::tex2D(_<AImage> image) {
+void GL::Texture2D::tex2D(const _<AImage>& image) {
 	bind();
 	Result types = recognize(image);
 
@@ -127,12 +102,3 @@ void GL::Texture::tex2D(_<AImage> image) {
 	glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image->getWidth(), image->getHeight(), 0, types.format, types.type, image->getData().empty() ? nullptr : image->getData().data());
 	assert(glGetError() == 0);
 }
-
-GL::Texture::operator bool() const {
-	return mTexture > 0;
-}
-
-uint32_t GL::Texture::getHandle() {
-	return mTexture;
-}
-

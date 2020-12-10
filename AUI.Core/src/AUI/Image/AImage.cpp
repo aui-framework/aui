@@ -5,6 +5,7 @@
 #include <utility>
 #include <cstring>
 #include "AImage.h"
+#include "AImageLoaderRegistry.h"
 
 AImage::AImage() {
 
@@ -126,5 +127,9 @@ void AImage::copy(_<AImage> src, _<AImage> dst, uint32_t x, uint32_t y) {
 			}
 		}
 	}
+}
+
+_<AImage> AImage::fromUrl(const AUrl& url) {
+    return AImageLoaderRegistry::inst().loadImage(url);
 }
 

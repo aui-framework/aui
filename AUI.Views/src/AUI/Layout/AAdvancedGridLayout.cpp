@@ -68,8 +68,8 @@ AAdvancedGridLayout::AAdvancedGridLayout(int cellsX, int cellsY): cellsX(cellsX)
 
 void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
 {
-    float cellWidth = static_cast<float>(width) / cellsX;
-    float cellHeight = static_cast<float>(height) / cellsY;
+    //float cellWidth = static_cast<float>(width) / cellsX;
+    //float cellHeight = static_cast<float>(height) / cellsY;
 
     struct cache_t
     {
