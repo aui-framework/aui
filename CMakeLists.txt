@@ -42,8 +42,6 @@ function(AUI_Module AUI_MODULE_NAME)
 				DESTINATION "lib"
 			RUNTIME
 				DESTINATION "bin"
-
-			COMPONENT RUNTIME
 	)
 	install(
 			DIRECTORY src/

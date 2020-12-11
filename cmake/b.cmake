@@ -248,7 +248,6 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
     install(
             TARGETS ${AUI_MODULE_NAME}
             DESTINATION "bin"
-            COMPONENT RUNTIME
     )
 endfunction(AUI_Executable_Advanced)
 
