@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AUI/Thread/AThreadPool.h>
+#include <AUI/Thread/AFuture.h>
 #include <type_traits>
 
 /**

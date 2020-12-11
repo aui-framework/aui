@@ -157,4 +157,8 @@ public:
 	{
 		return this->back();
 	}
+
+	bool contains(const StoredType& value) const {
+	    return std::find(p::begin(), p::end(), value) != p::end();
+	}
 };
