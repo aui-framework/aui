@@ -248,6 +248,7 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
     install(
             TARGETS ${AUI_MODULE_NAME}
             DESTINATION "bin"
+            COMPONENT RUNTIME
     )
 endfunction(AUI_Executable_Advanced)
 
@@ -257,7 +258,6 @@ endfunction(AUI_Executable)
 
 function(AUI_Static_Link AUI_MODULE_NAME LIBRARY_NAME)
     target_include_directories(${AUI_MODULE_NAME} PRIVATE "3rdparty/${LIBRARY_NAME}")
-    project(${LIBRARY_NAME})
     file(GLOB_RECURSE SRCS "3rdparty/${LIBRARY_NAME}/*.cpp" "3rdparty/${LIBRARY_NAME}/*.c" "3rdparty/${LIBRARY_NAME}/*.h")
     add_library(${LIBRARY_NAME} STATIC ${SRCS})
     target_link_libraries(${AUI_MODULE_NAME} PRIVATE ${LIBRARY_NAME})

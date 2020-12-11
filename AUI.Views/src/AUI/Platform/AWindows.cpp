@@ -348,7 +348,6 @@ AWindow*& AWindow::currentWindowStorage() {
 }
 
 AWindow::Context::~Context() {
-    Drawables::cleanup();
 #if defined(_WIN32)
     wglDeleteContext(hrc);
 #elif defined(ANDROID)

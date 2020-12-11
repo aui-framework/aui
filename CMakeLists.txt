@@ -42,12 +42,15 @@ function(AUI_Module AUI_MODULE_NAME)
 				DESTINATION "lib"
 			RUNTIME
 				DESTINATION "bin"
+
+			COMPONENT RUNTIME
 	)
 	install(
 			DIRECTORY src/
 			DESTINATION "include/"
 			FILES_MATCHING PATTERN "*.h"
-						   PATTERN "*.hpp"
+			PATTERN "*.hpp"
+
 	)
 
 endfunction(AUI_Module)
