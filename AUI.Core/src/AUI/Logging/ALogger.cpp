@@ -6,11 +6,15 @@
 #endif
 
 ALogger::ALogger()
-#ifndef __ANDROID__
-    : mLogFile(_new<FileOutputStream>("latest.log"))
-#endif
 {
 
+#ifndef __ANDROID__
+    try {
+        mLogFile = _new<FileOutputStream>("latest.log");
+    } catch (const AException& e) {
+        log(WARN, e.getMessage());
+    }
+#endif
 }
 
 ALogger& ALogger::instance()

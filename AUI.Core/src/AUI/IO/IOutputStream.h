@@ -4,6 +4,8 @@
 #include "EOFException.h"
 #include "AUI/Common/AString.h"
 
+class IInputStream;
+
 class API_AUI_CORE IOutputStream
 {
 public:
@@ -17,14 +19,17 @@ public:
 
 
 	template<typename T>
-	IOutputStream& operator<<(const T& out)
+	inline IOutputStream& operator<<(const T& out)
 	{
 		if (write(reinterpret_cast<const char*>(&out), sizeof(T)) < 0)
 			throw IOException("could not write to file");
 		return *this;
 	}
+
+    template<typename T>
+    inline IOutputStream& operator<<(const _<T>& is);
 	
-	IOutputStream& operator<<(const AString& out)
+	inline IOutputStream& operator<<(const AString& out)
 	{
 		if (out.empty())
 			return *this;
@@ -32,7 +37,7 @@ public:
 		write(st.c_str(), st.length());
 		return *this;
 	}
-	IOutputStream& operator<<(const char* out)
+	inline IOutputStream& operator<<(const char* out)
 	{
 		if (!out)
 			return *this;
@@ -47,3 +52,16 @@ public:
 		write(buffer->data(), buffer->getSize());
 	}
 };
+
+
+#include "IInputStream.h"
+
+template<typename T>
+inline IOutputStream& IOutputStream::operator<<(const _<T>& is)
+{
+    char buf[0x8000];
+    for (int r; (r = is->read(buf, sizeof(buf))) > 0;) {
+        write(buf, r);
+    }
+    return *this;
+}

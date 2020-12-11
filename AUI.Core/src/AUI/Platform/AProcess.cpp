@@ -7,8 +7,10 @@
 #ifdef _WIN32
 #include <windows.h>
 #include <AUI/Traits/memory.h>
+#include <AUI/Logging/ALogger.h>
 
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
+    ALogger::info("Executing " + applicationFile + " " + args + " in " + workingDirectory);
     ShellExecute(nullptr, L"runas", applicationFile.c_str(), args.c_str(),
                  workingDirectory.empty() ? nullptr : workingDirectory.c_str(), SW_SHOWNORMAL);
 }

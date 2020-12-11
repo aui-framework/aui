@@ -5,6 +5,8 @@
 
 #include <boost/test/unit_test.hpp>
 #include <AUI/IO/APath.h>
+#include <AUI/IO/FileOutputStream.h>
+#include <AUI/IO/FileInputStream.h>
 
 using namespace boost::unit_test;
 
@@ -21,6 +23,17 @@ BOOST_AUTO_TEST_SUITE(Path)
         }
 
         BOOST_CHECK_EQUAL(APath("/home/user/file.txt").filename(), "file.txt");
+    }
+
+    BOOST_AUTO_TEST_CASE(Copy) {
+        _new<FileOutputStream>("test.txt")->write("test", 4);
+
+        APath::copy("test.txt", "test-copy.txt");
+
+        char buf[0x100];
+        auto s = _new<FileInputStream>("test-copy.txt")->read(buf, sizeof(buf));
+        BOOST_TEST(s == 4);
+        BOOST_TEST(memcmp(buf, "test", 4) == 0);
     }
     BOOST_AUTO_TEST_CASE(Windows) {
         APath p = "C:/home";

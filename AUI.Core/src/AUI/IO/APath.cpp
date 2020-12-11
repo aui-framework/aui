@@ -9,6 +9,8 @@
 #include "IOException.h"
 #include "FileNotFoundException.h"
 #include "InsufficientPermissionsException.h"
+#include "FileInputStream.h"
+#include "FileOutputStream.h"
 
 #ifdef WIN32
 #include <windows.h>
@@ -222,12 +224,16 @@ const APath& APath::makeDir() const {
     return *this;
 }
 
-const APath& APath::makeDirs() const {
-    if (!empty()) {
-        if (!isDirectoryExists()) {
-            parent().makeDirs();
-            makeDir();
+const APath& APath::makeDirs() const noexcept {
+    try {
+        if (!empty()) {
+            if (!isDirectoryExists()) {
+                parent().makeDirs();
+                makeDir();
+            }
         }
+    } catch (...) {
+
     }
     return *this;
 }
@@ -279,6 +285,10 @@ APath APath::workingDir() {
     p.resize(0x800);
     p.resize(GetCurrentDirectory(0x800, p.data()));
     return p;
+}
+
+void APath::copy(const APath& source, const APath& destination) {
+    _new<FileOutputStream>(destination) << _new<FileInputStream>(source);
 }
 
 #else

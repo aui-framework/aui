@@ -105,6 +105,10 @@ endfunction(AUI_Common)
 
 
 function(AUI_Deploy_Library AUI_MODULE_NAME)
+    if (TARGET ${AUI_MODULE_NAME})
+        message(STATUS "link_libraries ${AUI_MODULE_NAME}")
+        link_libraries(${AUI_MODULE_NAME})
+    endif()
     string(TOLOWER ${AUI_MODULE_NAME} AUI_MODULE_NAME_LOWERED)
     install(CODE "list(APPEND ADDITIONAL_DEPENDENCIES ${CMAKE_SHARED_LIBRARY_PREFIX}${AUI_MODULE_NAME_LOWERED}${CMAKE_SHARED_LIBRARY_SUFFIX})")
 endfunction(AUI_Deploy_Library)

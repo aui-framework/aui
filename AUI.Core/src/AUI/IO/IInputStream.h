@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 
 class AByteBuffer;
+class IOutputStream;
 
 class API_AUI_CORE IInputStream
 {
@@ -37,9 +38,8 @@ public:
 		dst->setSize(dst->getCurrentPos() + r);
 	}
 
-
 	template<typename T>
-	IInputStream& operator>>(T& out)
+	inline IInputStream& operator>>(T& out)
 	{
 		auto dst = reinterpret_cast<char*>(&out);
 
@@ -56,6 +56,9 @@ public:
 		return *this;
 	}
 
+    template<typename T>
+    inline IInputStream& operator>>(const _<T>& is);
+
 
 	inline _<AByteBuffer> readSizedBuffer() {
 		auto buf = _new<AByteBuffer>();
@@ -70,3 +73,15 @@ public:
 		return buf;
 	}
 };
+
+#include "IOutputStream.h"
+
+template<typename T>
+inline IInputStream& IInputStream::operator>>(const _<T>& os)
+{
+    char buf[0x8000];
+    for (int r; (r = read(buf, sizeof(buf))) > 0;) {
+        os->write(buf, r);
+    }
+    return *this;
+}

@@ -172,7 +172,7 @@ public:
      * \brief Создать все папки по пути.
      * \return this
      */
-    const APath& makeDirs() const;
+    const APath& makeDirs() const noexcept;
 
     size_t fileSize() const;
 
@@ -198,6 +198,8 @@ public:
      * \return полный путь по умолчанию
      */
     static APath getDefaultPath(DefaultPath path);
+
+    static void copy(const APath& source, const APath& destination);
 
     static APath workingDir();
 };
