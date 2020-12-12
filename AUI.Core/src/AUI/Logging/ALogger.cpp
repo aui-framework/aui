@@ -12,7 +12,7 @@ ALogger::ALogger()
     try {
         mLogFile = _new<FileOutputStream>("latest.log");
     } catch (const AException& e) {
-        log(WARN, e.getMessage());
+        //log(WARN, e.getMessage());
     }
 #endif
 }
