@@ -73,10 +73,23 @@ void ALogger::log(Level level, const AString& str)
     std::unique_lock lock(mSync);
 
     std::cout << '[' << timebuf << "] " << levelName << ": " << str << std::endl;
-    *mLogFile << '[';
-    mLogFile->write(timebuf, strlen(timebuf));
-    *mLogFile << "] ";
-    mLogFile->write(levelName, strlen(levelName));
-    *mLogFile << ": " << str << "\n";
+    if (mLogFile) {
+        *mLogFile << '[';
+        mLogFile->write(timebuf, strlen(timebuf));
+        *mLogFile << "] ";
+        mLogFile->write(levelName, strlen(levelName));
+        *mLogFile << ": " << str << "\n";
+    }
 #endif
+}
+
+void ALogger::setLogFile(const AString& str) {
+#ifndef __ANDROID__
+    try {
+        instance().mLogFile = _new<FileOutputStream>(str);
+    } catch (const AException& e) {
+        //log(WARN, e.getMessage());
+    }
+#endif
+
 }

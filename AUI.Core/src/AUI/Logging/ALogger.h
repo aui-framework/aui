@@ -24,7 +24,9 @@ private:
 	
 	void log(Level level, const AString& str);
 
-public:	
+public:
+    static void setLogFile(const AString& str);
+
 	static void info(const AString& str)
 	{
 		instance().log(INFO, str);
