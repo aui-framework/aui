@@ -12,6 +12,11 @@ public:
 	{
 	}
 
+    template<typename Iterator>
+	AStringVector(Iterator begin, Iterator end) : AVector<AString>(begin, end)
+	{
+	}
+
 	AStringVector(const std::allocator<AString>& allocator)
 		: AVector<AString>(allocator)
 	{

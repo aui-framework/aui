@@ -29,7 +29,6 @@ private:
 
 public:
     AProcess(const AString& applicationFile) : mApplicationFile(applicationFile) {}
-
     const AString& getApplicationFile() const {
         return mApplicationFile;
     }
@@ -50,10 +49,47 @@ public:
         mWorkingDirectory = workingDirectory;
     }
 
+    /**
+     * \brief Запустить процесс.
+     */
     void run();
 
-    static void executeAsAdministrator(const AString& applicationFile, const AString& args = {}, const APath& workingDirectory = {});
-    static void execute(const AString& applicationFile, const AString& args = {}, const APath& workingDirectory = {});
+    /**
+     * \brief Подождать завершения процесса.
+     */
+    void wait();
+
+    /**
+     * \brief Подождать завершения процесса и получить exit-code процесса.
+     * \return exit-code процесса
+     */
+    int getExitCode();
+
+    /**
+     * \brief Запустить указанный исполяемый файл с указанными аргументами.
+     * \param applicationFile исполняемый файл
+     * \param args аргументы
+     * \param workingDirectory рабочая директория создаваемого процесса
+     * \param waitForExit ожидать завершения процесса. Если false, то функция вернёт 0, так как exit-code процесса
+     *        неизвестен в момент его выполнения
+     * \return exit-code процесса
+     */
+    static int execute(const AString& applicationFile,
+                       const AString& args = {},
+                       const APath& workingDirectory = {},
+                       bool waitForExit = true);
+
+
+    /**
+     * \brief Запустить указанный исполяемый файл от имени адмнистратор с указанными аргументами.
+     * \param applicationFile исполняемый файл
+     * \param args аргументы
+     * \param workingDirectory рабочая директория создаваемого процесса
+     * \note Эта функция не ждёт завершения процесса из-за ограничений ОС Windows
+     */
+    static void executeAsAdministrator(const AString& applicationFile,
+                                      const AString& args = {},
+                                      const APath& workingDirectory = {});
 };
 
 

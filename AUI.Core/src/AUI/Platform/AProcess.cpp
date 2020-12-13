@@ -9,17 +9,39 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Logging/ALogger.h>
 
-void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
-    ALogger::info("Executing " + applicationFile + " " + args + " in " + workingDirectory);
-    ShellExecute(nullptr, L"runas", applicationFile.c_str(), args.c_str(),
-                 workingDirectory.empty() ? nullptr : workingDirectory.c_str(), SW_SHOWNORMAL);
-}
 
-void AProcess::execute(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
+int AProcess::execute(const AString& applicationFile, const AString& args, const APath& workingDirectory, bool waitForExit) {
     AProcess p(applicationFile);
     p.setArgs(args);
     p.setWorkingDirectory(workingDirectory);
     p.run();
+
+    if (waitForExit)
+        return p.getExitCode();
+
+    return 0;
+}
+
+void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
+    SHELLEXECUTEINFO sei = { sizeof(sei) };
+
+
+    sei.lpVerb = L"runas";
+    sei.lpFile = applicationFile.c_str();
+    sei.lpParameters = args.c_str();
+    sei.lpDirectory = workingDirectory.c_str();
+    sei.hwnd = NULL;
+    sei.nShow = SW_NORMAL;
+    sei.fMask = SEE_MASK_NOCLOSEPROCESS;
+
+    if (!ShellExecuteEx(&sei)) {
+        AString message = "Could not create process as admin " + applicationFile;
+        if (!args.empty())
+            message += " with args " + args;
+        if (!workingDirectory.empty())
+            message += " in " + workingDirectory;
+        throw AProcessException(message);
+    }
 }
 
 void AProcess::run() {
@@ -27,7 +49,6 @@ void AProcess::run() {
     aui::zero(startupInfo);
     startupInfo.cb = sizeof(startupInfo);
 
-    PROCESS_INFORMATION pi;
 
     if (!CreateProcess(mApplicationFile.c_str(),
                        const_cast<wchar_t*>(mArgs.empty() ? nullptr : mArgs.c_str()),
@@ -38,7 +59,7 @@ void AProcess::run() {
                        nullptr,
                        mWorkingDirectory.empty() ? nullptr : mWorkingDirectory.c_str(),
                        &startupInfo,
-                       &pi)) {
+                       &mProcessInformation)) {
         AString message = "Could not create process " + mApplicationFile;
         if (!mArgs.empty())
             message += " with args " + mArgs;
@@ -46,7 +67,19 @@ void AProcess::run() {
             message += " in " + mWorkingDirectory;
         throw AProcessException(message);
     }
-    WaitForSingleObject(pi.hProcess, 0);
+
+}
+
+void AProcess::wait() {
+    WaitForSingleObject(mProcessInformation.hProcess, INFINITE);
+}
+
+int AProcess::getExitCode() {
+    DWORD exitCode;
+    wait();
+    int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
+    assert(r && r != STILL_ACTIVE);
+    return exitCode;
 }
 
 #else
