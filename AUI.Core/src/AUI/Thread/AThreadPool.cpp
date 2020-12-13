@@ -51,6 +51,7 @@ void AThreadPool::Worker::thread_fn() {
 AThreadPool::Worker::~Worker() {
 	mEnabled = false;
 	mThread->interrupt();
+	mThread->join();
 	mThread = nullptr;
 }
 
@@ -60,7 +61,7 @@ void AThreadPool::Worker::disable() {
 
 
 void AThreadPool::run(const std::function<void()>& fun, Priority priority) {
-	std::unique_lock<std::recursive_mutex> lck(mQueueLock);
+	std::unique_lock lck(mQueueLock);
 	switch (priority)
 	{
 	case PRIORITY_MEDIUM:
@@ -78,7 +79,7 @@ void AThreadPool::run(const std::function<void()>& fun, Priority priority) {
 
 void AThreadPool::clear()
 {
-	std::unique_lock<std::recursive_mutex> lck(mQueueLock);
+	std::unique_lock lck(mQueueLock);
 
 	while (!mQueueLowest.empty())
 		mQueueLowest.pop();
@@ -109,8 +110,9 @@ void AThreadPool::enqueue(const std::function<void()>& fun, Priority priority)
 
 AThreadPool& AThreadPool::global()
 {
-	static AThreadPool t;
-	return t;
+    // говнофикс дедлока на mingw
+	static AThreadPool* t = new AThreadPool;
+	return *t;
 }
 
 AThreadPool::AThreadPool(size_t size) {

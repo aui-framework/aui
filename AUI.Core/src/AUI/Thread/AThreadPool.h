@@ -55,6 +55,7 @@ protected:
 	Queue<task> mQueueTryLater;
 	std::recursive_mutex mQueueLock;
 	std::condition_variable mCV;
+
 public:
 	AThreadPool(size_t size);
 	AThreadPool();
