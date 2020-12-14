@@ -185,6 +185,7 @@ public:
 	void flagRedraw();
 	void show();
 	void close();
+	void hide();
 
 #if defined(_WIN32)
 	HWND getNativeHandle() { return mHandle; }

@@ -104,10 +104,16 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             onFocusLost();
             return 0;
 
-        case WM_PAINT: {
-            if (!painter::painting) {
-                redraw();
-            }
+        case WM_WINDOWPOSCHANGED:
+            return 0;
+
+            case WM_PAINT: {
+                // почему-то поток повисает при перемещении окна
+                AThread::current()->processMessages();
+
+                if (!painter::painting) {
+                    redraw();
+                }
 
             return 0;
         }
@@ -1326,6 +1332,10 @@ void AWindow::setIcon(const AImage& image) {
 
     SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon);
 #endif
+}
+
+void AWindow::hide() {
+    ShowWindow(mHandle, SW_HIDE);
 }
 
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ для XLIB
