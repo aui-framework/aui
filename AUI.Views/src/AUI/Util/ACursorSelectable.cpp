@@ -117,6 +117,11 @@ void ACursorSelectable::selectAll() {
     mCursorIndex = getText().length();
 }
 
+void ACursorSelectable::clearSelection() {
+    mCursorSelection = -1;
+}
+
+
 void ACursorSelectable::drawSelectionRects() {
     auto p = getMouseSelectionPadding();
 

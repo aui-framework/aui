@@ -880,6 +880,9 @@ void AView::onMouseWheel(glm::ivec2 pos, int delta) {
 
 void AView::onKeyDown(AInput::Key key)
 {
+    if (key == AInput::Tab) {
+        AWindow::current()->focusNextView();
+    }
 }
 
 void AView::onKeyRepeat(AInput::Key key)

@@ -219,7 +219,7 @@ public:
 	void onKeyRepeat(AInput::Key key) override;
 	void onKeyUp(AInput::Key key) override;
 	void onCharEntered(wchar_t c) override;
-	void setFocusedView(_<AView> view);
+	void setFocusedView(const _<AView>& view);
 	_<AView> getFocusedView() const
 	{
 		return mFocusedView.lock();
@@ -290,4 +290,10 @@ signals:
 	emits<> restored;
 
 	emits<AInput::Key> keyDown;
+
+    void focusNextView();
+
+    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+
+    bool consumesClick(const glm::ivec2& pos) override;
 };

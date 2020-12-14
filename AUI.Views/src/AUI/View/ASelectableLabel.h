@@ -26,6 +26,10 @@ public:
 
     void onFocusLost() override;
 
+    bool consumesClick(const glm::ivec2& pos) override;
+
+    void onFocusAcquired() override;
+
     void onKeyDown(AInput::Key key) override;
 
 protected:

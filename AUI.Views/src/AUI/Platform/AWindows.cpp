@@ -105,6 +105,11 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
 
         case WM_WINDOWPOSCHANGED:
+            setFocusedView(nullptr);
+            return 0;
+
+        case WM_WINDOWPOSCHANGING:
+            setFocusedView(nullptr);
             return 0;
 
             case WM_PAINT: {
@@ -360,6 +365,22 @@ AWindow::Context::~Context() {
 #else
     glXDestroyContext(gDisplay, context);
 #endif
+}
+
+bool AWindow::consumesClick(const glm::ivec2& pos) {
+    return AViewContainer::consumesClick(pos);
+}
+
+void AWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+    auto focusCopy = mFocusedView.lock();
+    mFocusedView.reset();
+    assert(mFocusedView.lock() == nullptr);
+    AViewContainer::onMousePressed(pos, button);
+    if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
+        if (focusCopy->hasFocus()) {
+            focusCopy->onFocusLost();
+        }
+    }
 }
 
 void AWindow::onClosed() {
@@ -1138,17 +1159,19 @@ void AWindow::onMouseMove(glm::ivec2 pos) {
 void AWindow::onFocusAcquired() {
     mIsFocused = true;
     AViewContainer::onFocusAcquired();
+    /*
     if (auto v = getFocusedView()) {
         v->onFocusAcquired();
-    }
+    }*/
 }
 
 void AWindow::onFocusLost() {
     mIsFocused = false;
     AViewContainer::onFocusLost();
+    /*
     if (auto v = getFocusedView()) {
         v->onFocusLost();
-    }
+    }*/
 }
 
 void AWindow::onKeyDown(AInput::Key key) {
@@ -1173,7 +1196,7 @@ void AWindow::onCharEntered(wchar_t c) {
     }
 }
 
-void AWindow::setFocusedView(_<AView> view) {
+void AWindow::setFocusedView(const _<AView>& view) {
     if (mFocusedView.lock() == view) {
         return;
     }
@@ -1182,7 +1205,9 @@ void AWindow::setFocusedView(_<AView> view) {
     }
     mFocusedView = view;
     if (view) {
-        view->onFocusAcquired();
+        if (!view->hasFocus()) {
+            view->onFocusAcquired();
+        }
     }
 }
 
@@ -1336,6 +1361,18 @@ void AWindow::setIcon(const AImage& image) {
 
 void AWindow::hide() {
     ShowWindow(mHandle, SW_HIDE);
+}
+
+void AWindow::focusNextView() {
+    auto beginPoint = getFocusedView();
+    if (beginPoint == nullptr) {
+        beginPoint = shared_from_this();
+    }
+    while (beginPoint != nullptr) {
+        if (auto asContainer = _cast<AViewContainer>(beginPoint)) {
+
+        }
+    }
 }
 
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ для XLIB

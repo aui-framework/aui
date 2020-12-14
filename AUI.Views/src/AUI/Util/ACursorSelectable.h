@@ -55,6 +55,7 @@ public:
     int getPosByIndex(int end, int begin = 0);
 
     void selectAll();
+    void clearSelection();
 
     void drawSelectionRects();
 };

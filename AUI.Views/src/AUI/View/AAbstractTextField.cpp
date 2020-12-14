@@ -178,7 +178,10 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
 
 void AAbstractTextField::onCharEntered(wchar_t c)
 {
-	if (AInput::isKeyDown(AInput::LButton) || AInput::isKeyDown(AInput::LControl) || AInput::isKeyDown(AInput::RControl))
+	if (AInput::isKeyDown(AInput::LButton) ||
+	    AInput::isKeyDown(AInput::LControl) ||
+	    AInput::isKeyDown(AInput::RControl) ||
+	    c == '\t')
 		return;
 	if (c == '\n' || c == '\r')
         return;

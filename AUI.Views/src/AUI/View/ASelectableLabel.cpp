@@ -61,6 +61,7 @@ void ASelectableLabel::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
 
 void ASelectableLabel::onFocusLost() {
     AView::onFocusLost();
+    clearSelection();
     redraw();
 }
 
@@ -79,4 +80,12 @@ void ASelectableLabel::onKeyDown(AInput::Key key) {
                     AClipboard::copyToClipboard(getSelectedText());
                 break;
     }
+}
+
+bool ASelectableLabel::consumesClick(const glm::ivec2& pos) {
+    return true;
+}
+
+void ASelectableLabel::onFocusAcquired() {
+    AView::onFocusAcquired();
 }
