@@ -61,6 +61,9 @@ AAbstractTextField::~AAbstractTextField()
 {
 }
 
+bool AAbstractTextField::handlesNonMouseNavigation() {
+    return true;
+}
 
 int AAbstractTextField::getContentMinimumHeight()
 {
@@ -69,6 +72,7 @@ int AAbstractTextField::getContentMinimumHeight()
 
 void AAbstractTextField::onKeyDown(AInput::Key key)
 {
+    AView::onKeyDown(key);
 	onKeyRepeat(key);
 }
 

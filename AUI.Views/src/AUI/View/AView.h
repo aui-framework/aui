@@ -246,22 +246,17 @@ protected:
 	virtual void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor);
 
 
-	/**
-	 * \brief Попробовать определить std::shared_ptr для этого объекта.
-	 */
-    _<AView> determineSharedPointer() const;
-
 public:
-	AView();
-	virtual ~AView() = default;
 
+    AView();
+    virtual ~AView() = default;
 	/**
 	 * \brief Попросить рендерер перерисовать этот AView.
 	 */
 	void redraw();
 
-
 	virtual void drawStencilMask();
+
 
 	/**
 	 * \brief Отрисовка этого AView. Эта фукнция не должна
@@ -340,7 +335,6 @@ public:
 
 	virtual bool consumesClick(const glm::ivec2& pos);
 
-
 	/**
 	 * \note каждый <class ?: AView> должен сам
 	 *		 обрабатывать этот отступ.
@@ -352,6 +346,7 @@ public:
 		return mPadding;
 	}
 
+
 	/**
 	 * \brief расчитывает ширину, занимаемой этим
 	 *	      AView.
@@ -361,7 +356,6 @@ public:
 	[[nodiscard]]
 	float getTotalFieldHorizontal() const;
 
-
 	/**
 	 * \brief расчитывает высоту, занимаемой этим
 	 *	      AView.
@@ -370,6 +364,7 @@ public:
 	 */
 	[[nodiscard]]
 	float getTotalFieldVertical() const;
+
 
 	AViewContainer* getParent() const
 	{
@@ -381,13 +376,13 @@ public:
 		return mCursor;
 	}
 
-
 	/**
 	 * \brief расчитывает минимальную ширину контента.
 	 *
 	 * \return минимальная ширина контента.
 	 */
 	virtual int getContentMinimumWidth();
+
 
 	/**
 	 * \brief расчитывает минимальную высоту контента.
@@ -396,12 +391,12 @@ public:
 	 */
 	virtual int getContentMinimumHeight();
 
-
 	bool hasFocus() const;
 
-	virtual int getMinimumWidth();
-    virtual int getMinimumHeight();
 
+	virtual int getMinimumWidth();
+
+    virtual int getMinimumHeight();
 	glm::ivec2 getMinimumSize() {
 	    return {getMinimumWidth(), getMinimumHeight()};
 	}
@@ -415,11 +410,11 @@ public:
 	{
 		return static_cast<int>(mSize.x - mPadding.horizontal());
 	}
-	int getContentHeight() const
+
+    int getContentHeight() const
 	{
 		return static_cast<int>(mSize.y - mPadding.vertical());
 	}
-
 	void setExpanding(const glm::ivec2& expanding)
 	{
 		mExpanding = expanding;
@@ -428,24 +423,24 @@ public:
     const _<AAnimator>& getAnimator() const {
 	    return mAnimator;
 	}
-    void setAnimator(const _<AAnimator>& animator);
 
+    void setAnimator(const _<AAnimator>& animator);
     void getTransform(glm::mat4& transform) const;
-	int getExpandingHorizontal() const
+
+    int getExpandingHorizontal() const
 	{
 		return mExpanding.x;
 	}
-	int getExpandingVertical() const
+    int getExpandingVertical() const
 	{
 		return mExpanding.y;
 	}
-
 	FontStyle& getFontStyle();
 
 	virtual void setPosition(const glm::ivec2& position);
-	virtual void setSize(int width, int height);
-    virtual void setGeometry(int x, int y, int width, int height);
 
+    virtual void setSize(int width, int height);
+    virtual void setGeometry(int x, int y, int width, int height);
 	void setFixedSize(const glm::ivec2& size) {
 	    mFixedSize = size;
 	}
@@ -454,19 +449,20 @@ public:
 	{
 		return mHovered;
 	}
-	bool isMousePressed() const
+
+    bool isMousePressed() const
 	{
 		return mPressed;
 	}
-	bool isEnabled() const
+    bool isEnabled() const
 	{
 		return mEnabled;
 	}
-
 	Visibility getVisibility() const
 	{
 		return mVisibility;
 	}
+	Visibility getVisibilityRecursive() const;
 
 	void setVisibility(Visibility visibility)
 	{
@@ -479,11 +475,11 @@ public:
 	 */
 	void pack();
 
-
 	/**
 	 * \brief Выставить фокус на этот AView.
 	 */
 	 void focus();
+
 
 	/**
 	 * \return координаты этого AView относительно левого верхнего угла окна
@@ -491,8 +487,8 @@ public:
     [[nodiscard]] glm::ivec2 getPositionInWindow();
 
 	const ADeque<AString>& getCssNames() const;
-	void addCssName(const AString& css);
 
+    void addCssName(const AString& css);
 	/**
 	 * \brief добавить CSS класс к AView. Эта функция служит для упрощения создания элементов с кастомными классами
 	 * \example
@@ -509,50 +505,60 @@ public:
 	}
 
 	void setCss(const AString& cssCode);
-	void ensureCSSUpdated();
+    void ensureCSSUpdated();
+
+    /**
+     * \brief Попробовать определить std::shared_ptr для этого объекта.
+     */
+    virtual _<AView> determineSharedPointer();
 
 	virtual void onMouseEnter();
-	virtual void onMouseMove(glm::ivec2 pos);
-	virtual void onMouseLeave();
+    virtual void onMouseMove(glm::ivec2 pos);
+    virtual void onMouseLeave();
 
 	virtual void onMousePressed(glm::ivec2 pos, AInput::Key button);
-	virtual void onMouseReleased(glm::ivec2 pos, AInput::Key button);
+    virtual void onMouseReleased(glm::ivec2 pos, AInput::Key button);
     virtual void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button);
     virtual void onMouseWheel(glm::ivec2 pos, int delta);
     virtual void onKeyDown(AInput::Key key);
-	virtual void onKeyRepeat(AInput::Key key);
-	virtual void onKeyUp(AInput::Key key);
-	virtual void onFocusAcquired();
-	virtual void onFocusLost();
+    virtual void onKeyRepeat(AInput::Key key);
+    virtual void onKeyUp(AInput::Key key);
+    virtual void onFocusAcquired();
+    virtual void onFocusLost();
 
 	virtual void onCharEntered(wchar_t c);
 
 	virtual void getCustomCssAttributes(AMap<AString, AVariant>& map);
 
+	/**
+	 * \brief Принимает ли данный AView фокус при переключении между AView кнопкой Tab
+	 */
+	virtual bool handlesNonMouseNavigation();
+
 	void setEnabled(bool enabled = true);
-	void setDisabled(bool disabled = true);
+    void setDisabled(bool disabled = true);
 
 	void enable()
 	{
 		setEnabled(true);
 	}
-	void disable()
+    void disable()
 	{
 		setEnabled(false);
 	}
 
 signals:
-	emits<bool> hoveredState;
-	emits<> mouseEnter;
-	emits<> mouseLeave;
+    emits<bool> hoveredState;
+    emits<> mouseEnter;
+    emits<> mouseLeave;
 
 	emits<bool> pressedState;
-	emits<> mousePressed;
-	emits<> mouseReleased;
+    emits<> mousePressed;
+    emits<> mouseReleased;
 
 	emits<bool> enabledState;
-	emits<> enabled;
-	emits<> disabled;
+    emits<> enabled;
+    emits<> disabled;
 
 	/**
 	 * \brief щёлчок какой-то кнопкой мыши.

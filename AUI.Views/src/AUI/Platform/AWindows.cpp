@@ -1365,14 +1365,82 @@ void AWindow::hide() {
 
 void AWindow::focusNextView() {
     auto beginPoint = getFocusedView();
+
+    bool triedToSearchFromBeginning = false;
+
     if (beginPoint == nullptr) {
         beginPoint = shared_from_this();
+        triedToSearchFromBeginning = true;
     }
-    while (beginPoint != nullptr) {
-        if (auto asContainer = _cast<AViewContainer>(beginPoint)) {
-
+    auto target = beginPoint;
+    while (target != nullptr) {
+        if (auto asContainer = _cast<AViewContainer>(target)) {
+            // контейнер
+            if (!asContainer->getViews().empty()) {
+                target = asContainer->getViews().first();
+                continue;
+            }
+        }
+        if (target == beginPoint || !target->handlesNonMouseNavigation() || target->getVisibilityRecursive() == V_GONE) {
+            // нам нужно уйти на следующий элемент
+            if (target->getParent()) {
+                // будем идти вверх по иерархии
+                while (auto parent = target->getParent()) {
+                    auto& parentViews = parent->getViews();
+                    auto index = parentViews.indexOf(target) + 1;
+                    if (index >= parentViews.size()) {
+                        // нужно перескочить на следующий контейнер, т. к. в этом контейнере все элементы закончились
+                        target = target->getParent()->determineSharedPointer();
+                        if (target == nullptr) {
+                            if (triedToSearchFromBeginning) {
+                                break;
+                            } else {
+                                beginPoint = target = shared_from_this();
+                                triedToSearchFromBeginning = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        target = parentViews[index];
+                        break;
+                    }
+                }
+            } else {
+                // корневой элемент
+                if (triedToSearchFromBeginning) {
+                    // уже пробовали искать с начала, прекращаем поиск
+                    target = nullptr;
+                    break;
+                } else {
+                    // попробуем поискать с начала
+                    beginPoint = target = shared_from_this();
+                    triedToSearchFromBeginning = true;
+                }
+            }
+        } else {
+            // нашли то, что не является beginPoint
+            break;
         }
     }
+
+    if (target != shared_from_this()) {
+        if (mFocusedView.lock() == target) {
+            return;
+        }
+        if (auto c = mFocusedView.lock()) {
+            c->onFocusLost();
+        }
+        mFocusedView = target;
+        if (target) {
+            if (!target->hasFocus()) {
+                target->onFocusAcquired();
+            }
+        }
+    }
+}
+
+_<AView> AWindow::determineSharedPointer() {
+    return (shared_from_this());
 }
 
 // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ для XLIB

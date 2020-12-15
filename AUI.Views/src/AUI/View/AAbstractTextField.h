@@ -62,6 +62,8 @@ public:
 		return mContents;
 	}
 
+    bool handlesNonMouseNavigation() override;
+
 signals:
 	/**
 	 * \brief изменение текстового поля завершено

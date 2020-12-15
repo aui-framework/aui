@@ -908,6 +908,10 @@ void AView::onCharEntered(wchar_t c)
 
 }
 
+bool AView::handlesNonMouseNavigation() {
+    return false;
+}
+
 void AView::getCustomCssAttributes(AMap<AString, AVariant>& map)
 {
 	if (mEnabled)
@@ -998,7 +1002,7 @@ void AView::setCss(const AString& cssCode) {
     recompileCSS();
 }
 
-_<AView> AView::determineSharedPointer() const {
+_<AView> AView::determineSharedPointer() {
     if (mParent) {
         for (auto& p : mParent->getViews()) {
             if (p.get() == this) {
@@ -1015,5 +1019,23 @@ void AView::focus() {
         assert(s);
         AWindow::current()->setFocusedView(s);
     };
+}
+
+AView::Visibility AView::getVisibilityRecursive() const {
+    if (mVisibility == V_GONE)
+        return V_GONE;
+
+    int v = mVisibility;
+
+    for (auto target = mParent; target; target = target->mParent) {
+        if (v < target->mVisibility) {
+            v = target->mVisibility;
+            if (v == V_GONE) {
+                return V_GONE;
+            }
+        }
+    }
+
+    return static_cast<AView::Visibility>(v);
 }
 
