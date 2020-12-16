@@ -64,6 +64,8 @@ public:
 
     bool handlesNonMouseNavigation() override;
 
+    void onFocusAcquired() override;
+
 signals:
 	/**
 	 * \brief изменение текстового поля завершено

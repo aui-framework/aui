@@ -56,6 +56,10 @@ AAbstractTextField::AAbstractTextField()
 	AVIEW_CSS;
 }
 
+void AAbstractTextField::onFocusAcquired() {
+    AView::onFocusAcquired();
+    updateCursorBlinking();
+}
 
 AAbstractTextField::~AAbstractTextField()
 {

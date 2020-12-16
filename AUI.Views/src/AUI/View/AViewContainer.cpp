@@ -6,6 +6,7 @@
 
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/AMetric.h"
+#include <AUI/Traits/iterators.h>
 
 
 unsigned char stencilDepth = 0;
@@ -91,25 +92,18 @@ void AViewContainer::onMouseMove(glm::ivec2 pos)
 {
 	AView::onMouseMove(pos);
 
-	for (auto& view : mViews)
-	{
-		if (!view->isEnabled())
-			continue;
-		
-		auto mousePos = pos - view->getPosition();
-		bool hovered = mousePos.x >= 0 && mousePos.y >= 0 && mousePos.x < view->getSize().x && mousePos.y < view->getSize().y;
-        if (view->isMouseHover() != hovered) {
-            if (hovered) {
-                view->onMouseEnter();
-            } else {
+	auto targetView = getViewAt(pos);
 
-                view->onMouseLeave();
-            }
-        }
-		if (hovered)
-		{
-			view->onMouseMove(mousePos);
-		}
+	if (targetView) {
+        auto mousePos = pos - targetView->getPosition();
+	    targetView->onMouseEnter();
+        targetView->onMouseMove(mousePos);
+	}
+
+	for (auto& v : mViews) {
+	    if (v->isMouseHover() && v != targetView) {
+	        v->onMouseLeave();
+	    }
 	}
 }
 
@@ -199,9 +193,8 @@ _<ALayout> AViewContainer::getLayout() const
 _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 {
     _<AView> possibleOutput = nullptr;
-	for (auto it = mViews.rbegin(); it != mViews.rend(); ++it)
+	for (auto view : aui::reverse_iterator_wrap(mViews))
 	{
-		auto view = *it;
 		auto targetPos = pos - view->getPosition();
 
 		if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x && targetPos.y < view->getSize().y)
