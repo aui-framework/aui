@@ -38,7 +38,7 @@ protected:
     /**
      * \brief Обновляет макет родительского AView, если размер этого элемента был изменён.
      */
-    void updateParentsLayoutIfNecessary();
+    virtual void updateParentsLayoutIfNecessary();
 
 public:
 	AViewContainer();

@@ -5,6 +5,8 @@
 #include <AUI/Platform/AClipboard.h>
 #include "ASelectableLabel.h"
 #include <AUI/GL/gl.h>
+#include <AUI/Render/RenderHints.h>
+#include <glm/ext/matrix_transform.hpp>
 
 ASelectableLabel::ASelectableLabel() {}
 
@@ -34,9 +36,18 @@ void ASelectableLabel::render() {
     AView::render();
 
     if (hasFocus()) {
-        drawSelectionPre();
+        {
+            RenderHints::PushMatrix m;
+            Render::inst().setTransform(glm::translate(glm::mat4(1.f), {mTextLeftOffset - mPrerendered.length / 2.f, 0, 0}));
+            drawSelectionPre();
+        }
         doRenderText();
-        drawSelectionPost();
+
+        {
+            RenderHints::PushMatrix m;
+            Render::inst().setTransform(glm::translate(glm::mat4(1.f), {mTextLeftOffset - mPrerendered.length / 2.f, 0, 0}));
+            drawSelectionPost();
+        }
     } else {
         doRenderText();
     }
@@ -46,16 +57,19 @@ void ASelectableLabel::render() {
 
 void ASelectableLabel::onMouseMove(glm::ivec2 pos) {
     AView::onMouseMove(pos);
+    pos.x -= mTextLeftOffset - mPrerendered.length / 2.f;
     handleMouseMove(pos);
 }
 
 void ASelectableLabel::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     AView::onMousePressed(pos, button);
+    pos.x -= mTextLeftOffset - mPrerendered.length / 2.f;
     handleMousePressed(pos, button);
  }
 
 void ASelectableLabel::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     AView::onMouseReleased(pos, button);
+    pos.x -= mTextLeftOffset - mPrerendered.length / 2.f;
     handleMouseReleased(pos, button);
 }
 

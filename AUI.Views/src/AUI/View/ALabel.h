@@ -8,7 +8,6 @@ class API_AUI_VIEWS ALabel: public AView
 {
 private:
 	AString mText;
-	Render::PrerendereredString mPrerendered;
 	_<IDrawable> mIcon;
     _<AFont> mFontOverride;
     uint8_t mFontSizeOverride = 0;
@@ -18,11 +17,11 @@ private:
         TT_UPPERCASE,
         TT_LOWERCASE
     } mTextTransform = TT_NORMAL;
-
 	bool mMultiline = false;
 
 protected:
-	AStringVector mLines;
+    AStringVector mLines;
+    Render::PrerendereredString mPrerendered;
 
 	void updateMultiline();
 	FontStyle getFontStyleLabel();
@@ -34,6 +33,10 @@ protected:
     void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
     void doRenderText();
     AString getTargetText();
+
+
+    // для корректного позиционирования выделения
+    int mTextLeftOffset = 0;
 
 public:
 	ALabel();

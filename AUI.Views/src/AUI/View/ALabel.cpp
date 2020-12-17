@@ -159,7 +159,7 @@ void ALabel::doRenderText() {
 
     if (mPrerendered.mVao || mIcon)
     {
-        int leftPadding = mPadding.left;
+        mTextLeftOffset = 0;
         switch (getFontStyleLabel().align)
         {
             case ALIGN_LEFT:
@@ -168,20 +168,20 @@ void ALabel::doRenderText() {
                     auto requiredSpace = mIcon->getSizeHint();
                     RenderHints::PushState s;
                     Render::inst().setTransform(glm::translate(glm::mat4(1.f),
-                                                               glm::vec3(leftPadding, (getContentHeight() - requiredSpace.y) / 2, 0)));
+                                                               glm::vec3(mTextLeftOffset, (getContentHeight() - requiredSpace.y) / 2, 0)));
                     mIcon->draw(requiredSpace);
-                    leftPadding += requiredSpace.x + 1;
+                    mTextLeftOffset += requiredSpace.x + 1;
                 }
                 break;
 
             case ALIGN_CENTER:
-                leftPadding += getContentWidth() / 2;
+                mTextLeftOffset += getContentWidth() / 2;
                 if (mIcon)
                 {
                     auto requiredSpace = mIcon->getSizeHint();
                     RenderHints::PushState s;
                     Render::inst().setTransform(glm::translate(glm::mat4(1.f),
-                                                               glm::vec3(leftPadding - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
+                                                               glm::vec3(mTextLeftOffset - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
                                                                              (getContentHeight() - requiredSpace.y) / 2, 0)));
                     mIcon->draw(requiredSpace);
                 }
@@ -189,13 +189,13 @@ void ALabel::doRenderText() {
                 break;
 
             case ALIGN_RIGHT:
-                leftPadding += getContentWidth();
+                mTextLeftOffset += getContentWidth();
                 if (mIcon)
                 {
                     auto requiredSpace = mIcon->getSizeHint();
                     RenderHints::PushState s;
                     Render::inst().setTransform(glm::translate(glm::mat4(1.f),
-                                                               glm::vec3(leftPadding - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
+                                                               glm::vec3(mTextLeftOffset - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
                                                                              (getContentHeight() - requiredSpace.y) / 2, 0)));
                     mIcon->draw(requiredSpace);
                 }
@@ -211,7 +211,7 @@ void ALabel::doRenderText() {
                     y = (glm::max)(y, (getHeight() - getFontStyleLabel().size) / 2 - 1);
                 }
             }
-            Render::inst().drawString(leftPadding, y, mPrerendered);
+            Render::inst().drawString(mTextLeftOffset + mPadding.left, y, mPrerendered);
         }
     }
 }
