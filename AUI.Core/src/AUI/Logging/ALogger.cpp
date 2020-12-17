@@ -86,7 +86,11 @@ void ALogger::log(Level level, const AString& str)
 void ALogger::setLogFile(const AString& str) {
 #ifndef __ANDROID__
     try {
-        instance().mLogFile = _new<FileOutputStream>(str);
+        if (str.empty()) {
+            instance().mLogFile = nullptr;
+        } else {
+            instance().mLogFile = _new<FileOutputStream>(str);
+        }
     } catch (const AException& e) {
         //log(WARN, e.getMessage());
     }
