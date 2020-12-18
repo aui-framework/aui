@@ -28,6 +28,7 @@ std::tuple<ADragArea*, AViewContainer*> ADragArea::ADraggableHandle::getDragArea
 
 void ADragArea::ADraggableHandle::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     AView::onMousePressed(pos, button);
+    mDragging = true;
 
     auto [dragArea, container] = getDragAreaAndDraggingView();
     connect(mouseMove, dragArea, &ADragArea::handleMouseMove);
@@ -36,14 +37,19 @@ void ADragArea::ADraggableHandle::onMousePressed(glm::ivec2 pos, AInput::Key but
 
 void ADragArea::ADraggableHandle::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     AView::onMouseReleased(pos, button);
-    auto [dragArea,_] = getDragAreaAndDraggingView();
-    mouseMove.clearAllConnectionsWith(dragArea);
-    dragArea->endDragging();
+    if (mDragging) {
+        mDragging = false;
+        auto[dragArea, _] = getDragAreaAndDraggingView();
+        mouseMove.clearAllConnectionsWith(dragArea);
+        dragArea->endDragging();
+    }
 }
 
 void ADragArea::ADraggableHandle::onMouseMove(glm::ivec2 pos) {
     AView::onMouseMove(pos);
-    emit mouseMove(pos);
+    if (mDragging) {
+        emit mouseMove(pos);
+    }
 }
 
 void ADragArea::startDragging(AViewContainer* container) {

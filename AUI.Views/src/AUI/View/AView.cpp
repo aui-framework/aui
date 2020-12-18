@@ -838,7 +838,7 @@ void AView::onMouseLeave()
 void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 {
 	mPressed = true;
-	if (auto w = getWindow())
+	if (auto w = AWindow::current())
 	{
 		if (w != this) {
 			connect(w->mouseReleased, this, [&]()
@@ -846,7 +846,9 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 				AThread::current()->enqueue([&]()
 				{
 					// чтобы быть точно уверенным, что isPressed будет равно false.
-					mPressed = false;
+					if (mPressed) {
+					    onMouseReleased(pos, button);
+					}
 				});
 				disconnect();
 			});

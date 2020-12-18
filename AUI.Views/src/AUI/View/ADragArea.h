@@ -22,6 +22,7 @@ public:
     class API_AUI_VIEWS ADraggableHandle: public AView {
     private:
         std::tuple<ADragArea*, AViewContainer*> getDragAreaAndDraggingView() const;
+        bool mDragging = false;
 
     public:
         void onMousePressed(glm::ivec2 pos, AInput::Key button) override;

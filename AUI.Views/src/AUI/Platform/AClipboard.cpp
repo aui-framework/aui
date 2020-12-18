@@ -21,7 +21,15 @@ void AClipboard::copyToClipboard(const AString& text) {
 AString AClipboard::pasteFromClipboard() {
     OpenClipboard(nullptr);
     HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
-    AString s = (const wchar_t*)GlobalLock(hMem);
+    auto azaza = (const wchar_t*)GlobalLock(hMem);
+    size_t length = 0;
+    for (; *azaza && length < 50'000; ++length) {
+
+    }
+    if (length >= 50'000) {
+        return {};
+    }
+    AString s = azaza;
     GlobalUnlock(hMem);
     CloseClipboard();
     return s;
