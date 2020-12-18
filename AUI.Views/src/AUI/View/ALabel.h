@@ -21,12 +21,12 @@ private:
 
 protected:
     AStringVector mLines;
-    Render::PrerendereredString mPrerendered;
+    Render::PrerenderedString mPrerendered;
 
 	void updateMultiline();
 	FontStyle getFontStyleLabel();
 
-	const Render::PrerendereredString& getPrerendered() {
+	const Render::PrerenderedString& getPrerendered() {
 	    return mPrerendered;
 	}
 

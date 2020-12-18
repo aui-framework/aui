@@ -11,7 +11,7 @@ ACursorSelectable::Selection ACursorSelectable::getSelection() const {
     return { glm::min(mCursorIndex, mCursorSelection), glm::max(mCursorIndex, mCursorSelection) };
 }
 
-bool ACursorSelectable::hasSelection() {
+bool ACursorSelectable::hasSelection() const {
     return mCursorIndex != mCursorSelection && mCursorSelection != -1;
 }
 

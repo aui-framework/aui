@@ -1,6 +1,6 @@
 ﻿#include "StringStream.h"
 
-StringStream::StringStream(const AString& string): mString(string), mIterator(mString.begin())
+StringStream::StringStream(const AString& string): mString(string.toStdString()), mIterator(mString.begin())
 {
 }
 
@@ -9,10 +9,8 @@ int StringStream::read(char* dst, int size)
 	if (mIterator == mString.end())
 		return 0;
 
-	int r = 0;
-	for (; mIterator != mString.end() && r < size; ++r, ++mIterator)
-	{
-		dst[r] = char(*mIterator);
-	}
-	return r;
+	int toRead = glm::min(size, mString.end() - mIterator);
+	memcpy(dst, &(*mIterator), toRead);
+    mIterator += toRead;
+	return toRead;
 }

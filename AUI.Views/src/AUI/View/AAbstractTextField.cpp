@@ -163,6 +163,11 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
                         mContents.erase(mContents.begin() + sel.begin, mContents.begin() + sel.end);
                     }
                     auto toPaste = AClipboard::pasteFromClipboard();
+                    if (mMaxTextLength <= mContents.length())
+                        return;
+                    if (!mIsMultiline) {
+                        toPaste = toPaste.replacedAll("\n", "");
+                    }
                     mContents.insert(pastePos, toPaste);
                     mCursorIndex = pastePos + toPaste.length();
                     mCursorSelection = -1;
@@ -221,6 +226,8 @@ void AAbstractTextField::onCharEntered(wchar_t c)
 			}
 			break;
 		default:
+		    if (mMaxTextLength <= mContents.length())
+		        return;
 			mContents.insert(mCursorIndex++, c);
 		}
 		if (!isValidText(mContents))
@@ -231,7 +238,8 @@ void AAbstractTextField::onCharEntered(wchar_t c)
 		}
 	}
 	emit textChanging(mContents);
-	updateCursorBlinking();
+    invalidatePrerenderedString();
+    updateCursorBlinking();
 	updateCursorPos();
 
 	if (!AInput::isKeyDown(AInput::LShift) && !AInput::isKeyDown(AInput::RShift))
@@ -269,7 +277,10 @@ void AAbstractTextField::render()
         }
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     } else {
-        Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, getContentsPasswordWrap(), getFontStyle());
+	    if (!mPrerenderedString.mVao) {
+            mPrerenderedString = Render::inst().preRendererString(getContentsPasswordWrap(), getFontStyle());
+	    }
+        Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, mPrerenderedString);
         Render::inst().setFill(Render::FILL_SOLID);
         Render::inst().setColor({1, 1, 1, 1 });
 	}
@@ -311,6 +322,7 @@ void AAbstractTextField::setText(const AString& t)
 	mCursorSelection = 0;
 	updateCursorBlinking();
 
+    invalidatePrerenderedString();
 	emit textChanged;
 }
 

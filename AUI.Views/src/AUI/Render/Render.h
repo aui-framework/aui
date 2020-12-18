@@ -38,15 +38,15 @@ public:
 		FILL_SYMBOL_SUBPIXEL,
 	};
 
-	class PrerendereredString {
+	class PrerenderedString {
 	public:
-		PrerendereredString():
+		PrerenderedString():
 			length(0),
 			side(0)
 		{};
 
-		PrerendereredString(const _<GL::Vao>& mVao, const FontStyle& fs, float length,
-			uint16_t side, const AString& mText) : mVao(mVao), fs(fs), length(length),
+		PrerenderedString(const _<GL::Vao>& mVao, const FontStyle& fs, float length,
+                          uint16_t side, const AString& mText) : mVao(mVao), fs(fs), length(length),
 			side(side), mText(mText) {}
 
 		_<GL::Vao> mVao;
@@ -112,9 +112,9 @@ public:
 	}
     void drawBoxShadow(float x, float y, float width, float height, float blurRadius, const AColor& color);
     void drawString(int x, int y, const AString& text, FontStyle& fs);
-    void drawString(int x, int y, PrerendereredString& f);
+    void drawString(int x, int y, PrerenderedString& f);
 
-	PrerendereredString preRendererString(const AString& text, FontStyle& fs);
+	PrerenderedString preRendererString(const AString& text, FontStyle& fs);
 
 	void setColorForced(const AColor& color)
 	{

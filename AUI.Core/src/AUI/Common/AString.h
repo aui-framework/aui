@@ -210,8 +210,8 @@ public:
 	{
 		return std::wstring::data();
 	}
-	AString replacedAll(const AString& from, const AString& to) const noexcept;
-	AString replacedAll(wchar_t from, wchar_t to) const noexcept {
+	[[nodiscard]] inline AString replacedAll(const AString& from, const AString& to) const noexcept;
+    [[nodiscard]] inline AString replacedAll(wchar_t from, wchar_t to) const noexcept {
 	    AString copy;
 	    copy.reserve(length() + 10);
 	    for (auto c : *this) {
@@ -223,7 +223,7 @@ public:
 	    }
         return copy;
 	}
-	AString replacedAll(const ASet<wchar_t> from, wchar_t to) const noexcept {
+    [[nodiscard]] inline AString replacedAll(const ASet<wchar_t> from, wchar_t to) const noexcept {
 	    AString copy;
 	    copy.reserve(length() + 10);
 	    for (auto c : *this) {

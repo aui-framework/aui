@@ -5,8 +5,8 @@
 class API_AUI_CORE StringStream: public IInputStream
 {
 private:
-	AString mString;
-	AString::iterator mIterator;
+	std::string mString;
+	std::string::iterator mIterator;
 
 	public:
 	StringStream(const AString& string);

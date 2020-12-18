@@ -3,11 +3,13 @@
 #include <AUI/Util/ACursorSelectable.h>
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
+#include <AUI/Render/Render.h>
 
 class API_AUI_VIEWS AAbstractTextField : public AView, public ACursorSelectable
 {
 private:
 	AString mContents;
+	Render::PrerenderedString mPrerenderedString;
 
 	static ATimer& blinkTimer();
 	
@@ -15,11 +17,16 @@ private:
 	bool mCursorBlinkVisible = true;
 	bool mTextChangedFlag = false;
     bool mIsPasswordTextField = false;
+    bool mIsMultiline = false;
 
 	int mHorizontalScroll = 0;
+	size_t mMaxTextLength = 0x200;
 
 	void updateCursorBlinking();
 	void updateCursorPos();
+	void invalidatePrerenderedString() {
+        mPrerenderedString.mVao = nullptr;
+	}
 
     AString getContentsPasswordWrap();
 	
@@ -51,10 +58,6 @@ public:
 	void onMouseMove(glm::ivec2 pos) override;
 	void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
-	void setPasswordMode(bool isPasswordMode) {
-        mIsPasswordTextField = isPasswordMode;
-	}
-
 	void setText(const AString& t);
 
 	[[nodiscard]] const AString& getText() const override
@@ -62,8 +65,15 @@ public:
 		return mContents;
 	}
 
-    bool handlesNonMouseNavigation() override;
+    void setPasswordMode(bool isPasswordMode) {
+        mIsPasswordTextField = isPasswordMode;
+    }
 
+	void setMaxTextLength(size_t newTextLength) {
+	    mMaxTextLength = newTextLength;
+	}
+
+    bool handlesNonMouseNavigation() override;
     void onFocusAcquired() override;
 
 signals:

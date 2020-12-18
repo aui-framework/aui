@@ -45,14 +45,16 @@ public:
     [[nodiscard]] virtual const AString& getText() const = 0;
     [[nodiscard]] AString getSelectedText() const
     {
+        if (!hasSelection())
+            return {};
         return {getText().begin() + getSelection().begin, getText().begin() + getSelection().end};
     }
 
     [[nodiscard]] Selection getSelection() const;
-    bool hasSelection();
+    [[nodiscard]] bool hasSelection() const;
 
-    unsigned getCursorIndexByPos(glm::ivec2 pos);
-    int getPosByIndex(int end, int begin = 0);
+    [[nodiscard]] unsigned getCursorIndexByPos(glm::ivec2 pos);
+    [[nodiscard]] int getPosByIndex(int end, int begin = 0);
 
     void selectAll();
     void clearSelection();

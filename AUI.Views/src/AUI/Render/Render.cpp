@@ -419,7 +419,7 @@ void Render::drawString(int x, int y, const AString& text, FontStyle& fs) {
 	auto s = preRendererString(text, fs);
 	drawString(x, y, s);
 }
-void Render::drawString(int x, int y, PrerendereredString& f) {
+void Render::drawString(int x, int y, PrerenderedString& f) {
 	auto img = f.fs.font->texturePackerOf(f.fs.size, f.fs.fontRendering);
 	if (!img->getImage())
 		return;
@@ -469,7 +469,7 @@ void Render::drawString(int x, int y, PrerendereredString& f) {
 
 
 
-Render::PrerendereredString Render::preRendererString(const AString& text, FontStyle& fs) {
+Render::PrerenderedString Render::preRendererString(const AString& text, FontStyle& fs) {
 	static _<AFont> d = AFontManager::inst().getDefault();
 	if (!fs.font)
 		fs.font = d;

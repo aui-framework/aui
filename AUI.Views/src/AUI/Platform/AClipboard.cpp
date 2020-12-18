@@ -22,17 +22,23 @@ AString AClipboard::pasteFromClipboard() {
     OpenClipboard(nullptr);
     HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
     auto azaza = (const wchar_t*)GlobalLock(hMem);
-    size_t length = 0;
-    for (; *azaza && length < 50'000; ++length) {
 
+	if (azaza) {
+        size_t length = 0;
+        for (; azaza[length] && length < 50'000; ++length) {
+
+        }
+        if (length >= 50'000) {
+            GlobalUnlock(hMem);
+            CloseClipboard();
+            return {};
+        }
+        AString s = azaza;
+        GlobalUnlock(hMem);
+        CloseClipboard();
+        return s;
     }
-    if (length >= 50'000) {
-        return {};
-    }
-    AString s = azaza;
-    GlobalUnlock(hMem);
-    CloseClipboard();
-    return s;
+    return {};
 }
 #else
 void AClipboard::copyToClipboard(const AString& text) {
