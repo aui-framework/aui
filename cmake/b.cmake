@@ -175,6 +175,11 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
                     endforeach()
                 endif()
 
+                # find compiler home dir
+                get_filename_component(${COMPILER_DIR} ${CMAKE_CXX_COMPILER} DIRECTORY)
+                get_filename_component(${COMPILER_DIR} ${COMPILER_DIR} DIRECTORY)
+                message(STATUS "Compiler dir is ${COMPILER_DIR}")
+
                 # try to resolve unresolved dependencies
                 foreach (V ${UNRESOLVED})
 					# avoid duplicates
@@ -189,6 +194,8 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
 							find_file(
 								TARGET_FILE
 									"${V}"
+								HINTS
+								    "${COMPILER_DIR}"
 								PATH_SUFFIXES
 									"bin/"
 									"lib/"
@@ -297,13 +304,7 @@ function(AUI_Compile_Assets AUI_MODULE_NAME)
         endif()
     endif()
 endfunction(AUI_Compile_Assets)
-if (MINGW)
-    # get rid of libgcc_s<whatever>.dll
-    set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libgcc -static-libstdc++ -lwsock32 -lws2_32 ${CMAKE_CXX_STANDARD_LIBRARIES}")
 
-    # get rid of libwinpthread<whatever>.dll
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive")
-endif()
 if (MINGW OR UNIX)
     # strip for release
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")

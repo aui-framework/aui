@@ -210,7 +210,7 @@ public:
 	{
 		return std::wstring::data();
 	}
-	[[nodiscard]] inline AString replacedAll(const AString& from, const AString& to) const noexcept;
+	[[nodiscard]] AString replacedAll(const AString& from, const AString& to) const noexcept;
     [[nodiscard]] inline AString replacedAll(wchar_t from, wchar_t to) const noexcept {
 	    AString copy;
 	    copy.reserve(length() + 10);

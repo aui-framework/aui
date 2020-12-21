@@ -9,7 +9,7 @@ int StringStream::read(char* dst, int size)
 	if (mIterator == mString.end())
 		return 0;
 
-	int toRead = glm::min(size, mString.end() - mIterator);
+	int toRead = glm::min(size, int(mString.end() - mIterator));
 	memcpy(dst, &(*mIterator), toRead);
     mIterator += toRead;
 	return toRead;
