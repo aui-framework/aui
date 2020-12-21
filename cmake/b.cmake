@@ -3,6 +3,16 @@
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 
+# determine compiler home dir for mingw when crosscompiling
+if (MINGW AND CMAKE_CROSSCOMPILING)
+    get_filename_component(C_COMPILER_NAME ${CMAKE_C_COMPILER} NAME)
+    string(FIND ${C_COMPILER_NAME} "mingw32" _tmp)
+    math(EXPR _tmp "${_tmp}+7")
+    string(SUBSTRING ${C_COMPILER_NAME} 0 ${_tmp}+7 COMPILER_DIR)
+    set(COMPILER_DIR "/usr/${COMPILER_DIR}")
+    message(STATUS "Compiler dir is ${COMPILER_DIR}")
+endif()
+
 
 cmake_minimum_required(VERSION 3.16)
 
@@ -98,6 +108,7 @@ function(AUI_Common AUI_MODULE_NAME)
     install(CODE "set(CMAKE_INSTALL_PATH \"${CMAKE_INSTALL_PATH}\")")
     install(CODE "set(CMAKE_PREFIX_PATH \"${CMAKE_PREFIX_PATH}\")")
     install(CODE "set(CMAKE_C_COMPILER \"${CMAKE_C_COMPILER}\")")
+    install(CODE "set(COMPILER_DIR \"${COMPILER_DIR}\")")
     install(CODE [[
             message(STATUS "Installing ${AUI_MODULE_NAME}")
     ]])
@@ -174,11 +185,6 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
                         list(APPEND UNRESOLVED ${V})
                     endforeach()
                 endif()
-
-                # find compiler home dir
-                get_filename_component(${COMPILER_DIR} ${CMAKE_CXX_COMPILER} DIRECTORY)
-                get_filename_component(${COMPILER_DIR} ${COMPILER_DIR} DIRECTORY)
-                message(STATUS "Compiler dir is ${COMPILER_DIR}")
 
                 # try to resolve unresolved dependencies
                 foreach (V ${UNRESOLVED})
