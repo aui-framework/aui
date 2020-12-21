@@ -65,11 +65,24 @@ void ADragArea::startDragging(AViewContainer* container) {
 void ADragArea::handleMouseMove() {
     if (auto s = mDraggedContainer.lock()) {
         auto newPos = ADesktop::getMousePosition() - mInitialMousePos;
-        s->setPosition(glm::clamp(newPos, glm::ivec2{0, 0}, getSize() - s->getSize()));
+        setValidPositionFor(s, newPos);
         redraw();
     }
 }
 
+void ADragArea::updateLayout() {
+    for (auto& v : getViews()) {
+        setValidPositionFor(v, v->getPosition());
+    }
+    AViewContainer::updateLayout();
+}
+
 void ADragArea::endDragging() {
     mDraggedContainer.reset();
+}
+
+void ADragArea::setValidPositionFor(const _<AView>& targetView, const glm::ivec2& newPosition) {
+    targetView->setPosition(
+            glm::clamp(newPosition, glm::ivec2{targetView->getMargin().left, targetView->getMargin().top},
+                       getSize() - targetView->getSize() - glm::ivec2{targetView->getMargin().right, targetView->getMargin().bottom}));
 }

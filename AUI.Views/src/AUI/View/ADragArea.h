@@ -12,12 +12,16 @@ private:
     _weak<AViewContainer> mDraggedContainer;
     glm::ivec2 mInitialMousePos;
 
+
+    void setValidPositionFor(const _<AView>& targetView, const glm::ivec2& newPosition);
 public:
     ADragArea();
     void startDragging(AViewContainer* container);
     void handleMouseMove();
 
     void endDragging();
+
+    void updateLayout() override;
 
     class API_AUI_VIEWS ADraggableHandle: public AView {
     private:
