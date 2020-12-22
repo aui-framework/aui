@@ -51,10 +51,9 @@ public:
     ~painter() {
         assert(painting);
         painting = false;
-        //SwapBuffers(hdc);
-        bool ok = wglMakeCurrent(mHdc, nullptr);
-        assert(ok);
         EndPaint(mHandle, &mPaint);
+        bool ok = wglMakeCurrent(nullptr, nullptr);
+        assert(ok);
     }
 };
 
@@ -89,13 +88,18 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     }
 
     switch (uMsg) {
-        /*
-    case WM_SIZING:
-        {
-        auto rect = reinterpret_cast<RECT*>(lParam);
-        }
-        break;*/
-
+/*
+        case WM_SIZING:
+            if (!isMinimized()) {
+                auto rect = reinterpret_cast<LPRECT>(lParam);
+                auto w = rect->right - rect->left;
+                auto h = rect->bottom - rect->top;
+                wglMakeCurrent(mDC, context.hrc);
+                emit resized(w, h);
+                AViewContainer::setSize(w, h);
+            }
+            return true;
+            */
         case WM_SETFOCUS:
             onFocusAcquired();
             return 0;
@@ -106,19 +110,19 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         case WM_WINDOWPOSCHANGED:
             setFocusedView(nullptr);
-            return 0;
+            break;
 
         case WM_WINDOWPOSCHANGING:
             setFocusedView(nullptr);
             return 0;
 
-            case WM_PAINT: {
-                // почему-то поток повисает при перемещении окна
-                AThread::current()->processMessages();
+        case WM_PAINT: {
+            // почему-то поток повисает при перемещении окна
+            AThread::current()->processMessages();
 
-                if (!painter::painting) {
-                    redraw();
-                }
+            if (!painter::painting) {
+                redraw();
+            }
 
             return 0;
         }
