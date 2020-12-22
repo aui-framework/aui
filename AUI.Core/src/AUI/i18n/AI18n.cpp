@@ -35,15 +35,15 @@ void AI18n::loadFromStreamInto(const _<IInputStream>& iis, AMap<AString, AString
         for (;;) {
             if (t.readChar() == '#') {
                 // комментарий
-                t.skipUntilUnescaped('n');
+                t.skipUntilUnescaped('\n');
             } else {
                 // строка
                 t.reverseByte();
 
                 auto key = t.readStringUntilUnescaped('=');
-                auto value = t.readStringUntilUnescaped('n');
+                auto value = t.readStringUntilUnescaped('\n');
 
-                langData[key] = value;
+                langData[key] = value.processEscapes();
             }
         }
     } catch (...) {

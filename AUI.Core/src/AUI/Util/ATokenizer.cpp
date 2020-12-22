@@ -174,6 +174,7 @@ AString ATokenizer::readStringUntilUnescaped(char c)
 	{
 		if (current == '\\')
 		{
+			result += '\\';
 			result += readChar();
 		} else
 		{

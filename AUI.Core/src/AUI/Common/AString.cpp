@@ -305,3 +305,27 @@ AString AString::numberHex(int i) noexcept {
     sprintf(buf, "%x", i);
     return buf;
 }
+
+AString AString::processEscapes() const {
+    AString result;
+    result.reserve(length());
+    bool doEscape = false;
+    for (auto& c : *this) {
+        if (doEscape) {
+            doEscape = false;
+            switch (c) {
+                case '\\':
+                    result << '\\';
+                    break;
+                case 'n':
+                    result << '\n';
+                    break;
+            }
+        } else if (c == '\\') {
+            doEscape = true;
+        } else {
+            result << c;
+        }
+    }
+    return result;
+}

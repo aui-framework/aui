@@ -498,6 +498,8 @@ public:
 
     template<typename... Args>
     inline AString format(Args&&... args);
+
+    AString processEscapes() const;
 };
 
 inline AString operator+(const AString& l, const AString& r) noexcept
