@@ -8,13 +8,6 @@
 ALogger::ALogger()
 {
 
-#ifndef __ANDROID__
-    try {
-        mLogFile = _new<FileOutputStream>("latest.log");
-    } catch (const AException& e) {
-        //log(WARN, e.getMessage());
-    }
-#endif
 }
 
 ALogger& ALogger::instance()
@@ -46,6 +39,14 @@ void ALogger::log(Level level, const AString& str)
     }
     __android_log_print(prio, "AUI", "%ls", str.c_str());
 #else
+    if (!mLogFile) {
+        try {
+            mLogFile = _new<FileOutputStream>("latest.log");
+        } catch (const AException& e) {
+            //log(WARN, e.getMessage());
+        }
+    }
+
     const char* levelName = "UNKNOWN";
 
     switch (level)
