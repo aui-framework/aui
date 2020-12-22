@@ -5,6 +5,7 @@
 #include <cassert>
 #include "AHash.h"
 #include <openssl/sha.h>
+#include <openssl/md5.h>
 #include <AUI/IO/IInputStream.h>
 
 
@@ -60,4 +61,12 @@ AByteBuffer AHash::sha1(const AByteBuffer& in) {
 
 AByteBuffer AHash::sha1(const _<IInputStream>& in) {
     return sha_impl<SHA_CTX>(SHA1_Init, SHA1_Update, SHA1_Final, 20, in);
+}
+
+AByteBuffer AHash::md5(const AByteBuffer& in) {
+    return sha_impl(MD5, 16, in);
+}
+
+AByteBuffer AHash::md5(const _<IInputStream>& in) {
+    return sha_impl<MD5_CTX>(MD5_Init, MD5_Update, MD5_Final, 16, in);
 }

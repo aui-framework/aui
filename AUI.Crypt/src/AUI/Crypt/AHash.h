@@ -16,6 +16,9 @@ namespace AHash {
 
     API_AUI_CRYPT AByteBuffer sha1(const AByteBuffer& in);
     API_AUI_CRYPT AByteBuffer sha1(const _<IInputStream>& in);
+
+    API_AUI_CRYPT AByteBuffer md5(const AByteBuffer& in);
+    API_AUI_CRYPT AByteBuffer md5(const _<IInputStream>& in);
 }
 
 

@@ -14,6 +14,14 @@ using namespace boost::unit_test;
 
 BOOST_AUTO_TEST_SUITE(Hash)
 
+BOOST_AUTO_TEST_CASE(Md5) {
+    BOOST_CHECK_EQUAL(AHash::md5(AByteBuffer::fromString("govno")).toHexString(), "b3575f222f7b768c25160b879699118b");
+
+    AByteBuffer buffer = AByteBuffer::fromString("govno");
+    _<AByteBuffer> buffer_shared = buffer >> shared;
+
+    BOOST_CHECK_EQUAL(AHash::md5(_new<ByteBufferInputStream>(buffer_shared)).toHexString(), "b3575f222f7b768c25160b879699118b");
+}
 BOOST_AUTO_TEST_CASE(Sha512) {
     BOOST_CHECK_EQUAL(AHash::sha512(AByteBuffer::fromString("govno")).toHexString(), "b7cbd9e15895669db8806632dc00894b4551e172220bdadedbae7005291e1a1586a172012e1319fbff968760bcc13d96015acdff8c115b8f1e3e7b421126bb03");
 
