@@ -78,6 +78,10 @@ _<AFuture<APath>> ADesktop::browseForFolder(const APath& startingLocation) {
     };
 }
 
+void ADesktop::openUrl(const AString& url) {
+    ShellExecute(nullptr, L"open", url.c_str(), nullptr, nullptr, SW_NORMAL);
+}
+
 #elif defined(ANDROID)
 glm::ivec2 ADesktop::getMousePosition()
 {
