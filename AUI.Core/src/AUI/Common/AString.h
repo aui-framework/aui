@@ -552,3 +552,6 @@ namespace std
 		}
 	};
 }
+
+#include <AUI/i18n/AI18n.h>
+#include <AUI/Traits/strings.h>
