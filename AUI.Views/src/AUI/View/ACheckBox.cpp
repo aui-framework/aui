@@ -59,5 +59,7 @@ void ACheckBox::getCustomCssAttributes(AMap<AString, AVariant>& map)
 void ACheckBox::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
 	AView::onMouseReleased(pos, button);
-	emit checked(mChecked = !mChecked);
+	if (button == AInput::LButton) {
+        emit checked(mChecked = !mChecked);
+    }
 }
