@@ -117,3 +117,9 @@ bool ASelectableLabel::consumesClick(const glm::ivec2& pos) {
 void ASelectableLabel::onFocusAcquired() {
     AView::onFocusAcquired();
 }
+
+
+void ASelectableLabel::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) {
+    AView::onMouseDoubleClicked(pos, button);
+    ACursorSelectable::handleMouseDoubleClicked(pos, button);
+}

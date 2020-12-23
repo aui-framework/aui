@@ -150,6 +150,7 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
                     auto sel = getSelection();
                     AClipboard::copyToClipboard(getSelectedText());
                     mContents.erase(mContents.begin() + sel.begin, mContents.begin() + sel.end);
+                    mCursorIndex = sel.begin;
                     mCursorSelection = -1;
                 }
                     break;
@@ -324,6 +325,12 @@ void AAbstractTextField::setText(const AString& t)
 
     invalidatePrerenderedString();
 	emit textChanged;
+}
+
+void AAbstractTextField::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) {
+    AView::onMouseDoubleClicked(pos, button);
+    ACursorSelectable::handleMouseDoubleClicked(pos, button);
+    updateCursorBlinking();
 }
 
 AString AAbstractTextField::getContentsPasswordWrap() {

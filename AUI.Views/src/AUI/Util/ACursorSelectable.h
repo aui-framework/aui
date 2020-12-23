@@ -24,6 +24,8 @@ protected:
     virtual AString getMouseSelectionText() = 0;
     virtual void doRedraw() = 0;
 
+
+    void handleMouseDoubleClicked(const glm::ivec2& pos, AInput::Key key);
     void handleMousePressed(const glm::ivec2& pos, AInput::Key button);
     void handleMouseReleased(const glm::ivec2& pos, AInput::Key button);
     void handleMouseMove(const glm::ivec2& pos);

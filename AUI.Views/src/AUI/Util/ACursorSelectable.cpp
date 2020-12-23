@@ -160,3 +160,27 @@ void ACursorSelectable::drawSelectionRects() {
     draw();
 }
 
+void ACursorSelectable::handleMouseDoubleClicked(const glm::ivec2& pos, AInput::Key button) {
+    auto text = getMouseSelectionText();
+
+    // выделить слово
+    auto clickIndex = getCursorIndexByPos(pos);
+
+
+    // найти начало и конец слова
+    auto end = text.find(' ', clickIndex);
+    auto begin = text.rfind(' ', clickIndex);
+
+    if (end == AString::NPOS) {
+        end = text.length();
+    }
+    if (begin == AString::NPOS) {
+        begin = 0;
+    } else {
+        begin += 1;
+    }
+
+    mCursorSelection = begin;
+    mCursorIndex = end;
+}
+

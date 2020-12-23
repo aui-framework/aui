@@ -55,7 +55,10 @@ public:
 
 	void onFocusLost() override;
 	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
-	void onMouseMove(glm::ivec2 pos) override;
+
+    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
+
+    void onMouseMove(glm::ivec2 pos) override;
 	void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
 	void setText(const AString& t);

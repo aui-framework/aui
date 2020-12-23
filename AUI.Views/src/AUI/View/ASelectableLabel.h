@@ -32,6 +32,8 @@ public:
 
     void onKeyDown(AInput::Key key) override;
 
+    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
+
 protected:
     glm::ivec2 getMouseSelectionPadding() override;
     glm::ivec2 getMouseSelectionScroll() override;
