@@ -172,6 +172,10 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
                     mContents.insert(pastePos, toPaste);
                     mCursorIndex = pastePos + toPaste.length();
                     mCursorSelection = -1;
+
+                    invalidatePrerenderedString();
+                    emit textChanged;
+
                     break;
                 }
                 default:
