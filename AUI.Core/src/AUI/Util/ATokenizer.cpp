@@ -170,18 +170,22 @@ void ATokenizer::skipUntilUnescaped(char c) {
 AString ATokenizer::readStringUntilUnescaped(char c)
 {
 	std::string result;
+	readStringUntilUnescaped(result, c);
+	return result;
+}
+void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
+{
 	for (char current; (current = readChar()) != c;)
 	{
 		if (current == '\\')
 		{
-			result += '\\';
-			result += readChar();
+            out += '\\';
+            out += readChar();
 		} else
 		{
-			result += current;
+            out += current;
 		}
 	}
-	return result;
 }
 
 glm::vec2 ATokenizer::readVec2()

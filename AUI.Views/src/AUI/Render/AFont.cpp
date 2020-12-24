@@ -163,7 +163,7 @@ float AFont::length(const AString& text, long size, FontRendering fr)
 
 	for (AString::const_iterator i = text.begin(); i != text.end(); i++) {
 		if (*i == ' ')
-			advance += float(size) / 2.3f;
+			advance += size / 2.3f;
 		else if (*i == '\n')
 		    advance = 0;
 		else {
@@ -173,7 +173,7 @@ float AFont::length(const AString& text, long size, FontRendering fr)
                 advance = glm::floor(advance);
             }
 			else
-				advance += float(size) / 2.3f;
+				advance += size / 2.3f;
 		}
 	}
 	return advance;

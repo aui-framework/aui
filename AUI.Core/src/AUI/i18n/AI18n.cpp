@@ -31,8 +31,9 @@ AI18n::AI18n() {
 
 void AI18n::loadFromStreamInto(const _<IInputStream>& iis, AMap<AString, AString>& langData) {
     ATokenizer t(iis);
+    bool running = true;
     try {
-        for (;;) {
+        while (running) {
             if (t.readChar() == '#') {
                 // комментарий
                 t.skipUntilUnescaped('\n');
@@ -41,9 +42,14 @@ void AI18n::loadFromStreamInto(const _<IInputStream>& iis, AMap<AString, AString
                 t.reverseByte();
 
                 auto key = t.readStringUntilUnescaped('=');
-                auto value = t.readStringUntilUnescaped('\n');
+                std::string value;
+                try {
+                    t.readStringUntilUnescaped(value, '\n');
+                } catch (...) {
+                    running = false;
+                }
 
-                langData[key] = value.processEscapes();
+                langData[key] = AString(value).processEscapes();
             }
         }
     } catch (...) {

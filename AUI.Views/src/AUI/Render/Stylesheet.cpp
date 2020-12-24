@@ -85,6 +85,8 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 				switch (target)
 				{
 				case TARGET_CURRENT:
+                    if (!view)
+                        return M_MISMATCH;
 					nameMatches = view->getCssNames().contains(name);
 					break;
 				case TARGET_INDIRECT_PARENT:

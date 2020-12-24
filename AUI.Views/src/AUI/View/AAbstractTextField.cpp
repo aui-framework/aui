@@ -115,14 +115,33 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
 
 	case AInput::Left:
         fastenSelection();
-		if (mCursorIndex)
-			mCursorIndex -= 1;
+		if (mCursorIndex) {
+		    if (AInput::isKeyDown(AInput::LControl)) {
+		        if (mCursorIndex <= 1) {
+		            mCursorIndex = 0;
+		        } else {
+                    mCursorIndex = mContents.rfind(' ', mCursorIndex - 2) + 1;
+                }
+            } else {
+                mCursorIndex -= 1;
+            }
+        }
 		break;
 
 	case AInput::Right:
         fastenSelection();
-		if (mCursorIndex < mContents.length())
-			mCursorIndex += 1;
+		if (mCursorIndex < mContents.length()) {
+            if (AInput::isKeyDown(AInput::LControl)) {
+                auto index = mContents.find(' ', mCursorIndex);
+                if (index == AString::NPOS) {
+                    mCursorIndex = mContents.length();
+                } else {
+                    mCursorIndex = index + 1;
+                }
+            } else {
+                mCursorIndex += 1;
+            }
+		}
 		break;
 
 	case AInput::Home:

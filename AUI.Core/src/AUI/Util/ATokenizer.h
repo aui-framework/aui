@@ -90,6 +90,7 @@ public:
 
 	void skipUntilUnescaped(char c);
 	AString readStringUntilUnescaped(char c);
+    void readStringUntilUnescaped(std::string& out, char c);
 
 	/**
 	 * \brief читает 2 float'а, разделённые между собой любым символом.
