@@ -70,6 +70,7 @@ void ASelectableLabel::onMouseMove(glm::ivec2 pos) {
 }
 
 void ASelectableLabel::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+    clearSelection();
     AView::onMousePressed(pos, button);
     pos.x -= mTextLeftOffset;
     if (getFontStyleLabel().align == ALIGN_CENTER) {

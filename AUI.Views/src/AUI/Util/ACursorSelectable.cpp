@@ -16,8 +16,9 @@ bool ACursorSelectable::hasSelection() const {
 }
 
 unsigned ACursorSelectable::getCursorIndexByPos(glm::ivec2 pos) {
-    if (pos.y < 0)
+    if (pos.x < 0)
         return 0;
+
     auto text = getMouseSelectionText();
     if (text.empty()) {
         return 0;
@@ -28,10 +29,7 @@ unsigned ACursorSelectable::getCursorIndexByPos(glm::ivec2 pos) {
     pos = pos - (getMouseSelectionPadding() - getMouseSelectionScroll());
 
     auto fs = getMouseSelectionFont();
-    int row = pos.y / fs.getLineHeight();
-    if (row < 0) {
-        row = 0;
-    }
+    int row = pos.y < 0 ? 0 : pos.y / fs.getLineHeight();
 
     if (row == 0) {
         return f.font->indexOfX(text, pos.x, f.size, f.fontRendering);
@@ -40,13 +38,12 @@ unsigned ACursorSelectable::getCursorIndexByPos(glm::ivec2 pos) {
     // твою мышь! теперь ещё надо найти эту строчку...
     size_t targetLineIndex = 0;
     for (size_t r = 0; r < row; ++r) {
-        targetLineIndex = text.find('\n', targetLineIndex);
-        if (targetLineIndex == AString::NPOS) {
-            // курсор вышел за границу выделяемого AView. нетрудно догадаться, что в этом случае мы можем схалявить
-            // и вернуть просто индекс последнего элемента
-            return text.length() - 1;
+        auto temp = text.find('\n', targetLineIndex);
+        if (temp == AString::NPOS) {
+            // курсор вышел за границу выделяемого AView
+            break;
         }
-        targetLineIndex += 1;
+        targetLineIndex = temp + 1;
     }
 
     return targetLineIndex + f.font->indexOfX(text.mid(targetLineIndex, text.find('\n', targetLineIndex)), pos.x, f.size, f.fontRendering);
@@ -83,8 +80,8 @@ int ACursorSelectable::drawSelectionPre() {
     {
         auto absoluteSelectionPos = getPosByIndex(mCursorSelection);
 
-        mAbsoluteBegin = glm::min(absoluteCursorPos, absoluteSelectionPos);
-        mAbsoluteEnd = glm::max(absoluteCursorPos, absoluteSelectionPos);
+        mAbsoluteBegin = mCursorIndex < mCursorSelection ? absoluteCursorPos : absoluteSelectionPos;
+        mAbsoluteEnd = mCursorIndex < mCursorSelection ? absoluteSelectionPos : absoluteCursorPos;
 
         Render::inst().setFill(Render::FILL_SOLID);
         RenderHints::PushColor c;
@@ -123,6 +120,9 @@ void ACursorSelectable::clearSelection() {
 
 
 void ACursorSelectable::drawSelectionRects() {
+    if (AInput::isKeyDown(AInput::LControl)) {
+        printf("");
+    }
     auto p = getMouseSelectionPadding();
 
     int absoluteBeginPos = mAbsoluteBegin;
