@@ -481,6 +481,10 @@ Render::PrerenderedString Render::preRendererString(const AString& text, FontSty
 	AVector<glm::vec3> pos;
 	AVector<glm::vec2> uvs;
 	AVector<GLuint> indices;
+	
+	pos.reserve(4000);
+	uvs.reserve(3000);
+    indices.reserve(6000);
 
 	auto img = fs.font->texturePackerOf(fs.size, fs.fontRendering)->getImage();
 	int prevWidth = -1;
