@@ -1,4 +1,5 @@
-﻿#include "AUI/Common/Plugin.h"
+﻿#include <AUI/IO/APath.h>
+#include "AUI/Common/Plugin.h"
 
 #include "AString.h"
 #include "ASet.h"
@@ -8,13 +9,14 @@ void aui::importPlugin(const AString& name)
 {
     auto n = name;
     n[0] = toupper(n[0]);
-	auto path = AString::path(std::filesystem::path(n.toStdString()).filename());
+	AString path = APath(name).filename();
 	
 	static ASet<AString> importedPlugins;
 	if (!importedPlugins.contains(path))
 	{
 		importedPlugins << path;
-		Dll::load("AUI." + path)->getProcAddress<void()>("aui_plugin_init")();
+
+		Dll::load("aui." + path.lowercase())->getProcAddress<void()>("aui_plugin_init")();
 	}
 	
 }

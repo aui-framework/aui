@@ -1,7 +1,9 @@
+#include <AUI/IO/IOutputStream.h>
 #include "AJsonElement.h"
 #include "JsonValue.h"
 #include "JsonObject.h"
 #include "JsonArray.h"
+#include "JsonNull.h"
 
 AJsonElement::AJsonElement(const _<IJsonElement>& json_element): mJson(json_element)
 {
@@ -58,18 +60,79 @@ const AJsonElement& AJsonElement::operator[](const AString& key) const
 	return mJson->asObject().at(key);
 }
 
+void AJsonElement::serialize(_<IOutputStream> param) const {
+    mJson->serialize(param);
+}
+
+
+AJsonElement& AJsonElement::operator=(const AVariant& value) {
+    mJson = _new<JsonValue>(value);
+    return *this;
+}
+
+AJsonElement::AJsonElement():
+    mJson(_new<JsonNull>())
+{
+
+}
+
+
 AJsonValue::AJsonValue(const AVariant& value):
-	AJsonElement(_new<JsonValue>(value))
+        AJsonElement(_new<JsonValue>(value))
 {
 }
 
 AJsonObject::AJsonObject(const AMap<AString, AJsonElement>& value):
-	AJsonElement(_new<JsonObject>(value))
+        AJsonElement(_new<JsonObject>(value))
 {
+}
+
+AJsonObject::AJsonObject():
+    AJsonElement(_new<JsonObject>())
+{
+
+}
+
+AJsonElement& AJsonObject::operator[](const AString& key) {
+    return mJson->asObject()[key];
+}
+const AJsonElement& AJsonObject::operator[](const AString& key) const {
+    return mJson->asObject().at(key);
+}
+
+bool AJsonObject::contains(const AString& key) const {
+    return asObject().contains(key);
 }
 
 AJsonArray::AJsonArray(const AVector<AJsonElement>& value) :
 	AJsonElement(_new<JsonArray>(value))
 {
 }
+
+
+AJsonArray& AJsonArray::operator<<(const AJsonElement& value) {
+    mJson->asArray().push_back(value);
+    return *this;
+}
+
+void AJsonArray::push_back(const AJsonElement& value) {
+    mJson->asArray().push_back(value);
+}
+
+AJsonArray::AJsonArray():
+    AJsonElement(_new<JsonArray>())
+{
+
+}
+
+AJsonArray AJsonArray::fromVariantArray(const AVector<AVariant>& value) {
+    AVector<AJsonElement> a;
+    a.reserve(value.size());
+    for (auto& v : value) {
+        a << AJsonValue(v);
+    }
+    return AJsonArray(a);
+}
+
+
 

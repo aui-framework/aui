@@ -8,19 +8,36 @@ class API_AUI_VIEWS ALabel: public AView
 {
 private:
 	AString mText;
-	Render::PrerendereredString mPrerendered;
 	_<IDrawable> mIcon;
     _<AFont> mFontOverride;
     uint8_t mFontSizeOverride = 0;
     Align mVerticalAlign;
-
+    enum {
+        TT_NORMAL,
+        TT_UPPERCASE,
+        TT_LOWERCASE
+    } mTextTransform = TT_NORMAL;
 	bool mMultiline = false;
-	AStringVector mLines;
+
+protected:
+    AStringVector mLines;
+    Render::PrerenderedString mPrerendered;
 
 	void updateMultiline();
-
 	FontStyle getFontStyleLabel();
-	
+
+	const Render::PrerenderedString& getPrerendered() {
+	    return mPrerendered;
+	}
+
+    void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
+    void doRenderText();
+    AString getTargetText();
+
+
+    // для корректного позиционирования выделения
+    int mTextLeftOffset = 0;
+
 public:
 	ALabel();
 	explicit ALabel(const AString& text);
@@ -40,10 +57,8 @@ public:
         mIcon = drawable;
         redraw();
     }
+    void doPrerender();
 
-protected:
-    void
-    userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
 
 public:
 
@@ -65,8 +80,9 @@ public:
 	    mFontOverride = font;
 	}
 	void setFontSize(uint8_t size) {
-	    mFontSizeOverride = size;
-	}
+        mFontSizeOverride = size;
+    }
 
-	void setGeometry(int x, int y, int width, int height) override;
+    void setSize(int width, int height) override;
+
 };

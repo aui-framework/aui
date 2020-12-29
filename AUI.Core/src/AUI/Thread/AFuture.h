@@ -4,6 +4,7 @@
 #include <functional>
 #include "AConditionVariable.h"
 #include "AMutex.h"
+#include <AUI/Common/SharedPtrTypes.h>
 
 class AThreadPool;
 
@@ -14,6 +15,7 @@ private:
 	Value* mValue = new Value;
 	AMutex mMutex;
 	AConditionVariable mNotify;
+	std::function<void(const Value&)> mOnDone;
 	std::atomic_int mRefCount = 2;
 
 	void decRef()
@@ -23,11 +25,21 @@ private:
 			delete mValue;
 		}
 	}
-	
+
+	void notify() {
+        mNotify.notify_one();
+        if (mOnDone) {
+            mOnDone(*mValue);
+        }
+	}
+
+
+    AFuture() {}
+
 public:
 
-	template<typename Callable>
-	AFuture(AThreadPool& tp, Callable func);
+    template<typename Callable>
+    static _<AFuture> make(AThreadPool& tp, Callable func);
 
 	Value& operator*() {
 		if (mRefCount == 2) {
@@ -38,6 +50,29 @@ public:
 			}
 		}
 		return *mValue;
+	}
+
+    template<typename Object, typename Member>
+	void onDone(const _<Object>& object, Member memberFunc) {
+        std::unique_lock lock(mMutex);
+	    mOnDone = [object, memberFunc](const Value& t) {
+            (object.get()->*memberFunc)(t);
+	    };
+	}
+
+    template<typename Object, typename Member>
+	void onDone(const Object* object, Member memberFunc) {
+        std::unique_lock lock(mMutex);
+	    mOnDone = [object, memberFunc](const Value& t) {
+            (object->*memberFunc)(t);
+	    };
+	}
+    template<typename Callback>
+	void onDone(const Callback& callable) {
+        std::unique_lock lock(mMutex);
+	    mOnDone = [callable](const Value& t) {
+            callable(t);
+	    };
 	}
 
 	inline Value& get()
@@ -55,13 +90,15 @@ public:
 
 template <typename Value>
 template <typename Callable>
-AFuture<Value>::AFuture(AThreadPool& tp, Callable func)
+_<AFuture<Value>> AFuture<Value>::make(AThreadPool& tp, Callable func)
 {
-	tp.run([&, func]()
+    auto future = _<AFuture<Value>>(new AFuture<Value>);
+	tp.run([future, func]()
 	{
-		std::unique_lock lock(mMutex);
-		*mValue = func();
-		decRef();
-		mNotify.notify_one();
+		std::unique_lock lock(future->mMutex);
+		*future->mValue = func();
+        future->decRef();
+        future->notify();
 	});
+	return future;
 }

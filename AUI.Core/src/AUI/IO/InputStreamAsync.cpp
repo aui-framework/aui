@@ -6,7 +6,7 @@ InputStreamAsync::InputStreamAsync(_<IInputStream> inputStream):
 		try {
 			for (;;)
 			{
-				auto buffer = _new<ByteBuffer>();
+				auto buffer = _new<AByteBuffer>();
 				inputStream->read(buffer);
 				emit read(buffer);
 			}

@@ -14,6 +14,11 @@ public:
 	 */
 	virtual void notifyProcessMessages() = 0;
 
+	/**
+	 * \brief Начать обработку сообщений.
+	 */
+	virtual void loop() = 0;
+
 
     class API_AUI_CORE Handle {
 	private:

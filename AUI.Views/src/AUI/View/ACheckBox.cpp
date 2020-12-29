@@ -14,6 +14,10 @@ public:
 	{
 		emit customCssPropertyChanged;
 	}
+
+    void render() override {
+        AView::render();
+    }
 };
 
 
@@ -55,5 +59,11 @@ void ACheckBox::getCustomCssAttributes(AMap<AString, AVariant>& map)
 void ACheckBox::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
 	AView::onMouseReleased(pos, button);
-	emit checked(mChecked = !mChecked);
+	if (button == AInput::LButton) {
+        emit checked(mChecked = !mChecked);
+    }
+}
+
+bool ACheckBox::consumesClick(const glm::ivec2& pos) {
+    return true;
 }

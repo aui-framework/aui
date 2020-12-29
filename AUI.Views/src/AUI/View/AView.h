@@ -36,7 +36,7 @@ class AAnimator;
  * \note  Для корректной работы CSS в конструкторах всех ваших
  *        классов, наследующих AView следует написать AVIEW_CSS
  */
-class API_AUI_VIEWS AView : public AObject
+class API_AUI_VIEWS AView: public AObject
 {
 	friend class AViewContainer;
 	friend class Stylesheet::Entry;
@@ -133,17 +133,12 @@ private:
 	 */
     float mBorderRadius = 0;
 
-    /**
-     * \brief если у нашего AView есть border или border-radius, но при этом не требуется клиппинг, то нам нужно
-     *        включить этот клиппинг на время отрисовки фона. в противном случае drawStencilMask и так учтёт наше
-     *        скругление
-     */
-    bool mForceStencilForBackground = false;
-
 	/**
 	 * \brief Стиль шрифта для этого AView.
 	 */
 	FontStyle mFontStyle;
+
+	_unique<Stylesheet::Cache> mCustomStylesheet;
 
 
 protected:
@@ -250,22 +245,28 @@ protected:
 	 */
 	virtual void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor);
 
-public:
-	AView();
-	virtual ~AView() = default;
 
+public:
+
+    AView();
+    virtual ~AView() = default;
 	/**
 	 * \brief Попросить рендерер перерисовать этот AView.
 	 */
 	void redraw();
 
+	virtual void drawStencilMask();
 
-	void drawStencilMask();
+
 	/**
 	 * \brief Отрисовка этого AView. Эта фукнция не должна
 	 *		  вызываться никем, кроме как рендерером.
 	 */
 	virtual void render();
+
+	virtual void postRender();
+
+	void popStencilIfNeeded();
 
 	/**
 	 * \return позиция этого AView относительно левого верхнего
@@ -306,6 +307,22 @@ public:
 	}
 
 	/**
+	 * \return количество пикселей, занимаемое этим AView по горизонтали, с учётом размера, паддинга и маргина.
+	 */
+	float getTotalOccupiedWidth() const
+	{
+		return mSize.x + getTotalFieldHorizontal();
+	}
+
+    /**
+     * \return количество пикселей, занимаемое этим AView по вертикали, с учётом размера, паддинга и маргина.
+     */
+    float getTotalOccupiedHeight() const
+	{
+        return mSize.y + getTotalFieldVertical();
+	}
+
+	/**
 	 * \note каждый менеджер компоновки должен
 	 *		 обрабатывать этот отступ.
 	 * \return внешние отступы.
@@ -316,6 +333,7 @@ public:
 		return mMargin;
 	}
 
+	virtual bool consumesClick(const glm::ivec2& pos);
 
 	/**
 	 * \note каждый <class ?: AView> должен сам
@@ -328,6 +346,7 @@ public:
 		return mPadding;
 	}
 
+
 	/**
 	 * \brief расчитывает ширину, занимаемой этим
 	 *	      AView.
@@ -337,7 +356,6 @@ public:
 	[[nodiscard]]
 	float getTotalFieldHorizontal() const;
 
-
 	/**
 	 * \brief расчитывает высоту, занимаемой этим
 	 *	      AView.
@@ -346,6 +364,7 @@ public:
 	 */
 	[[nodiscard]]
 	float getTotalFieldVertical() const;
+
 
 	AViewContainer* getParent() const
 	{
@@ -357,13 +376,13 @@ public:
 		return mCursor;
 	}
 
-
 	/**
 	 * \brief расчитывает минимальную ширину контента.
 	 *
 	 * \return минимальная ширина контента.
 	 */
 	virtual int getContentMinimumWidth();
+
 
 	/**
 	 * \brief расчитывает минимальную высоту контента.
@@ -372,12 +391,15 @@ public:
 	 */
 	virtual int getContentMinimumHeight();
 
-
 	bool hasFocus() const;
 
-	int getMinimumWidth();
-	int getMinimumHeight();
 
+	virtual int getMinimumWidth();
+
+    virtual int getMinimumHeight();
+	glm::ivec2 getMinimumSize() {
+	    return {getMinimumWidth(), getMinimumHeight()};
+	}
 
 	[[nodiscard]] const glm::ivec2& getMaxSize() const
 	{
@@ -388,60 +410,59 @@ public:
 	{
 		return static_cast<int>(mSize.x - mPadding.horizontal());
 	}
-	int getContentHeight() const
+
+    int getContentHeight() const
 	{
 		return static_cast<int>(mSize.y - mPadding.vertical());
 	}
-
 	void setExpanding(const glm::ivec2& expanding)
 	{
 		mExpanding = expanding;
 	}
 
-    void setAnimator(const _<AAnimator>& animator);
+    const _<AAnimator>& getAnimator() const {
+	    return mAnimator;
+	}
 
+    void setAnimator(const _<AAnimator>& animator);
     void getTransform(glm::mat4& transform) const;
-	int getExpandingHorizontal() const
+
+    int getExpandingHorizontal() const
 	{
 		return mExpanding.x;
 	}
-	int getExpandingVertical() const
+    int getExpandingVertical() const
 	{
 		return mExpanding.y;
 	}
-
 	FontStyle& getFontStyle();
 
-	virtual void setSize(int width, int height);
+	virtual void setPosition(const glm::ivec2& position);
 
+    virtual void setSize(int width, int height);
+    virtual void setGeometry(int x, int y, int width, int height);
 	void setFixedSize(const glm::ivec2& size) {
 	    mFixedSize = size;
-	}
-
-	virtual void setGeometry(int x, int y, int width, int height)
-	{
-		mPosition = { x, y };
-		setSize(width, height);
 	}
 
 	bool isMouseHover() const
 	{
 		return mHovered;
 	}
-	bool isMousePressed() const
+
+    bool isMousePressed() const
 	{
 		return mPressed;
 	}
-	bool isEnabled() const
+    bool isEnabled() const
 	{
 		return mEnabled;
 	}
-
-
 	Visibility getVisibility() const
 	{
 		return mVisibility;
 	}
+	Visibility getVisibilityRecursive() const;
 
 	void setVisibility(Visibility visibility)
 	{
@@ -450,55 +471,94 @@ public:
 	}
 
 	/**
-	 * \brief выставить минимально возможный размер AView.
+	 * \brief Выставить минимально возможный размер AView.
 	 */
 	void pack();
 
+	/**
+	 * \brief Выставить фокус на этот AView.
+	 */
+	 void focus();
+
+
+	/**
+	 * \return координаты этого AView относительно левого верхнего угла окна
+	 */
+    [[nodiscard]] glm::ivec2 getPositionInWindow();
+
 	const ADeque<AString>& getCssNames() const;
-	void addCssName(const AString& css);
-	void ensureCSSUpdated();
+
+    void addCssName(const AString& css);
+	/**
+	 * \brief добавить CSS класс к AView. Эта функция служит для упрощения создания элементов с кастомными классами
+	 * \example
+	 * <code>
+	 * ...
+	 * _new<ALabel>("Компоненты) << ".components_title"
+	 * ...
+	 * </code>
+	 * \param cssName класс CSS, который нужно добавить к этому AView
+	 */
+	inline AView& operator<<(const AString& cssName) {
+	    addCssName(cssName);
+	    return *this;
+	}
+
+	void setCss(const AString& cssCode);
+    void ensureCSSUpdated();
+
+    /**
+     * \brief Попробовать определить std::shared_ptr для этого объекта.
+     */
+    virtual _<AView> determineSharedPointer();
 
 	virtual void onMouseEnter();
-	virtual void onMouseMove(glm::ivec2 pos);
-	virtual void onMouseLeave();
+    virtual void onMouseMove(glm::ivec2 pos);
+    virtual void onMouseLeave();
 
 	virtual void onMousePressed(glm::ivec2 pos, AInput::Key button);
-	virtual void onMouseReleased(glm::ivec2 pos, AInput::Key button);
-	virtual void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button);
-	virtual void onKeyDown(AInput::Key key);
-	virtual void onKeyRepeat(AInput::Key key);
-	virtual void onKeyUp(AInput::Key key);
-	virtual void onFocusAcquired();
-	virtual void onFocusLost();
+    virtual void onMouseReleased(glm::ivec2 pos, AInput::Key button);
+    virtual void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button);
+    virtual void onMouseWheel(glm::ivec2 pos, int delta);
+    virtual void onKeyDown(AInput::Key key);
+    virtual void onKeyRepeat(AInput::Key key);
+    virtual void onKeyUp(AInput::Key key);
+    virtual void onFocusAcquired();
+    virtual void onFocusLost();
 
 	virtual void onCharEntered(wchar_t c);
 
 	virtual void getCustomCssAttributes(AMap<AString, AVariant>& map);
 
+	/**
+	 * \brief Принимает ли данный AView фокус при переключении между AView кнопкой Tab
+	 */
+	virtual bool handlesNonMouseNavigation();
+
 	void setEnabled(bool enabled = true);
-	void setDisabled(bool disabled = true);
+    void setDisabled(bool disabled = true);
 
 	void enable()
 	{
 		setEnabled(true);
 	}
-	void disable()
+    void disable()
 	{
 		setEnabled(false);
 	}
 
 signals:
-	emits<bool> hoveredState;
-	emits<> mouseEnter;
-	emits<> mouseLeave;
+    emits<bool> hoveredState;
+    emits<> mouseEnter;
+    emits<> mouseLeave;
 
 	emits<bool> pressedState;
-	emits<> mousePressed;
-	emits<> mouseReleased;
+    emits<> mousePressed;
+    emits<> mouseReleased;
 
 	emits<bool> enabledState;
-	emits<> enabled;
-	emits<> disabled;
+    emits<> enabled;
+    emits<> disabled;
 
 	/**
 	 * \brief щёлчок какой-то кнопкой мыши.
@@ -531,4 +591,4 @@ private:
 	Watchable<bool> mHasFocus = Watchable<bool>(focusState, focusAcquired, focusLost, false);
 };
 
-#define AVIEW_CSS mCssNames << AClass<decltype(*this)>::name()
+#define AVIEW_CSS addCssName(AClass<decltype(*this)>::name())

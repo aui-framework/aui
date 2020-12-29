@@ -4,11 +4,11 @@
 
 
 #include "AXmlParseError.h"
-#include "AUI/Util/Tokenizer.h"
+#include "AUI/Util/ATokenizer.h"
 
 void AXml::read(_<IInputStream> is, _<IXmlDocumentVisitor> visitor)
 {
-	Tokenizer p(is);
+	ATokenizer p(is);
 
 	char c;
 
@@ -30,15 +30,15 @@ void AXml::read(_<IInputStream> is, _<IXmlDocumentVisitor> visitor)
 			case ' ':
 				break;
 			case '<':
-				// новая сущность
+				// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 				switch (p.readChar())
 				{
 				case '?':
 					{
-						// заголовок
+						// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 						auto headerVisitor = visitor->visitHeader();
 
-						p.readString(); // прочитать "xml"
+						p.readString(); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ "xml"
 
 						for (; (c = p.readChar()) != '>';)
 						{
@@ -102,7 +102,7 @@ void AXml::read(_<IInputStream> is, _<IXmlDocumentVisitor> visitor)
 					}
 					break;
 				default:
-					// нормальная сущность
+					// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 					{
 						p.reverseByte();
 						auto entityName = p.readString();
@@ -192,7 +192,7 @@ void AXml::read(_<IInputStream> is, _<IXmlDocumentVisitor> visitor)
 											c = p.readChar();
 											if (c == '/')
 											{
-												// конец этой сущности.
+												// пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 												p.readString();
 
 												if (p.readChar() != '>')
@@ -200,7 +200,7 @@ void AXml::read(_<IInputStream> is, _<IXmlDocumentVisitor> visitor)
 
 												return;
 											}
-											// начало новой сущности.
+											// пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 											{
 												p.reverseByte();
 												auto entityName = p.readString();

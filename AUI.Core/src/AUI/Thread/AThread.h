@@ -1,10 +1,10 @@
 ﻿#pragma once
 #include <thread>
 #include <utility>
-#include "AUI/Common/AObject.h"
 #include "AUI/Common/ADeque.h"
 #include "AMutex.h"
 #include "AConditionVariable.h"
+#include "AUI/Common/SharedPtrTypes.h"
 #include <functional>
 
 class IEventLoop;
@@ -93,13 +93,26 @@ public:
 	 * \return true, если для потока запрошено прерывание.
 	 */
 	virtual bool isInterrupted();
+
 	/**
 	 * \brief сбросить флаг прерывания.
 	 */
-	virtual void resetInterrupted();
+	virtual void resetInterruptFlag();
+
+    /**
+     * \brief Прервать выполнение потока.
+     *	      Естественно, так как С++ - компилируемый язык, то для
+     *	      корректной работы этой функции прерываемый код должен
+     *	      содержать вызовы функции AThread::interruptionPoint().
+     */
+    virtual void interrupt();
+
+	IEventLoop* getCurrentEventLoop() const {
+		return mCurrentEventLoop;
+	}
 
 
-    template <class Callable>
+	template <class Callable>
     inline void operator<<(Callable fun)
     {
         enqueue(fun);
@@ -110,6 +123,8 @@ public:
         enqueue(fun);
     }
 };
+
+#include "AUI/Common/AObject.h"
 
 /**
  * \brief Поток.
@@ -157,14 +172,6 @@ public:
 	 */
 	void start();
 
-	/**
-	 * \brief Прервать выполнение потока.
-	 *	      Естественно, так как С++ - компилируемый язык, то для
-	 *	      корректной работы этой функции прерываемый код должен
-	 *	      содержать вызовы функции AThread::interruptionPoint().
-	 */
-	void interrupt();
-
 
 	/**
 	 * \brief Заснуть на указаную длительность.
@@ -189,7 +196,8 @@ public:
 	static void interruptionPoint();
 
 	bool isInterrupted() override;
-	void resetInterrupted() override;
+	void resetInterruptFlag() override;
+    void interrupt() override;
 	
 	void join();
 

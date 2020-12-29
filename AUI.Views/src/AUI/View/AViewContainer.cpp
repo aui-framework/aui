@@ -2,9 +2,11 @@
 #include "AView.h"
 #include "AUI/Render/Render.h"
 #include <glm/gtc/matrix_transform.hpp>
+#include <utility>
 
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/AMetric.h"
+#include <AUI/Traits/iterators.h>
 
 
 unsigned char stencilDepth = 0;
@@ -15,26 +17,16 @@ void AViewContainer::drawView(const _<AView>& view)
 		RenderHints::PushState s;
 		glm::mat4 t(1.f);
 		view->getTransform(t);
-		Render::instance().setTransform(t);
+        Render::inst().setTransform(t);
 
 		try {
 			view->render();
 		}
 		catch (...) {}
-
-		if (view->getOverflow() == OF_HIDDEN)
-		{
-		    /*
-		     * Если у AView есть ограничение по Overflow, то он запушил свою маску в буфер трафарета, но он не может
-		     * вернуть буфер трафарета к прежнему состоянию из-за ограничений C++, поэтому заносить маску нужно
-		     * после обновлений преобразований (позиция, поворот), но перед непосредственным рендером содержимого AView
-		     * (то есть, в <code>AView::render</code>), а возвращать трафарет к предыдущему состоянию можно только
-		     * здесь, после того, как AView будет полностью отрендерен.
-		     */
-		    RenderHints::PushMask::popMask([&]() {
-		       view->drawStencilMask();
-		    });
+		try {
+			view->postRender();
 		}
+		catch (...) {}
 	}
 }
 
@@ -48,6 +40,16 @@ void AViewContainer::userProcessStyleSheet(
 			mLayout->setSpacing(AMetric(p->getArgs()[0]).getValuePx());
 		}
 	});
+
+	mHasBackground = false;
+	auto bg = [&](property p)
+	{
+		if (p->getArgs().size() > 0 && p->getArgs()[0] != "none") {
+			mHasBackground = true;
+		}
+	};
+	processor(css::T_BACKGROUND, bg);
+	processor(css::T_BACKGROUND_COLOR, bg);
 }
 
 AViewContainer::AViewContainer()
@@ -57,7 +59,7 @@ AViewContainer::AViewContainer()
 
 AViewContainer::~AViewContainer()
 {
-	//Stylesheet::instance().invalidateCache();
+	//Stylesheet::inst().invalidateCache();
 }
 
 void AViewContainer::addView(_<AView> view)
@@ -90,28 +92,18 @@ void AViewContainer::onMouseMove(glm::ivec2 pos)
 {
 	AView::onMouseMove(pos);
 
-	for (auto& view : mViews)
-	{
-		if (!view->isEnabled())
-			continue;
-		
-		auto mousePos = pos - view->getPosition();
-		bool hovered = mousePos.x >= 0 && mousePos.y >= 0 && mousePos.x < view->getSize().x && mousePos.y < view->getSize().y;
-		if (view->isMouseHover() != hovered)
-		{
-			if (hovered)
-			{
-				view->onMouseEnter();
-			} else
-			{
+	auto targetView = getViewAt(pos);
 
-				view->onMouseLeave();
-			}
-		}
-		if (hovered)
-		{
-			view->onMouseMove(mousePos);
-		}
+	if (targetView) {
+        auto mousePos = pos - targetView->getPosition();
+	    targetView->onMouseEnter();
+        targetView->onMouseMove(mousePos);
+	}
+
+	for (auto& v : mViews) {
+	    if (v->isMouseHover() && v != targetView) {
+	        v->onMouseLeave();
+	    }
 	}
 }
 
@@ -171,18 +163,26 @@ void AViewContainer::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
 		p->onMouseDoubleClicked(pos - p->getPosition(), button);
 }
 
-
-void AViewContainer::setSize(int width, int height)
-{
-	AView::setSize(width, height);
-	updateLayout();
+void AViewContainer::onMouseWheel(glm::ivec2 pos, int delta) {
+    AView::onMouseWheel(pos, delta);
+    auto p = getViewAt(pos);
+    if (p && p->isEnabled())
+        p->onMouseWheel(pos - p->getPosition(), delta);
 }
 
+bool AViewContainer::consumesClick(const glm::ivec2& pos) {
+	if (mHasBackground)
+		return true;
+    auto p = getViewAt(pos);
+    if (p)
+        return p->consumesClick(pos - p->getPosition());
+    return false;
+}
 
 void AViewContainer::setLayout(_<ALayout> layout)
 {
 	mViews.clear();
-	mLayout = layout;
+	mLayout = std::move(layout);
 }
 
 _<ALayout> AViewContainer::getLayout() const
@@ -192,21 +192,26 @@ _<ALayout> AViewContainer::getLayout() const
 
 _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 {
-	for (auto it = mViews.rbegin(); it != mViews.rend(); ++it)
+    _<AView> possibleOutput = nullptr;
+	for (auto view : aui::reverse_iterator_wrap(mViews))
 	{
-		auto view = *it;
-		auto mousePos = pos - view->getPosition();
+		auto targetPos = pos - view->getPosition();
 
-		if (mousePos.x >= 0 && mousePos.y >= 0 && mousePos.x < view->getSize().x && mousePos.y < view->getSize().y)
+		if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x && targetPos.y < view->getSize().y)
 		{
-			if (!ignoreGone || view->getVisibility() != V_GONE)
-				return view;
+			if (!ignoreGone || view->getVisibility() != V_GONE) {
+			    if (!possibleOutput)
+			        possibleOutput = view;
+                if (view->consumesClick(targetPos))
+			        return view;
+            }
 		}
 	}
-	return nullptr;
+	return possibleOutput;
 }
 
-_<AView> AViewContainer::getViewAtRecusrive(glm::ivec2 pos)
+
+_<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos)
 {
 	_<AView> target = getViewAt(pos);
 	if (!target)
@@ -221,21 +226,25 @@ _<AView> AViewContainer::getViewAtRecusrive(glm::ivec2 pos)
 	return target;
 }
 
+void AViewContainer::setSize(int width, int height)
+{
+    mSizeSet = true;
+    AView::setSize(width, height);
+    updateLayout();
+}
+
+void AViewContainer::recompileCSS() {
+    AView::recompileCSS();
+    if (mSizeSet)
+        updateLayout();
+}
+
 void AViewContainer::updateLayout()
 {
     if (mLayout)
         mLayout->onResize(mPadding.left, mPadding.top,
                           getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
-}
-
-void AViewContainer::recompileCSS() {
-    AView::recompileCSS();
-    updateLayout();
-}
-
-void AViewContainer::setGeometry(int x, int y, int width, int height) {
-    AView::setGeometry(x, y, width, height);
-    updateLayout();
+    updateParentsLayoutIfNecessary();
 }
 
 void AViewContainer::removeAllViews() {
@@ -245,4 +254,13 @@ void AViewContainer::removeAllViews() {
         }
     }
     mViews.clear();
+}
+
+void AViewContainer::updateParentsLayoutIfNecessary() {
+	if (mPreviousSize != mSize) {
+		mPreviousSize = mSize;
+		if (mParent) {
+			mParent->updateLayout();
+		}
+	}
 }

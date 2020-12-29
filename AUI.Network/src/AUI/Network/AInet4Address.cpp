@@ -4,9 +4,9 @@
 #include "AUI/IO/IOException.h"
 
 
-#ifdef _WIN32
+#if defined(_WIN32)
 extern void aui_wsa_init();
-#include <WS2tcpip.h>
+#include <ws2tcpip.h>
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -30,7 +30,7 @@ AInet4Address::AInet4Address() {
 
 AInet4Address::AInet4Address(const sockaddr_in& other):
 
-#ifdef _WIN32
+#if defined(_WIN32)
 	mAddr(other.sin_addr.S_un.S_addr),
 #else
         mAddr(other.sin_addr.s_addr),
@@ -58,7 +58,7 @@ AInet4Address::AInet4Address(uint32_t ip, uint16_t port):
 
 AInet4Address::AInet4Address(const AString& addr, uint16_t port):
 	mPort(port) {
-#ifdef _WIN32
+#if defined(_WIN32)
 	aui_wsa_init();
 #endif
 	sockaddr_in sock;
@@ -74,7 +74,7 @@ AInet4Address::AInet4Address(const AString& addr, uint16_t port):
 		throw IOException((AString("Unresolved hostname: ") + addr).c_str());
 	auto* sockaddrin = (sockaddr_in*)result->ai_addr;
 
-#ifdef _WIN32
+#if defined(_WIN32)
 	mAddr = sockaddrin->sin_addr.S_un.S_addr;
 #else
 	mAddr = sockaddrin->sin_addr.s_addr;

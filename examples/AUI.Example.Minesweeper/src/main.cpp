@@ -1,6 +1,6 @@
 #include "CellView.h"
-#include "AUI/Common/ByteBuffer.h"
-#include "AUI/Platform/CustomCaptionWindow.h"
+#include "AUI/Common/AByteBuffer.h"
+#include "AUI/Platform/ACustomCaptionWindow.h"
 #include "AUI/Util/BuiltinFiles.h"
 #include "AUI/View/AButton.h"
 #include "assets.h"
@@ -13,7 +13,7 @@ int main()
 		BuiltinFiles f;
 		ByteBuffer b(AUI_PACKED_asset, sizeof(AUI_PACKED_asset));
 		f.loadBuffer(b);
-		Stylesheet::instance().load(f.open("assets/minesweeper/style.css"));
+		Stylesheet::inst().load(f.open("assets/minesweeper/style.css"));
 	}
 	
 	MinesweeperWindow w;

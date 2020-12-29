@@ -6,20 +6,15 @@ AView {
 AWindow {
     background: #f0f0f0;
 }
-CustomWindow {
-    border: 1px solid $OS_THEME_COLOR;
-    padding: 1px;
-}
-
 ALabel {
     padding: 1em 0 2em;
 }
 ATitleLabel {
     font-size: 12pt;
-	margin: 4em 8em;
+    margin: 4em 8em;
 }
 ALabel[disabled] {
-	color: #6d6d6d;
+    color: #6d6d6d;
 }
 
 ALabel, .input-field, AListView {
@@ -28,18 +23,17 @@ ALabel, .input-field, AListView {
 
 AButton {
     background-color: #fff;
-    border: 1px solid #ccc;
     padding: 4em 8em;
     min-width: 60em;
     min-height: 14em;
     margin: 2em 4em;
     border-radius: 4em;
-    box-shadow: 0 1em 3em -2em #0008;
+    box-shadow: 0 1em 5em -2em #0008;
     text-align: center;
 }
 
 AButton:hover {
-    border: 1px solid $OS_THEME_COLOR;
+    border: 1em solid $OS_THEME_COLOR;
 }
 AButton:active {
     background-color: #fafafa;
@@ -66,22 +60,24 @@ AButton:active {
 AButton[disabled] {
     background-color: #cccccc;
     box-shadow: none;
-    border: 1px solid #bfbfbf;
+    border: 1em solid #bfbfbf;
     color: #838383;
 }
 
 .window-title {
     background: $OS_THEME_COLOR;
     height: 30em;
-    padding: 0 0 1em 7em;
+    padding: 0 0 1em 0;
 }
 .window-title ALabel {
     color: #fff;
-    padding: 7em 0;
+    padding: 7em;
     margin: 0;
 }
 
 .window-title .default {
+    border-radius: 0;
+    box-shadow: none;
     transition: none;
     border: none;
     min-width: 45em;
@@ -95,7 +91,6 @@ AButton[disabled] {
 }
 .window-title .middle {
     background-color: none;
-    background: url(':win/caption/maximize.svg');
 }
 .window-title .close {
     background-color: none;
@@ -172,27 +167,79 @@ ACheckBox ALabel {
 }
 ACheckBoxInner {
     background-color: #fff;
-    margin: 1px;
-    border: 1px solid #333333;
+    margin: 1em 1em 1em 3em;
+    border: 1em solid #333333;
     width: 13em;
     height: 13em;
     transition: 0.1s;
+    -aui-background-overlay: #333333;
 }
 ACheckBox:hover ACheckBoxInner {
-    border: 1px solid #0078d7;
+    border: 1em solid #0078d7;
+    -aui-background-overlay: #0078d7;
 }
 ACheckBox:active ACheckBoxInner {
     background-color: #cce4f7;
-    border: 1px solid #005499;
+    border: 1em solid #005499;
+    -aui-background-overlay: #005499;
 }
 
 ACheckBox[checked] ACheckBoxInner {
     background: url(':win/svg/checkbox.svg');
 }
+ACheckBox[disabled] ACheckBoxInner {
+    background: #e5e5e5;
+    -aui-background-overlay: #aaa;
+    border: 1em solid #aaa;
+}
+ACheckBox[disabled] ALabel {
+    color: #aaa;
+}
+ARadioButton {
+    margin: 1em 4em;
+}
+ARadioButton ALabel {
+    padding: 0;
+    margin: 0 0 0 2em;
+}
+ARadioButtonInner {
+    background-color: #fff;
+    margin: 1em 1em 1em 3em;
+    border: 1em solid #333333;
+    width: 13em;
+    height: 13em;
+    transition: 0.1s;
+    border-radius: 6.5em;
+    -aui-background-overlay: #333333;
+}
+ARadioButton:hover ARadioButtonInner {
+    border: 1em solid #0078d7;
+    -aui-background-overlay: #0078d7;
+}
+ARadioButton:active ARadioButtonInner {
+    background-color: #cce4f7;
+    border: 1em solid #005499;
+    -aui-background-overlay: #005499;
+}
+
+ARadioButton[disabled] ARadioButtonInner {
+    background: #e5e5e5;
+    -aui-background-overlay: #aaa;
+    border: 1em solid #aaa;
+}
+ARadioButton[disabled] ALabel {
+    color: #aaa;
+}
+ARadioButton[checked] ARadioButtonInner {
+    background: url(':win/svg/radio.svg');
+}
+AComboBox {
+    text-align: left;
+}
 
 AListView {
     background: #fff;
-    border: 1px solid #828790;
+    border: 1em solid #828790;
     padding: 2px;
     overflow: hidden;
 }
@@ -220,4 +267,30 @@ ATableView {
 ATableView AView {
     background: #fff;
     margin: 0 1px 1px 0;
+}
+ACustomWindow {
+    border: none;
+    padding: 0;
+}
+ADividerView {
+    background: #fff4;
+}
+AVDividerView {
+    width: 1em;
+}
+AHDividerView {
+    height: 1em;
+}
+
+AScrollbar {
+    background: #f0f0f0;
+}
+AScrollbarButton {
+    -aui-background-overlay: #606060;
+}
+AScrollbarHandle {
+    background: #cdcdcd;
+    margin: 0 1em 0 0;
+    min-height: 14em;
+    min-width: 14em;
 }

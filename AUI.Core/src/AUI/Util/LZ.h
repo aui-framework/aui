@@ -3,7 +3,7 @@
 #include "AUI/Core.h"
 #include "AUI/Common/AException.h"
 
-class ByteBuffer;
+class AByteBuffer;
 
 class AZLibException: public AException
 {
@@ -19,6 +19,6 @@ public:
 };
 
 namespace LZ {
-	void API_AUI_CORE compress(const ByteBuffer& b, ByteBuffer& dst);
-	void API_AUI_CORE decompress(const ByteBuffer& b, ByteBuffer& dst);
+	void API_AUI_CORE compress(const AByteBuffer& b, AByteBuffer& dst);
+	void API_AUI_CORE decompress(const AByteBuffer& b, AByteBuffer& dst);
 }

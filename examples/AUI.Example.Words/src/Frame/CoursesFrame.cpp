@@ -13,6 +13,7 @@
 #include <AUI/View/AButton.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/Layout/AStackedLayout.h>
+#include <View/CourseView.h>
 
 CoursesFrame::CoursesFrame() {
     AVIEW_CSS;
@@ -32,16 +33,7 @@ CoursesFrame::CoursesFrame() {
                          (&AView::setExpanding, glm::ivec2{1, 1});
     addView(list);
 
-    for (auto& course : Course::all()->get()) {
-        list->addView(_container<AHorizontalLayout>({
-            _container<AVerticalLayout>({
-                _new<ALabel>(course.name)
-                        (&ALabel::setFontSize, 20dp),
-                _new<ALabel>(course.description)
-                        (&ALabel::setMultiline, true)
-                        (&ALabel::setExpanding, glm::ivec2{1, 0}),
-            })(&AView::setExpanding, glm::ivec2{1, 0}),
-            _container<AStackedLayout>({_new<AButton>(u8"ИЗУЧАТЬ")})
-        }));
+    for (auto& course : Note::all()->get()) {
+        list->addView(_new<CourseView>());
     }
 }

@@ -14,9 +14,9 @@ void AVerticalLayout::onResize(int x, int y, int width, int height)
 	};
 	AVector<cache_t> cache;
 	cache.reserve(mViews.size());
-	
+
 	int sum = 0;
-	int availableSpace = height;
+	int availableSpace = height - y;
 
 
 	for (auto& view : mViews)
@@ -40,7 +40,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height)
 		auto margins = view->getMargin();
 		auto maxSize = view->getMaxSize();
 		auto& e = cache[index++];
-		
+
 		int viewHeight = glm::clamp(availableSpace * e.expanding / sum, e.minSpace,	maxSize.y);
 
 

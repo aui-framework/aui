@@ -27,10 +27,10 @@ public:
 		emit customCssPropertyChanged();
 	}
 
-	void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
+    bool consumesClick(const glm::ivec2& pos) override;
 
-
-	void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
+    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 signals:
 	emits<bool> checked;
 };

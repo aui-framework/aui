@@ -41,6 +41,10 @@ public:
 		{
 			return mRow != other.mRow;
 		}
+		bool operator==(const Iterator& other) const
+		{
+			return mRow == other.mRow;
+		}
 
 		Iterator& operator*()
 		{
@@ -59,7 +63,15 @@ public:
 		{
 			return mRow->getValue(index);
 		}
-	};
+
+        AVector<AVariant> range(size_t count) const {
+            AVector<AVariant> v;
+            for (size_t i = 0; i < count; ++i) {
+                v << getValue(i);
+            }
+            return v;
+		}
+    };
 
 	Iterator begin() const;
 	Iterator end() const;

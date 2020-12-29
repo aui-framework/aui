@@ -5,6 +5,7 @@
 #include <AUI/Common/AColor.h>
 #include <AUI/Common/ASide.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Render/AFontCharacter.h>
 
 Render::Render()
 {
@@ -34,23 +35,75 @@ Render::Render()
 
             "vec4 query = vec4(pass_uv - vec2(lower), pass_uv - vec2(upper));"
             "vec4 integral = 0.5 + 0.5 * erf(query * (sqrt(0.5) / sigma));"
-            "gl_FragColor.a *= clamp((integral.z - integral.x) * (integral.w - integral.y), 0.f, 1.f);"
+            "gl_FragColor.a *= clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0);"
             //"gl_FragColor.a = query.x + query.y;"
          "}");
+    /*
 
-	mRoundedSolidShader.load(
-		"attribute vec3 pos;"
-        "attribute vec2 uv;"
-		"varying vec2 pass_uv;"
-		"void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv * 2.f - vec2(1, 1);}",
-        "uniform vec2 size;"
-        "varying vec2 pass_uv;"
-		"void main(void) {"
-            "vec2 tmp = abs(pass_uv);"
-            "if ((tmp.x - 1) * (size.y) / (-size.x) < tmp.y - (1 - size.y) &&"
-                "(pow(tmp.x - (1.f - size.x), 2.f) / pow(size.x, 2.f) +"
-                 "pow(tmp.y - (1.f - size.y), 2.f) / pow(size.y, 2.f)) > 1.f) discard;"
-        "}");
+    if (glewGetExtension("ARB_multisample")) {
+        mRoundedSolidShader.load(
+                "attribute vec3 pos;"
+                "attribute vec2 uv;"
+                "varying vec2 pass_uv;"
+                "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
+                "uniform vec2 size;"
+                "varying vec2 pass_uv;"
+                "void main(void) {"
+                "vec2 tmp = abs(pass_uv);"
+                "if ((tmp.x - 1.0) * (size.y) / (-size.x) < tmp.y - (1.0 - size.y) &&"
+                "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
+                "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
+                "}");
+    } else */ {
+        // без сглаживания скруглённые края выглядят убого. исправим это
+        mRoundedSolidShader.load(
+                "attribute vec3 pos;"
+                "attribute vec2 uv;"
+                "varying vec2 pass_uv;"
+                "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
+                "uniform vec2 size;"
+                "varying vec2 pass_uv;"
+                "void main(void) {"
+                "vec2 tmp = abs(pass_uv);"
+                "if ((tmp.x - 1.0) * (size.y) / (-size.x) < tmp.y - (1.0 - size.y) &&"
+                "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
+                "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
+                "}");
+        mRoundedSolidShaderAntialiased.load(
+                "attribute vec3 pos;"
+                "attribute vec2 uv;"
+                "attribute vec2 outer_to_inner;"
+                "varying vec2 pass_uv;"
+                "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
+                "uniform vec2 outerSize;"
+                "uniform vec2 innerSize;"
+                "uniform vec2 innerTexelSize;"
+                "uniform vec2 outerTexelSize;"
+                "uniform vec2 outer_to_inner;"
+                "uniform vec4 color;"
+                "varying vec2 pass_uv;"
+                "bool is_outside(vec2 tmp, vec2 size) {"
+                    "if (tmp.x >= 1 || tmp.y >= 1) return true;"
+                    "return (tmp.x - 1.0) * (size.y) / (-size.x) <= tmp.y - (1.0 - size.y) &&"
+                        "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
+                        "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) >= 1.0;"
+                "}"
+                "void main(void) {"
+                    "vec2 outer_uv = abs(pass_uv);"
+                    "vec2 inner_uv = outer_uv * outer_to_inner;"
+                    "float alpha = 1.f;"
+                    "ivec2 i;"
+                    "for (i.x = -2; i.x <= 2; ++i.x) {"
+                        "for (i.y = -2; i.y <= 2; ++i.y) {"
+                        "alpha -= (is_outside(inner_uv + innerTexelSize * (i), innerSize)"
+                                  " == "
+                                  "is_outside(outer_uv + outerTexelSize * (i), outerSize)"
+                                  ") ? (1.0 / 25.0) : 0;"
+                        "}"
+                    "}"
+                    "gl_FragColor = vec4(color.rgb, color.a * alpha);"
+                "}");
+    }
 
 	mSolidTransformShader.load(
 		"attribute vec3 pos;"
@@ -65,23 +118,37 @@ Render::Render()
 		"varying vec2 pass_uv;"
 		"void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv;}",
 		"uniform sampler2D tex;"
+		"uniform vec4 color;"
 		"varying vec2 pass_uv;"
-		"void main(void) {gl_FragColor = texture2D(tex, pass_uv);}",
+		"void main(void) {gl_FragColor = texture2D(tex, pass_uv) * color; if (gl_FragColor.a < 0.01) discard;}",
 		{"pos", "", "uv"});
+
+	mGradientShader.load(
+		"attribute vec3 pos;"
+		"attribute vec2 uv;"
+		"varying vec2 pass_uv;"
+		"void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv;}",
+		"uniform sampler2D tex;"
+		"uniform vec4 color;"
+		"uniform vec4 color_tl;"
+		"uniform vec4 color_tr;"
+		"uniform vec4 color_bl;"
+		"uniform vec4 color_br;"
+		"varying vec2 pass_uv;"
+		"void main(void) {gl_FragColor = mix(mix(color_tl, color_tr, pass_uv.x), mix(color_bl, color_br, pass_uv.x), pass_uv.y) * color;}",
+		{"pos", "uv"});
 
 	mSymbolShader.load(
 		"attribute vec3 pos;"
 		"attribute vec2 uv;"
 		"varying vec2 pass_uv;"
 		"uniform mat4 mat;"
-		"uniform int pos_x;"
-		"uniform int pos_y;"
 
-		"void main(void) {gl_Position = mat * vec4(pos + vec3(pos_x, pos_y, 0), 1); pass_uv = uv;}",
+		"void main(void) {gl_Position = mat * vec4(pos, 1); pass_uv = uv;}",
 		"varying vec2 pass_uv;"
 		"uniform sampler2D tex;"
 		"uniform vec4 color;"
-		"void main(void) {float sample = pow(texture2D(tex, pass_uv).r, 1.f / 1.2f); gl_FragColor = vec4(color.rgb, color.a * sample);}",
+		"void main(void) {float sample = pow(texture2D(tex, pass_uv).r, 1.0 / 1.2); gl_FragColor = vec4(color.rgb, color.a * sample); if (gl_FragColor.a < 0.01) discard;}",
 		{"pos", "uv"});
 
 	mSymbolShaderSubPixel.load(
@@ -89,14 +156,12 @@ Render::Render()
 		"attribute vec2 uv;"
 		"varying vec2 pass_uv;"
 		"uniform mat4 mat;"
-		"uniform int pos_x;"
-		"uniform int pos_y;"
 
-		"void main(void) {gl_Position = mat * vec4(pos + vec3(pos_x, pos_y, 0), 1); pass_uv = uv;}",
+		"void main(void) {gl_Position = mat * vec4(pos, 1); pass_uv = uv;}",
 		"varying vec2 pass_uv;"
 		"uniform sampler2D tex;"
 		"uniform vec4 color;"
-		"void main(void) {vec3 sample = pow(texture2D(tex, pass_uv).rgb, vec3(1.f / 1.2f)); gl_FragColor = vec4(sample * color.rgb * color.a, 1);}",
+		"void main(void) {vec3 sample = pow(texture2D(tex, pass_uv).rgb, vec3(1.0 / 1.2)); gl_FragColor = vec4(sample * color.rgb * color.a, 1);}",
 		{"pos", "uv"});
 
 	mTempVao.bind();
@@ -163,9 +228,37 @@ void Render::drawTexturedRect(float x, float y, float width, float height, const
 
 void Render::drawRoundedRect(float x, float y, float width, float height, float radius) {
     mRoundedSolidShader.use();
+
     mRoundedSolidShader.set("size", 2.f * radius / glm::vec2{width, height});
     drawRect(x, y, width, height);
     setFill(mCurrentFill);
+}
+void Render::drawRoundedRectAntialiased(float x, float y, float width, float height, float radius) {
+    mRoundedSolidShaderAntialiased.use();
+    mRoundedSolidShaderAntialiased.set("outerSize", 2.f * radius / glm::vec2{width, height});
+    mRoundedSolidShaderAntialiased.set("innerSize", glm::vec2{9999});
+    mRoundedSolidShaderAntialiased.set("innerTexelSize", glm::vec2{0, 0});
+    mRoundedSolidShaderAntialiased.set("outerTexelSize", 2.f / 5.f / glm::vec2{width, height});
+    mRoundedSolidShaderAntialiased.set("outer_to_inner", glm::vec2{0});
+    drawRect(x, y, width, height);
+    setFill(mCurrentFill);
+}
+void Render::drawRoundedBorder(float x, float y, float width, float height, float radius, int borderWidth) {
+    //float innerX = x + borderWidth;
+    //float innerY = y + borderWidth;
+    float innerWidth = width - borderWidth * 2;
+    float innerHeight = height - borderWidth * 2;
+
+    mRoundedSolidShaderAntialiased.use();
+    mRoundedSolidShaderAntialiased.set("outerSize", 2.f * radius / glm::vec2{width, height});
+    mRoundedSolidShaderAntialiased.set("innerSize", 2.f * (radius - borderWidth) / glm::vec2{innerWidth, innerHeight});
+    mRoundedSolidShaderAntialiased.set("outer_to_inner", glm::vec2{width, height} / glm::vec2{innerWidth, innerHeight});
+
+    mRoundedSolidShaderAntialiased.set("innerTexelSize", 2.f / 5.f / glm::vec2{innerWidth, innerHeight});
+    mRoundedSolidShaderAntialiased.set("outerTexelSize", 2.f / 5.f / glm::vec2{width, height});
+    drawRect(x, y, width, height);
+    setFill(mCurrentFill);
+
 }
 
 void Render::drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s)
@@ -298,6 +391,10 @@ void Render::setFill(Filling t)
 		mSolidShader.use();
 		break;
 
+	case FILL_GRADIENT:
+		mGradientShader.use();
+		break;
+
 	case FILL_TEXTURED:
 		mTexturedShader.use();
 		break;
@@ -322,7 +419,7 @@ void Render::drawString(int x, int y, const AString& text, FontStyle& fs) {
 	auto s = preRendererString(text, fs);
 	drawString(x, y, s);
 }
-void Render::drawString(int x, int y, PrerendereredString& f) {
+void Render::drawString(int x, int y, PrerenderedString& f) {
 	auto img = f.fs.font->texturePackerOf(f.fs.size, f.fs.fontRendering);
 	if (!img->getImage())
 		return;
@@ -346,9 +443,7 @@ void Render::drawString(int x, int y, PrerendereredString& f) {
 	auto finalColor = mColor * f.fs.color;
 	if (f.fs.fontRendering & FR_SUBPIXEL) {
 		setFill(FILL_SYMBOL_SUBPIXEL);
-		mSymbolShaderSubPixel.set("pos_x", x);
-		mSymbolShaderSubPixel.set("pos_y", y);
-		mSymbolShaderSubPixel.set("mat", mTransform);
+		mSymbolShaderSubPixel.set("mat", glm::translate(mTransform, glm::vec3{x, y, 0}));
 
 		mSymbolShaderSubPixel.set("color", glm::vec4(1, 1, 1, finalColor.a));
 		glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
@@ -366,7 +461,7 @@ void Render::drawString(int x, int y, PrerendereredString& f) {
 		setFill(FILL_SYMBOL);
 		mSymbolShader.set("pos_x", x);
 		mSymbolShader.set("pos_y", y);
-		mSymbolShader.set("mat", mTransform);
+        mSymbolShader.set("mat", glm::translate(mTransform, glm::vec3{x, y, 0}));
 		mSymbolShader.set("color", finalColor);
 		f.mVao->draw(GL_TRIANGLES);
 	}
@@ -374,17 +469,22 @@ void Render::drawString(int x, int y, PrerendereredString& f) {
 
 
 
-Render::PrerendereredString Render::preRendererString(const AString& text, FontStyle& fs) {
-	static _<AFont> d = AFontManager::instance().getDefault();
+Render::PrerenderedString Render::preRendererString(const AString& text, FontStyle& fs) {
+	static _<AFont> d = AFontManager::inst().getDefault();
 	if (!fs.font)
 		fs.font = d;
 	float advance = 0;
+	float advanceMax = 0;
 	int advanceY = 0;
 
 
 	AVector<glm::vec3> pos;
 	AVector<glm::vec2> uvs;
 	AVector<GLuint> indices;
+	
+	pos.reserve(4000);
+	uvs.reserve(3000);
+    indices.reserve(6000);
 
 	auto img = fs.font->texturePackerOf(fs.size, fs.fontRendering)->getImage();
 	int prevWidth = -1;
@@ -399,15 +499,16 @@ Render::PrerendereredString Render::preRendererString(const AString& text, FontS
 
 	for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
 		wchar_t c = *i;
-		if (*i == ' ') {
+		if (c == ' ') {
 			advance += fs.size / 2.3f;
 		}
-		else if (*i == '\n') {
+		else if (c == '\n') {
+            advanceMax = (glm::max)(advanceMax, advance);
 			advance = 0;
-			advanceY += fs.font->getAscenderHeight(fs.size) * (1.f + fs.lineSpacing);
+			advanceY += fs.getLineHeight();
 		}
 		else {
-			AFont::Character* ch = fs.font->getCharacter(*i, fs.size, fs.fontRendering);
+			AFont::Character* ch = fs.font->getCharacter(c, fs.size, fs.fontRendering);
 			if (!ch) {
 				advance += fs.size / 2.3f;
 				continue;
@@ -438,13 +539,13 @@ Render::PrerendereredString Render::preRendererString(const AString& text, FontS
 				auto next = std::next(i);
 				if (next != text.end())
 				{
-					auto kerning = fs.font->getKerning(*i, *next);
+					auto kerning = fs.font->getKerning(c, *next);
 					advance += kerning.x;
 				}
 			}
 
 			advance += ch->advanceX;
-			//advance = glm::ceil(advance);
+			advance = glm::floor(advance);
 		}
 	}
 	auto vao = _new<GL::Vao>();
@@ -457,13 +558,42 @@ Render::PrerendereredString Render::preRendererString(const AString& text, FontS
 	if (prevWidth != -1 && fs.font->texturePackerOf(fs.size, fs.fontRendering)->getImage()->getWidth() != prevWidth) {
 		return preRendererString(text, fs); // ������ ��������
 	}
-	return { vao, fs, fs.font->length(text, fs.size, fs.fontRendering), uint16_t(prevWidth), text };
+    advanceMax = (glm::max)(advanceMax, advance);
+
+    //assert(advanceMax == fs.font->length(text, fs.size, fs.fontRendering));
+
+	return { vao, fs, advanceMax, uint16_t(prevWidth), text };
 }
 
 void Render::uploadToShader()
 {
 	GL::Shader::currentShader()->set("color", mColor);
 	GL::Shader::currentShader()->set("transform", mTransform);
+}
+
+glm::vec2 Render::getCurrentPos() {
+    return glm::vec2(mTransform * glm::vec4(0, 0, 0, 1.f));
+}
+
+void Render::setGradientColors(const AColor& tl, const AColor& tr,
+                               const AColor& bl, const AColor& br) {
+    mGradientShader.use();
+    mGradientShader.set("color_tl", tl);
+    mGradientShader.set("color_tr", tr);
+    mGradientShader.set("color_bl", bl);
+    mGradientShader.set("color_br", br);
+}
+
+void Render::applyTextureRepeat() {
+    if (Render::inst().getRepeat() == REPEAT_NONE) {
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    }
+}
+
+Render& Render::inst() {
+    static Render r;
+    return r;
 }
 
 

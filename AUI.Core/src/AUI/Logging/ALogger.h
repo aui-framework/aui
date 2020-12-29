@@ -13,17 +13,20 @@ public:
 	{
 		INFO,
 		WARN,
-		ERR
+		ERR,
+        DEBUG,
 	};
 private:
 	ALogger();
 	static ALogger& instance();
 	AMutex mSync;
-	_<FileOutputStream> mLogFile = _new<FileOutputStream>("latest.log");
+	_<FileOutputStream> mLogFile;
 	
 	void log(Level level, const AString& str);
 
-public:	
+public:
+    static void setLogFile(const AString& str);
+
 	static void info(const AString& str)
 	{
 		instance().log(INFO, str);
@@ -35,5 +38,9 @@ public:
 	static void err(const AString& str)
 	{
 		instance().log(ERR, str);
+	}
+	static void debug(const AString& str)
+	{
+		instance().log(DEBUG, str);
 	}
 };

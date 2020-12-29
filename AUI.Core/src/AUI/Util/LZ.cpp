@@ -2,12 +2,12 @@
 
 #include <stdexcept>
 #include <string>
-#include "AUI/Common/ByteBuffer.h"
+#include "AUI/Common/AByteBuffer.h"
 
 #include <zlib.h>
 
 
-void LZ::compress(const ByteBuffer& b, ByteBuffer& dst)
+void LZ::compress(const AByteBuffer& b, AByteBuffer& dst)
 {
 	dst.reserve(dst.getSize() + b.getAvailable() + 0xff);
 	uLong len = b.getAvailable() + 0xff;
@@ -21,7 +21,7 @@ void LZ::compress(const ByteBuffer& b, ByteBuffer& dst)
 	dst.setCurrentPos(dst.getSize());
 }
 
-void LZ::decompress(const ByteBuffer& b, ByteBuffer& dst)
+void LZ::decompress(const AByteBuffer& b, AByteBuffer& dst)
 {
 	for (size_t i = 4;; i++) {
 		dst.reserve(b.getAvailable() * i);

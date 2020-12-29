@@ -5,7 +5,7 @@
 #include <AUI/Platform/AWindow.h>
 #include "AAnimator.h"
 
-void AAnimator::animate() {
+void AAnimator::animate(AView* view) {
     if (mIsPlaying) {
         AWindow::current()->flagRedraw();
         auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -25,7 +25,11 @@ void AAnimator::animate() {
 
         mLastFrameTime = now;
     }
-    doAnimation(mCurrentTheta);
+    doAnimation(view, mCurrentTheta);
+}
+
+void AAnimator::postRender(AView* view) {
+    doPostRender(view, mCurrentTheta);
 }
 
 void AAnimator::pause() {
@@ -34,14 +38,14 @@ void AAnimator::pause() {
 }
 
 void AAnimator::translateToCenter() {
-    Render::instance().setTransform(
+    Render::inst().setTransform(
             glm::translate(glm::mat4(1.f),
                            glm::vec3(glm::vec2(mView->getSize().x,
                                                 mView->getSize().y + mView->getTotalFieldVertical() - 1) / 2.f, 0.f)));
 }
 
 void AAnimator::translateToCorner() {
-    Render::instance().setTransform(
+    Render::inst().setTransform(
             glm::translate(glm::mat4(1.f),
                            glm::vec3(-glm::vec2(mView->getSize().x,
                                    mView->getSize().y + mView->getTotalFieldVertical() - 1) / 2.f, 0.f)));

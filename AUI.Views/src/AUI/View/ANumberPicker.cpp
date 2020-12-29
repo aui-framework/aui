@@ -18,6 +18,33 @@ bool ANumberPicker::ANumberPickerField::isValidText(const AString& text)
 	return true;
 }
 
+void ANumberPicker::ANumberPickerField::onKeyRepeat(AInput::Key key) {
+
+    switch (key) {
+        case AInput::Down:
+            if (mPicker.getValue() > mPicker.getMin()) {
+                if (AInput::isKeyDown(AInput::LControl)) {
+                    mPicker.setValue(glm::max(mPicker.getValue() - 10, mPicker.getMin()));
+                } else {
+                    mPicker.setValue(mPicker.getValue() - 1);
+                }
+            }
+            break;
+        case AInput::Up:
+            if (mPicker.getValue() < mPicker.getMax()) {
+                if (AInput::isKeyDown(AInput::LControl)) {
+                    mPicker.setValue(glm::min(mPicker.getValue() + 10, mPicker.getMax()));
+                } else {
+                    mPicker.setValue(mPicker.getValue() + 1);
+                }
+            }
+            break;
+        default:
+            AAbstractTextField::onKeyRepeat(key);
+    }
+}
+
+
 ANumberPicker::ANumberPicker()
 {
 	AVIEW_CSS;
@@ -113,3 +140,4 @@ void ANumberPicker::setMax(const int max)
 	if (getValue() > max)
 		setValue(max);
 }
+

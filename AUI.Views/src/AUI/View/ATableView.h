@@ -1,4 +1,5 @@
 ﻿#pragma once
+/*
 #include "AViewContainer.h"
 #include "AUI/Model/ITableModel.h"
 
@@ -24,3 +25,4 @@ public:
 	void setModel(_<ITableModel> model);
 	
 };
+*/

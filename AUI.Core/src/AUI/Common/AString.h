@@ -1,15 +1,11 @@
 #pragma once
-#include <filesystem>
+
 #include <string>
 #include <iostream>
-
-
-#include "ByteBuffer.h"
+#include "AByteBuffer.h"
 #include "AUI/Core.h"
 
 class API_AUI_CORE AStringVector;
-
-
 
 class API_AUI_CORE AString: std::wstring
 {
@@ -133,7 +129,10 @@ public:
 	{
 		std::wstring::pop_back();
 	}
-	
+
+    AString uppercase() const;
+    AString lowercase() const;
+
 	bool startsWith(const AString& other) const noexcept
 	{
 		return rfind(other, 0) == 0;
@@ -200,6 +199,8 @@ public:
 		std::wstring::resize(s);
 	}
 
+	AString restrictLength(size_t s, const AString& stringAtEnd = "...") const;
+
 	wchar_t* data() noexcept
 	{
 		return std::wstring::data();
@@ -209,8 +210,33 @@ public:
 	{
 		return std::wstring::data();
 	}
-	AString replaceAll(const AString& from, const AString& to) const noexcept;
-	
+	[[nodiscard]] AString replacedAll(const AString& from, const AString& to) const noexcept;
+    [[nodiscard]] inline AString replacedAll(wchar_t from, wchar_t to) const noexcept {
+	    AString copy;
+	    copy.reserve(length() + 10);
+	    for (auto c : *this) {
+	        if (c == from) {
+	            copy << to;
+	        } else {
+	            copy << c;
+	        }
+	    }
+        return copy;
+	}
+    [[nodiscard]] inline AString replacedAll(const ASet<wchar_t> from, wchar_t to) const noexcept {
+	    AString copy;
+	    copy.reserve(length() + 10);
+	    for (auto c : *this) {
+	        if (from.contains(c)) {
+	            copy << to;
+	        } else {
+	            copy << c;
+	        }
+	    }
+        return copy;
+	}
+	void replaceAll(wchar_t from, wchar_t to) noexcept;
+
 	[[nodiscard]]
 	float toFloat() const noexcept;
 
@@ -234,11 +260,19 @@ public:
 		return find(other) != npos;
 	}
 
-	static AString fromLatin1(_<ByteBuffer> buffer);
+	static AString fromLatin1(_<AByteBuffer> buffer);
+	static AString fromLatin1(const char* buffer);
 
-	static AString path(const std::filesystem::path& path) noexcept;
-	static AString number(int i) noexcept;
-	static AString number(unsigned i) noexcept;
+	static AString numberHex(int i) noexcept;
+
+	static AString number(int8_t i) noexcept;
+	static AString number(int16_t i) noexcept;
+	static AString number(int32_t i) noexcept;
+	static AString number(int64_t i) noexcept;
+	static AString number(uint8_t i) noexcept;
+	static AString number(uint16_t i) noexcept;
+	static AString number(uint32_t i) noexcept;
+	static AString number(uint64_t i) noexcept;
 	static AString number(float i) noexcept;
 	static AString number(double i) noexcept;
 	static AString number(bool i) noexcept;
@@ -247,6 +281,8 @@ public:
 	int toNumberHex() const noexcept;
 
 	std::string toStdString() const noexcept;
+
+    void resizeToNullTerminator();
 
 	iterator erase(const_iterator begin, const_iterator end)
 	{
@@ -268,7 +304,7 @@ public:
 		return *this;
 	}
 
-	_<ByteBuffer> toUtf8() const;
+	_<AByteBuffer> toUtf8() const;
 
 	void removeAt(unsigned index)
 	{
@@ -278,6 +314,10 @@ public:
 	iterator insert(size_type at, wchar_t c)
 	{
 		return std::wstring::insert(begin() + at, 1, c);
+	}
+	iterator insert(size_type at, const AString& c)
+	{
+		return std::wstring::insert(begin() + at, c.begin(), c.end());
 	}
 	
 	template<typename Iterator>
@@ -455,29 +495,45 @@ public:
 	{
 		return *this != AString(other);
 	}
+
+    template<typename... Args>
+    inline AString format(Args&&... args);
+
+    AString processEscapes() const;
 };
 
-inline AString API_AUI_CORE operator+(const AString& l, const AString& r) noexcept
+inline AString operator+(const AString& l, const AString& r) noexcept
 {
 	auto x = l;
 	x.append(r);
 	return x;
 }
-inline AString API_AUI_CORE operator+(const AString& one, const char* other) noexcept
+inline AString operator+(const AString& l, wchar_t r) noexcept
+{
+	auto x = l;
+	x.append(r);
+	return x;
+}
+inline AString operator+(const AString& one, const char* other) noexcept
 {
 	return one + AString(other);
 }
 
-inline AString API_AUI_CORE operator+(const char* other, const AString& one) noexcept
+inline AString operator+(const char* other, const AString& one) noexcept
 {
 	return AString(other) + one;
 }
 
-inline AString API_AUI_CORE operator+(char lhs, const AString& cs) noexcept
+inline AString operator+(char lhs, const AString& cs) noexcept
 {
 	AString s(lhs);
 	s += cs;
 	return s;
+}
+
+inline AString operator"" _as(const char* str, size_t len)
+{
+    return {str};
 }
 
 inline std::ostream& operator<<(std::ostream& o, const AString& s)

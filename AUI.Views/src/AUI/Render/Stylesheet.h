@@ -5,14 +5,13 @@
 #include "AUI/Common/AStringVector.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/IO/IInputStream.h"
-#include "AUI/Util/Singleton.h"
 #include "AUI/Views.h"
 
 class AView;
 class AViewContainer;
 class AString;
 
-class API_AUI_VIEWS Stylesheet: public Singleton<Stylesheet>
+class API_AUI_VIEWS Stylesheet
 {
 public:
     enum PreferredStyle {
@@ -40,6 +39,7 @@ public:
 				T_BACKGROUND,
 				T_BACKGROUND_COLOR,
 				T_BACKGROUND_SIZE,
+				T_BACKGROUND_REPEAT,
 				T_BACKGROUND_EFFECT,
 				T_COLOR,
 				T_TEXT_ALIGN,
@@ -52,10 +52,12 @@ public:
 				// Fonts
 				T_FONT_FAMILY,
 				T_FONT_SIZE,
+				T_TEXT_TRANSFORM,
 
 				// Fields
 				T_BORDER_RADIUS,
 				T_BORDER,
+				T_BORDER_BOTTOM,
 				T_MARGIN,
 				T_PADDING,
 
@@ -71,7 +73,10 @@ public:
 
 				// AUI
 				T_AUI_SPACING,
-				T_AUI_FONT_RENDERING
+                T_AUI_OFFSET,
+                T_AUI_SCALE,
+				T_AUI_FONT_RENDERING,
+                T_AUI_BACKGROUND_OVERLAY,
 			};
 			
 		private:
@@ -134,19 +139,36 @@ public:
 		Matching selectorMatches(AView* view, bool forcePossibleEntries = true);
 	};
 
+	class Cache {
+    private:
+        ADeque<_<Entry>> mEntries;
+
+    public:
+	    void clear() {
+	        mEntries.clear();
+	    }
+
+        [[nodiscard]] const ADeque<_<Entry>>& getEntries() const {
+            return mEntries;
+        }
+        void load(Stylesheet& ss, const _<IInputStream>& css, bool skipSelector = false) noexcept;
+    };
+
 private:
-	ADeque<_<Entry>> mEntries;
 	AMap<AString, AString> mVariables;
 	static PreferredStyle ourPrefferedStyle;
-	
+	Cache mGlobalCache;
+
 public:
 	Stylesheet();
 
+	static Stylesheet& inst();
+
 	static void setPreferredStyle(PreferredStyle style);
 
-	const ADeque<_<Entry>>& getEntries() const noexcept
+	[[nodiscard]] const ADeque<_<Entry>>& getEntries() const noexcept
 	{
-		return mEntries;
+		return mGlobalCache.getEntries();
 	}
 
 	void load(const AString& css) noexcept;

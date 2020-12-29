@@ -38,9 +38,9 @@ AString::AString(const char* str) noexcept
     }
 }
 
-_<ByteBuffer> AString::toUtf8() const
+_<AByteBuffer> AString::toUtf8() const
 {
-    auto buf = _new<ByteBuffer>();
+    auto buf = _new<AByteBuffer>();
     for (wchar_t c : *this)
     {
         if (c >= 0x80)
@@ -48,16 +48,16 @@ _<ByteBuffer> AString::toUtf8() const
             if (c >= 0x800)
             {
                 char b[] = {
-                        0b11100000 | (c >> 12 & 0b1111),
-                        0b10000000 | (c >> 6 & 0b111111),
-                        0b10000000 | (c & 0b111111),
+                        static_cast<char>(0b11100000 | (c >> 12 & 0b1111)),
+                        static_cast<char>(0b10000000 | (c >> 6 & 0b111111)),
+                        static_cast<char>(0b10000000 | (c & 0b111111)),
                 };
                 buf->put(b, sizeof(b));
             } else if (c >= 0x80)
             {
                 char b[] = {
-                        0b11000000 | (c >> 6 & 0b11111),
-                        0b10000000 | (c & 0b111111),
+                        static_cast<char>(0b11000000 | (c >> 6 & 0b11111)),
+                        static_cast<char>(0b10000000 | (c & 0b111111)),
                 };
                 buf->put(b, sizeof(b));
             }
@@ -112,7 +112,7 @@ AString AString::trimRight(wchar_t symbol) const noexcept
     return {};
 }
 
-AString AString::replaceAll(const AString& from, const AString& to) const noexcept
+AString AString::replacedAll(const AString& from, const AString& to) const noexcept
 {
     AString result;
     for (size_type pos = 0;;)
@@ -166,7 +166,7 @@ bool AString::toBool() const noexcept
     return *this == "true";
 }
 
-AString AString::fromLatin1(_<ByteBuffer> buffer)
+AString AString::fromLatin1(_<AByteBuffer> buffer)
 {
     AString result;
 
@@ -182,14 +182,48 @@ AString AString::fromLatin1(_<ByteBuffer> buffer)
     return result;
 }
 
-AString AString::number(int i) noexcept
+AString AString::fromLatin1(const char* buffer) {
+    AString s;
+    for (; *buffer; ++buffer)
+        s.push_back(*buffer);
+
+    return s;
+}
+
+
+AString AString::number(int8_t i) noexcept
 {
     return std::to_wstring(i);
 }
-AString AString::number(unsigned i) noexcept
+AString AString::number(int16_t i) noexcept
 {
     return std::to_wstring(i);
 }
+AString AString::number(int32_t i) noexcept
+{
+    return std::to_wstring(i);
+}
+AString AString::number(int64_t i) noexcept
+{
+    return std::to_wstring(i);
+}
+AString AString::number(uint8_t i) noexcept
+{
+    return std::to_wstring(i);
+}
+AString AString::number(uint16_t i) noexcept
+{
+    return std::to_wstring(i);
+}
+AString AString::number(uint32_t i) noexcept
+{
+    return std::to_wstring(i);
+}
+AString AString::number(uint64_t i) noexcept
+{
+    return std::to_wstring(i);
+}
+
 AString AString::number(float i) noexcept
 {
     return std::to_wstring(i);
@@ -232,7 +266,66 @@ std::string AString::toStdString() const noexcept
     return dst;
 }
 
-AString AString::path(const std::filesystem::path& path) noexcept {
-    return path.wstring();
+AString AString::uppercase() const {
+    auto& f = std::use_facet<std::ctype<wchar_t>>(std::locale());
+    AString result = *this;
+    f.toupper(&result[0], &result[0] + result.size());
+    return result;
 }
 
+AString AString::lowercase() const {
+    auto& f = std::use_facet<std::ctype<wchar_t>>(std::locale());
+    AString result = *this;
+    f.tolower(&result[0], &result[0] + result.size());
+    return result;
+}
+
+void AString::replaceAll(wchar_t from, wchar_t to) noexcept {
+    for (auto& s : *this) {
+        if (s == from)
+            s = to;
+    }
+}
+
+void AString::resizeToNullTerminator() {
+    wchar_t* i;
+    for (i = data(); *i; ++i);
+    resize(i - data());
+}
+
+AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
+    if (length() > s) {
+        return mid(0, s) + stringAtEnd;
+    }
+    return *this;
+}
+
+AString AString::numberHex(int i) noexcept {
+    char buf[32];
+    sprintf(buf, "%x", i);
+    return buf;
+}
+
+AString AString::processEscapes() const {
+    AString result;
+    result.reserve(length());
+    bool doEscape = false;
+    for (auto& c : *this) {
+        if (doEscape) {
+            doEscape = false;
+            switch (c) {
+                case '\\':
+                    result << '\\';
+                    break;
+                case 'n':
+                    result << '\n';
+                    break;
+            }
+        } else if (c == '\\') {
+            doEscape = true;
+        } else {
+            result << c;
+        }
+    }
+    return result;
+}

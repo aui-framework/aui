@@ -25,21 +25,24 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
 			finalY = 0;
 			finalHeight = height;
 		}
-		v->setGeometry(finalX, finalY, finalWidth, finalHeight);
+		v->setGeometry(finalX + x, finalY + y, finalWidth, finalHeight);
 	}
 }
 int ::AStackedLayout::getMinimumWidth()
 {
 	int m = 0;
 	for (auto& v : mViews)
-		m = glm::max(v->getMinimumWidth(), m);
+		if (v->getVisibility() != AView::V_GONE)
+			m = glm::max(int(v->getMinimumWidth() + v->getMargin().horizontal()), m);
 	return m;
 }
 
 int ::AStackedLayout::getMinimumHeight()
 {
 	int m = 0;
-	for (auto& v : mViews)
-		m = glm::max(v->getMinimumHeight(), m);
+	for (auto& v : mViews) {
+		if (v->getVisibility() != AView::V_GONE)
+			m = glm::max(int(v->getMinimumHeight() + v->getMargin().vertical()), m);
+	}
 	return m;
 }

@@ -1,7 +1,7 @@
 ﻿#include "ATcpServerSocket.h"
 
-#ifdef _WIN32
-#include <WS2tcpip.h>
+#if defined(_WIN32)
+#include <ws2tcpip.h>
 #else
 
 #include <sys/socket.h>
@@ -26,12 +26,8 @@ _<ATcpSocket> ATcpServerSocket::accept()
 		handleError("socket listen error", res);
 
 	sockaddr_in addr;
-	unsigned addrlen = sizeof(addr);
-#ifdef _WIN32
-	int s = ::accept(getHandle(), reinterpret_cast<sockaddr*>(&addr), (int*)&addrlen);
-#else
-	int s = ::accept(getHandle(), reinterpret_cast<sockaddr*>(&addr), (unsigned*)&addrlen);
-#endif
+	socklen_t addrlen = sizeof(addr);
+	int s = ::accept(getHandle(), reinterpret_cast<sockaddr*>(&addr), &addrlen);
 
 	auto socket = new ATcpSocket(s, addr);
 	return _<ATcpSocket>(socket);

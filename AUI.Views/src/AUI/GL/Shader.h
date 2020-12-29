@@ -4,7 +4,6 @@
 
 #pragma once
 
-#include "gl.h"
 #include <AUI/Common/AString.h>
 #include <glm/glm.hpp>
 #include <AUI/Common/AMap.h>
@@ -16,25 +15,27 @@ class AString;
 namespace GL {
 	class API_AUI_VIEWS Shader {
 	private:
-		GLuint mProgram;
-		GLuint mVertex = 0;
-		GLuint mFragment = 0;
-		GLuint load(const AString&, GLenum type);
-		mutable AMap<AString, GLint> mUniforms;
-		GLint getLocation(const AString& name) const;
+		uint32_t mProgram;
+		uint32_t mVertex = 0;
+		uint32_t mFragment = 0;
+		uint32_t load(const AString&, uint32_t type);
+		mutable AMap<AString, int32_t> mUniforms;
+		int32_t getLocation(const AString& name) const;
 		
 	public:
 		Shader();
-		void load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs = {});
+		void load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs = {}, const AString& version = {});
 		void compile();
-		void bindAttribute(GLuint index, const AString& name);
+		void bindAttribute(uint32_t index, const AString& name);
 		void use() const;
 		~Shader();
 		Shader(const Shader&) = delete;
 
 		void set(const AString& uniform, int value) const;
 		void set(const AString& uniform, float value) const;
+		void set(const AString& uniform, double value) const;
 		void set(const AString& uniform, glm::mat4 value) const;
+		void set(const AString& uniform, glm::dmat4 value) const;
 		void set(const AString& uniform, glm::vec2 value) const;
 		void set(const AString& uniform, glm::vec3 value) const;
 		void set(const AString& uniform, glm::vec4 value) const;

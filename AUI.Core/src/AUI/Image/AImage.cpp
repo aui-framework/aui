@@ -5,6 +5,7 @@
 #include <utility>
 #include <cstring>
 #include "AImage.h"
+#include "AImageLoaderRegistry.h"
 
 AImage::AImage() {
 
@@ -112,18 +113,23 @@ _<AImage> AImage::resizeLinearDownscale(_<AImage> src, uint16_t width, uint16_t 
 	return n;
 }
 
-void AImage::copy(_<AImage> src, _<AImage> dst, uint16_t x, uint16_t y) {
+void AImage::copy(_<AImage> src, _<AImage> dst, uint32_t x, uint32_t y) {
 	assert(src->getFormat() == dst->getFormat());
 	
 	// https://stackoverflow.com/questions/9900854/opengl-creating-texture-atlas-at-run-time
-	for (uint16_t sourceY = 0; sourceY < glm::min(src->mHeight, dst->mHeight); ++sourceY) {
-		for (uint16_t sourceX = 0; sourceX < glm::min(src->mWidth, dst->mWidth); ++sourceX) {
-			uint16_t from = (sourceY * src->mWidth * src->getBytesPerPixel()) + (sourceX * src->getBytesPerPixel()); // 4 bytes per pixel (assuming RGBA)
-			uint16_t to = ((y + sourceY) * dst->mWidth * dst->getBytesPerPixel()) + ((x + sourceX) * dst->getBytesPerPixel()); // same format as source
+	for (uint32_t sourceY = 0; sourceY < glm::min(src->mHeight, dst->mHeight); ++sourceY) {
+		for (uint32_t sourceX = 0; sourceX < glm::min(src->mWidth, dst->mWidth); ++sourceX) {
+			uint32_t from = (sourceY * uint32_t(src->mWidth) * uint32_t(src->getBytesPerPixel())) + (sourceX * uint32_t(src->getBytesPerPixel())); // 4 bytes per pixel (assuming RGBA)
+			uint32_t to = ((y + sourceY) *uint32_t(dst->mWidth) * uint32_t(dst->getBytesPerPixel())) + ((x + sourceX) * uint32_t(dst->getBytesPerPixel())); // same format as source
 
-			for (uint16_t channel = 0; channel < dst->getBytesPerPixel(); ++channel) {
+			for (uint32_t channel = 0; channel < dst->getBytesPerPixel(); ++channel) {
 				dst->mData[to + channel] = src->mData[from + channel];
 			}
 		}
 	}
 }
+
+_<AImage> AImage::fromUrl(const AUrl& url) {
+    return AImageLoaderRegistry::inst().loadImage(url);
+}
+

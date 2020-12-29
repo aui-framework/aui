@@ -9,7 +9,7 @@ CellView:hover {
 }
 
 CellView[flag="false"]:active, CellView[open="true"] {
-    border: 1px solid #8c8c8c;
+    border: 1em solid #8c8c8c;
     background-color: #cecece;
 }
 CellView[flag="true"] {
@@ -32,6 +32,6 @@ CellView[red] {
     background-color: #f00;
     border: none;
 }
-.window_title_content AButton {
+.window-title-content AButton {
     margin: 4px 2px;
 }

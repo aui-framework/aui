@@ -4,7 +4,7 @@
 #include "AUI/Layout/AVerticalLayout.h"
 #include "AUI/View/AButton.h"
 #include "AUI/Layout/AHorizontalLayout.h"
-#include "AUI/Platform/CustomCaptionWindow.h"
+#include "AUI/Platform/ACustomCaptionWindow.h"
 #include "AUI/View/ALabel.h"
 #include "AUI/Layout/AStackedLayout.h"
 #include "AUI/Network/ATcpSocket.h"
@@ -18,7 +18,7 @@
 #include "AUI/Data/ASqlDatabase.h"
 #include "DatabaseWindow.h"
 
-ExampleWindow::ExampleWindow() : AWindow(u8"Подключение к БД")
+ExampleWindow::ExampleWindow() : AWindow(u8"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅ")
 {
 	setWindowStyle(WS_DIALOG);
 
@@ -41,19 +41,19 @@ ExampleWindow::ExampleWindow() : AWindow(u8"Подключение к БД")
 	port->setValue(3306);
 
 	auto form = _form({
-		//{u8"Адрес", address},
-		//{u8"Порт", port},
-		//{u8"Название БД", dbName},
-		//{u8"Имя пользователя", username},
-		//{u8"Пароль", password},
+		//{u8"пїЅпїЅпїЅпїЅпїЅ", address},
+		//{u8"пїЅпїЅпїЅпїЅ", port},
+		//{u8"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ", dbName},
+		//{u8"пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ", username},
+		//{u8"пїЅпїЅпїЅпїЅпїЅпїЅ", password},
 	});
 	form->addCssName(".window-content");
 
 	addView(form);
 
-	auto connectButton = _new<AButton>(u8"Подключиться");
+	auto connectButton = _new<AButton>(u8"пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
 	connectButton->setDefault();
-	auto cancelButton = _new<AButton>(u8"Отмена");
+	auto cancelButton = _new<AButton>(u8"пїЅпїЅпїЅпїЅпїЅпїЅ");
 
 	auto buttons = _container<AHorizontalLayout>({
 		_new<ASpacer>(),
@@ -75,7 +75,7 @@ ExampleWindow::ExampleWindow() : AWindow(u8"Подключение к БД")
 
 		} catch (const AException& e)
 		{
-			AMessageBox::show(this, u8"Не удалось подключиться к БД", e.getMessage(), AMessageBox::I_CRITICAL);
+			AMessageBox::show(this, u8"пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅ", e.getMessage(), AMessageBox::I_CRITICAL);
 		}
 	});
 

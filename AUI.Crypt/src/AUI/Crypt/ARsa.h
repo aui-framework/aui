@@ -1,10 +1,10 @@
 #pragma once
-#include "AUI/Crypt.h"
+#include "AUI/Rsa.h"
 #include "AUI/Common/SharedPtrTypes.h"
-#include "AUI/Common/ByteBuffer.h"
+#include "AUI/Common/AByteBuffer.h"
 
 /**
- * \brief Хранит открытый и/или закрытый ключ RSA
+ * \brief РҐСЂР°РЅРёС‚ РѕС‚РєСЂС‹С‚С‹Р№ Рё/РёР»Рё Р·Р°РєСЂС‹С‚С‹Р№ РєР»СЋС‡ RSA
  */
 class API_AUI_CRYPT ARsa
 {
@@ -17,15 +17,15 @@ private:
 public:
 	~ARsa();
 
-	_<ByteBuffer> encrypt(_<ByteBuffer> in);
-	_<ByteBuffer> decrypt(_<ByteBuffer> in);
+	_<AByteBuffer> encrypt(_<AByteBuffer> in);
+	_<AByteBuffer> decrypt(_<AByteBuffer> in);
 
 	size_t getKeyLength() const;
 
-	_<ByteBuffer> getPrivateKeyPEM() const;
-	_<ByteBuffer> getPublicKeyPEM() const;
+	_<AByteBuffer> getPrivateKeyPEM() const;
+	_<AByteBuffer> getPublicKeyPEM() const;
 	
 	static _<ARsa> generate(int bits = 0x800);
-	static _<ARsa> fromPrivateKeyPEM(_<ByteBuffer> buffer);
-	static _<ARsa> fromPublicKeyPEM(_<ByteBuffer> buffer);
+	static _<ARsa> fromPrivateKeyPEM(_<AByteBuffer> buffer);
+	static _<ARsa> fromPublicKeyPEM(_<AByteBuffer> buffer);
 };

@@ -55,6 +55,7 @@ protected:
 	Queue<task> mQueueTryLater;
 	std::recursive_mutex mQueueLock;
 	std::condition_variable mCV;
+
 public:
 	AThreadPool(size_t size);
 	AThreadPool();
@@ -67,17 +68,17 @@ public:
 	static void enqueue(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
 	static AThreadPool& global();
 
-	template <class Callable>
+	template <typename Callable>
 	typename aui::detail::future_helper<std::invoke_result_t<Callable>>::return_type operator<<(Callable fun)
 	{
 		if constexpr (std::is_void_v<std::invoke_result_t<Callable>>) {
 			run(fun);
 		} else
 		{
-			return _new<AFuture<std::invoke_result_t<Callable>>>(*this, fun);
+			return AFuture<std::invoke_result_t<Callable>>::make(*this, fun);
 		}
 	}
-	template <class Callable>
+	template <typename Callable>
 	inline auto operator*(Callable fun)
 	{
 		return *this << fun;

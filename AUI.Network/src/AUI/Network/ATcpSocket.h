@@ -9,7 +9,7 @@
 
 #include "AInet4Address.h"
 
-class ByteBuffer;
+class AByteBuffer;
 
 class API_AUI_NETWORK ATcpSocket: public AAbstractSocket, public IInputStream, public IOutputStream
 {
@@ -17,8 +17,8 @@ friend class ATcpServerSocket;
 public:
 
 	/**
-	 * \brief Запуск TCP сокета-клиента
-	 * \param destinationAddress Куда подключаться
+	 * \brief пїЅпїЅпїЅпїЅпїЅпїЅ TCP пїЅпїЅпїЅпїЅпїЅпїЅ-пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+	 * \param destinationAddress пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 	 */
 	ATcpSocket(const AInet4Address& destinationAddress);
 

@@ -1,6 +1,6 @@
 #include "AView.h"
 #include "AUI/Render/Render.h"
-#include "AUI/Util/Tokenizer.h"
+#include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Url/AUrl.h"
 #include "AUI/Image/Drawables.h"
@@ -8,8 +8,11 @@
 #include "AUI/Animator/AAnimator.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <memory>
+#include <AUI/IO/StringStream.h>
+#include <AUI/Util/kAUI.h>
 
-#include "AUI/Platform/Desktop.h"
+#include "AUI/Platform/ADesktop.h"
 #include "AUI/Render/AFontManager.h"
 #include "AUI/Util/AMetric.h"
 #include "AUI/Util/Factory.h"
@@ -44,73 +47,85 @@ void AView::redraw()
 
 void AView::drawStencilMask()
 {
-    if (mBorderRadius > 0) {
-        Render::instance().drawRoundedRect(mPadding.left, mPadding.top, getWidth() - mPadding.horizontal(),
-                                           getHeight() - mPadding.vertical(), mBorderRadius);
+    if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
+        Render::inst().drawRoundedRect(mPadding.left,
+                                       mPadding.top,
+                                           getWidth() - mPadding.horizontal(),
+                                           getHeight() - mPadding.vertical(),
+                                       mBorderRadius);
     } else {
-        Render::instance().setFill(Render::FILL_SOLID);
-        Render::instance().drawRect(mPadding.left, mPadding.top,getWidth() - mPadding.horizontal(),
+        Render::inst().setFill(Render::FILL_SOLID);
+        Render::inst().drawRect(mPadding.left, mPadding.top, getWidth() - mPadding.horizontal(),
                                     getHeight() - mPadding.vertical());
     }
 }
 
+void AView::postRender() {
+    if (mAnimator)
+        mAnimator->postRender(this);
+    popStencilIfNeeded();
+}
+
+void AView::popStencilIfNeeded() {
+    if (getOverflow() == OF_HIDDEN)
+    {
+        /*
+         * Если у AView есть ограничение по Overflow, то он запушил свою маску в буфер трафарета, но он не может
+         * вернуть буфер трафарета к прежнему состоянию из-за ограничений C++, поэтому заносить маску нужно
+         * после обновлений преобразований (позиция, поворот), но перед непосредственным рендером содержимого AView
+         * (то есть, в <code>AView::render</code>), а возвращать трафарет к предыдущему состоянию можно только
+         * здесь, после того, как AView будет полностью отрендерен.
+         */
+        RenderHints::PushMask::popMask([&]() {
+            drawStencilMask();
+        });
+    }
+}
 void AView::render()
 {
     if (mAnimator)
-        mAnimator->animate();
+        mAnimator->animate(this);
 
 	{
 		ensureCSSUpdated();
 
-		auto doDraw = [&]() {
-            for (auto& e : mBackgroundEffects)
-            {
-                e->draw([&]()
-                        {
-                            Render::instance().drawRect(0, 0, getWidth(), getHeight());
-                        });
+        for (auto& e : mBackgroundEffects)
+        {
+            e->draw([&]()
+                    {
+                        Render::inst().drawRect(0, 0, getWidth(), getHeight());
+                    });
+        }
+
+        // список отрисовки.
+        if (mHasTransitions) {
+            mTransitionValue = glm::clamp(mTransitionValue, 0.f, 1.f);
+            for (auto& item : mCssDrawListBack)
+                item();
+
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            RenderHints::PushColor c;
+            Render::inst().setColor({1, 1, 1, mTransitionValue });
+            for (auto& item : mCssDrawListFront)
+                item();
+
+            auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::high_resolution_clock::now().time_since_epoch());
+            mTransitionValue += (now - mLastFrameTime).count() / (1000.f * mTransitionDuration);
+            if (mTransitionValue >= 1.f) {
+                mHasTransitions = false;
             }
-
-            // список отрисовки.
-            if (mHasTransitions) {
-                mTransitionValue = glm::clamp(mTransitionValue, 0.f, 1.f);
-                for (auto& item : mCssDrawListBack)
-                    item();
-
-                glEnable(GL_BLEND);
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-                RenderHints::PushColor c;
-                Render::instance().setColor({ 1, 1, 1, mTransitionValue });
-                for (auto& item : mCssDrawListFront)
-                    item();
-
-                auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
-                        std::chrono::high_resolution_clock::now().time_since_epoch());
-                mTransitionValue += (now - mLastFrameTime).count() / (1000.f * mTransitionDuration);
-                if (mTransitionValue >= 1.f) {
-                    mHasTransitions = false;
-                }
-                else {
-                    AWindow::current()->flagRedraw();
-                    mLastFrameTime = now;
-                }
+            else {
+                AWindow::current()->flagRedraw();
+                mLastFrameTime = now;
             }
-            else
-            {
-                for (auto& item : mCssDrawListFront)
-                    item();
-            }
-		};
-
-		if (mForceStencilForBackground) {
-		    RenderHints::PushMask mask([&]() {
-                Render::instance().drawRoundedRect(0, 0, getWidth(),
-                                                   getHeight(), mBorderRadius);
-		    });
-		    doDraw();
-		} else {
-		    doDraw();
-		}
+        }
+        else
+        {
+            for (auto& item : mCssDrawListFront)
+                item();
+        }
 	}
 
     // stencil
@@ -135,6 +150,9 @@ void AView::recompileCSS()
 			entries << possibleEntry;
 		}
 	}
+	if (mCustomStylesheet) {
+        entries.insert(entries.end(), mCustomStylesheet->getEntries().begin(), mCustomStylesheet->getEntries().end());
+    }
 
 	// некоторая вспомогательная хрень
 	auto processStylesheet = [&](css type, const std::function<void(property)>& callback)
@@ -193,9 +211,9 @@ void AView::recompileCSS()
 	mMargin = {};
 	mMinSize = {};
     mBorderRadius = 0.f;
-    mForceStencilForBackground = false;
+    //mForceStencilForBackground = false;
 	mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-	mFontStyle = {AFontManager::instance().getDefault(), 12, false, ALIGN_LEFT, AColor(0, 0, 0, 1.f) };
+	mFontStyle = {AFontManager::inst().getDefault(), 12, false, ALIGN_LEFT, AColor(0, 0, 0, 1.f) };
 	mBackgroundEffects.clear();
 
 	// общий обработчик для margin и padding.
@@ -232,7 +250,6 @@ void AView::recompileCSS()
 		}
 		return {};
 	};
-
 	processStylesheet(css::T_MARGIN, [&](property p)
 	{
 		mMargin = fieldProcessor(p);
@@ -298,7 +315,7 @@ void AView::recompileCSS()
 	processStylesheet(css::T_FONT_FAMILY, [&](property p)
 	{
 		if (p->getArgs().size() == 1) {
-			mFontStyle.font = AFontManager::instance().get(p->getArgs()[0].trim('\'').trim('\"'));
+			mFontStyle.font = AFontManager::inst().get(p->getArgs()[0].trim('\'').trim('\"'));
 		}
 	});
 	processStylesheet(css::T_FONT_SIZE, [&](property p)
@@ -343,12 +360,55 @@ void AView::recompileCSS()
 			else if (p->getArgs()[0] == "antialiasing")
 				mFontStyle.fontRendering = FR_ANTIALIASING;
 			else if (p->getArgs()[0] == "subpixel")
-				mFontStyle.fontRendering = FR_SUBPIXEL;
+#ifdef __ANDROID__
+			    mFontStyle.fontRendering = FR_ANTIALIASING;
+#else
+			    mFontStyle.fontRendering = FR_SUBPIXEL;
+#endif
 		}
 	});
 
 	// составление списка отрисовки.
 	mCssDrawListFront.clear();
+
+    processStylesheet(css::T_AUI_SCALE, [&](property p)
+    {
+        float oX, oY;
+        switch (p->getArgs().size()) {
+            case 1:
+                oX = oY = p->getArgs()[0].toFloat();
+                break;
+            case 2:
+                oX = p->getArgs()[0].toFloat();
+                oY = p->getArgs()[1].toFloat();
+                break;
+            default:
+                return;
+        }
+        mCssDrawListFront << [&, oX, oY]() {
+            Render::inst().setTransform(glm::scale(glm::mat4(1.f), glm::vec3{oX, oY, 1.0}));
+        };
+    });
+
+    processStylesheet(css::T_AUI_OFFSET, [&](property p)
+    {
+        int oX, oY;
+        switch (p->getArgs().size()) {
+            case 1:
+                oX = oY = AMetric(p->getArgs()[0]).getValuePx();
+                break;
+            case 2:
+                oX = AMetric(p->getArgs()[0]).getValuePx();
+                oY = AMetric(p->getArgs()[1]).getValuePx();
+                break;
+            default:
+                return;
+        }
+        mCssDrawListFront << [&, oX, oY]() {
+            Render::inst().setTransform(glm::translate(glm::mat4(1.f), glm::vec3{oX, oY, 0.0}));
+        };
+    });
+
 	processStylesheet(css::T_BOX_SHADOW, [&](property p)
 	{
         glm::vec2 offset;
@@ -368,36 +428,44 @@ void AView::recompileCSS()
                 stretch = AMetric(p->getArgs()[3]).getValuePx();
                 color = p->getArgs()[4];
                 break;
+            default:
+                return;
         }
         mCssDrawListFront << [&, offset, radius, stretch, color]() {
-            auto doDrawShadow = [&]() {
-                Render::instance().drawBoxShadow(offset.x - stretch, offset.y - stretch, getWidth() + stretch * 2,
-                                                 getHeight() + stretch * 2, radius, color);
-            };
-            if (mForceStencilForBackground) {
-                RenderHints::PushMask::Layer layer(RenderHints::PushMask::Layer::DECREASE, GL_GEQUAL);
-                doDrawShadow();
-            } else {
-                doDrawShadow();
-            }
+            Render::inst().drawBoxShadow(offset.x - stretch, offset.y - stretch, getWidth() + stretch * 2,
+                                             getHeight() + stretch * 2, radius, color);
         };
 	});
 	processStylesheet(css::T_BACKGROUND_COLOR, [&](property p)
 	{
 		AColor color = p->getArgs()[0];
-		mCssDrawListFront << [&, color]() {
-			RenderHints::PushColor x;
+		if (color.a > 0.001) {
+            mCssDrawListFront << [&, color]() {
+                RenderHints::PushColor x;
 
-			Render::instance().setFill(Render::FILL_SOLID);
-			Render::instance().setColor(color);
-			Render::instance().drawRect(0, 0, getWidth(), getHeight());
-		};
+                Render::inst().setColor(color);
+                if (mBorderRadius > 0) {
+                    Render::inst().drawRoundedRectAntialiased(0, 0, getWidth(), getHeight(), mBorderRadius);
+                } else  {
+                    Render::inst().setFill(Render::FILL_SOLID);
+                    Render::inst().drawRect(0, 0, getWidth(), getHeight());
+                }
+            };
+        }
 	});
 	processStylesheet(css::T_BACKGROUND_EFFECT, [&](property p)
 	{
-		for (auto a : p->getArgs()) {
+		for (auto& a : p->getArgs()) {
 			mBackgroundEffects << Autumn::get<Factory<IShadingEffect>>(a)->createObject();
 		}
+	});
+
+	AColor backgroundImageOverlay(1.f);
+	processStylesheet(css::T_AUI_BACKGROUND_OVERLAY, [&](property p)
+	{
+	    if (p->getArgs().size() == 1) {
+            backgroundImageOverlay = AColor(p->getArgs()[0]);
+	    }
 	});
 
 	processStylesheet(css::T_BACKGROUND, [&](property p)
@@ -422,25 +490,59 @@ void AView::recompileCSS()
 							sizing = p->getArgs()[0];
 					});
 
-					if (sizing == "fit")
+
+                    Repeat repeat = REPEAT_NONE;
+
+                    processStylesheet(css::T_BACKGROUND_REPEAT, [&](property p)
+                    {
+                        if (p->getArgs().size() == 1) {
+                            if (p->getArgs()[0] == "repeat") {
+                                repeat = REPEAT;
+                            } else if (p->getArgs()[0] == "repeat-x") {
+                                repeat = REPEAT_X;
+                            } else if (p->getArgs()[0] == "repeat-y") {
+                                repeat = REPEAT_Y;
+                            }
+                        }
+                    });
+
+
+                    auto drawableDrawWrapper = [repeat, drawable, backgroundImageOverlay](const glm::ivec2& size) {
+                        RenderHints::PushColor c;
+                        Render::inst().setColor(backgroundImageOverlay);
+                        Render::inst().setRepeat(repeat);
+                        drawable->draw(size);
+                        Render::inst().setRepeat(REPEAT_NONE);
+                    };
+
+                    if (sizing == "fit")
 					{
-						mCssDrawListFront << [&, drawable]()
+						mCssDrawListFront << [&, drawableDrawWrapper]()
 						{
-							drawable->draw(getSize());
+                            drawableDrawWrapper(getSize());
+						};
+					} else if (sizing == "fit-padding")
+					{
+						mCssDrawListFront << [&, drawableDrawWrapper]()
+						{
+                            RenderHints::PushMatrix m;
+                            Render::inst().setTransform(
+                                    glm::translate(glm::mat4(1.f), glm::vec3{mPadding.left, mPadding.top, 0.f}));
+                            drawableDrawWrapper(getSize() - glm::ivec2{mPadding.horizontal(), mPadding.vertical()});
 						};
 					}
 					else {
-						mCssDrawListFront << [&, drawable]()
+						mCssDrawListFront << [&, drawable, drawableDrawWrapper]()
 						{
 							auto imageSize = glm::vec2(drawable->getSizeHint());
 							if (drawable->isDpiDependent())
 								imageSize *= AWindow::current()->getDpiRatio();
 
 							RenderHints::PushMatrix m;
-							Render::instance().setTransform(
+                            Render::inst().setTransform(
 								glm::translate(glm::mat4(1.f),
-									glm::vec3((glm::vec2(mSize) - imageSize) / 2.f, 0.f)));
-							drawable->draw(imageSize);
+									glm::vec3(glm::ivec2((glm::vec2(mSize) - imageSize) / 2.f), 0.f)));
+                            drawableDrawWrapper(imageSize);
 						};
 					}
 				}
@@ -450,16 +552,21 @@ void AView::recompileCSS()
 			AColor color = p->getArgs()[0];
 			mCssDrawListFront << [&, color]() {
 				RenderHints::PushColor x;
-				Render::instance().setFill(Render::FILL_SOLID);
-				Render::instance().setColor(color);
-				Render::instance().drawRect(0, 0, getWidth(), getHeight());
+                Render::inst().setColor(color);
+
+				if (mBorderRadius > 0) {
+                    Render::inst().drawRoundedRectAntialiased(0, 0, getWidth(), getHeight(), mBorderRadius);
+				} else  {
+                    Render::inst().setFill(Render::FILL_SOLID);
+                    Render::inst().drawRect(0, 0, getWidth(), getHeight());
+                }
 			};
 		}
 	});
 
 	processStylesheet(css::T_BORDER, [&](property p)
 	{
-		float width = 1.f;
+		int width = 1;
 		AColor c;
 
 		enum
@@ -500,52 +607,101 @@ void AView::recompileCSS()
 		{
 		case B_SOLID:
 			mCssDrawListFront << [&, c, width]() {
-				RenderHints::PushColor x;
-				RenderHints::PushMask mask([&]() {
-				    if (mBorderRadius > 0) {
-				        Render::instance().drawRoundedRect(width, width, getWidth() - width * 2,
-                                        getHeight() - width * 2, glm::max(mBorderRadius - width, 0.f));
-				    } else {
-                        Render::instance().drawRect(width, width, getWidth() - width * 2,
+                RenderHints::PushColor x;
+                if (mBorderRadius > 0) {
+                    Render::inst().setColor(c);
+                    Render::inst().drawRoundedBorder(0, 0, getWidth(), getHeight(), mBorderRadius, width);
+                } else {
+                    Render::inst().setFill(Render::FILL_SOLID);
+                    RenderHints::PushMask mask([&]() {
+                        /*
+                        if (mBorderRadius > 0) {
+                            Render::inst().drawRoundedRect(width, width, getWidth() - width * 2,
+                                            getHeight() - width * 2, glm::max(mBorderRadius - width, 0.f));
+                        } else */ {
+                        Render::inst().drawRect(width, width, getWidth() - width * 2,
                                                     getHeight() - width * 2);
-				    }
-				});
-				RenderHints::PushMask::Layer maskLayer(RenderHints::PushMask::Layer::DECREASE);
-				Render::instance().setFill(Render::FILL_SOLID);
-                Render::instance().setColor(c);
-				Render::instance().drawRect(0, 0, getWidth(), getHeight());
+                    }
+                    });
+                    RenderHints::PushMask::Layer maskLayer(RenderHints::PushMask::Layer::DECREASE);
+                    Render::inst().setColor(c);
+                    Render::inst().drawRect(0, 0, getWidth(), getHeight());
+                }
 			};
 			break;
 		case B_INSET:
 			mCssDrawListFront << [&, c, width]() {
 				RenderHints::PushColor x;
-				Render::instance().setFill(Render::FILL_SOLID);
-				Render::instance().setColor(c);
-				Render::instance().drawRectBorder(0, 0, getWidth(), getHeight(), width);
+                Render::inst().setFill(Render::FILL_SOLID);
+                Render::inst().setColor(c);
+                Render::inst().drawRectBorder(0, 0, getWidth(), getHeight(), width);
 
-				Render::instance().setColor({ 0.55f, 0.55f, 0.55f, 1 });
-				Render::instance().drawRectBorderSide(0, 0, getWidth(), getHeight(), width, S_CORNER_TOPLEFT);
+                Render::inst().setColor({0.55f, 0.55f, 0.55f, 1 });
+                Render::inst().drawRectBorderSide(0, 0, getWidth(), getHeight(), width, S_CORNER_TOPLEFT);
 			};
 			break;
 		case B_OUTSET:
 			mCssDrawListFront << [&, c, width]() {
 				RenderHints::PushColor x;
-				Render::instance().setFill(Render::FILL_SOLID);
-				Render::instance().setColor(c);
-				Render::instance().drawRectBorder(0, 0, getWidth(), getHeight(), width);
+                Render::inst().setFill(Render::FILL_SOLID);
+                Render::inst().setColor(c);
+                Render::inst().drawRectBorder(0, 0, getWidth(), getHeight(), width);
 
-				Render::instance().setColor({ 0.55f, 0.55f, 0.55f, 1 });
-				Render::instance().drawRectBorderSide(0, 0, getWidth(), getHeight(), width, S_CORNER_BOTTOMRIGHT);
+                Render::inst().setColor({0.55f, 0.55f, 0.55f, 1 });
+                Render::inst().drawRectBorderSide(0, 0, getWidth(), getHeight(), width, S_CORNER_BOTTOMRIGHT);
 			};
 			break;
 		}
-		mForceStencilForBackground = true;
+		//mForceStencilForBackground = true;
+	});
+	processStylesheet(css::T_BORDER_BOTTOM, [&](property p)
+	{
+		float width = 1.f;
+		AColor c;
+
+
+		switch (p->getArgs().size())
+		{
+		case 0:
+			return;
+		case 1:
+			if (p->getArgs()[0] == "none")
+				return;
+			width = AMetric(p->getArgs()[0]).getValuePx();
+			break;
+
+		case 3:
+			width = AMetric(p->getArgs()[0]).getValuePx();
+			c = AColor(p->getArgs()[2]);
+			break;
+
+		case 2:
+			c = AColor(p->getArgs()[1]);
+			break;
+		}
+        mCssDrawListFront << [&, c, width]() {
+            Render::inst().setFill(Render::FILL_SOLID);
+            RenderHints::PushColor x;
+            RenderHints::PushMask mask([&]() {
+                if (mBorderRadius > 0) {
+                    Render::inst().drawRoundedRect(0, 0, getWidth(),
+                                                       getHeight() - width, glm::max(mBorderRadius - width, 0.f));
+                } else {
+                    Render::inst().drawRect(0, 0, getWidth(),
+                                                getHeight() - width);
+                }
+            });
+            RenderHints::PushMask::Layer maskLayer(RenderHints::PushMask::Layer::DECREASE);
+            Render::inst().setColor(c);
+            Render::inst().drawRect(0, 0, getWidth(), getHeight());
+        };
+		//mForceStencilForBackground = true;
 	});
 
     processStylesheet(css::T_BORDER_RADIUS, [&](property p)
     {
         if (p->getArgs().size() == 1) {
-            mForceStencilForBackground = true;
+            //mForceStencilForBackground = true;
             mBorderRadius = AMetric(p->getArgs()[0]).getValuePx();
         }
     });
@@ -601,35 +757,10 @@ void AView::getTransform(glm::mat4& transform) const
 FontStyle& AView::getFontStyle()
 {
 	if (mFontStyle.font == nullptr)
-		mFontStyle.font = AFontManager::instance().getDefault();
+		mFontStyle.font = AFontManager::inst().getDefault();
 	return mFontStyle;
 }
 
-
-void AView::setSize(int width, int height)
-{
-	if (mFixedSize.x != 0)
-	{
-		mSize.x = mFixedSize.x;
-	}
-	else
-	{
-		mSize.x = width;
-		if (mMinSize.x != 0)
-			mSize.x = glm::max(mMinSize.x, mSize.x);
-	}
-	if (mFixedSize.y != 0)
-	{
-		mSize.y = mFixedSize.y;
-	}
-	else
-	{
-		mSize.y = height;
-		if (mMinSize.y != 0)
-			mSize.y = glm::max(mMinSize.y, mSize.y);
-	}
-	mSize = glm::min(mSize, mMaxSize);
-}
 
 void AView::pack()
 {
@@ -667,7 +798,7 @@ void AView::ensureCSSUpdated()
 		connect(mCssHelper->checkPossiblyMatchCss, this, &AView::redraw);
 		mCssEntries.clear();
 
-		for (auto& entry : Stylesheet::instance().getEntries())
+		for (auto& entry : Stylesheet::inst().getEntries())
 		{
 			switch (entry->selectorMatches(this))
 			{
@@ -686,7 +817,9 @@ void AView::ensureCSSUpdated()
 
 void AView::onMouseEnter()
 {
-	mHovered = true;
+    if (AWindow::shouldDisplayHoverAnimations()) {
+        mHovered = true;
+    }
 }
 
 
@@ -696,14 +829,16 @@ void AView::onMouseMove(glm::ivec2 pos)
 
 void AView::onMouseLeave()
 {
-	mHovered = false;
+    if (AWindow::shouldDisplayHoverAnimations()) {
+        mHovered = false;
+    }
 }
 
 
 void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 {
 	mPressed = true;
-	if (auto w = getWindow())
+	if (auto w = AWindow::current())
 	{
 		if (w != this) {
 			connect(w->mouseReleased, this, [&]()
@@ -711,7 +846,9 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 				AThread::current()->enqueue([&]()
 				{
 					// чтобы быть точно уверенным, что isPressed будет равно false.
-					mPressed = false;
+					if (mPressed) {
+					    onMouseReleased(pos, button);
+					}
 				});
 				disconnect();
 			});
@@ -739,8 +876,15 @@ void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
 	emit doubleClicked(button);
 }
 
+void AView::onMouseWheel(glm::ivec2 pos, int delta) {
+
+}
+
 void AView::onKeyDown(AInput::Key key)
 {
+    if (key == AInput::Tab) {
+        AWindow::current()->focusNextView();
+    }
 }
 
 void AView::onKeyRepeat(AInput::Key key)
@@ -766,6 +910,10 @@ void AView::onCharEntered(wchar_t c)
 
 }
 
+bool AView::handlesNonMouseNavigation() {
+    return false;
+}
+
 void AView::getCustomCssAttributes(AMap<AString, AVariant>& map)
 {
 	if (mEnabled)
@@ -781,19 +929,115 @@ void AView::getCustomCssAttributes(AMap<AString, AVariant>& map)
 void AView::setEnabled(bool enabled)
 {
 	mEnabled = enabled;
+    emit customCssPropertyChanged();
 	setSignalsEnabled(mEnabled);
 	emit customCssPropertyChanged();
 }
 
 void AView::setDisabled(bool disabled)
 {
-	mEnabled = !disabled;
-	emit customCssPropertyChanged();
-	setSignalsEnabled(mEnabled);
+    mEnabled = !disabled;
+    emit customCssPropertyChanged();
+    setSignalsEnabled(mEnabled);
+    emit customCssPropertyChanged();
 }
 
 void AView::setAnimator(const _<AAnimator>& animator) {
     mAnimator = animator;
-    mAnimator->setView(this);
+    if (mAnimator)
+        mAnimator->setView(this);
+}
+
+glm::ivec2 AView::getPositionInWindow() {
+    glm::ivec2 p(0);
+    for (AView* i = this; i && i->getParent(); i = i->getParent()) {
+        p += i->getPosition();
+    }
+    return p;
+}
+
+
+void AView::setPosition(const glm::ivec2& position) {
+    mPosition = position;
+}
+void AView::setSize(int width, int height)
+{
+    if (mFixedSize.x != 0)
+    {
+        mSize.x = mFixedSize.x;
+    }
+    else
+    {
+        mSize.x = width;
+        if (mMinSize.x != 0)
+            mSize.x = glm::max(mMinSize.x, mSize.x);
+    }
+    if (mFixedSize.y != 0)
+    {
+        mSize.y = mFixedSize.y;
+    }
+    else
+    {
+        mSize.y = height;
+        if (mMinSize.y != 0)
+            mSize.y = glm::max(mMinSize.y, mSize.y);
+    }
+    mSize = glm::min(mSize, mMaxSize);
+}
+
+void AView::setGeometry(int x, int y, int width, int height) {
+    setPosition({ x, y });
+    setSize(width, height);
+}
+
+bool AView::consumesClick(const glm::ivec2& pos) {
+    return true;
+}
+
+void AView::setCss(const AString& cssCode) {
+    if (cssCode.empty()) {
+        mCustomStylesheet = nullptr;
+    } else {
+        mCustomStylesheet = std::make_unique<Stylesheet::Cache>();
+        mCustomStylesheet->load(Stylesheet::inst(), _new<StringStream>(cssCode), true);
+    }
+    recompileCSS();
+}
+
+_<AView> AView::determineSharedPointer() {
+    if (mParent) {
+        for (auto& p : mParent->getViews()) {
+            if (p.get() == this) {
+                return p;
+            }
+        }
+    }
+    return nullptr;
+}
+
+void AView::focus() {
+    uiX [&]() {
+        auto s = determineSharedPointer();
+        assert(s);
+        AWindow::current()->setFocusedView(s);
+    };
+}
+
+AView::Visibility AView::getVisibilityRecursive() const {
+    if (mVisibility == V_GONE)
+        return V_GONE;
+
+    int v = mVisibility;
+
+    for (auto target = mParent; target; target = target->mParent) {
+        if (v < target->mVisibility) {
+            v = target->mVisibility;
+            if (v == V_GONE) {
+                return V_GONE;
+            }
+        }
+    }
+
+    return static_cast<AView::Visibility>(v);
 }
 

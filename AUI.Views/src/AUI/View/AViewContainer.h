@@ -12,7 +12,10 @@ class API_AUI_VIEWS AViewContainer: public AView
 {
 private:
 	_<ALayout> mLayout;
-	
+    bool mSizeSet = false;
+    bool mHasBackground = false;
+	glm::ivec2 mPreviousSize = mSize;
+
 protected:
 	AVector<_<AView>> mViews;
 	
@@ -31,6 +34,12 @@ protected:
 
     void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)
 	override;
+
+    /**
+     * \brief Обновляет макет родительского AView, если размер этого элемента был изменён.
+     */
+    virtual void updateParentsLayoutIfNecessary();
+
 public:
 	AViewContainer();
 	virtual ~AViewContainer();
@@ -53,8 +62,12 @@ public:
 	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 	void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
 	void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
-	
-	void setSize(int width, int height) override;
+
+    void onMouseWheel(glm::ivec2 pos, int delta) override;
+
+    bool consumesClick(const glm::ivec2& pos) override;
+
+    void setSize(int width, int height) override;
 
 	/**
 	 * \brief выставить компоновщик для этого контейнера. УНИЧТОЖАЕТ СТАРЫЙ
@@ -64,12 +77,34 @@ public:
 	_<ALayout> getLayout() const;
 
 	_<AView> getViewAt(glm::ivec2 pos, bool ignoreGone = true);
-	_<AView> getViewAtRecusrive(glm::ivec2 pos);
-	
-	void updateLayout();
+	_<AView> getViewAtRecursive(glm::ivec2 pos);
 
-    void setGeometry(int x, int y, int width, int height) override;
+	template<typename T>
+	_<T> getViewAtRecursiveOf(glm::ivec2 pos, bool ignoreGone = true) {
+		for (auto it = mViews.rbegin(); it != mViews.rend(); ++it)
+		{
+			auto view = *it;
+			auto targetPos = pos - view->getPosition();
 
+			if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x && targetPos.y < view->getSize().y)
+			{
+				if (!ignoreGone || view->getVisibility() != V_GONE) {
+					if (auto applicable = _cast<T>(view))
+						return applicable;
+					if (auto container = _cast<AViewContainer>(view)) {
+						if (auto applicable = container->getViewAtRecursiveOf<T>(targetPos, ignoreGone)) {
+							return applicable;
+						}
+					}
+				}
+			}
+		}
+        return nullptr;
+	}
+
+	virtual void updateLayout();
+
+public:
 
     const AVector<_<AView>>& getViews() const
 	{

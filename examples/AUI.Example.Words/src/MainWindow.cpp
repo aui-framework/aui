@@ -22,7 +22,7 @@
 #include <AUI/Url/AUrl.h>
 #include <Frame/CoursesFrame.h>
 
-MainWindow::MainWindow() : AWindow("Words", 300, 400) {
+MainWindow::MainWindow() : AWindow("Words", 300_dp, 400_dp) {
     setLayout(_new<AStackedLayout>());
 
     auto loadingScreen = _container<AVerticalLayout>(
@@ -30,14 +30,16 @@ MainWindow::MainWindow() : AWindow("Words", 300, 400) {
                 _container<AHorizontalLayout>(
                 {
                         _new<ASpacer>(),
-                        _new<ALabel>(u8"\uf1ce")
-                           (&ALabel::addCssName, ".icon")
-                           (&ALabel::setFont, AFontManager::instance().get(":words/fas.otf"))
-                           (&ALabel::setFontSize,50dp)
-                           (&ALabel::setExpanding, glm::ivec2(0))
-                           (&ALabel::setAnimator, _new<ARotationAnimator>()
-                                                     (&ARotationAnimator::setRepeating, true)
-                                                     (&ARotationAnimator::setDuration, 1.5f)),
+                        _new<ALabel>(u8"\uf1ce") let (ALabel, {
+                           addCssName(".icon");
+                           setFont(AFontManager::inst().get(":words/fas.otf"));
+                           setFontSize(50_dp);
+                           setExpanding(glm::ivec2(0));
+                           setAnimator(_new<ARotationAnimator>() let (ARotationAnimator, {
+                               setRepeating(true);
+                               setDuration(1.5f);
+                           }));
+                        }),
                         _new<ASpacer>()
                 }),
                 _new<ALabel>(u8"Запуск...")
@@ -54,7 +56,7 @@ MainWindow::MainWindow() : AWindow("Words", 300, 400) {
 
             auto json = AJson::read(AUrl(":words/courses.json").open());
             for (auto& course : json.asArray()) {
-                Course::make(course["courseName"].asString(), course["courseDescription"].asString());
+                Note::make(course["courseName"].asString(), course["courseDescription"].asString());
             }
 
         });

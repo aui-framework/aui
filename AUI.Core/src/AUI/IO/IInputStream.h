@@ -1,10 +1,11 @@
 #pragma once
 #include "EOFException.h"
 
-#include <AUI/Common/ByteBuffer.h>
+#include <AUI/Common/AByteBuffer.h>
 #include <glm/glm.hpp>
 
-class ByteBuffer;
+class AByteBuffer;
+class IOutputStream;
 
 class API_AUI_CORE IInputStream
 {
@@ -19,7 +20,7 @@ public:
 	 */
 	virtual int read(char* dst, int size) = 0;
 
-	inline void read(const _<ByteBuffer>& dst)
+	inline void read(const _<AByteBuffer>& dst)
 	{
 		const size_t BUFFER_SIZE = 0x10000;
 
@@ -37,9 +38,8 @@ public:
 		dst->setSize(dst->getCurrentPos() + r);
 	}
 
-
 	template<typename T>
-	IInputStream& operator>>(T& out)
+	inline IInputStream& operator>>(T& out)
 	{
 		auto dst = reinterpret_cast<char*>(&out);
 
@@ -49,23 +49,39 @@ public:
 		for (int r = 0; accumulator; dst += r, accumulator -= r) {
 			r = read(dst, accumulator);
 			if (r < 0)
-				throw IOException();
+				throw IOException("something went wrong while reading from the stream");
 			if (r == 0)
 				throw EOFException();
 		}
 		return *this;
 	}
 
+    template<typename T>
+    inline IInputStream& operator>>(const _<T>& is);
 
-	inline _<ByteBuffer> readSizedBuffer() {
-		auto buf = _new<ByteBuffer>();
+
+	inline _<AByteBuffer> readSizedBuffer() {
+		auto buf = _new<AByteBuffer>();
 		uint32_t length;
 		*this >> length;
-		buf->reserve(length);
-		buf->setSize(length);
-		int r = read(buf->data(), length);
-		assert(r == length);  // NOLINT(clang-diagnostic-sign-compare)
-
+		if (length) {
+            buf->reserve(length);
+            buf->setSize(length);
+            int r = read(buf->data(), length);
+            assert(r == length);  // NOLINT(clang-diagnostic-sign-compare)
+        }
 		return buf;
 	}
 };
+
+#include "IOutputStream.h"
+
+template<typename T>
+inline IInputStream& IInputStream::operator>>(const _<T>& os)
+{
+    char buf[0x8000];
+    for (int r; (r = read(buf, sizeof(buf))) > 0;) {
+        os->write(buf, r);
+    }
+    return *this;
+}

@@ -1,11 +1,12 @@
 ﻿#include <ft2build.h>
 #include <freetype/freetype.h>
-#include "AFont.h"
+#include "FreeType.h"
+#include "AFontCharacter.h"
 #include "AFontManager.h"
 #include <fstream>
 #include <string>
-
 #include "AUI/Common/AStringVector.h"
+
 
 AFont::AFont(AFontManager* fm, const AString& path) :
 	ft(fm->mFreeType)
@@ -17,9 +18,9 @@ AFont::AFont(AFontManager* fm, const AString& path) :
 
 AFont::AFont(AFontManager *fm, const AUrl& url):
     ft(fm->mFreeType) {
-    mFontDataBuffer = ByteBuffer::fromStream(url.open());
+    mFontDataBuffer = AByteBuffer::fromStream(url.open());
 
-    if (FT_New_Memory_Face(fm->mFreeType->getFt(), (const FT_Byte*)mFontDataBuffer->getBuffer(), mFontDataBuffer->getSize(), 0, &face)) {
+    if (FT_New_Memory_Face(fm->mFreeType->getFt(), (const FT_Byte*)mFontDataBuffer.getBuffer(), mFontDataBuffer.getSize(), 0, &face)) {
         throw AException(("Could not load font: " + url.getFull()).toStdString());
     }
 }
@@ -59,10 +60,10 @@ AFont::FontData& AFont::getCharsetBySize(long size, FontRendering fr) {
 	//renderGlyphs(size);
 	return data[data.size() - 1];
 }
-AFont::Character* AFont::renderGlyph(FontData& fs, FT_ULong glyph, long size, FontRendering fr) {
+AFont::Character* AFont::renderGlyph(FontData& fs, long glyph, long size, FontRendering fr) {
 	FT_Set_Pixel_Sizes(face, 0, size);
 
-	FT_Int32 flags = FT_LOAD_RENDER | FT_LOAD_FORCE_AUTOHINT;
+	FT_Int32 flags = FT_LOAD_RENDER;// | FT_LOAD_FORCE_AUTOHINT;
 	if (fr & FR_SUBPIXEL)
 		flags |= FT_LOAD_TARGET_LCD;
 	FT_Error e = FT_Load_Char(face, glyph, flags);
@@ -109,11 +110,12 @@ AFont::Character* AFont::renderGlyph(FontData& fs, FT_ULong glyph, long size, Fo
 	return nullptr;
 }
 
-_<GL::Texture> AFont::textureOf(long size, FontRendering fr) {
+_<GL::Texture2D> AFont::textureOf(long size, FontRendering fr) {
 	FontData& chars = getCharsetBySize(size, fr);
 	if (!chars.texture)
 	{
-		chars.texture = _new<GL::Texture>();
+		chars.texture = _new<GL::Texture2D>();
+		chars.texture->setupNearest();
 	}
 	if (chars.isDirty)
 	{
@@ -140,7 +142,7 @@ _<GL::Texture> AFont::textureOf(long size, FontRendering fr) {
 	}
 	return chars.texture;
 }
-AFont::Character* AFont::getCharacter(FT_ULong id, long size, FontRendering fr) {
+AFont::Character* AFont::getCharacter(long id, long size, FontRendering fr) {
 	FontData& chars = getCharsetBySize(size, fr);
 	if (chars.chars.size() > id && chars.chars[id]) {
 		return chars.chars[id];
@@ -161,15 +163,18 @@ float AFont::length(const AString& text, long size, FontRendering fr)
 
 	for (AString::const_iterator i = text.begin(); i != text.end(); i++) {
 		if (*i == ' ')
-			advance += float(size) / 2.3f;
+			advance += size / 2.3f;
+		else if (*i == '\n')
+		    advance = 0;
 		else {
 			Character* ch = getCharacter(*i, size, fr);
-			if (ch)
-				advance += ch->advanceX;
+			if (ch) {
+                advance += ch->advanceX;
+                advance = glm::floor(advance);
+            }
 			else
-				advance += float(size) / 2.3f;
+				advance += size / 2.3f;
 		}
-		advance = glm::floor(advance);
 	}
 	return advance;
 }
@@ -215,6 +220,34 @@ AString AFont::trimStringToWidth(const AString& text, size_t width, long size, F
 	return s;
 }
 
+size_t AFont::indexOfX(const AString& text, size_t width, long size, FontRendering fr) {
+    float advance = 0;
+    size_t index = 0;
+
+    for (auto c : text) {
+        float widthOfChar;
+        if (c == ' ') {
+            widthOfChar = size / 2.3f;
+        } else {
+            auto characterInfo = getCharacter(c, size, fr);
+            if (!characterInfo) {
+                continue;
+            }
+
+            widthOfChar = characterInfo->advanceX;
+        }
+
+        if (advance + widthOfChar / 2.f > width) {
+            break;
+        }
+        advance += widthOfChar;
+        advance = glm::floor(advance);
+        index += 1;
+    }
+
+    return index;
+}
+
 AStringVector AFont::trimStringToMultiline(const AString& text, int width, long scale, FontRendering fr) {
 	AStringVector v;
 	AString currentText = text;
@@ -239,11 +272,11 @@ int AFont::getAscenderHeight(long size) const
 	return int(face->ascender) * size / face->height;
 }
 
+
 int AFont::getDescenderHeight(long size) const
 {
 	return -int(face->descender) * size / face->height;
 }
-
 
 _<Util::SimpleTexturePacker> AFont::texturePackerOf(long size, FontRendering fr) {
 	return getCharsetBySize(size, fr).tp;

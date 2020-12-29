@@ -34,13 +34,17 @@ AUrl::AUrl(const AString& full)
 	}
 }
 
+AMap<AString, std::function<_<IInputStream>(const AUrl&)>> AUrl::ourResolvers = {
+        {"builtin", [](const AUrl& u) {
+            return BuiltinFiles::open(u.getPath());
+        }}
+};
 _<IInputStream> AUrl::open() const {
-	static AMap<AString, std::function<_<IInputStream>(const AUrl&)>> resolvers = {
-		{"builtin", [](const AUrl& u)
-		{
-			return BuiltinFiles::open(u.mPath);
-		}}
-	};
+	if (auto is = ourResolvers[mProtocol](*this))
+	    return is;
+	throw IOException("could not open url: " + getFull());
+}
 
-	return resolvers[mProtocol](*this);
+void AUrl::registerResolver(const AString& protocol, const std::function<_<IInputStream>(const AUrl&)>& factory) {
+    ourResolvers[protocol] = factory;
 }

@@ -19,13 +19,14 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 	cache.reserve(mViews.size());
 	
 	int sum = 0;
-	int availableSpace = width;
+	int availableSpace = width - x;
 	
 	for (auto& view : mViews)
 	{
 		view->ensureCSSUpdated();
 		int e = view->getExpandingHorizontal();
-		int minSpace = view->getMinimumWidth() + view->getMargin().horizontal();
+		auto m = view->getMinimumWidth();
+		int minSpace = m + view->getMargin().horizontal();
 		sum += e;
 		if (e == 0)
 			availableSpace -= (minSpace + mSpacing);
@@ -43,11 +44,14 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 		auto maxSize = view->getMaxSize();
 		auto& e = cache[index++];
 		auto margins = view->getMargin();
+		//auto cmin = view->getMinimumWidth();
+		//assert(cmin == e.minSpace - margins.horizontal());
 
 		if (view == last)
 		{
 			// последний элемент должен находиться идеально ровно на границе.
 			int viewPosX = glm::round(posX) + margins.left;
+			//assert(int(width - viewPosX - margins.right) >= e.minSpace - margins.horizontal());
 			view->setGeometry(viewPosX, y + margins.top, width - viewPosX - margins.right, height - margins.vertical());
 		}
 		else {
@@ -56,7 +60,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 			view->setGeometry(glm::round(posX) + margins.left, y + margins.top, viewWidth - margins.horizontal(), glm::min(height - margins.vertical(), float(maxSize.y)));
 			posX += viewWidth + mSpacing;
 
-			availableSpace += viewWidth - view->getSize().x;
+			availableSpace += viewWidth - (view->getSize().x + view->getMargin().horizontal());
 		}
 	}
 	//assert(width == x);

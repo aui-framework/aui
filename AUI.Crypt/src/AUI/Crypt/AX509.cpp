@@ -29,7 +29,7 @@ bool AX509::checkTrust() const
 	return X509_trusted((X509*)mX509);
 }
 
-_<AX509> AX509::fromPEM(_<ByteBuffer> buffer)
+_<AX509> AX509::fromPEM(_<AByteBuffer> buffer)
 {
 	BIO* inputBuffer = BIO_new_mem_buf(buffer->getCurrentPosAddress(), buffer->getAvailable());
 	X509* rsa = nullptr;

@@ -1,12 +1,12 @@
-﻿#ifdef _WIN32
-#include <Windows.h>
+﻿#if defined(_WIN32)
+#include <windows.h>
 #include "AMessageBox.h"
 #include "AWindow.h"
 AMessageBox::Button AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b)
 {
     HWND window = parent ? parent->getNativeHandle() : nullptr;
 
-    unsigned flags = 0;
+    long flags = 0;
 
     // Icons
     if (icon & I_INFO)
@@ -19,7 +19,7 @@ AMessageBox::Button AMessageBox::show(AWindow* parent, const AString& title, con
     }
     if (icon & I_CRITICAL)
     {
-        flags |= MB_ICONERROR;
+        flags |= MB_ICONSTOP;
     }
 
     // Flags
@@ -38,27 +38,56 @@ AMessageBox::Button AMessageBox::show(AWindow* parent, const AString& title, con
     }
     return B_INVALID;
 }
-#else
+#elif defined(ANDROID)
 
-#include <gtk/gtk.h>
+#include <AUI/Platform/OSAndroid.h>
 #include "AMessageBox.h"
 #include "AWindow.h"
 
 AMessageBox::Button
 AMessageBox::show(AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,
                   AMessageBox::Button b) {
+
+    auto j = AAndroid::getJNI();
+    auto klazzAUI = j->FindClass("ru/alex2772/aui/AUI");
+    auto methodShowMessageBox = j->GetStaticMethodID(klazzAUI, "showMessageBox", "(Ljava/lang/String;Ljava/lang/String;)V");
+    auto strTitle = j->NewStringUTF(title.toStdString().c_str());
+    auto strMessage = j->NewStringUTF(message.toStdString().c_str());
+
+    j->CallStaticVoidMethod(klazzAUI, methodShowMessageBox, strTitle, strMessage);
+
+    j->DeleteLocalRef(strTitle);
+    j->DeleteLocalRef(strMessage);
+
+    return B_INVALID;
+}
+#else
+#include <gtk/gtk.h>
+#include <AUI/Util/kAUI.h>
+#include "AMessageBox.h"
+#include "AWindow.h"
+#include <AUI/Util/kAUI.h>
+
+AMessageBox::Button
+AMessageBox::show(AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,
+                  AMessageBox::Button b) {
     unsigned iconFlags = 0;
 
+    do_once gtk_init(nullptr, nullptr);
+
+
     // Icons
-    if (icon & I_INFO) {
-        iconFlags |= GTK_MESSAGE_INFO;
-    }
-    if (icon & I_WARNING) {
-        iconFlags |= GTK_MESSAGE_WARNING;
-    }
-    if (icon & I_CRITICAL) {
-        iconFlags |= GTK_MESSAGE_ERROR;
-    }
+    switch (icon) {
+        case I_INFO:
+            iconFlags |= GTK_MESSAGE_INFO;
+            break;
+        case I_WARNING:
+            iconFlags |= GTK_MESSAGE_WARNING;
+            break;
+        case I_CRITICAL:
+            iconFlags |= GTK_MESSAGE_ERROR;
+            break;
+}
 
     unsigned buttonFlags = 0;
 

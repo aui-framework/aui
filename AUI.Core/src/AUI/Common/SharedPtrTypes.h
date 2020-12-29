@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <functional>
 
 class AObject;
 
@@ -10,14 +11,15 @@ class _ : public std::shared_ptr<T>
 {
 private:
 	using parent = std::shared_ptr<T>;
-	
+
 public:
+    using stored_t = T;
 
 	class SafeCallWrapper
 	{
 	private:
 		_<T>& mPtr;
-		
+
 	public:
 		SafeCallWrapper(_<T>& ptr)
 			: mPtr(ptr)
@@ -31,7 +33,7 @@ public:
 			return *this;
 		}
 	};
-	
+
 	_() = default;
 
 	template<typename X>
@@ -47,12 +49,27 @@ public:
 
 
 	template<typename MemberFunction, typename... Args>
-	_<T>& operator()(MemberFunction memberFunction, Args&&... args) {
+	inline _<T>& operator()(MemberFunction memberFunction, Args&&... args) {
 		(parent::get()->*memberFunction)(std::forward<Args>(args)...);
 		return *this;
 	}
 
-	auto operator~()
+	template<typename SignalField, typename Object, typename Function>
+	inline _<T>& connect(SignalField signalField, Object object, Function function);
+
+
+	template <typename Functor>
+	inline _<T>& applyOnFunctor(Functor functor) {
+	    functor(*this);
+	    return *this;
+	}
+
+	/**
+	 * \brief Гарантирует, что дальнейшие builder-вызовы будут выполняться тогда и только тогда, когда этот указатель
+	 *        не равен null.
+	 * \return безопасный builder
+	 */
+    inline auto safe()
 	{
 		return SafeCallWrapper(*this);
 	}
@@ -64,10 +81,21 @@ public:
 	auto end() {
 	    return parent::operator->()->end();
 	}
+
+	// операторы
+
+    template<typename Arg>
+	_<T>& operator<<(Arg&& value) {
+        (*parent::get()) << std::forward<Arg>(value);
+        return *this;
+    }
 };
 
 template<typename T>
 using _weak = std::weak_ptr<T>;
+
+template<typename T>
+using _unique = std::unique_ptr<T>;
 
 
 template<typename TO, typename FROM>

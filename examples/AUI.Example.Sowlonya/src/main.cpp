@@ -1,10 +1,10 @@
 #include <AUI/IO/FileInputStream.h>
-#include <AUI/Platform/CustomWindow.h>
+#include <AUI/Platform/ACustomWindow.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/View/ALabel.h>
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/Layout/AVerticalLayout.h>
-#include <AUI/Platform/Desktop.h>
+#include <AUI/Platform/ADesktop.h>
 #include <AUI/View/AButton.h>
 #include <AUI/Render/Stylesheet.h>
 #include <AUI/Util/ARandom.h>
@@ -12,7 +12,7 @@
 #include <glm/glm.hpp>
 #include <AUI/Image/AImageLoaderRegistry.h>
 
-#include "AUI/Platform/CustomCaptionWindow.h"
+#include "AUI/Platform/ACustomCaptionWindow.h"
 
 int main()
 {
@@ -45,7 +45,7 @@ int main()
 	auto no = _new<AButton>(u8"Пошёл в жопу");
 	AObject::connect(no->mouseEnter, no, [&]()
 	{
-		auto pos = Desktop::getMousePos();
+		auto pos = Desktop::getMousePosition();
 		Desktop::setMousePos(pos + glm::ivec2((rand.nextVec2(0.2f, 1.f) * 2.f - 1.f) * 10.f * glm::vec2(no->getSize())));
 	});
 	AObject::connect(no->clickedButton, no, [&]()

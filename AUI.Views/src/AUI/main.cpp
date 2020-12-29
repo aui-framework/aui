@@ -1,5 +1,5 @@
-#ifdef _WIN32
-#include <Windows.h>
+#if defined(_WIN32)
+#include <windows.h>
 #include <AUI/Url/AUrl.h>
 
 
@@ -30,21 +30,44 @@ BOOL WINAPI DllMain(
 	}
 	return TRUE;  // Successful DLL_PROCESS_ATTACH.
 }
+
+#elif defined(ANDROID)
 #else
 #include <gtk/gtk.h>
+#include <AUI/Logging/ALogger.h>
+
 #endif
 
 #include "AUI/Common/Plugin.h"
 #include "AUI/Util/BuiltinFiles.h"
 #include "Render/Stylesheet.h"
+#include <AUI/Logging/ALogger.h>
+
+
 
 struct initialize
 {
     initialize() {
-#ifdef __linux
-        gtk_init(nullptr, nullptr);
+#ifndef ANDROID
+        try {
+            aui::importPlugin("svg");
+        } catch (const AException& e) {
+            ALogger::warn("Could not load Svg plugin:" + e.getMessage());
+        }
+        try {
+            aui::importPlugin("image");
+        } catch (const AException& e) {
+            ALogger::warn("Could not load Image plugin:" + e.getMessage());
+        }
 #endif
+#ifdef _WIN32
+        typedef BOOL(WINAPI *SetProcessDpiAwarenessContext_t)(HANDLE);
+        auto SetProcessDpiAwarenessContext = (SetProcessDpiAwarenessContext_t)GetProcAddress(GetModuleHandleA("User32.dll"), "SetProcessDpiAwarenessContext");
 
-        aui::importPlugin("Svg");
+        if (SetProcessDpiAwarenessContext) {
+            // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+            SetProcessDpiAwarenessContext((HANDLE) -4);
+        }
+#endif
     }
 } init;

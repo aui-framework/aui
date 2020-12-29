@@ -1,7 +1,7 @@
 ﻿#include "Stylesheet.h"
 
 #include <utility>
-#include "AUI/Util/Tokenizer.h"
+#include "AUI/Util/ATokenizer.h"
 #include "AUI/IO/StringStream.h"
 #include "AUI/Util/EnumUtil.h"
 #include "AUI/Common/AMap.h"
@@ -10,7 +10,7 @@
 #include "AUI/View/ATextField.h"
 #include "AUI/View/AViewContainer.h"
 
-#ifdef _WIN32
+#if defined(_WIN32)
 #undef max
 #include <dwmapi.h>
 #endif
@@ -21,7 +21,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 {
 	/*
 	size_t hash = reinterpret_cast<size_t>(view->getParent());
-	
+
 	hash ^= std::hash<Set<AString>>()(Set<AString>(view->getCssNames().begin(), view->getCssNames().end()));
 	hash ^= view->isEnabled() * 71245 | view->isMouseHover() * 876126 | view->isMousePressed() * 999125;
 	Map<AString, AVariant> attrs;
@@ -31,7 +31,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 		hash ^= std::hash<AString>()(attr.first);
 		hash ^= attr.second.hash();
 	}
-	
+
 	if (auto c = mCache.contains(hash))
 	{
 		if (c->second.classes.isSubsetOf(view->getCssNames()) &&
@@ -48,7 +48,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 	};
 	auto targetView = view;
 
-	
+
 	int finalResult = M_MISMATCH;
 
 
@@ -56,6 +56,8 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 
 	for (auto& subSelector : subSelectors)
 	{
+	    if (subSelector == "*")
+	        return M_MATCH;
 		subSelector = subSelector.trim();
 		try
 		{
@@ -74,7 +76,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 
 			auto processToken = [&](const AString& token) -> int
 			{
-				Tokenizer p(_new<StringStream>(token));
+				ATokenizer p(_new<StringStream>(token));
 
 				auto name = p.readString({ '_', '-', '.' });
 
@@ -83,6 +85,8 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 				switch (target)
 				{
 				case TARGET_CURRENT:
+                    if (!view)
+                        return M_MISMATCH;
 					nameMatches = view->getCssNames().contains(name);
 					break;
 				case TARGET_INDIRECT_PARENT:
@@ -97,7 +101,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 				if (!view)
 					return M_MISMATCH;
 
-				
+
 				if (nameMatches)
 				{
 					try {
@@ -109,7 +113,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 								p.reverseByte();
 								c = false;
 								break;
-								
+
 							case '[':
 							{
 								auto attributeName = p.readString({ '_', '-', '.' });
@@ -119,7 +123,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 								if (forcePossibleEntries && view != targetView)
 									AObject::connect(view->customCssPropertyChanged, targetView->mCssHelper,
 										&ACSSHelper::onCheckPossiblyMatchCss);
-									
+
 								view->getCustomCssAttributes(attrs);
 
 								switch (p.readChar())
@@ -151,7 +155,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 								auto pseudoClass = p.readString();
 								if (forcePossibleEntries)
 								{
-									
+
 									if (pseudoClass == "hover")
 									{
 										AObject::connect(view->hoveredState, targetView->mCssHelper,
@@ -216,7 +220,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 				result = processToken(token);
 				if (result == 0)
 					throw 0;
-				
+
 				view = reinterpret_cast<AView*>(view->getParent());
 				if (!view)
 					return cache(M_MISMATCH);
@@ -244,7 +248,7 @@ Stylesheet::Entry::Matching Stylesheet::Entry::selectorMatches(AView* view, bool
 
 Stylesheet::Stylesheet()
 {
-#ifdef _WIN32
+#if defined(_WIN32)
 	DWORD c = 0;
 	BOOL blending;
 	DwmGetColorizationColor(&c, &blending);
@@ -259,7 +263,7 @@ Stylesheet::Stylesheet()
     setVariable("OS_THEME_COLOR", "#3e3e3e");
 #endif
     if (ourPrefferedStyle == PREFER_NATIVE_LOOK) {
-#ifdef _WIN32
+#if defined(_WIN32)
         load(AUrl(":win/style.less").open());
 #else
         load(AUrl(":uni/style.less").open());
@@ -275,14 +279,19 @@ void Stylesheet::load(const AString& css) noexcept
 	load(_new<StringStream>(css));
 }
 
-void Stylesheet::load(const _<IInputStream>& css) noexcept
+void Stylesheet::load(const _<IInputStream>& css) noexcept {
+    mGlobalCache.load(*this, css);
+}
+
+void Stylesheet::Cache::load(Stylesheet& ss, const _<IInputStream>& css, bool skipSelector) noexcept
 {
     assert(css);
-	Tokenizer p(css);
+	ATokenizer p(css);
 	AMap<AString, Entry::Property::Type> items = {
 		{"background", Entry::Property::T_BACKGROUND},
 		{"background-color", Entry::Property::T_BACKGROUND_COLOR},
 		{"background-size", Entry::Property::T_BACKGROUND_SIZE},
+		{"background-repeat", Entry::Property::T_BACKGROUND_REPEAT},
 		{"background-effect", Entry::Property::T_BACKGROUND_EFFECT},
 		{"color", Entry::Property::T_COLOR},
 		{"text-align", Entry::Property::T_TEXT_ALIGN},
@@ -294,8 +303,10 @@ void Stylesheet::load(const _<IInputStream>& css) noexcept
 
 		{"font-family", Entry::Property::T_FONT_FAMILY},
 		{"font-size", Entry::Property::T_FONT_SIZE},
+		{"text-transform", Entry::Property::T_TEXT_TRANSFORM},
 
 		{"border", Entry::Property::T_BORDER},
+		{"border-bottom", Entry::Property::T_BORDER_BOTTOM},
 		{"border-radius", Entry::Property::T_BORDER_RADIUS},
 		{"margin", Entry::Property::T_MARGIN},
 		{"padding", Entry::Property::T_PADDING},
@@ -308,124 +319,144 @@ void Stylesheet::load(const _<IInputStream>& css) noexcept
 		{"height", Entry::Property::T_HEIGHT},
 
 		{"-aui-spacing", Entry::Property::T_AUI_SPACING},
+		{"-aui-offset", Entry::Property::T_AUI_OFFSET},
+		{"-aui-scale", Entry::Property::T_AUI_SCALE},
 		{"-aui-font-rendering", Entry::Property::T_AUI_FONT_RENDERING},
+        {"-aui-background-overlay", Entry::Property::T_AUI_BACKGROUND_OVERLAY},
 	};
 
+    char c;
+    AString selector;
 
-	AString selector;
+	auto beginReadingBody = [&]() {
+        // entry
+        AMap<Entry::Property::Type, _<Entry::Property>> properties;
+        AString propertyName;
 
+        for (;;)
+        {
+            c = p.readChar();
+            switch (c)
+            {
+                case '}':
+                    if (!properties.empty())
+                    {
+                        mEntries << _new<Entry>(selector, properties);
+                        properties.clear();
+                    }
+                    selector.clear();
+                    throw 0;
 
-	char c;
-	for (;;)
-	{
-		try
-		{
-			c = p.readChar();
-			if (isalnum(c) || c == ',' || c == '.' || c == '#' || c == ' ' || c == ':' || c == '[' || c == ']' || c == '=' || c == '_')
-			{
-				// selector
-				selector += c + p.readString({'-', '_'});
-			}
-			else if (c == '{')
-			{
-				selector = selector.trim();
-				// entry
-				AMap<Entry::Property::Type, _<Entry::Property>> properties;
-				AString propertyName;
+                case '\t':
+                case '\n':
+                case '\r':
+                case ' ':
+                    break;
+                case ':':
+                    if (!propertyName.empty())
+                    {
+                        auto propertyType = items.find(propertyName);
+                        propertyName.clear();
+                        if (propertyType == items.end())
+                            continue;
 
-				for (;;)
-				{
-					c = p.readChar();
-					switch (c)
-					{
-					case '}':
-						if (!properties.empty())
-						{
-							mEntries << _new<Entry>(selector, properties);
-							properties.clear();
-						}
-						selector.clear();
-						throw 0;
+                        AString propertyValue;
 
-					case '\t':
-					case '\n':
-					case '\r':
-					case ' ':
-						break;
-					case ':':
-						if (!propertyName.empty())
-						{
-							auto propertyType = items.find(propertyName);
-							propertyName.clear();
-							if (propertyType == items.end())
-								continue;
+                        auto insertProperty = [&]()
+                        {
+                            if (!propertyValue.empty())
+                            {
+                                auto args = propertyValue.split(' ').noEmptyStrings();
 
-							AString propertyValue;
+                                for (auto& a : args)
+                                {
+                                    if (a.startsWith("$"))
+                                    {
+                                        a = ss.getVariable(a.mid(1));
+                                    }
+                                }
 
-							auto insertProperty = [&]()
-							{
-								if (!propertyValue.empty())
-								{
-									auto args = propertyValue.split(' ').noEmptyStrings();
+                                properties[propertyType->second] = _new<Entry::Property>
+                                        (propertyType->second, args);
+                            }
+                            mEntries << _new<Entry>(selector, properties);
+                        };
 
-									for (auto& a : args)
-									{
-										if (a.startsWith("$"))
-										{
-											a = getVariable(a.mid(1));
-										}
-									}
-									
-									properties[propertyType->second] = _new<Entry::Property>
-										(propertyType->second, args);
-								}
-							};
+                        for (;;) {
+                            try {
+                                c = p.readChar();
+                            } catch (const IOException&) {
+                                c = 0;
+                            }
+                            if (c == '}' || c == 0) {
+                                insertProperty();
+                                selector.clear();
+                                properties.clear();
+                                throw 0;
+                            }
+                            if (c == ';') {
+                                break;
+                            }
+                            if (c != '\n')
+                                propertyValue += c;
+                        }
+                        insertProperty();
+                    }
+                    break;
+                default:
+                    if (isalnum(c) || c == '-' || c == '_')
+                    {
+                        propertyName += c;
+                    }
+            }
+        }
+	};
 
-							for (;;)
-							{
-								c = p.readChar();
-								if (c == '}')
-								{
-									insertProperty();
-									mEntries << _new<Entry>(selector, properties);
-									selector.clear();
-									properties.clear();
-									throw 0;
-								}
-								if (c == ';')
-								{
-									break;
-								}
-								if (c != '\n')
-									propertyValue += c;
-							}
-							insertProperty();
-						}
-						break;
-					default:
-						if (isalnum(c) || c == '-' || c == '_')
-						{
-							propertyName += c;
-						}
-					}
-				}
-			}
-		}
-		catch (int)
-		{
-		}
-		catch (const IOException&)
-		{
-			break;
-		}
-		catch (...)
-		{
-		}
-	}
+	if (skipSelector) {
+	    selector = "*";
+	    try {
+            beginReadingBody();
+        } catch (...) {}
+	} else {
+        for (;;) {
+            try {
+                c = p.readChar();
+                if (isalnum(c) ||
+                    c == ',' ||
+                    c == '.' ||
+                    c == '#' ||
+                    c == ' ' ||
+                    c == ':' ||
+                    c == '[' ||
+                    c == ']' ||
+                    c == '=' ||
+                    c == '_' ||
+                    c == '*') {
+                    // selector
+                    selector += c + p.readString({'-', '_'});
+                } else if (c == '{') {
+                    selector = selector.trim();
+                    beginReadingBody();
+                }
+            }
+            catch (int) {
+            }
+            catch (const IOException&) {
+                break;
+            }
+            catch (...) {
+            }
+        }
+    }
 }
 
 void Stylesheet::setPreferredStyle(Stylesheet::PreferredStyle style) {
     ourPrefferedStyle = style;
+}
+
+Stylesheet& Stylesheet::inst() {
+    static Stylesheet s;
+    return s;
 }
 /*
 void Stylesheet::invalidateCache()

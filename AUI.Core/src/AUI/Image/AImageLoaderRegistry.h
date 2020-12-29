@@ -1,12 +1,12 @@
 ﻿#pragma once
 
 #include <AUI/Url/AUrl.h>
+#include <AUI/Logging/ALogger.h>
 #include "IImageLoader.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/SharedPtr.h"
-#include "AUI/Util/Singleton.h"
 
-class API_AUI_CORE AImageLoaderRegistry: public Singleton<AImageLoaderRegistry>
+class API_AUI_CORE AImageLoaderRegistry
 {
 private:
 	ADeque<_<IImageLoader>> mImageLoaders;
@@ -18,12 +18,13 @@ public:
 
 	void registerImageLoader(_<IImageLoader> imageLoader);
 
-	_<IDrawable> loadVectorImage(_<ByteBuffer> buffer);
-	_<AImage> loadRasterImage(_<ByteBuffer> buffer);
-	inline _<IDrawable> loadVectorImage(const AUrl& url) {
-	    return loadVectorImage(ByteBuffer::fromStream(url.open()));
+	_<IDrawable> loadDrawable(AByteBuffer& buffer);
+	_<AImage> loadImage(AByteBuffer& buffer);
+	inline _<IDrawable> loadDrawable(const AUrl& url) {
+	    auto s = AByteBuffer::fromStream(url.open());
+	    return loadDrawable(s);
 	}
-	inline _<AImage> loadRasterImage(const AUrl& url) {
-        return loadRasterImage(ByteBuffer::fromStream(url.open()));
-	}
+	_<AImage> loadImage(const AUrl& url);
+
+	static AImageLoaderRegistry& inst();
 };

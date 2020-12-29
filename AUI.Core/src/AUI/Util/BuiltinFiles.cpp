@@ -4,9 +4,9 @@
 #include "AUI/Common/AString.h"
 #include "AUI/IO/ByteBufferInputStream.h"
 
-void BuiltinFiles::loadBuffer(ByteBuffer& data)
+void BuiltinFiles::loadBuffer(AByteBuffer& data)
 {
-	ByteBuffer unpacked;
+	AByteBuffer unpacked;
 	LZ::decompress(data, unpacked);
 
 	while (unpacked.getAvailable())
@@ -17,18 +17,18 @@ void BuiltinFiles::loadBuffer(ByteBuffer& data)
 		uint32_t s;
 		unpacked >> s;
 
-		auto b = _new<ByteBuffer>();
+		auto b = _new<AByteBuffer>();
 		b->reserve(s);
 		b->setSize(s);
 
 		unpacked.get(b->data(), s);
-		instance().mBuffers[AString(file)] = b;
+        inst().mBuffers[AString(file)] = b;
 	}
 }
 
 _<IInputStream> BuiltinFiles::open(const AString& file)
 {
-	if (auto c = instance().mBuffers.contains(file))
+	if (auto c = inst().mBuffers.contains(file))
 	{
 	    c->second->setCurrentPos(0);
 		return _new<ByteBufferInputStream>(c->second);
@@ -36,7 +36,12 @@ _<IInputStream> BuiltinFiles::open(const AString& file)
 	return nullptr;
 }
 
+BuiltinFiles& BuiltinFiles::inst() {
+    static BuiltinFiles f;
+    return f;
+}
+
 void BuiltinFiles::load(const unsigned char* data, size_t size) {
-    ByteBuffer b(data, size);
-    instance().loadBuffer(b);
+    AByteBuffer b(data, size);
+    inst().loadBuffer(b);
 }

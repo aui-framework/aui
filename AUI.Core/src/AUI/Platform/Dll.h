@@ -5,8 +5,8 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Common/AException.h"
 
-#ifdef _WIN32
-#include <Windows.h>
+#if defined(_WIN32)
+#include <windows.h>
 #else
 #include <dlfcn.h>
 
@@ -30,13 +30,13 @@ class API_AUI_CORE Dll
 private:
 	HMODULE mHandle;
 
-	Dll(HMODULE handle) noexcept
-		: mHandle(handle)
-	{
-	}
 	Dll(const Dll&) = delete;
 	
 public:
+    Dll(HMODULE handle) noexcept
+            : mHandle(handle)
+    {
+    }
 
 	[[nodiscard]]
 	void(*getProcAddressRawPtr(const AString& name) const noexcept)();

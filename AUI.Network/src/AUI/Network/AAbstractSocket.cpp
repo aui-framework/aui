@@ -8,9 +8,10 @@
 #include "AUI/Thread/AThread.h"
 
 
-#ifdef _WIN32
-#include <WS2tcpip.h>
-#include <Windows.h>
+#if defined(_WIN32)
+#include <ws2tcpip.h>
+#include <windows.h>
+#include <AUI/Logging/ALogger.h>
 
 void aui_wsa_init()
 {
@@ -39,18 +40,21 @@ void aui_wsa_init()
 #include <netinet/in.h>
 #include <cstring>
 #include <netdb.h>
+#include <AUI/Logging/ALogger.h>
+#include <AUI/Util/AError.h>
+
 #endif
 
 void AAbstractSocket::init()
 {
-#ifdef _WIN32
+#if defined(_WIN32)
 	aui_wsa_init();
 	if ((mHandle = createSocket()) == INVALID_SOCKET) {
 		throw IOException(
 			(AString("Failed to create ASocket. Error code: ") + AString::number(WSAGetLastError())).c_str());
 	}
 #else
-	if ((mHandle = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) < 0)
+	if ((mHandle = createSocket()) < 0)
 	{
 		throw IOException("Failed to create ASocket.");
 	}
@@ -65,8 +69,8 @@ void AAbstractSocket::init()
 
 AString AAbstractSocket::getErrorString()
 {
-#ifdef _WIN32
-	long error = WSAGetLastError();
+#if defined(_WIN32)
+	int error = WSAGetLastError();
 	wchar_t* str;
 	FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, static_cast<DWORD>(error), 0,
 	               (LPWSTR)&str, 0, nullptr);
@@ -84,14 +88,14 @@ AString AAbstractSocket::getErrorString()
 	}
 	return s + ": " + AString(str);
 #else
-	return "unknown error";
+	return strerror(errno);
 #endif
 }
 
 void AAbstractSocket::handleError(const AString& message, int code)
 {
 	AString msg = message + ": " + getErrorString();
-#ifdef _WIN32
+#if defined(_WIN32)
 	switch (WSAGetLastError()) {
 	case WSAEINTR:
 		throw AThread::AInterrupted();
@@ -114,13 +118,22 @@ void AAbstractSocket::handleError(const AString& message, int code)
 
 void AAbstractSocket::bind(uint16_t bindingPort)
 {
-	mSelfAddress = AInet4Address(0u, bindingPort );
+	mSelfAddress = AInet4Address(0u, bindingPort);
 	auto addr = mSelfAddress.addr();
-	const int res = ::bind(getHandle(), reinterpret_cast<const sockaddr*>(&addr), sizeof(sockaddr_in));
-	if (res < 0)
-	{
-		handleError("failed to bind to port: " + AString::number(bindingPort), res);
-	}
+	for (unsigned i = 5; i >= 0; --i) {
+        const int res = ::bind(getHandle(), reinterpret_cast<const sockaddr*>(&addr), sizeof(sockaddr_in));
+        if (res < 0) {
+            if (i == 0) {
+                ALogger::err("failed to bind to port: " + AString::number(bindingPort) + ", giving up.");
+                handleError("failed to bind to port: " + AString::number(bindingPort), res);
+            } else {
+                ALogger::err("failed to bind to port: " + AString::number(bindingPort) + ", trying again");
+                AThread::sleep(3000);
+            }
+        } else {
+            break;
+        }
+    }
 }
 
 AAbstractSocket::AAbstractSocket()
@@ -137,7 +150,7 @@ AAbstractSocket::~AAbstractSocket()
 void AAbstractSocket::close()
 {
 	if (mHandle) {
-#ifdef _WIN32
+#if defined(_WIN32)
 		closesocket(mHandle);
 #else
 		shutdown(mHandle, 2);

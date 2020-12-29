@@ -3,8 +3,8 @@
 
 #include "Exceptions.h"
 
-#ifdef _WIN32
-#include <WS2tcpip.h>
+#if defined(_WIN32)
+#include <ws2tcpip.h>
 #else
 
 #include <sys/socket.h>

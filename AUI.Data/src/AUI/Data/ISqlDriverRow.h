@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include "AUI/Common/ByteBuffer.h"
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Common/AVariant.h"
 
 class ISqlDriverRow

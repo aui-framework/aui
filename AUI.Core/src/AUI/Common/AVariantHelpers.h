@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AUI/IO/APath.h>
 #include "AVariant.h"
 
 
@@ -91,6 +92,10 @@ public:
     AVariantType::Type getType() override {
         return AVariantType::getTypeOf<T>();
     }
+
+    T& getData() {
+	    return mStored;
+	}
 };
 
 
@@ -178,6 +183,13 @@ public:
     }
 };
 
+template<>
+struct AVariantHelper<APath>: AVariantHelper<AString> {
+    AVariantHelper(const APath& string):
+            AVariantHelper<AString>(string)
+    {
+    }
+};
 
 
 template<>

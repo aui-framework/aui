@@ -1,7 +1,6 @@
 #pragma once
 
 #include <AUI/Common/AObject.h>
-#include <AUI/Views.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 class AView;
@@ -23,14 +22,17 @@ protected:
      * \brief Выполнить непосредственно анимацию (выставить матрицы, цвета и так далее)
      * \param theta число [0;1], где 0 - начало анимации, 1 - конец анимации
      */
-    virtual void doAnimation(float theta) = 0;
+    virtual void doAnimation(AView* view, float theta) {};
+
+    virtual void doPostRender(AView* view, float theta) {};
 
     void translateToCenter();
     void translateToCorner();
 
 public:
 
-    void animate();
+    void animate(AView* view);
+    void postRender(AView* view);
     void pause();
 
     void setDuration(float period) {

@@ -1,6 +1,5 @@
-﻿#include "ATableView.h"
-
-
+﻿/*
+#include "ATableView.h"
 #include "ALabel.h"
 #include "AUI/Layout/AGridLayout.h"
 #include "AUI/Model/AModelIndex.h"
@@ -25,3 +24,4 @@ void ATableView::setModel(_<ITableModel> model)
 	}
 	updateLayout();
 }
+*/

@@ -27,22 +27,6 @@ private:
 	AMutex mSlotsLock;
 	ADeque<slot> mSlots;
 
-	virtual void onObjectHasDestroyed(AObject* object)
-	{
-		std::unique_lock lock(mSlotsLock);
-		for (auto it = mSlots.begin(); it != mSlots.end();)
-		{
-			if (it->object == object)
-			{
-				it = mSlots.erase(it);
-			}
-			else
-			{
-				++it;
-			}
-		}
-	}
-
 	void invokeSignal();
 
 	template<typename Lambda, typename... A>
@@ -144,6 +128,28 @@ public:
 			unlinkSlot(slot.object);
 		}
 	}
+
+
+    void clearAllConnections() override
+    {
+        std::unique_lock lock(mSlotsLock);
+        mSlots.clear();
+    }
+    void clearAllConnectionsWith(AObject* object) override
+    {
+        std::unique_lock lock(mSlotsLock);
+        for (auto it = mSlots.begin(); it != mSlots.end();)
+        {
+            if (it->object == object)
+            {
+                it = mSlots.erase(it);
+            }
+            else
+            {
+                ++it;
+            }
+        }
+    }
 };
 #include <AUI/Thread/AThread.h>
 
@@ -157,14 +163,21 @@ void ASignal<Args...>::invokeSignal()
 		{
 			if (i->object->getThread() != AThread::current())
 			{
-				i->object->getThread()->enqueue([=]()
-				{
-					std::apply(i->func, mArgs);
+				i->object->getThread()->enqueue([=]() {
+					try {
+						(std::apply)(i->func, mArgs);
+					}
+					catch (Disconnect)
+					{
+						std::unique_lock lock(mSlotsLock);
+						unlinkSlot(i->object);
+						mSlots.erase(i);
+					}
 				});
 			}
 			else
 			{
-                std::apply(i->func, mArgs);
+                (std::apply)(i->func, mArgs);
 			}
 			++i;
 		}
