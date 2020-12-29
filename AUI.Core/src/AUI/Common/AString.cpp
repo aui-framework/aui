@@ -320,6 +320,8 @@ AString AString::processEscapes() const {
                 case 'n':
                     result << '\n';
                     break;
+                default:
+                    result << c;
             }
         } else if (c == '\\') {
             doEscape = true;
