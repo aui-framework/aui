@@ -73,21 +73,25 @@ public:
         p::push_back(data);
     }
 
+    void push_back(StoredType&& data) {
+        p::push_back(data);
+    }
+
 
 	inline AVector<StoredType, Allocator>& operator<<(const StoredType& rhs)
 	{
-		this->push_back(rhs);
+		p::push_back(rhs);
 		return *this;
 	}
 	inline AVector<StoredType, Allocator>& operator<<(StoredType&& rhs)
 	{
-		this->push_back(rhs);
+		p::push_back(std::forward<StoredType>(rhs));
 		return *this;
 	}
 	inline AVector<StoredType, Allocator>& operator<<(const AVector<StoredType>& rhs)
 	{
 	    for (auto& item : rhs)
-		    this->push_back(item);
+		    p::push_back(item);
 		return *this;
 	}
 
@@ -107,6 +111,11 @@ public:
 			}
 		}
 		return true;
+	}
+
+    template<typename Container>
+	Iterator insertAll(Iterator position, const Container& c) {
+	    return p::insert(position, c.begin(), c.end());
 	}
 
 	[[nodiscard]]

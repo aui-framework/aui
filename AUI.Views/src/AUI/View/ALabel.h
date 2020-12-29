@@ -30,7 +30,7 @@ protected:
 	    return mPrerendered;
 	}
 
-    void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
+    //void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
     void doRenderText();
     AString getTargetText();
 

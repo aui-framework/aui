@@ -32,8 +32,6 @@ protected:
 
     void recompileCSS() override;
 
-    void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)
-	override;
 
     /**
      * \brief Обновляет макет родительского AView, если размер этого элемента был изменён.

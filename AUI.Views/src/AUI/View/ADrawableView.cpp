@@ -16,6 +16,7 @@ void ADrawableView::render() {
         mDrawable->draw(getSize());
 }
 
+/*
 void
 ADrawableView::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) {
     processor(css::T_AUI_BACKGROUND_OVERLAY, [&](property p)
@@ -25,3 +26,4 @@ ADrawableView::userProcessStyleSheet(const std::function<void(css, const std::fu
         }
     });
 }
+*/

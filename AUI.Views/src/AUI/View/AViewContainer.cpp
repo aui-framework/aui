@@ -31,6 +31,7 @@ void AViewContainer::drawView(const _<AView>& view)
 }
 
 
+/*
 void AViewContainer::userProcessStyleSheet(
 	const std::function<void(css, const std::function<void(property)>&)>& processor)
 {
@@ -50,7 +51,7 @@ void AViewContainer::userProcessStyleSheet(
 	};
 	processor(css::T_BACKGROUND, bg);
 	processor(css::T_BACKGROUND_COLOR, bg);
-}
+}*/
 
 AViewContainer::AViewContainer()
 {

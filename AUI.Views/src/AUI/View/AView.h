@@ -6,8 +6,6 @@
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Platform/AInput.h"
-#include "AUI/Render/ACSSHelper.h"
-#include "AUI/Render/Stylesheet.h"
 #include "AUI/Reflect/AClass.h"
 #include "AUI/Util/Watchable.h"
 
@@ -24,6 +22,10 @@ class AWindow;
 class AViewContainer;
 class AAnimator;
 
+namespace ass {
+    class SolidBackground;
+}
+
 /**
  * \brief Класс, описывающий минимальную единицу, которая может быть
  *        помещена в контейнер (в том числе в окно), занимающая некоторое
@@ -39,7 +41,7 @@ class AAnimator;
 class API_AUI_VIEWS AView: public AObject
 {
 	friend class AViewContainer;
-	friend class Stylesheet::Entry;
+	friend class ass::SolidBackground;
 public:
 	enum Overflow
 	{
@@ -65,11 +67,6 @@ public:
 	};
 
 private:
-	/**
-	 * \brief Вспомогательный объект для получения оповещений об
-	 *	      обновлении CSS от других View.
-	 */
-	_<ACSSHelper> mCssHelper;
 
 	/**
 	 * \brief Дополнительная анимация.
@@ -138,8 +135,6 @@ private:
 	 */
 	FontStyle mFontStyle;
 
-	_unique<Stylesheet::Cache> mCustomStylesheet;
-
 
 protected:
 	/**
@@ -201,20 +196,6 @@ protected:
 	 */
 	ABoxFields mPadding;
 
-	/**
-	 * \brief Правила CSS, которые подходят этому View и
-	 *		  на 100% не зависят от состояния этого или других
-	 *		  View.
-	 */
-	ADeque<_<Stylesheet::Entry>> mCssEntries;
-
-
-	/**
-	 * \brief Правила CSS, которые подходят этому View и
-	 *		  зависят от состояния (:hover, :focus) этого
-	 *		  или других View.
-	 */
-	ADeque<_<Stylesheet::Entry>> mCssPossibleEntries;
 
 	/**
 	 * \brief CSS названия классов.
@@ -234,16 +215,6 @@ protected:
 	 *		  стилей.
 	 */
 	virtual void recompileCSS();
-
-	using property = const _<Stylesheet::Entry::Property>&;
-
-	/**
-	 * \brief Пользовательский AView может определить поведение
-	 *		  на правила CSS
-	 * \param processor интерфейс, который ищет требуемое правило
-	 *		  с учётом весов.
-	 */
-	virtual void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor);
 
 
 public:
@@ -288,6 +259,10 @@ public:
 	Overflow getOverflow() const
 	{
 		return mOverflow;
+	}
+
+	float getBorderRadius() const {
+	    return mBorderRadius;
 	}
 
 	/**

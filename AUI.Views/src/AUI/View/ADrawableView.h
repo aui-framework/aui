@@ -17,7 +17,7 @@ public:
     void render() override;
 
 protected:
-    void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
+    //void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
 
 };
 

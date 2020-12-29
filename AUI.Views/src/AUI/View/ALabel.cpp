@@ -115,6 +115,7 @@ FontStyle ALabel::getFontStyleLabel() {
     return fs;
 }
 
+/*
 void ALabel::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) {
     mPrerendered.mVao = nullptr;
     mVerticalAlign = ALIGN_LEFT;
@@ -137,7 +138,7 @@ void ALabel::userProcessStyleSheet(const std::function<void(css, const std::func
                 mTextTransform = TT_LOWERCASE;
         }
     });
-}
+}*/
 
 void ALabel::doPrerender() {
     auto fs = getFontStyleLabel();

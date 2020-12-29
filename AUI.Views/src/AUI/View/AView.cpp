@@ -11,6 +11,7 @@
 #include <memory>
 #include <AUI/IO/StringStream.h>
 #include <AUI/Util/kAUI.h>
+#include <AUI/ASS/AStylesheet.h>
 
 #include "AUI/Platform/ADesktop.h"
 #include "AUI/Render/AFontManager.h"
@@ -98,33 +99,10 @@ void AView::render()
         }
 
         // список отрисовки.
-        if (mHasTransitions) {
-            mTransitionValue = glm::clamp(mTransitionValue, 0.f, 1.f);
-            for (auto& item : mCssDrawListBack)
-                item();
-
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            RenderHints::PushColor c;
-            Render::inst().setColor({1, 1, 1, mTransitionValue });
-            for (auto& item : mCssDrawListFront)
-                item();
-
-            auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
-                    std::chrono::high_resolution_clock::now().time_since_epoch());
-            mTransitionValue += (now - mLastFrameTime).count() / (1000.f * mTransitionDuration);
-            if (mTransitionValue >= 1.f) {
-                mHasTransitions = false;
+        for (auto& r : AStylesheet::inst().getRules()) {
+            for (auto& d : r.getDeclarations()) {
+                d->applyFor(this);
             }
-            else {
-                AWindow::current()->flagRedraw();
-                mLastFrameTime = now;
-            }
-        }
-        else
-        {
-            for (auto& item : mCssDrawListFront)
-                item();
         }
 	}
 
@@ -139,6 +117,7 @@ void AView::render()
 
 void AView::recompileCSS()
 {
+    /*
 	// соберём полный список свойств CSS.
 	ADeque<_<Stylesheet::Entry>> entries;
 	entries.insert(entries.end(), mCssEntries.begin(), mCssEntries.end());
@@ -436,23 +415,6 @@ void AView::recompileCSS()
                                              getHeight() + stretch * 2, radius, color);
         };
 	});
-	processStylesheet(css::T_BACKGROUND_COLOR, [&](property p)
-	{
-		AColor color = p->getArgs()[0];
-		if (color.a > 0.001) {
-            mCssDrawListFront << [&, color]() {
-                RenderHints::PushColor x;
-
-                Render::inst().setColor(color);
-                if (mBorderRadius > 0) {
-                    Render::inst().drawRoundedRectAntialiased(0, 0, getWidth(), getHeight(), mBorderRadius);
-                } else  {
-                    Render::inst().setFill(Render::FILL_SOLID);
-                    Render::inst().drawRect(0, 0, getWidth(), getHeight());
-                }
-            };
-        }
-	});
 	processStylesheet(css::T_BACKGROUND_EFFECT, [&](property p)
 	{
 		for (auto& a : p->getArgs()) {
@@ -614,11 +576,7 @@ void AView::recompileCSS()
                 } else {
                     Render::inst().setFill(Render::FILL_SOLID);
                     RenderHints::PushMask mask([&]() {
-                        /*
-                        if (mBorderRadius > 0) {
-                            Render::inst().drawRoundedRect(width, width, getWidth() - width * 2,
-                                            getHeight() - width * 2, glm::max(mBorderRadius - width, 0.f));
-                        } else */ {
+
                         Render::inst().drawRect(width, width, getWidth() - width * 2,
                                                     getHeight() - width * 2);
                     }
@@ -704,13 +662,13 @@ void AView::recompileCSS()
             //mForceStencilForBackground = true;
             mBorderRadius = AMetric(p->getArgs()[0]).getValuePx();
         }
-    });
+    });*/
 }
-
+/*
 void AView::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)
 {
 }
-
+*/
 
 float AView::getTotalFieldHorizontal() const
 {
@@ -775,11 +733,12 @@ const ADeque<AString>& AView::getCssNames() const
 void AView::addCssName(const AString& css)
 {
 	mCssNames << css;
-	mCssHelper = nullptr;
+	//mCssHelper = nullptr;
 }
 
 void AView::ensureCSSUpdated()
 {
+    /*
 	if (mCssHelper == nullptr)
 	{
 		mCssHelper = _new<ACSSHelper>();
@@ -812,7 +771,7 @@ void AView::ensureCSSUpdated()
 		}
 
 		recompileCSS();
-	}
+	}*/
 }
 
 void AView::onMouseEnter()
@@ -995,12 +954,13 @@ bool AView::consumesClick(const glm::ivec2& pos) {
 }
 
 void AView::setCss(const AString& cssCode) {
+    /*
     if (cssCode.empty()) {
         mCustomStylesheet = nullptr;
     } else {
         mCustomStylesheet = std::make_unique<Stylesheet::Cache>();
         mCustomStylesheet->load(Stylesheet::inst(), _new<StringStream>(cssCode), true);
-    }
+    }*/
     recompileCSS();
 }
 
