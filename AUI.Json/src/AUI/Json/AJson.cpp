@@ -46,7 +46,7 @@ AJsonElement AJson::read(_<IInputStream> is) {
                         while (t.readChar() != '}') {
                             if (!isspace(t.getLastCharacter())) {
                                 if (t.getLastCharacter() == '\"') {
-                                    AString key = t.readStringUntilUnescaped('\"');
+                                    AString key = t.readStringUntilUnescaped('\"').processEscapes();
 
                                     for (char c = 0;;) {
                                         c = t.readChar();
@@ -65,7 +65,7 @@ AJsonElement AJson::read(_<IInputStream> is) {
                         return result;
 
                     case '\"':
-                        result = _new<JsonValue>(t.readStringUntilUnescaped('\"'));
+                        result = _new<JsonValue>(t.readStringUntilUnescaped('\"').processEscapes());
                         return result;
                 }
 
