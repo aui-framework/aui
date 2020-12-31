@@ -66,6 +66,7 @@ protected:
 	Queue<task> mQueueTryLater;
 	std::recursive_mutex mQueueLock;
 	std::condition_variable mCV;
+	std::atomic_uint mIdleWorkers;
 
 public:
 	AThreadPool(size_t size);
@@ -101,6 +102,8 @@ public:
 
         std::unique_lock l(fenceHelper.mutex);
         callable();
+        if (fenceHelper.enqueuedTasks == 0)
+            return;
         fenceHelper.waitingForNotify = true;
         do {
             fenceHelper.cv.wait(l);

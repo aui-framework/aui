@@ -56,7 +56,9 @@ void AThreadPool::Worker::thread_fn() {
 			processQueue(mTP.mQueueLowest);
 		}
 		std::unique_lock<std::mutex> lck(mMutex);
+        mTP.mIdleWorkers += 1;
 		mTP.mCV.wait(lck);
+        mTP.mIdleWorkers -= 1;
 	}
 }
 
@@ -89,7 +91,9 @@ void AThreadPool::run(const std::function<void()>& fun, Priority priority) {
 		mQueueLowest.push(fun);
 		break;
 	}
-	mCV.notify_one();
+	if (mIdleWorkers > 0) {
+        mCV.notify_one();
+    }
 }
 
 void AThreadPool::clear()
