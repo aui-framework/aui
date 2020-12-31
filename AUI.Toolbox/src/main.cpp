@@ -30,7 +30,7 @@ void printAllCommands() {
 
 AUI_ENTRY
 {
-	std::cout << "Alex2772 Universal Interface toolbox" << std::endl;
+	std::cout << "Advanced Universal Interface toolbox" << std::endl;
 	if (args.size() <= 1)
 	{
 		printAllCommands();
