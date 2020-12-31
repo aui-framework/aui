@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 #include <AUI/Core.h>
+#include <cassert>
+#include <atomic>
 
 #include "AUI/Common/AVector.h"
 #include "AUI/Common/Queue.h"
