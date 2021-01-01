@@ -797,7 +797,7 @@ void AView::ensureCSSUpdated()
 
 		recompileCSS();
 	}*/
-    //recompileCSS();
+    recompileCSS();
 }
 
 void AView::onMouseEnter()
