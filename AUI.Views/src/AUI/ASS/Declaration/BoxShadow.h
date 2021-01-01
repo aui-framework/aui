@@ -34,7 +34,6 @@ namespace ass {
             offsetX(offsetX),
             offsetY(offsetY),
             blurRadius(blurRadius),
-            spreadRadius(0),
             color(color) {}
     };
 

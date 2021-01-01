@@ -797,7 +797,7 @@ void AView::ensureCSSUpdated()
 
 		recompileCSS();
 	}*/
-    recompileCSS();
+    //recompileCSS();
 }
 
 void AView::onMouseEnter()
@@ -1025,5 +1025,9 @@ AView::Visibility AView::getVisibilityRecursive() const {
     }
 
     return static_cast<AView::Visibility>(v);
+}
+
+void AView::onDpiChanged() {
+    recompileCSS();
 }
 

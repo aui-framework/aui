@@ -9,8 +9,8 @@
 
 namespace ass {
     struct MinSize {
-        AMetric width = 0;
-        AMetric height = 0;
+        AMetric width;
+        AMetric height;
     };
 
     namespace decl {

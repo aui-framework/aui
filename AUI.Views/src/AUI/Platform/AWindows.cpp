@@ -961,6 +961,7 @@ void AWindow::updateDpi() {
 #else
     mDpiRatio = Platform::getDpiRatio();
 #endif
+    onDpiChanged();
 }
 
 void AWindow::restore() {

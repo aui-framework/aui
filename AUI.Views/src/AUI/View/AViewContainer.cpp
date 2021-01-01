@@ -265,3 +265,10 @@ void AViewContainer::updateParentsLayoutIfNecessary() {
 		}
 	}
 }
+
+void AViewContainer::onDpiChanged() {
+    AView::onDpiChanged();
+    for (auto& v : mViews) {
+        v->onDpiChanged();
+    }
+}

@@ -498,6 +498,7 @@ public:
 	virtual void onMouseEnter();
     virtual void onMouseMove(glm::ivec2 pos);
     virtual void onMouseLeave();
+    virtual void onDpiChanged();
 
 	virtual void onMousePressed(glm::ivec2 pos, AInput::Key button);
     virtual void onMouseReleased(glm::ivec2 pos, AInput::Key button);

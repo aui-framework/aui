@@ -52,9 +52,10 @@ public:
 	void onMouseMove(glm::ivec2 pos) override;
 	void onMouseLeave() override;
 
+    void onDpiChanged() override;
 
 
-	int getContentMinimumWidth() override;
+    int getContentMinimumWidth() override;
 	int getContentMinimumHeight() override;
 	
 	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;

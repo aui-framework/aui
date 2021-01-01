@@ -23,7 +23,7 @@ AStylesheet::AStylesheet() {
         },
         {
             any<ALabel>(),
-            Padding {1_dp, 0, 2_dp},
+            Padding {1_dp, {}, 2_dp},
         },
         {
             any<ALabel>(),
@@ -37,7 +37,7 @@ AStylesheet::AStylesheet() {
             MinSize {60_dp, 14_dp},
             BorderRadius {4_dp},
             TextAlign::CENTER,
-            BoxShadow {0, 1_dp, 5_dp, -2_dp, 0x80000000_argb},
+            BoxShadow {{}, 1_dp, 5_dp, -2_dp, 0x80000000_argb},
         },
         {
             any<AButton>::hover(),
