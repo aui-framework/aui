@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Align.h"
+#include "TextAlign.h"
 #include "AFont.h"
 #include "FontRendering.h"
 #include "AUI/Common/AColor.h"
@@ -12,10 +12,10 @@ struct FontStyle {
 	mutable _<AFont> font;
 	uint8_t size = 12;
 	bool formatting = false;
-	Align align = ALIGN_LEFT;
+	TextAlign align = TextAlign::LEFT;
 	AColor color;
 
-	FontRendering fontRendering = FR_SUBPIXEL;
+	FontRendering fontRendering = FontRendering::SUBPIXEL;
 	float lineSpacing = 0.5f;
 
 	size_t getWidth(const AString& text) const;

@@ -13,7 +13,14 @@ private:
 
 public:
     AStylesheet();
-    void addRules(std::initializer_list<Rule> rules);
+
+    inline void addRules(std::initializer_list<Rule> rules) {
+        for (auto& constRule : rules) {
+            auto& rule = const_cast<Rule&>(constRule);
+            mRules << std::move(rule);
+        }
+    }
+
 
     [[nodiscard]] const AVector<Rule>& getRules() const {
         return mRules;

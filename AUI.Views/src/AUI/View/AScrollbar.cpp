@@ -107,7 +107,7 @@ void AScrollbar::updateScrollHandleSize() {
             break;
     }
 
-    size_t o = glm::max(10_dp, scrollbarSpace * mViewportSize / mFullSize);
+    size_t o = glm::max(float(10_dp), scrollbarSpace * mViewportSize / mFullSize);
 
     if (o < scrollbarSpace) {
         setEnabled();

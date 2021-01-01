@@ -11,7 +11,7 @@ private:
 	_<IDrawable> mIcon;
     _<AFont> mFontOverride;
     uint8_t mFontSizeOverride = 0;
-    Align mVerticalAlign;
+    TextAlign mVerticalAlign;
     enum {
         TT_NORMAL,
         TT_UPPERCASE,

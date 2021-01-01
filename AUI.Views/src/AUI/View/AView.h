@@ -1,30 +1,28 @@
 #pragma once
 #include <glm/glm.hpp>
 
+#include <AUI/ASS/Declaration/IDeclaration.h>
 #include "AUI/Common/ABoxFields.h"
-#include "AUI/Common/AObject.h"
 #include "AUI/Common/ADeque.h"
+#include "AUI/Common/AObject.h"
+#include "AUI/Common/AVariant.h"
 #include "AUI/Common/SharedPtr.h"
+#include "AUI/Platform/ACursor.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Reflect/AClass.h"
+#include "AUI/Render/FontStyle.h"
 #include "AUI/Util/Watchable.h"
+#include "AUI/Util/IShadingEffect.h"
 
 #include <chrono>
 #include <functional>
-
-#include "AUI/Common/AVariant.h"
-#include "AUI/Platform/ACursor.h"
-#include "AUI/Render/FontStyle.h"
-#include "AUI/Util/IShadingEffect.h"
+#include <array>
 
 class Render;
 class AWindow;
 class AViewContainer;
 class AAnimator;
 
-namespace ass {
-    class SolidBackground;
-}
 
 /**
  * \brief Класс, описывающий минимальную единицу, которая может быть
@@ -41,7 +39,6 @@ namespace ass {
 class API_AUI_VIEWS AView: public AObject
 {
 	friend class AViewContainer;
-	friend class ass::SolidBackground;
 public:
 	enum Overflow
 	{
@@ -89,13 +86,7 @@ private:
 	 * \brief Список отрисовки, или запекание команд отрисовки,
 	 *        чтобы каждый раз не парсить CSS.
 	 */
-	ADeque<std::function<void()>> mCssDrawListFront;
-
-	/**
-	 * \brief При включённых анимациях (mHasTransitions = true)
-	 *		  содержит список отрисовки предыдущего состояния.
-	 */
-	ADeque<std::function<void()>> mCssDrawListBack;
+	std::array<ass::decl::IDeclarationBase*, int(ass::decl::DeclarationSlot::COUNT)> mAss;
 
 	/**
 	 * \brief Эффекты фона
@@ -218,7 +209,6 @@ protected:
 
 
 public:
-
     AView();
     virtual ~AView() = default;
 	/**
@@ -256,13 +246,24 @@ public:
 		return mSize;
 	}
 
-	Overflow getOverflow() const
+    const glm::ivec2& getMinSize() const {
+        return mMinSize;
+    }
+
+    void setMinSize(const glm::ivec2& minSize) {
+        mMinSize = minSize;
+    }
+
+    Overflow getOverflow() const
 	{
 		return mOverflow;
 	}
 
 	float getBorderRadius() const {
 	    return mBorderRadius;
+	}
+	void setBorderRadius(float radius) {
+	    mBorderRadius = radius;
 	}
 
 	/**
@@ -307,18 +308,25 @@ public:
 	{
 		return mMargin;
 	}
+    void setMargin(const ABoxFields& margin) {
+        mMargin = margin;
+    }
 
 	virtual bool consumesClick(const glm::ivec2& pos);
 
 	/**
 	 * \note каждый <class ?: AView> должен сам
 	 *		 обрабатывать этот отступ.
-	 * \return внешние отступы.
+	 * \return внутрениие отступы.
 	 */
 	[[nodiscard]]
 	const ABoxFields& getPadding() const
 	{
 		return mPadding;
+	}
+
+	void setPadding(const ABoxFields& padding) {
+	    mPadding = padding;
 	}
 
 

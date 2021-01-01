@@ -37,7 +37,7 @@ void ASelectableLabel::render() {
 
     if (hasFocus()) {
         auto x =  mTextLeftOffset;
-        if (getFontStyleLabel().align == ALIGN_CENTER) {
+        if (getFontStyleLabel().align == TextAlign::CENTER) {
             x -= mPrerendered.length / 2.f;
         }
         {
@@ -63,7 +63,7 @@ void ASelectableLabel::render() {
 void ASelectableLabel::onMouseMove(glm::ivec2 pos) {
     AView::onMouseMove(pos);
     pos.x -= mTextLeftOffset;
-    if (getFontStyleLabel().align == ALIGN_CENTER) {
+    if (getFontStyleLabel().align == TextAlign::CENTER) {
         pos.x += mPrerendered.length / 2.f;
     }
     handleMouseMove(pos);
@@ -73,7 +73,7 @@ void ASelectableLabel::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     clearSelection();
     AView::onMousePressed(pos, button);
     pos.x -= mTextLeftOffset;
-    if (getFontStyleLabel().align == ALIGN_CENTER) {
+    if (getFontStyleLabel().align == TextAlign::CENTER) {
         pos.x += mPrerendered.length / 2.f;
     }
     handleMousePressed(pos, button);
@@ -82,7 +82,7 @@ void ASelectableLabel::onMousePressed(glm::ivec2 pos, AInput::Key button) {
 void ASelectableLabel::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     AView::onMouseReleased(pos, button);
     pos.x -= mTextLeftOffset;
-    if (getFontStyleLabel().align == ALIGN_CENTER) {
+    if (getFontStyleLabel().align == TextAlign::CENTER) {
         pos.x += mPrerendered.length / 2.f;
     }
     handleMouseReleased(pos, button);

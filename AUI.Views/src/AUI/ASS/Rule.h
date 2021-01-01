@@ -1,16 +1,22 @@
 #pragma once
 
-#include "IDeclaration.h"
+#include <AUI/ASS/Declaration/Selector.h>
 
 struct Rule {
 public:
     template<typename... Declarations>
-    explicit Rule(Declarations&&... declarations) {
+    Rule(ass::ASelector&& selector, Declarations&&... declarations):
+            mSelector(std::forward<ass::ASelector>(selector))
+        {
         processDeclarations(std::forward<Declarations>(declarations)...);
     }
 
-    const AVector<ass::decl::IDeclarationBase*>& getDeclarations() const {
+    [[nodiscard]] const AVector<ass::decl::IDeclarationBase*>& getDeclarations() const {
         return mDeclarations;
+    }
+
+    [[nodiscard]] const ass::ASelector& getSelector() const {
+        return mSelector;
     }
 
 private:
@@ -27,5 +33,6 @@ private:
         mDeclarations.emplace_back(new ass::decl::Declaration<T>(t));
     }
 
+    ass::ASelector mSelector;
     AVector<ass::decl::IDeclarationBase*> mDeclarations;
 };

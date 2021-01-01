@@ -20,7 +20,7 @@ private:
 	Unit mUnit;
 	
 public:
-	AMetric(float value, Unit unit);
+	AMetric(float value, Unit unit = T_PX);
 	AMetric(const AString& text);
 
 	[[nodiscard]] float getRawValue() const
@@ -34,14 +34,18 @@ public:
 	}
 
 	[[nodiscard]] float getValuePx() const;
+
+	operator float() const {
+	    return getValuePx();
+	}
 };
 
 
-inline float operator"" _dp(unsigned long long v)
+inline AMetric operator"" _dp(unsigned long long v)
 {
-	return AMetric(static_cast<float>(v), AMetric::T_EM).getValuePx();
+	return AMetric(static_cast<float>(v), AMetric::T_EM);
 }
-inline float operator"" _pt(unsigned long long v)
+inline AMetric operator"" _pt(unsigned long long v)
 {
-	return AMetric(static_cast<float>(v), AMetric::T_PT).getValuePx();
+	return AMetric(static_cast<float>(v), AMetric::T_PT);
 }

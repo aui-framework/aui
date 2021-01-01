@@ -4,6 +4,13 @@
 
 #pragma once
 
-namespace ass {
-
-}
+#include "Declaration/Border.h"
+#include "Declaration/BorderRadius.h"
+#include "Declaration/BoxShadow.h"
+#include "Declaration/SolidBackground.h"
+#include "Declaration/FontSize.h"
+#include "Declaration/FontRendering.h"
+#include "Declaration/Padding.h"
+#include "Declaration/Margin.h"
+#include "Declaration/MinSize.h"
+#include "Declaration/TextAlign.h"

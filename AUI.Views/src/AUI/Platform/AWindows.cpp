@@ -51,8 +51,8 @@ public:
     ~painter() {
         assert(painting);
         painting = false;
-        EndPaint(mHandle, &mPaint);
         bool ok = wglMakeCurrent(nullptr, nullptr);
+        EndPaint(mHandle, &mPaint);
         assert(ok);
     }
 };
@@ -151,6 +151,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_SIZE: {
+
             if (!isMinimized()) {
                 wglMakeCurrent(mDC, context.hrc);
                 emit resized(LOWORD(lParam), HIWORD(lParam));
@@ -255,7 +256,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         }
             return 0;
         case WM_ERASEBKGND:
-            return TRUE;
+            return true;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 
@@ -541,6 +542,9 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
                 throw std::runtime_error("Failed to create OpenGL 2.0 context");
         }
         ALogger::info("OpenGL context is ready");
+
+        // vsync
+        wglSwapIntervalEXT(true);
 
         //wglMakeCurrent(mDC, nullptr);
     } else {
@@ -832,7 +836,7 @@ void AWindow::redraw() {
 
                     FontStyle fs;
                     fs.color = 0xffffffffu;
-                    fs.fontRendering = FR_ANTIALIASING;
+                    fs.fontRendering = FontRendering::ANTIALIASING;
                     fs.size = 9_pt;
                     auto s = Render::inst().preRendererString(getCssNames().back() + "\n"_as +
                                                               AString::number(getSize().x) + "x"_as + AString::number(getSize().y), fs);
@@ -856,7 +860,7 @@ void AWindow::redraw() {
 #endif
     }
 #if defined(_WIN32)
-    wglMakeCurrent(mDC, context.hrc);
+    wglMakeCurrent(nullptr, nullptr);
 #endif
     emit redrawn();
 }

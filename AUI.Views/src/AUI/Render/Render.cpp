@@ -432,16 +432,16 @@ void Render::drawString(int x, int y, PrerenderedString& f) {
 	}
 
 
-	if (f.fs.align == ALIGN_CENTER)
+	if (f.fs.align == TextAlign::CENTER)
 		x -= f.length / 2;
-	else if (f.fs.align == ALIGN_RIGHT)
+	else if (f.fs.align == TextAlign::RIGHT)
 		x -= f.length;
 
 	f.fs.font->textureOf(f.fs.size, f.fs.fontRendering)->bind();
 
 
 	auto finalColor = mColor * f.fs.color;
-	if (f.fs.fontRendering & FR_SUBPIXEL) {
+	if (f.fs.fontRendering == FontRendering::SUBPIXEL) {
 		setFill(FILL_SYMBOL_SUBPIXEL);
 		mSymbolShaderSubPixel.set("mat", glm::translate(mTransform, glm::vec3{x, y, 0}));
 

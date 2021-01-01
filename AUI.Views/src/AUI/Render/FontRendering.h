@@ -2,9 +2,9 @@
 #include "AUI/Util/EnumUtil.h"
 
 
-ENUM_FLAG(FontRendering)
+enum class FontRendering
 {
-	FR_NEAREST = 0, // TODO
-	FR_ANTIALIASING = 1,
-	FR_SUBPIXEL = 2,
+	NEAREST = 0, // TODO
+	ANTIALIASING = 1,
+	SUBPIXEL = 2,
 };

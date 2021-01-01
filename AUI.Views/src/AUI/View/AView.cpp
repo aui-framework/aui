@@ -12,6 +12,7 @@
 #include <AUI/IO/StringStream.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/ASS/AStylesheet.h>
+#include <AUI/Traits/memory.h>
 
 #include "AUI/Platform/ADesktop.h"
 #include "AUI/Render/AFontManager.h"
@@ -37,6 +38,7 @@ AWindow* AView::getWindow()
 AView::AView()
 {
 	AVIEW_CSS;
+	aui::zero(mAss);
 }
 
 void AView::redraw()
@@ -99,9 +101,9 @@ void AView::render()
         }
 
         // список отрисовки.
-        for (auto& r : AStylesheet::inst().getRules()) {
-            for (auto& d : r.getDeclarations()) {
-                d->applyFor(this);
+        for (auto& w : mAss) {
+            if (w) {
+                w->renderFor(this);
             }
         }
 	}
@@ -192,7 +194,7 @@ void AView::recompileCSS()
     mBorderRadius = 0.f;
     //mForceStencilForBackground = false;
 	mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-	mFontStyle = {AFontManager::inst().getDefault(), 12, false, ALIGN_LEFT, AColor(0, 0, 0, 1.f) };
+	mFontStyle = {AFontManager::inst().getDefault(), 12, false, Align::LEFT, AColor(0, 0, 0, 1.f) };
 	mBackgroundEffects.clear();
 
 	// общий обработчик для margin и padding.
@@ -324,25 +326,25 @@ void AView::recompileCSS()
 	{
 		if (p->getArgs().size() == 1) {
 			if (p->getArgs()[0] == "left")
-				mFontStyle.align = ALIGN_LEFT;
+				mFontStyle.align = Align::LEFT;
 			else if (p->getArgs()[0] == "center")
-				mFontStyle.align = ALIGN_CENTER;
+				mFontStyle.align = Align::CENTER;
 			else if (p->getArgs()[0] == "right")
-				mFontStyle.align = ALIGN_RIGHT;
+				mFontStyle.align = Align::RIGHT;
 		}
 	});
 	processStylesheet(css::T_AUI_FONT_RENDERING, [&](property p)
 	{
 		if (p->getArgs().size() == 1) {
 			if (p->getArgs()[0] == "nearest")
-				mFontStyle.fontRendering = FR_NEAREST;
+				mFontStyle.fontRendering = FontRendering::NEAREST;
 			else if (p->getArgs()[0] == "antialiasing")
-				mFontStyle.fontRendering = FR_ANTIALIASING;
+				mFontStyle.fontRendering = FontRendering::ANTIALIASING;
 			else if (p->getArgs()[0] == "subpixel")
 #ifdef __ANDROID__
-			    mFontStyle.fontRendering = FR_ANTIALIASING;
+			    mFontStyle.fontRendering = FontRendering::ANTIALIASING;
 #else
-			    mFontStyle.fontRendering = FR_SUBPIXEL;
+			    mFontStyle.fontRendering = FontRendering::SUBPIXEL;
 #endif
 		}
 	});
@@ -663,6 +665,29 @@ void AView::recompileCSS()
             mBorderRadius = AMetric(p->getArgs()[0]).getValuePx();
         }
     });*/
+
+    mCursor = ACursor::DEFAULT;
+    mOverflow = OF_VISIBLE;
+    mMargin = {};
+    mMinSize = {};
+    mBorderRadius = 0.f;
+    //mForceStencilForBackground = false;
+    mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+    mFontStyle = {AFontManager::inst().getDefault(), 12, false, TextAlign::LEFT, AColor(0, 0, 0, 1.f) };
+    mBackgroundEffects.clear();
+    aui::zero(mAss);
+
+    for (auto& r : AStylesheet::inst().getRules()) {
+        if (r.getSelector().isApplicable(this)) {
+            for (auto& d : r.getDeclarations()) {
+                auto slot = d->getDeclarationSlot();
+                if (slot != ass::decl::DeclarationSlot::NONE) {
+                    mAss[int(slot)] = d;
+                }
+                d->applyFor(this);
+            }
+        }
+    }
 }
 /*
 void AView::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)
@@ -772,6 +797,7 @@ void AView::ensureCSSUpdated()
 
 		recompileCSS();
 	}*/
+    recompileCSS();
 }
 
 void AView::onMouseEnter()

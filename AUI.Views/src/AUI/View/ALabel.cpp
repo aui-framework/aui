@@ -118,14 +118,14 @@ FontStyle ALabel::getFontStyleLabel() {
 /*
 void ALabel::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) {
     mPrerendered.mVao = nullptr;
-    mVerticalAlign = ALIGN_LEFT;
+    mVerticalAlign = Align::LEFT;
     processor(css::T_VERTICAL_ALIGN, [&](property p)
     {
         if (p->getArgs().size() == 1) {
             if (p->getArgs()[0] == "middle")
-                mVerticalAlign = ALIGN_CENTER;
+                mVerticalAlign = Align::CENTER;
             else
-                mVerticalAlign = ALIGN_LEFT;
+                mVerticalAlign = Align::LEFT;
         }
     });
     mTextTransform = TT_NORMAL;
@@ -163,7 +163,7 @@ void ALabel::doRenderText() {
         mTextLeftOffset = 0;
         switch (getFontStyleLabel().align)
         {
-            case ALIGN_LEFT:
+            case TextAlign::LEFT:
                 if (mIcon)
                 {
                     auto requiredSpace = mIcon->getSizeHint();
@@ -175,7 +175,7 @@ void ALabel::doRenderText() {
                 }
                 break;
 
-            case ALIGN_CENTER:
+            case TextAlign::CENTER:
                 mTextLeftOffset += getContentWidth() / 2;
                 if (mIcon)
                 {
@@ -189,7 +189,7 @@ void ALabel::doRenderText() {
 
                 break;
 
-            case ALIGN_RIGHT:
+            case TextAlign::RIGHT:
                 mTextLeftOffset += getContentWidth();
                 if (mIcon)
                 {
@@ -205,7 +205,7 @@ void ALabel::doRenderText() {
         }
         if (mPrerendered.mVao) {
             int y = mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)) + 1;
-            if (mVerticalAlign == ALIGN_CENTER) {
+            if (mVerticalAlign == TextAlign::CENTER) {
                 if (mMultiline) {
                     y = (glm::max)(y, (getHeight() - getMinimumHeight()) / 2 - 1);
                 } else {

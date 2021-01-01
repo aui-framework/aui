@@ -156,6 +156,8 @@ public:
 template <typename ... Args>
 void ASignal<Args...>::invokeSignal()
 {
+    if (mSlots.empty())
+        return;
 	std::unique_lock lock(mSlotsLock);
 	for (auto i = mSlots.begin(); i != mSlots.end();)
 	{

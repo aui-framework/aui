@@ -64,7 +64,7 @@ AFont::Character* AFont::renderGlyph(FontData& fs, long glyph, long size, FontRe
 	FT_Set_Pixel_Sizes(face, 0, size);
 
 	FT_Int32 flags = FT_LOAD_RENDER;// | FT_LOAD_FORCE_AUTOHINT;
-	if (fr & FR_SUBPIXEL)
+	if (fr == FontRendering::SUBPIXEL)
 		flags |= FT_LOAD_TARGET_LCD;
 	FT_Error e = FT_Load_Char(face, glyph, flags);
 	if (e) {
@@ -77,7 +77,7 @@ AFont::Character* AFont::renderGlyph(FontData& fs, long glyph, long size, FontRe
 		c->c = glyph;
 		c->width = g->bitmap.width;
 		
-		if (fr & FR_SUBPIXEL)
+		if (fr == FontRendering::SUBPIXEL)
 			c->width /= 3;
 		
 		c->height = g->bitmap.rows;
@@ -95,7 +95,7 @@ AFont::Character* AFont::renderGlyph(FontData& fs, long glyph, long size, FontRe
 		}
 
 		int imageFormat = AImage::BYTE;
-		if (fr & FR_SUBPIXEL)
+		if (fr == FontRendering::SUBPIXEL)
 			imageFormat |= AImage::RGB;
 		else
 			imageFormat |= AImage::R;
