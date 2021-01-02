@@ -50,7 +50,7 @@ AStylesheet::AStylesheet() {
             SolidBackground{0xfafafa_rgb},
         },
         {
-            any_attr<AButton>({"default"}),
+            any<AButton>()["default"],
             FontRendering::SUBPIXEL,
             GradientBackground { getOsThemeColor().lighter(0.15f),
                                  getOsThemeColor().darker(0.15f),
@@ -60,7 +60,7 @@ AStylesheet::AStylesheet() {
             TextColor { 0xffffff_rgb },
         },
         {
-            any_attr<AButton>::hover({"default"}),
+            any<AButton>::hover()["default"],
             BoxShadow { {}, 1_dp, 6_dp, -1_dp, getOsThemeColor() },
         },
         {
@@ -69,17 +69,17 @@ AStylesheet::AStylesheet() {
             BoxShadow { nullptr },
         },
         {
-            any_attr<AButton>::hover({"default"}),
+            any<AButton>::hover()["default"],
             GradientBackground { getOsThemeColor().lighter(0.2f),
                                  getOsThemeColor().darker(0.15f),
                                  LayoutDirection::VERTICAL },
         },
         {
-            any_attr<AButton>::active({"default"}),
+            any<AButton>::active()["default"],
             SolidBackground { getOsThemeColor() }
         },
         {
-            any_attr<AButton>({"disabled"}),
+            any<AButton>()["disabled"],
             SolidBackground { 0xcccccc_rgb },
             BoxShadow { nullptr },
             Border {1_dp, 0xbfbfbf_rgb },

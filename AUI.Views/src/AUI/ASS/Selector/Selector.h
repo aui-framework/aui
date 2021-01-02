@@ -25,10 +25,15 @@ namespace ass {
     private:
         AVector<_<ISubSelector>> mSubSelectors;
 
-        template<typename SubSelector>
+        template<typename SubSelector, std::enable_if_t<!std::is_pointer_v<SubSelector>, bool> = true>
         void processSubSelector(SubSelector&& subSelector) {
             ISubSelector* sub = new SubSelector(std::forward<SubSelector>(subSelector));
             mSubSelectors << std::move(_unique<ISubSelector>(sub));
+        }
+
+        template<typename SubSelector, std::enable_if_t<std::is_pointer_v<SubSelector>, bool> = true>
+        void processSubSelector(SubSelector&& subSelector) {
+            mSubSelectors << std::move(_unique<ISubSelector>(subSelector));
         }
 
         template<typename SubSelector, typename...SubSelectors>

@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "Selector.h"
+#include "attribute.h"
 #include <AUI/Util/kAUI.h>
 #include <AUI/View/AView.h>
 #include <AUI/ASS/AAssHelper.h>
@@ -12,13 +12,13 @@
 namespace ass {
 
     template<typename T>
-    struct any: ISubSelector {
+    struct any: AttributeHelper<any<T>> {
     public:
         bool isPossiblyApplicable(AView* view) override {
             return dynamic_cast<T*>(view) != nullptr;
         }
 
-        struct hover: ISubSelector {
+        struct hover: AttributeHelper<hover> {
             bool isPossiblyApplicable(AView* view) override {
                 return dynamic_cast<T*>(view) != nullptr;
             }
@@ -33,7 +33,7 @@ namespace ass {
             }
         };
 
-        struct active: ISubSelector {
+        struct active: AttributeHelper<active> {
             bool isPossiblyApplicable(AView* view) override {
                 return dynamic_cast<T*>(view) != nullptr;
             }
