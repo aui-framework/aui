@@ -42,11 +42,11 @@ AStylesheet::AStylesheet() {
             BoxShadow {{}, 1_dp, 5_dp, -2_dp, 0x80000000_argb},
         },
         {
-            any<AButton>::hover(),
+            hovered<AButton>(),
             Border {1_dp, getOsThemeColor() * glm::vec4(1, 1, 1, 0.3f)}
         },
         {
-            any<AButton>::active(),
+            active<AButton>(),
             SolidBackground{0xfafafa_rgb},
         },
         {
@@ -60,22 +60,22 @@ AStylesheet::AStylesheet() {
             TextColor { 0xffffff_rgb },
         },
         {
-            any<AButton>::hover()["default"],
+            hovered<AButton>()["default"],
             BoxShadow { {}, 1_dp, 6_dp, -1_dp, getOsThemeColor() },
         },
         {
-            any<AButton>::active(),
+            active<AButton>(),
             Padding {5_dp, 8_dp, 3_dp},
             BoxShadow { nullptr },
         },
         {
-            any<AButton>::hover()["default"],
+            hovered<AButton>()["default"],
             GradientBackground { getOsThemeColor().lighter(0.2f),
                                  getOsThemeColor().darker(0.15f),
                                  LayoutDirection::VERTICAL },
         },
         {
-            any<AButton>::active()["default"],
+            active<AButton>()["default"],
             SolidBackground { getOsThemeColor() }
         },
         {

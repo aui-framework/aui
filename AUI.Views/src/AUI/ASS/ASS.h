@@ -22,3 +22,5 @@
 #include "Selector/Selector.h"
 #include "Selector/any.h"
 #include "Selector/attribute.h"
+#include "Selector/active.h"
+#include "Selector/hovered.h"
