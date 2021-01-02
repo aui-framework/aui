@@ -22,8 +22,6 @@ namespace ass {
 
             }
 
-            void applyFor(AView* view) override;
-
             void renderFor(AView* view) override;
 
             DeclarationSlot getDeclarationSlot() const override;

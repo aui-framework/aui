@@ -61,6 +61,7 @@ public:
 
 
 public:
+    void onDpiChanged() override;
 
     void setText(const AString& newText);
 

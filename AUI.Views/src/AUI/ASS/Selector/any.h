@@ -12,13 +12,13 @@
 namespace ass {
 
     template<typename T>
-    class any: public ISubSelector {
+    struct any: ISubSelector {
     public:
         bool isPossiblyApplicable(AView* view) override {
             return dynamic_cast<T*>(view) != nullptr;
         }
 
-        struct hover: public ISubSelector {
+        struct hover: ISubSelector {
             bool isPossiblyApplicable(AView* view) override {
                 return dynamic_cast<T*>(view) != nullptr;
             }
@@ -33,7 +33,7 @@ namespace ass {
             }
         };
 
-        struct active: public ISubSelector {
+        struct active: ISubSelector {
             bool isPossiblyApplicable(AView* view) override {
                 return dynamic_cast<T*>(view) != nullptr;
             }
@@ -48,5 +48,4 @@ namespace ass {
             }
         };
     };
-
 }

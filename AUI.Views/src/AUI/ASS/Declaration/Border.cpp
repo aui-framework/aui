@@ -31,6 +31,10 @@ void ass::decl::Declaration<ass::Border>::renderFor(AView* view) {
     }
 }
 
+bool ass::decl::Declaration<ass::Border>::isNone() {
+    return mInfo.width <= 0.001f;
+}
+
 ass::decl::DeclarationSlot ass::decl::Declaration<ass::Border>::getDeclarationSlot() const {
     return ass::decl::DeclarationSlot::BORDER;
 }

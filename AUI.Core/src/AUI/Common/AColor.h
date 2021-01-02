@@ -36,6 +36,15 @@ public:
 		((color >> 24) & 0xff) / 255.f,
 		};
 	}
+	static AColor fromRRGGBB(unsigned int color)
+	{
+		return {
+		((color >> 16) & 0xff) / 255.f,
+		((color >> 8) & 0xff) / 255.f,
+		((color) & 0xff) / 255.f,
+		1,
+		};
+	}
 	
 	AColor operator*(float other) const
 	{
@@ -70,5 +79,12 @@ public:
 inline AColor operator"" _argb(unsigned long long v)
 {
     return AColor::fromAARRGGBB(unsigned(v));
+}
+
+
+
+inline AColor operator"" _rgb(unsigned long long v)
+{
+    return AColor::fromRRGGBB(unsigned(v));
 }
 

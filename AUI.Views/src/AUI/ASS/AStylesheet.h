@@ -26,6 +26,8 @@ public:
         return mRules;
     }
 
+    static AColor getOsThemeColor();
+
     static AStylesheet& inst();
 };
 

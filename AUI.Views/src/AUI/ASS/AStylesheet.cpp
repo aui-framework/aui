@@ -6,7 +6,9 @@
 #include <AUI/Platform/AWindow.h>
 #include "AStylesheet.h"
 #include "ASS.h"
-
+#ifdef _WIN32
+#include <dwmapi.h>
+#endif
 
 AStylesheet::AStylesheet() {
     using namespace ass;
@@ -19,7 +21,7 @@ AStylesheet::AStylesheet() {
         },
         {
             any<AWindow>(),
-            SolidBackground {0xfff0f0f0_argb},
+            SolidBackground {0xf0f0f0_rgb},
         },
         {
             any<ALabel>(),
@@ -31,7 +33,7 @@ AStylesheet::AStylesheet() {
         },
         {
             any<AButton>(),
-            SolidBackground {0xffffffff_argb},
+            SolidBackground {0xffffff_rgb},
             Padding {4_dp, 8_dp},
             Margin {2_dp, 4_dp},
             MinSize {60_dp, 14_dp},
@@ -41,14 +43,48 @@ AStylesheet::AStylesheet() {
         },
         {
             any<AButton>::hover(),
-            Border {1_dp, 0xff000000_argb}
+            Border {1_dp, getOsThemeColor() * glm::vec4(1, 1, 1, 0.3f)}
         },
         {
             any<AButton>::active(),
-            SolidBackground {0xfffafafa_argb},
+            SolidBackground{0xfafafa_rgb},
+        },
+        {
+            any_attr<AButton>({"default"}),
+            FontRendering::SUBPIXEL,
+            GradientBackground { getOsThemeColor().lighter(0.15f),
+                                 getOsThemeColor().darker(0.15f),
+                                 LayoutDirection::VERTICAL },
+            BoxShadow { {}, 1_dp, 3_dp, -1_dp, getOsThemeColor() },
+            Border { nullptr },
+            TextColor { 0xffffff_rgb },
+        },
+        {
+            any_attr<AButton>::hover({"default"}),
+            BoxShadow { {}, 1_dp, 6_dp, -1_dp, getOsThemeColor() },
+        },
+        {
+            any<AButton>::active(),
             Padding {5_dp, 8_dp, 3_dp},
-            BoxShadow {nullptr},
-        }
+            BoxShadow { nullptr },
+        },
+        {
+            any_attr<AButton>::hover({"default"}),
+            GradientBackground { getOsThemeColor().lighter(0.2f),
+                                 getOsThemeColor().darker(0.15f),
+                                 LayoutDirection::VERTICAL },
+        },
+        {
+            any_attr<AButton>::active({"default"}),
+            SolidBackground { getOsThemeColor() }
+        },
+        {
+            any_attr<AButton>({"disabled"}),
+            SolidBackground { 0xcccccc_rgb },
+            BoxShadow { nullptr },
+            Border {1_dp, 0xbfbfbf_rgb },
+            TextColor { 0x838383_rgb }
+        },
     });
 }
 
@@ -56,4 +92,26 @@ AStylesheet::AStylesheet() {
 AStylesheet& AStylesheet::inst() {
     static AStylesheet s;
     return s;
+}
+
+AColor AStylesheet::getOsThemeColor() {
+#if defined(_WIN32)
+    auto impl = []() {
+        DWORD c = 0;
+        BOOL blending;
+        DwmGetColorizationColor(&c, &blending);
+        c |= 0xff000000;
+        AColor osThemeColor = AColor::fromAARRGGBB(static_cast<unsigned>(c));
+        float readability = osThemeColor.readabilityOfForegroundColor(0xffffffff);
+        if (readability < 0.3f)  {
+            osThemeColor = osThemeColor.darker(1.f - readability * 0.5f);
+        }
+        return osThemeColor;
+    };
+    static AColor osThemeColor = impl();
+
+    return osThemeColor;
+#else
+    return 0xff2147_rgb;
+#endif
 }

@@ -69,40 +69,54 @@ Render::Render()
                 "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
                 "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
                 "}");
-        mRoundedSolidShaderAntialiased.load(
-                "attribute vec3 pos;"
-                "attribute vec2 uv;"
-                "attribute vec2 outer_to_inner;"
-                "varying vec2 pass_uv;"
-                "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
-                "uniform vec2 outerSize;"
-                "uniform vec2 innerSize;"
-                "uniform vec2 innerTexelSize;"
-                "uniform vec2 outerTexelSize;"
-                "uniform vec2 outer_to_inner;"
-                "uniform vec4 color;"
-                "varying vec2 pass_uv;"
-                "bool is_outside(vec2 tmp, vec2 size) {"
+        auto produceRoundedAntialiasedShader = [](GL::Shader& shader, const AString& uniforms, const AString& color) {
+            shader.load(
+                    "attribute vec3 pos;"
+                    "attribute vec2 uv;"
+                    "attribute vec2 outer_to_inner;"
+                    "varying vec2 pass_uv;"
+                    "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
+                    "uniform vec2 outerSize;"
+                    "uniform vec2 innerSize;"
+                    "uniform vec2 innerTexelSize;"
+                    "uniform vec2 outerTexelSize;"
+                    "uniform vec2 outer_to_inner;"
+                    + uniforms +
+                    "uniform vec4 color;"
+                    "varying vec2 pass_uv;"
+                    "bool is_outside(vec2 tmp, vec2 size) {"
                     "if (tmp.x >= 1 || tmp.y >= 1) return true;"
                     "return (tmp.x - 1.0) * (size.y) / (-size.x) <= tmp.y - (1.0 - size.y) &&"
-                        "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
-                        "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) >= 1.0;"
-                "}"
-                "void main(void) {"
+                    "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
+                    "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) >= 1.0;"
+                    "}"
+                    "void main(void) {"
                     "vec2 outer_uv = abs(pass_uv);"
                     "vec2 inner_uv = outer_uv * outer_to_inner;"
                     "float alpha = 1.f;"
                     "ivec2 i;"
                     "for (i.x = -2; i.x <= 2; ++i.x) {"
-                        "for (i.y = -2; i.y <= 2; ++i.y) {"
-                        "alpha -= (is_outside(inner_uv + innerTexelSize * (i), innerSize)"
-                                  " == "
-                                  "is_outside(outer_uv + outerTexelSize * (i), outerSize)"
-                                  ") ? (1.0 / 25.0) : 0;"
-                        "}"
+                    "for (i.y = -2; i.y <= 2; ++i.y) {"
+                    "alpha -= (is_outside(inner_uv + innerTexelSize * (i), innerSize)"
+                    " == "
+                    "is_outside(outer_uv + outerTexelSize * (i), outerSize)"
+                    ") ? (1.0 / 25.0) : 0;"
                     "}"
-                    "gl_FragColor = vec4(color.rgb, color.a * alpha);"
-                "}");
+                    "}"
+                    + color +
+                    "gl_FragColor = vec4(fcolor.rgb, fcolor.a * alpha);"
+                    "}");
+        };
+        produceRoundedAntialiasedShader(mRoundedSolidShaderAntialiased,
+                                        {},
+                                        "vec4 fcolor = color;");
+
+        produceRoundedAntialiasedShader(mRoundedGradientShaderAntialiased,
+                                        "uniform vec4 color_tl;"
+                                        "uniform vec4 color_tr;"
+                                        "uniform vec4 color_bl;"
+                                        "uniform vec4 color_br;",
+                                        "vec4 fcolor = mix(mix(color_tl, color_tr, pass_uv.x), mix(color_bl, color_br, pass_uv.x), pass_uv.y) * color;");
     }
 
 	mSolidTransformShader.load(
@@ -199,7 +213,14 @@ AVector<glm::vec3> Render::getVerticesForRect(float x, float y, float width, flo
 
 void Render::drawRect(float x, float y, float width, float height)
 {
-	uploadToShader();
+    uploadToShaderCommon();
+
+	switch (mCurrentFill) {
+	    case FILL_GRADIENT:
+	        uploadToShaderGradient();
+            break;
+	}
+
 	mTempVao.bind();
 
 	mTempVao.insert(0, getVerticesForRect(x, y, width, height));
@@ -209,7 +230,7 @@ void Render::drawRect(float x, float y, float width, float height)
 }
 
 void Render::drawTexturedRect(float x, float y, float width, float height, const glm::vec2& uv1, const glm::vec2& uv2) {
-    uploadToShader();
+    uploadToShaderCommon();
     mTempVao.bind();
     glEnableVertexAttribArray(2);
 
@@ -234,12 +255,23 @@ void Render::drawRoundedRect(float x, float y, float width, float height, float 
     setFill(mCurrentFill);
 }
 void Render::drawRoundedRectAntialiased(float x, float y, float width, float height, float radius) {
-    mRoundedSolidShaderAntialiased.use();
-    mRoundedSolidShaderAntialiased.set("outerSize", 2.f * radius / glm::vec2{width, height});
-    mRoundedSolidShaderAntialiased.set("innerSize", glm::vec2{9999});
-    mRoundedSolidShaderAntialiased.set("innerTexelSize", glm::vec2{0, 0});
-    mRoundedSolidShaderAntialiased.set("outerTexelSize", 2.f / 5.f / glm::vec2{width, height});
-    mRoundedSolidShaderAntialiased.set("outer_to_inner", glm::vec2{0});
+    GL::Shader* targetShader = nullptr;
+    switch (mCurrentFill) {
+        case FILL_SOLID:
+            targetShader = &mRoundedSolidShaderAntialiased;
+            break;
+        case FILL_GRADIENT:
+            targetShader = &mRoundedGradientShaderAntialiased;
+            uploadToShaderGradient();
+            break;
+    }
+
+    targetShader->use();
+    targetShader->set("outerSize", 2.f * radius / glm::vec2{width, height});
+    targetShader->set("innerSize", glm::vec2{9999});
+    targetShader->set("innerTexelSize", glm::vec2{0, 0});
+    targetShader->set("outerTexelSize", 2.f / 5.f / glm::vec2{width, height});
+    targetShader->set("outer_to_inner", glm::vec2{0});
     drawRect(x, y, width, height);
     setFill(mCurrentFill);
 }
@@ -263,7 +295,7 @@ void Render::drawRoundedBorder(float x, float y, float width, float height, floa
 
 void Render::drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s)
 {
-	uploadToShader();
+    uploadToShaderCommon();
 	mTempVao.bind();
 
 	auto doDraw = [&](ASide s)
@@ -322,7 +354,7 @@ void Render::drawRectBorderSide(float x, float y, float width, float height, flo
 
 void Render::drawRectBorder(float x, float y, float width, float height, float lineWidth)
 {
-	uploadToShader();
+    uploadToShaderCommon();
 	mTempVao.bind();
 
 	//rect.insert(0, getVerticesForRect(x + 0.25f + lineWidth * 0.5f, y + 0.25f + lineWidth * 0.5f, width - (0.25f + lineWidth * 0.5f), height - (0.75f + lineWidth * 0.5f)));
@@ -565,10 +597,18 @@ Render::PrerenderedString Render::preRendererString(const AString& text, FontSty
 	return { vao, fs, advanceMax, uint16_t(prevWidth), text };
 }
 
-void Render::uploadToShader()
+void Render::uploadToShaderCommon()
 {
 	GL::Shader::currentShader()->set("color", mColor);
 	GL::Shader::currentShader()->set("transform", mTransform);
+}
+
+void Render::uploadToShaderGradient()
+{
+    GL::Shader::currentShader()->set("color_tl", mGradientTL);
+    GL::Shader::currentShader()->set("color_tr", mGradientTR);
+    GL::Shader::currentShader()->set("color_bl", mGradientBL);
+    GL::Shader::currentShader()->set("color_br", mGradientBR);
 }
 
 glm::vec2 Render::getCurrentPos() {
@@ -577,11 +617,10 @@ glm::vec2 Render::getCurrentPos() {
 
 void Render::setGradientColors(const AColor& tl, const AColor& tr,
                                const AColor& bl, const AColor& br) {
-    mGradientShader.use();
-    mGradientShader.set("color_tl", tl);
-    mGradientShader.set("color_tr", tr);
-    mGradientShader.set("color_bl", bl);
-    mGradientShader.set("color_br", br);
+    mGradientTL = tl;
+    mGradientTR = tr;
+    mGradientBL = bl;
+    mGradientBR = br;
 }
 
 void Render::applyTextureRepeat() {

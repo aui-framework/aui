@@ -5,6 +5,7 @@
 #include "AViewContainer.h"
 
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Util/kAUI.h>
 
 void ALabel::updateMultiline()
 {
@@ -236,4 +237,12 @@ AString ALabel::getTargetText() {
             break;
     }
     return targetString;
+}
+
+void ALabel::onDpiChanged() {
+    AView::onDpiChanged();
+    uiX [&] {
+        mPrerendered.mVao = nullptr;
+        redraw();
+    };
 }

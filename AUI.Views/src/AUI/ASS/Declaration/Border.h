@@ -33,6 +33,7 @@ namespace ass {
             color(color) {
 
         }
+        Border(std::nullptr_t) {}
 
     };
 
@@ -48,6 +49,8 @@ namespace ass {
             }
 
             void renderFor(AView* view) override;
+
+            bool isNone() override;
 
             DeclarationSlot getDeclarationSlot() const override;
         };

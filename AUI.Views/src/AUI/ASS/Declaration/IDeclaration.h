@@ -7,8 +7,7 @@ namespace ass::decl {
         NONE,
 
         SHADOW,
-        BACKGROUND_SOLID,
-        BACKGROUND_COMPLEX,
+        BACKGROUND,
         BORDER,
 
         COUNT,
@@ -18,6 +17,7 @@ namespace ass::decl {
     public:
         virtual void applyFor(AView* view) {};
         virtual void renderFor(AView* view) {};
+        virtual bool isNone() { return false; }
         [[nodiscard]] virtual DeclarationSlot getDeclarationSlot() const {
             return DeclarationSlot::NONE;
         }

@@ -58,10 +58,17 @@ public:
 private:
 	AWindow* mWindow = nullptr;
 	AColor mColor = 1.f;
+
+	AColor mGradientTL = 1.f;
+	AColor mGradientTR = 1.f;
+	AColor mGradientBL = 1.f;
+	AColor mGradientBR = 1.f;
+
 	GL::Shader mSolidShader;
 	GL::Shader mGradientShader;
 	GL::Shader mRoundedSolidShader;
 	GL::Shader mRoundedSolidShaderAntialiased;
+	GL::Shader mRoundedGradientShaderAntialiased;
 	GL::Shader mSolidTransformShader;
 	GL::Shader mBoxShadowShader;
 	GL::Shader mTexturedShader;
@@ -78,6 +85,9 @@ private:
 	
 	glm::mat4 getProjectionMatrix() const;
 	AVector<glm::vec3> getVerticesForRect(float x, float y, float width, float height);
+
+    void uploadToShaderCommon();
+    void uploadToShaderGradient();
 
 	
 public:	
@@ -152,8 +162,6 @@ public:
 	void setRepeat(Repeat repeat) {
 	    mRepeat = repeat;
 	}
-
-	void uploadToShader();
 
     glm::vec2 getCurrentPos();
 
