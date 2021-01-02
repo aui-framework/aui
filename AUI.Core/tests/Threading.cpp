@@ -7,6 +7,8 @@
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/Util.h>
+#include <random>
+#include <ctime>
 
 using namespace boost::unit_test;
 
@@ -79,6 +81,31 @@ BOOST_AUTO_TEST_SUITE(Threading)
 
         BOOST_CHECK_EQUAL(**v8, 8);
         BOOST_CHECK_EQUAL(**v1231, 1231.f);
+    }
+
+    BOOST_AUTO_TEST_CASE(Fence) {
+        std::default_random_engine e(std::time(nullptr));
+        repeat(10) {
+            std::atomic_int test = 0;
+            std::mutex m;
+
+            AThreadPool::global().fence([&]() {
+                repeat(1000) {
+                    asyncX [&]() {
+                        int s;
+                        {
+                            std::unique_lock lock(m);
+                            s = std::uniform_int_distribution(5, 100)(e);
+                        }
+                        AThread::sleep(s);
+                        ++test;
+                    };
+                }
+
+                BOOST_CHECK_LE(test, 1000);
+            });
+            BOOST_CHECK_EQUAL(test, 1000);
+        }
     }
 
 BOOST_AUTO_TEST_SUITE_END()

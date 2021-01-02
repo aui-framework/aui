@@ -1,6 +1,8 @@
 ﻿#pragma once
 
 #include <AUI/Core.h>
+#include <cassert>
+#include <atomic>
 
 #include "AUI/Common/AVector.h"
 #include "AUI/Common/Queue.h"
@@ -39,6 +41,17 @@ private:
 		~Worker();
 		void disable();
 	};
+
+	struct FenceHelper {
+	    unsigned enqueuedTasks = 0;
+	    std::atomic_uint doneTasks;
+	    bool waitingForNotify = false;
+	    std::condition_variable cv;
+	    std::mutex mutex;
+	};
+
+    FenceHelper*& fenceHelperStorage();
+
 public:
 	enum Priority
 	{
@@ -55,6 +68,7 @@ protected:
 	Queue<task> mQueueTryLater;
 	std::recursive_mutex mQueueLock;
 	std::condition_variable mCV;
+	std::atomic_uint mIdleWorkers;
 
 public:
 	AThreadPool(size_t size);
@@ -63,10 +77,40 @@ public:
 	size_t getPendingTaskCount();
 	void run(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
 	void clear();
-	void runLaterTasks();
-
+    void runLaterTasks();
 	static void enqueue(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
-	static AThreadPool& global();
+
+    static AThreadPool& global();
+
+    /**
+     * \brief Оборачивает лямбду, гарантируя, что все задачи, которые были отправлены на выполнение в этот тредпул
+     *        внутри этой лямбды будут завершены после вызова этой функции.
+     * @tparam Callable
+     * @param callable
+     */
+    template<typename Callable>
+    void fence(Callable callable) {
+        assert(fenceHelperStorage() == nullptr);
+        FenceHelper fenceHelper;
+        fenceHelperStorage() = &fenceHelper;
+        struct s {
+            AThreadPool& th;
+            s(AThreadPool& th) : th(th) {}
+
+            ~s() {
+                th.fenceHelperStorage() = nullptr;
+            }
+        } s(*this);
+
+        std::unique_lock l(fenceHelper.mutex);
+        callable();
+        if (fenceHelper.enqueuedTasks == 0)
+            return;
+        fenceHelper.waitingForNotify = true;
+        do {
+            fenceHelper.cv.wait(l);
+        } while (fenceHelper.doneTasks != fenceHelper.enqueuedTasks);
+    }
 
 	template <typename Callable>
 	typename aui::detail::future_helper<std::invoke_result_t<Callable>>::return_type operator<<(Callable fun)
@@ -78,7 +122,7 @@ public:
 			return AFuture<std::invoke_result_t<Callable>>::make(*this, fun);
 		}
 	}
-	template <typename Callable>
+    template <typename Callable>
 	inline auto operator*(Callable fun)
 	{
 		return *this << fun;

@@ -1,4 +1,6 @@
 ﻿#include "AThreadPool.h"
+#include <glm/glm.hpp>
+
 AThreadPool::Worker::Worker(AThreadPool& tp) :
 	mThread(_new<AThread>([&]()
 {
@@ -18,6 +20,16 @@ bool AThreadPool::Worker::processQueue(Queue<std::function<void()>>& queue)
 		tpLock.unlock();
 		try {
 			func();
+            if (auto h = mTP.fenceHelperStorage()) {
+                if ((h->doneTasks += 1) == h->enqueuedTasks) {
+                    if (h->waitingForNotify) {
+                        std::unique_lock lock(h->mutex);
+                        if (h->waitingForNotify) {
+                            h->cv.notify_one();
+                        }
+                    }
+                }
+            }
 		}
 		catch (const AThread::AInterrupted&)
 		{
@@ -44,7 +56,9 @@ void AThreadPool::Worker::thread_fn() {
 			processQueue(mTP.mQueueLowest);
 		}
 		std::unique_lock<std::mutex> lck(mMutex);
+        mTP.mIdleWorkers += 1;
 		mTP.mCV.wait(lck);
+        mTP.mIdleWorkers -= 1;
 	}
 }
 
@@ -62,6 +76,9 @@ void AThreadPool::Worker::disable() {
 
 void AThreadPool::run(const std::function<void()>& fun, Priority priority) {
 	std::unique_lock lck(mQueueLock);
+	if (auto h = fenceHelperStorage()) {
+	    h->enqueuedTasks += 1;
+	}
 	switch (priority)
 	{
 	case PRIORITY_MEDIUM:
@@ -74,7 +91,9 @@ void AThreadPool::run(const std::function<void()>& fun, Priority priority) {
 		mQueueLowest.push(fun);
 		break;
 	}
-	mCV.notify_one();
+	if (mIdleWorkers > 0) {
+        mCV.notify_one();
+    }
 }
 
 void AThreadPool::clear()
@@ -121,7 +140,7 @@ AThreadPool::AThreadPool(size_t size) {
 }
 
 AThreadPool::AThreadPool() :
-	AThreadPool(std::thread::hardware_concurrency())
+	AThreadPool(glm::max(std::thread::hardware_concurrency() - 1, 1u))
 {
 }
 
@@ -139,3 +158,9 @@ size_t AThreadPool::getPendingTaskCount()
 {
 	return mQueueHighest.size() + mQueueLowest.size() + mQueueMedium.size();
 }
+
+AThreadPool::FenceHelper*& AThreadPool::fenceHelperStorage() {
+    static FenceHelper* helper = nullptr;
+    return helper;
+}
+

@@ -120,9 +120,6 @@ void ACursorSelectable::clearSelection() {
 
 
 void ACursorSelectable::drawSelectionRects() {
-    if (AInput::isKeyDown(AInput::LControl)) {
-        printf("");
-    }
     auto p = getMouseSelectionPadding();
 
     int absoluteBeginPos = mAbsoluteBegin;

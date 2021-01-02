@@ -88,9 +88,28 @@ int AProcess::getExitCode() {
 #include <sys/wait.h>
 #include <cassert>
 
-void AProcess::execute(const AString& command, const AString& args, const APath& workingDirectory) {
+int AProcess::execute(const AString& applicationFile, const AString& args, const APath& workingDirectory, bool waitForExit) {
+    assert(0);
+
+
+    return 0;
+}
+
+void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
     assert(0);
 }
 
+void AProcess::run() {
+    assert(0);
+}
+
+void AProcess::wait() {
+    assert(0);
+}
+
+int AProcess::getExitCode() {
+    assert(0);
+    return 0;
+}
 #endif
 
