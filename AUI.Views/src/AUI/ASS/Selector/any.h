@@ -7,7 +7,7 @@
 #include "Selector.h"
 #include <AUI/Util/kAUI.h>
 #include <AUI/View/AView.h>
-#include "AAssHelper.h"
+#include <AUI/ASS/AAssHelper.h>
 
 namespace ass {
 
