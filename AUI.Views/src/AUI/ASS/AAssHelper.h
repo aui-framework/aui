@@ -5,10 +5,31 @@
 #pragma once
 
 #include <AUI/Common/AObject.h>
+#include <AUI/Common/ASignal.h>
+#include <AUI/Common/AVector.h>
 
+class Rule;
+
+/**
+ * \brief И помни, ASS - это не жопа. ASS - это Aui Style Sheets
+ */
 class AAssHelper: public AObject {
+    friend class AView;
+
+private:
+    AVector<const Rule*> mPossiblyApplicableRules;
+
 public:
-    void invalidateAss();
+    void onInvalidateFullAss() {
+        emit invalidateFullAss();
+    }
+    void onInvalidateStateAss() {
+        emit invalidateStateAss();
+    }
+
+signals:
+    emits<> invalidateFullAss;
+    emits<> invalidateStateAss;
 };
 
 

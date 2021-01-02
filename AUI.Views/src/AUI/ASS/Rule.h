@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AUI/ASS/Declaration/Selector.h>
+#include <AUI/ASS/Selector/Selector.h>
 
 struct Rule {
 public:

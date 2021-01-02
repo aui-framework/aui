@@ -4,6 +4,7 @@
 
 #pragma once
 
+// Declarations
 #include "Declaration/Border.h"
 #include "Declaration/BorderRadius.h"
 #include "Declaration/BoxShadow.h"
@@ -14,3 +15,7 @@
 #include "Declaration/Margin.h"
 #include "Declaration/MinSize.h"
 #include "Declaration/TextAlign.h"
+
+// Selectors
+#include "Selector/Selector.h"
+#include "Selector/any.h"

@@ -43,9 +43,11 @@ AView::AView()
 
 void AView::redraw()
 {
+    /*
 	if (auto w = getWindow()) {
 		w->flagRedraw();
-	}
+	}*/
+    AWindow::current()->flagRedraw();
 }
 
 void AView::drawStencilMask()
@@ -675,11 +677,21 @@ void AView::recompileCSS()
     mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     mFontStyle = {AFontManager::inst().getDefault(), 12, false, TextAlign::LEFT, AColor(0, 0, 0, 1.f) };
     mBackgroundEffects.clear();
-    aui::zero(mAss);
 
     for (auto& r : AStylesheet::inst().getRules()) {
-        if (r.getSelector().isApplicable(this)) {
-            for (auto& d : r.getDeclarations()) {
+        if (r.getSelector().isPossiblyApplicable(this)) {
+            mAssHelper->mPossiblyApplicableRules << &r;
+            r.getSelector().setupConnections(this, mAssHelper);
+        }
+    }
+    updateAssState();
+}
+
+void AView::updateAssState() {
+    aui::zero(mAss);
+    for (auto& r : mAssHelper->mPossiblyApplicableRules) {
+        if (r->getSelector().isStateApplicable(this)) {
+            for (auto& d : r->getDeclarations()) {
                 auto slot = d->getDeclarationSlot();
                 if (slot != ass::decl::DeclarationSlot::NONE) {
                     mAss[int(slot)] = d;
@@ -688,7 +700,9 @@ void AView::recompileCSS()
             }
         }
     }
+    redraw();
 }
+
 /*
 void AView::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)
 {
@@ -758,46 +772,24 @@ const ADeque<AString>& AView::getCssNames() const
 void AView::addCssName(const AString& css)
 {
 	mCssNames << css;
-	//mCssHelper = nullptr;
+	mAssHelper = nullptr;
 }
 
 void AView::ensureCSSUpdated()
 {
-    /*
-	if (mCssHelper == nullptr)
+	if (mAssHelper == nullptr)
 	{
-		mCssHelper = _new<ACSSHelper>();
-		connect(customCssPropertyChanged, mCssHelper,
-			&ACSSHelper::onCheckPossiblyMatchCss);
-		connect(mCssHelper->invalidateViewCss, this, [&]()
+		mAssHelper = _new<AAssHelper>();
+		connect(customCssPropertyChanged, mAssHelper,
+                &AAssHelper::onInvalidateStateAss);
+		connect(mAssHelper->invalidateFullAss, this, [&]()
 		{
-			mCssHelper = nullptr;
+			mAssHelper = nullptr;
 		});
-
-		connect(AWindow::current()->dpiChanged, this, [&]()
-		{
-			mCssHelper = nullptr;
-		});
-		connect(mCssHelper->checkPossiblyMatchCss, this, &AView::recompileCSS);
-		connect(mCssHelper->checkPossiblyMatchCss, this, &AView::redraw);
-		mCssEntries.clear();
-
-		for (auto& entry : Stylesheet::inst().getEntries())
-		{
-			switch (entry->selectorMatches(this))
-			{
-			case Stylesheet::Entry::M_MATCH:
-				mCssEntries << entry;
-				break;
-			case Stylesheet::Entry::M_POSSIBLY_MATCH:
-				mCssPossibleEntries << entry;
-				break;
-			}
-		}
+		connect(mAssHelper->invalidateStateAss, me::updateAssState);
 
 		recompileCSS();
-	}*/
-    recompileCSS();
+	}
 }
 
 void AView::onMouseEnter()
@@ -1028,6 +1020,6 @@ AView::Visibility AView::getVisibilityRecursive() const {
 }
 
 void AView::onDpiChanged() {
-    recompileCSS();
+    mAssHelper = nullptr;
 }
 

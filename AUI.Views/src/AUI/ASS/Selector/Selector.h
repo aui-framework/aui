@@ -5,36 +5,20 @@
 #pragma once
 
 #include <AUI/Common/AVector.h>
+#include <AUI/ASS/AAssHelper.h>
+#include <AUI/Util/kAUI.h>
 #include <utility>
 
 class AView;
 
+
 namespace ass {
+
     class ISubSelector {
     public:
-        virtual bool isApplicable(AView* view) = 0;
-    };
-
-    template<typename T>
-    class any: public ISubSelector {
-    public:
-        bool isApplicable(AView* view) override {
-            return dynamic_cast<T*>(view) != nullptr;
-        }
-
-        struct hover: public ISubSelector {
-            bool isApplicable(AView* view) override {
-                return dynamic_cast<T*>(view) != nullptr;
-            }
-        };
-    };
-
-    template<>
-    class any<AView>: public ISubSelector {
-    public:
-        bool isApplicable(AView* view) override {
-            return true;
-        }
+        virtual bool isPossiblyApplicable(AView* view) = 0;
+        virtual bool isStateApplicable(AView* view);
+        virtual void setupConnections(AView* view, const _<AAssHelper>& helper);
     };
 
     class ASelector {
@@ -60,13 +44,28 @@ namespace ass {
         ASelector(SubSelectors&&... subSelectors) {
             processSubSelectors(std::forward<SubSelectors>(subSelectors)...);
         }
-        bool isApplicable(AView* view) const {
+        bool isPossiblyApplicable(AView* view) const {
             for (auto& s : mSubSelectors) {
-                if (s->isApplicable(view))
+                if (s->isPossiblyApplicable(view))
                     return true;
             }
             return false;
         }
+        bool isStateApplicable(AView* view) const {
+            for (auto& s : mSubSelectors) {
+                if (s->isStateApplicable(view))
+                    return true;
+            }
+            return false;
+        }
+        void setupConnections(AView* view, const _<AAssHelper>& helper) const {
+            for (auto& s : mSubSelectors) {
+                if (s->isPossiblyApplicable(view)) {
+                    s->setupConnections(view, helper);
+                }
+            }
+        }
+
     };
 
     using sel = ASelector;

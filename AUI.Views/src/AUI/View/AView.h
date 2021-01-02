@@ -17,6 +17,7 @@
 #include <chrono>
 #include <functional>
 #include <array>
+#include <AUI/ASS/AAssHelper.h>
 
 class Render;
 class AWindow;
@@ -82,9 +83,13 @@ private:
 	 */
 	Visibility mVisibility = V_VISIBLE;
 
+    /**
+     * \brief Вспомогательный объект для обработки обновления стилей ASS при изменении состояния (hover, active и т.д.)
+     */
+    _<AAssHelper> mAssHelper;
+
 	/**
-	 * \brief Список отрисовки, или запекание команд отрисовки,
-	 *        чтобы каждый раз не парсить CSS.
+	 * \brief Список отрисовки, или запекание команд отрисовки, чтобы каждый раз не парсить ASS.
 	 */
 	std::array<ass::decl::IDeclarationBase*, int(ass::decl::DeclarationSlot::COUNT)> mAss;
 
@@ -206,6 +211,11 @@ protected:
 	 *		  стилей.
 	 */
 	virtual void recompileCSS();
+
+	/**
+	 * \brief Обновить state-селекторы для Aui Style Sheets
+	 */
+	void updateAssState();
 
 
 public:

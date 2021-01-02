@@ -37,7 +37,7 @@
   *}
  * </code>
  */
-#define slot(v) v, &decltype(v)::stored_t
+#define slot(v) v, &std::decay_t<decltype(v)>::stored_t
 
 /**
  * \brief Выполнить несколько операций над одним объектом, не повторяя его имени.
