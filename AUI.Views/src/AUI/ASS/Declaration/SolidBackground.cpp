@@ -26,3 +26,4 @@ void ass::decl::Declaration<ass::SolidBackground>::renderFor(AView* view) {
 ass::decl::DeclarationSlot ass::decl::Declaration<ass::SolidBackground>::getDeclarationSlot() const {
     return ass::decl::DeclarationSlot::BACKGROUND_SOLID;
 }
+

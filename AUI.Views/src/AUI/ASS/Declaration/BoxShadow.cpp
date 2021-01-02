@@ -18,3 +18,7 @@ void ass::decl::Declaration<ass::BoxShadow>::renderFor(AView* view) {
 ass::decl::DeclarationSlot ass::decl::Declaration<ass::BoxShadow>::getDeclarationSlot() const {
     return ass::decl::DeclarationSlot::SHADOW;
 }
+
+bool ass::decl::Declaration<ass::BoxShadow>::isNone() {
+    return mInfo.color.isFullyTransparent();
+}

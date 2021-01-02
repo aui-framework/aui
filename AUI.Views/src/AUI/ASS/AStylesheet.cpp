@@ -42,6 +42,12 @@ AStylesheet::AStylesheet() {
         {
             any<AButton>::hover(),
             Border {1_dp, 0xff000000_argb}
+        },
+        {
+            any<AButton>::active(),
+            SolidBackground {0xfffafafa_argb},
+            Padding {5_dp, 8_dp, 3_dp},
+            BoxShadow {nullptr},
         }
     });
 }

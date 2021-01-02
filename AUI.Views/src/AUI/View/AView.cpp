@@ -694,7 +694,7 @@ void AView::updateAssState() {
             for (auto& d : r->getDeclarations()) {
                 auto slot = d->getDeclarationSlot();
                 if (slot != ass::decl::DeclarationSlot::NONE) {
-                    mAss[int(slot)] = d;
+                    mAss[int(slot)] = d->isNone() ? nullptr : d;
                 }
                 d->applyFor(this);
             }

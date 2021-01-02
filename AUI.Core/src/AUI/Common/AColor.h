@@ -60,6 +60,10 @@ public:
     inline AColor lighter(float d) {
         return mul(1.f + d);
     }
+
+    bool isFullyTransparent() const {
+        return a < 0.001f;
+    }
 };
 
 

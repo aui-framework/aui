@@ -35,6 +35,8 @@ namespace ass {
             offsetY(offsetY),
             blurRadius(blurRadius),
             color(color) {}
+
+        BoxShadow(std::nullptr_t): color(0.f) {}
     };
 
     namespace decl {
@@ -49,6 +51,8 @@ namespace ass {
             }
 
             void renderFor(AView* view) override;
+
+            bool isNone() override;
 
             DeclarationSlot getDeclarationSlot() const override;
         };
