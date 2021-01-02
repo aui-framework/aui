@@ -9,7 +9,7 @@
 
 namespace ass {
     template<typename WrappedType>
-    struct AttributeHelper: ISubSelector {
+    struct AttributeHelper: virtual ISubSelector {
     public:
         ISubSelector* operator[](const AString& attributeName);
     };

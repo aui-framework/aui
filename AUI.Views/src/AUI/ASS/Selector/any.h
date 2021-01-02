@@ -9,13 +9,27 @@
 #include <AUI/View/AView.h>
 #include <AUI/ASS/AAssHelper.h>
 
+#include "hovered.h"
+#include "active.h"
+
 namespace ass {
 
+    namespace detail {
+        template<typename T>
+        struct Type : virtual ISubSelector {
+        public:
+            bool isPossiblyApplicable(AView* view) override {
+                return dynamic_cast<T*>(view) != nullptr;
+            }
+
+        };
+    }
+
     template<typename T>
-    struct any: AttributeHelper<any<T>> {
+    struct any: detail::Type<T>, AttributeHelper<any<T>> {
     public:
-        bool isPossiblyApplicable(AView* view) override {
-            return dynamic_cast<T*>(view) != nullptr;
-        }
+
+        using hover = ass::hovered<detail::Type<T>>;
+        using active = ass::active<detail::Type<T>>;
     };
 }

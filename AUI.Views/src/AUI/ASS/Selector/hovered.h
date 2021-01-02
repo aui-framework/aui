@@ -7,17 +7,15 @@
 #include "attribute.h"
 
 namespace ass {
-    template<typename T>
-    struct hovered: AttributeHelper<hovered<T>> {
-        bool isPossiblyApplicable(AView* view) override {
-            return dynamic_cast<T*>(view) != nullptr;
-        }
+    template<typename Base>
+    struct hovered: Base, AttributeHelper<hovered<Base>> {
 
         bool isStateApplicable(AView* view) override {
-            return view->isMouseHover();
+            return Base::isStateApplicable(view) && view->isMouseHover();
         }
 
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+            Base::setupConnections(view, helper);
             view->hoveredState.clearAllConnectionsWith(helper.get());
             AObject::connect(view->hoveredState, slot(helper)::onInvalidateStateAss);
         }
