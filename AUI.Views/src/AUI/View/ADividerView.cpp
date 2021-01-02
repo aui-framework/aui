@@ -5,7 +5,7 @@
 #include "ADividerView.h"
 
 ADividerView::ADividerView() {
-    AVIEW_CSS;
+
 }
 
 bool ADividerView::consumesClick(const glm::ivec2& pos) {

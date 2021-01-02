@@ -14,6 +14,7 @@ AStylesheet::AStylesheet() {
     using namespace ass;
     
     addRules({
+        // COMMON VIEWS ======================================
         {
             any<AView>(),
             FontSize {9_pt},
@@ -85,6 +86,13 @@ AStylesheet::AStylesheet() {
             Border {1_dp, 0xbfbfbf_rgb },
             TextColor { 0x838383_rgb }
         },
+
+        // CUSTOM VIEWS ===================================================
+        {
+            class_of(".window-title"),
+            SolidBackground { getOsThemeColor() },
+            FixedSize { .height = 30_dp }
+        }
     });
 }
 

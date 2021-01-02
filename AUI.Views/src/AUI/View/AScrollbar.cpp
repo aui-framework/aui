@@ -9,13 +9,13 @@
 class AScrollbarButton: public AView {
 public:
     AScrollbarButton() {
-        AVIEW_CSS;
+
     }
 };
 class AScrollbarHandle: public AView {
 public:
     AScrollbarHandle() {
-        AVIEW_CSS;
+
     }
 
     int getMinimumWidth() override {
@@ -42,7 +42,7 @@ public:
 };
 
 AScrollbar::AScrollbar(LayoutDirection direction) : mDirection(direction) {
-    AVIEW_CSS;
+
     mForwardButton = _new<AScrollbarButton>();
     mBackwardButton = _new<AScrollbarButton>();
 

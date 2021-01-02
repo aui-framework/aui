@@ -15,13 +15,13 @@ void ALabel::updateMultiline()
 
 ALabel::ALabel()
 {
-	AVIEW_CSS;
+
 }
 
 ALabel::ALabel(const AString& text):
 	mText(text)
 {
-	AVIEW_CSS;
+
 }
 
 void ALabel::render()

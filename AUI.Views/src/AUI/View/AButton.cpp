@@ -3,12 +3,12 @@
 
 AButton::AButton()
 {
-	AVIEW_CSS;
+
 }
 
 AButton::AButton(const AString& text): ALabel(text)
 {
-	AVIEW_CSS;
+
 }
 
 void AButton::setDefault()

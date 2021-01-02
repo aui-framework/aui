@@ -6,7 +6,7 @@
 #include <AUI/Render/Render.h>
 
 ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable), mColorOverlay(1.f) {
-    AVIEW_CSS;
+
 }
 
 void ADrawableView::render() {

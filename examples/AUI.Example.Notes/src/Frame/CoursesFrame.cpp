@@ -17,7 +17,7 @@
 
 
 CoursesFrame::CoursesFrame() {
-    AVIEW_CSS;
+
     setLayout(_new<AVerticalLayout>());
     setExpanding({1, 1});
 

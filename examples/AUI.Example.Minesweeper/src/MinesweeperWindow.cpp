@@ -16,7 +16,7 @@
 
 MinesweeperWindow::MinesweeperWindow(): CustomCaptionWindow(u8"Сапёр", 1000, 1000)
 {
-	AVIEW_CSS;
+
 
 	auto toolbox = _new<AViewContainer>();
 	toolbox->addCssName(".grid");

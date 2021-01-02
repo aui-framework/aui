@@ -6,7 +6,7 @@
 CellView::CellView(FieldCell& cell)
 	: mCell(cell), mCellValueCopy(cell)
 {
-	AVIEW_CSS;
+
 	
 	connect(clickedButton, this, [&]()
 	{

@@ -11,7 +11,7 @@ private:
 
 public:
     ATabButtonView(const AString& text): ALabel(text) {
-        AVIEW_CSS;
+
     }
 
     void getCustomCssAttributes(AMap<AString, AVariant>& map) override {

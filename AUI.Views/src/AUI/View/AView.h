@@ -584,5 +584,3 @@ private:
 	Watchable<bool> mEnabled = Watchable<bool>(enabledState, enabled, disabled, true);
 	Watchable<bool> mHasFocus = Watchable<bool>(focusState, focusAcquired, focusLost, false);
 };
-
-#define AVIEW_CSS addCssName(AClass<decltype(*this)>::name())

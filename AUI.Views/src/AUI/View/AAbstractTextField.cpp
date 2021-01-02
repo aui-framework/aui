@@ -53,7 +53,7 @@ AAbstractTextField::AAbstractTextField()
 			redraw();
 		}
 	});
-	AVIEW_CSS;
+
 }
 
 void AAbstractTextField::onFocusAcquired() {

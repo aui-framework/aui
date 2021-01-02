@@ -18,7 +18,7 @@ public:
     explicit AComboBoxWindow(const _<IListModel<AString>>& model):
         AWindow("COMBOBOX", 854, 500, AWindow::current())
     {
-        AVIEW_CSS;
+
         setWindowStyle(WS_SYS);
         setLayout(_new<AVerticalLayout>());
         addView(mListView = _new<AListView>(model) let (AListView, {
@@ -36,7 +36,7 @@ AComboBox::AComboBox(const _<IListModel<AString>>& model):
 }
 
 AComboBox::AComboBox() {
-    AVIEW_CSS;
+
 }
 
 void AComboBox::setModel(const _<IListModel<AString>>& model) {

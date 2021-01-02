@@ -390,7 +390,7 @@ void AWindow::doDrawWindow() {
 AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) :
         mWindowTitle(name),
         mParentWindow(parent) {
-    AVIEW_CSS;
+
 
     currentWindowStorage() = this;
 

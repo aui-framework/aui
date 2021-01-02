@@ -47,7 +47,7 @@ void ANumberPicker::ANumberPickerField::onKeyRepeat(AInput::Key key) {
 
 ANumberPicker::ANumberPicker()
 {
-	AVIEW_CSS;
+
 	
 	setLayout(_new<AHorizontalLayout>());
 	addView(mTextField = _new<ANumberPickerField>(*this));

@@ -6,7 +6,7 @@ class ARadioButtonInner: public AView
 public:
     ARadioButtonInner()
     {
-        AVIEW_CSS;
+
     }
     virtual ~ARadioButtonInner() = default;
 
@@ -19,7 +19,7 @@ public:
 
 ARadioButton::ARadioButton()
 {
-    AVIEW_CSS;
+
 
     setLayout(_new<AHorizontalLayout>());
 

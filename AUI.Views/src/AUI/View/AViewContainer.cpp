@@ -55,7 +55,7 @@ void AViewContainer::userProcessStyleSheet(
 
 AViewContainer::AViewContainer()
 {
-	AVIEW_CSS;
+
 }
 
 AViewContainer::~AViewContainer()

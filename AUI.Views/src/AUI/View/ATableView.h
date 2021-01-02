@@ -11,13 +11,13 @@ private:
 public:
 	ATableView(const _<ITableModel>& model)
 	{
-		AVIEW_CSS;
+
 		setModel(model);
 	}
 	
 	ATableView()
 	{
-		AVIEW_CSS;
+
 	}
 
 	~ATableView() override;

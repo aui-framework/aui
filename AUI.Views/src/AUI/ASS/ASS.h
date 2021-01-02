@@ -8,6 +8,7 @@
 #include "Declaration/Border.h"
 #include "Declaration/BorderRadius.h"
 #include "Declaration/BoxShadow.h"
+#include "Declaration/FixedSize.h"
 #include "Declaration/SolidBackground.h"
 #include "Declaration/GradientBackground.h"
 #include "Declaration/FontSize.h"
@@ -24,3 +25,4 @@
 #include "Selector/attribute.h"
 #include "Selector/active.h"
 #include "Selector/hovered.h"
+#include "Selector/class_of.h"

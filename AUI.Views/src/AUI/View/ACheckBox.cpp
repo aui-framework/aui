@@ -6,7 +6,7 @@ class ACheckBoxInner: public AView
 public:
 	ACheckBoxInner()
 	{
-		AVIEW_CSS;
+
 	}
 	virtual ~ACheckBoxInner() = default;
 
@@ -23,7 +23,7 @@ public:
 
 ACheckBox::ACheckBox()
 {
-	AVIEW_CSS;
+
 	
 	setLayout(_new<AHorizontalLayout>());
 	

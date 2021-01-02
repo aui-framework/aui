@@ -5,7 +5,7 @@
 #include "AVDividerView.h"
 
 AVDividerView::AVDividerView() {
-    AVIEW_CSS;
+
     setExpanding({0, 1});
 }
 

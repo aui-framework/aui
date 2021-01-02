@@ -137,7 +137,7 @@ void ACustomWindow::doDrawWindow()
 
 ACustomWindow::ACustomWindow(const AString& name, int width, int height): AWindow(name, width, height)
 {
-    AVIEW_CSS;
+
 
     const MARGINS shadow = { 1, 1, 1, 1 };
     DwmExtendFrameIntoClientArea((HWND)getNativeHandle(), &shadow);
@@ -187,7 +187,7 @@ extern Display* gDisplay;
 
 ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
         AWindow(name, width, height) {
-    AVIEW_CSS;
+
 
     setWindowStyle(WS_NO_DECORATORS);
 }

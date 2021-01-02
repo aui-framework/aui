@@ -13,7 +13,7 @@ private:
 public:
 	AListItem()
 	{
-		AVIEW_CSS;
+
 	}
 
 	AListItem(const AString& text)
@@ -70,7 +70,7 @@ AListView::~AListView()
 }
 
 AListView::AListView(const _<IListModel<AString>>& model) {
-    AVIEW_CSS;
+
     setModel(model);
 }
 

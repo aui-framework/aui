@@ -9,7 +9,7 @@ APageSwitch::APageSwitch(const AString& text, unsigned pageNumber, const _<APage
     mPageNumber(pageNumber),
     mPageView(pageView)
 {
-    AVIEW_CSS;
+
     connect(pageView->pageChanged, this, [&]() {
         emit customCssPropertyChanged();
     });

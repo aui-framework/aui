@@ -37,7 +37,7 @@ AWindow* AView::getWindow()
 
 AView::AView()
 {
-	AVIEW_CSS;
+
 	aui::zero(mAss);
 }
 
@@ -972,14 +972,7 @@ bool AView::consumesClick(const glm::ivec2& pos) {
 }
 
 void AView::setCss(const AString& cssCode) {
-    /*
-    if (cssCode.empty()) {
-        mCustomStylesheet = nullptr;
-    } else {
-        mCustomStylesheet = std::make_unique<Stylesheet::Cache>();
-        mCustomStylesheet->load(Stylesheet::inst(), _new<StringStream>(cssCode), true);
-    }*/
-    recompileCSS();
+
 }
 
 _<AView> AView::determineSharedPointer() {
