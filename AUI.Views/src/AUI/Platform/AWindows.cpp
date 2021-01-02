@@ -1355,7 +1355,11 @@ void AWindow::setIcon(const AImage& image) {
 }
 
 void AWindow::hide() {
+#ifdef _WIN32
     ShowWindow(mHandle, SW_HIDE);
+#else
+    XUnmapWindow(gDisplay, mHandle);
+#endif
 }
 
 void AWindow::focusNextView() {
