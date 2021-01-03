@@ -18,6 +18,7 @@
 #include <functional>
 #include <array>
 #include <AUI/ASS/AAssHelper.h>
+#include <AUI/ASS/RuleWithoutSelector.h>
 
 class Render;
 class AWindow;
@@ -92,6 +93,11 @@ private:
 	 * \brief Список отрисовки, или запекание команд отрисовки, чтобы каждый раз не парсить ASS.
 	 */
 	std::array<ass::decl::IDeclarationBase*, int(ass::decl::DeclarationSlot::COUNT)> mAss;
+
+	/**
+	 * \brief Custom ASS Rule
+	 */
+    RuleWithoutSelector mCustomAssRule;
 
 	/**
 	 * \brief Эффекты фона
@@ -497,8 +503,8 @@ public:
 	    return *this;
 	}
 
-	void setCss(const AString& cssCode);
-    void ensureCSSUpdated();
+	void setCustomAss(const RuleWithoutSelector& rule);
+    void ensureAssUpdated();
 
     /**
      * \brief Попробовать определить std::shared_ptr для этого объекта.

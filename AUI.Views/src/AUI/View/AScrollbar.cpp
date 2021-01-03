@@ -3,6 +3,7 @@
 //
 
 #include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/ASS/ASS.h>
 #include "AScrollbar.h"
 #include "ASpacer.h"
 
@@ -49,21 +50,34 @@ AScrollbar::AScrollbar(LayoutDirection direction) : mDirection(direction) {
     switch (direction) {
         case LayoutDirection::HORIZONTAL:
             setLayout(_new<AHorizontalLayout>());
-            mForwardButton->setCss("background: url(':win/svg/sb-right.svg');"
-                                  "width: 17em;"
-                                  "height: 15em;");
-            mBackwardButton->setCss("background: url(':win/svg/sb-left.svg');"
-                                   "width: 17em;"
-                                   "height: 15em;");
+
+            mForwardButton->setCustomAss({
+                ass::BackgroundUrl {
+                    ":win/svg/sb-right.svg"
+                },
+                ass::FixedSize { 17_dp, 15_dp }
+            });
+            mBackwardButton->setCustomAss({
+                ass::BackgroundUrl {
+                    ":win/svg/sb-left.svg"
+                },
+                ass::FixedSize { 17_dp, 15_dp }
+            });
             break;
         case LayoutDirection::VERTICAL:
             setLayout(_new<AVerticalLayout>());
-            mForwardButton->setCss("background: url(':win/svg/sb-down.svg');"
-                                  "width: 15em;"
-                                  "height: 17em;");
-            mBackwardButton->setCss("background: url(':win/svg/sb-top.svg');"
-                                   "width: 15em;"
-                                   "height: 17em;");
+            mForwardButton->setCustomAss({
+                 ass::BackgroundUrl {
+                         ":win/svg/sb-down.svg"
+                 },
+                 ass::FixedSize { 15_dp, 17_dp }
+            });
+            mBackwardButton->setCustomAss({
+                 ass::BackgroundUrl {
+                         ":win/svg/sb-top.svg"
+                 },
+                 ass::FixedSize { 15_dp, 17_dp }
+            });
             break;
     }
     mHandle = _new<AScrollbarHandle>();

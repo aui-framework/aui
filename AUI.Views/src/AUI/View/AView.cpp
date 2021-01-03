@@ -92,7 +92,7 @@ void AView::render()
         mAnimator->animate(this);
 
 	{
-		ensureCSSUpdated();
+        ensureAssUpdated();
 
         for (auto& e : mBackgroundEffects)
         {
@@ -689,17 +689,24 @@ void AView::recompileCSS()
 
 void AView::updateAssState() {
     aui::zero(mAss);
+
+    auto applyRule = [&](const RuleWithoutSelector& r) {
+        for (auto& d : r.getDeclarations()) {
+            auto slot = d->getDeclarationSlot();
+            if (slot != ass::decl::DeclarationSlot::NONE) {
+                mAss[int(slot)] = d->isNone() ? nullptr : d;
+            }
+            d->applyFor(this);
+        }
+    };
+
     for (auto& r : mAssHelper->mPossiblyApplicableRules) {
         if (r->getSelector().isStateApplicable(this)) {
-            for (auto& d : r->getDeclarations()) {
-                auto slot = d->getDeclarationSlot();
-                if (slot != ass::decl::DeclarationSlot::NONE) {
-                    mAss[int(slot)] = d->isNone() ? nullptr : d;
-                }
-                d->applyFor(this);
-            }
+            applyRule(* r);
         }
     }
+    applyRule(mCustomAssRule);
+
     redraw();
 }
 
@@ -736,13 +743,13 @@ bool AView::hasFocus() const
 
 int AView::getMinimumWidth()
 {
-	ensureCSSUpdated();
+    ensureAssUpdated();
 	return (mFixedSize.x == 0 ? ((glm::max)(getContentMinimumWidth(), mMinSize.x) + mPadding.horizontal()) : mFixedSize.x);
 }
 
 int AView::getMinimumHeight()
 {
-	ensureCSSUpdated();
+    ensureAssUpdated();
 	return (mFixedSize.y == 0 ? ((glm::max)(getContentMinimumHeight(), mMinSize.y) + mPadding.vertical()) : mFixedSize.y);
 }
 
@@ -775,7 +782,7 @@ void AView::addCssName(const AString& css)
 	mAssHelper = nullptr;
 }
 
-void AView::ensureCSSUpdated()
+void AView::ensureAssUpdated()
 {
 	if (mAssHelper == nullptr)
 	{
@@ -971,8 +978,8 @@ bool AView::consumesClick(const glm::ivec2& pos) {
     return true;
 }
 
-void AView::setCss(const AString& cssCode) {
-
+void AView::setCustomAss(const RuleWithoutSelector& rule) {
+    mCustomAssRule = rule;
 }
 
 _<AView> AView::determineSharedPointer() {

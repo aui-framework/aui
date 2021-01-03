@@ -21,7 +21,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height)
 
 	for (auto& view : mViews)
 	{
-        view->ensureCSSUpdated();
+        view->ensureAssUpdated();
 		int e = view->getExpandingVertical();
 		int minSpace = view->getMinimumHeight();
 		sum += e;

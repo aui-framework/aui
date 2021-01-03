@@ -2,17 +2,13 @@
 
 #include <AUI/ASS/Selector/Selector.h>
 
-struct Rule {
+
+struct Rule: RuleWithoutSelector {
 public:
     template<typename... Declarations>
     Rule(ass::ASelector&& selector, Declarations&&... declarations):
-            mSelector(std::forward<ass::ASelector>(selector))
-        {
-        processDeclarations(std::forward<Declarations>(declarations)...);
-    }
-
-    [[nodiscard]] const AVector<ass::decl::IDeclarationBase*>& getDeclarations() const {
-        return mDeclarations;
+            RuleWithoutSelector(std::forward<Declarations>(declarations)...),
+            mSelector(std::forward<ass::ASelector>(selector)) {
     }
 
     [[nodiscard]] const ass::ASelector& getSelector() const {
@@ -20,19 +16,5 @@ public:
     }
 
 private:
-    template<typename Declaration, typename... Declarations>
-    void processDeclarations(Declaration&& declaration, Declarations&&... declarations) {
-        processDeclaration(std::forward<Declaration>(declaration));
-        if constexpr (sizeof...(Declarations) > 0) {
-            processDeclarations(std::forward<Declarations>(declarations)...);
-        }
-    }
-
-    template<typename T>
-    void processDeclaration(T&& t) {
-        mDeclarations.emplace_back(new ass::decl::Declaration<T>(t));
-    }
-
     ass::ASelector mSelector;
-    AVector<ass::decl::IDeclarationBase*> mDeclarations;
 };

@@ -40,7 +40,7 @@ AStylesheet::AStylesheet() {
             MinSize {60_dp, 14_dp},
             BorderRadius {4_dp},
             TextAlign::CENTER,
-            BoxShadow {{}, 1_dp, 5_dp, -2_dp, 0x80000000_argb},
+            BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},
         },
         {
             any<AButton>::hover(),
@@ -52,10 +52,10 @@ AStylesheet::AStylesheet() {
         },
         {
             any<AButton>()["default"],
-                FontRendering::ANTIALIASING,
-                BackgroundGradient {getOsThemeColor().lighter(0.15f),
-                                    getOsThemeColor().darker(0.15f),
-                                    LayoutDirection::VERTICAL },
+            FontRendering::ANTIALIASING,
+            BackgroundGradient {getOsThemeColor().lighter(0.15f),
+                                getOsThemeColor().darker(0.15f),
+                                LayoutDirection::VERTICAL },
             BoxShadow { {}, 1_dp, 3_dp, -1_dp, getOsThemeColor() },
             Border { nullptr },
             TextColor { 0xffffff_rgb },

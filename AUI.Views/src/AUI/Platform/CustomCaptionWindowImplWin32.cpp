@@ -5,6 +5,7 @@
 #include "CustomCaptionWindowImplWin32.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Common/Plugin.h>
+#include <AUI/ASS/Declaration/BackgroundUrl.h>
 
 void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool stacked, AViewContainer* to) {
     auto caption = _new<AViewContainer>();
@@ -58,8 +59,12 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
 
 void CustomCaptionWindowImplWin32::updateMiddleButtonIcon() {
     if (isCustomCaptionMaximized()) {
-        mMiddleButton->setCss("background: url(':win/caption/restore.svg')");
+        mMiddleButton->setCustomAss({
+            ass::BackgroundUrl { ":win/caption/restore.svg" }
+        });
     } else {
-        mMiddleButton->setCss("background: url(':win/caption/maximize.svg')");
+        mMiddleButton->setCustomAss({
+            ass::BackgroundUrl { ":win/caption/maximize.svg" }
+        });
     }
 }

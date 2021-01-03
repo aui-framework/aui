@@ -5,7 +5,7 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
 {
 	for (auto& v : mViews)
 	{
-	    v->ensureCSSUpdated();
+	    v->ensureAssUpdated();
 		int finalX, finalY, finalWidth, finalHeight;
 		if (v->getExpandingHorizontal() == 0)
 		{

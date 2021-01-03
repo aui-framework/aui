@@ -96,7 +96,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
 
     // подготовка
     for (auto& v : mCells) {
-        v.view->ensureCSSUpdated();
+        v.view->ensureAssUpdated();
         glm::ivec2 e = {v.view->getExpandingHorizontal(), v.view->getExpandingVertical()};
         glm::ivec2 m = {v.view->getMinimumWidth(), v.view->getMinimumHeight()};
         glm::ivec2 minSpace = m + glm::ivec2{v.view->getMargin().horizontal(), v.view->getMargin().vertical()};
