@@ -12,6 +12,7 @@
 
 #include "hovered.h"
 #include "active.h"
+#include "focus.h"
 
 namespace ass {
 
@@ -42,5 +43,6 @@ namespace ass {
 
         using hover = ass::hovered<detail::ClassOf>;
         using active = ass::active<detail::ClassOf>;
+        using focus = ass::focus<detail::ClassOf>;
     };
 }

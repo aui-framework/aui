@@ -274,6 +274,10 @@ public:
 	{
 		return mOverflow;
 	}
+    void setOverflow(Overflow overflow)
+	{
+		mOverflow = overflow;
+	}
 
 	float getBorderRadius() const {
 	    return mBorderRadius;
@@ -373,6 +377,10 @@ public:
 	ACursor getCursor() const
 	{
 		return mCursor;
+	}
+	void setCursor(ACursor cursor)
+	{
+		mCursor = cursor;
 	}
 
 	/**

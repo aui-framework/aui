@@ -4,6 +4,7 @@
 
 #include <AUI/View/AButton.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/View/AAbstractTextField.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 #ifdef _WIN32
@@ -15,15 +16,20 @@ AStylesheet::AStylesheet() {
     
     addRules({
         // COMMON VIEWS ======================================
+        // AView
         {
             any<AView>(),
             FontSize {9_pt},
             FontRendering::SUBPIXEL,
         },
+
+        // AWindow
         {
             any<AWindow>(),
             BackgroundSolid {0xf0f0f0_rgb},
         },
+
+        // ALabel
         {
             any<ALabel>(),
             Padding {1_dp, {}, 2_dp},
@@ -32,6 +38,8 @@ AStylesheet::AStylesheet() {
             any<ALabel>(),
             Margin {2_dp, 4_dp},
         },
+
+        // AButton
         {
             any<AButton>(),
             BackgroundSolid {0xffffff_rgb},
@@ -87,6 +95,31 @@ AStylesheet::AStylesheet() {
             TextColor { 0x838383_rgb }
         },
 
+        // Text fields
+        {
+            any<AAbstractTextField>(),
+            Padding { 3_dp, 6_dp },
+            ACursor::TEXT,
+        },
+        {
+            class_of(".input-field"),
+            TextColor { 0_rgb },
+            BackgroundSolid { 0xffffff_rgb },
+            Border { 1_dp, 0xa0a0a0_rgb },
+            BorderRadius { 4_dp },
+            Margin { 2_dp, 4_dp },
+            MinSize { 100_dp, 17_dp },
+            AView::OF_HIDDEN
+        },
+        {
+            class_of::hover(".input-field"),
+            Border { 1_dp, 0x404040_rgb },
+        },
+        {
+            class_of::focus(".input-field"),
+            Border { 1_dp, getOsThemeColor() },
+        },
+
         // CUSTOM WINDOWS ===================================================
         {
             class_of(".window-title"),
@@ -133,6 +166,14 @@ AStylesheet::AStylesheet() {
             class_of(".window-title") >> class_of::active(".close"),
             BackgroundSolid { 0x80e81123_argb }
         },
+        {
+            class_of(".window-content"),
+            BackgroundSolid { 0xffffff_rgb },
+            MinSize {
+                .width = 200_dp
+            },
+            Padding { 4_dp, 3_dp },
+        },
     });
 }
 
@@ -160,6 +201,6 @@ AColor AStylesheet::getOsThemeColor() {
 
     return osThemeColor;
 #else
-    return 0xff2147_rgb;
+    return 0x3e3e3e_rgb;
 #endif
 }
