@@ -31,27 +31,6 @@ void AViewContainer::drawView(const _<AView>& view)
 }
 
 
-/*
-void AViewContainer::userProcessStyleSheet(
-	const std::function<void(css, const std::function<void(property)>&)>& processor)
-{
-	processor(css::T_AUI_SPACING, [&](property p)
-	{
-		if (p->getArgs().size() == 1) {
-			mLayout->setSpacing(AMetric(p->getArgs()[0]).getValuePx());
-		}
-	});
-
-	mHasBackground = false;
-	auto bg = [&](property p)
-	{
-		if (p->getArgs().size() > 0 && p->getArgs()[0] != "none") {
-			mHasBackground = true;
-		}
-	};
-	processor(css::T_BACKGROUND, bg);
-	processor(css::T_BACKGROUND_COLOR, bg);
-}*/
 
 AViewContainer::AViewContainer()
 {
@@ -172,7 +151,8 @@ void AViewContainer::onMouseWheel(glm::ivec2 pos, int delta) {
 }
 
 bool AViewContainer::consumesClick(const glm::ivec2& pos) {
-	if (mHasBackground)
+    // has layout check
+	if (mAss[int(ass::decl::DeclarationSlot::BACKGROUND_SOLID)] || mAss[int(ass::decl::DeclarationSlot::BACKGROUND_IMAGE)])
 		return true;
     auto p = getViewAt(pos);
     if (p)

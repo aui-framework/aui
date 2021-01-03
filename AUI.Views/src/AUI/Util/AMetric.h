@@ -47,6 +47,10 @@ public:
 };
 
 
+inline AMetric operator"" _px(unsigned long long v)
+{
+	return AMetric(static_cast<float>(v), AMetric::T_PX);
+}
 inline AMetric operator"" _dp(unsigned long long v)
 {
 	return AMetric(static_cast<float>(v), AMetric::T_DP);

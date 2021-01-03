@@ -2,6 +2,16 @@
 #include "ALabel.h"
 #include "AViewContainer.h"
 
+
+class ACheckBoxInner: public AView
+{
+public:
+    ACheckBoxInner() = default;
+    virtual ~ACheckBoxInner() = default;
+
+    void update();
+};
+
 class API_AUI_VIEWS ACheckBox: public AViewContainer
 {
 private:

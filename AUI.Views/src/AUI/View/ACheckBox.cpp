@@ -1,24 +1,9 @@
 ﻿#include "ACheckBox.h"
 #include "AUI/Layout/AHorizontalLayout.h"
 
-class ACheckBoxInner: public AView
-{
-public:
-	ACheckBoxInner()
-	{
-
-	}
-	virtual ~ACheckBoxInner() = default;
-
-	void update()
-	{
-		emit customCssPropertyChanged;
-	}
-
-    void render() override {
-        AView::render();
-    }
-};
+void ACheckBoxInner::update() {
+    emit customCssPropertyChanged;
+}
 
 
 ACheckBox::ACheckBox()

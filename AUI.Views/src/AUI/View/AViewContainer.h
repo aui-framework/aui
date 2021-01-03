@@ -13,7 +13,6 @@ class API_AUI_VIEWS AViewContainer: public AView
 private:
 	_<ALayout> mLayout;
     bool mSizeSet = false;
-    bool mHasBackground = false;
 	glm::ivec2 mPreviousSize = mSize;
 
 protected:

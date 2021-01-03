@@ -5,6 +5,8 @@
 #include <AUI/View/AButton.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/View/AAbstractTextField.h>
+#include <AUI/View/ANumberPicker.h>
+#include <AUI/View/ACheckBox.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 #ifdef _WIN32
@@ -118,6 +120,43 @@ AStylesheet::AStylesheet() {
         {
             class_of::focus(".input-field"),
             Border { 1_dp, getOsThemeColor() },
+        },
+
+        // ANumberPicker
+        {
+            class_of(".up-down-wrapper"),
+            Padding { 1_px },
+            Margin { 1_px },
+            LayoutSpacing { 1_px },
+            BackgroundSolid { 0xf0f0f0_rgb }
+        },
+        {
+            any<ANumberPicker>() >> any<AButton>(),
+            Margin { {} },
+            Padding { {} },
+            FixedSize {
+                .width = 19_dp
+            },
+            MinSize {
+                .height = 9_dp
+            }
+        },
+
+        // ACheckBox
+        {
+            any<ACheckBox>(),
+            Margin { 1_dp, 4_dp },
+        },
+        {
+            any<ACheckBox>() > any<ALabel>(),
+            Margin { 1_dp, 4_dp },
+        },
+        {
+            any<ACheckBoxInner>(),
+            BackgroundSolid { 0xffffff_rgb },
+            Margin { 1_dp, 1_dp, 1_dp, 4_dp },
+            Border { 1_dp, 0x333333_rgb },
+            FixedSize { 13_dp, 13_dp },
         },
 
         // CUSTOM WINDOWS ===================================================

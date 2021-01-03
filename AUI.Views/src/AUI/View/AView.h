@@ -90,16 +90,6 @@ private:
     _<AAssHelper> mAssHelper;
 
 	/**
-	 * \brief Список отрисовки, или запекание команд отрисовки, чтобы каждый раз не парсить ASS.
-	 */
-	std::array<ass::decl::IDeclarationBase*, int(ass::decl::DeclarationSlot::COUNT)> mAss;
-
-	/**
-	 * \brief Custom ASS Rule
-	 */
-    RuleWithoutSelector mCustomAssRule;
-
-	/**
 	 * \brief Эффекты фона
 	 */
 	ADeque<_<IShadingEffect>> mBackgroundEffects;
@@ -143,6 +133,17 @@ protected:
 	 * \brief Родительский элемент
 	 */
 	AViewContainer* mParent = nullptr;
+
+
+    /**
+     * \brief Список отрисовки, или запекание команд отрисовки, чтобы каждый раз не парсить ASS.
+     */
+    std::array<ass::decl::IDeclarationBase*, int(ass::decl::DeclarationSlot::COUNT)> mAss;
+
+    /**
+     * \brief Custom ASS Rule
+     */
+    RuleWithoutSelector mCustomAssRule;
 
 	/**
 	 * \brief Определяет, какую форму должен принять указатель,
