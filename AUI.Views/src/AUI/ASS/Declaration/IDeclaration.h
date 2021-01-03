@@ -1,6 +1,7 @@
 #pragma once
 
 class AView;
+class AAssHelper;
 
 namespace ass::decl {
     enum class DeclarationSlot {
@@ -33,3 +34,4 @@ namespace ass::decl {
 }
 
 #include "AUI/View/AView.h"
+#include <AUI/ASS/unset.h>

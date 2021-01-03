@@ -15,10 +15,10 @@ namespace ass {
     };
 
     struct BackgroundUrl {
-        AString url;
-        AColor color = 0xffffff_rgb;
-        Repeat repeat = REPEAT_NONE;
-        Sizing sizing = Sizing::NONE;
+        unset_wrap<AString> url;
+        unset_wrap<AColor> overlayColor;
+        unset_wrap<Repeat> repeat;
+        unset_wrap<Sizing> sizing;
     };
 
     namespace decl {
@@ -32,6 +32,7 @@ namespace ass {
 
             }
 
+            void applyFor(AView* view) override;
             void renderFor(AView* view) override;
 
             DeclarationSlot getDeclarationSlot() const override;

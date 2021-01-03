@@ -8,6 +8,8 @@
 #include <AUI/Common/ASignal.h>
 #include <AUI/Common/AVector.h>
 
+#include "Declaration/BackgroundUrl.h"
+
 class Rule;
 
 /**
@@ -26,6 +28,8 @@ public:
     void onInvalidateStateAss() {
         emit invalidateStateAss();
     }
+
+    ass::BackgroundUrl mBackgroundUrl;
 
 signals:
     emits<> invalidateFullAss;

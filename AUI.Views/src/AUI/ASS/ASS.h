@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "unset.h"
+
 // Declarations
 #include "Declaration/BackgroundUrl.h"
 #include "Declaration/BackgroundSolid.h"

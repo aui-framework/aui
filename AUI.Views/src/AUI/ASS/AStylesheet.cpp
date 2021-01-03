@@ -155,8 +155,14 @@ AStylesheet::AStylesheet() {
             any<ACheckBoxInner>(),
             BackgroundSolid { 0xffffff_rgb },
             Margin { 1_dp, 1_dp, 1_dp, 4_dp },
-            Border { 1_dp, 0x333333_rgb },
+            Border { 1_px, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
+            BackgroundUrl { .overlayColor = 0x333333_rgb },
+        },
+        {
+            any<ACheckBoxInner>::hover (),
+            Border { 1_px, 0x333333_rgb },
+            BackgroundUrl { .overlayColor = 0x333333_rgb },
         },
 
         // CUSTOM WINDOWS ===================================================

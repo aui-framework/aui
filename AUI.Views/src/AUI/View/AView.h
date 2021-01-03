@@ -17,13 +17,13 @@
 #include <chrono>
 #include <functional>
 #include <array>
-#include <AUI/ASS/AAssHelper.h>
 #include <AUI/ASS/RuleWithoutSelector.h>
 
 class Render;
 class AWindow;
 class AViewContainer;
 class AAnimator;
+class AAssHelper;
 
 
 /**
@@ -510,6 +510,10 @@ public:
 	inline AView& operator<<(const AString& cssName) {
 	    addCssName(cssName);
 	    return *this;
+	}
+
+	const _<AAssHelper>& getAssHelper() const {
+	    return mAssHelper;
 	}
 
 	void setCustomAss(const RuleWithoutSelector& rule);
