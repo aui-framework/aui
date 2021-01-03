@@ -9,6 +9,12 @@
 namespace ass {
     template<typename Base>
     struct active: Base, AttributeHelper<active<Base>> {
+        template<typename... Args>
+        active(Args&&... args):
+            Base(std::forward<Args>(args)...)
+        {
+
+        }
 
         bool isStateApplicable(AView* view) override {
             return Base::isStateApplicable(view) && view->isMousePressed();

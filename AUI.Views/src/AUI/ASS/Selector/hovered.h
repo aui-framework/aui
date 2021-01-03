@@ -9,6 +9,12 @@
 namespace ass {
     template<typename Base>
     struct hovered: Base, AttributeHelper<hovered<Base>> {
+        template<typename... Args>
+        hovered(Args&&... args):
+            Base(std::forward<Args>(args)...)
+        {
+
+        }
 
         bool isStateApplicable(AView* view) override {
             return Base::isStateApplicable(view) && view->isMouseHover();

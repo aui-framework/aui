@@ -7,7 +7,8 @@ namespace ass::decl {
         NONE,
 
         SHADOW,
-        BACKGROUND,
+        BACKGROUND_SOLID,
+        BACKGROUND_IMAGE,
         BORDER,
 
         COUNT,

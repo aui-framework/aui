@@ -8,7 +8,7 @@
 #include "IDeclaration.h"
 
 namespace ass {
-    struct GradientBackground {
+    struct BackgroundGradient {
         AColor topLeftColor;
         AColor bottomRightColor;
         LayoutDirection direction;
@@ -16,12 +16,12 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<GradientBackground>: IDeclarationBase {
+        struct Declaration<BackgroundGradient>: IDeclarationBase {
         private:
-            GradientBackground mInfo;
+            BackgroundGradient mInfo;
 
         public:
-            Declaration(const GradientBackground& info) : mInfo(info) {
+            Declaration(const BackgroundGradient& info) : mInfo(info) {
 
             }
 

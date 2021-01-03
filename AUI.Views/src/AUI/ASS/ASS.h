@@ -5,12 +5,13 @@
 #pragma once
 
 // Declarations
+#include "Declaration/BackgroundUrl.h"
+#include "Declaration/BackgroundSolid.h"
+#include "Declaration/BackgroundGradient.h"
 #include "Declaration/Border.h"
 #include "Declaration/BorderRadius.h"
 #include "Declaration/BoxShadow.h"
 #include "Declaration/FixedSize.h"
-#include "Declaration/SolidBackground.h"
-#include "Declaration/GradientBackground.h"
 #include "Declaration/FontSize.h"
 #include "Declaration/FontRendering.h"
 #include "Declaration/Padding.h"

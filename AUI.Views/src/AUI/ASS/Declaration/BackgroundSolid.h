@@ -7,22 +7,27 @@
 #include "IDeclaration.h"
 
 namespace ass {
-    struct SolidBackground {
+    struct BackgroundSolid {
         AColor color;
+
+        BackgroundSolid(const AColor& color) : color(color) {}
+        BackgroundSolid(std::nullptr_t) : color(0.f) {}
     };
 
     namespace decl {
         template<>
-        struct Declaration<SolidBackground>: IDeclarationBase {
+        struct Declaration<BackgroundSolid>: IDeclarationBase {
         private:
-            SolidBackground mInfo;
+            BackgroundSolid mInfo;
 
         public:
-            Declaration(const SolidBackground& info) : mInfo(info) {
+            Declaration(const BackgroundSolid& info) : mInfo(info) {
 
             }
 
             void renderFor(AView* view) override;
+
+            bool isNone() override;
 
             DeclarationSlot getDeclarationSlot() const override;
         };

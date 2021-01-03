@@ -22,6 +22,7 @@ namespace ass {
             
         public:
             ClassOf(const AVector<AString>& classes) : mClasses(classes) {}
+            ClassOf(const AString& clazz) : mClasses({clazz}) {}
 
             bool isPossiblyApplicable(AView* view) override {
                 for (auto& v : mClasses) {
@@ -37,7 +38,7 @@ namespace ass {
     struct class_of: detail::ClassOf, AttributeHelper<class_of> {
     public:
         class_of(const AVector<AString>& classes) : ClassOf(classes) {}
-        class_of(const AString& clazz) : ClassOf({clazz}) {}
+        class_of(const AString& clazz) : ClassOf(clazz) {}
 
         using hover = ass::hovered<detail::ClassOf>;
         using active = ass::active<detail::ClassOf>;

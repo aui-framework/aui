@@ -3,12 +3,12 @@
 //
 
 #include <AUI/Render/RenderHints.h>
-#include "GradientBackground.h"
+#include "BackgroundGradient.h"
 #include "IDeclaration.h"
 
 
 
-void ass::decl::Declaration<ass::GradientBackground>::renderFor(AView* view) {
+void ass::decl::Declaration<ass::BackgroundGradient>::renderFor(AView* view) {
     RenderHints::PushColor x;
 
     Render::inst().setFill(Render::FILL_GRADIENT);
@@ -31,8 +31,8 @@ void ass::decl::Declaration<ass::GradientBackground>::renderFor(AView* view) {
     IDeclarationBase::renderFor(view);
 }
 
-ass::decl::DeclarationSlot ass::decl::Declaration<ass::GradientBackground>::getDeclarationSlot() const {
-    return ass::decl::DeclarationSlot::BACKGROUND;
+ass::decl::DeclarationSlot ass::decl::Declaration<ass::BackgroundGradient>::getDeclarationSlot() const {
+    return ass::decl::DeclarationSlot::BACKGROUND_SOLID;
 }
 
 

@@ -22,7 +22,7 @@ AStylesheet::AStylesheet() {
         },
         {
             any<AWindow>(),
-            SolidBackground {0xf0f0f0_rgb},
+            BackgroundSolid {0xf0f0f0_rgb},
         },
         {
             any<ALabel>(),
@@ -34,7 +34,7 @@ AStylesheet::AStylesheet() {
         },
         {
             any<AButton>(),
-            SolidBackground {0xffffff_rgb},
+            BackgroundSolid {0xffffff_rgb},
             Padding {4_dp, 8_dp},
             Margin {2_dp, 4_dp},
             MinSize {60_dp, 14_dp},
@@ -48,14 +48,14 @@ AStylesheet::AStylesheet() {
         },
         {
             any<AButton>::active(),
-            SolidBackground{0xfafafa_rgb},
+            BackgroundSolid{0xfafafa_rgb},
         },
         {
             any<AButton>()["default"],
-            FontRendering::ANTIALIASING,
-            GradientBackground { getOsThemeColor().lighter(0.15f),
-                                 getOsThemeColor().darker(0.15f),
-                                 LayoutDirection::VERTICAL },
+                FontRendering::ANTIALIASING,
+                BackgroundGradient {getOsThemeColor().lighter(0.15f),
+                                    getOsThemeColor().darker(0.15f),
+                                    LayoutDirection::VERTICAL },
             BoxShadow { {}, 1_dp, 3_dp, -1_dp, getOsThemeColor() },
             Border { nullptr },
             TextColor { 0xffffff_rgb },
@@ -71,28 +71,68 @@ AStylesheet::AStylesheet() {
         },
         {
             any<AButton>::hover()["default"],
-            GradientBackground { getOsThemeColor().lighter(0.2f),
-                                 getOsThemeColor().darker(0.15f),
-                                 LayoutDirection::VERTICAL },
+                BackgroundGradient {getOsThemeColor().lighter(0.2f),
+                                    getOsThemeColor().darker(0.15f),
+                                    LayoutDirection::VERTICAL },
         },
         {
             any<AButton>::active()["default"],
-            SolidBackground { getOsThemeColor() }
+            BackgroundSolid { getOsThemeColor() }
         },
         {
             any<AButton>()["disabled"],
-            SolidBackground { 0xcccccc_rgb },
+            BackgroundSolid { 0xcccccc_rgb },
             BoxShadow { nullptr },
             Border {1_dp, 0xbfbfbf_rgb },
             TextColor { 0x838383_rgb }
         },
 
-        // CUSTOM VIEWS ===================================================
+        // CUSTOM WINDOWS ===================================================
         {
             class_of(".window-title"),
-            SolidBackground { getOsThemeColor() },
+            BackgroundSolid { getOsThemeColor() },
             FixedSize { .height = 30_dp }
-        }
+        },
+        {
+            class_of(".window-title") >> any<ALabel>(),
+            Margin { {} },
+            Padding { 7_dp },
+            TextColor { 0xffffff_rgb }
+        },
+        {
+            class_of(".window-title") >> class_of(".default"),
+            BorderRadius{ {} },
+            BoxShadow { nullptr },
+            Border { nullptr },
+            Margin { {} },
+            Padding { {} },
+            MinSize { 45_dp, 29_dp },
+            BackgroundSolid{ nullptr }
+        },
+        {
+            class_of(".window-title") >> class_of(".minimize"),
+            BackgroundUrl { ":win/caption/minimize.svg" }
+        },
+        {
+            class_of(".window-title") >> class_of(".close"),
+            BackgroundUrl { ":win/caption/close.svg" }
+        },
+        {
+            class_of(".window-title") >> any<AButton>::hover(),
+            BackgroundSolid { 0x20ffffff_argb },
+        },
+        {
+            class_of(".window-title") >> any<AButton>::active(),
+            BackgroundSolid { 0x30ffffff_argb },
+        },
+        {
+            class_of(".window-title") >> class_of::hover(".close"),
+            BackgroundSolid { 0xe81123_rgb }
+        },
+        {
+            class_of(".window-title") >> class_of::active(".close"),
+            BackgroundSolid { 0x80e81123_argb }
+        },
     });
 }
 

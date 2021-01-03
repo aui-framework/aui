@@ -3,11 +3,11 @@
 //
 
 #include <AUI/Render/RenderHints.h>
-#include "SolidBackground.h"
+#include "BackgroundSolid.h"
 #include "IDeclaration.h"
 
 
-void ass::decl::Declaration<ass::SolidBackground>::renderFor(AView* view) {
+void ass::decl::Declaration<ass::BackgroundSolid>::renderFor(AView* view) {
     RenderHints::PushColor x;
 
     Render::inst().setColor(mInfo.color);
@@ -20,8 +20,11 @@ void ass::decl::Declaration<ass::SolidBackground>::renderFor(AView* view) {
     IDeclarationBase::renderFor(view);
 }
 
-ass::decl::DeclarationSlot ass::decl::Declaration<ass::SolidBackground>::getDeclarationSlot() const {
-    return ass::decl::DeclarationSlot::BACKGROUND;
+bool ass::decl::Declaration<ass::BackgroundSolid>::isNone() {
+    return mInfo.color.isFullyTransparent();
+}
+ass::decl::DeclarationSlot ass::decl::Declaration<ass::BackgroundSolid>::getDeclarationSlot() const {
+    return ass::decl::DeclarationSlot::BACKGROUND_SOLID;
 }
 
 
