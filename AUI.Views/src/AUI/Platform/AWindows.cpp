@@ -20,6 +20,7 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Image/Drawables.h>
 #include <AUI/Util/kAUI.h>
+#include <AUI/Traits/memory.h>
 
 constexpr bool AUI_DISPLAY_BOUNDS = false;
 AWindow::Context AWindow::context = {};
@@ -653,7 +654,6 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
     mHandle = XCreateWindow(gDisplay, gScreen->root, 0, 0, width, height, 0, vi->depth, InputOutput, vi->visual,
                             CWColormap | CWEventMask | CWCursor, &swa);
 
-
     mIC = XCreateIC(im, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, mHandle, NULL);
     if (mIC == NULL) {
         throw AException("Could not get IC");
@@ -683,6 +683,10 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
         if (glewInit() != GLEW_OK) {
             throw AException("glewInit failed");
         }
+    }
+
+    if (parent) {
+        XSetTransientForHint(gDisplay, mHandle, parent->mHandle);
     }
 
 #endif
@@ -900,7 +904,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         // small shadow
         SetClassLong(mHandle, GCL_STYLE, GetClassLong(mHandle, GCL_STYLE) | CS_DROPSHADOW);
     } else {
-        if (ws & WS_SIMPLIFIED_WINDOW) {
+        if (ws & WS_NO_MINIMIZE_MAXIMIZE) {
             SetWindowLongPtr(mHandle, GWL_STYLE,
                              GetWindowLong(mHandle, GWL_STYLE) & ~(WS_THICKFRAME |
                              WS_SYSMENU) | WS_CAPTION);
@@ -922,9 +926,9 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         }
     }
 #else
-    if (ws & (WS_SIMPLIFIED_WINDOW | WS_SYS | WS_NO_DECORATORS)) {
-        //note the struct is declared elsewhere, is here just for clarity.
-//code is from [http://tonyobryan.com/index.php?article=9][1]
+    if (ws & (WS_SYS | WS_NO_DECORATORS)) {
+        // note the struct is declared elsewhere, is here just for clarity.
+        // code is from [http://tonyobryan.com/index.php?article=9][1]
         typedef struct Hints
         {
             unsigned long   flags;
@@ -934,12 +938,20 @@ void AWindow::setWindowStyle(WindowStyle ws) {
             unsigned long   status;
         } Hints;
 
-//code to remove decoration
+        /*
+         * flags:
+         * LS
+         *  0 - close disable
+         *  1 - decorations disable
+         * MS
+         */
         Hints hints;
+
+        //code to remove decoration
         hints.flags = 2;
         hints.decorations = 0;
         XChangeProperty(gDisplay, mHandle, gAtoms.wmHints, gAtoms.wmHints, 32, PropModeReplace,
-                (unsigned char *)&hints, 5);
+                        (unsigned char *)&hints, 5);
     }
 #endif
 }
@@ -1265,6 +1277,37 @@ void AWindow::onCloseButtonClicked() {
 
 void AWindow::setSize(int width, int height) {
     setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
+
+#ifdef __linux__
+    if (mWindowStyle & WS_NO_RESIZE) {
+        // we should set min size and max size the same as current size
+        XSizeHints* sizehints = XAllocSizeHints();
+        long userhints;
+
+        XGetWMNormalHints(gDisplay, mHandle, sizehints, &userhints);
+
+        sizehints->min_width = sizehints->min_width = sizehints->max_width = sizehints->base_width = width;
+        sizehints->min_height = sizehints->min_height = sizehints->max_height = sizehints->base_height = height;
+        sizehints->flags |= PMinSize | PMaxSize;
+
+        XSetWMNormalHints(gDisplay, mHandle, sizehints);
+
+        XFree(sizehints);
+    } else {
+        XSizeHints* sizehints = XAllocSizeHints();
+        long userhints;
+
+        XGetWMNormalHints(gDisplay, mHandle, sizehints, &userhints);
+
+        sizehints->min_width = getMinimumWidth();
+        sizehints->min_height = getMinimumHeight();
+        sizehints->flags |= PMinSize;
+
+        XSetWMNormalHints(gDisplay, mHandle, sizehints);
+
+        XFree(sizehints);
+    }
+#endif
 }
 
 void AWindow::setPosition(const glm::ivec2& position) {

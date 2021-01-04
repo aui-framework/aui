@@ -32,7 +32,7 @@ ENUM_FLAG(WindowStyle)
 	/**
 	 * \brief Окно без кнопок сворачивания и раскрытия.
 	 */
-	WS_SIMPLIFIED_WINDOW = 0x1,
+	WS_NO_MINIMIZE_MAXIMIZE = 0x1,
 
 	/**
 	 * \brief Запретить изменять размер окна.
@@ -42,7 +42,7 @@ ENUM_FLAG(WindowStyle)
 	/**
 	 * \brief Типичное диалоговое окно.
 	 */
-	WS_DIALOG = WS_SIMPLIFIED_WINDOW | WS_NO_RESIZE,
+	WS_DIALOG = WS_NO_MINIMIZE_MAXIMIZE | WS_NO_RESIZE,
 
 	/**
 	 * \brief Без стандартных декораторов окна.
