@@ -73,7 +73,14 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
                   AMessageBox::Button b) {
     unsigned iconFlags = 0;
 
-    do_once gtk_init(nullptr, nullptr);
+    do_once {
+        int argc = 0;
+        char c = 0;
+        char* pc = &c;
+        char** ppc = &pc;
+
+        gtk_init(&argc, &ppc);
+    };
 
 
     // Icons
@@ -104,9 +111,14 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
                                          (GtkMessageType)iconFlags,
                                          (GtkButtonsType)buttonFlags,
                                          "%ls", message.c_str());
-    gtk_dialog_run(GTK_DIALOG (dialog));
-    gtk_widget_destroy(dialog);
+    gtk_window_set_keep_above(GTK_WINDOW(dialog), true);
+    gtk_window_activate_focus(GTK_WINDOW(dialog));
+    gtk_dialog_run(GTK_DIALOG(dialog));
+    gtk_widget_destroy(GTK_WIDGET(dialog));
 
+    while (gtk_events_pending()) {
+        gtk_main_iteration();
+    }
     return B_INVALID;
 }
 
