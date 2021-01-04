@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "TextAlign.h"
+#include "AUI/TextAlign.h"
 #include "AFont.h"
 #include "FontRendering.h"
 #include "AUI/Common/AColor.h"

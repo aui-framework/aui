@@ -7,12 +7,12 @@
 namespace ass {
     namespace decl {
         template<>
-        struct Declaration<AView::Overflow>: IDeclarationBase {
+        struct Declaration<Overflow>: IDeclarationBase {
         private:
-            AView::Overflow mInfo;
+            Overflow mInfo;
 
         public:
-            Declaration(const AView::Overflow& info) : mInfo(info) {
+            Declaration(const Overflow& info) : mInfo(info) {
 
             }
 

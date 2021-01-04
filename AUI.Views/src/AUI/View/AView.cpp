@@ -72,7 +72,7 @@ void AView::postRender() {
 }
 
 void AView::popStencilIfNeeded() {
-    if (getOverflow() == OF_HIDDEN)
+    if (getOverflow() == Overflow::HIDDEN)
     {
         /*
          * Если у AView есть ограничение по Overflow, то он запушил свою маску в буфер трафарета, но он не может
@@ -111,7 +111,7 @@ void AView::render()
 	}
 
     // stencil
-    if (mOverflow == OF_HIDDEN)
+    if (mOverflow == Overflow::HIDDEN)
     {
         RenderHints::PushMask::pushMask([&]() {
             drawStencilMask();
@@ -190,7 +190,7 @@ void AView::recompileCSS()
 	}
 
 	mCursor = ACursor::DEFAULT;
-	mOverflow = OF_VISIBLE;
+	mOverflow = Overflow::VISIBLE;
 	mMargin = {};
 	mMinSize = {};
     mBorderRadius = 0.f;
@@ -246,7 +246,7 @@ void AView::recompileCSS()
 	{
 		if (p->getArgs().size() == 1) {
 			if (p->getArgs()[0] == "hidden")
-				mOverflow = OF_HIDDEN;
+				mOverflow = Overflow::HIDDEN;
 		}
 	});
 
@@ -669,7 +669,7 @@ void AView::recompileCSS()
     });*/
 
     mCursor = ACursor::DEFAULT;
-    mOverflow = OF_VISIBLE;
+    mOverflow = Overflow::VISIBLE;
     mMargin = {};
     mMinSize = {};
     mBorderRadius = 0.f;
@@ -1002,22 +1002,22 @@ void AView::focus() {
     };
 }
 
-AView::Visibility AView::getVisibilityRecursive() const {
-    if (mVisibility == V_GONE)
-        return V_GONE;
+Visibility AView::getVisibilityRecursive() const {
+    if (mVisibility == Visibility::GONE)
+        return Visibility::GONE;
 
-    int v = mVisibility;
+    int v = int(mVisibility);
 
     for (auto target = mParent; target; target = target->mParent) {
-        if (v < target->mVisibility) {
-            v = target->mVisibility;
-            if (v == V_GONE) {
-                return V_GONE;
+        if (v < int(target->mVisibility)) {
+            v = int(target->mVisibility);
+            if (v == int(Visibility::GONE)) {
+                return Visibility::GONE;
             }
         }
     }
 
-    return static_cast<AView::Visibility>(v);
+    return static_cast<Visibility>(v);
 }
 
 void AView::onDpiChanged() {

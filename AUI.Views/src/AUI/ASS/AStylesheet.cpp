@@ -2,19 +2,21 @@
 // Created by alex2 on 29.12.2020.
 //
 
+#ifdef _WIN32
+#include <dwmapi.h>
+#endif
+
 #include <AUI/View/AButton.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/View/AAbstractTextField.h>
 #include <AUI/View/ANumberPicker.h>
 #include <AUI/View/ACheckBox.h>
+#include <AUI/View/ARadioButton.h>
+#include <AUI/View/AComboBox.h>
+#include <AUI/View/AListView.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 
-#ifdef _WIN32
-#include <dwmapi.h>
-#include <AUI/View/ARadioButton.h>
-
-#endif
 
 AStylesheet::AStylesheet() {
     using namespace ass;
@@ -114,7 +116,7 @@ AStylesheet::AStylesheet() {
             BorderRadius { 4_dp },
             Margin { 2_dp, 4_dp },
             MinSize { 100_dp, 17_dp },
-            AView::OF_HIDDEN
+            Overflow::HIDDEN
         },
         {
             class_of::hover(".input-field"),
@@ -226,6 +228,34 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0xe5e5e5_rgb },
             BackgroundImage { 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
+        },
+
+        // AComboBox
+        {
+            any<AComboBox>(),
+            TextAlign::LEFT,
+        },
+
+        // AListView
+        {
+            any<AListView>(),
+            BackgroundSolid { 0xffffff_rgb },
+            Border { 1_px, 0x828790_rgb },
+            Padding { 2_px },
+            Overflow::HIDDEN,
+        },
+        {
+            any<AListView>() > any<ALabel>(),
+            Margin { {} },
+            Padding { 1_px, 4_px, 4_px },
+        },
+        {
+            any<AListView>() > any<ALabel>::hover(),
+            BackgroundSolid { 0xe5f3ff_rgb },
+        },
+        {
+            any<AListView>() > any<ALabel>()["selected"],
+            BackgroundSolid { 0xcde8ff_rgb },
         },
 
         // CUSTOM WINDOWS ===================================================

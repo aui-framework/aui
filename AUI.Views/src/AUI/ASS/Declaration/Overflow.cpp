@@ -5,6 +5,6 @@
 #include "Overflow.h"
 
 
-void ass::decl::Declaration<AView::Overflow>::applyFor(AView* view) {
+void ass::decl::Declaration<Overflow>::applyFor(AView* view) {
     view->setOverflow(mInfo);
 }

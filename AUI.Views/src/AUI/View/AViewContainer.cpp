@@ -13,7 +13,7 @@ unsigned char stencilDepth = 0;
 
 void AViewContainer::drawView(const _<AView>& view)
 {
-	if (view->getVisibility() == V_VISIBLE) {
+	if (view->getVisibility() == Visibility::VISIBLE) {
 		RenderHints::PushState s;
 		glm::mat4 t(1.f);
 		view->getTransform(t);
@@ -180,7 +180,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 
 		if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x && targetPos.y < view->getSize().y)
 		{
-			if (!ignoreGone || view->getVisibility() != V_GONE) {
+			if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
 			    if (!possibleOutput)
 			        possibleOutput = view;
                 if (view->consumesClick(targetPos))

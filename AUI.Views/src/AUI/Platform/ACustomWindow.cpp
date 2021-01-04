@@ -14,6 +14,7 @@ const int AUI_TITLE_HEIGHT = 30;
 
 #include <dwmapi.h>
 #include <AUI/Util/kAUI.h>
+#include <AUI/View/AButton.h>
 
 
 LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -172,7 +173,7 @@ void ACustomWindow::setSize(int width, int height)
 bool ACustomWindow::isCaptionAt(const glm::ivec2& pos) {
     if (pos.y <= AUI_TITLE_HEIGHT) {
         if (auto v = getViewAtRecursive(pos)) {
-            if (!v->getCssNames().contains("AButton") &&
+            if (!(_cast<AButton>(v)) &&
                 !v->getCssNames().contains(".override-title-dragging")) {
                 return true;
             }

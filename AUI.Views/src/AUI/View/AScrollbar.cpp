@@ -125,7 +125,7 @@ void AScrollbar::updateScrollHandleSize() {
 
     if (o < scrollbarSpace) {
         setEnabled();
-        mHandle->setVisibility(V_VISIBLE);
+        mHandle->setVisibility(Visibility::VISIBLE);
         switch (mDirection) {
             case LayoutDirection::HORIZONTAL:
                 mHandle->setFixedSize({o, mHandle->getHeight()});
@@ -135,7 +135,7 @@ void AScrollbar::updateScrollHandleSize() {
                 break;
         }
     } else {
-        mHandle->setVisibility(V_GONE);
+        mHandle->setVisibility(Visibility::GONE);
         setDisabled();
     }
 }

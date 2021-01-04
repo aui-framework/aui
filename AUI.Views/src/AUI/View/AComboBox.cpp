@@ -124,6 +124,8 @@ void AComboBox::destroyWindow() {
     mComboWindow->quit();
     mComboWindow = nullptr;
     emit customCssPropertyChanged();
+
+    getWindow()->flagRedraw();
 }
 
 

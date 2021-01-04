@@ -13,11 +13,13 @@
 #include "AUI/Render/FontStyle.h"
 #include "AUI/Util/Watchable.h"
 #include "AUI/Util/IShadingEffect.h"
+#include <AUI/ASS/RuleWithoutSelector.h>
+#include <AUI/Overflow.h>
+#include <AUI/Visibility.h>
 
 #include <chrono>
 #include <functional>
 #include <array>
-#include <AUI/ASS/RuleWithoutSelector.h>
 
 class Render;
 class AWindow;
@@ -41,30 +43,6 @@ class AAssHelper;
 class API_AUI_VIEWS AView: public AObject
 {
 	friend class AViewContainer;
-public:
-	enum Overflow
-	{
-		OF_VISIBLE,
-		OF_HIDDEN
-	};
-
-	enum Visibility {
-		/**
-		 * AView виден и активен
-		 */
-		V_VISIBLE,
-
-		/**
-		 * AView невидим, но мышкой кликнуть можно
-		 */
-		 V_INVISIBLE,
-
-		 /**
-		  * AView невидим и мышкой попасть невозможно
-		  */
-		  V_GONE
-	};
-
 private:
 
 	/**
@@ -76,13 +54,13 @@ private:
 	 * \brief Определяет, отображать ли выходящую за границу AView
 	 *		  графику, или нет
 	 */
-	Overflow mOverflow = OF_VISIBLE;
+	Overflow mOverflow = Overflow::VISIBLE;
 
 	/**
 	 * \brief Определяет, виден ли и можно ли тыкнуть мышкой в
 	 *        этот AView.
 	 */
-	Visibility mVisibility = V_VISIBLE;
+	Visibility mVisibility = Visibility::VISIBLE;
 
     /**
      * \brief Вспомогательный объект для обработки обновления стилей ASS при изменении состояния (hover, active и т.д.)

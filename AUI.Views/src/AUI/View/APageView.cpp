@@ -13,8 +13,8 @@ APageView::APageView() {
 void APageView::setPageId(unsigned int pageId) {
     assert(pageId < getViews().size());
     emit pageChanging(pageId);
-    getViews()[mPageId]->setVisibility(V_GONE);
-    getViews()[pageId]->setVisibility(V_VISIBLE);
+    getViews()[mPageId]->setVisibility(Visibility::GONE);
+    getViews()[pageId]->setVisibility(Visibility::VISIBLE);
     mPageId = pageId;
     emit pageChanged();
 
@@ -22,6 +22,6 @@ void APageView::setPageId(unsigned int pageId) {
 }
 
 void APageView::addPage(const _<AView>& view) {
-    view->setVisibility(mPageId == getViews().size() ? V_VISIBLE : V_GONE);
+    view->setVisibility(mPageId == getViews().size() ? Visibility::VISIBLE : Visibility::GONE);
     addView(view);
 }

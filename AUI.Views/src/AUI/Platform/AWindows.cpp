@@ -1385,7 +1385,7 @@ void AWindow::focusNextView() {
                 continue;
             }
         }
-        if (target == beginPoint || !target->handlesNonMouseNavigation() || target->getVisibilityRecursive() == V_GONE) {
+        if (target == beginPoint || !target->handlesNonMouseNavigation() || target->getVisibilityRecursive() == Visibility::GONE) {
             // нам нужно уйти на следующий элемент
             if (target->getParent()) {
                 // будем идти вверх по иерархии

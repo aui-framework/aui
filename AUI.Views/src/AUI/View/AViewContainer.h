@@ -86,7 +86,7 @@ public:
 
 			if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x && targetPos.y < view->getSize().y)
 			{
-				if (!ignoreGone || view->getVisibility() != V_GONE) {
+				if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
 					if (auto applicable = _cast<T>(view))
 						return applicable;
 					if (auto container = _cast<AViewContainer>(view)) {
