@@ -4,8 +4,6 @@
 
 #pragma once
 
-#include "unset.h"
-
 // Declarations
 #include "Declaration/BackgroundImage.h"
 #include "Declaration/BackgroundSolid.h"
@@ -34,3 +32,7 @@
 #include "Selector/active.h"
 #include "Selector/hovered.h"
 #include "Selector/class_of.h"
+
+// Other
+#include "unset.h"
+#include "AStylesheet.h"

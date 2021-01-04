@@ -48,3 +48,5 @@ namespace ass {
         return DirectParentSubSelector<L, R>(std::forward<L>(l), std::forward<R>(r));
     }
 }
+
+#include <AUI/View/AViewContainer.h>

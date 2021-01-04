@@ -3,7 +3,7 @@
 #include "AUI/Platform/ACustomCaptionWindow.h"
 
 
-class MinesweeperWindow: public CustomCaptionWindow
+class MinesweeperWindow: public AWindow
 {
 private:
 	int mFieldColumns;

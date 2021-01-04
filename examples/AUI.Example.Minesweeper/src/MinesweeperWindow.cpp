@@ -1,4 +1,5 @@
-﻿#include "MinesweeperWindow.h"
+﻿#include <AUI/Util/UIBuildingHelpers.h>
+#include "MinesweeperWindow.h"
 
 #include "CellView.h"
 #include "NewGameWindow.h"
@@ -14,28 +15,29 @@
 #include "AUI/View/ATextField.h"
 #include "AUI/View/ANumberPicker.h"
 
-MinesweeperWindow::MinesweeperWindow(): CustomCaptionWindow(u8"Сапёр", 1000, 1000)
+MinesweeperWindow::MinesweeperWindow(): AWindow("Minesweeper", 100_dp, 100_dp)
 {
+    // root layout manager
+    setLayout(_new<AVerticalLayout>());
+
+    // top frame
+    addView(_container<AHorizontalLayout>({
+        // center with two spacers
+        _new<ASpacer>(),
+        // create a button and assign a slot in place
+        _new<AButton>("New game...").connect(&AButton::clicked, me::newGame),
+        _new<ASpacer>(),
+    }) << ".frame");
+    // ^^^^^^^^^^^ add a ASS class (see Style.cpp)
+
+    // game area
+    // we will use a wrapper with stacked layout to center our game area
+    addView(_container<AStackedLayout>({
+        // also assign ".frame" ASS class in place
+        mGrid = _new<AViewContainer>() << ".frame"
+    }));
 
 
-	auto toolbox = _new<AViewContainer>();
-	toolbox->addCssName(".grid");
-	toolbox->setLayout(_new<AHorizontalLayout>());
-	toolbox->addView(_new<ASpacer>());
-	auto newGame = _new<AButton>(u8"Новая игра...");
-	AObject::connect(newGame->clicked, this, &MinesweeperWindow::newGame);
-	toolbox->addView(newGame);
-	toolbox->addView(_new<ASpacer>());
-	addView(toolbox);
-
-	auto c = _new<AViewContainer>();
-	c->setExpanding({ 1, 1 });
-	c->setLayout(_new<AStackedLayout>());
-	mGrid = _new<AViewContainer>();
-	mGrid->addCssName(".grid");
-	c->addView(mGrid);
-	addView(c);
-	
 	beginGame(10, 10, 20);
 } 
 
@@ -61,7 +63,7 @@ void MinesweeperWindow::openCell(int x, int y, bool doGameLoseIfBomb)
 		
 		mBombsPlanted = true;
 
-		Random r;
+		ARandom r;
 		for (int i = 0; i < mBombs;)
 		{
 			int x = r.nextInt() % mFieldColumns;
@@ -159,7 +161,7 @@ void MinesweeperWindow::newGame()
 
 void MinesweeperWindow::getCustomCssAttributes(AMap<AString, AVariant>& map)
 {
-	CustomCaptionWindow::getCustomCssAttributes(map);
+    AWindow::getCustomCssAttributes(map);
 	if (mDead)
 	{
 		map["dead"] = true;

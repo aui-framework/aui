@@ -37,7 +37,7 @@ void CellView::render()
 		{
 			FontStyle fs;
 			fs.size = getHeight() * 6 / 7;
-			fs.align = Align::CENTER;
+			fs.align = TextAlign::CENTER;
 
 			switch (count)
 			{

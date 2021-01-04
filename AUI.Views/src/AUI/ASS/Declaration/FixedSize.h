@@ -13,6 +13,7 @@ namespace ass {
         AMetric height;
 
         FixedSize(const AMetric& width, const AMetric& height) : width(width), height(height) {}
+        explicit FixedSize(const AMetric& side) : width(side), height(side) {}
     };
 
 

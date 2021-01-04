@@ -10,7 +10,9 @@
 #include "JumpToCoordsWindow.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AImageView.h>
+#include <AUI/ASS/ASS.h>
 
+using namespace ass;
 
 FractalWindow::FractalWindow():
     AWindow("Mandelbrot set")
@@ -18,7 +20,14 @@ FractalWindow::FractalWindow():
     setLayout(_new<AHorizontalLayout>());
 
     auto centerPosDisplay = _new<ALabel>("-");
-    centerPosDisplay->setCss("background: #0008; padding: 4em; color: #fff; font-size: 11pt");
+    {
+        centerPosDisplay->setCustomAss({
+            BackgroundSolid { 0x80000000_argb },
+            Padding { 4_dp },
+            TextColor { 0xffffffff_rgb },
+            FontSize { 11_pt },
+        });
+    }
 
     auto fractal = _new<FractalView>();
     connect(fractal->centerPosChanged, this, [centerPosDisplay](const glm::dvec2& newPos, double scale) {
@@ -58,7 +67,10 @@ FractalWindow::FractalWindow():
             }),
             _new<ALabel>("Gradient:"),
             _new<AImageView>(fractal->getTexture()) let (AImageView, {
-                setCss("height: 10em; margin: 4em;");
+                setCustomAss({
+                    FixedSize { {}, 10_dp },
+                    Margin { 4_dp }
+                });
             }),
     }));
     fractal->focus();
