@@ -53,10 +53,13 @@ namespace ass {
         AAssSelector(AAssSelector&& move): mSubSelectors(std::move(move.mSubSelectors)) {
 
         }
+        AAssSelector(const AAssSelector&) = default;
 
         ~AAssSelector() {
             mSubSelectors.clear();
         }
+
+        AAssSelector& operator=(const AAssSelector& c) = default;
 
         bool isPossiblyApplicable(AView* view) const {
             for (auto& s : mSubSelectors) {
