@@ -47,8 +47,9 @@ public:
 	int getContentMinimumWidth() override;
 	int getContentMinimumHeight() override;
 
+    void invalidateFont() override;
 
-	const _<IDrawable>& getIcon() const
+    const _<IDrawable>& getIcon() const
 	{
 		return mIcon;
 	}

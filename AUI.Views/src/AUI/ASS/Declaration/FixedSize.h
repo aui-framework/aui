@@ -11,6 +11,8 @@ namespace ass {
     struct FixedSize {
         AMetric width;
         AMetric height;
+
+        FixedSize(const AMetric& width, const AMetric& height) : width(width), height(height) {}
     };
 
 

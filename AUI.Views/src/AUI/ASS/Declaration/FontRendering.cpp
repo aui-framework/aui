@@ -11,4 +11,5 @@ void ass::decl::Declaration<FontRendering>::applyFor(AView* view){
         view->getFontStyle().fontRendering = FontRendering::ANTIALIASING;
     }
 #endif
+    view->invalidateFont();
 }

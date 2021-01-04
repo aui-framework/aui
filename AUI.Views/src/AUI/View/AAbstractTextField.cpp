@@ -385,3 +385,7 @@ AString AAbstractTextField::getMouseSelectionText() {
 void AAbstractTextField::doRedraw() {
     redraw();
 }
+
+void AAbstractTextField::invalidateFont() {
+    mPrerenderedString.mVao = nullptr;
+}

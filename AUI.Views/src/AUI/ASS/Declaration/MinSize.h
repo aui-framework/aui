@@ -11,6 +11,8 @@ namespace ass {
     struct MinSize {
         AMetric width;
         AMetric height;
+
+        MinSize(const AMetric& width, const AMetric& height) : width(width), height(height) {}
     };
 
     namespace decl {

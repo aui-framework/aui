@@ -445,6 +445,7 @@ public:
 	}
 	FontStyle& getFontStyle();
 
+    virtual void invalidateFont();
 	virtual void setPosition(const glm::ivec2& position);
 
     virtual void setSize(int width, int height);

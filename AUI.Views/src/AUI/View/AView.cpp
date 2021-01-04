@@ -689,6 +689,7 @@ void AView::recompileCSS()
 
 void AView::updateAssState() {
     aui::zero(mAss);
+    aui::zero(mAssHelper->state);
 
     auto applyRule = [&](const RuleWithoutSelector& r) {
         for (auto& d : r.getDeclarations()) {
@@ -1021,5 +1022,9 @@ AView::Visibility AView::getVisibilityRecursive() const {
 
 void AView::onDpiChanged() {
     mAssHelper = nullptr;
+}
+
+void AView::invalidateFont() {
+
 }
 

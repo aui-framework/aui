@@ -7,7 +7,7 @@
 #include "unset.h"
 
 // Declarations
-#include "Declaration/BackgroundUrl.h"
+#include "Declaration/BackgroundImage.h"
 #include "Declaration/BackgroundSolid.h"
 #include "Declaration/BackgroundGradient.h"
 #include "Declaration/Border.h"

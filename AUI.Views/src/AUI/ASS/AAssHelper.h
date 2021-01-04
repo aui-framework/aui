@@ -8,7 +8,7 @@
 #include <AUI/Common/ASignal.h>
 #include <AUI/Common/AVector.h>
 
-#include "Declaration/BackgroundUrl.h"
+#include "Declaration/BackgroundImage.h"
 
 class Rule;
 
@@ -29,8 +29,9 @@ public:
         emit invalidateStateAss();
     }
 
-    ass::BackgroundUrl mBackgroundUrl;
-
+    struct {
+        ass::BackgroundImage backgroundUrl;
+    } state;
 signals:
     emits<> invalidateFullAss;
     emits<> invalidateStateAss;

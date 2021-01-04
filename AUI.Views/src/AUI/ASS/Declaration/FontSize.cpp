@@ -7,4 +7,5 @@
 
 void ass::decl::Declaration<ass::FontSize>::applyFor(AView* view) {
     view->getFontStyle().size = mInfo.size.getValuePx();
+    view->invalidateFont();
 }

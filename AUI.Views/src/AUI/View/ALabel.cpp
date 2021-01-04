@@ -246,3 +246,7 @@ void ALabel::onDpiChanged() {
         redraw();
     };
 }
+
+void ALabel::invalidateFont() {
+    mPrerendered.mVao = nullptr;
+}

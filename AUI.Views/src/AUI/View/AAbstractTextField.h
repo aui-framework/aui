@@ -52,8 +52,9 @@ public:
 	void onCharEntered(wchar_t c) override;
 	void render() override;
 
+    void invalidateFont() override;
 
-	void onFocusLost() override;
+    void onFocusLost() override;
 	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 
     void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;

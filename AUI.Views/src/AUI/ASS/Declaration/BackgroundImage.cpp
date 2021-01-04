@@ -2,28 +2,28 @@
 // Created by alex2 on 03.01.2021.
 //
 
-#include "BackgroundUrl.h"
+#include "BackgroundImage.h"
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Image/Drawables.h>
 #include <AUI/Render/RenderHints.h>
 #include <AUI/ASS/AAssHelper.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-void ass::decl::Declaration<ass::BackgroundUrl>::renderFor(AView* view) {
-    ass::BackgroundUrl& info = view->getAssHelper()->mBackgroundUrl;
+void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
+    ass::BackgroundImage& info = view->getAssHelper()->state.backgroundUrl;
     if (info.url) {
         if (auto drawable = Drawables::get(*info.url)) {
             auto drawableDrawWrapper = [&](const glm::ivec2& size) {
                 RenderHints::PushColor c;
-                Render::inst().setColor(mInfo.overlayColor.or_default(0xffffff_rgb));
-                Render::inst().setRepeat(mInfo.repeat.or_default(REPEAT_NONE));
+                Render::inst().setColor(info.overlayColor.or_default(0xffffff_rgb));
+                Render::inst().setRepeat(info.rep.or_default(REPEAT_NONE));
                 drawable->draw(size);
                 Render::inst().setRepeat(REPEAT_NONE);
             };
 
-            if (mInfo.sizing.or_default(Sizing::NONE) == Sizing::FIT) {
+            if (info.sizing.or_default(Sizing::NONE) == Sizing::FIT) {
                 drawableDrawWrapper(view->getSize());
-            } else if (mInfo.sizing.or_default(Sizing::NONE) == Sizing::FIT_PADDING) {
+            } else if (info.sizing.or_default(Sizing::NONE) == Sizing::FIT_PADDING) {
                 RenderHints::PushMatrix m;
                 Render::inst().setTransform(
                         glm::translate(glm::mat4(1.f),
@@ -46,11 +46,11 @@ void ass::decl::Declaration<ass::BackgroundUrl>::renderFor(AView* view) {
 }
 
 
-void ass::decl::Declaration<ass::BackgroundUrl>::applyFor(AView* view) {
-    view->getAssHelper()->mBackgroundUrl = mInfo;
+void ass::decl::Declaration<ass::BackgroundImage>::applyFor(AView* view) {
+    view->getAssHelper()->state.backgroundUrl = mInfo;
 }
 
-ass::decl::DeclarationSlot ass::decl::Declaration<ass::BackgroundUrl>::getDeclarationSlot() const {
+ass::decl::DeclarationSlot ass::decl::Declaration<ass::BackgroundImage>::getDeclarationSlot() const {
     return ass::decl::DeclarationSlot::BACKGROUND_IMAGE;
 }
 

@@ -9,13 +9,14 @@
 #include <AUI/View/ACheckBox.h>
 #include "AStylesheet.h"
 #include "ASS.h"
+
 #ifdef _WIN32
 #include <dwmapi.h>
 #endif
 
 AStylesheet::AStylesheet() {
     using namespace ass;
-    
+
     addRules({
         // COMMON VIEWS ======================================
         // AView
@@ -81,9 +82,9 @@ AStylesheet::AStylesheet() {
         },
         {
             any<AButton>::hover()["default"],
-                BackgroundGradient {getOsThemeColor().lighter(0.2f),
-                                    getOsThemeColor().darker(0.15f),
-                                    LayoutDirection::VERTICAL },
+            BackgroundGradient {getOsThemeColor().lighter(0.2f),
+                                getOsThemeColor().darker(0.15f),
+                                LayoutDirection::VERTICAL },
         },
         {
             any<AButton>::active()["default"],
@@ -134,12 +135,8 @@ AStylesheet::AStylesheet() {
             any<ANumberPicker>() >> any<AButton>(),
             Margin { {} },
             Padding { {} },
-            FixedSize {
-                .width = 19_dp
-            },
-            MinSize {
-                .height = 9_dp
-            }
+            FixedSize { 19_dp, {} },
+            MinSize { {}, 9_dp }
         },
 
         // ACheckBox
@@ -157,19 +154,40 @@ AStylesheet::AStylesheet() {
             Margin { 1_dp, 1_dp, 1_dp, 4_dp },
             Border { 1_px, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
-            BackgroundUrl { .overlayColor = 0x333333_rgb },
+            BackgroundImage {0x333333_rgb },
         },
         {
-            any<ACheckBoxInner>::hover (),
-            Border { 1_px, 0x333333_rgb },
-            BackgroundUrl { .overlayColor = 0x333333_rgb },
+            any<ACheckBoxInner>::hover(),
+            Border { 1_px, 0x0078d7_rgb },
+            BackgroundImage {0x0078d7_rgb },
+        },
+        {
+            any<ACheckBoxInner>::hover(),
+            BackgroundSolid { 0xcce4f7_rgb },
+            Border { 1_px, 0x005499_rgb },
+            BackgroundImage {0x005499_rgb },
+        },
+        {
+            any<ACheckBox>()["checked"] > any<ACheckBoxInner>(),
+            BackgroundImage {":win/svg/checkbox.svg" },
+        },
+        {
+            any<ACheckBox>()["disabled"] > any<ALabel>(),
+            TextColor { 0xa0a0a0_rgb },
+        },
+        {
+            any<ACheckBox>()["disabled"] > any<ACheckBoxInner>(),
+            BackgroundSolid { 0xe5e5e5_rgb },
+            BackgroundImage { 0xa0a0a0_rgb },
+            Border { 1_px, 0xa0a0a0_rgb },
+
         },
 
         // CUSTOM WINDOWS ===================================================
         {
             class_of(".window-title"),
             BackgroundSolid { getOsThemeColor() },
-            FixedSize { .height = 30_dp }
+            FixedSize { {}, 30_dp }
         },
         {
             class_of(".window-title") >> any<ALabel>(),
@@ -185,15 +203,15 @@ AStylesheet::AStylesheet() {
             Margin { {} },
             Padding { {} },
             MinSize { 45_dp, 29_dp },
-            BackgroundSolid{ nullptr }
+            BackgroundSolid { nullptr }
         },
         {
             class_of(".window-title") >> class_of(".minimize"),
-            BackgroundUrl { ":win/caption/minimize.svg" }
+            BackgroundImage {":win/caption/minimize.svg" }
         },
         {
             class_of(".window-title") >> class_of(".close"),
-            BackgroundUrl { ":win/caption/close.svg" }
+            BackgroundImage {":win/caption/close.svg" }
         },
         {
             class_of(".window-title") >> any<AButton>::hover(),
@@ -214,9 +232,7 @@ AStylesheet::AStylesheet() {
         {
             class_of(".window-content"),
             BackgroundSolid { 0xffffff_rgb },
-            MinSize {
-                .width = 200_dp
-            },
+            MinSize { 200_dp, {} },
             Padding { 4_dp, 3_dp },
         },
     });

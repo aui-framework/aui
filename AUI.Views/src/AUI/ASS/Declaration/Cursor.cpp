@@ -3,8 +3,10 @@
 //
 
 #include "Cursor.h"
+#include "IDeclaration.h"
 
 
 void ass::decl::Declaration<ACursor>::applyFor(AView* view) {
     view->setCursor(mInfo);
 }
+

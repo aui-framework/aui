@@ -8,15 +8,17 @@
 #include <AUI/View/AView.h>
 
 namespace ass {
+    struct AttributeWrapper;
+
     template<typename WrappedType>
     struct AttributeHelper: virtual ISubSelector {
     public:
-        ISubSelector* operator[](const AString& attributeName);
+        AttributeWrapper operator[](const AString& attributeName);
     };
 
     struct AttributeWrapper: AttributeHelper<AttributeWrapper> {
     private:
-        _unique<ISubSelector> mWrapped;
+        _<ISubSelector> mWrapped;
         AString mAttributeName;
 
     public:
@@ -34,7 +36,10 @@ namespace ass {
 
             AMap<AString, AVariant> data;
             view->getCustomCssAttributes(data);
-            return data[mAttributeName].toBool();
+            if (auto c = data.contains(mAttributeName)) {
+                return c->second.toBool();
+            }
+            return false;
         }
 
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
@@ -47,9 +52,9 @@ namespace ass {
     };
 
     template<typename WrappedType>
-    ISubSelector* AttributeHelper<WrappedType>::operator[](const AString& attributeName) {
+    AttributeWrapper AttributeHelper<WrappedType>::operator[](const AString& attributeName) {
         WrappedType& t = *dynamic_cast<WrappedType*>(this);
         _unique<ISubSelector> ptr(new WrappedType(std::move(t)));
-        return new AttributeWrapper(std::move(ptr), attributeName);
+        return AttributeWrapper(std::move(ptr), attributeName);
     }
 }

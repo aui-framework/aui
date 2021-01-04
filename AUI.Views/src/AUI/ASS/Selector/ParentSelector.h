@@ -41,13 +41,14 @@ namespace ass {
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
             if (r.isStateApplicable(view)) {
                 for (AView* v = view->getParent(); v; v = v->getParent()) {
-                    if (l.isStateApplicable(v) && l.isPossiblyApplicable(v)) {
+                    if (l.isPossiblyApplicable(v)) {
                         l.setupConnections(v, helper);
                         r.setupConnections(view, helper);
                         return;
                     }
                 }
             }
+            assert(0);
         }
     };
 

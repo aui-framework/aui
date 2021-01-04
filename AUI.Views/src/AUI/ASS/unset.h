@@ -12,10 +12,12 @@ namespace ass {
     struct unset_wrap {
     private:
         T stored;
-        bool unset = true;
+        bool set;
 
     public:
-        unset_wrap() {
+        unset_wrap():
+            set(false)
+        {
         }
 
         template<typename V>
@@ -25,39 +27,37 @@ namespace ass {
             assert(bool(*this));
             return stored;
         }
+        const T& operator*() const {
+            assert(bool(*this));
+            return stored;
+        }
         T or_default(const T& def) {
-            if (*this) {
+            if (set) {
                 return stored;
             }
             return def;
         }
 
 
-        template<typename V>
-        T& operator=(const V& v) {
-            stored = v;
-            return stored;
-        }
+        unset_wrap<T>& operator=(const unset_wrap<T>& v);
 
         operator bool() const {
-            return !unset;
+            return set;
         }
     };
 
     namespace detail::unset {
-        template<typename T, typename V>
-        void init(unset_wrap<T>& wrap, T& dst, bool& unset, const V& value) {
-            if (wrap) {
-                dst = value;
-                unset = false;
-            }
-        }
-        template<typename T, typename V>
-        void init(unset_wrap<T>& wrap, T& dst, bool& unset, const unset_wrap<T>& value) {
+        template<typename T>
+        void init(unset_wrap<T>& wrap, T& dst, bool& set, const unset_wrap<T>& value) {
             if (value) {
                 dst = *value;
-                unset = false;
+                set = true;
             }
+        }
+        template<typename T>
+        void init(unset_wrap<T>& wrap, T& dst, bool& set, const T& value) {
+            dst = value;
+            set = true;
         }
     }
 
@@ -67,7 +67,13 @@ namespace ass {
     unset_wrap<T>::unset_wrap(const V& v):
             stored(v)
     {
-        detail::unset::init(*this, stored, unset, v);
+        detail::unset::init(*this, stored, set, v);
+    }
+
+    template<typename T>
+    unset_wrap<T>& unset_wrap<T>::operator=(const unset_wrap<T>& v) {
+        detail::unset::init(*this, stored, set, v);
+        return *this;
     }
 
 }
