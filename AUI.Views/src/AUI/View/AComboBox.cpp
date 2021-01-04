@@ -54,7 +54,7 @@ void AComboBox::setSelectionId(int id) {
 
 void AComboBox::render() {
     ALabel::render();
-    auto arrow = Drawables::get(":win/svg/combo.svg");
+    auto arrow = Drawables::get(":uni/svg/combo.svg");
     auto size = arrow->getSizeHint();
     auto s = (getHeight() - size.y) / 2;
     Render::inst().setTransform(

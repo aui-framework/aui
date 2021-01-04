@@ -173,7 +173,7 @@ AStylesheet::AStylesheet() {
         },
         {
             any<ACheckBox>()["checked"] > any<ACheckBoxInner>(),
-            BackgroundImage {":win/svg/checkbox.svg" },
+            BackgroundImage {":uni/svg/checkbox.svg" },
         },
         {
             any<ACheckBox>()["disabled"] > any<ALabel>(),
@@ -217,7 +217,7 @@ AStylesheet::AStylesheet() {
         },
         {
             any<ARadioButton>()["checked"] > any<ARadioButtonInner>(),
-            BackgroundImage {":win/svg/radio.svg" },
+            BackgroundImage {":uni/svg/radio.svg" },
         },
         {
             any<ARadioButton>()["disabled"] > any<ALabel>(),
@@ -282,11 +282,11 @@ AStylesheet::AStylesheet() {
         },
         {
             class_of(".window-title") >> class_of(".minimize"),
-            BackgroundImage {":win/caption/minimize.svg" }
+            BackgroundImage {":uni/caption/minimize.svg" }
         },
         {
             class_of(".window-title") >> class_of(".close"),
-            BackgroundImage {":win/caption/close.svg" }
+            BackgroundImage {":uni/caption/close.svg" }
         },
         {
             class_of(".window-title") >> any<AButton>::hover(),

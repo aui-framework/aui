@@ -53,13 +53,13 @@ AScrollbar::AScrollbar(LayoutDirection direction) : mDirection(direction) {
 
             mForwardButton->setCustomAss({
                 ass::BackgroundImage {
-                    ":win/svg/sb-right.svg"
+                    ":uni/svg/sb-right.svg"
                 },
                 ass::FixedSize { 17_dp, 15_dp }
             });
             mBackwardButton->setCustomAss({
                 ass::BackgroundImage {
-                    ":win/svg/sb-left.svg"
+                    ":uni/svg/sb-left.svg"
                 },
                 ass::FixedSize { 17_dp, 15_dp }
             });
@@ -68,13 +68,13 @@ AScrollbar::AScrollbar(LayoutDirection direction) : mDirection(direction) {
             setLayout(_new<AVerticalLayout>());
             mForwardButton->setCustomAss({
                  ass::BackgroundImage {
-                         ":win/svg/sb-down.svg"
+                         ":uni/svg/sb-down.svg"
                  },
                  ass::FixedSize { 15_dp, 17_dp }
             });
             mBackwardButton->setCustomAss({
                  ass::BackgroundImage {
-                         ":win/svg/sb-top.svg"
+                         ":uni/svg/sb-top.svg"
                  },
                  ass::FixedSize { 15_dp, 17_dp }
             });

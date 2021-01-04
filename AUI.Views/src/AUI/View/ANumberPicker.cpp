@@ -65,9 +65,9 @@ ANumberPicker::ANumberPicker()
 	auto c = _new<AViewContainer>();
 	c->addCssName(".up-down-wrapper");
 	auto up = _new<AButton>();
-	up->setIcon(Drawables::get(":win/svg/up.svg"));
+	up->setIcon(Drawables::get(":uni/svg/up.svg"));
 	auto down = _new<AButton>();
-	down->setIcon(Drawables::get(":win/svg/down.svg"));
+	down->setIcon(Drawables::get(":uni/svg/down.svg"));
 	c->setLayout(_new<AVerticalLayout>());
 	c->setExpanding({ 0, 0 });
 	c->addView(up);
