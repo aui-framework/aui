@@ -1,20 +1,20 @@
 #pragma once
 
-#include <AUI/ASS/Selector/Selector.h>
+#include <AUI/ASS/Selector/AAssSelector.h>
 
 
 struct Rule: RuleWithoutSelector {
 public:
     template<typename... Declarations>
-    Rule(ass::ASelector&& selector, Declarations&&... declarations):
+    Rule(ass::AAssSelector&& selector, Declarations&&... declarations):
             RuleWithoutSelector(std::forward<Declarations>(declarations)...),
-            mSelector(std::forward<ass::ASelector>(selector)) {
+            mSelector(std::forward<ass::AAssSelector>(selector)) {
     }
 
-    [[nodiscard]] const ass::ASelector& getSelector() const {
+    [[nodiscard]] const ass::AAssSelector& getSelector() const {
         return mSelector;
     }
 
 private:
-    ass::ASelector mSelector;
+    ass::AAssSelector mSelector;
 };

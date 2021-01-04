@@ -10,7 +10,7 @@
 #include <AUI/Render/FontStyle.h>
 #include <AUI/Platform/AInput.h>
 
-class ACursorSelectable {
+class API_AUI_VIEWS ACursorSelectable {
 private:
     int mAbsoluteBegin, mAbsoluteEnd;
 

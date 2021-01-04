@@ -4,11 +4,11 @@
 
 #pragma once
 
-#include "Selector.h"
+#include "AAssSelector.h"
 
 namespace ass {
     template <typename L, typename R>
-    struct DirectParentSubSelector: public ISubSelector {
+    struct DirectParentSubSelector: public IAssSubSelector {
     private:
         L l;
         R r;
@@ -43,7 +43,7 @@ namespace ass {
         }
     };
 
-    template <typename L, typename R, std::enable_if_t<std::is_base_of_v<ISubSelector, L> && std::is_base_of_v<ISubSelector, R>, bool> = true>
+    template <typename L, typename R, std::enable_if_t<std::is_base_of_v<IAssSubSelector, L> && std::is_base_of_v<IAssSubSelector, R>, bool> = true>
     DirectParentSubSelector<L, R> operator>(L&& l, R&& r) {
         return DirectParentSubSelector<L, R>(std::forward<L>(l), std::forward<R>(r));
     }

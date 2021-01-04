@@ -4,26 +4,28 @@
 
 #pragma once
 
-#include "Selector.h"
+#include "AAssSelector.h"
 #include <AUI/View/AView.h>
+
+#pragma warning(disable: 4250)
 
 namespace ass {
     struct AttributeWrapper;
 
     template<typename WrappedType>
-    struct AttributeHelper: virtual ISubSelector {
+    struct AttributeHelper: virtual IAssSubSelector {
     public:
         AttributeWrapper operator[](const AString& attributeName);
     };
 
     struct AttributeWrapper: AttributeHelper<AttributeWrapper> {
     private:
-        _<ISubSelector> mWrapped;
+        _<IAssSubSelector> mWrapped;
         AString mAttributeName;
 
     public:
-        AttributeWrapper(_unique<ISubSelector>&& wrapped, const AString& attributeName):
-            mWrapped(std::forward<_unique<ISubSelector>>(wrapped)),
+        AttributeWrapper(_unique<IAssSubSelector>&& wrapped, const AString& attributeName):
+            mWrapped(std::forward<_unique<IAssSubSelector>>(wrapped)),
             mAttributeName(attributeName) {}
 
         bool isPossiblyApplicable(AView* view) override {
@@ -43,7 +45,7 @@ namespace ass {
         }
 
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
-            ISubSelector::setupConnections(view, helper);
+            IAssSubSelector::setupConnections(view, helper);
             mWrapped->setupConnections(view, helper);
 
             view->customCssPropertyChanged.clearAllConnectionsWith(helper.get());
@@ -54,7 +56,7 @@ namespace ass {
     template<typename WrappedType>
     AttributeWrapper AttributeHelper<WrappedType>::operator[](const AString& attributeName) {
         WrappedType& t = *dynamic_cast<WrappedType*>(this);
-        _unique<ISubSelector> ptr(new WrappedType(std::move(t)));
+        _unique<IAssSubSelector> ptr(new WrappedType(std::move(t)));
         return AttributeWrapper(std::move(ptr), attributeName);
     }
 }

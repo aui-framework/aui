@@ -10,7 +10,7 @@
 
 #include "Declaration/BackgroundImage.h"
 
-class Rule;
+struct Rule;
 
 /**
  * \brief И помни, ASS - это не жопа. ASS - это Aui Style Sheets

@@ -15,26 +15,26 @@ class AView;
 
 namespace ass {
 
-    class ISubSelector {
+    class IAssSubSelector {
     public:
         virtual bool isPossiblyApplicable(AView* view) = 0;
         virtual bool isStateApplicable(AView* view);
         virtual void setupConnections(AView* view, const _<AAssHelper>& helper);
+        virtual ~IAssSubSelector() = default;
     };
 
-    class ASelector {
+    class AAssSelector {
     private:
-        AVector<_<ISubSelector>> mSubSelectors;
+        AVector<_<IAssSubSelector>> mSubSelectors;
 
         template<typename SubSelector, std::enable_if_t<!std::is_pointer_v<SubSelector>, bool> = true>
         void processSubSelector(SubSelector&& subSelector) {
-            ISubSelector* sub = new SubSelector(std::forward<SubSelector>(subSelector));
-            mSubSelectors << std::move(_<ISubSelector>(sub));
+            mSubSelectors << _new<SubSelector>(std::forward<SubSelector>(subSelector));
         }
 
         template<typename SubSelector, std::enable_if_t<std::is_pointer_v<SubSelector>, bool> = true>
         void processSubSelector(SubSelector&& subSelector) {
-            mSubSelectors << std::move(_<ISubSelector>(subSelector));
+            mSubSelectors << _<IAssSubSelector>(subSelector);
         }
 
         template<typename SubSelector, typename...SubSelectors>
@@ -47,9 +47,17 @@ namespace ass {
 
     public:
         template<typename...SubSelectors>
-        ASelector(SubSelectors&&... subSelectors) {
+        AAssSelector(SubSelectors&&... subSelectors) {
             processSubSelectors(std::forward<SubSelectors>(subSelectors)...);
         }
+        AAssSelector(AAssSelector&& move): mSubSelectors(std::move(move.mSubSelectors)) {
+
+        }
+
+        ~AAssSelector() {
+            mSubSelectors.clear();
+        }
+
         bool isPossiblyApplicable(AView* view) const {
             for (auto& s : mSubSelectors) {
                 if (s->isPossiblyApplicable(view))
@@ -74,5 +82,5 @@ namespace ass {
 
     };
 
-    using sel = ASelector;
+    using sel = AAssSelector;
 }

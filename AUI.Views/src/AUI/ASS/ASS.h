@@ -24,7 +24,7 @@
 #include "Declaration/TextColor.h"
 
 // Selectors
-#include "Selector/Selector.h"
+#include "AUI/ASS/Selector/AAssSelector.h"
 #include "Selector/ParentSelector.h"
 #include "Selector/DirectParentSelector.h"
 #include "Selector/any.h"

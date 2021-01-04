@@ -17,7 +17,7 @@
 namespace ass {
 
     namespace detail {
-        struct ClassOf : virtual ISubSelector {
+        struct ClassOf : virtual IAssSubSelector {
         private:
             AVector<AString> mClasses;
             

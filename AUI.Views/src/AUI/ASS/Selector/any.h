@@ -17,7 +17,7 @@ namespace ass {
 
     namespace detail {
         template<typename T>
-        struct Type : virtual ISubSelector {
+        struct Type : virtual IAssSubSelector {
         public:
             bool isPossiblyApplicable(AView* view) override {
                 return dynamic_cast<T*>(view) != nullptr;
