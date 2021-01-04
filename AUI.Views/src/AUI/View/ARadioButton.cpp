@@ -1,21 +1,6 @@
 #include "ARadioButton.h"
 #include "AUI/Layout/AHorizontalLayout.h"
 
-class ARadioButtonInner: public AView
-{
-public:
-    ARadioButtonInner()
-    {
-
-    }
-    virtual ~ARadioButtonInner() = default;
-
-    void update()
-    {
-        emit customCssPropertyChanged;
-    }
-};
-
 
 ARadioButton::ARadioButton()
 {
@@ -79,4 +64,8 @@ int ARadioButton::Group::getSelectedId() const {
         return mButtons.indexOf(s);
     }
     return 0;
+}
+
+void ARadioButtonInner::update() {
+    emit customCssPropertyChanged;
 }

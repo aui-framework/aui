@@ -12,6 +12,8 @@
 
 #ifdef _WIN32
 #include <dwmapi.h>
+#include <AUI/View/ARadioButton.h>
+
 #endif
 
 AStylesheet::AStylesheet() {
@@ -180,7 +182,50 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0xe5e5e5_rgb },
             BackgroundImage { 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
+        },
 
+        // ARadioButton
+        {
+            any<ARadioButton>(),
+            Margin { 1_dp, 4_dp },
+        },
+        {
+            any<ARadioButton>() > any<ALabel>(),
+            Margin { 1_dp, 4_dp },
+        },
+        {
+            any<ARadioButtonInner>(),
+            BackgroundSolid { 0xffffff_rgb },
+            Margin { 1_dp, 1_dp, 1_dp, 4_dp },
+            Border { 1_px, 0x333333_rgb },
+            FixedSize { 13_dp, 13_dp },
+            BorderRadius { 6_dp },
+            BackgroundImage {0x333333_rgb },
+        },
+        {
+            any<ARadioButtonInner>::hover(),
+            Border { 1_px, 0x0078d7_rgb },
+            BackgroundImage {0x0078d7_rgb },
+        },
+        {
+            any<ARadioButtonInner>::hover(),
+            BackgroundSolid { 0xcce4f7_rgb },
+            Border { 1_px, 0x005499_rgb },
+            BackgroundImage {0x005499_rgb },
+        },
+        {
+            any<ARadioButton>()["checked"] > any<ARadioButtonInner>(),
+            BackgroundImage {":win/svg/radio.svg" },
+        },
+        {
+            any<ARadioButton>()["disabled"] > any<ALabel>(),
+            TextColor { 0xa0a0a0_rgb },
+        },
+        {
+            any<ARadioButton>()["disabled"] > any<ARadioButtonInner>(),
+            BackgroundSolid { 0xe5e5e5_rgb },
+            BackgroundImage { 0xa0a0a0_rgb },
+            Border { 1_px, 0xa0a0a0_rgb },
         },
 
         // CUSTOM WINDOWS ===================================================

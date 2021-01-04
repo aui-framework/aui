@@ -7,6 +7,17 @@
 #include "ALabel.h"
 #include "AViewContainer.h"
 
+
+class ARadioButtonInner: public AView
+{
+public:
+    ARadioButtonInner() = default;
+    virtual ~ARadioButtonInner() = default;
+
+    void update();
+};
+
+
 class API_AUI_VIEWS ARadioButton : public AViewContainer {
 private:
     _<ALabel> mText;
