@@ -42,6 +42,7 @@
 #include <AUI/Image/Drawables.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Traits/memory.h>
+#include <AUI/Traits/strings.h>
 
 constexpr bool AUI_DISPLAY_BOUNDS = false;
 AWindow::Context AWindow::context = {};
@@ -104,9 +105,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     if (uMsg != WM_PAINT) {
         if (!mRedrawFlag) {
             // REMIND VINDOVWS ABOUT MY VINDOW I WANT TO REDRAW!!!
-            if (AInput::isKeyDown(AInput::LControl)) {
-                printf("");
-            }
             mRedrawFlag = true;
             flagRedraw();
         }
@@ -129,6 +127,10 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             }
             return true;
             */
+
+        case WM_USER:
+            return 0;
+
         case WM_SETFOCUS:
             onFocusAcquired();
             return 0;
@@ -1566,8 +1568,12 @@ void AWindowManager::notifyProcessMessages() {
 #else
     if (!mWindows.empty()) {
 #if defined(_WIN32)
-        auto handle = mWindows.back()->mHandle;
-        PostMessage(handle, WM_USER, 0, 0);
+        auto& lastWindow = mWindows.back();
+
+        // we don't need to notify MS Windows' mesass::decl::Declaration<ass::Border>::renderForsage queue about new message if message sent from UI thread.
+        if (lastWindow->getThread() != AThread::current()) {
+            PostMessage(lastWindow->mHandle, WM_USER, 0, 0);
+        }
 #else
     mXNotifyCV.notify_all();
 #endif
