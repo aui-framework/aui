@@ -82,10 +82,10 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
 		{
 			c->addView(_new<ALabel>("Checkboxes"));
 			c->addView(_new<ACheckBox>("Unchecked checkbox"));
-			auto checked = _new<ACheckBox>("Disabled checkbox");
+			auto checked = _new<ACheckBox>("Checked checkbox");
 			checked->setChecked(true);
 			c->addView(checked);
-			auto disabled = _new<ACheckBox>("Disable");
+			auto disabled = _new<ACheckBox>("Disabled checkbox");
 			disabled->setDisabled();
 			c->addView(disabled);
 		}
