@@ -1,5 +1,7 @@
 #pragma once
 
+#include <type_traits>
+
 namespace aui::traits {
     struct android_platform {
         using is_vertical_preferred = std::true_type;

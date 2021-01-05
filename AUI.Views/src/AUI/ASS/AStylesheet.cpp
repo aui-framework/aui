@@ -34,6 +34,7 @@ AStylesheet::AStylesheet() {
         {
             any<AWindow>(),
             BackgroundSolid {0xf0f0f0_rgb},
+            Padding { 4_dp },
         },
 
         // ALabel

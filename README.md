@@ -1,80 +1,131 @@
 # AUI (Advanced Universal Interface)
-Кроссплатформенный фреймворк для разработки графических и консольных программ на С++17.
-## Основные возможности
-- Вспомогательные классы для работы со строками
-- Шифрование 
-- IO потоки
-- Работа с сетью, в том числе https, ftp запросы
-- Асинхронная и синхронная архитектуры приложений
-- GUI интерфейсы, в том числе средства фреймворка для удобного описания интерфейсов на C++, стили в формате CSS
-- MVC
-- Работа с БД на языке SQL, в том числе генератор запросов
-- Биндинг моделей и ORM
-- Компилятор ресурсов (ассетов)
+Cross-platform module-based framework for developing and deploying hardware accelerated graphical desktop applications
+using modern C++17.
 
-## Поддерживаемые платформы
-| Операционная система      | Поддержка      |
-|---------------------------|----------------|
-| Android                   | Частичная      |
-| iOS                       | Не планируется |
-| Linux                     | Полная         |
-| Mac                       | Не планируется |
-| Windows 2000 and older    | Не планируется |
-| Windows XP                | Планируется    | 
-| Windows 7                 | Полная         |
-| Windows 8/8.1             | Полная         |
-| Windows 10                | Полная         |
+## Key features
+- Extended common types (containers, strings, streams, etc...)
+- Graphical User Interfaces, including framework tools for fast declarative UI producing using modern C++ capabilities
+- Resource compiler (assets)
+- Internationalization (i18n)
+- DPI support
+- CMake deployment scripts
+- Model binding and ORM
+- Encryption
+- IO streams
+- Networking, including http(s) requests
+- DBMS integration including SQL query builder
+- Both asynchronous and synchronous application architecture support
 
-| Компилятор                   | Поддержка      |
-|------------------------------|----------------|
-| MSVC 16+ (Visual Studio 19+) | Полная         |
-| gcc (8+)                     | Полная         |
-| MinGW (8+)                   | Полная         |
-| clang                        | Не проверялось |
+## Module list
+- `AUI.Core` - basic types (containers, strings, streams, etc...)
+- `AUI.Crypt` - wrapper around OpenSSL for encryption functionality
+- `AUI.Curl` - wrapper around libcurl for http/https requests
+- `AUI.Designer` - UI Designer (in dev)
+- `AUI.Data` - DBMS interface and ORM
+- `AUI.Image` - popular image format loader 
+- `AUI.Json` - JSON parser
+- `AUI.Mysql` - MySQL driver for `AUI.Data`
+- `AUI.Network` - networking
+- `AUI.Sqlite` - SQLite driver for `AUI.Data`
+- `AUI.Svg` - SVG image loader
+- `AUI.Toolbox` - resource compiler
+- `AUI.Views` - UI toolkit
+- `AUI.Xml` - XML parser
 
-## Используемые библиотеки
-- `libcurl` для http/https запросов
-- `OpenSSL` для шифрования
-- `OpenGL` для отображения графики
-- `glm` для линейной алгебры
-- `stbimage` для загрузки изображений
-- `freetype2` для рендеринга шрифтов
+## Feature support
+ - `-` equals unsupported
+ - `?` equals planned
+ - `+` equals almost completely supported
+ - `#` equals fully supported
 
-## Список модулей
-Каждый модуль в AUI решает свою конкретную задачу.
-- `AUI.Core` - базовые типы - `_`, строки, потоки, IO и т.д.
-- `AUI.Crypt` - обёртка над OpenSSL для обеспечения функциями шифрования.
-- `AUI.Curl` - обёртка над libcurl для обеспечения ftp/https запросами.
-- `AUI.Designer` - Designer (in dev)
-- `AUI.Data` - работа с СУБД и ORM
-- `AUI.Image` - загрузка изображений популярных форматов
-- `AUI.Json` - парсер JSON
-- `AUI.Mysql` - адаптер MySQL для `AUI.Data`
-- `AUI.Network` - обёртка над системными вызовами для работы с сетью
-- `AUI.Sqlite` - адаптер SQLite для `AUI.Data`
-- `AUI.Svg` - загрузка изображений в формате Svg
-- `AUI.Toolbox` - компилятор ресурсов
-- `AUI.Views` - UI-движок с аппаратным ускорением
-- `AUI.Xml` - парсер XML
+| Feature or module | Windows Vista/7/8/8.1/10 | Windows XP | Linux | Android | MacOS | iOS |
+|-------------------|--------------------------|------------|-------|---------|-------|-----|
+| AUI.Core          |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| AUI.Crypt         |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| AUI.Curl          |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| AUI.Data          |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| AUI.Designer      |             #            |     #      |   #   |    -    |   ?   |  -  |
+| AUI.Image         |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| AUI.Json          |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| AUI.Mysql         |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| AUI.Network       |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| AUI.Sqlite        |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| AUI.Svg           |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| AUI.Toolbox       |             #            |     #      |   #   |    -    |   ?   |  -  |
+| AUI.Views         |             #            |     ?      |   +   |    +    |   ?   |  ?  |
+| AUI.Xml           |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| Assets            |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| Filesystem        |             #            |     #      |   #   |    #    |   ?   |  -  |
+| Process creation  |             #            |     #      |   #   |    -    |   ?   |  -  |
 
-## Примеры
-В папке `examples/` находятся примеры проектов, использующие AUI.
+| Compiler                     | Support       |
+|------------------------------|---------------|
+| MSVC 19+ (Visual Studio 17+) | Full          |
+| gcc (8+)                     | Full          |
+| MinGW (8+)                   | Full          |
+| Cross-compile MinGW          | Full          |
+| clang                        | Unknown       |
 
-### Шаблон проекта
+## Used libraries
+- `libcurl` for http/https requests
+- `OpenSSL` for encryption
+- `OpenGL` as graphics hardware acceleration backend
+- `glm` for linear algebra
+- `stbimage` for image loading
+- `freetype2` for font rendering
+
+
+## Examples
+Check the `examples/` folder.
+
+![Fractal](https://sun9-42.userapi.com/impf/WruyOdMmMBrRfpjJ7QrhFepZj7obL3VMGxNSaw/Tr8XxKqdVV8.jpg?size=1261x740&quality=96&proxy=1&sign=f6b851a26a7c40a5f1c22367a34f4c71&type=album)
+
+![Views](https://sun9-72.userapi.com/impf/i-t02B1DzF1AJDBLpDrjX6QkjhnI6VruPGYgrA/8eU7ZvOZ2Lo.jpg?size=1261x740&quality=96&proxy=1&sign=06f90177b68f83228c529d5108e1b685&type=album)
+
+![Minesweeper](https://sun9-10.userapi.com/impf/AW9aUF7nuKdkiOfEz7WtsKqhYARlwVaFb_qV0g/0EGtNBty3NI.jpg?size=392x481&quality=96&proxy=1&sign=adbaf47dada836ab25868abf8db9b9d5&type=album)
+
+# Getting started
+## Building AUI
+### Windows
+1. Download the following dependencies:
+    - for `AUI.Views`: `freetype2`. Note that you need only `AUI.Views` for UI applications
+    - for `AUI.Crypt`: `OpenSSL`
+    - for `AUI.Curl`: `libcurl`
+2. Download and install [cmake-gui](https://cmake.org/download/)
+3. For each dependency:
+   1. Open project's dir as source dir in cmake-gui
+   2. Specify build folder
+   3. Configure
+   4. Generate
+   5. Open project (button in cmake-gui)
+   6. Build the `INSTALL` project. It will build the library and install to your system
+4. `git clone` this repository
+5. `git submodule update --init --recursive`
+6. Repeat the third step but for AUI
+
+### *nix
+1. Download and install cmake and gcc
+2. `git clone` this repository
+3. Download dependencies: `git submodule update --init --recursive`
+4. Create build folder and cd to it: `cd AUI && mkdir build && cd build`
+5. Run `cmake ..`
+6. Run `make && sudo make install`
+
+## Creating own project
 `CMakeLists.txt`
 ```cmake
-# Стандартная рутина
+# Standard routine
 cmake_minimum_required(VERSION 3.16)
 project(project_template)
 
-# Подключаем AUI
+# Link AUI
 find_package(AUI REQUIRED)
 
-# Создаём испольняемый файл. Данная функция автоматически подключит все нужные исходники из папки src, создаст цель
-# CMake и расположит исполнямый файл в папку bin/.
+# Create the executable. This function automatically links all sources from the src/ folder, creates CMake target and
+# places the resulting executable to bin/ folder.
 AUI_Executable(project_template)
 
-# Подключаем требуемые библиотеки
+# Link required libs
 target_link_libraries(project_template PRIVATE AUI.Core)
 #target_link_libraries(project_template PRIVATE AUI.Views)
 #target_link_libraries(project_template PRIVATE AUI.Network)
@@ -92,15 +143,21 @@ AUI_ENTRY {
 }
 ```
 
-## Контрибьютинг
-Ветка `master` содержит код release-кандидата. Код в этой ветке должен компилироваться без ошибок и проходить все тесты
-для всех поддерживаемых платформ. Если произошёл форс-мажор и вышеуказаные требования перестали выполняться:
-- не уходите домой
-- не уходите на конференции/встречи и т.д.
-- решайте проблему (в том числе допустим откат коммита)
-Ветка `release` содержит код release версий. В этой ветке никогда не пишут код, а код там появляется исключительно из
-ветки `master`. Для каждой версии создаётся tag с соответствующей версией.
+# Contributing
+## Workflow
+`master` branch contains code of the release candidate. Code of this branch must compile without errors and should pass
+all tests on all supported platforms.
+Each feature of the framework is created in a separate branch in the `feat/` folder. Pulling changes from your branch to
+`master` is possible only if the merge with your branch does not generate merge conflicts and does not break the build
+and tests.
 
-Каждая фича фреймворка создаётся в отдельной ветке в папке `feat/`. pull изменений из вашей ветки в `master` возможен
-только в том случае, если мердж с вашей веткой не породит мердж-конфликты и не сломает сборку и тесты. pull изменений
-в master вы должны проводить самостоятельно, но рекомендуется сначала обсудить ваш код с другими программистами.
+## Code style
+AUI's code should be kept with the following code style:
+- `No tabs`; only four spaces
+- Row length: up to `120` characters
+- Class names: `CamelCase`
+- Functions, variables: `lowerCamelCase`
+- Constants: `UPPER_SNAKE_CASE`
+- Structures: commonly holds some data and does not have member functions; `CamelCase`.
+              Also used for template-based functionality (like `stl`, `AUI/Traits/`), in that case, `snake_case` used
+              for file names, struct name and its member functions

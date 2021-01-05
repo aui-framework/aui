@@ -53,8 +53,8 @@ public:
         assert(painting);
         painting = false;
         bool ok = wglMakeCurrent(nullptr, nullptr);
-        EndPaint(mHandle, &mPaint);
         assert(ok);
+        EndPaint(mHandle, &mPaint);
     }
 };
 
@@ -82,11 +82,18 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     if (uMsg != WM_PAINT) {
         if (!mRedrawFlag) {
-            // НАПОМНИТЬ ВЕНДЕ, ЧТО Я ОЧЕНЬ ХОЧУ ПЕРЕРИСОВАТЬ СРАНОЕ ОКНО!!!
+            // REMIND VINDOVWS ABOUT MY VINDOW I WANT TO REDRAW!!!
+            if (AInput::isKeyDown(AInput::LControl)) {
+                printf("");
+            }
             mRedrawFlag = true;
             flagRedraw();
         }
+
+        bool ok = wglMakeCurrent(GetDC(mHandle), AWindow::context.hrc);
+        assert(ok);
     }
+
 
     switch (uMsg) {
 /*
