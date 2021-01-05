@@ -9,13 +9,12 @@ public:
 	virtual ~IEventLoop() {}
 
 	/**
-	 * \brief Поток этого IEventLoop получил новое сообщение,
-	 *		  которое необходимо обработать.
+	 * \brief Notifies this IEventLoop that its thread got a new message to process.
 	 */
 	virtual void notifyProcessMessages() = 0;
 
 	/**
-	 * \brief Начать обработку сообщений.
+	 * \brief Do message processing loop.
 	 */
 	virtual void loop() = 0;
 

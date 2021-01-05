@@ -18,12 +18,34 @@ class API_AUI_NETWORK AUdpSocket : public AAbstractSocket
 {
 public:
 
-	AUdpSocket(const AUdpSocket&) = delete;
-	AUdpSocket(uint16_t port);
-	AUdpSocket();
-	~AUdpSocket() override = default;
+    /**
+     * \brief Creates socket
+     * \param port port
+     */
+    AUdpSocket(uint16_t port);
 
+
+    /**
+     * \brief Creates socket with random port (used for "client" socket)
+     */
+	AUdpSocket();
+
+	AUdpSocket(const AUdpSocket&) = delete;
+    ~AUdpSocket() override = default;
+
+
+    /**
+     * \brief Sends data by address.
+     * \param buf data buffer
+     * \param dst destination delivery address
+     */
 	void write(const AByteBuffer& buf, const AInet4Address& dst);
+
+	/**
+	 * \brief Read data.
+	 * \param buf (out) received data
+	 * \param dst (out) sender address
+	 */
 	void read(AByteBuffer& buf, AInet4Address& dst);
 
 protected:

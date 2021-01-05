@@ -51,7 +51,7 @@ ANumberPicker::ANumberPicker()
 	
 	setLayout(_new<AHorizontalLayout>());
 	addView(mTextField = _new<ANumberPickerField>(*this));
-	addCssName(".input-field");
+    addAssName(".input-field");
 
 	mTextField->setExpanding({ 1, 1 });
 	connect(mTextField->focusState, this, [&](bool c)
@@ -63,7 +63,7 @@ ANumberPicker::ANumberPicker()
 	});
 	
 	auto c = _new<AViewContainer>();
-	c->addCssName(".up-down-wrapper");
+    c->addAssName(".up-down-wrapper");
 	auto up = _new<AButton>();
 	up->setIcon(Drawables::get(":uni/svg/up.svg"));
 	auto down = _new<AButton>();

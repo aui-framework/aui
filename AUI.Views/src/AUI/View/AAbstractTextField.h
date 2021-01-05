@@ -82,13 +82,13 @@ public:
 
 signals:
 	/**
-	 * \brief изменение текстового поля завершено
-	 * \note этот сигнал порождается в том числе при вызове функции AAbstractTextField::setText
+	 * \brief Text changed.
+	 * \note This signal is also emitted by the AAbstractTextField::setText function
 	 */
 	emits<AString> textChanged;
 
 	/**
-	 * \brief содержимое текстового поля изменяется пользователем.
+	 * \brief Text is changing by the user.
 	 */
 	emits<AString> textChanging;
 };

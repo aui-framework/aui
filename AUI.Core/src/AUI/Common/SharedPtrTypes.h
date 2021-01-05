@@ -6,6 +6,11 @@
 class AObject;
 
 
+/**
+ * \brief std::shared_ptr<T> wrapper
+ *        Of course, it is not good tone to define a class with _ type but it significantly increases coding speed.
+ *        Instead of writing every time std::shared_ptr you should write only the _ symbol.
+ */
 template<typename T>
 class _ : public std::shared_ptr<T>
 {
@@ -65,16 +70,16 @@ public:
 	}
 
 	/**
-	 * \brief Гарантирует, что дальнейшие builder-вызовы будут выполняться тогда и только тогда, когда этот указатель
-	 *        не равен null.
-	 * \return безопасный builder
+	 * \brief Guarantees that further builder calls will be executed if and only if this pointer
+     *        not equal to null.
+	 * \return safe builder
 	 */
     inline auto safe()
 	{
 		return SafeCallWrapper(*this);
 	}
 
-	// для ranged-for циклов
+	// ranged-for loops
 	auto begin() {
 	    return parent::operator->()->begin();
 	}
@@ -82,7 +87,7 @@ public:
 	    return parent::operator->()->end();
 	}
 
-	// операторы
+	// operators
 
     template<typename Arg>
 	_<T>& operator<<(Arg&& value) {

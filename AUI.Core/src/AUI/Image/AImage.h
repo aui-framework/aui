@@ -1,5 +1,5 @@
 ﻿//
-// Created by Алексей on 25.07.2018.
+// Created by alex2772 on 25.07.2018.
 //
 
 #pragma once
@@ -49,7 +49,7 @@ public:
     }
 
     /**
-     * \return Количество байт на пиксель.
+     * \return bytes per pixel.
      */
     inline uint8_t getBytesPerPixel() const {
         auto b = static_cast<uint8_t>(mFormat & 15u);

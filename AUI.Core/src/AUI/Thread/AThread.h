@@ -10,8 +10,7 @@
 class IEventLoop;
 
 /**
- * \brief Абстрактный поток. Не все потоки созданы через AThread,
- *        а это - по сути абстрактный интерфейс.
+ * \brief Abstract thread. Not all threads are created through AThread - these are interfaced with AAbstractThread.
  */
 class API_AUI_CORE AAbstractThread
 {
@@ -20,103 +19,111 @@ class API_AUI_CORE AAbstractThread
 public:
 
 	/**
-	 * \brief Идентификатор потока.
+	 * \brief Thread ID type.
 	 */
 	typedef std::thread::id id;
 
 private:
 	/**
-	 * \brief Очередь сообщений.
+	 * \brief Message queue.
 	 */
 	ADeque<std::function<void()>> mMessageQueue;
 
 	/**
-	 * \brief Мьютекс для потокобезопасности очереди сообщений
+	 * \brief Message queue mutex.
 	 */
 	std::recursive_mutex mQueueLock;
-	/**
-	 * \brief Мьютекс для потокобезопасности поля mCurrentEventLoop.
-	 */
-    std::recursive_mutex mEventLoopLock;
 
 	/**
-	 * \brief Идентификатор этого потока.
+	 * \brief Thread ID.
 	 */
 	id mId;
 
 	AConditionVariable mSleepCV;
 	
 	/**
-	 * \brief Текущий IEventLoop для этого потока. Требуется
-	 *		  для межпоточной доставки сообщений.
+	 * \brief Current IEventLoop for this thread. Used for inter thread message delivery.
 	 */
 	IEventLoop* mCurrentEventLoop = nullptr;
+
+    /**
+     * \brief Mutex for mCurrentEventLoop.
+     */
+    std::recursive_mutex mEventLoopLock;
 
 	AAbstractThread() = default;
 	AAbstractThread(const id& id);
 
 
 	/**
-	 * \brief Хранилище указателя на AAbstractThread для текущего потока.
+	 * \brief AAbstractThread storage of current thread.
 	 */
 	static _<AAbstractThread>& threadStorage();
 
 public:
 	/**
-	 * \return Идентификатор этого потока.
+	 * \return thread ID
 	 */
 	id getId() const;
 
 	/**
-	 * \brief Передать задание на обработку (сообщение) этому
-	 *		  потоку.
-	 *        Сообщения обрабатываются самим фреймворком при помощи
-	 *        AEventLoop и участие пользователя не требуется.
-	 *        Если очень хочется, можно обработать эти сообщения,
-	 *        вызвав функцию AThread::processMessages().
-	 *
+	 * \brief Delivers task for execution (message) to this thread's event queue. Messages are processed by framework
+	 *        itself using AEventLoop. This behaviour may be overwritten using the <code>AThread::processMessages()
+	 *        </code> function.
 	 */
 	void enqueue(const std::function<void()>& f);
 
 	/**
-	 * \brief Обработать сообщения от других потоков.
-	 *        Вызывается самим фреймворком при помощи
-	 *        IEventLoop и участие пользователя не требуется.
-	 *        Если очень хочется, можно вызвать самому, фреймворк
-	 *        от этого не помрёт.
+	 * \brief Processes messages from other threads. It's called by framework itself using IEventLoop. This function can
+	 *        be called from any place of this thread's execution. This function shouldn't be called from another
+	 *        thread.
 	 */
 	void processMessages();
 
 	virtual ~AAbstractThread();
 
 	/**
-	 * \return true, если для потока запрошено прерывание.
+	 * \return true if interrupt requested for this thread.
 	 */
 	virtual bool isInterrupted();
 
 	/**
-	 * \brief сбросить флаг прерывания.
+	 * \brief Reset interruption flag.
 	 */
 	virtual void resetInterruptFlag();
 
     /**
-     * \brief Прервать выполнение потока.
-     *	      Естественно, так как С++ - компилируемый язык, то для
-     *	      корректной работы этой функции прерываемый код должен
-     *	      содержать вызовы функции AThread::interruptionPoint().
+     * \brief Interrupt thread's execution.
+     *        This function requires the interrupted code contain calls to the <code>AThread::interruptionPoint()</code>
+     *        function since C++ is native programming language (not managed)
      */
     virtual void interrupt();
 
+    /**
+     * \brief Get current event loop for this thread.
+     * \return current event loop for this thread
+     */
 	IEventLoop* getCurrentEventLoop() const {
 		return mCurrentEventLoop;
 	}
 
 
+	/**
+	 * \brief Enqueue message to execute.
+	 * \tparam Callable callable
+	 * \param fun callable function
+	 */
 	template <class Callable>
     inline void operator<<(Callable fun)
     {
         enqueue(fun);
     }
+
+    /**
+     * \brief Enqueue message to execute. Helper function for async, asyncX, ui, uiX
+     * \tparam Callable callable
+     * \param fun callable function
+     */
     template <class Callable>
     inline void operator*(Callable fun)
     {
@@ -127,16 +134,14 @@ public:
 #include "AUI/Common/AObject.h"
 
 /**
- * \brief Поток.
+ * \brief Thread.
  */
 class API_AUI_CORE AThread : public AAbstractThread, public AObject, public std::enable_shared_from_this<AThread>
 {
 public:
 	/**
-	 * \brief Исключение, которое выплёвывается из точки прерывания,
-	 *        если для потока было запрошено это самое прерывание.
-	 *        Обрабатывается в AThread::start. Может быть обработано
-	 *        пользователем.
+	 * \brief Exception that is thrown by <code>AThread::interruptionPoint()</code>, if interruption is requested for
+	 *        this thread. Handled by <code>AThread::start</code.
 	 */
 	class AInterrupted
 	{
@@ -144,19 +149,18 @@ public:
 
 private:
 	/**
-	 * \brief Нативный хендл потока.
+	 * \brief Native thread handle.
 	 */
 	std::thread* mThread = nullptr;
 
 	/**
-	 * \brief Функция, запускаемая при выполнении этого потока.
-	 *	      Становится nullptr после start().
+	 * \brief Function that is called by <code>AThread::start()</code>. Becomes nullptr after call to
+	 *        <code>AThread::start()</code>
 	 */
 	std::function<void()> mFunctor;
 
 	/**
-	 * \brief true, если для этого потока было запрошено
-	 *		  прерывание.
+	 * \brief true if interrupt requested for this thread.
 	 */
 	bool mInterrupted = false;
 
@@ -167,39 +171,38 @@ public:
 	{
 	}
 
+    virtual ~AThread();
+
 	/**
-	 * \brief Запустить выполнение потока.
+	 * \brief Start thread execution.
 	 */
 	void start();
 
 
 	/**
-	 * \brief Заснуть на указаную длительность.
-	 *	      В большинстве операционных систем гарантируется, что
-	 *	      пройдёт указаное количество времени, но не гарантируется,
-	 *	      что пройдёт больше времени, чем нужно.
-	 *	      
-	 *	      Есть поддержка interrupt().
-	 * \param durationInMs длительность в миллисекундах
+	 * \brief Sleep for specified duration.
+	 *        Most operation systems guarantee that elasped time will be greater than specified.
+	 *        <code>AThread::interrupt()</code> is supported.
+	 * \param durationInMs duration in milliseconds.
 	 */
 	static void sleep(unsigned durationInMs);
 
 	/**
-	 * \return Текущий поток.
+	 * \return current thread.
 	 */
 	static _<AAbstractThread> current();
 
 	/**
-	 * \return Точка прерывания. Необходима для работы функции
-	 *		   AThread::interrupt.
+	 * \return Interruption point. It's required for <code>AThread::interrupt</code>.
 	 */
 	static void interruptionPoint();
 
 	bool isInterrupted() override;
 	void resetInterruptFlag() override;
     void interrupt() override;
-	
-	void join();
 
-	virtual ~AThread();
+    /**
+     * \brief Waits for thread to be finished.
+     */
+	void join();
 };

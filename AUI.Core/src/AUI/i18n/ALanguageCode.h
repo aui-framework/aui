@@ -8,7 +8,7 @@
 #include <AUI/Common/AString.h>
 
 /**
- * \brief Код языка в формате ISO 639-1, например, en-US или ru-RU
+ * \brief Language code in ISO 639-1, for example, en-US or ru-RU
  */
 class API_AUI_CORE ALanguageCode {
 private:

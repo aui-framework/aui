@@ -3,8 +3,7 @@
 namespace aui {
 
     /**
-     * \brief Враппер для объектов, предоставляющие функции итераторов rbegin и rend (ReverseIterable). Используется
-     *        для foreach-циклов
+     * \brief Helper wrapper for objects implementing rbegin and rend for using in foreach loops
      * \example
      * <pre>
      * for (auto& view : aui::reverse_iterator_wrap(mViews)) { ... }

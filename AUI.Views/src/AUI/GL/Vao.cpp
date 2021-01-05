@@ -1,5 +1,5 @@
 //
-// Created by Алексей on 25.07.2018.
+// Created by alex2772 on 25.07.2018.
 //
 
 #include "Vao.h"
@@ -38,13 +38,7 @@ void GL::Vao::draw(GLenum type, GLsizei count) {
 	bind();
 	glDrawArrays(type, 0, count);
 }
-/*!
- * Создаёт VBO
- * @param index Индекс в VAO
- * @param data Собственно данные
- * @param dataSize Размер данных в байтах
- * @param vertexSize Количетсво флоатов на вершину
- */
+
 void GL::Vao::insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType) {
 	bind();
 	bool newFlag = true;
@@ -69,13 +63,6 @@ void GL::Vao::insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint
     glVertexAttribPointer(index, vertexSize, dataType, GL_TRUE, 0, nullptr);
 }
 
-/*!
- * Создаёт целочисленный VBO
- * @param index Индекс в VAO
- * @param data Собственно данные
- * @param dataSize Размер данных в байтах
- * @param vertexSize Количетсво флоатов на вершину
- */
 void GL::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType) {
 	GLuint buffer;
 	bind();
@@ -104,10 +91,7 @@ void GL::Vao::insert(GLuint index, const AVector<glm::vec4>& data) {
 void GL::Vao::insert(GLuint index, const AVector<GLuint>& data) {
 	insertInteger(index, (const char*)data.data(), data.size() * sizeof(GLuint), 1, GL_UNSIGNED_INT);
 }
-/*!
- * Рисует буфер. Убедитесь, что вы залили данные индексов при помощи @see GL::Vao::indices
- * @param type Примитив
- */
+
 void GL::Vao::draw(GLenum type) {
 	assert(mIndicesBuffer);
 	bind();
@@ -115,13 +99,6 @@ void GL::Vao::draw(GLenum type) {
  	glDrawElements(type, mIndicesCount, GL_UNSIGNED_INT, 0);
 }
 
-/*!
- * Создаёт индексы VBO
- * @param index Индекс в VAO
- * @param data Собственно данные
- * @param dataSize Размер данных в байтах
- * @param vertexSize Количетсво флоатов на вершину
- */
 void GL::Vao::indices(const AVector<GLuint>& data) {
 	GLenum drawType = GL_DYNAMIC_DRAW;
 	if (mIndicesBuffer == 0) {

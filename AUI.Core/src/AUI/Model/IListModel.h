@@ -15,12 +15,12 @@ public:
 
 signals:
     /**
-     * \brief В модели данные были изменены.
+     * \brief Model data was changed
      */
     emits<AModelRange<T>> dataChanged;
 
     /**
-     * \brief В модели данные были добавлены
+     * \brief Model data was added
      */
     emits<AModelRange<T>> dataInserted;
 };

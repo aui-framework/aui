@@ -3,30 +3,28 @@
 #include <glm/glm.hpp>
 
 /**
- * \brief Абстрактное изображение, которое само определяет способ его отображения.
- *	      По сути, абстракция от векторной и растровой графики.
+ * \brief An abstract image that determines itself how it is displayed. Essentially an abstraction from vector and
+ *        raster graphics.
  */
 class IDrawable
 {
 public:
 	/**
-	 * \param size требуемый размер. Основывается на getSizeHint
-	 * \brief Вызывается, когда изображение требуется отобразить. Предполагается,
-	 *        что рендерер уже выставлен в нужное состояние (координаты, цвет и
-	 *        т. д.)
+	 * \brief Called when the image needs to be displayed. It is assumed that the renderer is already set to the
+	 *        desired state (coordinates, color, etc.)
+	 * \param size required image size. In common based on getSizeHint result
 	 */
 	virtual void draw(const glm::ivec2& size) = 0;
 
 	
 	/**
-	 * \return Размер хранимого изображения. Может быть проигнорирован рендерером.
-	 *         Если размер неизвестен, то может быть {0, 0}
+	 * \return Size of the stored image. Can be ignored by the renderer. If the size is unknown, it can be {0, 0}
 	 */
 	virtual glm::ivec2 getSizeHint() = 0;
 
 
 	/**
-	 * \return true, если размер этого IDrawable зависит от DPI
+	 * \return true if the size hint of this drawable needs to be multiplied by the DPI ratio
 	 */
 	virtual bool isDpiDependent() const
 	{

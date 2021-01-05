@@ -1,5 +1,5 @@
 ﻿//
-// Created by Алексей on 30.07.2018.
+// Created by alex2772 on 30.07.2018.
 //
 
 #pragma once
@@ -12,8 +12,8 @@
 #define SO_STATE
 
 namespace GL {
-	/*!
-	 * Класс для оптимизации количества вызовов gl
+	/**
+	 * \brief Helper class for optimizing gl calls count
 	 */
 	class API_AUI_VIEWS State {
 	private:

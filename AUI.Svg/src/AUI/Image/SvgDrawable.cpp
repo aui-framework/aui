@@ -83,7 +83,7 @@ void SvgDrawable::draw(const glm::ivec2& size) {
         textureSize.y = getSizeHint().y;
     }
 
-    // растеризация
+    // rasterization
     auto texture = _new<GL::Texture2D>();
     auto image = _new<AImage>(AVector<uint8_t>{}, textureSize.x, textureSize.y, AImage::RGBA | AImage::BYTE);
     image->allocate();

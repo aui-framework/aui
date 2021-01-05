@@ -3,8 +3,7 @@
 #include "ATextField.h"
 
 /**
- * \brief текстовое поле для ввода чисел с кнопками увеличения/
- *		  уменьшения числа.
+ * \brief A text field for numbers with increase/decrease buttons.
  */
 class API_AUI_VIEWS ANumberPicker: public AViewContainer
 {
@@ -57,12 +56,12 @@ public:
 
 signals:
 	/**
-	 * \brief число изменено
+	 * \brief Number changed.
 	 */
 	emits<int> valueChanged;
 
 	/**
-	 * \brief число меняется
+	 * \brief Number is changing.
 	 */
 	emits<> valueChanging;
 };

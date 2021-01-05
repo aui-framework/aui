@@ -118,7 +118,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
 
         case WM_PAINT: {
-            // почему-то поток повисает при перемещении окна
+            // process thread messages because queue freezes when window is frequently redrawn
             AThread::current()->processMessages();
 
             if (!painter::painting) {
@@ -129,7 +129,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         }
         case WM_KEYDOWN:
             if (lParam & (1 << 30)) {
-                // автоповторение
+                // autoupdate
                 onKeyRepeat(AInput::fromNative(wParam));
             } else {
                 onKeyDown(AInput::fromNative(wParam));
@@ -473,7 +473,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
         DescribePixelFormat(fakeWindow.mDC, iPixelFormat, sizeof(pfd), &pfd);
         SetPixelFormat(fakeWindow.mDC, iPixelFormat, &pfd);
 
-        // инициализация контекста
+        // context initialization
         context.hrc = wglCreateContext(fakeWindow.mDC);
         wglMakeCurrent(fakeWindow.mDC, context.hrc);
 
@@ -700,7 +700,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
     Render::inst().setWindow(this);
 
     {
-        // проверим, а дали ли нам вообще биты трафарета
+        // check for stencil bits
         GLint stencilBits = 0;
         glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
         assert(stencilBits > 0);
@@ -735,7 +735,6 @@ using namespace std::chrono;
 using namespace std::chrono_literals;
 
 
-// ограничение 16мс = не более 60 кадров в секунду
 static auto _gLastFrameTime = 0ms;
 
 bool AWindow::isRedrawWillBeEfficient() {
@@ -749,11 +748,11 @@ void AWindow::redraw() {
 #endif
     {
 
-        // ограничение фпс
-
+        // fps restriction
         {
             auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
             auto delta = now - _gLastFrameTime;
+            // restriction 16ms = up to 60 frames per second
             const auto FRAME_DURATION = 16ms;
 
             if (FRAME_DURATION > delta) {
@@ -833,7 +832,7 @@ void AWindow::redraw() {
                 }
 
                 glDisable(GL_STENCIL_TEST);
-                // Подписи
+                // labels
                 {
                     int x = -getMargin().left;
                     int y = getHeight() + getMargin().bottom + 2_dp;
@@ -872,7 +871,7 @@ void AWindow::redraw() {
 void AWindow::quit() {
     getWindowManager().mWindows.remove(shared_from_this());
 #if defined(_WIN32)
-    // родительское окно должно быть активировано ДО закрытия дочернего.
+    // parent window should be activated BEFORE child is closed.
     if (mParentWindow) {
         EnableWindow(mParentWindow->mHandle, true);
     }
@@ -1422,21 +1421,22 @@ void AWindow::focusNextView() {
     auto target = beginPoint;
     while (target != nullptr) {
         if (auto asContainer = _cast<AViewContainer>(target)) {
-            // контейнер
+            // container
             if (!asContainer->getViews().empty()) {
                 target = asContainer->getViews().first();
                 continue;
             }
         }
         if (target == beginPoint || !target->handlesNonMouseNavigation() || target->getVisibilityRecursive() == Visibility::GONE) {
-            // нам нужно уйти на следующий элемент
+            // we should jump to the next element
             if (target->getParent()) {
-                // будем идти вверх по иерархии
+                // up though hierarchy
                 while (auto parent = target->getParent()) {
                     auto& parentViews = parent->getViews();
                     auto index = parentViews.indexOf(target) + 1;
                     if (index >= parentViews.size()) {
-                        // нужно перескочить на следующий контейнер, т. к. в этом контейнере все элементы закончились
+
+                        // jump to the next container since we already visited all the elements in current container
                         target = target->getParent()->determineSharedPointer();
                         if (target == nullptr) {
                             if (triedToSearchFromBeginning) {
@@ -1453,19 +1453,19 @@ void AWindow::focusNextView() {
                     }
                 }
             } else {
-                // корневой элемент
+                // root element
                 if (triedToSearchFromBeginning) {
-                    // уже пробовали искать с начала, прекращаем поиск
+                    // already tried searching from beginning, breaking loop
                     target = nullptr;
                     break;
                 } else {
-                    // попробуем поискать с начала
+                    // try to search from beginning
                     beginPoint = target = shared_from_this();
                     triedToSearchFromBeginning = true;
                 }
             }
         } else {
-            // нашли то, что не является beginPoint
+            // found something what is not beginPoint
             break;
         }
     }
@@ -1490,7 +1490,7 @@ _<AView> AWindow::determineSharedPointer() {
     return (shared_from_this());
 }
 
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ для XLIB
+// HELPER FUNCTIONS FOR XLIB
 
 #ifdef __linux
 
@@ -1525,13 +1525,6 @@ void AWindow::xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) 
 
 #endif
 
-
-//
-// Created by alex2772 on 9/14/20.
-//
-
-#include "AWindowManager.h"
-#include "ACustomWindow.h"
 
 AWindowManager::AWindowManager(): mHandle(this) {}
 
@@ -1593,7 +1586,7 @@ void AWindowManager::loop() {
                     case ClientMessage: {
                         if (ev.xclient.message_type == gAtoms.wmProtocols &&
                             ev.xclient.data.l[0] == gAtoms.wmDeleteWindow) {
-                            // клик по кнопке закрытия окна
+                            // close button clicked
                             auto window = locateWindow(ev.xclient.window);
                             window->onCloseButtonClicked();
                         }

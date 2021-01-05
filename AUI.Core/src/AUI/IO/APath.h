@@ -9,24 +9,24 @@ ENUM_FLAG(ListFlags) {
     LF_NONE = 0,
 
     /**
-     * \brief Некоторые файловые системы включают "." и ".." в список файлов. В AUI по умолчанию пропускаются эти
-     *        элементы. Этот флаг отменяет исключение ".", ".."
+     * \brief Some file systems include ". " and " .. " to the list of files. In AUI, these elements are skipped by
+     *        default. This flag overrides this behaviour.
      */
     LF_DONT_IGNORE_DOTS = 1,
 
     /**
-     * \brief Включать папки в список.
+     * \brief Include folders to the list of files.
      */
     LF_DIRS = 2,
 
     /**
-     * \brief Включать обычные файлы в список.
+     * \brief Include regular files to the list of files.
      */
     LF_REGULAR_FILES = 4,
 
     /**
-     * \brief Обойти папку рекурсивно (т.е. включать содержимое дочерних папок). Пути дочерних файлов задаются
-     *        относительно папки, у которой вызывается listDir().
+     * \brief Walk thru the folder recursively (i.e. include the contents of child folders). The paths of child files
+     * are set relative to the folder where the <code>listDir()</code> is called.
      * \example
      * <ul>
      *     <li>/home</li>
@@ -44,18 +44,17 @@ ENUM_FLAG(ListFlags) {
 };
 
 /**
- * \brief Надстройка над AString с функциями для работы с путём.
- * \note Иногда под словом "файл" ("file") имеется в виду и <i>обычный файл</i> (txt, png, jpeg и т.д.), и <i>папка</i>
- *       (директория, каталог, которая содержать другие файлы и папки), т.е. единица файловой системы, из-за чего часто
- *       возникает путанница в терминологии. Здесь и далее:
+ * \brief An add-on to AString with functions for working with the path.
+ * \note Sometimes the word "file" refers to both a <i>regular file</i> (txt, png, jpeg, etc.) and a <i>folder</i>
+ *       (directory, a file that contains other regular files and folders), i.e. a unit of the file system, which is
+ *       often a confusion in terminology. Here and further:
  *       <ul>
- *          <li><b>файл</b> (file) - единица файловой системы.</li>
- *          <li><b>обычный файл</b> (regular file) - файл, который можно прочитать или в который можно записать. Можно представить
- *              как последовательность байт или поток байтов.</li>
- *          <li><b>папка</b> (directory) - файл, который включает себя другие файлы (обычные файлы и папки)</li>
+ *          <li><b>file</b> - a unit of the file system.</li>
+ *          <li><b>regular file</b> - a file that can be read or written to. You can think of as a sequence of bytes
+ *                                    or a stream of bytes.</li>
+ *          <li><b>folder</b> (directory) - a file that may have child files (both regular files and folders)</li>
  *       </ul>
- * \note В большинстве файловых систем по одному пути может существовать и обычный файл, и папка с одинаковымиъ
- *       названиями.
+ * \note In most file systems, both a regular file and a folder with the same name can exist on the same path.
  */
 class API_AUI_CORE APath: public AString {
 private:
@@ -80,96 +79,98 @@ public:
     }
 
     /**
-     * \brief Получить абсолютный (полный) путь до файла.
-     * \return абсолютный (полный) путь
+     * \brief Get the absolute (full) path to the file.
+     * \return the absolute (full) path to the file
      */
     APath absolute() const;
 
     /**
-     * \brief Составить список имён файлов
-     * \note Некоторые файловые системы включают "." и ".." в список файлов. В AUI по умолчанию пропускаются эти
-     *       элементы. Используйте L_DONT_IGNORE_DOTS, чтобы отменить пропуск папок "." и ".."
-     * \return Список путей к файлам
+     * \brief Get list of (by default) direct children of this folder.
+     * \note Use ListFlags enum flags to customize behaviour of this function.
+     * \return list of children of this folder.
      */
     ADeque<APath> listDir(ListFlags f = LF_DEFAULT_FLAGS) const;
 
     /**
      * \example <pre>/home/user -> /home</pre>
-     * \return путь родительской папки
+     * \return path to parent folder
      */
     [[nodiscard]] APath parent() const;
 
     /**
-     * \brief Путь дочернего элемента. Актуально только для папок.
-     * \example при fileName = work: <pre>/home/user -> /home/user/work</pre>
-     * \param название дочернего файла
-     * \return путь до дочернего файла
+     * \brief Path of the child element. Relevant only for folders.
+     * \example with fileName = work: <pre>/home/user -> /home/user/work</pre>
+     * \param name of child file
+     * \return path to child file relatively to this folder
      */
     [[nodiscard]] APath file(const AString& fileName) const;
 
     /**
-     * \brief Название файла.
+     * \brief File name.
      * \example <pre>/home/user/file.cpp -> file.cpp
-     * \return название файла
+     * \return file name
      */
     [[nodiscard]] AString filename() const;
 
     /**
-     * \brief Название без расширения.
+     * \brief File name without extension.
      * \example <pre>/home/user/file.cpp -> file
-     * \return название файла без расширения
+     * \return file name without extension
      */
     [[nodiscard]] AString filenameWithoutExtension() const;
 
     /**
-     * \brief Убрать самую верхнюю папку из пути.
-     * \return тот же путь, только без верхней папки
+     * \brief Remove the uppermost folder from this path
      * \example v1.0.0/client/azaza.zip -> client/azaza.zip
+     * \return The same path except uppermost folder
      */
     [[nodiscard]] APath withoutUppermostFolder() const;
 
     /**
-     * \return true, если обычный файл или папка существует
-     * \note файл может существовать как обычный файл, как папка, или и то, и другое. Эта функция вернёт false только
-     *       в том случае, если ни папки, ни файла по этому пути не существует.
+     * \return true if whether regular file or a folder exists on this path
+     * \note A file can exist as a regular file or(and) as a folder. This function will return false only if neither
+     *       the folder nor the file does not exists on this path.
+     *
+     *       Checkout the <code>isRegularFileExists</code> or <code>isDirectoryExists</code> function to check which
+     *       type of the file exists on this path.
      */
     bool exists() const;
 
 
     /**
-     * \return true, если обычный файл существует
-     * \note файл может существовать как обычный файл, как папка, или и то, и другое. Эта функция вернёт true только
-     *       в том случае, если по этому пути существует именно обычный файл.
+     * \return true if regular file exists on this path
+     * \note A file can exist as a regular file or(and) as a folder. This function will return false only if regular
+     *       file does not exists on this path.
      */
     bool isRegularFileExists() const;
 
     /**
-     * \return true, если папка существует
-     * \note файл может существовать как обычный файл, как папка, или и то, и другое. Эта функция вернёт true только
-     *       в том случае, если по этому пути существует именно папка.
+     * \return true if folder exists on this path
+     * \note A file can exist as a regular file or(and) as a folder. This function will return false only if folder does
+     *       not exists on this path.
      */
     bool isDirectoryExists() const;
 
     /**
-     * \brief Удалить файлы рекурсивно. Актуально для папок.
+     * \brief Delete file. Relevant for empty folders and regular files.
      * \return this
      */
     const APath& removeFile() const;
 
     /**
-     * \brief Удалить файлы рекурсивно. Актуально для папок.
+     * \brief Delete files recursively. Relevant for folders.
      * \return this
      */
     const APath& removeFileRecursive() const;
 
     /**
-     * \brief Создать папку.
+     * \brief Create folder.
      * \return this
      */
     const APath& makeDir() const;
 
     /**
-     * \brief Создать все папки по пути.
+     * \brief Create all nonexistent folders on the path.
      * \return this
      */
     const APath& makeDirs() const noexcept;
@@ -178,29 +179,37 @@ public:
 
     enum DefaultPath {
         /**
-         * \brief Папка для данных по умолчанию.
+         * \brief Folder for application data.
          * Windows: C:/Users/%user%/.appdata/Roaming/
          * Linux: %homedir%/.local/share/
          */
         APPDATA,
 
         /**
-         * \brief Папка для временных файлов.
-         * Windows: Папка TEMP пользователя
+         * \brief Folder for temporary data.
+         * Windows: User's temp folder (%temp%)
          * Linux: /tmp
          */
         TEMP,
     };
 
     /**
-     * \brief Вернуть путь по умолчанию
-     * \note См. объявление APath::DefaultPath
-     * \return полный путь по умолчанию
+     * \brief Get system's default folder.
+     * \note See the <code>APath::DefaultPath</code> definition.
+     * \return absolute path to default folder.
      */
     static APath getDefaultPath(DefaultPath path);
 
+    /**
+     * \brief Copy regular file.
+     * \param source source file
+     * \param destination destination file
+     */
     static void copy(const APath& source, const APath& destination);
 
+    /**
+     * \return working dir of application
+     */
     static APath workingDir();
 };
 

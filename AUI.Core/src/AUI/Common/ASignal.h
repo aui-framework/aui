@@ -20,7 +20,7 @@ private:
 
 	struct slot
 	{
-		AObject* object; // TODO сделать weak_ptr
+		AObject* object; // TODO replace with weak_ptr
 		func_t func;
 	};
 

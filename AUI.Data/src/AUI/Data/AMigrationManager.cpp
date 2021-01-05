@@ -20,7 +20,7 @@ void AMigrationManager::doMigration()
 			if (migrationNumber == 0)
 			{
 				m.second();
-			ALogger::info(u8"Успешная миграция "_i18n + AString::number(index) + " (" + mMigrations.at(index).first + ")");
+			ALogger::info("Successful migration "_i18n + AString::number(index) + " (" + mMigrations.at(index).first + ")");
 			}
 			else
 			{
@@ -30,7 +30,7 @@ void AMigrationManager::doMigration()
 		}
 	} catch (const AException& e)
 	{
-		AError::handle(e, u8"Не удалось завершить миграцию "_i18n + AString::number(index) + " (" + mMigrations.at(index).first + ")");
+		AError::handle(e, "Could not finish migration "_i18n + AString::number(index) + " (" + mMigrations.at(index).first + ")");
 	}
 
 	AMeta::set("migration", index);

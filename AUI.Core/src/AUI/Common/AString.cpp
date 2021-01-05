@@ -6,16 +6,16 @@ AString::AString(const char* str) noexcept
 {
     reserve(strlen(str));
 
-    // прочитаем-ка utf8
+    // parse utf8
     while (*str)
     {
         if (*str & 0x80)
         {
             wchar_t t;
-            // ненормальный utf8 символ
+            // utf8 symbol
             if (*str & 0b00100000)
             {
-                // 3х-байтный символ
+                // 3-byte symbol
                 t = *(str++) & 0b1111;
                 t <<= 6;
                 t |= *(str++) & 0b111111;
@@ -24,7 +24,7 @@ AString::AString(const char* str) noexcept
                 push_back(t);
             } else
             {
-                // 2х-байтный символ
+                // 2-byte symbol
                 t = *(str++) & 0b11111;
                 t <<= 6;
                 t |= *(str++) & 0b111111;
@@ -32,7 +32,7 @@ AString::AString(const char* str) noexcept
             }
         } else
         {
-            // нормальный ascii символ
+            // ascii symbol
             push_back(*(str++));
         }
     }

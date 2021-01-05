@@ -5,7 +5,8 @@
 #include <type_traits>
 
 /**
- * \brief Получить текущий класс и тип текущего класса. Удобно использовать в связке с функцией connect:
+ * \brief Passes the current class and type of the current class separated by comma. It's convenient to use with the
+ *        connect function:
  * \example
  * <code>
  * class MyObject: public AView {<br />
@@ -23,7 +24,8 @@
 #define me this, &std::remove_reference_t<decltype(*this)>
 
 /**
- * \brief Получить AObject и тип этого AObject. Удобно использовать в связке с функцией connect:
+ * \brief Passes some variable and type of the variable separated by comma. It's convenient to use with the connect
+ *        function:
  * \example
  * <code>
  * class MyObject: public AView {<br />
@@ -40,10 +42,10 @@
 #define slot(v) v, &std::decay_t<decltype(v)>::stored_t
 
 /**
- * \brief Выполнить несколько операций над одним объектом, не повторяя его имени.
- * \param object объект, над которым нужно провести операции
- * \param lambda код операции, выполняющийся в контексте объекта (как его member-функция)
- * \note аналог <code>with</code>, <code>apply</code> в Kotlin
+ * \brief Performs multiple operations on a single object without repeating its name.
+ * \param object object to perform operations on
+ * \param lambda code executed in the context of an object (as its member function)
+ * \note analogue to <code>with</code>, <code>apply</code> in Kotlin
  * \example
  * <code>
  * class Worker {<br />
@@ -70,10 +72,11 @@
     (*reinterpret_cast<__apply ## __FUNCTION__ ## __LINE__ *>(object.get()))()
 
 /**
- * \brief Выполнить несколько операций над одним объектом, не повторяя его имени (in place).
- * \param T тип объекта, над которым нужно провести операции
- * \param lambda код операции, выполняющийся в контексте объекта (как его member-функция)
- * \note аналог <code>with</code>, <code>apply</code> в Kotlin
+ * \brief Performs multiple operations on a single object without repeating its name (in place)
+ *        This function can be used as an operator on object.
+ * \param T object type to perform operations on
+ * \param lambda code executed in the context of an object (as its member function)
+ * \note analogue to <code>with</code>, <code>apply</code> in Kotlin
  * \example
  * <code>
  * class Worker {<br />
@@ -96,19 +99,18 @@
     })
 
 /**
- * \brief Выполнить следующий блок асинхронно, т. е. в стандартном тредпуле. В отличие от <code>async</code> <b>не</b>
- *        позволяет задать область видимости лямбды.
- * \return ничего, если в блоке нет ключевого слова <code>return</code>; <code>_&lt;AFuture&lt;T&gt;&gt;</code>, если
- *         блок имеет ключевое слово <code>return</code>, где <code>T</code> - тип возвращаемого объекта.
+ * \brief Executes following {} block asynchronously in standard thread pool. Does now allow to set lambda's capture.
+ * \return nothing, if lambda does not contain <code>return</code>; <code>_&lt;AFuture&lt;T&gt;&gt;</code> if lambda
+ *         contains <code>return</code> where <code>T</code> - return type of the lambda.
  * \see asyncX
  * \example
- * <p>Пример без возвращаемого значения</p>
+ * <p>Example without return value</p>
  * <code>
  * async {<br />
  * &#09;...<br />
  * };<br />
  * </code>
- * <p>Пример с возвращаемым значением</p>
+ * <p>Example with return value</p>
  * <code>
  * auto futureStatus = async {<br />
  * &#09;int status;<br />
@@ -122,21 +124,21 @@
 
 
 /**
- * \brief Выполнить следующий блок асинхронно, т. е. в стандартном тредпуле. В отличие от <code>async</code> позволяет
- *        задать область видимости лямбды.
- * \return ничего, если в блоке нет ключевого слова <code>return</code>; <code>_&lt;AFuture&lt;T&gt;&gt;</code>, если
- *         блок имеет ключевое слово <code>return</code>, где <code>T</code> - тип возвращаемого объекта.
+ * \brief Executes following {} block asynchronously in standard thread pool. Allows to set lambda's capture but you
+ *        should always specify lambda's capture.
+ * \return nothing, if lambda does not contain <code>return</code>; <code>_&lt;AFuture&lt;T&gt;&gt;</code> if lambda
+ *         contains <code>return</code> where <code>T</code> - return type of the lambda.
  * \see async
  * \example
- * <p>Пример без возвращаемого значения</p>
+ * <p>Example without return value</p>
  * <code>
- * asyncX [&]() {<br />
+ * asyncX [&] {<br />
  * &#09;...<br />
  * };<br />
  * </code>
- * <p>Пример с возвращаемым значением</p>
+ * <p>Example with return value</p>
  * <code>
- * auto futureStatus = asyncX [&]() {<br />
+ * auto futureStatus = asyncX [&] {<br />
  * &#09;int status;<br />
  * &#09;...<br />
  * &#09;return status;<br />
@@ -147,22 +149,29 @@
 #define asyncX AThreadPool::global() *
 
 /**
- * \brief Выполнить следующий блок один раз за один запуск программы.
+ * \brief Executes following function call or {} block once per program execution.
  * \example
- * <p>Пример с фигурными скобками</p>
+ * <p>Example with {} block</p>
  * <code>
  * do_once {<br />
  * &#09;aui::importPlugin("MyPlugin");<br />
  * }<br />
  * </code>
- * <p>Пример без фигурных скобок</p>
+ * <p>Example with function call</p>
  * <code>
  * do_once aui::importPlugin("MyPlugin");
  * </code>
  */
 #define do_once static uint8_t _aui_once = 0; if(!_aui_once++)
 
+/**
+ * \brief Executes lambda on current object's thread.
+ */
 #define ui (*getThread()) * [=]()
+
+/**
+ * \brief Executes lambda on current object's thread. Allows to determine lambda's capture.
+ */
 #define uiX (*getThread()) *
 #define repeat(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex)
 #define repeat_async(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex) AThreadPool::global() << [=]()

@@ -33,7 +33,7 @@ protected:
 
 
     /**
-     * \brief Обновляет макет родительского AView, если размер этого элемента был изменён.
+     * \brief Updates layout of the parent AViewContainer if size of this AViewContainer was changed.
      */
     virtual void updateParentsLayoutIfNecessary();
 
@@ -68,8 +68,7 @@ public:
     void setSize(int width, int height) override;
 
 	/**
-	 * \brief выставить компоновщик для этого контейнера. УНИЧТОЖАЕТ СТАРЫЙ
-	 *        КОМПОНОВЩИК ВМЕСТЕ СО ВСЕМИ ЕГО ЭЛЕМЕНТАМИ!!
+	 * \brief Set new layout manager for this AViewContainer. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
 	 */
 	void setLayout(_<ALayout> layout);
 	_<ALayout> getLayout() const;

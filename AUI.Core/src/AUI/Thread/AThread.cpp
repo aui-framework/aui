@@ -21,7 +21,7 @@ AAbstractThread::~AAbstractThread()
 
 bool AAbstractThread::isInterrupted()
 {
-	// для абстрактного потока - это всегда false.
+	// abstract thread could not be interrupted.
 	return false;
 }
 
@@ -78,7 +78,7 @@ AAbstractThread::id AAbstractThread::getId() const
 _<AAbstractThread> AThread::current()
 {
 	auto& t = threadStorage();
-	if (t == nullptr) // абстрактный поток
+	if (t == nullptr) // abstract thread
 	{
 		t = _<AAbstractThread>(new AAbstractThread(std::this_thread::get_id()));
 	}
@@ -127,6 +127,8 @@ void AAbstractThread::enqueue(const std::function<void()>& f)
 
 void AAbstractThread::processMessages()
 {
+    assert(("AAbstractThread::processMessages() should not be called from other thread",
+            mId != std::this_thread::get_id()));
 	std::unique_lock lock(mQueueLock);
 	while (!mMessageQueue.empty())
 	{

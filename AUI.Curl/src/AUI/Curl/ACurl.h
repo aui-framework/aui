@@ -35,9 +35,10 @@ public:
         ~Builder();
 
         /**
-         * \brief Установить аттрибут Accept-Ranges: begin-end (загрузка куска файла)
-         * \param begin позиция начала
-         * \param end позиция конца. Может быть 0 для обозначения конца
+         * \brief Sets: Accept-Ranges: begin-end
+         *        (download part of the file)
+         * \param begin start index of the part
+         * \param end end index of the part. Zero means end of the file.
          * \return this
          */
         Builder& setRanges(size_t begin, size_t end);

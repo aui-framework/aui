@@ -26,48 +26,48 @@ private:
 public:
 	~ASqlDatabase();
 
-	/**
-	 * \brief Выполнить запрос с получением результата (SELECT).
-	 *
-	 * \param query SQL запрос
-	 * \param params аргументы запроса
-	 * \return результат запроса
-	 * \throws SQLException при возникновении какой-либо ошибки
-	 */
+    /**
+     * \brief Execute a query with the result (SELECT).
+     *
+     * \param query the SQL query
+     * \param params query arguments
+     * \return query result
+     * \throws SQLException when any error occurs
+     */
 	_<ASqlQueryResult> query(const AString& query, const AVector<AVariant>& params = {});
 
 	/**
-	 * \brief Выполнить запрос без результата (UPDATE, INSERT, DELETE и т. д.)
-	 * 
-	 * \param query SQL запрос
-	 * \param params аргументы запроса
-	 * \return количество затронутых строк (affected rows)
-	 * \throws SQLException при возникновении какой-либо ошибки
+	 * \brief Execute a query with no result (UPDATE, INSERT, DELETE, etc.)
+     *
+     * \param query the SQL query
+     * \param params query arguments
+     * \return number of affected rows
+     * \throws SQLException if any error occurs
 	 */
 	int execute(const AString& query, const AVector<AVariant>& params = {});
 
 
 	/**
-	 * \brief Подключиться к базе данных, используя указанные реквизиты и драйвер.
-	 * \param driverName название драйвера БД. Если драйвер не загружен, то будет предпринята попытка загрузить драйвер
-	 *                   по шаблону AUI.НАЗВАНИЕДРАЙВЕРА.dll. Если драйвер не получилось загрузить, то будет выплюнут
-	 *                   SQLException.
-	 *			         
-	 * \param address хост сервера (IP адрес или домен)
-	 * \param port порт сервера
-	 * \param databaseName название БД
-	 * \param username имя пользователя; в некоторых БД - необязательно
-	 * \param password пароль пользователя; в некоторых БД - необязательно
-	 * \return объект для связи с БД; в некоторых БД - необязательно
-	 * \throws SQLException при возникновении какой-либо ошибки
+	 * \brief Connect to the database using the specified details and driver.
+     * \param drivername name of the database driver. If the driver is not loaded, an attempt will be made to load the
+     *        driver based on the template aui.DRIVERNAME (aui.DRIVERNAME.dll for Windows, libaui.DRIVERNAME.so for
+     *        Linux, etc...). If the driver failed to load SQLException will be thrown.
+     *
+     * \param address server host (IP address or domain)
+     * \param port server port
+     * \param databaseName name of the database
+     * \param username user name; optional in some DBMS
+     * \param password user password; optional in some DBMS
+     * \return object for communicating with the database; in some DBMS - optional
+     * \throws SQLException when any error occurs
 	 */
 	static _<ASqlDatabase> connect(const AString& driverName, const AString& address, uint16_t port = 0,
 	                               const AString& databaseName = {}, const AString& username = {},
 	                               const AString& password = {});
 
 	/**
-	 * \brief Тип драйвера. Требуется для коррекции запросов в БД в связи с различием драйверов.
-	 * \return тип драйвера
+	 * \brief the type of the driver. Required to correct queries in the database due to driver differences.
+     * \return type of driver
 	 */
 	SqlDriverType getDriverType();
 

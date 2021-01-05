@@ -1,19 +1,10 @@
-﻿#include <AUI/Util/UIBuildingHelpers.h>
-#include "MinesweeperWindow.h"
+﻿#include "MinesweeperWindow.h"
 
+#include <AUI/Util/UIBuildingHelpers.h>
 #include "CellView.h"
 #include "NewGameWindow.h"
-#include "AUI/Layout/AGridLayout.h"
-#include "AUI/Layout/AHorizontalLayout.h"
-#include "AUI/Layout/AStackedLayout.h"
-#include "AUI/Layout/AVerticalLayout.h"
 #include "AUI/Platform/AMessageBox.h"
 #include "AUI/Util/ARandom.h"
-#include "AUI/View/AButton.h"
-#include "AUI/View/ALabel.h"
-#include "AUI/View/ASpacer.h"
-#include "AUI/View/ATextField.h"
-#include "AUI/View/ANumberPicker.h"
 
 MinesweeperWindow::MinesweeperWindow(): AWindow("Minesweeper", 100_dp, 100_dp)
 {
@@ -85,7 +76,7 @@ void MinesweeperWindow::openCell(int x, int y, bool doGameLoseIfBomb)
 				mDead = true;
 				emit customCssPropertyChanged();
 				redraw();
-				AMessageBox::show(this, u8"Ты лох!", u8"ТЫ ПРОДУЛ!!! АЗЗАЗАЗАЗАЗЗА");
+				AMessageBox::show(this, "You lost!", "You lost! Ahahahhaa!");
 
 				//Window w;
 				//w.setDialog(true);
@@ -103,7 +94,7 @@ void MinesweeperWindow::openCell(int x, int y, bool doGameLoseIfBomb)
 		if (mOpenedCells + mBombs == mFieldRows * mFieldColumns)
 		{
 			redraw();
-			AMessageBox::show(this, u8"Ты победил!", u8"Respect +");
+			AMessageBox::show(this, "You won!", "Respect +");
 		}
 
 
@@ -202,7 +193,7 @@ void MinesweeperWindow::beginGame(int columns, int rows, int bombs)
 		connect(cell->doubleClicked, this, [&, x, y]()
 		{
 			if (fieldAt(x, y) & F_OPEN) {
-				// посчитаем флаги вокруг.
+				// count for flags around.
 				unsigned flagCount = 0;
 				for (int i = -1; i <= 1; ++i)
 				{
@@ -220,7 +211,7 @@ void MinesweeperWindow::beginGame(int columns, int rows, int bombs)
 
 				if (flagCount == (fieldAt(x, y) >> 16))
 				{
-					// открываем ячейки.
+					// open cells.
 
 					for (int i = -1; i <= 1; ++i)
 					{

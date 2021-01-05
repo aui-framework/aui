@@ -14,7 +14,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
     AStringVector args;
 #if defined(_WIN32)
     if (argc == 0) {
-        // убрать кавычки
+        // remove quotation marks
         AString argsRaw = GetCommandLineW();
         bool wrappedWithQuots = false;
         AString currentArg;

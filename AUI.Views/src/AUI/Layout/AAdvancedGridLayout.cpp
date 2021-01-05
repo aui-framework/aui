@@ -94,7 +94,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
         c.available = width - x;
     }
 
-    // подготовка
+    // preparation
     for (auto& v : mCells) {
         v.view->ensureAssUpdated();
         glm::ivec2 e = {v.view->getExpandingHorizontal(), v.view->getExpandingVertical()};
@@ -112,7 +112,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
         rows[v.y].minSize    = glm::max(rows[v.y].minSize,    minSpace.y);
     }
 
-    // подсчёт суммы расширения
+    // evaluate expansion sum
     glm::ivec2 sums(0);
     for (auto& c : columns) {
         sums.x += c.expandingSum;
@@ -123,7 +123,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
     sums = glm::max(sums, glm::ivec2(1));
     float pos = x;
 
-    // подсчёт финального размера
+    // evaluate final size
     for (auto& c : columns) {
         c.finalPos = glm::round(pos);
         c.finalSize = glm::round(glm::max(float(c.available * c.expandingSum) / sums.x, float(c.minSize)));
@@ -138,7 +138,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
         pos += r.finalSize + mSpacing;
     }
 
-    // установка позиций
+    // update geometry
     for (auto& v : mCells) {
         auto margins = v.view->getMargin();
 

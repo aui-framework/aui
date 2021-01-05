@@ -32,20 +32,19 @@ protected:
 	}
 	
 	/**
-	 * \brief Инициализировать сокет
+	 * \brief Initialise socket
 	 */
 	void init();
 	
 	/**
-	 * \brief Запуск сокета на определённом порте. Используется для
-	 *		  ATcpServerSocket и AUdpSocket
-	 * \param bindingPort порт
+	 * \brief Bind socket for port. Used for ATcpServerSocket and AUdpSocket
+	 * \param bindingPort port
 	 */
 	void bind(uint16_t bindingPort);
 
 
 	/**
-	 * \brief Создать хэндл сокета. Используйте фукнцию ::socket()
+	 * \brief Create socket handle. Use ::socket()
 	 */
 	virtual int createSocket() = 0;
 	

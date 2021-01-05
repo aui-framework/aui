@@ -10,7 +10,7 @@
 void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool stacked, AViewContainer* to) {
     auto caption = _new<AViewContainer>();
     caption->setLayout(_new<AHorizontalLayout>());
-    caption->addCssName(".window-title");
+    caption->addAssName(".window-title");
     caption->setExpanding({1, 0});
 
     auto titleLabel = _new<ALabel>(name);
@@ -19,23 +19,23 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
     mCaptionContainer = _new<AViewContainer>();
     mCaptionContainer->setLayout(_new<AHorizontalLayout>());
     mCaptionContainer->setExpanding({1, 0 });
-    mCaptionContainer->addCssName(".window-title-content");
+    mCaptionContainer->addAssName(".window-title-content");
     caption->addView(mCaptionContainer);
 
     mMinimizeButton = _new<AButton>();
-    mMinimizeButton->addCssName(".minimize");
-    mMinimizeButton->addCssName(".default");
+    mMinimizeButton->addAssName(".minimize");
+    mMinimizeButton->addAssName(".default");
     caption->addView(mMinimizeButton);
 
     mMiddleButton = _new<AButton>();
-    mMiddleButton->addCssName(".middle");
-    mMiddleButton->addCssName(".default");
+    mMiddleButton->addAssName(".middle");
+    mMiddleButton->addAssName(".default");
 
     caption->addView(mMiddleButton);
 
     mCloseButton = _new<AButton>();
-    mCloseButton->addCssName(".close");
-    mCloseButton->addCssName(".default");
+    mCloseButton->addAssName(".close");
+    mCloseButton->addAssName(".default");
     caption->addView(mCloseButton);
 
     if (stacked) {

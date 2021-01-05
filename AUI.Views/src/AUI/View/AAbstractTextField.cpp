@@ -156,15 +156,15 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
     default:
 		if (AInput::isKeyDown(AInput::LControl) || AInput::isKeyDown(AInput::RControl)) {
             switch (key) {
-                case AInput::A: // выделить всё
+                case AInput::A: // select all
                     ACursorSelectable::selectAll();
                     break;
 
-                case AInput::C: // копировать
+                case AInput::C: // copy
                     AClipboard::copyToClipboard(getSelectedText());
                     break;
 
-                case AInput::X: // вырезать
+                case AInput::X: // cut
                 {
                     auto sel = getSelection();
                     AClipboard::copyToClipboard(getSelectedText());
@@ -174,7 +174,7 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
                 }
                     break;
 
-                case AInput::V: // вставить
+                case AInput::V: // paste
                 {
                     auto pastePos = mCursorIndex;
                     if (mCursorSelection != -1) {
@@ -281,12 +281,12 @@ void AAbstractTextField::render()
 	if (hasFocus()) {
 	    auto absoluteCursorPos = ACursorSelectable::drawSelectionPre();
 
-	    // текст
+	    // text
         Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, getContentsPasswordWrap(), getFontStyle());
 
         ACursorSelectable::drawSelectionPost();
 
-        // курсор
+        // cursor
         if (hasFocus() && mCursorBlinkVisible) {
             if (absoluteCursorPos < 0) {
                 mHorizontalScroll += absoluteCursorPos;

@@ -84,9 +84,9 @@ namespace aui {
 
 
     /**
-     * \brief Форматирование строки.
-     *        Форматирование строки аналогично форматированию в Rust
-     * @return отформатированная строка
+     * \brief Formats string.
+     *        String formatting is inspired by Rust's string formatting rules.
+     * \return formatted string.
      */
     template <typename... Args>
     inline AString format(const AString& format, Args&&... args) {
@@ -109,7 +109,7 @@ namespace aui {
                     if (ignoreCurledBrackets) {
                         ignoreCurledBrackets = false;
                     } else {
-                        // пошёл формат строки.
+                        // inside {} format but it's not supported :)
                         c = *(++i);
                         assert(c == '}');
 

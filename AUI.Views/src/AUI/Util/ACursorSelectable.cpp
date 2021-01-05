@@ -35,12 +35,12 @@ unsigned ACursorSelectable::getCursorIndexByPos(glm::ivec2 pos) {
         return f.font->indexOfX(text, pos.x, f.size, f.fontRendering);
     }
 
-    // твою мышь! теперь ещё надо найти эту строчку...
+    // oh! we should even find this row...
     size_t targetLineIndex = 0;
     for (size_t r = 0; r < row; ++r) {
         auto temp = text.find('\n', targetLineIndex);
         if (temp == AString::NPOS) {
-            // курсор вышел за границу выделяемого AView
+            // cursor gone out of selecting AView
             break;
         }
         targetLineIndex = temp + 1;
@@ -75,7 +75,7 @@ void ACursorSelectable::handleMouseReleased(const glm::ivec2& pos, AInput::Key b
 int ACursorSelectable::drawSelectionPre() {
     auto absoluteCursorPos = getPosByIndex(mCursorIndex);
     
-    // выделение
+    // selection
     if (hasSelection())
     {
         auto absoluteSelectionPos = getPosByIndex(mCursorSelection);
@@ -160,11 +160,11 @@ void ACursorSelectable::drawSelectionRects() {
 void ACursorSelectable::handleMouseDoubleClicked(const glm::ivec2& pos, AInput::Key button) {
     auto text = getMouseSelectionText();
 
-    // выделить слово
+    // select word
     auto clickIndex = getCursorIndexByPos(pos);
 
 
-    // найти начало и конец слова
+    // determine the begin and end indices of the word
     auto end = text.find(' ', clickIndex);
     auto begin = text.rfind(' ', clickIndex);
 

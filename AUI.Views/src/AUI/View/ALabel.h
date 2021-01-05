@@ -35,7 +35,7 @@ protected:
     AString getTargetText();
 
 
-    // для корректного позиционирования выделения
+    // for correct selection positioning (used in ASelectableLabel)
     int mTextLeftOffset = 0;
 
 public:

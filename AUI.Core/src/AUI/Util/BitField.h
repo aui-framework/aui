@@ -2,7 +2,7 @@
 
 
 /**
- * \brief Битовое поле.
+ * \brief Bit field implementation.
  */
 template <typename T = uint32_t>
 class BitField {
@@ -21,8 +21,8 @@ public:
     }
 
     /**
-     * \brief Запихнуть флаг в битовое поле.
-     * \param flag Флаг
+     * \brief Sets flag.
+     * \param flag flag
      * \return this
      */
     BitField& operator<<(T flag) {
@@ -31,20 +31,21 @@ public:
     }
 
     /**
-     * \brief Убрать флаг из битового поля.
-     * \param flag Флаг
+     * \brief Resets flag.
+     * \param flag flag
      * \return this
      */
     BitField& operator>>(T flag) {
         mStorage &= ~flag;
         return *this;
     }
+
     /**
-     * \brief Определяет, есть ли флаг в BitField и сбрасывает флаг, если он есть.
-     * \param flag флаг
-     * \return true, если флаг был поднят и сброшен этим вызовом
+     * \brief Determines whether flag set or not and resets flag.
+     * \param flag flag
+     * \return true if flag was set
      */
-    bool checkAndTake(T flag) {
+    bool checkAndSet(T flag) {
         if (mStorage & flag) {
             mStorage &= ~flag;
             return true;
@@ -53,11 +54,11 @@ public:
     }
 
     /**
-     * \brief Определяет, есть ли флаг в BitField и поднимает флаг, если его нет.
-     * \param flag флаг
-     * \return true, если флаг был опущен и поднят этим вызовом
+     * \brief Determines whether flag set or not and sets flag.
+     * \param flag flag
+     * \return true if flag was reset
      */
-    bool checkAndPut(T flag)
+    bool checkAndReset(T flag)
     {
         if (mStorage & flag)
         {
@@ -66,16 +67,24 @@ public:
         mStorage |= flag;
         return true;
     }
+
     /**
-     * \brief Проверить, поднят ли флаг в битовом поле.
-     * \param flags Флаг
-     * \return true, если флаг поднят
+     * \brief Determines whether flag(s) set or not.
+     * \param flags flag(s)
+     * \return true if flag(s) set
+     * \note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
      */
     bool check(T flags) const {
-        return mStorage & flags;
+        return (mStorage & flags) == flags;
     }
 
+    /**
+     * \brief Determines whether flag(s) set or not.
+     * \param flags flag(s)
+     * \return true if flag(s) set
+     * \note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
+     */
     bool operator&(T flags) const {
-        return mStorage & flags;
+        return check(flags);
     }
 };

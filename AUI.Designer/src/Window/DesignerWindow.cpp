@@ -26,20 +26,20 @@ DesignerWindow::DesignerWindow():
 
     addView(_container<AVerticalLayout>({
         _container<AHorizontalLayout>({
-            _new<AButton>("ты лох")
+            _new<AButton>("button")
         }) let (AView, {
             setCss("background: $OS_THEME_COLOR");
         }),
         _container<AHorizontalLayout>({
-            // левая колонка с компонентами
+            // left column with components
             _container<AVerticalLayout>({
-                _new<ALabel>("Компоненты") << ".components_title",
+                _new<ALabel>("Components") << ".components_title",
                 componentsList
             }) let (AViewContainer, {
                 setExpanding({0, 2});
             }) << ".components",
 
-            // центральная рабочая область
+            // central work area
             _container<AStackedLayout>({
                 _new<FakeWindow>()
             }) let (AViewContainer, {

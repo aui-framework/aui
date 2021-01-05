@@ -83,10 +83,10 @@ public:
     static AThreadPool& global();
 
     /**
-     * \brief Оборачивает лямбду, гарантируя, что все задачи, которые были отправлены на выполнение в этот тредпул
-     *        внутри этой лямбды будут завершены после вызова этой функции.
-     * @tparam Callable
-     * @param callable
+     * \brief Wraps lambda. Guarantees that all tasks enqueued inside this lambda will be finished after this function
+     *        call.
+     * \tparam Callable
+     * \param callable
      */
     template<typename Callable>
     void fence(Callable callable) {

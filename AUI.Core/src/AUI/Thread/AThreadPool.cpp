@@ -129,7 +129,7 @@ void AThreadPool::enqueue(const std::function<void()>& fun, Priority priority)
 
 AThreadPool& AThreadPool::global()
 {
-    // говнофикс дедлока на mingw
+    // deadlock fix for mingw
 	static AThreadPool* t = new AThreadPool;
 	return *t;
 }

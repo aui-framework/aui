@@ -19,7 +19,9 @@ public:
 	AColor(float r, float g, float b, float a) : glm::vec4(r, g, b, a) {}
 
 	/**
-	 * \brief Формат 0xRRGGBBAA
+	 * \brief Construct with hex integer
+	 * \param color integer representing color in 0xRRGGBBAA
+	 * \example AColor(0xff0000ff) will represent opaque bright red
 	 */
 	AColor(unsigned int color) : glm::vec4(
 		((color >> 24) & 0xff) / 255.f, 
@@ -27,6 +29,11 @@ public:
 		((color >> 8) & 0xff) / 255.f, 
 		((color) & 0xff) / 255.f) {}
 
+    /**
+     * \brief Construct with hex integer
+     * \param color integer representing color in 0xAARRGGBB
+     * \example AColor(0xff0000ff) will represent opaque bright blue
+     */
 	static AColor fromAARRGGBB(unsigned int color)
 	{
 		return {
@@ -36,6 +43,12 @@ public:
 		((color >> 24) & 0xff) / 255.f,
 		};
 	}
+
+    /**
+     * \brief Construct with hex integer
+     * \param color integer representing color in 0xRRGGBB
+     * \example AColor(0x00ff00) will represent opaque bright green
+     */
 	static AColor fromRRGGBB(unsigned int color)
 	{
 		return {
@@ -56,9 +69,9 @@ public:
     float readabilityOfForegroundColor(const AColor &foreground);
 
     /**
-     * \brief Умножить цветовую часть (кроме альфа канала), (xyz * d, a)
-     * @param d
-     * @return
+     * \brief Multiply all color components except alpha channel (rgb * d, a)
+     * \param multiplier
+     * \return result color
      */
     inline AColor mul(float d) {
         return AColor(r * d, g * d, b * d, a);
@@ -75,14 +88,22 @@ public:
     }
 };
 
-
+/**
+ * \brief Construct with hex integer
+ * \param color integer representing color in 0xAARRGGBB
+ * \example AColor(0xff0000ff) will represent opaque bright blue
+ */
 inline AColor operator"" _argb(unsigned long long v)
 {
     return AColor::fromAARRGGBB(unsigned(v));
 }
 
 
-
+/**
+ * \brief Construct with hex integer
+ * \param color integer representing color in 0xRRGGBB
+ * \example AColor(0x00ff00) will represent opaque bright green
+ */
 inline AColor operator"" _rgb(unsigned long long v)
 {
     return AColor::fromRRGGBB(unsigned(v));

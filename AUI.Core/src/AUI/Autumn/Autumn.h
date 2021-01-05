@@ -5,7 +5,7 @@
 #include "AUI/Common/AException.h"
 
 /**
- * \brief Dependency Injection на минималках
+ * \brief Minimal Dependency Injection implementation
  */
 namespace Autumn
 {
@@ -55,8 +55,8 @@ namespace Autumn
 
 
     /**
-     * \brief Временно сохранить объект в Autumn.
-     * @tparam T
+     * \brief Temporary replace object in Autumn.
+     * \tparam object type.
      */
     template <typename T>
     class Temporary {

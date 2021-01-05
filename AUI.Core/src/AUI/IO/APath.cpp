@@ -182,7 +182,7 @@ ADeque<APath> APath::listDir(ListFlags f) const {
             auto childDir = file(filename);
             for (auto& file : childDir.listDir(f)) {
                 if (file.startsWith(childDir)) {
-                    // абсолютный путь
+                    // absolute path
                     auto p = file.mid(childDir.length());
                     if (p.startsWith("/")) {
                         p = p.mid(1);

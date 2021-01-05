@@ -22,7 +22,7 @@ namespace AError
 	inline void handle(const AException& exception, const AString& furtherInfo = {})
 	{
 		if (furtherInfo.empty()) {
-			ALogger::err(u8"Произошла ошибка: "_i18n + exception.getMessage());
+			ALogger::err(u8"Error occurred: "_i18n + exception.getMessage());
 		}
 		else
 		{

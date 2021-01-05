@@ -40,8 +40,8 @@ private:
     sqlite3_stmt* mStmt;
     AVector<SqlColumn> mColumns;
 
-    /**
-     * это нужно для продления жизни строк.
+    /*
+     * Extends strings' life.
      */
     AVector<std::string> mTempStrings;
 

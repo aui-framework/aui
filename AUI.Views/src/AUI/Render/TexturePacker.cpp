@@ -60,9 +60,9 @@ bool TexturePacker_Lol::check(Rect& res, Rect r) {
 }
 
 bool TexturePacker_Lol::allocateRect(Rect& t, dim width, dim height) {
-    // Выделение
+    // searching
     if (mRects.empty()) {
-        Rect r(0, 0, width + 1, height + 1); // Тупо в (0, 0) влепить
+        Rect r(0, 0, width + 1, height + 1); // just put in (0, 0)
         mRects.push_back(r);
         t = Rect(0, 0, width, height);
         return true;

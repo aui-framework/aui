@@ -3,10 +3,10 @@
 //
 
 
-#include <AUI/ASS/ASS.h>
 #include <AUI/View/AButton.h>
 #include "CellView.h"
 #include "MinesweeperWindow.h"
+#include <AUI/ASS/ASS.h>
 
 using namespace ass;
 

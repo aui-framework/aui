@@ -6,20 +6,20 @@
 #include <utility>
 
 /**
- * \brief Тип, определеяющий модель, которая может хранится в базе данных SQL.
- *        Реализовывает для этого типа запросы в базу данных (insert, update, select, delete)
- * \tparam Model модель (тип).
- *                   Класс модели должен реализовывать AModelMeta (см. AUI/Data/AModelMeta.h)
+ * \brief Defines a model that can be stored in an SQL database. Implements queries for this type to the database
+ *        (insert, update, select, delete)
+ * \tparam Model ORM model.
+ * \note Model should implement AModelMeta (see AUI/Data/AModelMeta.h)
  */
 template<typename Model>
 struct ASqlModel {
     /**
-     * \brief Выплёвывается, когда ожидается получение одной строки, но база данных не вернула ни одной строки.
+     * \brief Thrown when a single row is expected to be received, but the database did not return any rows.
      */
     class NoSuchRowException: public AException {};
 
     /**
-     * \brief Выплёвывается, когда ожидается получение одной строки, но база данных вернула больше одной строки.
+     * \brief Thrown when one row is expected to be received, but the database returned more than one row.
      */
     class TooManyRowsException: public AException {};
 
@@ -28,9 +28,10 @@ struct ASqlModel {
     id_t id = 0;
 
     /**
-     * \brief Сохраняет в БД эту модель.
-     *        Если id = 0, то будет создана новая строка в таблице, а id созданной строки присвоится в поле структуры.
-     *        Если id != 0, то будет обновлена существующая строка в таблице.
+     * \brief Saves this model in DB.
+     *        If id = 0 then a new row will be created in the table, and the id of the created row will be assigned in
+     *        the structure field.
+     *        If id != 0 then the existing row in the table will be updated.
      */
     void save() {
         if (id == 0) {
@@ -41,7 +42,7 @@ struct ASqlModel {
     }
 
     /**
-     * \brief Удаляет строку из БД по ID.
+     * \brief Removes row from the table by ID.
      */
     void remove() {
         assert(id != 0);
@@ -79,8 +80,8 @@ struct ASqlModel {
         }
 
         /**
-         * \brief Получить результат запроса в виде ORM.
-         * \return результат запроса
+         * \brief Get query result in ORM.
+         * \return query result in ORM
          */
         AVector<Model> get() {
             auto idField = AField<ASqlModel<Model>>::make(&ASqlModel<Model>::id);
@@ -108,10 +109,10 @@ struct ASqlModel {
         }
 
         /**
-         * \brief Выполнить запрос и получить первый элемент
-         * \throws NoSuchRowException, когда база данных не вернула ни одной строки
-         *         TooManyRowsException, когда база данных вернула больше одной строки
-         * \return ORM структура
+         * \brief Do query and get first row in ORM
+         * \throws NoSuchRowException when database returned zero rows
+         *         TooManyRowsException when database returned two or more rows
+         * \return ORM structure
          */
         inline Model first() {
             auto result = get();
@@ -131,10 +132,10 @@ struct ASqlModel {
     }
 
     /**
-     * \brief Получить строку из таблицы по ID.
-     * \param id ID требуемой строки
-     * \return строка таблицы по указанному ID
-     * \throws NoSuchRowException, если не найдена строка по указанному ID
+     * \brief Get a row from the table by ID.
+     * \param id ID of the required string
+     * \return the string table for the specified ID
+     * \throws NoSuchRowException if no string was found for the specified ID
      */
     static Model byId(id_t id) {
         AStringVector columns;
@@ -159,10 +160,10 @@ struct ASqlModel {
 
 
     /**
-     * \brief Создаёт модель и сохраняет её в базу данных.
-     * \tparam Args типы аргументов конструктора
-     * \param args аргументы конструктора
-     * \return ORM структура
+     * \brief Creates a model and saves it to the database.
+     * \tparam Args the types of constructor arguments
+     * \param args the constructor arguments
+     * \return the ORM structure
      */
     template<typename ... Args>
     static Model make(Args&&... args) {
@@ -173,8 +174,8 @@ struct ASqlModel {
 
 
     /**
-     * \return название relation столбца.
-     * \example struct User -> таблица users -> столбец user_id - возвращаемое значение.
+     * \return name of the relation column for other tables.
+     * \example struct User -> table users -> column user_id is the result.
      */
     static AString getIdColumnNameInOtherTables() {
         AString tableName = AModelMeta<Model>::getSqlTable();
@@ -188,7 +189,7 @@ struct ASqlModel {
 protected:    /* ORM RELATIONSHIP */
 
     /**
-     * \brief Реализация one-to-many связи между ORM структурами. Используется в паре с belongsTo.
+     * \brief Implementation of one-to-many relation between ORM structures. Used with belongsTo.
      * <pre>
      * User::getPosts() -> hasMany<Post>()<br />
      * &nbsp;&nbsp;|-- Post::getAuthor() -> belongsTo<Post>()<br />
@@ -196,8 +197,8 @@ protected:    /* ORM RELATIONSHIP */
      * &nbsp;&nbsp;|-- Post::getAuthor() -> belongsTo<Post>()<br />
      * &nbsp;&nbsp;....
      *  </pre>
-     * \tparam Other ORM-тип, с которым нужно установить связь
-     * \return незавершённый SQL запрос (см. ASqlModel::IncompleteSelectRequest)
+     * \tparam Other ORM model relation will created with
+     * \return incomplete SQL request (see ASqlModel::IncompleteSelectRequest)
      * \see ASqlModel::IncompleteSelectRequest
      */
     template<typename Other>

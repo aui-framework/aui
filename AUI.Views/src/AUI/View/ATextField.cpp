@@ -4,7 +4,7 @@
 ATextField::ATextField()
 {
 
-	addCssName(".input-field");
+    addAssName(".input-field");
 }
 
 bool ATextField::isValidText(const AString& text) {

@@ -122,7 +122,7 @@ public:
 	size_t indexOf(const StoredType& t) const
 	{
 		/*
-		 * Это оставим для других контейнеров
+		 * leave this for other container implementations
 		 * 
 		size_t index = 0;
 		for (auto i = this->begin(); i != this->end(); ++i, ++index)

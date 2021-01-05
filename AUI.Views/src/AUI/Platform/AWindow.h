@@ -30,27 +30,27 @@ ENUM_FLAG(WindowStyle)
 {
     WS_DEFAULT = 0,
 	/**
-	 * \brief Окно без кнопок сворачивания и раскрытия.
+	 * \brief Window without minimize and maximize buttons.
 	 */
 	WS_NO_MINIMIZE_MAXIMIZE = 0x1,
 
 	/**
-	 * \brief Запретить изменять размер окна.
+	 * \brief Disable window resize.
 	 */
 	WS_NO_RESIZE = 0x2,
 
 	/**
-	 * \brief Типичное диалоговое окно.
+	 * \brief Typical dialog window.
 	 */
 	WS_DIALOG = WS_NO_MINIMIZE_MAXIMIZE | WS_NO_RESIZE,
 
 	/**
-	 * \brief Без стандартных декораторов окна.
+	 * \brief Remove standard window decorators.
 	 */
 	WS_NO_DECORATORS = 0x4,
 
 	/**
-	 * \brief Окно для вывода системного меню (выпадающий список дропбокса)
+	 * \brief Window for displaying system menu (dropdown, context menu)
 	 */
 	WS_SYS = 0x8
 };
@@ -87,7 +87,7 @@ private:
 	float mDpiRatio = 1.f;
 
 	/**
-	 * \brief Удержание ссылки окна.
+	 * \brief Handles self shared pointer.
 	 */
 	_<AWindow> mSelfHolder;
 
@@ -144,43 +144,45 @@ public:
     _<AView> determineSharedPointer() override;
 
     /**
-     * \brief Если какой-то объект часто плюётся сигналами в UI поток для отображения каких-то данных, он может
-     *        спросить, а целесообразно ли выплёвывать очередной сигнал, если окно даже перерисоваться не успевает...
-     * \return true, если с момента последнего кадра прошло более 16 миллисекунд
+     * \brief Checks whether last monitor frame is displayed and redraw will be efficient..
+     *        If some object often updates UI thread for displaying some data it may cause extra CPU and GPU overload.
+     *        AUI throttles window redraws and FPS does not go above 60 FPS but UI views may also cause extra CPU and
+     *        GPU overload that does not have visual difference.
+     * \return true if 16 milliseconds elapsed since last frame
      */
 	static bool isRedrawWillBeEfficient();
 
 	void setIcon(const AImage& image);
 
 	/**
-	 * \brief Удаляет окно из AWindowManager.
+	 * \brief Removes window from AWindowManager.
 	 */
 	void quit();
 
 	void setWindowStyle(WindowStyle ws);
 
 	/**
-	 * \brief Спрятать окно в панель задач.
+	 * \brief Minimizes window (hide window to the taskbar, iconifies)
 	 */
 	void minimize();
 
 	/**
-	 * \return true, если окно спрятано в панель задач
+	 * \return true if window minimized (hidden in taskbar, iconified)
 	 */
 	bool isMinimized() const;
 
 	/**
-	 * \brief Развернуть окно на весь экран.
+	 * \brief Maximizes window (makes window fullscreen)
 	 */
 	void maximize();
 
 	/**
-	 * \return true, если окно раскрыто на весь экран
+	 * \return true if window maximized (fullscreen)
 	 */
 	bool isMaximized() const;
 
 	/**
-	 * \brief Вывести окно из панели задач и вывести его из ра
+	 * \brief Restores window (shows window from taskbar)
 	 */
 	void restore();
 
@@ -232,34 +234,35 @@ public:
     }
 
     /**
-     * \brief Получить текущее окно для данного потока.
+     * \return Current window for current thread.
      */
 	static AWindow* current();
 
 	/**
-	 * \return false, когда хотя-бы одна клавиша мыши зажата
+	 * \brief Determines whether views should display hover animations.
+	 * \return false when any keyboard button is pressed
 	 */
 	static bool shouldDisplayHoverAnimations();
 
 	/**
-	 * \brief Перевести координаты из координатного пространства этого окна в координатное пространство другого окна.
-	 * \param position координаты в пространстве этого окна
-	 * \param other другое окно
-	 * \return координаты в пространстве окна other
+	 * \brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.
+     * \param position coordinates in the space of this window
+     * \param other other window
+     * \return coordinates in the space of the other window
 	 */
 	[[nodiscard]] glm::ivec2 mapPositionTo(const glm::ivec2& position, _<AWindow> other);
 
     /**
-     * \brief Перевести координаты из координатного пространства этого окна в координатное пространство монитора.
-     * \param position координаты в пространстве этого окна
-     * \return координаты в пространстве монитора
+     * \brief Translates coordinates from the coordinate space of this window to the coordinate space of the monitor.
+     * \param position coordinates in the space of this window
+     * \return the coordinates in space of the monitor
      */
     [[nodiscard]] glm::ivec2 unmapPosition(const glm::ivec2& position);
 
     /**
-     * \brief Перевести координаты из координатного пространства монитора в координатное пространство этого окна.
-     * \param position координаты в пространстве монитора
-     * \return координаты в пространстве этого окна
+     * \brief Translates coordinates from the monitor's coordinate space to the coordinate space of this window.
+     * \param position the coordinate in screen space
+     * \return coordinates in the space of this window
      */
     [[nodiscard]] glm::ivec2 mapPosition(const glm::ivec2& position);
 
@@ -271,23 +274,23 @@ signals:
 	emits<> shown;
 
 	/**
-	 * \brief Окно перемещается.
-	 * \param позиция client-area.
+	 * \brief Window is moving.
+	 * \param client area position.
 	 */
 	 emits<glm::vec2> moving;
 
 	/**
-	 * \brief Окно было развёрнуто на весь экран.
+	 * \brief Window is maximized.
 	 */
 	emits<> maximized;
 
 	/**
-	 * \brief Окно было свёрнуто в панель задач (iconified).
+	 * \brief Window is minimized (hidden to the taskbar, iconified).
 	 */
 	emits<> minimized;
 
 	/**
-	 * \brief Окно было развёрнуто из панели задач, или перестало быть развёрнутым на весь экран.
+	 * \brief Window is restored (shown from the taskbar, deiconified).
 	 */
 	emits<> restored;
 

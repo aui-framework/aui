@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_SUITE(BitField1)
         Flags x = f;
         BOOST_TEST(x & F_FLAG1);
         BOOST_TEST(x & F_FLAG2);
-        BOOST_TEST(f.checkAndTake(F_FLAG2));
+        BOOST_TEST(f.checkAndSet(F_FLAG2));
         x = f;
         BOOST_TEST(x & F_FLAG1);
         BOOST_TEST(!(x & F_FLAG2));
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_SUITE(BitField1)
         Flags x = f;
         BOOST_TEST(x & F_FLAG1);
         BOOST_TEST(!(x & F_FLAG2));
-        BOOST_TEST(!f.checkAndTake(F_FLAG2));
+        BOOST_TEST(!f.checkAndSet(F_FLAG2));
         x = f;
         BOOST_TEST(x & F_FLAG1);
         BOOST_TEST(!(x & F_FLAG2));

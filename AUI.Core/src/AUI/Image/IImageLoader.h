@@ -6,28 +6,28 @@
 class AByteBuffer;
 
 /**
- * \brief Класс-загрузчик абстрактных изображений, которые можно отобразить на экране.
+ * \brief Class-loader of abstract images that can be displayed on the screen.
  */
 class IImageLoader
 {
 public:
 	/**
-	 * \return true, если этот загрузчик может загрузить изображение, находящееся в
-	 *	       этом буфере.
+	 * \param buffer buffer with the raw image file contents.
+	 * \return true, if this IImageLoader accepts image stored in this buffer
 	 */
 	virtual bool matches(AByteBuffer& buffer) = 0;
 
 	/**
-	 * \brief Вызывается тогда и только тогда, когда matches вернёт true.
-	 *        Непосредственно загрузчик изображения (векторный).
-	 * \return векторное изображение (nullable)
+	 * \brief The drawable (vector) image loader implementation.
+	 * \note Called if and only if <code>matches</code> returned true.
+	 * \return drawable (vector) image. Can be <code>nullptr</code> if <code>getRasterImage</code> implemented.
 	 */
 	virtual _<IDrawable> getDrawable(AByteBuffer& buffer) = 0;
 
 	/**
-	 * \brief Вызывается тогда и только тогда, когда matches вернёт true.
-	 *        Непосредственно загрузчик изображения (растровый)
-	 * \return растровое изображение (nullable)
+	 * \brief The image loader implementation (raster).
+	 * \note Called if and only if <code>matches</code> returned true.
+	 * \return raster image. Can be <code>nullptr</code> if <code>getDrawable</code> implemented.
 	 */
 	virtual _<AImage> getRasterImage(AByteBuffer& buffer) = 0;
 };

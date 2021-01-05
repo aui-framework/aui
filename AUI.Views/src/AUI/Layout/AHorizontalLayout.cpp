@@ -49,7 +49,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 
 		if (view == last)
 		{
-			// последний элемент должен находиться идеально ровно на границе.
+			// the last element should stick right to the border.
 			int viewPosX = glm::round(posX) + margins.left;
 			//assert(int(width - viewPosX - margins.right) >= e.minSpace - margins.horizontal());
 			view->setGeometry(viewPosX, y + margins.top, width - viewPosX - margins.right, height - margins.vertical());

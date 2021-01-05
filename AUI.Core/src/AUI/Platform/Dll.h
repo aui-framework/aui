@@ -49,14 +49,14 @@ public:
 	}
 	
 	/**
-	 * \param Путь до библиотеки (без расширения).
-	 * \brief Загрузить динамическую библиотеку.
+	 * \brief Loads a dynamic load library (shared object).
+	 * \param path Path to a dynamic load library without extension (extension is added based on current platform)
 	 */
 	static _<Dll> load(const AString& path);
 
 	/**
-	 * \brief Расширение динамических библиотек текущей платформы
-	 * \return dll для Windows, so для Linux и т. д.
+	 * \brief Extension of a dynamic load library of current platform
+	 * \return dll for Windows, so for Linux, dylib for Apple
 	 */
 	static AString getDllExtension();
 };

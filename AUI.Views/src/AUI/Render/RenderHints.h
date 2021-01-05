@@ -38,19 +38,18 @@ namespace RenderHints
         };
 
         /**
-         * \brief Увеличить стек маски без объекта. Используется для AView.
-         * \note Не используйте эту функцию без крайней необходимости. Быстрее, проще, удобнее и безопаснее использовать
-         *       <code>RenderHints::PushMask</code>.
-         * \param maskRenderer функция-рендерер маски
+         * \brief Increases mask stack. Used by AView.
+         * \note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
+         *       wrapper class.
+         * \param maskRenderer function - mask renderer
          */
         API_AUI_VIEWS static void pushMask(const std::function<void()>& maskRenderer);
 
         /**
-         * \brief Уменьшить стек маски без объекта. Используется для AView.
-         * \note Не используйте эту функцию без крайней необходимости. Быстрее, проще, удобнее и безопаснее использовать
-         *       <code>RenderHints::PushMask</code>.
-         * \param maskRenderer функция-рендерер маски. Функция должна вернуть буфер трафарета к прежнему состоянию,
-         *        то есть, отменить действие <code>RenderHints::PushMask::pushMask</code>
+         * \brief Decreases mask stack. Used by AView.
+         * \note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
+         *       wrapper class.
+         * \param maskRenderer function - mask renderer
          */
         API_AUI_VIEWS static void popMask(const std::function<void()>& maskRenderer);
     };

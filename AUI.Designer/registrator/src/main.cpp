@@ -34,7 +34,7 @@ BOOL WINAPI DllMain(
 
 
 static AVector<aui::detail::DesignerRegistrationBase*> gRegistrations;
-static AMutex gMutex; // на всякий
+static AMutex gMutex; // to be sure
 
 aui::detail::DesignerRegistrationBase::DesignerRegistrationBase() noexcept {
     std::unique_lock lock(gMutex);

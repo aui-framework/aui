@@ -21,17 +21,19 @@
 void fillWindow(_<AViewContainer> t)
 {
 	t->setLayout(_new<AStackedLayout>());
-	t->addView(_new<ALabel>(u8"Контент окна"));
+	t->addView(_new<ALabel>("Window contents"));
 }
 
-ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
+ExampleWindow::ExampleWindow(): AWindow("Examples")
 {
 	setLayout(_new<AVerticalLayout>());
 
-	addView(_new<ASelectableLabel>(u8"Давай я тебе расскажу, что ты не прав, когда говоришь, что на чистом С++ невозможно делать красивые программы"));
+	// This dialog is constructed using the old way. The newer way is declarative ui.
+
+	addView(_new<ASelectableLabel>("Building beautiful programs in pure C++ without chrome embded framework"));
 
 	auto horizontal = _new<AViewContainer>();
-	horizontal->addCssName(".contents");
+    horizontal->addAssName(".contents");
 	horizontal->setLayout(_new<AHorizontalLayout>());
 	addView(horizontal);
 
@@ -41,53 +43,58 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		auto c = _new<AViewContainer>(); 
 		c->setLayout(_new<AVerticalLayout>());
 
-		// кнопки
+		// buttons
 		{
-			c->addView(_new<ALabel>("Кнопки"));
+			c->addView(_new<ALabel>("Buttons"));
 
-			auto button = _new<AButton>(u8"Обычная кнопка");
-			auto def = _new<AButton>(u8"Дефолтная кнопка");
+			auto button = _new<AButton>("Common button");
+			auto def = _new<AButton>("Default button");
 			def->setDefault();
-			auto disabled = _new<AButton>(u8"Неактивная кнопка");
+			auto disabled = _new<AButton>("Disabled button");
 			disabled->setEnabled(false);
 
 			c->addView(button);
 			c->addView(def);
 			c->addView(disabled);
 		}
-		// Флажки
+		// checkboxes
 		{
-			c->addView(_new<ALabel>(u8"Флажки"));
-			c->addView(_new<ACheckBox>(u8"Флажок снят"));
-			auto checked = _new<ACheckBox>(u8"Флажок установлен");
+			c->addView(_new<ALabel>("Checkboxes"));
+			c->addView(_new<ACheckBox>("Unchecked checkbox"));
+			auto checked = _new<ACheckBox>("Disabled checkbox");
 			checked->setChecked(true);
 			c->addView(checked);
-			auto disabled = _new<ACheckBox>(u8"Неактивный флажок");
+			auto disabled = _new<ACheckBox>("Disable");
 			disabled->setDisabled();
 			c->addView(disabled);
 		}
+
+		// radiobuttons
 		{
-			c->addView(_new<ALabel>(u8"Радио кнопка"));
+			c->addView(_new<ALabel>("Radiobuttons"));
 			c->addView(_new<ARadioGroup>(_new<AListModel<AString>>(AVector<AString>{
-			    "Радио 1",
-			    "Радио 2",
-			    "Радио 3",
-			    "Неактивная кнопка",
+			    "Radiobutton 1",
+			    "Radiobutton 2",
+			    "Radiobutton 3",
+			    "Disabled radiobutton",
 			})) let (ARadioGroup, {
 			    getViews()[3]->setDisabled();
 			}));
 		}
+
+		// comboboxes
         {
+			c->addView(_new<ALabel>("Comboboxes"));
             c->addView(_new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{
-                "Комбобокс 1",
-                "Комбобокс 2",
-                "Комбобокс 3",
-                "Комбобокс 4",
-                "Комбобокс 5",
-                "Комбобокс 6",
+                "Combobox 1",
+                "Combobox 2",
+                "Combobox 3",
+                "Combobox 4",
+                "Combobox 5",
+                "Combobox 6",
             })));
             c->addView(_new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{
-                "Отключённый комбобокс"
+                "Disabled combobox"
             })) let(AComboBox, {
                 setDisabled();
             }));
@@ -102,55 +109,55 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		auto c = _new<AViewContainer>();
 		c->setLayout(_new<AVerticalLayout>());
 		
-		c->addView(_new<ALabel>(u8"Окна"));
+		c->addView(_new<ALabel>("Windows"));
 		
-		auto def = _new<AButton>(u8"Обычное окно");
+		auto def = _new<AButton>("Common window");
 		connect(def->clicked, this, [&]()
 		{
-			auto w = _new<AWindow>(u8"Диалоговое окно", 400_dp, 300_dp);
+			auto w = _new<AWindow>("Common window", 400_dp, 300_dp);
 			fillWindow(w);
 			w->show();
 			mWindows << w;
 		});
-		auto dialog = _new<AButton>(u8"Диалоговое окно");
+		auto dialog = _new<AButton>("Dialog window");
 		connect(dialog->clicked, this, [&]()
 		{
-			auto w = _new<AWindow>(u8"Диалоговое окно", 400_dp, 300_dp);
+			auto w = _new<AWindow>("Dialog window", 400_dp, 300_dp);
 			fillWindow(w);
 			w->show();
 			w->setWindowStyle(WS_DIALOG);
 			mWindows << w;
 		});
-		auto modal = _new<AButton>(u8"Модальное окно");
+		auto modal = _new<AButton>("Modal window");
 		connect(modal->clicked, this, [&]()
 		{
-			auto w = _new<AWindow>(u8"Модальное окно", 400_dp, 300_dp, this, WS_DIALOG);
+			auto w = _new<AWindow>("Modal window", 400_dp, 300_dp, this, WS_DIALOG);
 			fillWindow(w);
 			w->show();
 			mWindows << w;
 		});
 		
-		auto customWindowWithCaption = _new<AButton>(u8"Кастомное окно с заголовком");
+		auto customWindowWithCaption = _new<AButton>("Custom window with caption");
 		connect(customWindowWithCaption->clicked, this, [&]()
 		{
-			auto w = _new<ACustomCaptionWindow>(u8"Кастомное окно", 400_dp, 300_dp);
+			auto w = _new<ACustomCaptionWindow>("Custom window with caption", 400_dp, 300_dp);
 			fillWindow(w->getContentContainer());
 			w->show();
 			//w->setWindowStyle(WS_DIALOG);
 			mWindows << w;
 		});
 		
-		auto customWindow = _new<AButton>(u8"Кастомное окно без заголовка");
+		auto customWindow = _new<AButton>("Custom window without caption");
 		connect(customWindow->clicked, this, [&]()
 		{
-			auto w = _new<ACustomWindow>(u8"Кастомное окно", 400_dp, 300_dp);
+			auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
 			fillWindow(w);
 			w->show();
 			w->setWindowStyle(WS_DIALOG);
 			mWindows << w;
 		});
 		
-		auto closeAll = _new<AButton>(u8"Закрыть все окна");
+		auto closeAll = _new<AButton>("Close all windows");
 		connect(closeAll->clicked, this, [&]()
 		{
 			for (auto& w : mWindows)
@@ -168,17 +175,17 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 		horizontal->addView(c);
 	}
 
-	// текстовые поля
+	// fields
 	{
 		auto c = _new<AViewContainer>();
 		c->setLayout(_new<AVerticalLayout>());
 
-		c->addView(_new<ALabel>(u8"Текстовые поля"));
+		c->addView(_new<ALabel>("Fields"));
 
-		c->addView(_new<ALabel>(u8"Обычное поле"));
+		c->addView(_new<ALabel>("Text field"));
 		c->addView(_new<ATextField>());
 
-		c->addView(_new<ALabel>(u8"Числовое поле"));
+		c->addView(_new<ALabel>("Number picker"));
 		c->addView(_new<ANumberPicker>()); 
 
 		horizontal->addView(c);
@@ -186,7 +193,7 @@ ExampleWindow::ExampleWindow(): AWindow(u8"Примеры")
 
 	addView(_container<AHorizontalLayout>({
 		_new<ASpacer>(),
-		_new<ALabel>(u8"\u00a9 Alex2772 2020, alex2772.ru")
+		_new<ALabel>("\u00a9 Advanced Universal Interface 2020")
 					(&AView::setEnabled, false)
 	}));
 }

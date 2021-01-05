@@ -1,5 +1,5 @@
 ﻿//
-// Created by Алексей on 30.07.2018.
+// Created by alex2772 on 30.07.2018.
 //
 
 #include "State.h"

@@ -143,7 +143,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height): AWindo
     const MARGINS shadow = { 1, 1, 1, 1 };
     DwmExtendFrameIntoClientArea((HWND)getNativeHandle(), &shadow);
 
-    // обновить размер окна
+    // update window size
     RECT rcClient;
     GetWindowRect(getNativeHandle(), &rcClient);
 

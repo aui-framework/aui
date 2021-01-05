@@ -13,35 +13,35 @@
 
 DESIGNER_REGISTRATION(ALabel, {
     virtual _<AView> instanciate() {
-        return _new<ALabel>("Метка");
+        return _new<ALabel>("ALabel");
     }
 })
 
 DESIGNER_REGISTRATION(AButton, {
     virtual _<AView> instanciate() {
-        return _new<AButton>("Кноп Очка");
+        return _new<AButton>("AButton");
     }
 })
 DESIGNER_REGISTRATION(ATextField, {
     virtual _<AView> instanciate() {
         auto t = _new<ATextField>();
-        t->setText("Текстовое поле");
+        t->setText("ATextField");
         return t;
     }
 })
 DESIGNER_REGISTRATION(AComboBox, {
     virtual _<AView> instanciate() {
-        return _new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{"Кккккккомбобокс", "Ты чё сюда смотришь?"}));
+        return _new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{"AComboBox", "AComboBox #2"}));
     }
 })
 DESIGNER_REGISTRATION(ACheckBox, {
     virtual _<AView> instanciate() {
-        return _new<ACheckBox>("Гал Очка");
+        return _new<ACheckBox>("ACheckBox");
     }
 })
 DESIGNER_REGISTRATION(ARadioButton, {
     virtual _<AView> instanciate() {
-        return _new<ARadioButton>("Флаж Очек");
+        return _new<ARadioButton>("ARadioButton");
     }
 })
 DESIGNER_REGISTRATION(AScrollbar, {

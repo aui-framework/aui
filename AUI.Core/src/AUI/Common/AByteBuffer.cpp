@@ -81,7 +81,7 @@ char* AByteBuffer::getCurrentPosAddress()
 }
 
 /**
- * \return Количество доступных байт
+ * \return Number of available bytes
  */
 size_t AByteBuffer::getAvailable() const
 {

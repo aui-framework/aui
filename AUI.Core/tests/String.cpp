@@ -11,7 +11,7 @@ BOOST_AUTO_TEST_SUITE(String)
 
 BOOST_AUTO_TEST_CASE(UTF8)
 {
-    const char* someUtfString = u8"Ютф строка! \u0228";
+    const char* someUtfString = "Ютф строка! \u0228";
 
     AString s = someUtfString;
 

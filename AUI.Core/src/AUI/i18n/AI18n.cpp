@@ -35,10 +35,10 @@ void AI18n::loadFromStreamInto(const _<IInputStream>& iis, AMap<AString, AString
     try {
         while (running) {
             if (t.readChar() == '#') {
-                // комментарий
+                // comment
                 t.skipUntilUnescaped('\n');
             } else {
-                // строка
+                // string
                 t.reverseByte();
 
                 auto key = t.readStringUntilUnescaped('=');

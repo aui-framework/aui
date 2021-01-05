@@ -50,29 +50,29 @@ public:
     }
 
     /**
-     * \brief Запустить процесс.
+     * \brief Launches process.
      */
     void run();
 
     /**
-     * \brief Подождать завершения процесса.
+     * \brief Wait for process to be finished.
      */
     void wait();
 
     /**
-     * \brief Подождать завершения процесса и получить exit-code процесса.
-     * \return exit-code процесса
+     * \brief Wait for process to be finished and returns exit code
+     * \return exit code
      */
     int getExitCode();
 
     /**
-     * \brief Запустить указанный исполяемый файл с указанными аргументами.
-     * \param applicationFile исполняемый файл
-     * \param args аргументы
-     * \param workingDirectory рабочая директория создаваемого процесса
-     * \param waitForExit ожидать завершения процесса. Если false, то функция вернёт 0, так как exit-code процесса
-     *        неизвестен в момент его выполнения
-     * \return exit-code процесса
+     * \brief Launches executable
+     * \param applicationFile executable file
+     * \param args arguments
+     * \param workingDirectory pro
+     * \param waitForExit should function wait for exit. If false, function will return zero because exit code of
+     *        process is unknown during it's execution
+     * \return exit code if waitForExit = true, zero otherwise
      */
     static int execute(const AString& applicationFile,
                        const AString& args = {},
@@ -81,11 +81,11 @@ public:
 
 
     /**
-     * \brief Запустить указанный исполяемый файл от имени адмнистратор с указанными аргументами.
-     * \param applicationFile исполняемый файл
-     * \param args аргументы
-     * \param workingDirectory рабочая директория создаваемого процесса
-     * \note Эта функция не ждёт завершения процесса из-за ограничений ОС Windows
+     * \brief Launches executable with administrator rights
+     * \param applicationFile executable file
+     * \param args arguments
+     * \param workingDirectory pro
+     * \note This function could not determine exit code because of MS Windows restrictions
      */
     static void executeAsAdministrator(const AString& applicationFile,
                                       const AString& args = {},

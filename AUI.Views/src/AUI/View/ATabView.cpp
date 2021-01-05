@@ -32,7 +32,7 @@ ATabView::ATabView() {
     addView(mButtonsRow = _container<AHorizontalLayout>({}));
     addView(mPageView = _new<APageView>());
 
-    mButtonsRow->addCssName(".tabview_row");
+    mButtonsRow->addAssName(".tabview_row");
 
     connect(mPageView->pageChanging, this, [&](unsigned pageId) {
         _cast<ATabButtonView>(mButtonsRow->getViews()[mPageView->getPageId()])->setCurrent(false);

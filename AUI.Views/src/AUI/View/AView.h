@@ -29,16 +29,11 @@ class AAssHelper;
 
 
 /**
- * \brief Класс, описывающий минимальную единицу, которая может быть
- *        помещена в контейнер (в том числе в окно), занимающая некоторое
- *        пространство на экране, реагирующее на изменения размера, положения,
- *        перемещения курсора, нажатия/отпускания клавиш и кнопок, движения
- *        колёсика мыши и т. д.
+ * \brief A class that describes the minimum unit that can be placed in a container (including a window) that takes up
+ *        some space on the screen that responds to changes in size, position, moving the cursor, pressing / releasing
+ *        keys and buttons, movement mouse wheel, etc...
  *
- *        Аналог QWidget, View.
- *
- * \note  Для корректной работы CSS в конструкторах всех ваших
- *        классов, наследующих AView следует написать AVIEW_CSS
+ *        Analogue to QWidget, View.
  */
 class API_AUI_VIEWS AView: public AObject
 {
@@ -46,159 +41,123 @@ class API_AUI_VIEWS AView: public AObject
 private:
 
 	/**
-	 * \brief Дополнительная анимация.
+	 * \brief Animation.
 	 */
 	_<AAnimator> mAnimator;
 
 	/**
-	 * \brief Определяет, отображать ли выходящую за границу AView
-	 *		  графику, или нет
+	 * \brief Determines whether display graphics that go out of the bounds of this AView or not.
 	 */
 	Overflow mOverflow = Overflow::VISIBLE;
 
 	/**
-	 * \brief Определяет, виден ли и можно ли тыкнуть мышкой в
-	 *        этот AView.
+	 * \see Visibility
 	 */
 	Visibility mVisibility = Visibility::VISIBLE;
 
     /**
-     * \brief Вспомогательный объект для обработки обновления стилей ASS при изменении состояния (hover, active и т.д.)
+     * \brief Helper middleware object for handling ASS state updates (hover, active, etc...)
      */
     _<AAssHelper> mAssHelper;
 
 	/**
-	 * \brief Эффекты фона
+	 * \brief Background effects (custom rendered backgrounds)
 	 */
 	ADeque<_<IShadingEffect>> mBackgroundEffects;
 
 	/**
-	 * \brief Коэффициент времени текущей анимации.
-	 *		  = 0 - начало анимации (mCssDrawListBack)
-	 *		  = 1 - конец анимации (mCssDrawListFront)
-	 */
-	float mTransitionValue = 0.f;
-
-	/**
-	 * \brief Время предыдущего кадра для определения, какой
-	 *		  длительности должен быть шаг анимации.
-	 */
-	std::chrono::milliseconds mLastFrameTime;
-
-	/**
-	 * \brief Длительность текущей анимации (в сек.)
-	 */
-	float mTransitionDuration;
-
-	/**
-	 * \brief Свидетельствует о наличии анимации (перехода).
-	 */
-	bool mHasTransitions = false;
-
-	/**
-	 * \brief border-radius, заданный в CSS
+	 * \brief border-radius, specified in ASS.
 	 */
     float mBorderRadius = 0;
 
 	/**
-	 * \brief Стиль шрифта для этого AView.
+	 * \brief Font style for this AView.
 	 */
 	FontStyle mFontStyle;
 
 
 protected:
 	/**
-	 * \brief Родительский элемент
+	 * \brief Parent AView.
 	 */
 	AViewContainer* mParent = nullptr;
 
 
     /**
-     * \brief Список отрисовки, или запекание команд отрисовки, чтобы каждый раз не парсить ASS.
+     * \brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
      */
     std::array<ass::decl::IDeclarationBase*, int(ass::decl::DeclarationSlot::COUNT)> mAss;
 
     /**
-     * \brief Custom ASS Rule
+     * \brief Custom ASS Rules
      */
     RuleWithoutSelector mCustomAssRule;
 
 	/**
-	 * \brief Определяет, какую форму должен принять указатель,
-	 *		  когда он находится над этим AView.
+	 * \brief Determines shape which should pointer take when it's above this AView.
 	 */
 	ACursor mCursor = ACursor::DEFAULT;
 
 	/**
-	 * \brief Позиция этого View относительно верхнего
-	 *        левого угла родителя.
+	 * \brief Top left corner's position relative to top left corner's position of the parent AView.
 	 */
 	glm::ivec2 mPosition;
 
 	/**
-	 * \brief Размер этого View, включая content area,
-	 *        padding и border.
+	 * \brief Size, including content area, border and padding.
 	 */
 	glm::ivec2 mSize = glm::ivec2(20, 20);
 
 	/**
-	 * \brief Коэффициент расширения. Подсказывает менеджеру
-	 *        компоновки, настолько нужно расширять этот
-	 *        View относительно других View. (x;y)
+	 * \brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
+	 *        AViews in the same container.
 	 */
 	glm::ivec2 mExpanding = {0, 0};
 
 	/**
-	 * \brief Значения минимального размера CSS.
+	 * \brief Minimal size.
 	 */
 	glm::ivec2 mMinSize = {0, 0};
 
 	/**
-	 * \brief Значения максимального размера CSS.
+	 * \brief Maximal size.
 	 */
 	glm::ivec2 mMaxSize = {0x7fffffff, 0x7fffffff};
 
 	/**
-	 * \brief Значения абсолютного размера CSS (и не только).
+	 * \brief Fixed size.
 	 */
 	glm::ivec2 mFixedSize = {0, 0};
 
 	/**
-	 * \brief CSS margin. Подсказывает менеджеру компоновки,
-	 *		  на каком расстоянии от этого View должны располагаться
-	 *		  другие View.
+	 * \brief Margin, which defines the spacing around this AView. Processed by the layout manager.
 	 */
 	ABoxFields mMargin;
 
 	/**
-	 * \brief CSS padding. Обрабатывается реализацией AView
-	 *		  индивидуально. Определяет расстояние от краёв View
-	 *		  до content area.
+	 * \brief Padding, which defines the spacing around content area. Processed by AView implementation.
 	 */
 	ABoxFields mPadding;
 
 
 	/**
-	 * \brief CSS названия классов.
+	 * \brief ASS class names.
 	 */
-	ADeque<AString> mCssNames;
+	ADeque<AString> mAssNames;
 
 	/**
-	 * \brief Найти окно, которому принадлежит этот AView.
-	 * \return окно, которому принадлежит этот AView.
-	 *         Может быть nullptr.
+	 * \brief Determines window which this AView belongs to.
+	 * \return window which this AView belongs to. Could be nullptr
 	 */
 	AWindow* getWindow();
 
 	/**
-	 * \brief Пересобирает mCssDrawList и вытаскивает значения
-	 *		  маргинов, паддингов и прочих бордеров из таблицы
-	 *		  стилей.
+	 * \brief Determines which ASS style rules should be applied to this AView and fills the mAss field.
 	 */
 	virtual void recompileCSS();
 
 	/**
-	 * \brief Обновить state-селекторы для Aui Style Sheets
+	 * \brief Updates state selectors for ASS.
 	 */
 	void updateAssState();
 
@@ -207,7 +166,7 @@ public:
     AView();
     virtual ~AView() = default;
 	/**
-	 * \brief Попросить рендерер перерисовать этот AView.
+	 * \brief Request window manager to redraw this AView.
 	 */
 	void redraw();
 
@@ -215,8 +174,7 @@ public:
 
 
 	/**
-	 * \brief Отрисовка этого AView. Эта фукнция не должна
-	 *		  вызываться никем, кроме как рендерером.
+	 * \brief Draws this AView. Noone should call this function except rendering routine.
 	 */
 	virtual void render();
 
@@ -224,23 +182,25 @@ public:
 
 	void popStencilIfNeeded();
 
-	/**
-	 * \return позиция этого AView относительно левого верхнего
-	 *	       края родителя (в пикселях).
-	 */
+    /**
+     * \brief Top left corner's position relative to top left corner's position of the parent AView.
+     */
 	const glm::ivec2& getPosition() const
 	{
 		return mPosition;
 	}
 
-	/**
-	 * \return размер этого AView (в пикселях).
-	 */
+    /**
+     * \brief Size, including content area, border and padding.
+     */
 	const glm::ivec2& getSize() const
 	{
 		return mSize;
 	}
 
+    /**
+     * \brief Minimal size.
+     */
     const glm::ivec2& getMinSize() const {
         return mMinSize;
     }
@@ -249,6 +209,9 @@ public:
         mMinSize = minSize;
     }
 
+    /**
+     * \brief Determines whether display graphics that go out of the bounds of this AView or not.
+     */
     Overflow getOverflow() const
 	{
 		return mOverflow;
@@ -258,6 +221,9 @@ public:
 		mOverflow = overflow;
 	}
 
+    /**
+     * \brief border-radius, specified in ASS.
+     */
 	float getBorderRadius() const {
 	    return mBorderRadius;
 	}
@@ -265,24 +231,18 @@ public:
 	    mBorderRadius = radius;
 	}
 
-	/**
-	 * \return ширина этого AView (в пикселях).
-	 */
 	int getWidth() const
 	{
 		return mSize.x;
 	}
 
-	/**
-	 * \return высота этого AView (в пикселях).
-	 */
 	int getHeight() const
 	{
 		return mSize.y;
 	}
 
 	/**
-	 * \return количество пикселей, занимаемое этим AView по горизонтали, с учётом размера, паддинга и маргина.
+	 * \return pixel count which this AView acquired by width including content area, padding, border and margin.
 	 */
 	float getTotalOccupiedWidth() const
 	{
@@ -290,18 +250,16 @@ public:
 	}
 
     /**
-     * \return количество пикселей, занимаемое этим AView по вертикали, с учётом размера, паддинга и маргина.
+	 * \return pixel count which this AView acquired by height including content area, padding, border and margin.
      */
     float getTotalOccupiedHeight() const
 	{
         return mSize.y + getTotalFieldVertical();
 	}
 
-	/**
-	 * \note каждый менеджер компоновки должен
-	 *		 обрабатывать этот отступ.
-	 * \return внешние отступы.
-	 */
+    /**
+     * \brief Margin, which defines the spacing around this AView. Processed by the layout manager.
+     */
 	[[nodiscard]]
 	const ABoxFields& getMargin() const
 	{
@@ -311,13 +269,16 @@ public:
         mMargin = margin;
     }
 
+    /**
+     * \brief Determines whether this AView processes this click or passes it thru.
+     * \param pos mouse position
+     * \return true if AView processes this click
+     */
 	virtual bool consumesClick(const glm::ivec2& pos);
 
-	/**
-	 * \note каждый <class ?: AView> должен сам
-	 *		 обрабатывать этот отступ.
-	 * \return внутрениие отступы.
-	 */
+    /**
+     * \brief Padding, which defines the spacing around content area. Processed by AView implementation.
+     */
 	[[nodiscard]]
 	const ABoxFields& getPadding() const
 	{
@@ -330,29 +291,29 @@ public:
 
 
 	/**
-	 * \brief расчитывает ширину, занимаемой этим
-	 *	      AView.
-	 *
-	 * \return ширина, занимаемая этим AView.
+	 * \return pixel count which this AView's margin and padding acquired by width.
 	 */
 	[[nodiscard]]
 	float getTotalFieldHorizontal() const;
 
 	/**
-	 * \brief расчитывает высоту, занимаемой этим
-	 *	      AView.
-	 *
-	 * \return высота, занимаемая этим AView.
+	 * \return pixel count which this AView's margin and padding acquired by height.
 	 */
 	[[nodiscard]]
 	float getTotalFieldVertical() const;
 
 
+    /**
+     * \brief Parent AView.
+     */
 	AViewContainer* getParent() const
 	{
 		return mParent;
 	}
 
+    /**
+     * \brief Determines shape which should pointer take when it's above this AView.
+     */
 	ACursor getCursor() const
 	{
 		return mCursor;
@@ -363,26 +324,22 @@ public:
 	}
 
 	/**
-	 * \brief расчитывает минимальную ширину контента.
-	 *
-	 * \return минимальная ширина контента.
+	 * \return minimal content-area width.
 	 */
 	virtual int getContentMinimumWidth();
 
 
-	/**
-	 * \brief расчитывает минимальную высоту контента.
-	 *
-	 * \return минимальная высота контента.
-	 */
+    /**
+     * \return minimal content-area height.
+     */
 	virtual int getContentMinimumHeight();
 
 	bool hasFocus() const;
 
 
 	virtual int getMinimumWidth();
-
     virtual int getMinimumHeight();
+
 	glm::ivec2 getMinimumSize() {
 	    return {getMinimumWidth(), getMinimumHeight()};
 	}
@@ -458,36 +415,42 @@ public:
 	}
 
 	/**
-	 * \brief Выставить минимально возможный размер AView.
+	 * \brief Sets minimal size.
 	 */
 	void pack();
 
 	/**
-	 * \brief Выставить фокус на этот AView.
+	 * \brief Requests focus for this AView.
 	 */
 	 void focus();
 
 
 	/**
-	 * \return координаты этого AView относительно левого верхнего угла окна
+	 * \return Coords of this AView relative to window
 	 */
     [[nodiscard]] glm::ivec2 getPositionInWindow();
 
 	const ADeque<AString>& getCssNames() const;
 
-    void addCssName(const AString& css);
 	/**
-	 * \brief добавить CSS класс к AView. Эта функция служит для упрощения создания элементов с кастомными классами
+	 * \brief Adds an ASS class to this AView.
+	 * \param assName new ASS name
+	 */
+    void addAssName(const AString& assName);
+
+	/**
+	 * \brief Wraps the addAssName function to make it easier to add ASS class names.
 	 * \example
 	 * <code>
 	 * ...
-	 * _new<ALabel>("Компоненты) << ".components_title"
+	 * _new<ALabel>("Components") << ".components_title"
 	 * ...
 	 * </code>
-	 * \param cssName класс CSS, который нужно добавить к этому AView
+	 * \param assName new ASS name
+	 * \return this
 	 */
-	inline AView& operator<<(const AString& cssName) {
-	    addCssName(cssName);
+	inline AView& operator<<(const AString& assName) {
+        addAssName(assName);
 	    return *this;
 	}
 
@@ -499,7 +462,7 @@ public:
     void ensureAssUpdated();
 
     /**
-     * \brief Попробовать определить std::shared_ptr для этого объекта.
+     * \brief Tries to determine std::shared_ptr for this object.
      */
     virtual _<AView> determineSharedPointer();
 
@@ -523,7 +486,7 @@ public:
 	virtual void getCustomCssAttributes(AMap<AString, AVariant>& map);
 
 	/**
-	 * \brief Принимает ли данный AView фокус при переключении между AView кнопкой Tab
+	 * \return true if this AView accepts tab focus
 	 */
 	virtual bool handlesNonMouseNavigation();
 
@@ -553,17 +516,17 @@ signals:
     emits<> disabled;
 
 	/**
-	 * \brief щёлчок какой-то кнопкой мыши.
+	 * \brief Some mouse button clicked.
 	 */
 	emits<AInput::Key> clickedButton;
 
 	/**
-	 * \brief щёлчок левой кнопкой мыши.
+	 * \brief Left mouse button clicked.
 	 */
 	emits<> clicked;
 
 	/**
-	 * \brief щёлчок правой кнопкой мыши.
+	 * \brief Right mouse button clicked.
 	 */
 	emits<> clickedRight;
 

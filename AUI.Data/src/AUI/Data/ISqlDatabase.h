@@ -6,7 +6,7 @@
 #include "AUI/Data/ASqlDriverType.h"
 
 /*
- * \brief См. ASqlDatabase 
+ * \brief Driver-to-AUI.Data interface. See ASqlDatabase for Application-to-AUI.Data interface
  */
 class ISqlDatabase
 {

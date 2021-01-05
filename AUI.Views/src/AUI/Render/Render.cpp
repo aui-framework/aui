@@ -55,7 +55,7 @@ Render::Render()
                 "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
                 "}");
     } else */ {
-        // без сглаживания скруглённые края выглядят убого. исправим это
+        // without antialiasing rounded borders look poorly. fix it
         mRoundedSolidShader.load(
                 "attribute vec3 pos;"
                 "attribute vec2 uv;"

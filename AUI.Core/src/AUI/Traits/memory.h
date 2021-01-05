@@ -4,9 +4,9 @@
 
 namespace aui {
     /**
-     * \brief Заполнить нулями объект.
-     * \tparam T тип объекта
-     * \param data объект
+     * \brief Fill with zeros object's memory.
+     * \tparam T object type
+     * \param data object itself
      */
     template<typename T>
     inline void zero(T& data) {

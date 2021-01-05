@@ -10,46 +10,63 @@ class API_AUI_CORE IOutputStream
 {
 public:
 	virtual ~IOutputStream() = default;
+
+    /**
+     * \brief Writes exact <code>size</code> bytes to stream. Blocking (waiting for write all data) is allowed. Returns
+     *        -1 if stream has encountered an error.
+     * \param dst source buffer
+     * \param size source buffer's size. > 0
+     * \return -1 - error
+     *         >0 - count of written bytes
+     */
 	virtual int write(const char* src, int size) = 0;
 
-	inline void write(const _<AByteBuffer>& buffer)
+	/**
+	 * \brief Works as <code>write(const char* src, int size)</code> except it accepts AByteBuffer instead of
+	 *        const char* and int.
+	 * \param buffer source data buffer
+	 */
+	inline void write(const AByteBuffer& buffer)
 	{
-		write(buffer->getCurrentPosAddress(), buffer->getAvailable());
+		write(buffer.getCurrentPosAddress(), buffer.getAvailable());
 	}
 
 
+    /**
+     * \brief Writes raw data from in. Does not applicable to types with pointers.
+     * \tparam storage data type
+     * \param in data
+     * \return this
+     */
 	template<typename T>
-	inline IOutputStream& operator<<(const T& out)
+	inline IOutputStream& operator<<(const T& in)
 	{
-		if (write(reinterpret_cast<const char*>(&out), sizeof(T)) < 0)
+		if (write(reinterpret_cast<const char*>(&in), sizeof(T)) < 0)
 			throw IOException("could not write to file");
 		return *this;
 	}
 
+    /**
+     * \brief Redirects all input stream data to this output stream.
+     * \note This declaration is strange because it overloads the
+     *       <code>inline IOutputStream& operator<<(const T& in)</code> function
+     * \tparam base of IOutputStream
+     * \param os IOutputStream
+     * \return this
+     */
     template<typename T>
     inline IOutputStream& operator<<(const _<T>& is);
-	
-	inline IOutputStream& operator<<(const AString& out)
-	{
-		if (out.empty())
-			return *this;
-		auto st = out.toStdString();
-		write(st.c_str(), st.length());
-		return *this;
-	}
-	inline IOutputStream& operator<<(const char* out)
-	{
-		if (!out)
-			return *this;
-		write(out, strlen(out));
-		return *this;
-	}
 
 
-	inline void writeSizedBuffer(const _<AByteBuffer>& buffer)
+    /**
+     * \brief Writes the AByteBuffer in the following format: uint32_t as size, %size% bytes...
+     * \param buffer AByteBuffer to be written
+     * \see IInputStream::readSizedBuffer
+     */
+	inline void writeSizedBuffer(const AByteBuffer& buffer)
 	{
-		*this << uint32_t(buffer->getSize());
-		write(buffer->data(), buffer->getSize());
+		*this << uint32_t(buffer.getSize());
+		write(buffer.data(), buffer.getSize());
 	}
 };
 

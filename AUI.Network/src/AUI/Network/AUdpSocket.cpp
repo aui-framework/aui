@@ -14,10 +14,6 @@
 
 
 
-/**
- * \brief Запуск сокета
- * \param source_port
- */
 AUdpSocket::AUdpSocket(uint16_t source_port) :
 	mSelf({ 0, 0, 0, 0 }, source_port) {
 
@@ -28,19 +24,11 @@ AUdpSocket::AUdpSocket(uint16_t source_port) :
 	}
 }
 
-/**
- * \brief Запуск сокета с рандомным портом (используется для "клиентского" сокета)
- */
 AUdpSocket::AUdpSocket() :
 	AUdpSocket(static_cast<uint16_t>((rand() % 20000) + 30000)) {
 }
 
 
-/**
- * \brief Отправляет данные по адресу. Плюёт исключение, если что-то пошло не так
- * \param buf Буфер
- * \param dst Адрес доставки
- */
 void AUdpSocket::write(const AByteBuffer& buf, const AInet4Address& dst) {
 	assert(buf.getSize() < 32768);
 	//static boost::mutex m;
@@ -52,11 +40,6 @@ void AUdpSocket::write(const AByteBuffer& buf, const AInet4Address& dst) {
 	}
 }
 
-/**
- * \brief
- * \param buf
- * \param dst
- */
 void AUdpSocket::read(AByteBuffer& buf, AInet4Address& dst) {
 	buf.reserve(32768);
 	sockaddr_in from;
@@ -73,7 +56,7 @@ void AUdpSocket::read(AByteBuffer& buf, AInet4Address& dst) {
 				throw AThread::AInterrupted();
 			case WSAECONNRESET:
 				// https://stackoverflow.com/questions/30749423/is-winsock-error-10054-wsaeconnreset-normal-with-udp-to-from-localhost
-				continue; // чё за херня кто это придумал??? 
+				continue; // wtf why does it work?
 			default:
 				throw SocketException(msg, dst);
 #else

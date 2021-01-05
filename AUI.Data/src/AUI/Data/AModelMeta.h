@@ -11,22 +11,22 @@ struct AModelMetaBase {
 };
 
 /**
- * \brief Отображает метаданные модели (список полей, название привязанной sql-таблицы и так далее)
- * \tparam T модель (тип)
+ * \brief Defines model metadata (list of fields, name of appropriate sql table, etc...)
+ * \tparam T Model
  * \code
- * // пользовательская модель
+ * // user model
  * struct User: ASqlModel<User> {
  *   id_t id;
  *   AString username;
  *   AString password;
  * };
  *
- * // метаданные
+ * // metadata
  * A_META(User) {
- *   // привязанная таблица SQL
+ *   // appropriate sql table
  *   A_SQL_TABLE("users")
  *
- *   // привязанные поля
+ *   // appropriate fields
  *   A_FIELDS {
  *     return {
  *       A_FIELD(id)

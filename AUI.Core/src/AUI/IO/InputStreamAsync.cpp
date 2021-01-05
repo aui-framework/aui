@@ -7,7 +7,7 @@ InputStreamAsync::InputStreamAsync(_<IInputStream> inputStream):
 			for (;;)
 			{
 				auto buffer = _new<AByteBuffer>();
-				inputStream->read(buffer);
+				inputStream->read(*buffer);
 				emit read(buffer);
 			}
 		} catch (...)
@@ -18,8 +18,7 @@ InputStreamAsync::InputStreamAsync(_<IInputStream> inputStream):
 	}))
 {
 	auto t = mReadThread;
-	AThread::current()->enqueue([t]()
-	{
+	AThread::current() << [t] {
 		t->start();
-	});
+	};
 }

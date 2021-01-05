@@ -4,7 +4,7 @@
 #include "AUI/Common/AByteBuffer.h"
 
 /**
- * \brief Хранит открытый и/или закрытый ключ RSA
+ * \brief Stores public and/or private RSA key
  */
 class API_AUI_CRYPT ARsa
 {

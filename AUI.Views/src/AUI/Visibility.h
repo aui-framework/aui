@@ -7,17 +7,17 @@
 enum class Visibility {
 
     /**
-     * AView виден и активен
+     * AView is visible and active
      */
     VISIBLE,
 
     /**
-     * AView невидим, но мышкой кликнуть можно
+     * AView is invisible but still interacting to the mouse
      */
     INVISIBLE,
 
     /**
-     * AView невидим и мышкой попасть невозможно
+     * AView is invisible and does not interact with the mouse
      */
     GONE
 };

@@ -22,56 +22,58 @@ void NewGameWindow::updateDifficultyLabel()
 {
 	int difficulty = mWidth->getValue() * mHeight->getValue() / (glm::max)(mMines->getValue(), 1);
 
-	AString text = u8"Сложность: ";
+	AString text = "Difficulty: ";
 	switch (difficulty)
 	{
 	case 0:
 	case 1:
-		text += u8"очень высокая";
+		text += "very low";
 		break;
 	case 2:
 	case 3:
-		text += u8"высокая";
+		text += "high";
 		break;
 	case 4:
 	case 5:
-		text += u8"средняя";
+		text += "medium";
 		break;
 	case 6:
 	case 7:
 	case 8:
-		text += u8"низкая";
+		text += "low";
 		break;
 
 	default:
-		text += u8"очень низкая";
+		text += "wtf";
 	}
 	mDifficultyLabel->setText(text);
 }
 
 NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper):
-	AWindow(u8"Новая игра", 100, 100, minesweeper),
+	AWindow("New game", 100, 100, minesweeper),
 	mMinesweeper(minesweeper)
 {
 	setWindowStyle(WS_DIALOG);
+
+	// This dialog is constructed using the old way. The newer way is declarative ui.
 
 	setLayout(_new<AVerticalLayout>());
 
 	auto form = _new<AViewContainer>();
 	form->setLayout(_new<AGridLayout>(2, 3));
-	form->addView(_new<ALabel>(u8"Ширина поля:"));
+	form->addView(_new<ALabel>("Cells by width:"));
 	mWidth = _new<ANumberPicker>();
 	mWidth->setMin(8);
 	mWidth->setMax(50);
 	form->addView(mWidth);
 	
-	form->addView(_new<ALabel>(u8"Высота поля:"));
+	form->addView(_new<ALabel>("Cells by height:"));
 	mHeight = _new<ANumberPicker>();
 	mHeight->setMin(8);
 	mHeight->setMax(50);
 	form->addView(mHeight);
 
-	form->addView(_new<ALabel>(u8"Количество мин:"));
+	form->addView(_new<ALabel>("Mines count:"));
 	mMines = _new<ANumberPicker>();
 	mMines->setMin(8);
 	
@@ -79,8 +81,8 @@ NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper):
 	addView(form);
 	addView(mDifficultyLabel = _new<ALabel>());
 	
-	auto begin = _new<AButton>(u8"Начать игру");
-	auto cancel = _new<AButton>(u8"Отмена");
+	auto begin = _new<AButton>("Start game");
+	auto cancel = _new<AButton>("Cancel");
 	
 	begin->setDefault();
 

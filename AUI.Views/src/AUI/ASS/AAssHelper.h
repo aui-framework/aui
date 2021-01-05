@@ -13,7 +13,7 @@
 struct Rule;
 
 /**
- * \brief И помни, ASS - это не жопа. ASS - это Aui Style Sheets
+ * \brief Remember, ASS is not a butt. ASS is Aui Style Sheets
  */
 class AAssHelper: public AObject {
     friend class AView;

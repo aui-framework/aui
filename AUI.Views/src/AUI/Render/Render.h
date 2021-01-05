@@ -29,7 +29,7 @@ public:
 		FILL_SOLID,
 
 		/**
-		 * \brief как FILL_SOLID, только с трансформацией
+		 * \brief FILL_SOLID but with transform matrix
 		 */
 		FILL_SOLID_TRANSFORM,
 		FILL_TEXTURED,
@@ -79,7 +79,7 @@ private:
     Filling mCurrentFill;
 
     /**
-     * \brief Повторение. Обрабатываются IDrawabl'ами самостоятельно.
+     * \brief Repeating. Handled by IDrawable.
      */
     Repeat mRepeat = REPEAT_NONE;
 	

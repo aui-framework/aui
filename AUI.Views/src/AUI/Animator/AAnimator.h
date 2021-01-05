@@ -19,8 +19,8 @@ private:
 
 protected:
     /**
-     * \brief Выполнить непосредственно анимацию (выставить матрицы, цвета и так далее)
-     * \param theta число [0;1], где 0 - начало анимации, 1 - конец анимации
+     * \brief Does the animation (sets matrix, colors, etc...)
+     * \param theta animation time value [0;1] where 0 - start of the animation, 1 - end of the animation
      */
     virtual void doAnimation(AView* view, float theta) {};
 
