@@ -1669,10 +1669,31 @@ void AWindowManager::loop() {
                         switch (ev.xbutton.button) {
                             case 1:
                             case 2:
-                            case 3:
+                            case 3: {
+                                using namespace std::chrono;
+                                using namespace std::chrono_literals;
+                                static milliseconds lastButtonPressedTime = 0ms;
+                                static unsigned lastButtonPressed = 0;
+
+                                auto now = duration_cast<std::chrono::milliseconds>(system_clock::now().time_since_epoch());
                                 window->onMousePressed({ev.xbutton.x, ev.xbutton.y},
                                                        (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
+
+                                auto delta = now - lastButtonPressedTime;
+                                if (delta < 500ms) {
+                                    if (lastButtonPressed == ev.xbutton.button) {
+                                        window->onMouseDoubleClicked({ev.xbutton.x, ev.xbutton.y},
+                                                                     (AInput::Key) (AInput::LButton +
+                                                                                    ev.xbutton.button - 1));
+
+                                        lastButtonPressedTime = 0ms;
+                                    }
+                                } else {
+                                    lastButtonPressedTime = now;
+                                    lastButtonPressed = ev.xbutton.button;
+                                }
                                 break;
+                            }
                             case 4: // wheel down
                                 window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, -20_dp);
                                 break;
