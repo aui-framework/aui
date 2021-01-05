@@ -144,6 +144,7 @@ AUI_ENTRY {
 ```
 
 # Contributing
+You are always free to contribute to this project and add yourself to the authors list :)
 ## Workflow
 `master` branch contains code of the release candidate. Code of this branch must compile without errors and should pass
 all tests on all supported platforms.

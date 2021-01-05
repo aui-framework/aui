@@ -1,6 +1,6 @@
 /**
  * =====================================================================================================================
- * Copyright (c) 2020 Alex2772
+ * Copyright (c) 2021 Alex2772
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
@@ -214,7 +214,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
 
 	addView(_container<AHorizontalLayout>({
 		_new<ASpacer>(),
-		_new<ALabel>("\u00a9 Advanced Universal Interface 2020")
+		_new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru")
 					(&AView::setEnabled, false)
 	}));
 }
