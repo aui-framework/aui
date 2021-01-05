@@ -15,7 +15,8 @@ private:
 
 	void updateMinesMax();
 	void updateDifficultyLabel();
-	
+	void begin();
+
 public:
 	NewGameWindow(MinesweeperWindow* minesweeper);
 };

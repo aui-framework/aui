@@ -6,6 +6,7 @@
 #include <AUI/View/AButton.h>
 #include "CellView.h"
 #include "MinesweeperWindow.h"
+#include "NewGameWindow.h"
 #include <AUI/ASS/ASS.h>
 
 using namespace ass;
@@ -60,6 +61,10 @@ struct style {
             {
                 class_of(".frame") > any<AButton>(),
                 Margin { 4_dp }
+            },
+            {
+                any<NewGameWindow>(),
+                Padding { 4_dp }
             }
         });
     }

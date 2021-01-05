@@ -117,7 +117,6 @@ void MinesweeperWindow::openCell(int x, int y, bool doGameLoseIfBomb)
 			}
 		}
 	}
-	redraw();
 }
 
 int MinesweeperWindow::bombsAround(int x, int y)
@@ -182,6 +181,7 @@ void MinesweeperWindow::beginGame(int columns, int rows, int bombs)
 		connect(cell->clicked, this, [&, x, y]()
 		{
 			openCell(x, y, true);
+            flagRedraw();
 		});
 		connect(cell->clickedRight, this, [&, x, y]()
 		{
@@ -227,6 +227,7 @@ void MinesweeperWindow::beginGame(int columns, int rows, int bombs)
 					}
 				}
 			}
+            flagRedraw();
 		});
 		mGrid->addView(cell);
 	}

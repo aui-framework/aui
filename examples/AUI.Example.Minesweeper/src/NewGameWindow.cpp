@@ -20,11 +20,13 @@ void NewGameWindow::updateMinesMax()
 
 void NewGameWindow::updateDifficultyLabel()
 {
+    mMines->setMax(mWidth->getValue() * mHeight->getValue() * 3 / 4);
 	int difficulty = mWidth->getValue() * mHeight->getValue() / (glm::max)(mMines->getValue(), 1);
 
 	AString text = "Difficulty: ";
 	switch (difficulty)
 	{
+    default:
 	case 0:
 	case 1:
 		text += "very low";
@@ -43,8 +45,6 @@ void NewGameWindow::updateDifficultyLabel()
 		text += "low";
 		break;
 
-	default:
-		text += "wtf";
 	}
 	mDifficultyLabel->setText(text);
 }
@@ -55,52 +55,35 @@ NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper):
 {
 	setWindowStyle(WS_DIALOG);
 
-	// This dialog is constructed using the old way. The newer way is declarative ui.
-
 	setLayout(_new<AVerticalLayout>());
 
-	auto form = _new<AViewContainer>();
-	form->setLayout(_new<AGridLayout>(2, 3));
-	form->addView(_new<ALabel>("Cells by width:"));
-	mWidth = _new<ANumberPicker>();
-	mWidth->setMin(8);
-	mWidth->setMax(50);
-	form->addView(mWidth);
-	
-	form->addView(_new<ALabel>("Cells by height:"));
-	mHeight = _new<ANumberPicker>();
-	mHeight->setMin(8);
-	mHeight->setMax(50);
-	form->addView(mHeight);
-
-	form->addView(_new<ALabel>("Mines count:"));
-	mMines = _new<ANumberPicker>();
-	mMines->setMin(8);
-	
-	form->addView(mMines);
-	addView(form);
-	addView(mDifficultyLabel = _new<ALabel>());
-	
-	auto begin = _new<AButton>("Start game");
-	auto cancel = _new<AButton>("Cancel");
-	
-	begin->setDefault();
-
-	begin->setExpanding({ 1, 1 });
-	cancel->setExpanding({ 1, 1 });
-
-	connect(begin->clicked, this, [&]()
-	{
-		close();
-		mMinesweeper->beginGame(gWidth = mWidth->getValue(), 
-			gHeight = mHeight->getValue(), gMines = mMines->getValue());
-	});
-	connect(cancel->clicked, this, &AWindow::close);
-	
-	addView(_container<AHorizontalLayout>({
-		begin,
-		cancel
+	// form
+	addView(_form({
+        {"Cells by width:"_as, mWidth = _new<ANumberPicker>() let (ANumberPicker, {
+            setMin(8);
+            setMax(25);
+        })},
+        {"Cells by height:"_as, mHeight = _new<ANumberPicker>() let (ANumberPicker, {
+            setMin(8);
+            setMax(25);
+        })},
+        {"Mines count:"_as, mMines = _new<ANumberPicker>() let (ANumberPicker, {
+            setMin(8);
+        })},
 	}));
+
+	// difficulty label
+    addView(mDifficultyLabel = _new<ALabel>());
+
+	// buttons
+	addView(_container<AHorizontalLayout>({
+	    _new<ASpacer>(),
+        _new<AButton>("Start game") let(AButton, {
+            setDefault();
+        }).connect(&AButton::clicked, me::begin),
+        _new<AButton>("Cancel").connect(&AButton::clicked, me::close),
+	}));
+
 
 	mWidth->setValue(gWidth);
 	mHeight->setValue(gHeight);
@@ -118,4 +101,10 @@ NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper):
 	connect(mMines->valueChanging, this, &NewGameWindow::updateDifficultyLabel);
 	
 	pack();
+}
+
+void NewGameWindow::begin() {
+    close();
+    mMinesweeper->beginGame(gWidth = mWidth->getValue(),
+                            gHeight = mHeight->getValue(), gMines = mMines->getValue());
 }
