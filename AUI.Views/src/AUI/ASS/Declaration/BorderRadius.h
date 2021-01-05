@@ -15,7 +15,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<BorderRadius>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<BorderRadius>: IDeclarationBase {
         private:
             BorderRadius mInfo;
 

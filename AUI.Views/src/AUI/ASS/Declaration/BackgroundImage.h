@@ -37,7 +37,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<BackgroundImage>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<BackgroundImage>: IDeclarationBase {
         private:
             BackgroundImage mInfo;
 

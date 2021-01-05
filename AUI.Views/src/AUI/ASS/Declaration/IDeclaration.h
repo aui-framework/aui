@@ -1,5 +1,7 @@
 #pragma once
 
+#include <AUI/api.h>
+
 class AView;
 class AAssHelper;
 
@@ -15,7 +17,7 @@ namespace ass::decl {
         COUNT,
     };
 
-    struct IDeclarationBase {
+    struct API_AUI_VIEWS IDeclarationBase {
     public:
         virtual void applyFor(AView* view) {};
         virtual void renderFor(AView* view) {};

@@ -68,6 +68,33 @@ public:
 		*this << uint32_t(buffer.getSize());
 		write(buffer.data(), buffer.getSize());
 	}
+
+
+	/**
+	 * \brief Encodes string to utf-8 and writes it as it should be written; not garbage
+	 * \param out string to be written
+	 * \return this
+	 */
+    inline IOutputStream& operator<<(const AString& out)
+    {
+        if (out.empty())
+            return *this;
+        auto st = out.toStdString();
+        write(st.c_str(), st.length());
+        return *this;
+    }
+    /**
+     * \brief Writes string as it should be written; not garbage
+     * \param out string to be written
+     * \return this
+     */
+    inline IOutputStream& operator<<(const char* out)
+    {
+        if (!out)
+            return *this;
+        write(out, strlen(out));
+        return *this;
+    }
 };
 
 

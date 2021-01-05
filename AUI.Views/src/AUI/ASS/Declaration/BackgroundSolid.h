@@ -16,7 +16,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<BackgroundSolid>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<BackgroundSolid>: IDeclarationBase {
         private:
             BackgroundSolid mInfo;
 

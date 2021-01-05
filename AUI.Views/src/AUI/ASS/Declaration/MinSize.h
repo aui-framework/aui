@@ -18,7 +18,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<MinSize>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<MinSize>: IDeclarationBase {
         private:
             MinSize mInfo;
 

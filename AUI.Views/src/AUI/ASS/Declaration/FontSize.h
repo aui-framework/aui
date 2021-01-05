@@ -14,7 +14,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<FontSize>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<FontSize>: IDeclarationBase {
         private:
             FontSize mInfo;
 

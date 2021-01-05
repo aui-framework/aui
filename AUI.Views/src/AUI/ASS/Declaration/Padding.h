@@ -39,7 +39,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<Padding>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<Padding>: IDeclarationBase {
         private:
             Padding mInfo;
 

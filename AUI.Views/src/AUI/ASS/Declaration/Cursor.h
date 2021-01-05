@@ -7,7 +7,7 @@
 namespace ass {
     namespace decl {
         template<>
-        struct Declaration<ACursor>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<ACursor>: IDeclarationBase {
         private:
             ACursor mInfo;
 

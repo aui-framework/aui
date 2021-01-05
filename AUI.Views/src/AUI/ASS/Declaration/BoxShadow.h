@@ -41,7 +41,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<BoxShadow>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<BoxShadow>: IDeclarationBase {
         private:
             BoxShadow mInfo;
 

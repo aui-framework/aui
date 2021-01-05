@@ -10,7 +10,7 @@
 namespace ass {
     namespace decl {
         template<>
-        struct Declaration<TextAlign>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<TextAlign>: IDeclarationBase {
         private:
             TextAlign mInfo;
 

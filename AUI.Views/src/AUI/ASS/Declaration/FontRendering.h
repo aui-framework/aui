@@ -9,7 +9,7 @@
 namespace ass {
     namespace decl {
         template<>
-        struct Declaration<FontRendering>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<FontRendering>: IDeclarationBase {
         private:
             FontRendering mInfo;
 

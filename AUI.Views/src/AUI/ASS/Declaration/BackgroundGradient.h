@@ -16,7 +16,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<BackgroundGradient>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<BackgroundGradient>: IDeclarationBase {
         private:
             BackgroundGradient mInfo;
 

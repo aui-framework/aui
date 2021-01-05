@@ -7,7 +7,7 @@
 namespace ass {
     namespace decl {
         template<>
-        struct Declaration<Overflow>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<Overflow>: IDeclarationBase {
         private:
             Overflow mInfo;
 

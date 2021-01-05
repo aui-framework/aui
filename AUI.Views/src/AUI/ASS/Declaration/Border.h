@@ -39,7 +39,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<Border>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<Border>: IDeclarationBase {
         private:
             Border mInfo;
 

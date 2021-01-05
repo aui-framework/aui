@@ -39,7 +39,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<Margin>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<Margin>: IDeclarationBase {
         private:
             Margin mInfo;
 

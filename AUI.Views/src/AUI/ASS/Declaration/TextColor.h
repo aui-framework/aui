@@ -14,7 +14,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<TextColor>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<TextColor>: IDeclarationBase {
         private:
             TextColor mInfo;
 

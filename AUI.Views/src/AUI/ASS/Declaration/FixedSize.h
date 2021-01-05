@@ -19,7 +19,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<FixedSize>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<FixedSize>: IDeclarationBase {
         private:
             FixedSize mInfo;
 

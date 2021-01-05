@@ -117,6 +117,7 @@ void MinesweeperWindow::openCell(int x, int y, bool doGameLoseIfBomb)
 			}
 		}
 	}
+	redraw();
 }
 
 int MinesweeperWindow::bombsAround(int x, int y)

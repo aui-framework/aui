@@ -128,7 +128,7 @@ void AAbstractThread::enqueue(const std::function<void()>& f)
 void AAbstractThread::processMessages()
 {
     assert(("AAbstractThread::processMessages() should not be called from other thread",
-            mId != std::this_thread::get_id()));
+            mId == std::this_thread::get_id()));
 	std::unique_lock lock(mQueueLock);
 	while (!mMessageQueue.empty())
 	{

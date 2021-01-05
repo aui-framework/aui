@@ -15,7 +15,7 @@ class AView;
 
 namespace ass {
 
-    class IAssSubSelector {
+    class API_AUI_VIEWS IAssSubSelector {
     public:
         virtual bool isPossiblyApplicable(AView* view) = 0;
         virtual bool isStateApplicable(AView* view);

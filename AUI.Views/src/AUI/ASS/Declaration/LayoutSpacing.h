@@ -12,7 +12,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct Declaration<LayoutSpacing>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<LayoutSpacing>: IDeclarationBase {
         private:
             LayoutSpacing mInfo;
 
