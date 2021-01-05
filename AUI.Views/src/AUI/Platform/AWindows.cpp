@@ -109,8 +109,8 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             flagRedraw();
         }
 
-        bool ok = wglMakeCurrent(GetDC(mHandle), AWindow::context.hrc);
-        assert(ok);
+        //bool ok = wglMakeCurrent(GetDC(mHandle), AWindow::context.hrc);
+        //assert(ok);
     }
 
 
@@ -772,6 +772,9 @@ bool AWindow::isRedrawWillBeEfficient() {
     auto delta = now - _gLastFrameTime;
     return 8ms < delta;
 }
+bool AWindow::isRenderingContextAcquired() {
+    return painter::painting;
+}
 void AWindow::redraw() {
 #ifdef WIN32
     mRedrawFlag = true;
@@ -893,7 +896,7 @@ void AWindow::redraw() {
 #endif
     }
 #if defined(_WIN32)
-    wglMakeCurrent(nullptr, nullptr);
+    wglMakeCurrent(mDC, context.hrc);
 #endif
     emit redrawn();
 }
@@ -1169,15 +1172,7 @@ glm::ivec2 AWindow::getWindowPosition() const {
     return {x - xwa.x, y - xwa.y};
 #endif
 }
-/*
-TemporaryRenderingContext AWindow::acquireTemporaryRenderingContext() {
-    if (painter::painting) {
-        return TemporaryRenderingContext(nullptr);
-    }
 
-    return TemporaryRenderingContext(_new<painter>(mHandle));
-}
-*/
 void AWindow::onMouseMove(glm::ivec2 pos) {
     AViewContainer::onMouseMove(pos);
     auto v = getViewAtRecursive(pos);

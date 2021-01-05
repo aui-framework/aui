@@ -76,19 +76,6 @@ ENUM_FLAG(WindowStyle)
 	WS_SYS = 0x8
 };
 
-class TemporaryRenderingContext
-{
-	friend class AWindow;
-private:
-	_<struct painter> mPainter;
-	explicit TemporaryRenderingContext(const _<painter>& painter)
-		: mPainter(painter)
-	{
-	}
-	
-public:
-};
-
 class API_AUI_VIEWS AWindow: public AViewContainer, public std::enable_shared_from_this<AWindow>
 {
     friend class AWindowManager;
@@ -172,6 +159,11 @@ public:
      * \return true if 16 milliseconds elapsed since last frame
      */
 	static bool isRedrawWillBeEfficient();
+
+	/**
+	 * \return true if window is currently painting
+	 */
+	static bool isRenderingContextAcquired();
 
 	void setIcon(const AImage& image);
 
