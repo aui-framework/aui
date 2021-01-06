@@ -303,6 +303,10 @@ bool APath::isAbsolute() const {
     return false;
 }
 
+void APath::copy(const APath& source, const APath& destination) {
+    _new<FileOutputStream>(destination) << _new<FileInputStream>(source);
+}
+
 #ifdef _WIN32
 #include <shlobj.h>
 
@@ -349,15 +353,16 @@ APath APath::workingDir() {
     return p;
 }
 
-void APath::copy(const APath& source, const APath& destination) {
-    _new<FileOutputStream>(destination) << _new<FileInputStream>(source);
-}
-
-
 #else
 #include <unistd.h>
 #include <sys/types.h>
 #include <pwd.h>
+
+APath APath::workingDir() {
+    char buf[0x1000];
+    getcwd(buf, sizeof(buf));
+    return buf;
+}
 
 APath APath::getDefaultPath(APath::DefaultPath path) {
     switch (path) {
