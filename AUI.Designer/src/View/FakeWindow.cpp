@@ -29,8 +29,8 @@ FakeWindow::FakeWindow()
 {
     initCustomCaption("My window", false, this);
 
-    addCssName("AWindow");
-    addCssName("ACustomWindow");
+    addAssName("AWindow");
+    addAssName("ACustomWindow");
     setCss("min-width: 200em; min-height: 100em; box-shadow: 0 2em 16em 0 #0003;");
 }
 

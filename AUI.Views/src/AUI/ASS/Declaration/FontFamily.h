@@ -19,42 +19,32 @@
  * =====================================================================================================================
  */
 
-/**
- * It's not an ASS, it's Aui Style Sheets!!
- */
+//
+// Created by alex2 on 01.01.2021.
+//
 
 #pragma once
 
-// Declarations
-#include "Declaration/BackgroundImage.h"
-#include "Declaration/BackgroundSolid.h"
-#include "Declaration/BackgroundGradient.h"
-#include "Declaration/Border.h"
-#include "Declaration/BorderRadius.h"
-#include "Declaration/BoxShadow.h"
-#include "Declaration/Cursor.h"
-#include "Declaration/FixedSize.h"
-#include "Declaration/FontFamily.h"
-#include "Declaration/FontRendering.h"
-#include "Declaration/FontSize.h"
-#include "Declaration/LayoutSpacing.h"
-#include "Declaration/Margin.h"
-#include "Declaration/MinSize.h"
-#include "Declaration/Overflow.h"
-#include "Declaration/Padding.h"
-#include "Declaration/TextAlign.h"
-#include "Declaration/TextColor.h"
+#include <AUI/Util/AMetric.h>
+#include "IDeclaration.h"
 
-// Selectors
-#include "AUI/ASS/Selector/AAssSelector.h"
-#include "Selector/ParentSelector.h"
-#include "Selector/DirectParentSelector.h"
-#include "Selector/any.h"
-#include "Selector/attribute.h"
-#include "Selector/active.h"
-#include "Selector/hovered.h"
-#include "Selector/class_of.h"
+namespace ass {
+    struct FontFamily {
+        AString family;
+    };
 
-// Other
-#include "unset.h"
-#include "AStylesheet.h"
+    namespace decl {
+        template<>
+        struct API_AUI_VIEWS Declaration<FontFamily>: IDeclarationBase {
+        private:
+            FontFamily mInfo;
+
+        public:
+            Declaration(const FontFamily& info) : mInfo(info) {
+
+            }
+
+            void applyFor(AView* view) override;
+        };
+    }
+}

@@ -127,6 +127,7 @@ inline AColor operator"" _argb(unsigned long long v)
  */
 inline AColor operator"" _rgb(unsigned long long v)
 {
+	assert(("_rgb literal should be in 0xrrggbb format, not 0xaarrggbb", !(v & 0xff000000u)));
     return AColor::fromRRGGBB(unsigned(v));
 }
 
