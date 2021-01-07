@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,18 +19,61 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 07.01.2021.
+//
+
+
 #pragma once
-#include <deque>
-#include "AUI/Core.h"
-#include <algorithm>
-#include <AUI/Util/Extensions/SequenceContainerExtensions.h>
 
-template <class StoredType,
-	class Allocator = std::allocator<StoredType>>
-class ADeque: public SequenceContainerExtensions<std::deque<StoredType, Allocator>>
-{
+
+template <typename Container>
+class CommonContainerExtensions: public Container {
 public:
-    using SequenceContainerExtensions<std::deque<StoredType, Allocator>>::SequenceContainerExtensions;
+    using StoredType = typename Container::value_type;
+    using Iterator = typename Container::iterator;
+
+    using Container::Container;
 
 
+    template<typename OtherContainer>
+    Iterator insertAll(Iterator position, const OtherContainer& c) {
+        return Container::insert(position, c.begin(), c.end());
+    }
+
+
+    void remove(const StoredType& item)
+    {
+        Container::erase(std::remove_if(Container::begin(), Container::end(), [&](const StoredType& probe)
+        {
+            return item == probe;
+        }), Container::end());
+    }
+    
+
+    template<typename OtherContainer>
+    bool isSubsetOf(const OtherContainer& c) const
+    {
+        for (auto& i : c)
+        {
+            if (!contains(i))
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    
+    bool contains(const StoredType& value) const {
+        return std::find(Container::begin(), Container::end(), value) != Container::end();
+    }
+    
+    template<typename Func, typename... Args>
+    void forEach(Func f, Args&&... args)
+    {
+        for (auto& i: *this)
+        {
+            (i.get()->*f)(std::forward<Args>(args)...);
+        }
+    }
 };

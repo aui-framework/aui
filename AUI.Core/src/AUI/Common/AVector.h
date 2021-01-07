@@ -25,15 +25,17 @@
 #include <vector>
 #include "SharedPtr.h"
 #include <algorithm>
+#include <AUI/Util/Extensions/SequenceContainerExtensions.h>
 
 template <class StoredType, class Allocator = std::allocator<StoredType>>
-class AVector: public std::vector<StoredType, Allocator>
+class AVector: public SequenceContainerExtensions<std::vector<StoredType, Allocator>>
 {
 protected:
-	using p = std::vector<StoredType, Allocator>;
+	using p = SequenceContainerExtensions<std::vector<StoredType, Allocator>>;
 	
 public:
 
+    using ElementType = typename p::value_type;
     using Iterator = typename p::iterator;
     using ConstIterator = typename p::const_iterator;
 
@@ -82,113 +84,4 @@ public:
 	template <class Iterator>
 	inline AVector(Iterator first, Iterator end, const Allocator& allocator = Allocator()): p(first, end, allocator) {}
 
-	inline void remove(const StoredType& item)
-	{
-		this->erase(std::remove_if(this->begin(), this->end(), [&](const StoredType& probe)
-		{
-			return item == probe;
-		}), this->end());
-	}
-
-    void push_back(const StoredType& data) {
-        p::push_back(data);
-    }
-
-    void push_back(StoredType&& data) {
-        p::push_back(data);
-    }
-
-
-	inline AVector<StoredType, Allocator>& operator<<(const StoredType& rhs)
-	{
-		p::push_back(rhs);
-		return *this;
-	}
-	inline AVector<StoredType, Allocator>& operator<<(StoredType&& rhs)
-	{
-		p::push_back(std::forward<StoredType>(rhs));
-		return *this;
-	}
-	inline AVector<StoredType, Allocator>& operator<<(const AVector<StoredType>& rhs)
-	{
-	    for (auto& item : rhs)
-		    p::push_back(item);
-		return *this;
-	}
-
-	void removeAt(size_t index)
-	{
-		this->erase(this->begin() + index);
-	}
-
-	template<typename Container>
-	bool isSubsetOf(const Container& c) const
-	{
-		for (auto& i : c)
-		{
-			if (!contains(i))
-			{
-				return false;
-			}
-		}
-		return true;
-	}
-
-    template<typename Container>
-	Iterator insertAll(Iterator position, const Container& c) {
-	    return p::insert(position, c.begin(), c.end());
-	}
-
-	[[nodiscard]]
-	size_t indexOf(const StoredType& t) const
-	{
-		/*
-		 * leave this for other container implementations
-		 * 
-		size_t index = 0;
-		for (auto i = this->begin(); i != this->end(); ++i, ++index)
-		{
-			if (*i == t)
-				return index;
-		}
-		*/
-		for (size_t i = 0; i < this->size(); ++i)
-		{
-			if ((*this)[i] == t)
-				return i;
-		}
-		
-		return static_cast<size_t>(-1);
-	}
-
-	template<typename Func, typename... Args>
-	void forEach(Func f, Args&&... args)
-	{
-		for (auto& i: *this)
-		{
-			(i.get()->*f)(std::forward<Args>(args)...);
-		}
-	}
-
-	StoredType& first()
-	{
-		return this->front();
-	}
-	const StoredType& first() const
-	{
-		return this->front();
-	}
-
-	StoredType& last()
-	{
-		return this->back();
-	}
-	const StoredType& last() const
-	{
-		return this->back();
-	}
-
-	bool contains(const StoredType& value) const {
-	    return std::find(p::begin(), p::end(), value) != p::end();
-	}
 };
