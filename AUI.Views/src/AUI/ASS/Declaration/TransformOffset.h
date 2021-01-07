@@ -19,45 +19,37 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 07.01.2021.
+//
+
+
 #pragma once
 
-#include <AUI/api.h>
+#include <AUI/Util/AMetric.h>
+#include "IDeclaration.h"
 
-class AView;
-class AAssHelper;
+namespace ass {
+    struct TransformOffset {
+        AMetric offsetX;
+        AMetric offsetY;
 
-namespace ass::decl {
-    enum class DeclarationSlot {
-        NONE,
-
-        TRANSFORM_SCALE,
-        TRANSFORM_OFFSET,
-
-        SHADOW,
-        BACKGROUND_SOLID,
-        BACKGROUND_IMAGE,
-        BORDER,
-
-        COUNT,
+        TransformOffset(const AMetric& offsetX, const AMetric& offsetY) : offsetX(offsetX), offsetY(offsetY) {}
     };
 
-    struct API_AUI_VIEWS IDeclarationBase {
-    public:
-        virtual void applyFor(AView* view) {};
-        virtual void renderFor(AView* view) {};
-        virtual bool isNone() { return false; }
-        [[nodiscard]] virtual DeclarationSlot getDeclarationSlot() const {
-            return DeclarationSlot::NONE;
-        }
-    };
-    template<typename DeclarationStruct>
-    struct Declaration: IDeclarationBase {
-    protected:
-        DeclarationStruct mDeclarationStruct;
-    public:
-        Declaration(const DeclarationStruct& data): mDeclarationStruct(data) {}
-    };
+
+    namespace decl {
+        template<>
+        struct API_AUI_VIEWS Declaration<TransformOffset>: IDeclarationBase {
+        private:
+            TransformOffset mInfo;
+
+        public:
+            Declaration(const TransformOffset& info) : mInfo(info) {}
+            void renderFor(AView* view) override;
+
+            DeclarationSlot getDeclarationSlot() const override;
+
+        };
 }
-
-#include "AUI/View/AView.h"
-#include <AUI/ASS/unset.h>
+}

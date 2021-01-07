@@ -19,45 +19,19 @@
  * =====================================================================================================================
  */
 
-#pragma once
+//
+// Created by alex2 on 07.01.2021.
+//
 
-#include <AUI/api.h>
 
-class AView;
-class AAssHelper;
+#include "TransformOffset.h"
+#include <AUI/Render/Render.h>
+#include <glm/gtc/matrix_transform.hpp>
 
-namespace ass::decl {
-    enum class DeclarationSlot {
-        NONE,
-
-        TRANSFORM_SCALE,
-        TRANSFORM_OFFSET,
-
-        SHADOW,
-        BACKGROUND_SOLID,
-        BACKGROUND_IMAGE,
-        BORDER,
-
-        COUNT,
-    };
-
-    struct API_AUI_VIEWS IDeclarationBase {
-    public:
-        virtual void applyFor(AView* view) {};
-        virtual void renderFor(AView* view) {};
-        virtual bool isNone() { return false; }
-        [[nodiscard]] virtual DeclarationSlot getDeclarationSlot() const {
-            return DeclarationSlot::NONE;
-        }
-    };
-    template<typename DeclarationStruct>
-    struct Declaration: IDeclarationBase {
-    protected:
-        DeclarationStruct mDeclarationStruct;
-    public:
-        Declaration(const DeclarationStruct& data): mDeclarationStruct(data) {}
-    };
+void ass::decl::Declaration<ass::TransformOffset>::renderFor(AView* view) {
+    Render::inst().setTransform(glm::translate(glm::mat4(1.f), glm::vec3{mInfo.offsetX, mInfo.offsetY, 0.0}));
 }
 
-#include "AUI/View/AView.h"
-#include <AUI/ASS/unset.h>
+ass::decl::DeclarationSlot ass::decl::Declaration<ass::TransformOffset>::getDeclarationSlot() const {
+    return ass::decl::DeclarationSlot::TRANSFORM_OFFSET;
+}
