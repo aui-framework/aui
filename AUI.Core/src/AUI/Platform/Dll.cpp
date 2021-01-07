@@ -26,45 +26,60 @@
 #if defined(_WIN32)
 #else
 #include <unistd.h>
+#include <AUI/IO/APath.h>
+
 #endif
 
 _<Dll> Dll::load(const AString& path)
 {
 #ifdef _MSC_VER
-    auto fullpath = path + "." + getDllExtension();
+    auto fullname = path + "." + getDllExtension();
 #else
-    auto fullpath = "lib" + path + "." + getDllExtension();
+    auto fullname = "lib" + path + "." + getDllExtension();
 #endif
 #if defined(_WIN32)
-	auto lib = LoadLibrary(fullpath.c_str());
+	auto lib = LoadLibrary(fullname.c_str());
 	if (!lib)
 	{
-		throw DllLoadException("Could not load shared library: " + fullpath + ": " + AString::number(int(GetLastError())));
+		throw DllLoadException("Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));
 	}
+	return _<Dll>(new Dll(lib));
 #elif defined(__ANDROID__)
-	auto name = ("lib" + fullpath).toStdString();
+	auto name = ("lib" + fullname).toStdString();
 	auto lib = dlopen(name.c_str(), RTLD_LAZY);
 	if (!lib)
 	{
-		throw DllLoadException("Could not load shared library: " + fullpath + ": " + dlerror());
+		throw DllLoadException("Could not load shared library: " + fullname + ": " + dlerror());
 	}
+	return _<Dll>(new Dll(lib));
 #else
-	char buf[0x2000];
+	char buf[0x1000];
 	getcwd(buf, sizeof(buf));
-	auto name = (AString(buf) + "/" + fullpath).toStdString();
-	auto lib = dlopen(name.c_str(), RTLD_LAZY);
-	if (!lib)
-	{
-	    // ../lib/
 
-        name = (AString(buf) + "/../lib/" + fullpath).toStdString();
-        lib = dlopen(name.c_str(), RTLD_LAZY);
-        if (!lib) {
-		    throw DllLoadException("Could not load shared library: " + fullpath + ": " + dlerror());
+	for (auto& fp : {
+        ""_as,
+	    AString(buf) + "/",
+        AString(buf) + "/../lib/",
+        "/usr/local/lib/"_as,
+        "/usr/lib/"_as,
+        "/lib/"_as,
+	}) {
+	    APath p = fp + fullname;
+	    try {
+            if (p.absolute().isRegularFileExists()) {
+                auto name = p.toStdString();
+                auto lib = dlopen(name.c_str(), RTLD_LAZY);
+                if (lib) {
+                    return _<Dll>(new Dll(lib));
+                }
+            }
+        } catch (...) {
+
         }
 	}
+
+    throw DllLoadException("Could not load shared library: " + fullname + ": " + dlerror());
 #endif
-	return _<Dll>(new Dll(lib));
 }
 
 AString Dll::getDllExtension()

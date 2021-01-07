@@ -45,7 +45,7 @@ FractalWindow::FractalWindow():
         centerPosDisplay->setCustomAss({
             BackgroundSolid { 0x80000000_argb },
             Padding { 4_dp },
-            TextColor { 0xffffffff_rgb },
+            TextColor { 0xffffff_rgb },
             FontSize { 11_pt },
         });
     }

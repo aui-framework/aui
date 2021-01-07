@@ -93,7 +93,7 @@ add_subdirectory(AUI.Image)
 
 if(NOT ANDROID)
 	#add_subdirectory(examples/AUI.Example.Views)
-	#add_subdirectory(examples/AUI.Example.Fractal)
+	add_subdirectory(examples/AUI.Example.Fractal)
 	#add_subdirectory(examples/AUI.Example.Minesweeper)
 endif()
 
