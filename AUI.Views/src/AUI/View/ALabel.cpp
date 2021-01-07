@@ -227,7 +227,7 @@ void ALabel::doRenderText() {
         }
         if (mPrerendered.mVao) {
             int y = mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)) + 1;
-            if (mVerticalAlign == TextAlign::CENTER) {
+            if (mVerticalAlign == VerticalAlign::MIDDLE) {
                 if (mMultiline) {
                     y = (glm::max)(y, (getHeight() - getMinimumHeight()) / 2 - 1);
                 } else {

@@ -20,6 +20,8 @@
  */
 
 #pragma once
+
+#include <AUI/Enum/VerticalAlign.h>
 #include "AView.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Common/AString.h"
@@ -32,7 +34,7 @@ private:
 	_<IDrawable> mIcon;
     _<AFont> mFontOverride;
     uint8_t mFontSizeOverride = 0;
-    TextAlign mVerticalAlign;
+    VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
     enum {
         TT_NORMAL,
         TT_UPPERCASE,
@@ -82,7 +84,6 @@ public:
     void doPrerender();
 
 
-public:
     void onDpiChanged() override;
 
     void setText(const AString& newText);
@@ -105,6 +106,10 @@ public:
 	void setFontSize(uint8_t size) {
         mFontSizeOverride = size;
     }
+
+    void setVerticalAlign(VerticalAlign verticalAlign) {
+        mVerticalAlign = verticalAlign;
+	}
 
     void setSize(int width, int height) override;
 

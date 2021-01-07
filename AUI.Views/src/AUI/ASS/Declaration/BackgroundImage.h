@@ -46,8 +46,10 @@ namespace ass {
         BackgroundImage(const unset_wrap<AString>& url, const unset_wrap<AColor>& overlayColor):
             url(url),
             overlayColor(overlayColor) {}
-        BackgroundImage(const unset_wrap<AString>& url):
+        BackgroundImage(const AString& url):
             url(url) {}
+        BackgroundImage(const AColor& overlayColor):
+            overlayColor(overlayColor) {}
 
         BackgroundImage(const unset_wrap<AString>& url, const unset_wrap<AColor>& overlayColor,
                         const unset_wrap<Repeat>& rep, const unset_wrap<Sizing>& sizing) : url(url),

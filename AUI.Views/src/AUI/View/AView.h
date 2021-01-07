@@ -35,8 +35,8 @@
 #include "AUI/Util/Watchable.h"
 #include "AUI/Util/IShadingEffect.h"
 #include <AUI/ASS/RuleWithoutSelector.h>
-#include <AUI/Overflow.h>
-#include <AUI/Visibility.h>
+#include <AUI/Enum/Overflow.h>
+#include <AUI/Enum/Visibility.h>
 
 #include <chrono>
 #include <functional>
