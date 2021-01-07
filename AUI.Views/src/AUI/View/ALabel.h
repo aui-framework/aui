@@ -22,6 +22,7 @@
 #pragma once
 
 #include <AUI/Enum/VerticalAlign.h>
+#include <AUI/Enum/TextTransform.h>
 #include "AView.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Common/AString.h"
@@ -35,11 +36,7 @@ private:
     _<AFont> mFontOverride;
     uint8_t mFontSizeOverride = 0;
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
-    enum {
-        TT_NORMAL,
-        TT_UPPERCASE,
-        TT_LOWERCASE
-    } mTextTransform = TT_NORMAL;
+    TextTransform mTextTransform = TextTransform::NONE;
 	bool mMultiline = false;
 
 protected:
@@ -101,14 +98,21 @@ public:
 
 	void setMultiline(const bool multiline);
 	void setFont(_<AFont> font) {
-	    mFontOverride = font;
+	    mFontOverride = std::move(font);
+        invalidateFont();
 	}
 	void setFontSize(uint8_t size) {
         mFontSizeOverride = size;
+        invalidateFont();
     }
 
     void setVerticalAlign(VerticalAlign verticalAlign) {
         mVerticalAlign = verticalAlign;
+        invalidateFont();
+	}
+    void setTextTransform(TextTransform textTransform) {
+        mTextTransform = textTransform;
+        invalidateFont();
 	}
 
     void setSize(int width, int height) override;

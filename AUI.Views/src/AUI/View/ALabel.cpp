@@ -250,10 +250,10 @@ AString ALabel::getTargetText() {
     if (targetString.empty())
         return {};
     switch (mTextTransform) {
-        case TT_UPPERCASE:
+        case TextTransform::UPPERCASE:
             targetString = targetString.uppercase();
             break;
-        case TT_LOWERCASE:
+        case TextTransform::LOWERCASE:
             targetString = targetString.lowercase();
             break;
     }
