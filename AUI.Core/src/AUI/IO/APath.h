@@ -106,7 +106,8 @@ public:
     APath absolute() const;
 
     /**
-     * \brief Get list of (by default) direct children of this folder.
+     * \brief Get list of (by default) direct children of this folder. This function outputs paths including the path
+     *        listDir was called on.
      * \note Use ListFlags enum flags to customize behaviour of this function.
      * \return list of children of this folder.
      */
@@ -195,6 +196,27 @@ public:
      * \return this
      */
     const APath& makeDirs() const noexcept;
+
+    /**
+     * \brief Returns same path but without <code>folder</code>
+     * \param folder some parent, grandparent, grandgrandparent... folder
+     * \example APath("C:/work/mon/test.txt").relativelyTo("C:/work") -> mon/test.txt
+     * \return same path but without <code>folder</code>
+     */
+    AString relativelyTo(const APath& folder);
+
+    /**
+     * \brief Checks whether path absolute or not.
+     * \return true if path is absolute
+     */
+    bool isAbsolute() const;
+    /**
+     * \brief Checks whether path absolute or not.
+     * \return true if path is relative
+     */
+    bool isRelative() const {
+        return !isAbsolute();
+    }
 
     size_t fileSize() const;
 

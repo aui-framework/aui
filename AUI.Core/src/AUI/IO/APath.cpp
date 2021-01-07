@@ -104,6 +104,17 @@ APath APath::ensureNonSlashEnding() const {
     return *this;
 }
 
+AString APath::relativelyTo(const APath& folder) {
+    if (isAbsolute() == folder.isAbsolute()) {
+        auto f = folder.ensureSlashEnding();
+        assert(startsWith(f));
+        return mid(f.length());
+    }
+    auto meButAbsolute = absolute();
+    auto f = folder.absolute().ensureSlashEnding();
+    assert(meButAbsolute.startsWith(f));
+    return meButAbsolute.mid(f.length());
+}
 bool APath::exists() const {
 #ifdef _WIN32
     struct _stat64 s = {0};
@@ -197,10 +208,10 @@ ADeque<APath> APath::listDir(ListFlags f) const {
             }
         }
         if ((f & LF_DIRS && isDirectory) || (f & LF_REGULAR_FILES && isFile)) {
-            list << file(filename);
+            list << file(APath(filename));
         }
         if (f & LF_RECURSIVE && isDirectory) {
-            auto childDir = file(filename);
+            auto childDir = file(APath(filename));
             for (auto& file : childDir.listDir(f)) {
                 if (file.startsWith(childDir)) {
                     // absolute path
@@ -225,15 +236,12 @@ ADeque<APath> APath::listDir(ListFlags f) const {
 
 APath APath::absolute() const {
 #ifdef WIN32
-    APath r;
-    r.resize(0x1000);
-    if (_wfullpath(r.data(), c_str(), r.length()) == nullptr) {
+    wchar_t buf[0x1000];
+    if (_wfullpath(buf, c_str(), sizeof(buf) / sizeof(wchar_t)) == nullptr) {
         throw IOException("could not find absolute file" + *this ERROR_DESCRIPTION);
     }
 
-    r.resizeToNullTerminator();
-
-    return r;
+    return APath(buf);
 #else
     char buf[0x1000];
     if (realpath(toStdString().c_str(), buf) == nullptr) {
@@ -282,6 +290,17 @@ const APath& APath::makeDirs() const noexcept {
 }
 void APath::removeBackSlashes() {
     replaceAll('\\', '/');
+}
+
+bool APath::isAbsolute() const {
+    if (length() >= 1) {
+        if (first() == '/')
+            return true;
+        if (length() >= 2 && (*this)[1] == ':') {
+            return true;
+        }
+    }
+    return false;
 }
 
 #ifdef _WIN32
@@ -333,6 +352,7 @@ APath APath::workingDir() {
 void APath::copy(const APath& source, const APath& destination) {
     _new<FileOutputStream>(destination) << _new<FileInputStream>(source);
 }
+
 
 #else
 #include <unistd.h>
