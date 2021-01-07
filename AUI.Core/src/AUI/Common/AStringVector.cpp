@@ -44,3 +44,18 @@ AString AStringVector::join(wchar_t w) const
 	return res;
 }
 
+AString AStringVector::join(const AString& w) const {
+    AString res;
+
+    for (const auto& x : *this)
+    {
+        if (!res.empty())
+        {
+            res += w;
+        }
+        res += x;
+    }
+
+    return res;
+}
+
