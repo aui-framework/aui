@@ -187,16 +187,16 @@ bool AString::toBool() const noexcept
     return *this == "true";
 }
 
-AString AString::fromLatin1(_<AByteBuffer> buffer)
+AString AString::fromLatin1(const AByteBuffer& buffer)
 {
     AString result;
 
-    result.reserve(buffer->getAvailable());
+    result.reserve(buffer.getAvailable());
 
-    while (buffer->getAvailable())
+    while (buffer.getAvailable())
     {
         char b;
-        buffer->get(&b, 1);
+        buffer.get(&b, 1);
         result += b;
     }
 

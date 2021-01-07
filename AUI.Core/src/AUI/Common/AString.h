@@ -158,6 +158,10 @@ public:
 	{
 		return rfind(other, 0) == 0;
 	}
+	bool startsWith(wchar_t c) const noexcept
+	{
+		return rfind(c, 0) == 0;
+	}
 	bool endsWith(const AString& other) const noexcept
 	{
 		if (length() < other.length())
@@ -166,6 +170,11 @@ public:
 		}
 		size_t offset = length() - other.length();
 		return std::wstring::find(other, offset) == offset;
+	}
+	bool endsWith(wchar_t c) const noexcept
+	{
+		size_t offset = length() - 1;
+		return std::wstring::find(c, offset) == offset;
 	}
 
 	AStringVector split(wchar_t c) const noexcept;
@@ -281,7 +290,7 @@ public:
 		return find(other) != npos;
 	}
 
-	static AString fromLatin1(_<AByteBuffer> buffer);
+	static AString fromLatin1(const AByteBuffer& buffer);
 	static AString fromLatin1(const char* buffer);
 
 	static AString numberHex(int i) noexcept;
