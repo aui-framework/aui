@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_SUITE(Rsa)
 
                 auto encrypted = r->encrypt(someData);
                 auto decrypted = r->decrypt(encrypted);
-                BOOST_CHECK_EQUAL(*decrypted, *someData);
+                BOOST_CHECK_EQUAL(decrypted, someData);
             }
         }
 
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_SUITE(Rsa)
         auto someData = ARandom().nextBytes(10000);
         auto result = priv->decrypt(both->encrypt(someData));
 
-        BOOST_CHECK_EQUAL(*someData, *result);
+        BOOST_CHECK_EQUAL(someData, result);
 
     }
 
@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_SUITE(Rsa)
         auto someData = ARandom().nextBytes(10000);
         auto result = both->decrypt(pub->encrypt(someData));
 
-        BOOST_CHECK_EQUAL(*someData, *result);
+        BOOST_CHECK_EQUAL(someData, result);
 
     }
 

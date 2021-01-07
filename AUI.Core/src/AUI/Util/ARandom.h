@@ -39,5 +39,5 @@ public:
 	glm::vec2 nextVec2();
 	glm::vec2 nextVec2(float min, float max);
 
-	_<AByteBuffer> nextBytes(unsigned count);
+	AByteBuffer nextBytes(unsigned count);
 };

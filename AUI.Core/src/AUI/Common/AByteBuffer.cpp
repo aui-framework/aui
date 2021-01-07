@@ -109,7 +109,7 @@ size_t AByteBuffer::getAvailable() const
 	return mSize - mIndex;
 }
 
-void AByteBuffer::setCurrentPos(size_t p)
+void AByteBuffer::setCurrentPos(size_t p) const
 {
 	mIndex = p;
 }

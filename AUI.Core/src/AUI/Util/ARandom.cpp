@@ -52,14 +52,14 @@ glm::vec2 ARandom::nextVec2(float min, float max)
 	return { nextFloat(min, max), nextFloat(min, max) };
 }
 
-_<AByteBuffer> ARandom::nextBytes(unsigned count)
+AByteBuffer ARandom::nextBytes(unsigned count)
 {
-	auto buf = _new<AByteBuffer>();
-	buf->reserve(count);
+    AByteBuffer buf;
+	buf.reserve(count);
 	for (unsigned i = 0; i < count; ++i)
 	{
 		unsigned char c = std::uniform_int_distribution<unsigned>()(mRandom) % 0xff;
-		buf->put(reinterpret_cast<char*>(&c), 1);
+		buf.put(reinterpret_cast<char*>(&c), 1);
 	}
 	return buf;
 }

@@ -38,15 +38,15 @@ private:
 public:
 	~ARsa();
 
-	_<AByteBuffer> encrypt(_<AByteBuffer> in);
-	_<AByteBuffer> decrypt(_<AByteBuffer> in);
+	AByteBuffer encrypt(const AByteBuffer& in);
+	AByteBuffer decrypt(const AByteBuffer& in);
 
 	size_t getKeyLength() const;
 
-	_<AByteBuffer> getPrivateKeyPEM() const;
-	_<AByteBuffer> getPublicKeyPEM() const;
+	AByteBuffer getPrivateKeyPEM() const;
+	AByteBuffer getPublicKeyPEM() const;
 	
 	static _<ARsa> generate(int bits = 0x800);
-	static _<ARsa> fromPrivateKeyPEM(_<AByteBuffer> buffer);
-	static _<ARsa> fromPublicKeyPEM(_<AByteBuffer> buffer);
+	static _<ARsa> fromPrivateKeyPEM(const AByteBuffer& buffer);
+	static _<ARsa> fromPublicKeyPEM(const AByteBuffer& buffer);
 };

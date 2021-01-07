@@ -104,7 +104,7 @@ public:
 	char* getCurrentPosAddress();
 	size_t getAvailable() const;
 
-	void setCurrentPos(size_t p);
+	void setCurrentPos(size_t p) const;
 	size_t getCurrentPos() const;
 
 	AByteBuffer& operator=(AByteBuffer&& other) {
