@@ -194,6 +194,12 @@ AString ATokenizer::readStringUntilUnescaped(char c)
 	readStringUntilUnescaped(result, c);
 	return result;
 }
+AString ATokenizer::readStringUntilUnescaped(const ASet<char>& characters) {
+	std::string result;
+	readStringUntilUnescaped(result, characters);
+	return result;
+}
+
 void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
 {
 	for (char current; (current = readChar()) != c;)
@@ -205,6 +211,20 @@ void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
 		} else
 		{
             out += current;
+		}
+	}
+}
+
+void ATokenizer::readStringUntilUnescaped(std::string& out, const ASet<char>& characters) {
+	for (char current; !characters.contains(current = readChar());)
+	{
+		if (current == '\\')
+		{
+			out += '\\';
+			out += readChar();
+		} else
+		{
+			out += current;
 		}
 	}
 }

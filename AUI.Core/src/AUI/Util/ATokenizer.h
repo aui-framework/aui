@@ -60,7 +60,7 @@ public:
 	AString readString(int n);
 
 	/**
-	 * \brief Reads string while isalnum == true and characters contains in <code>applicableChars</code>.
+	 * \brief Reads string while isalnum == true and characters contain in <code>applicableChars</code>.
 	 * \return read string
 	 */
 	AString readString(const ASet<char>& applicableChars);
@@ -132,10 +132,24 @@ public:
 
     /**
      * \brief Reads string until unescaped c.
+     * \param characters characters to read until to
+     * \return read string
+     */
+	AString readStringUntilUnescaped(const ASet<char>& characters);
+
+    /**
+     * \brief Reads string until unescaped c.
      * \param out read string
      * \param c character to read until to
      */
     void readStringUntilUnescaped(std::string& out, char c);
+
+    /**
+     * \brief Reads string until unescaped c.
+     * \param out read string
+     * \param characters characters to read until to
+     */
+    void readStringUntilUnescaped(std::string& out, const ASet<char>& characters);
 
 	/**
 	 * \brief reads 2 floats divided by any symbol.
