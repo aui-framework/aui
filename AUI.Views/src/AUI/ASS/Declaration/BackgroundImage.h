@@ -43,17 +43,14 @@ namespace ass {
 
         BackgroundImage() {}
 
-        BackgroundImage(const AString& url) : url(url) {}
-        BackgroundImage(const AColor& overlayColor) : overlayColor(overlayColor) {}
-
-        BackgroundImage(const AString& url,
-                        const AColor& overlayColor,
-                        Repeat repeat,
-                        Sizing sizing):
+        BackgroundImage(const unset_wrap<AString>& url, const unset_wrap<AColor>& overlayColor):
             url(url),
-            overlayColor(overlayColor),
-            rep(repeat),
-            sizing(sizing) {}
+            overlayColor(overlayColor) {}
+
+        BackgroundImage(const unset_wrap<AString>& url, const unset_wrap<AColor>& overlayColor,
+                        const unset_wrap<Repeat>& rep, const unset_wrap<Sizing>& sizing) : url(url),
+                                                                                           overlayColor(overlayColor),
+                                                                                           rep(rep), sizing(sizing) {}
     };
 
     namespace decl {

@@ -22,6 +22,7 @@
 #include <AUI/Platform/Entry.h>
 #include <Command/Pack.h>
 #include <Command/Lang.h>
+#include <Command/Css2ass.h>
 
 #include "Toolbox.h"
 
@@ -35,6 +36,7 @@ void registerCommand() {
 Toolbox::Toolbox() {
     registerCommand<Pack>();
     registerCommand<Lang>();
+    registerCommand<Css2ass>();
 }
 Toolbox::~Toolbox() {
     for (auto& c : commands) {
@@ -81,6 +83,9 @@ AUI_ENTRY
         } catch (const IllegalArgumentsException& e) {
 		    std::cerr << std::endl << e.getMessage() << std::endl;
 		    command->printHelp();
+		    return -1;
+        } catch (const AException& e) {
+		    std::cerr << std::endl << e.getMessage() << std::endl;
 		    return -1;
         } catch (...) {
 		    return -1;
