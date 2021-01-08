@@ -43,6 +43,7 @@ void AAbstractTextField::updateCursorBlinking()
 	blinkTimer().restart();
 	mCursorBlinkVisible = true;
 	mCursorBlinkCount = 0;
+	redraw();
 }
 
 void AAbstractTextField::updateCursorPos()
