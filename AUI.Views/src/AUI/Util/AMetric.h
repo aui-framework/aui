@@ -22,9 +22,15 @@
 #pragma once
 
 #include <AUI/Core.h>
+#include <type_traits>
 
 class AString;
 
+/**
+ * \brief Used to store dimensions in scalable units (dp, pt, etc...).
+ * \note It's highly recommended to use only Density-independent Pixel unit (_dp) to make your application correctly
+ *       handle systems with high DPI.
+ */
 class API_AUI_VIEWS AMetric
 {
 public:
@@ -43,6 +49,27 @@ private:
 public:
     AMetric():
         AMetric(0, T_PX) {}
+
+    /**
+     * \brief Constructor for AMetric a; a = 0 without unit specifier. Can be used only for zero initialization (see
+     *        example)
+     * \example
+     * <code>
+     * AMetric a = 0; // ok<br />
+     * AMetric b = 5_dp; // ok<br />
+     * AMetric c = 5; // produces error<br />
+     * </code>
+     * \tparam T integer
+     * \param value should be zero
+     */
+    template<typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = 0>
+    AMetric(T value):
+        AMetric(value, T_PX)
+    {
+        assert(("please use _px, _dp or _pt literal for AMetric initialisation. only zero allowed to initialise "
+                "AMetric without literal", value == 0));
+    }
+
 	AMetric(float value, Unit unit);
 	AMetric(const AString& text);
 
