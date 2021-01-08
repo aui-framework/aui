@@ -99,13 +99,13 @@ Check the `examples/` folder.
    4. Generate
    5. Open project (button in cmake-gui)
    6. Build the `INSTALL` project. It will build the library and install to your system
-4. `git clone` this repository
+4. `git clone https://github.com/Alex2772/aui.git`
 5. `git submodule update --init --recursive`
 6. Repeat the third step but for AUI
 
 ### *nix
 1. Download and install cmake and gcc
-2. `git clone` this repository
+2. `git clone https://github.com/Alex2772/aui.git`
 3. Download dependencies: `git submodule update --init --recursive`
 4. Create build folder and cd to it: `cd AUI && mkdir build && cd build`
 5. Run `cmake ..`
