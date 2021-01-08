@@ -1,5 +1,5 @@
 # AUI (Advanced Universal Interface)
-Cross-platform module-based framework for developing and deploying hardware accelerated graphical desktop applications
+Cross-platform high performance efficient module-based framework for developing and deploying hardware accelerated graphical desktop applications
 using modern C++17.
 
 ## Key features
@@ -44,7 +44,7 @@ using modern C++17.
 | AUI.Crypt         |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | AUI.Curl          |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | AUI.Data          |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| AUI.Designer      |             #            |     #      |   #   |    -    |   ?   |  -  |
+| AUI.Designer      |             ?            |     ?      |   ?   |    -    |   ?   |  -  |
 | AUI.Image         |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | AUI.Json          |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | AUI.Mysql         |             #            |     #      |   #   |    #    |   ?   |  ?  |
