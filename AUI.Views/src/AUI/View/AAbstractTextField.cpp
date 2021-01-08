@@ -346,17 +346,20 @@ void AAbstractTextField::onFocusLost()
 
 void AAbstractTextField::onMousePressed(glm::ivec2 pos, AInput::Key button)
 {
+    AView::onMousePressed(pos, button);
     ACursorSelectable::handleMousePressed(pos, button);
 	updateCursorBlinking();
 }
 
 void AAbstractTextField::onMouseMove(glm::ivec2 pos)
 {
+    AView::onMouseMove(pos);
 	ACursorSelectable::handleMouseMove(pos);
 }
 
 void AAbstractTextField::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
+    AView::onMouseReleased(pos, button);
     ACursorSelectable::handleMouseReleased(pos, button);
 }
 
