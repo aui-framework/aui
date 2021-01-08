@@ -30,31 +30,38 @@
 
 namespace ass {
     struct Padding {
-        ABoxFields padding;
+        unset_wrap<AMetric> left;
+        unset_wrap<AMetric> top;
+        unset_wrap<AMetric> right;
+        unset_wrap<AMetric> bottom;
 
-        Padding(AMetric all) {
-            padding.left = all;
-            padding.top = all;
-            padding.right = all;
-            padding.bottom = all;
+        Padding(unset_wrap<AMetric> all):
+            left(all),
+            top(all),
+            right(all),
+            bottom(all)
+        {
         }
-        Padding(AMetric vertical, AMetric horizontal) {
-            padding.left = horizontal;
-            padding.top = vertical;
-            padding.right = horizontal;
-            padding.bottom = vertical;
+        Padding(unset_wrap<AMetric> vertical, unset_wrap<AMetric> horizontal):
+                left(horizontal),
+                top(vertical),
+                right(horizontal),
+                bottom(vertical)
+        {
         }
-        Padding(AMetric top, AMetric horizontal, AMetric bottom) {
-            padding.left = horizontal;
-            padding.top = top;
-            padding.right = horizontal;
-            padding.bottom = bottom;
+        Padding(unset_wrap<AMetric> top, unset_wrap<AMetric> horizontal, unset_wrap<AMetric> bottom):
+                left(horizontal),
+                top(top),
+                right(horizontal),
+                bottom(bottom)
+        {
         }
-        Padding(AMetric top, AMetric right, AMetric bottom, AMetric left) {
-            padding.left = left;
-            padding.top = top;
-            padding.right = right;
-            padding.bottom = bottom;
+        Padding(unset_wrap<AMetric> top, unset_wrap<AMetric> right, unset_wrap<AMetric> bottom, unset_wrap<AMetric> left):
+                left(left),
+                top(top),
+                right(right),
+                bottom(bottom)
+        {
         }
     };
 

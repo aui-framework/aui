@@ -26,5 +26,12 @@
 #include "Padding.h"
 
 void ass::decl::Declaration<ass::Padding>::applyFor(AView* view) {
-    view->setPadding(mInfo.padding);
+    auto padding = view->getPadding();
+
+    mInfo.left.bind_to(padding.left);
+    mInfo.top.bind_to(padding.top);
+    mInfo.right.bind_to(padding.right);
+    mInfo.bottom.bind_to(padding.bottom);
+
+    view->setPadding(padding);
 }

@@ -26,5 +26,12 @@
 #include "Margin.h"
 
 void ass::decl::Declaration<ass::Margin>::applyFor(AView* view) {
-    view->setMargin(mInfo.margin);
+    auto margin = view->getMargin();
+
+    mInfo.left.bind_to(margin.left);
+    mInfo.top.bind_to(margin.top);
+    mInfo.right.bind_to(margin.right);
+    mInfo.bottom.bind_to(margin.bottom);
+
+    view->setMargin(margin);
 }

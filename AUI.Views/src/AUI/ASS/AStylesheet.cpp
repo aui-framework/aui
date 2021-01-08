@@ -61,7 +61,7 @@ AStylesheet::AStylesheet() {
         // ALabel
         {
             any<ALabel>(),
-            Padding {1_dp, {}, 2_dp},
+            Padding {1_dp, 0, 2_dp},
         },
         {
             any<ALabel>(),
@@ -93,13 +93,13 @@ AStylesheet::AStylesheet() {
             BackgroundGradient {getOsThemeColor().lighter(0.15f),
                                 getOsThemeColor().darker(0.15f),
                                 LayoutDirection::VERTICAL },
-            BoxShadow { {}, 1_dp, 3_dp, -1_dp, getOsThemeColor() },
+            BoxShadow { 0, 1_dp, 3_dp, -1_dp, getOsThemeColor() },
             Border { nullptr },
             TextColor { 0xffffff_rgb },
         },
         {
             any<AButton>::hover()["default"],
-            BoxShadow { {}, 1_dp, 6_dp, -1_dp, getOsThemeColor() },
+            BoxShadow { 0, 1_dp, 6_dp, -1_dp, getOsThemeColor() },
         },
         {
             any<AButton>::active(),
@@ -159,8 +159,8 @@ AStylesheet::AStylesheet() {
         },
         {
             any<ANumberPicker>() >> any<AButton>(),
-            Margin { {} },
-            Padding { {} },
+            Margin { 0 },
+            Padding { 0 },
             FixedSize { 19_dp, {} },
             MinSize { {}, 9_dp }
         },
@@ -268,7 +268,7 @@ AStylesheet::AStylesheet() {
         },
         {
             any<AListView>() > any<ALabel>(),
-            Margin { {} },
+            Margin { 0 },
             Padding { 1_px, 4_px, 4_px },
         },
         {
@@ -288,17 +288,17 @@ AStylesheet::AStylesheet() {
         },
         {
             class_of(".window-title") >> any<ALabel>(),
-            Margin { {} },
+            Margin { 0 },
             Padding { 7_dp },
             TextColor { 0xffffff_rgb }
         },
         {
             class_of(".window-title") >> class_of(".default"),
-            BorderRadius{ {} },
+            BorderRadius{ 0 },
             BoxShadow { nullptr },
             Border { nullptr },
-            Margin { {} },
-            Padding { {} },
+            Margin { 0 },
+            Padding { 0 },
             MinSize { 45_dp, 29_dp },
             BackgroundSolid { nullptr }
         },

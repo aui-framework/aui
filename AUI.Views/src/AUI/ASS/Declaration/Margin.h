@@ -30,31 +30,41 @@
 
 namespace ass {
     struct Margin {
-        ABoxFields margin;
+        unset_wrap<AMetric> left;
+        unset_wrap<AMetric> top;
+        unset_wrap<AMetric> right;
+        unset_wrap<AMetric> bottom;
 
-        Margin(AMetric all) {
-            margin.left = all;
-            margin.top = all;
-            margin.right = all;
-            margin.bottom = all;
+        Margin(unset_wrap<AMetric> all):
+            left(all),
+            top(all),
+            right(all),
+            bottom(all)
+        {
         }
-        Margin(AMetric vertical, AMetric horizontal) {
-            margin.left = horizontal;
-            margin.top = vertical;
-            margin.right = horizontal;
-            margin.bottom = vertical;
+
+        Margin(unset_wrap<AMetric> vertical, unset_wrap<AMetric> horizontal):
+            left(horizontal),
+            top(vertical),
+            right(horizontal),
+            bottom(vertical)
+        {
         }
-        Margin(AMetric top, AMetric horizontal, AMetric bottom) {
-            margin.left = horizontal;
-            margin.top = top;
-            margin.right = horizontal;
-            margin.bottom = bottom;
+
+        Margin(unset_wrap<AMetric> top, unset_wrap<AMetric> horizontal, unset_wrap<AMetric> bottom):
+            left(horizontal),
+            top(top),
+            right(horizontal),
+            bottom(bottom)
+        {
         }
-        Margin(AMetric top, AMetric right, AMetric bottom, AMetric left) {
-            margin.left = left;
-            margin.top = top;
-            margin.right = right;
-            margin.bottom = bottom;
+
+        Margin(unset_wrap<AMetric> top, unset_wrap<AMetric> right, unset_wrap<AMetric> bottom, unset_wrap<AMetric> left):
+            left(left),
+            top(top),
+            right(right),
+            bottom(bottom)
+        {
         }
     };
 
