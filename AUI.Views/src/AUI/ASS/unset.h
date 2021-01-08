@@ -52,11 +52,26 @@ namespace ass {
             assert(bool(*this));
             return stored;
         }
+        T* operator->() {
+            assert(bool(*this));
+            return &stored;
+        }
+        const T* operator->() const {
+            assert(bool(*this));
+            return &stored;
+        }
         T or_default(const T& def) {
             if (set) {
                 return stored;
             }
             return def;
+        }
+
+        template<typename Destination>
+        void bind_to(Destination& destination) {
+            if (set) {
+                destination = stored;
+            }
         }
 
 
@@ -75,8 +90,8 @@ namespace ass {
                 set = true;
             }
         }
-        template<typename T>
-        void init(unset_wrap<T>& wrap, T& dst, bool& set, const T& value) {
+        template<typename T, typename V>
+        void init(unset_wrap<T>& wrap, T& dst, bool& set, const V& value) {
             dst = value;
             set = true;
         }
@@ -85,8 +100,7 @@ namespace ass {
 
     template<typename T>
     template<typename V>
-    unset_wrap<T>::unset_wrap(const V& v):
-            stored(v)
+    unset_wrap<T>::unset_wrap(const V& v)
     {
         detail::unset::init(*this, stored, set, v);
     }
