@@ -149,6 +149,10 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
         c.finalPos = glm::round(pos);
         c.finalSize = glm::round(glm::max(float(c.available * c.expandingSum) / sums.x, float(c.minSize)));
 
+        // align right to border
+        if (c.finalPos + c.finalSize > x + width) {
+            c.finalSize = x + width - c.finalPos;
+        }
         pos += c.finalSize + mSpacing;
     }
     pos = y;
@@ -156,6 +160,11 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
         r.finalPos = glm::round(pos);
         r.finalSize = glm::round(glm::max(float(r.available * r.expandingSum) / sums.y, float(r.minSize)));
 
+
+        // align right to border
+        if (r.finalPos + r.finalSize > x + width) {
+            r.finalSize = x + width - r.finalPos;
+        }
         pos += r.finalSize + mSpacing;
     }
 
@@ -169,8 +178,11 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
         auto width  = columns[v.x].finalSize;
         auto height = rows   [v.y].finalSize;
 
-        v.view->setGeometry(posX + margins.left, posY + margins.top,
-                            width - margins.horizontal(), height - margins.vertical());
+        auto geomX = posX + margins.left;
+        auto geomY = posY + margins.top;
+        auto geomW = width - margins.horizontal();
+        auto geomH = height - margins.vertical();
+        v.view->setGeometry(geomX, geomY, geomW, geomH);
     }
 }
 
