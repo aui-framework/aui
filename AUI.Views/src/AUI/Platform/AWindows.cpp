@@ -266,10 +266,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             ReleaseCapture();
             return 0;
 
-        case WM_LBUTTONDBLCLK:
-            onMouseDoubleClicked(POS, AInput::LButton);
-            return 0;
-
         case WM_DPICHANGED: {
             auto prevDpi = mDpiRatio;
             updateDpi();
@@ -408,6 +404,26 @@ void AWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
             focusCopy->onFocusLost();
         }
     }
+
+    // check for double clicks
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+    static milliseconds lastButtonPressedTime = 0ms;
+    static AInput::Key lastButtonPressed = AInput::Unknown;
+
+    auto now = duration_cast<std::chrono::milliseconds>(system_clock::now().time_since_epoch());
+
+    auto delta = now - lastButtonPressedTime;
+    if (delta < 500ms) {
+        if (lastButtonPressed == button) {
+            onMouseDoubleClicked(pos, button);
+
+            lastButtonPressedTime = 0ms;
+        }
+    } else {
+        lastButtonPressedTime = now;
+        lastButtonPressed = button;
+    }
 }
 
 void AWindow::onClosed() {
@@ -438,7 +454,7 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
         mWindowClass = "AUI-" + AString::number(r.nextInt());
         winClass.lpszClassName = mWindowClass.c_str();
         winClass.cbSize = sizeof(WNDCLASSEX);
-        winClass.style = CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS;
+        winClass.style = CS_HREDRAW | CS_VREDRAW;
         winClass.lpfnWndProc = WindowProc;
         winClass.hInstance = mInst;
         //winClass.hIcon = LoadIcon(mInst, (LPCTSTR)101);
@@ -1672,31 +1688,10 @@ void AWindowManager::loop() {
                         switch (ev.xbutton.button) {
                             case 1:
                             case 2:
-                            case 3: {
-                                using namespace std::chrono;
-                                using namespace std::chrono_literals;
-                                static milliseconds lastButtonPressedTime = 0ms;
-                                static unsigned lastButtonPressed = 0;
-
-                                auto now = duration_cast<std::chrono::milliseconds>(system_clock::now().time_since_epoch());
+                            case 3:
                                 window->onMousePressed({ev.xbutton.x, ev.xbutton.y},
                                                        (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
-
-                                auto delta = now - lastButtonPressedTime;
-                                if (delta < 500ms) {
-                                    if (lastButtonPressed == ev.xbutton.button) {
-                                        window->onMouseDoubleClicked({ev.xbutton.x, ev.xbutton.y},
-                                                                     (AInput::Key) (AInput::LButton +
-                                                                                    ev.xbutton.button - 1));
-
-                                        lastButtonPressedTime = 0ms;
-                                    }
-                                } else {
-                                    lastButtonPressedTime = now;
-                                    lastButtonPressed = ev.xbutton.button;
-                                }
                                 break;
-                            }
                             case 4: // wheel down
                                 window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, -20_dp);
                                 break;
