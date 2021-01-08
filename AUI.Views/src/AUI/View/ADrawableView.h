@@ -31,14 +31,12 @@
 class API_AUI_VIEWS ADrawableView: public AView {
 private:
     _<IDrawable> mDrawable;
-    AColor mColorOverlay;
 
 public:
     ADrawableView(const _<IDrawable>& drawable);
     void render() override;
 
 protected:
-    //void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
 
 };
 

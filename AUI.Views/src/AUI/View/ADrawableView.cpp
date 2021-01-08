@@ -25,14 +25,15 @@
 
 #include "ADrawableView.h"
 #include <AUI/Render/Render.h>
+#include <AUI/ASS/ASS.h>
 
-ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable), mColorOverlay(1.f) {
+ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable) {
 
 }
 
 void ADrawableView::render() {
     AView::render();
-    Render::inst().setColor(mColorOverlay);
+    Render::inst().setColor(getAssHelper()->state.backgroundUrl.overlayColor.or_default(0xffffff_rgb));
     if (mDrawable)
         mDrawable->draw(getSize());
 }
