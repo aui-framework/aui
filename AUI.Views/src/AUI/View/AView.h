@@ -406,6 +406,14 @@ public:
 
     virtual void setSize(int width, int height);
     virtual void setGeometry(int x, int y, int width, int height);
+
+
+    /**
+     * \brief Fixed size.
+     */
+    const glm::ivec2& getFixedSize() {
+	    return mFixedSize;
+	}
 	void setFixedSize(const glm::ivec2& size) {
 	    mFixedSize = size;
 	}
