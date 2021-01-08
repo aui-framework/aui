@@ -67,6 +67,5 @@ namespace ass {
         using focus = ass::focus<detail::ClassOf>;
     };
 
-    template<typename T>
     using c = class_of;
 }
