@@ -44,6 +44,9 @@
 #include "Declaration/Padding.h"
 #include "Declaration/TextAlign.h"
 #include "Declaration/TextColor.h"
+#include "Declaration/TransformOffset.h"
+#include "Declaration/TransformScale.h"
+#include "Declaration/VerticalAlign.h"
 
 // Selectors
 #include "AUI/ASS/Selector/AAssSelector.h"
