@@ -27,16 +27,15 @@
 #pragma once
 
 
-#include <AUI/Util/AMetric.h>
 #include "IDeclaration.h"
 
 namespace ass {
     struct TransformScale {
-        AMetric scaleX;
-        AMetric scaleY;
+        float scaleX;
+        float scaleY;
 
-        TransformScale(const AMetric& scaleX, const AMetric& scaleY) : scaleX(scaleX), scaleY(scaleY) {}
-        explicit TransformScale(const AMetric& scale) : scaleX(scale), scaleY(scale) {}
+        TransformScale(float scaleX, float scaleY) : scaleX(scaleX), scaleY(scaleY) {}
+        explicit TransformScale(float scale) : scaleX(scale), scaleY(scale) {}
     };
 
 
