@@ -107,7 +107,7 @@ Check the `examples/` folder.
 1. Download and install cmake and gcc
 2. `git clone https://github.com/Alex2772/aui.git`
 3. Download dependencies: `git submodule update --init --recursive`
-4. Create build folder and cd to it: `cd AUI && mkdir build && cd build`
+4. Create build folder and cd to it: `cd aui && mkdir build && cd build`
 5. Run `cmake ..`
 6. Run `make && sudo make install`
 
