@@ -26,6 +26,20 @@
 #pragma once
 
 #include "APageView.h"
+#include "ALabel.h"
+
+class ATabButtonView: public ALabel {
+private:
+    bool mCurrent = false;
+
+public:
+    ATabButtonView(const AString& text): ALabel(text) {
+
+    }
+
+    void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
+    void setCurrent(bool current);
+};
 
 class API_AUI_VIEWS ATabView: public AViewContainer {
 private:

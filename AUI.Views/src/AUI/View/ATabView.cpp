@@ -26,26 +26,6 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "ATabView.h"
 
-class ATabButtonView: public ALabel {
-private:
-    bool mCurrent = false;
-
-public:
-    ATabButtonView(const AString& text): ALabel(text) {
-
-    }
-
-    void getCustomCssAttributes(AMap<AString, AVariant>& map) override {
-        AView::getCustomCssAttributes(map);
-        if (mCurrent)
-            map["current"] = true;
-    }
-
-    void setCurrent(bool current) {
-        mCurrent = current;
-        emit customCssPropertyChanged;
-    }
-};
 
 ATabView::ATabView() {
     setLayout(_new<AVerticalLayout>());
@@ -75,4 +55,15 @@ void ATabView::addTab(const _<AView>& view, const AString& name) {
 
 void ATabView::setTabId(unsigned int tabId) {
     mPageView->setPageId(tabId);
+}
+
+void ATabButtonView::getCustomCssAttributes(AMap<AString, AVariant>& map) {
+    AView::getCustomCssAttributes(map);
+    if (mCurrent)
+        map["current"] = true;
+}
+
+void ATabButtonView::setCurrent(bool current) {
+    mCurrent = current;
+    emit customCssPropertyChanged;
 }
