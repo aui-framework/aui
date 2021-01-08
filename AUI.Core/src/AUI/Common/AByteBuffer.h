@@ -26,6 +26,7 @@
 #include <cstddef>
 #include <string>
 #include <stdexcept>
+#include <cassert>
 #include "AUI/Core.h"
 
 class IInputStream;
@@ -35,7 +36,7 @@ private:
 	char* mBuffer = nullptr;
 	size_t mReserved = 0;
 	size_t mSize = 0;
-	mutable size_t mIndex = 0;
+	mutable size_t mCurrentPos = 0;
 
 public:
 	AByteBuffer();
@@ -45,37 +46,77 @@ public:
 	
 	AByteBuffer(const AByteBuffer& other) noexcept;
 	AByteBuffer(AByteBuffer&& other) noexcept;
+
+	/**
+	 * \brief Resizes internal buffer.
+	 */
 	void reserve(size_t size);
+
+	/**
+	 * \brief Appends data to the buffer. Twices internal buffer's size if needed.
+	 * \param buffer pointer to data
+	 * \param size data size to write in bytes
+	 */
 	void put(const char* buffer, size_t size);
+
+	/**
+	 * \brief Retrieves next <code>size</code> bytes from the buffer.
+	 * \param buffer pointer to destination buffer
+	 * \param size data size to read in bytes
+	 */
 	void get(char* buffer, size_t size) const;
 
+	/**
+	 * \return Internal buffer.
+	 */
 	char* data() const
 	{
 		return mBuffer;
 	}
 
+	/**
+	 * \brief Gets value of specified type by byte index relative to the beginning of internal buffer.
+	 * \tparam T data type
+	 * \param byteIndex byte offset realtive to the beginning of internal buffer
+	 * \return data
+	 */
 	template <typename T>
 	T& at(size_t byteIndex)
 	{
 		return *reinterpret_cast<T*>(mBuffer + byteIndex);
 	}
 
+	/**
+	 * \brief Wrapper around put
+	 */
 	template <typename T>
 	AByteBuffer& operator<<(const T& data) {
 		put(reinterpret_cast<const char*>(&data), sizeof(T));
 		return *this;
 	}
+
+
+    /**
+     * \brief Wrapper around get
+     */
 	template <typename T>
 	const AByteBuffer& operator>>(T& dst) const {
 		get(reinterpret_cast<char*>(&dst), sizeof(T));
 		return *this;
 	}
 
+    /**
+     * \brief Puts string size and its contents to the buffer.
+     */
 	AByteBuffer& operator<<(const std::string& data) {
 		*this << uint32_t(data.length());
 		put(data.c_str(), data.length());
 		return *this;
 	}
+
+	/**
+	 * \brief Reads string size and string contents.
+	 */
 	const AByteBuffer& operator>>(std::string& dst) const {
 		uint32_t s;
 		*this >> s;
@@ -86,35 +127,89 @@ public:
 		return *this;
 	}
 
+	/**
+	 * \brief Puts another byte buffer.
+	 */
 	AByteBuffer& operator<<(const AByteBuffer& data) {
-		put(data.getBuffer(), data.getSize());
+		put(data.data(), data.getSize());
 		return *this;
 	}
+
+	/**
+	 * \brief Put this bytebuffer to another byte buffer.
+	 */
 	const AByteBuffer& operator>>(AByteBuffer& dst) const {
-		dst.put(getBuffer(), getSize());
+		dst.put(data(), getSize());
 		return *this;
 	}
 
 
-	void setSize(size_t s);
-	char* getBuffer() const;
-	size_t getSize() const;
-	size_t getReserved() const;
-	const char* getCurrentPosAddress() const;
-	char* getCurrentPosAddress();
-	size_t getAvailable() const;
+	/**
+	 * \param s new size of payload (valid data)
+	 */
+	void setSize(size_t s) {
+		assert(s <= mReserved);
+		mSize = s;
+	}
 
-	void setCurrentPos(size_t p) const;
-	size_t getCurrentPos() const;
+	/**
+	 * \return size of payload (valid data)
+	 */
+	size_t getSize() const {
+		return mSize;
+	}
+
+	/**
+	 * \return size of internal buffer. Must be greater that getSize()
+	 */
+	size_t getReserved() const {
+		return mReserved;
+	}
+
+	/**
+	 * \return pointer to data including reading/writing offset.
+	 */
+	const char* getCurrentPosAddress() const {
+		return mBuffer + mCurrentPos;
+	}
+
+    /**
+     * \return pointer to data including reading/writing offset.
+     */
+	char* getCurrentPosAddress() {
+		return mBuffer + mCurrentPos;
+	}
+
+	/**
+	 * \return number of available (unread) bytes.
+	 */
+	size_t getAvailable() const
+	{
+		return mSize - mCurrentPos;
+	}
+
+	/**
+	 * \param p new reading/writing offset
+	 */
+	void setCurrentPos(size_t p) const {
+        mCurrentPos = p;
+	}
+
+	/**
+	 * \return reading/writing offset
+	 */
+	size_t getCurrentPos() const {
+		return mCurrentPos;
+	}
 
 	AByteBuffer& operator=(AByteBuffer&& other) {
         mBuffer = other.mBuffer;
-        mIndex = other.mIndex;
+        mCurrentPos = other.mCurrentPos;
         mReserved = other.mReserved;
         mSize = other.mSize;
 
         other.mBuffer = nullptr;
-        other.mIndex = 0;
+        other.mCurrentPos = 0;
         other.mReserved = 0;
         other.mSize = 0;
         return *this;
@@ -128,6 +223,14 @@ public:
 		return mBuffer;
 	}
 	char* end()
+	{
+		return mBuffer + mSize;
+	}
+	const char* begin() const
+	{
+		return mBuffer;
+	}
+	const char* end() const
 	{
 		return mBuffer + mSize;
 	}

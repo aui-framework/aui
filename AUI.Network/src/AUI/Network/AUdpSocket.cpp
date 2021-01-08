@@ -55,8 +55,8 @@ void AUdpSocket::write(const AByteBuffer& buf, const AInet4Address& dst) {
 	//static boost::mutex m;
 	//boost::unique_lock lock(m);
 	auto addr = dst.addr();
-	if (sendto(getHandle(), buf.getBuffer(), static_cast<int>(buf.getSize()), 0, (sockaddr*)&addr, sizeof(sockaddr_in)) <=
-		0) {
+	if (sendto(getHandle(), buf.data(), static_cast<int>(buf.getSize()), 0, (sockaddr*)&addr, sizeof(sockaddr_in)) <=
+        0) {
 		throw IOException(AString("sendto error ") + getErrorString());
 	}
 }
@@ -68,7 +68,7 @@ void AUdpSocket::read(AByteBuffer& buf, AInet4Address& dst) {
 	socklen_t  l = sizeof(from);
 	int res;
 	for (;;) {
-		res = recvfrom(getHandle(), buf.getBuffer(), 32768, 0, (sockaddr*)& from, (socklen_t *)&l);
+		res = recvfrom(getHandle(), buf.data(), 32768, 0, (sockaddr*)& from, (socklen_t *)&l);
 		if (res <= 0) {
 			AString msg = AString("recvfrom error ") + getErrorString();
 #if defined(_WIN32)

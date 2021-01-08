@@ -47,7 +47,7 @@ AByteBuffer::AByteBuffer(const AByteBuffer& other) noexcept {
 	reserve(other.mReserved);
 	memcpy(mBuffer, other.mBuffer, other.mSize);
 	mSize = other.mSize;
-	mIndex = other.mIndex;
+    mCurrentPos = other.mCurrentPos;
 }
 
 AByteBuffer::AByteBuffer(AByteBuffer&& other) noexcept
@@ -76,61 +76,16 @@ void AByteBuffer::put(const char* buffer, size_t size) {
 }
 
 void AByteBuffer::get(char* buffer, size_t size) const {
-	if (mIndex + size > mSize)
+	if (mCurrentPos + size > mSize)
 		throw IOException("bytebuffer overflow");
-	memcpy(buffer, mBuffer + mIndex, size);
-	mIndex += size;
+	memcpy(buffer, mBuffer + mCurrentPos, size);
+    mCurrentPos += size;
 }
 
-size_t AByteBuffer::getSize() const {
-	return mSize;
-}
-
-size_t AByteBuffer::getReserved() const
-{
-	return mReserved;
-}
-
-const char* AByteBuffer::getCurrentPosAddress() const
-{
-	return mBuffer + mIndex;
-}
-
-char* AByteBuffer::getCurrentPosAddress()
-{
-	return mBuffer + mIndex;
-}
-
-/**
- * \return Number of available bytes
- */
-size_t AByteBuffer::getAvailable() const
-{
-	return mSize - mIndex;
-}
-
-void AByteBuffer::setCurrentPos(size_t p) const
-{
-	mIndex = p;
-}
-
-char* AByteBuffer::getBuffer() const {
-	return mBuffer;
-}
-
-void AByteBuffer::setSize(size_t s) {
-	assert(s <= mReserved);
-	mSize = s;
-}
-
-size_t AByteBuffer::getCurrentPos() const
-{
-	return mIndex;
-}
 
 bool AByteBuffer::operator==(const AByteBuffer& r) const {
 	if (getSize() == r.getSize()) {
-		return memcmp(getBuffer(), r.getBuffer(), getSize()) == 0;
+		return memcmp(data(), r.data(), getSize()) == 0;
 	}
 	return false;
 }
