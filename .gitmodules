@@ -1,6 +1,3 @@
 [submodule "AUI.Svg/3rdparty/nanosvg"]
 	path = AUI.Svg/3rdparty/nanosvg
 	url = https://github.com/memononen/nanosvg
-[submodule "AUI.Core/3rdparty/glm"]
-	path = AUI.Core/3rdparty/glm
-	url = https://github.com/g-truc/glm/
