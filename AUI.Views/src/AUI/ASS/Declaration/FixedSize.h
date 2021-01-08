@@ -30,10 +30,10 @@
 
 namespace ass {
     struct FixedSize {
-        AMetric width;
-        AMetric height;
+        unset_wrap<AMetric> width;
+        unset_wrap<AMetric> height;
 
-        FixedSize(const AMetric& width, const AMetric& height) : width(width), height(height) {}
+        FixedSize(const unset_wrap<AMetric>& width, const unset_wrap<AMetric>& height) : width(width), height(height) {}
         explicit FixedSize(const AMetric& side) : width(side), height(side) {}
     };
 
