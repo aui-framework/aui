@@ -874,7 +874,9 @@ void AWindow::redraw() {
                     fs.color = 0xffffffffu;
                     fs.fontRendering = FontRendering::ANTIALIASING;
                     fs.size = 9_pt;
-                    auto s = Render::inst().preRendererString(getCssNames().back() + "\n"_as +
+
+                    AView* t = this;
+                    auto s = Render::inst().preRendererString(getCssNames().empty() ? typeid(*t).name() : getCssNames().back() + "\n"_as +
                                                               AString::number(getSize().x) + "x"_as + AString::number(getSize().y), fs);
 
                     {
