@@ -52,7 +52,7 @@
 #include "AUI/ASS/Selector/AAssSelector.h"
 #include "Selector/ParentSelector.h"
 #include "Selector/DirectParentSelector.h"
-#include "Selector/any.h"
+#include "Selector/type_of.h"
 #include "Selector/attribute.h"
 #include "Selector/active.h"
 #include "Selector/hovered.h"

@@ -44,7 +44,7 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Traits/strings.h>
 
-constexpr bool AUI_DISPLAY_BOUNDS = false;
+constexpr bool AUI_DISPLAY_BOUNDS = true;
 AWindow::Context AWindow::context = {};
 
 #if defined(_WIN32)

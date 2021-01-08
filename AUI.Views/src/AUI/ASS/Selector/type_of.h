@@ -25,7 +25,6 @@
 
 #pragma once
 
-
 #include "attribute.h"
 #include <AUI/Util/kAUI.h>
 #include <AUI/View/AView.h>
@@ -38,35 +37,25 @@
 namespace ass {
 
     namespace detail {
-        struct ClassOf : virtual IAssSubSelector {
-        private:
-            AVector<AString> mClasses;
-            
+        template<typename T>
+        struct Type : virtual IAssSubSelector {
         public:
-            ClassOf(const AVector<AString>& classes) : mClasses(classes) {}
-            ClassOf(const AString& clazz) : mClasses({clazz}) {}
-
             bool isPossiblyApplicable(AView* view) override {
-                for (auto& v : mClasses) {
-                    if (view->getCssNames().contains(v))
-                        return true;
-                }
-                return false;
+                return dynamic_cast<T*>(view) != nullptr;
             }
 
         };
     }
 
-    struct class_of: detail::ClassOf, AttributeHelper<class_of> {
+    template<typename T>
+    struct type_of: detail::Type<T>, AttributeHelper<type_of<T>> {
     public:
-        class_of(const AVector<AString>& classes) : ClassOf(classes) {}
-        class_of(const AString& clazz) : ClassOf(clazz) {}
 
-        using hover = ass::hovered<detail::ClassOf>;
-        using active = ass::active<detail::ClassOf>;
-        using focus = ass::focus<detail::ClassOf>;
+        using hover = ass::hovered<detail::Type<T>>;
+        using active = ass::active<detail::Type<T>>;
+        using focus = ass::active<detail::Type<T>>;
     };
 
     template<typename T>
-    using c = class_of;
+    using t = type_of<T>;
 }
