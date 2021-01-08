@@ -34,6 +34,7 @@
 class API_AUI_VIEWS ACursorSelectable {
 private:
     int mAbsoluteBegin, mAbsoluteEnd;
+    bool mIgnoreSelection = false;
 
 protected:
     unsigned mCursorIndex = 0;

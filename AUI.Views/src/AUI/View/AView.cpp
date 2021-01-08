@@ -295,6 +295,7 @@ void AView::onMouseLeave()
 
 void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 {
+    assert(!mPressed);
 	mPressed = true;
 	if (auto w = AWindow::current())
 	{

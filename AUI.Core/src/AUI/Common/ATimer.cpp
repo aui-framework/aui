@@ -48,6 +48,7 @@ void ATimer::start()
 			}
 			catch (...)
 			{
+			    AThread::current()->resetInterruptFlag();
 				if (mResetFlag)
 				{
 					mResetFlag = false;

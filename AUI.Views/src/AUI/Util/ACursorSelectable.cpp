@@ -77,7 +77,7 @@ void ACursorSelectable::handleMousePressed(const glm::ivec2& pos, AInput::Key bu
 }
 
 void ACursorSelectable::handleMouseMove(const glm::ivec2& pos) {
-    if (AInput::isKeyDown(AInput::LButton)) {
+    if (!mIgnoreSelection && AInput::isKeyDown(AInput::LButton)) {
         mCursorIndex = getCursorIndexByPos(pos);
         doRedraw();
     }
@@ -86,6 +86,7 @@ void ACursorSelectable::handleMouseMove(const glm::ivec2& pos) {
 void ACursorSelectable::handleMouseReleased(const glm::ivec2& pos, AInput::Key button) {
     if (button == AInput::LButton)
     {
+        mIgnoreSelection = false;
         if (mCursorSelection == mCursorIndex)
         {
             mCursorSelection = -1;
@@ -179,6 +180,7 @@ void ACursorSelectable::drawSelectionRects() {
 }
 
 void ACursorSelectable::handleMouseDoubleClicked(const glm::ivec2& pos, AInput::Key button) {
+    mIgnoreSelection = true;
     auto text = getMouseSelectionText();
 
     // select word
