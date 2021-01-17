@@ -61,7 +61,6 @@ public:
 BOOST_AUTO_TEST_SUITE(SharedPtrs)
 
     BOOST_AUTO_TEST_CASE(Builder1) {
-
         auto builder = _new<SomeBuilderClass>();
         apply(builder, {
            setUsername("John");
@@ -169,8 +168,8 @@ BOOST_AUTO_TEST_SUITE(SharedPtrs)
                 "sdfzsrsrhsrhfxbuihusebrvjmsdfbvhsrhvbhfsvbhbhlsdbhjbsdhbdfhbhlefbhlABHJ");
         _<AByteBuffer> buffer_shared = buffer >> shared;
 
-        BOOST_TEST(buffer.getBuffer() == nullptr);
-        BOOST_TEST(buffer_shared->getBuffer() != nullptr);
+        BOOST_TEST(buffer.data() == nullptr);
+        BOOST_TEST(buffer_shared->data() != nullptr);
     }
 
     BOOST_AUTO_TEST_CASE(Performance1) {
