@@ -39,6 +39,9 @@ namespace ass {
     namespace detail {
         template<typename T>
         struct Type : virtual IAssSubSelector {
+            static_assert(std::is_polymorphic_v<T>, "Your type is not polymorphic! Please define at least virtual "
+                                                    "destructor for using type_of (t) style selector "
+                                                    "(see https://en.cppreference.com/w/cpp/language/object#Polymorphic_objects)");
         public:
             bool isPossiblyApplicable(AView* view) override {
                 return dynamic_cast<T*>(view) != nullptr;
