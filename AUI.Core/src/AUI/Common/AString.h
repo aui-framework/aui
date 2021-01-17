@@ -291,6 +291,8 @@ public:
 	}
 
 	static AString fromLatin1(const AByteBuffer& buffer);
+	static AString fromUtf8(const AByteBuffer& buffer);
+	static AString fromUtf8(const char* buffer, size_t length);
 	static AString fromLatin1(const char* buffer);
 
 	static AString numberHex(int i) noexcept;

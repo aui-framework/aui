@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,7 +14,7 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/Alex2772/aui
  * =====================================================================================================================
  */
@@ -23,9 +23,8 @@
 #include "AString.h"
 #include "AStringVector.h"
 
-AString::AString(const char* str) noexcept
-{
-    reserve(strlen(str));
+inline static void fromUtf8_impl(AString& destination, const char* str, size_t length) {
+    destination.reserve(length);
 
     // parse utf8
     while (*str)
@@ -42,22 +41,38 @@ AString::AString(const char* str) noexcept
                 t |= *(str++) & 0b111111;
                 t <<= 6;
                 t |= *(str++) & 0b111111;
-                push_back(t);
+                destination.push_back(t);
             } else
             {
                 // 2-byte symbol
                 t = *(str++) & 0b11111;
                 t <<= 6;
                 t |= *(str++) & 0b111111;
-                push_back(t);
+                destination.push_back(t);
             }
         } else
         {
             // ascii symbol
-            push_back(*(str++));
+            destination.push_back(*(str++));
         }
     }
 }
+
+AString::AString(const char* str) noexcept
+{
+    fromUtf8_impl(*this, str, strlen(str));
+}
+
+AString AString::fromUtf8(const AByteBuffer& buffer) {
+    return AString::fromUtf8(buffer.data(), buffer.getSize());
+}
+
+AString AString::fromUtf8(const char* buffer, size_t length) {
+    AString result;
+    fromUtf8_impl(result, buffer, length);
+    return result;
+}
+
 
 _<AByteBuffer> AString::toUtf8() const
 {
@@ -90,10 +105,10 @@ _<AByteBuffer> AString::toUtf8() const
     return buf;
 }
 
-
 AStringVector AString::split(wchar_t c) const noexcept
 {
     AStringVector result;
+    result.reserve(length() / 10);
     for (size_type s = 0;;)
     {
         auto next = std::wstring::find(c, s);
@@ -203,6 +218,7 @@ AString AString::fromLatin1(const AByteBuffer& buffer)
     return result;
 }
 
+
 AString AString::fromLatin1(const char* buffer) {
     AString s;
     for (; *buffer; ++buffer)
@@ -210,8 +226,6 @@ AString AString::fromLatin1(const char* buffer) {
 
     return s;
 }
-
-
 AString AString::number(int8_t i) noexcept
 {
     return std::to_wstring(i);
@@ -240,11 +254,11 @@ AString AString::number(uint32_t i) noexcept
 {
     return std::to_wstring(i);
 }
+
 AString AString::number(uint64_t i) noexcept
 {
     return std::to_wstring(i);
 }
-
 AString AString::number(float i) noexcept
 {
     return std::to_wstring(i);
@@ -253,13 +267,13 @@ AString AString::number(double i) noexcept
 {
     return std::to_wstring(i);
 }
+
 AString AString::number(bool i) noexcept
 {
     if (i)
         return "true";
     return "false";
 }
-
 int AString::toNumberDec() const noexcept
 {
     int n;
@@ -268,6 +282,7 @@ int AString::toNumberDec() const noexcept
 
     return n;
 }
+
 int AString::toNumberHex() const noexcept
 {
     int n;
