@@ -32,7 +32,7 @@ private:
 protected:
 	LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
 	void doDrawWindow() override;
-	
+
 public:
 	ACustomWindow(const AString& name, int width, int height);
 	ACustomWindow();

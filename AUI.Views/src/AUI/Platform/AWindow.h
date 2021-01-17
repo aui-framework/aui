@@ -123,8 +123,6 @@ private:
     unsigned long xGetWindowProperty(Atom property, Atom type, unsigned char** value) const;
     void xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) const;
 #endif
-
-	void updateDpi();
 	
 protected:
 #if defined(_WIN32)
@@ -142,12 +140,23 @@ protected:
 	virtual void doDrawWindow();
 	virtual void onClosed();
     void onCloseButtonClicked();
-	
+	void windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws);
+
+	/**
+	 * \brief Constructor for custom initialization logic
+	 * \note Please call windowNativePreInit
+	 */
+    AWindow(std::nullptr_t) {}
+
 public:
-	AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WS_DEFAULT);
+	AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WS_DEFAULT) {
+	    windowNativePreInit(name, width, height, parent, ws);
+	}
 	virtual ~AWindow();
 
 	void redraw();
+
+    void updateDpi();
 
     _<AView> determineSharedPointer() override;
 

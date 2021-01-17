@@ -128,6 +128,9 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return true;
             */
 
+        case WM_CREATE: // used for ACustomWindow
+            return 0;
+
         case WM_USER:
             return 0;
 
@@ -184,6 +187,14 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case WM_SIZE: {
 
             if (!isMinimized()) {
+                RECT windowRect, clientRect;
+                GetWindowRect(mHandle, &windowRect);
+                GetClientRect(mHandle, &clientRect);
+                ALogger::info("AWindow resize proc args({},{}), window area({},{}), client area({},{})"_as.format(
+                        LOWORD(lParam), HIWORD(lParam), // proc args
+                        windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
+                        clientRect.right - clientRect.left, clientRect.bottom - clientRect.top
+                    ));
                 wglMakeCurrent(mDC, context.hrc);
                 emit resized(LOWORD(lParam), HIWORD(lParam));
                 AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
@@ -434,10 +445,9 @@ void AWindow::doDrawWindow() {
     render();
 }
 
-AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) :
-        mWindowTitle(name),
-        mParentWindow(parent) {
-
+void AWindow::windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) {
+    mWindowTitle = name;
+    mParentWindow = parent;
 
     currentWindowStorage() = this;
 
@@ -479,6 +489,9 @@ AWindow::AWindow(const AString& name, int width, int height, AWindow* parent, Wi
                              parent != nullptr ? parent->mHandle : nullptr, nullptr, mInst, nullptr);
 
     SetWindowLongPtr(mHandle, GWLP_USERDATA, reinterpret_cast<long long int>(this));
+
+    // used for ACustomWindow
+    winProc(mHandle, WM_CREATE, 0, 0);
 
     if (mParentWindow && ws & WS_DIALOG) {
         EnableWindow(mParentWindow->mHandle, false);

@@ -44,7 +44,21 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
     switch (uMsg)
     {
+        case WM_CREATE: {
+            const MARGINS shadow = {1, 1, 1, 1};
+            DwmExtendFrameIntoClientArea((HWND) getNativeHandle(), &shadow);
 
+            // update window size
+            RECT rcClient;
+            GetWindowRect(getNativeHandle(), &rcClient);
+
+            SetWindowPos(getNativeHandle(),
+                         NULL,
+                         rcClient.left, rcClient.top,
+                         rcClient.right - rcClient.left, rcClient.bottom - rcClient.top,
+                         SWP_FRAMECHANGED);
+            return 0;
+        }
     case WM_GETMINMAXINFO:
     {
         MINMAXINFO* info = reinterpret_cast<MINMAXINFO*>(lParam);
@@ -157,22 +171,10 @@ void ACustomWindow::doDrawWindow()
     AWindow::doDrawWindow();
 }
 
-ACustomWindow::ACustomWindow(const AString& name, int width, int height): AWindow(name, width, height)
+ACustomWindow::ACustomWindow(const AString& name, int width, int height): AWindow(nullptr)
 {
-
-
-    const MARGINS shadow = { 1, 1, 1, 1 };
-    DwmExtendFrameIntoClientArea((HWND)getNativeHandle(), &shadow);
-
-    // update window size
-    RECT rcClient;
-    GetWindowRect(getNativeHandle(), &rcClient);
-
-    SetWindowPos(getNativeHandle(),
-                 NULL,
-                 rcClient.left, rcClient.top,
-                 rcClient.right - rcClient.left, rcClient.bottom - rcClient.top,
-                 SWP_FRAMECHANGED);
+    // init here to be sure vtable for wndProc for WM_CREATE is initialized
+    windowNativePreInit(name, width, height, nullptr, WS_DEFAULT);
 }
 
 ACustomWindow::ACustomWindow(): ACustomWindow("My custom window", 854, 500)
