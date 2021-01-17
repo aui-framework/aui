@@ -421,11 +421,12 @@ void AWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     using namespace std::chrono_literals;
     static milliseconds lastButtonPressedTime = 0ms;
     static AInput::Key lastButtonPressed = AInput::Unknown;
+    static glm::ivec2 lastPosition = {0, 0};
 
     auto now = duration_cast<std::chrono::milliseconds>(system_clock::now().time_since_epoch());
 
     auto delta = now - lastButtonPressedTime;
-    if (delta < 500ms) {
+    if (delta < 500ms && lastPosition == pos) {
         if (lastButtonPressed == button) {
             onMouseDoubleClicked(pos, button);
 
@@ -434,6 +435,7 @@ void AWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     } else {
         lastButtonPressedTime = now;
         lastButtonPressed = button;
+        lastPosition = pos;
     }
 }
 
