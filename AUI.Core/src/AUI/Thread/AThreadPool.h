@@ -103,6 +103,13 @@ public:
 
     static AThreadPool& global();
 
+    size_t getTotalWorkerCount() const {
+        return mWorkers.size();
+    }
+    size_t getIdleWorkerCount() const {
+        return mIdleWorkers;
+    }
+
     /**
      * \brief Wraps lambda. Guarantees that all tasks enqueued inside this lambda will be finished after this function
      *        call.
