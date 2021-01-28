@@ -48,7 +48,7 @@ DesignerWindow::DesignerWindow():
     addView(_container<AVerticalLayout>({
         _container<AHorizontalLayout>({
             _new<AButton>("button")
-        }) let (AView, {
+        }) let {
             setCss("background: $OS_THEME_COLOR");
         }),
         _container<AHorizontalLayout>({
@@ -56,20 +56,20 @@ DesignerWindow::DesignerWindow():
             _container<AVerticalLayout>({
                 _new<ALabel>("Components") << ".components_title",
                 componentsList
-            }) let (AViewContainer, {
+            }) let {
                 setExpanding({0, 2});
             }) << ".components",
 
             // central work area
             _container<AStackedLayout>({
                 _new<FakeWindow>()
-            }) let (AViewContainer, {
+            }) let {
                 setExpanding({2, 2});
             })
-        }) let (AViewContainer, {
+        }) let {
             setExpanding({2, 2});
         })
-    }) let (AViewContainer, {
+    }) let {
         setExpanding({2, 2});
     }));
     setCss("padding: 0");

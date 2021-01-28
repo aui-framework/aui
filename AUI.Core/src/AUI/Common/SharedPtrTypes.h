@@ -85,7 +85,7 @@ public:
 
 
 	template <typename Functor>
-	inline _<T>& applyOnFunctor(Functor functor) {
+	inline _<T>& operator^(Functor functor) {
 	    functor(*this);
 	    return *this;
 	}
@@ -113,6 +113,11 @@ public:
     template<typename Arg>
 	_<T>& operator<<(Arg&& value) {
         (*parent::get()) << std::forward<Arg>(value);
+        return *this;
+    }
+    template<typename Arg>
+	_<T>& operator>>(Arg&& value) {
+        (*parent::get()) >> std::forward<Arg>(value);
         return *this;
     }
 };

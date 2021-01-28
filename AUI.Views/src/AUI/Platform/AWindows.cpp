@@ -1730,7 +1730,7 @@ void AWindowManager::loop() {
                         if (ev.xproperty.atom == gAtoms.netWmState) {
                             auto maximized = window->isMaximized();
                             if (maximized != window->mWasMaximized) {
-                                window let (AWindow, {
+                                apply(window, {
                                     if (mWasMaximized) {
                                         emit restored();
                                     } else {

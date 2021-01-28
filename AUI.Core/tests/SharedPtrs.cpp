@@ -72,10 +72,10 @@ BOOST_AUTO_TEST_SUITE(SharedPtrs)
     }
 
     BOOST_AUTO_TEST_CASE(Builder2) {
-        auto builder = _new<SomeBuilderClass>() let (SomeBuilderClass, {
-            setUsername("John");
-            setAge(23);
-        });
+        auto builder = _new<SomeBuilderClass>() let {
+            it->setUsername("John");
+            it->setAge(23);
+        };
 
 
         BOOST_CHECK_EQUAL(builder->getUsername(), "John");

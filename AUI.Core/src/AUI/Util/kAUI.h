@@ -87,7 +87,7 @@
 #define apply(object, lambda)                                                  \
     struct __apply ## __FUNCTION__ ## __LINE__   : std::decay_t<decltype(object)>::stored_t { \
         void operator()() {                                                    \
-            ([&]() lambda )();                                                 \
+            lambda;                                                            \
         }                                                                      \
     };                                                                         \
     (*reinterpret_cast<__apply ## __FUNCTION__ ## __LINE__ *>(object.get()))()
@@ -107,17 +107,14 @@
  * &#09;void raiseSon();<br />
  * };<br />
  * ...<br />
- * auto worker = _new&lt;Worker&gt;() let (Worker, {<br />
- * &#09;buildHouse();<br />
- * &#09;plantTree();<br />
- * &#09;raiseSon();<br />
- * });<br />
+ * auto worker = _new&lt;Worker&gt;() let {<br />
+ * &#09;it->buildHouse();<br />
+ * &#09;it->plantTree();<br />
+ * &#09;it->raiseSon();<br />
+ * };<br />
  * </code>
  */
-#define let(T, lambda)               \
-    .applyOnFunctor([&](const _<T>& object) { \
-        apply(object, lambda);   \
-    })
+#define let ^ [&](const auto& it)
 
 /**
  * \brief Executes following {} block asynchronously in standard thread pool. Does now allow to set lambda's capture.

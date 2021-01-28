@@ -80,15 +80,15 @@ NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper):
 
 	// form
 	addView(_form({
-        {"Cells by width:"_as, mWidth = _new<ANumberPicker>() let (ANumberPicker, {
+        {"Cells by width:"_as, mWidth = _new<ANumberPicker>() let {
             setMin(8);
             setMax(25);
         })},
-        {"Cells by height:"_as, mHeight = _new<ANumberPicker>() let (ANumberPicker, {
+        {"Cells by height:"_as, mHeight = _new<ANumberPicker>() let {
             setMin(8);
             setMax(25);
         })},
-        {"Mines count:"_as, mMines = _new<ANumberPicker>() let (ANumberPicker, {
+        {"Mines count:"_as, mMines = _new<ANumberPicker>() let {
             setMin(8);
         })},
 	}));
@@ -99,7 +99,7 @@ NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper):
 	// buttons
 	addView(_container<AHorizontalLayout>({
 	    _new<ASpacer>(),
-        _new<AButton>("Start game") let(AButton, {
+        _new<AButton>("Start game") let {
             setDefault();
         }).connect(&AButton::clicked, me::begin),
         _new<AButton>("Cancel").connect(&AButton::clicked, me::close),

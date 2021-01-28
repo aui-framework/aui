@@ -65,10 +65,10 @@ FractalWindow::FractalWindow():
                 _new<ASpacer>(),
                 centerPosDisplay
             })
-        }) let (AViewContainer, {
+        }) let {
             setExpanding({2, 2});
         })
-    }) let (AViewContainer, {
+    }) let {
         setExpanding({2, 2});
     }));
 
@@ -82,12 +82,12 @@ FractalWindow::FractalWindow():
             _new<ALabel>("Iterations:"),
             _new<ANumberPicker>().connect(&ANumberPicker::valueChanged, this, [fractal](int v) {
                 fractal->setIterations(v);
-            }) let (ANumberPicker, {
+            }) let {
                 setMax(1000);
                 setValue(350);
             }),
             _new<ALabel>("Gradient:"),
-            _new<AImageView>(fractal->getTexture()) let (AImageView, {
+            _new<AImageView>(fractal->getTexture()) let {
                 setCustomAss({
                     FixedSize { {}, 10_dp },
                     Margin { 4_dp }

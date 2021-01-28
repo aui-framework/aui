@@ -42,9 +42,7 @@ public:
 
         setWindowStyle(WS_SYS);
         setLayout(_new<AVerticalLayout>());
-        addView(mListView = _new<AListView>(model) let (AListView, {
-            setExpanding({2, 2});
-        }));
+        addView(mListView = _new<AListView>(model) let { it->setExpanding({2, 2}); });
     }
 
     _<AListView> mListView;
@@ -101,9 +99,7 @@ void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
         mComboWindow->setGeometry(currentPos.x, currentPos.y + getHeight(),
                                   (glm::max)(getWidth(), mComboWindow->mListView->getMinimumWidth()), height);
         mComboWindow->setAnimator(_new<ASizeAnimator>(
-                glm::ivec2{mComboWindow->getWidth(), 0}) let (ASizeAnimator, {
-            setDuration(0.1f);
-        }));
+                glm::ivec2{mComboWindow->getWidth(), 0}) let { it->setDuration(0.1f); });
         connect(w->mousePressed, this, [&] () {
             if (mComboWindow) {
                 mClickConsumer = true;

@@ -25,6 +25,9 @@
 
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/ASS/ASS.h>
+#include <AUI/View/AButton.h>
+#include <AUI/View/ALabel.h>
+#include <AUI/View/AAbstractTextField.h>
 #include "AScrollbar.h"
 #include "ASpacer.h"
 
@@ -104,9 +107,9 @@ AScrollbar::AScrollbar(LayoutDirection direction) : mDirection(direction) {
     mHandle = _new<AScrollbarHandle>();
 
     addView(mBackwardButton);
-    addView(mOffsetSpacer = _new<AScrollbarOffsetSpacer>() let (ASpacer, {setMinimumSize({0, 0});}));
+    addView(mOffsetSpacer = _new<AScrollbarOffsetSpacer>() let { it->setMinimumSize({0, 0}); });
     addView(mHandle);
-    addView(_new<ASpacer>() let (ASpacer, {setMinimumSize({0, 0});}));
+    addView(_new<ASpacer>() let { it->setMinimumSize({0, 0}); });
     addView(mForwardButton);
 
     setScroll(0);

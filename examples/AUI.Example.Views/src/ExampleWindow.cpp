@@ -98,9 +98,9 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
 			    "Radiobutton 2",
 			    "Radiobutton 3",
 			    "Disabled radiobutton",
-			})) let (ARadioGroup, {
-			    getViews()[3]->setDisabled();
-			}));
+			})) let {
+			    it->getViews()[3]->setDisabled();
+			});
 		}
 
 		// comboboxes
@@ -116,9 +116,9 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
             })));
             c->addView(_new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{
                 "Disabled combobox"
-            })) let(AComboBox, {
-                setDisabled();
-            }));
+            })) let {
+                it->setDisabled();
+            });
         }
 		
 		horizontal->addView(c);

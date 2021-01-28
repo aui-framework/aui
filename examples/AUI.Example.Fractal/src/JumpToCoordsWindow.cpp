@@ -64,7 +64,7 @@ JumpToCoordsWindow::JumpToCoordsWindow(_<FractalView> fractalView, AWindow* pare
             } catch (...) {
                 AMessageBox::show(this, "Error", "Please check your values are valid numbers.");
             }
-        }) let (AButton, {
+        }) let {
             setDefault();
         }),
         _new<AButton>("Cancel").connect(&AButton::clicked, me::close)
