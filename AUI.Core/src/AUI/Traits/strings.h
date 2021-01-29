@@ -38,6 +38,10 @@ namespace aui {
         return t;
     };
     template<>
+    inline AString to_string(char* const& t) {
+        return t;
+    };
+    template<>
     inline AString to_string(const AString& t) {
         return t;
     };

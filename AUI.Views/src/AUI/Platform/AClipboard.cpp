@@ -24,6 +24,8 @@
 //
 
 #include "AClipboard.h"
+#include "AWindow.h"
+#include "AWindowManager.h"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -62,11 +64,11 @@ AString AClipboard::pasteFromClipboard() {
     return {};
 }
 #else
+
 void AClipboard::copyToClipboard(const AString& text) {
-
+    AWindow::current()->getWindowManager().xClipboardCopyImpl(text);
 }
-
 AString AClipboard::pasteFromClipboard() {
-    return "unsupported";
+    return AWindow::current()->getWindowManager().xClipboardPasteImpl();
 }
 #endif

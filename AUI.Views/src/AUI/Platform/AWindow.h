@@ -215,6 +215,8 @@ public:
 
 #if defined(_WIN32)
 	HWND getNativeHandle() { return mHandle; }
+#else
+	Window getNativeHandle() { return mHandle; }
 #endif
 
 	float getDpiRatio()

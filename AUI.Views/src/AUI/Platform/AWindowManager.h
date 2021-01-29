@@ -28,6 +28,7 @@ class AWindow;
 
 class API_AUI_VIEWS AWindowManager: public IEventLoop {
 friend class AWindow;
+friend class AClipboard;
 private:
     IEventLoop::Handle mHandle;
     ADeque<_<AWindow>> mWindows;
@@ -35,6 +36,11 @@ private:
 #ifdef __linux
     AMutex mXNotifyLock;
     AConditionVariable mXNotifyCV;
+    std::string mXClipboardText;
+
+    void xProcessEvent(XEvent& ev);
+    void xClipboardCopyImpl(const AString& text);
+    AString xClipboardPasteImpl();
 #endif
 
 public:
@@ -59,5 +65,4 @@ public:
 
         return std::move(result);
     }
-
 };

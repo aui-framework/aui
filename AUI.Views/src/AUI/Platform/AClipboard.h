@@ -28,7 +28,8 @@
 
 #include <AUI/Common/AString.h>
 
-namespace AClipboard {
-    void copyToClipboard(const AString& text);
-    AString pasteFromClipboard();
-}
+class AClipboard {
+public:
+    static void copyToClipboard(const AString& text);
+    static AString pasteFromClipboard();
+};

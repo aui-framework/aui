@@ -338,6 +338,11 @@ struct {
     Atom netWmState;
     Atom netWmStateMaximizedVert;
     Atom netWmStateMaximizedHorz;
+    Atom clipboard;
+    Atom utf8String;
+    Atom auiClipboard;
+    Atom incr;
+    Atom targets;
 
 
     void init() {
@@ -348,6 +353,11 @@ struct {
         netWmState = XInternAtom(gDisplay, "_NET_WM_STATE", false);
         netWmStateMaximizedVert = XInternAtom(gDisplay, "_NET_WM_STATE_MAXIMIZED_VERT", false);
         netWmStateMaximizedHorz = XInternAtom(gDisplay, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
+        clipboard = XInternAtom(gDisplay, "CLIPBOARD", False);
+        utf8String = XInternAtom(gDisplay, "UTF8_STRING", False);
+        auiClipboard = XInternAtom(gDisplay, "AUI_CLIPBOARD", False);
+        incr = XInternAtom(gDisplay, "INCR", False);
+        targets = XInternAtom(gDisplay, "TARGETS", False);
     }
 
 } gAtoms;
@@ -1630,134 +1640,262 @@ void AWindowManager::loop() {
 #else
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
-        struct NotFound {};
-        auto locateWindow = [&](Window xWindow) -> _<AWindow> {
-            for (auto& w : mWindows) {
-                if (w->mHandle == xWindow) {
-                    AWindow::currentWindowStorage() = w.get();
-                    return w;
-                }
-            }
-            throw NotFound();
-        };
-        try {
-            while (XPending(gDisplay)) {
-                XNextEvent(gDisplay, &ev);
-                _<AWindow> window;
-                switch (ev.type) {
-                    case ClientMessage: {
-                        if (ev.xclient.message_type == gAtoms.wmProtocols &&
-                            ev.xclient.data.l[0] == gAtoms.wmDeleteWindow) {
-                            // close button clicked
-                            auto window = locateWindow(ev.xclient.window);
-                            window->onCloseButtonClicked();
-                        }
-                        break;
-                    }
-                    case KeyPress: {
-                        window = locateWindow(ev.xkey.window);
-                        int count = 0;
-                        KeySym keysym = 0;
-                        char buf[0x20];
-                        Status status = 0;
-                        count = Xutf8LookupString(window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
-                                                  &status);
-
-                        if (count) {
-                            AString s(buf);
-                            assert(!s.empty());
-                            window->onCharEntered(s[0]);
-                        }
-                        window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
-                        break;
-                    }
-                    case KeyRelease:
-                        window = locateWindow(ev.xkey.window);
-                        window->onKeyUp(AInput::fromNative(ev.xkey.keycode));
-                        break;
-
-                    case ConfigureNotify:
-                        if (auto w = _cast<ACustomWindow>(window = locateWindow(ev.xconfigure.window))) {
-                            w->handleXConfigureNotify();
-                        }
-
-                    case MappingNotify:
-                        XRefreshKeyboardMapping(&ev.xmapping);
-                        break;
-
-                    case Expose: {
-                        window = locateWindow(ev.xexpose.window);
-                        glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
-                        if (size.x >= 10 && size.y >= 10 && size != window->getSize())
-                            window->AViewContainer::setSize(size.x, size.y);
-                        window->mRedrawFlag = true;
-                        break;
-                    }
-                    case MotionNotify: {
-                        window = locateWindow(ev.xmotion.window);
-                        window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
-                        break;
-                    }
-                    case ButtonPress: {
-                        window = locateWindow(ev.xbutton.window);
-                        switch (ev.xbutton.button) {
-                            case 1:
-                            case 2:
-                            case 3:
-                                window->onMousePressed({ev.xbutton.x, ev.xbutton.y},
-                                                       (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
-                                break;
-                            case 4: // wheel down
-                                window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, -20_dp);
-                                break;
-                            case 5: // wheel up
-                                window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, 20_dp);
-                                break;
-                        }
-                        break;
-                    }
-                    case ButtonRelease: {
-                        if (ev.xbutton.button < 4) {
-                            window = locateWindow(ev.xbutton.window);
-                            window->onMouseReleased({ev.xbutton.x, ev.xbutton.y},
-                                                    (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
-                        }
-                        break;
-                    }
-
-                    case PropertyNotify: {
-                        window = locateWindow(ev.xproperty.window);
-                        if (ev.xproperty.atom == gAtoms.netWmState) {
-                            auto maximized = window->isMaximized();
-                            if (maximized != window->mWasMaximized) {
-                                apply(window, {
-                                    if (mWasMaximized) {
-                                        emit restored();
-                                    } else {
-                                        emit maximized();
-                                    }
-                                });
-                                window->mWasMaximized = maximized;
-                            }
-                        }
-                        break;
-                    }
-                }
-            }
-
-
-            std::unique_lock lock(mXNotifyLock);
-            mXNotifyCV.wait_for(lock, std::chrono::microseconds(500));
-            AThread::current()->processMessages();
-            for (auto& window : mWindows) {
-                if (window->mRedrawFlag) {
-                    window->mRedrawFlag = false;
-                    window->redraw();
-                }
-            }
-        } catch(NotFound e) {
-
-        }
+        xProcessEvent(ev);
     }
 #endif
 }
+
+#ifdef __linux
+void AWindowManager::xProcessEvent(XEvent& ev) {
+    struct NotFound {};
+    auto locateWindow = [&](Window xWindow) -> _<AWindow> {
+        for (auto& w : mWindows) {
+            if (w->mHandle == xWindow) {
+                AWindow::currentWindowStorage() = w.get();
+                return w;
+            }
+        }
+        throw NotFound();
+    };
+    try {
+        while (XPending(gDisplay)) {
+            XNextEvent(gDisplay, &ev);
+            _<AWindow> window;
+            switch (ev.type) {
+                case ClientMessage: {
+                    if (ev.xclient.message_type == gAtoms.wmProtocols &&
+                        ev.xclient.data.l[0] == gAtoms.wmDeleteWindow) {
+                        // close button clicked
+                        auto window = locateWindow(ev.xclient.window);
+                        window->onCloseButtonClicked();
+                    }
+                    break;
+                }
+                case KeyPress: {
+                    window = locateWindow(ev.xkey.window);
+                    int count = 0;
+                    KeySym keysym = 0;
+                    char buf[0x20];
+                    Status status = 0;
+                    count = Xutf8LookupString(window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
+                                              &status);
+
+                    if (count) {
+                        AString s(buf);
+                        assert(!s.empty());
+                        window->onCharEntered(s[0]);
+                    }
+                    window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
+                    break;
+                }
+                case KeyRelease:
+                    window = locateWindow(ev.xkey.window);
+                    window->onKeyUp(AInput::fromNative(ev.xkey.keycode));
+                    break;
+
+                case ConfigureNotify:
+                    if (auto w = _cast<ACustomWindow>(window = locateWindow(ev.xconfigure.window))) {
+                        w->handleXConfigureNotify();
+                    }
+
+                case MappingNotify:
+                    XRefreshKeyboardMapping(&ev.xmapping);
+                    break;
+
+                case Expose: {
+                    window = locateWindow(ev.xexpose.window);
+                    glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
+                    if (size.x >= 10 && size.y >= 10 && size != window->getSize())
+                        window->AViewContainer::setSize(size.x, size.y);
+                    window->mRedrawFlag = true;
+                    break;
+                }
+                case MotionNotify: {
+                    window = locateWindow(ev.xmotion.window);
+                    window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
+                    break;
+                }
+                case ButtonPress: {
+                    window = locateWindow(ev.xbutton.window);
+                    switch (ev.xbutton.button) {
+                        case 1:
+                        case 2:
+                        case 3:
+                            window->onMousePressed({ev.xbutton.x, ev.xbutton.y},
+                                                   (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
+                            break;
+                        case 4: // wheel down
+                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, -20_dp);
+                            break;
+                        case 5: // wheel up
+                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, 20_dp);
+                            break;
+                    }
+                    break;
+                }
+                case ButtonRelease: {
+                    if (ev.xbutton.button < 4) {
+                        window = locateWindow(ev.xbutton.window);
+                        window->onMouseReleased({ev.xbutton.x, ev.xbutton.y},
+                                                (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
+                    }
+                    break;
+                }
+
+                case PropertyNotify: {
+                    window = locateWindow(ev.xproperty.window);
+                    if (ev.xproperty.atom == gAtoms.netWmState) {
+                        auto maximized = window->isMaximized();
+                        if (maximized != window->mWasMaximized) {
+                            apply(window, {
+                                if (mWasMaximized) {
+                                    emit restored();
+                                } else {
+                                    emit maximized();
+                                }
+                            });
+                            window->mWasMaximized = maximized;
+                        }
+                    }
+                    break;
+                }
+
+                case SelectionClear: {
+                    // lost clipboard ownership -> clean up
+                    mXClipboardText.clear();
+                    break;
+                }
+
+                case SelectionRequest: {
+                    if (ev.xselectionrequest.property == None) {
+                        break;
+                    }
+
+
+                    char* targetName = XGetAtomName(gDisplay, ev.xselectionrequest.target);
+                    char* propertyName = XGetAtomName(gDisplay, ev.xselectionrequest.property);
+                    ALogger::info("{}: {}"_as.format(targetName, propertyName));
+                    XFree(targetName);
+                    XFree(propertyName);
+                    if (ev.xselectionrequest.target == gAtoms.utf8String) { // check for UTF8_STRING
+                        XChangeProperty(gDisplay,
+                                        ev.xselectionrequest.requestor,
+                                        ev.xselectionrequest.property,
+                                        gAtoms.utf8String,
+                                        8,
+                                        PropModeReplace,
+                                        (unsigned char*) mXClipboardText.c_str(),
+                                        mXClipboardText.length());
+                    } else if (ev.xselectionrequest.target == gAtoms.targets) { // data type request
+                        Atom atoms[] = {
+                                XInternAtom(gDisplay, "TIMESTAMP", false),
+                                XInternAtom(gDisplay, "TARGETS", false),
+                                XInternAtom(gDisplay, "SAVE_TARGETS", false),
+                                XInternAtom(gDisplay, "MULTIPLE", false),
+                                XInternAtom(gDisplay, "STRING", false),
+                                XInternAtom(gDisplay, "UTF8_STRING", false),
+                                XInternAtom(gDisplay, "text/plain", false),
+                                XInternAtom(gDisplay, "text/plain;charset=utf-8", false),
+                        };
+                        XChangeProperty(gDisplay,
+                                        ev.xselectionrequest.requestor,
+                                        ev.xselectionrequest.property,
+                                        gAtoms.clipboard,
+                                        8,
+                                        PropModeReplace,
+                                        (unsigned char*) atoms,
+                                        sizeof(atoms));
+                    }
+
+                    XSelectionEvent ssev;
+                    ssev.type = SelectionNotify;
+                    ssev.requestor = ev.xselectionrequest.requestor;
+                    ssev.selection = ev.xselectionrequest.selection;
+                    ssev.target = ev.xselectionrequest.target;
+                    ssev.property = ev.xselectionrequest.property;
+                    ssev.time = ev.xselectionrequest.time;
+
+                    XSendEvent(gDisplay, ev.xselectionrequest.requestor, True, NoEventMask, (XEvent *)&ssev);
+                    break;
+                }
+            }
+        }
+
+        {
+            std::unique_lock lock(mXNotifyLock);
+            mXNotifyCV.wait_for(lock, std::chrono::microseconds(500));
+        }
+        AThread::current()->processMessages();
+        for (auto& window : mWindows) {
+            if (window->mRedrawFlag) {
+                window->mRedrawFlag = false;
+                window->redraw();
+            }
+        }
+    } catch(NotFound e) {
+
+    }
+}
+
+AString AWindowManager::xClipboardPasteImpl() {
+
+    auto owner = XGetSelectionOwner(gDisplay, gAtoms.clipboard);
+    if (owner == None)
+    {
+        return {};
+    }
+    auto auiWindow = AWindow::current();
+    assert(auiWindow);
+    auto nativeHandle = auiWindow->getNativeHandle();
+    assert(nativeHandle);
+
+    XConvertSelection(gDisplay, gAtoms.clipboard, gAtoms.utf8String, gAtoms.auiClipboard, nativeHandle,
+                      CurrentTime);
+
+    XEvent ev;
+    for (;;)
+    {
+        XNextEvent(gDisplay, &ev);
+        switch (ev.type)
+        {
+            case SelectionNotify: {
+                if (ev.xselection.property == None) {
+                    return {};
+                }
+                Atom da, incr, type;
+                int di;
+                unsigned long size, dul;
+                unsigned char *prop_ret = NULL;
+
+                XGetWindowProperty(gDisplay, nativeHandle, gAtoms.auiClipboard, 0, 0, False, AnyPropertyType,
+                                   &type, &di, &dul, &size, &prop_ret);
+                XFree(prop_ret);
+
+                if (type == gAtoms.incr)
+                {
+                    ALogger::warn("Clipboard data is too large and INCR mechanism not implemented");
+                    return {};
+                }
+
+                XGetWindowProperty(gDisplay, nativeHandle, gAtoms.auiClipboard, 0, size, False, AnyPropertyType,
+                                   &da, &di, &dul, &dul, &prop_ret);
+                AString clipboardData = (const char*)prop_ret;
+                XFree(prop_ret);
+
+                XDeleteProperty(gDisplay, nativeHandle, gAtoms.auiClipboard);
+                return clipboardData;
+            }
+            default:
+                auiWindow->getThread() << [this, ev] {
+                    xProcessEvent(const_cast<XEvent&>(ev));
+                };
+        }
+    }
+}
+
+void AWindowManager::xClipboardCopyImpl(const AString& text) {
+    mXClipboardText = text.toStdString();
+    XSetSelectionOwner(gDisplay, gAtoms.clipboard, AWindow::current()->mHandle, CurrentTime);
+}
+
+#endif
