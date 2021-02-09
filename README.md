@@ -107,9 +107,10 @@ Check the `examples/` folder.
 1. Download and install cmake and gcc
 2. `git clone https://github.com/Alex2772/aui.git`
 3. Download dependencies: `git submodule update --init --recursive`
-4. Create build folder and cd to it: `cd aui && mkdir build && cd build`
-5. Run `cmake ..`
-6. Run `make && sudo make install`
+4. Install dependencies: `sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev`
+5. Create build folder and cd to it: `cd aui && mkdir build && cd build`
+6. Run `cmake ..`
+7. Run `make && sudo make install`
 
 ## Creating own project
 `CMakeLists.txt`
