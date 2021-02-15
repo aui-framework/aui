@@ -38,12 +38,11 @@ class AString;
 class API_AUI_CORE DllLoadException: public AException
 {
 public:
-
-
 	explicit DllLoadException(const AString& message)
 		: AException(message)
 	{
 	}
+	virtual ~DllLoadException();
 };
 
 class API_AUI_CORE Dll

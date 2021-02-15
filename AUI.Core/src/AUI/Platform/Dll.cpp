@@ -27,6 +27,8 @@
 #else
 #include <unistd.h>
 #include <AUI/IO/APath.h>
+#include <AUI/Common/AStringVector.h>
+#include <AUI/Traits/arrays.h>
 
 #endif
 
@@ -56,29 +58,48 @@ _<Dll> Dll::load(const AString& path)
 	char buf[0x1000];
 	getcwd(buf, sizeof(buf));
 
-	for (auto& fp : {
-        ""_as,
-	    AString(buf) + "/",
-        AString(buf) + "/../lib/",
-        "/usr/local/lib/"_as,
-        "/usr/lib/"_as,
-        "/lib/"_as,
-	}) {
-	    APath p = fp + fullname;
+	APath paths[] = {
+            ""_as,
+            AString(buf) + "/",
+            AString(buf) + "/../lib/",
+            "/usr/local/lib/"_as,
+            "/usr/lib/"_as,
+            "/lib/"_as,
+    };
+
+	std::string dlErrors[aui::array_length(paths)];
+
+	size_t counter = 0;
+	for (auto& fp : paths) {
 	    try {
-            if (p.absolute().isRegularFileExists()) {
-                auto name = p.toStdString();
+            fp = APath(fp + fullname).absolute();
+	    } catch (...) {
+	        fp = fp + fullname;
+        }
+	    try {
+            if (fp.isRegularFileExists()) {
+                auto name = fp.toStdString();
                 auto lib = dlopen(name.c_str(), RTLD_LAZY);
                 if (lib) {
                     return _<Dll>(new Dll(lib));
                 }
+                dlErrors[counter] = dlerror();
             }
         } catch (...) {
 
         }
+	    ++counter;
 	}
 
-    throw DllLoadException("Could not load shared library: " + fullname + ": " + dlerror());
+	AString diagnostic = "Could not load shared library: " + fullname + "\n";
+	counter = 0;
+	for (auto& fp : paths) {
+	    auto& dlError = dlErrors[counter];
+	    diagnostic += " - " + fp + " -> " + (dlError.empty() ? "not found" : dlError) + "\n";
+        ++counter;
+	}
+
+    throw DllLoadException(diagnostic);
 #endif
 }
 
@@ -103,3 +124,5 @@ void(*Dll::getProcAddressRawPtr(const AString& name) const noexcept)()
     assert(r);
     return r;
 }
+
+DllLoadException::~DllLoadException() = default;
