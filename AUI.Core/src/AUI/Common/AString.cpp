@@ -367,3 +367,21 @@ AString AString::processEscapes() const {
     }
     return result;
 }
+
+AString AString::excessSpacesRemoved() const {
+    AString s;
+    s.reserve(length() + 1);
+    bool prevWasSpace = false;
+    for (auto c : *this) {
+        if (c == ' ') {
+            if (prevWasSpace) {
+                continue;
+            }
+            prevWasSpace = true;
+        } else {
+            prevWasSpace = false;
+        }
+        s << c;
+    }
+    return s;
+}

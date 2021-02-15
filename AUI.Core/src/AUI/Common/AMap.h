@@ -81,7 +81,7 @@ public:
 
 	ValueType& operator[](KeyType&& k)
 	{
-		return parent::operator[](k);
+		return parent::operator[](std::forward<KeyType>(k));
 	}
 
 	ValueType& operator[](const KeyType& k)

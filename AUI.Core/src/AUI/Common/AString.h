@@ -342,6 +342,7 @@ public:
 	{
 		erase(begin() + index);
 	}
+	AString excessSpacesRemoved() const;
 
 	iterator insert(size_type at, wchar_t c)
 	{

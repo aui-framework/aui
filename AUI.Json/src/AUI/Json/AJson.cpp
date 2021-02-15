@@ -133,9 +133,9 @@ AString AJson::toString(const AJsonElement& json) {
 }
 
 AJsonElement AJson::fromString(const AString& json) {
-    auto bb = _new<AByteBuffer>();
+    AByteBuffer bb;
     auto s = json.toStdString();
-    bb->put(s.c_str(), s.length());
-    bb->setCurrentPos(0);
+    bb.put(s.c_str(), s.length());
+    bb.setCurrentPos(0);
     return read(_new<ByteBufferInputStream>(bb));
 }

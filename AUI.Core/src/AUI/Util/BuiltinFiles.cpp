@@ -38,12 +38,12 @@ void BuiltinFiles::loadBuffer(AByteBuffer& data)
 		uint32_t s;
 		unpacked >> s;
 
-		auto b = _new<AByteBuffer>();
-		b->reserve(s);
-		b->setSize(s);
+        AByteBuffer b;
+		b.reserve(s);
+		b.setSize(s);
 
-		unpacked.get(b->data(), s);
-        inst().mBuffers[AString(file)] = b;
+		unpacked.get(b.data(), s);
+        inst().mBuffers[AString(file)] = std::move(b);
 	}
 }
 
@@ -51,7 +51,7 @@ _<IInputStream> BuiltinFiles::open(const AString& file)
 {
 	if (auto c = inst().mBuffers.contains(file))
 	{
-	    c->second->setCurrentPos(0);
+	    c->second.setCurrentPos(0);
 		return _new<ByteBufferInputStream>(c->second);
 	}
 	return nullptr;

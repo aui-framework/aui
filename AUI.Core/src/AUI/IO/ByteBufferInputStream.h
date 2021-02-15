@@ -27,11 +27,15 @@
 class API_AUI_CORE ByteBufferInputStream: public IInputStream
 {
 private:
-	_<AByteBuffer> mBuffer;
+    AByteBuffer mBuffer;
 	
 public:
-	ByteBufferInputStream(const _<AByteBuffer>& buffer)
+	ByteBufferInputStream(const AByteBuffer& buffer)
 		: mBuffer(buffer)
+	{
+	}
+	ByteBufferInputStream(AByteBuffer&& buffer)
+		: mBuffer(std::forward<AByteBuffer>(buffer))
 	{
 	}
 

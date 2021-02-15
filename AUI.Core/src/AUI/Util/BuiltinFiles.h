@@ -32,7 +32,7 @@ class AString;
 class API_AUI_CORE BuiltinFiles
 {
 private:
-	AMap<AString, _<AByteBuffer>> mBuffers;
+	AMap<AString, AByteBuffer> mBuffers;
 
 	static BuiltinFiles& inst();
 	BuiltinFiles() = default;

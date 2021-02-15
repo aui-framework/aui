@@ -73,7 +73,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
     } catch (const AException& e) {
         AError::handle(e, "uncaught exception");
     } catch (...) {
-        ALogger::err("Caught exception of unknown type");
+        ALogger::err("Uncaught exception of unknown type");
     }
     return r;
 }
