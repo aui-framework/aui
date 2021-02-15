@@ -48,6 +48,28 @@ inline auto _new(Args&& ... args)
 	}
 }
 
+template<typename T, typename E>
+inline auto _new(std::initializer_list<E> il) {
+
+    if constexpr (std::is_base_of_v<AObject, T>) {
+        auto o = new T(il.begin(), il.end());
+        return _<T>(o, [](T* obj)
+        {
+            static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
+            {
+                obj->clearSignals();
+                static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
+                {
+                    delete obj;
+                });
+            });
+        });
+    }
+    else {
+        return _<T>(std::make_shared<T>(il.begin(), il.end()));
+    }
+}
+
 
 template<typename T>
 template<typename SignalField, typename Object, typename Function>
