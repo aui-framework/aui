@@ -52,10 +52,14 @@ public:
 		return mChecked;
 	}
 
-	void setChecked(const bool checked)
+	void setChecked(bool checked)
 	{
 		mChecked = checked;
 		emit customCssPropertyChanged();
+		emit ACheckBox::checked(checked);
+	}
+	void setUnchecked(bool unchecked) {
+	    setChecked(!unchecked);
 	}
 
     bool consumesClick(const glm::ivec2& pos) override;
