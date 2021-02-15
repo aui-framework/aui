@@ -75,14 +75,14 @@ mark_as_advanced(
 
 if (MYSQL_FOUND)
 
-	#AUI_Module(AUI.Mysql)
+	AUI_Module(AUI.Mysql)
 
-	#target_link_libraries(AUI.Mysql PUBLIC AUI.Core)
-	#target_link_libraries(AUI.Mysql PUBLIC AUI.Data)
+	target_link_libraries(AUI.Mysql PUBLIC AUI.Core)
+	target_link_libraries(AUI.Mysql PUBLIC AUI.Data)
 
 
-	#target_include_directories(AUI.Mysql PRIVATE ${MYSQL_INCLUDE_DIR})
-	#target_link_libraries(AUI.Mysql PRIVATE ${MYSQL_LIBRARIES})
+	target_include_directories(AUI.Mysql PRIVATE ${MYSQL_INCLUDE_DIR})
+	target_link_libraries(AUI.Mysql PRIVATE ${MYSQL_LIBRARIES})
 
 else()
 	message("MySQL library was not found. Disabling AUI.Mysql")
