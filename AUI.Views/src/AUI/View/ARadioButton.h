@@ -60,6 +60,7 @@ public:
     void setChecked(const bool checked) {
         mChecked = checked;
         emit customCssPropertyChanged();
+        emit ARadioButton::checked(checked);
     }
 
     void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
