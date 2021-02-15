@@ -89,20 +89,13 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
 #include "AWindow.h"
 #include <AUI/Util/kAUI.h>
 
+extern void aui_gtk_init();
 AMessageBox::Button
 AMessageBox::show(AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,
                   AMessageBox::Button b) {
     unsigned iconFlags = 0;
 
-    do_once {
-        int argc = 0;
-        char c = 0;
-        char* pc = &c;
-        char** ppc = &pc;
-
-        gtk_init(&argc, &ppc);
-    };
-
+    aui_gtk_init();
 
     // Icons
     switch (icon) {

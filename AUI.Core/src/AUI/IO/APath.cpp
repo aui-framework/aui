@@ -303,6 +303,18 @@ bool APath::isAbsolute() const {
     return false;
 }
 
+size_t APath::fileSize() const {
+#ifdef _WIN32
+    struct _stat64 s = {0};
+    _wstat64(c_str(), &s);
+#else
+    struct stat s = {0};
+    stat(toStdString().c_str(), &s);
+#endif
+    return s.st_size;
+}
+
+
 void APath::copy(const APath& source, const APath& destination) {
     _new<FileOutputStream>(destination) << _new<FileInputStream>(source);
 }
@@ -328,16 +340,6 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
     return result;
 }
 
-size_t APath::fileSize() const {
-#ifdef _WIN32
-    struct _stat64 s = {0};
-    _wstat64(c_str(), &s);
-#else
-    struct stat s = {0};
-    stat(toStdString().c_str(), &s);
-#endif
-    return s.st_size;
-}
 
 APath APath::withoutUppermostFolder() const {
     auto r = find('/');

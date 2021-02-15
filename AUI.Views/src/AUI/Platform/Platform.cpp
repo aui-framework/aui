@@ -120,7 +120,7 @@ float Platform::getDpiRatio()
 #ifdef __ANDROID__
     return AAndroid::getDpiRatio();
 #else
-    return 1.25f;
+    return 1;
 #endif
 }
 

@@ -25,12 +25,12 @@
 #define _WIN32_WINNT _WIN32_WINNT_VISTA
 #endif
 
-#include "ADesktop.h"
-#include "ACursor.h"
-#include "AWindow.h"
 
 #if defined(_WIN32)
 
+#include "ADesktop.h"
+#include "ACursor.h"
+#include "AWindow.h"
 #include <windows.h>
 #include <shlobj.h>
 #include <AUI/Traits/memory.h>
@@ -115,9 +115,27 @@ void ADesktop::setMousePos(const glm::ivec2& pos)
 }
 #else
 
+#include <gtk/gtk.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysymdef.h>
+#include <AUI/Util/kAUI.h>
+#include <AUI/i18n/AI18n.h>
+#include "ADesktop.h"
+#include "ACursor.h"
+#include "AWindow.h"
+
+void aui_gtk_init() {
+    do_once {
+        int argc = 0;
+        char c = 0;
+        char* pc = &c;
+        char** ppc = &pc;
+
+        gtk_init(&argc, &ppc);
+    };
+}
+
 extern Display* gDisplay;
 glm::ivec2 ADesktop::getMousePosition()
 {
@@ -136,4 +154,58 @@ void ADesktop::setMousePos(const glm::ivec2& pos)
     XWarpPointer(gDisplay, None, rootWindow, 0, 0, 0, 0, pos.x, pos.y);
     XFlush(gDisplay);
 }
+
+void ADesktop::openUrl(const AString& url) {
+    std::string s = "xdg-open ";
+    s += url.toStdString();
+    system(s.c_str());
+}
+
+_<AFuture<APath>> ADesktop::browseForFolder(const APath& startingLocation) {
+    return async {
+        aui_gtk_init();
+        GtkWidget *dialog;
+        GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER;
+        gint res;
+
+        dialog = gtk_file_chooser_dialog_new ("Open folder"_i18n.toStdString().c_str(),
+                                              nullptr,
+                                              action,
+                                              "Cancel"_i18n.toStdString().c_str(),
+                                              GTK_RESPONSE_CANCEL,
+                                              "Open"_i18n.toStdString().c_str(),
+                                              GTK_RESPONSE_ACCEPT,
+                                              nullptr);
+
+
+        gtk_file_chooser_set_current_folder(reinterpret_cast<GtkFileChooser*>(dialog), startingLocation.toStdString().c_str());
+
+        gtk_window_set_keep_above(GTK_WINDOW(dialog), true);
+        gtk_window_activate_focus(GTK_WINDOW(dialog));
+
+        res = gtk_dialog_run (GTK_DIALOG (dialog));
+        if (res == GTK_RESPONSE_ACCEPT)
+        {
+            char *filename;
+            GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
+            filename = gtk_file_chooser_get_filename (chooser);
+            APath f = filename;
+            g_free(filename);
+            gtk_widget_destroy (dialog);
+
+            while (gtk_events_pending()) {
+                gtk_main_iteration();
+            }
+            return f;
+        }
+
+        gtk_widget_destroy (dialog);
+
+        while (gtk_events_pending()) {
+            gtk_main_iteration();
+        }
+        return APath{};
+    };
+}
+
 #endif
