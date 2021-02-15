@@ -22,6 +22,7 @@
 #include "ACustomWindow.h"
 #include "ADesktop.h"
 #include <cstring>
+#include <AUI/View/AButton.h>
 
 const int AUI_TITLE_HEIGHT = 30;
 
@@ -35,7 +36,6 @@ const int AUI_TITLE_HEIGHT = 30;
 
 #include <dwmapi.h>
 #include <AUI/Util/kAUI.h>
-#include <AUI/View/AButton.h>
 
 
 LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -193,18 +193,6 @@ void ACustomWindow::setSize(int width, int height)
     MoveWindow(mHandle, pos.x, pos.y, width, height, false);
 }
 
-bool ACustomWindow::isCaptionAt(const glm::ivec2& pos) {
-    if (pos.y <= AUI_TITLE_HEIGHT) {
-        if (auto v = getViewAtRecursive(pos)) {
-            if (!(_cast<AButton>(v)) &&
-                !v->getCssNames().contains(".override-title-dragging")) {
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
 #else
 
 extern Display* gDisplay;
@@ -217,9 +205,8 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
 }
 
 void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    if (pos.y < AUI_TITLE_HEIGHT) {
-        auto v = getViewAtRecursive(pos);
-        if (!v || !v->getCssNames().contains("AButton")) {
+    if (pos.y < AUI_TITLE_HEIGHT && button == AInput::LButton) {
+        if (isCaptionAt(pos)) {
             XClientMessageEvent xclient;
             memset(&xclient, 0, sizeof(XClientMessageEvent));
             XUngrabPointer(gDisplay, 0);
@@ -238,19 +225,37 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
                        (XEvent*) &xclient);
 
             mDragging = true;
+            mDragPos = pos;
             emit dragBegin(pos);
         }
     }
     AViewContainer::onMousePressed(pos, button);
 }
 
+
 void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     AViewContainer::onMouseReleased(pos, button);
 }
 void ACustomWindow::handleXConfigureNotify() {
     emit dragEnd();
+
+    // x11 does not send release button event
+    AViewContainer::onMouseReleased(mDragPos, AInput::LButton);
 }
 
 
 
 #endif
+
+
+bool ACustomWindow::isCaptionAt(const glm::ivec2& pos) {
+    if (pos.y <= AUI_TITLE_HEIGHT) {
+        if (auto v = getViewAtRecursive(pos)) {
+            if (!(_cast<AButton>(v)) &&
+                !v->getCssNames().contains(".override-title-dragging")) {
+                return true;
+            }
+        }
+    }
+    return false;
+}

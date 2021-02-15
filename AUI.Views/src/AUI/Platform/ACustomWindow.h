@@ -52,6 +52,7 @@ class API_AUI_VIEWS ACustomWindow: public AWindow
     friend class AWindowManager;
 private:
     bool mDragging = false;
+    glm::ivec2 mDragPos;
 
     void handleXConfigureNotify();
 
@@ -62,6 +63,8 @@ public:
 
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+
+    virtual bool isCaptionAt(const glm::ivec2& pos);
 
 signals:
     emits<glm::ivec2> dragBegin;
