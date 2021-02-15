@@ -49,172 +49,115 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
 {
 	setLayout(_new<AVerticalLayout>());
 
-	// This dialog is constructed using the old way. The newer way is declarative ui.
-
 	addView(_new<ASelectableLabel>("Building beautiful programs in pure C++ without chrome embded framework"));
 
 	auto horizontal = _new<AViewContainer>();
-    horizontal->addAssName(".contents");
+    horizontal << ".contents";
 	horizontal->setLayout(_new<AHorizontalLayout>());
 	addView(horizontal);
 
 	horizontal->setExpanding({ 1, 1 });
 	
 	{
-		auto c = _new<AViewContainer>(); 
-		c->setLayout(_new<AVerticalLayout>());
+	    horizontal->addView(Vertical {
+	        // buttons
+	        _new<ALabel>("Buttons"),
+	        _new<AButton>("Common button"),
+	        _new<AButton>("Default button") let { it->setDefault(); },
+	        _new<AButton>("Disabled button") let { it->setDisabled(); },
 
-		// buttons
-		{
-			c->addView(_new<ALabel>("Buttons"));
+	        // checkboxes
+	        _new<ALabel>("Checkboxes"),
+	        _new<ACheckBox>("Unchecked checkbox"),
+	        _new<ACheckBox>("Checked checkbox") let { it->setChecked(true); },
+	        _new<ACheckBox>("Disabled checkbox") let { it->setDisabled(); },
 
-			auto button = _new<AButton>("Common button");
-			auto def = _new<AButton>("Default button");
-			def->setDefault();
-			auto disabled = _new<AButton>("Disabled button");
-			disabled->setEnabled(false);
-
-			c->addView(button);
-			c->addView(def);
-			c->addView(disabled);
-		}
-		// checkboxes
-		{
-			c->addView(_new<ALabel>("Checkboxes"));
-			c->addView(_new<ACheckBox>("Unchecked checkbox"));
-			auto checked = _new<ACheckBox>("Checked checkbox");
-			checked->setChecked(true);
-			c->addView(checked);
-			auto disabled = _new<ACheckBox>("Disabled checkbox");
-			disabled->setDisabled();
-			c->addView(disabled);
-		}
-
-		// radiobuttons
-		{
-			c->addView(_new<ALabel>("Radiobuttons"));
-			c->addView(_new<ARadioGroup>(_new<AListModel<AString>>(AVector<AString>{
-			    "Radiobutton 1",
-			    "Radiobutton 2",
-			    "Radiobutton 3",
-			    "Disabled radiobutton",
-			})) let {
-			    it->getViews()[3]->setDisabled();
-			});
-		}
-
-		// comboboxes
-        {
-			c->addView(_new<ALabel>("Comboboxes"));
-            c->addView(_new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{
-                "Combobox 1",
-                "Combobox 2",
-                "Combobox 3",
-                "Combobox 4",
-                "Combobox 5",
-                "Combobox 6",
-            })));
-            c->addView(_new<AComboBox>(_new<AListModel<AString>>(AVector<AString>{
-                "Disabled combobox"
+	        // radiobuttons
+            _new<ALabel>("Radiobuttons"),
+            _new<ARadioGroup>(_new<AListModel<AString>>({
+                "Radiobutton 1",
+                "Radiobutton 2",
+                "Radiobutton 3",
+                "Disabled radiobutton",
             })) let {
-                it->setDisabled();
-            });
-        }
-		
-		horizontal->addView(c);
+                it->getViews()[3]->setDisabled();
+            },
+
+            // comboboxes
+            _new<ALabel>("Comboboxes"),
+            _new<AComboBox>(_new<AListModel<AString>>({
+                    "Combobox 1",
+                    "Combobox 2",
+                    "Combobox 3",
+                    "Combobox 4",
+                    "Combobox 5",
+                    "Combobox 6",
+            })),
+            _new<AComboBox>(_new<AListModel<AString>>({"Disabled combobox"})) let { it->setDisabled(); }
+	    });
 	}
 
 	
 	// окна
 	{
-		auto c = _new<AViewContainer>();
-		c->setLayout(_new<AVerticalLayout>());
-		
-		c->addView(_new<ALabel>("Windows"));
-		
-		auto def = _new<AButton>("Common window");
-		connect(def->clicked, this, [&]()
-		{
-			auto w = _new<AWindow>("Common window", 400_dp, 300_dp);
-			fillWindow(w);
-			w->show();
-			mWindows << w;
-		});
-		auto dialog = _new<AButton>("Dialog window");
-		connect(dialog->clicked, this, [&]()
-		{
-			auto w = _new<AWindow>("Dialog window", 400_dp, 300_dp);
-			fillWindow(w);
-			w->show();
-			w->setWindowStyle(WS_DIALOG);
-			mWindows << w;
-		});
-		auto modal = _new<AButton>("Modal window");
-		connect(modal->clicked, this, [&]()
-		{
-			auto w = _new<AWindow>("Modal window", 400_dp, 300_dp, this, WS_DIALOG);
-			fillWindow(w);
-			w->show();
-			mWindows << w;
-		});
-		
-		auto customWindowWithCaption = _new<AButton>("Custom window with caption");
-		connect(customWindowWithCaption->clicked, this, [&]()
-		{
-			auto w = _new<ACustomCaptionWindow>("Custom window with caption", 400_dp, 300_dp);
-			fillWindow(w->getContentContainer());
-			w->show();
-			//w->setWindowStyle(WS_DIALOG);
-			mWindows << w;
-		});
-		
-		auto customWindow = _new<AButton>("Custom window without caption");
-		connect(customWindow->clicked, this, [&]()
-		{
-			auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
-			fillWindow(w);
-			w->show();
-			w->setWindowStyle(WS_DIALOG);
-			mWindows << w;
-		});
-		
-		auto closeAll = _new<AButton>("Close all windows");
-		connect(closeAll->clicked, this, [&]()
-		{
-			for (auto& w : mWindows)
-				w->close();
-			mWindows.clear();
+		horizontal->addView(Vertical {
+		   _new<ALabel>("Windows"),
+           _new<AButton>("Common window").connect(&AButton::clicked, this, [&] {
+               auto w = _new<AWindow>("Common window", 400_dp, 300_dp);
+               fillWindow(w);
+               w->show();
+               mWindows << w;
+           }),
+           _new<AButton>("Dialog window").connect(&AButton::clicked, this, [&] {
+               auto w = _new<AWindow>("Dialog window", 400_dp, 300_dp);
+               fillWindow(w);
+               w->show();
+               w->setWindowStyle(WS_DIALOG);
+               mWindows << w;
+           }),
+           _new<AButton>("Modal window").connect(&AButton::clicked, this, [&] {
+               auto w = _new<AWindow>("Modal window", 400_dp, 300_dp, this, WS_DIALOG);
+               fillWindow(w);
+               w->show();
+               mWindows << w;
+           }),
+           _new<AButton>("Custom window with caption").connect(&AButton::clicked, this, [&] {
+               auto w = _new<ACustomCaptionWindow>("Custom window with caption", 400_dp, 300_dp);
+               fillWindow(w->getContentContainer());
+               w->show();
+               //w->setWindowStyle(WS_DIALOG);
+               mWindows << w;
+           }),
+           _new<AButton>("Custom window without caption").connect(&AButton::clicked, this, [&] {
+               auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
+               fillWindow(w);
+               w->show();
+               w->setWindowStyle(WS_DIALOG);
+               mWindows << w;
+           }),
+           _new<AButton>("Close all windows").connect(&AButton::clicked, this, [&] {
+               for (auto& w : mWindows)
+                   w->close();
+               mWindows.clear();
+           }),
 		});
 
-		c->addView(def);
-		c->addView(dialog);
-		c->addView(customWindowWithCaption);
-		c->addView(customWindow);
-		c->addView(modal);
-		c->addView(closeAll);
-
-		horizontal->addView(c);
 	}
 
 	// fields
 	{
-		auto c = _new<AViewContainer>();
-		c->setLayout(_new<AVerticalLayout>());
-
-		c->addView(_new<ALabel>("Fields"));
-
-		c->addView(_new<ALabel>("Text field"));
-		c->addView(_new<ATextField>());
-
-		c->addView(_new<ALabel>("Number picker"));
-		c->addView(_new<ANumberPicker>()); 
-
-		horizontal->addView(c);
+		horizontal->addView(Vertical {
+		    _new<ALabel>("Fields"),
+		    _new<ALabel>("Text field"),
+		    _new<ATextField>(),
+		    _new<ALabel>("Number picker"),
+		    _new<ANumberPicker>(),
+		});
 	}
 
-	addView(_container<AHorizontalLayout>({
+	addView(Horizontal{
 		_new<ASpacer>(),
 		_new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru")
 					(&AView::setEnabled, false)
-	}));
+	});
 }

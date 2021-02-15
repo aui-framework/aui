@@ -68,3 +68,23 @@ inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AVi
 
 	return c;
 }
+
+namespace aui::detail {
+    template<typename Layout>
+    struct container_helper {
+    private:
+        AVector<_<AView>> mViews;
+
+    public:
+        container_helper(std::initializer_list<_<AView>> views): mViews(views) {
+
+        }
+        operator _<AView>() const {
+            return _container<Layout>(mViews);
+        }
+    };
+}
+
+using Vertical = aui::detail::container_helper<AVerticalLayout>;
+using Horizontal = aui::detail::container_helper<AHorizontalLayout>;
+using Stacked = aui::detail::container_helper<AStackedLayout>;
