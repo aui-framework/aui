@@ -47,36 +47,36 @@ AVector<uint8_t>& AImage::getData() {
 	return mData;
 }
 
-_<AImage> AImage::addAlpha(const _<AImage>& src)
+AImage AImage::addAlpha(const AImage& src)
 {
-	auto dst = _new<AImage>(AVector<uint8_t>(), src->getWidth(), src->getHeight(), RGBA | BYTE);
-	dst->getData().resize(src->getWidth() * src->getHeight() * dst->getBytesPerPixel());
-	memset(dst->getData().data(), 255, dst->getData().size());
+	AImage dst(AVector<uint8_t>(), src.getWidth(), src.getHeight(), RGBA | BYTE);
+	dst.getData().resize(src.getWidth() * src.getHeight() * dst.getBytesPerPixel());
+	memset(dst.getData().data(), 255, dst.getData().size());
 
 	// https://stackoverflow.com/questions/9900854/opengl-creating-texture-atlas-at-run-time
-	for (int sourceY = 0; sourceY < src->mHeight; ++sourceY) {
-		for (int sourceX = 0; sourceX < src->mWidth; ++sourceX) {
-			int from = (sourceY * src->mWidth * src->getBytesPerPixel()) + (sourceX * src->getBytesPerPixel()); // 4 bytes per pixel (assuming RGBA)
-			int to = ((sourceY)* dst->mWidth * dst->getBytesPerPixel()) + ((sourceX)* dst->getBytesPerPixel()); // same format as source
+	for (int sourceY = 0; sourceY < src.mHeight; ++sourceY) {
+		for (int sourceX = 0; sourceX < src.mWidth; ++sourceX) {
+			int from = (sourceY * src.mWidth * src.getBytesPerPixel()) + (sourceX * src.getBytesPerPixel()); // 4 bytes per pixel (assuming RGBA)
+			int to = ((sourceY)* dst.mWidth * dst.getBytesPerPixel()) + ((sourceX)* dst.getBytesPerPixel()); // same format as source
 
-			for (int channel = 0; channel < src->getBytesPerPixel(); ++channel) {
-				dst->mData[to + channel] = src->mData[from + channel];
+			for (int channel = 0; channel < src.getBytesPerPixel(); ++channel) {
+				dst.mData[to + channel] = src.mData[from + channel];
 			}
 		}
 	}
 	return dst;
 }
 
-_<AImage> AImage::resize(_<AImage> src, uint16_t width, uint16_t height) {
-	auto n = _new<AImage>(AVector<uint8_t>(), width, height, src->getFormat());
-	n->getData().resize(width * height * n->getBytesPerPixel());
+AImage AImage::resize(const AImage& src, uint16_t width, uint16_t height) {
+	AImage n(AVector<uint8_t>(), width, height, src.getFormat());
+	n.getData().resize(width * height * n.getBytesPerPixel());
 	copy(src, n, 0, 0);
 	return n;
 }
 
-glm::ivec4 AImage::getPixelAt(uint16_t x, uint16_t y)
+glm::ivec4 AImage::getPixelAt(uint16_t x, uint16_t y) const
 {
-	uint8_t* dataPtr = &mData[mHeight * glm::clamp(y, uint16_t(0), mHeight) + glm::clamp(x, uint16_t(0), mWidth)];
+	const uint8_t* dataPtr = &mData[mHeight * glm::clamp(y, uint16_t(0), mHeight) + glm::clamp(x, uint16_t(0), mWidth)];
 	switch (getBytesPerPixel())
 	{
 	case 1:
@@ -106,13 +106,13 @@ void AImage::setPixelAt(uint16_t x, uint16_t y, const glm::ivec4& val)
 	}
 }
 
-_<AImage> AImage::resizeLinearDownscale(_<AImage> src, uint16_t width, uint16_t height)
+AImage AImage::resizeLinearDownscale(const AImage& src, uint16_t width, uint16_t height)
 {
-	auto n = _new<AImage>(AVector<uint8_t>(), width, height, src->getFormat());
-	n->getData().resize(width * height * n->getBytesPerPixel());
+	AImage n(AVector<uint8_t>(), width, height, src.getFormat());
+	n.getData().resize(width * height * n.getBytesPerPixel());
 
-	uint16_t deltaX = src->getWidth() / width;
-	uint16_t deltaY = src->getHeight() / height;
+	uint16_t deltaX = src.getWidth() / width;
+	uint16_t deltaY = src.getHeight() / height;
 
 	for (uint16_t y = 0; y < height; ++y)
 	{
@@ -123,34 +123,34 @@ _<AImage> AImage::resizeLinearDownscale(_<AImage> src, uint16_t width, uint16_t 
 			{
 				for (uint16_t dx = 0; dx < deltaX; ++dx)
 				{
-					block += src->getPixelAt(x * deltaX + dx, y * deltaY + dy);
+					block += src.getPixelAt(x * deltaX + dx, y * deltaY + dy);
 				}
 			}
 			block /= deltaY * deltaX;
-			n->setPixelAt(x, y, block);
+			n.setPixelAt(x, y, block);
 		}
 	}
 
 	return n;
 }
 
-void AImage::copy(_<AImage> src, _<AImage> dst, uint32_t x, uint32_t y) {
-	assert(src->getFormat() == dst->getFormat());
+void AImage::copy(const AImage& src, AImage& dst, uint32_t x, uint32_t y) {
+	assert(src.getFormat() == dst.getFormat());
 	
 	// https://stackoverflow.com/questions/9900854/opengl-creating-texture-atlas-at-run-time
-	for (uint32_t sourceY = 0; sourceY < glm::min(src->mHeight, dst->mHeight); ++sourceY) {
-		for (uint32_t sourceX = 0; sourceX < glm::min(src->mWidth, dst->mWidth); ++sourceX) {
-			uint32_t from = (sourceY * uint32_t(src->mWidth) * uint32_t(src->getBytesPerPixel())) + (sourceX * uint32_t(src->getBytesPerPixel())); // 4 bytes per pixel (assuming RGBA)
-			uint32_t to = ((y + sourceY) *uint32_t(dst->mWidth) * uint32_t(dst->getBytesPerPixel())) + ((x + sourceX) * uint32_t(dst->getBytesPerPixel())); // same format as source
+	for (uint32_t sourceY = 0; sourceY < glm::min(src.mHeight, dst.mHeight); ++sourceY) {
+		for (uint32_t sourceX = 0; sourceX < glm::min(src.mWidth, dst.mWidth); ++sourceX) {
+			uint32_t from = (sourceY * uint32_t(src.mWidth) * uint32_t(src.getBytesPerPixel())) + (sourceX * uint32_t(src.getBytesPerPixel())); // 4 bytes per pixel (assuming RGBA)
+			uint32_t to = ((y + sourceY) *uint32_t(dst.mWidth) * uint32_t(dst.getBytesPerPixel())) + ((x + sourceX) * uint32_t(dst.getBytesPerPixel())); // same format as source
 
-			for (uint32_t channel = 0; channel < dst->getBytesPerPixel(); ++channel) {
-				dst->mData[to + channel] = src->mData[from + channel];
+			for (uint32_t channel = 0; channel < dst.getBytesPerPixel(); ++channel) {
+				dst.mData[to + channel] = src.mData[from + channel];
 			}
 		}
 	}
 }
 
-AImage AImage::fromUrl(const AUrl& url) {
+_<AImage> AImage::fromUrl(const AUrl& url) {
     return AImageLoaderRegistry::inst().loadImage(url);
 }
 

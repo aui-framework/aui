@@ -85,13 +85,13 @@ public:
 	    return {getWidth(), getHeight()};
 	}
 
-    glm::ivec4 getPixelAt(uint16_t x, uint16_t y);
+    glm::ivec4 getPixelAt(uint16_t x, uint16_t y) const;
     void setPixelAt(uint16_t x, uint16_t y, const glm::ivec4& val);
 
-	static _<AImage> addAlpha(const _<AImage>& AImage);
-	static _<AImage> resize(_<AImage> src, uint16_t width, uint16_t height);
-	static _<AImage> resizeLinearDownscale(_<AImage> src, uint16_t width, uint16_t height);
-	static void copy(const AImage& src, const AImage& dst, uint32_t x, uint32_t y);
+	static AImage addAlpha(const AImage& AImage);
+	static AImage resize(const AImage& src, uint16_t width, uint16_t height);
+	static AImage resizeLinearDownscale(const AImage& src, uint16_t width, uint16_t height);
+	static void copy(const AImage& src, AImage& dst, uint32_t x, uint32_t y);
 
     uint8_t& at(uint16_t x, uint16_t y) {
         return mData[(y * getWidth() + x) * getBytesPerPixel()];
@@ -100,6 +100,6 @@ public:
         return mData[(y * getWidth() + x) * getBytesPerPixel()];
     }
 
-    static AImage fromUrl(const AUrl& url);
+    static _<AImage> fromUrl(const AUrl& url);
 };
 
