@@ -60,7 +60,11 @@ int ALabel::getContentMinimumWidth()
 	if (!mPrerendered.mVao) {
 	    doPrerender();
 	}
-    return mPrerendered.length;
+	int acc = mPrerendered.length;
+	if (mIcon) {
+	    acc += getIconSize().x * 2;
+	}
+    return acc;
 	/*
 	if (mPrerendered.mVao) {
 	    return mPrerendered.length;
@@ -188,10 +192,11 @@ void ALabel::doRenderText() {
             case TextAlign::LEFT:
                 if (mIcon)
                 {
-                    auto requiredSpace = mIcon->getSizeHint();
+                    auto requiredSpace = getIconSize();
                     RenderHints::PushState s;
+                    Render::inst().setColor(mIconColor);
                     Render::inst().setTransform(glm::translate(glm::mat4(1.f),
-                                                               glm::vec3(mTextLeftOffset, (getContentHeight() - requiredSpace.y) / 2, 0)));
+                                                               glm::vec3(mPadding.left + mTextLeftOffset, (getHeight() - requiredSpace.y) / 2, 0)));
                     mIcon->draw(requiredSpace);
                     mTextLeftOffset += requiredSpace.x + 1;
                 }
@@ -201,11 +206,13 @@ void ALabel::doRenderText() {
                 mTextLeftOffset += getContentWidth() / 2;
                 if (mIcon)
                 {
-                    auto requiredSpace = mIcon->getSizeHint();
+                    auto requiredSpace = getIconSize();
+                    mTextLeftOffset += requiredSpace.x / 2;
                     RenderHints::PushState s;
+                    Render::inst().setColor(mIconColor);
                     Render::inst().setTransform(glm::translate(glm::mat4(1.f),
-                                                               glm::vec3(mTextLeftOffset - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
-                                                                             (getContentHeight() - requiredSpace.y) / 2, 0)));
+                                                               glm::vec3(mTextLeftOffset - (mPrerendered.length) / 2 - requiredSpace.x,
+                                                                             (getHeight() - requiredSpace.y) / 2, 0)));
                     mIcon->draw(requiredSpace);
                 }
 
@@ -215,11 +222,12 @@ void ALabel::doRenderText() {
                 mTextLeftOffset += getContentWidth();
                 if (mIcon)
                 {
-                    auto requiredSpace = mIcon->getSizeHint();
+                    auto requiredSpace = getIconSize();
                     RenderHints::PushState s;
+                    Render::inst().setColor(mIconColor);
                     Render::inst().setTransform(glm::translate(glm::mat4(1.f),
-                                                               glm::vec3(mTextLeftOffset - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
-                                                                             (getContentHeight() - requiredSpace.y) / 2, 0)));
+                                                               glm::vec3(mPadding.left + mTextLeftOffset - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
+                                                                             (getHeight() - requiredSpace.y) / 2, 0)));
                     mIcon->draw(requiredSpace);
                 }
 
@@ -271,3 +279,11 @@ void ALabel::onDpiChanged() {
 void ALabel::invalidateFont() {
     mPrerendered.mVao = nullptr;
 }
+
+glm::ivec2 ALabel::getIconSize() const {
+    if (mIcon) {
+        return {mIcon->getSizeHint().x * getContentHeight() / mIcon->getSizeHint().y, getContentHeight()};
+    }
+    return {};
+}
+

@@ -37,7 +37,10 @@ private:
     uint8_t mFontSizeOverride = 0;
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
     TextTransform mTextTransform = TextTransform::NONE;
+    AColor mIconColor;
 	bool mMultiline = false;
+
+	glm::ivec2 getIconSize() const;
 
 protected:
     AStringVector mLines;
@@ -78,6 +81,11 @@ public:
         mIcon = drawable;
         redraw();
     }
+
+    void setIconColor(const AColor& iconColor) {
+        mIconColor = iconColor;
+    }
+
     void doPrerender();
 
 
