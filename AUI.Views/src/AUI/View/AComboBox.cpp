@@ -92,8 +92,8 @@ void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
         return;
     }
     if (!mComboWindow) {
+        auto w = AWindow::current();
         mComboWindow = _new<AComboBoxWindow>(mModel);
-        auto w = getWindow();
         auto currentPos = w->unmapPosition(getPositionInWindow() + w->getWindowPosition()) - w->getWindowPosition();
         auto height = mComboWindow->mListView->getContentFullHeight();
         mComboWindow->setGeometry(currentPos.x, currentPos.y + getHeight(),
