@@ -73,7 +73,7 @@ _<AImage> AImageLoaderRegistry::loadImage(AByteBuffer& buffer) {
     return nullptr;
 }
 
-_<AImage> AImageLoaderRegistry::loadImage(const AUrl& url) {
+AImage AImageLoaderRegistry::loadImage(const AUrl& url) {
     auto buffer = AByteBuffer::fromStream(url.open());
     if (auto r = loadImage(buffer))
         return r;
