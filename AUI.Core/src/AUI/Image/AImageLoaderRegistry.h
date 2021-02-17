@@ -40,12 +40,12 @@ public:
 	void registerImageLoader(_<IImageLoader> imageLoader);
 
 	_<IDrawable> loadDrawable(AByteBuffer& buffer);
-	AImage loadImage(AByteBuffer& buffer);
+	_<AImage> loadImage(AByteBuffer& buffer);
 	inline _<IDrawable> loadDrawable(const AUrl& url) {
 	    auto s = AByteBuffer::fromStream(url.open());
 	    return loadDrawable(s);
 	}
-	AImage loadImage(const AUrl& url);
+	_<AImage> loadImage(const AUrl& url);
 
 	static AImageLoaderRegistry& inst();
 };
