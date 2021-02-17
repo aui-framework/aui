@@ -84,3 +84,7 @@ void AScrollArea::onMouseWheel(glm::ivec2 pos, int delta) {
     AViewContainer::onMouseWheel(pos, delta);
     mVerticalScrollbar->onMouseWheel(pos, delta);
 }
+
+int AScrollArea::getContentMinimumHeight() {
+    return 30;
+}

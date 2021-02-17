@@ -39,6 +39,8 @@ public:
         return mContentContainer;
     }
 
+    int getContentMinimumHeight() override;
+
     void setSize(int width, int height) override;
 
     void onMouseWheel(glm::ivec2 pos, int delta) override;
