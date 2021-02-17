@@ -34,6 +34,8 @@ public:
 	virtual size_t listSize() = 0;
 	virtual T listItemAt(const AModelIndex& index) = 0;
 
+	using stored_t = T;
+
 signals:
     /**
      * \brief Model data was changed

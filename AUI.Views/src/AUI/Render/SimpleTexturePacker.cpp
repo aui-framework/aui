@@ -32,7 +32,7 @@ Util::SimpleTexturePacker::~SimpleTexturePacker() {
 
 void Util::SimpleTexturePacker::onResize(_<AImage> data, Util::dim side) {
 	if (mImage) {
-		mImage = AImage::resize(mImage, static_cast<uint16_t>(side), static_cast<uint16_t>(side));
+		mImage = AImage::resize(*mImage, static_cast<uint16_t>(side), static_cast<uint16_t>(side)) >> shared;
 	}
 	else {
 		AVector<uint8_t> c;
@@ -41,9 +41,8 @@ void Util::SimpleTexturePacker::onResize(_<AImage> data, Util::dim side) {
 	}
 }
 
-void
-Util::SimpleTexturePacker::onInsert(_<AImage> data, const Util::dim& x, const Util::dim& y) {
-	AImage::copy(data, mImage, x, y);
+void Util::SimpleTexturePacker::onInsert(_<AImage> data, const Util::dim& x, const Util::dim& y) {
+	AImage::copy(*data, *mImage, x, y);
 }
 
 _<glm::vec4> Util::SimpleTexturePacker::insert(_<AImage> data) {

@@ -32,6 +32,7 @@
 #include "AUI/Util/AMetric.h"
 
 #if defined(_WIN32)
+#undef ui
 #include <windows.h>
 #elif defined(ANDROID)
 #include <jni.h>
