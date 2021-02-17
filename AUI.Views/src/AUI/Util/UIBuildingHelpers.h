@@ -82,6 +82,12 @@ namespace aui::detail {
         operator _<AView>() const {
             return _container<Layout>(mViews);
         }
+        operator _<AViewContainer>() const {
+            return _container<Layout>(mViews);
+        }
+        _<AViewContainer> operator<<(const AString assEntry) const {
+            return _container<Layout>(mViews) << assEntry;
+        }
     };
 }
 

@@ -266,6 +266,7 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_px, 0x828790_rgb },
             Padding { 2_px },
+            Expanding { 0, 1 },
             Overflow::HIDDEN,
         },
         {

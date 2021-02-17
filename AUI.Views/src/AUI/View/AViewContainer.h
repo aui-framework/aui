@@ -65,6 +65,12 @@ public:
 	void removeView(_<AView> view);
 	void removeAllViews();
 
+	/**
+	 * \brief Move all children of specified container to this container
+	 * \param container container
+	 */
+	void setContents(const _<AViewContainer>& container);
+
 	void render() override;
 
 

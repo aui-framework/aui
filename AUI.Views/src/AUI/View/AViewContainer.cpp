@@ -273,3 +273,11 @@ void AViewContainer::onDpiChanged() {
         v->onDpiChanged();
     }
 }
+
+void AViewContainer::setContents(const _<AViewContainer>& container) {
+    setLayout(std::move(container->mLayout));
+    mViews = std::move(container->mViews);
+    for (auto& v : mViews) {
+        v->mParent = this;
+    }
+}
