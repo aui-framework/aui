@@ -19,46 +19,36 @@
  * =====================================================================================================================
  */
 
-/**
- * It's not an ASS, it's Aui Style Sheets!!
- */
+//
+// Created by alex2 on 03.01.2021.
+//
 
 #pragma once
 
-// Declarations
-#include "Declaration/BackgroundImage.h"
-#include "Declaration/BackgroundSolid.h"
-#include "Declaration/BackgroundGradient.h"
-#include "Declaration/Border.h"
-#include "Declaration/BorderRadius.h"
-#include "Declaration/BoxShadow.h"
-#include "Declaration/Cursor.h"
-#include "Declaration/Expanding.h"
-#include "Declaration/FixedSize.h"
-#include "Declaration/FontFamily.h"
-#include "Declaration/FontRendering.h"
-#include "Declaration/FontSize.h"
-#include "Declaration/LayoutSpacing.h"
-#include "Declaration/Margin.h"
-#include "Declaration/MinSize.h"
-#include "Declaration/Overflow.h"
-#include "Declaration/Padding.h"
-#include "Declaration/TextAlign.h"
-#include "Declaration/TextColor.h"
-#include "Declaration/TransformOffset.h"
-#include "Declaration/TransformScale.h"
-#include "Declaration/VerticalAlign.h"
+#include <AUI/Util/AMetric.h>
+#include "IDeclaration.h"
 
-// Selectors
-#include "AUI/ASS/Selector/AAssSelector.h"
-#include "Selector/ParentSelector.h"
-#include "Selector/DirectParentSelector.h"
-#include "Selector/type_of.h"
-#include "Selector/attribute.h"
-#include "Selector/active.h"
-#include "Selector/hovered.h"
-#include "Selector/class_of.h"
+namespace ass {
+    struct Expanding {
+        unset_wrap<unsigned> expandingX;
+        unset_wrap<unsigned> expandingY;
 
-// Other
-#include "unset.h"
-#include "AStylesheet.h"
+        Expanding(const unset_wrap<unsigned>& expandingX, const unset_wrap<unsigned>& expandingY) : expandingX(expandingX), expandingY(expandingY) {}
+        Expanding(const unset_wrap<unsigned>& expanding) : expandingX(expanding), expandingY(expanding) {}
+    };
+
+
+    namespace decl {
+        template<>
+        struct API_AUI_VIEWS Declaration<Expanding>: IDeclarationBase {
+        private:
+            Expanding mInfo;
+
+        public:
+            Declaration(const Expanding& info) : mInfo(info) {
+            }
+
+            void applyFor(AView* view) override;
+        };
+    }
+}
