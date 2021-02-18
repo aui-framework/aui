@@ -31,7 +31,7 @@ class AListModel: public AVector<StoredType>, public AObject, public IListModel<
     using p = AVector<StoredType>;
 
 public:
-    using p::AVector;
+    using typename p::AVector;
 
 
     void push_back(const StoredType& data) {
@@ -50,6 +50,9 @@ public:
 
     StoredType listItemAt(const AModelIndex& index) override {
         return p::at(index.getRow());
+    }
+    void invalidate(size_t index) {
+        emit this->dataChanged(AModelRange{AModelIndex(index), AModelIndex(index + 1u), this});
     }
 
 };
