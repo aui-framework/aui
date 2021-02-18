@@ -54,6 +54,9 @@ public:
 
     void setSize(int width, int height) override;
 
+    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
+
 signals:
 	emits<AModelSelection<AString>> selectionChanged;
+	emits<unsigned> itemDoubleClicked;
 };

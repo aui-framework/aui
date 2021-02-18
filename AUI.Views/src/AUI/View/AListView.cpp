@@ -86,6 +86,15 @@ void AListView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 	}
 }
 
+void AListView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) {
+    AViewContainer::onMouseDoubleClicked(pos, button);
+
+    auto target = _cast<AListItem>(getViewAt(pos));
+    if (target) {
+        emit itemDoubleClicked(getViews().indexOf(target));
+    }
+}
+
 AListView::~AListView()
 {
 }
@@ -109,6 +118,12 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
                 addView(_new<AListItem>(row));
             }
             updateLayout();
+            redraw();
+        });
+        connect(mModel->dataChanged, this, [&](const AModelRange<AString>& data) {
+            for (size_t i = data.getBegin().getRow(); i != data.getEnd().getRow(); ++i) {
+                _cast<AListItem>(mViews[i])->setText(data.getModel()->listItemAt(i));
+            }
             redraw();
         });
     }
