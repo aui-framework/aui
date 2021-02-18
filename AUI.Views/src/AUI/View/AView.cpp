@@ -64,11 +64,11 @@ AView::AView()
 
 void AView::redraw()
 {
-    /*
+
 	if (auto w = getWindow()) {
 		w->flagRedraw();
-	}*/
-    AWindow::current()->flagRedraw();
+	}
+    //AWindow::current()->flagRedraw();
 }
 
 void AView::drawStencilMask()

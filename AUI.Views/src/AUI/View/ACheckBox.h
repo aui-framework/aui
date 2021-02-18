@@ -22,6 +22,7 @@
 #pragma once
 #include "ALabel.h"
 #include "AViewContainer.h"
+#include <AUI/Util/ADataBinding.h>
 
 
 class ACheckBoxInner: public AView
@@ -68,4 +69,16 @@ public:
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 signals:
 	emits<bool> checked;
+};
+
+
+template<>
+struct ADataBindingDefault<ACheckBox, bool> {
+public:
+    static auto getGetter() {
+        return &ACheckBox::checked;
+    }
+    static auto getSetter() {
+        return &ACheckBox::setChecked;
+    }
 };

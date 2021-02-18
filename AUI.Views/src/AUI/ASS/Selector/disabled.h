@@ -25,49 +25,26 @@
 
 #pragma once
 
-
 #include "attribute.h"
-#include <AUI/Util/kAUI.h>
-#include <AUI/View/AView.h>
-#include <AUI/ASS/AAssHelper.h>
-
-#include "hovered.h"
-#include "active.h"
-#include "focus.h"
-#include "disabled.h"
 
 namespace ass {
+    template<typename Base>
+    struct disabled: Base, AttributeHelper<disabled<Base>> {
+        template<typename... Args>
+        disabled(Args&&... args):
+            Base(std::forward<Args>(args)...)
+        {
 
-    namespace detail {
-        struct ClassOf : virtual IAssSubSelector {
-        private:
-            AVector<AString> mClasses;
-            
-        public:
-            ClassOf(const AVector<AString>& classes) : mClasses(classes) {}
-            ClassOf(const AString& clazz) : mClasses({clazz}) {}
+        }
 
-            bool isPossiblyApplicable(AView* view) override {
-                for (auto& v : mClasses) {
-                    if (view->getCssNames().contains(v))
-                        return true;
-                }
-                return false;
-            }
+        bool isStateApplicable(AView* view) override {
+            return Base::isStateApplicable(view) && !view->isEnabled();
+        }
 
-        };
-    }
-
-    struct class_of: detail::ClassOf, AttributeHelper<class_of> {
-    public:
-        class_of(const AVector<AString>& classes) : ClassOf(classes) {}
-        class_of(const AString& clazz) : ClassOf(clazz) {}
-
-        using hover = ass::hovered<detail::ClassOf>;
-        using active = ass::active<detail::ClassOf>;
-        using focus = ass::focus<detail::ClassOf>;
-        using disabled = ass::disabled<detail::ClassOf>;
+        void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+            Base::setupConnections(view, helper);
+            view->enabledState.clearAllConnectionsWith(helper.get());
+            AObject::connect(view->enabledState, slot(helper)::onInvalidateStateAss);
+        }
     };
-
-    using c = class_of;
 }

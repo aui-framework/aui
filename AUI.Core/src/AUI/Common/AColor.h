@@ -107,6 +107,10 @@ public:
     bool isFullyTransparent() const {
         return a < 0.001f;
     }
+
+    AColor opacify(float d) {
+        return {x, y, z, a * d};
+    }
 };
 
 /**

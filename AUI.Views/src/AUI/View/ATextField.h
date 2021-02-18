@@ -23,6 +23,7 @@
 
 #include "AView.h"
 #include "AAbstractTextField.h"
+#include <AUI/Util/ADataBinding.h>
 
 class API_AUI_VIEWS ATextField: public AAbstractTextField
 {
@@ -32,4 +33,15 @@ public:
 
 protected:
 	bool isValidText(const AString& text) override;
+};
+
+template<>
+struct ADataBindingDefault<ATextField, AString> {
+public:
+    static auto getGetter() {
+        return &ATextField::textChanging;
+    }
+    static auto getSetter() {
+        return &ATextField::setText;
+    }
 };

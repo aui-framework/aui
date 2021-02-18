@@ -109,6 +109,7 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
                 addView(_new<AListItem>(row));
             }
             updateLayout();
+            redraw();
         });
     }
     updateLayout();

@@ -74,12 +74,6 @@ public:
 	}
 
 
-	template<typename MemberFunction, typename... Args>
-	inline _<T>& operator()(MemberFunction memberFunction, Args&&... args) {
-		(parent::get()->*memberFunction)(std::forward<Args>(args)...);
-		return *this;
-	}
-
 	template<typename SignalField, typename Object, typename Function>
 	inline _<T>& connect(SignalField signalField, Object object, Function function);
 
@@ -119,6 +113,16 @@ public:
 	_<T>& operator>>(Arg&& value) {
         (*parent::get()) >> std::forward<Arg>(value);
         return *this;
+    }
+
+    template<typename...Args>
+	_<T>& operator()(const Args&... value) {
+        (*parent::get())(value...);
+        return *this;
+    }
+    template<typename...Args>
+	auto operator()(Args&&... value) {
+        return (*parent::get())(std::forward<Args>(value)...);
     }
 };
 

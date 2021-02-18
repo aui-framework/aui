@@ -150,6 +150,12 @@ AStylesheet::AStylesheet() {
             class_of::focus(".input-field"),
             Border { 1_dp, getOsThemeColor() },
         },
+        {
+            class_of::disabled(".input-field"),
+            Border { 1_dp, getOsThemeColor().opacify(0.7f) },
+            TextColor { 0x555555_rgb },
+            BackgroundSolid { 0xeeeeee_rgb }
+        },
 
         // ANumberPicker
         {

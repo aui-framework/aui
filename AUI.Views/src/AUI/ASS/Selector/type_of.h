@@ -33,6 +33,7 @@
 #include "hovered.h"
 #include "active.h"
 #include "focus.h"
+#include "disabled.h"
 
 namespace ass {
 
@@ -57,6 +58,7 @@ namespace ass {
         using hover = ass::hovered<detail::Type<T>>;
         using active = ass::active<detail::Type<T>>;
         using focus = ass::active<detail::Type<T>>;
+        using disabled = ass::disabled<detail::Type<T>>;
     };
 
     template<typename T>
