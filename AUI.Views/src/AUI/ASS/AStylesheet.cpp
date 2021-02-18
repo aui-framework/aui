@@ -64,6 +64,7 @@ AStylesheet::AStylesheet() {
         {
             type_of<ALabel>(),
             Padding {1_dp, 0, 2_dp},
+            VerticalAlign::MIDDLE,
         },
         {
             type_of<ALabel>(),
@@ -152,9 +153,10 @@ AStylesheet::AStylesheet() {
         },
         {
             class_of::disabled(".input-field"),
-            Border { 1_dp, getOsThemeColor().opacify(0.7f) },
+            Border { 1_dp, 0x999999_rgb },
             TextColor { 0x555555_rgb },
-            BackgroundSolid { 0xeeeeee_rgb }
+            ACursor::DEFAULT,
+            BackgroundSolid { 0xe0e0e0_rgb }
         },
 
         // ANumberPicker
