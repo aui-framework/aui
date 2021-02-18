@@ -90,7 +90,7 @@ public:
 template <typename Model>
 class ADataBinding: public AObject {
 private:
-    using Applier = std::function<void(const Model& model)>;
+    using Applier = std::function<void(const Model& model, unsigned)>;
     ADeque<Applier> mLinkAppliers;
 
     Model mModel;
@@ -134,34 +134,44 @@ public:
         return mExcept;
     }
 
-    void update(void* except = nullptr) {
+    void update(void* except = nullptr, unsigned field = -1) {
         mExcept = except;
         for (auto& applier : mLinkAppliers) {
-            applier(mModel);
+            applier(mModel, field);
         }
     }
 
     void addApplier(const Applier& applier) {
         mLinkAppliers << applier;
-        mLinkAppliers.last()(mModel);
+        mLinkAppliers.last()(mModel, -1);
     }
 };
 
 template<typename Klass1, typename Klass2, typename Model, typename Data>
 _<Klass1> operator&&(const _<Klass1>& object, const ADataBindingLinker<Model, Klass2, Data>& linker) {
+    union converter {
+       unsigned i;
+       decltype(linker.getField()) p;
+    };
     if (linker.getGetter()) {
         AObject::connect(object.get()->*(linker.getGetter()), linker.getBinder(), [object, linker](const Data& data) {
             object->setSignalsEnabled(false);
             linker.getBinder()->getEditableModel().*(linker.getField()) = data;
-            linker.getBinder()->update(object.get());
+            converter c;
+            c.p = linker.getField();
+            linker.getBinder()->update(object.get(), c.i);
             object->setSignalsEnabled(true);
         });
     }
 
     if (linker.getSetterFunc()) {
-        linker.getBinder()->addApplier([object, linker](const Model& model) {
-            if (object.get() != linker.getBinder()->getExclusion()) {
-                (object.get()->*(linker.getSetterFunc()))(model.*(linker.getField()));
+        linker.getBinder()->addApplier([object, linker](const Model& model, unsigned field) {
+            converter c;
+            c.p = linker.getField();
+            if (c.i == field || field == -1) {
+                if (object.get() != linker.getBinder()->getExclusion()) {
+                    (object.get()->*(linker.getSetterFunc()))(model.*(linker.getField()));
+                }
             }
         });
     }
