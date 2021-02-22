@@ -116,7 +116,9 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
     if (b & B_OK) {
         buttonFlags |= GTK_BUTTONS_OK;
     }
-    if (b & B_CANCEL) {
+    if (b & B_YES) {
+        buttonFlags |= GTK_BUTTONS_YES_NO;
+    } else if (b & B_CANCEL) {
         buttonFlags |= GTK_BUTTONS_CANCEL;
     }
 
@@ -127,11 +129,17 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
                                          "%ls", message.c_str());
     gtk_window_set_keep_above(GTK_WINDOW(dialog), true);
     gtk_window_activate_focus(GTK_WINDOW(dialog));
-    gtk_dialog_run(GTK_DIALOG(dialog));
+    int resp = gtk_dialog_run(GTK_DIALOG(dialog));
     gtk_widget_destroy(GTK_WIDGET(dialog));
 
     while (gtk_events_pending()) {
         gtk_main_iteration();
+    }
+    switch (resp) {
+        case GTK_RESPONSE_ACCEPT:
+            return B_OK;
+        case GTK_RESPONSE_YES:
+            return B_YES;
     }
     return B_INVALID;
 }
