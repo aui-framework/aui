@@ -26,29 +26,29 @@
 class AModelIndex
 {
 private:
-	int mRow;
-	int mColumn;
+	std::size_t mRow;
+    std::size_t mColumn;
 	
 public:
-	AModelIndex(int row, int column)
+	AModelIndex(std::size_t row, std::size_t column)
 		: mRow(row),
 		  mColumn(column)
 	{
 	}
 
-	AModelIndex(int row)
+	AModelIndex(std::size_t row)
 		: mRow(row)
 	{
 	}
 
 	AModelIndex() = default;
 
-	int getRow() const
+	std::size_t getRow() const
 	{
 		return mRow;
 	}
 
-	int getColumn() const
+	std::size_t getColumn() const
 	{
 		return mColumn;
 	}
