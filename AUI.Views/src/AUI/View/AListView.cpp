@@ -126,6 +126,14 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
             }
             redraw();
         });
+        connect(mModel->dataRemoved, this, [&](const AModelRange<AString>& data) {
+            size_t index = data.getBegin().getRow();
+            for (size_t i = data.getBegin().getRow(); i < data.getEnd().getRow(); ++i) {
+                removeView(mViews[index]);
+            }
+            updateLayout();
+            redraw();
+        });
     }
     updateLayout();
     AWindow::current()->flagRedraw();
