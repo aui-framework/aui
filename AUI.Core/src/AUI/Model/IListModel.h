@@ -46,4 +46,9 @@ signals:
      * \brief Model data was added
      */
     emits<AModelRange<T>> dataInserted;
+
+    /**
+     * \brief Model data about to remove
+     */
+    emits<AModelRange<T>> dataRemoved;
 };

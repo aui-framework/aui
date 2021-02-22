@@ -95,7 +95,7 @@ public:
 
     void removeAt(size_t index)
     {
-        Container::erase(Container::begin() + index);
+        this->erase(Container::begin() + index);
     }
 
 };

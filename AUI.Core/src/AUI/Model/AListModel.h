@@ -26,33 +26,61 @@
 #include "AModelIndex.h"
 #include "IListModel.h"
 
+namespace aui::detail {
+
+    template <typename StoredType>
+    class AListModel: public std::vector<StoredType>, public AObject, public IListModel<StoredType> {
+    private:
+        using p = std::vector<StoredType>;
+        using Iterator = typename p::iterator;
+
+    public:
+        using p::vector;
+
+
+        Iterator erase(Iterator begin) {
+            return this->erase(begin, begin + 1);
+        }
+        Iterator erase(Iterator begin, Iterator end) {
+            emit this->dataRemoved(AModelRange{AModelIndex{size_t(begin - this->begin())},
+                                               AModelIndex{size_t(end   - this->begin())},
+                                               this});
+
+            return p::erase(begin, end);
+        }
+
+
+        void push_back(const StoredType& data) {
+            p::push_back(data);
+            emit this->dataInserted(AModelRange{AModelIndex(p::size() - 1),
+                                                AModelIndex(p::size()    ),
+                                                this});
+        }
+
+        AListModel& operator<<(const StoredType& data) {
+            push_back(data);
+            return *this;
+        }
+
+        size_t listSize() override {
+            return p::size();
+        }
+
+        StoredType listItemAt(const AModelIndex& index) override {
+            return p::at(index.getRow());
+        }
+        void invalidate(size_t index) {
+            emit this->dataChanged(AModelRange{AModelIndex(index), AModelIndex(index + 1u), this});
+        }
+    };
+}
+
 template <typename StoredType>
-class AListModel: public AVector<StoredType>, public AObject, public IListModel<StoredType> {
-    using p = AVector<StoredType>;
-
+class AListModel: public SequenceContainerExtensions<aui::detail::AListModel<StoredType>> {
+    using p = SequenceContainerExtensions<aui::detail::AListModel<StoredType>>;
+    using Iterator = typename p::Iterator;
 public:
-    using typename p::AVector;
+    using p::SequenceContainerExtensions;
 
-
-    void push_back(const StoredType& data) {
-        p::push_back(data);
-        emit this->dataInserted(AModelRange{AModelIndex(p::size()-1), AModelIndex(p::size()), this});
-    }
-
-    AListModel& operator<<(const StoredType& data) {
-        push_back(data);
-        return *this;
-    }
-
-    size_t listSize() override {
-        return p::size();
-    }
-
-    StoredType listItemAt(const AModelIndex& index) override {
-        return p::at(index.getRow());
-    }
-    void invalidate(size_t index) {
-        emit this->dataChanged(AModelRange{AModelIndex(index), AModelIndex(index + 1u), this});
-    }
 
 };

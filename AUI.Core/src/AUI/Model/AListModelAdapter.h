@@ -46,6 +46,9 @@ private:
         AObject::connect(other->dataInserted, this, [&](const AModelRange<T>& r){
             emit dataInserted({r.getBegin(), r.getEnd(), this});
         });
+        AObject::connect(other->dataRemoved, this, [&](const AModelRange<T>& r){
+            emit dataRemoved({r.getBegin(), r.getEnd(), this});
+        });
     }
 
 public:
