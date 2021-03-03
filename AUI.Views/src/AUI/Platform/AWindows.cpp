@@ -43,6 +43,7 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Traits/strings.h>
+#include <AUI/Traits/arrays.h>
 
 constexpr bool AUI_DISPLAY_BOUNDS = false;
 AWindow::Context AWindow::context = {};
@@ -662,14 +663,14 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     static XIMStyles *styles;
 
     if (context.context == nullptr) {
-        GLint att[] = {GLX_X_RENDERABLE, True,
-                       GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT,
-                       GLX_RENDER_TYPE, GLX_RGBA_BIT,
-                       GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR,
-                       GLX_RED_SIZE, 8,
-                       GLX_GREEN_SIZE, 8,
-                       GLX_BLUE_SIZE, 8,
-                       GLX_ALPHA_SIZE, 8,
+        GLint att[] = {GLX_X_RENDERABLE, True, // 1
+                       GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT, // 3
+                       GLX_RENDER_TYPE, GLX_RGBA_BIT, // 5
+                       GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR, // 7
+                       GLX_RED_SIZE, 8, // 9
+                       GLX_GREEN_SIZE, 8, // 11
+                       GLX_BLUE_SIZE, 8, // 13
+                       GLX_ALPHA_SIZE, 8, // 15
                        GLX_DEPTH_SIZE, 24,
                        GLX_STENCIL_SIZE, 8,
                        GLX_DOUBLEBUFFER, true,
@@ -681,8 +682,37 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
         int fbcount;
         GLXFBConfig* fbc = glXChooseFBConfig(gDisplay, DefaultScreen(gDisplay), att, &fbcount);
 
+        if (fbc == nullptr || fbcount <= 0) {
+            // try to reduce system requirements
+            size_t indexToReduce = aui::array_length(att) - 2;
+            do {
+                ALogger::warn("[OpenGL compatibility] Reduced OpenGL requirements: pass {}"_as.format((aui::array_length(att) - indexToReduce) / 2 - 1));
+                att[indexToReduce] = 0;
+                indexToReduce -= 2;
+                fbc = glXChooseFBConfig(gDisplay, DefaultScreen(gDisplay), att, &fbcount);
+            } while ((fbc == nullptr || fbcount <= 0) && indexToReduce > 13); // up to GLX_BLUE_SIZE
+
+            if (fbc == nullptr || fbcount <= 0) {
+                // try to disable rgba.
+                att[5] = 0;
+                ALogger::warn("[OpenGL compatibility] Disabled RGBA");
+                fbc = glXChooseFBConfig(gDisplay, DefaultScreen(gDisplay), att, &fbcount);
+
+                if (fbc == nullptr || fbcount <= 0) {
+                    // use default attribs
+                    ALogger::warn("[OpenGL compatibility] Using default attribs");
+                    glXChooseFBConfig(gDisplay, DefaultScreen(gDisplay), nullptr, &fbcount);
+                    if (fbc == nullptr || fbcount <= 0) {
+                        // giving up.
+                        ALogger::err("[OpenGL compatibility] System hardware is not supported. Giving up.");
+                        exit(-1);
+                    }
+                }
+            }
+        }
+
         // Pick the FB config/visual with the most samples per pixel
-        int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
+        int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = std::numeric_limits<int>::max();
 
         int i;
         for (i = 0; i < fbcount; ++i) {
