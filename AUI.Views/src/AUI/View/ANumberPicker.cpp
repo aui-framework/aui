@@ -141,6 +141,7 @@ int ANumberPicker::getContentMinimumHeight()
 void ANumberPicker::setValue(int v)
 {
 	mTextField->setText(AString::number(v));
+	emit valueChanging();
     redraw();
 }
 
