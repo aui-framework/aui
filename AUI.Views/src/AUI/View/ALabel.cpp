@@ -86,7 +86,28 @@ int ALabel::getContentMinimumHeight()
 
 void ALabel::setText(const AString& newText)
 {
-	mText = newText;
+    // try to determine is text changed..
+
+    auto sourceIterator = newText.begin();
+    auto destinationIterator = mText.begin();
+
+    if (newText.length() == mText.length()) {
+        for (; sourceIterator != newText.end(); ++sourceIterator, ++destinationIterator) {
+            if (*destinationIterator != *sourceIterator) {
+                break;
+            }
+        }
+        if (sourceIterator == newText.end()) {
+            return;
+        }
+    } else {
+        mText.resize(newText.size());
+        destinationIterator = mText.begin();
+    }
+    for (; sourceIterator != newText.end(); ++sourceIterator, ++destinationIterator) {
+        *destinationIterator = *sourceIterator;
+    }
+
 	mPrerendered.mVao = nullptr;
 	if (mMultiline)
 	{
