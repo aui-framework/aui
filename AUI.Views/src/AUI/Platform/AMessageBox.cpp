@@ -23,41 +23,53 @@
 #include <windows.h>
 #include "AMessageBox.h"
 #include "AWindow.h"
-AMessageBox::Button AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b)
+AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b)
 {
     HWND window = parent ? parent->getNativeHandle() : nullptr;
 
     long flags = 0;
 
     // Icons
-    if (icon & I_INFO)
+    switch (icon)
     {
-        flags |= MB_ICONINFORMATION;
-    }
-    if (icon & I_WARNING)
-    {
-        flags |= MB_ICONWARNING;
-    }
-    if (icon & I_CRITICAL)
-    {
-        flags |= MB_ICONSTOP;
+        case Icon::INFO:
+            flags |= MB_ICONINFORMATION;
+            break;
+        case Icon::WARNING:
+            flags |= MB_ICONWARNING;
+            break;
+        case Icon::CRITICAL:
+            flags |= MB_ICONSTOP;
+            break;
     }
 
-    // Flags
-    if (b & B_OK)
-    {
-        flags |= MB_OK;
-    }
-    if (b & B_CANCEL)
-    {
-        flags |= MB_OKCANCEL;
+
+    // Buttons
+    switch (b) {
+        case Button::OK:
+            flags |= MB_OK;
+            break;
+
+        case Button::OK_CANCEL:
+            flags |= MB_OKCANCEL;
+            break;
+
+        case Button::YES_NO:
+            flags |= MB_YESNO;
+            break;
     }
 
     switch (::MessageBox(window, message.c_str(), title.c_str(), flags)) {
-    case IDOK:
-        return B_OK;
+        case IDOK:
+            return ResultButton::OK;
+        case IDCANCEL:
+            return ResultButton::CANCEL;
+        case IDYES:
+            return ResultButton::YES;
+        case IDNO:
+            return ResultButton::NO;
     }
-    return B_INVALID;
+    return ResultButton::INVALID;
 }
 #elif defined(ANDROID)
 
@@ -80,7 +92,7 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
     j->DeleteLocalRef(strTitle);
     j->DeleteLocalRef(strMessage);
 
-    return B_INVALID;
+    return INVALID;
 }
 #else
 #include <gtk/gtk.h>
@@ -102,10 +114,10 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
         case I_INFO:
             iconFlags |= GTK_MESSAGE_INFO;
             break;
-        case I_WARNING:
+        case WARNING:
             iconFlags |= GTK_MESSAGE_WARNING;
             break;
-        case I_CRITICAL:
+        case CRITICAL:
             iconFlags |= GTK_MESSAGE_ERROR;
             break;
 }
@@ -113,12 +125,12 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
     unsigned buttonFlags = 0;
 
     // Flags
-    if (b & B_OK) {
+    if (b & OK) {
         buttonFlags |= GTK_BUTTONS_OK;
     }
-    if (b & B_YES) {
+    if (b & YES_NO) {
         buttonFlags |= GTK_BUTTONS_YES_NO;
-    } else if (b & B_CANCEL) {
+    } else if (b & CANCEL) {
         buttonFlags |= GTK_BUTTONS_CANCEL;
     }
 
@@ -137,11 +149,11 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
     }
     switch (resp) {
         case GTK_RESPONSE_ACCEPT:
-            return B_OK;
+            return OK;
         case GTK_RESPONSE_YES:
-            return B_YES;
+            return YES_NO;
     }
-    return B_INVALID;
+    return INVALID;
 }
 
 #endif

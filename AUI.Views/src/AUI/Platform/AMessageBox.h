@@ -29,19 +29,26 @@ class AWindow;
 
 namespace AMessageBox
 {
-	enum Icon
+    enum class Icon
 	{
-		I_NONE,
-		I_INFO,
-		I_WARNING,
-		I_CRITICAL
+		NONE,
+		INFO,
+		WARNING,
+		CRITICAL
 	};
-	ENUM_FLAG(Button)
+	enum class Button
 	{
-		B_OK = 0x1,
-		B_CANCEL = 0x2,
-		B_YES = 0x4,
-        B_INVALID = -1,
+		OK,
+		OK_CANCEL,
+		YES_NO,
 	};
-	API_AUI_VIEWS Button show(AWindow* parent, const AString& title, const AString& message, Icon icon = I_NONE, Button b = B_OK);
+	enum class ResultButton
+	{
+		INVALID,
+		OK,
+		CANCEL,
+		YES,
+		NO
+	};
+	API_AUI_VIEWS ResultButton show(AWindow* parent, const AString& title, const AString& message, Icon icon = Icon::NONE, Button b = Button::OK);
 };
