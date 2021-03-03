@@ -66,7 +66,7 @@ public:
     void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
-    class Group: public AObject {
+    class API_AUI_VIEWS Group: public AObject {
     private:
         AVector<_<ARadioButton>> mButtons;
         _weak<ARadioButton> mSelected;
