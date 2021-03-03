@@ -68,6 +68,7 @@ void ATimer::stop()
 	mResetFlag = false;
 	if (mThread) {
         mThread->interrupt();
+        mThread->join();
         mThread = nullptr;
     }
 }
