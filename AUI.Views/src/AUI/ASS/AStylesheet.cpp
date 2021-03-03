@@ -231,7 +231,7 @@ AStylesheet::AStylesheet() {
         {
             type_of<ARadioButtonInner>(),
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 1_dp, 1_dp, 1_dp, 4_dp },
+            Margin { 3_dp, 1_dp, 1_dp, 4_dp },
             Border { 1_px, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
             BorderRadius { 6_dp },
@@ -275,6 +275,7 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_px, 0x828790_rgb },
             Padding { 2_px },
+            Margin {2_dp, 4_dp},
             Expanding { 0, 1 },
             Overflow::HIDDEN,
         },
