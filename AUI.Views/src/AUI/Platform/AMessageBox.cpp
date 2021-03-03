@@ -102,7 +102,7 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
 #include <AUI/Util/kAUI.h>
 
 extern void aui_gtk_init();
-AMessageBox::Button
+AMessageBox::ResultButton
 AMessageBox::show(AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,
                   AMessageBox::Button b) {
     unsigned iconFlags = 0;
@@ -111,26 +111,36 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
 
     // Icons
     switch (icon) {
-        case I_INFO:
-            iconFlags |= GTK_MESSAGE_INFO;
+        case Icon::INFO:
+            iconFlags = GTK_MESSAGE_INFO;
             break;
-        case WARNING:
-            iconFlags |= GTK_MESSAGE_WARNING;
+        case Icon::WARNING:
+            iconFlags = GTK_MESSAGE_WARNING;
             break;
-        case CRITICAL:
-            iconFlags |= GTK_MESSAGE_ERROR;
+        case Icon::CRITICAL:
+            iconFlags = GTK_MESSAGE_ERROR;
             break;
 }
 
     unsigned buttonFlags = 0;
 
     // Flags
-    if (b & OK) {
-        buttonFlags |= GTK_BUTTONS_OK;
+    if (b == Button::OK) {
     }
-    if (b & YES_NO) {
+    switch (b) {
+        case Button::OK:
+            buttonFlags = GTK_BUTTONS_OK;
+            break;
+        case Button::YES_NO:
+            buttonFlags = GTK_BUTTONS_YES_NO;
+            break;
+        case Button::OK_CANCEL:
+            buttonFlags = GTK_BUTTONS_CANCEL;
+            break;
+    }
+    if (b == Button::YES_NO) {
         buttonFlags |= GTK_BUTTONS_YES_NO;
-    } else if (b & CANCEL) {
+    } else if (b == Button::OK_CANCEL) {
         buttonFlags |= GTK_BUTTONS_CANCEL;
     }
 
@@ -149,11 +159,11 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
     }
     switch (resp) {
         case GTK_RESPONSE_ACCEPT:
-            return OK;
+            return ResultButton::OK;
         case GTK_RESPONSE_YES:
-            return YES_NO;
+            return ResultButton::YES;
     }
-    return INVALID;
+    return ResultButton::CANCEL;
 }
 
 #endif
