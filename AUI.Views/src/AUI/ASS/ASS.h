@@ -30,6 +30,7 @@
 #include "Declaration/BackgroundSolid.h"
 #include "Declaration/BackgroundGradient.h"
 #include "Declaration/Border.h"
+#include "Declaration/BorderBottom.h"
 #include "Declaration/BorderRadius.h"
 #include "Declaration/BoxShadow.h"
 #include "Declaration/Cursor.h"
