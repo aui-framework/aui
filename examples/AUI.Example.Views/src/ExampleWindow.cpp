@@ -157,7 +157,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
 
 	addView(Horizontal{
 		_new<ASpacer>(),
-		_new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru")
-					(&AView::setEnabled, false)
+		_new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") let {
+		    it->setEnabled(false);
+		}
 	});
 }
