@@ -30,7 +30,10 @@
 ATabView::ATabView() {
     setLayout(_new<AVerticalLayout>());
 
-    addView(mButtonsRow = _container<AHorizontalLayout>({}));
+    addView(_container<AHorizontalLayout>({
+        mButtonsRow = _container<AHorizontalLayout>({}),
+        _new<ASpacer>(),
+    }));
     addView(mPageView = _new<APageView>());
 
     mButtonsRow->addAssName(".tabview_row");

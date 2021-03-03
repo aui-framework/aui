@@ -37,6 +37,7 @@
 #include <AUI/View/AListView.h>
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/AVDividerView.h>
+#include <AUI/View/ATabView.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 
@@ -170,9 +171,9 @@ AStylesheet::AStylesheet() {
         {
             type_of<ANumberPicker>() >> type_of<AButton>(),
             Margin { 0 },
-            Padding { 0 },
+            Padding { 3_dp, 0 },
             FixedSize { 19_dp, {} },
-            MinSize { {}, 9_dp }
+            MinSize { {}, 3_dp }
         },
 
         // ACheckBox
@@ -352,6 +353,22 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0xffffff_rgb },
             MinSize { 200_dp, {} },
             Padding { 4_dp, 3_dp },
+        },
+
+        // ATabView
+        {
+            t<ATabButtonView>(),
+            FontSize { 12_pt },
+            TextColor { 0x444444_rgb },
+            Padding { 8_dp, 4_dp },
+        },
+        {
+            t<ATabButtonView>()["current"],
+            BorderBottom { 2_dp, getOsThemeColor() },
+        },
+        {
+            t<ATabButtonView>::hover(),
+            BackgroundSolid {0xffffff_rgb },
         },
     });
 }
