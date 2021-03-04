@@ -80,6 +80,8 @@ public:
         [[nodiscard]] _<ARadioButton> getSelectedRadio() const;
         [[nodiscard]] int getSelectedId() const;
 
+        void setSelectedId(int id);
+
         [[nodiscard]] bool isSelected() const {
             return mSelected.lock() != nullptr;
         }

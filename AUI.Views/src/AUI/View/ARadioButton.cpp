@@ -67,12 +67,14 @@ void ARadioButton::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 
 void ARadioButton::Group::addRadioButton(_<ARadioButton> radio) {
     mButtons << radio;
-    connect(radio->checked, this, [&, radio]() {
-        if (auto s =  mSelected.lock()) {
-            s->setChecked(false);
+    connect(radio->checked, this, [&, radio](bool checked) {
+        if (checked) {
+            if (auto s = mSelected.lock()) {
+                s->setChecked(false);
+            }
+            mSelected = radio;
+            emit selectionChanged(getSelectedId());
         }
-        mSelected = radio;
-        emit selectionChanged(getSelectedId());
     });
 }
 
@@ -85,6 +87,10 @@ int ARadioButton::Group::getSelectedId() const {
         return mButtons.indexOf(s);
     }
     return 0;
+}
+
+void ARadioButton::Group::setSelectedId(int id) {
+    mButtons[id]->setChecked(true);
 }
 
 void ARadioButtonInner::update() {
