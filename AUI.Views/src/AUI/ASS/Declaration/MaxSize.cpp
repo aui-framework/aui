@@ -19,49 +19,12 @@
  * =====================================================================================================================
  */
 
-/**
- * It's not an ASS, it's Aui Style Sheets!!
- */
+//
+// Created by alex2 on 01.01.2021.
+//
 
-#pragma once
+#include "MaxSize.h"
 
-// Declarations
-#include "Declaration/BackgroundImage.h"
-#include "Declaration/BackgroundSolid.h"
-#include "Declaration/BackgroundGradient.h"
-#include "Declaration/Border.h"
-#include "Declaration/BorderBottom.h"
-#include "Declaration/BorderRadius.h"
-#include "Declaration/BoxShadow.h"
-#include "Declaration/Cursor.h"
-#include "Declaration/Expanding.h"
-#include "Declaration/FixedSize.h"
-#include "Declaration/FontFamily.h"
-#include "Declaration/FontRendering.h"
-#include "Declaration/FontSize.h"
-#include "Declaration/LayoutSpacing.h"
-#include "Declaration/Margin.h"
-#include "Declaration/MaxSize.h"
-#include "Declaration/MinSize.h"
-#include "Declaration/Overflow.h"
-#include "Declaration/Padding.h"
-#include "Declaration/TextAlign.h"
-#include "Declaration/TextColor.h"
-#include "Declaration/TransformOffset.h"
-#include "Declaration/TransformScale.h"
-#include "Declaration/VerticalAlign.h"
-
-// Selectors
-#include "AUI/ASS/Selector/AAssSelector.h"
-#include "Selector/ParentSelector.h"
-#include "Selector/DirectParentSelector.h"
-#include "Selector/type_of.h"
-#include "Selector/attribute.h"
-#include "Selector/active.h"
-#include "Selector/disabled.h"
-#include "Selector/hovered.h"
-#include "Selector/class_of.h"
-
-// Other
-#include "unset.h"
-#include "AStylesheet.h"
+void ass::decl::Declaration<ass::MaxSize>::applyFor(AView* view) {
+    view->setMaxSize({mInfo.width.getValuePx(), mInfo.height.getValuePx()});
+}

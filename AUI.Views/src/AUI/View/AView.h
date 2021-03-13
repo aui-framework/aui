@@ -365,6 +365,9 @@ public:
 	    return {getMinimumWidth(), getMinimumHeight()};
 	}
 
+    void setMaxSize(const glm::ivec2& maxSize) {
+        mMaxSize = maxSize;
+    }
 	[[nodiscard]] const glm::ivec2& getMaxSize() const
 	{
 		return mMaxSize;
