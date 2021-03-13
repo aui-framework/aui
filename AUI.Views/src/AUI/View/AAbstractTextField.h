@@ -84,6 +84,10 @@ public:
 	void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
 	void setText(const AString& t);
+	void clear() {
+	    setText({});
+	}
+
 
 	[[nodiscard]] const AString& getText() const override
 	{
