@@ -87,6 +87,9 @@ public:
 	void clear() {
 	    setText({});
 	}
+	void trimText() {
+	    setText(getText().trim());
+	}
 
 
 	[[nodiscard]] const AString& getText() const override
