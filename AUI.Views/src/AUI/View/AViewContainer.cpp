@@ -281,3 +281,14 @@ void AViewContainer::setContents(const _<AViewContainer>& container) {
         v->mParent = this;
     }
 }
+void AViewContainer::setEnabled(bool enabled) {
+    AView::setEnabled(enabled);
+    notifyParentEnabledStateChanged(enabled);
+}
+void AViewContainer::notifyParentEnabledStateChanged(bool enabled) {
+    enabled &= mDirectlyEnabled;
+    AView::notifyParentEnabledStateChanged(enabled);
+    for (auto& v : mViews) {
+        v->notifyParentEnabledStateChanged(enabled);
+    }   
+}

@@ -36,6 +36,8 @@ private:
     bool mSizeSet = false;
 	glm::ivec2 mPreviousSize = mSize;
 
+    void notifyParentEnabledStateChanged(bool enabled) override;
+
 protected:
 	AVector<_<AView>> mViews;
 	
@@ -91,8 +93,8 @@ public:
     void onMouseWheel(glm::ivec2 pos, int delta) override;
 
     bool consumesClick(const glm::ivec2& pos) override;
-
     void setSize(int width, int height) override;
+    void setEnabled(bool enabled = false) override;
 
 	/**
 	 * \brief Set new layout manager for this AViewContainer. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!

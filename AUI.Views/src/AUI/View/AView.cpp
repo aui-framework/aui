@@ -387,18 +387,15 @@ void AView::getCustomCssAttributes(AMap<AString, AVariant>& map)
 
 void AView::setEnabled(bool enabled)
 {
-	mEnabled = enabled;
+    mDirectlyEnabled = enabled;
+    updateEnableState();
+}
+void AView::updateEnableState()
+{
+	mEnabled = mDirectlyEnabled && mParentEnabled;
     emit customCssPropertyChanged();
 	setSignalsEnabled(mEnabled);
 	emit customCssPropertyChanged();
-}
-
-void AView::setDisabled(bool disabled)
-{
-    mEnabled = !disabled;
-    emit customCssPropertyChanged();
-    setSignalsEnabled(mEnabled);
-    emit customCssPropertyChanged();
 }
 
 void AView::setAnimator(const _<AAnimator>& animator) {
@@ -501,4 +498,7 @@ void AView::onDpiChanged() {
 void AView::invalidateFont() {
 
 }
-
+void AView::notifyParentEnabledStateChanged(bool enabled) {
+   mParentEnabled = enabled;
+   updateEnableState();
+}

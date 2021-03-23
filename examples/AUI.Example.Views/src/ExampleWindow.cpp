@@ -157,6 +157,10 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
 
 	addView(Horizontal{
 		_new<ASpacer>(),
+        _new<ACheckBox>("Enabled") let {
+            it->setChecked();
+            connect(it->checked, horizontal, &AView::setEnabled);
+        },
 		_new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") let {
 		    it->setEnabled(false);
 		}

@@ -96,6 +96,7 @@ private:
 	 */
 	FontStyle mFontStyle;
 
+    virtual void notifyParentEnabledStateChanged(bool enabled);
 
 protected:
 	/**
@@ -522,8 +523,12 @@ public:
 	 */
 	virtual bool handlesNonMouseNavigation();
 
-	void setEnabled(bool enabled = true);
-    void setDisabled(bool disabled = true);
+	virtual void setEnabled(bool enabled = true);
+    void setDisabled(bool disabled = true) {
+        setEnabled(!disabled);
+    }
+
+    void updateEnableState();
 
 	void enable()
 	{
@@ -575,5 +580,7 @@ private:
 	Watchable<bool> mPressed = Watchable<bool>(pressedState, mousePressed, mouseReleased);
 	//Watchable<bool> mFocused = Watchable<bool>(pressedState, mousePressed, mouseReleased);
 	Watchable<bool> mEnabled = Watchable<bool>(enabledState, enabled, disabled, true);
+    bool mDirectlyEnabled = true;
+    bool mParentEnabled = true;
 	Watchable<bool> mHasFocus = Watchable<bool>(focusState, focusAcquired, focusLost, false);
 };

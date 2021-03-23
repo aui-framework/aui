@@ -53,13 +53,13 @@ public:
 		return mChecked;
 	}
 
-	void setChecked(bool checked)
-	{
+	void setChecked(bool checked = true)
+    {
 		mChecked = checked;
 		emit customCssPropertyChanged();
 		emit ACheckBox::checked(checked);
 	}
-	void setUnchecked(bool unchecked) {
+	void setUnchecked(bool unchecked = true) {
 	    setChecked(!unchecked);
 	}
 
