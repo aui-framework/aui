@@ -28,7 +28,7 @@
 
 void ass::decl::Declaration<ass::FixedSize>::applyFor(AView* view) {
     view->setFixedSize({
-        mInfo.width ? mInfo.width->getValuePx() : view->getFixedSize().x,
-        mInfo.height ? mInfo.height->getValuePx() : view->getFixedSize().y
+                               mVisibility.width ? mVisibility.width->getValuePx() : view->getFixedSize().x,
+                               mVisibility.height ? mVisibility.height->getValuePx() : view->getFixedSize().y
     });
 }

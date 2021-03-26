@@ -42,10 +42,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<FixedSize>: IDeclarationBase {
         private:
-            FixedSize mInfo;
+            FixedSize mVisibility;
 
         public:
-            Declaration(const FixedSize& info) : mInfo(info) {
+            Declaration(const FixedSize& info) : mVisibility(info) {
             }
 
             void applyFor(AView* view) override;

@@ -29,9 +29,40 @@
 #include "AViewContainer.h"
 #include "ASpacer.h"
 
-class AScrollbarHandle;
-class AScrollbarButton;
+class AScrollbarButton: public AView {
+public:
+    AScrollbarButton() {
 
+    }
+};
+class AScrollbarHandle: public AView {
+public:
+    AScrollbarHandle() {
+
+    }
+
+    int getMinimumWidth() override {
+        return 0;
+    }
+
+    int getMinimumHeight() override {
+        return 0;
+    }
+};
+class AScrollbarOffsetSpacer: public ASpacer {
+public:
+    AScrollbarOffsetSpacer(): ASpacer(0, 0) {
+
+    }
+
+    int getMinimumWidth() override {
+        return 0;
+    }
+
+    int getMinimumHeight() override {
+        return 0;
+    }
+};
 class API_AUI_VIEWS AScrollbar: public AViewContainer {
 private:
     LayoutDirection mDirection;
@@ -47,7 +78,7 @@ private:
 
 public:
 
-    explicit AScrollbar(LayoutDirection direction);
+    explicit AScrollbar(LayoutDirection direction = LayoutDirection::VERTICAL);
 
     void setScrollDimensions(size_t viewportSize, size_t fullSize);
 

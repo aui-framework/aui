@@ -30,10 +30,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<ACursor>: IDeclarationBase {
         private:
-            ACursor mInfo;
+            ACursor mVisibility;
 
         public:
-            Declaration(const ACursor& info) : mInfo(info) {
+            Declaration(const ACursor& info) : mVisibility(info) {
 
             }
 

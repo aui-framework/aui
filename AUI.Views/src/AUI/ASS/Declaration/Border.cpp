@@ -30,17 +30,17 @@
 
 void ass::decl::Declaration<ass::Border>::renderFor(AView* view) {
     RenderHints::PushColor x;
-    Render::inst().setColor(mInfo.color);
+    Render::inst().setColor(mVisibility.color);
     Render::inst().drawRoundedBorder(0,
                                      0,
                                      view->getWidth(),
                                      view->getHeight(),
                                      view->getBorderRadius(),
-                                     mInfo.width);
+                                     mVisibility.width);
 }
 
 bool ass::decl::Declaration<ass::Border>::isNone() {
-    return mInfo.width <= 0.001f;
+    return mVisibility.width <= 0.001f;
 }
 
 ass::decl::DeclarationSlot ass::decl::Declaration<ass::Border>::getDeclarationSlot() const {

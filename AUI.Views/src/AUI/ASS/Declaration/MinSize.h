@@ -41,10 +41,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<MinSize>: IDeclarationBase {
         private:
-            MinSize mInfo;
+            MinSize mVisibility;
 
         public:
-            Declaration(const MinSize& info) : mInfo(info) {
+            Declaration(const MinSize& info) : mVisibility(info) {
 
             }
 

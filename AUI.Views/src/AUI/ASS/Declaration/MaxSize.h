@@ -41,10 +41,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<MaxSize>: IDeclarationBase {
         private:
-            MaxSize mInfo;
+            MaxSize mVisibility;
 
         public:
-            Declaration(const MaxSize& info) : mInfo(info) {
+            Declaration(const MaxSize& info) : mVisibility(info) {
 
             }
 

@@ -396,6 +396,7 @@ void AView::updateEnableState()
     emit customCssPropertyChanged();
 	setSignalsEnabled(mEnabled);
 	emit customCssPropertyChanged();
+	redraw();
 }
 
 void AView::setAnimator(const _<AAnimator>& animator) {

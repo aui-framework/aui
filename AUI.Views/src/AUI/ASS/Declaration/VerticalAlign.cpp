@@ -29,6 +29,6 @@
 
 void ass::decl::Declaration<VerticalAlign>::applyFor(AView* view) {
     if (auto label = dynamic_cast<ALabel*>(view)) {
-        label->setVerticalAlign(mInfo);
+        label->setVerticalAlign(mVisibility);
     }
 }

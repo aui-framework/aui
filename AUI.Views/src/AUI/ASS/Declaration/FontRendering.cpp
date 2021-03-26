@@ -26,7 +26,7 @@
 #include "FontRendering.h"
 
 void ass::decl::Declaration<FontRendering>::applyFor(AView* view){
-    view->getFontStyle().fontRendering = mInfo;
+    view->getFontStyle().fontRendering = mVisibility;
 #ifdef __ANDROID__
     if (view->getFontStyle().fontRendering == FontRendering::SUBPIXEL) {
         view->getFontStyle().fontRendering = FontRendering::ANTIALIASING;

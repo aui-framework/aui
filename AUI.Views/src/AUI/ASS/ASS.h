@@ -50,6 +50,7 @@
 #include "Declaration/TransformOffset.h"
 #include "Declaration/TransformScale.h"
 #include "Declaration/VerticalAlign.h"
+#include "Declaration/Visibility.h"
 
 // Selectors
 #include "AUI/ASS/Selector/AAssSelector.h"

@@ -25,14 +25,20 @@
 #include "AViewContainer.h"
 #include "AUI/Model/AModelIndex.h"
 #include "AUI/Model/IListModel.h"
+#include "AScrollbar.h"
 
 class AListItem;
+class AListViewContainer;
 
 class API_AUI_VIEWS AListView: public AViewContainer
 {
 private:
+    _<AListViewContainer> mContent;
+    _<AScrollbar> mScrollbar;
 	_<IListModel<AString>> mModel;
 	ASet<AModelIndex> mSelectionModel;
+
+    void updateScrollbarDimensions();
 	
 public:
     AListView(): AListView(nullptr) {}
@@ -56,7 +62,10 @@ public:
 
     void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
 
+    void onMouseWheel(glm::ivec2 pos, int delta) override;
+
 signals:
 	emits<AModelSelection<AString>> selectionChanged;
 	emits<unsigned> itemDoubleClicked;
+
 };

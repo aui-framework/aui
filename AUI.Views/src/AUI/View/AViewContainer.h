@@ -94,7 +94,7 @@ public:
 
     bool consumesClick(const glm::ivec2& pos) override;
     void setSize(int width, int height) override;
-    void setEnabled(bool enabled = false) override;
+    void setEnabled(bool enabled = true) override;
 
 	/**
 	 * \brief Set new layout manager for this AViewContainer. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!

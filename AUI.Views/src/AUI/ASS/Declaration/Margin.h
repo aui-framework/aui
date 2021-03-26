@@ -72,10 +72,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<Margin>: IDeclarationBase {
         private:
-            Margin mInfo;
+            Margin mVisibility;
 
         public:
-            Declaration(const Margin& info) : mInfo(info) {
+            Declaration(const Margin& info) : mVisibility(info) {
 
             }
 

@@ -7,8 +7,8 @@
 
 void ass::decl::Declaration<BorderBottom>::renderFor(AView* view) {
     RenderHints::PushColor x;
-    int w = mInfo.width;
-    Render::inst().setColor(mInfo.color);
+    int w = mVisibility.width;
+    Render::inst().setColor(mVisibility.color);
     Render::inst().setFill(Render::FILL_SOLID);
     Render::inst().drawRect(0,
                             view->getHeight() - w,
@@ -19,7 +19,7 @@ void ass::decl::Declaration<BorderBottom>::renderFor(AView* view) {
 }
 
 bool ass::decl::Declaration<BorderBottom>::isNone() {
-    return mInfo.width <= 0.001f;
+    return mVisibility.width <= 0.001f;
 }
 
 ass::decl::DeclarationSlot ass::decl::Declaration<BorderBottom>::getDeclarationSlot() const {

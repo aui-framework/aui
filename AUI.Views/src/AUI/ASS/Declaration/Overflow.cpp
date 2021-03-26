@@ -27,5 +27,5 @@
 
 
 void ass::decl::Declaration<Overflow>::applyFor(AView* view) {
-    view->setOverflow(mInfo);
+    view->setOverflow(mVisibility);
 }

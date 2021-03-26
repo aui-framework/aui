@@ -68,7 +68,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
 
 
 void ass::decl::Declaration<ass::BackgroundImage>::applyFor(AView* view) {
-    view->getAssHelper()->state.backgroundUrl = mInfo;
+    view->getAssHelper()->state.backgroundUrl = mVisibility;
 }
 
 ass::decl::DeclarationSlot ass::decl::Declaration<ass::BackgroundImage>::getDeclarationSlot() const {

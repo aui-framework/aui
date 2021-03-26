@@ -61,10 +61,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<BackgroundImage>: IDeclarationBase {
         private:
-            BackgroundImage mInfo;
+            BackgroundImage mVisibility;
 
         public:
-            Declaration(const BackgroundImage& info) : mInfo(info) {
+            Declaration(const BackgroundImage& info) : mVisibility(info) {
 
             }
 

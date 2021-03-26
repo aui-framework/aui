@@ -35,10 +35,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<LayoutSpacing>: IDeclarationBase {
         private:
-            LayoutSpacing mInfo;
+            LayoutSpacing mVisibility;
 
         public:
-            Declaration(const LayoutSpacing& info) : mInfo(info) {
+            Declaration(const LayoutSpacing& info) : mVisibility(info) {
 
             }
 

@@ -39,10 +39,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<BackgroundGradient>: IDeclarationBase {
         private:
-            BackgroundGradient mInfo;
+            BackgroundGradient mVisibility;
 
         public:
-            Declaration(const BackgroundGradient& info) : mInfo(info) {
+            Declaration(const BackgroundGradient& info) : mVisibility(info) {
 
             }
 

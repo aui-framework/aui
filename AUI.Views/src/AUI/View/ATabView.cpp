@@ -33,7 +33,9 @@ ATabView::ATabView() {
     addView(_container<AHorizontalLayout>({
         mButtonsRow = _container<AHorizontalLayout>({}),
         _new<ASpacer>(),
-    }));
+    }) let {
+        it << ".tabview_row_wrap";
+    });
     addView(mPageView = _new<APageView>());
 
     mButtonsRow->addAssName(".tabview_row");

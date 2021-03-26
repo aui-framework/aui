@@ -85,6 +85,13 @@ public:
         [[nodiscard]] bool isSelected() const {
             return mSelected.lock() != nullptr;
         }
+
+        void uncheckAll() {
+            for (auto& b : mButtons) {
+                b->setChecked(false);
+            }
+        }
+
     signals:
         emits<int> selectionChanged;
     };

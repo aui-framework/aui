@@ -37,10 +37,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<FontFamily>: IDeclarationBase {
         private:
-            FontFamily mInfo;
+            FontFamily mVisibility;
 
         public:
-            Declaration(const FontFamily& info) : mInfo(info) {
+            Declaration(const FontFamily& info) : mVisibility(info) {
 
             }
 

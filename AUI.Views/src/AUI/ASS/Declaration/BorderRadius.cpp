@@ -26,5 +26,5 @@
 #include "BorderRadius.h"
 
 void ass::decl::Declaration<ass::BorderRadius>::applyFor(AView* view) {
-    view->setBorderRadius(mInfo.radius);
+    view->setBorderRadius(mVisibility.radius);
 }

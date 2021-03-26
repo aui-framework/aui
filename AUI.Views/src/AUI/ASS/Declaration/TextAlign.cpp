@@ -27,6 +27,6 @@
 
 
 void ass::decl::Declaration<TextAlign>::applyFor(AView* view) {
-    view->getFontStyle().align = mInfo;
+    view->getFontStyle().align = mVisibility;
     view->invalidateFont();
 }

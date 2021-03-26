@@ -31,45 +31,18 @@
 #include "AScrollbar.h"
 #include "ASpacer.h"
 
-class AScrollbarButton: public AView {
-public:
-    AScrollbarButton() {
-
-    }
-};
-class AScrollbarHandle: public AView {
-public:
-    AScrollbarHandle() {
-
-    }
-
-    int getMinimumWidth() override {
-        return 0;
-    }
-
-    int getMinimumHeight() override {
-        return 0;
-    }
-};
-class AScrollbarOffsetSpacer: public ASpacer {
-public:
-    AScrollbarOffsetSpacer(): ASpacer(0, 0) {
-
-    }
-
-    int getMinimumWidth() override {
-        return 0;
-    }
-
-    int getMinimumHeight() override {
-        return 0;
-    }
-};
 
 AScrollbar::AScrollbar(LayoutDirection direction) : mDirection(direction) {
 
     mForwardButton = _new<AScrollbarButton>();
     mBackwardButton = _new<AScrollbarButton>();
+
+    connect(mForwardButton->clicked, this, [&] {
+        setScroll(mCurrentScroll + 10);
+    });
+    connect(mBackwardButton->clicked, this, [&] {
+        setScroll(mCurrentScroll - 10);
+    });
 
     switch (direction) {
         case LayoutDirection::HORIZONTAL:

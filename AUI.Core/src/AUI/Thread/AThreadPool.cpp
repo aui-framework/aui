@@ -21,6 +21,8 @@
 
 #include "AThreadPool.h"
 #include <glm/glm.hpp>
+#include <AUI/Common/AException.h>
+#include <AUI/Logging/ALogger.h>
 
 AThreadPool::Worker::Worker(AThreadPool& tp) :
 	mThread(_new<AThread>([&]()
@@ -52,6 +54,9 @@ bool AThreadPool::Worker::processQueue(Queue<std::function<void()>>& queue)
                 }
             }
 		}
+		catch (const AException& e) {
+            ALogger::err("uncaught exception in thread pool: " + e.getMessage());
+        }
 		catch (const AThread::AInterrupted&)
 		{
 			//AThread::current()->resetInterruptFlag();

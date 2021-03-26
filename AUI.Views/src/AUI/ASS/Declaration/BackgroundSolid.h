@@ -39,10 +39,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<BackgroundSolid>: IDeclarationBase {
         private:
-            BackgroundSolid mInfo;
+            BackgroundSolid mVisibility;
 
         public:
-            Declaration(const BackgroundSolid& info) : mInfo(info) {
+            Declaration(const BackgroundSolid& info) : mVisibility(info) {
 
             }
 

@@ -69,7 +69,6 @@ void AThread::start()
 			f();
 		} catch (const AException& e) {
             ALogger::err("uncaught exception: " + e.getMessage());
-            abort();
         } catch (AInterrupted)
 		{
 

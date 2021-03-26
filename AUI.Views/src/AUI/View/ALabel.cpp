@@ -299,6 +299,7 @@ void ALabel::onDpiChanged() {
 
 void ALabel::invalidateFont() {
     mPrerendered.mVao = nullptr;
+    redraw();
 }
 
 glm::ivec2 ALabel::getIconSize() const {

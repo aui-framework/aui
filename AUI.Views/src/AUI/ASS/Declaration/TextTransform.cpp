@@ -29,6 +29,6 @@
 
 void ass::decl::Declaration<TextTransform>::applyFor(AView* view) {
     if (auto label = dynamic_cast<ALabel*>(view)) {
-        label->setTextTransform(mInfo);
+        label->setTextTransform(mVisibility);
     }
 }

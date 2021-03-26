@@ -69,10 +69,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<Padding>: IDeclarationBase {
         private:
-            Padding mInfo;
+            Padding mVisibility;
 
         public:
-            Declaration(const Padding& info) : mInfo(info) {
+            Declaration(const Padding& info) : mVisibility(info) {
 
             }
 

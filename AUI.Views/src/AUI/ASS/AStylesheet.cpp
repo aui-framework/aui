@@ -50,6 +50,7 @@ AStylesheet::AStylesheet() {
         // AView
         {
             type_of<AView>(),
+            TextColor { 0x0_rgb },
             FontSize {9_pt},
             FontRendering::SUBPIXEL,
         },
@@ -66,6 +67,11 @@ AStylesheet::AStylesheet() {
             type_of<ALabel>(),
             Padding {1_dp, 0, 2_dp},
             VerticalAlign::MIDDLE,
+        },
+        // ALabel
+        {
+            type_of<ALabel>::disabled(),
+            TextColor { 0x444444_rgb },
         },
         {
             type_of<ALabel>(),
@@ -274,7 +280,7 @@ AStylesheet::AStylesheet() {
             type_of<AListView>(),
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_px, 0x828790_rgb },
-            Padding { 2_px },
+            Padding { 2_px, 0, 2_px, 2_px },
             Margin {2_dp, 4_dp},
             Expanding { 0, 1 },
             Overflow::HIDDEN,
@@ -370,6 +376,38 @@ AStylesheet::AStylesheet() {
         {
             t<ATabButtonView>::hover(),
             BackgroundSolid {0xffffff_rgb },
+        },
+
+        // scrollbar
+        {
+            t<AScrollbar>(),
+            Margin { 0, 0, 0, 2_px },
+        },
+        {
+            t<AScrollbarHandle>(),
+            FixedSize { 15_dp, {} },
+            MinSize { {}, 40_dp },
+            BackgroundSolid { 0xcccccc_rgb },
+            Margin {1_px, 0},
+        },
+        {
+            t<AScrollbar>::disabled() > t<AScrollbarHandle>(),
+            Visibility::GONE,
+        },
+        {
+            t<AScrollbarButton>(),
+            FixedSize { 15_dp, 15_dp },
+            BackgroundImage { {}, 0x404040_rgb },
+            Margin {0 },
+        },
+        {
+            t<AScrollbarButton>::disabled(),
+            BackgroundSolid { 0 },
+            BackgroundImage { {}, 0x707070_rgb },
+        },
+        {
+            {t<AScrollbarHandle>::hover(), t<AScrollbarButton>::hover() },
+            BackgroundSolid { 0xc0c0c0_rgb },
         },
     });
 }

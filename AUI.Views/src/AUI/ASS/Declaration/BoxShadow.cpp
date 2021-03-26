@@ -28,12 +28,12 @@
 
 
 void ass::decl::Declaration<ass::BoxShadow>::renderFor(AView* view) {
-    Render::inst().drawBoxShadow(mInfo.offsetX - mInfo.spreadRadius,
-                                 mInfo.offsetY - mInfo.spreadRadius,
-                                 view->getWidth() + mInfo.spreadRadius * 2,
-                                 view->getHeight() + mInfo.spreadRadius * 2,
-                                 mInfo.blurRadius,
-                                 mInfo.color);
+    Render::inst().drawBoxShadow(mVisibility.offsetX - mVisibility.spreadRadius,
+                                 mVisibility.offsetY - mVisibility.spreadRadius,
+                                 view->getWidth() + mVisibility.spreadRadius * 2,
+                                 view->getHeight() + mVisibility.spreadRadius * 2,
+                                 mVisibility.blurRadius,
+                                 mVisibility.color);
 }
 
 ass::decl::DeclarationSlot ass::decl::Declaration<ass::BoxShadow>::getDeclarationSlot() const {
@@ -41,5 +41,5 @@ ass::decl::DeclarationSlot ass::decl::Declaration<ass::BoxShadow>::getDeclaratio
 }
 
 bool ass::decl::Declaration<ass::BoxShadow>::isNone() {
-    return mInfo.color.isFullyTransparent();
+    return mVisibility.color.isFullyTransparent();
 }
