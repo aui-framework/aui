@@ -66,11 +66,11 @@ FractalWindow::FractalWindow():
                 centerPosDisplay
             })
         }) let {
-            setExpanding({2, 2});
-        })
+            it->setExpanding({2, 2});
+        }
     }) let {
-        setExpanding({2, 2});
-    }));
+        it->setExpanding({2, 2});
+    });
 
 
     addView(
@@ -83,16 +83,16 @@ FractalWindow::FractalWindow():
             _new<ANumberPicker>().connect(&ANumberPicker::valueChanged, this, [fractal](int v) {
                 fractal->setIterations(v);
             }) let {
-                setMax(1000);
-                setValue(350);
-            }),
+                it->setMax(1000);
+                it->setValue(350);
+            },
             _new<ALabel>("Gradient:"),
             _new<AImageView>(fractal->getTexture()) let {
-                setCustomAss({
+                it->setCustomAss({
                     FixedSize { {}, 10_dp },
                     Margin { 4_dp }
                 });
-            }),
+            },
     }));
     fractal->focus();
 }
