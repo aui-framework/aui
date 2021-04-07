@@ -35,6 +35,8 @@ Before to get started, you have to compile AUI.
 
 ## Basic hello world
 
+**Project:** `projects/basic_hello_world`
+
 Once you have compiled AUI, you can use it!
 
 Here's the example of basic hello work application, which every AUI project AUI starts with.
@@ -104,7 +106,9 @@ The last line in CMake script links the AUI.Views module which holds all UI rela
 
 Used to store dimensions in scalable units (dp, pt, etc...).
 
-It's highly recommended to use only Density-independent Pixel unit (_dp) to make your application correctly handle systems with high DPI.
+It's highly recommended to use only Density-independent Pixel unit (`_dp`) to make your application correctly handle
+systems with high DPI. In AUI, all units are density independent except `_px`. The only purpose of the `_px` unit is to
+define lines of exact one or two pixels wide.
 
 ### Initialization
 
@@ -147,6 +151,25 @@ Here's table of currently supported units:
 | Pixels                     | T_PX | _px     |
 
 
+## Assertions
+
+The whole AUI framework's code filled with assertion checks so if you do something wrong the framework will tell you
+about it. Also in AUI almost every assertion contains a quick tip how to solve the problem It is recommended to you to
+do the same. For example:
+
+```cpp
+assert(("AAbstractThread::processMessages() should not be called from other thread",
+        mId == std::this_thread::get_id()));
+```
+
+The code above ensures that the function was not called from some other thread. As you can see, the tooltip is produced
+using the `operator,`:
+
+```cpp
+assert(("your message", expression))
+```
+
+Assertions work only if `CMAKE_BUILD_TYPE` set to `Debug`.
 
 ## AStylesheet
 
@@ -154,7 +177,8 @@ AStylesheet is a class used for applying styles on views.
 
 ### Basic usage
 
-The example below defines a struct which constructor will be called on a program startup before the `main()` function. It applies red background for all AButtons and blue border for ATextFields.
+The example below defines a struct which constructor will be called on a program startup before the `main()` function is
+called. It applies red background for all AButtons and blue border for ATextFields.
 
 `Style.cpp`
 
@@ -173,13 +197,13 @@ struct Style {
         AStylesheet::inst().addRules({
             // first rule
             {
-                type_of<AButton>(),
+                t<AButton>(),
                 BackgroundSolid { 0xff0000_rgb }
             },
             
             // second rule
             {
-                type_of<ATextField>(),
+                t<ATextField>(),
                 Border { 1_px, 0x0000ff_rgb }
             },
         });
@@ -187,4 +211,6 @@ struct Style {
 } inst;
 ```
 
-The benefit of using way of defining struct is a simplicity: you don't have to define all styles in a function in the embedded file and call the function from the `main()`. Compiler automatically places call to the constructor of this struct before the `main()`.
+The benefit of using way of defining struct is a simplicity: you don't have to define all styles in a function in the
+embedded file and call the function from the `main()` function. Compiler automatically places call to the constructor of
+this struct before the `main()` function call.
