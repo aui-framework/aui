@@ -60,18 +60,19 @@ protected:
      */
     virtual void updateParentsLayoutIfNecessary();
 
+
+    /**
+     * \brief Move all children of specified container to this container
+     * \param container container
+     */
+    void setContents(const _<AViewContainer>& container);
+
 public:
 	AViewContainer();
 	virtual ~AViewContainer();
 	void addView(_<AView> view);
 	void removeView(_<AView> view);
 	void removeAllViews();
-
-	/**
-	 * \brief Move all children of specified container to this container
-	 * \param container container
-	 */
-	void setContents(const _<AViewContainer>& container);
 
 	void render() override;
 
