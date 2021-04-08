@@ -35,7 +35,7 @@ Before to get started, you have to compile AUI.
 
 ## Basic hello world
 
-**Project:** `projects/basic_hello_world`
+**Project:** `projects/hello_world/basic`
 
 Once you have compiled AUI, you can use it!
 
@@ -72,9 +72,12 @@ AUI_ENTRY {
 }
 ```
 
-Building and running this project, you are getting sure that AUI built properly and you are ready to build AUI applications!
+Building and running this project, you are getting sure that AUI built properly and you are ready to build AUI
+applications!
 
 ## Graphical hello world
+
+**Project:** `projects/hello_world/ui`
 
 Since AUI is graphical framework it allows to easily create windows, buttons, fields without any graphical UI toolkits.
 
@@ -98,10 +101,61 @@ target_link_libraries(graphical_example PRIVATE AUI.Views)
 
 The last line in CMake script links the AUI.Views module which holds all UI related functionality of the framework.
 
+The `main.cpp` file also contains some changes:
 
+`src/main.cpp`
+
+```cpp
+#include <AUI/Platform/Entry.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/Util/UIBuildingHelpers.h>
+
+class MyWindow: public AWindow {
+public:
+    MyWindow(): AWindow("Hello world", 300_dp, 200_dp)
+    {
+        setContents(
+            Stacked {
+                _new<ALabel>("Hello world!")
+            }
+        );
+    }
+};
+
+AUI_ENTRY {
+    _new<MyWindow>()->show();
+
+    return 0;
+}
+```
+
+Let's analyze this code line by line:
+
+- `#include <AUI/Platform/Entry.h>` for `AUI_ENTRY`;
+- `#include <AUI/Platform/AWindow.h>` for `AWindow`;
+- `#include <AUI/Util/UIBuildingHelpers.h>` for `Stacked` and `ALabel`;
+- `class MyWindow: public AWindow` we created our own window class because the `setContents` function is `protected`;
+- `MyWindow(): AWindow("Hello world", 300_dp, 200_dp)` specifies window title and size, `_dp` means density independent
+   screen unit (300_dp is 300 pixels with 100% DPI scale and 450 pixels with 150% DPI scale), for more info check the
+   AMetric section;
+- `setContents( ... )` updates the contents of the container (of the window in our case);
+- `Stacked { ... }` means the container of `AStackedLayout` layout manager, basically it centers all of its children
+   specified in the curly braces;
+- `_new<ALabel>("Hello world!")` is the only child of the stacked container, `_new` is an alias for the
+  `std::make_shared` function which returns `std::shared_ptr`, `ALabel` is a simple label (text on the screen),
+  arguments in braces are used to construct `ALabel`;
+- `_new<MyWindow>()->show();` creates a new instance of your window and pushes it to the AUI's window manager, which
+  references to your window which guards your window from destruction by `std::shared_ptr`.
+
+Please note that if any window in shown, an event loop is created after returning from the `AUI_ENTRY` function.
+
+The example above produces the following window:
+
+![Label](imgs/Screenshot_20210408_024201.jpg)
 
 # Reference
 
+<a name="ametric"></a>
 ## AMetric
 
 Used to store dimensions in scalable units (dp, pt, etc...).
