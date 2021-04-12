@@ -85,64 +85,9 @@ Check the `examples/` folder.
 ![Minesweeper](https://sun9-10.userapi.com/impf/AW9aUF7nuKdkiOfEz7WtsKqhYARlwVaFb_qV0g/0EGtNBty3NI.jpg?size=392x481&quality=96&proxy=1&sign=adbaf47dada836ab25868abf8db9b9d5&type=album)
 
 # Getting started
-## Building AUI
-### Windows
-1. Download the following dependencies:
-    - for `AUI.Views`: `freetype2`. Note that you need only `AUI.Views` for UI applications
-    - for `AUI.Crypt`: `OpenSSL`
-    - for `AUI.Curl`: `libcurl`
-2. Download and install [cmake-gui](https://cmake.org/download/)
-3. For each dependency:
-   1. Open project's dir as source dir in cmake-gui
-   2. Specify build folder
-   3. Configure
-   4. Generate
-   5. Open project (button in cmake-gui)
-   6. Build the `INSTALL` project. It will build the library and install to your system
-4. `git clone https://github.com/Alex2772/aui.git`
-5. `git submodule update --init --recursive`
-6. Repeat the third step but for AUI
 
-### *nix
-1. Download and install cmake and gcc
-2. `git clone https://github.com/Alex2772/aui.git`
-3. Download dependencies: `git submodule update --init --recursive`
-4. Install dependencies: `sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev`
-5. Create build folder and cd to it: `cd aui && mkdir build && cd build`
-6. Run `cmake ..`
-7. Run `make && sudo make install`
+Please check [docs/MANUAL.md]()
 
-## Creating own project
-`CMakeLists.txt`
-```cmake
-# Standard routine
-cmake_minimum_required(VERSION 3.16)
-project(project_template)
-
-# Link AUI
-find_package(AUI REQUIRED)
-
-# Create the executable. This function automatically links all sources from the src/ folder, creates CMake target and
-# places the resulting executable to bin/ folder.
-AUI_Executable(project_template)
-
-# Link required libs
-target_link_libraries(project_template PRIVATE AUI.Core)
-#target_link_libraries(project_template PRIVATE AUI.Views)
-#target_link_libraries(project_template PRIVATE AUI.Network)
-#target_link_libraries(project_template PRIVATE AUI.Data)
-```
-
-`src/main.cpp`
-```c++
-#include <AUI/Platform/Entry.h>
-#include <AUI/Logging/ALogger.h>
-
-AUI_ENTRY {
-    ALogger::info("Hello world!");
-    return 0;
-}
-```
 
 # Contributing
 You are always free to contribute to this project and add yourself to the authors list :)
