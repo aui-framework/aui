@@ -49,7 +49,7 @@ AStylesheet::AStylesheet() {
         // COMMON VIEWS ======================================
         // AView
         {
-            type_of<AView>(),
+            t<AView>(),
             TextColor { 0x0_rgb },
             FontSize {9_pt},
             FontRendering::SUBPIXEL,
@@ -57,30 +57,30 @@ AStylesheet::AStylesheet() {
 
         // AWindow
         {
-            type_of<AWindow>(),
+            t<AWindow>(),
             BackgroundSolid {0xf0f0f0_rgb},
             Padding { 4_dp },
         },
 
         // ALabel
         {
-            type_of<ALabel>(),
+            t<ALabel>(),
             Padding {1_dp, 0, 2_dp},
             VerticalAlign::MIDDLE,
         },
         // ALabel
         {
-            type_of<ALabel>::disabled(),
+            t<ALabel>::disabled(),
             TextColor { 0x444444_rgb },
         },
         {
-            type_of<ALabel>(),
+            t<ALabel>(),
             Margin {2_dp, 4_dp},
         },
 
         // AButton
         {
-            type_of<AButton>(),
+            t<AButton>(),
             BackgroundSolid {0xffffff_rgb},
             Padding {4_dp, 8_dp},
             Margin {2_dp, 4_dp},
@@ -90,15 +90,15 @@ AStylesheet::AStylesheet() {
             BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},
         },
         {
-            type_of<AButton>::hover(),
+            t<AButton>::hover(),
             Border {1_dp, getOsThemeColor() * glm::vec4(1, 1, 1, 0.3f)}
         },
         {
-            type_of<AButton>::active(),
+            t<AButton>::active(),
             BackgroundSolid{0xfafafa_rgb},
         },
         {
-            type_of<AButton>()["default"],
+            t<AButton>()["default"],
             FontRendering::ANTIALIASING,
             BackgroundGradient {getOsThemeColor().lighter(0.15f),
                                 getOsThemeColor().darker(0.15f),
@@ -108,26 +108,26 @@ AStylesheet::AStylesheet() {
             TextColor { 0xffffff_rgb },
         },
         {
-            type_of<AButton>::hover()["default"],
+            t<AButton>::hover()["default"],
             BoxShadow { 0, 1_dp, 6_dp, -1_dp, getOsThemeColor() },
         },
         {
-            type_of<AButton>::active(),
+            t<AButton>::active(),
             Padding {5_dp, 8_dp, 3_dp},
             BoxShadow { nullptr },
         },
         {
-            type_of<AButton>::hover()["default"],
+            t<AButton>::hover()["default"],
             BackgroundGradient {getOsThemeColor().lighter(0.2f),
                                 getOsThemeColor().darker(0.15f),
                                 LayoutDirection::VERTICAL },
         },
         {
-            type_of<AButton>::active()["default"],
+            t<AButton>::active()["default"],
             BackgroundSolid { getOsThemeColor() }
         },
         {
-            type_of<AButton>()["disabled"],
+            t<AButton>()["disabled"],
             BackgroundSolid { 0xcccccc_rgb },
             BoxShadow { nullptr },
             Border {1_dp, 0xbfbfbf_rgb },
@@ -136,7 +136,7 @@ AStylesheet::AStylesheet() {
 
         // Text fields
         {
-            type_of<AAbstractTextField>(),
+            t<AAbstractTextField>(),
             Padding { 3_dp, 6_dp },
             ACursor::TEXT,
         },
@@ -175,7 +175,7 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0xf0f0f0_rgb }
         },
         {
-            type_of<ANumberPicker>() >> type_of<AButton>(),
+            t<ANumberPicker>() >> t<AButton>(),
             Margin { 0 },
             Padding { 3_dp, 0 },
             FixedSize { 19_dp, {} },
@@ -184,15 +184,15 @@ AStylesheet::AStylesheet() {
 
         // ACheckBox
         {
-            type_of<ACheckBox>(),
+            t<ACheckBox>(),
             Margin { 1_dp, 4_dp },
         },
         {
-            type_of<ACheckBox>() > type_of<ALabel>(),
+            t<ACheckBox>() > t<ALabel>(),
             Margin { 1_dp, 4_dp },
         },
         {
-            type_of<ACheckBoxInner>(),
+            t<ACheckBoxInner>(),
             BackgroundSolid { 0xffffff_rgb },
             Margin { 1_dp, 1_dp, 1_dp, 4_dp },
             Border { 1_px, 0x333333_rgb },
@@ -200,26 +200,26 @@ AStylesheet::AStylesheet() {
             BackgroundImage {0x333333_rgb },
         },
         {
-            type_of<ACheckBoxInner>::hover(),
+            t<ACheckBoxInner>::hover(),
             Border { 1_px, 0x0078d7_rgb },
             BackgroundImage {0x0078d7_rgb },
         },
         {
-            type_of<ACheckBoxInner>::hover(),
+            t<ACheckBoxInner>::hover(),
             BackgroundSolid { 0xcce4f7_rgb },
             Border { 1_px, 0x005499_rgb },
             BackgroundImage {0x005499_rgb },
         },
         {
-            type_of<ACheckBox>()["checked"] > type_of<ACheckBoxInner>(),
+            t<ACheckBox>()["checked"] > t<ACheckBoxInner>(),
             BackgroundImage {":uni/svg/checkbox.svg" },
         },
         {
-            type_of<ACheckBox>()["disabled"] > type_of<ALabel>(),
+            t<ACheckBox>()["disabled"] > t<ALabel>(),
             TextColor { 0xa0a0a0_rgb },
         },
         {
-            type_of<ACheckBox>()["disabled"] > type_of<ACheckBoxInner>(),
+            t<ACheckBox>()["disabled"] > t<ACheckBoxInner>(),
             BackgroundSolid { 0xe5e5e5_rgb },
             BackgroundImage { 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
@@ -227,15 +227,15 @@ AStylesheet::AStylesheet() {
 
         // ARadioButton
         {
-            type_of<ARadioButton>(),
+            t<ARadioButton>(),
             Margin { 1_dp, 4_dp },
         },
         {
-            type_of<ARadioButton>() > type_of<ALabel>(),
+            t<ARadioButton>() > t<ALabel>(),
             Margin { 1_dp, 4_dp },
         },
         {
-            type_of<ARadioButtonInner>(),
+            t<ARadioButtonInner>(),
             BackgroundSolid { 0xffffff_rgb },
             Margin { 3_dp, 1_dp, 1_dp, 4_dp },
             Border { 1_px, 0x333333_rgb },
@@ -244,26 +244,26 @@ AStylesheet::AStylesheet() {
             BackgroundImage {0x333333_rgb },
         },
         {
-            type_of<ARadioButtonInner>::hover(),
+            t<ARadioButtonInner>::hover(),
             Border { 1_px, 0x0078d7_rgb },
             BackgroundImage {0x0078d7_rgb },
         },
         {
-            type_of<ARadioButtonInner>::hover(),
+            t<ARadioButtonInner>::hover(),
             BackgroundSolid { 0xcce4f7_rgb },
             Border { 1_px, 0x005499_rgb },
             BackgroundImage {0x005499_rgb },
         },
         {
-            type_of<ARadioButton>()["checked"] > type_of<ARadioButtonInner>(),
+            t<ARadioButton>()["checked"] > t<ARadioButtonInner>(),
             BackgroundImage {":uni/svg/radio.svg" },
         },
         {
-            type_of<ARadioButton>()["disabled"] > type_of<ALabel>(),
+            t<ARadioButton>()["disabled"] > t<ALabel>(),
             TextColor { 0xa0a0a0_rgb },
         },
         {
-            type_of<ARadioButton>()["disabled"] > type_of<ARadioButtonInner>(),
+            t<ARadioButton>()["disabled"] > t<ARadioButtonInner>(),
             BackgroundSolid { 0xe5e5e5_rgb },
             BackgroundImage { 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
@@ -271,13 +271,13 @@ AStylesheet::AStylesheet() {
 
         // AComboBox
         {
-            type_of<AComboBox>(),
+            t<AComboBox>(),
             TextAlign::LEFT,
         },
 
         // AListView
         {
-            type_of<AListView>(),
+            t<AListView>(),
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_px, 0x828790_rgb },
             Padding { 2_px, 0, 2_px, 2_px },
@@ -286,26 +286,26 @@ AStylesheet::AStylesheet() {
             Overflow::HIDDEN,
         },
         {
-            type_of<AListView>() > type_of<ALabel>(),
+            t<AListView>() > t<AViewContainer>() > t<ALabel>(),
             Margin { 0 },
             Padding { 1_px, 4_px, 4_px },
         },
         {
-            type_of<AListView>() > type_of<ALabel>::hover(),
+            t<AListView>() > t<AViewContainer>() > t<ALabel>::hover(),
             BackgroundSolid { 0xe5f3ff_rgb },
         },
         {
-            type_of<AListView>() > type_of<ALabel>()["selected"],
+            t<AListView>() > t<AViewContainer>() > t<ALabel>()["selected"],
             BackgroundSolid { 0xcde8ff_rgb },
         },
 
         // ADividerView
         {
-            type_of<AHDividerView>(),
+            t<AHDividerView>(),
             FixedSize { {}, 1_dp },
         },
         {
-            type_of<AVDividerView>(),
+            t<AVDividerView>(),
             FixedSize { 1_dp, {} },
         },
 
@@ -316,7 +316,7 @@ AStylesheet::AStylesheet() {
             FixedSize { {}, 30_dp }
         },
         {
-            class_of(".window-title") >> type_of<ALabel>(),
+            class_of(".window-title") >> t<ALabel>(),
             Margin { 0 },
             Padding { 7_dp },
             TextColor { 0xffffff_rgb }
@@ -340,11 +340,11 @@ AStylesheet::AStylesheet() {
             BackgroundImage {":uni/caption/close.svg" }
         },
         {
-            class_of(".window-title") >> type_of<AButton>::hover(),
+            class_of(".window-title") >> t<AButton>::hover(),
             BackgroundSolid { 0x20ffffff_argb },
         },
         {
-            class_of(".window-title") >> type_of<AButton>::active(),
+            class_of(".window-title") >> t<AButton>::active(),
             BackgroundSolid { 0x30ffffff_argb },
         },
         {

@@ -195,6 +195,7 @@ _<ALayout> AViewContainer::getLayout() const
 _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 {
     _<AView> possibleOutput = nullptr;
+
 	for (auto view : aui::reverse_iterator_wrap(mViews))
 	{
 		auto targetPos = pos - view->getPosition();
@@ -202,10 +203,12 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 		if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x && targetPos.y < view->getSize().y)
 		{
 			if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
-			    if (!possibleOutput)
-			        possibleOutput = view;
-                if (view->consumesClick(targetPos))
-			        return view;
+			    if (!possibleOutput) {
+                    possibleOutput = view;
+                }
+                if (view->consumesClick(targetPos)) {
+                    return view;
+                }
             }
 		}
 	}

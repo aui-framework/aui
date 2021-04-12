@@ -103,7 +103,7 @@ public:
 	void setLayout(_<ALayout> layout);
 	_<ALayout> getLayout() const;
 
-	_<AView> getViewAt(glm::ivec2 pos, bool ignoreGone = true);
+	virtual _<AView> getViewAt(glm::ivec2 pos, bool ignoreGone = true);
 	_<AView> getViewAtRecursive(glm::ivec2 pos);
 
 	template<typename T>

@@ -32,6 +32,7 @@ class AListViewContainer;
 
 class API_AUI_VIEWS AListView: public AViewContainer
 {
+    friend class AListItem;
 private:
     _<AListViewContainer> mContent;
     _<AScrollbar> mScrollbar;
@@ -39,6 +40,8 @@ private:
 	ASet<AModelIndex> mSelectionModel;
 
     void updateScrollbarDimensions();
+    void handleMousePressed(AListItem* item);
+    void handleMouseDoubleClicked(AListItem* item);
 	
 public:
     AListView(): AListView(nullptr) {}
@@ -51,17 +54,12 @@ public:
     int getContentFullHeight() {
         return getLayout()->getMinimumHeight() + 8;
     }
-	
-	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 
 	[[nodiscard]] AModelSelection<AString> getSelectionModel() const {
 	    return AModelSelection<AString>(mSelectionModel, mModel.get());
 	}
 
     void setSize(int width, int height) override;
-
-    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
-
     void onMouseWheel(glm::ivec2 pos, int delta) override;
 
 signals:

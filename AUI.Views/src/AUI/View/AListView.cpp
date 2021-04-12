@@ -31,6 +31,7 @@
 class AListViewContainer: public AViewContainer {
 private:
     int mScrollY = 0;
+    size_t mIndex = -1;
 
 public:
     void updateLayout() override {
@@ -40,9 +41,34 @@ public:
         updateParentsLayoutIfNecessary();
     }
 
+    _<AView> getViewAt(glm::ivec2 pos, bool ignoreGone) override {
+        switch (mViews.size()) {
+            case 0:
+                return nullptr;
+            case 1: {
+                auto v = AViewContainer::getViewAt(pos, ignoreGone);
+                mIndex = v ? 0 : -1;
+                return v;
+            }
+            default: {
+                mIndex = -1;
+                pos.y -= mScrollY;
+                pos.y /= mViews[1]->getPosition().y - mViews[0]->getPosition().y;
+                if (pos.y >= 0 && pos.y < mViews.size()) {
+                    return mViews[mIndex = pos.y];
+                }
+                return nullptr;
+            }
+        }
+    }
+
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
         updateLayout();
+    }
+
+    size_t getIndex() const {
+        return mIndex;
     }
 };
 
@@ -64,8 +90,11 @@ public:
 
 	virtual ~AListItem() = default;
 
+    void onMouseEnter() override {
+        AView::onMouseEnter();
+    }
 
-	void getCustomCssAttributes(AMap<AString, AVariant>& map) override
+    void getCustomCssAttributes(AMap<AString, AVariant>& map) override
 	{
 		ALabel::getCustomCssAttributes(map);
 		if (mSelected)
@@ -77,6 +106,18 @@ public:
 		mSelected = selected;
 		emit customCssPropertyChanged;
 	}
+
+    void onMousePressed(glm::ivec2 pos, AInput::Key button) override {
+        AView::onMousePressed(pos, button);
+
+        dynamic_cast<AListView*>(getParent()->getParent())->handleMousePressed(this);
+    }
+
+    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override {
+        AView::onMouseDoubleClicked(pos, button);
+
+        dynamic_cast<AListView*>(getParent()->getParent())->handleMouseDoubleClicked(this);
+    }
 };
 
 
@@ -86,34 +127,6 @@ int AListView::getContentMinimumHeight()
 	return 40;
 }
 
-void AListView::onMousePressed(glm::ivec2 pos, AInput::Key button)
-{
-	AViewContainer::onMousePressed(pos, button);
-
-	auto target = _cast<AListItem>(getViewAt(pos));
-	if (target) {
-	    if (!AInput::isKeyDown(AInput::LControl)) {
-	        for (auto& s : mSelectionModel) {
-                _cast<AListItem>(getViews()[s.getRow()])->setSelected(false);
-	        }
-
-	        mSelectionModel.clear();
-	    }
-	    mSelectionModel << AModelIndex(getViews().indexOf(target));
-	    target->setSelected(true);
-
-        emit selectionChanged(getSelectionModel());
-	}
-}
-
-void AListView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseDoubleClicked(pos, button);
-
-    auto target = _cast<AListItem>(getViewAt(pos));
-    if (target) {
-        emit itemDoubleClicked(getViews().indexOf(target));
-    }
-}
 
 AListView::~AListView()
 {
@@ -181,4 +194,23 @@ void AListView::updateScrollbarDimensions() {
 void AListView::onMouseWheel(glm::ivec2 pos, int delta) {
     //AViewContainer::onMouseWheel(pos, delta);
     mScrollbar->onMouseWheel(pos, delta);
+}
+
+void AListView::handleMousePressed(AListItem* item) {
+
+    if (!AInput::isKeyDown(AInput::LControl)) {
+        for (auto& s : mSelectionModel) {
+            _cast<AListItem>(mContent->getViews()[s.getRow()])->setSelected(false);
+        }
+
+        mSelectionModel.clear();
+    }
+    mSelectionModel << AModelIndex(mContent->getIndex());
+    item->setSelected(true);
+
+    emit selectionChanged(getSelectionModel());
+}
+
+void AListView::handleMouseDoubleClicked(AListItem* item) {
+    emit itemDoubleClicked(mContent->getIndex());
 }
