@@ -52,7 +52,7 @@ public:
             }
             default: {
                 mIndex = -1;
-                pos.y -= mScrollY;
+                pos.y += mScrollY;
                 pos.y /= mViews[1]->getPosition().y - mViews[0]->getPosition().y;
                 if (pos.y >= 0 && pos.y < mViews.size()) {
                     return mViews[mIndex = pos.y];
@@ -89,10 +89,6 @@ public:
 	}
 
 	virtual ~AListItem() = default;
-
-    void onMouseEnter() override {
-        AView::onMouseEnter();
-    }
 
     void getCustomCssAttributes(AMap<AString, AVariant>& map) override
 	{
@@ -178,6 +174,7 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
         });
     }
     updateLayout();
+    updateScrollbarDimensions();
     AWindow::current()->flagRedraw();
 }
 
@@ -194,6 +191,7 @@ void AListView::updateScrollbarDimensions() {
 void AListView::onMouseWheel(glm::ivec2 pos, int delta) {
     //AViewContainer::onMouseWheel(pos, delta);
     mScrollbar->onMouseWheel(pos, delta);
+    onMouseMove(pos); // update hover on scroll
 }
 
 void AListView::handleMousePressed(AListItem* item) {
