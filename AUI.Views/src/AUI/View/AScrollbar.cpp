@@ -116,7 +116,7 @@ void AScrollbar::updateScrollHandleSize() {
             break;
     }
 
-    size_t o = glm::max(float(10_dp), scrollbarSpace * mViewportSize / mFullSize);
+    size_t o = glm::max(float(15_dp), scrollbarSpace * mViewportSize / mFullSize);
 
     if (o < scrollbarSpace) {
         setEnabled();
@@ -137,22 +137,13 @@ void AScrollbar::updateScrollHandleSize() {
 
 void AScrollbar::setScroll(int scroll) {
     updateScrollHandleSize();
-    int max = mFullSize - mViewportSize + 10_dp;
+    int max = getMaxScroll();
     auto newScroll = glm::clamp(scroll, 0, max);
     if (mCurrentScroll != newScroll) {
         mCurrentScroll = newScroll;
 
-        float availableSpace;
+        float availableSpace = getAvailableSpaceForSpacer();
 
-
-        switch (mDirection) {
-            case LayoutDirection::HORIZONTAL:
-                availableSpace = getWidth() - (mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth() + mHandle->getTotalOccupiedWidth());
-                break;
-            case LayoutDirection::VERTICAL:
-                availableSpace = getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight() + mHandle->getTotalOccupiedHeight());
-                break;
-        }
 
         int handlePos = float(mCurrentScroll) / max * availableSpace;
 
@@ -199,4 +190,43 @@ void AScrollbar::scrollBackward() {
             AObject::disconnect();
         }
     });
+}
+
+void AScrollbar::handleScrollbar(int s) {
+    setScroll(mCurrentScroll + s * getMaxScroll() / getAvailableSpaceForSpacer());
+}
+
+int AScrollbar::getMaxScroll() {
+    return mFullSize - mViewportSize + 15_dp;
+}
+
+float AScrollbar::getAvailableSpaceForSpacer() {
+
+    switch (mDirection) {
+        case LayoutDirection::HORIZONTAL:
+            return getWidth() - (mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth() + mHandle->getTotalOccupiedWidth());
+
+        case LayoutDirection::VERTICAL:
+            return getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight() + mHandle->getTotalOccupiedHeight());
+
+    }
+    return 0;
+}
+
+void AScrollbarHandle::onMouseMove(glm::ivec2 pos) {
+    AView::onMouseMove(pos);
+    if (mDragging) {
+        dynamic_cast<AScrollbar*>(getParent())->handleScrollbar(pos.y - mScrollOffset);
+    }
+}
+
+void AScrollbarHandle::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+    AView::onMousePressed(pos, button);
+    mScrollOffset = pos.y;
+    mDragging = true;
+}
+
+void AScrollbarHandle::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
+    AView::onMouseReleased(pos, button);
+    mDragging = false;
 }

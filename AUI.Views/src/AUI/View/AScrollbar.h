@@ -37,10 +37,20 @@ public:
     }
 };
 class AScrollbarHandle: public AView {
+private:
+    int mScrollOffset = 0;
+    bool mDragging = false;
+
 public:
     AScrollbarHandle() {
 
     }
+
+    void onMouseMove(glm::ivec2 pos) override;
+
+    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+
+    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
     int getMinimumWidth() override {
         return 0;
@@ -65,6 +75,7 @@ public:
     }
 };
 class API_AUI_VIEWS AScrollbar: public AViewContainer {
+    friend class AScrollbarHandle;
 private:
     LayoutDirection mDirection;
     _<ASpacer> mOffsetSpacer;
@@ -81,18 +92,24 @@ private:
     void scrollForward();
     void scrollBackward();
 
+    void handleScrollbar(int s);
+
+    int getMaxScroll();
+
 public:
 
     explicit AScrollbar(LayoutDirection direction = LayoutDirection::VERTICAL);
 
     void setScrollDimensions(size_t viewportSize, size_t fullSize);
-
     void updateScrollHandleSize();
     void setScroll(int scroll);
-    void onMouseWheel(glm::ivec2 pos, int delta) override;
 
+    void onMouseWheel(glm::ivec2 pos, int delta) override;
 signals:
+
     emits<int> scrolled;
+
+    float getAvailableSpaceForSpacer();
 };
 
 
