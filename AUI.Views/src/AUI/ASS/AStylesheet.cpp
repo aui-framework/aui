@@ -283,6 +283,7 @@ AStylesheet::AStylesheet() {
             Padding { 2_px, 0, 2_px, 2_px },
             Margin {2_dp, 4_dp},
             Expanding { 0, 1 },
+            MinSize { 120_dp, 80_dp },
             Overflow::HIDDEN,
         },
         {

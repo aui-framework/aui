@@ -19,44 +19,31 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 13.04.2021.
+//
+
+
 #pragma once
 
-#include <AUI/Common/ASignal.h>
-#include "AUI/Common/AVariant.h"
-#include "AModelRange.h"
 
-template<typename T>
-class IListModel
-{
+#include <AUI/Common/AObject.h>
+#include <AUI/Common/AString.h>
+#include <AUI/Model/IListModel.h>
+
+
+class DemoListModel: public AObject, public IListModel<AString> {
+private:
+    size_t mListSize = 3;
+
 public:
-	virtual ~IListModel() = default;
+    virtual ~DemoListModel() = default;
 
-	virtual size_t listSize() = 0;
-	virtual T listItemAt(const AModelIndex& index) = 0;
+    size_t listSize() override;
+    AString listItemAt(const AModelIndex& index) override;
 
-	using stored_t = T;
-
-	AModelRange<T> range(const AModelIndex& begin, const AModelIndex& end) {
-        return AModelRange<T>(begin, end, this);
-	}
-
-	AModelRange<T> range(const AModelIndex& item) {
-        return AModelRange<T>(item, item, this);
-	}
-
-signals:
-    /**
-     * \brief Model data was changed
-     */
-    emits<AModelRange<T>> dataChanged;
-
-    /**
-     * \brief Model data was added
-     */
-    emits<AModelRange<T>> dataInserted;
-
-    /**
-     * \brief Model data about to remove
-     */
-    emits<AModelRange<T>> dataRemoved;
+    void addItem();
+    void removeItem();
 };
+
+

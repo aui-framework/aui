@@ -34,10 +34,12 @@
 #include "AUI/View/ANumberPicker.h"
 #include "AUI/View/ASpacer.h"
 #include "AUI/Util/UIBuildingHelpers.h"
+#include "DemoListModel.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/AComboBox.h>
 #include <AUI/i18n/AI18n.h>
 #include <AUI/View/ASelectableLabel.h>
+#include <AUI/View/AListView.h>
 
 void fillWindow(_<AViewContainer> t)
 {
@@ -140,26 +142,44 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                    w->close();
                mWindows.clear();
            }),
+
+
+           // list view
+           _new<ALabel>("List view"),
+           [] { // lambda style inlining
+               auto model = _new<DemoListModel>();
+
+               return Vertical {
+                       Horizontal {
+                           _new<AButton>("Add").connect(&AButton::clicked, slot(model)::addItem),
+                           _new<AButton>("Remove").connect(&AButton::clicked, slot(model)::removeItem),
+                           _new<ASpacer>(),
+                       },
+                       _new<AListView>(model)
+               };
+           }()
 		});
 
 	}
 
-	// fields
 	{
 		horizontal->addView(Vertical {
+            // fields
 		    _new<ALabel>("Fields"),
 		    _new<ALabel>("Text field"),
 		    _new<ATextField>(),
 		    _new<ALabel>("Number picker"),
 		    _new<ANumberPicker>(),
+
 		});
 	}
+
 
 	addView(Horizontal{
 		_new<ASpacer>(),
         _new<ACheckBox>("Enabled") let {
             it->setChecked();
-            connect(it->checked, horizontal, &AView::setEnabled);
+            connect(it->checked, slot(horizontal)::setEnabled);
         },
 		_new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") let {
 		    it->setEnabled(false);

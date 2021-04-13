@@ -130,7 +130,6 @@ AListView::~AListView()
 
 AListView::AListView(const _<IListModel<AString>>& model) {
     setModel(model);
-    updateScrollbarDimensions();
 }
 
 void AListView::setModel(const _<IListModel<AString>>& model) {

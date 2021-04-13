@@ -19,44 +19,31 @@
  * =====================================================================================================================
  */
 
-#pragma once
+//
+// Created by alex2 on 13.04.2021.
+//
 
-#include <AUI/Common/ASignal.h>
-#include "AUI/Common/AVariant.h"
-#include "AModelRange.h"
 
-template<typename T>
-class IListModel
-{
-public:
-	virtual ~IListModel() = default;
+#include "DemoListModel.h"
 
-	virtual size_t listSize() = 0;
-	virtual T listItemAt(const AModelIndex& index) = 0;
+#include <AUI/traits/strings.h>
 
-	using stored_t = T;
+size_t DemoListModel::listSize() {
+    return mListSize;
+}
 
-	AModelRange<T> range(const AModelIndex& begin, const AModelIndex& end) {
-        return AModelRange<T>(begin, end, this);
-	}
+AString DemoListModel::listItemAt(const AModelIndex& index) {
+    return "List item #{}"_as.format(index.getRow() + 1);
+}
 
-	AModelRange<T> range(const AModelIndex& item) {
-        return AModelRange<T>(item, item, this);
-	}
+void DemoListModel::addItem() {
+    mListSize += 1;
+    emit dataInserted(range({mListSize - 1}));
+}
 
-signals:
-    /**
-     * \brief Model data was changed
-     */
-    emits<AModelRange<T>> dataChanged;
-
-    /**
-     * \brief Model data was added
-     */
-    emits<AModelRange<T>> dataInserted;
-
-    /**
-     * \brief Model data about to remove
-     */
-    emits<AModelRange<T>> dataRemoved;
-};
+void DemoListModel::removeItem() {
+    if (mListSize > 0) {
+        mListSize -= 1;
+        emit dataRemoved(range({mListSize}));
+    }
+}
