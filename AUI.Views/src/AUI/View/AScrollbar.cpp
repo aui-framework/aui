@@ -32,17 +32,15 @@
 #include "ASpacer.h"
 
 
-AScrollbar::AScrollbar(LayoutDirection direction) : mDirection(direction) {
+AScrollbar::AScrollbar(LayoutDirection direction) :
+    mScrollButtonTimer(_new<ATimer>(80)),
+    mDirection(direction) {
 
     mForwardButton = _new<AScrollbarButton>();
     mBackwardButton = _new<AScrollbarButton>();
 
-    connect(mForwardButton->clicked, this, [&] {
-        setScroll(mCurrentScroll + 10);
-    });
-    connect(mBackwardButton->clicked, this, [&] {
-        setScroll(mCurrentScroll - 10);
-    });
+    connect(mForwardButton->mousePressed, me::scrollForward);
+    connect(mBackwardButton->mousePressed, me::scrollBackward);
 
     switch (direction) {
         case LayoutDirection::HORIZONTAL:
@@ -175,4 +173,30 @@ void AScrollbar::setScroll(int scroll) {
 void AScrollbar::onMouseWheel(glm::ivec2 pos, int delta) {
     AViewContainer::onMouseWheel(pos, delta);
     setScroll(mCurrentScroll + delta);
+}
+
+void AScrollbar::scrollForward() {
+    setScroll(mCurrentScroll + 10);
+    mScrollButtonTimer->start();
+    connect(mScrollButtonTimer->fired, this, [&] {
+        if (AInput::isKeyDown(AInput::LButton)) {
+            setScroll(mCurrentScroll + 10);
+        } else {
+            mScrollButtonTimer->stop();
+            AObject::disconnect();
+        }
+    });
+}
+
+void AScrollbar::scrollBackward() {
+    setScroll(mCurrentScroll - 10);
+    mScrollButtonTimer->start();
+    connect(mScrollButtonTimer->fired, this, [&] {
+        if (AInput::isKeyDown(AInput::LButton)) {
+            setScroll(mCurrentScroll - 10);
+        } else {
+            mScrollButtonTimer->stop();
+            AObject::disconnect();
+        }
+    });
 }

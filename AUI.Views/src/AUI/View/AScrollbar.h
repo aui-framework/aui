@@ -26,6 +26,7 @@
 #pragma once
 
 #include <AUI/Util/LayoutDirection.h>
+#include <AUI/Common/ATimer.h>
 #include "AViewContainer.h"
 #include "ASpacer.h"
 
@@ -70,11 +71,15 @@ private:
     _<AScrollbarHandle> mHandle;
     _<AScrollbarButton> mForwardButton;
     _<AScrollbarButton> mBackwardButton;
+    _<ATimer> mScrollButtonTimer;
 
     size_t mViewportSize = 0, mFullSize = 0;
     int mCurrentScroll = 0;
 
     void setOffset(size_t o);
+
+    void scrollForward();
+    void scrollBackward();
 
 public:
 
