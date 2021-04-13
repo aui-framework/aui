@@ -111,10 +111,10 @@ void AScrollbar::updateScrollHandleSize() {
 
     switch (mDirection) {
         case LayoutDirection::HORIZONTAL:
-            scrollbarSpace = getWidth() + mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth() + mHandle->getMargin().horizontal();
+            scrollbarSpace = getWidth() - (mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth());
             break;
         case LayoutDirection::VERTICAL:
-            scrollbarSpace = getHeight() + mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight() + mHandle->getMargin().vertical();
+            scrollbarSpace = getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight());
             break;
     }
 
@@ -138,11 +138,25 @@ void AScrollbar::updateScrollHandleSize() {
 }
 
 void AScrollbar::setScroll(int scroll) {
-    auto newScroll = glm::clamp(scroll, 0, int(mFullSize - mViewportSize));
+    updateScrollHandleSize();
+    int max = mFullSize - mViewportSize + 10_dp;
+    auto newScroll = glm::clamp(scroll, 0, max);
     if (mCurrentScroll != newScroll) {
         mCurrentScroll = newScroll;
 
-        int handlePos = float(mCurrentScroll) * float(mViewportSize) / mFullSize;
+        float availableSpace;
+
+
+        switch (mDirection) {
+            case LayoutDirection::HORIZONTAL:
+                availableSpace = getWidth() - (mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth() + mHandle->getTotalOccupiedWidth());
+                break;
+            case LayoutDirection::VERTICAL:
+                availableSpace = getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight() + mHandle->getTotalOccupiedHeight());
+                break;
+        }
+
+        int handlePos = float(mCurrentScroll) / max * availableSpace;
 
         switch (mDirection) {
             case LayoutDirection::HORIZONTAL:
