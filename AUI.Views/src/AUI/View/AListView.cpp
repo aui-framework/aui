@@ -152,23 +152,25 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
 
         connect(mModel->dataInserted, this, [&](const AModelRange<AString>& data) {
             for (const auto& row : data) {
-                mContent->addView(_new<AListItem>(row));
+                auto view = _new<AListItem>(row.get());
+                mContent->addView(row.getIndex().getRow(), view);
             }
             updateLayout();
+            updateScrollbarDimensions();
             redraw();
         });
         connect(mModel->dataChanged, this, [&](const AModelRange<AString>& data) {
-            for (size_t i = data.getBegin().getRow(); i != data.getEnd().getRow(); ++i) {
-                _cast<AListItem>(mContent->getViews()[i])->setText(data.getModel()->listItemAt(i));
+            for (const auto& row : data) {
+                _cast<AListItem>(mContent->getViews()[row.getIndex().getRow()])->setText(row.get());
             }
             redraw();
         });
         connect(mModel->dataRemoved, this, [&](const AModelRange<AString>& data) {
-            size_t index = data.getBegin().getRow();
-            for (size_t i = data.getBegin().getRow(); i < data.getEnd().getRow(); ++i) {
-                mContent->removeView(mViews[index]);
+            for (const auto& row : data) {
+                mContent->removeView(row.getIndex().getRow());
             }
             updateLayout();
+            updateScrollbarDimensions();
             redraw();
         });
     }

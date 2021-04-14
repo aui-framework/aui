@@ -70,8 +70,10 @@ protected:
 public:
 	AViewContainer();
 	virtual ~AViewContainer();
-	void addView(_<AView> view);
-	void removeView(_<AView> view);
+	void addView(const _<AView>& view);
+	void addView(size_t index, const _<AView>& view);
+	void removeView(const _<AView>& view);
+	void removeView(size_t index);
 	void removeAllViews();
 
 	void render() override;

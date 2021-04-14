@@ -21,14 +21,23 @@
 
 #include "ALayout.h"
 
-void ALayout::addView(const _<AView>& view)
+void ALayout::addView(size_t index, const _<AView>& view)
 {
-	mViews << view;
+	if (index == -1) {
+		mViews << view;
+	} else {
+		mViews.insert(mViews.begin() + index, view);
+	}
 }
 
-void ALayout::removeView(const _<AView>& view)
+void ALayout::removeView(size_t index, const _<AView>& view)
 {
-	mViews.remove(view);
+
+	if (index == -1) {
+		mViews.remove(view);
+	} else {
+		mViews.removeAt(index);
+	}
 }
 
 void ALayout::setSpacing(int spacing)

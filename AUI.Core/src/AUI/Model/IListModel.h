@@ -41,7 +41,7 @@ public:
 	}
 
 	AModelRange<T> range(const AModelIndex& item) {
-        return AModelRange<T>(item, item, this);
+        return AModelRange<T>(item, {item.getRow() + 1}, this);
 	}
 
 signals:

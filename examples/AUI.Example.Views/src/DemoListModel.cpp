@@ -26,7 +26,7 @@
 
 #include "DemoListModel.h"
 
-#include <AUI/traits/strings.h>
+#include <AUI/Traits/strings.h>
 
 size_t DemoListModel::listSize() {
     return mListSize;

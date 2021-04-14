@@ -63,19 +63,33 @@ AViewContainer::~AViewContainer()
 	//Stylesheet::inst().invalidateCache();
 }
 
-void AViewContainer::addView(_<AView> view)
+void AViewContainer::addView(const _<AView>& view)
 {
 	mViews << view;
 	view->mParent = this;
 	if (mLayout)
-		mLayout->addView(view);
+        mLayout->addView(-1, view);
+}
+void AViewContainer::addView(size_t index, const _<AView>& view)
+{
+	mViews.insert(mViews.begin() + index, view);
+	view->mParent = this;
+	if (mLayout)
+        mLayout->addView(index, view);
 }
 
-void AViewContainer::removeView(_<AView> view)
+void AViewContainer::removeView(const _<AView>& view)
 {
 	mViews.remove(view);
 	if (mLayout)
-		mLayout->removeView(view);
+        mLayout->removeView(-1, view);
+}
+
+void AViewContainer::removeView(size_t index)
+{
+	mViews.removeAt(index);
+	if (mLayout)
+        mLayout->removeView(index, nullptr);
 }
 
 void AViewContainer::render()
@@ -255,7 +269,7 @@ void AViewContainer::updateLayout()
 void AViewContainer::removeAllViews() {
     if (mLayout) {
         for (auto& x : getViews()) {
-            mLayout->removeView(x);
+            mLayout->removeView(0, x);
         }
     }
     mViews.clear();

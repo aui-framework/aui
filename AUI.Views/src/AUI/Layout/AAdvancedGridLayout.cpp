@@ -186,7 +186,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
     }
 }
 
-void AAdvancedGridLayout::addView(const _<AView>& view)
+void AAdvancedGridLayout::addView(size_t index, const _<AView>& view)
 {
     if (mCurrentIndex < mIndices.size())
     {
@@ -206,9 +206,11 @@ void AAdvancedGridLayout::addView(const _<AView>& view, int x, int y)
     mCells << GridCell{view, x, y};
 }
 
-void AAdvancedGridLayout::removeView(const _<AView>& view)
+void AAdvancedGridLayout::removeView(size_t index, const _<AView>& view)
 {
-    auto index = indexOf(view);
+    if (index == -1) {
+        index = indexOf(view);
+    }
 
     if (index != -1) {
         for (auto& i : mIndices)

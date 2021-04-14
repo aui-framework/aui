@@ -52,7 +52,14 @@ public:
         Iterator(const AModelIndex& index, IListModel<T>* model):
                 mIndex(index), mModel(model) {}
 
-        T operator*() {
+        Iterator& operator*() {
+            return *this;
+        }
+
+        auto& operator->() {
+            return mModel->listItemAt(mIndex);
+        }
+        auto get() const {
             return mModel->listItemAt(mIndex);
         }
 
@@ -69,6 +76,10 @@ public:
         bool operator==(const Iterator& other) const {
             assert(mModel == other.mModel);
             return mIndex.getRow() == other.mIndex.getRow();
+        }
+
+        [[nodiscard]] const AModelIndex& getIndex() const {
+            return mIndex;
         }
     };
 

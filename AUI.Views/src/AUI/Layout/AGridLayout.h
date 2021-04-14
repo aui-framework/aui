@@ -54,9 +54,9 @@ public:
 	}
 
 	void onResize(int x, int y, int width, int height) override;
-	void addView(const _<AView>& view) override;
+	void addView(size_t index, const _<AView>& view) override;
 	void addView(const _<AView>& view, int x, int y);
-	void removeView(const _<AView>& view) override;
+	void removeView(size_t index, const _<AView>& view) override;
 	int getMinimumWidth() override;
 	int getMinimumHeight() override;
 
