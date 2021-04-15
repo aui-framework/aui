@@ -62,14 +62,19 @@ _<AFuture<APath>> ADesktop::browseForFolder(const APath& startingLocation) {
         assert(SUCCEEDED(hr));
 
         pFileOpen->SetOptions(FOS_PICKFOLDERS);
-        IShellItem* psiFolder = nullptr;
-        for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
-            APath current = i;
-            current.replaceAll('/', '\\');
-            SHCreateItemFromParsingName(current.data(), nullptr, IID_IShellItem, reinterpret_cast<void**>(&psiFolder));
+        {
+            IShellItem* psiFolder = nullptr;
+            for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
+                APath current = i;
+                current.replaceAll('/', '\\');
+                SHCreateItemFromParsingName(current.data(), nullptr, IID_IShellItem,
+                                            reinterpret_cast<void**>(&psiFolder));
+            }
+            if (psiFolder) {
+                pFileOpen->SetFolder(psiFolder);
+                psiFolder->Release();
+            }
         }
-        pFileOpen->SetFolder(psiFolder);
-        psiFolder->Release();
 
         hr = pFileOpen->Show(NULL);
 
