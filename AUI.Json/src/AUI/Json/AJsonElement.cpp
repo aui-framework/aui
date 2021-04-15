@@ -46,6 +46,17 @@ bool AJsonElement::isArray() const
 	return mJson->isArray();
 }
 
+bool AJsonElement::isString() const {
+    return mJson->isVariant() && mJson->asVariant().isString();
+}
+bool AJsonElement::isBool() const {
+    return mJson->isVariant() && mJson->asVariant().isBool();
+}
+bool AJsonElement::isInt() const {
+    return mJson->isVariant() && mJson->asVariant().isInt();
+}
+
+
 const AVariant& AJsonElement::asVariant() const
 {
 	return mJson->asVariant();
@@ -54,6 +65,10 @@ const AVariant& AJsonElement::asVariant() const
 int AJsonElement::asInt() const
 {
 	return mJson->asVariant().toInt();
+}
+
+int AJsonElement::asBool() const {
+    return mJson->asVariant().toInt(); // TODO
 }
 
 AString AJsonElement::asString() const

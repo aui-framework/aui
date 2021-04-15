@@ -42,6 +42,11 @@ AJsonElement AJson::read(_<IInputStream> is) {
                     AString("unexpected character ") + t.getLastCharacter() + " at " + AString::number(t.getRow()) + ":"
                     + AString::number(t.getColumn()));
         };
+        auto unexpectedToken = [&](const AString& token) {
+            throw JsonException(
+                    AString("unexpected token ") + token + " at " + AString::number(t.getRow()) + ":"
+                    + AString::number(t.getColumn()));
+        };
 
         read = [&]() -> _<IJsonElement> {
             _<IJsonElement> result;
@@ -84,6 +89,30 @@ AJsonElement AJson::read(_<IInputStream> is) {
                         }
 
                         return result;
+
+                    case 't': // true?
+                    {
+                        t.reverseByte();
+                        auto s = t.readString();
+                        if (s == "true") {
+                            result = _new<JsonValue>(true);
+                            return result;
+                        }
+                        unexpectedToken(s);
+                        break;
+                    }
+
+                    case 'f': // false?
+                    {
+                        t.reverseByte();
+                        auto s = t.readString();
+                        if (s == "false") {
+                            result = _new<JsonValue>(true);
+                            return result;
+                        }
+                        unexpectedToken(s);
+                        break;
+                    }
 
                     case '\"':
                         result = _new<JsonValue>(t.readStringUntilUnescaped('\"').processEscapes());

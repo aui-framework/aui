@@ -176,35 +176,62 @@ public:
 	}
 
 	[[nodiscard]]
+	bool isInt() const noexcept {
+		return mStored->getType() == AVariantType::AV_INT;
+	}
+
+	[[nodiscard]]
     inline int toInt() const noexcept
 	{
 		return mStored->toInt();
 	}
 
 	[[nodiscard]]
+	bool isUInt() const noexcept {
+		return mStored->getType() == AVariantType::AV_UINT;
+	}
+	[[nodiscard]]
 	unsigned toUInt() const noexcept
 	{
 		return mStored->toInt();
 	}
 
+
+	[[nodiscard]]
+	bool isFloat() const noexcept {
+		return mStored->getType() == AVariantType::AV_FLOAT;
+	}
 	[[nodiscard]]
     inline float toFloat() const noexcept
 	{
 		return mStored->toFloat();
 	}
-	
+
+	[[nodiscard]]
+	bool isDouble() const noexcept {
+		return mStored->getType() == AVariantType::AV_DOUBLE;
+	}
 	[[nodiscard]]
     inline double toDouble() const noexcept
 	{
 		return mStored->toDouble();
 	}
 
+
+	[[nodiscard]]
+	bool isBool() const noexcept {
+		return mStored->getType() == AVariantType::AV_BOOL;
+	}
 	[[nodiscard]]
     inline bool toBool() const noexcept
 	{
 		return mStored->toBool();
 	}
 
+	[[nodiscard]]
+	bool isString() const noexcept {
+		return mStored->getType() == AVariantType::AV_STRING;
+	}
 	[[nodiscard]]
     inline AString toString() const noexcept
 	{

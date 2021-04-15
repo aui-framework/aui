@@ -52,7 +52,15 @@ public:
         Iterator(const ASet<AModelIndex>::iterator& iterator, IListModel<T>* model):
             mIterator(iterator), mModel(model) {}
 
-        T operator*() {
+
+        Iterator& operator*() {
+            return *this;
+        }
+
+        auto& operator->() {
+            return mModel->listItemAt(*mIterator);
+        }
+        auto get() const {
             return mModel->listItemAt(*mIterator);
         }
 
@@ -70,13 +78,18 @@ public:
             assert(mModel == other.mModel);
             return mIterator == other.mIterator;
         }
+
+        [[nodiscard]]
+        const AModelIndex& getIndex() const {
+            return *mIterator;
+        }
     };
 
     AModelSelection<T>::Iterator begin() const {
-        return mIndices.begin();
+        return {mIndices.begin(), mModel};
     }
     AModelSelection<T>::Iterator end() const {
-        return mIndices.end();
+        return {mIndices.end(), mModel};
     }
 
     [[nodiscard]] size_t size() const {

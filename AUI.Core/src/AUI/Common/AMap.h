@@ -89,6 +89,16 @@ public:
 		return parent::operator[](k);
 	}
 
+	const ValueType& operator[](KeyType&& k) const
+	{
+		return parent::at(std::forward<KeyType>(k));
+	}
+
+	const ValueType& operator[](const KeyType& k) const
+	{
+		return parent::at(k);
+	}
+
 	// ================
 
 	struct contains_iterator

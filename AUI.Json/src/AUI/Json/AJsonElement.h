@@ -62,9 +62,17 @@ public:
 	[[nodiscard]] bool isObject() const;
 	[[nodiscard]] bool isArray() const;
 	[[nodiscard]] bool isNull() const;
+	[[nodiscard]] bool isString() const;
+	[[nodiscard]] bool isBool() const;
+	[[nodiscard]] bool isInt() const;
+
+	[[nodiscard]] bool contains(const AString& key) const {
+	    return asObject().contains(key);
+	}
 
 	[[nodiscard]] const AVariant& asVariant() const;
 	[[nodiscard]] int asInt() const;
+	[[nodiscard]] int asBool() const;
 	[[nodiscard]] AString asString() const;
 	[[nodiscard]] AString asStringOrDefault(const AString& d = "") const {
 	    try {
