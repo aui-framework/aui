@@ -82,5 +82,4 @@ class AListModel: public SequenceContainerExtensions<aui::detail::AListModel<Sto
 public:
     using p::SequenceContainerExtensions;
 
-
 };

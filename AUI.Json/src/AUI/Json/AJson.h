@@ -24,9 +24,54 @@
 #include <AUI/IO/IOutputStream.h>
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/IO/IInputStream.h"
-#include "AUI/Json.h"
+#include "AUI/Basic.h"
 #include "AJsonElement.h"
+#include <AUI/Traits/arrays.h>
 
+
+namespace aui::json::impl {
+    struct helper {
+        template<typename T>
+        static void toJson(AJsonObject& j, const char*& name, T& value) {
+            const char* end;
+            for (end = name; *end && *end != ','; ++end);
+            j[AString(name, end)] = value;
+            if (*++end == ' ') { ++end; }
+            name = end;
+        }
+        template<typename T, typename... Args>
+        static void toJson(AJsonObject& j, const char* name, T& value, Args&... args) {
+            toJson(j, name, value);
+            toJson(j, name, std::forward<Args>(args)...);
+        }
+
+        template<typename T>
+        static void fromJson(const AJsonElement& j, const char*& name, T& value) {
+            const char* end;
+            for (end = name; *end && *end != ','; ++end);
+            value = j[AString(name, end)].asVariant().to<T>();
+            if (*++end == ' ') { ++end; }
+            name = end;
+        }
+        template<typename T, typename... Args>
+        static void fromJson(const AJsonElement& j, const char* name, T& value, Args&... args) {
+            fromJson(j, name, value);
+            fromJson(j, name, args...);
+        }
+    };
+}
+
+#define AJSON_FIELDS(...)                                                           \
+    AJsonObject toJson() const {                                                    \
+        AJsonObject j;                                                              \
+        const char* fieldNames = { #__VA_ARGS__ };                                  \
+        aui::json::impl::helper::toJson(j, fieldNames, __VA_ARGS__);                \
+        return j;                                                                   \
+    };                                                                              \
+    void readJson(const AJsonElement& json) {                                       \
+        const char* fieldNames = { #__VA_ARGS__ };                                  \
+        aui::json::impl::helper::fromJson(json, fieldNames, __VA_ARGS__);           \
+    };                                                                              \
 
 namespace AJson
 {

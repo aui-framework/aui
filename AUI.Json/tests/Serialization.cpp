@@ -19,7 +19,44 @@
  * =====================================================================================================================
  */
 
-#pragma once
-#pragma warning(disable: 4251)
+//
+// Created by alex2 on 30.08.2020.
+//
 
-#include "AUI/api.h"
+#include <boost/test/unit_test.hpp>
+#include <AUI/Common/AString.h>
+#include <AUI/Json/AJsonElement.h>
+#include <AUI/Json/AJson.h>
+
+using namespace boost::unit_test;
+BOOST_AUTO_TEST_SUITE(Json)
+
+
+struct Data {
+    AString name;
+    int year;
+
+    AJSON_FIELDS(name, year)
+};
+
+BOOST_AUTO_TEST_CASE(Serialization)
+{
+    Data d = {"Alex2772", 2020};
+    BOOST_CHECK_EQUAL(AJson::toString(d.toJson()), R"({"name":"Alex2772","year":2020})");
+}
+
+BOOST_AUTO_TEST_CASE(Deserialization)
+{
+    auto jsonString = R"({"name":"Azaza","year":2021})";
+    auto jsonParsed = AJson::fromString(jsonString);
+    BOOST_CHECK_EQUAL(AJson::toString(jsonParsed), jsonString);
+
+    Data d;
+    d.readJson(jsonParsed);
+    BOOST_CHECK_EQUAL(d.name, "Azaza");
+    BOOST_CHECK_EQUAL(d.year, 2021);
+}
+
+
+BOOST_AUTO_TEST_SUITE_END()
+

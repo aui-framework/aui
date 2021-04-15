@@ -21,7 +21,7 @@
 
 #pragma once
 
-#include <AUI/Json.h>
+#include <AUI/Basic.h>
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AUI/Common/AVariant.h"
 #include "AUI/Common/AMap.h"

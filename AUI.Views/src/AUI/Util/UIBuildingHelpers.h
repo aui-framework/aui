@@ -55,7 +55,7 @@ inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AVi
 {
 	auto c = _new<AViewContainer>();
 	c->setLayout(_new<AAdvancedGridLayout>(2, views.size()));
-
+	c->setExpanding({2, 0});
 	for (const auto& v : views) {
 		try {
 			c->addView(_new<ALabel>(std::get<AString>(v.first)));
@@ -63,6 +63,7 @@ inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AVi
 		catch (const std::bad_variant_access&) {
 			c->addView(std::get<_<AView>>(v.first));
 		}
+		v.second->setExpanding({2, 0});
 		c->addView(v.second);
 	}
 
