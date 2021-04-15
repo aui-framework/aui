@@ -21,7 +21,6 @@
 
 #pragma once
 #include "AUI/Common/AException.h"
-#include <AUI/Basic.h>
 
 class API_AUI_JSON JsonException: public AException
 {
