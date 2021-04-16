@@ -335,3 +335,11 @@ if (MINGW OR UNIX)
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 endif()
+
+# Coverage support
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if (UNIX)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} --coverage")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
+    endif()
+endif()
