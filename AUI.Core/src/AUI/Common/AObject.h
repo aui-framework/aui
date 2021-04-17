@@ -38,6 +38,8 @@ private:
     AMutex mSignalsLock;
     ASet<AAbstractSignal*> mSignals;
 	bool mSignalsEnabled = true;
+
+	static AObject*& sender_impl();
 	
 protected:
 	void disconnect();
@@ -57,6 +59,11 @@ public:
 		if constexpr (std::is_base_of_v<AObject, typename std::remove_pointer<Object>::type> && std::is_pointer_v<Object>) {
 			signal.connect(object, function);
 		}
+	}
+	template<class Signal, typename Function>
+	void connect(Signal& signal, Function function)
+	{
+        signal.connect(this, function);
 	}
 	template<class Signal, class Object, typename Function>
 	static void connect(Signal& signal, _<Object> object, Function function)

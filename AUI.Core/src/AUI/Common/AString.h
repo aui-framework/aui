@@ -297,18 +297,16 @@ public:
 
 	static AString numberHex(int i) noexcept;
 
-	static AString number(int8_t i) noexcept;
-	static AString number(int16_t i) noexcept;
-	static AString number(int32_t i) noexcept;
-	static AString number(int64_t i) noexcept;
-	static AString number(uint8_t i) noexcept;
-	static AString number(uint16_t i) noexcept;
-	static AString number(uint32_t i) noexcept;
-	static AString number(uint64_t i) noexcept;
-	static AString number(float i) noexcept;
-	static AString number(double i) noexcept;
-	static AString number(bool i) noexcept;
-
+    template<typename T, std::enable_if_t<std::is_integral_v<std::decay_t<T>> || std::is_floating_point_v<std::decay_t<T>>, int> = 0>
+	static AString number(T i) noexcept {
+	    if constexpr (std::is_same_v<bool, std::decay_t<T>>) {
+            if (i)
+                return "true";
+            return "false";
+	    } else {
+            return std::to_wstring(i);
+        }
+	}
 	int toNumberDec() const noexcept;
 	int toNumberHex() const noexcept;
 

@@ -134,6 +134,34 @@ template<> struct AVariantHelper<unsigned>: AVariantHelperNumeric<unsigned>
 	{
 	}
 };
+template<> struct AVariantHelper<short>: AVariantHelperNumeric<short>
+{
+	AVariantHelper(short stored)
+		: AVariantHelperNumeric<short>(stored)
+	{
+	}
+};
+template<> struct AVariantHelper<unsigned short>: AVariantHelperNumeric<unsigned short>
+{
+	AVariantHelper(unsigned short stored)
+		: AVariantHelperNumeric<unsigned short>(stored)
+	{
+	}
+};
+template<> struct AVariantHelper<long>: AVariantHelperNumeric<long>
+{
+	AVariantHelper(unsigned stored)
+		: AVariantHelperNumeric<long>(stored)
+	{
+	}
+};
+template<> struct AVariantHelper<unsigned long>: AVariantHelperNumeric<unsigned long>
+{
+	AVariantHelper(unsigned long stored)
+		: AVariantHelperNumeric<unsigned long>(stored)
+	{
+	}
+};
 template<> struct AVariantHelper<float>: AVariantHelperNumeric<float>
 {
 	AVariantHelper(float stored)

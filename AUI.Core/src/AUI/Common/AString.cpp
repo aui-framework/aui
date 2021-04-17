@@ -226,54 +226,8 @@ AString AString::fromLatin1(const char* buffer) {
 
     return s;
 }
-AString AString::number(int8_t i) noexcept
-{
-    return std::to_wstring(i);
-}
-AString AString::number(int16_t i) noexcept
-{
-    return std::to_wstring(i);
-}
-AString AString::number(int32_t i) noexcept
-{
-    return std::to_wstring(i);
-}
-AString AString::number(int64_t i) noexcept
-{
-    return std::to_wstring(i);
-}
-AString AString::number(uint8_t i) noexcept
-{
-    return std::to_wstring(i);
-}
-AString AString::number(uint16_t i) noexcept
-{
-    return std::to_wstring(i);
-}
-AString AString::number(uint32_t i) noexcept
-{
-    return std::to_wstring(i);
-}
 
-AString AString::number(uint64_t i) noexcept
-{
-    return std::to_wstring(i);
-}
-AString AString::number(float i) noexcept
-{
-    return std::to_wstring(i);
-}
-AString AString::number(double i) noexcept
-{
-    return std::to_wstring(i);
-}
 
-AString AString::number(bool i) noexcept
-{
-    if (i)
-        return "true";
-    return "false";
-}
 int AString::toNumberDec() const noexcept
 {
     int n;

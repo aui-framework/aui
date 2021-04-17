@@ -152,12 +152,19 @@ public:
         for (auto& applier : mLinkAppliers) {
             applier(mModel, field);
         }
+        emit modelChanged;
     }
 
     void addApplier(const Applier& applier) {
         mLinkAppliers << applier;
         mLinkAppliers.last()(mModel, -1);
     }
+
+signals:
+    /**
+     * \brief Data in the model has changed.
+     */
+    emits<> modelChanged;
 };
 
 template<typename Klass1, typename Klass2, typename Model, typename ModelField, typename GetterRV, typename SetterArg>

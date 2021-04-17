@@ -19,6 +19,7 @@
  * =====================================================================================================================
  */
 
+#include <AUI/Util/UIBuildingHelpers.h>
 #include "ACheckBox.h"
 #include "AUI/Layout/AHorizontalLayout.h"
 
@@ -35,7 +36,7 @@ ACheckBox::ACheckBox()
 	
 	mText = _new<ALabel>();
 	auto checkbox = _new<ACheckBoxInner>();
-	addView(checkbox);
+	addView(Stacked{checkbox});
 	addView(mText);
 
 	connect(checked, checkbox, &ACheckBoxInner::update);

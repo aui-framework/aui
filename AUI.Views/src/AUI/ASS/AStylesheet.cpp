@@ -168,6 +168,10 @@ AStylesheet::AStylesheet() {
 
         // ANumberPicker
         {
+            t<ANumberPicker>(),
+            MinSize { 60_dp, {} },
+        },
+        {
             class_of(".up-down-wrapper"),
             Padding { 1_px },
             Margin { 1_px },
@@ -211,7 +215,7 @@ AStylesheet::AStylesheet() {
             BackgroundImage {0x005499_rgb },
         },
         {
-            t<ACheckBox>()["checked"] > t<ACheckBoxInner>(),
+            t<ACheckBox>()["checked"] >> t<ACheckBoxInner>(),
             BackgroundImage {":uni/svg/checkbox.svg" },
         },
         {
@@ -219,7 +223,7 @@ AStylesheet::AStylesheet() {
             TextColor { 0xa0a0a0_rgb },
         },
         {
-            t<ACheckBox>()["disabled"] > t<ACheckBoxInner>(),
+            t<ACheckBox>()["disabled"] >> t<ACheckBoxInner>(),
             BackgroundSolid { 0xe5e5e5_rgb },
             BackgroundImage { 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },

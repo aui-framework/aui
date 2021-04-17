@@ -277,7 +277,7 @@ inline short AVariant::to<short>() const {
 }
 template<>
 inline unsigned short AVariant::to<unsigned short>() const {
-    return toInt();
+    return toUInt();
 }
 template<>
 inline long AVariant::to<long>() const {
