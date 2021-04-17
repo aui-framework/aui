@@ -86,3 +86,31 @@ signals:
 	 */
 	emits<> valueChanging;
 };
+
+namespace aui::impl {
+    template<typename Num>
+    struct ADataBindingDefaultNumberPicker {
+    public:
+
+        static void setup(const _<ANumberPicker>& view) {
+            view->setMin(std::numeric_limits<int>::min());
+            view->setMax(std::numeric_limits<int>::max());
+        }
+
+        static auto getGetter() {
+            return &ANumberPicker::valueChanged;
+        }
+
+        static auto getSetter() {
+            return &ANumberPicker::setValue;
+        }
+    };
+}
+
+template<> struct ADataBindingDefault<ANumberPicker, uint8_t>: aui::impl::ADataBindingDefaultNumberPicker<uint8_t> {};
+template<> struct ADataBindingDefault<ANumberPicker, int8_t>: aui::impl::ADataBindingDefaultNumberPicker<int8_t> {};
+template<> struct ADataBindingDefault<ANumberPicker, uint16_t>: aui::impl::ADataBindingDefaultNumberPicker<uint16_t> {};
+template<> struct ADataBindingDefault<ANumberPicker, int16_t>: aui::impl::ADataBindingDefaultNumberPicker<int16_t> {};
+template<> struct ADataBindingDefault<ANumberPicker, uint32_t>: aui::impl::ADataBindingDefaultNumberPicker<uint32_t> {};
+template<> struct ADataBindingDefault<ANumberPicker, int32_t>: aui::impl::ADataBindingDefaultNumberPicker<int32_t> {};
+

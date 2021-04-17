@@ -75,6 +75,7 @@ signals:
 template<>
 struct ADataBindingDefault<ACheckBox, bool> {
 public:
+    static void setup(const _<ACheckBox>& view) {}
     static auto getGetter() {
         return &ACheckBox::checked;
     }

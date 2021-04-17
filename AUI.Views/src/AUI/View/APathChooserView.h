@@ -45,3 +45,16 @@ signals:
 };
 
 
+
+template<>
+struct ADataBindingDefault<APathChooserView, APath> {
+public:
+    static auto setup(const _<APathChooserView>& v) {}
+
+    static auto getGetter() {
+        return &APathChooserView::changed;
+    }
+    static auto getSetter() {
+        return &APathChooserView::setPath;
+    }
+};

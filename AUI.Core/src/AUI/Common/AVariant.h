@@ -272,6 +272,14 @@ inline int AVariant::to<int>() const {
     return toInt();
 }
 template<>
+inline short AVariant::to<short>() const {
+    return toInt();
+}
+template<>
+inline unsigned short AVariant::to<unsigned short>() const {
+    return toInt();
+}
+template<>
 inline long AVariant::to<long>() const {
     return toInt();
 }
@@ -305,6 +313,10 @@ inline double AVariant::to<double>() const {
 
 template<>
 inline AString AVariant::to<AString>() const {
+    return toString();
+}
+template<>
+inline APath AVariant::to<APath>() const {
     return toString();
 }
 template<>

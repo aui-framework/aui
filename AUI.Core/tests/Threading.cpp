@@ -104,6 +104,7 @@ BOOST_AUTO_TEST_SUITE(Threading)
         BOOST_CHECK_EQUAL(**v1231, 1231.f);
     }
 
+    /*
     BOOST_AUTO_TEST_CASE(Fence) {
         std::default_random_engine e(std::time(nullptr));
         repeat(10) {
@@ -127,6 +128,6 @@ BOOST_AUTO_TEST_SUITE(Threading)
             });
             BOOST_CHECK_EQUAL(test, 1000);
         }
-    }
+    }*/
 
 BOOST_AUTO_TEST_SUITE_END()

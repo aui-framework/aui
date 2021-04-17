@@ -29,6 +29,12 @@
 template<typename View, typename FieldType>
 struct ADataBindingDefault {
 public:
+    /**
+     * Called then view linked with field.
+     * @param view
+     */
+    static void setup(const _<View>& view) {}
+
     static ASignal<FieldType>(View::*getGetter()) {
         return nullptr;
     }
@@ -40,17 +46,17 @@ public:
 template <typename Model>
 class ADataBinding;
 
-template<typename Model, typename Klass, typename Data>
+template<typename Model, typename Klass, typename ModelField, typename Getter, typename Setter>
 class ADataBindingLinker {
 private:
     ADataBinding<Model>* mBinder;
-    void(Klass::*mSetterFunc)(Data);
-    std::decay_t<Data>(Model::*mField);
-    ASignal<std::decay_t<Data>>(Klass::*mGetter);
+    void(Klass::*mSetterFunc)(Setter);
+    std::decay_t<ModelField>(Model::*mField);
+    ASignal<std::decay_t<Getter>>(Klass::*mGetter);
 
 public:
-    ADataBindingLinker(ADataBinding<Model>* binder, ASignal<std::decay_t<Data>>(Klass::*getter), void (Klass::*setterFunc)(Data),
-                       std::decay_t<Data>(Model::*field)):
+    ADataBindingLinker(ADataBinding<Model>* binder, ASignal<std::decay_t<Getter>>(Klass::*getter), void (Klass::*setterFunc)(Setter),
+                       std::decay_t<ModelField>(Model::*field)):
         mBinder(binder), mGetter(getter), mSetterFunc(setterFunc), mField(field) {}
 
     ADataBinding<Model>* getBinder() const {
@@ -99,20 +105,27 @@ private:
 
 public:
 
-    virtual ~ADataBinding() = default;
-    template<typename Klass, typename Data>
-    ADataBindingLinker<Model, Klass, Data> operator()(std::decay_t<Data>(Model::*field), void(Klass::*setterFunc)(Data)) {
-        assert(setterFunc != nullptr);
-        return ADataBindingLinker<Model, Klass, Data>(this, nullptr, setterFunc, field);
+    ADataBinding() = default;
+    explicit ADataBinding(const Model& m):
+        mModel(m)
+    {
+        update();
     }
-    template<typename Klass, typename Data1, typename Data2>
-    ADataBindingLinker<Model, Klass, Data1> operator()(std::decay_t<Data1>(Model::*field), ASignal<Data2>(Klass::*getter), void(Klass::*setterFunc)(Data1) = nullptr) {
-        static_assert(std::is_same_v<std::decay_t<Data2>, std::decay_t<Data1>>, "ASignal argument, field and setter"
-                                                                                "argument types must be the same");
+
+    virtual ~ADataBinding() = default;
+    template<typename View, typename ModelField, typename SetterArg>
+    ADataBindingLinker<Model, View, std::decay_t<ModelField>, std::decay_t<ModelField>, SetterArg> operator()(ModelField(Model::*field), void(View::*setterFunc)(SetterArg)) {
+        assert(setterFunc != nullptr);
+        return ADataBindingLinker<Model, View, std::decay_t<ModelField>, std::decay_t<ModelField>, SetterArg>(this, nullptr, setterFunc, field);
+    }
+    template<typename View, typename ModelField, typename GetterRV, typename SetterArg>
+    ADataBindingLinker<Model, View, std::decay_t<ModelField>, GetterRV, SetterArg> operator()(ModelField(Model::*field),
+                                                                                ASignal<GetterRV>(View::*getter),
+                                                                                void(View::*setterFunc)(SetterArg) = nullptr) {
         assert((getter != nullptr || setterFunc != nullptr) &&
-               "implement ADataBindingDefault for your type in order to use default binding");
+               "implement ADataBindingDefault for your view in order to use default binding");
         assert(getter != nullptr);
-        return ADataBindingLinker<Model, Klass, Data1>(this, getter, setterFunc, field);
+        return ADataBindingLinker<Model, View, std::decay_t<ModelField>, GetterRV, SetterArg>(this, getter, setterFunc, field);
     }
 
     template<typename Data>
@@ -147,14 +160,14 @@ public:
     }
 };
 
-template<typename Klass1, typename Klass2, typename Model, typename Data>
-_<Klass1> operator&&(const _<Klass1>& object, const ADataBindingLinker<Model, Klass2, Data>& linker) {
+template<typename Klass1, typename Klass2, typename Model, typename ModelField, typename GetterRV, typename SetterArg>
+_<Klass1> operator&&(const _<Klass1>& object, const ADataBindingLinker<Model, Klass2, ModelField, GetterRV, SetterArg>& linker) {
     union converter {
        unsigned i;
        decltype(linker.getField()) p;
     };
     if (linker.getGetter()) {
-        AObject::connect(object.get()->*(linker.getGetter()), linker.getBinder(), [object, linker](const Data& data) {
+        AObject::connect(object.get()->*(linker.getGetter()), linker.getBinder(), [object, linker](const GetterRV& data) {
             object->setSignalsEnabled(false);
             linker.getBinder()->getEditableModel().*(linker.getField()) = data;
             converter c;
@@ -181,6 +194,7 @@ _<Klass1> operator&&(const _<Klass1>& object, const ADataBindingLinker<Model, Kl
 
 template<typename View, typename Model, typename Data>
 _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>& linker) {
+    ADataBindingDefault<View, Data>::setup(object);
     object && (*linker.getBinder())(linker.getField(),
                                     ADataBindingDefault<View, Data>::getGetter(),
                                     ADataBindingDefault<View, Data>::getSetter());

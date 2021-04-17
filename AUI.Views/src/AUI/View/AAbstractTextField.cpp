@@ -372,7 +372,7 @@ void AAbstractTextField::setText(const AString& t)
 	updateCursorBlinking();
 
     invalidatePrerenderedString();
-	emit textChanged;
+	emit textChanged(t);
 }
 
 void AAbstractTextField::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) {
