@@ -134,6 +134,7 @@ public:
 	AJsonArray(const AVector<AJsonElement>& value);
 	AJsonArray();
 
+	bool empty() const;
 	void push_back(const AJsonElement& value);
 	AJsonArray& operator<<(const AJsonElement& value);
 

@@ -170,5 +170,9 @@ AJsonArray AJsonArray::fromVariantArray(const AVector<AVariant>& value) {
     return AJsonArray(a);
 }
 
+bool AJsonArray::empty() const {
+    return mJson->asArray().empty();
+}
+
 
 
