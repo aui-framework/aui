@@ -34,30 +34,40 @@ BOOST_AUTO_TEST_SUITE(Json)
 
 BOOST_AUTO_TEST_CASE(ObjectAssignValue)
 {
+    // arrange data
     AJsonObject o;
     o["name"] = "Alex2772";
     o["year"] = 2020;
 
-    BOOST_CHECK_EQUAL(AJson::toString(o), "{\"name\":\"Alex2772\",\"year\":2020}");
+    // check for resulting json
+    BOOST_CHECK_EQUAL(AJson::toString(o), R"({"name":"Alex2772","year":2020})");
 }
 
 BOOST_AUTO_TEST_CASE(ObjectAssignObject)
 {
+    // arrange data
     AJsonObject o;
     o["name"] = "Alex2772";
     o["year"] = 2020;
 
     AJsonObject root;
+    // assign object to another object. this is what we want check for
     root["user"] = o;
 
-    BOOST_CHECK_EQUAL(AJson::toString(root), "{\"user\":{\"name\":\"Alex2772\",\"year\":2020}}");
+    // check for resulting json
+    BOOST_CHECK_EQUAL(AJson::toString(root), R"({"user":{"name":"Alex2772","year":2020}})");
 }
 BOOST_AUTO_TEST_CASE(StringEscape)
 {
+    // arrange data
     AJsonObject root;
     root["user"] = "u\"";
     auto s = AJson::toString(root);
-    BOOST_CHECK_EQUAL(s, "{\"user\":\"u\\\"\"}");
+
+    // check for whole composition
+    BOOST_CHECK_EQUAL(s, R"({"user":"u\""})");
+
+    // check for string itself
     auto deserialized = AJson::fromString(s);
     BOOST_CHECK_EQUAL(deserialized["user"].asString(), "u\"");
 }

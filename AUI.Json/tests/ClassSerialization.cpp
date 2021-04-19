@@ -31,7 +31,7 @@
 using namespace boost::unit_test;
 BOOST_AUTO_TEST_SUITE(Json)
 
-
+// ORM data class
 struct Data {
     AString name;
     int year;
@@ -39,20 +39,31 @@ struct Data {
     AJSON_FIELDS(name, year)
 };
 
-BOOST_AUTO_TEST_CASE(Serialization)
+BOOST_AUTO_TEST_CASE(ClassSerialization)
 {
+    // arrange
     Data d = {"Alex2772", 2020};
+
+    // check for serialization
     BOOST_CHECK_EQUAL(AJson::toString(d.toJson()), R"({"name":"Alex2772","year":2020})");
 }
 
-BOOST_AUTO_TEST_CASE(Deserialization)
+BOOST_AUTO_TEST_CASE(ClassDeserialization)
 {
+    // arrange
     auto jsonString = R"({"name":"Azaza","year":2021})";
+
+    // deserialize
     auto jsonParsed = AJson::fromString(jsonString);
+
+    // when serialized back, the json should not change
     BOOST_CHECK_EQUAL(AJson::toString(jsonParsed), jsonString);
 
+    // read json
     Data d;
     d.readJson(jsonParsed);
+
+    // assert
     BOOST_CHECK_EQUAL(d.name, "Azaza");
     BOOST_CHECK_EQUAL(d.year, 2021);
 }
