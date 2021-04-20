@@ -24,7 +24,7 @@
 
 #include "AString.h"
 
-class API_AUI_CORE AException
+class API_AUI_CORE AException: public std::exception
 {
 private:
 	AString mMessage;
@@ -45,4 +45,6 @@ public:
 	{
 		return mMessage;
 	}
+
+    const char* what() const noexcept override;
 };

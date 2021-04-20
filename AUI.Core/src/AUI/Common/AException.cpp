@@ -24,3 +24,10 @@
 AException::~AException() noexcept
 {
 }
+
+const char* AException::what() const noexcept {
+    static thread_local std::string s;
+    s = getMessage().toStdString();
+    return s.c_str();
+}
+
