@@ -58,7 +58,7 @@ uint8_t AUuid::fromHex(char c) {
     if (c >= 'A' && c <= 'F')
         return c - 'A' + 10;
 
-    throw AUuidException("invalid hex char in uuid: " + c);
+    throw AUuidException("invalid hex char in uuid: "_as + c);
 }
 
 AString AUuid::toString() const {

@@ -30,13 +30,14 @@
 /**
  * AUI universally unique identifier (UUID) implementation
  */
-class AUuid {
+class API_AUI_CORE AUuid {
 private:
     std::array<uint8_t, 16> mData;
 
     static uint8_t fromHex(char c);
 
 public:
+    AUuid() = default;
     explicit AUuid(const std::array<uint8_t, 16>& data) : mData(data) {}
 
     /**
