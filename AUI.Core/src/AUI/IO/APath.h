@@ -128,6 +128,16 @@ public:
     [[nodiscard]] APath file(const AString& fileName) const;
 
     /**
+     * \brief Path of the child element. Relevant only for folders.
+     * \example with fileName = work: <pre>/home/user -> /home/user/work</pre>
+     * \param name of child file
+     * \return path to child file relatively to this folder
+     */
+    [[nodiscard]] APath operator[](const AString& fileName) const {
+        return file(fileName);
+    }
+
+    /**
      * \brief File name.
      * \example <pre>/home/user/file.cpp -> file.cpp
      * \return file name

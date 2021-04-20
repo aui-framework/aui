@@ -34,16 +34,15 @@ namespace aui {
     template <typename T>
     struct reverse_iterator_wrap {
     private:
-        T& mIterable;
+        const T& mIterable;
 
     public:
-        using iterator = typename T::reverse_iterator;
-        reverse_iterator_wrap(T& mIterable) : mIterable(mIterable) {}
+        reverse_iterator_wrap(const T& mIterable) : mIterable(mIterable) {}
 
-        iterator begin() {
+        auto begin() {
             return mIterable.rbegin();
         }
-        iterator end() {
+        auto end() {
             return mIterable.rend();
         }
     };
