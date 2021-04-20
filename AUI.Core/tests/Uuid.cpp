@@ -31,6 +31,7 @@
 #include <random>
 #include <ctime>
 #include <AUI/Common/AUuid.h>
+#include <AUI/Util/ARandom.h>
 
 using namespace boost::unit_test;
 
@@ -45,6 +46,14 @@ BOOST_AUTO_TEST_SUITE(Uuid)
         AString s = "123e4567e89b12d3a456426655440000";
         AUuid uuid = s;
         BOOST_CHECK_EQUAL(uuid.toRawString(), s);
+    }
+    BOOST_AUTO_TEST_CASE(Random) {
+        ARandom r;
+        repeat(100) {
+            auto u = r.nextUuid();
+            AUuid(u.toString());
+            AUuid(u.toRawString());
+        }
     }
 
     BOOST_AUTO_TEST_CASE(ExceptionOverflow) {

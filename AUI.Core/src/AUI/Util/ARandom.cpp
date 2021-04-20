@@ -24,7 +24,7 @@
 
 ARandom::ARandom()
 {
-	mRandom.seed(std::time(nullptr));
+	mRandom.seed(std::time(nullptr) ^ std::chrono::high_resolution_clock::now().time_since_epoch().count());
 }
 
 int ARandom::nextInt()
@@ -62,4 +62,12 @@ AByteBuffer ARandom::nextBytes(unsigned count)
 		buf.put(reinterpret_cast<char*>(&c), 1);
 	}
 	return buf;
+}
+
+AUuid ARandom::nextUuid() {
+	std::array<uint8_t, 16> array;
+	for (auto& v : array) {
+		v = std::uniform_int_distribution<unsigned>()(mRandom) % 0xff;
+	}
+	return AUuid(array);
 }

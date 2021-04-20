@@ -22,6 +22,7 @@
 #pragma once
 #include <random>
 #include <glm/glm.hpp>
+#include <AUI/Common/AUuid.h>
 #include "AUI/Core.h"
 #include "AUI/Common/AByteBuffer.h"
 
@@ -33,6 +34,7 @@ private:
 public:
 	ARandom();
 
+	AUuid nextUuid();
 	int nextInt();
 	float nextFloat();
 	float nextFloat(float min, float max);

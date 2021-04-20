@@ -85,7 +85,7 @@ public:
     }
 };
 
-std::ostream& operator<<(std::ostream& o, const AUuid& u) {
+inline std::ostream& operator<<(std::ostream& o, const AUuid& u) {
     o << "urn:uuid:" << u.toString();
     return o;
 }
