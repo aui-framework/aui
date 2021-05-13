@@ -33,6 +33,7 @@
 
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
     AStringVector args;
+    AThread::current()->setThreadName("UI thread");
 #if defined(_WIN32)
     if (argc == 0) {
         // remove quotation marks

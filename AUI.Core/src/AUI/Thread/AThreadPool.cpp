@@ -31,6 +31,7 @@ AThreadPool::Worker::Worker(AThreadPool& tp) :
 })),
 mTP(tp)
 {
+	mThread->setThreadName("AThreadPool worker #" + AString::number(mTP.mWorkers.size() + 1));
 	mThread->start();
 }
 

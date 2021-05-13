@@ -29,10 +29,13 @@
 #include <windows.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Logging/ALogger.h>
+#include <psapi.h>
+#include <AUI/IO/FileInputStream.h>
+#include <AUI/Util/ATokenizer.h>
 
 
 int AProcess::execute(const AString& applicationFile, const AString& args, const APath& workingDirectory, bool waitForExit) {
-    AProcess p(applicationFile);
+    AChildProcess p(applicationFile);
     p.setArgs(args);
     p.setWorkingDirectory(workingDirectory);
     p.run();
@@ -65,7 +68,73 @@ void AProcess::executeAsAdministrator(const AString& applicationFile, const AStr
     }
 }
 
-void AProcess::run() {
+class AOtherProcess: public AProcess {
+private:
+    HANDLE mHandle;
+
+public:
+    AOtherProcess(HANDLE handle) : mHandle(handle) {}
+
+    ~AOtherProcess() {
+        CloseHandle(mHandle);
+    }
+
+    void wait() override {
+        WaitForSingleObject(mHandle, INFINITE);
+    }
+
+    int getExitCode() override {
+        DWORD exitCode;
+        wait();
+        int r = GetExitCodeProcess(mHandle, &exitCode);
+        assert(r && r != STILL_ACTIVE);
+        return exitCode;
+    }
+
+    APath getModuleName() override {
+        wchar_t buf[0x800];
+        GetProcessImageFileName(mHandle, buf, sizeof(buf));
+        return APath(buf).filename();
+    }
+
+    uint32_t getPid() override {
+        return GetProcessId(mHandle);
+    }
+};
+
+AVector<_<AProcess>> AProcess::all() {
+    // get the list of process identifiers.
+    DWORD pids[4096], processCountInBytes, processCount;
+    unsigned int i;
+
+    if (!EnumProcesses(pids, sizeof(pids), &processCountInBytes))
+    {
+        throw AException("could not retrieve process data");
+    }
+
+
+    // calculate how many process identifiers were returned.
+    processCount = processCountInBytes / sizeof(DWORD);
+
+    AVector<_<AProcess>> result;
+    for ( i = 0; i < processCount; i++ )
+    {
+        if(pids[i] != 0 )
+        {
+            if (auto p = fromPid(pids[i])) {
+                result << p;
+            }
+        }
+    }
+
+    return result;
+}
+
+_<AProcess> AProcess::self() {
+    return _new<AOtherProcess>(GetCurrentProcess());
+}
+
+void AChildProcess::run() {
     STARTUPINFO startupInfo;
     aui::zero(startupInfo);
     startupInfo.cb = sizeof(startupInfo);
@@ -91,16 +160,24 @@ void AProcess::run() {
 
 }
 
-void AProcess::wait() {
+void AChildProcess::wait() {
     WaitForSingleObject(mProcessInformation.hProcess, INFINITE);
 }
 
-int AProcess::getExitCode() {
+int AChildProcess::getExitCode() {
     DWORD exitCode;
     wait();
     int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
     assert(r && r != STILL_ACTIVE);
     return exitCode;
+}
+
+_<AProcess> AProcess::fromPid(uint32_t pid) {
+    auto handle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid);
+    if (handle) {
+        return _new<AOtherProcess>(handle);
+    }
+    return nullptr;
 }
 
 #else
@@ -134,3 +211,66 @@ int AProcess::getExitCode() {
 }
 #endif
 
+
+
+_<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
+    // try to find in task list
+    auto list = all();
+    auto s = self();
+    auto name = s->getModuleName();
+    auto pid = s->getPid();
+    auto it = std::find_if(list.begin(), list.end(), [&](const _<AProcess>& v) {
+        return v->getModuleName() == name && pid != v->getPid();
+    });
+    if (it != list.end()) {
+        return *it;
+    }
+
+    // try to find by tmp file
+    auto f = APath::getDefaultPath(APath::TEMP)["." + yourProjectName + ".pid"];
+    try {
+        ATokenizer t(_new<FileInputStream>(f));
+        auto p = t.readInt();
+
+        return AProcess::fromPid(p);
+    } catch (...) {}
+
+    try {
+        struct RemoveHelper {
+        private:
+            APath mPath;
+
+        public:
+            RemoveHelper(APath&& path) : mPath(std::forward<APath>(path)) {
+                auto fos = _new<FileOutputStream>(mPath);
+
+                auto n = std::to_string(self()->getPid());
+                fos->write(n.c_str(), n.length());
+                fos->close();
+            }
+
+            ~RemoveHelper() {
+                try {
+                    mPath.removeFile();
+                } catch (...) {
+
+                }
+            }
+        };
+        static RemoveHelper rh(std::move(f));
+    } catch (...) {
+
+    }
+
+
+    return nullptr;
+}
+
+
+APath AChildProcess::getModuleName() {
+    return APath(mApplicationFile).filename();
+}
+
+uint32_t AChildProcess::getPid() {
+    return mProcessInformation.dwProcessId;
+}

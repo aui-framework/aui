@@ -29,6 +29,7 @@
 #include <functional>
 
 class IEventLoop;
+class AString;
 
 /**
  * \brief Abstract thread. Not all threads are created through AThread - these are interfaced with AAbstractThread.
@@ -150,6 +151,13 @@ public:
     {
         enqueue(fun);
     }
+
+
+    /**
+     * Sets name of the thread for debugger.
+     * @param name new name of the thread
+     */
+    virtual void setThreadName(const AString& name);
 };
 
 #include "AUI/Common/AObject.h"
@@ -174,6 +182,8 @@ private:
 	 */
 	std::thread* mThread = nullptr;
 
+	_unique<AString> mThreadName;
+
 	/**
 	 * \brief Function that is called by <code>AThread::start()</code>. Becomes nullptr after call to
 	 *        <code>AThread::start()</code>
@@ -187,10 +197,7 @@ private:
 
 public:
 
-	AThread(std::function<void()> functor)
-		: mFunctor(std::move(functor))
-	{
-	}
+	AThread(std::function<void()> functor);
 
     virtual ~AThread();
 
@@ -226,4 +233,13 @@ public:
      * \brief Waits for thread to be finished.
      */
 	void join();
+
+	/**
+	 * Sets name of the thread for debugger.
+	 * @param name new name of the thread
+	 */
+	void setThreadName(const AString& name) override;
+
+	void updateThreadName();
+
 };

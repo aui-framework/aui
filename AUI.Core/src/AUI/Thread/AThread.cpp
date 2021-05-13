@@ -23,9 +23,51 @@
 
 #include <cassert>
 #include <AUI/Common/AException.h>
+#include <AUI/Common/AString.h>
 #include <AUI/Logging/ALogger.h>
 
 #include "IEventLoop.h"
+
+#ifdef _WIN32
+#include <Windows.h>
+
+
+void setThreadNameImpl(HANDLE handle, const AString& name) {
+    static struct SetThreadDescription {
+    private:
+        using T = HRESULT(WINAPI*)(HANDLE, PCWSTR);
+        T mPtr = nullptr;
+
+    public:
+        SetThreadDescription() {
+            auto hKernel32 = GetModuleHandleA("kernel32.dll");
+            if (hKernel32) {
+                mPtr = reinterpret_cast<T>(GetProcAddress(hKernel32, "SetThreadDescription"));
+            }
+        }
+
+        operator bool() const {
+            return mPtr != nullptr;
+        }
+
+        HRESULT operator()(HANDLE thread, PCWSTR name) {
+            return mPtr(thread, name);
+        }
+    } s;
+    if (s) {
+        s(handle, name.c_str());
+    }
+}
+#endif
+
+class CurrentThread: public AAbstractThread {
+public:
+    using AAbstractThread::AAbstractThread;
+
+    void setThreadName(const AString& name) override {
+        setThreadNameImpl(GetCurrentThread(), name);
+    }
+};
 
 AAbstractThread::AAbstractThread(const id& id): mId(id)
 {
@@ -58,6 +100,7 @@ void AThread::start()
 {
 	assert(mThread == nullptr);
 	auto t = shared_from_this();
+    updateThreadName();
 	mThread = new std::thread([&, t] ()
 	{
 		threadStorage() = t;
@@ -100,7 +143,7 @@ _<AAbstractThread> AThread::current()
 	auto& t = threadStorage();
 	if (t == nullptr) // abstract thread
 	{
-		t = _<AAbstractThread>(new AAbstractThread(std::this_thread::get_id()));
+		t = _<AAbstractThread>(new CurrentThread(std::this_thread::get_id()));
 	}
 
 	return t;
@@ -160,7 +203,6 @@ void AAbstractThread::processMessages()
 	}
 }
 
-
 AThread::~AThread()
 {
 	if (mThread) {
@@ -176,4 +218,29 @@ AThread::~AThread()
 		}
 		mThread = nullptr;
 	}
+}
+
+
+void AAbstractThread::setThreadName(const AString& name) {
+    // stub
+}
+
+void AThread::setThreadName(const AString& name) {
+    mThreadName = std::make_unique<AString>(name);
+#ifdef _WIN32
+    updateThreadName();
+#else
+    // TODO setThreadName for linux
+#endif
+}
+
+void AThread::updateThreadName() {
+    if (mThreadName && mThread) {
+        setThreadNameImpl((HANDLE) mThread->native_handle(), *mThreadName);
+    }
+}
+
+AThread::AThread(std::function<void()> functor)
+        : mFunctor(std::move(functor))
+{
 }

@@ -15,6 +15,9 @@ install(
 )
 
 
+if (WIN32)
+	target_link_libraries(AUI.Core PRIVATE kernel32 psapi)
+endif()
 if (UNIX)
 	SET(CMAKE_CXX_FLAGS -pthread)
 	target_link_libraries(AUI.Core PRIVATE dl)
