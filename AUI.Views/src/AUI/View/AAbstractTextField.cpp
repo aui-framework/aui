@@ -27,6 +27,9 @@
 #include "AUI/Render/Render.h"
 #include "AUI/Render/RenderHints.h"
 #include <AUI/Util/AMetric.h>
+#include <AUI/Action/AMenu.h>
+#include <AUI/Util/kAUI.h>
+#include <AUI/i18n/AI18n.h>
 
 ATimer& AAbstractTextField::blinkTimer()
 {
@@ -179,46 +182,21 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
 		if (AInput::isKeyDown(AInput::LControl) || AInput::isKeyDown(AInput::RControl)) {
             switch (key) {
                 case AInput::A: // select all
-                    ACursorSelectable::selectAll();
-                    break;
+					selectAll();
+					break;
 
                 case AInput::C: // copy
-                    AClipboard::copyToClipboard(getSelectedText());
-                    break;
+					copyToClipboard();
+					break;
 
                 case AInput::X: // cut
-                {
-                    auto sel = getSelection();
-                    AClipboard::copyToClipboard(getSelectedText());
-                    mContents.erase(mContents.begin() + sel.begin, mContents.begin() + sel.end);
-                    mCursorIndex = sel.begin;
-                    mCursorSelection = -1;
-                }
+					cutToClipboard();
                     break;
 
                 case AInput::V: // paste
-                {
-                    auto pastePos = mCursorIndex;
-                    if (mCursorSelection != -1) {
-                        auto sel = getSelection();
-                        pastePos = sel.begin;
-                        mContents.erase(mContents.begin() + sel.begin, mContents.begin() + sel.end);
-                    }
-                    auto toPaste = AClipboard::pasteFromClipboard();
-                    if (mMaxTextLength <= mContents.length())
-                        return;
-                    if (!mIsMultiline) {
-                        toPaste = toPaste.replacedAll("\n", "");
-                    }
-                    mContents.insert(pastePos, toPaste);
-                    mCursorIndex = pastePos + toPaste.length();
-                    mCursorSelection = -1;
+					pasteFromClipboard();
+					break;
 
-                    invalidatePrerenderedString();
-                    emit textChanged;
-
-                    break;
-                }
                 default:
                     return;
             }
@@ -234,6 +212,39 @@ void AAbstractTextField::onKeyRepeat(AInput::Key key)
 	
 	redraw();
 }
+
+void AAbstractTextField::pasteFromClipboard() {
+	auto pastePos = mCursorIndex;
+	if (mCursorSelection != -1) {
+		auto sel = getSelection();
+		pastePos = sel.begin;
+		mContents.erase(mContents.begin() + sel.begin, mContents.begin() + sel.end);
+	}
+	auto toPaste = AClipboard::pasteFromClipboard();
+	if (mMaxTextLength <= mContents.length())
+		return;
+	if (!mIsMultiline) {
+		toPaste = toPaste.replacedAll("\n", "");
+	}
+	mContents.insert(pastePos, toPaste);
+	mCursorIndex = pastePos + toPaste.length();
+	mCursorSelection = -1;
+
+	invalidatePrerenderedString();
+	emit textChanged;
+}
+
+void AAbstractTextField::cutToClipboard() {
+	auto sel = getSelection();
+	AClipboard::copyToClipboard(getSelectedText());
+	mContents.erase(mContents.begin() + sel.begin, mContents.begin() + sel.end);
+	mCursorIndex = sel.begin;
+	mCursorSelection = -1;
+}
+
+void AAbstractTextField::copyToClipboard() const { AClipboard::copyToClipboard(getSelectedText()); }
+
+void AAbstractTextField::selectAll() { ACursorSelectable::selectAll(); }
 
 void AAbstractTextField::onCharEntered(wchar_t c)
 {
@@ -360,9 +371,19 @@ void AAbstractTextField::onMouseMove(glm::ivec2 pos)
 void AAbstractTextField::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
     AView::onMouseReleased(pos, button);
-    ACursorSelectable::handleMouseReleased(pos, button);
-}
 
+	if (button == AInput::RButton) {
+		AMenu::show({
+						{ "aui.cut"_i18n, [&]{cutToClipboard();}, AInput::LControl + AInput::X, hasSelection() },
+						{ "aui.copy"_i18n, [&]{copyToClipboard();}, AInput::LControl + AInput::C, hasSelection() },
+						{ "aui.paste"_i18n, [&]{pasteFromClipboard();}, AInput::LControl + AInput::V, !AClipboard::isEmpty() },
+						AMenu::SEPARATOR,
+						{ "aui.select_all"_i18n, [&]{selectAll();}, AInput::LControl + AInput::A, !getText().empty() }
+				});
+	} else {
+		ACursorSelectable::handleMouseReleased(pos, button);
+	}
+}
 void AAbstractTextField::setText(const AString& t)
 {
     mHorizontalScroll = 0;

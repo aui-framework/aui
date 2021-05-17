@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,21 +19,65 @@
  * =====================================================================================================================
  */
 
-#include "ATextField.h"
-#include <AUI/Action/AMenu.h>
+//
+// Created by alex2 on 5/13/2021.
+//
 
 
-ATextField::ATextField()
-{
+#pragma once
 
-    addAssName(".input-field");
-}
 
-bool ATextField::isValidText(const AString& text) {
-    return true;
-}
+#include <AUI/Common/AString.h>
+#include <AUI/Common/AVector.h>
+#include "AShortcut.h"
 
-ATextField::~ATextField() {
+class IMenuProvider;
+struct MenuItem;
 
-}
+using MenuModel = AVector<MenuItem>;
+
+class AMenu {
+private:
+    static _<IMenuProvider>& provider();
+public:
+    static void show(const MenuModel& model);
+    static void close();
+    static bool isOpen();
+
+    enum Type {
+        SINGLE,
+        SUBLIST,
+        SEPARATOR
+    };
+};
+
+
+struct MenuItem {
+    AMenu::Type type;
+    AString name;
+    AShortcut shortcut;
+    std::function<void()> onAction;
+    AVector<MenuItem> subItems;
+    bool enabled;
+
+
+    MenuItem(const AString& name, const std::function<void()>& onAction = {}, const AShortcut& shortcut = {}, bool enabled = true):
+        type(AMenu::SINGLE),
+        name(name),
+        onAction(onAction),
+        shortcut(shortcut),
+        enabled(enabled) {
+
+    }
+    MenuItem(const AString& name, const AVector<MenuItem>& subItems, bool enabled = true):
+        type(AMenu::SUBLIST),
+        name(name),
+        subItems(subItems),
+        enabled(enabled) {
+
+    }
+    MenuItem(AMenu::Type t): type(t) {
+
+    }
+};
 

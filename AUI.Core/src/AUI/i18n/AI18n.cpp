@@ -31,6 +31,12 @@
 
 
 AI18n::AI18n() {
+    // TODO hardcoded
+    mLangData["aui.cut"] = "Cut";
+    mLangData["aui.copy"] = "Copy";
+    mLangData["aui.paste"] = "Paste";
+    mLangData["aui.select_all"] = "Select all";
+
     try {
         loadFromLang(userLanguage());
     } catch (...) {

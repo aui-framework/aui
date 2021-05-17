@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,21 +19,15 @@
  * =====================================================================================================================
  */
 
-#include "ATextField.h"
+
+#pragma once
+
 #include <AUI/Action/AMenu.h>
 
+class IMenuProvider {
+public:
 
-ATextField::ATextField()
-{
-
-    addAssName(".input-field");
-}
-
-bool ATextField::isValidText(const AString& text) {
-    return true;
-}
-
-ATextField::~ATextField() {
-
-}
-
+    virtual void createMenu(const AVector<MenuItem>& vector) = 0;
+    virtual void closeMenu() = 0;
+    virtual bool isOpen() = 0;
+};

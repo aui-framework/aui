@@ -414,6 +414,41 @@ AStylesheet::AStylesheet() {
             {t<AScrollbarHandle>::hover(), t<AScrollbarButton>::hover() },
             BackgroundSolid { 0xc0c0c0_rgb },
         },
+
+
+        // menu
+        {
+            c(".menu"),
+            Padding { 1_px },
+            Margin { 0 },
+            MinSize { 200_dp, 0 },
+            Border { 1_px, 0x606060_rgb, }
+        },
+        {
+            c(".menu-item"),
+            Padding { 5_dp },
+            Margin { 1_dp },
+        },
+        {
+            c(".menu-separator"),
+            Margin { 4_dp, 0 },
+            FixedSize { {}, 1_px },
+            BackgroundSolid { 0x606060_rgb },
+        },
+        {
+            c::hover(".menu-item"),
+            BackgroundSolid { 0xffffff_rgb },
+        },
+        {
+            c(".menu-item-shortcut"),
+            TextColor { 0x404040_rgb },
+        },
+
+        {
+            c::disabled(".menu-item"),
+            BackgroundSolid { 0x0_argb },
+            Opacity { 0.7f },
+        },
     });
 }
 

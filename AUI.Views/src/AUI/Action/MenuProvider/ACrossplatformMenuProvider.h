@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,21 +19,27 @@
  * =====================================================================================================================
  */
 
-#include "ATextField.h"
-#include <AUI/Action/AMenu.h>
+//
+// Created by alex2 on 5/13/2021.
+//
 
 
-ATextField::ATextField()
-{
+#pragma once
 
-    addAssName(".input-field");
-}
 
-bool ATextField::isValidText(const AString& text) {
-    return true;
-}
+#include "IMenuProvider.h"
+#include <AUI/Platform/AWindow.h>
 
-ATextField::~ATextField() {
+class ACrossplatformMenuProvider: public IMenuProvider {
+private:
+    _<AWindow> mWindow;
 
-}
+public:
+    void createMenu(const AVector<MenuItem>& vector) override;
+
+    bool isOpen() override;
+
+    void closeMenu() override;
+};
+
 

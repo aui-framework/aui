@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,21 +19,34 @@
  * =====================================================================================================================
  */
 
-#include "ATextField.h"
-#include <AUI/Action/AMenu.h>
 
 
-ATextField::ATextField()
-{
+#pragma once
 
-    addAssName(".input-field");
+
+#include <AUI/Util/AMetric.h>
+#include "IDeclaration.h"
+
+namespace ass {
+    struct Opacity {
+        float opacity;
+
+        explicit Opacity(float opacity) : opacity(opacity) {}
+    };
+
+    namespace decl {
+        template<>
+        struct API_AUI_VIEWS Declaration<Opacity>: IDeclarationBase {
+        private:
+            Opacity mInfo;
+
+        public:
+            Declaration(const Opacity& info) : mInfo(info) {
+
+            }
+
+            void applyFor(AView* view) override;
+
+        };
+    }
 }
-
-bool ATextField::isValidText(const AString& text) {
-    return true;
-}
-
-ATextField::~ATextField() {
-
-}
-

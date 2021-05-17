@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,21 +19,9 @@
  * =====================================================================================================================
  */
 
-#include "ATextField.h"
-#include <AUI/Action/AMenu.h>
+//
+// Created by alex2 on 5/15/2021.
+//
 
 
-ATextField::ATextField()
-{
-
-    addAssName(".input-field");
-}
-
-bool ATextField::isValidText(const AString& text) {
-    return true;
-}
-
-ATextField::~ATextField() {
-
-}
-
+#include "AShortcut.h"

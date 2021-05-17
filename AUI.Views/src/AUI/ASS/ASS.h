@@ -43,6 +43,7 @@
 #include "Declaration/Margin.h"
 #include "Declaration/MaxSize.h"
 #include "Declaration/MinSize.h"
+#include "Declaration/Opacity.h"
 #include "Declaration/Overflow.h"
 #include "Declaration/Padding.h"
 #include "Declaration/TextAlign.h"

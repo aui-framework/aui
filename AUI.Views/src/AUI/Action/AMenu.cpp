@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,21 +19,27 @@
  * =====================================================================================================================
  */
 
-#include "ATextField.h"
-#include <AUI/Action/AMenu.h>
+//
+// Created by alex2 on 5/13/2021.
+//
 
 
-ATextField::ATextField()
-{
+#include <AUI/Action/MenuProvider/ACrossplatformMenuProvider.h>
+#include "AMenu.h"
 
-    addAssName(".input-field");
+void AMenu::show(const MenuModel& model) {
+    provider()->createMenu(model);
 }
 
-bool ATextField::isValidText(const AString& text) {
-    return true;
+_<IMenuProvider>& AMenu::provider() {
+    static _<IMenuProvider> provider = _new<ACrossplatformMenuProvider>();
+    return provider;
 }
 
-ATextField::~ATextField() {
-
+void AMenu::close() {
+    provider()->closeMenu();
 }
 
+bool AMenu::isOpen() {
+    return provider()->isOpen();
+}

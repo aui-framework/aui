@@ -63,8 +63,26 @@ AString AClipboard::pasteFromClipboard() {
     }
     return {};
 }
+
+bool AClipboard::isEmpty() {
+    OpenClipboard(nullptr);
+    HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
+    auto azaza = (const wchar_t*)GlobalLock(hMem);
+
+    if (azaza) {
+        auto c = *azaza;
+        GlobalUnlock(hMem);
+        CloseClipboard();
+        return c == '\0';
+    }
+    return true;
+}
+
 #else
 
+bool AClipboard::isEmpty() {
+    return pasteFromClipboard().empty();
+}
 void AClipboard::copyToClipboard(const AString& text) {
     AWindow::current()->getWindowManager().xClipboardCopyImpl(text);
 }

@@ -96,6 +96,11 @@ private:
 	 */
 	FontStyle mFontStyle;
 
+    /**
+     * \brief opacity, specified in ASS.
+     */
+    float mOpacity = 1;
+
     virtual void notifyParentEnabledStateChanged(bool enabled);
 
 protected:
@@ -404,6 +409,13 @@ public:
 		return mExpanding.y;
 	}
 	FontStyle& getFontStyle();
+
+    [[nodiscard]] float getOpacity() const {
+        return mOpacity;
+    }
+    void setOpacity(float opacity) {
+        mOpacity = opacity;
+    }
 
     virtual void invalidateFont();
 	virtual void setPosition(const glm::ivec2& position);

@@ -53,6 +53,7 @@ AWindow::Context AWindow::context = {};
 #include <GL/wglew.h>
 #include <AUI/Util/Cache.h>
 #include <AUI/Util/AError.h>
+#include <AUI/Action/AMenu.h>
 
 struct painter {
 private:
@@ -448,6 +449,7 @@ void AWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
         lastButtonPressed = button;
         lastPosition = pos;
     }
+    AMenu::close();
 }
 
 void AWindow::onClosed() {
@@ -1277,6 +1279,9 @@ void AWindow::onFocusAcquired() {
 void AWindow::onFocusLost() {
     mIsFocused = false;
     AViewContainer::onFocusLost();
+    if (AMenu::isOpen()) {
+        AMenu::close();
+    }
     /*
     if (auto v = getFocusedView()) {
         v->onFocusLost();

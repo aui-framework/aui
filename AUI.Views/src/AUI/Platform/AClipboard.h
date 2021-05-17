@@ -31,5 +31,6 @@
 class AClipboard {
 public:
     static void copyToClipboard(const AString& text);
+    static bool isEmpty();
     static AString pasteFromClipboard();
 };

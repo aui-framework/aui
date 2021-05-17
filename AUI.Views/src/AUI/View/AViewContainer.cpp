@@ -38,6 +38,7 @@ void AViewContainer::drawView(const _<AView>& view)
 		RenderHints::PushState s;
 		glm::mat4 t(1.f);
 		view->getTransform(t);
+		Render::inst().setColor(AColor(1, 1, 1, view->getOpacity()));
         Render::inst().setTransform(t);
 
 		try {
@@ -136,7 +137,7 @@ int AViewContainer::getContentMinimumWidth()
 {
 	if (mLayout)
 	{
-		return mLayout->getMinimumWidth();
+		return glm::max(mLayout->getMinimumWidth(), AView::getContentMinimumWidth());
 	}
 	return AView::getContentMinimumWidth();
 }
@@ -145,7 +146,7 @@ int AViewContainer::getContentMinimumHeight()
 {
 	if (mLayout)
 	{
-		return mLayout->getMinimumHeight();
+        return glm::max(mLayout->getMinimumHeight(), AView::getContentMinimumHeight());
 	}
 	return AView::getContentMinimumHeight();
 }

@@ -91,7 +91,6 @@ public:
 	    setText(getText().trim());
 	}
 
-
 	[[nodiscard]] const AString& getText() const override
 	{
 		return mContents;
@@ -119,4 +118,12 @@ signals:
 	 * \brief Text is changing by the user.
 	 */
 	emits<AString> textChanging;
+
+    void selectAll();
+
+    void copyToClipboard() const;
+
+    void cutToClipboard();
+
+    void pasteFromClipboard();
 };

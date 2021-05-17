@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,21 +19,18 @@
  * =====================================================================================================================
  */
 
-#include "ATextField.h"
-#include <AUI/Action/AMenu.h>
+//
+// Created by alex2 on 29.12.2020.
+//
+
+#include <AUI/Render/RenderHints.h>
+#include "Opacity.h"
+#include "IDeclaration.h"
 
 
-ATextField::ATextField()
-{
 
-    addAssName(".input-field");
+void ass::decl::Declaration<ass::Opacity>::applyFor(AView* view) {
+    view->setOpacity(mInfo.opacity);
 }
 
-bool ATextField::isValidText(const AString& text) {
-    return true;
-}
-
-ATextField::~ATextField() {
-
-}
 
