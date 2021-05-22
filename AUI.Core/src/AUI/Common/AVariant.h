@@ -256,14 +256,12 @@ public:
         return to<T>();
     }
     template<typename T>
-    bool operator==(const T& other) const {
-        return to<T>() == other;
-    }
+    bool operator==(const T& other) const;
 
     bool operator==(const char* other) const;
     template<typename T>
     bool operator!=(const T& other) const {
-        return !(to<T>() == other);
+        return !(*this == other);
     }
 };
 
@@ -323,7 +321,6 @@ template<>
 inline bool AVariant::to<bool>() const {
     return toBool();
 }
-
 inline std::ostream& operator<<(std::ostream& o, const AVariant& v) {
     o << v.toString();
     return o;
@@ -331,4 +328,14 @@ inline std::ostream& operator<<(std::ostream& o, const AVariant& v) {
 
 inline bool AVariant::operator==(const char* other) const {
     return to<AString>() == other;
+}
+
+template<typename T>
+inline bool AVariant::operator==(const T& other) const {
+    return to<T>() == other;
+}
+
+template<>
+inline bool AVariant::operator==(const AVariant& other) const {
+    return toString() == other.toString();
 }

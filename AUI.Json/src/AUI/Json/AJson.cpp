@@ -107,7 +107,7 @@ AJsonElement AJson::read(_<IInputStream> is) {
                         t.reverseByte();
                         auto s = t.readString();
                         if (s == "false") {
-                            result = _new<JsonValue>(true);
+                            result = _new<JsonValue>(false);
                             return result;
                         }
                         unexpectedToken(s);

@@ -41,7 +41,7 @@ int AProcess::execute(const AString& applicationFile, const AString& args, const
     p.run();
 
     if (waitForExit)
-        return p.getExitCode();
+        return p.wait();
 
     return 0;
 }
@@ -160,8 +160,13 @@ void AChildProcess::run() {
 
 }
 
-void AChildProcess::wait() {
+int AChildProcess::wait() {
     WaitForSingleObject(mProcessInformation.hProcess, INFINITE);
+    DWORD exitCode;
+    wait();
+    int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
+    assert(r && r != STILL_ACTIVE);
+    return exitCode;
 }
 
 int AChildProcess::getExitCode() {
@@ -180,15 +185,37 @@ _<AProcess> AProcess::fromPid(uint32_t pid) {
     return nullptr;
 }
 
+uint32_t AChildProcess::getPid() {
+    return mProcessInformation.dwProcessId;
+}
+
+
 #else
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <cassert>
+#include <spawn.h>
+#include <AUI/Common/AStringVector.h>
+#include <cstring>
 
 int AProcess::execute(const AString& applicationFile, const AString& args, const APath& workingDirectory, bool waitForExit) {
-    assert(0);
+    AProcess p(applicationFile);
+    p.setArgs(args);
+    p.setWorkingDirectory(workingDirectory);
+    p.run();
 
+    if (waitForExit) {
+        auto f = fdopen(p.mPipes[0],"r");
+        char buf[0x1000];
+        int r;
+        while ((r = fread(buf, 1, sizeof(buf), f)) > 0) {
+            write(STDOUT_FILENO, buf, r);
+        }
+
+        fclose(f);
+        return p.wait();
+    }
 
     return 0;
 }
@@ -196,19 +223,46 @@ int AProcess::execute(const AString& applicationFile, const AString& args, const
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
     assert(0);
 }
+extern char **environ;
 
 void AProcess::run() {
-    assert(0);
+    auto splt = mArgs.split(' ');
+    char** argv = new char*[splt.size() + 1];
+    size_t counter = 0;
+    for (auto& s : splt) {
+        auto stdString = s.toStdString();
+        auto cString = new char[stdString.length() + 1];
+        strcpy(cString, stdString.c_str());
+        argv[counter++] = cString;
+    }
+    argv[splt.size()] = nullptr;
+
+    if (pipe(mPipes) == -1) {
+        throw AException("could not create unix pipe");
+    }
+
+    auto pid = fork();
+    if (pid == 0) {
+        while ((dup2(mPipes[1], STDOUT_FILENO) == -1) && (errno == EINTR)) {}
+        //close(mPipes[0]);
+        //close(mPipes[1]);
+
+        // we are in a new process
+        chdir(mWorkingDirectory.toStdString().c_str());
+        execve(mApplicationFile.toStdString().c_str(), argv, environ);
+    } else {
+        // we are in old process
+        mPid = pid;
+        close(mPipes[1]);
+    }
 }
 
-void AProcess::wait() {
-    assert(0);
+int AProcess::wait() {
+    int loc;
+    waitpid(mPid, &loc, 0);
+    return WEXITSTATUS(loc);
 }
 
-int AProcess::getExitCode() {
-    assert(0);
-    return 0;
-}
 #endif
 
 
@@ -269,8 +323,4 @@ _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
 
 APath AChildProcess::getModuleName() {
     return APath(mApplicationFile).filename();
-}
-
-uint32_t AChildProcess::getPid() {
-    return mProcessInformation.dwProcessId;
 }

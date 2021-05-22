@@ -107,6 +107,9 @@ _<AByteBuffer> AString::toUtf8() const
 
 AStringVector AString::split(wchar_t c) const noexcept
 {
+    if (empty()) {
+        return {};
+    }
     AStringVector result;
     result.reserve(length() / 10);
     for (size_type s = 0;;)

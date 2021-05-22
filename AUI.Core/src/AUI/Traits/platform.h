@@ -34,12 +34,53 @@ namespace aui::platform {
 
     namespace os_windows {
         using namespace desktop;
+
+#ifdef _WIN32
+#endif
+
+        constexpr bool is_windows() {
+            return true;
+        }
+
+        constexpr bool is_unix() {
+            return false;
+        }
+
+        static const char* name() {
+            return "windows";
+        }
     }
     namespace os_unix {
         using namespace desktop;
+
+        static const char* name() {
+            return "unix";
+        }
+
+        constexpr bool is_windows() {
+            return false;
+        }
+
+        constexpr bool is_unix() {
+            return true;
+        }
     }
     namespace os_android {
         using namespace mobile;
+
+
+        static const char* name() {
+            return "android";
+        }
+
+
+        constexpr bool is_windows() {
+            return false;
+        }
+
+        constexpr bool is_unix() {
+            return true;
+        }
     }
 
 #if defined(_WIN32)

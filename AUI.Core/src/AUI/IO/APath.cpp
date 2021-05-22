@@ -27,8 +27,9 @@
 #include <cstring>
 #include <cassert>
 #include "APath.h"
+#include <AUI/Common/AStringVector.h>
 #include "IOException.h"
-#include "FileNotFoundException.h"
+#include "CouldNotOpenFileException.h"
 #include "InsufficientPermissionsException.h"
 #include "FileInputStream.h"
 #include "FileOutputStream.h"
@@ -188,7 +189,7 @@ ADeque<APath> APath::listDir(ListFlags f) const {
     DIR* dir = opendir(toStdString().c_str());
     if (!dir)
 #endif
-        throw FileNotFoundException("could not list " + *this ERROR_DESCRIPTION);
+        throw CouldNotOpenFileException("could not list " + *this ERROR_DESCRIPTION);
 
 #ifdef WIN32
     for (bool t = true; t; t = FindNextFile(dir, &fd)) {
@@ -379,3 +380,23 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
     return {};
 }
 #endif
+
+APath APath::locate(const AString& filename, const AVector<APath>& locations) {
+
+    if (locations.empty()) {
+        for (APath pathEntry : AString(getenv("PATH")).split(':')) {
+            auto fullPath = pathEntry[filename];
+            if (fullPath.isRegularFileExists()) {
+                return fullPath;
+            }
+        }
+    } else {
+        for (const APath& pathEntry : locations) {
+            auto fullPath = pathEntry[filename];
+            if (fullPath.isRegularFileExists()) {
+                return fullPath;
+            }
+        }
+    }
+    return {};
+}
