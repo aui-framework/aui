@@ -65,7 +65,9 @@ public:
     using AAbstractThread::AAbstractThread;
 
     void setThreadName(const AString& name) override {
+#ifdef _WIN32
         setThreadNameImpl(GetCurrentThread(), name);
+#endif
     }
 };
 
@@ -235,9 +237,11 @@ void AThread::setThreadName(const AString& name) {
 }
 
 void AThread::updateThreadName() {
+#ifdef _WIN32
     if (mThreadName && mThread) {
         setThreadNameImpl((HANDLE) mThread->native_handle(), *mThreadName);
     }
+#endif
 }
 
 AThread::AThread(std::function<void()> functor)

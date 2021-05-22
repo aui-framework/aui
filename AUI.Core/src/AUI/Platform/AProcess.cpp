@@ -198,9 +198,66 @@ uint32_t AChildProcess::getPid() {
 #include <spawn.h>
 #include <AUI/Common/AStringVector.h>
 #include <cstring>
+#include <AUI/Util/ATokenizer.h>
+#include <AUI/IO/FileOutputStream.h>
+#include <AUI/IO/FileInputStream.h>
+
+class AOtherProcess: public AProcess {
+private:
+    pid_t mHandle;
+
+public:
+    AOtherProcess(pid_t handle) : mHandle(handle) {}
+
+    ~AOtherProcess() {
+    }
+
+    int wait() override {
+        int loc;
+        waitpid(mHandle, &loc, 0);
+        return WEXITSTATUS(loc);
+    }
+
+    int getExitCode() override {
+        return wait();
+    }
+
+    APath getModuleName() override {
+        char buf[0x800];
+        char path[0x100];
+        sprintf(path, "/proc/%u/exe", mHandle);
+        readlink(path, buf, sizeof(buf));
+        return APath(buf).filename();
+    }
+
+    uint32_t getPid() override {
+        return mHandle;
+    }
+};
+
+AVector<_<AProcess>> AProcess::all() {
+    AVector<_<AProcess>> result;
+    for (auto& f : APath("/proc/").listDir(LF_DIRS)) {
+        pid_t p = f.filename().toUInt();
+        if (p != 0) {
+            result << _new<AOtherProcess>(p);
+        }
+    }
+    return result;
+}
+
+_<AProcess> AProcess::self() {
+    char buf[0x100];
+    readlink("/proc/self", buf, sizeof(buf));
+    return _new<AOtherProcess>(AString(buf).toUInt());
+}
+
+_<AProcess> AProcess::fromPid(uint32_t pid) {
+    return _new<AOtherProcess>(pid_t(pid));
+}
 
 int AProcess::execute(const AString& applicationFile, const AString& args, const APath& workingDirectory, bool waitForExit) {
-    AProcess p(applicationFile);
+    AChildProcess p(applicationFile);
     p.setArgs(args);
     p.setWorkingDirectory(workingDirectory);
     p.run();
@@ -225,7 +282,7 @@ void AProcess::executeAsAdministrator(const AString& applicationFile, const AStr
 }
 extern char **environ;
 
-void AProcess::run() {
+void AChildProcess::run() {
     auto splt = mArgs.split(' ');
     char** argv = new char*[splt.size() + 1];
     size_t counter = 0;
@@ -257,10 +314,18 @@ void AProcess::run() {
     }
 }
 
-int AProcess::wait() {
+int AChildProcess::wait() {
     int loc;
     waitpid(mPid, &loc, 0);
     return WEXITSTATUS(loc);
+}
+
+int AChildProcess::getExitCode() {
+    return wait();
+}
+
+uint32_t AChildProcess::getPid() {
+    return mPid;
 }
 
 #endif

@@ -199,6 +199,16 @@ int AString::toInt() const noexcept
         return 0;
     }
 }
+unsigned AString::toUInt() const noexcept
+{
+    try
+    {
+        return std::stoul(*this);
+    } catch (...)
+    {
+        return 0;
+    }
+}
 
 bool AString::toBool() const noexcept
 {

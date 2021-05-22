@@ -60,7 +60,7 @@ public:
     /**
      * \brief Wait for process to be finished.
      */
-    virtual void wait() = 0;
+    virtual int wait() = 0;
 
     /**
      * \brief Wait for process to be finished and returns exit code.
@@ -121,6 +121,7 @@ public:
  * Creates child process of this application.
  */
 class AChildProcess: public AProcess {
+friend class AProcess;
 private:
     AString mApplicationFile;
     AString mArgs;
