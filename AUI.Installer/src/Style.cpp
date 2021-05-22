@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,35 +19,32 @@
  * =====================================================================================================================
  */
 
-#pragma once
-#include <exception>
+//
+// Created by alex2 on 5/21/2021.
+//
 
-#include "AUI/Common/AException.h"
+#include <AUI/ASS/ASS.h>
+#include <Window/MainWindow.h>
 
-class IOException: public AException
-{
+using namespace ass;
+
+class Style123121233121233 {
 public:
-	IOException()
-	{
-	}
-
-	IOException(const AString& message)
-		: AException(message)
-	{
-	}
-	virtual ~IOException() = default;
-};
-
-
-class FileNotFoundException: public IOException {
-public:
-    using IOException::IOException;
-};
-class AccessDeniedException: public IOException {
-public:
-    using IOException::IOException;
-};
-class ResourceBusyException: public IOException {
-public:
-    using IOException::IOException;
-};
+    Style123121233121233() {
+        AStylesheet::inst().addRules({
+            {
+                c(".title"),
+                FontSize { 18_pt },
+                Margin { 8_dp, {} }
+            },
+            {
+                c(".padded-page"),
+                Margin { 16_dp, 8_dp }
+            },
+            {
+                t<MainWindow>(),
+                MinSize { 500_dp, 50_dp },
+            }
+        });
+    }
+} style123121233121233;

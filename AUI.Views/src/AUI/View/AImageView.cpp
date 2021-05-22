@@ -26,6 +26,7 @@
 #include "AImageView.h"
 #include <AUI/Render/Render.h>
 #include <AUI/View/AViewContainer.h>
+#include <AUI/Image/AImageLoaderRegistry.h>
 
 AImageView::AImageView(const _<GL::Texture2D>& texture) : mTexture(texture) {}
 
@@ -39,6 +40,12 @@ AImageView::AImageView() {
 
 }
 
+
+AImageView::AImageView(const AUrl& img):
+    AImageView(AImageLoaderRegistry::inst().loadImage(img))
+{
+
+}
 
 void AImageView::render() {
     AView::render();

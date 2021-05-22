@@ -20,13 +20,18 @@
  */
 
 //
-// Created by alex2 on 31.10.2020.
+// Created by alex2 on 5/21/2021.
 //
 
-#include "InsufficientPermissionsException.h"
 
-InsufficientPermissionsException::InsufficientPermissionsException() {}
+#pragma once
 
-InsufficientPermissionsException::InsufficientPermissionsException(const AString& message) : IOException(message) {
 
-}
+#include "IPage.h"
+
+class InstallDirPage: public IPage {
+public:
+    void inflate(const _<AViewContainer>& container, const InstallerModel& model) override;
+};
+
+

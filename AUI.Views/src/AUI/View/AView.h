@@ -551,6 +551,13 @@ public:
 		setEnabled(false);
 	}
 
+	/**
+	 * Helper function for kAUI.h:with_style
+	 */
+    void operator+(const RuleWithoutSelector& rule) {
+        setCustomAss(rule);
+    }
+
 signals:
     emits<bool> hoveredState;
     emits<> mouseEnter;

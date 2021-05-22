@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,35 +19,22 @@
  * =====================================================================================================================
  */
 
-#pragma once
-#include <exception>
-
-#include "AUI/Common/AException.h"
-
-class IOException: public AException
-{
-public:
-	IOException()
-	{
-	}
-
-	IOException(const AString& message)
-		: AException(message)
-	{
-	}
-	virtual ~IOException() = default;
-};
+//
+// Created by alex2 on 5/21/2021.
+//
 
 
-class FileNotFoundException: public IOException {
-public:
-    using IOException::IOException;
-};
-class AccessDeniedException: public IOException {
-public:
-    using IOException::IOException;
-};
-class ResourceBusyException: public IOException {
-public:
-    using IOException::IOException;
-};
+#include "InstallDirPage.h"
+#include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/View/ATextField.h>
+#include <AUI/View/ACheckBox.h>
+#include <AUI/View/APathChooserView.h>
+
+void InstallDirPage::inflate(const _<AViewContainer>& container, const InstallerModel& model) {
+    container->setLayout(_new<AVerticalLayout>());
+    container->addView(Vertical {
+        _new<ALabel>("Install folder") << ".title",
+        _new<ALabel>("Please specify program installation folder:"),
+        _new<APathChooserView>()
+    } << ".padded-page");
+}

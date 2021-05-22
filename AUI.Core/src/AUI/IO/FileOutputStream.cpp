@@ -19,10 +19,10 @@
  * =====================================================================================================================
  */
 
+#include <AUI/Util/AError.h>
 #include "FileOutputStream.h"
 
 
-#include "FileNotFoundException.h"
 #include "AUI/Common/AString.h"
 
 FileOutputStream::FileOutputStream(const AString& path, bool append)
@@ -35,7 +35,7 @@ FileOutputStream::FileOutputStream(const AString& path, bool append)
 #endif
 	if (!mFile)
 	{
-		throw FileNotFoundException(path.toStdString().c_str());
+        AError::handleErrno();
 	}
 }
 

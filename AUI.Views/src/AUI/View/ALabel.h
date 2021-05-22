@@ -55,7 +55,7 @@ protected:
 
     //void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
     void doRenderText();
-    AString getTargetText();
+    AString getCompiledMultilineText();
 
 
     // for correct selection positioning (used in ASelectableLabel)

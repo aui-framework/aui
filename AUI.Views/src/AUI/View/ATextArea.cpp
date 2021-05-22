@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,35 +19,42 @@
  * =====================================================================================================================
  */
 
-#pragma once
-#include <exception>
+//
+// Created by alex2 on 5/22/2021.
+//
 
-#include "AUI/Common/AException.h"
 
-class IOException: public AException
+#include <AUI/Layout/AHorizontalLayout.h>
+#include <AUI/Util/kAUI.h>
+#include <AUI/Util/AMetric.h>
+#include "ATextArea.h"
+#include "AScrollbar.h"
+
+
+class TextAreaField: public AAbstractTextField {
+public:
+protected:
+    bool isValidText(const AString& text) override {
+        return true;
+    }
+};
+
+ATextArea::ATextArea() {
+    addAssName(".input-field");
+    setLayout(_new<AHorizontalLayout>());
+    addView(mTextField = _new<TextAreaField>() let {
+        it->setExpanding({2, 2});
+    });
+    addView(_new<AScrollbar>());
+}
+
+ATextArea::ATextArea(const AString& text):
+    ATextArea()
 {
-public:
-	IOException()
-	{
-	}
+    mTextField->setText(text);
+}
 
-	IOException(const AString& message)
-		: AException(message)
-	{
-	}
-	virtual ~IOException() = default;
-};
+int ATextArea::getContentMinimumHeight() {
+    return 80_dp;
+}
 
-
-class FileNotFoundException: public IOException {
-public:
-    using IOException::IOException;
-};
-class AccessDeniedException: public IOException {
-public:
-    using IOException::IOException;
-};
-class ResourceBusyException: public IOException {
-public:
-    using IOException::IOException;
-};

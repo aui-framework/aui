@@ -20,18 +20,25 @@
  */
 
 //
-// Created by alex2 on 31.10.2020.
+// Created by alex2 on 5/22/2021.
 //
+
 
 #pragma once
 
-#include "IOException.h"
 
-class InsufficientPermissionsException: public IOException {
+#include "AViewContainer.h"
+#include "AAbstractTextField.h"
+
+class API_AUI_VIEWS ATextArea: public AViewContainer {
+private:
+    _<AAbstractTextField> mTextField;
+
 public:
-    InsufficientPermissionsException();
+    ATextArea();
+    explicit ATextArea(const AString& text);
 
-    InsufficientPermissionsException(const AString& message);
+    int getContentMinimumHeight() override;
 };
 
 

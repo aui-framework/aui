@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,35 +19,30 @@
  * =====================================================================================================================
  */
 
-#pragma once
-#include <exception>
-
-#include "AUI/Common/AException.h"
-
-class IOException: public AException
-{
-public:
-	IOException()
-	{
-	}
-
-	IOException(const AString& message)
-		: AException(message)
-	{
-	}
-	virtual ~IOException() = default;
-};
+//
+// Created by alex2 on 5/21/2021.
+//
 
 
-class FileNotFoundException: public IOException {
-public:
-    using IOException::IOException;
-};
-class AccessDeniedException: public IOException {
-public:
-    using IOException::IOException;
-};
-class ResourceBusyException: public IOException {
-public:
-    using IOException::IOException;
-};
+#include <AUI/Layout/AStackedLayout.h>
+#include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/View/AImageView.h>
+#include "WelcomePage.h"
+#include <AUI/ASS/ASS.h>
+
+using namespace ass;
+
+void WelcomePage::inflate(const _<AViewContainer>& container, const InstallerModel& model) {
+    container->setLayout(_new<AStackedLayout>());
+    container->addView(
+        Horizontal {
+            _new<AImageView>(AUrl(":img/side.png")) with_style { FixedSize { 100_dp, 300_dp } },
+            Vertical {
+                _new<ALabel>("aui.installer.welcome_title") << ".title",
+                _new<ALabel>("aui.installer.welcome_desc")
+            } let {
+                it->setExpanding({2, 2});
+                it->setCustomAss(Padding { 8_dp });
+            }
+        } let { it->setExpanding({2, 2});});
+}

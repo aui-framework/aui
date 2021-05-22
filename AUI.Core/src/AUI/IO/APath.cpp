@@ -28,8 +28,6 @@
 #include <cassert>
 #include "APath.h"
 #include "IOException.h"
-#include "FileNotFoundException.h"
-#include "InsufficientPermissionsException.h"
 #include "FileInputStream.h"
 #include "FileOutputStream.h"
 
@@ -260,7 +258,7 @@ const APath& APath::makeDir() const {
         auto et = GetLastError();
         switch (et) {
             case ERROR_ACCESS_DENIED:
-                throw InsufficientPermissionsException(s);
+                throw AccessDeniedException(s);
             case ERROR_ALREADY_EXISTS:
                 break;
             default:

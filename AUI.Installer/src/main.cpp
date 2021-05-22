@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,35 +19,13 @@
  * =====================================================================================================================
  */
 
-#pragma once
-#include <exception>
+#include <AUI/Platform/Entry.h>
+#include <Window/MainWindow.h>
 
-#include "AUI/Common/AException.h"
 
-class IOException: public AException
+AUI_ENTRY
 {
-public:
-	IOException()
-	{
-	}
+    _new<MainWindow>()->show();
 
-	IOException(const AString& message)
-		: AException(message)
-	{
-	}
-	virtual ~IOException() = default;
-};
-
-
-class FileNotFoundException: public IOException {
-public:
-    using IOException::IOException;
-};
-class AccessDeniedException: public IOException {
-public:
-    using IOException::IOException;
-};
-class ResourceBusyException: public IOException {
-public:
-    using IOException::IOException;
-};
+	return 0;
+}

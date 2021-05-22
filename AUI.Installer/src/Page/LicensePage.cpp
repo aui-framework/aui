@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,6 +19,25 @@
  * =====================================================================================================================
  */
 
-#include "FileNotFoundException.h"
+//
+// Created by alex2 on 5/21/2021.
+//
 
-FileNotFoundException::FileNotFoundException(const AString& message) : IOException(message) {}
+
+#include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/View/ATextField.h>
+#include <AUI/View/ACheckBox.h>
+#include "LicensePage.h"
+
+void LicensePage::inflate(const _<AViewContainer>& container, const InstallerModel& model) {
+    container->setLayout(_new<AVerticalLayout>());
+
+    container->addView(Vertical {
+            _new<ALabel>("License") << ".title",
+            _new<ALabel>("Please read the following license:"),
+            _new<ATextField>() let {
+                it->setExpanding({2, 2});
+            },
+            _new<ACheckBox>("I agree with the license above")
+    } << ".padded-page");
+}

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,35 +19,35 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 5/19/2021.
+//
+
+
 #pragma once
-#include <exception>
 
-#include "AUI/Common/AException.h"
 
-class IOException: public AException
-{
+#include <AUI/Platform/AWindow.h>
+#include <Page/IPage.h>
+#include <AUI/View/AButton.h>
+
+class MainWindow: public AWindow {
+private:
+    _<AViewContainer> mContent;
+    _<AButton> mBackButton;
+    _<AButton> mNextButton;
+    InstallerModel mInstallerModel;
+
+    AVector<_<IPage>> mPages;
+
+    int mCurrentPageId;
+
+    void setPage(int pageId);
+
 public:
-	IOException()
-	{
-	}
 
-	IOException(const AString& message)
-		: AException(message)
-	{
-	}
-	virtual ~IOException() = default;
+    MainWindow();
+
 };
 
 
-class FileNotFoundException: public IOException {
-public:
-    using IOException::IOException;
-};
-class AccessDeniedException: public IOException {
-public:
-    using IOException::IOException;
-};
-class ResourceBusyException: public IOException {
-public:
-    using IOException::IOException;
-};

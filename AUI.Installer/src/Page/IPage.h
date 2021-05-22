@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,11 +19,18 @@
  * =====================================================================================================================
  */
 
-#pragma once
-#include "IOException.h"
+//
+// Created by alex2 on 5/21/2021.
+//
 
-class FileNotFoundException: public IOException
-{
+
+#pragma once
+
+#include <InstallerModel.h>
+#include <AUI/View/AViewContainer.h>
+
+class IPage {
 public:
-	FileNotFoundException(const AString& message);
+
+    virtual void inflate(const _<AViewContainer>& container, const InstallerModel& model) = 0;
 };

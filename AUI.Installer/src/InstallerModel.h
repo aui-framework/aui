@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,35 +19,15 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 5/21/2021.
+//
+
+
 #pragma once
-#include <exception>
 
-#include "AUI/Common/AException.h"
+#include <AUI/Common/AString.h>
 
-class IOException: public AException
-{
-public:
-	IOException()
-	{
-	}
-
-	IOException(const AString& message)
-		: AException(message)
-	{
-	}
-	virtual ~IOException() = default;
-};
-
-
-class FileNotFoundException: public IOException {
-public:
-    using IOException::IOException;
-};
-class AccessDeniedException: public IOException {
-public:
-    using IOException::IOException;
-};
-class ResourceBusyException: public IOException {
-public:
-    using IOException::IOException;
+struct InstallerModel {
+    AString installDir = PROJECT_NAME;
 };
