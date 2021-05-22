@@ -26,7 +26,7 @@
 
 class API_AUI_CORE AException: public std::exception
 {
-private:
+protected:
 	AString mMessage;
 
 public:
@@ -41,10 +41,7 @@ public:
 
 	virtual ~AException() noexcept;
 	
-	const AString& getMessage() const
-	{
-		return mMessage;
-	}
+	[[nodiscard]] virtual AString getMessage() const;
 
     const char* what() const noexcept override;
 };

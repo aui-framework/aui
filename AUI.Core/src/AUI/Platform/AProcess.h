@@ -60,7 +60,7 @@ public:
     /**
      * \brief Wait for process to be finished.
      */
-    virtual void wait() = 0;
+    virtual int wait() = 0;
 
     /**
      * \brief Wait for process to be finished and returns exit code.
@@ -121,6 +121,7 @@ public:
  * Creates child process of this application.
  */
 class AChildProcess: public AProcess {
+friend class AProcess;
 private:
     AString mApplicationFile;
     AString mArgs;
@@ -128,6 +129,10 @@ private:
 
 #if defined(_WIN32)
     PROCESS_INFORMATION mProcessInformation;
+#else
+    pid_t mPid;
+
+    int mPipes[2];
 #endif
 
 public:
@@ -152,13 +157,16 @@ public:
         mWorkingDirectory = workingDirectory;
     }
 
-
     /**
      * \brief Launches process.
      */
     void run();
 
-    void wait() override;
+    /**
+     * \brief Wait for process to be finished.
+     * \return exit code
+     */
+    int wait() override;
     int getExitCode() override;
 
     uint32_t getPid() override;

@@ -107,6 +107,9 @@ _<AByteBuffer> AString::toUtf8() const
 
 AStringVector AString::split(wchar_t c) const noexcept
 {
+    if (empty()) {
+        return {};
+    }
     AStringVector result;
     result.reserve(length() / 10);
     for (size_type s = 0;;)
@@ -191,6 +194,16 @@ int AString::toInt() const noexcept
     try
     {
         return std::stoi(*this);
+    } catch (...)
+    {
+        return 0;
+    }
+}
+unsigned AString::toUInt() const noexcept
+{
+    try
+    {
+        return std::stoul(*this);
     } catch (...)
     {
         return 0;

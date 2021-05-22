@@ -23,6 +23,7 @@
 
 #include <iterator>
 #include <AUI/Common/AString.h>
+#include <AUI/Common/AVector.h>
 #include <AUI/Util/EnumUtil.h>
 
 
@@ -264,5 +265,14 @@ public:
      * \return working dir of application
      */
     static APath workingDir();
+
+
+    /**
+     * Searches for file in specified dirs. If locations is empty, the PATH variable is used.
+     * @param filename Name of the file searching for
+     * @param locations paths to directories to search for the file in
+     * @return full path to the found file; if file not found, an empty string is returned.
+     */
+    static APath locate(const AString& filename, const AVector<APath>& locations = {});
 };
 

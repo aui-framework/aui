@@ -276,6 +276,9 @@ public:
 	[[nodiscard]]
 	int toInt() const noexcept;
 
+    [[nodiscard]]
+	unsigned toUInt() const noexcept;
+
 	[[nodiscard]]
 	bool toBool() const noexcept;
 

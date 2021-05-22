@@ -19,10 +19,10 @@
  * =====================================================================================================================
  */
 
-#include <AUI/Util/AError.h>
 #include "FileOutputStream.h"
 
 
+#include "CouldNotOpenFileException.h"
 #include "AUI/Common/AString.h"
 
 FileOutputStream::FileOutputStream(const AString& path, bool append)
@@ -35,7 +35,7 @@ FileOutputStream::FileOutputStream(const AString& path, bool append)
 #endif
 	if (!mFile)
 	{
-        AError::handleErrno();
+		throw CouldNotOpenFileException(path.toStdString().c_str());
 	}
 }
 

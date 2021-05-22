@@ -31,3 +31,7 @@ const char* AException::what() const noexcept {
     return s.c_str();
 }
 
+AString AException::getMessage() const {
+    return mMessage;
+}
+

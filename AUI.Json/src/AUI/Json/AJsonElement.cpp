@@ -68,7 +68,7 @@ int AJsonElement::asInt() const
 }
 
 int AJsonElement::asBool() const {
-    return mJson->asVariant().toInt(); // TODO
+    return mJson->asVariant().toBool();
 }
 
 AString AJsonElement::asString() const
@@ -134,10 +134,6 @@ AJsonElement& AJsonObject::operator[](const AString& key) {
 }
 const AJsonElement& AJsonObject::operator[](const AString& key) const {
     return mJson->asObject().at(key);
-}
-
-bool AJsonObject::contains(const AString& key) const {
-    return asObject().contains(key);
 }
 
 AJsonArray::AJsonArray(const AVector<AJsonElement>& value) :
