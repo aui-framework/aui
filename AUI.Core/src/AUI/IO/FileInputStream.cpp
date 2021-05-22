@@ -22,7 +22,6 @@
 #include "FileInputStream.h"
 
 
-#include "CouldNotOpenFileException.h"
 #include "AUI/Common/AString.h"
 
 FileInputStream::FileInputStream(const AString& path)
@@ -35,7 +34,7 @@ FileInputStream::FileInputStream(const AString& path)
 #endif
 	if (!mFile)
 	{
-		throw CouldNotOpenFileException(path.toStdString().c_str());
+		throw IOException(path.toStdString().c_str());
 	}
 }
 

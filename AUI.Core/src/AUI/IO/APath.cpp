@@ -29,8 +29,6 @@
 #include "APath.h"
 #include <AUI/Common/AStringVector.h>
 #include "IOException.h"
-#include "CouldNotOpenFileException.h"
-#include "InsufficientPermissionsException.h"
 #include "FileInputStream.h"
 #include "FileOutputStream.h"
 
@@ -189,7 +187,7 @@ ADeque<APath> APath::listDir(ListFlags f) const {
     DIR* dir = opendir(toStdString().c_str());
     if (!dir)
 #endif
-        throw CouldNotOpenFileException("could not list " + *this ERROR_DESCRIPTION);
+        throw AccessDeniedException("could not list " + *this ERROR_DESCRIPTION);
 
 #ifdef WIN32
     for (bool t = true; t; t = FindNextFile(dir, &fd)) {

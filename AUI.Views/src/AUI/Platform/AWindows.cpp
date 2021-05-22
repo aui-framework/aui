@@ -44,6 +44,7 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Traits/strings.h>
 #include <AUI/Traits/arrays.h>
+#include <AUI/Action/AMenu.h>
 
 constexpr bool AUI_DISPLAY_BOUNDS = false;
 AWindow::Context AWindow::context = {};

@@ -21,8 +21,6 @@
 
 #include "FileOutputStream.h"
 
-
-#include "CouldNotOpenFileException.h"
 #include "AUI/Common/AString.h"
 
 FileOutputStream::FileOutputStream(const AString& path, bool append)
@@ -35,7 +33,7 @@ FileOutputStream::FileOutputStream(const AString& path, bool append)
 #endif
 	if (!mFile)
 	{
-		throw CouldNotOpenFileException(path.toStdString().c_str());
+		throw IOException(path.toStdString().c_str());
 	}
 }
 
