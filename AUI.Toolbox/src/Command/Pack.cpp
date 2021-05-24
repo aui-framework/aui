@@ -151,10 +151,6 @@ void Pack::run(Toolbox& t) {
         {
             std::cout << "Warning: could not read file " << entry << ": " << e.what() << std::endl;
         }
-        catch (AException& e)
-        {
-            std::cout << "Warning: could not read file " << entry << ": " << e.getMessage().toStdString() << std::endl;
-        }
     }
 }
 

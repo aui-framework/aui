@@ -32,6 +32,14 @@
 
 
 class TextAreaField: public AAbstractTextField {
+private:
+    struct Line {
+        AString text;
+        Render::PrerenderedString prerendered;
+    };
+
+    AVector<Line> mLines;
+
 public:
 protected:
     bool isValidText(const AString& text) override {

@@ -58,15 +58,11 @@ public:
     virtual uint32_t getPid() = 0;
 
     /**
-     * \brief Wait for process to be finished.
-     */
-    virtual int wait() = 0;
-
-    /**
      * \brief Wait for process to be finished and returns exit code.
      * \return exit code
      */
-    virtual int getExitCode() = 0;
+    virtual int wait() = 0;
+
 
     /**
      * \brief Launches executable.
@@ -167,7 +163,6 @@ public:
      * \return exit code
      */
     int wait() override;
-    int getExitCode() override;
 
     uint32_t getPid() override;
 

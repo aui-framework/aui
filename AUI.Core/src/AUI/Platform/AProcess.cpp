@@ -79,11 +79,8 @@ public:
         CloseHandle(mHandle);
     }
 
-    void wait() override {
+    int wait() override {
         WaitForSingleObject(mHandle, INFINITE);
-    }
-
-    int getExitCode() override {
         DWORD exitCode;
         wait();
         int r = GetExitCodeProcess(mHandle, &exitCode);
@@ -163,19 +160,11 @@ void AChildProcess::run() {
 int AChildProcess::wait() {
     WaitForSingleObject(mProcessInformation.hProcess, INFINITE);
     DWORD exitCode;
-    wait();
     int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
     assert(r && r != STILL_ACTIVE);
     return exitCode;
 }
 
-int AChildProcess::getExitCode() {
-    DWORD exitCode;
-    wait();
-    int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
-    assert(r && r != STILL_ACTIVE);
-    return exitCode;
-}
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {
     auto handle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid);
@@ -216,10 +205,6 @@ public:
         int loc;
         waitpid(mHandle, &loc, 0);
         return WEXITSTATUS(loc);
-    }
-
-    int getExitCode() override {
-        return wait();
     }
 
     APath getModuleName() override {
@@ -320,9 +305,6 @@ int AChildProcess::wait() {
     return WEXITSTATUS(loc);
 }
 
-int AChildProcess::getExitCode() {
-    return wait();
-}
 
 uint32_t AChildProcess::getPid() {
     return mPid;
