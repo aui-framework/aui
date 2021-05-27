@@ -29,7 +29,6 @@
 class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView
 {
 private:
-	AString mContents;
 	Render::PrerenderedString mPrerenderedString;
     bool mIsPasswordTextField = false;
 
@@ -38,6 +37,7 @@ private:
 	AString getContentsPasswordWrap();
 
 protected:
+    AString mContents;
 	virtual bool isValidText(const AString& text) = 0;
 
 
