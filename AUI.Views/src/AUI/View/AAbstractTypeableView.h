@@ -43,33 +43,41 @@ private:
     unsigned mCursorBlinkCount = 0;
     bool mCursorBlinkVisible = true;
     bool mTextChangedFlag = false;
-    bool mIsPasswordTextField = false;
     bool mIsMultiline = false;
 
+
+protected:
+    int mHorizontalScroll = 0;
     size_t mMaxTextLength = 0x200;
+
+    bool isCursorBlinkVisible() const {
+        return mCursorBlinkVisible;
+    }
+
+protected:
 
     void updateCursorBlinking();
     void updateCursorPos();
 
-    AString getContentsPasswordWrap();
+    virtual void invalidatePrerenderedString() = 0;
+    virtual void typeableErase(size_t begin, size_t end) = 0;
+    virtual void typeableInsert(size_t at, const AString& toInsert) = 0;
+    virtual void typeableInsert(size_t at, wchar_t toInsert) = 0;
+    virtual size_t typeableFind(wchar_t c, size_t startPos = -1) = 0;
+    virtual size_t typeableReverseFind(wchar_t c, size_t startPos = -1) = 0;
+    virtual size_t length() const = 0;
 
-protected:
-    int mHorizontalScroll = 0;
-    virtual bool isValidText(const AString& text) = 0;
+    /**
+     * Char enter implementation. Should be called in onCharEntered.
+     * @param c
+     */
+    void enterChar(wchar_t c);
 
     glm::ivec2 getMouseSelectionPadding() override;
     glm::ivec2 getMouseSelectionScroll() override;
     FontStyle getMouseSelectionFont() override;
-    AString getMouseSelectionText() override;
-
+    AString getDisplayText() override;
     void doRedraw() override;
-
-    virtual void invalidatePrerenderedString() = 0;
-    virtual void typeableErase(size_t begin, size_t end) = 0;
-    virtual void typeableInsert(size_t at, const AString& toInsert) = 0;
-    virtual size_t typeableFind(wchar_t c, size_t startPos = -1) = 0;
-    virtual size_t typeableReverseFind(wchar_t c, size_t startPos = -1) = 0;
-    virtual size_t length() = 0;
 
 public:
     AAbstractTypeableView();
@@ -80,11 +88,6 @@ public:
     void onKeyDown(AInput::Key key) override;
     void onKeyRepeat(AInput::Key key) override;
 
-    void onCharEntered(wchar_t c) override;
-    void render() override;
-
-    void invalidateFont() override;
-
     void onFocusLost() override;
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 
@@ -93,26 +96,24 @@ public:
     void onMouseMove(glm::ivec2 pos) override;
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
-    void setText(const AString& t);
     void clear() {
         setText({});
     }
-    void trimText() {
-        setText(getText().trim());
-    }
-
-    void setPasswordMode(bool isPasswordMode) {
-        mIsPasswordTextField = isPasswordMode;
-    }
-
     void setMaxTextLength(size_t newTextLength) {
         mMaxTextLength = newTextLength;
     }
 
+    void trimText() {
+        setText(getText().trim());
+    }
+
+
+    virtual void setText(const AString& t);
+
     bool handlesNonMouseNavigation() override;
     void onFocusAcquired() override;
 
-    signals:
+signals:
     /**
      * \brief Text changed.
      * \note This signal is also emitted by the AAbstractTextField::setText function
@@ -125,11 +126,8 @@ public:
     emits<AString> textChanging;
 
     void selectAll();
-
     void copyToClipboard() const;
-
     void cutToClipboard();
-
     void pasteFromClipboard();
 };
 

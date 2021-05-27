@@ -31,14 +31,27 @@ class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView
 private:
 	AString mContents;
 	Render::PrerenderedString mPrerenderedString;
+    bool mIsPasswordTextField = false;
 
-	void invalidatePrerenderedString() {
-        mPrerenderedString.mVao = nullptr;
-	}
-	
+	void invalidatePrerenderedString() override;
+
+	AString getContentsPasswordWrap();
+
 protected:
 	virtual bool isValidText(const AString& text) = 0;
 
+
+    void typeableErase(size_t begin, size_t end) override;
+    void typeableInsert(size_t at, const AString& toInsert) override;
+    size_t typeableFind(wchar_t c, size_t startPos) override;
+    size_t typeableReverseFind(wchar_t c, size_t startPos) override;
+    size_t length() const override;
+
+    void typeableInsert(size_t at, wchar_t toInsert) override;
+
+    AString getDisplayText() override;
+
+    void doRedraw() override;
 
 
 public:
@@ -46,49 +59,20 @@ public:
 	virtual ~AAbstractTextField();
 
 	int getContentMinimumHeight() override;
+	void setText(const AString& t) override;
 
-
-	void setText(const AString& t);
-	void clear() {
-	    setText({});
-	}
-	void trimText() {
-	    setText(getText().trim());
-	}
-
-	[[nodiscard]] const AString& getText() const override
-	{
-		return mContents;
-	}
+    void render() override;
 
     void setPasswordMode(bool isPasswordMode) {
         mIsPasswordTextField = isPasswordMode;
     }
 
-	void setMaxTextLength(size_t newTextLength) {
-	    mMaxTextLength = newTextLength;
-	}
-
     bool handlesNonMouseNavigation() override;
     void onFocusAcquired() override;
 
-signals:
-	/**
-	 * \brief Text changed.
-	 * \note This signal is also emitted by the AAbstractTextField::setText function
-	 */
-	emits<AString> textChanged;
+    AString getText() const override;
 
-	/**
-	 * \brief Text is changing by the user.
-	 */
-	emits<AString> textChanging;
+    void onCharEntered(wchar_t c) override;
+    void invalidateFont() override;
 
-    void selectAll();
-
-    void copyToClipboard() const;
-
-    void cutToClipboard();
-
-    void pasteFromClipboard();
 };

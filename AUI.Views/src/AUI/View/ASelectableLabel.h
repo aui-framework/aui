@@ -34,7 +34,7 @@ public:
     ASelectableLabel();
     explicit ASelectableLabel(const AString& text);
 
-    [[nodiscard]] const AString& getText() const override
+    [[nodiscard]] AString getText() const override
     {
         return ALabel::getText();
     }
@@ -59,7 +59,7 @@ protected:
     glm::ivec2 getMouseSelectionPadding() override;
     glm::ivec2 getMouseSelectionScroll() override;
     FontStyle getMouseSelectionFont() override;
-    AString getMouseSelectionText() override;
+    AString getDisplayText() override;
     void doRedraw() override;
 
 };

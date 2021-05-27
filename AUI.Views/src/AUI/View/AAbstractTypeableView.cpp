@@ -56,7 +56,7 @@ void AAbstractTypeableView::updateCursorBlinking()
 
 void AAbstractTypeableView::updateCursorPos()
 {
-    auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getContentsPasswordWrap().mid(0, mCursorIndex)));
+    auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().mid(0, mCursorIndex)));
 
     const int SCROLL_ADVANCEMENT = getContentWidth() * 4 / 10;
 
@@ -68,7 +68,7 @@ void AAbstractTypeableView::updateCursorPos()
     {
         mHorizontalScroll += absoluteCursorPos - getContentWidth() + SCROLL_ADVANCEMENT;
     }
-    mHorizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getFontStyle().getWidth(getContentsPasswordWrap())) - getContentWidth() + 1, 0));
+    mHorizontalScroll = glm::clamp(mHorizontalScroll, 0, glm::max(int(getFontStyle().getWidth(getDisplayText())) - getContentWidth() + 1, 0));
 }
 
 
@@ -138,7 +138,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
             {
                 if (mCursorIndex < length())
                 {
-                    typeableErase(mCursorIndex, mCursorIndex + 1);
+                    typeableErase(mCursorIndex + 1, mCursorIndex + 2);
                 }
             }
             break;
@@ -210,7 +210,9 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
             }
     }
 
-    emit textChanging(getText());
+    if (textChanging) {
+        emit textChanging(getText());
+    }
 
     updateCursorPos();
     updateCursorBlinking();
@@ -242,7 +244,7 @@ void AAbstractTypeableView::pasteFromClipboard() {
 void AAbstractTypeableView::cutToClipboard() {
     auto sel = getSelection();
     AClipboard::copyToClipboard(getSelectedText());
-    mContents.erase(mContents.begin() + sel.begin, mContents.begin() + sel.end);
+    typeableErase(sel.begin, sel.end);
     mCursorIndex = sel.begin;
     mCursorSelection = -1;
 }
@@ -251,23 +253,23 @@ void AAbstractTypeableView::copyToClipboard() const { AClipboard::copyToClipboar
 
 void AAbstractTypeableView::selectAll() { ACursorSelectable::selectAll(); }
 
-void AAbstractTypeableView::onCharEntered(wchar_t c)
+void AAbstractTypeableView::enterChar(wchar_t c)
 {
     if (AInput::isKeyDown(AInput::LButton) ||
         AInput::isKeyDown(AInput::LControl) ||
         AInput::isKeyDown(AInput::RControl) ||
         c == '\t')
         return;
-    if (c == '\n' || c == '\r')
-        return;
+    if (c == '\r') {
+        c = '\n';
+    }
 
     mTextChangedFlag = true;
-    AString contentsCopy = mContents;
     auto cursorIndexCopy = mCursorIndex;
 
     if (hasSelection()) {
         auto sel = getSelection();
-        mContents.erase(mContents.begin() + sel.begin, mContents.begin() + sel.end);
+        typeableErase(sel.begin + 1, sel.end + 1);
 
         switch (c)
         {
@@ -275,7 +277,7 @@ void AAbstractTypeableView::onCharEntered(wchar_t c)
                 mCursorIndex = sel.begin;
                 break;
             default:
-                mContents.insert(sel.begin, c);
+                typeableInsert(sel.begin, c);
                 mCursorIndex = sel.begin + 1;
         }
         mCursorSelection = -1;
@@ -284,22 +286,16 @@ void AAbstractTypeableView::onCharEntered(wchar_t c)
         {
             case '\b':
                 if (mCursorIndex != 0) {
-                    mContents.removeAt(--mCursorIndex);
+                    typeableErase(mCursorIndex, mCursorIndex + 1);
+                    mCursorIndex -= 1;
                 }
                 break;
             default:
-                if (mMaxTextLength <= mContents.length())
+                if (mMaxTextLength <= length())
                     return;
-                mContents.insert(mCursorIndex++, c);
-        }
-        if (!isValidText(mContents))
-        {
-            mContents = std::move(contentsCopy);
-            mCursorIndex = cursorIndexCopy;
-            Platform::playSystemSound(Platform::S_ASTERISK);
+                typeableInsert(mCursorIndex++, c);
         }
     }
-    emit textChanging(mContents);
     invalidatePrerenderedString();
     updateCursorBlinking();
     updateCursorPos();
@@ -312,50 +308,15 @@ void AAbstractTypeableView::onCharEntered(wchar_t c)
     redraw();
 }
 
-void AAbstractTypeableView::render()
-{
-    AView::render();
-
-    if (hasFocus()) {
-        auto absoluteCursorPos = ACursorSelectable::drawSelectionPre();
-
-        // text
-        Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, getContentsPasswordWrap(), getFontStyle());
-
-        ACursorSelectable::drawSelectionPost();
-
-        // cursor
-        if (hasFocus() && mCursorBlinkVisible) {
-            if (absoluteCursorPos < 0) {
-                mHorizontalScroll += absoluteCursorPos;
-                redraw();
-            } else if (getWidth() < absoluteCursorPos + mPadding.horizontal() + 1) {
-                mHorizontalScroll += absoluteCursorPos - getWidth() + mPadding.horizontal() + 1;
-                redraw();
-            }
-
-            Render::inst().drawRect(mPadding.left + absoluteCursorPos,
-                                    mPadding.top, glm::ceil(1_dp), getFontStyle().size + 3);
-        }
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    } else {
-        if (!mPrerenderedString.mVao) {
-            mPrerenderedString = Render::inst().preRendererString(getContentsPasswordWrap(), getFontStyle());
-        }
-        Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, mPrerenderedString);
-        Render::inst().setFill(Render::FILL_SOLID);
-        Render::inst().setColor({1, 1, 1, 1 });
-    }
-
-}
-
 void AAbstractTypeableView::onFocusLost()
 {
     AView::onFocusLost();
     if (mTextChangedFlag)
     {
         mTextChangedFlag = false;
-        emit textChanged(mContents);
+        if (textChanged) {
+            emit textChanged(getText());
+        }
     }
 
 }
@@ -392,7 +353,6 @@ void AAbstractTypeableView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 void AAbstractTypeableView::setText(const AString& t)
 {
     mHorizontalScroll = 0;
-    mContents = t;
     mCursorIndex = t.length();
     mCursorSelection = 0;
     updateCursorBlinking();
@@ -407,16 +367,6 @@ void AAbstractTypeableView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key but
     updateCursorBlinking();
 }
 
-AString AAbstractTypeableView::getContentsPasswordWrap() {
-    if (mIsPasswordTextField) {
-        AString s;
-        for (auto c : mContents)
-            s += "•";
-        return s;
-    }
-    return mContents;
-}
-
 glm::ivec2 AAbstractTypeableView::getMouseSelectionPadding() {
     return {mPadding.left, mPadding.top};
 }
@@ -429,14 +379,11 @@ FontStyle AAbstractTypeableView::getMouseSelectionFont() {
     return getFontStyle();
 }
 
-AString AAbstractTypeableView::getMouseSelectionText() {
-    return getContentsPasswordWrap();
+AString AAbstractTypeableView::getDisplayText() {
+    return getText();
 }
+
 
 void AAbstractTypeableView::doRedraw() {
     redraw();
-}
-
-void AAbstractTypeableView::invalidateFont() {
-    mPrerenderedString.mVao = nullptr;
 }

@@ -30,9 +30,14 @@
 #include "AViewContainer.h"
 #include "AAbstractTextField.h"
 
+/**
+ * Word breaking fast text area.
+ */
 class API_AUI_VIEWS ATextArea: public AViewContainer {
 private:
-    _<AAbstractTextField> mTextField;
+    class TextAreaField;
+    _<TextAreaField> mTextField;
+    bool mEditable = false; // TODO editable
 
 public:
     ATextArea();
