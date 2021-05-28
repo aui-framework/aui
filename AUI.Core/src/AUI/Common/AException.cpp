@@ -20,6 +20,39 @@
  */
 
 #include "AException.h"
+#ifdef AUI_USE_BACKTRACE
+#include <backtrace.h>
+#include <AUI/Logging/ALogger.h>
+
+void aui_backtrace_error_callback(void *data, const char *msg,
+                                  int errnum) {
+    ALogger::err("Backtrace error:"_as + msg);
+}
+int aui_backtrace_full_callback(void *data,
+                                uintptr_t pc,
+                                const char *filename,
+                                int lineno,
+                                const char *function) {
+    auto exception = reinterpret_cast<AException*>(data);
+    exception->mStacktrace << AException::StacktraceEntry{
+        function
+        ? function
+        : (filename
+           ? filename
+           : std::to_string(pc)
+           ),
+        lineno
+    };
+    return 0;
+}
+AException::AException() {
+    static auto state = backtrace_create_state(nullptr, true, aui_backtrace_error_callback, nullptr);
+    backtrace_full(state, 0, aui_backtrace_full_callback, aui_backtrace_error_callback, this);
+}
+#else
+AException::AException() = default;
+#endif
+
 
 AException::~AException() noexcept
 {
@@ -33,5 +66,15 @@ const char* AException::what() const noexcept {
 
 AString AException::getMessage() const {
     return mMessage;
+}
+
+void AException::printStacktrace() {
+    if (mStacktrace.empty()) {
+        ALogger::warn("<stack trace is not available>");
+        return;
+    }
+    for (auto& l : mStacktrace) {
+        ALogger::raw() << "    at " << l.mName << l.lineno << '\n';
+    }
 }
 

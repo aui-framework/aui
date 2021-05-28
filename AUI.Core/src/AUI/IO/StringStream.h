@@ -22,15 +22,19 @@
 #pragma once
 #include "AUI/Common/AString.h"
 #include "IInputStream.h"
+#include "IOutputStream.h"
 
-class API_AUI_CORE StringStream: public IInputStream
+class API_AUI_CORE StringStream: public IInputStream, public IOutputStream
 {
 private:
 	std::string mString;
 	std::string::iterator mIterator;
 
-	public:
-	StringStream(const AString& string);
+public:
+    StringStream() = default;
+	explicit StringStream(const AString& string);
+	virtual ~StringStream() = default;
 
 	int read(char* dst, int size) override;
+    int write(const char *src, int size) override;
 };

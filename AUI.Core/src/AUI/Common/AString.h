@@ -553,8 +553,7 @@ inline AString operator+(const AString& one, const char* other) noexcept
 	return one + AString(other);
 }
 
-inline AString operator+(const char* other, const AString& one) noexcept
-{
+inline AString operator+(const char* other, const AString& one) noexcept {
 	return AString(other) + one;
 }
 

@@ -43,15 +43,15 @@ bool JsonNull::isArray() {
 }
 
 AVariant& JsonNull::asVariant() {
-    throw JsonException("null is not a value");
+    throwMiscastException("null is not a value");
 }
 
 AMap<AString, AJsonElement>& JsonNull::asObject() {
-    throw JsonException("null is not an object");
+    throwMiscastException("null is not an object");
 }
 
 AVector<AJsonElement>& JsonNull::asArray() {
-    throw JsonException("null is not an array");
+    throwMiscastException("null is not an array");
 }
 
 void JsonNull::serialize(const _<IOutputStream>& os) const {

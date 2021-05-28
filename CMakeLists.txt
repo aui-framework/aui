@@ -91,7 +91,7 @@ add_subdirectory(AUI.Xml)
 add_subdirectory(AUI.Views)
 add_subdirectory(AUI.Svg)
 add_subdirectory(AUI.Image)
-add_subdirectory(AUI.Installer)
+#add_subdirectory(AUI.Installer)
 
 
 if(NOT ANDROID)
