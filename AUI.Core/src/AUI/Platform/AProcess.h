@@ -48,9 +48,14 @@ public:
     virtual ~AProcess() = default;
 
     /**
-     * \return path to the process' executable.
+     * \return process' executable file name.
      */
     virtual APath getModuleName() = 0;
+
+    /**
+     * \return path to the process' executable.
+     */
+    virtual APath getPathToExecutable() = 0;
 
     /**
      * \return process' ID.
@@ -152,6 +157,8 @@ public:
     void setWorkingDirectory(const APath& workingDirectory) {
         mWorkingDirectory = workingDirectory;
     }
+
+    APath getPathToExecutable() override;
 
     /**
      * \brief Launches process.

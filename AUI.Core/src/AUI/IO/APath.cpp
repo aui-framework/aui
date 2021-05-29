@@ -31,6 +31,7 @@
 #include "IOException.h"
 #include "FileInputStream.h"
 #include "FileOutputStream.h"
+#include <AUI/Traits/platform.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -382,7 +383,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
 APath APath::locate(const AString& filename, const AVector<APath>& locations) {
 
     if (locations.empty()) {
-        for (APath pathEntry : AString(getenv("PATH")).split(':')) {
+        for (const APath& pathEntry : AString(getenv("PATH")).split(aui::platform::current::path_variable_separator)) {
             auto fullPath = pathEntry[filename];
             if (fullPath.isRegularFileExists()) {
                 return fullPath;

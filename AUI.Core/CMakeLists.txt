@@ -16,8 +16,8 @@ install(
 )
 
 if(Backtrace_FOUND)
-	message(STATUS "Stacktrace backend: libbacktrace")
-	target_link_libraries(AUI.Core PRIVATE backtrace)
+	message(STATUS "Stacktrace backend: backtrace")
+	target_link_libraries(AUI.Core PRIVATE ${Backtrace_LIBRARIES})
 	target_compile_definitions(AUI.Core PRIVATE AUI_USE_BACKTRACE=1)
 else()
 	message(STATUS "Stacktrace backend: none")

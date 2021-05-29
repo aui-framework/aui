@@ -79,6 +79,12 @@ public:
         CloseHandle(mHandle);
     }
 
+    APath getPathToExecutable() override {
+        wchar_t buf[0x800];
+        GetProcessImageFileName(mHandle, buf, sizeof(buf));
+        return APath(buf).filename();
+    }
+
     int wait() override {
         WaitForSingleObject(mHandle, INFINITE);
         DWORD exitCode;
@@ -91,7 +97,7 @@ public:
     APath getModuleName() override {
         wchar_t buf[0x800];
         GetProcessImageFileName(mHandle, buf, sizeof(buf));
-        return APath(buf).filename();
+        return getPathToExecutable().filename();
     }
 
     uint32_t getPid() override {
@@ -370,4 +376,8 @@ _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
 
 APath AChildProcess::getModuleName() {
     return APath(mApplicationFile).filename();
+}
+
+APath AChildProcess::getPathToExecutable() {
+    return mApplicationFile;
 }

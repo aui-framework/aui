@@ -23,10 +23,11 @@
 #ifdef AUI_USE_BACKTRACE
 #include <backtrace.h>
 #include <AUI/Logging/ALogger.h>
+#include <AUI/Platform/AProcess.h>
 
 void aui_backtrace_error_callback(void *data, const char *msg,
                                   int errnum) {
-    ALogger::err("Backtrace error:"_as + msg);
+    ALogger::err("Backtrace error: "_as + msg);
 }
 int aui_backtrace_full_callback(void *data,
                                 uintptr_t pc,
@@ -46,7 +47,8 @@ int aui_backtrace_full_callback(void *data,
     return 0;
 }
 AException::AException() {
-    static auto state = backtrace_create_state(nullptr, true, aui_backtrace_error_callback, nullptr);
+    static auto pathToExecutable = AProcess::self()->getPathToExecutable().toStdString();
+    static auto state = backtrace_create_state(pathToExecutable.c_str(), true, aui_backtrace_error_callback, nullptr);
     backtrace_full(state, 0, aui_backtrace_full_callback, aui_backtrace_error_callback, this);
 }
 #else
