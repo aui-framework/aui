@@ -519,6 +519,12 @@ public:
 	virtual void onMousePressed(glm::ivec2 pos, AInput::Key button);
     virtual void onMouseReleased(glm::ivec2 pos, AInput::Key button);
     virtual void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button);
+
+    /**
+     * Handles mouse wheel events
+     * @param pos mouse cursor position
+     * @param delta the distance mouse wheel scrolled. 120 = mouse scroll down, -120 = mouse scroll up.
+     */
     virtual void onMouseWheel(glm::ivec2 pos, int delta);
     virtual void onKeyDown(AInput::Key key);
     virtual void onKeyRepeat(AInput::Key key);

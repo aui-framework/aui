@@ -28,7 +28,7 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/AMetric.h>
 #include "ATextArea.h"
-#include "AScrollbar.h"
+#include <optional>
 
 
 class ATextArea::TextAreaField: public AAbstractTypeableView {
@@ -46,26 +46,36 @@ private:
      */
     std::optional<AString> mFullText;
 
-    /**
-     * Current position where the lazy word wrapping stopped.
-     */
-    size_t mLazyWordWrappingPos = 0;
+    int mScroll = 0;
 
     void updateWordWrap(const AString& text) {
         mLines.clear();
         mFullText = text;
-        mLazyWordWrappingPos = 0;
+    }
+
+    void updateScrollDimensions() {
+        mTextArea.mScrollbar->setScrollDimensions(getContentHeight(),
+                                                  mLines.size() * getFontStyle().getLineHeight() / 2);
     }
 
 public:
-    TextAreaField(ATextArea& textArea) : mTextArea(textArea) {}
+    TextAreaField(ATextArea& textArea) : mTextArea(textArea) {
+
+        connect(mTextArea.mScrollbar->scrolled, [&](int scroll) {
+            mScroll = scroll;
+            redraw();
+        });
+    }
 
     void setSize(int width, int height) override {
-        bool changed = getWidth() != width || getHeight() != height;
+        bool widthChanged = getWidth() != width;
+        bool heightChanged = getHeight() != height;
         AView::setSize(width, height);
 
-        if (changed) {
+        if (widthChanged) {
             updateWordWrap(getText());
+        } else if (heightChanged) {
+            updateScrollDimensions();
         }
     }
 
@@ -93,34 +103,38 @@ public:
         return s;
     }
 
+
     void render() override {
+        if (mLines.empty() && !mFullText->empty()) {
+            size_t wordWrappingPos = 0;
+            while (wordWrappingPos < mFullText->length()) {
+                // TODO optimize mid
+                auto t = mFullText->mid(wordWrappingPos);
+                AString line = getFontStyle().font->trimStringToWidth(t,
+                                                                      getWidth(),
+                                                                      getFontStyle().size,
+                                                                      getFontStyle().fontRendering);
+                wordWrappingPos += line.length() + 1;
+                mLines.push_back(Line{ std::move(line), {} });
+            }
+            updateScrollDimensions();
+        }
         AView::render();
 
         auto drawText = [&] {
-            size_t viewHeight = getContentHeight();
             size_t lineHeight = getFontStyle().getLineHeight();
-            for (size_t i = 0; ; ++i) {
-                if (i * lineHeight > viewHeight) {
+            size_t viewHeight = getContentHeight();
+            for (size_t i = mScroll / getFontStyle().getLineHeight(); ; ++i) {
+                if (i * lineHeight > viewHeight + mScroll) {
                     return;
-                }
-                if (i >= mLines.size()) {
-                    if (mLazyWordWrappingPos < mFullText->length()) {
-                        // TODO optimize mid
-                        AString line = getFontStyle().font->trimStringToWidth(mFullText->mid(mLazyWordWrappingPos),
-                                                                              getWidth(),
-                                                                              getFontStyle().size,
-                                                                              getFontStyle().fontRendering);
-                        mLazyWordWrappingPos += line.length() + 1;
-                        mLines.push_back(Line{ std::move(line), {} });
-                    } else {
-                        return;
-                    }
                 }
 
                 if (!mLines[i].prerendered.mVao) {
                     mLines[i].prerendered = Render::inst().preRendererString(mLines[i].text, getFontStyle());
                 }
-                Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top + i * getFontStyle().getLineHeight(), mLines[i].prerendered);
+                Render::inst().drawString(mPadding.left - mHorizontalScroll,
+                                          mPadding.top + i * getFontStyle().getLineHeight() - mScroll,
+                                          mLines[i].prerendered);
             }
         };
 
@@ -325,10 +339,11 @@ protected:
 ATextArea::ATextArea() {
     addAssName(".input-field");
     setLayout(_new<AHorizontalLayout>());
+    mScrollbar = _new<AScrollbar>();
     addView(mTextField = _new<TextAreaField>(*this) let {
         it->setExpanding({2, 2});
     });
-    addView(_new<AScrollbar>());
+    addView(mScrollbar);
 }
 
 ATextArea::ATextArea(const AString& text):
@@ -339,5 +354,10 @@ ATextArea::ATextArea(const AString& text):
 
 int ATextArea::getContentMinimumHeight() {
     return 80_dp;
+}
+
+void ATextArea::onMouseWheel(glm::ivec2 pos, int delta) {
+    //AViewContainer::onMouseWheel(pos, delta);
+    mScrollbar->onMouseWheel({}, delta);
 }
 

@@ -29,6 +29,7 @@
 
 #include "AViewContainer.h"
 #include "AAbstractTextField.h"
+#include "AScrollbar.h"
 
 /**
  * Word breaking fast text area.
@@ -37,6 +38,7 @@ class API_AUI_VIEWS ATextArea: public AViewContainer {
 private:
     class TextAreaField;
     _<TextAreaField> mTextField;
+    _<AScrollbar> mScrollbar;
     bool mEditable = false; // TODO editable
 
 public:
@@ -44,6 +46,8 @@ public:
     explicit ATextArea(const AString& text);
 
     int getContentMinimumHeight() override;
+
+    void onMouseWheel(glm::ivec2 pos, int delta) override;
 };
 
 

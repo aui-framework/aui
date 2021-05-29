@@ -20,9 +20,9 @@
  */
 
 #include "AException.h"
+#include <AUI/Logging/ALogger.h>
 #ifdef AUI_USE_BACKTRACE
 #include <backtrace.h>
-#include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AProcess.h>
 
 void aui_backtrace_error_callback(void *data, const char *msg,

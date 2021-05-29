@@ -137,7 +137,7 @@ int AViewContainer::getContentMinimumWidth()
 {
 	if (mLayout)
 	{
-		return glm::max(mLayout->getMinimumWidth(), AView::getContentMinimumWidth());
+		return (glm::max)(mLayout->getMinimumWidth(), AView::getContentMinimumWidth());
 	}
 	return AView::getContentMinimumWidth();
 }
@@ -146,7 +146,7 @@ int AViewContainer::getContentMinimumHeight()
 {
 	if (mLayout)
 	{
-        return glm::max(mLayout->getMinimumHeight(), AView::getContentMinimumHeight());
+        return (glm::max)(mLayout->getMinimumHeight(), AView::getContentMinimumHeight());
 	}
 	return AView::getContentMinimumHeight();
 }
