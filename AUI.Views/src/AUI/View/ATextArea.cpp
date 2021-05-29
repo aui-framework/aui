@@ -29,6 +29,7 @@
 #include <AUI/Util/AMetric.h>
 #include "ATextArea.h"
 #include <optional>
+#include <glm/ext/matrix_transform.hpp>
 
 
 class ATextArea::TextAreaField: public AAbstractTypeableView {
@@ -55,7 +56,10 @@ private:
 
     void updateScrollDimensions() {
         mTextArea.mScrollbar->setScrollDimensions(getContentHeight(),
-                                                  mLines.size() * getFontStyle().getLineHeight() / 2);
+                                                  mLines.size() * getFontStyle().getLineHeight());
+    }
+    void pushScrollMatrix() {
+        Render::inst().setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
     }
 
 public:
@@ -108,9 +112,8 @@ public:
         if (mLines.empty() && !mFullText->empty()) {
             size_t wordWrappingPos = 0;
             while (wordWrappingPos < mFullText->length()) {
-                // TODO optimize mid
-                auto t = mFullText->mid(wordWrappingPos);
-                AString line = getFontStyle().font->trimStringToWidth(t,
+                AString line = getFontStyle().font->trimStringToWidth(mFullText->begin() + wordWrappingPos,
+                                                                      mFullText->end(),
                                                                       getWidth(),
                                                                       getFontStyle().size,
                                                                       getFontStyle().fontRendering);
@@ -124,7 +127,7 @@ public:
         auto drawText = [&] {
             size_t lineHeight = getFontStyle().getLineHeight();
             size_t viewHeight = getContentHeight();
-            for (size_t i = mScroll / getFontStyle().getLineHeight(); ; ++i) {
+            for (size_t i = mScroll / getFontStyle().getLineHeight(); i < mLines.size(); ++i) {
                 if (i * lineHeight > viewHeight + mScroll) {
                     return;
                 }
@@ -138,12 +141,20 @@ public:
             }
         };
 
-        if (hasFocus()) {
-            auto absoluteCursorPos = ACursorSelectable::drawSelectionPre();
+        if (hasFocus() && mTextArea.mEditable) {
+            int absoluteCursorPos;
+            {
+                RenderHints::PushMatrix m;
+                pushScrollMatrix();
+                absoluteCursorPos = ACursorSelectable::drawSelectionPre();
+            }
 
             drawText();
 
-            ACursorSelectable::drawSelectionPost();
+            {
+                RenderHints::PushMatrix m;
+                ACursorSelectable::drawSelectionPost();
+            }
 
             // cursor
             if (mTextArea.mEditable && hasFocus() && isCursorBlinkVisible()) {

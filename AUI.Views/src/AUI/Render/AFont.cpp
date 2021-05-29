@@ -27,6 +27,7 @@
 #include <fstream>
 #include <string>
 #include "AUI/Common/AStringVector.h"
+#include "AFont.h"
 
 
 AFont::AFont(AFontManager* fm, const AString& path) :
@@ -200,20 +201,34 @@ float AFont::length(const AString& text, long size, FontRendering fr)
 	return advance;
 }
 
-AString AFont::trimStringToWidth(const AString& text, size_t width, long size, FontRendering fr) {
+AString AFont::trimStringToWidth(const AString& text, size_t width, long size, const FontRendering& fr) {
+	return trimStringToWidth(text.begin(), text.end(), width, size, fr);
+}
+AString AFont::trimStringToWidth(AString::const_iterator begin, AString::const_iterator end, size_t width, long size, const FontRendering& fr) {
 	AString s;
 	size_t advance = 0;
-	AStringVector a = text.split(' ');
 	size_t length = 0;
 	size_t space_width = AFont::length(" ", size, fr);
 
-	for (int i = 0; i < a.size(); i++) {
-		if (a[i].empty()) {
+	for (auto i = begin; i != end;) {
+		// find next space
+		AString::const_iterator wordEnd = i;
+		for (; wordEnd != end && *wordEnd != ' '; ++wordEnd) {
+
+		}
+		AString word = {i, wordEnd};
+		if (wordEnd == end) {
+			i = end;
+		} else {
+			i = wordEnd + 1;
+		}
+
+		if (word.empty()) {
 			if (!s.empty())
 				s += " ";
 			continue;
 		}
-		size_t l = AFont::length(a[i], size, fr);
+		size_t l = AFont::length(word, size, fr);
 		if (s.size())
 			l += size;
 
@@ -224,12 +239,12 @@ AString AFont::trimStringToWidth(const AString& text, size_t width, long size, F
 			s += AString(" ");
 			length += space_width;
 		}
-		for (size_t j = 0; j < a[i].size(); j++) {
+		for (size_t j = 0; j < word.size(); j++) {
 			if (length > width)
 			{
 				return s;
 			}
-			wchar_t c = a[i][j];
+			wchar_t c = word[j];
 			if (c == '\n') {
 				return s;
 			}
@@ -302,4 +317,3 @@ int AFont::getDescenderHeight(long size) const
 _<Util::SimpleTexturePacker> AFont::texturePackerOf(long size, FontRendering fr) {
 	return getCharsetBySize(size, fr).tp;
 }
-
