@@ -192,8 +192,8 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
                 file(GET_RUNTIME_DEPENDENCIES
                      EXECUTABLES
                          ${MODULE_NAME}
-                     PRE_EXCLUDE_REGEXES "^[Cc]:[\\/\\][Ww]indows[\\/\\].*$"
-                     POST_EXCLUDE_REGEXES "^[Cc]:[\\/\\][Ww]indows[\\/\\].*$"
+                     PRE_EXCLUDE_REGEXES "^[Cc]:[\\/\\][Ww][Ii][Nn][Dd][Oo][Ww][Ss][\\/\\].*$"
+                     POST_EXCLUDE_REGEXES "^[Cc]:[\\/\\][Ww][Ii][Nn][Dd][Oo][Ww][Ss][\\/\\].*$"
                      UNRESOLVED_DEPENDENCIES_VAR UNRESOLVED
                      RESOLVED_DEPENDENCIES_VAR RESOLVED
                 )
@@ -205,6 +205,9 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
                     endforeach()
                 endif()
 
+                foreach (V ${RESOLVED})
+                    message("Resolved[1]: ${V}")
+                endforeach()
                 # try to resolve unresolved dependencies
                 foreach (V ${UNRESOLVED})
 					# avoid duplicates
@@ -228,6 +231,7 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
 							if (EXISTS ${TARGET_FILE})
 								# add to global resolved items
 								list(APPEND RESOLVED ${TARGET_FILE})
+                                message("Resolved[2]: ${TARGET_FILE}")
 								list(REMOVE_ITEM UNRESOLVED ${V})
 							else()
 								# add to global unresolved items
