@@ -44,6 +44,7 @@ bool JsonObject::isArray()
 AVariant& JsonObject::asVariant()
 {
 	throwMiscastException("object is not a value");
+    throw std::exception{};
 }
 
 AMap<AString, AJsonElement>& JsonObject::asObject()
@@ -54,6 +55,7 @@ AMap<AString, AJsonElement>& JsonObject::asObject()
 AVector<AJsonElement>& JsonObject::asArray()
 {
 	throwMiscastException("object is not an array");
+    throw std::exception{};
 }
 
 void JsonObject::serialize(const _<IOutputStream>& os) const {

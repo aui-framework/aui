@@ -49,11 +49,13 @@ AVariant& JsonValue::asVariant()
 AMap<AString, AJsonElement>& JsonValue::asObject()
 {
 	throwMiscastException("value is not an object");
+    throw std::exception{};
 }
 
 AVector<AJsonElement>& JsonValue::asArray()
 {
 	throwMiscastException("value is not an array");
+    throw std::exception{};
 }
 
 void JsonValue::serialize(const _<IOutputStream>& os) const {
