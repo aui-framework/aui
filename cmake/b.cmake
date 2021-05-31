@@ -189,6 +189,9 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
             message(STATUS "Installing dependencies for ${AUI_MODULE_NAME}")
 
             function(install_dependencies_for MODULE_NAME)
+                if(${MODULE_NAME} STREQUAL "installer")
+                    return()
+                endif()
                 file(GET_RUNTIME_DEPENDENCIES
                      EXECUTABLES
                          ${MODULE_NAME}
@@ -333,6 +336,39 @@ function(AUI_Compile_Assets AUI_MODULE_NAME)
         endif()
     endif()
 endfunction(AUI_Compile_Assets)
+
+function(AUI_Compile_Assets_Add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
+    if(ANDROID)
+        set(TARGET_DIR ${AUI_SDK_BIN})
+    else()
+        get_target_property(TARGET_DIR ${AUI_MODULE_NAME} ARCHIVE_OUTPUT_DIRECTORY)
+    endif()
+
+    if (NOT EXISTS ${FILE_PATH})
+        message(FATAL_ERROR "File ${FILE_PATH} does not exist! Is your path absolute?")
+    endif()
+
+    if (TARGET AUI.Toolbox AND NOT CMAKE_CROSSCOMPILING)
+        set(AUI_TOOLBOX_EXE $<TARGET_FILE:AUI.Toolbox>)
+    else()
+        set(AUI_TOOLBOX_EXE aui.toolbox)
+    endif()
+
+    string(MD5 OUTPUT_PATH ${ASSET_PATH})
+    set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
+    add_custom_command(
+            OUTPUT ${OUTPUT_PATH}
+            COMMAND ${AUI_TOOLBOX_EXE} pack_manual ${FILE_PATH} ${ASSET_PATH} ${OUTPUT_PATH}
+            DEPENDS ${FILE_PATH}
+    )
+
+    target_sources(${AUI_MODULE_NAME} PRIVATE ${OUTPUT_PATH})
+    if(NOT ANDROID)
+        if (TARGET AUI.Toolbox)
+            add_dependencies(${AUI_MODULE_NAME} AUI.Toolbox)
+        endif()
+    endif()
+endfunction(AUI_Compile_Assets_Add)
 
 if (MINGW OR UNIX)
     # strip for release
