@@ -17,9 +17,74 @@ install(
 		DESTINATION "include/"
 )
 
-if(Backtrace_FOUND)
+if(Backtrace_FOUND AND Backtrace_LIBRARIES)
 	message(STATUS "Stacktrace backend: backtrace")
 	target_link_libraries(AUI.Core PRIVATE ${Backtrace_LIBRARIES})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 	target_compile_definitions(AUI.Core PRIVATE AUI_USE_BACKTRACE=1)
 else()
 	message(STATUS "Stacktrace backend: none")

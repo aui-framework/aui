@@ -214,11 +214,29 @@ public:
     }
 
     APath getModuleName() override {
+        return getPathToExecutable().filename();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+    APath getPathToExecutable() override {
         char buf[0x800];
         char path[0x100];
         sprintf(path, "/proc/%u/exe", mHandle);
         readlink(path, buf, sizeof(buf));
-        return APath(buf).filename();
+        return APath(buf);
     }
 
     uint32_t getPid() override {
