@@ -8,14 +8,18 @@ if (NOT WIN32)
 endif()
 
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-set(GLM_INCLUDE_DIR "${SELF_DIR}/3rdparty/glm")
+if (GLM_INCLUDE_DIR)
+	message(STATUS "Using custom GLM_INCLUDE_DIR: ${GLM_INCLUDE_DIR}")
+else()
+	set(GLM_INCLUDE_DIR "${SELF_DIR}/3rdparty/glm")
+	install(
+			DIRECTORY ${GLM_INCLUDE_DIR}/glm
+			DESTINATION "include/"
+	)
+endif()
 target_include_directories(AUI.Core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>)
 target_link_libraries(AUI.Core PRIVATE ZLIB::ZLIB)
 
-install(
-		DIRECTORY ${GLM_INCLUDE_DIR}/glm
-		DESTINATION "include/"
-)
 
 if(Backtrace_FOUND AND Backtrace_LIBRARIES)
 	message(STATUS "Stacktrace backend: backtrace")
