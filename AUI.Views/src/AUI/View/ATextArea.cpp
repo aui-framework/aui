@@ -69,6 +69,7 @@ public:
             mScroll = scroll;
             redraw();
         });
+        addAssName(".text-area-field");
     }
 
     void setSize(int width, int height) override {
@@ -114,7 +115,7 @@ public:
             while (wordWrappingPos < mFullText->length()) {
                 AString line = getFontStyle().font->trimStringToWidth(mFullText->begin() + wordWrappingPos,
                                                                       mFullText->end(),
-                                                                      getWidth(),
+                                                                      getContentWidth(),
                                                                       getFontStyle().size,
                                                                       getFontStyle().fontRendering);
                 wordWrappingPos += line.length() + 1;

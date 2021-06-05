@@ -36,7 +36,6 @@ endif()
 cmake_minimum_required(VERSION 3.16)
 
 
-ADD_DEFINITIONS(-DUNICODE)
 
 # mingw winver fix
 if (MINGW)

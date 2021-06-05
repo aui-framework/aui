@@ -37,6 +37,7 @@ if (OPENGL_FOUND)
 
 	target_include_directories(AUI.Views PUBLIC ${GLEW_INCLUDE_DIRS})
 	target_include_directories(AUI.Views PRIVATE ${FREETYPE_INCLUDE_DIRS})
+	target_compile_definitions(AUI.Views PRIVATE UNICODE=1)
 
 	target_link_libraries(AUI.Views PUBLIC AUI.Core)
 
