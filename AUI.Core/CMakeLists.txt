@@ -11,6 +11,7 @@ get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 set(GLM_INCLUDE_DIR "${SELF_DIR}/3rdparty/glm")
 target_include_directories(AUI.Core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>)
 target_link_libraries(AUI.Core PRIVATE ZLIB::ZLIB)
+target_compile_definitions(AUI.Core PRIVATE UNICODE=1)
 
 install(
 		DIRECTORY ${GLM_INCLUDE_DIR}/glm
@@ -92,6 +93,10 @@ endif()
 
 if (WIN32)
 	target_link_libraries(AUI.Core PRIVATE kernel32 psapi)
+
+	# fix min/max definition
+	target_compile_definitions(AUI.Core PUBLIC NOMINMAX=1)
+
 endif()
 if (UNIX)
 	SET(CMAKE_CXX_FLAGS -pthread)
