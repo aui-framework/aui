@@ -20,6 +20,8 @@ endif()
 target_include_directories(AUI.Core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>)
 target_link_libraries(AUI.Core PRIVATE ZLIB::ZLIB)
 
+target_compile_definitions(AUI.Core PRIVATE UNICODE=1)
+
 
 if(Backtrace_FOUND AND Backtrace_LIBRARIES)
 	message(STATUS "Stacktrace backend: backtrace")
