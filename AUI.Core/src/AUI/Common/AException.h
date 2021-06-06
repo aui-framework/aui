@@ -32,12 +32,11 @@ friend int aui_backtrace_full_callback(void *data,
                                        const char *filename,
                                        int lineno,
                                        const char *function);
+public:
+    class Stacktrace;
+
 private:
-    struct StacktraceEntry {
-        std::string mName;
-        int lineno;
-    };
-    AVector<StacktraceEntry> mStacktrace;
+    Stacktrace* mStacktrace = nullptr;
 
 protected:
 	AString mMessage;

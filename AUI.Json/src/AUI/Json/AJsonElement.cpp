@@ -132,8 +132,12 @@ AJsonObject::AJsonObject():
 AJsonElement& AJsonObject::operator[](const AString& key) {
     return mJson->asObject()[key];
 }
-const AJsonElement& AJsonObject::operator[](const AString& key) const {
-    return mJson->asObject().at(key);
+AJsonElement AJsonObject::operator[](const AString& key) const {
+    //return mJson->asObject().at(key);
+    if (auto c = mJson->asObject().contains(key)) {
+        return c->second;
+    }
+    return AJsonElement(_new<JsonNull>());
 }
 
 AJsonArray::AJsonArray(const AVector<AJsonElement>& value) :

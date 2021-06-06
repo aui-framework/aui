@@ -114,7 +114,7 @@ public:
 	AJsonObject(const AMap<AString, AJsonElement>& value);
 	AJsonObject();
     [[nodiscard]] AJsonElement& operator[](const AString& key);
-    [[nodiscard]] const AJsonElement& operator[](const AString& key) const;
+    [[nodiscard]] AJsonElement operator[](const AString& key) const;
 
     auto contains(const AString& key) const {
         return asObject().contains(key);
