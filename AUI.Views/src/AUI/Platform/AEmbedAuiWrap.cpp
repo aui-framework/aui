@@ -27,6 +27,11 @@
 #include "AEmbedAuiWrap.h"
 #include <glm/ext/matrix_clip_space.hpp>
 
+AEmbedAuiWrap::AEmbedAuiWrap(const _<AViewContainer>& container) : mContainer(container) {
+    auto r = glewInit();
+    assert(r == 0);
+}
+
 void AEmbedAuiWrap::setSize(int width, int height) {
     mWidth = width;
     mHeight = height;

@@ -38,7 +38,7 @@ private:
     int mWidth, mHeight;
 
 public:
-    explicit AEmbedAuiWrap(const _<AViewContainer>& container) : mContainer(container) {}
+    explicit AEmbedAuiWrap(const _<AViewContainer>& container);
 
     void setSize(int width, int height);
     void render();
