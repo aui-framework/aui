@@ -91,7 +91,7 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
         auto x = GET_X_LPARAM(lParam);
         auto y = GET_Y_LPARAM(lParam);
 
-        bool resizeWidth = !(mWindowStyle & WS_NO_RESIZE);//window->minimumWidth() != window->maximumWidth();
+        bool resizeWidth = !(mWindowStyle & WindowStyle::NO_RESIZE);//window->minimumWidth() != window->maximumWidth();
         bool resizeHeight = resizeWidth;//window->minimumHeight() != window->maximumHeight();
 
         if (resizeWidth)
@@ -174,7 +174,7 @@ void ACustomWindow::doDrawWindow()
 ACustomWindow::ACustomWindow(const AString& name, int width, int height): AWindow(nullptr)
 {
     // init here to be sure vtable for wndProc for WM_CREATE is initialized
-    windowNativePreInit(name, width, height, nullptr, WS_DEFAULT);
+    windowNativePreInit(name, width, height, nullptr, WindowStyle::DEFAULT);
 }
 
 ACustomWindow::ACustomWindow(): ACustomWindow("My custom window", 854, 500)
@@ -201,7 +201,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
         AWindow(name, width, height) {
 
 
-    setWindowStyle(WS_NO_DECORATORS);
+    setWindowStyle(WindowStyle::NO_DECORATORS);
 }
 
 void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {

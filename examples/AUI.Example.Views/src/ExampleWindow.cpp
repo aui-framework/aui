@@ -115,11 +115,11 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                auto w = _new<AWindow>("Dialog window", 400_dp, 300_dp);
                fillWindow(w);
                w->show();
-               w->setWindowStyle(WS_DIALOG);
+               w->setWindowStyle(WindowStyle::DIALOG);
                mWindows << w;
            }),
            _new<AButton>("Modal window").connect(&AButton::clicked, this, [&] {
-               auto w = _new<AWindow>("Modal window", 400_dp, 300_dp, this, WS_DIALOG);
+               auto w = _new<AWindow>("Modal window", 400_dp, 300_dp, this, WindowStyle::DIALOG);
                fillWindow(w);
                w->show();
                mWindows << w;
@@ -128,14 +128,14 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                auto w = _new<ACustomCaptionWindow>("Custom window with caption", 400_dp, 300_dp);
                fillWindow(w->getContentContainer());
                w->show();
-               //w->setWindowStyle(WS_DIALOG);
+               //w->setWindowStyle(WindowStyle::DIALOG);
                mWindows << w;
            }),
            _new<AButton>("Custom window without caption").connect(&AButton::clicked, this, [&] {
                auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
                fillWindow(w);
                w->show();
-               w->setWindowStyle(WS_DIALOG);
+               w->setWindowStyle(WindowStyle::DIALOG);
                mWindows << w;
            }),
            _new<AButton>("Close all windows").connect(&AButton::clicked, this, [&] {

@@ -202,15 +202,15 @@ ADeque<APath> APath::listDir(ListFlags f) const {
         bool isDirectory = i->d_type & DT_DIR;
 #endif
 
-        if (!(f & LF_DONT_IGNORE_DOTS)) {
+        if (!(f & ListFlags::DONT_IGNORE_DOTS)) {
             if ("."_as == filename || ".."_as == filename) {
                 continue;
             }
         }
-        if ((f & LF_DIRS && isDirectory) || (f & LF_REGULAR_FILES && isFile)) {
+        if ((f & ListFlags::DIRS && isDirectory) || (f & ListFlags::REGULAR_FILES && isFile)) {
             list << file(APath(filename));
         }
-        if (f & LF_RECURSIVE && isDirectory) {
+        if (f & ListFlags::RECURSIVE && isDirectory) {
             auto childDir = file(APath(filename));
             for (auto& file : childDir.listDir(f)) {
                 if (file.startsWith(childDir)) {

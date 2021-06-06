@@ -40,7 +40,7 @@ public:
         AWindow("COMBOBOX", 854, 500, AWindow::current())
     {
 
-        setWindowStyle(WS_SYS);
+        setWindowStyle(WindowStyle::SYS);
         setLayout(_new<AVerticalLayout>());
         addView(mListView = _new<AListView>(model) let { it->setExpanding({2, 2}); });
     }

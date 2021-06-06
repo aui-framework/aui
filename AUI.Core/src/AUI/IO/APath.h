@@ -28,23 +28,23 @@
 
 
 ENUM_FLAG(ListFlags) {
-    LF_NONE = 0,
+    NONE = 0,
 
     /**
      * \brief Some file systems include ". " and " .. " to the list of files. In AUI, these elements are skipped by
      *        default. This flag overrides this behaviour.
      */
-    LF_DONT_IGNORE_DOTS = 1,
+    DONT_IGNORE_DOTS = 1,
 
     /**
      * \brief Include folders to the list of files.
      */
-    LF_DIRS = 2,
+    DIRS = 2,
 
     /**
      * \brief Include regular files to the list of files.
      */
-    LF_REGULAR_FILES = 4,
+    REGULAR_FILES = 4,
 
     /**
      * \brief Walk thru the folder recursively (i.e. include the contents of child folders). The paths of child files
@@ -60,9 +60,9 @@ ENUM_FLAG(ListFlags) {
      *     <li>/home/other/code2.cpp</li>
      * </ul>
      */
-    LF_RECURSIVE = 8,
+    RECURSIVE = 8,
 
-    LF_DEFAULT_FLAGS = LF_DIRS | LF_REGULAR_FILES
+    DEFAULT_FLAGS = ListFlags::DIRS | ListFlags::REGULAR_FILES
 };
 
 /**
@@ -112,7 +112,7 @@ public:
      * \note Use ListFlags enum flags to customize behaviour of this function.
      * \return list of children of this folder.
      */
-    ADeque<APath> listDir(ListFlags f = LF_DEFAULT_FLAGS) const;
+    ADeque<APath> listDir(ListFlags f = ListFlags::DEFAULT_FLAGS) const;
 
     /**
      * \example <pre>/home/user -> /home</pre>

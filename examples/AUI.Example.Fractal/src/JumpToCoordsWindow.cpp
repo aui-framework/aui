@@ -32,7 +32,7 @@
 #include <AUI/Platform/AMessageBox.h>
 
 JumpToCoordsWindow::JumpToCoordsWindow(_<FractalView> fractalView, AWindow* parent):
-    AWindow("Jump to coords", 854_dp, 500_dp, parent, WS_NO_RESIZE)
+    AWindow("Jump to coords", 854_dp, 500_dp, parent, WindowStyle::NO_RESIZE)
 {
     setLayout(_new<AVerticalLayout>());
 

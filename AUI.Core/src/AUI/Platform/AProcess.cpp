@@ -246,7 +246,7 @@ public:
 
 AVector<_<AProcess>> AProcess::all() {
     AVector<_<AProcess>> result;
-    for (auto& f : APath("/proc/").listDir(LF_DIRS)) {
+    for (auto& f : APath("/proc/").listDir(ListFlags::LF_DIRS)) {
         pid_t p = f.filename().toUInt();
         if (p != 0) {
             result << _new<AOtherProcess>(p);

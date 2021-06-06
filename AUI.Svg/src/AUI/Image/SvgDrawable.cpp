@@ -65,13 +65,13 @@ void SvgDrawable::draw(const glm::ivec2& size) {
         float posX, posY;
         float scale = glm::min(size.x / mImage->width, size.y / mImage->height);
 
-        if (Render::inst().getRepeat() & REPEAT_X) {
+        if (!!(Render::inst().getRepeat() & Repeat::X)) {
             uv.x = float(size.x) / getSizeHint().x;
             posX = 0;
         } else {
             posX = glm::round((size.x - mImage->width * scale) / 2.f);
         }
-        if (Render::inst().getRepeat() & REPEAT_Y) {
+        if (!!(Render::inst().getRepeat() & Repeat::Y)) {
             uv.y = float(size.y) / getSizeHint().y;
             posY = 0;
         } else {
@@ -97,10 +97,10 @@ void SvgDrawable::draw(const glm::ivec2& size) {
 
     glm::ivec2 textureSize = size;
 
-    if (Render::inst().getRepeat() & REPEAT_X) {
+    if (!!(Render::inst().getRepeat() & Repeat::X)) {
         textureSize.x = getSizeHint().x;
     }
-    if (Render::inst().getRepeat() & REPEAT_Y) {
+    if (!!(Render::inst().getRepeat() & Repeat::Y)) {
         textureSize.y = getSizeHint().y;
     }
 

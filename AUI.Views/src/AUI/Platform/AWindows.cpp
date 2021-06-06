@@ -509,7 +509,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     // used for ACustomWindow
     winProc(mHandle, WM_CREATE, 0, 0);
 
-    if (mParentWindow && ws & WS_DIALOG) {
+    if ((ws & WindowStyle::DIALOG) && mParentWindow) {
         EnableWindow(mParentWindow->mHandle, false);
     }
 
@@ -998,7 +998,7 @@ void AWindow::quit() {
 void AWindow::setWindowStyle(WindowStyle ws) {
     mWindowStyle = ws;
 #if defined(_WIN32)
-    if (ws & WS_SYS) {
+    if (!!(ws & WindowStyle::SYS)) {
         SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) & ~(WS_CAPTION | WS_THICKFRAME
             | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU) | WS_CHILD);
         {
@@ -1012,20 +1012,20 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         // small shadow
         SetClassLong(mHandle, GCL_STYLE, GetClassLong(mHandle, GCL_STYLE) | CS_DROPSHADOW);
     } else {
-        if (ws & WS_NO_MINIMIZE_MAXIMIZE) {
+        if (!!(ws & WindowStyle::NO_MINIMIZE_MAXIMIZE)) {
             SetWindowLongPtr(mHandle, GWL_STYLE,
                              GetWindowLong(mHandle, GWL_STYLE) & ~(WS_THICKFRAME |
-                             WS_SYSMENU) | WS_CAPTION);
+                                     WS_SYSMENU) | WS_CAPTION);
         } else {
             SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) | WS_THICKFRAME);
         }
 
-        if (ws & WS_NO_RESIZE) {
+        if (!!(ws & WindowStyle::NO_RESIZE)) {
             SetWindowLongPtr(mHandle, GWL_STYLE,
                              GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME | WS_THICKFRAME |
-                             WS_SYSMENU | WS_CAPTION);
+                                     WS_SYSMENU | WS_CAPTION);
         }
-        if (ws & WS_NO_DECORATORS) {
+        if (!!(ws & WindowStyle::NO_DECORATORS)) {
             LONG lExStyle = GetWindowLong(mHandle, GWL_EXSTYLE);
             lExStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
             SetWindowLong(mHandle, GWL_EXSTYLE, lExStyle);
@@ -1034,7 +1034,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         }
     }
 #else
-    if (ws & (WS_SYS | WS_NO_DECORATORS)) {
+    if (ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS)) {
         // note the struct is declared elsewhere, is here just for clarity.
         // code is from [http://tonyobryan.com/index.php?article=9][1]
         typedef struct Hints
@@ -1382,7 +1382,7 @@ void AWindow::setSize(int width, int height) {
     setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
 
 #ifdef __linux__
-    if (mWindowStyle & WS_NO_RESIZE) {
+    if (mWindowStyle & WindowStyle::NO_RESIZE) {
         // we should set min size and max size the same as current size
         XSizeHints* sizehints = XAllocSizeHints();
         long userhints;

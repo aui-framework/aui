@@ -37,9 +37,9 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
             auto drawableDrawWrapper = [&](const glm::ivec2& size) {
                 RenderHints::PushColor c;
                 Render::inst().setColor(info.overlayColor.or_default(0xffffff_rgb));
-                Render::inst().setRepeat(info.rep.or_default(REPEAT_NONE));
+                Render::inst().setRepeat(info.rep.or_default(Repeat::NONE));
                 drawable->draw(size);
-                Render::inst().setRepeat(REPEAT_NONE);
+                Render::inst().setRepeat(Repeat::NONE);
             };
 
             if (info.sizing.or_default(Sizing::NONE) == Sizing::FIT) {

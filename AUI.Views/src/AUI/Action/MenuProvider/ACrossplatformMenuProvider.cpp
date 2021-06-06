@@ -37,7 +37,7 @@ private:
     _<AMenuWindow> mSubWindow;
 public:
     AMenuWindow(const AVector<MenuItem>& vector):
-            AWindow("MENU", 0, 0, AWindow::current(), WS_SYS)
+            AWindow("MENU", 0, 0, AWindow::current(), WindowStyle::SYS)
     {
         addAssName(".menu");
         setLayout(_new<AVerticalLayout>());

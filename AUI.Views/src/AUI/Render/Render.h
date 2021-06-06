@@ -36,10 +36,10 @@ class AWindow;
 
 
 ENUM_FLAG(Repeat) {
-    REPEAT_NONE = 0,
-    REPEAT = 0b11,
-    REPEAT_X = 0b01,
-    REPEAT_Y = 0b10,
+    NONE = 0,
+    X_Y = 0b11,
+    X = 0b01,
+    Y = 0b10,
 };
 
 class API_AUI_VIEWS Render
@@ -106,7 +106,7 @@ private:
     /**
      * \brief Repeating. Handled by IDrawable.
      */
-    Repeat mRepeat = REPEAT_NONE;
+    Repeat mRepeat = Repeat::NONE;
 	
 	glm::mat4 getProjectionMatrix() const;
 	AVector<glm::vec3> getVerticesForRect(float x, float y, float width, float height);

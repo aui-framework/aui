@@ -326,21 +326,21 @@ void Render::drawRectBorderSide(float x, float y, float width, float height, flo
 
 		switch (s)
 		{
-		case S_NONE:
+		case ASide::NONE:
 			return;
-		case S_TOP:
+		case ASide::TOP:
 			begin = { x, y };
 			end = { x + width, y };
 			break;
-		case S_BOTTOM:
+		case ASide::BOTTOM:
 			end = { x, y + height };
 			begin = { x + width, y + height };
 			break;
-		case S_LEFT:
+		case ASide::LEFT:
 			end = { x, y};
 			begin = { x, y + height };
 			break;
-		case S_RIGHT:
+		case ASide::RIGHT:
 			begin = { x + width, y};
 			end = { x + width, y + height };
 			break;
@@ -367,10 +367,10 @@ void Render::drawRectBorderSide(float x, float y, float width, float height, flo
 		mTempVao.draw();
 	};
 
-	doDraw(s & S_LEFT);
-	doDraw(s & S_RIGHT);
-	doDraw(s & S_TOP);
-	doDraw(s & S_BOTTOM);
+	doDraw(s & ASide::LEFT);
+	doDraw(s & ASide::RIGHT);
+	doDraw(s & ASide::TOP);
+	doDraw(s & ASide::BOTTOM);
 }
 
 void Render::drawRectBorder(float x, float y, float width, float height, float lineWidth)
@@ -645,7 +645,7 @@ void Render::setGradientColors(const AColor& tl, const AColor& tr,
 }
 
 void Render::applyTextureRepeat() {
-    if (Render::inst().getRepeat() == REPEAT_NONE) {
+    if (Render::inst().getRepeat() == Repeat::NONE) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
     }

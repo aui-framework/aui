@@ -27,30 +27,32 @@
 #include "AUI/Core.h"
 #include "AUI/Util/EnumUtil.h"
 
+/**
+ * Describes sides of the rectangle.
+ */
 ENUM_FLAG(ASide)
 {
-	S_NONE = 0,
-	S_LEFT = 1,
-	S_RIGHT = 2,
-	S_TOP = 4,
-	S_BOTTOM = 8,
+	NONE = 0,
+	LEFT = 1,
+	RIGHT = 2,
+	TOP = 4,
+	BOTTOM = 8,
 
-	S_LEFT_RIGHT = S_LEFT | S_RIGHT,
-	S_TOP_BOTTOM = S_TOP | S_BOTTOM,
+	LEFT_RIGHT = ASide::LEFT | ASide::RIGHT,
+	TOP_BOTTOM = ASide::TOP | ASide::BOTTOM,
 
-	S_CORNER_TOPLEFT = S_LEFT | S_TOP,
-	S_CORNER_TOPRIGHT = S_RIGHT | S_TOP,
-	S_CORNER_BOTTOMLEFT = S_LEFT | S_BOTTOM,
-	S_CORNER_BOTTOMRIGHT = S_RIGHT | S_BOTTOM,
+	CORNER_TOPLEFT = ASide::LEFT | ASide::TOP,
+	CORNER_TOPRIGHT = ASide::RIGHT | ASide::TOP,
+	CORNER_BOTTOMLEFT = ASide::LEFT | ASide::BOTTOM,
+	CORNER_BOTTOMRIGHT = ASide::RIGHT | ASide::BOTTOM,
 
-	S_ALL = S_LEFT | S_RIGHT | S_TOP | S_BOTTOM,
+	ALL = ASide::LEFT | ASide::RIGHT | ASide::TOP | ASide::BOTTOM,
 
-	S_EXCLUDE_LEFT = S_ALL & ~S_LEFT,
-	S_EXCLUDE_RIGHT = S_ALL & ~S_RIGHT,
-	S_EXCLUDE_TOP = S_ALL & ~S_TOP,
-	S_EXCLUDE_BOTTOM = S_ALL & ~S_BOTTOM,
+	EXCEPT_LEFT = ALL & ~ASide::LEFT,
+	EXCEPT_RIGHT = ALL & ~ASide::RIGHT,
+	EXCEPT_TOP = ALL & ~ASide::TOP,
+	EXCEPT_BOTTOM = ALL & ~ASide::BOTTOM,
 };
-
 namespace ASides
 {
 	API_AUI_CORE glm::vec2 getNormalVector(ASide s);

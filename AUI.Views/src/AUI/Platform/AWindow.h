@@ -50,31 +50,31 @@ class AWindowManager;
 
 ENUM_FLAG(WindowStyle)
 {
-    WS_DEFAULT = 0,
+    DEFAULT = 0,
 	/**
 	 * \brief Window without minimize and maximize buttons.
 	 */
-	WS_NO_MINIMIZE_MAXIMIZE = 0x1,
+	NO_MINIMIZE_MAXIMIZE = 0x1,
 
 	/**
 	 * \brief Disable window resize.
 	 */
-	WS_NO_RESIZE = 0x2,
+	NO_RESIZE = 0x2,
 
 	/**
 	 * \brief Typical dialog window.
 	 */
-	WS_DIALOG = WS_NO_MINIMIZE_MAXIMIZE | WS_NO_RESIZE,
+	DIALOG = WindowStyle::NO_MINIMIZE_MAXIMIZE | WindowStyle::NO_RESIZE,
 
 	/**
 	 * \brief Remove standard window decorators.
 	 */
-	WS_NO_DECORATORS = 0x4,
+	NO_DECORATORS = 0x4,
 
 	/**
 	 * \brief Window for displaying system menu (dropdown, context menu)
 	 */
-	WS_SYS = 0x8,
+	SYS = 0x8,
 
 	/**
 	 * \brief Enables transparency for this window, so it can be displayed as custom rounded shadowed rectangle.
@@ -142,7 +142,7 @@ protected:
     Window mHandle;
     XIC mIC;
 #endif
-    WindowStyle mWindowStyle = WS_DEFAULT;
+    WindowStyle mWindowStyle = WindowStyle::DEFAULT;
 
 	virtual void doDrawWindow();
 	virtual void onClosed();
@@ -156,7 +156,7 @@ protected:
     AWindow(std::nullptr_t) {}
 
 public:
-	AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WS_DEFAULT) {
+	AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
 	    windowNativePreInit(name, width, height, parent, ws);
 	}
 	virtual ~AWindow();
