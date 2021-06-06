@@ -32,7 +32,7 @@
 /**
  * Helper for applications which initialize OpenGL by themselves.
  */
-class AEmbedAuiWrap {
+class API_AUI_VIEWS AEmbedAuiWrap {
 private:
     _<AViewContainer> mContainer;
     int mWidth, mHeight;
