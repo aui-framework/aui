@@ -34,6 +34,7 @@
 #if defined(_WIN32)
 #undef ui
 #include <windows.h>
+#define ui (*getThread()) * [=]()
 #elif defined(ANDROID)
 #include <jni.h>
 #else
