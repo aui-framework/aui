@@ -342,7 +342,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
 
 
 APath APath::withoutUppermostFolder() const {
-    auto r = find('/');
+    auto r = AString::find('/');
     if (r == NPOS)
         return *this;
     return mid(r + 1);
@@ -380,22 +380,36 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
 }
 #endif
 
-APath APath::locate(const AString& filename, const AVector<APath>& locations) {
+AVector<APath> APath::find(const AString& filename, const AVector<APath>& locations, PathFinder flags) {
+    AVector<APath> result;
+    auto doReturn = [&] {
+        return !!(flags & PathFinder::SINGLE) && !result.empty();
+    };
+    auto locateImpl = [&](const AVector<AString>& container) {
+        for (const APath& pathEntry : container) {
+            auto fullPath = pathEntry[filename];
+            if (fullPath.isRegularFileExists()) {
+                result << fullPath;
+                if (doReturn()) {
+                    return;
+                }
+            }
 
-    if (locations.empty()) {
-        for (const APath& pathEntry : AString(getenv("PATH")).split(aui::platform::current::path_variable_separator)) {
-            auto fullPath = pathEntry[filename];
-            if (fullPath.isRegularFileExists()) {
-                return fullPath;
+            if (!!(flags & PathFinder::RECURSIVE)) {
+                if (fullPath.isDirectoryExists()) {
+
+                }
             }
         }
-    } else {
-        for (const APath& pathEntry : locations) {
-            auto fullPath = pathEntry[filename];
-            if (fullPath.isRegularFileExists()) {
-                return fullPath;
-            }
-        }
+    };
+
+    locateImpl((const AVector<AString>&) locations);
+    if (doReturn()) {
+        return result;
     }
-    return {};
+
+    if (!!(flags & PathFinder::USE_SYSTEM_PATHS)) {
+        locateImpl(AString(getenv("PATH")).split(aui::platform::current::path_variable_separator));
+    }
+    return result;
 }

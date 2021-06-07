@@ -27,6 +27,28 @@
 #include <AUI/Util/EnumUtil.h>
 
 
+/**
+ * Flag enum for APath::find
+ */
+ENUM_FLAG(PathFinder) {
+    NONE,
+
+    /**
+     * In addition to specified paths, use the system paths (PATH environment variable)
+     */
+    USE_SYSTEM_PATHS = 1,
+
+    /**
+     * Do scan recursively (slow)
+     */
+    RECURSIVE = 2,
+
+    /**
+     * Return only one file
+     */
+    SINGLE
+};
+
 ENUM_FLAG(ListFlags) {
     NONE = 0,
 
@@ -268,11 +290,11 @@ public:
 
 
     /**
-     * Searches for file in specified dirs. If locations is empty, the PATH variable is used.
+     * Searches for file in specified dirs.
      * @param filename Name of the file searching for
      * @param locations paths to directories to search for the file in
      * @return full path to the found file; if file not found, an empty string is returned.
      */
-    static APath locate(const AString& filename, const AVector<APath>& locations = {});
+    static AVector<APath> find(const AString& filename, const AVector<APath>& locations, PathFinder flags = PathFinder::NONE);
 };
 
