@@ -91,9 +91,12 @@ const AJsonElement& AJsonElement::operator[](size_t index) const
 	return mJson->asArray()[index];
 }
 
-const AJsonElement& AJsonElement::operator[](const AString& key) const
+AJsonElement AJsonElement::operator[](const AString& key) const
 {
-	return mJson->asObject().at(key);
+    if (auto c = mJson->asObject().contains(key)) {
+        return c->second;
+    }
+    return AJsonElement{_new<JsonNull>()};
 }
 
 void AJsonElement::serialize(_<IOutputStream> param) const {
