@@ -51,6 +51,14 @@ public:
     AUuid(const AString& s);
 
     /**
+     * Converts a string to UUID. If the string is a valid UUID it is converted to the matching AUuid value else a new
+     * UUID generated from the string contents.
+     * @param string
+     * @return generated UUID.
+     */
+    static AUuid fromString(const AString& string);
+
+    /**
      * @return uuid string in canonical format
      */
     [[nodiscard]] AString toString() const;
@@ -84,6 +92,7 @@ public:
     bool operator!=(const AUuid& other) const {
         return mData != other.mData;
     }
+
 };
 
 inline std::ostream& operator<<(std::ostream& o, const AUuid& u) {
