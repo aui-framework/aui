@@ -987,7 +987,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         }
     }
 #else
-    if (ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS)) {
+    if (!!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS))) {
         // note the struct is declared elsewhere, is here just for clarity.
         // code is from [http://tonyobryan.com/index.php?article=9][1]
         typedef struct Hints
@@ -1292,7 +1292,7 @@ void AWindow::setSize(int width, int height) {
     setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
 
 #ifdef __linux__
-    if (mWindowStyle & WindowStyle::NO_RESIZE) {
+    if (!!(mWindowStyle & WindowStyle::NO_RESIZE)) {
         // we should set min size and max size the same as current size
         XSizeHints* sizehints = XAllocSizeHints();
         long userhints;

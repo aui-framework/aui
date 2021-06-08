@@ -78,7 +78,7 @@ AString AJsonElement::asString() const
 
 const AMap<AString, AJsonElement>& AJsonElement::asObject() const
 {
-	return mJson->asObject();
+    	return mJson->asObject();
 }
 
 const AVector<AJsonElement>& AJsonElement::asArray() const

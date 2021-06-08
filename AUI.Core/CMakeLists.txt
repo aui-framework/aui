@@ -7,6 +7,7 @@ if (NOT WIN32)
 	find_package(Backtrace)
 endif()
 
+
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 if (GLM_INCLUDE_DIR)
 	message(STATUS "Using custom GLM_INCLUDE_DIR: ${GLM_INCLUDE_DIR}")
