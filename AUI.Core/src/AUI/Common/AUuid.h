@@ -78,11 +78,11 @@ public:
         const auto* other = reinterpret_cast<const uint32_t*>(o.mData.data());
 
         for (size_t i = 0; i < 4; ++i) {
-            if (self[i] < other[i]) {
-                return true;
+            if (self[i] > other[i]) {
+                return false;
             }
         }
-        return false;
+        return true;
     }
 
     bool operator==(const AUuid& other) const {
