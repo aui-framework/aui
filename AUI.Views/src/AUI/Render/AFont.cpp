@@ -88,6 +88,9 @@ AFont::Character* AFont::renderGlyph(FontData& fs, long glyph, long size, FontRe
 	FT_Int32 flags = FT_LOAD_RENDER;// | FT_LOAD_FORCE_AUTOHINT;
 	if (fr == FontRendering::SUBPIXEL)
 		flags |= FT_LOAD_TARGET_LCD;
+	if (fr == FontRendering::NEAREST)
+	    flags |= FT_LOAD_TARGET_MONO;
+
 	FT_Error e = FT_Load_Char(face, glyph, flags);
 	if (e) {
 		throw std::runtime_error(("Cannot load char: error code" + AString::number(e)).toStdString());
@@ -108,12 +111,25 @@ AFont::Character* AFont::renderGlyph(FontData& fs, long glyph, long size, FontRe
 		c->advanceY = -(g->metrics.horiBearingY * div) + size;
 
 		AVector<uint8_t> data;
-		data.reserve(g->bitmap.rows * g->bitmap.pitch);
 
-		for (unsigned r = 0; r < g->bitmap.rows; ++r)
-		{
-			unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
-			data.insert(data.end(), bufPtr, bufPtr + g->bitmap.width);
+		if (fr == FontRendering::NEAREST) {
+		    // when nearest, freetype renders glyphs into the 1bit-depth image but OpenGL required at least8bit-depth,
+		    // so we will convert it here
+            data.resize(g->bitmap.rows * g->bitmap.width);
+
+            for (unsigned r = 0; r < g->bitmap.rows; ++r) {
+                unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
+                for (unsigned c = 0; c < g->bitmap.width; ++c) {
+                    data[c + r * g->bitmap.width] = (bufPtr[c / 8] & (0b10000000 >> (c % 8))) ? 255 : 0;
+                }
+            }
+        } else {
+            data.reserve(g->bitmap.rows * g->bitmap.pitch);
+
+            for (unsigned r = 0; r < g->bitmap.rows; ++r) {
+                unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
+                data.insert(data.end(), bufPtr, bufPtr + g->bitmap.width);
+            }
 		}
 
 		int imageFormat = AImage::BYTE;
