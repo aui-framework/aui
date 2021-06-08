@@ -28,6 +28,7 @@
 #include "FontStyle.h"
 #include "AUI/Common/AColor.h"
 #include "AUI/Common/ASide.h"
+#include "ImageRendering.h"
 
 
 class AColor;
@@ -102,6 +103,7 @@ private:
 	GL::Vao mTempVao;
 	glm::mat4 mTransform;
     Filling mCurrentFill;
+    ImageRendering mCurrentImageRendering = ImageRendering::PIXELATED;
 
     /**
      * \brief Repeating. Handled by IDrawable.
@@ -131,7 +133,11 @@ public:
 
 	void setFill(Filling t);
 
-	void setGradientColors(const AColor& tl, const AColor& tr,
+    void setCurrentImageRendering(ImageRendering currentImageRendering) {
+        mCurrentImageRendering = currentImageRendering;
+    }
+
+    void setGradientColors(const AColor& tl, const AColor& tr,
 						   const AColor& bl, const AColor& br);
 
 	void setWindow(AWindow* const window)

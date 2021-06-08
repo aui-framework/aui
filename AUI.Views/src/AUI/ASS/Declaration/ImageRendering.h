@@ -19,47 +19,32 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 29.12.2020.
+//
+
 #pragma once
 
-#include <AUI/api.h>
+#include <AUI/Util/LayoutDirection.h>
+#include "IDeclaration.h"
+#include <AUI/Render/ImageRendering.h>
 
-class AView;
-class AAssHelper;
+namespace ass {
 
-namespace ass::decl {
-    enum class DeclarationSlot {
-        NONE,
+    namespace decl {
+        template<>
+        struct API_AUI_VIEWS Declaration<ImageRendering>: IDeclarationBase {
+        private:
+            ImageRendering mInfo;
 
-        TRANSFORM_SCALE,
-        TRANSFORM_OFFSET,
+        public:
+            Declaration(const ImageRendering& info) : mInfo(info) {
 
-        SHADOW,
-        RENDER_OVERFLOW,
-        IMAGE_RENDERING,
-        BACKGROUND_SOLID,
-        BACKGROUND_IMAGE,
-        BORDER,
+            }
 
-        COUNT,
-    };
+            void renderFor(AView* view) override;
+            DeclarationSlot getDeclarationSlot() const override;
+        };
 
-    struct API_AUI_VIEWS IDeclarationBase {
-    public:
-        virtual void applyFor(AView* view) {};
-        virtual void renderFor(AView* view) {};
-        virtual bool isNone() { return false; }
-        [[nodiscard]] virtual DeclarationSlot getDeclarationSlot() const {
-            return DeclarationSlot::NONE;
-        }
-    };
-    template<typename DeclarationStruct>
-    struct Declaration: IDeclarationBase {
-    protected:
-        DeclarationStruct mDeclarationStruct;
-    public:
-        Declaration(const DeclarationStruct& data): mDeclarationStruct(data) {}
-    };
+    }
 }
-
-#include "AUI/View/AView.h"
-#include <AUI/ASS/unset.h>

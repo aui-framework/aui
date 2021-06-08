@@ -47,6 +47,11 @@ void GL::Texture<TEXTURE_TARGET>::setupNearest() {
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
+template<unsigned int TEXTURE_TARGET>
+void GL::Texture<TEXTURE_TARGET>::setupLinear() {
+    glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+}
 
 template<unsigned int TEXTURE_TARGET>
 void GL::Texture<TEXTURE_TARGET>::setupMirroredRepeat() {

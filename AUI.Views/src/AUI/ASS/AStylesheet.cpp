@@ -53,6 +53,7 @@ AStylesheet::AStylesheet() {
             TextColor { 0x0_rgb },
             FontSize {9_pt},
             FontRendering::SUBPIXEL,
+            ImageRendering::SMOOTH,
         },
 
         // AWindow

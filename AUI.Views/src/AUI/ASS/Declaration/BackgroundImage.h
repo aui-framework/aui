@@ -33,6 +33,8 @@ namespace ass {
         NONE,
         FIT,
         FIT_PADDING,
+
+        SPLIT_2X2,
     };
 
     struct BackgroundImage {
@@ -40,6 +42,7 @@ namespace ass {
         unset_wrap<AColor> overlayColor;
         unset_wrap<Repeat> rep;
         unset_wrap<Sizing> sizing;
+        unset_wrap<glm::vec2> scale;
 
         BackgroundImage() {}
 
@@ -51,10 +54,15 @@ namespace ass {
         BackgroundImage(const AColor& overlayColor):
             overlayColor(overlayColor) {}
 
-        BackgroundImage(const unset_wrap<AString>& url, const unset_wrap<AColor>& overlayColor,
-                        const unset_wrap<Repeat>& rep, const unset_wrap<Sizing>& sizing) : url(url),
-                                                                                           overlayColor(overlayColor),
-                                                                                           rep(rep), sizing(sizing) {}
+        BackgroundImage(const unset_wrap<AString>& url,
+                        const unset_wrap<AColor>& overlayColor,
+                        const unset_wrap<Repeat>& rep,
+                        const unset_wrap<Sizing>& sizing = {},
+                        const unset_wrap<glm::vec2>& scale = {}) : url(url),
+                                                              overlayColor(overlayColor),
+                                                              rep(rep),
+                                                              sizing(sizing),
+                                                              scale(scale) {}
     };
 
     namespace decl {

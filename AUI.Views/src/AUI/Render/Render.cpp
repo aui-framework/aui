@@ -252,6 +252,14 @@ void Render::drawRect(float x, float y, float width, float height)
 
 void Render::drawTexturedRect(float x, float y, float width, float height, const glm::vec2& uv1, const glm::vec2& uv2) {
     uploadToShaderCommon();
+    switch (mCurrentImageRendering) {
+        case ImageRendering::PIXELATED:
+            GL::Texture2D::setupNearest();
+            break;
+        case ImageRendering::SMOOTH:
+            GL::Texture2D::setupLinear();
+            break;
+    }
     mTempVao.bind();
     glEnableVertexAttribArray(2);
 

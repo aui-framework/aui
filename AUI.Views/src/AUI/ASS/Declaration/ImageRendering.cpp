@@ -19,47 +19,22 @@
  * =====================================================================================================================
  */
 
-#pragma once
+//
+// Created by alex2 on 29.12.2020.
+//
 
-#include <AUI/api.h>
+#include <AUI/Render/RenderHints.h>
+#include "ImageRendering.h"
+#include "IDeclaration.h"
 
-class AView;
-class AAssHelper;
 
-namespace ass::decl {
-    enum class DeclarationSlot {
-        NONE,
 
-        TRANSFORM_SCALE,
-        TRANSFORM_OFFSET,
-
-        SHADOW,
-        RENDER_OVERFLOW,
-        IMAGE_RENDERING,
-        BACKGROUND_SOLID,
-        BACKGROUND_IMAGE,
-        BORDER,
-
-        COUNT,
-    };
-
-    struct API_AUI_VIEWS IDeclarationBase {
-    public:
-        virtual void applyFor(AView* view) {};
-        virtual void renderFor(AView* view) {};
-        virtual bool isNone() { return false; }
-        [[nodiscard]] virtual DeclarationSlot getDeclarationSlot() const {
-            return DeclarationSlot::NONE;
-        }
-    };
-    template<typename DeclarationStruct>
-    struct Declaration: IDeclarationBase {
-    protected:
-        DeclarationStruct mDeclarationStruct;
-    public:
-        Declaration(const DeclarationStruct& data): mDeclarationStruct(data) {}
-    };
+void ass::decl::Declaration<ImageRendering>::renderFor(AView* view) {
+    Render::inst().setCurrentImageRendering(mInfo);
 }
 
-#include "AUI/View/AView.h"
-#include <AUI/ASS/unset.h>
+ass::decl::DeclarationSlot ass::decl::Declaration<ImageRendering>::getDeclarationSlot() const {
+    return ass::decl::DeclarationSlot::IMAGE_RENDERING;
+}
+
+

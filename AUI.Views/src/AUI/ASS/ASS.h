@@ -39,6 +39,7 @@
 #include "Declaration/FontFamily.h"
 #include "Declaration/FontRendering.h"
 #include "Declaration/FontSize.h"
+#include "Declaration/ImageRendering.h"
 #include "Declaration/LayoutSpacing.h"
 #include "Declaration/Margin.h"
 #include "Declaration/MaxSize.h"
