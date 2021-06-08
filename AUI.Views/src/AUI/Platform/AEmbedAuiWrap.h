@@ -38,10 +38,13 @@ private:
     int mWidth, mHeight;
 
 public:
-    explicit AEmbedAuiWrap(const _<AViewContainer>& container);
+    explicit AEmbedAuiWrap();
 
+    void setContainer(const _<AViewContainer>& container);
     void setSize(int width, int height);
     void render();
+
+    void resetGLState();
 };
 
 

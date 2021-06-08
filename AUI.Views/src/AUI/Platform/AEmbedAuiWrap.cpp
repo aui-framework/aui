@@ -26,23 +26,47 @@
 
 #include "AEmbedAuiWrap.h"
 #include <glm/ext/matrix_clip_space.hpp>
+#include <AUI/GL/State.h>
 
-AEmbedAuiWrap::AEmbedAuiWrap(const _<AViewContainer>& container) : mContainer(container) {
+AEmbedAuiWrap::AEmbedAuiWrap() {
     auto r = glewInit();
     assert(r == 0);
+}
+
+void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
+    mContainer = container;
 }
 
 void AEmbedAuiWrap::setSize(int width, int height) {
     mWidth = width;
     mHeight = height;
     mContainer->setSize(width, height);
+
+    resetGLState();
 }
 
 void AEmbedAuiWrap::render() {
+    glDisable(GL_DEPTH_TEST);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    GL::State::activeTexture(0);
+    GL::State::bindTexture(GL_TEXTURE_2D, 0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     Render::inst().setColorForced(1.f);
     Render::inst().setTransformForced(glm::ortho(0.f,
                                                           static_cast<float>(mWidth),
                                                           static_cast<float>(mHeight),
                                                           0.f));
     mContainer->render();
+
+    resetGLState();
+}
+
+void AEmbedAuiWrap::resetGLState() {
+    glBindTexture(GL_TEXTURE_2D, 0);
+    if (glBindVertexArray) {
+        glBindVertexArray(0);
+    }
 }
