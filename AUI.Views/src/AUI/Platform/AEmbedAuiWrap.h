@@ -48,22 +48,25 @@ public:
     void resetGLState();
 
     /**
+     * @return true if UI is opaque for mouse at specified position
+     */
+    bool isUIConsumesMouseAt(int x, int y);
+
+    /**
      * Handle mouse pressed in UI.
      * @param x x position
      * @param y y position
      * @param button mouse button
-     * @return true, if mouse click is consumed, false otherwise
      */
-    bool onMousePressed(int x, int y, AInput::Key button);
+    void onMousePressed(int x, int y, AInput::Key button);
 
     /**
      * Handle mouse released in UI.
      * @param x x position
      * @param y y position
      * @param button mouse button
-     * @return true, if mouse click is consumed, false otherwise
      */
-    bool onMouseReleased(int x, int y, AInput::Key button);
+    void onMouseReleased(int x, int y, AInput::Key button);
 };
 
 

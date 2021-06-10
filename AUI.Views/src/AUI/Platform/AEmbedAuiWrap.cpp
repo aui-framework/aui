@@ -57,6 +57,8 @@ void AEmbedAuiWrap::setSize(int width, int height) {
 }
 
 void AEmbedAuiWrap::render() {
+    AThread::current()->processMessages();
+
     glDisable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -82,22 +84,15 @@ void AEmbedAuiWrap::resetGLState() {
     }
 }
 
-bool AEmbedAuiWrap::onMousePressed(int x, int y, AInput::Key button) {
+void AEmbedAuiWrap::onMousePressed(int x, int y, AInput::Key button) {
+    AThread::current()->processMessages();
     mContainer->onMousePressed({x, y}, button);
-
-    auto view = AWindow::current()->getFocusedView();
-    if (!view)
-        return false;
-
-    return mContainer->consumesClick({x, y});
 }
 
-bool AEmbedAuiWrap::onMouseReleased(int x, int y, AInput::Key button) {
+void AEmbedAuiWrap::onMouseReleased(int x, int y, AInput::Key button) {
     mContainer->onMouseReleased({x, y}, button);
+}
 
-    auto view = AWindow::current()->getFocusedView();
-    if (!view)
-        return false;
-
+bool AEmbedAuiWrap::isUIConsumesMouseAt(int x, int y) {
     return mContainer->consumesClick({x, y});
 }
