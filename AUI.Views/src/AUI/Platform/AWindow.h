@@ -27,7 +27,7 @@
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/ASignal.h"
 
-#include "AUI/View/AViewContainer.h"
+#include "AUI/Platform/ABaseWindow.h"
 #include "AUI/Thread/IEventLoop.h"
 #include "AUI/Util/AMetric.h"
 
@@ -84,12 +84,11 @@ ENUM_FLAG(WindowStyle)
 	// WS_TRANSPARENT
 };
 
-class API_AUI_VIEWS AWindow: public AViewContainer, public std::enable_shared_from_this<AWindow>
+class API_AUI_VIEWS AWindow: public ABaseWindow, public std::enable_shared_from_this<AWindow>
 {
     friend class AWindowManager;
 	friend struct painter;
 private:
-	static AWindow*& currentWindowStorage();
 #if defined(_WIN32)
 	HMODULE mInst;
 	HDC mDC;
@@ -97,14 +96,12 @@ private:
     bool mWasMaximized = false;
 #endif
     bool mRedrawFlag = true;
-    bool mIsFocused = true;
-	AString mWindowClass;
+    AString mWindowClass;
 	AWindow* mParentWindow;
-	float mDpiRatio = 1.f;
 
-	/**
-	 * \brief Handles self shared pointer.
-	 */
+    /**
+     * \brief Handles self shared pointer.
+     */
 	_<AWindow> mSelfHolder;
 
 	struct Context
@@ -121,8 +118,6 @@ private:
 	static Context context;
 
 	AString mWindowTitle;
-	
-	_weak<AView> mFocusedView;
 
 #if defined(_WIN32)
 	friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -216,7 +211,7 @@ public:
 	 */
 	void restore();
 
-	void flagRedraw();
+	void flagRedraw() override;
 	void show();
 	void close();
 	void hide();
@@ -227,12 +222,7 @@ public:
 	Window getNativeHandle() { return mHandle; }
 #endif
 
-	float getDpiRatio()
-	{
-		return mDpiRatio;
-	}
-	
-	const AString& getWindowTitle() const
+    const AString& getWindowTitle() const
 	{
 		return mWindowTitle;
 	}
@@ -245,30 +235,17 @@ public:
     void setGeometry(int x, int y, int width, int height) override;
 
 
-    void onMouseMove(glm::ivec2 pos) override;
-
-
-	void onFocusAcquired() override;
+    void onFocusAcquired() override;
 	void onFocusLost() override;
-	
-	void onKeyDown(AInput::Key key) override;
-	void onKeyRepeat(AInput::Key key) override;
+
+    void onKeyRepeat(AInput::Key key) override;
 	void onKeyUp(AInput::Key key) override;
 	void onCharEntered(wchar_t c) override;
-	void setFocusedView(const _<AView>& view);
-	_<AView> getFocusedView() const
-	{
-		return mFocusedView.lock();
-	}
-
-    bool isFocused() const {
-        return mIsFocused;
-    }
 
     /**
      * \return Current window for current thread.
      */
-	static AWindow* current();
+	static ABaseWindow* current();
 
 	/**
 	 * \brief Determines whether views should display hover animations.
@@ -301,8 +278,7 @@ public:
 signals:
 	emits<> closed;
 	emits<int, int> resized;
-	emits<> dpiChanged;
-	emits<> redrawn;
+    emits<> redrawn;
 	emits<> shown;
 
 	/**
@@ -326,11 +302,7 @@ signals:
 	 */
 	emits<> restored;
 
-	emits<AInput::Key> keyDown;
-
-    void focusNextView();
-
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
-
     bool consumesClick(const glm::ivec2& pos) override;
+
+    void onMouseMove(glm::ivec2 pos) override;
 };

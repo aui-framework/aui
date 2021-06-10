@@ -36,6 +36,7 @@
 #include "AMessageBox.h"
 #include "AWindowManager.h"
 #include "ADesktop.h"
+#include "ABaseWindow.h"
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
@@ -397,14 +398,6 @@ int xerrorhandler(Display* dsp, XErrorEvent* error) {
 thread_local bool painter::painting = false;
 
 
-AWindow*& AWindow::currentWindowStorage() {
-    thread_local AWindow* threadLocal = nullptr;
-    static AWindow* global = nullptr;
-    if (threadLocal)
-        return threadLocal;
-    return global;
-}
-
 AWindow::Context::~Context() {
 #if defined(_WIN32)
     wglDeleteContext(hrc);
@@ -416,41 +409,6 @@ AWindow::Context::~Context() {
 
 bool AWindow::consumesClick(const glm::ivec2& pos) {
     return AViewContainer::consumesClick(pos);
-}
-
-void AWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    auto focusCopy = mFocusedView.lock();
-    mFocusedView.reset();
-    assert(mFocusedView.lock() == nullptr);
-    AViewContainer::onMousePressed(pos, button);
-    if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
-        if (focusCopy->hasFocus()) {
-            focusCopy->onFocusLost();
-        }
-    }
-
-    // check for double clicks
-    using namespace std::chrono;
-    using namespace std::chrono_literals;
-    static milliseconds lastButtonPressedTime = 0ms;
-    static AInput::Key lastButtonPressed = AInput::Unknown;
-    static glm::ivec2 lastPosition = {0, 0};
-
-    auto now = duration_cast<std::chrono::milliseconds>(system_clock::now().time_since_epoch());
-
-    auto delta = now - lastButtonPressedTime;
-    if (delta < 500ms && lastPosition == pos) {
-        if (lastButtonPressed == button) {
-            onMouseDoubleClicked(pos, button);
-
-            lastButtonPressedTime = 0ms;
-        }
-    } else {
-        lastButtonPressedTime = now;
-        lastButtonPressed = button;
-        lastPosition = pos;
-    }
-    AMenu::close();
 }
 
 void AWindow::onClosed() {
@@ -1249,25 +1207,6 @@ glm::ivec2 AWindow::getWindowPosition() const {
 #endif
 }
 
-void AWindow::onMouseMove(glm::ivec2 pos) {
-    AViewContainer::onMouseMove(pos);
-    auto v = getViewAtRecursive(pos);
-    if (v) {
-        mCursor = v->getCursor();
-    }
-    if (!AWindow::shouldDisplayHoverAnimations()) {
-        if (auto focused = mFocusedView.lock()) {
-            if (focused != v) {
-                focused->onMouseMove(pos - focused->getPositionInWindow());
-            }
-        }
-    }
-
-    if constexpr (AUI_DISPLAY_BOUNDS) {
-        flagRedraw();
-    }
-}
-
 void AWindow::onFocusAcquired() {
     mIsFocused = true;
     AViewContainer::onFocusAcquired();
@@ -1275,6 +1214,14 @@ void AWindow::onFocusAcquired() {
     if (auto v = getFocusedView()) {
         v->onFocusAcquired();
     }*/
+}
+
+void AWindow::onMouseMove(glm::ivec2 pos) {
+    ABaseWindow::onMouseMove(pos);
+
+    if constexpr (AUI_DISPLAY_BOUNDS) {
+        AWindow::flagRedraw();
+    }
 }
 
 void AWindow::onFocusLost() {
@@ -1287,12 +1234,6 @@ void AWindow::onFocusLost() {
     if (auto v = getFocusedView()) {
         v->onFocusLost();
     }*/
-}
-
-void AWindow::onKeyDown(AInput::Key key) {
-    emit keyDown(key);
-    if (auto v = getFocusedView())
-        v->onKeyDown(key);
 }
 
 void AWindow::onKeyRepeat(AInput::Key key) {
@@ -1311,22 +1252,7 @@ void AWindow::onCharEntered(wchar_t c) {
     }
 }
 
-void AWindow::setFocusedView(const _<AView>& view) {
-    if (mFocusedView.lock() == view) {
-        return;
-    }
-    if (auto c = mFocusedView.lock()) {
-        c->onFocusLost();
-    }
-    mFocusedView = view;
-    if (view) {
-        if (!view->hasFocus()) {
-            view->onFocusAcquired();
-        }
-    }
-}
-
-AWindow* AWindow::current() {
+ABaseWindow* AWindow::current() {
     return currentWindowStorage();
 }
 
@@ -1511,83 +1437,6 @@ void AWindow::hide() {
 #else
     XUnmapWindow(gDisplay, mHandle);
 #endif
-}
-
-void AWindow::focusNextView() {
-    auto beginPoint = getFocusedView();
-
-    bool triedToSearchFromBeginning = false;
-
-    if (beginPoint == nullptr) {
-        beginPoint = shared_from_this();
-        triedToSearchFromBeginning = true;
-    }
-    auto target = beginPoint;
-    while (target != nullptr) {
-        if (auto asContainer = _cast<AViewContainer>(target)) {
-            // container
-            if (!asContainer->getViews().empty()) {
-                target = asContainer->getViews().first();
-                continue;
-            }
-        }
-        if (target == beginPoint || !target->handlesNonMouseNavigation() || target->getVisibilityRecursive() == Visibility::GONE) {
-            // we should jump to the next element
-            if (target->getParent()) {
-                // up though hierarchy
-                while (auto parent = target->getParent()) {
-                    auto& parentViews = parent->getViews();
-                    auto index = parentViews.indexOf(target) + 1;
-                    if (index >= parentViews.size()) {
-
-                        // jump to the next container since we already visited all the elements in current container
-                        target = target->getParent()->determineSharedPointer();
-                        if (target == nullptr) {
-                            if (triedToSearchFromBeginning) {
-                                break;
-                            } else {
-                                beginPoint = target = shared_from_this();
-                                triedToSearchFromBeginning = true;
-                                break;
-                            }
-                        }
-                    } else {
-                        target = parentViews[index];
-                        break;
-                    }
-                }
-            } else {
-                // root element
-                if (triedToSearchFromBeginning) {
-                    // already tried searching from beginning, breaking loop
-                    target = nullptr;
-                    break;
-                } else {
-                    // try to search from beginning
-                    beginPoint = target = shared_from_this();
-                    triedToSearchFromBeginning = true;
-                }
-            }
-        } else {
-            // found something what is not beginPoint
-            break;
-        }
-    }
-
-    if (target != shared_from_this()) {
-        if (mFocusedView.lock() == target) {
-            return;
-        }
-        if (auto c = mFocusedView.lock()) {
-            c->onFocusLost();
-        }
-        mFocusedView = target;
-        if (target) {
-            if (!target->hasFocus()) {
-                target->onFocusAcquired();
-            }
-        }
-    }
 }
 
 _<AView> AWindow::determineSharedPointer() {

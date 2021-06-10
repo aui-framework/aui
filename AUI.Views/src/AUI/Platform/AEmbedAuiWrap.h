@@ -34,7 +34,8 @@
  */
 class API_AUI_VIEWS AEmbedAuiWrap {
 private:
-    _<AViewContainer> mContainer;
+    class FakeWindow;
+    _<FakeWindow> mContainer;
     int mWidth, mHeight;
 
 public:
@@ -45,6 +46,24 @@ public:
     void render();
 
     void resetGLState();
+
+    /**
+     * Handle mouse pressed in UI.
+     * @param x x position
+     * @param y y position
+     * @param button mouse button
+     * @return true, if mouse click is consumed, false otherwise
+     */
+    bool onMousePressed(int x, int y, AInput::Key button);
+
+    /**
+     * Handle mouse released in UI.
+     * @param x x position
+     * @param y y position
+     * @param button mouse button
+     * @return true, if mouse click is consumed, false otherwise
+     */
+    bool onMouseReleased(int x, int y, AInput::Key button);
 };
 
 

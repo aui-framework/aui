@@ -25,16 +25,27 @@
 
 
 #include "AEmbedAuiWrap.h"
+#include "ABaseWindow.h"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <AUI/GL/State.h>
+#include <AUI/Platform/AWindow.h>
+
+class AEmbedAuiWrap::FakeWindow: public ABaseWindow {
+friend class AEmbedAuiWrap;
+public:
+    FakeWindow() {
+        currentWindowStorage() = this;
+    }
+};
 
 AEmbedAuiWrap::AEmbedAuiWrap() {
     auto r = glewInit();
     assert(r == 0);
+    mContainer = _new<FakeWindow>();
 }
 
 void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
-    mContainer = container;
+    mContainer->setContents(container);
 }
 
 void AEmbedAuiWrap::setSize(int width, int height) {
@@ -69,4 +80,24 @@ void AEmbedAuiWrap::resetGLState() {
     if (glBindVertexArray) {
         glBindVertexArray(0);
     }
+}
+
+bool AEmbedAuiWrap::onMousePressed(int x, int y, AInput::Key button) {
+    mContainer->onMousePressed({x, y}, button);
+
+    auto view = AWindow::current()->getFocusedView();
+    if (!view)
+        return false;
+
+    return mContainer->consumesClick({x, y});
+}
+
+bool AEmbedAuiWrap::onMouseReleased(int x, int y, AInput::Key button) {
+    mContainer->onMouseReleased({x, y}, button);
+
+    auto view = AWindow::current()->getFocusedView();
+    if (!view)
+        return false;
+
+    return mContainer->consumesClick({x, y});
 }

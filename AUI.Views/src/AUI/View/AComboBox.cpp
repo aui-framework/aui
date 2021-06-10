@@ -37,7 +37,7 @@
 class AComboBoxWindow: public AWindow {
 public:
     explicit AComboBoxWindow(const _<IListModel<AString>>& model):
-        AWindow("COMBOBOX", 854, 500, AWindow::current())
+        AWindow("COMBOBOX", 854, 500, dynamic_cast<AWindow*>(AWindow::current()))
     {
 
         setWindowStyle(WindowStyle::SYS);
@@ -92,7 +92,8 @@ void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
         return;
     }
     if (!mComboWindow) {
-        auto w = AWindow::current();
+        auto w = dynamic_cast<AWindow*>(AWindow::current());
+        if (!w) return;
         mComboWindow = _new<AComboBoxWindow>(mModel);
         auto currentPos = w->unmapPosition(getPositionInWindow() + w->getWindowPosition()) - w->getWindowPosition();
         auto height = mComboWindow->mListView->getContentFullHeight();
