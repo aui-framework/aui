@@ -40,9 +40,10 @@ private:
 	bool mSignalsEnabled = true;
 
 	static AObject*& sender_impl();
-	
+	static bool& isDisconnected();
+
 protected:
-	void disconnect();
+	static void disconnect();
 
 public:
 	AObject();

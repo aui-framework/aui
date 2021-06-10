@@ -190,33 +190,29 @@ void ASignal<Args...>::invokeSignal()
 	std::unique_lock lock(mSlotsLock);
 	for (auto i = mSlots.begin(); i != mSlots.end();)
 	{
-		try
-		{
-			if (i->object->getThread() != AThread::current())
-			{
-				i->object->getThread()->enqueue([=]() {
-					try {
-						(std::apply)(i->func, mArgs);
-					}
-					catch (Disconnect)
-					{
-						std::unique_lock lock(mSlotsLock);
-						unlinkSlot(i->object);
-						mSlots.erase(i);
-					}
-				});
-			}
-			else
-			{
+        if (i->object->getThread() != AThread::current())
+        {
+            i->object->getThread()->enqueue([=]() {
+                AAbstractSignal::isDisconnected() = false;
                 (std::apply)(i->func, mArgs);
-			}
-			++i;
-		}
-		catch (Disconnect)
-		{
-			unlinkSlot(i->object);
-			i = mSlots.erase(i);
-		}
+                if (AAbstractSignal::isDisconnected()) {
+                    std::unique_lock lock(mSlotsLock);
+                    unlinkSlot(i->object);
+                    mSlots.erase(i);
+                }
+            });
+        }
+        else
+        {
+            AAbstractSignal::isDisconnected() = false;
+            (std::apply)(i->func, mArgs);
+            if (AAbstractSignal::isDisconnected()) {
+                unlinkSlot(i->object);
+                i = mSlots.erase(i);
+                continue;
+            }
+        }
+        ++i;
 	}
 }
 

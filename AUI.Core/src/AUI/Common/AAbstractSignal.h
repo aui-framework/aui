@@ -35,6 +35,11 @@ private:
 protected:
 	void linkSlot(AObject* object);
 	void unlinkSlot(AObject* object);
+
+
+	static bool& isDisconnected() {
+	    return AObject::isDisconnected();
+	}
 	
 public:
 	virtual void clearAllConnectionsWith(AObject* object) = 0;
@@ -46,6 +51,4 @@ public:
     [[nodiscard]] bool isDestroyed() const {
         return mDestroyed;
     }
-
-    class Disconnect: public std::exception {};
 };
