@@ -37,10 +37,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<TextColor>: IDeclarationBase {
         private:
-            TextColor mVisibility;
+            TextColor mInfo;
 
         public:
-            Declaration(const TextColor& info) : mVisibility(info) {
+            Declaration(const TextColor& info) : mInfo(info) {
 
             }
 

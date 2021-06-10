@@ -30,19 +30,25 @@
 
 namespace ass {
     struct BackgroundGradient {
+        bool null = false;
         AColor topLeftColor;
         AColor bottomRightColor;
         LayoutDirection direction;
+
+        BackgroundGradient(const AColor& topLeftColor, const AColor& bottomRightColor, LayoutDirection direction)
+                : topLeftColor(topLeftColor), bottomRightColor(bottomRightColor), direction(direction) {}
+
+        BackgroundGradient(std::nullptr_t): null(true) {}
     };
 
     namespace decl {
         template<>
         struct API_AUI_VIEWS Declaration<BackgroundGradient>: IDeclarationBase {
         private:
-            BackgroundGradient mVisibility;
+            BackgroundGradient mInfo;
 
         public:
-            Declaration(const BackgroundGradient& info) : mVisibility(info) {
+            Declaration(const BackgroundGradient& info) : mInfo(info) {
 
             }
 

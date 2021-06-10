@@ -42,10 +42,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<Expanding>: IDeclarationBase {
         private:
-            Expanding mVisibility;
+            Expanding mInfo;
 
         public:
-            Declaration(const Expanding& info) : mVisibility(info) {
+            Declaration(const Expanding& info) : mInfo(info) {
             }
 
             void applyFor(AView* view) override;

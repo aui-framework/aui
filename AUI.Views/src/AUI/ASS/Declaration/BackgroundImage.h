@@ -31,9 +31,33 @@
 namespace ass {
     enum class Sizing {
         NONE,
+
+        /**
+         * Resize image to view's area without keeping aspect ratio.
+         */
         FIT,
+
+
+        /**
+         * Resize image to view's content area without keeping aspect ratio.
+         */
         FIT_PADDING,
 
+        /**
+         * Resize image to view's area keeping aspect ratio and cutting of excess parts. Matches CSS
+         * background-size: cover
+         */
+        COVER,
+
+        /**
+         * Resize image to view's area keeping aspect ratio and keeping space not covered by the image. Matches CSS
+         * background-size: contain
+         */
+        CONTAIN,
+
+        /**
+         * Texture divided to 4 parts cutting center.
+         */
         SPLIT_2X2,
     };
 
@@ -69,10 +93,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<BackgroundImage>: IDeclarationBase {
         private:
-            BackgroundImage mVisibility;
+            BackgroundImage mInfo;
 
         public:
-            Declaration(const BackgroundImage& info) : mVisibility(info) {
+            Declaration(const BackgroundImage& info) : mInfo(info) {
 
             }
 

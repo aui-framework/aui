@@ -37,9 +37,7 @@ protected:
 	void unlinkSlot(AObject* object);
 
 
-	static bool& isDisconnected() {
-	    return AObject::isDisconnected();
-	}
+	static bool& isDisconnected();
 	
 public:
 	virtual void clearAllConnectionsWith(AObject* object) = 0;
@@ -52,3 +50,9 @@ public:
         return mDestroyed;
     }
 };
+
+#include <AUI/Common/AObject.h>
+
+inline bool& AAbstractSignal::isDisconnected() {
+    return AObject::isDisconnected();
+}

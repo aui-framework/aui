@@ -37,10 +37,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<FontSize>: IDeclarationBase {
         private:
-            FontSize mVisibility;
+            FontSize mInfo;
 
         public:
-            Declaration(const FontSize& info) : mVisibility(info) {
+            Declaration(const FontSize& info) : mInfo(info) {
 
             }
 

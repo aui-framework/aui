@@ -29,7 +29,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 void ass::decl::Declaration<ass::TransformScale>::renderFor(AView* view) {
-    Render::inst().setTransform(glm::scale(glm::mat4(1.f), glm::vec3{mVisibility.scaleX, mVisibility.scaleY, 1.0}));
+    Render::inst().setTransform(glm::scale(glm::mat4(1.f), glm::vec3{mInfo.scaleX, mInfo.scaleY, 1.0}));
 }
 
 ass::decl::DeclarationSlot ass::decl::Declaration<ass::TransformScale>::getDeclarationSlot() const {

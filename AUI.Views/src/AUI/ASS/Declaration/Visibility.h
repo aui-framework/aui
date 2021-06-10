@@ -28,10 +28,10 @@ namespace ass::decl {
     template<>
     struct API_AUI_VIEWS Declaration<Visibility>: IDeclarationBase {
     private:
-        Visibility mVisibility;
+        Visibility mInfo;
 
     public:
-        Declaration(const Visibility& visibility) : mVisibility(visibility) {
+        Declaration(const Visibility& visibility) : mInfo(visibility) {
 
         }
 

@@ -30,19 +30,20 @@
 
 
 void ass::decl::Declaration<ass::BackgroundGradient>::renderFor(AView* view) {
+    if (mInfo.null) { return; }
     RenderHints::PushColor x;
 
     Render::inst().setFill(Render::FILL_GRADIENT);
-    if (mVisibility.direction == LayoutDirection::VERTICAL) {
-        Render::inst().setGradientColors(mVisibility.topLeftColor,
-                                         mVisibility.topLeftColor,
-                                         mVisibility.bottomRightColor,
-                                         mVisibility.bottomRightColor);
+    if (mInfo.direction == LayoutDirection::VERTICAL) {
+        Render::inst().setGradientColors(mInfo.topLeftColor,
+                                         mInfo.topLeftColor,
+                                         mInfo.bottomRightColor,
+                                         mInfo.bottomRightColor);
     } else {
-        Render::inst().setGradientColors(mVisibility.topLeftColor,
-                                         mVisibility.bottomRightColor,
-                                         mVisibility.topLeftColor,
-                                         mVisibility.bottomRightColor);
+        Render::inst().setGradientColors(mInfo.topLeftColor,
+                                         mInfo.bottomRightColor,
+                                         mInfo.topLeftColor,
+                                         mInfo.bottomRightColor);
     }
     if (view->getBorderRadius() > 0) {
         Render::inst().drawRoundedRectAntialiased(0, 0, view->getWidth(), view->getHeight(), view->getBorderRadius());

@@ -18,10 +18,10 @@ namespace ass::decl {
     template<>
     struct API_AUI_VIEWS Declaration<BorderBottom>: IDeclarationBase {
     private:
-        BorderBottom mVisibility;
+        BorderBottom mInfo;
 
     public:
-        Declaration(const BorderBottom& info) : mVisibility(info) {
+        Declaration(const BorderBottom& info) : mInfo(info) {
 
         }
 

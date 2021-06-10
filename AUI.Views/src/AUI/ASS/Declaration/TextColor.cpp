@@ -26,6 +26,6 @@
 #include "TextColor.h"
 
 void ass::decl::Declaration<ass::TextColor>::applyFor(AView* view) {
-    view->getFontStyle().color = mVisibility.color;
+    view->getFontStyle().color = mInfo.color;
     view->invalidateFont();
 }

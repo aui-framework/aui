@@ -33,10 +33,10 @@ namespace ass::decl {
     template<>
     struct API_AUI_VIEWS Declaration<VerticalAlign>: IDeclarationBase {
     private:
-        VerticalAlign mVisibility;
+        VerticalAlign mInfo;
 
     public:
-        Declaration(const VerticalAlign& info) : mVisibility(info) {
+        Declaration(const VerticalAlign& info) : mInfo(info) {
 
         }
 

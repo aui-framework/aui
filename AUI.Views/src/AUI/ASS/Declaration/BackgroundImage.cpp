@@ -50,6 +50,48 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                     drawableDrawWrapper(view->getSize());
                     break;
                 }
+                case Sizing::COVER: {
+                    glm::ivec2 viewSize = view->getSize();
+                    if (viewSize.y == 0 || viewSize.x == 0) {
+                        return;
+                    }
+                    RenderHints::PushMatrix m;
+                    glm::ivec2 imageSize = drawable->getSizeHint();
+                    glm::ivec2 size;
+
+
+                    if (viewSize.x * imageSize.y / viewSize.y > imageSize.x) {
+                        size.x = viewSize.x;
+                        size.y = size.x * imageSize.y / imageSize.x;
+                    } else {
+                        size.y = viewSize.y;
+                        size.x = size.y * imageSize.x / imageSize.y;
+                    }
+                    Render::inst().setTransform(
+                            glm::translate(glm::mat4(1.f),
+                                           glm::vec3{glm::vec2(viewSize - size) / 2.f, 0.f}));
+                    drawableDrawWrapper(size);
+                    break;
+                }
+                case Sizing::CONTAIN: {
+                    RenderHints::PushMatrix m;
+                    glm::ivec2 viewSize = view->getSize();
+                    glm::ivec2 imageSize = drawable->getSizeHint();
+                    glm::ivec2 sizeDelta = viewSize - imageSize;
+                    glm::ivec2 size;
+                    if (viewSize.x * imageSize.y / viewSize.y < imageSize.x) {
+                        size.x = viewSize.x;
+                        size.y = size.x * imageSize.y / imageSize.x;
+                    } else {
+                        size.y = viewSize.y;
+                        size.x = size.y * imageSize.x / imageSize.y;
+                    }
+                    Render::inst().setTransform(
+                            glm::translate(glm::mat4(1.f),
+                                           glm::vec3{glm::vec2(viewSize - size) / 2.f, 0.f}));
+                    drawableDrawWrapper(size);
+                    break;
+                }
                 case Sizing::FIT_PADDING: {
                     RenderHints::PushMatrix m;
                     Render::inst().setTransform(
@@ -127,7 +169,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
 
 
 void ass::decl::Declaration<ass::BackgroundImage>::applyFor(AView* view) {
-    view->getAssHelper()->state.backgroundUrl = mVisibility;
+    view->getAssHelper()->state.backgroundUrl = mInfo;
 }
 
 ass::decl::DeclarationSlot ass::decl::Declaration<ass::BackgroundImage>::getDeclarationSlot() const {

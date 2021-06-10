@@ -298,6 +298,8 @@ void AViewContainer::setContents(const _<AViewContainer>& container) {
     for (auto& v : mViews) {
         v->mParent = this;
     }
+    mAssNames = std::move(container->mAssNames);
+    mAssHelper = nullptr;
 }
 void AViewContainer::setEnabled(bool enabled) {
     AView::setEnabled(enabled);

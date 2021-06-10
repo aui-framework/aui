@@ -28,7 +28,7 @@
 
 void ass::decl::Declaration<ass::Expanding>::applyFor(AView* view) {
     view->setExpanding({
-                               mVisibility.expandingX.or_default(view->getExpandingHorizontal()),
-                               mVisibility.expandingY.or_default(view->getExpandingVertical()),
+                               mInfo.expandingX.or_default(view->getExpandingHorizontal()),
+                               mInfo.expandingY.or_default(view->getExpandingVertical()),
     });
 }

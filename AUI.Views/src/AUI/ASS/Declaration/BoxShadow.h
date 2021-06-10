@@ -64,10 +64,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<BoxShadow>: IDeclarationBase {
         private:
-            BoxShadow mVisibility;
+            BoxShadow mInfo;
 
         public:
-            Declaration(const BoxShadow& info) : mVisibility(info) {
+            Declaration(const BoxShadow& info) : mInfo(info) {
 
             }
 

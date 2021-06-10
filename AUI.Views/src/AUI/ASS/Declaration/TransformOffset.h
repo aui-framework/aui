@@ -42,10 +42,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<TransformOffset>: IDeclarationBase {
         private:
-            TransformOffset mVisibility;
+            TransformOffset mInfo;
 
         public:
-            Declaration(const TransformOffset& info) : mVisibility(info) {}
+            Declaration(const TransformOffset& info) : mInfo(info) {}
             void renderFor(AView* view) override;
 
             DeclarationSlot getDeclarationSlot() const override;

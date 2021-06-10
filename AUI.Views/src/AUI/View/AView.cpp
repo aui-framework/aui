@@ -253,6 +253,7 @@ const ADeque<AString>& AView::getCssNames() const
 void AView::addAssName(const AString& assName)
 {
 	mAssNames << assName;
+	assert(("empty ass name" && !mAssNames.back().empty()));
 	mAssHelper = nullptr;
 }
 

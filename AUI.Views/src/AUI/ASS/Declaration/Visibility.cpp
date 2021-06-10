@@ -23,5 +23,5 @@
 #include "Visibility.h"
 
 void ass::decl::Declaration<Visibility>::applyFor(AView* view) {
-    view->setVisibility(mVisibility);
+    view->setVisibility(mInfo);
 }

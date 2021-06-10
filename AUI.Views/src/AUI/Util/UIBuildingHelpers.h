@@ -91,7 +91,7 @@ namespace aui::detail {
         operator _<AViewContainer>() const {
             return _container<Layout>(mViews);
         }
-        _<AViewContainer> operator<<(const AString assEntry) const {
+        _<AViewContainer> operator<<(const AString& assEntry) const {
             return _container<Layout>(mViews) << assEntry;
         }
         template<typename T>
