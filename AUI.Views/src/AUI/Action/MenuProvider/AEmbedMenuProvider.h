@@ -24,31 +24,24 @@
 //
 
 
-#include <AUI/Action/MenuProvider/ACrossplatformMenuProvider.h>
-#include <AUI/Action/MenuProvider/AEmbedMenuProvider.h>
-#include "AMenu.h"
+#pragma once
 
-void AMenu::show(const MenuModel& model) {
-    provider()->createMenu(model);
-}
 
-_<IMenuProvider>& AMenu::provider() {
-    static _<IMenuProvider> provider = nullptr;
-    if (provider == nullptr) {
-        if (dynamic_cast<AWindow*>(AWindow::current())) {
-            provider = _new<ACrossplatformMenuProvider>();
-        } else {
-            provider = _new<AEmbedMenuProvider>();
-        }
-    }
+#include "IMenuProvider.h"
+#include <AUI/Platform/AWindow.h>
 
-    return provider;
-}
+class AEmbedMenuProvider: public IMenuProvider {
+private:
+    class MenuContainer;
 
-void AMenu::close() {
-    provider()->closeMenu();
-}
+    _<MenuContainer> mWindow;
 
-bool AMenu::isOpen() {
-    return provider()->isOpen();
-}
+public:
+    void createMenu(const AVector<MenuItem>& vector) override;
+
+    bool isOpen() override;
+
+    void closeMenu() override;
+};
+
+

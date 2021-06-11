@@ -35,6 +35,7 @@ friend class AEmbedAuiWrap;
 public:
     FakeWindow() {
         currentWindowStorage() = this;
+        checkForStencilBits();
     }
 };
 
@@ -59,6 +60,7 @@ void AEmbedAuiWrap::setSize(int width, int height) {
 void AEmbedAuiWrap::render() {
     AThread::current()->processMessages();
 
+    glEnable(GL_STENCIL_TEST);
     glDisable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);

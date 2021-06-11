@@ -146,6 +146,7 @@ void ABaseWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
 }
 
 void ABaseWindow::onMouseMove(glm::ivec2 pos) {
+    mMousePos = pos;
     AViewContainer::onMouseMove(pos);
     auto v = getViewAtRecursive(pos);
     if (v) {
@@ -189,3 +190,10 @@ void ABaseWindow::onCharEntered(wchar_t c) {
         v->onCharEntered(c);
     }
 }
+
+void ABaseWindow::checkForStencilBits() {
+    GLint stencilBits = 0;
+    glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
+    assert(("no stencil bits" && stencilBits > 0));
+}
+

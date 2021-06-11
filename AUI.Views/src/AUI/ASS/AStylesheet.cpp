@@ -419,6 +419,12 @@ AStylesheet::AStylesheet() {
 
         // menu
         {
+            c(".menu-background"),
+            BackgroundSolid {0xf0f0f0_rgb},
+            Padding { 4_dp },
+            BoxShadow { 0, 2_dp, 17_dp, 0xaa000000_argb },
+        },
+        {
             c(".menu"),
             Padding { 1_px },
             Margin { 0 },

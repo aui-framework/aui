@@ -71,7 +71,8 @@ public:
     {
         if (!hasSelection())
             return {};
-        return {getText().begin() + getSelection().begin, getText().begin() + getSelection().end};
+        auto text = getText();
+    	return { text.begin() + getSelection().begin, text.begin() + getSelection().end };
     }
 
     [[nodiscard]] Selection getSelection() const;

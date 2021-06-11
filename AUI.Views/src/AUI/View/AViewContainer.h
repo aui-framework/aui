@@ -73,6 +73,7 @@ public:
 	void addView(const _<AView>& view);
 	void addView(size_t index, const _<AView>& view);
 	void removeView(const _<AView>& view);
+	void removeView(AView* view);
 	void removeView(size_t index);
 	void removeAllViews();
 
@@ -139,4 +140,6 @@ public:
 	{
 		return mViews;
 	}
+
+    void addViewCustomLayout(const _<AView>& view);
 };

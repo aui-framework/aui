@@ -761,12 +761,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     updateDpi();
     Render::inst().setWindow(this);
 
-    {
-        // check for stencil bits
-        GLint stencilBits = 0;
-        glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
-        assert(stencilBits > 0);
-    }
+    checkForStencilBits();
 
 #if defined(_WIN32)
     RECT clientRect;

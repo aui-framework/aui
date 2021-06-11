@@ -10,12 +10,15 @@ class API_AUI_VIEWS ABaseWindow: public AViewContainer {
 
 private:
     _weak<AView> mFocusedView;
+    glm::ivec2 mMousePos;
 
 protected:
     float mDpiRatio = 1.f;
     bool mIsFocused = true;
 
     static ABaseWindow*& currentWindowStorage();
+
+    static void checkForStencilBits();
 
 public:
     ABaseWindow();
@@ -32,8 +35,6 @@ public:
         return mFocusedView.lock();
     }
 
-    emits<> dpiChanged;
-
     void setFocusedView(const _<AView>& view);
     void focusNextView();
 
@@ -45,6 +46,11 @@ public:
         return mIsFocused;
     }
 
+    [[nodiscard]]
+    const glm::ivec2& getMousePos() const {
+        return mMousePos;
+    }
+
     emits<AInput::Key> keyDown;
 
     void onKeyDown(AInput::Key key) override;
@@ -54,6 +60,9 @@ public:
     void onKeyUp(AInput::Key key) override;
 
     void onCharEntered(wchar_t c) override;
+
+signals:
+    emits<> dpiChanged;
 };
 
 
