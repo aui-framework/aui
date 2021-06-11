@@ -108,6 +108,7 @@ public:
     }
 
     AModelIndex one() {
+        assert(("selection model is empty" && mIndices.begin() != mIndices.end()));
         return *mIndices.begin();
     }
 };
