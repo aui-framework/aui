@@ -63,7 +63,8 @@ public:
                             }
                         });
 
-                        connect(view->mousePressed, i.onAction);
+                        auto onAction = i.onAction;
+                        connect(view->mousePressed, [onAction] { onAction(); });
                     } else {
                         view->disable();
                     }
