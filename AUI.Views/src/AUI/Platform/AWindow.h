@@ -239,8 +239,6 @@ public:
 	void onFocusLost() override;
 
     void onKeyRepeat(AInput::Key key) override;
-	void onKeyUp(AInput::Key key) override;
-	void onCharEntered(wchar_t c) override;
 
     /**
      * \return Current window for current thread.

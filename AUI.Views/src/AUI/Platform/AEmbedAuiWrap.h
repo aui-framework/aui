@@ -67,6 +67,24 @@ public:
      * @param button mouse button
      */
     void onMouseReleased(int x, int y, AInput::Key button);
+
+    /**
+     * Handle mouse move in UI.
+     * @param x x position
+     * @param y y position
+     */
+    void onMouseMove(int x, int y);
+
+    /**
+     * Handle mouse move in UI.
+     * @param x x position
+     * @param y y position
+     */
+    void onCharEntered(wchar_t c);
+
+
+    void onKeyPressed(AInput::Key key);
+    void onKeyReleased(AInput::Key key);
 };
 
 

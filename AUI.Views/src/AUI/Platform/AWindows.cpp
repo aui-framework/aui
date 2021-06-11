@@ -1241,17 +1241,6 @@ void AWindow::onKeyRepeat(AInput::Key key) {
         v->onKeyRepeat(key);
 }
 
-void AWindow::onKeyUp(AInput::Key key) {
-    if (auto v = getFocusedView())
-        v->onKeyUp(key);
-}
-
-void AWindow::onCharEntered(wchar_t c) {
-    if (auto v = getFocusedView()) {
-        v->onCharEntered(c);
-    }
-}
-
 ABaseWindow* AWindow::current() {
     return currentWindowStorage();
 }

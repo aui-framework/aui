@@ -50,6 +50,10 @@ public:
     void onKeyDown(AInput::Key key) override;
 
     virtual void flagRedraw();
+
+    void onKeyUp(AInput::Key key) override;
+
+    void onCharEntered(wchar_t c) override;
 };
 
 

@@ -2,17 +2,15 @@
 // Created by alex2 on 6/9/2021.
 //
 
+#include <AUI/Util/AError.h>
+#include <AUI/Traits/strings.h>
+#include "AUI/Util/ARandom.h"
+#include "AUI/Platform/AWindow.h"
 #include "ABaseWindow.h"
-#include <AUI/Util/Cache.h>
-#include <AUI/Logging/ALogger.h>
-#include "AMessageBox.h"
-#include "AUI/GL/State.h"
-#include "AUI/Render/Render.h"
 #include <AUI/Action/AMenu.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
 #include <chrono>
-#include "AWindowManager.h"
 #include "Platform.h"
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -179,4 +177,15 @@ ABaseWindow*& ABaseWindow::currentWindowStorage() {
     if (threadLocal)
         return threadLocal;
     return global;
+}
+
+void ABaseWindow::onKeyUp(AInput::Key key) {
+    if (auto v = getFocusedView())
+        v->onKeyUp(key);
+}
+
+void ABaseWindow::onCharEntered(wchar_t c) {
+    if (auto v = getFocusedView()) {
+        v->onCharEntered(c);
+    }
 }

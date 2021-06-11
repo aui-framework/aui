@@ -96,3 +96,20 @@ void AEmbedAuiWrap::onMouseReleased(int x, int y, AInput::Key button) {
 bool AEmbedAuiWrap::isUIConsumesMouseAt(int x, int y) {
     return mContainer->consumesClick({x, y});
 }
+
+void AEmbedAuiWrap::onMouseMove(int x, int y) {
+    mContainer->onMouseMove({x, y});
+}
+
+
+void AEmbedAuiWrap::onCharEntered(wchar_t c) {
+    mContainer->onCharEntered(c);
+}
+
+void AEmbedAuiWrap::onKeyPressed(AInput::Key key) {
+    mContainer->onKeyDown(key);
+}
+
+void AEmbedAuiWrap::onKeyReleased(AInput::Key key) {
+    mContainer->onKeyUp(key);
+}
