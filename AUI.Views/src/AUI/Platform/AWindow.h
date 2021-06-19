@@ -226,7 +226,6 @@ public:
 	{
 		return mWindowTitle;
 	}
-	AWindowManager& getWindowManager() const;
 
 	glm::ivec2 getWindowPosition() const;
 

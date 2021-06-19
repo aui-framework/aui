@@ -28,6 +28,7 @@
 
 #include "AModelIndex.h"
 #include <AUI/Common/ASet.h>
+#include <cassert>
 
 template<typename T> class IListModel;
 

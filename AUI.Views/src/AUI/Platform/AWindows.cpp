@@ -37,6 +37,7 @@
 #include "AWindowManager.h"
 #include "ADesktop.h"
 #include "ABaseWindow.h"
+#include "ACustomWindow.h"
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
@@ -1279,11 +1280,6 @@ void AWindow::show() {
     emit shown();
 }
 
-AWindowManager& AWindow::getWindowManager() const {
-    thread_local AWindowManager ourWindowManager;
-    return ourWindowManager;
-}
-
 void AWindow::onCloseButtonClicked() {
     emit closed();
 }
@@ -1713,8 +1709,10 @@ AString AWindowManager::xClipboardPasteImpl() {
     {
         return {};
     }
-    auto auiWindow = AWindow::current();
-    assert(auiWindow);
+    auto basicWindow = AWindow::current();
+    auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
+    if (!auiWindow)
+        return {};
     auto nativeHandle = auiWindow->getNativeHandle();
     assert(nativeHandle);
 
@@ -1763,8 +1761,12 @@ AString AWindowManager::xClipboardPasteImpl() {
 }
 
 void AWindowManager::xClipboardCopyImpl(const AString& text) {
+    auto basicWindow = AWindow::current();
+    auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
+    if (!auiWindow) return;
     mXClipboardText = text.toStdString();
-    XSetSelectionOwner(gDisplay, gAtoms.clipboard, AWindow::current()->mHandle, CurrentTime);
+    XSetSelectionOwner(gDisplay, gAtoms.clipboard, auiWindow->mHandle, CurrentTime);
 }
+
 
 #endif

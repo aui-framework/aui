@@ -18,6 +18,11 @@ ABaseWindow::ABaseWindow() {
     mDpiRatio = Platform::getDpiRatio();
 }
 
+AWindowManager& ABaseWindow::getWindowManager() const {
+    thread_local AWindowManager ourWindowManager;
+    return ourWindowManager;
+}
+
 void ABaseWindow::setFocusedView(const _<AView>& view) {
     if (mFocusedView.lock() == view) {
         return;

@@ -5,6 +5,7 @@
 #pragma once
 
 #include <AUI/View/AViewContainer.h>
+#include "AWindowManager.h"
 
 class API_AUI_VIEWS ABaseWindow: public AViewContainer {
 
@@ -24,6 +25,8 @@ public:
     ABaseWindow();
 
     virtual ~ABaseWindow() = default;
+
+    AWindowManager& getWindowManager() const;
 
     float getDpiRatio()
     {
