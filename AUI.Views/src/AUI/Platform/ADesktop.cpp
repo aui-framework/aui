@@ -104,9 +104,79 @@ _<AFuture<APath>> ADesktop::browseForFolder(const APath& startingLocation) {
     };
 }
 
+_<AFuture<APath>> ADesktop::browseForFile(const APath& startingLocation, const AVector<FileExtension>& extensions) {
+    return async {
+        APath result;
+        OleInitialize(0);
+        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+        assert(SUCCEEDED(hr));
+        IFileOpenDialog *pFileOpen;
+
+        // Create the FileOpenDialog object.
+        hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+                              IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+
+        assert(SUCCEEDED(hr));
+        AVector<COMDLG_FILTERSPEC> filter;
+        AVector<AString> storage;
+        filter.reserve(extensions.size());
+        storage.reserve(extensions.size() * 2);
+        for (auto& ext : extensions) {
+            auto extFilter = "*." + ext.extension;
+            storage << extFilter;
+            storage << ext.name + " (" + extFilter + ")";
+            filter << COMDLG_FILTERSPEC{ (storage.end()-1)->c_str(), (storage.end()-2)->c_str() };
+        }
+
+
+        hr = pFileOpen->SetFileTypes(filter.size(), filter.data());
+        assert(SUCCEEDED(hr));
+
+        {
+            IShellItem* psiFolder = nullptr;
+            for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
+                APath current = i;
+                current.replaceAll('/', '\\');
+                SHCreateItemFromParsingName(current.data(), nullptr, IID_IShellItem,
+                                            reinterpret_cast<void**>(&psiFolder));
+            }
+            if (psiFolder) {
+                pFileOpen->SetFolder(psiFolder);
+                psiFolder->Release();
+            }
+        }
+
+        hr = pFileOpen->Show(NULL);
+
+        // Get the file name from the dialog box.
+        if (SUCCEEDED(hr))
+        {
+            IShellItem *pItem;
+            hr = pFileOpen->GetResult(&pItem);
+            if (SUCCEEDED(hr))
+            {
+                PWSTR pszFilePath;
+                hr = pItem->GetDisplayName(SIGDN_FILESYSPATH, &pszFilePath);
+
+                // Display the file name to the user.
+                if (SUCCEEDED(hr))
+                {
+                    result = pszFilePath;
+                    CoTaskMemFree(pszFilePath);
+                }
+                pItem->Release();
+            }
+        }
+        pFileOpen->Release();
+        CoUninitialize();
+        OleUninitialize();
+        return result;
+    };
+}
 void ADesktop::openUrl(const AString& url) {
     ShellExecute(nullptr, L"open", url.c_str(), nullptr, nullptr, SW_NORMAL);
 }
+
 
 #elif defined(ANDROID)
 glm::ivec2 ADesktop::getMousePosition()

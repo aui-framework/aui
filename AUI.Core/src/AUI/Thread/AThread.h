@@ -78,7 +78,7 @@ private:
 
 
 	/**
-	 * \brief AAbstractThread storage of current thread.
+	 * \brief AAbstractThread threadLocalStorage of current thread.
 	 */
 	static _<AAbstractThread>& threadStorage();
 

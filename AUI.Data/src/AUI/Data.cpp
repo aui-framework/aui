@@ -22,7 +22,7 @@
 #include "Data.h"
 
 template<>
-_<ASqlDatabase>& Autumn::detail::storage()
+_<ASqlDatabase>& Autumn::detail::threadLocalStorage()
 {
 	static _<ASqlDatabase> s;
 	return s;

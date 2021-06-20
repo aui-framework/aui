@@ -262,6 +262,10 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
 
         case WM_LBUTTONDOWN:
+            if (isMousePressed()) {
+                // fix assert(!mPressed);
+                onMouseReleased(POS, AInput::LButton);
+            }
             onMousePressed(POS, AInput::LButton);
             SetCapture(mHandle);
             return 0;

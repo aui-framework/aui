@@ -30,7 +30,10 @@
 #include <AUI/Model/IListModel.h>
 #include <AUI/Model/AListModel.h>
 #include <AUI/Common/AStringVector.h>
+
+#ifdef API_AUI_DATA
 #include <AUI/Data/AModelMeta.h>
+#endif
 
 class IJsonElement;
 class AJsonElement;
@@ -86,6 +89,7 @@ public:
 	[[nodiscard]] const AJsonElement& operator[](size_t index) const;
 	[[nodiscard]] AJsonElement operator[](const AString& key) const;
 
+#ifdef API_AUI_DATA
     template<typename Model>
     _<IListModel<Model>> asModelList(const AStringVector& columns) const {
         auto list = _new<AListModel<Model>>();
@@ -101,6 +105,8 @@ public:
         }
         return list;
     }
+#endif
+
 };
 
 class API_AUI_JSON AJsonValue: public AJsonElement
