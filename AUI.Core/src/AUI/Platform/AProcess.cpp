@@ -79,11 +79,14 @@ public:
         CloseHandle(mHandle);
     }
 
-    void wait() override {
-        WaitForSingleObject(mHandle, INFINITE);
+    APath getPathToExecutable() override {
+        wchar_t buf[0x800];
+        GetProcessImageFileName(mHandle, buf, sizeof(buf));
+        return APath(buf).filename();
     }
 
-    int getExitCode() override {
+    int wait() override {
+        WaitForSingleObject(mHandle, INFINITE);
         DWORD exitCode;
         wait();
         int r = GetExitCodeProcess(mHandle, &exitCode);
@@ -94,7 +97,7 @@ public:
     APath getModuleName() override {
         wchar_t buf[0x800];
         GetProcessImageFileName(mHandle, buf, sizeof(buf));
-        return APath(buf).filename();
+        return getPathToExecutable().filename();
     }
 
     uint32_t getPid() override {
@@ -163,19 +166,11 @@ void AChildProcess::run() {
 int AChildProcess::wait() {
     WaitForSingleObject(mProcessInformation.hProcess, INFINITE);
     DWORD exitCode;
-    wait();
     int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
     assert(r && r != STILL_ACTIVE);
     return exitCode;
 }
 
-int AChildProcess::getExitCode() {
-    DWORD exitCode;
-    wait();
-    int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
-    assert(r && r != STILL_ACTIVE);
-    return exitCode;
-}
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {
     auto handle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid);
@@ -216,10 +211,6 @@ public:
         int loc;
         waitpid(mHandle, &loc, 0);
         return WEXITSTATUS(loc);
-    }
-
-    int getExitCode() override {
-        return wait();
     }
 
     APath getModuleName() override {
@@ -320,9 +311,6 @@ int AChildProcess::wait() {
     return WEXITSTATUS(loc);
 }
 
-int AChildProcess::getExitCode() {
-    return wait();
-}
 
 uint32_t AChildProcess::getPid() {
     return mPid;
@@ -388,4 +376,8 @@ _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
 
 APath AChildProcess::getModuleName() {
     return APath(mApplicationFile).filename();
+}
+
+APath AChildProcess::getPathToExecutable() {
+    return mApplicationFile;
 }

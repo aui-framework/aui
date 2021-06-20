@@ -74,7 +74,13 @@ ENUM_FLAG(WindowStyle)
 	/**
 	 * \brief Window for displaying system menu (dropdown, context menu)
 	 */
-	WS_SYS = 0x8
+	WS_SYS = 0x8,
+
+	/**
+	 * \brief Enables transparency for this window, so it can be displayed as custom rounded shadowed rectangle.
+	 * TODO implement WS_TRANSPARENT. WinAPI: http://rsdn.org/article/opengl/layeredopengl.xml, X11: https://github.com/datenwolf/codesamples/blob/master/samples/OpenGL/x11argb_opengl/x11argb_opengl.c
+	 */
+	// WS_TRANSPARENT
 };
 
 class API_AUI_VIEWS AWindow: public AViewContainer, public std::enable_shared_from_this<AWindow>

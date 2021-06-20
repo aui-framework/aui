@@ -72,7 +72,8 @@ public:
 	float length(const AString& text, long size, FontRendering fr);
 	_<GL::Texture2D> textureOf(long size, FontRendering fr);
 	_<Util::SimpleTexturePacker> texturePackerOf(long size, FontRendering fr);
-	AString trimStringToWidth(const AString& text, size_t width, long size, FontRendering fr);
+	AString trimStringToWidth(const AString& text, size_t width, long size, const FontRendering& fr);
+	AString trimStringToWidth(AString::const_iterator begin, AString::const_iterator end, size_t width, long size, const FontRendering& fr);
 	size_t indexOfX(const AString& text, size_t x, long size, FontRendering fr);
 	AStringVector trimStringToMultiline(const AString& text, int width, long size, FontRendering fr);
 	bool isHasKerning();

@@ -98,6 +98,14 @@ namespace aui::detail {
         _<AViewContainer> operator^(const T& t) const {
             return _container<Layout>(mViews) ^ t;
         }
+        template<typename T>
+        _<AViewContainer> operator+(const T& t) const {
+            return _container<Layout>(mViews) + t;
+        }
+
+        _<AViewContainer> operator->() const {
+            return _container<Layout>(mViews);
+        }
     };
 }
 

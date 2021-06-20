@@ -23,6 +23,7 @@
 #include <Command/Pack.h>
 #include <Command/Lang.h>
 #include <Command/Css2ass.h>
+#include <Command/PackManual.h>
 
 #include "Toolbox.h"
 
@@ -37,6 +38,7 @@ Toolbox::Toolbox() {
     registerCommand<Pack>();
     registerCommand<Lang>();
     registerCommand<Css2ass>();
+    registerCommand<PackManual>();
 }
 Toolbox::~Toolbox() {
     for (auto& c : commands) {

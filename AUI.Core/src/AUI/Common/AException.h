@@ -23,20 +23,33 @@
 #include <exception>
 
 #include "AString.h"
+#include <AUI/Common/AVector.h>
 
 class API_AUI_CORE AException: public std::exception
 {
+friend int aui_backtrace_full_callback(void *data,
+                                       uintptr_t pc,
+                                       const char *filename,
+                                       int lineno,
+                                       const char *function);
+private:
+    struct StacktraceEntry {
+        std::string mName;
+        int lineno;
+    };
+    AVector<StacktraceEntry> mStacktrace;
+
 protected:
 	AString mMessage;
 
+
 public:
-	AException()
-	{
-	}
+	AException();
 
 	AException(const AString& message)
-		: mMessage(message)
+		: AException()
 	{
+        mMessage = message;
 	}
 
 	virtual ~AException() noexcept;
@@ -44,4 +57,6 @@ public:
 	[[nodiscard]] virtual AString getMessage() const;
 
     const char* what() const noexcept override;
+
+    void printStacktrace();
 };

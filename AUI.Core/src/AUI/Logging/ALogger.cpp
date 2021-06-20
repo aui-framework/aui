@@ -119,3 +119,10 @@ void ALogger::setLogFile(const AString& str) {
 #endif
 
 }
+
+void ALogger::rawWrite(const char *data, size_t length) {
+    std::cout.write(data, length);
+    if (mLogFile) {
+        mLogFile->write(data, length);
+    }
+}

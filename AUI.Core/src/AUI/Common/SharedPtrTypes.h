@@ -115,6 +115,18 @@ public:
         (*parent::get()) << std::forward<Arg>(value);
         return *this;
     }
+
+    template<typename Arg>
+	const _<T>& operator+(Arg&& value) const {
+        (*parent::get()) + std::forward<Arg>(value);
+        return *this;
+    }
+
+    template<typename Arg>
+	_<T>& operator+(Arg&& value) {
+        (*parent::get()) + std::forward<Arg>(value);
+        return *this;
+    }
     template<typename Arg>
 	_<T>& operator>>(Arg&& value) {
         (*parent::get()) >> std::forward<Arg>(value);

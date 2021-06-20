@@ -116,6 +116,10 @@
  */
 #define let ^ [&](const auto& it)
 
+
+
+#define with_style + RuleWithoutSelector
+
 /**
  * \brief Executes following {} block asynchronously in standard thread pool. Does now allow to set lambda's capture.
  * \return nothing, if lambda does not contain <code>return</code>; <code>_&lt;AFuture&lt;T&gt;&gt;</code> if lambda

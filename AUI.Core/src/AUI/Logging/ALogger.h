@@ -24,6 +24,7 @@
 #include <AUI/Core.h>
 #include "AUI/Thread/AMutex.h"
 #include "AUI/IO/FileOutputStream.h"
+#include <sstream>
 
 class AString;
 
@@ -45,8 +46,35 @@ private:
 	
 	void log(Level level, const AString& str);
 
+    void rawWrite(const char* data, size_t length);
+
 public:
+
     static void setLogFile(const AString& str);
+
+    struct RawLogPusher {
+        friend class ALogger;
+    private:
+        ALogger& inst;
+
+        explicit RawLogPusher(ALogger& l): inst(l) {
+
+        }
+    public:
+
+        template<typename T>
+        RawLogPusher& operator<<(const T& t) {
+            std::stringstream ss;
+            ss << t;
+            auto s = ss.str();
+            inst.rawWrite(s.c_str(), s.length());
+            return *this;
+        }
+    };
+
+    static RawLogPusher raw() {
+        return RawLogPusher{instance()};
+    }
 
 	static void info(const AString& str)
 	{

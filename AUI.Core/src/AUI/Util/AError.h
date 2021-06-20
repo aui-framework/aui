@@ -39,7 +39,9 @@ namespace AError
 		virtual void handle(const AException& exception, const AString& furtherInfo)= 0;
 		virtual ~IErrorHandler() = default;
 	};
-	
+
+	void handleErrno(const AString& furtherInfo = {});
+
 	inline void handle(const AException& exception, const AString& furtherInfo = {})
 	{
 		if (furtherInfo.empty()) {

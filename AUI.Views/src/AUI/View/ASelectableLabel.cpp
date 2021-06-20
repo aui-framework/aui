@@ -45,8 +45,8 @@ FontStyle ASelectableLabel::getMouseSelectionFont() {
     return getPrerendered().fs;
 }
 
-AString ASelectableLabel::getMouseSelectionText() {
-    return getTargetText();
+AString ASelectableLabel::getDisplayText() {
+    return getCompiledMultilineText();
 }
 
 void ASelectableLabel::doRedraw() {

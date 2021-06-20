@@ -150,6 +150,14 @@ public:
 		}
 	}
 
+	/**
+	 * Check whether signal contains any connected slots or not. It's very useful then signal argument values
+	 * calculation is expensive and you do not want to calculate them if no signals connected to the slot.
+	 * @return true, if slot contains any connected slots, false otherwise.
+	 */
+	operator bool() const {
+	    return !mSlots.empty();
+	}
 
     void clearAllConnections() override
     {

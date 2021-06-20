@@ -57,7 +57,7 @@ private:
 public:
     ADataBindingLinker(ADataBinding<Model>* binder, ASignal<std::decay_t<Getter>>(Klass::*getter), void (Klass::*setterFunc)(Setter),
                        std::decay_t<ModelField>(Model::*field)):
-        mBinder(binder), mGetter(getter), mSetterFunc(setterFunc), mField(field) {}
+            mBinder(binder), mGetter(getter), mSetterFunc(setterFunc), mField(field) {}
 
     ADataBinding<Model>* getBinder() const {
         return mBinder;
@@ -93,26 +93,52 @@ public:
     }
 };
 
+/**
+ * Data binding implementation.
+ * <p>
+ * If const reference of your model passed, ADataBinding will create and manage its own copy of your model.
+ * </p>
+ * <p>
+ * If pointer of your model passed, ADataBinding will reference to your model and write directly to your model. When
+ * ADataBinding is destructed the pointer will not be deleted.
+ * </p>
+ *
+ * <p>Example:</p>
+ * <code>
+ * _new&lt;ATextField&gt;() && dataBinding(&User::username)
+ * </code>
+ * <p>This code will bind ATextField with username field in the User model.</p>
+ *
+ * @tparam Model Your model type.
+ */
 template <typename Model>
 class ADataBinding: public AObject {
 private:
     using Applier = std::function<void(const Model& model, unsigned)>;
     ADeque<Applier> mLinkAppliers;
 
-    Model mModel;
+    Model* mModel = nullptr;
+    bool mOwning = false;
 
     void* mExcept = nullptr;
 
 public:
 
     ADataBinding() = default;
-    explicit ADataBinding(const Model& m):
-        mModel(m)
+    explicit ADataBinding(const Model& m)
     {
-        update();
+        setModel(m);
+    }
+    explicit ADataBinding(Model* m)
+    {
+        setModel(m);
     }
 
-    virtual ~ADataBinding() = default;
+    virtual ~ADataBinding() {
+        if (mOwning) {
+            delete mModel;
+        }
+    }
     template<typename View, typename ModelField, typename SetterArg>
     ADataBindingLinker<Model, View, std::decay_t<ModelField>, std::decay_t<ModelField>, SetterArg> operator()(ModelField(Model::*field), void(View::*setterFunc)(SetterArg)) {
         assert(setterFunc != nullptr);
@@ -120,8 +146,8 @@ public:
     }
     template<typename View, typename ModelField, typename GetterRV, typename SetterArg>
     ADataBindingLinker<Model, View, std::decay_t<ModelField>, GetterRV, SetterArg> operator()(ModelField(Model::*field),
-                                                                                ASignal<GetterRV>(View::*getter),
-                                                                                void(View::*setterFunc)(SetterArg) = nullptr) {
+                                                                                              ASignal<GetterRV>(View::*getter),
+                                                                                              void(View::*setterFunc)(SetterArg) = nullptr) {
         assert((getter != nullptr || setterFunc != nullptr) &&
                "implement ADataBindingDefault for your view in order to use default binding");
         assert(getter != nullptr);
@@ -133,12 +159,25 @@ public:
         return ADataBindingLinker2<Model, Data>(this, field);
     }
     const Model& getModel() const {
-        return mModel;
+        return *mModel;
     }
     Model& getEditableModel() {
-        return mModel;
+        return *mModel;
     }
     void setModel(const Model& model) {
+        if (mOwning) {
+            delete mModel;
+        }
+        mOwning = true;
+        mModel = new Model(model);
+        update();
+    }
+
+    void setModel(Model* model) {
+        if (mOwning) {
+            delete mModel;
+        }
+        mOwning = false;
         mModel = model;
         update();
     }
@@ -150,14 +189,14 @@ public:
     void update(void* except = nullptr, unsigned field = -1) {
         mExcept = except;
         for (auto& applier : mLinkAppliers) {
-            applier(mModel, field);
+            applier(*mModel, field);
         }
         emit modelChanged;
     }
 
     void addApplier(const Applier& applier) {
         mLinkAppliers << applier;
-        mLinkAppliers.last()(mModel, -1);
+        mLinkAppliers.last()(*mModel, -1);
     }
 
 signals:
@@ -170,8 +209,8 @@ signals:
 template<typename Klass1, typename Klass2, typename Model, typename ModelField, typename GetterRV, typename SetterArg>
 _<Klass1> operator&&(const _<Klass1>& object, const ADataBindingLinker<Model, Klass2, ModelField, GetterRV, SetterArg>& linker) {
     union converter {
-       unsigned i;
-       decltype(linker.getField()) p;
+        unsigned i;
+        decltype(linker.getField()) p;
     };
     if (linker.getGetter()) {
         AObject::connect(object.get()->*(linker.getGetter()), linker.getBinder(), [object, linker](const GetterRV& data) {

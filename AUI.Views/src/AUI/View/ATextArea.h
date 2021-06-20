@@ -20,18 +20,34 @@
  */
 
 //
-// Created by alex2 on 31.10.2020.
+// Created by alex2 on 5/22/2021.
 //
+
 
 #pragma once
 
-#include "IOException.h"
 
-class InsufficientPermissionsException: public IOException {
+#include "AViewContainer.h"
+#include "AAbstractTextField.h"
+#include "AScrollbar.h"
+
+/**
+ * Word breaking fast text area.
+ */
+class API_AUI_VIEWS ATextArea: public AViewContainer {
+private:
+    class TextAreaField;
+    _<TextAreaField> mTextField;
+    _<AScrollbar> mScrollbar;
+    bool mEditable = false; // TODO editable
+
 public:
-    InsufficientPermissionsException();
+    ATextArea();
+    explicit ATextArea(const AString& text);
 
-    InsufficientPermissionsException(const AString& message);
+    int getContentMinimumHeight() override;
+
+    void onMouseWheel(glm::ivec2 pos, int delta) override;
 };
 
 

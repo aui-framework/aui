@@ -100,6 +100,10 @@ public:
 
     explicit AScrollbar(LayoutDirection direction = LayoutDirection::VERTICAL);
 
+    [[nodiscard]] int getCurrentScroll() const {
+        return mCurrentScroll;
+    }
+
     void setScrollDimensions(size_t viewportSize, size_t fullSize);
     void updateScrollHandleSize();
     void setScroll(int scroll);

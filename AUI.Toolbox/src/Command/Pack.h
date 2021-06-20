@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <AUI/IO/APath.h>
 #include "ICommand.h"
 
 class Pack: public ICommand {
@@ -30,4 +31,7 @@ public:
     AString getDescription() override;
 
     void run(Toolbox& t) override;
+
+
+    static void doPacking(const AString& inputFile, const AString& assetPath, const APath& outputCpp);
 };

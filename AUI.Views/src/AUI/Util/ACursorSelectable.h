@@ -43,7 +43,7 @@ protected:
     virtual glm::ivec2 getMouseSelectionPadding() = 0;
     virtual glm::ivec2 getMouseSelectionScroll() = 0;
     virtual FontStyle getMouseSelectionFont() = 0;
-    virtual AString getMouseSelectionText() = 0;
+    virtual AString getDisplayText() = 0;
     virtual void doRedraw() = 0;
 
 
@@ -66,7 +66,7 @@ public:
         unsigned begin;
         unsigned end;
     };
-    [[nodiscard]] virtual const AString& getText() const = 0;
+    [[nodiscard]] virtual AString getText() const = 0;
     [[nodiscard]] AString getSelectedText() const
     {
         if (!hasSelection())

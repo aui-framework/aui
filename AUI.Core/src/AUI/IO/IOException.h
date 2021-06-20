@@ -37,3 +37,17 @@ public:
 	}
 	virtual ~IOException() = default;
 };
+
+
+class FileNotFoundException: public IOException {
+public:
+    using IOException::IOException;
+};
+class AccessDeniedException: public IOException {
+public:
+    using IOException::IOException;
+};
+class ResourceBusyException: public IOException {
+public:
+    using IOException::IOException;
+};

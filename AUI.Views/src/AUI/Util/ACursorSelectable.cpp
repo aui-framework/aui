@@ -40,7 +40,7 @@ unsigned ACursorSelectable::getCursorIndexByPos(glm::ivec2 pos) {
     if (pos.x < 0)
         return 0;
 
-    auto text = getMouseSelectionText();
+    auto text = getDisplayText();
     if (text.empty()) {
         return 0;
     }
@@ -117,7 +117,7 @@ int ACursorSelectable::drawSelectionPre() {
 }
 
 int ACursorSelectable::getPosByIndex(int end, int begin) {
-    return -getMouseSelectionScroll().x + int(getMouseSelectionFont().getWidth(getMouseSelectionText().mid(begin, end - begin)));
+    return -getMouseSelectionScroll().x + int(getMouseSelectionFont().getWidth(getDisplayText().mid(begin, end - begin)));
 }
 
 void ACursorSelectable::drawSelectionPost() {
@@ -157,7 +157,7 @@ void ACursorSelectable::drawSelectionRects() {
                                     getMouseSelectionFont().size + 2);
     };
 
-    auto t = getMouseSelectionText();
+    auto t = getDisplayText();
     auto sel = getSelection();
     size_t lineBeginIndex = 0;
     for (size_t i = 0; i != sel.begin; ++i) {
@@ -181,7 +181,7 @@ void ACursorSelectable::drawSelectionRects() {
 
 void ACursorSelectable::handleMouseDoubleClicked(const glm::ivec2& pos, AInput::Key button) {
     mIgnoreSelection = true;
-    auto text = getMouseSelectionText();
+    auto text = getDisplayText();
 
     // select word
     auto clickIndex = getCursorIndexByPos(pos);

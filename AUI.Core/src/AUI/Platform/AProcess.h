@@ -48,9 +48,14 @@ public:
     virtual ~AProcess() = default;
 
     /**
-     * \return path to the process' executable.
+     * \return process' executable file name.
      */
     virtual APath getModuleName() = 0;
+
+    /**
+     * \return path to the process' executable.
+     */
+    virtual APath getPathToExecutable() = 0;
 
     /**
      * \return process' ID.
@@ -58,15 +63,11 @@ public:
     virtual uint32_t getPid() = 0;
 
     /**
-     * \brief Wait for process to be finished.
-     */
-    virtual int wait() = 0;
-
-    /**
      * \brief Wait for process to be finished and returns exit code.
      * \return exit code
      */
-    virtual int getExitCode() = 0;
+    virtual int wait() = 0;
+
 
     /**
      * \brief Launches executable.
@@ -157,6 +158,8 @@ public:
         mWorkingDirectory = workingDirectory;
     }
 
+    APath getPathToExecutable() override;
+
     /**
      * \brief Launches process.
      */
@@ -167,7 +170,6 @@ public:
      * \return exit code
      */
     int wait() override;
-    int getExitCode() override;
 
     uint32_t getPid() override;
 

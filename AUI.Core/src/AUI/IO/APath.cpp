@@ -29,10 +29,9 @@
 #include "APath.h"
 #include <AUI/Common/AStringVector.h>
 #include "IOException.h"
-#include "CouldNotOpenFileException.h"
-#include "InsufficientPermissionsException.h"
 #include "FileInputStream.h"
 #include "FileOutputStream.h"
+#include <AUI/Traits/platform.h>
 
 #ifdef WIN32
 #include <windows.h>
@@ -189,7 +188,7 @@ ADeque<APath> APath::listDir(ListFlags f) const {
     DIR* dir = opendir(toStdString().c_str());
     if (!dir)
 #endif
-        throw CouldNotOpenFileException("could not list " + *this ERROR_DESCRIPTION);
+        throw AccessDeniedException("could not list " + *this ERROR_DESCRIPTION);
 
 #ifdef WIN32
     for (bool t = true; t; t = FindNextFile(dir, &fd)) {
@@ -261,7 +260,7 @@ const APath& APath::makeDir() const {
         auto et = GetLastError();
         switch (et) {
             case ERROR_ACCESS_DENIED:
-                throw InsufficientPermissionsException(s);
+                throw AccessDeniedException(s);
             case ERROR_ALREADY_EXISTS:
                 break;
             default:
@@ -384,7 +383,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
 APath APath::locate(const AString& filename, const AVector<APath>& locations) {
 
     if (locations.empty()) {
-        for (APath pathEntry : AString(getenv("PATH")).split(':')) {
+        for (const APath& pathEntry : AString(getenv("PATH")).split(aui::platform::current::path_variable_separator)) {
             auto fullPath = pathEntry[filename];
             if (fullPath.isRegularFileExists()) {
                 return fullPath;

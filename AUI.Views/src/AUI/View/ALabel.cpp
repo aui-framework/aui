@@ -189,7 +189,7 @@ void ALabel::userProcessStyleSheet(const std::function<void(css, const std::func
 
 void ALabel::doPrerender() {
     auto fs = getFontStyleLabel();
-    auto t = getTargetText();
+    auto t = getCompiledMultilineText();
     if (t.empty())
         return;
     mPrerendered = Render::inst().preRendererString(t, fs);
@@ -268,7 +268,7 @@ void ALabel::doRenderText() {
     }
 }
 
-AString ALabel::getTargetText() {
+AString ALabel::getCompiledMultilineText() {
     AString targetString;
     if (mMultiline) {
         targetString = mLines.join('\n');

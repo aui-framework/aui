@@ -29,6 +29,9 @@
 #include <AUI/IO/IOutputStream.h>
 
 class IJsonElement {
+protected:
+    void throwMiscastException(const AString& message);
+
 public:
 	virtual ~IJsonElement() = default;
 

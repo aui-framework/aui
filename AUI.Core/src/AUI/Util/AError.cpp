@@ -22,3 +22,16 @@
 #include "AError.h"
 
 
+void AError::handleErrno(const AString& furtherInfo) {
+    auto e = errno;
+    switch (e) {
+        case EACCES: case EPERM: throw AccessDeniedException("access denied: " + furtherInfo);
+        case EEXIST: throw IOException("file already exists: " + furtherInfo);
+        case EIO: throw IOException("io error: " + furtherInfo);
+        case EBUSY: throw ResourceBusyException("device or resource is busy: " + furtherInfo);
+
+        default:
+            throw AException("unknown exception (errno " + std::to_string(e) + "): " + furtherInfo);
+    }
+
+}

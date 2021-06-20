@@ -35,3 +35,8 @@ int StringStream::read(char* dst, int size)
     mIterator += toRead;
 	return toRead;
 }
+
+int StringStream::write(const char *src, int size) {
+    mString.append(src, src + size);
+    return size;
+}

@@ -75,7 +75,11 @@ public:
 		float length;
 		uint16_t side;
 		AString mText;
-	};
+
+        inline void invalidate() {
+            mVao = nullptr;
+        }
+    };
 private:
 	AWindow* mWindow = nullptr;
 	AColor mColor = 1.f;

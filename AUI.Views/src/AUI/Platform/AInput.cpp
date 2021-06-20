@@ -644,8 +644,4 @@ bool AInput::isKeyDown(Key k) {
 		return false;
 	}
 }
-AString AInput::getName(Key k)
-{
-	return "?";
-}
 #endif

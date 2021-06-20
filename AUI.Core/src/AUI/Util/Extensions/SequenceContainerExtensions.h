@@ -35,17 +35,17 @@ public:
     using Iterator = typename Container::iterator;
     using CommonContainerExtensions<Container>::CommonContainerExtensions;
 
-    inline Container& operator<<(const StoredType& rhs)
+    inline SequenceContainerExtensions<Container>& operator<<(const StoredType& rhs)
     {
         Container::push_back(rhs);
         return *this;
     }
-    inline Container& operator<<(StoredType&& rhs)
+    inline SequenceContainerExtensions<Container>& operator<<(StoredType&& rhs)
     {
         Container::push_back(std::forward<StoredType>(rhs));
         return *this;
     }
-    inline Container& operator<<(const Container& rhs)
+    inline SequenceContainerExtensions<Container>& operator<<(const Container& rhs)
     {
         for (auto& item : rhs)
             Container::push_back(item);
