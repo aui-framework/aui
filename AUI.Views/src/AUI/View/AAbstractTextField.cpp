@@ -127,7 +127,7 @@ AString AAbstractTextField::getText() const {
 }
 
 void AAbstractTextField::typeableErase(size_t begin, size_t end) {
-    mContents.erase(mContents.begin() + begin - 1, mContents.begin() + end - 1);
+    mContents.erase(mContents.begin() + begin, mContents.begin() + end);
 }
 
 void AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {

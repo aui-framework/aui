@@ -25,6 +25,7 @@
 
 
 #include <AUI/Action/MenuProvider/ACrossplatformMenuProvider.h>
+#include <AUI/Action/MenuProvider/AEmbedMenuProvider.h>
 #include "AMenu.h"
 
 void AMenu::show(const MenuModel& model) {
@@ -32,7 +33,15 @@ void AMenu::show(const MenuModel& model) {
 }
 
 _<IMenuProvider>& AMenu::provider() {
-    static _<IMenuProvider> provider = _new<ACrossplatformMenuProvider>();
+    static _<IMenuProvider> provider = nullptr;
+    if (provider == nullptr) {
+        if (dynamic_cast<AWindow*>(AWindow::current())) {
+            provider = _new<ACrossplatformMenuProvider>();
+        } else {
+            provider = _new<AEmbedMenuProvider>();
+        }
+    }
+
     return provider;
 }
 

@@ -214,11 +214,29 @@ public:
     }
 
     APath getModuleName() override {
+        return getPathToExecutable().filename();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    }
+
+    APath getPathToExecutable() override {
         char buf[0x800];
         char path[0x100];
         sprintf(path, "/proc/%u/exe", mHandle);
         readlink(path, buf, sizeof(buf));
-        return APath(buf).filename();
+        return APath(buf);
     }
 
     uint32_t getPid() override {
@@ -228,7 +246,7 @@ public:
 
 AVector<_<AProcess>> AProcess::all() {
     AVector<_<AProcess>> result;
-    for (auto& f : APath("/proc/").listDir(LF_DIRS)) {
+    for (auto& f : APath("/proc/").listDir(ListFlags::DIRS)) {
         pid_t p = f.filename().toUInt();
         if (p != 0) {
             result << _new<AOtherProcess>(p);

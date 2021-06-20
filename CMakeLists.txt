@@ -31,6 +31,8 @@ define_property(GLOBAL PROPERTY TESTS_DEPS
 
 set_property(GLOBAL PROPERTY TESTS_SRCS "")
 
+set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
+
 
 include(cmake/b.cmake)
 
@@ -93,7 +95,7 @@ add_subdirectory(AUI.Svg)
 add_subdirectory(AUI.Image)
 
 
-if(NOT ANDROID)
+if(NOT ANDROID AND AUI_BUILD_EXAMPLES)
 	add_subdirectory(examples/AUI.Example.Views)
 	#add_subdirectory(examples/AUI.Example.Fractal)
 	#add_subdirectory(examples/AUI.Example.Minesweeper)

@@ -28,6 +28,6 @@
 
 
 void ass::decl::Declaration<ACursor>::applyFor(AView* view) {
-    view->setCursor(mVisibility);
+    view->setCursor(mInfo);
 }
 

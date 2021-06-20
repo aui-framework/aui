@@ -28,10 +28,10 @@
 void ass::decl::Declaration<ass::Margin>::applyFor(AView* view) {
     auto margin = view->getMargin();
 
-    mVisibility.left.bind_to(margin.left);
-    mVisibility.top.bind_to(margin.top);
-    mVisibility.right.bind_to(margin.right);
-    mVisibility.bottom.bind_to(margin.bottom);
+    mInfo.left.bind_to(margin.left);
+    mInfo.top.bind_to(margin.top);
+    mInfo.right.bind_to(margin.right);
+    mInfo.bottom.bind_to(margin.bottom);
 
     view->setMargin(margin);
 }

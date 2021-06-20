@@ -21,8 +21,14 @@
 
 #pragma once
 #include <AUI/Thread/IEventLoop.h>
-#include "ACustomWindow.h"
 
+#ifdef __linux
+
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/keysymdef.h>
+
+#endif
 
 class AWindow;
 

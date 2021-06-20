@@ -30,10 +30,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<Overflow>: IDeclarationBase {
         private:
-            Overflow mVisibility;
+            Overflow mInfo;
 
         public:
-            Declaration(const Overflow& info) : mVisibility(info) {
+            Declaration(const Overflow& info) : mInfo(info) {
 
             }
 

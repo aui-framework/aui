@@ -86,7 +86,7 @@ Check the `examples/` folder.
 
 # Getting started
 
-Please check [docs/MANUAL.md]()
+Please check [docs/MANUAL.md](docs/MANUAL.md)
 
 
 # Contributing

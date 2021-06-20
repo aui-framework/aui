@@ -32,10 +32,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<FontRendering>: IDeclarationBase {
         private:
-            FontRendering mVisibility;
+            FontRendering mInfo;
 
         public:
-            Declaration(const FontRendering& info) : mVisibility(info) {
+            Declaration(const FontRendering& info) : mInfo(info) {
 
             }
 

@@ -31,6 +31,6 @@ void ass::decl::Declaration<ass::LayoutSpacing>::applyFor(AView* view) {
     auto container = dynamic_cast<AViewContainer*>(view);
     assert(container);
     if (auto l = container->getLayout()) {
-        l->setSpacing(mVisibility.spacing);
+        l->setSpacing(mInfo.spacing);
     }
 }

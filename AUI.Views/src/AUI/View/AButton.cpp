@@ -36,10 +36,12 @@ void AButton::setDefault()
 {
 	mDefault = true;
 	connect(AWindow::current()->keyDown, this, [&](AInput::Key k) {
-	    if (!mDefault)
-	        throw AAbstractSignal::Disconnect();
-	    if (k == AInput::Return) {
-            emit clicked();
+	    if (!mDefault) {
+	        AObject::disconnect();
+	    } else {
+            if (k == AInput::Return) {
+                emit clicked();
+            }
         }
 	});
 

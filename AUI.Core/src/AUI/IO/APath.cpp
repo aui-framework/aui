@@ -202,15 +202,15 @@ ADeque<APath> APath::listDir(ListFlags f) const {
         bool isDirectory = i->d_type & DT_DIR;
 #endif
 
-        if (!(f & LF_DONT_IGNORE_DOTS)) {
+        if (!(f & ListFlags::DONT_IGNORE_DOTS)) {
             if ("."_as == filename || ".."_as == filename) {
                 continue;
             }
         }
-        if ((f & LF_DIRS && isDirectory) || (f & LF_REGULAR_FILES && isFile)) {
+        if ((f & ListFlags::DIRS && isDirectory) || (f & ListFlags::REGULAR_FILES && isFile)) {
             list << file(APath(filename));
         }
-        if (f & LF_RECURSIVE && isDirectory) {
+        if (f & ListFlags::RECURSIVE && isDirectory) {
             auto childDir = file(APath(filename));
             for (auto& file : childDir.listDir(f)) {
                 if (file.startsWith(childDir)) {
@@ -342,7 +342,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
 
 
 APath APath::withoutUppermostFolder() const {
-    auto r = find('/');
+    auto r = AString::find('/');
     if (r == NPOS)
         return *this;
     return mid(r + 1);
@@ -380,22 +380,36 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
 }
 #endif
 
-APath APath::locate(const AString& filename, const AVector<APath>& locations) {
+AVector<APath> APath::find(const AString& filename, const AVector<APath>& locations, PathFinder flags) {
+    AVector<APath> result;
+    auto doReturn = [&] {
+        return !!(flags & PathFinder::SINGLE) && !result.empty();
+    };
+    auto locateImpl = [&](const AVector<AString>& container) {
+        for (const APath& pathEntry : container) {
+            auto fullPath = pathEntry[filename];
+            if (fullPath.isRegularFileExists()) {
+                result << fullPath;
+                if (doReturn()) {
+                    return;
+                }
+            }
 
-    if (locations.empty()) {
-        for (const APath& pathEntry : AString(getenv("PATH")).split(aui::platform::current::path_variable_separator)) {
-            auto fullPath = pathEntry[filename];
-            if (fullPath.isRegularFileExists()) {
-                return fullPath;
+            if (!!(flags & PathFinder::RECURSIVE)) {
+                if (fullPath.isDirectoryExists()) {
+
+                }
             }
         }
-    } else {
-        for (const APath& pathEntry : locations) {
-            auto fullPath = pathEntry[filename];
-            if (fullPath.isRegularFileExists()) {
-                return fullPath;
-            }
-        }
+    };
+
+    locateImpl((const AVector<AString>&) locations);
+    if (doReturn()) {
+        return result;
     }
-    return {};
+
+    if (!!(flags & PathFinder::USE_SYSTEM_PATHS)) {
+        locateImpl(AString(getenv("PATH")).split(aui::platform::current::path_variable_separator));
+    }
+    return result;
 }

@@ -84,7 +84,7 @@ public:
 	[[nodiscard]] const AVector<AJsonElement>& asArray() const;
 
 	[[nodiscard]] const AJsonElement& operator[](size_t index) const;
-	[[nodiscard]] const AJsonElement& operator[](const AString& key) const;
+	[[nodiscard]] AJsonElement operator[](const AString& key) const;
 
     template<typename Model>
     _<IListModel<Model>> asModelList(const AStringVector& columns) const {
@@ -114,7 +114,7 @@ public:
 	AJsonObject(const AMap<AString, AJsonElement>& value);
 	AJsonObject();
     [[nodiscard]] AJsonElement& operator[](const AString& key);
-    [[nodiscard]] const AJsonElement& operator[](const AString& key) const;
+    [[nodiscard]] AJsonElement operator[](const AString& key) const;
 
     auto contains(const AString& key) const {
         return asObject().contains(key);

@@ -27,6 +27,6 @@
 #include <AUI/Render/AFontManager.h>
 
 void ass::decl::Declaration<ass::FontFamily>::applyFor(AView* view) {
-    view->getFontStyle().font = AFontManager::inst().get(mVisibility.family);
+    view->getFontStyle().font = AFontManager::inst().get(mInfo.family);
     view->invalidateFont();
 }

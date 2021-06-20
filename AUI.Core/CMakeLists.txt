@@ -7,17 +7,26 @@ if (NOT WIN32)
 	find_package(Backtrace)
 endif()
 
+
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-set(GLM_INCLUDE_DIR "${SELF_DIR}/3rdparty/glm")
+if (GLM_INCLUDE_DIR)
+	message(STATUS "Using custom GLM_INCLUDE_DIR: ${GLM_INCLUDE_DIR}")
+else()
+	set(GLM_INCLUDE_DIR "${SELF_DIR}/3rdparty/glm")
+	install(
+			DIRECTORY ${GLM_INCLUDE_DIR}/glm
+			DESTINATION "include/"
+	)
+endif()
 target_include_directories(AUI.Core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>)
 target_link_libraries(AUI.Core PRIVATE ZLIB::ZLIB)
 
-install(
-		DIRECTORY ${GLM_INCLUDE_DIR}/glm
-		DESTINATION "include/"
-)
+target_compile_definitions(AUI.Core PRIVATE UNICODE=1)
+target_compile_definitions(AUI.Core PUBLIC GLM_FORCE_INLINE=1)
+target_compile_definitions(AUI.Core PUBLIC NOMINMAX=1)
 
-if(Backtrace_FOUND)
+
+if(Backtrace_FOUND AND Backtrace_LIBRARIES)
 	message(STATUS "Stacktrace backend: backtrace")
 	target_link_libraries(AUI.Core PRIVATE ${Backtrace_LIBRARIES})
 	target_compile_definitions(AUI.Core PRIVATE AUI_USE_BACKTRACE=1)

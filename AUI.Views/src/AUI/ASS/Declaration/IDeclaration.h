@@ -34,6 +34,8 @@ namespace ass::decl {
         TRANSFORM_OFFSET,
 
         SHADOW,
+        RENDER_OVERFLOW,
+        IMAGE_RENDERING,
         BACKGROUND_SOLID,
         BACKGROUND_IMAGE,
         BORDER,

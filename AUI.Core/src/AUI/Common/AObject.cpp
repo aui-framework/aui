@@ -24,9 +24,11 @@
 #include "AUI/Thread/AThread.h"
 
 
+thread_local bool gIsDisconnected;
+
 void AObject::disconnect()
 {
-	throw AAbstractSignal::Disconnect();
+    gIsDisconnected = true;
 }
 
 AObject::AObject()
@@ -47,4 +49,8 @@ void AObject::clearSignals()
 	    if (!a->isDestroyed())
 		    a->clearAllConnectionsWith(this);
 	}
+}
+
+bool& AObject::isDisconnected() {
+    return gIsDisconnected;
 }

@@ -25,32 +25,32 @@ glm::vec2 ASides::getNormalVector(ASide s)
 {
 	switch (s)
 	{
-	case S_TOP:
+	case ASide::TOP:
 		return { 0, -1 };
-	case S_BOTTOM:
+	case ASide::BOTTOM:
 		return { 0, 1 };
-	case S_LEFT:
+	case ASide::LEFT:
 		return { -1, 0 };
-	case S_RIGHT:
+	case ASide::RIGHT:
 		return { 1, 0 };
-	case S_NONE:
+	case ASide::NONE:
 		return {};
 	}
 	glm::ivec2 result;
 
-	if (s & S_LEFT)
+	if (!!(s & ASide::LEFT))
 	{
 		result += glm::vec2(-1, 0);
 	}
-	if (s & S_RIGHT)
+	if (!!(s & ASide::RIGHT))
 	{
 		result += glm::vec2(1, 0);
 	}
-	if (s & S_TOP)
+	if (!!(s & ASide::TOP))
 	{
 		result += glm::vec2(0, -1);
 	}
-	if (s & S_BOTTOM)
+	if (!!(s & ASide::BOTTOM))
 	{
 		result += glm::vec2(0, 1);
 	}

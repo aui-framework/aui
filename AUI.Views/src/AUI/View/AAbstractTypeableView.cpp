@@ -138,7 +138,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
             {
                 if (mCursorIndex < length())
                 {
-                    typeableErase(mCursorIndex + 1, mCursorIndex + 2);
+                    typeableErase(mCursorIndex, mCursorIndex + 1);
                 }
             }
             break;
@@ -269,7 +269,7 @@ void AAbstractTypeableView::enterChar(wchar_t c)
 
     if (hasSelection()) {
         auto sel = getSelection();
-        typeableErase(sel.begin + 1, sel.end + 1);
+        typeableErase(sel.begin, sel.end);
 
         switch (c)
         {
@@ -286,7 +286,7 @@ void AAbstractTypeableView::enterChar(wchar_t c)
         {
             case '\b':
                 if (mCursorIndex != 0) {
-                    typeableErase(mCursorIndex, mCursorIndex + 1);
+                    typeableErase(mCursorIndex - 1, mCursorIndex);
                     mCursorIndex -= 1;
                 }
                 break;

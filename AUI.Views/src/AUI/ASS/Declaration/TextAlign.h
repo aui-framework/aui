@@ -33,10 +33,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<TextAlign>: IDeclarationBase {
         private:
-            TextAlign mVisibility;
+            TextAlign mInfo;
 
         public:
-            Declaration(const TextAlign& info) : mVisibility(info) {
+            Declaration(const TextAlign& info) : mInfo(info) {
 
             }
 

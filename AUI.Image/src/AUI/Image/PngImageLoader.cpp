@@ -26,8 +26,6 @@
 #include "PngImageLoader.h"
 #include <AUI/Common/AByteBuffer.h>
 
-#define STBI_ONLY_PNG
-#define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
 bool PngImageLoader::matches(AByteBuffer& buffer) {

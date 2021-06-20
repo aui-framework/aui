@@ -253,6 +253,7 @@ const ADeque<AString>& AView::getCssNames() const
 void AView::addAssName(const AString& assName)
 {
 	mAssNames << assName;
+	assert(("empty ass name" && !mAssNames.back().empty()));
 	mAssHelper = nullptr;
 }
 
@@ -297,6 +298,12 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 {
     assert(!mPressed);
 	mPressed = true;
+
+	/**
+	 * If button is pressed on this view, we want to know when the mouse will be released even if mouse outside
+	 * this view and even the mouse outside the window so we can guarantee that if we got a mouse press event, we will
+	 * get a mouse release event too.
+	 */
 	if (auto w = AWindow::current())
 	{
 		if (w != this) {

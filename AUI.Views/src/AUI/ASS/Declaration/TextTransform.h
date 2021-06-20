@@ -33,10 +33,10 @@ namespace ass::decl {
     template<>
     struct API_AUI_VIEWS Declaration<TextTransform>: IDeclarationBase {
     private:
-        TextTransform mVisibility;
+        TextTransform mInfo;
 
     public:
-        Declaration(const TextTransform& info) : mVisibility(info) {
+        Declaration(const TextTransform& info) : mInfo(info) {
 
         }
 

@@ -22,7 +22,7 @@
 #pragma once
 
 
-#define ENUM_FLAG(name) enum name: int; \
+#define ENUM_FLAG(name) enum class name: int; \
 				   constexpr inline name operator|(name a, name b) {return static_cast<name>(static_cast<int>(a) | static_cast<int>(b));} \
 				   constexpr inline name operator&(name a, name b) {return static_cast<name>(static_cast<int>(a) & static_cast<int>(b));} \
 				   constexpr inline name operator^(name a, name b) {return static_cast<name>(static_cast<int>(a) ^ static_cast<int>(b));} \
@@ -30,4 +30,9 @@
 				   constexpr inline name operator&=(name& a, name b) {return a = static_cast<name>(static_cast<int>(a) & static_cast<int>(b));} \
 				   constexpr inline name operator^=(name& a, name b) {return a = static_cast<name>(static_cast<int>(a) ^ static_cast<int>(b));} \
 				   constexpr inline name operator~(const name& a) {return static_cast<name>(~static_cast<int>(a));} \
-				   enum name: int
+				   constexpr inline bool operator!(const name& a) {return a == static_cast<name>(0);}                                     \
+                                              \
+				   constexpr inline bool operator&&(const name& a, bool v) {return static_cast<int>(a) && v;}                                     \
+				   constexpr inline bool operator||(const name& a, bool v) {return static_cast<int>(a) || v;}                                     \
+\
+				   enum class name: int

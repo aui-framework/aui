@@ -29,7 +29,7 @@
 #include "IEventLoop.h"
 
 #ifdef _WIN32
-#include <Windows.h>
+#include <windows.h>
 
 
 void setThreadNameImpl(HANDLE handle, const AString& name) {

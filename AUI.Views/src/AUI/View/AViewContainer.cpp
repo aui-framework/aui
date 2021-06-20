@@ -71,6 +71,11 @@ void AViewContainer::addView(const _<AView>& view)
 	if (mLayout)
         mLayout->addView(-1, view);
 }
+void AViewContainer::addViewCustomLayout(const _<AView>& view)
+{
+	mViews << view;
+	view->mParent = this;
+}
 void AViewContainer::addView(size_t index, const _<AView>& view)
 {
 	mViews.insert(mViews.begin() + index, view);
@@ -84,6 +89,19 @@ void AViewContainer::removeView(const _<AView>& view)
 	mViews.remove(view);
 	if (mLayout)
         mLayout->removeView(-1, view);
+}
+
+void AViewContainer::removeView(AView* view) {
+    auto it = std::find_if(mViews.begin(), mViews.end(), [&](const _<AView>& item) { return item.get() == view;});
+    if (it != mViews.end()) {
+        if (mLayout) {
+            auto sharedPtr = *it;
+            mViews.erase(it);
+            mLayout->removeView(-1, sharedPtr);
+        } else {
+            mViews.erase(it);
+        }
+    }
 }
 
 void AViewContainer::removeView(size_t index)
@@ -142,6 +160,7 @@ int AViewContainer::getContentMinimumWidth()
 	return AView::getContentMinimumWidth();
 }
 
+
 int AViewContainer::getContentMinimumHeight()
 {
 	if (mLayout)
@@ -150,7 +169,6 @@ int AViewContainer::getContentMinimumHeight()
 	}
 	return AView::getContentMinimumHeight();
 }
-
 
 void AViewContainer::onMousePressed(glm::ivec2 pos, AInput::Key button)
 {
@@ -162,7 +180,6 @@ void AViewContainer::onMousePressed(glm::ivec2 pos, AInput::Key button)
 		p->onMousePressed(pos - p->getPosition(), button);
 	}
 }
-
 void AViewContainer::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
 	AView::onMouseReleased(pos, button);
@@ -170,6 +187,7 @@ void AViewContainer::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 	if (p && p->isEnabled() && p->isMousePressed())
 		p->onMouseReleased(pos - p->getPosition(), button);
 }
+
 void AViewContainer::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
 {
 	AView::onMouseDoubleClicked(pos, button);
@@ -207,6 +225,7 @@ _<ALayout> AViewContainer::getLayout() const
 	return mLayout;
 }
 
+
 _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 {
     _<AView> possibleOutput = nullptr;
@@ -229,7 +248,6 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 	}
 	return possibleOutput;
 }
-
 
 _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos)
 {
@@ -291,22 +309,24 @@ void AViewContainer::onDpiChanged() {
         v->onDpiChanged();
     }
 }
-
 void AViewContainer::setContents(const _<AViewContainer>& container) {
     setLayout(std::move(container->mLayout));
     mViews = std::move(container->mViews);
     for (auto& v : mViews) {
         v->mParent = this;
     }
+    mAssNames = std::move(container->mAssNames);
+    mAssHelper = nullptr;
 }
 void AViewContainer::setEnabled(bool enabled) {
     AView::setEnabled(enabled);
     notifyParentEnabledStateChanged(enabled);
 }
+
 void AViewContainer::notifyParentEnabledStateChanged(bool enabled) {
     enabled &= mDirectlyEnabled;
     AView::notifyParentEnabledStateChanged(enabled);
     for (auto& v : mViews) {
         v->notifyParentEnabledStateChanged(enabled);
-    }   
+    }
 }

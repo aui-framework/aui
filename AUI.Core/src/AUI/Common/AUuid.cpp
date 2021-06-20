@@ -24,6 +24,7 @@
 // Created by alex2772 on 4/20/21.
 //
 
+#include <AUI/Traits/memory.h>
 #include "AUuid.h"
 
 AUuid::AUuid(const AString& s) {
@@ -107,5 +108,23 @@ AString AUuid::toRawString() const {
             mData[15]
     );
     return AString(str, str + 32);
+}
+
+AUuid AUuid::fromString(const AString& string) {
+    try {
+        return AUuid{string};
+    } catch (const AUuidException&) {
+        std::array<uint8_t, 16> v;
+        aui::zero(v);
+        size_t i = 0;
+        for (auto c : string) {
+            while (c >= 255) {
+                v[i++] = c;
+                c >>= 8;
+            }
+            v[i++] = c;
+        }
+        return AUuid{v};
+    }
 }
 

@@ -44,3 +44,7 @@ void ImageDrawable::draw(const glm::ivec2& size) {
 glm::ivec2 ImageDrawable::getSizeHint() {
     return mSize;
 }
+
+void ImageDrawable::bind() {
+    mTexture.bind();
+}

@@ -74,7 +74,7 @@ NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper):
 	AWindow("New game", 100, 100, minesweeper),
 	mMinesweeper(minesweeper)
 {
-	setWindowStyle(WS_DIALOG);
+	setWindowStyle(WindowStyle::DIALOG);
 
 	setLayout(_new<AVerticalLayout>());
 

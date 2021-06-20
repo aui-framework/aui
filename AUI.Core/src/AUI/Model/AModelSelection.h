@@ -28,6 +28,7 @@
 
 #include "AModelIndex.h"
 #include <AUI/Common/ASet.h>
+#include <cassert>
 
 template<typename T> class IListModel;
 
@@ -108,6 +109,7 @@ public:
     }
 
     AModelIndex one() {
+        assert(("selection model is empty" && mIndices.begin() != mIndices.end()));
         return *mIndices.begin();
     }
 };

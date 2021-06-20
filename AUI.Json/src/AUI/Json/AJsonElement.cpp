@@ -87,7 +87,7 @@ AString AJsonElement::asString() const
 
 const AMap<AString, AJsonElement>& AJsonElement::asObject() const
 {
-	return mJson->asObject();
+    	return mJson->asObject();
 }
 
 const AVector<AJsonElement>& AJsonElement::asArray() const
@@ -100,9 +100,12 @@ const AJsonElement& AJsonElement::operator[](size_t index) const
 	return mJson->asArray()[index];
 }
 
-const AJsonElement& AJsonElement::operator[](const AString& key) const
+AJsonElement AJsonElement::operator[](const AString& key) const
 {
-	return mJson->asObject().at(key);
+    if (auto c = mJson->asObject().contains(key)) {
+        return c->second;
+    }
+    return AJsonElement{_new<JsonNull>()};
 }
 
 void AJsonElement::serialize(_<IOutputStream> param) const {
@@ -144,8 +147,12 @@ AJsonObject::AJsonObject():
 AJsonElement& AJsonObject::operator[](const AString& key) {
     return mJson->asObject()[key];
 }
-const AJsonElement& AJsonObject::operator[](const AString& key) const {
-    return mJson->asObject().at(key);
+AJsonElement AJsonObject::operator[](const AString& key) const {
+    //return mJson->asObject().at(key);
+    if (auto c = mJson->asObject().contains(key)) {
+        return c->second;
+    }
+    return AJsonElement(_new<JsonNull>());
 }
 
 AJsonArray::AJsonArray(const AVector<AJsonElement>& value) :

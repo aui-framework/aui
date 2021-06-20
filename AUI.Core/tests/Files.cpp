@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_SUITE(Path)
         BOOST_TEST(!l.contains("./."));
         BOOST_TEST(!l.contains("./.."));
 
-        l = APath(".").listDir(LF_DEFAULT_FLAGS | LF_DONT_IGNORE_DOTS);
+        l = APath(".").listDir(ListFlags::LF_DEFAULT_FLAGS | LF_DONT_IGNORE_DOTS);
 #ifdef WIN32
         BOOST_TEST(l.contains("./Tests.exe"));
 #else
@@ -87,7 +87,7 @@ BOOST_AUTO_TEST_SUITE(Path)
         BOOST_TEST(l.contains("./."));
         BOOST_TEST(l.contains("./.."));
 
-        l = APath(".").listDir(LF_DIRS);
+        l = APath(".").listDir(ListFlags::LF_DIRS);
         BOOST_TEST(l.empty());
     }
 

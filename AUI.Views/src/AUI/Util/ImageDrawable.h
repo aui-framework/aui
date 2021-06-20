@@ -41,6 +41,7 @@ public:
     virtual ~ImageDrawable();
 
     void draw(const glm::ivec2& size) override;
+    void bind();
 
     glm::ivec2 getSizeHint() override;
 };

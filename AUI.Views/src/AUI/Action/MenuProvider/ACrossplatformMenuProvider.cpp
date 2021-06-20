@@ -37,7 +37,7 @@ private:
     _<AMenuWindow> mSubWindow;
 public:
     AMenuWindow(const AVector<MenuItem>& vector):
-            AWindow("MENU", 0, 0, AWindow::current(), WS_SYS)
+            AWindow("MENU", 0, 0, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::SYS)
     {
         addAssName(".menu");
         setLayout(_new<AVerticalLayout>());
@@ -63,7 +63,8 @@ public:
                             }
                         });
 
-                        connect(view->mousePressed, i.onAction);
+                        auto onAction = i.onAction;
+                        connect(view->mousePressed, [onAction] { onAction(); });
                     } else {
                         view->disable();
                     }

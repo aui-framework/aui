@@ -31,8 +31,34 @@
 namespace ass {
     enum class Sizing {
         NONE,
+
+        /**
+         * Resize image to view's area without keeping aspect ratio.
+         */
         FIT,
+
+
+        /**
+         * Resize image to view's content area without keeping aspect ratio.
+         */
         FIT_PADDING,
+
+        /**
+         * Resize image to view's area keeping aspect ratio and cutting of excess parts. Matches CSS
+         * background-size: cover
+         */
+        COVER,
+
+        /**
+         * Resize image to view's area keeping aspect ratio and keeping space not covered by the image. Matches CSS
+         * background-size: contain
+         */
+        CONTAIN,
+
+        /**
+         * Texture divided to 4 parts cutting center.
+         */
+        SPLIT_2X2,
     };
 
     struct BackgroundImage {
@@ -40,6 +66,7 @@ namespace ass {
         unset_wrap<AColor> overlayColor;
         unset_wrap<Repeat> rep;
         unset_wrap<Sizing> sizing;
+        unset_wrap<glm::vec2> scale;
 
         BackgroundImage() {}
 
@@ -51,20 +78,25 @@ namespace ass {
         BackgroundImage(const AColor& overlayColor):
             overlayColor(overlayColor) {}
 
-        BackgroundImage(const unset_wrap<AString>& url, const unset_wrap<AColor>& overlayColor,
-                        const unset_wrap<Repeat>& rep, const unset_wrap<Sizing>& sizing) : url(url),
-                                                                                           overlayColor(overlayColor),
-                                                                                           rep(rep), sizing(sizing) {}
+        BackgroundImage(const unset_wrap<AString>& url,
+                        const unset_wrap<AColor>& overlayColor,
+                        const unset_wrap<Repeat>& rep,
+                        const unset_wrap<Sizing>& sizing = {},
+                        const unset_wrap<glm::vec2>& scale = {}) : url(url),
+                                                              overlayColor(overlayColor),
+                                                              rep(rep),
+                                                              sizing(sizing),
+                                                              scale(scale) {}
     };
 
     namespace decl {
         template<>
         struct API_AUI_VIEWS Declaration<BackgroundImage>: IDeclarationBase {
         private:
-            BackgroundImage mVisibility;
+            BackgroundImage mInfo;
 
         public:
-            Declaration(const BackgroundImage& info) : mVisibility(info) {
+            Declaration(const BackgroundImage& info) : mInfo(info) {
 
             }
 

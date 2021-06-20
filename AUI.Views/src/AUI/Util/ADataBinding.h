@@ -196,7 +196,9 @@ public:
 
     void addApplier(const Applier& applier) {
         mLinkAppliers << applier;
-        mLinkAppliers.last()(*mModel, -1);
+        if (mModel) {
+            mLinkAppliers.last()(*mModel, -1);
+        }
     }
 
 signals:
@@ -214,6 +216,7 @@ _<Klass1> operator&&(const _<Klass1>& object, const ADataBindingLinker<Model, Kl
     };
     if (linker.getGetter()) {
         AObject::connect(object.get()->*(linker.getGetter()), linker.getBinder(), [object, linker](const GetterRV& data) {
+            assert(("please setModel for ADataBinding" && &linker.getBinder()->getEditableModel()));
             object->setSignalsEnabled(false);
             linker.getBinder()->getEditableModel().*(linker.getField()) = data;
             converter c;

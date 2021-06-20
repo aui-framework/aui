@@ -19,8 +19,20 @@
  * =====================================================================================================================
  */
 
+
 #include "AException.h"
 #include <AUI/Logging/ALogger.h>
+class AException::Stacktrace {
+public:
+    struct Entry {
+        std::string mName;
+        int lineno;
+    };
+
+    AVector<Entry> mEntries;
+};
+
+
 #ifdef AUI_USE_BACKTRACE
 #include <backtrace.h>
 #include <AUI/Platform/AProcess.h>
@@ -35,7 +47,7 @@ int aui_backtrace_full_callback(void *data,
                                 int lineno,
                                 const char *function) {
     auto exception = reinterpret_cast<AException*>(data);
-    exception->mStacktrace << AException::StacktraceEntry{
+    exception->mStacktrace->mEntries << AException::Stacktrace::Entry {
         function
         ? function
         : (filename
@@ -47,17 +59,21 @@ int aui_backtrace_full_callback(void *data,
     return 0;
 }
 AException::AException() {
+    mStacktrace = new AException::Stacktrace;
     static auto pathToExecutable = AProcess::self()->getPathToExecutable().toStdString();
     static auto state = backtrace_create_state(pathToExecutable.c_str(), true, aui_backtrace_error_callback, nullptr);
     backtrace_full(state, 0, aui_backtrace_full_callback, aui_backtrace_error_callback, this);
 }
 #else
-AException::AException() = default;
+AException::AException() {
+    mStacktrace = nullptr;
+}
 #endif
 
 
 AException::~AException() noexcept
 {
+    delete mStacktrace;
 }
 
 const char* AException::what() const noexcept {
@@ -71,11 +87,11 @@ AString AException::getMessage() const {
 }
 
 void AException::printStacktrace() {
-    if (mStacktrace.empty()) {
+    if (!mStacktrace) {
         ALogger::warn("<stack trace is not available>");
         return;
     }
-    for (auto& l : mStacktrace) {
+    for (auto& l : mStacktrace->mEntries) {
         ALogger::raw() << "    at " << l.mName << l.lineno << '\n';
     }
 }

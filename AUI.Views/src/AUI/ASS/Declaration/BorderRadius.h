@@ -38,10 +38,10 @@ namespace ass {
         template<>
         struct API_AUI_VIEWS Declaration<BorderRadius>: IDeclarationBase {
         private:
-            BorderRadius mVisibility;
+            BorderRadius mInfo;
 
         public:
-            Declaration(const BorderRadius& info) : mVisibility(info) {
+            Declaration(const BorderRadius& info) : mInfo(info) {
 
             }
 

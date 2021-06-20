@@ -27,13 +27,14 @@
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/ASignal.h"
 
-#include "AUI/View/AViewContainer.h"
+#include "AUI/Platform/ABaseWindow.h"
 #include "AUI/Thread/IEventLoop.h"
 #include "AUI/Util/AMetric.h"
 
 #if defined(_WIN32)
 #undef ui
 #include <windows.h>
+#define ui (*getThread()) * [=]()
 #elif defined(ANDROID)
 #include <jni.h>
 #else
@@ -50,31 +51,31 @@ class AWindowManager;
 
 ENUM_FLAG(WindowStyle)
 {
-    WS_DEFAULT = 0,
+    DEFAULT = 0,
 	/**
 	 * \brief Window without minimize and maximize buttons.
 	 */
-	WS_NO_MINIMIZE_MAXIMIZE = 0x1,
+	NO_MINIMIZE_MAXIMIZE = 0x1,
 
 	/**
 	 * \brief Disable window resize.
 	 */
-	WS_NO_RESIZE = 0x2,
+	NO_RESIZE = 0x2,
 
 	/**
 	 * \brief Typical dialog window.
 	 */
-	WS_DIALOG = WS_NO_MINIMIZE_MAXIMIZE | WS_NO_RESIZE,
+	DIALOG = WindowStyle::NO_MINIMIZE_MAXIMIZE | WindowStyle::NO_RESIZE,
 
 	/**
 	 * \brief Remove standard window decorators.
 	 */
-	WS_NO_DECORATORS = 0x4,
+	NO_DECORATORS = 0x4,
 
 	/**
 	 * \brief Window for displaying system menu (dropdown, context menu)
 	 */
-	WS_SYS = 0x8,
+	SYS = 0x8,
 
 	/**
 	 * \brief Enables transparency for this window, so it can be displayed as custom rounded shadowed rectangle.
@@ -83,12 +84,11 @@ ENUM_FLAG(WindowStyle)
 	// WS_TRANSPARENT
 };
 
-class API_AUI_VIEWS AWindow: public AViewContainer, public std::enable_shared_from_this<AWindow>
+class API_AUI_VIEWS AWindow: public ABaseWindow, public std::enable_shared_from_this<AWindow>
 {
     friend class AWindowManager;
 	friend struct painter;
 private:
-	static AWindow*& currentWindowStorage();
 #if defined(_WIN32)
 	HMODULE mInst;
 	HDC mDC;
@@ -96,14 +96,12 @@ private:
     bool mWasMaximized = false;
 #endif
     bool mRedrawFlag = true;
-    bool mIsFocused = true;
-	AString mWindowClass;
+    AString mWindowClass;
 	AWindow* mParentWindow;
-	float mDpiRatio = 1.f;
 
-	/**
-	 * \brief Handles self shared pointer.
-	 */
+    /**
+     * \brief Handles self shared pointer.
+     */
 	_<AWindow> mSelfHolder;
 
 	struct Context
@@ -120,8 +118,6 @@ private:
 	static Context context;
 
 	AString mWindowTitle;
-	
-	_weak<AView> mFocusedView;
 
 #if defined(_WIN32)
 	friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -142,7 +138,7 @@ protected:
     Window mHandle;
     XIC mIC;
 #endif
-    WindowStyle mWindowStyle = WS_DEFAULT;
+    WindowStyle mWindowStyle = WindowStyle::DEFAULT;
 
 	virtual void doDrawWindow();
 	virtual void onClosed();
@@ -156,7 +152,7 @@ protected:
     AWindow(std::nullptr_t) {}
 
 public:
-	AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WS_DEFAULT) {
+	AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
 	    windowNativePreInit(name, width, height, parent, ws);
 	}
 	virtual ~AWindow();
@@ -215,7 +211,7 @@ public:
 	 */
 	void restore();
 
-	void flagRedraw();
+	void flagRedraw() override;
 	void show();
 	void close();
 	void hide();
@@ -226,16 +222,10 @@ public:
 	Window getNativeHandle() { return mHandle; }
 #endif
 
-	float getDpiRatio()
-	{
-		return mDpiRatio;
-	}
-	
-	const AString& getWindowTitle() const
+    const AString& getWindowTitle() const
 	{
 		return mWindowTitle;
 	}
-	AWindowManager& getWindowManager() const;
 
 	glm::ivec2 getWindowPosition() const;
 
@@ -244,30 +234,15 @@ public:
     void setGeometry(int x, int y, int width, int height) override;
 
 
-    void onMouseMove(glm::ivec2 pos) override;
-
-
-	void onFocusAcquired() override;
+    void onFocusAcquired() override;
 	void onFocusLost() override;
-	
-	void onKeyDown(AInput::Key key) override;
-	void onKeyRepeat(AInput::Key key) override;
-	void onKeyUp(AInput::Key key) override;
-	void onCharEntered(wchar_t c) override;
-	void setFocusedView(const _<AView>& view);
-	_<AView> getFocusedView() const
-	{
-		return mFocusedView.lock();
-	}
 
-    bool isFocused() const {
-        return mIsFocused;
-    }
+    void onKeyRepeat(AInput::Key key) override;
 
     /**
      * \return Current window for current thread.
      */
-	static AWindow* current();
+	static ABaseWindow* current();
 
 	/**
 	 * \brief Determines whether views should display hover animations.
@@ -300,8 +275,7 @@ public:
 signals:
 	emits<> closed;
 	emits<int, int> resized;
-	emits<> dpiChanged;
-	emits<> redrawn;
+    emits<> redrawn;
 	emits<> shown;
 
 	/**
@@ -325,11 +299,7 @@ signals:
 	 */
 	emits<> restored;
 
-	emits<AInput::Key> keyDown;
-
-    void focusNextView();
-
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
-
     bool consumesClick(const glm::ivec2& pos) override;
+
+    void onMouseMove(glm::ivec2 pos) override;
 };

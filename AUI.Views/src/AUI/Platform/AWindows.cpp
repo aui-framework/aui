@@ -36,6 +36,8 @@
 #include "AMessageBox.h"
 #include "AWindowManager.h"
 #include "ADesktop.h"
+#include "ABaseWindow.h"
+#include "ACustomWindow.h"
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
@@ -397,14 +399,6 @@ int xerrorhandler(Display* dsp, XErrorEvent* error) {
 thread_local bool painter::painting = false;
 
 
-AWindow*& AWindow::currentWindowStorage() {
-    thread_local AWindow* threadLocal = nullptr;
-    static AWindow* global = nullptr;
-    if (threadLocal)
-        return threadLocal;
-    return global;
-}
-
 AWindow::Context::~Context() {
 #if defined(_WIN32)
     wglDeleteContext(hrc);
@@ -416,41 +410,6 @@ AWindow::Context::~Context() {
 
 bool AWindow::consumesClick(const glm::ivec2& pos) {
     return AViewContainer::consumesClick(pos);
-}
-
-void AWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    auto focusCopy = mFocusedView.lock();
-    mFocusedView.reset();
-    assert(mFocusedView.lock() == nullptr);
-    AViewContainer::onMousePressed(pos, button);
-    if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
-        if (focusCopy->hasFocus()) {
-            focusCopy->onFocusLost();
-        }
-    }
-
-    // check for double clicks
-    using namespace std::chrono;
-    using namespace std::chrono_literals;
-    static milliseconds lastButtonPressedTime = 0ms;
-    static AInput::Key lastButtonPressed = AInput::Unknown;
-    static glm::ivec2 lastPosition = {0, 0};
-
-    auto now = duration_cast<std::chrono::milliseconds>(system_clock::now().time_since_epoch());
-
-    auto delta = now - lastButtonPressedTime;
-    if (delta < 500ms && lastPosition == pos) {
-        if (lastButtonPressed == button) {
-            onMouseDoubleClicked(pos, button);
-
-            lastButtonPressedTime = 0ms;
-        }
-    } else {
-        lastButtonPressedTime = now;
-        lastButtonPressed = button;
-        lastPosition = pos;
-    }
-    AMenu::close();
 }
 
 void AWindow::onClosed() {
@@ -509,7 +468,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     // used for ACustomWindow
     winProc(mHandle, WM_CREATE, 0, 0);
 
-    if (mParentWindow && ws & WS_DIALOG) {
+    if ((ws & WindowStyle::DIALOG) && mParentWindow) {
         EnableWindow(mParentWindow->mHandle, false);
     }
 
@@ -803,12 +762,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     updateDpi();
     Render::inst().setWindow(this);
 
-    {
-        // check for stencil bits
-        GLint stencilBits = 0;
-        glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
-        assert(stencilBits > 0);
-    }
+    checkForStencilBits();
 
 #if defined(_WIN32)
     RECT clientRect;
@@ -998,7 +952,7 @@ void AWindow::quit() {
 void AWindow::setWindowStyle(WindowStyle ws) {
     mWindowStyle = ws;
 #if defined(_WIN32)
-    if (ws & WS_SYS) {
+    if (!!(ws & WindowStyle::SYS)) {
         SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) & ~(WS_CAPTION | WS_THICKFRAME
             | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU) | WS_CHILD);
         {
@@ -1012,20 +966,20 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         // small shadow
         SetClassLong(mHandle, GCL_STYLE, GetClassLong(mHandle, GCL_STYLE) | CS_DROPSHADOW);
     } else {
-        if (ws & WS_NO_MINIMIZE_MAXIMIZE) {
+        if (!!(ws & WindowStyle::NO_MINIMIZE_MAXIMIZE)) {
             SetWindowLongPtr(mHandle, GWL_STYLE,
                              GetWindowLong(mHandle, GWL_STYLE) & ~(WS_THICKFRAME |
-                             WS_SYSMENU) | WS_CAPTION);
+                                     WS_SYSMENU) | WS_CAPTION);
         } else {
             SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) | WS_THICKFRAME);
         }
 
-        if (ws & WS_NO_RESIZE) {
+        if (!!(ws & WindowStyle::NO_RESIZE)) {
             SetWindowLongPtr(mHandle, GWL_STYLE,
                              GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME | WS_THICKFRAME |
-                             WS_SYSMENU | WS_CAPTION);
+                                     WS_SYSMENU | WS_CAPTION);
         }
-        if (ws & WS_NO_DECORATORS) {
+        if (!!(ws & WindowStyle::NO_DECORATORS)) {
             LONG lExStyle = GetWindowLong(mHandle, GWL_EXSTYLE);
             lExStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
             SetWindowLong(mHandle, GWL_EXSTYLE, lExStyle);
@@ -1034,7 +988,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         }
     }
 #else
-    if (ws & (WS_SYS | WS_NO_DECORATORS)) {
+    if (!!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS))) {
         // note the struct is declared elsewhere, is here just for clarity.
         // code is from [http://tonyobryan.com/index.php?article=9][1]
         typedef struct Hints
@@ -1249,25 +1203,6 @@ glm::ivec2 AWindow::getWindowPosition() const {
 #endif
 }
 
-void AWindow::onMouseMove(glm::ivec2 pos) {
-    AViewContainer::onMouseMove(pos);
-    auto v = getViewAtRecursive(pos);
-    if (v) {
-        mCursor = v->getCursor();
-    }
-    if (!AWindow::shouldDisplayHoverAnimations()) {
-        if (auto focused = mFocusedView.lock()) {
-            if (focused != v) {
-                focused->onMouseMove(pos - focused->getPositionInWindow());
-            }
-        }
-    }
-
-    if constexpr (AUI_DISPLAY_BOUNDS) {
-        flagRedraw();
-    }
-}
-
 void AWindow::onFocusAcquired() {
     mIsFocused = true;
     AViewContainer::onFocusAcquired();
@@ -1275,6 +1210,14 @@ void AWindow::onFocusAcquired() {
     if (auto v = getFocusedView()) {
         v->onFocusAcquired();
     }*/
+}
+
+void AWindow::onMouseMove(glm::ivec2 pos) {
+    ABaseWindow::onMouseMove(pos);
+
+    if constexpr (AUI_DISPLAY_BOUNDS) {
+        AWindow::flagRedraw();
+    }
 }
 
 void AWindow::onFocusLost() {
@@ -1289,44 +1232,12 @@ void AWindow::onFocusLost() {
     }*/
 }
 
-void AWindow::onKeyDown(AInput::Key key) {
-    emit keyDown(key);
-    if (auto v = getFocusedView())
-        v->onKeyDown(key);
-}
-
 void AWindow::onKeyRepeat(AInput::Key key) {
     if (auto v = getFocusedView())
         v->onKeyRepeat(key);
 }
 
-void AWindow::onKeyUp(AInput::Key key) {
-    if (auto v = getFocusedView())
-        v->onKeyUp(key);
-}
-
-void AWindow::onCharEntered(wchar_t c) {
-    if (auto v = getFocusedView()) {
-        v->onCharEntered(c);
-    }
-}
-
-void AWindow::setFocusedView(const _<AView>& view) {
-    if (mFocusedView.lock() == view) {
-        return;
-    }
-    if (auto c = mFocusedView.lock()) {
-        c->onFocusLost();
-    }
-    mFocusedView = view;
-    if (view) {
-        if (!view->hasFocus()) {
-            view->onFocusAcquired();
-        }
-    }
-}
-
-AWindow* AWindow::current() {
+ABaseWindow* AWindow::current() {
     return currentWindowStorage();
 }
 
@@ -1369,11 +1280,6 @@ void AWindow::show() {
     emit shown();
 }
 
-AWindowManager& AWindow::getWindowManager() const {
-    thread_local AWindowManager ourWindowManager;
-    return ourWindowManager;
-}
-
 void AWindow::onCloseButtonClicked() {
     emit closed();
 }
@@ -1382,7 +1288,7 @@ void AWindow::setSize(int width, int height) {
     setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
 
 #ifdef __linux__
-    if (mWindowStyle & WS_NO_RESIZE) {
+    if (!!(mWindowStyle & WindowStyle::NO_RESIZE)) {
         // we should set min size and max size the same as current size
         XSizeHints* sizehints = XAllocSizeHints();
         long userhints;
@@ -1511,83 +1417,6 @@ void AWindow::hide() {
 #else
     XUnmapWindow(gDisplay, mHandle);
 #endif
-}
-
-void AWindow::focusNextView() {
-    auto beginPoint = getFocusedView();
-
-    bool triedToSearchFromBeginning = false;
-
-    if (beginPoint == nullptr) {
-        beginPoint = shared_from_this();
-        triedToSearchFromBeginning = true;
-    }
-    auto target = beginPoint;
-    while (target != nullptr) {
-        if (auto asContainer = _cast<AViewContainer>(target)) {
-            // container
-            if (!asContainer->getViews().empty()) {
-                target = asContainer->getViews().first();
-                continue;
-            }
-        }
-        if (target == beginPoint || !target->handlesNonMouseNavigation() || target->getVisibilityRecursive() == Visibility::GONE) {
-            // we should jump to the next element
-            if (target->getParent()) {
-                // up though hierarchy
-                while (auto parent = target->getParent()) {
-                    auto& parentViews = parent->getViews();
-                    auto index = parentViews.indexOf(target) + 1;
-                    if (index >= parentViews.size()) {
-
-                        // jump to the next container since we already visited all the elements in current container
-                        target = target->getParent()->determineSharedPointer();
-                        if (target == nullptr) {
-                            if (triedToSearchFromBeginning) {
-                                break;
-                            } else {
-                                beginPoint = target = shared_from_this();
-                                triedToSearchFromBeginning = true;
-                                break;
-                            }
-                        }
-                    } else {
-                        target = parentViews[index];
-                        break;
-                    }
-                }
-            } else {
-                // root element
-                if (triedToSearchFromBeginning) {
-                    // already tried searching from beginning, breaking loop
-                    target = nullptr;
-                    break;
-                } else {
-                    // try to search from beginning
-                    beginPoint = target = shared_from_this();
-                    triedToSearchFromBeginning = true;
-                }
-            }
-        } else {
-            // found something what is not beginPoint
-            break;
-        }
-    }
-
-    if (target != shared_from_this()) {
-        if (mFocusedView.lock() == target) {
-            return;
-        }
-        if (auto c = mFocusedView.lock()) {
-            c->onFocusLost();
-        }
-        mFocusedView = target;
-        if (target) {
-            if (!target->hasFocus()) {
-                target->onFocusAcquired();
-            }
-        }
-    }
 }
 
 _<AView> AWindow::determineSharedPointer() {
@@ -1880,8 +1709,10 @@ AString AWindowManager::xClipboardPasteImpl() {
     {
         return {};
     }
-    auto auiWindow = AWindow::current();
-    assert(auiWindow);
+    auto basicWindow = AWindow::current();
+    auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
+    if (!auiWindow)
+        return {};
     auto nativeHandle = auiWindow->getNativeHandle();
     assert(nativeHandle);
 
@@ -1930,8 +1761,12 @@ AString AWindowManager::xClipboardPasteImpl() {
 }
 
 void AWindowManager::xClipboardCopyImpl(const AString& text) {
+    auto basicWindow = AWindow::current();
+    auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
+    if (!auiWindow) return;
     mXClipboardText = text.toStdString();
-    XSetSelectionOwner(gDisplay, gAtoms.clipboard, AWindow::current()->mHandle, CurrentTime);
+    XSetSelectionOwner(gDisplay, gAtoms.clipboard, auiWindow->mHandle, CurrentTime);
 }
+
 
 #endif

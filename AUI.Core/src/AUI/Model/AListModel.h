@@ -72,6 +72,10 @@ namespace aui::detail {
         void invalidate(size_t index) {
             emit this->dataChanged(AModelRange{AModelIndex(index), AModelIndex(index + 1u), this});
         }
+
+        void clear() {
+            erase(p::begin(), p::end());
+        }
     };
 }
 

@@ -25,7 +25,7 @@
 
 enum class FontRendering
 {
-	NEAREST = 0, // TODO
+	NEAREST = 0,
 	ANTIALIASING = 1,
 	SUBPIXEL = 2,
 };
