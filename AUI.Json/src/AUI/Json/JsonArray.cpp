@@ -33,12 +33,12 @@ bool JsonArray::isVariant()
 
 bool JsonArray::isObject()
 {
-	return true;
+	return false;
 }
 
 bool JsonArray::isArray()
 {
-	return false;
+	return true;
 }
 
 AVariant& JsonArray::asVariant()

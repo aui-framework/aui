@@ -30,6 +30,15 @@ AJsonElement::AJsonElement(const _<IJsonElement>& json_element): mJson(json_elem
 {
 }
 
+AJsonElement::AJsonElement(std::nullptr_t) :
+        mJson(_new<JsonNull>()) {
+
+}
+
+bool AJsonElement::isNull() const {
+    return mJson->isNull();
+}
+
 
 bool AJsonElement::isVariant() const
 {
@@ -113,9 +122,12 @@ AJsonElement::AJsonElement():
 }
 
 
-AJsonValue::AJsonValue(const AVariant& value):
-        AJsonElement(_new<JsonValue>(value))
+AJsonValue::AJsonValue(const AVariant& value)
 {
+    if (value.isNull()) {
+    } else {
+        mJson = _new<JsonValue>(value);
+    }
 }
 
 AJsonObject::AJsonObject(const AMap<AString, AJsonElement>& value):

@@ -27,10 +27,16 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Json/AJsonElement.h>
 #include <AUI/Json/AJson.h>
+#include <AUI/Json/JsonException.h>
 
 using namespace boost::unit_test;
 BOOST_AUTO_TEST_SUITE(Json)
 
+
+// check const access
+void check_girlfriend(const AJsonObject& o) {
+    BOOST_CHECK(o["girlfriend"].isNull());
+}
 
 BOOST_AUTO_TEST_CASE(ObjectAssignValue)
 {
@@ -38,9 +44,11 @@ BOOST_AUTO_TEST_CASE(ObjectAssignValue)
     AJsonObject o;
     o["name"] = "Alex2772";
     o["year"] = 2020;
+    o["girlfriend"] = AJsonValue(nullptr);
 
     // check for resulting json
-    BOOST_CHECK_EQUAL(AJson::toString(o), R"({"name":"Alex2772","year":2020})");
+    BOOST_CHECK_EQUAL(AJson::toString(o), R"({"girlfriend":null,"name":"Alex2772","year":2020})");
+    check_girlfriend(o);
 }
 
 BOOST_AUTO_TEST_CASE(ObjectAssignObject)
@@ -70,6 +78,37 @@ BOOST_AUTO_TEST_CASE(StringEscape)
     // check for string itself
     auto deserialized = AJson::fromString(s);
     BOOST_CHECK_EQUAL(deserialized["user"].asString(), "u\"");
+}
+
+BOOST_AUTO_TEST_CASE(BraceInitialization)
+{
+    // arrange data
+    AJsonObject root({
+            {"array", AJsonArray({
+                AJsonValue("value1"),
+                AJsonValue("value2"),
+            })},
+            {"key", AJsonValue(1)},
+    });
+
+    // check for resulting json
+    BOOST_CHECK_EQUAL(AJson::toString(root), R"({"array":["value1","value2"],"key":1})");
+}
+
+BOOST_AUTO_TEST_CASE(Array)
+{
+    // arrange data
+    auto root = AJsonArray::fromVariantArray({1, 2, 3});
+
+    // check for resulting json
+    BOOST_CHECK(!root.empty());
+    BOOST_CHECK_EQUAL(AJson::toString(root), R"([1,2,3])");
+
+    // check push
+    root << AJsonValue(10);
+    root.push_back(AJsonValue(9));
+    BOOST_CHECK_EQUAL(AJson::toString(root), R"([1,2,3,10,9])");
+    BOOST_CHECK_EQUAL(root[1].asInt(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
