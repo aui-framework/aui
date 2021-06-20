@@ -65,6 +65,10 @@ public:
     AVariantType::Type getType() override {
         return AVariantType::AV_NULL;
     }
+
+    bool isNull() override {
+        return true;
+    }
 };
 
 template <typename T>

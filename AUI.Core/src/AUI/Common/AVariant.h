@@ -68,6 +68,10 @@ namespace AVariantType {
     inline Type getTypeOf<bool>() {
         return AV_BOOL;
     }
+    template<>
+    inline Type getTypeOf<std::nullptr_t>() {
+        return AV_NULL;
+    }
 
 };
 
@@ -80,6 +84,9 @@ struct API_AUI_CORE AVariantHelperBase
 	virtual float toFloat() = 0;
 	virtual double toDouble() = 0;
 	virtual bool toBool() = 0;
+    virtual bool isNull() {
+        return false;
+    }
 	virtual AString toString() = 0;
 	virtual size_t hash() = 0;
 	virtual AVariantType::Type getType() = 0;
@@ -120,6 +127,10 @@ public:
 	{
 		return mStored;
 	}
+	bool isNull() override
+	{
+		return false;
+	}
 	AString toString() override
 	{
 		return AClass<T>::name();
@@ -151,9 +162,7 @@ public:
 	template<typename T>
 	AVariant(const T& object)
 	{
-	    if constexpr (!std::is_null_pointer_v<T>) {
-            mStored = _new<AVariantHelper<T>>(object);
-        }
+        mStored = _new<AVariantHelper<T>>(object);
 	}
 
 
@@ -185,7 +194,7 @@ public:
 
 	[[nodiscard]]
 	bool isNull() const noexcept {
-		return mStored == nullptr;
+		return mStored->isNull();
 	}
 
 	[[nodiscard]]

@@ -20,46 +20,45 @@
  */
 
 //
-// Created by alex2 on 31.08.2020.
+// Created by alex2 on 26.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
-#include <AUI/Common/SharedPtr.h>
-#include <AUI/Thread/AFuture.h>
-#include <AUI/Util/kAUI.h>
-#include <AUI/Util/Util.h>
+#include "JpgImageLoader.h"
+#include <AUI/Common/AByteBuffer.h>
+#include <stb_image.h>
 
-using namespace boost::unit_test;
+bool JpgImageLoader::matches(AByteBuffer& buffer) {
+    const uint8_t header[] = {0xff, 0xd8 };
+    uint8_t read_header[sizeof(header)];
+    buffer.get((char*) read_header, sizeof(read_header));
+    return memcmp(header, read_header, sizeof(read_header)) == 0;
+}
 
-BOOST_AUTO_TEST_SUITE(Async)
+_<IDrawable> JpgImageLoader::getDrawable(AByteBuffer& buffer) {
+    return nullptr;
+}
 
-    template<typename T>
-    std::ostream& operator<<(std::ostream& o, const std::atomic<T>& n) {
-        o << *n;
-        return o;
+_<AImage> JpgImageLoader::getRasterImage(AByteBuffer& buffer) {
+    int x, y, channels;
+    if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer.getCurrentPosAddress(), buffer.getAvailable(),
+                                              &x, &y, &channels, 4)) {
+        channels = 4;
+        uint32_t format = AImage::BYTE;
+        switch (channels) {
+            case 3:
+                format |= AImage::RGB;
+                break;
+            case 4:
+                format |= AImage::RGBA;
+                break;
+            default:
+                assert(0);
+        }
+        auto img = _new<AImage>(
+                AVector<uint8_t>{static_cast<uint8_t*>(data), static_cast<uint8_t*>(data + x * y * channels)}, x, y,
+                format);
+        stbi_image_free(data);
+        return img;
     }
-
-
-    BOOST_AUTO_TEST_CASE(Repeat) {
-        auto someInt = _new<std::atomic_int>(0);
-
-        repeat(100'000) {
-            (*someInt) += 1;
-        };
-
-        BOOST_CHECK_EQUAL(*someInt, 100'000);
-    }
-
-    BOOST_AUTO_TEST_CASE(RepeatAsync) {
-        auto someInt = _new<std::atomic_int>(0);
-
-        repeat_async(1'000) {
-            (*someInt) += 1;
-        };
-
-        AThread::sleep(1'000);
-
-        BOOST_CHECK_EQUAL(*someInt, 1'000);
-    }
-
-BOOST_AUTO_TEST_SUITE_END()
+    return nullptr;
+}

@@ -20,46 +20,20 @@
  */
 
 //
-// Created by alex2 on 31.08.2020.
+// Created by alex2 on 26.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
-#include <AUI/Common/SharedPtr.h>
-#include <AUI/Thread/AFuture.h>
-#include <AUI/Util/kAUI.h>
-#include <AUI/Util/Util.h>
-
-using namespace boost::unit_test;
-
-BOOST_AUTO_TEST_SUITE(Async)
-
-    template<typename T>
-    std::ostream& operator<<(std::ostream& o, const std::atomic<T>& n) {
-        o << *n;
-        return o;
-    }
+#pragma once
 
 
-    BOOST_AUTO_TEST_CASE(Repeat) {
-        auto someInt = _new<std::atomic_int>(0);
+#include <AUI/Image/IImageLoader.h>
 
-        repeat(100'000) {
-            (*someInt) += 1;
-        };
+class JpgImageLoader: public IImageLoader {
+public:
+    bool matches(AByteBuffer& buffer) override;
 
-        BOOST_CHECK_EQUAL(*someInt, 100'000);
-    }
+    _<IDrawable> getDrawable(AByteBuffer& buffer) override;
+    _<AImage> getRasterImage(AByteBuffer& buffer) override;
+};
 
-    BOOST_AUTO_TEST_CASE(RepeatAsync) {
-        auto someInt = _new<std::atomic_int>(0);
 
-        repeat_async(1'000) {
-            (*someInt) += 1;
-        };
-
-        AThread::sleep(1'000);
-
-        BOOST_CHECK_EQUAL(*someInt, 1'000);
-    }
-
-BOOST_AUTO_TEST_SUITE_END()
