@@ -166,6 +166,22 @@ int ATokenizer::readInt()
 			case '7':
 			case '8':
 			case '9':
+			case 'x':
+			case 'X':
+
+			    // hex
+			case 'a':
+			case 'A':
+			case 'b':
+			case 'B':
+			case 'c':
+			case 'C':
+			case 'd':
+			case 'D':
+			case 'e':
+			case 'E':
+			case 'f':
+			case 'F':
 				tmp += c;
 				break;
 			default:
@@ -245,4 +261,8 @@ AString ATokenizer::readString(int n) {
         result += readChar();
     }
     return result;
+}
+
+void ATokenizer::skipUntil(char c) {
+    for (char x; (x = readChar()) != c; );
 }

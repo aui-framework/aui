@@ -83,9 +83,10 @@ AStylesheet::AStylesheet() {
         {
             t<AButton>(),
             BackgroundSolid {0xffffff_rgb},
-            Padding {4_dp, 8_dp},
+            Padding {3_dp, 6_dp},
             Margin {2_dp, 4_dp},
             MinSize {60_dp, 14_dp},
+            Border { 1_dp, 0xcacaca_rgb },
             BorderRadius {4_dp},
             TextAlign::CENTER,
             BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},

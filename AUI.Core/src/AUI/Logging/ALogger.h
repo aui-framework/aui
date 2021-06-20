@@ -93,3 +93,5 @@ public:
 		instance().log(DEBUG, str);
 	}
 };
+
+#include <AUI/Traits/strings.h>

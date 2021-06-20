@@ -74,6 +74,7 @@ namespace ass {
         AAssSelector(AAssSelector&& move): mSubSelectors(std::move(move.mSubSelectors)) {
 
         }
+        explicit AAssSelector(std::nullptr_t) {}
         AAssSelector(const AAssSelector&) = default;
 
         ~AAssSelector() {
@@ -102,6 +103,10 @@ namespace ass {
                     s->setupConnections(view, helper);
                 }
             }
+        }
+        template<typename SubSelector, std::enable_if_t<!std::is_pointer_v<SubSelector>, bool> = true>
+        void addSubSelector(SubSelector&& subSelector) {
+            processSubSelector(std::forward<SubSelector>(subSelector));
         }
 
     };

@@ -33,10 +33,16 @@ namespace Autumn
 	namespace detail
 	{
 		template <typename T>
-		_<T>& storage()
+		_<T>& globalStorage()
 		{
-			static _<T> t = nullptr;
-			return t;
+            static _<T> t = nullptr;
+            return t;
+		}
+		template <typename T>
+		_<T>& threadLocalStorage()
+		{
+            thread_local _<T> t = nullptr;
+            return t;
 		}
 		template <typename T>
 		AMap<AString, _<T>>& storageMap()
@@ -49,12 +55,16 @@ namespace Autumn
 	template <typename T>
 	_<T> get()
 	{
-		return detail::storage<T>();
+	    if (auto v = detail::threadLocalStorage<T>()) {
+	        return v;
+	    }
+		return detail::globalStorage<T>();
 	}
 	template <typename T>
 	void put(_<T> obj)
 	{
-		detail::storage<T>() = obj;
+        detail::globalStorage<T>() = obj;
+        detail::threadLocalStorage<T>() = obj;
 	}
 
 

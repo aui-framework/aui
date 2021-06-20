@@ -193,6 +193,12 @@ int AString::toInt() const noexcept
 {
     try
     {
+        if (length() >= 2) {
+            if ((*this)[1] == 'x' || (*this)[1] == 'X') {
+                // hex
+                return std::stoi(AString{begin() + 2, end()}, nullptr, 16);
+            }
+        }
         return std::stoi(*this);
     } catch (...)
     {

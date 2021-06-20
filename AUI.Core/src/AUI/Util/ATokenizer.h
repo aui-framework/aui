@@ -54,6 +54,36 @@ public:
 	AString readString();
 
 	/**
+	 * \brief Reads string while pred(char) == true.
+	 * \return read string
+	 */
+    template<typename Callable>
+	AString readStringWhile(Callable pred) {
+        AString res;
+        char c;
+
+        try
+        {
+            for (;;) {
+                c = readChar();
+                if (pred(c))
+                {
+                    res << c;
+                }
+                else
+                {
+                    reverseByte();
+                    return res;
+                }
+            }
+        } catch (...)
+        {
+
+        }
+        return res;
+	}
+
+	/**
 	 * \brief Reads <code>n</code> symbols.
 	 * \return read string
 	 */
@@ -121,6 +151,12 @@ public:
 	 * \param c character to read until to
 	 */
 	void skipUntilUnescaped(char c);
+
+	/**
+	 * \brief Skips character until c.
+	 * \param c character to read until to
+	 */
+	void skipUntil(char c);
 
 
     /**
