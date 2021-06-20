@@ -128,6 +128,7 @@ AJsonElement::AJsonElement():
 AJsonValue::AJsonValue(const AVariant& value)
 {
     if (value.isNull()) {
+        mJson = _new<JsonNull>();
     } else {
         mJson = _new<JsonValue>(value);
     }

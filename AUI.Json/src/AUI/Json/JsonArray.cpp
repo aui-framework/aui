@@ -44,13 +44,11 @@ bool JsonArray::isArray()
 AVariant& JsonArray::asVariant()
 {
     throw JsonException(formatMiscastException("array is not a value"));
-    throw std::exception{};
 }
 
 AMap<AString, AJsonElement>& JsonArray::asObject()
 {
     throw JsonException(formatMiscastException("array is not an object"));
-    throw std::exception{};
 }
 
 AVector<AJsonElement>& JsonArray::asArray()

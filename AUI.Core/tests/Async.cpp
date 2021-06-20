@@ -53,13 +53,13 @@ BOOST_AUTO_TEST_SUITE(Async)
     BOOST_AUTO_TEST_CASE(RepeatAsync) {
         auto someInt = _new<std::atomic_int>(0);
 
-        repeat_async(100'000) {
-                (*someInt) += 1;
-            };
+        repeat_async(1'000) {
+            (*someInt) += 1;
+        };
 
         AThread::sleep(1'000);
 
-        BOOST_CHECK_EQUAL(*someInt, 100'000);
+        BOOST_CHECK_EQUAL(*someInt, 1'000);
     }
 
 BOOST_AUTO_TEST_SUITE_END()
