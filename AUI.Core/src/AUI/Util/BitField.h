@@ -67,7 +67,7 @@ public:
      * \return true if flag was set
      */
     bool checkAndSet(T flag) {
-        if (mStorage & flag) {
+        if (!!(mStorage & flag)) {
             mStorage &= ~flag;
             return true;
         }

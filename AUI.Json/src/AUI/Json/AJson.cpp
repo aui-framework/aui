@@ -99,7 +99,6 @@ AJsonElement AJson::read(_<IInputStream> is) {
                             return result;
                         }
                         unexpectedToken(s);
-                        break;
                     }
 
                     case 'f': // false?
@@ -111,7 +110,6 @@ AJsonElement AJson::read(_<IInputStream> is) {
                             return result;
                         }
                         unexpectedToken(s);
-                        break;
                     }
 
                     case '\"':

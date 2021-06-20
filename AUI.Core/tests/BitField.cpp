@@ -32,81 +32,81 @@ using namespace boost::unit_test;
 
 
 ENUM_FLAG(Flags) {
-    F_FLAG1 = 0x1,
-    F_FLAG2 = 0x2,
-    F_FLAG3 = 0x4,
+    FLAG1 = 0x1,
+    FLAG2 = 0x2,
+    FLAG3 = 0x4,
 };
 
 BOOST_AUTO_TEST_SUITE(BitField1)
 
     BOOST_AUTO_TEST_CASE(Put) {
         BitField<Flags> f;
-        f << F_FLAG1;
+        f << Flags::FLAG1;
         Flags x = f;
-        BOOST_TEST(x & F_FLAG1);
-        BOOST_TEST(!(x & ~F_FLAG1));
-        f << F_FLAG2;
+        BOOST_TEST(!!(x & Flags::FLAG1));
+        BOOST_TEST(!!(!(x & ~Flags::FLAG1)));
+        f << Flags::FLAG2;
         x = f;
-        BOOST_TEST(x & F_FLAG1);
-        BOOST_TEST(x & F_FLAG2);
-        BOOST_TEST((x & ~F_FLAG1));
-        BOOST_TEST((x & ~F_FLAG2));
+        BOOST_TEST(!!(x & Flags::FLAG1));
+        BOOST_TEST(!!(x & Flags::FLAG2));
+        BOOST_TEST(!!((x & ~Flags::FLAG1)));
+        BOOST_TEST(!!((x & ~Flags::FLAG2)));
     }
 
     BOOST_AUTO_TEST_CASE(Take) {
         BitField<Flags> f;
-        f << F_FLAG1 << F_FLAG2;
+        f << Flags::FLAG1 << Flags::FLAG2;
         Flags x = f;
-        BOOST_TEST(x & F_FLAG1);
-        BOOST_TEST(x & F_FLAG2);
-        f >> F_FLAG2;
+        BOOST_TEST(!!(x & Flags::FLAG1));
+        BOOST_TEST(!!(x & Flags::FLAG2));
+        f >> Flags::FLAG2;
         x = f;
-        BOOST_TEST(x & F_FLAG1);
-        BOOST_TEST(!(x & F_FLAG2));
+        BOOST_TEST(!!(x & Flags::FLAG1));
+        BOOST_TEST(!!(!(x & Flags::FLAG2)));
     }
 
     BOOST_AUTO_TEST_CASE(CheckTake1) {
         BitField<Flags> f;
-        f << F_FLAG1 << F_FLAG2;
+        f << Flags::FLAG1 << Flags::FLAG2;
         Flags x = f;
-        BOOST_TEST(x & F_FLAG1);
-        BOOST_TEST(x & F_FLAG2);
-        BOOST_TEST(f.checkAndSet(F_FLAG2));
+        BOOST_TEST(!!(x & Flags::FLAG1));
+        BOOST_TEST(!!(x & Flags::FLAG2));
+        BOOST_TEST(f.checkAndSet(Flags::FLAG2));
         x = f;
-        BOOST_TEST(x & F_FLAG1);
-        BOOST_TEST(!(x & F_FLAG2));
+        BOOST_TEST(!!(x & Flags::FLAG1));
+        BOOST_TEST(!!(!(x & Flags::FLAG2)));
     }
     BOOST_AUTO_TEST_CASE(CheckTake2) {
         BitField<Flags> f;
-        f << F_FLAG1;
+        f << Flags::FLAG1;
         Flags x = f;
-        BOOST_TEST(x & F_FLAG1);
-        BOOST_TEST(!(x & F_FLAG2));
-        BOOST_TEST(!f.checkAndSet(F_FLAG2));
+        BOOST_TEST(!!(x & Flags::FLAG1));
+        BOOST_TEST(!!(!(x & Flags::FLAG2)));
+        BOOST_TEST(!f.checkAndSet(Flags::FLAG2));
         x = f;
-        BOOST_TEST(x & F_FLAG1);
-        BOOST_TEST(!(x & F_FLAG2));
+        BOOST_TEST(!!(x & Flags::FLAG1));
+        BOOST_TEST(!!(!(x & Flags::FLAG2)));
     }
     BOOST_AUTO_TEST_CASE(Check) {
         BitField<Flags> f;
-        f << F_FLAG1;
+        f << Flags::FLAG1;
 
-        BOOST_TEST((f.check(F_FLAG1) && (f & F_FLAG1)));
-        BOOST_TEST(!f.check(F_FLAG2));
-        BOOST_TEST(!f.check(F_FLAG3));
+        BOOST_TEST(!!((f.check(Flags::FLAG1) && (f & Flags::FLAG1))));
+        BOOST_TEST(!f.check(Flags::FLAG2));
+        BOOST_TEST(!f.check(Flags::FLAG3));
 
-        f << F_FLAG2;
+        f << Flags::FLAG2;
 
-        BOOST_TEST(f.check(F_FLAG1));
-        BOOST_TEST(f.check(F_FLAG2));
-        BOOST_TEST(!f.check(F_FLAG3));
+        BOOST_TEST(f.check(Flags::FLAG1));
+        BOOST_TEST(f.check(Flags::FLAG2));
+        BOOST_TEST(!f.check(Flags::FLAG3));
 
-        f >> F_FLAG3;
-        f >> F_FLAG1;
+        f >> Flags::FLAG3;
+        f >> Flags::FLAG1;
 
-        BOOST_TEST(!f.check(F_FLAG1));
-        BOOST_TEST(f.check(F_FLAG2));
-        BOOST_TEST(!f.check(F_FLAG3));
+        BOOST_TEST(!f.check(Flags::FLAG1));
+        BOOST_TEST(f.check(Flags::FLAG2));
+        BOOST_TEST(!f.check(Flags::FLAG3));
     }
 
 

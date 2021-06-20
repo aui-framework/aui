@@ -6,8 +6,8 @@
 #include "IJsonElement.h"
 #include "JsonException.h"
 
-void IJsonElement::throwMiscastException(const AString& message) {
+AString IJsonElement::formatMiscastException(const AString& message) {
     auto buf = _new<AByteBuffer>();
     serialize(_new<ByteBufferOutputStream>(buf));
-    throw JsonException(message + ": " + AString::fromUtf8(*buf));
+    return message + ": " + AString::fromUtf8(*buf);
 }

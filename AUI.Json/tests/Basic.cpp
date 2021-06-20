@@ -36,6 +36,9 @@ BOOST_AUTO_TEST_SUITE(Json)
 // check const access
 void check_girlfriend(const AJsonObject& o) {
     BOOST_CHECK(o["girlfriend"].isNull());
+
+    // unexisting object
+    BOOST_CHECK(o["unexisting_object"].isNull());
 }
 
 BOOST_AUTO_TEST_CASE(ObjectAssignValue)
@@ -109,6 +112,13 @@ BOOST_AUTO_TEST_CASE(Array)
     root.push_back(AJsonValue(9));
     BOOST_CHECK_EQUAL(AJson::toString(root), R"([1,2,3,10,9])");
     BOOST_CHECK_EQUAL(root[1].asInt(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(SerializationDeserialization)
+{
+    // arrange data
+    const char* str = R"({"a":null,"b":[1,2,3],"c":false,"d":true,"e":{"v":"123"}})";
+    BOOST_CHECK_EQUAL(AJson::toString(AJson::fromString(str)), str);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
