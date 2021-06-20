@@ -99,7 +99,6 @@ AJsonElement AJson::read(_<IInputStream> is) {
                             return result;
                         }
                         unexpectedToken(s);
-                        break;
                     }
 
                     case 'f': // false?
@@ -111,7 +110,6 @@ AJsonElement AJson::read(_<IInputStream> is) {
                             return result;
                         }
                         unexpectedToken(s);
-                        break;
                     }
 
                     case '\"':
@@ -146,14 +144,6 @@ void API_AUI_JSON AJson::write(_<IOutputStream> os, const AJsonElement& json) {
     json.serialize(os);
 }
 
-AJsonElement::AJsonElement(std::nullptr_t) :
-        mJson(_new<JsonNull>()) {
-
-}
-
-bool AJsonElement::isNull() const {
-    return mJson->isNull();
-}
 
 AString AJson::toString(const AJsonElement& json) {
     auto bb = _new<AByteBuffer>();

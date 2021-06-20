@@ -20,47 +20,31 @@
  */
 
 //
-// Created by alex2772 on 9/27/20.
+// Created by alex2 on 30.08.2020.
 //
 
-#include "JsonNull.h"
-#include "JsonException.h"
+#include <boost/test/unit_test.hpp>
+#include <AUI/Common/AString.h>
+#include <AUI/Json/AJsonElement.h>
+#include <AUI/Json/AJson.h>
+#include <AUI/Json/JsonException.h>
+#include <AUI/IO/StringStream.h>
 
-JsonNull::~JsonNull() {
+using namespace boost::unit_test;
+BOOST_AUTO_TEST_SUITE(Json)
 
+
+BOOST_AUTO_TEST_CASE(Error)
+{
+    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"kek": truz})")), AException);
+    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"kek": falz})")), AException);
+    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"array": [1,2,3,x]})")), AException);
+    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"array": [1,2,3})")), AException);
+    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"object": {"1"s:1,)")), AException);
+    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"object": {"1":1,})")), AException);
+    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"object": {"1":2})")), AException);
+    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"object": {"1":2 xs})")), AException);
 }
 
-bool JsonNull::isVariant() {
-    return false;
-}
+BOOST_AUTO_TEST_SUITE_END()
 
-bool JsonNull::isObject() {
-    return false;
-}
-
-bool JsonNull::isArray() {
-    return false;
-}
-
-AVariant& JsonNull::asVariant() {
-    throw JsonException(formatMiscastException("null is not a value"));
-    throw std::exception{};
-}
-
-AMap<AString, AJsonElement>& JsonNull::asObject() {
-    throw JsonException(formatMiscastException("null is not an object"));
-    throw std::exception{};
-}
-
-AVector<AJsonElement>& JsonNull::asArray() {
-    throw JsonException(formatMiscastException("null is not an array"));
-    throw std::exception{};
-}
-
-void JsonNull::serialize(const _<IOutputStream>& os) const {
-    os->write("null", 4);
-}
-
-bool JsonNull::isNull() {
-    return true;
-}

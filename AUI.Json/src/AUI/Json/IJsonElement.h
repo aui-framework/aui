@@ -30,7 +30,7 @@
 
 class IJsonElement {
 protected:
-    void throwMiscastException(const AString& message);
+    AString formatMiscastException(const AString& message);
 
 public:
 	virtual ~IJsonElement() = default;

@@ -151,8 +151,11 @@ public:
 	template<typename T>
 	AVariant(const T& object)
 	{
-		mStored = _new<AVariantHelper<T>>(object);
+	    if constexpr (!std::is_null_pointer_v<T>) {
+            mStored = _new<AVariantHelper<T>>(object);
+        }
 	}
+
 
 	AVariant(const char* object) {
         mStored = _new<AVariantHelper<AString>>(object);
@@ -178,6 +181,11 @@ public:
 	[[nodiscard]]
 	bool isInt() const noexcept {
 		return mStored->getType() == AVariantType::AV_INT;
+	}
+
+	[[nodiscard]]
+	bool isNull() const noexcept {
+		return mStored == nullptr;
 	}
 
 	[[nodiscard]]
