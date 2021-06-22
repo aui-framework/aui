@@ -38,6 +38,7 @@
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/AVDividerView.h>
 #include <AUI/View/ATabView.h>
+#include <AUI/Platform/ACustomCaptionWindow.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 
@@ -317,6 +318,10 @@ AStylesheet::AStylesheet() {
 
         // CUSTOM WINDOWS ===================================================
         {
+            type_of<ACustomCaptionWindow>(),
+            Padding { 0 },
+        },
+        {
             class_of(".window-title"),
             BackgroundSolid { getOsThemeColor() },
             FixedSize { {}, 30_dp }
@@ -335,15 +340,16 @@ AStylesheet::AStylesheet() {
             Margin { 0 },
             Padding { 0 },
             MinSize { 45_dp, 29_dp },
-            BackgroundSolid { nullptr }
+            BackgroundSolid { nullptr },
+            BackgroundImage {{}, {}, {}, Sizing::CENTER }
         },
         {
             class_of(".window-title") >> class_of(".minimize"),
-            BackgroundImage {":uni/caption/minimize.svg" }
+            BackgroundImage {":uni/caption/minimize.svg", {}, {}, Sizing::CENTER }
         },
         {
             class_of(".window-title") >> class_of(".close"),
-            BackgroundImage {":uni/caption/close.svg" }
+            BackgroundImage {":uni/caption/close.svg", {}, {}, Sizing::CENTER }
         },
         {
             class_of(".window-title") >> t<AButton>::hover(),

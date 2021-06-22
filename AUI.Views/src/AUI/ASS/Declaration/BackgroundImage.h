@@ -37,6 +37,10 @@ namespace ass {
          */
         FIT,
 
+        /**
+         * Center the image
+         */
+        CENTER,
 
         /**
          * Resize image to view's content area without keeping aspect ratio.
