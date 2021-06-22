@@ -100,7 +100,16 @@ float Platform::getDpiRatio()
 
 #if defined(__ANDROID__)
 #include <AUI/Platform/OSAndroid.h>
+#else
+
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+#include <X11/Xresource.h>
+
+extern Display* gDisplay;
+
 #endif
+
 
 AString Platform::getFontPath(const AString& font)
 {
@@ -115,12 +124,33 @@ void Platform::playSystemSound(Sound s)
     // unsupported
 }
 
+void ensureXLibInitialized();
+
 float Platform::getDpiRatio()
 {
 #ifdef __ANDROID__
     return AAndroid::getDpiRatio();
 #else
-    return 1;
+    ensureXLibInitialized();
+    char *resourceString = XResourceManagerString(gDisplay);
+    XrmDatabase db;
+    XrmValue value;
+    char *type = NULL;
+    float dpi = 1.f;
+
+    XrmInitialize(); /* Need to initialize the DB before calling Xrm* functions */
+
+    db = XrmGetStringDatabase(resourceString);
+
+    if (resourceString) {
+        if (XrmGetResource(db, "Xft.dpi", "String", &type, &value) == True) {
+            if (value.addr) {
+                dpi = atof(value.addr) / 96.f;
+            }
+        }
+    }
+
+    return dpi;
 #endif
 }
 

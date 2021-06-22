@@ -331,9 +331,18 @@ public:
 };
 #else
 
-Display* gDisplay;
+Display* gDisplay = nullptr;
 Screen* gScreen;
 int gScreenId;
+
+int xerrorhandler(Display* dsp, XErrorEvent* error) {
+    if (gDisplay == dsp) {
+        char errorstring[0x100];
+        XGetErrorText(dsp, error->error_code, errorstring, sizeof(errorstring));
+        printf("X Error: %s\n", errorstring);
+    }
+    return 0;
+}
 
 struct {
     Atom wmProtocols;
@@ -367,6 +376,26 @@ struct {
 
 } gAtoms;
 
+void ensureXLibInitialized() {
+    struct DisplayInstance {
+
+    public:
+        DisplayInstance() {
+            gDisplay = XOpenDisplay(nullptr);
+            XSetErrorHandler(xerrorhandler);
+            gScreen = DefaultScreenOfDisplay(gDisplay);
+            gScreenId = DefaultScreen(gDisplay);
+            gAtoms.init();
+        }
+
+        ~DisplayInstance() {
+            //XCloseDisplay(gDisplay);
+            //XFree(gScreen);
+
+        }
+    };
+    static DisplayInstance display;
+}
 
 
 struct painter {
@@ -383,15 +412,6 @@ public:
 
     }
 };
-
-int xerrorhandler(Display* dsp, XErrorEvent* error) {
-    if (gDisplay == dsp) {
-        char errorstring[0x100];
-        XGetErrorText(dsp, error->error_code, errorstring, sizeof(errorstring));
-        printf("X Error: %s\n", errorstring);
-    }
-    return 0;
-}
 
 #endif
 
@@ -600,24 +620,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
             throw AException("Your X server does not support locales.");
         }
     }
-    struct DisplayInstance {
-
-    public:
-        DisplayInstance() {
-            gDisplay = XOpenDisplay(nullptr);
-            XSetErrorHandler(xerrorhandler);
-            gScreen = DefaultScreenOfDisplay(gDisplay);
-            gScreenId = DefaultScreen(gDisplay);
-            gAtoms.init();
-        }
-
-        ~DisplayInstance() {
-            //XCloseDisplay(gDisplay);
-            //XFree(gScreen);
-
-        }
-    };
-    static DisplayInstance display;
+    ensureXLibInitialized();
 
     static XVisualInfo* vi;
     static XSetWindowAttributes swa;
