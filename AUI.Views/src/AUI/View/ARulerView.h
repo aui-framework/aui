@@ -19,61 +19,31 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 6/25/2021.
+//
+
+
 #pragma once
-#include "AUI/Common/AString.h"
-#include "AUI/Common/AStringVector.h"
 
+#include <AUI/View/AView.h>
+#include <AUI/Util/LayoutDirection.h>
+#include <AUI/GL/Vao.h>
 
+class API_AUI_VIEWS ARulerView: public AView {
+private:
+    LayoutDirection mLayoutDirection;
+    _<GL::Vao> mPrecompiledLines;
 
-template<class T>
-class AClass
-{
+    int mOffsetPx = 0;
+    float mUnit = 1.f;
+
+    int getSide() const;
+
 public:
-	static AString name()
-	{
-#if defined(_MSC_VER)
-		AString s = __FUNCSIG__;
-		auto openTag = s.find('<') + 1;
-		auto closeTag = s.find('>');
-		auto name = s.mid(openTag, closeTag - openTag).split(' ').last();
-		if (name.endsWith(" &"))
-			name = name.mid(0, name.length() - 2);
-		return name;
-#elif defined(__ANDROID__)
-		AString s = __PRETTY_FUNCTION__;
-		auto b = s.find("=") + 1;
-		auto e = s.find("&", b);
-		auto result = s.mid(b, e - b);
-		result = result.trim();
-		return result;
-#else
-		AString s = __PRETTY_FUNCTION__;
-		auto b = s.find("with T = ") + 9;
-		auto e = s.find("&", b);
-        auto result = s.mid(b, e - b);
-        return result;
-#endif
-	}
+    explicit ARulerView(LayoutDirection layoutDirection);
 
-	static AString nameWithoutNamespace() {
-        auto s = name();
-        auto p = s.rfind("::");
-        if (p != AString::NPOS) {
-            return {s.begin() + p + 2, s.end()};
-        }
-        return s;
-	}
-
-	static AString toString(const T& t) {
-        return "<object of type " + name() + ">";
-	}
+    void render() override;
 };
 
-template<>
-inline AString AClass<AString>::toString(const AString& t) {
-    return "\"" + t + "\"";
-}
-template<>
-inline AString AClass<int>::toString(const int& t) {
-    return AString::number(t);
-}
+

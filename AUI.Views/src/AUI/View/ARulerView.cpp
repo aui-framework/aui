@@ -19,61 +19,47 @@
  * =====================================================================================================================
  */
 
-#pragma once
-#include "AUI/Common/AString.h"
-#include "AUI/Common/AStringVector.h"
+//
+// Created by alex2 on 6/25/2021.
+//
 
 
+#include "ARulerView.h"
+#include <AUI/Platform/AWindow.h>
 
-template<class T>
-class AClass
-{
-public:
-	static AString name()
-	{
-#if defined(_MSC_VER)
-		AString s = __FUNCSIG__;
-		auto openTag = s.find('<') + 1;
-		auto closeTag = s.find('>');
-		auto name = s.mid(openTag, closeTag - openTag).split(' ').last();
-		if (name.endsWith(" &"))
-			name = name.mid(0, name.length() - 2);
-		return name;
-#elif defined(__ANDROID__)
-		AString s = __PRETTY_FUNCTION__;
-		auto b = s.find("=") + 1;
-		auto e = s.find("&", b);
-		auto result = s.mid(b, e - b);
-		result = result.trim();
-		return result;
-#else
-		AString s = __PRETTY_FUNCTION__;
-		auto b = s.find("with T = ") + 9;
-		auto e = s.find("&", b);
-        auto result = s.mid(b, e - b);
-        return result;
-#endif
-	}
+ARulerView::ARulerView(LayoutDirection layoutDirection) : mLayoutDirection(layoutDirection) {
 
-	static AString nameWithoutNamespace() {
-        auto s = name();
-        auto p = s.rfind("::");
-        if (p != AString::NPOS) {
-            return {s.begin() + p + 2, s.end()};
+    switch (mLayoutDirection) {
+        case LayoutDirection::VERTICAL:
+            setExpanding({0, 2});
+            break;
+        case LayoutDirection::HORIZONTAL:
+            setExpanding({2, 0});
+    }
+}
+
+void ARulerView::render() {
+    AView::render();
+    if (mLayoutDirection == LayoutDirection::VERTICAL) return;
+
+    const int delay = 50_dp;
+    {
+        RenderHints::PushColor c;
+        Render::inst().setColor(getFontStyle().color);
+        Render::inst().setFill(Render::FILL_SOLID);
+        for (int i = 0; i * delay < getSide(); ++i) {
+            Render::inst().drawRect(i * delay, 0.f, 1_dp, getHeight());
         }
-        return s;
-	}
-
-	static AString toString(const T& t) {
-        return "<object of type " + name() + ">";
-	}
-};
-
-template<>
-inline AString AClass<AString>::toString(const AString& t) {
-    return "\"" + t + "\"";
+    }
 }
-template<>
-inline AString AClass<int>::toString(const int& t) {
-    return AString::number(t);
+
+int ARulerView::getSide() const {
+    switch (mLayoutDirection) {
+        case LayoutDirection::VERTICAL:
+            return getHeight();
+        case LayoutDirection::HORIZONTAL:
+            return getWidth();
+    }
+    return -1;
 }
+

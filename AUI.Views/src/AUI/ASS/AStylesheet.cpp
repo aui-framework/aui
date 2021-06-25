@@ -39,6 +39,7 @@
 #include <AUI/View/AVDividerView.h>
 #include <AUI/View/ATabView.h>
 #include <AUI/Platform/ACustomCaptionWindow.h>
+#include <AUI/View/ARulerView.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 
@@ -230,6 +231,14 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0xe5e5e5_rgb },
             BackgroundImage { 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
+        },
+
+        // ARulerView
+        {
+            t<ARulerView>(),
+            MinSize { 16_dp },
+            BackgroundSolid { 0x20000000_argb },
+            TextColor { 0x40000000_argb },
         },
 
         // ARadioButton
