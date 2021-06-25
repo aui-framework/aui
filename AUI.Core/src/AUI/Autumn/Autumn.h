@@ -61,10 +61,11 @@ namespace Autumn
 		return detail::globalStorage<T>();
 	}
 	template <typename T>
-	void put(_<T> obj)
+    const _<T>& put(const _<T>& obj)
 	{
         detail::globalStorage<T>() = obj;
         detail::threadLocalStorage<T>() = obj;
+        return obj;
 	}
 
 

@@ -119,6 +119,11 @@ public:
 	 * \return read integer number
 	 */
 	int readInt();
+	/**
+	 * \brief Reads unsigned integer number.
+	 * \return read unsigned integer number
+	 */
+	unsigned readUInt();
 	
 	/**
 	 * \return last read byte. Applicable with <code>ATokenizer::reverseByte()</code>

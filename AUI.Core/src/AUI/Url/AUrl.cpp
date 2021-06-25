@@ -22,6 +22,7 @@
 #include "AUrl.h"
 
 #include <functional>
+#include <AUI/IO/FileInputStream.h>
 
 #include "AUI/Common/AMap.h"
 #include "AUI/Util/BuiltinFiles.h"
@@ -58,7 +59,10 @@ AUrl::AUrl(const AString& full)
 AMap<AString, std::function<_<IInputStream>(const AUrl&)>> AUrl::ourResolvers = {
         {"builtin", [](const AUrl& u) {
             return BuiltinFiles::open(u.getPath());
-        }}
+        }},
+        {"file", [](const AUrl& u) {
+            return _new<FileInputStream>(u.getHost() + '/' + u.getPath());
+        }},
 };
 _<IInputStream> AUrl::open() const {
 	if (auto is = ourResolvers[mProtocol](*this))

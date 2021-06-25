@@ -144,11 +144,13 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
 
                 case Sizing::CENTER: {
                     RenderHints::PushMatrix m;
-                    glm::ivec2 viewSize = view->getSize();
-                    glm::ivec2 imageSize = drawable->getSizeHint();
+                    glm::vec2 viewSize = view->getSize();
+                    glm::vec2 imageSize = drawable->getSizeHint();
+
 
                     if (drawable->isDpiDependent())
                         imageSize *= AWindow::current()->getDpiRatio();
+
 
                     Render::inst().setTransform(
                             glm::translate(glm::mat4(1.f),

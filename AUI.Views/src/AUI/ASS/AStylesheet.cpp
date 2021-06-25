@@ -467,11 +467,6 @@ AStylesheet::AStylesheet() {
 }
 
 
-AStylesheet& AStylesheet::inst() {
-    static AStylesheet s;
-    return s;
-}
-
 AColor AStylesheet::getOsThemeColor() {
 #if defined(_WIN32)
     auto impl = []() {
@@ -492,4 +487,13 @@ AColor AStylesheet::getOsThemeColor() {
 #else
     return 0x3e3e3e_rgb;
 #endif
+}
+
+AStylesheet& AStylesheet::inst() {
+    return *instStorage();
+}
+
+_<AStylesheet>& AStylesheet::instStorage() {
+    static _<AStylesheet> s = _new<AStylesheet>();
+    return s;
 }

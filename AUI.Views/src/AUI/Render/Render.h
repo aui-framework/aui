@@ -29,6 +29,7 @@
 #include "AUI/Common/AColor.h"
 #include "AUI/Common/ASide.h"
 #include "ImageRendering.h"
+#include <AUI/Reflect/AEnumerate.h>
 
 
 class AColor;
@@ -42,6 +43,8 @@ ENUM_FLAG(Repeat) {
     X = 0b01,
     Y = 0b10,
 };
+
+ENUM_VALUES(Repeat, Repeat::NONE, Repeat::X, Repeat::Y, Repeat::X_Y)
 
 class API_AUI_VIEWS Render
 {

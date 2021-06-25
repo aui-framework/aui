@@ -21,6 +21,7 @@
 
 #pragma once
 #include "AUI/Common/AString.h"
+#include "AUI/Common/AStringVector.h"
 
 
 
@@ -32,9 +33,9 @@ public:
 	{
 #if defined(_MSC_VER)
 		AString s = __FUNCSIG__;
-		auto openTag = s.find('<') + 7;
+		auto openTag = s.find('<') + 1;
 		auto closeTag = s.find('>');
-		auto name = s.mid(openTag, closeTag - openTag);
+		auto name = s.mid(openTag, closeTag - openTag).split(' ')[1];
 		if (name.endsWith(" &"))
 			name = name.mid(0, name.length() - 2);
 		return name;
@@ -52,6 +53,15 @@ public:
         auto result = s.mid(b, e - b);
         return result;
 #endif
+	}
+
+	static AString nameWithoutNamespace() {
+        auto s = name();
+        auto p = s.rfind("::");
+        if (p != AString::NPOS) {
+            return {s.begin() + p + 2, s.end()};
+        }
+        return s;
 	}
 
 	static AString toString(const T& t) {

@@ -27,6 +27,7 @@
 
 #include <initializer_list>
 #include "Rule.h"
+#include <AUI/Autumn/Autumn.h>
 
 class API_AUI_VIEWS AStylesheet {
 private:
@@ -42,6 +43,15 @@ public:
         }
     }
 
+    void addRule(const Rule& r) {
+        mRules << r;
+    }
+
+
+    void addRule(Rule&& r) {
+        mRules << std::forward<Rule>(r);
+    }
+
 
     [[nodiscard]] const AVector<Rule>& getRules() const {
         return mRules;
@@ -50,6 +60,5 @@ public:
     static AColor getOsThemeColor();
 
     static AStylesheet& inst();
+    static _<AStylesheet>& instStorage();
 };
-
-
