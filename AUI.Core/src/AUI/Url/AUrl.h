@@ -60,3 +60,10 @@ public:
 
 	static void registerResolver(const AString& protocol, const std::function<_<IInputStream>(const AUrl&)>& factory);
 };
+
+
+
+inline AUrl operator"" _url(const char* input, size_t s)
+{
+    return AUrl({input, input + s});
+}

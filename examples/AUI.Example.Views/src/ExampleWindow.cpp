@@ -38,9 +38,15 @@
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/AComboBox.h>
 #include <AUI/i18n/AI18n.h>
+#include <AUI/ASS/ASS.h>
 #include <AUI/View/ASelectableLabel.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/ATextArea.h>
+#include <AUI/View/ARulerView.h>
+#include <AUI/View/AImageView.h>
+#include <AUI/View/ARulerArea.h>
+
+using namespace ass;
 
 void fillWindow(_<AViewContainer> t)
 {
@@ -184,6 +190,10 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                       "WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR "
                       "COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
                       "OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.) "),
+
+            // Rulers
+            _new<ALabel>("ARulerArea"),
+            _new<ARulerArea>(_new<AImageView>(":img/example.jpg"_url) with_style { MinSize { 300_dp, {} } }),
 		});
 	}
 

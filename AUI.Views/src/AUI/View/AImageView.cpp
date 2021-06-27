@@ -31,6 +31,9 @@
 AImageView::AImageView(const _<GL::Texture2D>& texture) : mTexture(texture) {}
 
 AImageView::AImageView(const _<AImage>& img) {
+    if (!img) {
+        return;
+    }
     mTexture = _new<GL::Texture2D>();
     mTexture->tex2D(img);
     mImageSize = img->getSize();
@@ -65,10 +68,28 @@ int AImageView::getContentMinimumHeight() {
 }
 
 void AImageView::setSize(int width, int height) {
-    auto w = getSize().x != width;
+    // stack overflow fix
+    if (mRunningAspectRatioKeepingRoutine) {
+        AView::setSize(width, height);
+        return;
+    }
+
+    struct helper {
+       bool& t;
+
+       helper(bool& t) : t(t) {
+           t = true;
+       }
+       ~helper() {
+           t = false;
+       }
+    } helper(mRunningAspectRatioKeepingRoutine);
+
+    auto widthChanged = getSize().x != width;
     AView::setSize(width, height);
-    if (w && mFixedSize.x == 0)
+    if (widthChanged && mFixedSize.x == 0)
         getParent()->updateLayout();
+
 }
 
 bool AImageView::consumesClick(const glm::ivec2& pos) {

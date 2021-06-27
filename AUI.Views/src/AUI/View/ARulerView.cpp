@@ -26,6 +26,7 @@
 
 #include "ARulerView.h"
 #include <AUI/Platform/AWindow.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 ARulerView::ARulerView(LayoutDirection layoutDirection) : mLayoutDirection(layoutDirection) {
 
@@ -40,25 +41,62 @@ ARulerView::ARulerView(LayoutDirection layoutDirection) : mLayoutDirection(layou
 
 void ARulerView::render() {
     AView::render();
-    if (mLayoutDirection == LayoutDirection::VERTICAL) return;
 
-    const int delay = 50_dp;
+    if (mLayoutDirection == LayoutDirection::VERTICAL) {
+        Render::inst().setTransform(glm::translate(
+                    glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3{0, 0, 1.f}),
+                    glm::vec3{0, -getWidth(), 0}));
+    }
+
+    const int delay1 = 50;
+    const int delay2 = delay1 / 2;
+    const int delay3 = delay2 / 10;
+    Render::inst().setFill(Render::FILL_SOLID);
     {
         RenderHints::PushColor c;
         Render::inst().setColor(getFontStyle().color);
-        Render::inst().setFill(Render::FILL_SOLID);
-        for (int i = 0; i * delay < getSide(); ++i) {
-            Render::inst().drawRect(i * delay, 0.f, 1_dp, getHeight());
+        for (int i = 0; i * delay1 < getLongestSide(); ++i) {
+            Render::inst().drawRect(mOffsetPx + operator""_dp(i * delay1), 0.f, 1_dp, getShortestSide());
         }
+    }
+
+    // number display
+    {
+        for (int i = 0; i * delay1 < getLongestSide(); ++i) {
+            Render::inst().drawString(mOffsetPx + operator""_dp(i * delay1) + 2_dp,
+                                      0.f,
+                                      AString::number(i * delay1),
+                                      getFontStyle());
+        }
+    }
+
+    Render::inst().setFill(Render::FILL_SOLID);
+
+    // cursor display
+    {
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
+        for (int i = 0; i * delay1 < getLongestSide(); ++i) {
+            Render::inst().drawRect(mCursorPosPx, 0.f, 1_px, getShortestSide());
+        }
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }
 }
 
-int ARulerView::getSide() const {
+int ARulerView::getLongestSide() const {
     switch (mLayoutDirection) {
         case LayoutDirection::VERTICAL:
             return getHeight();
         case LayoutDirection::HORIZONTAL:
             return getWidth();
+    }
+    return -1;
+}
+int ARulerView::getShortestSide() const {
+    switch (mLayoutDirection) {
+        case LayoutDirection::VERTICAL:
+            return getWidth();
+        case LayoutDirection::HORIZONTAL:
+            return getHeight();
     }
     return -1;
 }
