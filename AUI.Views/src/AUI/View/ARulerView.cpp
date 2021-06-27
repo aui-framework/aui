@@ -48,24 +48,58 @@ void ARulerView::render() {
                     glm::vec3{0, -getWidth(), 0}));
     }
 
-    const int delay1 = 50;
-    const int delay2 = delay1 / 2;
-    const int delay3 = delay2 / 10;
+    const int delayLarge = 50;
+    const int delayMedium = delayLarge / 2;
+    const int delaySmall = delayLarge / 10;
+    const int totalHeight = getShortestSide();
     Render::inst().setFill(Render::FILL_SOLID);
+
+    /*
+     * L
+     * L    M
+     * LssssMssss
+     * 0123456789
+     *
+     */
     {
         RenderHints::PushColor c;
         Render::inst().setColor(getFontStyle().color);
-        for (int i = 0; i * delay1 < getLongestSide(); ++i) {
-            Render::inst().drawRect(mOffsetPx + operator""_dp(i * delay1), 0.f, 1_dp, getShortestSide());
+        for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
+            // large dashes
+            Render::inst().drawRect(mOffsetPx + operator""_dp(i * delayLarge),
+                                    0.f,
+                                    1,
+                                    totalHeight);
+
+            // medium dashes
+            Render::inst().drawRect(mOffsetPx + operator""_dp(i * delayLarge + delayMedium),
+                                    totalHeight / 2,
+                                    1,
+                                    totalHeight / 2);
+
+
+            // small dashes
+            for (int j = 1; j <= 4; ++j) {
+                int smallDashOffset = j * delaySmall;
+                Render::inst().drawRect(mOffsetPx + operator""_dp(i * delayLarge + smallDashOffset),
+                                        3 * totalHeight / 4,
+                                        1,
+                                        totalHeight / 4);
+
+                Render::inst().drawRect(mOffsetPx + operator""_dp(i * delayLarge + smallDashOffset + delayMedium),
+                                        3 * totalHeight / 4,
+                                        1,
+                                        totalHeight / 4);
+            }
         }
     }
 
     // number display
     {
-        for (int i = 0; i * delay1 < getLongestSide(); ++i) {
-            Render::inst().drawString(mOffsetPx + operator""_dp(i * delay1) + 2_dp,
-                                      0.f,
-                                      AString::number(i * delay1),
+        for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
+            Render::inst().drawString(mOffsetPx + operator""_dp(i * delayLarge) + 2_dp,
+                                      -1.f,
+                                      AString::number(i * delayLarge),
                                       getFontStyle());
         }
     }
@@ -75,8 +109,8 @@ void ARulerView::render() {
     // cursor display
     {
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-        for (int i = 0; i * delay1 < getLongestSide(); ++i) {
-            Render::inst().drawRect(mCursorPosPx, 0.f, 1_px, getShortestSide());
+        for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
+            Render::inst().drawRect(mCursorPosPx, 0.f, 1, totalHeight);
         }
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     }

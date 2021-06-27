@@ -30,13 +30,13 @@ signals:
 
 ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) {
 
-    auto wrapper = _new<WrapperContainer>(mWrappedView) with_style { Expanding { 2, 2 } };
+    auto wrapper = _new<WrapperContainer>(mWrappedView) with_style { Expanding { 2, 2 } } << ".arulerarea-content";
 
     setContents(
         Horizontal {
             Vertical {
                 _container<AAdvancedGridLayout>({
-                    _new<AView>(),
+                    _new<ALabel>("dp") << ".arulerarea-unit",
                     mHorizontalRuler = _new<ARulerView>(LayoutDirection::HORIZONTAL),
                     mVerticalRuler = _new<ARulerView>(LayoutDirection::VERTICAL),
                     wrapper,
@@ -54,4 +54,19 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
     });
 
     setExpanding({10, 10});
+
+
+    mWrappedView->setSize(mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight());
+}
+
+void ARulerArea::setSize(int width, int height) {
+    AViewContainer::setSize(width, height);
+    mWrappedView->setSize(mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight());
+    setWrappedViewPosition((getSize() - mWrappedView->getSize()) / 2);
+}
+
+void ARulerArea::setWrappedViewPosition(const glm::ivec2& pos) {
+    mWrappedView->setPosition(pos);
+    mHorizontalRuler->setOffsetPx(pos.x);
+    mVerticalRuler->setOffsetPx(pos.y);
 }

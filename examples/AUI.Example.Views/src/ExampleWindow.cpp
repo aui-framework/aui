@@ -193,7 +193,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
 
             // Rulers
             _new<ALabel>("ARulerArea"),
-            _new<ARulerArea>(_new<AImageView>(":img/example.jpg"_url) with_style { MinSize { 300_dp, {} } }),
+            _new<ARulerArea>(_new<AView>() with_style { MinSize { 100_dp, 100_dp },
+                                                        BackgroundGradient { 0x0_rgb, 0x404040_rgb, LayoutDirection::VERTICAL } }),
 		});
 	}
 

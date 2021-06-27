@@ -113,7 +113,7 @@ namespace ass {
     }
 }
 
-/*
+
 ENUM_VALUES(ass::Sizing,
             ass::Sizing::NONE,
             ass::Sizing::FIT,
@@ -121,4 +121,3 @@ ENUM_VALUES(ass::Sizing,
             ass::Sizing::COVER,
             ass::Sizing::CONTAIN,
             ass::Sizing::SPLIT_2X2)
-            */

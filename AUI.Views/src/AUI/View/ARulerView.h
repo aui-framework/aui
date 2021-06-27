@@ -53,6 +53,11 @@ public:
         redraw();
     }
 
+    void setOffsetPx(int offsetPx) {
+        mOffsetPx = offsetPx;
+        redraw();
+    }
+
 };
 
 

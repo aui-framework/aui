@@ -9,7 +9,12 @@ private:
     _<ARulerView> mHorizontalRuler;
     _<ARulerView> mVerticalRuler;
 
+
+    void setWrappedViewPosition(const glm::ivec2& pos);
+
 public:
     ARulerArea(const _<AView>& wrappedView);
+
+    void setSize(int width, int height) override;
 };
 

@@ -239,6 +239,21 @@ AStylesheet::AStylesheet() {
             MinSize { 16_dp },
             BackgroundSolid { 0x20000000_argb },
             TextColor { 0x40000000_argb },
+            Overflow::HIDDEN,
+            FontSize { 8_pt },
+        },
+        {
+            c(".arulerarea-content"),
+            Border { 1_px, 0x40808080_argb },
+        },
+        {
+            c(".arulerarea-unit"),
+            MaxSize { 16_dp },
+            BackgroundSolid { 0x20000000_argb },
+            FontSize { 9_pt },
+            TextColor { 0x40000000_argb },
+            Margin { 0 },
+            Padding { 1_dp },
         },
 
         // ARadioButton
