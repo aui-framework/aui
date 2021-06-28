@@ -30,10 +30,11 @@
 
 namespace ass {
     struct MinSize {
-        AMetric width;
-        AMetric height;
+        unset_wrap<AMetric> width;
+        unset_wrap<AMetric> height;
 
-        MinSize(const AMetric& width, const AMetric& height) : width(width), height(height) {}
+        MinSize(const unset_wrap <AMetric>& width, const unset_wrap <AMetric>& height) : width(width), height(height) {}
+
         explicit MinSize(const AMetric& side) : width(side), height(side) {}
     };
 
