@@ -23,49 +23,49 @@
 // Created by alex2 on 30.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
 #include <AUI/Common/AString.h>
-#include <AUI/Json/AJsonElement.h>
 #include <AUI/Json/AJson.h>
+#include <AUI/Json/AJsonElement.h>
 
+
+#include <boost/test/unit_test.hpp>
 using namespace boost::unit_test;
 BOOST_AUTO_TEST_SUITE(Json)
 
-// ORM data class
-struct Data {
-    AString name;
-    int year;
 
-    AJSON_FIELDS(name, year)
+
+// ORM data class
+struct Data2 {
+    AVector<int> values;
+
+    bool operator==(const Data2& o) const {
+        return values == o.values;
+    }
+
+    AJSON_FIELDS(values)
 };
 
-BOOST_AUTO_TEST_CASE(ClassSerialization)
-{
-    // arrange
-    Data d = {"Alex2772", 2020};
-
-    // check for serialization
-    BOOST_CHECK_EQUAL(AJson::toString(d.toJson()), R"({"name":"Alex2772","year":2020})");
+std::ostream& operator<<(std::ostream& o, const Data2& d) {
+    o << '[';
+    for (auto& v : d.values) {
+        o << v << ", ";
+    }
+    o << ']';
+    return o;
 }
 
-BOOST_AUTO_TEST_CASE(ClassDeserialization)
+BOOST_AUTO_TEST_CASE(CustomConverter)
 {
     // arrange
-    auto jsonString = R"({"name":"Azaza","year":2021})";
+    Data2 d = { {1, 2, 3} };
 
-    // deserialize
-    auto jsonParsed = AJson::fromString(jsonString);
+    // check for serialization
+    auto jsonObject = d.toJson();
+    BOOST_CHECK_EQUAL(AJson::toString(jsonObject), R"({"values":[1,2,3]})");
 
-    // when serialized back, the json should not change
-    BOOST_CHECK_EQUAL(AJson::toString(jsonParsed), jsonString);
-
-    // read json
-    Data d;
-    d.readJson(jsonParsed);
-
-    // assert
-    BOOST_CHECK_EQUAL(d.name, "Azaza");
-    BOOST_CHECK_EQUAL(d.year, 2021);
+    Data2 d2;
+    d2.readJson(jsonObject);
+    BOOST_CHECK_EQUAL(d, d2);
 }
 
 

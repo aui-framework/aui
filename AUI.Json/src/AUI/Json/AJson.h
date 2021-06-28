@@ -28,13 +28,45 @@
 #include <AUI/Traits/arrays.h>
 
 
+namespace aui::json::conv {
+    template<typename T>
+    struct conv {
+        static T from_json(const AJsonElement& v) {
+            return v.asVariant().to<T>();
+        }
+
+        static AJsonElement to_json(const T& t) {
+            return AJsonValue(t);
+        }
+    };
+
+    template<typename T>
+    struct conv<AVector<T>> {
+        static AVector<T> from_json(const AJsonElement& v) {
+            AVector<T> result;
+            for (auto& f : v.asArray()) {
+                result << conv<T>::from_json(f);
+            }
+            return result;
+        }
+
+        static AJsonElement to_json(const AVector<T>& t) {
+            AJsonArray result;
+            for (auto& v : t) {
+                result << conv<T>::to_json(v);
+            }
+            return result;
+        }
+    };
+}
+
 namespace aui::json::impl {
     struct helper {
         template<typename T>
         static void toJson(AJsonObject& j, const char*& name, T& value) {
             const char* end;
             for (end = name; *end && *end != ','; ++end);
-            j[AString(name, end)] = value;
+            j[AString(name, end)] = conv::conv<std::decay_t<T>>::to_json(value);
             if (*++end == ' ') { ++end; }
             name = end;
         }
@@ -48,7 +80,7 @@ namespace aui::json::impl {
         static void fromJson(const AJsonElement& j, const char*& name, T& value) {
             const char* end;
             for (end = name; *end && *end != ','; ++end);
-            value = j[AString(name, end)].asVariant().to<T>();
+            value = conv::conv<std::decay_t<T>>::from_json(j[AString(name, end)]);
             if (*++end == ' ') { ++end; }
             name = end;
         }
