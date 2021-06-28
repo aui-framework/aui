@@ -21,8 +21,13 @@
 
 #pragma once
 
+#include <AUI/Reflect/AEnumerate.h>
+
 enum class TextAlign {
 	LEFT,
 	CENTER,
 	RIGHT
 };
+
+ENUM_VALUES(TextAlign, TextAlign::LEFT, TextAlign::CENTER, TextAlign::RIGHT)
+
