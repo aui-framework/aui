@@ -32,7 +32,7 @@
 
 class ATreeIndex: public AModelIndex {
 private:
-    void* mUserData;
+    void* mUserData = nullptr;
 
 public:
     using AModelIndex::AModelIndex;
@@ -55,9 +55,9 @@ class ITreeModel
 public:
     virtual ~ITreeModel() = default;
 
-    virtual size_t rowCount(const ATreeIndex& parent) = 0;
+    virtual size_t childrenCount(const ATreeIndex& parent) = 0;
     virtual T itemAt(const ATreeIndex& index) = 0;
-    virtual ATreeIndex indexOf(size_t row, size_t column, const ATreeIndex& = {}) = 0;
+    virtual ATreeIndex indexOfChild(size_t row, size_t column, const ATreeIndex& = {}) = 0;
 
     using stored_t = T;
 

@@ -102,9 +102,13 @@ and tests.
 AUI's code should be kept with the following code style:
 - `No tabs`; only four spaces
 - Row length: up to `120` characters
-- Class names: `CamelCase`
+- Class names: `CamelCase`. Every framework class name starts with capital '`A`'. Use `GenericSpecific` pattern
+  (`EventClose`, not `CloseEvent`, `PacketConnect`, not `ConnectPacket`). Using that convention files group nicely in
+  file lists.
 - Functions, variables: `lowerCamelCase`
 - Constants: `UPPER_SNAKE_CASE`
+- Getters: `get...`/`is...` (`lineNumber` -> `getLineNumber()`, `accessible` -> `isAccessible()`)
+- Getters: `set...`/`with...` (`lineNumber` -> `setLineNumber(...)`, `accessible` -> `withAccessible(...)`)
 - Structures: commonly holds some data and does not have member functions; `CamelCase`.
               Also used for template-based functionality (like `stl`, `AUI/Traits/`), in that case, `snake_case` used
               for file names, struct name and its member functions

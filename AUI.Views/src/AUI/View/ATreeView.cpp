@@ -29,6 +29,7 @@
 #include <AUI/Layout/AVerticalLayout.h>
 #include <AUI/Platform/AWindow.h>
 #include "ALabel.h"
+#include <AUI/ASS/ASS.h>
 
 class ATreeView::ContainerView: public AViewContainer {
 private:
@@ -77,6 +78,7 @@ class ATreeView::ItemView: public ALabel
 {
 private:
     bool mSelected = false;
+    unsigned mDepth;
 
 public:
     ItemView()
@@ -84,9 +86,11 @@ public:
 
     }
 
-    ItemView(const AString& text)
-            : ALabel(text)
+    ItemView(unsigned depth, const AString& text)
+            : ALabel(text),
+              mDepth(depth)
     {
+        setCustomAss({ ass::Padding{ {}, {}, {}, operator""_dp(depth * 10) } });
     }
 
     virtual ~ItemView() = default;
@@ -141,9 +145,9 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     connect(mScrollbar->scrolled, mContent, &ContainerView::setScrollY);
 
     if (mModel) {
-        for (size_t i = 0; i < model->rowCount({}); ++i) {
-            mContent->addView(_new<ItemView>(model->itemAt(i)));
-            fillViewsRecursively(i, {});
+        for (size_t i = 0; i < model->childrenCount({}); ++i) {
+            mContent->addView(_new<ItemView>(0, model->itemAt(i)));
+            fillViewsRecursively(1, mModel->indexOfChild(i, 0, {}));
         }
     }
     updateLayout();
@@ -176,10 +180,11 @@ void ATreeView::handleMouseDoubleClicked(ATreeView::ItemView* v) {
 
 }
 
-void ATreeView::fillViewsRecursively(size_t row, const ATreeIndex& parent) {
-    auto index = mModel->indexOf(row, 0, parent);
-    for (size_t i = 0; i < mModel->rowCount(index); ++i) {
-        mContent->addView(_new<ItemView>(mModel->itemAt(i,)))
+void ATreeView::fillViewsRecursively(unsigned depth, const ATreeIndex& index) {
+    for (size_t i = 0; i < mModel->childrenCount(index); ++i) {
+        auto c = mModel->indexOfChild(i, 0, index);
+        mContent->addView(_new<ItemView>(depth, mModel->itemAt(c)));
+        fillViewsRecursively(depth + 1, c);
     }
 
 }

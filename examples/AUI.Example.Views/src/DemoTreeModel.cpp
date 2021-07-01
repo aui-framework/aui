@@ -27,24 +27,38 @@
 #include "DemoTreeModel.h"
 #include <AUI/Logging/ALogger.h>
 
-size_t DemoTreeModel::rowCount(const ATreeIndex& parent) {
-    if (parent.getUserData() == nullptr) {
-        return 3;
+enum Type {
+    TYPE_ROOT,
+    TYPE_4ITEM,
+    TYPE_ZERO_CHILD,
+};
+
+size_t DemoTreeModel::childrenCount(const ATreeIndex& parent) {
+    switch ((int)parent.getUserData()) {
+        case TYPE_ROOT:
+            return 3;
+        case TYPE_4ITEM:
+            return 4;
     }
-    return 4;
+    return 0;
 }
 
 AString DemoTreeModel::itemAt(const ATreeIndex& index) {
-    if (index.getUserData() != nullptr) {
+    if (((int)index.getUserData()) != TYPE_ROOT) {
         return "Sub item #{}"_as.format(index.getRow() + 1);
     }
     return "Root item #{}"_as.format(index.getRow() + 1);
 }
 
-ATreeIndex DemoTreeModel::indexOf(size_t row, size_t column, const ATreeIndex& index) {
-    if (row == 0) {
-        return ATreeIndex::make((void*)4, row, column);
+ATreeIndex DemoTreeModel::indexOfChild(size_t row, size_t column, const ATreeIndex& parent) {
+    switch ((int)parent.getUserData()) {
+        case TYPE_ROOT:
+            if (row == 0) {
+                return ATreeIndex::make((void*)TYPE_4ITEM, row, column);
+            }
+            break;
+
     }
-    return ATreeIndex(row, column);
+    return ATreeIndex::make((void*)TYPE_ZERO_CHILD, row, column);
 }
 
