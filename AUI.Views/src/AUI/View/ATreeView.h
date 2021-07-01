@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,55 +19,41 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 7/1/2021.
+//
+
+
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
 
-class AModelIndex
-{
+#include "AViewContainer.h"
+#include "AScrollbar.h"
+#include <AUI/Model/ITreeModel.h>
+
+class API_AUI_VIEWS ATreeView: public AViewContainer {
 private:
-	std::size_t mRow = -1;
-    std::size_t mColumn = -1;
-	
+    class ContainerView;
+    class ItemView;
+
+    _<ITreeModel<AString>> mModel;
+    _<ContainerView> mContent;
+    _<AScrollbar> mScrollbar;
+
+    void updateScrollbarDimensions();
+    void handleMousePressed(ItemView* v);
+    void handleMouseDoubleClicked(ItemView* v);
+
 public:
-	AModelIndex(std::size_t row, std::size_t column)
-		: mRow(row),
-		  mColumn(column)
-	{
-	}
+    ATreeView();
+    ATreeView(const _<ITreeModel<AString>>& model);
 
-	AModelIndex(std::size_t row)
-		: mRow(row)
-	{
-	}
+    void setModel(const _<ITreeModel<AString>>& model);
 
-	AModelIndex() = default;
+    void onMouseWheel(glm::ivec2 pos, int delta) override;
 
-	std::size_t getRow() const
-	{
-		return mRow;
-	}
+    void setSize(int width, int height) override;
 
-	std::size_t getColumn() const
-	{
-		return mColumn;
-	}
-
-	inline bool operator==(const AModelIndex& other) const {
-	    return mRow == other.mRow && mColumn == other.mColumn;
-	}
-	inline bool operator!=(const AModelIndex& other) const {
-	    return mRow != other.mRow || mColumn != other.mColumn;
-	}
-    inline bool operator<(const AModelIndex& other) const {
-	    return hash() < other.hash();
-	}
-
-	[[nodiscard]] inline uint64_t hash() const {
-	    uint64_t hash = uint32_t(mRow);
-	    hash <<= 32u;
-	    hash |= uint32_t(mColumn);
-	    return hash;
-	}
 };
+
+

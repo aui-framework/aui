@@ -40,6 +40,7 @@
 #include <AUI/View/ATabView.h>
 #include <AUI/Platform/ACustomCaptionWindow.h>
 #include <AUI/View/ARulerView.h>
+#include <AUI/View/ATreeView.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 
@@ -308,7 +309,7 @@ AStylesheet::AStylesheet() {
 
         // AListView
         {
-            t<AListView>(),
+            {t<AListView>(), t<ATreeView>()},
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_px, 0x828790_rgb },
             Padding { 2_px, 0, 2_px, 2_px },
@@ -318,16 +319,16 @@ AStylesheet::AStylesheet() {
             Overflow::HIDDEN,
         },
         {
-            t<AListView>() > t<AViewContainer>() > t<ALabel>(),
+            {t<AListView>() > t<AViewContainer>() > t<ALabel>(), t<ATreeView>() > t<AViewContainer>() > t<ALabel>()},
             Margin { 0 },
             Padding { 1_px, 4_px, 4_px },
         },
         {
-            t<AListView>() > t<AViewContainer>() > t<ALabel>::hover(),
+            {t<AListView>() > t<AViewContainer>() > t<ALabel>::hover(),t<ATreeView>() > t<AViewContainer>() > t<ALabel>::hover(),},
             BackgroundSolid { 0xe5f3ff_rgb },
         },
         {
-            t<AListView>() > t<AViewContainer>() > t<ALabel>()["selected"],
+            {t<AListView>() > t<AViewContainer>() > t<ALabel>()["selected"], t<ATreeView>() > t<AViewContainer>() > t<ALabel>()["selected"]},
             BackgroundSolid { 0xcde8ff_rgb },
         },
 

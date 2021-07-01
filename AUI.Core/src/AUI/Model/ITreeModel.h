@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,55 +19,54 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 7/1/2021.
+//
+
+
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
+#include <AUI/Common/ASignal.h>
+#include "AUI/Common/AVariant.h"
+#include "AModelRange.h"
 
-class AModelIndex
-{
+class ATreeIndex: public AModelIndex {
 private:
-	std::size_t mRow = -1;
-    std::size_t mColumn = -1;
-	
+    _<AObject> mUserData;
+
 public:
-	AModelIndex(std::size_t row, std::size_t column)
-		: mRow(row),
-		  mColumn(column)
-	{
-	}
+    using AModelIndex::AModelIndex;
 
-	AModelIndex(std::size_t row)
-		: mRow(row)
-	{
-	}
+    static ATreeIndex make(const _<AObject>& userData, size_t row, size_t column) {
+        ATreeIndex i(row, column);
+        i.mUserData = userData;
+        return i;
+    }
 
-	AModelIndex() = default;
+    [[nodiscard]]
+    const _<AObject>& getUserData() const {
+        return mUserData;
+    }
+};
 
-	std::size_t getRow() const
-	{
-		return mRow;
-	}
+template<typename T>
+class ITreeModel
+{
+public:
+    virtual ~ITreeModel() = default;
 
-	std::size_t getColumn() const
-	{
-		return mColumn;
-	}
+    virtual size_t rowCount(const ATreeIndex& parent) = 0;
+    virtual T itemAt(const ATreeIndex& index) = 0;
 
-	inline bool operator==(const AModelIndex& other) const {
-	    return mRow == other.mRow && mColumn == other.mColumn;
-	}
-	inline bool operator!=(const AModelIndex& other) const {
-	    return mRow != other.mRow || mColumn != other.mColumn;
-	}
-    inline bool operator<(const AModelIndex& other) const {
-	    return hash() < other.hash();
-	}
+    using stored_t = T;
 
-	[[nodiscard]] inline uint64_t hash() const {
-	    uint64_t hash = uint32_t(mRow);
-	    hash <<= 32u;
-	    hash |= uint32_t(mColumn);
-	    return hash;
-	}
+    AModelRange<T> range(const ATreeIndex& begin, const ATreeIndex& end) {
+        return AModelRange<T>(begin, end, this);
+    }
+
+    AModelRange<T> range(const ATreeIndex& item) {
+        return AModelRange<T>(item, {item.getRow() + 1}, this);
+    }
+
+signals:
 };

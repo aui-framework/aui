@@ -35,6 +35,7 @@
 #include "AUI/View/ASpacer.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "DemoListModel.h"
+#include "DemoTreeModel.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/AComboBox.h>
 #include <AUI/i18n/AI18n.h>
@@ -45,6 +46,7 @@
 #include <AUI/View/ARulerView.h>
 #include <AUI/View/AImageView.h>
 #include <AUI/View/ARulerArea.h>
+#include <AUI/View/ATreeView.h>
 
 using namespace ass;
 
@@ -164,6 +166,14 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                        },
                        _new<AListView>(model)
                };
+           }(),
+
+           // tree view
+           _new<ALabel>("Tree view"),
+           [] { // lambda style inlining
+               auto model = _new<DemoTreeModel>();
+
+               return _new<ATreeView>(model);
            }()
 		});
 

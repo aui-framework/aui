@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,55 +19,21 @@
  * =====================================================================================================================
  */
 
-#pragma once
+//
+// Created by alex2 on 7/1/2021.
+//
 
-#include <cstddef>
-#include <cstdint>
 
-class AModelIndex
-{
-private:
-	std::size_t mRow = -1;
-    std::size_t mColumn = -1;
-	
-public:
-	AModelIndex(std::size_t row, std::size_t column)
-		: mRow(row),
-		  mColumn(column)
-	{
-	}
+#include "DemoTreeModel.h"
+#include <AUI/Logging/ALogger.h>
 
-	AModelIndex(std::size_t row)
-		: mRow(row)
-	{
-	}
+size_t DemoTreeModel::rowCount(const ATreeIndex& parent) {
+    if (parent.getUserData() == nullptr) {
+        return 3;
+    }
+    return 0;
+}
 
-	AModelIndex() = default;
-
-	std::size_t getRow() const
-	{
-		return mRow;
-	}
-
-	std::size_t getColumn() const
-	{
-		return mColumn;
-	}
-
-	inline bool operator==(const AModelIndex& other) const {
-	    return mRow == other.mRow && mColumn == other.mColumn;
-	}
-	inline bool operator!=(const AModelIndex& other) const {
-	    return mRow != other.mRow || mColumn != other.mColumn;
-	}
-    inline bool operator<(const AModelIndex& other) const {
-	    return hash() < other.hash();
-	}
-
-	[[nodiscard]] inline uint64_t hash() const {
-	    uint64_t hash = uint32_t(mRow);
-	    hash <<= 32u;
-	    hash |= uint32_t(mColumn);
-	    return hash;
-	}
-};
+AString DemoTreeModel::itemAt(const ATreeIndex& index) {
+    return "Root item #{}"_as.format(index.getRow() + 1);
+}

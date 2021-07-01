@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,16 +19,18 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 7/1/2021.
+//
+
+
+#include "ATreeView.h"
 #include <AUI/Layout/AHorizontalLayout.h>
-#include <AUI/Util/UIBuildingHelpers.h>
-#include "AListView.h"
+#include <AUI/Layout/AVerticalLayout.h>
+#include <AUI/Platform/AWindow.h>
 #include "ALabel.h"
-#include "AUI/Layout/AVerticalLayout.h"
-#include "AUI/Platform/AWindow.h"
 
-
-
-class AListViewContainer: public AViewContainer {
+class ATreeView::ContainerView: public AViewContainer {
 private:
     int mScrollY = 0;
     size_t mIndex = -1;
@@ -71,144 +73,104 @@ public:
         return mIndex;
     }
 };
-
-class AListItem: public ALabel
+class ATreeView::ItemView: public ALabel
 {
 private:
-	bool mSelected = false;
+    bool mSelected = false;
 
 public:
-	AListItem()
-	{
+    ItemView()
+    {
 
-	}
+    }
 
-	AListItem(const AString& text)
-		: ALabel(text)
-	{
-	}
+    ItemView(const AString& text)
+            : ALabel(text)
+    {
+    }
 
-	virtual ~AListItem() = default;
+    virtual ~ItemView() = default;
 
     void getCustomCssAttributes(AMap<AString, AVariant>& map) override
-	{
-		ALabel::getCustomCssAttributes(map);
-		if (mSelected)
-			map["selected"] = true;
-	}
+    {
+        ALabel::getCustomCssAttributes(map);
+        if (mSelected)
+            map["selected"] = true;
+    }
 
-	void setSelected(const bool selected)
-	{
-		mSelected = selected;
-		emit customCssPropertyChanged;
-	}
+    void setSelected(const bool selected)
+    {
+        mSelected = selected;
+        emit customCssPropertyChanged;
+    }
 
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override {
         AView::onMousePressed(pos, button);
 
-        dynamic_cast<AListView*>(getParent()->getParent())->handleMousePressed(this);
+        dynamic_cast<ATreeView*>(getParent()->getParent())->handleMousePressed(this);
     }
 
     void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override {
         AView::onMouseDoubleClicked(pos, button);
 
-        dynamic_cast<AListView*>(getParent()->getParent())->handleMouseDoubleClicked(this);
+        dynamic_cast<ATreeView*>(getParent()->getParent())->handleMouseDoubleClicked(this);
     }
 };
 
 
 
-int AListView::getContentMinimumHeight()
-{
-	return 40;
+ATreeView::ATreeView() {
+
 }
 
-
-AListView::~AListView()
+ATreeView::ATreeView(const _<ITreeModel<AString>>& model)
 {
-}
-
-AListView::AListView(const _<IListModel<AString>>& model) {
     setModel(model);
 }
 
-void AListView::setModel(const _<IListModel<AString>>& model) {
+void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     mModel = model;
     setLayout(_new<AHorizontalLayout>());
 
-    addView(mContent = _new<AListViewContainer>());
+    addView(mContent = _new<ContainerView>());
     addView(mScrollbar = _new<AScrollbar>());
 
     mContent->setLayout(_new<AVerticalLayout>());
     mContent->setExpanding({2, 2});
 
-    connect(mScrollbar->scrolled, mContent, &AListViewContainer::setScrollY);
+    connect(mScrollbar->scrolled, mContent, &ContainerView::setScrollY);
 
     if (mModel) {
-        for (size_t i = 0; i < model->listSize(); ++i) {
-            mContent->addView(_new<AListItem>(model->listItemAt(i)));
+        for (size_t i = 0; i < model->rowCount({}); ++i) {
+            mContent->addView(_new<ItemView>(model->itemAt(i)));
         }
-
-        connect(mModel->dataInserted, this, [&](const AModelRange<AString>& data) {
-            for (const auto& row : data) {
-                auto view = _new<AListItem>(row.get());
-                mContent->addView(row.getIndex().getRow(), view);
-            }
-            updateLayout();
-            updateScrollbarDimensions();
-            redraw();
-        });
-        connect(mModel->dataChanged, this, [&](const AModelRange<AString>& data) {
-            for (const auto& row : data) {
-                _cast<AListItem>(mContent->getViews()[row.getIndex().getRow()])->setText(row.get());
-            }
-            redraw();
-        });
-        connect(mModel->dataRemoved, this, [&](const AModelRange<AString>& data) {
-            for (const auto& row : data) {
-                mContent->removeView(row.getIndex().getRow());
-            }
-            updateLayout();
-            updateScrollbarDimensions();
-            redraw();
-        });
     }
     updateLayout();
     updateScrollbarDimensions();
     AWindow::current()->flagRedraw();
 }
 
-void AListView::setSize(int width, int height) {
+
+void ATreeView::setSize(int width, int height) {
     AViewContainer::setSize(width, height);
 
     updateScrollbarDimensions();
 }
 
-void AListView::updateScrollbarDimensions() {
+void ATreeView::updateScrollbarDimensions() {
     mScrollbar->setScrollDimensions(getHeight(), mContent->getContentMinimumHeight());
 }
 
-void AListView::onMouseWheel(glm::ivec2 pos, int delta) {
+void ATreeView::onMouseWheel(glm::ivec2 pos, int delta) {
     //AViewContainer::onMouseWheel(pos, delta);
     mScrollbar->onMouseWheel(pos, delta);
     onMouseMove(pos); // update hover on scroll
 }
 
-void AListView::handleMousePressed(AListItem* item) {
+void ATreeView::handleMousePressed(ATreeView::ItemView* v) {
 
-    if (!AInput::isKeyDown(AInput::LControl)) {
-        for (auto& s : mSelectionModel) {
-            _cast<AListItem>(mContent->getViews()[s.getRow()])->setSelected(false);
-        }
-
-        mSelectionModel.clear();
-    }
-    mSelectionModel << AModelIndex(mContent->getIndex());
-    item->setSelected(true);
-
-    emit selectionChanged(getSelectionModel());
 }
 
-void AListView::handleMouseDoubleClicked(AListItem* item) {
-    emit itemDoubleClicked(mContent->getIndex());
+void ATreeView::handleMouseDoubleClicked(ATreeView::ItemView* v) {
+
 }
