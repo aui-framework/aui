@@ -31,9 +31,20 @@ size_t DemoTreeModel::rowCount(const ATreeIndex& parent) {
     if (parent.getUserData() == nullptr) {
         return 3;
     }
-    return 0;
+    return 4;
 }
 
 AString DemoTreeModel::itemAt(const ATreeIndex& index) {
+    if (index.getUserData() != nullptr) {
+        return "Sub item #{}"_as.format(index.getRow() + 1);
+    }
     return "Root item #{}"_as.format(index.getRow() + 1);
 }
+
+ATreeIndex DemoTreeModel::indexOf(size_t row, size_t column, const ATreeIndex& index) {
+    if (row == 0) {
+        return ATreeIndex::make((void*)4, row, column);
+    }
+    return ATreeIndex(row, column);
+}
+

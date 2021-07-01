@@ -143,6 +143,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     if (mModel) {
         for (size_t i = 0; i < model->rowCount({}); ++i) {
             mContent->addView(_new<ItemView>(model->itemAt(i)));
+            fillViewsRecursively(i, {});
         }
     }
     updateLayout();
@@ -172,5 +173,13 @@ void ATreeView::handleMousePressed(ATreeView::ItemView* v) {
 }
 
 void ATreeView::handleMouseDoubleClicked(ATreeView::ItemView* v) {
+
+}
+
+void ATreeView::fillViewsRecursively(size_t row, const ATreeIndex& parent) {
+    auto index = mModel->indexOf(row, 0, parent);
+    for (size_t i = 0; i < mModel->rowCount(index); ++i) {
+        mContent->addView(_new<ItemView>(mModel->itemAt(i,)))
+    }
 
 }

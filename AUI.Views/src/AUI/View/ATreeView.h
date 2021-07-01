@@ -44,6 +44,8 @@ private:
     void handleMousePressed(ItemView* v);
     void handleMouseDoubleClicked(ItemView* v);
 
+    void fillViewsRecursively(size_t row, const ATreeIndex& parent = {});
+
 public:
     ATreeView();
     ATreeView(const _<ITreeModel<AString>>& model);

@@ -32,19 +32,19 @@
 
 class ATreeIndex: public AModelIndex {
 private:
-    _<AObject> mUserData;
+    void* mUserData;
 
 public:
     using AModelIndex::AModelIndex;
 
-    static ATreeIndex make(const _<AObject>& userData, size_t row, size_t column) {
+    static ATreeIndex make(void* userData, size_t row, size_t column) {
         ATreeIndex i(row, column);
         i.mUserData = userData;
         return i;
     }
 
     [[nodiscard]]
-    const _<AObject>& getUserData() const {
+    void* getUserData() const {
         return mUserData;
     }
 };
@@ -57,6 +57,7 @@ public:
 
     virtual size_t rowCount(const ATreeIndex& parent) = 0;
     virtual T itemAt(const ATreeIndex& index) = 0;
+    virtual ATreeIndex indexOf(size_t row, size_t column, const ATreeIndex& = {}) = 0;
 
     using stored_t = T;
 
