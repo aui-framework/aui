@@ -35,5 +35,25 @@ public:
 	FileInputStream(const AString& path);
 	virtual ~FileInputStream();
 
+	enum class Seek {
+	    /**
+	     * Seek relatively to the begin of file
+	     */
+	    BEGIN,
+
+	    /**
+	     * Seek relatively to the current position
+	     */
+	    CURRENT,
+
+	    /**
+	     * Seek relative to the end of file
+	     */
+	    END
+	};
+
+	void seek(std::streamoff offset, Seek dir);
+	void seek(std::streampos pos);
+
 	int read(char* dst, int size) override;
 };

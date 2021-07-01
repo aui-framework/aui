@@ -74,15 +74,15 @@ public:
 
 
     bool operator<(const AUuid& o) const {
-        const auto* self = reinterpret_cast<const uint32_t*>(mData.data());
-        const auto* other = reinterpret_cast<const uint32_t*>(o.mData.data());
+        const auto* self = reinterpret_cast<const unsigned*>(mData.data());
+        const auto* other = reinterpret_cast<const unsigned*>(o.mData.data());
 
-        for (size_t i = 0; i < 4; ++i) {
-            if (self[i] > other[i]) {
-                return false;
+        for (unsigned i = 0; i < sizeof(mData) / sizeof(unsigned); ++i) {
+            if (self[i] != other[i]) {
+                return self[i] < other[i];
             }
-        }
-        return true;
+        };
+        return false;
     }
 
     bool operator==(const AUuid& other) const {

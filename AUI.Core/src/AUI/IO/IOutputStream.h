@@ -43,6 +43,14 @@ public:
 	virtual int write(const char* src, int size) = 0;
 
 	/**
+     * \brief Redirects all input stream data to this output stream
+     * \param os IInputStream
+     * \param limit max count of bytes to write
+     * \note if you don't want to limit stream, use the operator<<() function.
+	 */
+	void writeAll(const _<IInputStream>& fis, size_t limit = std::numeric_limits<size_t>::max());
+
+	/**
 	 * \brief Works as <code>write(const char* src, int size)</code> except it accepts AByteBuffer instead of
 	 *        const char* and int.
 	 * \param buffer source data buffer

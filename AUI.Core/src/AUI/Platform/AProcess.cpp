@@ -175,7 +175,11 @@ int AChildProcess::wait() {
 _<AProcess> AProcess::fromPid(uint32_t pid) {
     auto handle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid);
     if (handle) {
-        return _new<AOtherProcess>(handle);
+        DWORD exitCode;
+        GetExitCodeProcess(handle, &exitCode);
+        if (exitCode == STILL_ACTIVE) {
+            return _new<AOtherProcess>(handle);
+        }
     }
     return nullptr;
 }

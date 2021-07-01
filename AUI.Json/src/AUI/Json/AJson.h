@@ -80,7 +80,9 @@ namespace aui::json::impl {
         static void fromJson(const AJsonElement& j, const char*& name, T& value) {
             const char* end;
             for (end = name; *end && *end != ','; ++end);
-            value = conv::conv<std::decay_t<T>>::from_json(j[AString(name, end)]);
+            try {
+                value = conv::conv<std::decay_t<T>>::from_json(j[AString(name, end)]);
+            } catch (...) {}
             if (*++end == ' ') { ++end; }
             name = end;
         }
