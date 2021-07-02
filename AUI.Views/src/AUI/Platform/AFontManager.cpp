@@ -19,23 +19,28 @@
  * =====================================================================================================================
  */
 
-#pragma once
+#include <AUI/Url/AUrl.h>
+#include "AFontManager.h"
+#include "AUI/Platform/Platform.h"
+#include "AUI/Render/FreeType.h"
 
-#include "AUI/Common/SharedPtr.h"
-#include "AUI/Util/Manager.h"
-#include "AUI/Render/AFont.h"
 
-class API_AUI_VIEWS AFontManager: public Manager<AFont> {
-public:
-	AFontManager();
-    AFontManager(const AFontManager&) = delete;
-    virtual ~AFontManager();
 
-    static AFontManager& inst();
+AFontManager::~AFontManager() {
+	mItems.clear();
+}
 
-	_<FreeType> mFreeType;
-	_<AFont> getDefault();
-private:
-	_<AFont> newItem(const AString& name) override;
-	friend class AFont;
-};
+_<AFont> AFontManager::newItem(const AString& name) {
+    if (name.contains(":")) {
+        // url
+        return _new<AFont>(this, AUrl(name));
+    }
+
+	return _new<AFont>(this, getPathToFont(name));
+}
+
+
+AFontManager& AFontManager::inst() {
+    static AFontManager f;
+    return f;
+}

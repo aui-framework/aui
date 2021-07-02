@@ -37,7 +37,7 @@
 #include <AUI/Logging/ALogger.h>
 
 #include "AUI/Platform/ADesktop.h"
-#include "AUI/Render/AFontManager.h"
+#include "AUI/Platform/AFontManager.h"
 #include "AUI/Util/AMetric.h"
 #include "AUI/Util/Factory.h"
 

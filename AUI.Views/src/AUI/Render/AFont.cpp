@@ -23,7 +23,7 @@
 #include <freetype/freetype.h>
 #include "FreeType.h"
 #include "AFontCharacter.h"
-#include "AFontManager.h"
+#include "AUI/Platform/AFontManager.h"
 #include <fstream>
 #include <string>
 #include "AUI/Common/AStringVector.h"

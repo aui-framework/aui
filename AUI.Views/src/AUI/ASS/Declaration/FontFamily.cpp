@@ -24,7 +24,7 @@
 //
 
 #include "FontFamily.h"
-#include <AUI/Render/AFontManager.h>
+#include <AUI/Platform/AFontManager.h>
 
 void ass::decl::Declaration<ass::FontFamily>::applyFor(AView* view) {
     view->getFontStyle().font = AFontManager::inst().get(mInfo.family);

@@ -19,40 +19,26 @@
  * =====================================================================================================================
  */
 
-#include <AUI/Url/AUrl.h>
-#include "AFontManager.h"
-#include "AUI/Platform/Platform.h"
-#include "FreeType.h"
+#pragma once
 
-AFontManager::AFontManager() :
-	mFreeType(_new<FreeType>())
-{
-}
+#include "AUI/Common/SharedPtr.h"
+#include "AUI/Util/Manager.h"
+#include "AUI/Render/AFont.h"
 
-AFontManager::~AFontManager() {
-	mItems.clear();
-}
+class API_AUI_VIEWS AFontManager: public Manager<AFont> {
+public:
+	AFontManager();
+    AFontManager(const AFontManager&) = delete;
+    virtual ~AFontManager();
 
-_<AFont> AFontManager::newItem(const AString& name) {
-    if (name.contains(":")) {
-        // url
-        return _new<AFont>(this, AUrl(name));
-    }
+    static AFontManager& inst();
 
-	return _new<AFont>(this, Platform::getFontPath(name));
-}
+	_<FreeType> mFreeType;
+	_<AFont> getDefault();
+private:
+	_<AFont> newItem(const AString& name) override;
 
-_<AFont> AFontManager::getDefault() {
-#if defined(_WIN32)
-	return get("segoeui");
-#elif defined(ANDROID)
-	return get(":and/font/Roboto-Medium.ttf");
-#else
-	return get("ubuntu/Ubuntu-R.ttf");
-#endif
-}
+	AString getPathToFont(const AString& font);
 
-AFontManager& AFontManager::inst() {
-    static AFontManager f;
-    return f;
-}
+	friend class AFont;
+};

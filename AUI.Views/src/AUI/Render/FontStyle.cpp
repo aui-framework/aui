@@ -21,7 +21,7 @@
 
 #include "FontStyle.h"
 
-#include "AFontManager.h"
+#include "AUI/Platform/AFontManager.h"
 
 size_t FontStyle::getWidth(const AString& text) const
 {
