@@ -35,7 +35,7 @@ namespace aui::detail {
         using Iterator = typename p::iterator;
 
     public:
-        using p::vector;
+        using typename p::vector;
 
 
         Iterator erase(Iterator begin) {
@@ -84,6 +84,6 @@ class AListModel: public SequenceContainerExtensions<aui::detail::AListModel<Sto
     using p = SequenceContainerExtensions<aui::detail::AListModel<StoredType>>;
     using Iterator = typename p::Iterator;
 public:
-    using p::SequenceContainerExtensions;
+    using typename p::SequenceContainerExtensions;
 
 };

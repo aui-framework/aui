@@ -51,7 +51,6 @@ AFontManager::AFontManager() :
 
         }
         ~FontConfig() {
-            FcFini();
         }
     } fc;
 

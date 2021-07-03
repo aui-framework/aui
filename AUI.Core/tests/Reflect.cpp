@@ -28,6 +28,8 @@
 #include <AUI/Common/AMap.h>
 #include <AUI/Reflect/AClass.h>
 #include <AUI/Reflect/AEnumerate.h>
+#include <AUI/Reflect/AReflect.h>
+#include <AUI/Model/AListModel.h>
 
 using namespace boost::unit_test;
 enum Test {
@@ -49,6 +51,11 @@ BOOST_AUTO_TEST_SUITE(Reflect)
     BOOST_AUTO_TEST_CASE(NameClass) {
         BOOST_CHECK_EQUAL(AClass<AString>::name(), "AString");
         BOOST_CHECK_EQUAL(AClass<AzazaTest::Test>::nameWithoutNamespace(), "Test");
+    }
+
+    BOOST_AUTO_TEST_CASE(NameClassPtr) {
+        AObject* ptr = new AListModel<AString>();
+        BOOST_CHECK_EQUAL(AReflect::name(ptr), "AListModel<AString>");
     }
 
     BOOST_AUTO_TEST_CASE(NameStruct) {
