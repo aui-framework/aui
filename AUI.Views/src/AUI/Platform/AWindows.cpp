@@ -57,6 +57,7 @@ AWindow::Context AWindow::context = {};
 #include <AUI/Util/Cache.h>
 #include <AUI/Util/AError.h>
 #include <AUI/Action/AMenu.h>
+#include <AUI/Util/AViewProfiler.h>
 
 struct painter {
 private:
@@ -811,6 +812,10 @@ bool AWindow::isRenderingContextAcquired() {
     return painter::painting;
 }
 void AWindow::redraw() {
+    if (mUpdateLayoutFlag) {
+        mUpdateLayoutFlag = false;
+        updateLayout();
+    }
 #ifdef WIN32
     mRedrawFlag = true;
 #endif
@@ -866,62 +871,7 @@ void AWindow::redraw() {
             auto v = getViewAtRecursive(mapPosition(ADesktop::getMousePosition()));
             if (v == nullptr)
                 v = shared_from_this();
-            apply(v, {
-                RenderHints::PushMatrix m;
-                Render::inst().setTransform(glm::translate(glm::mat4(1.f), glm::vec3{getPositionInWindow(), 0.f}));
-                Render::inst().setFill(Render::FILL_SOLID);
-                glEnable(GL_STENCIL_TEST);
-                glStencilMask(0xff);
-                glStencilOp(GL_INCR, GL_INCR, GL_INCR);
-                glStencilFunc(GL_EQUAL, 0, 0xff);
-
-                // content
-                {
-                    RenderHints::PushColor c;
-                    Render::inst().setColor(0x7cb6c180u);
-                    Render::inst().drawRect(getPadding().left, getPadding().top,
-                                                getWidth() - getPadding().horizontal(), getHeight() - getPadding().vertical());
-                }
-
-                // padding
-                {
-                    RenderHints::PushColor c;
-                    Render::inst().setColor(0xbccf9180u);
-                    Render::inst().drawRect(0, 0, getWidth(), getHeight());
-                }
-
-                // margin
-                {
-                    RenderHints::PushColor c;
-                    Render::inst().setColor(0xffcca4a0u);
-                    Render::inst().drawRect(-getMargin().left, -getMargin().top,
-                                                getWidth() + getMargin().horizontal(),
-                                                getHeight() + getMargin().vertical());
-                }
-
-                glDisable(GL_STENCIL_TEST);
-                // labels
-                {
-                    int x = -getMargin().left;
-                    int y = getHeight() + getMargin().bottom + 2_dp;
-
-                    FontStyle fs;
-                    fs.color = 0xffffffffu;
-                    fs.fontRendering = FontRendering::ANTIALIASING;
-                    fs.size = 9_pt;
-
-                    AView* t = this;
-                    auto s = Render::inst().preRendererString(getCssNames().empty() ? typeid(*t).name() : getCssNames().back() + "\n"_as +
-                                                              AString::number(getSize().x) + "x"_as + AString::number(getSize().y), fs);
-
-                    {
-                        RenderHints::PushColor c;
-                        Render::inst().setColor(0x00000070u);
-                        Render::inst().drawRect(x, y, s.length + 4_dp, fs.size * 2.5 + 2_dp);
-                    }
-                    Render::inst().drawString(x + 2_dp, y + 1_dp, s);
-                }
-            });
+            AViewProfiler::displayBoundsOn(*v);
         }
 
 #if defined(_WIN32)
@@ -1265,6 +1215,11 @@ void AWindow::flagRedraw() {
 #else
     mRedrawFlag = true;
 #endif
+}
+
+void AWindow::flagUpdateLayout() {
+    flagRedraw();
+    mUpdateLayoutFlag = true;
 }
 
 void AWindow::show() {

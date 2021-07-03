@@ -83,7 +83,9 @@ AScrollbar::AScrollbar(LayoutDirection direction) :
     addView(_new<ASpacer>() let { it->setMinimumSize({0, 0}); });
     addView(mForwardButton);
 
-    setScroll(0);
+    ui {
+        setScroll(0);
+    };
 }
 
 void AScrollbar::setOffset(size_t o) {
@@ -131,8 +133,11 @@ void AScrollbar::updateScrollHandleSize() {
         }
     } else {
         mHandle->setVisibility(Visibility::GONE);
+        emit scrolled(mCurrentScroll = 0);
         setDisabled();
     }
+
+    updateScrollHandleOffset(getMaxScroll());
 }
 
 void AScrollbar::setScroll(int scroll) {
@@ -142,23 +147,29 @@ void AScrollbar::setScroll(int scroll) {
     if (mCurrentScroll != newScroll) {
         mCurrentScroll = newScroll;
 
-        float availableSpace = getAvailableSpaceForSpacer();
+        updateScrollHandleOffset(max);
 
 
-        int handlePos = float(mCurrentScroll) / max * availableSpace;
-
-        switch (mDirection) {
-            case LayoutDirection::HORIZONTAL:
-                mOffsetSpacer->setFixedSize(glm::ivec2{handlePos, 0});
-                break;
-            case LayoutDirection::VERTICAL:
-                mOffsetSpacer->setFixedSize(glm::ivec2{0, handlePos});
-                break;
-        }
-        updateLayout();
-        redraw();
         emit scrolled(mCurrentScroll);
     }
+}
+
+void AScrollbar::updateScrollHandleOffset(int max) {
+    float availableSpace = getAvailableSpaceForSpacer();
+
+
+    int handlePos = float(mCurrentScroll) / max * availableSpace;
+
+    switch (mDirection) {
+        case LayoutDirection::HORIZONTAL:
+            mOffsetSpacer->setFixedSize(glm::ivec2{handlePos, 0});
+            break;
+        case LayoutDirection::VERTICAL:
+            mOffsetSpacer->setFixedSize(glm::ivec2{0, handlePos});
+            break;
+    }
+    updateLayout();
+    redraw();
 }
 
 void AScrollbar::onMouseWheel(glm::ivec2 pos, int delta) {

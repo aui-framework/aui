@@ -35,7 +35,6 @@ private:
     LayoutDirection mLayoutDirection;
     _<GL::Vao> mPrecompiledLines;
 
-    int mCursorPosPx = 0;
     int mOffsetPx = 0;
 
     float mUnit = 1.f;
@@ -47,11 +46,6 @@ public:
     explicit ARulerView(LayoutDirection layoutDirection);
 
     void render() override;
-
-    void setCursorPosPx(int cursorPosPx) {
-        mCursorPosPx = cursorPosPx;
-        redraw();
-    }
 
     void setOffsetPx(int offsetPx) {
         mOffsetPx = offsetPx;

@@ -32,6 +32,7 @@
 #include "Declaration/Border.h"
 #include "Declaration/BorderBottom.h"
 #include "Declaration/BorderRadius.h"
+#include "Declaration/BorderLeft.h"
 #include "Declaration/BoxShadow.h"
 #include "Declaration/Cursor.h"
 #include "Declaration/Expanding.h"

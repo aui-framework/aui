@@ -29,7 +29,9 @@
 #include <AUI/Layout/AVerticalLayout.h>
 #include <AUI/Platform/AWindow.h>
 #include "ALabel.h"
+#include "ADrawableView.h"
 #include <AUI/ASS/ASS.h>
+#include <AUI/Util/UIBuildingHelpers.h>
 
 class ATreeView::ContainerView: public AViewContainer {
 private:
@@ -44,27 +46,6 @@ public:
         updateParentsLayoutIfNecessary();
     }
 
-    _<AView> getViewAt(glm::ivec2 pos, bool ignoreGone) override {
-        switch (mViews.size()) {
-            case 0:
-                return nullptr;
-            case 1: {
-                auto v = AViewContainer::getViewAt(pos, ignoreGone);
-                mIndex = v ? 0 : -1;
-                return v;
-            }
-            default: {
-                mIndex = -1;
-                pos.y += mScrollY;
-                pos.y /= mViews[1]->getPosition().y - mViews[0]->getPosition().y;
-                if (pos.y >= 0 && pos.y < mViews.size()) {
-                    return mViews[mIndex = pos.y];
-                }
-                return nullptr;
-            }
-        }
-    }
-
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
         updateLayout();
@@ -73,31 +54,94 @@ public:
     size_t getIndex() const {
         return mIndex;
     }
+
+    int getContentMinimumWidth() override {
+        return 40;
+    }
+
+    int getContentMinimumHeight() override {
+        return 40;
+    }
 };
-class ATreeView::ItemView: public ALabel
+class ATreeView::ItemView: public AViewContainer
 {
 private:
     bool mSelected = false;
-    unsigned mDepth;
+    bool mExpanded = false;
+    _<AView> mDisplay;
+    _<ADrawableView> mCollapseDisplay;
+    ATreeIndex mIndex;
+    ATreeView* mTreeView;
 
 public:
-    ItemView()
+    ItemView(ATreeView* treeView, const _<AView>& display, bool hasChildren, const ATreeIndex& index)
+            : mDisplay(display),
+              mIndex(index),
+              mTreeView(treeView)
     {
+        addAssName(".list-item");
+        setLayout(_new<AHorizontalLayout>());
 
+        if (hasChildren) {
+            addView(mCollapseDisplay = _new<ADrawableView>(AImageLoaderRegistry::inst().loadDrawable(":uni/svg/tree-collapsed.svg")) let {
+                it << ".list-item-icon";
+                connect(it->clicked, me::toggleCollapse);
+            });
+        } else {
+            addView(_new<AView>() << ".list-item-icon");
+        }
+
+        addView(mDisplay);
+        if (hasChildren) {
+            connect(mDisplay->doubleClicked, me::toggleCollapseRecursive);
+        }
     }
 
-    ItemView(unsigned depth, const AString& text)
-            : ALabel(text),
-              mDepth(depth)
-    {
-        setCustomAss({ ass::Padding{ {}, {}, {}, operator""_dp(depth * 10) } });
+    void toggleCollapse() {
+        setExpanded(!mExpanded);
+    }
+    void toggleCollapseRecursive() {
+        expandOrCollapseRecursively(!mExpanded);
+    }
+
+    void expandOrCollapseRecursively(bool expand) {
+        setExpanded(expand);
+        auto& parentViews = getParent()->getViews();
+        for (auto it = parentViews.begin(); it != parentViews.end(); ++it) {
+            if (it->get() == this) {
+                ++it;
+                if (it != parentViews.end()) {
+                    if (auto container = _cast<AViewContainer>(*it)) {
+                        for (auto& v : container->getViews()) {
+                            if (auto treeItem = _cast<ItemView>(v)) {
+                                treeItem->expandOrCollapseRecursively(expand);
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    void setExpanded(bool expanded) {
+        mExpanded = expanded;
+        if (mCollapseDisplay) {
+            mCollapseDisplay->setDrawable(AImageLoaderRegistry::inst().loadDrawable(
+                    mExpanded ? ":uni/svg/tree-expanded.svg" : ":uni/svg/tree-collapsed.svg"));
+        }
+        emit expandStateChanged(mExpanded);
     }
 
     virtual ~ItemView() = default;
 
+    const ATreeIndex& getIndex() const {
+        return mIndex;
+    }
+
     void getCustomCssAttributes(AMap<AString, AVariant>& map) override
     {
-        ALabel::getCustomCssAttributes(map);
+        AViewContainer::getCustomCssAttributes(map);
         if (mSelected)
             map["selected"] = true;
     }
@@ -109,25 +153,37 @@ public:
     }
 
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override {
-        AView::onMousePressed(pos, button);
+        AViewContainer::onMousePressed(pos, button);
 
-        dynamic_cast<ATreeView*>(getParent()->getParent())->handleMousePressed(this);
+        mTreeView->handleMousePressed(this);
     }
 
     void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override {
-        AView::onMouseDoubleClicked(pos, button);
+        AViewContainer::onMouseDoubleClicked(pos, button);
 
-        dynamic_cast<ATreeView*>(getParent()->getParent())->handleMouseDoubleClicked(this);
+        mTreeView->handleMouseDoubleClicked(this);
     }
+
+    void onMouseMove(glm::ivec2 pos) override {
+        AViewContainer::onMouseMove(pos);
+        mTreeView->handleMouseMove(this);
+    }
+
+signals:
+    emits<bool> expandStateChanged;
 };
 
 
-
-ATreeView::ATreeView() {
+ATreeView::ATreeView():
+    mViewFactory([](const _<ITreeModel<AString>>& model, const ATreeIndex& index) {
+        return _new<ALabel>(model->itemAt(index));
+    })
+{
 
 }
 
-ATreeView::ATreeView(const _<ITreeModel<AString>>& model)
+ATreeView::ATreeView(const _<ITreeModel<AString>>& model):
+    ATreeView()
 {
     setModel(model);
 }
@@ -145,14 +201,41 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     connect(mScrollbar->scrolled, mContent, &ContainerView::setScrollY);
 
     if (mModel) {
-        for (size_t i = 0; i < model->childrenCount({}); ++i) {
-            mContent->addView(_new<ItemView>(0, model->itemAt(i)));
-            fillViewsRecursively(1, mModel->indexOfChild(i, 0, {}));
+        for (size_t i = 0; i < model->childrenCount(model->root()); ++i) {
+            ATreeIndex index = {model->getUserDataForRoot(), i, 0};
+            ATreeIndex childIndex = mModel->indexOfChild(i, 0, index);
+            bool group = model->childrenCount(childIndex) != 0;
+
+            auto item = _new<ItemView>(this, mViewFactory(mModel, index), group, index);
+            makeElement(mContent, childIndex, group, item);
         }
     }
     updateLayout();
     updateScrollbarDimensions();
     AWindow::current()->flagRedraw();
+}
+
+void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView) {
+    container->addView(itemView);
+    if (isGroup) {
+        auto wrapper = _container<AVerticalLayout>({});
+        wrapper->setVisibility(Visibility::GONE);
+        wrapper << ".list-item-group";
+        container->addView(wrapper);
+        fillViewsRecursively(wrapper, childIndex);
+
+        connect(itemView->expandStateChanged, wrapper, [&, wrapper](bool expanded) {
+            if (expanded) {
+                wrapper->setVisibility(Visibility::VISIBLE);
+            } else {
+                wrapper->setVisibility(Visibility::GONE);
+            }
+
+            updateLayout();
+            updateScrollbarDimensions();
+            redraw();
+        });
+    }
 }
 
 
@@ -163,7 +246,9 @@ void ATreeView::setSize(int width, int height) {
 }
 
 void ATreeView::updateScrollbarDimensions() {
-    mScrollbar->setScrollDimensions(getHeight(), mContent->getContentMinimumHeight());
+    if (mContent) {
+        mScrollbar->setScrollDimensions(getHeight(), mContent->AViewContainer::getContentMinimumHeight());
+    }
 }
 
 void ATreeView::onMouseWheel(glm::ivec2 pos, int delta) {
@@ -171,6 +256,7 @@ void ATreeView::onMouseWheel(glm::ivec2 pos, int delta) {
     mScrollbar->onMouseWheel(pos, delta);
     onMouseMove(pos); // update hover on scroll
 }
+
 
 void ATreeView::handleMousePressed(ATreeView::ItemView* v) {
 
@@ -180,11 +266,20 @@ void ATreeView::handleMouseDoubleClicked(ATreeView::ItemView* v) {
 
 }
 
-void ATreeView::fillViewsRecursively(unsigned depth, const ATreeIndex& index) {
+void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATreeIndex& index) {
     for (size_t i = 0; i < mModel->childrenCount(index); ++i) {
-        auto c = mModel->indexOfChild(i, 0, index);
-        mContent->addView(_new<ItemView>(depth, mModel->itemAt(c)));
-        fillViewsRecursively(depth + 1, c);
+        auto childIndex = mModel->indexOfChild(i, 0, index);
+        bool group = mModel->childrenCount(childIndex) != 0;
+        auto item = _new<ItemView>(this, mViewFactory(mModel, childIndex), group, childIndex);
+        makeElement(content, childIndex, group,  item);
     }
 
+}
+
+int ATreeView::getContentMinimumHeight() {
+    return 40;
+}
+
+void ATreeView::handleMouseMove(ATreeView::ItemView* pView) {
+    emit itemMouseHover(pView->getIndex());
 }

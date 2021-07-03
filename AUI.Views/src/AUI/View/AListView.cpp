@@ -70,6 +70,10 @@ public:
     size_t getIndex() const {
         return mIndex;
     }
+
+    int getContentMinimumHeight() override {
+        return 40;
+    }
 };
 
 class AListItem: public ALabel
@@ -129,7 +133,9 @@ AListView::~AListView()
 }
 
 AListView::AListView(const _<IListModel<AString>>& model) {
-    setModel(model);
+    ui {
+        setModel(model);
+    };
 }
 
 void AListView::setModel(const _<IListModel<AString>>& model) {
@@ -185,10 +191,12 @@ void AListView::setSize(int width, int height) {
 }
 
 void AListView::updateScrollbarDimensions() {
-    mScrollbar->setScrollDimensions(getHeight(), mContent->getContentMinimumHeight());
+    if (!mScrollbar) return;
+    mScrollbar->setScrollDimensions(getHeight(), mContent->AViewContainer::getContentMinimumHeight());
 }
 
 void AListView::onMouseWheel(glm::ivec2 pos, int delta) {
+    if (!mScrollbar) return;
     //AViewContainer::onMouseWheel(pos, delta);
     mScrollbar->onMouseWheel(pos, delta);
     onMouseMove(pos); // update hover on scroll

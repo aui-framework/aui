@@ -209,6 +209,11 @@ public:
 
 	void popStencilIfNeeded();
 
+	[[nodiscard]]
+    const ADeque<AString>& getAssNames() const {
+        return mAssNames;
+    }
+
     /**
      * \brief Top left corner's position relative to top left corner's position of the parent AView.
      */
@@ -473,7 +478,7 @@ public:
 	/**
 	 * \return Coords of this AView relative to window
 	 */
-    [[nodiscard]] glm::ivec2 getPositionInWindow();
+    [[nodiscard]] glm::ivec2 getPositionInWindow() const;
 
 	const ADeque<AString>& getCssNames() const;
 

@@ -59,6 +59,7 @@ public:
     void onKeyDown(AInput::Key key) override;
 
     virtual void flagRedraw();
+    virtual void flagUpdateLayout();
 
     void onKeyUp(AInput::Key key) override;
 

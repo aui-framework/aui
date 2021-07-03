@@ -37,7 +37,7 @@ private:
     uint8_t mFontSizeOverride = 0;
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
     TextTransform mTextTransform = TextTransform::NONE;
-    AColor mIconColor;
+    AColor mIconColor = {1, 1, 1, 1};
 	bool mMultiline = false;
 
 	glm::ivec2 getIconSize() const;

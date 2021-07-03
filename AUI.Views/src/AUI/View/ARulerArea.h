@@ -8,7 +8,7 @@ private:
     _<AView> mWrappedView;
     _<ARulerView> mHorizontalRuler;
     _<ARulerView> mVerticalRuler;
-
+    glm::ivec2 mMousePos;
 
     void setWrappedViewPosition(const glm::ivec2& pos);
 
@@ -16,5 +16,9 @@ public:
     ARulerArea(const _<AView>& wrappedView);
 
     void setSize(int width, int height) override;
+
+    void onMouseMove(glm::ivec2 pos) override;
+
+    void render() override;
 };
 

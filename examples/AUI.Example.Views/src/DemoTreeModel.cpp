@@ -54,11 +54,15 @@ ATreeIndex DemoTreeModel::indexOfChild(size_t row, size_t column, const ATreeInd
     switch ((int)parent.getUserData()) {
         case TYPE_ROOT:
             if (row == 0) {
-                return ATreeIndex::make((void*)TYPE_4ITEM, row, column);
+                return {(void*)TYPE_4ITEM, row, column};
             }
             break;
 
     }
-    return ATreeIndex::make((void*)TYPE_ZERO_CHILD, row, column);
+    return {(void*)TYPE_ZERO_CHILD, row, column};
+}
+
+void* DemoTreeModel::getUserDataForRoot() {
+    return (int)TYPE_ROOT;
 }
 

@@ -28,11 +28,14 @@
 #include "APageView.h"
 #include "ALabel.h"
 
-class ATabButtonView: public ALabel {
+class API_AUI_VIEWS ATabButtonView: public ALabel {
 private:
     bool mCurrent = false;
 
 public:
+    ATabButtonView() {
+
+    }
     ATabButtonView(const AString& text): ALabel(text) {
 
     }

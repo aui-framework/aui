@@ -20,29 +20,18 @@
  */
 
 //
-// Created by alex2 on 23.10.2020.
+// Created by alex2 on 7/2/2021.
 //
+
 
 #pragma once
 
-#include <AUI/Image/IDrawable.h>
-#include "AView.h"
 
-class API_AUI_VIEWS ADrawableView: public AView {
-private:
-    _<IDrawable> mDrawable;
+#include <AUI/View/AView.h>
 
+class API_AUI_VIEWS AViewProfiler {
 public:
-    ADrawableView(const _<IDrawable>& drawable);
-    void render() override;
-
-    void setDrawable(const _<IDrawable>& drawable) {
-        mDrawable = drawable;
-        redraw();
-    }
-
-protected:
-
+    static void displayBoundsOn(const AView& v);
 };
 
 

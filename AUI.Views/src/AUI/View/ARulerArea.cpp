@@ -20,12 +20,6 @@ public:
         addView(mWrappedView);
     }
 
-    void onMouseMove(glm::ivec2 pos) override {
-        AViewContainer::onMouseMove(pos);
-        emit mouseMove(pos);
-    }
-signals:
-    emits<glm::ivec2> mouseMove;
 };
 
 ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) {
@@ -39,7 +33,7 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
                     _new<ALabel>("dp") << ".arulerarea-unit",
                     mHorizontalRuler = _new<ARulerView>(LayoutDirection::HORIZONTAL),
                     mVerticalRuler = _new<ARulerView>(LayoutDirection::VERTICAL),
-                    wrapper,
+                    wrapper with_style { Overflow::HIDDEN },
                 }, 2, 2) with_style { Expanding { 2, 2 } },
                 _new<AScrollbar>(LayoutDirection::HORIZONTAL),
 
@@ -47,11 +41,6 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
             _new<AScrollbar>(),
         }
     );
-
-    connect(wrapper->mouseMove, [&](const glm::ivec2& pos) {
-        mHorizontalRuler->setCursorPosPx(pos.x);
-        mVerticalRuler->setCursorPosPx(pos.y);
-    });
 
     setExpanding({10, 10});
 
@@ -69,4 +58,31 @@ void ARulerArea::setWrappedViewPosition(const glm::ivec2& pos) {
     mWrappedView->setPosition(pos);
     mHorizontalRuler->setOffsetPx(pos.x);
     mVerticalRuler->setOffsetPx(pos.y);
+}
+
+void ARulerArea::render() {
+    AViewContainer::render();
+
+
+    glDisable(GL_STENCIL_TEST);
+    // cursor display
+    {
+        Render::inst().drawString(mMousePos.x + 2_dp, 20_dp, AString::number(int(operator""_px(mMousePos.x).getValueDp())));
+        Render::inst().drawString(20_dp, mMousePos.y + 20_dp, AString::number(int(operator""_px(mMousePos.y).getValueDp())));
+
+        Render::inst().setFill(Render::FILL_SOLID);
+        glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+        Render::inst().drawRect(mMousePos.x, 0.f, 1, mMousePos.y);
+        Render::inst().drawRect(0.f, mMousePos.y, mMousePos.x, 1);
+
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+    glEnable(GL_STENCIL_TEST);
+}
+
+void ARulerArea::onMouseMove(glm::ivec2 pos) {
+    AViewContainer::onMouseMove(pos);
+    mMousePos = pos;
+    redraw();
 }

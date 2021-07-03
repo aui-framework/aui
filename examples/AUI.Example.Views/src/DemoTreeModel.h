@@ -35,10 +35,11 @@ public:
     ~DemoTreeModel() override = default;
 
     size_t childrenCount(const ATreeIndex& parent) override;
-
     AString itemAt(const ATreeIndex& index) override;
-
     ATreeIndex indexOfChild(size_t row, size_t column, const ATreeIndex& parent) override;
+
+    void* getUserDataForRoot() override;
+
 };
 
 

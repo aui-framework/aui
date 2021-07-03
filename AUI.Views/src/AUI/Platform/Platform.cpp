@@ -143,7 +143,7 @@ float Platform::getDpiRatio()
     db = XrmGetStringDatabase(resourceString);
 
     if (resourceString) {
-        if (XrmGetResource(db, "Xft.dpi", "String", &type, &value) == True) {
+        if (XrmGetResource(db, "Xft.dpi", "String", &type, &value)) {
             if (value.addr) {
                 dpi = atof(value.addr) / 96.f;
             }

@@ -40,22 +40,30 @@ private:
     _<ContainerView> mContent;
     _<AScrollbar> mScrollbar;
 
+    std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeIndex& index)> mViewFactory;
+
+
     void updateScrollbarDimensions();
     void handleMousePressed(ItemView* v);
     void handleMouseDoubleClicked(ItemView* v);
 
-    void fillViewsRecursively(unsigned depth, const ATreeIndex& index);
-
+    void fillViewsRecursively(const _<AViewContainer>& content, const ATreeIndex& index);
+    void makeElement(const _<AViewContainer>& container, const ATreeIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView);
 public:
     ATreeView();
     ATreeView(const _<ITreeModel<AString>>& model);
-
     void setModel(const _<ITreeModel<AString>>& model);
-
     void onMouseWheel(glm::ivec2 pos, int delta) override;
-
     void setSize(int width, int height) override;
+    int getContentMinimumHeight() override;
+    void handleMouseMove(ItemView* pView);
 
+    void setViewFactory(const std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeIndex&)>& viewFactory) {
+        mViewFactory = viewFactory;
+    }
+
+signals:
+    emits<ATreeIndex> itemMouseHover;
 };
 
 

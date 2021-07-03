@@ -41,6 +41,7 @@
 #include <AUI/Platform/ACustomCaptionWindow.h>
 #include <AUI/View/ARulerView.h>
 #include <AUI/View/ATreeView.h>
+#include <AUI/View/ADrawableView.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 
@@ -319,16 +320,32 @@ AStylesheet::AStylesheet() {
             Overflow::HIDDEN,
         },
         {
-            {t<AListView>() > t<AViewContainer>() > t<ALabel>(), t<ATreeView>() > t<AViewContainer>() > t<ALabel>()},
+            t<ATreeView>() > t<AViewContainer>() > c(".list-item") > t<ALabel>(),
+            Padding { 0, 2_dp },
+            Margin { 0 },
+        },
+        {
+            c(".list-item-icon"),
+            MinSize { 7_pt, 7_pt },
+            Margin { 2_dp, {} },
+        },
+        {
+            c(".list-item-group"),
+            Padding { 0, 0, 0, 4_dp },
+            Margin { 0, 0, 4_dp, 15_dp },
+            BorderLeft { 1_dp, 0x0_rgb },
+        },
+        {
+            {t<AListView>() > t<AViewContainer>() > t<ALabel>(), c(".list-item")},
             Margin { 0 },
             Padding { 1_px, 4_px, 4_px },
         },
         {
-            {t<AListView>() > t<AViewContainer>() > t<ALabel>::hover(),t<ATreeView>() > t<AViewContainer>() > t<ALabel>::hover(),},
+            {t<AListView>() > t<AViewContainer>() > t<ALabel>::hover(), c::hover(".list-item"),},
             BackgroundSolid { 0xe5f3ff_rgb },
         },
         {
-            {t<AListView>() > t<AViewContainer>() > t<ALabel>()["selected"], t<ATreeView>() > t<AViewContainer>() > t<ALabel>()["selected"]},
+            {t<AListView>() > t<AViewContainer>() > t<ALabel>()["selected"], c(".list-item")["selected"]},
             BackgroundSolid { 0xcde8ff_rgb },
         },
 

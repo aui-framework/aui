@@ -214,12 +214,13 @@ void ALabel::doRenderText() {
                 if (mIcon)
                 {
                     auto requiredSpace = getIconSize();
+                    requiredSpace *= getHeight() / requiredSpace.y;
                     RenderHints::PushState s;
                     Render::inst().setColor(mIconColor);
                     Render::inst().setTransform(glm::translate(glm::mat4(1.f),
-                                                               glm::vec3(mPadding.left + mTextLeftOffset, (getHeight() - requiredSpace.y) / 2, 0)));
+                                                               glm::vec3(mPadding.left + mTextLeftOffset, 2_dp, 0)));
                     mIcon->draw(requiredSpace);
-                    mTextLeftOffset += requiredSpace.x + 1;
+                    mTextLeftOffset += requiredSpace.x + 4_dp;
                 }
                 break;
 

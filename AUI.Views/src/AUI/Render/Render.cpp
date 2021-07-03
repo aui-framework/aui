@@ -664,5 +664,9 @@ Render& Render::inst() {
     return r;
 }
 
+void Render::translate(const glm::vec2& offset) {
+    mTransform = glm::translate(mTransform, glm::vec3(offset, 0.f));
+}
+
 
 

@@ -33,6 +33,17 @@ namespace aui {
         return std::to_wstring(t);
     };
 
+    template<typename T>
+    inline AString to_string(T* t) {
+        char buf[0xff];
+        sprintf(buf, "%p", t);
+        return buf;
+    }
+    template<>
+    inline AString to_string(const char* t) {
+        return t;
+    }
+
     template<>
     inline AString to_string(const char* const& t) {
         return t;

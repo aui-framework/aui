@@ -200,5 +200,7 @@ public:
     glm::vec2 getCurrentPos();
 
     void applyTextureRepeat();
+
+    void translate(const glm::vec2& offset);
 };
 

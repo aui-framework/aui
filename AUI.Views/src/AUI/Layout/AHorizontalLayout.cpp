@@ -45,6 +45,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 	for (auto& view : mViews)
 	{
 		view->ensureAssUpdated();
+        if (view->getVisibility() == Visibility::GONE) continue;
 		int e = view->getExpandingHorizontal();
 		auto m = view->getMinimumWidth();
 		int minSpace = m + view->getMargin().horizontal();
@@ -62,6 +63,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 	auto last = mViews.back();
 	for (auto& view : mViews)
 	{
+        if (view->getVisibility() == Visibility::GONE) continue;
 		auto maxSize = view->getMaxSize();
 		auto& e = cache[index++];
 		auto margins = view->getMargin();
@@ -94,6 +96,7 @@ int AHorizontalLayout::getMinimumWidth()
 
 	for (auto& v : mViews)
 	{
+        if (v->getVisibility() == Visibility::GONE) continue;
 		minWidth += v->getMinimumWidth() + mSpacing + v->getMargin().horizontal();
 	}
 
@@ -105,6 +108,7 @@ int AHorizontalLayout::getMinimumHeight()
 	int minHeight = 0;
 	for (auto& v : mViews)
 	{
+        if (v->getVisibility() == Visibility::GONE) continue;
 	    auto h = v->getMinimumHeight();
 		minHeight = glm::max(minHeight, int(h + v->getMargin().vertical()));
 	}

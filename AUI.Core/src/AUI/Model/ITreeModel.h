@@ -35,12 +35,11 @@ private:
     void* mUserData = nullptr;
 
 public:
-    using AModelIndex::AModelIndex;
-
-    static ATreeIndex make(void* userData, size_t row, size_t column) {
-        ATreeIndex i(row, column);
-        i.mUserData = userData;
-        return i;
+    ATreeIndex() = default;
+    ATreeIndex(void* userData, size_t row, size_t column):
+        AModelIndex(row, column),
+        mUserData(userData)
+    {
     }
 
     [[nodiscard]]
@@ -57,7 +56,12 @@ public:
 
     virtual size_t childrenCount(const ATreeIndex& parent) = 0;
     virtual T itemAt(const ATreeIndex& index) = 0;
-    virtual ATreeIndex indexOfChild(size_t row, size_t column, const ATreeIndex& = {}) = 0;
+    virtual ATreeIndex indexOfChild(size_t row, size_t column, const ATreeIndex& parent) = 0;
+    virtual void* getUserDataForRoot() = 0;
+
+    ATreeIndex root() {
+        return {getUserDataForRoot(), 0, 0};
+    }
 
     using stored_t = T;
 

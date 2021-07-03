@@ -105,15 +105,6 @@ void ARulerView::render() {
     }
 
     Render::inst().setFill(Render::FILL_SOLID);
-
-    // cursor display
-    {
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_COLOR);
-        for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
-            Render::inst().drawRect(mCursorPosPx, 0.f, 1, totalHeight);
-        }
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    }
 }
 
 int ARulerView::getLongestSide() const {

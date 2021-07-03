@@ -84,6 +84,7 @@ public:
 	}
 
 	[[nodiscard]] float getValuePx() const;
+	[[nodiscard]] float getValueDp() const;
 
 	operator float() const {
 	    return getValuePx();
