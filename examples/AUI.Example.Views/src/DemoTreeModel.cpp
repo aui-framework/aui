@@ -63,6 +63,6 @@ ATreeIndex DemoTreeModel::indexOfChild(size_t row, size_t column, const ATreeInd
 }
 
 void* DemoTreeModel::getUserDataForRoot() {
-    return (int)TYPE_ROOT;
+    return (void*)TYPE_ROOT;
 }
 

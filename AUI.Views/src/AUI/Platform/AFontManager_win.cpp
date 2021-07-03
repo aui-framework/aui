@@ -24,9 +24,6 @@
 //
 
 
-#pragma once
-
-
 #ifdef _WIN32
 #include <AUI/Platform/AFontManager.h>
 #include "AUI/Render/FreeType.h"

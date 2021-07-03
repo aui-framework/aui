@@ -25,9 +25,6 @@ public:
     static AString valueName() {
 #ifdef _MSC_VER
         AString s = __FUNCSIG__;
-#else
-        AString s = __FUNCTION__;
-#endif
         auto end = s.rfind('>');
         size_t begin;
         begin = s.rfind("::", end);
@@ -37,6 +34,18 @@ public:
             begin += 2;
         }
         AString result = {s.begin() + begin, s.begin() + end};
+#else
+        AString s = __PRETTY_FUNCTION__;
+        auto end = s.rfind(';');
+        size_t begin;
+        begin = s.rfind("value =", end);
+        if (begin == AString::NPOS) {
+            begin = s.rfind('[', end) + 1;
+        } else {
+            begin += 8;
+        }
+        AString result = {s.begin() + begin, s.begin() + end};
+#endif
         return result;
     }
 

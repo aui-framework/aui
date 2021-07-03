@@ -49,9 +49,7 @@ public:
 #else
 		AString s = __PRETTY_FUNCTION__;
 		auto b = s.find("with T = ") + 9;
-		auto e = s.find("&", b);
-        auto result = s.mid(b, e - b);
-        return result;
+        return { s.begin() + b, s.end() - 1 };
 #endif
 	}
 
