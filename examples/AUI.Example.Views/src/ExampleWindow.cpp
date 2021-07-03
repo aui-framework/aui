@@ -47,6 +47,8 @@
 #include <AUI/View/AImageView.h>
 #include <AUI/View/ARulerArea.h>
 #include <AUI/View/ATreeView.h>
+#include <AUI/Platform/ADesktop.h>
+#include <AUI/Platform/AMessageBox.h>
 
 using namespace ass;
 
@@ -152,6 +154,25 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                mWindows.clear();
            }),
 
+           _new<ALabel>("System dialog"),
+           _new<AButton>("Show file chooser").connect(&AView::clicked, this, [&] {
+               ADesktop::browseForFile()->onDone([&](const APath& f) {
+                   if (f.empty()) {
+                       AMessageBox::show(this, "Result", "Cancelled");
+                   } else {
+                       AMessageBox::show(this, "Result", "File: {}"_as.format(f));
+                   }
+               });
+           }),
+           _new<AButton>("Show folder chooser").connect(&AView::clicked, this, [&] {
+               ADesktop::browseForFolder()->onDone([&](const APath& f) {
+                   if (f.empty()) {
+                       AMessageBox::show(this, "Result", "Cancelled");
+                   } else {
+                       AMessageBox::show(this, "Result", "Folder: {}"_as.format(f));
+                   }
+               });
+           }),
 
            // list view
            _new<ALabel>("List view"),
