@@ -15,14 +15,15 @@
 namespace AReflect {
     template<typename T>
     AString name(T* v) {
-#ifdef _MSVC_VER
+#ifdef _MSC_VER
     return typeid(*v).name();
 #else
-    char buf[0x100];
-    size_t length;
     int status;
-    abi::__cxa_demangle(typeid(*v).name(), buf, &length, &status);
-    return buf;
+    auto mangledName = typeid(*v).name();
+    auto ptr = abi::__cxa_demangle(mangledName, nullptr, nullptr, &status);
+    AString result = ptr;
+    free(ptr);
+    return result;
 #endif
     }
 }
