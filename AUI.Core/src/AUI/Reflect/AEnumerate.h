@@ -45,6 +45,12 @@ public:
             begin += 8;
         }
         AString result = {s.begin() + begin, s.begin() + end};
+
+
+        for (size_t p; (p = result.find("::")) != AString::NPOS;) {
+            result = result.mid(p + 2);
+        }
+
 #endif
         return result;
     }

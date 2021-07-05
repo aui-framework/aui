@@ -38,6 +38,15 @@ enum Test {
     VALUE3 = 1000,
     VALUE4 = 10000,
 };
+
+namespace namespaceeee {
+    enum Test {
+        V1,
+        V2,
+        V3,
+    };
+}
+
 struct MyStruct {};
 
 namespace AzazaTest {
@@ -45,6 +54,7 @@ namespace AzazaTest {
 }
 
 ENUM_VALUES(Test, VALUE1, VALUE2, VALUE3, VALUE4)
+ENUM_VALUES(namespaceeee::Test, namespaceeee::V1, namespaceeee::V2, namespaceeee::V3)
 
 BOOST_AUTO_TEST_SUITE(Reflect)
 
@@ -79,13 +89,22 @@ BOOST_AUTO_TEST_SUITE(Reflect)
 
     BOOST_AUTO_TEST_CASE(EnumerateAll) {
         AMap<AString, Test> ref = {
-            {"VALUE1", VALUE1},
-            {"VALUE2", VALUE2},
-            {"VALUE3", VALUE3},
-            {"VALUE4", VALUE4},
+                {"VALUE1", VALUE1},
+                {"VALUE2", VALUE2},
+                {"VALUE3", VALUE3},
         };
 
-        BOOST_TEST((AEnumerate<Test>::all() == ref));
+        BOOST_TEST((AEnumerate<Test>::names<VALUE1, VALUE2, VALUE3>() == ref));
+    }
+
+    BOOST_AUTO_TEST_CASE(NamespaceEnumerateNames) {
+        AMap<AString, namespaceeee::Test> ref = {
+                {"V1", namespaceeee::V1},
+                {"V2", namespaceeee::V2},
+                {"V3", namespaceeee::V3},
+        };
+
+        BOOST_TEST((AEnumerate<namespaceeee::Test>::all() == ref));
     }
 
 BOOST_AUTO_TEST_SUITE_END()
