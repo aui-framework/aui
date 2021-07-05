@@ -68,6 +68,7 @@ AString AFontManager::getPathToFont(const AString& font) {
     //FcDefaultSubstitute(pattern);
     auto os = FcObjectSetBuild (FC_FILE, nullptr);
     FcPatternAddString(pattern, FC_FAMILY, reinterpret_cast<const FcChar8*>(tmp.c_str()));
+    FcPatternAddString(pattern, FC_STYLE, reinterpret_cast<const FcChar8*>("Regular"));
 
     struct FcFontSetWrap {
         FcFontSet* value;
