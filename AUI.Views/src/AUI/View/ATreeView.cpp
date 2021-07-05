@@ -39,16 +39,11 @@ private:
     size_t mIndex = -1;
 
 public:
-    void updateLayout() override {
+    void setScrollY(int scrollY) {
+        mScrollY = scrollY;
         if (getLayout())
             getLayout()->onResize(mPadding.left, mPadding.top - mScrollY,
                                   getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
-        updateParentsLayoutIfNecessary();
-    }
-
-    void setScrollY(int scrollY) {
-        mScrollY = scrollY;
-        updateLayout();
     }
 
     size_t getIndex() const {

@@ -281,7 +281,7 @@ void AViewContainer::updateLayout()
 {
     if (getContentMinimumWidth() > getContentWidth() ||
         getContentMinimumHeight() > getContentHeight()) {
-        AWindow::current()->flagUpdateLayout();
+        //AWindow::current()->flagUpdateLayout();
     } else {
     }
     if (mLayout)

@@ -48,6 +48,7 @@
 #include <AUI/Traits/arrays.h>
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
+#include <X11/extensions/sync.h>
 
 constexpr bool AUI_DISPLAY_BOUNDS = false;
 AWindow::Context AWindow::context = {};
@@ -363,6 +364,8 @@ struct {
     Atom auiClipboard;
     Atom incr;
     Atom targets;
+    Atom netWmSyncRequest;
+    Atom netWmSyncRequestCounter;
 
 
     void init() {
@@ -378,6 +381,8 @@ struct {
         auiClipboard = XInternAtom(gDisplay, "AUI_CLIPBOARD", False);
         incr = XInternAtom(gDisplay, "INCR", False);
         targets = XInternAtom(gDisplay, "TARGETS", False);
+        netWmSyncRequest = XInternAtom(gDisplay, "_NET_WM_SYNC_REQUEST", False);
+        netWmSyncRequestCounter = XInternAtom(gDisplay, "_NET_WM_SYNC_REQUEST_COUNTER", False);
     }
 
 } gAtoms;
@@ -711,7 +716,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
         auto cmap = XCreateColormap(gDisplay, gScreen->root, vi->visual, AllocNone);
         swa.colormap = cmap;
         swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask
-                | PointerMotionMask | StructureNotifyMask | PropertyChangeMask;
+                | PointerMotionMask | StructureNotifyMask | PropertyChangeMask | StructureNotifyMask;
         context.context = glXCreateContext(gDisplay, vi, nullptr, true);
 
         im = XOpenIM(gDisplay, NULL, NULL, NULL);
@@ -725,6 +730,21 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     }
     mHandle = XCreateWindow(gDisplay, gScreen->root, 0, 0, width, height, 0, vi->depth, InputOutput, vi->visual,
                             CWColormap | CWEventMask | CWCursor, &swa);
+
+    // XSync
+    {
+        XSyncValue value;
+        XSyncIntToValue(&value, 0);
+        mXsyncRequestCounter.counter = XSyncCreateCounter(gDisplay, value);
+        XChangeProperty(gDisplay,
+                        mHandle,
+                        gAtoms.netWmSyncRequestCounter,
+                        XA_CARDINAL,
+                        32,
+                        PropModeReplace,
+                        (const unsigned char*)&mXsyncRequestCounter.counter, 1);
+
+    }
 
     mIC = XCreateIC(im, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, mHandle, NULL);
     if (mIC == NULL) {
@@ -1491,11 +1511,16 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
             _<AWindow> window;
             switch (ev.type) {
                 case ClientMessage: {
-                    if (ev.xclient.message_type == gAtoms.wmProtocols &&
-                        ev.xclient.data.l[0] == gAtoms.wmDeleteWindow) {
-                        // close button clicked
+                    if (ev.xclient.message_type == gAtoms.wmProtocols) {
                         auto window = locateWindow(ev.xclient.window);
-                        window->onCloseButtonClicked();
+                        if(ev.xclient.data.l[0] == gAtoms.wmDeleteWindow) {
+                            // close button clicked
+                            window->onCloseButtonClicked();
+                        } else if (ev.xclient.data.l[0] == gAtoms.netWmSyncRequest) {
+                            // flicker-fix sync on resize
+                            window->mXsyncRequestCounter.lo = ev.xclient.data.l[2];
+                            window->mXsyncRequestCounter.hi = ev.xclient.data.l[3];
+                        }
                     }
                     break;
                 }
@@ -1521,23 +1546,31 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     window->onKeyUp(AInput::fromNative(ev.xkey.keycode));
                     break;
 
-                case ConfigureNotify:
-                    if (auto w = _cast<ACustomWindow>(window = locateWindow(ev.xconfigure.window))) {
+                case ConfigureNotify: {
+                    printf("Configure notify\n");
+                    window = locateWindow(ev.xconfigure.window);
+                    glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
+                    if (size.x >= 10 && size.y >= 10 && size != window->getSize())
+                        window->AViewContainer::setSize(size.x, size.y);
+                    if (auto w = _cast<ACustomWindow>(window)) {
                         w->handleXConfigureNotify();
                     }
+                    window->mRedrawFlag = false;
+                    window->redraw();
+
+                    XSyncValue syncValue;
+                    XSyncIntsToValue(&syncValue,
+                                     window->mXsyncRequestCounter.lo,
+                                     window->mXsyncRequestCounter.hi);
+                    XSyncSetCounter(gDisplay, window->mXsyncRequestCounter.counter, syncValue);
+
+                    break;
+                }
 
                 case MappingNotify:
                     XRefreshKeyboardMapping(&ev.xmapping);
                     break;
 
-                case Expose: {
-                    window = locateWindow(ev.xexpose.window);
-                    glm::ivec2 size = {ev.xexpose.width, ev.xexpose.height};
-                    if (size.x >= 10 && size.y >= 10 && size != window->getSize())
-                        window->AViewContainer::setSize(size.x, size.y);
-                    window->mRedrawFlag = true;
-                    break;
-                }
                 case MotionNotify: {
                     window = locateWindow(ev.xmotion.window);
                     window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
@@ -1654,10 +1687,12 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
             mXNotifyCV.wait_for(lock, std::chrono::microseconds(500));
         }
         AThread::current()->processMessages();
-        for (auto& window : mWindows) {
-            if (window->mRedrawFlag) {
-                window->mRedrawFlag = false;
-                window->redraw();
+        if (AWindow::isRedrawWillBeEfficient()) {
+            for (auto &window : mWindows) {
+                if (window->mRedrawFlag) {
+                    window->mRedrawFlag = false;
+                    window->redraw();
+                }
             }
         }
     } catch(NotFound e) {
