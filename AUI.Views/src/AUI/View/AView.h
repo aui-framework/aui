@@ -425,6 +425,9 @@ public:
     virtual void invalidateFont();
 	virtual void setPosition(const glm::ivec2& position);
 
+	void setSize(const glm::ivec2& size) {
+        setSize(size.x, size.y);
+	}
     virtual void setSize(int width, int height);
     virtual void setGeometry(int x, int y, int width, int height);
 

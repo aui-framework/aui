@@ -1547,7 +1547,6 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     break;
 
                 case ConfigureNotify: {
-                    printf("Configure notify\n");
                     window = locateWindow(ev.xconfigure.window);
                     glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
                     if (size.x >= 10 && size.y >= 10 && size != window->getSize())
@@ -1586,10 +1585,10 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                                                    (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
                             break;
                         case 4: // wheel down
-                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, -20_dp);
+                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, -120);
                             break;
                         case 5: // wheel up
-                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, 20_dp);
+                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, 120);
                             break;
                     }
                     break;

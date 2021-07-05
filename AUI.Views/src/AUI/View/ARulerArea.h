@@ -12,13 +12,13 @@ private:
 
     void setWrappedViewPosition(const glm::ivec2& pos);
 
+protected:
+    void updatePosition();
+
 public:
     ARulerArea(const _<AView>& wrappedView);
-
     void setSize(int width, int height) override;
-
     void onMouseMove(glm::ivec2 pos) override;
-
     void render() override;
 };
 

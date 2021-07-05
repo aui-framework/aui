@@ -51,7 +51,7 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
 void ARulerArea::setSize(int width, int height) {
     AViewContainer::setSize(width, height);
     mWrappedView->setSize(mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight());
-    setWrappedViewPosition((getSize() - mWrappedView->getSize()) / 2);
+    updatePosition();
 }
 
 void ARulerArea::setWrappedViewPosition(const glm::ivec2& pos) {
@@ -85,4 +85,8 @@ void ARulerArea::onMouseMove(glm::ivec2 pos) {
     AViewContainer::onMouseMove(pos);
     mMousePos = pos;
     redraw();
+}
+
+void ARulerArea::updatePosition() {
+    setWrappedViewPosition((getSize() - mWrappedView->getSize()) / 2);
 }

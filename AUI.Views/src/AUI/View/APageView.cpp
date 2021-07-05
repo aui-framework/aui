@@ -30,7 +30,6 @@
 
 APageView::APageView() {
     setLayout(_new<AStackedLayout>());
-    ALogger::info("azaza");
 }
 
 void APageView::setPageId(unsigned int pageId) {

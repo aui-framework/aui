@@ -279,11 +279,12 @@ void AViewContainer::recompileCSS() {
 
 void AViewContainer::updateLayout()
 {
+    /*
     if (getContentMinimumWidth() > getContentWidth() ||
         getContentMinimumHeight() > getContentHeight()) {
         //AWindow::current()->flagUpdateLayout();
     } else {
-    }
+    }*/
     if (mLayout)
         mLayout->onResize(mPadding.left, mPadding.top,
                           getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
