@@ -44,16 +44,32 @@ public:
     void setCurrent(bool current);
 };
 
+class API_AUI_VIEWS ATabButtonRow: public AViewContainer {
+private:
+    _<AViewContainer> mContents;
+
+public:
+    ATabButtonRow();
+    void setCurrent(size_t i, bool current);
+    void addTab(const AString& name);
+
+    const _<AViewContainer>& getContents() const {
+        return mContents;
+    }
+};
+
 class API_AUI_VIEWS ATabView: public AViewContainer {
 private:
     _<APageView> mPageView;
     _<AViewContainer> mButtonsRow;
+    _<ATabButtonRow> mRow;
 
 public:
     ATabView();
 
     void addTab(const _<AView>& view, const AString& name = {});
     void setTabId(unsigned tabId);
+
 };
 
 

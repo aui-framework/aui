@@ -66,9 +66,21 @@ void ARulerArea::render() {
 
     glDisable(GL_STENCIL_TEST);
     // cursor display
-    {
-        Render::inst().drawString(mMousePos.x + 2_dp, 20_dp, AString::number(int(operator""_px(mMousePos.x).getValueDp())));
-        Render::inst().drawString(20_dp, mMousePos.y + 20_dp, AString::number(int(operator""_px(mMousePos.y).getValueDp())));
+    const auto rulerOffset = glm::ivec2(mVerticalRuler->getWidth(), mHorizontalRuler->getHeight());
+    if (glm::any(glm::greaterThan(mMousePos, rulerOffset * 2))) {
+        mMousePos = glm::clamp(mMousePos, rulerOffset, getSize() - rulerOffset);
+
+        glm::ivec2 tp = mMousePos - (getTargetPosition() + rulerOffset);
+
+        FontStyle fs = getFontStyle();
+        fs.color = 0x0_rgb;
+        auto prX = Render::inst().preRendererString(AString::number(int(operator""_px(tp.x).getValueDp())), fs);
+        auto prY = Render::inst().preRendererString(AString::number(int(operator""_px(tp.y).getValueDp())), fs);
+
+        glm::vec2 maxNumbersPos = glm::vec2(getSize() - rulerOffset) - glm::vec2(prX.length, fs.size) - glm::vec2(4_dp);
+
+        Render::inst().drawString(glm::min(mMousePos.x + 2_dp, maxNumbersPos.x), 18_dp, prX);
+        Render::inst().drawString(18_dp, glm::min(mMousePos.y + 2_dp, maxNumbersPos.y), prY);
 
         Render::inst().setFill(Render::FILL_SOLID);
         glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
@@ -88,5 +100,9 @@ void ARulerArea::onMouseMove(glm::ivec2 pos) {
 }
 
 void ARulerArea::updatePosition() {
-    setWrappedViewPosition((getSize() - mWrappedView->getSize()) / 2);
+    setWrappedViewPosition(getTargetPosition());
+}
+
+glm::ivec2 ARulerArea::getTargetPosition() const {
+    return (getSize() - mWrappedView->getSize()) / 2;
 }

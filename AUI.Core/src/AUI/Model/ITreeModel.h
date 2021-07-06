@@ -30,15 +30,15 @@
 #include "AUI/Common/AVariant.h"
 #include "AModelRange.h"
 
-class ATreeIndex: public AModelIndex {
+class ATreeIndex {
 private:
-    void* mUserData = nullptr;
+    void* mUserData;
 
 public:
     ATreeIndex() = default;
-    ATreeIndex(void* userData, size_t row, size_t column):
-        AModelIndex(row, column),
-        mUserData(userData)
+
+    explicit ATreeIndex(void* userData):
+            mUserData(userData)
     {
     }
 
@@ -51,27 +51,21 @@ public:
 template<typename T>
 class ITreeModel
 {
+protected:
+    virtual void* rootUserData() = 0;
+
 public:
     virtual ~ITreeModel() = default;
 
     virtual size_t childrenCount(const ATreeIndex& parent) = 0;
     virtual T itemAt(const ATreeIndex& index) = 0;
     virtual ATreeIndex indexOfChild(size_t row, size_t column, const ATreeIndex& parent) = 0;
-    virtual void* getUserDataForRoot() = 0;
 
     ATreeIndex root() {
-        return {getUserDataForRoot(), 0, 0};
+        return ATreeIndex{rootUserData()};
     }
 
     using stored_t = T;
-
-    AModelRange<T> range(const ATreeIndex& begin, const ATreeIndex& end) {
-        return AModelRange<T>(begin, end, this);
-    }
-
-    AModelRange<T> range(const ATreeIndex& item) {
-        return AModelRange<T>(item, {item.getRow() + 1}, this);
-    }
 
 signals:
 };

@@ -196,14 +196,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     connect(mScrollbar->scrolled, mContent, &ContainerView::setScrollY);
 
     if (mModel) {
-        for (size_t i = 0; i < model->childrenCount(model->root()); ++i) {
-            ATreeIndex index = {model->getUserDataForRoot(), i, 0};
-            ATreeIndex childIndex = mModel->indexOfChild(i, 0, index);
-            bool group = model->childrenCount(childIndex) != 0;
-
-            auto item = _new<ItemView>(this, mViewFactory(mModel, index), group, index);
-            makeElement(mContent, childIndex, group, item);
-        }
+        fillViewsRecursively(mContent, model->root());
     }
     updateLayout();
     updateScrollbarDimensions();

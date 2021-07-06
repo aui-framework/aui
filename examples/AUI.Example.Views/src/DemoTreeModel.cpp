@@ -45,24 +45,23 @@ size_t DemoTreeModel::childrenCount(const ATreeIndex& parent) {
 
 AString DemoTreeModel::itemAt(const ATreeIndex& index) {
     if (((uintptr_t)index.getUserData()) != TYPE_ROOT) {
-        return "Sub item #{}"_as.format(index.getRow() + 1);
+        return "Sub item";
     }
-    return "Root item #{}"_as.format(index.getRow() + 1);
+    return "Root item #";
 }
 
 ATreeIndex DemoTreeModel::indexOfChild(size_t row, size_t column, const ATreeIndex& parent) {
     switch ((uintptr_t)parent.getUserData()) {
         case TYPE_ROOT:
             if (row == 0) {
-                return {(void*)TYPE_4ITEM, row, column};
+                return ATreeIndex{(void*)TYPE_4ITEM};
             }
             break;
 
     }
-    return {(void*)TYPE_ZERO_CHILD, row, column};
+    return ATreeIndex{(void*)TYPE_ZERO_CHILD};
 }
 
-void* DemoTreeModel::getUserDataForRoot() {
+void *DemoTreeModel::rootUserData() {
     return (void*)TYPE_ROOT;
 }
-

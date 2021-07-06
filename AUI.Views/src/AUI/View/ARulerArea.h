@@ -12,6 +12,8 @@ private:
 
     void setWrappedViewPosition(const glm::ivec2& pos);
 
+    glm::ivec2 getTargetPosition() const;
+
 protected:
     void updatePosition();
 

@@ -38,7 +38,8 @@ public:
     AString itemAt(const ATreeIndex& index) override;
     ATreeIndex indexOfChild(size_t row, size_t column, const ATreeIndex& parent) override;
 
-    void* getUserDataForRoot() override;
+protected:
+    void *rootUserData() override;
 
 };
 
