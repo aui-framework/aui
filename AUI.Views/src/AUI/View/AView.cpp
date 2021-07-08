@@ -467,9 +467,6 @@ bool AView::consumesClick(const glm::ivec2& pos) {
     return true;
 }
 
-void AView::setCustomAss(const RuleWithoutSelector& rule) {
-    mCustomAssRule = rule;
-}
 
 _<AView> AView::determineSharedPointer() {
     if (mParent) {

@@ -455,6 +455,9 @@ public:
 	{
 		return mEnabled;
 	}
+	bool isFocused() const {
+        return mHasFocus;
+    }
 	Visibility getVisibility() const
 	{
 		return mVisibility;
@@ -511,7 +514,14 @@ public:
 	    return mAssHelper;
 	}
 
-	void setCustomAss(const RuleWithoutSelector& rule);
+	const RuleWithoutSelector& getCustomAss() const {
+		return mCustomAssRule;
+	}
+
+	void setCustomAss(const RuleWithoutSelector& rule) {
+		mCustomAssRule = rule;
+	}
+
     void ensureAssUpdated();
 
     /**
