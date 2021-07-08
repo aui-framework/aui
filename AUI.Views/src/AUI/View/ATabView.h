@@ -61,7 +61,6 @@ public:
 class API_AUI_VIEWS ATabView: public AViewContainer {
 private:
     _<APageView> mPageView;
-    _<AViewContainer> mButtonsRow;
     _<ATabButtonRow> mRow;
 
 public:

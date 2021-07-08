@@ -195,7 +195,14 @@ int ATokenizer::readInt()
 }
 
 unsigned ATokenizer::readUInt() {
+    auto [value, _] = readUIntX();
+    return value;
+}
+
+
+std::tuple<unsigned, bool> ATokenizer::readUIntX() {
     AString tmp;
+    bool isHex = false;
     try {
         char c;
         for (;;)
@@ -203,6 +210,9 @@ unsigned ATokenizer::readUInt() {
             c = readChar();
             switch (c)
             {
+                case 'x':
+                case 'X':
+                    isHex = true;
                 case '0':
                 case '1':
                 case '2':
@@ -213,8 +223,6 @@ unsigned ATokenizer::readUInt() {
                 case '7':
                 case '8':
                 case '9':
-                case 'x':
-                case 'X':
 
                     // hex
                 case 'a':
@@ -233,12 +241,12 @@ unsigned ATokenizer::readUInt() {
                     break;
                 default:
                     reverseByte();
-                    return tmp.toUInt();
+                    return {tmp.toUInt(), isHex};
             }
         }
     }
     catch (...) {}
-    return tmp.toUInt();
+    return {tmp.toUInt(), isHex};
 }
 
 void ATokenizer::skipUntilUnescaped(char c) {

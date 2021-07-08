@@ -42,6 +42,7 @@
 #include <AUI/View/ARulerView.h>
 #include <AUI/View/ATreeView.h>
 #include <AUI/View/ADrawableView.h>
+#include <AUI/View/AScrollArea.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 
@@ -433,6 +434,11 @@ AStylesheet::AStylesheet() {
             BackgroundSolid {0xffffff_rgb },
         },
 
+        // scroll area
+        {
+            c(".scrollarea_inner"),
+            Overflow::HIDDEN
+        },
         // scrollbar
         {
             t<AScrollbar>(),

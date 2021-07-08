@@ -134,12 +134,12 @@ AListView::~AListView()
 
 AListView::AListView(const _<IListModel<AString>>& model) {
     ui {
+        mObserver = _new<AListModelObserver<AString>>(this);
         setModel(model);
     };
 }
 
 void AListView::setModel(const _<IListModel<AString>>& model) {
-    mModel = model;
     setLayout(_new<AHorizontalLayout>());
 
     addView(mContent = _new<AListViewContainer>());
@@ -149,39 +149,7 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
     mContent->setExpanding({2, 2});
 
     connect(mScrollbar->scrolled, mContent, &AListViewContainer::setScrollY);
-
-    if (mModel) {
-        for (size_t i = 0; i < model->listSize(); ++i) {
-            mContent->addView(_new<AListItem>(model->listItemAt(i)));
-        }
-
-        connect(mModel->dataInserted, this, [&](const AModelRange<AString>& data) {
-            for (const auto& row : data) {
-                auto view = _new<AListItem>(row.get());
-                mContent->addView(row.getIndex().getRow(), view);
-            }
-            updateLayout();
-            updateScrollbarDimensions();
-            redraw();
-        });
-        connect(mModel->dataChanged, this, [&](const AModelRange<AString>& data) {
-            for (const auto& row : data) {
-                _cast<AListItem>(mContent->getViews()[row.getIndex().getRow()])->setText(row.get());
-            }
-            redraw();
-        });
-        connect(mModel->dataRemoved, this, [&](const AModelRange<AString>& data) {
-            for (const auto& row : data) {
-                mContent->removeView(row.getIndex().getRow());
-            }
-            updateLayout();
-            updateScrollbarDimensions();
-            redraw();
-        });
-    }
-    updateLayout();
-    updateScrollbarDimensions();
-    AWindow::current()->flagRedraw();
+    mObserver->setModel(model);
 }
 
 void AListView::setSize(int width, int height) {
@@ -219,4 +187,25 @@ void AListView::handleMousePressed(AListItem* item) {
 
 void AListView::handleMouseDoubleClicked(AListItem* item) {
     emit itemDoubleClicked(mContent->getIndex());
+}
+
+void AListView::insertItem(size_t at, const AString& value) {
+    mContent->addView(at, _new<AListItem>(value));
+}
+
+void AListView::updateItem(size_t at, const AString& value) {
+    _cast<AListItem>(mContent->getViews()[at])->setText(value);
+}
+
+void AListView::removeItem(size_t at) {
+    mContent->removeView(at);
+}
+
+void AListView::onDataCountChanged() {
+    updateLayout();
+    updateScrollbarDimensions();
+}
+
+void AListView::onDataChanged() {
+    redraw();
 }

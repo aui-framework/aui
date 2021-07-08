@@ -42,10 +42,10 @@ ATabView::ATabView() {
 void ATabView::addTab(const _<AView>& view, const AString& name) {
     mPageView->addPage(view);
     view->setExpanding({2, 2});
-    auto id = mButtonsRow->getViews().size();
+    auto id = mRow->getContents()->getViews().size();
     auto c = _new<ATabButtonView>(name);
     c->setCurrent(id == mPageView->getPageId());
-    mButtonsRow->addView(c);
+    mRow->getContents()->addView(c);
 
     connect(c->clicked, this, [&, id]() {
        setTabId(id);
@@ -76,7 +76,7 @@ ATabButtonRow::ATabButtonRow() {
 }
 
 void ATabButtonRow::setCurrent(size_t i, bool current) {
-    _cast<ATabButtonView>(getViews()[i])->setCurrent(current);
+    _cast<ATabButtonView>(getContents()->getViews()[i])->setCurrent(current);
 }
 
 void ATabButtonRow::addTab(const AString &name) {

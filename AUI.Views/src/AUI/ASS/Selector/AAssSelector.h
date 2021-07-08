@@ -109,6 +109,7 @@ namespace ass {
             processSubSelector(std::forward<SubSelector>(subSelector));
         }
 
+        [[nodiscard]]
         const AVector<_<IAssSubSelector>>& getSubSelectors() const {
             return mSubSelectors;
         }

@@ -119,12 +119,19 @@ public:
 	 * \return read integer number
 	 */
 	int readInt();
+
 	/**
 	 * \brief Reads unsigned integer number.
 	 * \return read unsigned integer number
 	 */
 	unsigned readUInt();
-	
+
+	/**
+	 * \brief Reads unsigned integer number.
+	 * \return read unsigned integer number + bool isHex
+	 */
+	std::tuple<unsigned, bool> readUIntX();
+
 	/**
 	 * \return last read byte. Applicable with <code>ATokenizer::reverseByte()</code>
 	 */

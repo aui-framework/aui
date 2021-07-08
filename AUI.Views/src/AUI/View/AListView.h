@@ -22,6 +22,7 @@
 #pragma once
 
 #include <AUI/Model/AModelSelection.h>
+#include <AUI/Model/AListModelObserver.h>
 #include "AViewContainer.h"
 #include "AUI/Model/AModelIndex.h"
 #include "AUI/Model/IListModel.h"
@@ -30,14 +31,14 @@
 class AListItem;
 class AListViewContainer;
 
-class API_AUI_VIEWS AListView: public AViewContainer
+class API_AUI_VIEWS AListView: public AViewContainer, public AListModelObserver<AString>::IListModelListener
 {
     friend class AListItem;
 private:
     _<AListViewContainer> mContent;
     _<AScrollbar> mScrollbar;
-	_<IListModel<AString>> mModel;
 	ASet<AModelIndex> mSelectionModel;
+	_<AListModelObserver<AString>> mObserver;
 
     void updateScrollbarDimensions();
     void handleMousePressed(AListItem* item);
@@ -56,11 +57,18 @@ public:
     }
 
 	[[nodiscard]] AModelSelection<AString> getSelectionModel() const {
-	    return AModelSelection<AString>(mSelectionModel, mModel.get());
+	    return AModelSelection<AString>(mSelectionModel, mObserver->getModel().get());
 	}
 
     void setSize(int width, int height) override;
     void onMouseWheel(glm::ivec2 pos, int delta) override;
+
+    void insertItem(size_t at, const AString& value) override;
+    void updateItem(size_t at, const AString& value) override;
+    void removeItem(size_t at) override;
+
+    void onDataCountChanged() override;
+    void onDataChanged() override;
 
 signals:
 	emits<AModelSelection<AString>> selectionChanged;

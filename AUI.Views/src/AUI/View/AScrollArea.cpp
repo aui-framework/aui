@@ -33,6 +33,9 @@ private:
     int mScroll = 0;
 
 public:
+    AScrollAreaContainer() {
+        (*this) << ".scrollarea_inner";
+    }
 
     int getContentMinimumWidth() override {
         return 30_dp;
