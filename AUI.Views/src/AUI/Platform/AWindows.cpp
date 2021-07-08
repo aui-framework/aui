@@ -1533,10 +1533,13 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     count = Xutf8LookupString(window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
                                               &status);
 
-                    if (count) {
-                        AString s(buf);
-                        assert(!s.empty());
-                        window->onCharEntered(s[0]);
+                    // delete key
+                    if (buf[0] != 127) {
+                        if (count) {
+                            AString s(buf);
+                            assert(!s.empty());
+                            window->onCharEntered(s[0]);
+                        }
                     }
                     window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
                     break;
