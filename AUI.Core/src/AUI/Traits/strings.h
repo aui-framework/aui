@@ -70,19 +70,19 @@ namespace aui {
     namespace detail::format {
         template<typename T>
         struct type_length {
-            inline static constexpr size_t format_length(T t) {
+            inline static constexpr size_t format_length(const T& t) {
                 return glm::pow(2llu, sizeof(T)) + 1;
             }
         };
         template<>
         struct type_length<wchar_t*> {
-            inline static size_t format_length(wchar_t* t) {
+            inline static size_t format_length(const wchar_t* t) {
                 return wcslen(t);
             }
         };
         template<>
         struct type_length<char*> {
-            inline static size_t format_length(char* t) {
+            inline static size_t format_length(const char* t) {
                 return strlen(t);
             }
         };
@@ -101,13 +101,13 @@ namespace aui {
 
 
         template <typename Arg>
-        inline size_t format_length(Arg&& arg) {
-            return type_length<std::remove_const_t<std::remove_reference_t<Arg>>>::format_length(std::forward<Arg>(arg));
+        inline size_t format_length(const Arg& arg) {
+            return type_length<std::remove_const_t<std::remove_reference_t<Arg>>>::format_length(arg);
         }
         template <typename Arg, typename... Args>
-        inline size_t format_length(Arg&& arg, Args&&... args) {
-            return type_length<std::remove_const_t<std::remove_reference_t<Arg>>>::format_length(std::forward<Arg>(arg))
-                + format_length(std::forward<Args>(args)...);
+        inline size_t format_length(const Arg& arg, const Args&... args) {
+            return type_length<std::remove_const_t<std::remove_reference_t<Arg>>>::format_length(arg)
+                + format_length(args...);
         }
 
 
