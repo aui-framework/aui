@@ -266,7 +266,10 @@ _<AProcess> AProcess::self() {
 }
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {
-    return _new<AOtherProcess>(pid_t(pid));
+    if (APath("/proc")[AString::number(pid)].isDirectoryExists()) {
+        return _new<AOtherProcess>(pid_t(pid));
+    }
+    return nullptr;
 }
 
 int AProcess::execute(const AString& applicationFile, const AString& args, const APath& workingDirectory, bool waitForExit) {
@@ -361,7 +364,10 @@ _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
         ATokenizer t(_new<FileInputStream>(f));
         auto p = t.readInt();
 
-        return AProcess::fromPid(p);
+        auto process = AProcess::fromPid(p);
+        if (process) {
+            return process;
+        }
     } catch (...) {}
 
     try {
