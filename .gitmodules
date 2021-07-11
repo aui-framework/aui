@@ -7,3 +7,6 @@
 [submodule "AUI.Preview"]
 	path = AUI.Preview
 	url = https://github.com/Alex2772/AUI.Preview
+[submodule "AUI.Views/3rdparty/freetype"]
+	path = AUI.Views/3rdparty/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype

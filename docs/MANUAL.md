@@ -8,7 +8,6 @@ Before to get started, you have to compile AUI.
 
 
 1. Download the following dependencies:
-    - for `AUI.Views`: `freetype2`. Note that you need only `AUI.Views` for UI applications
     - for `AUI.Crypt`: `OpenSSL`
     - for `AUI.Curl`: `libcurl`
 2. Download and install [cmake-gui](https://cmake.org/download/)
