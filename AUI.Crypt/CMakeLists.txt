@@ -20,7 +20,7 @@ else()
 	message(STATUS "Using embedded OpenSSL")
 	add_subdirectory(3rdparty/openssl-cmake)
 	target_include_directories(AUI.Crypt PRIVATE 3rdparty/openssl-cmake/include)
-	target_include_directories(AUI.Crypt PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/3rdparty/openssl-cmake/include) # config
+	target_include_directories(AUI.Crypt PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/3rdparty/openssl-cmake/include>) # config
 	target_link_libraries(AUI.Crypt PRIVATE ssl crypto)
 	install(
 			TARGETS ssl crypto
