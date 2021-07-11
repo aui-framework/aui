@@ -55,5 +55,7 @@ else()
 		add_subdirectory(3rdparty/zlib)
 		set_property(TARGET zlibstatic PROPERTY POSITION_INDEPENDENT_CODE ON)
 	endif()
+	target_include_directories(AUI.Core PRIVATE 3rdparty/zlib/)
+	target_include_directories(AUI.Core PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/3rdparty/zlib) # zconf.h
 	target_link_libraries(AUI.Core PRIVATE zlibstatic)
 endif()
