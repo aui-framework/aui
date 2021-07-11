@@ -34,9 +34,21 @@
 
 _<Dll> Dll::load(const AString& path)
 {
+    auto doLoad = [](const APath& fp) -> _<Dll> {
+        auto name = fp.toStdString();
+        auto lib = dlopen(name.c_str(), RTLD_LAZY);
+        if (lib) {
+            return _<Dll>(new Dll(lib));
+        }
+        return nullptr;
+    };
+
 #ifdef _MSC_VER
     auto fullname = path + "." + getDllExtension();
 #else
+    if (APath(path).isRegularFileExists()) {
+        return doLoad(path);
+    }
     auto fullname = "lib" + path + "." + getDllExtension();
 #endif
 #if defined(_WIN32)
@@ -78,10 +90,8 @@ _<Dll> Dll::load(const AString& path)
         }
 	    try {
             if (fp.isRegularFileExists()) {
-                auto name = fp.toStdString();
-                auto lib = dlopen(name.c_str(), RTLD_LAZY);
-                if (lib) {
-                    return _<Dll>(new Dll(lib));
+                if (auto dll = doLoad(fp)) {
+                    return dll;
                 }
                 dlErrors[counter] = dlerror();
             }

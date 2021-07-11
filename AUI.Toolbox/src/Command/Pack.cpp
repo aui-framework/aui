@@ -157,7 +157,7 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
              << cppObjectName
              << ", sizeof(AUI_PACKED_asset"_as
              << cppObjectName << "));\n\t}\n};\n"
-                                 "static Assets"_as
+                                 "Assets"_as
              << cppObjectName
              << " a"_as << cppObjectName << ";"_as;
         out = nullptr;

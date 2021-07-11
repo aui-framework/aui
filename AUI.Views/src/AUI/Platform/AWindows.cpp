@@ -435,7 +435,7 @@ AWindow::Context::~Context() {
     wglDeleteContext(hrc);
 #elif defined(ANDROID)
 #else
-    glXDestroyContext(gDisplay, context);
+    //glXDestroyContext(gDisplay, context);
 #endif
 }
 
