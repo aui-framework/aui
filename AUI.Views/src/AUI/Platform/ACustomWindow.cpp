@@ -32,7 +32,7 @@ const int AUI_TITLE_HEIGHT = 30;
 #include "AUI/Render/Render.h"
 #include "AUI/Common/AColor.h"
 #include "AUI/Image/Drawables.h"
-#include "AUI/Render/AFontManager.h"
+#include "AUI/Platform/AFontManager.h"
 
 #include <dwmapi.h>
 #include <AUI/Util/kAUI.h>

@@ -101,15 +101,6 @@ private:
 	AWindow* mParentWindow;
 
     /**
-     * _NET_WM_SYNC_REQUEST (resize flicker fix) update request counter
-     */
-    struct {
-        uint32_t lo = 0;
-        uint32_t hi = 0;
-        XID counter;
-    } mXsyncRequestCounter;
-
-    /**
      * \brief Handles self shared pointer.
      */
 	_<AWindow> mSelfHolder;
@@ -120,7 +111,17 @@ private:
 		HGLRC hrc = 0;
 #elif defined(ANDROID)
 #else
-        GLXContext context;
+
+    /**
+     * _NET_WM_SYNC_REQUEST (resize flicker fix) update request counter
+     */
+    struct {
+        uint32_t lo = 0;
+        uint32_t hi = 0;
+        XID counter;
+    } mXsyncRequestCounter;
+
+    GLXContext context;
 #endif
 
 		~Context();

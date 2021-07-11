@@ -48,7 +48,6 @@
 #include <AUI/Traits/arrays.h>
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
-#include <X11/extensions/sync.h>
 
 constexpr bool AUI_DISPLAY_BOUNDS = false;
 AWindow::Context AWindow::context = {};
@@ -337,6 +336,8 @@ public:
     }
 };
 #else
+
+#include <X11/extensions/sync.h>
 
 Display* gDisplay = nullptr;
 Screen* gScreen;

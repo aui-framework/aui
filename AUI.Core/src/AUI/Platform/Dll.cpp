@@ -34,6 +34,9 @@
 
 _<Dll> Dll::load(const AString& path)
 {
+#ifdef _MSC_VER
+    auto fullname = path + "." + getDllExtension();
+#else
     auto doLoad = [](const APath& fp) -> _<Dll> {
         auto name = fp.toStdString();
         auto lib = dlopen(name.c_str(), RTLD_LAZY);
@@ -43,9 +46,6 @@ _<Dll> Dll::load(const AString& path)
         return nullptr;
     };
 
-#ifdef _MSC_VER
-    auto fullname = path + "." + getDllExtension();
-#else
     if (APath(path).isRegularFileExists()) {
         return doLoad(path);
     }

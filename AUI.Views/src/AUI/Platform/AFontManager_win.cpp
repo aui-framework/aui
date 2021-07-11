@@ -25,9 +25,10 @@
 
 
 #ifdef _WIN32
+#include <Windows.h>
 #include <AUI/Platform/AFontManager.h>
 #include "AUI/Render/FreeType.h"
-#include <Windows.h>
+#include <AUI/IO/APath.h>
 
 AFontManager::AFontManager() :
         mFreeType(_new<FreeType>())

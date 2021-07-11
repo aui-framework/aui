@@ -24,6 +24,7 @@
 #include "AUI/IO/APath.h"
 
 #if defined(_WIN32)
+#include <Windows.h>
 void Platform::playSystemSound(Sound s)
 {
 	switch (s)
