@@ -1,0 +1,35 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="16.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="C:\Users\Cmenu\Desktop\magicsea\source\libs\engine\libs\glew-2.2.0\src\glew.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="C:\Users\Cmenu\Desktop\magicsea\source\libs\engine\libs\glew-2.2.0\include\GL\wglew.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Cmenu\Desktop\magicsea\source\libs\engine\libs\glew-2.2.0\include\GL\glew.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\Cmenu\Desktop\magicsea\source\libs\engine\libs\glew-2.2.0\include\GL\glxew.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <CustomBuild Include="C:\Users\Cmenu\Desktop\magicsea\source\libs\engine\libs\glew-2.2.0\build\cmake\CMakeLists.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="C:\Users\Cmenu\Desktop\magicsea\source\libs\engine\libs\glew-2.2.0\build\glew.rc">
+      <Filter>Source Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{757F0863-B5D1-3990-AAEB-C0BFA18401CD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{FE2FC645-44E7-3269-A585-5379D15B5367}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

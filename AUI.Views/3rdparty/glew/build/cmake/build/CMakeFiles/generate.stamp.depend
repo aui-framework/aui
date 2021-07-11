@@ -1,0 +1,25 @@
+# CMake generation dependency list for this directory.
+C:/Program Files/CMake/share/cmake-3.20/Modules/CMakeCInformation.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/CMakeCommonLanguageInclude.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/CMakeGenericSystem.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/CMakeInitializeConfigs.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/CMakeLanguageInformation.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/CMakeRCInformation.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/CMakeSystemSpecificInformation.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/CMakeSystemSpecificInitialize.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/Compiler/CMakeCommonCompilerMacros.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/Compiler/MSVC-C.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/FindOpenGL.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/FindPackageHandleStandardArgs.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/FindPackageMessage.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/GNUInstallDirs.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/Platform/Windows-MSVC-C.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/Platform/Windows-MSVC.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/Platform/Windows.cmake
+C:/Program Files/CMake/share/cmake-3.20/Modules/Platform/WindowsPaths.cmake
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/CMakeLists.txt
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/build/CMakeFiles/3.20.0-rc5/CMakeCCompiler.cmake
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/build/CMakeFiles/3.20.0-rc5/CMakeRCCompiler.cmake
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/build/CMakeFiles/3.20.0-rc5/CMakeSystem.cmake
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/cmake_uninstall.cmake.in
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/glew.pc.in

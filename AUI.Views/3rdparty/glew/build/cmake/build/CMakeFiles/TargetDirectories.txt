@@ -1,0 +1,8 @@
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/build/CMakeFiles/glewinfo.dir
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/build/CMakeFiles/glew.dir
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/build/CMakeFiles/glew_s.dir
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/build/CMakeFiles/uninstall.dir
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/build/CMakeFiles/visualinfo.dir
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/build/CMakeFiles/INSTALL.dir
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/Cmenu/Desktop/magicsea/source/libs/engine/libs/glew-2.2.0/build/cmake/build/CMakeFiles/ZERO_CHECK.dir

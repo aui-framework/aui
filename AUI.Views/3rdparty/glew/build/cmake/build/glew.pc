@@ -1,0 +1,11 @@
+prefix=C:/Program Files (x86)/glew
+exec_prefix=${prefix}
+libdir=C:/Program Files (x86)/glew/lib
+includedir=${prefix}/include
+
+Name: glew
+Description: The OpenGL Extension Wrangler library
+Version: 2.2.0
+Cflags: -I${includedir} 
+Libs: -L${libdir} -lglew32 
+Requires: glu
