@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,40 +19,56 @@
  * =====================================================================================================================
  */
 
-#include <AUI/Url/AUrl.h>
-#include "AFontManager.h"
-#include "AUI/Platform/Platform.h"
-#include "FreeType.h"
+//
+// Created by alex2 on 30.08.2020.
+//
 
-AFontManager::AFontManager() :
-	mFreeType(_new<FreeType>())
-{
-}
+#include <AUI/Common/AString.h>
+#include <AUI/Json/AJson.h>
+#include <AUI/Json/AJsonElement.h>
 
-AFontManager::~AFontManager() {
-	mItems.clear();
-}
 
-_<AFont> AFontManager::newItem(const AString& name) {
-    if (name.contains(":")) {
-        // url
-        return _new<AFont>(this, AUrl(name));
+#include <boost/test/unit_test.hpp>
+using namespace boost::unit_test;
+BOOST_AUTO_TEST_SUITE(Json)
+
+
+
+// ORM data class
+struct Data2 {
+    AVector<int> values;
+
+    bool operator==(const Data2& o) const {
+        return values == o.values;
     }
 
-	return _new<AFont>(this, Platform::getFontPath(name));
+    AJSON_FIELDS(values)
+};
+
+std::ostream& operator<<(std::ostream& o, const Data2& d) {
+    o << '[';
+    for (auto& v : d.values) {
+        o << v << ", ";
+    }
+    o << ']';
+    return o;
 }
 
-_<AFont> AFontManager::getDefault() {
-#if defined(_WIN32)
-	return get("segoeui");
-#elif defined(ANDROID)
-	return get(":and/font/Roboto-Medium.ttf");
-#else
-	return get("ubuntu/Ubuntu-R.ttf");
-#endif
+BOOST_AUTO_TEST_CASE(CustomConverter)
+{
+    // arrange
+    Data2 d = { {1, 2, 3} };
+
+    // check for serialization
+    auto jsonObject = d.toJson();
+    BOOST_CHECK_EQUAL(AJson::toString(jsonObject), R"({"values":[1,2,3]})");
+
+    Data2 d2;
+    d2.readJson(jsonObject);
+    BOOST_CHECK_EQUAL(d, d2);
 }
 
-AFontManager& AFontManager::inst() {
-    static AFontManager f;
-    return f;
-}
+
+
+BOOST_AUTO_TEST_SUITE_END()
+

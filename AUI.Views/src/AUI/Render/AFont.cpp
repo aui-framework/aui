@@ -23,7 +23,7 @@
 #include <freetype/freetype.h>
 #include "FreeType.h"
 #include "AFontCharacter.h"
-#include "AFontManager.h"
+#include "AUI/Platform/AFontManager.h"
 #include <fstream>
 #include <string>
 #include "AUI/Common/AStringVector.h"
@@ -85,7 +85,7 @@ AFont::FontData& AFont::getCharsetBySize(long size, FontRendering fr) {
 AFont::Character* AFont::renderGlyph(FontData& fs, long glyph, long size, FontRendering fr) {
 	FT_Set_Pixel_Sizes(face, 0, size);
 
-	FT_Int32 flags = FT_LOAD_RENDER;// | FT_LOAD_FORCE_AUTOHINT;
+	FT_Int32 flags = FT_LOAD_RENDER;
 	if (fr == FontRendering::SUBPIXEL)
 		flags |= FT_LOAD_TARGET_LCD;
 	if (fr == FontRendering::NEAREST)

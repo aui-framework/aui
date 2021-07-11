@@ -41,10 +41,10 @@ namespace ass {
     namespace detail {
         struct ClassOf : virtual IAssSubSelector {
         private:
-            AVector<AString> mClasses;
+            AStringVector mClasses;
             
         public:
-            ClassOf(const AVector<AString>& classes) : mClasses(classes) {}
+            ClassOf(const AStringVector& classes) : mClasses(classes) {}
             ClassOf(const AString& clazz) : mClasses({clazz}) {}
 
             bool isPossiblyApplicable(AView* view) override {
@@ -55,12 +55,15 @@ namespace ass {
                 return false;
             }
 
+            const AStringVector& getClasses() const {
+                return mClasses;
+            }
         };
     }
 
     struct class_of: detail::ClassOf, AttributeHelper<class_of> {
     public:
-        class_of(const AVector<AString>& classes) : ClassOf(classes) {}
+        class_of(const AStringVector& classes) : ClassOf(classes) {}
         class_of(const AString& clazz) : ClassOf(clazz) {}
 
         using hover = ass::hovered<detail::ClassOf>;

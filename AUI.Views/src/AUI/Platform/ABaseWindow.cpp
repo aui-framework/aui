@@ -177,6 +177,10 @@ void ABaseWindow::flagRedraw() {
 
 }
 
+void ABaseWindow::flagUpdateLayout() {
+
+}
+
 ABaseWindow*& ABaseWindow::currentWindowStorage() {
     thread_local ABaseWindow* threadLocal = nullptr;
     static ABaseWindow* global = nullptr;

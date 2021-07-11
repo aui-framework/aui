@@ -104,21 +104,54 @@ public:
 	struct contains_iterator
 	{
 	private:
-		const_iterator mIterator;
+		iterator mIterator;
 		bool mValid;
 		
 	public:
-		contains_iterator(const const_iterator& p, bool valid):
+		contains_iterator(const iterator& p, bool valid):
 			mIterator(p),
 			mValid(valid)
 		{
 			
 		}
-		contains_iterator(const contains_iterator& c):
+        contains_iterator(const contains_iterator& c):
 			mIterator(c.mIterator),
 			mValid(c.mValid)
 		{
 			
+		}
+
+		operator bool() const noexcept {
+			return mValid;
+		}
+
+		iterator operator->() const noexcept
+		{
+			return mIterator;
+		}
+		iterator operator*() const noexcept
+		{
+			return mIterator;
+		}
+	};
+	struct const_contains_iterator
+	{
+	private:
+		const_iterator mIterator;
+		bool mValid;
+
+	public:
+		const_contains_iterator(const const_iterator& p, bool valid):
+			mIterator(p),
+			mValid(valid)
+		{
+
+		}
+        const_contains_iterator(const const_contains_iterator& c):
+			mIterator(c.mIterator),
+			mValid(c.mValid)
+		{
+
 		}
 
 		operator bool() const noexcept {
@@ -148,7 +181,13 @@ public:
 	    return it->second;
 	}
 
-	contains_iterator contains(const KeyType& key) const
+	const_contains_iterator contains(const KeyType& key) const
+	{
+		auto it = parent::find(key);
+		return const_contains_iterator(it, it != parent::end());
+	}
+
+    contains_iterator contains(const KeyType& key)
 	{
 		auto it = parent::find(key);
 		return contains_iterator(it, it != parent::end());

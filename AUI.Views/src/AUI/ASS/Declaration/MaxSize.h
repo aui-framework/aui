@@ -30,10 +30,10 @@
 
 namespace ass {
     struct MaxSize {
-        AMetric width;
-        AMetric height;
+        unset_wrap<AMetric> width;
+        unset_wrap<AMetric> height;
 
-        MaxSize(const AMetric& width, const AMetric& height) : width(width), height(height) {}
+        MaxSize(const unset_wrap <AMetric>& width, const unset_wrap <AMetric>& height) : width(width), height(height) {}
         explicit MaxSize(const AMetric& side) : width(side), height(side) {}
     };
 

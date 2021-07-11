@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,23 +19,53 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 7/1/2021.
+//
+
+
 #pragma once
 
-#include "AUI/Common/SharedPtr.h"
-#include "AUI/Util/Manager.h"
-#include "AUI/Render/AFont.h"
+#include <AUI/Common/ASignal.h>
+#include "AUI/Common/AVariant.h"
+#include "AModelRange.h"
 
-class API_AUI_VIEWS AFontManager: public Manager<AFont> {
-public:
-	AFontManager();
-    AFontManager(const AFontManager&) = delete;
-    virtual ~AFontManager();
-
-    static AFontManager& inst();
-
-	_<FreeType> mFreeType;
-	_<AFont> getDefault();
+class ATreeIndex {
 private:
-	_<AFont> newItem(const AString& name) override;
-	friend class AFont;
+    void* mUserData;
+
+public:
+    ATreeIndex() = default;
+
+    explicit ATreeIndex(void* userData):
+            mUserData(userData)
+    {
+    }
+
+    [[nodiscard]]
+    void* getUserData() const {
+        return mUserData;
+    }
+};
+
+template<typename T>
+class ITreeModel
+{
+protected:
+    virtual void* rootUserData() = 0;
+
+public:
+    virtual ~ITreeModel() = default;
+
+    virtual size_t childrenCount(const ATreeIndex& parent) = 0;
+    virtual T itemAt(const ATreeIndex& index) = 0;
+    virtual ATreeIndex indexOfChild(size_t row, size_t column, const ATreeIndex& parent) = 0;
+
+    ATreeIndex root() {
+        return ATreeIndex{rootUserData()};
+    }
+
+    using stored_t = T;
+
+signals:
 };

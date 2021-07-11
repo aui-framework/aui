@@ -49,6 +49,10 @@ namespace ass {
             mWrapped(std::forward<_unique<IAssSubSelector>>(wrapped)),
             mAttributeName(attributeName) {}
 
+        AttributeWrapper(const _<IAssSubSelector>& mWrapped, const AString& mAttributeName) : mWrapped(mWrapped),
+                                                                                              mAttributeName(
+                                                                                                      mAttributeName) {}
+
         bool isPossiblyApplicable(AView* view) override {
             return mWrapped->isPossiblyApplicable(view);
         }

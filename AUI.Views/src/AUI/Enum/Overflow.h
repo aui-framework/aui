@@ -25,7 +25,11 @@
 
 #pragma once
 
+#include <AUI/Reflect/AEnumerate.h>
+
 enum class Overflow {
     VISIBLE,
     HIDDEN
 };
+
+ENUM_VALUES(Overflow, Overflow::VISIBLE, Overflow::HIDDEN)

@@ -194,6 +194,61 @@ int ATokenizer::readInt()
 	return tmp.toInt();
 }
 
+unsigned ATokenizer::readUInt() {
+    auto [value, _] = readUIntX();
+    return value;
+}
+
+
+std::tuple<unsigned, bool> ATokenizer::readUIntX() {
+    AString tmp;
+    bool isHex = false;
+    try {
+        char c;
+        for (;;)
+        {
+            c = readChar();
+            switch (c)
+            {
+                case 'x':
+                case 'X':
+                    isHex = true;
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+
+                    // hex
+                case 'a':
+                case 'A':
+                case 'b':
+                case 'B':
+                case 'c':
+                case 'C':
+                case 'd':
+                case 'D':
+                case 'e':
+                case 'E':
+                case 'f':
+                case 'F':
+                    tmp += c;
+                    break;
+                default:
+                    reverseByte();
+                    return {tmp.toUInt(), isHex};
+            }
+        }
+    }
+    catch (...) {}
+    return {tmp.toUInt(), isHex};
+}
+
 void ATokenizer::skipUntilUnescaped(char c) {
     for (char current; (current = readChar()) != c;)
     {

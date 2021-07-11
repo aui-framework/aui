@@ -22,7 +22,7 @@
 #include "Render.h"
 
 #include <glm/gtc/matrix_transform.hpp>
-#include "AFontManager.h"
+#include "AUI/Platform/AFontManager.h"
 #include <AUI/Common/AColor.h>
 #include <AUI/Common/ASide.h>
 #include <AUI/Platform/AWindow.h>
@@ -662,6 +662,10 @@ void Render::applyTextureRepeat() {
 Render& Render::inst() {
     static Render r;
     return r;
+}
+
+void Render::translate(const glm::vec2& offset) {
+    mTransform = glm::translate(mTransform, glm::vec3(offset, 0.f));
 }
 
 

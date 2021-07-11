@@ -50,6 +50,11 @@ public:
         emit invalidateStateAss();
     }
 
+    [[nodiscard]]
+    const AVector<const Rule*>& getPossiblyApplicableRules() const {
+        return mPossiblyApplicableRules;
+    }
+
     struct {
         ass::BackgroundImage backgroundUrl;
     } state;

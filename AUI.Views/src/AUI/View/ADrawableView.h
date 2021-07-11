@@ -36,6 +36,11 @@ public:
     ADrawableView(const _<IDrawable>& drawable);
     void render() override;
 
+    void setDrawable(const _<IDrawable>& drawable) {
+        mDrawable = drawable;
+        redraw();
+    }
+
 protected:
 
 };

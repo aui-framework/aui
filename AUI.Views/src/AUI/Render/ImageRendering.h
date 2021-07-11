@@ -26,8 +26,11 @@
 
 #pragma once
 
+#include <AUI/Reflect/AEnumerate.h>
 
 enum class ImageRendering {
     PIXELATED,
     SMOOTH
 };
+
+ENUM_VALUES(ImageRendering, ImageRendering::PIXELATED, ImageRendering::SMOOTH)

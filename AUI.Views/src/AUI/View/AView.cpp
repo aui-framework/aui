@@ -34,9 +34,10 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/ASS/AStylesheet.h>
 #include <AUI/Traits/memory.h>
+#include <AUI/Logging/ALogger.h>
 
 #include "AUI/Platform/ADesktop.h"
-#include "AUI/Render/AFontManager.h"
+#include "AUI/Platform/AFontManager.h"
 #include "AUI/Util/AMetric.h"
 #include "AUI/Util/Factory.h"
 
@@ -412,9 +413,9 @@ void AView::setAnimator(const _<AAnimator>& animator) {
         mAnimator->setView(this);
 }
 
-glm::ivec2 AView::getPositionInWindow() {
+glm::ivec2 AView::getPositionInWindow() const {
     glm::ivec2 p(0);
-    for (AView* i = this; i && i->getParent(); i = i->getParent()) {
+    for (const AView* i = this; i && i->getParent(); i = i->getParent()) {
         p += i->getPosition();
     }
     return p;
@@ -426,6 +427,14 @@ void AView::setPosition(const glm::ivec2& position) {
 }
 void AView::setSize(int width, int height)
 {
+    /*
+    int minWidth = getContentMinimumWidth();
+    int minHeight = getContentMinimumHeight();
+
+    // some bias is allowed
+    assert(minWidth <= width + 5);
+    assert(minHeight <= height + 5);
+*/
     if (mFixedSize.x != 0)
     {
         mSize.x = mFixedSize.x;
@@ -458,9 +467,6 @@ bool AView::consumesClick(const glm::ivec2& pos) {
     return true;
 }
 
-void AView::setCustomAss(const RuleWithoutSelector& rule) {
-    mCustomAssRule = rule;
-}
 
 _<AView> AView::determineSharedPointer() {
     if (mParent) {
@@ -510,3 +516,4 @@ void AView::notifyParentEnabledStateChanged(bool enabled) {
    mParentEnabled = enabled;
    updateEnableState();
 }
+

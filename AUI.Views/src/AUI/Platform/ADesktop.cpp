@@ -236,6 +236,53 @@ void ADesktop::openUrl(const AString& url) {
     system(s.c_str());
 }
 
+_<AFuture<APath>> ADesktop::browseForFile(const APath& startingLocation, const AVector<FileExtension>& extensions) {
+    return async {
+        aui_gtk_init();
+        GtkWidget *dialog;
+        GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
+        gint res;
+
+        dialog = gtk_file_chooser_dialog_new ("Open file"_i18n.toStdString().c_str(),
+                                              nullptr,
+                                              action,
+                                              "Cancel"_i18n.toStdString().c_str(),
+                                              GTK_RESPONSE_CANCEL,
+                                              "Open"_i18n.toStdString().c_str(),
+                                              GTK_RESPONSE_ACCEPT,
+                                              nullptr);
+
+
+        gtk_file_chooser_set_current_folder(reinterpret_cast<GtkFileChooser*>(dialog), startingLocation.toStdString().c_str());
+
+        gtk_window_set_keep_above(GTK_WINDOW(dialog), true);
+        gtk_window_activate_focus(GTK_WINDOW(dialog));
+
+        res = gtk_dialog_run (GTK_DIALOG (dialog));
+        if (res == GTK_RESPONSE_ACCEPT)
+        {
+            char *filename;
+            GtkFileChooser *chooser = GTK_FILE_CHOOSER (dialog);
+            filename = gtk_file_chooser_get_filename (chooser);
+            APath f = filename;
+            g_free(filename);
+            gtk_widget_destroy (dialog);
+
+            while (gtk_events_pending()) {
+                gtk_main_iteration();
+            }
+            return f;
+        }
+
+        gtk_widget_destroy (dialog);
+
+        while (gtk_events_pending()) {
+            gtk_main_iteration();
+        }
+        return APath{};
+    };
+}
+
 _<AFuture<APath>> ADesktop::browseForFolder(const APath& startingLocation) {
     return async {
         aui_gtk_init();

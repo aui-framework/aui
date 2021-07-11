@@ -80,9 +80,7 @@ void AAbstractTextField::render()
         }
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     } else {
-	    if (!mPrerenderedString.mVao) {
-            mPrerenderedString = Render::inst().preRendererString(getContentsPasswordWrap(), getFontStyle());
-	    }
+	    prerenderStringIfNeeded();
         Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, mPrerenderedString);
         Render::inst().setFill(Render::FILL_SOLID);
         Render::inst().setColor({1, 1, 1, 1 });
@@ -173,5 +171,11 @@ void AAbstractTextField::onCharEntered(wchar_t c) {
         Platform::playSystemSound(Platform::S_ASTERISK);
     }
     emit textChanging(mContents);
+}
+
+void AAbstractTextField::prerenderStringIfNeeded() {
+    if (!mPrerenderedString.mVao) {
+        mPrerenderedString = Render::inst().preRendererString(getContentsPasswordWrap(), getFontStyle());
+    }
 }
 

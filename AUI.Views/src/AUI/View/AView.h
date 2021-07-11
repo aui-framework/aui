@@ -209,6 +209,11 @@ public:
 
 	void popStencilIfNeeded();
 
+	[[nodiscard]]
+    const ADeque<AString>& getAssNames() const {
+        return mAssNames;
+    }
+
     /**
      * \brief Top left corner's position relative to top left corner's position of the parent AView.
      */
@@ -420,6 +425,9 @@ public:
     virtual void invalidateFont();
 	virtual void setPosition(const glm::ivec2& position);
 
+	void setSize(const glm::ivec2& size) {
+        setSize(size.x, size.y);
+	}
     virtual void setSize(int width, int height);
     virtual void setGeometry(int x, int y, int width, int height);
 
@@ -447,6 +455,9 @@ public:
 	{
 		return mEnabled;
 	}
+	bool isFocused() const {
+        return mHasFocus;
+    }
 	Visibility getVisibility() const
 	{
 		return mVisibility;
@@ -473,7 +484,7 @@ public:
 	/**
 	 * \return Coords of this AView relative to window
 	 */
-    [[nodiscard]] glm::ivec2 getPositionInWindow();
+    [[nodiscard]] glm::ivec2 getPositionInWindow() const;
 
 	const ADeque<AString>& getCssNames() const;
 
@@ -503,7 +514,14 @@ public:
 	    return mAssHelper;
 	}
 
-	void setCustomAss(const RuleWithoutSelector& rule);
+	const RuleWithoutSelector& getCustomAss() const {
+		return mCustomAssRule;
+	}
+
+	void setCustomAss(const RuleWithoutSelector& rule) {
+		mCustomAssRule = rule;
+	}
+
     void ensureAssUpdated();
 
     /**

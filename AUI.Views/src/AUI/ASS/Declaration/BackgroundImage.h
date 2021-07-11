@@ -37,6 +37,10 @@ namespace ass {
          */
         FIT,
 
+        /**
+         * Center the image
+         */
+        CENTER,
 
         /**
          * Resize image to view's content area without keeping aspect ratio.
@@ -108,3 +112,12 @@ namespace ass {
 
     }
 }
+
+
+ENUM_VALUES(ass::Sizing,
+            ass::Sizing::NONE,
+            ass::Sizing::FIT,
+            ass::Sizing::FIT_PADDING,
+            ass::Sizing::COVER,
+            ass::Sizing::CONTAIN,
+            ass::Sizing::SPLIT_2X2)

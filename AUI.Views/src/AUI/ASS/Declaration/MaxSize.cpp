@@ -26,5 +26,8 @@
 #include "MaxSize.h"
 
 void ass::decl::Declaration<ass::MaxSize>::applyFor(AView* view) {
-    view->setMaxSize({mInfo.width.getValuePx(), mInfo.height.getValuePx()});
+    view->setMaxSize({
+                               mInfo.width ? mInfo.width->getValuePx() : view->getMaxSize().x,
+                               mInfo.height ? mInfo.height->getValuePx() : view->getMaxSize().y
+                       });
 }

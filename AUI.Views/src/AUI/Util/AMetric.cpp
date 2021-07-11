@@ -80,3 +80,24 @@ float AMetric::getValuePx() const
 		return mValue;
 	}
 }
+
+float AMetric::getValueDp() const {
+    float dpi;
+    if (AWindow::current())
+        dpi = AWindow::current()->getDpiRatio();
+    else
+        dpi = Platform::getDpiRatio();
+
+    switch (mUnit)
+    {
+        case T_PX:
+            return mValue / dpi;
+        case T_DP:
+            return mValue;
+        case T_PT:
+            return mValue * 3.f / 4.f;
+
+        default:
+            return mValue;
+    }
+}

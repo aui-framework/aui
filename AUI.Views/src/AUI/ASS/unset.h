@@ -75,7 +75,7 @@ namespace ass {
         }
 
 
-        unset_wrap<T>& operator=(const unset_wrap<T>& v);
+        unset_wrap<T>& operator=(const unset_wrap<T>& v) noexcept;
 
         operator bool() const {
             return set;
@@ -106,7 +106,7 @@ namespace ass {
     }
 
     template<typename T>
-    unset_wrap<T>& unset_wrap<T>::operator=(const unset_wrap<T>& v) {
+    unset_wrap<T>& unset_wrap<T>::operator=(const unset_wrap<T>& v) noexcept {
         detail::unset::init(*this, stored, set, v);
         return *this;
     }

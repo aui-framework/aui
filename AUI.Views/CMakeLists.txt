@@ -10,7 +10,7 @@ if (OPENGL_FOUND)
 			PKG_CHECK_MODULES(GTK3 gtk+-3.0)
 
 			if (NOT GTK3_FOUND)
-				message("Could not find GTK3; Disabling AUI.Views")
+				message(WARNING "Could not find GTK3; Disabling AUI.Views. Hint: install package libgtk-3-dev")
 				return()
 			endif()
 		endif ()

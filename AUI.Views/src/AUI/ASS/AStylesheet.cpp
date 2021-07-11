@@ -38,6 +38,11 @@
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/AVDividerView.h>
 #include <AUI/View/ATabView.h>
+#include <AUI/Platform/ACustomCaptionWindow.h>
+#include <AUI/View/ARulerView.h>
+#include <AUI/View/ATreeView.h>
+#include <AUI/View/ADrawableView.h>
+#include <AUI/View/AScrollArea.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 
@@ -231,6 +236,29 @@ AStylesheet::AStylesheet() {
             Border { 1_px, 0xa0a0a0_rgb },
         },
 
+        // ARulerView
+        {
+            t<ARulerView>(),
+            MinSize { 16_dp },
+            BackgroundSolid { 0x20000000_argb },
+            TextColor { 0x40000000_argb },
+            Overflow::HIDDEN,
+            FontSize { 8_pt },
+        },
+        {
+            c(".arulerarea-content"),
+            Border { 1_px, 0x40808080_argb },
+        },
+        {
+            c(".arulerarea-unit"),
+            MaxSize { 16_dp },
+            BackgroundSolid { 0x20000000_argb },
+            FontSize { 9_pt },
+            TextColor { 0x40000000_argb },
+            Margin { 0 },
+            Padding { 1_dp },
+        },
+
         // ARadioButton
         {
             t<ARadioButton>(),
@@ -283,7 +311,7 @@ AStylesheet::AStylesheet() {
 
         // AListView
         {
-            t<AListView>(),
+            {t<AListView>(), t<ATreeView>()},
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_px, 0x828790_rgb },
             Padding { 2_px, 0, 2_px, 2_px },
@@ -293,16 +321,32 @@ AStylesheet::AStylesheet() {
             Overflow::HIDDEN,
         },
         {
-            t<AListView>() > t<AViewContainer>() > t<ALabel>(),
+            t<ATreeView>() > t<AViewContainer>() > c(".list-item") > t<ALabel>(),
+            Padding { 0, 2_dp },
+            Margin { 0 },
+        },
+        {
+            c(".list-item-icon"),
+            MinSize { 7_pt, 7_pt },
+            Margin { 2_dp, {} },
+        },
+        {
+            c(".list-item-group"),
+            Padding { 0, 0, 0, 4_dp },
+            Margin { 0, 0, 4_dp, 15_dp },
+            BorderLeft { 1_dp, 0x0_rgb },
+        },
+        {
+            {t<AListView>() > t<AViewContainer>() > t<ALabel>(), c(".list-item")},
             Margin { 0 },
             Padding { 1_px, 4_px, 4_px },
         },
         {
-            t<AListView>() > t<AViewContainer>() > t<ALabel>::hover(),
+            {t<AListView>() > t<AViewContainer>() > t<ALabel>::hover(), c::hover(".list-item"),},
             BackgroundSolid { 0xe5f3ff_rgb },
         },
         {
-            t<AListView>() > t<AViewContainer>() > t<ALabel>()["selected"],
+            {t<AListView>() > t<AViewContainer>() > t<ALabel>()["selected"], c(".list-item")["selected"]},
             BackgroundSolid { 0xcde8ff_rgb },
         },
 
@@ -317,6 +361,10 @@ AStylesheet::AStylesheet() {
         },
 
         // CUSTOM WINDOWS ===================================================
+        {
+            type_of<ACustomCaptionWindow>(),
+            Padding { 0 },
+        },
         {
             class_of(".window-title"),
             BackgroundSolid { getOsThemeColor() },
@@ -336,15 +384,16 @@ AStylesheet::AStylesheet() {
             Margin { 0 },
             Padding { 0 },
             MinSize { 45_dp, 29_dp },
-            BackgroundSolid { nullptr }
+            BackgroundSolid { nullptr },
+            BackgroundImage {{}, {}, {}, Sizing::CENTER }
         },
         {
             class_of(".window-title") >> class_of(".minimize"),
-            BackgroundImage {":uni/caption/minimize.svg" }
+            BackgroundImage {":uni/caption/minimize.svg", {}, {}, Sizing::CENTER }
         },
         {
             class_of(".window-title") >> class_of(".close"),
-            BackgroundImage {":uni/caption/close.svg" }
+            BackgroundImage {":uni/caption/close.svg", {}, {}, Sizing::CENTER }
         },
         {
             class_of(".window-title") >> t<AButton>::hover(),
@@ -385,6 +434,11 @@ AStylesheet::AStylesheet() {
             BackgroundSolid {0xffffff_rgb },
         },
 
+        // scroll area
+        {
+            c(".scrollarea_inner"),
+            Overflow::HIDDEN
+        },
         // scrollbar
         {
             t<AScrollbar>(),
@@ -461,11 +515,6 @@ AStylesheet::AStylesheet() {
 }
 
 
-AStylesheet& AStylesheet::inst() {
-    static AStylesheet s;
-    return s;
-}
-
 AColor AStylesheet::getOsThemeColor() {
 #if defined(_WIN32)
     auto impl = []() {
@@ -486,4 +535,13 @@ AColor AStylesheet::getOsThemeColor() {
 #else
     return 0x3e3e3e_rgb;
 #endif
+}
+
+AStylesheet& AStylesheet::inst() {
+    return *instStorage();
+}
+
+_<AStylesheet>& AStylesheet::instStorage() {
+    static _<AStylesheet> s = _new<AStylesheet>();
+    return s;
 }

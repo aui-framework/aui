@@ -31,6 +31,10 @@ class API_AUI_VIEWS AImageView: public AView {
 private:
     _<GL::Texture2D> mTexture;
     glm::ivec2 mImageSize = {10, 10};
+    /**
+     * See AImageView::setSize
+     */
+    bool mRunningAspectRatioKeepingRoutine = false;
 
 public:
     explicit AImageView(const _<GL::Texture2D>& texture);

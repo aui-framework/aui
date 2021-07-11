@@ -114,6 +114,8 @@ signals:
     emits<int> scrolled;
 
     float getAvailableSpaceForSpacer();
+
+    void updateScrollHandleOffset(int max);
 };
 
 

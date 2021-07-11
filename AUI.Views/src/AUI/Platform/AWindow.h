@@ -96,8 +96,18 @@ private:
     bool mWasMaximized = false;
 #endif
     bool mRedrawFlag = true;
+    bool mUpdateLayoutFlag = true;
     AString mWindowClass;
 	AWindow* mParentWindow;
+
+    /**
+     * _NET_WM_SYNC_REQUEST (resize flicker fix) update request counter
+     */
+    struct {
+        uint32_t lo = 0;
+        uint32_t hi = 0;
+        XID counter;
+    } mXsyncRequestCounter;
 
     /**
      * \brief Handles self shared pointer.
@@ -302,4 +312,6 @@ signals:
     bool consumesClick(const glm::ivec2& pos) override;
 
     void onMouseMove(glm::ivec2 pos) override;
+
+    void flagUpdateLayout() override;
 };

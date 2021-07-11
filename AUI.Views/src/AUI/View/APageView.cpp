@@ -26,6 +26,7 @@
 #include <AUI/Layout/AStackedLayout.h>
 #include "APageView.h"
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Logging/ALogger.h>
 
 APageView::APageView() {
     setLayout(_new<AStackedLayout>());

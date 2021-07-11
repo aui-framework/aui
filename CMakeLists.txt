@@ -36,49 +36,6 @@ set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
 
 include(cmake/b.cmake)
 
-function(AUI_Module AUI_MODULE_NAME)
-	project(${AUI_MODULE_NAME})
-
-	file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp)
-	if (WIN32)
-		if (EXISTS "${CMAKE_SOURCE_DIR}/Resource.rc")
-			set(SRCS ${SRCS} "${CMAKE_SOURCE_DIR}/Resource.rc")
-		endif()
-	endif()
-	add_library(${AUI_MODULE_NAME} SHARED ${SRCS} ${ARGN})
-	get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-	target_include_directories(${AUI_MODULE_NAME} PUBLIC $<BUILD_INTERFACE:${SELF_DIR}/src>)
-
-	# AUI.Core -> BUILD_AUI_CORE
-	string(REPLACE "." "_" BUILD_DEF_NAME ${AUI_MODULE_NAME})
-	string(TOUPPER "API_${BUILD_DEF_NAME}" BUILD_DEF_NAME)
-	target_compile_definitions(${AUI_MODULE_NAME} INTERFACE ${BUILD_DEF_NAME}=AUI_IMPORT)
-	target_compile_definitions(${AUI_MODULE_NAME} PRIVATE ${BUILD_DEF_NAME}=AUI_EXPORT)
-
-	AUI_Add_Properties(${AUI_MODULE_NAME})
-
-	AUI_Common(${AUI_MODULE_NAME})
-
-	install(
-			TARGETS ${AUI_MODULE_NAME}
-			EXPORT AUI
-			ARCHIVE
-				DESTINATION "lib"
-			LIBRARY
-				DESTINATION "lib"
-			RUNTIME
-				DESTINATION "bin"
-	)
-	install(
-			DIRECTORY src/
-			DESTINATION "include/"
-			FILES_MATCHING PATTERN "*.h"
-			PATTERN "*.hpp"
-
-	)
-
-endfunction(AUI_Module)
-
 add_subdirectory(AUI.Core)
 add_subdirectory(AUI.Crypt)
 add_subdirectory(AUI.Toolbox)
@@ -94,6 +51,7 @@ add_subdirectory(AUI.Views)
 add_subdirectory(AUI.Svg)
 add_subdirectory(AUI.Image)
 
+add_subdirectory(AUI.Preview)
 
 if(NOT ANDROID AND AUI_BUILD_EXAMPLES)
 	add_subdirectory(examples/AUI.Example.Views)

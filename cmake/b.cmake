@@ -21,6 +21,8 @@
 
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
+set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable AUI.Preview plugin target")
+cmake_policy(SET CMP0072 NEW)
 
 # determine compiler home dir for mingw when crosscompiling
 if (MINGW AND CMAKE_CROSSCOMPILING)
@@ -150,7 +152,35 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
     if(ANDROID)
         add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
     else()
-        add_executable(${AUI_MODULE_NAME} ${ADDITIONAL_SRCS} ${SRCS})
+
+        file(GLOB_RECURSE PREVIEW_SRCS preview/*.cpp)
+        if (AUI_BUILD_PREVIEW AND PREVIEW_SRCS)
+            message(STATUS "Added preview target: ${AUI_MODULE_NAME}")
+
+            set(SRCS ${ADDITIONAL_SRCS} ${SRCS})
+            set(FILTER_REGEX "(src/main.cpp$|WIN32)")
+            set(EXCLUDED_SRCS ${SRCS})
+            list(FILTER EXCLUDED_SRCS INCLUDE REGEX ${FILTER_REGEX})
+            list(FILTER SRCS EXCLUDE REGEX ${FILTER_REGEX})
+
+            add_executable(${AUI_MODULE_NAME} ${EXCLUDED_SRCS} ${SRCS})
+            set_target_properties(${AUI_MODULE_NAME} PROPERTIES ENABLE_EXPORTS ON)
+            AUI_Add_Properties(${AUI_MODULE_NAME})
+            AUI_Common(${AUI_MODULE_NAME})
+
+            add_library(preview.${AUI_MODULE_NAME} SHARED ${PREVIEW_SRCS} ${SRCS})
+            set_property(TARGET preview.${AUI_MODULE_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+            target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
+            target_link_libraries(preview.${AUI_MODULE_NAME} PUBLIC ${AUI_MODULE_NAME})
+            target_link_libraries(preview.${AUI_MODULE_NAME} PUBLIC AUI.Preview.Library)
+            AUI_Add_Properties(preview.${AUI_MODULE_NAME})
+            AUI_Common(preview.${AUI_MODULE_NAME})
+
+            add_dependencies(AUI.Preview preview.${AUI_MODULE_NAME})
+        else()
+            add_executable(${AUI_MODULE_NAME} ${ADDITIONAL_SRCS} ${SRCS})
+        endif()
     endif()
 
     target_include_directories(${AUI_MODULE_NAME} PRIVATE src)
@@ -295,10 +325,11 @@ function(AUI_Executable AUI_MODULE_NAME)
 endfunction(AUI_Executable)
 
 function(AUI_Static_Link AUI_MODULE_NAME LIBRARY_NAME)
-    target_include_directories(${AUI_MODULE_NAME} PRIVATE "3rdparty/${LIBRARY_NAME}")
+    target_include_directories(${AUI_MODULE_NAME} PUBLIC "3rdparty/${LIBRARY_NAME}")
     file(GLOB_RECURSE SRCS "3rdparty/${LIBRARY_NAME}/*.cpp" "3rdparty/${LIBRARY_NAME}/*.c" "3rdparty/${LIBRARY_NAME}/*.h")
     add_library(${LIBRARY_NAME} STATIC ${SRCS})
-    target_link_libraries(${AUI_MODULE_NAME} PRIVATE ${LIBRARY_NAME})
+    set_property(TARGET ${LIBRARY_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+    target_link_libraries(${AUI_MODULE_NAME} PUBLIC ${LIBRARY_NAME})
 endfunction(AUI_Static_Link)
 
 
@@ -369,11 +400,55 @@ function(AUI_Compile_Assets_Add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
     endif()
 endfunction(AUI_Compile_Assets_Add)
 
+function(AUI_Module AUI_MODULE_NAME)
+    project(${AUI_MODULE_NAME})
+
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp)
+    if (WIN32)
+        if (EXISTS "${CMAKE_SOURCE_DIR}/Resource.rc")
+            set(SRCS ${SRCS} "${CMAKE_SOURCE_DIR}/Resource.rc")
+        endif()
+    endif()
+    add_library(${AUI_MODULE_NAME} SHARED ${SRCS} ${ARGN})
+    get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+    target_include_directories(${AUI_MODULE_NAME} PUBLIC $<BUILD_INTERFACE:${SELF_DIR}/src>)
+
+    # AUI.Core -> BUILD_AUI_CORE
+    string(REPLACE "." "_" BUILD_DEF_NAME ${AUI_MODULE_NAME})
+    string(TOUPPER "API_${BUILD_DEF_NAME}" BUILD_DEF_NAME)
+    target_compile_definitions(${AUI_MODULE_NAME} INTERFACE ${BUILD_DEF_NAME}=AUI_IMPORT)
+    target_compile_definitions(${AUI_MODULE_NAME} PRIVATE ${BUILD_DEF_NAME}=AUI_EXPORT)
+
+    AUI_Add_Properties(${AUI_MODULE_NAME})
+
+    AUI_Common(${AUI_MODULE_NAME})
+
+    install(
+            TARGETS ${AUI_MODULE_NAME}
+            EXPORT AUI
+            ARCHIVE
+            DESTINATION "lib"
+            LIBRARY
+            DESTINATION "lib"
+            RUNTIME
+            DESTINATION "bin"
+    )
+    install(
+            DIRECTORY src/
+            DESTINATION "include/"
+            FILES_MATCHING PATTERN "*.h"
+            PATTERN "*.hpp"
+
+    )
+
+endfunction(AUI_Module)
+
 if (MINGW OR UNIX)
     # strip for release
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -s")
     set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -s")
 endif()
+
 
 # Coverage support
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")

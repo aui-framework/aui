@@ -30,29 +30,22 @@
 ATabView::ATabView() {
     setLayout(_new<AVerticalLayout>());
 
-    addView(_container<AHorizontalLayout>({
-        mButtonsRow = _container<AHorizontalLayout>({}),
-        _new<ASpacer>(),
-    }) let {
-        it << ".tabview_row_wrap";
-    });
+    addView(mRow = _new<ATabButtonRow>());
     addView(mPageView = _new<APageView>());
 
-    mButtonsRow->addAssName(".tabview_row");
-
     connect(mPageView->pageChanging, this, [&](unsigned pageId) {
-        _cast<ATabButtonView>(mButtonsRow->getViews()[mPageView->getPageId()])->setCurrent(false);
-        _cast<ATabButtonView>(mButtonsRow->getViews()[pageId])->setCurrent(true);
+        mRow->setCurrent(mPageView->getPageId(), false);
+        mRow->setCurrent(pageId, true);
     });
 }
 
 void ATabView::addTab(const _<AView>& view, const AString& name) {
     mPageView->addPage(view);
     view->setExpanding({2, 2});
-    auto id = mButtonsRow->getViews().size();
+    auto id = mRow->getContents()->getViews().size();
     auto c = _new<ATabButtonView>(name);
     c->setCurrent(id == mPageView->getPageId());
-    mButtonsRow->addView(c);
+    mRow->getContents()->addView(c);
 
     connect(c->clicked, this, [&, id]() {
        setTabId(id);
@@ -72,4 +65,20 @@ void ATabButtonView::getCustomCssAttributes(AMap<AString, AVariant>& map) {
 void ATabButtonView::setCurrent(bool current) {
     mCurrent = current;
     emit customCssPropertyChanged;
+}
+
+ATabButtonRow::ATabButtonRow() {
+    setContents(Horizontal {
+        mContents = _container<AHorizontalLayout>({}) << ".tabview_row",
+        _new<ASpacer>(),
+    });
+    addAssName(".tabview_row_wrap");
+}
+
+void ATabButtonRow::setCurrent(size_t i, bool current) {
+    _cast<ATabButtonView>(getContents()->getViews()[i])->setCurrent(current);
+}
+
+void ATabButtonRow::addTab(const AString &name) {
+
 }

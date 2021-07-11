@@ -35,12 +35,22 @@
 #include "AUI/View/ASpacer.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "DemoListModel.h"
+#include "DemoTreeModel.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/AComboBox.h>
 #include <AUI/i18n/AI18n.h>
+#include <AUI/ASS/ASS.h>
 #include <AUI/View/ASelectableLabel.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/ATextArea.h>
+#include <AUI/View/ARulerView.h>
+#include <AUI/View/AImageView.h>
+#include <AUI/View/ARulerArea.h>
+#include <AUI/View/ATreeView.h>
+#include <AUI/Platform/ADesktop.h>
+#include <AUI/Platform/AMessageBox.h>
+
+using namespace ass;
 
 void fillWindow(_<AViewContainer> t)
 {
@@ -144,6 +154,25 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                mWindows.clear();
            }),
 
+           _new<ALabel>("System dialog"),
+           _new<AButton>("Show file chooser").connect(&AView::clicked, this, [&] {
+               ADesktop::browseForFile()->onDone([&](const APath& f) {
+                   if (f.empty()) {
+                       AMessageBox::show(this, "Result", "Cancelled");
+                   } else {
+                       AMessageBox::show(this, "Result", "File: {}"_as.format(f));
+                   }
+               });
+           }),
+           _new<AButton>("Show folder chooser").connect(&AView::clicked, this, [&] {
+               ADesktop::browseForFolder()->onDone([&](const APath& f) {
+                   if (f.empty()) {
+                       AMessageBox::show(this, "Result", "Cancelled");
+                   } else {
+                       AMessageBox::show(this, "Result", "Folder: {}"_as.format(f));
+                   }
+               });
+           }),
 
            // list view
            _new<ALabel>("List view"),
@@ -158,6 +187,14 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                        },
                        _new<AListView>(model)
                };
+           }(),
+
+           // tree view
+           _new<ALabel>("Tree view"),
+           [] { // lambda style inlining
+               auto model = _new<DemoTreeModel>();
+
+               return _new<ATreeView>(model);
            }()
 		});
 
@@ -184,6 +221,11 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                       "WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR "
                       "COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
                       "OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.) "),
+
+            // Rulers
+            _new<ALabel>("ARulerArea"),
+            _new<ARulerArea>(_new<AView>() with_style { MinSize { 100_dp, 100_dp },
+                                                        BackgroundGradient { 0x0_rgb, 0x404040_rgb, LayoutDirection::VERTICAL } }),
 		});
 	}
 

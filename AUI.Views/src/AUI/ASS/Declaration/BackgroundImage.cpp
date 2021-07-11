@@ -142,6 +142,31 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                     break;
                 }
 
+                case Sizing::CENTER: {
+                    RenderHints::PushMatrix m;
+                    glm::vec2 viewSize = view->getSize();
+                    glm::vec2 imageSize = drawable->getSizeHint();
+
+
+                    if (drawable->isDpiDependent())
+                        imageSize *= AWindow::current()->getDpiRatio();
+
+
+                    Render::inst().setTransform(
+                            glm::translate(glm::mat4(1.f),
+                                           glm::vec3{glm::vec2(viewSize - imageSize) / 2.f, 0.f}));
+
+                    RenderHints::PushMask mask([&] {
+                        Render::inst().setFill(Render::FILL_SOLID);
+                        Render::inst().drawRect(0,
+                                                0,
+                                                view->getWidth(),
+                                                view->getHeight());
+                    });
+
+                    drawableDrawWrapper(imageSize);
+                    break;
+                }
                 case Sizing::NONE: {
                     RenderHints::PushMask mask([&] {
                         Render::inst().setFill(Render::FILL_SOLID);
@@ -154,11 +179,6 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
 
                     if (drawable->isDpiDependent())
                         imageSize *= AWindow::current()->getDpiRatio();
-/*
-                RenderHints::PushMatrix m;
-                Render::inst().setTransform(
-                        glm::translate(glm::mat4(1.f),
-                                       glm::vec3(glm::ivec2((glm::vec2(view->getSize()) - imageSize) / 2.f), 0.f)));*/
                     drawableDrawWrapper(imageSize);
                     break;
                 }

@@ -21,6 +21,7 @@
 
 #pragma once
 #include "AUI/Util/EnumUtil.h"
+#include "AUI/Reflect/AEnumerate.h"
 
 
 enum class FontRendering
@@ -29,3 +30,5 @@ enum class FontRendering
 	ANTIALIASING = 1,
 	SUBPIXEL = 2,
 };
+
+ENUM_VALUES(FontRendering, FontRendering::NEAREST, FontRendering::ANTIALIASING, FontRendering::SUBPIXEL)

@@ -27,8 +27,8 @@
 class AModelIndex
 {
 private:
-	std::size_t mRow;
-    std::size_t mColumn;
+	std::size_t mRow = -1;
+    std::size_t mColumn = -1;
 	
 public:
 	AModelIndex(std::size_t row, std::size_t column)

@@ -48,3 +48,23 @@ int FileInputStream::read(char* dst, int size)
 	size_t r = ::fread(dst, 1, size, mFile);
 	return r;
 }
+
+void FileInputStream::seek(std::streamoff offset, FileInputStream::Seek dir) {
+    fseek(mFile, offset, [&] {
+        switch (dir) {
+            case Seek::BEGIN:
+                return SEEK_SET;
+            case Seek::CURRENT:
+                return SEEK_CUR;
+            case Seek::END:
+                return SEEK_CUR;
+        }
+        return 0;
+    }());
+}
+
+void FileInputStream::seek(std::streampos pos) {
+    fseek(mFile, pos, SEEK_SET);
+}
+
+

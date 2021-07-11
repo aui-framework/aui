@@ -42,6 +42,10 @@ public:
         return mDeclarations;
     }
 
+    void addDeclaration(ass::decl::IDeclarationBase* declaration) {
+        mDeclarations << declaration;
+    }
+
 private:
     template<typename Declaration, typename... Declarations>
     void processDeclarations(Declaration&& declaration, Declarations&&... declarations) {

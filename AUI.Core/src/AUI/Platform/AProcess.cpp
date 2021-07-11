@@ -175,7 +175,11 @@ int AChildProcess::wait() {
 _<AProcess> AProcess::fromPid(uint32_t pid) {
     auto handle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid);
     if (handle) {
-        return _new<AOtherProcess>(handle);
+        DWORD exitCode;
+        GetExitCodeProcess(handle, &exitCode);
+        if (exitCode == STILL_ACTIVE) {
+            return _new<AOtherProcess>(handle);
+        }
     }
     return nullptr;
 }
@@ -262,7 +266,10 @@ _<AProcess> AProcess::self() {
 }
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {
-    return _new<AOtherProcess>(pid_t(pid));
+    if (APath("/proc")[AString::number(pid)].isDirectoryExists()) {
+        return _new<AOtherProcess>(pid_t(pid));
+    }
+    return nullptr;
 }
 
 int AProcess::execute(const AString& applicationFile, const AString& args, const APath& workingDirectory, bool waitForExit) {
@@ -357,7 +364,10 @@ _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
         ATokenizer t(_new<FileInputStream>(f));
         auto p = t.readInt();
 
-        return AProcess::fromPid(p);
+        auto process = AProcess::fromPid(p);
+        if (process) {
+            return process;
+        }
     } catch (...) {}
 
     try {

@@ -26,5 +26,8 @@
 #include "MinSize.h"
 
 void ass::decl::Declaration<ass::MinSize>::applyFor(AView* view) {
-    view->setMinSize({mInfo.width.getValuePx(), mInfo.height.getValuePx()});
+    view->setMinSize({
+                               mInfo.width ? mInfo.width->getValuePx() : view->getMinSize().x,
+                               mInfo.height ? mInfo.height->getValuePx() : view->getMinSize().y
+                       });
 }

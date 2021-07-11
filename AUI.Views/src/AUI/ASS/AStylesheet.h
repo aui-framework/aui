@@ -27,19 +27,43 @@
 
 #include <initializer_list>
 #include "Rule.h"
+#include <AUI/Autumn/Autumn.h>
 
 class API_AUI_VIEWS AStylesheet {
 private:
     AVector<Rule> mRules;
+    bool mIgnoreRules = false;
 
 public:
     AStylesheet();
 
     inline void addRules(std::initializer_list<Rule> rules) {
+        if (mIgnoreRules) {
+            return;
+        }
         for (auto& constRule : rules) {
             auto& rule = const_cast<Rule&>(constRule);
             mRules << std::move(rule);
         }
+    }
+
+    void addRule(const Rule& r) {
+        if (mIgnoreRules) {
+            return;
+        }
+        mRules << r;
+    }
+
+
+    void addRule(Rule&& r) {
+        if (mIgnoreRules) {
+            return;
+        }
+        mRules << std::forward<Rule>(r);
+    }
+
+    void setIgnoreRules(bool ignoreRules) {
+        mIgnoreRules = ignoreRules;
     }
 
 
@@ -50,6 +74,5 @@ public:
     static AColor getOsThemeColor();
 
     static AStylesheet& inst();
+    static _<AStylesheet>& instStorage();
 };
-
-
