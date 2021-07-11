@@ -1,4 +1,4 @@
-PRIVATE[submodule "AUI.Svg/3rdparty/nanosvg"]
+[submodule "AUI.Svg/3rdparty/nanosvg"]
 	path = AUI.Svg/3rdparty/nanosvg
 	url = https://github.com/memononen/nanosvg
 [submodule "AUI.Core/3rdparty/glm"]
