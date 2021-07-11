@@ -10,3 +10,6 @@
 [submodule "AUI.Views/3rdparty/freetype"]
 	path = AUI.Views/3rdparty/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype
+[submodule "AUI.Core/3rdparty/zlib"]
+	path = AUI.Core/3rdparty/zlib
+	url = https://github.com/madler/zlib
