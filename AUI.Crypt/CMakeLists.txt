@@ -18,6 +18,7 @@ if (OPENSSL_FOUND AND NOT AUI_EMBEDDED_OPENSSL)
 	endif()
 else()
 	message(STATUS "Using embedded OpenSSL")
+	set(MSVC_DYNAMIC_RUNTIME ON)
 	add_subdirectory(3rdparty/openssl-cmake)
 	target_include_directories(AUI.Crypt PRIVATE 3rdparty/openssl-cmake/include)
 	target_include_directories(AUI.Crypt PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/3rdparty/openssl-cmake/include>) # config
