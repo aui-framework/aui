@@ -18,7 +18,6 @@ endif()
 
 set(CMAKE_DEBUG_POSTFIX d)
 
-option (BUILD_UTILS "utilities" OFF)
 option (GLEW_REGAL "Regal mode" OFF)
 option (GLEW_OSMESA "OSMesa mode" OFF)
 if (APPLE)
@@ -112,38 +111,11 @@ add_library (glew_s STATIC ${GLEW_PUBLIC_HEADERS_FILES} ${GLEW_SRC_FILES})
 set_target_properties (glew_s PROPERTIES COMPILE_DEFINITIONS "GLEW_STATIC" OUTPUT_NAME "${GLEW_LIB_NAME}" PREFIX lib)
 
 if (MSVC)
-  # add options from visual studio project
-  target_compile_definitions (glew PRIVATE "GLEW_BUILD;VC_EXTRALEAN")
-  target_compile_definitions (glew_s PRIVATE "GLEW_STATIC;VC_EXTRALEAN")
-  target_link_libraries (glew LINK_PRIVATE -BASE:0x62AA0000)
-  # kill security checks which are dependent on stdlib
-  target_compile_options (glew PRIVATE -GS-)
-  target_compile_options (glew_s PRIVATE -GS-)
-  # remove stdlib dependency
-  target_link_libraries (glew LINK_PRIVATE -nodefaultlib -noentry)
-  target_link_libraries (glew LINK_PRIVATE libvcruntime.lib)
-  target_link_libraries (glew LINK_PRIVATE msvcrt.lib )
-  string(REGEX REPLACE "/RTC(su|[1su])" "" CMAKE_C_FLAGS_DEBUG ${CMAKE_C_FLAGS_DEBUG})
 elseif (WIN32 AND ((CMAKE_C_COMPILER_ID MATCHES "GNU") OR (CMAKE_C_COMPILER_ID MATCHES "Clang")))
   # remove stdlib dependency on windows with GCC and Clang (for similar reasons
   # as to MSVC - to allow it to be used with any Windows compiler)
-  target_compile_options (glew PRIVATE -fno-builtin -fno-stack-protector)
   target_compile_options (glew_s PRIVATE -fno-builtin -fno-stack-protector)
-  target_link_libraries (glew LINK_PRIVATE -nostdlib)
 endif ()
-
-if (BUILD_FRAMEWORK)
-  set_target_properties(glew PROPERTIES
-    FRAMEWORK TRUE
-    FRAMEWORK_VERSION ${GLEW_VERSION}
-    MACOSX_FRAMEWORK_IDENTIFIER net.sourceforge.glew
-    MACOSX_FRAMEWORK_SHORT_VERSION_STRING ${GLEW_VERSION}
-    MACOSX_FRAMEWORK_BUNDLE_VERSION ${GLEW_VERSION}
-    XCODE_ATTRIBUTE_INSTALL_PATH "@rpath"
-    PUBLIC_HEADER "${GLEW_PUBLIC_HEADERS_FILES}"
-    OUTPUT_NAME GLEW
-  )
-endif()
 
 #target_link_libraries (glew LINK_PUBLIC ${GLEW_LIBRARIES})
 target_link_libraries (glew_s ${GLEW_LIBRARIES})
@@ -174,39 +146,6 @@ install ( TARGETS ${targets_to_install}
           ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
           FRAMEWORK DESTINATION ${CMAKE_INSTALL_PREFIX}
 )
-
-if (BUILD_UTILS)
-  set (GLEWINFO_SRC_FILES ${GLEW_DIR}/src/glewinfo.c)
-  if (WIN32)
-    list (APPEND GLEWINFO_SRC_FILES ${GLEW_DIR}/build/glewinfo.rc)
-  endif ()
-  add_executable (glewinfo ${GLEWINFO_SRC_FILES})
-  if(NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
-     target_link_libraries (glewinfo glew)
-  else()
-     target_link_libraries (glewinfo glew_s)
-  endif()
-  if (NOT WIN32)
-    target_link_libraries(glewinfo ${X11_LIBRARIES})
-  endif ()
-
-  set (VISUALINFO_SRC_FILES ${GLEW_DIR}/src/visualinfo.c)
-  if (WIN32)
-    list (APPEND VISUALINFO_SRC_FILES ${GLEW_DIR}/build/visualinfo.rc)
-  endif ()
-  add_executable (visualinfo ${VISUALINFO_SRC_FILES})
-  if(NOT DEFINED BUILD_SHARED_LIBS OR BUILD_SHARED_LIBS)
-     target_link_libraries (visualinfo glew)
-  else()
-     target_link_libraries (visualinfo glew_s)
-  endif()
-  if (NOT WIN32)
-    target_link_libraries(visualinfo ${X11_LIBRARIES})
-  endif ()
-
-  install ( TARGETS glewinfo visualinfo
-            DESTINATION ${CMAKE_INSTALL_BINDIR})
-endif ()
 
 set (prefix ${CMAKE_INSTALL_PREFIX})
 set (exec_prefix ${CMAKE_INSTALL_PREFIX})
