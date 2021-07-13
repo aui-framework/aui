@@ -17,6 +17,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        ci_node_total: [2]
+        ci_node_index: [0, 1]
         config:
           - {
             name: "Windows Latest MSVC", artifact: "windows-msvc.tar.xz",
@@ -49,10 +51,10 @@ jobs:
 
     - name: Build
       # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} -t AUI.Core
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}}
 
     - name: Install Strip
-      run: cmake --install build/AUI.Core --prefix instdir --strip
+      run: cmake --install build --prefix instdir --strip
 
     - name: Pack
       working-directory: instdir
