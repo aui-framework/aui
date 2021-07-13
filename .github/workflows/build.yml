@@ -1,0 +1,64 @@
+name: build
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  GIT_SUBMODULE_STRATEGY: recursive
+
+jobs:
+  build:
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - {
+            name: "Windows Latest MSVC", artifact: "windows-msvc.tar.xz",
+            os: windows-latest,
+            build_type: "Release", cc: "cl", cxx: "cl"
+          }
+          - {
+            name: "Windows Latest MinGW", artifact: "windows-mingw.tar.xz",
+            os: windows-latest,
+            build_type: "Release", cc: "gcc", cxx: "g++"
+          }
+          - {
+            name: "Linux Latest GCC", artifact: "linux.tar.xz",
+            os: ubuntu-latest,
+            build_type: "Release", cc: "gcc", cxx: "g++"
+          }
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Install dependencies
+      run: sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev
+    - name: Configure CMake
+      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
+
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} -t AUI.Core
+
+    - name: Install Strip
+      run: cmake --install build --prefix instdir --strip
+
+    - name: Pack
+      working-directory: instdir
+      run: cmake -E tar cJfv ../${{ matrix.config.artifact }} .
+
+    - name: Upload
+      uses: actions/upload-artifact@v1
+      with:
+        path: ./${{ matrix.config.artifact }}
+        name: ${{ matrix.config.artifact }}
