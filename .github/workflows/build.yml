@@ -30,7 +30,7 @@ jobs:
           }
           - {
             name: "Linux Latest GCC", artifact: "linux.tar.xz",
-            os: ubuntu-latest,
+            os: linux-latest,
             build_type: "Release", cc: "gcc", cxx: "g++"
           }
 
@@ -40,6 +40,7 @@ jobs:
         submodules: true
 
     - name: Install dependencies
+      if: matrix.os == 'linux-latest'
       run: sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -51,7 +52,7 @@ jobs:
       run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} -t AUI.Core
 
     - name: Install Strip
-      run: cmake --install build --prefix instdir --strip
+      run: cmake --install build/AUI.Core --prefix instdir --strip
 
     - name: Pack
       working-directory: instdir
