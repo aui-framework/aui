@@ -122,7 +122,6 @@ jobs:
         with:
           name: upload_url
           path: ./
-      - id: set_upload_url
   
       - name: Upload to Release
         id: upload_to_release
