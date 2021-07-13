@@ -17,8 +17,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        ci_node_total: [2]
-        ci_node_index: [0, 1]
         config:
           - {
             name: "Windows Latest MSVC", artifact: "windows-msvc.tar.xz",
