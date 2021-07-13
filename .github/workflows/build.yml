@@ -3,8 +3,6 @@ name: build
 on:
   push:
     branches: [ master, release ]
-    tags:
-      - v*
   pull_request:
     branches: [ master ]
 
@@ -21,7 +19,7 @@ jobs:
       matrix:
         config:
           - {
-            name: "Windows Latest MSVC", artifact: "windows-msvc.tar.xz",
+            name: "Windows Latest MSVC", artifact: "aui_windows-msvc-x86_64.tar.xz",
             os: windows-latest,
             build_type: "Release", generator: "Visual Studio 16 2019"
           }
@@ -31,40 +29,40 @@ jobs:
           #  build_type: "Release", generator: "MinGW Makefiles"
           #}
           - {
-            name: "Ubuntu Latest GCC", artifact: "ubuntu.tar.xz",
+            name: "Ubuntu Latest GCC", artifact: "aui_ubuntu-x86_64.tar.xz",
             os: ubuntu-latest,
             build_type: "Release", generator: "Unix Makefiles"
           }
 
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
 
-    - name: Install Linux dependencies
-      if: matrix.config.os == 'ubuntu-latest'
-      run: sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev
-    - name: Configure CMake
-      # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
-      # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-      run: cmake -G "${{ matrix.config.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
+      - name: Install Linux dependencies
+        if: matrix.config.os == 'ubuntu-latest'
+        run: sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev
+      - name: Configure CMake
+        # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
+        # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
+        run: cmake -G "${{ matrix.config.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
 
-    - name: Build
-      # Build your program with the given configuration
-      run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}}
+      - name: Build
+        # Build your program with the given configuration
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}}
 
-    - name: Install Strip
-      run: cmake --install build --prefix instdir --strip
+      - name: Install Strip
+        run: cmake --install build --prefix instdir --strip
 
-    - name: Pack
-      working-directory: instdir
-      run: cmake -E tar cJfv ../${{ matrix.config.artifact }} .
+      - name: Pack
+        working-directory: instdir
+        run: cmake -E tar cJfv ../${{ matrix.config.artifact }} .
 
-    - name: Upload
-      uses: actions/upload-artifact@v1
-      with:
-        path: ./${{ matrix.config.artifact }}
-        name: ${{ matrix.config.artifact }}
+      - name: Upload
+        uses: actions/upload-artifact@v1
+        with:
+          path: ./${{ matrix.config.artifact }}
+          name: ${{ matrix.config.artifact }}
 
   release:
     if: contains(github.ref, 'tags/v')
@@ -101,28 +99,32 @@ jobs:
       matrix:
         config:
           - {
-            name: "Windows Latest MSVC", artifact: "windows-msvc.tar.xz",
+            name: "Windows Latest MSVC", artifact: "aui_windows-msvc-x86_64.tar.xz",
             os: windows-latest
           }
           - {
-            name: "Ubuntu Latest GCC", artifact: "ubuntu.tar.xz",
+            name: "Ubuntu Latest GCC", artifact: "aui_ubuntu-x86_64.tar.xz",
             os: ubuntu-latest
           }
     needs: release
-  
+
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v1
         with:
           name: ${{ matrix.config.artifact }}
           path: ./
-  
+
       - name: Download URL
         uses: actions/download-artifact@v1
         with:
           name: upload_url
           path: ./
-  
+      - id: set_upload_url
+        run: |
+          upload_url=`cat ./upload_url`
+          echo ::set-output name=upload_url::$upload_url
+
       - name: Upload to Release
         id: upload_to_release
         uses: actions/upload-release-asset@v1.0.1
