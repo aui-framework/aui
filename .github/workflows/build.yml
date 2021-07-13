@@ -29,8 +29,8 @@ jobs:
           #  build_type: "Release", generator: "MinGW Makefiles"
           #}
           - {
-            name: "Linux Latest GCC", artifact: "linux.tar.xz",
-            os: linux-latest,
+            name: "Ubuntu Latest GCC", artifact: "ubuntu.tar.xz",
+            os: ubuntu-latest,
             build_type: "Release", generator: "Unix Makefiles"
           }
 
