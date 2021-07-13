@@ -116,38 +116,14 @@ AString APath::relativelyTo(const APath& folder) {
     return meButAbsolute.mid(f.length());
 }
 bool APath::exists() const {
-#ifdef _WIN32
-    struct _stat64 s = {0};
-    _wstat64(c_str(), &s);
-#else
-    struct stat s = {0};
-    stat(toStdString().c_str(), &s);
-#endif
-
-    return s.st_mode & (S_IFDIR | S_IFREG);
+    return stat().st_mode & (S_IFDIR | S_IFREG);
 }
 bool APath::isRegularFileExists() const {
-#ifdef _WIN32
-    struct _stat64 s = {0};
-    _wstat64(c_str(), &s);
-#else
-    struct stat s = {0};
-    stat(toStdString().c_str(), &s);
-#endif
-
-    return s.st_mode & S_IFREG;
+    return stat().st_mode & S_IFREG;
 }
 
 bool APath::isDirectoryExists() const {
-#ifdef _WIN32
-    struct _stat64 s = {0};
-    _wstat64(c_str(), &s);
-#else
-    struct stat s = {0};
-    stat(toStdString().c_str(), &s);
-#endif
-
-    return s.st_mode & S_IFDIR;
+    return stat().st_mode & S_IFDIR;
 }
 
 const APath& APath::removeFile() const {
@@ -304,15 +280,22 @@ bool APath::isAbsolute() const {
 }
 
 size_t APath::fileSize() const {
+    return stat().st_size;
+}
+
 #ifdef _WIN32
+struct _stat64 APath::stat() const {
     struct _stat64 s = {0};
     _wstat64(c_str(), &s);
-#else
-    struct stat s = {0};
-    stat(toStdString().c_str(), &s);
-#endif
-    return s.st_size;
+    return s;
 }
+#else
+struct stat APath::stat() const {
+    struct stat s = {0};
+    ::stat(toStdString().c_str(), &s);
+    return s;
+}
+#endif
 
 
 void APath::copy(const APath& source, const APath& destination) {
@@ -412,4 +395,8 @@ AVector<APath> APath::find(const AString& filename, const AVector<APath>& locati
         locateImpl(AString(getenv("PATH")).split(aui::platform::current::path_variable_separator));
     }
     return result;
+}
+
+time_t APath::fileModifyTime() const {
+    return stat().st_mtim.tv_sec;
 }

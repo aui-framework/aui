@@ -107,6 +107,13 @@ private:
 
     void removeBackSlashes();
 
+
+#ifdef _WIN32
+    struct _stat64 stat() const;
+#else
+    struct stat stat() const;
+#endif
+
 public:
     APath() = default;
     APath(AString&& other): AString(other) {
@@ -251,6 +258,7 @@ public:
         return !isAbsolute();
     }
 
+    time_t fileModifyTime() const;
     size_t fileSize() const;
 
     enum DefaultPath {
