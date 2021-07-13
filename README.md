@@ -1,4 +1,6 @@
 # AUI (Advanced Universal Interface)
+![build badge](https://github.com/Alex2772/aui/actions/workflows/build.yml/badge.svg)
+
 Cross-platform high performance efficient module-based framework for developing and deploying hardware accelerated graphical desktop applications
 using modern C++17.
 
