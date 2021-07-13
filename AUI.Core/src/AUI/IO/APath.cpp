@@ -399,7 +399,7 @@ AVector<APath> APath::find(const AString& filename, const AVector<APath>& locati
 
 time_t APath::fileModifyTime() const {
 #ifdef _WIN32
-    return stat().st_mtime.tv_sec;
+    return stat().st_mtime;
 #else
     return stat().st_mtim.tv_sec;
 #endif
