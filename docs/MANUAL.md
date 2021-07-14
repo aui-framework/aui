@@ -164,14 +164,14 @@ hit `CTRL+S` in your IDE.
 
 In AUI, layout building consists of layout managers. Layout manager determines position and size of container's children
 views. A container is a view that consists of other views, called children. In general layout manager does not allow
-going beyond the border of the container. A container can be child of a container.
+going beyond the border of the container. A container can be child of a container i.e., nesting is allowed.
 
 ### Horizontal layout
 
 ![Horizontal layout](imgs/horizontal.jpg)
 
-Horizontal layout manager places views in a row, fitting their height to the container's height i.e., nesting is
-allowed.
+Horizontal layout manager places views in a row, fitting their height to the container's height. Horizontal layout
+expands last view in a row to match the right side of the container.
 
 Example:
 
@@ -213,7 +213,7 @@ setContents(
 
 ### Stacked layout
 
-We have encountered the first use case of stacked layout - centering. The second purpose of stacked layout is stacking
+We already have encountered the first use case of stacked layout - centering. The second purpose of stacked layout is stacking
 views above/below each other. In this example we have some picture as a background and a letter as some content. We want
 to display letter on the background.
 
@@ -247,7 +247,7 @@ We want to place `Left` and `Right` buttons on single row. Using nesting, it's q
 setContents(
     Vertical {
         _new<AButton>("Up"),
-        Horizontal{
+        Horizontal {
             _new<AButton>("Left"),
             _new<AButton>("Right"),
         },
@@ -260,6 +260,124 @@ It produces the output we want:
 
 ![example](imgs/Screenshot_20210714_041807.png)
 
+## Expanding and `let` syntax
+
+Continuing example above, let's add a new button with expanding between `Left` and `Right` buttons:
+
+```c++
+setContents(
+    Vertical {
+        _new<AButton>("Up"),
+        Horizontal {
+            _new<AButton>("Left"),
+            _new<AButton>("Center"),
+            _new<AButton>("Right"),
+        },
+        _new<AButton>("Down"),
+    }
+);
+```
+
+![example](imgs/Screenshot_20210714_172559.png)
+
+Expand our form using black angle icon in the bottom right corner.
+
+![example](imgs/Screenshot_20210714_172900.png)
+
+Horizontal layout manager expanded the last button in a row. We can override this behaviour specifying the views we want
+to expand. To do this, call the `AView::setExpanding(vec2)` function. We need to embed `Center` button to some variable
+in order to call its functions.
+
+```c++
+auto center = _new<AButton>("Center");
+center->setExpanding({1, 1});
+setContents(
+    Vertical {
+        _new<AButton>("Up"),
+        Horizontal {
+            _new<AButton>("Left"),
+            center,
+            _new<AButton>("Right"),
+        },
+        _new<AButton>("Down"),
+    }
+);
+```
+
+It's much more convenient to use AUI's `let` syntax to call some methods on object without embedding them to variables.
+It is similar to Kotlin's `let` or `apply`. Inside `let` block you receive `it` variable which is object to the left of
+`let` keyword.
+
+```c++
+_new<AButton>() let { it->setExpanding({1, 1}); };
+```
+
+This line is similar to
+
+```c++
+auto button = _new<AButton>();
+button->setExpanding({1, 1});
+```
+
+, but you can place `let` operator inside function call or UI building. Let's finalize our example:
+
+```c++
+setContents(
+    Vertical {
+        _new<AButton>("Up"),
+        Horizontal {
+            _new<AButton>("Left"),
+            _new<AButton>("Center") let { it->setExpanding({1, 0}); },
+            _new<AButton>("Right"),
+        },
+        _new<AButton>("Down"),
+    }
+);
+```
+
+This code is simpler but produces the same result.
+
+Returning to expanding, we can specify expanding to the several or all views. In this case AUI resizes your views in
+fraction:
+
+```c++
+setContents(
+    Vertical {
+        _new<AButton>("Up"),
+        Horizontal {
+            _new<AButton>("Left") let { it->setExpanding({1, 0}); },
+            _new<AButton>("Center") let { it->setExpanding({1, 0}); },
+            _new<AButton>("Right") let { it->setExpanding({1, 0}); },
+        },
+        _new<AButton>("Down"),
+    }
+);
+```
+
+![example](imgs/Screenshot_20210714_175401.png)
+
+All buttons shared the space. Since we set the same expanding, they took the same space.
+Left - 1/3, Center - 1/3, Right - 1/3. '3' is the sum of call expanding in the row.
+
+We can specify the bigger expanding for the `Center` button:
+
+```c++
+setContents(
+    Vertical {
+        _new<AButton>("Up"),
+        Horizontal {
+            _new<AButton>("Left") let { it->setExpanding({1, 0}); },
+            _new<AButton>("Center") let { it->setExpanding({2, 0}); },
+            _new<AButton>("Right") let { it->setExpanding({1, 0}); },
+        },
+        _new<AButton>("Down"),
+    }
+);
+```
+
+![example](imgs/Screenshot_20210714_180105.png)
+
+Left - 1/4, Center - 2/4, Right - 1/4. '4' is the sum of call expanding in the row.
 
 # Reference
 

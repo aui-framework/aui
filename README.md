@@ -4,7 +4,7 @@
 Cross-platform high performance efficient module-based framework for developing and deploying hardware accelerated graphical desktop applications
 using modern C++17.
 
-[Download](https://github.com/Alex2772/aui/releases/)
+[Download](https://github.com/Alex2772/aui/releases/) | [Documentation](docs/MANUAL.md)
 
 ## Key features
 - Extended common types (containers, strings, streams, etc...)
