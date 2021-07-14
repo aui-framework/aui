@@ -6,30 +6,26 @@ Before to get started, you have to compile AUI.
 
 ### Windows
 
-
-1. Download the following dependencies:
-    - for `AUI.Crypt`: `OpenSSL`
-    - for `AUI.Curl`: `libcurl`
-2. Download and install [cmake-gui](https://cmake.org/download/)
-3. For each dependency:
-   1. Open project's dir as source dir in cmake-gui
-   2. Specify build folder
-   3. Configure
-   4. Generate
-   5. Open project (button in cmake-gui)
-   6. Build the `INSTALL` project. It will build the library and install to your system
-4. `git clone https://github.com/Alex2772/aui.git`
-5. `git submodule update --init --recursive`
-6. Repeat the third step but for AUI
+1. `git clone https://github.com/Alex2772/aui.git`
+2. `git submodule update --init --recursive`
+3. Open project's dir as source dir in cmake-gui
+4. Specify build folder and install prefix (if needed)
+5. Configure
+6. Generate
+7. Open project (button in cmake-gui)
+8. Build the `INSTALL` project. It will build the library and install to your system
+9. Add `<install prefix>\bin` (`C:\Program Files (x86)\AUI\bin`) to your PATH variable
+10. Enjoy!
 
 ### *nix
 1. Download and install cmake and gcc
 2. `git clone https://github.com/Alex2772/aui.git`
 3. Download dependencies: `git submodule update --init --recursive`
-4. Install dependencies: `sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev`
+4. Install dependencies: `sudo apt install pkg-config libglew-dev libgtk-3-dev`
 5. Create build folder and cd to it: `cd aui && mkdir build && cd build`
 6. Run `cmake ..`
 7. Run `make && sudo make install`
+8. Enjoy!
 
 
 ## Basic hello world
@@ -95,6 +91,7 @@ AUI_Executable(graphical_example)
 
 # Link required libs
 target_link_libraries(graphical_example PRIVATE AUI.Core)
+# VVVVVVVVVVVVVVVVVVV uncomment this VVVVVVVVVVVVVVVVVVVV
 target_link_libraries(graphical_example PRIVATE AUI.Views)
 ```
 
@@ -140,6 +137,7 @@ Let's analyze this code line by line:
 - `setContents( ... )` updates the contents of the container (of the window in our case);
 - `Stacked { ... }` means the container of `AStackedLayout` layout manager, basically it centers all of its children
    specified in the curly braces;
+   ![Stacked](imgs/stacked1.jpg)
 - `_new<ALabel>("Hello world!")` is the only child of the stacked container, `_new` is an alias for the
   `std::make_shared` function which returns `std::shared_ptr`, `ALabel` is a simple label (text on the screen),
   arguments in braces are used to construct `ALabel`;
@@ -151,6 +149,117 @@ Please note that if any window in shown, an event loop is created after returnin
 The example above produces the following window:
 
 ![Label](imgs/Screenshot_20210408_024201.jpg)
+
+AUI supplies `AUI.Preview` module which is realtime previewer of UI code. It is great tool to study AUI layout build
+features.
+
+Our example in AUI.Preview:
+
+![AUI Preview](imgs/Screenshot_20210714_034900.png)
+
+Here we can see hierarchy of our UI and the UI itself. You can change the code, and it will immediately update after you
+hit `CTRL+S` in your IDE.
+
+## Layout managers
+
+In AUI, layout building consists of layout managers. Layout manager determines position and size of container's children
+views. A container is a view that consists of other views, called children. In general layout manager does not allow
+going beyond the border of the container. A container can be child of a container.
+
+### Horizontal layout
+
+![Horizontal layout](imgs/horizontal.jpg)
+
+Horizontal layout manager places views in a row, fitting their height to the container's height i.e., nesting is
+allowed.
+
+Example:
+
+```c++
+setContents(
+    Horizontal {
+        _new<AButton>("1"),
+        _new<AButton>("2"),
+        _new<AButton>("3"),
+    }
+);
+```
+
+Note: when compiling this example don't forget to include `AButton`: `#include <AUI/Views/AButton.h>`.
+`AUI.Preview` ignores insufficient includes.
+
+![Horizontal layout](imgs/Screenshot_20210714_035347.png)
+
+### Vertical layout
+
+![Vertical layout](imgs/vertical.jpg)
+
+Vertical layout manager places views in a column, fitting their width to the container's width.
+
+Example:
+
+```c++
+setContents(
+    Vertical {
+        _new<AButton>("1"),
+        _new<AButton>("2"),
+        _new<AButton>("3"),
+    }
+);
+```
+
+![Vertical layout](imgs/Screenshot_20210714_040046.png)
+
+
+### Stacked layout
+
+We have encountered the first use case of stacked layout - centering. The second purpose of stacked layout is stacking
+views above/below each other. In this example we have some picture as a background and a letter as some content. We want
+to display letter on the background.
+
+![Vertical layout](imgs/stacked2.jpg)
+
+Also, using stacked layout we can display some overlay above application to display some dialog.
+
+
+## Combining layouts
+
+Since container can be child of other container, we can create complex UIs using basic layout managers. Let's take a
+look at the example:
+
+```c++
+setContents(
+    Vertical {
+        _new<AButton>("Up"),
+        _new<AButton>("Left"),
+        _new<AButton>("Right"),
+        _new<AButton>("Down"),
+    }
+);
+```
+
+![example](imgs/Screenshot_20210714_041617.png)
+
+We want to place `Left` and `Right` buttons on single row. Using nesting, it's quite simple:
+
+
+```c++
+setContents(
+    Vertical {
+        _new<AButton>("Up"),
+        Horizontal{
+            _new<AButton>("Left"),
+            _new<AButton>("Right"),
+        },
+        _new<AButton>("Down"),
+    }
+);
+```
+
+It produces the output we want:
+
+![example](imgs/Screenshot_20210714_041807.png)
+
 
 # Reference
 

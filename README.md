@@ -4,6 +4,8 @@
 Cross-platform high performance efficient module-based framework for developing and deploying hardware accelerated graphical desktop applications
 using modern C++17.
 
+[Download](https://github.com/Alex2772/aui/releases/)
+
 ## Key features
 - Extended common types (containers, strings, streams, etc...)
 - Graphical User Interfaces, including framework tools for fast declarative UI producing using modern C++ capabilities
