@@ -404,3 +404,7 @@ time_t APath::fileModifyTime() const {
     return stat().st_mtim.tv_sec;
 #endif
 }
+
+void APath::move(const APath& source, const APath& destination) {
+    rename(source.toStdString().c_str(), destination.toStdString().c_str());
+}

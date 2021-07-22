@@ -120,6 +120,6 @@ _<AFuture<Value>> AFuture<Value>::make(AThreadPool& tp, Callable func)
 		*future->mValue = func();
         future->decRef();
         future->notify();
-	});
+	}, AThreadPool::PRIORITY_LOWEST);
 	return future;
 }

@@ -38,7 +38,7 @@ private:
 protected:
     Render::PrerenderedString mPrerenderedString;
     AString mContents;
-	virtual bool isValidText(const AString& text) = 0;
+	virtual bool isValidText(const AString& text);
 
     void prerenderStringIfNeeded();
 

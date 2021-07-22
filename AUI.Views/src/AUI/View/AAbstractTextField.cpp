@@ -179,3 +179,7 @@ void AAbstractTextField::prerenderStringIfNeeded() {
     }
 }
 
+bool AAbstractTextField::isValidText(const AString& text) {
+    return true;
+}
+

@@ -48,7 +48,7 @@ public:
      * \param limit max count of bytes to write
      * \note if you don't want to limit stream, use the operator<<() function.
 	 */
-	void writeAll(const _<IInputStream>& fis, size_t limit = std::numeric_limits<size_t>::max());
+	inline void writeAll(const _<IInputStream>& fis, size_t limit = std::numeric_limits<size_t>::max());
 
 	/**
 	 * \brief Works as <code>write(const char* src, int size)</code> except it accepts AByteBuffer instead of
@@ -138,4 +138,22 @@ inline IOutputStream& IOutputStream::operator<<(const _<T>& is)
         write(buf, r);
     }
     return *this;
+}
+
+void IOutputStream::writeAll(const _<IInputStream>& fis, size_t limit) {
+    char buf[0x800];
+    while (limit > 0) {
+        int r = fis->read(buf, (glm::min)(sizeof(buf), limit));
+        if (r == 0) {
+            return;
+        } else if (r <= 0) {
+            throw AException("something went wrong");
+        }
+        write(buf, r);
+
+        if (r >= limit) {
+            return;
+        }
+        limit -= r;
+    }
 }

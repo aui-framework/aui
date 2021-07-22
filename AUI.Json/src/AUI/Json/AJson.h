@@ -26,6 +26,7 @@
 #include "AUI/IO/IInputStream.h"
 #include "AJsonElement.h"
 #include <AUI/Traits/arrays.h>
+#include <AUI/Common/AUuid.h>
 
 
 namespace aui::json::conv {
@@ -37,6 +38,17 @@ namespace aui::json::conv {
 
         static AJsonElement to_json(const T& t) {
             return AJsonValue(t);
+        }
+    };
+
+    template<>
+    struct conv<AUuid> {
+        static AUuid from_json(const AJsonElement& v) {
+            return AUuid(v.asString());
+        }
+
+        static AJsonElement to_json(const AUuid& t) {
+            return AJsonValue(t.toString());
         }
     };
 

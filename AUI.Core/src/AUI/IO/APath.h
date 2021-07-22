@@ -292,6 +292,13 @@ public:
     static void copy(const APath& source, const APath& destination);
 
     /**
+     * \brief Move regular file.
+     * \param source source file
+     * \param destination destination file
+     */
+    static void move(const APath& source, const APath& destination);
+
+    /**
      * \return working dir of application
      */
     static APath workingDir();

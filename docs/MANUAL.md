@@ -357,7 +357,7 @@ setContents(
 ![example](imgs/Screenshot_20210714_175401.png)
 
 All buttons shared the space. Since we set the same expanding, they took the same space.
-Left - 1/3, Center - 1/3, Right - 1/3. '3' is the sum of call expanding in the row.
+Left - 1/3, Center - 1/3, Right - 1/3. '3' is the sum of all expanding in the row.
 
 We can specify the bigger expanding for the `Center` button:
 
@@ -377,7 +377,7 @@ setContents(
 
 ![example](imgs/Screenshot_20210714_180105.png)
 
-Left - 1/4, Center - 2/4, Right - 1/4. '4' is the sum of call expanding in the row.
+Left - 1/4, Center - 2/4, Right - 1/4. '4' is the sum of all expanding in the row.
 
 # Reference
 

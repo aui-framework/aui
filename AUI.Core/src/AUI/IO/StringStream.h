@@ -28,12 +28,14 @@ class API_AUI_CORE StringStream: public IInputStream, public IOutputStream
 {
 private:
 	std::string mString;
-	std::string::iterator mIterator;
+	size_t mReadPos = 0;
 
 public:
-    StringStream() = default;
+    StringStream();
 	explicit StringStream(const AString& string);
 	virtual ~StringStream() = default;
+
+	void seekRead(size_t position);
 
 	int read(char* dst, int size) override;
     int write(const char *src, int size) override;

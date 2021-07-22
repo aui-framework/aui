@@ -21,22 +21,28 @@
 
 #include "StringStream.h"
 
-StringStream::StringStream(const AString& string): mString(string.toStdString()), mIterator(mString.begin())
+
+StringStream::StringStream(const AString& string): mString(string.toStdString())
 {
 }
+StringStream::StringStream() = default;
 
 int StringStream::read(char* dst, int size)
 {
-	if (mIterator == mString.end())
+	if (mReadPos >= mString.length())
 		return 0;
 
-	int toRead = glm::min(size, int(mString.end() - mIterator));
-	memcpy(dst, &(*mIterator), toRead);
-    mIterator += toRead;
+	int toRead = glm::min(size, int(mString.length() - mReadPos));
+	memcpy(dst, mString.c_str() + mReadPos, toRead);
+    mReadPos += toRead;
 	return toRead;
 }
 
 int StringStream::write(const char *src, int size) {
     mString.append(src, src + size);
     return size;
+}
+
+void StringStream::seekRead(size_t position) {
+	mReadPos = position;
 }
