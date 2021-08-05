@@ -150,6 +150,11 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
 
     connect(mScrollbar->scrolled, mContent, &AListViewContainer::setScrollY);
     mObserver->setModel(model);
+    if (model) {
+        connect(model->dataRemoved, [&] {
+            mSelectionModel.clear();
+        });
+    }
 }
 
 void AListView::setSize(int width, int height) {
