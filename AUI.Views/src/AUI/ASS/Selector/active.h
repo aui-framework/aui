@@ -38,13 +38,13 @@ namespace ass {
         }
 
         bool isStateApplicable(AView* view) override {
-            return Base::isStateApplicable(view) && view->isFocused();
+            return Base::isStateApplicable(view) && view->isMousePressed();
         }
 
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
             Base::setupConnections(view, helper);
             view->focusState.clearAllConnectionsWith(helper.get());
-            AObject::connect(view->focusState, slot(helper)::onInvalidateStateAss);
+            AObject::connect(view->pressedState, slot(helper)::onInvalidateStateAss);
         }
     };
 }
