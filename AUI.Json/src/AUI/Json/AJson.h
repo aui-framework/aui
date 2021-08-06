@@ -32,12 +32,29 @@
 namespace aui::json::conv {
     template<typename T>
     struct conv {
+    private:
+        static constexpr bool not_uses_variant() {
+            return std::is_class_v<T> && !std::is_base_of_v<AString, T>;
+        }
+    public:
         static T from_json(const AJsonElement& v) {
-            return v.asVariant().to<T>();
+            if constexpr (not_uses_variant()) {
+                // for AJSON_FIELDS
+                T t;
+                t.readJson(v);
+                return t;
+            } else {
+                return v.asVariant().to<T>();
+            }
         }
 
         static AJsonElement to_json(const T& t) {
-            return AJsonValue(t);
+            if constexpr (not_uses_variant()) {
+                // for AJSON_FIELDS
+                return t.toJson();
+            } else {
+                return AJsonValue(t);
+            }
         }
     };
 }
@@ -64,6 +81,16 @@ namespace aui::json::conv {
 
         static AJsonElement to_json(const AUuid& t) {
             return AJsonValue(t.toString());
+        }
+    };
+    template<>
+    struct conv<AVariant> {
+        static AVariant from_json(const AJsonElement& v) {
+            return v.asVariant();
+        }
+
+        static AJsonElement to_json(const AVariant& t) {
+            return AJsonValue(t);
         }
     };
 
@@ -93,7 +120,7 @@ namespace aui::json::conv {
         }
 
         static AJsonElement to_json(const std::pair<T1, T2>& t) {
-            AJsonElement r;
+            AJsonObject r;
             r["k"] = aui::to_json<T1>(t.first);
             r["v"] = aui::to_json<T2>(t.second);
             return r;

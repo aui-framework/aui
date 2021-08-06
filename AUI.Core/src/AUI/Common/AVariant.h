@@ -107,47 +107,6 @@ public:
 	}
 	
 	~AVariantHelper() override = default;
-	int toInt() override
-	{
-		return mStored;
-	}
-	unsigned toUInt() override
-	{
-		return mStored;
-	}
-	float toFloat() override
-	{
-		return mStored;
-	}
-	double toDouble() override
-	{
-		return mStored;
-	}
-	bool toBool() override
-	{
-		return mStored;
-	}
-	bool isNull() override
-	{
-		return false;
-	}
-	AString toString() override
-	{
-		return AClass<T>::name();
-	}
-
-	size_t hash() override
-	{
-		return std::hash<T>()(mStored);
-	}
-
-    AVariantType::Type getType() override {
-        return AVariantType::getTypeOf<T>();
-	}
-
-	T& getData() {
-	    return mStored;
-	}
 };
 
 
