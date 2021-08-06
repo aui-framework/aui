@@ -40,6 +40,21 @@ namespace aui::json::conv {
             return AJsonValue(t);
         }
     };
+}
+
+
+namespace aui {
+    template<typename T>
+    inline AJsonElement to_json(const T& t) {
+        return json::conv::conv<T>::to_json(t);
+    }
+    template<typename T>
+    inline T from_json(const AJsonElement& v) {
+        return json::conv::conv<T>::from_json(v);
+    }
+}
+
+namespace aui::json::conv {
 
     template<>
     struct conv<AUuid> {
@@ -70,7 +85,22 @@ namespace aui::json::conv {
             return result;
         }
     };
+
+    template<typename T1, typename T2>
+    struct conv<std::pair<T1, T2>> {
+        static std::pair<T1, T2> from_json(const AJsonElement& v) {
+            return std::pair<T1, T2>{ aui::from_json<T1>(v["k"]), aui::from_json<T2>(v["v"]) };
+        }
+
+        static AJsonElement to_json(const std::pair<T1, T2>& t) {
+            AJsonElement r;
+            r["k"] = aui::to_json<T1>(t.first);
+            r["v"] = aui::to_json<T2>(t.second);
+            return r;
+        }
+    };
 }
+
 
 namespace aui::json::impl {
     struct helper {

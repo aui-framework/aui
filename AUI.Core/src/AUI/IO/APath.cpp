@@ -369,21 +369,26 @@ AVector<APath> APath::find(const AString& filename, const AVector<APath>& locati
         return !!(flags & PathFinder::SINGLE) && !result.empty();
     };
     auto locateImpl = [&](const AVector<AString>& container) {
-        for (const APath& pathEntry : container) {
-            auto fullPath = pathEntry[filename];
-            if (fullPath.isRegularFileExists()) {
-                result << fullPath;
-                if (doReturn()) {
-                    return;
+        auto c = [&](auto& c, const AVector<AString>& container) mutable {
+            for (const APath& pathEntry : container) {
+                auto fullPath = pathEntry[filename];
+                if (fullPath.isRegularFileExists()) {
+                    result << fullPath;
+                    if (doReturn()) {
+                        return;
+                    }
+                }
+
+                if (!!(flags & PathFinder::RECURSIVE)) {
+                    if (pathEntry.isDirectoryExists()) {
+                        auto list = pathEntry.listDir();
+                        c(c, AVector<AString>{ list.begin(), list.end() });
+                    }
                 }
             }
 
-            if (!!(flags & PathFinder::RECURSIVE)) {
-                if (fullPath.isDirectoryExists()) {
-
-                }
-            }
-        }
+        };
+        c(c, container);
     };
 
     locateImpl((const AVector<AString>&) locations);

@@ -302,11 +302,16 @@ void AChildProcess::run() {
     auto splt = mArgs.split(' ');
     char** argv = new char*[splt.size() + 1];
     size_t counter = 0;
+    {
+        auto s = mApplicationFile.toStdString();
+        argv[0] = new char[s.length() + 1];
+        strcpy(argv[0], s.c_str());
+    }
     for (auto& s : splt) {
         auto stdString = s.toStdString();
         auto cString = new char[stdString.length() + 1];
         strcpy(cString, stdString.c_str());
-        argv[counter++] = cString;
+        argv[++counter] = cString;
     }
     argv[splt.size()] = nullptr;
 
