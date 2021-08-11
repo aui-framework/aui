@@ -32,38 +32,38 @@
 
 class API_AUI_CORE AImage {
 public:
-	enum Format : unsigned {
-		UNKNOWN = 0,
-		R = 1,
-		RG = 2,
-		RGB = 3,
-		RGBA = 4,
-		FLOAT = 8,
-		BYTE = 16
-	};
+    enum Format : unsigned {
+        UNKNOWN = 0,
+        R = 1,
+        RG = 2,
+        RGB = 3,
+        RGBA = 4,
+        FLOAT = 8,
+        BYTE = 16
+    };
 private:
-	AVector<uint8_t> mData;
-	uint16_t mWidth;
-	uint16_t mHeight;
-	unsigned mFormat = UNKNOWN;
-	
+    AVector<uint8_t> mData;
+    uint32_t mWidth;
+    uint32_t mHeight;
+    unsigned mFormat = UNKNOWN;
+
 public:
-	AImage();
-	AImage(Format f);
-	AImage(AVector<uint8_t> mData, uint16_t mWidth, uint16_t mHeight, int mFormat);
+    AImage();
+    AImage(Format f);
+    AImage(AVector<uint8_t> mData, uint32_t mWidth, uint32_t mHeight, int mFormat);
 
-	void allocate() {
-	    mData.resize(mWidth * mHeight * getBytesPerPixel());
-	}
+    void allocate() {
+        mData.resize(mWidth * mHeight * getBytesPerPixel());
+    }
 
-	AVector<uint8_t>& getData();
+    AVector<uint8_t>& getData();
 
-    [[nodiscard]] inline uint16_t getWidth() const {
-	    return mWidth;
-	}
-    [[nodiscard]] inline uint16_t getHeight() const {
-	    return mHeight;
-	}
+    [[nodiscard]] inline uint32_t getWidth() const {
+        return mWidth;
+    }
+    [[nodiscard]] inline uint32_t getHeight() const {
+        return mHeight;
+    }
 
     inline unsigned getFormat() const {
         return mFormat;
@@ -82,21 +82,21 @@ public:
 
 
     inline glm::ivec2 getSize() const {
-	    return {getWidth(), getHeight()};
-	}
+        return {getWidth(), getHeight()};
+    }
 
-    glm::ivec4 getPixelAt(uint16_t x, uint16_t y) const;
-    void setPixelAt(uint16_t x, uint16_t y, const glm::ivec4& val);
+    glm::ivec4 getPixelAt(uint32_t x, uint32_t y) const;
+    void setPixelAt(uint32_t x, uint32_t y, const glm::ivec4& val);
 
-	static AImage addAlpha(const AImage& AImage);
-	static AImage resize(const AImage& src, uint16_t width, uint16_t height);
-	static AImage resizeLinearDownscale(const AImage& src, uint16_t width, uint16_t height);
-	static void copy(const AImage& src, AImage& dst, uint32_t x, uint32_t y);
+    static AImage addAlpha(const AImage& AImage);
+    static AImage resize(const AImage& src, uint32_t width, uint32_t height);
+    static AImage resizeLinearDownscale(const AImage& src, uint32_t width, uint32_t height);
+    static void copy(const AImage& src, AImage& dst, uint32_t x, uint32_t y);
 
-    uint8_t& at(uint16_t x, uint16_t y) {
+    uint8_t& at(uint32_t x, uint32_t y) {
         return mData[(y * getWidth() + x) * getBytesPerPixel()];
     }
-    const uint8_t& at(uint16_t x, uint16_t y) const {
+    const uint8_t& at(uint32_t x, uint32_t y) const {
         return mData[(y * getWidth() + x) * getBytesPerPixel()];
     }
 
