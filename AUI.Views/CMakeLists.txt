@@ -40,7 +40,10 @@ if (OPENGL_FOUND)
 	else()
 		message(STATUS "Using embedded GLEW")
 		set(BUILD_UTILS OFF)
-		add_subdirectory(3rdparty/glew/build/cmake)
+
+		if (NOT TARGET glew_s)
+			add_subdirectory(3rdparty/glew/build/cmake)
+		endif()
 		set_property(TARGET glew_s PROPERTY POSITION_INDEPENDENT_CODE ON)
 	endif()
 
