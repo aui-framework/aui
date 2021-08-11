@@ -81,6 +81,7 @@ struct initialize
         }
 #endif
 #ifdef _WIN32
+#ifndef AUI_DISABLE_HIDPI
         typedef BOOL(WINAPI *SetProcessDpiAwarenessContext_t)(HANDLE);
         auto SetProcessDpiAwarenessContext = (SetProcessDpiAwarenessContext_t)GetProcAddress(GetModuleHandleA("User32.dll"), "SetProcessDpiAwarenessContext");
 
@@ -88,6 +89,7 @@ struct initialize
             // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
             SetProcessDpiAwarenessContext((HANDLE) -4);
         }
+#endif
 #endif
     }
 } init;
