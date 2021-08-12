@@ -126,7 +126,7 @@ Render::Render()
                     "}"
                     + color +
                     "gl_FragColor = vec4(fcolor.rgb, fcolor.a * alpha);"
-                    "}");
+                    "}", { "pos", "uv" });
         };
         produceRoundedAntialiasedShader(mRoundedSolidShaderAntialiased,
                                         {},
