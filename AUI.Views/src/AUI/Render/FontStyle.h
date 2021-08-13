@@ -29,7 +29,7 @@
 class AString;
 
 
-struct FontStyle {
+struct API_AUI_VIEWS FontStyle {
 	mutable _<AFont> font;
 	uint8_t size = 12;
 	bool formatting = false;
