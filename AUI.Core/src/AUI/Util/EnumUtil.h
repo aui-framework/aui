@@ -34,6 +34,9 @@
                                               \
 				   constexpr inline bool operator&&(const name& a, bool v) {return static_cast<int>(a) && v;}                                     \
 				   constexpr inline bool operator||(const name& a, bool v) {return static_cast<int>(a) || v;}                                     \
+				   constexpr inline bool operator|(const name& a, bool v) {return static_cast<int>(a) | v;}                                     \
+				   constexpr inline bool operator&(const name& a, bool v) {return static_cast<int>(a) & v;}                                     \
+				   constexpr inline bool operator^(const name& a, bool v) {return static_cast<int>(a) ^ v;}                                     \
 \
 				   enum class name: int
 
