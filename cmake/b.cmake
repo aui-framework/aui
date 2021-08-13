@@ -422,6 +422,7 @@ function(AUI_Module AUI_MODULE_NAME)
     string(TOUPPER "API_${BUILD_DEF_NAME}" BUILD_DEF_NAME)
     target_compile_definitions(${AUI_MODULE_NAME} INTERFACE ${BUILD_DEF_NAME}=AUI_IMPORT)
     target_compile_definitions(${AUI_MODULE_NAME} PRIVATE ${BUILD_DEF_NAME}=AUI_EXPORT)
+    target_compile_definitions(${AUI_MODULE_NAME} PUBLIC GLM_FORCE_INLINE=1)
 
     AUI_Add_Properties(${AUI_MODULE_NAME})
 
