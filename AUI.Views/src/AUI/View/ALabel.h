@@ -54,7 +54,6 @@ protected:
 	}
 
     //void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
-    void doRenderText();
     AString getCompiledMultilineText();
 
 
@@ -66,6 +65,7 @@ public:
 	explicit ALabel(const AString& text);
 
 	void render() override;
+    void doRenderText();
 
 	int getContentMinimumWidth() override;
 	int getContentMinimumHeight() override;

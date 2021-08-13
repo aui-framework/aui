@@ -19,48 +19,34 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 01.01.2021.
+//
+
 #pragma once
 
-#include <AUI/api.h>
+#include <AUI/Util/AMetric.h>
+#include "IDeclaration.h"
 
-class AView;
-class AAssHelper;
-
-namespace ass::decl {
-    enum class DeclarationSlot {
-        NONE,
-
-        TRANSFORM_SCALE,
-        TRANSFORM_OFFSET,
-
-        SHADOW,
-        RENDER_OVERFLOW,
-        IMAGE_RENDERING,
-        BACKGROUND_SOLID,
-        BACKGROUND_IMAGE,
-        BORDER,
-        TEXT_SHADOW,
-
-        COUNT,
+namespace ass {
+    struct TextBorder {
+        AColor borderColor;
     };
 
-    struct API_AUI_VIEWS IDeclarationBase {
-    public:
-        virtual void applyFor(AView* view) {};
-        virtual void renderFor(AView* view) {};
-        virtual bool isNone() { return false; }
-        [[nodiscard]] virtual DeclarationSlot getDeclarationSlot() const {
-            return DeclarationSlot::NONE;
-        }
-    };
-    template<typename DeclarationStruct>
-    struct Declaration: IDeclarationBase {
-    protected:
-        DeclarationStruct mDeclarationStruct;
-    public:
-        Declaration(const DeclarationStruct& data): mDeclarationStruct(data) {}
-    };
+    namespace decl {
+        template<>
+        struct API_AUI_VIEWS Declaration<TextBorder>: IDeclarationBase {
+        private:
+            TextBorder mInfo;
+
+        public:
+            Declaration(const TextBorder& info) : mInfo(info) {
+
+            }
+
+            void renderFor(AView* view) override;
+
+            DeclarationSlot getDeclarationSlot() const override;
+        };
+    }
 }
-
-#include "AUI/View/AView.h"
-#include <AUI/ASS/unset.h>

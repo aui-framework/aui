@@ -19,48 +19,43 @@
  * =====================================================================================================================
  */
 
-#pragma once
+//
+// Created by alex2 on 01.01.2021.
+//
 
-#include <AUI/api.h>
+#include "TextBorder.h"
+#include <AUI/View/ALabel.h>
+#include <AUI/Render/RenderHints.h>
 
-class AView;
-class AAssHelper;
-
-namespace ass::decl {
-    enum class DeclarationSlot {
-        NONE,
-
-        TRANSFORM_SCALE,
-        TRANSFORM_OFFSET,
-
-        SHADOW,
-        RENDER_OVERFLOW,
-        IMAGE_RENDERING,
-        BACKGROUND_SOLID,
-        BACKGROUND_IMAGE,
-        BORDER,
-        TEXT_SHADOW,
-
-        COUNT,
-    };
-
-    struct API_AUI_VIEWS IDeclarationBase {
-    public:
-        virtual void applyFor(AView* view) {};
-        virtual void renderFor(AView* view) {};
-        virtual bool isNone() { return false; }
-        [[nodiscard]] virtual DeclarationSlot getDeclarationSlot() const {
-            return DeclarationSlot::NONE;
+void ass::decl::Declaration<ass::TextBorder>::renderFor(AView* view) {
+    if (auto label = dynamic_cast<ALabel*>(view)) {
+        auto prevColor = view->getFontStyle().color;
+        view->getFontStyle().color = mInfo.borderColor;
+        view->invalidateFont();
+        {
+            RenderHints::PushMatrix m;
+            Render::inst().translate({-1, 0});
+            label->doRenderText();
         }
-    };
-    template<typename DeclarationStruct>
-    struct Declaration: IDeclarationBase {
-    protected:
-        DeclarationStruct mDeclarationStruct;
-    public:
-        Declaration(const DeclarationStruct& data): mDeclarationStruct(data) {}
-    };
+        {
+            RenderHints::PushMatrix m;
+            Render::inst().translate({1, 0});
+            label->doRenderText();
+        }
+        {
+            RenderHints::PushMatrix m;
+            Render::inst().translate({0, -1});
+            label->doRenderText();
+        }
+        {
+            RenderHints::PushMatrix m;
+            Render::inst().translate({0, 1});
+            label->doRenderText();
+        }
+        view->getFontStyle().color = prevColor;
+        view->invalidateFont();
+    }
 }
-
-#include "AUI/View/AView.h"
-#include <AUI/ASS/unset.h>
+ass::decl::DeclarationSlot ass::decl::Declaration<ass::TextBorder>::getDeclarationSlot() const {
+    return ass::decl::DeclarationSlot::TEXT_SHADOW;
+}

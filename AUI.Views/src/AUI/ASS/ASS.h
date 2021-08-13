@@ -49,6 +49,7 @@
 #include "Declaration/Overflow.h"
 #include "Declaration/Padding.h"
 #include "Declaration/TextAlign.h"
+#include "Declaration/TextBorder.h"
 #include "Declaration/TextColor.h"
 #include "Declaration/TransformOffset.h"
 #include "Declaration/TransformScale.h"
