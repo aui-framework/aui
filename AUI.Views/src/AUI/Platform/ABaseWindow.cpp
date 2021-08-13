@@ -62,7 +62,16 @@ void ABaseWindow::focusNextView() {
                 // up though hierarchy
                 while (auto parent = target->getParent()) {
                     auto& parentViews = parent->getViews();
-                    auto index = parentViews.indexOf(target) + 1;
+
+                    auto index = [&]() -> size_t {
+                        for (size_t i = 0; i < parentViews.size(); ++i)
+                        {
+                            if (parentViews[i].get() == target)
+                                return i;
+                        }
+
+                        return static_cast<size_t>(-1);
+                    }()  + 1;
                     if (index >= parentViews.size()) {
 
                         // jump to the next container since we already visited all the elements in current container
