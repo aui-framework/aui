@@ -362,6 +362,8 @@ struct {
     Atom netWmStateMaximizedHorz;
     Atom clipboard;
     Atom utf8String;
+    Atom textPlain;
+    Atom textPlainUtf8;
     Atom auiClipboard;
     Atom incr;
     Atom targets;
@@ -379,6 +381,8 @@ struct {
         netWmStateMaximizedHorz = XInternAtom(gDisplay, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
         clipboard = XInternAtom(gDisplay, "CLIPBOARD", False);
         utf8String = XInternAtom(gDisplay, "UTF8_STRING", False);
+        textPlain = XInternAtom(gDisplay, "text/plain", False);
+        textPlainUtf8 = XInternAtom(gDisplay, "text/plain;charset=utf-8", False);
         auiClipboard = XInternAtom(gDisplay, "AUI_CLIPBOARD", False);
         incr = XInternAtom(gDisplay, "INCR", False);
         targets = XInternAtom(gDisplay, "TARGETS", False);
@@ -1641,11 +1645,13 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     ALogger::info("{}: {}"_as.format(targetName, propertyName));
                     XFree(targetName);
                     XFree(propertyName);
-                    if (ev.xselectionrequest.target == gAtoms.utf8String) { // check for UTF8_STRING
+                    if (ev.xselectionrequest.target == gAtoms.utf8String ||
+                        ev.xselectionrequest.target == gAtoms.textPlain ||
+                        ev.xselectionrequest.target == gAtoms.textPlainUtf8) { // check for UTF8_STRING
                         XChangeProperty(gDisplay,
                                         ev.xselectionrequest.requestor,
                                         ev.xselectionrequest.property,
-                                        gAtoms.utf8String,
+                                        ev.xselectionrequest.target,
                                         8,
                                         PropModeReplace,
                                         (unsigned char*) mXClipboardText.c_str(),
@@ -1664,7 +1670,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         XChangeProperty(gDisplay,
                                         ev.xselectionrequest.requestor,
                                         ev.xselectionrequest.property,
-                                        gAtoms.clipboard,
+                                        ev.xselectionrequest.target,
                                         8,
                                         PropModeReplace,
                                         (unsigned char*) atoms,
