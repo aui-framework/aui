@@ -44,9 +44,9 @@ public:
 
     void updateLayout() override;
 
-    class API_AUI_VIEWS ADraggableHandle: public AView {
+    class API_AUI_VIEWS ADraggableHandle: public AViewContainer {
     private:
-        std::tuple<ADragArea*, AViewContainer*> getDragAreaAndDraggingView() const;
+        std::tuple<ADragArea*, AViewContainer*> getDragAreaAndDraggingView();
         bool mDragging = false;
 
     public:
@@ -58,6 +58,8 @@ public:
     signals:
         emits<glm::ivec2> mouseMove;
     };
+
+    static _<AView> makeDraggable(const _<AView>& view);
 };
 
 

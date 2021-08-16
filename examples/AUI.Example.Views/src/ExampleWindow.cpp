@@ -49,6 +49,7 @@
 #include <AUI/View/ATreeView.h>
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Platform/AMessageBox.h>
+#include <AUI/View/ADragArea.h>
 
 using namespace ass;
 
@@ -106,7 +107,14 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                     "Combobox 5",
                     "Combobox 6",
             })),
-            _new<AComboBox>(_new<AListModel<AString>>({"Disabled combobox"})) let { it->setDisabled(); }
+            _new<AComboBox>(_new<AListModel<AString>>({"Disabled combobox"})) let { it->setDisabled(); },
+            _new<ADragArea>() let {
+                it with_style {
+                        MinSize { 100_dp },
+                        Border { 1_px, 0x0_rgb, },
+                };
+                it->addView(ADragArea::makeDraggable(_new<AButton>("Drag me!")));
+            },
 	    });
 	}
 

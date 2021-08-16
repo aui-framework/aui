@@ -32,8 +32,8 @@ ADragArea::ADragArea() {
     setExpanding({1, 1});
 }
 
-std::tuple<ADragArea*, AViewContainer*> ADragArea::ADraggableHandle::getDragAreaAndDraggingView() const {
-    AViewContainer* potentionalDragArea = mParent;
+std::tuple<ADragArea*, AViewContainer*> ADragArea::ADraggableHandle::getDragAreaAndDraggingView() {
+    AViewContainer* potentionalDragArea = this;
     AViewContainer* potentionalDraggingView = mParent;
 
     while (potentionalDragArea) {
@@ -49,7 +49,7 @@ std::tuple<ADragArea*, AViewContainer*> ADragArea::ADraggableHandle::getDragArea
 }
 
 void ADragArea::ADraggableHandle::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    AView::onMousePressed(pos, button);
+    AViewContainer::onMousePressed(pos, button);
     mDragging = true;
 
     auto [dragArea, container] = getDragAreaAndDraggingView();
@@ -58,7 +58,7 @@ void ADragArea::ADraggableHandle::onMousePressed(glm::ivec2 pos, AInput::Key but
 }
 
 void ADragArea::ADraggableHandle::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AView::onMouseReleased(pos, button);
+    AViewContainer::onMouseReleased(pos, button);
     if (mDragging) {
         mDragging = false;
         auto[dragArea, _] = getDragAreaAndDraggingView();
@@ -68,7 +68,7 @@ void ADragArea::ADraggableHandle::onMouseReleased(glm::ivec2 pos, AInput::Key bu
 }
 
 void ADragArea::ADraggableHandle::onMouseMove(glm::ivec2 pos) {
-    AView::onMouseMove(pos);
+    AViewContainer::onMouseMove(pos);
     if (mDragging) {
         emit mouseMove(pos);
     }
@@ -107,4 +107,12 @@ void ADragArea::setValidPositionFor(const _<AView>& targetView, const glm::ivec2
     targetView->setPosition(
             glm::clamp(newPosition, glm::ivec2{targetView->getMargin().left, targetView->getMargin().top},
                        getSize() - targetView->getSize() - glm::ivec2{targetView->getMargin().right, targetView->getMargin().bottom}));
+}
+
+_<AView> ADragArea::makeDraggable(const _<AView>& view) {
+    auto v = _new<ADraggableHandle>();
+    v->setLayout(_new<AStackedLayout>());
+    v->setExpanding({view->getExpandingHorizontal(), view->getExpandingVertical()});
+    v->addView(view);
+    return v;
 }
