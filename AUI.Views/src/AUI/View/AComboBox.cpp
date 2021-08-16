@@ -42,7 +42,7 @@ public:
 
         setWindowStyle(WindowStyle::SYS);
         setLayout(_new<AVerticalLayout>());
-        addView(mListView = _new<AListView>(model) let { it->setExpanding({2, 2}); });
+        addView(mListView = _new<AListView>(model) let { it->setExpanding(); });
     }
 
     _<AListView> mListView;

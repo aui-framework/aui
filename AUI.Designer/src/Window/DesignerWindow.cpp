@@ -64,13 +64,13 @@ DesignerWindow::DesignerWindow():
             _container<AStackedLayout>({
                 _new<FakeWindow>()
             }) let {
-                setExpanding({2, 2});
+                setExpanding();
             })
         }) let {
-            setExpanding({2, 2});
+            setExpanding();
         })
     }) let {
-        setExpanding({2, 2});
+        setExpanding();
     }));
     setCss("padding: 0");
 }

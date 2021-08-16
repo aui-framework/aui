@@ -66,10 +66,10 @@ FractalWindow::FractalWindow():
                 centerPosDisplay
             })
         }) let {
-            it->setExpanding({2, 2});
+            it->setExpanding();
         }
     }) let {
-        it->setExpanding({2, 2});
+        it->setExpanding();
     });
 
 

@@ -353,7 +353,7 @@ ATextArea::ATextArea() {
     setLayout(_new<AHorizontalLayout>());
     mScrollbar = _new<AScrollbar>();
     addView(mTextField = _new<TextAreaField>(*this) let {
-        it->setExpanding({2, 2});
+        it->setExpanding();
     });
     addView(mScrollbar);
 }

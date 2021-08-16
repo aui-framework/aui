@@ -191,7 +191,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     addView(mScrollbar = _new<AScrollbar>());
 
     mContent->setLayout(_new<AVerticalLayout>());
-    mContent->setExpanding({2, 2});
+    mContent->setExpanding();
 
     connect(mScrollbar->scrolled, mContent, &ContainerView::setScrollY);
 

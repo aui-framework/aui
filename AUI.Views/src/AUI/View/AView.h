@@ -397,6 +397,10 @@ public:
 	{
 		mExpanding = expanding;
 	}
+    void setExpanding()
+    {
+        mExpanding = glm::ivec2(1);
+    }
 
     const _<AAnimator>& getAnimator() const {
 	    return mAnimator;

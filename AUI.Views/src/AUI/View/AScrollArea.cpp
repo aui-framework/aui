@@ -68,9 +68,9 @@ AScrollArea::AScrollArea() {
     addView(mVerticalScrollbar = _new<AScrollbar>(LayoutDirection::VERTICAL));
     addView(mHorizontalScrollbar = _new<AScrollbar>(LayoutDirection::HORIZONTAL));
 
-    mContentContainer->setExpanding({2, 2});
+    mContentContainer->setExpanding();
 
-    setExpanding({2, 2});
+    setExpanding();
 
 
     connect(mVerticalScrollbar->scrolled, slot(contentContainer)::setScrollY);

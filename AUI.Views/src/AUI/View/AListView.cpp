@@ -146,7 +146,7 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
     addView(mScrollbar = _new<AScrollbar>());
 
     mContent->setLayout(_new<AVerticalLayout>());
-    mContent->setExpanding({2, 2});
+    mContent->setExpanding();
 
     connect(mScrollbar->scrolled, mContent, &AListViewContainer::setScrollY);
     mObserver->setModel(model);

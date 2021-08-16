@@ -29,6 +29,7 @@
 
 ADragArea::ADragArea() {
     setLayout(_new<AStackedLayout>());
+    setExpanding({1, 1});
 }
 
 std::tuple<ADragArea*, AViewContainer*> ADragArea::ADraggableHandle::getDragAreaAndDraggingView() const {

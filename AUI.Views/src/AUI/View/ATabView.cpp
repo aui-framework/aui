@@ -41,7 +41,7 @@ ATabView::ATabView() {
 
 void ATabView::addTab(const _<AView>& view, const AString& name) {
     mPageView->addPage(view);
-    view->setExpanding({2, 2});
+    view->setExpanding();
     auto id = mRow->getContents()->getViews().size();
     auto c = _new<ATabButtonView>(name);
     c->setCurrent(id == mPageView->getPageId());

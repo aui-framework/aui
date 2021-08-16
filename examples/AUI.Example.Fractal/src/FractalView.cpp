@@ -30,7 +30,7 @@
 FractalView::FractalView():
     mTransform(1.f)
 {
-    setExpanding({2, 2});
+    setExpanding();
     mShader.load(
             "in vec4 pos;"
                  "in vec2 uv;"
