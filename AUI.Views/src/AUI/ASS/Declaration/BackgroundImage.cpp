@@ -107,37 +107,134 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                     auto texture = _cast<ImageDrawable>(drawable);
                     texture->bind();
                     scale *= AWindow::current()->getDpiRatio();
-                    glm::vec2 cutSize = (glm::vec2(img->getSize()) - glm::vec2(view->getSize()) / scale) / 2.f / glm::vec2(img->getSize());
+                    float chunkWidth = glm::min(view->getWidth() / 2.f, img->getWidth() / 2.f);
+                    float chunkHeight = glm::min(view->getHeight() / 2.f, img->getHeight() / 2.f);
+
+                    glm::vec2 cutSize = (glm::vec2(img->getSize()) - glm::vec2(chunkWidth, chunkHeight) * 2.f / scale) / 2.f / glm::vec2(img->getSize());
 
                     Render::inst().setFill(Render::FILL_TEXTURED);
+
+
+                    // upper left
                     Render::inst().drawTexturedRect(0,
                                                     0,
-                                                    view->getWidth() / 2.f,
-                                                    view->getHeight() / 2.f,
+                                                    chunkWidth,
+                                                    chunkHeight,
                                                     {0, 0},
                                                     glm::vec2(0.5f) - cutSize);
 
-                    Render::inst().drawTexturedRect(view->getWidth() / 2.f,
+                    // upper right
+                    Render::inst().drawTexturedRect(view->getWidth() - chunkWidth,
                                                     0,
-                                                    view->getWidth() / 2.f,
-                                                    view->getHeight() / 2.f,
+                                                    chunkWidth,
+                                                    chunkHeight,
                                                     {0.5f + cutSize.x, 0 },
                                                     {1.f, 0.5f - cutSize.y });
 
+                    // lower left
                     Render::inst().drawTexturedRect(0,
-                                                    view->getHeight() / 2.f,
-                                                    view->getWidth() / 2.f,
-                                                    view->getHeight() / 2.f,
+                                                    view->getHeight() - chunkHeight,
+                                                    chunkWidth,
+                                                    chunkHeight,
                                                     {0, 0.5f + cutSize.y },
                                                     {0.5f - cutSize.x, 1.f });
 
-                    Render::inst().drawTexturedRect(view->getWidth() / 2.f,
-                                                    view->getHeight() / 2.f,
-                                                    view->getWidth() / 2.f,
-                                                    view->getHeight() / 2.f,
+                    // lower right
+                    Render::inst().drawTexturedRect(view->getWidth() - chunkWidth,
+                                                    view->getHeight() - chunkHeight,
+                                                    chunkWidth,
+                                                    chunkHeight,
                                                     glm::vec2(0.5f) + cutSize,
                                                     {1, 1});
 
+                    bool expandX = view->getWidth() > img->getWidth();
+                    bool expandY = view->getHeight() > img->getHeight();
+
+                    /*
+                     * lets image our scene as follows:
+                     *
+                     *     +*+
+                     *     *#*
+                     *     +*+
+                     *
+                     * where: + is a corner,
+                     *        * is a side,
+                     *        # is a center.
+                     */
+                    if (expandX && expandY) {
+                        /*
+                         * drawing top side
+                         *      v
+                         *     +*+
+                         *     *#*
+                         *     +*+
+                         */
+                        Render::inst().drawTexturedRect(chunkWidth,
+                                                        0,
+                                                        view->getWidth() - 2 * chunkWidth,
+                                                        chunkHeight,
+                                                        {0.5f, 0.f},
+                                                        {0.5f, 0.5f});
+                        /*
+                         *     +*+
+                         *     *#*
+                         *     +*+
+                         *      ^
+                         * drawing bottom side
+                         */
+                        Render::inst().drawTexturedRect(chunkWidth,
+                                                        view->getHeight() - chunkHeight,
+                                                        view->getWidth() - 2 * chunkWidth,
+                                                        chunkHeight,
+                                                        {0.5f, 0.5f},
+                                                        {0.5f, 1.f});
+                        /*
+                         *                +*+
+                         * drawing left > *#*
+                         *     side       +*+
+                         */
+                        Render::inst().drawTexturedRect(0,
+                                                        chunkHeight,
+                                                        chunkWidth,
+                                                        view->getHeight() - chunkHeight * 2.f,
+                                                        {0.f, 0.5f},
+                                                        {0.5f, 0.5f});
+
+                        /*
+                         *  +*+
+                         *  *#* < drawing right
+                         *  +*+       side
+                         */
+                        Render::inst().drawTexturedRect(view->getWidth() - chunkWidth,
+                                                        chunkHeight,
+                                                        chunkWidth,
+                                                        view->getHeight() - chunkHeight * 2.f,
+                                                        {0.5f, 0.5f},
+                                                        {1.f, 0.5f});
+                        /*
+                         * drawing center
+                         */
+                        Render::inst().drawTexturedRect(chunkWidth,
+                                                        chunkHeight,
+                                                        view->getWidth() - 2 * chunkWidth,
+                                                        view->getHeight() - chunkHeight * 2.f,
+                                                        {0.5f, 0.5f},
+                                                        {0.5f, 0.5f});
+                    } else if (expandX) {
+                        Render::inst().drawTexturedRect(chunkWidth,
+                                                        0,
+                                                        view->getWidth() - 2 * chunkWidth,
+                                                        view->getHeight(),
+                                                        {0.5f, 0.f},
+                                                        {0.5f, 1.f});
+                    } else if (expandY) {
+                        Render::inst().drawTexturedRect(0,
+                                                        chunkHeight,
+                                                        view->getWidth(),
+                                                        view->getHeight() - 2 * chunkHeight,
+                                                        {0.f, 0.5f},
+                                                        {1.f, 0.5f});
+                    }
 
                     break;
                 }
