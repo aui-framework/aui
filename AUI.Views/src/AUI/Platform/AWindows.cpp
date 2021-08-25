@@ -1461,7 +1461,7 @@ void AWindowManager::notifyProcessMessages() {
 #if defined(_WIN32)
         auto& lastWindow = mWindows.back();
 
-        // we don't need to notify MS Windows' mesass::decl::Declaration<ass::Border>::renderForsage queue about new message if message sent from UI thread.
+        // we don't need to notify MS Windows' message queue about new message if message sent from UI thread.
         if (lastWindow->getThread() != AThread::current()) {
             PostMessage(lastWindow->mHandle, WM_USER, 0, 0);
         }

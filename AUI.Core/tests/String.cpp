@@ -40,6 +40,23 @@ BOOST_AUTO_TEST_CASE(UTF8)
     BOOST_TEST(memcmp(s.toUtf8()->data(), someUtfString, strlen(someUtfString)) == 0);
 
 }
+BOOST_AUTO_TEST_CASE(lowercase_en)
+{
+    BOOST_CHECK_EQUAL("Hello"_as.lowercase(), "hello");
+}
+BOOST_AUTO_TEST_CASE(uppercase_en)
+{
+    BOOST_CHECK_EQUAL("Hello"_as.uppercase(), "HELLO");
+}
+
+BOOST_AUTO_TEST_CASE(lowercase_ru)
+{
+    BOOST_CHECK_EQUAL("Привет"_as.lowercase(), "привет");
+}
+BOOST_AUTO_TEST_CASE(uppercase_ru)
+{
+    BOOST_CHECK_EQUAL("Привет"_as.uppercase(), "ПРИВЕТ");
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 

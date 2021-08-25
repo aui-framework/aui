@@ -65,6 +65,8 @@ void AEmbedAuiWrap::render() {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, 0);
     GL::State::activeTexture(0);
+    GL::State::useProgram(0);
+    GL::State::bindVertexArray(0);
     GL::State::bindTexture(GL_TEXTURE_2D, 0);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
