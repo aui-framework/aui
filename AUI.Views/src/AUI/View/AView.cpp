@@ -480,7 +480,7 @@ _<AView> AView::determineSharedPointer() {
 }
 
 void AView::focus() {
-    uiX [&]() {
+    ui_threadX [&]() {
         auto s = determineSharedPointer();
         assert(s);
         AWindow::current()->setFocusedView(s);

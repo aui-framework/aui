@@ -189,11 +189,11 @@
 /**
  * \brief Executes lambda on current object's thread.
  */
-#define ui (*getThread()) * [=]()
+#define ui_thread (*getThread()) * [=]()
 
 /**
  * \brief Executes lambda on current object's thread. Allows to determine lambda's capture.
  */
-#define uiX (*getThread()) *
+#define ui_threadX (*getThread()) *
 #define repeat(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex)
 #define repeat_async(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex) AThreadPool::global() << [=]()

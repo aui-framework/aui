@@ -292,7 +292,7 @@ AString ALabel::getCompiledMultilineText() {
 
 void ALabel::onDpiChanged() {
     AView::onDpiChanged();
-    uiX [&] {
+    ui_threadX [&] {
         mPrerendered.mVao = nullptr;
         redraw();
     };

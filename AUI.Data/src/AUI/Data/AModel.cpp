@@ -25,12 +25,8 @@
 
 #include "AModel.h"
 
-#define ui
-
 AModel::AModel() {
-    ui {
 
-    };
 }
 
 AModel*& AModel::currentModel() {

@@ -133,7 +133,7 @@ AListView::~AListView()
 }
 
 AListView::AListView(const _<IListModel<AString>>& model) {
-    ui {
+    ui_thread {
         mObserver = _new<AListModelObserver<AString>>(this);
         setModel(model);
     };
