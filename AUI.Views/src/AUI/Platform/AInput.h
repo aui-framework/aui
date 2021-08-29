@@ -133,8 +133,8 @@ namespace AInput
 		RButton,
 		KeyCount      ///< Keep last -- the total number of keyboard keys
 	};
-	Key fromNative(int w);
-	int toNative(Key w);
-	AString getName(Key k);
-	bool isKeyDown(Key k);
+	API_AUI_VIEWS Key fromNative(int w);
+    API_AUI_VIEWS int toNative(Key w);
+    API_AUI_VIEWS AString getName(Key k);
+    API_AUI_VIEWS bool isKeyDown(Key k);
 };
