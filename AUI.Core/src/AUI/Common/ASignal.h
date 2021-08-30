@@ -29,135 +29,135 @@
 template<typename... Args>
 class ASignal: public AAbstractSignal
 {
-	friend class AObject;
+    friend class AObject;
 
-	template <typename T>
-	friend class Watchable;
+    template <typename T>
+    friend class Watchable;
 public:
-	using func_t = std::function<void(Args...)>;
+    using func_t = std::function<void(Args...)>;
 
 private:
     std::tuple<Args...> mArgs;
 
-	struct slot
-	{
-		AObject* object; // TODO replace with weak_ptr
-		func_t func;
-	};
+    struct slot
+    {
+        AObject* object; // TODO replace with weak_ptr
+        func_t func;
+    };
 
-	AMutex mSlotsLock;
-	ADeque<slot> mSlots;
+    AMutex mSlotsLock;
+    ADeque<slot> mSlots;
 
-	void invokeSignal();
+    void invokeSignal();
 
-	template<typename Lambda, typename... A>
-	struct call_helper {};
+    template<typename Lambda, typename... A>
+    struct call_helper {};
 
-	// empty arguments
-	template<typename Lambda>
-	struct call_helper<void(Lambda::*)() const>
-	{
-		Lambda l;
+    // empty arguments
+    template<typename Lambda>
+    struct call_helper<void(Lambda::*)() const>
+    {
+        Lambda l;
 
-		explicit call_helper(Lambda l)
-			: l(l)
-		{
-		}
+        explicit call_helper(Lambda l)
+                : l(l)
+        {
+        }
 
-		void operator()(Args... args) {
-			l();
-		}
-	};
-	
-	template<typename Lambda, typename A1>
-	struct call_helper<void(Lambda::*)(A1) const>
-	{
-		Lambda l;
+        void operator()(Args... args) {
+            l();
+        }
+    };
 
-		explicit call_helper(Lambda l)
-			: l(l)
-		{
-		}
+    template<typename Lambda, typename A1>
+    struct call_helper<void(Lambda::*)(A1) const>
+    {
+        Lambda l;
 
-		template<typename... Others>
-		void call(A1 a1, Others...)
-		{
-			l(a1);
-		}
+        explicit call_helper(Lambda l)
+                : l(l)
+        {
+        }
 
-		void operator()(Args... args) {
-			call(args...);
-		}
-	};
-	template<typename Lambda, typename A1, typename A2>
-	struct call_helper<void(Lambda::*)(A1, A2) const>
-	{
-		Lambda l;
+        template<typename... Others>
+        void call(A1 a1, Others...)
+        {
+            l(a1);
+        }
 
-		explicit call_helper(Lambda l)
-			: l(l)
-		{
-		}
+        void operator()(Args... args) {
+            call(args...);
+        }
+    };
+    template<typename Lambda, typename A1, typename A2>
+    struct call_helper<void(Lambda::*)(A1, A2) const>
+    {
+        Lambda l;
 
-		template<typename... Others>
-		void call(A1 a1, A2 a2, Others...)
-		{
-			l(a1, a2);
-		}
+        explicit call_helper(Lambda l)
+                : l(l)
+        {
+        }
 
-		void operator()(Args... args) {
-			call(args...);
-		}
-	};
-	
-	
-	
-	// Member function
-	template<class Derived, class Object, typename... FArgs>
-	void connect(Derived derived, void(Object::* memberFunction)(FArgs...))
-	{
-		Object* object = static_cast<Object*>(derived);
-		connect(object, [object, memberFunction](FArgs... args)
-		{
-			(object->*memberFunction)(args...);
-		});
-	}
-	
-	// Lambda function
-	template<class Object, class Lambda>
-	void connect(Object object, Lambda lambda)
-	{
-		static_assert(std::is_class_v<Lambda>, "the lambda should be a class");
+        template<typename... Others>
+        void call(A1 a1, A2 a2, Others...)
+        {
+            l(a1, a2);
+        }
 
-		std::unique_lock lock(mSlotsLock);
-		mSlots.push_back({ object, call_helper<decltype(&Lambda::operator())>(lambda) });
+        void operator()(Args... args) {
+            call(args...);
+        }
+    };
 
-		linkSlot(object);
-	}
-	
+
+
+    // Member function
+    template<class Derived, class Object, typename... FArgs>
+    void connect(Derived derived, void(Object::* memberFunction)(FArgs...))
+    {
+        Object* object = static_cast<Object*>(derived);
+        connect(object, [object, memberFunction](FArgs... args)
+        {
+            (object->*memberFunction)(args...);
+        });
+    }
+
+    // Lambda function
+    template<class Object, class Lambda>
+    void connect(Object object, Lambda lambda)
+    {
+        static_assert(std::is_class_v<Lambda>, "the lambda should be a class");
+
+        std::unique_lock lock(mSlotsLock);
+        mSlots.push_back({ object, call_helper<decltype(&Lambda::operator())>(lambda) });
+
+        linkSlot(object);
+    }
+
 public:
     ASignal<Args...>& operator()(const Args&... args) {
         mArgs = std::make_tuple(args...);
         return *this;
     }
 
-	virtual ~ASignal()
-	{
-		std::unique_lock lock(mSlotsLock);
-		for (slot& slot : mSlots)
-		{
-			unlinkSlot(slot.object);
-		}
-	}
+    virtual ~ASignal()
+    {
+        std::unique_lock lock(mSlotsLock);
+        for (slot& slot : mSlots)
+        {
+            unlinkSlot(slot.object);
+        }
+    }
 
-	/**
-	 * Check whether signal contains any connected slots or not. It's very useful then signal argument values
-	 * calculation is expensive and you do not want to calculate them if no signals connected to the slot.
-	 * @return true, if slot contains any connected slots, false otherwise.
-	 */
-	operator bool() const {
-	    return !mSlots.empty();
-	}
+    /**
+     * Check whether signal contains any connected slots or not. It's very useful then signal argument values
+     * calculation is expensive and you do not want to calculate them if no signals connected to the slot.
+     * @return true, if slot contains any connected slots, false otherwise.
+     */
+    operator bool() const {
+        return !mSlots.empty();
+    }
 
     void clearAllConnections() override
     {
@@ -187,20 +187,23 @@ void ASignal<Args...>::invokeSignal()
 {
     if (mSlots.empty())
         return;
-	std::unique_lock lock(mSlotsLock);
-	for (auto i = mSlots.begin(); i != mSlots.end();)
-	{
+    std::unique_lock lock(mSlotsLock);
+    for (auto i = mSlots.begin(); i != mSlots.end();)
+    {
         if (i->object->getThread() != AThread::current())
         {
-            i->object->getThread()->enqueue([=]() {
+            auto obj = std::move(i->object);
+            auto func = std::move(i->func);
+            auto args = mArgs;
+            obj->getThread()->enqueue([this, obj, func, args]() {
                 AAbstractSignal::isDisconnected() = false;
-                (std::apply)(i->func, mArgs);
+                (std::apply)(func, args);
                 if (AAbstractSignal::isDisconnected()) {
                     std::unique_lock lock(mSlotsLock);
-                    unlinkSlot(i->object);
-                    mSlots.erase(i);
+                    unlinkSlot(obj);
                 }
             });
+            i = mSlots.erase(i);
         }
         else
         {
@@ -211,9 +214,9 @@ void ASignal<Args...>::invokeSignal()
                 i = mSlots.erase(i);
                 continue;
             }
+            ++i;
         }
-        ++i;
-	}
+    }
 }
 
 template<typename... Args>
