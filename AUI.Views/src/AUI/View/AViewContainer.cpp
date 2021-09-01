@@ -176,7 +176,7 @@ void AViewContainer::onMousePressed(glm::ivec2 pos, AInput::Key button)
 
 	auto p = getViewAt(pos);
 	if (p && p->isEnabled()) {
-		AWindow::current()->setFocusedView(p);
+		p->focus();
 		p->onMousePressed(pos - p->getPosition(), button);
 	}
 }
@@ -334,4 +334,8 @@ void AViewContainer::notifyParentEnabledStateChanged(bool enabled) {
     for (auto& v : mViews) {
         v->notifyParentEnabledStateChanged(enabled);
     }
+}
+
+void AViewContainer::focus() {
+    // we don't want to focus containers.
 }

@@ -480,9 +480,9 @@ public:
 	void pack();
 
 	/**
-	 * \brief Requests focus for this AView.
+	 * \brief Requests focus for this AView. It's overridden for AViewContainer.
 	 */
-	 void focus();
+	 virtual void focus();
 
 
 	/**

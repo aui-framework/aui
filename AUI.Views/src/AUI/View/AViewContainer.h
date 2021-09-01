@@ -79,8 +79,9 @@ public:
 
 	void render() override;
 
+    void focus() override;
 
-	void onMouseEnter() override;
+    void onMouseEnter() override;
 	void onMouseMove(glm::ivec2 pos) override;
 	void onMouseLeave() override;
 
