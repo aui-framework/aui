@@ -65,6 +65,10 @@ public:
 
     void onCharEntered(wchar_t c) override;
 
+    void makeCurrent() {
+        currentWindowStorage() = this;
+    }
+
 signals:
     emits<> dpiChanged;
 };

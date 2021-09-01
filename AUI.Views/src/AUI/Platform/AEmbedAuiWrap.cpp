@@ -31,7 +31,7 @@
 #include <AUI/Platform/AWindow.h>
 
 class AEmbedAuiWrap::FakeWindow: public ABaseWindow {
-friend class AEmbedAuiWrap;
+    friend class AEmbedAuiWrap;
 public:
     FakeWindow() {
         currentWindowStorage() = this;
@@ -50,6 +50,7 @@ void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
 }
 
 void AEmbedAuiWrap::setSize(int width, int height) {
+    mContainer->makeCurrent();
     mWidth = width;
     mHeight = height;
     mContainer->setSize(width, height);
@@ -58,6 +59,7 @@ void AEmbedAuiWrap::setSize(int width, int height) {
 }
 
 void AEmbedAuiWrap::render() {
+    mContainer->makeCurrent();
     AThread::current()->processMessages();
 
     glEnable(GL_STENCIL_TEST);
@@ -73,9 +75,9 @@ void AEmbedAuiWrap::render() {
 
     Render::inst().setColorForced(1.f);
     Render::inst().setTransformForced(glm::ortho(0.f,
-                                                          static_cast<float>(mWidth),
-                                                          static_cast<float>(mHeight),
-                                                          0.f));
+                                                 static_cast<float>(mWidth),
+                                                 static_cast<float>(mHeight),
+                                                 0.f));
     mContainer->render();
 
     resetGLState();
@@ -89,11 +91,13 @@ void AEmbedAuiWrap::resetGLState() {
 }
 
 void AEmbedAuiWrap::onMousePressed(int x, int y, AInput::Key button) {
+    mContainer->makeCurrent();
     AThread::current()->processMessages();
     mContainer->onMousePressed({x, y}, button);
 }
 
 void AEmbedAuiWrap::onMouseReleased(int x, int y, AInput::Key button) {
+    mContainer->makeCurrent();
     mContainer->onMouseReleased({x, y}, button);
 }
 
@@ -102,18 +106,22 @@ bool AEmbedAuiWrap::isUIConsumesMouseAt(int x, int y) {
 }
 
 void AEmbedAuiWrap::onMouseMove(int x, int y) {
+    mContainer->makeCurrent();
     mContainer->onMouseMove({x, y});
 }
 
 
 void AEmbedAuiWrap::onCharEntered(wchar_t c) {
+    mContainer->makeCurrent();
     mContainer->onCharEntered(c);
 }
 
 void AEmbedAuiWrap::onKeyPressed(AInput::Key key) {
+    mContainer->makeCurrent();
     mContainer->onKeyDown(key);
 }
 
 void AEmbedAuiWrap::onKeyReleased(AInput::Key key) {
+    mContainer->makeCurrent();
     mContainer->onKeyUp(key);
 }

@@ -48,27 +48,27 @@
 AWindow* AView::getWindow()
 {
 
-	AView* parent = nullptr;
+    AView* parent = nullptr;
 
-	for (AView* target = this; target; target = target->mParent) {
-		parent = target;
-	}
+    for (AView* target = this; target; target = target->mParent) {
+        parent = target;
+    }
 
-	return dynamic_cast<AWindow*>(parent);
+    return dynamic_cast<AWindow*>(parent);
 }
 
 AView::AView()
 {
 
-	aui::zero(mAss);
+    aui::zero(mAss);
 }
 
 void AView::redraw()
 {
 
-	if (auto w = getWindow()) {
-		w->flagRedraw();
-	}
+    if (auto w = getWindow()) {
+        w->flagRedraw();
+    }
     //AWindow::current()->flagRedraw();
 }
 
@@ -77,13 +77,13 @@ void AView::drawStencilMask()
     if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
         Render::inst().drawRoundedRect(mPadding.left,
                                        mPadding.top,
-                                           getWidth() - mPadding.horizontal(),
-                                           getHeight() - mPadding.vertical(),
+                                       getWidth() - mPadding.horizontal(),
+                                       getHeight() - mPadding.vertical(),
                                        mBorderRadius);
     } else {
         Render::inst().setFill(Render::FILL_SOLID);
         Render::inst().drawRect(mPadding.left, mPadding.top, getWidth() - mPadding.horizontal(),
-                                    getHeight() - mPadding.vertical());
+                                getHeight() - mPadding.vertical());
     }
 }
 
@@ -112,7 +112,7 @@ void AView::render()
     if (mAnimator)
         mAnimator->animate(this);
 
-	{
+    {
         ensureAssUpdated();
 
         for (auto& e : mBackgroundEffects)
@@ -129,7 +129,7 @@ void AView::render()
                 w->renderFor(this);
             }
         }
-	}
+    }
 
     // stencil
     if (mOverflow == Overflow::HIDDEN)
@@ -193,86 +193,86 @@ void AView::userProcessStyleSheet(const std::function<void(css, const std::funct
 
 float AView::getTotalFieldHorizontal() const
 {
-	return mPadding.horizontal() + mMargin.horizontal();
+    return mPadding.horizontal() + mMargin.horizontal();
 }
 
 float AView::getTotalFieldVertical() const
 {
-	return mPadding.vertical() + mMargin.vertical();
+    return mPadding.vertical() + mMargin.vertical();
 }
 
 int AView::getContentMinimumWidth()
 {
-	return 0;
+    return 0;
 }
 
 int AView::getContentMinimumHeight()
 {
-	return 0;
+    return 0;
 }
 
 bool AView::hasFocus() const
 {
-	return mHasFocus;
+    return mHasFocus;
 }
 
 int AView::getMinimumWidth()
 {
     ensureAssUpdated();
-	return (mFixedSize.x == 0 ? ((glm::max)(getContentMinimumWidth(), mMinSize.x) + mPadding.horizontal()) : mFixedSize.x);
+    return (mFixedSize.x == 0 ? ((glm::max)(getContentMinimumWidth(), mMinSize.x) + mPadding.horizontal()) : mFixedSize.x);
 }
 
 int AView::getMinimumHeight()
 {
     ensureAssUpdated();
-	return (mFixedSize.y == 0 ? ((glm::max)(getContentMinimumHeight(), mMinSize.y) + mPadding.vertical()) : mFixedSize.y);
+    return (mFixedSize.y == 0 ? ((glm::max)(getContentMinimumHeight(), mMinSize.y) + mPadding.vertical()) : mFixedSize.y);
 }
 
 void AView::getTransform(glm::mat4& transform) const
 {
-	transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
+    transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
 }
 
 FontStyle& AView::getFontStyle()
 {
-	if (mFontStyle.font == nullptr)
-		mFontStyle.font = AFontManager::inst().getDefault();
-	return mFontStyle;
+    if (mFontStyle.font == nullptr)
+        mFontStyle.font = AFontManager::inst().getDefault();
+    return mFontStyle;
 }
 
 
 void AView::pack()
 {
-	setSize(getMinimumWidth(), getMinimumHeight());
+    setSize(getMinimumWidth(), getMinimumHeight());
 }
 
 const ADeque<AString>& AView::getCssNames() const
 {
-	return mAssNames;
+    return mAssNames;
 }
 
 void AView::addAssName(const AString& assName)
 {
-	mAssNames << assName;
-	assert(("empty ass name" && !mAssNames.back().empty()));
-	mAssHelper = nullptr;
+    mAssNames << assName;
+    assert(("empty ass name" && !mAssNames.back().empty()));
+    mAssHelper = nullptr;
 }
 
 void AView::ensureAssUpdated()
 {
-	if (mAssHelper == nullptr)
-	{
-		mAssHelper = _new<AAssHelper>();
-		connect(customCssPropertyChanged, mAssHelper,
+    if (mAssHelper == nullptr)
+    {
+        mAssHelper = _new<AAssHelper>();
+        connect(customCssPropertyChanged, mAssHelper,
                 &AAssHelper::onInvalidateStateAss);
-		connect(mAssHelper->invalidateFullAss, this, [&]()
-		{
-			mAssHelper = nullptr;
-		});
-		connect(mAssHelper->invalidateStateAss, me::updateAssState);
+        connect(mAssHelper->invalidateFullAss, this, [&]()
+        {
+            mAssHelper = nullptr;
+        });
+        connect(mAssHelper->invalidateStateAss, me::updateAssState);
 
-		recompileCSS();
-	}
+        recompileCSS();
+    }
 }
 
 void AView::onMouseEnter()
@@ -298,49 +298,49 @@ void AView::onMouseLeave()
 void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 {
     assert(!mPressed);
-	mPressed = true;
+    mPressed = true;
 
-	/**
-	 * If button is pressed on this view, we want to know when the mouse will be released even if mouse outside
-	 * this view and even the mouse outside the window so we can guarantee that if we got a mouse press event, we will
-	 * get a mouse release event too.
-	 */
-	if (auto w = AWindow::current())
-	{
-		if (w != this) {
-			connect(w->mouseReleased, this, [&]()
-			{
-				AThread::current()->enqueue([&]()
-				{
-					// to be sure that isPressed will be false.
-					if (mPressed) {
-					    onMouseReleased(pos, button);
-					}
-				});
-				disconnect();
-			});
-		}
-	}
+    /**
+     * If button is pressed on this view, we want to know when the mouse will be released even if mouse outside
+     * this view and even the mouse outside the window so we can guarantee that if we got a mouse press event, we will
+     * get a mouse release event too.
+     */
+    if (auto w = AWindow::current())
+    {
+        if (w != this) {
+            connect(w->mouseReleased, this, [&]()
+            {
+                AThread::current()->enqueue([&]()
+                                            {
+                                                // to be sure that isPressed will be false.
+                                                if (mPressed) {
+                                                    onMouseReleased(pos, button);
+                                                }
+                                            });
+                disconnect();
+            });
+        }
+    }
 }
 
 void AView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
-	mPressed = false;
-	emit clickedButton(button);
-	switch (button)
-	{
-	case AInput::LButton:
-		emit clicked();
-		break;
-	case AInput::RButton:
-		emit clickedRight();
-		break;
-	}
+    mPressed = false;
+    emit clickedButton(button);
+    switch (button)
+    {
+        case AInput::LButton:
+            emit clicked();
+            break;
+        case AInput::RButton:
+            emit clickedRight();
+            break;
+    }
 }
 
 void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
 {
-	emit doubleClicked(button);
+    emit doubleClicked(button);
 }
 
 void AView::onMouseWheel(glm::ivec2 pos, int delta) {
@@ -364,12 +364,12 @@ void AView::onKeyUp(AInput::Key key)
 
 void AView::onFocusAcquired()
 {
-	mHasFocus = true;
+    mHasFocus = true;
 }
 
 void AView::onFocusLost()
 {
-	mHasFocus = false;
+    mHasFocus = false;
 }
 
 void AView::onCharEntered(wchar_t c)
@@ -383,14 +383,14 @@ bool AView::handlesNonMouseNavigation() {
 
 void AView::getCustomCssAttributes(AMap<AString, AVariant>& map)
 {
-	if (mEnabled)
-	{
-		map["enabled"] = true;
-	}
-	else
-	{
-		map["disabled"] = true;
-	}
+    if (mEnabled)
+    {
+        map["enabled"] = true;
+    }
+    else
+    {
+        map["disabled"] = true;
+    }
 }
 
 void AView::setEnabled(bool enabled)
@@ -400,11 +400,11 @@ void AView::setEnabled(bool enabled)
 }
 void AView::updateEnableState()
 {
-	mEnabled = mDirectlyEnabled && mParentEnabled;
+    mEnabled = mDirectlyEnabled && mParentEnabled;
     emit customCssPropertyChanged();
-	setSignalsEnabled(mEnabled);
-	emit customCssPropertyChanged();
-	redraw();
+    setSignalsEnabled(mEnabled);
+    emit customCssPropertyChanged();
+    redraw();
 }
 
 void AView::setAnimator(const _<AAnimator>& animator) {
@@ -480,10 +480,16 @@ _<AView> AView::determineSharedPointer() {
 }
 
 void AView::focus() {
-    ui_threadX [&]() {
-        auto s = determineSharedPointer();
-        assert(s);
-        AWindow::current()->setFocusedView(s);
+    // holding reference here
+    auto mySharedPtr = determineSharedPointer();
+    ui_threadX [&, mySharedPtr]() {
+        if (mySharedPtr) {
+            AWindow::current()->setFocusedView(mySharedPtr);
+        } else {
+            auto s = determineSharedPointer();
+            assert(s);
+            AWindow::current()->setFocusedView(s);
+        }
     };
 }
 
@@ -513,7 +519,7 @@ void AView::invalidateFont() {
 
 }
 void AView::notifyParentEnabledStateChanged(bool enabled) {
-   mParentEnabled = enabled;
-   updateEnableState();
+    mParentEnabled = enabled;
+    updateEnableState();
 }
 
