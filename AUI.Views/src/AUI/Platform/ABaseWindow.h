@@ -70,7 +70,8 @@ public:
     }
 
 signals:
-    emits<> dpiChanged;
+    emits<>           dpiChanged;
+    emits<glm::ivec2> mouseMove ;
 };
 
 

@@ -173,7 +173,7 @@ void ABaseWindow::onMouseMove(glm::ivec2 pos) {
             }
         }
     }
-
+    emit mouseMove(pos);
 }
 
 void ABaseWindow::onKeyDown(AInput::Key key) {

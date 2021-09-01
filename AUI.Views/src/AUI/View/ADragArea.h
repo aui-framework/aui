@@ -53,8 +53,6 @@ public:
         void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
         void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
-        void onMouseMove(glm::ivec2 pos) override;
-
     signals:
         emits<glm::ivec2> mouseMove;
     };

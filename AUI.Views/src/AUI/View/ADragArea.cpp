@@ -26,6 +26,7 @@
 #include "ADragArea.h"
 #include <AUI/Layout/AStackedLayout.h>
 #include <AUI/Platform/ADesktop.h>
+#include <AUI/Platform/AWindow.h>
 
 ADragArea::ADragArea() {
     setLayout(_new<AStackedLayout>());
@@ -55,6 +56,16 @@ void ADragArea::ADraggableHandle::onMousePressed(glm::ivec2 pos, AInput::Key but
     auto [dragArea, container] = getDragAreaAndDraggingView();
     connect(mouseMove, dragArea, &ADragArea::handleMouseMove);
     dragArea->startDragging(container);
+
+    connect(AWindow::current()->mouseMove,
+            this,
+            [this](const glm::ivec2& windowPos) {
+                if (mDragging) {
+                    emit mouseMove(windowPos - getPositionInWindow());
+                } else {
+                    AObject::disconnect();
+                }
+            });
 }
 
 void ADragArea::ADraggableHandle::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
@@ -64,13 +75,6 @@ void ADragArea::ADraggableHandle::onMouseReleased(glm::ivec2 pos, AInput::Key bu
         auto[dragArea, _] = getDragAreaAndDraggingView();
         mouseMove.clearAllConnectionsWith(dragArea);
         dragArea->endDragging();
-    }
-}
-
-void ADragArea::ADraggableHandle::onMouseMove(glm::ivec2 pos) {
-    AViewContainer::onMouseMove(pos);
-    if (mDragging) {
-        emit mouseMove(pos);
     }
 }
 
