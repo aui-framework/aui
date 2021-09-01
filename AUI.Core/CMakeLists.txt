@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(AUI_EMBEDDED_ZLIB OFF CACHE BOOL "Use embedded ZLIB")
+set(AUI_EMBEDDED_ZLIB ON CACHE BOOL "Use embedded ZLIB")
 
 AUI_Module(AUI.Core)
 

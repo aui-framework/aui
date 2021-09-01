@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(AUI_EMBEDDED_OPENSSL OFF CACHE BOOL "Use embedded OpenSSL")
+set(AUI_EMBEDDED_OPENSSL ON CACHE BOOL "Use embedded OpenSSL")
 
 find_package(OpenSSL)
 

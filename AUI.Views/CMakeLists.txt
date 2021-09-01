@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(AUI_EMBEDDED_FREETYPE OFF CACHE BOOL "Use embedded Freetype2")
-set(AUI_EMBEDDED_GLEW OFF CACHE BOOL "Use embedded GLEW")
+set(AUI_EMBEDDED_FREETYPE ON CACHE BOOL "Use embedded Freetype2")
+set(AUI_EMBEDDED_GLEW ON CACHE BOOL "Use embedded GLEW")
 
 if (OPENGL_FOUND)
 
