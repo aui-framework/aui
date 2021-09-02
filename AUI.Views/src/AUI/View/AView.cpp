@@ -309,16 +309,16 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
     {
         if (w != this) {
             connect(w->mouseReleased, this, [&]()
-            {
-                AThread::current()->enqueue([&]()
-                                            {
-                                                // to be sure that isPressed will be false.
-                                                if (mPressed) {
-                                                    onMouseReleased(pos, button);
-                                                }
-                                            });
-                disconnect();
-            });
+                {
+                    AThread::current()->enqueue([&]()
+                        {
+                            // to be sure that isPressed will be false.
+                            if (mPressed) {
+                                onMouseReleased(pos, button);
+                            }
+                        });
+                    disconnect();
+                });
         }
     }
 }
@@ -482,13 +482,14 @@ _<AView> AView::determineSharedPointer() {
 void AView::focus() {
     // holding reference here
     auto mySharedPtr = determineSharedPointer();
-    ui_threadX [&, mySharedPtr]() {
+    auto window = AWindow::current();
+    ui_threadX [&, window, mySharedPtr]() {
         if (mySharedPtr) {
-            AWindow::current()->setFocusedView(mySharedPtr);
+            window->setFocusedView(mySharedPtr);
         } else {
             auto s = determineSharedPointer();
             assert(s);
-            AWindow::current()->setFocusedView(s);
+            window->setFocusedView(s);
         }
     };
 }

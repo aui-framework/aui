@@ -32,7 +32,7 @@ private:
     _<GL::Texture2D> mTexture;
     glm::ivec2 mImageSize = {10, 10};
     /**
-     * See AImageView::setSize
+     * See AImageView::setViewportSize
      */
     bool mRunningAspectRatioKeepingRoutine = false;
 

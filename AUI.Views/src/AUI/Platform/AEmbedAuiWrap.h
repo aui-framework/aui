@@ -36,13 +36,13 @@ class API_AUI_VIEWS AEmbedAuiWrap {
 private:
     class FakeWindow;
     _<FakeWindow> mContainer;
-    int mWidth, mHeight;
+    glm::ivec2 mSize;
 
 public:
     explicit AEmbedAuiWrap();
 
     void setContainer(const _<AViewContainer>& container);
-    void setSize(int width, int height);
+    void setViewportSize(int width, int height);
     void render();
 
     void resetGLState();

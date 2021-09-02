@@ -39,20 +39,21 @@ public:
     }
 };
 
-AEmbedAuiWrap::AEmbedAuiWrap() {
+AEmbedAuiWrap::AEmbedAuiWrap()
+{
     auto r = glewInit();
     assert(r == 0);
     mContainer = _new<FakeWindow>();
+    mContainer->setPosition({ 0, 0 });
 }
 
 void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
     mContainer->setContents(container);
 }
 
-void AEmbedAuiWrap::setSize(int width, int height) {
+void AEmbedAuiWrap::setViewportSize(int width, int height) {
     mContainer->makeCurrent();
-    mWidth = width;
-    mHeight = height;
+    mSize = { width, height };
     mContainer->setSize(width, height);
 
     resetGLState();
@@ -75,8 +76,8 @@ void AEmbedAuiWrap::render() {
 
     Render::inst().setColorForced(1.f);
     Render::inst().setTransformForced(glm::ortho(0.f,
-                                                 static_cast<float>(mWidth),
-                                                 static_cast<float>(mHeight),
+                                                 static_cast<float>(mSize.x),
+                                                 static_cast<float>(mSize.y),
                                                  0.f));
     mContainer->render();
 
@@ -93,21 +94,21 @@ void AEmbedAuiWrap::resetGLState() {
 void AEmbedAuiWrap::onMousePressed(int x, int y, AInput::Key button) {
     mContainer->makeCurrent();
     AThread::current()->processMessages();
-    mContainer->onMousePressed({x, y}, button);
+    mContainer->onMousePressed(glm::ivec2{ x, y }, button);
 }
 
 void AEmbedAuiWrap::onMouseReleased(int x, int y, AInput::Key button) {
     mContainer->makeCurrent();
-    mContainer->onMouseReleased({x, y}, button);
+    mContainer->onMouseReleased(glm::ivec2{ x, y }, button);
 }
 
 bool AEmbedAuiWrap::isUIConsumesMouseAt(int x, int y) {
-    return mContainer->consumesClick({x, y});
+    return mContainer->consumesClick(glm::ivec2{ x, y });
 }
 
 void AEmbedAuiWrap::onMouseMove(int x, int y) {
     mContainer->makeCurrent();
-    mContainer->onMouseMove({x, y});
+    mContainer->onMouseMove(glm::ivec2{ x, y });
 }
 
 
