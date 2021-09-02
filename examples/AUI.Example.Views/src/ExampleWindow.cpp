@@ -45,6 +45,7 @@
 #include <AUI/View/ATextArea.h>
 #include <AUI/View/ARulerView.h>
 #include <AUI/View/AImageView.h>
+#include <AUI/View/AForEach.h>
 #include <AUI/View/ARulerArea.h>
 #include <AUI/View/ATreeView.h>
 #include <AUI/Platform/ADesktop.h>
@@ -52,6 +53,10 @@
 #include <AUI/View/ADragArea.h>
 
 using namespace ass;
+
+struct MyModel {
+    AString name;
+};
 
 void fillWindow(_<AViewContainer> t)
 {
@@ -194,6 +199,29 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                            _new<ASpacer>(),
                        },
                        _new<AListView>(model)
+               };
+           }(),
+
+           // foreach
+           _new<ALabel>("AForEach"),
+           [this] { // lambda style inlining
+               auto model = _new<AListModel<MyModel>>();
+
+               return Vertical {
+                       Horizontal {
+                           _new<AButton>("Add").connect(&AButton::clicked, this, [model] {
+                               model->push_back({"ты лох" });
+                           }),
+                           _new<AButton>("Remove").connect(&AButton::clicked, this, [model] {
+                               model->pop_back();
+                           }),
+                           _new<ASpacer>(),
+                       },
+                       _new<AForEach<MyModel>>(model, [](ADataBinding<MyModel>& i) -> _<AView> {
+                           return Horizontal {
+                               _new<ALabel>() && i(&MyModel::name)
+                           };
+                       })
                };
            }(),
 
