@@ -13,3 +13,6 @@
 [submodule "AUI.Crypt/3rdparty/openssl-cmake"]
 	path = AUI.Crypt/3rdparty/openssl-cmake
 	url = https://github.com/Alex2772/openssl-cmake
+[submodule "AUI.Curl/3rdparty/curl"]
+	path = AUI.Curl/3rdparty/curl
+	url = https://github.com/curl/curl
