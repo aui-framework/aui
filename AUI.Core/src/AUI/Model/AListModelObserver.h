@@ -43,20 +43,20 @@ public:
             mListener->onDataCountChanged();
             mListener->onDataChanged();
 
-            connect(mModel->dataInserted, this, [&](const AModelRange<AString>& data) {
+            connect(mModel->dataInserted, this, [&](const AModelRange<T>& data) {
                 for (const auto& row : data) {
                     mListener->insertItem(row.getIndex().getRow(), row.get());
                 }
                 mListener->onDataCountChanged();
                 mListener->onDataChanged();
             });
-            connect(mModel->dataChanged, this, [&](const AModelRange<AString>& data) {
+            connect(mModel->dataChanged, this, [&](const AModelRange<T>& data) {
                 for (const auto& row : data) {
                     mListener->updateItem(row.getIndex().getRow(), row.get());
                 }
                 mListener->onDataChanged();
             });
-            connect(mModel->dataRemoved, this, [&](const AModelRange<AString>& data) {
+            connect(mModel->dataRemoved, this, [&](const AModelRange<T>& data) {
                 for (const auto& row : data) {
                     mListener->removeItem(row.getIndex().getRow());
                 }
