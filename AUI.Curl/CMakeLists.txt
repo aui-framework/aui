@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(AUI_EMBEDDED_CURL ON CACHE BOOL "Use embedded cURL")
+set(AUI_EMBEDDED_CURL ${AUI_IS_WINDOWS} CACHE BOOL "Use embedded cURL")
 
 find_package(CURL)
 AUI_Module(AUI.Curl)
