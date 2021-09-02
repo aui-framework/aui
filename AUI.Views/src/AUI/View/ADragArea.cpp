@@ -45,7 +45,6 @@ std::tuple<ADragArea*, AViewContainer*> ADragArea::ADraggableHandle::getDragArea
         }
     }
 
-
     return {nullptr, potentionalDraggingView};
 }
 
