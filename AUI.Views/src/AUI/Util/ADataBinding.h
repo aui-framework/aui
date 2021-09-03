@@ -150,7 +150,7 @@ public:
                                                                                               void(View::*setterFunc)(SetterArg) = nullptr) {
         assert((getter != nullptr || setterFunc != nullptr) &&
                "implement ADataBindingDefault for your view in order to use default binding");
-        assert(getter != nullptr);
+
         return ADataBindingLinker<Model, View, std::decay_t<ModelField>, GetterRV, SetterArg>(this, getter, setterFunc, field);
     }
 

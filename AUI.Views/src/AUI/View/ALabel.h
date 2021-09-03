@@ -27,6 +27,7 @@
 #include "AUI/Render/Render.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Image/IDrawable.h"
+#include <AUI/Util/ADataBinding.h>
 
 class API_AUI_VIEWS ALabel: public AView
 {
@@ -125,4 +126,17 @@ public:
 
     void setSize(int width, int height) override;
 
+};
+
+
+template<>
+struct ADataBindingDefault<ALabel, AString> {
+public:
+    static void setup(const _<ALabel>& view) {}
+    static auto getGetter() {
+        return (ASignal<AString> ALabel::*)nullptr;
+    }
+    static auto getSetter() {
+        return &ALabel::setText;
+    }
 };

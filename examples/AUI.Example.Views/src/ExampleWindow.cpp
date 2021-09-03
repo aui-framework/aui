@@ -217,7 +217,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                            }),
                            _new<ASpacer>(),
                        },
-                       _new<AForEach<MyModel>>(model, [](ADataBinding<MyModel>& i) -> _<AView> {
+                       _new<AForEach<MyModel>>(model, [](_<ADataBinding<MyModel>>& i) -> _<AView> {
                            return Horizontal {
                                _new<ALabel>() && i(&MyModel::name)
                            };

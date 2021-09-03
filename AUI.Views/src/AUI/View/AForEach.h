@@ -11,7 +11,7 @@ template<typename T>
 class AForEach: public AViewContainer, public AListModelObserver<T>::IListModelListener {
 public:
     using List = _<IListModel<T>>;
-    using Factory = std::function<_<AView>(ADataBinding<T>&)>;
+    using Factory = std::function<_<AView>(_<ADataBinding<T>>&)>;
 private:
     _<AListModelObserver<T>> mObserver;
 
@@ -36,16 +36,17 @@ public:
     }
 
     void insertItem(size_t at, const T& value) override {
-        addView(at, mFactory(value));
+        auto binding = _new<ADataBinding<T>>(value);
+        mBindings.insert(mBindings.begin() + at, binding);
+        addView(at, mFactory(binding));
     }
 
     void updateItem(size_t at, const T& value) override {
-        // TODO optimize
-        removeView(at);
-        addView(at, mFactory(value));
+        mBindings[at]->setModel(value);
     }
 
     void removeItem(size_t at) override {
+        mBindings.removeAt(at);
         removeView(at);
     }
 
