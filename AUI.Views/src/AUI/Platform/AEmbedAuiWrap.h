@@ -41,6 +41,8 @@ private:
 public:
     explicit AEmbedAuiWrap();
 
+    void clearFocus();
+
     void setContainer(const _<AViewContainer>& container);
     void setViewportSize(int width, int height);
     void render();

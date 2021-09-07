@@ -126,3 +126,7 @@ void AEmbedAuiWrap::onKeyReleased(AInput::Key key) {
     mContainer->makeCurrent();
     mContainer->onKeyUp(key);
 }
+
+void AEmbedAuiWrap::clearFocus() {
+    mContainer->setFocusedView(nullptr);
+}

@@ -74,6 +74,10 @@ namespace ass {
 
         BackgroundImage() {}
 
+        BackgroundImage(std::nullptr_t): url("") {
+
+        }
+
         BackgroundImage(const unset_wrap<AString>& url, const unset_wrap<AColor>& overlayColor):
             url(url),
             overlayColor(overlayColor) {}
