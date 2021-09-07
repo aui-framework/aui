@@ -8,25 +8,18 @@
 #include <AUI/Util/ADataBinding.h>
 
 template<typename T>
-class AForEach: public AViewContainer, public AListModelObserver<T>::IListModelListener {
+class AForEachUI: public AViewContainer, public AListModelObserver<T>::IListModelListener {
 public:
     using List = _<IListModel<T>>;
-    using Factory = std::function<_<AView>(_<ADataBinding<T>>&)>;
+    using Factory = std::function<_<AView>(const T&)>;
 private:
     _<AListModelObserver<T>> mObserver;
-
-    /**
-     * Holds the binding object for the views.
-     * @note Should be kept in sync with <code>mViews</code>.
-     */
-    AVector<_<ADataBinding<T>>> mBindings;
 
     Factory mFactory;
 
 public:
-    AForEach(const List& list, const Factory& factory):
-        mObserver(_new<AListModelObserver<T>>(this)),
-        mFactory(factory) {
+    AForEachUI(const List& list):
+        mObserver(_new<AListModelObserver<T>>(this)) {
         setModel(list);
         setLayout(_new<AVerticalLayout>());
     }
@@ -36,17 +29,16 @@ public:
     }
 
     void insertItem(size_t at, const T& value) override {
-        auto binding = _new<ADataBinding<T>>(value);
-        mBindings.insert(mBindings.begin() + at, binding);
-        addView(at, mFactory(binding));
+        addView(at, mFactory(value));
     }
 
     void updateItem(size_t at, const T& value) override {
-        mBindings[at]->setModel(value);
+        // TODO optimize
+        removeView(at);
+        addView(at, mFactory(value));
     }
 
     void removeItem(size_t at) override {
-        mBindings.removeAt(at);
         removeView(at);
     }
 
@@ -57,5 +49,10 @@ public:
     void onDataChanged() override {
         AWindow::current()->updateLayout();
     }
+
+    void operator+(const Factory& f) {
+        mFactory = f;
+    }
 };
 
+#define ui_for(key, model) _new<AForEachUI<decltype(model)::stored_t::stored_t>>(model) + [](const decltype(model)::stored_t::stored_t& key) -> _<AView>
