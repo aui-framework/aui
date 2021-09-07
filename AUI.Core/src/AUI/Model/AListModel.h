@@ -61,6 +61,14 @@ namespace aui::detail {
                                                 this});
         }
 
+
+        void pop_back() {
+            p::pop_back();
+            emit this->dataRemoved(AModelRange{AModelIndex(p::size()    ),
+                                               AModelIndex(p::size() + 1),
+                                               this});
+        }
+
         AListModel& operator<<(const StoredType& data) {
             push_back(data);
             return *this;

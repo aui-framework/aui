@@ -23,6 +23,7 @@
 
 #include <glm/glm.hpp>
 #include <AUI/Core.h>
+#include <glm/gtx/norm.hpp>
 
 class AString;
 
@@ -85,7 +86,7 @@ public:
 		return AColor(x * other, y * other, z * other, w);
 	}
 
-	AString toString();
+	AString toString() const;
 
     float readabilityOfForegroundColor(const AColor &foreground);
 
@@ -106,6 +107,10 @@ public:
 
     bool isFullyTransparent() const {
         return a < 0.001f;
+    }
+
+    AColor readableBlackOrWhite() const {
+        return glm::length2(glm::vec3{*this}) > 1.5f ? fromRRGGBB(0) : fromRRGGBB(0xffffff);
     }
 
     AColor opacify(float d) {

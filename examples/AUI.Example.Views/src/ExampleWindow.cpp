@@ -45,17 +45,18 @@
 #include <AUI/View/ATextArea.h>
 #include <AUI/View/ARulerView.h>
 #include <AUI/View/AImageView.h>
-#include <AUI/View/AForEach.h>
+#include <AUI/View/AForEachUI.h>
 #include <AUI/View/ARulerArea.h>
 #include <AUI/View/ATreeView.h>
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/View/ADragArea.h>
+#include <random>
 
 using namespace ass;
 
 struct MyModel {
-    AString name;
+    AColor color;
 };
 
 void fillWindow(_<AViewContainer> t)
@@ -203,25 +204,38 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
            }(),
 
            // foreach
-           _new<ALabel>("AForEach"),
+           _new<ALabel>("AForEachUI"),
            [this] { // lambda style inlining
                auto model = _new<AListModel<MyModel>>();
 
                return Vertical {
-                       Horizontal {
-                           _new<AButton>("Add").connect(&AButton::clicked, this, [model] {
-                               model->push_back({"ты лох" });
-                           }),
-                           _new<AButton>("Remove").connect(&AButton::clicked, this, [model] {
-                               model->pop_back();
-                           }),
-                           _new<ASpacer>(),
-                       },
-                       _new<AForEach<MyModel>>(model, [](_<ADataBinding<MyModel>>& i) -> _<AView> {
-                           return Horizontal {
-                               _new<ALabel>() && i(&MyModel::name)
+                   Horizontal {
+                       _new<AButton>("Add").connect(&AButton::clicked, this, [model] {
+                           static std::default_random_engine re;
+                           do_once {
+                               re.seed(std::time(nullptr));
                            };
-                       })
+                           static std::uniform_real_distribution<float> d(0.f, 1.f);
+                           model->push_back({ AColor(d(re), d(re), d(re), 1.f) });
+                       }),
+                       _new<AButton>("Remove").connect(&AButton::clicked, this, [model] {
+                           if (!model->empty()) {
+                               model->pop_back();
+                           }
+                       }),
+                       _new<ASpacer>(),
+                   },
+                   ui_for (i, model) {
+                       return Horizontal {
+                           _new<ALabel>(i.color.toString()) with_style {
+                               TextColor { i.color.readableBlackOrWhite() },
+                           }
+                       } with_style {
+                           BackgroundSolid { i.color },
+                           BorderRadius { 6_pt },
+                           Margin { 2_dp, 4_dp },
+                       };
+                   }
                };
            }(),
 
