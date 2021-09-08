@@ -225,7 +225,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                        }),
                        _new<ASpacer>(),
                    },
-                   ui_for (i, model) {
+                   ui_for (i, model, AWordWrappingLayout) {
                        return Horizontal {
                            _new<ALabel>(i.color.toString()) with_style {
                                TextColor { i.color.readableBlackOrWhite() },

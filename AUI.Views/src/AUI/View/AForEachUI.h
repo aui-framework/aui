@@ -7,7 +7,7 @@
 #include <functional>
 #include <AUI/Util/ADataBinding.h>
 
-template<typename T>
+template<typename T, typename Layout>
 class AForEachUI: public AViewContainer, public AListModelObserver<T>::IListModelListener {
 public:
     using List = _<IListModel<T>>;
@@ -20,8 +20,8 @@ private:
 public:
     AForEachUI(const List& list):
         mObserver(_new<AListModelObserver<T>>(this)) {
+        setLayout(_new<Layout>());
         setModel(list);
-        setLayout(_new<AVerticalLayout>());
     }
 
     void setModel(const List& list) {
@@ -55,4 +55,4 @@ public:
     }
 };
 
-#define ui_for(key, model) _new<AForEachUI<decltype(model)::stored_t::stored_t>>(model) + [](const decltype(model)::stored_t::stored_t& key) -> _<AView>
+#define ui_for(key, model, layout) _new<AForEachUI<decltype(model)::stored_t::stored_t, layout>>(model) + [](const decltype(model)::stored_t::stored_t& key) -> _<AView>

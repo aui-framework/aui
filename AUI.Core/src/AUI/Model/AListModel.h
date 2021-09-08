@@ -92,15 +92,4 @@ namespace aui::detail {
 }
 
 template <typename StoredType>
-class AListModel: public SequenceContainerExtensions<aui::detail::AListModel<StoredType>> {
-    using p = SequenceContainerExtensions<aui::detail::AListModel<StoredType>>;
-    using Iterator = typename p::Iterator;
-public:
-
-#ifdef _MSC_VER
-    using p::SequenceContainerExtensions;
-#else
-    using typename p::SequenceContainerExtensions;
-#endif
-
-};
+using AListModel = typename SequenceContainerExtensions<aui::detail::AListModel<StoredType>>;
