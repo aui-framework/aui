@@ -30,6 +30,7 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/View/ASpacer.h>
+#include <AUI/Layout/AWordWrappingLayout.h>
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/Layout/AVerticalLayout.h>
 #include <AUI/Layout/AStackedLayout.h>
