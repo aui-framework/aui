@@ -32,7 +32,6 @@ private:
     bool mIsPasswordTextField = false;
 
 	void invalidatePrerenderedString() override;
-
 	AString getContentsPasswordWrap();
 
 protected:

@@ -57,11 +57,12 @@ void AAbstractTextField::render()
 {
 	AView::render();
 
+    prerenderStringIfNeeded();
 	if (hasFocus()) {
 	    auto absoluteCursorPos = ACursorSelectable::drawSelectionPre();
 
 	    // text
-        Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, getContentsPasswordWrap(), getFontStyle());
+        Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, mPrerenderedString);
 
         ACursorSelectable::drawSelectionPost();
 
@@ -80,7 +81,6 @@ void AAbstractTextField::render()
         }
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     } else {
-	    prerenderStringIfNeeded();
         Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, mPrerenderedString);
         Render::inst().setFill(Render::FILL_SOLID);
         Render::inst().setColor({1, 1, 1, 1 });

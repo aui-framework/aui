@@ -29,9 +29,9 @@
 
 void ass::decl::Declaration<ass::TextBorder>::renderFor(AView* view) {
     if (auto label = dynamic_cast<ALabel*>(view)) {
-        auto prevColor = view->getFontStyle().color;
-        view->getFontStyle().color = mInfo.borderColor;
-        view->invalidateFont();
+        RenderHints::PushColor c;
+        Render::inst().setColor(mInfo.borderColor);
+
         {
             RenderHints::PushMatrix m;
             Render::inst().translate({-1, 0});
@@ -52,8 +52,6 @@ void ass::decl::Declaration<ass::TextBorder>::renderFor(AView* view) {
             Render::inst().translate({0, 1});
             label->doRenderText();
         }
-        view->getFontStyle().color = prevColor;
-        view->invalidateFont();
     }
 }
 ass::decl::DeclarationSlot ass::decl::Declaration<ass::TextBorder>::getDeclarationSlot() const {
