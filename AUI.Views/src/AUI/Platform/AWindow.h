@@ -249,6 +249,14 @@ public:
     void onKeyRepeat(AInput::Key key) override;
 
     /**
+     * Wraps your AView to window.
+     * @param title window title
+     * @param view view to wrap
+     * @return created window, AWindow::show() is not called
+     */
+    static _<AWindow> wrapViewToWindow(const _<AView>& view, const AString& title, int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT);
+
+    /**
      * \return Current window for current thread.
      */
 	static ABaseWindow* current();

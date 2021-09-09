@@ -88,6 +88,14 @@ namespace aui::detail {
         void clear() {
             erase(p::begin(), p::end());
         }
+
+        void removeItems(const AModelRange<StoredType>& items) override {
+            erase(p::begin() + items.begin().getIndex().getRow(), p::end() + items.begin().getIndex().getRow());
+        }
+
+        void removeItem(const AModelIndex& item) override {
+            erase(p::begin() + item.getRow());
+        }
     };
 }
 

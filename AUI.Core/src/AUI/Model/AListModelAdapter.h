@@ -29,6 +29,7 @@ struct AAdapter {
     template<typename T, typename Adapter>
     static _<AListModelAdapter<T, Adapter>> make(const _<IListModel<T>>& other, const Adapter& adapter);
 };
+
 template<typename T, typename Adapter>
 class AListModelAdapter: public IListModel<AString>, public AObject {
 friend struct AAdapter;
@@ -61,6 +62,19 @@ public:
     AString listItemAt(const AModelIndex& index) override {
         return mAdapter(mOther->listItemAt(index));
     }
+
+    void removeItems(const AModelRange<AString>& items) override {
+        mOther->removeItems({items.begin().getIndex(), items.end().getIndex(), mOther.get()});
+    }
+
+    void removeItems(const AModelSelection<AString>& items) override {
+        mOther->removeItems({items.getIndices(), mOther.get()});
+    }
+
+    void removeItem(const AModelIndex& item) override {
+        mOther->removeItem(item);
+    }
+
 };
 
 template <typename T, typename Adapter>

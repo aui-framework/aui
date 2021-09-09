@@ -167,3 +167,14 @@ inline _<TO> _cast(_<FROM> object)
 {
 	return std::dynamic_pointer_cast<TO, FROM>(object);
 }
+
+
+/**
+ * Parody to null-safety.
+ * @example
+ * <code>
+ * _&lt;AView&gt; view;<br/>
+ * nullsafe(view)->enable();
+ * </code>
+ */
+#define nullsafe(s) if(s)s

@@ -133,10 +133,8 @@ AListView::~AListView()
 }
 
 AListView::AListView(const _<IListModel<AString>>& model) {
-    ui_thread {
-        mObserver = _new<AListModelObserver<AString>>(this);
-        setModel(model);
-    };
+    mObserver = _new<AListModelObserver<AString>>(this);
+    setModel(model);
 }
 
 void AListView::setModel(const _<IListModel<AString>>& model) {
@@ -178,16 +176,20 @@ void AListView::onMouseWheel(glm::ivec2 pos, int delta) {
 void AListView::handleMousePressed(AListItem* item) {
 
     if (!AInput::isKeyDown(AInput::LControl)) {
-        for (auto& s : mSelectionModel) {
-            _cast<AListItem>(mContent->getViews()[s.getRow()])->setSelected(false);
-        }
-
-        mSelectionModel.clear();
+        clearSelection();
     }
     mSelectionModel << AModelIndex(mContent->getIndex());
     item->setSelected(true);
 
     emit selectionChanged(getSelectionModel());
+}
+
+void AListView::clearSelection() {
+    for (auto& s : mSelectionModel) {
+        _cast<AListItem>(mContent->getViews()[s.getRow()])->setSelected(false);
+    }
+
+    mSelectionModel.clear();
 }
 
 void AListView::handleMouseDoubleClicked(AListItem* item) {
@@ -213,4 +215,10 @@ void AListView::onDataCountChanged() {
 
 void AListView::onDataChanged() {
     redraw();
+}
+
+void AListView::selectItem(size_t i) {
+    clearSelection();
+    mSelectionModel = { AModelIndex(i) };
+    _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
 }

@@ -399,7 +399,7 @@ public:
 	}
     void setExpanding()
     {
-        mExpanding = glm::ivec2(1);
+        mExpanding = glm::ivec2(2);
     }
 
     const _<AAnimator>& getAnimator() const {
