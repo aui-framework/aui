@@ -96,11 +96,11 @@ void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
         if (!w) return;
         mComboWindow = _new<AComboBoxWindow>(mModel);
         auto currentPos = w->unmapPosition(getPositionInWindow() + w->getWindowPosition()) - w->getWindowPosition();
-        auto height = mComboWindow->mListView->getContentFullHeight();
+        auto height = mComboWindow->mListView->getContentFullHeight() + mComboWindow->getMinimumHeight();
         mComboWindow->setGeometry(currentPos.x, currentPos.y + getHeight(),
-                                  (glm::max)(getWidth(), mComboWindow->mListView->getMinimumWidth()), height);
+                                  (glm::max)(getWidth(), mComboWindow->getMinimumWidth() + int(20_dp)), height);
         mComboWindow->setAnimator(_new<ASizeAnimator>(
-                glm::ivec2{mComboWindow->getWidth(), 0}) let { it->setDuration(0.1f); });
+                glm::ivec2{mComboWindow->getWidth(), 0}) let { it->setDuration(0.15f); });
         connect(w->mousePressed, this, [&] () {
             if (mComboWindow) {
                 mClickConsumer = true;
@@ -118,7 +118,7 @@ void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
             destroyWindow();
             AObject::disconnect();
         });
-
+        onComboBoxWindowCreated();
         mComboWindow->show();
         mPopup = true;
     } else {
@@ -144,6 +144,14 @@ void AComboBox::destroyWindow() {
     emit customCssPropertyChanged();
 
     getWindow()->flagRedraw();
+}
+
+void AComboBox::onComboBoxWindowCreated() {
+
+}
+
+const _<AWindow>& AComboBox::getComboBoxWindow() const {
+    return mComboWindow;
 }
 
 

@@ -38,6 +38,9 @@ private:
     _<AComboBoxWindow> mComboWindow;
     bool mClickConsumer = false;
 
+protected:
+    virtual void onComboBoxWindowCreated();
+
 public:
     explicit AComboBox(const _<IListModel<AString>>& model);
     AComboBox();
@@ -59,8 +62,17 @@ public:
 
     void destroyWindow();
 
+    [[nodiscard]]
+    const _<IListModel<AString>>& getModel() const {
+        return mModel;
+    }
+
+    [[nodiscard]]
+    const _<AWindow>& getComboBoxWindow() const;
+
 signals:
     emits<int> selectionChanged;
+
 };
 
 

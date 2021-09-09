@@ -51,6 +51,8 @@ public:
 
     void setModel(const _<IListModel<AString>>& model);
 
+    void selectItem(size_t i);
+
     int getContentMinimumHeight() override;
     int getContentFullHeight() {
         return getLayout()->getMinimumHeight() + 8;
@@ -74,4 +76,5 @@ signals:
 	emits<AModelSelection<AString>> selectionChanged;
 	emits<unsigned> itemDoubleClicked;
 
+    void clearSelection();
 };

@@ -59,6 +59,7 @@ AWindow::Context AWindow::context = {};
 #include <AUI/Util/AError.h>
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
+#include <AUI/Util/UIBuildingHelpers.h>
 
 struct painter {
 private:
@@ -823,6 +824,16 @@ using namespace std::chrono_literals;
 
 
 static auto _gLastFrameTime = 0ms;
+
+_<AWindow> AWindow::wrapViewToWindow(const _<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {
+    view->setExpanding();
+
+    auto window = _new<AWindow>(title, width, height, parent, ws);
+    window->setContents(Stacked {
+        view
+    });
+    return window;
+}
 
 bool AWindow::isRedrawWillBeEfficient() {
     auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());

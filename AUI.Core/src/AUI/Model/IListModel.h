@@ -22,6 +22,7 @@
 #pragma once
 
 #include <AUI/Common/ASignal.h>
+#include <AUI/Model/AModelSelection.h>
 #include "AUI/Common/AVariant.h"
 #include "AModelRange.h"
 
@@ -43,6 +44,14 @@ public:
 	AModelRange<T> range(const AModelIndex& item) {
         return AModelRange<T>(item, {item.getRow() + 1}, this);
 	}
+
+    virtual void removeItems(const AModelRange<T>& items) = 0;
+    virtual void removeItems(const AModelSelection<T>& items) {
+        for (auto& item : items) {
+            removeItem(item.getIndex());
+        }
+    }
+    virtual void removeItem(const AModelIndex& item) = 0;
 
 signals:
     /**
