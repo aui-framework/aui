@@ -161,7 +161,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                      *        * is a side,
                      *        # is a center.
                      */
-                    if (expandX && expandY) {
+                    {
                         /*
                          * drawing top side
                          *      v
@@ -174,7 +174,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                                                         view->getWidth() - 2 * chunkWidth,
                                                         chunkHeight,
                                                         {0.5f, 0.f},
-                                                        {0.5f, 0.5f});
+                                                        {0.5f, 0.5f - cutSize.y});
                         /*
                          *     +*+
                          *     *#*
@@ -182,17 +182,19 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                          *      ^
                          * drawing bottom side
                          */
+                        
                         Render::inst().drawTexturedRect(chunkWidth,
                                                         view->getHeight() - chunkHeight,
                                                         view->getWidth() - 2 * chunkWidth,
                                                         chunkHeight,
-                                                        {0.5f, 0.5f},
-                                                        {0.5f, 1.f});
+                                                        {0.5f, 0.5f + cutSize.y },
+                                                        {0.5f, 1.f}); 
                         /*
                          *                +*+
                          * drawing left > *#*
                          *     side       +*+
                          */
+                        
                         Render::inst().drawTexturedRect(0,
                                                         chunkHeight,
                                                         chunkWidth,
@@ -214,26 +216,13 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                         /*
                          * drawing center
                          */
+                        
                         Render::inst().drawTexturedRect(chunkWidth,
                                                         chunkHeight,
                                                         view->getWidth() - 2 * chunkWidth,
                                                         view->getHeight() - chunkHeight * 2.f,
                                                         {0.5f, 0.5f},
                                                         {0.5f, 0.5f});
-                    } else if (expandX) {
-                        Render::inst().drawTexturedRect(chunkWidth,
-                                                        0,
-                                                        view->getWidth() - 2 * chunkWidth,
-                                                        view->getHeight(),
-                                                        {0.5f, 0.f},
-                                                        {0.5f, 1.f});
-                    } else if (expandY) {
-                        Render::inst().drawTexturedRect(0,
-                                                        chunkHeight,
-                                                        view->getWidth(),
-                                                        view->getHeight() - 2 * chunkHeight,
-                                                        {0.f, 0.5f},
-                                                        {1.f, 0.5f});
                     }
 
                     break;
