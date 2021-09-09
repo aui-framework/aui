@@ -381,8 +381,10 @@ AVector<APath> APath::find(const AString& filename, const AVector<APath>& locati
 
                 if (!!(flags & PathFinder::RECURSIVE)) {
                     if (pathEntry.isDirectoryExists()) {
-                        auto list = pathEntry.listDir();
-                        c(c, AVector<AString>{ list.begin(), list.end() });
+                        try {
+                            auto list = pathEntry.listDir();
+                            c(c, AVector<AString>{list.begin(), list.end()});
+                        } catch (...) {}
                     }
                 }
             }

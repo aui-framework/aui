@@ -58,7 +58,7 @@ public:
             });
             connect(mModel->dataRemoved, this, [&](const AModelRange<T>& data) {
                 for (const auto& row : data) {
-                    mListener->removeItem(row.getIndex().getRow());
+                    mListener->removeItem(data.begin().getIndex().getRow());
                 }
                 mListener->onDataCountChanged();
                 mListener->onDataChanged();

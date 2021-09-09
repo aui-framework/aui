@@ -29,6 +29,9 @@ public:
     }
 
     void insertItem(size_t at, const T& value) override {
+        if (!mFactory) {
+            return;
+        }
         addView(at, mFactory(value));
     }
 
@@ -50,9 +53,10 @@ public:
         AWindow::current()->updateLayout();
     }
 
-    void operator+(const Factory& f) {
+    void operator-(const Factory& f) {
         mFactory = f;
+        setModel(mObserver->getModel());
     }
 };
 
-#define ui_for(key, model, layout) _new<AForEachUI<decltype(model)::stored_t::stored_t, layout>>(model) + [](const decltype(model)::stored_t::stored_t& key) -> _<AView>
+#define ui_for(key, model, layout) _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [](const std::decay_t<decltype(model)>::stored_t::stored_t& key) -> _<AView>
