@@ -197,11 +197,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 RECT windowRect, clientRect;
                 GetWindowRect(mHandle, &windowRect);
                 GetClientRect(mHandle, &clientRect);
-                ALogger::info("AWindow resize proc args({},{}), window area({},{}), client area({},{})"_as.format(
-                        LOWORD(lParam), HIWORD(lParam), // proc args
-                        windowRect.right - windowRect.left, windowRect.bottom - windowRect.top,
-                        clientRect.right - clientRect.left, clientRect.bottom - clientRect.top
-                    ));
                 wglMakeCurrent(mDC, context.hrc);
                 emit resized(LOWORD(lParam), HIWORD(lParam));
                 AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));

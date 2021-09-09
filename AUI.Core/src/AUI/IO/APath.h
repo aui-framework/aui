@@ -36,17 +36,17 @@ ENUM_FLAG(PathFinder) {
     /**
      * In addition to specified paths, use the system paths (PATH environment variable)
      */
-    USE_SYSTEM_PATHS = 1,
+    USE_SYSTEM_PATHS = 1 << 0,
 
     /**
      * Do scan recursively (slow)
      */
-    RECURSIVE = 2,
+    RECURSIVE = 1 << 1,
 
     /**
      * Return only one file
      */
-    SINGLE
+    SINGLE = 1 << 2
 };
 
 ENUM_FLAG(ListFlags) {
@@ -56,17 +56,17 @@ ENUM_FLAG(ListFlags) {
      * \brief Some file systems include ". " and " .. " to the list of files. In AUI, these elements are skipped by
      *        default. This flag overrides this behaviour.
      */
-    DONT_IGNORE_DOTS = 1,
+    DONT_IGNORE_DOTS = 1 << 0,
 
     /**
      * \brief Include folders to the list of files.
      */
-    DIRS = 2,
+    DIRS = 1 << 1,
 
     /**
      * \brief Include regular files to the list of files.
      */
-    REGULAR_FILES = 4,
+    REGULAR_FILES = 1 << 2,
 
     /**
      * \brief Walk thru the folder recursively (i.e. include the contents of child folders). The paths of child files
@@ -82,7 +82,7 @@ ENUM_FLAG(ListFlags) {
      *     <li>/home/other/code2.cpp</li>
      * </ul>
      */
-    RECURSIVE = 8,
+    RECURSIVE = 1 << 3,
 
     DEFAULT_FLAGS = ListFlags::DIRS | ListFlags::REGULAR_FILES
 };
