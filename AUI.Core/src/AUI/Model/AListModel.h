@@ -92,4 +92,4 @@ namespace aui::detail {
 }
 
 template <typename StoredType>
-using AListModel = typename SequenceContainerExtensions<aui::detail::AListModel<StoredType>>;
+using AListModel = SequenceContainerExtensions<aui::detail::AListModel<StoredType>>;

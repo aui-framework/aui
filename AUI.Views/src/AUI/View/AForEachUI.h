@@ -6,6 +6,7 @@
 #include <AUI/Model/AListModelObserver.h>
 #include <functional>
 #include <AUI/Util/ADataBinding.h>
+#include <AUI/Platform/AWindow.h>
 
 template<typename T, typename Layout>
 class AForEachUI: public AViewContainer, public AListModelObserver<T>::IListModelListener {
