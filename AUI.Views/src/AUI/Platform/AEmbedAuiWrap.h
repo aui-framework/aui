@@ -28,6 +28,7 @@
 
 
 #include <AUI/View/AViewContainer.h>
+#include "ABaseWindow.h"
 
 /**
  * Helper for applications which initialize OpenGL by themselves.
@@ -87,6 +88,8 @@ public:
 
     void onKeyPressed(AInput::Key key);
     void onKeyReleased(AInput::Key key);
+
+    ABaseWindow* getWindow();
 };
 
 

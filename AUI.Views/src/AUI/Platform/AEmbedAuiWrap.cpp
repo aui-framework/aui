@@ -49,6 +49,7 @@ AEmbedAuiWrap::AEmbedAuiWrap()
 
 void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
     mContainer->setContents(container);
+    mContainer->makeCurrent();
 }
 
 void AEmbedAuiWrap::setViewportSize(int width, int height) {
@@ -129,4 +130,8 @@ void AEmbedAuiWrap::onKeyReleased(AInput::Key key) {
 
 void AEmbedAuiWrap::clearFocus() {
     mContainer->setFocusedView(nullptr);
+}
+
+ABaseWindow* AEmbedAuiWrap::getWindow() {
+    return mContainer.get();
 }

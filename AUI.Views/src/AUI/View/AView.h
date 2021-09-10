@@ -474,6 +474,14 @@ public:
 		redraw();
 	}
 
+    /**
+     * Simulates click on the view. Useful then you want to call clicked() slots of this view.
+     */
+    void click() {
+        emit clickedButton(AInput::LButton);
+        emit clicked();
+    }
+
 	/**
 	 * \brief Sets minimal size.
 	 */

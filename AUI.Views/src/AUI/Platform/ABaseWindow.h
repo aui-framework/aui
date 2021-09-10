@@ -54,7 +54,6 @@ public:
         return mMousePos;
     }
 
-    emits<AInput::Key> keyDown;
 
     void onKeyDown(AInput::Key key) override;
 
@@ -70,8 +69,9 @@ public:
     }
 
 signals:
-    emits<>           dpiChanged;
-    emits<glm::ivec2> mouseMove ;
+    emits<>            dpiChanged;
+    emits<glm::ivec2>  mouseMove;
+    emits<AInput::Key> keyDown;
 };
 
 
