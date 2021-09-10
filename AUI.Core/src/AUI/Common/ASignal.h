@@ -217,6 +217,7 @@ void ASignal<Args...>::invokeSignal()
             ++i;
         }
     }
+    AAbstractSignal::isDisconnected() = false;
 }
 
 template<typename... Args>

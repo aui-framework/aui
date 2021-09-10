@@ -46,11 +46,13 @@ namespace aui::detail {
             return this->erase(begin, begin + 1);
         }
         Iterator erase(Iterator begin, Iterator end) {
-            emit this->dataRemoved(AModelRange{AModelIndex{size_t(begin - this->begin())},
-                                               AModelIndex{size_t(end   - this->begin())},
-                                               this});
+            AModelRange range{AModelIndex{size_t(begin - this->begin())},
+                              AModelIndex{size_t(end   - this->begin())},
+                              this};
+            auto it = p::erase(begin, end);
+            emit this->dataRemoved(range);
 
-            return p::erase(begin, end);
+            return it;
         }
 
 

@@ -50,7 +50,7 @@ A_META(Post)
     };
 };
 
-struct User : ASqlModel<User> {
+struct Account : ASqlModel<Account> {
     AString name;
     int age;
 
@@ -60,10 +60,10 @@ struct User : ASqlModel<User> {
 };
 
 auto Post::getUser() {
-    return belongsTo<User>(user_id);
+    return belongsTo<Account>(user_id);
 }
 
-A_META(User)
+A_META(Account)
 {
     A_SQL_TABLE("users")
 
@@ -88,12 +88,12 @@ BOOST_AUTO_TEST_SUITE(ORM)
         });
         mm.doMigration();
 
-        User u;
+        Account u;
         u.name = "John";
         u.age = 23;
         u.save();
         {
-            auto foundById = User::byId(u.id);
+            auto foundById = Account::byId(u.id);
             BOOST_CHECK_EQUAL(foundById.id, u.id);
             BOOST_CHECK_EQUAL(foundById.name, u.name);
             BOOST_CHECK_EQUAL(foundById.age, u.age);
@@ -102,12 +102,12 @@ BOOST_AUTO_TEST_SUITE(ORM)
         u.name = "Jenny";
         u.save();
         {
-            auto foundById = User::byId(u.id);
+            auto foundById = Account::byId(u.id);
             BOOST_CHECK_EQUAL(foundById.name, "Jenny");
         }
 
         u.remove();
-        BOOST_CHECK_THROW(User::byId(u.id), AException);
+        BOOST_CHECK_THROW(Account::byId(u.id), AException);
     }
 
     BOOST_AUTO_TEST_CASE(One2Many) {
@@ -124,8 +124,8 @@ BOOST_AUTO_TEST_SUITE(ORM)
         });
         mm.doMigration();
 
-        User john = User::make("John", 23);
-        User jenny = User::make("Jenny", 21);
+        Account john = Account::make("John", 23);
+        Account jenny = Account::make("Jenny", 21);
 
         Post::make(john.id, "I love cars");
         Post::make(john.id, "im a typical boi girlz add me friends");
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_SUITE(ORM)
         Post::make(jenny.id, "Boys are so stupid");
 
         for (Post& p : john.getPosts()->get()) {
-            User u = p.getUser();
+            Account u = p.getUser();
             BOOST_CHECK_EQUAL(u.id, john.id);
             BOOST_CHECK_EQUAL(u.name, john.name);
             BOOST_CHECK_EQUAL(u.age, john.age);
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_SUITE(ORM)
         }
 
         for (Post& p : jenny.getPosts()->get()) {
-            User u = p.getUser();
+            Account u = p.getUser();
             BOOST_CHECK_EQUAL(u.id, jenny.id);
             BOOST_CHECK_EQUAL(u.name, jenny.name);
             BOOST_CHECK_EQUAL(u.age, jenny.age);

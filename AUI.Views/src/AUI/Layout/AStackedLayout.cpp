@@ -28,9 +28,10 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
 	{
 	    v->ensureAssUpdated();
 		int finalX, finalY, finalWidth, finalHeight;
+        auto margins = v->getMargin();
 		if (v->getExpandingHorizontal() == 0)
 		{
-			finalWidth = v->getMinimumWidth();
+			finalWidth = v->getMinimumWidth() + margins.horizontal();
 			finalX = (width - finalWidth) / 2;
 		} else
 		{
@@ -39,14 +40,17 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
 		}
 		if (v->getExpandingVertical() == 0)
 		{
-			finalHeight = v->getMinimumHeight();
+			finalHeight = v->getMinimumHeight() + margins.vertical();
 			finalY = (height - finalHeight) / 2;
 		} else
 		{
 			finalY = 0;
 			finalHeight = height;
 		}
-		v->setGeometry(finalX + x, finalY + y, finalWidth, finalHeight);
+		v->setGeometry(finalX + x + margins.left,
+                       finalY + y + margins.top,
+                       finalWidth - margins.horizontal(),
+                       finalHeight - margins.vertical());
 	}
 }
 int ::AStackedLayout::getMinimumWidth()

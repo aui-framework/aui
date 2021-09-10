@@ -33,6 +33,7 @@ namespace ass {
         unset_wrap<unsigned> expandingX;
         unset_wrap<unsigned> expandingY;
 
+        Expanding() : expandingX(2), expandingY(2) {}
         Expanding(const unset_wrap<unsigned>& expandingX, const unset_wrap<unsigned>& expandingY) : expandingX(expandingX), expandingY(expandingY) {}
         Expanding(const unset_wrap<unsigned>& expanding) : expandingX(expanding), expandingY(expanding) {}
     };

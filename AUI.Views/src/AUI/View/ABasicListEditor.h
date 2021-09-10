@@ -63,10 +63,14 @@ public:
                 removeButton->disable();
                 nullsafe(modifyButton)->disable();
             }
-            connect(list->selectionChanged, c, [modifyButton, removeButton](const AModelSelection<AString>& s) {
-                nullsafe(removeButton)->setDisabled(s.empty());
+            auto updateEnabledState = [list, modifyButton, removeButton]() {
+                auto& s = list->getSelectionModel().getIndices();
+                nullsafe(modifyButton)->setDisabled(s.empty());
                 removeButton->setDisabled(s.empty());
-            });
+            };
+            connect(list->selectionChanged, c, updateEnabledState);
+            connect(mModel->dataRemoved, c, updateEnabledState);
+            connect(mModel->dataInserted, c, updateEnabledState);
 
             c->setContents(Horizontal {
                 list,

@@ -507,6 +507,12 @@ public:
     void addAssName(const AString& assName);
 
 	/**
+	 * \brief Removes an ASS class to this AView.
+	 * \param assName ASS name to remove
+	 */
+    void removeAssName(const AString& assName);
+
+	/**
 	 * \brief Wraps the addAssName function to make it easier to add ASS class names.
 	 * \example
 	 * <code>
