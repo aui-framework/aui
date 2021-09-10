@@ -58,7 +58,7 @@ private:
 		void thread_fn();
 		AThreadPool& mTP;
 	public:
-		Worker(AThreadPool& tp);
+		Worker(AThreadPool& tp, size_t index);
 		~Worker();
 		void disable();
 	};

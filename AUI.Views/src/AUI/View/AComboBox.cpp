@@ -61,16 +61,23 @@ AComboBox::AComboBox() {
 void AComboBox::setModel(const _<IListModel<AString>>& model) {
     mModel = model;
     setSelectionId(0);
+
+    connect(model->dataInserted, &AComboBox::updateText);
+    connect(model->dataRemoved,  &AComboBox::updateText);
+    connect(model->dataChanged,  &AComboBox::updateText);
 }
 
 void AComboBox::setSelectionId(int id) {
     mSelectionId = id;
     if (mModel->listSize() > id) {
-        setText(mModel->listItemAt(id));
+        updateText();
     }
     emit selectionChanged(id);
 }
 
+void AComboBox::updateText() {
+    setText(mModel->listItemAt(mSelectionId));
+}
 void AComboBox::render() {
     ALabel::render();
     auto arrow = Drawables::get(":uni/svg/combo.svg");

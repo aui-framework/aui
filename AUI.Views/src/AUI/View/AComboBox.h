@@ -39,6 +39,7 @@ private:
     bool mClickConsumer = false;
 
 protected:
+    virtual void updateText();
     virtual void onComboBoxWindowCreated();
 
 public:
@@ -52,7 +53,9 @@ public:
     [[nodiscard]] int getSelectionId() const {
         return mSelectionId;
     }
-
+    int getSelectedId() const {
+        return mSelectionId;
+    }
     void setSelectionId(int id);
     int getContentMinimumWidth() override;
 
@@ -72,7 +75,6 @@ public:
 
 signals:
     emits<int> selectionChanged;
-
 };
 
 

@@ -12,7 +12,7 @@ template<typename T, typename Layout>
 class AForEachUI: public AViewContainer, public AListModelObserver<T>::IListModelListener {
 public:
     using List = _<IListModel<T>>;
-    using Factory = std::function<_<AView>(const T&)>;
+    using Factory = std::function<_<AView>(const T& value, size_t index)>;
 private:
     _<AListModelObserver<T>> mObserver;
 
@@ -33,13 +33,13 @@ public:
         if (!mFactory) {
             return;
         }
-        addView(at, mFactory(value));
+        addView(at, mFactory(value, at));
     }
 
     void updateItem(size_t at, const T& value) override {
         // TODO optimize
         removeView(at);
-        addView(at, mFactory(value));
+        addView(at, mFactory(value, at));
     }
 
     void removeItem(size_t at) override {
@@ -60,4 +60,4 @@ public:
     }
 };
 
-#define ui_for(key, model, layout) _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [](const std::decay_t<decltype(model)>::stored_t::stored_t& key) -> _<AView>
+#define ui_for(value, model, layout) _new<AForEachUI<std::decay_t<decltype(model)>::stored_t::stored_t, layout>>(model) - [&](const std::decay_t<decltype(model)>::stored_t::stored_t& value, unsigned index) -> _<AView>

@@ -24,14 +24,14 @@
 #include <AUI/Common/AException.h>
 #include <AUI/Logging/ALogger.h>
 
-AThreadPool::Worker::Worker(AThreadPool& tp) :
-	mThread(_new<AThread>([&]()
+AThreadPool::Worker::Worker(AThreadPool& tp, size_t index) :
+	mThread(_new<AThread>([&, index]()
 {
+    mThread->setThreadName("AThreadPool worker #" + AString::number(index + 1));
 	thread_fn();
 })),
 mTP(tp)
 {
-	mThread->setThreadName("AThreadPool worker #" + AString::number(mTP.mWorkers.size() + 1));
 	mThread->start();
 }
 
@@ -163,7 +163,7 @@ AThreadPool& AThreadPool::global()
 
 AThreadPool::AThreadPool(size_t size) {
 	for (size_t i = 0; i < size; ++i)
-		mWorkers.push_back(new Worker(*this));
+		mWorkers.push_back(new Worker(*this, i));
 }
 
 AThreadPool::AThreadPool() :
