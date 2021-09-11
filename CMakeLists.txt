@@ -88,5 +88,5 @@ install(
 		DESTINATION "cmake/")
 
 # TODO broken
-# install(EXPORT AUI DESTINATION "cmake/")
+install(EXPORT AUI DESTINATION "cmake/")
 

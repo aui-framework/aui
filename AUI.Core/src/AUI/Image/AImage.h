@@ -76,7 +76,7 @@ public:
     /**
      * \return bytes per pixel.
      */
-    inline uint8_t getBytesPerPixel() const;
+    uint8_t getBytesPerPixel() const;
 
 
     inline glm::ivec2 getSize() const {

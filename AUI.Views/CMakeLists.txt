@@ -50,6 +50,7 @@ if (OPENGL_FOUND)
 				DESTINATION "bin"
 		)
 
+		install(TARGETS glew_s EXPORT AUI)
 	endif()
 
 
