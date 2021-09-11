@@ -27,37 +27,17 @@
 #include "AModelRange.h"
 
 template<typename T>
-class IListModel
+class IMutableListModel: public IListModel<T>
 {
 public:
-	virtual ~IListModel() = default;
+    virtual ~IMutableListModel() = default;
+    
+    virtual void removeItems(const AModelRange<T>& items) = 0;
+    virtual void removeItems(const AModelSelection<T>& items) {
+        for (auto& item : items) {
+            removeItem(item.getIndex());
+        }
+    }
+    virtual void removeItem(const AModelIndex& item) = 0;
 
-	virtual size_t listSize() = 0;
-	virtual T listItemAt(const AModelIndex& index) = 0;
-
-	using stored_t = T;
-
-	AModelRange<T> range(const AModelIndex& begin, const AModelIndex& end) {
-        return AModelRange<T>(begin, end, this);
-	}
-
-	AModelRange<T> range(const AModelIndex& item) {
-        return AModelRange<T>(item, {item.getRow() + 1}, this);
-	}
-
-signals:
-    /**
-     * \brief Model data was changed
-     */
-    emits<AModelRange<T>> dataChanged;
-
-    /**
-     * \brief Model data was added
-     */
-    emits<AModelRange<T>> dataInserted;
-
-    /**
-     * \brief Model data about to remove
-     */
-    emits<AModelRange<T>> dataRemoved;
 };
