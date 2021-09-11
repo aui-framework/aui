@@ -22,9 +22,14 @@ jobs:
       matrix:
         config:
           - {
-            name: "Windows Latest MSVC", artifact: "aui_windows-msvc-x86_64.tar.xz",
+            name: "Windows Latest MSVC x86", artifact: "aui_windows-msvc-x86.tar.xz",
             os: windows-latest,
-            build_type: "Release", generator: "Visual Studio 16 2019"
+            build_type: "Release", generator: "Visual Studio 16 2019", additional_cmake_flags: "-A Win32"
+          }
+          - {
+            name: "Windows Latest MSVC x86_64", artifact: "aui_windows-msvc-x86_64.tar.xz",
+            os: windows-latest,
+            build_type: "Release", generator: "Visual Studio 16 2019", additional_cmake_flags: "-A x64"
           }
           #- {
           #  name: "Windows Latest MinGW", artifact: "windows-mingw.tar.xz",
@@ -34,7 +39,7 @@ jobs:
           - {
             name: "Ubuntu Latest GCC", artifact: "aui_ubuntu-x86_64.tar.xz",
             os: ubuntu-latest,
-            build_type: "Release", generator: "Unix Makefiles"
+            build_type: "Release", generator: "Unix Makefiles", additional_cmake_flags: ""
           }
 
     steps:
@@ -48,7 +53,7 @@ jobs:
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -G "${{ matrix.config.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}}
+        run: cmake -G "${{ matrix.config.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}} ${{matrix.config.additional_cmake_flags}}
 
       - name: Build
         # Build your program with the given configuration
