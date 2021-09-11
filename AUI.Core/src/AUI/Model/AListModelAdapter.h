@@ -22,6 +22,7 @@
 #pragma once
 
 #include <AUI/Model/IListModel.h>
+#include <AUI/Model/IMutableListModel.h>
 
 template<typename T, typename Adapter> class AListModelAdapter;
 
@@ -31,16 +32,17 @@ struct AAdapter {
 };
 
 template<typename T, typename Adapter>
-class AListModelAdapter: public IListModel<AString>, public AObject {
+class AListModelAdapter: public IMutableListModel<AString>, public AObject {
 friend struct AAdapter;
 private:
     _<IListModel<T>> mOther;
+    IMutableListModel<T>* mOtherMutable;
     Adapter mAdapter;
 
     explicit AListModelAdapter(const _<IListModel<T>>& other, const Adapter& adapter) :
             mOther(other),
             mAdapter(adapter) {
-
+        mOtherMutable = dynamic_cast<IMutableListModel<T>*>(mOther.get());
         AObject::connect(other->dataChanged, this, [&](const AModelRange<T>& r){
             emit dataChanged({r.getBegin(), r.getEnd(), this});
         });
@@ -64,15 +66,15 @@ public:
     }
 
     void removeItems(const AModelRange<AString>& items) override {
-        mOther->removeItems({items.begin().getIndex(), items.end().getIndex(), mOther.get()});
+        nullsafe(mOtherMutable)->removeItems({items.begin().getIndex(), items.end().getIndex(), mOther.get()});
     }
 
     void removeItems(const AModelSelection<AString>& items) override {
-        mOther->removeItems({items.getIndices(), mOther.get()});
+        nullsafe(mOtherMutable)->removeItems({items.getIndices(), mOther.get()});
     }
 
     void removeItem(const AModelIndex& item) override {
-        mOther->removeItem(item);
+        nullsafe(mOtherMutable)->removeItem(item);
     }
 
 };

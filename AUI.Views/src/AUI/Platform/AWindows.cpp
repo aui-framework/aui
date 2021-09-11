@@ -131,7 +131,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 auto h = rect->bottom - rect->top;
                 wglMakeCurrent(mDC, context.hrc);
                 emit resized(w, h);
-                AViewContainer::setViewportSize(w, h);
+                AViewContainer::setSize(w, h);
             }
             return true;
             */
@@ -1564,7 +1564,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     window = locateWindow(ev.xconfigure.window);
                     glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
                     if (size.x >= 10 && size.y >= 10 && size != window->getSize())
-                        window->AViewContainer::setViewportSize(size.x, size.y);
+                        window->AViewContainer::setSize(size.x, size.y);
                     if (auto w = _cast<ACustomWindow>(window)) {
                         w->handleXConfigureNotify();
                     }
