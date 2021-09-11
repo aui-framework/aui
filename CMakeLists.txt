@@ -86,5 +86,7 @@ install(
 			cmake/b.cmake
 		RENAME AUI.Build.cmake
 		DESTINATION "cmake/")
-install(EXPORT AUI DESTINATION "cmake/")
+
+# TODO broken
+# install(EXPORT AUI DESTINATION "cmake/")
 

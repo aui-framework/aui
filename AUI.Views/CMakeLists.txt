@@ -45,6 +45,11 @@ if (OPENGL_FOUND)
 			add_subdirectory(3rdparty/glew/build/cmake)
 		endif()
 		set_property(TARGET glew_s PROPERTY POSITION_INDEPENDENT_CODE ON)
+		install(
+				TARGETS glew_s
+				DESTINATION "bin"
+		)
+
 	endif()
 
 
@@ -87,6 +92,8 @@ if (OPENGL_FOUND)
 			endif()
 		endif()
 		if (NOT GLEW_FOUND)
+			# fix install error for glew_s
+
 			target_link_libraries(AUI.Views PUBLIC glew_s)
 			target_include_directories(AUI.Views PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/3rdparty/glew/include>)
 		endif()
