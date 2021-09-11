@@ -32,6 +32,8 @@
 
 class API_AUI_CORE AImage {
 public:
+    AImage(uint32_t width, uint32_t height, int format);
+
     enum Format : unsigned {
         UNKNOWN = 0,
         R = 1,
@@ -49,7 +51,9 @@ private:
 
 public:
     AImage();
-    AImage(Format f);
+
+    AImage(unsigned int format) : mFormat(format) {}
+
     AImage(AVector<uint8_t> mData, uint32_t mWidth, uint32_t mHeight, int mFormat);
 
     void allocate() {
@@ -72,19 +76,17 @@ public:
     /**
      * \return bytes per pixel.
      */
-    inline uint8_t getBytesPerPixel() const {
-        auto b = static_cast<uint8_t>(mFormat & 15u);
-        if (mFormat & FLOAT) {
-            b *= 4;
-        }
-        return b;
-    }
+    inline uint8_t getBytesPerPixel() const;
 
 
     inline glm::ivec2 getSize() const {
         return {getWidth(), getHeight()};
     }
 
+    [[nodiscard]]
+    AImage sub(uint32_t x, uint32_t y, uint32_t width, uint32_t height) const;
+
+    [[nodiscard]]
     glm::ivec4 getPixelAt(uint32_t x, uint32_t y) const;
     void setPixelAt(uint32_t x, uint32_t y, const glm::ivec4& val);
 
