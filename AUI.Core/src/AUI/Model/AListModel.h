@@ -24,12 +24,12 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/ASignal.h>
 #include "AModelIndex.h"
-#include "IListModel.h"
+#include "IMutableListModel.h"
 
 namespace aui::detail {
 
     template <typename StoredType>
-    class AListModel: public std::vector<StoredType>, public AObject, public IListModel<StoredType> {
+    class AListModel: public std::vector<StoredType>, public AObject, public IMutableListModel<StoredType> {
     private:
         using p = std::vector<StoredType>;
         using Iterator = typename p::iterator;

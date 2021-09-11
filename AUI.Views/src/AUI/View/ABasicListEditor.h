@@ -3,6 +3,7 @@
 
 #include <AUI/View/AViewContainer.h>
 #include <AUI/Model/IListModel.h>
+#include <AUI/Model/IMutableListModel.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/AButton.h>
@@ -53,20 +54,23 @@ public:
                 callback(list->getSelectionModel().one());
             }) : nullptr;
 
-            auto removeButton = _new<AButton>("Remove").connect(&AView::clicked, c, [list, model = mModel] {
-                model->removeItems(list->getSelectionModel());
-            });
+            _<AButton> removeButton;
+            if (auto model = _cast<IMutableListModel<AString>>(mModel)) {
+                removeButton = _new<AButton>("Remove").connect(&AView::clicked, c, [list, model] {
+                    model->removeItems(list->getSelectionModel());
+                });
+            }
 
             if (mModel->listSize() != 0) {
                 list->selectItem(0);
             } else {
-                removeButton->disable();
+                nullsafe(removeButton)->disable();
                 nullsafe(modifyButton)->disable();
             }
             auto updateEnabledState = [list, modifyButton, removeButton]() {
                 auto& s = list->getSelectionModel().getIndices();
                 nullsafe(modifyButton)->setDisabled(s.empty());
-                removeButton->setDisabled(s.empty());
+                nullsafe(removeButton)->setDisabled(s.empty());
             };
             connect(list->selectionChanged, c, updateEnabledState);
             connect(mModel->dataRemoved, c, updateEnabledState);
