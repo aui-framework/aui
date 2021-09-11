@@ -334,6 +334,7 @@ public:
 #else
 
 #include <X11/extensions/sync.h>
+#include <AUI/Util/UIBuildingHelpers.h>
 
 Display* gDisplay = nullptr;
 Screen* gScreen;
