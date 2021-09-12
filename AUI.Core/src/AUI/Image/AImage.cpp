@@ -130,7 +130,7 @@ AImage AImage::resizeLinearDownscale(const AImage& src, uint32_t width, uint32_t
     {
         for (uint32_t x = 0; x < width; ++x)
         {
-            glm::ivec4 block;
+            glm::ivec4 block(0.f);
             for (uint32_t dy = 0; dy < deltaY; ++dy)
             {
                 for (uint32_t dx = 0; dx < deltaX; ++dx)
