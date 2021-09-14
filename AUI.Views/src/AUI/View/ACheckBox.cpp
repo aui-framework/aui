@@ -15,7 +15,7 @@
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
- * Original code located at https://github.com/Alex2772/aui
+ * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
