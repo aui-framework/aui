@@ -50,11 +50,8 @@ public:
 		: basic_string<wchar_t>(other)
 	{
 	}
-	AString(const std::string& other) noexcept
-		: AString(other.c_str())
-	{
-	}
-	
+	AString(const std::string& str) noexcept;
+
 	AString(const AString& other) noexcept
 		: std::wstring(other.c_str())
 	{
