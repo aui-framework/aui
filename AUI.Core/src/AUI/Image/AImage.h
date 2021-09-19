@@ -28,9 +28,21 @@
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <AUI/Common/AVector.h>
+#include <AUI/Util/Cache.h>
 #include <AUI/Url/AUrl.h>
 
 class API_AUI_CORE AImage {
+private:
+    class Cache;
+    friend class ::Cache<AImage, Cache, AUrl>;
+    friend class AImageLoaderRegistry;
+    class Cache: public ::Cache<AImage, Cache, AUrl> {
+    public:
+        static Cache& inst();
+    protected:
+        _<AImage> load(const AUrl& key) override;
+    };
+
 public:
     AImage(uint32_t width, uint32_t height, int format);
 

@@ -25,7 +25,6 @@
 
 #include "BackgroundImage.h"
 #include <AUI/Platform/AWindow.h>
-#include <AUI/Image/Drawables.h>
 #include <AUI/Render/RenderHints.h>
 #include <AUI/ASS/AAssHelper.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -35,7 +34,7 @@
 void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
     ass::BackgroundImage& info = view->getAssHelper()->state.backgroundUrl;
     if (info.url && !info.url->empty()) {
-        if (auto drawable = Drawables::get(*info.url)) {
+        if (auto drawable = IDrawable::fromUrl(*info.url)) {
             auto scale = info.scale.or_default(glm::vec2{1, 1});
             auto drawableDrawWrapper = [&](const glm::ivec2& size) {
                 RenderHints::PushColor c;
@@ -103,7 +102,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                 }
 
                 case Sizing::SPLIT_2X2: {
-                    auto img = AImageLoaderRegistry::inst().loadImage(AUrl(*info.url));
+                    auto img = AImage::fromUrl(AUrl(*info.url));
                     auto texture = _cast<ImageDrawable>(drawable);
                     texture->bind();
                     scale *= AWindow::current()->getDpiRatio();

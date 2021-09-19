@@ -23,29 +23,36 @@
 
 #include <AUI/Url/AUrl.h>
 #include <AUI/Logging/ALogger.h>
+#include <AUI/Util/Cache.h>
 #include "IImageLoader.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/SharedPtr.h"
 
+/**
+ * Image loader used for IDrawable::fromUrl and Images::get
+ */
 class API_AUI_CORE AImageLoaderRegistry
 {
+    friend class AImage::Cache;
+    friend class IDrawable;
+
 private:
 	ADeque<_<IImageLoader>> mImageLoaders;
-	
+
+    _<IDrawable> loadDrawable(AByteBuffer& buffer);
+    _<AImage> loadImage(AByteBuffer& buffer);
+    inline _<IDrawable> loadDrawable(const AUrl& url) {
+        auto s = AByteBuffer::fromStream(url.open());
+        return loadDrawable(s);
+    }
+    _<AImage> loadImage(const AUrl& url);
+
 public:
 	AImageLoaderRegistry()
 	{
 	}
 
 	void registerImageLoader(_<IImageLoader> imageLoader);
-
-	_<IDrawable> loadDrawable(AByteBuffer& buffer);
-	_<AImage> loadImage(AByteBuffer& buffer);
-	inline _<IDrawable> loadDrawable(const AUrl& url) {
-	    auto s = AByteBuffer::fromStream(url.open());
-	    return loadDrawable(s);
-	}
-	_<AImage> loadImage(const AUrl& url);
 
 	static AImageLoaderRegistry& inst();
 };

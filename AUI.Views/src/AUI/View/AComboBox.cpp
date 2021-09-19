@@ -26,7 +26,6 @@
 #include <AUI/Util/Cache.h>
 #include "AComboBox.h"
 #include "AListView.h"
-#include <AUI/Image/Drawables.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Layout/AVerticalLayout.h>
@@ -80,7 +79,7 @@ void AComboBox::updateText() {
 }
 void AComboBox::render() {
     ALabel::render();
-    auto arrow = Drawables::get(":uni/svg/combo.svg");
+    auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg");
     auto size = arrow->getSizeHint();
     auto s = (getHeight() - size.y) / 2;
     Render::inst().setTransform(

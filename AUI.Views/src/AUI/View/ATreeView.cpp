@@ -78,7 +78,7 @@ public:
         setLayout(_new<AHorizontalLayout>());
 
         if (hasChildren) {
-            addView(mCollapseDisplay = _new<ADrawableView>(AImageLoaderRegistry::inst().loadDrawable(":uni/svg/tree-collapsed.svg")) let {
+            addView(mCollapseDisplay = _new<ADrawableView>(IDrawable::fromUrl(":uni/svg/tree-collapsed.svg")) let {
                 it << ".list-item-icon";
                 connect(it->clicked, me::toggleCollapse);
             });
@@ -122,7 +122,7 @@ public:
     void setExpanded(bool expanded) {
         mExpanded = expanded;
         if (mCollapseDisplay) {
-            mCollapseDisplay->setDrawable(AImageLoaderRegistry::inst().loadDrawable(
+            mCollapseDisplay->setDrawable(IDrawable::fromUrl(
                     mExpanded ? ":uni/svg/tree-expanded.svg" : ":uni/svg/tree-collapsed.svg"));
         }
         emit expandStateChanged(mExpanded);

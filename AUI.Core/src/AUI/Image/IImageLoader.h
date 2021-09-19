@@ -20,11 +20,11 @@
  */
 
 #pragma once
-#include "IDrawable.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AImage.h"
 
 class AByteBuffer;
+class IDrawable;
 
 /**
  * \brief Class-loader of abstract images that can be displayed on the screen.

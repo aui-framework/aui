@@ -25,27 +25,30 @@
 #include "AUI/Common/AMap.h"
 #include "AUI/Common/SharedPtr.h"
 
-template<typename T, typename Container>
+template<typename T, typename Container, typename K = AString>
 class Cache
 {
 private:
-	AMap<AString, _<T>> mContainer;
-	
+	AMap<K, _<T>> mContainer;
+
+protected:
+    virtual _<T> load(const K& key) = 0;
+
 public:
-	virtual _<T> load(const AString& key) = 0;
 	
-	static _<T> get(const AString& key)
+	static _<T> get(const K& key)
 	{
 		if (auto i = Container::inst().mContainer.contains(key))
 		{
 			return i->second;
 		}
-		auto value = Container::inst().load(key);
+		Cache& i = Container::inst();
+		auto value = i.load(key);
 		put(key, value);
 		return value;
 	}
 	
-	static void put(const AString& key, _<T> value)
+	static void put(const K& key, _<T> value)
 	{
         Container::inst().mContainer[key] = value;
 	}

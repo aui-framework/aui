@@ -45,7 +45,7 @@ AImageView::AImageView() {
 
 
 AImageView::AImageView(const AUrl& img):
-    AImageView(AImageLoaderRegistry::inst().loadImage(img))
+    AImageView(AImage::fromUrl(img))
 {
 
 }

@@ -22,6 +22,9 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <AUI/Util/Cache.h>
+#include <AUI/Url/AUrl.h>
+
 
 /**
  * \brief An abstract image that determines itself how it is displayed. Essentially an abstraction from vector and
@@ -29,6 +32,18 @@
  */
 class IDrawable
 {
+    friend class AImageLoaderRegistry;
+
+    class Cache;
+    friend class ::Cache<IDrawable, Cache, AUrl>;
+    friend class AImageLoaderRegistry;
+    class Cache: public ::Cache<IDrawable, Cache, AUrl> {
+    public:
+        static Cache& inst();
+    protected:
+        _<IDrawable> load(const AUrl& key) override;
+    };
+
 public:
 	/**
 	 * \brief Called when the image needs to be displayed. It is assumed that the renderer is already set to the
@@ -51,4 +66,7 @@ public:
 	{
 		return false;
 	}
+
+
+    static _<IDrawable> fromUrl(const AUrl& url);
 };

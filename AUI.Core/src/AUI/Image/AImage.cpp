@@ -204,5 +204,25 @@ std::uint8_t AImage::getBytesPerPixel() const
 }
 
 _<AImage> AImage::fromUrl(const AUrl& url) {
-    return AImageLoaderRegistry::inst().loadImage(url);
+    return Cache::get(url);
 }
+
+_<AImage> AImage::Cache::load(const AUrl& key)
+{
+    try {
+        auto buffer = AByteBuffer::fromStream(AUrl(key).open(), 0x100000);
+
+        if (auto raster = AImageLoaderRegistry::inst().loadImage(buffer))
+            return raster;
+    } catch (const AException& e) {
+        ALogger::err("Could not load image: " + key.getFull() + ": " + e.getMessage());
+    }
+    return nullptr;
+}
+
+AImage::Cache& AImage::Cache::inst() {
+    static AImage::Cache s;
+    return s;
+}
+
+

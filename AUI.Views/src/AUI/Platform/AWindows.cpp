@@ -41,7 +41,6 @@
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/Image/Drawables.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Traits/strings.h>

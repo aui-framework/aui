@@ -58,6 +58,10 @@ public:
 	    return mProtocol + "://" + mHost + "/" + mPath;
 	}
 
+    bool operator<(const AUrl& u) const {
+        return getFull() < u.getFull();
+    }
+
 	static void registerResolver(const AString& protocol, const std::function<_<IInputStream>(const AUrl&)>& factory);
 };
 
