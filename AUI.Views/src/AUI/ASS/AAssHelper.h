@@ -28,10 +28,12 @@
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Common/AVector.h>
+#include <optional>
 
 #include "Declaration/BackgroundImage.h"
 
 struct Rule;
+class IDrawable;
 
 /**
  * \brief Remember, ASS is not a butt. ASS is Aui Style Sheets
@@ -57,6 +59,7 @@ public:
 
     struct {
         ass::BackgroundImage backgroundUrl;
+        std::optional<_<IDrawable>> backgroundImage;
     } state;
 signals:
     emits<> invalidateFullAss;

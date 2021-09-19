@@ -31,11 +31,9 @@
 #include <AUI/IO/APath.h>
 
 AFontManager::AFontManager() :
-        mFreeType(_new<FreeType>())
+        mFreeType(_new<FreeType>()),
+        mDefault(get("segoeui"))
 {
-}
-_<AFont> AFontManager::getDefault() {
-    return get("segoeui");
 }
 
 AString AFontManager::getPathToFont(const AString& font) {

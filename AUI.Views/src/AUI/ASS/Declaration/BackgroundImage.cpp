@@ -34,7 +34,11 @@
 void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
     ass::BackgroundImage& info = view->getAssHelper()->state.backgroundUrl;
     if (info.url && !info.url->empty()) {
-        if (auto drawable = IDrawable::fromUrl(*info.url)) {
+        if (!view->getAssHelper()->state.backgroundImage) {
+            // resolve background image by url
+            view->getAssHelper()->state.backgroundImage = IDrawable::fromUrl(*info.url);
+        }
+        if (auto drawable = *view->getAssHelper()->state.backgroundImage) {
             auto scale = info.scale.or_default(glm::vec2{1, 1});
             auto drawableDrawWrapper = [&](const glm::ivec2& size) {
                 RenderHints::PushColor c;

@@ -54,7 +54,49 @@ AFontManager::AFontManager() :
         }
     } fc;
 
+    mDefault = [&] {
+        _<AFont> result;
 
+        try {
+            // try to determine user's font
+            // /home/alex2772/.config/xsettingsd/xsettingsd.conf
+
+            ATokenizer t(
+                    _new<FileInputStream>("/home/{}/.config/xsettingsd/xsettingsd.conf"_as.format(getenv("USER"))));
+
+            // find something like
+            // Gtk/FontName "System Font,  10"
+            for (;;) {
+                AString k = t.readStringWhile([](char c) { return isalpha(c) || c == '/'; });
+                if (k == "Gtk/FontName") {
+                    // found it! now scrap the font name
+                    t.skipUntil('"');
+                    auto fontName = t.readStringUntilUnescaped(',');
+
+                    // done!
+                    result = get(fontName);
+                    break;
+                } else {
+                    // skip line
+                    t.skipUntil('\n');
+                }
+            }
+
+        } catch (...) {}
+
+        if (result == nullptr) {
+            // fallback to something default
+            for (auto& d : {"Ubuntu", "Serif", "FreeSans", "Monospace"}) {
+                try {
+                    result = get(d);
+                    ALogger::info("Using fallback font: {}"_as.format(d));
+                    break;
+                } catch (...) {}
+            }
+        }
+
+        return result;
+    }();
 }
 
 AString AFontManager::getPathToFont(const AString& font) {
@@ -100,50 +142,4 @@ AString AFontManager::getPathToFont(const AString& font) {
     }
 }
 
-_<AFont> AFontManager::getDefault() {
-    static _<AFont> d = [&] {
-        _<AFont> result;
-
-        try {
-            // try to determine user's font
-            // /home/alex2772/.config/xsettingsd/xsettingsd.conf
-
-            ATokenizer t(
-                    _new<FileInputStream>("/home/{}/.config/xsettingsd/xsettingsd.conf"_as.format(getenv("USER"))));
-
-            // find something like
-            // Gtk/FontName "System Font,  10"
-            for (;;) {
-                AString k = t.readStringWhile([](char c) { return isalpha(c) || c == '/'; });
-                if (k == "Gtk/FontName") {
-                    // found it! now scrap the font name
-                    t.skipUntil('"');
-                    auto fontName = t.readStringUntilUnescaped(',');
-
-                    // done!
-                    result = get(fontName);
-                    break;
-                } else {
-                    // skip line
-                    t.skipUntil('\n');
-                }
-            }
-
-        } catch (...) {}
-
-        if (result == nullptr) {
-            // fallback to something default
-            for (auto& d : {"Ubuntu", "Serif", "FreeSans", "Monospace"}) {
-                try {
-                    result = get(d);
-                    ALogger::info("Using fallback font: {}"_as.format(d));
-                    break;
-                } catch (...) {}
-            }
-        }
-
-        return result;
-    }();
-    return d;
-}
 #endif

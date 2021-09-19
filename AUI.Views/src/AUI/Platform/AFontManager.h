@@ -34,8 +34,12 @@ public:
     static AFontManager& inst();
 
 	_<FreeType> mFreeType;
-	_<AFont> getDefault();
+	[[nodiscard]] _<AFont> getDefault() {
+        return mDefault;
+    }
+
 private:
+    _<AFont> mDefault;
 	_<AFont> newItem(const AString& name) override;
 
 	AString getPathToFont(const AString& font);
