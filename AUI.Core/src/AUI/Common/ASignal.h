@@ -192,10 +192,7 @@ void ASignal<Args...>::invokeSignal()
     {
         if (i->object->getThread() != AThread::current())
         {
-            auto obj = std::move(i->object);
-            auto func = std::move(i->func);
-            auto args = mArgs;
-            obj->getThread()->enqueue([this, obj, func, args]() {
+            i->object->getThread()->enqueue([this, obj = i->object, func = i->func, args = mArgs]() {
                 AAbstractSignal::isDisconnected() = false;
                 (std::apply)(func, args);
                 if (AAbstractSignal::isDisconnected()) {
@@ -203,7 +200,7 @@ void ASignal<Args...>::invokeSignal()
                     unlinkSlot(obj);
                 }
             });
-            i = mSlots.erase(i);
+            ++i;
         }
         else
         {
