@@ -27,6 +27,9 @@
 class AObject;
 
 
+template<typename T>
+using _weak = std::weak_ptr<T>;
+
 /**
  * \brief std::shared_ptr<T> wrapper
  *        Of course, it is not good tone to define a class with _ type but it significantly increases coding speed.
@@ -73,6 +76,13 @@ public:
 	{
 	}
 
+    /**
+     * @return weak reference
+     */
+    [[nodiscard]]
+    _weak<T> weak() {
+        return _weak<T>(*this);
+    }
 
 	template<typename SignalField, typename Object, typename Function>
 	inline _<T>& connect(SignalField signalField, Object object, Function function);
@@ -154,9 +164,6 @@ public:
         return (*parent::get())(std::forward<Args>(value)...);
     }
 };
-
-template<typename T>
-using _weak = std::weak_ptr<T>;
 
 template<typename T>
 using _unique = std::unique_ptr<T>;
