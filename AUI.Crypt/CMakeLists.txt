@@ -4,7 +4,7 @@ set(AUI_EMBEDDED_OPENSSL ${AUI_IS_WINDOWS} CACHE BOOL "Use embedded OpenSSL")
 
 find_package(OpenSSL)
 
-AUI_Module(AUI.Crypt)
+aui_module(AUI.Crypt)
 target_link_libraries(AUI.Crypt PRIVATE AUI.Core)
 
 if (OPENSSL_FOUND AND NOT AUI_EMBEDDED_OPENSSL)

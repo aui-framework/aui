@@ -65,7 +65,7 @@ endif()
 get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
 
 if (NOT ANDROID)
-	AUI_Tests(Tests ${TESTS_SRCS})
+	aui_tests(Tests ${TESTS_SRCS})
 	if (TARGET Tests)
 		get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
 		foreach(child ${TESTS_DEPS})
@@ -87,6 +87,5 @@ install(
 		RENAME AUI.Build.cmake
 		DESTINATION "cmake/")
 
-# TODO broken
 install(EXPORT AUI DESTINATION "cmake/")
 

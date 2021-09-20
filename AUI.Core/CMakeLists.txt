@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 set(AUI_EMBEDDED_ZLIB ${AUI_IS_WINDOWS} CACHE BOOL "Use embedded ZLIB")
 
-AUI_Module(AUI.Core)
+aui_module(AUI.Core)
 
 if (NOT WIN32)
 	find_package(Backtrace)

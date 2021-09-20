@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 if (TARGET AUI.Views)
-    AUI_Module(AUI.Image)
+    aui_module(AUI.Image)
     target_include_directories(AUI.Image PRIVATE 3rdparty)
     target_link_libraries(AUI.Image PRIVATE AUI.Core)
     target_link_libraries(AUI.Image PRIVATE AUI.Views)

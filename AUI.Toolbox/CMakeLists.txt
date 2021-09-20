@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 if(NOT ANDROID)
-    AUI_Executable(AUI.Toolbox)
+    aui_executable(AUI.Toolbox)
     target_link_libraries(AUI.Toolbox PRIVATE AUI.Core)
     target_link_libraries(AUI.Toolbox PRIVATE AUI.Crypt)
 else()

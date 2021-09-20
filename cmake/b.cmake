@@ -94,7 +94,7 @@ if(NOT ANDROID)
     endif()
 endif()
 
-function(AUI_Add_Properties AUI_MODULE_NAME)
+function(aui_add_properties AUI_MODULE_NAME)
     if(MSVC)
         set_target_properties(${AUI_MODULE_NAME} PROPERTIES
                 LINK_FLAGS "/force:MULTIPLE"
@@ -107,9 +107,9 @@ function(AUI_Add_Properties AUI_MODULE_NAME)
                 LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib"
                 RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
     endif()
-endfunction(AUI_Add_Properties)
+endfunction(aui_add_properties)
 
-function(AUI_Tests TESTS_MODULE_NAME)
+function(aui_tests TESTS_MODULE_NAME)
     find_package(Boost)
     if(Boost_FOUND)
         add_executable(${ARGV})
@@ -120,14 +120,14 @@ function(AUI_Tests TESTS_MODULE_NAME)
         target_link_directories(${TESTS_MODULE_NAME} PRIVATE ${Boost_LIBRARY_DIRS})
         target_link_libraries(${TESTS_MODULE_NAME} PRIVATE AUI.Core)
         target_link_libraries(${TESTS_MODULE_NAME} PRIVATE ${AUI_MODULE_NAME})
-        AUI_Add_Properties(${TESTS_MODULE_NAME})
+        aui_add_properties(${TESTS_MODULE_NAME})
         set_target_properties(${TESTS_MODULE_NAME} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
     else()
         message(WARNING "Boost was not found! Test target is not available.")
     endif()
-endfunction(AUI_Tests)
+endfunction(aui_tests)
 
-function(AUI_Common AUI_MODULE_NAME)
+function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
     set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 17)
@@ -162,19 +162,19 @@ function(AUI_Common AUI_MODULE_NAME)
     install(CODE [[
             message(STATUS "Installing ${AUI_MODULE_NAME}")
     ]])
-endfunction(AUI_Common)
+endfunction(aui_common)
 
 
-function(AUI_Deploy_Library AUI_MODULE_NAME)
+function(aui_deploy_library AUI_MODULE_NAME)
     if (TARGET ${AUI_MODULE_NAME})
         message(STATUS "link_libraries ${AUI_MODULE_NAME}")
         link_libraries(${AUI_MODULE_NAME})
     endif()
     string(TOLOWER ${AUI_MODULE_NAME} AUI_MODULE_NAME_LOWERED)
     install(CODE "list(APPEND ADDITIONAL_DEPENDENCIES ${CMAKE_SHARED_LIBRARY_PREFIX}${AUI_MODULE_NAME_LOWERED}${CMAKE_SHARED_LIBRARY_SUFFIX})")
-endfunction(AUI_Deploy_Library)
+endfunction(aui_deploy_library)
 
-function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
+function(aui_executable_advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
     project(${AUI_MODULE_NAME})
 
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
@@ -195,8 +195,8 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
 
             add_executable(${AUI_MODULE_NAME} ${EXCLUDED_SRCS} ${SRCS})
             set_target_properties(${AUI_MODULE_NAME} PROPERTIES ENABLE_EXPORTS ON)
-            AUI_Add_Properties(${AUI_MODULE_NAME})
-            AUI_Common(${AUI_MODULE_NAME})
+            aui_add_properties(${AUI_MODULE_NAME})
+            aui_common(${AUI_MODULE_NAME})
 
             add_library(preview.${AUI_MODULE_NAME} SHARED ${PREVIEW_SRCS} ${SRCS})
             set_property(TARGET preview.${AUI_MODULE_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
@@ -204,8 +204,8 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
             target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
             target_link_libraries(preview.${AUI_MODULE_NAME} PUBLIC ${AUI_MODULE_NAME})
             target_link_libraries(preview.${AUI_MODULE_NAME} PUBLIC AUI.Preview.Library)
-            AUI_Add_Properties(preview.${AUI_MODULE_NAME})
-            AUI_Common(preview.${AUI_MODULE_NAME})
+            aui_add_properties(preview.${AUI_MODULE_NAME})
+            aui_common(preview.${AUI_MODULE_NAME})
 
             add_dependencies(AUI.Preview preview.${AUI_MODULE_NAME})
         else()
@@ -215,9 +215,9 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
 
     target_include_directories(${AUI_MODULE_NAME} PRIVATE src)
 
-    AUI_Add_Properties(${AUI_MODULE_NAME})
+    aui_add_properties(${AUI_MODULE_NAME})
 
-    AUI_Common(${AUI_MODULE_NAME})
+    aui_common(${AUI_MODULE_NAME})
 
     # strip
     if (CMAKE_BUILD_TYPE EQUAL "Release")
@@ -348,22 +348,22 @@ function(AUI_Executable_Advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
             TARGETS ${AUI_MODULE_NAME}
             DESTINATION "bin"
     )
-endfunction(AUI_Executable_Advanced)
+endfunction(aui_executable_advanced)
 
-function(AUI_Executable AUI_MODULE_NAME)
-    AUI_Executable_Advanced(${AUI_MODULE_NAME} "")
-endfunction(AUI_Executable)
+function(aui_executable AUI_MODULE_NAME)
+    aui_executable_advanced(${AUI_MODULE_NAME} "")
+endfunction(aui_executable)
 
-function(AUI_Static_Link AUI_MODULE_NAME LIBRARY_NAME)
+function(aui_static_link AUI_MODULE_NAME LIBRARY_NAME)
     target_include_directories(${AUI_MODULE_NAME} PUBLIC "3rdparty/${LIBRARY_NAME}")
     file(GLOB_RECURSE SRCS "3rdparty/${LIBRARY_NAME}/*.cpp" "3rdparty/${LIBRARY_NAME}/*.c" "3rdparty/${LIBRARY_NAME}/*.h")
     add_library(${LIBRARY_NAME} STATIC ${SRCS})
     set_property(TARGET ${LIBRARY_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
     target_link_libraries(${AUI_MODULE_NAME} PUBLIC ${LIBRARY_NAME})
-endfunction(AUI_Static_Link)
+endfunction(aui_static_link)
 
 
-function(AUI_Compile_Assets AUI_MODULE_NAME)
+function(aui_compile_assets AUI_MODULE_NAME)
     if(ANDROID)
         set(TARGET_DIR ${AUI_SDK_BIN})
     else()
@@ -398,9 +398,9 @@ function(AUI_Compile_Assets AUI_MODULE_NAME)
             add_dependencies(${AUI_MODULE_NAME} AUI.Toolbox)
         endif()
     endif()
-endfunction(AUI_Compile_Assets)
+endfunction(aui_compile_assets)
 
-function(AUI_Compile_Assets_Add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
+function(aui_compile_assets_add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
     if(ANDROID)
         set(TARGET_DIR ${AUI_SDK_BIN})
     else()
@@ -431,9 +431,9 @@ function(AUI_Compile_Assets_Add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
             add_dependencies(${AUI_MODULE_NAME} AUI.Toolbox)
         endif()
     endif()
-endfunction(AUI_Compile_Assets_Add)
+endfunction(aui_compile_assets_add)
 
-function(AUI_Module AUI_MODULE_NAME)
+function(aui_module AUI_MODULE_NAME)
     project(${AUI_MODULE_NAME})
 
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp)
@@ -453,9 +453,9 @@ function(AUI_Module AUI_MODULE_NAME)
     target_compile_definitions(${AUI_MODULE_NAME} PRIVATE ${BUILD_DEF_NAME}=AUI_EXPORT)
     target_compile_definitions(${AUI_MODULE_NAME} PUBLIC GLM_FORCE_INLINE=1)
 
-    AUI_Add_Properties(${AUI_MODULE_NAME})
+    aui_add_properties(${AUI_MODULE_NAME})
 
-    AUI_Common(${AUI_MODULE_NAME})
+    aui_common(${AUI_MODULE_NAME})
 
     install(
             TARGETS ${AUI_MODULE_NAME}
@@ -475,7 +475,7 @@ function(AUI_Module AUI_MODULE_NAME)
 
     )
 
-endfunction(AUI_Module)
+endfunction(aui_module)
 
 if (MINGW OR UNIX)
     # strip for release

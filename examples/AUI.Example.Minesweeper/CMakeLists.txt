@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.10)
 
-AUI_Deploy_Library(AUI.Svg)
-AUI_Deploy_Library(AUI.Image)
+aui_deploy_library(AUI.Svg)
+aui_deploy_library(AUI.Image)
 
-AUI_Executable(AUI.Example.Minesweeper)
-AUI_Compile_Assets(AUI.Example.Minesweeper)
+aui_executable(AUI.Example.Minesweeper)
+aui_compile_assets(AUI.Example.Minesweeper)
 
 target_link_libraries(AUI.Example.Minesweeper PRIVATE AUI.Core)
 target_link_libraries(AUI.Example.Minesweeper PRIVATE AUI.Views)

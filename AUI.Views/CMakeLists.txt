@@ -30,9 +30,9 @@ if (OPENGL_FOUND)
 		endif ()
 	endif()
 
-	AUI_Module(AUI.Views)
+	aui_module(AUI.Views)
 
-	AUI_Compile_Assets(AUI.Views)
+	aui_compile_assets(AUI.Views)
 
 
 	if (GLEW_FOUND)
