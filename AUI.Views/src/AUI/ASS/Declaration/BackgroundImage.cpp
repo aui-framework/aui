@@ -106,14 +106,16 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                 }
 
                 case Sizing::SPLIT_2X2: {
-                    auto img = AImage::fromUrl(AUrl(*info.url));
                     auto texture = _cast<ImageDrawable>(drawable);
+                    auto textureSize = glm::vec2(texture->getSizeHint());
+                    auto textureWidth = textureSize.x;
+                    auto textureHeight = textureSize.y;
                     texture->bind();
                     scale *= AWindow::current()->getDpiRatio();
-                    float chunkWidth = glm::min(view->getWidth() / 2.f, img->getWidth() / 2.f);
-                    float chunkHeight = glm::min(view->getHeight() / 2.f, img->getHeight() / 2.f);
+                    float chunkWidth = glm::min(view->getWidth() / 2.f, textureWidth / 2.f);
+                    float chunkHeight = glm::min(view->getHeight() / 2.f, textureHeight / 2.f);
 
-                    glm::vec2 cutSize = (glm::vec2(img->getSize()) - glm::vec2(chunkWidth, chunkHeight) * 2.f / scale) / 2.f / glm::vec2(img->getSize());
+                    glm::vec2 cutSize = (textureSize - glm::vec2(chunkWidth, chunkHeight) * 2.f / scale) / 2.f / textureSize;
 
                     Render::inst().setFill(Render::FILL_TEXTURED);
 
@@ -149,9 +151,6 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                                                     chunkHeight,
                                                     glm::vec2(0.5f) + cutSize,
                                                     {1, 1});
-
-                    bool expandX = view->getWidth() > img->getWidth();
-                    bool expandY = view->getHeight() > img->getHeight();
 
                     /*
                      * lets image our scene as follows:
