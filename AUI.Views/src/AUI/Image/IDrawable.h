@@ -68,5 +68,5 @@ public:
 	}
 
 
-    static _<IDrawable> fromUrl(const AUrl& url);
+    API_AUI_VIEWS static _<IDrawable> fromUrl(const AUrl& url);
 };
