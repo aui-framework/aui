@@ -23,6 +23,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include "AUI/Platform/AFontManager.h"
+#include "ShaderUniforms.h"
 #include <AUI/Common/AColor.h>
 #include <AUI/Common/ASide.h>
 #include <AUI/Platform/AWindow.h>
@@ -279,7 +280,7 @@ void Render::drawTexturedRect(float x, float y, float width, float height, const
 void Render::drawRoundedRect(float x, float y, float width, float height, float radius) {
     mRoundedSolidShader.use();
 
-    mRoundedSolidShader.set("size", 2.f * radius / glm::vec2{width, height});
+    mRoundedSolidShader.set(aui::ShaderUniforms::SIZE, 2.f * radius / glm::vec2{width, height});
     drawRect(x, y, width, height);
     setFill(mCurrentFill);
 }
@@ -296,11 +297,11 @@ void Render::drawRoundedRectAntialiased(float x, float y, float width, float hei
     }
 
     targetShader->use();
-    targetShader->set("outerSize", 2.f * radius / glm::vec2{width, height});
-    targetShader->set("innerSize", glm::vec2{9999});
-    targetShader->set("innerTexelSize", glm::vec2{0, 0});
-    targetShader->set("outerTexelSize", 2.f / 5.f / glm::vec2{width, height});
-    targetShader->set("outer_to_inner", glm::vec2{0});
+    targetShader->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / glm::vec2{width, height});
+    targetShader->set(aui::ShaderUniforms::INNER_SIZE, glm::vec2{9999});
+    targetShader->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, glm::vec2{0, 0});
+    targetShader->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / glm::vec2{width, height});
+    targetShader->set(aui::ShaderUniforms::OUTER_TO_INNER, glm::vec2{0});
     drawRect(x, y, width, height);
     setFill(mCurrentFill);
 }
@@ -311,12 +312,12 @@ void Render::drawRoundedBorder(float x, float y, float width, float height, floa
     float innerHeight = height - borderWidth * 2;
 
     mRoundedSolidShaderAntialiased.use();
-    mRoundedSolidShaderAntialiased.set("outerSize", 2.f * radius / glm::vec2{width, height});
-    mRoundedSolidShaderAntialiased.set("innerSize", 2.f * (radius - borderWidth) / glm::vec2{innerWidth, innerHeight});
-    mRoundedSolidShaderAntialiased.set("outer_to_inner", glm::vec2{width, height} / glm::vec2{innerWidth, innerHeight});
+    mRoundedSolidShaderAntialiased.set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / glm::vec2{width, height});
+    mRoundedSolidShaderAntialiased.set(aui::ShaderUniforms::INNER_SIZE, 2.f * (radius - borderWidth) / glm::vec2{innerWidth, innerHeight});
+    mRoundedSolidShaderAntialiased.set(aui::ShaderUniforms::OUTER_TO_INNER, glm::vec2{width, height} / glm::vec2{innerWidth, innerHeight});
 
-    mRoundedSolidShaderAntialiased.set("innerTexelSize", 2.f / 5.f / glm::vec2{innerWidth, innerHeight});
-    mRoundedSolidShaderAntialiased.set("outerTexelSize", 2.f / 5.f / glm::vec2{width, height});
+    mRoundedSolidShaderAntialiased.set(aui::ShaderUniforms::INNER_TEXEL_SIZE, 2.f / 5.f / glm::vec2{innerWidth, innerHeight});
+    mRoundedSolidShaderAntialiased.set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / glm::vec2{width, height});
     drawRect(x, y, width, height);
     setFill(mCurrentFill);
 
@@ -414,11 +415,11 @@ void Render::drawRectBorder(float x, float y, float width, float height, float l
 
 void Render::drawBoxShadow(float x, float y, float width, float height, float blurRadius, const AColor& color) {
     mBoxShadowShader.use();
-    mBoxShadowShader.set("sigma", blurRadius / 2.f);
-    mBoxShadowShader.set("lower", glm::vec2(x, y) + glm::vec2(width, height));
-    mBoxShadowShader.set("upper", glm::vec2(x, y));
-    mBoxShadowShader.set("transform", mTransform);
-    mBoxShadowShader.set("color", mColor * color);
+    mBoxShadowShader.set(aui::ShaderUniforms::SIGMA, blurRadius / 2.f);
+    mBoxShadowShader.set(aui::ShaderUniforms::LOWER, glm::vec2(x, y) + glm::vec2(width, height));
+    mBoxShadowShader.set(aui::ShaderUniforms::UPPER, glm::vec2(x, y));
+    mBoxShadowShader.set(aui::ShaderUniforms::TRANSFORM, mTransform);
+    mBoxShadowShader.set(aui::ShaderUniforms::COLOR, mColor * color);
 
     mTempVao.bind();
 
@@ -473,7 +474,7 @@ void Render::setFill(Filling t)
 		break;
 	}
 
-	GL::Shader::currentShader()->set("color", mColor);
+	GL::Shader::currentShader()->set(aui::ShaderUniforms::SIZE, mColor);
 }
 
 void Render::drawString(int x, int y, const AString& text, FontStyle& fs) {
@@ -504,13 +505,12 @@ void Render::drawString(int x, int y, PrerenderedString& f) {
 	auto finalColor = mColor * f.fs.color;
 	if (f.fs.fontRendering == FontRendering::SUBPIXEL) {
 		setFill(FILL_SYMBOL_SUBPIXEL);
-		mSymbolShaderSubPixel.set("mat", glm::translate(mTransform, glm::vec3{x, y, 0}));
-
-		mSymbolShaderSubPixel.set("color", glm::vec4(1, 1, 1, finalColor.a));
+		mSymbolShaderSubPixel.set(aui::ShaderUniforms::MAT, glm::translate(mTransform, glm::vec3{x, y, 0}));
+		mSymbolShaderSubPixel.set(aui::ShaderUniforms::COLOR, glm::vec4(1, 1, 1, finalColor.a));
 		glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
 		f.mVao->draw(GL_TRIANGLES);
 
-		mSymbolShaderSubPixel.set("color", finalColor);
+		mSymbolShaderSubPixel.set(aui::ShaderUniforms::COLOR, finalColor);
 		glBlendFunc(GL_ONE, GL_ONE);
 		f.mVao->draw(GL_TRIANGLES);
 
@@ -520,10 +520,10 @@ void Render::drawString(int x, int y, PrerenderedString& f) {
 	{
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		setFill(FILL_SYMBOL);
-		mSymbolShader.set("pos_x", x);
-		mSymbolShader.set("pos_y", y);
-        mSymbolShader.set("mat", glm::translate(mTransform, glm::vec3{x, y, 0}));
-		mSymbolShader.set("color", finalColor);
+		mSymbolShader.set(aui::ShaderUniforms::POS_X, x);
+		mSymbolShader.set(aui::ShaderUniforms::POS_Y, y);
+        mSymbolShader.set(aui::ShaderUniforms::MAT, glm::translate(mTransform, glm::vec3{x, y, 0}));
+		mSymbolShader.set(aui::ShaderUniforms::COLOR, finalColor);
 		f.mVao->draw(GL_TRIANGLES);
 	}
 }
@@ -628,16 +628,16 @@ Render::PrerenderedString Render::preRendererString(const AString& text, FontSty
 
 void Render::uploadToShaderCommon()
 {
-	GL::Shader::currentShader()->set("color", mColor);
-	GL::Shader::currentShader()->set("transform", mTransform);
+	GL::Shader::currentShader()->set(aui::ShaderUniforms::COLOR, mColor);
+	GL::Shader::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
 }
 
 void Render::uploadToShaderGradient()
 {
-    GL::Shader::currentShader()->set("color_tl", mGradientTL);
-    GL::Shader::currentShader()->set("color_tr", mGradientTR);
-    GL::Shader::currentShader()->set("color_bl", mGradientBL);
-    GL::Shader::currentShader()->set("color_br", mGradientBR);
+    GL::Shader::currentShader()->set(aui::ShaderUniforms::COLOR_TL, mGradientTL);
+    GL::Shader::currentShader()->set(aui::ShaderUniforms::COLOR_TR, mGradientTR);
+    GL::Shader::currentShader()->set(aui::ShaderUniforms::COLOR_BL, mGradientBL);
+    GL::Shader::currentShader()->set(aui::ShaderUniforms::COLOR_BR, mGradientBR);
 }
 
 glm::vec2 Render::getCurrentPos() {

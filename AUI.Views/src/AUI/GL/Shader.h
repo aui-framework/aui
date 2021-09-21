@@ -40,10 +40,44 @@ namespace GL {
 		uint32_t mVertex = 0;
 		uint32_t mFragment = 0;
 		uint32_t load(const AString&, uint32_t type);
-		mutable AMap<AString, int32_t> mUniforms;
-		int32_t getLocation(const AString& name) const;
+        mutable int32_t mUniforms[64];
+
+        class UniformState {
+        public:
+            enum Value {
+                UNINITIALIZED = -2,
+                DOES_NOT_EXIST = -1
+            };
+        };
 		
 	public:
+
+        class Uniform
+        {
+        private:
+            const char* mUniformString;
+            unsigned mId = -1;
+
+            static unsigned next();
+
+        public:
+            explicit Uniform(const char* uniformString)
+                    : mUniformString(uniformString), mId(next())
+            {
+            }
+
+
+            const char* getUniformName() const
+            {
+                return mUniformString;
+            }
+
+            unsigned getId() const
+            {
+                return mId;
+            }
+        };
+
 		Shader();
 		void load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs = {}, const AString& version = {});
 		void compile();
@@ -52,16 +86,18 @@ namespace GL {
 		~Shader();
 		Shader(const Shader&) = delete;
 
-		void set(const AString& uniform, int value) const;
-		void set(const AString& uniform, float value) const;
-		void set(const AString& uniform, double value) const;
-		void set(const AString& uniform, glm::mat4 value) const;
-		void set(const AString& uniform, glm::dmat4 value) const;
-		void set(const AString& uniform, glm::vec2 value) const;
-		void set(const AString& uniform, glm::vec3 value) const;
-		void set(const AString& uniform, glm::vec4 value) const;
+        int32_t getLocation(const Uniform& uniform) const;
 
-		void setArray(const AString& uniform, const AVector<float>& value) const;
+		void set(const GL::Shader::Uniform& uniform, int value) const;
+		void set(const GL::Shader::Uniform& uniform, float value) const;
+		void set(const GL::Shader::Uniform& uniform, double value) const;
+		void set(const GL::Shader::Uniform& uniform, glm::mat4 value) const;
+		void set(const GL::Shader::Uniform& uniform, glm::dmat4 value) const;
+		void set(const GL::Shader::Uniform& uniform, glm::vec2 value) const;
+		void set(const GL::Shader::Uniform& uniform, glm::vec3 value) const;
+		void set(const GL::Shader::Uniform& uniform, glm::vec4 value) const;
+
+		void setArray(const GL::Shader::Uniform& uniform, const AVector<float>& value) const;
 
 		static GL::Shader*& currentShader()
 		{
