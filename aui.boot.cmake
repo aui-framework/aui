@@ -19,14 +19,48 @@
 # =====================================================================================================================
 #
 
+if(WIN32 AND NOT CYGWIN)
+    set(HOME_DIR $ENV{USERPROFILE})
+else()
+    set(HOME_DIR $ENV{HOME})
+endif()
+
+if (NOT CMAKE_CXX_COMPILER_ID)
+    message(FATAL_ERROR "Please include aui.boot AFTER project() call.")
+endif()
+
+set(AUI_CACHE_DIR ${HOME_DIR}/.aui CACHE PATH "Path to AUI.Boot cache")
+string(TOLOWER "${CMAKE_CXX_COMPILER_ID}-${CMAKE_SYSTEM_PROCESSOR}" _tmp)
+set(AUI_TARGET_ABI "${_tmp}" CACHE STRING "COMPILER-PROCESSOR pair")
+message(STATUS "AUI.Boot cache: ${AUI_CACHE_DIR}")
+message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_ABI}")
+
+# create all required dirs
+if (NOT EXISTS ${AUI_CACHE_DIR})
+    file(MAKE_DIRECTORY ${AUI_CACHE_DIR})
+endif()
+if (NOT EXISTS ${AUI_CACHE_DIR}/prefix)
+    file(MAKE_DIRECTORY ${AUI_CACHE_DIR}/prefix)
+endif()
+if (NOT EXISTS ${AUI_CACHE_DIR}/repo)
+    file(MAKE_DIRECTORY ${AUI_CACHE_DIR}/repo)
+endif()
+
 # TODO add a way to provide file access to the repository
-macro(auib_import AUI_MODULE_NAME URL)
+macro(auib_import AUI_MODULE_NAME URL TAG_OR_HASH)
     cmake_policy(SET CMP0087 NEW)
-    set(DEP_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/dependencies)
+
+    set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${AUI_MODULE_NAME}/${AUI_TARGET_ABI}/${CMAKE_BUILD_TYPE}")
+
     # append our location to module path
-    if (NOT "${DEP_INSTALL_PREFIX}" IN_LIST CMAKE_PREFIX_PATH)
-        list(APPEND CMAKE_PREFIX_PATH ${DEP_INSTALL_PREFIX})
-    endif()
+    #if (NOT "${DEP_INSTALL_PREFIX}" IN_LIST CMAKE_PREFIX_PATH)
+    #    list(APPEND CMAKE_PREFIX_PATH ${DEP_INSTALL_PREFIX})
+    #endif()
+
+    set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX})
+
+    string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
+    set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}")
 
     find_package(${AUI_MODULE_NAME} QUIET)
 
@@ -34,8 +68,10 @@ macro(auib_import AUI_MODULE_NAME URL)
         include(FetchContent)
         # TODO add protocol check
         message(STATUS "Fetching ${AUI_MODULE_NAME}")
+
         FetchContent_Declare(${AUI_MODULE_NAME}_FC
-                GIT_REPOSITORY "https://${URL}"
+                GIT_REPOSITORY "${URL}"
+                GIT_TAG ${TAG_OR_HASH}
                 GIT_PROGRESS TRUE # show progress of download
                 USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                 )
@@ -43,13 +79,13 @@ macro(auib_import AUI_MODULE_NAME URL)
         FetchContent_Populate(${AUI_MODULE_NAME}_FC)
 
         FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
-                SOURCE_DIR DEP_SOURCE_DIR
-                BINARY_DIR DEP_BINARY_DIR)
+                                   SOURCE_DIR DEP_SOURCE_DIR
+                                   BINARY_DIR DEP_BINARY_DIR)
 
 
         message(STATUS "Compiling ${AUI_MODULE_NAME}")
 
-        execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX} -G "${CMAKE_GENERATOR}" ${ARGV2}
+        execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX} -G "${CMAKE_GENERATOR}"
                 WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                 RESULT_VARIABLE STATUS_CODE)
 
@@ -67,6 +103,8 @@ macro(auib_import AUI_MODULE_NAME URL)
         if (NOT STATUS_CODE EQUAL 0)
             message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
         endif()
+
+        set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX})
 
         find_package(${AUI_MODULE_NAME} REQUIRED)
     endif()

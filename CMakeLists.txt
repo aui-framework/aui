@@ -21,6 +21,8 @@ cmake_minimum_required(VERSION 3.16)
 
 project(AUI)
 
+include(aui.boot.cmake)
+
 # use msvc dll
 cmake_policy(SET CMP0091 NEW)
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")

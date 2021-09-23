@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
-set(AUI_EMBEDDED_ZLIB ${AUI_IS_WINDOWS} CACHE BOOL "Use embedded ZLIB")
+
+auib_import(ZLIB https://github.com/madler/zlib v1.2.11)
 
 aui_module(AUI.Core)
 
@@ -46,18 +47,4 @@ if (ANDROID)
 	target_link_libraries(AUI.Core PRIVATE ${log-lib})
 endif()
 
-find_package(ZLIB)
-if (ZLIB_FOUND AND NOT AUI_EMBEDDED_ZLIB)
-	target_link_libraries(AUI.Core PRIVATE ZLIB::ZLIB)
-else()
-	if (NOT TARGET zlibstatic)
-		message(STATUS "Using embedded ZLIB")
-		add_subdirectory(3rdparty/zlib)
-		target_include_directories(zlibstatic PUBLIC 3rdparty/zlib/)
-		target_include_directories(zlibstatic PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/3rdparty/zlib) # zconf.h
-		target_include_directories(zlib PUBLIC 3rdparty/zlib/)
-		target_include_directories(zlib PUBLIC ${CMAKE_CURRENT_BINARY_DIR}/3rdparty/zlib) # zconf.h
-		set_property(TARGET zlibstatic PROPERTY POSITION_INDEPENDENT_CODE ON)
-	endif()
-	target_link_libraries(AUI.Core PRIVATE zlibstatic)
-endif()
+target_link_libraries(AUI.Core PRIVATE ZLIB::ZLIB)
