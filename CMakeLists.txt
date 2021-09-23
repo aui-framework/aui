@@ -19,6 +19,8 @@
 
 cmake_minimum_required(VERSION 3.16)
 
+include(aui.boot.cmake)
+
 project(AUI)
 
 include(aui.boot.cmake)
