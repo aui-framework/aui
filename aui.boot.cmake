@@ -19,6 +19,8 @@
 # =====================================================================================================================
 #
 
+set(CMAKE_POLICY_DEFAULT_CMP0074 NEW)
+
 if(WIN32 AND NOT CYGWIN)
     set(HOME_DIR $ENV{USERPROFILE})
 else()
@@ -49,8 +51,9 @@ endif()
 # TODO add a way to provide file access to the repository
 macro(auib_import AUI_MODULE_NAME URL TAG_OR_HASH)
     cmake_policy(SET CMP0087 NEW)
+    cmake_policy(SET CMP0074 NEW)
 
-    set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${AUI_MODULE_NAME}/${AUI_TARGET_ABI}/${CMAKE_BUILD_TYPE}")
+    set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${AUI_MODULE_NAME}/${TAG_OR_HASH}/${AUI_TARGET_ABI}/${CMAKE_BUILD_TYPE}")
 
     # append our location to module path
     #if (NOT "${DEP_INSTALL_PREFIX}" IN_LIST CMAKE_PREFIX_PATH)
@@ -61,10 +64,7 @@ macro(auib_import AUI_MODULE_NAME URL TAG_OR_HASH)
 
     string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
     set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}")
-
-    find_package(${AUI_MODULE_NAME} QUIET)
-
-    if (NOT ${AUI_MODULE_NAME}_FOUND)
+    if (NOT ${AUI_MODULE_NAME}_ROOT)
         include(FetchContent)
         # TODO add protocol check
         message(STATUS "Fetching ${AUI_MODULE_NAME}")
@@ -96,7 +96,7 @@ macro(auib_import AUI_MODULE_NAME URL TAG_OR_HASH)
 
 
         message(STATUS "Installing ${AUI_MODULE_NAME}")
-        execute_process(COMMAND ${CMAKE_COMMAND} --build ${DEP_BINARY_DIR} --target install --prefix ${DEP_INSTALL_PREFIX}
+        execute_process(COMMAND ${CMAKE_COMMAND} --build ${DEP_BINARY_DIR} --target install
                 WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                 RESULT_VARIABLE ERROR_CODE)
 
@@ -104,10 +104,9 @@ macro(auib_import AUI_MODULE_NAME URL TAG_OR_HASH)
             message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
         endif()
 
-        set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX})
-
-        find_package(${AUI_MODULE_NAME} REQUIRED)
+        set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
     endif()
+    find_package(${AUI_MODULE_NAME} REQUIRED)
 
     # add dependencies' folders to install
     # WHY CMAKE COULDN'T CHECK WHETHER FILE OR NOT???
