@@ -31,8 +31,19 @@ if (NOT CMAKE_CXX_COMPILER_ID)
     message(FATAL_ERROR "Please include aui.boot AFTER project() call.")
 endif()
 
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(AUI_TARGET_PROCESSOR_NAME "x86_64")
+    elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+        set(AUI_TARGET_PROCESSOR_NAME "x86")
+    endif()
+else ()
+    set(AUI_TARGET_PROCESSOR_NAME ${CMAKE_SYSTEM_PROCESSOR})
+endif ()
+
+
 set(AUI_CACHE_DIR ${HOME_DIR}/.aui CACHE PATH "Path to AUI.Boot cache")
-string(TOLOWER "${CMAKE_CXX_COMPILER_ID}-${CMAKE_SYSTEM_PROCESSOR}" _tmp)
+string(TOLOWER "${CMAKE_CXX_COMPILER_ID}-${AUI_TARGET_PROCESSOR_NAME}" _tmp)
 set(AUI_TARGET_ABI "${_tmp}" CACHE STRING "COMPILER-PROCESSOR pair")
 message(STATUS "AUI.Boot cache: ${AUI_CACHE_DIR}")
 message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_ABI}")
@@ -74,12 +85,12 @@ macro(auib_import AUI_MODULE_NAME URL TAG_OR_HASH)
                 GIT_TAG ${TAG_OR_HASH}
                 GIT_PROGRESS TRUE # show progress of download
                 USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
+                SOURCE_DIR ${DEP_SOURCE_DIR}
                 )
 
         FetchContent_Populate(${AUI_MODULE_NAME}_FC)
 
         FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
-                                   SOURCE_DIR DEP_SOURCE_DIR
                                    BINARY_DIR DEP_BINARY_DIR)
 
 
