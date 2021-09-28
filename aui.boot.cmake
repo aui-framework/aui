@@ -60,10 +60,21 @@ if (NOT EXISTS ${AUI_CACHE_DIR}/repo)
 endif()
 
 # TODO add a way to provide file access to the repository
-macro(auib_import AUI_MODULE_NAME URL TAG_OR_HASH)
+macro(auib_import AUI_MODULE_NAME URL)
     cmake_policy(SET CMP0087 NEW)
     cmake_policy(SET CMP0074 NEW)
 
+    set(options)
+    set(oneValueArgs HASH VERSION)
+    set(multiValueArgs CMAKE_ARGS)
+    cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
+            "${multiValueArgs}" ${ARGN} )
+
+    if (AUIB_IMPORT_HASH)
+        set(TAG_OR_HASH ${AUIB_IMPORT_HASH})
+    elseif(AUIB_IMPORT_VERSION)
+        set(TAG_OR_HASH ${AUIB_IMPORT_VERSION})
+    endif()
     set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${AUI_MODULE_NAME}/${TAG_OR_HASH}/${AUI_TARGET_ABI}/${CMAKE_BUILD_TYPE}")
 
     # append our location to module path
@@ -75,6 +86,7 @@ macro(auib_import AUI_MODULE_NAME URL TAG_OR_HASH)
 
     string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
     set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}")
+    set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
     if (NOT ${AUI_MODULE_NAME}_ROOT)
         include(FetchContent)
         # TODO add protocol check
@@ -82,7 +94,8 @@ macro(auib_import AUI_MODULE_NAME URL TAG_OR_HASH)
 
         FetchContent_Declare(${AUI_MODULE_NAME}_FC
                 GIT_REPOSITORY "${URL}"
-                GIT_TAG ${TAG_OR_HASH}
+                GIT_TAG ${AUIB_IMPORT_VERSION}
+                GIT_HASH ${AUIB_IMPORT_HASH}
                 GIT_PROGRESS TRUE # show progress of download
                 USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                 SOURCE_DIR ${DEP_SOURCE_DIR}
@@ -96,7 +109,7 @@ macro(auib_import AUI_MODULE_NAME URL TAG_OR_HASH)
 
         message(STATUS "Compiling ${AUI_MODULE_NAME}")
 
-        execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX} -G "${CMAKE_GENERATOR}"
+        execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX} -G "${CMAKE_GENERATOR}" %{AUIB_IMPORT_CMAKE_ARGS}
                 WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                 RESULT_VARIABLE STATUS_CODE)
 
@@ -115,7 +128,6 @@ macro(auib_import AUI_MODULE_NAME URL TAG_OR_HASH)
             message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
         endif()
 
-        set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
     endif()
     find_package(${AUI_MODULE_NAME} REQUIRED)
 
