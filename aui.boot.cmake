@@ -65,7 +65,7 @@ macro(auib_import AUI_MODULE_NAME URL)
     cmake_policy(SET CMP0074 NEW)
 
     set(options)
-    set(oneValueArgs HASH VERSION)
+    set(oneValueArgs VERSION)
     set(multiValueArgs CMAKE_ARGS)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
@@ -90,11 +90,10 @@ macro(auib_import AUI_MODULE_NAME URL)
         include(FetchContent)
         # TODO add protocol check
         message(STATUS "Fetching ${AUI_MODULE_NAME}")
-
+        file(LOCK "${AUI_CACHE_DIR}/repo.lock")
         FetchContent_Declare(${AUI_MODULE_NAME}_FC
                 GIT_REPOSITORY "${URL}"
                 GIT_TAG ${AUIB_IMPORT_VERSION}
-                GIT_HASH ${AUIB_IMPORT_HASH}
                 GIT_PROGRESS TRUE # show progress of download
                 USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                 SOURCE_DIR ${DEP_SOURCE_DIR}
@@ -102,13 +101,15 @@ macro(auib_import AUI_MODULE_NAME URL)
 
         FetchContent_Populate(${AUI_MODULE_NAME}_FC)
 
+        file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+
         FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
                                    BINARY_DIR DEP_BINARY_DIR)
 
 
         message(STATUS "Compiling ${AUI_MODULE_NAME}")
 
-        execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX} -G "${CMAKE_GENERATOR}" %{AUIB_IMPORT_CMAKE_ARGS}
+        execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX} -G "${CMAKE_GENERATOR}" ${AUIB_IMPORT_CMAKE_ARGS}
                 WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                 RESULT_VARIABLE STATUS_CODE)
 
