@@ -69,7 +69,7 @@ macro(auib_import AUI_MODULE_NAME URL)
     set(multiValueArgs CMAKE_ARGS)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
-
+    set(TAG_OR_HASH latest)
     if (AUIB_IMPORT_HASH)
         set(TAG_OR_HASH ${AUIB_IMPORT_HASH})
     elseif(AUIB_IMPORT_VERSION)
@@ -86,7 +86,6 @@ macro(auib_import AUI_MODULE_NAME URL)
 
     string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
     set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}")
-    set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
     if (NOT ${AUI_MODULE_NAME}_ROOT)
         include(FetchContent)
         # TODO add protocol check
@@ -129,6 +128,7 @@ macro(auib_import AUI_MODULE_NAME URL)
         endif()
 
     endif()
+    set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
     find_package(${AUI_MODULE_NAME} REQUIRED)
 
     # add dependencies' folders to install
