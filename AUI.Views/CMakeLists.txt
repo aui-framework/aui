@@ -1,21 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 
-set(AUI_EMBEDDED_FREETYPE ON CACHE BOOL "Use embedded Freetype2")
-set(AUI_EMBEDDED_GLEW ON CACHE BOOL "Use embedded GLEW")
+find_package(OpenGL)
 
 if (OPENGL_FOUND)
 
-	if (NOT AUI_EMBEDDED_FREETYPE)
-		find_package(Freetype)
-	endif()
-
-	if (NOT FREETYPE_FOUND)
-		if (NOT TARGET freetype)
-			message(STATUS "Using embedded Freetype")
-			add_subdirectory(3rdparty/freetype)
-			set_property(TARGET freetype PROPERTY POSITION_INDEPENDENT_CODE ON)
-		endif()
-	endif()
+	auib_import(Freetype https://github.com/freetype/freetype
+			    VERSION "VER-2-10-4")
+	auib_import(GLEW https://github.com/Alex2772/glew-cmake
+				CMAKE_WORKING_DIR "build/cmake"
+			    CMAKE_ARGS "-DBUILD_SHARED_LIBS=true")
 
 
 	if(NOT ANDROID)
@@ -34,26 +27,6 @@ if (OPENGL_FOUND)
 
 	aui_compile_assets(AUI.Views)
 
-
-	if (GLEW_FOUND)
-		target_include_directories(AUI.Views PUBLIC ${GLEW_INCLUDE_DIRS})
-	else()
-		message(STATUS "Using embedded GLEW")
-		set(BUILD_UTILS OFF)
-
-		if (NOT TARGET glew_s)
-			add_subdirectory(3rdparty/glew/build/cmake)
-		endif()
-		set_property(TARGET glew_s PROPERTY POSITION_INDEPENDENT_CODE ON)
-		install(
-				TARGETS glew_s
-				DESTINATION "bin"
-		)
-
-		install(TARGETS glew_s EXPORT AUI)
-	endif()
-
-
 	if(NOT ANDROID)
 		if (NOT WIN32)
 			include_directories (${GTK3_INCLUDE_DIRS})
@@ -64,7 +37,7 @@ if (OPENGL_FOUND)
 
 	target_compile_definitions(AUI.Views PRIVATE UNICODE=1)
 
-	target_link_libraries(AUI.Views PUBLIC AUI.Core)
+	target_link_libraries(AUI.Views PUBLIC AUI.Core GLEW::GLEW)
 
 	if(ANDROID)
 		target_link_libraries(AUI.Views PUBLIC EGL GLESv2 GLESv3)

@@ -65,7 +65,7 @@ macro(auib_import AUI_MODULE_NAME URL)
     cmake_policy(SET CMP0074 NEW)
 
     set(options)
-    set(oneValueArgs VERSION)
+    set(oneValueArgs VERSION CMAKE_WORKING_DIR)
     set(multiValueArgs CMAKE_ARGS)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
@@ -87,47 +87,56 @@ macro(auib_import AUI_MODULE_NAME URL)
     string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
     set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}")
     if (NOT ${AUI_MODULE_NAME}_ROOT)
-        include(FetchContent)
-        # TODO add protocol check
-        message(STATUS "Fetching ${AUI_MODULE_NAME}")
-        file(LOCK "${AUI_CACHE_DIR}/repo.lock")
-        FetchContent_Declare(${AUI_MODULE_NAME}_FC
-                GIT_REPOSITORY "${URL}"
-                GIT_TAG ${AUIB_IMPORT_VERSION}
-                GIT_PROGRESS TRUE # show progress of download
-                USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
-                SOURCE_DIR ${DEP_SOURCE_DIR}
-                )
+        # avoid compilation if we have existing installation
+        set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
 
-        FetchContent_Populate(${AUI_MODULE_NAME}_FC)
+        # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
+        if (NOT EXISTS ${DEP_INSTALLED_FLAG})
+            # so we have to compile and install
 
-        file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+            include(FetchContent)
+            # TODO add protocol check
+            message(STATUS "Fetching ${AUI_MODULE_NAME}")
+            file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+            FetchContent_Declare(${AUI_MODULE_NAME}_FC
+                    GIT_REPOSITORY "${URL}"
+                    GIT_TAG ${AUIB_IMPORT_VERSION}
+                    GIT_PROGRESS TRUE # show progress of download
+                    USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
+                    SOURCE_DIR ${DEP_SOURCE_DIR}
+                    )
 
-        FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
-                                   BINARY_DIR DEP_BINARY_DIR)
+            FetchContent_Populate(${AUI_MODULE_NAME}_FC)
 
 
-        message(STATUS "Compiling ${AUI_MODULE_NAME}")
+            FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
+                                       BINARY_DIR DEP_BINARY_DIR)
 
-        execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX} -G "${CMAKE_GENERATOR}" ${AUIB_IMPORT_CMAKE_ARGS}
-                WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                RESULT_VARIABLE STATUS_CODE)
+            message(STATUS "Compiling ${AUI_MODULE_NAME}")
+            if (AUIB_IMPORT_CMAKE_WORKING_DIR)
+                set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
+            endif()
+            execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${AUIB_IMPORT_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX} -G "${CMAKE_GENERATOR}"
+                    WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                    RESULT_VARIABLE STATUS_CODE)
 
-        if (NOT STATUS_CODE EQUAL 0)
-            message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}")
+            if (NOT STATUS_CODE EQUAL 0)
+                message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}")
+            endif()
+
+
+
+            message(STATUS "Installing ${AUI_MODULE_NAME}")
+            execute_process(COMMAND ${CMAKE_COMMAND} --build ${DEP_BINARY_DIR} --target install
+                    WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                    RESULT_VARIABLE ERROR_CODE)
+
+            if (NOT STATUS_CODE EQUAL 0)
+                message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
+            endif()
+            file(TOUCH ${DEP_INSTALLED_FLAG})
+            file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
         endif()
-
-
-
-        message(STATUS "Installing ${AUI_MODULE_NAME}")
-        execute_process(COMMAND ${CMAKE_COMMAND} --build ${DEP_BINARY_DIR} --target install
-                WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                RESULT_VARIABLE ERROR_CODE)
-
-        if (NOT STATUS_CODE EQUAL 0)
-            message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
-        endif()
-
     endif()
     set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
     find_package(${AUI_MODULE_NAME} REQUIRED)
