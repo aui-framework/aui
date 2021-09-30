@@ -112,13 +112,15 @@ macro(auib_import AUI_MODULE_NAME URL)
 
 
             FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
-                                       BINARY_DIR DEP_BINARY_DIR)
+                                       BINARY_DIR DEP_BINARY_DIR
+                                       #SOURCE_DIR DEP_SOURCE_DIR
+                    )
 
             message(STATUS "Compiling ${AUI_MODULE_NAME}")
             if (AUIB_IMPORT_CMAKE_WORKING_DIR)
                 set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
             endif()
-            execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${AUIB_IMPORT_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX} -G "${CMAKE_GENERATOR}"
+            execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} -DAUI_BOOT ${AUIB_IMPORT_CMAKE_ARGS} -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX} -G "${CMAKE_GENERATOR}"
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                     RESULT_VARIABLE STATUS_CODE)
 
@@ -143,24 +145,21 @@ macro(auib_import AUI_MODULE_NAME URL)
     set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
     find_package(${AUI_MODULE_NAME} REQUIRED)
 
-    # add dependencies' folders to install
-    # WHY CMAKE COULDN'T CHECK WHETHER FILE OR NOT???
-    file(GLOB DEP_FILES_LIST LIST_DIRECTORIES false ${DEP_INSTALL_PREFIX}/*)
-    file(GLOB DEP_FILES_DIRS_LIST LIST_DIRECTORIES true ${DEP_INSTALL_PREFIX}/*)
-    foreach(_item ${DEP_FILES_DIRS_LIST})
-        if (${_item} IN_LIST DEP_FILES_LIST)
-            install(
-                    FILES ${_item}
-                    DESTINATION .
-                    OPTIONAL
-            )
-        else()
-            install(
-                DIRECTORY ${_item}
-                DESTINATION .
-                OPTIONAL
-            )
+    # create links to runtime dependencies
+    if (WIN32)
+        set(LIB_EXT dll)
+    elseif(APPLE)
+        set(LIB_EXT dylib)
+    else()
+        set(LIB_EXT so)
+    endif()
+    file(GLOB DEP_RUNTIME LIST_DIRECTORIES false ${DEP_INSTALL_PREFIX}/bin/*.${LIB_EXT})
+    file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    foreach(_item ${DEP_RUNTIME})
+        get_filename_component(FILENAME ${_item} NAME)
+        set(_copy ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${FILENAME})
+        if (NOT EXISTS ${_copy})
+            file(CREATE_LINK ${_item} ${_copy})
         endif()
     endforeach()
-
 endmacro()
