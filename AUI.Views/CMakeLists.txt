@@ -5,10 +5,10 @@ find_package(OpenGL)
 if (OPENGL_FOUND)
 
 	auib_import(Freetype https://github.com/freetype/freetype
-			    VERSION "VER-2-10-4")
+			    VERSION "VER-2-10-4"
+				CMAKE_ARGS "-DBUILD_SHARED_LIBS=true")
 	auib_import(GLEW https://github.com/Alex2772/glew-cmake
-				CMAKE_WORKING_DIR "build/cmake"
-			    CMAKE_ARGS "-DBUILD_SHARED_LIBS=true")
+				CMAKE_WORKING_DIR "build/cmake")
 
 
 	if(NOT ANDROID)

@@ -86,7 +86,9 @@ macro(auib_import AUI_MODULE_NAME URL)
 
     string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
     set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}")
-    if (NOT ${AUI_MODULE_NAME}_ROOT)
+    if (NOT ${AUI_MODULE_NAME}_ROOT
+        OR NOT EXISTS ${${AUI_MODULE_NAME}_ROOT}
+            )
         # avoid compilation if we have existing installation
         set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
 
