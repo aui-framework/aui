@@ -4,8 +4,8 @@
 [submodule "AUI.Core/3rdparty/glm"]
 	path = AUI.Core/3rdparty/glm
 	url = https://github.com/g-truc/glm
-[submodule "aui.preview"]
-	path = aui.preview
+[submodule "AUI.Preview"]
+	path = AUI.Preview
 	url = https://github.com/Alex2772/aui.preview
 [submodule "AUI.Core/3rdparty/zlib"]
 	path = AUI.Core/3rdparty/zlib
