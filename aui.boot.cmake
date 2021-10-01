@@ -87,7 +87,7 @@ macro(auib_import AUI_MODULE_NAME URL)
     string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
     set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}")
     if (NOT ${AUI_MODULE_NAME}_ROOT
-        OR NOT EXISTS ${${AUI_MODULE_NAME}_ROOT}
+            OR NOT EXISTS ${${AUI_MODULE_NAME}_ROOT}
             )
         # avoid compilation if we have existing installation
         set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
@@ -112,8 +112,8 @@ macro(auib_import AUI_MODULE_NAME URL)
 
 
             FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
-                                       BINARY_DIR DEP_BINARY_DIR
-                                       #SOURCE_DIR DEP_SOURCE_DIR
+                    BINARY_DIR DEP_BINARY_DIR
+                    #SOURCE_DIR DEP_SOURCE_DIR
                     )
 
             message(STATUS "Compiling ${AUI_MODULE_NAME}")
@@ -157,9 +157,19 @@ macro(auib_import AUI_MODULE_NAME URL)
     file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
     foreach(_item ${DEP_RUNTIME})
         get_filename_component(FILENAME ${_item} NAME)
-        set(_copy ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${FILENAME})
-        if (NOT EXISTS ${_copy})
-            file(CREATE_LINK ${_item} ${_copy})
+        if (CMAKE_CONFIGURATION_TYPES)
+            foreach(_config ${CMAKE_CONFIGURATION_TYPES})
+                set(_copy ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${_config}/${FILENAME})
+                if (NOT EXISTS ${_copy})
+                    file(MAKE_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${_config})
+                    file(CREATE_LINK ${_item} ${_copy})
+                endif()
+            endforeach()
+        else()
+            set(_copy ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${FILENAME})
+            if (NOT EXISTS ${_copy})
+                file(CREATE_LINK ${_item} ${_copy})
+            endif()
         endif()
     endforeach()
 endmacro()
