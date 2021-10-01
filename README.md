@@ -24,18 +24,18 @@ using modern C++17.
 ## Module list
 - `AUI.Core` - basic types (containers, strings, streams, etc...)
 - `AUI.Crypt` - wrapper around OpenSSL for encryption functionality
-- `AUI.Curl` - wrapper around libcurl for http/https requests
-- `AUI.Designer` - UI Designer (in dev)
-- `AUI.Data` - DBMS interface and ORM
-- `AUI.Image` - popular image format loader 
-- `AUI.Json` - JSON parser
-- `AUI.Mysql` - MySQL driver for `AUI.Data`
-- `AUI.Network` - networking
-- `AUI.Sqlite` - SQLite driver for `AUI.Data`
-- `AUI.Svg` - SVG image loader
-- `AUI.Toolbox` - resource compiler
-- `AUI.Views` - UI toolkit
-- `AUI.Xml` - XML parser
+- `aui.curl` - wrapper around libcurl for http/https requests
+- `aui.designer` - UI Designer (in dev)
+- `aui.data` - DBMS interface and ORM
+- `aui.image` - popular image format loader 
+- `aui.json` - JSON parser
+- `AUI.Mysql` - MySQL driver for `aui.data`
+- `aui.network` - networking
+- `aui.sqlite` - SQLite driver for `aui.data`
+- `aui.svg` - SVG image loader
+- `aui.toolbox` - resource compiler
+- `aui.views` - UI toolkit
+- `aui.xml` - XML parser
 
 ## Feature support
  - `-` equals unsupported
@@ -47,18 +47,18 @@ using modern C++17.
 |-------------------|--------------------------|------------|-------|---------|-------|-----|
 | AUI.Core          |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | AUI.Crypt         |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| AUI.Curl          |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| AUI.Data          |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| AUI.Designer      |             ?            |     ?      |   ?   |    -    |   ?   |  -  |
-| AUI.Image         |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| AUI.Json          |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| aui.curl          |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| aui.data          |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| aui.designer      |             ?            |     ?      |   ?   |    -    |   ?   |  -  |
+| aui.image         |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| aui.json          |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | AUI.Mysql         |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| AUI.Network       |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| AUI.Sqlite        |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| AUI.Svg           |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| AUI.Toolbox       |             #            |     #      |   #   |    -    |   ?   |  -  |
-| AUI.Views         |             #            |     ?      |   +   |    +    |   ?   |  ?  |
-| AUI.Xml           |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| aui.network       |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| aui.sqlite        |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| aui.svg           |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| aui.toolbox       |             #            |     #      |   #   |    -    |   ?   |  -  |
+| aui.views         |             #            |     ?      |   +   |    +    |   ?   |  ?  |
+| aui.xml           |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | Assets            |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | Filesystem        |             #            |     #      |   #   |    #    |   ?   |  -  |
 | Process creation  |             #            |     #      |   #   |    -    |   ?   |  -  |

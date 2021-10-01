@@ -27,7 +27,7 @@
 #include "AUI/Data/ASqlDriverType.h"
 
 /*
- * \brief Driver-to-AUI.Data interface. See ASqlDatabase for Application-to-AUI.Data interface
+ * \brief Driver-to-aui.data interface. See ASqlDatabase for Application-to-aui.data interface
  */
 class ISqlDatabase
 {

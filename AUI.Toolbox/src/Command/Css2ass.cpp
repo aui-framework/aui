@@ -45,7 +45,7 @@ AString Css2ass::getSignature() {
 
 AString Css2ass::getDescription() {
     return "converts CSS (cascading style sheets) to the src/Style.cpp file containing appropriate ASS (aui style sheets) "
-           "definitions. AUI.Toolbox will use src/ folder to find files to #include. Please note that this command will "
+           "definitions. aui.toolbox will use src/ folder to find files to #include. Please note that this command will "
            "not generate 100% equal ASS analogue to CSS because of differences between ASS and CSS.\n"
            "\tf\tignore already existent destination file (warning! overrides contents)";
 }

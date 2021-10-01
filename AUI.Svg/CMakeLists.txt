@@ -1,14 +1,14 @@
 cmake_minimum_required(VERSION 3.10)
 
 
-if (TARGET AUI.Views)
-aui_module(AUI.Svg)
+if (TARGET aui.views)
+aui_module(aui.svg)
 
-target_include_directories(AUI.Svg PRIVATE 3rdparty/nanosvg/src)
+target_include_directories(aui.svg PRIVATE 3rdparty/nanosvg/src)
 
-target_link_libraries(AUI.Svg PRIVATE AUI.Core)
-target_link_libraries(AUI.Svg PRIVATE AUI.Views)
-target_link_libraries(AUI.Svg PRIVATE AUI.Xml)
+target_link_libraries(aui.svg PRIVATE aui.core)
+target_link_libraries(aui.svg PRIVATE aui.views)
+target_link_libraries(aui.svg PRIVATE aui.xml)
 else()
-    message("Could not find AUI.Views; Disabling AUI.Svg")
+    message("Could not find aui.views; Disabling aui.svg")
 endif()

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
 
-aui_module(AUI.Data)
+aui_module(aui.data)
 
-target_link_libraries(AUI.Data PRIVATE AUI.Core)
+target_link_libraries(aui.data PRIVATE aui.core)

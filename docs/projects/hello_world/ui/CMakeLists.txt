@@ -9,5 +9,5 @@ find_package(AUI REQUIRED)
 aui_executable(graphical_example)
 
 # Link required libs
-target_link_libraries(graphical_example PRIVATE AUI.Core)
-target_link_libraries(graphical_example PRIVATE AUI.Views)
+target_link_libraries(graphical_example PRIVATE aui.core)
+target_link_libraries(graphical_example PRIVATE aui.views)

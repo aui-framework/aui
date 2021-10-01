@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
-aui_module(AUI.Network)
+aui_module(aui.network)
 
-target_link_libraries(AUI.Network PRIVATE AUI.Core)
+target_link_libraries(aui.network PRIVATE aui.core)
 if(WIN32)
-  target_link_libraries(AUI.Network PRIVATE wsock32 ws2_32)
+  target_link_libraries(aui.network PRIVATE wsock32 ws2_32)
 endif()

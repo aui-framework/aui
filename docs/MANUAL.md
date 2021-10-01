@@ -52,7 +52,7 @@ aui_executable(project_template)
 
 # Link required libs
 target_link_libraries(project_template PRIVATE AUI.Core)
-# target_link_libraries(project_template PRIVATE AUI.Views)
+# target_link_libraries(project_template PRIVATE aui.views)
 ```
 
 `src/main.cpp`
@@ -76,7 +76,7 @@ applications!
 
 Since AUI is graphical framework it allows to easily create windows, buttons, fields without any graphical UI toolkits.
 
-Don't forget to link to `AUI.Views` in `CMakeLists.txt`:
+Don't forget to link to `aui.views` in `CMakeLists.txt`:
 
 ```cmake
 cmake_minimum_required(VERSION 3.16)
@@ -92,10 +92,10 @@ aui_executable(graphical_example)
 # Link required libs
 target_link_libraries(graphical_example PRIVATE AUI.Core)
 # VVVVVVVVVVVVVVVVVVV uncomment this VVVVVVVVVVVVVVVVVVVV
-target_link_libraries(graphical_example PRIVATE AUI.Views)
+target_link_libraries(graphical_example PRIVATE aui.views)
 ```
 
-The last line in CMake script links the AUI.Views module which holds all UI related functionality of the framework.
+The last line in CMake script links the aui.views module which holds all UI related functionality of the framework.
 
 The `main.cpp` file also contains some changes:
 
@@ -150,10 +150,10 @@ The example above produces the following window:
 
 ![Label](imgs/Screenshot_20210408_024201.jpg)
 
-AUI supplies `AUI.Preview` module which is realtime previewer of UI code. It is great tool to study AUI layout build
+AUI supplies `aui.preview` module which is realtime previewer of UI code. It is great tool to study AUI layout build
 features.
 
-Our example in AUI.Preview:
+Our example in aui.preview:
 
 ![AUI Preview](imgs/Screenshot_20210714_034900.png)
 
@@ -186,7 +186,7 @@ setContents(
 ```
 
 Note: when compiling this example don't forget to include `AButton`: `#include <AUI/Views/AButton.h>`.
-`AUI.Preview` ignores insufficient includes.
+`aui.preview` ignores insufficient includes.
 
 ![Horizontal layout](imgs/Screenshot_20210714_035347.png)
 

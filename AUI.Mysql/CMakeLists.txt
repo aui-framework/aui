@@ -79,10 +79,10 @@ if (AUI_ENABLE_MYSQL)
 
 	if (MYSQL_FOUND)
 
-		aui_module(AUI.Mysql)
+		aui_module(aui.mysql)
 
-		target_link_libraries(AUI.Mysql PUBLIC AUI.Core)
-		target_link_libraries(AUI.Mysql PUBLIC AUI.Data)
+		target_link_libraries(AUI.Mysql PUBLIC aui.core)
+		target_link_libraries(AUI.Mysql PUBLIC aui.data)
 
 
 		target_include_directories(AUI.Mysql PRIVATE ${MYSQL_INCLUDE_DIR})

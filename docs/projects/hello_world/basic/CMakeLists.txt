@@ -10,5 +10,5 @@ find_package(AUI REQUIRED)
 aui_executable(project_template)
 
 # Link required libs
-target_link_libraries(project_template PRIVATE AUI.Core)
-# target_link_libraries(project_template PRIVATE AUI.Views)
+target_link_libraries(project_template PRIVATE aui.core)
+# target_link_libraries(project_template PRIVATE aui.views)
