@@ -57,8 +57,6 @@ add_subdirectory(aui.views)
 add_subdirectory(aui.svg)
 add_subdirectory(aui.image)
 
-add_subdirectory(aui.preview)
-
 if(NOT ANDROID AND AUI_BUILD_EXAMPLES)
 	add_subdirectory(examples/AUI.Example.Views)
 	#add_subdirectory(examples/AUI.Example.Fractal)
