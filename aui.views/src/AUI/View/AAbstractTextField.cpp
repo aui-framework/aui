@@ -36,6 +36,7 @@ AAbstractTextField::AAbstractTextField() {
 void AAbstractTextField::onFocusAcquired() {
     AView::onFocusAcquired();
     updateCursorBlinking();
+    clearSelection();
 }
 
 AAbstractTextField::~AAbstractTextField()
@@ -93,8 +94,14 @@ void AAbstractTextField::setText(const AString& t)
 {
     mHorizontalScroll = 0;
 	mContents = t;
-	mCursorIndex = t.length();
-	mCursorSelection = 0;
+    if (t.empty()) {
+        clearSelection();
+        mCursorIndex = 0;
+    }
+    else {
+        mCursorIndex = t.length();
+        mCursorSelection = 0;
+    }
 	updateCursorBlinking();
 
     invalidatePrerenderedString();
