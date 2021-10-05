@@ -255,7 +255,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
             // fields
 		    _new<ALabel>("Fields"),
 		    _new<ALabel>("Text field"),
-		    _new<ATextField>(),
+		    _new<ATextField>() let { it->focus(); },
 		    _new<ALabel>("Number picker"),
 		    _new<ANumberPicker>(),
             _new<ALabel>("Text area"),
