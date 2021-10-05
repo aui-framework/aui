@@ -72,6 +72,8 @@ public:
 
     AString getText() const override;
 
+    size_t getTextLength() const override;
+
     void onCharEntered(wchar_t c) override;
     void invalidateFont() override;
 

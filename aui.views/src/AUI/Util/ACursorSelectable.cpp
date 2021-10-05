@@ -132,8 +132,11 @@ void ACursorSelectable::drawSelectionPost() {
 }
 
 void ACursorSelectable::selectAll() {
-    mCursorSelection = 0;
-    mCursorIndex = getText().length();
+    size_t length = getTextLength();
+    if (length > 0) {
+        mCursorSelection = 0;
+        mCursorIndex = length;
+    }
 }
 
 void ACursorSelectable::clearSelection() {

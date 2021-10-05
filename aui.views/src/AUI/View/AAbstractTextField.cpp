@@ -183,3 +183,7 @@ bool AAbstractTextField::isValidText(const AString& text) {
     return true;
 }
 
+size_t AAbstractTextField::getTextLength() const {
+    return mContents.length();
+}
+

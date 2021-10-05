@@ -39,6 +39,8 @@ public:
         return ALabel::getText();
     }
 
+    size_t getTextLength() const override;
+
     void render() override;
 
     void onMouseMove(glm::ivec2 pos) override;

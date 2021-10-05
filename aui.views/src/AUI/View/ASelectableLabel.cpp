@@ -145,3 +145,7 @@ void ASelectableLabel::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) 
     AView::onMouseDoubleClicked(pos, button);
     ACursorSelectable::handleMouseDoubleClicked(pos, button);
 }
+
+size_t ASelectableLabel::getTextLength() const {
+    return ALabel::getText().length();
+}

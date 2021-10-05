@@ -67,6 +67,7 @@ public:
         unsigned end;
     };
     [[nodiscard]] virtual AString getText() const = 0;
+    [[nodiscard]] virtual size_t getTextLength() const = 0;
     [[nodiscard]] AString getSelectedText() const
     {
         if (!hasSelection())

@@ -108,6 +108,13 @@ public:
         return s;
     }
 
+    size_t getTextLength() const override {
+        size_t length = 0;
+        for (auto& l : mLines) {
+            length += l.text.length();
+        }
+        return length;
+    }
 
     void render() override {
         if (mLines.empty() && !mFullText->empty()) {
