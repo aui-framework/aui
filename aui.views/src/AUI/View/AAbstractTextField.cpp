@@ -111,10 +111,7 @@ void AAbstractTextField::setText(const AString& t)
 
 AString AAbstractTextField::getContentsPasswordWrap() {
     if (mIsPasswordTextField) {
-        AString s;
-        for (auto c : mContents)
-            s += "•";
-        return s;
+        return AString(mContents.length(), L'•');
     }
     return mContents;
 }
