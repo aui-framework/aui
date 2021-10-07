@@ -105,6 +105,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                     GIT_TAG ${AUIB_IMPORT_VERSION}
                     GIT_PROGRESS TRUE # show progress of download
                     USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
+                    USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
                     SOURCE_DIR ${DEP_SOURCE_DIR}
                     )
 
