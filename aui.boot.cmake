@@ -121,15 +121,14 @@ macro(auib_import AUI_MODULE_NAME URL)
                 set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
             endif()
             set(FINAL_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                                 -DAUI_BOOT=TRUE
-                                 ${AUIB_IMPORT_CMAKE_ARGS}
-                                 -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
-                                 -G "${CMAKE_GENERATOR}")
+                    -DAUI_BOOT=TRUE
+                    ${AUIB_IMPORT_CMAKE_ARGS}
+                    -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
+                    -G "${CMAKE_GENERATOR}")
 
             if (AUIB_IMPORT_COMPONENTS)
-                set(FINAL_CMAKE_ARGS -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=TRUE )
+                set(FINAL_CMAKE_ARGS ${FINAL_CMAKE_ARGS} -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=TRUE)
             endif()
-
             execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                     RESULT_VARIABLE STATUS_CODE)
