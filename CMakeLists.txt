@@ -75,7 +75,7 @@ if (NOT ANDROID)
 	endif()
 endif()
 
-#install(EXPORT AUI DESTINATION "cmake/")
+install(EXPORT AUI DESTINATION "cmake/")
 install(
 		FILES
 		cmake/c.cmake
