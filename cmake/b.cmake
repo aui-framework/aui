@@ -348,10 +348,11 @@ function(aui_executable_advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
             ]])
         endif()
 
-        install(
-                TARGETS ${AUI_MODULE_NAME}
-                DESTINATION "bin"
-        )
+        install(CODE [[
+            if (EXISTS ${AUI_MODULE_PATH})
+                file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES ${AUI_MODULE_PATH})
+            endif()
+        ]])
     endif()
 endfunction(aui_executable_advanced)
 
