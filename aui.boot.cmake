@@ -65,8 +65,8 @@ macro(auib_import AUI_MODULE_NAME URL)
     cmake_policy(SET CMP0074 NEW)
 
     set(options)
-    set(oneValueArgs VERSION CMAKE_WORKING_DIR COMPONENTS)
-    set(multiValueArgs CMAKE_ARGS)
+    set(oneValueArgs VERSION CMAKE_WORKING_DIR)
+    set(multiValueArgs CMAKE_ARGS COMPONENTS)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
     set(TAG_OR_HASH latest)
@@ -128,7 +128,11 @@ macro(auib_import AUI_MODULE_NAME URL)
                     -G "${CMAKE_GENERATOR}")
 
             if (AUIB_IMPORT_COMPONENTS)
-                set(FINAL_CMAKE_ARGS ${FINAL_CMAKE_ARGS} -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=TRUE)
+                list(JOIN AUIB_IMPORT_COMPONENTS "\\\;" TMP_LIST)
+                set(FINAL_CMAKE_ARGS
+                        ${FINAL_CMAKE_ARGS}
+                        -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=TRUE
+                        -DAUI_BOOT_COMPONENTS=${TMP_LIST})
             endif()
             execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
@@ -142,8 +146,7 @@ macro(auib_import AUI_MODULE_NAME URL)
             execute_process(COMMAND
                     ${CMAKE_COMMAND}
                     --build ${DEP_BINARY_DIR}
-                    --target ${AUIB_IMPORT_COMPONENTS}
-                    install
+                    --target install
 
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                     RESULT_VARIABLE ERROR_CODE)

@@ -409,8 +409,8 @@ URL to the git repository of the project you want to import.
 Commit hash, tag or branch name to `checkout`.
 
 #### COMPONENTS
-List of components to import which will be passed to `find_package`. Also, passed to dependency's `CMakeLists.txt` via
-`AUI_BOOT_COMPONENTS` variable.
+List of components to import which will be passed to `find_package`. Also, passed as semicolon-separated list to
+dependency's `CMakeLists.txt` via `AUI_BOOT_COMPONENTS` variable.
 
 ## AMetric
 
