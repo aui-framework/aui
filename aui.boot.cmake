@@ -86,12 +86,11 @@ macro(auib_import AUI_MODULE_NAME URL)
 
     string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
     set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}")
-    if (NOT ${AUI_MODULE_NAME}_ROOT
-            OR NOT EXISTS ${${AUI_MODULE_NAME}_ROOT}
-            )
-        # avoid compilation if we have existing installation
-        set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
+    set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
+    # avoid compilation if we have existing installation
+    set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
+    if (NOT EXISTS ${DEP_INSTALLED_FLAG})
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
         if (NOT EXISTS ${DEP_INSTALLED_FLAG})
             # so we have to compile and install
@@ -153,7 +152,6 @@ macro(auib_import AUI_MODULE_NAME URL)
             # file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
         endif()
     endif()
-    set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
     find_package(${AUI_MODULE_NAME} REQUIRED)
 
     # create links to runtime dependencies
