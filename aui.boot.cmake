@@ -99,14 +99,14 @@ macro(auib_import AUI_MODULE_NAME URL)
             include(FetchContent)
             # TODO add protocol check
             message(STATUS "Fetching ${AUI_MODULE_NAME}")
-            file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+            # file(LOCK "${AUI_CACHE_DIR}/repo.lock")
             FetchContent_Declare(${AUI_MODULE_NAME}_FC
                     GIT_REPOSITORY "${URL}"
                     GIT_TAG ${AUIB_IMPORT_VERSION}
                     GIT_PROGRESS TRUE # show progress of download
                     USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                     USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
-                    SOURCE_DIR ${DEP_SOURCE_DIR}
+                    #SOURCE_DIR ${DEP_SOURCE_DIR}
                     )
 
             FetchContent_Populate(${AUI_MODULE_NAME}_FC)
@@ -114,7 +114,7 @@ macro(auib_import AUI_MODULE_NAME URL)
 
             FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
                     BINARY_DIR DEP_BINARY_DIR
-                    #SOURCE_DIR DEP_SOURCE_DIR
+                    SOURCE_DIR DEP_SOURCE_DIR
                     )
 
             message(STATUS "Compiling ${AUI_MODULE_NAME}")
@@ -150,7 +150,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                 message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
             endif()
             file(TOUCH ${DEP_INSTALLED_FLAG})
-            file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+            # file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
         endif()
     endif()
     set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
