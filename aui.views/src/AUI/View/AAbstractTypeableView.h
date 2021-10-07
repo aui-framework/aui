@@ -66,6 +66,7 @@ protected:
     virtual size_t typeableFind(wchar_t c, size_t startPos = -1) = 0;
     virtual size_t typeableReverseFind(wchar_t c, size_t startPos = -1) = 0;
     virtual size_t length() const = 0;
+    virtual void updateSelectionOnTextSet(const AString& t);
 
     /**
      * Char enter implementation. Should be called in onCharEntered.
@@ -129,6 +130,7 @@ signals:
     void copyToClipboard() const;
     void cutToClipboard();
     void pasteFromClipboard();
+
 };
 
 

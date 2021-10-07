@@ -353,12 +353,16 @@ void AAbstractTypeableView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 void AAbstractTypeableView::setText(const AString& t)
 {
     mHorizontalScroll = 0;
-    mCursorIndex = t.length();
-    mCursorSelection = 0;
+    updateSelectionOnTextSet(t);
     updateCursorBlinking();
 
     invalidatePrerenderedString();
     emit textChanged(t);
+}
+
+void AAbstractTypeableView::updateSelectionOnTextSet(const AString& t) {
+    mCursorIndex = t.length();
+    mCursorSelection = 0;
 }
 
 void AAbstractTypeableView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) {
