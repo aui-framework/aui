@@ -138,10 +138,13 @@ macro(auib_import AUI_MODULE_NAME URL)
                 message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}")
             endif()
 
-
-
             message(STATUS "Installing ${AUI_MODULE_NAME}")
-            execute_process(COMMAND ${CMAKE_COMMAND} --build ${DEP_BINARY_DIR} --target ${AUIB_IMPORT_COMPONENTS} install
+            execute_process(COMMAND
+                    ${CMAKE_COMMAND}
+                    --build ${DEP_BINARY_DIR}
+                    --target ${AUIB_IMPORT_COMPONENTS}
+                    install
+
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                     RESULT_VARIABLE ERROR_CODE)
 

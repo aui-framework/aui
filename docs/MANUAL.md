@@ -2,6 +2,11 @@
 
 ## Building AUI
 
+### AUI.Boot
+
+AUI.Boot is a CMake script which allows you to manage dependencies.
+You can specify link to repository to add an installable (and findable by CMake) dependency.
+
 Before to get started, you have to compile AUI.
 
 ### Windows
@@ -381,7 +386,32 @@ Left - 1/4, Center - 2/4, Right - 1/4. '4' is the sum of all expanding in the ro
 
 # Reference
 
-<a name="ametric"></a>
+## AUI.Boot
+
+### auib_import
+
+If needed, downloads and compiles project. Adds an `IMPORTED` target. Built on top of `find_package`.
+
+#### Signature
+```cmake
+auib_import(<PackageName> <URL>
+            [VERSION version]
+            [COMPONENTS components...])
+```
+
+#### PackageName
+Specifies the package name which will be passed to `find_package`.
+
+#### URL
+URL to the git repository of the project you want to import.
+
+#### VERSION
+Commit hash, tag or branch name to `checkout`.
+
+#### COMPONENTS
+List of components to import which will be passed to `find_package`. Also, passed to dependency's `CMakeLists.txt` via
+`AUI_BOOT_COMPONENTS` variable.
+
 ## AMetric
 
 Used to store dimensions in scalable units (dp, pt, etc...).
