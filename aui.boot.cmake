@@ -90,7 +90,8 @@ macro(auib_import AUI_MODULE_NAME URL)
 
     # avoid compilation if we have existing installation
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
-    if (NOT EXISTS ${DEP_INSTALLED_FLAG})
+    find_package(${AUI_MODULE_NAME})
+    if (NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND)
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
         if (NOT EXISTS ${DEP_INSTALLED_FLAG})
             # so we have to compile and install
@@ -151,7 +152,11 @@ macro(auib_import AUI_MODULE_NAME URL)
             # file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
         endif()
     endif()
-    find_package(${AUI_MODULE_NAME} REQUIRED)
+    find_package(${AUI_MODULE_NAME})
+
+    if (NOT ${AUI_MODULE_NAME}_FOUND)
+        message(FATAL_ERROR "AUI.Boot could not resolve dependency: ${AUI_MODULE_NAME}")
+    endif()
 
     # create links to runtime dependencies
     if (WIN32)
