@@ -99,8 +99,7 @@ void AAbstractTextField::setText(const AString& t)
         mCursorIndex = 0;
     }
     else {
-        mCursorIndex = t.length();
-        mCursorSelection = 0;
+        updateSelectionOnTextSet(t);
     }
 	updateCursorBlinking();
 
