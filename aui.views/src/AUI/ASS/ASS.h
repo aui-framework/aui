@@ -51,6 +51,7 @@
 #include "Declaration/TextAlign.h"
 #include "Declaration/TextBorder.h"
 #include "Declaration/TextColor.h"
+#include "Declaration/TextShadow.h"
 #include "Declaration/TransformOffset.h"
 #include "Declaration/TransformScale.h"
 #include "Declaration/VerticalAlign.h"
