@@ -96,7 +96,6 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
     {
         unsigned expandingSum = 0;
         int minSize = 0;
-        unsigned available;
 
         int finalPos = 0;
         int finalSize = 0;
@@ -108,38 +107,41 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
     columns.resize(cellsX);
     rows.resize(cellsY);
 
-    for (auto& r : rows) {
-        r.available = height - y;
-    }
-    for (auto& c : columns) {
-        c.available = width - x;
-    }
+
 
     // preparation
     for (auto& v : mCells) {
         v.view->ensureAssUpdated();
+        if (v.view->getVisibility() == Visibility::GONE) continue;
+
         glm::ivec2 e = {v.view->getExpandingHorizontal(), v.view->getExpandingVertical()};
         glm::ivec2 m = {v.view->getMinimumWidth(), v.view->getMinimumHeight()};
         glm::ivec2 minSpace = m + glm::ivec2{v.view->getMargin().horizontal(), v.view->getMargin().vertical()};
-        if (e.x == 0)
-            rows[v.y].available -= minSpace.x + mSpacing;
-        if (e.y == 0)
-            columns[v.x].available -= minSpace.y + mSpacing;
 
         columns[v.x].expandingSum += e.x;
         rows[v.y].expandingSum    += e.y;
 
         columns[v.x].minSize = glm::max(columns[v.x].minSize, minSpace.x);
         rows[v.y].minSize    = glm::max(rows[v.y].minSize,    minSpace.y);
+
     }
+    glm::ivec2 available { width - x, height - y };
 
     // evaluate expansion sum
     glm::ivec2 sums(0);
     for (auto& c : columns) {
-        sums.x += c.expandingSum;
+        if (c.expandingSum == 0) {
+            available.x -= c.minSize;
+        } else {
+            sums.x += c.expandingSum;
+        }
     }
     for (auto& r : rows) {
-        sums.y += r.expandingSum;
+        if (r.expandingSum == 0) {
+            available.y -= r.minSize;
+        } else {
+            sums.y += r.expandingSum;
+        }
     }
     sums = glm::max(sums, glm::ivec2(1));
     float pos = x;
@@ -147,7 +149,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
     // evaluate final size
     for (auto& c : columns) {
         c.finalPos = glm::round(pos);
-        c.finalSize = glm::round(glm::max(float(c.available * c.expandingSum) / sums.x, float(c.minSize)));
+        c.finalSize = glm::round(glm::max(float(available.x * c.expandingSum) / sums.x, float(c.minSize)));
 
         // align right to border
         if (c.finalPos + c.finalSize > x + width) {
@@ -158,7 +160,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
     pos = y;
     for (auto& r : rows) {
         r.finalPos = glm::round(pos);
-        r.finalSize = glm::round(glm::max(float(r.available * r.expandingSum) / sums.y, float(r.minSize)));
+        r.finalSize = glm::round(glm::max(float(available.y * r.expandingSum) / sums.y, float(r.minSize)));
 
 
         // align right to border

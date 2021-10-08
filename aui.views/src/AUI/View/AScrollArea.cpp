@@ -34,7 +34,7 @@ private:
 
 public:
     AScrollAreaContainer() {
-        (*this) << ".scrollarea_inner";
+        addAssName(".scrollarea_inner");
     }
 
     int getContentMinimumWidth() override {

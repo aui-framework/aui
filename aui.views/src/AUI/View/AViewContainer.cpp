@@ -321,7 +321,7 @@ void AViewContainer::setContents(const _<AViewContainer>& container) {
         v->mParent = this;
     }
     mCustomAssRule = std::move(container->mCustomAssRule);
-    mAssNames = std::move(container->mAssNames);
+    mAssNames.insertAll(container->mAssNames);
     mAssHelper = nullptr;
 }
 void AViewContainer::setEnabled(bool enabled) {

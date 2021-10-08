@@ -42,6 +42,7 @@
 #include "Declaration/FontSize.h"
 #include "Declaration/ImageRendering.h"
 #include "Declaration/LayoutSpacing.h"
+#include "Declaration/LineHeight.h"
 #include "Declaration/Margin.h"
 #include "Declaration/MaxSize.h"
 #include "Declaration/MinSize.h"

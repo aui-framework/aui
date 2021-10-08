@@ -20,65 +20,31 @@
  */
 
 //
-// Created by alex2 on 07.01.2021.
+// Created by alex2 on 01.01.2021.
 //
-
 
 #pragma once
 
+#include <AUI/Util/AMetric.h>
+#include "IDeclaration.h"
 
-template <typename Container>
-class CommonContainerExtensions: public Container {
-public:
-    using StoredType = typename Container::value_type;
-    using Iterator = typename Container::iterator;
+namespace ass {
+    struct LineHeight {
+        float spacing;
+    };
 
-    using Container::Container;
+    namespace decl {
+        template<>
+        struct API_AUI_VIEWS Declaration<LineHeight>: IDeclarationBase {
+        private:
+            LineHeight mInfo;
 
+        public:
+            Declaration(const LineHeight& info) : mInfo(info) {
 
-    template<typename OtherContainer>
-    Iterator insertAll(Iterator position, const OtherContainer& c) {
-        return Container::insert(position, c.begin(), c.end());
-    }
-
-    template<typename OtherContainer>
-    Iterator insertAll(const OtherContainer& c) {
-        return Container::insert(Container::end(), c.begin(), c.end());
-    }
-
-
-    void remove(const StoredType& item)
-    {
-        Container::erase(std::remove_if(Container::begin(), Container::end(), [&](const StoredType& probe)
-        {
-            return item == probe;
-        }), Container::end());
-    }
-    
-
-    template<typename OtherContainer>
-    bool isSubsetOf(const OtherContainer& c) const
-    {
-        for (auto& i : c)
-        {
-            if (!contains(i))
-            {
-                return false;
             }
-        }
-        return true;
+
+            void applyFor(AView* view) override;
+        };
     }
-    
-    bool contains(const StoredType& value) const {
-        return std::find(Container::begin(), Container::end(), value) != Container::end();
-    }
-    
-    template<typename Func, typename... Args>
-    void forEach(Func f, Args&&... args)
-    {
-        for (auto& i: *this)
-        {
-            (i.get()->*f)(std::forward<Args>(args)...);
-        }
-    }
-};
+}
