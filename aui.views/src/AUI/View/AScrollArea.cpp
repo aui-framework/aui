@@ -56,7 +56,9 @@ public:
         mScroll = scroll;
         updateLayout();
     }
-
+    void setContent(const _<AViewContainer>& view) {
+        setContents(view);
+    }
 };
 
 AScrollArea::AScrollArea() {
@@ -91,4 +93,12 @@ void AScrollArea::onMouseWheel(glm::ivec2 pos, int delta) {
 
 int AScrollArea::getContentMinimumHeight() {
     return 30;
+}
+
+const _<AViewContainer>& AScrollArea::getContentContainer() const {
+    return mContentContainer;
+}
+
+void AScrollArea::setContents(const _<AViewContainer>& container) {
+    mContentContainer->setContent(container);
 }

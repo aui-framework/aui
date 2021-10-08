@@ -115,3 +115,4 @@ namespace aui::detail {
 using Vertical = aui::detail::container_helper<AVerticalLayout>;
 using Horizontal = aui::detail::container_helper<AHorizontalLayout>;
 using Stacked = aui::detail::container_helper<AStackedLayout>;
+using Centered = Stacked;

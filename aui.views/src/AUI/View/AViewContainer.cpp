@@ -320,6 +320,7 @@ void AViewContainer::setContents(const _<AViewContainer>& container) {
     for (auto& v : mViews) {
         v->mParent = this;
     }
+    mCustomAssRule = std::move(container->mCustomAssRule);
     mAssNames = std::move(container->mAssNames);
     mAssHelper = nullptr;
 }
