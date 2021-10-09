@@ -40,7 +40,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 	cache.reserve(mViews.size());
 	
 	int sum = 0;
-	int availableSpace = width - x;
+	int availableSpace = width;
 	
 	for (auto& view : mViews)
 	{
@@ -75,7 +75,8 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 			// the last element should stick right to the border.
 			int viewPosX = glm::round(posX) + margins.left;
 			//assert(int(width - viewPosX - margins.right) >= e.minSpace - margins.horizontal());
-			view->setGeometry(viewPosX, y + margins.top, width - viewPosX - margins.right, height - margins.vertical());
+			int viewWidth = width - viewPosX - margins.right;
+			view->setGeometry(viewPosX, y + margins.top, viewWidth, height - margins.vertical());
 		}
 		else {
 			float viewWidth = glm::clamp(float(availableSpace * e.expanding) / sum, float(e.minSpace), float(maxSize.x));

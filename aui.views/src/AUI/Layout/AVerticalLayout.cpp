@@ -37,7 +37,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height)
 	cache.reserve(mViews.size());
 
 	int sum = 0;
-	int availableSpace = height - y;
+	int availableSpace = height;
 
 
 	for (auto& view : mViews)
