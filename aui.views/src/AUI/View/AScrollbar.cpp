@@ -46,33 +46,13 @@ AScrollbar::AScrollbar(LayoutDirection direction) :
         case LayoutDirection::HORIZONTAL:
             setLayout(_new<AHorizontalLayout>());
 
-            mForwardButton->setCustomAss({
-                ass::BackgroundImage {
-                    ":uni/svg/sb-right.svg"
-                },
-                ass::FixedSize { 17_dp, 15_dp }
-            });
-            mBackwardButton->setCustomAss({
-                ass::BackgroundImage {
-                    ":uni/svg/sb-left.svg"
-                },
-                ass::FixedSize { 17_dp, 15_dp }
-            });
+            mForwardButton << ".scrollbar_right";
+            mBackwardButton << ".scrollbar_left";
             break;
         case LayoutDirection::VERTICAL:
             setLayout(_new<AVerticalLayout>());
-            mForwardButton->setCustomAss({
-                 ass::BackgroundImage {
-                         ":uni/svg/sb-down.svg"
-                 },
-                 ass::FixedSize { 15_dp, 17_dp }
-            });
-            mBackwardButton->setCustomAss({
-                 ass::BackgroundImage {
-                         ":uni/svg/sb-top.svg"
-                 },
-                 ass::FixedSize { 15_dp, 17_dp }
-            });
+            mForwardButton << ".scrollbar_down";
+            mBackwardButton << ".scrollbar_up";
             break;
     }
     mHandle = _new<AScrollbarHandle>();

@@ -63,6 +63,11 @@ namespace ass {
          * Texture divided to 4 parts cutting center.
          */
         SPLIT_2X2,
+
+        /**
+         * Texture is cropped by BackgroundCropping rule.
+         */
+        CROPPED,
     };
 
     struct BackgroundImage {

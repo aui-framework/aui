@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,59 +14,51 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
 //
-// Created by alex2 on 01.01.2021.
+// Created by alex2 on 3.12.2020.
 //
 
 #pragma once
 
-#include <AUI/Common/AObject.h>
-#include <AUI/Common/ASignal.h>
-#include <AUI/Common/AVector.h>
-#include <optional>
+#include <AUI/Render/Render.h>
+#include "IDeclaration.h"
 
-#include "Declaration/BackgroundCropping.h"
-#include "Declaration/BackgroundImage.h"
+namespace ass {
 
-struct Rule;
-class IDrawable;
+    struct BackgroundCropping {
+        unset_wrap<glm::vec2> offset;
+        unset_wrap<glm::vec2> size;
 
-/**
- * \brief Remember, ASS is not a butt. ASS is Aui Style Sheets
- */
-class AAssHelper: public AObject {
-    friend class AView;
+        BackgroundCropping() = default;
+        BackgroundCropping(const glm::vec2& offset, const unset_wrap<glm::vec2>& size):
+            offset(offset), size(size) {}
 
-private:
-    AVector<const Rule*> mPossiblyApplicableRules;
 
-public:
-    void onInvalidateFullAss() {
-        emit invalidateFullAss();
+        static BackgroundCropping H4_1() { return { glm::vec2{0.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} }; }
+        static BackgroundCropping H4_2() { return { glm::vec2{1.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} }; }
+        static BackgroundCropping H4_3() { return { glm::vec2{2.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} }; }
+        static BackgroundCropping H4_4() { return { glm::vec2{3.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} }; }
+    };
+
+    namespace decl {
+        template<>
+        struct API_AUI_VIEWS Declaration<BackgroundCropping>: IDeclarationBase {
+        private:
+            BackgroundCropping mInfo;
+
+        public:
+            Declaration(const BackgroundCropping& info) : mInfo(info) {
+
+            }
+
+            void applyFor(AView* view) override;
+        };
+
     }
-    void onInvalidateStateAss() {
-        emit invalidateStateAss();
-    }
-
-    [[nodiscard]]
-    const AVector<const Rule*>& getPossiblyApplicableRules() const {
-        return mPossiblyApplicableRules;
-    }
-
-    struct {
-        ass::BackgroundImage backgroundUrl;
-        ass::BackgroundCropping backgroundCropping;
-        std::optional<_<IDrawable>> backgroundImage;
-    } state;
-signals:
-    emits<> invalidateFullAss;
-    emits<> invalidateStateAss;
-};
-
-
+}
 

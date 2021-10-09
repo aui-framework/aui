@@ -33,6 +33,7 @@
 
 void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
     ass::BackgroundImage& info = view->getAssHelper()->state.backgroundUrl;
+    ass::BackgroundCropping& cropping = view->getAssHelper()->state.backgroundCropping;
     if (info.url && !info.url->empty()) {
         if (!view->getAssHelper()->state.backgroundImage) {
             // resolve background image by url
@@ -105,8 +106,23 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                     break;
                 }
 
+                case Sizing::CROPPED: {
+                    auto texture = _cast<ImageDrawable>(drawable);
+                    if (!texture) break;
+                    texture->bind();
+                    Render::inst().setFill(Render::FILL_TEXTURED);
+
+                    // upper left
+                    auto offset = cropping.offset.or_default({0, 0});
+                    Render::inst().drawTexturedRect(0, 0,
+                                                    view->getSize().x, view->getSize().y,
+                                                    offset,
+                                                    offset + cropping.size.or_default({1, 1}));
+                    break;
+                }
                 case Sizing::SPLIT_2X2: {
                     auto texture = _cast<ImageDrawable>(drawable);
+                    if (!texture) break;
                     auto textureSize = glm::vec2(texture->getSizeHint());
                     auto textureWidth = textureSize.x;
                     auto textureHeight = textureSize.y;

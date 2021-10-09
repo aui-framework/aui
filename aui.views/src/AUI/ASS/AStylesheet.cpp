@@ -470,7 +470,34 @@ AStylesheet::AStylesheet() {
             {t<AScrollbarHandle>::hover(), t<AScrollbarButton>::hover() },
             BackgroundSolid { 0xc0c0c0_rgb },
         },
-
+        {
+            c(".scrollbar_right"),
+            ass::BackgroundImage {
+                    ":uni/svg/sb-right.svg"
+            },
+            ass::FixedSize { 17_dp, 15_dp },
+        },
+        {
+            c(".scrollbar_left"),
+            ass::BackgroundImage {
+                    ":uni/svg/sb-left.svg"
+            },
+            ass::FixedSize { 17_dp, 15_dp },
+        },
+        {
+            c(".scrollbar_up"),
+            ass::BackgroundImage {
+                    ":uni/svg/sb-up.svg"
+            },
+            ass::FixedSize { 15_dp, 17_dp },
+        },
+        {
+            c(".scrollbar_bottom"),
+            ass::BackgroundImage {
+                    ":uni/svg/sb-bottom.svg"
+            },
+            ass::FixedSize { 15_dp, 17_dp },
+        },
 
         // menu
         {
