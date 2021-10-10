@@ -28,23 +28,53 @@
 class AScrollAreaContainer;
 
 class API_AUI_VIEWS AScrollArea: public AViewContainer {
+public:
+    class Builder;
+
 private:
     _<AScrollAreaContainer> mContentContainer;
     _<AScrollbar> mVerticalScrollbar;
     _<AScrollbar> mHorizontalScrollbar;
 
+    explicit AScrollArea(const Builder& builder);
 public:
     AScrollArea();
     virtual ~AScrollArea();
 
     const _<AViewContainer>& getContentContainer() const;
-
     int getContentMinimumHeight() override;
-
     void setSize(int width, int height) override;
-
     void onMouseWheel(glm::ivec2 pos, int delta) override;
-
     void setContents(const _<AViewContainer>& container);
+
+    class Builder {
+    friend class AScrollArea;
+    private:
+        _<AScrollbar> mExternalVerticalScrollbar;
+        _<AViewContainer> mContents;
+
+    public:
+        Builder() = default;
+
+        Builder& withExternalVerticalScrollbar(const _<AScrollbar>& externalVerticalScrollbar) {
+            mExternalVerticalScrollbar = externalVerticalScrollbar;
+            return *this;
+        }
+        Builder& withContents(const _<AViewContainer>& contents) {
+            mContents = contents;
+            return *this;
+        }
+
+        _<AScrollArea> build() {
+            return {new AScrollArea(*this) };
+        }
+
+        operator _<AView>() {
+            return build();
+        }
+        operator _<AViewContainer>() {
+            return build();
+        }
+    };
 };
 

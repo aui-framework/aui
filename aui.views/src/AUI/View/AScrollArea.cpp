@@ -61,20 +61,32 @@ public:
     }
 };
 
-AScrollArea::AScrollArea() {
+AScrollArea::AScrollArea():
+    AScrollArea(Builder{})
+{
+}
+
+AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
     setLayout(_new<AAdvancedGridLayout>(2, 2));
 
     auto contentContainer = _new<AScrollAreaContainer>();
     mContentContainer = contentContainer;
     addView(contentContainer);
-    addView(mVerticalScrollbar = _new<AScrollbar>(LayoutDirection::VERTICAL));
+    if (!builder.mExternalVerticalScrollbar) {
+        addView(mVerticalScrollbar = _new<AScrollbar>(LayoutDirection::VERTICAL));
+    } else {
+        mVerticalScrollbar = builder.mExternalVerticalScrollbar;
+    }
     addView(mHorizontalScrollbar = _new<AScrollbar>(LayoutDirection::HORIZONTAL));
 
     mHorizontalScrollbar->setVisibility(Visibility::GONE);
     mContentContainer->setExpanding();
 
-    setExpanding();
+    if (builder.mContents) {
+        setContents(builder.mContents);
+    }
 
+    setExpanding();
 
     connect(mVerticalScrollbar->scrolled, slot(contentContainer)::setScrollY);
 }
