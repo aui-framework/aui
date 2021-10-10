@@ -53,3 +53,7 @@ void AButton::getCustomCssAttributes(AMap<AString, AVariant>& map)
 	if (mDefault)
 		map["default"] = true;
 }
+
+bool AButton::consumesClick(const glm::ivec2& pos) {
+    return true;
+}

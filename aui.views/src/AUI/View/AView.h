@@ -218,6 +218,7 @@ public:
      * \brief Top left corner's position relative to top left corner's position of the parent AView.
      */
 	const glm::ivec2& getPosition() const
+
 	{
 		return mPosition;
 	}
@@ -278,7 +279,7 @@ public:
 	 */
 	float getTotalOccupiedWidth() const
 	{
-		return mSize.x + getTotalFieldHorizontal();
+		return mVisibility == Visibility::GONE ? 0 : mSize.x + getTotalFieldHorizontal();
 	}
 
     /**
@@ -286,7 +287,7 @@ public:
      */
     float getTotalOccupiedHeight() const
 	{
-        return mSize.y + getTotalFieldVertical();
+        return mVisibility == Visibility::GONE ? 0 : mSize.y + getTotalFieldVertical();
 	}
 
     /**
@@ -392,6 +393,11 @@ public:
     int getContentHeight() const
 	{
 		return static_cast<int>(mSize.y - mPadding.vertical());
+	}
+    [[nodiscard]]
+	const glm::ivec2& getExpanding() const
+	{
+		return mExpanding;
 	}
 	void setExpanding(const glm::ivec2& expanding)
 	{

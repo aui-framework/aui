@@ -184,6 +184,10 @@ void AScrollbar::scrollBackward() {
     });
 }
 
+void AScrollbar::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+    AViewContainer::onMousePressed(pos, button);
+}
+
 void AScrollbar::handleScrollbar(int s) {
     setScroll(mCurrentScroll + s * getMaxScroll() / getAvailableSpaceForSpacer());
 }

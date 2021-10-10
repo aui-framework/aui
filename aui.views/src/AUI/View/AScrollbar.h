@@ -51,14 +51,6 @@ public:
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
-
-    int getMinimumWidth() override {
-        return 0;
-    }
-
-    int getMinimumHeight() override {
-        return 0;
-    }
 };
 class AScrollbarOffsetSpacer: public ASpacer {
 public:
@@ -116,6 +108,8 @@ signals:
     float getAvailableSpaceForSpacer();
 
     void updateScrollHandleOffset(int max);
+
+    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 };
 
 

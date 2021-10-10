@@ -50,6 +50,15 @@ std::tuple<ADragArea*, AViewContainer*> ADragArea::ADraggableHandle::getDragArea
 
 void ADragArea::ADraggableHandle::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     AViewContainer::onMousePressed(pos, button);
+
+    if (mCheckForClickConsumption) {
+        auto p = getViewAt(pos);
+        if (p) {
+            if (p->consumesClick(pos - p->getPosition())) {
+                return;
+            }
+        }
+    }
     mDragging = true;
 
     auto [dragArea, container] = getDragAreaAndDraggingView();
@@ -112,10 +121,18 @@ void ADragArea::setValidPositionFor(const _<AView>& targetView, const glm::ivec2
                        getSize() - targetView->getSize() - glm::ivec2{targetView->getMargin().right, targetView->getMargin().bottom}));
 }
 
-_<AView> ADragArea::makeDraggable(const _<AView>& view) {
-    auto v = _new<ADraggableHandle>();
+_<AView> ADragArea::convertToDraggable(const _<AView>& view, bool checkForClickConsumption) {
+    auto v = _new<ADraggableHandle>(checkForClickConsumption);
     v->setLayout(_new<AStackedLayout>());
     v->setExpanding({view->getExpandingHorizontal(), view->getExpandingVertical()});
     v->addView(view);
+    return v;
+}
+
+_<AViewContainer> ADragArea::convertToDraggableContainer(const _<AViewContainer>& view, bool checkForClickConsumption) {
+    auto v = _new<ADraggableHandle>(checkForClickConsumption);
+    v->setContents(view);
+    v->setExpanding(view->getExpanding());
+    v->updateLayout();
     return v;
 }

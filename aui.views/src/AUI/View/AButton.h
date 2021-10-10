@@ -36,6 +36,8 @@ public:
 	
 	void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
 
+    bool consumesClick(const glm::ivec2& pos) override;
+
 signals:
 	emits<bool> defaultState;
 	emits<> becameDefault;

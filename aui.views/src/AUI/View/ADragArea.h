@@ -45,11 +45,15 @@ public:
     void updateLayout() override;
 
     class API_AUI_VIEWS ADraggableHandle: public AViewContainer {
+        friend class ADragArea;
     private:
         std::tuple<ADragArea*, AViewContainer*> getDragAreaAndDraggingView();
         bool mDragging = false;
+        bool mCheckForClickConsumption = true;
 
     public:
+        ADraggableHandle(bool checkForClickConsumption = false) : mCheckForClickConsumption(checkForClickConsumption) {}
+
         void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
         void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
@@ -57,7 +61,8 @@ public:
         emits<glm::ivec2> mouseMove;
     };
 
-    static _<AView> makeDraggable(const _<AView>& view);
+    static _<AView>          convertToDraggable(const _<AView>& view, bool checkForClickConsumption = true);
+    static _<AViewContainer> convertToDraggableContainer(const _<AViewContainer>& view, bool checkForClickConsumption = true);
 };
 
 

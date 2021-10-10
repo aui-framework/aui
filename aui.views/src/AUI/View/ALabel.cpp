@@ -310,3 +310,7 @@ glm::ivec2 ALabel::getIconSize() const {
     return {};
 }
 
+bool ALabel::consumesClick(const glm::ivec2& pos) {
+    return false;
+}
+

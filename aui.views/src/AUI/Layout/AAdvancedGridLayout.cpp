@@ -125,7 +125,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
         rows[v.y].minSize    = glm::max(rows[v.y].minSize,    minSpace.y);
 
     }
-    glm::ivec2 available { width - x, height - y };
+    glm::ivec2 available { width, height };
 
     // evaluate expansion sum
     glm::ivec2 sums(0);
