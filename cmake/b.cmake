@@ -443,13 +443,27 @@ endfunction(aui_compile_assets_add)
 function(aui_module AUI_MODULE_NAME)
     project(${AUI_MODULE_NAME})
 
+    set(_opt "")
+    set(_exclude_from_all "")
+    if (AUI_BOOT_COMPONENTS)
+        # check if starts with "aui."
+        set(_module_name ${AUI_MODULE_NAME})
+        if (AUI_MODULE_NAME MATCHES "aui.+")
+            string(SUBSTRING ${AUI_MODULE_NAME} 4 -1 _module_name)
+        endif()
+        if (NOT ${_module_name} IN_LIST AUI_BOOT_COMPONENTS)
+            set(_opt OPTIONAL)
+            set(_exclude_from_all EXCLUDE_FROM_ALL)
+        endif()
+    endif()
+
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp)
     if (WIN32)
         if (EXISTS "${CMAKE_SOURCE_DIR}/Resource.rc")
             set(SRCS ${SRCS} "${CMAKE_SOURCE_DIR}/Resource.rc")
         endif()
     endif()
-    add_library(${AUI_MODULE_NAME} SHARED ${SRCS} ${ARGN})
+    add_library(${AUI_MODULE_NAME} SHARED ${_exclude_from_all} ${SRCS} ${ARGN})
     get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
     target_include_directories(${AUI_MODULE_NAME} PUBLIC $<BUILD_INTERFACE:${SELF_DIR}/src>)
 
@@ -463,27 +477,26 @@ function(aui_module AUI_MODULE_NAME)
     aui_add_properties(${AUI_MODULE_NAME})
 
     aui_common(${AUI_MODULE_NAME})
-    if (NOT AUI_ONLY_COMPONENT OR AUI_ONLY_COMPONENT STREQUAL ${AUI_MODULE_NAME})
-        install(
-                TARGETS ${AUI_MODULE_NAME}
-                EXPORT AUI
-                ARCHIVE
-                DESTINATION "lib"
-                LIBRARY
-                DESTINATION "lib"
-                RUNTIME
-                DESTINATION "bin"
-                OPTIONAL
-                PUBLIC_HEADER DESTINATION "include"
-        )
-        install(
-                DIRECTORY src/
-                DESTINATION "include/"
-                FILES_MATCHING PATTERN "*.h"
-                PATTERN "*.hpp"
+    install(
+            TARGETS ${AUI_MODULE_NAME}
+            EXPORT AUI
+            ARCHIVE
+            DESTINATION "${AUI_MODULE_NAME}/lib"
+            LIBRARY
+            DESTINATION "${AUI_MODULE_NAME}/lib"
+            RUNTIME
+            DESTINATION "${AUI_MODULE_NAME}/bin"
+            ${_opt}
+            PUBLIC_HEADER DESTINATION "${AUI_MODULE_NAME}/include"
+    )
 
-        )
-    endif()
+    install(
+            DIRECTORY src/
+            DESTINATION "${AUI_MODULE_NAME}/include/"
+            FILES_MATCHING PATTERN "*.h"
+            PATTERN "*.hpp"
+
+    )
 endfunction(aui_module)
 
 if (MINGW OR UNIX)
