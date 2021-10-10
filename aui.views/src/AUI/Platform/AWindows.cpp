@@ -149,13 +149,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             onFocusLost();
             return 0;
 
-        case WM_WINDOWPOSCHANGED:
-            setFocusedView(nullptr);
-            break;
-
-        case WM_WINDOWPOSCHANGING:
-            setFocusedView(nullptr);
-            return 0;
 
         case WM_PAINT: {
             // process thread messages because queue freezes when window is frequently redrawn

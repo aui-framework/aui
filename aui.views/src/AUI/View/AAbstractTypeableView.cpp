@@ -247,6 +247,7 @@ void AAbstractTypeableView::cutToClipboard() {
     typeableErase(sel.begin, sel.end);
     mCursorIndex = sel.begin;
     mCursorSelection = -1;
+    invalidatePrerenderedString();
 }
 
 void AAbstractTypeableView::copyToClipboard() const { AClipboard::copyToClipboard(getSelectedText()); }

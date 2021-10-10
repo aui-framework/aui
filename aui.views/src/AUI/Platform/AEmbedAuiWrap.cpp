@@ -30,12 +30,20 @@
 #include <AUI/GL/State.h>
 #include <AUI/Platform/AWindow.h>
 
-class AEmbedAuiWrap::FakeWindow: public ABaseWindow {
+class AEmbedAuiWrap::EmbedWindow: public ABaseWindow {
     friend class AEmbedAuiWrap;
 public:
-    FakeWindow() {
+    EmbedWindow() {
         currentWindowStorage() = this;
         checkForStencilBits();
+    }
+
+    _<AViewContainer> createOverlappingSurface(const glm::ivec2& position, const glm::ivec2& size) override {
+        return _<AViewContainer>();
+    }
+
+    void closeOverlappingSurface() override {
+
     }
 };
 
@@ -43,7 +51,7 @@ AEmbedAuiWrap::AEmbedAuiWrap()
 {
     auto r = glewInit();
     assert(r == 0);
-    mContainer = _new<FakeWindow>();
+    mContainer = _new<EmbedWindow>();
     mContainer->setPosition({ 0, 0 });
 }
 

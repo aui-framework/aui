@@ -126,8 +126,6 @@ void ABaseWindow::focusNextView() {
 
 void ABaseWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     auto focusCopy = mFocusedView.lock();
-    mFocusedView.reset();
-    assert(mFocusedView.lock() == nullptr);
     AViewContainer::onMousePressed(pos, button);
     if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
         if (focusCopy->hasFocus()) {

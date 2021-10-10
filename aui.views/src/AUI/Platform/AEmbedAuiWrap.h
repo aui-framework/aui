@@ -35,8 +35,8 @@
  */
 class API_AUI_VIEWS AEmbedAuiWrap {
 private:
-    class FakeWindow;
-    _<FakeWindow> mContainer;
+    class EmbedWindow;
+    _<EmbedWindow> mContainer;
     glm::ivec2 mSize;
 
 public:

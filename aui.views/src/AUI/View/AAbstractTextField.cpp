@@ -128,6 +128,9 @@ AString AAbstractTextField::getText() const {
 }
 
 void AAbstractTextField::typeableErase(size_t begin, size_t end) {
+    if (begin >= mContents.length()) {
+        return;
+    }
     mContents.erase(mContents.begin() + begin, mContents.begin() + end);
 }
 
