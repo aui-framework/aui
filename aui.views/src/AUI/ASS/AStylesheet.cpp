@@ -492,9 +492,9 @@ AStylesheet::AStylesheet() {
             ass::FixedSize { 15_dp, 17_dp },
         },
         {
-            c(".scrollbar_bottom"),
+            c(".scrollbar_down"),
             ass::BackgroundImage {
-                    ":uni/svg/sb-bottom.svg"
+                    ":uni/svg/sb-down.svg"
             },
             ass::FixedSize { 15_dp, 17_dp },
         },
