@@ -32,7 +32,8 @@
 
 class AWindowMenuProvider: public IMenuProvider {
 private:
-    _<AWindow> mWindow;
+    _weak<AViewContainer> mSurfaceContainer;
+    ABaseWindow* mWindow;
 
 public:
     void createMenu(const AVector<MenuItem>& vector) override;

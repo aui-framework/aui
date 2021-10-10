@@ -22,6 +22,8 @@
 #pragma once
 #include "ACustomWindow.h"
 #include <AUI/View/AButton.h>
+#include <AUI/View/ASpacer.h>
+#include <AUI/Util/UIBuildingHelpers.h>
 #include "CustomCaptionWindowImplWin32.h"
 
 using CustomCaptionWindowImplCurrent = CustomCaptionWindowImplWin32;
@@ -39,6 +41,7 @@ public:
 	ACustomCaptionWindow():
             ACustomCaptionWindow("Custom Caption Window", 240, 124)
 	{
+        getCaptionContainer()->addView(_new<AButton>("Button!"));
 	}
 
 

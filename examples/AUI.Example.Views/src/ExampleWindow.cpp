@@ -119,7 +119,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                         MinSize { 100_dp },
                         Border { 1_px, 0x0_rgb, },
                 };
-                it->addView(ADragArea::convertToDraggable(_new<AButton>("Drag me!")));
+                it->addView(ADragArea::convertToDraggable(_new<AButton>("Drag me!"), false));
             },
 	    });
 	}

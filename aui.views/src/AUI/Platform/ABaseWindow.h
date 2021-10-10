@@ -77,7 +77,7 @@ public:
      * @return a new surface.
      */
     virtual _<AViewContainer> createOverlappingSurface(const glm::ivec2& position, const glm::ivec2& size) = 0;
-    virtual void closeOverlappingSurface() = 0;
+    virtual void closeOverlappingSurface(AViewContainer* surface) = 0;
 
 signals:
     emits<>            dpiChanged;

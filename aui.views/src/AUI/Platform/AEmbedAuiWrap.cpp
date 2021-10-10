@@ -42,7 +42,7 @@ public:
         return _<AViewContainer>();
     }
 
-    void closeOverlappingSurface() override {
+    void closeOverlappingSurface(AViewContainer* surface) override {
 
     }
 };

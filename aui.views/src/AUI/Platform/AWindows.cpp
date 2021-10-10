@@ -1478,17 +1478,22 @@ _<AViewContainer> AWindow::createOverlappingSurface(const glm::ivec2& position, 
     public:
         AOverlappingWindow(AWindow* parent):
         AWindow("MENU", 0, 0, parent, WindowStyle::SYS) {
-
+            setCustomAss({ ass::Padding { 0 } });
         }
     };
     auto window = _new<AOverlappingWindow>(this);
     window->setGeometry(position.x, position.y, size.x, size.y);
-
+    // show later
+    ui_thread {
+        window->show();
+    };
     return window;
 }
 
-void AWindow::closeOverlappingSurface() {
-
+void AWindow::closeOverlappingSurface(AViewContainer* surface) {
+    if (auto c = dynamic_cast<AWindow*>(surface)) {
+        c->close();
+    }
 }
 
 void AWindowManager::loop() {

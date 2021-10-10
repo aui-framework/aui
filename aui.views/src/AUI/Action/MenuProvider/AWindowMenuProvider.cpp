@@ -25,21 +25,20 @@
 
 
 #include <AUI/Common/AVector.h>
-#include <AUI/Platform/AWindow.h>
 #include <AUI/Layout/AVerticalLayout.h>
 #include <AUI/View/ALabel.h>
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "AWindowMenuProvider.h"
 
-class AMenuWindow: public AWindow {
+class AMenuContainer: public AViewContainer {
 private:
-    _<AMenuWindow> mSubWindow;
+    _<AMenuContainer> mSubWindow;
 public:
-    AMenuWindow(const AVector<MenuItem>& vector):
-            AWindow("MENU", 0, 0, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::SYS)
+    AMenuContainer(const AVector<MenuItem>& vector)
     {
         addAssName(".menu");
+        setExpanding();
         setLayout(_new<AVerticalLayout>());
         for (auto& i : vector) {
             _<AView> view;
@@ -86,11 +85,12 @@ public:
                                 mSubWindow->close();
                             }
 
-                            mSubWindow = _new<AMenuWindow>(items);
-                            auto pos = unmapPosition(view->getPositionInWindow() + glm::ivec2{view->getWidth(), 0});
-                            mSubWindow->setGeometry(pos.x, pos.y, mSubWindow->getMinimumWidth(),
-                                                    mSubWindow->getMinimumHeight());
-                            mSubWindow->show();
+                            mSubWindow = _new<AMenuContainer>(items);
+                            auto pos = getPositionInWindow();
+                            auto window = getWindow();
+                            auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize());
+                            surfaceContainer->setLayout(_new<AStackedLayout>());
+                            surfaceContainer->addView(mSubWindow);
                         });
                     } else {
                         view->disable();
@@ -105,31 +105,38 @@ public:
 
         }
     }
-
-protected:
-    void onClosed() override {
-        AWindow::onClosed();
+    virtual ~AMenuContainer() {
         if (mSubWindow) {
             mSubWindow->close();
+        }
+    }
+protected:
+
+
+    void close() {
+        if (auto window = getWindow()) {
+            window->closeOverlappingSurface(this);
         }
     }
 };
 
 void AWindowMenuProvider::createMenu(const AVector<MenuItem>& vector) {
     closeMenu();
-    mWindow = _new<AMenuWindow>(vector);
+    mWindow = AWindow::current();
+    auto menu = _new<AMenuContainer>(vector);
     auto mousePos = ADesktop::getMousePosition();
-    mWindow->setGeometry(mousePos.x, mousePos.y, mWindow->getMinimumWidth(), mWindow->getMinimumHeight());
-    mWindow->show();
+    auto surfaceContainer = mWindow->createOverlappingSurface(mousePos, menu->getMinimumSize());
+    surfaceContainer->setLayout(_new<AStackedLayout>());
+    surfaceContainer->addView(menu);
+    mSurfaceContainer = surfaceContainer;
 }
 
 void AWindowMenuProvider::closeMenu() {
-    if (isOpen()) {
-        mWindow->close();
-        mWindow = nullptr;
+    if (auto lock = mSurfaceContainer.lock()) {
+        mWindow->closeOverlappingSurface(lock.get());
     }
 }
 
 bool AWindowMenuProvider::isOpen() {
-    return mWindow != nullptr;
+    return !mSurfaceContainer.expired();
 }

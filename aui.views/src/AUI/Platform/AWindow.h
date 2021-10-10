@@ -291,7 +291,7 @@ public:
 
     _<AViewContainer> createOverlappingSurface(const glm::ivec2& position, const glm::ivec2& size) override;
 
-    void closeOverlappingSurface() override;
+    void closeOverlappingSurface(AViewContainer* surface) override;
 
 signals:
 	emits<> closed;
