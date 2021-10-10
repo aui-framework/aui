@@ -38,11 +38,11 @@ public:
         checkForStencilBits();
     }
 
-    _<AViewContainer> createOverlappingSurface(const glm::ivec2& position, const glm::ivec2& size) override {
+    _<AViewContainer> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override {
         return _<AViewContainer>();
     }
 
-    void closeOverlappingSurface(AViewContainer* surface) override {
+    void closeOverlappingSurfaceImpl(AViewContainer* surface) override {
 
     }
 };

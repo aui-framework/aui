@@ -124,7 +124,15 @@ void ABaseWindow::focusNextView() {
     }
 }
 
+void ABaseWindow::closeAllOverlappingSurfaces() {
+    // not doing foreach loop because of comodification
+    while (!mOverlappingSurfaces.empty()) {
+        closeOverlappingSurface(*mOverlappingSurfaces.begin());
+    }
+}
+
 void ABaseWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+    closeAllOverlappingSurfaces();
     auto focusCopy = mFocusedView.lock();
     AViewContainer::onMousePressed(pos, button);
     if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
@@ -205,6 +213,11 @@ void ABaseWindow::onCharEntered(wchar_t c) {
     if (auto v = getFocusedView()) {
         v->onCharEntered(c);
     }
+}
+
+void ABaseWindow::onFocusLost() {
+    AView::onFocusLost();
+    closeAllOverlappingSurfaces();
 }
 
 void ABaseWindow::checkForStencilBits() {

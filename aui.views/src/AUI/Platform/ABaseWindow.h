@@ -12,6 +12,7 @@ class API_AUI_VIEWS ABaseWindow: public AViewContainer {
 private:
     _weak<AView> mFocusedView;
     glm::ivec2 mMousePos;
+    ASet<AViewContainer*> mOverlappingSurfaces;
 
 protected:
     float mDpiRatio = 1.f;
@@ -20,6 +21,12 @@ protected:
     static ABaseWindow*& currentWindowStorage();
 
     static void checkForStencilBits();
+
+    /**
+     * @see ABaseWindow::createOverlappingSurface
+     */
+    virtual _<AViewContainer> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
+    virtual void closeOverlappingSurfaceImpl(AViewContainer* surface) = 0;
 
 public:
     ABaseWindow();
@@ -44,6 +51,8 @@ public:
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 
     void onMouseMove(glm::ivec2 pos) override;
+
+    void closeAllOverlappingSurfaces();
 
     bool isFocused() const {
         return mIsFocused;
@@ -76,8 +85,17 @@ public:
      * @param size size
      * @return a new surface.
      */
-    virtual _<AViewContainer> createOverlappingSurface(const glm::ivec2& position, const glm::ivec2& size) = 0;
-    virtual void closeOverlappingSurface(AViewContainer* surface) = 0;
+    _<AViewContainer> createOverlappingSurface(const glm::ivec2& position, const glm::ivec2& size) {
+        auto tmp = createOverlappingSurfaceImpl(position, size);
+        mOverlappingSurfaces << tmp.get();
+        return tmp;
+    }
+    void closeOverlappingSurface(AViewContainer* surface) {
+        mOverlappingSurfaces.erase(surface);
+        closeOverlappingSurfaceImpl(surface);
+    }
+
+    void onFocusLost() override;
 
 signals:
     emits<>            dpiChanged;

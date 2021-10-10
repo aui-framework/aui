@@ -1204,7 +1204,7 @@ void AWindow::onMouseMove(glm::ivec2 pos) {
 
 void AWindow::onFocusLost() {
     mIsFocused = false;
-    AViewContainer::onFocusLost();
+    ABaseWindow::onFocusLost();
     if (AMenu::isOpen()) {
         AMenu::close();
     }
@@ -1473,7 +1473,7 @@ void AWindowManager::notifyProcessMessages() {
 }
 
 
-_<AViewContainer> AWindow::createOverlappingSurface(const glm::ivec2& position, const glm::ivec2& size) {
+_<AViewContainer> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
     class AOverlappingWindow: public AWindow {
     public:
         AOverlappingWindow(AWindow* parent):
@@ -1490,7 +1490,7 @@ _<AViewContainer> AWindow::createOverlappingSurface(const glm::ivec2& position, 
     return window;
 }
 
-void AWindow::closeOverlappingSurface(AViewContainer* surface) {
+void AWindow::closeOverlappingSurfaceImpl(AViewContainer* surface) {
     if (auto c = dynamic_cast<AWindow*>(surface)) {
         c->close();
     }
