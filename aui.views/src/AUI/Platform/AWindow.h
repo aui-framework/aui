@@ -289,6 +289,10 @@ public:
      */
     [[nodiscard]] glm::ivec2 mapPosition(const glm::ivec2& position);
 
+    _<AViewContainer> createOverlappingSurface(const glm::ivec2& position, const glm::ivec2& size) override;
+
+    void closeOverlappingSurface() override;
+
 signals:
 	emits<> closed;
 	emits<int, int> resized;

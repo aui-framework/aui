@@ -214,4 +214,3 @@ void ABaseWindow::checkForStencilBits() {
     glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
     assert(("no stencil bits" && stencilBits > 0));
 }
-

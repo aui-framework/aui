@@ -30,7 +30,7 @@
 #include <AUI/View/ALabel.h>
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/UIBuildingHelpers.h>
-#include "ACrossplatformMenuProvider.h"
+#include "AWindowMenuProvider.h"
 
 class AMenuWindow: public AWindow {
 private:
@@ -115,7 +115,7 @@ protected:
     }
 };
 
-void ACrossplatformMenuProvider::createMenu(const AVector<MenuItem>& vector) {
+void AWindowMenuProvider::createMenu(const AVector<MenuItem>& vector) {
     closeMenu();
     mWindow = _new<AMenuWindow>(vector);
     auto mousePos = ADesktop::getMousePosition();
@@ -123,13 +123,13 @@ void ACrossplatformMenuProvider::createMenu(const AVector<MenuItem>& vector) {
     mWindow->show();
 }
 
-void ACrossplatformMenuProvider::closeMenu() {
+void AWindowMenuProvider::closeMenu() {
     if (isOpen()) {
         mWindow->close();
         mWindow = nullptr;
     }
 }
 
-bool ACrossplatformMenuProvider::isOpen() {
+bool AWindowMenuProvider::isOpen() {
     return mWindow != nullptr;
 }

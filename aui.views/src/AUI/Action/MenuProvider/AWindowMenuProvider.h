@@ -30,7 +30,7 @@
 #include "IMenuProvider.h"
 #include <AUI/Platform/AWindow.h>
 
-class ACrossplatformMenuProvider: public IMenuProvider {
+class AWindowMenuProvider: public IMenuProvider {
 private:
     _<AWindow> mWindow;
 

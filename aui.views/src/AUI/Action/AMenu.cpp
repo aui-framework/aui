@@ -24,7 +24,7 @@
 //
 
 
-#include <AUI/Action/MenuProvider/ACrossplatformMenuProvider.h>
+#include <AUI/Action/MenuProvider/AWindowMenuProvider.h>
 #include <AUI/Action/MenuProvider/AEmbedMenuProvider.h>
 #include "AMenu.h"
 
@@ -36,7 +36,7 @@ _<IMenuProvider>& AMenu::provider() {
     static _<IMenuProvider> provider = nullptr;
     if (provider == nullptr) {
         if (dynamic_cast<AWindow*>(AWindow::current())) {
-            provider = _new<ACrossplatformMenuProvider>();
+            provider = _new<AWindowMenuProvider>();
         } else {
             provider = _new<AEmbedMenuProvider>();
         }

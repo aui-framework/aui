@@ -1417,6 +1417,7 @@ _<AView> AWindow::determineSharedPointer() {
     return (shared_from_this());
 }
 
+
 // HELPER FUNCTIONS FOR XLIB
 
 #ifdef __linux
@@ -1476,6 +1477,25 @@ void AWindowManager::notifyProcessMessages() {
 #endif
     }
 #endif
+}
+
+
+_<AViewContainer> AWindow::createOverlappingSurface(const glm::ivec2& position, const glm::ivec2& size) {
+    class AOverlappingWindow: public AWindow {
+    public:
+        AOverlappingWindow(AWindow* parent):
+        AWindow("MENU", 0, 0, parent, WindowStyle::SYS) {
+
+        }
+    };
+    auto window = _new<AOverlappingWindow>(this);
+    window->setGeometry(position.x, position.y, size.x, size.y);
+
+    return window;
+}
+
+void AWindow::closeOverlappingSurface() {
+
 }
 
 void AWindowManager::loop() {

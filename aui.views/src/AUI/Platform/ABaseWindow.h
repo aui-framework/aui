@@ -68,6 +68,17 @@ public:
         currentWindowStorage() = this;
     }
 
+    /**
+     * Create a surface used for context menus and combo boxes. Closure of the surface is managed by window but can be
+     * closed manually by calling closeOverlappingSurface.
+     * @param position position where does the surface should be created. It's not exact the top left corner of the
+     *        surface but a hint (i.e. if the surface does not fit)
+     * @param size size
+     * @return a new surface.
+     */
+    virtual _<AViewContainer> createOverlappingSurface(const glm::ivec2& position, const glm::ivec2& size) = 0;
+    virtual void closeOverlappingSurface() = 0;
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
