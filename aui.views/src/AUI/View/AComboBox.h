@@ -29,13 +29,12 @@
 #include "AButton.h"
 #include <AUI/Model/IListModel.h>
 
-class AComboBoxWindow;
 class API_AUI_VIEWS AComboBox: public AButton {
 private:
     _<IListModel<AString>> mModel;
     int mSelectionId = 0;
     bool mPopup = false;
-    _<AComboBoxWindow> mComboWindow;
+    _weak<AViewContainer> mComboWindow;
     bool mClickConsumer = false;
 
 protected:
@@ -69,9 +68,6 @@ public:
     const _<IListModel<AString>>& getModel() const {
         return mModel;
     }
-
-    [[nodiscard]]
-    const _<AWindow>& getComboBoxWindow() const;
 
 signals:
     emits<int> selectionChanged;

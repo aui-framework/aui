@@ -32,20 +32,8 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/Animator/ATranslationAnimator.h>
 #include <AUI/Animator/ASizeAnimator.h>
-
-class AComboBoxWindow: public AWindow {
-public:
-    explicit AComboBoxWindow(const _<IListModel<AString>>& model):
-        AWindow("COMBOBOX", 854, 500, dynamic_cast<AWindow*>(AWindow::current()))
-    {
-
-        setWindowStyle(WindowStyle::SYS);
-        setLayout(_new<AVerticalLayout>());
-        addView(mListView = _new<AListView>(model) let { it->setExpanding(); });
-    }
-
-    _<AListView> mListView;
-};
+#include <AUI/Layout/AStackedLayout.h>
+#include <AUI/ASS/ASS.h>
 
 AComboBox::AComboBox(const _<IListModel<AString>>& model):
     AComboBox()
@@ -97,27 +85,26 @@ void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
         mClickConsumer = false;
         return;
     }
-    if (!mComboWindow) {
+    if (!mComboWindow.lock()) {
         auto w = dynamic_cast<AWindow*>(AWindow::current());
         if (!w) return;
-        mComboWindow = _new<AComboBoxWindow>(mModel);
+
+        auto list = _new<AListView>(mModel) with_style { ass::Margin { 0 }, ass::Expanding{} };
+
         auto currentPos = w->unmapPosition(getPositionInWindow() + w->getWindowPosition()) - w->getWindowPosition();
-        auto height = mComboWindow->mListView->getContentFullHeight() + mComboWindow->getMinimumHeight();
-        mComboWindow->setGeometry(currentPos.x, currentPos.y + getHeight(),
-                                  (glm::max)(getWidth(), mComboWindow->getMinimumWidth() + int(20_dp)), height);
-        mComboWindow->setAnimator(_new<ASizeAnimator>(
-                glm::ivec2{mComboWindow->getWidth(), 0}) let { it->setDuration(0.15f); });
-        connect(w->mousePressed, this, [&] () {
-            if (mComboWindow) {
-                mClickConsumer = true;
-                destroyWindow();
-                AThread::current() << [&]() {
-                    mClickConsumer = false;
-                };
-            }
-            AObject::disconnect();
-        });
-        connect(mComboWindow->mListView->selectionChanged, this, [&](const AModelSelection<AString>& s) {
+        currentPos.y += getHeight();
+        auto comboWindow = getWindow()->createOverlappingSurface(currentPos,
+                                                                 {
+                                                                     (glm::max)(getWidth(), list->getMinimumWidth() + int(20_dp)),
+                                                                     list->getContentFullHeight() + list->getMinimumHeight()
+                                                                 });
+        comboWindow->setLayout(_new<AStackedLayout>());
+        comboWindow->addView(list);
+        mComboWindow = comboWindow;
+        list->setAnimator(_new<ASizeAnimator>(
+                glm::ivec2{list->getWidth(), 0}) let { it->setDuration(0.15f); });
+
+        connect(list->selectionChanged, this, [&](const AModelSelection<AString>& s) {
             if (!s.getIndices().empty()) {
                 setSelectionId(s.getIndices().begin()->getRow());
             }
@@ -125,7 +112,6 @@ void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
             AObject::disconnect();
         });
         onComboBoxWindowCreated();
-        mComboWindow->show();
         mPopup = true;
     } else {
         destroyWindow();
@@ -139,25 +125,22 @@ void AComboBox::getCustomCssAttributes(AMap<AString, AVariant>& map) {
 }
 
 AComboBox::~AComboBox() {
-    if (mComboWindow)
-        mComboWindow->quit();
+    if (auto l = mComboWindow.lock())
+        getWindow()->closeOverlappingSurface(l.get());
 }
 
 void AComboBox::destroyWindow() {
     mPopup = false;
-    mComboWindow->quit();
-    mComboWindow = nullptr;
+    if (auto c = mComboWindow.lock()) {
+        getWindow()->closeOverlappingSurface(c.get());
+    }
+    mComboWindow.reset();
     emit customCssPropertyChanged();
 
-    getWindow()->flagRedraw();
+    redraw();
 }
 
 void AComboBox::onComboBoxWindowCreated() {
 
 }
-
-const _<AWindow>& AComboBox::getComboBoxWindow() const {
-    return mComboWindow;
-}
-
 
