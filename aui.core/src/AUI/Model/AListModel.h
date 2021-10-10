@@ -98,6 +98,28 @@ namespace aui::detail {
         void removeItem(const AModelIndex& item) override {
             erase(p::begin() + item.getRow());
         }
+
+
+        /**
+         * Create AListModel from initializer list. Applicable for initializing AListModel<AString> from
+         * const char* initializer list.
+         *
+         * @tparam V type that converts to T
+         * @return a new AListModel
+         */
+        template<typename V>
+        static _<AListModel<StoredType>> make(const std::initializer_list<V>& t) {
+            if constexpr(std::is_same_v<V, StoredType>) {
+                return _new<AListModel<AString>>(t.begin(), t.end());
+            } else {
+                auto model = _new<AListModel<AString>>(t.begin(), t.end());
+                model->reserve(t.end() - t.begin());
+                for (auto& element : t) {
+                    model->push_back(StoredType(element));
+                }
+                return model;
+            }
+        }
     };
 }
 
