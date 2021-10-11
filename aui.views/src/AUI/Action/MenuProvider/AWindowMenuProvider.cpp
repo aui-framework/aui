@@ -124,7 +124,7 @@ void AWindowMenuProvider::createMenu(const AVector<MenuItem>& vector) {
     closeMenu();
     mWindow = AWindow::current();
     auto menu = _new<AMenuContainer>(vector);
-    auto mousePos = ADesktop::getMousePosition();
+    auto mousePos = mWindow->getMousePos();
     auto surfaceContainer = mWindow->createOverlappingSurface(mousePos, menu->getMinimumSize());
     surfaceContainer->setLayout(_new<AStackedLayout>());
     surfaceContainer->addView(menu);
