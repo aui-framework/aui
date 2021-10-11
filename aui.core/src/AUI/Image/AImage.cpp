@@ -207,6 +207,10 @@ _<AImage> AImage::fromUrl(const AUrl& url) {
     return Cache::get(url);
 }
 
+_<AImage> AImage::fromFile(const APath& path) {
+    return fromUrl(AUrl("file://" + path));
+}
+
 _<AImage> AImage::Cache::load(const AUrl& key)
 {
     try {

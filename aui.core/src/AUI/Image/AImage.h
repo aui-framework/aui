@@ -30,6 +30,7 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/Util/Cache.h>
 #include <AUI/Url/AUrl.h>
+#include <AUI/IO/APath.h>
 
 class API_AUI_CORE AImage {
 private:
@@ -115,5 +116,6 @@ public:
     }
 
     static _<AImage> fromUrl(const AUrl& url);
+    static _<AImage> fromFile(const APath& path);
 };
 
