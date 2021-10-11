@@ -1482,7 +1482,8 @@ _<AViewContainer> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& positi
         }
     };
     auto window = _new<AOverlappingWindow>(this);
-    window->setGeometry(position.x, position.y, size.x, size.y);
+    auto finalPos = unmapPosition(position);
+    window->setGeometry(finalPos.x, finalPos.y, size.x, size.y);
     // show later
     ui_thread {
         window->show();
