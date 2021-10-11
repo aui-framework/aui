@@ -438,6 +438,14 @@ public:
 	void setSize(const glm::ivec2& size) {
         setSize(size.x, size.y);
 	}
+
+    /**
+     * Set size ignoring all restrictions (i.e. min size, max size, fixed size, etc...). Used by AAnimator.
+     * @param size
+     */
+	void setSizeForced(const glm::ivec2& size) {
+        mSize = size;
+	}
     virtual void setSize(int width, int height);
     virtual void setGeometry(int x, int y, int width, int height);
 

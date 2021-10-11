@@ -36,6 +36,6 @@ void ASizeAnimator::doAnimation(AView* view, float theta) {
         mEndSize = view->getSize();
     }
     auto currentSize = glm::mix(mBeginSize, mEndSize, theta);
-    view->setSize(currentSize.x, currentSize.y);
+    view->setSizeForced(currentSize);
 }
 

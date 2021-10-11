@@ -86,24 +86,41 @@ void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
         return;
     }
     if (!mComboWindow.lock()) {
-        auto w = dynamic_cast<AWindow*>(AWindow::current());
+        auto w = AWindow::current();
         if (!w) return;
 
-        auto list = _new<AListView>(mModel) with_style { ass::Margin { 0 }, ass::Expanding{} };
-
-        auto currentPos = w->unmapPosition(getPositionInWindow() + w->getWindowPosition()) - w->getWindowPosition();
-        currentPos.y += getHeight();
-        auto comboWindow = getWindow()->createOverlappingSurface(currentPos,
-                                                                 {
-                                                                     (glm::max)(getWidth(), list->getMinimumWidth() + int(20_dp)),
-                                                                     list->getContentFullHeight() + list->getMinimumHeight()
-                                                                 });
+        auto list = _new<AListView>(mModel) with_style { ass::Margin { 0 }, ass::Expanding{}, ass::MinSize {  AMetric(getWidth(), AMetric::T_PX), 0, } };
+        list << ".combobox_list";
+        int listHeight = list->getContentFullHeight() + list->getMinimumHeight() + 2; // bias
+        auto comboBoxPos = getPositionInWindow();
+        unsigned usedPositionIndex;
+        auto comboWindow = w->createOverlappingSurface(
+                [&](unsigned attempt) -> std::optional<glm::ivec2> {
+                    usedPositionIndex = attempt;
+                    switch (attempt) {
+                        case 0: return comboBoxPos + glm::ivec2(0, getHeight()); // below
+                        case 1: return comboBoxPos - glm::ivec2(0, listHeight - 1); // above
+                        default: return std::nullopt;
+                    }
+                },{
+                    (glm::max)(getWidth(), list->getMinimumWidth()),
+                    listHeight
+                });
         comboWindow->setLayout(_new<AStackedLayout>());
         comboWindow->addView(list);
         mComboWindow = comboWindow;
-        list->setAnimator(_new<ASizeAnimator>(
-                glm::ivec2{list->getWidth(), 0}) let { it->setDuration(0.15f); });
 
+        // when list floats up from below, we should apply only size animation
+        if (usedPositionIndex == 0) {
+            list->setAnimator(_new<ASizeAnimator>(
+                    glm::ivec2{list->getWidth(), 0}) let { it->setDuration(0.15f); });
+        } else {
+            // when list floats up from above, we should apply both position and size animations
+            list->setAnimator(AAnimator::combine({
+                _new<ATranslationAnimator>(glm::ivec2(0, listHeight)) let { it->setDuration(0.15f); },
+                _new<ASizeAnimator>(glm::ivec2{list->getWidth(), 0}) let { it->setDuration(0.15f); }
+            }));
+        }
         connect(list->selectionChanged, this, [&](const AModelSelection<AString>& s) {
             if (!s.getIndices().empty()) {
                 setSelectionId(s.getIndices().begin()->getRow());

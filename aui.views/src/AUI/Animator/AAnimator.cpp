@@ -46,7 +46,7 @@ void AAnimator::animate(AView* view) {
 
         mLastFrameTime = now;
     }
-    doAnimation(view, mCurrentTheta);
+    doAnimation(view, mCurve(mCurrentTheta));
 }
 
 void AAnimator::postRender(AView* view) {
@@ -70,4 +70,29 @@ void AAnimator::translateToCorner() {
             glm::translate(glm::mat4(1.f),
                            glm::vec3(-glm::vec2(mView->getSize().x,
                                    mView->getSize().y + mView->getTotalFieldVertical() - 1) / 2.f, 0.f)));
+}
+
+
+_<AAnimator> AAnimator::combine(const AVector<_<AAnimator>>& animators) {
+    class ACombiningAnimator: public AAnimator {
+    private:
+        AVector<_<AAnimator>> mAnimator;
+
+    public:
+        ACombiningAnimator(const AVector<_<AAnimator>>& animator) : mAnimator(animator) {}
+
+    protected:
+        void doAnimation(AView* view, float theta) override {
+            for (auto& animator : mAnimator) {
+                animator->animate(view);
+            }
+        }
+
+        void doPostRender(AView* view, float theta) override {
+            for (auto& animator : mAnimator) {
+                animator->doPostRender(view, theta);
+            }
+        }
+    };
+    return _new<ACombiningAnimator>(animators);
 }

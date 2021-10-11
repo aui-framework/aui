@@ -109,16 +109,7 @@ namespace aui::detail {
          */
         template<typename V>
         static _<AListModel<StoredType>> make(const std::initializer_list<V>& t) {
-            if constexpr(std::is_same_v<V, StoredType>) {
-                return _new<AListModel<AString>>(t.begin(), t.end());
-            } else {
-                auto model = _new<AListModel<AString>>(t.begin(), t.end());
-                model->reserve(t.end() - t.begin());
-                for (auto& element : t) {
-                    model->push_back(StoredType(element));
-                }
-                return model;
-            }
+            return _new<AListModel<StoredType>>(t.begin(), t.end());
         }
     };
 }

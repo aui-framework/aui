@@ -39,11 +39,17 @@ public:
     }
 
     _<AViewContainer> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override {
-        return _<AViewContainer>();
+        auto container = _new<AViewContainer>();
+        addViewCustomLayout(container);
+
+        auto windowSize = getSize();
+
+        container->setGeometry(position.x, position.y, size.x, size.y);
+        return container;
     }
 
     void closeOverlappingSurfaceImpl(AViewContainer* surface) override {
-
+        removeView(surface);
     }
 };
 
