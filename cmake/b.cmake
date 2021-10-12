@@ -443,27 +443,13 @@ endfunction(aui_compile_assets_add)
 function(aui_module AUI_MODULE_NAME)
     project(${AUI_MODULE_NAME})
 
-    set(_opt "")
-    set(_exclude_from_all "")
-    if (AUI_BOOT_COMPONENTS)
-        # check if starts with "aui."
-        set(_module_name ${AUI_MODULE_NAME})
-        if (AUI_MODULE_NAME MATCHES "aui.+")
-            string(SUBSTRING ${AUI_MODULE_NAME} 4 -1 _module_name)
-        endif()
-        if (NOT ${_module_name} IN_LIST AUI_BOOT_COMPONENTS)
-            set(_opt OPTIONAL)
-            set(_exclude_from_all EXCLUDE_FROM_ALL)
-        endif()
-    endif()
-
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp)
     if (WIN32)
         if (EXISTS "${CMAKE_SOURCE_DIR}/Resource.rc")
             set(SRCS ${SRCS} "${CMAKE_SOURCE_DIR}/Resource.rc")
         endif()
     endif()
-    add_library(${AUI_MODULE_NAME} SHARED ${_exclude_from_all} ${SRCS} ${ARGN})
+    add_library(${AUI_MODULE_NAME} SHARED ${SRCS} ${ARGN})
     get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
     target_include_directories(${AUI_MODULE_NAME} PUBLIC $<BUILD_INTERFACE:${SELF_DIR}/src>)
 
@@ -486,7 +472,6 @@ function(aui_module AUI_MODULE_NAME)
             DESTINATION "${AUI_MODULE_NAME}/lib"
             RUNTIME
             DESTINATION "${AUI_MODULE_NAME}/bin"
-            ${_opt}
             PUBLIC_HEADER DESTINATION "${AUI_MODULE_NAME}/include"
     )
 
