@@ -55,16 +55,17 @@ foreach(_module ${AUI_FIND_COMPONENTS})
     set(_module_dir "${SELF_DIR}/aui.${_module}")
     if (EXISTS ${_module_dir})
         set(AUI_${_module}_FOUND TRUE)
-        find_library(_lib "aui.${_module}" PATHS "${SELF_DIR}/aui.${_module}/lib" NO_DEFAULT_PATH)
+        find_library(AUI_${_module}_LIBRARY "aui.${_module}" PATHS "${SELF_DIR}/aui.${_module}/lib" NO_DEFAULT_PATH NO_CACHE)
+        set(_lib ${AUI_${_module}_LIBRARY})
         set(_include ${SELF_DIR}/aui.${_module}/include)
         if (_lib AND EXISTS ${_include})
-            set(AUI_${_module}_LIBRARY ${_lib})
             list(APPEND AUI_LIBRARIES ${_lib})
             list(APPEND AUI_INCLUDE_DIRS ${_include})
             list(APPEND AUI_IMPORTED_TARGETS "${_module_target_name}")
             add_library(${_module_target_name} SHARED IMPORTED)
             set_target_properties(${_module_target_name} PROPERTIES
-                    IMPORTED_LOCATION ${_lib}
+                    IMPORTED_LOCATION "${_lib}"
+                    IMPORTED_IMPLIB "${_lib}"
                     INTERFACE_INCLUDE_DIRECTORIES "${_include};${SELF_DIR}/aui.core/include")
             continue()
         endif()
