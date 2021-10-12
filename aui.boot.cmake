@@ -75,6 +75,9 @@ macro(auib_import AUI_MODULE_NAME URL)
     elseif(AUIB_IMPORT_VERSION)
         set(TAG_OR_HASH ${AUIB_IMPORT_VERSION})
     endif()
+    if (NOT CMAKE_BUILD_TYPE)
+        set(CMAKE_BUILD_TYPE Debug)
+    endif()
     set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${AUI_MODULE_NAME}/${TAG_OR_HASH}/${AUI_TARGET_ABI}/${CMAKE_BUILD_TYPE}")
 
     # append our location to module path
@@ -93,70 +96,74 @@ macro(auib_import AUI_MODULE_NAME URL)
     find_package(${AUI_MODULE_NAME})
     if (NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND)
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
+        # so we have to compile and install
+
         if (NOT EXISTS ${DEP_INSTALLED_FLAG})
-            # so we have to compile and install
-
-            include(FetchContent)
-            # TODO add protocol check
-            message(STATUS "Fetching ${AUI_MODULE_NAME}")
-            # file(LOCK "${AUI_CACHE_DIR}/repo.lock")
-            FetchContent_Declare(${AUI_MODULE_NAME}_FC
-                    GIT_REPOSITORY "${URL}"
-                    GIT_TAG ${AUIB_IMPORT_VERSION}
-                    GIT_PROGRESS TRUE # show progress of download
-                    USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
-                    USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
-                    #SOURCE_DIR ${DEP_SOURCE_DIR}
-                    )
-
-            FetchContent_Populate(${AUI_MODULE_NAME}_FC)
-
-
-            FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
-                    BINARY_DIR DEP_BINARY_DIR
-                    SOURCE_DIR DEP_SOURCE_DIR
-                    )
-
-            message(STATUS "Compiling ${AUI_MODULE_NAME}")
-            if (AUIB_IMPORT_CMAKE_WORKING_DIR)
-                set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
-            endif()
-            set(FINAL_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-                    -DAUI_BOOT=TRUE
-                    ${AUIB_IMPORT_CMAKE_ARGS}
-                    -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
-                    -G "${CMAKE_GENERATOR}")
-
-            if (AUIB_IMPORT_COMPONENTS)
-                list(JOIN AUIB_IMPORT_COMPONENTS "\\\;" TMP_LIST)
-                set(FINAL_CMAKE_ARGS
-                        ${FINAL_CMAKE_ARGS}
-                        -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=TRUE
-                        -DAUI_BOOT_COMPONENTS=${TMP_LIST})
-            endif()
-            execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
-                    WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                    RESULT_VARIABLE STATUS_CODE)
-
-            if (NOT STATUS_CODE EQUAL 0)
-                message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}")
-            endif()
-
-            message(STATUS "Installing ${AUI_MODULE_NAME}")
-            execute_process(COMMAND
-                    ${CMAKE_COMMAND}
-                    --build ${DEP_BINARY_DIR}
-                    --target install
-
-                    WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                    RESULT_VARIABLE ERROR_CODE)
-
-            if (NOT STATUS_CODE EQUAL 0)
-                message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
-            endif()
-            file(TOUCH ${DEP_INSTALLED_FLAG})
-            # file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+            message(STATUS "${AUI_MODULE_NAME}: building because ${DEP_INSTALLED_FLAG} does not exist")
+        else()
+            message(STATUS "${AUI_MODULE_NAME}: building because find_package could not find package in ${DEP_INSTALL_PREFIX}")
         endif()
+
+        include(FetchContent)
+        # TODO add protocol check
+        message(STATUS "Fetching ${AUI_MODULE_NAME}")
+        # file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+        FetchContent_Declare(${AUI_MODULE_NAME}_FC
+                GIT_REPOSITORY "${URL}"
+                GIT_TAG ${AUIB_IMPORT_VERSION}
+                GIT_PROGRESS TRUE # show progress of download
+                USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
+                USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
+                #SOURCE_DIR ${DEP_SOURCE_DIR}
+                )
+
+        FetchContent_Populate(${AUI_MODULE_NAME}_FC)
+
+
+        FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
+                BINARY_DIR DEP_BINARY_DIR
+                SOURCE_DIR DEP_SOURCE_DIR
+                )
+
+        message(STATUS "Compiling ${AUI_MODULE_NAME}")
+        if (AUIB_IMPORT_CMAKE_WORKING_DIR)
+            set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
+        endif()
+        set(FINAL_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+                -DAUI_BOOT=TRUE
+                ${AUIB_IMPORT_CMAKE_ARGS}
+                -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
+                -G "${CMAKE_GENERATOR}")
+
+        if (AUIB_IMPORT_COMPONENTS)
+            list(JOIN AUIB_IMPORT_COMPONENTS "\\\;" TMP_LIST)
+            set(FINAL_CMAKE_ARGS
+                    ${FINAL_CMAKE_ARGS}
+                    -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=TRUE
+                    -DAUI_BOOT_COMPONENTS=${TMP_LIST})
+        endif()
+        execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
+                WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                RESULT_VARIABLE STATUS_CODE)
+
+        if (NOT STATUS_CODE EQUAL 0)
+            message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}")
+        endif()
+
+        message(STATUS "Installing ${AUI_MODULE_NAME}")
+        execute_process(COMMAND
+                ${CMAKE_COMMAND}
+                --build ${DEP_BINARY_DIR}
+                --target install
+
+                WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                RESULT_VARIABLE ERROR_CODE)
+
+        if (NOT STATUS_CODE EQUAL 0)
+            message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
+        endif()
+        file(TOUCH ${DEP_INSTALLED_FLAG})
+        # file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
     endif()
     find_package(${AUI_MODULE_NAME})
 
