@@ -139,7 +139,6 @@ macro(auib_import AUI_MODULE_NAME URL)
             list(JOIN AUIB_IMPORT_COMPONENTS "\\\;" TMP_LIST)
             set(FINAL_CMAKE_ARGS
                     ${FINAL_CMAKE_ARGS}
-                    -DCMAKE_SKIP_INSTALL_ALL_DEPENDENCY=TRUE
                     -DAUI_BOOT_COMPONENTS=${TMP_LIST})
         endif()
         execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
