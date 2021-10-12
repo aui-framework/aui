@@ -79,7 +79,7 @@ foreach(_module ${AUI_FIND_COMPONENTS})
     endif()
 endforeach()
 
-if (AUI_FOUND)
+if (AUI_FOUND AND NOT TARGET aui)
     add_library(aui INTERFACE IMPORTED)
     set_target_properties(aui PROPERTIES
             INTERFACE_LINK_LIBRARIES "${AUI_IMPORTED_TARGETS}")
