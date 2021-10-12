@@ -40,6 +40,7 @@ set(AUI_ALL_MODULES core
 
 if (NOT AUI_FIND_COMPONENTS)
     set(AUI_FIND_COMPONENTS ${AUI_ALL_MODULES})
+    set(_all TRUE)
 endif()
 
 set(AUI_FOUND TRUE)
@@ -51,20 +52,31 @@ foreach(_module ${AUI_FIND_COMPONENTS})
     if (EXISTS ${_module_dir})
         set(AUI_${_module}_FOUND TRUE)
         find_library(_lib "aui.${_module}" PATHS "${SELF_DIR}/aui.${_module}/lib" NO_DEFAULT_PATH)
-        if (_lib)
+        set(_include ${SELF_DIR}/aui.${_module}/include)
+        if (_lib AND EXISTS ${_include})
             set(AUI_${_module}_LIBRARY ${_lib})
-
+            list(APPEND AUI_LIBRARIES ${_lib})
+            list(APPEND AUI_INCLUDE_DIRS ${_include})
+            list(APPEND AUI_IMPORTED_TARGETS "aui::${_module}")
             add_library(aui::${_module} SHARED IMPORTED)
             set_target_properties(aui::${_module} PROPERTIES
                     IMPORTED_LOCATION ${_lib}
-                    INTERFACE_INCLUDE_DIRECTORIES "${SELF_DIR}/aui.${_module}/include;${SELF_DIR}/aui.core/include")
+                    INTERFACE_INCLUDE_DIRECTORIES "${_include};${SELF_DIR}/aui.core/include")
             continue()
         endif()
     endif()
 
     set(AUI_${_module}_FOUND FALSE)
-    set(AUI_FOUND FALSE)
-    if (AUI_FIND_REQUIRED AND AUI_FIND_REQUIRED_${_module})
-        message(FATAL_ERROR "Component ${_module} is not found")
+    if (NOT _all)
+        set(AUI_FOUND FALSE)
+        if (AUI_FIND_REQUIRED AND AUI_FIND_REQUIRED_${_module})
+            message(FATAL_ERROR "Component ${_module} is not found")
+        endif()
     endif()
 endforeach()
+
+if (AUI_FOUND)
+    add_library(aui INTERFACE IMPORTED)
+    set_target_properties(aui PROPERTIES
+            INTERFACE_LINK_LIBRARIES "${AUI_IMPORTED_TARGETS}")
+endif()
