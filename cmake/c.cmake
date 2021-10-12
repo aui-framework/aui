@@ -45,6 +45,10 @@ endif()
 
 set(AUI_FOUND TRUE)
 foreach(_module ${AUI_FIND_COMPONENTS})
+    set(_module_target_name aui::${_module})
+    if (TARGET ${_module_target_name})
+        continue()
+    endif()
     if (NOT ${_module} IN_LIST AUI_ALL_MODULES)
         message(FATAL_ERROR "Unknown component ${_module}")
     endif()
@@ -57,9 +61,9 @@ foreach(_module ${AUI_FIND_COMPONENTS})
             set(AUI_${_module}_LIBRARY ${_lib})
             list(APPEND AUI_LIBRARIES ${_lib})
             list(APPEND AUI_INCLUDE_DIRS ${_include})
-            list(APPEND AUI_IMPORTED_TARGETS "aui::${_module}")
-            add_library(aui::${_module} SHARED IMPORTED)
-            set_target_properties(aui::${_module} PROPERTIES
+            list(APPEND AUI_IMPORTED_TARGETS "${_module_target_name}")
+            add_library(${_module_target_name} SHARED IMPORTED)
+            set_target_properties(${_module_target_name} PROPERTIES
                     IMPORTED_LOCATION ${_lib}
                     INTERFACE_INCLUDE_DIRECTORIES "${_include};${SELF_DIR}/aui.core/include")
             continue()
