@@ -19,6 +19,10 @@
 # =====================================================================================================================
 #
 
+define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
+        BRIEF_DOCS "Global list of aui boot root entries"
+        FULL_DOCS "Global list of aui boot root entries")
+
 set(CMAKE_POLICY_DEFAULT_CMP0074 NEW)
 
 if(WIN32 AND NOT CYGWIN)
@@ -205,4 +209,5 @@ macro(auib_import AUI_MODULE_NAME URL)
             endif()
         endif()
     endforeach()
+    set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
 endmacro()
