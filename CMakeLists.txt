@@ -28,6 +28,7 @@ if(AUI_BOOT_COMPONENTS)
 		list(APPEND AUI_BOOT_COMPONENTS crypt toolbox)
 	endif()
 endif()
+list(REMOVE_DUPLICATES AUI_BOOT_COMPONENTS)
 
 include(aui.boot.cmake)
 
@@ -93,9 +94,60 @@ if (NOT ANDROID)
 endif()
 
 #install(EXPORT AUI DESTINATION "cmake/")
+
+if(NOT AUI_BOOT_COMPONENTS)
+	# adding all components
+	set(AUI_BOOT_COMPONENTS core
+			crypt
+			curl
+			data
+			image
+			json
+			mysql
+			network
+			sqlite
+			views
+			xml
+			)
+
+	# remove unexisting modules from module list (i.e. toolbox)
+	foreach(_module ${AUI_BOOT_COMPONENTS})
+		if (NOT TARGET "aui.${_module}")
+			list(REMOVE_ITEM AUI_BOOT_COMPONENTS ${_module})
+		endif()
+	endforeach()
+else()
+	# remove executables from module list (i.e. toolbox)
+	foreach(_module ${AUI_BOOT_COMPONENTS})
+		get_target_property(_type "aui.${_module}" TYPE)
+		if (_type STREQUAL "EXECUTABLE")
+			list(REMOVE_ITEM AUI_BOOT_COMPONENTS ${_module})
+		endif()
+	endforeach()
+endif()
+
+set(AUI_CONFIG_VARS "set(AUI_ALL_MODULES ${AUI_BOOT_COMPONENTS})")
+foreach(_module ${AUI_BOOT_COMPONENTS})
+	set(_target "aui.${_module}")
+	get_target_property(_compile_definitions ${_target} INTERFACE_COMPILE_DEFINITIONS)
+	get_target_property(_link_libs ${_target} INTERFACE_LINK_LIBRARIES)
+	unset(_link_libs2)
+	foreach(_lib ${_link_libs})
+		string(REPLACE "aui." "" _lib ${_lib})
+		list(APPEND _link_libs2 ${_lib})
+	endforeach()
+	set(AUI_CONFIG_VARS "${AUI_CONFIG_VARS}\
+
+set(AUI_COMPONENT_${_module}_COMPILE_DEFINITIONS ${_compile_definitions})
+set(AUI_COMPONENT_${_module}_LINK_LIBS ${_link_libs2})
+")
+endforeach()
+
+
+configure_file(cmake/c.cmake ${CMAKE_CURRENT_BINARY_DIR}/c.cmake @ONLY)
 install(
 		FILES
-		cmake/c.cmake
+		${CMAKE_CURRENT_BINARY_DIR}/c.cmake
 		RENAME aui-config.cmake
 		DESTINATION ".")
 

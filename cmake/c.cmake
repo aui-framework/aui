@@ -25,18 +25,8 @@ include_directories(${SELF_DIR}/include)
 
 include(${SELF_DIR}/cmake/AUI.Build.cmake)
 
-set(AUI_ALL_MODULES core
-        crypt
-        curl
-        data
-        image
-        json
-        mysql
-        network
-        sqlite
-        views
-        xml
-        )
+
+@AUI_CONFIG_VARS@
 
 if (NOT AUI_FIND_COMPONENTS)
     set(AUI_FIND_COMPONENTS ${AUI_ALL_MODULES})
@@ -63,10 +53,12 @@ foreach(_module ${AUI_FIND_COMPONENTS})
             list(APPEND AUI_INCLUDE_DIRS ${_include})
             list(APPEND AUI_IMPORTED_TARGETS "${_module_target_name}")
             add_library(${_module_target_name} SHARED IMPORTED)
+            target_link_libraries(${_module_target_name} INTERFACE ${AUI_COMPONENT_${_module}_LINK_LIBS})
             set_target_properties(${_module_target_name} PROPERTIES
                     IMPORTED_LOCATION "${_lib}"
                     IMPORTED_IMPLIB "${_lib}"
-                    INTERFACE_INCLUDE_DIRECTORIES "${_include};${SELF_DIR}/aui.core/include")
+                    INTERFACE_INCLUDE_DIRECTORIES "${_include}"
+                    INTERFACE_COMPILE_DEFINITIONS ${AUI_COMPONENT_${_module}_COMPILE_DEFINITIONS})
             continue()
         endif()
     endif()
