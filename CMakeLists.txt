@@ -147,6 +147,7 @@ endforeach()
 
 
 configure_file(cmake/c.cmake ${CMAKE_CURRENT_BINARY_DIR}/c.cmake @ONLY)
+#install(EXPORT AUI DESTINATION cmake/)
 install(
 		FILES
 		${CMAKE_CURRENT_BINARY_DIR}/c.cmake

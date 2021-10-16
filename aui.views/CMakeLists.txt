@@ -37,8 +37,7 @@ if (OPENGL_FOUND)
 
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
 
-	target_link_libraries(aui.views PUBLIC aui.core)
-	target_link_libraries(aui.views PRIVATE GLEW::GLEW)
+	target_link_libraries(aui.views PUBLIC aui.core GLEW::GLEW)
 
 	if(ANDROID)
 		target_link_libraries(aui.views PRIVATE EGL GLESv2 GLESv3)
