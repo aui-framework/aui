@@ -94,21 +94,22 @@ if (NOT ANDROID)
 endif()
 
 #install(EXPORT AUI DESTINATION "cmake/")
+set(AUI_ALL_COMPONENTS core
+		crypt
+		curl
+		data
+		image
+		json
+		mysql
+		network
+		sqlite
+		views
+		xml
+		)
 
 if(NOT AUI_BOOT_COMPONENTS)
 	# adding all components
-	set(AUI_BOOT_COMPONENTS core
-			crypt
-			curl
-			data
-			image
-			json
-			mysql
-			network
-			sqlite
-			views
-			xml
-			)
+	set(AUI_BOOT_COMPONENTS ${AUI_ALL_COMPONENTS})
 
 	# remove unexisting modules from module list (i.e. toolbox)
 	foreach(_module ${AUI_BOOT_COMPONENTS})
@@ -126,7 +127,8 @@ else()
 	endforeach()
 endif()
 
-set(AUI_CONFIG_VARS "set(AUI_ALL_MODULES ${AUI_BOOT_COMPONENTS})")
+set(AUI_CONFIG_VARS "set(AUI_ALL_COMPONENTS ${AUI_ALL_COMPONENTS})\
+set(AUI_AVAILABLE_COMPONENTS ${AUI_BOOT_COMPONENTS})")
 foreach(_module ${AUI_BOOT_COMPONENTS})
 	set(_target "aui.${_module}")
 	get_target_property(_compile_definitions ${_target} INTERFACE_COMPILE_DEFINITIONS)

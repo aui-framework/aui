@@ -29,7 +29,7 @@ include(${SELF_DIR}/cmake/AUI.Build.cmake)
 @AUI_CONFIG_VARS@
 
 if (NOT AUI_FIND_COMPONENTS)
-    set(AUI_FIND_COMPONENTS ${AUI_ALL_MODULES})
+    set(AUI_FIND_COMPONENTS ${AUI_AVAILABLE_COMPONENTS})
     set(_all TRUE)
 endif()
 
@@ -39,27 +39,29 @@ foreach(_module ${AUI_FIND_COMPONENTS})
     if (TARGET ${_module_target_name})
         continue()
     endif()
-    if (NOT ${_module} IN_LIST AUI_ALL_MODULES)
+    if (NOT ${_module} IN_LIST AUI_ALL_COMPONENTS)
         message(FATAL_ERROR "Unknown component ${_module}")
     endif()
-    set(_module_dir "${SELF_DIR}/aui.${_module}")
-    if (EXISTS ${_module_dir})
-        set(AUI_${_module}_FOUND TRUE)
-        find_library(AUI_${_module}_LIBRARY "aui.${_module}" PATHS "${SELF_DIR}/aui.${_module}/lib" NO_DEFAULT_PATH NO_CACHE)
-        set(_lib ${AUI_${_module}_LIBRARY})
-        set(_include ${SELF_DIR}/aui.${_module}/include)
-        if (_lib AND EXISTS ${_include})
-            list(APPEND AUI_LIBRARIES ${_lib})
-            list(APPEND AUI_INCLUDE_DIRS ${_include})
-            list(APPEND AUI_IMPORTED_TARGETS "${_module_target_name}")
-            add_library(${_module_target_name} SHARED IMPORTED)
-            target_link_libraries(${_module_target_name} INTERFACE ${AUI_COMPONENT_${_module}_LINK_LIBS})
-            set_target_properties(${_module_target_name} PROPERTIES
-                    IMPORTED_LOCATION "${_lib}"
-                    IMPORTED_IMPLIB "${_lib}"
-                    INTERFACE_INCLUDE_DIRECTORIES "${_include}"
-                    INTERFACE_COMPILE_DEFINITIONS ${AUI_COMPONENT_${_module}_COMPILE_DEFINITIONS})
-            continue()
+    if (${_module} IN_LIST AUI_AVAILABLE_COMPONENTS)
+        set(_module_dir "${SELF_DIR}/aui.${_module}")
+        if (EXISTS ${_module_dir})
+            set(AUI_${_module}_FOUND TRUE)
+            find_library(AUI_${_module}_LIBRARY "aui.${_module}" PATHS "${SELF_DIR}/aui.${_module}/lib" NO_DEFAULT_PATH NO_CACHE)
+            set(_lib ${AUI_${_module}_LIBRARY})
+            set(_include ${SELF_DIR}/aui.${_module}/include)
+            if (_lib AND EXISTS ${_include})
+                list(APPEND AUI_LIBRARIES ${_lib})
+                list(APPEND AUI_INCLUDE_DIRS ${_include})
+                list(APPEND AUI_IMPORTED_TARGETS "${_module_target_name}")
+                add_library(${_module_target_name} SHARED IMPORTED)
+                target_link_libraries(${_module_target_name} INTERFACE ${AUI_COMPONENT_${_module}_LINK_LIBS})
+                set_target_properties(${_module_target_name} PROPERTIES
+                        IMPORTED_LOCATION "${_lib}"
+                        IMPORTED_IMPLIB "${_lib}"
+                        INTERFACE_INCLUDE_DIRECTORIES "${_include}"
+                        INTERFACE_COMPILE_DEFINITIONS ${AUI_COMPONENT_${_module}_COMPILE_DEFINITIONS})
+                continue()
+            endif()
         endif()
     endif()
 
