@@ -127,8 +127,7 @@ else()
 	endforeach()
 endif()
 
-set(AUI_CONFIG_VARS "set(AUI_ALL_COMPONENTS ${AUI_ALL_COMPONENTS})\
-set(AUI_AVAILABLE_COMPONENTS ${AUI_BOOT_COMPONENTS})")
+set(AUI_CONFIG_VARS "set(AUI_ALL_COMPONENTS ${AUI_ALL_COMPONENTS})\nset(AUI_AVAILABLE_COMPONENTS ${AUI_BOOT_COMPONENTS})")
 foreach(_module ${AUI_BOOT_COMPONENTS})
 	set(_target "aui.${_module}")
 	get_target_property(_compile_definitions ${_target} INTERFACE_COMPILE_DEFINITIONS)
