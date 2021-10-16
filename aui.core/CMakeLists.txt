@@ -16,12 +16,11 @@ if (GLM_INCLUDE_DIR)
 	message(STATUS "Using custom GLM_INCLUDE_DIR: ${GLM_INCLUDE_DIR}")
 else()
 	set(GLM_INCLUDE_DIR "${SELF_DIR}/3rdparty/glm")
-	if (aui.core IN_LIST AUI_ONLY_COMPONENT)
-		install(
-				DIRECTORY ${GLM_INCLUDE_DIR}/glm
-				DESTINATION "include/"
-		)
-	endif()
+
+	install(
+			DIRECTORY ${GLM_INCLUDE_DIR}/glm
+			DESTINATION "include/"
+	)
 endif()
 target_include_directories(aui.core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>)
 
