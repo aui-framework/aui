@@ -19,7 +19,7 @@ else()
 
 	install(
 			DIRECTORY ${GLM_INCLUDE_DIR}/glm
-			DESTINATION "include/"
+			DESTINATION "aui.core/include/"
 	)
 endif()
 target_include_directories(aui.core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>)
