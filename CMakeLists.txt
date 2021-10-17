@@ -137,8 +137,11 @@ foreach(_module ${AUI_BOOT_COMPONENTS})
 	get_target_property(_link_libs ${_target} INTERFACE_LINK_LIBRARIES)
 	unset(_link_libs2)
 	foreach(_lib ${_link_libs})
-		string(REPLACE "aui." "" _lib ${_lib})
-		list(APPEND _link_libs2 ${_lib})
+		# skip NOTFOUNDs
+		if (_lib)
+			string(REPLACE "aui." "" _lib ${_lib})
+			list(APPEND _link_libs2 ${_lib})
+		endif()
 	endforeach()
 	set(AUI_CONFIG_VARS "${AUI_CONFIG_VARS}\
 

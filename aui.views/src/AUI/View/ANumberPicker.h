@@ -22,6 +22,7 @@
 #pragma once
 #include "AViewContainer.h"
 #include "ATextField.h"
+#include <limits>
 
 /**
  * \brief A text field for numbers with increase/decrease buttons.
@@ -29,62 +30,62 @@
 class API_AUI_VIEWS ANumberPicker: public AViewContainer
 {
 private:
-	class ANumberPickerField: public AAbstractTextField
-	{
-	private:
-		ANumberPicker& mPicker;
-	public:
-		ANumberPickerField(::ANumberPicker& picker)
-			: mPicker(picker)
-		{
-		}
+    class ANumberPickerField: public AAbstractTextField
+    {
+    private:
+        ANumberPicker& mPicker;
+    public:
+        ANumberPickerField(::ANumberPicker& picker)
+                : mPicker(picker)
+        {
+        }
 
-		virtual ~ANumberPickerField() = default;
+        virtual ~ANumberPickerField() = default;
 
         void onKeyRepeat(AInput::Key key) override;
 
     protected:
-		bool isValidText(const AString& text) override;
-	};
-	
-	_<ANumberPickerField> mTextField;
+        bool isValidText(const AString& text) override;
+    };
 
-	int mMin = 0;
-	int mMax = 100;
-	
+    _<ANumberPickerField> mTextField;
+
+    int mMin = 0;
+    int mMax = 100;
+
 public:
-	ANumberPicker();
+    ANumberPicker();
 
-	int getContentMinimumHeight() override;
+    int getContentMinimumHeight() override;
 
-	void setValue(int v);
-	int getValue() const;
+    void setValue(int v);
+    int getValue() const;
 
 
-	[[nodiscard]] int getMin() const
-	{
-		return mMin;
-	}
+    [[nodiscard]] int getMin() const
+    {
+        return mMin;
+    }
 
-	[[nodiscard]] int getMax() const
-	{
-		return mMax;
-	}
+    [[nodiscard]] int getMax() const
+    {
+        return mMax;
+    }
 
 
     void setMin(const int min);
-	void setMax(const int max);
+    void setMax(const int max);
 
 signals:
-	/**
-	 * \brief Number changed.
-	 */
-	emits<int> valueChanged;
+    /**
+     * \brief Number changed.
+     */
+    emits<int> valueChanged;
 
-	/**
-	 * \brief Number is changing.
-	 */
-	emits<> valueChanging;
+    /**
+     * \brief Number is changing.
+     */
+    emits<> valueChanging;
 };
 
 namespace aui::impl {
@@ -93,8 +94,8 @@ namespace aui::impl {
     public:
 
         static void setup(const _<ANumberPicker>& view) {
-            view->setMin(std::numeric_limits<int>::min());
-            view->setMax(std::numeric_limits<int>::max());
+            view->setMin((std::numeric_limits<int>::min)());
+            view->setMax((std::numeric_limits<int>::max)());
         }
 
         static auto getGetter() {
