@@ -1,10 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
-find_package(CURL)
+auib_import(CURL https://github.com/curl/curl
+            VERSION curl-7_79_1)
 
-if (CURL_FOUND)
-    aui_module(aui.curl)
-    target_link_libraries(aui.curl PUBLIC aui.core)
-else()
-    message(INFO "cURL is not available, disabling aui.curl")
-endif()
+aui_module(aui.curl)
+target_link_libraries(aui.curl PUBLIC aui.core)
+target_link_libraries(aui.curl PRIVATE CURL::libcurl)

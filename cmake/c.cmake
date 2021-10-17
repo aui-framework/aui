@@ -37,7 +37,7 @@ foreach(_entry ${AUI_BOOT_ROOT_ENTRIES})
     string(REPLACE "=" ";" _entry ${_entry})
     list(GET _entry 0 VAR_NAME)
     list(GET _entry 1 VAR_VALUE)
-    message("XYI ${VAR_NAME} set to ${VAR_VALUE}")
+    message("Forwarded ${VAR_NAME} with ${VAR_VALUE}")
     set(${VAR_NAME} ${VAR_VALUE})
 endforeach()
 
@@ -86,4 +86,8 @@ if (AUI_FOUND AND NOT TARGET aui)
     add_library(aui INTERFACE IMPORTED)
     set_target_properties(aui PROPERTIES
             INTERFACE_LINK_LIBRARIES "${AUI_IMPORTED_TARGETS}")
+endif()
+
+if (views IN_LIST AUI_FIND_COMPONENTS)
+    find_package(GLEW REQUIRED)
 endif()
