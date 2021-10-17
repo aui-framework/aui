@@ -139,7 +139,7 @@ foreach(_module ${AUI_BOOT_COMPONENTS})
 	foreach(_lib ${_link_libs})
 		# skip NOTFOUNDs
 		if (_lib)
-			string(REPLACE "aui." "" _lib ${_lib})
+			string(REPLACE "aui." "aui::" _lib ${_lib})
 			list(APPEND _link_libs2 ${_lib})
 		endif()
 	endforeach()
