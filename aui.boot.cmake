@@ -98,10 +98,12 @@ macro(auib_import AUI_MODULE_NAME URL)
 
     # avoid compilation if we have existing installation
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
-    if (AUIB_IMPORT_COMPONENTS)
-        find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS})
-    else()
-        find_package(${AUI_MODULE_NAME})
+    if (EXISTS ${DEP_INSTALLED_FLAG})
+        if (AUIB_IMPORT_COMPONENTS)
+            find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS})
+        else()
+            find_package(${AUI_MODULE_NAME})
+        endif()
     endif()
     if (NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND)
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
