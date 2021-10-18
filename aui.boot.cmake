@@ -138,8 +138,15 @@ macro(auib_import AUI_MODULE_NAME URL)
         if (AUIB_IMPORT_CMAKE_WORKING_DIR)
             set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
         endif()
+
+        get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
+        unset(FORWARDED_LIBS)
+        foreach (_entry ${AUI_BOOT_ROOT_ENTRIES})
+            list(APPEND FORWARDED_LIBS "-D${_entry}")
+        endforeach()
         set(FINAL_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
                 -DAUI_BOOT=TRUE
+                ${FORWARDED_LIBS}
                 ${AUIB_IMPORT_CMAKE_ARGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
                 -G "${CMAKE_GENERATOR}")
