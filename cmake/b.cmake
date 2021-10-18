@@ -162,62 +162,7 @@ function(aui_common AUI_MODULE_NAME)
     install(CODE [[
             message(STATUS "Installing ${AUI_MODULE_NAME}")
     ]])
-endfunction(aui_common)
 
-
-function(aui_deploy_library AUI_MODULE_NAME)
-    if (TARGET ${AUI_MODULE_NAME})
-        message(STATUS "link_libraries ${AUI_MODULE_NAME}")
-        link_libraries(${AUI_MODULE_NAME})
-    endif()
-    string(TOLOWER ${AUI_MODULE_NAME} AUI_MODULE_NAME_LOWERED)
-    install(CODE "list(APPEND ADDITIONAL_DEPENDENCIES ${CMAKE_SHARED_LIBRARY_PREFIX}${AUI_MODULE_NAME_LOWERED}${CMAKE_SHARED_LIBRARY_SUFFIX})")
-endfunction(aui_deploy_library)
-
-function(aui_executable_advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
-    project(${AUI_MODULE_NAME})
-
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
-    #message("ASSDIR ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp")
-    if(ANDROID)
-        add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
-    else()
-
-        file(GLOB_RECURSE PREVIEW_SRCS preview/*.cpp)
-        if (AUI_BUILD_PREVIEW AND PREVIEW_SRCS)
-            message(STATUS "Added preview target: ${AUI_MODULE_NAME}")
-
-            set(SRCS ${ADDITIONAL_SRCS} ${SRCS})
-            set(FILTER_REGEX "(src/main.cpp$|WIN32)")
-            set(EXCLUDED_SRCS ${SRCS})
-            list(FILTER EXCLUDED_SRCS INCLUDE REGEX ${FILTER_REGEX})
-            list(FILTER SRCS EXCLUDE REGEX ${FILTER_REGEX})
-
-            add_executable(${AUI_MODULE_NAME} ${EXCLUDED_SRCS} ${SRCS})
-            set_target_properties(${AUI_MODULE_NAME} PROPERTIES ENABLE_EXPORTS ON)
-            aui_add_properties(${AUI_MODULE_NAME})
-            aui_common(${AUI_MODULE_NAME})
-
-            add_library(preview.${AUI_MODULE_NAME} SHARED ${PREVIEW_SRCS} ${SRCS})
-            set_property(TARGET preview.${AUI_MODULE_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
-
-            target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
-            target_link_libraries(preview.${AUI_MODULE_NAME} PUBLIC ${AUI_MODULE_NAME})
-            target_link_libraries(preview.${AUI_MODULE_NAME} PUBLIC aui.preview.library)
-            aui_add_properties(preview.${AUI_MODULE_NAME})
-            aui_common(preview.${AUI_MODULE_NAME})
-
-            add_dependencies(aui.preview preview.${AUI_MODULE_NAME})
-        else()
-            add_executable(${AUI_MODULE_NAME} ${ADDITIONAL_SRCS} ${SRCS})
-        endif()
-    endif()
-
-    target_include_directories(${AUI_MODULE_NAME} PRIVATE src)
-
-    aui_add_properties(${AUI_MODULE_NAME})
-
-    aui_common(${AUI_MODULE_NAME})
 
     if (NOT AUI_ONLY_COMPONENT OR AUI_ONLY_COMPONENT STREQUAL ${AUI_MODULE_NAME})
 
@@ -354,6 +299,62 @@ function(aui_executable_advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
             endif()
         ]])
     endif()
+endfunction(aui_common)
+
+
+function(aui_deploy_library AUI_MODULE_NAME)
+    if (TARGET ${AUI_MODULE_NAME})
+        message(STATUS "link_libraries ${AUI_MODULE_NAME}")
+        link_libraries(${AUI_MODULE_NAME})
+    endif()
+    string(TOLOWER ${AUI_MODULE_NAME} AUI_MODULE_NAME_LOWERED)
+    install(CODE "list(APPEND ADDITIONAL_DEPENDENCIES ${CMAKE_SHARED_LIBRARY_PREFIX}${AUI_MODULE_NAME_LOWERED}${CMAKE_SHARED_LIBRARY_SUFFIX})")
+endfunction(aui_deploy_library)
+
+function(aui_executable_advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
+    project(${AUI_MODULE_NAME})
+
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
+    #message("ASSDIR ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp")
+    if(ANDROID)
+        add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
+    else()
+
+        file(GLOB_RECURSE PREVIEW_SRCS preview/*.cpp)
+        if (AUI_BUILD_PREVIEW AND PREVIEW_SRCS)
+            message(STATUS "Added preview target: ${AUI_MODULE_NAME}")
+
+            set(SRCS ${ADDITIONAL_SRCS} ${SRCS})
+            set(FILTER_REGEX "(src/main.cpp$|WIN32)")
+            set(EXCLUDED_SRCS ${SRCS})
+            list(FILTER EXCLUDED_SRCS INCLUDE REGEX ${FILTER_REGEX})
+            list(FILTER SRCS EXCLUDE REGEX ${FILTER_REGEX})
+
+            add_executable(${AUI_MODULE_NAME} ${EXCLUDED_SRCS} ${SRCS})
+            set_target_properties(${AUI_MODULE_NAME} PROPERTIES ENABLE_EXPORTS ON)
+            aui_add_properties(${AUI_MODULE_NAME})
+            aui_common(${AUI_MODULE_NAME})
+
+            add_library(preview.${AUI_MODULE_NAME} SHARED ${PREVIEW_SRCS} ${SRCS})
+            set_property(TARGET preview.${AUI_MODULE_NAME} PROPERTY POSITION_INDEPENDENT_CODE ON)
+
+            target_include_directories(${AUI_MODULE_NAME} PUBLIC src)
+            target_link_libraries(preview.${AUI_MODULE_NAME} PUBLIC ${AUI_MODULE_NAME})
+            target_link_libraries(preview.${AUI_MODULE_NAME} PUBLIC aui.preview.library)
+            aui_add_properties(preview.${AUI_MODULE_NAME})
+            aui_common(preview.${AUI_MODULE_NAME})
+
+            add_dependencies(aui.preview preview.${AUI_MODULE_NAME})
+        else()
+            add_executable(${AUI_MODULE_NAME} ${ADDITIONAL_SRCS} ${SRCS})
+        endif()
+    endif()
+
+    target_include_directories(${AUI_MODULE_NAME} PRIVATE src)
+
+    aui_add_properties(${AUI_MODULE_NAME})
+
+    aui_common(${AUI_MODULE_NAME})
 endfunction(aui_executable_advanced)
 
 function(aui_executable AUI_MODULE_NAME)
