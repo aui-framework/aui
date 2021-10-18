@@ -189,7 +189,7 @@ macro(auib_import AUI_MODULE_NAME URL)
     elseif(APPLE)
         set(LIB_EXT dylib)
     else()
-        set(LIB_EXT so)
+        set(LIB_EXT so*)
     endif()
     file(GLOB_RECURSE DEP_RUNTIME LIST_DIRECTORIES false ${DEP_INSTALL_PREFIX}/*.${LIB_EXT})
 
