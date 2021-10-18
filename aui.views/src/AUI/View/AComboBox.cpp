@@ -36,7 +36,7 @@
 #include <AUI/ASS/ASS.h>
 
 AComboBox::AComboBox(const _<IListModel<AString>>& model):
-    AComboBox()
+        AComboBox()
 {
     setModel(model);
 }
@@ -67,12 +67,13 @@ void AComboBox::updateText() {
 }
 void AComboBox::render() {
     ALabel::render();
-    auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg");
-    auto size = arrow->getSizeHint();
-    auto s = (getHeight() - size.y) / 2;
-    Render::inst().setTransform(
-            glm::translate(glm::mat4(1.f), glm::vec3(getWidth() - s - size.x, s, 0.f)));
-    arrow->draw(size);
+    if (auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg")) {
+        auto size = arrow->getSizeHint();
+        auto s = (getHeight() - size.y) / 2;
+        Render::inst().setTransform(
+                glm::translate(glm::mat4(1.f), glm::vec3(getWidth() - s - size.x, s, 0.f)));
+        arrow->draw(size);
+    }
 }
 
 int AComboBox::getContentMinimumWidth() {
@@ -103,8 +104,8 @@ void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
                         default: return std::nullopt;
                     }
                 },{
-                    (glm::max)(getWidth(), list->getMinimumWidth()),
-                    listHeight
+                        (glm::max)(getWidth(), list->getMinimumWidth()),
+                        listHeight
                 });
         comboWindow->setLayout(_new<AStackedLayout>());
         comboWindow->addView(list);
@@ -117,9 +118,9 @@ void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
         } else {
             // when list floats up from above, we should apply both position and size animations
             list->setAnimator(AAnimator::combine({
-                _new<ATranslationAnimator>(glm::ivec2(0, listHeight)) let { it->setDuration(0.15f); },
-                _new<ASizeAnimator>(glm::ivec2{list->getWidth(), 0}) let { it->setDuration(0.15f); }
-            }));
+                                                         _new<ATranslationAnimator>(glm::ivec2(0, listHeight)) let { it->setDuration(0.15f); },
+                                                         _new<ASizeAnimator>(glm::ivec2{list->getWidth(), 0}) let { it->setDuration(0.15f); }
+                                                 }));
         }
         connect(list->selectionChanged, this, [&](const AModelSelection<AString>& s) {
             if (!s.getIndices().empty()) {
