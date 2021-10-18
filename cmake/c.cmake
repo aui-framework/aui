@@ -54,7 +54,22 @@ foreach(_module ${AUI_FIND_COMPONENTS})
         set(_module_dir "${SELF_DIR}/aui.${_module}")
         if (EXISTS ${_module_dir})
             set(AUI_${_module}_FOUND TRUE)
-            find_library(AUI_${_module}_LIBRARY "aui.${_module}" PATHS "${SELF_DIR}/aui.${_module}/lib" NO_DEFAULT_PATH NO_CACHE)
+            if (WIN32)
+                find_file(AUI_${_module}_LIBRARY
+                          NAMES "aui.${_module}.dll" "libaui.${_module}.dll"
+                          PATHS "${SELF_DIR}/aui.${_module}/bin"
+                          NO_DEFAULT_PATH
+                          NO_CACHE)
+                find_library(AUI_${_module}_IMPLIBRARY "aui.${_module}"
+                             PATHS "${SELF_DIR}/aui.${_module}/lib"
+                             NO_DEFAULT_PATH
+                             NO_CACHE)
+            else()
+                find_library(AUI_${_module}_LIBRARY "aui.${_module}"
+                             PATHS "${SELF_DIR}/aui.${_module}/lib"
+                             NO_DEFAULT_PATH
+                             NO_CACHE)
+            endif()
             set(_lib ${AUI_${_module}_LIBRARY})
             set(_include ${SELF_DIR}/aui.${_module}/include)
             if (_lib AND EXISTS ${_include})
@@ -65,7 +80,7 @@ foreach(_module ${AUI_FIND_COMPONENTS})
                 target_link_libraries(${_module_target_name} INTERFACE ${AUI_COMPONENT_${_module}_LINK_LIBS})
                 set_target_properties(${_module_target_name} PROPERTIES
                         IMPORTED_LOCATION "${_lib}"
-                        IMPORTED_IMPLIB "${_lib}"
+                        IMPORTED_IMPLIB "${AUI_${_module}_IMPLIBRARY}"
                         INTERFACE_INCLUDE_DIRECTORIES "${_include}"
                         INTERFACE_COMPILE_DEFINITIONS ${AUI_COMPONENT_${_module}_COMPILE_DEFINITIONS})
                 continue()
