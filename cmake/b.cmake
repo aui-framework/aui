@@ -153,6 +153,16 @@ function(aui_common AUI_MODULE_NAME)
         target_link_libraries(${AUI_MODULE_NAME} PRIVATE -static-libgcc -static-libstdc++)
     endif()
 
+    # add aui.boot folders to GET_RUNTIME_DEPENDENCIES' paths
+    get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
+    unset(DEP_DIRS)
+    foreach(_entry ${AUI_BOOT_ROOT_ENTRIES})
+        string(REPLACE "=" ";" _entry ${_entry})
+        list(GET _entry 1 VAR_VALUE)
+        list(APPEND DEP_DIRS ${VAR_VALUE})
+    endforeach()
+
+    install(CODE "set(AUI_RUNTIME_DEP_DIRS \"${DEP_DIRS}\")")
     install(CODE "set(AUI_MODULE_NAME \"${AUI_MODULE_NAME}\")")
     install(CODE "set(AUI_MODULE_PATH \"$<TARGET_FILE:${AUI_MODULE_NAME}>\")")
     install(CODE "set(CMAKE_INSTALL_PATH \"${CMAKE_INSTALL_PATH}\")")
@@ -196,16 +206,34 @@ function(aui_common AUI_MODULE_NAME)
                     return()
                 endif()
 
-                set(EXCLUDE_REGEX "^([Cc]:[\\/\\][Ww][Ii][Nn][Dd][Oo][Ww][Ss][\\/\\]|\\/(usr|lib)).*$")
+                set(EXCLUDE_REGEX "^([Cc]:[\\/\\][Ww][Ii][Nn][Dd][Oo][Ww][Ss][\\/\\]).*$")
 
                 file(GET_RUNTIME_DEPENDENCIES
                      EXECUTABLES
                          ${MODULE_NAME}
+                     LIBRARIES
+                         ${MODULE_NAME}
+                     DIRECTORIES
+                        ${AUI_RUNTIME_DEP_DIRS}
+                     CONFLICTING_DEPENDENCIES_PREFIX CONFLICTING
                      PRE_EXCLUDE_REGEXES ${EXCLUDE_REGEX}
                      POST_EXCLUDE_REGEXES ${EXCLUDE_REGEX}
                      UNRESOLVED_DEPENDENCIES_VAR UNRESOLVED
                      RESOLVED_DEPENDENCIES_VAR RESOLVED
                 )
+
+                # prefer libraries built by aui.boot over system
+                foreach(_entry ${RESOLVED})
+                    if (_entry MATCHES "^\\/(usr|lib).*\\.so.*")
+                        get_filename_component(_filename ${_entry} NAME)
+                        list(REMOVE_ITEM RESOLVED ${_entry})
+                        if (NOT _filename MATCHES "(ld-linux.*|libm|libc)\\.so.*")
+                            list(APPEND UNRESOLVED ${_filename})
+                        endif()
+                    endif()
+                endforeach()
+
+                message("install_dependencies_for ${MODULE_NAME} ${UNRESOLVED} ${RESOLVED}")
 
                 if ("${MODULE_NAME}" STREQUAL "${AUI_MODULE_PATH}")
                     # put additional dependencies
@@ -285,6 +313,7 @@ function(aui_common AUI_MODULE_NAME)
             if (RESOLVED_LENGTH EQUAL 0)
                 message(WARNING "Count of dependencies of ${AUI_MODULE_NAME} equals to zero which means that "
                                 "something gone wrong in dependency copy script.")
+
             endif()
 
             list(LENGTH G_UNRESOLVED UNRESOLVED_LENGTH)
