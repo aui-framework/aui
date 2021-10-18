@@ -46,7 +46,7 @@ if (OPENGL_FOUND)
 		target_link_libraries(aui.views PRIVATE OpenGL::GL)
 
 		if (FREETYPE_FOUND)
-			target_link_libraries(aui.views PRIVATE Freetype::Freetype)
+			target_link_libraries(aui.views PUBLIC Freetype::Freetype)
 		else()
 			target_link_libraries(aui.views PRIVATE freetype)
 		endif()
