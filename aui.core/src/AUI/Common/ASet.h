@@ -93,19 +93,3 @@ public:
 	}
 };
 
-namespace std
-{
-	template<typename T>
-	struct hash<ASet<T>>
-	{
-		size_t operator()(const ASet<T>& t) const
-		{
-			size_t totalHash = 1298511242;
-			for (auto i = t.begin(); i != t.end(); ++i)
-			{
-				totalHash ^= hash<T>()(*i);
-			}
-			return totalHash;
-		}
-	};
-}
