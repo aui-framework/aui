@@ -21,6 +21,7 @@
 
 # rpath fix on linux
 set(CMAKE_BUILD_RPATH ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_INSTALL_RPATH ${CMAKE_BINARY_DIR}/lib)
 
 define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
         BRIEF_DOCS "Global list of aui boot root entries"
