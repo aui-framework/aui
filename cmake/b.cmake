@@ -163,142 +163,145 @@ function(aui_common AUI_MODULE_NAME)
             message(STATUS "Installing ${AUI_MODULE_NAME}")
     ]])
 
-
-    if (NOT AUI_ONLY_COMPONENT OR AUI_ONLY_COMPONENT STREQUAL ${AUI_MODULE_NAME})
-
-        # strip
-        if (CMAKE_BUILD_TYPE EQUAL "Release")
-            install(CODE [[
-                set(CMAKE_INSTALL_DO_STRIP TRUE)
-            ]])
-        endif()
-
-        if (WIN32)
-            if (MINGW AND CMAKE_CROSSCOMPILING)
-                # workaround for crosscompiling on linux/mingw for windows
-                # thanks to this thread https://gitlab.kitware.com/cmake/cmake/-/issues/20753
-                install(CODE [[
-                    set(CMAKE_GET_RUNTIME_DEPENDENCIES_PLATFORM "windows+pe")
-                    set(CMAKE_GET_RUNTIME_DEPENDENCIES_TOOL "objdump")
-                    set(CMAKE_GET_RUNTIME_DEPENDENCIES_COMMAND "./objdump_unix2dos.sh")
-                    if (NOT EXISTS "objdump_unix2dos.sh")
-                        file(WRITE "objdump_unix2dos.sh" "${CMAKE_OBJDUMP} $@ | unix2dos")
-                        cmake_minimum_required(VERSION 3.19)
-                        file(CHMOD "objdump_unix2dos.sh" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_WRITE WORLD_EXECUTE)
-                    endif()
-                ]])
-            endif()
-            install(CODE [[
-                if (EXISTS ${AUI_MODULE_PATH})
-                    set_property(GLOBAL PROPERTY AUI_RESOLVED "")
-                    set_property(GLOBAL PROPERTY AUI_UNRESOLVED "")
-
-                    message(STATUS "Installing dependencies for ${AUI_MODULE_NAME}")
-
-                    function(install_dependencies_for MODULE_NAME)
-                        if(${MODULE_NAME} STREQUAL "installer")
-                            return()
-                        endif()
-                        file(GET_RUNTIME_DEPENDENCIES
-                             EXECUTABLES
-                                 ${MODULE_NAME}
-                             PRE_EXCLUDE_REGEXES "^[Cc]:[\\/\\][Ww][Ii][Nn][Dd][Oo][Ww][Ss][\\/\\].*$"
-                             POST_EXCLUDE_REGEXES "^[Cc]:[\\/\\][Ww][Ii][Nn][Dd][Oo][Ww][Ss][\\/\\].*$"
-                             UNRESOLVED_DEPENDENCIES_VAR UNRESOLVED
-                             RESOLVED_DEPENDENCIES_VAR RESOLVED
-                        )
-
-                        if ("${MODULE_NAME}" STREQUAL "${AUI_MODULE_PATH}")
-                            # put additional dependencies
-                            foreach (V ${ADDITIONAL_DEPENDENCIES})
-                                list(APPEND UNRESOLVED ${V})
-                            endforeach()
-                        endif()
-
-                        foreach (V ${RESOLVED})
-                            message("Resolved[1]: ${V}")
-                        endforeach()
-                        # try to resolve unresolved dependencies
-                        foreach (V ${UNRESOLVED})
-                            # avoid duplicates
-                            get_property(_tmp GLOBAL PROPERTY AUI_RESOLVED)
-                            list (FIND _tmp ${V} _index)
-                            if (${_index} EQUAL -1)
-                                if (V MATCHES "^((shell|user|kernel|advapi|ws2_|crypt|wldap|gdi|ole|opengl)32|winmm|dwmapi|msvcrt)\\.dll")
-                                    list(REMOVE_ITEM UNRESOLVED ${V})
-                                else()
-                                    # clear cache entry
-                                    unset(TARGET_FILE CACHE)
-                                    find_file(
-                                        TARGET_FILE
-                                            "${V}"
-                                        HINTS
-                                            "${COMPILER_DIR}"
-                                        PATH_SUFFIXES
-                                            "bin/"
-                                            "lib/"
-                                    )
-                                    if (EXISTS ${TARGET_FILE})
-                                        # add to global resolved items
-                                        list(APPEND RESOLVED ${TARGET_FILE})
-                                        message("Resolved[2]: ${TARGET_FILE}")
-                                        list(REMOVE_ITEM UNRESOLVED ${V})
-                                    else()
-                                        # add to global unresolved items
-                                        # avoid duplicates
-                                        get_property(_tmp GLOBAL PROPERTY AUI_UNRESOLVED)
-                                        list (FIND _tmp ${V} _index)
-                                        if (${_index} EQUAL -1)
-                                            list(APPEND _tmp ${V})
-                                            set_property(GLOBAL PROPERTY AUI_UNRESOLVED ${_tmp})
-                                        endif()
-                                    endif()
-                                endif()
-                            endif()
-                        endforeach()
-                        get_property(_tmp GLOBAL PROPERTY AUI_RESOLVED)
-                        foreach (V ${RESOLVED})
-                            list (FIND _tmp ${V} _index)
-                            if (${_index} EQUAL -1)
-                                list(APPEND _tmp ${V})
-                                set_property(GLOBAL PROPERTY AUI_RESOLVED ${_tmp})
-                                file(INSTALL
-                                     FILES ${V}
-                                     TYPE SHARED_LIBRARY
-                                     FOLLOW_SYMLINK_CHAIN
-                                     DESTINATION "${CMAKE_INSTALL_PREFIX}/bin"
-                                )
-                                install_dependencies_for(${V})
-                                get_property(_tmp GLOBAL PROPERTY AUI_RESOLVED)
-                            endif()
-                        endforeach()
-                    endfunction()
-                    install_dependencies_for(${AUI_MODULE_PATH})
-                    get_property(G_RESOLVED GLOBAL PROPERTY AUI_RESOLVED)
-                    get_property(G_UNRESOLVED GLOBAL PROPERTY AUI_UNRESOLVED)
-                    list(LENGTH G_RESOLVED RESOLVED_LENGTH)
-                    if (RESOLVED_LENGTH EQUAL 0)
-                        message(WARNING "Count of dependencies of ${AUI_MODULE_NAME} equals to zero which means that "
-                                        "something gone wrong in dependency copy script.")
-                    endif()
-
-                    list(LENGTH G_UNRESOLVED UNRESOLVED_LENGTH)
-                    if (UNRESOLVED_LENGTH GREATER 0)
-                        message("There are some unresolved libraries:")
-                        foreach (V ${G_UNRESOLVED})
-                            message("UNRESOLVED ${V}")
-                        endforeach()
-                    endif()
-                endif()
-            ]])
-        endif()
-
+    # strip
+    if (CMAKE_BUILD_TYPE EQUAL "Release")
         install(CODE [[
-            if (EXISTS ${AUI_MODULE_PATH})
-                file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES ${AUI_MODULE_PATH})
+            set(CMAKE_INSTALL_DO_STRIP TRUE)
+        ]])
+    endif()
+
+    if (MINGW AND CMAKE_CROSSCOMPILING)
+        # workaround for crosscompiling on linux/mingw for windows
+        # thanks to this thread https://gitlab.kitware.com/cmake/cmake/-/issues/20753
+        install(CODE [[
+            set(CMAKE_GET_RUNTIME_DEPENDENCIES_PLATFORM "windows+pe")
+            set(CMAKE_GET_RUNTIME_DEPENDENCIES_TOOL "objdump")
+            set(CMAKE_GET_RUNTIME_DEPENDENCIES_COMMAND "./objdump_unix2dos.sh")
+            if (NOT EXISTS "objdump_unix2dos.sh")
+                file(WRITE "objdump_unix2dos.sh" "${CMAKE_OBJDUMP} $@ | unix2dos")
+                cmake_minimum_required(VERSION 3.19)
+                file(CHMOD "objdump_unix2dos.sh" PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_WRITE GROUP_EXECUTE WORLD_READ WORLD_WRITE WORLD_EXECUTE)
             endif()
         ]])
     endif()
+    install(CODE [[
+        if (EXISTS ${AUI_MODULE_PATH})
+            set_property(GLOBAL PROPERTY AUI_RESOLVED "")
+            set_property(GLOBAL PROPERTY AUI_UNRESOLVED "")
+
+            message(STATUS "Installing dependencies for ${AUI_MODULE_NAME}")
+
+            function(install_dependencies_for MODULE_NAME)
+                if(${MODULE_NAME} STREQUAL "installer")
+                    return()
+                endif()
+
+                set(EXCLUDE_REGEX "^([Cc]:[\\/\\][Ww][Ii][Nn][Dd][Oo][Ww][Ss][\\/\\]|\\/(usr|lib)).*$")
+
+                file(GET_RUNTIME_DEPENDENCIES
+                     EXECUTABLES
+                         ${MODULE_NAME}
+                     PRE_EXCLUDE_REGEXES ${EXCLUDE_REGEX}
+                     POST_EXCLUDE_REGEXES ${EXCLUDE_REGEX}
+                     UNRESOLVED_DEPENDENCIES_VAR UNRESOLVED
+                     RESOLVED_DEPENDENCIES_VAR RESOLVED
+                )
+
+                if ("${MODULE_NAME}" STREQUAL "${AUI_MODULE_PATH}")
+                    # put additional dependencies
+                    foreach (V ${ADDITIONAL_DEPENDENCIES})
+                        list(APPEND UNRESOLVED ${V})
+                    endforeach()
+                endif()
+
+                foreach (V ${RESOLVED})
+                    message("Resolved[1]: ${V}")
+                endforeach()
+                # try to resolve unresolved dependencies
+                foreach (V ${UNRESOLVED})
+                    # avoid duplicates
+                    get_property(_tmp GLOBAL PROPERTY AUI_RESOLVED)
+                    list (FIND _tmp ${V} _index)
+                    if (${_index} EQUAL -1)
+                        if (V MATCHES "^((shell|user|kernel|advapi|ws2_|crypt|wldap|gdi|ole|opengl)32|winmm|dwmapi|msvcrt)\\.dll")
+                            list(REMOVE_ITEM UNRESOLVED ${V})
+                        else()
+                            # clear cache entry
+                            unset(TARGET_FILE CACHE)
+                            find_file(
+                                TARGET_FILE
+                                    "${V}"
+                                HINTS
+                                    "${COMPILER_DIR}"
+                                PATH_SUFFIXES
+                                    "bin/"
+                                    "lib/"
+                            )
+                            if (EXISTS ${TARGET_FILE})
+                                # add to global resolved items
+                                list(APPEND RESOLVED ${TARGET_FILE})
+                                message("Resolved[2]: ${TARGET_FILE}")
+                                list(REMOVE_ITEM UNRESOLVED ${V})
+                            else()
+                                # add to global unresolved items
+                                # avoid duplicates
+                                get_property(_tmp GLOBAL PROPERTY AUI_UNRESOLVED)
+                                list (FIND _tmp ${V} _index)
+                                if (${_index} EQUAL -1)
+                                    list(APPEND _tmp ${V})
+                                    set_property(GLOBAL PROPERTY AUI_UNRESOLVED ${_tmp})
+                                endif()
+                            endif()
+                        endif()
+                    endif()
+                endforeach()
+                get_property(_tmp GLOBAL PROPERTY AUI_RESOLVED)
+                if (WIN32)
+                    set(LIB_DIR "bin")
+                else()
+                    set(LIB_DIR "lib")
+                endif()
+                foreach (V ${RESOLVED})
+                    list (FIND _tmp ${V} _index)
+                    if (${_index} EQUAL -1)
+                        list(APPEND _tmp ${V})
+                        set_property(GLOBAL PROPERTY AUI_RESOLVED ${_tmp})
+
+                        file(INSTALL
+                             FILES ${V}
+                             TYPE SHARED_LIBRARY
+                             FOLLOW_SYMLINK_CHAIN
+                             DESTINATION "${CMAKE_INSTALL_PREFIX}/${LIB_DIR}"
+                        )
+                        install_dependencies_for(${V})
+                        get_property(_tmp GLOBAL PROPERTY AUI_RESOLVED)
+                    endif()
+                endforeach()
+            endfunction()
+            install_dependencies_for(${AUI_MODULE_PATH})
+            get_property(G_RESOLVED GLOBAL PROPERTY AUI_RESOLVED)
+            get_property(G_UNRESOLVED GLOBAL PROPERTY AUI_UNRESOLVED)
+            list(LENGTH G_RESOLVED RESOLVED_LENGTH)
+            if (RESOLVED_LENGTH EQUAL 0)
+                message(WARNING "Count of dependencies of ${AUI_MODULE_NAME} equals to zero which means that "
+                                "something gone wrong in dependency copy script.")
+            endif()
+
+            list(LENGTH G_UNRESOLVED UNRESOLVED_LENGTH)
+            if (UNRESOLVED_LENGTH GREATER 0)
+                message("There are some unresolved libraries:")
+                foreach (V ${G_UNRESOLVED})
+                    message("UNRESOLVED ${V}")
+                endforeach()
+            endif()
+        endif()
+    ]])
+
+    install(CODE [[
+        if (EXISTS ${AUI_MODULE_PATH})
+            file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/bin" TYPE EXECUTABLE FILES ${AUI_MODULE_PATH})
+        endif()
+    ]])
 endfunction(aui_common)
 
 
