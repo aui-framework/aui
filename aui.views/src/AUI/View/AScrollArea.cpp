@@ -107,7 +107,7 @@ int AScrollArea::getContentMinimumHeight() {
     return 30;
 }
 
-const _<AViewContainer>& AScrollArea::getContentContainer() const {
+_<AViewContainer> AScrollArea::getContentContainer() const {
     return mContentContainer;
 }
 

@@ -72,8 +72,6 @@ define_aui_component(network)
 define_aui_component(xml)
 
 define_aui_component(views)
-define_aui_component(svg)
-define_aui_component(image)
 
 if(NOT ANDROID AND AUI_BUILD_EXAMPLES)
 	add_subdirectory(examples/AUI.Example.Views)

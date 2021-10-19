@@ -24,7 +24,7 @@ if (OPENGL_FOUND)
 	endif()
 
 	aui_module(aui.views)
-
+	target_include_directories(aui.views PRIVATE 3rdparty)
 	aui_compile_assets(aui.views)
 
 	if(NOT ANDROID)

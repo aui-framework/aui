@@ -59,27 +59,24 @@ BOOL WINAPI DllMain(
 
 #endif
 
-#include "AUI/Common/Plugin.h"
-#include "AUI/Util/BuiltinFiles.h"
-#include <AUI/Logging/ALogger.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+#include "AUI/Common/Plugin.h"
+#include <AUI/Logging/ALogger.h>
+#include <AUI/Image/JpgImageLoader.h>
+#include <AUI/Image/PngImageLoader.h>
+#include <AUI/Image/AImageLoaderRegistry.h>
+#include <AUI/Image/SvgImageLoader.h>
 
 
 struct initialize
 {
     initialize() {
-#ifndef ANDROID
-        try {
-            aui::importPlugin("svg");
-        } catch (const AException& e) {
-            ALogger::warn("Could not load Svg plugin:" + e.getMessage());
-        }
-        try {
-            aui::importPlugin("image");
-        } catch (const AException& e) {
-            ALogger::warn("Could not load Image plugin:" + e.getMessage());
-        }
-#endif
+        AImageLoaderRegistry::inst().registerImageLoader(_new<SvgImageLoader>());
+        AImageLoaderRegistry::inst().registerImageLoader(_new<PngImageLoader>());
+        AImageLoaderRegistry::inst().registerImageLoader(_new<JpgImageLoader>());
+
 #ifdef _WIN32
 #ifndef AUI_DISABLE_HIDPI
         typedef BOOL(WINAPI *SetProcessDpiAwarenessContext_t)(HANDLE);
