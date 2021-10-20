@@ -7,11 +7,11 @@ if (OPENGL_FOUND)
 	auib_import(Freetype https://github.com/freetype/freetype
 			    VERSION "VER-2-10-4"
 				CMAKE_ARGS "-DBUILD_SHARED_LIBS=true")
-	auib_import(GLEW https://github.com/Alex2772/glew-cmake
-				CMAKE_WORKING_DIR "build/cmake")
-
 
 	if(NOT ANDROID)
+		auib_import(GLEW https://github.com/Alex2772/glew-cmake
+				CMAKE_WORKING_DIR "build/cmake")
+
 		if (NOT WIN32)
 			FIND_PACKAGE(PkgConfig REQUIRED)
 			PKG_CHECK_MODULES(GTK3 gtk+-3.0)
@@ -37,13 +37,14 @@ if (OPENGL_FOUND)
 
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
 
-	target_link_libraries(aui.views PUBLIC aui.core GLEW::GLEW)
+	target_link_libraries(aui.views PUBLIC aui.core)
 
 	if(ANDROID)
 		target_link_libraries(aui.views PRIVATE EGL GLESv2 GLESv3)
 		target_link_libraries(aui.views PRIVATE freetype)
 	else()
 		target_link_libraries(aui.views PRIVATE OpenGL::GL)
+		target_link_libraries(aui.views PUBLIC GLEW::GLEW)
 
 		if (FREETYPE_FOUND)
 			target_link_libraries(aui.views PRIVATE Freetype::Freetype)
