@@ -401,16 +401,20 @@ function(aui_compile_assets AUI_MODULE_NAME)
     get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
     file(GLOB_RECURSE ASSETS RELATIVE ${SELF_DIR} "assets/*")
 
-    if (TARGET aui.toolbox AND NOT CMAKE_CROSSCOMPILING)
-        set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox>)
-    else()
-        #        find_program(AUI_TOOLBOX_EXE aui.toolbox
-        #                HINTS ${AUI_DIR}/bin
-        #                REQUIRED)
-        set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox)
+    if (NOT AUI_TOOLBOX_EXE)
+        if (CMAKE_CROSSCOMPILING)
+            # the worst case because we (possibly) have to compile aui.toolbox for the host system
+            # FIXME assume that aui.toolbox is already built for our system
+            find_program(AUI_TOOLBOX_EXE aui.toolbox
+                         HINTS ${AUI_DIR}/bin
+                         REQUIRED)
+        elseif (TARGET aui.toolbox)
+            set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox")
+        else()
+            set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox")
+        endif()
         message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
     endif()
-
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})
         set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
