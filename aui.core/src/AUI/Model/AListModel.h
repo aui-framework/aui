@@ -109,7 +109,12 @@ namespace aui::detail {
          */
         template<typename V>
         static _<AListModel<StoredType>> make(const std::initializer_list<V>& t) {
-            return _new<AListModel<StoredType>>(t.begin(), t.end());
+            auto list = _new<AListModel<StoredType>>();
+            list->reserve(t.size());
+            for (auto& item : t) {
+                list->push_back(item);
+            }
+            return list;
         }
     };
 }
