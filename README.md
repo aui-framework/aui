@@ -7,6 +7,17 @@ using modern C++17.
 
 [Download](https://github.com/Alex2772/aui/releases/) | [Documentation](docs/MANUAL.md)
 
+Quickstart
+```cmake
+file(DOWNLOAD
+        https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+auib_import(AUI https://github.com/aui-framework/aui
+            COMPONENTS core views)
+
+```
+
 ## Key features
 - Extended common types (containers, strings, streams, etc...)
 - Graphical User Interfaces, including framework tools for fast declarative UI producing using modern C++ capabilities
