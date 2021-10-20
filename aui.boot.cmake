@@ -41,19 +41,22 @@ if (NOT CMAKE_CXX_COMPILER_ID)
     message(FATAL_ERROR "Please include aui.boot AFTER project() call.")
 endif()
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
-    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-        set(AUI_TARGET_PROCESSOR_NAME "x86_64")
-    elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-        set(AUI_TARGET_PROCESSOR_NAME "x86")
-    endif()
-else ()
-    set(AUI_TARGET_PROCESSOR_NAME ${CMAKE_SYSTEM_PROCESSOR})
-endif ()
-
+if (ANDROID_ABI)
+    set(AUI_TARGET_ARCH_NAME "android_${ANDROID_ABI}")
+else()
+    if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
+        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+            set(AUI_TARGET_ARCH_NAME "x86_64")
+        elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+            set(AUI_TARGET_ARCH_NAME "x86")
+        endif()
+    else ()
+        set(AUI_TARGET_ARCH_NAME ${CMAKE_SYSTEM_PROCESSOR})
+    endif ()
+endif()
 
 set(AUI_CACHE_DIR ${HOME_DIR}/.aui CACHE PATH "Path to AUI.Boot cache")
-string(TOLOWER "${CMAKE_CXX_COMPILER_ID}-${AUI_TARGET_PROCESSOR_NAME}" _tmp)
+string(TOLOWER "${CMAKE_CXX_COMPILER_ID}-${AUI_TARGET_ARCH_NAME}" _tmp)
 set(AUI_TARGET_ABI "${_tmp}" CACHE STRING "COMPILER-PROCESSOR pair")
 message(STATUS "AUI.Boot cache: ${AUI_CACHE_DIR}")
 message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_ABI}")
@@ -152,7 +155,7 @@ macro(auib_import AUI_MODULE_NAME URL)
         foreach (_entry ${AUI_BOOT_ROOT_ENTRIES})
             list(APPEND FORWARDED_LIBS "-D${_entry}")
         endforeach()
-        set(FINAL_CMAKE_ARGS -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        set(FINAL_CMAKE_ARGS
                 -DAUI_BOOT=TRUE
                 ${FORWARDED_LIBS}
                 ${AUIB_IMPORT_CMAKE_ARGS}
@@ -165,6 +168,26 @@ macro(auib_import AUI_MODULE_NAME URL)
                     ${FINAL_CMAKE_ARGS}
                     -DAUI_BOOT_COMPONENTS=${TMP_LIST})
         endif()
+
+        # forward all necessary variables to child cmake build
+        foreach(_varname CMAKE_SYSTEM_NAME
+                         CMAKE_EXPORT_COMPILE_COMMANDS
+                         CMAKE_SYSTEM_VERSION
+                         ANDROID_PLATFORM
+                         ANDROID_ABI
+                         CMAKE_ANDROID_ARCH_ABI
+                         ANDROID_NDK
+                         CMAKE_ANDROID_NDK
+                         CMAKE_TOOLCHAIN_FILE
+                         CMAKE_MAKE_PROGRAM
+                         CMAKE_LIBRARY_OUTPUT_DIRECTORY
+                         CMAKE_RUNTIME_OUTPUT_DIRECTORY
+                         CMAKE_BUILD_TYPE)
+            if (${_varname})
+                list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
+            endif()
+        endforeach()
+
         message("Building and installing ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
         execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                 WORKING_DIRECTORY "${DEP_BINARY_DIR}"
