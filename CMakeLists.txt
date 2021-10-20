@@ -24,7 +24,7 @@ project(AUI)
 if(AUI_BOOT_COMPONENTS)
 	# adding required dependencies to the components
 	list(APPEND AUI_BOOT_COMPONENTS core)
-	if (views IN_LIST AUI_BOOT_COMPONENTS)
+	if (views IN_LIST AUI_BOOT_COMPONENTS AND NOT CMAKE_CROSSCOMPILING)
 		list(APPEND AUI_BOOT_COMPONENTS crypt toolbox)
 	endif()
 endif()
