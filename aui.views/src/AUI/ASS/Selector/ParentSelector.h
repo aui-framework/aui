@@ -26,6 +26,7 @@
 #pragma once
 
 #include "AAssSelector.h"
+#include <AUI/View/AViewContainer.h>
 
 namespace ass {
     template <typename L, typename R>
