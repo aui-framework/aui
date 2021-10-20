@@ -157,6 +157,7 @@ macro(auib_import AUI_MODULE_NAME URL)
         endforeach()
         set(FINAL_CMAKE_ARGS
                 -DAUI_BOOT=TRUE
+                -DCMAKE_CROSSCOMPILING=${CMAKE_CROSSCOMPILING}
                 ${FORWARDED_LIBS}
                 ${AUIB_IMPORT_CMAKE_ARGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
@@ -180,8 +181,6 @@ macro(auib_import AUI_MODULE_NAME URL)
                          CMAKE_ANDROID_NDK
                          CMAKE_TOOLCHAIN_FILE
                          CMAKE_MAKE_PROGRAM
-                         CMAKE_LIBRARY_OUTPUT_DIRECTORY
-                         CMAKE_RUNTIME_OUTPUT_DIRECTORY
                          CMAKE_BUILD_TYPE)
             if (${_varname})
                 list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
