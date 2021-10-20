@@ -23,18 +23,18 @@
 #include <AUI/Thread/IEventLoop.h>
 
 #ifdef __linux
-
+#ifndef __ANDROID__
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysymdef.h>
-
+#endif
 #endif
 
 class AWindow;
 
 class API_AUI_VIEWS AWindowManager: public IEventLoop {
-friend class AWindow;
-friend class AClipboard;
+    friend class AWindow;
+    friend class AClipboard;
 private:
     IEventLoop::Handle mHandle;
     ADeque<_<AWindow>> mWindows;
