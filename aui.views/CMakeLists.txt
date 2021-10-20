@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 find_package(OpenGL)
 
-if (OPENGL_FOUND)
+if (OPENGL_FOUND OR ANDROID)
 
 	auib_import(Freetype https://github.com/freetype/freetype
 			    VERSION "VER-2-10-4"
@@ -38,19 +38,14 @@ if (OPENGL_FOUND)
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
 
 	target_link_libraries(aui.views PUBLIC aui.core)
+	target_link_libraries(aui.views PRIVATE Freetype::Freetype)
 
 	if(ANDROID)
 		target_link_libraries(aui.views PRIVATE EGL GLESv2 GLESv3)
-		target_link_libraries(aui.views PRIVATE freetype)
 	else()
 		target_link_libraries(aui.views PRIVATE OpenGL::GL)
 		target_link_libraries(aui.views PUBLIC GLEW::GLEW)
 
-		if (FREETYPE_FOUND)
-			target_link_libraries(aui.views PRIVATE Freetype::Freetype)
-		else()
-			target_link_libraries(aui.views PRIVATE freetype)
-		endif()
 		if(WIN32)
 			target_link_libraries(aui.views PRIVATE dwmapi)
 			target_link_libraries(aui.views PRIVATE winmm)
