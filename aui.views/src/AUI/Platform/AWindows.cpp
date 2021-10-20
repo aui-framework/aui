@@ -58,7 +58,6 @@ AWindow::Context AWindow::context = {};
 #include <AUI/Util/AError.h>
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
-#include <AUI/Util/UIBuildingHelpers.h>
 
 struct painter {
 private:
@@ -326,7 +325,6 @@ public:
 #else
 
 #include <X11/extensions/sync.h>
-#include <AUI/Util/UIBuildingHelpers.h>
 
 Display* gDisplay = nullptr;
 Screen* gScreen;
@@ -420,6 +418,7 @@ public:
 
 #endif
 
+#include <AUI/Util/UIBuildingHelpers.h>
 
 thread_local bool painter::painting = false;
 
@@ -969,6 +968,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
                          SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
         }
     }
+#elif defined(__ANDROID__)
 #else
     if (!!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS))) {
         // note the struct is declared elsewhere, is here just for clarity.
@@ -1023,6 +1023,7 @@ void AWindow::updateDpi() {
 void AWindow::restore() {
 #if defined(_WIN32)
     ShowWindow(mHandle, SW_RESTORE);
+#elif defined(__ANDROID__)
 #else
     if (gAtoms.netWmState &&
         gAtoms.netWmStateMaximizedVert &&
@@ -1049,6 +1050,9 @@ void AWindow::minimize() {
 bool AWindow::isMinimized() const {
 #ifdef _WIN32
     return IsIconic(mHandle);
+
+#elif defined(__ANDROID__)
+    return false;
 #else
     int result = WithdrawnState;
     struct {
@@ -1072,6 +1076,9 @@ bool AWindow::isMinimized() const {
 bool AWindow::isMaximized() const {
 #ifdef _WIN32
     return IsZoomed(mHandle);
+
+#elif defined(__ANDROID__)
+    return true;
 #else
     Atom* states;
     unsigned long i;
@@ -1106,6 +1113,8 @@ bool AWindow::isMaximized() const {
 void AWindow::maximize() {
 #ifdef _WIN32
     ShowWindow(mHandle, SW_MAXIMIZE);
+
+#elif defined(__ANDROID__)
 #else
     // https://github.com/glfw/glfw/blob/master/src/x11_window.c#L2355
 
@@ -1174,6 +1183,7 @@ glm::ivec2 AWindow::getWindowPosition() const {
     return {r.left, r.top};
 
 #elif defined(ANDROID)
+    return {0, 0};
 #else
     int x, y;
     Window child;
@@ -1274,7 +1284,8 @@ void AWindow::onCloseButtonClicked() {
 void AWindow::setSize(int width, int height) {
     setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
 
-#ifdef __linux__
+#if defined(__ANDROID__)
+#else
     if (!!(mWindowStyle & WindowStyle::NO_RESIZE)) {
         // we should set min size and max size the same as current size
         XSizeHints* sizehints = XAllocSizeHints();
@@ -1401,6 +1412,8 @@ void AWindow::setIcon(const AImage& image) {
 void AWindow::hide() {
 #ifdef _WIN32
     ShowWindow(mHandle, SW_HIDE);
+
+#elif defined(__ANDROID__)
 #else
     XUnmapWindow(gDisplay, mHandle);
 #endif
@@ -1413,7 +1426,8 @@ _<AView> AWindow::determineSharedPointer() {
 
 // HELPER FUNCTIONS FOR XLIB
 
-#ifdef __linux
+#if defined(__ANDROID__)
+#elif defined(__linux)
 
 unsigned long AWindow::xGetWindowProperty(Atom property, Atom type, unsigned char** value) const {
     Atom actualType;
@@ -1523,7 +1537,8 @@ void AWindowManager::loop() {
 #endif
 }
 
-#ifdef __linux
+#if defined(__ANDROID__)
+#elif defined(__linux)
 void AWindowManager::xProcessEvent(XEvent& ev) {
     struct NotFound {};
     auto locateWindow = [&](Window xWindow) -> _<AWindow> {

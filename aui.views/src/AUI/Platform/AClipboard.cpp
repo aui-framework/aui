@@ -78,6 +78,22 @@ bool AClipboard::isEmpty() {
     return true;
 }
 
+#elif defined(__ANDROID__)
+
+void AClipboard::copyToClipboard(const AString &text) {
+    // stub
+}
+
+bool AClipboard::isEmpty() {
+    // stub
+    return false;
+}
+
+AString AClipboard::pasteFromClipboard() {
+    // stub
+    return AString();
+}
+
 #else
 
 bool AClipboard::isEmpty() {

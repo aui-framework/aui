@@ -55,8 +55,10 @@ public:
 
 AEmbedAuiWrap::AEmbedAuiWrap()
 {
+#ifndef __ANDROID__
     auto r = glewInit();
     assert(r == 0);
+#endif
     mContainer = _new<EmbedWindow>();
     mContainer->setPosition({ 0, 0 });
 }

@@ -77,9 +77,7 @@ AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& titl
 #include "AMessageBox.h"
 #include "AWindow.h"
 
-AMessageBox::Button
-AMessageBox::show(AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,
-                  AMessageBox::Button b) {
+AMessageBox::ResultButton show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b) {
 
     auto j = AAndroid::getJNI();
     auto klazzAUI = j->FindClass("ru/alex2772/aui/AUI");
@@ -92,7 +90,7 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
     j->DeleteLocalRef(strTitle);
     j->DeleteLocalRef(strMessage);
 
-    return INVALID;
+    return AMessageBox::ResultButton::INVALID;
 }
 #else
 #include <gtk/gtk.h>

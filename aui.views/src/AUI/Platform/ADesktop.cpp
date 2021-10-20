@@ -19,6 +19,8 @@
  * =====================================================================================================================
  */
 
+#include "ADesktop.h"
+
 #ifdef __MINGW32__
 // Explicitly setting NTDDI version, this is necessary for the MinGW compiler
 #define NTDDI_VERSION NTDDI_VISTA
@@ -179,15 +181,28 @@ void ADesktop::openUrl(const AString& url) {
 
 
 #elif defined(ANDROID)
-glm::ivec2 ADesktop::getMousePosition()
-{
-    glm::ivec2 p;
-    return p;
+
+glm::ivec2 ADesktop::getMousePosition() {
+    return {};
 }
 
-void ADesktop::setMousePos(const glm::ivec2& pos)
-{
+void ADesktop::setMousePos(const glm::ivec2 &pos) {
+
 }
+
+_<AFuture<APath>> ADesktop::browseForFolder(const APath &startingLocation) {
+    return nullptr;
+}
+
+_<AFuture<APath>>
+ADesktop::browseForFile(const APath &startingLocation, const AVector <FileExtension> &extensions) {
+    return nullptr;
+}
+
+void ADesktop::openUrl(const AString &url) {
+
+}
+
 #else
 
 #include <gtk/gtk.h>

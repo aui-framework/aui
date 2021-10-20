@@ -376,10 +376,6 @@ int AInput::toNative(Key key) {
 bool AInput::isKeyDown(Key k) {
     return false;
 }
-AString AInput::getName(Key k)
-{
-    return "?";
-}
 
 #else
 #include <X11/Xlib.h>

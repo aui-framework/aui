@@ -26,6 +26,7 @@
 
 
 #ifdef __linux
+#ifndef __ANDROID__
 
 #include <AUI/Platform/AFontManager.h>
 #include <X11/Xlib.h>
@@ -142,4 +143,5 @@ AString AFontManager::getPathToFont(const AString& font) {
     }
 }
 
+#endif
 #endif

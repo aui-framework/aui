@@ -25,7 +25,11 @@ if (OPENGL_FOUND OR ANDROID)
 
 	aui_module(aui.views)
 	target_include_directories(aui.views PRIVATE 3rdparty)
-	aui_compile_assets(aui.views)
+	if (ANDROID)
+		aui_compile_assets(aui.views)
+	else()
+		aui_compile_assets(aui.views EXCLUDE uni/font/Roboto.ttf)
+	endif()
 
 	if(NOT ANDROID)
 		if (NOT WIN32)

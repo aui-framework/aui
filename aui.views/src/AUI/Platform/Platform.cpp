@@ -70,8 +70,10 @@ void Platform::playSystemSound(Sound s)
 }
 
 #ifdef __linux
+#ifndef __ANDROID__
 extern Display* gDisplay;
 void ensureXLibInitialized();
+#endif
 #endif
 
 float Platform::getDpiRatio()

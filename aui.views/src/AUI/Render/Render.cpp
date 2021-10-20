@@ -107,7 +107,7 @@ Render::Render()
                     "uniform vec4 color;"
                     "varying vec2 pass_uv;"
                     "bool is_outside(vec2 tmp, vec2 size) {"
-                    "if (tmp.x >= 1 || tmp.y >= 1) return true;"
+                    "if (tmp.x >= 1.0 || tmp.y >= 1.0) return true;"
                     "return (tmp.x - 1.0) * (size.y) / (-size.x) <= tmp.y - (1.0 - size.y) &&"
                     "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
                     "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) >= 1.0;"
@@ -119,10 +119,10 @@ Render::Render()
                     "ivec2 i;"
                     "for (i.x = -2; i.x <= 2; ++i.x) {"
                     "for (i.y = -2; i.y <= 2; ++i.y) {"
-                    "alpha -= (is_outside(inner_uv + innerTexelSize * (i), innerSize)"
+                    "alpha -= (is_outside(inner_uv + innerTexelSize * vec2(i), innerSize)"
                     " == "
-                    "is_outside(outer_uv + outerTexelSize * (i), outerSize)"
-                    ") ? (1.0 / 25.0) : 0;"
+                    "is_outside(outer_uv + outerTexelSize * vec2(i), outerSize)"
+                    ") ? (1.0 / 25.0) : 0.0;"
                     "}"
                     "}"
                     + color +
@@ -654,8 +654,10 @@ void Render::setGradientColors(const AColor& tl, const AColor& tr,
 
 void Render::applyTextureRepeat() {
     if (Render::inst().getRepeat() == Repeat::NONE) {
+#ifndef __ANDROID__
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+#endif
     }
 }
 

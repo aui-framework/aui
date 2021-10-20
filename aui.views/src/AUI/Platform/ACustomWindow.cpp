@@ -192,6 +192,24 @@ void ACustomWindow::setSize(int width, int height)
     MoveWindow(mHandle, pos.x, pos.y, width, height, false);
 }
 
+#elif defined(__ANDROID__)
+
+void ACustomWindow::handleXConfigureNotify() {
+
+}
+
+ACustomWindow::ACustomWindow(const AString &name, int width, int height) {
+
+}
+
+void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+    ABaseWindow::onMousePressed(pos, button);
+}
+
+void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
+    AViewContainer::onMouseReleased(pos, button);
+}
+
 #else
 
 extern Display* gDisplay;

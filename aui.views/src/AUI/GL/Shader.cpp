@@ -123,8 +123,14 @@ void GL::Shader::set(const GL::Shader::Uniform& uniform, glm::mat4 value) const 
 
 void GL::Shader::set(const GL::Shader::Uniform& uniform, glm::dmat4 value) const {
 	auto loc = getLocation(uniform);
-	if (loc >= 0)
+	if (loc >= 0) {
+#ifdef __ANDROID__
+		glm::mat4 fvalue = value;
+		glUniformMatrix4fv(loc, 1, GL_FALSE, &(fvalue[0][0]));
+#else
 		glUniformMatrix4dv(loc, 1, GL_FALSE, &(value[0][0]));
+#endif
+	}
 }
 
 void GL::Shader::set(const GL::Shader::Uniform& uniform, float value) const {
@@ -159,8 +165,13 @@ void GL::Shader::set(const GL::Shader::Uniform& uniform, int value) const {
 
 void GL::Shader::set(const GL::Shader::Uniform& uniform, double value) const {
     auto loc = getLocation(uniform);
-    if (loc >= 0)
-        glUniform1d(loc, value);
+    if (loc >= 0) {
+#ifdef __ANDROID__
+		glUniform1f(loc, value);
+#else
+		glUniform1d(loc, value);
+#endif
+	}
 }
 
 int32_t GL::Shader::getLocation(const GL::Shader::Uniform& uniform) const {

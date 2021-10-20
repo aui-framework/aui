@@ -52,46 +52,47 @@ class AWindowManager;
 ENUM_FLAG(WindowStyle)
 {
     DEFAULT = 0,
-	/**
-	 * \brief Window without minimize and maximize buttons.
-	 */
-	NO_MINIMIZE_MAXIMIZE = 0x1,
+    /**
+     * \brief Window without minimize and maximize buttons.
+     */
+    NO_MINIMIZE_MAXIMIZE = 0x1,
 
-	/**
-	 * \brief Disable window resize.
-	 */
-	NO_RESIZE = 0x2,
+    /**
+     * \brief Disable window resize.
+     */
+    NO_RESIZE = 0x2,
 
-	/**
-	 * \brief Typical dialog window.
-	 */
-	DIALOG = WindowStyle::NO_MINIMIZE_MAXIMIZE | WindowStyle::NO_RESIZE,
+    /**
+     * \brief Typical dialog window.
+     */
+    DIALOG = WindowStyle::NO_MINIMIZE_MAXIMIZE | WindowStyle::NO_RESIZE,
 
-	/**
-	 * \brief Remove standard window decorators.
-	 */
-	NO_DECORATORS = 0x4,
+    /**
+     * \brief Remove standard window decorators.
+     */
+    NO_DECORATORS = 0x4,
 
-	/**
-	 * \brief Window for displaying system menu (dropdown, context menu)
-	 */
-	SYS = 0x8,
+    /**
+     * \brief Window for displaying system menu (dropdown, context menu)
+     */
+    SYS = 0x8,
 
-	/**
-	 * \brief Enables transparency for this window, so it can be displayed as custom rounded shadowed rectangle.
-	 * TODO implement WS_TRANSPARENT. WinAPI: http://rsdn.org/article/opengl/layeredopengl.xml, X11: https://github.com/datenwolf/codesamples/blob/master/samples/OpenGL/x11argb_opengl/x11argb_opengl.c
-	 */
-	// WS_TRANSPARENT
+    /**
+     * \brief Enables transparency for this window, so it can be displayed as custom rounded shadowed rectangle.
+     * TODO implement WS_TRANSPARENT. WinAPI: http://rsdn.org/article/opengl/layeredopengl.xml, X11: https://github.com/datenwolf/codesamples/blob/master/samples/OpenGL/x11argb_opengl/x11argb_opengl.c
+     */
+    // WS_TRANSPARENT
 };
 
 class API_AUI_VIEWS AWindow: public ABaseWindow, public std::enable_shared_from_this<AWindow>
 {
     friend class AWindowManager;
-	friend struct painter;
+    friend struct painter;
 private:
 #if defined(_WIN32)
-	HMODULE mInst;
+    HMODULE mInst;
 	HDC mDC;
+#elif defined(__ANDROID__)
 #elif defined(__linux)
     /**
      * _NET_WM_SYNC_REQUEST (resize flicker fix) update request counter
@@ -106,39 +107,39 @@ private:
     bool mRedrawFlag = true;
     bool mUpdateLayoutFlag = true;
     AString mWindowClass;
-	AWindow* mParentWindow;
+    AWindow* mParentWindow;
 
     /**
      * \brief Handles self shared pointer.
      */
-	_<AWindow> mSelfHolder;
+    _<AWindow> mSelfHolder;
 
-	struct Context
-	{
+    struct Context
+    {
 #if defined(_WIN32)
-		HGLRC hrc = 0;
+        HGLRC hrc = 0;
 #elif defined(ANDROID)
 #else
-    GLXContext context;
+        GLXContext context;
 #endif
 
-		~Context();
-	};
-	static Context context;
+        ~Context();
+    };
+    static Context context;
 
-	AString mWindowTitle;
+    AString mWindowTitle;
 
 #if defined(_WIN32)
-	friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
+    friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#elif defined(__ANDROID__)
 #else
     unsigned long xGetWindowProperty(Atom property, Atom type, unsigned char** value) const;
     void xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) const;
 #endif
-	
+
 protected:
 #if defined(_WIN32)
-	HWND mHandle;
+    HWND mHandle;
 	HICON mIcon = nullptr;
     virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #elif defined(ANDROID)
@@ -149,24 +150,24 @@ protected:
 #endif
     WindowStyle mWindowStyle = WindowStyle::DEFAULT;
 
-	virtual void doDrawWindow();
-	virtual void onClosed();
+    virtual void doDrawWindow();
+    virtual void onClosed();
     void onCloseButtonClicked();
-	void windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws);
+    void windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws);
 
-	/**
-	 * \brief Constructor for custom initialization logic
-	 * \note Please call windowNativePreInit
-	 */
+    /**
+     * \brief Constructor for custom initialization logic
+     * \note Please call windowNativePreInit
+     */
     AWindow(std::nullptr_t) {}
 
 public:
-	AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
-	    windowNativePreInit(name, width, height, parent, ws);
-	}
-	virtual ~AWindow();
+    AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
+        windowNativePreInit(name, width, height, parent, ws);
+    }
+    virtual ~AWindow();
 
-	void redraw();
+    void redraw();
 
     void updateDpi();
 
@@ -179,64 +180,66 @@ public:
      *        GPU overload that does not have visual difference.
      * \return true if 16 milliseconds elapsed since last frame
      */
-	static bool isRedrawWillBeEfficient();
+    static bool isRedrawWillBeEfficient();
 
-	/**
-	 * \return true if window is currently painting
-	 */
-	static bool isRenderingContextAcquired();
+    /**
+     * \return true if window is currently painting
+     */
+    static bool isRenderingContextAcquired();
 
-	void setIcon(const AImage& image);
+    void setIcon(const AImage& image);
 
-	/**
-	 * \brief Removes window from AWindowManager.
-	 */
-	void quit();
+    /**
+     * \brief Removes window from AWindowManager.
+     */
+    void quit();
 
-	void setWindowStyle(WindowStyle ws);
+    void setWindowStyle(WindowStyle ws);
 
-	/**
-	 * \brief Minimizes window (hide window to the taskbar, iconifies)
-	 */
-	void minimize();
+    /**
+     * \brief Minimizes window (hide window to the taskbar, iconifies)
+     */
+    void minimize();
 
-	/**
-	 * \return true if window minimized (hidden in taskbar, iconified)
-	 */
-	bool isMinimized() const;
+    /**
+     * \return true if window minimized (hidden in taskbar, iconified)
+     */
+    bool isMinimized() const;
 
-	/**
-	 * \brief Maximizes window (makes window fullscreen)
-	 */
-	void maximize();
+    /**
+     * \brief Maximizes window (makes window fullscreen)
+     */
+    void maximize();
 
-	/**
-	 * \return true if window maximized (fullscreen)
-	 */
-	bool isMaximized() const;
+    /**
+     * \return true if window maximized (fullscreen)
+     */
+    bool isMaximized() const;
 
-	/**
-	 * \brief Restores window (shows window from taskbar)
-	 */
-	void restore();
+    /**
+     * \brief Restores window (shows window from taskbar)
+     */
+    void restore();
 
-	void flagRedraw() override;
-	void show();
-	void close();
-	void hide();
+    void flagRedraw() override;
+    void show();
+    void close();
+    void hide();
 
 #if defined(_WIN32)
-	HWND getNativeHandle() { return mHandle; }
+    HWND getNativeHandle() { return mHandle; }
+#elif defined(__ANDROID__)
+    jobject getNativeHandle() { return mHandle; }
 #else
-	Window getNativeHandle() { return mHandle; }
+    Window getNativeHandle() { return mHandle; }
 #endif
 
     const AString& getWindowTitle() const
-	{
-		return mWindowTitle;
-	}
+    {
+        return mWindowTitle;
+    }
 
-	glm::ivec2 getWindowPosition() const;
+    glm::ivec2 getWindowPosition() const;
 
     void setPosition(const glm::ivec2& position) override;
     void setSize(int width, int height) override;
@@ -244,7 +247,7 @@ public:
 
 
     void onFocusAcquired() override;
-	void onFocusLost() override;
+    void onFocusLost() override;
 
     void onKeyRepeat(AInput::Key key) override;
 
@@ -259,21 +262,21 @@ public:
     /**
      * \return Current window for current thread.
      */
-	static ABaseWindow* current();
+    static ABaseWindow* current();
 
-	/**
-	 * \brief Determines whether views should display hover animations.
-	 * \return false when any keyboard button is pressed
-	 */
-	static bool shouldDisplayHoverAnimations();
+    /**
+     * \brief Determines whether views should display hover animations.
+     * \return false when any keyboard button is pressed
+     */
+    static bool shouldDisplayHoverAnimations();
 
-	/**
-	 * \brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.
+    /**
+     * \brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.
      * \param position coordinates in the space of this window
      * \param other other window
      * \return coordinates in the space of the other window
-	 */
-	[[nodiscard]] glm::ivec2 mapPositionTo(const glm::ivec2& position, _<AWindow> other);
+     */
+    [[nodiscard]] glm::ivec2 mapPositionTo(const glm::ivec2& position, _<AWindow> other);
 
     /**
      * \brief Translates coordinates from the coordinate space of this window to the coordinate space of the monitor.
@@ -294,31 +297,31 @@ public:
     void closeOverlappingSurfaceImpl(AViewContainer* surface) override;
 
 signals:
-	emits<> closed;
-	emits<int, int> resized;
+    emits<> closed;
+    emits<int, int> resized;
     emits<> redrawn;
-	emits<> shown;
+    emits<> shown;
 
-	/**
-	 * \brief Window is moving.
-	 * \param client area position.
-	 */
-	 emits<glm::vec2> moving;
+    /**
+     * \brief Window is moving.
+     * \param client area position.
+     */
+    emits<glm::vec2> moving;
 
-	/**
-	 * \brief Window is maximized.
-	 */
-	emits<> maximized;
+    /**
+     * \brief Window is maximized.
+     */
+    emits<> maximized;
 
-	/**
-	 * \brief Window is minimized (hidden to the taskbar, iconified).
-	 */
-	emits<> minimized;
+    /**
+     * \brief Window is minimized (hidden to the taskbar, iconified).
+     */
+    emits<> minimized;
 
-	/**
-	 * \brief Window is restored (shown from the taskbar, deiconified).
-	 */
-	emits<> restored;
+    /**
+     * \brief Window is restored (shown from the taskbar, deiconified).
+     */
+    emits<> restored;
 
     bool consumesClick(const glm::ivec2& pos) override;
 
