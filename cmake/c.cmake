@@ -64,17 +64,11 @@ foreach(_module ${AUI_FIND_COMPONENTS})
                              PATHS "${SELF_DIR}/aui.${_module}/lib"
                              NO_DEFAULT_PATH
                              NO_CACHE)
-            elseif(ANDROID)
-                # for some unknown reason find_library on android does not work so using hardcoded path
-                set(AUI_${_module}_LIBRARY "${SELF_DIR}/aui.${_module}/lib/libaui.${_module}.so")
-                if (NOT EXISTS ${AUI_${_module}_LIBRARY})
-                    set(AUI_${_module}_LIBRARY NOTFOUND)
-                endif()
             else()
-                    find_library(AUI_${_module}_LIBRARY "aui.${_module}"
-                                 PATHS "${SELF_DIR}/aui.${_module}/lib"
-                                 NO_DEFAULT_PATH
-                                 NO_CACHE)
+                find_library(AUI_${_module}_LIBRARY "aui.${_module}"
+                             PATHS "${SELF_DIR}/aui.${_module}/lib"
+                             NO_DEFAULT_PATH
+                             NO_CACHE)
             endif()
             set(_lib ${AUI_${_module}_LIBRARY})
             set(_include ${SELF_DIR}/aui.${_module}/include)
