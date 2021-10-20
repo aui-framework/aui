@@ -99,6 +99,7 @@ macro(auib_import AUI_MODULE_NAME URL)
 
     # avoid compilation if we have existing installation
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
+    set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX})
     if (EXISTS ${DEP_INSTALLED_FLAG})
         if (AUIB_IMPORT_COMPONENTS)
             find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS})
@@ -137,6 +138,8 @@ macro(auib_import AUI_MODULE_NAME URL)
                 SOURCE_DIR DEP_SOURCE_DIR
                 )
 
+        message("Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+
         message(STATUS "Compiling ${AUI_MODULE_NAME}")
         if (AUIB_IMPORT_CMAKE_WORKING_DIR)
             set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
@@ -160,6 +163,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                     ${FINAL_CMAKE_ARGS}
                     -DAUI_BOOT_COMPONENTS=${TMP_LIST})
         endif()
+        message("Building and installing ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
         execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                 WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                 RESULT_VARIABLE STATUS_CODE)
