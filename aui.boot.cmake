@@ -79,10 +79,10 @@ macro(auib_import AUI_MODULE_NAME URL)
     cmake_policy(SET CMP0074 NEW)
     # https://stackoverflow.com/a/46057018
     if (CMAKE_CROSSCOMPILING)
-        set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-        set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-        set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-        set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+        set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM BOTH)
+        set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
+        set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
+        set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE BOTH)
         set(ONLY_CMAKE_FIND_ROOT_PATH TRUE)
     endif()
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
@@ -182,16 +182,16 @@ macro(auib_import AUI_MODULE_NAME URL)
 
         # forward all necessary variables to child cmake build
         foreach(_varname CMAKE_SYSTEM_NAME
-                         CMAKE_EXPORT_COMPILE_COMMANDS
-                         CMAKE_SYSTEM_VERSION
-                         ANDROID_PLATFORM
-                         ANDROID_ABI
-                         CMAKE_ANDROID_ARCH_ABI
-                         ANDROID_NDK
-                         CMAKE_ANDROID_NDK
-                         CMAKE_TOOLCHAIN_FILE
-                         CMAKE_MAKE_PROGRAM
-                         CMAKE_BUILD_TYPE)
+                CMAKE_EXPORT_COMPILE_COMMANDS
+                CMAKE_SYSTEM_VERSION
+                ANDROID_PLATFORM
+                ANDROID_ABI
+                CMAKE_ANDROID_ARCH_ABI
+                ANDROID_NDK
+                CMAKE_ANDROID_NDK
+                CMAKE_TOOLCHAIN_FILE
+                CMAKE_MAKE_PROGRAM
+                CMAKE_BUILD_TYPE)
             if (${_varname})
                 list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
             endif()
