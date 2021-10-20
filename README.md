@@ -9,12 +9,14 @@ using modern C++17.
 
 Quickstart
 ```cmake
-file(DOWNLOAD
-        https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+file(
+    DOWNLOAD 
+    https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake 
+    ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
-auib_import(AUI https://github.com/aui-framework/aui
-            COMPONENTS core views)
+auib_import(
+    AUI https://github.com/aui-framework/aui 
+    COMPONENTS core views)
 
 ```
 

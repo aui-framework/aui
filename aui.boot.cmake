@@ -19,6 +19,8 @@
 # =====================================================================================================================
 #
 
+cmake_minimum_required(VERSION 3.16)
+
 # rpath fix on linux
 set(CMAKE_INSTALL_RPATH $ORIGIN)
 set(CMAKE_BUILD_RPATH ${CMAKE_BINARY_DIR}/lib)
