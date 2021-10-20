@@ -81,18 +81,6 @@ if (AUI_3RDPARTY_LIBS_DIR)
     message("LIBRARY PATH: ${CMAKE_PREFIX_PATH}")
 endif()
 
-# For aui.views
-if(NOT ANDROID)
-    if(MSVC)
-        set(GLEW_USE_STATIC_LIBS true)
-    endif()
-    add_definitions(-DGLEW_STATIC)
-    find_package(OpenGL)
-    set(AUI_EMBEDDED_GLEW ON CACHE BOOL "Use embedded GLEW")
-    if (NOT AUI_EMBEDDED_GLEW)
-        find_package(GLEW)
-    endif()
-endif()
 
 function(aui_add_properties AUI_MODULE_NAME)
     if(MSVC)
