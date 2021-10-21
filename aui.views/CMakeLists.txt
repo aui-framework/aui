@@ -42,11 +42,12 @@ if (OPENGL_FOUND OR ANDROID)
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
 
 	target_link_libraries(aui.views PUBLIC aui.core)
-	target_link_libraries(aui.views PRIVATE Freetype::Freetype)
 
 	if(ANDROID)
 		target_link_libraries(aui.views PRIVATE EGL GLESv2 GLESv3)
+		target_link_libraries(aui.views PUBLIC Freetype::Freetype)
 	else()
+		target_link_libraries(aui.views PRIVATE Freetype::Freetype)
 		target_link_libraries(aui.views PRIVATE OpenGL::GL)
 		target_link_libraries(aui.views PUBLIC GLEW::GLEW)
 
