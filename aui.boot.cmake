@@ -31,7 +31,8 @@ define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
 
 set(CMAKE_POLICY_DEFAULT_CMP0074 NEW)
 
-if(WIN32 AND NOT CYGWIN)
+# checking host system not by WIN32 because of cross compilation
+if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     set(HOME_DIR $ENV{USERPROFILE})
 else()
     set(HOME_DIR $ENV{HOME})
