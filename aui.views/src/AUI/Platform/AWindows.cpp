@@ -1284,7 +1284,8 @@ void AWindow::onCloseButtonClicked() {
 void AWindow::setSize(int width, int height) {
     setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
 
-#if defined(__ANDROID__)
+#ifdef _WIN32
+#elif defined(__ANDROID__)
 #else
     if (!!(mWindowStyle & WindowStyle::NO_RESIZE)) {
         // we should set min size and max size the same as current size
