@@ -75,14 +75,23 @@ JNIEnv* AAndroid::getJNI() {
 
 float AAndroid::getDpiRatio() {
     auto j = getJNI();
+    if (!j) return 1.f;
+    if (!_gClassAUI) {
+        _gClassAUI = j->FindClass("ru/alex2772/aui/AUI")
+        if (!_gClassAUI) {
+            return 1.f;
+        }
+    }
     auto methodGetDpiRatio = j->GetStaticMethodID(_gClassAUI.clazz(), "getDpiRatio", "()F");
     return j->CallStaticFloatMethod(_gClassAUI.clazz(), methodGetDpiRatio);
 }
 
 void AAndroid::requestRedraw() {
-    auto j = getJNI();
-    auto methodGetDpiRatio = j->GetStaticMethodID(_gClassMyGLSurfaceView.clazz(), "requestRedraw", "()V");
-    j->CallStaticVoidMethod(_gClassMyGLSurfaceView.clazz(), methodGetDpiRatio);
+    if (auto j = getJNI()) {
+        if (auto methodGetDpiRatio = j->GetStaticMethodID(_gClassMyGLSurfaceView.clazz(), "requestRedraw", "()V")) {
+            j->CallStaticVoidMethod(_gClassMyGLSurfaceView.clazz(), methodGetDpiRatio);
+        }
+    }
 }
 
 
