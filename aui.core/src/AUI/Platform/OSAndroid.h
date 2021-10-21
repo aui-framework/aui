@@ -25,6 +25,7 @@
 
 namespace AAndroid {
     JNIEnv* getJNI();
+    void setJavaVM(JavaVM* vm);
     float getDpiRatio();
     void requestRedraw();
 

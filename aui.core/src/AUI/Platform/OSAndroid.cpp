@@ -53,6 +53,9 @@ AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(const AStringVector&)) {
     return 0;
 }
 
+void AAndroid::setJavaVM(JavaVM* vm) {
+    _gVM = vm;
+}
 JNIEnv* AAndroid::getJNI() {
     JNIEnv* env;
 
