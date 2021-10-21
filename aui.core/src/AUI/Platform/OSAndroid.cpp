@@ -77,7 +77,7 @@ float AAndroid::getDpiRatio() {
     auto j = getJNI();
     if (!j) return 1.f;
     if (!_gClassAUI) {
-        _gClassAUI = j->FindClass("ru/alex2772/aui/AUI")
+        _gClassAUI = j->FindClass("ru/alex2772/aui/AUI");
         if (!_gClassAUI) {
             return 1.f;
         }

@@ -53,6 +53,14 @@ namespace AAndroid {
 
         Ref& operator=(jobject object);
 
+        bool operator!() const {
+            return !mObject;
+        }
+
+        operator bool() const {
+            return mObject;
+        }
+
 
         jobject object() const {
             return mObject;
