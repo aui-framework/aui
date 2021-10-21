@@ -37,8 +37,7 @@ AFontManager::AFontManager():
 }
 
 AString AFontManager::getPathToFont(const AString &font) {
-    assert(0); // stub
-    return AString();
+    return font;
 }
 
 
