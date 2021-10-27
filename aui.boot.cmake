@@ -112,7 +112,8 @@ macro(auib_import AUI_MODULE_NAME URL)
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE Debug)
     endif()
-    set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${AUI_MODULE_NAME}/${TAG_OR_HASH}/${AUI_TARGET_ABI}/${CMAKE_BUILD_TYPE}")
+    set(BUILD_SPECIFIER "${AUI_MODULE_NAME}/${TAG_OR_HASH}/${AUI_TARGET_ABI}/${CMAKE_BUILD_TYPE}")
+    set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
 
     # append our location to module path
     #if (NOT "${DEP_INSTALL_PREFIX}" IN_LIST CMAKE_PREFIX_PATH)
@@ -120,7 +121,8 @@ macro(auib_import AUI_MODULE_NAME URL)
     #endif()
 
     string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
-    set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}")
+    set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/src")
+    set(DEP_BINARY_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/build/${BUILD_SPECIFIER}")
     set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
     # avoid compilation if we have existing installation
@@ -147,10 +149,11 @@ macro(auib_import AUI_MODULE_NAME URL)
         # TODO add protocol check
         message(STATUS "Fetching ${AUI_MODULE_NAME}")
         if(AUI_BOOT_SOURCEDIR_COMPAT)
-            unset(SOURCE_DIR_ARG)
+            unset(SOURCE_BINARY_DIRS_ARG)
         else()
             file(LOCK "${AUI_CACHE_DIR}/repo.lock")
-            set(SOURCE_DIR_ARG SOURCE_DIR ${DEP_SOURCE_DIR})
+            set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
+                                       BINARY_DIR ${DEP_BINARY_DIR})
         endif()
         FetchContent_Declare(${AUI_MODULE_NAME}_FC
                 GIT_REPOSITORY "${URL}"
@@ -158,7 +161,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                 GIT_PROGRESS TRUE # show progress of download
                 USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                 USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
-                ${SOURCE_DIR_ARG}
+                ${SOURCE_BINARY_DIRS_ARG}
                 )
 
         FetchContent_Populate(${AUI_MODULE_NAME}_FC)
