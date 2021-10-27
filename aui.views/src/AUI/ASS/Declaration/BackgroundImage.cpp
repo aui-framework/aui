@@ -127,7 +127,6 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                     auto textureWidth = textureSize.x;
                     auto textureHeight = textureSize.y;
                     texture->bind();
-                    scale *= AWindow::current()->getDpiRatio();
                     float chunkWidth = glm::min(view->getWidth() / 2.f, textureWidth / 2.f);
                     float chunkHeight = glm::min(view->getHeight() / 2.f, textureHeight / 2.f);
 
