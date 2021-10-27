@@ -214,6 +214,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                 CMAKE_ANDROID_NDK
                 CMAKE_TOOLCHAIN_FILE
                 CMAKE_MAKE_PROGRAM
+                CMAKE_SYSTEM_PROCESSOR
                 CMAKE_BUILD_TYPE)
             if (${_varname})
                 list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
