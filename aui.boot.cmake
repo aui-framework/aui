@@ -147,14 +147,18 @@ macro(auib_import AUI_MODULE_NAME URL)
 
         include(FetchContent)
         # TODO add protocol check
-        message(STATUS "Fetching ${AUI_MODULE_NAME}")
         if(AUI_BOOT_SOURCEDIR_COMPAT)
             unset(SOURCE_BINARY_DIRS_ARG)
         else()
-            file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+            if (NOT AUI_BOOT) # recursive deadlock fix
+                message(STATUS "Waiting for repository...")
+                file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+            endif()
             set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
                                        BINARY_DIR ${DEP_BINARY_DIR})
         endif()
+        message(STATUS "Fetching ${AUI_MODULE_NAME}")
+
         FetchContent_Declare(${AUI_MODULE_NAME}_FC
                 GIT_REPOSITORY "${URL}"
                 GIT_TAG ${AUIB_IMPORT_VERSION}
@@ -239,7 +243,9 @@ macro(auib_import AUI_MODULE_NAME URL)
         endif()
         file(TOUCH ${DEP_INSTALLED_FLAG})
         if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
-            file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+            if (NOT AUI_BOOT) # recursive deadlock fix
+                file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+            endif()
         endif()
     endif()
     if (AUIB_IMPORT_COMPONENTS)
