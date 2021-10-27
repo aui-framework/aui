@@ -63,6 +63,16 @@ set(AUI_CACHE_DIR ${HOME_DIR}/.aui CACHE PATH "Path to AUI.Boot cache")
 message(STATUS "AUI.Boot cache: ${AUI_CACHE_DIR}")
 message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_ABI}")
 
+
+
+set(AUI_BOOT_SOURCEDIR_COMPAT OFF)
+if(${CMAKE_VERSION} VERSION_LESS "3.21.0")
+    message(STATUS "Dependencies will be cloned to build directory, not to ${AUI_CACHE_DIR} because you're using CMake older"
+            " than 3.21. See https://github.com/aui-framework/aui/issues/6 for details.")
+    set(AUI_BOOT_SOURCEDIR_COMPAT ON)
+endif()
+
+
 # create all required dirs
 if (NOT EXISTS ${AUI_CACHE_DIR})
     file(MAKE_DIRECTORY ${AUI_CACHE_DIR})
@@ -136,14 +146,19 @@ macro(auib_import AUI_MODULE_NAME URL)
         include(FetchContent)
         # TODO add protocol check
         message(STATUS "Fetching ${AUI_MODULE_NAME}")
-        # file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+        if(AUI_BOOT_SOURCEDIR_COMPAT)
+            unset(SOURCE_DIR_ARG)
+        else()
+            file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+            set(SOURCE_DIR_ARG SOURCE_DIR ${DEP_SOURCE_DIR})
+        endif()
         FetchContent_Declare(${AUI_MODULE_NAME}_FC
                 GIT_REPOSITORY "${URL}"
                 GIT_TAG ${AUIB_IMPORT_VERSION}
                 GIT_PROGRESS TRUE # show progress of download
                 USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                 USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
-                #SOURCE_DIR ${DEP_SOURCE_DIR}
+                ${SOURCE_DIR_ARG}
                 )
 
         FetchContent_Populate(${AUI_MODULE_NAME}_FC)
@@ -220,7 +235,9 @@ macro(auib_import AUI_MODULE_NAME URL)
             message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
         endif()
         file(TOUCH ${DEP_INSTALLED_FLAG})
-        # file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+        if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
+            file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+        endif()
     endif()
     if (AUIB_IMPORT_COMPONENTS)
         find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS})
