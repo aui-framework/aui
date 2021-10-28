@@ -20,7 +20,9 @@
  */
 
 #pragma once
+
 #include "ALayout.h"
+#include <AUI/Util/LayoutDirection.h>
 
 class API_AUI_VIEWS AHorizontalLayout: public ALayout
 {
@@ -28,6 +30,9 @@ private:
 	int mSpacing = 0;
 
 public:
+    // for template<> logic
+    static constexpr LayoutDirection DIRECTION = LayoutDirection::HORIZONTAL;
+
 	AHorizontalLayout()
 	{
 	}

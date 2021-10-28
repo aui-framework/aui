@@ -354,10 +354,14 @@ AStylesheet::AStylesheet() {
         {
             t<AHDividerView>(),
             FixedSize { {}, 1_dp },
+            Margin { 0, 2_dp },
+            BackgroundSolid { 0x808080_rgb },
         },
         {
             t<AVDividerView>(),
             FixedSize { 1_dp, {} },
+            Margin { 2_dp, 0 },
+            BackgroundSolid { 0x808080_rgb },
         },
 
         // CUSTOM WINDOWS ===================================================

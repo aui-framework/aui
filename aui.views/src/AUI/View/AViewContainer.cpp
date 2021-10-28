@@ -234,7 +234,24 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone)
 	{
 		auto targetPos = pos - view->getPosition();
 
-		if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x && targetPos.y < view->getSize().y)
+        bool hitTest;
+        switch (view->getMouseCollisionPolicy()) {
+            case MouseCollisionPolicy::DEFAULT:
+                hitTest = targetPos.x >= 0 &&
+                          targetPos.y >= 0 &&
+                          targetPos.x < view->getSize().x &&
+                          targetPos.y < view->getSize().y;
+                break;
+
+            case MouseCollisionPolicy::MARGIN:
+                hitTest = targetPos.x >= -view->getMargin().left &&
+                          targetPos.y >= -view->getMargin().top &&
+                          targetPos.x < (view->getSize().x + view->getMargin().horizontal()) &&
+                          targetPos.y < (view->getSize().y + view->getMargin().vertical());
+                break;
+        }
+
+		if (hitTest)
 		{
 			if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
 			    if (!possibleOutput) {

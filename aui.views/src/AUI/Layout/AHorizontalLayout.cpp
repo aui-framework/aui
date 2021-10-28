@@ -76,7 +76,10 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 			int viewPosX = glm::round(posX) + margins.left;
 			//assert(int(width - viewPosX - margins.right) >= e.minSpace - margins.horizontal());
 			int viewWidth = width - viewPosX - margins.right;
-			view->setGeometry(viewPosX, y + margins.top, viewWidth, height - margins.vertical());
+			view->setGeometry(viewPosX,
+                              y + margins.top,
+                              viewWidth,
+                              height - margins.vertical());
 		}
 		else {
 			float viewWidth = glm::clamp(float(availableSpace * e.expanding) / sum, float(e.minSpace), float(maxSize.x));

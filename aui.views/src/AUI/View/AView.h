@@ -41,6 +41,7 @@
 #include <chrono>
 #include <functional>
 #include <array>
+#include <AUI/Enum/MouseCollisionPolicy.h>
 
 class Render;
 class AWindow;
@@ -90,6 +91,9 @@ private:
 	 * \brief border-radius, specified in ASS.
 	 */
     float mBorderRadius = 0;
+
+
+	MouseCollisionPolicy mMouseCollisionPolicy = MouseCollisionPolicy::DEFAULT;
 
 	/**
 	 * \brief Font style for this AView.
@@ -231,9 +235,9 @@ public:
 		return mSize;
 	}
 
-    /**
-     * \brief Minimal size.
-     */
+	/**
+	 * @return minSize (ignoring fixedSize)
+	 */
     const glm::ivec2& getMinSize() const {
         return mMinSize;
     }
@@ -380,6 +384,10 @@ public:
     void setMaxSize(const glm::ivec2& maxSize) {
         mMaxSize = maxSize;
     }
+
+	/**
+	 * @return maxSize (ignoring fixedSize)
+	 */
 	[[nodiscard]] const glm::ivec2& getMaxSize() const
 	{
 		return mMaxSize;
@@ -402,6 +410,10 @@ public:
 	void setExpanding(const glm::ivec2& expanding)
 	{
 		mExpanding = expanding;
+	}
+	void setExpanding(int expanding)
+	{
+		mExpanding = { expanding, expanding };
 	}
     void setExpanding()
     {
@@ -488,7 +500,16 @@ public:
 		redraw();
 	}
 
-    /**
+	[[nodiscard]]
+	MouseCollisionPolicy getMouseCollisionPolicy() const {
+		return mMouseCollisionPolicy;
+	}
+
+	void setMouseCollisionPolicy(MouseCollisionPolicy mouseCollisionPolicy) {
+		mMouseCollisionPolicy = mouseCollisionPolicy;
+	}
+
+	/**
      * Simulates click on the view. Useful then you want to call clicked() slots of this view.
      */
     void click() {

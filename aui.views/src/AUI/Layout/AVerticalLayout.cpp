@@ -57,6 +57,8 @@ void AVerticalLayout::onResize(int x, int y, int width, int height)
 	sum = glm::max(sum, 1);
 
 	unsigned index = 0;
+    float posY = y;
+    auto last = mViews.back();
 	for (auto& view : mViews)
 	{
         if (view->getVisibility() == Visibility::GONE) continue;
@@ -64,14 +66,28 @@ void AVerticalLayout::onResize(int x, int y, int width, int height)
 		auto maxSize = view->getMaxSize();
 		auto& e = cache[index++];
 
-		int viewHeight = glm::clamp(availableSpace * e.expanding / sum, e.minSpace,	maxSize.y);
+        if (view == last)
+        {
+            // the last element should stick right to the border.
+            int viewPosY = glm::round(posY) + margins.top;
+            //assert(int(width - viewPosY - margins.right) >= e.minSpace - margins.horizontal());
+            int viewHeight = height - viewPosY - margins.bottom;
+            view->setGeometry(x + margins.left,
+                              viewPosY,
+                              width - margins.horizontal(),
+                              viewHeight);
+        }
+        else {
+            int viewHeight = glm::clamp(availableSpace * e.expanding / sum, e.minSpace, maxSize.y);
 
+            view->setGeometry(x + margins.left,
+                              glm::round(posY) + margins.top,
+                              glm::min(width - margins.horizontal(), float(maxSize.x)),
+                              viewHeight);
+            posY += view->getSize().y + mSpacing + margins.vertical();
 
-		view->setGeometry(x + margins.left, y + margins.top, glm::min(width - margins.horizontal(), float(maxSize.x)), viewHeight);
-		y += view->getSize().y + mSpacing + margins.vertical();
-
-
-		availableSpace += viewHeight - view->getSize().y;
+            availableSpace += viewHeight - view->getSize().y;
+        }
 	}
 }
 

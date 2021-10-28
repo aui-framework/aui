@@ -80,6 +80,41 @@ namespace aui::detail {
         AVector<_<AView>> mViews;
 
     public:
+
+        struct Expanding {
+        private:
+            AVector<_<AView>> mViews;
+
+        public:
+            Expanding(std::initializer_list<_<AView>> views) {
+                mViews.reserve(views.size());
+                for (auto& v : views) {
+                    if (v) {
+                        mViews << v;
+                    }
+                }
+            }
+
+            operator _<AView>() const {
+                return (_container<Layout>(mViews) let {it->setExpanding();});
+            }
+            operator _<AViewContainer>() const {
+                return (_container<Layout>(mViews) let {it->setExpanding();});
+            }
+            _<AViewContainer> operator<<(const AString& assEntry) const {
+                return (_container<Layout>(mViews) let {it->setExpanding();}) << assEntry;
+            }
+            template<typename T>
+            _<AViewContainer> operator^(const T& t) const {
+                return (_container<Layout>(mViews) let {it->setExpanding();}) ^ t;
+            }
+            template<typename T>
+            _<AViewContainer> operator+(const T& t) const {
+                return (_container<Layout>(mViews) let {it->setExpanding();}) + t;
+            }
+        };
+
+
         container_helper(std::initializer_list<_<AView>> views) {
             mViews.reserve(views.size());
             for (auto& v : views) {

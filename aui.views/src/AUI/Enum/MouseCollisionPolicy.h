@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,37 +14,29 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
+
 #pragma once
 
-#include "ALayout.h"
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Reflect/AEnumerate.h>
 
-class API_AUI_VIEWS AVerticalLayout : public ALayout
-{
-private:
-	int mSpacing = 0;
+/**
+ * Determines which area of view handles mouse (clicks and movement).
+ */
+enum class MouseCollisionPolicy {
+    /**
+     * Standard behaviour. Handles mouse only inside view's borders area.
+     */
+    DEFAULT,
 
-public:
-    // for template<> logic
-    static constexpr LayoutDirection DIRECTION = LayoutDirection::VERTICAL;
-
-	AVerticalLayout()
-	{
-	}
-	AVerticalLayout(int spacing) : mSpacing(spacing)
-	{
-	}
-
-	void onResize(int x, int y, int width, int height) override;
-
-	int getMinimumWidth() override;
-	int getMinimumHeight() override;
-
-
-	void setSpacing(int spacing) override;
+    /**
+     * Handles mouse inside view's margin area.
+     */
+    MARGIN,
 };
+
+ENUM_VALUES(MouseCollisionPolicy, MouseCollisionPolicy::DEFAULT, MouseCollisionPolicy::MARGIN)
