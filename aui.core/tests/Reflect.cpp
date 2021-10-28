@@ -63,10 +63,6 @@ BOOST_AUTO_TEST_SUITE(Reflect)
         BOOST_CHECK_EQUAL(AClass<AzazaTest::Test>::nameWithoutNamespace(), "Test");
     }
 
-    BOOST_AUTO_TEST_CASE(NameClassPtr) {
-        AObject* ptr = new AListModel<AString>();
-        BOOST_CHECK_EQUAL(AReflect::name(ptr), "AListModel<AString>");
-    }
 
     BOOST_AUTO_TEST_CASE(NameStruct) {
         BOOST_CHECK_EQUAL(AClass<MyStruct>::name(), "MyStruct");
@@ -94,7 +90,8 @@ BOOST_AUTO_TEST_SUITE(Reflect)
                 {"VALUE3", VALUE3},
         };
 
-        BOOST_TEST((AEnumerate<Test>::names<VALUE1, VALUE2, VALUE3>() == ref));
+        auto test = AEnumerate<Test>::names<VALUE1, VALUE2, VALUE3>();
+        BOOST_TEST((test == ref));
     }
 
     BOOST_AUTO_TEST_CASE(NamespaceEnumerateNames) {
@@ -103,8 +100,8 @@ BOOST_AUTO_TEST_SUITE(Reflect)
                 {"V2", namespaceeee::V2},
                 {"V3", namespaceeee::V3},
         };
-
-        BOOST_TEST((AEnumerate<namespaceeee::Test>::all() == ref));
+        auto test = AEnumerate<namespaceeee::Test>::all();
+        BOOST_TEST((test == ref));
     }
 
 BOOST_AUTO_TEST_SUITE_END()

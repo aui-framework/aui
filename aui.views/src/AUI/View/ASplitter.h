@@ -100,7 +100,7 @@ private:
            return *this;
        }
 
-       _<ASplitter> build() {
+       _<AView> build() {
            _<ASplitter> splitter = new ASplitter;
            splitter->mDividerFactory = std::move(mDividerFactory);
            splitter->mItems = std::move(mItems);

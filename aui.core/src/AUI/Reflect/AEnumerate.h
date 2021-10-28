@@ -27,11 +27,10 @@ public:
         AString s = __FUNCSIG__;
         auto end = s.rfind('>');
         size_t begin;
-        begin = s.rfind("::", end);
-        if (begin == AString::NPOS) {
-            begin = s.rfind('<', end) + 1;
-        } else {
-            begin += 2;
+        begin = s.rfind('<') + 1;
+        auto namespacePos = s.find("::", begin);
+        if (namespacePos < end) {
+            begin = namespacePos + 2;
         }
         AString result = {s.begin() + begin, s.begin() + end};
 #else

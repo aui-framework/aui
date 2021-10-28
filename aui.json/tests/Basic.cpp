@@ -76,7 +76,7 @@ BOOST_AUTO_TEST_CASE(StringEscape)
     auto s = AJson::toString(root);
 
     // check for whole composition
-    BOOST_CHECK_EQUAL(s, R"({"user":"u\""})");
+    BOOST_CHECK_EQUAL(s, "{\"user\":\\\"u\"}");
 
     // check for string itself
     auto deserialized = AJson::fromString(s);
