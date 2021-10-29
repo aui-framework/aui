@@ -1,45 +1,22 @@
 # Advanced Universal Interface manual
 
-## Building AUI
+## Getting started with AUI
 
-### AUI.Boot
+AUI uses CMake as a build system. All CPP source files are placed in `src/` folder
 
-AUI.Boot is a CMake script which allows you to manage dependencies.
-You can specify link to repository to add an installable (and findable by CMake) dependency.
-
-Before to get started, you have to compile AUI.
-
-### Windows
-
-1. `git clone https://github.com/Alex2772/aui.git`
-2. `git submodule update --init --recursive`
-3. Open project's dir as source dir in cmake-gui
-4. Specify build folder and install prefix (if needed)
-5. Configure
-6. Generate
-7. Open project (button in cmake-gui)
-8. Build the `INSTALL` project. It will build the library and install to your system
-9. Add `<install prefix>\bin` (`C:\Program Files (x86)\AUI\bin`) to your PATH variable
-10. Enjoy!
-
-### *nix
-1. Download and install cmake and gcc
-2. `git clone https://github.com/Alex2772/aui.git`
-3. Download dependencies: `git submodule update --init --recursive`
-4. Install dependencies: `sudo apt install pkg-config libglew-dev libgtk-3-dev`
-5. Create build folder and cd to it: `cd aui && mkdir build && cd build`
-6. Run `cmake ..`
-7. Run `make && sudo make install`
-8. Enjoy!
-
-
-## Basic hello world
+###  Basic hello world
 
 **Project:** `projects/hello_world/basic`
 
-Once you have compiled AUI, you can use it!
+**Files:**
 
-Here's the example of basic hello work application, which every AUI project AUI starts with.
+```
+CMakeLists.txt
+src
+└── main.cpp
+```
+
+Here's the example of basic hello work application, which every AUI project starts with.
 
 `CMakeLists.txt`
 
@@ -48,16 +25,25 @@ Here's the example of basic hello work application, which every AUI project AUI 
 cmake_minimum_required(VERSION 3.16)
 project(project_template)
 
-# Link AUI
-find_package(AUI REQUIRED)
+# Use AUI.Boot
+file(
+    DOWNLOAD 
+    https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake 
+    ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+
+# link AUI
+auib_import(
+    AUI https://github.com/aui-framework/aui 
+    COMPONENTS core)
+
 
 # Create the executable. This function automatically links all sources from the src/ folder, creates CMake target and
 # places the resulting executable to bin/ folder.
 aui_executable(project_template)
 
 # Link required libs
-target_link_libraries(project_template PRIVATE AUI.Core)
-# target_link_libraries(project_template PRIVATE aui.views)
+target_link_libraries(project_template PRIVATE aui::core)
 ```
 
 `src/main.cpp`
@@ -72,35 +58,65 @@ AUI_ENTRY {
 }
 ```
 
-Building and running this project, you are getting sure that AUI built properly and you are ready to build AUI
-applications!
+AUI.Boot is a CMake script which allows you to manage dependencies.
+You can specify link to a repository to add an installable (and findable by CMake) dependency. It compiles and links all required dependencies to free you from dependency management and focus you right to development of your application.
+
+To build a CMake project:
+
+1. Create folder (i.e. `build/`): `mkdir build`
+2. Enter to it: `cd build`
+3. Configure CMake: `cmake ..`
+   If you use AUI on your computer for the first time, the command above will take a lot of time because it builds AUI.
+4. Build your project: `cmake . --build`
+5. Run your project: `bin/project_template`
+
+Output:
+
+```
+[13:58:33] INFO: Hello world!
+```
 
 ## Graphical hello world
 
 **Project:** `projects/hello_world/ui`
 
+**Files:**
+
+```
+CMakeLists.txt
+src
+└── main.cpp
+```
+
 Since AUI is graphical framework it allows to easily create windows, buttons, fields without any graphical UI toolkits.
 
-Don't forget to link to `aui.views` in `CMakeLists.txt`:
+Don't forget to add component `views` and link to `aui::views` in `CMakeLists.txt`:
 
 ```cmake
 cmake_minimum_required(VERSION 3.16)
 project(graphical_example)
 
-# Link AUI
-find_package(AUI REQUIRED)
+# Use AUI.Boot
+file(
+    DOWNLOAD 
+    https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake 
+    ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+
+# link AUI
+auib_import(
+    AUI https://github.com/aui-framework/aui 
+    COMPONENTS core views)
 
 # Create the executable. This function automatically links all sources from the src/ folder, creates CMake target and
 # places the resulting executable to bin/ folder.
 aui_executable(graphical_example)
 
 # Link required libs
-target_link_libraries(graphical_example PRIVATE AUI.Core)
-# VVVVVVVVVVVVVVVVVVV uncomment this VVVVVVVVVVVVVVVVVVVV
-target_link_libraries(graphical_example PRIVATE aui.views)
+target_link_libraries(graphical_example PRIVATE aui::core aui::views)
 ```
 
-The last line in CMake script links the aui.views module which holds all UI related functionality of the framework.
+`aui::views` is a module which holds all UI related functionality of the framework.
 
 The `main.cpp` file also contains some changes:
 
@@ -155,8 +171,7 @@ The example above produces the following window:
 
 ![Label](imgs/Screenshot_20210408_024201.jpg)
 
-AUI supplies `aui.preview` module which is realtime previewer of UI code. It is great tool to study AUI layout build
-features.
+AUI supplies `aui::preview` module which is realtime previewer of UI code. It is great tool to study AUI layout build features.
 
 Our example in aui.preview:
 
@@ -290,12 +305,11 @@ Expand our form using black angle icon in the bottom right corner.
 ![example](imgs/Screenshot_20210714_172900.png)
 
 Horizontal layout manager expanded the last button in a row. We can override this behaviour specifying the views we want
-to expand. To do this, call the `AView::setExpanding(vec2)` function. We need to embed `Center` button to some variable
-in order to call its functions.
+to expand. To do this, call the `AView::setExpanding(vec2)` function. We need to embed `Center` button to some variable in order to call its functions.
 
 ```c++
 auto center = _new<AButton>("Center");
-center->setExpanding({1, 1});
+center->setExpanding(true);
 setContents(
     Vertical {
         _new<AButton>("Up"),
@@ -309,19 +323,19 @@ setContents(
 );
 ```
 
-It's much more convenient to use AUI's `let` syntax to call some methods on object without embedding them to variables.
-It is similar to Kotlin's `let` or `apply`. Inside `let` block you receive `it` variable which is object to the left of
-`let` keyword.
+It's much more convenient to use AUI's `let` syntax to call some methods on object without embedding them to variables. It's similar to Kotlin's `let` or `apply`. Inside `let` block you receive `it` variable which is object to the left of `let` keyword.
+
+This line
 
 ```c++
-_new<AButton>() let { it->setExpanding({1, 1}); };
+_new<AButton>() let { it->setExpanding(true); };
 ```
 
-This line is similar to
+ is similar to
 
 ```c++
 auto button = _new<AButton>();
-button->setExpanding({1, 1});
+button->setExpanding(true);
 ```
 
 , but you can place `let` operator inside function call or UI building. Let's finalize our example:
@@ -332,7 +346,7 @@ setContents(
         _new<AButton>("Up"),
         Horizontal {
             _new<AButton>("Left"),
-            _new<AButton>("Center") let { it->setExpanding({1, 0}); },
+            _new<AButton>("Center") let { it->setExpanding(true); },
             _new<AButton>("Right"),
         },
         _new<AButton>("Down"),
@@ -342,17 +356,16 @@ setContents(
 
 This code is simpler but produces the same result.
 
-Returning to expanding, we can specify expanding to the several or all views. In this case AUI resizes your views in
-fraction:
+Returning to expanding, we can specify expanding as a number instead of `true` to the several or all views. In this case AUI resizes your views in fraction:
 
 ```c++
 setContents(
     Vertical {
         _new<AButton>("Up"),
         Horizontal {
-            _new<AButton>("Left") let { it->setExpanding({1, 0}); },
-            _new<AButton>("Center") let { it->setExpanding({1, 0}); },
-            _new<AButton>("Right") let { it->setExpanding({1, 0}); },
+            _new<AButton>("Left") let { it->setExpanding(1); },
+            _new<AButton>("Center") let { it->setExpanding(1); },
+            _new<AButton>("Right") let { it->setExpanding(1); },
         },
         _new<AButton>("Down"),
     }
@@ -371,9 +384,9 @@ setContents(
     Vertical {
         _new<AButton>("Up"),
         Horizontal {
-            _new<AButton>("Left") let { it->setExpanding({1, 0}); },
-            _new<AButton>("Center") let { it->setExpanding({2, 0}); },
-            _new<AButton>("Right") let { it->setExpanding({1, 0}); },
+            _new<AButton>("Left") let { it->setExpanding(1); },
+            _new<AButton>("Center") let { it->setExpanding(2); },
+            _new<AButton>("Right") let { it->setExpanding(1); },
         },
         _new<AButton>("Down"),
     }
