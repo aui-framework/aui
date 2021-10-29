@@ -76,7 +76,7 @@ public:
 	template<typename T>
 	inline IInputStream& operator>>(T& out)
 	{
-        static_assert(std::is_standard_layout_v<T>, "data is too complex to be read from stream");
+        // static_assert(std::is_standard_layout_v<T>, "data is too complex to be read from stream");
 		auto dst = reinterpret_cast<char*>(&out);
 
 		int accumulator = sizeof(T);

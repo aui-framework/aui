@@ -91,7 +91,7 @@ public:
 	 */
 	template <typename T>
 	AByteBuffer& operator<<(const T& data) {
-        static_assert(std::is_standard_layout_v<T>, "data is too complex to be put onto buffer");
+        // static_assert(std::is_standard_layout_v<T>, "data is too complex to be put onto buffer");
 		put(reinterpret_cast<const char*>(&data), sizeof(T));
 		return *this;
 	}
@@ -102,7 +102,7 @@ public:
      */
 	template <typename T>
 	const AByteBuffer& operator>>(T& dst) const {
-        static_assert(std::is_standard_layout_v<T>, "data is too complex to be read from buffer");
+        // static_assert(std::is_standard_layout_v<T>, "data is too complex to be read from buffer");
 		get(reinterpret_cast<char*>(&dst), sizeof(T));
 		return *this;
 	}

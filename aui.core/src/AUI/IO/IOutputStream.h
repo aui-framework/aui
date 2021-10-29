@@ -70,7 +70,7 @@ public:
 	template<typename T>
 	inline IOutputStream& operator<<(const T& in)
 	{
-        static_assert(std::is_standard_layout_v<T>, "data is too complex to be written to stream");
+        // static_assert(std::is_standard_layout_v<T>, "data is too complex to be written to stream");
 		if (write(reinterpret_cast<const char*>(&in), sizeof(T)) < 0)
 			throw IOException("could not write to file");
 		return *this;
