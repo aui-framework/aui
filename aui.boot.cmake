@@ -46,9 +46,6 @@ if (ANDROID_ABI)
     set(AUI_TARGET_ARCH_NAME "android-${ANDROID_ABI}")
     set(AUI_TARGET_ABI "${AUI_TARGET_ARCH_NAME}" CACHE STRING "COMPILER-PROCESSOR pair")
 else()
-    if (NOT CMAKE_SYSTEM_PROCESSOR)
-        message(FATAL_ERROR "CMAKE_SYSTEM_PROCESSOR is not set")
-    endif()
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
         if(CMAKE_SIZEOF_VOID_P EQUAL 8)
             set(AUI_TARGET_ARCH_NAME "x86_64")
@@ -206,17 +203,23 @@ macro(auib_import AUI_MODULE_NAME URL)
                     -DAUI_BOOT_COMPONENTS=${TMP_LIST})
         endif()
 
+        if(ANDROID)
+            set(ANDROID_VARS
+                    CMAKE_SYSTEM_NAME
+                    CMAKE_EXPORT_COMPILE_COMMANDS
+                    CMAKE_SYSTEM_VERSION
+                    ANDROID_PLATFORM
+                    ANDROID_ABI
+                    CMAKE_ANDROID_ARCH_ABI
+                    ANDROID_NDK
+                    CMAKE_ANDROID_NDK
+                    CMAKE_MAKE_PROGRAM
+                    )
+        endif()
+
         # forward all necessary variables to child cmake build
-        foreach(_varname CMAKE_SYSTEM_NAME
-                CMAKE_EXPORT_COMPILE_COMMANDS
-                CMAKE_SYSTEM_VERSION
-                ANDROID_PLATFORM
-                ANDROID_ABI
-                CMAKE_ANDROID_ARCH_ABI
-                ANDROID_NDK
-                CMAKE_ANDROID_NDK
+        foreach(_varname
                 CMAKE_TOOLCHAIN_FILE
-                CMAKE_MAKE_PROGRAM
                 CMAKE_GENERATOR_PLATFORM
                 CMAKE_VS_PLATFORM_NAME
                 CMAKE_BUILD_TYPE)
