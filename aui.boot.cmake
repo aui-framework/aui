@@ -46,6 +46,9 @@ if (ANDROID_ABI)
     set(AUI_TARGET_ARCH_NAME "android-${ANDROID_ABI}")
     set(AUI_TARGET_ABI "${AUI_TARGET_ARCH_NAME}" CACHE STRING "COMPILER-PROCESSOR pair")
 else()
+    if (NOT CMAKE_SYSTEM_PROCESSOR)
+        message(FATAL_ERROR "CMAKE_SYSTEM_PROCESSOR is not set")
+    endif()
     if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
         if(CMAKE_SIZEOF_VOID_P EQUAL 8)
             set(AUI_TARGET_ARCH_NAME "x86_64")
@@ -190,7 +193,6 @@ macro(auib_import AUI_MODULE_NAME URL)
         endforeach()
         set(FINAL_CMAKE_ARGS
                 -DAUI_BOOT=TRUE
-                -DCMAKE_CROSSCOMPILING=${CMAKE_CROSSCOMPILING}
                 ${FORWARDED_LIBS}
                 ${AUIB_IMPORT_CMAKE_ARGS}
                 -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
@@ -222,7 +224,9 @@ macro(auib_import AUI_MODULE_NAME URL)
                 CMAKE_TOOLCHAIN_FILE
                 CMAKE_GENERATOR_PLATFORM
                 CMAKE_VS_PLATFORM_NAME
-                CMAKE_BUILD_TYPE)
+                CMAKE_BUILD_TYPE
+                CMAKE_CROSSCOMPILING
+                ${ANDROID_VARS})
             if (${_varname})
                 list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
             endif()
