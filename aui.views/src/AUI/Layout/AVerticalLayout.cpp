@@ -47,12 +47,14 @@ void AVerticalLayout::onResize(int x, int y, int width, int height)
 		int e = view->getExpandingVertical();
 		int minSpace = view->getMinimumHeight();
 		sum += e;
-		if (e == 0)
+		if (e == 0 || view->getFixedSize().y != 0)
 			availableSpace -= minSpace + view->getMargin().vertical() + mSpacing;
 		else
 			availableSpace -= view->getMargin().vertical() + mSpacing;
 		cache << cache_t{ e, minSpace };
 	}
+
+    bool containsExpandingItems = sum > 0;
 
 	sum = glm::max(sum, 1);
 
@@ -66,7 +68,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height)
 		auto maxSize = view->getMaxSize();
 		auto& e = cache[index++];
 
-        if (view == last)
+        if (containsExpandingItems && view == last)
         {
             // the last element should stick right to the border.
             int viewPosY = glm::round(posY) + margins.top;

@@ -50,10 +50,14 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 		auto m = view->getMinimumWidth();
 		int minSpace = m + view->getMargin().horizontal();
 		sum += e;
-		if (e == 0)
-			availableSpace -= (minSpace + mSpacing);
+		if (e == 0 || view->getFixedSize().x != 0)
+            availableSpace -= minSpace + view->getMargin().horizontal() + mSpacing;
+        else
+            availableSpace -= view->getMargin().horizontal() + mSpacing;
 		cache << cache_t{e, minSpace};
 	}
+
+    bool containsExpandingItems = sum > 0;
 
 	sum = glm::max(sum, 1);
 	
@@ -70,7 +74,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 		//auto cmin = view->getMinimumWidth();
 		//assert(cmin == e.minSpace - margins.horizontal());
 
-		if (view == last)
+		if (containsExpandingItems && view == last)
 		{
 			// the last element should stick right to the border.
 			int viewPosX = glm::round(posX) + margins.left;

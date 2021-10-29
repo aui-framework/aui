@@ -252,7 +252,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
 	}
 
 	{
-		horizontal->addView(Vertical {
+		horizontal->addView(Vertical::Expanding {
             // fields
 		    _new<ALabel>("Fields"),
 		    _new<ALabel>("Text field"),
@@ -273,7 +273,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                                    "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE "
                                    "WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR "
                                    "COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
-                                   "OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.) "),
+                                   "OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.) ") let { it->setExpanding(); },
                },
                Vertical {
                    // Rulers
@@ -288,6 +288,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                 _new<AButton>("One"),
                 _new<AButton>("Two"),
                 _new<AButton>("Three"),
+                _new<AButton>("Four"),
+                _new<AButton>("Five"),
             })
 		});
 	}
