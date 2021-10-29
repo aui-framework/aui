@@ -101,7 +101,7 @@ macro(auib_import AUI_MODULE_NAME URL)
     endif()
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
 
-    set(options)
+    set(options ADD_SUBDIRECTORY)
     set(oneValueArgs VERSION CMAKE_WORKING_DIR)
     set(multiValueArgs CMAKE_ARGS COMPONENTS)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
@@ -123,29 +123,37 @@ macro(auib_import AUI_MODULE_NAME URL)
     #    list(APPEND CMAKE_PREFIX_PATH ${DEP_INSTALL_PREFIX})
     #endif()
 
+    if (AUI_BOOT_${AUI_MODULE_NAME}_ADD_SUBDIRECTORY OR AUIB_IMPORT_ADD_SUBDIRECTORY)
+        set(DEP_ADD_SUBDIRECTORY TRUE)
+    else()
+        set(DEP_ADD_SUBDIRECTORY FALSE)
+    endif()
     string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
     set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/src")
     set(DEP_BINARY_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/build/${BUILD_SPECIFIER}/${CMAKE_GENERATOR}")
     set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
-    # avoid compilation if we have existing installation
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
-    set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX})
-    if (EXISTS ${DEP_INSTALLED_FLAG})
-        if (AUIB_IMPORT_COMPONENTS)
-            find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS})
-        else()
-            find_package(${AUI_MODULE_NAME})
+    if (NOT DEP_ADD_SUBDIRECTORY)
+        # avoid compilation if we have existing installation
+        set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX})
+        if (EXISTS ${DEP_INSTALLED_FLAG})
+            if (AUIB_IMPORT_COMPONENTS)
+                find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS})
+            else()
+                find_package(${AUI_MODULE_NAME})
+            endif()
         endif()
     endif()
     if (NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND)
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
         # so we have to compile and install
-
-        if (NOT EXISTS ${DEP_INSTALLED_FLAG})
-            message(STATUS "${AUI_MODULE_NAME}: building because ${DEP_INSTALLED_FLAG} does not exist")
-        else()
-            message(STATUS "${AUI_MODULE_NAME}: building because find_package could not find package in ${DEP_INSTALL_PREFIX}")
+        if (NOT DEP_ADD_SUBDIRECTORY)
+            if (NOT EXISTS ${DEP_INSTALLED_FLAG})
+                message(STATUS "${AUI_MODULE_NAME}: building because ${DEP_INSTALLED_FLAG} does not exist")
+            else()
+                message(STATUS "${AUI_MODULE_NAME}: building because find_package could not find package in ${DEP_INSTALL_PREFIX}")
+            endif()
         endif()
 
         include(FetchContent)
@@ -181,85 +189,89 @@ macro(auib_import AUI_MODULE_NAME URL)
 
         message("Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
 
-        message(STATUS "Compiling ${AUI_MODULE_NAME}")
-        if (AUIB_IMPORT_CMAKE_WORKING_DIR)
-            set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
-        endif()
-
-        get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
-        unset(FORWARDED_LIBS)
-        foreach (_entry ${AUI_BOOT_ROOT_ENTRIES})
-            list(APPEND FORWARDED_LIBS "-D${_entry}")
-        endforeach()
-        set(FINAL_CMAKE_ARGS
-                -DAUI_BOOT=TRUE
-                ${FORWARDED_LIBS}
-                ${AUIB_IMPORT_CMAKE_ARGS}
-                -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
-                -G "${CMAKE_GENERATOR}")
-
-        if (AUIB_IMPORT_COMPONENTS)
-            list(JOIN AUIB_IMPORT_COMPONENTS "\\\;" TMP_LIST)
-            set(FINAL_CMAKE_ARGS
-                    ${FINAL_CMAKE_ARGS}
-                    -DAUI_BOOT_COMPONENTS=${TMP_LIST})
-        endif()
-
-        if(ANDROID)
-            set(ANDROID_VARS
-                    CMAKE_SYSTEM_NAME
-                    CMAKE_EXPORT_COMPILE_COMMANDS
-                    CMAKE_SYSTEM_VERSION
-                    ANDROID_PLATFORM
-                    ANDROID_ABI
-                    CMAKE_ANDROID_ARCH_ABI
-                    ANDROID_NDK
-                    CMAKE_ANDROID_NDK
-                    CMAKE_MAKE_PROGRAM
-                    )
-        endif()
-
-        # forward all necessary variables to child cmake build
-        foreach(_varname
-                CMAKE_TOOLCHAIN_FILE
-                CMAKE_GENERATOR_PLATFORM
-                CMAKE_VS_PLATFORM_NAME
-                CMAKE_BUILD_TYPE
-                CMAKE_CROSSCOMPILING
-                ${ANDROID_VARS})
-            if (${_varname})
-                list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
+        if (DEP_ADD_SUBDIRECTORY)
+            add_subdirectory(${DEP_SOURCE_DIR} "aui.boot-build-${AUI_MODULE_NAME}")
+        else()
+            message(STATUS "Compiling ${AUI_MODULE_NAME}")
+            if (AUIB_IMPORT_CMAKE_WORKING_DIR)
+                set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
             endif()
-        endforeach()
 
-        message("Building and installing ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
-        execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
-                WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                RESULT_VARIABLE STATUS_CODE)
+            get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
+            unset(FORWARDED_LIBS)
+            foreach (_entry ${AUI_BOOT_ROOT_ENTRIES})
+                list(APPEND FORWARDED_LIBS "-D${_entry}")
+            endforeach()
+            set(FINAL_CMAKE_ARGS
+                    -DAUI_BOOT=TRUE
+                    ${FORWARDED_LIBS}
+                    ${AUIB_IMPORT_CMAKE_ARGS}
+                    -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
+                    -G "${CMAKE_GENERATOR}")
 
-        if (NOT STATUS_CODE EQUAL 0)
-            message(STATUS "CMake configure failed, clearing dir and trying again...")
-            file(REMOVE_RECURSE ${DEP_BINARY_DIR})
-            file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
+            if (AUIB_IMPORT_COMPONENTS)
+                list(JOIN AUIB_IMPORT_COMPONENTS "\\\;" TMP_LIST)
+                set(FINAL_CMAKE_ARGS
+                        ${FINAL_CMAKE_ARGS}
+                        -DAUI_BOOT_COMPONENTS=${TMP_LIST})
+            endif()
+
+            if(ANDROID)
+                set(ANDROID_VARS
+                        CMAKE_SYSTEM_NAME
+                        CMAKE_EXPORT_COMPILE_COMMANDS
+                        CMAKE_SYSTEM_VERSION
+                        ANDROID_PLATFORM
+                        ANDROID_ABI
+                        CMAKE_ANDROID_ARCH_ABI
+                        ANDROID_NDK
+                        CMAKE_ANDROID_NDK
+                        CMAKE_MAKE_PROGRAM
+                        )
+            endif()
+
+            # forward all necessary variables to child cmake build
+            foreach(_varname
+                    CMAKE_TOOLCHAIN_FILE
+                    CMAKE_GENERATOR_PLATFORM
+                    CMAKE_VS_PLATFORM_NAME
+                    CMAKE_BUILD_TYPE
+                    CMAKE_CROSSCOMPILING
+                    ${ANDROID_VARS})
+                if (${_varname})
+                    list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
+                endif()
+            endforeach()
+
+            message("Building and installing ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
             execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                     RESULT_VARIABLE STATUS_CODE)
+
             if (NOT STATUS_CODE EQUAL 0)
-                message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}")
+                message(STATUS "CMake configure failed, clearing dir and trying again...")
+                file(REMOVE_RECURSE ${DEP_BINARY_DIR})
+                file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
+                execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
+                        WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                        RESULT_VARIABLE STATUS_CODE)
+                if (NOT STATUS_CODE EQUAL 0)
+                    message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}")
+                endif()
             endif()
-        endif()
 
-        message(STATUS "Installing ${AUI_MODULE_NAME}")
-        execute_process(COMMAND
-                ${CMAKE_COMMAND}
-                --build ${DEP_BINARY_DIR}
-                --target install
+            message(STATUS "Installing ${AUI_MODULE_NAME}")
+            execute_process(COMMAND
+                    ${CMAKE_COMMAND}
+                    --build ${DEP_BINARY_DIR}
+                    --target install
 
-                WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                RESULT_VARIABLE ERROR_CODE)
+                    WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                    RESULT_VARIABLE ERROR_CODE)
 
-        if (NOT STATUS_CODE EQUAL 0)
-            message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
+            if (NOT STATUS_CODE EQUAL 0)
+                message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
+            endif()
         endif()
         file(TOUCH ${DEP_INSTALLED_FLAG})
         if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
