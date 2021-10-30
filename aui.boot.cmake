@@ -129,7 +129,13 @@ macro(auib_import AUI_MODULE_NAME URL)
         set(DEP_ADD_SUBDIRECTORY FALSE)
     endif()
     string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
-    set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/src")
+
+    if (DEP_ADD_SUBDIRECTORY)
+        # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project's name
+        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME}")
+    else()
+        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/src")
+    endif()
     set(DEP_BINARY_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/build/${BUILD_SPECIFIER}/${CMAKE_GENERATOR}")
     set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
@@ -145,7 +151,7 @@ macro(auib_import AUI_MODULE_NAME URL)
             endif()
         endif()
     endif()
-    if (NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND)
+    if ((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND) AND NOT DEP_ADD_SUBDIRECTORY OR (NOT EXISTS ${DEP_SOURCE_DIR}) AND DEP_ADD_SUBDIRECTORY)
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
         # so we have to compile and install
         if (NOT DEP_ADD_SUBDIRECTORY)

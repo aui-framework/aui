@@ -507,6 +507,9 @@ function(aui_module AUI_MODULE_NAME)
 
     aui_add_properties(${AUI_MODULE_NAME})
 
+    string(REPLACE "." "::" BUILD_AS_IMPORTED_NAME ${AUI_MODULE_NAME})
+    add_library(${BUILD_AS_IMPORTED_NAME} ALIAS ${AUI_MODULE_NAME})
+
     aui_common(${AUI_MODULE_NAME})
     install(
             TARGETS ${AUI_MODULE_NAME}
