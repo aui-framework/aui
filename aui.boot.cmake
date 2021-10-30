@@ -151,7 +151,7 @@ macro(auib_import AUI_MODULE_NAME URL)
             endif()
         endif()
     endif()
-    if ((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND) AND NOT DEP_ADD_SUBDIRECTORY OR (NOT EXISTS ${DEP_SOURCE_DIR}) AND DEP_ADD_SUBDIRECTORY)
+    if (((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND) AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_SOURCE_DIR}) AND DEP_ADD_SUBDIRECTORY))
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
         # so we have to compile and install
         if (NOT DEP_ADD_SUBDIRECTORY)
@@ -172,7 +172,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                 file(LOCK "${AUI_CACHE_DIR}/repo.lock")
             endif()
             set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
-                                       BINARY_DIR ${DEP_BINARY_DIR})
+                    BINARY_DIR ${DEP_BINARY_DIR})
         endif()
         message(STATUS "Fetching ${AUI_MODULE_NAME}")
 
