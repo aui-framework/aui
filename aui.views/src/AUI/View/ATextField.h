@@ -25,6 +25,10 @@
 #include "AAbstractTextField.h"
 #include <AUI/Util/ADataBinding.h>
 
+/**
+ * <p>Represents an editable field with text to receive a text input from the user.</p>
+ * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/ATextField.gif">
+ */
 class API_AUI_VIEWS ATextField: public AAbstractTextField
 {
 public:

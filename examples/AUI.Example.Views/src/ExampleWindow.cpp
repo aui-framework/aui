@@ -75,6 +75,7 @@ public:
             AScrollArea::Builder().withContents(Vertical {
                 Centered { _new<ALabel>("ALabel") },
                 Centered { _new<AButton>("AButton") },
+                Centered { _new<ATextField>() let { it->setText("ATextField"); } },
             } << ".all_views_wrap").withExpanding()
         });
     }
@@ -86,7 +87,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
     AStylesheet::inst().addRules({
          {
              c(".all_views_wrap") > t<AViewContainer>(),
-             Padding { 20_dp },
+             Padding { 16_dp },
          }
     });
 
