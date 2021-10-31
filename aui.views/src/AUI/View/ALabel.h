@@ -29,6 +29,10 @@
 #include "AUI/Image/IDrawable.h"
 #include <AUI/Util/ADataBinding.h>
 
+/**
+ * Represents a simple text.
+ * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/ALabel.png">
+ */
 class API_AUI_VIEWS ALabel: public AView
 {
 private:

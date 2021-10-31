@@ -34,6 +34,9 @@ public:
     void update();
 };
 
+/**
+ * Represents a simple check box.
+ */
 class API_AUI_VIEWS ACheckBox: public AViewContainer
 {
 private:

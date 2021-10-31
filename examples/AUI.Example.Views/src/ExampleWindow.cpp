@@ -53,6 +53,7 @@
 #include <AUI/View/ADragArea.h>
 #include <random>
 #include <AUI/View/ASplitter.h>
+#include <AUI/View/AScrollArea.h>
 
 using namespace ass;
 
@@ -66,9 +67,28 @@ void fillWindow(_<AViewContainer> t)
 	t->addView(_new<ALabel>("Window contents"));
 }
 
+
+class AllViewsWindow: public AWindow {
+public:
+    AllViewsWindow(): AWindow("All views", 300_dp, 500_dp, nullptr, WindowStyle::DIALOG) {
+        setContents(Centered {
+            AScrollArea::Builder().withContents(Vertical {
+                Centered { _new<ALabel>("ALabel") },
+                Centered { _new<AButton>("AButton") },
+            } << ".all_views_wrap").withExpanding()
+        });
+    }
+};
+
 ExampleWindow::ExampleWindow(): AWindow("Examples")
 {
 	setLayout(_new<AVerticalLayout>());
+    AStylesheet::inst().addRules({
+         {
+             c(".all_views_wrap") > t<AViewContainer>(),
+             Padding { 20_dp },
+         }
+    });
 
 	addView(_new<ASelectableLabel>("Building beautiful programs in pure C++ without chrome embded framework"));
 
@@ -83,7 +103,9 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
 	    horizontal->addView(Vertical {
 	        // buttons
 	        _new<ALabel>("Buttons"),
-	        _new<AButton>("Common button"),
+	        _new<AButton>("Common button").connect(&AButton::clicked, this, [] {
+                _new<AllViewsWindow>()->show();
+            }),
 	        _new<AButton>("Default button") let { it->setDefault(); },
 	        _new<AButton>("Disabled button") let { it->setDisabled(); },
 

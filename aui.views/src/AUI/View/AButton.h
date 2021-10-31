@@ -25,6 +25,10 @@
 #include "AUI/Render/Render.h"
 #include "ALabel.h"
 
+/**
+ * Represents a simple button with text, which can be pushed to make some action.
+ * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/AButton.gif">
+ */
 class API_AUI_VIEWS AButton: public ALabel
 {	
 public:

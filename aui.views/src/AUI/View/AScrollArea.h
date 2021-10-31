@@ -52,6 +52,7 @@ public:
     private:
         _<AScrollbar> mExternalVerticalScrollbar;
         _<AViewContainer> mContents;
+        bool mExpanding = false;
 
     public:
         Builder() = default;
@@ -64,6 +65,12 @@ public:
             mContents = contents;
             return *this;
         }
+
+        Builder& withExpanding() {
+            mExpanding = true;
+            return *this;
+        }
+
 
         _<AScrollArea> build() {
             return {new AScrollArea(*this) };
