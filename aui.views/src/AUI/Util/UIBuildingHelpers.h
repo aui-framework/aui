@@ -147,7 +147,49 @@ namespace aui::detail {
     };
 }
 
+/**
+ * Places views in a column.
+ * <p>
+ *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/vertical.jpg">
+ *
+ *  <dl>
+ *    <dt><b>View:</b> <a href="#AViewContainer">AViewContainer</a></dt>
+ *    <dt><b>Layout manager:</b> <a href="#AVerticalLayout">AVerticalLayout</a></dt>
+ *  </dl>
+ * </p>
+ */
 using Vertical = aui::detail::container_helper<AVerticalLayout>;
+
+/**
+ * Places views in a row.
+ * <p>
+ *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/horizontal.jpg">
+ *
+ *  <dl>
+ *    <dt><b>View:</b> <a href="#AViewContainer">AViewContainer</a></dt>
+ *    <dt><b>Layout manager:</b> <a href="#AHorizontalLayout">AHorizontalLayout</a></dt>
+ *  </dl>
+ * </p>
+ */
 using Horizontal = aui::detail::container_helper<AHorizontalLayout>;
+
+/**
+ * Places views in a stack, centering them.
+ * <p>
+ *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/stacked2.jpg">
+ *
+ *  <dl>
+ *    <dt><b>View:</b> <a href="#AViewContainer">AViewContainer</a></dt>
+ *    <dt><b>Layout manager:</b> <a href="#AStackedLayout">AStackedLayout</a></dt>
+ *  </dl>
+ * </p>
+ */
 using Stacked = aui::detail::container_helper<AStackedLayout>;
+
+/**
+ * <p>
+ * <code>Center</code> is an alias to <a href="#Stacked">Stacked</a>. When <a href="#Stacked">Stacked</a> is used only for centering views, you can use
+ * this alias in order to improve understanding of your code.
+ * </p>
+ */
 using Centered = Stacked;
