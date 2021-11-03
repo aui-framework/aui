@@ -61,6 +61,9 @@ AViewContainer::AViewContainer()
 
 AViewContainer::~AViewContainer()
 {
+	for (auto& view : mViews) {
+		view->mParent = nullptr;
+	}
 	//Stylesheet::inst().invalidateCache();
 }
 
