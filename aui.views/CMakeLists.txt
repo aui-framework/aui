@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.10)
 
+
+set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH TRUE)
 find_package(OpenGL)
+set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
 
 if (OPENGL_FOUND OR ANDROID)
 
