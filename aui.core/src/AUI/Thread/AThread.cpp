@@ -66,7 +66,9 @@ public:
 
     void setThreadName(const AString& name) override {
 #ifdef _WIN32
-        setThreadNameImpl(GetCurrentThread(), name);
+        setThreadNameImpl((HANDLE) GetCurrentThread(), name);
+#else
+        pthread_setname_np(pthread_self(), name.toStdString().c_str());
 #endif
     }
 };
@@ -224,24 +226,22 @@ AThread::~AThread()
 
 
 void AAbstractThread::setThreadName(const AString& name) {
-    // stub
+    // just stub
 }
 
 void AThread::setThreadName(const AString& name) {
     mThreadName = std::make_unique<AString>(name);
-#ifdef _WIN32
     updateThreadName();
-#else
-    // TODO setThreadName for linux
-#endif
 }
 
 void AThread::updateThreadName() {
-#ifdef _WIN32
     if (mThreadName && mThread) {
+#ifdef _WIN32
         setThreadNameImpl((HANDLE) mThread->native_handle(), *mThreadName);
-    }
+#else
+        pthread_setname_np(mThread->native_handle(), mThreadName->toStdString().c_str());
 #endif
+    }
 }
 
 AThread::AThread(std::function<void()> functor)

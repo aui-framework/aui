@@ -37,5 +37,6 @@ void ASizeAnimator::doAnimation(AView* view, float theta) {
     }
     auto currentSize = glm::mix(mBeginSize, mEndSize, theta);
     view->setSizeForced(currentSize);
+    view->redraw();
 }
 

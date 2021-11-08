@@ -721,7 +721,14 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
             throw AException("XIM Can't get styles");
         }
     }
-    mHandle = XCreateWindow(gDisplay, gScreen->root, 0, 0, width, height, 0, vi->depth, InputOutput, vi->visual,
+    mHandle = XCreateWindow(gDisplay,
+                            gScreen->root,
+                            0, 0,
+                            width, height,
+                            0,
+                            vi->depth,
+                            InputOutput,
+                            vi->visual,
                             CWColormap | CWEventMask | CWCursor, &swa);
 
     // XSync
@@ -1191,7 +1198,7 @@ glm::ivec2 AWindow::getWindowPosition() const {
     XTranslateCoordinates(gDisplay, mHandle, gScreen->root, 0, 0, &x, &y, &child);
     XGetWindowAttributes(gDisplay, mHandle, &xwa);
 
-    return {x - xwa.x, y - xwa.y};
+    return {x, y};
 #endif
 }
 
@@ -1332,6 +1339,7 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     MoveWindow(mHandle, x, y, r.right - r.left, r.bottom - r.top, false);
 #elif defined(ANDROID)
 #else
+    XMoveWindow(gDisplay, mHandle, x, y);
     XResizeWindow(gDisplay, mHandle, width, height);
 #endif
 }
@@ -1492,7 +1500,7 @@ _<AViewContainer> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& positi
     class AOverlappingWindow: public AWindow {
     public:
         AOverlappingWindow(AWindow* parent):
-        AWindow("MENU", 0, 0, parent, WindowStyle::SYS) {
+        AWindow("MENU", 100, 100, parent, WindowStyle::SYS) {
             setCustomAss({ ass::Padding { 0 } });
         }
     };
@@ -1500,9 +1508,7 @@ _<AViewContainer> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& positi
     auto finalPos = unmapPosition(position);
     window->setGeometry(finalPos.x, finalPos.y, size.x, size.y);
     // show later
-    ui_thread {
-        window->show();
-    };
+    window->show();
     return window;
 }
 
