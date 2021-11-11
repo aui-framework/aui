@@ -177,12 +177,6 @@ protected:
 	ADeque<AString> mAssNames;
 
 	/**
-	 * \brief Determines window which this AView belongs to.
-	 * \return window which this AView belongs to. Could be nullptr
-	 */
-	AWindow* getWindow();
-
-	/**
 	 * \brief Determines which ASS style rules should be applied to this AView and fills the mAss field.
 	 */
 	virtual void recompileCSS();
@@ -200,6 +194,12 @@ public:
 	 * \brief Request window manager to redraw this AView.
 	 */
 	void redraw();
+    
+    /**
+     * \brief Determines window which this AView belongs to.
+     * \return window which this AView belongs to. Could be nullptr
+     */
+    AWindow* getWindow();
 
 	virtual void drawStencilMask();
 

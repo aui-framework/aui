@@ -28,6 +28,7 @@
 
 void AVerticalLayout::onResize(int x, int y, int width, int height)
 {
+    if (mViews.empty()) return;
 	struct cache_t
 	{
 		int expanding;

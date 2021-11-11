@@ -247,11 +247,11 @@ void ATreeView::onMouseWheel(glm::ivec2 pos, int delta) {
 
 
 void ATreeView::handleMousePressed(ATreeView::ItemView* v) {
-
+    emit itemMouseClicked(v->getIndex());
 }
 
 void ATreeView::handleMouseDoubleClicked(ATreeView::ItemView* v) {
-
+    emit itemMouseDoubleClicked(v->getIndex());
 }
 
 void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATreeIndex& index) {

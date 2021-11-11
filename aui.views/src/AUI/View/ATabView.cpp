@@ -32,7 +32,7 @@ ATabView::ATabView() {
 
     addView(mRow = _new<ATabButtonRow>());
     addView(mPageView = _new<APageView>());
-
+    mPageView->setExpanding();
     connect(mPageView->pageChanging, this, [&](unsigned pageId) {
         mRow->setCurrent(mPageView->getPageId(), false);
         mRow->setCurrent(pageId, true);

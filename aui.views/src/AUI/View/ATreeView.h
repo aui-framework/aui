@@ -63,6 +63,8 @@ public:
     }
 
 signals:
+    emits<ATreeIndex> itemMouseClicked;
+    emits<ATreeIndex> itemMouseDoubleClicked;
     emits<ATreeIndex> itemMouseHover;
 };
 

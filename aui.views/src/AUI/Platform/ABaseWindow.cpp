@@ -12,6 +12,7 @@
 #include <AUI/Util/kAUI.h>
 #include <chrono>
 #include "Platform.h"
+#include <AUI/Devtools/DevtoolsWindow.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 ABaseWindow::ABaseWindow() {
@@ -186,6 +187,13 @@ void ABaseWindow::onKeyDown(AInput::Key key) {
     emit keyDown(key);
     if (auto v = getFocusedView())
         v->onKeyDown(key);
+
+#ifdef _DEBUG
+    if (key == AInput::F12 && AInput::isKeyDown(AInput::LControl)) {
+        auto devtools = _new<DevtoolsWindow>(this);
+        devtools->show();
+    }
+#endif
 }
 
 void ABaseWindow::flagRedraw() {

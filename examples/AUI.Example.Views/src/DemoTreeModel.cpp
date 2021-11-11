@@ -34,7 +34,7 @@ enum Type {
 };
 
 size_t DemoTreeModel::childrenCount(const ATreeIndex& parent) {
-    switch ((uintptr_t)parent.getUserData()) {
+    switch ((uintptr_t)parent.getUserData<void>()) {
         case TYPE_ROOT:
             return 3;
         case TYPE_4ITEM:
@@ -44,14 +44,14 @@ size_t DemoTreeModel::childrenCount(const ATreeIndex& parent) {
 }
 
 AString DemoTreeModel::itemAt(const ATreeIndex& index) {
-    if (((uintptr_t)index.getUserData()) != TYPE_ROOT) {
+    if (((uintptr_t)index.getUserData<void>()) != TYPE_ROOT) {
         return "Sub item";
     }
     return "Root item #";
 }
 
 ATreeIndex DemoTreeModel::indexOfChild(size_t row, size_t column, const ATreeIndex& parent) {
-    switch ((uintptr_t)parent.getUserData()) {
+    switch ((uintptr_t)parent.getUserData<void>()) {
         case TYPE_ROOT:
             if (row == 0) {
                 return ATreeIndex{(void*)TYPE_4ITEM};

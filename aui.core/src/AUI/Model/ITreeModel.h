@@ -42,9 +42,10 @@ public:
     {
     }
 
+    template<typename T>
     [[nodiscard]]
-    void* getUserData() const {
-        return mUserData;
+    T* getUserData() const {
+        return reinterpret_cast<T*>(mUserData);
     }
 };
 
