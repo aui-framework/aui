@@ -32,6 +32,7 @@ class AVector: public SequenceContainerExtensions<std::vector<StoredType, Alloca
 {
 protected:
 	using p = SequenceContainerExtensions<std::vector<StoredType, Allocator>>;
+    using self = AVector<StoredType, Allocator>;
 	
 public:
 
@@ -84,4 +85,14 @@ public:
 	template <class Iterator>
 	inline AVector(Iterator first, Iterator end, const Allocator& allocator = Allocator()): p(first, end, allocator) {}
 
+
+    template<typename Callable>
+    inline static AVector<StoredType, Allocator> generate(size_t size, Callable callable) {
+        AVector<StoredType, Allocator> s;
+        s.reserve(size);
+        for (size_t i = 0; i < size; ++i) {
+            s << callable(i);
+        }
+        return s;
+    }
 };

@@ -55,6 +55,7 @@
 #include <AUI/View/ASplitter.h>
 #include <AUI/View/AScrollArea.h>
 #include <AUI/View/ATabView.h>
+#include <AUI/View/AGridSplitter.h>
 
 using namespace ass;
 
@@ -287,11 +288,16 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                                                _new<AButton>("Five")}),
             _new<ALabel>("Vertical splitter"),
             ASplitter::Vertical().withItems({_new<AButton>("One"),
-                                                   _new<AButton>("Two"),
-                                                   _new<AButton>("Three"),
-                                                   _new<AButton>("Four"),
-                                                   _new<AButton>("Five")}).build() let { it->setExpanding(); },
-            _new<ALabel>("TODO: grid splitter"),
+                                              _new<AButton>("Two"),
+                                              _new<AButton>("Three"),
+                                              _new<AButton>("Four"),
+                                              _new<AButton>("Five")}).build() let { it->setExpanding(); },
+            _new<ALabel>("Grid splitter"),
+            AGridSplitter::Builder().withItems(AVector<AVector<_<AView>>>::generate(5, [](size_t y) {
+               return AVector<_<AView>>::generate(5, [&](size_t x) {
+                   return _new<AButton>("{}x{}"_as.format(x, y));
+               });
+            })).withCrosses()
         } let { it->setExpanding(); }, "Splitters");
 
         it->addTab(Vertical {

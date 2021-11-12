@@ -27,6 +27,7 @@
 #include "AViewContainer.h"
 #include "AHDividerView.h"
 #include "AVDividerView.h"
+#include "ASplitterHelper.h"
 
 class API_AUI_VIEWS ASplitter: public AViewContainer
 {
@@ -34,50 +35,14 @@ private:
     template<typename Layout>
     friend class Builder;
 
-    LayoutDirection mDirection;
-    std::function<_<AView>()> mDividerFactory;
-    AVector<_<AView>> mItems;
-    AVector<_<AView>> mDividers;
-    unsigned mDraggingDividerIndex = -1;
-    int mDragOffset;
+    ASplitterHelper mHelper;
 
     ASplitter();
-
-    void updateSplitterItems();
-
-    float getTotalOccupiedSizeOf(const _<AView>& view) {
-        return mDirection == LayoutDirection::VERTICAL ? view->getTotalOccupiedHeight() : view->getTotalOccupiedWidth();
-    }
-
-    template<typename T>
-    [[nodiscard]]
-    T& getAxisValue(glm::tvec2<T>& v) {
-        switch (mDirection) {
-            case LayoutDirection::VERTICAL  : return v.y;
-            case LayoutDirection::HORIZONTAL: return v.x;
-        }
-        throw;
-    }
-    template<typename T>
-    [[nodiscard]]
-    T getAxisValue(const glm::tvec2<T>& v) {
-        switch (mDirection) {
-            case LayoutDirection::VERTICAL  : return v.y;
-            case LayoutDirection::HORIZONTAL: return v.x;
-        }
-        throw;
-    }
 
     template<typename Layout>
     class Builder {
     friend class ASplitter;
     private:
-        std::function<_<AView>()> mDividerFactory = []() -> _<AView> {
-            if constexpr (Layout::DIRECTION == LayoutDirection::VERTICAL) {
-                return _new<AHDividerView>();
-            }
-            return _new<AVDividerView>();
-        };
         AVector<_<AView>> mItems;
 
     public:
@@ -86,26 +51,30 @@ private:
            return *this;
        }
 
-       Builder& withDivider(const std::function<_<AView>()>& factory) {
-           mDividerFactory = factory;
-           return *this;
-       }
-
-       template<typename T>
-       Builder& withDivider() {
-           static_assert(std::is_base_of_v<AView, T>, "use instance of AView in withDivider");
-           withDivider([] {
-              return _new<T>();
-           });
-           return *this;
-       }
-
        _<AView> build() {
            _<ASplitter> splitter = new ASplitter;
-           splitter->mDividerFactory = std::move(mDividerFactory);
-           splitter->mItems = std::move(mItems);
-           splitter->mDirection = Layout::DIRECTION;
-           splitter->updateSplitterItems();
+           splitter->mHelper.setDirection(Layout::DIRECTION);
+
+
+           if (splitter->mHelper.mDirection == LayoutDirection::VERTICAL) {
+               splitter->setLayout(_new<AVerticalLayout>());
+           } else {
+               splitter->setLayout(_new<AHorizontalLayout>());
+           }
+
+           bool atLeastOneItemHasExpanding = false;
+           for (auto& item : mItems) {
+               splitter->addView(item);
+               atLeastOneItemHasExpanding |= splitter->mHelper.getAxisValue(item->getExpanding()) > 0;
+           }
+           if (!atLeastOneItemHasExpanding) {
+               auto spacer = _new<ASpacer>();
+               splitter->addView(spacer);
+               mItems << spacer;
+           }
+
+           splitter->mHelper.mItems = std::move(mItems);
+
            return splitter;
        }
 
@@ -118,11 +87,6 @@ public:
     virtual ~ASplitter() = default;
 
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
-
-    [[nodiscard]]
-    bool isDragging() const {
-        return mDraggingDividerIndex != -1;
-    }
 
     void onMouseMove(glm::ivec2 pos) override;
 

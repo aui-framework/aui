@@ -81,4 +81,5 @@ public:
             (i.get()->*f)(std::forward<Args>(args)...);
         }
     }
+
 };
