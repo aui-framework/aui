@@ -335,6 +335,7 @@ void AViewContainer::onDpiChanged() {
     }
 }
 void AViewContainer::setContents(const _<AViewContainer>& container) {
+    assert(("Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents" && typeid(container.get()) == typeid(AViewContainer*)));
     setLayout(std::move(container->mLayout));
     mViews = std::move(container->mViews);
     for (auto& v : mViews) {

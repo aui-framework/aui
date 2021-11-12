@@ -62,8 +62,11 @@ protected:
 
 
     /**
-     * \brief Move all children of specified container to this container
-     * \param container container
+     * \brief Moves all children and layout of specified container to this container.
+     * \param container container. Cannot be derivative from <a href="AViewContainer">AViewContainer</a>.
+     * \note If access to this function is restricted or you want to pass an object derived from
+     * <a href="AViewContainer">AViewContainer</a>, you should use
+     * <a href="ALayoutInflater::inflate">ALayoutInflater::inflate</a> instead.
      */
     void setContents(const _<AViewContainer>& container);
 

@@ -28,6 +28,8 @@ protected:
     virtual _<AViewContainer> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
     virtual void closeOverlappingSurfaceImpl(AViewContainer* surface) = 0;
 
+    virtual void createDevtoolsWindow();
+
 public:
     ABaseWindow();
 
@@ -78,7 +80,7 @@ public:
     }
 
     /**
-     * Create a surface used for context menus and combo boxes. Closure of the surface is managed by window but can be
+     * Creates a surface used for context menus and combo boxes. Closure of the surface is managed by window but can be
      * closed manually by calling closeOverlappingSurface.
      * @param position position where does the surface should be created. It's not exact the top left corner of the
      *        surface but a hint (i.e. if the surface does not fit)
@@ -134,6 +136,7 @@ signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
+
 };
 
 

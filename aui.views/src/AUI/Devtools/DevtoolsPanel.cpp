@@ -1,6 +1,6 @@
 //#ifdef _DEBUG
 
-#include "DevtoolsWindow.h"
+#include "DevtoolsPanel.h"
 #include "AUI/View/ASplitter.h"
 #include "Devtools.h"
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -36,10 +36,8 @@ protected:
     }
 };
 
-DevtoolsWindow::DevtoolsWindow(ABaseWindow* targetWindow):
-        AWindow("Devtools", 600_dp, 400_dp),
+DevtoolsPanel::DevtoolsPanel(AViewContainer* targetWindow):
         mTargetWindow(targetWindow) {
-
     setContents(Stacked {
         ASplitter::Horizontal().withItems({
             mViewHierarchyTree = _new<ATreeView>() with_style { ass::MinSize{ 300_dp } },

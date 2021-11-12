@@ -419,6 +419,8 @@ public:
 #endif
 
 #include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/Devtools/DevtoolsPanel.h>
+#include <AUI/Util/ALayoutInflater.h>
 
 thread_local bool painter::painting = false;
 
@@ -442,6 +444,21 @@ void AWindow::onClosed() {
 
 void AWindow::doDrawWindow() {
     render();
+}
+
+void AWindow::createDevtoolsWindow() {
+    class DevtoolsWindow: public AWindow {
+    public:
+        DevtoolsWindow(): AWindow("Devtools", 500_dp, 400_dp) {}
+
+    protected:
+        void createDevtoolsWindow() override {
+            // stub
+        }
+    };
+    auto window = _new<DevtoolsWindow>();
+    ALayoutInflater::inflate(window, _new<DevtoolsPanel>(this));
+    window->show();
 }
 
 void AWindow::windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) {

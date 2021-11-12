@@ -12,8 +12,9 @@
 #include <AUI/Util/kAUI.h>
 #include <chrono>
 #include "Platform.h"
-#include <AUI/Devtools/DevtoolsWindow.h>
+#include <AUI/Devtools/DevtoolsPanel.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <AUI/Util/ALayoutInflater.h>
 
 ABaseWindow::ABaseWindow() {
     mDpiRatio = Platform::getDpiRatio();
@@ -190,10 +191,13 @@ void ABaseWindow::onKeyDown(AInput::Key key) {
 
 #ifdef _DEBUG
     if (key == AInput::F12 && AInput::isKeyDown(AInput::LControl)) {
-        auto devtools = _new<DevtoolsWindow>(this);
-        devtools->show();
+        createDevtoolsWindow();
     }
 #endif
+}
+
+void ABaseWindow::createDevtoolsWindow() {
+    ALayoutInflater::inflate(createOverlappingSurface({0, 0}, { 500_dp, 400_dp }), _new<DevtoolsPanel>(this));
 }
 
 void ABaseWindow::flagRedraw() {
