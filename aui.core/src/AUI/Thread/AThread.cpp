@@ -147,7 +147,7 @@ _<AAbstractThread> AThread::current()
 	auto& t = threadStorage();
 	if (t == nullptr) // abstract thread
 	{
-		t = _<AAbstractThread>(new CurrentThread(std::this_thread::get_id()));
+		t = aui::ptr::manage(new CurrentThread(std::this_thread::get_id()));
 	}
 
 	return t;

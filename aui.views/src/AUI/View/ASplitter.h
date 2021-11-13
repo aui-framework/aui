@@ -52,7 +52,7 @@ private:
        }
 
        _<AView> build() {
-           _<ASplitter> splitter = new ASplitter;
+           auto splitter = aui::ptr::manage(new ASplitter);
            splitter->mHelper.setDirection(Layout::DIRECTION);
 
 

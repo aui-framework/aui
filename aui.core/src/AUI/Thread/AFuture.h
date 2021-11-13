@@ -113,7 +113,7 @@ template <typename Value>
 template <typename Callable>
 _<AFuture<Value>> AFuture<Value>::make(AThreadPool& tp, Callable func)
 {
-    auto future = _<AFuture<Value>>(new AFuture<Value>);
+    auto future = aui::ptr::manage(new AFuture<Value>);
 	tp.run([future, func]()
 	{
 		std::unique_lock lock(future->mMutex);

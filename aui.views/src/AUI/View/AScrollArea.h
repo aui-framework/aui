@@ -73,7 +73,7 @@ public:
 
 
         _<AScrollArea> build() {
-            return {new AScrollArea(*this) };
+            return aui::ptr::manage(new AScrollArea(*this));
         }
 
         operator _<AView>() {

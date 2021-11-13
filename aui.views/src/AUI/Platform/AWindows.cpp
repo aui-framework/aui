@@ -1513,7 +1513,7 @@ void AWindowManager::notifyProcessMessages() {
 }
 
 
-_<AViewContainer> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
+_<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
     class AOverlappingWindow: public AWindow {
     public:
         AOverlappingWindow(AWindow* parent):
@@ -1526,10 +1526,14 @@ _<AViewContainer> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& positi
     window->setGeometry(finalPos.x, finalPos.y, size.x, size.y);
     // show later
     window->show();
-    return window;
+
+    auto surface = _new<AOverlappingSurface>();
+    ALayoutInflater::inflate(window, surface);
+
+    return surface;
 }
 
-void AWindow::closeOverlappingSurfaceImpl(AViewContainer* surface) {
+void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
     if (auto c = dynamic_cast<AWindow*>(surface)) {
         c->close();
     }

@@ -28,13 +28,14 @@
 
 #include "AButton.h"
 #include <AUI/Model/IListModel.h>
+#include <AUI/Platform/AOverlappingSurface.h>
 
 class API_AUI_VIEWS AComboBox: public AButton {
 private:
     _<IListModel<AString>> mModel;
     int mSelectionId = 0;
     bool mPopup = false;
-    _weak<AViewContainer> mComboWindow;
+    _weak<AOverlappingSurface> mComboWindow;
     bool mClickConsumer = false;
 
 protected:

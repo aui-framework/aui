@@ -294,9 +294,9 @@ public:
      */
     [[nodiscard]] glm::ivec2 mapPosition(const glm::ivec2& position);
 
-    _<AViewContainer> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override;
+    _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override;
 
-    void closeOverlappingSurfaceImpl(AViewContainer* surface) override;
+    void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) override;
 
 signals:
     emits<> closed;

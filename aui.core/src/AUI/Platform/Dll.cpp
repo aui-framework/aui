@@ -41,7 +41,7 @@ _<Dll> Dll::load(const AString& path)
         auto name = fp.toStdString();
         auto lib = dlopen(name.c_str(), RTLD_LAZY);
         if (lib) {
-            return _<Dll>(new Dll(lib));
+            return aui::ptr::manage(new Dll(lib));
         }
         return nullptr;
     };
@@ -57,7 +57,7 @@ _<Dll> Dll::load(const AString& path)
 	{
 		throw DllLoadException("Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));
 	}
-	return _<Dll>(new Dll(lib));
+	return aui::ptr::manage(new Dll(lib));
 #elif defined(__ANDROID__)
 	auto name = ("lib" + fullname).toStdString();
 	auto lib = dlopen(name.c_str(), RTLD_LAZY);
@@ -65,7 +65,7 @@ _<Dll> Dll::load(const AString& path)
 	{
 		throw DllLoadException("Could not load shared library: " + fullname + ": " + dlerror());
 	}
-	return _<Dll>(new Dll(lib));
+	return aui::ptr::manage(new Dll(lib));
 #else
 	char buf[0x1000];
 	getcwd(buf, sizeof(buf));

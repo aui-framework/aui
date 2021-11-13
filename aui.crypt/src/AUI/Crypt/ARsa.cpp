@@ -113,7 +113,7 @@ AByteBuffer ARsa::getPublicKeyPEM() const
 
 _<ARsa> ARsa::generate(int bits)
 {
-	return _<ARsa>(new ARsa(RSA_generate_key(bits, RSA_F4, nullptr, nullptr)));
+	return aui::ptr::manage(new ARsa(RSA_generate_key(bits, RSA_F4, nullptr, nullptr)));
 }
 
 _<ARsa> ARsa::fromPrivateKeyPEM(const AByteBuffer& buffer)
@@ -126,7 +126,7 @@ _<ARsa> ARsa::fromPrivateKeyPEM(const AByteBuffer& buffer)
 	if (rsa == nullptr)
 		throw AException("Could not create RSA private key");
 
-	return _<ARsa>(new ARsa(rsa));
+	return aui::ptr::manage(new ARsa(rsa));
 }
 
 _<ARsa> ARsa::fromPublicKeyPEM(const AByteBuffer& buffer)
@@ -139,5 +139,5 @@ _<ARsa> ARsa::fromPublicKeyPEM(const AByteBuffer& buffer)
 	if (rsa == nullptr)
 		throw AException("Could not create RSA public key");
 
-	return _<ARsa>(new ARsa(rsa));
+	return aui::ptr::manage(new ARsa(rsa));
 }

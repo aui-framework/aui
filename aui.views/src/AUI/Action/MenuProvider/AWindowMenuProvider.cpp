@@ -34,6 +34,7 @@
 class AMenuContainer: public AViewContainer {
 private:
     _<AMenuContainer> mSubWindow;
+    _weak<AOverlappingSurface> mSurface;
 public:
     AMenuContainer(const AVector<MenuItem>& vector)
     {
@@ -105,17 +106,18 @@ public:
 
         }
     }
+
+    void setSurface(const _<AOverlappingSurface>& surface) {
+        mSurface = surface;
+    }
+
     virtual ~AMenuContainer() {
+        close();
+    }
+    void close() {
+        if (auto s = mSurface.lock()) s->close();
         if (mSubWindow) {
             mSubWindow->close();
-        }
-    }
-protected:
-
-
-    void close() {
-        if (auto window = getWindow()) {
-            window->closeOverlappingSurface(this);
         }
     }
 };
@@ -128,15 +130,16 @@ void AWindowMenuProvider::createMenu(const AVector<MenuItem>& vector) {
     auto surfaceContainer = mWindow->createOverlappingSurface(mousePos, menu->getMinimumSize());
     surfaceContainer->setLayout(_new<AStackedLayout>());
     surfaceContainer->addView(menu);
-    mSurfaceContainer = surfaceContainer;
+    menu->setSurface(surfaceContainer);
+    mMenuContainer = menu;
 }
 
 void AWindowMenuProvider::closeMenu() {
-    if (auto lock = mSurfaceContainer.lock()) {
-        mWindow->closeOverlappingSurface(lock.get());
+    if (auto s = mMenuContainer.lock()) {
+        s->close();
     }
 }
 
 bool AWindowMenuProvider::isOpen() {
-    return !mSurfaceContainer.expired();
+    return !mMenuContainer.expired();
 }

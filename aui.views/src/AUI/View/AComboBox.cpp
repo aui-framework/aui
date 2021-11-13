@@ -147,13 +147,13 @@ void AComboBox::getCustomCssAttributes(AMap<AString, AVariant>& map) {
 
 AComboBox::~AComboBox() {
     if (auto l = mComboWindow.lock())
-        getWindow()->closeOverlappingSurface(l.get());
+        l->close();
 }
 
 void AComboBox::destroyWindow() {
     mPopup = false;
-    if (auto c = mComboWindow.lock()) {
-        getWindow()->closeOverlappingSurface(c.get());
+    if (auto l = mComboWindow.lock()) {
+        l->close();
     }
     mComboWindow.reset();
     emit customCssPropertyChanged();

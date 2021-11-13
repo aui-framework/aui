@@ -23,6 +23,7 @@
 
 #include <memory>
 #include <functional>
+#include <optional>
 
 class AObject;
 
@@ -30,16 +31,48 @@ class AObject;
 template<typename T>
 using _weak = std::weak_ptr<T>;
 
+template<typename T>
+class _;
+
+namespace aui {
+    struct ptr {
+        /**
+         * Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
+         * @tparam T any type
+         * @param raw raw pointer to manage memory of
+         * @return shared pointer
+         */
+        template<typename T>
+        static _<T> manage(T* raw);
+
+        /**
+         * Creates fake shared pointer to <code>T* raw</code> with empty destructor, which does nothing. It's useful
+         * when some function accept shared pointer but you have only raw one.
+         * @tparam T any type
+         * @param raw raw pointer to manage memory of
+         * @return shared pointer
+         */
+        template<typename T>
+        static _<T> fake(T* raw);
+    };
+}
+
+
 /**
  * \brief std::shared_ptr<T> wrapper
- *        Of course, it is not good tone to define a class with _ type but it significantly increases coding speed.
+ * \note  Of course, it is not good tone to define a class with _ type but it significantly increases coding speed.
  *        Instead of writing every time std::shared_ptr you should write only the _ symbol.
  */
 template<typename T>
 class _ : public std::shared_ptr<T>
 {
+friend struct aui::ptr;
 private:
 	using parent = std::shared_ptr<T>;
+
+    _(T* raw, std::nullopt_t): std::shared_ptr<T>(raw) {
+
+    }
 
 public:
     using stored_t = T;
@@ -63,18 +96,16 @@ public:
 		}
 	};
 
-	_() = default;
+    using std::shared_ptr<T>::shared_ptr;
 
-	template<typename X>
-	_(X&& x)
-		: parent(std::forward<X>(x))
-	{
-	}
-	template<typename X, typename Y>
-	_(X&& x, Y&& y)
-		: parent(std::forward<X>(x), std::forward<Y>(y))
-	{
-	}
+    /**
+     * <p>Trap constructor</p>
+     * <p>In order to make shared pointer from the raw one, please explicitly specify how do you want manage memory by
+     * using either <code>aui::ptr::manage</code> or <code>aui::ptr::fake</code>.
+     */
+    _(T* v) {
+        static_assert(false, "use either aui::ptr::manage or aui::ptr::fake");
+    }
 
     /**
      * @return weak reference
@@ -164,6 +195,20 @@ public:
         return (*parent::get())(std::forward<Args>(value)...);
     }
 };
+
+
+namespace aui {
+    template<typename T>
+    _<T> ptr::manage(T* raw) {
+        return _<T>(raw, std::nullopt);
+    }
+
+    template<typename T>
+    _<T> ptr::fake(T* raw) {
+        return _<T>(raw, [](T*) {});
+    }
+}
+
 
 template<typename T>
 using _unique = std::unique_ptr<T>;

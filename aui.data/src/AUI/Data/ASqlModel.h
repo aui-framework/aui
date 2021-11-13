@@ -148,7 +148,7 @@ struct ASqlModel {
         AStringVector columnNames;
         columnNames << "id";
         columnNames << Meta::getFields().keyVector();
-        return _<IncompleteSelectRequest>(new IncompleteSelectRequest("SELECT " + (columnNames.empty() ? '*'
+        return aui::ptr::manage(new IncompleteSelectRequest("SELECT " + (columnNames.empty() ? '*'
             : columnNames.join(',')) + " FROM " + AModelMeta<Model>::getSqlTable(), expression));
     }
 
@@ -175,7 +175,7 @@ struct ASqlModel {
         AStringVector columnNames;
         columnNames << "id";
         columnNames << Meta::getFields().keyVector();
-        return _<IncompleteSelectRequest>(new IncompleteSelectRequest("SELECT " + (columnNames.empty() ? '*'
+        return aui::ptr::manage(new IncompleteSelectRequest("SELECT " + (columnNames.empty() ? '*'
             : columnNames.join(',')) + " FROM " + AModelMeta<Model>::getSqlTable(), {}));
     }
 

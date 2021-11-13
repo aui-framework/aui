@@ -38,8 +38,8 @@ public:
         checkForStencilBits();
     }
 
-    _<AViewContainer> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override {
-        auto container = _new<AViewContainer>();
+    _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override {
+        auto container = _new<AOverlappingSurface>();
         addViewCustomLayout(container);
 
         auto windowSize = getSize();
@@ -48,7 +48,7 @@ public:
         return container;
     }
 
-    void closeOverlappingSurfaceImpl(AViewContainer* surface) override {
+    void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) override {
         removeView(surface);
     }
 };

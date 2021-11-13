@@ -4,6 +4,7 @@ cmake_minimum_required(VERSION 3.16)
 auib_import(ZLIB https://github.com/madler/zlib
 		    VERSION v1.2.11)
 
+
 aui_module(aui.core)
 
 if (NOT WIN32)

@@ -126,15 +126,22 @@ void ABaseWindow::focusNextView() {
     }
 }
 
-void ABaseWindow::closeAllOverlappingSurfaces() {
-    // not doing foreach loop because of comodification
-    while (!mOverlappingSurfaces.empty()) {
-        closeOverlappingSurface(*mOverlappingSurfaces.begin());
+void ABaseWindow::closeOverlappingSurfacesOnClick() {
+    // creating copy because of comodification
+    AVector<AOverlappingSurface*> surfacesToClose;
+    surfacesToClose.reserve(mOverlappingSurfaces.size());
+    for (auto& surface : mOverlappingSurfaces) {
+        if (surface->isCloseOnClick()) {
+            surfacesToClose << surface.get();
+        }
+    }
+    for (auto& surface : surfacesToClose) {
+        closeOverlappingSurface(surface);
     }
 }
 
 void ABaseWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    closeAllOverlappingSurfaces();
+    closeOverlappingSurfacesOnClick();
     auto focusCopy = mFocusedView.lock();
     AViewContainer::onMousePressed(pos, button);
     if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
@@ -197,7 +204,9 @@ void ABaseWindow::onKeyDown(AInput::Key key) {
 }
 
 void ABaseWindow::createDevtoolsWindow() {
-    ALayoutInflater::inflate(createOverlappingSurface({0, 0}, { 500_dp, 400_dp }), _new<DevtoolsPanel>(this));
+    auto surface = createOverlappingSurface({0, 0}, { 500_dp, 400_dp });
+    surface->setCloseOnClick(false);
+    ALayoutInflater::inflate(surface, _new<DevtoolsPanel>(this));
 }
 
 void ABaseWindow::flagRedraw() {
@@ -229,7 +238,7 @@ void ABaseWindow::onCharEntered(wchar_t c) {
 
 void ABaseWindow::onFocusLost() {
     AView::onFocusLost();
-    closeAllOverlappingSurfaces();
+    closeOverlappingSurfacesOnClick();
 }
 
 void ABaseWindow::checkForStencilBits() {

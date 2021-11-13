@@ -30,10 +30,13 @@
 #include "IMenuProvider.h"
 #include <AUI/Platform/AWindow.h>
 
+class AMenuContainer;
+
 class AWindowMenuProvider: public IMenuProvider {
 private:
-    _weak<AViewContainer> mSurfaceContainer;
     ABaseWindow* mWindow;
+
+    _weak<AMenuContainer> mMenuContainer;
 
 public:
     void createMenu(const AVector<MenuItem>& vector) override;

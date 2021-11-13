@@ -11,7 +11,7 @@ public:
         friend class ASplitter;
     private:
         AVector<AVector<_<AView>>> mItems;
-        bool mCrosses = false;
+        bool mAddSpacers = false;
 
     public:
         Builder& withItems(const AVector<AVector<_<AView>>>& items) {
@@ -19,19 +19,21 @@ public:
             return *this;
         }
 
-        Builder& withCrosses() {
-            mCrosses = true;
+        Builder& noDefaultSpacers() {
+            mAddSpacers = false;
             return *this;
         }
 
         _<AView> build() {
-            _<AGridSplitter> splitter = new AGridSplitter;
-            for (auto& row : mItems) {
-                row.push_back(_new<ASpacer>());
+            auto splitter = aui::ptr::manage(new AGridSplitter);
+            if (mAddSpacers) {
+                for (auto& row: mItems) {
+                    row.push_back(_new<ASpacer>());
+                }
+                mItems.push_back(
+                        AVector<_<AView>>::generate(mItems.first().size(), [](size_t) { return _new<ASpacer>(); }));
             }
-            mItems.push_back(AVector<_<AView>>::generate(mItems.first().size(), [](size_t){ return _new<ASpacer>(); }));
             splitter->mItems = std::move(mItems);
-            splitter->mCrosses = mCrosses;
             splitter->updateSplitterItems();
             return splitter;
         }
@@ -46,7 +48,6 @@ private:
     AVector<AVector<_<AView>>> mItems;
     ASplitterHelper mHorizontalHelper;
     ASplitterHelper mVerticalHelper;
-    bool mCrosses;
 
     AGridSplitter();
 
@@ -58,6 +59,8 @@ public:
     void onMouseMove(glm::ivec2 pos) override;
 
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+
+    bool consumesClick(const glm::ivec2& pos) override;
 };
 
 
