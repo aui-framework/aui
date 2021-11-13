@@ -116,13 +116,19 @@ public:
 
 signals:
     /**
-     * \brief Text changed.
-     * \note This signal is also emitted by the AAbstractTextField::setText function
+     * <dl>
+     *   <dt><b>Emits</b></dt>
+     *   <dd>When the user changed text and focused another view.</dd>
+     *   <dd>When <code>AAbstractTextField::setText</code> is called.</dd>
+     * </dl>
      */
     emits<AString> textChanged;
 
     /**
-     * \brief Text is changing by the user.
+     * <dl>
+     *   <dt><b>Emits</b></dt>
+     *   <dd>When the user added/removed one or more symbols.</dd>
+     * </dl>
      */
     emits<AString> textChanging;
 

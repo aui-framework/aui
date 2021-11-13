@@ -51,6 +51,16 @@ public:
 
 	void clearSignals();
 
+    /**
+     * Connects signal to the slot of the specified object.
+     * @example
+     * <code>
+     * connect(view->clicked, slot(otherObject)::handleButtonClicked);
+     * </code>
+     * @param signal signal
+     * @param object instance of <code>AObject</code>
+     * @param function slot. Can be lambda
+     */
 	template<class Signal, class Object, typename Function>
 	static void connect(Signal& signal, Object object, Function function)
 	{
@@ -61,11 +71,32 @@ public:
 			signal.connect(object, function);
 		}
 	}
+
+    /**
+     * Connects signal to slot of <code>this</code> object.
+     * @example
+     * <code>
+     * connect(view->clicked, [] { printf("Button clicked!\\n"); });
+     * </code>
+     * @param signal signal
+     * @param function slot. Can be lambda
+     */
 	template<class Signal, typename Function>
 	void connect(Signal& signal, Function function)
 	{
         signal.connect(this, function);
 	}
+
+    /**
+     * Connects signal to the slot of the specified object.
+     * @example
+     * <code>
+     * connect(view->clicked, slot(otherObject)::handleButtonClicked);
+     * </code>
+     * @param signal signal
+     * @param object instance of <code>AObject</code>
+     * @param function slot. Can be lambda
+     */
 	template<class Signal, class Object, typename Function>
 	static void connect(Signal& signal, _<Object> object, Function function)
 	{
