@@ -5,13 +5,13 @@
 
 class ViewPropertiesView: public AScrollArea {
 private:
-    AView* mTargetView;
+    _weak<AView> mTargetView;
 
     void requestTargetUpdate();
 public:
-    explicit ViewPropertiesView(AView* targetView);
+    explicit ViewPropertiesView(const _<AView>& targetView);
     void displayApplicableRule(ADeque<ass::decl::IDeclarationBase*>& applicableDeclarations, const RuleWithoutSelector* rule);
-    void setTargetView(AView* targetView);
+    void setTargetView(const _<AView>& targetView);
 };
 
 

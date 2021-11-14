@@ -48,7 +48,6 @@
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 
-constexpr bool AUI_DISPLAY_BOUNDS = false;
 AWindow::Context AWindow::context = {};
 
 #if defined(_WIN32)
@@ -915,13 +914,6 @@ void AWindow::redraw() {
         doDrawWindow();
 
 
-        if constexpr (AUI_DISPLAY_BOUNDS) {
-            auto v = getViewAtRecursive(mapPosition(ADesktop::getMousePosition()));
-            if (v == nullptr)
-                v = shared_from_this();
-            AViewProfiler::displayBoundsOn(*v);
-        }
-
 #if defined(_WIN32)
         SwapBuffers(p.mHdc);
 #elif defined(ANDROID)
@@ -1230,10 +1222,6 @@ void AWindow::onFocusAcquired() {
 
 void AWindow::onMouseMove(glm::ivec2 pos) {
     ABaseWindow::onMouseMove(pos);
-
-    if constexpr (AUI_DISPLAY_BOUNDS) {
-        AWindow::flagRedraw();
-    }
 }
 
 void AWindow::onFocusLost() {

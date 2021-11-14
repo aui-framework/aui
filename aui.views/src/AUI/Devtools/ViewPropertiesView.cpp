@@ -15,7 +15,7 @@
 
 using namespace ass;
 
-ViewPropertiesView::ViewPropertiesView(AView* targetView) {
+ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
     setCustomAss({ Border {
                            1_px,
                            0x505050_rgb,
@@ -25,10 +25,11 @@ ViewPropertiesView::ViewPropertiesView(AView* targetView) {
     setTargetView(targetView);
 }
 
-void ViewPropertiesView::setTargetView(AView* targetView) {
+void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     mTargetView = targetView;
+    if (!targetView) return;
     getContentContainer()->setLayout(_new<AVerticalLayout>());
-    getContentContainer()->addView(_new<ALabel>(Devtools::prettyViewName(targetView)) with_style { FontSize {14_pt } });
+    getContentContainer()->addView(_new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize {14_pt } });
 
     ADeque<ass::decl::IDeclarationBase*> applicableDeclarations;
 
@@ -37,7 +38,7 @@ void ViewPropertiesView::setTargetView(AView* targetView) {
             _new<ACheckBox>("Enabled") let {
                 it->setChecked(targetView->isEnabled());
                 connect(it->checked, [this](bool v) {
-                    mTargetView->setEnabled(v);
+                    if (auto s = mTargetView.lock()) s->setEnabled(v);
                     requestTargetUpdate();
                 });
             },
@@ -47,7 +48,7 @@ void ViewPropertiesView::setTargetView(AView* targetView) {
             _new<ACheckBox>("Expanding") let {
                 it->setChecked(targetView->getExpanding() != glm::ivec2(0));
                 connect(it->checked, [this](bool v) {
-                    mTargetView->setExpanding(v);
+                    if (auto s = mTargetView.lock()) s->setExpanding(v);
                     requestTargetUpdate();
                 });
             },
@@ -62,7 +63,7 @@ void ViewPropertiesView::setTargetView(AView* targetView) {
     displayApplicableRule(applicableDeclarations, &targetView->getCustomAss());
 
     for (auto r : aui::reverse_iterator_wrap(targetView->getAssHelper()->getPossiblyApplicableRules())) {
-        if (r->getSelector().isStateApplicable(targetView)) {
+        if (r->getSelector().isStateApplicable(targetView.get())) {
             AStringVector sl;
             for (auto& ss : r->getSelector().getSubSelectors()) {
                 if (auto classOf = _cast<class_of>(ss)) {
@@ -97,8 +98,10 @@ void ViewPropertiesView::displayApplicableRule(ADeque<ass::decl::IDeclarationBas
 }
 
 void ViewPropertiesView::requestTargetUpdate() {
-    if (auto targetWindow = mTargetView->getWindow()) {
-        targetWindow->updateLayout();
-        targetWindow->redraw();
+    if (auto targetView = mTargetView.lock()) {
+        if (auto targetWindow = targetView->getWindow()) {
+            targetWindow->updateLayout();
+            targetWindow->redraw();
+        }
     }
 }

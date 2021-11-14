@@ -11,7 +11,7 @@ public:
         friend class ASplitter;
     private:
         AVector<AVector<_<AView>>> mItems;
-        bool mAddSpacers = false;
+        bool mAddSpacers = true;
 
     public:
         Builder& withItems(const AVector<AVector<_<AView>>>& items) {

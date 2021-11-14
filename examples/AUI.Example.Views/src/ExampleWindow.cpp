@@ -297,7 +297,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                return AVector<_<AView>>::generate(5, [&](size_t x) {
                    return _new<AButton>("{}x{}"_as.format(x, y));
                });
-            })).withCrosses()
+            }))
         } let { it->setExpanding(); }, "Splitters");
 
         it->addTab(Vertical {

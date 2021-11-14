@@ -15,6 +15,7 @@
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Util/ALayoutInflater.h>
+#include <AUI/Util/AViewProfiler.h>
 
 ABaseWindow::ABaseWindow() {
     mDpiRatio = Platform::getDpiRatio();
@@ -215,6 +216,14 @@ void ABaseWindow::flagRedraw() {
 
 void ABaseWindow::flagUpdateLayout() {
 
+}
+
+void ABaseWindow::render() {
+    AViewContainer::render();
+
+    if (auto v = mProfiledView.lock()) {
+        AViewProfiler::displayBoundsOn(*v);
+    }
 }
 
 ABaseWindow*& ABaseWindow::currentWindowStorage() {

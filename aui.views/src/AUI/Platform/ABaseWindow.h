@@ -14,6 +14,7 @@
 class API_AUI_VIEWS ABaseWindow: public AViewContainer {
 private:
     _weak<AView> mFocusedView;
+    _weak<AView> mProfiledView;
     glm::ivec2 mMousePos;
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
 
@@ -49,6 +50,10 @@ public:
     _<AView> getFocusedView() const
     {
         return mFocusedView.lock();
+    }
+
+    void setProfiledView(const _<AView>& view) {
+        mProfiledView = view;
     }
 
     void setFocusedView(const _<AView>& view);
@@ -145,6 +150,8 @@ public:
     }
 
     void onFocusLost() override;
+
+    void render() override;
 
 signals:
     emits<>            dpiChanged;
