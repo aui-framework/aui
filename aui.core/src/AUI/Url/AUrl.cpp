@@ -33,6 +33,9 @@ AUrl::AUrl(const AString& full)
 	if (posColon == AString::NPOS)
 	{
 		mPath = full;
+		if (mPath.startsWith("./")) {
+			mPath = mPath.mid(2);
+		}
 		mProtocol = "file";
 	} else
 	{
@@ -43,15 +46,7 @@ AUrl::AUrl(const AString& full)
 			mPath = full.mid(posColon + 1);
 		} else
 		{
-			auto posHost = posColon + 3;
-			auto posSlash = full.find('/', posHost);
-			if (posSlash == AString::NPOS)
-				posSlash = 0;
-			mHost = full.mid(posHost, posSlash - posHost);
-			if (posSlash)
-			{
-				mPath = full.mid(posSlash + 1);
-			}
+            mPath = full.mid(posColon + 3);
 		}
 	}
 }
@@ -61,7 +56,7 @@ AMap<AString, std::function<_<IInputStream>(const AUrl&)>> AUrl::ourResolvers = 
             return BuiltinFiles::open(u.getPath());
         }},
         {"file", [](const AUrl& u) {
-            return _new<FileInputStream>(u.getHost() + '/' + u.getPath());
+            return _new<FileInputStream>(u.getPath());
         }},
 };
 _<IInputStream> AUrl::open() const {

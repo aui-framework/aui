@@ -29,7 +29,6 @@ class API_AUI_CORE AUrl
 {
 private:
 	AString mProtocol;
-	AString mHost;
 	AString mPath;
 
 
@@ -40,11 +39,7 @@ public:
 	inline AUrl(const char* full): AUrl(AString(full)) {}
 
 	_<IInputStream> open() const;
-	
-	const AString& getHost() const
-	{
-		return mHost;
-	}
+
 	const AString& getPath() const
 	{
 		return mPath;
@@ -55,7 +50,7 @@ public:
 	}
 
 	AString getFull() const {
-	    return mProtocol + "://" + mHost + "/" + mPath;
+	    return mProtocol + "://" + mPath;
 	}
 
     bool operator<(const AUrl& u) const {
