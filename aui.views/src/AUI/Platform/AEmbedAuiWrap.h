@@ -85,6 +85,8 @@ public:
      */
     void onCharEntered(wchar_t c);
 
+    void onMouseScroll(int mouseX, int mouseY, int scrollX, int scrollY);
+
 
     void onKeyPressed(AInput::Key key);
     void onKeyReleased(AInput::Key key);

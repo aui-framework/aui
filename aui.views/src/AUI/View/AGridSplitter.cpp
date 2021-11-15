@@ -6,6 +6,8 @@
 #include <AUI/Util/LayoutDirection.h>
 #include "AGridSplitter.h"
 
+const auto CLICK_BIAS = 8_dp;
+
 AGridSplitter::AGridSplitter():
     mHorizontalHelper(LayoutDirection::HORIZONTAL),
     mVerticalHelper(LayoutDirection::VERTICAL)
@@ -21,26 +23,26 @@ void AGridSplitter::onMousePressed(glm::ivec2 mousePos, AInput::Key button) {
         auto viewPos = v->getPosition().y;
         auto viewSize = v->getSize().y;
 
-        if (mousePos.y >= viewPos && mousePos.y < viewPos + viewSize) {
+        if (mousePos.y > viewPos && mousePos.y < viewPos + viewSize) {
             doVerticalDrag = false;
             break;
         }
 
-        if (mousePos.y < viewPos) {
+        if (mousePos.y <= viewPos) {
             break;
         }
     }
     bool doHorizontalDrag = true;
     for (auto& v : mItems.first()) {
-        auto viewPos = v->getPosition().x;
-        auto viewSize = v->getSize().x;
+        auto viewPos = v->getPosition().x + CLICK_BIAS.getValuePx();
+        auto viewSize = v->getSize().x + - CLICK_BIAS.getValuePx() * 2.f;
 
-        if (mousePos.x >= viewPos && mousePos.x < viewPos + viewSize) {
+        if (mousePos.x > viewPos && mousePos.x < viewPos + viewSize) {
             doHorizontalDrag = false;
             break;
         }
 
-        if (mousePos.x < viewPos) {
+        if (mousePos.x <= viewPos) {
             break;
         }
     }

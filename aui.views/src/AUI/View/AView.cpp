@@ -162,6 +162,7 @@ void AView::recompileCSS()
 
 void AView::updateAssState() {
     aui::zero(mAss);
+    if (!mAssHelper) return;
     aui::zero(mAssHelper->state);
 
     auto applyRule = [&](const RuleWithoutSelector& r) {

@@ -53,6 +53,10 @@ public:
     }
 };
 
+void AEmbedAuiWrap::onMouseScroll(int mouseX, int mouseY, int scrollX, int scrollY) {
+    mContainer->onMouseWheel({mouseX, mouseY}, scrollY);
+}
+
 AEmbedAuiWrap::AEmbedAuiWrap()
 {
 #ifndef __ANDROID__

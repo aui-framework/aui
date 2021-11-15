@@ -8,7 +8,7 @@ void ASplitterHelper::beginDrag(const glm::ivec2& mousePos) {
     int cursor = getAxisValue(mousePos);
     size_t dividerIndex = 0;
     for (auto& v : mItems) {
-        if (getAxisValue(v->getPosition()) + getAxisValue(v->getSize()) > cursor) {
+        if (getAxisValue(v->getPosition()) + getAxisValue(v->getSize()) / 2 > cursor) {
             break;
         }
         dividerIndex += 1;
@@ -22,6 +22,9 @@ void ASplitterHelper::beginDrag(const glm::ivec2& mousePos) {
 
 bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
     if (isDragging()) {
+        if (AInput::isKeyDown(AInput::LControl)) {
+            printf("\n");
+        }
         int newDragOffset = getAxisValue(mousePos);
 
         // positive delta = movement of the slider to right, negative delta = movement of the slider to left
@@ -66,6 +69,7 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
                 currentItem->setFixedSize(fixedSize);
                 amountToShrink -= currentDelta;
             }
+            currentItem->setExpanding(false);
         }
 
         int amountToEnlarge = (glm::abs(delta) - amountToShrink);
@@ -79,6 +83,7 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
                 auto& currentItem = mItems[i];
                 // same stuff as above, but we'll check for maxSize
 
+                glm::ivec2 fixedSize = currentItem->getFixedSize();
                 currentItem->setFixedSize({0, 0});
 
                 // check if current view can handle us all free space
@@ -88,18 +93,17 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
 
                 if (currentDelta >= amountToEnlarge) {
                     // best case. current view handled all free space
-                    glm::ivec2 fixedSize = {0, 0};
                     getAxisValue(fixedSize) = currentSize + amountToEnlarge;
                     currentItem->setFixedSize(fixedSize);
                     amountToEnlarge = 0;
                     break;
                 } else if (currentDelta != 0) {
                     // worse case. current view partially handled free space, so we have to spread it to the next elements
-                    glm::ivec2 fixedSize = {0, 0};
                     getAxisValue(fixedSize) = currentSize + currentDelta;
                     currentItem->setFixedSize(fixedSize);
                     amountToEnlarge -= currentDelta;
                 }
+                currentItem->setExpanding(false);
             }
         }
         mDragOffset += amountToEnlargeCopy * glm::sign(delta);
