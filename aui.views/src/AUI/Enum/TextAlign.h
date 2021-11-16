@@ -26,8 +26,12 @@
 enum class TextAlign {
 	LEFT,
 	CENTER,
-	RIGHT
+	RIGHT,
+    JUSTIFY,
 };
 
-ENUM_VALUES(TextAlign, TextAlign::LEFT, TextAlign::CENTER, TextAlign::RIGHT)
+ENUM_VALUES(TextAlign, TextAlign::LEFT,
+                       TextAlign::CENTER,
+                       TextAlign::RIGHT,
+                       TextAlign::JUSTIFY)
 

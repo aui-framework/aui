@@ -21,6 +21,9 @@
 
 #pragma once
 
+#include <tuple>
+#include <variant>
+
 namespace aui {
 
     /**
@@ -46,4 +49,99 @@ namespace aui {
             return mIterable.rend();
         }
     };
+
+    template<typename Iterator>
+    struct range {
+    private:
+        Iterator mBegin;
+        Iterator mEnd;
+    public:
+        range(Iterator mBegin, Iterator mEnd) : mBegin(mBegin), mEnd(mEnd) {}
+
+
+        template<typename Container>
+        range(Container& c): mBegin(c.begin()), mEnd(c.end()) {
+
+        }
+
+        Iterator& begin() {
+            return mBegin;
+        }
+
+        Iterator& end() {
+            return mEnd;
+        }
+    };
+
+    template<typename...Items>
+    struct joined_range {
+    private:
+        std::tuple<Items*...> mItems;
+
+    public:
+        joined_range(const std::tuple<Items*...>& items) : mItems(items) {}
+
+    public:
+        using joined_range_t = joined_range<Items...>;
+
+        struct my_iterator {
+        friend joined_range_t;
+        private:
+            joined_range_t& mJoinedRange;
+            std::variant<typename Items::iterator...> mIterator;
+            size_t mIndex = 0;
+
+        public:
+            my_iterator(joined_range_t& mJoinedRange) :
+                mJoinedRange(mJoinedRange),
+                mIterator(std::get<0>(mJoinedRange.mItems)->begin()),
+                mIndex(0)
+                {}
+
+            my_iterator& operator++()
+            {
+                std::visit([](auto&& arg){
+                    ++arg;
+                }, mIterator);
+                return *this;
+            }
+
+            bool operator!=(const my_iterator& other) const
+            {
+                return mIterator != other.mIterator;
+            }
+            bool operator==(const my_iterator& other) const
+            {
+                return mIterator == other.mIterator;
+            }
+
+            auto operator->()
+            {
+                return std::visit([](auto&& arg){
+                    return &*arg;
+                }, mIterator);
+            }
+            auto operator*()
+            {
+                return *this;
+            }
+
+            auto operator*() const
+            {
+                return *this;
+            }
+        };
+
+        my_iterator begin() {
+            return my_iterator{*this };
+        }
+        my_iterator end() {
+            return my_iterator{*this };
+        }
+    };
+
+    template<typename... Items>
+    joined_range<Items...> join(Items... items) {
+        return { (&items)... };
+    }
 }
