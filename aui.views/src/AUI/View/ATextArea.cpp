@@ -59,7 +59,7 @@ private:
                                                   mLines.size() * getFontStyle().getLineHeight());
     }
     void pushScrollMatrix() {
-        Render::inst().setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
+        Render::setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
     }
 
 public:
@@ -117,6 +117,8 @@ public:
     }
 
     void render() override {
+        // TODO stub
+        /*
         if (mLines.empty() && !mFullText->empty()) {
             size_t wordWrappingPos = 0;
             while (wordWrappingPos < mFullText->length()) {
@@ -129,7 +131,7 @@ public:
                 mLines.push_back(Line{ std::move(line), {} });
             }
             updateScrollDimensions();
-        }
+        }*/
         AView::render();
 
         auto drawText = [&] {
@@ -141,9 +143,9 @@ public:
                 }
 
                 if (!mLines[i].prerendered.mVao) {
-                    mLines[i].prerendered = Render::inst().preRendererString(mLines[i].text, getFontStyle());
+                    mLines[i].prerendered = Render::preRendererString(mLines[i].text, getFontStyle());
                 }
-                Render::inst().drawString(mPadding.left - mHorizontalScroll,
+                Render::drawString(mPadding.left - mHorizontalScroll,
                                           mPadding.top + i * getFontStyle().getLineHeight() - mScroll,
                                           mLines[i].prerendered);
             }
@@ -174,14 +176,14 @@ public:
                     redraw();
                 }
 
-                Render::inst().drawRect(mPadding.left + absoluteCursorPos,
+                Render::drawRect(mPadding.left + absoluteCursorPos,
                                         mPadding.top, glm::ceil(1_dp), getFontStyle().size + 3);
             }
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         } else {
             drawText();
-            Render::inst().setFill(Render::FILL_SOLID);
-            Render::inst().setColor({1, 1, 1, 1 });
+            Render::setFill(Render::FILL_SOLID);
+            Render::setColor({1, 1, 1, 1 });
         }
     }
 

@@ -88,7 +88,7 @@ void CellView::render()
 				break;
 			}
 			
-			Render::inst().drawString(getWidth() / 2, (getHeight() - fs.size) / 2 - 3, AString::number(count), fs);
+			Render::drawString(getWidth() / 2, (getHeight() - fs.size) / 2 - 3, AString::number(count), fs);
 		}
 	}
 }

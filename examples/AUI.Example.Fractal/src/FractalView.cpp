@@ -85,7 +85,7 @@ void FractalView::render() {
 
     mShader.use();
     mTexture->bind();
-    Render::inst().drawRect(0, 0, getWidth(), getHeight());
+    Render::drawRect(0, 0, getWidth(), getHeight());
 }
 
 void FractalView::setSize(int width, int height) {

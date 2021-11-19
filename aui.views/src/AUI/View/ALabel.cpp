@@ -28,11 +28,6 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/kAUI.h>
 
-void ALabel::updateMultiline()
-{
-	mLines = getFontStyleLabel().font->trimStringToMultiline(mText, getWidth(), getFontStyleLabel().size, getFontStyleLabel().fontRendering);
-	mPrerendered.mVao = nullptr;
-}
 
 ALabel::ALabel()
 {
@@ -78,15 +73,18 @@ int ALabel::getContentMinimumHeight()
 		return 0;
 	if (mMultiline)
 	{
+        // TODO STUB
+        /*
 		return mLines.size() * (getFontStyleLabel().font->getAscenderHeight(getFontStyleLabel().size)
 		* (1.f + getFontStyleLabel().lineSpacing)) + getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size) + 1;
+         */
 	}
 	return getFontStyleLabel().size;
 }
 
 void ALabel::setText(const AString& newText)
 {
-    // try to determine is text changed..
+    // try to determine is text changed.
 
     auto sourceIterator = newText.begin();
     auto destinationIterator = mText.begin();
@@ -109,40 +107,40 @@ void ALabel::setText(const AString& newText)
     }
 
 	mPrerendered.mVao = nullptr;
-	if (mMultiline)
-	{
-		updateMultiline();
-	}
+    // TODO stub
+//	if (mMultiline)
+//	{
+//		updateMultiline();
+//	}
     if (getParent())
         getParent()->updateLayout();
 	redraw();
 }
 
+
 void ALabel::setMultiline(const bool multiline)
 {
-	mMultiline = multiline;
 	mPrerendered.mVao = nullptr;
 	if (multiline) {
 		if (getParent())
 			getParent()->updateLayout();
-		//updateMultiline();
 	}
-	else
-		mLines.clear();
 	redraw();
 }
 
 void ALabel::setSize(int width, int height) {
     auto oldWidth = getWidth();
     AView::setSize(width, height);
+    bool refresh = false;
+    // TODO stub
 
-    bool refresh = mMultiline && (mLines.empty() || oldWidth != getWidth());
-
-    if (mMultiline) {
-        updateMultiline();
-        if (mLines.empty())
-            return;
-    }
+//    bool refresh = mMultiline && (mLines.empty() || oldWidth != getWidth());
+//
+//    if (mMultiline) {
+//        updateMultiline();
+//        if (mLines.empty())
+//            return;
+//    }
 
     if (refresh) {
         AThread::current()->enqueue([&]()
@@ -189,16 +187,14 @@ void ALabel::userProcessStyleSheet(const std::function<void(css, const std::func
 
 void ALabel::doPrerender() {
     auto fs = getFontStyleLabel();
-    auto t = getCompiledMultilineText();
-    if (t.empty())
-        return;
-    mPrerendered = Render::inst().preRendererString(t, fs);
+    if (isMultiline()) {
+        mPrerendered = mMultilineTextRender->updateText(mText);
+    } else {
+        mPrerendered = Render::preRendererString(mText, fs);
+    }
 }
 
 void ALabel::doRenderText() {
-    if (mMultiline && mLines.empty()) {
-        updateMultiline();
-    }
     if (!mPrerendered.mVao && !mText.empty())
     {
         doPrerender();
@@ -216,8 +212,8 @@ void ALabel::doRenderText() {
                     auto requiredSpace = getIconSize();
                     requiredSpace *= getHeight() / requiredSpace.y;
                     RenderHints::PushState s;
-                    Render::inst().setColor(mIconColor);
-                    Render::inst().setTransform(glm::translate(glm::mat4(1.f),
+                    Render::setColor(mIconColor);
+                    Render::setTransform(glm::translate(glm::mat4(1.f),
                                                                glm::vec3(mPadding.left + mTextLeftOffset, 2_dp, 0)));
                     mIcon->draw(requiredSpace);
                     mTextLeftOffset += requiredSpace.x + 4_dp;
@@ -231,8 +227,8 @@ void ALabel::doRenderText() {
                     auto requiredSpace = getIconSize();
                     mTextLeftOffset += requiredSpace.x / 2;
                     RenderHints::PushState s;
-                    Render::inst().setColor(mIconColor);
-                    Render::inst().setTransform(glm::translate(glm::mat4(1.f),
+                    Render::setColor(mIconColor);
+                    Render::setTransform(glm::translate(glm::mat4(1.f),
                                                                glm::vec3(mTextLeftOffset - (mPrerendered.length) / 2 - requiredSpace.x,
                                                                              (getHeight() - requiredSpace.y) / 2, 0)));
                     mIcon->draw(requiredSpace);
@@ -246,8 +242,8 @@ void ALabel::doRenderText() {
                 {
                     auto requiredSpace = getIconSize();
                     RenderHints::PushState s;
-                    Render::inst().setColor(mIconColor);
-                    Render::inst().setTransform(glm::translate(glm::mat4(1.f),
+                    Render::setColor(mIconColor);
+                    Render::setTransform(glm::translate(glm::mat4(1.f),
                                                                glm::vec3(mPadding.left + mTextLeftOffset - (mPrerendered.mVao ? mPrerendered.fs.getWidth(mText) : 0) - requiredSpace.x / 2,
                                                                              (getHeight() - requiredSpace.y) / 2, 0)));
                     mIcon->draw(requiredSpace);
@@ -261,10 +257,10 @@ void ALabel::doRenderText() {
                 if (mMultiline) {
                     y = (glm::max)(y, (getHeight() - getMinimumHeight()) / 2 - 1);
                 } else {
-                    y = (glm::max)(y, (getHeight() - getFontStyleLabel().size) / 2 - 1);
+                    y = (glm::max)(y, int(getHeight() - getFontStyleLabel().size) / 2 - 1);
                 }
             }
-            Render::inst().drawString(mTextLeftOffset + mPadding.left, y, mPrerendered);
+            Render::drawString(mTextLeftOffset + mPadding.left, y, mPrerendered);
         }
     }
 }
@@ -272,7 +268,8 @@ void ALabel::doRenderText() {
 AString ALabel::getCompiledMultilineText() {
     AString targetString;
     if (mMultiline) {
-        targetString = mLines.join('\n');
+        // TODO stub
+        //targetString = mLines.join('\n');
     } else
     {
         targetString = mText;

@@ -30,7 +30,7 @@
 
 
 void ass::decl::Declaration<ImageRendering>::renderFor(AView* view) {
-    Render::inst().setCurrentImageRendering(mInfo);
+    Render::setCurrentImageRendering(mInfo);
 }
 
 ass::decl::DeclarationSlot ass::decl::Declaration<ImageRendering>::getDeclarationSlot() const {

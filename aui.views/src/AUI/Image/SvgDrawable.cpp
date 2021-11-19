@@ -59,27 +59,27 @@ glm::ivec2 SvgDrawable::getSizeHint() {
 void SvgDrawable::draw(const glm::ivec2& size) {
     auto key = asKey(size);
     auto doDraw = [&]() {
-        Render::inst().setFill(Render::FILL_TEXTURED);
+        Render::setFill(Render::FILL_TEXTURED);
         glm::vec2 uv = {1, 1};
 
         float posX, posY;
         float scale = glm::min(size.x / mImage->width, size.y / mImage->height);
 
-        if (!!(Render::inst().getRepeat() & Repeat::X)) {
+        if (!!(Render::getRepeat() & Repeat::X)) {
             uv.x = float(size.x) / getSizeHint().x;
             posX = 0;
         } else {
             posX = glm::round((size.x - mImage->width * scale) / 2.f);
         }
-        if (!!(Render::inst().getRepeat() & Repeat::Y)) {
+        if (!!(Render::getRepeat() & Repeat::Y)) {
             uv.y = float(size.y) / getSizeHint().y;
             posY = 0;
         } else {
             posY = glm::round((size.y - mImage->height * scale) / 2.f);
         }
-        Render::inst().applyTextureRepeat();
+        Render::applyTextureRepeat();
 
-        Render::inst().drawTexturedRect(posX,
+        Render::drawTexturedRect(posX,
                                         posY,
                                         size.x,
                                         size.y, {0, 0}, uv);
@@ -97,10 +97,10 @@ void SvgDrawable::draw(const glm::ivec2& size) {
 
     glm::ivec2 textureSize = size;
 
-    if (!!(Render::inst().getRepeat() & Repeat::X)) {
+    if (!!(Render::getRepeat() & Repeat::X)) {
         textureSize.x = getSizeHint().x;
     }
-    if (!!(Render::inst().getRepeat() & Repeat::Y)) {
+    if (!!(Render::getRepeat() & Repeat::Y)) {
         textureSize.y = getSizeHint().y;
     }
 

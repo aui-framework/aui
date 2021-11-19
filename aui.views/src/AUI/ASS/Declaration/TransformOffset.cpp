@@ -29,7 +29,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 void ass::decl::Declaration<ass::TransformOffset>::renderFor(AView* view) {
-    Render::inst().setTransform(glm::translate(glm::mat4(1.f), glm::vec3{mInfo.offsetX, mInfo.offsetY, 0.0}));
+    Render::setTransform(glm::translate(glm::mat4(1.f), glm::vec3{mInfo.offsetX, mInfo.offsetY, 0.0}));
 }
 
 ass::decl::DeclarationSlot ass::decl::Declaration<ass::TransformOffset>::getDeclarationSlot() const {

@@ -63,7 +63,7 @@ void AAbstractTextField::render()
 	    auto absoluteCursorPos = ACursorSelectable::drawSelectionPre();
 
 	    // text
-        Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, mPrerenderedString);
+        Render::drawString(mPadding.left - mHorizontalScroll, mPadding.top, mPrerenderedString);
 
         ACursorSelectable::drawSelectionPost();
 
@@ -77,14 +77,14 @@ void AAbstractTextField::render()
                 redraw();
             }
 
-            Render::inst().drawRect(mPadding.left + absoluteCursorPos,
+            Render::drawRect(mPadding.left + absoluteCursorPos,
                                     mPadding.top, glm::ceil(1_dp), getFontStyle().size + 3);
         }
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     } else {
-        Render::inst().drawString(mPadding.left - mHorizontalScroll, mPadding.top, mPrerenderedString);
-        Render::inst().setFill(Render::FILL_SOLID);
-        Render::inst().setColor({1, 1, 1, 1 });
+        Render::drawString(mPadding.left - mHorizontalScroll, mPadding.top, mPrerenderedString);
+        Render::setFill(Render::FILL_SOLID);
+        Render::setColor({1, 1, 1, 1 });
 	}
 
 }
@@ -181,7 +181,7 @@ void AAbstractTextField::onCharEntered(wchar_t c) {
 
 void AAbstractTextField::prerenderStringIfNeeded() {
     if (!mPrerenderedString.mVao) {
-        mPrerenderedString = Render::inst().preRendererString(getContentsPasswordWrap(), getFontStyle());
+        mPrerenderedString = Render::preRendererString(getContentsPasswordWrap(), getFontStyle());
     }
 }
 

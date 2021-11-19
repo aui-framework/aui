@@ -38,8 +38,8 @@ void AViewContainer::drawView(const _<AView>& view)
 		RenderHints::PushState s;
 		glm::mat4 t(1.f);
 		view->getTransform(t);
-		Render::inst().setColor(AColor(1, 1, 1, view->getOpacity()));
-        Render::inst().setTransform(t);
+		Render::setColor(AColor(1, 1, 1, view->getOpacity()));
+        Render::setTransform(t);
 
 		try {
 			view->render();

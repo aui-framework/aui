@@ -420,6 +420,7 @@ public:
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <AUI/Util/ALayoutInflater.h>
+#include <AUI/Render/OpenGLRenderer.h>
 
 thread_local bool painter::painting = false;
 
@@ -617,6 +618,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
                 throw std::runtime_error("Failed to create OpenGL 2.0 context");
         }
         ALogger::info("OpenGL context is ready");
+        Render::setRenderer(std::make_unique<OpenGLRenderer>());
 
         // vsync
         wglSwapIntervalEXT(true);
@@ -736,6 +738,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
         if (XGetIMValues(im, XNQueryInputStyle, &styles, NULL)) {
             throw AException("XIM Can't get styles");
         }
+        Render::setRenderer(std::make_unique<OpenGLRenderer>());
     }
     mHandle = XCreateWindow(gDisplay,
                             gScreen->root,
@@ -805,7 +808,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     //assert(glGetError() == 0);
 
     updateDpi();
-    Render::inst().setWindow(this);
+    Render::setWindow(this);
 
     checkForStencilBits();
 
@@ -887,7 +890,7 @@ void AWindow::redraw() {
         GL::State::bindVertexArray(0);
         GL::State::useProgram(0);
 
-        Render::inst().setWindow(this);
+        Render::setWindow(this);
         glViewport(0, 0, getWidth(), getHeight());
 
         glDisable(GL_DEPTH_TEST);

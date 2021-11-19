@@ -30,8 +30,8 @@
 
 void ass::decl::Declaration<ass::Border>::renderFor(AView* view) {
     RenderHints::PushColor x;
-    Render::inst().setColor(mInfo.color);
-    Render::inst().drawRoundedBorder(0,
+    Render::setColor(mInfo.color);
+    Render::drawRoundedBorder(0,
                                      0,
                                      view->getWidth(),
                                      view->getHeight(),

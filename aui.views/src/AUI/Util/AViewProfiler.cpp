@@ -33,8 +33,8 @@
 void AViewProfiler::displayBoundsOn(const AView& v) {
 
     RenderHints::PushMatrix m;
-    Render::inst().setTransform(glm::translate(glm::mat4(1.f), glm::vec3{v.getPositionInWindow(), 0.f}));
-    Render::inst().setFill(Render::FILL_SOLID);
+    Render::setTransform(glm::translate(glm::mat4(1.f), glm::vec3{v.getPositionInWindow(), 0.f}));
+    Render::setFill(Render::FILL_SOLID);
     glEnable(GL_STENCIL_TEST);
     glStencilMask(0xff);
     glStencilOp(GL_INCR, GL_INCR, GL_INCR);
@@ -43,23 +43,23 @@ void AViewProfiler::displayBoundsOn(const AView& v) {
     // content
     {
         RenderHints::PushColor c;
-        Render::inst().setColor(0x7cb6c180u);
-        Render::inst().drawRect(v.getPadding().left, v.getPadding().top,
+        Render::setColor(0x7cb6c180u);
+        Render::drawRect(v.getPadding().left, v.getPadding().top,
                                 v.getWidth() - v.getPadding().horizontal(), v.getHeight() - v.getPadding().vertical());
     }
 
     // padding
     {
         RenderHints::PushColor c;
-        Render::inst().setColor(0xbccf9180u);
-        Render::inst().drawRect(0, 0, v.getWidth(), v.getHeight());
+        Render::setColor(0xbccf9180u);
+        Render::drawRect(0, 0, v.getWidth(), v.getHeight());
     }
 
     // margin
     {
         RenderHints::PushColor c;
-        Render::inst().setColor(0xffcca4a0u);
-        Render::inst().drawRect(-v.getMargin().left, -v.getMargin().top,
+        Render::setColor(0xffcca4a0u);
+        Render::drawRect(-v.getMargin().left, -v.getMargin().top,
                                 v.getWidth() + v.getMargin().horizontal(),
                                 v.getHeight() + v.getMargin().vertical());
     }
@@ -75,14 +75,14 @@ void AViewProfiler::displayBoundsOn(const AView& v) {
         fs.fontRendering = FontRendering::ANTIALIASING;
         fs.size = 9_pt;
 
-        auto s = Render::inst().preRendererString(v.getCssNames().empty() ? typeid(v).name() : v.getCssNames().back() + "\n"_as +
+        auto s = Render::preRendererString(v.getCssNames().empty() ? typeid(v).name() : v.getCssNames().back() + "\n"_as +
                                                                                               AString::number(v.getSize().x) + "x"_as + AString::number(v.getSize().y), fs);
 
         {
             RenderHints::PushColor c;
-            Render::inst().setColor(0x00000070u);
-            Render::inst().drawRect(x, y, s.length + 4_dp, fs.size * 2.5 + 2_dp);
+            Render::setColor(0x00000070u);
+            Render::drawRect(x, y, s.length + 4_dp, fs.size * 2.5 + 2_dp);
         }
-        Render::inst().drawString(x + 2_dp, y + 1_dp, s);
+        Render::drawString(x + 2_dp, y + 1_dp, s);
     }
 }

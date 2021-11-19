@@ -28,6 +28,7 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Image/IDrawable.h"
 #include <AUI/Util/ADataBinding.h>
+#include <AUI/Render/AMultilineTextRender.h>
 
 /**
  * Represents a simple text.
@@ -43,15 +44,14 @@ private:
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
     TextTransform mTextTransform = TextTransform::NONE;
     AColor mIconColor = {1, 1, 1, 1};
-	bool mMultiline = false;
+
+    _unique<AMultilineTextRender> mMultilineTextRender;
 
 	glm::ivec2 getIconSize() const;
 
 protected:
-    AStringVector mLines;
     Render::PrerenderedString mPrerendered;
 
-	void updateMultiline();
 	FontStyle getFontStyleLabel();
 
 	const Render::PrerenderedString& getPrerendered() {
@@ -59,7 +59,6 @@ protected:
 	}
 
     //void userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) override;
-    AString getCompiledMultilineText();
 
 
     // for correct selection positioning (used in ASelectableLabel)
@@ -102,7 +101,7 @@ public:
 
 	[[nodiscard]] bool isMultiline() const
 	{
-		return mMultiline;
+		return mMultilineTextRender != nullptr;
 	}
 
 	[[nodiscard]] const AString& getText() const

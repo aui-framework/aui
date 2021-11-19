@@ -31,12 +31,12 @@
 void ass::decl::Declaration<ass::BackgroundSolid>::renderFor(AView* view) {
     RenderHints::PushColor x;
 
-    Render::inst().setColor(mInfo.color);
-    Render::inst().setFill(Render::FILL_SOLID);
+    Render::setColor(mInfo.color);
+    Render::setFill(Render::FILL_SOLID);
     if (view->getBorderRadius() > 0) {
-        Render::inst().drawRoundedRectAntialiased(0, 0, view->getWidth(), view->getHeight(), view->getBorderRadius());
+        Render::drawRoundedRectAntialiased(0, 0, view->getWidth(), view->getHeight(), view->getBorderRadius());
     } else  {
-        Render::inst().drawRect(0, 0, view->getWidth(), view->getHeight());
+        Render::drawRect(0, 0, view->getWidth(), view->getHeight());
     }
     IDeclarationBase::renderFor(view);
 }

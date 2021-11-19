@@ -159,24 +159,6 @@ _<GL::Texture2D> AFont::textureOf(long size, FontRendering fr) {
 	{
 		chars.isDirty = false;
 		chars.texture->tex2D(chars.tp->getImage());
-		/*
-		if (size == 14) {
-			std::ofstream fos(std::to_string(size) + ".txt");
-			for (uint16_t y = 0; y < chars.tp->getImage()->getHeight(); ++y) {
-				for (uint16_t x = 0; x < chars.tp->getImage()->getWidth(); ++x) {
-					char c = chars.tp->getImage()->getData()[y * chars.tp->getImage()->getWidth() + x];;
-					unsigned char u = *reinterpret_cast<unsigned char*>(&c);
-					if (u > 200)
-						fos << "#";
-					else if (u > 100)
-						fos << ".";
-					else
-						fos << " ";
-				}
-				fos << std::endl;
-			}
-			fos.close();
-		}*/
 	}
 	return chars.texture;
 }
@@ -215,103 +197,6 @@ float AFont::length(const AString& text, long size, FontRendering fr)
 		}
 	}
 	return advance;
-}
-
-AString AFont::trimStringToWidth(const AString& text, size_t width, long size, const FontRendering& fr) {
-	return trimStringToWidth(text.begin(), text.end(), width, size, fr);
-}
-AString AFont::trimStringToWidth(AString::const_iterator begin, AString::const_iterator end, size_t width, long size, const FontRendering& fr) {
-	AString s;
-	size_t advance = 0;
-	size_t length = 0;
-	size_t space_width = AFont::length(" ", size, fr);
-
-	for (auto i = begin; i != end;) {
-		// find next space
-		AString::const_iterator wordEnd = i;
-		for (; wordEnd != end && *wordEnd != ' '; ++wordEnd) {
-
-		}
-		AString word = {i, wordEnd};
-		if (wordEnd == end) {
-			i = end;
-		} else {
-			i = wordEnd + 1;
-		}
-
-		if (word.empty()) {
-			if (!s.empty())
-				s += " ";
-			continue;
-		}
-		size_t l = AFont::length(word, size, fr);
-		if (s.size())
-			l += size;
-
-		if (length + l > width && !(l > width))
-			return s;
-
-		if (!s.empty()) {
-			s += AString(" ");
-			length += space_width;
-		}
-		for (size_t j = 0; j < word.size(); j++) {
-			if (length > width)
-			{
-				return s;
-			}
-			wchar_t c = word[j];
-			if (c == '\n') {
-				return s;
-			}
-			AString str = c;
-			s += str;
-			length += AFont::length(str, size, fr);
-		}
-	}
-	return s;
-}
-
-size_t AFont::indexOfX(const AString& text, size_t width, long size, FontRendering fr) {
-    float advance = 0;
-    size_t index = 0;
-
-    for (auto c : text) {
-        float widthOfChar;
-        if (c == ' ') {
-            widthOfChar = size / 2.3f;
-        } else {
-            auto characterInfo = getCharacter(c, size, fr);
-            if (!characterInfo) {
-                continue;
-            }
-
-            widthOfChar = characterInfo->advanceX;
-        }
-
-        if (advance + widthOfChar / 2.f > width) {
-            break;
-        }
-        advance += widthOfChar;
-        advance = glm::floor(advance);
-        index += 1;
-    }
-
-    return index;
-}
-
-AStringVector AFont::trimStringToMultiline(const AString& text, int width, long scale, FontRendering fr) {
-	AStringVector v;
-	AString currentText = text;
-	while (currentText.length()) {
-		AString l = trimStringToWidth(currentText, width, scale, fr);
-		v.push_back(l);
-		size_t len = l.length();
-		if (len + 1 >= currentText.length())
-			break;
-		currentText = currentText.mid(len + 1);
-	}
-	return v;
 }
 
 bool AFont::isHasKerning()

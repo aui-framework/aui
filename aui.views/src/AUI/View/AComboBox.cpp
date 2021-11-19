@@ -73,7 +73,7 @@ void AComboBox::render() {
     if (auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg")) {
         auto size = arrow->getSizeHint();
         auto s = (getHeight() - size.y) / 2;
-        Render::inst().setTransform(
+        Render::setTransform(
                 glm::translate(glm::mat4(1.f), glm::vec3(getWidth() - s - size.x, s, 0.f)));
         arrow->draw(size);
     }

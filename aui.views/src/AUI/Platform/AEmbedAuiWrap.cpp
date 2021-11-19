@@ -95,8 +95,8 @@ void AEmbedAuiWrap::render() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    Render::inst().setColorForced(1.f);
-    Render::inst().setTransformForced(glm::ortho(0.f,
+    Render::setColorForced(1.f);
+    Render::setTransformForced(glm::ortho(0.f,
                                                  static_cast<float>(mSize.x),
                                                  static_cast<float>(mSize.y),
                                                  0.f));

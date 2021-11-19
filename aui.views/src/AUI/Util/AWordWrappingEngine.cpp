@@ -62,7 +62,7 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
 
                     AFraction spacing(freeSpace - actualRowWidth, (glm::max)(int(currentRow->size()) - 1, 1));
 
-                    int currentPos = offset.x + leftPadding;
+                    currentPos = offset.x + leftPadding;
                     int index = 0;
                     for (auto& i: *currentRow) {
                         i.entry->setPosition({currentPos + (spacing * index).toInt(), currentY});

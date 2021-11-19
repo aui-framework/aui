@@ -28,7 +28,7 @@
 
 
 void ass::decl::Declaration<ass::BoxShadow>::renderFor(AView* view) {
-    Render::inst().drawBoxShadow(mInfo.offsetX - mInfo.spreadRadius,
+    Render::drawBoxShadow(mInfo.offsetX - mInfo.spreadRadius,
                                  mInfo.offsetY - mInfo.spreadRadius,
                                  view->getWidth() + mInfo.spreadRadius * 2,
                                  view->getHeight() + mInfo.spreadRadius * 2,
