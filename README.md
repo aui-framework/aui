@@ -98,7 +98,7 @@ Check the `examples/` folder.
 
 ![Fractal](https://sun9-42.userapi.com/impf/WruyOdMmMBrRfpjJ7QrhFepZj7obL3VMGxNSaw/Tr8XxKqdVV8.jpg?size=1261x740&quality=96&proxy=1&sign=f6b851a26a7c40a5f1c22367a34f4c71&type=album)
 
-![Views](https://sun9-72.userapi.com/impf/i-t02B1DzF1AJDBLpDrjX6QkjhnI6VruPGYgrA/8eU7ZvOZ2Lo.jpg?size=1261x740&quality=96&proxy=1&sign=06f90177b68f83228c529d5108e1b685&type=album)
+![Views](https://sun9-37.userapi.com/impg/1JYHdZ7PlYsCPvZnP3qeObUT4anFIH5GDghEEA/_JOtAwNfaLI.jpg?size=1261x1007&quality=96&sign=46300730d3b638ea9300e0238f8a511a&type=album)
 
 ![Minesweeper](https://sun9-10.userapi.com/impf/AW9aUF7nuKdkiOfEz7WtsKqhYARlwVaFb_qV0g/0EGtNBty3NI.jpg?size=392x481&quality=96&proxy=1&sign=adbaf47dada836ab25868abf8db9b9d5&type=album)
 
