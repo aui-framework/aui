@@ -28,6 +28,9 @@ private:
 
     void endDraw(const ABrush& brush);
 
+protected:
+    ITexture* createNewTexture() override;
+
 public:
     OpenGLRenderer();
     ~OpenGLRenderer() override = default;
@@ -66,7 +69,7 @@ public:
                     const AString& string,
                     const FontStyle& fs) override;
 
-    _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, FontStyle& fs) override;
+    _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, const FontStyle& fs) override;
 
     void drawRectImpl(const glm::vec2& position, const glm::vec2& size);
 };

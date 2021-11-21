@@ -54,6 +54,8 @@ protected:
     void doRedraw() override;
 
 
+    void doDrawString();
+
 public:
 	AAbstractTextField();
 	virtual ~AAbstractTextField();

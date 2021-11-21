@@ -23,6 +23,8 @@
 
 #include <AUI/Reflect/AEnumerate.h>
 #include "IRenderer.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 
 
@@ -33,9 +35,14 @@ private:
 
 public:
     using PrerenderedString = _<IRenderer::IPrerenderedString>;
+    using Texture = _<ITexture>;
 
     static void setRenderer(_unique<IRenderer> renderer) {
         ourRenderer = std::move(renderer);
+    }
+
+    static Texture getNewTexture() {
+        return ourRenderer->getNewTexture();
     }
 
     /**
@@ -212,6 +219,10 @@ public:
     static const glm::mat4& getTransform()
     {
         return ourRenderer->getTransform();
+    }
+
+    static void translate(const glm::vec2& offset) {
+        setTransform(glm::translate(getTransform(), glm::vec3(offset, 0.f)));
     }
 };
 

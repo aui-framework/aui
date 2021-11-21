@@ -62,6 +62,7 @@ public:
         ass::BackgroundImage backgroundUrl;
         ass::BackgroundCropping backgroundCropping;
         std::optional<_<IDrawable>> backgroundImage;
+        ImageRendering imageRendering = ImageRendering::PIXELATED;
     } state;
 signals:
     emits<> invalidateFullAss;

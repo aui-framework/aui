@@ -27,15 +27,15 @@
 
 class AString;
 
-class API_AUI_CORE AColor: public glm::vec4
+class AColor: public glm::vec4
 {
 public:
 	AColor(): glm::vec4(0, 0, 0, 1.f)
 	{
 	}
 	AColor(const glm::vec4& v): glm::vec4(v){}
-	
-	AColor(const AString& s);
+
+    API_AUI_CORE AColor(const AString& s);
 	AColor(float scalar) : glm::vec4(scalar) {}
 	AColor(float r, float g, float b) : glm::vec4(r, g, b, 1.f) {}
 	AColor(float r, float g, float b, float a) : glm::vec4(r, g, b, a) {}
@@ -86,9 +86,9 @@ public:
 		return AColor(x * other, y * other, z * other, w);
 	}
 
-	AString toString() const;
+    API_AUI_CORE AString toString() const;
 
-    float readabilityOfForegroundColor(const AColor &foreground);
+    API_AUI_CORE float readabilityOfForegroundColor(const AColor &foreground);
 
     /**
      * \brief Multiply all color components except alpha channel (rgb * d, a)
@@ -116,7 +116,12 @@ public:
     AColor opacify(float d) {
         return {x, y, z, a * d};
     }
+
+
+    static const AColor WHITE;
 };
+
+inline const AColor AColor::WHITE = {1.f, 1.f, 1.f, 1.f};
 
 /**
  * \brief Construct with hex integer
@@ -139,4 +144,3 @@ inline AColor operator"" _rgb(unsigned long long v)
 	assert(("_rgb literal should be in 0xrrggbb format, not 0xaarrggbb" && !(v & 0xff000000u)));
     return AColor::fromRRGGBB(unsigned(v));
 }
-

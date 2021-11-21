@@ -8,13 +8,10 @@
 void ass::decl::Declaration<BorderLeft>::renderFor(AView* view) {
     RenderHints::PushColor x;
     int w = mInfo.width;
-    Render::setColor(mInfo.color);
-    Render::setFill(Render::FILL_SOLID);
-    Render::drawRect(0,
-                            0,
-                            w,
-                            view->getHeight());
 
+    Render::drawRect(ASolidBrush { mInfo.color },
+                     {0, 0},
+                     {w, view->getHeight()});
 
 }
 

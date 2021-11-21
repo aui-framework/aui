@@ -6,7 +6,9 @@
 #include <AUI/Common/ASide.h>
 #include <AUI/Common/AColor.h>
 #include <AUI/Render/ABrush.h>
+#include <AUI/Util/APool.h>
 #include "FontStyle.h"
+#include "ITexture.h"
 
 class AColor;
 class ABaseWindow;
@@ -19,15 +21,24 @@ public:
     public:
         virtual void draw() = 0;
         virtual ~IPrerenderedString() = default;
+        virtual int getWidth() = 0;
     };
 
 protected:
     AColor mColor;
     glm::mat4 mTransform;
     ABaseWindow* mWindow = nullptr;
+    APool<ITexture> mTexturePool;
+
+    virtual ITexture* createNewTexture() = 0;
 
 public:
+    IRenderer(): mTexturePool([this] { return createNewTexture(); }) {}
     virtual ~IRenderer() = default;
+
+    _<ITexture> getNewTexture() {
+        return mTexturePool.get();
+    }
 
     /**
      * Draws simple rectangle.
@@ -129,7 +140,7 @@ public:
      * @param fs font style
      * @return an instance of IPrerenderedString
      */
-    virtual _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, FontStyle& fs) = 0;
+    virtual _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, const FontStyle& fs) = 0;
 
 
     /**

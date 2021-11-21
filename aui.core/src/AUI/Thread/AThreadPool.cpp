@@ -35,7 +35,7 @@ mTP(tp)
 	mThread->start();
 }
 
-bool AThreadPool::Worker::processQueue(Queue<std::function<void()>>& queue)
+bool AThreadPool::Worker::processQueue(AQueue<std::function<void()>>& queue)
 {
 	std::unique_lock tpLock(mTP.mQueueLock);
 	if (!queue.empty()) {

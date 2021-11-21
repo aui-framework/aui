@@ -26,7 +26,7 @@
 #include "AUI/Platform/Platform.h"
 #include <AUI/Util/AMetric.h>
 #include <AUI/Util/kAUI.h>
-
+#include <AUI/Render/RenderHints.h>
 
 
 AAbstractTextField::AAbstractTextField() {
@@ -63,7 +63,7 @@ void AAbstractTextField::render()
 	    auto absoluteCursorPos = ACursorSelectable::drawSelectionPre();
 
 	    // text
-        Render::drawString(mPadding.left - mHorizontalScroll, mPadding.top, mPrerenderedString);
+        doDrawString();
 
         ACursorSelectable::drawSelectionPost();
 
@@ -77,16 +77,23 @@ void AAbstractTextField::render()
                 redraw();
             }
 
-            Render::drawRect(mPadding.left + absoluteCursorPos,
-                                    mPadding.top, glm::ceil(1_dp), getFontStyle().size + 3);
+            Render::drawRect(ASolidBrush{},
+                             { mPadding.left + absoluteCursorPos, mPadding.top },
+                             { glm::ceil(1_dp), getFontStyle().size + 3 });
         }
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        // TODO STUB
+        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     } else {
-        Render::drawString(mPadding.left - mHorizontalScroll, mPadding.top, mPrerenderedString);
-        Render::setFill(Render::FILL_SOLID);
-        Render::setColor({1, 1, 1, 1 });
+        doDrawString();
 	}
 
+}
+
+void AAbstractTextField::doDrawString() {
+    RenderHints::PushMatrix m;
+    Render::translate({ mPadding.left - mHorizontalScroll, mPadding.top });
+    mPrerenderedString->draw();
 }
 
 
@@ -155,11 +162,11 @@ size_t AAbstractTextField::length() const {
 }
 
 void AAbstractTextField::invalidatePrerenderedString() {
-    mPrerenderedString.mVao = nullptr;
+    mPrerenderedString = nullptr;
 }
 
 void AAbstractTextField::invalidateFont() {
-    mPrerenderedString.mVao = nullptr;
+    mPrerenderedString = nullptr;
 }
 
 void AAbstractTextField::onCharEntered(wchar_t c) {
@@ -180,8 +187,8 @@ void AAbstractTextField::onCharEntered(wchar_t c) {
 }
 
 void AAbstractTextField::prerenderStringIfNeeded() {
-    if (!mPrerenderedString.mVao) {
-        mPrerenderedString = Render::preRendererString(getContentsPasswordWrap(), getFontStyle());
+    if (!mPrerenderedString) {
+        mPrerenderedString = Render::prerenderString({0.f, 0.f}, getContentsPasswordWrap(), getFontStyle());
     }
 }
 

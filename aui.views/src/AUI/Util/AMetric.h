@@ -45,7 +45,11 @@ public:
 private:
 	float mValue;
 	Unit mUnit;
-	
+
+    float convertValueToMyUnit(const AMetric& anotherMetric) {
+        return fromPxToMetric(anotherMetric.getValuePx(), mUnit);
+    }
+
 public:
     AMetric():
         AMetric(0, T_PX) {}
@@ -86,13 +90,16 @@ public:
 	[[nodiscard]] float getValuePx() const;
 	[[nodiscard]] float getValueDp() const;
 
+    static float fromPxToMetric(float value, Unit unit);
+
 	operator float() const {
 	    return getValuePx();
 	}
-
+    
 	AMetric operator-() const {
 	    return {-mValue, mUnit};
 	}
+
 };
 
 

@@ -3,6 +3,7 @@
 //
 
 #include "IRenderer.h"
+#include <AUI/Platform/ABaseWindow.h>
 
 glm::mat4 IRenderer::getProjectionMatrix() const {
     return glm::ortho(0.f, static_cast<float>(mWindow->getWidth()), static_cast<float>(mWindow->getHeight()), 0.f);

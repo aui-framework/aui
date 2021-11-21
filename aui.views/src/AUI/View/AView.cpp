@@ -74,15 +74,14 @@ void AView::redraw()
 void AView::drawStencilMask()
 {
     if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
-        Render::drawRoundedRect(mPadding.left,
-                                       mPadding.top,
-                                       getWidth() - mPadding.horizontal(),
-                                       getHeight() - mPadding.vertical(),
-                                       mBorderRadius);
+        Render::drawRoundedRect(ASolidBrush {},
+                                { mPadding.left, mPadding.top },
+                                { getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical() },
+                                mBorderRadius);
     } else {
-        Render::setFill(Render::FILL_SOLID);
-        Render::drawRect(mPadding.left, mPadding.top, getWidth() - mPadding.horizontal(),
-                                getHeight() - mPadding.vertical());
+        Render::drawRect(ASolidBrush {},
+                         { mPadding.left, mPadding.top },
+                         { getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical() });
     }
 }
 
@@ -118,7 +117,9 @@ void AView::render()
         {
             e->draw([&]()
                     {
-                        Render::drawRect(0, 0, getWidth(), getHeight());
+                        Render::drawRect(ASolidBrush{},
+                                         { 0, 0 },
+                                         getSize());
                     });
         }
 

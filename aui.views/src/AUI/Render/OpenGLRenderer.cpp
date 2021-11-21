@@ -4,7 +4,24 @@
 
 #include "OpenGLRenderer.h"
 #include "ShaderUniforms.h"
+#include "Render.h"
 #include <AUI/Traits/callables.h>
+
+
+class OpenGLTexture2D: public ITexture {
+private:
+    GL::Texture2D mTexture;
+
+public:
+    void setImage(const _<AImage>& image) override {
+        mTexture.tex2D(image);
+    }
+
+    void bind() {
+        mTexture.bind();
+    }
+};
+
 
 template<typename Brush>
 struct UnsupportedBrushHelper {
@@ -20,10 +37,11 @@ struct GradientShaderHelper {
 
     void operator()(const ALinearGradientBrush& brush) const {
         shader.use();
-        GL::Shader::currentShader()->set(aui::ShaderUniforms::COLOR_TL, brush.topLeftColor);
-        GL::Shader::currentShader()->set(aui::ShaderUniforms::COLOR_TR, brush.topRightColor);
-        GL::Shader::currentShader()->set(aui::ShaderUniforms::COLOR_BL, brush.bottomLeftColor);
-        GL::Shader::currentShader()->set(aui::ShaderUniforms::COLOR_BR, brush.bottomRightColor);
+        shader.set(aui::ShaderUniforms::COLOR, Render::getColor());
+        shader.set(aui::ShaderUniforms::COLOR_TL, brush.topLeftColor);
+        shader.set(aui::ShaderUniforms::COLOR_TR, brush.topRightColor);
+        shader.set(aui::ShaderUniforms::COLOR_BL, brush.bottomLeftColor);
+        shader.set(aui::ShaderUniforms::COLOR_BR, brush.bottomRightColor);
     }
 };
 
@@ -34,6 +52,7 @@ struct SolidShaderHelper {
 
     void operator()(const ASolidBrush& brush) const {
         shader.use();
+        shader.set(aui::ShaderUniforms::COLOR, Render::getColor() * brush.solidColor);
     }
 };
 
@@ -54,6 +73,7 @@ struct TexturedShaderHelper {
                 break;
         }
         glEnableVertexAttribArray(2);
+        shader.set(aui::ShaderUniforms::COLOR, Render::getColor());
         glm::vec2 uv1 = brush.uv1 ? *brush.uv1 : glm::vec2{0, 0};
         glm::vec2 uv2 = brush.uv2 ? *brush.uv2 : glm::vec2{1, 1};
         tempVao.insert(2, {
@@ -62,6 +82,7 @@ struct TexturedShaderHelper {
                 glm::vec2{uv1.x, uv1.y},
                 glm::vec2{uv2.x, uv1.y},
         });
+        _cast<OpenGLTexture2D>(brush.texture)->bind();
     }
 };
 
@@ -248,7 +269,6 @@ OpenGLRenderer::OpenGLRenderer() {
 }
 
 void OpenGLRenderer::uploadToShaderCommon() {
-    GL::Shader::currentShader()->set(aui::ShaderUniforms::COLOR, mColor);
     GL::Shader::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
 }
 
@@ -335,7 +355,7 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(mRoundedSolidShader),
+            SolidShaderHelper(mSolidShader),
     }, brush);
     uploadToShaderCommon();
     mTempVao.bind();
@@ -378,8 +398,18 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(mRoundedSolidShader),
+            SolidShaderHelper(mRoundedSolidShaderAntialiased),
     }, brush);
+
+    glm::vec2 innerSize = { size.x - borderWidth * 2,
+                            size.y - borderWidth * 2 };
+
+    GL::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
+    GL::Shader::currentShader()->set(aui::ShaderUniforms::INNER_SIZE, 2.f * (radius - borderWidth) / innerSize);
+    GL::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, size / innerSize);
+
+    GL::Shader::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, 2.f / 5.f / innerSize);
+    GL::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
 
     drawRectImpl(position, size);
     endDraw(brush);
@@ -398,8 +428,10 @@ void OpenGLRenderer::drawBoxShadow(const glm::vec2& position,
 
     mTempVao.bind();
 
-    float w = x + width;
-    float h = y + height;
+    float x = position.x;
+    float y = position.y;
+    float w = x + size.x;
+    float h = y + size.y;
 
     x -= blurRadius;
     y -= blurRadius;
@@ -423,9 +455,6 @@ void OpenGLRenderer::drawString(const glm::vec2& position,
     prerenderString(position, string, fs)->draw();
 }
 
-_<IPrerenderedString> OpenGLRenderer::prerenderString(const glm::vec2& position, const AString& text, FontStyle& fs) {
-    return _<IPrerenderedString>();
-}
 
 void OpenGLRenderer::endDraw(const ABrush& brush) {
     if (std::holds_alternative<ATexturedBrush>(brush)) {
@@ -433,3 +462,27 @@ void OpenGLRenderer::endDraw(const ABrush& brush) {
     }
 }
 
+
+class OpenGLPrerenderedString: public IRenderer::IPrerenderedString {
+
+public:
+    OpenGLPrerenderedString() {}
+
+    void draw() override {
+
+    }
+
+    int getWidth() override {
+        return 0;
+    }
+};
+
+_<IRenderer::IPrerenderedString>
+OpenGLRenderer::prerenderString(const glm::vec2& position, const AString& text, const FontStyle& fs) {
+
+    return _new<OpenGLPrerenderedString>();
+}
+
+ITexture* OpenGLRenderer::createNewTexture() {
+    return new OpenGLTexture2D;
+}

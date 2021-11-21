@@ -19,37 +19,59 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 27.08.2020.
-//
-
 #pragma once
+#include <queue>
+#include "AUI/Core.h"
+#include <algorithm>
 
-#include "AView.h"
-
-class API_AUI_VIEWS AImageView: public AView {
-private:
-    _<GL::Texture2D> mTexture;
-    glm::ivec2 mImageSize = {10, 10};
-    /**
-     * See AImageView::setViewportSize
-     */
-    bool mRunningAspectRatioKeepingRoutine = false;
-
+template <class StoredType>
+	class AQueue : public std::queue<StoredType>
+{
+	using parent = std::queue<StoredType>;
 public:
-    explicit AImageView(const _<GL::Texture2D>& texture);
-    explicit AImageView(const _<AImage>& img);
-    explicit AImageView(const AUrl& img);
-    AImageView();
+	void remove(const StoredType& item)
+	{
+		parent::erase(std::remove_if(parent::begin(), parent::end(), [&](const StoredType& probe)
+		{
+			return item == probe;
+		}), parent::end());
+	}
 
-    void render() override;
 
-    int getContentMinimumWidth() override;
-    int getContentMinimumHeight() override;
+	AQueue<StoredType>& operator<<(const StoredType& rhs)
+	{
+		parent::push(rhs);
+		return *this;
+	}
 
-    bool consumesClick(const glm::ivec2& pos) override;
+	bool contains(const StoredType& value) const
+	{
+		for (auto i = parent::begin(); i != parent::end(); ++i)
+		{
+			if (*i == value)
+				return true;
+		}
+		return false;
+	}
 
-    void setSize(int width, int height) override;
+	template<typename Container>
+	bool isSubsetOf(const Container& c) const
+	{
+		for (auto& i : c)
+		{
+			if (!contains(i))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 };
 
 
+template <class StoredType>
+AQueue<StoredType>& operator<<(AQueue<StoredType>& lhs, const StoredType& rhs)
+{
+	lhs.push(rhs);
+	return lhs;
+}

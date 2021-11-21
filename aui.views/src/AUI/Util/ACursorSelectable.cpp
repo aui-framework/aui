@@ -108,13 +108,11 @@ int ACursorSelectable::drawSelectionPre() {
         mAbsoluteBegin = mCursorIndex < mCursorSelection ? absoluteCursorPos : absoluteSelectionPos;
         mAbsoluteEnd = mCursorIndex < mCursorSelection ? absoluteSelectionPos : absoluteCursorPos;
 
-        Render::setFill(Render::FILL_SOLID);
         RenderHints::PushColor c;
         Render::setColor(AColor(1.f) - AColor(0x0078d700u));
         
         auto padding = getMouseSelectionPadding();
         drawSelectionRects();
-
     }
     return absoluteCursorPos;
 }
@@ -124,10 +122,8 @@ int ACursorSelectable::getPosByIndex(int end, int begin) {
 }
 
 void ACursorSelectable::drawSelectionPost() {
-    Render::setFill(Render::FILL_SOLID);
-    Render::setColor({1, 1, 1, 1 });
-
-    glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+    // TODO STUB
+    //glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
     if (hasSelection())
     {
         drawSelectionRects();
@@ -157,10 +153,9 @@ void ACursorSelectable::drawSelectionRects() {
 
     auto draw = [&]() {
         auto fs = getMouseSelectionFont();
-        Render::drawRect(p.x + absoluteBeginPos,
-                                    p.y + row * fs.getLineHeight(),
-                                    absoluteEndPos - absoluteBeginPos + 1,
-                                    getMouseSelectionFont().size + 2);
+        Render::drawRect(ASolidBrush{},
+                         { p.x + absoluteBeginPos, p.y + row * fs.getLineHeight() },
+                         { absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 2 });
     };
 
     auto t = getDisplayText();

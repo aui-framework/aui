@@ -176,7 +176,7 @@ public:
     _<AView> determineSharedPointer() override;
 
     /**
-     * \brief Checks whether last monitor frame is displayed and redraw will be efficient..
+     * \brief Checks whether last monitor frame is displayed and redraw will be efficient.
      *        If some object often updates UI thread for displaying some data it may cause extra CPU and GPU overload.
      *        AUI throttles window redraws and FPS does not go above 60 FPS but UI views may also cause extra CPU and
      *        GPU overload that does not have visual difference.

@@ -28,23 +28,24 @@
 #include <AUI/Platform/AWindow.h>
 
 ImageDrawable::ImageDrawable(const _<AImage> image): mSize(image->getSize()) {
-    mTexture.tex2D(image);
+    mTexture = Render::getNewTexture();
+    mTexture->setImage(image);
 }
 
 ImageDrawable::~ImageDrawable() {
 
 }
 
-void ImageDrawable::draw(const glm::ivec2& size) {
-    mTexture.bind();
-    Render::setFill(Render::FILL_TEXTURED);
-    Render::drawTexturedRect(0, 0, size.x, size.y);
-}
-
 glm::ivec2 ImageDrawable::getSizeHint() {
     return mSize;
 }
 
-void ImageDrawable::bind() {
-    mTexture.bind();
+
+void ImageDrawable::draw( const IDrawable::Params& params) {
+    Render::drawRect(ATexturedBrush {
+        mTexture,
+        params.cropUvTopLeft,
+        params.cropUvBottomRight,
+        params.imageRendering,
+    }, params.offset, params.size);
 }

@@ -34,8 +34,11 @@ ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable)
 void ADrawableView::render() {
     AView::render();
     Render::setColor(getAssHelper()->state.backgroundUrl.overlayColor.or_default(0xffffff_rgb));
-    if (mDrawable)
-        mDrawable->draw(getSize());
+    if (mDrawable) {
+        IDrawable::Params p;
+        p.size = getSize();
+        mDrawable->draw(p);
+    }
 }
 
 /*

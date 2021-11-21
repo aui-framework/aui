@@ -5,6 +5,7 @@
 #pragma once
 
 #include <type_traits>
+#include <AUI/Util/EnumUtil.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AMap.h>
 

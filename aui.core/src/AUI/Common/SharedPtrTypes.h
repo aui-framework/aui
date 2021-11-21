@@ -46,6 +46,17 @@ namespace aui {
         static _<T> manage(T* raw);
 
         /**
+         * Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
+         * @tparam T any type
+         * @tparam Deleter object implementing <code>operator()(T*)</code>
+         * @param raw raw pointer to manage memory of
+         * @param deleter
+         * @return shared pointer
+         */
+        template<typename T, typename Deleter>
+        static _<T> manage(T* raw, Deleter deleter);
+
+        /**
          * Creates fake shared pointer to <code>T* raw</code> with empty destructor, which does nothing. It's useful
          * when some function accept shared pointer but you have only raw one.
          * @tparam T any type
@@ -206,6 +217,11 @@ namespace aui {
     template<typename T>
     _<T> ptr::fake(T* raw) {
         return _<T>(raw, [](T*) {});
+    }
+
+    template<typename T, typename Deleter>
+    _<T> ptr::manage(T* raw, Deleter deleter) {
+        return _<T>(raw, deleter);
     }
 }
 

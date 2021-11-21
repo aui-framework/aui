@@ -24,6 +24,8 @@
 #include <glm/glm.hpp>
 #include <AUI/Util/Cache.h>
 #include <AUI/Url/AUrl.h>
+#include <AUI/Enum/Repeat.h>
+#include <AUI/Enum/ImageRendering.h>
 
 
 /**
@@ -45,12 +47,22 @@ class IDrawable
     };
 
 public:
+
+    struct Params {
+        glm::vec2 offset = {0.f, 0.f};
+        glm::vec2 size;
+        std::optional<glm::vec2> cropUvTopLeft;
+        std::optional<glm::vec2> cropUvBottomRight;
+
+        Repeat repeat = Repeat::NONE;
+        ImageRendering imageRendering;
+    };
+
 	/**
 	 * \brief Called when the image needs to be displayed. It is assumed that the renderer is already set to the
 	 *        desired state (coordinates, color, etc.)
-	 * \param size required image size. In common based on getSizeHint result
 	 */
-	virtual void draw(const glm::ivec2& size) = 0;
+	virtual void draw(const Params& params) = 0;
 
 	
 	/**

@@ -56,38 +56,41 @@ glm::ivec2 SvgDrawable::getSizeHint() {
     return {mImage->width, mImage->height};
 }
 
-void SvgDrawable::draw(const glm::ivec2& size) {
+void SvgDrawable::draw(const Params& params) {
+    auto& size = params.size;
     auto key = asKey(size);
-    auto doDraw = [&]() {
-        Render::setFill(Render::FILL_TEXTURED);
+    auto doDraw = [&](const Render::Texture& texture) {
         glm::vec2 uv = {1, 1};
 
         float posX, posY;
         float scale = glm::min(size.x / mImage->width, size.y / mImage->height);
 
-        if (!!(Render::getRepeat() & Repeat::X)) {
+        if (!!(params.repeat & Repeat::X)) {
             uv.x = float(size.x) / getSizeHint().x;
             posX = 0;
         } else {
             posX = glm::round((size.x - mImage->width * scale) / 2.f);
         }
-        if (!!(Render::getRepeat() & Repeat::Y)) {
+        if (!!(params.repeat & Repeat::Y)) {
             uv.y = float(size.y) / getSizeHint().y;
             posY = 0;
         } else {
             posY = glm::round((size.y - mImage->height * scale) / 2.f);
         }
-        Render::applyTextureRepeat();
 
-        Render::drawTexturedRect(posX,
-                                        posY,
-                                        size.x,
-                                        size.y, {0, 0}, uv);
+        Render::drawRect(ATexturedBrush {
+             texture,
+             glm::ivec2 { 0.f, 0.f },
+             uv,
+             params.imageRendering,
+             params.repeat,
+            },
+            { posX, posY },
+            size);
     };
     for (auto& p : mRasterized) {
         if (p.key == key) {
-            p.texture->bind();
-            doDraw();
+            doDraw(p.texture);
             return;
         }
     }
@@ -97,15 +100,15 @@ void SvgDrawable::draw(const glm::ivec2& size) {
 
     glm::ivec2 textureSize = size;
 
-    if (!!(Render::getRepeat() & Repeat::X)) {
+    if (!!(params.repeat & Repeat::X)) {
         textureSize.x = getSizeHint().x;
     }
-    if (!!(Render::getRepeat() & Repeat::Y)) {
+    if (!!(params.repeat & Repeat::Y)) {
         textureSize.y = getSizeHint().y;
     }
 
     // rasterization
-    auto texture = _new<GL::Texture2D>();
+    auto texture = Render::getNewTexture();
     auto image = _new<AImage>(AVector<uint8_t>{}, textureSize.x, textureSize.y, AImage::RGBA | AImage::BYTE);
     image->allocate();
     auto rasterizer = nsvgCreateRasterizer();
@@ -113,8 +116,8 @@ void SvgDrawable::draw(const glm::ivec2& size) {
     nsvgRasterize(rasterizer, mImage, 0, 0, glm::min(textureSize.x / mImage->width, textureSize.y / mImage->height),
                   image->getData().data(), textureSize.x, textureSize.y, textureSize.x * 4);
 
-    texture->tex2D(image);
+    texture->setImage(image);
     nsvgDeleteRasterizer(rasterizer);
     mRasterized.push_back({key, texture});
-    doDraw();
+    doDraw(texture);
 }

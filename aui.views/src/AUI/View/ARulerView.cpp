@@ -52,7 +52,6 @@ void ARulerView::render() {
     const int delayMedium = delayLarge / 2;
     const int delaySmall = delayLarge / 10;
     const int totalHeight = getShortestSide();
-    Render::setFill(Render::FILL_SOLID);
 
     /*
      * L
@@ -66,30 +65,26 @@ void ARulerView::render() {
         Render::setColor(getFontStyle().color);
         for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
             // large dashes
-            Render::drawRect(mOffsetPx + operator""_dp(i * delayLarge),
-                                    0.f,
-                                    1,
-                                    totalHeight);
+            Render::drawRect(ASolidBrush{},
+                             { mOffsetPx + operator""_dp(i * delayLarge), 0.f },
+                             { 1, totalHeight });
 
             // medium dashes
-            Render::drawRect(mOffsetPx + operator""_dp(i * delayLarge + delayMedium),
-                                    totalHeight / 2,
-                                    1,
-                                    totalHeight / 2);
+            Render::drawRect(ASolidBrush{},
+                             { mOffsetPx + operator""_dp(i * delayLarge + delayMedium), totalHeight / 2 },
+                             { 1, totalHeight / 2 });
 
 
             // small dashes
             for (int j = 1; j <= 4; ++j) {
                 int smallDashOffset = j * delaySmall;
-                Render::drawRect(mOffsetPx + operator""_dp(i * delayLarge + smallDashOffset),
-                                        3 * totalHeight / 4,
-                                        1,
-                                        totalHeight / 4);
+                Render::drawRect(ASolidBrush{},
+                                 { mOffsetPx + operator""_dp(i * delayLarge + smallDashOffset), 3 * totalHeight / 4 },
+                                 { 1, totalHeight / 4 });
 
-                Render::drawRect(mOffsetPx + operator""_dp(i * delayLarge + smallDashOffset + delayMedium),
-                                        3 * totalHeight / 4,
-                                        1,
-                                        totalHeight / 4);
+                Render::drawRect(ASolidBrush{},
+                                 { mOffsetPx + operator""_dp(i * delayLarge + smallDashOffset + delayMedium), 3 * totalHeight / 4 },
+                                 { 1, totalHeight / 4 });
             }
         }
     }
@@ -97,14 +92,11 @@ void ARulerView::render() {
     // number display
     {
         for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
-            Render::drawString(mOffsetPx + operator""_dp(i * delayLarge) + 2_dp,
-                                      -1.f,
-                                      AString::number(i * delayLarge),
-                                      getFontStyle());
+            Render::drawString({ mOffsetPx + operator""_dp(i * delayLarge) + 2_dp, -1.f },
+                               AString::number(i * delayLarge),
+                               getFontStyle());
         }
     }
-
-    Render::setFill(Render::FILL_SOLID);
 }
 
 int ARulerView::getLongestSide() const {

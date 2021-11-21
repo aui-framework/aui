@@ -26,11 +26,12 @@
 #include <AUI/Render/RenderHints.h>
 #include "ImageRendering.h"
 #include "IDeclaration.h"
+#include <AUI/ASS/AAssHelper.h>
 
 
 
 void ass::decl::Declaration<ImageRendering>::renderFor(AView* view) {
-    Render::setCurrentImageRendering(mInfo);
+    view->getAssHelper()->state.imageRendering = mInfo;
 }
 
 ass::decl::DeclarationSlot ass::decl::Declaration<ImageRendering>::getDeclarationSlot() const {

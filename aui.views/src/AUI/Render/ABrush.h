@@ -8,14 +8,14 @@
 #include <variant>
 #include <AUI/Common/AColor.h>
 #include <AUI/Enum/Repeat.h>
-#include "ImageRendering.h"
+#include "AUI/Enum/ImageRendering.h"
 
 
 /**
  * The simplest brush which used single solid color to fill.
  */
 struct ASolidBrush {
-    AColor solidColor;
+    AColor solidColor = AColor::WHITE;
 };
 
 
@@ -29,10 +29,14 @@ struct ALinearGradientBrush {
     AColor bottomRightColor = 1.f;
 };
 
+class ITexture;
+
 /**
  * Brush which draws texture (raster image).
  */
 struct ATexturedBrush {
+    _<ITexture> texture;
+
     /**
      * Optional. Top left UV coords of the texture.
      * <dl>

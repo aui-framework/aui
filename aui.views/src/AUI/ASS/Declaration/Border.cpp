@@ -29,14 +29,11 @@
 
 
 void ass::decl::Declaration<ass::Border>::renderFor(AView* view) {
-    RenderHints::PushColor x;
-    Render::setColor(mInfo.color);
-    Render::drawRoundedBorder(0,
-                                     0,
-                                     view->getWidth(),
-                                     view->getHeight(),
-                                     view->getBorderRadius(),
-                                     mInfo.width);
+    Render::drawRectBorder(ASolidBrush{mInfo.color},
+                           {0, 0},
+                           view->getSize(),
+                           view->getBorderRadius(),
+                           mInfo.width);
 }
 
 bool ass::decl::Declaration<ass::Border>::isNone() {
