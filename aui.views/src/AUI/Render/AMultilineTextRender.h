@@ -3,7 +3,7 @@
 
 #include <AUI/Render/Render.h>
 #include <AUI/Util/AWordWrappingEngine.h>
-#include "FontStyle.h"
+#include "AUI/Font/AFontStyle.h"
 
 /**
  * Helper class for rendering and processing multiline texts.
@@ -12,7 +12,7 @@ class AMultilineTextRender {
 private:
 friend class TextEntry;
     AWordWrappingEngine mEngine;
-    FontStyle mFontStyle;
+    AFontStyle mFontStyle;
 
     class TextEntry: public AWordWrappingEngine::Entry {
     private:

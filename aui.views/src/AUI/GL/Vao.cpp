@@ -34,7 +34,6 @@ GL::Vao::Vao() {
 }
 
 GL::Vao::~Vao() {
-
 	auto buffers = mBuffers;
 	auto handle = mHandle;
 

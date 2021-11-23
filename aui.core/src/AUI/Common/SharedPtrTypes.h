@@ -109,6 +109,8 @@ public:
 
     using std::shared_ptr<T>::shared_ptr;
 
+    _(const std::shared_ptr<T>& v): std::shared_ptr<T>(v) {}
+
     /**
      * <p>Trap constructor</p>
      * <p>In order to make shared pointer from the raw one, please explicitly specify how do you want manage memory by

@@ -21,8 +21,8 @@
 
 #include <ft2build.h>
 #include <freetype/freetype.h>
-#include "FreeType.h"
-#include "AFontCharacter.h"
+#include <freetype/ftsnames.h>
+#include "AUI/Render/FreeType.h"
 #include "AUI/Platform/AFontManager.h"
 #include <fstream>
 #include <string>
@@ -33,7 +33,7 @@
 AFont::AFont(AFontManager* fm, const AString& path) :
 	ft(fm->mFreeType)
 {
-	if (FT_New_Face(fm->mFreeType->getFt(), path.toStdString().c_str(), 0, &face)) {
+	if (FT_New_Face(fm->mFreeType->getFt(), path.toStdString().c_str(), 0, &mFace)) {
 		throw AException(("Could not load font: " + path).toStdString());
 	}
 }
@@ -42,73 +42,60 @@ AFont::AFont(AFontManager *fm, const AUrl& url):
     ft(fm->mFreeType) {
     mFontDataBuffer = AByteBuffer::fromStream(url.open());
 
-    if (FT_New_Memory_Face(fm->mFreeType->getFt(), (const FT_Byte*) mFontDataBuffer.data(), mFontDataBuffer.getSize(), 0, &face)) {
+    if (FT_New_Memory_Face(fm->mFreeType->getFt(), (const FT_Byte*) mFontDataBuffer.data(), mFontDataBuffer.getSize(), 0, &mFace)) {
         throw AException(("Could not load font: " + url.getFull()).toStdString());
     }
 }
 
-AFont::~AFont() {
-	FT_Done_Face(face);
-	for (size_t i = 0; i < data.size(); i++) {
-		AVector<Character*> c = data[i].chars;
-		for (size_t j = 0; j < c.size(); j++) {
-			Character* ch = c[j];
-			delete ch;
-		}
-		c.clear();
-	}
-	data.clear();
+AString AFont::getFontFamilyName() const {
+    FT_SfntName name;
+    FT_Get_Sfnt_Name(mFace, 0, &name);
+    return std::string(name.string, name.string + name.string_len);
+}
+
+AFontFamily::Weight AFont::getFontWeight() const {
+    return AFontFamily::NORMAL;
+}
+
+bool AFont::isItalic() const {
+    return mFace->style_flags & FT_STYLE_FLAG_ITALIC;
 }
 
 
 glm::vec2 AFont::getKerning(wchar_t left, wchar_t right)
 {
 	FT_Vector vec2;
-	FT_Get_Kerning(face, left, right, FT_KERNING_DEFAULT, &vec2);
+	FT_Get_Kerning(mFace, left, right, FT_KERNING_DEFAULT, &vec2);
 
 	return { vec2.x >> 6, vec2.y >> 6 };
 }
 
-AFont::FontData& AFont::getCharsetBySize(long size, FontRendering fr) {
-	for (size_t i = 0; i < data.size(); i++) {
-		if (data[i].size == size && data[i].fontRendering == fr) {
-			return data[i];
-		}
-	}
-	FontData s;
-	s.size = size;
-	s.fontRendering = fr;
-	data.push_back(s);
-	//renderGlyphs(size);
-	return data[data.size() - 1];
-}
-AFont::Character* AFont::renderGlyph(FontData& fs, long glyph, long size, FontRendering fr) {
-	FT_Set_Pixel_Sizes(face, 0, size);
+AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
+    int size = fs.first.size;
+    FontRendering fr = fs.first.fr;
+
+	FT_Set_Pixel_Sizes(mFace, 0, size);
 
 	FT_Int32 flags = FT_LOAD_RENDER;
+
 	if (fr == FontRendering::SUBPIXEL)
 		flags |= FT_LOAD_TARGET_LCD;
 	if (fr == FontRendering::NEAREST)
 	    flags |= FT_LOAD_TARGET_MONO;
 
-	FT_Error e = FT_Load_Char(face, glyph, flags);
+	FT_Error e = FT_Load_Char(mFace, glyph, flags);
 	if (e) {
 		throw std::runtime_error(("Cannot load char: error code" + AString::number(e)).toStdString());
 	}
-	FT_GlyphSlot g = face->glyph;
+	FT_GlyphSlot g = mFace->glyph;
 	if (g->bitmap.width && g->bitmap.rows) {
 		const float div = 1.f / 64.f;
-		Character* c = new Character;
-		c->c = glyph;
-		c->width = g->bitmap.width;
+		int width = g->bitmap.width;
 		
 		if (fr == FontRendering::SUBPIXEL)
-			c->width /= 3;
+			width /= 3;
 		
-		c->height = g->bitmap.rows;
-		c->bearingX = float(g->bitmap_left);
-		c->advanceX = g->metrics.horiAdvance * div;
-		c->advanceY = -(g->metrics.horiBearingY * div) + size;
+		int height = g->bitmap.rows;
 
 		AVector<uint8_t> data;
 
@@ -137,63 +124,55 @@ AFont::Character* AFont::renderGlyph(FontData& fs, long glyph, long size, FontRe
 			imageFormat |= AImage::RGB;
 		else
 			imageFormat |= AImage::R;
-		
-		auto img = _new<AImage>(data, c->width, c->height, imageFormat);
 
-		c->uv = fs.tp->insert(img);
-		
-		fs.isDirty = true;
-		return c;
+		return Character {
+            _new<AImage>(data, width, height, imageFormat),
+            int(g->metrics.horiAdvance * div),
+            int(-(g->metrics.horiBearingY * div) + size),
+            int(g->bitmap_left)
+        };
 	}
-	return nullptr;
+    return Character{
+            nullptr,
+            0,
+            0,
+            0
+    };
 }
 
-_<GL::Texture2D> AFont::textureOf(long size, FontRendering fr) {
-	FontData& chars = getCharsetBySize(size, fr);
-	if (!chars.texture)
-	{
-		chars.texture = _new<GL::Texture2D>();
-		chars.texture->setupNearest();
-	}
-	if (chars.isDirty)
-	{
-		chars.isDirty = false;
-		chars.texture->tex2D(chars.tp->getImage());
-	}
-	return chars.texture;
-}
-AFont::Character* AFont::getCharacter(long id, long size, FontRendering fr) {
-	FontData& chars = getCharsetBySize(size, fr);
-	if (chars.chars.size() > id && chars.chars[id]) {
-		return chars.chars[id];
+AFont::Character& AFont::getCharacter(const FontEntry& charset, long glyph) {
+	auto& chars = charset.second.characters;
+	if (chars.size() > glyph && chars[glyph]) {
+		return *chars[glyph];
 	}
 	else {
-		if (chars.chars.size() <= id)
-			chars.chars.resize(id + 1, nullptr);
-		Character* d = renderGlyph(chars, id, size, fr);
-		chars.chars[id] = d;
-		return d;
+		if (chars.size() <= glyph) {
+            chars.resize(glyph + 1, std::nullopt);
+        }
+		chars[glyph] = std::move(renderGlyph(charset, glyph));
+
+		return *chars[glyph];
 	}
-	return nullptr;
 }
 
-float AFont::length(const AString& text, long size, FontRendering fr)
+float AFont::length(const FontEntry& charset, const AString& text)
 {
-	float advance = 0;
+    int size = charset.first.size;
+	int advance = 0;
 
 	for (AString::const_iterator i = text.begin(); i != text.end(); i++) {
 		if (*i == ' ')
-			advance += size / 2.3f;
+			advance += getSpaceWidth(size);
 		else if (*i == '\n')
 		    advance = 0;
 		else {
-			Character* ch = getCharacter(*i, size, fr);
-			if (ch) {
-                advance += ch->advanceX;
+			Character& ch = getCharacter(charset, *i);
+			if (!ch.empty()) {
+                advance += ch.advanceX;
                 advance = glm::floor(advance);
             }
 			else
-				advance += size / 2.3f;
+				advance += getSpaceWidth(size);
 		}
 	}
 	return advance;
@@ -201,20 +180,16 @@ float AFont::length(const AString& text, long size, FontRendering fr)
 
 bool AFont::isHasKerning()
 {
-	return FT_HAS_KERNING(face);
+	return FT_HAS_KERNING(mFace);
 }
 
-int AFont::getAscenderHeight(long size) const
+int AFont::getAscenderHeight(unsigned size) const
 {
-	return int(face->ascender) * size / face->height;
+	return int(mFace->ascender) * size / mFace->height;
 }
 
 
-int AFont::getDescenderHeight(long size) const
+int AFont::getDescenderHeight(unsigned size) const
 {
-	return -int(face->descender) * size / face->height;
-}
-
-_<Util::SimpleTexturePacker> AFont::texturePackerOf(long size, FontRendering fr) {
-	return getCharsetBySize(size, fr).tp;
+	return -int(mFace->descender) * size / mFace->height;
 }

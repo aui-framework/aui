@@ -31,7 +31,7 @@
 #include "AUI/Platform/ACursor.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Reflect/AClass.h"
-#include "AUI/Render/FontStyle.h"
+#include "AUI/Font/AFontStyle.h"
 #include "AUI/Util/Watchable.h"
 #include "AUI/Util/IShadingEffect.h"
 #include <AUI/ASS/RuleWithoutSelector.h>
@@ -98,7 +98,7 @@ private:
 	/**
 	 * \brief Font style for this AView.
 	 */
-	FontStyle mFontStyle;
+	AFontStyle mFontStyle;
 
     /**
      * \brief opacity, specified in ASS.
@@ -179,7 +179,7 @@ protected:
 	/**
 	 * \brief Determines which ASS style rules should be applied to this AView and fills the mAss field.
 	 */
-	virtual void recompileCSS();
+	virtual void recompileAss();
 
 	/**
 	 * \brief Updates state selectors for ASS.
@@ -194,7 +194,7 @@ public:
 	 * \brief Request window manager to redraw this AView.
 	 */
 	void redraw();
-    
+
     /**
      * \brief Determines window which this AView belongs to.
      * \return window which this AView belongs to. Could be nullptr
@@ -435,7 +435,7 @@ public:
 	{
 		return mExpanding.y;
 	}
-	FontStyle& getFontStyle();
+	AFontStyle& getFontStyle();
 
     [[nodiscard]] float getOpacity() const {
         return mOpacity;

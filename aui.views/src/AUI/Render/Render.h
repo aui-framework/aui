@@ -148,7 +148,7 @@ public:
      */
     static void drawString(const glm::vec2& position,
                            const AString& string,
-                           const FontStyle& fs = {}) {
+                           const AFontStyle& fs = {}) {
         ourRenderer->drawString(position, string, fs);
     }
 
@@ -159,7 +159,7 @@ public:
      * @param fs font style
      * @return an instance of IPrerenderedString
      */
-    static _<IRenderer::IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, FontStyle& fs) {
+    static _<IRenderer::IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, AFontStyle& fs) {
         return ourRenderer->prerenderString(position, text, fs);
     }
 

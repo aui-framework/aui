@@ -52,7 +52,7 @@ private:
 protected:
     Render::PrerenderedString mPrerendered;
 
-	FontStyle getFontStyleLabel();
+	AFontStyle getFontStyleLabel();
 
 	const Render::PrerenderedString& getPrerendered() {
 	    return mPrerendered;

@@ -291,8 +291,8 @@ void AViewContainer::setSize(int width, int height)
     updateLayout();
 }
 
-void AViewContainer::recompileCSS() {
-    AView::recompileCSS();
+void AViewContainer::recompileAss() {
+    AView::recompileAss();
     if (mSizeSet)
         updateLayout();
 }

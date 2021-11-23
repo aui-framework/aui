@@ -151,7 +151,7 @@ void ALabel::setSize(int width, int height) {
     }
 }
 
-FontStyle ALabel::getFontStyleLabel() {
+AFontStyle ALabel::getFontStyleLabel() {
     auto fs = getFontStyle();
     if (mFontOverride)
         fs.font = mFontOverride;

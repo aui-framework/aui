@@ -28,6 +28,16 @@ private:
 
     void endDraw(const ABrush& brush);
 
+    struct OpenGLCharacterData {
+        _<glm::vec4> uv;
+    };
+    struct OpenGLFontEntryData {
+        _<Util::SimpleTexturePacker> texturePacker;
+    };
+
+    ADeque<OpenGLCharacterData> mCharData;
+    ADeque<OpenGLFontEntryData> mFontEntryData;
+
 protected:
     ITexture* createNewTexture() override;
 
@@ -67,9 +77,9 @@ public:
 
     void drawString(const glm::vec2& position,
                     const AString& string,
-                    const FontStyle& fs) override;
+                    const AFontStyle& fs) override;
 
-    _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, const FontStyle& fs) override;
+    _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, const AFontStyle& fs) override;
 
     void drawRectImpl(const glm::vec2& position, const glm::vec2& size);
 };

@@ -380,7 +380,7 @@ glm::ivec2 AAbstractTypeableView::getMouseSelectionScroll() {
     return {mHorizontalScroll, 0};
 }
 
-FontStyle AAbstractTypeableView::getMouseSelectionFont() {
+AFontStyle AAbstractTypeableView::getMouseSelectionFont() {
     return getFontStyle();
 }
 

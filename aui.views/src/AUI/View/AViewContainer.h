@@ -52,7 +52,7 @@ protected:
 		}
 	}
 
-    void recompileCSS() override;
+    void recompileAss() override;
 
 
     /**

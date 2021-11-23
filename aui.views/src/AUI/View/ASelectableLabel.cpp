@@ -41,7 +41,7 @@ glm::ivec2 ASelectableLabel::getMouseSelectionScroll() {
     return {0, 0};
 }
 
-FontStyle ASelectableLabel::getMouseSelectionFont() {
+AFontStyle ASelectableLabel::getMouseSelectionFont() {
     return getFontStyleLabel();
 }
 

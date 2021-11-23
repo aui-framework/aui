@@ -19,18 +19,39 @@
  * =====================================================================================================================
  */
 
-#include "FontStyle.h"
+#pragma once
+#include "AUI/Enum/TextAlign.h"
+#include "AFont.h"
+#include "AUI/Render/FontRendering.h"
+#include "AUI/Common/AColor.h"
 
-#include "AUI/Platform/AFontManager.h"
 
-size_t FontStyle::getWidth(const AString& text) const
-{
-	if (!font)
-		font = AFontManager::inst().getDefault();
+class AString;
 
-	return font->length(text, size, fontRendering);
-}
 
-size_t FontStyle::getLineHeight() const {
-    return font->getAscenderHeight(size) * (1.f + lineSpacing);
-}
+struct API_AUI_VIEWS AFontStyle {
+	mutable _<AFont> font;
+	unsigned size = 12;
+	bool formatting = false;
+	TextAlign align = TextAlign::LEFT;
+	AColor color;
+
+	FontRendering fontRendering = FontRendering::SUBPIXEL;
+	float lineSpacing = 0.5f;
+
+	size_t getWidth(const AString& text) const;
+
+    [[nodiscard]]
+    size_t getSpaceWidth() const {
+        return font->getSpaceWidth(size);
+    }
+	size_t getLineHeight() const;
+
+    AFont::FontEntry getFontEntry() const {
+        return font->getFontEntry({size, fontRendering});
+    }
+
+    operator AFont::FontEntry() const {
+        return getFontEntry();
+    }
+};

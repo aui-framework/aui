@@ -66,7 +66,7 @@ void AViewProfiler::displayBoundsOn(const AView& v) {
         int x = -v.getMargin().left;
         int y = v.getHeight() + v.getMargin().bottom + 2_dp;
 
-        FontStyle fs;
+        AFontStyle fs;
         fs.color = 0xffffffffu;
         fs.fontRendering = FontRendering::ANTIALIASING;
         fs.size = 9_pt;

@@ -72,7 +72,7 @@ void ARulerArea::render() {
 
         glm::ivec2 tp = mMousePos - (getTargetPosition() + rulerOffset);
 
-        FontStyle fs = getFontStyle();
+        AFontStyle fs = getFontStyle();
         fs.color = 0x0_rgb;
         auto prX = Render::prerenderString({ 0, 0 }, AString::number(int(operator ""_px(tp.x).getValueDp())), fs);
         auto prY = Render::prerenderString({ 0, 0 }, AString::number(int(operator ""_px(tp.y).getValueDp())), fs);

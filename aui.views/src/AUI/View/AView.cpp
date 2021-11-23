@@ -140,7 +140,7 @@ void AView::render()
     }
 }
 
-void AView::recompileCSS()
+void AView::recompileAss()
 {
     mCursor = ACursor::DEFAULT;
     mOverflow = Overflow::VISIBLE;
@@ -149,7 +149,7 @@ void AView::recompileCSS()
     mBorderRadius = 0.f;
     //mForceStencilForBackground = false;
     mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-    mFontStyle = {AFontManager::inst().getDefault(), 12, false, TextAlign::LEFT, AColor(0, 0, 0, 1.f) };
+    mFontStyle = {AFontManager::inst().getDefaultFont(), 12, false, TextAlign::LEFT, AColor(0, 0, 0, 1.f) };
     mBackgroundEffects.clear();
 
     for (auto& r : AStylesheet::inst().getRules()) {
@@ -234,10 +234,10 @@ void AView::getTransform(glm::mat4& transform) const
     transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
 }
 
-FontStyle& AView::getFontStyle()
+AFontStyle& AView::getFontStyle()
 {
     if (mFontStyle.font == nullptr)
-        mFontStyle.font = AFontManager::inst().getDefault();
+        mFontStyle.font = AFontManager::inst().getDefaultFont();
     return mFontStyle;
 }
 
@@ -278,7 +278,7 @@ void AView::ensureAssUpdated()
         });
         connect(mAssHelper->invalidateStateAss, me::updateAssState);
 
-        recompileCSS();
+        recompileAss();
     }
 }
 

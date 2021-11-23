@@ -7,7 +7,7 @@
 #include <AUI/Common/AColor.h>
 #include <AUI/Render/ABrush.h>
 #include <AUI/Util/APool.h>
-#include "FontStyle.h"
+#include "AUI/Font/AFontStyle.h"
 #include "ITexture.h"
 
 class AColor;
@@ -131,7 +131,7 @@ public:
      */
     virtual void drawString(const glm::vec2& position,
                             const AString& string,
-                            const FontStyle& fs = {}) = 0;
+                            const AFontStyle& fs = {}) = 0;
 
     /**
      * Analyzes string and creates an instance of <code>IRenderer::IPrerenderedString</code> which helps
@@ -140,7 +140,7 @@ public:
      * @param fs font style
      * @return an instance of IPrerenderedString
      */
-    virtual _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, const FontStyle& fs) = 0;
+    virtual _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, const AFontStyle& fs) = 0;
 
 
     /**
