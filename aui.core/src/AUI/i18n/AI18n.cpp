@@ -42,7 +42,7 @@ AI18n::AI18n() {
     } catch (...) {
         try {
             loadFromLang("en-US");
-            ALogger::warn("User native language ({}) is not supported, using en-US"_as.format(userLanguage().toString()));
+            ALogger::warn("User native language ({}) is not supported, using en-US"_format(userLanguage().toString()));
         } catch (...) {
             if (userLanguage().toString() == "en-US") {
                 ALogger::err("US English (en-US) language file has not found! Please add at least en-US.lang file "
@@ -90,7 +90,7 @@ AI18n& AI18n::inst() {
 }
 
 void AI18n::loadFromLang(const ALanguageCode& languageCode) {
-    loadFromStream(AUrl(":lang/{}.lang"_as.format(languageCode.toString())).open());
+    loadFromStream(AUrl(":lang/{}.lang"_format(languageCode.toString())).open());
 }
 
 void AI18n::loadFromStream(const _<IInputStream>& iis) {

@@ -63,7 +63,7 @@ AFontManager::AFontManager() :
             // /home/alex2772/.config/xsettingsd/xsettingsd.conf
 
             ATokenizer t(
-                    _new<FileInputStream>("/home/{}/.config/xsettingsd/xsettingsd.conf"_as.format(getenv("USER"))));
+                    _new<FileInputStream>("/home/{}/.config/xsettingsd/xsettingsd.conf"_format(getenv("USER"))));
 
             // find something like
             // Gtk/FontName "System Font,  10"
@@ -90,7 +90,7 @@ AFontManager::AFontManager() :
             for (auto& d : {"Ubuntu", "Serif", "FreeSans", "Monospace"}) {
                 try {
                     result = get(d);
-                    ALogger::info("Using fallback font: {}"_as.format(d));
+                    ALogger::info("Using fallback font: {}"_format(d));
                     break;
                 } catch (...) {}
             }
