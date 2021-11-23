@@ -116,9 +116,7 @@ public:
      * <p>In order to make shared pointer from the raw one, please explicitly specify how do you want manage memory by
      * using either <code>aui::ptr::manage</code> or <code>aui::ptr::fake</code>.
      */
-    _(T* v) {
-        static_assert(false, "use either aui::ptr::manage or aui::ptr::fake");
-    }
+    _(T* v) = delete;
 
     /**
      * @return weak reference

@@ -28,6 +28,7 @@
 #include "AHDividerView.h"
 #include "AVDividerView.h"
 #include "ASplitterHelper.h"
+#include <AUI/View/ASpacer.h>
 
 class API_AUI_VIEWS ASplitter: public AViewContainer
 {

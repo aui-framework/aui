@@ -55,7 +55,7 @@ AFontManager::AFontManager() :
         }
     } fc;
 
-    mDefault = [&] {
+    mDefaultFont = [&] {
         _<AFont> result;
 
         try {
@@ -75,7 +75,7 @@ AFontManager::AFontManager() :
                     auto fontName = t.readStringUntilUnescaped(',');
 
                     // done!
-                    result = get(fontName);
+                    result = loadFont(AUrl::file(getPathToFont(fontName)));
                     break;
                 } else {
                     // skip line
@@ -89,7 +89,7 @@ AFontManager::AFontManager() :
             // fallback to something default
             for (auto& d : {"Ubuntu", "Serif", "FreeSans", "Monospace"}) {
                 try {
-                    result = get(d);
+                    result = loadFont(AUrl::file(getPathToFont(d)));
                     ALogger::info("Using fallback font: {}"_as.format(d));
                     break;
                 } catch (...) {}

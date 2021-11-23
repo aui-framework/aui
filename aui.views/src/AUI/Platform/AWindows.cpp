@@ -618,7 +618,6 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
                 throw std::runtime_error("Failed to create OpenGL 2.0 context");
         }
         ALogger::info("OpenGL context is ready");
-        Render::setRenderer(std::make_unique<OpenGLRenderer>());
 
         // vsync
         wglSwapIntervalEXT(true);
@@ -738,7 +737,6 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
         if (XGetIMValues(im, XNQueryInputStyle, &styles, NULL)) {
             throw AException("XIM Can't get styles");
         }
-        Render::setRenderer(std::make_unique<OpenGLRenderer>());
     }
     mHandle = XCreateWindow(gDisplay,
                             gScreen->root,
@@ -794,6 +792,8 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
         if (glewInit() != GLEW_OK) {
             throw AException("glewInit failed");
         }
+        ALogger::info("OpenGL context is ready");
+        Render::setRenderer(std::make_unique<OpenGLRenderer>());
     }
 
     if (parent) {

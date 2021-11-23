@@ -50,7 +50,7 @@ private:
     }
     template<bool italicPrefer>
     _<AFont> getEitherWeightItalicPreferred() {
-        if (auto& f = getEitherWeight<italicPrefer>()) {
+        if (auto f = getEitherWeight<italicPrefer>()) {
             return f;
         }
         return getEitherWeight<!italicPrefer>();

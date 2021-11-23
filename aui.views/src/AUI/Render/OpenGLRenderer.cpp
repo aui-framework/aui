@@ -473,26 +473,32 @@ public:
     };
     GL::VertexBuffer mVertexBuffer;
     GL::IndexBuffer mIndexBuffer;
-    int mWidth;
+    int mTextWidth;
+    OpenGLRenderer::FontEntryData* mEntryData;
+    int mTextureWidth;
 
-    OpenGLPrerenderedString(GL::VertexBuffer vertexBuffer, GL::IndexBuffer indexBuffer, int width):
-        mVertexBuffer(std::move(vertexBuffer)),
-        mIndexBuffer(std::move(indexBuffer)),
-        mWidth(width) {}
+    OpenGLPrerenderedString(GL::VertexBuffer vertexBuffer,
+                            GL::IndexBuffer indexBuffer,
+                            int textWidth,
+                            OpenGLRenderer::FontEntryData* entryData,
+                            int textureWidth):
+            mVertexBuffer(std::move(vertexBuffer)),
+            mIndexBuffer(std::move(indexBuffer)),
+            mTextWidth(textWidth),
+            mEntryData(entryData),
+            mTextureWidth(textureWidth) {}
 
 
     void draw() override {
         mVertexBuffer.bind();
         mIndexBuffer.bind();
 
-        auto img = f.fs.font->texturePackerOf(f.fs.size, f.fs.fontRendering);
-        if (!img->getImage())
+        auto img = mEntryData->texturePacker->getImage();
+        if (!img)
             return;
-
-        auto width = img->getImage()->getWidth();
-        if (width != f.side) {
-            f.side = width;
-            // PreRendereredString ��������� � �����������
+/*
+        auto width = img->getWidth();
+        if (width != mTextureWidth) {
             f = preRendererString(f.mText, f.fs);
         }
 
@@ -528,11 +534,11 @@ public:
             mSymbolShader.set(aui::ShaderUniforms::MAT, glm::translate(mTransform, glm::vec3{x, y, 0}));
             mSymbolShader.set(aui::ShaderUniforms::COLOR, finalColor);
             f.mVao->draw(GL_TRIANGLES);
-        }
+        }*/
     }
 
     int getWidth() override {
-        return mWidth;
+        return mTextWidth;
     }
 };
 
@@ -554,12 +560,12 @@ OpenGLRenderer::prerenderString(const glm::vec2& position, const AString& text, 
 
 
     auto fe = fs.getFontEntry();
-    OpenGLFontEntryData* entryData;
+    FontEntryData* entryData;
     if (fe.second.rendererData == nullptr) {
-        mFontEntryData.push_back(OpenGLFontEntryData{_new<Util::SimpleTexturePacker>()});
+        mFontEntryData.push_back(FontEntryData{_new<Util::SimpleTexturePacker>()});
         fe.second.rendererData = entryData = &mFontEntryData.last();
     } else {
-        entryData = reinterpret_cast<OpenGLFontEntryData*>(fe.second.rendererData);
+        entryData = reinterpret_cast<FontEntryData*>(fe.second.rendererData);
     }
 
     auto texturePacker = entryData->texturePacker;
@@ -611,10 +617,10 @@ OpenGLRenderer::prerenderString(const glm::vec2& position, const AString& text, 
                 if (ch.rendererData == nullptr) {
                     auto pUv = texturePacker->insert(ch.image);;
                     uv = *pUv;
-                    mCharData.push_back(OpenGLCharacterData{std::move(pUv)});
+                    mCharData.push_back(CharacterData{std::move(pUv)});
                     ch.rendererData = &mCharData.last();
                 } else {
-                    uv = *reinterpret_cast<OpenGLCharacterData*>(ch.rendererData)->uv;
+                    uv = *reinterpret_cast<CharacterData*>(ch.rendererData)->uv;
                 }
 
 
@@ -658,7 +664,7 @@ OpenGLRenderer::prerenderString(const glm::vec2& position, const AString& text, 
 
     //assert(advanceMax == font->length(text, fs.size, fs.fontRendering));
 
-    return _new<OpenGLPrerenderedString>(std::move(vertexBuffer), std::move(indexBuffer), advance);
+    return _new<OpenGLPrerenderedString>(std::move(vertexBuffer), std::move(indexBuffer), advance, entryData, prevWidth);
 }
 
 ITexture* OpenGLRenderer::createNewTexture() {

@@ -6,6 +6,11 @@
 #include "IRenderer.h"
 
 class OpenGLRenderer: public IRenderer {
+public:
+    struct FontEntryData {
+        _<Util::SimpleTexturePacker> texturePacker;
+    };
+
 private:
     GL::Shader mSolidShader;
     GL::Shader mGradientShader;
@@ -28,15 +33,12 @@ private:
 
     void endDraw(const ABrush& brush);
 
-    struct OpenGLCharacterData {
+    struct CharacterData {
         _<glm::vec4> uv;
     };
-    struct OpenGLFontEntryData {
-        _<Util::SimpleTexturePacker> texturePacker;
-    };
 
-    ADeque<OpenGLCharacterData> mCharData;
-    ADeque<OpenGLFontEntryData> mFontEntryData;
+    ADeque<CharacterData> mCharData;
+    ADeque<FontEntryData> mFontEntryData;
 
 protected:
     ITexture* createNewTexture() override;
