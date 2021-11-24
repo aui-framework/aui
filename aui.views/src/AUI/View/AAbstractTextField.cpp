@@ -82,8 +82,7 @@ void AAbstractTextField::render()
                              { glm::ceil(1_dp), getFontStyle().size + 3 });
         }
 
-        // TODO STUB
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        Render::setBlending(Blending::NORMAL);
     } else {
         doDrawString();
 	}

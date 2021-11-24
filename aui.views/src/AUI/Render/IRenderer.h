@@ -15,6 +15,21 @@ class ABaseWindow;
 
 
 
+/**
+ * Blending mode (like in Photoshop)
+ */
+enum class Blending {
+    /**
+     * Normal blending.
+     */
+    NORMAL,
+
+    /**
+     * <code>1 - COLOR</code>
+     */
+    INVERSE
+};
+
 class IRenderer {
 public:
     class IPrerenderedString {
@@ -186,6 +201,7 @@ public:
         mTransform = transform;
     }
 
+    virtual void setBlending(Blending blending) = 0;
 
     void setWindow(ABaseWindow* window)
     {

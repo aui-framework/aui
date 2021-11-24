@@ -467,6 +467,17 @@ void OpenGLRenderer::endDraw(const ABrush& brush) {
     }
 }
 
+void OpenGLRenderer::setBlending(Blending blending) {
+    switch (blending) {
+        case Blending::NORMAL:
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            break;
+
+        case Blending::INVERSE:
+            glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+            break;
+    }
+}
 
 class OpenGLPrerenderedString: public IRenderer::IPrerenderedString {
 public:

@@ -87,6 +87,8 @@ public:
     _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, const AFontStyle& fs) override;
 
     void drawRectImpl(const glm::vec2& position, const glm::vec2& size);
+
+    void setBlending(Blending blending) override;
 };
 
 

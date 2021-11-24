@@ -207,6 +207,15 @@ public:
         ourRenderer->setTransformForced(transform);
     }
 
+    /**
+     * Sets blending.
+     * @see <a href="Blending">Blending</a>
+     */
+    static void setBlending(Blending blending)
+    {
+        ourRenderer->setBlending(blending);
+    }
+
     static void setWindow(ABaseWindow* window)
     {
         ourRenderer->setWindow(window);

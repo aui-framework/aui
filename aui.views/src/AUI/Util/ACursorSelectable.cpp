@@ -122,8 +122,7 @@ int ACursorSelectable::getPosByIndex(int end, int begin) {
 }
 
 void ACursorSelectable::drawSelectionPost() {
-    // TODO STUB
-    //glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+    Render::setBlending(Blending::INVERSE);
     if (hasSelection())
     {
         drawSelectionRects();
