@@ -93,7 +93,7 @@ void AAbstractTextField::render()
 void AAbstractTextField::doDrawString() {
     RenderHints::PushMatrix m;
     Render::translate({ mPadding.left - mHorizontalScroll, mPadding.top });
-    mPrerenderedString->draw();
+    if (mPrerenderedString) mPrerenderedString->draw();
 }
 
 

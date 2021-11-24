@@ -222,7 +222,7 @@ public:
     }
 
     static void translate(const glm::vec2& offset) {
-        setTransform(glm::translate(getTransform(), glm::vec3(offset, 0.f)));
+        ourRenderer->setTransformForced(glm::translate(getTransform(), glm::vec3(offset, 0.f)));
     }
 };
 

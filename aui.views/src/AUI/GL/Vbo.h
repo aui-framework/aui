@@ -44,13 +44,24 @@ namespace GL {
     };
 
     class API_AUI_VIEWS IndexBuffer: public detail::VboImpl {
+    private:
+        size_t mIndicesCount;
     public:
         void bind();
-
         void set(const GLuint* indices, GLsizei length);
 
         void set(const AVector<GLuint>& indices) {
             set(indices.data(), static_cast<GLsizei>(indices.size() * sizeof(GLuint)));
+        }
+
+        void draw(GLenum primitiveType) {
+            bind();
+            glDrawElements(primitiveType, GLsizei(mIndicesCount), GL_UNSIGNED_INT, nullptr);
+        }
+
+        [[nodiscard]]
+        size_t count() const {
+            return mIndicesCount;
         }
     };
 }

@@ -622,6 +622,8 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
         // vsync
         wglSwapIntervalEXT(true);
 
+        Render::setRenderer(std::make_unique<OpenGLRenderer>());
+
         //wglMakeCurrent(mDC, nullptr);
     } else {
         bool k = SetPixelFormat(mDC, pxf, &pfd);

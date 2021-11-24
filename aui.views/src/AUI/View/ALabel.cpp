@@ -201,7 +201,7 @@ void ALabel::doRenderText() {
     }
 
 
-    if (mPrerendered && mIcon)
+    if (mPrerendered)
     {
         mTextLeftOffset = 0;
         switch (getFontStyleLabel().align)
@@ -223,7 +223,7 @@ void ALabel::doRenderText() {
                 break;
 
             case TextAlign::CENTER:
-                mTextLeftOffset += getContentWidth() / 2;
+                mTextLeftOffset += (getContentWidth() - mPrerendered->getWidth()) / 2;
                 if (mIcon)
                 {
                     auto requiredSpace = getIconSize();
@@ -242,7 +242,7 @@ void ALabel::doRenderText() {
                 break;
 
             case TextAlign::RIGHT:
-                mTextLeftOffset += getContentWidth();
+                mTextLeftOffset += getContentWidth() - mPrerendered->getWidth();
                 if (mIcon)
                 {
                     auto requiredSpace = getIconSize();

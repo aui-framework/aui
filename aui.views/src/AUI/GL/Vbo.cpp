@@ -30,5 +30,6 @@ void GL::IndexBuffer::bind() {
 
 void GL::IndexBuffer::set(const GLuint* indices, GLsizei length) {
     bind();
+    mIndicesCount = length / sizeof(GLuint);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, length, indices, GL_STATIC_DRAW);
 }

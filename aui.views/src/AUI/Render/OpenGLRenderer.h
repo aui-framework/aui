@@ -6,9 +6,12 @@
 #include "IRenderer.h"
 
 class OpenGLRenderer: public IRenderer {
+friend class OpenGLPrerenderedString;
 public:
     struct FontEntryData {
-        _<Util::SimpleTexturePacker> texturePacker;
+        Util::SimpleTexturePacker texturePacker;
+        GL::Texture2D texture;
+        bool isTextureInvalid = true;
     };
 
 private:

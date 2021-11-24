@@ -26,8 +26,7 @@ namespace aui::ShaderUniforms {
     extern GL::Shader::Uniform TRANSFORM;
     extern GL::Shader::Uniform SIZE;
     extern GL::Shader::Uniform MAT;
-    extern GL::Shader::Uniform POS_X;
-    extern GL::Shader::Uniform POS_Y;
+    extern GL::Shader::Uniform UV_SCALE;
     extern GL::Shader::Uniform SIGMA;
     extern GL::Shader::Uniform LOWER;
     extern GL::Shader::Uniform UPPER;

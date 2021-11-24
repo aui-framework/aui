@@ -26,8 +26,7 @@ namespace aui::ShaderUniforms {
     GL::Shader::Uniform TRANSFORM("transform");
     GL::Shader::Uniform SIZE("size");
     GL::Shader::Uniform MAT("mat");
-    GL::Shader::Uniform POS_X("pos_x");
-    GL::Shader::Uniform POS_Y("pos_y");
+    GL::Shader::Uniform UV_SCALE("uv_scale");
     GL::Shader::Uniform SIGMA("sigma");
     GL::Shader::Uniform LOWER("lower");
     GL::Shader::Uniform UPPER("upper");

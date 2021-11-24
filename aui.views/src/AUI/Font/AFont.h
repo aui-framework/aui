@@ -113,7 +113,7 @@ public:
     int getAscenderHeight(unsigned size) const;
     int getDescenderHeight(unsigned size) const;
     int getSpaceWidth(unsigned size) {
-        return size * 23 / 10;
+        return size * 10 / 23;
     }
 
     [[nodiscard]]
