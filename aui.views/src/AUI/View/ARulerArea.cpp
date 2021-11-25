@@ -90,8 +90,7 @@ void ARulerArea::render() {
             prY->draw();
         }
 
-        // TODO stub
-        //glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+        Render::setBlending(Blending::INVERSE);
         Render::drawRect(ASolidBrush{},
                          { mMousePos.x, 0.f },
                          { 1, mMousePos.y });
@@ -100,8 +99,7 @@ void ARulerArea::render() {
                          { mMousePos.x, 1 });
 
 
-        // TODO stub
-        //glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        Render::setBlending(Blending::NORMAL);
     }
 
     glEnable(GL_STENCIL_TEST);

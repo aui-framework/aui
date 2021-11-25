@@ -460,6 +460,9 @@ public:
 	}
     virtual void setSize(int width, int height);
     virtual void setGeometry(int x, int y, int width, int height);
+    void setGeometry(const glm::ivec2& position, const glm::ivec2& size) {
+		setGeometry(position.x, position.y, size.x, size.y);
+	}
 
 
     /**

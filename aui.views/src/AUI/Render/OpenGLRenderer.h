@@ -7,6 +7,7 @@
 
 class OpenGLRenderer: public IRenderer {
 friend class OpenGLPrerenderedString;
+friend class OpenGLMultiStringCanvas;
 public:
     struct FontEntryData {
         Util::SimpleTexturePacker texturePacker;
@@ -28,14 +29,6 @@ private:
     GL::Vao mTempVao;
 
 
-    glm::mat4 getProjectionMatrix() const;
-    AVector<glm::vec3> getVerticesForRect(const glm::vec2& position,
-                                          const glm::vec2& size);
-
-    void uploadToShaderCommon();
-
-    void endDraw(const ABrush& brush);
-
     struct CharacterData {
         _<glm::vec4> uv;
     };
@@ -43,6 +36,15 @@ private:
     ADeque<CharacterData> mCharData;
     ADeque<FontEntryData> mFontEntryData;
 
+
+    glm::mat4 getProjectionMatrix() const;
+    AVector<glm::vec3> getVerticesForRect(const glm::vec2& position,
+                                          const glm::vec2& size);
+
+    void uploadToShaderCommon();
+
+    void endDraw(const ABrush& brush);
+    FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 protected:
     ITexture* createNewTexture() override;
 
@@ -89,6 +91,9 @@ public:
     void drawRectImpl(const glm::vec2& position, const glm::vec2& size);
 
     void setBlending(Blending blending) override;
+
+    _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle style) override;
+
 };
 
 

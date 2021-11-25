@@ -75,7 +75,7 @@ struct TexturedShaderHelper {
                 GL::Texture2D::setupLinear();
                 break;
         }
-        glEnableVertexAttribArray(2);
+        glEnableVertexAttribArray(1);
         shader.set(aui::ShaderUniforms::COLOR, Render::getColor());
         glm::vec2 uv1 = brush.uv1 ? *brush.uv1 : glm::vec2{0, 0};
         glm::vec2 uv2 = brush.uv2 ? *brush.uv2 : glm::vec2{1, 1};
@@ -463,7 +463,6 @@ void OpenGLRenderer::drawString(const glm::vec2& position,
 
 void OpenGLRenderer::endDraw(const ABrush& brush) {
     if (std::holds_alternative<ATexturedBrush>(brush)) {
-        glDisableVertexAttribArray(2);
     }
 }
 
@@ -489,6 +488,7 @@ public:
     GL::VertexBuffer mVertexBuffer;
     GL::IndexBuffer mIndexBuffer;
     int mTextWidth;
+    int mTextHeight;
     OpenGLRenderer::FontEntryData* mEntryData;
     int mTextureWidth;
     AColor mColor;
@@ -498,6 +498,7 @@ public:
                             GL::VertexBuffer vertexBuffer,
                             GL::IndexBuffer indexBuffer,
                             int textWidth,
+                            int textHeight,
                             OpenGLRenderer::FontEntryData* entryData,
                             int textureWidth,
                             AColor color,
@@ -506,6 +507,7 @@ public:
             mVertexBuffer(std::move(vertexBuffer)),
             mIndexBuffer(std::move(indexBuffer)),
             mTextWidth(textWidth),
+            mTextHeight(textHeight),
             mEntryData(entryData),
             mTextureWidth(textureWidth),
             mColor(color),
@@ -569,28 +571,164 @@ public:
     int getWidth() override {
         return mTextWidth;
     }
+
+    int getHeight() override {
+        return mTextHeight;
+    }
 };
 
-_<IRenderer::IPrerenderedString>
-OpenGLRenderer::prerenderString(const glm::vec2& position, const AString& text, const AFontStyle& fs) {
+class OpenGLMultiStringCanvas: public IRenderer::IMultiStringCanvas {
+private:
+    AVector<OpenGLPrerenderedString::Vertex> mVertices;
+    OpenGLRenderer* mRenderer;
+    AFontStyle mFontStyle;
+    OpenGLRenderer::FontEntryData* mEntryData;
+    int mAdvanceX = 0;
+    int mAdvanceY = 0;
+
+public:
+    OpenGLMultiStringCanvas(OpenGLRenderer* renderer, const AFontStyle& fontStyle):
+        mRenderer(renderer),
+        mFontStyle(fontStyle),
+        mEntryData(renderer->getFontEntryData(fontStyle)) {
+        mVertices.reserve(1000);
+    }
+
+    void addString(const glm::vec2& position, const AString& text) override {
+        static _<AFont> d = AFontManager::inst().getDefaultFont();
+        auto font = mFontStyle.font ? mFontStyle.font : d;
+        auto& texturePacker = mEntryData->texturePacker;
+        auto fe = mFontStyle.getFontEntry();
+
+        const bool hasKerning = font->isHasKerning();
+
+        int prevWidth = -1;
+
+        {
+            auto texturePackerImage = texturePacker.getImage();
+            if (texturePackerImage) {
+                prevWidth = texturePackerImage->getWidth();
+            }
+        }
+
+        int advanceX = position.x;
+        int advanceY = position.y;
+        size_t counter = 0;
+        int advance = advanceX;
+        for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
+            wchar_t c = *i;
+            if (c == ' ') {
+                advance += mFontStyle.getSpaceWidth();
+            }
+            else if (c == '\n') {
+                advanceX = (glm::max)(advanceX, advance);
+                advance = position.x;
+                advanceY += mFontStyle.getLineHeight();
+            }
+            else {
+                AFont::Character& ch = font->getCharacter(fe, c);
+                if (ch.empty()) {
+                    advance += mFontStyle.getSpaceWidth();
+                    continue;
+                }
+                if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
+
+                    int posX = advance + ch.bearingX;
+                    int width = ch.image->getWidth();
+                    int height = ch.image->getHeight();
+
+                    glm::vec4 uv;
+
+                    if (ch.rendererData == nullptr) {
+                        auto pUv = texturePacker.insert(ch.image);;
+                        uv = *pUv;
+                        mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{std::move(pUv)});
+                        ch.rendererData = &mRenderer->mCharData.last();
+                        mEntryData->isTextureInvalid = true;
+                    } else {
+                        uv = *reinterpret_cast<OpenGLRenderer::CharacterData*>(ch.rendererData)->uv;
+                    }
+
+
+                    mVertices.push_back({ glm::vec2(posX, ch.advanceY + height + advanceY),
+                                         glm::vec2(uv.x, uv.w) });
+                    mVertices.push_back({ glm::vec2(posX + width, ch.advanceY + height + advanceY),
+                                         glm::vec2(uv.z, uv.w) });
+                    mVertices.push_back({ glm::vec2(posX, ch.advanceY + advanceY),
+                                         glm::vec2(uv.x, uv.y) });
+                    mVertices.push_back({ glm::vec2(posX + width, ch.advanceY + advanceY),
+                                         glm::vec2(uv.z, uv.y) });
+
+                }
+
+                if (hasKerning) {
+                    auto next = std::next(i);
+                    if (next != text.end())
+                    {
+                        auto kerning = font->getKerning(c, *next);
+                        advance += kerning.x;
+                    }
+                }
+
+                advance += ch.advanceX;
+                advance = glm::floor(advance);
+            }
+        }
+
+        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
+        mAdvanceY = advanceY;
+
+        
+        if (prevWidth != -1 && texturePacker.getImage()->getWidth() != prevWidth) {
+            // looks like texture of the font was updated; we have to do everything again
+            mVertices.clear();
+            addString(position, text);
+        }
+    }
+
+    _<IRenderer::IPrerenderedString> build() override {
+        GL::VertexBuffer vertexBuffer;
+        vertexBuffer.set(mVertices);
+
+        // build indices
+        AVector<GLuint> indices;
+        indices.reserve(mVertices.size() / 4 * 6);
+        for (unsigned i = 0; i < mVertices.size() / 4; ++i) {
+            indices.push_back(i * 4);
+            indices.push_back(i * 4 + 1);
+            indices.push_back(i * 4 + 2);
+            indices.push_back(i * 4 + 2);
+            indices.push_back(i * 4 + 1);
+            indices.push_back(i * 4 + 3);
+        }
+        GL::IndexBuffer indexBuffer;
+        indexBuffer.set(indices);
+
+        return _new<OpenGLPrerenderedString>(mRenderer,
+                                             std::move(vertexBuffer),
+                                             std::move(indexBuffer),
+                                             mAdvanceX,
+                                             mAdvanceY,
+                                             mEntryData,
+                                             mEntryData->texturePacker.getImage()->getWidth(),
+                                             mFontStyle.color,
+                                             mFontStyle.fontRendering);
+    }
+};
+
+_<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(const glm::vec2& position,
+                                                                 const AString& text,
+                                                                 const AFontStyle& fs) {
     if (text.empty()) return nullptr;
 
-    static _<AFont> d = AFontManager::inst().getDefaultFont();
-    auto font = fs.font ? fs.font : d;
+    OpenGLMultiStringCanvas c(this, fs);
+    c.addString(position, text);
 
-    int advance = 0;
-    int advanceMax = 0;
-    int advanceY = 0;
+    return c.build();
+}
 
-
-    AVector<OpenGLPrerenderedString::Vertex> vertices;
-    AVector<GLuint> indices;
-
-    vertices.reserve(4000);
-    indices.reserve(6000);
-
-
-    auto fe = fs.getFontEntry();
+OpenGLRenderer::FontEntryData* OpenGLRenderer::getFontEntryData(const AFontStyle& fontStyle) {
+    auto fe = fontStyle.getFontEntry();
     FontEntryData* entryData;
     if (fe.second.rendererData == nullptr) {
         mFontEntryData.emplace_back();
@@ -598,108 +736,13 @@ OpenGLRenderer::prerenderString(const glm::vec2& position, const AString& text, 
     } else {
         entryData = reinterpret_cast<FontEntryData*>(fe.second.rendererData);
     }
-
-    auto& texturePacker = entryData->texturePacker;
-
-    int prevWidth = -1;
-
-    {
-        auto texturePackerImage = texturePacker.getImage();
-        if (texturePackerImage) {
-            prevWidth = texturePackerImage->getWidth();
-        }
-    }
-
-    size_t counter = 0;
-
-    const bool hasKerning = font->isHasKerning();
-
-    for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
-        wchar_t c = *i;
-        if (c == ' ') {
-            advance += fs.getSpaceWidth();
-        }
-        else if (c == '\n') {
-            advanceMax = (glm::max)(advanceMax, advance);
-            advance = 0;
-            advanceY += fs.getLineHeight();
-        }
-        else {
-            AFont::Character& ch = font->getCharacter(fe, c);
-            if (ch.empty()) {
-                advance += fs.getSpaceWidth();
-                continue;
-            }
-            if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
-                unsigned int in = static_cast<unsigned int>(vertices.size());
-                indices.push_back(in);
-                indices.push_back(in + 1);
-                indices.push_back(in + 2);
-                indices.push_back(in + 2);
-                indices.push_back(in + 1);
-                indices.push_back(in + 3);
-
-                int posX = advance + ch.bearingX;
-                int width = ch.image->getWidth();
-                int height = ch.image->getHeight();
-
-                glm::vec4 uv;
-
-                if (ch.rendererData == nullptr) {
-                    auto pUv = texturePacker.insert(ch.image);;
-                    uv = *pUv;
-                    mCharData.push_back(CharacterData{std::move(pUv)});
-                    ch.rendererData = &mCharData.last();
-                    entryData->isTextureInvalid = true;
-                } else {
-                    uv = *reinterpret_cast<CharacterData*>(ch.rendererData)->uv;
-                }
-
-
-                vertices.push_back({ glm::vec2(posX, ch.advanceY + height + advanceY),
-                                     glm::vec2(uv.x, uv.w) });
-                vertices.push_back({ glm::vec2(posX + width, ch.advanceY + height + advanceY),
-                                     glm::vec2(uv.z, uv.w) });
-                vertices.push_back({ glm::vec2(posX, ch.advanceY + advanceY),
-                                     glm::vec2(uv.x, uv.y) });
-                vertices.push_back({ glm::vec2(posX + width, ch.advanceY + advanceY),
-                                     glm::vec2(uv.z, uv.y) });
-
-            }
-
-            if (hasKerning) {
-                auto next = std::next(i);
-                if (next != text.end())
-                {
-                    auto kerning = font->getKerning(c, *next);
-                    advance += kerning.x;
-                }
-            }
-
-            advance += ch.advanceX;
-            advance = glm::floor(advance);
-        }
-    }
-
-
-    if (prevWidth != -1 && texturePacker.getImage()->getWidth() != prevWidth) {
-        return prerenderString(position, text, fs); // looks like texture of the font was updated; we have to do everything again
-    }
-
-    GL::VertexBuffer vertexBuffer;
-    vertexBuffer.set(vertices);
-
-
-    GL::IndexBuffer indexBuffer;
-    indexBuffer.set(indices);
-
-    advanceMax = (glm::max)(advanceMax, advance);
-
-    //assert(advanceMax == font->length(text, fs.size, fs.fontRendering));
-
-    return _new<OpenGLPrerenderedString>(this, std::move(vertexBuffer), std::move(indexBuffer), advanceMax, entryData, prevWidth == -1 ? texturePacker.getImage()->getWidth() : prevWidth, fs.color, fs.fontRendering);
+    return entryData;
 }
 
 ITexture* OpenGLRenderer::createNewTexture() {
     return new OpenGLTexture2D;
+}
+
+_<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle style) {
+    return _new<OpenGLMultiStringCanvas>(this, style);
 }

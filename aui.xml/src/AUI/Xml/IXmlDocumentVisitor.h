@@ -27,6 +27,6 @@
 class IXmlDocumentVisitor
 {
 public:
-	virtual _<IXmlHeaderVisitor> visitHeader() = 0;
-	virtual _<IXmlEntityVisitor> visitEntity(const AString& entityName) = 0;
+	virtual _<IXmlHeaderVisitor> visitHeader() { return nullptr; };
+    virtual _<IXmlEntityVisitor> visitEntity(AString entityName) { return nullptr; };
 };

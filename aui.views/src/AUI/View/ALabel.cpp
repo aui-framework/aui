@@ -60,24 +60,15 @@ int ALabel::getContentMinimumWidth()
 	    acc += getIconSize().x * 2;
 	}
     return acc;
-	/*
-	if (mPrerendered.mVao) {
-	    return mPrerendered.length;
-	}
-	return getFontStyleLabel().getWidth(mText);*/
 }
 
 int ALabel::getContentMinimumHeight()
 {
 	if (mText.empty())
 		return 0;
-	if (isMultiline())
+	if (mPrerendered && isMultiline())
 	{
-        // TODO STUB
-        /*
-		return mLines.size() * (getFontStyleLabel().font->getAscenderHeight(getFontStyleLabel().size)
-		* (1.f + getFontStyleLabel().lineSpacing)) + getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size) + 1;
-         */
+        return mPrerendered->getHeight();
 	}
 	return getFontStyleLabel().size;
 }
@@ -107,11 +98,7 @@ void ALabel::setText(const AString& newText)
     }
 
 	mPrerendered = nullptr;
-    // TODO stub
-//	if (mMultiline)
-//	{
-//		updateMultiline();
-//	}
+
     if (getParent())
         getParent()->updateLayout();
 	redraw();
@@ -120,29 +107,25 @@ void ALabel::setText(const AString& newText)
 
 void ALabel::setMultiline(const bool multiline)
 {
-	mPrerendered = nullptr;
-	if (multiline) {
-		if (getParent())
-			getParent()->updateLayout();
-	}
-	redraw();
+    if (isMultiline() != multiline) {
+        mPrerendered = nullptr;
+        if (multiline) {
+            mMultilineTextRender = std::make_unique<AMultilineTextRender>();
+            if (getParent())
+                getParent()->updateLayout();
+        } else {
+            mMultilineTextRender = nullptr;
+        }
+        redraw();
+    }
 }
 
 void ALabel::setSize(int width, int height) {
     auto oldWidth = getWidth();
     AView::setSize(width, height);
-    bool refresh = false;
-    // TODO stub
 
-//    bool refresh = mMultiline && (mLines.empty() || oldWidth != getWidth());
-//
-//    if (mMultiline) {
-//        updateMultiline();
-//        if (mLines.empty())
-//            return;
-//    }
-
-    if (refresh) {
+    if (isMultiline() && oldWidth != getWidth()) {
+        mPrerendered = nullptr;
         AThread::current()->enqueue([&]()
         {
             if (getParent())
@@ -188,9 +171,10 @@ void ALabel::userProcessStyleSheet(const std::function<void(css, const std::func
 void ALabel::doPrerender() {
     auto fs = getFontStyleLabel();
     if (isMultiline()) {
-        mPrerendered = mMultilineTextRender->updateText(mText, getSize());
+        mMultilineTextRender->setFontStyle(getFontStyleLabel());
+        mPrerendered = mMultilineTextRender->updateText(getTransformedText(), getSize());
     } else {
-        mPrerendered = Render::prerenderString({0, 0}, mText, fs);
+        mPrerendered = Render::prerenderString({0, 0}, getTransformedText(), fs);
     }
 }
 
@@ -204,60 +188,61 @@ void ALabel::doRenderText() {
     if (mPrerendered)
     {
         mTextLeftOffset = 0;
-        switch (getFontStyleLabel().align)
-        {
-            case TextAlign::LEFT:
-                if (mIcon)
-                {
-                    auto requiredSpace = getIconSize();
-                    requiredSpace *= getHeight() / requiredSpace.y;
-                    RenderHints::PushState s;
-                    Render::setColor(mIconColor);
-                    Render::setTransform(glm::translate(glm::mat4(1.f),
-                                                               glm::vec3(mPadding.left + mTextLeftOffset, 2_dp, 0)));
-                    IDrawable::Params p;
-                    p.size = requiredSpace;
-                    mIcon->draw(p);
-                    mTextLeftOffset += requiredSpace.x + 4_dp;
-                }
-                break;
+        if (isMultiline()) {
+            switch (getFontStyleLabel().align) {
+                case TextAlign::LEFT:
+                    if (mIcon) {
+                        auto requiredSpace = getIconSize();
+                        requiredSpace *= getHeight() / requiredSpace.y;
+                        RenderHints::PushState s;
+                        Render::setColor(mIconColor);
+                        Render::setTransform(glm::translate(glm::mat4(1.f),
+                                                            glm::vec3(mPadding.left + mTextLeftOffset, 2_dp, 0)));
+                        IDrawable::Params p;
+                        p.size = requiredSpace;
+                        mIcon->draw(p);
+                        mTextLeftOffset += requiredSpace.x + 4_dp;
+                    }
+                    break;
 
-            case TextAlign::CENTER:
-                mTextLeftOffset += (getContentWidth() - mPrerendered->getWidth()) / 2;
-                if (mIcon)
-                {
-                    auto requiredSpace = getIconSize();
-                    mTextLeftOffset += requiredSpace.x / 2;
-                    RenderHints::PushState s;
-                    Render::setColor(mIconColor);
-                    Render::setTransform(glm::translate(glm::mat4(1.f),
-                                                               glm::vec3(mTextLeftOffset - (mPrerendered->getWidth()) / 2 - requiredSpace.x,
-                                                                             (getHeight() - requiredSpace.y) / 2, 0)));
+                case TextAlign::CENTER:
+                    mTextLeftOffset += (getContentWidth() - mPrerendered->getWidth()) / 2;
+                    if (mIcon) {
+                        auto requiredSpace = getIconSize();
+                        mTextLeftOffset += requiredSpace.x / 2;
+                        RenderHints::PushState s;
+                        Render::setColor(mIconColor);
+                        Render::setTransform(glm::translate(glm::mat4(1.f),
+                                                            glm::vec3(mTextLeftOffset - (mPrerendered->getWidth()) / 2 -
+                                                                      requiredSpace.x,
+                                                                      (getHeight() - requiredSpace.y) / 2, 0)));
 
-                    IDrawable::Params p;
-                    p.size = requiredSpace;
-                    mIcon->draw(p);
-                }
+                        IDrawable::Params p;
+                        p.size = requiredSpace;
+                        mIcon->draw(p);
+                    }
 
-                break;
+                    break;
 
-            case TextAlign::RIGHT:
-                mTextLeftOffset += getContentWidth() - mPrerendered->getWidth();
-                if (mIcon)
-                {
-                    auto requiredSpace = getIconSize();
-                    RenderHints::PushState s;
-                    Render::setColor(mIconColor);
-                    Render::setTransform(glm::translate(glm::mat4(1.f),
-                                                               glm::vec3(mPadding.left + mTextLeftOffset - (mPrerendered ? mPrerendered->getWidth() : 0) - requiredSpace.x / 2,
-                                                                             (getHeight() - requiredSpace.y) / 2, 0)));
+                case TextAlign::RIGHT:
+                    mTextLeftOffset += getContentWidth() - mPrerendered->getWidth();
+                    if (mIcon) {
+                        auto requiredSpace = getIconSize();
+                        RenderHints::PushState s;
+                        Render::setColor(mIconColor);
+                        Render::setTransform(glm::translate(glm::mat4(1.f),
+                                                            glm::vec3(mPadding.left + mTextLeftOffset -
+                                                                      (mPrerendered ? mPrerendered->getWidth() : 0) -
+                                                                      requiredSpace.x / 2,
+                                                                      (getHeight() - requiredSpace.y) / 2, 0)));
 
-                    IDrawable::Params p;
-                    p.size = requiredSpace;
-                    mIcon->draw(p);
-                }
+                        IDrawable::Params p;
+                        p.size = requiredSpace;
+                        mIcon->draw(p);
+                    }
 
-                break;
+                    break;
+            }
         }
         if (mPrerendered) {
             int y = mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)) + 1;
@@ -275,7 +260,7 @@ void ALabel::doRenderText() {
     }
 }
 
-AString ALabel::getCompiledMultilineText() {
+AString ALabel::getTransformedText() {
     if (getText().empty())
         return {};
     switch (mTextTransform) {
@@ -284,6 +269,7 @@ AString ALabel::getCompiledMultilineText() {
         case TextTransform::LOWERCASE:
             return getText().lowercase();
     }
+    return getText();
 }
 
 void ALabel::onDpiChanged() {

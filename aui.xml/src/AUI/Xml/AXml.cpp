@@ -27,7 +27,7 @@
 #include "AXmlParseError.h"
 #include "AUI/Util/ATokenizer.h"
 
-void AXml::read(_<IInputStream> is, _<IXmlDocumentVisitor> visitor)
+void AXml::read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor)
 {
 	ATokenizer p(is);
 
@@ -131,6 +131,7 @@ void AXml::read(_<IInputStream> is, _<IXmlDocumentVisitor> visitor)
 						std::function<void(_<IXmlEntityVisitor>)> handleEntity;
 						handleEntity = [&](_<IXmlEntityVisitor> entityVisitor)
 						{
+                            if (!entityVisitor) return;
 							bool endFlag = false;
 							for (; (c = p.readChar()) != '>';)
 							{
@@ -191,7 +192,7 @@ void AXml::read(_<IInputStream> is, _<IXmlDocumentVisitor> visitor)
 											}();
 
 											if (entityVisitor)
-												entityVisitor->visitAttribute(attrName, value);
+												entityVisitor->visitAttribute(attrName, std::move(value));
 										}
 									}
 								}
@@ -225,7 +226,7 @@ void AXml::read(_<IInputStream> is, _<IXmlDocumentVisitor> visitor)
 											{
 												p.reverseByte();
 												auto entityName = p.readString();
-												handleEntity(entityVisitor->visitEntity(entityName));
+												handleEntity(entityVisitor->visitEntity(std::move(entityName)));
 											}
 
 										default:
@@ -240,7 +241,7 @@ void AXml::read(_<IInputStream> is, _<IXmlDocumentVisitor> visitor)
 								}();
 							}
 						};
-						handleEntity(visitor->visitEntity(entityName));
+						handleEntity(visitor->visitEntity(std::move(entityName)));
 					}
 				}
 

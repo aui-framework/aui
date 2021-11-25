@@ -19,6 +19,7 @@ friend class TextEntry;
         AString::const_iterator mBegin;
         AString::const_iterator mEnd;
         AMultilineTextRender& mTextRender;
+        glm::vec2 mPosition;
 
     public:
         TextEntry(const AString::const_iterator& begin, const AString::const_iterator& end, AMultilineTextRender& textRender)
@@ -30,11 +31,21 @@ friend class TextEntry;
         glm::ivec2 getSize() override;
         void setPosition(const glm::ivec2& position) override;
         Float getFloat() const override;
+
+        ~TextEntry() override = default;
+
+        const glm::vec2& getPosition() const {
+            return mPosition;
+        }
     };
 
 
 public:
     Render::PrerenderedString updateText(const AString& text, const glm::ivec2& size);
+
+    void setFontStyle(const AFontStyle& fontStyle) {
+        mFontStyle = fontStyle;
+    }
 };
 
 

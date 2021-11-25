@@ -37,6 +37,13 @@ public:
         virtual void draw() = 0;
         virtual ~IPrerenderedString() = default;
         virtual int getWidth() = 0;
+        virtual int getHeight() = 0;
+    };
+    class IMultiStringCanvas {
+    public:
+        virtual ~IMultiStringCanvas() = default;
+        virtual void addString(const glm::vec2& position, const AString& text) = 0;
+        virtual _<IRenderer::IPrerenderedString> build() = 0;
     };
 
 protected:
@@ -54,6 +61,12 @@ public:
     _<ITexture> getNewTexture() {
         return mTexturePool.get();
     }
+
+    /**
+     * Canvas for batching multiple <code>prerender</code> string calls.
+     * @return a new instance of <code>IMultiStringCanvas</code>
+     */
+    virtual _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle style) = 0;
 
     /**
      * Draws simple rectangle.

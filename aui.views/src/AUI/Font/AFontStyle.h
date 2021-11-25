@@ -35,6 +35,8 @@ struct API_AUI_VIEWS AFontStyle {
 	bool formatting = false;
 	TextAlign align = TextAlign::LEFT;
 	AColor color;
+    bool bold = false;
+    bool italic = false;
 
 	FontRendering fontRendering = FontRendering::SUBPIXEL;
 	float lineSpacing = 0.5f;

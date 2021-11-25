@@ -48,7 +48,7 @@ AFontStyle ASelectableLabel::getMouseSelectionFont() {
 AString ASelectableLabel::getDisplayText() {
     // TODO STUB
     return "";
-    //return getCompiledMultilineText();
+    //return getTransformedText();
 }
 
 void ASelectableLabel::doRedraw() {

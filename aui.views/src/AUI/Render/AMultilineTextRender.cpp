@@ -9,31 +9,46 @@ glm::ivec2 AMultilineTextRender::TextEntry::getSize() {
 }
 
 void AMultilineTextRender::TextEntry::setPosition(const glm::ivec2& position) {
-
+    mPosition = position;
 }
 
 Float AMultilineTextRender::TextEntry::getFloat() const {
     return Float::NONE;
 }
 
+
 Render::PrerenderedString AMultilineTextRender::updateText(const AString& text, const glm::ivec2& size) {
-    AVector<_<AWordWrappingEngine::Entry>> entries;
+    AVector<TextEntry> textEntries;
 
     auto lastWordBegin = text.begin();
     for (auto it = text.begin(); it != text.end(); ++it) {
         if (*it == ' ') {
-            entries << _new<TextEntry>(lastWordBegin, it, *this);
+            textEntries.emplace_back(lastWordBegin, it, *this);
             ++it;
             lastWordBegin = it;
         }
     }
     if (lastWordBegin != text.end()) {
-        entries << _new<TextEntry>(lastWordBegin, text.end(), *this);
+        textEntries.emplace_back(lastWordBegin, text.end(), *this);
     }
 
-    mEngine.setEntries(entries);
+    // compose entries
+    AVector<_<AWordWrappingEngine::Entry>> entries;
+    entries.reserve(textEntries.size());
 
+    for (auto& textEntry : textEntries) {
+        entries << aui::ptr::fake(&textEntry);
+    }
+    mEngine.setEntries(std::move(entries));
+    mEngine.setTextAlign(mFontStyle.align);
     mEngine.performLayout({0, 0}, size);
 
-    return nullptr;
+
+    auto multiStringCanvas = Render::newMultiStringCanvas(mFontStyle);
+
+    for (auto& entry : textEntries) {
+        multiStringCanvas->addString(entry.getPosition(), entry.getText());
+    }
+
+    return multiStringCanvas->build();
 }

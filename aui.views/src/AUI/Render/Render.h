@@ -41,6 +41,14 @@ public:
         ourRenderer = std::move(renderer);
     }
 
+    /**
+     * Canvas for batching multiple <code>prerender</code> string calls.
+     * @return a new instance of <code>IMultiStringCanvas</code>
+     */
+    static _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& fontStyle) {
+        return ourRenderer->newMultiStringCanvas(fontStyle);
+    }
+
     static Texture getNewTexture() {
         return ourRenderer->getNewTexture();
     }

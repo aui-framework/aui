@@ -39,8 +39,8 @@ public:
         mTextAlign = textAlign;
     }
 
-    void setEntries(const AVector<_<Entry>>& entries) {
-        mEntries = entries;
+    void setEntries(AVector<_<Entry>> entries) {
+        mEntries = std::move(entries);
     }
 
     void performLayout(const glm::ivec2& offset, const glm::ivec2& size);

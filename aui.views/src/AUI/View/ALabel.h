@@ -48,7 +48,7 @@ private:
     _unique<AMultilineTextRender> mMultilineTextRender;
 
 	glm::ivec2 getIconSize() const;
-    AString getCompiledMultilineText();
+    AString getTransformedText();
 protected:
     Render::PrerenderedString mPrerendered;
 
