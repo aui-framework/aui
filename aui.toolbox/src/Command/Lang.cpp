@@ -95,7 +95,7 @@ void Lang::run(Toolbox& t) {
         APath langFile;
         try {
             langFile = APath(t.args[0]).absolute().file(
-                    "assets/lang/{}.lang"_as.format(ALanguageCode(t.args[2]).toString()));
+                    "assets/lang/{}.lang"_format(ALanguageCode(t.args[2]).toString()));
         } catch (const AException& e) {
             std::cout << e.getMessage() << std::endl
                       << "note: AUI follows the ISO 639-1 format of language codes (en-US, ru-RU, ru-UA etc...)"

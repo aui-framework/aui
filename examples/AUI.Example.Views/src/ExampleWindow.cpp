@@ -191,7 +191,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                         if (f.empty()) {
                             AMessageBox::show(this, "Result", "Cancelled");
                         } else {
-                            AMessageBox::show(this, "Result", "File: {}"_as.format(f));
+                            AMessageBox::show(this, "Result", "File: {}"_format(f));
                         }
                     });
                 }),
@@ -200,7 +200,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                         if (f.empty()) {
                             AMessageBox::show(this, "Result", "Cancelled");
                         } else {
-                            AMessageBox::show(this, "Result", "Folder: {}"_as.format(f));
+                            AMessageBox::show(this, "Result", "Folder: {}"_format(f));
                         }
                     });
                 }),
@@ -301,7 +301,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
             _new<ALabel>("Grid splitter"),
             AGridSplitter::Builder().withItems(AVector<AVector<_<AView>>>::generate(5, [](size_t y) {
                return AVector<_<AView>>::generate(5, [&](size_t x) {
-                   return _new<AButton>("{}x{}"_as.format(x, y));
+                   return _new<AButton>("{}x{}"_format(x, y));
                });
             }))
         } let { it->setExpanding(); }, "Splitters");

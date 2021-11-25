@@ -51,7 +51,7 @@ static void GLAPIENTRY debugProc(GLenum source,
         default:                                return;
     }
 
-    ALogger::info("GL[{}] {}"_as.format(typeString, message));
+    ALogger::info("GL[{}] {}"_format(typeString, message));
 }
 
 void GL::setupDebug() {

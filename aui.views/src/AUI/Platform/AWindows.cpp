@@ -674,7 +674,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
             // try to reduce system requirements
             size_t indexToReduce = aui::array_length(att) - 2;
             do {
-                ALogger::warn("[OpenGL compatibility] Reduced OpenGL requirements: pass {}"_as.format((aui::array_length(att) - indexToReduce) / 2 - 1));
+                ALogger::warn("[OpenGL compatibility] Reduced OpenGL requirements: pass {}"_format((aui::array_length(att) - indexToReduce) / 2 - 1));
                 att[indexToReduce] = 0;
                 indexToReduce -= 2;
                 fbc = glXChooseFBConfig(gDisplay, DefaultScreen(gDisplay), att, &fbcount);
@@ -1703,7 +1703,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
 
                     char* targetName = XGetAtomName(gDisplay, ev.xselectionrequest.target);
                     char* propertyName = XGetAtomName(gDisplay, ev.xselectionrequest.property);
-                    ALogger::info("{}: {}"_as.format(targetName, propertyName));
+                    ALogger::info("{}: {}"_format(targetName, propertyName));
                     XFree(targetName);
                     XFree(propertyName);
                     if (ev.xselectionrequest.target == gAtoms.utf8String ||

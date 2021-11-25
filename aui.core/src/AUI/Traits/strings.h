@@ -173,3 +173,18 @@ template<typename... Args>
 inline AString AString::format(Args&& ... args) {
     return aui::format(*this, std::forward<Args>(args)...);
 }
+
+
+struct AStringFormatHelper {
+    AString string;
+
+    template<typename... Args>
+    inline AString operator()(Args&& ... args) {
+        return aui::format(string, std::forward<Args>(args)...);
+    }
+};
+
+inline AStringFormatHelper operator"" _format(const char* str, size_t len)
+{
+    return {str};
+}

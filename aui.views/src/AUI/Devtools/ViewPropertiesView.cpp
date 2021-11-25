@@ -67,7 +67,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             AStringVector sl;
             for (auto& ss : r->getSelector().getSubSelectors()) {
                 if (auto classOf = _cast<class_of>(ss)) {
-                    sl << "ass::class_of(\"{}\")"_as.format(classOf->getClasses().join(", "));
+                    sl << "ass::class_of(\"{}\")"_format(classOf->getClasses().join(", "));
                 } else {
                     sl << IStringable::toString(ss);
                 }
@@ -89,7 +89,7 @@ void ViewPropertiesView::displayApplicableRule(ADeque<ass::decl::IDeclarationBas
 
     for (auto& decl : rule->getDeclarations()) {
         applicableDeclarations.push_front(decl);
-        this->getContentContainer()->addView(_new<ALabel>("<internal {}>"_as.format(AReflect::name(decl))) with_style{Opacity {0.7f } });
+        this->getContentContainer()->addView(_new<ALabel>("<internal {}>"_format(AReflect::name(decl))) with_style{Opacity {0.7f } });
     }
     this->getContentContainer()->addView(Horizontal {
             _new<ALabel>("},") << ".declaration_br",
