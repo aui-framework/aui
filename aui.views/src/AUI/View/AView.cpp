@@ -149,7 +149,7 @@ void AView::recompileAss()
     mBorderRadius = 0.f;
     //mForceStencilForBackground = false;
     mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-    mFontStyle = {AFontManager::inst().getDefaultFont(), 12, false, TextAlign::LEFT, AColor(0, 0, 0, 1.f) };
+    mFontStyle = {};
     mBackgroundEffects.clear();
 
     for (auto& r : AStylesheet::inst().getRules()) {
@@ -236,8 +236,6 @@ void AView::getTransform(glm::mat4& transform) const
 
 AFontStyle& AView::getFontStyle()
 {
-    if (mFontStyle.font == nullptr)
-        mFontStyle.font = AFontManager::inst().getDefaultFont();
     return mFontStyle;
 }
 

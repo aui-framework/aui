@@ -41,6 +41,8 @@ struct API_AUI_VIEWS AFontStyle {
 	FontRendering fontRendering = FontRendering::SUBPIXEL;
 	float lineSpacing = 0.5f;
 
+    AFontStyle();
+
 	size_t getWidth(const AString& text) const;
 
     [[nodiscard]]

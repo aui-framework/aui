@@ -35,6 +35,7 @@ private:
 
 	char mLastByte;
 	bool mReverse = false;
+    bool mEof = false;
 
 	int mRow = 1;
 	int mColumn = 1;
@@ -45,7 +46,11 @@ public:
 	{
 	}
 
-	explicit ATokenizer(const AString& fromString);
+    bool isEof() const {
+        return mEof;
+    }
+
+    explicit ATokenizer(const AString& fromString);
 
 	/**
 	 * \brief Reads string while isalnum == true.

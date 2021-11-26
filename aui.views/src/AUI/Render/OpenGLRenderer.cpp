@@ -595,8 +595,7 @@ public:
     }
 
     void addString(const glm::vec2& position, const AString& text) override {
-        static _<AFont> d = AFontManager::inst().getDefaultFont();
-        auto font = mFontStyle.font ? mFontStyle.font : d;
+        auto& font = mFontStyle.font;
         auto& texturePacker = mEntryData->texturePacker;
         auto fe = mFontStyle.getFontEntry();
 

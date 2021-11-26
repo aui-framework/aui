@@ -48,7 +48,7 @@ private:
     };
 
     AWordWrappingEngine mEngine;
-    AVector<WordEntry> mWordEntries;
+    ADeque<WordEntry> mWordEntries;
 
     Render::PrerenderedString mPrerenderedString;
 

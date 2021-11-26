@@ -27,7 +27,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 
-
 class API_AUI_VIEWS Render
 {
 private:

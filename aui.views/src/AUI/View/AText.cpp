@@ -12,6 +12,7 @@
 #include <chrono>
 #include <utility>
 #include <AUI/Traits/strings.h>
+#include <AUI/Platform/AWindow.h>
 
 struct State {
     AFontStyle fontStyle;
@@ -24,7 +25,6 @@ struct State {
 _<AText> AText::fromItems(std::initializer_list<std::variant<AString, _<AView>>> init) {
     auto text = aui::ptr::manage(new AText);
     AVector<_<AWordWrappingEngine::Entry>> entries;
-    text->mWordEntries.reserve(init.size());
     entries.reserve(init.size());
     for (auto& item : init) {
         std::visit(aui::lambda_overloaded {
@@ -47,67 +47,62 @@ _<AText> AText::fromItems(std::initializer_list<std::variant<AString, _<AView>>>
 
 _<AText> AText::fromHtml(const AString& html) {
     StringStream stringStream(html);
+    struct CommonEntityVisitor: IXmlDocumentVisitor {
+        _<AText> text = aui::ptr::manage(new AText());
+        AVector<_<AWordWrappingEngine::Entry>> entries;
 
-    struct: IXmlDocumentVisitor {
+        struct State {
+            AFontStyle fontStyle;
+            bool bold = false;
+            bool italic = false;
+        } currentState;
+        std::stack<State> stateStack;
 
-        struct CommonEntityVisitor: IXmlEntityVisitor {
-            _<AText> text = aui::ptr::manage(new AText());
-            AVector<_<AWordWrappingEngine::Entry>> entries;
+        CommonEntityVisitor() {}
 
-            struct State {
-                AFontStyle fontStyle;
-                bool bold = false;
-                bool italic = false;
-            } currentState;
-            std::stack<State> stateStack;
+        void visitAttribute(const AString& name, AString value) override {};
+        _<IXmlEntityVisitor> visitEntity(AString entityName) override {
 
-            CommonEntityVisitor() {}
+            struct ViewEntityVisitor: IXmlEntityVisitor {
+                CommonEntityVisitor& parent;
+                AString name;
+                AMap<AString, AString> attrs;
 
-            void visitAttribute(const AString& name, AString value) override {};
-            _<IXmlEntityVisitor> visitEntity(AString entityName) override {
+                ViewEntityVisitor(CommonEntityVisitor& parent, AString name) : parent(parent), name(std::move(name)) {}
 
-                struct ViewEntityVisitor: IXmlEntityVisitor {
-                    CommonEntityVisitor& parent;
-                    AString name;
-                    AMap<AString, AString> attrs;
+                void visitAttribute(const AString& attributeName, AString value) override {
+                    attrs[attributeName] = std::move(value);
+                }
 
-                    ViewEntityVisitor(CommonEntityVisitor& parent, AString name) : parent(parent), name(std::move(name)) {}
+                _<IXmlEntityVisitor> visitEntity(AString entityName) override {
+                    return nullptr;
+                }
 
-                    void visitAttribute(const AString& attributeName, AString value) override {
-                        attrs[attributeName] = std::move(value);
-                    }
+                void visitTextEntity(const AString& entity) override {
+                    IXmlEntityVisitor::visitTextEntity(entity);
+                }
 
-                    _<IXmlEntityVisitor> visitEntity(AString entityName) override {
-                        return nullptr;
-                    }
-
-                    void visitTextEntity(const AString& entity) override {
-                        IXmlEntityVisitor::visitTextEntity(entity);
-                    }
-
-                    ~ViewEntityVisitor() override {
-                        parent.entries << _new<ViewEntry>(_new<AButton>("ты пидор {}"_format(name)));
-                    }
-                };
-
-                return _new<ViewEntityVisitor>(*this, std::move(entityName));
-            };
-            void visitTextEntity(const AString& entity) override {
-                for (auto& w : entity.split(' ')) {
-                    text->mWordEntries.emplace_back(text.get(), w);
-                    entries << aui::ptr::fake(&text->mWordEntries.last());
+                ~ViewEntityVisitor() override {
+                    auto view = _new<AButton>("hello {}"_format(name));
+                    parent.text->addView(view);
+                    parent.entries << _new<ViewEntry>(view);
                 }
             };
 
-        } entityVisitor;
-        _<IXmlEntityVisitor> visitEntity(AString entityName) override {
-            return aui::ptr::fake(&entityVisitor);
-        }
-    } visitor;
-    AXml::read(aui::ptr::fake(&stringStream), aui::ptr::fake(&visitor));
+            return _new<ViewEntityVisitor>(*this, std::move(entityName));
+        };
+        void visitTextEntity(const AString& entity) override {
+            for (auto& w : entity.split(' ')) {
+                text->mWordEntries.emplace_back(text.get(), w);
+                entries << aui::ptr::fake(&text->mWordEntries.last());
+            }
+        };
 
-    auto text = std::move(visitor.entityVisitor.text);
-    text->mEngine.setEntries(std::move(visitor.entityVisitor.entries));
+    } entityVisitor;
+    AXml::read(aui::ptr::fake(&stringStream), aui::ptr::fake(&entityVisitor));
+
+    auto text = std::move(entityVisitor.text);
+    text->mEngine.setEntries(std::move(entityVisitor.entries));
 
     return text;
 }
@@ -121,8 +116,6 @@ int AText::getContentMinimumHeight() {
 }
 
 void AText::render() {
-    AViewContainer::render();
-
     if (!mPrerenderedString) {
         mEngine.setTextAlign(TextAlign::JUSTIFY);
         mEngine.performLayout({ mPadding.left, mPadding.top }, getSize());
@@ -140,6 +133,9 @@ void AText::render() {
             mPrerenderedString = multiStringCanvas->build();
         }
     }
+
+    AViewContainer::render();
+
     if (mPrerenderedString) {
         mPrerenderedString->draw();
     }
@@ -170,9 +166,10 @@ glm::ivec2 AText::ViewEntry::getSize() {
 void AText::ViewEntry::setPosition(const glm::ivec2& position) {
     mView->setGeometry(position + glm::ivec2{mView->getMargin().left, mView->getMargin().top},
                        mView->getMinimumSize());
+
 }
 
 Float AText::ViewEntry::getFloat() const {
-    return Float::LEFT;
+    return Float::NONE;
 }
 

@@ -21,8 +21,8 @@
 
 #pragma once
 #include "AUI/Common/SharedPtr.h"
+#include "AUI/Common/AString.h"
 
-class AString;
 
 class IXmlEntityVisitor
 {

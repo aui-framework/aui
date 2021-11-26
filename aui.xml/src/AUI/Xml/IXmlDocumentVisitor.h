@@ -24,9 +24,8 @@
 #include "IXmlHeaderVisitor.h"
 #include "AUI/Common/SharedPtr.h"
 
-class IXmlDocumentVisitor
+class IXmlDocumentVisitor: public IXmlEntityVisitor
 {
 public:
 	virtual _<IXmlHeaderVisitor> visitHeader() { return nullptr; };
-    virtual _<IXmlEntityVisitor> visitEntity(AString entityName) { return nullptr; };
 };
