@@ -1527,7 +1527,7 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
 }
 
 void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
-    if (auto c = dynamic_cast<AWindow*>(surface)) {
+    if (auto c = dynamic_cast<AWindow*>(surface->getParent())) {
         c->close();
     }
 }
