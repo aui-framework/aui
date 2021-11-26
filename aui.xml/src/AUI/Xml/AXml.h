@@ -28,5 +28,5 @@
 
 namespace AXml
 {
-	void API_AUI_XML read(_<IInputStream> is, _<IXmlDocumentVisitor> visitor);
+	void API_AUI_XML read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor);
 }

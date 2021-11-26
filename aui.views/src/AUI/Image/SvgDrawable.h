@@ -27,7 +27,7 @@
 #include "AUI/Image/IDrawable.h"
 #include <nanosvg.h>
 #include <nanosvgrast.h>
-#include <AUI/GL/Texture2D.h>
+#include <AUI/Render/Render.h>
 
 
 class SvgDrawable: public IDrawable
@@ -35,7 +35,7 @@ class SvgDrawable: public IDrawable
 private:
     struct Pair {
         uint64_t key;
-        _<GL::Texture2D> texture;
+        Render::Texture texture;
     };
 
     NSVGimage* mImage;
@@ -45,7 +45,7 @@ public:
     explicit SvgDrawable(AByteBuffer& data);
     ~SvgDrawable();
 
-	void draw(const glm::ivec2& size) override;
+	void draw(const Params& params) override;
 	glm::ivec2 getSizeHint() override;
 
 	bool isDpiDependent() const override;

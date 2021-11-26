@@ -420,6 +420,7 @@ public:
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <AUI/Util/ALayoutInflater.h>
+#include <AUI/Render/OpenGLRenderer.h>
 
 thread_local bool painter::painting = false;
 
@@ -621,6 +622,8 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
         // vsync
         wglSwapIntervalEXT(true);
 
+        Render::setRenderer(std::make_unique<OpenGLRenderer>());
+
         //wglMakeCurrent(mDC, nullptr);
     } else {
         bool k = SetPixelFormat(mDC, pxf, &pfd);
@@ -791,6 +794,8 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
         if (glewInit() != GLEW_OK) {
             throw AException("glewInit failed");
         }
+        ALogger::info("OpenGL context is ready");
+        Render::setRenderer(std::make_unique<OpenGLRenderer>());
     }
 
     if (parent) {
@@ -805,7 +810,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     //assert(glGetError() == 0);
 
     updateDpi();
-    Render::inst().setWindow(this);
+    Render::setWindow(this);
 
     checkForStencilBits();
 
@@ -887,7 +892,7 @@ void AWindow::redraw() {
         GL::State::bindVertexArray(0);
         GL::State::useProgram(0);
 
-        Render::inst().setWindow(this);
+        Render::setWindow(this);
         glViewport(0, 0, getWidth(), getHeight());
 
         glDisable(GL_DEPTH_TEST);

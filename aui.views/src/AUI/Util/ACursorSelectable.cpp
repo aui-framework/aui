@@ -52,9 +52,10 @@ unsigned ACursorSelectable::getCursorIndexByPos(glm::ivec2 pos) {
     auto fs = getMouseSelectionFont();
     int row = pos.y < 0 ? 0 : pos.y / fs.getLineHeight();
 
-    if (row == 0) {
-        return f.font->indexOfX(text, pos.x, f.size, f.fontRendering);
-    }
+    // TODO STUB
+//    if (row == 0) {
+//        return f.font->indexOfX(text, pos.x, f.size, f.fontRendering);
+//    }
 
     // oh! we should even find this row...
     size_t targetLineIndex = 0;
@@ -67,7 +68,9 @@ unsigned ACursorSelectable::getCursorIndexByPos(glm::ivec2 pos) {
         targetLineIndex = temp + 1;
     }
 
-    return targetLineIndex + f.font->indexOfX(text.mid(targetLineIndex, text.find('\n', targetLineIndex)), pos.x, f.size, f.fontRendering);
+    // TODO STUB
+    //return targetLineIndex + f.font->indexOfX(text.mid(targetLineIndex, text.find('\n', targetLineIndex)), pos.x, f.size, f.fontRendering);
+    return 0;
 }
 
 void ACursorSelectable::handleMousePressed(const glm::ivec2& pos, AInput::Key button) {
@@ -105,13 +108,11 @@ int ACursorSelectable::drawSelectionPre() {
         mAbsoluteBegin = mCursorIndex < mCursorSelection ? absoluteCursorPos : absoluteSelectionPos;
         mAbsoluteEnd = mCursorIndex < mCursorSelection ? absoluteSelectionPos : absoluteCursorPos;
 
-        Render::inst().setFill(Render::FILL_SOLID);
         RenderHints::PushColor c;
-        Render::inst().setColor(AColor(1.f) - AColor(0x0078d700u));
+        Render::setColor(AColor(1.f) - AColor(0x0078d700u));
         
         auto padding = getMouseSelectionPadding();
         drawSelectionRects();
-
     }
     return absoluteCursorPos;
 }
@@ -121,10 +122,7 @@ int ACursorSelectable::getPosByIndex(int end, int begin) {
 }
 
 void ACursorSelectable::drawSelectionPost() {
-    Render::inst().setFill(Render::FILL_SOLID);
-    Render::inst().setColor({1, 1, 1, 1 });
-
-    glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
+    Render::setBlending(Blending::INVERSE);
     if (hasSelection())
     {
         drawSelectionRects();
@@ -154,10 +152,9 @@ void ACursorSelectable::drawSelectionRects() {
 
     auto draw = [&]() {
         auto fs = getMouseSelectionFont();
-        Render::inst().drawRect(p.x + absoluteBeginPos,
-                                    p.y + row * fs.getLineHeight(),
-                                    absoluteEndPos - absoluteBeginPos + 1,
-                                    getMouseSelectionFont().size + 2);
+        Render::drawRect(ASolidBrush{},
+                         { p.x + absoluteBeginPos, p.y + row * fs.getLineHeight() },
+                         { absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 2 });
     };
 
     auto t = getDisplayText();

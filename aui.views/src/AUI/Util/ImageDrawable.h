@@ -29,19 +29,18 @@
 #include <AUI/Image/IDrawable.h>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Image/AImage.h>
-#include <AUI/GL/Texture2D.h>
+#include <AUI/Render/Render.h>
 
 class ImageDrawable: public IDrawable {
 private:
-    GL::Texture2D mTexture;
+    Render::Texture mTexture;
     glm::ivec2 mSize;
 
 public:
     explicit ImageDrawable(const _<AImage> image);
     virtual ~ImageDrawable();
 
-    void draw(const glm::ivec2& size) override;
-    void bind();
+    void draw(const Params& params) override;
 
     glm::ivec2 getSizeHint() override;
 };

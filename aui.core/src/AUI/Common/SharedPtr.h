@@ -27,7 +27,7 @@
 #include <AUI/Thread/AThread.h>
 
 template<typename T, typename... Args>
-inline auto _new(Args&& ... args)
+inline _<T> _new(Args&& ... args)
 {
 	if constexpr (std::is_base_of_v<AObject, T>) {
 		auto o = new T(args...);
@@ -44,12 +44,12 @@ inline auto _new(Args&& ... args)
 		});
 	}
 	else {
-		return _<T>(std::make_shared<T>(std::forward<Args>(args)...));
+		return static_cast<_<T>>(std::make_shared<T>(std::forward<Args>(args)...));
 	}
 }
 
 template<typename T, typename E>
-inline auto _new(std::initializer_list<E> il) {
+inline _<T> _new(std::initializer_list<E> il) {
 
     if constexpr (std::is_base_of_v<AObject, T>) {
         auto o = new T(il.begin(), il.end());
@@ -66,7 +66,7 @@ inline auto _new(std::initializer_list<E> il) {
         });
     }
     else {
-        return _<T>(std::make_shared<T>(il.begin(), il.end()));
+        return static_cast<_<T>>(std::make_shared<T>(il.begin(), il.end()));
     }
 }
 

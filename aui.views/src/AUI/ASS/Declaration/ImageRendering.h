@@ -27,7 +27,7 @@
 
 #include <AUI/Util/LayoutDirection.h>
 #include "IDeclaration.h"
-#include <AUI/Render/ImageRendering.h>
+#include <AUI/Enum/ImageRendering.h>
 
 namespace ass {
 

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -20,25 +20,58 @@
  */
 
 #pragma once
-#include "AUI/Enum/TextAlign.h"
-#include "AFont.h"
-#include "FontRendering.h"
-#include "AUI/Common/AColor.h"
+#include <queue>
+#include "AUI/Core.h"
+#include <algorithm>
+
+template <class StoredType>
+	class AQueue : public std::queue<StoredType>
+{
+	using parent = std::queue<StoredType>;
+public:
+	void remove(const StoredType& item)
+	{
+		parent::erase(std::remove_if(parent::begin(), parent::end(), [&](const StoredType& probe)
+		{
+			return item == probe;
+		}), parent::end());
+	}
 
 
-class AString;
+	AQueue<StoredType>& operator<<(const StoredType& rhs)
+	{
+		parent::push(rhs);
+		return *this;
+	}
 
+	bool contains(const StoredType& value) const
+	{
+		for (auto i = parent::begin(); i != parent::end(); ++i)
+		{
+			if (*i == value)
+				return true;
+		}
+		return false;
+	}
 
-struct API_AUI_VIEWS FontStyle {
-	mutable _<AFont> font;
-	uint8_t size = 12;
-	bool formatting = false;
-	TextAlign align = TextAlign::LEFT;
-	AColor color;
-
-	FontRendering fontRendering = FontRendering::SUBPIXEL;
-	float lineSpacing = 0.5f;
-
-	size_t getWidth(const AString& text) const;
-	size_t getLineHeight() const;
+	template<typename Container>
+	bool isSubsetOf(const Container& c) const
+	{
+		for (auto& i : c)
+		{
+			if (!contains(i))
+			{
+				return false;
+			}
+		}
+		return true;
+	}
 };
+
+
+template <class StoredType>
+AQueue<StoredType>& operator<<(AQueue<StoredType>& lhs, const StoredType& rhs)
+{
+	lhs.push(rhs);
+	return lhs;
+}

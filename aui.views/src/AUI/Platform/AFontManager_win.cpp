@@ -32,9 +32,10 @@
 
 AFontManager::AFontManager() :
         mFreeType(_new<FreeType>()),
-        mDefault(get("segoeui"))
+        mDefaultFont(loadFont(AUrl::file(getPathToFont("segoeui"))))
 {
 }
+
 
 AString AFontManager::getPathToFont(const AString& font) {
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,37 +19,43 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 27.08.2020.
-//
-
 #pragma once
+#include "AUI/Enum/TextAlign.h"
+#include "AFont.h"
+#include "AUI/Render/FontRendering.h"
+#include "AUI/Common/AColor.h"
 
-#include "AView.h"
 
-class API_AUI_VIEWS AImageView: public AView {
-private:
-    _<GL::Texture2D> mTexture;
-    glm::ivec2 mImageSize = {10, 10};
-    /**
-     * See AImageView::setViewportSize
-     */
-    bool mRunningAspectRatioKeepingRoutine = false;
+class AString;
 
-public:
-    explicit AImageView(const _<GL::Texture2D>& texture);
-    explicit AImageView(const _<AImage>& img);
-    explicit AImageView(const AUrl& img);
-    AImageView();
 
-    void render() override;
+struct API_AUI_VIEWS AFontStyle {
+	mutable _<AFont> font;
+	unsigned size = 12;
+	bool formatting = false;
+	TextAlign align = TextAlign::LEFT;
+	AColor color;
+    bool bold = false;
+    bool italic = false;
 
-    int getContentMinimumWidth() override;
-    int getContentMinimumHeight() override;
+	FontRendering fontRendering = FontRendering::SUBPIXEL;
+	float lineSpacing = 0.5f;
 
-    bool consumesClick(const glm::ivec2& pos) override;
+    AFontStyle();
 
-    void setSize(int width, int height) override;
+	size_t getWidth(const AString& text) const;
+
+    [[nodiscard]]
+    size_t getSpaceWidth() const {
+        return font->getSpaceWidth(size);
+    }
+	size_t getLineHeight() const;
+
+    AFont::FontEntry getFontEntry() const {
+        return font->getFontEntry({size, fontRendering});
+    }
+
+    operator AFont::FontEntry() const {
+        return getFontEntry();
+    }
 };
-
-

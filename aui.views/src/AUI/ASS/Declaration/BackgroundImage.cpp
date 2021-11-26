@@ -34,6 +34,7 @@
 void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
     ass::BackgroundImage& info = view->getAssHelper()->state.backgroundUrl;
     ass::BackgroundCropping& cropping = view->getAssHelper()->state.backgroundCropping;
+    auto imageRendering = view->getAssHelper()->state.imageRendering;
     if (info.url && !info.url->empty()) {
         if (!view->getAssHelper()->state.backgroundImage) {
             // resolve background image by url
@@ -43,10 +44,13 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
             auto scale = info.scale.or_default(glm::vec2{1, 1});
             auto drawableDrawWrapper = [&](const glm::ivec2& size) {
                 RenderHints::PushColor c;
-                Render::inst().setColor(info.overlayColor.or_default(0xffffff_rgb));
-                Render::inst().setRepeat(info.rep.or_default(Repeat::NONE));
-                drawable->draw(glm::ivec2(glm::vec2(size) * scale));
-                Render::inst().setRepeat(Repeat::NONE);
+                Render::setColor(info.overlayColor.or_default(0xffffff_rgb));
+                IDrawable::Params p;
+                p.offset = {0, 0};
+                p.size = glm::vec2(size) * scale;
+                p.repeat = info.rep.or_default(Repeat::NONE);
+                p.imageRendering = imageRendering;
+                drawable->draw(p);
             };
 
             switch (info.sizing.or_default(Sizing::NONE)) {
@@ -71,7 +75,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                         size.y = viewSize.y;
                         size.x = size.y * imageSize.x / imageSize.y;
                     }
-                    Render::inst().setTransform(
+                    Render::setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{glm::vec2(viewSize - size) / 2.f, 0.f}));
                     drawableDrawWrapper(size);
@@ -90,7 +94,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                         size.y = viewSize.y;
                         size.x = size.y * imageSize.x / imageSize.y;
                     }
-                    Render::inst().setTransform(
+                    Render::setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{glm::vec2(viewSize - size) / 2.f, 0.f}));
                     drawableDrawWrapper(size);
@@ -98,7 +102,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                 }
                 case Sizing::FIT_PADDING: {
                     RenderHints::PushMatrix m;
-                    Render::inst().setTransform(
+                    Render::setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{view->getPadding().left, view->getPadding().top, 0.f}));
                     drawableDrawWrapper(
@@ -107,65 +111,70 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                 }
 
                 case Sizing::CROPPED: {
-                    auto texture = _cast<ImageDrawable>(drawable);
-                    if (!texture) break;
-                    texture->bind();
-                    Render::inst().setFill(Render::FILL_TEXTURED);
-
                     // upper left
                     auto offset = cropping.offset.or_default({0, 0});
-                    Render::inst().drawTexturedRect(0, 0,
-                                                    view->getSize().x, view->getSize().y,
-                                                    offset,
-                                                    offset + cropping.size.or_default({1, 1}));
+
+                    IDrawable::Params p;
+                    p.cropUvTopLeft = offset;
+                    p.cropUvBottomRight = offset + cropping.size.or_default({1, 1});
+                    p.size = view->getSize();
+                    p.imageRendering = imageRendering;
+
+                    drawable->draw(p);
                     break;
                 }
                 case Sizing::SPLIT_2X2: {
-                    auto texture = _cast<ImageDrawable>(drawable);
-                    if (!texture) break;
-                    auto textureSize = glm::vec2(texture->getSizeHint());
+                    auto textureSize = glm::vec2(drawable->getSizeHint());
                     auto textureWidth = textureSize.x;
                     auto textureHeight = textureSize.y;
-                    texture->bind();
+
                     float chunkWidth = glm::min(view->getWidth() / 2.f, textureWidth / 2.f);
                     float chunkHeight = glm::min(view->getHeight() / 2.f, textureHeight / 2.f);
 
                     glm::vec2 cutSize = (textureSize - glm::vec2(chunkWidth, chunkHeight) * 2.f / scale) / 2.f / textureSize;
 
-                    Render::inst().setFill(Render::FILL_TEXTURED);
+                    auto doDraw = [&](float x, float y, float width, float height, const glm::vec2& uv1, const glm::vec2& uv2) {
+                        IDrawable::Params p;
+                        p.offset = {x, y};
+                        p.cropUvTopLeft = uv1;
+                        p.cropUvBottomRight = uv1;
+                        p.size = {width, height};
+                        p.imageRendering = imageRendering;
+                        drawable->draw(p);
+                    };
 
 
                     // upper left
-                    Render::inst().drawTexturedRect(0,
-                                                    0,
-                                                    chunkWidth,
-                                                    chunkHeight,
-                                                    {0, 0},
-                                                    glm::vec2(0.5f) - cutSize);
+                    doDraw(0,
+                           0,
+                           chunkWidth,
+                           chunkHeight,
+                           {0, 0},
+                           glm::vec2(0.5f) - cutSize);
 
                     // upper right
-                    Render::inst().drawTexturedRect(view->getWidth() - chunkWidth,
-                                                    0,
-                                                    chunkWidth,
-                                                    chunkHeight,
-                                                    {0.5f + cutSize.x, 0 },
-                                                    {1.f, 0.5f - cutSize.y });
+                    doDraw(view->getWidth() - chunkWidth,
+                           0,
+                           chunkWidth,
+                           chunkHeight,
+                           {0.5f + cutSize.x, 0 },
+                           {1.f, 0.5f - cutSize.y });
 
                     // lower left
-                    Render::inst().drawTexturedRect(0,
-                                                    view->getHeight() - chunkHeight,
-                                                    chunkWidth,
-                                                    chunkHeight,
-                                                    {0, 0.5f + cutSize.y },
-                                                    {0.5f - cutSize.x, 1.f });
+                    doDraw(0,
+                           view->getHeight() - chunkHeight,
+                           chunkWidth,
+                           chunkHeight,
+                           {0, 0.5f + cutSize.y },
+                           {0.5f - cutSize.x, 1.f });
 
                     // lower right
-                    Render::inst().drawTexturedRect(view->getWidth() - chunkWidth,
-                                                    view->getHeight() - chunkHeight,
-                                                    chunkWidth,
-                                                    chunkHeight,
-                                                    glm::vec2(0.5f) + cutSize,
-                                                    {1, 1});
+                    doDraw(view->getWidth() - chunkWidth,
+                           view->getHeight() - chunkHeight,
+                           chunkWidth,
+                           chunkHeight,
+                           glm::vec2(0.5f) + cutSize,
+                           {1, 1});
 
                     /*
                      * lets image our scene as follows:
@@ -186,12 +195,12 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                          *     *#*
                          *     +*+
                          */
-                        Render::inst().drawTexturedRect(chunkWidth,
-                                                        0,
-                                                        view->getWidth() - 2 * chunkWidth,
-                                                        chunkHeight,
-                                                        {0.5f, 0.f},
-                                                        {0.5f, 0.5f - cutSize.y});
+                        doDraw(chunkWidth,
+                               0,
+                               view->getWidth() - 2 * chunkWidth,
+                               chunkHeight,
+                               {0.5f, 0.f},
+                               {0.5f, 0.5f - cutSize.y});
                         /*
                          *     +*+
                          *     *#*
@@ -200,46 +209,46 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                          * drawing bottom side
                          */
                         
-                        Render::inst().drawTexturedRect(chunkWidth,
-                                                        view->getHeight() - chunkHeight,
-                                                        view->getWidth() - 2 * chunkWidth,
-                                                        chunkHeight,
-                                                        {0.5f, 0.5f + cutSize.y },
-                                                        {0.5f, 1.f}); 
+                        doDraw(chunkWidth,
+                               view->getHeight() - chunkHeight,
+                               view->getWidth() - 2 * chunkWidth,
+                               chunkHeight,
+                               {0.5f, 0.5f + cutSize.y },
+                               {0.5f, 1.f});
                         /*
                          *                +*+
                          * drawing left > *#*
                          *     side       +*+
                          */
                         
-                        Render::inst().drawTexturedRect(0,
-                                                        chunkHeight,
-                                                        chunkWidth,
-                                                        view->getHeight() - chunkHeight * 2.f,
-                                                        {0.f, 0.5f},
-                                                        {0.5f, 0.5f});
+                        doDraw(0,
+                               chunkHeight,
+                               chunkWidth,
+                               view->getHeight() - chunkHeight * 2.f,
+                               {0.f, 0.5f},
+                               {0.5f, 0.5f});
 
                         /*
                          *  +*+
                          *  *#* < drawing right
                          *  +*+       side
                          */
-                        Render::inst().drawTexturedRect(view->getWidth() - chunkWidth,
-                                                        chunkHeight,
-                                                        chunkWidth,
-                                                        view->getHeight() - chunkHeight * 2.f,
-                                                        {0.5f, 0.5f},
-                                                        {1.f, 0.5f});
+                        doDraw(view->getWidth() - chunkWidth,
+                               chunkHeight,
+                               chunkWidth,
+                               view->getHeight() - chunkHeight * 2.f,
+                               {0.5f, 0.5f},
+                               {1.f, 0.5f});
                         /*
                          * drawing center
                          */
                         
-                        Render::inst().drawTexturedRect(chunkWidth,
-                                                        chunkHeight,
-                                                        view->getWidth() - 2 * chunkWidth,
-                                                        view->getHeight() - chunkHeight * 2.f,
-                                                        {0.5f, 0.5f},
-                                                        {0.5f, 0.5f});
+                        doDraw(chunkWidth,
+                               chunkHeight,
+                               view->getWidth() - 2 * chunkWidth,
+                               view->getHeight() - chunkHeight * 2.f,
+                               {0.5f, 0.5f},
+                               {0.5f, 0.5f});
                     }
 
                     break;
@@ -255,16 +264,12 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                         imageSize *= AWindow::current()->getDpiRatio();
 
 
-                    Render::inst().setTransform(
+                    Render::setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{glm::vec2(viewSize - imageSize) / 2.f, 0.f}));
 
                     RenderHints::PushMask mask([&] {
-                        Render::inst().setFill(Render::FILL_SOLID);
-                        Render::inst().drawRect(0,
-                                                0,
-                                                view->getWidth(),
-                                                view->getHeight());
+                        Render::drawRect(ASolidBrush{}, {0, 0}, view->getSize());
                     });
 
                     drawableDrawWrapper(imageSize);
@@ -272,11 +277,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                 }
                 case Sizing::NONE: {
                     RenderHints::PushMask mask([&] {
-                        Render::inst().setFill(Render::FILL_SOLID);
-                        Render::inst().drawRect(0,
-                                                0,
-                                                view->getWidth(),
-                                                view->getHeight());
+                        Render::drawRect(ASolidBrush{}, {0, 0}, view->getSize());
                     });
                     glm::vec2 imageSize = glm::vec2(drawable->getSizeHint());
 

@@ -26,7 +26,7 @@
 #include <atomic>
 
 #include "AUI/Common/AVector.h"
-#include "AUI/Common/Queue.h"
+#include "AUI/Common/AQueue.h"
 
 template<typename T>
 class AFuture;
@@ -54,7 +54,7 @@ private:
 		bool mEnabled = true;
 		_<AThread> mThread;
 		std::mutex mMutex;
-		bool processQueue(Queue<std::function<void()>>& queue);
+		bool processQueue(AQueue<std::function<void()>>& queue);
 		void thread_fn();
 		AThreadPool& mTP;
 	public:
@@ -83,10 +83,10 @@ public:
 protected:
 	typedef std::function<void()> task;
 	AVector<Worker*> mWorkers;
-	Queue<task> mQueueHighest;
-	Queue<task> mQueueMedium;
-	Queue<task> mQueueLowest;
-	Queue<task> mQueueTryLater;
+	AQueue<task> mQueueHighest;
+	AQueue<task> mQueueMedium;
+	AQueue<task> mQueueLowest;
+	AQueue<task> mQueueTryLater;
 	std::recursive_mutex mQueueLock;
 	std::condition_variable mCV;
 	std::atomic_uint mIdleWorkers;

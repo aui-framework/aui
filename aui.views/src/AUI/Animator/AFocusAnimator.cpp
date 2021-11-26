@@ -35,11 +35,11 @@ AFocusAnimator::AFocusAnimator() {
 void AFocusAnimator::doAnimation(AView* view, float theta) {
     const float SIZE = 4.f;
     if (theta < 0.99999f) {
-        RenderHints::PushColor c;
-        Render::inst().setFill(Render::FILL_SOLID);
         float t = glm::pow(1.f - theta, 4.f);
-        Render::inst().setColor({0, 0, 0, t});
-        Render::inst().drawRectBorder(-t * SIZE, -t * SIZE, t * SIZE * 2 + view->getWidth(),
-                                          t * SIZE * 2 + view->getHeight(), 2.f);
+        Render::drawRectBorder(
+                ASolidBrush{{0, 0, 0, t}},
+                { -t * SIZE, -t * SIZE },
+                { t * SIZE * 2 + view->getWidth(),t * SIZE * 2 + view->getHeight() },
+                2.f);
     }
 }

@@ -38,6 +38,12 @@ public:
 	AUrl(const AString& full);
 	inline AUrl(const char* full): AUrl(AString(full)) {}
 
+    AUrl(const AString& protocol, const AString& path) : mProtocol(protocol), mPath(path) {}
+
+    static AUrl file(const AString& file) {
+        return { "file", file };
+    }
+
 	_<IInputStream> open() const;
 
 	const AString& getPath() const
@@ -64,5 +70,5 @@ public:
 
 inline AUrl operator"" _url(const char* input, size_t s)
 {
-    return AUrl({input, input + s});
+    return AUrl(std::string{input, input + s});
 }

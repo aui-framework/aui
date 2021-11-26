@@ -23,6 +23,7 @@
 
 #include <tuple>
 #include <variant>
+#include <cstdint>
 
 namespace aui {
 
@@ -89,7 +90,7 @@ namespace aui {
         private:
             joined_range_t& mJoinedRange;
             std::variant<typename Items::iterator...> mIterator;
-            size_t mIndex = 0;
+            std::size_t mIndex = 0;
 
         public:
             my_iterator(joined_range_t& mJoinedRange) :

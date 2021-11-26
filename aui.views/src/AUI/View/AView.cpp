@@ -74,15 +74,14 @@ void AView::redraw()
 void AView::drawStencilMask()
 {
     if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
-        Render::inst().drawRoundedRect(mPadding.left,
-                                       mPadding.top,
-                                       getWidth() - mPadding.horizontal(),
-                                       getHeight() - mPadding.vertical(),
-                                       mBorderRadius);
+        Render::drawRoundedRect(ASolidBrush {},
+                                { mPadding.left, mPadding.top },
+                                { getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical() },
+                                mBorderRadius);
     } else {
-        Render::inst().setFill(Render::FILL_SOLID);
-        Render::inst().drawRect(mPadding.left, mPadding.top, getWidth() - mPadding.horizontal(),
-                                getHeight() - mPadding.vertical());
+        Render::drawRect(ASolidBrush {},
+                         { mPadding.left, mPadding.top },
+                         { getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical() });
     }
 }
 
@@ -118,7 +117,9 @@ void AView::render()
         {
             e->draw([&]()
                     {
-                        Render::inst().drawRect(0, 0, getWidth(), getHeight());
+                        Render::drawRect(ASolidBrush{},
+                                         { 0, 0 },
+                                         getSize());
                     });
         }
 
@@ -139,7 +140,7 @@ void AView::render()
     }
 }
 
-void AView::recompileCSS()
+void AView::recompileAss()
 {
     mCursor = ACursor::DEFAULT;
     mOverflow = Overflow::VISIBLE;
@@ -148,7 +149,7 @@ void AView::recompileCSS()
     mBorderRadius = 0.f;
     //mForceStencilForBackground = false;
     mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-    mFontStyle = {AFontManager::inst().getDefault(), 12, false, TextAlign::LEFT, AColor(0, 0, 0, 1.f) };
+    mFontStyle = {};
     mBackgroundEffects.clear();
 
     for (auto& r : AStylesheet::inst().getRules()) {
@@ -233,10 +234,8 @@ void AView::getTransform(glm::mat4& transform) const
     transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
 }
 
-FontStyle& AView::getFontStyle()
+AFontStyle& AView::getFontStyle()
 {
-    if (mFontStyle.font == nullptr)
-        mFontStyle.font = AFontManager::inst().getDefault();
     return mFontStyle;
 }
 
@@ -277,7 +276,7 @@ void AView::ensureAssUpdated()
         });
         connect(mAssHelper->invalidateStateAss, me::updateAssState);
 
-        recompileCSS();
+        recompileAss();
     }
 }
 

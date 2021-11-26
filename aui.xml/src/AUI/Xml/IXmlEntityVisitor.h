@@ -21,13 +21,14 @@
 
 #pragma once
 #include "AUI/Common/SharedPtr.h"
+#include "AUI/Common/AString.h"
 
-class AString;
 
 class IXmlEntityVisitor
 {
 public:
-	virtual void visitAttribute(const AString& name, const AString& value) = 0;
-	virtual _<IXmlEntityVisitor> visitEntity(const AString& entityName) = 0;
-	virtual void visitTextEntity(const AString& entity) = 0;
+	virtual void visitAttribute(const AString& name, AString value) {};
+	virtual _<IXmlEntityVisitor> visitEntity(AString entityName) { return nullptr; };
+	virtual void visitTextEntity(const AString& entity) {};
+    virtual ~IXmlEntityVisitor() = default;
 };

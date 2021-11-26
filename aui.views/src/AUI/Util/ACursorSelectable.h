@@ -28,7 +28,7 @@
 
 #include <AUI/Common/AString.h>
 #include <glm/glm.hpp>
-#include <AUI/Render/FontStyle.h>
+#include <AUI/Font/AFontStyle.h>
 #include <AUI/Platform/AInput.h>
 
 class API_AUI_VIEWS ACursorSelectable {
@@ -42,7 +42,7 @@ protected:
 
     virtual glm::ivec2 getMouseSelectionPadding() = 0;
     virtual glm::ivec2 getMouseSelectionScroll() = 0;
-    virtual FontStyle getMouseSelectionFont() = 0;
+    virtual AFontStyle getMouseSelectionFont() = 0;
     virtual AString getDisplayText() = 0;
     virtual void doRedraw() = 0;
 

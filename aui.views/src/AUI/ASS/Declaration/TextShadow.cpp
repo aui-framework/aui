@@ -30,11 +30,11 @@
 void ass::decl::Declaration<ass::TextShadow>::renderFor(AView* view) {
     if (auto label = dynamic_cast<ALabel*>(view)) {
         RenderHints::PushColor c;
-        Render::inst().setColor(mInfo.shadowColor);
+        Render::setColor(mInfo.shadowColor);
 
         {
             RenderHints::PushMatrix m;
-            Render::inst().translate({1, 1});
+            Render::translate({1, 1});
             label->doRenderText();
         }
     }

@@ -28,12 +28,10 @@
 
 
 void ass::decl::Declaration<ass::BoxShadow>::renderFor(AView* view) {
-    Render::inst().drawBoxShadow(mInfo.offsetX - mInfo.spreadRadius,
-                                 mInfo.offsetY - mInfo.spreadRadius,
-                                 view->getWidth() + mInfo.spreadRadius * 2,
-                                 view->getHeight() + mInfo.spreadRadius * 2,
-                                 mInfo.blurRadius,
-                                 mInfo.color);
+    Render::drawBoxShadow({mInfo.offsetX.getValuePx() - mInfo.spreadRadius.getValuePx(), mInfo.offsetY.getValuePx() - mInfo.spreadRadius.getValuePx()},
+                          glm::vec2(view->getSize()) + mInfo.spreadRadius.getValuePx() * 2.f,
+                          mInfo.blurRadius,
+                          mInfo.color);
 }
 
 ass::decl::DeclarationSlot ass::decl::Declaration<ass::BoxShadow>::getDeclarationSlot() const {

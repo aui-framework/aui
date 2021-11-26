@@ -76,7 +76,7 @@ protected:
 
     glm::ivec2 getMouseSelectionPadding() override;
     glm::ivec2 getMouseSelectionScroll() override;
-    FontStyle getMouseSelectionFont() override;
+    AFontStyle getMouseSelectionFont() override;
     AString getDisplayText() override;
     void doRedraw() override;
 
@@ -119,7 +119,7 @@ signals:
      * <dl>
      *   <dt><b>Emits</b></dt>
      *   <dd>When the user changed text and focused another view.</dd>
-     *   <dd>When <code>AAbstractTextField::setText</code> is called.</dd>
+     *   <dd>When <code>AAbstractTextField::updateText</code> is called.</dd>
      * </dl>
      */
     emits<AString> textChanged;

@@ -44,7 +44,6 @@
 #include <AUI/View/AListView.h>
 #include <AUI/View/ATextArea.h>
 #include <AUI/View/ARulerView.h>
-#include <AUI/View/AImageView.h>
 #include <AUI/View/AForEachUI.h>
 #include <AUI/View/ARulerArea.h>
 #include <AUI/View/ATreeView.h>
@@ -56,6 +55,8 @@
 #include <AUI/View/AScrollArea.h>
 #include <AUI/View/ATabView.h>
 #include <AUI/View/AGridSplitter.h>
+#include <AUI/View/AText.h>
+#include <AUI/View/ADrawableView.h>
 
 using namespace ass;
 
@@ -94,6 +95,14 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
     });
 
 	addView(_new<ASelectableLabel>("Building beautiful programs in pure C++ without chrome embded framework"));
+	//addView(AText::fromItems(
+    //        {
+    //            _new<ADrawableView>(IDrawable::fromUrl(":img/cat.jpg")) with_style { MinSize { 100_dp }, Margin { 4_dp } },
+    //            "Lorem Ipsum - это текст-\"рыба\", часто используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной \"рыбой\" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов. Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн. Его популяризации в новое время послужили публикация листов Letraset с образцами Lorem Ipsum в 60-х годах и, в более недавнее время, программы электронной вёрстки типа Aldus PageMaker, в шаблонах которых используется Lorem Ipsum."
+    //        }));
+	addView(AText::fromHtml(
+            "Lorem Ipsum - это текст-\"рыба\", часто используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной \"рыбой\" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов. <world /> Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн. Его популяризации в новое время послужили публикация листов Letraset с образцами Lorem Ipsum в 60-х годах и, в более недавнее время, программы электронной вёрстки типа Aldus PageMaker, в шаблонах которых используется Lorem Ipsum."
+            ));
     _<ATabView> tabView;
     addView(tabView = _new<ATabView>() let {
         it->addTab(Horizontal {

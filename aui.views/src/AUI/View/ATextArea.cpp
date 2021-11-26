@@ -59,7 +59,7 @@ private:
                                                   mLines.size() * getFontStyle().getLineHeight());
     }
     void pushScrollMatrix() {
-        Render::inst().setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
+        Render::setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
     }
 
 public:
@@ -117,6 +117,8 @@ public:
     }
 
     void render() override {
+        // TODO stub
+        /*
         if (mLines.empty() && !mFullText->empty()) {
             size_t wordWrappingPos = 0;
             while (wordWrappingPos < mFullText->length()) {
@@ -129,7 +131,7 @@ public:
                 mLines.push_back(Line{ std::move(line), {} });
             }
             updateScrollDimensions();
-        }
+        }*/
         AView::render();
 
         auto drawText = [&] {
@@ -140,12 +142,13 @@ public:
                     return;
                 }
 
-                if (!mLines[i].prerendered.mVao) {
-                    mLines[i].prerendered = Render::inst().preRendererString(mLines[i].text, getFontStyle());
+                if (!mLines[i].prerendered) {
+                    mLines[i].prerendered = Render::prerenderString({0, 0}, mLines[i].text, getFontStyle());
                 }
-                Render::inst().drawString(mPadding.left - mHorizontalScroll,
-                                          mPadding.top + i * getFontStyle().getLineHeight() - mScroll,
-                                          mLines[i].prerendered);
+                RenderHints::PushMatrix m;
+                Render::translate({ mPadding.left - mHorizontalScroll,
+                                    mPadding.top + i * getFontStyle().getLineHeight() - mScroll });
+                mLines[i].prerendered->draw();
             }
         };
 
@@ -174,14 +177,14 @@ public:
                     redraw();
                 }
 
-                Render::inst().drawRect(mPadding.left + absoluteCursorPos,
-                                        mPadding.top, glm::ceil(1_dp), getFontStyle().size + 3);
+                Render::drawRect(ASolidBrush{},
+                                 { mPadding.left + absoluteCursorPos, mPadding.top },
+                                 { glm::ceil(1_dp), getFontStyle().size + 3 });
             }
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            // TODO STUB
+            // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         } else {
             drawText();
-            Render::inst().setFill(Render::FILL_SOLID);
-            Render::inst().setColor({1, 1, 1, 1 });
         }
     }
 
@@ -195,7 +198,7 @@ public:
 protected:
     void invalidatePrerenderedString() override {
         for (auto& l : mLines) {
-            l.prerendered.invalidate();
+            l.prerendered = nullptr;
         }
     }
 
@@ -269,7 +272,7 @@ protected:
                 }
             }
             firstText.erase(firstText.begin() + (begin - offset), firstText.begin() + (end - offset));
-            firstLine.prerendered.invalidate();
+            firstLine.prerendered = nullptr;
         }
     }
 
@@ -302,10 +305,10 @@ protected:
                         auto secondPart = text.mid(at);
                         text.resize(at);
                         mLines.insert(mLines.begin() + at, {secondPart, {}});
-                        mLines[i].prerendered.invalidate();
+                        mLines[i].prerendered = nullptr;
                     }
                 } else {
-                    mLines[i].prerendered.invalidate();
+                    mLines[i].prerendered = nullptr;
                 }
                 return;
             } else {

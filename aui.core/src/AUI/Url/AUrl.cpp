@@ -60,10 +60,13 @@ AMap<AString, std::function<_<IInputStream>(const AUrl&)>> AUrl::ourResolvers = 
         }},
 };
 _<IInputStream> AUrl::open() const {
-	if (auto is = ourResolvers[mProtocol](*this))
-	    return is;
+	if (auto c = ourResolvers.contains(mProtocol)) {
+		if (auto is = c->second(*this))
+			return is;
+	}
 	throw IOException("could not open url: " + getFull());
 }
+
 
 void AUrl::registerResolver(const AString& protocol, const std::function<_<IInputStream>(const AUrl&)>& factory) {
     ourResolvers[protocol] = factory;

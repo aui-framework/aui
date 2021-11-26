@@ -29,15 +29,19 @@
 
 
 void ass::decl::Declaration<ass::BackgroundSolid>::renderFor(AView* view) {
-    RenderHints::PushColor x;
-
-    Render::inst().setColor(mInfo.color);
-    Render::inst().setFill(Render::FILL_SOLID);
+    ASolidBrush brush = { mInfo.color };
     if (view->getBorderRadius() > 0) {
-        Render::inst().drawRoundedRectAntialiased(0, 0, view->getWidth(), view->getHeight(), view->getBorderRadius());
+        Render::drawRoundedRectAntialiased(brush,
+                                           {0, 0},
+                                           view->getSize(),
+                                           view->getBorderRadius());
     } else  {
-        Render::inst().drawRect(0, 0, view->getWidth(), view->getHeight());
+        Render::drawRect(brush,
+                         {0, 0},
+                         view->getSize());
+
     }
+
     IDeclarationBase::renderFor(view);
 }
 

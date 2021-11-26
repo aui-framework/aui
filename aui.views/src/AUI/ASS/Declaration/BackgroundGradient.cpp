@@ -33,22 +33,22 @@ void ass::decl::Declaration<ass::BackgroundGradient>::renderFor(AView* view) {
     if (mInfo.null) { return; }
     RenderHints::PushColor x;
 
-    Render::inst().setFill(Render::FILL_GRADIENT);
+    ABrush brush;
     if (mInfo.direction == LayoutDirection::VERTICAL) {
-        Render::inst().setGradientColors(mInfo.topLeftColor,
-                                         mInfo.topLeftColor,
-                                         mInfo.bottomRightColor,
-                                         mInfo.bottomRightColor);
+        brush = ALinearGradientBrush{mInfo.topLeftColor,
+                                     mInfo.topLeftColor,
+                                     mInfo.bottomRightColor,
+                                     mInfo.bottomRightColor};
     } else {
-        Render::inst().setGradientColors(mInfo.topLeftColor,
-                                         mInfo.bottomRightColor,
-                                         mInfo.topLeftColor,
-                                         mInfo.bottomRightColor);
+        brush = ALinearGradientBrush{mInfo.topLeftColor,
+                                     mInfo.bottomRightColor,
+                                     mInfo.topLeftColor,
+                                     mInfo.bottomRightColor};
     }
     if (view->getBorderRadius() > 0) {
-        Render::inst().drawRoundedRectAntialiased(0, 0, view->getWidth(), view->getHeight(), view->getBorderRadius());
+        Render::drawRoundedRectAntialiased(brush, {0, 0}, view->getSize(), view->getBorderRadius());
     } else  {
-        Render::inst().drawRect(0, 0, view->getWidth(), view->getHeight());
+        Render::drawRect(brush, {0, 0}, view->getSize());
     }
     IDeclarationBase::renderFor(view);
 }

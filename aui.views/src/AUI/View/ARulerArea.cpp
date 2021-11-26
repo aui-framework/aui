@@ -72,22 +72,34 @@ void ARulerArea::render() {
 
         glm::ivec2 tp = mMousePos - (getTargetPosition() + rulerOffset);
 
-        FontStyle fs = getFontStyle();
+        AFontStyle fs = getFontStyle();
         fs.color = 0x0_rgb;
-        auto prX = Render::inst().preRendererString(AString::number(int(operator""_px(tp.x).getValueDp())), fs);
-        auto prY = Render::inst().preRendererString(AString::number(int(operator""_px(tp.y).getValueDp())), fs);
+        auto prX = Render::prerenderString({ 0, 0 }, AString::number(int(operator ""_px(tp.x).getValueDp())), fs);
+        auto prY = Render::prerenderString({ 0, 0 }, AString::number(int(operator ""_px(tp.y).getValueDp())), fs);
 
-        glm::vec2 maxNumbersPos = glm::vec2(getSize() - rulerOffset) - glm::vec2(prX.length, fs.size) - glm::vec2(4_dp);
+        glm::vec2 maxNumbersPos = glm::vec2(getSize() - rulerOffset) - glm::vec2(prX->getWidth(), fs.size) - glm::vec2(4_dp);
 
-        Render::inst().drawString(glm::min(mMousePos.x + 2_dp, maxNumbersPos.x), 18_dp, prX);
-        Render::inst().drawString(18_dp, glm::min(mMousePos.y + 2_dp, maxNumbersPos.y), prY);
+        {
+            RenderHints::PushMatrix m;
+            Render::translate({ glm::min(mMousePos.x + 2_dp, maxNumbersPos.x), 18_dp });
+            prX->draw();
+        }
+        {
+            RenderHints::PushMatrix m;
+            Render::translate({ 18_dp, glm::min(mMousePos.y + 2_dp, maxNumbersPos.y) });
+            prY->draw();
+        }
 
-        Render::inst().setFill(Render::FILL_SOLID);
-        glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
-        Render::inst().drawRect(mMousePos.x, 0.f, 1, mMousePos.y);
-        Render::inst().drawRect(0.f, mMousePos.y, mMousePos.x, 1);
+        Render::setBlending(Blending::INVERSE);
+        Render::drawRect(ASolidBrush{},
+                         { mMousePos.x, 0.f },
+                         { 1, mMousePos.y });
+        Render::drawRect(ASolidBrush{},
+                         { 0.f, mMousePos.y },
+                         { mMousePos.x, 1 });
 
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        Render::setBlending(Blending::NORMAL);
     }
 
     glEnable(GL_STENCIL_TEST);

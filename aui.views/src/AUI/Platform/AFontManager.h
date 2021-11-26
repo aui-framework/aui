@@ -21,11 +21,13 @@
 
 #pragma once
 
+#include <AUI/Render/FreeType.h>
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Util/Manager.h"
-#include "AUI/Render/AFont.h"
+#include "AUI/Font/AFontFamily.h"
+#include "AUI/Font/AFont.h"
 
-class API_AUI_VIEWS AFontManager: public Manager<AFont> {
+class API_AUI_VIEWS AFontManager {
 public:
 	AFontManager();
     AFontManager(const AFontManager&) = delete;
@@ -33,16 +35,31 @@ public:
 
     static AFontManager& inst();
 
-	_<FreeType> mFreeType;
-	[[nodiscard]] _<AFont> getDefault() {
-        return mDefault;
+	[[nodiscard]] _<AFontFamily> getDefaultFamily() {
+        return mDefaultFamily;
+    }
+	[[nodiscard]] _<AFont> getDefaultFont() {
+        return mDefaultFont;
     }
 
+    [[nodiscard]]
+    _<AFontFamily> getFontFamily(const AString& name) const {
+        if (auto c = mFamilies.contains(name)) {
+            return c->second;
+        }
+        return nullptr;
+    }
 private:
-    _<AFont> mDefault;
-	_<AFont> newItem(const AString& name) override;
+    AMap<AUrl, _<AFont>> mLoadedFont;
+    AMap<AString, _<AFontFamily>> mFamilies;
+    _<FreeType> mFreeType;
+    _<AFontFamily> mDefaultFamily;
+    _<AFont> mDefaultFont;
 
 	AString getPathToFont(const AString& font);
+
+    _<AFont> loadFont(const AUrl& url);
+
 
 	friend class AFont;
 };

@@ -51,7 +51,7 @@ AString ATokenizer::readString()
 		}
 	} catch (...)
 	{
-		
+        mEof = true;
 	}
 	return res;
 }
@@ -77,7 +77,7 @@ AString ATokenizer::readString(const ASet<char>& applicableChars)
 		}
 	} catch (...)
 	{
-		
+        mEof = true;
 	}
 	return res;
 }
@@ -142,7 +142,9 @@ float ATokenizer::readFloat()
 				return tmp.toFloat();
 			}
 		}
-	} catch (...) {}
+	} catch (...) {
+        mEof = true;
+    }
 	return tmp.toFloat();
 }
 
@@ -190,7 +192,9 @@ int ATokenizer::readInt()
 			}
 		}
 	}
-	catch (...) {}
+	catch (...) {
+        mEof = true;
+    }
 	return tmp.toInt();
 }
 
@@ -245,7 +249,9 @@ std::tuple<unsigned, bool> ATokenizer::readUIntX() {
             }
         }
     }
-    catch (...) {}
+    catch (...) {
+        mEof = true;
+    }
     return {tmp.toUInt(), isHex};
 }
 
@@ -273,31 +279,43 @@ AString ATokenizer::readStringUntilUnescaped(const ASet<char>& characters) {
 
 void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
 {
-	for (char current; (current = readChar()) != c;)
-	{
-		if (current == '\\')
+	try {
+		for (char current; (current = readChar()) != c;)
 		{
-            out += '\\';
-            out += readChar();
-		} else
-		{
-            out += current;
+			if (current == '\\')
+			{
+				out += '\\';
+				out += readChar();
+			}
+			else
+			{
+				out += current;
+			}
 		}
 	}
+	catch (...) {
+        mEof = true;
+    }
 }
 
 void ATokenizer::readStringUntilUnescaped(std::string& out, const ASet<char>& characters) {
-	for (char current; !characters.contains(current = readChar());)
-	{
-		if (current == '\\')
+	try {
+		for (char current; !characters.contains(current = readChar());)
 		{
-			out += '\\';
-			out += readChar();
-		} else
-		{
-			out += current;
+			if (current == '\\')
+			{
+				out += '\\';
+				out += readChar();
+			}
+			else
+			{
+				out += current;
+			}
 		}
 	}
+	catch (...) {
+        mEof = true;
+    }
 }
 
 glm::vec2 ATokenizer::readVec2()

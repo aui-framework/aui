@@ -19,18 +19,19 @@
  * =====================================================================================================================
  */
 
-#include "FontStyle.h"
+#include "AFontStyle.h"
 
 #include "AUI/Platform/AFontManager.h"
 
-size_t FontStyle::getWidth(const AString& text) const
-{
-	if (!font)
-		font = AFontManager::inst().getDefault();
-
-	return font->length(text, size, fontRendering);
+AFontStyle::AFontStyle() {
+    font = AFontManager::inst().getDefaultFont();
 }
 
-size_t FontStyle::getLineHeight() const {
+size_t AFontStyle::getWidth(const AString& text) const
+{
+	return font->length(*this, text);
+}
+
+size_t AFontStyle::getLineHeight() const {
     return font->getAscenderHeight(size) * (1.f + lineSpacing);
 }

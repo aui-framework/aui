@@ -21,186 +21,224 @@
 
 #pragma once
 
-#include "AUI/GL/Vao.h"
-#include "AUI/GL/Shader.h"
-#include "AUI/GL/Texture2D.h"
-#include "AFont.h"
-#include "FontStyle.h"
-#include "AUI/Common/AColor.h"
-#include "AUI/Common/ASide.h"
-#include "ImageRendering.h"
 #include <AUI/Reflect/AEnumerate.h>
+#include "IRenderer.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
-
-class AColor;
-class AWindow;
-
-
-
-ENUM_FLAG(Repeat) {
-    NONE = 0,
-    X_Y = 0b11,
-    X = 0b01,
-    Y = 0b10,
-};
-
-ENUM_VALUES(Repeat, Repeat::NONE, Repeat::X, Repeat::Y, Repeat::X_Y)
 
 class API_AUI_VIEWS Render
 {
-public:
-	enum Filling
-	{
-		FILL_SOLID,
-
-		/**
-		 * \brief FILL_SOLID but with transform matrix
-		 */
-		FILL_SOLID_TRANSFORM,
-		FILL_TEXTURED,
-		FILL_GRADIENT,
-		FILL_SYMBOL,
-		FILL_SYMBOL_SUBPIXEL,
-	};
-
-	class PrerenderedString {
-	public:
-		PrerenderedString():
-			length(0),
-			side(0)
-		{};
-
-		PrerenderedString(const _<GL::Vao>& mVao, const FontStyle& fs, float length,
-                          uint16_t side, const AString& mText) : mVao(mVao), fs(fs), length(length),
-			side(side), mText(mText) {}
-
-		_<GL::Vao> mVao;
-		FontStyle fs;
-		float length;
-		uint16_t side;
-		AString mText;
-
-        inline void invalidate() {
-            mVao = nullptr;
-        }
-    };
 private:
-	AWindow* mWindow = nullptr;
-	AColor mColor = 1.f;
+    static _unique<IRenderer> ourRenderer;
 
-	AColor mGradientTL = 1.f;
-	AColor mGradientTR = 1.f;
-	AColor mGradientBL = 1.f;
-	AColor mGradientBR = 1.f;
+public:
+    using PrerenderedString = _<IRenderer::IPrerenderedString>;
+    using Texture = _<ITexture>;
 
-	GL::Shader mSolidShader;
-	GL::Shader mGradientShader;
-	GL::Shader mRoundedSolidShader;
-	GL::Shader mRoundedSolidShaderAntialiased;
-	GL::Shader mRoundedGradientShaderAntialiased;
-	GL::Shader mSolidTransformShader;
-	GL::Shader mBoxShadowShader;
-	GL::Shader mTexturedShader;
-	GL::Shader mSymbolShader;
-	GL::Shader mSymbolShaderSubPixel;
-	GL::Vao mTempVao;
-	glm::mat4 mTransform;
-    Filling mCurrentFill;
-    ImageRendering mCurrentImageRendering = ImageRendering::PIXELATED;
-
-    /**
-     * \brief Repeating. Handled by IDrawable.
-     */
-    Repeat mRepeat = Repeat::NONE;
-	
-	glm::mat4 getProjectionMatrix() const;
-	AVector<glm::vec3> getVerticesForRect(float x, float y, float width, float height);
-
-    void uploadToShaderCommon();
-    void uploadToShaderGradient();
-
-	
-public:	
-	Render();
-
-	static Render& inst();
-
-	void drawRect(float x, float y, float width, float height);
-	void drawTexturedRect(float x, float y, float width, float height,
-                       const glm::vec2& uv1 = {0, 0}, const glm::vec2& uv2 = {1, 1});
-    void drawRoundedRect(float x, float y, float width, float height, float radius);
-    void drawRoundedRectAntialiased(float x, float y, float width, float height, float radius);
-    void drawRectBorderSide(float x, float y, float width, float height, float lineWidth, ASide s);
-	void drawRectBorder(float x, float y, float width, float height, float lineWidth = 1.f);
-    void drawRoundedBorder(float x, float y, float width, float height, float radius, int borderWidth);
-
-	void setFill(Filling t);
-
-    void setCurrentImageRendering(ImageRendering currentImageRendering) {
-        mCurrentImageRendering = currentImageRendering;
+    static void setRenderer(_unique<IRenderer> renderer) {
+        ourRenderer = std::move(renderer);
     }
 
-    void setGradientColors(const AColor& tl, const AColor& tr,
-						   const AColor& bl, const AColor& br);
+    /**
+     * Canvas for batching multiple <code>prerender</code> string calls.
+     * @return a new instance of <code>IMultiStringCanvas</code>
+     */
+    static _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& fontStyle) {
+        return ourRenderer->newMultiStringCanvas(fontStyle);
+    }
 
-	void setWindow(AWindow* const window)
-	{
-		mWindow = window;
-		setColorForced(1.f);
-		setTransformForced(getProjectionMatrix());
-	}
-    inline void drawString(int x, int y, const AString& text)
-	{
-		FontStyle fs;
-		drawString(x, y, text, fs);
-	}
-    void drawBoxShadow(float x, float y, float width, float height, float blurRadius, const AColor& color);
-    void drawString(int x, int y, const AString& text, FontStyle& fs);
-    void drawString(int x, int y, PrerenderedString& f);
+    static Texture getNewTexture() {
+        return ourRenderer->getNewTexture();
+    }
 
-	PrerenderedString preRendererString(const AString& text, FontStyle& fs);
+    /**
+     * Draws simple rectangle.
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     */
+    static void drawRect(const ABrush& brush,
+                         const glm::vec2& position,
+                         const glm::vec2& size) {
+        ourRenderer->drawRect(brush, position, size);
+    }
 
-	void setColorForced(const AColor& color)
-	{
-		mColor = color;
-	}
 
-	void setColor(const AColor& color)
-	{
-		setColorForced(mColor * color);
-	}
+    /**
+     * Draws rounded rect (without antialiasing).
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @param radius corner radius (px)
+     */
+    static void drawRoundedRect(const ABrush& brush,
+                                const glm::vec2& position,
+                                const glm::vec2& size,
+                                float radius) {
+        ourRenderer->drawRoundedRect(brush, position, size, radius);
+    }
 
-	const AColor& getColor() const
-	{
-		return mColor;
-	}
+    /**
+     * Draws rounded rect (with antialiasing).
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @param radius corner radius (px)
+     */
+    static void drawRoundedRectAntialiased(const ABrush& brush,
+                                           const glm::vec2& position,
+                                           const glm::vec2& size,
+                                           float radius) {
+        ourRenderer->drawRoundedRectAntialiased(brush, position, size, radius);
+    }
 
-	void setTransform(const glm::mat4& transform)
-	{
-		mTransform *= transform;
-	}
+    /**
+     * Draws rectangle's border.
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @param lineWidth border line width (px)
+     */
+    static void drawRectBorder(const ABrush& brush,
+                               const glm::vec2& position,
+                               const glm::vec2& size,
+                               float lineWidth = 1.f) {
+        ourRenderer->drawRectBorder(brush, position, size, lineWidth);
+    }
+    /**
+     * Draws rectangle's border (with antialiasing).
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @param radius corner radius (px)
+     * @param borderWidth border line width (px)
+     */
+    static void drawRectBorder(const ABrush& brush,
+                               const glm::vec2& position,
+                               const glm::vec2& size,
+                               float radius,
+                               int borderWidth) {
+        ourRenderer->drawRectBorder(brush, position, size, radius, borderWidth);
+    }
 
-	void setTransformForced(const glm::mat4& transform)
-	{
-		mTransform = transform;
-	}
 
-	const glm::mat4& getTransform()
-	{
-		return mTransform;
-	}
-    Repeat getRepeat() const {
-	    return mRepeat;
-	}
+    /**
+     * Draws a rectangle-shaped shadow.
+     * @param position position
+     * @param size rectangle size
+     * @param blurRadius blur radius
+     * @param color shadow color
+     */
+    static void drawBoxShadow(const glm::vec2& position,
+                              const glm::vec2& size,
+                              float blurRadius,
+                              const AColor& color) {
+        ourRenderer->drawBoxShadow(position, size, blurRadius, color);
+    }
 
-	void setRepeat(Repeat repeat) {
-	    mRepeat = repeat;
-	}
 
-    glm::vec2 getCurrentPos();
+    /**
+     * Draws string.
+     * <dl>
+     *     <dt><b>Warning!</b></dt>
+     *     <dd>
+     *         This function is dramatically inefficient since it does symbol lookup for every character is the
+     *         <code>string</code> and does GPU buffer allocations. If you want to render the same string for several
+     *         times (frames), consider using the <a href="IRenderer::prerenderString">IRenderer::prerenderString</a>
+     *         function instead.
+     *     </dd>
+     * </dl>
+     * @param position string's top left corner position
+     * @param string string to render
+     * @param fs font style (optional)
+     */
+    static void drawString(const glm::vec2& position,
+                           const AString& string,
+                           const AFontStyle& fs = {}) {
+        ourRenderer->drawString(position, string, fs);
+    }
 
-    void applyTextureRepeat();
+    /**
+     * Analyzes string and creates an instance of <code>IRenderer::IPrerenderedString</code> which helps
+     * <code>IRenderer</code> to efficiently render the string.
+     * @param text string to prerender
+     * @param fs font style
+     * @return an instance of IPrerenderedString
+     */
+    static _<IRenderer::IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, AFontStyle& fs) {
+        return ourRenderer->prerenderString(position, text, fs);
+    }
 
-    void translate(const glm::vec2& offset);
+
+    /**
+     * Sets the color which is multiplied with any brush.
+     * @param color color
+     */
+    static void setColorForced(const AColor& color)
+    {
+        ourRenderer->setColorForced(color);
+    }
+
+    /**
+     * Sets the color which is multiplied with any brush. Unlike <code>setColorForced</code>, the new color is multiplied
+     * by the previous color.
+     * @param color color
+     */
+    static void setColor(const AColor& color)
+    {
+        ourRenderer->setColor(color);
+    }
+
+    static const AColor& getColor()
+    {
+        return ourRenderer->getColor();
+    }
+
+    /**
+     * Sets the transform matrix which is applicable for any figure. Unlike <code>setTransformForced</code>, the new
+     * matrix is multiplied by the previous matrix.
+     * @param transform transform matrix
+     */
+    static void setTransform(const glm::mat4& transform)
+    {
+        ourRenderer->setTransform(transform);
+    }
+
+    /**
+     * Sets the transform matrix which is applicable for any figure.
+     * @param transform transform matrix
+     */
+    static void setTransformForced(const glm::mat4& transform)
+    {
+        ourRenderer->setTransformForced(transform);
+    }
+
+    /**
+     * Sets blending.
+     * @see <a href="Blending">Blending</a>
+     */
+    static void setBlending(Blending blending)
+    {
+        ourRenderer->setBlending(blending);
+    }
+
+    static void setWindow(ABaseWindow* window)
+    {
+        ourRenderer->setWindow(window);
+    }
+
+    static glm::mat4 getProjectionMatrix() {
+        return ourRenderer->getProjectionMatrix();
+    }
+
+    static const glm::mat4& getTransform()
+    {
+        return ourRenderer->getTransform();
+    }
+
+    static void translate(const glm::vec2& offset) {
+        ourRenderer->setTransformForced(glm::translate(getTransform(), glm::vec3(offset, 0.f)));
+    }
 };
 

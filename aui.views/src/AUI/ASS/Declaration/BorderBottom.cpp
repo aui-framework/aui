@@ -8,14 +8,9 @@
 void ass::decl::Declaration<BorderBottom>::renderFor(AView* view) {
     RenderHints::PushColor x;
     int w = mInfo.width;
-    Render::inst().setColor(mInfo.color);
-    Render::inst().setFill(Render::FILL_SOLID);
-    Render::inst().drawRect(0,
-                            view->getHeight() - w,
-                            view->getWidth(),
-                            w);
-
-
+    Render::drawRect(ASolidBrush { mInfo.color },
+                     {0, view->getHeight() - w},
+                     {view->getWidth(), w });
 }
 
 bool ass::decl::Declaration<BorderBottom>::isNone() {

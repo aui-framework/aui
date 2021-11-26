@@ -26,19 +26,12 @@
 
 
 
-AFontManager::~AFontManager() {
-	mItems.clear();
+AFontManager::~AFontManager() = default;
+
+
+_<AFont> AFontManager::loadFont(const AUrl& url) {
+    return _new<AFont>(this, url);
 }
-
-_<AFont> AFontManager::newItem(const AString& name) {
-    if (name.contains(":")) {
-        // url
-        return _new<AFont>(this, AUrl(name));
-    }
-
-	return _new<AFont>(this, getPathToFont(name));
-}
-
 
 AFontManager& AFontManager::inst() {
     static AFontManager f;
