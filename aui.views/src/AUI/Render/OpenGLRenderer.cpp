@@ -675,7 +675,7 @@ public:
         }
 
         mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
-        mAdvanceY = advanceY;
+        mAdvanceY = advanceY + mFontStyle.getLineHeight();
 
         
         if (prevWidth != -1 && texturePacker.getImage()->getWidth() != prevWidth) {

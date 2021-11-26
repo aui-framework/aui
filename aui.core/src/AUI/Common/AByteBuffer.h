@@ -47,6 +47,12 @@ public:
 	AByteBuffer(const AByteBuffer& other) noexcept;
 	AByteBuffer(AByteBuffer&& other) noexcept;
 
+    void clear() {
+        delete[] mBuffer;
+        mBuffer = nullptr;
+        mSize = mReserved = mCurrentPos = 0;
+    }
+
 	/**
 	 * \brief Resizes internal buffer.
 	 */

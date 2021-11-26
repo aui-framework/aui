@@ -117,21 +117,7 @@ int AText::getContentMinimumHeight() {
 
 void AText::render() {
     if (!mPrerenderedString) {
-        mEngine.setTextAlign(TextAlign::JUSTIFY);
-        mEngine.performLayout({ mPadding.left, mPadding.top }, getSize());
-        {
-            auto multiStringCanvas = Render::newMultiStringCanvas(getFontStyle());
-            for (auto& wordEntry : mWordEntries) {
-                multiStringCanvas->addString(wordEntry.getPosition(), wordEntry.getWord());
-            }
-        }
-        {
-            auto multiStringCanvas = Render::newMultiStringCanvas(getFontStyle());
-            for (auto& wordEntry : mWordEntries) {
-                multiStringCanvas->addString(wordEntry.getPosition(), wordEntry.getWord());
-            }
-            mPrerenderedString = multiStringCanvas->build();
-        }
+        prerenderString();
     }
 
     AViewContainer::render();
@@ -141,9 +127,37 @@ void AText::render() {
     }
 }
 
+void AText::prerenderString() {
+    mEngine.setTextAlign(TextAlign::JUSTIFY);
+    mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
+    {
+        auto multiStringCanvas = Render::newMultiStringCanvas(getFontStyle());
+        for (auto& wordEntry : mWordEntries) {
+            multiStringCanvas->addString(wordEntry.getPosition(), wordEntry.getWord());
+        }
+    }
+    {
+        auto multiStringCanvas = Render::newMultiStringCanvas(getFontStyle());
+        for (auto& wordEntry : mWordEntries) {
+            multiStringCanvas->addString(wordEntry.getPosition(), wordEntry.getWord());
+        }
+        mPrerenderedString = multiStringCanvas->build();
+    }
+}
+
 void AText::setSize(int width, int height) {
+    bool widthDiffers = width != getWidth();
+    int prevContentMinimumHeight = getContentMinimumHeight();
     AViewContainer::setSize(width, height);
-    mPrerenderedString = nullptr;
+    if (widthDiffers) {
+        prerenderString();
+
+        AThread::current()->enqueue([&]()
+                                    {
+                                        if (auto p = getParent())
+                                            p->updateLayout();
+                                    });
+    }
 }
 
 glm::ivec2 AText::WordEntry::getSize() {

@@ -28,7 +28,6 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Image/IDrawable.h"
 #include <AUI/Util/ADataBinding.h>
-#include <AUI/Render/AMultilineTextRender.h>
 
 /**
  * Represents a simple text.
@@ -44,8 +43,6 @@ private:
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
     TextTransform mTextTransform = TextTransform::NONE;
     AColor mIconColor = {1, 1, 1, 1};
-
-    _unique<AMultilineTextRender> mMultilineTextRender;
 
 	glm::ivec2 getIconSize() const;
     AString getTransformedText();
@@ -98,18 +95,11 @@ public:
 
     void setText(const AString& newText);
 
-
-	[[nodiscard]] bool isMultiline() const
-	{
-		return mMultilineTextRender != nullptr;
-	}
-
 	[[nodiscard]] const AString& getText() const
 	{
 		return mText;
 	}
 
-	void setMultiline(const bool multiline);
 	void setFont(_<AFont> font) {
 	    mFontOverride = std::move(font);
         invalidateFont();

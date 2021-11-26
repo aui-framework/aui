@@ -66,6 +66,8 @@ public:
     int getContentMinimumWidth() override;
 
     int getContentMinimumHeight() override;
+
+    void prerenderString();
 };
 
 
