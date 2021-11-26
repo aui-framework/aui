@@ -50,8 +50,8 @@ AString AFontManager::getPathToFont(const AString& font) {
                 throw std::exception{};
             if (fontsKey == nullptr)
                 throw std::exception{};
-            DWORD maxValueNameSize, maxValueDataSize;
-            DWORD valueNameSize, valueDataSize, valueType;
+            DWORD maxValueNameSize = 0, maxValueDataSize = 0;
+            DWORD valueNameSize = 0, valueDataSize = 0, valueType = 0;
 
             if (RegQueryInfoKey(fontsKey, 0, 0, 0, 0, 0, 0, 0, &maxValueNameSize, &maxValueDataSize, 0, 0)) {
                 throw std::exception{};
