@@ -532,6 +532,7 @@ public:
         } else {
             mEntryData->texture.bind();
         }
+        GL::Texture2D::setupNearest();
 
         mVertexBuffer.bind();
 
@@ -639,7 +640,12 @@ public:
                     glm::vec4 uv;
 
                     if (ch.rendererData == nullptr) {
-                        auto pUv = texturePacker.insert(ch.image);;
+                        auto pUv = texturePacker.insert(ch.image);
+                        glm::vec2 bias = 0.1f / glm::vec2(texturePacker.getImage()->getSize());
+                        pUv->x -= bias.x;
+                        pUv->y -= bias.x;
+                        pUv->z -= bias.y;
+                        pUv->w -= bias.y;
                         uv = *pUv;
                         mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{std::move(pUv)});
                         ch.rendererData = &mRenderer->mCharData.last();
