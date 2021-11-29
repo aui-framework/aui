@@ -25,26 +25,32 @@ set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
 cmake_policy(SET CMP0072 NEW)
 
 # platform definitions
+# platform exclusion (AUI/Platform/<platform name>/...)
+set(AUI_EXCLUDE_PLATFORMS android linux macos win32)
 
 if (WIN32)
     set(AUI_PLATFORM_WIN 1)
+    list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS win32)
 else()
     set(AUI_PLATFORM_WIN 0)
 endif()
 if (UNIX AND NOT APPLE AND NOT ANDROID)
     set(AUI_PLATFORM_LINUX 1)
+    list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS linux)
 else()
     set(AUI_PLATFORM_LINUX 0)
 endif()
 
 if (UNIX AND APPLE)
     set(AUI_PLATFORM_APPLE 1)
+    list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS macos)
 else()
     set(AUI_PLATFORM_APPLE 0)
 endif()
 
 if (ANDROID)
     set(AUI_PLATFORM_ANDROID 1)
+    list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS android)
 else()
     set(AUI_PLATFORM_ANDROID 0)
 endif()
@@ -54,6 +60,7 @@ if (UNIX)
 else()
     set(AUI_PLATFORM_UNIX 0)
 endif()
+
 
 # determine compiler home dir for mingw when crosscompiling
 if (MINGW AND CMAKE_CROSSCOMPILING)
@@ -135,6 +142,7 @@ function(aui_common AUI_MODULE_NAME)
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
     set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 17)
     file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
+
     if (SRCS_TESTS_TMP)
         set_property(GLOBAL APPEND PROPERTY TESTS_DEPS ${AUI_MODULE_NAME})
         foreach(child ${SRCS_TESTS_TMP})
@@ -352,6 +360,12 @@ function(aui_executable_advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
     project(${AUI_MODULE_NAME})
 
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
+
+    # remove platform dependent files
+    foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
+        list(FILTER SRCS EXCLUDE REGEX ".*\\/${PLATFORM_NAME}\\/.*")
+    endforeach()
+
     #message("ASSDIR ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp")
     if(ANDROID)
         add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
@@ -502,6 +516,12 @@ function(aui_module AUI_MODULE_NAME)
             set(SRCS ${SRCS} "${CMAKE_SOURCE_DIR}/Resource.rc")
         endif()
     endif()
+
+    # remove platform dependent files
+    foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
+        list(FILTER SRCS EXCLUDE REGEX ".*\\/${PLATFORM_NAME}\\/.*")
+    endforeach()
+
     add_library(${AUI_MODULE_NAME} SHARED ${SRCS} ${ARGN})
     get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
     target_include_directories(${AUI_MODULE_NAME} PUBLIC $<BUILD_INTERFACE:${SELF_DIR}/src>)

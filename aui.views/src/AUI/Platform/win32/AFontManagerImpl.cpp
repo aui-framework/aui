@@ -24,20 +24,19 @@
 //
 
 
-#if AUI_PLATFORM_WIN
 #include <Windows.h>
 #include <AUI/Platform/AFontManager.h>
 #include "AUI/Render/FreeType.h"
 #include <AUI/IO/APath.h>
 
-AFontManager::AFontManager() :
+AFontManagerImpl::AFontManagerImpl() :
         mFreeType(_new<FreeType>()),
         mDefaultFont(loadFont(AUrl::file(getPathToFont("segoeui"))))
 {
 }
 
 
-AString AFontManager::getPathToFont(const AString& font) {
+AString AFontManagerImpl::getPathToFont(const AString& font) {
 
     try {
         if (APath(font.toStdString()).isRegularFileExists())
@@ -82,5 +81,3 @@ AString AFontManager::getPathToFont(const AString& font) {
     } catch(...) {}
 	return "C:/Windows/Fonts/" + font + ".ttf";
 }
-
-#endif

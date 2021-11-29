@@ -27,13 +27,13 @@
 #include "AUI/Font/AFontFamily.h"
 #include "AUI/Font/AFont.h"
 
-class API_AUI_VIEWS AFontManager {
+class API_AUI_VIEWS AFontManagerImpl {
 public:
-	AFontManager();
-    AFontManager(const AFontManager&) = delete;
-    virtual ~AFontManager();
+	AFontManagerImpl();
+    AFontManagerImpl(const AFontManagerImpl&) = delete;
+    virtual ~AFontManagerImpl();
 
-    static AFontManager& inst();
+    static AFontManagerImpl& inst();
 
 	[[nodiscard]] _<AFontFamily> getDefaultFamily() {
         return mDefaultFamily;

@@ -19,14 +19,7 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2772 on 7/2/21.
-//
-
-
-#if AUI_PLATFORM_ANDROID
-
-#include "AFontManager.h"
+#include <AUI/Platform/AFontManager.h>
 #include <AUI/Render/FreeType.h>
 
 AFontManager::AFontManager():
@@ -39,6 +32,3 @@ AFontManager::AFontManager():
 AString AFontManager::getPathToFont(const AString &font) {
     return font;
 }
-
-
-#endif

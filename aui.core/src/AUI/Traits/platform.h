@@ -83,7 +83,7 @@ namespace aui::platform {
             return false;
         }
     }
-    namespace os_x {
+    namespace macos {
         using namespace desktop;
 
         constexpr char path_variable_separator = ':';
@@ -131,7 +131,7 @@ namespace aui::platform {
 #elif AUI_PLATFORM_ANDROID
     namespace current = os_android;
 #elif defined(__APPLE__)
-    namespace current = os_x;
+    namespace current = macos;
 #else
     namespace current = os_unix;
 #endif

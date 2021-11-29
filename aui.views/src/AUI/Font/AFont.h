@@ -35,7 +35,7 @@
 
 
 class AString;
-class AFontManager;
+class AFontManagerImpl;
 class FreeType;
 
 
@@ -90,8 +90,8 @@ private:
 	Character renderGlyph(const FontEntry& fs, long glyph);
 
 public:
-	AFont(AFontManager* fm, const AString& path);
-	AFont(AFontManager* fm, const AUrl& url);
+	AFont(AFontManagerImpl* fm, const AString& path);
+	AFont(AFontManagerImpl* fm, const AUrl& url);
 
     FontEntry getFontEntry(const FontKey& key) {
         return { key, mCharData[key] };

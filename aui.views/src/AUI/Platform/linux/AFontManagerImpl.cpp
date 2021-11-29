@@ -19,16 +19,8 @@
  * =====================================================================================================================
  */
 
-
-//
-// Created by alex2772 on 7/2/21.
-//
-
-
-#ifdef __linux
-#if !(AUI_PLATFORM_ANDROID)
-
 #include <AUI/Platform/AFontManager.h>
+
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <fontconfig/fontconfig.h>
@@ -142,6 +134,3 @@ AString AFontManager::getPathToFont(const AString& font) {
         return {};
     }
 }
-
-#endif
-#endif
