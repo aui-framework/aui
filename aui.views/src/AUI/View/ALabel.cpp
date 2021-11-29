@@ -53,7 +53,7 @@ int ALabel::getContentMinimumWidth()
 	if (!mPrerendered) {
 	    doPrerender();
 	}
-	int acc = mPrerendered->getWidth();
+	int acc = mPrerendered ? mPrerendered->getWidth() : 0;
 	if (mIcon) {
 	    acc += getIconSize().x * 2;
 	}
@@ -140,11 +140,13 @@ void ALabel::userProcessStyleSheet(const std::function<void(css, const std::func
 
 void ALabel::doPrerender() {
     auto fs = getFontStyleLabel();
-    mPrerendered = Render::prerenderString({0, 0}, getTransformedText(), fs);
+    if (!mText.empty()) {
+        mPrerendered = Render::prerenderString({0, 0}, getTransformedText(), fs);
+    }
 }
 
 void ALabel::doRenderText() {
-    if (!mPrerendered && !mText.empty())
+    if (!mPrerendered)
     {
         doPrerender();
     }

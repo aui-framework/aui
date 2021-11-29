@@ -26,10 +26,18 @@
 namespace aui::platform {
     namespace mobile {
         using is_vertical_layout_preferred = std::true_type;
+
+        constexpr bool is_mobile() {
+            return true;
+        }
     }
 
     namespace desktop {
         using is_vertical_layout_preferred = std::false_type;
+
+        constexpr bool is_mobile() {
+            return false;
+        }
     }
 
     namespace os_windows {
@@ -50,6 +58,7 @@ namespace aui::platform {
         static const char* name() {
             return "windows";
         }
+
     }
     namespace os_unix {
         using namespace desktop;

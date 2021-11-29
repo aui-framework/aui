@@ -167,6 +167,7 @@ public:
      * @return an instance of IPrerenderedString
      */
     static _<IRenderer::IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, AFontStyle& fs) {
+        assert(("empty string could not be prerendered" && !text.empty()));
         return ourRenderer->prerenderString(position, text, fs);
     }
 

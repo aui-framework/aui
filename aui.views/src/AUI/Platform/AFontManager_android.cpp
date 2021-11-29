@@ -31,7 +31,7 @@
 
 AFontManager::AFontManager():
     mFreeType(_new<FreeType>()),
-    mDefault(get(":uni/font/Roboto.ttf"))
+    mDefaultFont(loadFont(":uni/font/Roboto.ttf"))
 {
 
 }

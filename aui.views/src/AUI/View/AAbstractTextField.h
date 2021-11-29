@@ -69,7 +69,11 @@ public:
         mIsPasswordTextField = isPasswordMode;
     }
 
-    bool handlesNonMouseNavigation() override;
+	bool isPasswordMode() const {
+		return mIsPasswordTextField;
+	}
+
+	bool handlesNonMouseNavigation() override;
     void onFocusAcquired() override;
 
     AString getText() const override;
