@@ -24,7 +24,7 @@
 //
 
 
-#ifdef __ANDROID__
+#if AUI_PLATFORM_ANDROID
 
 #include "AFontManager.h"
 #include <AUI/Render/FreeType.h>

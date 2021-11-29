@@ -26,7 +26,7 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Common/AException.h"
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 #include <windows.h>
 #else
 #include <dlfcn.h>

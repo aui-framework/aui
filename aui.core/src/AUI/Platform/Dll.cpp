@@ -23,7 +23,7 @@
 #include "Dll.h"
 #include "AUI/Common/AString.h"
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 #else
 #include <unistd.h>
 #include <AUI/IO/APath.h>
@@ -51,14 +51,14 @@ _<Dll> Dll::load(const AString& path)
     }
     auto fullname = "lib" + path + "." + getDllExtension();
 #endif
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 	auto lib = LoadLibrary(fullname.c_str());
 	if (!lib)
 	{
 		throw DllLoadException("Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));
 	}
 	return aui::ptr::manage(new Dll(lib));
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
 	auto name = ("lib" + fullname).toStdString();
 	auto lib = dlopen(name.c_str(), RTLD_LAZY);
 	if (!lib)
@@ -115,7 +115,7 @@ _<Dll> Dll::load(const AString& path)
 
 AString Dll::getDllExtension()
 {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 	return "dll";
 #else
 	return "so";
@@ -124,7 +124,7 @@ AString Dll::getDllExtension()
 
 void(*Dll::getProcAddressRawPtr(const AString& name) const noexcept)()
 {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 	auto r = reinterpret_cast<void(*)()>(
 		GetProcAddress(mHandle, name.toStdString().c_str()));
 #else

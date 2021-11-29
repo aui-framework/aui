@@ -23,7 +23,7 @@
 #include "AUI/Common/AString.h"
 #include "AUI/IO/APath.h"
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 #include <Windows.h>
 void Platform::playSystemSound(Sound s)
 {
@@ -51,7 +51,7 @@ float Platform::getDpiRatio()
 }
 #else
 
-#if defined(__ANDROID__)
+#if AUI_PLATFORM_ANDROID
 #include <AUI/Platform/OSAndroid.h>
 #else
 
@@ -70,7 +70,7 @@ void Platform::playSystemSound(Sound s)
 }
 
 #ifdef __linux
-#ifndef __ANDROID__
+#if !(AUI_PLATFORM_ANDROID)
 extern Display* gDisplay;
 void ensureXLibInitialized();
 #endif
@@ -78,7 +78,7 @@ void ensureXLibInitialized();
 
 float Platform::getDpiRatio()
 {
-#ifdef __ANDROID__
+#if AUI_PLATFORM_ANDROID
     return AAndroid::getDpiRatio();
 #else
     ensureXLibInitialized();

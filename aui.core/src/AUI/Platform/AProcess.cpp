@@ -25,7 +25,7 @@
 
 #include "AProcess.h"
 
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
 #include <windows.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Logging/ALogger.h>

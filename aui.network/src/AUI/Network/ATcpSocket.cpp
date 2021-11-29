@@ -24,7 +24,7 @@
 
 #include "Exceptions.h"
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 #include <ws2tcpip.h>
 #else
 

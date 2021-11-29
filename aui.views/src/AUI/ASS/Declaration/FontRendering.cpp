@@ -27,7 +27,7 @@
 
 void ass::decl::Declaration<FontRendering>::applyFor(AView* view){
     view->getFontStyle().fontRendering = mInfo;
-#ifdef __ANDROID__
+#if AUI_PLATFORM_ANDROID
     if (view->getFontStyle().fontRendering == FontRendering::SUBPIXEL) {
         view->getFontStyle().fontRendering = FontRendering::ANTIALIASING;
     }

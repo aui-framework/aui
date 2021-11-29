@@ -29,7 +29,7 @@
 #include "AUI/Thread/AThread.h"
 
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 #include <ws2tcpip.h>
 #include <windows.h>
 #include <AUI/Logging/ALogger.h>
@@ -68,7 +68,7 @@ void aui_wsa_init()
 
 void AAbstractSocket::init()
 {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 	aui_wsa_init();
 	if ((mHandle = createSocket()) == INVALID_SOCKET) {
 		throw IOException(
@@ -90,7 +90,7 @@ void AAbstractSocket::init()
 
 AString AAbstractSocket::getErrorString()
 {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 	int error = WSAGetLastError();
 	wchar_t* str;
 	FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, nullptr, static_cast<DWORD>(error), 0,
@@ -116,7 +116,7 @@ AString AAbstractSocket::getErrorString()
 void AAbstractSocket::handleError(const AString& message, int code)
 {
 	AString msg = message + ": " + getErrorString();
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 	switch (WSAGetLastError()) {
 	case WSAEINTR:
 		throw AThread::AInterrupted();
@@ -171,7 +171,7 @@ AAbstractSocket::~AAbstractSocket()
 void AAbstractSocket::close()
 {
 	if (mHandle) {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 		closesocket(mHandle);
 #else
 		shutdown(mHandle, 2);

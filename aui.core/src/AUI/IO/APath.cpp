@@ -127,12 +127,12 @@ bool APath::isDirectoryExists() const {
 }
 
 const APath& APath::removeFile() const {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
     if (::_wremove(c_str()) != 0) {
 #else
     if (::remove(toStdString().c_str()) != 0) {
 #endif
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
         if (RemoveDirectory(c_str()))
             return *this;
 #endif
@@ -283,7 +283,7 @@ size_t APath::fileSize() const {
     return stat().st_size;
 }
 
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
 struct _stat64 APath::stat() const {
     struct _stat64 s = {0};
     _wstat64(c_str(), &s);
@@ -302,7 +302,7 @@ void APath::copy(const APath& source, const APath& destination) {
     _new<FileOutputStream>(destination) << _new<FileInputStream>(source);
 }
 
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
 #include <shlobj.h>
 
 APath APath::getDefaultPath(APath::DefaultPath path) {
@@ -405,7 +405,7 @@ AVector<APath> APath::find(const AString& filename, const AVector<APath>& locati
 }
 
 time_t APath::fileModifyTime() const {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
     return stat().st_mtime;
 #else
     return stat().st_mtim.tv_sec;

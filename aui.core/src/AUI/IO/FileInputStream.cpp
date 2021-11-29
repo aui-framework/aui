@@ -26,7 +26,7 @@
 
 FileInputStream::FileInputStream(const AString& path)
 {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
     // КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
     _wfopen_s(&mFile, path.c_str(), L"rb");
 #else

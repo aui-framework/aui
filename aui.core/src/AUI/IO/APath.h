@@ -108,7 +108,7 @@ private:
     void removeBackSlashes();
 
 
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
     struct _stat64 stat() const;
 #else
     struct stat stat() const;

@@ -39,7 +39,7 @@ public:
 		if (name.endsWith(" &"))
 			name = name.mid(0, name.length() - 2);
 		return name;
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
 		AString s = __PRETTY_FUNCTION__;
 		auto b = s.find("=") + 1;
 		auto e = s.find("&", b);

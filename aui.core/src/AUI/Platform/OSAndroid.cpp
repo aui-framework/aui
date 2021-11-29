@@ -23,7 +23,7 @@
 // Created by alex2772 on 9/12/20.
 //
 
-#if defined(__ANDROID__)
+#if AUI_PLATFORM_ANDROID
 
 #include <jni.h>
 #include <AUI/Logging/ALogger.h>

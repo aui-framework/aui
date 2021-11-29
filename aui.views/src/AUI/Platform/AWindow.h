@@ -31,7 +31,7 @@
 #include "AUI/Thread/IEventLoop.h"
 #include "AUI/Util/AMetric.h"
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 #undef ui
 #include <windows.h>
 #define ui (*getThread()) * [=]()
@@ -89,11 +89,11 @@ class API_AUI_VIEWS AWindow: public ABaseWindow, public std::enable_shared_from_
     friend class AWindowManager;
     friend struct painter;
 private:
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     HMODULE mInst;
 	HDC mDC;
-#elif defined(__ANDROID__)
-#elif defined(__linux)
+#elif AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_LINUX
     /**
      * _NET_WM_SYNC_REQUEST (resize flicker fix) update request counter
      */
@@ -116,7 +116,7 @@ private:
 
     struct Context
     {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
         HGLRC hrc = 0;
 #elif defined(ANDROID)
 #else
@@ -129,16 +129,16 @@ private:
 
     AString mWindowTitle;
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
 #else
     unsigned long xGetWindowProperty(Atom property, Atom type, unsigned char** value) const;
     void xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) const;
 #endif
 
 protected:
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     HWND mHandle;
 	HICON mIcon = nullptr;
     virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -228,9 +228,9 @@ public:
     void close();
     void hide();
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     HWND getNativeHandle() { return mHandle; }
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
     jobject getNativeHandle() { return mHandle; }
 #else
     Window getNativeHandle() { return mHandle; }

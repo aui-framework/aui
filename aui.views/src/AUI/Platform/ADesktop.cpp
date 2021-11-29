@@ -28,7 +28,7 @@
 #endif
 
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 #include "ADesktop.h"
 #include "ACursor.h"

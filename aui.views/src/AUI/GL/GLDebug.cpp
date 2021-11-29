@@ -29,7 +29,7 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Traits/strings.h>
 
-#ifndef __ANDROID__
+#if !(AUI_PLATFORM_ANDROID)
 static void GLAPIENTRY debugProc(GLenum source,
                                  GLenum type,
                                  GLuint id,

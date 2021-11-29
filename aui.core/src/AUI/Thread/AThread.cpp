@@ -28,7 +28,7 @@
 
 #include "IEventLoop.h"
 
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
 #include <windows.h>
 
 
@@ -65,7 +65,7 @@ public:
     using AAbstractThread::AAbstractThread;
 
     void setThreadName(const AString& name) override {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
         setThreadNameImpl((HANDLE) GetCurrentThread(), name);
 #else
         pthread_setname_np(pthread_self(), name.toStdString().c_str());
@@ -236,7 +236,7 @@ void AThread::setThreadName(const AString& name) {
 
 void AThread::updateThreadName() {
     if (mThreadName && mThread) {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
         setThreadNameImpl((HANDLE) mThread->native_handle(), *mThreadName);
 #else
         pthread_setname_np(mThread->native_handle(), mThreadName->toStdString().c_str());

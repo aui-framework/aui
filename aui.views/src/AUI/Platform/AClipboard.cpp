@@ -27,7 +27,7 @@
 #include "AWindow.h"
 #include "AWindowManager.h"
 
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
 #include <windows.h>
 
 void AClipboard::copyToClipboard(const AString& text) {
@@ -78,7 +78,7 @@ bool AClipboard::isEmpty() {
     return true;
 }
 
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
 
 void AClipboard::copyToClipboard(const AString &text) {
     // stub

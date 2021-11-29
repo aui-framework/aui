@@ -25,7 +25,7 @@
 
 FileOutputStream::FileOutputStream(const AString& path, bool append)
 {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
 	// КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
 	_wfopen_s(&mFile, path.c_str(), append ? L"a+b" : L"wb");
 #else

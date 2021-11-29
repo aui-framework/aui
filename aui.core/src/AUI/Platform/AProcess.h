@@ -30,7 +30,7 @@
 #include <AUI/Common/AException.h>
 #include <AUI/Common/AVector.h>
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 #include <windows.h>
 #endif
 
@@ -128,7 +128,7 @@ private:
     AString mArgs;
     APath mWorkingDirectory;
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     PROCESS_INFORMATION mProcessInformation;
 #else
     pid_t mPid;

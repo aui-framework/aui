@@ -23,7 +23,7 @@
 #include <AUI/Thread/IEventLoop.h>
 
 #ifdef __linux
-#ifndef __ANDROID__
+#if !(AUI_PLATFORM_ANDROID)
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysymdef.h>
@@ -39,8 +39,8 @@ private:
     IEventLoop::Handle mHandle;
     ADeque<_<AWindow>> mWindows;
     bool mLoopRunning = false;
-#if defined(__ANDROID__)
-#elif defined(__linux)
+#if AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_LINUX
     AMutex mXNotifyLock;
     AConditionVariable mXNotifyCV;
     std::string mXClipboardText;

@@ -130,7 +130,7 @@ AString AInput::getName(Key k)
 }
 
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 #include <windows.h>
 
 AInput::Key AInput::fromNative(int key) {

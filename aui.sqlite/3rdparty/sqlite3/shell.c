@@ -30,7 +30,7 @@
 ** This file contains code to implement the "sqlite" command line
 ** utility for accessing SQLite databases.
 */
-#if (defined(_WIN32) || defined(WIN32)) && !defined(_CRT_SECURE_NO_WARNINGS)
+#if (AUI_PLATFORM_WIN || defined(WIN32)) && !defined(_CRT_SECURE_NO_WARNINGS)
 /* This needs to come before any includes for MSVC compiler */
 #define _CRT_SECURE_NO_WARNINGS
 #endif
@@ -96,13 +96,13 @@ typedef unsigned char u8;
 #include <ctype.h>
 #include <stdarg.h>
 
-#if !defined(_WIN32) && !defined(WIN32)
+#if !AUI_PLATFORM_WIN && !defined(WIN32)
 # include <signal.h>
 # if !defined(__RTP__) && !defined(_WRS_KERNEL)
 #  include <pwd.h>
 # endif
 #endif
-#if (!defined(_WIN32) && !defined(WIN32)) || defined(__MINGW32__)
+#if (!AUI_PLATFORM_WIN && !defined(WIN32)) || defined(__MINGW32__)
 # include <unistd.h>
 # include <dirent.h>
 # define GETPID getpid
@@ -154,7 +154,7 @@ typedef unsigned char u8;
 #endif
 
 
-#if defined(_WIN32) || defined(WIN32)
+#if AUI_PLATFORM_WIN || defined(WIN32)
 # if SQLITE_OS_WINRT
 #  define SQLITE_OMIT_POPEN 1
 # else
@@ -202,7 +202,7 @@ typedef unsigned char u8;
 #define IsDigit(X)  isdigit((unsigned char)X)
 #define ToLower(X)  (char)tolower((unsigned char)X)
 
-#if defined(_WIN32) || defined(WIN32)
+#if AUI_PLATFORM_WIN || defined(WIN32)
 #if SQLITE_OS_WINRT
 #include <intrin.h>
 #endif
@@ -221,7 +221,7 @@ extern LPWSTR sqlite3_win32_utf8_to_unicode(const char *zText);
 ** rendering quoted strings that contain \n characters).  The following
 ** routines take care of that.
 */
-#if (defined(_WIN32) || defined(WIN32)) && !SQLITE_OS_WINRT
+#if (AUI_PLATFORM_WIN || defined(WIN32)) && !SQLITE_OS_WINRT
 static void setBinaryMode(FILE *file, int isOutput){
   if( isOutput ) fflush(file);
   _setmode(_fileno(file), _O_BINARY);
@@ -254,7 +254,7 @@ static sqlite3_int64 timeOfDay(void){
   return t;
 }
 
-#if !defined(_WIN32) && !defined(WIN32) && !defined(__minux)
+#if !AUI_PLATFORM_WIN && !defined(WIN32) && !defined(__minux)
 #include <sys/time.h>
 #include <sys/resource.h>
 
@@ -306,7 +306,7 @@ static void endTimer(void){
 #define END_TIMER endTimer()
 #define HAS_TIMER 1
 
-#elif (defined(_WIN32) || defined(WIN32))
+#elif (AUI_PLATFORM_WIN || defined(WIN32))
 
 /* Saved resource information for the beginning of an operation */
 static HANDLE hProcess;
@@ -459,7 +459,7 @@ static char continuePrompt[20]; /* Continuation prompt. default: "   ...> " */
 ** console and if this is running on a Windows machine, translate the
 ** output from UTF-8 into MBCS.
 */
-#if defined(_WIN32) || defined(WIN32)
+#if AUI_PLATFORM_WIN || defined(WIN32)
 void utf8_printf(FILE *out, const char *zFormat, ...){
   va_list ap;
   va_start(ap, zFormat);
@@ -644,7 +644,7 @@ static int strlenChar(const char *z){
 /*
 ** Return true if zFile does not exist or if it is not an ordinary file.
 */
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 # define notNormalFile(X) 0
 #else
 static int notNormalFile(const char *zFile){
@@ -691,7 +691,7 @@ static char *local_getline(char *zLine, FILE *in){
       break;
     }
   }
-#if defined(_WIN32) || defined(WIN32)
+#if AUI_PLATFORM_WIN || defined(WIN32)
   /* For interactive input on Windows systems, translate the
   ** multi-byte characterset characters into UTF-8. */
   if( stdin_is_interactive && in==stdin ){
@@ -706,7 +706,7 @@ static char *local_getline(char *zLine, FILE *in){
       sqlite3_free(zTrans);
     }
   }
-#endif /* defined(_WIN32) || defined(WIN32) */
+#endif /* AUI_PLATFORM_WIN || defined(WIN32) */
   return zLine;
 }
 
@@ -1033,7 +1033,7 @@ static void shellAddSchemaName(
 #define SQLITE_EXTENSION_INIT1
 #define SQLITE_EXTENSION_INIT2(X) (void)(X)
 
-#if defined(_WIN32) && defined(_MSC_VER)
+#if AUI_PLATFORM_WIN && defined(_MSC_VER)
 /************************* Begin test_windirent.h ******************/
 /*
 ** 2015 November 30
@@ -1050,7 +1050,7 @@ static void shellAddSchemaName(
 ** POSIX functions on Win32 using the MSVCRT.
 */
 
-#if defined(_WIN32) && defined(_MSC_VER) && !defined(SQLITE_WINDIRENT_H)
+#if AUI_PLATFORM_WIN && defined(_MSC_VER) && !defined(SQLITE_WINDIRENT_H)
 #define SQLITE_WINDIRENT_H
 
 /*
@@ -1212,7 +1212,7 @@ extern INT closedir(LPDIR dirp);
 ** POSIX functions on Win32 using the MSVCRT.
 */
 
-#if defined(_WIN32) && defined(_MSC_VER)
+#if AUI_PLATFORM_WIN && defined(_MSC_VER)
 /* #include "test_windirent.h" */
 
 /*
@@ -2080,7 +2080,7 @@ static void sha3QueryFunc(
 }
 
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 #endif
 int sqlite3_shathree_init(
@@ -2198,7 +2198,7 @@ SQLITE_EXTENSION_INIT1
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#if !defined(_WIN32) && !defined(WIN32)
+#if !AUI_PLATFORM_WIN && !defined(WIN32)
 #  include <unistd.h>
 #  include <dirent.h>
 #  include <utime.h>
@@ -2314,7 +2314,7 @@ static void ctxErrorMsg(sqlite3_context *ctx, const char *zFmt, ...){
   va_end(ap);
 }
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 /*
 ** This function is designed to convert a Win32 FILETIME structure into the
 ** number of seconds since the Unix Epoch (1970-01-01 00:00:00 UTC).
@@ -2378,7 +2378,7 @@ static int fileStat(
   const char *zPath,
   struct stat *pStatBuf
 ){
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
   int rc = stat(zPath, pStatBuf);
   if( rc==0 ) statTimesToUtc(zPath, pStatBuf);
   return rc;
@@ -2396,7 +2396,7 @@ static int fileLinkStat(
   const char *zPath,
   struct stat *pStatBuf
 ){
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
   int rc = lstat(zPath, pStatBuf);
   if( rc==0 ) statTimesToUtc(zPath, pStatBuf);
   return rc;
@@ -2463,7 +2463,7 @@ static int writeFile(
   mode_t mode,                    /* MODE parameter passed to writefile() */
   sqlite3_int64 mtime             /* MTIME parameter (or -1 to not set time) */
 ){
-#if !defined(_WIN32) && !defined(WIN32)
+#if !AUI_PLATFORM_WIN && !defined(WIN32)
   if( S_ISLNK(mode) ){
     const char *zTo = (const char*)sqlite3_value_text(pData);
     if( symlink(zTo, zFile)<0 ) return 1;
@@ -2509,7 +2509,7 @@ static int writeFile(
   }
 
   if( mtime>=0 ){
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 #if !SQLITE_OS_WINRT
     /* Windows */
     FILETIME lastAccess;
@@ -2867,7 +2867,7 @@ static int fsdirColumn(
       mode_t m = pCur->sStat.st_mode;
       if( S_ISDIR(m) ){
         sqlite3_result_null(ctx);
-#if !defined(_WIN32) && !defined(WIN32)
+#if !AUI_PLATFORM_WIN && !defined(WIN32)
       }else if( S_ISLNK(m) ){
         char aStatic[64];
         char *aBuf = aStatic;
@@ -3086,7 +3086,7 @@ static int fsdirRegister(sqlite3 *db){
 # define fsdirRegister(x) SQLITE_OK
 #endif
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 #endif
 int sqlite3_fileio_init(
@@ -3602,7 +3602,7 @@ int sqlite3CompletionVtabInit(sqlite3 *db){
   return rc;
 }
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 #endif
 int sqlite3_completion_init(
@@ -4156,7 +4156,7 @@ static const char *apndNextSystemCall(sqlite3_vfs *pVfs, const char *zName){
 }
 
   
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 #endif
 /* 
@@ -4380,7 +4380,7 @@ static int uintCollFunc(
   return (nKey1 - i) - (nKey2 - j);
 }
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 #endif
 int sqlite3_uint_init(
@@ -4987,7 +4987,7 @@ mul_end:
   decimal_free(pB);
 }
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 #endif
 int sqlite3_decimal_init(
@@ -5279,7 +5279,7 @@ static void ieee754func_to_blob(
 }
 
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 #endif
 int sqlite3_ieee_init(
@@ -7493,7 +7493,7 @@ static int zipfileRegister(sqlite3 *db){
 # define zipfileRegister(x) SQLITE_OK
 #endif
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 #endif
 int sqlite3_zipfile_init(
@@ -7611,7 +7611,7 @@ static void sqlarUncompressFunc(
 }
 
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 #endif
 int sqlite3_sqlar_init(
@@ -10610,7 +10610,7 @@ static int sqlite3DbdataRegister(sqlite3 *db){
   return rc;
 }
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 #endif
 int sqlite3_dbdata_init(
@@ -11321,7 +11321,7 @@ static void interrupt_handler(int NotUsed){
   if( globalDb ) sqlite3_interrupt(globalDb);
 }
 
-#if (defined(_WIN32) || defined(WIN32)) && !defined(_WIN32_WCE)
+#if (AUI_PLATFORM_WIN || defined(WIN32)) && !defined(_WIN32_WCE)
 /*
 ** This routine runs for console events (e.g. Ctrl-C) on Win32
 */
@@ -14895,7 +14895,7 @@ static void output_reset(ShellState *p){
 #ifndef SQLITE_NOHAVE_SYSTEM
     if( p->doXdgOpen ){
       const char *zXdgOpenCmd =
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
       "start";
 #elif defined(__APPLE__)
       "open";
@@ -15166,7 +15166,7 @@ static int optionMatch(const char *zStr, const char *zOpt){
 */
 int shellDeleteFile(const char *zFilename){
   int rc;
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
   wchar_t *z = sqlite3_win32_utf8_to_unicode(zFilename);
   rc = _wunlink(z);
   sqlite3_free(z);
@@ -15207,7 +15207,7 @@ static void newTempFile(ShellState *p, const char *zSuffix){
     zTemp = getenv("TEMP");
     if( zTemp==0 ) zTemp = getenv("TMP");
     if( zTemp==0 ){
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
       zTemp = "\\tmp";
 #else
       zTemp = "/tmp";
@@ -17101,7 +17101,7 @@ static int do_meta_command(char *zLine, ShellState *p){
 
   if( c=='c' && strcmp(azArg[0],"cd")==0 ){
     if( nArg==2 ){
-#if defined(_WIN32) || defined(WIN32)
+#if AUI_PLATFORM_WIN || defined(WIN32)
       wchar_t *z = sqlite3_win32_utf8_to_unicode(azArg[1]);
       rc = !SetCurrentDirectoryW(z);
       sqlite3_free(z);
@@ -20057,7 +20057,7 @@ static char *find_home_dir(int clearFlag){
   }
   if( home_dir ) return home_dir;
 
-#if !defined(_WIN32) && !defined(WIN32) && !defined(_WIN32_WCE) \
+#if !AUI_PLATFORM_WIN && !defined(WIN32) && !defined(_WIN32_WCE) \
      && !defined(__RTP__) && !defined(_WRS_KERNEL)
   {
     struct passwd *pwent;
@@ -20074,7 +20074,7 @@ static char *find_home_dir(int clearFlag){
   home_dir = "/";
 #else
 
-#if defined(_WIN32) || defined(WIN32)
+#if AUI_PLATFORM_WIN || defined(WIN32)
   if (!home_dir) {
     home_dir = getenv("USERPROFILE");
   }
@@ -20084,7 +20084,7 @@ static char *find_home_dir(int clearFlag){
     home_dir = getenv("HOME");
   }
 
-#if defined(_WIN32) || defined(WIN32)
+#if AUI_PLATFORM_WIN || defined(WIN32)
   if (!home_dir) {
     char *zDrive, *zPath;
     int n;
@@ -20259,7 +20259,7 @@ static void main_init(ShellState *data) {
 /*
 ** Output text to the console in a font that attracts extra attention.
 */
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 static void printBold(const char *zText){
 #if !SQLITE_OS_WINRT
   HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
@@ -20294,7 +20294,7 @@ static char *cmdline_option_value(int argc, char **argv, int i){
 }
 
 #ifndef SQLITE_SHELL_IS_UTF8
-#  if (defined(_WIN32) || defined(WIN32)) && defined(_MSC_VER)
+#  if (AUI_PLATFORM_WIN || defined(WIN32)) && defined(_MSC_VER)
 #    define SQLITE_SHELL_IS_UTF8          (0)
 #  else
 #    define SQLITE_SHELL_IS_UTF8          (1)
@@ -20339,7 +20339,7 @@ int SQLITE_CDECL wmain(int argc, wchar_t **wargv){
           GETPID());
       fgetc(stdin);
     }else{
-#if defined(_WIN32) || defined(WIN32)
+#if AUI_PLATFORM_WIN || defined(WIN32)
 #if SQLITE_OS_WINRT
       __debugbreak();
 #else
@@ -20395,7 +20395,7 @@ int SQLITE_CDECL wmain(int argc, wchar_t **wargv){
   */
 #ifdef SIGINT
   signal(SIGINT, interrupt_handler);
-#elif (defined(_WIN32) || defined(WIN32)) && !defined(_WIN32_WCE)
+#elif (AUI_PLATFORM_WIN || defined(WIN32)) && !defined(_WIN32_WCE)
   SetConsoleCtrlHandler(ConsoleCtrlHandler, TRUE);
 #endif
 

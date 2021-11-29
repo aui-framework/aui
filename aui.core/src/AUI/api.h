@@ -25,7 +25,7 @@
     #define AUI_IMPORT
     #define AUI_EXPORT
 #else
-    #if defined(_WIN32)
+    #if AUI_PLATFORM_WIN
     #define AUI_IMPORT __declspec(dllimport)
     #define AUI_EXPORT __declspec(dllexport)
     #else

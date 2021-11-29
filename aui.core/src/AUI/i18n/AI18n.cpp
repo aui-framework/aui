@@ -97,7 +97,7 @@ void AI18n::loadFromStream(const _<IInputStream>& iis) {
     loadFromStreamInto(iis, mLangData);
 }
 
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
 
 #include <windows.h>
 

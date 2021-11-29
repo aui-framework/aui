@@ -26,7 +26,7 @@
 
 
 #ifdef __linux
-#ifndef __ANDROID__
+#if !(AUI_PLATFORM_ANDROID)
 
 #include <AUI/Platform/AFontManager.h>
 #include <X11/Xlib.h>

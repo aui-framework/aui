@@ -23,7 +23,7 @@
 // Created by alex2 on 29.12.2020.
 //
 
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
 #include <dwmapi.h>
 #endif
 
@@ -547,7 +547,7 @@ AStylesheet::AStylesheet() {
 
 
 AColor AStylesheet::getOsThemeColor() {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     auto impl = []() {
         DWORD c = 0;
         BOOL blending;

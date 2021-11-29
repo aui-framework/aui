@@ -41,7 +41,7 @@ GL::Shader::Shader() {
 
 void GL::Shader::load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs, const AString& version)
 {
-#ifdef __ANDROID__
+#if AUI_PLATFORM_ANDROID
 	AString prefix = "precision mediump float;"
 					 "precision mediump int;"
 					 ;
@@ -124,7 +124,7 @@ void GL::Shader::set(const GL::Shader::Uniform& uniform, glm::mat4 value) const 
 void GL::Shader::set(const GL::Shader::Uniform& uniform, glm::dmat4 value) const {
 	auto loc = getLocation(uniform);
 	if (loc >= 0) {
-#ifdef __ANDROID__
+#if AUI_PLATFORM_ANDROID
 		glm::mat4 fvalue = value;
 		glUniformMatrix4fv(loc, 1, GL_FALSE, &(fvalue[0][0]));
 #else
@@ -166,7 +166,7 @@ void GL::Shader::set(const GL::Shader::Uniform& uniform, int value) const {
 void GL::Shader::set(const GL::Shader::Uniform& uniform, double value) const {
     auto loc = getLocation(uniform);
     if (loc >= 0) {
-#ifdef __ANDROID__
+#if AUI_PLATFORM_ANDROID
 		glUniform1f(loc, value);
 #else
 		glUniform1d(loc, value);

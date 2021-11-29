@@ -60,7 +60,7 @@ void AEmbedAuiWrap::onMouseScroll(int mouseX, int mouseY, int scrollX, int scrol
 
 AEmbedAuiWrap::AEmbedAuiWrap()
 {
-#ifndef __ANDROID__
+#if !(AUI_PLATFORM_ANDROID)
     auto r = glewInit();
     assert(r == 0);
 #endif

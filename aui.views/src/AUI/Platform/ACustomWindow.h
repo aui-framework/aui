@@ -22,7 +22,7 @@
 #pragma once
 #include "AWindow.h"
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 class API_AUI_VIEWS ACustomWindow: public AWindow
 {

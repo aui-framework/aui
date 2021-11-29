@@ -41,7 +41,7 @@
     return main(0, nullptr); \
 } \
 AUI_EXPORT int aui_entry(const AStringVector& args)
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
 
 #include <jni.h>
 

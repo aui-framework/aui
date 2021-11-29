@@ -50,7 +50,7 @@
 
 AWindow::Context AWindow::context = {};
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 
 #include <GL/wglew.h>
 #include <AUI/Util/Cache.h>
@@ -426,7 +426,7 @@ thread_local bool painter::painting = false;
 
 
 AWindow::Context::~Context() {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     wglDeleteContext(hrc);
 #elif defined(ANDROID)
 #else
@@ -469,7 +469,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
     connect(closed, this, &AWindow::close);
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     // CREATE WINDOW
     WNDCLASSEX winClass;
 
@@ -814,7 +814,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
     checkForStencilBits();
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     RECT clientRect;
     GetClientRect(mHandle, &clientRect);
     mSize = {clientRect.right - clientRect.left, clientRect.bottom - clientRect.top};
@@ -824,7 +824,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 }
 
 AWindow::~AWindow() {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     wglMakeCurrent(mDC, nullptr);
     ReleaseDC(mHandle, mDC);
 
@@ -919,7 +919,7 @@ void AWindow::redraw() {
         doDrawWindow();
 
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
         SwapBuffers(p.mHdc);
 #elif defined(ANDROID)
 
@@ -927,7 +927,7 @@ void AWindow::redraw() {
         glXSwapBuffers(gDisplay, mHandle);
 #endif
     }
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     wglMakeCurrent(mDC, context.hrc);
 #endif
     emit redrawn();
@@ -935,7 +935,7 @@ void AWindow::redraw() {
 
 void AWindow::quit() {
     getWindowManager().mWindows.remove(shared_from_this());
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     // parent window should be activated BEFORE child is closed.
     if (mParentWindow) {
         EnableWindow(mParentWindow->mHandle, true);
@@ -953,7 +953,7 @@ void AWindow::quit() {
 
 void AWindow::setWindowStyle(WindowStyle ws) {
     mWindowStyle = ws;
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     if (!!(ws & WindowStyle::SYS)) {
         SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) & ~(WS_CAPTION | WS_THICKFRAME
             | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU) | WS_CHILD);
@@ -989,7 +989,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
                          SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
         }
     }
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
 #else
     if (!!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS))) {
         // note the struct is declared elsewhere, is here just for clarity.
@@ -1027,7 +1027,7 @@ void AWindow::close() {
 
 void AWindow::updateDpi() {
     emit dpiChanged;
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     typedef UINT(WINAPI *GetDpiForWindow_t)(_In_ HWND);
     static auto GetDpiForWindow = (GetDpiForWindow_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForWindow");
     if (GetDpiForWindow) {
@@ -1042,9 +1042,9 @@ void AWindow::updateDpi() {
 }
 
 void AWindow::restore() {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     ShowWindow(mHandle, SW_RESTORE);
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
 #else
     if (gAtoms.netWmState &&
         gAtoms.netWmStateMaximizedVert &&
@@ -1060,7 +1060,7 @@ void AWindow::restore() {
 }
 
 void AWindow::minimize() {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     ShowWindow(mHandle, SW_MINIMIZE);
 #elif defined(ANDROID)
 #else
@@ -1069,10 +1069,10 @@ void AWindow::minimize() {
 }
 
 bool AWindow::isMinimized() const {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
     return IsIconic(mHandle);
 
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
     return false;
 #else
     int result = WithdrawnState;
@@ -1095,10 +1095,10 @@ bool AWindow::isMinimized() const {
 
 
 bool AWindow::isMaximized() const {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
     return IsZoomed(mHandle);
 
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
     return true;
 #else
     Atom* states;
@@ -1132,10 +1132,10 @@ bool AWindow::isMaximized() const {
 }
 
 void AWindow::maximize() {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
     ShowWindow(mHandle, SW_MAXIMIZE);
 
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
 #else
     // https://github.com/glfw/glfw/blob/master/src/x11_window.c#L2355
 
@@ -1198,7 +1198,7 @@ void AWindow::maximize() {
 }
 
 glm::ivec2 AWindow::getWindowPosition() const {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     RECT r;
     GetWindowRect(mHandle, &r);
     return {r.left, r.top};
@@ -1257,7 +1257,7 @@ bool AWindow::shouldDisplayHoverAnimations() {
 }
 
 void AWindow::flagRedraw() {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     if (mRedrawFlag) {
         InvalidateRect(mHandle, nullptr, true);
         mRedrawFlag = false;
@@ -1286,7 +1286,7 @@ void AWindow::show() {
     AThread::current() << [&]() {
         redraw();
     };
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     UpdateWindow(mHandle);
     ShowWindow(mHandle, SW_SHOWNORMAL);
 #else
@@ -1301,8 +1301,8 @@ void AWindow::onCloseButtonClicked() {
 void AWindow::setSize(int width, int height) {
     setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
 
-#ifdef _WIN32
-#elif defined(__ANDROID__)
+#if AUI_PLATFORM_WIN
+#elif AUI_PLATFORM_ANDROID
 #else
     if (!!(mWindowStyle & WindowStyle::NO_RESIZE)) {
         // we should set min size and max size the same as current size
@@ -1343,7 +1343,7 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
     AViewContainer::setSize(width, height);
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     RECT r = {0, 0, width, height};
     AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
     MoveWindow(mHandle, x, y, r.right - r.left, r.bottom - r.top, false);
@@ -1355,7 +1355,7 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
     POINT p = {position.x, position.y};
     ScreenToClient(mHandle, &p);
     return {p.x, p.y};
@@ -1364,7 +1364,7 @@ glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
 #endif
 }
 glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
     POINT p = {position.x, position.y};
     ClientToScreen(mHandle, &p);
     return {p.x, p.y};
@@ -1378,7 +1378,7 @@ glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) 
 }
 
 void AWindow::setIcon(const AImage& image) {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
     assert(image.getFormat() & AImage::BYTE);
 
     if (mIcon) {
@@ -1429,10 +1429,10 @@ void AWindow::setIcon(const AImage& image) {
 }
 
 void AWindow::hide() {
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
     ShowWindow(mHandle, SW_HIDE);
 
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
 #else
     XUnmapWindow(gDisplay, mHandle);
 #endif
@@ -1445,8 +1445,8 @@ _<AView> AWindow::determineSharedPointer() {
 
 // HELPER FUNCTIONS FOR XLIB
 
-#if defined(__ANDROID__)
-#elif defined(__linux)
+#if AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_LINUX
 
 unsigned long AWindow::xGetWindowProperty(Atom property, Atom type, unsigned char** value) const {
     Atom actualType;
@@ -1491,7 +1491,7 @@ void AWindowManager::notifyProcessMessages() {
     AAndroid::requestRedraw();
 #else
     if (!mWindows.empty()) {
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
         auto& lastWindow = mWindows.back();
 
         // we don't need to notify MS Windows' message queue about new message if message sent from UI thread.
@@ -1534,7 +1534,7 @@ void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
 
 void AWindowManager::loop() {
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     MSG msg;
     for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
         if (GetMessage(&msg, nullptr, 0, 0) == 0) {
@@ -1558,8 +1558,8 @@ void AWindowManager::loop() {
 #endif
 }
 
-#if defined(__ANDROID__)
-#elif defined(__linux)
+#if AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_LINUX
 void AWindowManager::xProcessEvent(XEvent& ev) {
     struct NotFound {};
     auto locateWindow = [&](Window xWindow) -> _<AWindow> {

@@ -24,7 +24,7 @@
 
 #include "Exceptions.h"
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 #include <ws2tcpip.h>
 #else
 
@@ -71,7 +71,7 @@ void AUdpSocket::read(AByteBuffer& buf, AInet4Address& dst) {
 		res = recvfrom(getHandle(), buf.data(), 32768, 0, (sockaddr*)& from, (socklen_t *)&l);
 		if (res <= 0) {
 			AString msg = AString("recvfrom error ") + getErrorString();
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 			switch (WSAGetLastError()) {
 			case WSAEINTR:
 				throw AThread::AInterrupted();

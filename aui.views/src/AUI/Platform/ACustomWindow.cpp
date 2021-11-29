@@ -26,7 +26,7 @@
 
 const int AUI_TITLE_HEIGHT = 30;
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "AUI/Render/Render.h"
@@ -192,7 +192,7 @@ void ACustomWindow::setSize(int width, int height)
     MoveWindow(mHandle, pos.x, pos.y, width, height, false);
 }
 
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
 
 void ACustomWindow::handleXConfigureNotify() {
 

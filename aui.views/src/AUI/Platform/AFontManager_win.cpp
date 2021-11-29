@@ -24,7 +24,7 @@
 //
 
 
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
 #include <Windows.h>
 #include <AUI/Platform/AFontManager.h>
 #include "AUI/Render/FreeType.h"

@@ -19,7 +19,7 @@
  * =====================================================================================================================
  */
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
 #include <windows.h>
 #include <AUI/Url/AUrl.h>
 
@@ -77,7 +77,7 @@ struct initialize
         AImageLoaderRegistry::inst().registerImageLoader(_new<PngImageLoader>());
         AImageLoaderRegistry::inst().registerImageLoader(_new<JpgImageLoader>());
 
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
 #ifndef AUI_DISABLE_HIDPI
         typedef BOOL(WINAPI *SetProcessDpiAwarenessContext_t)(HANDLE);
         auto SetProcessDpiAwarenessContext = (SetProcessDpiAwarenessContext_t)GetProcAddress(GetModuleHandleA("User32.dll"), "SetProcessDpiAwarenessContext");

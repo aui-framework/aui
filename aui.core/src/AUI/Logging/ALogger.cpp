@@ -20,7 +20,7 @@
  */
 
 #include "ALogger.h"
-#ifdef __ANDROID__
+#if AUI_PLATFORM_ANDROID
 #include <android/log.h>
 #else
 #include <ctime>
@@ -39,7 +39,7 @@ ALogger& ALogger::instance()
 
 void ALogger::log(Level level, const AString& str)
 {
-#ifdef __ANDROID__
+#if AUI_PLATFORM_ANDROID
 
     int prio;
     switch (level) {
@@ -106,7 +106,7 @@ void ALogger::log(Level level, const AString& str)
 }
 
 void ALogger::setLogFile(const AString& str) {
-#ifndef __ANDROID__
+#if !(AUI_PLATFORM_ANDROID)
     try {
         if (str.empty()) {
             instance().mLogFile = nullptr;

@@ -44,7 +44,7 @@ namespace aui::platform {
         constexpr char path_variable_separator = ';';
         using namespace desktop;
 
-#ifdef _WIN32
+#if AUI_PLATFORM_WIN
 #endif
 
         constexpr bool is_windows() {
@@ -96,9 +96,9 @@ namespace aui::platform {
         }
     }
 
-#if defined(_WIN32)
+#if AUI_PLATFORM_WIN
     namespace current = os_windows;
-#elif defined(__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
     namespace current = os_android;
 #else
     namespace current = os_unix;
