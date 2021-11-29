@@ -15,7 +15,7 @@ if (OPENGL_FOUND OR ANDROID)
 		auib_import(GLEW https://github.com/Alex2772/glew-cmake
 				CMAKE_WORKING_DIR "build/cmake")
 
-		if (NOT WIN32)
+		if (NOT WIN32 AND NOT APPLE)
 			FIND_PACKAGE(PkgConfig REQUIRED)
 			PKG_CHECK_MODULES(GTK3 gtk+-3.0)
 
@@ -34,12 +34,10 @@ if (OPENGL_FOUND OR ANDROID)
 		aui_compile_assets(aui.views EXCLUDE uni/font/Roboto.ttf)
 	endif()
 
-	if(NOT ANDROID)
-		if (NOT WIN32)
-			include_directories (${GTK3_INCLUDE_DIRS})
-			link_directories (${GTK3_LIBRARY_DIRS})
-			target_link_libraries(aui.views PRIVATE gtk-3)
-		endif ()
+	if(NOT ANDROID AND NOT WIN32 AND NOT APPLE)
+		include_directories (${GTK3_INCLUDE_DIRS})
+		link_directories (${GTK3_LIBRARY_DIRS})
+		target_link_libraries(aui.views PRIVATE gtk-3)
 	endif()
 
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)

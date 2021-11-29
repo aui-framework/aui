@@ -299,7 +299,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #undef GET_Y_LPARAM
 #undef POS
 }
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
 
 #include <AUI/Platform/OSAndroid.h>
 
@@ -321,6 +321,8 @@ public:
         painting = false;
     }
 };
+
+#elif AUI_PLATFORM_APPLE
 #else
 
 #include <X11/extensions/sync.h>
@@ -422,13 +424,16 @@ public:
 #include <AUI/Util/ALayoutInflater.h>
 #include <AUI/Render/OpenGLRenderer.h>
 
+
+#if !(AUI_PLATFORM_APPLE)
 thread_local bool painter::painting = false;
+#endif
 
 
 AWindow::Context::~Context() {
 #if AUI_PLATFORM_WIN
     wglDeleteContext(hrc);
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
 #else
     //glXDestroyContext(gDisplay, context);
 #endif
@@ -632,11 +637,14 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
     wglMakeCurrent(mDC, context.hrc);
 
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
     ALogger::info((const char*) glGetString(GL_VERSION));
     ALogger::info((const char*) glGetString(GL_VENDOR));
     ALogger::info((const char*) glGetString(GL_RENDERER));
     ALogger::info((const char*) glGetString(GL_EXTENSIONS));
+
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
 #else
     do_once {
         if (!XSupportsLocale() || XSetLocaleModifiers("@im=none") == NULL) {
@@ -830,8 +838,11 @@ AWindow::~AWindow() {
 
     DestroyWindow(mHandle);
     UnregisterClass(mWindowClass.c_str(), mInst);
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
     // TODO close
+
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
 #else
     XDestroyWindow(gDisplay, mHandle);
 #endif
@@ -861,7 +872,11 @@ bool AWindow::isRedrawWillBeEfficient() {
     return 8ms < delta;
 }
 bool AWindow::isRenderingContextAcquired() {
+#if AUI_PLATFORM_APPLE
+    return true;
+#else
     return painter::painting;
+#endif
 }
 void AWindow::redraw() {
     if (mUpdateLayoutFlag) {
@@ -886,7 +901,9 @@ void AWindow::redraw() {
             _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         }
 
+#if !(AUI_PLATFORM_APPLE)
         painter p(mHandle);
+#endif
         GL::State::activeTexture(0);
         GL::State::bindTexture(GL_TEXTURE_2D, 0);
         GL::State::bindVertexArray(0);
@@ -897,7 +914,7 @@ void AWindow::redraw() {
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
-#ifndef ANDROID
+#if !(AUI_PLATFORM_ANDROID)
         glEnable(GL_MULTISAMPLE);
 #else
         glClearColor(1.f, 0, 0, 1);
@@ -921,8 +938,10 @@ void AWindow::redraw() {
 
 #if AUI_PLATFORM_WIN
         SwapBuffers(p.mHdc);
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
 
+#elif AUI_PLATFORM_APPLE
+        // TODO apple
 #else
         glXSwapBuffers(gDisplay, mHandle);
 #endif
@@ -941,7 +960,9 @@ void AWindow::quit() {
         EnableWindow(mParentWindow->mHandle, true);
     }
     ShowWindow(mHandle, SW_HIDE);
-#elif (__ANDROID__)
+#elif AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
 #else
     XUnmapWindow(gDisplay, mHandle);
 #endif
@@ -990,6 +1011,9 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         }
     }
 #elif AUI_PLATFORM_ANDROID
+
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
 #else
     if (!!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS))) {
         // note the struct is declared elsewhere, is here just for clarity.
@@ -1045,6 +1069,8 @@ void AWindow::restore() {
 #if AUI_PLATFORM_WIN
     ShowWindow(mHandle, SW_RESTORE);
 #elif AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
 #else
     if (gAtoms.netWmState &&
         gAtoms.netWmStateMaximizedVert &&
@@ -1062,7 +1088,10 @@ void AWindow::restore() {
 void AWindow::minimize() {
 #if AUI_PLATFORM_WIN
     ShowWindow(mHandle, SW_MINIMIZE);
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
+
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
 #else
     XIconifyWindow(gDisplay, mHandle, 0);
 #endif
@@ -1073,6 +1102,10 @@ bool AWindow::isMinimized() const {
     return IsIconic(mHandle);
 
 #elif AUI_PLATFORM_ANDROID
+    return false;
+
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
     return false;
 #else
     int result = WithdrawnState;
@@ -1100,6 +1133,9 @@ bool AWindow::isMaximized() const {
 
 #elif AUI_PLATFORM_ANDROID
     return true;
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
+    return false;
 #else
     Atom* states;
     unsigned long i;
@@ -1136,6 +1172,8 @@ void AWindow::maximize() {
     ShowWindow(mHandle, SW_MAXIMIZE);
 
 #elif AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
 #else
     // https://github.com/glfw/glfw/blob/master/src/x11_window.c#L2355
 
@@ -1203,7 +1241,10 @@ glm::ivec2 AWindow::getWindowPosition() const {
     GetWindowRect(mHandle, &r);
     return {r.left, r.top};
 
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
+    return {0, 0};
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
     return {0, 0};
 #else
     int x, y;
@@ -1262,7 +1303,7 @@ void AWindow::flagRedraw() {
         InvalidateRect(mHandle, nullptr, true);
         mRedrawFlag = false;
     }
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
     AAndroid::requestRedraw();
 #else
     mRedrawFlag = true;
@@ -1303,6 +1344,8 @@ void AWindow::setSize(int width, int height) {
 
 #if AUI_PLATFORM_WIN
 #elif AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
 #else
     if (!!(mWindowStyle & WindowStyle::NO_RESIZE)) {
         // we should set min size and max size the same as current size
@@ -1347,7 +1390,9 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     RECT r = {0, 0, width, height};
     AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
     MoveWindow(mHandle, x, y, r.right - r.left, r.bottom - r.top, false);
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
 #else
     XMoveWindow(gDisplay, mHandle, x, y);
     XResizeWindow(gDisplay, mHandle, width, height);
@@ -1433,6 +1478,8 @@ void AWindow::hide() {
     ShowWindow(mHandle, SW_HIDE);
 
 #elif AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
 #else
     XUnmapWindow(gDisplay, mHandle);
 #endif
@@ -1487,7 +1534,7 @@ AWindowManager::~AWindowManager() {
 }
 
 void AWindowManager::notifyProcessMessages() {
-#if defined(ANDROID)
+#if AUI_PLATFORM_ANDROID
     AAndroid::requestRedraw();
 #else
     if (!mWindows.empty()) {
@@ -1498,6 +1545,8 @@ void AWindowManager::notifyProcessMessages() {
         if (lastWindow->getThread() != AThread::current()) {
             PostMessage(lastWindow->mHandle, WM_USER, 0, 0);
         }
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
 #else
     mXNotifyCV.notify_all();
 #endif
@@ -1545,11 +1594,13 @@ void AWindowManager::loop() {
         AThread::current()->processMessages();
     }
 
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
     AThread::current()->processMessages();
     if (!mWindows.empty()) {
         mWindows.back()->redraw();
     }
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
 #else
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {

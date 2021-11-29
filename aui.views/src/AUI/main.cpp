@@ -52,7 +52,9 @@ BOOL WINAPI DllMain(
 	return TRUE;  // Successful DLL_PROCESS_ATTACH.
 }
 
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
+
+#elif AUI_PLATFORM_APPLE
 #else
 #include <gtk/gtk.h>
 #include <AUI/Logging/ALogger.h>

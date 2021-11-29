@@ -67,6 +67,8 @@ public:
     void setThreadName(const AString& name) override {
 #if AUI_PLATFORM_WIN
         setThreadNameImpl((HANDLE) GetCurrentThread(), name);
+#elif AUI_PLATFORM_APPLE
+        pthread_setname_np(name.toStdString().c_str());
 #else
         pthread_setname_np(pthread_self(), name.toStdString().c_str());
 #endif
@@ -238,6 +240,8 @@ void AThread::updateThreadName() {
     if (mThreadName && mThread) {
 #if AUI_PLATFORM_WIN
         setThreadNameImpl((HANDLE) mThread->native_handle(), *mThreadName);
+#elif AUI_PLATFORM_APPLE
+        pthread_setname_np(mThreadName->toStdString().c_str());
 #else
         pthread_setname_np(mThread->native_handle(), mThreadName->toStdString().c_str());
 #endif

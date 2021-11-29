@@ -180,7 +180,7 @@ void ADesktop::openUrl(const AString& url) {
 }
 
 
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
 
 glm::ivec2 ADesktop::getMousePosition() {
     return {};
@@ -197,6 +197,29 @@ _<AFuture<APath>> ADesktop::browseForFolder(const APath &startingLocation) {
 _<AFuture<APath>>
 ADesktop::browseForFile(const APath &startingLocation, const AVector <FileExtension> &extensions) {
     return nullptr;
+}
+
+void ADesktop::openUrl(const AString &url) {
+
+}
+
+#elif AUI_PLATFORM_APPLE
+
+// TODO apple
+glm::ivec2 ADesktop::getMousePosition() {
+    return glm::ivec2();
+}
+
+void ADesktop::setMousePos(const glm::ivec2 &pos) {
+
+}
+
+_<AFuture<APath>> ADesktop::browseForFolder(const APath &startingLocation) {
+    return _<AFuture<APath>>();
+}
+
+_<AFuture<APath>> ADesktop::browseForFile(const APath &startingLocation, const AVector<FileExtension> &extensions) {
+    return _<AFuture<APath>>();
 }
 
 void ADesktop::openUrl(const AString &url) {

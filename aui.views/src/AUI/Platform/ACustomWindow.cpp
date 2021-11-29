@@ -210,6 +210,39 @@ void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     AViewContainer::onMouseReleased(pos, button);
 }
 
+#elif AUI_PLATFORM_APPLE
+
+ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
+        AWindow(name, width, height) {
+
+
+    setWindowStyle(WindowStyle::NO_DECORATORS);
+}
+void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+    if (pos.y < AUI_TITLE_HEIGHT && button == AInput::LButton) {
+        if (isCaptionAt(pos)) {
+            // TODO apple
+
+            mDragging = true;
+            mDragPos = pos;
+            emit dragBegin(pos);
+        }
+    }
+    AViewContainer::onMousePressed(pos, button);
+}
+
+
+void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
+    AViewContainer::onMouseReleased(pos, button);
+}
+void ACustomWindow::handleXConfigureNotify() {
+    emit dragEnd();
+
+    // x11 does not send release button event
+    AViewContainer::onMouseReleased(mDragPos, AInput::LButton);
+}
+
+
 #else
 
 extern Display* gDisplay;

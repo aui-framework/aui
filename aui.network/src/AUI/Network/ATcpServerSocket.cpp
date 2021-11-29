@@ -50,8 +50,7 @@ _<ATcpSocket> ATcpServerSocket::accept()
 	socklen_t addrlen = sizeof(addr);
 	int s = ::accept(getHandle(), reinterpret_cast<sockaddr*>(&addr), &addrlen);
 
-	auto socket = new ATcpSocket(s, addr);
-	return _<ATcpSocket>(socket);
+	return aui::ptr::manage(new ATcpSocket(s, addr));
 }
 
 ATcpServerSocket::ATcpServerSocket(uint16_t serverPort)

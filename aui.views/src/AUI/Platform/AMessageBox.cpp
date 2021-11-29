@@ -19,6 +19,8 @@
  * =====================================================================================================================
  */
 
+#include "AMessageBox.h"
+
 #if AUI_PLATFORM_WIN
 #include <windows.h>
 #include "AMessageBox.h"
@@ -71,7 +73,7 @@ AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& titl
     }
     return ResultButton::INVALID;
 }
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
 
 #include <AUI/Platform/OSAndroid.h>
 #include "AMessageBox.h"
@@ -92,6 +94,14 @@ AMessageBox::ResultButton show(AWindow* parent, const AString& title, const AStr
 
     return AMessageBox::ResultButton::INVALID;
 }
+
+#elif AUI_PLATFORM_APPLE
+
+AMessageBox::ResultButton AMessageBox::show(AWindow *parent, const AString &title, const AString &message, Icon icon, Button b) {
+    // TODO apple
+    return AMessageBox::ResultButton::INVALID;
+}
+
 #else
 #include <gtk/gtk.h>
 #include <AUI/Util/kAUI.h>

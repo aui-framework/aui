@@ -152,7 +152,7 @@ function(aui_common AUI_MODULE_NAME)
         #add_custom_command(TARGET ${AUI_MODULE_NAME} POST_BUILD COMMAND ${CMAKE_STRIP} ${PROJECT_NAME})
     endif()
 
-    if ((UNIX OR MINGW) AND NOT ANDROID)
+    if ((UNIX OR MINGW) AND NOT ANDROID AND NOT APPLE)
         target_link_libraries(${AUI_MODULE_NAME} PRIVATE -static-libgcc -static-libstdc++)
     endif()
 

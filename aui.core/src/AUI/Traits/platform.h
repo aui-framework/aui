@@ -54,6 +54,9 @@ namespace aui::platform {
         constexpr bool is_unix() {
             return false;
         }
+        constexpr bool is_apple() {
+            return false;
+        }
 
         static const char* name() {
             return "windows";
@@ -76,6 +79,29 @@ namespace aui::platform {
         constexpr bool is_unix() {
             return true;
         }
+        constexpr bool is_apple() {
+            return false;
+        }
+    }
+    namespace os_x {
+        using namespace desktop;
+
+        constexpr char path_variable_separator = ':';
+
+        static const char* name() {
+            return "osx";
+        }
+
+        constexpr bool is_windows() {
+            return false;
+        }
+
+        constexpr bool is_unix() {
+            return true;
+        }
+        constexpr bool is_apple() {
+            return true;
+        }
     }
     namespace os_android {
         using namespace mobile;
@@ -94,12 +120,18 @@ namespace aui::platform {
         constexpr bool is_unix() {
             return true;
         }
+
+        constexpr bool is_apple() {
+            return false;
+        }
     }
 
 #if AUI_PLATFORM_WIN
     namespace current = os_windows;
 #elif AUI_PLATFORM_ANDROID
     namespace current = os_android;
+#elif defined(__APPLE__)
+    namespace current = os_x;
 #else
     namespace current = os_unix;
 #endif

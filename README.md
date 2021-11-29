@@ -58,10 +58,10 @@ auib_import(
 
 | Feature or module | Windows Vista/7/8/8.1/10 | Windows XP | Linux | Android | MacOS | iOS |
 |-------------------|--------------------------|------------|-------|---------|-------|-----|
-| AUI.Core          |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| AUI.Crypt         |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.curl          |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| aui.data          |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| AUI.Core          |             #            |     #      |   #   |    #    |   #   |  ?  |
+| AUI.Crypt         |             #            |     #      |   #   |    #    |   #   |  ?  |
+| aui.curl          |             #            |     #      |   #   |    #    |   #   |  ?  |
+| aui.data          |             #            |     #      |   #   |    #    |   #   |  ?  |
 | aui.designer      |             ?            |     ?      |   ?   |    -    |   ?   |  -  |
 | aui.image         |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | aui.json          |             #            |     #      |   #   |    #    |   ?   |  ?  |
@@ -70,8 +70,8 @@ auib_import(
 | aui.sqlite        |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | aui.svg           |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | aui.toolbox       |             #            |     #      |   #   |    -    |   ?   |  -  |
-| aui.views         |             #            |     ?      |   +   |    +    |   ?   |  ?  |
-| aui.xml           |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| aui.views         |             #            |     ?      |   +   |    +    |   +   |  ?  |
+| aui.xml           |             #            |     #      |   #   |    #    |   #   |  ?  |
 | Assets            |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | Filesystem        |             #            |     #      |   #   |    #    |   ?   |  -  |
 | Process creation  |             #            |     #      |   #   |    -    |   ?   |  -  |

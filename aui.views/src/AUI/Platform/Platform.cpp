@@ -22,6 +22,7 @@
 #include "Platform.h"
 #include "AUI/Common/AString.h"
 #include "AUI/IO/APath.h"
+#include <AUI/Util/kAUI.h>
 
 #if AUI_PLATFORM_WIN
 #include <Windows.h>
@@ -53,13 +54,13 @@ float Platform::getDpiRatio()
 
 #if AUI_PLATFORM_ANDROID
 #include <AUI/Platform/OSAndroid.h>
+
+#elif AUI_PLATFORM_APPLE
 #else
 
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xresource.h>
-#include <AUI/Util/kAUI.h>
-
 
 #endif
 
@@ -80,6 +81,10 @@ float Platform::getDpiRatio()
 {
 #if AUI_PLATFORM_ANDROID
     return AAndroid::getDpiRatio();
+
+#elif AUI_PLATFORM_APPLE
+    // TODO apple
+    return 1.f;
 #else
     ensureXLibInitialized();
     char *resourceString = XResourceManagerString(gDisplay);

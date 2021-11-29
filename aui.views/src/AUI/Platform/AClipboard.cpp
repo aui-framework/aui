@@ -94,6 +94,21 @@ AString AClipboard::pasteFromClipboard() {
     return AString();
 }
 
+#elif AUI_PLATFORM_APPLE
+
+// TODO apple
+void AClipboard::copyToClipboard(const AString &text) {
+
+}
+
+bool AClipboard::isEmpty() {
+    return false;
+}
+
+AString AClipboard::pasteFromClipboard() {
+    return AString();
+}
+
 #else
 
 bool AClipboard::isEmpty() {

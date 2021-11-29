@@ -365,7 +365,7 @@ bool AInput::isKeyDown(Key k) {
 	return GetAsyncKeyState(toNative(k)) & 32768;
 }
 
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
 
 AInput::Key AInput::fromNative(int k) {
     return Unknown;
@@ -374,6 +374,21 @@ int AInput::toNative(Key key) {
     return 0;
 }
 bool AInput::isKeyDown(Key k) {
+    return false;
+}
+
+#elif AUI_PLATFORM_APPLE
+
+// TODO apple
+AInput::Key AInput::fromNative(int w) {
+    return AInput::B;
+}
+
+int AInput::toNative(AInput::Key w) {
+    return 0;
+}
+
+bool AInput::isKeyDown(AInput::Key k) {
     return false;
 }
 

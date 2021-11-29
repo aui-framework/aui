@@ -21,9 +21,12 @@
 
 #pragma once
 extern "C" {
-#ifdef ANDROID
+#if AUI_PLATFORM_ANDROID
 #include <GLES3/gl3.h>
 #include <EGL/egl.h>
+#elif AUI_PLATFORM_APPLE
+#include <GL/glew.h>
+#include <OpenGL/OpenGL.h>
 #else
 #include <GL/glew.h>
 #include <GL/gl.h>

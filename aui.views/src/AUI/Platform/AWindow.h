@@ -35,8 +35,9 @@
 #undef ui
 #include <windows.h>
 #define ui (*getThread()) * [=]()
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
 #include <jni.h>
+#elif AUI_PLATFORM_APPLE
 #else
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -118,7 +119,8 @@ private:
     {
 #if AUI_PLATFORM_WIN
         HGLRC hrc = 0;
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_APPLE
 #else
         GLXContext context;
 #endif
@@ -132,6 +134,7 @@ private:
 #if AUI_PLATFORM_WIN
     friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #elif AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_APPLE
 #else
     unsigned long xGetWindowProperty(Atom property, Atom type, unsigned char** value) const;
     void xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) const;
@@ -142,8 +145,9 @@ protected:
     HWND mHandle;
 	HICON mIcon = nullptr;
     virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-#elif defined(ANDROID)
+#elif AUI_PLATFORM_ANDROID
     jobject mHandle = nullptr;
+#elif AUI_PLATFORM_APPLE
 #else
     Window mHandle;
     XIC mIC;
@@ -232,6 +236,7 @@ public:
     HWND getNativeHandle() { return mHandle; }
 #elif AUI_PLATFORM_ANDROID
     jobject getNativeHandle() { return mHandle; }
+#elif AUI_PLATFORM_APPLE
 #else
     Window getNativeHandle() { return mHandle; }
 #endif
