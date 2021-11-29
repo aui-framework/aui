@@ -313,8 +313,18 @@ macro(auib_import AUI_MODULE_NAME URL)
         file(GLOB_RECURSE DEP_RUNTIME LIST_DIRECTORIES false ${DEP_INSTALL_PREFIX}/*.${LIB_EXT})
 
         if (WIN32)
+            # sometimes it's empty
+            if (NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+                set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/bin")
+            endif()
+
             set(DESTINATION_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
         else()
+            # sometimes it's empty
+            if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+                set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+            endif()
+
             set(DESTINATION_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
         endif()
 
