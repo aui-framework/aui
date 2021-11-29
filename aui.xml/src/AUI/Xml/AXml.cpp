@@ -248,14 +248,10 @@ void AXml::read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor
 				break;
 
 			default:
-                if (isalnum(c)) {
-                    p.reverseByte();
-					visitor->visitTextEntity(p.readStringUntilUnescaped('<'));
-					if (p.isEof()) return;
-                    p.reverseByte();
-                } else {
-                    throwUnexceptedCharacter();
-                }
+				p.reverseByte();
+				visitor->visitTextEntity(p.readStringUntilUnescaped('<'));
+				if (p.isEof()) return;
+				p.reverseByte();
 			}
 		}
 	}

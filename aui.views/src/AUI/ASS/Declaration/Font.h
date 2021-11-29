@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,54 +19,32 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 01.01.2021.
+//
+
 #pragma once
 
-#include <AUI/Render/FreeType.h>
-#include "AUI/Common/SharedPtr.h"
-#include "AUI/Util/Manager.h"
-#include "AUI/Font/AFontFamily.h"
-#include "AUI/Font/AFont.h"
+#include <AUI/Util/AMetric.h>
+#include "IDeclaration.h"
 
-class API_AUI_VIEWS AFontManager {
-public:
-	AFontManager();
-    AFontManager(const AFontManager&) = delete;
-    virtual ~AFontManager();
+namespace ass {
+    struct Font {
+        AUrl url;
+    };
 
-    static AFontManager& inst();
+    namespace decl {
+        template<>
+        struct API_AUI_VIEWS Declaration<Font>: IDeclarationBase {
+        private:
+            Font mInfo;
 
-	[[nodiscard]] _<AFontFamily> getDefaultFamily() {
-        return mDefaultFamily;
+        public:
+            Declaration(const Font& info) : mInfo(info) {
+
+            }
+
+            void applyFor(AView* view) override;
+        };
     }
-	[[nodiscard]] _<AFont> getDefaultFont() {
-        return mDefaultFont;
-    }
-
-    [[nodiscard]]
-    _<AFontFamily> getFontFamily(const AString& name) const {
-        if (auto c = mFamilies.contains(name)) {
-            return c->second;
-        }
-        return nullptr;
-    }
-    [[nodiscard]]
-    _<AFont> getFont(const AUrl& url) {
-        if (auto c = mLoadedFont.contains(url)) {
-            return c->second;
-        }
-        return mLoadedFont[url] = loadFont(url);
-    }
-private:
-    AMap<AUrl, _<AFont>> mLoadedFont;
-    AMap<AString, _<AFontFamily>> mFamilies;
-    _<FreeType> mFreeType;
-    _<AFontFamily> mDefaultFamily;
-    _<AFont> mDefaultFont;
-
-	AString getPathToFont(const AString& font);
-
-    _<AFont> loadFont(const AUrl& url);
-
-
-	friend class AFont;
-};
+}

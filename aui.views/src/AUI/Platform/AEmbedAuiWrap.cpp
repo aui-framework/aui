@@ -29,6 +29,7 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <AUI/GL/State.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Render/OpenGLRenderer.h>
 
 class AEmbedAuiWrap::EmbedWindow: public ABaseWindow {
     friend class AEmbedAuiWrap;
@@ -63,6 +64,7 @@ AEmbedAuiWrap::AEmbedAuiWrap()
     auto r = glewInit();
     assert(r == 0);
 #endif
+    Render::setRenderer(std::make_unique<OpenGLRenderer>());
     mContainer = _new<EmbedWindow>();
     mContainer->setPosition({ 0, 0 });
 }

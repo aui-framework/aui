@@ -137,7 +137,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                         IDrawable::Params p;
                         p.offset = {x, y};
                         p.cropUvTopLeft = uv1;
-                        p.cropUvBottomRight = uv1;
+                        p.cropUvBottomRight = uv2;
                         p.size = {width, height};
                         p.imageRendering = imageRendering;
                         drawable->draw(p);

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,59 +14,21 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
-#pragma once
+//
+// Created by alex2 on 01.01.2021.
+//
 
-#include <AUI/Render/FreeType.h>
-#include "AUI/Common/SharedPtr.h"
-#include "AUI/Util/Manager.h"
-#include "AUI/Font/AFontFamily.h"
-#include "AUI/Font/AFont.h"
+#include "Font.h"
+#include <AUI/Platform/AFontManager.h>
 
-class API_AUI_VIEWS AFontManager {
-public:
-	AFontManager();
-    AFontManager(const AFontManager&) = delete;
-    virtual ~AFontManager();
-
-    static AFontManager& inst();
-
-	[[nodiscard]] _<AFontFamily> getDefaultFamily() {
-        return mDefaultFamily;
-    }
-	[[nodiscard]] _<AFont> getDefaultFont() {
-        return mDefaultFont;
-    }
-
-    [[nodiscard]]
-    _<AFontFamily> getFontFamily(const AString& name) const {
-        if (auto c = mFamilies.contains(name)) {
-            return c->second;
-        }
-        return nullptr;
-    }
-    [[nodiscard]]
-    _<AFont> getFont(const AUrl& url) {
-        if (auto c = mLoadedFont.contains(url)) {
-            return c->second;
-        }
-        return mLoadedFont[url] = loadFont(url);
-    }
-private:
-    AMap<AUrl, _<AFont>> mLoadedFont;
-    AMap<AString, _<AFontFamily>> mFamilies;
-    _<FreeType> mFreeType;
-    _<AFontFamily> mDefaultFamily;
-    _<AFont> mDefaultFont;
-
-	AString getPathToFont(const AString& font);
-
-    _<AFont> loadFont(const AUrl& url);
-
-
-	friend class AFont;
-};
+void ass::decl::Declaration<ass::Font>::applyFor(AView* view) {
+    auto font = AFontManager::inst().getFont(mInfo.url);
+    if (!font) font = AFontManager::inst().getDefaultFont();
+    view->getFontStyle().font = std::move(font);
+    view->invalidateFont();
+}

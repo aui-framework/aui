@@ -37,6 +37,7 @@
 #include "Declaration/Cursor.h"
 #include "Declaration/Expanding.h"
 #include "Declaration/FixedSize.h"
+#include "Declaration/Font.h"
 #include "Declaration/FontFamily.h"
 #include "Declaration/FontRendering.h"
 #include "Declaration/FontSize.h"
