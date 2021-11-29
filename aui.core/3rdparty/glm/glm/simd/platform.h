@@ -25,13 +25,13 @@
 #	define GLM_PLATFORM GLM_PLATFORM_APPLE
 #elif defined(WINCE)
 #	define GLM_PLATFORM GLM_PLATFORM_WINCE
-#elif AUI_PLATFORM_WIN
+#elif defined(_WIN32)
 #	define GLM_PLATFORM GLM_PLATFORM_WINDOWS
 #elif defined(__native_client__)
 #	define GLM_PLATFORM GLM_PLATFORM_CHROME_NACL
-#elif AUI_PLATFORM_ANDROID
+#elif defined(__ANDROID__)
 #	define GLM_PLATFORM GLM_PLATFORM_ANDROID
-#elif AUI_PLATFORM_LINUX
+#elif defined(__linux)
 #	define GLM_PLATFORM GLM_PLATFORM_LINUX
 #elif defined(__unix)
 #	define GLM_PLATFORM GLM_PLATFORM_UNIX
