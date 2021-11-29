@@ -9,6 +9,7 @@
 #include <AUI/Util/APool.h>
 #include "AUI/Font/AFontStyle.h"
 #include "ITexture.h"
+#include "ATextLayoutHelper.h"
 
 class AColor;
 class ABaseWindow;
@@ -42,8 +43,24 @@ public:
     class IMultiStringCanvas {
     public:
         virtual ~IMultiStringCanvas() = default;
+
+        /**
+         * Bake string with some position.
+         * @param position position
+         * @param text text
+         */
         virtual void addString(const glm::vec2& position, const AString& text) = 0;
+
+        /**
+         * @return instance of <code>Render::PrerenderedString</code> to draw with.
+         */
         virtual _<IRenderer::IPrerenderedString> build() = 0;
+
+        /**
+         * @return an instance of <code>IRenderer::ITextLayoutHelper</code> constructed from
+         * <code>IMultiStringCanvas</code>'s cache to efficiently map cursor position to the string index.
+         */
+        virtual ATextLayoutHelper makeTextLayoutHelper() = 0;
     };
 
 protected:

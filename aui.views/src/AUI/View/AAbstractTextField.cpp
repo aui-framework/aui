@@ -187,7 +187,10 @@ void AAbstractTextField::onCharEntered(wchar_t c) {
 
 void AAbstractTextField::prerenderStringIfNeeded() {
     if (!mPrerenderedString) {
-        mPrerenderedString = Render::prerenderString({0.f, 0.f}, getContentsPasswordWrap(), getFontStyle());
+        auto canvas = Render::newMultiStringCanvas(getFontStyle());
+        canvas->addString({0.f, 0.f}, getContentsPasswordWrap());
+        mPrerenderedString = canvas->build();
+        setTextLayoutHelper(std::move(canvas->makeTextLayoutHelper()));
     }
 }
 

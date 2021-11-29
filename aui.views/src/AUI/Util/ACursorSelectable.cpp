@@ -37,40 +37,7 @@ bool ACursorSelectable::hasSelection() const {
 }
 
 unsigned ACursorSelectable::getCursorIndexByPos(glm::ivec2 pos) {
-    if (pos.x < 0)
-        return 0;
-
-    auto text = getDisplayText();
-    if (text.empty()) {
-        return 0;
-    }
-
-    const auto& f = getMouseSelectionFont();
-
-    pos = pos - (getMouseSelectionPadding() - getMouseSelectionScroll());
-
-    auto fs = getMouseSelectionFont();
-    int row = pos.y < 0 ? 0 : pos.y / fs.getLineHeight();
-
-    // TODO STUB
-//    if (row == 0) {
-//        return f.font->indexOfX(text, pos.x, f.size, f.fontRendering);
-//    }
-
-    // oh! we should even find this row...
-    size_t targetLineIndex = 0;
-    for (size_t r = 0; r < row; ++r) {
-        auto temp = text.find('\n', targetLineIndex);
-        if (temp == AString::NPOS) {
-            // cursor gone out of selecting AView
-            break;
-        }
-        targetLineIndex = temp + 1;
-    }
-
-    // TODO STUB
-    //return targetLineIndex + f.font->indexOfX(text.mid(targetLineIndex, text.find('\n', targetLineIndex)), pos.x, f.size, f.fontRendering);
-    return 0;
+    return mTextLayoutHelper.posToIndexFixedLineHeight(pos, getMouseSelectionFont());
 }
 
 void ACursorSelectable::handleMousePressed(const glm::ivec2& pos, AInput::Key button) {

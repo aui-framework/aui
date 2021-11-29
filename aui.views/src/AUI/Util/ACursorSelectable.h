@@ -29,12 +29,14 @@
 #include <AUI/Common/AString.h>
 #include <glm/glm.hpp>
 #include <AUI/Font/AFontStyle.h>
+#include <AUI/Render/ATextLayoutHelper.h>
 #include <AUI/Platform/AInput.h>
 
 class API_AUI_VIEWS ACursorSelectable {
 private:
     int mAbsoluteBegin, mAbsoluteEnd;
     bool mIgnoreSelection = false;
+    ATextLayoutHelper mTextLayoutHelper;
 
 protected:
     unsigned mCursorIndex = 0;
@@ -58,6 +60,11 @@ protected:
     int drawSelectionPre();
 
     void drawSelectionPost();
+
+
+    void setTextLayoutHelper(ATextLayoutHelper textLayoutHelper) {
+        mTextLayoutHelper = std::move(textLayoutHelper);
+    }
 
 public:
 

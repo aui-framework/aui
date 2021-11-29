@@ -719,6 +719,24 @@ public:
                                              mFontStyle.color,
                                              mFontStyle.fontRendering);
     }
+
+    ATextLayoutHelper makeTextLayoutHelper() override {
+        ATextLayoutHelper::Symbols symbols;
+
+        ATextLayoutHelper::Line line;
+
+        size_t index = 0;
+
+        for (auto it = mVertices.begin(); it != mVertices.end(); it += 4) {
+            // TODO чё то придумать с пробелами
+            line << ATextLayoutHelper::Symbol{ it->position, index++ };
+        }
+        symbols << std::move(line);
+
+        return ATextLayoutHelper{ std::move(symbols) };
+    }
+
+    ~OpenGLMultiStringCanvas() override = default;
 };
 
 _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(const glm::vec2& position,
