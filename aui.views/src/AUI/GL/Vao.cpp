@@ -29,7 +29,7 @@
 
 
 GL::Vao::Vao() {
-	glGenVertexArrays(1, &mHandle);
+    glGenVertexArrays(1, &mHandle);
 	bind();
 }
 
