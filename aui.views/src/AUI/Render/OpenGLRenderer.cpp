@@ -517,8 +517,18 @@ public:
 
 
     void draw() override {
-        GL::State::bindVertexArray(0);
         if (mIndexBuffer.count() == 0) return;
+
+        // TODO get rid of vao
+        if (mRenderer->isVaoAvailable()) {
+            static GLuint g = [] {
+                GLuint a;
+                glGenVertexArrays(1, &a);
+                return a;
+            }();
+            GL::State::bindVertexArray(g);
+        }
+
         auto img = mEntryData->texturePacker.getImage();
         if (!img)
             return;
@@ -540,8 +550,8 @@ public:
         glEnableVertexAttribArray(0);
         glEnableVertexAttribArray(1);
 
-        glVertexAttribPointer(0, 2, GL_FLOAT, true, sizeof(OpenGLPrerenderedString::Vertex), reinterpret_cast<const void*>(0));
-        glVertexAttribPointer(1, 2, GL_FLOAT, true, sizeof(OpenGLPrerenderedString::Vertex), reinterpret_cast<const void*>(sizeof(glm::vec2)));
+        glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(OpenGLPrerenderedString::Vertex), reinterpret_cast<const void*>(0));
+        glVertexAttribPointer(1, 2, GL_FLOAT, false, sizeof(OpenGLPrerenderedString::Vertex), reinterpret_cast<const void*>(sizeof(glm::vec2)));
 
         auto finalColor = Render::getColor() * mColor;
         if (mFontRendering == FontRendering::SUBPIXEL) {
@@ -769,4 +779,8 @@ ITexture* OpenGLRenderer::createNewTexture() {
 
 _<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle style) {
     return _new<OpenGLMultiStringCanvas>(this, style);
+}
+
+bool OpenGLRenderer::isVaoAvailable() {
+    return glBindVertexArray != nullptr;
 }

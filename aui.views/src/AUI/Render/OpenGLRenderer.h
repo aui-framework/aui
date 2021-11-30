@@ -51,6 +51,7 @@ protected:
 public:
     OpenGLRenderer();
     ~OpenGLRenderer() override = default;
+    bool isVaoAvailable();
 
     void drawRect(const ABrush& brush,
                   const glm::vec2& position,

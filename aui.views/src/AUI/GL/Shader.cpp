@@ -45,6 +45,8 @@ void GL::Shader::load(const AString& vertex, const AString& fragment, const AVec
 	AString prefix = "precision mediump float;"
 					 "precision mediump int;"
 					 ;
+#elif AUI_PLATFORM_APPLE
+    AString prefix;
 #else
 	AString prefix;
 	if (version.empty()) {
@@ -76,6 +78,26 @@ uint32_t GL::Shader::load(const AString& data, uint32_t type) {
 	uint32_t shader = glCreateShader(type);
 	std::string code = data.toStdString();
 	assert(!code.empty());
+
+#if AUI_PLATFORM_APPLE
+    if (type == GL_VERTEX_SHADER) {
+
+        code =
+"#version 150\n"
+"#define attribute in\n"
+"#define varying out\n"
++ code;
+    } else {
+        code =
+"#version 150\n"
+"#define varying in\n"
+"out vec4 resultColor;\n"
+"#define gl_FragColor resultColor\n"
+"#define texture2D texture\n"
++ code;
+    }
+#endif
+
 	const char* c = code.c_str();
 	glShaderSource(shader, 1, &c, nullptr);
 	glCompileShader(shader);

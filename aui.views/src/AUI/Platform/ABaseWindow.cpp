@@ -253,5 +253,5 @@ void ABaseWindow::onFocusLost() {
 void ABaseWindow::checkForStencilBits() {
     GLint stencilBits = 0;
     glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
-    assert(("no stencil bits" && stencilBits > 0));
+    //assert(("no stencil bits" && stencilBits > 0));
 }
