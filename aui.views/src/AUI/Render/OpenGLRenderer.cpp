@@ -75,11 +75,12 @@ struct TexturedShaderHelper {
                 GL::Texture2D::setupLinear();
                 break;
         }
-        glEnableVertexAttribArray(1);
         shader.set(aui::ShaderUniforms::COLOR, Render::getColor());
         glm::vec2 uv1 = brush.uv1 ? *brush.uv1 : glm::vec2{0, 0};
         glm::vec2 uv2 = brush.uv2 ? *brush.uv2 : glm::vec2{1, 1};
-        tempVao.insert(2, {
+        tempVao.bind();
+        glEnableVertexAttribArray(1);
+        tempVao.insert(1, {
                 glm::vec2{uv1.x, uv2.y},
                 glm::vec2{uv2.x, uv2.y},
                 glm::vec2{uv1.x, uv1.y},
@@ -217,7 +218,7 @@ OpenGLRenderer::OpenGLRenderer() {
             "uniform vec4 color;"
             "varying vec2 pass_uv;"
             "void main(void) {gl_FragColor = texture2D(tex, pass_uv) * color; if (gl_FragColor.a < 0.01) discard;}",
-            {"pos", "", "uv"});
+            {"pos", "uv"});
 
     mGradientShader.load(
             "attribute vec3 pos;"
@@ -294,9 +295,9 @@ AVector<glm::vec3> OpenGLRenderer::getVerticesForRect(const glm::vec2& position,
 }
 void OpenGLRenderer::drawRect(const ABrush& brush, const glm::vec2& position, const glm::vec2& size) {
     std::visit(aui::lambda_overloaded {
-        GradientShaderHelper(mGradientShader),
-        TexturedShaderHelper(mTexturedShader, mTempVao),
-        SolidShaderHelper(mSolidShader),
+            GradientShaderHelper(mGradientShader),
+            TexturedShaderHelper(mTexturedShader, mTempVao),
+            SolidShaderHelper(mSolidShader),
     }, brush);
     uploadToShaderCommon();
 
@@ -512,7 +513,7 @@ public:
             mTextureWidth(textureWidth),
             mColor(color),
             mFontRendering(fontRendering)
-            {}
+    {}
 
 
     void draw() override {
@@ -589,9 +590,9 @@ private:
 
 public:
     OpenGLMultiStringCanvas(OpenGLRenderer* renderer, const AFontStyle& fontStyle):
-        mRenderer(renderer),
-        mFontStyle(fontStyle),
-        mEntryData(renderer->getFontEntryData(fontStyle)) {
+            mRenderer(renderer),
+            mFontStyle(fontStyle),
+            mEntryData(renderer->getFontEntryData(fontStyle)) {
         mVertices.reserve(1000);
     }
 
@@ -656,13 +657,13 @@ public:
 
 
                     mVertices.push_back({ glm::vec2(posX, ch.advanceY + height + advanceY),
-                                         glm::vec2(uv.x, uv.w) });
+                                          glm::vec2(uv.x, uv.w) });
                     mVertices.push_back({ glm::vec2(posX + width, ch.advanceY + height + advanceY),
-                                         glm::vec2(uv.z, uv.w) });
+                                          glm::vec2(uv.z, uv.w) });
                     mVertices.push_back({ glm::vec2(posX, ch.advanceY + advanceY),
-                                         glm::vec2(uv.x, uv.y) });
+                                          glm::vec2(uv.x, uv.y) });
                     mVertices.push_back({ glm::vec2(posX + width, ch.advanceY + advanceY),
-                                         glm::vec2(uv.z, uv.y) });
+                                          glm::vec2(uv.z, uv.y) });
 
                 }
 
@@ -683,7 +684,7 @@ public:
         mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
 
-        
+
         if (prevWidth != -1 && texturePacker.getImage()->getWidth() != prevWidth) {
             // looks like texture of the font was updated; we have to do everything again
             mVertices.clear();
