@@ -21,9 +21,15 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-# rpath fix on linux
-set(CMAKE_INSTALL_RPATH $ORIGIN)
-set(CMAKE_BUILD_RPATH ${CMAKE_BINARY_DIR}/lib)
+# rpath fix
+if (APPLE)
+    set(CMAKE_MACOSX_RPATH 1)
+    set(CMAKE_INSTALL_NAME_DIR "@rpath")
+    set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+elseif(UNIX)
+    set(CMAKE_INSTALL_RPATH $ORIGIN)
+    set(CMAKE_BUILD_RPATH ${CMAKE_BINARY_DIR}/lib)
+endif()
 
 define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
         BRIEF_DOCS "Global list of aui boot root entries"
@@ -245,6 +251,9 @@ macro(auib_import AUI_MODULE_NAME URL)
                     CMAKE_VS_PLATFORM_NAME
                     CMAKE_BUILD_TYPE
                     CMAKE_CROSSCOMPILING
+                    CMAKE_MACOSX_RPATH
+                    CMAKE_INSTALL_NAME_DIR
+                    CMAKE_INSTALL_RPATH
                     ${ANDROID_VARS})
                 if (${_varname})
                     list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")

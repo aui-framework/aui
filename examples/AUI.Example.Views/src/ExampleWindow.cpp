@@ -130,7 +130,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
 
                 // comboboxes
                 _new<ALabel>("Comboboxes"),
-                _new<AComboBox>(_new<AListModel<AString>>({
+                _new<AComboBox>(AListModel<AString>::make({
                                                                   "Combobox 1",
                                                                   "Combobox 2",
                                                                   "Combobox 3",
@@ -138,7 +138,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                                                                   "Combobox 5",
                                                                   "Combobox 6",
                                                           })),
-                _new<AComboBox>(_new<AListModel<AString>>({"Disabled combobox"})) let { it->setDisabled(); },
+                _new<AComboBox>(AListModel<AString>::make({"Disabled combobox"})) let { it->setDisabled(); },
                 _new<ADragArea>() let {
                     it with_style {
                             MinSize { 100_dp },
