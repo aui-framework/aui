@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,18 +19,56 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 26.11.2020.
-//
+#include "AUI/Platform/AMessageBox.h"
+#include <Windows.h>
+#include "AUI/Platform/AMessageBox.h"
+#include "AUI/Platform/AWindow.h"
 
-#pragma once
+AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b)
+{
+    HWND window = parent ? parent->getNativeHandle() : nullptr;
+
+    long flags = 0;
+
+    // Icons
+    switch (icon)
+    {
+        case Icon::INFO:
+            flags |= MB_ICONINFORMATION;
+            break;
+        case Icon::WARNING:
+            flags |= MB_ICONWARNING;
+            break;
+        case Icon::CRITICAL:
+            flags |= MB_ICONSTOP;
+            break;
+    }
 
 
-#include <AUI/Common/AString.h>
+    // Buttons
+    switch (b) {
+        case Button::OK:
+            flags |= MB_OK;
+            break;
 
-class AClipboardImpl {
-public:
-    static void copyToClipboard(const AString& text);
-    static bool isEmpty();
-    static AString pasteFromClipboard();
-};
+        case Button::OK_CANCEL:
+            flags |= MB_OKCANCEL;
+            break;
+
+        case Button::YES_NO:
+            flags |= MB_YESNO;
+            break;
+    }
+
+    switch (::MessageBox(window, message.c_str(), title.c_str(), flags)) {
+        case IDOK:
+            return ResultButton::OK;
+        case IDCANCEL:
+            return ResultButton::CANCEL;
+        case IDYES:
+            return ResultButton::YES;
+        case IDNO:
+            return ResultButton::NO;
+    }
+    return ResultButton::INVALID;
+}

@@ -363,7 +363,7 @@ function(aui_executable_advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
 
     # remove platform dependent files
     foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
-        list(FILTER SRCS EXCLUDE REGEX ".*\\/${PLATFORM_NAME}\\/.*")
+        list(FILTER SRCS EXCLUDE REGEX ".*\\/Platform/${PLATFORM_NAME}\\/.*")
     endforeach()
 
     #message("ASSDIR ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp")

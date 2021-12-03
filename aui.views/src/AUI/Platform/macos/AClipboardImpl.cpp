@@ -23,14 +23,18 @@
 // Created by alex2 on 26.11.2020.
 //
 
-#pragma once
+#include "AUI/Platform/AClipboard.h"
+#include "AUI/Platform/AWindow.h"
+#include "AUI/Platform/AWindowManager.h"
+// TODO apple
+void AClipboard::copyToClipboard(const AString &text) {
 
+}
 
-#include <AUI/Common/AString.h>
+bool AClipboard::isEmpty() {
+    return false;
+}
 
-class AClipboardImpl {
-public:
-    static void copyToClipboard(const AString& text);
-    static bool isEmpty();
-    static AString pasteFromClipboard();
-};
+AString AClipboard::pasteFromClipboard() {
+    return AString();
+}

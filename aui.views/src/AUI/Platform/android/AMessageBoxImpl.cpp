@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,18 +19,25 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 26.11.2020.
-//
-
-#pragma once
+#include "AUI/Platform/AMessageBox.h"
 
 
-#include <AUI/Common/AString.h>
+#include <AUI/Platform/OSAndroid.h>
+#include "AMessageBox.h"
+#include "AWindow.h"
 
-class AClipboardImpl {
-public:
-    static void copyToClipboard(const AString& text);
-    static bool isEmpty();
-    static AString pasteFromClipboard();
-};
+AMessageBox::ResultButton show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b) {
+
+    auto j = AAndroid::getJNI();
+    auto klazzAUI = j->FindClass("ru/alex2772/aui/AUI");
+    auto methodShowMessageBox = j->GetStaticMethodID(klazzAUI, "showMessageBox", "(Ljava/lang/String;Ljava/lang/String;)V");
+    auto strTitle = j->NewStringUTF(title.toStdString().c_str());
+    auto strMessage = j->NewStringUTF(message.toStdString().c_str());
+
+    j->CallStaticVoidMethod(klazzAUI, methodShowMessageBox, strTitle, strMessage);
+
+    j->DeleteLocalRef(strTitle);
+    j->DeleteLocalRef(strMessage);
+
+    return AMessageBox::ResultButton::INVALID;
+}

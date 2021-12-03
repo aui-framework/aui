@@ -19,8 +19,8 @@
  * =====================================================================================================================
  */
 
-#include "ACustomWindow.h"
-#include "ADesktop.h"
+#include "AUI/Platform/ACustomWindow.h"
+#include "AUI/Platform/ADesktop.h"
 #include <cstring>
 #include <AUI/View/AButton.h>
 

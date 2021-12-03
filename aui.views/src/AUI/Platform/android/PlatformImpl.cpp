@@ -19,7 +19,7 @@
  * =====================================================================================================================
  */
 
-#include "Platform.h"
+#include "AUI/Platform/Platform.h"
 #include "AUI/Common/AString.h"
 #include "AUI/IO/APath.h"
 #include <AUI/Util/kAUI.h>

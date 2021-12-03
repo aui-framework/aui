@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,18 +19,33 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 26.11.2020.
-//
+#include "AUI/Platform/Platform.h"
+#include "AUI/Common/AString.h"
+#include "AUI/IO/APath.h"
+#include <AUI/Util/kAUI.h>
 
-#pragma once
+#include <Windows.h>
+void Platform::playSystemSound(Sound s)
+{
+	switch (s)
+	{
+	case S_QUESTION:
+		PlaySound(L"SystemQuestion", nullptr, SND_ASYNC);
+		break;
+		
+	case S_ASTERISK:
+		PlaySound(L"SystemAsterisk", nullptr, SND_ASYNC);
+		break;
+		
+	}
+}
 
-
-#include <AUI/Common/AString.h>
-
-class AClipboardImpl {
-public:
-    static void copyToClipboard(const AString& text);
-    static bool isEmpty();
-    static AString pasteFromClipboard();
-};
+float Platform::getDpiRatio()
+{
+    typedef UINT(WINAPI *GetDpiForSystem_t)();
+    static auto GetDpiForSystem = (GetDpiForSystem_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForSystem");
+	if (GetDpiForSystem) {
+        return GetDpiForSystem() / 96.f;
+    }
+	return 1.f;
+}

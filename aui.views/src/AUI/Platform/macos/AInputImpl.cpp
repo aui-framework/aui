@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,18 +19,18 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 26.11.2020.
-//
-
-#pragma once
+#include <AUI/Platform/AInput.h>
 
 
-#include <AUI/Common/AString.h>
+// TODO apple
+AInput::Key AInput::fromNative(int w) {
+    return AInput::B;
+}
 
-class AClipboardImpl {
-public:
-    static void copyToClipboard(const AString& text);
-    static bool isEmpty();
-    static AString pasteFromClipboard();
-};
+int AInput::toNative(AInput::Key w) {
+    return 0;
+}
+
+bool AInput::isKeyDown(AInput::Key k) {
+    return false;
+}

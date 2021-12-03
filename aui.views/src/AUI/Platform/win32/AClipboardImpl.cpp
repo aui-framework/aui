@@ -19,39 +19,60 @@
  * =====================================================================================================================
  */
 
-#if AUI_PLATFORM_ANDROID
+//
+// Created by alex2 on 26.11.2020.
+//
 
-#include <jni.h>
-#include "AWindow.h"
+#include "AUI/Platform/AClipboard.h"
+#include "AUI/Platform/AWindow.h"
+#include "AUI/Platform/AWindowManager.h"
 
-extern "C"
-JNIEXPORT void JNICALL
-Java_ru_alex2772_aui_MyGLRenderer_handleRedraw(JNIEnv *env, jclass clazz) {
-    if (auto el = AThread::current()->getCurrentEventLoop())
-        el->loop();
+#include <Windows.h>
+
+void AClipboardImpl::copyToClipboard(const AString& text) {
+    const size_t len = text.length() * 2 + 2;
+    HGLOBAL hMem =  GlobalAlloc(GMEM_MOVEABLE, len);
+    memcpy(GlobalLock(hMem), text.data(), len);
+    GlobalUnlock(hMem);
+    OpenClipboard(nullptr);
+    EmptyClipboard();
+    SetClipboardData(CF_UNICODETEXT, hMem);
+    CloseClipboard();
 }
 
-extern "C"
-JNIEXPORT void JNICALL
-Java_ru_alex2772_aui_MyGLRenderer_handleResize(JNIEnv *env, jclass clazz, jint width, jint height) {
-    if (auto w = AWindow::current())
-        w->setSize(width, height);
+AString AClipboardImpl::pasteFromClipboard() {
+    OpenClipboard(nullptr);
+    HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
+    auto azaza = (const wchar_t*)GlobalLock(hMem);
+
+	if (azaza) {
+        size_t length = 0;
+        for (; azaza[length] && length < 50'000; ++length) {
+
+        }
+        if (length >= 50'000) {
+            GlobalUnlock(hMem);
+            CloseClipboard();
+            return {};
+        }
+        AString s = azaza;
+        GlobalUnlock(hMem);
+        CloseClipboard();
+        return s;
+    }
+    return {};
 }
 
-extern "C"
-JNIEXPORT void JNICALL
-Java_ru_alex2772_aui_MyGLSurfaceView_handleMouseButtonDown(JNIEnv *env, jclass clazz, jint x,
-                                                           jint y) {
-    if (auto w = AWindow::current())
-        w->onMousePressed({x, y}, AInput::LButton);
-}
-extern "C"
-JNIEXPORT void JNICALL
-Java_ru_alex2772_aui_MyGLSurfaceView_handleMouseButtonUp(JNIEnv *env, jclass clazz, jint x,
-                                                           jint y) {
-    if (auto w = AWindow::current())
-        w->onMouseReleased({x, y}, AInput::LButton);
-}
+bool AClipboardImpl::isEmpty() {
+    OpenClipboard(nullptr);
+    HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
+    auto azaza = (const wchar_t*)GlobalLock(hMem);
 
-
-#endif
+    if (azaza) {
+        auto c = *azaza;
+        GlobalUnlock(hMem);
+        CloseClipboard();
+        return c == '\0';
+    }
+    return true;
+}

@@ -19,90 +19,7 @@
  * =====================================================================================================================
  */
 
-#include "AMessageBox.h"
-
-#if AUI_PLATFORM_WIN
-#include <windows.h>
-#include "AMessageBox.h"
-#include "AWindow.h"
-AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b)
-{
-    HWND window = parent ? parent->getNativeHandle() : nullptr;
-
-    long flags = 0;
-
-    // Icons
-    switch (icon)
-    {
-        case Icon::INFO:
-            flags |= MB_ICONINFORMATION;
-            break;
-        case Icon::WARNING:
-            flags |= MB_ICONWARNING;
-            break;
-        case Icon::CRITICAL:
-            flags |= MB_ICONSTOP;
-            break;
-    }
-
-
-    // Buttons
-    switch (b) {
-        case Button::OK:
-            flags |= MB_OK;
-            break;
-
-        case Button::OK_CANCEL:
-            flags |= MB_OKCANCEL;
-            break;
-
-        case Button::YES_NO:
-            flags |= MB_YESNO;
-            break;
-    }
-
-    switch (::MessageBox(window, message.c_str(), title.c_str(), flags)) {
-        case IDOK:
-            return ResultButton::OK;
-        case IDCANCEL:
-            return ResultButton::CANCEL;
-        case IDYES:
-            return ResultButton::YES;
-        case IDNO:
-            return ResultButton::NO;
-    }
-    return ResultButton::INVALID;
-}
-#elif AUI_PLATFORM_ANDROID
-
-#include <AUI/Platform/OSAndroid.h>
-#include "AMessageBox.h"
-#include "AWindow.h"
-
-AMessageBox::ResultButton show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b) {
-
-    auto j = AAndroid::getJNI();
-    auto klazzAUI = j->FindClass("ru/alex2772/aui/AUI");
-    auto methodShowMessageBox = j->GetStaticMethodID(klazzAUI, "showMessageBox", "(Ljava/lang/String;Ljava/lang/String;)V");
-    auto strTitle = j->NewStringUTF(title.toStdString().c_str());
-    auto strMessage = j->NewStringUTF(message.toStdString().c_str());
-
-    j->CallStaticVoidMethod(klazzAUI, methodShowMessageBox, strTitle, strMessage);
-
-    j->DeleteLocalRef(strTitle);
-    j->DeleteLocalRef(strMessage);
-
-    return AMessageBox::ResultButton::INVALID;
-}
-
-#elif AUI_PLATFORM_APPLE
-
-AMessageBox::ResultButton AMessageBox::show(AWindow *parent, const AString &title, const AString &message, Icon icon, Button b) {
-    // TODO apple
-    return AMessageBox::ResultButton::INVALID;
-}
-
-#else
+#include "AUI/Platform/AMessageBox.h"
 #include <gtk/gtk.h>
 #include <AUI/Util/kAUI.h>
 #include "AMessageBox.h"
@@ -173,5 +90,3 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
     }
     return ResultButton::CANCEL;
 }
-
-#endif

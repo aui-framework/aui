@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,18 +19,10 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 26.11.2020.
-//
-
-#pragma once
+#include "AUI/Platform/AMessageBox.h"
 
 
-#include <AUI/Common/AString.h>
-
-class AClipboardImpl {
-public:
-    static void copyToClipboard(const AString& text);
-    static bool isEmpty();
-    static AString pasteFromClipboard();
-};
+AMessageBox::ResultButton AMessageBox::show(AWindow *parent, const AString &title, const AString &message, Icon icon, Button b) {
+    // TODO apple
+    return AMessageBox::ResultButton::INVALID;
+}

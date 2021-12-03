@@ -9,7 +9,7 @@
  */
  
 #include <SDL.h>
-#include "AInput.h"
+#include <AUI/Platform/AInput.h>
 
 namespace AInput {
     static AInput::Key fromSDL(SDL_Keycode keycode) {
