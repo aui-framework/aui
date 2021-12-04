@@ -23,10 +23,9 @@
 
 
 #include <AUI/Platform/OSAndroid.h>
-#include "AMessageBox.h"
-#include "AWindow.h"
+#include <AUI/Platform/AMessageBox.h>
 
-AMessageBox::ResultButton show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b) {
+AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b) {
 
     auto j = AAndroid::getJNI();
     auto klazzAUI = j->FindClass("ru/alex2772/aui/AUI");

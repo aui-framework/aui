@@ -21,7 +21,8 @@
 
 
 #include <jni.h>
-#include "AWindow.h"
+#include <AUI/Thread/AThread.h>
+#include <AUI/Platform/AWindow.h>
 
 extern "C"
 JNIEXPORT void JNICALL
