@@ -24,45 +24,9 @@
 #include "AUI/IO/APath.h"
 #include <AUI/Util/kAUI.h>
 
-#if AUI_PLATFORM_WIN
-#include <Windows.h>
-void Platform::playSystemSound(Sound s)
-{
-	switch (s)
-	{
-	case S_QUESTION:
-		PlaySound(L"SystemQuestion", nullptr, SND_ASYNC);
-		break;
-		
-	case S_ASTERISK:
-		PlaySound(L"SystemAsterisk", nullptr, SND_ASYNC);
-		break;
-		
-	}
-}
-
-float Platform::getDpiRatio()
-{
-    typedef UINT(WINAPI *GetDpiForSystem_t)();
-    static auto GetDpiForSystem = (GetDpiForSystem_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForSystem");
-	if (GetDpiForSystem) {
-        return GetDpiForSystem() / 96.f;
-    }
-	return 1.f;
-}
-#else
-
-#if AUI_PLATFORM_ANDROID
-#include <AUI/Platform/OSAndroid.h>
-
-#elif AUI_PLATFORM_APPLE
-#else
-
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xresource.h>
-
-#endif
 
 
 void Platform::playSystemSound(Sound s)
@@ -70,22 +34,12 @@ void Platform::playSystemSound(Sound s)
     // unsupported
 }
 
-#ifdef __linux
-#if !(AUI_PLATFORM_ANDROID)
 extern Display* gDisplay;
 void ensureXLibInitialized();
-#endif
-#endif
+
 
 float Platform::getDpiRatio()
 {
-#if AUI_PLATFORM_ANDROID
-    return AAndroid::getDpiRatio();
-
-#elif AUI_PLATFORM_APPLE
-    // TODO apple
-    return 1.f;
-#else
     ensureXLibInitialized();
     char *resourceString = XResourceManagerString(gDisplay);
     XrmDatabase db;
@@ -108,7 +62,4 @@ float Platform::getDpiRatio()
     }
 
     return dpi;
-#endif
 }
-
-#endif

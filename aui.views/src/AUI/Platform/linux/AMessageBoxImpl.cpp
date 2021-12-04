@@ -22,9 +22,6 @@
 #include "AUI/Platform/AMessageBox.h"
 #include <gtk/gtk.h>
 #include <AUI/Util/kAUI.h>
-#include "AMessageBox.h"
-#include "AWindow.h"
-#include <AUI/Util/kAUI.h>
 
 extern void aui_gtk_init();
 AMessageBox::ResultButton

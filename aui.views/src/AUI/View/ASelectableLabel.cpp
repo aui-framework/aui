@@ -129,7 +129,7 @@ void ASelectableLabel::onKeyDown(AInput::Key key) {
             case AInput::X:
             case AInput::C:
                 if (hasSelection())
-                    AClipboardImpl::copyToClipboard(getSelectedText());
+                    AClipboard::copyToClipboard(getSelectedText());
                 break;
     }
 }

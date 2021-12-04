@@ -27,8 +27,8 @@
 #include <AUI/Platform/AFontManager.h>
 
 void ass::decl::Declaration<ass::FontFamily>::applyFor(AView* view) {
-    auto family = AFontManagerImpl::inst().getFontFamily(mInfo.family);
-    if (!family) family = AFontManagerImpl::inst().getDefaultFamily();
+    auto family = AFontManager::inst().getFontFamily(mInfo.family);
+    if (!family) family = AFontManager::inst().getDefaultFamily();
     view->getFontStyle().font = family->getEither();
     view->invalidateFont();
 }

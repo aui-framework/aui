@@ -407,7 +407,7 @@ AVector<APath> APath::find(const AString& filename, const AVector<APath>& locati
 time_t APath::fileModifyTime() const {
 #if AUI_PLATFORM_WIN
     return stat().st_mtime;
-#elif defined(AUI_PLATFORM_APPLE)
+#elif AUI_PLATFORM_APPLE
     return stat().st_mtimespec.tv_sec;
 #else
     return stat().st_mtim.tv_sec;

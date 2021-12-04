@@ -27,8 +27,8 @@
 #include <AUI/Platform/AFontManager.h>
 
 void ass::decl::Declaration<ass::Font>::applyFor(AView* view) {
-    auto font = AFontManagerImpl::inst().getFont(mInfo.url);
-    if (!font) font = AFontManagerImpl::inst().getDefaultFont();
+    auto font = AFontManager::inst().getFont(mInfo.url);
+    if (!font) font = AFontManager::inst().getDefaultFont();
     view->getFontStyle().font = std::move(font);
     view->invalidateFont();
 }

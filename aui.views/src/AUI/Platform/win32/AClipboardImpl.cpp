@@ -29,7 +29,7 @@
 
 #include <Windows.h>
 
-void AClipboardImpl::copyToClipboard(const AString& text) {
+void AClipboard::copyToClipboard(const AString& text) {
     const size_t len = text.length() * 2 + 2;
     HGLOBAL hMem =  GlobalAlloc(GMEM_MOVEABLE, len);
     memcpy(GlobalLock(hMem), text.data(), len);
@@ -40,7 +40,7 @@ void AClipboardImpl::copyToClipboard(const AString& text) {
     CloseClipboard();
 }
 
-AString AClipboardImpl::pasteFromClipboard() {
+AString AClipboard::pasteFromClipboard() {
     OpenClipboard(nullptr);
     HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
     auto azaza = (const wchar_t*)GlobalLock(hMem);
@@ -63,7 +63,7 @@ AString AClipboardImpl::pasteFromClipboard() {
     return {};
 }
 
-bool AClipboardImpl::isEmpty() {
+bool AClipboard::isEmpty() {
     OpenClipboard(nullptr);
     HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
     auto azaza = (const wchar_t*)GlobalLock(hMem);

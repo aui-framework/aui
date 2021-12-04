@@ -29,14 +29,14 @@
 #include "AUI/Render/FreeType.h"
 #include <AUI/IO/APath.h>
 
-AFontManagerImpl::AFontManagerImpl() :
+AFontManager::AFontManager() :
         mFreeType(_new<FreeType>()),
         mDefaultFont(loadFont(AUrl::file(getPathToFont("segoeui"))))
 {
 }
 
 
-AString AFontManagerImpl::getPathToFont(const AString& font) {
+AString AFontManager::getPathToFont(const AString& font) {
 
     try {
         if (APath(font.toStdString()).isRegularFileExists())

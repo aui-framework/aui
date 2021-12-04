@@ -240,7 +240,6 @@ macro(auib_import AUI_MODULE_NAME URL)
                         CMAKE_ANDROID_ARCH_ABI
                         ANDROID_NDK
                         CMAKE_ANDROID_NDK
-                        CMAKE_MAKE_PROGRAM
                         )
             endif()
 
@@ -254,6 +253,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                     CMAKE_MACOSX_RPATH
                     CMAKE_INSTALL_NAME_DIR
                     CMAKE_INSTALL_RPATH
+                    CMAKE_MAKE_PROGRAM
                     ${ANDROID_VARS})
                 if (${_varname})
                     list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")

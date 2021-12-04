@@ -24,7 +24,7 @@
 #include "AUI/Platform/AFontManager.h"
 
 AFontStyle::AFontStyle() {
-    font = AFontManagerImpl::inst().getDefaultFont();
+    font = AFontManager::inst().getDefaultFont();
 }
 
 size_t AFontStyle::getWidth(const AString& text) const

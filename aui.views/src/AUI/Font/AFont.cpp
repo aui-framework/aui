@@ -30,7 +30,7 @@
 #include "AFont.h"
 
 
-AFont::AFont(AFontManagerImpl* fm, const AString& path) :
+AFont::AFont(AFontManager* fm, const AString& path) :
 	ft(fm->mFreeType)
 {
 	if (FT_New_Face(fm->mFreeType->getFt(), path.toStdString().c_str(), 0, &mFace)) {
@@ -38,7 +38,7 @@ AFont::AFont(AFontManagerImpl* fm, const AString& path) :
 	}
 }
 
-AFont::AFont(AFontManagerImpl *fm, const AUrl& url):
+AFont::AFont(AFontManager* fm, const AUrl& url):
     ft(fm->mFreeType) {
     if (url.getProtocol() == "file") {
         if (FT_New_Face(fm->mFreeType->getFt(), url.getPath().toStdString().c_str(), 0, &mFace)) {

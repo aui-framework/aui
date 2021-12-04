@@ -227,7 +227,7 @@ void AAbstractTypeableView::pasteFromClipboard() {
         pastePos = sel.begin;
         typeableErase(sel.begin, sel.end);
     }
-    auto toPaste = AClipboardImpl::pasteFromClipboard();
+    auto toPaste = AClipboard::pasteFromClipboard();
     if (mMaxTextLength <= length())
         return;
     if (!mIsMultiline) {
@@ -243,14 +243,14 @@ void AAbstractTypeableView::pasteFromClipboard() {
 
 void AAbstractTypeableView::cutToClipboard() {
     auto sel = getSelection();
-    AClipboardImpl::copyToClipboard(getSelectedText());
+    AClipboard::copyToClipboard(getSelectedText());
     typeableErase(sel.begin, sel.end);
     mCursorIndex = sel.begin;
     mCursorSelection = -1;
     invalidatePrerenderedString();
 }
 
-void AAbstractTypeableView::copyToClipboard() const { AClipboardImpl::copyToClipboard(getSelectedText()); }
+void AAbstractTypeableView::copyToClipboard() const { AClipboard::copyToClipboard(getSelectedText()); }
 
 void AAbstractTypeableView::selectAll() { ACursorSelectable::selectAll(); }
 
@@ -343,7 +343,7 @@ void AAbstractTypeableView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
         AMenu::show({
                             { "aui.cut"_i18n, [&]{cutToClipboard();}, AInput::LControl + AInput::X, hasSelection() },
                             { "aui.copy"_i18n, [&]{copyToClipboard();}, AInput::LControl + AInput::C, hasSelection() },
-                            { "aui.paste"_i18n, [&]{pasteFromClipboard();}, AInput::LControl + AInput::V, !AClipboardImpl::isEmpty() },
+                            { "aui.paste"_i18n, [&]{pasteFromClipboard();}, AInput::LControl + AInput::V, !AClipboard::isEmpty() },
                             AMenu::SEPARATOR,
                             { "aui.select_all"_i18n, [&]{selectAll();}, AInput::LControl + AInput::A, !getText().empty() }
                     });

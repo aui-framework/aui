@@ -26,14 +26,14 @@
 
 
 
-AFontManagerImpl::~AFontManagerImpl() = default;
+AFontManager::~AFontManager() = default;
 
 
-_<AFont> AFontManagerImpl::loadFont(const AUrl& url) {
+_<AFont> AFontManager::loadFont(const AUrl& url) {
     return _new<AFont>(this, url);
 }
 
-AFontManagerImpl& AFontManagerImpl::inst() {
-    static AFontManagerImpl f;
+AFontManager& AFontManager::inst() {
+    static AFontManager f;
     return f;
 }
