@@ -59,8 +59,8 @@ void performSearchOn(const AVector<int>::ConstIterator& begin, const AVector<int
     }
 
     // also check if we search for *unexisting* value the algorithm results end arg
-    BOOST_TEST((aui::binary_search(begin, end, [](const AVector<int>::ConstIterator& it) { return -1; }) == end));
-    BOOST_TEST((aui::binary_search(begin, end, [](const AVector<int>::ConstIterator& it) { return  1; }) == end));
+    BOOST_TEST((aui::binary_search(begin, end, [](const AVector<int>::ConstIterator& it) { return -1; }) == end), "binary_search found unexisting element (wtf?)");
+    BOOST_TEST((aui::binary_search(begin, end, [](const AVector<int>::ConstIterator& it) { return  1; }) == end), "binary_search found unexisting element (wtf?)");
 }
 
 void performSearchOn(const AVector<int>& v) {
@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE(BinarySearch1) {
         }
     }
 
-    // try to fail
+    // try to confuse binary search algorithm
     dataset[0] = 228;
-    BOOST_TEST((aui::binary_search(dataset.begin(), dataset.end(), [](const AVector<int>::ConstIterator& it) { return -1; }) == dataset.end()));
+    BOOST_TEST((aui::binary_search(dataset.begin(), dataset.end(), [](const AVector<int>::ConstIterator& it) { return -1; }) == dataset.end()), "binary_search found unexisting element (wtf?)");
 }
 BOOST_AUTO_TEST_SUITE_END()

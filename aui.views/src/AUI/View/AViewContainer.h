@@ -104,6 +104,13 @@ public:
     void setSize(int width, int height) override;
     void setEnabled(bool enabled = true) override;
 
+    auto begin() const {
+        return mViews.cbegin();
+    }
+    auto end() const {
+        return mViews.cend();
+    }
+
 	/**
 	 * \brief Set new layout manager for this AViewContainer. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
 	 */

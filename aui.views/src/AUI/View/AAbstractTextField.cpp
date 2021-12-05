@@ -205,3 +205,7 @@ size_t AAbstractTextField::getTextLength() const {
     return mContents.length();
 }
 
+AString AAbstractTextField::toString() const {
+    return mContents;
+}
+

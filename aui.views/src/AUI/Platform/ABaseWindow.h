@@ -40,7 +40,7 @@ public:
 
     virtual ~ABaseWindow() = default;
 
-    AWindowManager& getWindowManager() const;
+    static AWindowManager& getWindowManager();
 
     float getDpiRatio()
     {

@@ -19,8 +19,6 @@
  * =====================================================================================================================
  */
 
-#define BOOST_TEST_MODULE WordWrappingEngine
-
 #include <boost/test/unit_test.hpp>
 #include <AUI/Util/AWordWrappingEngine.h>
 

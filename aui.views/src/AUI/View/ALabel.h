@@ -28,12 +28,13 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Image/IDrawable.h"
 #include <AUI/Util/ADataBinding.h>
+#include <AUI/Common/IStringable.h>
 
 /**
  * Represents a simple text.
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/ALabel.png">
  */
-class API_AUI_VIEWS ALabel: public AView
+class API_AUI_VIEWS ALabel: public AView, public IStringable
 {
 private:
 	AString mText;
@@ -78,7 +79,9 @@ public:
 		return mIcon;
 	}
 
-	void setIcon(const _<IDrawable>& drawable) {
+    AString toString() const override;
+
+    void setIcon(const _<IDrawable>& drawable) {
         mIcon = drawable;
         redraw();
     }

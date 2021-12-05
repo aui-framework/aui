@@ -257,3 +257,7 @@ bool ALabel::consumesClick(const glm::ivec2& pos) {
     return false;
 }
 
+AString ALabel::toString() const {
+    return mText;
+}
+

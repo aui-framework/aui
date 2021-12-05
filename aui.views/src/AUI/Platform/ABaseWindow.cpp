@@ -21,7 +21,7 @@ ABaseWindow::ABaseWindow() {
     mDpiRatio = Platform::getDpiRatio();
 }
 
-AWindowManager& ABaseWindow::getWindowManager() const {
+AWindowManager& ABaseWindow::getWindowManager() {
     thread_local AWindowManager ourWindowManager;
     return ourWindowManager;
 }

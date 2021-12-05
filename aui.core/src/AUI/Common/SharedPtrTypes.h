@@ -146,7 +146,13 @@ public:
 		return SafeCallWrapper(*this);
 	}
 
-	// ranged-for loops
+	// forward ranged-for loops
+	auto begin() const {
+	    return parent::operator->()->begin();
+	}
+	auto end() const {
+	    return parent::operator->()->end();
+	}
 	auto begin() {
 	    return parent::operator->()->begin();
 	}

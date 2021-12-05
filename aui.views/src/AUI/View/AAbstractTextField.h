@@ -24,9 +24,10 @@
 #include <AUI/View/AAbstractTypeableView.h>
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
+#include <AUI/Common/IStringable.h>
 #include <AUI/Render/Render.h>
 
-class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView
+class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView, public IStringable
 {
 private:
     bool mIsPasswordTextField = false;
@@ -64,6 +65,8 @@ public:
 	void setText(const AString& t) override;
 
     void render() override;
+
+    AString toString() const override;
 
     void setPasswordMode(bool isPasswordMode) {
         mIsPasswordTextField = isPasswordMode;
