@@ -51,7 +51,7 @@ set_property(GLOBAL PROPERTY TESTS_SRCS "")
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
 
 
-include(cmake/b.cmake)
+include(cmake/aui.build.cmake)
 
 function(define_aui_component AUI_COMPONENT_NAME)
 	if (AUI_BOOT_COMPONENTS)
@@ -153,18 +153,16 @@ set(AUI_COMPONENT_${_module}_LINK_LIBS ${_link_libs2})
 endforeach()
 
 
-configure_file(cmake/c.cmake ${CMAKE_CURRENT_BINARY_DIR}/c.cmake @ONLY)
+configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 #install(EXPORT AUI DESTINATION cmake/)
 install(
 		FILES
-		${CMAKE_CURRENT_BINARY_DIR}/c.cmake
-		RENAME aui-config.cmake
+		${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
 		DESTINATION ".")
 
 install(
 		FILES
-			cmake/b.cmake
-		RENAME AUI.Build.cmake
+		cmake/aui.build.cmake
 		DESTINATION "cmake/")
 
 

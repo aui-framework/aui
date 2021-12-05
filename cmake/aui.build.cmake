@@ -22,6 +22,7 @@
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
+set(AUI_INSTALL_RUNTIME_DEPENDENCIES OFF CACHE BOOL "Install runtime dependencies along with the project")
 cmake_policy(SET CMP0072 NEW)
 
 # platform definitions
@@ -191,7 +192,7 @@ function(aui_common AUI_MODULE_NAME)
         ]])
     endif()
 
-    if (NOT ANDROID)
+    if (NOT ANDROID AND AUI_INSTALL_RUNTIME_DEPENDENCIES)
         if (MINGW AND CMAKE_CROSSCOMPILING)
             # workaround for crosscompiling on linux/mingw for windows
             # thanks to this thread https://gitlab.kitware.com/cmake/cmake/-/issues/20753

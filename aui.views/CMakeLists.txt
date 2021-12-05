@@ -12,7 +12,7 @@ if (OPENGL_FOUND OR ANDROID)
 				CMAKE_ARGS "-DBUILD_SHARED_LIBS=true")
 
 	if(NOT ANDROID)
-		auib_import(GLEW https://github.com/Alex2772/glew-cmake
+		auib_import(GLEW https://github.com/aui-framework/glew-cmake
 				CMAKE_WORKING_DIR "build/cmake")
 
 		if (NOT WIN32 AND NOT APPLE)
