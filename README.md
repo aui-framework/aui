@@ -5,7 +5,7 @@
 Cross-platform high performance efficient module-based framework for developing and deploying hardware accelerated graphical desktop applications
 using modern C++17.
 
-[Download](https://github.com/Alex2772/aui/releases/) | [Documentation](docs/MANUAL.md)
+[Documentation](https://github.com/aui-framework/aui/wiki) | [Getting started](https://github.com/aui-framework/aui/wiki/Getting-started-with-AUI)
 
 Quickstart
 ```cmake
