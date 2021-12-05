@@ -62,30 +62,30 @@ void SvgDrawable::draw(const Params& params) {
     auto doDraw = [&](const Render::Texture& texture) {
         glm::vec2 uv = {1, 1};
 
-        float posX, posY;
+        glm::vec2 pos;
         float scale = glm::min(size.x / mImage->width, size.y / mImage->height);
 
         if (!!(params.repeat & Repeat::X)) {
             uv.x = float(size.x) / getSizeHint().x;
-            posX = 0;
+            pos.x = 0;
         } else {
-            posX = glm::round((size.x - mImage->width * scale) / 2.f);
+            pos.x = glm::round((size.x - mImage->width * scale) / 2.f);
         }
         if (!!(params.repeat & Repeat::Y)) {
             uv.y = float(size.y) / getSizeHint().y;
-            posY = 0;
+            pos.y = 0;
         } else {
-            posY = glm::round((size.y - mImage->height * scale) / 2.f);
+            pos.y = glm::round((size.y - mImage->height * scale) / 2.f);
         }
-
+        pos += params.offset;
         Render::drawRect(ATexturedBrush {
-             texture,
-             glm::ivec2 { 0.f, 0.f },
-             uv,
-             params.imageRendering,
-             params.repeat,
+              texture,
+              glm::ivec2 { 0.f, 0.f },
+              uv,
+              params.imageRendering,
+              params.repeat,
             },
-            { posX, posY },
+            pos,
             size);
     };
     for (auto& p : mRasterized) {

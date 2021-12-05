@@ -72,10 +72,9 @@ void AComboBox::render() {
     ALabel::render();
     if (auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg")) {
         auto size = arrow->getSizeHint();
-        auto s = (getHeight() - size.y) / 2;
         IDrawable::Params p;
         p.size = size;
-        p.offset = { getWidth() - s - size.x, s };
+        p.offset = { getWidth() - size.x - getPadding().right, (getHeight() - size.y) / 2 };
         arrow->draw(p);
     }
 }
