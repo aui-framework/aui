@@ -250,11 +250,6 @@ macro(auib_import AUI_MODULE_NAME URL)
                             )
                 endif()
 
-                # fix: convert CMAKE_TOOLCHAIN_FILE to absolute path
-                if (CMAKE_TOOLCHAIN_FILE)
-                    get_filename_component(CMAKE_TOOLCHAIN_FILE ${CMAKE_TOOLCHAIN_FILE} ABSOLUTE)
-                endif()
-
                 # forward all necessary variables to child cmake build
                 foreach(_varname
                         CMAKE_TOOLCHAIN_FILE
