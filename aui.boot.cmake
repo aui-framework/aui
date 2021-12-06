@@ -96,6 +96,7 @@ endif()
 # TODO add a way to provide file access to the repository
 macro(auib_import AUI_MODULE_NAME URL)
     set(_error_level STATUS) # we'll try for a second time if we encounter some errors
+    set(_locked FALSE)
     while(TRUE)
         cmake_policy(SET CMP0087 NEW)
         cmake_policy(SET CMP0074 NEW)
@@ -180,8 +181,11 @@ macro(auib_import AUI_MODULE_NAME URL)
                 unset(SOURCE_BINARY_DIRS_ARG)
             else()
                 if (NOT AUI_BOOT) # recursive deadlock fix
-                    message(STATUS "Waiting for repository...")
-                    file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+                    if (NOT _locked)
+                        set(_locked TRUE)
+                        message(STATUS "Waiting for repository...")
+                        file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+                    endif()
                 endif()
                 set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
                         BINARY_DIR ${DEP_BINARY_DIR})
