@@ -26,7 +26,6 @@ endif()
 target_include_directories(aui.core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>)
 
 target_compile_definitions(aui.core PRIVATE UNICODE=1)
-target_compile_definitions(aui.core PUBLIC GLM_FORCE_INLINE=1)
 target_compile_definitions(aui.core PUBLIC NOMINMAX=1)
 
 
