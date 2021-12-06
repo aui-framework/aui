@@ -25,6 +25,13 @@ set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES OFF CACHE BOOL "Install runtime dependencies along with the project")
 cmake_policy(SET CMP0072 NEW)
 
+
+if (IOS)
+    option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
+else()
+    option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
+endif()
+
 # platform definitions
 # platform exclusion (AUI/Platform/<platform name>/...)
 set(AUI_EXCLUDE_PLATFORMS android linux macos win32)
@@ -523,7 +530,7 @@ function(aui_module AUI_MODULE_NAME)
         list(FILTER SRCS EXCLUDE REGEX ".*\\/${PLATFORM_NAME}\\/.*")
     endforeach()
 
-    add_library(${AUI_MODULE_NAME} SHARED ${SRCS} ${ARGN})
+    add_library(${AUI_MODULE_NAME} ${SRCS} ${ARGN})
     get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
     target_include_directories(${AUI_MODULE_NAME} PUBLIC $<BUILD_INTERFACE:${SELF_DIR}/src>)
 
