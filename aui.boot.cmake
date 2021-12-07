@@ -263,6 +263,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                         CMAKE_MAKE_PROGRAM
                         CMAKE_TOOLCHAIN_FILE
                         ${ANDROID_VARS})
+                    list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
                 endforeach()
 
                 list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
