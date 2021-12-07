@@ -3,7 +3,6 @@ cmake_minimum_required(VERSION 3.16)
 
 auib_import(ZLIB https://github.com/aui-framework/zlib)
 
-
 aui_module(aui.core)
 
 if (NOT WIN32)
@@ -50,7 +49,7 @@ if (ANDROID)
 	target_link_libraries(aui.core PRIVATE ${log-lib})
 endif()
 
-target_link_libraries(aui.core PRIVATE ZLIB::ZLIB)
+target_link_libraries(aui.core PUBLIC ZLIB::ZLIB)
 
 # forward platform info
 foreach(_var AUI_PLATFORM_WIN

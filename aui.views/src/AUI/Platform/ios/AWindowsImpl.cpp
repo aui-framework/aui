@@ -32,12 +32,11 @@
 #include "AUI/Util/ARandom.h"
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
-#include "Platform.h"
-#include "AMessageBox.h"
-#include "AWindowManager.h"
-#include "ADesktop.h"
-#include "ABaseWindow.h"
-#include "ACustomWindow.h"
+#include "AUI/Platform/AMessageBox.h"
+#include "AUI/Platform/AWindowManager.h"
+#include "AUI/Platform/ADesktop.h"
+#include "AUI/Platform/ABaseWindow.h"
+#include "AUI/Platform/ACustomWindow.h"
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
@@ -50,80 +49,6 @@
 
 AWindow::Context AWindow::context = {};
 
-
-void AWindow::redraw() {
-    if (mUpdateLayoutFlag) {
-        mUpdateLayoutFlag = false;
-        updateLayout();
-    }
-#ifdef WIN32
-    mRedrawFlag = true;
-#endif
-    {
-
-        // fps restriction
-        {
-            auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-            auto delta = now - _gLastFrameTime;
-            // restriction 16ms = up to 60 frames per second
-            const auto FRAME_DURATION = 16ms;
-
-            if (FRAME_DURATION > delta) {
-                std::this_thread::sleep_for(FRAME_DURATION - delta);
-            }
-            _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        }
-
-#if !(AUI_PLATFORM_APPLE)
-        painter p(mHandle);
-#endif
-        GL::State::activeTexture(0);
-        GL::State::bindTexture(GL_TEXTURE_2D, 0);
-        GL::State::bindVertexArray(0);
-        GL::State::useProgram(0);
-
-        Render::setWindow(this);
-        glViewport(0, 0, getWidth(), getHeight());
-
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-#if !(AUI_PLATFORM_ANDROID)
-        glEnable(GL_MULTISAMPLE);
-#else
-        glClearColor(1.f, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-#endif
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        // stencil
-        glClearStencil(0);
-        glStencilMask(0xff);
-        glDisable(GL_SCISSOR_TEST);
-        glClear(GL_STENCIL_BUFFER_BIT);
-        glEnable(GL_STENCIL_TEST);
-        glStencilMask(0x00);
-        stencilDepth = 0;
-        glStencilFunc(GL_EQUAL, 0, 0xff);
-
-        doDrawWindow();
-
-
-#if AUI_PLATFORM_WIN
-        SwapBuffers(p.mHdc);
-#elif AUI_PLATFORM_ANDROID
-
-        #elif AUI_PLATFORM_APPLE
-        // TODO apple
-#else
-        glXSwapBuffers(gDisplay, mHandle);
-#endif
-    }
-#if AUI_PLATFORM_WIN
-    wglMakeCurrent(mDC, context.hrc);
-#endif
-    emit redrawn();
-}
 
 #if AUI_PLATFORM_WIN
 
@@ -989,7 +914,7 @@ void AWindow::redraw() {
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_CULL_FACE);
-#if !(AUI_PLATFORM_ANDROID)
+#if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_APPLE)
         glEnable(GL_MULTISAMPLE);
 #else
         glClearColor(1.f, 0, 0, 1);
@@ -1125,18 +1050,7 @@ void AWindow::close() {
 }
 
 void AWindow::updateDpi() {
-    emit dpiChanged;
-#if AUI_PLATFORM_WIN
-    typedef UINT(WINAPI *GetDpiForWindow_t)(_In_ HWND);
-    static auto GetDpiForWindow = (GetDpiForWindow_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForWindow");
-    if (GetDpiForWindow) {
-        mDpiRatio = GetDpiForWindow(mHandle) / 96.f;
-    } else {
-        mDpiRatio = Platform::getDpiRatio();
-    }
-#else
-    mDpiRatio = Platform::getDpiRatio();
-#endif
+    mDpiRatio = 1;
     onDpiChanged();
 }
 
