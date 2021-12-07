@@ -56,6 +56,8 @@ target_link_libraries(aui.core PRIVATE ZLIB::ZLIB)
 foreach(_var AUI_PLATFORM_WIN
 		     AUI_PLATFORM_LINUX
 	         AUI_PLATFORM_APPLE
+	         AUI_PLATFORM_MACOS
+	         AUI_PLATFORM_IOS
 	         AUI_PLATFORM_ANDROID
 	         AUI_PLATFORM_UNIX)
 	target_compile_definitions(aui.core PUBLIC ${_var}=${${_var}})

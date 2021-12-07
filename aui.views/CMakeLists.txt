@@ -5,12 +5,12 @@ set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH TRUE)
 find_package(OpenGL)
 set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
 
-if (OPENGL_FOUND OR ANDROID)
+if (OPENGL_FOUND OR ANDROID OR IOS)
 
 	auib_import(Freetype https://github.com/freetype/freetype
 			    VERSION "VER-2-10-4")
 
-	if(NOT ANDROID)
+	if(NOT ANDROID AND NOT IOS)
 		auib_import(GLEW https://github.com/aui-framework/glew-cmake
 				CMAKE_WORKING_DIR "build/cmake")
 
@@ -27,7 +27,7 @@ if (OPENGL_FOUND OR ANDROID)
 
 	aui_module(aui.views)
 	target_include_directories(aui.views PRIVATE 3rdparty)
-	if (ANDROID)
+	if (ANDROID OR IOS)
 		aui_compile_assets(aui.views)
 	else()
 		aui_compile_assets(aui.views EXCLUDE uni/font/Roboto.ttf)
@@ -45,6 +45,12 @@ if (OPENGL_FOUND OR ANDROID)
 	set_target_properties(Freetype::Freetype PROPERTIES INSTALL_NAME_DIR "@rpath" BUILD_WITH_INSTALL_RPATH 1)
 	if(ANDROID)
 		target_link_libraries(aui.views PRIVATE EGL GLESv2 GLESv3)
+		target_link_libraries(aui.views PUBLIC Freetype::Freetype)
+	elseif(IOS)
+		set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH TRUE)
+		find_library(OPENGL OpenGLES REQUIRED)
+		set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
+		target_link_libraries(aui.views PRIVATE ${OPENGL})
 		target_link_libraries(aui.views PUBLIC Freetype::Freetype)
 	else()
 		target_link_libraries(aui.views PRIVATE Freetype::Freetype)

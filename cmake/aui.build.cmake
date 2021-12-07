@@ -34,7 +34,7 @@ endif()
 
 # platform definitions
 # platform exclusion (AUI/Platform/<platform name>/...)
-set(AUI_EXCLUDE_PLATFORMS android linux macos win32)
+set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios)
 
 if (WIN32)
     set(AUI_PLATFORM_WIN 1)
@@ -51,9 +51,15 @@ endif()
 
 if (UNIX AND APPLE)
     set(AUI_PLATFORM_APPLE 1)
-    list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS macos)
 else()
     set(AUI_PLATFORM_APPLE 0)
+endif()
+
+if (UNIX AND APPLE AND NOT IOS)
+    set(AUI_PLATFORM_MACOS 1)
+    list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS macos)
+else()
+    set(AUI_PLATFORM_MACOS 0)
 endif()
 
 if (ANDROID)
@@ -61,6 +67,13 @@ if (ANDROID)
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS android)
 else()
     set(AUI_PLATFORM_ANDROID 0)
+endif()
+
+if (IOS)
+    set(AUI_PLATFORM_IOS 1)
+    list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS ios)
+else()
+    set(AUI_PLATFORM_IOS 0)
 endif()
 
 if (UNIX)

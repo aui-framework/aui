@@ -64,7 +64,7 @@ function(define_aui_component AUI_COMPONENT_NAME)
 endfunction()
 
 define_aui_component(core)
-if (NOT ANDROID)
+if (NOT ANDROID AND NOT IOS)
 	define_aui_component(crypt)
 	define_aui_component(toolbox)
 	define_aui_component(curl)
@@ -86,7 +86,7 @@ endif()
 
 get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
 
-if (NOT ANDROID)
+if (NOT ANDROID AND NOT IOS)
 	aui_tests(Tests ${TESTS_SRCS})
 	if (TARGET Tests)
 		get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
