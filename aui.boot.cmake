@@ -261,12 +261,10 @@ macro(auib_import AUI_MODULE_NAME URL)
                         CMAKE_INSTALL_NAME_DIR
                         CMAKE_INSTALL_RPATH
                         CMAKE_MAKE_PROGRAM
-                        BUILD_SHARED_LIBS
                         ${ANDROID_VARS})
-                    if (${_varname})
-                        list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
-                    endif()
                 endforeach()
+
+                list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
 
                 message("Building and installing ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
                 execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}

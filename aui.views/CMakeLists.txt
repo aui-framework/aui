@@ -8,8 +8,7 @@ set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
 if (OPENGL_FOUND OR ANDROID)
 
 	auib_import(Freetype https://github.com/freetype/freetype
-			    VERSION "VER-2-10-4"
-				CMAKE_ARGS "-DBUILD_SHARED_LIBS=true")
+			    VERSION "VER-2-10-4")
 
 	if(NOT ANDROID)
 		auib_import(GLEW https://github.com/aui-framework/glew-cmake
