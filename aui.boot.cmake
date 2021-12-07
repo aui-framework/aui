@@ -261,6 +261,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                         CMAKE_INSTALL_NAME_DIR
                         CMAKE_INSTALL_RPATH
                         CMAKE_MAKE_PROGRAM
+                        CMAKE_TOOLCHAIN_FILE
                         ${ANDROID_VARS})
                 endforeach()
 
