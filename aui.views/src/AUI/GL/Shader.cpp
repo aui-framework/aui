@@ -83,19 +83,26 @@ uint32_t GL::Shader::load(const AString& data, uint32_t type) {
     if (type == GL_VERTEX_SHADER) {
 
         code =
-"#version 150\n"
 "#define attribute in\n"
 "#define varying out\n"
 + code;
     } else {
         code =
-"#version 150\n"
 "#define varying in\n"
 "out vec4 resultColor;\n"
 "#define gl_FragColor resultColor\n"
 "#define texture2D texture\n"
 + code;
     }
+#endif
+
+#if AUI_PLATFORM_IOS
+    code = "#version 300 es\n"
+            "precision mediump float;\n"
+            "precision mediump int;\n"
+                     + code;
+#elif AUI_PLATFORM_MACOS
+    code = "#version 150\n" + code;
 #endif
 
 	const char* c = code.c_str();
@@ -113,7 +120,7 @@ uint32_t GL::Shader::load(const AString& data, uint32_t type) {
 		}
 	}
 	if (!st) {
-		throw AException("Failed to compile shader:\n" + data);
+		throw AException("Failed to compile shader:\n" + code);
 	}
 
 	return shader;
