@@ -51,7 +51,7 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <AUI/Util/ALayoutInflater.h>
-#include <AUI/Render/OpenGLRenderer.h>
+#include <AUI/GL/OpenGLRenderer.h>
 
 #include <GL/wglew.h>
 #include <AUI/Util/Cache.h>
@@ -62,44 +62,31 @@
 
 struct painter {
 private:
-    HWND mHandle;
+    AWindow& mWindow;
     PAINTSTRUCT mPaint;
 
 public:
-    HDC mHdc;
     static thread_local bool painting;
 
-    painter(HWND handle) :
-            mHandle(handle) {
+    painter(AWindow& window) :
+            mWindow(window) {
         assert(!painting);
         painting = true;
-        mHdc = BeginPaint(mHandle, &mPaint);
-        bool ok = wglMakeCurrent(mHdc, AWindow::context.hrc);
-        assert(ok);
+        mWindow.mHdc = BeginPaint(mWindow.mHandle, &mPaint);
+        AWindow::getWindowManager().getWindowInitializer()->beginPaint(window);
     }
 
     ~painter() {
         assert(painting);
         painting = false;
-        bool ok = wglMakeCurrent(nullptr, nullptr);
-        assert(ok);
-        EndPaint(mHandle, &mPaint);
+        AWindow::getWindowManager().getWindowInitializer()->endPaint(mWindow);
+        EndPaint(mWindow.mHandle, &mPaint);
     }
 };
 
 
 thread_local bool painter::painting = false;
 
-LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
-    AWindow* window = reinterpret_cast<AWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-    try {
-        if (window)
-            return window->winProc(hwnd, uMsg, wParam, lParam);
-    } catch (const AException& e) {
-        AError::handle(e);
-    }
-    return DefWindowProc(hwnd, uMsg, wParam, lParam);
-}
 
 LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
@@ -193,7 +180,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 RECT windowRect, clientRect;
                 GetWindowRect(mHandle, &windowRect);
                 GetClientRect(mHandle, &clientRect);
-                wglMakeCurrent(mDC, context.hrc);
+                getWindowManager().getWindowInitializer()->beginResize(*this);
                 emit resized(LOWORD(lParam), HIWORD(lParam));
                 AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
 
@@ -307,10 +294,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 
 
-AWindow::Context::~Context() {
-    wglDeleteContext(hrc);
-}
-
 bool AWindow::isRenderingContextAcquired() {
     return painter::painting;
 }
@@ -337,191 +320,19 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
     connect(closed, this, &AWindow::close);
 
-    // CREATE WINDOW
-    WNDCLASSEX winClass;
+    getWindowManager().getWindowInitializer()->initNativeWindow(*this,
+                                                                name,
+                                                                width,
+                                                                height,
+                                                                ws,
+                                                                parent);
 
-    mInst = GetModuleHandle(nullptr);
-
-    ARandom r;
-    for (;;) {
-        mWindowClass = "AUI-" + AString::number(r.nextInt());
-        winClass.lpszClassName = mWindowClass.c_str();
-        winClass.cbSize = sizeof(WNDCLASSEX);
-        winClass.style = CS_HREDRAW | CS_VREDRAW;
-        winClass.lpfnWndProc = WindowProc;
-        winClass.hInstance = mInst;
-        //winClass.hIcon = LoadIcon(mInst, (LPCTSTR)101);
-        //winClass.hIconSm = LoadIcon(mInst, (LPCTSTR)101);
-        winClass.hIcon = 0;
-        winClass.hIconSm = 0;
-        winClass.hbrBackground = nullptr;
-        winClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-        winClass.lpszMenuName = mWindowClass.c_str();
-        winClass.cbClsExtra = 0;
-        winClass.cbWndExtra = 0;
-        if (RegisterClassEx(&winClass)) {
-            break;
-        }
-    }
-
-    DWORD style = WS_OVERLAPPEDWINDOW;
-
-    mHandle = CreateWindowEx(WS_EX_DLGMODALFRAME, mWindowClass.c_str(), name.c_str(), style,
-                             GetSystemMetrics(SM_CXSCREEN) / 2 - width / 2,
-                             GetSystemMetrics(SM_CYSCREEN) / 2 - height / 2, width, height,
-                             parent != nullptr ? parent->mHandle : nullptr, nullptr, mInst, nullptr);
-
-    SetWindowLongPtr(mHandle, GWLP_USERDATA, reinterpret_cast<long long int>(this));
-
-    // used for ACustomWindow
-    winProc(mHandle, WM_CREATE, 0, 0);
-
-    if ((ws & WindowStyle::DIALOG) && mParentWindow) {
-        EnableWindow(mParentWindow->mHandle, false);
-    }
-
-    mDC = GetDC(mHandle);
-
-    // INITIALIZE OPENGL
-    static PIXELFORMATDESCRIPTOR pfd;
-    static int pxf;
-    if (context.hrc == nullptr) {
-        ALogger::info("Creating OpenGL context...");
-        struct FakeWindow {
-            HWND mHwnd;
-            HDC mDC;
-
-            explicit FakeWindow(HWND hwnd) : mHwnd(hwnd) {
-                mDC = GetDC(mHwnd);
-            }
-
-            ~FakeWindow() {
-                ReleaseDC(mHwnd, mDC);
-                DestroyWindow(mHwnd);
-            }
-        } fakeWindow(CreateWindowEx(WS_EX_DLGMODALFRAME, mWindowClass.c_str(), name.c_str(), style,
-                                    GetSystemMetrics(SM_CXSCREEN) / 2 - width / 2,
-                                    GetSystemMetrics(SM_CYSCREEN) / 2 - height / 2, width, height,
-                                    parent != nullptr ? parent->mHandle : nullptr, nullptr, mInst, nullptr));
-
-        memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
-        pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
-        pfd.nVersion = 1;
-        pfd.dwFlags = PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_SUPPORT_COMPOSITION;
-        pfd.iPixelType = PFD_TYPE_RGBA;
-        pfd.cColorBits = 8;
-        pfd.cStencilBits = 8;
-        size_t iPixelFormat = ChoosePixelFormat(fakeWindow.mDC, &pfd);
-        DescribePixelFormat(fakeWindow.mDC, iPixelFormat, sizeof(pfd), &pfd);
-        SetPixelFormat(fakeWindow.mDC, iPixelFormat, &pfd);
-
-        // context initialization
-        context.hrc = wglCreateContext(fakeWindow.mDC);
-        wglMakeCurrent(fakeWindow.mDC, context.hrc);
-
-        ALogger::info("Initialized temporary GL context");
-
-        if (!glewExperimental) {
-            ALogger::info((const char*) glGetString(GL_VERSION));
-            ALogger::info((const char*) glGetString(GL_VENDOR));
-            ALogger::info((const char*) glGetString(GL_RENDERER));
-            ALogger::info((const char*) glGetString(GL_EXTENSIONS));
-            glewExperimental = true;
-            if (glewInit() != GLEW_OK) {
-                AMessageBox::show(nullptr, "OpenGL", "Could not initialize OpenGL context");
-                throw std::runtime_error("glewInit failed");
-            }
-        }
-        bool k;
-
-        auto makeContext = [&](unsigned i) {
-            const int iPixelFormatAttribList[] =
-                    {
-                            WGL_DRAW_TO_WINDOW_ARB, GL_TRUE,
-                            WGL_SUPPORT_OPENGL_ARB, GL_TRUE,
-                            WGL_DOUBLE_BUFFER_ARB, GL_TRUE,
-                            WGL_PIXEL_TYPE_ARB, WGL_TYPE_RGBA_ARB,
-                            WGL_COLOR_BITS_ARB, 24,
-                            WGL_ALPHA_BITS_ARB, 8,
-                            WGL_DEPTH_BITS_ARB, 24,
-                            WGL_STENCIL_BITS_ARB, 8,
-                            //WGL_SAMPLE_BUFFERS_ARB, GL_TRUE,
-                            //WGL_SAMPLES_ARB, i,
-                            0
-                    };
-
-            UINT iNumFormats;
-            wglChoosePixelFormatARB(mDC, iPixelFormatAttribList, nullptr, 1, &pxf, &iNumFormats);
-            assert(iNumFormats);
-            DescribePixelFormat(mDC, pxf, sizeof(pfd), &pfd);
-            k = SetPixelFormat(mDC, pxf, &pfd);
-        };
-        makeContext(16);
-        if (!k) {
-            ALogger::info("Could not set pixel format with MSAA; trying to do the same but without MSAA");
-            makeContext(0);
-            if (!k) {
-                ALogger::info("Could not set pixel format even without MSAA. Giving up.");
-                throw AException("Could set pixel format");
-            } else {
-                ALogger::info("Successfully set pixel format without MSAA");
-            }
-        } else {
-            ALogger::info("Successfully set pixel format with MSAA");
-        }
-        GLint attribs[] =
-                {
-                        WGL_CONTEXT_MAJOR_VERSION_ARB, 2,
-                        WGL_CONTEXT_MINOR_VERSION_ARB, 0,
-                        WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-                        0
-                };
-        {
-            HGLRC CompHRC = wglCreateContextAttribsARB(mDC, nullptr, attribs);
-            if (CompHRC && wglMakeCurrent(mDC, CompHRC)) {
-                wglDeleteContext(context.hrc);
-                context.hrc = CompHRC;
-            } else
-                throw std::runtime_error("Failed to create OpenGL 2.0 context");
-        }
-        ALogger::info("OpenGL context is ready");
-
-        // vsync
-        wglSwapIntervalEXT(true);
-
-        Render::setRenderer(std::make_unique<OpenGLRenderer>());
-
-        //wglMakeCurrent(mDC, nullptr);
-    } else {
-        bool k = SetPixelFormat(mDC, pxf, &pfd);
-        assert(k);
-    }
-
-    wglMakeCurrent(mDC, context.hrc);
-
-#if defined(_DEBUG)
-    GL::setupDebug();
-#endif
-    //assert(glGetError() == 0);
-
-    updateDpi();
-    Render::setWindow(this);
-
-    checkForStencilBits();
-
-    RECT clientRect;
-    GetClientRect(mHandle, &clientRect);
-    mSize = {clientRect.right - clientRect.left, clientRect.bottom - clientRect.top};
     setWindowStyle(ws);
 
 }
 
 AWindow::~AWindow() {
-    wglMakeCurrent(mDC, nullptr);
-    ReleaseDC(mHandle, mDC);
-
-    DestroyWindow(mHandle);
-    UnregisterClass(mWindowClass.c_str(), mInst);
+    getWindowManager().getWindowInitializer()->destroyNativeWindow(*this);
 }
 
 extern unsigned char stencilDepth;
@@ -610,7 +421,7 @@ void AWindow::redraw() {
         }
 
 #if !(AUI_PLATFORM_APPLE)
-        painter p(mHandle);
+        painter p(*this);
 #endif
         GL::State::activeTexture(0);
         GL::State::bindTexture(GL_TEXTURE_2D, 0);
@@ -642,21 +453,8 @@ void AWindow::redraw() {
         glStencilFunc(GL_EQUAL, 0, 0xff);
 
         doDrawWindow();
-
-
-#if AUI_PLATFORM_WIN
-        SwapBuffers(p.mHdc);
-#elif AUI_PLATFORM_ANDROID
-
-        #elif AUI_PLATFORM_APPLE
-        // TODO apple
-#else
-        glXSwapBuffers(gDisplay, mHandle);
-#endif
     }
-#if AUI_PLATFORM_WIN
-    wglMakeCurrent(mDC, context.hrc);
-#endif
+
     emit redrawn();
 }
 void AWindow::restore() {

@@ -30,6 +30,8 @@
 #include "AUI/Platform/ABaseWindow.h"
 #include "AUI/Thread/IEventLoop.h"
 #include "AUI/Util/AMetric.h"
+#include "AWindowNativePtr.h"
+#include <AUI/Enum/WindowStyle.h>
 
 #if AUI_PLATFORM_WIN
 #undef ui
@@ -50,49 +52,24 @@
 class Render;
 class AWindowManager;
 
-ENUM_FLAG(WindowStyle)
-{
-    DEFAULT = 0,
-    /**
-     * \brief Window without minimize and maximize buttons.
-     */
-    NO_MINIMIZE_MAXIMIZE = 0x1,
-
-    /**
-     * \brief Disable window resize.
-     */
-    NO_RESIZE = 0x2,
-
-    /**
-     * \brief Typical dialog window.
-     */
-    DIALOG = WindowStyle::NO_MINIMIZE_MAXIMIZE | WindowStyle::NO_RESIZE,
-
-    /**
-     * \brief Remove standard window decorators.
-     */
-    NO_DECORATORS = 0x4,
-
-    /**
-     * \brief Window for displaying system menu (dropdown, context menu)
-     */
-    SYS = 0x8,
-
-    /**
-     * \brief Enables transparency for this window, so it can be displayed as custom rounded shadowed rectangle.
-     * TODO implement WS_TRANSPARENT. WinAPI: http://rsdn.org/article/opengl/layeredopengl.xml, X11: https://github.com/datenwolf/codesamples/blob/master/samples/OpenGL/x11argb_opengl/x11argb_opengl.c
-     */
-    // WS_TRANSPARENT
-};
-
 class API_AUI_VIEWS AWindow: public ABaseWindow, public std::enable_shared_from_this<AWindow>
 {
     friend class AWindowManager;
+    friend class CommonWindowInitializer;
+    friend class OpenGLWindowInitializer;
     friend struct painter;
 private:
 #if AUI_PLATFORM_WIN
     HMODULE mInst;
-	HDC mDC;
+	/**
+	 * GetDC() HDC
+	 */
+    HDC mDC;
+
+    /**
+     * BeginPaint() HDC
+     */
+	HDC mHdc;
 #elif AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_LINUX
     /**
@@ -115,20 +92,6 @@ private:
      */
     _<AWindow> mSelfHolder;
 
-    struct Context
-    {
-#if AUI_PLATFORM_WIN
-        HGLRC hrc = 0;
-#elif AUI_PLATFORM_ANDROID
-#elif AUI_PLATFORM_APPLE
-#else
-        GLXContext context;
-#endif
-
-        ~Context();
-    };
-    static Context context;
-
     AString mWindowTitle;
 
 #if AUI_PLATFORM_WIN
@@ -142,16 +105,14 @@ private:
 
 protected:
 #if AUI_PLATFORM_WIN
-    HWND mHandle;
 	HICON mIcon = nullptr;
     virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #elif AUI_PLATFORM_ANDROID
-    jobject mHandle = nullptr;
 #elif AUI_PLATFORM_APPLE
 #else
-    Window mHandle;
     XIC mIC;
 #endif
+    AWindowNativePtr mHandle = nullptr;
     WindowStyle mWindowStyle = WindowStyle::DEFAULT;
 
     virtual void doDrawWindow();

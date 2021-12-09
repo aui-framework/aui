@@ -29,7 +29,7 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <AUI/GL/State.h>
 #include <AUI/Platform/AWindow.h>
-#include <AUI/Render/OpenGLRenderer.h>
+#include <AUI/GL/OpenGLRenderer.h>
 
 class AEmbedAuiWrap::EmbedWindow: public ABaseWindow {
     friend class AEmbedAuiWrap;

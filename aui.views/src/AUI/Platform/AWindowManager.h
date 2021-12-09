@@ -21,16 +21,17 @@
 
 #pragma once
 #include <AUI/Thread/IEventLoop.h>
+#include "IWindowInitializer.h"
 
-#ifdef __linux
-#if !(AUI_PLATFORM_ANDROID)
+#if AUI_PLATFORM_LINUX
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysymdef.h>
-#endif
+
 #endif
 
 class AWindow;
+
 
 class API_AUI_VIEWS AWindowManager: public IEventLoop {
     friend class AWindow;
@@ -39,6 +40,8 @@ private:
     IEventLoop::Handle mHandle;
     ADeque<_<AWindow>> mWindows;
     bool mLoopRunning = false;
+    _unique<IWindowInitializer> mWindowInitializer;
+
 #if AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_LINUX
     AMutex mXNotifyLock;
@@ -50,6 +53,12 @@ private:
     AString xClipboardPasteImpl();
 #endif
 
+    void initNativeWindow(AWindow& window,
+                          const AString& name,
+                          int width,
+                          int height,
+                          WindowStyle ws,
+                          AWindow* parent);
 public:
     AWindowManager();
     ~AWindowManager() override;
@@ -62,8 +71,8 @@ public:
     }
 
     template<typename T>
-    [[nodiscard]] ADeque<_<AWindow>> getWindowsOfType() const {
-        ADeque<_<AWindow>> result;
+    [[nodiscard]] ADeque<_<T>> getWindowsOfType() const {
+        ADeque<_<T>> result;
         for (auto& w : mWindows) {
             if (auto c = _cast<T>(w)) {
                 result << c;
@@ -71,5 +80,12 @@ public:
         }
 
         return std::move(result);
+    }
+
+
+    const _unique<IWindowInitializer>& getWindowInitializer();
+
+    void setWindowInitializer(_unique<IWindowInitializer> windowInitializer) {
+        mWindowInitializer = std::move(windowInitializer);
     }
 };

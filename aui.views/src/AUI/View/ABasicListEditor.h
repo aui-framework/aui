@@ -39,7 +39,7 @@ public:
                                                     300_dp,
                                                     400_dp,
                                                     parent,
-                                                    WindowStyle::DIALOG |
+                                                    WindowStyle::MODAL |
                                                     WindowStyle::NO_RESIZE |
                                                     WindowStyle::NO_MINIMIZE_MAXIMIZE);
             return window;

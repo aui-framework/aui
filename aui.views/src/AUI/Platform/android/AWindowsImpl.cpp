@@ -45,7 +45,7 @@
 
 #include <AUI/Platform/OSAndroid.h>
 #include <AUI/Platform/Platform.h>
-#include <AUI/Render/OpenGLRenderer.h>
+#include <AUI/GL/OpenGLRenderer.h>
 
 struct painter {
 private:

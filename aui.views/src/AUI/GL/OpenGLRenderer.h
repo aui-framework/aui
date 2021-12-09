@@ -3,7 +3,7 @@
 
 #include <AUI/GL/Shader.h>
 #include <AUI/GL/Vao.h>
-#include "IRenderer.h"
+#include "AUI/Render/IRenderer.h"
 
 class OpenGLRenderer: public IRenderer {
 friend class OpenGLPrerenderedString;

@@ -28,6 +28,7 @@ cmake_policy(SET CMP0072 NEW)
 
 if (IOS)
     option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
+    message(STATUS "Linking everything statically because target platform is iOS")
 else()
     option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
 endif()

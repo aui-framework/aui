@@ -497,7 +497,7 @@ public:
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <AUI/Util/ALayoutInflater.h>
-#include <AUI/Render/OpenGLRenderer.h>
+#include <AUI/GL/OpenGLRenderer.h>
 
 
 #if !(AUI_PLATFORM_APPLE)

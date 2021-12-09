@@ -73,7 +73,7 @@ void fillWindow(_<AViewContainer> t)
 
 class AllViewsWindow: public AWindow {
 public:
-    AllViewsWindow(): AWindow("All views", 300_dp, 500_dp, nullptr, WindowStyle::DIALOG) {
+    AllViewsWindow(): AWindow("All views", 300_dp, 500_dp, nullptr, WindowStyle::MODAL) {
         setContents(Centered {
             AScrollArea::Builder().withContents(Vertical {
                 Centered { _new<ALabel>("ALabel") },
@@ -159,11 +159,11 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                     auto w = _new<AWindow>("Dialog window", 400_dp, 300_dp);
                     fillWindow(w);
                     w->show();
-                    w->setWindowStyle(WindowStyle::DIALOG);
+                    w->setWindowStyle(WindowStyle::MODAL);
                     mWindows << w;
                 }),
                 _new<AButton>("Modal window").connect(&AButton::clicked, this, [&] {
-                    auto w = _new<AWindow>("Modal window", 400_dp, 300_dp, this, WindowStyle::DIALOG);
+                    auto w = _new<AWindow>("Modal window", 400_dp, 300_dp, this, WindowStyle::MODAL);
                     fillWindow(w);
                     w->show();
                     mWindows << w;
@@ -179,7 +179,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                     auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
                     fillWindow(w);
                     w->show();
-                    w->setWindowStyle(WindowStyle::DIALOG);
+                    w->setWindowStyle(WindowStyle::MODAL);
                     mWindows << w;
                 }),
                 _new<AButton>("Close all windows").connect(&AButton::clicked, this, [&] {

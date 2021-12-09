@@ -48,12 +48,10 @@
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 
-AWindow::Context AWindow::context = {};
-
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <AUI/Util/ALayoutInflater.h>
-#include <AUI/Render/OpenGLRenderer.h>
+#include <AUI/GL/OpenGLRenderer.h>
 
 
 

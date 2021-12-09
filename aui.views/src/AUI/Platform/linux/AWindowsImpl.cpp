@@ -32,7 +32,7 @@
 #include "AUI/Util/ARandom.h"
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
-#include "AUI/Render/OpenGLRenderer.h"
+#include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Platform/Platform.h"
 #include "AUI/Platform/ACustomWindow.h"
 
