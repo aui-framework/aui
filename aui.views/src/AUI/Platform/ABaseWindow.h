@@ -12,20 +12,21 @@
 
 
 class API_AUI_VIEWS ABaseWindow: public AViewContainer {
+    friend class SoftwareRenderer;
 private:
     _weak<AView> mFocusedView;
     _weak<AView> mProfiledView;
+
+
     glm::ivec2 mMousePos;
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
 
 protected:
     float mDpiRatio = 1.f;
     bool mIsFocused = true;
+    _unique<IRenderingContext> mRenderingContext;
 
     static ABaseWindow*& currentWindowStorage();
-
-    static void checkForStencilBits();
-
 
     /**
      * @see ABaseWindow::createOverlappingSurface
@@ -41,6 +42,10 @@ public:
     virtual ~ABaseWindow() = default;
 
     static AWindowManager& getWindowManager();
+
+    const _unique<IRenderingContext>& getRenderingContext() const {
+        return mRenderingContext;
+    }
 
     float getDpiRatio()
     {

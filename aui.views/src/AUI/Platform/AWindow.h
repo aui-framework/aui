@@ -54,22 +54,13 @@ class AWindowManager;
 
 class API_AUI_VIEWS AWindow: public ABaseWindow, public std::enable_shared_from_this<AWindow>
 {
+    friend class OpenGLRenderingContext;
+    friend class CommonRenderingContext;
     friend class AWindowManager;
-    friend class CommonWindowInitializer;
-    friend class OpenGLWindowInitializer;
     friend struct painter;
 private:
 #if AUI_PLATFORM_WIN
-    HMODULE mInst;
-	/**
-	 * GetDC() HDC
-	 */
-    HDC mDC;
 
-    /**
-     * BeginPaint() HDC
-     */
-	HDC mHdc;
 #elif AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_LINUX
     /**
@@ -86,6 +77,7 @@ private:
     bool mUpdateLayoutFlag = true;
     AString mWindowClass;
     AWindow* mParentWindow;
+    _unique<IRenderingContext> mRenderingContext;
 
     /**
      * \brief Handles self shared pointer.
@@ -131,6 +123,7 @@ protected:
 public:
     AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
         windowNativePreInit(name, width, height, parent, ws);
+        Render::setWindow(this);
     }
     virtual ~AWindow();
 
@@ -148,11 +141,6 @@ public:
      * \return true if 16 milliseconds elapsed since last frame
      */
     static bool isRedrawWillBeEfficient();
-
-    /**
-     * \return true if window is currently painting
-     */
-    static bool isRenderingContextAcquired();
 
     void setIcon(const AImage& image);
 

@@ -59,33 +59,7 @@
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/Platform/AMessageBox.h>
-
-struct painter {
-private:
-    AWindow& mWindow;
-    PAINTSTRUCT mPaint;
-
-public:
-    static thread_local bool painting;
-
-    painter(AWindow& window) :
-            mWindow(window) {
-        assert(!painting);
-        painting = true;
-        mWindow.mHdc = BeginPaint(mWindow.mHandle, &mPaint);
-        AWindow::getWindowManager().getWindowInitializer()->beginPaint(window);
-    }
-
-    ~painter() {
-        assert(painting);
-        painting = false;
-        AWindow::getWindowManager().getWindowInitializer()->endPaint(mWindow);
-        EndPaint(mWindow.mHandle, &mPaint);
-    }
-};
-
-
-thread_local bool painter::painting = false;
+#include <AUI/Platform/OpenGLRenderingContext.h>
 
 
 LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -144,7 +118,8 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             // process thread messages because queue freezes when window is frequently redrawn
             AThread::current()->processMessages();
 
-            if (!painter::painting) {
+            //if (!painter::painting)
+            {
                 redraw();
             }
 
@@ -180,7 +155,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 RECT windowRect, clientRect;
                 GetWindowRect(mHandle, &windowRect);
                 GetClientRect(mHandle, &clientRect);
-                getWindowManager().getWindowInitializer()->beginResize(*this);
+                mRenderingContext->beginResize(*this);
                 emit resized(LOWORD(lParam), HIWORD(lParam));
                 AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
 
@@ -293,11 +268,6 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 
-
-bool AWindow::isRenderingContextAcquired() {
-    return painter::painting;
-}
-
 void AWindow::quit() {
     getWindowManager().mWindows.remove(shared_from_this());
 
@@ -320,28 +290,17 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
     connect(closed, this, &AWindow::close);
 
-    getWindowManager().getWindowInitializer()->initNativeWindow(*this,
-                                                                name,
-                                                                width,
-                                                                height,
-                                                                ws,
-                                                                parent);
+    mRenderingContext = std::make_unique<OpenGLRenderingContext>();
+
+    mRenderingContext->init({ *this, name, width, height, ws, parent });
 
     setWindowStyle(ws);
 
 }
 
 AWindow::~AWindow() {
-    getWindowManager().getWindowInitializer()->destroyNativeWindow(*this);
+    mRenderingContext->destroyNativeWindow(*this);
 }
-
-extern unsigned char stencilDepth;
-
-using namespace std::chrono;
-using namespace std::chrono_literals;
-
-
-static auto _gLastFrameTime = 0ms;
 
 
 void AWindow::setWindowStyle(WindowStyle ws) {
@@ -397,66 +356,7 @@ void AWindow::updateDpi() {
 
     onDpiChanged();
 }
-void AWindow::redraw() {
-    if (mUpdateLayoutFlag) {
-        mUpdateLayoutFlag = false;
-        updateLayout();
-    }
-#ifdef WIN32
-    mRedrawFlag = true;
-#endif
-    {
 
-        // fps restriction
-        {
-            auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-            auto delta = now - _gLastFrameTime;
-            // restriction 16ms = up to 60 frames per second
-            const auto FRAME_DURATION = 16ms;
-
-            if (FRAME_DURATION > delta) {
-                std::this_thread::sleep_for(FRAME_DURATION - delta);
-            }
-            _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        }
-
-#if !(AUI_PLATFORM_APPLE)
-        painter p(*this);
-#endif
-        GL::State::activeTexture(0);
-        GL::State::bindTexture(GL_TEXTURE_2D, 0);
-        GL::State::bindVertexArray(0);
-        GL::State::useProgram(0);
-
-        Render::setWindow(this);
-        glViewport(0, 0, getWidth(), getHeight());
-
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-#if !(AUI_PLATFORM_ANDROID)
-        glEnable(GL_MULTISAMPLE);
-#else
-        glClearColor(1.f, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-#endif
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        // stencil
-        glClearStencil(0);
-        glStencilMask(0xff);
-        glDisable(GL_SCISSOR_TEST);
-        glClear(GL_STENCIL_BUFFER_BIT);
-        glEnable(GL_STENCIL_TEST);
-        glStencilMask(0x00);
-        stencilDepth = 0;
-        glStencilFunc(GL_EQUAL, 0, 0xff);
-
-        doDrawWindow();
-    }
-
-    emit redrawn();
-}
 void AWindow::restore() {
     ShowWindow(mHandle, SW_RESTORE);
 }

@@ -20,38 +20,15 @@
  */
 
 
-#include "AUI/GL/gl.h"
-#include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
-#include "AUI/Render/Render.h"
-
-#include <glm/gtc/matrix_transform.hpp>
-
-
-#include "AUI/Util/ARandom.h"
-#include "AUI/GL/State.h"
-#include "AUI/Thread/AThread.h"
-#include "Platform.h"
-#include "AMessageBox.h"
-#include "AWindowManager.h"
-#include "ADesktop.h"
-#include "ABaseWindow.h"
-#include "ACustomWindow.h"
-
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/Util/kAUI.h>
-#include <AUI/Traits/memory.h>
-#include <AUI/Traits/strings.h>
-#include <AUI/Traits/arrays.h>
 #include <AUI/Action/AMenu.h>
-#include <AUI/Util/AViewProfiler.h>
 
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <AUI/Util/ALayoutInflater.h>
-#include <AUI/GL/OpenGLRenderer.h>
 
 
 
@@ -90,22 +67,52 @@ using namespace std::chrono_literals;
 
 static auto _gLastFrameTime = 0ms;
 
-_<AWindow> AWindow::wrapViewToWindow(const _<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {
-    view->setExpanding();
-
-    auto window = _new<AWindow>(title, width, height, parent, ws);
-    window->setContents(Stacked {
-        view
-    });
-    return window;
-}
-
 bool AWindow::isRedrawWillBeEfficient() {
     auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
     auto delta = now - _gLastFrameTime;
     return 8ms < delta;
 }
+void AWindow::redraw() {
+    if (mUpdateLayoutFlag) {
+        mUpdateLayoutFlag = false;
+        updateLayout();
+    }
+#ifdef WIN32
+    mRedrawFlag = true;
+#endif
+    {
 
+        // fps restriction
+        {
+            auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+            auto delta = now - _gLastFrameTime;
+            // restriction 16ms = up to 60 frames per second
+            const auto FRAME_DURATION = 16ms;
+
+            if (FRAME_DURATION > delta) {
+                std::this_thread::sleep_for(FRAME_DURATION - delta);
+            }
+            _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+        }
+
+        mRenderingContext->beginPaint(*this);
+        Render::setWindow(this);
+        doDrawWindow();
+        mRenderingContext->endPaint(*this);
+    }
+
+    emit redrawn();
+}
+
+_<AWindow> AWindow::wrapViewToWindow(const _<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {
+    view->setExpanding();
+
+    auto window = _new<AWindow>(title, width, height, parent, ws);
+    window->setContents(Stacked {
+            view
+    });
+    return window;
+}
 
 void AWindow::close() {
     onClosed();

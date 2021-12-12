@@ -21,7 +21,7 @@
 
 #pragma once
 #include <AUI/Thread/IEventLoop.h>
-#include "IWindowInitializer.h"
+#include "IRenderingContext.h"
 
 #if AUI_PLATFORM_LINUX
 #include <X11/Xlib.h>
@@ -40,7 +40,6 @@ private:
     IEventLoop::Handle mHandle;
     ADeque<_<AWindow>> mWindows;
     bool mLoopRunning = false;
-    _unique<IWindowInitializer> mWindowInitializer;
 
 #if AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_LINUX
@@ -82,10 +81,5 @@ public:
         return std::move(result);
     }
 
-
-    const _unique<IWindowInitializer>& getWindowInitializer();
-
-    void setWindowInitializer(_unique<IWindowInitializer> windowInitializer) {
-        mWindowInitializer = std::move(windowInitializer);
-    }
+    void setWindowInitializer(_unique<IRenderingContext> windowInitializer);
 };

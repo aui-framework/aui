@@ -4,16 +4,24 @@
 
 #include "AFakeWindowInitializer.h"
 
-void
-AFakeWindowInitializer::initNativeWindow(AWindow& window,
-                                         const AString& name,
-                                         int width,
-                                         int height,
-                                         WindowStyle ws,
-                                         AWindow* parent) {
 
+
+void AFakeWindowInitializer::init(const IRenderingContext::Init& init) {
+    IRenderingContext::init(init);
 }
 
 void AFakeWindowInitializer::destroyNativeWindow(AWindow& window) {
+
+}
+
+void AFakeWindowInitializer::beginPaint(AWindow& window) {
+
+}
+
+void AFakeWindowInitializer::endPaint(AWindow& window) {
+
+}
+
+void AFakeWindowInitializer::beginResize(AWindow& window) {
 
 }

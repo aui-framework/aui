@@ -36,7 +36,6 @@ class AEmbedAuiWrap::EmbedWindow: public ABaseWindow {
 public:
     EmbedWindow() {
         currentWindowStorage() = this;
-        checkForStencilBits();
     }
 
     _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override {

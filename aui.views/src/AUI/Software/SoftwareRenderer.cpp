@@ -2,13 +2,33 @@
 // Created by Alex2772 on 12/5/2021.
 //
 
+#include <AUI/Traits/callables.h>
 #include "SoftwareRenderer.h"
+#include <AUI/Platform/SoftwareRenderingContext.h>
 
+void SoftwareRenderer::putPixel(const glm::ivec2& position, const AColor& color) {
+    image().setPixelAt(position.x, position.y, glm::ivec4(color * 255.f));
+}
 
 void SoftwareRenderer::drawRect(const ABrush& brush,
                                 const glm::vec2& position,
                                 const glm::vec2& size) {
+    auto end = position + size;
+    for (int y = position.y; y < end.y; ++y) {
+        for (int x = position.x; x < end.x; ++x) {
+            std::visit(aui::lambda_overloaded {
+                [&](const ASolidBrush& brush) {
+                    putPixel({x, y}, brush.solidColor);
+                },
+                [&](const ATexturedBrush& brush) {
 
+                },
+                [&](const ALinearGradientBrush& brush) {
+
+                },
+            }, brush);
+        }
+    }
 }
 
 void SoftwareRenderer::drawRoundedRect(const ABrush& brush,
@@ -110,4 +130,11 @@ ITexture* SoftwareRenderer::createNewTexture() {
 
 _<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle style) {
     return _new<SoftwareMultiStringCanvas>();
+}
+
+void SoftwareRenderer::setWindow(ABaseWindow* window) {
+    IRenderer::setWindow(window);
+    if (auto w = dynamic_cast<SoftwareRenderingContext*>(window->getRenderingContext().get())) {
+
+    }
 }

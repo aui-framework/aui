@@ -233,7 +233,7 @@ public:
 
     virtual void setBlending(Blending blending) = 0;
 
-    void setWindow(ABaseWindow* window)
+    virtual void setWindow(ABaseWindow* window)
     {
         mWindow = window;
         setColorForced(1.f);

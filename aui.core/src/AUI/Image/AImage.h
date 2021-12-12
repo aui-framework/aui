@@ -72,6 +72,11 @@ public:
     void allocate() {
         mData.resize(mWidth * mHeight * getBytesPerPixel());
     }
+    void setSize(const glm::uvec2& size) {
+        mWidth = size.x;
+        mHeight = size.y;
+        allocate();
+    }
 
     AVector<uint8_t>& getData();
 

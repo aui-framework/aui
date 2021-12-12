@@ -250,8 +250,3 @@ void ABaseWindow::onFocusLost() {
     closeOverlappingSurfacesOnClick();
 }
 
-void ABaseWindow::checkForStencilBits() {
-    GLint stencilBits = 0;
-    glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
-    //assert(("no stencil bits" && stencilBits > 0));
-}

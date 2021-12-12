@@ -3,7 +3,7 @@
 //
 
 #include <AUI/GL/gl.h>
-#include <AUI/Platform/OpenGLWindowInitializer.h>
+#include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
@@ -11,20 +11,19 @@
 
 #include <GL/wglew.h>
 #include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/GL/State.h>
 
+extern unsigned char stencilDepth;
 
-void
-OpenGLWindowInitializer::initNativeWindow(AWindow& window, const AString& name, int width, int height, WindowStyle ws,
-                                          AWindow* parent) {
+HGLRC OpenGLRenderingContext::ourHrc = nullptr;
 
-    CommonWindowInitializer::initNativeWindow(window, name, width, height, WindowStyle::DEFAULT, parent);
-
-
+void OpenGLRenderingContext::init(const Init& init) {
+    CommonRenderingContext::init(init);
 
     // INITIALIZE OPENGL
     static PIXELFORMATDESCRIPTOR pfd;
     static int pxf;
-    if (mHrc == nullptr) {
+    if (ourHrc == nullptr) {
         ALogger::info("Creating OpenGL context...");
         struct FakeWindow {
             HWND mHwnd;
@@ -38,10 +37,10 @@ OpenGLWindowInitializer::initNativeWindow(AWindow& window, const AString& name, 
                 ReleaseDC(mHwnd, mDC);
                 DestroyWindow(mHwnd);
             }
-        } fakeWindow(CreateWindowEx(WS_EX_DLGMODALFRAME, window.mWindowClass.c_str(), name.c_str(), WS_OVERLAPPEDWINDOW,
-                                    GetSystemMetrics(SM_CXSCREEN) / 2 - width / 2,
-                                    GetSystemMetrics(SM_CYSCREEN) / 2 - height / 2, width, height,
-                                    parent != nullptr ? parent->mHandle : nullptr, nullptr, window.mInst, nullptr));
+        } fakeWindow(CreateWindowEx(WS_EX_DLGMODALFRAME, mWindowClass.c_str(), init.name.c_str(), WS_OVERLAPPEDWINDOW,
+                                    GetSystemMetrics(SM_CXSCREEN) / 2 - init.width / 2,
+                                    GetSystemMetrics(SM_CYSCREEN) / 2 - init.height / 2, init.width, init.height,
+                                    init.parent != nullptr ? init.parent->mHandle : nullptr, nullptr, GetModuleHandle(nullptr), nullptr));
 
         memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
         pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
@@ -55,8 +54,8 @@ OpenGLWindowInitializer::initNativeWindow(AWindow& window, const AString& name, 
         SetPixelFormat(fakeWindow.mDC, iPixelFormat, &pfd);
 
         // context initialization
-        mHrc = wglCreateContext(fakeWindow.mDC);
-        wglMakeCurrent(fakeWindow.mDC, mHrc);
+        ourHrc = wglCreateContext(fakeWindow.mDC);
+        wglMakeCurrent(fakeWindow.mDC, ourHrc);
 
         ALogger::info("Initialized temporary GL context");
 
@@ -91,10 +90,10 @@ OpenGLWindowInitializer::initNativeWindow(AWindow& window, const AString& name, 
 
             UINT iNumFormats;
 
-            wglChoosePixelFormatARB(window.mDC, iPixelFormatAttribList, nullptr, 1, &pxf, &iNumFormats);
+            wglChoosePixelFormatARB(mWindowDC, iPixelFormatAttribList, nullptr, 1, &pxf, &iNumFormats);
             assert(iNumFormats);
-            DescribePixelFormat(window.mDC, pxf, sizeof(pfd), &pfd);
-            k = SetPixelFormat(window.mDC, pxf, &pfd);
+            DescribePixelFormat(mWindowDC, pxf, sizeof(pfd), &pfd);
+            k = SetPixelFormat(mWindowDC, pxf, &pfd);
         };
         makeContext(16);
         if (!k) {
@@ -117,10 +116,10 @@ OpenGLWindowInitializer::initNativeWindow(AWindow& window, const AString& name, 
                         0
                 };
         {
-            HGLRC CompHRC = wglCreateContextAttribsARB(window.mDC, nullptr, attribs);
-            if (CompHRC && wglMakeCurrent(window.mDC, CompHRC)) {
-                wglDeleteContext(mHrc);
-                mHrc = CompHRC;
+            HGLRC CompHRC = wglCreateContextAttribsARB(mWindowDC, nullptr, attribs);
+            if (CompHRC && wglMakeCurrent(mWindowDC, CompHRC)) {
+                wglDeleteContext(ourHrc);
+                ourHrc = CompHRC;
             } else
                 throw std::runtime_error("Failed to create OpenGL 2.0 context");
         }
@@ -133,45 +132,72 @@ OpenGLWindowInitializer::initNativeWindow(AWindow& window, const AString& name, 
 
         //wglMakeCurrent(mDC, nullptr);
     } else {
-        bool k = SetPixelFormat(window.mDC, pxf, &pfd);
+        bool k = SetPixelFormat(mWindowDC, pxf, &pfd);
         assert(k);
     }
 
-    wglMakeCurrent(window.mDC, mHrc);
+    wglMakeCurrent(mWindowDC, ourHrc);
 
 #if defined(_DEBUG)
     GL::setupDebug();
 #endif
     //assert(glGetError() == 0);
 
-    window.updateDpi();
-    Render::setWindow(&window);
+    GLint stencilBits = 0;
+    glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
+    //assert(("no stencil bits" && stencilBits > 0));
 
-    window.checkForStencilBits();
-
-    RECT clientRect;
-    GetClientRect(window.mHandle, &clientRect);
-    window.mSize = {clientRect.right - clientRect.left, clientRect.bottom - clientRect.top};
 }
 
-void OpenGLWindowInitializer::destroyNativeWindow(AWindow& window) {
-    endPaint(window);
-}
-
-void OpenGLWindowInitializer::beginPaint(AWindow& window) {
-    bool ok = wglMakeCurrent(window.mHdc, mHrc);
-    assert(ok);
-}
-
-void OpenGLWindowInitializer::beginResize(AWindow& window) {
-    wglMakeCurrent(window.mDC, mHrc);
-}
-
-void OpenGLWindowInitializer::endPaint(AWindow& window) {
-    SwapBuffers(window.mHdc);
+void OpenGLRenderingContext::destroyNativeWindow(AWindow& window) {
+    CommonRenderingContext::destroyNativeWindow(window);
     wglMakeCurrent(nullptr, nullptr);
 }
 
-OpenGLWindowInitializer::~OpenGLWindowInitializer() {
-    wglDeleteContext(mHrc);
+void OpenGLRenderingContext::beginPaint(AWindow& window) {
+    CommonRenderingContext::beginPaint(window);
+    bool ok = wglMakeCurrent(mPainterDC, ourHrc);
+    assert(ok);
+
+
+    GL::State::activeTexture(0);
+    GL::State::bindTexture(GL_TEXTURE_2D, 0);
+    GL::State::bindVertexArray(0);
+    GL::State::useProgram(0);
+
+    glViewport(0, 0, window.getWidth(), window.getHeight());
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+#if !(AUI_PLATFORM_ANDROID)
+    glEnable(GL_MULTISAMPLE);
+#else
+    glClearColor(1.f, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#endif
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // stencil
+    glClearStencil(0);
+    glStencilMask(0xff);
+    glDisable(GL_SCISSOR_TEST);
+    glClear(GL_STENCIL_BUFFER_BIT);
+    glEnable(GL_STENCIL_TEST);
+    glStencilMask(0x00);
+    stencilDepth = 0;
+    glStencilFunc(GL_EQUAL, 0, 0xff);
+}
+
+void OpenGLRenderingContext::beginResize(AWindow& window) {
+    wglMakeCurrent(mWindowDC, ourHrc);
+}
+
+void OpenGLRenderingContext::endPaint(AWindow& window) {
+    SwapBuffers(mPainterDC);
+    wglMakeCurrent(mWindowDC, ourHrc);
+    CommonRenderingContext::endPaint(window);
+}
+
+OpenGLRenderingContext::~OpenGLRenderingContext() {
 }

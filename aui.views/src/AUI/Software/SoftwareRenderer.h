@@ -2,8 +2,18 @@
 
 
 #include <AUI/Render/IRenderer.h>
+#include <AUI/Platform/ABaseWindow.h>
 
 class SoftwareRenderer: public IRenderer {
+private:
+    AImage* mImage;
+
+    AImage& image() {
+        return *mImage;
+    }
+
+    void putPixel(const glm::ivec2& position, const AColor& color);
+
 public:
     _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle style) override;
 
@@ -46,6 +56,9 @@ public:
                                           const AFontStyle& fs) override;
 
     void setBlending(Blending blending) override;
+
+    void setWindow(ABaseWindow* window) override;
+
 
 protected:
     ITexture* createNewTexture() override;

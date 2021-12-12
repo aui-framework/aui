@@ -1,15 +1,22 @@
 #pragma once
 
 
-#include "IWindowInitializer.h"
+#include "IRenderingContext.h"
 
 /**
  * Fake window initializer which does not create any window. Applicable in UI tests
  */
-class AFakeWindowInitializer: public IWindowInitializer {
+class AFakeWindowInitializer: public IRenderingContext {
 public:
-    void initNativeWindow(AWindow& window, const AString& name, int width, int height, WindowStyle ws,
-                          AWindow* parent) override;
+    void init(const Init& init) override;
+
+    ~AFakeWindowInitializer() override = default;
+
+    void beginPaint(AWindow& window) override;
+
+    void endPaint(AWindow& window) override;
+
+    void beginResize(AWindow& window) override;
 
     void destroyNativeWindow(AWindow& window) override;
 };

@@ -40,6 +40,10 @@ public:
         ourRenderer = std::move(renderer);
     }
 
+    static const _unique<IRenderer>& getRenderer() {
+        return ourRenderer;
+    }
+
     /**
      * Canvas for batching multiple <code>prerender</code> string calls.
      * @return a new instance of <code>IMultiStringCanvas</code>
