@@ -77,7 +77,6 @@ private:
     bool mUpdateLayoutFlag = true;
     AString mWindowClass;
     AWindow* mParentWindow;
-    _unique<IRenderingContext> mRenderingContext;
 
     /**
      * \brief Handles self shared pointer.

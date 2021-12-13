@@ -100,9 +100,10 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
     //            _new<ADrawableView>(IDrawable::fromUrl(":img/cat.jpg")) with_style { MinSize { 100_dp }, Margin { 4_dp } },
     //            "Lorem Ipsum - это текст-\"рыба\", часто используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной \"рыбой\" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов. Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн. Его популяризации в новое время послужили публикация листов Letraset с образцами Lorem Ipsum в 60-х годах и, в более недавнее время, программы электронной вёрстки типа Aldus PageMaker, в шаблонах которых используется Lorem Ipsum."
     //        }));
-	addView(AText::fromHtml(
+	/*
+    addView(AText::fromHtml(
             "Lorem Ipsum - это текст-\"рыба\", часто используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной \"рыбой\" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов. <world /> Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн. Его популяризации в новое время послужили публикация листов Letraset с образцами Lorem Ipsum в 60-х годах и, в более недавнее время, программы электронной вёрстки типа Aldus PageMaker, в шаблонах которых используется Lorem Ipsum."
-            ));
+            ));*/
     _<ATabView> tabView;
     addView(tabView = _new<ATabView>() let {
         it->addTab(Horizontal {
@@ -319,6 +320,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
 
         it->setExpanding();
     });
+
 
 	addView(Horizontal{
         _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] {

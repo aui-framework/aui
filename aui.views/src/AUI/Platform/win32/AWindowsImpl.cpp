@@ -60,6 +60,7 @@
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
+#include <AUI/Platform/SoftwareRenderingContext.h>
 
 
 LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -170,6 +171,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                         emit restored();
                         break;
                 }
+                mRenderingContext->endResize(*this);
             }
             return 0;
         }
@@ -290,8 +292,8 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
     connect(closed, this, &AWindow::close);
 
-    mRenderingContext = std::make_unique<OpenGLRenderingContext>();
-
+    //mRenderingContext = std::make_unique<OpenGLRenderingContext>();
+    mRenderingContext = std::make_unique<SoftwareRenderingContext>();
     mRenderingContext->init({ *this, name, width, height, ws, parent });
 
     setWindowStyle(ws);

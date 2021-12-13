@@ -25,4 +25,5 @@ public:
     virtual void beginPaint(AWindow& window) = 0;
     virtual void endPaint(AWindow& window) = 0;
     virtual void beginResize(AWindow& window) = 0;
+    virtual void endResize(AWindow& window) = 0;
 };

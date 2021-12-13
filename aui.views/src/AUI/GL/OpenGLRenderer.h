@@ -37,7 +37,6 @@ private:
     ADeque<FontEntryData> mFontEntryData;
 
 
-    glm::mat4 getProjectionMatrix() const;
     AVector<glm::vec3> getVerticesForRect(const glm::vec2& position,
                                           const glm::vec2& size);
 
@@ -94,6 +93,8 @@ public:
     void setBlending(Blending blending) override;
 
     _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle style) override;
+
+    glm::mat4 getProjectionMatrix() const override;
 
 };
 

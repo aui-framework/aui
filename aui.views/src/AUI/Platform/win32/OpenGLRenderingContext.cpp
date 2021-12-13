@@ -193,6 +193,10 @@ void OpenGLRenderingContext::beginResize(AWindow& window) {
     wglMakeCurrent(mWindowDC, ourHrc);
 }
 
+void OpenGLRenderingContext::endResize(AWindow& window) {
+
+}
+
 void OpenGLRenderingContext::endPaint(AWindow& window) {
     SwapBuffers(mPainterDC);
     wglMakeCurrent(mWindowDC, ourHrc);

@@ -9,6 +9,7 @@
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/GL/Vbo.h>
 #include <AUI/GL/State.h>
+#include <AUI/Platform/ABaseWindow.h>
 
 
 class OpenGLTexture2D: public ITexture {
@@ -272,6 +273,10 @@ OpenGLRenderer::OpenGLRenderer() {
                             {1, 0}
                     }
     );
+}
+
+glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
+    return glm::ortho(0.f, static_cast<float>(mWindow->getWidth()), static_cast<float>(mWindow->getHeight()), 0.f);
 }
 
 void OpenGLRenderer::uploadToShaderCommon() {

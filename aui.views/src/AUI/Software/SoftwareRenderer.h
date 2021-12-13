@@ -3,18 +3,27 @@
 
 #include <AUI/Render/IRenderer.h>
 #include <AUI/Platform/ABaseWindow.h>
+#include <AUI/Platform/SoftwareRenderingContext.h>
 
 class SoftwareRenderer: public IRenderer {
 private:
-    AImage* mImage;
-
-    AImage& image() {
-        return *mImage;
-    }
-
-    void putPixel(const glm::ivec2& position, const AColor& color);
+    SoftwareRenderingContext* mContext;
 
 public:
+
+    inline void putPixel(const glm::ivec2& position, const AColor& color) {
+        assert(("context is null" && mContext != nullptr));
+        glm::uvec2 uposition(position);
+
+        if (color.a >= 0.9999f) {
+            mContext->putPixel(uposition, glm::u8vec3(glm::vec3(color) * 255.f));
+        } else {
+            // blending
+            auto u8srcColor = mContext->getPixel(uposition);
+            auto srcColor = glm::vec3(u8srcColor.r, u8srcColor.g, u8srcColor.b);
+            mContext->putPixel(uposition, glm::u8vec3(glm::mix(srcColor, glm::vec3(color) * 255.f, color.a)));
+        }
+    }
     _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle style) override;
 
     void drawRect(const ABrush& brush,
@@ -59,9 +68,12 @@ public:
 
     void setWindow(ABaseWindow* window) override;
 
+    glm::mat4 getProjectionMatrix() const override;
+
 
 protected:
     ITexture* createNewTexture() override;
+
 };
 
 

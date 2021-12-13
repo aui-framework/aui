@@ -29,11 +29,18 @@
 
 
 void ass::decl::Declaration<ass::Border>::renderFor(AView* view) {
-    Render::drawRectBorder(ASolidBrush{mInfo.color},
-                           {0, 0},
-                           view->getSize(),
-                           view->getBorderRadius(),
-                           mInfo.width);
+    if (view->getBorderRadius() < 0.1f) {
+        Render::drawRectBorder(ASolidBrush{mInfo.color},
+                               {0, 0},
+                               view->getSize(),
+                               mInfo.width);
+    } else {
+        Render::drawRectBorder(ASolidBrush{mInfo.color},
+                               {0, 0},
+                               view->getSize(),
+                               view->getBorderRadius(),
+                               mInfo.width);
+    }
 }
 
 bool ass::decl::Declaration<ass::Border>::isNone() {

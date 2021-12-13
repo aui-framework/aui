@@ -240,7 +240,7 @@ public:
         setTransformForced(getProjectionMatrix());
     }
 
-    glm::mat4 getProjectionMatrix() const;
+    virtual glm::mat4 getProjectionMatrix() const = 0;
 
     const glm::mat4& getTransform()
     {

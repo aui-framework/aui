@@ -26,4 +26,6 @@ public:
 
     void beginResize(AWindow& window) override;
 
+    void endResize(AWindow& window) override;
+
 };

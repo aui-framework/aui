@@ -153,10 +153,44 @@ public:
 
 
 	/**
-	 * \param s new size of payload (valid data)
+	 * Forces new size of the buffer.
+	 * <dl>
+	 *  <dt><b>Sneaky assert:</b></dt>
+	 *  <dd>
+	 *      Assert fails when new size is greater that reserved buffer size. Use <code>AByteBuffer::resize</code> to
+	 *      avoid this.
+	 *  </dd>
+	 * </dl>
+	 * @param s new size of the payload
 	 */
 	void setSize(size_t s) {
-		assert(s <= mReserved);
+		assert(("size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?" && s <= mReserved));
+		mSize = s;
+	}
+
+    /**
+     * Resizes the buffer keeping it's contents. When reserved buffer size is less than the new size, buffer is
+     * reallocated with new size.
+	 * @param s new size of the payload
+     */
+	void resize(size_t s) {
+		if (mReserved < s) {
+			reserve(s);
+		}
+		mSize = s;
+	}
+
+    /**
+     * Resizes the buffer WITHOUT keeping it's contents. When reserved buffer size is differs from the new size, buffer is
+     * reallocated with new size.
+	 * @param s new size of the payload
+     */
+	void reallocate(size_t s) {
+		if (mReserved != s) {
+            delete[] mBuffer;
+            mBuffer = new char[s];
+            mReserved = s;
+		}
 		mSize = s;
 	}
 
