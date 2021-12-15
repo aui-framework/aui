@@ -237,6 +237,7 @@ void ADesktop::openUrl(const AString &url) {
 #include "ADesktop.h"
 #include "ACursor.h"
 #include "AWindow.h"
+#include "CommonRenderingContext.h"
 
 void aui_gtk_init() {
     do_once {
@@ -249,23 +250,22 @@ void aui_gtk_init() {
     };
 }
 
-extern Display* gDisplay;
 glm::ivec2 ADesktop::getMousePosition()
 {
     glm::ivec2 p;
     Window w;
     int unused1;
     unsigned unused2;
-    XQueryPointer(gDisplay, XRootWindow(gDisplay, 0), &w, &w, &p.x, &p.y, &unused1, &unused1, &unused2);
+    XQueryPointer(CommonRenderingContext::ourDisplay, XRootWindow(CommonRenderingContext::ourDisplay, 0), &w, &w, &p.x, &p.y, &unused1, &unused1, &unused2);
     return p;
 }
 
 void ADesktop::setMousePos(const glm::ivec2& pos)
 {
-    auto rootWindow = XRootWindow(gDisplay, 0);
-    XSelectInput(gDisplay, rootWindow, KeyReleaseMask);
-    XWarpPointer(gDisplay, None, rootWindow, 0, 0, 0, 0, pos.x, pos.y);
-    XFlush(gDisplay);
+    auto rootWindow = XRootWindow(CommonRenderingContext::ourDisplay, 0);
+    XSelectInput(CommonRenderingContext::ourDisplay, rootWindow, KeyReleaseMask);
+    XWarpPointer(CommonRenderingContext::ourDisplay, None, rootWindow, 0, 0, 0, 0, pos.x, pos.y);
+    XFlush(CommonRenderingContext::ourDisplay);
 }
 
 void ADesktop::openUrl(const AString& url) {

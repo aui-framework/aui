@@ -22,6 +22,7 @@
 #include "AUI/Platform/Platform.h"
 #include "AUI/Common/AString.h"
 #include "AUI/IO/APath.h"
+#include "AUI/Platform/CommonRenderingContext.h"
 #include <AUI/Util/kAUI.h>
 
 #include <X11/Xlib.h>
@@ -34,14 +35,11 @@ void Platform::playSystemSound(Sound s)
     // unsupported
 }
 
-extern Display* gDisplay;
-void ensureXLibInitialized();
-
 
 float Platform::getDpiRatio()
 {
-    ensureXLibInitialized();
-    char *resourceString = XResourceManagerString(gDisplay);
+    CommonRenderingContext::ensureXLibInitialized();
+    char *resourceString = XResourceManagerString(CommonRenderingContext::ourDisplay);
     XrmDatabase db;
     XrmValue value;
     char *type = NULL;

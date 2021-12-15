@@ -23,7 +23,9 @@
 
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
-extern Display* gDisplay;
+#include "AUI/Platform/CommonRenderingContext.h"
+
+
 bool isMouseKeyDown(AInput::Key button) {
 	// we don't care about these but they are required
 	::Window root, child;
@@ -31,7 +33,7 @@ bool isMouseKeyDown(AInput::Key button) {
 	int gx, gy;
 
 	unsigned int buttons = 0;
-	XQueryPointer(gDisplay, DefaultRootWindow(gDisplay), &root, &child, &gx, &gy, &wx, &wy, &buttons);
+	XQueryPointer(CommonRenderingContext::ourDisplay, DefaultRootWindow(CommonRenderingContext::ourDisplay), &root, &child, &gx, &gy, &wx, &wy, &buttons);
 
 	switch (button)
 	{
@@ -45,7 +47,7 @@ bool isMouseKeyDown(AInput::Key button) {
 }
 AInput::Key AInput::fromNative(int k) {
 	Key key;
-	KeySym keycode = XKeycodeToKeysym(gDisplay, k, 0);
+	KeySym keycode = XKeycodeToKeysym(CommonRenderingContext::ourDisplay, k, 0);
 	switch (keycode) {
 	case XK_Shift_L: key = AInput::LShift; break;
 	case XK_Shift_R: key = AInput::RShift; break;
@@ -268,12 +270,12 @@ bool AInput::isKeyDown(Key k) {
 	auto keysym = (KeySym)toNative(k);
 
 	// Convert to keycode
-	KeyCode keycode = XKeysymToKeycode(gDisplay, keysym);
+	KeyCode keycode = XKeysymToKeycode(CommonRenderingContext::ourDisplay, keysym);
 	if (keycode != 0)
 	{
 		// Get the whole keyboard state
 		char keys[32];
-		XQueryKeymap(gDisplay, keys);
+		XQueryKeymap(CommonRenderingContext::ourDisplay, keys);
 
 		// Check our keycode
 		return (keys[keycode / 8] & (1 << (keycode % 8))) != 0;

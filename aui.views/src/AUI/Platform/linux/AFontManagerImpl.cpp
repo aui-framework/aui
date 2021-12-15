@@ -30,10 +30,6 @@
 #include <AUI/Util/ATokenizer.h>
 #include "AUI/Render/FreeType.h"
 
-extern Display* gDisplay;
-void ensureXLibInitialized();
-
-
 AFontManager::AFontManager() :
         mFreeType(_new<FreeType>())
 {

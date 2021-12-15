@@ -103,7 +103,7 @@ protected:
 #else
     XIC mIC;
 #endif
-    AWindowNativePtr mHandle = nullptr;
+    AWindowNativePtr mHandle;
     WindowStyle mWindowStyle = WindowStyle::DEFAULT;
 
     virtual void doDrawWindow();

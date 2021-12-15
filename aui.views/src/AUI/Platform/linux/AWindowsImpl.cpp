@@ -35,6 +35,7 @@
 #include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Platform/Platform.h"
 #include "AUI/Platform/ACustomWindow.h"
+#include "AUI/Platform/OpenGLRenderingContext.h"
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
@@ -47,167 +48,6 @@
 
 #include <X11/extensions/sync.h>
 
-Display* gDisplay = nullptr;
-Screen* gScreen;
-int gScreenId;
-
-int xerrorhandler(Display* dsp, XErrorEvent* error) {
-    if (gDisplay == dsp) {
-        char errorstring[0x100];
-        XGetErrorText(dsp, error->error_code, errorstring, sizeof(errorstring));
-        printf("X Error: %s\n", errorstring);
-    }
-    return 0;
-}
-
-struct {
-    Atom wmProtocols;
-    Atom wmDeleteWindow;
-    Atom wmHints;
-    Atom wmState;
-    Atom netWmState;
-    Atom netWmStateMaximizedVert;
-    Atom netWmStateMaximizedHorz;
-    Atom clipboard;
-    Atom utf8String;
-    Atom textPlain;
-    Atom textPlainUtf8;
-    Atom auiClipboard;
-    Atom incr;
-    Atom targets;
-    Atom netWmSyncRequest;
-    Atom netWmSyncRequestCounter;
-
-
-    void init() {
-        wmProtocols = XInternAtom(gDisplay, "WM_PROTOCOLS", False);
-        wmDeleteWindow = XInternAtom(gDisplay, "WM_DELETE_WINDOW", False);
-        wmHints = XInternAtom(gDisplay, "_MOTIF_WM_HINTS", true);
-        wmState = XInternAtom(gDisplay, "WM_STATE", true);
-        netWmState = XInternAtom(gDisplay, "_NET_WM_STATE", false);
-        netWmStateMaximizedVert = XInternAtom(gDisplay, "_NET_WM_STATE_MAXIMIZED_VERT", false);
-        netWmStateMaximizedHorz = XInternAtom(gDisplay, "_NET_WM_STATE_MAXIMIZED_HORZ", false);
-        clipboard = XInternAtom(gDisplay, "CLIPBOARD", False);
-        utf8String = XInternAtom(gDisplay, "UTF8_STRING", False);
-        textPlain = XInternAtom(gDisplay, "text/plain", False);
-        textPlainUtf8 = XInternAtom(gDisplay, "text/plain;charset=utf-8", False);
-        auiClipboard = XInternAtom(gDisplay, "AUI_CLIPBOARD", False);
-        incr = XInternAtom(gDisplay, "INCR", False);
-        targets = XInternAtom(gDisplay, "TARGETS", False);
-        netWmSyncRequest = XInternAtom(gDisplay, "_NET_WM_SYNC_REQUEST", False);
-        netWmSyncRequestCounter = XInternAtom(gDisplay, "_NET_WM_SYNC_REQUEST_COUNTER", False);
-    }
-
-} gAtoms;
-
-void ensureXLibInitialized() {
-    struct DisplayInstance {
-
-    public:
-        DisplayInstance() {
-            gDisplay = XOpenDisplay(nullptr);
-            XSetErrorHandler(xerrorhandler);
-            gScreen = DefaultScreenOfDisplay(gDisplay);
-            gScreenId = DefaultScreen(gDisplay);
-            gAtoms.init();
-        }
-
-        ~DisplayInstance() {
-            //XCloseDisplay(gDisplay);
-            //XFree(gScreen);
-
-        }
-    };
-    static DisplayInstance display;
-}
-
-
-struct painter {
-private:
-
-public:
-    static thread_local bool painting;
-
-    painter(Window window) {
-        glXMakeCurrent(gDisplay, window, AWindow::context.context);
-    }
-
-    ~painter() {
-
-    }
-};
-
-
-
-#if !(AUI_PLATFORM_APPLE)
-thread_local bool painter::painting = false;
-#endif
-
-
-AWindow::Context::~Context() {
-    //glXDestroyContext(gDisplay, context);
-}
-using namespace std::chrono;
-using namespace std::chrono_literals;
-static auto _gLastFrameTime = 0ms;
-extern unsigned char stencilDepth;
-
-void AWindow::redraw() {
-    if (mUpdateLayoutFlag) {
-        mUpdateLayoutFlag = false;
-        updateLayout();
-    }
-
-    {
-
-        // fps restriction
-        {
-            auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-            auto delta = now - _gLastFrameTime;
-            // restriction 16ms = up to 60 frames per second
-            const auto FRAME_DURATION = 16ms;
-
-            if (FRAME_DURATION > delta) {
-                std::this_thread::sleep_for(FRAME_DURATION - delta);
-            }
-            _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        }
-
-        painter p(mHandle);
-
-        GL::State::activeTexture(0);
-        GL::State::bindTexture(GL_TEXTURE_2D, 0);
-        GL::State::bindVertexArray(0);
-        GL::State::useProgram(0);
-
-        Render::setWindow(this);
-        glViewport(0, 0, getWidth(), getHeight());
-
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-
-        glEnable(GL_MULTISAMPLE);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        // stencil
-        glClearStencil(0);
-        glStencilMask(0xff);
-        glDisable(GL_SCISSOR_TEST);
-        glClear(GL_STENCIL_BUFFER_BIT);
-        glEnable(GL_STENCIL_TEST);
-        glStencilMask(0x00);
-        stencilDepth = 0;
-        glStencilFunc(GL_EQUAL, 0, 0xff);
-
-        doDrawWindow();
-
-        glXSwapBuffers(gDisplay, mHandle);
-    }
-
-    emit redrawn();
-}
 
 
 
@@ -219,197 +59,22 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
     connect(closed, this, &AWindow::close);
 
-    do_once {
-        if (!XSupportsLocale() || XSetLocaleModifiers("@im=none") == NULL) {
-            throw AException("Your X server does not support locales.");
-        }
-    }
-    ensureXLibInitialized();
-
-    static XVisualInfo* vi;
-    static XSetWindowAttributes swa;
-    static XIM im;
-    static XIMStyles *styles;
-
-    if (context.context == nullptr) {
-        GLint att[] = {GLX_X_RENDERABLE, True, // 1
-                       GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT, // 3
-                       GLX_RENDER_TYPE, GLX_RGBA_BIT, // 5
-                       GLX_X_VISUAL_TYPE, GLX_TRUE_COLOR, // 7
-                       GLX_RED_SIZE, 8, // 9
-                       GLX_GREEN_SIZE, 8, // 11
-                       GLX_BLUE_SIZE, 8, // 13
-                       GLX_ALPHA_SIZE, 8, // 15
-                       GLX_DEPTH_SIZE, 24,
-                       GLX_STENCIL_SIZE, 8,
-                       GLX_DOUBLEBUFFER, true,
-                       GLX_STENCIL_SIZE, 8,
-                       GLX_SAMPLE_BUFFERS  , 1,
-                       GLX_SAMPLES         , 16,
-                       None};
-
-        int fbcount;
-        GLXFBConfig* fbc = glXChooseFBConfig(gDisplay, DefaultScreen(gDisplay), att, &fbcount);
-
-        if (fbc == nullptr || fbcount <= 0) {
-            // try to reduce system requirements
-            size_t indexToReduce = aui::array_length(att) - 2;
-            do {
-                ALogger::warn("[OpenGL compatibility] Reduced OpenGL requirements: pass {}"_format((aui::array_length(att) - indexToReduce) / 2 - 1));
-                att[indexToReduce] = 0;
-                indexToReduce -= 2;
-                fbc = glXChooseFBConfig(gDisplay, DefaultScreen(gDisplay), att, &fbcount);
-            } while ((fbc == nullptr || fbcount <= 0) && indexToReduce > 13); // up to GLX_BLUE_SIZE
-
-            if (fbc == nullptr || fbcount <= 0) {
-                // try to disable rgba.
-                att[5] = 0;
-                ALogger::warn("[OpenGL compatibility] Disabled RGBA");
-                fbc = glXChooseFBConfig(gDisplay, DefaultScreen(gDisplay), att, &fbcount);
-
-                if (fbc == nullptr || fbcount <= 0) {
-                    // use default attribs
-                    ALogger::warn("[OpenGL compatibility] Using default attribs");
-                    glXChooseFBConfig(gDisplay, DefaultScreen(gDisplay), nullptr, &fbcount);
-                    if (fbc == nullptr || fbcount <= 0) {
-                        // giving up.
-                        ALogger::err("[OpenGL compatibility] System hardware is not supported. Giving up.");
-                        exit(-1);
-                    }
-                }
-            }
-        }
-
-        // Pick the FB config/visual with the most samples per pixel
-        int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = std::numeric_limits<int>::max();
-
-        int i;
-        for (i = 0; i < fbcount; ++i) {
-            vi = glXGetVisualFromFBConfig(gDisplay, fbc[i]);
-            if (vi) {
-                int samp_buf, samples;
-                glXGetFBConfigAttrib(gDisplay, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
-                glXGetFBConfigAttrib(gDisplay, fbc[i], GLX_SAMPLES, &samples);
-
-                if (best_fbc < 0 || samp_buf && samples > best_num_samp)
-                    best_fbc = i, best_num_samp = samples;
-                if (worst_fbc < 0 || !samp_buf || samples < worst_num_samp)
-                    worst_fbc = i, worst_num_samp = samples;
-            }
-            XFree(vi);
-        }
-
-        GLXFBConfig bestFbc = fbc[best_fbc];
-
-        // Be sure to free the FBConfig list allocated by glXChooseFBConfig()
-        XFree(fbc);
-
-        // Get a visual
-        vi = glXGetVisualFromFBConfig(gDisplay, bestFbc);
-        auto cmap = XCreateColormap(gDisplay, gScreen->root, vi->visual, AllocNone);
-        swa.colormap = cmap;
-        swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask
-                | PointerMotionMask | StructureNotifyMask | PropertyChangeMask | StructureNotifyMask;
-        context.context = glXCreateContext(gDisplay, vi, nullptr, true);
-
-        im = XOpenIM(gDisplay, NULL, NULL, NULL);
-        if (im == NULL) {
-            throw AException("Could not open input method");
-        }
-
-        if (XGetIMValues(im, XNQueryInputStyle, &styles, NULL)) {
-            throw AException("XIM Can't get styles");
-        }
-    }
-    mHandle = XCreateWindow(gDisplay,
-                            gScreen->root,
-                            0, 0,
-                            width, height,
-                            0,
-                            vi->depth,
-                            InputOutput,
-                            vi->visual,
-                            CWColormap | CWEventMask | CWCursor, &swa);
-
-    // XSync
-    {
-        XSyncValue value;
-        XSyncIntToValue(&value, 0);
-        mXsyncRequestCounter.counter = XSyncCreateCounter(gDisplay, value);
-        XChangeProperty(gDisplay,
-                        mHandle,
-                        gAtoms.netWmSyncRequestCounter,
-                        XA_CARDINAL,
-                        32,
-                        PropModeReplace,
-                        (const unsigned char*)&mXsyncRequestCounter.counter, 1);
-
-    }
-
-    mIC = XCreateIC(im, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, mHandle, NULL);
-    if (mIC == NULL) {
-        throw AException("Could not get IC");
-    }
-    XSetICFocus(mIC);
-
-
-    XMapWindow(gDisplay, mHandle);
-
-    auto title = mWindowTitle.toStdString();
-    XStoreName(gDisplay, mHandle, title.c_str());
-    XChangeProperty(gDisplay, mHandle, XInternAtom(gDisplay, "_NET_WM_NAME", false),
-                    XInternAtom(gDisplay, "UTF8_STRING", false), 8, PropModeReplace,
-                    reinterpret_cast<const unsigned char*>(title.c_str()), title.length());
-
-    XSetWMProtocols(gDisplay, mHandle, &gAtoms.wmDeleteWindow, 1);
-
-
-    glXMakeCurrent(gDisplay, mHandle, context.context);
-
-    if (!glewExperimental) {
-        ALogger::info((const char*) glGetString(GL_VERSION));
-        ALogger::info((const char*) glGetString(GL_VENDOR));
-        ALogger::info((const char*) glGetString(GL_RENDERER));
-        ALogger::info((const char*) glGetString(GL_EXTENSIONS));
-        glewExperimental = true;
-        if (glewInit() != GLEW_OK) {
-            throw AException("glewInit failed");
-        }
-        ALogger::info("OpenGL context is ready");
-        Render::setRenderer(std::make_unique<OpenGLRenderer>());
-    }
-
-    if (parent) {
-        XSetTransientForHint(gDisplay, mHandle, parent->mHandle);
-    }
-
-#if defined(_DEBUG)
-    GL::setupDebug();
-#endif
-    //assert(glGetError() == 0);
-
-    updateDpi();
-    Render::setWindow(this);
-
-    checkForStencilBits();
+    mRenderingContext = std::make_unique<OpenGLRenderingContext>();
+    //mRenderingContext = std::make_unique<SoftwareRenderingContext>();
+    mRenderingContext->init({ *this, name, width, height, ws, parent });
 
     setWindowStyle(ws);
-
 }
 
 AWindow::~AWindow() {
-    XDestroyWindow(gDisplay, mHandle);
+    mRenderingContext->destroyNativeWindow(*this);
 }
 
-
-bool AWindow::isRenderingContextAcquired() {
-    return painter::painting;
-}
 
 void AWindow::quit() {
     getWindowManager().mWindows.remove(shared_from_this());
 
-    XUnmapWindow(gDisplay, mHandle);
+    XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
 
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;
@@ -443,7 +108,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         //code to remove decoration
         hints.flags = 2;
         hints.decorations = 0;
-        XChangeProperty(gDisplay, mHandle, gAtoms.wmHints, gAtoms.wmHints, 32, PropModeReplace,
+        XChangeProperty(CommonRenderingContext::ourDisplay, mHandle, CommonRenderingContext::ourAtoms.wmHints, CommonRenderingContext::ourAtoms.wmHints, 32, PropModeReplace,
                         (unsigned char *)&hints, 5);
     }
 }
@@ -456,20 +121,20 @@ void AWindow::updateDpi() {
 }
 
 void AWindow::restore() {
-    if (gAtoms.netWmState &&
-        gAtoms.netWmStateMaximizedVert &&
-        gAtoms.netWmStateMaximizedHorz)
+    if (CommonRenderingContext::ourAtoms.netWmState &&
+        CommonRenderingContext::ourAtoms.netWmStateMaximizedVert &&
+        CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz)
         {
-            xSendEventToWM(gAtoms.netWmState,
+            xSendEventToWM(CommonRenderingContext::ourAtoms.netWmState,
                            0,
-                           gAtoms.netWmStateMaximizedVert,
-                           gAtoms.netWmStateMaximizedHorz,
+                           CommonRenderingContext::ourAtoms.netWmStateMaximizedVert,
+                           CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz,
                            1, 0);
         }
 }
 
 void AWindow::minimize() {
-    XIconifyWindow(gDisplay, mHandle, 0);
+    XIconifyWindow(CommonRenderingContext::ourDisplay, mHandle, 0);
 }
 
 bool AWindow::isMinimized() const {
@@ -479,7 +144,7 @@ bool AWindow::isMinimized() const {
         Window icon;
     } *state = NULL;
 
-    if (xGetWindowProperty(gAtoms.wmState, gAtoms.wmState, (unsigned char**) &state) >= 2)
+    if (xGetWindowProperty(CommonRenderingContext::ourAtoms.wmState, CommonRenderingContext::ourAtoms.wmState, (unsigned char**) &state) >= 2)
     {
         result = state->state;
     }
@@ -496,19 +161,19 @@ bool AWindow::isMaximized() const {
     unsigned long i;
     bool maximized = false;
 
-    if (!gAtoms.netWmState ||
-        !gAtoms.netWmStateMaximizedVert ||
-        !gAtoms.netWmStateMaximizedHorz)
+    if (!CommonRenderingContext::ourAtoms.netWmState ||
+        !CommonRenderingContext::ourAtoms.netWmStateMaximizedVert ||
+        !CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz)
     {
         return maximized;
     }
 
-    const unsigned long count = xGetWindowProperty(gAtoms.netWmState, XA_ATOM, (unsigned char**) &states);
+    const unsigned long count = xGetWindowProperty(CommonRenderingContext::ourAtoms.netWmState, XA_ATOM, (unsigned char**) &states);
 
     for (i = 0;  i < count;  i++)
     {
-        if (states[i] == gAtoms.netWmStateMaximizedVert ||
-            states[i] == gAtoms.netWmStateMaximizedHorz)
+        if (states[i] == CommonRenderingContext::ourAtoms.netWmStateMaximizedVert ||
+            states[i] == CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz)
         {
             maximized = true;
             break;
@@ -524,23 +189,23 @@ bool AWindow::isMaximized() const {
 void AWindow::maximize() {
     // https://github.com/glfw/glfw/blob/master/src/x11_window.c#L2355
 
-    if (!gAtoms.netWmState ||
-        !gAtoms.netWmStateMaximizedVert ||
-        !gAtoms.netWmStateMaximizedHorz)
+    if (!CommonRenderingContext::ourAtoms.netWmState ||
+        !CommonRenderingContext::ourAtoms.netWmStateMaximizedVert ||
+        !CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz)
     {
         return;
     }
 
     XWindowAttributes wa;
-    XGetWindowAttributes(gDisplay, mHandle, &wa);
+    XGetWindowAttributes(CommonRenderingContext::ourDisplay, mHandle, &wa);
 
     if (wa.map_state == IsViewable) {
-        xSendEventToWM(gAtoms.netWmState, 1, gAtoms.netWmStateMaximizedHorz, gAtoms.netWmStateMaximizedVert, 0, 0);
+        xSendEventToWM(CommonRenderingContext::ourAtoms.netWmState, 1, CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz, CommonRenderingContext::ourAtoms.netWmStateMaximizedVert, 0, 0);
     } else {
 
         Atom* states = NULL;
         unsigned long count =
-                xGetWindowProperty(gAtoms.netWmState,
+                xGetWindowProperty(CommonRenderingContext::ourAtoms.netWmState,
                                           XA_ATOM,
                                           (unsigned char**) &states);
 
@@ -549,8 +214,8 @@ void AWindow::maximize() {
 
         Atom missing[2] =
                 {
-                        gAtoms.netWmStateMaximizedVert,
-                        gAtoms.netWmStateMaximizedHorz
+                        CommonRenderingContext::ourAtoms.netWmStateMaximizedVert,
+                        CommonRenderingContext::ourAtoms.netWmStateMaximizedHorz
                 };
         unsigned long missingCount = 2;
 
@@ -572,21 +237,26 @@ void AWindow::maximize() {
         if (!missingCount)
             return;
 
-        XChangeProperty(gDisplay, mHandle,
-                        gAtoms.netWmState, XA_ATOM, 32,
+        XChangeProperty(CommonRenderingContext::ourDisplay, mHandle,
+                        CommonRenderingContext::ourAtoms.netWmState, XA_ATOM, 32,
                         PropModeAppend,
                         (unsigned char*) missing,
                         missingCount);
     }
-    XFlush(gDisplay);
+    XFlush(CommonRenderingContext::ourDisplay);
 }
 
 glm::ivec2 AWindow::getWindowPosition() const {
     int x, y;
     Window child;
     XWindowAttributes xwa;
-    XTranslateCoordinates(gDisplay, mHandle, gScreen->root, 0, 0, &x, &y, &child);
-    XGetWindowAttributes(gDisplay, mHandle, &xwa);
+    XTranslateCoordinates(CommonRenderingContext::ourDisplay,
+                          mHandle,
+                          CommonRenderingContext::ourScreen->root,
+                          0, 0,
+                          &x, &y,
+                          &child);
+    XGetWindowAttributes(CommonRenderingContext::ourDisplay, mHandle, &xwa);
 
     return {x, y};
 }
@@ -605,26 +275,26 @@ void AWindow::setSize(int width, int height) {
         XSizeHints* sizehints = XAllocSizeHints();
         long userhints;
 
-        XGetWMNormalHints(gDisplay, mHandle, sizehints, &userhints);
+        XGetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints, &userhints);
 
         sizehints->min_width = sizehints->min_width = sizehints->max_width = sizehints->base_width = width;
         sizehints->min_height = sizehints->min_height = sizehints->max_height = sizehints->base_height = height;
         sizehints->flags |= PMinSize | PMaxSize;
 
-        XSetWMNormalHints(gDisplay, mHandle, sizehints);
+        XSetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints);
 
         XFree(sizehints);
     } else {
         XSizeHints* sizehints = XAllocSizeHints();
         long userhints;
 
-        XGetWMNormalHints(gDisplay, mHandle, sizehints, &userhints);
+        XGetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints, &userhints);
 
         sizehints->min_width = getMinimumWidth();
         sizehints->min_height = getMinimumHeight();
         sizehints->flags |= PMinSize;
 
-        XSetWMNormalHints(gDisplay, mHandle, sizehints);
+        XSetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints);
 
         XFree(sizehints);
     }
@@ -634,8 +304,8 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
     AViewContainer::setSize(width, height);
 
-    XMoveWindow(gDisplay, mHandle, x, y);
-    XResizeWindow(gDisplay, mHandle, width, height);
+    XMoveWindow(CommonRenderingContext::ourDisplay, mHandle, x, y);
+    XResizeWindow(CommonRenderingContext::ourDisplay, mHandle, width, height);
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
@@ -650,7 +320,7 @@ void AWindow::setIcon(const AImage& image) {
 }
 
 void AWindow::hide() {
-    XUnmapWindow(gDisplay, mHandle);
+    XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
 }
 
 // HELPER FUNCTIONS FOR XLIB
@@ -660,7 +330,7 @@ unsigned long AWindow::xGetWindowProperty(Atom property, Atom type, unsigned cha
     int actualFormat;
     unsigned long itemCount, bytesAfter;
 
-    XGetWindowProperty(gDisplay, mHandle, property, 0, std::numeric_limits<long>::max(), false, type, &actualType,
+    XGetWindowProperty(CommonRenderingContext::ourDisplay, mHandle, property, 0, std::numeric_limits<long>::max(), false, type, &actualType,
                        &actualFormat, &itemCount, &bytesAfter, value);
 
     return itemCount;
@@ -678,7 +348,7 @@ void AWindow::xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) 
     event.xclient.data.l[3] = d;
     event.xclient.data.l[4] = e;
 
-    XSendEvent(gDisplay, DefaultRootWindow(gDisplay),
+    XSendEvent(CommonRenderingContext::ourDisplay, DefaultRootWindow(CommonRenderingContext::ourDisplay),
                False,
                SubstructureNotifyMask | SubstructureRedirectMask,
                &event);
@@ -710,17 +380,17 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
         throw NotFound();
     };
     try {
-        while (XPending(gDisplay)) {
-            XNextEvent(gDisplay, &ev);
+        while (XPending(CommonRenderingContext::ourDisplay)) {
+            XNextEvent(CommonRenderingContext::ourDisplay, &ev);
             _<AWindow> window;
             switch (ev.type) {
                 case ClientMessage: {
-                    if (ev.xclient.message_type == gAtoms.wmProtocols) {
+                    if (ev.xclient.message_type == CommonRenderingContext::ourAtoms.wmProtocols) {
                         auto window = locateWindow(ev.xclient.window);
-                        if(ev.xclient.data.l[0] == gAtoms.wmDeleteWindow) {
+                        if(ev.xclient.data.l[0] == CommonRenderingContext::ourAtoms.wmDeleteWindow) {
                             // close button clicked
                             window->onCloseButtonClicked();
-                        } else if (ev.xclient.data.l[0] == gAtoms.netWmSyncRequest) {
+                        } else if (ev.xclient.data.l[0] == CommonRenderingContext::ourAtoms.netWmSyncRequest) {
                             // flicker-fix sync on resize
                             window->mXsyncRequestCounter.lo = ev.xclient.data.l[2];
                             window->mXsyncRequestCounter.hi = ev.xclient.data.l[3];
@@ -768,7 +438,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     XSyncIntsToValue(&syncValue,
                                      window->mXsyncRequestCounter.lo,
                                      window->mXsyncRequestCounter.hi);
-                    XSyncSetCounter(gDisplay, window->mXsyncRequestCounter.counter, syncValue);
+                    XSyncSetCounter(CommonRenderingContext::ourDisplay, window->mXsyncRequestCounter.counter, syncValue);
 
                     break;
                 }
@@ -811,7 +481,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
 
                 case PropertyNotify: {
                     window = locateWindow(ev.xproperty.window);
-                    if (ev.xproperty.atom == gAtoms.netWmState) {
+                    if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
                         auto maximized = window->isMaximized();
                         if (maximized != window->mWasMaximized) {
                             apply(window, {
@@ -839,15 +509,15 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     }
 
 
-                    char* targetName = XGetAtomName(gDisplay, ev.xselectionrequest.target);
-                    char* propertyName = XGetAtomName(gDisplay, ev.xselectionrequest.property);
+                    char* targetName = XGetAtomName(CommonRenderingContext::ourDisplay, ev.xselectionrequest.target);
+                    char* propertyName = XGetAtomName(CommonRenderingContext::ourDisplay, ev.xselectionrequest.property);
                     ALogger::info("{}: {}"_format(targetName, propertyName));
                     XFree(targetName);
                     XFree(propertyName);
-                    if (ev.xselectionrequest.target == gAtoms.utf8String ||
-                        ev.xselectionrequest.target == gAtoms.textPlain ||
-                        ev.xselectionrequest.target == gAtoms.textPlainUtf8) { // check for UTF8_STRING
-                        XChangeProperty(gDisplay,
+                    if (ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.utf8String ||
+                        ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.textPlain ||
+                        ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.textPlainUtf8) { // check for UTF8_STRING
+                        XChangeProperty(CommonRenderingContext::ourDisplay,
                                         ev.xselectionrequest.requestor,
                                         ev.xselectionrequest.property,
                                         ev.xselectionrequest.target,
@@ -855,18 +525,18 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                                         PropModeReplace,
                                         (unsigned char*) mXClipboardText.c_str(),
                                         mXClipboardText.length());
-                    } else if (ev.xselectionrequest.target == gAtoms.targets) { // data type request
+                    } else if (ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.targets) { // data type request
                         Atom atoms[] = {
-                                XInternAtom(gDisplay, "TIMESTAMP", false),
-                                XInternAtom(gDisplay, "TARGETS", false),
-                                XInternAtom(gDisplay, "SAVE_TARGETS", false),
-                                XInternAtom(gDisplay, "MULTIPLE", false),
-                                XInternAtom(gDisplay, "STRING", false),
-                                XInternAtom(gDisplay, "UTF8_STRING", false),
-                                XInternAtom(gDisplay, "text/plain", false),
-                                XInternAtom(gDisplay, "text/plain;charset=utf-8", false),
+                                XInternAtom(CommonRenderingContext::ourDisplay, "TIMESTAMP", false),
+                                XInternAtom(CommonRenderingContext::ourDisplay, "TARGETS", false),
+                                XInternAtom(CommonRenderingContext::ourDisplay, "SAVE_TARGETS", false),
+                                XInternAtom(CommonRenderingContext::ourDisplay, "MULTIPLE", false),
+                                XInternAtom(CommonRenderingContext::ourDisplay, "STRING", false),
+                                XInternAtom(CommonRenderingContext::ourDisplay, "UTF8_STRING", false),
+                                XInternAtom(CommonRenderingContext::ourDisplay, "text/plain", false),
+                                XInternAtom(CommonRenderingContext::ourDisplay, "text/plain;charset=utf-8", false),
                         };
-                        XChangeProperty(gDisplay,
+                        XChangeProperty(CommonRenderingContext::ourDisplay,
                                         ev.xselectionrequest.requestor,
                                         ev.xselectionrequest.property,
                                         ev.xselectionrequest.target,
@@ -884,7 +554,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     ssev.property = ev.xselectionrequest.property;
                     ssev.time = ev.xselectionrequest.time;
 
-                    XSendEvent(gDisplay, ev.xselectionrequest.requestor, True, NoEventMask, (XEvent *)&ssev);
+                    XSendEvent(CommonRenderingContext::ourDisplay, ev.xselectionrequest.requestor, True, NoEventMask, (XEvent *)&ssev);
                     break;
                 }
             }
@@ -910,7 +580,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
 
 AString AWindowManager::xClipboardPasteImpl() {
 
-    auto owner = XGetSelectionOwner(gDisplay, gAtoms.clipboard);
+    auto owner = XGetSelectionOwner(CommonRenderingContext::ourDisplay, CommonRenderingContext::ourAtoms.clipboard);
     if (owner == None)
     {
         return {};
@@ -922,13 +592,13 @@ AString AWindowManager::xClipboardPasteImpl() {
     auto nativeHandle = auiWindow->getNativeHandle();
     assert(nativeHandle);
 
-    XConvertSelection(gDisplay, gAtoms.clipboard, gAtoms.utf8String, gAtoms.auiClipboard, nativeHandle,
+    XConvertSelection(CommonRenderingContext::ourDisplay, CommonRenderingContext::ourAtoms.clipboard, CommonRenderingContext::ourAtoms.utf8String, CommonRenderingContext::ourAtoms.auiClipboard, nativeHandle,
                       CurrentTime);
 
     XEvent ev;
     for (;;)
     {
-        XNextEvent(gDisplay, &ev);
+        XNextEvent(CommonRenderingContext::ourDisplay, &ev);
         switch (ev.type)
         {
             case SelectionNotify: {
@@ -940,22 +610,22 @@ AString AWindowManager::xClipboardPasteImpl() {
                 unsigned long size, dul;
                 unsigned char *prop_ret = NULL;
 
-                XGetWindowProperty(gDisplay, nativeHandle, gAtoms.auiClipboard, 0, 0, False, AnyPropertyType,
+                XGetWindowProperty(CommonRenderingContext::ourDisplay, nativeHandle, CommonRenderingContext::ourAtoms.auiClipboard, 0, 0, False, AnyPropertyType,
                                    &type, &di, &dul, &size, &prop_ret);
                 XFree(prop_ret);
 
-                if (type == gAtoms.incr)
+                if (type == CommonRenderingContext::ourAtoms.incr)
                 {
                     ALogger::warn("Clipboard data is too large and INCR mechanism not implemented");
                     return {};
                 }
 
-                XGetWindowProperty(gDisplay, nativeHandle, gAtoms.auiClipboard, 0, size, False, AnyPropertyType,
+                XGetWindowProperty(CommonRenderingContext::ourDisplay, nativeHandle, CommonRenderingContext::ourAtoms.auiClipboard, 0, size, False, AnyPropertyType,
                                    &da, &di, &dul, &dul, &prop_ret);
                 AString clipboardData = (const char*)prop_ret;
                 XFree(prop_ret);
 
-                XDeleteProperty(gDisplay, nativeHandle, gAtoms.auiClipboard);
+                XDeleteProperty(CommonRenderingContext::ourDisplay, nativeHandle, CommonRenderingContext::ourAtoms.auiClipboard);
                 return clipboardData;
             }
             default:
@@ -971,5 +641,5 @@ void AWindowManager::xClipboardCopyImpl(const AString& text) {
     auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
     if (!auiWindow) return;
     mXClipboardText = text.toStdString();
-    XSetSelectionOwner(gDisplay, gAtoms.clipboard, auiWindow->mHandle, CurrentTime);
+    XSetSelectionOwner(CommonRenderingContext::ourDisplay, CommonRenderingContext::ourAtoms.clipboard, auiWindow->mHandle, CurrentTime);
 }

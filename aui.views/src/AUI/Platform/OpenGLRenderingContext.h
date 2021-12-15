@@ -12,6 +12,8 @@ private:
 
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;
+#elif AUI_PLATFORM_LINUX
+    static GLXContext ourContext;
 #endif
 
 public:
@@ -27,5 +29,4 @@ public:
     void beginResize(AWindow& window) override;
 
     void endResize(AWindow& window) override;
-
 };

@@ -21,12 +21,11 @@
 
 #include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/ADesktop.h"
+#include "AUI/Platform/CommonRenderingContext.h"
 #include <cstring>
 #include <AUI/View/AButton.h>
 
 const int AUI_TITLE_HEIGHT = 30;
-
-extern Display* gDisplay;
 
 ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
         AWindow(name, width, height) {
@@ -40,11 +39,11 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
         if (isCaptionAt(pos)) {
             XClientMessageEvent xclient;
             memset(&xclient, 0, sizeof(XClientMessageEvent));
-            XUngrabPointer(gDisplay, 0);
-            XFlush(gDisplay);
+            XUngrabPointer(CommonRenderingContext::ourDisplay, 0);
+            XFlush(CommonRenderingContext::ourDisplay);
             xclient.type = ClientMessage;
             xclient.window = mHandle;
-            xclient.message_type = XInternAtom(gDisplay, "_NET_WM_MOVERESIZE", False);
+            xclient.message_type = XInternAtom(CommonRenderingContext::ourDisplay, "_NET_WM_MOVERESIZE", False);
             xclient.format = 32;
             auto newPos = ADesktop::getMousePosition();
             xclient.data.l[0] = newPos.x;
@@ -52,7 +51,7 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
             xclient.data.l[2] = 8;
             xclient.data.l[3] = 0;
             xclient.data.l[4] = 0;
-            XSendEvent(gDisplay, XRootWindow(gDisplay, 0), False, SubstructureRedirectMask | SubstructureNotifyMask,
+            XSendEvent(CommonRenderingContext::ourDisplay, XRootWindow(CommonRenderingContext::ourDisplay, 0), False, SubstructureRedirectMask | SubstructureNotifyMask,
                        (XEvent*) &xclient);
 
             mDragging = true;

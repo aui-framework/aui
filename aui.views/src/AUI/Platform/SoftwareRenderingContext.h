@@ -5,7 +5,7 @@
 
 class SoftwareRenderingContext: public CommonRenderingContext {
 private:
-#ifdef AUI_PLATFORM_WIN
+#if AUI_PLATFORM_WIN
     AByteBuffer mBitmapBlob;
     BITMAPINFO* mBitmapInfo;
 #endif
@@ -21,6 +21,8 @@ public:
     void beginResize(AWindow& window) override;
     void init(const Init& init) override;
 
+
+#if AUI_PLATFORM_WIN
     inline void putPixel(const glm::uvec2& position, const glm::u8vec3& color) {
         if (glm::all(glm::lessThan(position, mBitmapSize))) {
             auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
@@ -40,6 +42,14 @@ public:
         }
         return { 0, 0, 0 };
     }
+#else
+    inline void putPixel(const glm::uvec2& position, const glm::u8vec3& color) {
+
+    }
+    inline glm::u8vec3 getPixel(const glm::uvec2& position) {
+        return { 0, 0, 0 };
+    }
+#endif
 
     void endResize(AWindow& window) override;
 };
