@@ -35,8 +35,8 @@ auib_import(
 - Both asynchronous and synchronous application architecture support
 
 ## Module list
-- `AUI.Core` - basic types (containers, strings, streams, etc...)
-- `AUI.Crypt` - wrapper around OpenSSL for encryption functionality
+- `AUI.core` - basic types (containers, strings, streams, etc...)
+- `AUI.crypt` - wrapper around OpenSSL for encryption functionality
 - `aui.curl` - wrapper around libcurl for http/https requests
 - `aui.designer` - UI Designer (in dev)
 - `aui.data` - DBMS interface and ORM
@@ -82,7 +82,7 @@ auib_import(
 | gcc (8+)                     | Full          |
 | MinGW (8+)                   | Full          |
 | Cross-compile MinGW          | Full          |
-| clang                        | Unknown       |
+| clang                        | Full          |
 
 ## Used libraries
 - `libcurl` for http/https requests
@@ -102,10 +102,6 @@ Check the `examples/` folder.
 
 ![Minesweeper](https://sun9-10.userapi.com/impf/AW9aUF7nuKdkiOfEz7WtsKqhYARlwVaFb_qV0g/0EGtNBty3NI.jpg?size=392x481&quality=96&proxy=1&sign=adbaf47dada836ab25868abf8db9b9d5&type=album)
 
-# Getting started
-
-Please check [docs/MANUAL.md](docs/MANUAL.md)
-
 
 # Contributing
 You are always free to contribute to this project and add yourself to the authors list :)
@@ -115,18 +111,3 @@ all tests on all supported platforms.
 Each feature of the framework is created in a separate branch in the `feat/` folder. Pulling changes from your branch to
 `master` is possible only if the merge with your branch does not generate merge conflicts and does not break the build
 and tests.
-
-## Code style
-AUI's code should be kept with the following code style:
-- `No tabs`; only four spaces
-- Row length: up to `120` characters
-- Class names: `CamelCase`. Every framework class name starts with capital '`A`'. Use `GenericSpecific` pattern
-  (`EventClose`, not `CloseEvent`, `PacketConnect`, not `ConnectPacket`). Using that convention files group nicely in
-  file lists.
-- Functions, variables: `lowerCamelCase`
-- Constants: `UPPER_SNAKE_CASE`
-- Getters: `get...`/`is...` (`lineNumber` -> `getLineNumber()`, `accessible` -> `isAccessible()`)
-- Getters: `set...`/`with...` (`lineNumber` -> `setLineNumber(...)`, `accessible` -> `withAccessible(...)`)
-- Structures: commonly holds some data and does not have member functions; `CamelCase`.
-              Also used for template-based functionality (like `stl`, `AUI/Traits/`), in that case, `snake_case` used
-              for file names, struct name and its member functions
