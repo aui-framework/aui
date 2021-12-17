@@ -89,7 +89,7 @@ int ACursorSelectable::getPosByIndex(int end, int begin) {
 }
 
 void ACursorSelectable::drawSelectionPost() {
-    Render::setBlending(Blending::INVERSE);
+    Render::setBlending(Blending::INVERSE_DST);
     if (hasSelection())
     {
         drawSelectionRects();

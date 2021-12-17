@@ -478,7 +478,7 @@ void OpenGLRenderer::setBlending(Blending blending) {
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             break;
 
-        case Blending::INVERSE:
+        case Blending::INVERSE_DST:
             glBlendFunc(GL_ONE_MINUS_DST_COLOR, GL_ZERO);
             break;
     }
@@ -612,6 +612,7 @@ public:
     }
 
     void addString(const glm::vec2& position, const AString& text) override {
+        mVertices.reserve(mVertices.capacity() + text.length() * 4);
         auto& font = mFontStyle.font;
         auto& texturePacker = mEntryData->texturePacker;
         auto fe = mFontStyle.getFontEntry();
@@ -707,7 +708,7 @@ public:
         }
     }
 
-    _<IRenderer::IPrerenderedString> build() override {
+    _<IRenderer::IPrerenderedString> finalize() override {
         GL::VertexBuffer vertexBuffer;
         vertexBuffer.set(mVertices);
 
@@ -763,7 +764,7 @@ _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(const glm::vec2
     OpenGLMultiStringCanvas c(this, fs);
     c.addString(position, text);
 
-    return c.build();
+    return c.finalize();
 }
 
 OpenGLRenderer::FontEntryData* OpenGLRenderer::getFontEntryData(const AFontStyle& fontStyle) {
@@ -782,10 +783,36 @@ ITexture* OpenGLRenderer::createNewTexture() {
     return new OpenGLTexture2D;
 }
 
-_<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle style) {
+_<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle& style) {
     return _new<OpenGLMultiStringCanvas>(this, style);
 }
 
 bool OpenGLRenderer::isVaoAvailable() {
     return glBindVertexArray != nullptr;
+}
+
+void OpenGLRenderer::pushMaskBefore() {
+    glStencilFunc(GL_ALWAYS, 0, 0xff);
+    glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
+    glStencilMask(0xff);
+    glColorMask(false, false, false, false);
+}
+
+void OpenGLRenderer::pushMaskAfter() {
+    glColorMask(true, true, true, true);
+    glStencilMask(0x00);
+    glStencilFunc(GL_EQUAL, ++mStencilDepth, 0xff);
+}
+
+void OpenGLRenderer::popMaskBefore() {
+    glStencilFunc(GL_ALWAYS, 0, 0xff);
+    glStencilOp(GL_KEEP, GL_DECR, GL_DECR);
+    glStencilMask(0xff);
+    glColorMask(false, false, false, false);
+}
+
+void OpenGLRenderer::popMaskAfter() {
+    glColorMask(true, true, true, true);
+    glStencilMask(0x00);
+    glStencilFunc(GL_EQUAL, --mStencilDepth, 0xff);
 }

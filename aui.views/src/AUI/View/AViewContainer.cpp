@@ -30,8 +30,6 @@
 #include <AUI/Traits/iterators.h>
 
 
-unsigned char stencilDepth = 0;
-
 void AViewContainer::drawView(const _<AView>& view)
 {
 	if (view->getVisibility() == Visibility::VISIBLE) {

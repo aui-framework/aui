@@ -141,7 +141,7 @@ void AText::prerenderString() {
         for (auto& wordEntry : mWordEntries) {
             multiStringCanvas->addString(wordEntry.getPosition(), wordEntry.getWord());
         }
-        mPrerenderedString = multiStringCanvas->build();
+        mPrerenderedString = multiStringCanvas->finalize();
     }
 }
 

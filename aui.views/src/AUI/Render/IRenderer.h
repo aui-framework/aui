@@ -17,18 +17,105 @@ class ABaseWindow;
 
 
 /**
- * Blending mode (like in Photoshop)
+ * Blending mode.
+ * <p><b>Terminology used in this documentation</b>:</p>
+ * <dl>
+ *   <dt><b><u>S</u>ource color</b> (S)</dt>
+ *   <dd>
+ *      Source color is a color of the brush (i.e. texture color matching current position) multiplied by the current
+ *      renderer color, i.e. when drawing a black rectangle onto the white canvas the source color is black.
+ *   </dd>
+ *
+ *   <dt><b><u>D</u>estination color</b> (D)</dt>
+ *   <dd>
+ *      Destination color is a color of the framebuffer you're drawing to, i.e. when drawing a black
+ *      rectangle onto the white canvas the destination color is white.
+ *   </dd>
+ *
+ *   <dt><b><u>S</u>.rgb</b></dt>
+ *   <dd>Source color without the alpha component.</dd>
+ *
+ *   <dt><b><u>S</u>.a</b></dt>
+ *   <dd>Source's alpha component without the color itself.</dd>
+ *
+ *   <dt><b><u>D</u>.rgb</b></dt>
+ *   <dd>Destination color without the alpha component.</dd>
+ *
+ *   <dt><b><u>D</u>.a</b></dt>
+ *   <dd>Destination's alpha component without the color itself.</dd>
+ *
+ *   <dt><b>Alpha-based</b></dt>
+ *   <dd>Alpha-based blending mode is a blending mode that uses the alpha component in it's formula.</dd>
+ *
+ *   <dt><b>Color-based</b></dt>
+ *   <dd>Color-based blending mode is a blending mode that does not use the alpha component in it's formula.</dd>
+ * </dl>
  */
 enum class Blending {
     /**
-     * Normal blending.
+     * <p>Normal blending.</p>
+     * <dl>
+     *   <dt><b>Formula</b></dt>
+     *   <dd><code>S.rgb * S.a + D.rgb * (1 - S.a)</code></dd>
+     *   <dt><b>Type</b></dt>
+     *   <dd>Alpha-based</dd>
+     *   <dt><b>Behaviour</b></dt>
+     *   <dd>
+     *     <p>When <code>S.a</code> is 0, <code>NORMAL</code> does not draw anything.
+     *     <p>When <code>S.a</code> is 1, <code>NORMAL</code> ignores <code>D</code>.
+     *   </dd>
+     * </dl>
      */
     NORMAL,
 
+
     /**
-     * <code>1 - COLOR</code>
+     * <p>Simply sums <code>S</code> and <code>D</code> colors.
+     * <dl>
+     *   <dt><b>Formula</b></dt>
+     *   <dd><code>S.rgb + D.rgb</code></dd>
+     *   <dt><b>Type</b></dt>
+     *   <dd>Color-based</dd>
+     *   <dt><b>Behaviour</b></dt>
+     *   <dd>
+     *     <p>When <code>S</code> is black, <code>ADDITIVE</code> does not draw anything.</p>
+     *     <p>When <code>S</code> is white, <code>ADDITIVE</code> draws white.</p>
+     *   </dd>
+     * </dl>
      */
-    INVERSE
+    ADDITIVE,
+
+    /**
+     * <p>Inverses destination color and multiplies it with the source color.
+     * <dl>
+     *   <dt><b>Formula</b></dt>
+     *   <dd><code>S.rgb * (1 - D.rgb)</code></dd>
+     *   <dt><b>Type</b></dt>
+     *   <dd>Color-based</dd>
+     *   <dt><b>Behaviour</b></dt>
+     *   <dd>
+     *     <p>When <code>S</code> is black, <code>INVERSE_DST</code> does not draw anything.</p>
+     *     <p>When <code>S</code> is white, <code>INVERSE_DST</code> does full inverse.</p>
+     *   </dd>
+     * </dl>
+     */
+    INVERSE_DST,
+
+    /**
+     * <p>Inverses source color and multiplies it with the destination color.
+     * <dl>
+     *   <dt><b>Formula</b></dt>
+     *   <dd><code>(1 - S.rgb) * D.rgb</code></dd>
+     *   <dt><b>Type</b></dt>
+     *   <dd>Color-based</dd>
+     *   <dt><b>Behaviour</b></dt>
+     *   <dd>
+     *     <p>When <code>S</code> is black, <code>INVERSE_SRC</code> does not draw anything.</p>
+     *     <p>When <code>S</code> is white, <code>INVERSE_SRC</code> draws black.</p>
+     *   </dd>
+     * </dl>
+     */
+    INVERSE_SRC,
 };
 
 class IRenderer {
@@ -52,9 +139,10 @@ public:
         virtual void addString(const glm::vec2& position, const AString& text) = 0;
 
         /**
+         * @note invalidates IMultiStringCanvas which speeds up some implementations of IMultiStringCanvas.
          * @return instance of <code>Render::PrerenderedString</code> to draw with.
          */
-        virtual _<IRenderer::IPrerenderedString> build() = 0;
+        virtual _<IRenderer::IPrerenderedString> finalize() = 0;
 
         /**
          * @return an instance of <code>IRenderer::ITextLayoutHelper</code> constructed from
@@ -68,6 +156,7 @@ protected:
     glm::mat4 mTransform;
     ABaseWindow* mWindow = nullptr;
     APool<ITexture> mTexturePool;
+    uint8_t mStencilDepth = 0;
 
     virtual ITexture* createNewTexture() = 0;
 
@@ -83,7 +172,7 @@ public:
      * Canvas for batching multiple <code>prerender</code> string calls.
      * @return a new instance of <code>IMultiStringCanvas</code>
      */
-    virtual _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle style) = 0;
+    virtual _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
 
     /**
      * Draws simple rectangle.
@@ -231,6 +320,33 @@ public:
         mTransform = transform;
     }
 
+    /**
+     * Switches drawing to the stencil buffer instead of color buffer.
+     * Stencil pixel is increased by each affected pixel.
+     * Should be called before the <code>pushMaskAfter</code> function.
+     */
+    virtual void pushMaskBefore() = 0;
+
+    /**
+     * Switches drawing to the color buffer back from the stencil. Increases stencil depth.
+     * Stencil buffer should not be changed after calling this function.
+     * Should be called after the <code>pushMaskBefore</code> function.
+     */
+    virtual void pushMaskAfter() = 0;
+
+    /**
+    * Switches drawing to the stencil buffer instead of color buffer.
+    * Stencil pixel is decreased by each affected pixel.
+    * Should be called before the <code>popMaskAfter</code> function.
+    */
+    virtual void popMaskBefore() = 0;
+    /**
+     * Switches drawing to the color buffer back from the stencil. Decreases stencil depth.
+     * Stencil buffer should not be changed after calling this function.
+     * Should be called after the <code>popMaskBefore</code> function.
+     */
+    virtual void popMaskAfter() = 0;
+
     virtual void setBlending(Blending blending) = 0;
 
     virtual void setWindow(ABaseWindow* window)
@@ -238,6 +354,7 @@ public:
         mWindow = window;
         setColorForced(1.f);
         setTransformForced(getProjectionMatrix());
+        mStencilDepth = 0;
     }
 
     virtual glm::mat4 getProjectionMatrix() const = 0;

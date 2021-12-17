@@ -191,8 +191,8 @@ void AAbstractTextField::prerenderStringIfNeeded() {
         if (!text.empty()) {
             auto canvas = Render::newMultiStringCanvas(getFontStyle());
             canvas->addString({ 0.f, 0.f }, text);
-            mPrerenderedString = canvas->build();
             setTextLayoutHelper(std::move(canvas->makeTextLayoutHelper()));
+            mPrerenderedString = canvas->finalize();
         }
     }
 }

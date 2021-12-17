@@ -4,27 +4,68 @@
 
 #include <AUI/Traits/callables.h>
 #include "SoftwareRenderer.h"
+#include "SoftwareTexture.h"
 
 struct BrushHelper {
     SoftwareRenderer* renderer;
     int &x, &y;
+    glm::vec2 end;
+    glm::vec2 position;
 
-    BrushHelper(SoftwareRenderer* renderer, int& x, int& y) : renderer(renderer), x(x), y(y) {}
+    BrushHelper(SoftwareRenderer* renderer,
+                int& x,
+                int& y,
+                glm::ivec2& end,
+                glm::ivec2& position) : renderer(renderer), x(x), y(y), end(end), position(position) {}
 
-    void operator()(const ASolidBrush& brush) {
+    void operator()(const ASolidBrush& brush) noexcept {
         renderer->putPixel({x, y}, renderer->getColor() * brush.solidColor);
     }
 
-    void operator()(const ATexturedBrush& brush) {
+    void operator()(const ATexturedBrush& brush) noexcept {
+        if (!textureHelper) {
+            auto tex = dynamic_cast<SoftwareTexture*>(brush.texture.get());
+            textureHelper = {
+                brush.uv1 || brush.uv2 || glm::ivec2(end - position) != tex->getImage()->getSize(),
+                tex
+            };
+        }
+        if (textureHelper->slowMethod) {
+            // slower method
+            auto color = AColor(textureHelper->texture->getImage()->getPixelAt(x - position.x, y - position.y)) / 255.f;
+            renderer->putPixel({ x, y }, renderer->getColor() * color);
+        } else {
+            // faster method
+            auto color = AColor(textureHelper->texture->getImage()->getPixelAt(x - position.x, y - position.y)) / 255.f;
+            renderer->putPixel({ x, y }, renderer->getColor() * color);
+        }
     }
 
-    void operator()(const ALinearGradientBrush& brush) {
+
+    void operator()(const ALinearGradientBrush& brush) noexcept {
+        auto d = calculateUv();
+        auto color = glm::mix(glm::mix(glm::vec4(brush.topLeftColor), glm::vec4(brush.topRightColor), d.x),
+                              glm::mix(glm::vec4(brush.bottomLeftColor), glm::vec4(brush.bottomRightColor), d.x),
+                              d.y);
+        renderer->putPixel({ x, y }, renderer->getColor() * color);
+    }
+
+private:
+    struct TextureHelper {
+        bool slowMethod;
+        SoftwareTexture* texture;
+    };
+    std::optional<TextureHelper> textureHelper;
+
+    [[nodiscard]]
+    glm::vec2 calculateUv() const noexcept {
+        return (glm::vec2(x, y) - position) / (end - position);
     }
 };
 
 struct RoundedRect {
     int radius;
-    int radius2;\
+    int radius2;
     glm::ivec2 size;
     glm::ivec2 halfSize;
     glm::ivec2 transformedPosition;
@@ -103,7 +144,7 @@ void SoftwareRenderer::drawRect(const ABrush& brush,
     int x, y;
 
     auto sw = aui::lambda_overloaded {
-            BrushHelper(this, x, y),
+            BrushHelper(this, x, y, end, transformedPosition),
     };
 
     for (y = transformedPosition.y; y < end.y; ++y) {
@@ -123,7 +164,7 @@ void SoftwareRenderer::drawRoundedRect(const ABrush& brush,
     int x, y;
 
     auto sw = aui::lambda_overloaded{
-            BrushHelper(this, x, y),
+            BrushHelper(this, x, y, end, r.transformedPosition),
     };
 
     for (y = r.transformedPosition.y; y < end.y; ++y) {
@@ -147,7 +188,7 @@ void SoftwareRenderer::drawRoundedRectAntialiased(const ABrush& brush,
     int x, y;
 
     auto sw = aui::lambda_overloaded{
-            BrushHelper(this, x, y),
+            BrushHelper(this, x, y, end, r.transformedPosition),
     };
 
     for (y = r.transformedPosition.y; y < end.y; ++y) {
@@ -181,13 +222,13 @@ void SoftwareRenderer::drawRectBorder(const ABrush& brush,
                                       int borderWidth) {
     auto pos = glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f));
     RoundedRect outside(int(radius), glm::ivec2(size), pos);
-    RoundedRect inside(int(radius), glm::ivec2(size) - glm::ivec2(borderWidth * 2), pos + glm::ivec2(borderWidth));
+    RoundedRect inside(int(radius) - borderWidth, glm::ivec2(size) - glm::ivec2(borderWidth * 2), pos + glm::ivec2(borderWidth));
     auto end = outside.transformedPosition + outside.size;
 
     int x, y;
 
     auto sw = aui::lambda_overloaded{
-            BrushHelper(this, x, y),
+            BrushHelper(this, x, y, end, outside.transformedPosition),
     };
 
     for (y = outside.transformedPosition.y; y < end.y; ++y) {
@@ -259,61 +300,205 @@ void SoftwareRenderer::drawString(const glm::vec2& position,
 
 
 void SoftwareRenderer::setBlending(Blending blending) {
-
+    mBlending = blending;
 }
 
-class SoftwareTexture: public ITexture {
-private:
-    _<AImage> mImage;
+void SoftwareRenderer::pushMaskBefore() {
+    mDrawingToStencil = true;
+    mDrawingStencilDirection = INCREASE;
+}
 
-public:
-    void setImage(const _<AImage>& image) override {
-        mImage = image;
-    }
+void SoftwareRenderer::pushMaskAfter() {
+    mDrawingToStencil = false;
+    mStencilDepth += 1;
+}
+
+void SoftwareRenderer::popMaskBefore() {
+    mDrawingToStencil = true;
+    mDrawingStencilDirection = DECREASE;
+}
+
+void SoftwareRenderer::popMaskAfter() {
+    mDrawingToStencil = false;
+    mStencilDepth -= 1;
+}
+
+struct CharEntry {
+    glm::ivec2 position;
+    AImage* image;
 };
 
 class SoftwarePrerenderedString: public IRenderer::IPrerenderedString {
-public:
-    void draw() override {
+private:
+    SoftwareRenderer* mRenderer;
+    AVector<CharEntry> mCharEntries;
+    AColor mColor;
+    int mWidth = 0;
+    int mHeight = 0;
+    FontRendering mFontRendering;
 
+public:
+    SoftwarePrerenderedString(SoftwareRenderer* renderer,
+                              AVector<CharEntry> charEntries,
+                              const AColor& color,
+                              int width,
+                              int height,
+                              FontRendering fontRendering) : mRenderer(renderer),
+                                                             mCharEntries(std::move(charEntries)),
+                                                             mColor(color), mWidth(width),
+                                                             mHeight(height),
+                                                             mFontRendering(fontRendering) {}
+
+    void draw() override {
+        auto finalColor = AColor(mRenderer->getColor() * mColor);
+        if (finalColor.isFullyTransparent()) return;
+        switch (mFontRendering) {
+            case FontRendering::SUBPIXEL:
+                for (const auto& entry : mCharEntries) {
+                    auto transformedPosition = glm::ivec2(mRenderer->getTransform() * glm::vec4(entry.position, 1.f, 1.f));
+                    auto size = entry.image->getSize();
+                    for (int y = 0; y < size.y; ++y) {
+                        for (int x = 0; x < size.x; ++x) {
+                            auto color = glm::vec4(glm::vec3(glm::ivec3(entry.image->getPixelAt(x, y))) / 255.f, 1.f);
+                            
+                            mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, AColor{ color.r, color.g, color.b, color.a * finalColor.a }, Blending::INVERSE_SRC);
+                            mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, color * finalColor, Blending::ADDITIVE);
+                        }
+                    }
+                }
+                break;
+            case FontRendering::ANTIALIASING:
+                for (const auto& entry : mCharEntries) {
+                    auto transformedPosition = glm::ivec2(mRenderer->getTransform() * glm::vec4(entry.position, 1.f, 1.f));
+                    auto size = entry.image->getSize();
+                    for (int y = 0; y < size.y; ++y) {
+                        for (int x = 0; x < size.x; ++x) {
+                            mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, { finalColor.r, finalColor.g, finalColor.b, finalColor.a * (entry.image->getPixelAt(x, y).x / 255.f) });
+                        }
+                    }
+                }
+                break;
+        }
     }
 
     int getWidth() override {
-        return 0;
+        return mWidth;
     }
 
     int getHeight() override {
-        return 0;
+        return mHeight;
     }
 };
 
 class SoftwareMultiStringCanvas: public IRenderer::IMultiStringCanvas {
+private:
+    SoftwareRenderer* mRenderer;
+    AFontStyle mFontStyle;
+    int mAdvanceX = 0;
+    int mAdvanceY = 0;
+    AVector<CharEntry> mCharEntries;
+
 public:
+    SoftwareMultiStringCanvas(SoftwareRenderer* renderer, const AFontStyle& fontStyle) : mRenderer(renderer),
+                                                                                         mFontStyle(fontStyle) {}
+
     void addString(const glm::vec2& position,
                    const AString& text) override {
+        mCharEntries.reserve(mCharEntries.capacity() + text.length());
+        auto& font = mFontStyle.font;
+        auto fe = mFontStyle.getFontEntry();
 
+        const bool hasKerning = font->isHasKerning();
+
+        int prevWidth = -1;
+
+        int advanceX = position.x;
+        int advanceY = position.y;
+        size_t counter = 0;
+        int advance = advanceX;
+        for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
+            wchar_t c = *i;
+            if (c == ' ') {
+                advance += mFontStyle.getSpaceWidth();
+            }
+            else if (c == '\n') {
+                advanceX = (glm::max)(advanceX, advance);
+                advance = position.x;
+                advanceY += mFontStyle.getLineHeight();
+            }
+            else {
+                AFont::Character& ch = font->getCharacter(fe, c);
+                if (ch.empty()) {
+                    advance += mFontStyle.getSpaceWidth();
+                    continue;
+                }
+                if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
+                    mCharEntries.push_back(CharEntry{
+                            glm::ivec2{ advance + ch.bearingX, ch.advanceY + advanceY },
+                            ch.image.get()
+                    });
+                }
+
+                if (hasKerning) {
+                    auto next = std::next(i);
+                    if (next != text.end())
+                    {
+                        auto kerning = font->getKerning(c, *next);
+                        advance += kerning.x;
+                    }
+                }
+
+                advance += ch.advanceX;
+                advance = glm::floor(advance);
+            }
+        }
+
+        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
+        mAdvanceY = advanceY + mFontStyle.getLineHeight();
     }
 
-    _<IRenderer::IPrerenderedString> build() override {
-        return _<IRenderer::IPrerenderedString>();
+    _<IRenderer::IPrerenderedString> finalize() override {
+        return _new<SoftwarePrerenderedString>(mRenderer,
+                                               std::move(mCharEntries),
+                                               mFontStyle.color,
+                                               mAdvanceX,
+                                               mAdvanceY,
+                                               mFontStyle.fontRendering);
     }
 
     ATextLayoutHelper makeTextLayoutHelper() override {
-        return ATextLayoutHelper();
+        ATextLayoutHelper::Symbols symbols;
+
+        ATextLayoutHelper::Line line;
+
+        size_t index = 0;
+
+        for (auto it = mCharEntries.begin(); it != mCharEntries.end(); ++it) {
+            // TODO чё то придумать с пробелами
+            line << ATextLayoutHelper::Symbol{ it->position, index++ };
+        }
+        symbols << std::move(line);
+
+        return ATextLayoutHelper{ std::move(symbols) };
     }
 };
 
 _<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(const glm::vec2& position,
                                                                    const AString& text,
                                                                    const AFontStyle& fs) {
-    return _new<SoftwarePrerenderedString>();
+    if (text.empty()) return nullptr;
+
+    SoftwareMultiStringCanvas c(this, fs);
+    c.addString(position, text);
+
+    return c.finalize();
 }
 ITexture* SoftwareRenderer::createNewTexture() {
     return new SoftwareTexture;
 }
 
-_<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle style) {
-    return _new<SoftwareMultiStringCanvas>();
+_<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style) {
+    return _new<SoftwareMultiStringCanvas>(this, style);
 }
 
 void SoftwareRenderer::setWindow(ABaseWindow* window) {

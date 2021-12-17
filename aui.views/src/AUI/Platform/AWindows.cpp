@@ -59,7 +59,7 @@ void AWindow::createDevtoolsWindow() {
     window->show();
 }
 
-extern unsigned char stencilDepth;
+
 
 using namespace std::chrono;
 using namespace std::chrono_literals;

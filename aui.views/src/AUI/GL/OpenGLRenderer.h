@@ -92,10 +92,17 @@ public:
 
     void setBlending(Blending blending) override;
 
-    _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle style) override;
+    _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
 
     glm::mat4 getProjectionMatrix() const override;
 
+    void pushMaskBefore() override;
+
+    void pushMaskAfter() override;
+
+    void popMaskBefore() override;
+
+    void popMaskAfter() override;
 };
 
 

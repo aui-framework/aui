@@ -8,23 +8,73 @@
 class SoftwareRenderer: public IRenderer {
 private:
     SoftwareRenderingContext* mContext;
+    bool mDrawingToStencil = false;
+    enum {
+        INCREASE = 1,
+        DECREASE = -1
+    } mDrawingStencilDirection;
+    Blending mBlending = Blending::NORMAL;
 
 public:
-
-    inline void putPixel(const glm::ivec2& position, const AColor& color) {
+    /**
+     * Draws a pixel onto the software framebuffer following the stencil and blending rules.
+     * <dl>
+     *   <dt><b>Assertions</b></dt>
+     *   <dd><code>position</code> is inside the framebuffer.</dd>
+     * </dl>
+     * @param position position. An assertion is triggered if position is not inside the framebuffer.
+     * @param color color.
+     * @param blending blending. Optional. Cheaper. When set, the one set by the <code>setBlending</code> function is
+     *        ignored.
+     */
+    inline void putPixel(const glm::ivec2& position, const AColor& color, std::optional<Blending> blending = std::nullopt) noexcept {
         assert(("context is null" && mContext != nullptr));
+        auto actualBlending = blending ? *blending : mBlending;
         glm::uvec2 uposition(position);
+        if (!glm::all(glm::lessThan(uposition, mContext->bitmapSize()))) return;
 
-        if (color.a >= 0.9999f) {
-            mContext->putPixel(uposition, glm::u8vec3(glm::vec3(color) * 255.f));
+        if (mDrawingToStencil) {
+            if (color.a > 0.5f) {
+                mContext->stencil(position) += mDrawingStencilDirection;
+            }
         } else {
-            // blending
-            auto u8srcColor = mContext->getPixel(uposition);
-            auto srcColor = glm::vec3(u8srcColor.r, u8srcColor.g, u8srcColor.b);
-            mContext->putPixel(uposition, glm::u8vec3(glm::mix(srcColor, glm::vec3(color) * 255.f, color.a)));
+            auto bufferStencilValue = mContext->stencil(position);
+            if (bufferStencilValue == mStencilDepth)
+            {
+                switch (actualBlending) {
+                    case Blending::NORMAL:
+                        if (color.a >= 0.9999f) {
+                            mContext->putPixel(uposition, glm::u8vec3(glm::vec3(color) * 255.f));
+                        } else {
+                            // blending
+                            auto u8srcColor = mContext->getPixel(uposition);
+                            auto srcColor = glm::vec3(u8srcColor.r, u8srcColor.g, u8srcColor.b);
+                            mContext->putPixel(uposition, glm::u8vec3(glm::mix(srcColor, glm::vec3(color) * 255.f, color.a)));
+                        }
+                        break;
+
+                    case Blending::ADDITIVE: {
+                        auto src = glm::uvec3(glm::vec3(color) * 255.f);
+                        auto dst = glm::uvec3(mContext->getPixel(uposition));
+                        mContext->putPixel(uposition, (glm::min)(src + dst, glm::uvec3(255)));
+                        break;
+                    }
+                    case Blending::INVERSE_DST: {
+                        auto src = glm::vec3(color);
+                        auto dst = glm::vec3(mContext->getPixel(uposition)) / 255.f;
+                        mContext->putPixel(uposition, (glm::min)(glm::uvec3((src * (1.f - dst)) * 255.f), glm::uvec3(255)));
+                        break;
+                    }
+                    case Blending::INVERSE_SRC:
+                        auto src = glm::vec3(color);
+                        auto dst = glm::vec3(mContext->getPixel(uposition)) / 255.f;
+                        mContext->putPixel(uposition, (glm::min)(glm::uvec3(((1.f - src) * dst) * 255.f), glm::uvec3(255)));
+                        break;
+                }
+            }
         }
     }
-    _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle style) override;
+    _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
 
     void drawRect(const ABrush& brush,
                   const glm::vec2& position,
@@ -69,6 +119,14 @@ public:
     void setWindow(ABaseWindow* window) override;
 
     glm::mat4 getProjectionMatrix() const override;
+
+    void pushMaskBefore() override;
+
+    void pushMaskAfter() override;
+
+    void popMaskBefore() override;
+
+    void popMaskAfter() override;
 
 
 protected:

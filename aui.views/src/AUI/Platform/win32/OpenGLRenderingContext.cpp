@@ -13,7 +13,7 @@
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/GL/State.h>
 
-extern unsigned char stencilDepth;
+
 
 HGLRC OpenGLRenderingContext::ourHrc = nullptr;
 
@@ -185,7 +185,6 @@ void OpenGLRenderingContext::beginPaint(AWindow& window) {
     glClear(GL_STENCIL_BUFFER_BIT);
     glEnable(GL_STENCIL_TEST);
     glStencilMask(0x00);
-    stencilDepth = 0;
     glStencilFunc(GL_EQUAL, 0, 0xff);
 }
 

@@ -292,9 +292,19 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
     connect(closed, this, &AWindow::close);
 
-    //mRenderingContext = std::make_unique<OpenGLRenderingContext>();
-    mRenderingContext = std::make_unique<SoftwareRenderingContext>();
-    mRenderingContext->init({ *this, name, width, height, ws, parent });
+
+    IRenderingContext::Init initStruct = { *this, name, width, height, ws, parent };
+
+    try {
+        mRenderingContext = std::make_unique<OpenGLRenderingContext>();
+        mRenderingContext->init(initStruct);
+    } catch (...) {
+        mRenderingContext = nullptr;
+    }
+    if (mRenderingContext == nullptr) {
+        mRenderingContext = std::make_unique<SoftwareRenderingContext>();
+        mRenderingContext->init(initStruct);
+    }
 
     setWindowStyle(ws);
 

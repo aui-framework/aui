@@ -118,9 +118,11 @@ public:
     }
 
 
+    static const AColor BLACK;
     static const AColor WHITE;
 };
 
+inline const AColor AColor::BLACK = {0.f, 0.f, 0.f, 1.f};
 inline const AColor AColor::WHITE = {1.f, 1.f, 1.f, 1.f};
 
 /**

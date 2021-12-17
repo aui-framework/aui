@@ -22,6 +22,7 @@ void SoftwareRenderingContext::destroyNativeWindow(AWindow& window) {
 
 void SoftwareRenderingContext::beginPaint(AWindow& window) {
     CommonRenderingContext::beginPaint(window);
+    memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
 }
 
 void SoftwareRenderingContext::endPaint(AWindow& window) {
@@ -43,6 +44,7 @@ void SoftwareRenderingContext::beginResize(AWindow& window) {
 void SoftwareRenderingContext::endResize(AWindow& window) {
     mBitmapSize = window.getSize();
     mBitmapBlob.reallocate(mBitmapSize.x * mBitmapSize.y * 4 + sizeof(*mBitmapInfo));
+    mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
     mBitmapInfo = reinterpret_cast<BITMAPINFO*>(mBitmapBlob.data());
 
     mBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);

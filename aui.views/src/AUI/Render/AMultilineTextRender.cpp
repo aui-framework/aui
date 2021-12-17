@@ -50,5 +50,5 @@ Render::PrerenderedString AMultilineTextRender::updateText(const AString& text, 
         multiStringCanvas->addString(entry.getPosition(), entry.getText());
     }
 
-    return multiStringCanvas->build();
+    return multiStringCanvas->finalize();
 }

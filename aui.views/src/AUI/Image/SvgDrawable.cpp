@@ -60,6 +60,7 @@ void SvgDrawable::draw(const Params& params) {
     auto& size = params.size;
     auto key = asKey(size);
     auto doDraw = [&](const Render::Texture& texture) {
+        bool uvModifiedFlag = false;
         glm::vec2 uv = {1, 1};
 
         glm::vec2 pos;
@@ -67,12 +68,14 @@ void SvgDrawable::draw(const Params& params) {
 
         if (!!(params.repeat & Repeat::X)) {
             uv.x = float(size.x) / getSizeHint().x;
+            uvModifiedFlag = true;
             pos.x = 0;
         } else {
             pos.x = glm::round((size.x - mImage->width * scale) / 2.f);
         }
         if (!!(params.repeat & Repeat::Y)) {
             uv.y = float(size.y) / getSizeHint().y;
+            uvModifiedFlag = true;
             pos.y = 0;
         } else {
             pos.y = glm::round((size.y - mImage->height * scale) / 2.f);
@@ -80,8 +83,8 @@ void SvgDrawable::draw(const Params& params) {
         pos += params.offset;
         Render::drawRect(ATexturedBrush {
               texture,
-              glm::ivec2 { 0.f, 0.f },
-              uv,
+              std::nullopt,
+              uvModifiedFlag ? static_cast<decltype(ATexturedBrush::uv1)>(uv) : std::nullopt,
               params.imageRendering,
               params.repeat,
             },

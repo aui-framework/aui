@@ -100,7 +100,7 @@ void AView::popStencilIfNeeded() {
          * apply mask AFTER transform updated and BEFORE rendering AView content. The only way to return the stencil
          * back is place it here, after rendering AView.
          */
-        RenderHints::PushMask::popMask([&]() {
+        RenderHints::popMask([&]() {
             drawStencilMask();
         });
     }
@@ -134,7 +134,7 @@ void AView::render()
     // stencil
     if (mOverflow == Overflow::HIDDEN)
     {
-        RenderHints::PushMask::pushMask([&]() {
+        RenderHints::pushMask([&]() {
             drawStencilMask();
         });
     }

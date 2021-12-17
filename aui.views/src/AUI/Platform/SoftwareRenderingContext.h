@@ -9,6 +9,7 @@ private:
     AByteBuffer mBitmapBlob;
     BITMAPINFO* mBitmapInfo;
 #endif
+    AByteBuffer mStencilBlob;
     glm::uvec2 mBitmapSize;
 
 public:
@@ -21,32 +22,38 @@ public:
     void beginResize(AWindow& window) override;
     void init(const Init& init) override;
 
+    inline uint8_t& stencil(const glm::uvec2& position) {
+        return mStencilBlob.at<uint8_t>(mBitmapSize.x * position.y + position.x);
+    }
+
+    [[nodiscard]]
+    glm::uvec2 bitmapSize() const {
+        return mBitmapSize;
+    }
 
 #if AUI_PLATFORM_WIN
-    inline void putPixel(const glm::uvec2& position, const glm::u8vec3& color) {
-        if (glm::all(glm::lessThan(position, mBitmapSize))) {
-            auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
-                + (mBitmapSize.x * position.y + position.x) * 4);
-            dataPtr[0] = color[2];
-            dataPtr[1] = color[1];
-            dataPtr[2] = color[0];
-            dataPtr[3] = 255;
-        }
-    }
-    inline glm::u8vec3 getPixel(const glm::uvec2& position) {
-        if (glm::all(glm::lessThan(position, mBitmapSize))) {
-            auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
-                + (mBitmapSize.x * position.y + position.x) * 4);
+    inline void putPixel(const glm::uvec2& position, const glm::u8vec3& color) noexcept {
+        assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
 
-            return { dataPtr[2], dataPtr[1], dataPtr[0] };
-        }
-        return { 0, 0, 0 };
+        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
+            + (mBitmapSize.x * position.y + position.x) * 4);
+        dataPtr[0] = color[2];
+        dataPtr[1] = color[1];
+        dataPtr[2] = color[0];
+        dataPtr[3] = 0;
+    }
+    inline glm::u8vec3 getPixel(const glm::uvec2& position) noexcept {
+        assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
+        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
+                                                  + (mBitmapSize.x * position.y + position.x) * 4);
+
+        return { dataPtr[2], dataPtr[1], dataPtr[0] };
     }
 #else
-    inline void putPixel(const glm::uvec2& position, const glm::u8vec3& color) {
+    inline void putPixel(const glm::uvec2& position, const glm::u8vec3& color) noexcept {
 
     }
-    inline glm::u8vec3 getPixel(const glm::uvec2& position) {
+    inline glm::u8vec3 getPixel(const glm::uvec2& position) noexcept {
         return { 0, 0, 0 };
     }
 #endif
