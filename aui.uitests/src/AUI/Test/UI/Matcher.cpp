@@ -16,13 +16,20 @@ ASet<_<AView>> Matcher::toSet() const {
     return result;
 }
 
+Matcher*& Matcher::currentImpl() {
+    thread_local Matcher* matcher;
+    return matcher;
+}
+
 void Matcher::processContainer(ASet<_<AView>>& destination, const _<AViewContainer>& container) const {
     for (auto& view : container) {
-        if (mMatcher->matches(view)) {
-            destination << view;
-        }
-        if (auto currentContainer = _cast<AViewContainer>(view)) {
-            processContainer(destination, currentContainer);
+        if (mIncludeInvisibleViews || view->getVisibility() == Visibility::VISIBLE) {
+            if (mMatcher->matches(view)) {
+                destination << view;
+            }
+            if (auto currentContainer = _cast<AViewContainer>(view)) {
+                processContainer(destination, currentContainer);
+            }
         }
     }
 }

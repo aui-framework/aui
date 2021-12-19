@@ -417,3 +417,13 @@ time_t APath::fileModifyTime() const {
 void APath::move(const APath& source, const APath& destination) {
     rename(source.toStdString().c_str(), destination.toStdString().c_str());
 }
+
+AString APath::systemSlashDirection() const {
+#if AUI_PLATFORM_WIN
+    AString selfCopy = *this;
+    selfCopy.replaceAll('/', '\\');
+    return selfCopy;
+#else
+    return *this;
+#endif
+}

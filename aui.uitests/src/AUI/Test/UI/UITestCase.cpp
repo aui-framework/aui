@@ -4,6 +4,7 @@
 #include <AUI/Image/PngImageLoader.h>
 #include <AUI/IO/FileOutputStream.h>
 #include "UITestCase.h"
+#include "Matcher.h"
 #include <boost/test/tree/test_unit.hpp>
 #include <boost/test/unit_test_log.hpp>
 #include <AUI/Traits/strings.h>
@@ -13,6 +14,13 @@ using namespace boost::unit_test;
 void UITestCaseScope::test_unit_aborted(const test_unit& unit) {
     test_observer::test_unit_aborted(unit);
 
+    // draw red rects to highlight views
+    for (auto& v : Matcher::current()->toSet()) {
+        Render::drawRectBorder(ASolidBrush{ 0xaae00000_argb },
+                               v->getPositionInWindow() - glm::ivec2{ 1, 1 },
+                               v->getSize() + glm::ivec2{ 2, 2 });
+    }
+
     auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
     APath p("reports");
     p.makeDirs();
@@ -20,7 +28,9 @@ void UITestCaseScope::test_unit_aborted(const test_unit& unit) {
     FileOutputStream fos(p);
     PngImageLoader::save(fos, image);
 
-    //std::cout << log::begin( unit.p_file_name, unit.p_line_num ) << log_level::log_messages;
-    //std::cout << "report saved at " << p.absolute().toStdString();
-    //std::cout << log::end();
+    std::cout << std::string(unit.p_file_name.begin(),  unit.p_file_name.end())
+              << '(' << unit.p_line_num << "): report saved at "
+              << p.absolute().systemSlashDirection().toStdString()
+              << std::endl;
+    BOOST_TEST_MESSAGE("azaza");
 }

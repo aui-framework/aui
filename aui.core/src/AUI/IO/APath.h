@@ -129,6 +129,12 @@ public:
         removeBackSlashes();
     }
 
+
+    /**
+     * @return On Linux/macOS, returns self copy. On Windows, returns self copy with backslashes (\) instead of slashes (/).
+     */
+    AString systemSlashDirection() const;
+
     /**
      * \brief Get the absolute (full) path to the file.
      * \return the absolute (full) path to the file

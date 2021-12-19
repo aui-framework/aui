@@ -53,7 +53,7 @@ UI_TEST_CASE(HelloIsNotAppeared) {
     TestWindow::make();
 
     // check label is not visible
-    By::text("Hello!").require(gone(), "label is visible");
+    By::text("Hello!").require(not_visible(), "label is visible");
 }
 
 /**
@@ -63,12 +63,11 @@ UI_TEST_CASE(HelloAppearsAfterClick) {
     // prepare the window
     TestWindow::make();
 
+
     // press the button
     By::text("Say hello").perform(click());
 
     // check label is appeared
     By::text("Hello!").require(visible(), "label is not appeared");
-
-    By::text("Hello!").require(gone(), "label is visible");
 }
 BOOST_AUTO_TEST_SUITE_END()

@@ -37,3 +37,4 @@ namespace UITest {
 #include <AUI/Test/UI/Assertion/Empty.h>
 #include <AUI/Test/UI/Assertion/Gone.h>
 #include <AUI/Test/UI/Assertion/Visible.h>
+#include <AUI/Test/UI/Assertion/NotVisible.h>

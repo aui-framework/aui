@@ -6,6 +6,8 @@
 
 
 struct ViewAssertionGone {
+    using IGNORE_VISIBILITY = std::true_type;
+
     bool operator()(const _<AView>& v) {
         return v->getVisibility() == Visibility::GONE;
     }
