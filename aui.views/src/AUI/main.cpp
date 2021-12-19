@@ -63,7 +63,9 @@ BOOL WINAPI DllMain(
 
 
 #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb_image.h>
+#include <stb_image_write.h>
 #include "AUI/Common/Plugin.h"
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Image/JpgImageLoader.h>

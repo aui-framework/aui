@@ -46,10 +46,6 @@ AImage::AImage(uint32_t width, uint32_t height, int format):
     mData.resize(mWidth * mHeight * getBytesPerPixel());
 }
 
-AVector<std::uint8_t>& AImage::getData()
-{
-    return mData;
-}
 
 AImage AImage::addAlpha(const AImage& src)
 {

@@ -103,7 +103,7 @@ protected:
 #else
     XIC mIC;
 #endif
-    AWindowNativePtr mHandle;
+    AWindowNativePtr mHandle = 0; // on linux AWindowNativePtr is not a pointer type so using zero here
     WindowStyle mWindowStyle = WindowStyle::DEFAULT;
 
     virtual void doDrawWindow();
@@ -176,6 +176,14 @@ public:
     void restore();
 
     void flagRedraw() override;
+
+    /**
+     * Shows the window.
+     * <dl>
+     *   <dt><b>Behavior under UI tests</b></dt>
+     *   <dd>Does not actually shows the window and don't even needed in graphics environment.</dd>
+     * </dl>
+     */
     void show();
     void close();
     void hide();

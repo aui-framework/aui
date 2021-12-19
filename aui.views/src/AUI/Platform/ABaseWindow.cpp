@@ -21,8 +21,14 @@ ABaseWindow::ABaseWindow() {
     mDpiRatio = Platform::getDpiRatio();
 }
 
-AWindowManager& ABaseWindow::getWindowManager() {
-    thread_local AWindowManager ourWindowManager;
+ABaseWindow::~ABaseWindow() {
+    if (currentWindowStorage() == this) {
+        currentWindowStorage() = nullptr;
+    }
+}
+
+_unique<AWindowManager>& ABaseWindow::getWindowManagerImpl() {
+    thread_local _unique<AWindowManager> ourWindowManager = std::make_unique<AWindowManager>();
     return ourWindowManager;
 }
 

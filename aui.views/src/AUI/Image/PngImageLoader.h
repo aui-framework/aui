@@ -32,6 +32,8 @@ class PngImageLoader: public IImageLoader {
 public:
     bool matches(AByteBuffer& buffer) override;
 
+    API_AUI_VIEWS static void save(IOutputStream& outputStream, const AImage& image);
+
     _<IDrawable> getDrawable(AByteBuffer& buffer) override;
     _<AImage> getRasterImage(AByteBuffer& buffer) override;
 };

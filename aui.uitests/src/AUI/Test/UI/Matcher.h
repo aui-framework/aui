@@ -15,9 +15,10 @@ private:
 
     template<class Assertion>
     void performHintChecks(const char* msg, const ASet<_<AView>>& set) const {
-        BOOST_WARN_MESSAGE(msg != nullptr, "Assertion message is empty");
+        UITest::frame();
+        if (msg == nullptr) BOOST_WARN_MESSAGE(false, "Assertion message is empty");
         if constexpr(!std::is_same_v<Assertion, empty>) {
-            BOOST_WARN_MESSAGE(!set.empty(), "Matcher is empty so check is not performed");
+            if (set.empty()) BOOST_WARN_MESSAGE(false, "Matcher is empty so check is not performed");
         }
     }
 
@@ -25,18 +26,20 @@ public:
     Matcher(const _<IMatcher>& matcher) : mMatcher(matcher) {}
 
     template<class Action>
-    void perform(Action action) const {
+    void perform(Action&& action) const {
         auto set = toSet();
-        BOOST_WARN_MESSAGE(!set.empty(), "Matcher is empty so action is not performed");
+        if (set.empty()) BOOST_WARN_MESSAGE(false, "Matcher is empty so action is not performed");
 
+        UITest::frame();
         for (auto& v : set) {
             action(v);
+            UITest::frame();
         }
     }
 
 
     template<class Assertion>
-    Matcher& require(Assertion assertion, const char* msg = nullptr) {
+    Matcher& require(Assertion&& assertion, const char* msg = nullptr) {
         auto set = toSet();
         performHintChecks<Assertion>(msg, set);
         for (auto& s : set) {
@@ -45,11 +48,20 @@ public:
         return *this;
     }
     template<class Assertion>
-    Matcher& warn(Assertion assertion, const char* msg = nullptr) {
+    Matcher& warn(Assertion&& assertion, const char* msg = nullptr) {
         auto set = toSet();
         performHintChecks<Assertion>(msg, set);
         for (auto& s : set) {
             BOOST_WARN_MESSAGE(assertion(s), msg);
+        }
+        return *this;
+    }
+    template<class Assertion>
+    Matcher& check(Assertion&& assertion, const char* msg = nullptr) {
+        auto set = toSet();
+        performHintChecks<Assertion>(msg, set);
+        for (auto& s : set) {
+            BOOST_CHECK_MESSAGE(assertion(s), msg);
         }
         return *this;
     }

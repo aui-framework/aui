@@ -22,6 +22,7 @@
 
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
+#include "SoftwareRenderingContext.h"
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Action/AMenu.h>
@@ -29,6 +30,8 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <AUI/Util/ALayoutInflater.h>
+#include <AUI/Platform/OpenGLRenderingContext.h>
+#include <AUI/Platform/SoftwareRenderingContext.h>
 
 
 
@@ -77,7 +80,7 @@ void AWindow::redraw() {
         mUpdateLayoutFlag = false;
         updateLayout();
     }
-#ifdef WIN32
+#if AUI_PLATFORM_WIN
     mRedrawFlag = true;
 #endif
     {
@@ -204,6 +207,21 @@ AWindowManager::~AWindowManager() {
 }
 
 
+
+void AWindow::windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) {
+    mWindowTitle = name;
+    mParentWindow = parent;
+    mSize = (glm::max)(glm::ivec2{ width, height }, getMinimumSize());
+
+    currentWindowStorage() = this;
+
+    connect(closed, this, &AWindow::close);
+
+    getWindowManager().initNativeWindow({ *this, name, width, height, ws, parent });
+
+    setWindowStyle(ws);
+}
+
 _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
     class AOverlappingWindow: public AWindow {
     public:
@@ -227,5 +245,16 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
 void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
     if (auto c = dynamic_cast<AWindow*>(surface->getParent())) {
         c->close();
+    }
+}
+void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
+    try {
+        auto context = std::make_unique<OpenGLRenderingContext>();
+        context->init(init);
+        init.setRenderingContext(std::move(context));
+    } catch (...) {
+        auto context = std::make_unique<SoftwareRenderingContext>();
+        context->init(init);
+        init.setRenderingContext(std::move(context));
     }
 }

@@ -32,12 +32,10 @@
 #include "AUI/Util/ARandom.h"
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
-#include <AUI/Platform/Platform.h>
-#include <AUI/Platform/AMessageBox.h>
-#include <AUI/Platform/AWindowManager.h>
-#include <AUI/Platform/ADesktop.h>
-#include <AUI/Platform/ABaseWindow.h>
-#include <AUI/Platform/ACustomWindow.h>
+#include "AUI/GL/OpenGLRenderer.h"
+#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/ACustomWindow.h"
+#include "AUI/Platform/OpenGLRenderingContext.h"
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
@@ -48,150 +46,61 @@
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 
-#include <AUI/Util/UIBuildingHelpers.h>
-#include <AUI/Devtools/DevtoolsPanel.h>
-#include <AUI/Util/ALayoutInflater.h>
-#include <AUI/Render/OpenGLRenderer.h>
+#include <X11/extensions/sync.h>
 
-#include <AUI/Util/Cache.h>
-#include <AUI/Util/AError.h>
-#include <AUI/Action/AMenu.h>
-#include <AUI/Util/AViewProfiler.h>
-#include <AUI/Platform/AMessageBox.h>
 
-AWindow::Context::~Context() {
+
+AWindow::~AWindow() {
+    mRenderingContext->destroyNativeWindow(*this);
 }
 
-bool AWindow::isRenderingContextAcquired() {
-    return true;
-}
 
 void AWindow::quit() {
     getWindowManager().mWindows.remove(shared_from_this());
-
 
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;
     });
 }
 
-void AWindow::windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) {
-
-}
-
-AWindow::~AWindow() {
-}
-
-
-
-using namespace std::chrono;
-using namespace std::chrono_literals;
-
-
-static auto _gLastFrameTime = 0ms;
-
-
 void AWindow::setWindowStyle(WindowStyle ws) {
     mWindowStyle = ws;
 }
 
-
 void AWindow::updateDpi() {
     emit dpiChanged;
 
-    mDpiRatio = 1.f;
+    mDpiRatio = Platform::getDpiRatio();
     onDpiChanged();
 }
-void AWindow::redraw() {
-    if (mUpdateLayoutFlag) {
-        mUpdateLayoutFlag = false;
-        updateLayout();
-    }
 
-    {
-
-        // fps restriction
-        {
-            auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-            auto delta = now - _gLastFrameTime;
-            // restriction 16ms = up to 60 frames per second
-            const auto FRAME_DURATION = 16ms;
-
-            if (FRAME_DURATION > delta) {
-                std::this_thread::sleep_for(FRAME_DURATION - delta);
-            }
-            _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        }
-
-#if !(AUI_PLATFORM_APPLE)
-        painter p(mHandle);
-#endif
-        GL::State::activeTexture(0);
-        GL::State::bindTexture(GL_TEXTURE_2D, 0);
-        GL::State::bindVertexArray(0);
-        GL::State::useProgram(0);
-
-        Render::setWindow(this);
-        glViewport(0, 0, getWidth(), getHeight());
-
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_CULL_FACE);
-
-        glClearColor(1.f, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        // stencil
-        glClearStencil(0);
-        glStencilMask(0xff);
-        glDisable(GL_SCISSOR_TEST);
-        glClear(GL_STENCIL_BUFFER_BIT);
-        glEnable(GL_STENCIL_TEST);
-        glStencilMask(0x00);
-        glStencilFunc(GL_EQUAL, 0, 0xff);
-
-        doDrawWindow();
-
-
-#if AUI_PLATFORM_WIN
-        SwapBuffers(p.mHdc);
-#elif AUI_PLATFORM_ANDROID
-
-#elif AUI_PLATFORM_APPLE
-        // TODO apple
-#else
-        glXSwapBuffers(gDisplay, mHandle);
-#endif
-    }
-
-    emit redrawn();
-}
 void AWindow::restore() {
+
 }
 
 void AWindow::minimize() {
 }
 
 bool AWindow::isMinimized() const {
+    return false;
 }
 
 
 bool AWindow::isMaximized() const {
+    return false;
 }
 
 void AWindow::maximize() {
+
 }
 
 glm::ivec2 AWindow::getWindowPosition() const {
     return {0, 0};
 }
 
+
 void AWindow::flagRedraw() {
-    if (mRedrawFlag) {
-        mRedrawFlag = false;
-    }
+    mRedrawFlag = true;
 }
 
 
@@ -202,28 +111,26 @@ void AWindow::setSize(int width, int height) {
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
     AViewContainer::setSize(width, height);
+
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
-    return position;
+    return position - getWindowPosition();
 }
 glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
-    return position;
+    return position + getWindowPosition();
 }
 
-void AWindow::setIcon(const AImage& image) {
-    assert(image.getFormat() & AImage::BYTE);
 
+void AWindow::setIcon(const AImage& image) {
 }
 
 void AWindow::hide() {
 }
 
-
 void AWindowManager::notifyProcessMessages() {
 
 }
-
 
 void AWindowManager::loop() {
 

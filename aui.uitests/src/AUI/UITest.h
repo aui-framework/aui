@@ -21,11 +21,19 @@
 
 #pragma once
 
+
 #include <AUI/View/AView.h>
+
+namespace UITest {
+    API_AUI_UITESTS void frame();
+}
 #include <boost/test/unit_test.hpp>
 #include <AUI/Test/UI/Matcher.h>
 #include <AUI/Test/UI/By.h>
+#include <AUI/Test/UI/UITestCase.h>
 
 #include <AUI/Test/UI/Action/Click.h>
 
 #include <AUI/Test/UI/Assertion/Empty.h>
+#include <AUI/Test/UI/Assertion/Gone.h>
+#include <AUI/Test/UI/Assertion/Visible.h>

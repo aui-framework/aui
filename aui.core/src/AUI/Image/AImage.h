@@ -78,7 +78,13 @@ public:
         allocate();
     }
 
-    AVector<uint8_t>& getData();
+    AVector<uint8_t>& getData() {
+        return mData;
+    }
+
+    const AVector<uint8_t>& getData() const {
+        return mData;
+    }
 
     [[nodiscard]] inline uint32_t getWidth() const {
         return mWidth;

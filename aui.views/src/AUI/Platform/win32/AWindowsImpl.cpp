@@ -59,8 +59,6 @@
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/Platform/AMessageBox.h>
-#include <AUI/Platform/OpenGLRenderingContext.h>
-#include <AUI/Platform/SoftwareRenderingContext.h>
 
 
 LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -274,41 +272,18 @@ void AWindow::quit() {
     getWindowManager().mWindows.remove(shared_from_this());
 
     // parent window should be activated BEFORE child is closed.
-    if (mParentWindow) {
-        EnableWindow(mParentWindow->mHandle, true);
+    if (mHandle) {
+        if (mParentWindow) {
+            EnableWindow(mParentWindow->mHandle, true);
+        }
+        ShowWindow(mHandle, SW_HIDE);
     }
-    ShowWindow(mHandle, SW_HIDE);
 
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;
     });
 }
 
-void AWindow::windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) {
-    mWindowTitle = name;
-    mParentWindow = parent;
-
-    currentWindowStorage() = this;
-
-    connect(closed, this, &AWindow::close);
-
-
-    IRenderingContext::Init initStruct = { *this, name, width, height, ws, parent };
-
-    try {
-        mRenderingContext = std::make_unique<OpenGLRenderingContext>();
-        mRenderingContext->init(initStruct);
-    } catch (...) {
-        mRenderingContext = nullptr;
-    }
-    if (mRenderingContext == nullptr) {
-        mRenderingContext = std::make_unique<SoftwareRenderingContext>();
-        mRenderingContext->init(initStruct);
-    }
-
-    setWindowStyle(ws);
-
-}
 
 AWindow::~AWindow() {
     mRenderingContext->destroyNativeWindow(*this);
@@ -317,6 +292,7 @@ AWindow::~AWindow() {
 
 void AWindow::setWindowStyle(WindowStyle ws) {
     mWindowStyle = ws;
+    if (!mHandle) return;
     if (!!(ws & WindowStyle::SYS)) {
         SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) & ~(WS_CAPTION | WS_THICKFRAME
             | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU) | WS_CHILD);
@@ -358,46 +334,54 @@ void AWindow::setWindowStyle(WindowStyle ws) {
 void AWindow::updateDpi() {
     emit dpiChanged;
 
-    typedef UINT(WINAPI *GetDpiForWindow_t)(_In_ HWND);
-    static auto GetDpiForWindow = (GetDpiForWindow_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForWindow");
-    if (GetDpiForWindow) {
-        mDpiRatio = GetDpiForWindow(mHandle) / 96.f;
+    if (mHandle) {
+        typedef UINT(WINAPI* GetDpiForWindow_t)(_In_ HWND);
+        static auto GetDpiForWindow = (GetDpiForWindow_t) GetProcAddress(GetModuleHandleA("User32.dll"),
+                                                                         "GetDpiForWindow");
+        if (GetDpiForWindow) {
+            mDpiRatio = GetDpiForWindow(mHandle) / 96.f;
+        } else {
+            mDpiRatio = Platform::getDpiRatio();
+        }
     } else {
-        mDpiRatio = Platform::getDpiRatio();
+        mDpiRatio = 1.f;
     }
 
     onDpiChanged();
 }
 
 void AWindow::restore() {
-    ShowWindow(mHandle, SW_RESTORE);
+    if (mHandle) ShowWindow(mHandle, SW_RESTORE);
 }
 
 void AWindow::minimize() {
-    ShowWindow(mHandle, SW_MINIMIZE);
+    if (mHandle) ShowWindow(mHandle, SW_MINIMIZE);
 }
 
 bool AWindow::isMinimized() const {
+    if (!mHandle) return false;
     return IsIconic(mHandle);
 }
 
 
 bool AWindow::isMaximized() const {
+    if (!mHandle) return false;
     return IsZoomed(mHandle);
 }
 
 void AWindow::maximize() {
-    ShowWindow(mHandle, SW_MAXIMIZE);
+    if (mHandle) ShowWindow(mHandle, SW_MAXIMIZE);
 }
 
 glm::ivec2 AWindow::getWindowPosition() const {
+    if (!mHandle) return {0, 0};
     RECT r;
     GetWindowRect(mHandle, &r);
     return {r.left, r.top};
 }
 
 void AWindow::flagRedraw() {
-    if (mRedrawFlag) {
+    if (mRedrawFlag && mHandle) {
         InvalidateRect(mHandle, nullptr, true);
         mRedrawFlag = false;
     }
@@ -412,23 +396,28 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
     AViewContainer::setSize(width, height);
 
+    if (!mHandle) return;
+
     RECT r = {0, 0, width, height};
     AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
     MoveWindow(mHandle, x, y, r.right - r.left, r.bottom - r.top, false);
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
+    if (!mHandle) return position;
     POINT p = {position.x, position.y};
     ScreenToClient(mHandle, &p);
     return {p.x, p.y};
 }
 glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
+    if (!mHandle) return position;
     POINT p = {position.x, position.y};
     ClientToScreen(mHandle, &p);
     return {p.x, p.y};
 }
 
 void AWindow::setIcon(const AImage& image) {
+    if (!mHandle) return;
     assert(image.getFormat() & AImage::BYTE);
 
     if (mIcon) {
@@ -478,6 +467,7 @@ void AWindow::setIcon(const AImage& image) {
 }
 
 void AWindow::hide() {
+    if (!mHandle) return;
     ShowWindow(mHandle, SW_HIDE);
 }
 

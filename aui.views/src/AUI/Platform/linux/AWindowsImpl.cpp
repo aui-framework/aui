@@ -50,22 +50,6 @@
 
 
 
-
-void AWindow::windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) {
-    mWindowTitle = name;
-    mParentWindow = parent;
-
-    currentWindowStorage() = this;
-
-    connect(closed, this, &AWindow::close);
-
-    mRenderingContext = std::make_unique<OpenGLRenderingContext>();
-    //mRenderingContext = std::make_unique<SoftwareRenderingContext>();
-    mRenderingContext->init({ *this, name, width, height, ws, parent });
-
-    setWindowStyle(ws);
-}
-
 AWindow::~AWindow() {
     mRenderingContext->destroyNativeWindow(*this);
 }

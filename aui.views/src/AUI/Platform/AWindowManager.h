@@ -52,12 +52,6 @@ private:
     AString xClipboardPasteImpl();
 #endif
 
-    void initNativeWindow(AWindow& window,
-                          const AString& name,
-                          int width,
-                          int height,
-                          WindowStyle ws,
-                          AWindow* parent);
 public:
     AWindowManager();
     ~AWindowManager() override;
@@ -68,6 +62,8 @@ public:
     const ADeque<_<AWindow>>& getWindows() const {
         return mWindows;
     }
+
+    virtual void initNativeWindow(const IRenderingContext::Init& init);
 
     template<typename T>
     [[nodiscard]] ADeque<_<T>> getWindowsOfType() const {
@@ -80,6 +76,4 @@ public:
 
         return std::move(result);
     }
-
-    void setWindowInitializer(_unique<IRenderingContext> windowInitializer);
 };

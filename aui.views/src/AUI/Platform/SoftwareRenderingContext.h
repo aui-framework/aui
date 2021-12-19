@@ -3,12 +3,14 @@
 #include "CommonRenderingContext.h"
 #include <AUI/Platform/AWindow.h>
 
-class SoftwareRenderingContext: public CommonRenderingContext {
+class API_AUI_VIEWS SoftwareRenderingContext: public CommonRenderingContext {
 private:
 #if AUI_PLATFORM_WIN
     AByteBuffer mBitmapBlob;
     BITMAPINFO* mBitmapInfo;
 #endif
+
+protected:
     AByteBuffer mStencilBlob;
     glm::uvec2 mBitmapSize;
 
@@ -21,6 +23,8 @@ public:
     void endPaint(AWindow& window) override;
     void beginResize(AWindow& window) override;
     void init(const Init& init) override;
+
+    AImage makeScreenshot() override;
 
     inline uint8_t& stencil(const glm::uvec2& position) {
         return mStencilBlob.at<uint8_t>(mBitmapSize.x * position.y + position.x);
@@ -40,7 +44,7 @@ public:
         dataPtr[0] = color[2];
         dataPtr[1] = color[1];
         dataPtr[2] = color[0];
-        dataPtr[3] = 0;
+        dataPtr[3] = 255;
     }
     inline glm::u8vec3 getPixel(const glm::uvec2& position) noexcept {
         assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));

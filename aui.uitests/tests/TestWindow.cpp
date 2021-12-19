@@ -11,10 +11,12 @@ TestWindow::TestWindow() {
         Vertical {
             _new<AButton>("Say hello").connect(&AView::clicked, this, [&] {
                 mHelloLabel->setVisibility(Visibility::VISIBLE);
-            }),
-            mHelloLabel = _new<ALabel>("Hello!") let { it->setVisibility(Visibility::GONE); }
+            }) let { it->setDefault(); },
+            mHelloLabel = _new<ALabel>("Hello!") let { it->setVisibility(Visibility::INVISIBLE); }
         }
     });
+
+    pack();
 }
 
 void TestWindow::make() {

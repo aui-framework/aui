@@ -22,7 +22,7 @@ void SoftwareRenderingContext::destroyNativeWindow(AWindow& window) {
 
 void SoftwareRenderingContext::beginPaint(AWindow& window) {
     CommonRenderingContext::beginPaint(window);
-    memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
+    std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
 }
 
 void SoftwareRenderingContext::endPaint(AWindow& window) {
@@ -54,4 +54,18 @@ void SoftwareRenderingContext::endResize(AWindow& window) {
 
     mBitmapInfo->bmiHeader.biWidth = mBitmapSize.x;
     mBitmapInfo->bmiHeader.biHeight = -int(mBitmapSize.y); // negative means top-down bitmap
+}
+
+AImage SoftwareRenderingContext::makeScreenshot() {
+    AVector<uint8_t> data;
+    size_t s = mBitmapSize.x * mBitmapSize.y * 4;
+    data.resize(s);
+    for (size_t i = 0; i < s; i += 4) {
+        uint8_t* ptr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFOHEADER) + i);
+        data[i    ] = ptr[2];
+        data[i + 1] = ptr[1];
+        data[i + 2] = ptr[0];
+        data[i + 3] = ptr[3];
+    }
+    return {std::move(data), mBitmapSize.x, mBitmapSize.y, AImage::RGBA | AImage::BYTE};
 }

@@ -204,3 +204,7 @@ void OpenGLRenderingContext::endPaint(AWindow& window) {
 
 OpenGLRenderingContext::~OpenGLRenderingContext() {
 }
+
+AImage OpenGLRenderingContext::makeScreenshot() {
+    return AImage();
+}

@@ -13,6 +13,8 @@
 
 class API_AUI_VIEWS ABaseWindow: public AViewContainer {
     friend class SoftwareRenderer;
+    friend class UITestCaseScope;
+    friend class IRenderingContext::Init;
 private:
     _weak<AView> mFocusedView;
     _weak<AView> mProfiledView;
@@ -36,12 +38,19 @@ protected:
 
     virtual void createDevtoolsWindow();
 
+    static _unique<AWindowManager>& getWindowManagerImpl();
+
 public:
+
     ABaseWindow();
 
-    virtual ~ABaseWindow() = default;
-
-    static AWindowManager& getWindowManager();
+    virtual ~ABaseWindow();
+    static AWindowManager& getWindowManager() {
+        return *getWindowManagerImpl();
+    }
+    static void setWindowManager(_unique<AWindowManager> windowManager) {
+        getWindowManagerImpl() = std::move(windowManager);
+    }
 
     const _unique<IRenderingContext>& getRenderingContext() const {
         return mRenderingContext;

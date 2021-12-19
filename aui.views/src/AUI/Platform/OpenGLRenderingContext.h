@@ -20,13 +20,11 @@ public:
     void init(const Init& init) override;
     ~OpenGLRenderingContext() override;
 
+    AImage makeScreenshot() override;
+
     void destroyNativeWindow(AWindow& window) override;
-
     void beginPaint(AWindow& window) override;
-
     void endPaint(AWindow& window) override;
-
     void beginResize(AWindow& window) override;
-
     void endResize(AWindow& window) override;
 };

@@ -18,7 +18,7 @@ ASet<_<AView>> Matcher::toSet() const {
 
 void Matcher::processContainer(ASet<_<AView>>& destination, const _<AViewContainer>& container) const {
     for (auto& view : container) {
-        if (view->getVisibility() == Visibility::VISIBLE && mMatcher->matches(view)) {
+        if (mMatcher->matches(view)) {
             destination << view;
         }
         if (auto currentContainer = _cast<AViewContainer>(view)) {

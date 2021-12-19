@@ -27,6 +27,7 @@
 #include <AUI/Common/AByteBuffer.h>
 
 #include <stb_image.h>
+#include <stb_image_write.h>
 
 bool PngImageLoader::matches(AByteBuffer& buffer) {
     const uint8_t png_header[] = {0x89, 0x50, 0x4e, 0x47};
@@ -62,4 +63,10 @@ _<AImage> PngImageLoader::getRasterImage(AByteBuffer& buffer) {
         return img;
     }
     return nullptr;
+}
+
+void PngImageLoader::save(IOutputStream& outputStream, const AImage& image) {
+    stbi_write_png_to_func([](void *context, void *data, int size) {
+        reinterpret_cast<IOutputStream*>(context)->write(reinterpret_cast<char*>(data), size);
+    }, reinterpret_cast<void*>(&outputStream), image.getWidth(), image.getHeight(), image.getBytesPerPixel(), image.getData().data(), image.getWidth() * image.getBytesPerPixel());
 }

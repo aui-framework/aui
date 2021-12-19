@@ -39,6 +39,7 @@
 #include "AUI/Platform/AFontManager.h"
 #include "AUI/Util/AMetric.h"
 #include "AUI/Util/Factory.h"
+#include "ALabel.h"
 
 // windows.h
 #undef max

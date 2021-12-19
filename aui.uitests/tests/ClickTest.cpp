@@ -24,17 +24,51 @@
 
 using namespace boost::unit_test;
 
+/**
+ * This test suite checks a simple program.
+ * There's a button "Say hello":
+ * ___________-[]X_
+ * |              |
+ * |  [Say hello] |
+ * |              |
+ * |______________|
+ *
+ *
+ * when it's pressed, a message appears:
+ * ___________-[]X_
+ * |              |
+ * |  [Say hello] |
+ * |    Hello!    |
+ * |______________|
+ *
+ * that's it.
+ */
 BOOST_AUTO_TEST_SUITE(Click)
 
-BOOST_AUTO_TEST_CASE(HelloIsNotAppeared) {
+/**
+ * Checks that the message is not appeared yet.
+ */
+UI_TEST_CASE(HelloIsNotAppeared) {
+    // prepare the window
     TestWindow::make();
 
     // check label is not visible
-    By::text("Hello!").require(empty(), "label is visible");
+    By::text("Hello!").require(gone(), "label is visible");
 }
 
-BOOST_AUTO_TEST_CASE(HelloAppearsAfterClick) {
+/**
+ * Checks that the message appears when button is clicked.
+ */
+UI_TEST_CASE(HelloAppearsAfterClick) {
+    // prepare the window
     TestWindow::make();
+
+    // press the button
     By::text("Say hello").perform(click());
+
+    // check label is appeared
+    By::text("Hello!").require(visible(), "label is not appeared");
+
+    By::text("Hello!").require(gone(), "label is visible");
 }
 BOOST_AUTO_TEST_SUITE_END()

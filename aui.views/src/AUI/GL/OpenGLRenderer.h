@@ -97,11 +97,8 @@ public:
     glm::mat4 getProjectionMatrix() const override;
 
     void pushMaskBefore() override;
-
     void pushMaskAfter() override;
-
     void popMaskBefore() override;
-
     void popMaskAfter() override;
 };
 

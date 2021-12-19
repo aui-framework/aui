@@ -5,7 +5,7 @@
 #include <AUI/Platform/ABaseWindow.h>
 #include <AUI/Platform/SoftwareRenderingContext.h>
 
-class SoftwareRenderer: public IRenderer {
+class API_AUI_VIEWS SoftwareRenderer: public IRenderer {
 private:
     SoftwareRenderingContext* mContext;
     bool mDrawingToStencil = false;

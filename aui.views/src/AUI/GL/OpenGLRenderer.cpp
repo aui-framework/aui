@@ -816,3 +816,4 @@ void OpenGLRenderer::popMaskAfter() {
     glStencilMask(0x00);
     glStencilFunc(GL_EQUAL, --mStencilDepth, 0xff);
 }
+
