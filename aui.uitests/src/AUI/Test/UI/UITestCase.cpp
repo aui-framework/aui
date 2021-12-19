@@ -11,6 +11,16 @@
 
 using namespace boost::unit_test;
 
+APath saveScreenshot(const AString& testFilePath, const AString& name) {
+    auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
+    auto p = APath("reports")[APath(testFilePath).filenameWithoutExtension()];
+    p.makeDirs();
+    p = p[name];
+    FileOutputStream fos(p);
+    PngImageLoader::save(fos, image);
+    return p;
+}
+
 void UITestCaseScope::test_unit_aborted(const test_unit& unit) {
     test_observer::test_unit_aborted(unit);
 
@@ -21,16 +31,25 @@ void UITestCaseScope::test_unit_aborted(const test_unit& unit) {
                                v->getSize() + glm::ivec2{ 2, 2 });
     }
 
-    auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
-    APath p("reports");
-    p.makeDirs();
-    p = p["{}_{}.png"_format(unit.p_name->c_str(), unit.p_line_num)];
-    FileOutputStream fos(p);
-    PngImageLoader::save(fos, image);
+    auto name = std::string(unit.p_file_name.begin(),  unit.p_file_name.end());
+    auto p = saveScreenshot(name, "abort-{}_{}.png"_format(unit.p_name->c_str(), unit.p_line_num));
 
-    std::cout << std::string(unit.p_file_name.begin(),  unit.p_file_name.end())
+    std::cout << name
               << '(' << unit.p_line_num << "): report saved at "
               << p.absolute().systemSlashDirection().toStdString()
               << std::endl;
-    BOOST_TEST_MESSAGE("azaza");
+}
+
+void UITestCaseScope::test_unit_finish(const test_unit& unit, unsigned long i) {
+    test_observer::test_unit_finish(unit, i);
+
+    auto name = std::string(unit.p_file_name.begin(),  unit.p_file_name.end());
+    auto p = saveScreenshot(name, "finish-{}_{}.png"_format(unit.p_name->c_str(), unit.p_line_num));
+
+    std::cout << name
+              << '(' << unit.p_line_num << "): screenshot saved at "
+              << p.absolute().systemSlashDirection().toStdString()
+              << std::endl;
+
+    delete this;
 }

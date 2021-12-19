@@ -48,14 +48,16 @@ public:
     UITestCaseScope() {
         boost::unit_test::framework::register_observer(*this);
         Render::setRenderer(std::make_unique<SoftwareRenderer>());
-        AWindow::setWindowManager(std::make_unique<UITestWindowManager>());
+        AWindow::setWindowManager<UITestWindowManager>();
         ABaseWindow::currentWindowStorage() = nullptr;
     }
     ~UITestCaseScope() {
         boost::unit_test::framework::deregister_observer(*this);
+        AWindow::destroyWindowManager();
     }
 
     API_AUI_UITESTS void test_unit_aborted(const boost::unit_test::test_unit& unit) override;
+    API_AUI_UITESTS void test_unit_finish(const boost::unit_test::test_unit& unit, unsigned long i) override;
 };
 
-#define UI_TEST_CASE(name) void name ## _wrap(); BOOST_AUTO_TEST_CASE(name) { UITestCaseScope fixture; name ## _wrap(); }  void name ## _wrap()
+#define UI_TEST_CASE(name) void name ## _wrap(); BOOST_AUTO_TEST_CASE(name) { new UITestCaseScope; name ## _wrap(); }  void name ## _wrap()

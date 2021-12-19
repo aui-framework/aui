@@ -21,3 +21,19 @@ Matcher By::text(const AString& text) {
     };
     return { _new<TextMatcher>(text) };
 }
+
+Matcher By::name(const AString& text) {
+    class NameMatcher: public IMatcher {
+    private:
+        AString mText;
+    public:
+        NameMatcher(AString text) : mText(std::move(text)) {}
+
+        ~NameMatcher() override = default;
+
+        bool matches(const _<AView>& view) override {
+            return view->getAssNames().contains(mText);
+        }
+    };
+    return { _new<NameMatcher>(text) };
+}

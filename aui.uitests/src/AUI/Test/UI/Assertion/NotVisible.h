@@ -13,4 +13,4 @@ struct ViewAssertionNotVisible {
     }
 };
 
-using not_visible = ViewAssertionNotVisible;
+using notVisible = ViewAssertionNotVisible;

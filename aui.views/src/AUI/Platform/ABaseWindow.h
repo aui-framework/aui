@@ -48,8 +48,14 @@ public:
     static AWindowManager& getWindowManager() {
         return *getWindowManagerImpl();
     }
-    static void setWindowManager(_unique<AWindowManager> windowManager) {
-        getWindowManagerImpl() = std::move(windowManager);
+    template<typename WindowManager, typename... Args>
+    static void setWindowManager(Args&&... args) {
+        destroyWindowManager(); // destroys previous window manager so IEventLoop::Handle sets window manager to the
+                                // previous one BEFORE the new window manager is set
+        getWindowManagerImpl() = std::make_unique<WindowManager>(std::forward<Args>(args)...);
+    }
+    static void destroyWindowManager() {
+        getWindowManagerImpl() = nullptr;
     }
 
     const _unique<IRenderingContext>& getRenderingContext() const {

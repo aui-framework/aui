@@ -20,7 +20,8 @@
  */
 
 #include <AUI/UITest.h>
-#include "TestWindow.h"
+#include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/View/AButton.h>
 
 using namespace boost::unit_test;
 
@@ -45,15 +46,36 @@ using namespace boost::unit_test;
  */
 BOOST_AUTO_TEST_SUITE(Click)
 
+class TestWindow: public AWindow {
+private:
+    _<ALabel> mHelloLabel;
+
+public:
+    TestWindow() {
+        setContents(Centered {
+            Vertical {
+                _new<AButton>("Say hello").connect(&AView::clicked, this, [&] {
+                    mHelloLabel->setVisibility(Visibility::VISIBLE);
+                }) let { it->setDefault(); },
+                mHelloLabel = _new<ALabel>("Hello!") let { it->setVisibility(Visibility::INVISIBLE); }
+            }
+        });
+
+        pack();
+    }
+};
+
+
+
 /**
  * Checks that the message is not appeared yet.
  */
 UI_TEST_CASE(HelloIsNotAppeared) {
     // prepare the window
-    TestWindow::make();
+    _new<TestWindow>()->show();
 
     // check label is not visible
-    By::text("Hello!").require(not_visible(), "label is visible");
+    By::text("Hello!").require(notVisible(), "label is visible");
 }
 
 /**
@@ -61,7 +83,7 @@ UI_TEST_CASE(HelloIsNotAppeared) {
  */
 UI_TEST_CASE(HelloAppearsAfterClick) {
     // prepare the window
-    TestWindow::make();
+    _new<TestWindow>()->show();
 
 
     // press the button

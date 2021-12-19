@@ -5,6 +5,7 @@
 
 namespace By {
     API_AUI_UITESTS Matcher text(const AString& text);
+    API_AUI_UITESTS Matcher name(const AString& name);
 }
 
 

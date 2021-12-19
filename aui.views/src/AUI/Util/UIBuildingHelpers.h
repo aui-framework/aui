@@ -40,6 +40,7 @@
 #include <AUI/Image/AImageLoaderRegistry.h>
 #include <AUI/i18n/AI18n.h>
 #include <AUI/ASS/ASS.h>
+#include <AUI/Traits/strings.h>
 
 
 template<typename Layout, typename... Args>
