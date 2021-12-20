@@ -332,7 +332,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
             connect(it->checked, slot(tabView)::setEnabled);
         },
 		_new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") let {
-		    it->setEnabled(false);
+		    it << "#copyright";
+            it->setEnabled(false);
 		}
 	});
 }

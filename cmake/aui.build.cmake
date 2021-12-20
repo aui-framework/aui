@@ -163,14 +163,7 @@ function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
     set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 17)
-    file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
 
-    if (SRCS_TESTS_TMP)
-        set_property(GLOBAL APPEND PROPERTY TESTS_DEPS ${AUI_MODULE_NAME})
-        foreach(child ${SRCS_TESTS_TMP})
-            set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${child})
-        endforeach()
-    endif()
     if(AUI_STATIC)
         target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_STATIC)
     endif()
@@ -381,7 +374,16 @@ endfunction(aui_deploy_library)
 function(aui_executable_advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
     project(${AUI_MODULE_NAME})
 
+    file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
+
+    if (SRCS_TESTS_TMP)
+        set_property(GLOBAL APPEND PROPERTY TESTS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
+        foreach(child ${SRCS_TESTS_TMP} ${SRCS})
+            set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${child})
+        endforeach()
+    endif()
+
 
     # remove platform dependent files
     foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
@@ -531,6 +533,15 @@ endfunction(aui_compile_assets_add)
 
 function(aui_module AUI_MODULE_NAME)
     project(${AUI_MODULE_NAME})
+
+    file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
+
+    if (SRCS_TESTS_TMP)
+        set_property(GLOBAL APPEND PROPERTY TESTS_DEPS ${AUI_MODULE_NAME})
+        foreach(child ${SRCS_TESTS_TMP})
+            set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${child})
+        endforeach()
+    endif()
 
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp)
     if (WIN32)

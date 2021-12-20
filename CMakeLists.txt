@@ -42,10 +42,14 @@ set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
 define_property(GLOBAL PROPERTY TESTS_SRCS
 		BRIEF_DOCS "Global list of test files"
 		FULL_DOCS "Global list of test files")
+define_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS
+		BRIEF_DOCS "Global list of test include dirs"
+		FULL_DOCS "Global list of test include dirs")
 define_property(GLOBAL PROPERTY TESTS_DEPS
 		BRIEF_DOCS "Global list of test dependencies"
 		FULL_DOCS "Global list of test dependencies")
 
+set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
 set_property(GLOBAL PROPERTY TESTS_SRCS "")
 
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
@@ -90,9 +94,9 @@ if (NOT ANDROID AND NOT IOS)
 	aui_tests(Tests ${TESTS_SRCS})
 	if (TARGET Tests)
 		get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
-		foreach(child ${TESTS_DEPS})
-			target_link_libraries(Tests PRIVATE ${child})
-		endforeach()
+		get_property(TESTS_INCLUDE_DIRS GLOBAL PROPERTY TESTS_INCLUDE_DIRS)
+		target_link_libraries(Tests PRIVATE ${TESTS_DEPS})
+		target_include_directories(Tests PRIVATE ${TESTS_INCLUDE_DIRS})
 	endif()
 endif()
 

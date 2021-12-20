@@ -35,8 +35,10 @@ namespace UITest {
 #include <AUI/Test/UI/Action/Click.h>
 #include <AUI/Test/UI/Action/Type.h>
 
+#include <AUI/Test/UI/Assertion/Align.h>
 #include <AUI/Test/UI/Assertion/Empty.h>
 #include <AUI/Test/UI/Assertion/Gone.h>
 #include <AUI/Test/UI/Assertion/Visible.h>
 #include <AUI/Test/UI/Assertion/NotVisible.h>
 #include <AUI/Test/UI/Assertion/Text.h>
+#include <AUI/Test/UI/Assertion/Size.h>

@@ -89,6 +89,41 @@ public:
         }
         return *this;
     }
+
+private:
+
+    template<class BinaryOperator>
+    struct BinaryOperatorMatcher: public IMatcher {
+    private:
+        _<IMatcher> lhs;
+        _<IMatcher> rhs;
+    public:
+        BinaryOperatorMatcher(const _<IMatcher>& lhs, const _<IMatcher>& rhs) : lhs(lhs), rhs(rhs) {}
+
+        bool matches(const _<AView>& view) override {
+            return BinaryOperator()(lhs->matches(view), rhs->matches(view));
+        }
+    };
+
+public:
+
+    Matcher operator|(const Matcher& matcher) const {
+        struct compare_or {
+            bool operator()(bool lhs, bool rhs) const {
+                return lhs || rhs;
+            }
+        };
+        return { _new<BinaryOperatorMatcher<compare_or>>(mMatcher, matcher.mMatcher) };
+    }
+
+    Matcher operator&(const Matcher& matcher) const {
+        struct compare_and {
+            bool operator()(bool lhs, bool rhs) const {
+                return lhs && rhs;
+            }
+        };
+        return { _new<BinaryOperatorMatcher<compare_and>>(mMatcher, matcher.mMatcher) };
+    }
 };
 
 
