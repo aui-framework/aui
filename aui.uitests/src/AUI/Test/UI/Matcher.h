@@ -4,6 +4,7 @@
 #include "IMatcher.h"
 #include <boost/test/unit_test.hpp>
 #include <AUI/Test/UI/Assertion/Empty.h>
+#include <AUI/View/AViewContainer.h>
 
 class API_AUI_UITESTS Matcher {
 private:
@@ -88,6 +89,44 @@ public:
             BOOST_CHECK_MESSAGE(assertion(s), msg);
         }
         return *this;
+    }
+
+    [[nodiscard]]
+    Matcher parent() const {
+
+        struct ParentMatcher: public IMatcher {
+        private:
+            _<IMatcher> childMatcher;
+        public:
+            ParentMatcher(const _<IMatcher>& childMatcher) : childMatcher(childMatcher) {}
+
+            bool matches(const _<AView>& view) override {
+                if (auto container = _cast<AViewContainer>(view)) {
+                    for (const auto& childView : container) {
+                        if (childMatcher->matches(childView)) return true;
+                    }
+                }
+                return false;
+            }
+        };
+        return { _new<ParentMatcher>(mMatcher) };
+    }
+
+    [[nodiscard]]
+    Matcher allChildren() const {
+
+        struct ChildMatcher: public IMatcher {
+        private:
+            _<IMatcher> childMatcher;
+        public:
+            ChildMatcher(const _<IMatcher>& childMatcher) : childMatcher(childMatcher) {}
+
+            bool matches(const _<AView>& view) override {
+                return childMatcher->matches(aui::ptr::fake(view->getParent()));
+            }
+        };
+
+        return { _new<ChildMatcher>(mMatcher) };
     }
 
 private:

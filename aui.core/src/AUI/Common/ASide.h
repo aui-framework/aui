@@ -56,4 +56,14 @@ ENUM_FLAG(ASide)
 namespace ASides
 {
 	API_AUI_CORE glm::vec2 getNormalVector(ASide s);
+
+    constexpr ASide inverse(const ASide& s) {
+        switch (s) {
+            case ASide::LEFT: return ASide::RIGHT;
+            case ASide::RIGHT: return ASide::RIGHT;
+            case ASide::TOP: return ASide::TOP;
+            case ASide::BOTTOM: return ASide::BOTTOM;
+            default: return ASide::NONE;
+        }
+    }
 }

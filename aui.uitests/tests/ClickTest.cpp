@@ -92,4 +92,5 @@ UI_TEST_CASE(HelloAppearsAfterClick) {
     // check label is appeared
     By::text("Hello!").require(visible(), "label is not appeared");
 }
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -59,7 +59,7 @@ UI_TEST_CASE(Height) {
 /**
  * Checks alignment (see "Alex2772, 2021, alex2772.ru" - it is not perfectly aligned)
  */
-UI_TEST_CASE(Alignment) {
+UI_TEST_CASE(LastElementAlignment) {
     // prepare the window
     _new<ExampleWindow>()->show();
 
@@ -68,6 +68,20 @@ UI_TEST_CASE(Alignment) {
 
     // copyright width can be also not minimal
     By::name("#copyright").require(widthIsMinimal(), "copyright width should be minimal");
+}
+
+/**
+ * Checks alignment (looks like buttons and list views are not perfectly aligned)
+ */
+UI_TEST_CASE(ButtonsAlignment) {
+    // prepare the window
+    _new<ExampleWindow>()->show();
+
+    // buttons column should be perfectly aligned
+    By::name("Common button")
+        .parent()
+        .allChildren()
+        .require(leftRightAligned(), "elements should be perfectly aligned");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

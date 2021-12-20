@@ -6,8 +6,9 @@
 
 #include <AUI/Util/AMetric.h>
 #include <AUI/Common/ASide.h>
+#include "Traits.h"
 
-namespace UITest::impl {
+namespace uitest::impl {
     template<ASide side>
     struct side_value {};
 
@@ -45,10 +46,12 @@ namespace UITest::impl {
             return current == *value;
         }
     };
-
 }
 
-using leftAligned = UITest::impl::align<ASide::LEFT>;
-using topAligned = UITest::impl::align<ASide::TOP>;
-using rightAligned = UITest::impl::align<ASide::RIGHT>;
-using bottomAligned = UITest::impl::align<ASide::BOTTOM>;
+using leftAligned = uitest::impl::align<ASide::LEFT>;
+using topAligned = uitest::impl::align<ASide::TOP>;
+using rightAligned = uitest::impl::align<ASide::RIGHT>;
+using bottomAligned = uitest::impl::align<ASide::BOTTOM>;
+
+using leftRightAligned = uitest::impl::both<uitest::impl::align<ASide::LEFT>, uitest::impl::align<ASide::RIGHT>>;
+using topBottomAligned = uitest::impl::both<uitest::impl::align<ASide::TOP>, uitest::impl::align<ASide::BOTTOM>>;

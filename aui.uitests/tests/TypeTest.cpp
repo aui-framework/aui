@@ -123,7 +123,7 @@ UI_TEST_CASE(HelloAppearsAfterClick) {
 
     // check label is appeared and contains text "Hello, Steve!"
     By::name("#hello").require(visible(), "label is not appeared")
-                            .require(text("Hello, Steve!"), "invalid text");
+                      .require(text("Hello, Steve!"), "invalid text");
 }
 
 /**
