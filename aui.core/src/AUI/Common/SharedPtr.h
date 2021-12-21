@@ -30,7 +30,7 @@ template<typename T, typename... Args>
 inline _<T> _new(Args&& ... args)
 {
 	if constexpr (std::is_base_of_v<AObject, T>) {
-		auto o = new T(args...);
+		auto o = new T(std::forward<Args>(args)...);
 		return _<T>(o, [](T* obj)
 		{
 			static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
@@ -84,12 +84,12 @@ struct shared_t {};
 #define shared shared_t()
 
 template<typename T>
-inline auto operator>>(T& object, shared_t)
+inline _<T> operator>>(T& object, shared_t)
 {
     return _new<T>(std::move(object));
 }
 template<typename T>
-inline auto operator>>(T&& object, shared_t)
+inline _<T> operator>>(T&& object, shared_t)
 {
     return _new<T>(std::forward<T>(object));
 }

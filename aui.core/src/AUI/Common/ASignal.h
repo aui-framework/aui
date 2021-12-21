@@ -37,8 +37,6 @@ public:
     using func_t = std::function<void(Args...)>;
 
 private:
-    std::tuple<Args...> mArgs;
-
     struct slot
     {
         AObject* object; // TODO replace with weak_ptr
@@ -48,7 +46,7 @@ private:
     AMutex mSlotsLock;
     ADeque<slot> mSlots;
 
-    void invokeSignal();
+    void invokeSignal(const std::tuple<Args...>& args = {});
 
     template<typename Lambda, typename... A>
     struct call_helper {};
@@ -136,10 +134,22 @@ private:
     }
 
 public:
-    ASignal<Args...>& operator()(const Args&... args) {
-        mArgs = std::make_tuple(args...);
-        return *this;
+
+    struct call_wrapper {
+        ASignal& signal;
+        std::tuple<Args...> args;
+
+        void invokeSignal() {
+            signal.invokeSignal(args);
+        }
+    };
+
+    call_wrapper operator()(Args... args) {
+        return {*this, std::make_tuple(std::move(args)...)};
     }
+
+    ASignal() noexcept = default;
+    ASignal(ASignal&&) noexcept = default;
 
     virtual ~ASignal()
     {
@@ -183,7 +193,7 @@ public:
 #include <AUI/Thread/AThread.h>
 
 template <typename ... Args>
-void ASignal<Args...>::invokeSignal()
+void ASignal<Args...>::invokeSignal(const std::tuple<Args...>& args)
 {
     if (mSlots.empty())
         return;
@@ -192,7 +202,7 @@ void ASignal<Args...>::invokeSignal()
     {
         if (i->object->getThread() != AThread::current())
         {
-            i->object->getThread()->enqueue([this, obj = i->object, func = i->func, args = mArgs]() {
+            i->object->getThread()->enqueue([this, obj = i->object, func = i->func, args = args]() {
                 AAbstractSignal::isDisconnected() = false;
                 (std::apply)(func, args);
                 if (AAbstractSignal::isDisconnected()) {
@@ -205,7 +215,7 @@ void ASignal<Args...>::invokeSignal()
         else
         {
             AAbstractSignal::isDisconnected() = false;
-            (std::apply)(i->func, mArgs);
+            (std::apply)(i->func, args);
             if (AAbstractSignal::isDisconnected()) {
                 unlinkSlot(i->object);
                 i = mSlots.erase(i);
