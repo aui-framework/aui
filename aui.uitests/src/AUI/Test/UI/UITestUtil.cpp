@@ -1,8 +1,9 @@
 //
-// Created by Alex2772 on 12/18/2021.
+// Created by alex2772 on 12/21/21.
 //
 
-#include "UITest.h"
+#include "UITestUtil.h"
+#include "AUI/Platform/AWindow.h"
 
 void UITest::frame() {
     for (auto& w : AWindow::getWindowManager().getWindows()) {

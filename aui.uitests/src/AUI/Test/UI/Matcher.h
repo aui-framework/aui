@@ -5,6 +5,7 @@
 #include <boost/test/unit_test.hpp>
 #include <AUI/Test/UI/Assertion/Empty.h>
 #include <AUI/View/AViewContainer.h>
+#include "UITestUtil.h"
 
 class API_AUI_UITESTS Matcher {
 private:

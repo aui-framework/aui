@@ -57,6 +57,17 @@ JNI_OnLoad(JavaVM* vm, void* reserved) { \
     AUI_EXPORT int aui_entry(const AStringVector& args)
 
 #else
+
+// fake the main function when tests module compiling
+#ifdef AUI_TESTS_MODULE
+#define AUI_ENTRY \
+    AUI_EXPORT int aui_entry(const AStringVector& args); \
+    AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)); \
+    int fake_main(int argc, char** argv) {                               \
+        return aui_main(argc, argv, aui_entry);\
+    } \
+    AUI_EXPORT int aui_entry(const AStringVector& args)
+#else
 #define AUI_ENTRY \
     AUI_EXPORT int aui_entry(const AStringVector& args); \
     AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)); \
@@ -64,4 +75,6 @@ JNI_OnLoad(JavaVM* vm, void* reserved) { \
         return aui_main(argc, argv, aui_entry);\
     } \
     AUI_EXPORT int aui_entry(const AStringVector& args)
+#endif
+
 #endif

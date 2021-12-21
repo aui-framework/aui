@@ -113,7 +113,7 @@ public:
 	}
 
     template<typename T>
-	void operator^(T& t) {
+	void operator^(T&& t) {
 	    if (mSignalsEnabled) {
 	        t.invokeSignal();
 	    }

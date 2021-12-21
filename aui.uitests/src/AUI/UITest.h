@@ -24,9 +24,8 @@
 
 #include <AUI/View/AView.h>
 
-namespace UITest {
-    API_AUI_UITESTS void frame();
-}
+#include <AUI/Test/UI/UITestUtil.h>
+
 #include <boost/test/unit_test.hpp>
 #include <AUI/Test/UI/Matcher.h>
 #include <AUI/Test/UI/By.h>

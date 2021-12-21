@@ -67,7 +67,7 @@ void AWindow::quit() {
 
 void AWindow::setWindowStyle(WindowStyle ws) {
     mWindowStyle = ws;
-
+    if (!mHandle) return;
     if (!!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS))) {
         // note the struct is declared elsewhere, is here just for clarity.
         // code is from [http://tonyobryan.com/index.php?article=9][1]
@@ -118,10 +118,12 @@ void AWindow::restore() {
 }
 
 void AWindow::minimize() {
+    if (!mHandle) return;
     XIconifyWindow(CommonRenderingContext::ourDisplay, mHandle, 0);
 }
 
 bool AWindow::isMinimized() const {
+    if (!mHandle) return false;
     int result = WithdrawnState;
     struct {
         uint32_t state;
@@ -141,6 +143,7 @@ bool AWindow::isMinimized() const {
 
 
 bool AWindow::isMaximized() const {
+    if (!mHandle) return false;
     Atom* states;
     unsigned long i;
     bool maximized = false;
@@ -171,6 +174,7 @@ bool AWindow::isMaximized() const {
 }
 
 void AWindow::maximize() {
+    if (!mHandle) return;
     // https://github.com/glfw/glfw/blob/master/src/x11_window.c#L2355
 
     if (!CommonRenderingContext::ourAtoms.netWmState ||
@@ -231,6 +235,7 @@ void AWindow::maximize() {
 }
 
 glm::ivec2 AWindow::getWindowPosition() const {
+    if (!mHandle) return {0, 0};
     int x, y;
     Window child;
     XWindowAttributes xwa;
@@ -254,6 +259,7 @@ void AWindow::flagRedraw() {
 void AWindow::setSize(int width, int height) {
     setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
 
+    if (!mHandle) return;
     if (!!(mWindowStyle & WindowStyle::NO_RESIZE)) {
         // we should set min size and max size the same as current size
         XSizeHints* sizehints = XAllocSizeHints();
@@ -288,6 +294,7 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
     AViewContainer::setSize(width, height);
 
+    if (!mHandle) return;
     XMoveWindow(CommonRenderingContext::ourDisplay, mHandle, x, y);
     XResizeWindow(CommonRenderingContext::ourDisplay, mHandle, width, height);
 }
@@ -304,6 +311,7 @@ void AWindow::setIcon(const AImage& image) {
 }
 
 void AWindow::hide() {
+    if (!mHandle) return;
     XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
 }
 
@@ -321,6 +329,7 @@ unsigned long AWindow::xGetWindowProperty(Atom property, Atom type, unsigned cha
 }
 
 void AWindow::xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) const {
+    if (!mHandle) return;
     XEvent event = { 0 };
     event.type = ClientMessage;
     event.xclient.window = mHandle;

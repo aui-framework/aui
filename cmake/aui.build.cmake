@@ -144,6 +144,7 @@ function(aui_tests TESTS_MODULE_NAME)
         add_definitions(-DBOOST_ALL_NO_LIB)
         target_include_directories(${TESTS_MODULE_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
         target_link_directories(${TESTS_MODULE_NAME} PRIVATE ${Boost_LIBRARY_DIRS})
+        target_compile_definitions(${TESTS_MODULE_NAME} PRIVATE AUI_TESTS_MODULE=1)
 
         if (TARGET aui.core)
             target_link_libraries(${TESTS_MODULE_NAME} PRIVATE aui.core)

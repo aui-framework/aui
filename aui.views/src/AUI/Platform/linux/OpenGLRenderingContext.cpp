@@ -178,3 +178,8 @@ void OpenGLRenderingContext::endPaint(AWindow& window) {
 
 OpenGLRenderingContext::~OpenGLRenderingContext() {
 }
+
+AImage OpenGLRenderingContext::makeScreenshot() {
+    // stub
+    return AImage();
+}
