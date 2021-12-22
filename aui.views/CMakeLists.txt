@@ -40,7 +40,8 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
 
-	target_link_libraries(aui.views PUBLIC aui::core aui::xml)
+	target_link_libraries(aui.views PUBLIC aui::core)
+	target_link_libraries(aui.views PRIVATE aui::xml)
 	set_target_properties(Freetype::Freetype PROPERTIES INSTALL_NAME_DIR "@rpath" BUILD_WITH_INSTALL_RPATH 1)
 	if(ANDROID)
 		target_link_libraries(aui.views PRIVATE EGL GLESv2 GLESv3)

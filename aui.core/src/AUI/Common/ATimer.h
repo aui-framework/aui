@@ -43,6 +43,6 @@ public:
 	}
 	bool isStarted();
 
-	signals:
+signals:
 	emits<> fired;
 };
