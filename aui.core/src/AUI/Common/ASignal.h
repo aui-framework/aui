@@ -148,8 +148,8 @@ public:
         return {*this, std::make_tuple(std::move(args)...)};
     }
 
-    ASignal() noexcept = default;
-    ASignal(ASignal&&) noexcept = default;
+    ASignal() = default;
+    ASignal(ASignal&&) = default;
 
     virtual ~ASignal() noexcept
     {
