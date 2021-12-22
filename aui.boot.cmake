@@ -267,7 +267,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                     ${ANDROID_VARS})
                 list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
             endforeach()
-            if (EMPTY BUILD_SHARED_LIBS)
+            if (NOT DEFINED BUILD_SHARED_LIBS)
                 # default it to ON
                 set(BUILD_SHARED_LIBS ON)
             endif()
