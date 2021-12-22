@@ -26,7 +26,7 @@ set(AUI_INSTALL_RUNTIME_DEPENDENCIES OFF CACHE BOOL "Install runtime dependencie
 cmake_policy(SET CMP0072 NEW)
 
 if (AUI_BOOT)
-    set(AUI_INSTALL_RUNTIME_DEPENDENCIES ON CACHE BOOL "Install runtime dependencies along with the project")
+    set(AUI_INSTALL_RUNTIME_DEPENDENCIES ON)
 endif()
 
 if (IOS)
