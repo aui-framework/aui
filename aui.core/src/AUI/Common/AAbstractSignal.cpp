@@ -22,13 +22,13 @@
 #include "AAbstractSignal.h"
 #include "AObject.h"
 
-void AAbstractSignal::linkSlot(AObject* object)
+void AAbstractSignal::linkSlot(AObject* object) noexcept
 {
     std::unique_lock lock(object->mSignalsLock);
 	object->mSignals.insert(this);
 }
 
-void AAbstractSignal::unlinkSlot(AObject* object)
+void AAbstractSignal::unlinkSlot(AObject* object) noexcept
 {
     std::unique_lock lock(object->mSignalsLock);
 	object->mSignals.erase(this);

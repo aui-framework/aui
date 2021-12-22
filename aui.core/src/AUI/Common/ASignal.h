@@ -151,7 +151,7 @@ public:
     ASignal() noexcept = default;
     ASignal(ASignal&&) noexcept = default;
 
-    virtual ~ASignal()
+    virtual ~ASignal() noexcept
     {
         std::unique_lock lock(mSlotsLock);
         for (slot& slot : mSlots)

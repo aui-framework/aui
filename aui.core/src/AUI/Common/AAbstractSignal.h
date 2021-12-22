@@ -33,8 +33,8 @@ private:
     bool mDestroyed = false;
 
 protected:
-	void linkSlot(AObject* object);
-	void unlinkSlot(AObject* object);
+	void linkSlot(AObject* object) noexcept;
+	void unlinkSlot(AObject* object) noexcept;
 
 
 	static bool& isDisconnected();
