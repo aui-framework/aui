@@ -267,7 +267,10 @@ macro(auib_import AUI_MODULE_NAME URL)
                     ${ANDROID_VARS})
                 list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
             endforeach()
-
+            if (EMPTY BUILD_SHARED_LIBS)
+                # default it to ON
+                set(BUILD_SHARED_LIBS ON)
+            endif()
             list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
             if (IOS)
                 list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_C_FLAGS=-Wno-error-implicit-function-declaration")
