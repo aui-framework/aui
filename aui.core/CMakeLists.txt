@@ -49,7 +49,7 @@ if (ANDROID)
 	target_link_libraries(aui.core PRIVATE ${log-lib})
 endif()
 
-target_link_libraries(aui.core PUBLIC ZLIB::ZLIB)
+target_link_libraries(aui.core PRIVATE ZLIB::ZLIB)
 
 # forward platform info
 foreach(_var AUI_PLATFORM_WIN
