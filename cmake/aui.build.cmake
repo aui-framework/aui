@@ -25,6 +25,10 @@ set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES OFF CACHE BOOL "Install runtime dependencies along with the project")
 cmake_policy(SET CMP0072 NEW)
 
+if (AUI_BOOT)
+    set(AUI_INSTALL_RUNTIME_DEPENDENCIES ON CACHE BOOL "Install runtime dependencies along with the project")
+endif()
+
 if (IOS)
     option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
     message(STATUS "Linking everything statically because target platform is iOS")
