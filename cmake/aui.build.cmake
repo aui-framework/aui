@@ -19,6 +19,19 @@
 
 # CMake AUI building functions
 
+define_property(GLOBAL PROPERTY TESTS_SRCS
+        BRIEF_DOCS "Global list of test files"
+        FULL_DOCS "Global list of test files")
+define_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS
+        BRIEF_DOCS "Global list of test include dirs"
+        FULL_DOCS "Global list of test include dirs")
+define_property(GLOBAL PROPERTY TESTS_DEPS
+        BRIEF_DOCS "Global list of test dependencies"
+        FULL_DOCS "Global list of test dependencies")
+
+set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
+set_property(GLOBAL PROPERTY TESTS_SRCS "")
+
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
@@ -141,19 +154,34 @@ endfunction(aui_add_properties)
 
 function(aui_enable_tests)
     if (NOT ANDROID AND NOT IOS)
+        get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
         aui_tests(Tests ${TESTS_SRCS})
         if (TARGET Tests)
             get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
             get_property(TESTS_INCLUDE_DIRS GLOBAL PROPERTY TESTS_INCLUDE_DIRS)
-            target_link_libraries(Tests PRIVATE ${TESTS_DEPS})
+            foreach(_dep ${TESTS_DEPS})
+                get_target_property(_type ${_dep} TYPE)
+
+                # if a target is executable we should add it's dependencies instead of the executable itself since
+                # executable's source are already built to our Tests target
+                if (_type STREQUAL "EXECUTABLE")
+                    get_target_property(_libs ${_dep} LINK_LIBRARIES)
+                    target_link_libraries(Tests PRIVATE aui::views)
+                else()
+                    target_link_libraries(Tests PRIVATE ${_dep})
+                endif()
+            endforeach()
             target_include_directories(Tests PRIVATE ${TESTS_INCLUDE_DIRS})
         endif()
     endif()
 endfunction()
 function(aui_tests TESTS_MODULE_NAME)
-    find_package(Boost)
+    find_package(Boost COMPONENTS unit_test_framework)
     if(Boost_FOUND)
-        add_executable(${ARGV})
+        enable_testing()
+        file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp
+                "#define BOOST_TEST_MODULE ${TESTS_MODULE_NAME}\n#include <boost/test/included/unit_test.hpp>")
+        add_executable(${ARGV} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
         set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
         target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
         add_definitions(-DBOOST_ALL_NO_LIB)
@@ -167,7 +195,11 @@ function(aui_tests TESTS_MODULE_NAME)
             target_link_libraries(${TESTS_MODULE_NAME} PRIVATE aui::core)
         endif()
 
-        target_link_libraries(${TESTS_MODULE_NAME} PRIVATE ${AUI_MODULE_NAME})
+        if (TARGET aui::uitests)
+            target_link_libraries(${TESTS_MODULE_NAME} PRIVATE aui::uitests)
+        endif()
+
+        target_link_libraries(${TESTS_MODULE_NAME} PRIVATE ${Boost_LIBRARIES})
         aui_add_properties(${TESTS_MODULE_NAME})
         set_target_properties(${TESTS_MODULE_NAME} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
     else()
@@ -393,13 +425,12 @@ function(aui_executable_advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
     file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
 
+    # for tests
+    # executable's sources
     if (SRCS_TESTS_TMP)
         set_property(GLOBAL APPEND PROPERTY TESTS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
-        foreach(child ${SRCS_TESTS_TMP} ${SRCS})
-            set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${child})
-        endforeach()
+        set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${SRCS_TESTS_TMP} ${SRCS})
     endif()
-
 
     # remove platform dependent files
     foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
@@ -445,6 +476,11 @@ function(aui_executable_advanced AUI_MODULE_NAME ADDITIONAL_SRCS)
 
     aui_add_properties(${AUI_MODULE_NAME})
 
+    if (SRCS_TESTS_TMP)
+        # append executable as a dependency
+        set_property(GLOBAL APPEND PROPERTY TESTS_DEPS ${AUI_MODULE_NAME})
+    endif()
+
     aui_common(${AUI_MODULE_NAME})
 endfunction(aui_executable_advanced)
 
@@ -488,8 +524,8 @@ function(aui_compile_assets AUI_MODULE_NAME)
             # the worst case because we (possibly) have to compile aui.toolbox for the host system
             # FIXME assume that aui.toolbox is already built for our system
             find_program(AUI_TOOLBOX_EXE aui.toolbox
-                         HINTS ${AUI_DIR}/bin
-                         REQUIRED)
+                    HINTS ${AUI_DIR}/bin
+                    REQUIRED)
         elseif (TARGET aui.toolbox)
             set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox")
         else()
