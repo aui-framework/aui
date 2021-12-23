@@ -90,6 +90,7 @@ set(AUI_ALL_COMPONENTS core
 		sqlite
 		views
 		xml
+		uitests
 		)
 
 if(NOT AUI_BOOT_COMPONENTS)
