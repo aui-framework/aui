@@ -14,4 +14,9 @@ using AWindowNativePtr = HWND;
 #include <X11/keysymdef.h>
 
 using AWindowNativePtr = Window;
+
+#elif AUI_PLATFORM_APPLE
+
+using AWindowNativePtr = void*;
+
 #endif
