@@ -90,15 +90,7 @@ endif()
 
 get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
 
-if (NOT ANDROID AND NOT IOS)
-	aui_tests(Tests ${TESTS_SRCS})
-	if (TARGET Tests)
-		get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
-		get_property(TESTS_INCLUDE_DIRS GLOBAL PROPERTY TESTS_INCLUDE_DIRS)
-		target_link_libraries(Tests PRIVATE ${TESTS_DEPS})
-		target_include_directories(Tests PRIVATE ${TESTS_INCLUDE_DIRS})
-	endif()
-endif()
+aui_enable_tests()
 
 #install(EXPORT AUI DESTINATION "cmake/")
 set(AUI_ALL_COMPONENTS core
