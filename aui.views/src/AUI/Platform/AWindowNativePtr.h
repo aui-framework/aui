@@ -19,4 +19,9 @@ using AWindowNativePtr = Window;
 
 using AWindowNativePtr = void*;
 
+#elif AUI_PLATFORM_ANDROID
+
+#include <jni.h>
+using AWindowNativePtr = jobject;
+
 #endif

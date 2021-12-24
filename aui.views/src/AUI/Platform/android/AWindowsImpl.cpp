@@ -46,8 +46,6 @@
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 
-#include <X11/extensions/sync.h>
-
 
 
 AWindow::~AWindow() {
