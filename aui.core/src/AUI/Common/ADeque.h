@@ -23,14 +23,198 @@
 #include <deque>
 #include "AUI/Core.h"
 #include <algorithm>
-#include <AUI/Util/Extensions/SequenceContainerExtensions.h>
+#include <AUI/Traits/containers.h>
 
 template <class StoredType,
 	class Allocator = std::allocator<StoredType>>
-class ADeque: public SequenceContainerExtensions<std::deque<StoredType, Allocator>>
+class ADeque: public std::deque<StoredType, Allocator>
 {
+private:
+    using p = std::deque<StoredType, Allocator>;
+    using self = ADeque<StoredType, Allocator>;
 public:
-    using SequenceContainerExtensions<std::deque<StoredType, Allocator>>::SequenceContainerExtensions;
+    using p::p;
+    using iterator = typename p::iterator;
 
+
+    /**
+     * Inserts all values of the specified container to the end.
+     * @tparam OtherContainer other container type.
+     * @param c other container
+     * @return iterator pointing to the first element inserted.
+     */
+    template<typename OtherContainer>
+    iterator insertAll(const OtherContainer& c) noexcept {
+        return insertAll(p::end(), c);
+    }
+
+
+    /**
+     * Inserts all values of the specified container.
+     * @tparam OtherContainer other container type.
+     * @param at position to insert at.
+     * @param c other container
+     * @return iterator pointing to the first element inserted.
+     */
+    template<typename OtherContainer>
+    iterator insertAll(iterator at, const OtherContainer& c) noexcept {
+        return p::insert(at, c.begin(), c.end());
+    }
+
+
+    /**
+     * Removes all occurrences of <code>item</code>.
+     * @param item element to remove.
+     */
+    void removeAll(const StoredType& item) noexcept
+    {
+        aui::container::remove_all(*this, item);
+    }
+
+    /**
+     * Removes first occurrence of <code>item</code>.
+     * @param item element to remove.
+     */
+    void removeFirst(const StoredType& item) noexcept
+    {
+        aui::container::remove_first(*this, item);
+    }
+
+    /**
+     * @return true if <code>c</code> container is a subset of this container, false otherwise.
+     */
+    template<typename OtherContainer>
+    bool isSubsetOf(const OtherContainer& c) const noexcept
+    {
+        aui::container::is_subset(*this, c);
+    }
+
+    /**
+     * @return true if container contains an element, false otherwise.
+     */
+    bool contains(const StoredType& value) const noexcept {
+        return aui::container::contains(*this, value);
+    }
+
+
+    /**
+     * Shortcut to <code>push_back</code>.
+     * @param rhs value to push
+     * @return self
+     */
+    inline self& operator<<(const StoredType& rhs) noexcept
+    {
+        p::push_back(rhs);
+        return *this;
+    }
+
+    /**
+     * Shortcut to <code>push_back</code>.
+     * @param rhs value to push
+     * @return self
+     */
+    inline self& operator<<(StoredType&& rhs) noexcept
+    {
+        p::push_back(std::forward<StoredType>(rhs));
+        return *this;
+    }
+
+    /**
+     * Shortcut to <code>insertAll</code>.
+     * @param rhs container to push
+     * @return self
+     */
+    template<typename OtherContainer, std::enable_if_t<!std::is_convertible_v<OtherContainer, StoredType>, bool> = true>
+    inline self& operator<<(const OtherContainer& c) noexcept
+    {
+        insertAll(c);
+        return *this;
+    }
+
+
+    /**
+     * <dl>
+     *   <dt><b>Sneaky assertions</b></dt>
+     *   <dd>Container is not empty.</dd>
+     * </dl>
+     * @return the first element.
+     */
+    StoredType& first() noexcept
+    {
+        assert(("empty container could not have the first element" && !p::empty()));
+        return p::front();
+    }
+
+    /**
+     * <dl>
+     *   <dt><b>Sneaky assertions</b></dt>
+     *   <dd>Container is not empty.</dd>
+     * </dl>
+     * @return the first element.
+     */
+    const StoredType& first() const noexcept
+    {
+        assert(("empty container could not have the first element" && !p::empty()));
+        return p::front();
+    }
+
+    /**
+     * <dl>
+     *   <dt><b>Sneaky assertions</b></dt>
+     *   <dd>Container is not empty.</dd>
+     * </dl>
+     * @return the last element.
+     */
+    StoredType& last() noexcept
+    {
+        assert(("empty container could not have the last element" && !p::empty()));
+        return p::back();
+    }
+
+    /**
+     * <dl>
+     *   <dt><b>Sneaky assertions</b></dt>
+     *   <dd>Container is not empty.</dd>
+     * </dl>
+     * @return the last element.
+     */
+    const StoredType& last() const noexcept
+    {
+        assert(("empty container could not have the last element" && !p::empty()));
+        return p::back();
+    }
+
+    /**
+     * @param value element to find.
+     * @return index of the specified element. If element is not found, -1 is returned.
+     */
+    [[nodiscard]]
+    size_t indexOf(const StoredType& value) const noexcept
+    {
+        return aui::container::index_of(*this, value);
+    }
+
+
+    void sort() noexcept {
+        std::sort(p::begin(), p::end());
+    }
+
+    template<typename Comparator>
+    void sort(Comparator&& comparator) noexcept {
+        std::sort(p::begin(), p::end(), std::forward<Comparator>(comparator));
+    }
+
+    /**
+     * Removes element at the specified index.
+     * <dl>
+     *   <dt><b>Sneaky assertions</b></dt>
+     *   <dd><code>index</code> points to the existing element.</dd>
+     * </dl>
+     * @param index index of the element.
+     */
+    void removeAt(size_t index) noexcept
+    {
+        aui::container::remove_at(*this, index);
+    }
 
 };

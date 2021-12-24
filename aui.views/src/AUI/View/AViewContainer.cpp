@@ -87,7 +87,7 @@ void AViewContainer::addView(size_t index, const _<AView>& view)
 
 void AViewContainer::removeView(const _<AView>& view)
 {
-	mViews.remove(view);
+	mViews.removeFirst(view);
 	if (mLayout)
         mLayout->removeView(-1, view);
 }

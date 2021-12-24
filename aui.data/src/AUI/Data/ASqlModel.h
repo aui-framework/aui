@@ -91,10 +91,10 @@ struct ASqlModel {
             if (!exprString.empty()) {
                 if (mWhereExpr.empty()) {
                     mWhereExpr = "WHERE " + exprString;
-                    mWhereParams = whereParams;
+                    mWhereParams = std::move(whereParams);
                 } else {
                     mWhereExpr += "AND " + exprString;
-                    mWhereParams << whereParams;
+                    mWhereParams.insertAll(whereParams);
                 }
             }
             return *this;

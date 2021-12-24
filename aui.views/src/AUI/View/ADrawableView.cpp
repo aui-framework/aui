@@ -26,6 +26,7 @@
 #include "ADrawableView.h"
 #include <AUI/Render/Render.h>
 #include <AUI/ASS/ASS.h>
+#include <AUI/Util/ImageDrawable.h>
 
 ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable) {
 
@@ -39,6 +40,10 @@ void ADrawableView::render() {
         p.size = getSize();
         mDrawable->draw(p);
     }
+}
+
+ADrawableView::ADrawableView(const AUrl& url): ADrawableView(IDrawable::fromUrl(url)) {
+
 }
 
 /*

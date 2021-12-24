@@ -61,7 +61,7 @@ ASqlBuilder::Statement::Statement(ASqlBuilder& builder, const AString& sql):
 ASqlBuilder::Insert::Insert(ASqlBuilder& builder, const AString& sql) : Statement(builder, sql) {}
 
 ASqlBuilder::Insert& ASqlBuilder::Insert::row(const AVector<AVariant>& data) {
-    mData << data;
+    mData.insertAll(data);
     if (mSql.last() == ')')
         mSql += ',';
     mSql += "(";
@@ -104,7 +104,7 @@ void ASqlBuilder::WhereStatement::whereImpl(const ASqlBuilder::WhereStatement::W
         mWhereParams = w.mWhereParams;
     } else {
         mWhereExpr += "AND " + w.mExprString;
-        mWhereParams << w.mWhereParams;
+        mWhereParams.insertAll(w.mWhereParams);
     }
 }
 
@@ -153,7 +153,7 @@ ASqlBuilder::Update::~Update() {
 
     mSql += " ";
     mSql += mWhereExpr;
-    setValues << mWhereParams;
+    setValues.insertAll(mWhereParams);
 
     Autumn::get<ASqlDatabase>()->execute(mSql, setValues);
 }

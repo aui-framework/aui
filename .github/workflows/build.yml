@@ -4,10 +4,11 @@ on:
   push:
     branches:
       - master
+      - develop
     tags:
       - v*
   pull_request:
-    branches: [ master ]
+    branches: [ master, develop ]
 
 env:
   # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)

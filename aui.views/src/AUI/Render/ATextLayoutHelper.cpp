@@ -17,7 +17,7 @@ size_t ATextLayoutHelper::xToIndex(const AVector<Symbol>& line, int pos) {
     if (pos >= line.last().position.x) return line.last().index + 1;
 
 
-    auto it = aui::binary_search(line.begin(), line.end(), [&](const AVector<Symbol>::ConstIterator& it) {
+    auto it = aui::binary_search(line.begin(), line.end(), [&](const AVector<Symbol>::const_iterator& it) {
         int posCurrent = it->position.x;
         if (posCurrent <= pos) {
             // check if the element is the last

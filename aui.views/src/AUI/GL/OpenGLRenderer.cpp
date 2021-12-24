@@ -616,6 +616,7 @@ public:
         auto& font = mFontStyle.font;
         auto& texturePacker = mEntryData->texturePacker;
         auto fe = mFontStyle.getFontEntry();
+        auto tyi = mRenderer->getFontEntryData(mFontStyle);
 
         const bool hasKerning = font->isHasKerning();
 
