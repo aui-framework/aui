@@ -24,7 +24,6 @@
 #include "AUI/Core.h"
 #include <set>
 
-
 template <class KeyType, class Comparator = std::less<KeyType>, class Allocator = std::allocator<KeyType>>
 class ASet: public std::set<KeyType, Comparator, Allocator>
 {
