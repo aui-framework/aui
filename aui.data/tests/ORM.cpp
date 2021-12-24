@@ -29,7 +29,7 @@
 #include <AUI/Data/AMigrationManager.h>
 #include <AUI/Data/ASqlBlueprint.h>
 #include <AUI/Data/ASqlModel.h>
-
+/*
 // ORM
 struct Post : ASqlModel<Post> {
     id_t user_id;
@@ -153,4 +153,4 @@ BOOST_AUTO_TEST_SUITE(ORM)
         }
     }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END()*/
