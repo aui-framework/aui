@@ -25,99 +25,199 @@
 #include <AUI/Common/ASignal.h>
 #include "AModelIndex.h"
 #include "IMutableListModel.h"
+#include <AUI/Traits/strings.h>
 
 namespace aui::detail {
 
-    template <typename StoredType>
-    class AListModel: public std::vector<StoredType>, public AObject, public IMutableListModel<StoredType> {
-    private:
-        using p = std::vector<StoredType>;
-        using Iterator = typename p::iterator;
-
-    public:
-#ifdef _MSC_VER
-        using p::vector;
-#else
-        using typename p::vector;
-#endif
-
-
-        Iterator erase(Iterator begin) {
-            return this->erase(begin, begin + 1);
-        }
-        Iterator erase(Iterator begin, Iterator end) {
-            AModelRange range{AModelIndex{size_t(begin - this->begin())},
-                              AModelIndex{size_t(end   - this->begin())},
-                              this};
-            auto it = p::erase(begin, end);
-            emit this->dataRemoved(range);
-
-            return it;
-        }
-
-
-        void push_back(const StoredType& data) {
-            p::push_back(data);
-            emit this->dataInserted(AModelRange{AModelIndex(p::size() - 1),
-                                                AModelIndex(p::size()    ),
-                                                this});
-        }
-
-
-        void pop_back() {
-            p::pop_back();
-            emit this->dataRemoved(AModelRange{AModelIndex(p::size()    ),
-                                               AModelIndex(p::size() + 1),
-                                               this});
-        }
-
-        AListModel& operator<<(const StoredType& data) {
-            push_back(data);
-            return *this;
-        }
-
-        size_t listSize() override {
-            return p::size();
-        }
-
-        StoredType listItemAt(const AModelIndex& index) override {
-            return p::at(index.getRow());
-        }
-        void invalidate(size_t index) {
-            emit this->dataChanged(AModelRange{AModelIndex(index), AModelIndex(index + 1u), this});
-        }
-
-        void clear() {
-            erase(p::begin(), p::end());
-        }
-
-        void removeItems(const AModelRange<StoredType>& items) override {
-            erase(p::begin() + items.begin().getIndex().getRow(), p::end() + items.begin().getIndex().getRow());
-        }
-
-        void removeItem(const AModelIndex& item) override {
-            erase(p::begin() + item.getRow());
-        }
-
-
-        /**
-         * Create AListModel from initializer list. Applicable for initializing AListModel<AString> from
-         * const char* initializer list.
-         *
-         * @tparam V type that converts to T
-         * @return a new AListModel
-         */
-        template<typename V>
-        static _<AListModel<StoredType>> make(const std::initializer_list<V>& t) {
-            auto list = _new<AListModel<StoredType>>();
-            list->reserve(t.size());
-            for (auto& item : t) {
-                list->push_back(item);
-            }
-            return list;
-        }
-    };
 }
 
 template <typename StoredType>
-using AListModel = SequenceContainerExtensions<aui::detail::AListModel<StoredType>>;
+class AListModel: public AObject,
+                  public IMutableListModel<StoredType> {
+private:
+    AVector<StoredType> mVector;
+
+    using self = AListModel<StoredType>;
+
+public:
+    using iterator = typename decltype(mVector)::iterator;
+    using const_iterator = typename decltype(mVector)::const_iterator;
+
+    AListModel() = default;
+    AListModel(const self& s): mVector(s.mVector) {}
+    AListModel(self&& s): mVector(std::move(s.mVector)) {}
+
+
+
+    iterator erase(iterator begin) {
+        return this->erase(begin, begin + 1);
+    }
+    iterator erase(iterator begin, iterator end) {
+        AModelRange range{AModelIndex{size_t(begin - mVector.begin())},
+                          AModelIndex{size_t(end   - mVector.begin())},
+                          this};
+        auto it = mVector.erase(begin, end);
+        emit this->dataRemoved(range);
+
+        return it;
+    }
+
+
+    void push_back(const StoredType& data) {
+        mVector.push_back(data);
+        emit this->dataInserted(AModelRange{AModelIndex(mVector.size() - 1),
+                                            AModelIndex(mVector.size()    ),
+                                            this});
+    }
+
+
+    void push_back(StoredType&& data) {
+        mVector.push_back(std::forward<StoredType>(data));
+        emit this->dataInserted(AModelRange{AModelIndex(mVector.size() - 1),
+                                            AModelIndex(mVector.size()    ),
+                                            this});
+    }
+
+
+    void pop_back() {
+        mVector.pop_back();
+        emit this->dataRemoved(AModelRange{AModelIndex(mVector.size()    ),
+                                           AModelIndex(mVector.size() + 1),
+                                           this});
+    }
+
+    AListModel& operator<<(const StoredType& data) {
+        push_back(data);
+        return *this;
+    }
+    AListModel& operator<<(StoredType&& data) {
+        push_back(std::forward<StoredType>(data));
+        return *this;
+    }
+
+    size_t listSize() override {
+        return mVector.size();
+    }
+
+    StoredType listItemAt(const AModelIndex& index) override {
+        return mVector.at(index.getRow());
+    }
+    void invalidate(size_t index) {
+        emit this->dataChanged(AModelRange{AModelIndex(index), AModelIndex(index + 1u), this});
+    }
+
+    void clear() {
+        erase(mVector.begin(), mVector.end());
+    }
+
+    void removeItems(const AModelRange<StoredType>& items) override {
+        erase(mVector.begin() + items.begin().getIndex().getRow(), mVector.end() + items.begin().getIndex().getRow());
+    }
+
+    void removeItem(const AModelIndex& item) override {
+        erase(mVector.begin() + item.getRow());
+    }
+
+    [[nodiscard]]
+    size_t size() const noexcept {
+        return mVector.size();
+    }
+
+    /**
+     * Fetches element by index.
+     * <dl>
+     *   <dt><b>Sneaky exceptions</b></dt>
+     *   <dd><code>AException</code> thrown if out of bounds.</dd>
+     * </dl>
+     * <dl>
+     *   <dt><b>Performance note</b></dt>
+     *   <dd>if guaranteed <code>index</code> is not out of bounds, use the <code>operator[]</code> function instead.</dd>
+     * </dl>
+     */
+    const StoredType& at(size_t index) const {
+        if (index >= size()) throw AException("index of bounds: {} (size {})"_format(index, size()));
+        return *(mVector.begin() + index);
+    }
+
+    /**
+     * Fetches element by index.
+     * <dl>
+     *   <dt><b>Sneaky exceptions</b></dt>
+     *   <dd><code>AException</code> thrown if out of bounds.</dd>
+     * </dl>
+     * <dl>
+     *   <dt><b>Performance note</b></dt>
+     *   <dd>if guaranteed <code>index</code> is not out of bounds, use the <code>operator[]</code> function instead.</dd>
+     * </dl>
+     * <dl>
+     *   <dt><b>Data model note</b></dt>
+     *   <dd>
+     *      A mutable reference returned by this method. If you want to change data, you should report changes by
+     *      <a href="#invalidate">invalidate</a> function.
+     *   </dd>
+     * </dl>
+     */
+    StoredType& at(size_t index) {
+        if (index >= size()) throw AException("index of bounds: {} (size {})"_format(index, size()));
+        return *(mVector.begin() + index);
+    }
+
+    /**
+     * Fetches element by index.
+     * <dl>
+     *   <dt><b>Sneaky assertions</b></dt>
+     *   <dd><code>index</code> points to the existing element.</dd>
+     * </dl>
+     */
+    const StoredType& operator[](size_t index) const {
+        assert(("index out of bounds" && size() <= index));
+        return *(mVector.begin() + index);
+    }
+
+    /**
+     * Removes element at the specified index.
+     * <dl>
+     *   <dt><b>Sneaky assertions</b></dt>
+     *   <dd><code>index</code> points to the existing element.</dd>
+     * </dl>
+     * @param index index of the element.
+     */
+    void removeAt(size_t index) noexcept
+    {
+        aui::container::remove_at(*this, index);
+        emit this->dataRemoved(AModelRange{AModelIndex(index    ),
+                                           AModelIndex(index + 1),
+                                           this});
+    }
+
+    const_iterator begin() const {
+        return mVector.begin();
+    }
+    const_iterator end() const {
+        return mVector.end();
+    }
+
+    iterator begin() {
+        return mVector.begin();
+    }
+    iterator end() {
+        return mVector.end();
+    }
+
+    /**
+     * Create AListModel from initializer list. Applicable for initializing AListModel<AString> from
+     * const char* initializer list.
+     *
+     * @tparam V type that converts to T
+     * @return a new AListModel
+     */
+    template<typename V>
+    static _<AListModel<StoredType>> make(const std::initializer_list<V>& t) {
+        auto list = _new<AListModel<StoredType>>();
+        list->reserve(t.size());
+        for (auto& item : t) {
+            list->push_back(item);
+        }
+        return list;
+    }
+};

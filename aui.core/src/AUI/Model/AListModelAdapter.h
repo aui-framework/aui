@@ -81,5 +81,5 @@ public:
 
 template <typename T, typename Adapter>
 _<AListModelAdapter<T, Adapter>> AAdapter::make(const _<IListModel<T>>& other, const Adapter& adapter) {
-    return _<AListModelAdapter<T, Adapter>>(new AListModelAdapter<T, Adapter>(other, adapter));
+    return aui::ptr::manage(new AListModelAdapter<T, Adapter>(other, adapter));
 }

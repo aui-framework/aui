@@ -23,71 +23,208 @@
 
 #include <AUI/Core.h>
 #include <vector>
+#include <cassert>
 #include "SharedPtr.h"
 #include <algorithm>
-#include <AUI/Util/Extensions/SequenceContainerExtensions.h>
+#include <AUI/Traits/containers.h>
 
 template <class StoredType, class Allocator = std::allocator<StoredType>>
-class AVector: public SequenceContainerExtensions<std::vector<StoredType, Allocator>>
+class AVector: public std::vector<StoredType, Allocator>
 {
 protected:
-	using p = SequenceContainerExtensions<std::vector<StoredType, Allocator>>;
-    using self = AVector<StoredType, Allocator>;
-	
+	using p = std::vector<StoredType, Allocator>;
+	using self = AVector<StoredType, Allocator>;
+
 public:
+    using p::p;
+    using iterator = typename p::iterator;
 
-    using ElementType = typename p::value_type;
-    using Iterator = typename p::iterator;
-    using ConstIterator = typename p::const_iterator;
 
-	inline AVector() = default;
 
-	inline AVector(const Allocator& allocator)
-		: p(allocator)
-	{
-	}
+    /**
+     * Inserts all values of the specified container to the end.
+     * @tparam OtherContainer other container type.
+     * @param c other container
+     * @return iterator pointing to the first element inserted.
+     */
+    template<typename OtherContainer>
+    iterator insertAll(const OtherContainer& c) noexcept {
+        return insertAll(p::end(), c);
+    }
 
-	inline AVector(typename p::size_type _Count, const Allocator& allocator = Allocator())
-		: p(_Count, allocator)
-	{
-	}
 
-	inline AVector(typename p::size_type _Count, const StoredType& _Val, const Allocator& allocator = Allocator())
-		: p(_Count, _Val, allocator)
-	{
-	}
+    /**
+     * Inserts all values of the specified container.
+     * @tparam OtherContainer other container type.
+     * @param at position to insert at.
+     * @param c other container
+     * @return iterator pointing to the first element inserted.
+     */
+    template<typename OtherContainer>
+    iterator insertAll(iterator at, const OtherContainer& c) noexcept {
+        return p::insert(at, c.begin(), c.end());
+    }
 
-	inline AVector(std::initializer_list<StoredType> _Ilist, const Allocator& allocator = Allocator())
-		: p(_Ilist, allocator)
-	{
-	}
 
-	inline AVector(const p& _Right)
-		: p(_Right)
-	{
-	}
+    /**
+     * Removes all occurrences of <code>item</code>.
+     * @param item element to remove.
+     */
+    void removeAll(const StoredType& item) noexcept
+    {
+        aui::container::remove_all(*this, item);
+    }
 
-	inline AVector(const p& _Right, const Allocator& allocator = Allocator())
-		: p(_Right, allocator)
-	{
-	}
+    /**
+     * Removes first occurrence of <code>item</code>.
+     * @param item element to remove.
+     */
+    void removeFirst(const StoredType& item) noexcept
+    {
+        aui::container::remove_first(*this, item);
+    }
 
-	inline AVector(p&& _Right)
-		: p(_Right)
-	{
-	}
 
-	inline AVector(p&& _Right, const Allocator& allocator = Allocator())
-		: p(_Right, allocator)
-	{
-	}
+    /**
+     * @return true if <code>c</code> container is a subset of this container, false otherwise.
+     */
+    template<typename OtherContainer>
+    bool isSubsetOf(const OtherContainer& c) const noexcept
+    {
+        aui::container::is_subset(*this, c);
+    }
 
-	template <class Iterator>
-	inline AVector(Iterator first, Iterator end, const Allocator& allocator = Allocator()): p(first, end, allocator) {}
+    /**
+     * @return true if container contains an element, false otherwise.
+     */
+    bool contains(const StoredType& value) const noexcept {
+        return aui::container::contains(*this, value);
+    }
+
+
+    /**
+     * Shortcut to <code>push_back</code>.
+     * @param rhs value to push
+     * @return self
+     */
+    inline self& operator<<(const StoredType& rhs) noexcept
+    {
+        p::push_back(rhs);
+        return *this;
+    }
+
+    /**
+     * Shortcut to <code>push_back</code>.
+     * @param rhs value to push
+     * @return self
+     */
+    inline self& operator<<(StoredType&& rhs) noexcept
+    {
+        p::push_back(std::forward<StoredType>(rhs));
+        return *this;
+    }
+
+    /**
+     * Shortcut to <code>insertAll</code>.
+     * @param rhs container to push
+     * @return self
+     */
+    template<typename OtherContainer, std::enable_if_t<!std::is_convertible_v<OtherContainer, StoredType>, bool> = true>
+    inline self& operator<<(const OtherContainer& c) noexcept
+    {
+        insertAll(c);
+        return *this;
+    }
+
+
+    /**
+     * <dl>
+     *   <dt><b>Sneaky assertions</b></dt>
+     *   <dd>Container is not empty.</dd>
+     * </dl>
+     * @return the first element.
+     */
+    StoredType& first() noexcept
+    {
+        assert(("empty container could not have the first element" && !p::empty()));
+        return p::front();
+    }
+
+    /**
+     * <dl>
+     *   <dt><b>Sneaky assertions</b></dt>
+     *   <dd>Container is not empty.</dd>
+     * </dl>
+     * @return the first element.
+     */
+    const StoredType& first() const noexcept
+    {
+        assert(("empty container could not have the first element" && !p::empty()));
+        return p::front();
+    }
+
+    /**
+     * <dl>
+     *   <dt><b>Sneaky assertions</b></dt>
+     *   <dd>Container is not empty.</dd>
+     * </dl>
+     * @return the last element.
+     */
+    StoredType& last() noexcept
+    {
+        assert(("empty container could not have the last element" && !p::empty()));
+        return p::front();
+    }
+
+    /**
+     * <dl>
+     *   <dt><b>Sneaky assertions</b></dt>
+     *   <dd>Container is not empty.</dd>
+     * </dl>
+     * @return the last element.
+     */
+    const StoredType& last() const noexcept
+    {
+        assert(("empty container could not have the last element" && !p::empty()));
+        return p::front();
+    }
+
+    /**
+     * @param value element to find.
+     * @return index of the specified element. If element is not found, -1 is returned.
+     */
+    [[nodiscard]]
+    size_t indexOf(const StoredType& value) const noexcept
+    {
+        return aui::container::index_of(*this, value);
+    }
+
+
+    void sort() noexcept {
+        std::sort(p::begin(), p::end());
+    }
+
+    template<typename Comparator>
+    void sort(Comparator&& comparator) noexcept {
+        std::sort(p::begin(), p::end(), std::forward<Comparator>(comparator));
+    }
+
+    /**
+     * Removes element at the specified index.
+     * <dl>
+     *   <dt><b>Sneaky assertions</b></dt>
+     *   <dd><code>index</code> points to the existing element.</dd>
+     * </dl>
+     * @param index index of the element.
+     */
+    void removeAt(size_t index) noexcept
+    {
+        aui::container::remove_at(*this, index);
+    }
 
 
     template<typename Callable>
-    inline static AVector<StoredType, Allocator> generate(size_t size, Callable callable) {
+    inline static AVector<StoredType, Allocator> generate(size_t size, Callable&& callable) noexcept {
         AVector<StoredType, Allocator> s;
         s.reserve(size);
         for (size_t i = 0; i < size; ++i) {
@@ -95,4 +232,5 @@ public:
         }
         return s;
     }
+
 };

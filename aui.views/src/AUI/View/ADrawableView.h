@@ -33,7 +33,8 @@ private:
     _<IDrawable> mDrawable;
 
 public:
-    ADrawableView(const _<IDrawable>& drawable);
+    explicit ADrawableView(const AUrl& url);
+    explicit ADrawableView(const _<IDrawable>& drawable);
     void render() override;
 
     void setDrawable(const _<IDrawable>& drawable) {

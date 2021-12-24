@@ -28,67 +28,97 @@ template <class KeyType, class Comparator = std::less<KeyType>, class Allocator 
 class ASet: public std::set<KeyType, Comparator, Allocator>
 {
 private:
-	using parent = std::set<KeyType, Comparator, Allocator>;
-	
+	using p = std::set<KeyType, Comparator, Allocator>;
+	using self = ASet<KeyType, Comparator, Allocator>;
+
 public:
 
-	template<typename Iterator>
-	ASet(Iterator begin, Iterator end): parent(begin, end)
-	{
-	}
-	
-	ASet()
-	{
-	}
+    using p::p;
+    using iterator = typename p::iterator;
 
-	ASet(const typename parent::allocator_type& _Al)
-		: parent(_Al)
-	{
-	}
 
-	ASet(const parent& _Right)
-		: parent(_Right)
-	{
-	}
+    /**
+     * Inserts all values of the specified container to the end.
+     * @tparam OtherContainer other container type.
+     * @param c other container
+     * @return iterator pointing to the first element inserted.
+     */
+    template<typename OtherContainer>
+    iterator insertAll(const OtherContainer& c) noexcept {
+        return insertAll(p::end(), c);
+    }
 
-	ASet(const parent& _Right, const typename parent::allocator_type& _Al)
-		: parent(_Right, _Al)
-	{
-	}
 
-	ASet(const typename parent::key_compare& Comparatored)
-		: parent(Comparatored)
-	{
-	}
+    /**
+     * Inserts all values of the specified container.
+     * @tparam OtherContainer other container type.
+     * @param at position to insert at.
+     * @param c other container
+     * @return iterator pointing to the first element inserted.
+     */
+    template<typename OtherContainer>
+    iterator insertAll(iterator at, const OtherContainer& c) noexcept {
+        return p::insert(at, c.begin(), c.end());
+    }
 
-	ASet(const typename parent::key_compare& Comparatored, const typename parent::allocator_type& _Al)
-		: parent(Comparatored, _Al)
-	{
-	}
 
-	ASet(parent&& _Right)
-		: parent(_Right)
-	{
-	}
+    /**
+     * Removes elements equal to <code>item</code>.
+     * @param item element to remove.
+     */
+    void removeAll(const KeyType& item) noexcept
+    {
+        aui::container::remove_all(*this, item);
+    }
 
-	ASet(parent&& _Right, const typename parent::allocator_type& _Al)
-		: parent(_Right, _Al)
-	{
-	}
 
-	ASet(std::initializer_list<KeyType> _Ilist)
-		: parent(std::move(_Ilist))
-	{
-	}
+    /**
+     * @return true if <code>c</code> container is a subset of this container, false otherwise.
+     */
+    template<typename OtherContainer>
+    bool isSubsetOf(const OtherContainer& c) const noexcept
+    {
+        aui::container::is_subset(*this, c);
+    }
+
+    /**
+     * Shortcut to <code>push_back</code>.
+     * @param rhs value to push
+     * @return self
+     */
+    inline self& operator<<(const KeyType& rhs) noexcept
+    {
+        p::insert(rhs);
+        return *this;
+    }
+
+    /**
+     * Shortcut to <code>push_back</code>.
+     * @param rhs value to push
+     * @return self
+     */
+    inline self& operator<<(KeyType&& rhs) noexcept
+    {
+        p::insert(std::forward<KeyType>(rhs));
+        return *this;
+    }
+
+    /**
+     * Shortcut to <code>insertAll</code>.
+     * @param rhs container to push
+     * @return self
+     */
+    template<typename OtherContainer, std::enable_if_t<!std::is_convertible_v<OtherContainer, KeyType>, bool> = true>
+    inline self& operator<<(const OtherContainer& c) noexcept
+    {
+        insertAll(c);
+        return *this;
+    }
+
 
 	bool contains(const KeyType& value) const noexcept
 	{
-		return parent::find(value) != parent::end();
-	}
-	ASet& operator<<(const KeyType& value) noexcept
-	{
-		parent::insert(value);
-		return *this;
+		return p::find(value) != p::end();
 	}
 };
 

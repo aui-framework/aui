@@ -58,6 +58,7 @@ private:
 public:
     static _<AText> fromItems(std::initializer_list<std::variant<AString, _<AView>>> init);
     static _<AText> fromHtml(const AString& html);
+    static _<AText> fromString(const AString& string);
 
     void render() override;
 

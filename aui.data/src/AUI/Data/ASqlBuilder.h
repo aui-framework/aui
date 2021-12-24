@@ -133,12 +133,12 @@ public:
 
             inline WhereExpr& operator&&(const WhereExpr& other) {
                 mExprString += " and " + other.mExprString;
-                mWhereParams << other.mWhereParams;
+                mWhereParams.insertAll(other.mWhereParams);
                 return *this;
             }
             inline WhereExpr& operator||(const WhereExpr& other) {
                 mExprString += " or " + other.mExprString;
-                mWhereParams << other.mWhereParams;
+                mWhereParams.insertAll(other.mWhereParams);
                 return *this;
             }
         };
