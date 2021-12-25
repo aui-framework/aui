@@ -659,6 +659,9 @@ public:
 
                     if (ch.rendererData == nullptr) {
                         auto pUv = texturePacker.insert(ch.image);
+                        if (prevWidth == -1) {
+                            prevWidth = texturePacker.getImage()->getWidth();
+                        }
                         glm::vec2 bias = 0.1f / glm::vec2(texturePacker.getImage()->getSize());
                         pUv->x -= bias.x;
                         pUv->y -= bias.x;
