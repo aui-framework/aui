@@ -51,14 +51,14 @@ target_link_libraries(aui_app PRIVATE aui::core aui::views)
 - Both asynchronous and synchronous application architecture support
 
 ## Module list
-- `AUI.core` - basic types (containers, strings, streams, etc...)
-- `AUI.crypt` - wrapper around OpenSSL for encryption functionality
+- `aui.core` - basic types (containers, strings, streams, etc...)
+- `aui.crypt` - wrapper around OpenSSL for encryption functionality
 - `aui.curl` - wrapper around libcurl for http/https requests
 - `aui.designer` - UI Designer (in dev)
 - `aui.data` - DBMS interface and ORM
 - `aui.image` - popular image format loader 
 - `aui.json` - JSON parser
-- `AUI.Mysql` - MySQL driver for `aui.data`
+- `aui.mysql` - MySQL driver for `aui.data`
 - `aui.network` - networking
 - `aui.sqlite` - SQLite driver for `aui.data`
 - `aui.svg` - SVG image loader
