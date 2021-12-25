@@ -54,7 +54,7 @@ AWindow::~AWindow() {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.remove(shared_from_this());
+    getWindowManager().mWindows.removeFirst(shared_from_this());
 
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;

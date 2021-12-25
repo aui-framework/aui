@@ -86,7 +86,7 @@ public:
     template<typename OtherContainer>
     bool isSubsetOf(const OtherContainer& c) const noexcept
     {
-        aui::container::is_subset(*this, c);
+        return aui::container::is_subset(*this, c);
     }
 
     /**
