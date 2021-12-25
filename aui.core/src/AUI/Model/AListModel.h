@@ -48,11 +48,21 @@ public:
     AListModel(self&& s): mVector(std::move(s.mVector)) {}
 
 
+    [[nodiscard]]
+    bool empty() const noexcept {
+        return mVector.empty();
+    }
+    void reserve(size_t s) noexcept {
+        mVector.reserve(s);
+    }
+    void resize(size_t s) noexcept {
+        mVector.resize(s);
+    }
 
-    iterator erase(iterator begin) {
+    iterator erase(iterator begin) noexcept  {
         return this->erase(begin, begin + 1);
     }
-    iterator erase(iterator begin, iterator end) {
+    iterator erase(iterator begin, iterator end) noexcept {
         AModelRange range{AModelIndex{size_t(begin - mVector.begin())},
                           AModelIndex{size_t(end   - mVector.begin())},
                           this};
@@ -63,7 +73,7 @@ public:
     }
 
 
-    void push_back(const StoredType& data) {
+    void push_back(const StoredType& data) noexcept {
         mVector.push_back(data);
         emit this->dataInserted(AModelRange{AModelIndex(mVector.size() - 1),
                                             AModelIndex(mVector.size()    ),
@@ -71,7 +81,7 @@ public:
     }
 
 
-    void push_back(StoredType&& data) {
+    void push_back(StoredType&& data) noexcept {
         mVector.push_back(std::forward<StoredType>(data));
         emit this->dataInserted(AModelRange{AModelIndex(mVector.size() - 1),
                                             AModelIndex(mVector.size()    ),
@@ -79,18 +89,18 @@ public:
     }
 
 
-    void pop_back() {
+    void pop_back() noexcept {
         mVector.pop_back();
         emit this->dataRemoved(AModelRange{AModelIndex(mVector.size()    ),
                                            AModelIndex(mVector.size() + 1),
                                            this});
     }
 
-    AListModel& operator<<(const StoredType& data) {
+    AListModel& operator<<(const StoredType& data) noexcept {
         push_back(data);
         return *this;
     }
-    AListModel& operator<<(StoredType&& data) {
+    AListModel& operator<<(StoredType&& data) noexcept {
         push_back(std::forward<StoredType>(data));
         return *this;
     }
@@ -106,7 +116,7 @@ public:
         emit this->dataChanged(AModelRange{AModelIndex(index), AModelIndex(index + 1u), this});
     }
 
-    void clear() {
+    void clear() noexcept {
         erase(mVector.begin(), mVector.end());
     }
 

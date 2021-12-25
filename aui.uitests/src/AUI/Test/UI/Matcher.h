@@ -51,7 +51,7 @@ public:
     }
 
     template<class Action>
-    void perform(Action&& action) const {
+    Matcher& perform(Action&& action) {
         auto set = toSet();
         if (set.empty()) BOOST_WARN_MESSAGE(false, "Matcher is empty so action is not performed");
 
@@ -60,6 +60,7 @@ public:
             action(v);
             UITest::frame();
         }
+        return *this;
     }
 
 
