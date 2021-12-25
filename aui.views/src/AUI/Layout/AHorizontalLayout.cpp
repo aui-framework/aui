@@ -46,8 +46,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 		view->ensureAssUpdated();
         if (view->getVisibility() == Visibility::GONE) continue;
 		int e = view->getExpandingHorizontal();
-		auto m = view->getMinimumWidth();
-		int minSpace = m + view->getMargin().horizontal();
+		int minSpace = view->getMinimumWidth();
 		sum += e;
 		if (e == 0 || view->getFixedSize().x != 0)
             availableSpace -= minSpace + view->getMargin().horizontal() + mSpacing;
@@ -67,30 +66,30 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 	for (auto& view : mViews)
 	{
         if (view->getVisibility() == Visibility::GONE) continue;
-		auto maxSize = view->getMaxSize();
-		auto& e = cache[index++];
-		auto margins = view->getMargin();
-		//auto cmin = view->getMinimumWidth();
-		//assert(cmin == e.minSpace - margins.horizontal());
+        auto margins = view->getMargin();
+        auto maxSize = view->getMaxSize();
+        auto& e = cache[index++];
+
 
 		if (containsExpandingItems && view == last)
 		{
 			// the last element should stick right to the border.
 			int viewPosX = glm::round(posX) + margins.left;
-			//assert(int(width - viewPosX - margins.right) >= e.minSpace - margins.horizontal());
-			int viewWidth = width - viewPosX - margins.right;
+			int viewWidth = width - viewPosX - margins.right + x;
 			view->setGeometry(viewPosX,
                               y + margins.top,
                               viewWidth,
                               height - margins.vertical());
 		}
 		else {
-			float viewWidth = glm::clamp(float(availableSpace * e.expanding) / sum, float(e.minSpace), float(maxSize.x));
+			int viewWidth = glm::clamp(availableSpace * e.expanding / sum, e.minSpace, maxSize.x);
 
-			view->setGeometry(glm::round(posX) + margins.left, y + margins.top, viewWidth - margins.horizontal(), glm::min(height - margins.vertical(), float(maxSize.y)));
-			posX += viewWidth + mSpacing;
-
-			availableSpace += viewWidth - (view->getSize().x + view->getMargin().horizontal());
+			view->setGeometry(glm::round(posX) + margins.left,
+                              y + margins.top,
+                              viewWidth,
+                              glm::min(height - margins.vertical(), float(maxSize.y)));
+            posX += view->getSize().x + mSpacing + margins.horizontal();
+			availableSpace += viewWidth - view->getSize().x;
 		}
 	}
 	//assert(width == x);

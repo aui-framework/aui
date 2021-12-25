@@ -322,8 +322,17 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
     });
 
 
+    class MockButton: public AButton {
+    public:
+        using AButton::AButton;
+        void setSize(int width, int height) override {
+            ALabel::setSize(width, height);
+            //assert(height == 20);
+        }
+    };
+
 	addView(Horizontal{
-        _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] {
+        _new<MockButton>("Show all views...").connect(&AButton::clicked, this, [] {
             _new<AllViewsWindow>()->show();
         }),
 		_new<ASpacer>(),
