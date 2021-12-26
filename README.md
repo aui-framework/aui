@@ -74,14 +74,14 @@ target_link_libraries(aui_app PRIVATE aui::core aui::views)
 
 | Feature or module | Windows Vista/7/8/8.1/10 | Windows XP | Linux | Android | MacOS | iOS |
 |-------------------|--------------------------|------------|-------|---------|-------|-----|
-| AUI.Core          |             #            |     #      |   #   |    #    |   #   |  ?  |
-| AUI.Crypt         |             #            |     #      |   #   |    #    |   #   |  ?  |
+| aui.core          |             #            |     #      |   #   |    #    |   #   |  ?  |
+| aui.crypt         |             #            |     #      |   #   |    #    |   #   |  ?  |
 | aui.curl          |             #            |     #      |   #   |    #    |   #   |  ?  |
 | aui.data          |             #            |     #      |   #   |    #    |   #   |  ?  |
 | aui.designer      |             ?            |     ?      |   ?   |    -    |   ?   |  -  |
 | aui.image         |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | aui.json          |             #            |     #      |   #   |    #    |   ?   |  ?  |
-| AUI.Mysql         |             #            |     #      |   #   |    #    |   ?   |  ?  |
+| aui.mysql         |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | aui.network       |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | aui.sqlite        |             #            |     #      |   #   |    #    |   ?   |  ?  |
 | aui.svg           |             #            |     #      |   #   |    #    |   ?   |  ?  |
