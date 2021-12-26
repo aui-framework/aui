@@ -259,7 +259,7 @@ void AView::addAssName(const AString& assName)
 }
 void AView::removeAssName(const AString& assName)
 {
-    mAssNames.remove(assName);
+    mAssNames.removeFirst(assName);
     assert(("empty ass name" && !assName.empty()));
     mAssHelper = nullptr;
 }

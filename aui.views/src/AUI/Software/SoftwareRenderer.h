@@ -19,7 +19,7 @@ public:
     /**
      * Draws a pixel onto the software framebuffer following the stencil and blending rules.
      * <dl>
-     *   <dt><b>Assertions</b></dt>
+     *   <dt><b>Sneaky assertions</b></dt>
      *   <dd><code>position</code> is inside the framebuffer.</dd>
      * </dl>
      * @param position position. An assertion is triggered if position is not inside the framebuffer.

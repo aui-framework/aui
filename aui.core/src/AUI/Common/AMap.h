@@ -34,50 +34,7 @@ public:
 	using iterator = typename parent::iterator;
 	using const_iterator = typename parent::const_iterator;
 
-	AMap()
-	{
-	}
-
-	AMap(const typename parent::allocator_type& _Al)
-		: parent(_Al)
-	{
-	}
-
-	AMap(const parent& _Right)
-		: parent(_Right)
-	{
-	}
-
-	AMap(const parent& _Right, const typename parent::allocator_type& _Al)
-		: parent(_Right, _Al)
-	{
-	}
-
-	AMap(const typename parent::key_compare& _Pred)
-		: parent(_Pred)
-	{
-	}
-
-	AMap(const typename parent::key_compare& _Pred,
-		const typename parent::allocator_type& _Al)
-		: parent(_Pred, _Al)
-	{
-	}
-
-	AMap(parent&& _Right)
-		: parent(_Right)
-	{
-	}
-
-	AMap(parent&& _Right, const typename parent::allocator_type& _Al)
-		: parent(_Right, _Al)
-	{
-	}
-
-	AMap(std::initializer_list<std::pair<const KeyType, ValueType>> _Ilist)
-		: parent(std::move(_Ilist))
-	{
-	}
+	using parent::parent;
 
 	ValueType& operator[](KeyType&& k)
 	{

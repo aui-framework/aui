@@ -20,7 +20,19 @@ struct State {
     bool italic = false;
 };
 
+_<AText> AText::fromString(const AString& string) {
+    auto text = aui::ptr::manage(new AText);
+    AVector<_<AWordWrappingEngine::Entry>> entries;
+    auto splt = string.split(' ');
+    entries.reserve(splt.size());
+    for (auto& w : splt) {
+        text->mWordEntries.emplace_back(text.get(), w);
+        entries << aui::ptr::fake(&text->mWordEntries.last());
+    }
 
+    text->mEngine.setEntries(std::move(entries));
+    return text;
+}
 
 _<AText> AText::fromItems(std::initializer_list<std::variant<AString, _<AView>>> init) {
     auto text = aui::ptr::manage(new AText);

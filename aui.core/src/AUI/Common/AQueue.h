@@ -21,21 +21,31 @@
 
 #pragma once
 #include <queue>
-#include "AUI/Core.h"
-#include <algorithm>
+#include <AUI/Core.h>
+#include <AUI/Traits/containers.h>
 
 template <class StoredType>
-	class AQueue : public std::queue<StoredType>
+class AQueue : public std::queue<StoredType>
 {
 	using parent = std::queue<StoredType>;
 public:
-	void remove(const StoredType& item)
-	{
-		parent::erase(std::remove_if(parent::begin(), parent::end(), [&](const StoredType& probe)
-		{
-			return item == probe;
-		}), parent::end());
-	}
+    /**
+     * Removes all occurrences of <code>item</code>.
+     * @param item element to remove.
+     */
+    void removeAll(const StoredType& item) noexcept
+    {
+        aui::container::remove_all(*this, item);
+    }
+
+    /**
+     * Removes first occurrence of <code>item</code>.
+     * @param item element to remove.
+     */
+    void removeFirst(const StoredType& item) noexcept
+    {
+        aui::container::remove_first(*this, item);
+    }
 
 
 	AQueue<StoredType>& operator<<(const StoredType& rhs)
@@ -44,34 +54,28 @@ public:
 		return *this;
 	}
 
-	bool contains(const StoredType& value) const
+
+	AQueue<StoredType>& operator<<(StoredType&& rhs)
 	{
-		for (auto i = parent::begin(); i != parent::end(); ++i)
-		{
-			if (*i == value)
-				return true;
-		}
-		return false;
+		parent::push(std::forward<StoredType>(rhs));
+		return *this;
 	}
 
-	template<typename Container>
-	bool isSubsetOf(const Container& c) const
-	{
-		for (auto& i : c)
-		{
-			if (!contains(i))
-			{
-				return false;
-			}
-		}
-		return true;
-	}
+    /**
+     * @return true if container contains an element, false otherwise.
+     */
+    bool contains(const StoredType& value) const noexcept {
+        return aui::container::contains(*this, value);
+    }
+
+
+    /**
+     * @return true if <code>c</code> container is a subset of this container, false otherwise.
+     */
+    template<typename OtherContainer>
+    bool isSubsetOf(const OtherContainer& c) const noexcept
+    {
+        return aui::container::is_subset(*this, c);
+    }
+
 };
-
-
-template <class StoredType>
-AQueue<StoredType>& operator<<(AQueue<StoredType>& lhs, const StoredType& rhs)
-{
-	lhs.push(rhs);
-	return lhs;
-}

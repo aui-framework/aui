@@ -62,7 +62,7 @@ BOOST_AUTO_TEST_SUITE(Threading)
                 };
             }
 
-            taskList.forEach(&AFuture<double>::get);
+            for (auto& f : taskList) f.get();
 
             printf("Ok, result: %f\n", **taskList.first());
         });

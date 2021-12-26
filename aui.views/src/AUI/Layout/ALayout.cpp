@@ -34,7 +34,7 @@ void ALayout::removeView(size_t index, const _<AView>& view)
 {
 
 	if (index == -1) {
-		mViews.remove(view);
+		mViews.removeFirst(view);
 	} else {
 		mViews.removeAt(index);
 	}
