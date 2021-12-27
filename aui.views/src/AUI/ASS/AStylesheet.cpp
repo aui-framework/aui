@@ -72,7 +72,7 @@ AStylesheet::AStylesheet() {
         // AText
         {
             t<AText>(),
-            Margin { 2_dp, {} },
+            Margin { 2_dp, 4_dp },
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,
         },
