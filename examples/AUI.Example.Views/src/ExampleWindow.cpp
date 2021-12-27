@@ -36,6 +36,7 @@
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "DemoListModel.h"
 #include "DemoTreeModel.h"
+#include "AUI/View/ASpinner.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/AComboBox.h>
 #include <AUI/i18n/AI18n.h>
@@ -321,21 +322,12 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
         it->setExpanding();
     });
 
-
-    class MockButton: public AButton {
-    public:
-        using AButton::AButton;
-        void setSize(int width, int height) override {
-            ALabel::setSize(width, height);
-            //assert(height == 20);
-        }
-    };
-
 	addView(Horizontal{
-        _new<MockButton>("Show all views...").connect(&AButton::clicked, this, [] {
+        _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] {
             _new<AllViewsWindow>()->show();
         }),
 		_new<ASpacer>(),
+        _new<ASpinner>(),
         _new<ACheckBox>("Enabled") let {
             it->setChecked();
             connect(it->checked, slot(tabView)::setEnabled);

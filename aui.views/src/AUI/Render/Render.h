@@ -245,5 +245,22 @@ public:
     static void translate(const glm::vec2& offset) {
         ourRenderer->setTransformForced(glm::translate(getTransform(), glm::vec3(offset, 0.f)));
     }
+
+    /**
+     * Rotates matrix along the specified axis.
+     * @param axis axis
+     * @param angle angle to rotate (rad) -2pi;2pi
+     */
+    static void rotate(const glm::vec3& axis, float angle) {
+        ourRenderer->setTransformForced(glm::rotate(getTransform(), angle, axis));
+    }
+
+    /**
+     * Rotates matrix along Z axis.
+     * @param angle angle to rotate (rad) -2pi;2pi
+     */
+    static void rotate(float angle) {
+        rotate({0.f, 0.f, 1.f}, angle);
+    }
 };
 

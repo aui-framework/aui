@@ -46,6 +46,7 @@
 #include <AUI/View/AScrollArea.h>
 #include "AStylesheet.h"
 #include "ASS.h"
+#include "AUI/View/ASpinner.h"
 
 
 AStylesheet::AStylesheet() {
@@ -67,6 +68,14 @@ AStylesheet::AStylesheet() {
             t<AWindow>(),
             BackgroundSolid {0xf0f0f0_rgb},
             Padding { 4_dp },
+        },
+
+         // ASpinner
+        {
+            t<ASpinner>(),
+            BackgroundImage { ":uni/svg/spinner.svg", 0x404040_rgb },
+            Margin { 4_dp },
+            FixedSize { 16_dp }
         },
 
         // AText
