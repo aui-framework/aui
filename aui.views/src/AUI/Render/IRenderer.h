@@ -128,8 +128,38 @@ public:
         virtual int getHeight() = 0;
     };
     class IMultiStringCanvas {
+    private:
+        std::optional<ATextLayoutHelper::Symbols> mSymbols;
+
+    protected:
+
+        /**
+         * Notifies IMultiStringCanvas than a symbol was added used to construct a
+         * <a href="#ATextLayoutHelper">ATextLayoutHelper</a>.
+         * @note should be called by the implementation of <a href="#IMultiStringCanvas">IMultiStringCanvas</a>.
+         * @param symbol symbol to add
+         */
+        void notifySymbolAdded(const ATextLayoutHelper::Symbol& symbol) {
+            if (mSymbols) mSymbols->last().push_back(symbol);
+        }
+
     public:
         virtual ~IMultiStringCanvas() = default;
+
+        /**
+         * Notifies IMultiStringCanvas that <a href="#makeTextLayoutHelper">getTextLayoutHelper</a> will be used.
+         */
+        void enableCachingForTextLayoutHelper() {
+            mSymbols = ATextLayoutHelper::Symbols{};
+            nextLine();
+        }
+
+        /**
+         * When caching for text layout helper is enabled, a new line added.
+         */
+        void nextLine() {
+            if (mSymbols) mSymbols->push_back({});
+        }
 
         /**
          * Bake string with some position.
@@ -145,10 +175,16 @@ public:
         virtual _<IRenderer::IPrerenderedString> finalize() = 0;
 
         /**
+         * @note call <a href="#enableCachingForTextLayoutHelper">enableCachingForTextLayoutHelper</a> before adding
+         *       strings.
+         * @note can be called only once.
          * @return an instance of <code>IRenderer::ITextLayoutHelper</code> constructed from
          * <code>IMultiStringCanvas</code>'s cache to efficiently map cursor position to the string index.
          */
-        virtual ATextLayoutHelper makeTextLayoutHelper() = 0;
+        ATextLayoutHelper getTextLayoutHelper() {
+            assert(("call enableCachingForTextLayoutHelper() before using getTextLayoutHelper" && bool(mSymbols)));
+            return ATextLayoutHelper(std::move(*mSymbols));
+        }
     };
 
 protected:

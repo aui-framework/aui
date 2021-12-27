@@ -190,8 +190,9 @@ void AAbstractTextField::prerenderStringIfNeeded() {
         auto text = getContentsPasswordWrap();
         if (!text.empty()) {
             auto canvas = Render::newMultiStringCanvas(getFontStyle());
+            canvas->enableCachingForTextLayoutHelper();
             canvas->addString({ 0.f, 0.f }, text);
-            setTextLayoutHelper(std::move(canvas->makeTextLayoutHelper()));
+            setTextLayoutHelper(canvas->getTextLayoutHelper());
             mPrerenderedString = canvas->finalize();
         }
     }

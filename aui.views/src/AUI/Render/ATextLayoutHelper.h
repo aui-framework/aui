@@ -12,7 +12,6 @@ class ATextLayoutHelper {
 public:
     struct Symbol {
         glm::ivec2 position;
-        size_t index;
     };
 
     using Line = AVector<Symbol>;

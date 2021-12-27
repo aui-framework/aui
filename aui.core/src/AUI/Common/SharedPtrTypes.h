@@ -131,7 +131,7 @@ public:
 
 
 	template <typename Functor>
-	inline _<T>& operator^(Functor functor) {
+	inline _<T>& operator^(Functor&& functor) {
 	    functor(*this);
 	    return *this;
 	}

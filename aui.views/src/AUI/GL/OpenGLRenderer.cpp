@@ -636,12 +636,14 @@ public:
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
             wchar_t c = *i;
             if (c == ' ') {
+                notifySymbolAdded({glm::ivec2{advance, advanceY}});
                 advance += mFontStyle.getSpaceWidth();
             }
             else if (c == '\n') {
                 advanceX = (glm::max)(advanceX, advance);
                 advance = position.x;
                 advanceY += mFontStyle.getLineHeight();
+                nextLine();
             }
             else {
                 AFont::Character& ch = font->getCharacter(fe, c);
@@ -675,7 +677,7 @@ public:
                         uv = *reinterpret_cast<OpenGLRenderer::CharacterData*>(ch.rendererData)->uv;
                     }
 
-
+                    notifySymbolAdded({glm::ivec2{posX, ch.advanceY + advanceY}});
                     mVertices.push_back({ glm::vec2(posX, ch.advanceY + height + advanceY),
                                           glm::vec2(uv.x, uv.w) });
                     mVertices.push_back({ glm::vec2(posX + width, ch.advanceY + height + advanceY),
@@ -739,22 +741,6 @@ public:
                                              mEntryData->texturePacker.getImage()->getWidth(),
                                              mFontStyle.color,
                                              mFontStyle.fontRendering);
-    }
-
-    ATextLayoutHelper makeTextLayoutHelper() override {
-        ATextLayoutHelper::Symbols symbols;
-
-        ATextLayoutHelper::Line line;
-
-        size_t index = 0;
-
-        for (auto it = mVertices.begin(); it != mVertices.end(); it += 4) {
-            // TODO чё то придумать с пробелами
-            line << ATextLayoutHelper::Symbol{ it->position, index++ };
-        }
-        symbols << std::move(line);
-
-        return ATextLayoutHelper{ std::move(symbols) };
     }
 
     ~OpenGLMultiStringCanvas() override = default;

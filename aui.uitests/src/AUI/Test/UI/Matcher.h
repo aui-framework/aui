@@ -65,7 +65,7 @@ public:
 
 
     template<class Assertion>
-    Matcher& require(Assertion&& assertion, const char* msg = nullptr) {
+    Matcher& require(Assertion&& assertion, const char* msg = "no msg") {
         currentImpl() = this;
         auto set = toSet();
         performHintChecks<Assertion>(msg, set);
@@ -75,7 +75,7 @@ public:
         return *this;
     }
     template<class Assertion>
-    Matcher& warn(Assertion&& assertion, const char* msg = nullptr) {
+    Matcher& warn(Assertion&& assertion, const char* msg = "no msg") {
         auto set = toSet();
         performHintChecks<Assertion>(msg, set);
         for (auto& s : set) {
@@ -84,7 +84,7 @@ public:
         return *this;
     }
     template<class Assertion>
-    Matcher& check(Assertion&& assertion, const char* msg = nullptr) {
+    Matcher& check(Assertion&& assertion, const char* msg = "no msg") {
         auto set = toSet();
         performHintChecks<Assertion>(msg, set);
         for (auto& s : set) {
