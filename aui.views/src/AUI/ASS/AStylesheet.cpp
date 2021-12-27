@@ -41,6 +41,7 @@
 #include <AUI/Platform/ACustomCaptionWindow.h>
 #include <AUI/View/ARulerView.h>
 #include <AUI/View/ATreeView.h>
+#include <AUI/View/AText.h>
 #include <AUI/View/ADrawableView.h>
 #include <AUI/View/AScrollArea.h>
 #include "AStylesheet.h"
@@ -68,13 +69,19 @@ AStylesheet::AStylesheet() {
             Padding { 4_dp },
         },
 
+        // AText
+        {
+            t<AText>(),
+            Margin { 2_dp, {} },
+            LineHeight { 1.f },
+            VerticalAlign::MIDDLE,
+        },
         // ALabel
         {
             t<ALabel>(),
             Padding {1_dp, 0, 2_dp},
             VerticalAlign::MIDDLE,
         },
-        // ALabel
         {
             t<ALabel>::disabled(),
             TextColor { 0x444444_rgb },

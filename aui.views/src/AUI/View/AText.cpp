@@ -140,7 +140,8 @@ void AText::render() {
 }
 
 void AText::prerenderString() {
-    mEngine.setTextAlign(TextAlign::JUSTIFY);
+    mEngine.setTextAlign(getFontStyle().align);
+    mEngine.setLineHeight(getFontStyle().lineSpacing);
     mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
     {
         auto multiStringCanvas = Render::newMultiStringCanvas(getFontStyle());

@@ -142,7 +142,7 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
                 removeRedundantItems(leftFloat);
                 removeRedundantItems(rightFloat);
 
-                currentY += currentRowHeight;
+                currentY += int(float(currentRowHeight) * mLineHeight);
                 currentRowHeight = 0;
                 beginRow();
             }
