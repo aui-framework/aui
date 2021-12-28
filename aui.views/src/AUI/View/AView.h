@@ -576,6 +576,7 @@ public:
 
 	void setCustomAss(const RuleWithoutSelector& rule) {
 		mCustomAssRule = rule;
+        mAssHelper = nullptr;
 	}
 
     void ensureAssUpdated();

@@ -39,43 +39,28 @@
 namespace ass {
 
     namespace detail {
-        struct ClassOf : virtual IAssSubSelector {
-        private:
-            AStringVector mClasses;
-            
+        struct debug_selector : virtual IAssSubSelector {
         public:
-            ClassOf(const AStringVector& classes) : mClasses(classes) {}
-            ClassOf(const AString& clazz) : mClasses({clazz}) {}
+            debug_selector() = default;
 
-            bool isPossiblyApplicable(AView* view) override {
-                for (auto& v : mClasses) {
-                    if (view->getCssNames().contains(v)) {
-                        return true;
-                    }
-                }
+            bool isStateApplicable(AView* view) override {
                 return false;
             }
 
-            bool isStateApplicable(AView* view) override {
-                return isPossiblyApplicable(view);
-            }
-
-            const AStringVector& getClasses() const {
-                return mClasses;
+            bool isPossiblyApplicable(AView* view) override {
+                return false;
             }
         };
     }
 
-    struct class_of: detail::ClassOf, AttributeHelper<class_of> {
+    struct debug_selector: detail::debug_selector, AttributeHelper<debug_selector> {
     public:
-        class_of(const AStringVector& classes) : ClassOf(classes) {}
-        class_of(const AString& clazz) : ClassOf(clazz) {}
+        debug_selector() = default;
 
-        using hover = ass::hovered<detail::ClassOf>;
-        using active = ass::active<detail::ClassOf>;
-        using focus = ass::focus<detail::ClassOf>;
-        using disabled = ass::disabled<detail::ClassOf>;
+        using hover = ass::hovered<detail::debug_selector>;
+        using active = ass::active<detail::debug_selector>;
+        using focus = ass::focus<detail::debug_selector>;
+        using disabled = ass::disabled<detail::debug_selector>;
     };
 
-    using c = class_of;
 }

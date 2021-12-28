@@ -26,12 +26,16 @@ _<AText> AText::fromString(const AString& string) {
     auto splt = string.split(' ');
     entries.reserve(splt.size());
     for (auto& w : splt) {
-        text->mWordEntries.emplace_back(text.get(), w);
-        entries << aui::ptr::fake(&text->mWordEntries.last());
+        pushWord(text, entries, w);
     }
 
     text->mEngine.setEntries(std::move(entries));
     return text;
+}
+
+void AText::pushWord(const _<AText>& text, AVector<_<AWordWrappingEngine::Entry>>& entries, const AString& word) {
+    text->mWordEntries.emplace_back(text.get(), word);
+    entries << aui::ptr::fake(&text->mWordEntries.last());
 }
 
 _<AText> AText::fromItems(std::initializer_list<std::variant<AString, _<AView>>> init) {
@@ -42,8 +46,7 @@ _<AText> AText::fromItems(std::initializer_list<std::variant<AString, _<AView>>>
         std::visit(aui::lambda_overloaded {
             [&](const AString& string) {
                 for (auto& w : string.split(' ')) {
-                    text->mWordEntries.emplace_back(text.get(), w);
-                    entries << aui::ptr::fake(&text->mWordEntries.last());
+                    pushWord(text, entries, w);
                 }
             },
             [&](const _<AView>& view) {
@@ -105,8 +108,7 @@ _<AText> AText::fromHtml(const AString& html) {
         };
         void visitTextEntity(const AString& entity) override {
             for (auto& w : entity.split(' ')) {
-                text->mWordEntries.emplace_back(text.get(), w);
-                entries << aui::ptr::fake(&text->mWordEntries.last());
+                pushWord(text, entries, w);
             }
         };
 
@@ -174,7 +176,7 @@ void AText::setSize(int width, int height) {
 }
 
 glm::ivec2 AText::WordEntry::getSize() {
-    return { mText->getFontStyle().getWidth(mWord) + mText->getFontStyle().getSpaceWidth(), mText->getFontStyle().size };
+    return { mWidth, mText->getFontStyle().size };
 }
 
 void AText::WordEntry::setPosition(const glm::ivec2& position) {

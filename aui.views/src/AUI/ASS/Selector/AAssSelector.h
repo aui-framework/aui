@@ -84,23 +84,26 @@ namespace ass {
         AAssSelector& operator=(const AAssSelector& c) = default;
 
         bool isPossiblyApplicable(AView* view) const {
-            for (auto& s : mSubSelectors) {
-                if (s->isPossiblyApplicable(view))
+            for (const auto& s : mSubSelectors) {
+                if (s->isPossiblyApplicable(view)) {
                     return true;
+                }
             }
             return false;
         }
         bool isStateApplicable(AView* view) const {
-            for (auto& s : mSubSelectors) {
-                if (s->isStateApplicable(view))
+            for (const auto& s : mSubSelectors) {
+                if (s->isStateApplicable(view)) {
                     return true;
+                }
             }
             return false;
         }
         void setupConnections(AView* view, const _<AAssHelper>& helper) const {
-            for (auto& s : mSubSelectors) {
+            for (const auto& s : mSubSelectors) {
                 if (s->isPossiblyApplicable(view)) {
                     s->setupConnections(view, helper);
+                    break;
                 }
             }
         }

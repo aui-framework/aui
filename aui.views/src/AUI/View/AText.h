@@ -14,9 +14,11 @@ private:
         AString mWord;
         _<AFont> mFont;
         glm::ivec2 mPosition;
+        int mWidth;
 
     public:
-        WordEntry(AText* text, const AString& word, const _<AFont>& font = nullptr) : mText(text), mWord(word), mFont(font) {}
+        WordEntry(AText* text, const AString& word, const _<AFont>& font = nullptr)
+            : mText(text), mWord(word), mFont(font), mWidth(mText->getFontStyle().getWidth(mWord) + mText->getFontStyle().getSpaceWidth()) {}
 
         glm::ivec2 getSize() override;
 
@@ -26,6 +28,10 @@ private:
 
         const glm::ivec2& getPosition() const {
             return mPosition;
+        }
+
+        int getWidth() const {
+            return mWidth;
         }
 
         const AString& getWord() const {
@@ -69,6 +75,8 @@ public:
     int getContentMinimumHeight() override;
 
     void prerenderString();
+
+    static void pushWord(const _<AText>& text, AVector<_<AWordWrappingEngine::Entry>>& entries, const AString& word);
 };
 
 
