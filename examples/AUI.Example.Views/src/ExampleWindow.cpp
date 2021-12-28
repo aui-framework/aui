@@ -96,15 +96,6 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
     });
 
 	addView(_new<ASelectableLabel>("Building beautiful programs in pure C++ without chrome embded framework"));
-	//addView(AText::fromItems(
-    //        {
-    //            _new<ADrawableView>(IDrawable::fromUrl(":img/cat.jpg")) with_style { MinSize { 100_dp }, Margin { 4_dp } },
-    //            "Lorem Ipsum - это текст-\"рыба\", часто используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной \"рыбой\" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов. Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн. Его популяризации в новое время послужили публикация листов Letraset с образцами Lorem Ipsum в 60-х годах и, в более недавнее время, программы электронной вёрстки типа Aldus PageMaker, в шаблонах которых используется Lorem Ipsum."
-    //        }));
-	/*
-    addView(AText::fromHtml(
-            "Lorem Ipsum - это текст-\"рыба\", часто используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной \"рыбой\" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов. <world /> Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн. Его популяризации в новое время послужили публикация листов Letraset с образцами Lorem Ipsum в 60-х годах и, в более недавнее время, программы электронной вёрстки типа Aldus PageMaker, в шаблонах которых используется Lorem Ipsum."
-            ));*/
     _<ATabView> tabView;
     addView(tabView = _new<ATabView>() let {
         it->addTab(Horizontal {
@@ -299,10 +290,10 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                                                _new<AButton>("Five")}),
             _new<ALabel>("Vertical splitter"),
             ASplitter::Vertical().withItems({_new<AButton>("One"),
-                                              _new<AButton>("Two"),
-                                              _new<AButton>("Three"),
-                                              _new<AButton>("Four"),
-                                              _new<AButton>("Five")}).build() let { it->setExpanding(); },
+                                             _new<AButton>("Two"),
+                                             _new<AButton>("Three"),
+                                             _new<AButton>("Four"),
+                                             _new<AButton>("Five")}).build() let { it->setExpanding(); },
             _new<ALabel>("Grid splitter"),
             AGridSplitter::Builder().withItems(AVector<AVector<_<AView>>>::generate(5, [](size_t y) {
                return AVector<_<AView>>::generate(5, [&](size_t x) {
@@ -310,6 +301,30 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                });
             }))
         } let { it->setExpanding(); }, "Splitters");
+
+        it->addTab(Vertical {
+            ASplitter::Horizontal().withItems({
+                Vertical::Expanding {
+                    _new<ALabel>("Default"),
+                    AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                      "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                      "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                      "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                      "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                      "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style { TextAlign::JUSTIFY },
+                },
+                Vertical::Expanding {
+                    _new<ALabel>("Word breaking"),
+                    AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                      "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                      "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                      "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                      "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                      "proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
+                                      { WordBreak::BREAK_ALL })
+                },
+            }),
+        } let { it->setExpanding(); }, "Text");
 
         it->addTab(Vertical {
             // Rulers

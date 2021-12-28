@@ -23,6 +23,9 @@ public:
         bool isFloating() const {
             return getFloat() != Float::NONE;
         }
+
+        [[nodiscard]]
+        virtual bool escapesEdges();
     };
 
 private:

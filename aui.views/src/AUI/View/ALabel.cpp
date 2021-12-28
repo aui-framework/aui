@@ -142,6 +142,7 @@ void ALabel::doPrerender() {
     auto fs = getFontStyleLabel();
     if (!mText.empty()) {
         mPrerendered = Render::prerenderString({0, 0}, getTransformedText(), fs);
+
     }
 }
 
