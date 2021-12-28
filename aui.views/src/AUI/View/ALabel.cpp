@@ -1,4 +1,5 @@
-﻿/**
+﻿
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -64,7 +65,7 @@ int ALabel::getContentMinimumHeight()
 {
 	if (mText.empty())
 		return 0;
-	return getFontStyleLabel().size;
+	return getFontStyleLabel().size + getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size);
 }
 
 void ALabel::setText(const AString& newText)
@@ -211,10 +212,13 @@ void ALabel::doRenderText() {
                 break;
         }
         if (mPrerendered) {
-            int y = mPadding.top - (getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size)) + 1;
+            int y = mPadding.top;
+
             if (mVerticalAlign == VerticalAlign::MIDDLE) {
-                y = (glm::max)(y, int(getHeight() - getFontStyleLabel().size) / 2 - 1);
+                y = (glm::max)(y, int(getHeight() - (getFontStyleLabel().size)) / 2) + 1;
             }
+            y -= getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size);
+
             RenderHints::PushMatrix m;
             Render::translate({ mTextLeftOffset + mPadding.left, y });
             mPrerendered->draw();
