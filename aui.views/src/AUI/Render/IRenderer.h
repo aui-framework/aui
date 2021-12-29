@@ -139,7 +139,7 @@ public:
          * @note should be called by the implementation of <a href="#IMultiStringCanvas">IMultiStringCanvas</a>.
          * @param symbol symbol to add
          */
-        void notifySymbolAdded(const ATextLayoutHelper::Symbol& symbol) {
+        void notifySymbolAdded(const ATextLayoutHelper::Symbol& symbol) noexcept {
             if (mSymbols) mSymbols->last().push_back(symbol);
         }
 
@@ -149,7 +149,7 @@ public:
         /**
          * Notifies IMultiStringCanvas that <a href="#makeTextLayoutHelper">getTextLayoutHelper</a> will be used.
          */
-        void enableCachingForTextLayoutHelper() {
+        void enableCachingForTextLayoutHelper() noexcept {
             mSymbols = ATextLayoutHelper::Symbols{};
             nextLine();
         }
@@ -157,7 +157,7 @@ public:
         /**
          * When caching for text layout helper is enabled, a new line added.
          */
-        void nextLine() {
+        void nextLine() noexcept {
             if (mSymbols) mSymbols->push_back({});
         }
 
@@ -166,13 +166,13 @@ public:
          * @param position position
          * @param text text
          */
-        virtual void addString(const glm::vec2& position, const AString& text) = 0;
+        virtual void addString(const glm::vec2& position, const AString& text) noexcept = 0;
 
         /**
          * @note invalidates IMultiStringCanvas which speeds up some implementations of IMultiStringCanvas.
          * @return instance of <code>Render::PrerenderedString</code> to draw with.
          */
-        virtual _<IRenderer::IPrerenderedString> finalize() = 0;
+        virtual _<IRenderer::IPrerenderedString> finalize() noexcept = 0;
 
         /**
          * @note call <a href="#enableCachingForTextLayoutHelper">enableCachingForTextLayoutHelper</a> before adding
@@ -181,7 +181,7 @@ public:
          * @return an instance of <code>IRenderer::ITextLayoutHelper</code> constructed from
          * <code>IMultiStringCanvas</code>'s cache to efficiently map cursor position to the string index.
          */
-        ATextLayoutHelper getTextLayoutHelper() {
+        ATextLayoutHelper getTextLayoutHelper() noexcept {
             assert(("call enableCachingForTextLayoutHelper() before using getTextLayoutHelper" && bool(mSymbols)));
             return ATextLayoutHelper(std::move(*mSymbols));
         }

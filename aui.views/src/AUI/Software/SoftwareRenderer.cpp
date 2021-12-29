@@ -403,7 +403,7 @@ public:
                                                                                          mFontStyle(fontStyle) {}
 
     void addString(const glm::vec2& position,
-                   const AString& text) override {
+                   const AString& text) noexcept override {
         mCharEntries.reserve(mCharEntries.capacity() + text.length());
         auto& font = mFontStyle.font;
         auto fe = mFontStyle.getFontEntry();
@@ -461,7 +461,7 @@ public:
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
     }
 
-    _<IRenderer::IPrerenderedString> finalize() override {
+    _<IRenderer::IPrerenderedString> finalize() noexcept override {
         return _new<SoftwarePrerenderedString>(mRenderer,
                                                std::move(mCharEntries),
                                                mFontStyle.color,

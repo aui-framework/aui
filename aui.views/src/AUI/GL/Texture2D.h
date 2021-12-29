@@ -28,7 +28,7 @@
 namespace GL {
 	class API_AUI_VIEWS Texture2D: public Texture<TEXTURE_2D> {
 	public:
-		void tex2D(const _<AImage>& image);
+		void tex2D(const AImage& image);
         virtual ~Texture2D() = default;
 	};
 }

@@ -30,7 +30,7 @@ private:
 
 
     struct CharacterData {
-        _<glm::vec4> uv;
+        glm::vec4 uv;
     };
 
     ADeque<CharacterData> mCharData;
