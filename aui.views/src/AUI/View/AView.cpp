@@ -165,7 +165,7 @@ void AView::recompileAss()
 void AView::updateAssState() {
     aui::zero(mAss);
     if (!mAssHelper) return;
-    aui::zero(mAssHelper->state);
+    mAssHelper->state = {};
 
     auto applyRule = [&](const RuleWithoutSelector& r) {
         for (auto& d : r.getDeclarations()) {
