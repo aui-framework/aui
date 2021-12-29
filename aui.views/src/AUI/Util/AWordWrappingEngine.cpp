@@ -102,7 +102,15 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
 
                 for (auto& i: leftFloat) leftPadding += i.occupiedHorizontalSpace;
                 for (auto& i: rightFloat) rightPadding += i.occupiedHorizontalSpace;
-                for (auto& i: *currentRow) actualRowWidth += i.occupiedHorizontalSpace;
+                if (!currentRow->empty()) {
+                    if (currentRow->last().entry->escapesEdges()) {
+                        for (auto it = currentRow->begin(); it != currentRow->end() - 1; ++it) {
+                            actualRowWidth += it->occupiedHorizontalSpace;
+                        }
+                    } else {
+                        for (auto& i: *currentRow) actualRowWidth += i.occupiedHorizontalSpace;
+                    }
+                }
 
                 currentPos = leftPadding + (size.x - leftPadding - rightPadding - actualRowWidth) / 2;
                 for (auto& i: *currentRow) {
