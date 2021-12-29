@@ -616,15 +616,6 @@ public:
 
         const bool hasKerning = font->isHasKerning();
 
-        int prevWidth = -1;
-
-        {
-            decltype(auto) texturePackerImage = texturePacker.getImage();
-            if (texturePackerImage) {
-                prevWidth = texturePackerImage->getWidth();
-            }
-        }
-
         int advanceX = position.x;
         int advanceY = position.y;
         size_t counter = 0;
@@ -657,9 +648,7 @@ public:
 
                     if (ch.rendererData == nullptr) {
                         uv = texturePacker.insert(*ch.image);
-                        if (prevWidth == -1) {
-                            prevWidth = texturePacker.getImage()->getWidth();
-                        }
+
                         const float BIAS = 0.1f;
                         uv.x -= BIAS;
                         uv.y -= BIAS;
@@ -701,12 +690,6 @@ public:
         mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
 
-
-        if (prevWidth != -1 && texturePacker.getImage()->getWidth() != prevWidth) {
-            // looks like texture of the font was updated; we have to do everything again
-            mVertices.clear();
-            addString(position, text);
-        }
     }
 
     _<IRenderer::IPrerenderedString> finalize() noexcept override {
