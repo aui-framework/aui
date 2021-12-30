@@ -403,7 +403,7 @@ public:
                                                                                          mFontStyle(fontStyle) {}
 
     void addString(const glm::vec2& position,
-                   const AString& text) override {
+                   const AString& text) noexcept override {
         mCharEntries.reserve(mCharEntries.capacity() + text.length());
         auto& font = mFontStyle.font;
         auto fe = mFontStyle.getFontEntry();
@@ -419,12 +419,14 @@ public:
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
             wchar_t c = *i;
             if (c == ' ') {
+                notifySymbolAdded({glm::ivec2{advance, advanceY}});
                 advance += mFontStyle.getSpaceWidth();
             }
             else if (c == '\n') {
                 advanceX = (glm::max)(advanceX, advance);
                 advance = position.x;
                 advanceY += mFontStyle.getLineHeight();
+                nextLine();
             }
             else {
                 AFont::Character& ch = font->getCharacter(fe, c);
@@ -433,8 +435,10 @@ public:
                     continue;
                 }
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
+                    glm::ivec2 pos{ advance + ch.bearingX, ch.advanceY + advanceY };
+                    notifySymbolAdded({pos});
                     mCharEntries.push_back(CharEntry{
-                            glm::ivec2{ advance + ch.bearingX, ch.advanceY + advanceY },
+                            pos,
                             ch.image.get()
                     });
                 }
@@ -457,29 +461,13 @@ public:
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
     }
 
-    _<IRenderer::IPrerenderedString> finalize() override {
+    _<IRenderer::IPrerenderedString> finalize() noexcept override {
         return _new<SoftwarePrerenderedString>(mRenderer,
                                                std::move(mCharEntries),
                                                mFontStyle.color,
                                                mAdvanceX,
                                                mAdvanceY,
                                                mFontStyle.fontRendering);
-    }
-
-    ATextLayoutHelper makeTextLayoutHelper() override {
-        ATextLayoutHelper::Symbols symbols;
-
-        ATextLayoutHelper::Line line;
-
-        size_t index = 0;
-
-        for (auto it = mCharEntries.begin(); it != mCharEntries.end(); ++it) {
-            // TODO чё то придумать с пробелами
-            line << ATextLayoutHelper::Symbol{ it->position, index++ };
-        }
-        symbols << std::move(line);
-
-        return ATextLayoutHelper{ std::move(symbols) };
     }
 };
 

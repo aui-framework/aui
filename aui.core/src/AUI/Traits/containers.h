@@ -23,7 +23,7 @@ namespace aui::container {
      */
     template<typename Container>
     void remove_at(Container& c, size_t index) noexcept {
-        assert(("index out of bounds" && c.size() <= index));
+        assert(("index out of bounds" && c.size() > index));
         c.erase(c.begin() + index);
     }
 

@@ -127,11 +127,14 @@ public:
     }
 
 	template<typename SignalField, typename Object, typename Function>
-	inline _<T>& connect(SignalField signalField, Object object, Function function);
+	inline _<T>& connect(SignalField signalField, Object object, Function&& function);
+
+	template<typename SignalField, typename Function>
+	inline _<T>& connect(SignalField signalField, Function&& function);
 
 
 	template <typename Functor>
-	inline _<T>& operator^(Functor functor) {
+	inline _<T>& operator^(Functor&& functor) {
 	    functor(*this);
 	    return *this;
 	}

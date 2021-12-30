@@ -49,10 +49,15 @@ namespace ass {
 
             bool isPossiblyApplicable(AView* view) override {
                 for (auto& v : mClasses) {
-                    if (view->getCssNames().contains(v))
+                    if (view->getCssNames().contains(v)) {
                         return true;
+                    }
                 }
                 return false;
+            }
+
+            bool isStateApplicable(AView* view) override {
+                return isPossiblyApplicable(view);
             }
 
             const AStringVector& getClasses() const {

@@ -32,6 +32,7 @@
 #include <AUI/Test/UI/UITestCase.h>
 
 #include <AUI/Test/UI/Action/Click.h>
+#include <AUI/Test/UI/Action/DoubleClick.h>
 #include <AUI/Test/UI/Action/Type.h>
 #include <AUI/Test/UI/Action/MouseMove.h>
 

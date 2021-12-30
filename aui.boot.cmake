@@ -21,6 +21,9 @@
 
 cmake_minimum_required(VERSION 3.16)
 
+# fix "Failed to get the hash for HEAD" error
+file(REMOVE_RECURSE ${CMAKE_BINARY_DIR}/_deps)
+
 # rpath fix
 if (APPLE)
     set(CMAKE_MACOSX_RPATH 1)

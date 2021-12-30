@@ -41,10 +41,12 @@
 #include <AUI/Platform/ACustomCaptionWindow.h>
 #include <AUI/View/ARulerView.h>
 #include <AUI/View/ATreeView.h>
+#include <AUI/View/AText.h>
 #include <AUI/View/ADrawableView.h>
 #include <AUI/View/AScrollArea.h>
 #include "AStylesheet.h"
 #include "ASS.h"
+#include "AUI/View/ASpinner.h"
 
 
 AStylesheet::AStylesheet() {
@@ -59,6 +61,7 @@ AStylesheet::AStylesheet() {
             FontSize {9_pt},
             FontRendering::SUBPIXEL,
             ImageRendering::SMOOTH,
+            MaxSize {99999999_dp, 99999999_dp },
         },
 
         // AWindow
@@ -68,13 +71,27 @@ AStylesheet::AStylesheet() {
             Padding { 4_dp },
         },
 
+         // ASpinner
+        {
+            t<ASpinner>(),
+            BackgroundImage { ":uni/svg/spinner.svg", 0x404040_rgb },
+            Margin { 4_dp },
+            FixedSize { 16_dp }
+        },
+
+        // AText
+        {
+            t<AText>(),
+            Margin { 2_dp, 4_dp },
+            LineHeight { 1.f },
+            VerticalAlign::MIDDLE,
+        },
         // ALabel
         {
             t<ALabel>(),
             Padding {1_dp, 0, 2_dp},
             VerticalAlign::MIDDLE,
         },
-        // ALabel
         {
             t<ALabel>::disabled(),
             TextColor { 0x444444_rgb },
@@ -86,7 +103,7 @@ AStylesheet::AStylesheet() {
 
         // AButton
         {
-            t<AButton>(),
+            { t<AButton>(), c(".btn")},
             BackgroundSolid {0xffffff_rgb},
             Padding {3_dp, 6_dp},
             Margin {2_dp, 4_dp},
@@ -97,15 +114,15 @@ AStylesheet::AStylesheet() {
             BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},
         },
         {
-            t<AButton>::hover(),
+            { t<AButton>::hover(), c::hover(".btn")},
             Border {1_dp, getOsThemeColor() * glm::vec4(1, 1, 1, 0.3f)}
         },
         {
-            t<AButton>::active(),
+            { t<AButton>::active(), c::active(".btn")},
             BackgroundSolid{0xfafafa_rgb},
         },
         {
-            t<AButton>()["default"],
+            { debug_selector(), t<AButton>()["default"], c(".btn_default")},
             FontRendering::ANTIALIASING,
             BackgroundGradient {getOsThemeColor().lighter(0.15f),
                                 getOsThemeColor().darker(0.15f),
@@ -115,26 +132,26 @@ AStylesheet::AStylesheet() {
             TextColor { 0xffffff_rgb },
         },
         {
-            t<AButton>::hover()["default"],
+            { t<AButton>::hover()["default"], c::hover(".btn_default")},
             BoxShadow { 0, 1_dp, 6_dp, -1_dp, getOsThemeColor() },
         },
         {
-            t<AButton>::active(),
+            { t<AButton>::active(), c::active(".btn")},
             Padding {5_dp, 8_dp, 3_dp},
             BoxShadow { nullptr },
         },
         {
-            t<AButton>::hover()["default"],
+            { t<AButton>::hover()["default"], c::hover(".btn_default")},
             BackgroundGradient {getOsThemeColor().lighter(0.2f),
                                 getOsThemeColor().darker(0.15f),
                                 LayoutDirection::VERTICAL },
         },
         {
-            t<AButton>::active()["default"],
+            { t<AButton>::active()["default"], c::active(".btn_default")},
             BackgroundSolid { getOsThemeColor() }
         },
         {
-            t<AButton>()["disabled"],
+            { t<AButton>()["disabled"], c(".btn")["disabled"]},
             BackgroundSolid { 0xcccccc_rgb },
             BoxShadow { nullptr },
             Border {1_dp, 0xbfbfbf_rgb },

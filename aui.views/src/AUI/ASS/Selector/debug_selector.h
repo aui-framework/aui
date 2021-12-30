@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,47 +19,48 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 02.01.2021.
+//
+
 #pragma once
-#include "AUI/Enum/TextAlign.h"
-#include "AFont.h"
-#include "AUI/Render/FontRendering.h"
-#include "AUI/Common/AColor.h"
 
 
-class AString;
+#include "attribute.h"
+#include <AUI/Util/kAUI.h>
+#include <AUI/View/AView.h>
+#include <AUI/ASS/AAssHelper.h>
 
+#include "hovered.h"
+#include "active.h"
+#include "focus.h"
+#include "disabled.h"
 
-struct API_AUI_VIEWS AFontStyle {
-	mutable _<AFont> font;
-	unsigned size = 12;
-	bool formatting = false;
-	TextAlign align = TextAlign::LEFT;
-	AColor color;
-    bool bold = false;
-    bool italic = false;
+namespace ass {
 
-	FontRendering fontRendering = FontRendering::SUBPIXEL;
-	float lineSpacing = 0.5f;
+    namespace detail {
+        struct debug_selector : virtual IAssSubSelector {
+        public:
+            debug_selector() = default;
 
-    AFontStyle();
+            bool isStateApplicable(AView* view) override {
+                return false;
+            }
 
-	size_t getWidth(const AString& text) const;
-
-	AFont::Character& getCharacter(char32_t c) {
-		return font->getCharacter(getFontEntry(), c);
-	}
-
-    [[nodiscard]]
-    size_t getSpaceWidth() const {
-        return font->getSpaceWidth(size);
-    }
-	size_t getLineHeight() const;
-
-    AFont::FontEntry getFontEntry() const {
-        return font->getFontEntry({size, fontRendering});
+            bool isPossiblyApplicable(AView* view) override {
+                return false;
+            }
+        };
     }
 
-    operator AFont::FontEntry() const {
-        return getFontEntry();
-    }
-};
+    struct debug_selector: detail::debug_selector, AttributeHelper<debug_selector> {
+    public:
+        debug_selector() = default;
+
+        using hover = ass::hovered<detail::debug_selector>;
+        using active = ass::active<detail::debug_selector>;
+        using focus = ass::focus<detail::debug_selector>;
+        using disabled = ass::disabled<detail::debug_selector>;
+    };
+
+}

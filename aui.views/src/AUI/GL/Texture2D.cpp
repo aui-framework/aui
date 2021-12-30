@@ -56,14 +56,14 @@ bool Result::operator==(const Result& rhs) const
 	return memcmp(this, &rhs, sizeof(rhs)) == 0;
 }
 
-Result recognize(const _<AImage>& image)
+Result recognize(const AImage& image)
 {
 	Result res;
-	switch (image->getFormat() & 15)
+	switch (image.getFormat() & 15)
 	{
 	case AImage::R:
 		res.format = GL_RED;
-		switch (image->getFormat() & (~15))
+		switch (image.getFormat() & (~15))
 		{
 		case AImage::FLOAT:
 			res.internalformat = GL_R16F;
@@ -79,7 +79,7 @@ Result recognize(const _<AImage>& image)
 		break;
 	case AImage::RGB:
 		res.format = GL_RGB;
-		switch (image->getFormat() & (~15))
+		switch (image.getFormat() & (~15))
 		{
 		case AImage::FLOAT:
 			res.internalformat = GL_RGB16F;
@@ -95,7 +95,7 @@ Result recognize(const _<AImage>& image)
 		break;
 	case AImage::RGBA:
 		res.format = GL_RGBA;
-		switch (image->getFormat() & (~15))
+		switch (image.getFormat() & (~15))
 		{
 		case AImage::FLOAT:
 			res.internalformat = GL_RGBA16F;
@@ -115,11 +115,11 @@ Result recognize(const _<AImage>& image)
 	return res;
 }
 
-void GL::Texture2D::tex2D(const _<AImage>& image) {
+void GL::Texture2D::tex2D(const AImage& image) {
 	bind();
 	Result types = recognize(image);
 
 	glGetError();
-	glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image->getWidth(), image->getHeight(), 0, types.format, types.type, image->getData().empty() ? nullptr : image->getData().data());
+	glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image.getWidth(), image.getHeight(), 0, types.format, types.type, image.getData().empty() ? nullptr : image.getData().data());
 	assert(glGetError() == 0);
 }

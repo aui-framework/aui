@@ -116,8 +116,6 @@
  */
 #define let ^ [&](const auto& it)
 
-
-
 #define with_style + RuleWithoutSelector
 
 /**

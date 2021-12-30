@@ -67,6 +67,7 @@
 #include "Selector/attribute.h"
 #include "Selector/active.h"
 #include "Selector/disabled.h"
+#include "Selector/debug_selector.h"
 #include "Selector/hovered.h"
 #include "Selector/class_of.h"
 

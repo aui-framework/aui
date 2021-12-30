@@ -73,8 +73,15 @@ inline _<T> _new(std::initializer_list<E> il) {
 
 template<typename T>
 template<typename SignalField, typename Object, typename Function>
-inline _<T>& _<T>::connect(SignalField signalField, Object object, Function function) {
-    AObject::connect(parent::get()->*signalField, object, function);
+inline _<T>& _<T>::connect(SignalField signalField, Object object, Function&& function) {
+    AObject::connect(parent::get()->*signalField, object, std::forward<Function>(function));
+    return *this;
+}
+
+template<typename T>
+template<typename SignalField, typename Function>
+inline _<T>& _<T>::connect(SignalField signalField, Function&& function) {
+    AObject::connect(parent::get()->*signalField, _<T>::get(), std::forward<Function>(function));
     return *this;
 }
 

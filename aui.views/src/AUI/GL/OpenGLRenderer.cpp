@@ -18,7 +18,7 @@ private:
 
 public:
     void setImage(const _<AImage>& image) override {
-        mTexture.tex2D(image);
+        mTexture.tex2D(*image);
     }
 
     void bind() {
@@ -496,7 +496,6 @@ public:
     int mTextWidth;
     int mTextHeight;
     OpenGLRenderer::FontEntryData* mEntryData;
-    int mTextureWidth;
     AColor mColor;
     FontRendering mFontRendering;
 
@@ -506,7 +505,6 @@ public:
                             int textWidth,
                             int textHeight,
                             OpenGLRenderer::FontEntryData* entryData,
-                            int textureWidth,
                             AColor color,
                             FontRendering fontRendering):
             mRenderer(renderer),
@@ -515,7 +513,6 @@ public:
             mTextWidth(textWidth),
             mTextHeight(textHeight),
             mEntryData(entryData),
-            mTextureWidth(textureWidth),
             mColor(color),
             mFontRendering(fontRendering)
     {}
@@ -534,16 +531,16 @@ public:
             GL::State::bindVertexArray(g);
         }
 
-        auto img = mEntryData->texturePacker.getImage();
+        decltype(auto) img = mEntryData->texturePacker.getImage();
         if (!img)
             return;
 
         auto width = img->getWidth();
 
-        float uvScale = float(mTextureWidth) / float(width);
+        float uvScale = 1.f / float(width);
 
         if (mEntryData->isTextureInvalid) {
-            mEntryData->texture.tex2D(img);
+            mEntryData->texture.tex2D(*img);
             mEntryData->isTextureInvalid = false;
         } else {
             mEntryData->texture.bind();
@@ -611,23 +608,13 @@ public:
         mVertices.reserve(1000);
     }
 
-    void addString(const glm::vec2& position, const AString& text) override {
+    void addString(const glm::vec2& position, const AString& text) noexcept override {
         mVertices.reserve(mVertices.capacity() + text.length() * 4);
         auto& font = mFontStyle.font;
         auto& texturePacker = mEntryData->texturePacker;
         auto fe = mFontStyle.getFontEntry();
-        auto tyi = mRenderer->getFontEntryData(mFontStyle);
 
         const bool hasKerning = font->isHasKerning();
-
-        int prevWidth = -1;
-
-        {
-            auto texturePackerImage = texturePacker.getImage();
-            if (texturePackerImage) {
-                prevWidth = texturePackerImage->getWidth();
-            }
-        }
 
         int advanceX = position.x;
         int advanceY = position.y;
@@ -636,12 +623,14 @@ public:
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
             wchar_t c = *i;
             if (c == ' ') {
+                notifySymbolAdded({glm::ivec2{advance, advanceY}});
                 advance += mFontStyle.getSpaceWidth();
             }
             else if (c == '\n') {
                 advanceX = (glm::max)(advanceX, advance);
                 advance = position.x;
                 advanceY += mFontStyle.getLineHeight();
+                nextLine();
             }
             else {
                 AFont::Character& ch = font->getCharacter(fe, c);
@@ -658,24 +647,21 @@ public:
                     glm::vec4 uv;
 
                     if (ch.rendererData == nullptr) {
-                        auto pUv = texturePacker.insert(ch.image);
-                        if (prevWidth == -1) {
-                            prevWidth = texturePacker.getImage()->getWidth();
-                        }
-                        glm::vec2 bias = 0.1f / glm::vec2(texturePacker.getImage()->getSize());
-                        pUv->x -= bias.x;
-                        pUv->y -= bias.x;
-                        pUv->z -= bias.y;
-                        pUv->w -= bias.y;
-                        uv = *pUv;
-                        mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{std::move(pUv)});
+                        uv = texturePacker.insert(*ch.image);
+
+                        const float BIAS = 0.1f;
+                        uv.x -= BIAS;
+                        uv.y -= BIAS;
+                        uv.z -= BIAS;
+                        uv.w -= BIAS;
+                        mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv});
                         ch.rendererData = &mRenderer->mCharData.last();
                         mEntryData->isTextureInvalid = true;
                     } else {
-                        uv = *reinterpret_cast<OpenGLRenderer::CharacterData*>(ch.rendererData)->uv;
+                        uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(ch.rendererData)->uv;
                     }
 
-
+                    notifySymbolAdded({glm::ivec2{posX, ch.advanceY + advanceY}});
                     mVertices.push_back({ glm::vec2(posX, ch.advanceY + height + advanceY),
                                           glm::vec2(uv.x, uv.w) });
                     mVertices.push_back({ glm::vec2(posX + width, ch.advanceY + height + advanceY),
@@ -704,15 +690,9 @@ public:
         mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
 
-
-        if (prevWidth != -1 && texturePacker.getImage()->getWidth() != prevWidth) {
-            // looks like texture of the font was updated; we have to do everything again
-            mVertices.clear();
-            addString(position, text);
-        }
     }
 
-    _<IRenderer::IPrerenderedString> finalize() override {
+    _<IRenderer::IPrerenderedString> finalize() noexcept override {
         GL::VertexBuffer vertexBuffer;
         vertexBuffer.set(mVertices);
 
@@ -736,25 +716,8 @@ public:
                                              mAdvanceX,
                                              mAdvanceY,
                                              mEntryData,
-                                             mEntryData->texturePacker.getImage()->getWidth(),
                                              mFontStyle.color,
                                              mFontStyle.fontRendering);
-    }
-
-    ATextLayoutHelper makeTextLayoutHelper() override {
-        ATextLayoutHelper::Symbols symbols;
-
-        ATextLayoutHelper::Line line;
-
-        size_t index = 0;
-
-        for (auto it = mVertices.begin(); it != mVertices.end(); it += 4) {
-            // TODO чё то придумать с пробелами
-            line << ATextLayoutHelper::Symbol{ it->position, index++ };
-        }
-        symbols << std::move(line);
-
-        return ATextLayoutHelper{ std::move(symbols) };
     }
 
     ~OpenGLMultiStringCanvas() override = default;

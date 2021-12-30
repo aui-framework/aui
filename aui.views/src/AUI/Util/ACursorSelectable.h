@@ -72,6 +72,10 @@ public:
     {
         unsigned begin;
         unsigned end;
+
+        bool operator==(const Selection& s) const noexcept {
+            return begin == s.begin && end == s.end;
+        }
     };
     [[nodiscard]] virtual AString getText() const = 0;
     [[nodiscard]] virtual size_t getTextLength() const = 0;

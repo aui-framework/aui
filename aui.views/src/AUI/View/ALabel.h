@@ -27,6 +27,7 @@
 #include "AUI/Render/Render.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Image/IDrawable.h"
+#include "AUI/Enum/WordBreak.h"
 #include <AUI/Util/ADataBinding.h>
 #include <AUI/Common/IStringable.h>
 
@@ -122,7 +123,6 @@ public:
 	}
 
     void setSize(int width, int height) override;
-
 };
 
 

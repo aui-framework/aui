@@ -250,6 +250,7 @@ void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
 void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
     try {
         auto context = std::make_unique<OpenGLRenderingContext>();
+        //auto context = std::make_unique<SoftwareRenderingContext>();
         context->init(init);
         init.setRenderingContext(std::move(context));
     } catch (...) {

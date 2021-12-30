@@ -33,7 +33,10 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
     AVector<FloatingEntry> leftFloat;
     AVector<FloatingEntry> rightFloat;
 
+    bool firstItem;
+
     auto beginRow = [&] {
+        firstItem = true;
         currentRowWidth = 0;
         for (auto& i : leftFloat) {
             currentRowWidth += i.occupiedHorizontalSpace;
@@ -56,7 +59,16 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
 
                     for (auto& i: leftFloat) leftPadding += i.occupiedHorizontalSpace;
                     for (auto& i: rightFloat) rightPadding += i.occupiedHorizontalSpace;
-                    for (auto& i: *currentRow) actualRowWidth += i.occupiedHorizontalSpace;
+
+                    if (!currentRow->empty()) {
+                        if (currentRow->last().entry->escapesEdges()) {
+                            for (auto it = currentRow->begin(); it != currentRow->end() - 1; ++it) {
+                                actualRowWidth += it->occupiedHorizontalSpace;
+                            }
+                        } else {
+                            for (auto& i: *currentRow) actualRowWidth += i.occupiedHorizontalSpace;
+                        }
+                    }
 
                     int freeSpace = size.x - leftPadding - rightPadding;
 
@@ -90,7 +102,15 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
 
                 for (auto& i: leftFloat) leftPadding += i.occupiedHorizontalSpace;
                 for (auto& i: rightFloat) rightPadding += i.occupiedHorizontalSpace;
-                for (auto& i: *currentRow) actualRowWidth += i.occupiedHorizontalSpace;
+                if (!currentRow->empty()) {
+                    if (currentRow->last().entry->escapesEdges()) {
+                        for (auto it = currentRow->begin(); it != currentRow->end() - 1; ++it) {
+                            actualRowWidth += it->occupiedHorizontalSpace;
+                        }
+                    } else {
+                        for (auto& i: *currentRow) actualRowWidth += i.occupiedHorizontalSpace;
+                    }
+                }
 
                 currentPos = leftPadding + (size.x - leftPadding - rightPadding - actualRowWidth) / 2;
                 for (auto& i: *currentRow) {
@@ -142,10 +162,16 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
                 removeRedundantItems(leftFloat);
                 removeRedundantItems(rightFloat);
 
-                currentY += currentRowHeight;
+                currentY += int(float(currentRowHeight) * mLineHeight);
                 currentRowHeight = 0;
                 beginRow();
             }
+        }
+        if (firstItem) {
+            if ((*currentItem)->escapesEdges()) {
+                currentItemSize.x = 0;
+            }
+            firstItem = false;
         }
         switch ((*currentItem)->getFloat()) {
             case Float::LEFT: {
@@ -179,4 +205,8 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
     if (!currentRow->empty()) {
         flushRow(true);
     }
+}
+
+bool AWordWrappingEngine::Entry::escapesEdges() {
+    return false;
 }

@@ -27,25 +27,26 @@
 #include <Windows.h>
 void Platform::playSystemSound(Sound s)
 {
-	switch (s)
-	{
-	case S_QUESTION:
-		PlaySound(L"SystemQuestion", nullptr, SND_ASYNC);
-		break;
-		
-	case S_ASTERISK:
-		PlaySound(L"SystemAsterisk", nullptr, SND_ASYNC);
-		break;
-		
-	}
+    switch (s)
+    {
+    case S_QUESTION:
+        PlaySound(L"SystemQuestion", nullptr, SND_ASYNC);
+        break;
+
+    case S_ASTERISK:
+        PlaySound(L"SystemAsterisk", nullptr, SND_ASYNC);
+        break;
+
+    }
 }
 
 float Platform::getDpiRatio()
 {
     typedef UINT(WINAPI *GetDpiForSystem_t)();
     static auto GetDpiForSystem = (GetDpiForSystem_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForSystem");
-	if (GetDpiForSystem) {
+    if (GetDpiForSystem) {
         return GetDpiForSystem() / 96.f;
     }
-	return 1.f;
+    return 2.f;
 }
+    

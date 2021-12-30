@@ -173,7 +173,7 @@ public:
     StoredType& last() noexcept
     {
         assert(("empty container could not have the last element" && !p::empty()));
-        return p::front();
+        return p::back();
     }
 
     /**
@@ -186,7 +186,7 @@ public:
     const StoredType& last() const noexcept
     {
         assert(("empty container could not have the last element" && !p::empty()));
-        return p::front();
+        return p::back();
     }
 
     /**
