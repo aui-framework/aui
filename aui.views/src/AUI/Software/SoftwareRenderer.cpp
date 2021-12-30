@@ -402,7 +402,7 @@ public:
     SoftwareMultiStringCanvas(SoftwareRenderer* renderer, const AFontStyle& fontStyle) : mRenderer(renderer),
                                                                                          mFontStyle(fontStyle) {}
 
-    void addString(const glm::vec2& position,
+    void addString(const glm::ivec2& position,
                    const AString& text) noexcept override {
         mCharEntries.reserve(mCharEntries.capacity() + text.length());
         auto& font = mFontStyle.font;

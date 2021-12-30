@@ -166,7 +166,7 @@ public:
          * @param position position
          * @param text text
          */
-        virtual void addString(const glm::vec2& position, const AString& text) noexcept = 0;
+        virtual void addString(const glm::ivec2& position, const AString& text) noexcept = 0;
 
         /**
          * @note invalidates IMultiStringCanvas which speeds up some implementations of IMultiStringCanvas.

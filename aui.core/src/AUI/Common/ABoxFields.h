@@ -23,20 +23,20 @@
 
 struct ABoxFields
 {
-	float left = 0.f;
-	float right = 0.f;
-	float top = 0.f;
-	float bottom = 0.f;
+    int left = 0;
+    int right = 0;
+    int top = 0;
+    int bottom = 0;
 
-	[[nodiscard]]
-	float horizontal() const
-	{
-		return left + right;
-	}
-	
-	[[nodiscard]]
-	float vertical() const
-	{
-		return top + bottom;
-	}
+    [[nodiscard]]
+    int horizontal() const noexcept
+    {
+        return left + right;
+    }
+
+    [[nodiscard]]
+    int vertical() const noexcept
+    {
+        return top + bottom;
+    }
 };

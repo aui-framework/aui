@@ -47,6 +47,5 @@ float Platform::getDpiRatio()
     if (GetDpiForSystem) {
         return GetDpiForSystem() / 96.f;
     }
-    return 2.f;
+    return 1.f;
 }
-    

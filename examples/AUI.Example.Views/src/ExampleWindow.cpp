@@ -67,8 +67,8 @@ struct MyModel {
 
 void fillWindow(_<AViewContainer> t)
 {
-	t->setLayout(_new<AStackedLayout>());
-	t->addView(_new<ALabel>("Window contents"));
+    t->setLayout(_new<AStackedLayout>());
+    t->addView(_new<ALabel>("Window contents"));
 }
 
 
@@ -87,7 +87,7 @@ public:
 
 ExampleWindow::ExampleWindow(): AWindow("Examples")
 {
-	setLayout(_new<AVerticalLayout>());
+    setLayout(_new<AVerticalLayout>());
     AStylesheet::inst().addRules({
          {
              c(".all_views_wrap") > t<AViewContainer>(),
@@ -95,7 +95,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
          }
     });
 
-	addView(_new<ASelectableLabel>("Building beautiful programs in pure C++ without chrome embded framework"));
+    addView(_new<ASelectableLabel>("Building beautiful programs in pure C++ without chrome embded framework"));
     _<ATabView> tabView;
     addView(tabView = _new<ATabView>() let {
         it->addTab(Horizontal {
@@ -324,6 +324,21 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                                       { WordBreak::BREAK_ALL })
                 },
             }),
+            [] {
+                _<AViewContainer> v1 = Vertical {};
+                _<AViewContainer> v2 = Vertical {};
+                for (int i = 0; i <= 9; ++i) {
+                    v1->addView(Horizontal {
+                        _new<ALabel>("{} px"_format(i + 6)),
+                        _new<ALabel>("Hello! [] .~123`") with_style { FontSize { AMetric(i + 6, AMetric::T_PX) } }
+                    });
+                    v2->addView(Horizontal {
+                        _new<ALabel>("{} px"_format(i + 16)),
+                        _new<ALabel>("Hello! [] .~123`") with_style { FontSize { AMetric(i + 16, AMetric::T_PX) } }
+                    });
+                }
+                return Horizontal { v1, v2 };
+            }(),
         } let { it->setExpanding(); }, "Text");
 
         it->addTab(Vertical {
@@ -337,19 +352,19 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
         it->setExpanding();
     });
 
-	addView(Horizontal{
+    addView(Horizontal{
         _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] {
             _new<AllViewsWindow>()->show();
         }),
-		_new<ASpacer>(),
+        _new<ASpacer>(),
         _new<ASpinner>(),
         _new<ACheckBox>("Enabled") let {
             it->setChecked();
             connect(it->checked, slot(tabView)::setEnabled);
         },
-		_new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") let {
-		    it << "#copyright";
+        _new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") let {
+            it << "#copyright";
             it->setEnabled(false);
-		}
-	});
+        }
+    });
 }

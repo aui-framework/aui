@@ -27,18 +27,18 @@ class AString;
 
 namespace Platform
 {
-	API_AUI_VIEWS AString getFontPath(const AString& font);
+    API_AUI_VIEWS AString getFontPath(const AString& font);
 
-	enum Sound
-	{
-		S_QUESTION,
-		S_ASTERISK
-	};
+    enum Sound
+    {
+        S_QUESTION,
+        S_ASTERISK
+    };
 
-	/**
-	 * \brief Play system sound asynchronously.
-	 */
-	API_AUI_VIEWS void playSystemSound(Sound s);
+    /**
+     * \brief Play system sound asynchronously.
+     */
+    API_AUI_VIEWS void playSystemSound(Sound s);
 
-	API_AUI_VIEWS float getDpiRatio();
+    API_AUI_VIEWS float getDpiRatio();
 };

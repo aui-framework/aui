@@ -61,7 +61,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 	
 	unsigned index = 0;
 
-	float posX = x;
+	int posX = x;
 	auto last = mViews.back();
 	for (auto& view : mViews)
 	{
@@ -87,7 +87,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 			view->setGeometry(glm::round(posX) + margins.left,
                               y + margins.top,
                               viewWidth,
-                              glm::min(height - margins.vertical(), float(maxSize.y)));
+                              glm::min(height - margins.vertical(), maxSize.y));
             posX += view->getSize().x + mSpacing + margins.horizontal();
 			availableSpace += viewWidth - view->getSize().x;
 		}
