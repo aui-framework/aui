@@ -24,52 +24,46 @@
 #include <AUI/Model/IListModel.h>
 #include <AUI/Model/IMutableListModel.h>
 
-template<typename T, typename Adapter> class AListModelAdapter;
-
-struct AAdapter {
-    template<typename T, typename Adapter>
-    static _<AListModelAdapter<T, Adapter>> make(const _<IListModel<T>>& other, const Adapter& adapter);
-};
-
-template<typename T, typename Adapter>
-class AListModelAdapter: public IMutableListModel<AString>, public AObject {
-friend struct AAdapter;
+template<typename ItemTo, typename ItemFrom, typename Adapter>
+class AListModelAdapter: public IMutableListModel<ItemTo>, public AObject {
 private:
-    _<IListModel<T>> mOther;
-    IMutableListModel<T>* mOtherMutable;
+    _<IListModel<ItemFrom>> mOther;
+    IMutableListModel<ItemFrom>* mOtherMutable;
     Adapter mAdapter;
 
-    explicit AListModelAdapter(const _<IListModel<T>>& other, const Adapter& adapter) :
+public:
+    using value_type = ItemTo;
+    
+    explicit AListModelAdapter(const _<IListModel<ItemFrom>>& other, Adapter&& adapter) :
             mOther(other),
-            mAdapter(adapter) {
-        mOtherMutable = dynamic_cast<IMutableListModel<T>*>(mOther.get());
-        AObject::connect(other->dataChanged, this, [&](const AModelRange<T>& r){
+            mAdapter(std::forward<Adapter>(adapter)) {
+        mOtherMutable = dynamic_cast<IMutableListModel<ItemFrom>*>(mOther.get());
+        AObject::connect(other->dataChanged, this, [&](const AModelRange<ItemFrom>& r){
             emit dataChanged({r.getBegin(), r.getEnd(), this});
         });
-        AObject::connect(other->dataInserted, this, [&](const AModelRange<T>& r){
+        AObject::connect(other->dataInserted, this, [&](const AModelRange<ItemFrom>& r){
             emit dataInserted({r.getBegin(), r.getEnd(), this});
         });
-        AObject::connect(other->dataRemoved, this, [&](const AModelRange<T>& r){
+        AObject::connect(other->dataRemoved, this, [&](const AModelRange<ItemFrom>& r){
             emit dataRemoved({r.getBegin(), r.getEnd(), this});
         });
     }
 
-public:
     ~AListModelAdapter() override = default;
 
     size_t listSize() override {
         return mOther->listSize();
     }
 
-    AString listItemAt(const AModelIndex& index) override {
+    ItemTo listItemAt(const AModelIndex& index) override {
         return mAdapter(mOther->listItemAt(index));
     }
 
-    void removeItems(const AModelRange<AString>& items) override {
+    void removeItems(const AModelRange<ItemTo>& items) override {
         nullsafe(mOtherMutable)->removeItems({items.begin().getIndex(), items.end().getIndex(), mOther.get()});
     }
 
-    void removeItems(const AModelSelection<AString>& items) override {
+    void removeItems(const AModelSelection<ItemTo>& items) override {
         nullsafe(mOtherMutable)->removeItems({items.getIndices(), mOther.get()});
     }
 
@@ -79,7 +73,9 @@ public:
 
 };
 
-template <typename T, typename Adapter>
-_<AListModelAdapter<T, Adapter>> AAdapter::make(const _<IListModel<T>>& other, const Adapter& adapter) {
-    return aui::ptr::manage(new AListModelAdapter<T, Adapter>(other, adapter));
+namespace AModels {
+    template <typename ItemTo, typename Container, typename Adapter>
+    auto adapt(const _<Container>& other, Adapter&& adapter) -> _<AListModelAdapter<ItemTo, typename Container::value_type, Adapter>> {
+        return aui::ptr::manage(new AListModelAdapter<ItemTo, typename Container::value_type, Adapter>(other, std::forward<Adapter>(adapter)));
+    }
 }

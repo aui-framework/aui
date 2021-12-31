@@ -42,6 +42,8 @@ private:
 public:
     using iterator = typename decltype(mVector)::iterator;
     using const_iterator = typename decltype(mVector)::const_iterator;
+    using size_type = typename decltype(mVector)::size_type;
+    using value_type = typename decltype(mVector)::value_type;
 
     AListModel() = default;
     AListModel(const self& s): mVector(s.mVector) {}

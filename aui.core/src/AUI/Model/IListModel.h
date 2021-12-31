@@ -45,6 +45,34 @@ public:
         return AModelRange<T>(item, {item.getRow() + 1}, this);
 	}
 
+
+    template<typename Filter>
+    AVector<AModelRange<T>> rangesIncluding(Filter&& filter) {
+        AVector<AModelRange<T>> result;
+        size_t currentBeginning = 0;
+        size_t s = listSize();
+        bool prevValue = false;
+        bool currentValue;
+
+        auto endSliceIfNecessary = [&](size_t i) {
+            if (prevValue) {
+                result << AModelRange<T>(currentBeginning, i);
+            }
+        };
+        for (size_t i = 0; i < s; ++i, prevValue = currentValue) {
+            currentValue = filter(i);
+            if (currentValue) {
+                if (!prevValue) {
+                    currentBeginning = i;
+                }
+            } else {
+                endSliceIfNecessary(i);
+            }
+        }
+        endSliceIfNecessary(listSize());
+        return result;
+    }
+
 signals:
     /**
      * \brief Model data was changed

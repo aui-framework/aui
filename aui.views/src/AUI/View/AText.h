@@ -65,20 +65,6 @@ private:
         }
     };
 
-    class ViewEntry: public AWordWrappingEngine::Entry {
-    private:
-        _<AView> mView;
-
-    public:
-        ViewEntry(const _<AView>& view) : mView(view) {}
-
-        glm::ivec2 getSize() override;
-        void setPosition(const glm::ivec2& position) override;
-        Float getFloat() const override;
-
-        ~ViewEntry() override = default;
-    };
-
     class WhitespaceEntry: public AWordWrappingEngine::Entry {
     private:
         AText* mText;

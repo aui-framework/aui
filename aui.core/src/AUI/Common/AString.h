@@ -310,6 +310,9 @@ public:
 	int toNumberDec() const noexcept;
 	int toNumberHex() const noexcept;
 
+    /**
+     * @return utf8-encoded std::string.
+     */
 	std::string toStdString() const noexcept;
 
     void resizeToNullTerminator();

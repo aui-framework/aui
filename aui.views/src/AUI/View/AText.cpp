@@ -13,6 +13,7 @@
 #include <utility>
 #include <AUI/Traits/strings.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Util/AViewEntry.h>
 
 struct State {
     AFontStyle fontStyle;
@@ -76,7 +77,7 @@ _<AText> AText::fromItems(std::initializer_list<std::variant<AString, _<AView>>>
             },
             [&](const _<AView>& view) {
                 text->addView(view);
-                entries << _new<ViewEntry>(view);
+                entries << _new<AViewEntry>(view);
             },
         }, item);
     }
@@ -127,7 +128,7 @@ _<AText> AText::fromHtml(const AString& html, const Flags& flags) {
                 ~ViewEntityVisitor() override {
                     auto view = _new<AButton>("hello {}"_format(name));
                     parent.text->addView(view);
-                    parent.entries << _new<ViewEntry>(view);
+                    parent.entries << _new<AViewEntry>(view);
                 }
             };
 
@@ -237,19 +238,6 @@ bool AText::WhitespaceEntry::escapesEdges() {
     return true;
 }
 
-glm::ivec2 AText::ViewEntry::getSize() {
-    return { mView->getMinimumWidth() + mView->getMargin().horizontal(), mView->getMinimumHeight() + mView->getMargin().vertical() };
-}
-
-void AText::ViewEntry::setPosition(const glm::ivec2& position) {
-    mView->setGeometry(position + glm::ivec2{mView->getMargin().left, mView->getMargin().top},
-                       mView->getMinimumSize());
-
-}
-
-Float AText::ViewEntry::getFloat() const {
-    return Float::NONE;
-}
 
 glm::ivec2 AText::CharEntry::getSize() {
     return { mText->getFontStyle().getCharacter(mChar).advanceX, mText->getFontStyle().size };
