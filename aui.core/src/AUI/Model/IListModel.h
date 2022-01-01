@@ -56,7 +56,7 @@ public:
 
         auto endSliceIfNecessary = [&](size_t i) {
             if (prevValue) {
-                result << AModelRange<T>(currentBeginning, i);
+                result << range(currentBeginning, i);
             }
         };
         for (size_t i = 0; i < s; ++i, prevValue = currentValue) {

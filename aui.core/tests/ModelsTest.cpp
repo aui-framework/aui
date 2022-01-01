@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,75 +14,49 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
-#pragma once
+//
+// Created by alex2 on 31.08.2020.
+//
 
-#include <cstddef>
-#include <cstdint>
-#include <tuple>
-#include <ostream>
+#include <boost/test/unit_test.hpp>
+#include <AUI/Model/AModels.h>
+#include <AUI/Model/AListModel.h>
 
-class AModelIndex
-{
-private:
-    std::size_t mRow = -1;
-    std::size_t mColumn = -1;
+using namespace boost::unit_test;
 
-public:
-    AModelIndex(std::size_t row, std::size_t column)
-        : mRow(row),
-          mColumn(column)
-    {
-    }
+BOOST_AUTO_TEST_SUITE(Models)
 
-    AModelIndex(std::size_t row)
-        : mRow(row)
-    {
-    }
 
-    AModelIndex() = default;
-
-    std::size_t getRow() const
-    {
-        return mRow;
-    }
-
-    std::size_t getColumn() const
-    {
-        return mColumn;
-    }
-
-    bool operator==(const AModelIndex& rhs) const {
-        return std::tie(mRow, mColumn) == std::tie(rhs.mRow, rhs.mColumn);
-    }
-
-    bool operator!=(const AModelIndex& rhs) const {
-        return !(rhs == *this);
-    }
-
-    inline bool operator<(const AModelIndex& other) const {
-        return hash() < other.hash();
-    }
-
-    [[nodiscard]] inline uint64_t hash() const {
-        uint64_t hash = uint32_t(mRow);
-        hash <<= 32u;
-        hash |= uint32_t(mColumn);
-        return hash;
-    }
-
-};
-
-std::ostream& operator<<(std::ostream& o, const AModelIndex& index) {
-    o << "{ " << index.getRow();
-    if (index.getColumn() != -1) {
-        o << ", " << index.getColumn();
-    }
-    o << " }";
-
-    return o;
+_<IListModel<int>> testModel() {
+    return AListModel<int>::make({0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
 }
+
+BOOST_AUTO_TEST_CASE(RangesIncluding) {
+    auto model = testModel();
+
+    auto check = [](const AVector<AModelRange<int>>& v1, const AVector<AModelRange<int>>& v2) {
+        BOOST_REQUIRE_EQUAL(v1, v2);
+    };
+
+    check(model->rangesIncluding([&](size_t i) {
+        return i < 5;
+    }), { model->range(0, 5) });
+
+    check(model->rangesIncluding([&](size_t i) {
+        return i < 5 || i >= 8;
+    }), { model->range(0, 5), model->range(8, 10) });
+    check(model->rangesIncluding([&](size_t i) {
+        return i % 2 == 0;
+    }), { model->range(0),
+          model->range(2),
+          model->range(4),
+          model->range(6),
+          model->range(8), });
+}
+
+BOOST_AUTO_TEST_SUITE_END()
