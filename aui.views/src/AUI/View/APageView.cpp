@@ -40,7 +40,7 @@ void APageView::setPageId(unsigned int pageId) {
     mPageId = pageId;
     emit pageChanged();
 
-    AWindow::current()->updateLayout();
+    AWindow::current()->flagUpdateLayout();
 }
 
 void APageView::addPage(const _<AView>& view) {

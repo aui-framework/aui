@@ -56,9 +56,6 @@ void ACheckBox::setText(const AString& text)
 {
     mText->setVisibility(Visibility::VISIBLE);
     mText->setText(text);
-    if (getParent()) {
-        getParent()->updateLayout();
-    }
 }
 
 void ACheckBox::getCustomCssAttributes(AMap<AString, AVariant>& map)

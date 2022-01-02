@@ -201,12 +201,7 @@ void AText::setSize(int width, int height) {
     AViewContainer::setSize(width, height);
     if (widthDiffers) {
         prerenderString();
-
-        AThread::current()->enqueue([&]()
-                                    {
-                                        if (auto p = getParent())
-                                            p->updateLayout();
-                                    });
+        AWindow::current()->flagUpdateLayout();
     }
 }
 
