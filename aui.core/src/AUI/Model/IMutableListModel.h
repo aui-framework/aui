@@ -27,17 +27,26 @@
 #include "AModelRange.h"
 
 template<typename T>
-class IMutableListModel: public IListModel<T>
+class IRemovableListModel: public virtual IListModel<T>
 {
 public:
-    virtual ~IMutableListModel() = default;
-    
+    virtual ~IRemovableListModel() = default;
     virtual void removeItems(const AModelRange<T>& items) = 0;
     virtual void removeItems(const AModelSelection<T>& items) {
-        for (auto& item : items) {
-            removeItem(item.getIndex());
+        for (const auto& r : items.ranges()) {
+            removeItems(items);
         }
     }
     virtual void removeItem(const AModelIndex& item) = 0;
+
+};
+
+
+template<typename T>
+class IValueMutableListModel: public virtual IListModel<T>
+{
+public:
+    virtual ~IValueMutableListModel() = default;
+    virtual void setItem(const AModelIndex& index, const T& value) = 0;
 
 };

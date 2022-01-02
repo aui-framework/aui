@@ -32,8 +32,8 @@ using namespace boost::unit_test;
 BOOST_AUTO_TEST_SUITE(Models)
 
 
-_<IListModel<int>> testModel() {
-    return AListModel<int>::make({0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+_<AListModel<int>> testModel() {
+    return AListModel<int>::make({1, 5, 72, 23, 14, 35, 66, 37, 28, 19});
 }
 
 BOOST_AUTO_TEST_CASE(RangesIncluding) {
@@ -57,6 +57,61 @@ BOOST_AUTO_TEST_CASE(RangesIncluding) {
           model->range(4),
           model->range(6),
           model->range(8), });
+}
+
+/**
+ * Converts int model to string model.
+ */
+BOOST_AUTO_TEST_CASE(Adapter) {
+    auto model = testModel();
+    auto adaptedModel = AModels::adapt<AString>(model, [](int i) {
+        return AString::number(i);
+    });
+    AVector<AString> expected = { "1", "5", "72", "23", "14", "35", "66", "37", "28", "19", };
+    BOOST_REQUIRE_EQUAL(adaptedModel->toVector(), expected);
+}
+
+/**
+ * Includes only even numbers.
+ */
+BOOST_AUTO_TEST_CASE(Filter) {
+    auto model = testModel();
+    auto filteredModel = AModels::filter(model, [](int i) {
+        return i % 2 == 0;
+    });
+    AVector<int> expected = { 72, 14, 66, 28 };
+    BOOST_REQUIRE_EQUAL(filteredModel->toVector(), expected);
+}
+
+/**
+ * Includes only even numbers, removes one even number and does lazyInvalidate.
+ */
+BOOST_AUTO_TEST_CASE(FilterLazyInvalidate) {
+    auto model = testModel();
+    auto filteredModel = AModels::filter(model, [](int i) {
+        return i % 2 == 0;
+    });
+    model->setItem(2, 71); // replace 72 with 71;
+    filteredModel->lazyInvalidate();
+    AVector<int> expected = { 14, 66, 28 };
+    BOOST_REQUIRE_EQUAL(filteredModel->toVector(), expected);
+}
+
+/**
+ * Includes only even numbers, adds one even number and does invalidate.
+ */
+BOOST_AUTO_TEST_CASE(FilterInvalidate) {
+    auto model = testModel();
+    auto filteredModel = AModels::filter(model, [](int i) {
+        return i % 2 == 0;
+    });
+    model->setItem(0, 2); // replace 1 with 2;
+    model->setItem(1, 6); // replace 5 with 7;
+
+    filteredModel->invalidate();
+
+    AVector<int> expected = { 2, 6, 72, 14, 66, 28 };
+    BOOST_REQUIRE_EQUAL(filteredModel->toVector(), expected);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

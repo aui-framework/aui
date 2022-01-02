@@ -32,13 +32,20 @@ private:
     Filter mFilter;
     AVector<size_t> mMapping;
 
+    void fill() {
+        for (size_t i = 0; i < mOther->listSize(); ++i) {
+            if (mFilter(mOther->listItemAt(i))) {
+                mMapping.push_back(i);
+            }
+        }
+    }
 public:
     using value_type = T;
 
     explicit AListModelFilter(const _<IListModel<T>>& other, Filter&& adapter) :
             mOther(other),
             mFilter(std::forward<Filter>(adapter)) {
-        invalidate();
+        fill();
 
         AObject::connect(other->dataChanged, this, [&](const AModelRange<T>& r){
             assert(("unimplemented" && 0));
@@ -50,6 +57,7 @@ public:
             assert(("unimplemented" && 0));
         });
     }
+
 
     ~AListModelFilter() override = default;
 
@@ -65,11 +73,19 @@ public:
      * Removes all items and performs filtering again for all elements.
      */
     void invalidate() {
+        size_t prevSize = mMapping.size();
         mMapping.clear();
-        for (size_t i = 0; i < mOther->listSize(); ++i) {
-            if (mFilter(mOther->listItemAt(i))) {
-                mMapping.push_back(i);
-            }
+        fill();
+
+        size_t currentSize = mMapping.size();
+        if (currentSize == prevSize) {
+            emit this->dataChanged(this->range(0, currentSize));
+        } else if (currentSize > prevSize) {
+            emit this->dataChanged(this->range(0, prevSize));
+            emit this->dataInserted(this->range(prevSize, currentSize));
+        } else {
+            emit this->dataChanged(this->range(0, currentSize));
+            emit this->dataRemoved(this->range(currentSize, prevSize));
         }
     }
 
@@ -79,22 +95,21 @@ public:
      *       function instead of <a href="#invalidate">invalidate</a> because it's faster.
      */
     void lazyInvalidate() {
-        AVector<size_t> indicesToRemove;
-        for (auto it = mMapping.begin(); it != mMapping.end(); ++it) {
-            if (!mFilter(*it)) {
-                indicesToRemove.push_back(it - mMapping.begin());
-            }
-        }
         auto ranges = rangesIncluding([&](size_t i) {
-            return !mFilter(mOther->listItemAt(i));
+            return !mFilter(listItemAt(i));
         });
+        int offset = 0;
+        for (const AModelRange<T>& r : ranges) {
+            mMapping.erase(mMapping.begin() + r.getBegin().getRow() - offset, mMapping.begin() + r.getEnd().getRow()) - offset;
+            offset += r.getEnd().getRow() - r.getBegin().getRow();
+        }
     }
 };
 
 namespace AModels {
     template <typename Container, typename Filter>
-    auto filter(const _<Container>& other, Filter&& adapter) -> _<AListModelFilter<typename Container::value_type, Filter>> {
-        return aui::ptr::manage(new AListModelFilter<typename Container::value_type, Filter>(other, std::forward<Filter>(adapter)));
+    auto filter(const _<Container>& other, Filter&& filter) -> _<AListModelFilter<typename Container::value_type, Filter>> {
+        return aui::ptr::manage(new AListModelFilter<typename Container::value_type, Filter>(other, std::forward<Filter>(filter)));
     }
 }
 

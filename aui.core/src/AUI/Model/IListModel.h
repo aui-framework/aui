@@ -30,6 +30,7 @@ template<typename T>
 class IListModel
 {
 public:
+    using value_type = T;
 	virtual ~IListModel() = default;
 
 	virtual size_t listSize() = 0;
@@ -45,6 +46,16 @@ public:
         return AModelRange<T>(item, {item.getRow() + 1}, this);
 	}
 
+
+    AVector<T> toVector() noexcept {
+        AVector<T> result;
+        size_t size = listSize();
+        result.reserve(size);
+        for (size_t i = 0; i < size; ++i) {
+            result << listItemAt(i);
+        }
+        return result;
+    }
 
     template<typename Filter>
     AVector<AModelRange<T>> rangesIncluding(Filter&& filter) {

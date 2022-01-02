@@ -33,7 +33,8 @@ namespace aui::detail {
 
 template <typename StoredType>
 class AListModel: public AObject,
-                  public IMutableListModel<StoredType> {
+                  public IRemovableListModel<StoredType>,
+                  public IValueMutableListModel<StoredType> {
 private:
     AVector<StoredType> mVector;
 
@@ -49,6 +50,9 @@ public:
     AListModel(const self& s): mVector(s.mVector) {}
     AListModel(self&& s): mVector(std::move(s.mVector)) {}
 
+    void setItem(const AModelIndex& item, const StoredType& value) override {
+        mVector[item.getRow()] = value;
+    }
 
     [[nodiscard]]
     bool empty() const noexcept {
@@ -182,7 +186,7 @@ public:
      * </dl>
      */
     const StoredType& operator[](size_t index) const {
-        assert(("index out of bounds" && size() <= index));
+        assert(("index out of bounds" && size() > index));
         return *(mVector.begin() + index);
     }
 

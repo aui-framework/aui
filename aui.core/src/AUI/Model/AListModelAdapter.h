@@ -25,10 +25,10 @@
 #include <AUI/Model/IMutableListModel.h>
 
 template<typename ItemTo, typename ItemFrom, typename Adapter>
-class AListModelAdapter: public IMutableListModel<ItemTo>, public AObject {
+class AListModelAdapter: public IRemovableListModel<ItemTo>, public AObject {
 private:
     _<IListModel<ItemFrom>> mOther;
-    IMutableListModel<ItemFrom>* mOtherMutable;
+    IRemovableListModel<ItemFrom>* mOtherMutable;
     Adapter mAdapter;
 
 public:
@@ -37,7 +37,7 @@ public:
     explicit AListModelAdapter(const _<IListModel<ItemFrom>>& other, Adapter&& adapter) :
             mOther(other),
             mAdapter(std::forward<Adapter>(adapter)) {
-        mOtherMutable = dynamic_cast<IMutableListModel<ItemFrom>*>(mOther.get());
+        mOtherMutable = dynamic_cast<IRemovableListModel<ItemFrom>*>(mOther.get());
         AObject::connect(other->dataChanged, this, [&](const AModelRange<ItemFrom>& r){
             emit dataChanged({r.getBegin(), r.getEnd(), this});
         });
@@ -58,6 +58,7 @@ public:
     ItemTo listItemAt(const AModelIndex& index) override {
         return mAdapter(mOther->listItemAt(index));
     }
+
 
     void removeItems(const AModelRange<ItemTo>& items) override {
         nullsafe(mOtherMutable)->removeItems({items.begin().getIndex(), items.end().getIndex(), mOther.get()});
