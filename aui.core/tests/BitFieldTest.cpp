@@ -25,7 +25,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <AUI/Util/BitField.h>
+#include <AUI/Util/ABitField.h>
 #include <AUI/Util/EnumUtil.h>
 
 using namespace boost::unit_test;
@@ -40,7 +40,7 @@ ENUM_FLAG(Flags) {
 BOOST_AUTO_TEST_SUITE(BitField1)
 
     BOOST_AUTO_TEST_CASE(Put) {
-        BitField<Flags> f;
+        ABitField<Flags> f;
         f << Flags::FLAG1;
         Flags x = f;
         BOOST_TEST(!!(x & Flags::FLAG1));
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_SUITE(BitField1)
     }
 
     BOOST_AUTO_TEST_CASE(Take) {
-        BitField<Flags> f;
+        ABitField<Flags> f;
         f << Flags::FLAG1 << Flags::FLAG2;
         Flags x = f;
         BOOST_TEST(!!(x & Flags::FLAG1));
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_SUITE(BitField1)
     }
 
     BOOST_AUTO_TEST_CASE(CheckTake1) {
-        BitField<Flags> f;
+        ABitField<Flags> f;
         f << Flags::FLAG1 << Flags::FLAG2;
         Flags x = f;
         BOOST_TEST(!!(x & Flags::FLAG1));
@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_SUITE(BitField1)
         BOOST_TEST(!!(!(x & Flags::FLAG2)));
     }
     BOOST_AUTO_TEST_CASE(CheckTake2) {
-        BitField<Flags> f;
+        ABitField<Flags> f;
         f << Flags::FLAG1;
         Flags x = f;
         BOOST_TEST(!!(x & Flags::FLAG1));
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_SUITE(BitField1)
         BOOST_TEST(!!(!(x & Flags::FLAG2)));
     }
     BOOST_AUTO_TEST_CASE(Check) {
-        BitField<Flags> f;
+        ABitField<Flags> f;
         f << Flags::FLAG1;
 
         BOOST_TEST(!!((f.check(Flags::FLAG1) && (f & Flags::FLAG1))));

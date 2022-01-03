@@ -165,7 +165,15 @@ void AView::recompileAss()
 void AView::updateAssState() {
     aui::zero(mAss);
     if (!mAssHelper) return;
-    mAssHelper->state = {};
+    mAssHelper->state.backgroundCropping.size.reset();
+    mAssHelper->state.backgroundCropping.offset.reset();
+    mAssHelper->state.backgroundImage.reset();
+    mAssHelper->state.backgroundUrl.dpiMargin.reset();
+    mAssHelper->state.backgroundUrl.overlayColor.reset();
+    mAssHelper->state.backgroundUrl.rep.reset();
+    mAssHelper->state.backgroundUrl.scale.reset();
+    mAssHelper->state.backgroundUrl.sizing.reset();
+    mAssHelper->state.backgroundUrl.url.reset();
 
     auto applyRule = [&](const RuleWithoutSelector& r) {
         for (auto& d : r.getDeclarations()) {

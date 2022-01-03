@@ -26,6 +26,7 @@
 #pragma once
 
 #include <cassert>
+#include <algorithm>
 
 namespace ass {
 
@@ -76,6 +77,10 @@ namespace ass {
 
 
         unset_wrap<T>& operator=(const unset_wrap<T>& v) noexcept;
+
+        void reset() noexcept {
+            set = false;
+        }
 
         operator bool() const {
             return set;

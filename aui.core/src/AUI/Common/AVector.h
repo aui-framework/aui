@@ -238,7 +238,7 @@ public:
 
 
 template<typename T>
-std::ostream& operator<<(std::ostream& o, const AVector<T>& v) {
+inline std::ostream& operator<<(std::ostream& o, const AVector<T>& v) {
     if (v.empty()) {
         o << "[empty]";
     } else {

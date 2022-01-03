@@ -48,7 +48,19 @@ public:
      * \param limit max count of bytes to write
      * \note if you don't want to limit stream, use the operator<<() function.
 	 */
-	inline void writeAll(const _<IInputStream>& fis, size_t limit = (std::numeric_limits<size_t>::max)());
+	 template<typename T>
+	inline void writeAll(const _<T>& fis, size_t limit = (std::numeric_limits<size_t>::max)()) {
+        writeAll(*fis, limit);
+    }
+
+    /**
+     * \brief Redirects all input stream data to this output stream
+     * \param os IInputStream
+     * \param limit max count of bytes to write
+     * \note if you don't want to limit stream, use the operator<<() function.
+     */
+    inline void writeAll(IInputStream& fis, size_t limit = (std::numeric_limits<size_t>::max)());
+
 
 	/**
 	 * \brief Works as <code>write(const char* src, int size)</code> except it accepts AByteBuffer instead of
@@ -85,7 +97,20 @@ public:
      * \return this
      */
     template<typename T>
-    inline IOutputStream& operator<<(const _<T>& is);
+    inline IOutputStream& operator<<(const _<T>& is) {
+        operator<<(*is);
+        return *this;
+    }
+
+    /**
+     * \brief Redirects all input stream data to this output stream.
+     * \note This declaration is strange because it overloads the
+     *       <code>inline IOutputStream& operator<<(const T& in)</code> function
+     * \tparam base of IOutputStream
+     * \param os IOutputStream
+     * \return this
+     */
+    inline IOutputStream& operator<<(IInputStream& is);
 
 
     /**
@@ -130,20 +155,20 @@ public:
 
 #include "IInputStream.h"
 
-template<typename T>
-inline IOutputStream& IOutputStream::operator<<(const _<T>& is)
+inline IOutputStream& IOutputStream::operator<<(IInputStream& is)
 {
     char buf[0x8000];
-    for (int r; (r = is->read(buf, sizeof(buf))) > 0;) {
+    for (int r; (r = is.read(buf, sizeof(buf))) > 0;) {
         write(buf, r);
     }
     return *this;
 }
 
-void IOutputStream::writeAll(const _<IInputStream>& fis, size_t limit) {
+
+void IOutputStream::writeAll(IInputStream& fis, size_t limit) {
     char buf[0x800];
     while (limit > 0) {
-        int r = fis->read(buf, (glm::min)(sizeof(buf), limit));
+        int r = fis.read(buf, (glm::min)(sizeof(buf), limit));
         if (r == 0) {
             return;
         } else if (r <= 0) {

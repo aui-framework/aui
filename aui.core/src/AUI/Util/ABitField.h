@@ -26,18 +26,22 @@
  * \brief Bit field implementation.
  */
 template <typename T = uint32_t>
-class BitField {
+class ABitField {
 private:
     T mStorage;
 
 public:
-    BitField(T storage = static_cast<T>(0)) : mStorage(storage) {}
+    ABitField(T storage = static_cast<T>(0)) : mStorage(storage) {}
 
     operator T() {
         return mStorage;
     }
 
-    T& storage() {
+    T& value() {
+        return mStorage;
+    }
+
+    const T& value() const {
         return mStorage;
     }
 
@@ -46,7 +50,7 @@ public:
      * \param flag flag
      * \return this
      */
-    BitField& operator<<(T flag) {
+    ABitField& operator<<(T flag) {
         mStorage |= flag;
         return *this;
     }
@@ -56,7 +60,7 @@ public:
      * \param flag flag
      * \return this
      */
-    BitField& operator>>(T flag) {
+    ABitField& operator>>(T flag) {
         mStorage &= ~flag;
         return *this;
     }
@@ -107,5 +111,13 @@ public:
      */
     bool operator&(T flags) const {
         return check(flags);
+    }
+
+    void set(T flag, bool value) {
+        if (value) {
+            mStorage |= flag;
+        } else {
+            mStorage &= ~flag;
+        }
     }
 };

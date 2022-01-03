@@ -109,7 +109,7 @@ public:
 
 
 template<typename T>
-std::ostream& operator<<(std::ostream& o, const AModelRange<T>& range) {
+inline std::ostream& operator<<(std::ostream& o, const AModelRange<T>& range) {
     o << "[ " << range.getBegin() << "; " << range.getEnd() << " )";
 
     return o;

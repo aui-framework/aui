@@ -65,6 +65,13 @@ public:
 
     static const AMap<AString, enum_t>& all();
 
+    static enum_t byName(const AString& name) {
+        if (auto c = all().contains(name.uppercase())) {
+            return c->second;
+        }
+        return (enum_t)0;
+    }
+
 private:
     template<enum_t... values>
     static const AMap<AString, enum_t>& allImpl(const Values<values...>& v) {

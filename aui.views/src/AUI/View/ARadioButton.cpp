@@ -65,31 +65,33 @@ void ARadioButton::onMouseReleased(glm::ivec2 pos, AInput::Key button)
         emit checked(mChecked = true);
 }
 
-void ARadioButton::Group::addRadioButton(_<ARadioButton> radio) {
-    mButtons << radio;
-    connect(radio->checked, this, [&, radio](bool checked) {
+_<ARadioButton> ARadioButton::Group::addRadioButton(const _<ARadioButton>& radio, int id) {
+    if (id == -1) id = int(mButtons.size());
+    assert(("this id is already used; please choose another id" && !mButtons.contains(id)));
+    mButtons[id] = radio;
+    connect(radio->checked, this, [&, radio, id](bool checked) {
         if (checked) {
-            if (auto s = mSelected.lock()) {
+            if (auto s = mSelectedRadio.lock()) {
                 s->setChecked(false);
             }
-            mSelected = radio;
+            mSelectedRadio = radio;
+            mSelectedId = id;
             emit selectionChanged(getSelectedId());
         }
     });
+    return radio;
 }
 
 _<ARadioButton> ARadioButton::Group::getSelectedRadio() const {
-    return mSelected.lock();
+    return mSelectedRadio.lock();
 }
 
 int ARadioButton::Group::getSelectedId() const {
-    if (auto s = getSelectedRadio()) {
-        return mButtons.indexOf(s);
-    }
-    return 0;
+    return mSelectedId;
 }
 
 void ARadioButton::Group::setSelectedId(int id) {
+    mSelectedId = id;
     mButtons[id]->setChecked(true);
 }
 

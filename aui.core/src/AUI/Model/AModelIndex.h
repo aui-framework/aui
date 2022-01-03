@@ -77,7 +77,7 @@ public:
 
 };
 
-std::ostream& operator<<(std::ostream& o, const AModelIndex& index) {
+inline std::ostream& operator<<(std::ostream& o, const AModelIndex& index) {
     o << "{ " << index.getRow();
     if (index.getColumn() != -1) {
         o << ", " << index.getColumn();
