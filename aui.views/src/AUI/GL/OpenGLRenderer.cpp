@@ -608,7 +608,10 @@ public:
         mVertices.reserve(1000);
     }
 
-    void addString(const glm::vec2& position, const AString& text) noexcept override {
+    void addString(const glm::ivec2& position, const AString& text) noexcept override {
+        if (text.contains(L'х')) {
+            printf("s");
+        }
         mVertices.reserve(mVertices.capacity() + text.length() * 4);
         auto& font = mFontStyle.font;
         auto& texturePacker = mEntryData->texturePacker;
@@ -649,9 +652,9 @@ public:
                     if (ch.rendererData == nullptr) {
                         uv = texturePacker.insert(*ch.image);
 
-                        const float BIAS = 0.1f;
-                        uv.x -= BIAS;
-                        uv.y -= BIAS;
+                        const float BIAS = 0.5f;
+                        uv.x += BIAS;
+                        uv.y += BIAS;
                         uv.z -= BIAS;
                         uv.w -= BIAS;
                         mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv});
@@ -689,7 +692,6 @@ public:
 
         mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
-
     }
 
     _<IRenderer::IPrerenderedString> finalize() noexcept override {

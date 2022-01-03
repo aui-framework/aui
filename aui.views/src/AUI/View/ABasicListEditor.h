@@ -55,7 +55,7 @@ public:
             }) : nullptr;
 
             _<AButton> removeButton;
-            if (auto model = _cast<IMutableListModel<AString>>(mModel)) {
+            if (auto model = _cast<IRemovableListModel<AString>>(mModel)) {
                 removeButton = _new<AButton>("Remove").connect(&AView::clicked, c, [list, model] {
                     model->removeItems(list->getSelectionModel());
                 });

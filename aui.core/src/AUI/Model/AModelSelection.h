@@ -27,7 +27,9 @@
 
 
 #include "AModelIndex.h"
+#include "AModelRange.h"
 #include <AUI/Common/ASet.h>
+#include <AUI/Common/AVector.h>
 #include <cassert>
 
 template<typename T> class IListModel;
@@ -112,6 +114,15 @@ public:
         assert(("selection model is empty" && mIndices.begin() != mIndices.end()));
         return *mIndices.begin();
     }
+
+    AVector<AModelRange<T>> ranges() const noexcept;
 };
 
 #include "IListModel.h"
+
+template<typename T>
+AVector<AModelRange<T>> AModelSelection<T>::ranges() const noexcept {
+    return mModel->rangesIncluding([&](size_t i) {
+        return mIndices.contains(i);
+    });
+}

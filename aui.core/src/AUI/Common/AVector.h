@@ -26,6 +26,7 @@
 #include <cassert>
 #include "SharedPtr.h"
 #include <algorithm>
+#include <ostream>
 #include <AUI/Traits/containers.h>
 
 template <class StoredType, class Allocator = std::allocator<StoredType>>
@@ -234,3 +235,21 @@ public:
     }
 
 };
+
+
+template<typename T>
+inline std::ostream& operator<<(std::ostream& o, const AVector<T>& v) {
+    if (v.empty()) {
+        o << "[empty]";
+    } else {
+        o << "[ " << v.first();
+        for (auto it = v.begin() + 1; it != v.end(); ++it) {
+            o << ", " << *it;
+        }
+        o << "]";
+    }
+
+
+    return o;
+}
+

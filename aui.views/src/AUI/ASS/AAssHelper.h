@@ -58,7 +58,7 @@ public:
         return mPossiblyApplicableRules;
     }
 
-    struct {
+    struct State {
         ass::BackgroundImage backgroundUrl;
         ass::BackgroundCropping backgroundCropping;
         std::optional<_<IDrawable>> backgroundImage;

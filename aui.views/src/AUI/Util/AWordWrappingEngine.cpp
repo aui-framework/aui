@@ -206,7 +206,3 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
         flushRow(true);
     }
 }
-
-bool AWordWrappingEngine::Entry::escapesEdges() {
-    return false;
-}

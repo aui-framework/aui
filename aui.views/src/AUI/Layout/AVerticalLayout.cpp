@@ -60,7 +60,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height)
 	sum = glm::max(sum, 1);
 
 	unsigned index = 0;
-    float posY = y;
+    int posY = y;
     auto last = mViews.back();
 	for (auto& view : mViews)
 	{
@@ -84,7 +84,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height)
 
             view->setGeometry(x + margins.left,
                               glm::round(posY) + margins.top,
-                              glm::min(width - margins.horizontal(), float(maxSize.x)),
+                              glm::min(width - margins.horizontal(), maxSize.x),
                               viewHeight);
 
             posY += view->getSize().y + mSpacing + margins.vertical();

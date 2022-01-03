@@ -25,7 +25,9 @@ public:
         }
 
         [[nodiscard]]
-        virtual bool escapesEdges();
+        virtual bool escapesEdges() {
+            return false;
+        }
     };
 
 private:

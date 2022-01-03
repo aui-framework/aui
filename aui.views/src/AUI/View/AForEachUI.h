@@ -47,11 +47,11 @@ public:
     }
 
     void onDataCountChanged() override {
-        AWindow::current()->updateLayout();
+        AWindow::current()->flagUpdateLayout();
     }
 
     void onDataChanged() override {
-        AWindow::current()->updateLayout();
+        AWindow::current()->flagUpdateLayout();
     }
 
     void operator-(const Factory& f) {

@@ -191,7 +191,7 @@ void AAbstractTextField::prerenderStringIfNeeded() {
         if (!text.empty()) {
             auto canvas = Render::newMultiStringCanvas(getFontStyle());
             canvas->enableCachingForTextLayoutHelper();
-            canvas->addString({ 0.f, 0.f }, text);
+            canvas->addString({ 0, 0 }, text);
             setTextLayoutHelper(canvas->getTextLayoutHelper());
             mPrerenderedString = canvas->finalize();
         }

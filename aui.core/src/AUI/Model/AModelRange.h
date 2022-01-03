@@ -42,6 +42,10 @@ public:
                                                                                           mEnd(end),
                                                                                           mModel(model) {}
 
+    bool operator==(const AModelRange& rhs) const {
+        return std::tie(mBegin, mEnd, mModel) == std::tie(rhs.mBegin, rhs.mEnd, rhs.mModel);
+    }
+
     class Iterator {
     private:
         AModelIndex mIndex;
@@ -102,5 +106,13 @@ public:
         return mModel;
     }
 };
+
+
+template<typename T>
+inline std::ostream& operator<<(std::ostream& o, const AModelRange<T>& range) {
+    o << "[ " << range.getBegin() << "; " << range.getEnd() << " )";
+
+    return o;
+}
 
 #include "IListModel.h"

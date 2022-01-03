@@ -27,6 +27,7 @@
 
 #include "ALabel.h"
 #include "AViewContainer.h"
+#include <AUI/Common/AMap.h>
 
 
 class ARadioButtonInner: public AView
@@ -68,14 +69,15 @@ public:
 
     class API_AUI_VIEWS Group: public AObject {
     private:
-        AVector<_<ARadioButton>> mButtons;
-        _weak<ARadioButton> mSelected;
+        AMap<int, _<ARadioButton>> mButtons;
+        _weak<ARadioButton> mSelectedRadio;
+        int mSelectedId = -1;
 
     public:
         Group() = default;
         ~Group() override = default;
 
-        void addRadioButton(_<ARadioButton> radio);
+        _<ARadioButton> addRadioButton(const _<ARadioButton>& radio, int id = -1);
 
         [[nodiscard]] _<ARadioButton> getSelectedRadio() const;
         [[nodiscard]] int getSelectedId() const;
@@ -83,13 +85,14 @@ public:
         void setSelectedId(int id);
 
         [[nodiscard]] bool isSelected() const {
-            return mSelected.lock() != nullptr;
+            return mSelectedRadio.lock() != nullptr;
         }
 
         void uncheckAll() {
             for (auto& b : mButtons) {
-                b->setChecked(false);
+                b.second->setChecked(false);
             }
+            mSelectedId = -1;
         }
 
     signals:

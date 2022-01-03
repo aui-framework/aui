@@ -23,51 +23,66 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <tuple>
+#include <ostream>
 
 class AModelIndex
 {
 private:
-	std::size_t mRow = -1;
+    std::size_t mRow = -1;
     std::size_t mColumn = -1;
-	
+
 public:
-	AModelIndex(std::size_t row, std::size_t column)
-		: mRow(row),
-		  mColumn(column)
-	{
-	}
+    AModelIndex(std::size_t row, std::size_t column)
+        : mRow(row),
+          mColumn(column)
+    {
+    }
 
-	AModelIndex(std::size_t row)
-		: mRow(row)
-	{
-	}
+    AModelIndex(std::size_t row)
+        : mRow(row)
+    {
+    }
 
-	AModelIndex() = default;
+    AModelIndex() = default;
 
-	std::size_t getRow() const
-	{
-		return mRow;
-	}
+    std::size_t getRow() const
+    {
+        return mRow;
+    }
 
-	std::size_t getColumn() const
-	{
-		return mColumn;
-	}
+    std::size_t getColumn() const
+    {
+        return mColumn;
+    }
 
-	inline bool operator==(const AModelIndex& other) const {
-	    return mRow == other.mRow && mColumn == other.mColumn;
-	}
-	inline bool operator!=(const AModelIndex& other) const {
-	    return mRow != other.mRow || mColumn != other.mColumn;
-	}
+    bool operator==(const AModelIndex& rhs) const {
+        return std::tie(mRow, mColumn) == std::tie(rhs.mRow, rhs.mColumn);
+    }
+
+    bool operator!=(const AModelIndex& rhs) const {
+        return !(rhs == *this);
+    }
+
     inline bool operator<(const AModelIndex& other) const {
-	    return hash() < other.hash();
-	}
+        return hash() < other.hash();
+    }
 
-	[[nodiscard]] inline uint64_t hash() const {
-	    uint64_t hash = uint32_t(mRow);
-	    hash <<= 32u;
-	    hash |= uint32_t(mColumn);
-	    return hash;
-	}
+    [[nodiscard]] inline uint64_t hash() const {
+        uint64_t hash = uint32_t(mRow);
+        hash <<= 32u;
+        hash |= uint32_t(mColumn);
+        return hash;
+    }
+
 };
+
+inline std::ostream& operator<<(std::ostream& o, const AModelIndex& index) {
+    o << "{ " << index.getRow();
+    if (index.getColumn() != -1) {
+        o << ", " << index.getColumn();
+    }
+    o << " }";
+
+    return o;
+}
