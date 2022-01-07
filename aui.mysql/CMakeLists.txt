@@ -79,7 +79,7 @@ if (AUI_ENABLE_MYSQL)
 
 	if (MYSQL_FOUND)
 
-		aui_module(aui.mysql)
+		aui_module(aui.mysql EXPORT aui)
 
 		target_link_libraries(AUI.Mysql PUBLIC aui.core)
 		target_link_libraries(AUI.Mysql PUBLIC aui.data)

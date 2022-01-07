@@ -3,7 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 
 file(GLOB_RECURSE SQLITE3_SRCS 3rdparty/*.c)
 
-aui_module(aui.sqlite ${SQLITE3_SRCS})
+aui_module(aui.sqlite ADDITIONAL_SRCS ${SQLITE3_SRCS}
+                      EXPORT aui)
 target_include_directories(aui.sqlite PRIVATE 3rdparty/sqlite3)
 
 target_link_libraries(aui.sqlite PRIVATE aui.core)
