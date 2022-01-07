@@ -254,4 +254,4 @@ inline _<TO> _cast(_<FROM> object)
  * nullsafe(view)->enable();
  * </code>
  */
-#define nullsafe(s) if(s)s
+#define nullsafe(s) if(auto& _tmp = (s))_tmp
