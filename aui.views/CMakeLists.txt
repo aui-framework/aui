@@ -24,7 +24,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 		endif ()
 	endif()
 
-	aui_module(aui.views)
+	aui_module(aui.views EXPORT aui)
 	target_include_directories(aui.views PRIVATE 3rdparty)
 	if (ANDROID OR IOS)
 		aui_compile_assets(aui.views)
