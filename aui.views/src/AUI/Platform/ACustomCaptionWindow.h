@@ -41,7 +41,6 @@ public:
 	ACustomCaptionWindow():
             ACustomCaptionWindow("Custom Caption Window", 240, 124)
 	{
-        getCaptionContainer()->addView(_new<AButton>("Button!"));
 	}
 
 

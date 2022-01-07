@@ -385,6 +385,7 @@ AStylesheet::AStylesheet() {
         {
             type_of<ACustomCaptionWindow>(),
             Padding { 0 },
+            Border { 1_px, getOsThemeColor() },
         },
         {
             class_of(".window-title"),
@@ -392,7 +393,7 @@ AStylesheet::AStylesheet() {
             FixedSize { {}, 30_dp }
         },
         {
-            class_of(".window-title") >> t<ALabel>(),
+            class_of(".window-title") >> class_of(".title"),
             Margin { 0 },
             Padding { 7_dp },
             TextColor { 0xffffff_rgb }

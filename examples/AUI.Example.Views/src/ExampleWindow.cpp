@@ -163,6 +163,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                 }),
                 _new<AButton>("Custom window with caption").connect(&AButton::clicked, this, [&] {
                     auto w = _new<ACustomCaptionWindow>("Custom window with caption", 400_dp, 300_dp);
+                    w->getCaptionContainer()->setLayout(_new<AStackedLayout>());
+                    w->getCaptionContainer()->addView(_new<AButton>("Custom button here"));
                     fillWindow(w->getContentContainer());
                     w->show();
                     //w->setWindowStyle(WindowStyle::DIALOG);
