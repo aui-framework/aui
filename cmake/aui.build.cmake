@@ -595,6 +595,13 @@ endfunction(aui_compile_assets_add)
 function(aui_module AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
 
+
+    set(options )
+    set(oneValueArgs EXPORT)
+    set(multiValueArgs ADDITIONAL_SRCS)
+    cmake_parse_arguments(AUIE "${options}" "${oneValueArgs}"
+            "${multiValueArgs}" ${ARGN} )
+
     if (SRCS_TESTS_TMP)
         set_property(GLOBAL APPEND PROPERTY TESTS_DEPS ${AUI_MODULE_NAME})
         foreach(child ${SRCS_TESTS_TMP})
@@ -614,7 +621,7 @@ function(aui_module AUI_MODULE_NAME)
         list(FILTER SRCS EXCLUDE REGEX ".*\\/${PLATFORM_NAME}\\/.*")
     endforeach()
 
-    add_library(${AUI_MODULE_NAME} ${SRCS} ${ARGN})
+    add_library(${AUI_MODULE_NAME} ${AUIE_ADDITIONAL_SRCS} ${SRCS})
     get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
     target_include_directories(${AUI_MODULE_NAME} PUBLIC $<BUILD_INTERFACE:${SELF_DIR}/src>)
 
@@ -630,25 +637,27 @@ function(aui_module AUI_MODULE_NAME)
     string(REPLACE "." "::" BUILD_AS_IMPORTED_NAME ${AUI_MODULE_NAME})
 
     aui_common(${AUI_MODULE_NAME})
-    install(
-            TARGETS ${AUI_MODULE_NAME}
-            EXPORT AUI
-            ARCHIVE
-            DESTINATION "${AUI_MODULE_NAME}/lib"
-            LIBRARY
-            DESTINATION "${AUI_MODULE_NAME}/lib"
-            RUNTIME
-            DESTINATION "${AUI_MODULE_NAME}/bin"
-            PUBLIC_HEADER DESTINATION "${AUI_MODULE_NAME}/include"
-    )
+    if (AUIE_EXPORT)
+        install(
+                TARGETS ${AUI_MODULE_NAME}
+                EXPORT ${AUIE_EXPORT}
+                ARCHIVE
+                DESTINATION "${AUI_MODULE_NAME}/lib"
+                LIBRARY
+                DESTINATION "${AUI_MODULE_NAME}/lib"
+                RUNTIME
+                DESTINATION "${AUI_MODULE_NAME}/bin"
+                PUBLIC_HEADER DESTINATION "${AUI_MODULE_NAME}/include"
+        )
 
-    install(
-            DIRECTORY src/
-            DESTINATION "${AUI_MODULE_NAME}/include/"
-            FILES_MATCHING PATTERN "*.h"
-            PATTERN "*.hpp"
+        install(
+                DIRECTORY src/
+                DESTINATION "${AUI_MODULE_NAME}/include/"
+                FILES_MATCHING PATTERN "*.h"
+                PATTERN "*.hpp"
 
-    )
+        )
+    endif()
     if (NOT BUILD_AS_IMPORTED_NAME STREQUAL ${AUI_MODULE_NAME})
         add_library(${BUILD_AS_IMPORTED_NAME} ALIAS ${AUI_MODULE_NAME})
     endif()
