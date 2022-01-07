@@ -92,23 +92,14 @@ public:
 	template<typename T>
 	inline IOutputStream& operator<<(const T& in)
 	{
-        // static_assert(std::is_standard_layout_v<T>, "data is too complex to be written to stream");
-		if (write(reinterpret_cast<const char*>(&in), sizeof(T)) < 0)
-			throw IOException("could not write to file");
-		return *this;
-	}
-
-
-    /**
-     * \brief Writes raw data from the bytebuffer.
-     * \param in data
-     * \return this
-     */
-	template<>
-	inline IOutputStream& operator<<(const AByteBuffer& in)
-	{
-		if (write(in.data(), in.getSize()) < 0)
-			throw IOException("could not write to file");
+        if constexpr (std::is_same_v<AByteBuffer, T>) {
+            if (write(in.data(), in.getSize()) < 0)
+                throw IOException("could not write to file");
+        } else {
+            // static_assert(std::is_standard_layout_v<T>, "data is too complex to be written to stream");
+            if (write(reinterpret_cast<const char *>(&in), sizeof(T)) < 0)
+                throw IOException("could not write to file");
+        }
 		return *this;
 	}
 

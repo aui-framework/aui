@@ -198,8 +198,8 @@ uint32_t AChildProcess::getPid() {
 #include <AUI/Common/AStringVector.h>
 #include <cstring>
 #include <AUI/Util/ATokenizer.h>
-#include <AUI/IO/FileOutputStream.h>
-#include <AUI/IO/FileInputStream.h>
+#include <AUI/IO/AFileOutputStream.h>
+#include <AUI/IO/AFileInputStream.h>
 
 class AOtherProcess: public AProcess {
 private:

@@ -95,7 +95,7 @@ public:
      *       function instead of <a href="#invalidate">invalidate</a> because it's faster.
      */
     void lazyInvalidate() {
-        auto ranges = rangesIncluding([&](size_t i) {
+        auto ranges = this->rangesIncluding([&](size_t i) {
             return !mFilter(listItemAt(i));
         });
         int offset = 0;

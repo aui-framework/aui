@@ -39,13 +39,13 @@ public:
             mAdapter(std::forward<Adapter>(adapter)) {
         mOtherMutable = dynamic_cast<IRemovableListModel<ItemFrom>*>(mOther.get());
         AObject::connect(other->dataChanged, this, [&](const AModelRange<ItemFrom>& r){
-            emit dataChanged({r.getBegin(), r.getEnd(), this});
+            emit this->dataChanged({r.getBegin(), r.getEnd(), this});
         });
         AObject::connect(other->dataInserted, this, [&](const AModelRange<ItemFrom>& r){
-            emit dataInserted({r.getBegin(), r.getEnd(), this});
+            emit this->dataInserted({r.getBegin(), r.getEnd(), this});
         });
         AObject::connect(other->dataRemoved, this, [&](const AModelRange<ItemFrom>& r){
-            emit dataRemoved({r.getBegin(), r.getEnd(), this});
+            emit this->dataRemoved({r.getBegin(), r.getEnd(), this});
         });
     }
 

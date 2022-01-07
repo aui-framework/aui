@@ -34,7 +34,7 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
     caption->addAssName(".window-title");
     caption->setExpanding({1, 0});
 
-    auto titleLabel = _new<ALabel>(name);
+    auto titleLabel = _new<ALabel>(name) << ".title";
     caption->addView(titleLabel);
 
     mCaptionContainer = _new<AViewContainer>();

@@ -154,7 +154,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 RECT windowRect, clientRect;
                 GetWindowRect(mHandle, &windowRect);
                 GetClientRect(mHandle, &clientRect);
-                mRenderingContext->beginResize(*this);
+                nullsafe(mRenderingContext)->beginResize(*this);
                 emit resized(LOWORD(lParam), HIWORD(lParam));
                 AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
 
@@ -169,7 +169,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                         emit restored();
                         break;
                 }
-                mRenderingContext->endResize(*this);
+                nullsafe(mRenderingContext)->endResize(*this);
             }
             return 0;
         }

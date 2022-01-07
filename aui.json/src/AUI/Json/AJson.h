@@ -177,22 +177,22 @@ namespace aui::json::impl {
 
 namespace AJson
 {
-    API_AUI_JSON AJsonElement read(IInputStream& is);
-    AJsonElement read(const _<IInputStream>& is) {
+    [[nodiscard]] API_AUI_JSON AJsonElement read(IInputStream& is);
+    [[nodiscard]] inline AJsonElement read(const _<IInputStream>& is) {
         return read(*is);
     }
-    AJsonElement read(IInputStream&& is) {
+    [[nodiscard]] inline AJsonElement read(IInputStream&& is) {
         return read(is);
     }
 
     API_AUI_JSON void write(IOutputStream& os, const AJsonElement& json);
-    void write(const _<IOutputStream>& os, const AJsonElement& json) {
+    inline void write(const _<IOutputStream>& os, const AJsonElement& json) {
         write(*os, json);
     }
-    void write(IOutputStream&& os, const AJsonElement& json) {
+    inline void write(IOutputStream&& os, const AJsonElement& json) {
         write(os, json);
     }
 
-    API_AUI_JSON AString toString(const AJsonElement& json);
-    API_AUI_JSON AJsonElement fromString(const AString& json);
+    [[nodiscard]] API_AUI_JSON AString toString(const AJsonElement& json);
+    [[nodiscard]] API_AUI_JSON AJsonElement fromString(const AString& json);
 }
