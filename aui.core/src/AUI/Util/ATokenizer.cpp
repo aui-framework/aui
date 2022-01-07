@@ -39,7 +39,7 @@ AString ATokenizer::readString()
 	{
 		for (;;) {
 			c = readChar();
-			if (isalnum(c))
+			if (isalnum(uint8_t (c)))
 			{
 				res << c;
 			}
@@ -65,7 +65,7 @@ AString ATokenizer::readString(const ASet<char>& applicableChars)
 	{
 		for (;;) {
 			c = readChar();
-			if (isalnum(c) || applicableChars.find(c) != applicableChars.end())
+			if (isalnum(uint8_t (c)) || applicableChars.find(c) != applicableChars.end())
 			{
 				res << c;
 			}
