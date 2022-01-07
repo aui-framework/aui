@@ -62,7 +62,7 @@ void ALogger::log(Level level, const AString& str)
 #else
     if (!mLogFile) {
         try {
-            mLogFile = _new<FileOutputStream>("latest.log");
+            mLogFile = _new<AFileOutputStream>("latest.log");
         } catch (const AException& e) {
             //log(WARN, e.getMessage());
         }
@@ -111,7 +111,7 @@ void ALogger::setLogFile(const AString& str) {
         if (str.empty()) {
             instance().mLogFile = nullptr;
         } else {
-            instance().mLogFile = _new<FileOutputStream>(str);
+            instance().mLogFile = _new<AFileOutputStream>(str);
         }
     } catch (const AException& e) {
         //log(WARN, e.getMessage());

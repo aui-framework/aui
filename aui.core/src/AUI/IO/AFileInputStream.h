@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -21,20 +21,39 @@
 
 #pragma once
 #include <cstdio>
-#include "IOutputStream.h"
 #include "AUI/Core.h"
+#include "IInputStream.h"
 
 class AString;
 
-class API_AUI_CORE FileOutputStream : public IOutputStream
+class API_AUI_CORE AFileInputStream: public IInputStream
 {
 private:
 	FILE* mFile;
-
+	
 public:
-	FileOutputStream(const AString& path, bool append = false);
-	virtual ~FileOutputStream();
+	AFileInputStream(const AString& path);
+	virtual ~AFileInputStream();
 
-	int write(const char* src, int size) override;
-	void close();
+	enum class Seek {
+	    /**
+	     * Seek relatively to the begin of file
+	     */
+	    BEGIN,
+
+	    /**
+	     * Seek relatively to the current position
+	     */
+	    CURRENT,
+
+	    /**
+	     * Seek relative to the end of file
+	     */
+	    END
+	};
+
+	void seek(std::streamoff offset, Seek dir);
+	void seek(std::streampos pos);
+
+	int read(char* dst, int size) override;
 };

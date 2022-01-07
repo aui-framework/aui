@@ -28,7 +28,7 @@ InputStreamAsync::InputStreamAsync(_<IInputStream> inputStream):
 			for (;;)
 			{
 				auto buffer = _new<AByteBuffer>();
-				inputStream->read(*buffer);
+				inputStream->readBuffer(*buffer);
 				emit read(std::move(buffer));
 			}
 		} catch (...)

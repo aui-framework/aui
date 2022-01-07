@@ -108,7 +108,7 @@ AJsonElement AJsonElement::operator[](const AString& key) const
     return AJsonElement{_new<JsonNull>()};
 }
 
-void AJsonElement::serialize(_<IOutputStream> param) const {
+void AJsonElement::serialize(IOutputStream& param) const {
     mJson->serialize(param);
 }
 

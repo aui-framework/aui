@@ -26,7 +26,7 @@
 #include <fontconfig/fontconfig.h>
 #include <AUI/IO/APath.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/IO/FileInputStream.h>
+#include <AUI/IO/AFileInputStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include "AUI/Render/FreeType.h"
 
@@ -51,7 +51,7 @@ AFontManager::AFontManager() :
             // /home/alex2772/.config/xsettingsd/xsettingsd.conf
 
             ATokenizer t(
-                    _new<FileInputStream>("/home/{}/.config/xsettingsd/xsettingsd.conf"_format(getenv("USER"))));
+                    _new<AFileInputStream>("/home/{}/.config/xsettingsd/xsettingsd.conf"_format(getenv("USER"))));
 
             // find something like
             // Gtk/FontName "System Font,  10"

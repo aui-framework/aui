@@ -23,12 +23,12 @@
 // Created by alex2 on 30.08.2020.
 //
 
+#include <boost/test/unit_test.hpp>
 #include <AUI/Common/AString.h>
 #include <AUI/Json/AJson.h>
 #include <AUI/Json/AJsonElement.h>
 
 
-#include <boost/test/unit_test.hpp>
 using namespace boost::unit_test;
 BOOST_AUTO_TEST_SUITE(Json)
 

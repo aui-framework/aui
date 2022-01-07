@@ -8,6 +8,6 @@
 
 AString IJsonElement::formatMiscastException(const AString& message) {
     auto buf = _new<AByteBuffer>();
-    serialize(_new<ByteBufferOutputStream>(buf));
+    serialize(ByteBufferOutputStream(buf));
     return message + ": " + AString::fromUtf8(*buf);
 }

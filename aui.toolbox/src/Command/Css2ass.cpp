@@ -29,8 +29,8 @@
 #include <AUI/IO/APath.h>
 #include "Css2ass.h"
 #include <AUI/Traits/strings.h>
-#include <AUI/IO/FileInputStream.h>
-#include <AUI/IO/FileOutputStream.h>
+#include <AUI/IO/AFileInputStream.h>
+#include <AUI/IO/AFileOutputStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include <AUI/i18n/AI18n.h>
 #include <AUI/Util/ARandom.h>
@@ -65,7 +65,7 @@ void Css2ass::run(Toolbox& t) {
                              "destination file or specify the f flag (warning! f flag overrides contents)");
         }
 
-        ATokenizer t(_new<FileInputStream>(sourceCssPath));
+        ATokenizer t(_new<AFileInputStream>(sourceCssPath));
 
         // for #include <...> list
         AVector<AString> includes;
@@ -218,7 +218,7 @@ void Css2ass::run(Toolbox& t) {
 
         }
 
-        auto fos = _new<FileOutputStream>(destinationAssPath);
+        auto fos = _new<AFileOutputStream>(destinationAssPath);
         fos << "#include <AUI/ASS/ASS.h>\n";
         includes.sort();
         for (auto& line : includes) {

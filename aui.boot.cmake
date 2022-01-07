@@ -22,7 +22,9 @@
 cmake_minimum_required(VERSION 3.16)
 
 # fix "Failed to get the hash for HEAD" error
-file(REMOVE_RECURSE ${CMAKE_BINARY_DIR}/_deps)
+if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
+    file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
+endif()
 
 # rpath fix
 if (APPLE)
@@ -199,6 +201,7 @@ macro(auib_import AUI_MODULE_NAME URL)
 
         file(REMOVE_RECURSE ${DEP_SOURCE_DIR} ${DEP_BINARY_DIR})
         FetchContent_Declare(${AUI_MODULE_NAME}_FC
+                PREFIX "${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
                 GIT_REPOSITORY "${URL}"
                 GIT_TAG ${AUIB_IMPORT_VERSION}
                 GIT_PROGRESS TRUE # show progress of download

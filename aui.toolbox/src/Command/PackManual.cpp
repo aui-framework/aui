@@ -6,8 +6,8 @@
 #include "Pack.h"
 #include <AUI/Crypt/AHash.h>
 #include <AUI/IO/APath.h>
-#include <AUI/IO/FileInputStream.h>
-#include <AUI/IO/FileOutputStream.h>
+#include <AUI/IO/AFileInputStream.h>
+#include <AUI/IO/AFileOutputStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include <AUI/Util/LZ.h>
 

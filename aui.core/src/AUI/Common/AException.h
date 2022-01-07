@@ -25,37 +25,30 @@
 #include "AString.h"
 #include <AUI/Common/AVector.h>
 
-class API_AUI_CORE AException: public std::exception
+class AException: public std::exception
 {
-friend int aui_backtrace_full_callback(void *data,
-                                       uintptr_t pc,
-                                       const char *filename,
-                                       int lineno,
-                                       const char *function);
-public:
-    class Stacktrace;
-
-private:
-    Stacktrace* mStacktrace = nullptr;
+    mutable std::optional<std::string> mMessage;
 
 protected:
-	AString mMessage;
 
 
 public:
-	AException();
+	AException() = default;
 
 	AException(const AString& message)
 		: AException()
 	{
-        mMessage = message;
+        mMessage = message.toStdString();
 	}
 
-	virtual ~AException() noexcept;
-	
-	[[nodiscard]] virtual AString getMessage() const;
+    virtual AString getMessage() const noexcept {
+        return mMessage ? mMessage->c_str() : "<no message>";
+    }
 
-    const char* what() const noexcept override;
+	virtual ~AException() noexcept = default;
 
-    void printStacktrace();
+    const char* what() const noexcept override {
+        if (!mMessage) mMessage = getMessage().toStdString();
+        return mMessage->c_str();
+    }
 };

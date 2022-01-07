@@ -2,7 +2,7 @@
 // Created by Alex2772 on 12/18/2021.
 //
 #include <AUI/Image/PngImageLoader.h>
-#include <AUI/IO/FileOutputStream.h>
+#include <AUI/IO/AFileOutputStream.h>
 #include "UITestCase.h"
 #include "Matcher.h"
 #include <boost/test/tree/test_unit.hpp>
@@ -17,7 +17,7 @@ APath saveScreenshot(const AString& testFilePath, const AString& name) {
     auto p = APath("reports")[APath(testFilePath).filenameWithoutExtension()];
     p.makeDirs();
     p = p[name];
-    FileOutputStream fos(p);
+    AFileOutputStream fos(p);
     PngImageLoader::save(fos, image);
     return p;
 }

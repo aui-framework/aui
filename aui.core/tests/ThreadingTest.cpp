@@ -104,6 +104,50 @@ BOOST_AUTO_TEST_SUITE(Threading)
         BOOST_CHECK_EQUAL(**v1231, 1231.f);
     }
 
+    BOOST_AUTO_TEST_CASE(PararellVoid) {
+        for (int i = 0; i < 1000; ++i) {
+            AVector<int> ints;
+            for (int j = 0; j < i; ++j) {
+                ints.push_back(j);
+            }
+            AThreadPool::global().parallel(ints.begin(),
+                                           ints.end(),
+                                           [](AVector<int>::iterator begin, AVector<int>::iterator end) {
+                for (auto it = begin; it != end; ++it) {
+                    *it += 2;
+                }
+                return 0;
+            }).waitForAll();
+
+            for (int j = 0; j < i; ++j) {
+                if (ints[j] != j + 2) BOOST_FAIL("invalid result");
+            }
+        }
+    }
+
+    BOOST_AUTO_TEST_CASE(PararellWithResult) {
+        for (int i = 0; i < 1000; ++i) {
+            AVector<int> ints;
+            for (int j = 0; j < i; ++j) {
+                ints.push_back(5);
+            }
+            auto result = AThreadPool::global().parallel(ints.begin(),
+                                           ints.end(),
+                                           [](AVector<int>::iterator begin, AVector<int>::iterator end) {
+                int r = 0;
+                for (auto it = begin; it != end; ++it) {
+                    r += *it;
+                }
+                return r;
+            });
+            int accumulator = 0;
+            for (auto& v : result) {
+                accumulator += **v;
+            }
+            if (accumulator != 5 * i) BOOST_FAIL("invalid result");
+        }
+    }
+
     /*
     BOOST_AUTO_TEST_CASE(Fence) {
         std::default_random_engine e(std::time(nullptr));

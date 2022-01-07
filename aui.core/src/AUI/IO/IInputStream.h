@@ -25,7 +25,6 @@
 #include <AUI/Common/AByteBuffer.h>
 #include <glm/glm.hpp>
 
-class AByteBuffer;
 class IOutputStream;
 
 class API_AUI_CORE IInputStream
@@ -49,14 +48,12 @@ public:
      * \brief Reads up to 0x10000 and stores to AByteBuffer
      * \param dst destination buffer
      */
-    inline void read(AByteBuffer& dst)
+    inline void readBuffer(AByteBuffer& dst, int bufferSize = 0x10000)
     {
-        const size_t BUFFER_SIZE = 0x10000;
-
-        if (dst.getReserved() < BUFFER_SIZE) {
-            dst.reserve(BUFFER_SIZE);
+        if (dst.getReserved() - dst.getCurrentPos() < size_t(bufferSize)) {
+            dst.reserve(dst.getCurrentPos() + bufferSize);
         }
-        int r = read(dst.getCurrentPosAddress(), BUFFER_SIZE);
+        int r = read(dst.getCurrentPosAddress(), bufferSize);
 
         if (r < 0)
             throw IOException();
@@ -65,6 +62,7 @@ public:
             throw EOFException();
 
         dst.setSize(dst.getCurrentPos() + r);
+        dst.setCurrentPos(dst.getCurrentPos() + bufferSize);
     }
 
     /**

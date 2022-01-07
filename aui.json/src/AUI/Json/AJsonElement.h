@@ -40,16 +40,16 @@ class AJsonElement;
 
 namespace AJson
 {
-    void API_AUI_JSON write(_<IOutputStream> os, const AJsonElement& json);
+    void API_AUI_JSON write(IOutputStream& os, const AJsonElement& json);
 }
 
 
 class API_AUI_JSON AJsonElement {
 
-    API_AUI_JSON friend void AJson::write(_<IOutputStream> os, const AJsonElement& json);
+    API_AUI_JSON friend void AJson::write(IOutputStream& os, const AJsonElement& json);
 
 protected:
-    void serialize(_<IOutputStream> param) const;
+    void serialize(IOutputStream& param) const;
 
     _<IJsonElement> mJson;
 public:

@@ -54,8 +54,8 @@ AVector<AJsonElement>& JsonNull::asArray() {
     throw JsonException(formatMiscastException("null is not an array"));
 }
 
-void JsonNull::serialize(const _<IOutputStream>& os) const {
-    os->write("null", 4);
+void JsonNull::serialize(IOutputStream& os) const {
+    os.write("null", 4);
 }
 
 bool JsonNull::isNull() {

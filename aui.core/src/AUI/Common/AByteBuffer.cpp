@@ -30,23 +30,23 @@
 #include "AUI/IO/IOException.h"
 
 AByteBuffer::AByteBuffer() {
-	reserve(64);
+    reserve(64);
 }
 
 AByteBuffer::AByteBuffer(const char* buffer, size_t size)
 {
-	put(buffer, size);
+    put(buffer, size);
 }
 
 AByteBuffer::AByteBuffer(const unsigned char* buffer, size_t size)
 {
-	put(reinterpret_cast<const char*>(buffer), size);
+    put(reinterpret_cast<const char*>(buffer), size);
 }
 
 AByteBuffer::AByteBuffer(const AByteBuffer& other) noexcept {
-	reserve(other.mReserved);
-	memcpy(mBuffer, other.mBuffer, other.mSize);
-	mSize = other.mSize;
+    reserve(other.mReserved);
+    memcpy(mBuffer, other.mBuffer, other.mSize);
+    mSize = other.mSize;
     mCurrentPos = other.mCurrentPos;
 }
 
@@ -56,61 +56,61 @@ AByteBuffer::AByteBuffer(AByteBuffer&& other) noexcept
 }
 
 void AByteBuffer::reserve(size_t size) {
-	char* buffer = new char[size];
-	if (mBuffer) {
-		memcpy(buffer, mBuffer, glm::min(mReserved, size));
-		delete[] mBuffer;
-	}
-	mReserved = size;
-	mBuffer = buffer;
+    char* buffer = new char[size];
+    if (mBuffer) {
+        memcpy(buffer, mBuffer, glm::min(mReserved, size));
+        delete[] mBuffer;
+    }
+    mReserved = size;
+    mBuffer = buffer;
 }
 
 void AByteBuffer::put(const char* buffer, size_t size) {
-	if (size) {
-		if (mSize + size > mReserved) {
-			reserve(mSize * 2 + size);
-		}
-		memcpy(mBuffer + mSize, buffer, size);
-		mSize += size;
-	}
+    if (size) {
+        if (mSize + size > mReserved) {
+            reserve(mSize * 2 + size);
+        }
+        memcpy(mBuffer + mSize, buffer, size);
+        mSize += size;
+    }
 }
 
 void AByteBuffer::get(char* buffer, size_t size) const {
-	if (mCurrentPos + size > mSize)
-		throw IOException("bytebuffer overflow");
-	memcpy(buffer, mBuffer + mCurrentPos, size);
+    if (mCurrentPos + size > mSize)
+        throw IOException("bytebuffer overflow");
+    memcpy(buffer, mBuffer + mCurrentPos, size);
     mCurrentPos += size;
 }
 
 
 bool AByteBuffer::operator==(const AByteBuffer& r) const {
-	if (getSize() == r.getSize()) {
-		return memcmp(data(), r.data(), getSize()) == 0;
-	}
-	return false;
+    if (getSize() == r.getSize()) {
+        return memcmp(data(), r.data(), getSize()) == 0;
+    }
+    return false;
 }
 
 bool AByteBuffer::operator!=(const AByteBuffer& r) const {
-	return !(*this == r);
+    return !(*this == r);
 }
 
-AByteBuffer AByteBuffer::fromStream(const _<IInputStream>& is)
+AByteBuffer AByteBuffer::fromStream(IInputStream& is)
 {
     AByteBuffer buf;
-	char tmp[0x10000];
-	int last;
-	while ((last = is->read(tmp, sizeof(tmp))) > 0)
-	{
-		buf.put(tmp, last);
-	}
-	return buf;
+    char tmp[0x10000];
+    int last;
+    while ((last = is.read(tmp, sizeof(tmp))) > 0)
+    {
+        buf.put(tmp, last);
+    }
+    return buf;
 }
 
-AByteBuffer AByteBuffer::fromStream(const _<IInputStream>& is, size_t sizeRestriction) {
+AByteBuffer AByteBuffer::fromStream(IInputStream& is, size_t sizeRestriction) {
     AByteBuffer buf;
     char tmp[4096];
     int last;
-    while ((last = is->read(tmp, sizeof(tmp))) > 0 && buf.getSize() < sizeRestriction)
+    while ((last = is.read(tmp, sizeof(tmp))) > 0 && buf.getSize() < sizeRestriction)
     {
         buf.put(tmp, last);
     }
@@ -120,22 +120,22 @@ AByteBuffer AByteBuffer::fromStream(const _<IInputStream>& is, size_t sizeRestri
 
 std::ostream& operator<<(std::ostream& o, const AByteBuffer& r)
 {
-	char formatBuf[8];
-	o << '[';
-	while (r.getAvailable())
-	{
-		unsigned char c;
-		r >> c;
-		sprintf(formatBuf, "%02x ", c);
-		o << formatBuf;
-	}
-	o << ']';
-	return o;
+    char formatBuf[8];
+    o << '[';
+    while (r.getAvailable())
+    {
+        unsigned char c;
+        r >> c;
+        sprintf(formatBuf, "%02x ", c);
+        o << formatBuf;
+    }
+    o << ']';
+    return o;
 }
 
 AByteBuffer::~AByteBuffer() {
-	delete[] mBuffer;
-	mBuffer = nullptr;
+    delete[] mBuffer;
+    mBuffer = nullptr;
 }
 
 AByteBuffer AByteBuffer::fromString(const AString& string) {

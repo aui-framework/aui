@@ -26,8 +26,8 @@
 #include <AUI/IO/APath.h>
 #include "Lang.h"
 #include <AUI/Traits/strings.h>
-#include <AUI/IO/FileInputStream.h>
-#include <AUI/IO/FileOutputStream.h>
+#include <AUI/IO/AFileInputStream.h>
+#include <AUI/IO/AFileOutputStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include <AUI/i18n/ALanguageCode.h>
 #include <AUI/i18n/AI18n.h>
@@ -52,7 +52,7 @@ void scanSrcDir(const APath& srcDir, AMap<AString, AString>& dst) {
         }
 
         try {
-            ATokenizer t(_new<FileInputStream>(i));
+            ATokenizer t(_new<AFileInputStream>(i));
             for (;;) {
                 t.readStringUntilUnescaped('"');
                 AString stringLiteral = t.readStringUntilUnescaped('"');
@@ -69,7 +69,7 @@ void scanSrcDir(const APath& srcDir, AMap<AString, AString>& dst) {
 }
 
 void saveLangFile(const APath& path, const AMap<AString, AString>& data) {
-    auto fos = _new<FileOutputStream>(path);
+    auto fos = _new<AFileOutputStream>(path);
     *fos << "# AUI lang file\n";
 
     for (auto& i : data) {
@@ -131,7 +131,7 @@ void Lang::run(Toolbox& t) {
             }
 
             AMap<AString, AString> dstForThisLang = dst;
-            AI18n::loadFromStreamInto(_new<FileInputStream>(l), dstForThisLang);
+            AI18n::loadFromStreamInto(_new<AFileInputStream>(l), dstForThisLang);
             saveLangFile(l, dstForThisLang);
             std::cout << "updated: " << l << std::endl;
         }

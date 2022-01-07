@@ -56,16 +56,16 @@ AVector<AJsonElement>& JsonValue::asArray()
     throw JsonException(formatMiscastException("value is not an array"));
 }
 
-void JsonValue::serialize(const _<IOutputStream>& os) const {
+void JsonValue::serialize(IOutputStream& os) const {
     auto myStr = mValue.toString();
     if (mValue.getType() == AVariantType::AV_STRING) {
-        os->write("\"", 1);
+        os.write("\"", 1);
         myStr = myStr.replacedAll("\"", "\\\"");
         auto s = myStr.toStdString();
-        os->write(s.c_str(), s.length());
-        os->write("\"", 1);
+        os.write(s.c_str(), s.length());
+        os.write("\"", 1);
     } else {
         auto s = myStr.toStdString();
-        os->write(s.c_str(), s.length());
+        os.write(s.c_str(), s.length());
     }
 }
