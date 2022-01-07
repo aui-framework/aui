@@ -131,7 +131,12 @@ macro(auib_import AUI_MODULE_NAME URL)
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE Debug)
     endif()
-    set(BUILD_SPECIFIER "${AUI_MODULE_NAME}/${TAG_OR_HASH}/${AUI_TARGET_ABI}/${CMAKE_BUILD_TYPE}")
+    if (BUILD_SHARED_LIBS)
+        set(SHARED_OR_STATIC shared)
+    else()
+        set(SHARED_OR_STATIC static)
+    endif()
+    set(BUILD_SPECIFIER "${AUI_MODULE_NAME}/${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}")
     set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
 
     # append our location to module path
