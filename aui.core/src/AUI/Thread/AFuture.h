@@ -136,23 +136,3 @@ public:
 
 #include <AUI/Thread/AThreadPool.h>
 #include <AUI/Common/AException.h>
-#include <AUI/Reflect/AReflect.h>
-
-template <typename Value>
-template <typename Callable>
-_<AFuture<Value>> AFuture<Value>::make(AThreadPool& tp, Callable&& func)
-{
-    auto future = aui::ptr::manage(new AFuture<Value>);
-    tp.run([future, func = std::forward<Callable>(func)]()
-    {
-        std::unique_lock lock(future->mMutex);
-        try {
-            *future->mValue = func();
-        } catch (const AException& e) {
-            future->mException = AInvocationTargetException(e.getMessage(), AReflect::name(&e));
-        }
-        future->decRef();
-        future->notify();
-    }, AThreadPool::PRIORITY_LOWEST);
-    return future;
-}

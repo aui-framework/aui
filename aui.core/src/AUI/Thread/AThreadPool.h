@@ -27,7 +27,6 @@
 
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/AQueue.h>
-#include <AUI/Thread/AFutureSet.h>
 #include <AUI/Util/kAUI.h>
 #include <glm/glm.hpp>
 
@@ -159,27 +158,7 @@ public:
      * </dl>
      */
     template<typename Iterator, typename Functor>
-    auto parallel(Iterator begin, Iterator end, Functor&& functor) {
-        using ResultType = decltype(std::declval<Functor>()(std::declval<Iterator>(), std::declval<Iterator>()));
-        static_assert(!std::is_same_v<ResultType, void>, "functor must return a value");
-        AFutureSet<ResultType> futureSet;
-
-        size_t itemCount = end - begin;
-        size_t affinity = (glm::min)(AThreadPool::global().getTotalWorkerCount(), itemCount);
-        if (affinity == 0) return futureSet;
-        size_t itemsPerThread = itemCount / affinity;
-
-        for (size_t threadIndex = 0; threadIndex < affinity; ++threadIndex) {
-            auto forThreadBegin = begin;
-            begin += itemsPerThread;
-            auto forThreadEnd = threadIndex + 1 == affinity ? end : begin;
-            futureSet.push_back(asyncX [functor = std::forward<Functor>(functor), forThreadBegin, forThreadEnd]() -> decltype(auto) {
-                return functor(forThreadBegin, forThreadEnd);
-            });
-        }
-
-        return futureSet;
-    }
+    auto parallel(Iterator begin, Iterator end, Functor&& functor);
 
     template <typename Callable>
     typename aui::detail::future_helper<std::invoke_result_t<Callable>>::return_type operator<<(Callable fun)
@@ -199,3 +178,62 @@ public:
 
     class TryLaterException {};
 };
+
+#include <AUI/Thread/AFuture.h>
+
+template<typename T>
+class AFutureSet: public AVector<_<AFuture<T>>> {
+public:
+    using AVector<_<AFuture<T>>>::AVector;
+
+    void waitForAll() {
+        for (const _<AFuture<T>>& v : *this) {
+            v->operator*();
+        }
+    }
+};
+
+template<typename Iterator, typename Functor>
+auto AThreadPool::parallel(Iterator begin, Iterator end, Functor &&functor) {
+    using ResultType = decltype(std::declval<Functor>()(std::declval<Iterator>(), std::declval<Iterator>()));
+    static_assert(!std::is_same_v<ResultType, void>, "functor must return a value");
+    AFutureSet<ResultType> futureSet;
+
+    size_t itemCount = end - begin;
+    size_t affinity = (glm::min)(AThreadPool::global().getTotalWorkerCount(), itemCount);
+    if (affinity == 0) return futureSet;
+    size_t itemsPerThread = itemCount / affinity;
+
+    for (size_t threadIndex = 0; threadIndex < affinity; ++threadIndex) {
+        auto forThreadBegin = begin;
+        begin += itemsPerThread;
+        auto forThreadEnd = threadIndex + 1 == affinity ? end : begin;
+        futureSet.push_back(*this * [functor = std::forward<Functor>(functor), forThreadBegin, forThreadEnd]() -> decltype(auto) {
+            return functor(forThreadBegin, forThreadEnd);
+        });
+    }
+
+    return futureSet;
+}
+
+
+#include <AUI/Reflect/AReflect.h>
+
+template <typename Value>
+template <typename Callable>
+_<AFuture<Value>> AFuture<Value>::make(AThreadPool& tp, Callable&& func)
+{
+    auto future = aui::ptr::manage(new AFuture<Value>);
+    tp.run([future, func = std::forward<Callable>(func)]()
+           {
+               std::unique_lock lock(future->mMutex);
+               try {
+                   *future->mValue = func();
+               } catch (const AException& e) {
+                   future->mException = AInvocationTargetException(e.getMessage(), AReflect::name(&e));
+               }
+               future->decRef();
+               future->notify();
+           }, AThreadPool::PRIORITY_LOWEST);
+    return future;
+}

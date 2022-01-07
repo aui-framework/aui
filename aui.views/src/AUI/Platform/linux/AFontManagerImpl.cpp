@@ -51,7 +51,7 @@ AFontManager::AFontManager() :
             // /home/alex2772/.config/xsettingsd/xsettingsd.conf
 
             ATokenizer t(
-                    _new<FileInputStream>("/home/{}/.config/xsettingsd/xsettingsd.conf"_format(getenv("USER"))));
+                    _new<AFileInputStream>("/home/{}/.config/xsettingsd/xsettingsd.conf"_format(getenv("USER"))));
 
             // find something like
             // Gtk/FontName "System Font,  10"

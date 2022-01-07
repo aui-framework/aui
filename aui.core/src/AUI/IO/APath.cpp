@@ -211,6 +211,10 @@ ADeque<APath> APath::listDir(ListFlags f) const {
 }
 
 APath APath::absolute() const {
+    // *nix requires file existence but windows doesn't - unifying the behaviour
+    if (!exists()) {
+        throw FileNotFoundException(*this);
+    }
 #ifdef WIN32
     wchar_t buf[0x1000];
     if (_wfullpath(buf, c_str(), sizeof(buf) / sizeof(wchar_t)) == nullptr) {

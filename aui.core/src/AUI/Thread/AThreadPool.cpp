@@ -190,4 +190,3 @@ AThreadPool::FenceHelper*& AThreadPool::fenceHelperStorage() {
     static FenceHelper* helper = nullptr;
     return helper;
 }
-
