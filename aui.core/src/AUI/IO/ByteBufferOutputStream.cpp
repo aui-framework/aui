@@ -25,7 +25,7 @@
 
 #include "ByteBufferOutputStream.h"
 
-int ByteBufferOutputStream::write(const char* src, int size) {
+size_t ByteBufferOutputStream::write(const char* src, size_t size) {
     mBuffer->put(src, size);
     return size;
 }

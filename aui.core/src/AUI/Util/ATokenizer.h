@@ -92,7 +92,7 @@ public:
 	 * \brief Reads <code>n</code> symbols.
 	 * \return read string
 	 */
-	AString readString(int n);
+	AString readString(size_t n);
 
 	/**
 	 * \brief Reads string while isalnum == true and characters contain in <code>applicableChars</code>.

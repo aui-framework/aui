@@ -22,7 +22,7 @@
 #pragma once
 
 #include <cstring>
-#include "EOFException.h"
+#include "AEOFException.h"
 #include "AUI/Common/AString.h"
 
 class IInputStream;
@@ -35,12 +35,15 @@ public:
     /**
      * \brief Writes exact <code>size</code> bytes to stream. Blocking (waiting for write all data) is allowed. Returns
      *        -1 if stream has encountered an error.
+     * <dl>
+     *   <dt><b>Sneaky exceptions</b></dt>
+     *   <dd>An implementation can throw any exception that subclasses <a href="#AIOException">AIOException</a>.</dd>
+     * </dl>
      * \param dst source buffer
      * \param size source buffer's size. > 0
-     * \return -1 - error
-     *         >0 - count of written bytes
+     * \return count of written bytes
      */
-	virtual int write(const char* src, int size) = 0;
+	virtual size_t write(const char* src, size_t size) = 0;
 
 	/**
      * \brief Redirects all input stream data to this output stream
@@ -86,7 +89,7 @@ public:
     /**
      * \brief Writes raw data from in. Does not applicable to types with pointers.
      * \tparam storage data type
-     * \param in data
+     * \param in data. Can be <a href="#AByteBuffer">AByteBuffer</a>
      * \return this
      */
 	template<typename T>
@@ -94,11 +97,13 @@ public:
 	{
         if constexpr (std::is_same_v<AByteBuffer, T>) {
             if (write(in.data(), in.getSize()) < 0)
-                throw IOException("could not write to file");
+                throw AIOException("could not write to file");
+        } else if constexpr (std::is_base_of_v<IInputStream, T>) {
+            writeAll(const_cast<T&>(in));
         } else {
-            // static_assert(std::is_standard_layout_v<T>, "data is too complex to be written to stream");
-            if (write(reinterpret_cast<const char *>(&in), sizeof(T)) < 0)
-                throw IOException("could not write to file");
+            static_assert(std::is_standard_layout_v<T>, "data is too complex to be written to stream");
+            if (write(reinterpret_cast<const char *>(&in), sizeof(T)) != sizeof(T))
+                throw AIOException("could not write to file");
         }
 		return *this;
 	}
@@ -173,7 +178,7 @@ public:
 inline IOutputStream& IOutputStream::operator<<(IInputStream& is)
 {
     char buf[0x8000];
-    for (int r; (r = is.read(buf, sizeof(buf))) > 0;) {
+    for (size_t r; (r = is.read(buf, sizeof(buf))) > 0;) {
         write(buf, r);
     }
     return *this;
@@ -183,15 +188,13 @@ inline IOutputStream& IOutputStream::operator<<(IInputStream& is)
 void IOutputStream::writeAll(IInputStream& fis, size_t limit) {
     char buf[0x800];
     while (limit > 0) {
-        int r = fis.read(buf, (glm::min)(sizeof(buf), limit));
+        size_t r = fis.read(buf, (glm::min)(sizeof(buf), limit));
         if (r == 0) {
             return;
-        } else if (r <= 0) {
-            throw AException("something went wrong");
         }
         write(buf, r);
 
-        if (r >= int(limit)) {
+        if (r >= limit) {
             return;
         }
         limit -= r;

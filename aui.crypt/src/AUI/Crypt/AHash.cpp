@@ -50,7 +50,7 @@ inline AByteBuffer sha_impl(FInit init, FUpdate update, FFinal final, size_t s, 
 
     CTX ctx;
     init(&ctx);
-    for (int r; (r = in.read(tmp, sizeof(tmp))) > 0;) {
+    for (size_t r; (r = in.read(tmp, sizeof(tmp))) > 0;) {
         update(&ctx, tmp, r);
     }
     final((unsigned char*) result.data(), &ctx);

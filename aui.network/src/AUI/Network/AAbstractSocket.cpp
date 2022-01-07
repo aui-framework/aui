@@ -24,8 +24,8 @@
 
 #include "Exceptions.h"
 #include "AUI/Common/AString.h"
-#include "AUI/IO/EOFException.h"
-#include "AUI/IO/IOException.h"
+#include "AUI/IO/AEOFException.h"
+#include "AUI/IO/AIOException.h"
 #include "AUI/Thread/AThread.h"
 
 
@@ -45,7 +45,7 @@ void aui_wsa_init()
 		WSA()
 		{
 			if (WSAStartup(MAKEWORD(2, 2), &wsa) != 0) {
-				throw IOException((AString("Failed. Error code: ") + AString::number(WSAGetLastError())).c_str());
+				throw AIOException((AString("Failed. Error code: ") + AString::number(WSAGetLastError())).c_str());
 			}
 		}
 		~WSA()
@@ -71,7 +71,7 @@ void AAbstractSocket::init()
 #if AUI_PLATFORM_WIN
 	aui_wsa_init();
 	if ((mHandle = createSocket()) == INVALID_SOCKET) {
-		throw IOException(
+		throw AIOException(
 			(AString("Failed to create ASocket. Error code: ") + AString::number(WSAGetLastError())).c_str());
 	}
 #else
@@ -84,7 +84,7 @@ void AAbstractSocket::init()
 	static const int buflen = 1 << 24;
 	if (setsockopt(mHandle, SOL_SOCKET, SO_RCVBUF, (char*)& buflen, sizeof(buflen)) < 0 ||
 		setsockopt(mHandle, SOL_SOCKET, SO_SNDBUF, (char*)& buflen, sizeof(buflen)) < 0)
-		throw IOException(
+		throw AIOException(
 		(AString("Failed to setsockopt:") + getErrorString()).c_str());
 }
 
@@ -121,7 +121,7 @@ void AAbstractSocket::handleError(const AString& message, int code)
 	case WSAEINTR:
 		throw AThread::AInterrupted();
 	case WSAECONNRESET:
-		throw EOFException();
+		throw AEOFException();
 	default:
 		throw SocketException(msg);
 	}
@@ -187,6 +187,6 @@ void AAbstractSocket::setTimeout(int secs) {
 	tv.tv_sec = secs * 1000;
 	tv.tv_usec = 0;
 	if (setsockopt(getHandle(), SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv)) < 0) {
-		throw IOException(AString("setsockopt error ") + getErrorString());
+		throw AIOException(AString("setsockopt error ") + getErrorString());
 	}
 }

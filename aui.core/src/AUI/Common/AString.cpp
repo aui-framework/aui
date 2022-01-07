@@ -79,9 +79,9 @@ AString AString::fromUtf8(const char* buffer, size_t length) {
 }
 
 
-_<AByteBuffer> AString::toUtf8() const
+AByteBuffer AString::toUtf8() const noexcept
 {
-    auto buf = _new<AByteBuffer>();
+    AByteBuffer buf;
     for (wchar_t c : *this)
     {
         if (c >= 0x80)
@@ -93,18 +93,18 @@ _<AByteBuffer> AString::toUtf8() const
                         static_cast<char>(0b10000000 | (c >> 6 & 0b111111)),
                         static_cast<char>(0b10000000 | (c & 0b111111)),
                 };
-                buf->put(b, sizeof(b));
+                buf.put(b, sizeof(b));
             } else if (c >= 0x80)
             {
                 char b[] = {
                         static_cast<char>(0b11000000 | (c >> 6 & 0b11111)),
                         static_cast<char>(0b10000000 | (c & 0b111111)),
                 };
-                buf->put(b, sizeof(b));
+                buf.put(b, sizeof(b));
             }
         } else
         {
-            buf->put(reinterpret_cast<char*>(&c), 1);
+            buf.put(reinterpret_cast<char*>(&c), 1);
         }
     }
     return buf;
@@ -280,8 +280,8 @@ std::string AString::toStdString() const noexcept
 {
     auto encoded = toUtf8();
     std::string dst;
-    dst.reserve(encoded->getSize());
-    dst.insert(0, encoded->data(), encoded->getSize());
+    dst.reserve(encoded.getSize());
+    dst.insert(0, encoded.data(), encoded.getSize());
 
     return dst;
 }
@@ -352,7 +352,7 @@ AString AString::processEscapes() const {
     return result;
 }
 
-AString AString::excessSpacesRemoved() const {
+AString AString::excessSpacesRemoved() const noexcept {
     AString s;
     s.reserve(length() + 1);
     bool prevWasSpace = false;

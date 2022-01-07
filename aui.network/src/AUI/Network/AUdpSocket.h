@@ -28,7 +28,7 @@
 
 #include "AAbstractSocket.h"
 #include "AUI/IO/IInputStream.h"
-#include "AUI/IO/IOException.h"
+#include "AUI/IO/AIOException.h"
 #include "AUI/IO/IOutputStream.h"
 
 #include "AInet4Address.h"

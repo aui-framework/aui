@@ -20,12 +20,37 @@
  */
 
 #pragma once
-#include "IOException.h"
+#include <exception>
 
-class EOFException: public IOException
+#include "AUI/Common/AException.h"
+
+/**
+ * Exception caused by input/output stream.
+ */
+class AIOException: public AException
 {
 public:
-	EOFException() : IOException("the stream has reached eof") {}
+	AIOException()
+	{
+	}
 
-	virtual ~EOFException() = default;
+	AIOException(const AString& message)
+		: AException(message)
+	{
+	}
+	virtual ~AIOException() = default;
+};
+
+
+class AFileNotFoundException: public AIOException {
+public:
+    using AIOException::AIOException;
+};
+class AAccessDeniedException: public AIOException {
+public:
+    using AIOException::AIOException;
+};
+class AResourceBusyException: public AIOException {
+public:
+    using AIOException::AIOException;
 };

@@ -28,7 +28,7 @@
 #include <cassert>
 #include "APath.h"
 #include <AUI/Common/AStringVector.h>
-#include "IOException.h"
+#include "AIOException.h"
 #include "AFileInputStream.h"
 #include "AFileOutputStream.h"
 #include <AUI/Traits/platform.h>
@@ -136,7 +136,7 @@ const APath& APath::removeFile() const {
         if (RemoveDirectory(c_str()))
             return *this;
 #endif
-        throw IOException("could not remove file " + *this ERROR_DESCRIPTION);
+        throw AIOException("could not remove file " + *this ERROR_DESCRIPTION);
     }
     return *this;
 }
@@ -164,7 +164,7 @@ ADeque<APath> APath::listDir(ListFlags f) const {
     DIR* dir = opendir(toStdString().c_str());
     if (!dir)
 #endif
-        throw AccessDeniedException("could not list " + *this ERROR_DESCRIPTION);
+        throw AAccessDeniedException("could not list " + *this ERROR_DESCRIPTION);
 
 #ifdef WIN32
     for (bool t = true; t; t = FindNextFile(dir, &fd)) {
@@ -213,12 +213,12 @@ ADeque<APath> APath::listDir(ListFlags f) const {
 APath APath::absolute() const {
     // *nix requires file existence but windows doesn't - unifying the behaviour
     if (!exists()) {
-        throw FileNotFoundException(*this);
+        throw AFileNotFoundException(*this);
     }
 #ifdef WIN32
     wchar_t buf[0x1000];
     if (_wfullpath(buf, c_str(), sizeof(buf) / sizeof(wchar_t)) == nullptr) {
-        throw IOException("could not find absolute file" + *this ERROR_DESCRIPTION);
+        throw AIOException("could not find absolute file" + *this ERROR_DESCRIPTION);
     }
 
     return APath(buf);
@@ -240,13 +240,13 @@ const APath& APath::makeDir() const {
         auto et = GetLastError();
         switch (et) {
             case ERROR_FILE_NOT_FOUND:
-                throw FileNotFoundException(s);
+                throw AFileNotFoundException(s);
             case ERROR_ACCESS_DENIED:
-                throw AccessDeniedException(s);
+                throw AAccessDeniedException(s);
             case ERROR_ALREADY_EXISTS:
                 break;
             default:
-                throw IOException(s);
+                throw AIOException(s);
         }
     }
 #else
@@ -305,7 +305,7 @@ struct stat APath::stat() const {
 
 
 void APath::copy(const APath& source, const APath& destination) {
-    _new<AFileOutputStream>(destination) << _new<AFileInputStream>(source);
+    AFileOutputStream(destination) << AFileInputStream(source);
 }
 
 #if AUI_PLATFORM_WIN

@@ -23,13 +23,13 @@
 
 
 SocketException::SocketException(const AString& arg, const AInet4Address& addr) :
-	IOException(arg + ": " + addr.toString()),
-	mDestAddress(addr)
+        AIOException(arg + ": " + addr.toString()),
+        mDestAddress(addr)
 {
 
 }
 
-SocketException::SocketException(const AString& arg): IOException(arg)
+SocketException::SocketException(const AString& arg): AIOException(arg)
 {
 }
 

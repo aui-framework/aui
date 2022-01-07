@@ -35,5 +35,5 @@ public:
     {
     }
 
-    int write(const char* src, int size) override;
+    size_t write(const char* src, size_t size) override;
 };

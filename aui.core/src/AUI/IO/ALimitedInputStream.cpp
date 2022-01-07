@@ -25,11 +25,11 @@
 
 #include "ALimitedInputStream.h"
 
-int ALimitedInputStream::read(char* dst, int size) {
-    int toRead = glm::min(mLimit, size_t(size));
+size_t ALimitedInputStream::read(char* dst, size_t size) {
+    size_t toRead = glm::min(mLimit, size);
     if (toRead) {
         mLimit -= toRead;
-        int read = mInputStream->read(dst, toRead);
+        size_t read = mInputStream->read(dst, toRead);
         assert(read <= toRead);
         return read;
     }

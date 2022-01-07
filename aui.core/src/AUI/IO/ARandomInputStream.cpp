@@ -4,7 +4,7 @@
 
 #include "ARandomInputStream.h"
 
-int ARandomInputStream::read(char* dst, int size) {
+size_t ARandomInputStream::read(char* dst, size_t size) {
     std::uniform_int_distribution<int> in;
     for (int i = 0; i < size; ++i) {
         dst[i] = in(mRandomEngine);

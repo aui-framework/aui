@@ -317,45 +317,45 @@ public:
 
     void resizeToNullTerminator();
 
-	iterator erase(const_iterator begin, const_iterator end)
+	iterator erase(const_iterator begin, const_iterator end) noexcept
 	{
 		return std::wstring::erase(begin, end);
 	}
-	iterator erase(const_iterator begin)
+	iterator erase(const_iterator begin) noexcept
 	{
 		return std::wstring::erase(begin);
 	}
 
-	AString& erase(size_type offset)
+	AString& erase(size_type offset) noexcept
 	{
 		std::wstring::erase(offset);
 		return *this;
 	}
-	AString& erase(size_type offset, size_type count)
+	AString& erase(size_type offset, size_type count) noexcept
 	{
 		std::wstring::erase(offset, count);
 		return *this;
 	}
 
-	_<AByteBuffer> toUtf8() const;
+	AByteBuffer toUtf8() const noexcept;
 
-	void removeAt(unsigned index)
+	void removeAt(unsigned index) noexcept
 	{
 		erase(begin() + index);
 	}
-	AString excessSpacesRemoved() const;
+	AString excessSpacesRemoved() const noexcept;
 
-	iterator insert(size_type at, wchar_t c)
+	iterator insert(size_type at, wchar_t c) noexcept
 	{
 		return std::wstring::insert(begin() + at, 1, c);
 	}
-	iterator insert(size_type at, const AString& c)
+	iterator insert(size_type at, const AString& c) noexcept
 	{
 		return std::wstring::insert(begin() + at, c.begin(), c.end());
 	}
 	
 	template<typename Iterator>
-	iterator insert(const_iterator at, Iterator begin, Iterator end)
+	iterator insert(const_iterator at, Iterator begin, Iterator end) noexcept
 	{
 		return std::wstring::insert(at, begin, end);
 	}

@@ -25,10 +25,10 @@
 
 #include "MultipleInputStream.h"
 
-int MultipleInputStream::read(char* dst, int size) {
+size_t MultipleInputStream::read(char* dst, size_t size) {
     while (!mInputStreams.empty()) {
-        int r = mInputStreams.first()->read(dst, size);
-        if (r <= 0) {
+        size_t r = mInputStreams.first()->read(dst, size);
+        if (r == 0) {
             mInputStreams.pop_front();
         } else {
             return r;

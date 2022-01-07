@@ -64,7 +64,7 @@ _<IInputStream> AUrl::open() const {
 		if (auto is = c->second(*this))
 			return is;
 	}
-	throw IOException("could not open url: " + getFull());
+	throw AIOException("could not open url: " + getFull());
 }
 
 

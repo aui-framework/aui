@@ -12,7 +12,7 @@ public:
     explicit ARandomInputStream(size_t seed): mRandomEngine(seed) {}
     ~ARandomInputStream() override = default;
 
-    int read(char* dst, int size) override;
+    size_t read(char* dst, size_t size) override;
 };
 
 

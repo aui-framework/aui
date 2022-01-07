@@ -25,10 +25,10 @@
 void AError::handleErrno(const AString& furtherInfo) {
     auto e = errno;
     switch (e) {
-        case EACCES: case EPERM: throw AccessDeniedException("access denied: " + furtherInfo);
-        case EEXIST: throw IOException("file already exists: " + furtherInfo);
-        case EIO: throw IOException("io error: " + furtherInfo);
-        case EBUSY: throw ResourceBusyException("device or resource is busy: " + furtherInfo);
+        case EACCES: case EPERM: throw AAccessDeniedException("access denied: " + furtherInfo);
+        case EEXIST: throw AIOException("file already exists: " + furtherInfo);
+        case EIO: throw AIOException("io error: " + furtherInfo);
+        case EBUSY: throw AResourceBusyException("device or resource is busy: " + furtherInfo);
 
         default:
             throw AException("unknown exception (errno " + std::to_string(e) + "): " + furtherInfo);

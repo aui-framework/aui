@@ -34,7 +34,7 @@ AFileInputStream::AFileInputStream(const AString& path)
 #endif
 	if (!mFile)
 	{
-		throw IOException("could not read from " + path.toStdString());
+		throw AIOException("could not read from " + path.toStdString());
 	}
 }
 
@@ -43,7 +43,7 @@ AFileInputStream::~AFileInputStream()
 	fclose(mFile);
 }
 
-int AFileInputStream::read(char* dst, int size)
+size_t AFileInputStream::read(char* dst, size_t size)
 {
 	size_t r = ::fread(dst, 1, size, mFile);
 	return r;

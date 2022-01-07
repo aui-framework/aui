@@ -79,7 +79,7 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
         AByteBuffer data;
 
         char buf[0x1000];
-        for (int r; (r = fis->read(buf, sizeof(buf))) > 0;)
+        for (size_t r; (r = fis->read(buf, sizeof(buf))) > 0;)
         {
             data.put(buf, r);
         }

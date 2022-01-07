@@ -33,7 +33,7 @@ AFileOutputStream::AFileOutputStream(const AString& path, bool append)
 #endif
 	if (!mFile)
 	{
-		throw IOException("could not write to " + path.toStdString());
+		throw AIOException("could not write to " + path.toStdString());
 	}
 }
 
@@ -42,7 +42,7 @@ AFileOutputStream::~AFileOutputStream()
     close();
 }
 
-int AFileOutputStream::write(const char* src, int size)
+size_t AFileOutputStream::write(const char* src, size_t size)
 {
 	return fwrite(src, 1, size, mFile);
 }

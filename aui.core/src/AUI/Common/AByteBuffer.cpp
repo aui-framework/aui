@@ -27,7 +27,7 @@
 
 
 #include "AUI/IO/IInputStream.h"
-#include "AUI/IO/IOException.h"
+#include "AUI/IO/AIOException.h"
 
 AByteBuffer::AByteBuffer() {
     reserve(64);
@@ -77,7 +77,7 @@ void AByteBuffer::put(const char* buffer, size_t size) {
 
 void AByteBuffer::get(char* buffer, size_t size) const {
     if (mCurrentPos + size > mSize)
-        throw IOException("bytebuffer overflow");
+        throw AIOException("bytebuffer overflow");
     memcpy(buffer, mBuffer + mCurrentPos, size);
     mCurrentPos += size;
 }
@@ -98,8 +98,8 @@ AByteBuffer AByteBuffer::fromStream(IInputStream& is)
 {
     AByteBuffer buf;
     char tmp[0x10000];
-    int last;
-    while ((last = is.read(tmp, sizeof(tmp))) > 0)
+
+    for (size_t last; (last = is.read(tmp, sizeof(tmp))) > 0;)
     {
         buf.put(tmp, last);
     }
@@ -109,8 +109,7 @@ AByteBuffer AByteBuffer::fromStream(IInputStream& is)
 AByteBuffer AByteBuffer::fromStream(IInputStream& is, size_t sizeRestriction) {
     AByteBuffer buf;
     char tmp[4096];
-    int last;
-    while ((last = is.read(tmp, sizeof(tmp))) > 0 && buf.getSize() < sizeRestriction)
+    for (size_t last; (last = is.read(tmp, sizeof(tmp))) > 0 && buf.getSize() < sizeRestriction;)
     {
         buf.put(tmp, last);
     }
