@@ -19,11 +19,11 @@
  * =====================================================================================================================
  */
 
-#include "FileOutputStream.h"
+#include "AFileOutputStream.h"
 
 #include "AUI/Common/AString.h"
 
-FileOutputStream::FileOutputStream(const AString& path, bool append)
+AFileOutputStream::AFileOutputStream(const AString& path, bool append)
 {
 #if AUI_PLATFORM_WIN
 	// КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
@@ -33,21 +33,21 @@ FileOutputStream::FileOutputStream(const AString& path, bool append)
 #endif
 	if (!mFile)
 	{
-		throw IOException(path.toStdString().c_str());
+		throw IOException("could not write to " + path.toStdString());
 	}
 }
 
-FileOutputStream::~FileOutputStream()
+AFileOutputStream::~AFileOutputStream()
 {
     close();
 }
 
-int FileOutputStream::write(const char* src, int size)
+int AFileOutputStream::write(const char* src, int size)
 {
 	return fwrite(src, 1, size, mFile);
 }
 
-void FileOutputStream::close() {
+void AFileOutputStream::close() {
     if (mFile) {
         fclose(mFile);
         mFile = nullptr;

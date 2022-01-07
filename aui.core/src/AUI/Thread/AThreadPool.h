@@ -25,8 +25,11 @@
 #include <cassert>
 #include <atomic>
 
-#include "AUI/Common/AVector.h"
-#include "AUI/Common/AQueue.h"
+#include <AUI/Common/AVector.h>
+#include <AUI/Common/AQueue.h>
+#include <AUI/Thread/AFutureSet.h>
+#include <AUI/Util/kAUI.h>
+#include <glm/glm.hpp>
 
 template<typename T>
 class AFuture;
@@ -49,57 +52,57 @@ namespace aui::detail {
 class API_AUI_CORE AThreadPool
 {
 private:
-	class Worker {
-	private:
-		bool mEnabled = true;
-		_<AThread> mThread;
-		std::mutex mMutex;
-		bool processQueue(AQueue<std::function<void()>>& queue);
-		void thread_fn();
-		AThreadPool& mTP;
-	public:
-		Worker(AThreadPool& tp, size_t index);
-		~Worker();
-		void disable();
-	};
+    class Worker {
+    private:
+        bool mEnabled = true;
+        _<AThread> mThread;
+        std::mutex mMutex;
+        bool processQueue(AQueue<std::function<void()>>& queue);
+        void thread_fn();
+        AThreadPool& mTP;
+    public:
+        Worker(AThreadPool& tp, size_t index);
+        ~Worker();
+        void disable();
+    };
 
-	struct FenceHelper {
-	    unsigned enqueuedTasks = 0;
-	    std::atomic_uint doneTasks;
-	    bool waitingForNotify = false;
-	    std::condition_variable cv;
-	    std::mutex mutex;
-	};
+    struct FenceHelper {
+        unsigned enqueuedTasks = 0;
+        std::atomic_uint doneTasks;
+        bool waitingForNotify = false;
+        std::condition_variable cv;
+        std::mutex mutex;
+    };
 
     FenceHelper*& fenceHelperStorage();
 
 public:
-	enum Priority
-	{
-		PRIORITY_HIGHEST,
-		PRIORITY_MEDIUM,
-		PRIORITY_LOWEST,
-	};
+    enum Priority
+    {
+        PRIORITY_HIGHEST,
+        PRIORITY_MEDIUM,
+        PRIORITY_LOWEST,
+    };
 protected:
-	typedef std::function<void()> task;
-	AVector<Worker*> mWorkers;
-	AQueue<task> mQueueHighest;
-	AQueue<task> mQueueMedium;
-	AQueue<task> mQueueLowest;
-	AQueue<task> mQueueTryLater;
-	std::recursive_mutex mQueueLock;
-	std::condition_variable mCV;
-	std::atomic_uint mIdleWorkers;
+    typedef std::function<void()> task;
+    AVector<Worker*> mWorkers;
+    AQueue<task> mQueueHighest;
+    AQueue<task> mQueueMedium;
+    AQueue<task> mQueueLowest;
+    AQueue<task> mQueueTryLater;
+    std::recursive_mutex mQueueLock;
+    std::condition_variable mCV;
+    std::atomic_uint mIdleWorkers;
 
 public:
-	AThreadPool(size_t size);
-	AThreadPool();
-	~AThreadPool();
-	size_t getPendingTaskCount();
-	void run(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
-	void clear();
+    AThreadPool(size_t size);
+    AThreadPool();
+    ~AThreadPool();
+    size_t getPendingTaskCount();
+    void run(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
+    void clear();
     void runLaterTasks();
-	static void enqueue(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
+    static void enqueue(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
 
     static AThreadPool& global();
 
@@ -140,21 +143,59 @@ public:
         } while (fenceHelper.doneTasks != fenceHelper.enqueuedTasks);
     }
 
-	template <typename Callable>
-	typename aui::detail::future_helper<std::invoke_result_t<Callable>>::return_type operator<<(Callable fun)
-	{
-		if constexpr (std::is_void_v<std::invoke_result_t<Callable>>) {
-			run(fun);
-		} else
-		{
-			return AFuture<std::invoke_result_t<Callable>>::make(*this, fun);
-		}
-	}
-    template <typename Callable>
-	inline auto operator*(Callable fun)
-	{
-		return *this << fun;
-	}
 
-	class TryLaterException {};
+    /**
+     * Parallels work of some range, grouping tasks per thread (i.e. for 8 items on a 4-core processor each core will
+     * process 2 items)
+     *
+     * @return future set per thread (i.e. for 8 items on a 4-core processor there will be 4 futures)
+     *
+     * <dl>
+     *   <dt><b>Performance note</b></dt>
+     *   <dd>
+     *      When this function is used to write to the source data it would not be L1-cache friendly. Consider writing
+     *      results to another location.
+     *   </dd>
+     * </dl>
+     */
+    template<typename Iterator, typename Functor>
+    auto parallel(Iterator begin, Iterator end, Functor&& functor) {
+        using ResultType = decltype(std::declval<Functor>()(std::declval<Iterator>(), std::declval<Iterator>()));
+        static_assert(!std::is_same_v<ResultType, void>, "functor must return a value");
+        AFutureSet<ResultType> futureSet;
+
+        size_t itemCount = end - begin;
+        size_t affinity = (glm::min)(AThreadPool::global().getTotalWorkerCount(), itemCount);
+        if (affinity == 0) return futureSet;
+        size_t itemsPerThread = itemCount / affinity;
+
+        for (size_t threadIndex = 0; threadIndex < affinity; ++threadIndex) {
+            auto forThreadBegin = begin;
+            begin += itemsPerThread;
+            auto forThreadEnd = threadIndex + 1 == affinity ? end : begin;
+            futureSet.push_back(asyncX [functor = std::forward<Functor>(functor), forThreadBegin, forThreadEnd]() -> decltype(auto) {
+                return functor(forThreadBegin, forThreadEnd);
+            });
+        }
+
+        return futureSet;
+    }
+
+    template <typename Callable>
+    typename aui::detail::future_helper<std::invoke_result_t<Callable>>::return_type operator<<(Callable fun)
+    {
+        if constexpr (std::is_void_v<std::invoke_result_t<Callable>>) {
+            run(fun);
+        } else
+        {
+            return AFuture<std::invoke_result_t<Callable>>::make(*this, fun);
+        }
+    }
+    template <typename Callable>
+    inline auto operator*(Callable fun)
+    {
+        return *this << fun;
+    }
+
+    class TryLaterException {};
 };

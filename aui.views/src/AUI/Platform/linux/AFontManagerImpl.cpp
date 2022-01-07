@@ -26,7 +26,7 @@
 #include <fontconfig/fontconfig.h>
 #include <AUI/IO/APath.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/IO/FileInputStream.h>
+#include <AUI/IO/AFileInputStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include "AUI/Render/FreeType.h"
 

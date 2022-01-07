@@ -591,8 +591,6 @@ function(aui_compile_assets_add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
 endfunction(aui_compile_assets_add)
 
 function(aui_module AUI_MODULE_NAME)
-    project(${AUI_MODULE_NAME})
-
     file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
 
     if (SRCS_TESTS_TMP)
@@ -628,7 +626,6 @@ function(aui_module AUI_MODULE_NAME)
     aui_add_properties(${AUI_MODULE_NAME})
 
     string(REPLACE "." "::" BUILD_AS_IMPORTED_NAME ${AUI_MODULE_NAME})
-    add_library(${BUILD_AS_IMPORTED_NAME} ALIAS ${AUI_MODULE_NAME})
 
     aui_common(${AUI_MODULE_NAME})
     install(
@@ -650,6 +647,9 @@ function(aui_module AUI_MODULE_NAME)
             PATTERN "*.hpp"
 
     )
+    if (NOT BUILD_AS_IMPORTED_NAME STREQUAL ${AUI_MODULE_NAME})
+        add_library(${BUILD_AS_IMPORTED_NAME} ALIAS ${AUI_MODULE_NAME})
+    endif()
 endfunction(aui_module)
 
 if (MINGW OR UNIX)

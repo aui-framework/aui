@@ -23,7 +23,7 @@
 
 #include <AUI/Core.h>
 #include "AUI/Thread/AMutex.h"
-#include "AUI/IO/FileOutputStream.h"
+#include "AUI/IO/AFileOutputStream.h"
 #include <sstream>
 
 class AString;
@@ -42,7 +42,7 @@ private:
 	ALogger();
 	static ALogger& instance();
 	AMutex mSync;
-	_<FileOutputStream> mLogFile;
+	_<AFileOutputStream> mLogFile;
 	
 	void log(Level level, const AString& str);
 

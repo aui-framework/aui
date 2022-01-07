@@ -29,8 +29,8 @@
 #include "APath.h"
 #include <AUI/Common/AStringVector.h>
 #include "IOException.h"
-#include "FileInputStream.h"
-#include "FileOutputStream.h"
+#include "AFileInputStream.h"
+#include "AFileOutputStream.h"
 #include <AUI/Traits/platform.h>
 
 #ifdef WIN32
@@ -235,6 +235,8 @@ const APath& APath::makeDir() const {
         auto s = "could not create directory: "_as + absolute() ERROR_DESCRIPTION;
         auto et = GetLastError();
         switch (et) {
+            case ERROR_FILE_NOT_FOUND:
+                throw FileNotFoundException(s);
             case ERROR_ACCESS_DENIED:
                 throw AccessDeniedException(s);
             case ERROR_ALREADY_EXISTS:
@@ -299,7 +301,7 @@ struct stat APath::stat() const {
 
 
 void APath::copy(const APath& source, const APath& destination) {
-    _new<FileOutputStream>(destination) << _new<FileInputStream>(source);
+    _new<AFileOutputStream>(destination) << _new<AFileInputStream>(source);
 }
 
 #if AUI_PLATFORM_WIN

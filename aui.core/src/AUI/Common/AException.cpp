@@ -19,7 +19,7 @@
  * =====================================================================================================================
  */
 
-
+/*
 #include "AException.h"
 #include <AUI/Logging/ALogger.h>
 class AException::Stacktrace {
@@ -65,34 +65,9 @@ AException::AException() {
     backtrace_full(state, 0, aui_backtrace_full_callback, aui_backtrace_error_callback, this);
 }
 #else
-AException::AException() {
-    mStacktrace = nullptr;
-}
+
 #endif
 
 
-AException::~AException() noexcept
-{
-    delete mStacktrace;
-}
 
-const char* AException::what() const noexcept {
-    static thread_local std::string s;
-    s = getMessage().toStdString();
-    return s.c_str();
-}
-
-AString AException::getMessage() const {
-    return mMessage;
-}
-
-void AException::printStacktrace() {
-    if (!mStacktrace) {
-        ALogger::warn("<stack trace is not available>");
-        return;
-    }
-    for (auto& l : mStacktrace->mEntries) {
-        ALogger::raw() << "    at " << l.mName << l.lineno << '\n';
-    }
-}
-
+*/

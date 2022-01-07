@@ -31,8 +31,8 @@
 #include "AJsonElement.h"
 
 
-AJsonElement AJson::read(_<IInputStream> is) {
-    ATokenizer t(is);
+AJsonElement AJson::read(IInputStream& is) {
+    ATokenizer t(aui::ptr::fake(&is));
     try {
 
         std::function < _<IJsonElement>() > read;
@@ -140,14 +140,14 @@ AJsonElement AJson::read(_<IInputStream> is) {
     return AJsonElement();
 }
 
-void API_AUI_JSON AJson::write(_<IOutputStream> os, const AJsonElement& json) {
+void API_AUI_JSON AJson::write(IOutputStream& os, const AJsonElement& json) {
     json.serialize(os);
 }
 
 
 AString AJson::toString(const AJsonElement& json) {
     auto bb = _new<AByteBuffer>();
-    write(_new<ByteBufferOutputStream>(bb), json);
+    write(ByteBufferOutputStream(bb), json);
     return {bb->data(), bb->data() + bb->getSize()};
 }
 
@@ -156,5 +156,5 @@ AJsonElement AJson::fromString(const AString& json) {
     auto s = json.toStdString();
     bb.put(s.c_str(), s.length());
     bb.setCurrentPos(0);
-    return read(_new<ByteBufferInputStream>(bb));
+    return read(ByteBufferInputStream(bb));
 }

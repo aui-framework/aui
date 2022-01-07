@@ -61,6 +61,16 @@ public:
      */
     inline void writeAll(IInputStream& fis, size_t limit = (std::numeric_limits<size_t>::max)());
 
+    /**
+     * \brief Redirects all input stream data to this output stream
+     * \param os IInputStream
+     * \param limit max count of bytes to write
+     * \note if you don't want to limit stream, use the operator<<() function.
+     */
+    inline void writeAll(IInputStream&& fis, size_t limit = (std::numeric_limits<size_t>::max)()) {
+        writeAll(fis, limit);
+    }
+
 
 	/**
 	 * \brief Works as <code>write(const char* src, int size)</code> except it accepts AByteBuffer instead of
@@ -84,6 +94,20 @@ public:
 	{
         // static_assert(std::is_standard_layout_v<T>, "data is too complex to be written to stream");
 		if (write(reinterpret_cast<const char*>(&in), sizeof(T)) < 0)
+			throw IOException("could not write to file");
+		return *this;
+	}
+
+
+    /**
+     * \brief Writes raw data from the bytebuffer.
+     * \param in data
+     * \return this
+     */
+	template<>
+	inline IOutputStream& operator<<(const AByteBuffer& in)
+	{
+		if (write(in.data(), in.getSize()) < 0)
 			throw IOException("could not write to file");
 		return *this;
 	}
@@ -176,7 +200,7 @@ void IOutputStream::writeAll(IInputStream& fis, size_t limit) {
         }
         write(buf, r);
 
-        if (r >= limit) {
+        if (r >= int(limit)) {
             return;
         }
         limit -= r;

@@ -19,12 +19,12 @@
  * =====================================================================================================================
  */
 
-#include "FileInputStream.h"
+#include "AFileInputStream.h"
 
 
 #include "AUI/Common/AString.h"
 
-FileInputStream::FileInputStream(const AString& path)
+AFileInputStream::AFileInputStream(const AString& path)
 {
 #if AUI_PLATFORM_WIN
     // КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
@@ -34,22 +34,22 @@ FileInputStream::FileInputStream(const AString& path)
 #endif
 	if (!mFile)
 	{
-		throw IOException(path.toStdString().c_str());
+		throw IOException("could not read from " + path.toStdString());
 	}
 }
 
-FileInputStream::~FileInputStream()
+AFileInputStream::~AFileInputStream()
 {
 	fclose(mFile);
 }
 
-int FileInputStream::read(char* dst, int size)
+int AFileInputStream::read(char* dst, int size)
 {
 	size_t r = ::fread(dst, 1, size, mFile);
 	return r;
 }
 
-void FileInputStream::seek(std::streamoff offset, FileInputStream::Seek dir) {
+void AFileInputStream::seek(std::streamoff offset, AFileInputStream::Seek dir) {
     fseek(mFile, offset, [&] {
         switch (dir) {
             case Seek::BEGIN:
@@ -63,7 +63,7 @@ void FileInputStream::seek(std::streamoff offset, FileInputStream::Seek dir) {
     }());
 }
 
-void FileInputStream::seek(std::streampos pos) {
+void AFileInputStream::seek(std::streampos pos) {
     fseek(mFile, pos, SEEK_SET);
 }
 

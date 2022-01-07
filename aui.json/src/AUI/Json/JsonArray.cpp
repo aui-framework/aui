@@ -56,16 +56,16 @@ AVector<AJsonElement>& JsonArray::asArray()
 	return mValue;
 }
 
-void JsonArray::serialize(const _<IOutputStream>& os) const {
-    os->write("[", 1);
+void JsonArray::serialize(IOutputStream& os) const {
+    os.write("[", 1);
     bool comma = true;
     for (auto& element : mValue) {
         if (comma) {
             comma = false;
         } else {
-            os->write(",", 1);
+            os.write(",", 1);
         }
         AJson::write(os, element);
     }
-    os->write("]", 1);
+    os.write("]", 1);
 }
