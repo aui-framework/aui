@@ -95,7 +95,10 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
          }
     });
 
-    addView(_new<ASelectableLabel>("Building beautiful programs in pure C++ without chrome embded framework"));
+    addView(Horizontal {
+        _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) with_style { FixedSize { 32_dp } },
+        _new<ASelectableLabel>("Building beautiful programs in pure C++ without chrome embded framework"),
+    });
     _<ATabView> tabView;
     addView(tabView = _new<ATabView>() let {
         it->addTab(Horizontal {
