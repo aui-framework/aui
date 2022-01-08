@@ -107,8 +107,9 @@ if (AUI_FOUND AND NOT TARGET aui)
             INTERFACE_LINK_LIBRARIES "${AUI_IMPORTED_TARGETS}")
 endif()
 
-if (views IN_LIST AUI_FIND_COMPONENTS AND NOT ANDROID)
+if (views IN_LIST AUI_FIND_COMPONENTS AND NOT ANDROID AND NOT IOS)
     find_package(GLEW REQUIRED)
+    find_package(OpenGL REQUIRED)
 endif()
 
 # import required targets when static build is enabled.
