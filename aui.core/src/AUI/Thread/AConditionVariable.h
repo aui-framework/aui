@@ -21,8 +21,95 @@
 
 #pragma once
 #include <condition_variable>
+#include "AThread.h"
 
-class AConditionVariable: public std::condition_variable_any
+class AConditionVariable
 {
+private:
+    std::condition_variable_any mImpl;
+
+    struct WaitHelper {
+        WaitHelper(AConditionVariable& var) noexcept {
+            auto thread = AThread::current();
+            std::unique_lock lock(thread->mCurrentCV.mutex);
+            thread->mCurrentCV.cv = &var;
+        }
+        ~WaitHelper() noexcept(false) {
+            auto thread = AThread::current();
+            std::unique_lock lock(thread->mCurrentCV.mutex);
+            thread->mCurrentCV.cv = nullptr;
+            AThread::interruptionPoint();
+        }
+    };
+
+    template<typename Predicate>
+    struct PredicateHelper {
+        Predicate predicate;
+        _<AAbstractThread> thread;
+
+        PredicateHelper(Predicate predicate) : predicate(std::move(predicate)), thread(AThread::current()) {}
+        bool operator()() noexcept {
+            if (thread->isInterrupted()) return true;
+            return predicate();
+        }
+    };
+
 public:
+    /**
+     * Notifies all observing threads.
+     * <dl>
+     *   <dt><b>Performance note</b></dt>
+     *   <dd>This function is faster than <a href="notify_one">notify_one</a>.</dd>
+     * </dl>
+     */
+    void notify_all() noexcept { mImpl.notify_all(); }
+
+    /**
+     * Notifies one observing thread.
+     * <dl>
+     *   <dt><b>Performance note</b></dt>
+     *   <dd>This function is slower than <a href="notify_all">notify_all</a>.</dd>
+     * </dl>
+     */
+    void notify_one() noexcept { mImpl.notify_one(); }
+
+    template<typename Lock>
+    void wait(Lock& lock) {
+        WaitHelper w(*this);
+        mImpl.wait(lock);
+    }
+
+    /**
+     * Waits for the notification.
+     * @param lock lock.
+     * @param predicate which returns false if the waiting should be continued.
+     */
+    template<typename Lock, typename Predicate>
+    void wait(Lock& lock, Predicate&& predicate) {
+        WaitHelper w(*this);
+        mImpl.wait(lock, PredicateHelper(std::forward<Predicate>(predicate)));
+    }
+
+    /**
+     * Waits for the notification.
+     * @param lock lock.
+     * @param duration duration to wait for.
+     */
+    template<typename Lock, typename Duration>
+    void wait_for(Lock& lock, Duration duration) {
+        WaitHelper w(*this);
+        mImpl.wait_for(lock, duration);
+    }
+
+    /**
+     * Waits for the notification.
+     * @param lock lock.
+     * @param duration duration to wait for.
+     * @param predicate which returns false if the waiting should be continued.
+     */
+    template<typename Lock, typename Duration, typename Predicate>
+    void wait_for(Lock& lock, Duration duration, Predicate&& predicate) {
+        WaitHelper w(*this);
+        mImpl.wait_for(lock, duration, PredicateHelper(std::forward<Predicate>(predicate)));
+    }
 };

@@ -47,6 +47,36 @@ BOOST_AUTO_TEST_SUITE(Threading)
         BOOST_CHECK_EQUAL(*someInt, 100);
     }
 
+    BOOST_AUTO_TEST_CASE(SleepInterruption) {
+        bool called = false;
+        auto future = asyncX [&] {
+            called = true;
+            AThread::sleep(1000);
+            BOOST_FAIL("this line should not have reached");
+            return 0;
+        };
+        AThread::sleep(500);
+        future.cancel();
+        AThread::sleep(1000);
+        BOOST_REQUIRE_MESSAGE(called, "lambda has not called either");
+    }
+    BOOST_AUTO_TEST_CASE(ConditionVariableInterruption) {
+        bool called = false;
+        auto future = asyncX [&] {
+            called = true;
+            AConditionVariable cv;
+            AMutex mutex;
+            std::unique_lock lock(mutex);
+            cv.wait(lock);
+            BOOST_FAIL("this line should not have reached");
+            return 0;
+        };
+        AThread::sleep(500);
+        future.cancel();
+        AThread::sleep(500);
+        BOOST_REQUIRE_MESSAGE(called, "lambda has not called either");
+    }
+
     BOOST_AUTO_TEST_CASE(Future1, *boost::unit_test::tolerance(10)) {
         ADeque<AFuture<double>> taskList;
         auto time = Util::measureTimeInMillis([&]() {
