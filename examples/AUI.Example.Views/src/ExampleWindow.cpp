@@ -197,7 +197,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples")
                     });
                 }),
                 _new<AButton>("Show folder chooser").connect(&AView::clicked, this, [&] {
-                    ADesktop::browseForFolder()->onDone([&](const APath& f) {
+                    ADesktop::browseForDir()->onDone([&](const APath& f) {
                         if (f.empty()) {
                             AMessageBox::show(this, "Result", "Cancelled");
                         } else {

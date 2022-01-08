@@ -37,13 +37,13 @@ namespace aui::detail {
     template<typename T>
     struct future_helper
     {
-        typedef _<AFuture<T>> return_type;
+        using return_type = AFuture<T>;
     };
 
     template<>
     struct future_helper<void>
     {
-        typedef void return_type;
+        using return_type = void;
     };
 
 }
@@ -182,13 +182,13 @@ public:
 #include <AUI/Thread/AFuture.h>
 
 template<typename T>
-class AFutureSet: public AVector<_<AFuture<T>>> {
+class AFutureSet: public AVector<AFuture<T>> {
 public:
-    using AVector<_<AFuture<T>>>::AVector;
+    using AVector<AFuture<T>>::AVector;
 
-    void waitForAll() {
-        for (const _<AFuture<T>>& v : *this) {
-            v->operator*();
+    void waitForAll() const {
+        for (const AFuture<T>& v : *this) {
+            v.operator*();
         }
     }
 };
@@ -221,19 +221,21 @@ auto AThreadPool::parallel(Iterator begin, Iterator end, Functor &&functor) {
 
 template <typename Value>
 template <typename Callable>
-_<AFuture<Value>> AFuture<Value>::make(AThreadPool& tp, Callable&& func)
+inline AFuture<Value> AFuture<Value>::make(AThreadPool& tp, Callable&& func) noexcept
 {
-    auto future = aui::ptr::manage(new AFuture<Value>);
-    tp.run([future, func = std::forward<Callable>(func)]()
+    AFuture<Value> future;
+    tp.run([innerWeak = future.mInner.weak(), func = std::forward<Callable>(func)]()
            {
-               std::unique_lock lock(future->mMutex);
-               try {
-                   *future->mValue = func();
-               } catch (const AException& e) {
-                   future->mException = AInvocationTargetException(e.getMessage(), AReflect::name(&e));
+               if (auto inner = innerWeak.lock()) {
+                   if (inner->setThread(AThread::current())) return;
+                   try {
+                       inner = nullptr;
+                       auto result = func();
+                       nullsafe(innerWeak.lock())->result(std::move(result));
+                   } catch (const AException& e) {
+                       nullsafe(innerWeak.lock())->reportException(e);
+                   }
                }
-               future->decRef();
-               future->notify();
            }, AThreadPool::PRIORITY_LOWEST);
     return future;
 }

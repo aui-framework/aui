@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(UTF8)
     AString s = someUtfString;
 
     BOOST_TEST(s == someUtfString);
-    BOOST_TEST(memcmp(s.toUtf8()->data(), someUtfString, strlen(someUtfString)) == 0);
+    BOOST_TEST(memcmp(s.toUtf8().data(), someUtfString, strlen(someUtfString)) == 0);
 
 }
 BOOST_AUTO_TEST_CASE(lowercase_en)

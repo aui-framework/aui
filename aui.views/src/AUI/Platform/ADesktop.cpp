@@ -49,7 +49,7 @@ void ADesktop::setMousePos(const glm::ivec2& pos) {
     SetCursorPos(pos.x, pos.y);
 }
 
-_<AFuture<APath>> ADesktop::browseForFolder(const APath& startingLocation) {
+AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
     return async {
         APath result;
         OleInitialize(0);
@@ -106,7 +106,7 @@ _<AFuture<APath>> ADesktop::browseForFolder(const APath& startingLocation) {
     };
 }
 
-_<AFuture<APath>> ADesktop::browseForFile(const APath& startingLocation, const AVector<FileExtension>& extensions) {
+AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVector<FileExtension>& extensions) {
     return async {
         APath result;
         OleInitialize(0);
@@ -190,11 +190,11 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
 
 }
 
-_<AFuture<APath>> ADesktop::browseForFolder(const APath &startingLocation) {
+AFuture<APath> ADesktop::browseForDir(const APath &startingLocation) {
     return nullptr;
 }
 
-_<AFuture<APath>>
+AFuture<APath>
 ADesktop::browseForFile(const APath &startingLocation, const AVector <FileExtension> &extensions) {
     return nullptr;
 }
@@ -214,12 +214,12 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
 
 }
 
-_<AFuture<APath>> ADesktop::browseForFolder(const APath &startingLocation) {
-    return _<AFuture<APath>>();
+AFuture<APath> ADesktop::browseForDir(const APath &startingLocation) {
+    return AFuture<APath>();
 }
 
-_<AFuture<APath>> ADesktop::browseForFile(const APath &startingLocation, const AVector<FileExtension> &extensions) {
-    return _<AFuture<APath>>();
+AFuture<APath> ADesktop::browseForFile(const APath &startingLocation, const AVector<FileExtension> &extensions) {
+    return AFuture<APath>();
 }
 
 void ADesktop::openUrl(const AString &url) {
@@ -274,7 +274,7 @@ void ADesktop::openUrl(const AString& url) {
     system(s.c_str());
 }
 
-_<AFuture<APath>> ADesktop::browseForFile(const APath& startingLocation, const AVector<FileExtension>& extensions) {
+AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVector<FileExtension>& extensions) {
     return async {
         aui_gtk_init();
         GtkWidget *dialog;
@@ -321,7 +321,7 @@ _<AFuture<APath>> ADesktop::browseForFile(const APath& startingLocation, const A
     };
 }
 
-_<AFuture<APath>> ADesktop::browseForFolder(const APath& startingLocation) {
+AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
     return async {
         aui_gtk_init();
         GtkWidget *dialog;

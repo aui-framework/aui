@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_SUITE(Threading)
     }
 
     BOOST_AUTO_TEST_CASE(Future1, *boost::unit_test::tolerance(10)) {
-        ADeque < _ < AFuture < double>>> taskList;
+        ADeque<AFuture<double>> taskList;
         auto time = Util::measureTimeInMillis([&]() {
             repeat(1000)
             {
@@ -62,13 +62,13 @@ BOOST_AUTO_TEST_SUITE(Threading)
                 };
             }
 
-            for (auto& f : taskList) f.get();
+            for (auto& f : taskList) *f;
 
-            printf("Ok, result: %f\n", **taskList.first());
+            printf("Ok, result: %f\n", *taskList.first());
         });
 
         printf("Finished in %llu ms\n", time);
-        BOOST_CHECK_EQUAL(**taskList.first(),
+        BOOST_CHECK_EQUAL(*taskList.first(),
                           21430172143725346418968500981200036211228096234110672148875007767407021022498722449863967576313917162551893458351062936503742905713846280871969155149397149607869135549648461970842149210124742283755908364306092949967163882534797535118331087892154125829142392955373084335320859663305248773674411336138752.000000);
         BOOST_TEST(time < 1000);
     }
@@ -100,8 +100,8 @@ BOOST_AUTO_TEST_SUITE(Threading)
         AThread::sleep(2000);
         BOOST_TEST(*b);
 
-        BOOST_CHECK_EQUAL(**v8, 8);
-        BOOST_CHECK_EQUAL(**v1231, 1231.f);
+        BOOST_CHECK_EQUAL(*v8, 8);
+        BOOST_CHECK_EQUAL(*v1231, 1231.f);
     }
 
     BOOST_AUTO_TEST_CASE(PararellVoid) {
@@ -142,12 +142,85 @@ BOOST_AUTO_TEST_SUITE(Threading)
             });
             int accumulator = 0;
             for (auto& v : result) {
-                accumulator += **v;
+                accumulator += *v;
             }
             if (accumulator != 5 * i) BOOST_FAIL("invalid result");
         }
     }
 
+    BOOST_AUTO_TEST_CASE(FutureCancellationBeforeExecution) {
+        AThreadPool localThreadPool(1);
+        size_t foreignLambdaCallCount = 0;
+        auto foreignLambda = [&] {
+            try {
+                AThread::sleep(500);
+            } catch (const AThread::AInterrupted& e) {
+                BOOST_FAIL("interrupted exception thrown in a foreign lambda");
+            }
+            foreignLambdaCallCount += 1;
+        };
+        localThreadPool * foreignLambda;
+        {
+            auto future = localThreadPool * [&] {
+                BOOST_FAIL("lambda has called");
+                return 0;
+            };
+            localThreadPool * foreignLambda;
+
+            AThread::sleep(250);
+        }
+        AThread::sleep(1000);
+        BOOST_REQUIRE_EQUAL(foreignLambdaCallCount, 2);
+    }
+
+    BOOST_AUTO_TEST_CASE(FutureCancellationWhileExecution) {
+        bool called = false;
+        {
+            auto future = asyncX [&] {
+                called = true;
+                // hard work
+                AThread::sleep(1000);
+                BOOST_FAIL("this line should not have reached");
+                return 0;
+            };
+            AThread::sleep(500);
+            BOOST_REQUIRE_MESSAGE(called, "lambda has not called either");
+        }
+        AThread::sleep(2000);
+    }
+
+    BOOST_AUTO_TEST_CASE(FutureCancellationAfterExecution) {
+        AThreadPool localThreadPool(1);
+        bool foreignLambdaCalled = false;
+        {
+            auto future = localThreadPool * [&] {
+                return 0;
+            };
+            localThreadPool * [&] {
+                foreignLambdaCalled = true;
+            };
+            AThread::sleep(250);
+        }
+        AThread::sleep(250);
+        BOOST_REQUIRE_MESSAGE(foreignLambdaCalled, "foreign lambda has not called");
+    }
+
+
+    BOOST_AUTO_TEST_CASE(FutureOnDone) {
+        bool called = false;
+        {
+            auto future = async {
+                return 322;
+            };
+            future.onSuccess([&](int i) {
+                BOOST_REQUIRE_EQUAL(i, 322);
+                called = true;
+            });
+            // check that cancellation does not triggers here
+        }
+        AThread::sleep(500);
+        BOOST_REQUIRE_MESSAGE(called, "onSuccess callback does not called");
+    }
     /*
     BOOST_AUTO_TEST_CASE(Fence) {
         std::default_random_engine e(std::time(nullptr));
