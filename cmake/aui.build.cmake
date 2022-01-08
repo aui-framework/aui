@@ -29,6 +29,10 @@ define_property(GLOBAL PROPERTY TESTS_DEPS
         BRIEF_DOCS "Global list of test dependencies"
         FULL_DOCS "Global list of test dependencies")
 
+define_property(TARGET PROPERTY AUI_WHOLEARCHIVE
+        BRIEF_DOCS "Use wholearchive when linking this library to another"
+        FULL_DOCS "Use wholearchive when linking this library to another")
+
 set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
 set_property(GLOBAL PROPERTY TESTS_SRCS "")
 
@@ -433,7 +437,7 @@ function(aui_executable AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
 
     set(options )
-    set(oneValueArgs )
+    set(oneValueArgs COMPILE_ASSETS)
     set(multiValueArgs ADDITIONAL_SRCS)
     cmake_parse_arguments(AUIE "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
@@ -495,6 +499,7 @@ function(aui_executable AUI_MODULE_NAME)
     endif()
 
     aui_common(${AUI_MODULE_NAME})
+
 endfunction(aui_executable)
 
 function(aui_static_link AUI_MODULE_NAME LIBRARY_NAME)
@@ -508,6 +513,7 @@ endfunction(aui_static_link)
 
 function(aui_compile_assets AUI_MODULE_NAME)
     cmake_parse_arguments(ASSETS "" "" "EXCLUDE" ${ARGN})
+    set_target_properties(${AUI_MODULE_NAME} PROPERTIES AUI_WHOLEARCHIVE ON)
 
     if(ANDROID)
         set(TARGET_DIR ${AUI_SDK_BIN})
@@ -592,6 +598,48 @@ function(aui_compile_assets_add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
     endif()
 endfunction(aui_compile_assets_add)
 
+function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues/25
+    set(options )
+    set(oneValueArgs )
+    set(multiValueArgs PRIVATE;PUBLIC;INTERFACE)
+    cmake_parse_arguments(AUIL "${options}" "${oneValueArgs}"
+            "${multiValueArgs}" ${ARGN} )
+
+    foreach(_visibility ${multiValueArgs})
+        foreach(_lib ${AUIL_${_visibility}})
+            list(APPEND _${_visibility} ${_lib})
+
+            # check for wholearchive target flag
+            set(_wholearchive OFF)
+            if (NOT BUILD_SHARED_LIBS)
+                if (TARGET ${_lib})
+                    get_target_property(_wholearchive ${_lib} AUI_WHOLEARCHIVE)
+                endif()
+            endif()
+
+            if (MSVC AND _wholearchive)
+                target_link_options(${AUI_MODULE_NAME} PRIVATE "/WHOLEARCHIVE:$<TARGET_FILE:${_lib}>")
+            else()
+                list(APPEND _${_visibility} ${_lib})
+            endif()
+        endforeach()
+    endforeach()
+    if (AUIL_PRIVATE)
+        # do the job
+        if (BUILD_SHARED_LIBS)
+            target_link_libraries(${AUI_MODULE_NAME} PRIVATE ${_PRIVATE})
+        else()
+            target_link_libraries(${AUI_MODULE_NAME} PUBLIC ${_PRIVATE})
+        endif()
+    endif()
+    if (AUIL_INTERFACE)
+        target_link_libraries(${AUI_MODULE_NAME} INTERFACE ${_INTERFACE})
+    endif()
+    if (AUIL_PUBLIC)
+        target_link_libraries(${AUI_MODULE_NAME} PUBLIC ${_PUBLIC})
+    endif()
+endfunction()
+
 function(aui_module AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
 
@@ -610,9 +658,11 @@ function(aui_module AUI_MODULE_NAME)
     endif()
 
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp)
-    if (WIN32)
-        if (EXISTS "${CMAKE_SOURCE_DIR}/Resource.rc")
-            set(SRCS ${SRCS} "${CMAKE_SOURCE_DIR}/Resource.rc")
+    if (BUILD_SHARED_LIBS)
+        if (WIN32)
+            if (EXISTS "${CMAKE_SOURCE_DIR}/Resource.rc")
+                set(SRCS ${SRCS} "${CMAKE_SOURCE_DIR}/Resource.rc")
+            endif()
         endif()
     endif()
 
@@ -658,6 +708,11 @@ function(aui_module AUI_MODULE_NAME)
     endif()
     if (NOT BUILD_AS_IMPORTED_NAME STREQUAL ${AUI_MODULE_NAME})
         add_library(${BUILD_AS_IMPORTED_NAME} ALIAS ${AUI_MODULE_NAME})
+    endif()
+
+    if (AUIE_COMPILE_ASSETS)
+        _aui_compile_assets(${AUI_MODULE_NAME})
+        set_target_properties(${AUI_MODULE_NAME} PROPERTIES AUI_WHOLEARCHIVE ON)
     endif()
 endfunction(aui_module)
 

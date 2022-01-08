@@ -44,6 +44,7 @@
 #include <AUI/View/AText.h>
 #include <AUI/View/ADrawableView.h>
 #include <AUI/View/AScrollArea.h>
+#include <AUI/View/AProgressBar.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 #include "AUI/View/ASpinner.h"
@@ -559,6 +560,20 @@ AStylesheet::AStylesheet() {
             c::disabled(".menu-item"),
             BackgroundSolid { 0x0_argb },
             Opacity { 0.7f },
+        },
+
+        // AProgressBar
+        {
+            t<AProgressBar>(),
+            BackgroundSolid { 0xd0d0d0_rgb },
+            BorderRadius { 4_dp },
+            FixedSize { {}, 8_dp },
+            Margin { 2_dp, 4_dp },
+        },
+        {
+            t<AProgressBar::Inner>(),
+            BackgroundSolid { getOsThemeColor() },
+            BorderRadius { 4_dp },
         },
     });
 }

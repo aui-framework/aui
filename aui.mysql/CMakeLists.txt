@@ -81,12 +81,12 @@ if (AUI_ENABLE_MYSQL)
 
 		aui_module(aui.mysql EXPORT aui)
 
-		target_link_libraries(AUI.Mysql PUBLIC aui.core)
-		target_link_libraries(AUI.Mysql PUBLIC aui.data)
+		aui_link(AUI.Mysql PUBLIC aui.core)
+		aui_link(AUI.Mysql PUBLIC aui.data)
 
 
 		target_include_directories(AUI.Mysql PRIVATE ${MYSQL_INCLUDE_DIR})
-		target_link_libraries(AUI.Mysql PRIVATE ${MYSQL_LIBRARIES})
+		aui_link(AUI.Mysql PRIVATE ${MYSQL_LIBRARIES})
 	else()
 		message("MySQL library was not found. Disabling AUI.Mysql")
 	endif()
