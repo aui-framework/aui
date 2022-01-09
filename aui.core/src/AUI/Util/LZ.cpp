@@ -30,8 +30,8 @@
 
 void LZ::compress(const AByteBuffer& b, AByteBuffer& dst)
 {
-	dst.reserve(dst.getSize() + b.getAvailable() + 0xff);
-	uLong len = b.getAvailable() + 0xff;
+    uLong len = b.getAvailable() * 3 / 2 + 0xff;
+	dst.reserve(dst.getSize() + len);
 	int r = compress2(reinterpret_cast<Bytef*>(const_cast<char*>(dst.getCurrentPosAddress())), &len,
 		reinterpret_cast<Bytef*>(const_cast<char*>(b.getCurrentPosAddress())), b.getAvailable(), Z_BEST_COMPRESSION);
 	if (r != Z_OK)
