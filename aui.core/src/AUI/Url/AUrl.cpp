@@ -25,7 +25,7 @@
 #include <AUI/IO/AFileInputStream.h>
 
 #include "AUI/Common/AMap.h"
-#include "AUI/Util/BuiltinFiles.h"
+#include "AUI/Util/ABuiltinFiles.h"
 
 AUrl::AUrl(const AString& full)
 {
@@ -53,7 +53,7 @@ AUrl::AUrl(const AString& full)
 
 AMap<AString, std::function<_<IInputStream>(const AUrl&)>> AUrl::ourResolvers = {
         {"builtin", [](const AUrl& u) {
-            return BuiltinFiles::open(u.getPath());
+            return ABuiltinFiles::open(u.getPath());
         }},
         {"file", [](const AUrl& u) {
             return _new<AFileInputStream>(u.getPath());

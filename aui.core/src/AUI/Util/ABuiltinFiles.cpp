@@ -19,26 +19,58 @@
  * =====================================================================================================================
  */
 
-#pragma once
+#include "ABuiltinFiles.h"
 
-#include "AUI/Core.h"
-#include "AUI/Common/AByteBuffer.h"
-#include "AUI/Common/AMap.h"
-#include "AUI/Common/SharedPtr.h"
-#include "AUI/IO/IInputStream.h"
+#include "LZ.h"
+#include "AUI/Common/AString.h"
+#include "AUI/IO/ByteBufferInputStream.h"
 
-class AString;
-
-class API_AUI_CORE BuiltinFiles
+void ABuiltinFiles::loadBuffer(AByteBuffer& data)
 {
-private:
-	AMap<AString, AByteBuffer> mBuffers;
+	AByteBuffer unpacked;
+	LZ::decompress(data, unpacked);
 
-	static BuiltinFiles& inst();
-	BuiltinFiles() = default;
+	while (unpacked.getAvailable())
+	{
+		std::string file;
+		unpacked >> file;
 
-public:
-	static void loadBuffer(AByteBuffer& data);
-	static void load(const unsigned char* data, size_t size);
-	static _<IInputStream> open(const AString& file);
-};
+		uint32_t s;
+		unpacked >> s;
+
+        AByteBuffer b;
+		b.reserve(s);
+		b.setSize(s);
+
+		unpacked.get(b.data(), s);
+        inst().mBuffers[AString(file)] = std::move(b);
+	}
+}
+
+_<IInputStream> ABuiltinFiles::open(const AString& file)
+{
+	if (auto c = inst().mBuffers.contains(file))
+	{
+	    c->second.setCurrentPos(0);
+		return _new<ByteBufferInputStream>(c->second);
+	}
+	return nullptr;
+}
+
+std::optional<AByteBufferRef> ABuiltinFiles::getBuffer(const AString& file) {
+    if (auto c = inst().mBuffers.contains(file))
+    {
+        return c->second.ref();
+    }
+    return std::nullopt;
+}
+
+ABuiltinFiles& ABuiltinFiles::inst() {
+    static ABuiltinFiles f;
+    return f;
+}
+
+void ABuiltinFiles::load(const unsigned char* data, size_t size) {
+    AByteBuffer b(data, size);
+    inst().loadBuffer(b);
+}

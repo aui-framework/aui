@@ -19,50 +19,28 @@
  * =====================================================================================================================
  */
 
-#include "BuiltinFiles.h"
+#pragma once
 
-#include "LZ.h"
-#include "AUI/Common/AString.h"
-#include "AUI/IO/ByteBufferInputStream.h"
+#include "AUI/Core.h"
+#include "AUI/Common/AByteBuffer.h"
+#include "AUI/Common/AMap.h"
+#include "AUI/Common/SharedPtr.h"
+#include "AUI/IO/IInputStream.h"
+#include <optional>
 
-void BuiltinFiles::loadBuffer(AByteBuffer& data)
+class AString;
+
+class API_AUI_CORE ABuiltinFiles
 {
-	AByteBuffer unpacked;
-	LZ::decompress(data, unpacked);
+private:
+	AMap<AString, AByteBuffer> mBuffers;
 
-	while (unpacked.getAvailable())
-	{
-		std::string file;
-		unpacked >> file;
+	static ABuiltinFiles& inst();
+	ABuiltinFiles() = default;
 
-		uint32_t s;
-		unpacked >> s;
-
-        AByteBuffer b;
-		b.reserve(s);
-		b.setSize(s);
-
-		unpacked.get(b.data(), s);
-        inst().mBuffers[AString(file)] = std::move(b);
-	}
-}
-
-_<IInputStream> BuiltinFiles::open(const AString& file)
-{
-	if (auto c = inst().mBuffers.contains(file))
-	{
-	    c->second.setCurrentPos(0);
-		return _new<ByteBufferInputStream>(c->second);
-	}
-	return nullptr;
-}
-
-BuiltinFiles& BuiltinFiles::inst() {
-    static BuiltinFiles f;
-    return f;
-}
-
-void BuiltinFiles::load(const unsigned char* data, size_t size) {
-    AByteBuffer b(data, size);
-    inst().loadBuffer(b);
-}
+public:
+	static void loadBuffer(AByteBuffer& data);
+	static void load(const unsigned char* data, size_t size);
+	static _<IInputStream> open(const AString& file);
+    static std::optional<AByteBufferRef> getBuffer(const AString& file);
+};
