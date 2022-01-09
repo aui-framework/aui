@@ -140,7 +140,7 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
                                                "// hash: "_as << fileHash << "\n"
                                                                              "\n"
                                                                              "#include \"AUI/Common/AByteBuffer.h\"\n"
-                                                                             "#include \"AUI/Util/BuiltinFiles.h\"\n"
+                                                                             "#include \"AUI/Util/ABuiltinFiles.h\"\n"
                                                                              "const static unsigned char AUI_PACKED_asset"_as << cppObjectName
              << "[] = {"_as;
         for (uint8_t c : packed) {
@@ -152,11 +152,11 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
 
 
         *out << "struct Assets"_as << cppObjectName << " {\n"_as
-             << "\tAssets"_as + cppObjectName + "(){\n"_as
-                     "\t\tBuiltinFiles::load(AUI_PACKED_asset"_as
+             << "    Assets"_as + cppObjectName + "(){\n"_as
+                     "        ABuiltinFiles::load(AUI_PACKED_asset"_as
              << cppObjectName
              << ", sizeof(AUI_PACKED_asset"_as
-             << cppObjectName << "));\n\t}\n};\n"
+             << cppObjectName << "));\n    }\n};\n"
                                  "Assets"_as
              << cppObjectName
              << " a"_as << cppObjectName << ";"_as;
