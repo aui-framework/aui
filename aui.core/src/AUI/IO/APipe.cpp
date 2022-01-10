@@ -27,7 +27,7 @@
 
 using namespace std::chrono_literals;
 
-int APipe::read(char* dst, int size) {
+size_t APipe::read(char* dst, size_t size) {
     std::unique_lock lock(mMutex);
     int read = 0;
     for (uint16_t i = 0; i < size; ++i, ++mReaderPos, ++read) {
@@ -36,9 +36,7 @@ int APipe::read(char* dst, int size) {
                 return read;
             mConditionVariable.wait_for(lock, 100ms);
             if (mClosed) {
-                if (read)
-                    return read;
-                return -1;
+                return 0;
             }
         }
         dst[i] = mCircularBuffer[mReaderPos];
@@ -46,7 +44,7 @@ int APipe::read(char* dst, int size) {
     return read;
 }
 
-int APipe::write(const char* src, int size) {
+size_t APipe::write(const char* src, size_t size) {
     std::unique_lock lock(mMutex);
     if (mClosed) {
         return -1;

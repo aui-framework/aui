@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,18 +14,38 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
 #pragma once
-#include "IOException.h"
 
-class EOFException: public IOException
-{
+#include <AUI/View/AViewContainer.h>
+
+class API_AUI_VIEWS AProgressBar: public AViewContainer {
 public:
-	EOFException() : IOException("the stream has reached eof") {}
+    class Inner: public AView {
+    public:
+        ~Inner() override;
+    };
+    ~AProgressBar() override;
 
-	virtual ~EOFException() = default;
+    void setValue(float value) {
+        mValue = value;
+        updateInnerWidth();
+        redraw();
+    }
+
+private:
+    float mValue = 0.f;
+    void updateInnerWidth();
+    _<Inner> mInner;
+
+public:
+    AProgressBar();
+
+    void setSize(int width, int height) override;
 };
+
+

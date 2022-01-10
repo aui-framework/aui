@@ -31,6 +31,23 @@
 
 class IInputStream;
 
+class AByteBufferRef {
+private:
+    const char* mBuffer;
+    size_t mSize;
+
+public:
+    AByteBufferRef(): mBuffer(nullptr), mSize(0) {}
+    AByteBufferRef(const char* buffer, size_t size) : mBuffer(buffer), mSize(size) {}
+
+    const char* data() const {
+        return mBuffer;
+    }
+    size_t size() const {
+        return mSize;
+    }
+};
+
 class API_AUI_CORE AByteBuffer {
 private:
     char* mBuffer = nullptr;
@@ -46,6 +63,10 @@ public:
 
     AByteBuffer(const AByteBuffer& other) noexcept;
     AByteBuffer(AByteBuffer&& other) noexcept;
+
+    AByteBufferRef ref() const {
+        return { mBuffer, mSize };
+    }
 
     void clear() {
         delete[] mBuffer;

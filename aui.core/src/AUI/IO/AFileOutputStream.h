@@ -35,6 +35,6 @@ public:
     AFileOutputStream(const AString& path, bool append = false);
     virtual ~AFileOutputStream();
 
-    int write(const char* src, int size) override;
+    size_t write(const char* src, size_t size) override;
     void close();
 };

@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,55 +14,38 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
-#include "BuiltinFiles.h"
+//
+// Created by Alex2772 on 1/8/2022.
+//
 
-#include "LZ.h"
-#include "AUI/Common/AString.h"
-#include "AUI/IO/ByteBufferInputStream.h"
+#include "AProgressBar.h"
 
-void BuiltinFiles::loadBuffer(AByteBuffer& data)
-{
-	AByteBuffer unpacked;
-	LZ::decompress(data, unpacked);
-
-	while (unpacked.getAvailable())
-	{
-		std::string file;
-		unpacked >> file;
-
-		uint32_t s;
-		unpacked >> s;
-
-        AByteBuffer b;
-		b.reserve(s);
-		b.setSize(s);
-
-		unpacked.get(b.data(), s);
-        inst().mBuffers[AString(file)] = std::move(b);
-	}
+AProgressBar::AProgressBar() : mInner(_new<Inner>()) {
+    addView(mInner);
+    mInner->setPosition({0, 0});
 }
 
-_<IInputStream> BuiltinFiles::open(const AString& file)
-{
-	if (auto c = inst().mBuffers.contains(file))
-	{
-	    c->second.setCurrentPos(0);
-		return _new<ByteBufferInputStream>(c->second);
-	}
-	return nullptr;
+AProgressBar::Inner::~Inner() {
+
 }
 
-BuiltinFiles& BuiltinFiles::inst() {
-    static BuiltinFiles f;
-    return f;
+AProgressBar::~AProgressBar() {
+
 }
 
-void BuiltinFiles::load(const unsigned char* data, size_t size) {
-    AByteBuffer b(data, size);
-    inst().loadBuffer(b);
+void AProgressBar::setSize(int width, int height) {
+    AViewContainer::setSize(width, height);
+    updateInnerWidth();
+}
+
+void AProgressBar::updateInnerWidth() {
+    mInner->setGeometry(mPadding.left,
+                        mPadding.top,
+                        int(mValue * float(getContentWidth() - mPadding.horizontal())),
+                        getContentHeight() - mPadding.vertical());
 }

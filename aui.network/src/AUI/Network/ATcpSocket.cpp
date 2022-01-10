@@ -49,7 +49,7 @@ ATcpSocket::~ATcpSocket()
 {
 }
 
-int ATcpSocket::read(char* dst, int size)
+size_t ATcpSocket::read(char* dst, size_t size)
 {
 	int res = recv(getHandle(), dst, size, 0);
 	if (res < 0) {
@@ -58,7 +58,7 @@ int ATcpSocket::read(char* dst, int size)
 	return res;
 }
 
-int ATcpSocket::write(const char* buffer, int size)
+size_t ATcpSocket::write(const char* buffer, size_t size)
 {
 	int res = send(getHandle(), buffer, size, 0);
 	if (res < 0) {

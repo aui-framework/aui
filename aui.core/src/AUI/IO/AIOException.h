@@ -20,25 +20,37 @@
  */
 
 #pragma once
+#include <exception>
 
-#include "AUI/Core.h"
-#include "AUI/Common/AByteBuffer.h"
-#include "AUI/Common/AMap.h"
-#include "AUI/Common/SharedPtr.h"
-#include "AUI/IO/IInputStream.h"
+#include "AUI/Common/AException.h"
 
-class AString;
-
-class API_AUI_CORE BuiltinFiles
+/**
+ * Exception caused by input/output stream.
+ */
+class AIOException: public AException
 {
-private:
-	AMap<AString, AByteBuffer> mBuffers;
-
-	static BuiltinFiles& inst();
-	BuiltinFiles() = default;
-
 public:
-	static void loadBuffer(AByteBuffer& data);
-	static void load(const unsigned char* data, size_t size);
-	static _<IInputStream> open(const AString& file);
+	AIOException()
+	{
+	}
+
+	AIOException(const AString& message)
+		: AException(message)
+	{
+	}
+	virtual ~AIOException() = default;
+};
+
+
+class AFileNotFoundException: public AIOException {
+public:
+    using AIOException::AIOException;
+};
+class AAccessDeniedException: public AIOException {
+public:
+    using AIOException::AIOException;
+};
+class AResourceBusyException: public AIOException {
+public:
+    using AIOException::AIOException;
 };

@@ -29,27 +29,27 @@ target_compile_definitions(aui.core PUBLIC NOMINMAX=1)
 
 if(Backtrace_FOUND AND Backtrace_LIBRARIES)
 	message(STATUS "Stacktrace backend: backtrace")
-	target_link_libraries(aui.core PRIVATE ${Backtrace_LIBRARIES})
+	aui_link(aui.core PRIVATE ${Backtrace_LIBRARIES})
 	target_compile_definitions(aui.core PRIVATE AUI_USE_BACKTRACE=1)
 else()
 	message(STATUS "Stacktrace backend: none")
 endif()
 
 if (WIN32)
-	target_link_libraries(aui.core PRIVATE kernel32 psapi)
+	aui_link(aui.core PRIVATE kernel32 psapi)
 endif()
 if (UNIX)
 	SET(CMAKE_CXX_FLAGS -pthread)
-	target_link_libraries(aui.core PRIVATE dl)
+	aui_link(aui.core PRIVATE dl)
 endif()
 if (ANDROID)
 	set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH TRUE)
 	find_library(log-lib log)
 	set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
-	target_link_libraries(aui.core PRIVATE ${log-lib})
+	aui_link(aui.core PRIVATE ${log-lib})
 endif()
 
-target_link_libraries(aui.core PRIVATE ZLIB::ZLIB)
+aui_link(aui.core PRIVATE ZLIB::ZLIB)
 
 # forward platform info
 foreach(_var AUI_PLATFORM_WIN

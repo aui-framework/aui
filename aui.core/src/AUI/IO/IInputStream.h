@@ -20,7 +20,7 @@
  */
 
 #pragma once
-#include "EOFException.h"
+#include "AEOFException.h"
 
 #include <AUI/Common/AByteBuffer.h>
 #include <glm/glm.hpp>
@@ -33,33 +33,33 @@ public:
     virtual ~IInputStream() = default;
 
     /**
-     * \brief Reads up to <code>size</code> bytes from stream. Implementation must read at least one byte. Blocking
+     * @brief Reads up to <code>size</code> bytes from stream. Implementation must read at least one byte. Blocking
      *        (waiting for new data) is allowed. Returns 0 if stream has reached the end. Returns -1 if stream has
      *        encountered an error.
-     * \param dst destination buffer
-     * \param size destination buffer's size. > 0
-     * \return -1 - error
-     *          0 - EOF (end of file)
+     * <dl>
+     *   <dt><b>Sneaky exceptions</b></dt>
+     *   <dd>An implementation can throw any exception that subclasses <a href="#AIOException">AIOException</a>.</dd>
+     * </dl>
+     * @param dst destination buffer
+     * @param size destination buffer's size. > 0
+     * @return  0 - EOF (end of file)
      *         >0 - count of read bytes
      */
-    virtual int read(char* dst, int size) = 0;
+    virtual size_t read(char* dst, size_t size) = 0;
 
     /**
-     * \brief Reads up to 0x10000 and stores to AByteBuffer
+     * \brief Reads up to 0x10000 and puts them AByteBuffer
      * \param dst destination buffer
      */
-    inline void readBuffer(AByteBuffer& dst, int bufferSize = 0x10000)
+    inline void readBuffer(AByteBuffer& dst, size_t bufferSize = 0x10000)
     {
         if (dst.getReserved() - dst.getCurrentPos() < size_t(bufferSize)) {
             dst.reserve(dst.getCurrentPos() + bufferSize);
         }
-        int r = read(dst.getCurrentPosAddress(), bufferSize);
-
-        if (r < 0)
-            throw IOException();
+        size_t r = read(dst.getCurrentPosAddress(), bufferSize);
 
         if (r == 0)
-            throw EOFException();
+            throw AEOFException();
 
         dst.setSize(dst.getCurrentPos() + r);
         dst.setCurrentPos(dst.getCurrentPos() + bufferSize);
@@ -72,22 +72,7 @@ public:
      * \return this
      */
     template<typename T>
-    inline IInputStream& operator>>(T& out)
-    {
-        // static_assert(std::is_standard_layout_v<T>, "data is too complex to be read from stream");
-        auto dst = reinterpret_cast<char*>(&out);
-
-        int accumulator = sizeof(T);
-
-        for (int r = 0; accumulator; dst += r, accumulator -= r) {
-            r = read(dst, accumulator);
-            if (r < 0)
-                throw IOException("something went wrong while reading from the stream");
-            if (r == 0)
-                throw EOFException();
-        }
-        return *this;
-    }
+    inline IInputStream& operator>>(T& out);
 
     /**
      * \brief Redirects all this input stream data to output stream.
@@ -104,18 +89,6 @@ public:
     }
 
     /**
-     * \brief Redirects all this input stream data to output stream.
-     * \note This declaration is strange because it overloads the <code>inline IInputStream& operator>>(T& out)</code>
-     *       function
-     * \tparam base of IOutputStream
-     * \param os IOutputStream
-     * \return this
-     */
-    template<typename T>
-    inline IInputStream& operator>>(IOutputStream& os);
-
-
-    /**
      * \brief Reads the AByteBuffer in the following format: uint32_t as size, %size% bytes...
      * \see IOutputStream::writeSizedBuffer
      * \return produced AByteBuffer
@@ -127,12 +100,33 @@ public:
         if (length) {
             buf.reserve(length);
             buf.setSize(length);
-            int r = read(buf.data(), length);
+            size_t r = read(buf.data(), length);
             assert(r == length);  // NOLINT(clang-diagnostic-sign-compare)
         }
         return buf;
     }
 };
 
+
 #include "IOutputStream.h"
 
+template<typename T>
+IInputStream& IInputStream::operator>>(T& out) {
+    if constexpr (std::is_base_of_v<IOutputStream, T>) {
+        out << *this;
+    } else {
+        static_assert(std::is_standard_layout_v<T>, "data is too complex to be read from stream");
+        auto dst = reinterpret_cast<char*>(&out);
+
+        size_t accumulator = sizeof(T);
+
+        for (size_t r = 0; accumulator; dst += r, accumulator -= r) {
+            r = read(dst, accumulator);
+            if (r < 0)
+                throw AIOException("something went wrong while reading from the stream");
+            if (r == 0)
+                throw AEOFException();
+        }
+    }
+    return *this;
+}

@@ -45,8 +45,8 @@ public:
 
 	~ATcpSocket() override;
 
-	int read(char* dst, int size) override;
-	int write(const char* buffer, int size) override;
+	size_t read(char* dst, size_t size) override;
+	size_t write(const char* buffer, size_t size) override;
 
 
 protected:

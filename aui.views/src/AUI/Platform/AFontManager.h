@@ -21,7 +21,6 @@
 
 #pragma once
 
-#include <AUI/Render/FreeType.h>
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Util/Manager.h"
 #include "AUI/Font/AFontFamily.h"

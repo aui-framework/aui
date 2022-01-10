@@ -27,6 +27,7 @@
 #include <AUI/Logging/ALogger.h>
 
 #include "IEventLoop.h"
+#include <AUI/Thread/AConditionVariable.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
@@ -128,15 +129,17 @@ void AThread::start()
 void AThread::interrupt()
 {
 	mInterrupted = true;
-	mSleepCV.notify_one();
+	std::unique_lock lock(mCurrentCV.mutex);
+    nullsafe(mCurrentCV.cv)->notify_all();
 }
 
 void AThread::sleep(unsigned durationInMs)
 {
-	std::mutex m;
-	std::unique_lock lock(m);
-	current()->mSleepCV.wait_for(lock, std::chrono::milliseconds(durationInMs));
-	interruptionPoint();
+    AConditionVariable cv;
+    AMutex mutex;
+    std::unique_lock lock(mutex);
+    // the condition variable helps with thread interruption.
+    cv.wait_for(lock, std::chrono::milliseconds(durationInMs));
 }
 
 AAbstractThread::id AAbstractThread::getId() const

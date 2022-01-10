@@ -27,18 +27,18 @@ StringStream::StringStream(const AString& string): mString(string.toStdString())
 }
 StringStream::StringStream() = default;
 
-int StringStream::read(char* dst, int size)
+size_t StringStream::read(char* dst, size_t size)
 {
 	if (mReadPos >= mString.length())
 		return 0;
 
-	int toRead = glm::min(size, int(mString.length() - mReadPos));
+	size_t toRead = glm::min(size, mString.length() - mReadPos);
 	memcpy(dst, mString.c_str() + mReadPos, toRead);
     mReadPos += toRead;
 	return toRead;
 }
 
-int StringStream::write(const char *src, int size) {
+size_t StringStream::write(const char *src, size_t size) {
     mString.append(src, src + size);
     return size;
 }

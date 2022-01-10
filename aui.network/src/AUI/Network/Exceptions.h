@@ -21,13 +21,13 @@
 
 #pragma once
 #include "AInet4Address.h"
-#include "AUI/IO/IOException.h"
+#include "AUI/IO/AIOException.h"
 
 
 class AInet4Address;
 class AString;
 
-class SocketException : public IOException {
+class SocketException : public AIOException {
 public:
 	AInet4Address mDestAddress;
 	SocketException(const AString& arg, const AInet4Address& addr);

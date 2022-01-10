@@ -39,7 +39,7 @@ AString ATokenizer::readString()
 	{
 		for (;;) {
 			c = readChar();
-			if (isalnum(c))
+			if (isalnum(uint8_t (c)))
 			{
 				res << c;
 			}
@@ -65,7 +65,7 @@ AString ATokenizer::readString(const ASet<char>& applicableChars)
 	{
 		for (;;) {
 			c = readChar();
-			if (isalnum(c) || applicableChars.find(c) != applicableChars.end())
+			if (isalnum(uint8_t (c)) || applicableChars.find(c) != applicableChars.end())
 			{
 				res << c;
 			}
@@ -327,10 +327,10 @@ glm::vec2 ATokenizer::readVec2()
 	return result;
 }
 
-AString ATokenizer::readString(int n) {
+AString ATokenizer::readString(size_t n) {
     AString result;
     result.reserve(n);
-    for (int i = 0; i < n; ++i) {
+    for (size_t i = 0; i < n; ++i) {
         result += readChar();
     }
     return result;

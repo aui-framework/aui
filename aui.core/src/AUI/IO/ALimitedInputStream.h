@@ -41,7 +41,7 @@ public:
     ALimitedInputStream(const _<IInputStream>& inputStream, size_t limit) : mInputStream(inputStream), mLimit(limit) {}
     virtual ~ALimitedInputStream() = default;
 
-    int read(char* dst, int size) override;
+    size_t read(char* dst, size_t size) override;
 };
 
 

@@ -22,7 +22,7 @@
 #include "AInet4Address.h"
 
 #include <string>
-#include "AUI/IO/IOException.h"
+#include "AUI/IO/AIOException.h"
 
 
 #if AUI_PLATFORM_WIN
@@ -92,7 +92,7 @@ AInet4Address::AInet4Address(const AString& addr, uint16_t port):
 	addrinfo* result;
 
 	if (getaddrinfo(addr.toStdString().c_str(), ports.c_str(), &hints, &result) != 0)
-		throw IOException((AString("Unresolved hostname: ") + addr).c_str());
+		throw AIOException((AString("Unresolved hostname: ") + addr).c_str());
 	auto* sockaddrin = (sockaddr_in*)result->ai_addr;
 
 #if AUI_PLATFORM_WIN

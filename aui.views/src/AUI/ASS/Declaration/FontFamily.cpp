@@ -28,7 +28,6 @@
 
 void ass::decl::Declaration<ass::FontFamily>::applyFor(AView* view) {
     auto family = AFontManager::inst().getFontFamily(mInfo.family);
-    if (!family) family = AFontManager::inst().getDefaultFamily();
-    view->getFontStyle().font = family->getEither();
+    view->getFontStyle().font = AFontManager::inst().getDefaultFont();
     view->invalidateFont();
 }

@@ -255,7 +255,7 @@ void AXml::read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor
 			}
 		}
 	}
-	catch (const EOFException&)
+	catch (const AEOFException&)
 	{
 	}
 }

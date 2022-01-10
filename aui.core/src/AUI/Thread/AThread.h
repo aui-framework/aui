@@ -24,12 +24,12 @@
 #include <utility>
 #include "AUI/Common/ADeque.h"
 #include "AMutex.h"
-#include "AConditionVariable.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include <functional>
 
 class IEventLoop;
 class AString;
+class AConditionVariable;
 
 /**
  * \brief Abstract thread. Not all threads are created through AThread - these are interfaced with AAbstractThread.
@@ -38,6 +38,7 @@ class API_AUI_CORE AAbstractThread
 {
 	friend class IEventLoop;
 	friend class AThread;
+	friend class AConditionVariable;
 public:
 
 	/**
@@ -61,7 +62,13 @@ private:
 	 */
 	id mId;
 
-	AConditionVariable mSleepCV;
+    /**
+     * \brief A condition variable that's currently locking the thread. Used for thread interruption.
+     */
+	struct {
+        AMutex mutex;
+        AConditionVariable* cv = nullptr;
+    } mCurrentCV;
 	
 	/**
 	 * \brief Current IEventLoop for this thread. Used for inter thread message delivery.
@@ -243,3 +250,5 @@ public:
 	void updateThreadName();
 
 };
+
+#include "AConditionVariable.h"

@@ -29,6 +29,7 @@
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AException.h>
+#include <AUI/Reflect/AReflect.h>
 
 class AThreadPool;
 
@@ -55,35 +56,97 @@ template<typename Value>
 class AFuture
 {
 private:
-    Value* mValue = new Value;
-    AMutex mMutex;
-    AConditionVariable mNotify;
-    std::optional<AInvocationTargetException> mException;
-    std::function<void(const Value&)> mOnDone;
-    std::atomic_int mRefCount = 2;
+    struct Inner {
+        std::optional<Value> value;
+        std::optional<AInvocationTargetException> exception;
+        AMutex mutex;
+        AConditionVariable cv;
+        AAbstractThread* worker = nullptr;
+        std::function<void(const Value& value)> onSuccess;
+        std::function<void(const AException& exception)> onError;
+        _<AAbstractThread> thread;
+        bool cancelled = false;
 
-    void decRef()
-    {
-        if (--mRefCount == 0)
-        {
-            delete mValue;
+        [[nodiscard]]
+        bool hasResult() const noexcept {
+            return value || exception;
         }
-    }
 
-    void notify() {
-        mNotify.notify_one();
-        if (mOnDone) {
-            mOnDone(*mValue);
+        bool setThread(_<AAbstractThread> thr) noexcept {
+            std::unique_lock lock(mutex);
+            if (cancelled) return true;
+            thread = std::move(thr);
+            return false;
         }
-    }
 
+        void cancel() noexcept {
+            std::unique_lock lock(mutex);
+            if (!cancelled) {
+                cancelled = true;
+                if (thread && !hasResult()) {
+                    thread->interrupt();
+                }
+            }
+        }
 
-    AFuture() {}
+        void result(Value v) noexcept {
+            std::unique_lock lock(mutex);
+            value = std::move(v);
+            cv.notify_all();
+            nullsafe(onSuccess)(*value);
+        }
+
+        void reportException(const AException& e) noexcept {
+            std::unique_lock lock(mutex);
+            exception = AInvocationTargetException(e.getMessage(), AReflect::name(&e)); // NOLINT(bugprone-throw-keyword-missing)
+            cv.notify_all();
+            nullsafe(onError)(*exception);
+        }
+
+        ~Inner() {
+            cancel();
+        }
+    };
+    _<Inner> mInner;
+
 
 public:
 
     template<typename Callable>
-    static _<AFuture> make(AThreadPool& tp, Callable&& func);
+    static AFuture make(AThreadPool& tp, Callable&& func) noexcept;
+
+    AFuture() noexcept: mInner(aui::ptr::manage(new Inner)) {}
+
+
+    void result(Value v) noexcept {
+        mInner->result(std::move(v));
+    }
+
+    void reportException(const AException& e) noexcept {
+        mInner->reportException(e);
+    }
+
+    template<typename Callback>
+    AFuture& onSuccess(Callback&& callback) noexcept {
+        std::unique_lock lock(mInner->mutex);
+        mInner->onSuccess = [innerStorage = mInner, callback = std::forward<Callback>(callback)](const Value& v) {
+            callback(v);
+        };
+        return *this;
+    }
+
+    template<typename Callback>
+    AFuture& onError(Callback&& callback) noexcept {
+        std::unique_lock lock(mInner->mutex);
+        mInner->onError = [innerStorage = mInner, callback = std::forward<Callback>(callback)](const AException& v) {
+            callback(v);
+        };
+        return *this;
+    }
+
+    void cancel() noexcept {
+        mInner->cancel();
+    }
 
     /**
      * Returns the result from the another thread. Sleeps if the result is not currently available.
@@ -94,44 +157,26 @@ public:
      * @return the object stored from the another thread.
      */
     Value& operator*() {
-        if (mRefCount == 2) {
-            std::unique_lock lock(mMutex);
-            while (mRefCount == 2)
-            {
-                mNotify.wait(lock);
-            }
+        std::unique_lock lock(mInner->mutex);
+        while (!(mInner->value || mInner->exception)) {
+            mInner->cv.wait(lock);
         }
-        if (mException) throw *mException;
-        return *mValue;
+        if (mInner->exception) throw *mInner->exception;
+        return *mInner->value;
     }
 
-    template<typename Object, typename Member>
-    void onDone(const _<Object>& object, Member memberFunc) {
-        std::unique_lock lock(mMutex);
-        mOnDone = [object, memberFunc](const Value& t) {
-            (object.get()->*memberFunc)(t);
-        };
+    /**
+     * Returns the result from the another thread. Sleeps if the result is not currently available.
+     * <dl>
+     *   <dt><b>Sneaky exceptions</b></dt>
+     *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
+     * </dl>
+     * @return the object stored from the another thread.
+     */
+    const Value& operator*() const {
+        return **const_cast<AFuture*>(this);
     }
 
-    template<typename Object, typename Member>
-    void onDone(const Object* object, Member memberFunc) {
-        std::unique_lock lock(mMutex);
-        mOnDone = [object, memberFunc](const Value& t) {
-            (object->*memberFunc)(t);
-        };
-    }
-    template<typename Callback>
-    void onDone(const Callback& callable) {
-        std::unique_lock lock(mMutex);
-        mOnDone = [callable](const Value& t) {
-            callable(t);
-        };
-    }
-
-    ~AFuture()
-    {
-        decRef();
-    }
 };
 
 #include <AUI/Thread/AThreadPool.h>

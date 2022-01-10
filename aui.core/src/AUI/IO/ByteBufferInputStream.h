@@ -39,5 +39,5 @@ public:
 	{
 	}
 
-	int read(char* dst, int size) override;
+	size_t read(char* dst, size_t size) override;
 };

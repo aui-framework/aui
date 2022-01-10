@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,47 +19,28 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 31.08.2020.
-//
+#pragma once
 
-#include <boost/test/unit_test.hpp>
-#include <AUI/Common/SharedPtr.h>
-#include <AUI/Thread/AFuture.h>
-#include <AUI/Util/kAUI.h>
-#include <AUI/Util/Util.h>
+#include "AUI/Core.h"
+#include "AUI/Common/AByteBuffer.h"
+#include "AUI/Common/AMap.h"
+#include "AUI/Common/SharedPtr.h"
+#include "AUI/IO/IInputStream.h"
+#include <optional>
 
-using namespace boost::unit_test;
+class AString;
 
-BOOST_AUTO_TEST_SUITE(Async)
+class API_AUI_CORE ABuiltinFiles
+{
+private:
+	AMap<AString, AByteBuffer> mBuffers;
 
-    template<typename T>
-    std::ostream& operator<<(std::ostream& o, const std::atomic<T>& n) {
-        o << *n;
-        return o;
-    }
+	static ABuiltinFiles& inst();
+	ABuiltinFiles() = default;
 
-
-    BOOST_AUTO_TEST_CASE(Repeat) {
-        auto someInt = _new<std::atomic_int>(0);
-
-        repeat(100'000) {
-            (*someInt) += 1;
-        };
-
-        BOOST_CHECK_EQUAL(*someInt, 100'000);
-    }
-
-    BOOST_AUTO_TEST_CASE(RepeatAsync) {
-        auto someInt = _new<std::atomic_int>(0);
-
-        repeat_async(1'000) {
-            (*someInt) += 1;
-        };
-
-        AThread::sleep(1'000);
-
-        BOOST_CHECK_EQUAL(*someInt, 1'000);
-    }
-
-BOOST_AUTO_TEST_SUITE_END()
+public:
+	static void loadBuffer(AByteBuffer& data);
+	static void load(const unsigned char* data, size_t size);
+	static _<IInputStream> open(const AString& file);
+    static std::optional<AByteBufferRef> getBuffer(const AString& file);
+};

@@ -19,35 +19,58 @@
  * =====================================================================================================================
  */
 
-#pragma once
-#include <exception>
+#include "ABuiltinFiles.h"
 
-#include "AUI/Common/AException.h"
+#include "LZ.h"
+#include "AUI/Common/AString.h"
+#include "AUI/IO/ByteBufferInputStream.h"
 
-class IOException: public AException
+void ABuiltinFiles::loadBuffer(AByteBuffer& data)
 {
-public:
-	IOException()
+	AByteBuffer unpacked;
+	LZ::decompress(data, unpacked);
+
+	while (unpacked.getAvailable())
 	{
-	}
+		std::string file;
+		unpacked >> file;
 
-	IOException(const AString& message)
-		: AException(message)
+		uint32_t s;
+		unpacked >> s;
+
+        AByteBuffer b;
+		b.reserve(s);
+		b.setSize(s);
+
+		unpacked.get(b.data(), s);
+        inst().mBuffers[AString(file)] = std::move(b);
+	}
+}
+
+_<IInputStream> ABuiltinFiles::open(const AString& file)
+{
+	if (auto c = inst().mBuffers.contains(file))
 	{
+	    c->second.setCurrentPos(0);
+		return _new<ByteBufferInputStream>(c->second);
 	}
-	virtual ~IOException() = default;
-};
+	return nullptr;
+}
 
+std::optional<AByteBufferRef> ABuiltinFiles::getBuffer(const AString& file) {
+    if (auto c = inst().mBuffers.contains(file))
+    {
+        return c->second.ref();
+    }
+    return std::nullopt;
+}
 
-class FileNotFoundException: public IOException {
-public:
-    using IOException::IOException;
-};
-class AccessDeniedException: public IOException {
-public:
-    using IOException::IOException;
-};
-class ResourceBusyException: public IOException {
-public:
-    using IOException::IOException;
-};
+ABuiltinFiles& ABuiltinFiles::inst() {
+    static ABuiltinFiles f;
+    return f;
+}
+
+void ABuiltinFiles::load(const unsigned char* data, size_t size) {
+    AByteBuffer b(data, size);
+    inst().loadBuffer(b);
+}

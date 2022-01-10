@@ -22,7 +22,7 @@
 #include "ByteBufferInputStream.h"
 #include <glm/glm.hpp>
 
-int ByteBufferInputStream::read(char* dst, int size)
+size_t ByteBufferInputStream::read(char* dst, size_t size)
 {
 	const int toRead = glm::min(mBuffer.getAvailable(), static_cast<size_t>(size));
 	if (toRead)

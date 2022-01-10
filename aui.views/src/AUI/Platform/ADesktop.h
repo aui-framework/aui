@@ -38,7 +38,7 @@ namespace ADesktop
 
 	API_AUI_VIEWS glm::ivec2 getMousePosition();
 	API_AUI_VIEWS void setMousePos(const glm::ivec2& pos);
-	API_AUI_VIEWS _<AFuture<APath>> browseForFolder(const APath& startingLocation = {});
-	API_AUI_VIEWS _<AFuture<APath>> browseForFile(const APath& startingLocation = {}, const AVector<FileExtension>& extensions = {});
+	API_AUI_VIEWS AFuture<APath> browseForDir(const APath& startingLocation = {});
+	API_AUI_VIEWS AFuture<APath> browseForFile(const APath& startingLocation = {}, const AVector<FileExtension>& extensions = {});
 	API_AUI_VIEWS void openUrl(const AString& url);
 }

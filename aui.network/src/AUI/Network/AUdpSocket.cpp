@@ -40,7 +40,7 @@ AUdpSocket::AUdpSocket(uint16_t source_port) :
 
     auto addr = mSelf.addr();
 	if (::bind(getHandle(), (sockaddr*)&addr, sizeof(sockaddr_in)) < 0) {
-		throw IOException(
+		throw AIOException(
 			(AString("Failed to bind ASocket. Error code: ") + getErrorString()).c_str());
 	}
 }
@@ -57,7 +57,7 @@ void AUdpSocket::write(const AByteBuffer& buf, const AInet4Address& dst) {
 	auto addr = dst.addr();
 	if (sendto(getHandle(), buf.data(), static_cast<int>(buf.getSize()), 0, (sockaddr*)&addr, sizeof(sockaddr_in)) <=
         0) {
-		throw IOException(AString("sendto error ") + getErrorString());
+		throw AIOException(AString("sendto error ") + getErrorString());
 	}
 }
 

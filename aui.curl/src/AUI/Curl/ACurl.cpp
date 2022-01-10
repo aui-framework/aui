@@ -114,7 +114,7 @@ ACurl::~ACurl()
 	mWorkerThread->join();
 }
 
-int ACurl::read(char* dst, int size)
+size_t ACurl::read(char* dst, size_t size)
 {
     if (mFinished && !mPipe.available()) {
         if (mCURLcode == CURLE_WRITE_ERROR)
