@@ -23,6 +23,7 @@
 
 #include "AUI/Core.h"
 #include <set>
+#include <ostream>
 #include <AUI/Traits/containers.h>
 
 template <class KeyType, class Comparator = std::less<KeyType>, class Allocator = std::allocator<KeyType>>
