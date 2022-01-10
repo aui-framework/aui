@@ -62,8 +62,6 @@ AString Pack::getDescription() {
     return "pack a file into the .cpp file";
 }
 
-#include <Windows.h>
-
 void Pack::doPacking(const AString& inputFile, const AString& assetPath, const APath& outputCpp) {
     try {
         outputCpp.parent().makeDirs();

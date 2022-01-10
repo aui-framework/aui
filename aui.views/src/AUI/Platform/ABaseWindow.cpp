@@ -203,7 +203,7 @@ void ABaseWindow::onKeyDown(AInput::Key key) {
     if (auto v = getFocusedView())
         v->onKeyDown(key);
 
-#ifdef _DEBUG
+#ifdef AUI_DEBUG
     if (key == AInput::F12 && AInput::isKeyDown(AInput::LControl)) {
         createDevtoolsWindow();
     }

@@ -77,7 +77,7 @@ void AAbstractSocket::init()
 #else
 	if ((mHandle = createSocket()) < 0)
 	{
-		throw IOException("Failed to create ASocket.");
+		throw AIOException("Failed to create ASocket.");
 	}
 #endif
 
@@ -130,7 +130,7 @@ void AAbstractSocket::handleError(const AString& message, int code)
         case EINTR:
             throw AThread::AInterrupted();
         case ECONNRESET:
-            throw EOFException();
+            throw AEOFException();
         default:
             throw SocketException(msg);
     }
