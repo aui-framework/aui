@@ -104,14 +104,14 @@ APath APath::ensureNonSlashEnding() const {
     return *this;
 }
 
-AString APath::relativelyTo(const APath& folder) {
-    if (isAbsolute() == folder.isAbsolute()) {
-        auto f = folder.ensureSlashEnding();
+AString APath::relativelyTo(const APath& dir) const {
+    if (isAbsolute() == dir.isAbsolute()) {
+        auto f = dir.ensureSlashEnding();
         assert(startsWith(f));
         return mid(f.length());
     }
     auto meButAbsolute = absolute();
-    auto f = folder.absolute().ensureSlashEnding();
+    auto f = dir.absolute().ensureSlashEnding();
     assert(meButAbsolute.startsWith(f));
     return meButAbsolute.mid(f.length());
 }
@@ -432,4 +432,9 @@ AString APath::systemSlashDirection() const {
 #else
     return *this;
 #endif
+}
+
+const APath& APath::touch() const {
+    AFileOutputStream fos(*this);
+    return *this;
 }

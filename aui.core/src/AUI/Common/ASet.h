@@ -123,3 +123,21 @@ public:
 	}
 };
 
+
+template<typename T>
+inline std::ostream& operator<<(std::ostream& o, const ASet<T>& v) {
+    if (v.empty()) {
+        o << "[empty]";
+    } else {
+        auto it = v.begin();
+        o << "[ " << *it;
+        ++it;
+        for (; it != v.end(); ++it) {
+            o << ", " << *it;
+        }
+        o << " ]";
+    }
+
+    return o;
+}
+

@@ -100,6 +100,8 @@ public:
                 throw AIOException("could not write to file");
         } else if constexpr (std::is_base_of_v<IInputStream, T>) {
             writeAll(const_cast<T&>(in));
+        } else if constexpr (std::is_same_v<const char*, T>) {
+            write(in, std::strlen(in));
         } else {
             static_assert(std::is_standard_layout_v<T>, "data is too complex to be written to stream");
             if (write(reinterpret_cast<const char *>(&in), sizeof(T)) != sizeof(T))
