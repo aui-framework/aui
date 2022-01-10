@@ -225,7 +225,7 @@ APath APath::absolute() const {
 #else
     char buf[0x1000];
     if (realpath(toStdString().c_str(), buf) == nullptr) {
-        throw IOException("could not find absolute file" + *this ERROR_DESCRIPTION);
+        throw AIOException("could not find absolute file" + *this ERROR_DESCRIPTION);
     }
 
     return buf;
@@ -251,7 +251,7 @@ const APath& APath::makeDir() const {
     }
 #else
     if (::mkdir(toStdString().c_str(), 0755) != 0) {
-        throw IOException("could not create directory: "_as + absolute() ERROR_DESCRIPTION);
+        throw AIOException("could not create directory: "_as + absolute() ERROR_DESCRIPTION);
     }
 #endif
     return *this;

@@ -77,7 +77,7 @@ void AAbstractSocket::init()
 #else
 	if ((mHandle = createSocket()) < 0)
 	{
-		throw IOException("Failed to create ASocket.");
+		throw AIOException("Failed to create ASocket.");
 	}
 #endif
 

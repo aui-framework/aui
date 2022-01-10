@@ -213,7 +213,7 @@ void ALabel::doRenderText() {
             int y = mPadding.top;
 
             if (mVerticalAlign == VerticalAlign::MIDDLE) {
-                y = (glm::max)(y, int(getHeight() - (getFontStyleLabel().size)) / 2) + 1;
+                y = (glm::max)(y, int(getContentHeight() - (getFontStyleLabel().size)) / 2) + 1;
             }
             y -= getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size);
 
