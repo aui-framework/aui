@@ -173,7 +173,7 @@ macro(auib_import AUI_MODULE_NAME URL)
             endif()
         endif()
     endif()
-    if (((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND) AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_SOURCE_DIR}/CMakeLists.txt) AND DEP_ADD_SUBDIRECTORY))
+    if (((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND)) AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_SOURCE_DIR}/CMakeLists.txt) AND DEP_ADD_SUBDIRECTORY))
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
         # so we have to compile and install
         if (NOT DEP_ADD_SUBDIRECTORY)
@@ -335,7 +335,7 @@ macro(auib_import AUI_MODULE_NAME URL)
             find_package(${AUI_MODULE_NAME})
         endif()
 
-        if (NOT ${AUI_MODULE_NAME}_FOUND)
+        if (NOT ${AUI_MODULE_NAME}_FOUND AND NOT ${AUI_MODULE_NAME_UPPER}_FOUND)
             message(FATAL_ERROR "AUI.Boot could not resolve dependency: ${AUI_MODULE_NAME}")
         endif()
 
