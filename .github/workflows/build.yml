@@ -23,24 +23,45 @@ jobs:
       matrix:
         config:
           - {
-            name: "Windows Latest MSVC x86", artifact: "aui_windows-msvc-x86.tar.xz",
+            name: "Windows Latest MSVC x86 shared", artifact: "aui_windows-msvc-x86-shared.tar.xz",
             os: windows-latest,
             build_type: "Release", generator: "Visual Studio 16 2019", additional_cmake_flags: "-A Win32"
           }
           - {
-            name: "Windows Latest MSVC x86_64", artifact: "aui_windows-msvc-x86_64.tar.xz",
+            name: "Windows Latest MSVC x86_64 shared", artifact: "aui_windows-msvc-x86_64-shared.tar.xz",
             os: windows-latest,
             build_type: "Release", generator: "Visual Studio 16 2019", additional_cmake_flags: "-A x64"
           }
-          #- {
-          #  name: "Windows Latest MinGW", artifact: "windows-mingw.tar.xz",
-          #  os: windows-latest,
-          #  build_type: "Release", generator: "MinGW Makefiles"
-          #}
           - {
-            name: "Ubuntu Latest GCC", artifact: "aui_ubuntu-x86_64.tar.xz",
+            name: "Windows Latest MinGW x86_64 shared", artifact: "aui_windows-mingw-x86_64-shared.tar.xz",
+            os: windows-latest,
+            build_type: "Release", generator: "MinGW Makefiles", additional_cmake_flags: ""
+          }
+          - {
+            name: "Ubuntu Latest GCC shared", artifact: "aui_ubuntu-x86_64-shared.tar.xz",
             os: ubuntu-latest,
             build_type: "Release", generator: "Unix Makefiles", additional_cmake_flags: ""
+          }
+
+          - {
+            name: "Windows Latest MSVC x86 static", artifact: "aui_windows-msvc-x86-static.tar.xz",
+            os: windows-latest,
+            build_type: "Release", generator: "Visual Studio 16 2019", additional_cmake_flags: "-A Win32 -DBUILD_SHARED_LIBS=OFF"
+          }
+          - {
+            name: "Windows Latest MSVC x86_64 static", artifact: "aui_windows-msvc-x86_64-static.tar.xz",
+            os: windows-latest,
+            build_type: "Release", generator: "Visual Studio 16 2019", additional_cmake_flags: "-A x64 -DBUILD_SHARED_LIBS=OFF"
+          }
+          - {
+            name: "Windows Latest MinGW x86_64 static", artifact: "aui_windows-mingw-x86_64-static.tar.xz",
+            os: windows-latest,
+            build_type: "Release", generator: "MinGW Makefiles", additional_cmake_flags: "-DBUILD_SHARED_LIBS=OFF"
+          }
+          - {
+            name: "Ubuntu Latest GCC static", artifact: "aui_ubuntu-x86_64-static.tar.xz",
+            os: ubuntu-latest,
+            build_type: "Release", generator: "Unix Makefiles", additional_cmake_flags: "-DBUILD_SHARED_LIBS=OFF"
           }
 
     steps:

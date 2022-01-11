@@ -116,19 +116,24 @@ private:
 
 public:
     APath() = default;
-    APath(AString&& other): AString(other) {
+    APath(AString&& other) noexcept: AString(other) {
         removeBackSlashes();
     }
-    APath(const AString& other): AString(other) {
+    APath(const AString& other) noexcept: AString(other) {
         removeBackSlashes();
     }
-    APath(const char* str): AString(str) {
+    APath(const char* str) noexcept: AString(str) {
         removeBackSlashes();
     }
-    APath(const wchar_t * str): AString(str) {
+    APath(const wchar_t * str) noexcept: AString(str) {
         removeBackSlashes();
     }
 
+    /**
+     * Creates a file.
+     * @return this.
+     */
+    const APath& touch() const;
 
     /**
      * @return On Linux/macOS, returns self copy. On Windows, returns self copy with backslashes (\) instead of slashes (/).
@@ -245,11 +250,11 @@ public:
 
     /**
      * \brief Returns same path but without <code>folder</code>
-     * \param folder some parent, grandparent, grandgrandparent... folder
+     * \param dir some parent, grandparent, grandgrandparent... dir
      * \example APath("C:/work/mon/test.txt").relativelyTo("C:/work") -> mon/test.txt
-     * \return same path but without <code>folder</code>
+     * \return same path but without <code>dir</code>
      */
-    AString relativelyTo(const APath& folder);
+    AString relativelyTo(const APath& dir) const;
 
     /**
      * \brief Checks whether path absolute or not.

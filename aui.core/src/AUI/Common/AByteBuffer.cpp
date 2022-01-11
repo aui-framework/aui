@@ -108,8 +108,9 @@ AByteBuffer AByteBuffer::fromStream(IInputStream& is)
 
 AByteBuffer AByteBuffer::fromStream(IInputStream& is, size_t sizeRestriction) {
     AByteBuffer buf;
+    buf.reserve(sizeRestriction);
     char tmp[4096];
-    for (size_t last; (last = is.read(tmp, sizeof(tmp))) > 0 && buf.getSize() < sizeRestriction;)
+    for (size_t last; (last = is.read(tmp, glm::min(sizeof(tmp), sizeRestriction))) > 0; sizeRestriction -= last)
     {
         buf.put(tmp, last);
     }

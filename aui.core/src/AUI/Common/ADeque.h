@@ -23,6 +23,7 @@
 #include <deque>
 #include "AUI/Core.h"
 #include <algorithm>
+#include "ASet.h"
 #include <AUI/Traits/containers.h>
 
 template <class StoredType,
@@ -217,4 +218,34 @@ public:
         aui::container::remove_at(*this, index);
     }
 
+    /**
+     * Removes element if predicate(container[i]) == true.
+     * @param predicate predicate
+     */
+    template<typename Predicate>
+    void removeIf(Predicate&& predicate) noexcept
+    {
+        p::erase(std::remove_if(p::begin(), p::end(), std::forward<Predicate>(predicate)), p::end());
+    }
+
+
+    ASet<StoredType> toSet() const noexcept {
+        return ASet<StoredType>(p::begin(), p::end());
+    }
 };
+
+template<typename T>
+inline std::ostream& operator<<(std::ostream& o, const ADeque<T>& v) {
+    if (v.empty()) {
+        o << "[empty]";
+    } else {
+        o << "[ " << v.first();
+        for (auto it = v.begin() + 1; it != v.end(); ++it) {
+            o << ", " << *it;
+        }
+        o << " ]";
+    }
+
+    return o;
+}
+

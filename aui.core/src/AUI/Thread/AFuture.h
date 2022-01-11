@@ -173,6 +173,30 @@ public:
      * </dl>
      * @return the object stored from the another thread.
      */
+    Value* operator->() {
+        return &operator*();
+    }
+
+    /**
+     * Returns the result from the another thread. Sleeps if the result is not currently available.
+     * <dl>
+     *   <dt><b>Sneaky exceptions</b></dt>
+     *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
+     * </dl>
+     * @return the object stored from the another thread.
+     */
+    Value const * operator->() const {
+        return &operator*();
+    }
+
+    /**
+     * Returns the result from the another thread. Sleeps if the result is not currently available.
+     * <dl>
+     *   <dt><b>Sneaky exceptions</b></dt>
+     *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
+     * </dl>
+     * @return the object stored from the another thread.
+     */
     const Value& operator*() const {
         return **const_cast<AFuture*>(this);
     }

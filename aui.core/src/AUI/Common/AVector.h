@@ -27,6 +27,7 @@
 #include "SharedPtr.h"
 #include <algorithm>
 #include <ostream>
+#include "ASet.h"
 #include <AUI/Traits/containers.h>
 
 template <class StoredType, class Allocator = std::allocator<StoredType>>
@@ -223,6 +224,15 @@ public:
         aui::container::remove_at(*this, index);
     }
 
+    /**
+     * Removes element if predicate(container[i]) == true.
+     * @param predicate predicate
+     */
+    template<typename Predicate>
+    void removeIf(Predicate&& predicate) noexcept
+    {
+        p::erase(std::remove_if(p::begin(), p::end(), std::forward<Predicate>(predicate)), p::end());
+    }
 
     template<typename Callable>
     inline static AVector<StoredType, Allocator> generate(size_t size, Callable&& callable) noexcept {
@@ -234,6 +244,9 @@ public:
         return s;
     }
 
+    ASet<StoredType> toSet() const noexcept {
+        return ASet<StoredType>(p::begin(), p::end());
+    }
 };
 
 
@@ -246,9 +259,8 @@ inline std::ostream& operator<<(std::ostream& o, const AVector<T>& v) {
         for (auto it = v.begin() + 1; it != v.end(); ++it) {
             o << ", " << *it;
         }
-        o << "]";
+        o << " ]";
     }
-
 
     return o;
 }

@@ -23,6 +23,7 @@
 
 #include "AUI/Core.h"
 #include <set>
+#include <ostream>
 #include <AUI/Traits/containers.h>
 
 template <class KeyType, class Comparator = std::less<KeyType>, class Allocator = std::allocator<KeyType>>
@@ -122,4 +123,22 @@ public:
 		return p::find(value) != p::end();
 	}
 };
+
+
+template<typename T>
+inline std::ostream& operator<<(std::ostream& o, const ASet<T>& v) {
+    if (v.empty()) {
+        o << "[empty]";
+    } else {
+        auto it = v.begin();
+        o << "[ " << *it;
+        ++it;
+        for (; it != v.end(); ++it) {
+            o << ", " << *it;
+        }
+        o << " ]";
+    }
+
+    return o;
+}
 

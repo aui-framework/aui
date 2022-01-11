@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,21 +19,16 @@
  * =====================================================================================================================
  */
 
-#pragma once
-#include "IOutputStream.h"
-#include "AUI/Common/AByteBuffer.h"
-#include "AUI/Common/SharedPtr.h"
+#include "AByteBufferInputStream.h"
+#include <glm/glm.hpp>
 
-class API_AUI_CORE ByteBufferOutputStream: public IOutputStream
+size_t AByteBufferInputStream::read(char* dst, size_t size)
 {
-private:
-    _<AByteBuffer> mBuffer;
-
-public:
-    ByteBufferOutputStream(const _<AByteBuffer>& buffer)
-            : mBuffer(buffer)
-    {
-    }
-
-    size_t write(const char* src, size_t size) override;
-};
+	const int toRead = glm::min(mBuffer.getAvailable(), static_cast<size_t>(size));
+	if (toRead)
+	{
+		mBuffer.get(dst, toRead);
+		return toRead;
+	}
+	return 0;
+}

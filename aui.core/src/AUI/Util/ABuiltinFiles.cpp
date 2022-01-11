@@ -23,7 +23,7 @@
 
 #include "LZ.h"
 #include "AUI/Common/AString.h"
-#include "AUI/IO/ByteBufferInputStream.h"
+#include "AUI/IO/AByteBufferInputStream.h"
 
 void ABuiltinFiles::loadBuffer(AByteBuffer& data)
 {
@@ -52,7 +52,7 @@ _<IInputStream> ABuiltinFiles::open(const AString& file)
 	if (auto c = inst().mBuffers.contains(file))
 	{
 	    c->second.setCurrentPos(0);
-		return _new<ByteBufferInputStream>(c->second);
+		return _new<AByteBufferInputStream>(c->second);
 	}
 	return nullptr;
 }

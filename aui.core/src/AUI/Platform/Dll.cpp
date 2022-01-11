@@ -34,7 +34,7 @@
 
 _<Dll> Dll::load(const AString& path)
 {
-#ifdef _MSC_VER
+#if AUI_PLATFORM_WIN
     auto fullname = path + "." + getDllExtension();
 #else
     auto doLoad = [](const APath& fp) -> _<Dll> {
