@@ -22,9 +22,9 @@
 #pragma once
 #include <stdexcept>
 #include <string>
-
-#include "AUI/Common/SharedPtr.h"
-#include "AUI/Common/AException.h"
+#include <AUI/IO/APath.h>
+#include <AUI/Common/SharedPtr.h>
+#include <AUI/Common/AException.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
