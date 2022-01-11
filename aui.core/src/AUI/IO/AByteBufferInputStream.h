@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,13 +19,25 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 18.09.2020.
-//
+#pragma once
+#include "IInputStream.h"
+#include "AUI/Common/AByteBuffer.h"
+#include "AUI/Common/SharedPtr.h"
 
-#include "ByteBufferOutputStream.h"
+class API_AUI_CORE AByteBufferInputStream: public IInputStream
+{
+private:
+    AByteBuffer mBuffer;
+	
+public:
+	AByteBufferInputStream(const AByteBuffer& buffer)
+		: mBuffer(buffer)
+	{
+	}
+	AByteBufferInputStream(AByteBuffer&& buffer)
+		: mBuffer(std::forward<AByteBuffer>(buffer))
+	{
+	}
 
-size_t ByteBufferOutputStream::write(const char* src, size_t size) {
-    mBuffer->put(src, size);
-    return size;
-}
+	size_t read(char* dst, size_t size) override;
+};

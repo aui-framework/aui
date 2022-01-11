@@ -189,7 +189,7 @@ struct ASqlModel {
     template<typename ... Args>
     static Model make(Args&&... args) {
         Model m = {0, std::forward<Args>(args)...};
-        m.save();
+        m.toJson();
         return m;
     }
 
