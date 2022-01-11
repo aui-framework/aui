@@ -94,13 +94,13 @@ target_link_libraries(aui_app PRIVATE aui::core aui::views)
 | Filesystem        |             #            |     #      |   #   |    #    |   ?   |  -  |
 | Process creation  |             #            |     #      |   #   |    -    |   ?   |  -  |
 
-| Compiler                     | Support       |
-|------------------------------|---------------|
-| MSVC 19+ (Visual Studio 17+) | Full          |
-| gcc (8+)                     | Full          |
-| MinGW (8+)                   | Full          |
-| Cross-compile MinGW          | Full          |
-| clang                        | Full          |
+| Compiler                     | Support |
+|------------------------------|---------|
+| MSVC 19+ (Visual Studio 17+) | Full    |
+| gcc (8+)                     | Full    |
+| MinGW (8+)                   | Partial |
+| Cross-compile MinGW          | Partial |
+| clang                        | Full    |
 
 ## Used libraries
 - `libcurl` for http/https requests
