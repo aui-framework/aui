@@ -79,7 +79,7 @@ jobs:
 
       - name: Build
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}}
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} --target ALL Tests
 
       - name: Test
         # Build your program with the given configuration
