@@ -10,8 +10,8 @@
 
 class MyListener: public ::testing::EmptyTestEventListener {
 private:
-    static APath saveScreenshot(const AString& testFilePath, const AString& name) {
-        if (AWindow::current()) return {};
+    static APath saveScreenshot(const AString& testFilePath, const AString& name) noexcept {
+        if (!AWindow::current()) return {};
         auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
         if (image.getData().empty()) return {};
         auto p = APath("reports")[APath(testFilePath).filenameWithoutExtension()];
@@ -24,6 +24,7 @@ private:
 
 public:
     MyListener() noexcept = default;
+
     void OnTestPartResult(const testing::TestPartResult& result) override {
         EmptyTestEventListener::OnTestPartResult(result);
 
@@ -37,7 +38,17 @@ public:
                 }
             }
 
+            // do some hacking here
+            // current_test_info causes deadlock on Linux because it's already locked AddTestPartResult for current thread
+            struct ScaryHackingShit {
+                void* vtable;
+                testing::internal::Mutex mutex;
+            };
+            auto pShit = reinterpret_cast<ScaryHackingShit*>(testing::UnitTest::GetInstance());
+            pShit->mutex.Unlock();
             decltype(auto) info = testing::UnitTest::GetInstance()->current_test_info();
+            pShit->mutex.Lock();
+
             auto p = saveScreenshot(info->test_suite_name(), "fail-{}.png"_format(info->name()));
 
             if (!p.empty()) {
