@@ -81,6 +81,10 @@ jobs:
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}}
 
+      - name: Test
+        # Build your program with the given configuration
+        run: cd ${{github.workspace}}/build && ctest .
+
       - name: Install Strip
         run: cmake --install build --prefix instdir --strip
 
