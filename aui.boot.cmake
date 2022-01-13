@@ -238,7 +238,7 @@ macro(auib_import AUI_MODULE_NAME URL)
 
         file(REMOVE_RECURSE ${DEP_SOURCE_DIR} ${DEP_BINARY_DIR})
         FetchContent_Declare(${AUI_MODULE_NAME}_FC
-                PREFIX "${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
+                PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
                 GIT_REPOSITORY "${URL}"
                 GIT_TAG ${AUIB_IMPORT_VERSION}
                 GIT_PROGRESS TRUE # show progress of download
@@ -311,7 +311,6 @@ macro(auib_import AUI_MODULE_NAME URL)
                 list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
             endforeach()
             list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
-            list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_CONFIGURATION_TYPES=${CMAKE_BUILD_TYPE}") # fix vs and xcode generators
             if (IOS)
                 list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_C_FLAGS=-Wno-error-implicit-function-declaration")
             endif()
@@ -338,6 +337,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                     ${CMAKE_COMMAND}
                     --build ${DEP_BINARY_DIR}
                     --target install
+                    --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                     RESULT_VARIABLE ERROR_CODE)
@@ -346,6 +346,9 @@ macro(auib_import AUI_MODULE_NAME URL)
                 message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
             endif()
             file(TOUCH ${DEP_INSTALLED_FLAG})
+            if (NOT EXISTS ${DEP_INSTALLED_FLAG})
+                message(FATAL_ERROR "Dependency failed to install: ${AUI_MODULE_NAME} - check the compilation and installation logs above")
+            endif()
         endif()
         if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
             if (NOT AUI_BOOT) # recursive deadlock fix
