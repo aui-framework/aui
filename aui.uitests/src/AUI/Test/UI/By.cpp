@@ -6,7 +6,7 @@
 #include <AUI/Common/IStringable.h>
 #include "By.h"
 
-Matcher By::text(const AString& text) {
+UIMatcher By::text(const AString& text) {
     class TextMatcher: public IMatcher {
     private:
         AString mText;
@@ -22,7 +22,7 @@ Matcher By::text(const AString& text) {
     return { _new<TextMatcher>(text) };
 }
 
-Matcher By::name(const AString& text) {
+UIMatcher By::name(const AString& text) {
     class NameMatcher: public IMatcher {
     private:
         AString mText;

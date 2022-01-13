@@ -23,40 +23,37 @@
 // Created by alex2 on 30.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Common/AString.h>
 
-using namespace boost::unit_test;
-BOOST_AUTO_TEST_SUITE(String)
 
 
-BOOST_AUTO_TEST_CASE(UTF8)
+TEST(String, UTF8)
 {
     const char* someUtfString = "Ютф строка! \u0228";
 
     AString s = someUtfString;
 
-    BOOST_TEST(s == someUtfString);
-    BOOST_TEST(memcmp(s.toUtf8().data(), someUtfString, strlen(someUtfString)) == 0);
+    ASSERT_TRUE(s == someUtfString);
+    ASSERT_TRUE(memcmp(s.toUtf8().data(), someUtfString, strlen(someUtfString)) == 0);
 
 }
-BOOST_AUTO_TEST_CASE(lowercase_en)
+TEST(String, lowercase_en)
 {
-    BOOST_CHECK_EQUAL("Hello"_as.lowercase(), "hello");
+    ASSERT_EQ("Hello"_as.lowercase(), "hello");
 }
-BOOST_AUTO_TEST_CASE(uppercase_en)
+TEST(String, uppercase_en)
 {
-    BOOST_CHECK_EQUAL("Hello"_as.uppercase(), "HELLO");
-}
-
-BOOST_AUTO_TEST_CASE(lowercase_ru)
-{
-    BOOST_CHECK_EQUAL("Привет"_as.lowercase(), "привет");
-}
-BOOST_AUTO_TEST_CASE(uppercase_ru)
-{
-    BOOST_CHECK_EQUAL("Привет"_as.uppercase(), "ПРИВЕТ");
+    ASSERT_EQ("Hello"_as.uppercase(), "HELLO");
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+TEST(String, lowercase_ru)
+{
+    ASSERT_EQ("Привет"_as.lowercase(), "привет");
+}
+TEST(String, uppercase_ru)
+{
+    ASSERT_EQ("Привет"_as.uppercase(), "ПРИВЕТ");
+}
+
 

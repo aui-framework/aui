@@ -33,6 +33,10 @@ define_property(TARGET PROPERTY AUI_WHOLEARCHIVE
         BRIEF_DOCS "Use wholearchive when linking this library to another"
         FULL_DOCS "Use wholearchive when linking this library to another")
 
+
+auib_import(GTest https://github.com/google/googletest
+            VERSION main)
+
 set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
 set_property(GLOBAL PROPERTY TESTS_SRCS "")
 
@@ -189,34 +193,33 @@ function(aui_enable_tests)
     endif()
 endfunction()
 function(aui_tests TESTS_MODULE_NAME)
-    find_package(Boost COMPONENTS unit_test_framework)
-    if(Boost_FOUND)
+    if(GTest_FOUND)
         enable_testing()
-        file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp
-                "#define BOOST_TEST_MODULE ${TESTS_MODULE_NAME}\n#include <boost/test/included/unit_test.hpp>")
+        file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp [[
+#include <gtest/gtest.h>
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}]])
         add_executable(${ARGV} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
         set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
         target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
-        add_definitions(-DBOOST_ALL_NO_LIB)
-        target_include_directories(${TESTS_MODULE_NAME} PRIVATE ${Boost_INCLUDE_DIRS})
-        target_link_directories(${TESTS_MODULE_NAME} PRIVATE ${Boost_LIBRARY_DIRS})
-        target_compile_definitions(${TESTS_MODULE_NAME} PRIVATE AUI_TESTS_MODULE=1)
+        get_target_property(_t GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
+        target_link_libraries(${TESTS_MODULE_NAME} PUBLIC GTest::gtest)
+        target_compile_definitions(${TESTS_MODULE_NAME} PUBLIC AUI_TESTS_MODULE=1)
 
         if (TARGET aui.core)
-            target_link_libraries(${TESTS_MODULE_NAME} PRIVATE aui.core)
+            target_link_libraries(${TESTS_MODULE_NAME} PUBLIC aui.core)
         else()
-            target_link_libraries(${TESTS_MODULE_NAME} PRIVATE aui::core)
+            target_link_libraries(${TESTS_MODULE_NAME} PUBLIC aui::core)
         endif()
 
         if (TARGET aui::uitests)
-            target_link_libraries(${TESTS_MODULE_NAME} PRIVATE aui::uitests)
+            target_link_libraries(${TESTS_MODULE_NAME} PUBLIC aui::uitests)
         endif()
 
-        target_link_libraries(${TESTS_MODULE_NAME} PRIVATE ${Boost_LIBRARIES})
         aui_add_properties(${TESTS_MODULE_NAME})
         set_target_properties(${TESTS_MODULE_NAME} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
-    else()
-        message(WARNING "Boost was not found! Test target is not available.")
     endif()
 endfunction(aui_tests)
 

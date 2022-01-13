@@ -23,7 +23,7 @@
 // Created by alex2 on 30.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Util/kAUI.h>
@@ -33,43 +33,37 @@
 #include <AUI/Common/AUuid.h>
 #include <AUI/Util/ARandom.h>
 
-using namespace boost::unit_test;
+TEST(Uuid, Canonical) {
+    AString s = "123e4567-e89b-12d3-a456-426655440000";
+    AUuid uuid = s;
+    ASSERT_EQ(uuid.toString(), s);
+}
+TEST(Uuid, Raw) {
+    AString s = "123e4567e89b12d3a456426655440000";
+    AUuid uuid = s;
+    ASSERT_EQ(uuid.toRawString(), s);
+}
+TEST(Uuid, Random) {
+    ARandom r;
+    repeat(100) {
+        auto u = r.nextUuid();
+        AUuid(u.toString());
+        AUuid(u.toRawString());
+    }
+}
 
-BOOST_AUTO_TEST_SUITE(Uuid)
-
-    BOOST_AUTO_TEST_CASE(Canonical) {
-        AString s = "123e4567-e89b-12d3-a456-426655440000";
-        AUuid uuid = s;
-        BOOST_CHECK_EQUAL(uuid.toString(), s);
-    }
-    BOOST_AUTO_TEST_CASE(Raw) {
-        AString s = "123e4567e89b12d3a456426655440000";
-        AUuid uuid = s;
-        BOOST_CHECK_EQUAL(uuid.toRawString(), s);
-    }
-    BOOST_AUTO_TEST_CASE(Random) {
-        ARandom r;
-        repeat(100) {
-            auto u = r.nextUuid();
-            AUuid(u.toString());
-            AUuid(u.toRawString());
-        }
-    }
-
-    BOOST_AUTO_TEST_CASE(ExceptionOverflow) {
-        BOOST_CHECK_THROW(AUuid("000000000000000000000000000000000"), AUuidException);
-    }
-    BOOST_AUTO_TEST_CASE(ExceptionUnderflow) {
-        BOOST_CHECK_THROW(AUuid("0000000000000000000000000000000"), AUuidException);
-    }
-    BOOST_AUTO_TEST_CASE(ExceptionInvalidSymbol) {
-        BOOST_CHECK_THROW(AUuid("000000000000z0000000000000000000"), AUuidException);
-    }
-    BOOST_AUTO_TEST_CASE(ExceptionInvalidDash) {
-        BOOST_CHECK_THROW(AUuid("0-0000000000000000000000000000000"), AUuidException);
-        BOOST_CHECK_THROW(AUuid("-0-0000000000000000000000000000000"), AUuidException);
-        BOOST_CHECK_THROW(AUuid("-0-0000000000000000000000000000000-"), AUuidException);
-        BOOST_CHECK_THROW(AUuid("-0-00000000000000-000000-000000-00000-"), AUuidException);
-    }
-
-BOOST_AUTO_TEST_SUITE_END()
+TEST(Uuid, ExceptionOverflow) {
+    ASSERT_THROW(AUuid("000000000000000000000000000000000"), AUuidException);
+}
+TEST(Uuid, ExceptionUnderflow) {
+    ASSERT_THROW(AUuid("0000000000000000000000000000000"), AUuidException);
+}
+TEST(Uuid, ExceptionInvalidSymbol) {
+    ASSERT_THROW(AUuid("000000000000z0000000000000000000"), AUuidException);
+}
+TEST(Uuid, ExceptionInvalidDash) {
+    ASSERT_THROW(AUuid("0-0000000000000000000000000000000"), AUuidException);
+    ASSERT_THROW(AUuid("-0-0000000000000000000000000000000"), AUuidException);
+    ASSERT_THROW(AUuid("-0-0000000000000000000000000000000-"), AUuidException);
+    ASSERT_THROW(AUuid("-0-00000000000000-000000-000000-00000-"), AUuidException);
+}

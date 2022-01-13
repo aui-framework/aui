@@ -26,8 +26,8 @@
 
 #include <AUI/Test/UI/UITestUtil.h>
 
-#include <boost/test/unit_test.hpp>
-#include <AUI/Test/UI/Matcher.h>
+#include <gtest/gtest.h>
+#include <AUI/Test/UI/UIMatcher.h>
 #include <AUI/Test/UI/By.h>
 #include <AUI/Test/UI/UITestCase.h>
 

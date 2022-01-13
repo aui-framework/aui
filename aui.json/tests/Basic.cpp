@@ -23,25 +23,22 @@
 // Created by alex2 on 30.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Json/AJsonElement.h>
 #include <AUI/Json/AJson.h>
 #include <AUI/Json/JsonException.h>
 
-using namespace boost::unit_test;
-BOOST_AUTO_TEST_SUITE(Json)
-
 
 // check const access
 void check_girlfriend(const AJsonObject& o) {
-    BOOST_CHECK(o["girlfriend"].isNull());
+    EXPECT_TRUE(o["girlfriend"].isNull());
 
     // unexisting object
-    BOOST_CHECK(o["unexisting_object"].isNull());
+    EXPECT_TRUE(o["unexisting_object"].isNull());
 }
 
-BOOST_AUTO_TEST_CASE(ObjectAssignValue)
+TEST(JsonBasic, ObjectAssignValue)
 {
     // arrange data
     AJsonObject o;
@@ -50,11 +47,11 @@ BOOST_AUTO_TEST_CASE(ObjectAssignValue)
     o["girlfriend"] = AJsonValue(nullptr);
 
     // check for resulting json
-    BOOST_CHECK_EQUAL(AJson::toString(o), R"({"girlfriend":null,"name":"Alex2772","year":2020})");
+    ASSERT_EQ(AJson::toString(o), R"({"girlfriend":null,"name":"Alex2772","year":2020})");
     check_girlfriend(o);
 }
 
-BOOST_AUTO_TEST_CASE(ObjectAssignObject)
+TEST(JsonBasic, ObjectAssignObject)
 {
     // arrange data
     AJsonObject o;
@@ -66,9 +63,9 @@ BOOST_AUTO_TEST_CASE(ObjectAssignObject)
     root["user"] = o;
 
     // check for resulting json
-    BOOST_CHECK_EQUAL(AJson::toString(root), R"({"user":{"name":"Alex2772","year":2020}})");
+    ASSERT_EQ(AJson::toString(root), R"({"user":{"name":"Alex2772","year":2020}})");
 }
-BOOST_AUTO_TEST_CASE(StringEscape)
+TEST(JsonBasic, StringEscape)
 {
     // arrange data
     AJsonObject root;
@@ -76,14 +73,14 @@ BOOST_AUTO_TEST_CASE(StringEscape)
     auto s = AJson::toString(root);
 
     // check for whole composition
-    BOOST_CHECK_EQUAL(s, "{\"user\":\\\"u\"}");
+    ASSERT_EQ(s, "{\"user\":\\\"u\"}");
 
     // check for string itself
     auto deserialized = AJson::fromString(s);
-    BOOST_CHECK_EQUAL(deserialized["user"].asString(), "u\"");
+    ASSERT_EQ(deserialized["user"].asString(), "u\"");
 }
 
-BOOST_AUTO_TEST_CASE(BraceInitialization)
+TEST(JsonBasic, BraceInitialization)
 {
     // arrange data
     AJsonObject root({
@@ -95,31 +92,30 @@ BOOST_AUTO_TEST_CASE(BraceInitialization)
     });
 
     // check for resulting json
-    BOOST_CHECK_EQUAL(AJson::toString(root), R"({"array":["value1","value2"],"key":1})");
+    ASSERT_EQ(AJson::toString(root), R"({"array":["value1","value2"],"key":1})");
 }
 
-BOOST_AUTO_TEST_CASE(Array)
+TEST(JsonBasic, Array)
 {
     // arrange data
     auto root = AJsonArray::fromVariantArray({1, 2, 3});
 
     // check for resulting json
-    BOOST_CHECK(!root.empty());
-    BOOST_CHECK_EQUAL(AJson::toString(root), R"([1,2,3])");
+    EXPECT_TRUE(!root.empty());
+    ASSERT_EQ(AJson::toString(root), R"([1,2,3])");
 
     // check push
     root << AJsonValue(10);
     root.push_back(AJsonValue(9));
-    BOOST_CHECK_EQUAL(AJson::toString(root), R"([1,2,3,10,9])");
-    BOOST_CHECK_EQUAL(root[1].asInt(), 2);
+    ASSERT_EQ(AJson::toString(root), R"([1,2,3,10,9])");
+    ASSERT_EQ(root[1].asInt(), 2);
 }
 
-BOOST_AUTO_TEST_CASE(SerializationDeserialization)
+TEST(JsonBasic, SerializationDeserialization)
 {
     // arrange data
     const char* str = R"({"a":null,"b":[1,2,3],"c":false,"d":true,"e":{"v":"123"}})";
-    BOOST_CHECK_EQUAL(AJson::toString(AJson::fromString(str)), str);
+    ASSERT_EQ(AJson::toString(AJson::fromString(str)), str);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
 

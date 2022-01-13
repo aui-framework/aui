@@ -25,8 +25,6 @@
 #include <ExampleWindow.h>
 #include <AUI/View/ATextField.h>
 
-using namespace boost::unit_test;
-
 /**
  * <p>
  *   A bug appeared in this example application related to AUI layout managers. This suite checks the following issues:
@@ -41,47 +39,49 @@ using namespace boost::unit_test;
  * <img src="https://user-images.githubusercontent.com/19491414/144756936-173e5d65-9433-4c00-92d6-142ca217164d.png" />
  *
  */
-BOOST_AUTO_TEST_SUITE(LayoutManager)
+
+
+class UILayoutManager: public testing::UITest {
+public:
+protected:
+    void SetUp() override {
+        UITest::SetUp();
+        _new<ExampleWindow>()->show();
+    }
+
+    void TearDown() override {
+        UITest::TearDown();
+    }
+};
 
 
 /**
  * Checks height of all buttons - they should be the same (see "Show all views..." button above).
  */
-UI_TEST_CASE(Height) {
-    // prepare the window
-    _new<ExampleWindow>()->show();
-
+TEST_F(UILayoutManager, Height) {
     // check height
-    (By::text("Common button") | By::text("Show all views...")).require(sameHeight(), "height mismatch");
+    (By::text("Common button") | By::text("Show all views...")).check(sameHeight(), "height mismatch");
 }
 
 
 /**
  * Checks alignment (see "Alex2772, 2021, alex2772.ru" - it is not perfectly aligned)
  */
-UI_TEST_CASE(LastElementAlignment) {
-    // prepare the window
-    _new<ExampleWindow>()->show();
-
+TEST_F(UILayoutManager, LastElementAlignment) {
     // check alignment
-    (By::name("#copyright") | By::type<ATextField>()).require(rightAligned(), "bad alignment");
+    (By::name("#copyright") | By::type<ATextField>()).check(rightAligned(), "bad alignment");
 
     // copyright width can be also not minimal
-    By::name("#copyright").require(widthIsMinimal(), "copyright width should be minimal");
+    By::name("#copyright").check(widthIsMinimal(), "copyright width should be minimal");
 }
 
 /**
  * Checks alignment (looks like buttons and list views are not perfectly aligned)
  */
-UI_TEST_CASE(ButtonsAlignment) {
-    // prepare the window
-    _new<ExampleWindow>()->show();
-
+TEST_F(UILayoutManager, ButtonsAlignment) {
     // buttons column should be perfectly aligned
     By::name("Common button")
         .parent()
         .allChildren()
-        .require(leftRightAligned(), "elements should be perfectly aligned");
+        .check(leftRightAligned(), "elements should be perfectly aligned");
 }
-
-BOOST_AUTO_TEST_SUITE_END()

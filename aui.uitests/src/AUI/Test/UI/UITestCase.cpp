@@ -4,12 +4,9 @@
 #include <AUI/Image/PngImageLoader.h>
 #include <AUI/IO/AFileOutputStream.h>
 #include "UITestCase.h"
-#include "Matcher.h"
-#include <boost/test/tree/test_unit.hpp>
-#include <boost/test/unit_test_log.hpp>
+#include "UIMatcher.h"
 #include <AUI/Traits/strings.h>
 
-using namespace boost::unit_test;
 
 APath saveScreenshot(const AString& testFilePath, const AString& name) {
     auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
@@ -22,42 +19,54 @@ APath saveScreenshot(const AString& testFilePath, const AString& name) {
     return p;
 }
 
-void UITestCaseScope::test_unit_aborted(const test_unit& unit) {
-    test_observer::test_unit_aborted(unit);
+void testing::UITest::SetUp() {
+    testing::UnitTest::GetInstance()->listeners().Append(this);
+    Test::SetUp();
+    Render::setRenderer(std::make_unique<SoftwareRenderer>());
+    AWindow::setWindowManager<UITestWindowManager>();
+    ABaseWindow::currentWindowStorage() = nullptr;
+}
 
-    // draw red rects to highlight views
-    if (auto matcher = Matcher::current()) {
-        for (auto& v: matcher->toSet()) {
-            Render::drawRectBorder(ASolidBrush{0xaae00000_argb},
-                                   v->getPositionInWindow() - glm::ivec2{1, 1},
-                                   v->getSize() + glm::ivec2{2, 2});
+void testing::UITest::TearDown() {
+    testing::UnitTest::GetInstance()->listeners().Release(this);
+    Test::TearDown();
+    AWindow::destroyWindowManager();
+}
+
+void testing::UITest::OnTestPartResult(const testing::TestPartResult& result) {
+    EmptyTestEventListener::OnTestPartResult(result);
+
+    if (result.failed()) {
+        // draw red rects to highlight views
+        if (auto matcher = ::UIMatcher::current()) {
+            for (auto& v: matcher->toSet()) {
+                Render::drawRectBorder(ASolidBrush{0xaae00000_argb},
+                                       v->getPositionInWindow() - glm::ivec2{1, 1},
+                                       v->getSize() + glm::ivec2{2, 2});
+            }
         }
-    }
 
-    auto name = std::string(unit.p_file_name.begin(),  unit.p_file_name.end());
-    auto p = saveScreenshot(name, "abort-{}_{}.png"_format(unit.p_name->c_str(), unit.p_line_num));
+        auto p = saveScreenshot(result.file_name(), "fail-{}_{}.png"_format(result.file_name(), result.line_number()));
 
-    if (!p.empty()) {
-        std::cout << name
-                  << '(' << unit.p_line_num << "): report saved at "
-                  << p.absolute().systemSlashDirection().toStdString()
-                  << std::endl;
+        if (!p.empty()) {
+            std::cout << result.file_name()
+                      << '(' << result.line_number() << "): report saved at "
+                      << p.absolute().systemSlashDirection().toStdString()
+                      << std::endl;
+        }
     }
 }
 
-void UITestCaseScope::test_unit_finish(const test_unit& unit, unsigned long i) {
-    UITest::frame();
-    test_observer::test_unit_finish(unit, i);
+void testing::UITest::OnTestCaseEnd(const testing::TestCase& aCase) {
+    EmptyTestEventListener::OnTestCaseEnd(aCase);
+    auto name = std::string(aCase.name());
 
-    auto name = std::string(unit.p_file_name.begin(),  unit.p_file_name.end());
-    auto p = saveScreenshot(name, "finish-{}_{}.png"_format(unit.p_name->c_str(), unit.p_line_num));
+    auto p = saveScreenshot(name, "finish-{}_{}.png"_format(name));
 
     if (!p.empty()) {
         std::cout << name
-                  << '(' << unit.p_line_num << "): screenshot saved at "
+                  << '(' << name << "): screenshot saved at "
                   << p.absolute().systemSlashDirection().toStdString()
                   << std::endl;
     }
-
-    delete this;
 }

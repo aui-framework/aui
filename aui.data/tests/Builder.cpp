@@ -23,37 +23,47 @@
 // Created by alex2 on 31.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Data/ASqlBuilder.h>
-#include "helper.h"
+#include "AUI/Data/ASqlBlueprint.h"
+#include "AUI/Data/AMigrationManager.h"
 
 
-BOOST_AUTO_TEST_SUITE(Builder)
+class Builder: public ::testing::Test {
+protected:
+    void SetUp() override {
+        Test::SetUp();
+
+        Autumn::put(ASqlDatabase::connect("sqlite", ":memory:"));
+        AMigrationManager mm;
+        mm.registerMigration("initial", [&]() {
+            ASqlBlueprintTable t("users");
+            t.varchar("name");
+        });
+        mm.doMigration();
+    }
+};
+
 
 void seedDatabase() {
     table("users").ins("name").row({"Soso"}).rows({{"Kekos"}, {"Lol"}});
 }
-BOOST_AUTO_TEST_CASE(Raw) {
-        setupSimpleDatabase();
-
-        Autumn::get<ASqlDatabase>()->execute("INSERT INTO users (name) VALUES (?)", {"John"});
-        auto res = Autumn::get<ASqlDatabase>()->query("SELECT * FROM users");
-        for (auto r : res) {
-            BOOST_CHECK_EQUAL(r.getValue(1).toString(), "John");
-        }
+TEST_F(Builder, Raw) {
+    Autumn::get<ASqlDatabase>()->execute("INSERT INTO users (name) VALUES (?)", {"John"});
+    auto res = Autumn::get<ASqlDatabase>()->query("SELECT * FROM users");
+    for (auto r : res) {
+        ASSERT_EQ(r.getValue(1).toString(), "John");
+    }
 }
 
-BOOST_AUTO_TEST_CASE(BuilderInsert) {
-        setupSimpleDatabase();
+TEST_F(Builder, BuilderInsert) {
         seedDatabase();
 }
-BOOST_AUTO_TEST_CASE(BuilderInsertId) {
-        setupSimpleDatabase();
+TEST_F(Builder, BuilderInsertId) {
         id_t id = table("users").ins("name").row({"Soso"}).rowId();
-        BOOST_CHECK_EQUAL(table("users").sel("name").where(col("id") == id).get().first().first(), "Soso");
+        ASSERT_EQ(table("users").sel("name").where(col("id") == id).get().first().first(), "Soso");
 }
-BOOST_AUTO_TEST_CASE(BuilderSelect) {
-        setupSimpleDatabase();
+TEST_F(Builder, BuilderSelect) {
         seedDatabase();
         AVector<AString> names = {
             "Soso",
@@ -62,47 +72,43 @@ BOOST_AUTO_TEST_CASE(BuilderSelect) {
         };
         size_t index = 0;
         for (auto& row : table("users").sel("id", "name").get()) {
-            BOOST_CHECK_EQUAL(row[0], unsigned(index + 1));
-            BOOST_CHECK_EQUAL(row[1], names[index++]);
+            ASSERT_EQ(row[0], unsigned(index + 1));
+            ASSERT_EQ(row[1], names[index++]);
         }
 }
-BOOST_AUTO_TEST_CASE(BuilderSelectWhere1) {
-        setupSimpleDatabase();
+TEST_F(Builder, BuilderSelectWhere1) {
         seedDatabase();
 
         auto validate = [](const AVector<AVector<AVariant>>& result) {
-            BOOST_ASSERT(result.size() == 1);
-            BOOST_ASSERT(result.first().size() == 1);
+            EXPECT_EQ(result.size(), 1);
+            EXPECT_EQ(result.first().size(), 1);
             return result.first().first();
         };
-        BOOST_CHECK_EQUAL(validate(table("users").sel("name").where(col("id") == 1).get()), "Soso");
-        BOOST_CHECK_EQUAL(validate(table("users").sel("name").where(col("id") == 2).get()), "Kekos");
-        BOOST_CHECK_EQUAL(validate(table("users").sel("name").where(col("id") == 3).get()), "Lol");
-        BOOST_TEST(table("users").sel("name").where(col("id") == 4).get().empty());
+        ASSERT_EQ(validate(table("users").sel("name").where(col("id") == 1).get()), "Soso");
+        ASSERT_EQ(validate(table("users").sel("name").where(col("id") == 2).get()), "Kekos");
+        ASSERT_EQ(validate(table("users").sel("name").where(col("id") == 3).get()), "Lol");
+        ASSERT_TRUE(table("users").sel("name").where(col("id") == 4).get().empty());
 }
-BOOST_AUTO_TEST_CASE(BuilderSelectWhere2) {
-        setupSimpleDatabase();
+TEST_F(Builder, BuilderSelectWhere2) {
         seedDatabase();
-        BOOST_TEST(table("users").sel("name").where(col("id") == 0 && col("id") == 1).get().empty());
-        BOOST_TEST(table("users").sel("name").where(col("id") == 1 && col("name") == "Soso").get().size() == 1);
+        ASSERT_TRUE(table("users").sel("name").where(col("id") == 0 && col("id") == 1).get().empty());
+        ASSERT_TRUE(table("users").sel("name").where(col("id") == 1 && col("name") == "Soso").get().size() == 1);
         auto r = table("users").sel("name").where(col("id") == 3 || col("name") == "Soso").get();
-        BOOST_CHECK_EQUAL(r[0].first(), "Soso");
-        BOOST_CHECK_EQUAL(r[1].first(), "Lol");
+        ASSERT_EQ(r[0].first(), "Soso");
+        ASSERT_EQ(r[1].first(), "Lol");
 
-        BOOST_TEST(table("users").sel("name").where((col("id") == 1 && col("id") == 2) || col("name") == "Soso").get().size() == 1);
+        ASSERT_TRUE(table("users").sel("name").where((col("id") == 1 && col("id") == 2) || col("name") == "Soso").get().size() == 1);
 }
-BOOST_AUTO_TEST_CASE(BuilderUpdate) {
-        setupSimpleDatabase();
+TEST_F(Builder, BuilderUpdate) {
         seedDatabase();
 
         table("users").update({{"name", "pisos"}});
 
         for (auto i : table("users").sel("name").get()) {
-            BOOST_CHECK_EQUAL(i[0], "pisos");
+            ASSERT_EQ(i[0], "pisos");
         }
 }
-BOOST_AUTO_TEST_CASE(BuilderUpdateWhere) {
-        setupSimpleDatabase();
+TEST_F(Builder, BuilderUpdateWhere) {
         seedDatabase();
 
         AVector<AString> names = {
@@ -114,30 +120,26 @@ BOOST_AUTO_TEST_CASE(BuilderUpdateWhere) {
         table("users").update({{"name", "pisos"}}).where(col("id") == 1);
 
         for (auto i : table("users").sel("id", "name").get()) {
-            BOOST_CHECK_EQUAL(i[1], names[i[0].toUInt() - 1]);
+            ASSERT_EQ(i[1], names[i[0].toUInt() - 1]);
         }
 }
 
-BOOST_AUTO_TEST_CASE(BuilderDelete) {
-        setupSimpleDatabase();
+TEST_F(Builder, BuilderDelete) {
         seedDatabase();
 
         table("users").remove();
 
-        BOOST_TEST(table("users").select().get().empty());
+        ASSERT_TRUE(table("users").select().get().empty());
 }
 
-BOOST_AUTO_TEST_CASE(BuilderDeleteWhere) {
-        setupSimpleDatabase();
+TEST_F(Builder, BuilderDeleteWhere) {
         seedDatabase();
 
         table("users").remove().where(col("id") == 3);
 
         auto result = table("users").sel("name").get();
-        BOOST_ASSERT(result.size() == 2);
+        ASSERT_EQ(result.size(), 2);
 
-        BOOST_CHECK_EQUAL(result[0][0], "Soso");
-        BOOST_CHECK_EQUAL(result[1][0], "Kekos");
+        ASSERT_EQ(result[0][0], "Soso");
+        ASSERT_EQ(result[1][0], "Kekos");
 }
-
-BOOST_AUTO_TEST_SUITE_END()

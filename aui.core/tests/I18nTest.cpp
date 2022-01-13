@@ -24,32 +24,26 @@
 //
 
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/IO/APath.h>
 #include <AUI/Common/AException.h>
 #include <AUI/i18n/ALanguageCode.h>
 
-using namespace boost::unit_test;
+TEST(I18n, LanguageCode) {
+        ASSERT_THROW(ALanguageCode("en_US"), AException);
+        ASSERT_THROW(ALanguageCode("en-us"), AException);
+        ASSERT_THROW(ALanguageCode("en-UdS"), AException);
+        ASSERT_THROW(ALanguageCode("end-US"), AException);
+        ASSERT_THROW(ALanguageCode(""), AException);
+        ASSERT_THROW(ALanguageCode("fweo,fwoepmo"), AException);
+        ASSERT_THROW(ALanguageCode("fweo,-"), AException);
+        ASSERT_THROW(ALanguageCode("-afs"), AException);
 
-BOOST_AUTO_TEST_SUITE(i18n)
-
-
-BOOST_AUTO_TEST_CASE(LanguageCode) {
-        BOOST_CHECK_THROW(ALanguageCode("en_US"), AException);
-        BOOST_CHECK_THROW(ALanguageCode("en-us"), AException);
-        BOOST_CHECK_THROW(ALanguageCode("en-UdS"), AException);
-        BOOST_CHECK_THROW(ALanguageCode("end-US"), AException);
-        BOOST_CHECK_THROW(ALanguageCode(""), AException);
-        BOOST_CHECK_THROW(ALanguageCode("fweo,fwoepmo"), AException);
-        BOOST_CHECK_THROW(ALanguageCode("fweo,-"), AException);
-        BOOST_CHECK_THROW(ALanguageCode("-afs"), AException);
-        BOOST_CHECK_NO_THROW(ALanguageCode("en-US"));
+        ASSERT_NO_THROW(ALanguageCode("en-US"));
 
         ALanguageCode c("ru-UA");
 
-        BOOST_CHECK_EQUAL(c.toString(), "ru-UA");
-        BOOST_CHECK_EQUAL(c.getGroup(), "ru");
-        BOOST_CHECK_EQUAL(c.getSubGroup(), "UA");
+        ASSERT_EQ(c.toString(), "ru-UA");
+        ASSERT_EQ(c.getGroup(), "ru");
+        ASSERT_EQ(c.getSubGroup(), "UA");
 }
-
-BOOST_AUTO_TEST_SUITE_END()

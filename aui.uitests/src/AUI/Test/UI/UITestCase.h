@@ -7,8 +7,7 @@
 
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Software/SoftwareRenderer.h>
-#include <boost/test/tree/observer.hpp>
-#include <boost/test/framework.hpp>
+#include <gtest/gtest.h>
 
 
 class UITestRenderingContext: public SoftwareRenderingContext {
@@ -42,22 +41,17 @@ public:
     }
 };
 
+namespace testing {
+    class API_AUI_UITESTS UITest : public testing::Test, protected testing::EmptyTestEventListener {
+    public:
+    protected:
+        void SetUp() override;
 
-class UITestCaseScope: public boost::unit_test::test_observer {
-public:
-    UITestCaseScope() {
-        boost::unit_test::framework::register_observer(*this);
-        Render::setRenderer(std::make_unique<SoftwareRenderer>());
-        AWindow::setWindowManager<UITestWindowManager>();
-        ABaseWindow::currentWindowStorage() = nullptr;
-    }
-    ~UITestCaseScope() {
-        boost::unit_test::framework::deregister_observer(*this);
-        AWindow::destroyWindowManager();
-    }
+        void TearDown() override;
 
-    API_AUI_UITESTS void test_unit_aborted(const boost::unit_test::test_unit& unit) override;
-    API_AUI_UITESTS void test_unit_finish(const boost::unit_test::test_unit& unit, unsigned long i) override;
-};
+    public:
+        void OnTestPartResult(const testing::TestPartResult& result) override;
 
-#define UI_TEST_CASE(name) void name ## _wrap(); BOOST_AUTO_TEST_CASE(name) { new UITestCaseScope; name ## _wrap(); }  void name ## _wrap()
+        void OnTestCaseEnd(const testing::TestCase& aCase) override;
+    };
+}

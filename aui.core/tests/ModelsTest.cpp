@@ -23,24 +23,20 @@
 // Created by alex2 on 31.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Model/AModels.h>
 #include <AUI/Model/AListModel.h>
-
-using namespace boost::unit_test;
-
-BOOST_AUTO_TEST_SUITE(Models)
 
 
 _<AListModel<int>> testModel() {
     return AListModel<int>::make({1, 5, 72, 23, 14, 35, 66, 37, 28, 19});
 }
 
-BOOST_AUTO_TEST_CASE(RangesIncluding) {
+TEST(Models, RangesIncluding) {
     auto model = testModel();
 
     auto check = [](const AVector<AModelRange<int>>& v1, const AVector<AModelRange<int>>& v2) {
-        BOOST_REQUIRE_EQUAL(v1, v2);
+        ASSERT_EQ(v1, v2);
     };
 
     check(model->rangesIncluding([&](size_t i) {
@@ -62,31 +58,31 @@ BOOST_AUTO_TEST_CASE(RangesIncluding) {
 /**
  * Converts int model to string model.
  */
-BOOST_AUTO_TEST_CASE(Adapter) {
+TEST(Models, Adapter) {
     auto model = testModel();
     auto adaptedModel = AModels::adapt<AString>(model, [](int i) {
         return AString::number(i);
     });
     AVector<AString> expected = { "1", "5", "72", "23", "14", "35", "66", "37", "28", "19", };
-    BOOST_REQUIRE_EQUAL(adaptedModel->toVector(), expected);
+    ASSERT_EQ(adaptedModel->toVector(), expected);
 }
 
 /**
  * Includes only even numbers.
  */
-BOOST_AUTO_TEST_CASE(Filter) {
+TEST(Models, Filter) {
     auto model = testModel();
     auto filteredModel = AModels::filter(model, [](int i) {
         return i % 2 == 0;
     });
     AVector<int> expected = { 72, 14, 66, 28 };
-    BOOST_REQUIRE_EQUAL(filteredModel->toVector(), expected);
+    ASSERT_EQ(filteredModel->toVector(), expected);
 }
 
 /**
  * Includes only even numbers, removes one even number and does lazyInvalidate.
  */
-BOOST_AUTO_TEST_CASE(FilterLazyInvalidate) {
+TEST(Models, FilterLazyInvalidate) {
     auto model = testModel();
     auto filteredModel = AModels::filter(model, [](int i) {
         return i % 2 == 0;
@@ -94,13 +90,13 @@ BOOST_AUTO_TEST_CASE(FilterLazyInvalidate) {
     model->setItem(2, 71); // replace 72 with 71;
     filteredModel->lazyInvalidate();
     AVector<int> expected = { 14, 66, 28 };
-    BOOST_REQUIRE_EQUAL(filteredModel->toVector(), expected);
+    ASSERT_EQ(filteredModel->toVector(), expected);
 }
 
 /**
  * Includes only even numbers, adds one even number and does invalidate.
  */
-BOOST_AUTO_TEST_CASE(FilterInvalidate) {
+TEST(Models, FilterInvalidate) {
     auto model = testModel();
     auto filteredModel = AModels::filter(model, [](int i) {
         return i % 2 == 0;
@@ -111,7 +107,5 @@ BOOST_AUTO_TEST_CASE(FilterInvalidate) {
     filteredModel->invalidate();
 
     AVector<int> expected = { 2, 6, 72, 14, 66, 28 };
-    BOOST_REQUIRE_EQUAL(filteredModel->toVector(), expected);
+    ASSERT_EQ(filteredModel->toVector(), expected);
 }
-
-BOOST_AUTO_TEST_SUITE_END()

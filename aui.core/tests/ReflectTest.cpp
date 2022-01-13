@@ -23,7 +23,7 @@
 // Created by alex2 on 30.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AMap.h>
 #include <AUI/Reflect/AClass.h>
@@ -31,8 +31,7 @@
 #include <AUI/Reflect/AReflect.h>
 #include <AUI/Model/AListModel.h>
 
-using namespace boost::unit_test;
-enum Test {
+enum ATest {
     VALUE1,
     VALUE2,
     VALUE3 = 1000,
@@ -40,7 +39,7 @@ enum Test {
 };
 
 namespace namespaceeee {
-    enum Test {
+    enum ATest {
         V1,
         V2,
         V3,
@@ -49,59 +48,56 @@ namespace namespaceeee {
 
 struct MyStruct {};
 
-namespace AzazaTest {
-    struct Test {};
+namespace AzazaATest {
+    struct ATest {};
 }
 
-ENUM_VALUES(Test, VALUE1, VALUE2, VALUE3, VALUE4)
-ENUM_VALUES(namespaceeee::Test, namespaceeee::V1, namespaceeee::V2, namespaceeee::V3)
-
-BOOST_AUTO_TEST_SUITE(Reflect)
-
-    BOOST_AUTO_TEST_CASE(NameClass) {
-        BOOST_CHECK_EQUAL(AClass<AString>::name(), "AString");
-        BOOST_CHECK_EQUAL(AClass<AzazaTest::Test>::nameWithoutNamespace(), "Test");
-    }
+ENUM_VALUES(ATest, VALUE1, VALUE2, VALUE3, VALUE4)
+ENUM_VALUES(namespaceeee::ATest, namespaceeee::V1, namespaceeee::V2, namespaceeee::V3)
 
 
-    BOOST_AUTO_TEST_CASE(NameStruct) {
-        BOOST_CHECK_EQUAL(AClass<MyStruct>::name(), "MyStruct");
-    }
+TEST(Reflect, NameClass) {
+    ASSERT_EQ(AClass<AString>::name(), "AString");
+    ASSERT_EQ(AClass<AzazaATest::ATest>::nameWithoutNamespace(), "ATest");
+}
 
-    BOOST_AUTO_TEST_CASE(NameEnum) {
 
-        BOOST_CHECK_EQUAL((AClass<Test>::name()), "Test");
-    }
+TEST(Reflect, NameStruct) {
+    ASSERT_EQ(AClass<MyStruct>::name(), "MyStruct");
+}
 
-    BOOST_AUTO_TEST_CASE(EnumerateNames) {
-        AMap<AString, Test> ref = {
+TEST(Reflect, NameEnum) {
+
+    ASSERT_EQ((AClass<ATest>::name()), "ATest");
+}
+
+TEST(Reflect, EnumerateNames) {
+    AMap<AString, ATest> ref = {
+        {"VALUE1", VALUE1},
+        {"VALUE2", VALUE2},
+        {"VALUE3", VALUE3},
+    };
+
+    ASSERT_TRUE((AEnumerate<ATest>::names<VALUE1, VALUE2, VALUE3>() == ref));
+}
+
+TEST(Reflect, EnumerateAll) {
+    AMap<AString, ATest> ref = {
             {"VALUE1", VALUE1},
             {"VALUE2", VALUE2},
             {"VALUE3", VALUE3},
-        };
+    };
 
-        BOOST_TEST((AEnumerate<Test>::names<VALUE1, VALUE2, VALUE3>() == ref));
-    }
+    auto test = AEnumerate<ATest>::names<VALUE1, VALUE2, VALUE3>();
+    ASSERT_TRUE((test == ref));
+}
 
-    BOOST_AUTO_TEST_CASE(EnumerateAll) {
-        AMap<AString, Test> ref = {
-                {"VALUE1", VALUE1},
-                {"VALUE2", VALUE2},
-                {"VALUE3", VALUE3},
-        };
-
-        auto test = AEnumerate<Test>::names<VALUE1, VALUE2, VALUE3>();
-        BOOST_TEST((test == ref));
-    }
-
-    BOOST_AUTO_TEST_CASE(NamespaceEnumerateNames) {
-        AMap<AString, namespaceeee::Test> ref = {
-                {"V1", namespaceeee::V1},
-                {"V2", namespaceeee::V2},
-                {"V3", namespaceeee::V3},
-        };
-        auto test = AEnumerate<namespaceeee::Test>::all();
-        BOOST_TEST((test == ref));
-    }
-
-BOOST_AUTO_TEST_SUITE_END()
+TEST(Reflect, NamespaceEnumerateNames) {
+    AMap<AString, namespaceeee::ATest> ref = {
+            {"V1", namespaceeee::V1},
+            {"V2", namespaceeee::V2},
+            {"V3", namespaceeee::V3},
+    };
+    auto test = AEnumerate<namespaceeee::ATest>::all();
+    ASSERT_TRUE((test == ref));
+}

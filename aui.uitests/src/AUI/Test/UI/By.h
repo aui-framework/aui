@@ -1,14 +1,14 @@
 #pragma once
 
 #include <AUI/Common/AString.h>
-#include "Matcher.h"
+#include "UIMatcher.h"
 
 namespace By {
-    API_AUI_UITESTS Matcher text(const AString& text);
-    API_AUI_UITESTS Matcher name(const AString& name);
+    API_AUI_UITESTS UIMatcher text(const AString& text);
+    API_AUI_UITESTS UIMatcher name(const AString& name);
 
     template<typename T>
-    Matcher type() {
+    UIMatcher type() {
         class TypeMatcher: public IMatcher {
         public:
             ~TypeMatcher() override = default;

@@ -73,8 +73,12 @@ public:
         unsigned begin;
         unsigned end;
 
-        bool operator==(const Selection& s) const noexcept {
-            return begin == s.begin && end == s.end;
+        bool operator==(const Selection& rhs) const noexcept {
+            return std::tie(begin, end) == std::tie(rhs.begin, rhs.end);
+        }
+
+        bool operator!=(const Selection& rhs) const noexcept {
+            return !(rhs == *this);
         }
     };
     [[nodiscard]] virtual AString getText() const = 0;
