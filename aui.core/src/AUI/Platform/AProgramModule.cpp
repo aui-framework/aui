@@ -20,7 +20,7 @@
  */
 
 #include <cassert>
-#include "Dll.h"
+#include "AProgramModule.h"
 #include "AUI/Common/AString.h"
 
 #if AUI_PLATFORM_WIN
@@ -32,7 +32,7 @@
 
 #endif
 
-_<Dll> Dll::load(const AString& path)
+_<AProgramModule> AProgramModule::load(const AString& path)
 {
 #if AUI_PLATFORM_WIN
     auto fullname = path + "." + getDllExtension();
@@ -55,9 +55,9 @@ _<Dll> Dll::load(const AString& path)
 	auto lib = LoadLibrary(fullname.c_str());
 	if (!lib)
 	{
-		throw DllLoadException("Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));
+		throw AProgramModuleLoadException("Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));
 	}
-	return aui::ptr::manage(new Dll(lib));
+	return aui::ptr::manage(new AProgramModule(lib));
 #elif AUI_PLATFORM_ANDROID
 	auto name = ("lib" + fullname).toStdString();
 	auto lib = dlopen(name.c_str(), RTLD_LAZY);
@@ -113,7 +113,7 @@ _<Dll> Dll::load(const AString& path)
 #endif
 }
 
-AString Dll::getDllExtension()
+AString AProgramModule::getDllExtension()
 {
 #if AUI_PLATFORM_WIN
 	return "dll";
@@ -122,7 +122,7 @@ AString Dll::getDllExtension()
 #endif
 }
 
-void(*Dll::getProcAddressRawPtr(const AString& name) const noexcept)()
+void(*AProgramModule::getProcAddressRawPtr(const AString& name) const noexcept)()
 {
 #if AUI_PLATFORM_WIN
 	auto r = reinterpret_cast<void(*)()>(
@@ -131,8 +131,15 @@ void(*Dll::getProcAddressRawPtr(const AString& name) const noexcept)()
     auto r = reinterpret_cast<void(*)()>(
             dlsym(mHandle, name.toStdString().c_str()));
 #endif
-    assert(r);
     return r;
 }
 
-DllLoadException::~DllLoadException() = default;
+AProgramModuleLoadException::~AProgramModuleLoadException() = default;
+
+_<AProgramModule> AProgramModule::self() {
+#if AUI_PLATFORM_WIN
+    return aui::ptr::manage(new AProgramModule(GetModuleHandle(nullptr)));
+#else
+    return aui::ptr::manage(new AProgramModule(nullptr));
+#endif
+}

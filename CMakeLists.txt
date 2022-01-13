@@ -38,8 +38,6 @@ include(aui.boot.cmake)
 
 # use msvc dll
 cmake_policy(SET CMP0091 NEW)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
-
 
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
 
@@ -93,6 +91,7 @@ set(AUI_ALL_COMPONENTS core
         xml
         uitests
         )
+
 
 if(NOT AUI_BOOT_COMPONENTS)
     # adding all components

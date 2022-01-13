@@ -24,7 +24,15 @@
 #include "AUI/Core.h"
 #include <AUI/IO/APath.h>
 
-#define AUI_PLUGIN_ENTRY extern "C" AUI_EXPORT void aui_plugin_init()
+#ifdef AUI_STATIC
+#ifdef _AUI_PLUGIN_ENTRY_N
+#define AUI_PLUGIN_ENTRY struct _AUI_PLUGIN_ENTRY_N{ _AUI_PLUGIN_ENTRY_N() noexcept; } _AUI_PLUGIN_ENTRY_N ## v; _AUI_PLUGIN_ENTRY_N :: _AUI_PLUGIN_ENTRY_N () noexcept
+#else
+#define AUI_PLUGIN_ENTRY struct fail { fail(); static_assert(false, "usage of AUI_PLUGIN_ENTRY without PLUGIN flag in AUI_MODULE"); }; fail::fail()
+#endif
+#else
+#define AUI_PLUGIN_ENTRY extern "C" AUI_FORCE_EXPORT void _AUI_PLUGIN_ENTRY_N()
+#endif
 
 class AString;
 

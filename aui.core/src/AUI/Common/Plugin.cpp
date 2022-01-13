@@ -24,9 +24,8 @@
 
 #include "AString.h"
 #include "ASet.h"
-#include "AUI/Platform/Dll.h"
+#include "AUI/Platform/AProgramModule.h"
 #include "Plugin.h"
-
 
 void aui::importPlugin(const AString& name)
 {
@@ -44,5 +43,5 @@ void aui::importPlugin(const AString& name)
 }
 
 void aui::importPluginPath(const APath& path) {
-	Dll::load(path)->getProcAddress<void()>("aui_plugin_init")();
+	AProgramModule::load(path)->getProcAddress<void()>("aui_plugin_init")();
 }

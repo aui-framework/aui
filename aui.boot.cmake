@@ -26,6 +26,14 @@ if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
     file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
 endif()
 
+
+if (MSVC)
+    if (NOT CMAKE_MSVC_RUNTIME_LIBRARY)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+        message(STATUS "AUI.Boot CMAKE_MSVC_RUNTIME_LIBRARY is not set - defaulting to ${CMAKE_MSVC_RUNTIME_LIBRARY}")
+    endif()
+endif()
+
 # rpath fix
 if (APPLE)
     set(CMAKE_MACOSX_RPATH 1)
@@ -295,6 +303,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                         )
             endif()
 
+
             # forward all necessary variables to child cmake build
             foreach(_varname
                     CMAKE_TOOLCHAIN_FILE
@@ -307,6 +316,9 @@ macro(auib_import AUI_MODULE_NAME URL)
                     CMAKE_INSTALL_RPATH
                     CMAKE_MAKE_PROGRAM
                     CMAKE_TOOLCHAIN_FILE
+                    CMAKE_MSVC_RUNTIME_LIBRARY
+                    CMAKE_C_LINKER_FLAGS
+                    CMAKE_EXE_LINKER_FLAGS
                     ${ANDROID_VARS})
                 list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
             endforeach()

@@ -35,7 +35,8 @@ define_property(TARGET PROPERTY AUI_WHOLEARCHIVE
 
 
 auib_import(GTest https://github.com/google/googletest
-            VERSION main)
+            VERSION main
+            CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
 
 set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
 set_property(GLOBAL PROPERTY TESTS_SRCS "")
@@ -44,6 +45,7 @@ set_property(GLOBAL PROPERTY TESTS_SRCS "")
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES OFF CACHE BOOL "Install runtime dependencies along with the project")
+
 cmake_policy(SET CMP0072 NEW)
 
 if (AUI_BOOT)
@@ -61,6 +63,11 @@ endif()
 # platform definitions
 # platform exclusion (AUI/Platform/<platform name>/...)
 set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(AUI_DEBUG TRUE)
+else()
+    set(AUI_DEBUG TRUE)
+endif()
 
 if (WIN32)
     set(AUI_PLATFORM_WIN 1)
@@ -107,7 +114,6 @@ if (UNIX)
 else()
     set(AUI_PLATFORM_UNIX 0)
 endif()
-
 
 # determine compiler home dir for mingw when crosscompiling
 if (MINGW AND CMAKE_CROSSCOMPILING)
@@ -180,10 +186,10 @@ macro(aui_enable_tests)
                 if (_type STREQUAL "EXECUTABLE")
                     get_target_property(_libs ${_dep} LINK_LIBRARIES)
                     get_target_property(_defs ${_dep} COMPILE_DEFINITIONS)
-                    target_link_libraries(Tests PRIVATE ${_libs})
+                    aui_link(Tests PRIVATE ${_libs})
                     target_compile_definitions(Tests PRIVATE ${_defs})
                 else()
-                    target_link_libraries(Tests PRIVATE ${_dep})
+                    aui_link(Tests PRIVATE ${_dep})
                 endif()
             endforeach()
             target_include_directories(Tests PRIVATE ${TESTS_INCLUDE_DIRS})
@@ -235,7 +241,7 @@ function(aui_common AUI_MODULE_NAME)
     if(NOT BUILD_SHARED_LIBS)
         target_compile_definitions(${AUI_MODULE_NAME} PUBLIC AUI_STATIC)
     endif()
-    if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    if(AUI_DEBUG)
         target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_DEBUG)
     else()
         target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_RELEASE)
@@ -653,7 +659,7 @@ function(aui_module AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
 
 
-    set(options )
+    set(options PLUGIN)
     set(oneValueArgs EXPORT)
     set(multiValueArgs ADDITIONAL_SRCS)
     cmake_parse_arguments(AUIE "${options}" "${oneValueArgs}"
@@ -722,6 +728,17 @@ function(aui_module AUI_MODULE_NAME)
     if (AUIE_COMPILE_ASSETS)
         _aui_compile_assets(${AUI_MODULE_NAME})
         set_target_properties(${AUI_MODULE_NAME} PROPERTIES AUI_WHOLEARCHIVE ON)
+    endif()
+
+    if (AUIE_PLUGIN)
+        set_target_properties(${AUI_MODULE_NAME} PROPERTIES AUI_WHOLEARCHIVE ON)
+
+        # define plugin entry for plugins
+        if (BUILD_SHARED_LIBS)
+            target_compile_definitions(${AUI_MODULE_NAME} PRIVATE _AUI_PLUGIN_ENTRY_N=aui_plugin_entry)
+        else()
+            target_compile_definitions(${AUI_MODULE_NAME} PRIVATE _AUI_PLUGIN_ENTRY_N=aui_plugin_entry_${BUILD_DEF_NAME})
+        endif()
     endif()
 endfunction(aui_module)
 
