@@ -42,7 +42,7 @@ public:
 };
 
 namespace testing {
-    class API_AUI_UITESTS UITest : public testing::Test, protected testing::EmptyTestEventListener {
+    class API_AUI_UITESTS UITest : public testing::Test {
     public:
     protected:
         void SetUp() override;
@@ -50,8 +50,5 @@ namespace testing {
         void TearDown() override;
 
     public:
-        void OnTestPartResult(const testing::TestPartResult& result) override;
-
-        void OnTestCaseEnd(const testing::TestCase& aCase) override;
     };
 }

@@ -7,5 +7,5 @@ aui_module(aui.sqlite ADDITIONAL_SRCS ${SQLITE3_SRCS}
                       EXPORT aui)
 target_include_directories(aui.sqlite PRIVATE 3rdparty/sqlite3)
 
-aui_link(aui.sqlite PRIVATE aui.core)
-aui_link(aui.sqlite PRIVATE aui.data)
+aui_link(aui.sqlite PUBLIC aui.core)
+aui_link(aui.sqlite PUBLIC aui.data)

@@ -23,6 +23,7 @@ private:
 
     template<class Assertion>
     void performHintChecks(const char* msg, ASet<_<AView>>& set) {
+        currentImpl() = this;
         if constexpr (ignores_visibility<Assertion>::value) {
             mIncludeInvisibleViews = true;
             set = toSet();

@@ -73,7 +73,7 @@ TEST(JsonBasic, StringEscape)
     auto s = AJson::toString(root);
 
     // check for whole composition
-    ASSERT_EQ(s, "{\"user\":\\\"u\"}");
+    ASSERT_EQ(s, "{\"user\":\"u\\\"\"}");
 
     // check for string itself
     auto deserialized = AJson::fromString(s);
