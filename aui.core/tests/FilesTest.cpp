@@ -64,26 +64,3 @@ TEST(Path, Windows) {
     }
     ASSERT_EQ(APath("C:/home/user/file.txt").filename(), "file.txt");
 }
-
-TEST(Path, List) {
-    auto l = APath(".").listDir();
-#ifdef WIN32
-    ASSERT_TRUE(l.contains("./Tests.exe"));
-#else
-    ASSERT_TRUE(l.contains("./Tests"));
-#endif
-    ASSERT_TRUE(!l.contains("./."));
-    ASSERT_TRUE(!l.contains("./.."));
-
-    l = APath(".").listDir(ListFlags::DEFAULT_FLAGS | ListFlags::DONT_IGNORE_DOTS);
-#ifdef WIN32
-    ASSERT_TRUE(l.contains("./Tests.exe"));
-#else
-    ASSERT_TRUE(l.contains("./Tests"));
-#endif
-    ASSERT_TRUE(l.contains("./."));
-    ASSERT_TRUE(l.contains("./.."));
-
-    l = APath(".").listDir(ListFlags::DIRS);
-    ASSERT_TRUE(l.empty());
-}

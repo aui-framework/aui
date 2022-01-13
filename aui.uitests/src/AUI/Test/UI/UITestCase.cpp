@@ -11,6 +11,7 @@
 class MyListener: public ::testing::EmptyTestEventListener {
 private:
     static APath saveScreenshot(const AString& testFilePath, const AString& name) {
+        if (AWindow::current()) return {};
         auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
         if (image.getData().empty()) return {};
         auto p = APath("reports")[APath(testFilePath).filenameWithoutExtension()];

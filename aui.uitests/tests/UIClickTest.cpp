@@ -65,10 +65,10 @@ protected:
                 });
 
                 pack();
-                _new<TestWindow>()->show();
             }
         };
 
+        _new<TestWindow>()->show();
     }
 };
 
