@@ -83,7 +83,7 @@ jobs:
 
       - name: Test
         # Build your program with the given configuration
-        run: cd ${{github.workspace}}/build && ctest .
+        run: cd ${{github.workspace}}/build && ctest .  -C ${{matrix.config.build_type}}
 
       - name: Install Strip
         run: cmake --install build --prefix instdir --strip
