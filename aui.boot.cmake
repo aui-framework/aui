@@ -311,6 +311,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                 list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
             endforeach()
             list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
+            list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_CONFIGURATION_TYPES=${CMAKE_BUILD_TYPE}") # fix vs and xcode generators
             if (IOS)
                 list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_C_FLAGS=-Wno-error-implicit-function-declaration")
             endif()

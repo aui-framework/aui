@@ -70,6 +70,10 @@ protected:
 
         _new<TestWindow>()->show();
     }
+
+    void TearDown() override {
+        UITest::TearDown();
+    }
 };
 
 
