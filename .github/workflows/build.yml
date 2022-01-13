@@ -77,9 +77,13 @@ jobs:
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
         run: cmake -G "${{ matrix.config.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}} ${{matrix.config.additional_cmake_flags}}
 
-      - name: Build
+      - name: Build project
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} --target ALL_BUILD Tests
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}}
+
+      - name: Build tests
+        # Build your program with the given configuration
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} --target Tests
 
       - name: Test
         # Build your program with the given configuration
