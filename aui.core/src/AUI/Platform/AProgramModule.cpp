@@ -41,7 +41,7 @@ _<AProgramModule> AProgramModule::load(const AString& path)
         auto name = fp.toStdString();
         auto lib = dlopen(name.c_str(), RTLD_LAZY);
         if (lib) {
-            return aui::ptr::manage(new Dll(lib));
+            return aui::ptr::manage(new AProgramModule(lib));
         }
         return nullptr;
     };
@@ -63,9 +63,9 @@ _<AProgramModule> AProgramModule::load(const AString& path)
 	auto lib = dlopen(name.c_str(), RTLD_LAZY);
 	if (!lib)
 	{
-		throw DllLoadException("Could not load shared library: " + fullname + ": " + dlerror());
+		throw AProgramModuleLoadException("Could not load shared library: " + fullname + ": " + dlerror());
 	}
-	return aui::ptr::manage(new Dll(lib));
+	return aui::ptr::manage(new AProgramModule(lib));
 #else
 	char buf[0x1000];
 	getcwd(buf, sizeof(buf));
@@ -109,7 +109,7 @@ _<AProgramModule> AProgramModule::load(const AString& path)
         ++counter;
 	}
 
-    throw DllLoadException(diagnostic);
+    throw AProgramModuleLoadException(diagnostic);
 #endif
 }
 

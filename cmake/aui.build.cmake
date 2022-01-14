@@ -215,17 +215,17 @@ int main(int argc, char **argv) {
         set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
         target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
         get_target_property(_t GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
-        target_link_libraries(${TESTS_MODULE_NAME} PUBLIC GTest::gtest)
+        aui_link(${TESTS_MODULE_NAME} PUBLIC GTest::gtest)
         target_compile_definitions(${TESTS_MODULE_NAME} PUBLIC AUI_TESTS_MODULE=1)
 
         if (TARGET aui.core)
-            target_link_libraries(${TESTS_MODULE_NAME} PUBLIC aui.core)
+            aui_link(${TESTS_MODULE_NAME} PUBLIC aui.core)
         else()
-            target_link_libraries(${TESTS_MODULE_NAME} PUBLIC aui::core)
+            aui_link(${TESTS_MODULE_NAME} PUBLIC aui::core)
         endif()
 
         if (TARGET aui::uitests)
-            target_link_libraries(${TESTS_MODULE_NAME} PUBLIC aui::uitests)
+            aui_link(${TESTS_MODULE_NAME} PUBLIC aui::uitests)
         endif()
 
         aui_add_properties(${TESTS_MODULE_NAME})

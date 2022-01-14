@@ -247,7 +247,7 @@ TEST(Threading, FutureOnDone) {
         // check that cancellation does not triggers here
     }
     AThread::sleep(500);
-    ASSERT_TRUE(called) << "onSuccess callback does not called";
+    ASSERT_TRUE(called) << "onSuccess callback has not called";
 }
 /*
 TEST(Threading, Fence) {

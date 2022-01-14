@@ -85,7 +85,7 @@ public:
     }
 };
 
-ExampleWindow::ExampleWindow(): AWindow("Examples")
+ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 {
     setLayout(_new<AVerticalLayout>());
     AStylesheet::inst().addRules({

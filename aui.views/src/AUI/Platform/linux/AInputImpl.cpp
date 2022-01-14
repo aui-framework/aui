@@ -27,12 +27,13 @@
 
 
 bool isMouseKeyDown(AInput::Key button) {
-	// we don't care about these but they are required
-	::Window root, child;
-	int wx, wy;
-	int gx, gy;
+    if (CommonRenderingContext::ourDisplay == nullptr) return false;
+    // we don't care about these but they are required
+    ::Window root, child;
+    int wx, wy;
+    int gx, gy;
 
-	unsigned int buttons = 0;
+    unsigned int buttons = 0;
 	XQueryPointer(CommonRenderingContext::ourDisplay, DefaultRootWindow(CommonRenderingContext::ourDisplay), &root, &child, &gx, &gy, &wx, &wy, &buttons);
 
 	switch (button)
@@ -46,6 +47,7 @@ bool isMouseKeyDown(AInput::Key button) {
 	return false;
 }
 AInput::Key AInput::fromNative(int k) {
+    if (CommonRenderingContext::ourDisplay == nullptr) return AInput::Unknown;
 	Key key;
 	KeySym keycode = XKeycodeToKeysym(CommonRenderingContext::ourDisplay, k, 0);
 	switch (keycode) {
@@ -264,6 +266,7 @@ int AInput::toNative(Key key) {
 	return keysym;
 }
 bool AInput::isKeyDown(Key k) {
+    if (CommonRenderingContext::ourDisplay == nullptr) return false;
 	if (k == Key::LButton || k == Key::RButton) {
 		return isMouseKeyDown(k);
 	}
