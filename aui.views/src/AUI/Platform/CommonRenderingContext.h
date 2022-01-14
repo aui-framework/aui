@@ -2,6 +2,7 @@
 
 #include "IRenderingContext.h"
 #include "AWindow.h"
+#include "AUI/Traits/values.h"
 
 class CommonRenderingContext: public IRenderingContext {
 protected:
@@ -26,7 +27,7 @@ protected:
 #endif
 public:
 #if AUI_PLATFORM_LINUX
-    static Display* ourDisplay;
+    static aui::assert_not_used_when_null<Display*> ourDisplay;
     static Screen* ourScreen;
 
     static struct Atoms {

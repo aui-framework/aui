@@ -9,7 +9,7 @@
 #include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Util/kAUI.h"
 
-Display* CommonRenderingContext::ourDisplay = nullptr;
+aui::assert_not_used_when_null<Display*> CommonRenderingContext::ourDisplay = nullptr;
 Screen* CommonRenderingContext::ourScreen = nullptr;
 CommonRenderingContext::Atoms CommonRenderingContext::ourAtoms;
 
