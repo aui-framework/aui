@@ -30,13 +30,13 @@
 
 void aui::importPlugin(const AString& name)
 {
-	AString path = APath(name).filename();
+	AString filename = APath(name).filename();
 	
 	static ASet<AString> importedPlugins;
-	if (!importedPlugins.contains(path))
+	if (!importedPlugins.contains(filename))
 	{
-		importedPlugins << path;
-		aui::importPluginPath("aui." + path.lowercase());
+		importedPlugins << filename;
+		aui::importPluginPath("aui." + filename.lowercase());
 	}
 	
 }

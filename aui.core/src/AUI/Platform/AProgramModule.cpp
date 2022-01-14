@@ -72,6 +72,7 @@ _<AProgramModule> AProgramModule::load(const AString& path)
 
 	APath paths[] = {
             ""_as,
+            "lib/"_as,
             AString(buf) + "/",
             AString(buf) + "/../lib/",
             "/usr/local/lib/"_as,
