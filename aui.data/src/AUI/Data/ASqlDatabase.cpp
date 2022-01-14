@@ -69,7 +69,7 @@ _<ASqlDatabase> ASqlDatabase::connect(const AString& driverName, const AString& 
 
 void ASqlDatabase::registerDriver(_<ISqlDriver> driver)
 {
-	getDrivers()[driver->getDriverName()] = driver;
+	getDrivers()[driver->getDriverName()] = std::move(driver);
 }
 
 SqlDriverType ASqlDatabase::getDriverType() {

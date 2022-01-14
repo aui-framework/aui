@@ -23,14 +23,13 @@
 #include "AUI/Common/Plugin.h"
 
 #include "AString.h"
+#include <AUI/Traits/strings.h>
 #include "ASet.h"
 #include "AUI/Platform/AProgramModule.h"
 #include "Plugin.h"
 
 void aui::importPlugin(const AString& name)
 {
-    auto n = name;
-    n[0] = toupper(n[0]);
 	AString path = APath(name).filename();
 	
 	static ASet<AString> importedPlugins;
@@ -43,5 +42,11 @@ void aui::importPlugin(const AString& name)
 }
 
 void aui::importPluginPath(const APath& path) {
-	AProgramModule::load(path)->getProcAddress<void()>("aui_plugin_init")();
+	if (auto module = AProgramModule::load(path)) {
+        if (auto proc = module->getProcAddress<void()>("aui_plugin_init")) {
+            proc();
+            return;
+        }
+        throw AException("Module {} does not contain plugin entry point"_format(path));
+    }
 }

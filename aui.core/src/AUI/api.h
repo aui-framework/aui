@@ -22,17 +22,18 @@
 #pragma once
 
 #if AUI_PLATFORM_WIN
-    #define AUI_FORCE_IMPORT __declspec(dllimport)
-    #define AUI_FORCE_EXPORT __declspec(dllexport)
+#define AUI_FORCE_IMPORT __declspec(dllimport)
+#define AUI_FORCE_EXPORT __declspec(dllexport)
 #else
 #define AUI_FORCE_IMPORT
+    #define AUI_FORCE_IMPORT
     #define AUI_FORCE_EXPORT __attribute__((visibility("default")))
 #endif
 
 #ifdef AUI_STATIC
-    #define AUI_IMPORT
+#define AUI_IMPORT
     #define AUI_EXPORT
 #else
-    #define AUI_IMPORT AUI_FORCE_IMPORT
-    #define AUI_EXPORT AUI_FORCE_EXPORT
+#define AUI_IMPORT AUI_FORCE_IMPORT
+#define AUI_EXPORT AUI_FORCE_EXPORT
 #endif

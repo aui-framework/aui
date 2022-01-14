@@ -37,7 +37,7 @@ _<AProgramModule> AProgramModule::load(const AString& path)
 #if AUI_PLATFORM_WIN
     auto fullname = path + "." + getDllExtension();
 #else
-    auto doLoad = [](const APath& fp) -> _<Dll> {
+    auto doLoad = [](const APath& fp) -> _<AProgramModule> {
         auto name = fp.toStdString();
         auto lib = dlopen(name.c_str(), RTLD_LAZY);
         if (lib) {
