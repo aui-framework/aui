@@ -2,7 +2,6 @@
 // Created by alex2772 on 1/14/22.
 //
 
-#include <cxxabi.h>
 #include "ASegfaultException.h"
 #include "AUI/Traits/memory.h"
 #include "AUI/Traits/arrays.h"
@@ -24,6 +23,7 @@ extern "C" {
 #include <dlfcn.h>
 }
 
+#include <cxxabi.h>
 void restoreRt() {
     printf("restoreRt");
 }

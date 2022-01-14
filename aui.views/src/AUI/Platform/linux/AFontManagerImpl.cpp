@@ -86,6 +86,10 @@ AFontManager::AFontManager() :
 
         return result;
     }();
+    if (mDefaultFont == nullptr) {
+        // fallback to internal
+        mDefaultFont = loadFont(":uni/font/Roboto.ttf");
+    }
 }
 
 AString AFontManager::getPathToFont(const AString& font) {
