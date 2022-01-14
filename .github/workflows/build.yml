@@ -37,11 +37,6 @@ jobs:
             os: windows-latest,
             build_type: "Release", generator: "MinGW Makefiles", additional_cmake_flags: ""
           }
-          - {
-            name: "Ubuntu Latest GCC shared", artifact: "aui_ubuntu-x86_64-shared.tar.xz",
-            os: ubuntu-latest,
-            build_type: "Release", generator: "Unix Makefiles", additional_cmake_flags: ""
-          }
 
           - {
             name: "Windows Latest MSVC x86 static", artifact: "aui_windows-msvc-x86-static.tar.xz",
@@ -57,6 +52,12 @@ jobs:
             name: "Windows Latest MinGW x86_64 static", artifact: "aui_windows-mingw-x86_64-static.tar.xz",
             os: windows-latest,
             build_type: "Release", generator: "MinGW Makefiles", additional_cmake_flags: "-DBUILD_SHARED_LIBS=OFF"
+          }
+
+          - {
+            name: "Ubuntu Latest GCC shared", artifact: "aui_ubuntu-x86_64-shared.tar.xz",
+            os: ubuntu-latest,
+            build_type: "Release", generator: "Unix Makefiles", additional_cmake_flags: ""
           }
           - {
             name: "Ubuntu Latest GCC static", artifact: "aui_ubuntu-x86_64-static.tar.xz",
