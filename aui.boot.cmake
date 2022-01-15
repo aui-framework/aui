@@ -110,7 +110,7 @@ if (NOT EXISTS ${AUI_CACHE_DIR}/repo)
 endif()
 
 # TODO add a way to provide file access to the repository
-macro(auib_import AUI_MODULE_NAME URL)
+function(auib_import AUI_MODULE_NAME URL)
     set(_locked FALSE)
 
     set(FINDPACKAGE_QUIET QUIET)
@@ -212,7 +212,6 @@ macro(auib_import AUI_MODULE_NAME URL)
             # END: try find
         endif()
     endif()
-    set(DEP_INSTALL_PREFIX ${${AUI_MODULE_NAME}_DIR}) # DEP_INSTALL_PREFIX may be corrupted by the find_package script
     if ((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_SOURCE_DIR}/CMakeLists.txt) AND DEP_ADD_SUBDIRECTORY))
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
         # so we have to compile and install
@@ -389,7 +388,6 @@ macro(auib_import AUI_MODULE_NAME URL)
                 break()
             endif()
         endwhile()
-        set(DEP_INSTALL_PREFIX ${${AUI_MODULE_NAME}_DIR}) # DEP_INSTALL_PREFIX may be corrupted by the find_package script
         unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG)
         # expose result ignoring case sensitivity
         if (AUI_MODULE_NAME OR AUI_MODULE_NAME_UPPER)
@@ -416,6 +414,7 @@ macro(auib_import AUI_MODULE_NAME URL)
             endif()
             message(FATAL_ERROR ${error_message})
         endif()
+
         # create links to runtime dependencies
         if (WIN32)
             set(LIB_EXT dll)
@@ -464,4 +463,4 @@ macro(auib_import AUI_MODULE_NAME URL)
         endforeach()
         set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
     endif()
-endmacro()
+endfunction()
