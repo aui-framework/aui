@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-
+option(AUI_CATCH_SEGFAULT "Catch segfault" ON)
 auib_import(ZLIB https://github.com/aui-framework/zlib)
 
 aui_module(aui.core EXPORT aui)
@@ -9,6 +9,11 @@ if (NOT WIN32)
 	find_package(Backtrace)
 endif()
 
+
+# segfault functionality
+if (NOT MSVC AND AUI_CATCH_SEGFAULT)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -fnon-call-exceptions")
+endif()
 
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 if (GLM_INCLUDE_DIR)
@@ -25,7 +30,9 @@ target_include_directories(aui.core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>
 
 target_compile_definitions(aui.core PRIVATE UNICODE=1)
 target_compile_definitions(aui.core PUBLIC NOMINMAX=1)
-
+if (AUI_CATCH_SEGFAULT)
+	target_compile_definitions(aui.core PUBLIC AUI_CATCH_SEGFAULT=1)
+endif()
 
 if(Backtrace_FOUND AND Backtrace_LIBRARIES)
 	message(STATUS "Stacktrace backend: backtrace")

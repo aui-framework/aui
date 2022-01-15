@@ -20,7 +20,7 @@
  */
 
 #include <cassert>
-#include "Dll.h"
+#include "AProgramModule.h"
 #include "AUI/Common/AString.h"
 
 #if AUI_PLATFORM_WIN
@@ -32,16 +32,16 @@
 
 #endif
 
-_<Dll> Dll::load(const AString& path)
+_<AProgramModule> AProgramModule::load(const AString& path)
 {
 #if AUI_PLATFORM_WIN
     auto fullname = path + "." + getDllExtension();
 #else
-    auto doLoad = [](const APath& fp) -> _<Dll> {
+    auto doLoad = [](const APath& fp) -> _<AProgramModule> {
         auto name = fp.toStdString();
         auto lib = dlopen(name.c_str(), RTLD_LAZY);
         if (lib) {
-            return aui::ptr::manage(new Dll(lib));
+            return aui::ptr::manage(new AProgramModule(lib));
         }
         return nullptr;
     };
@@ -55,23 +55,24 @@ _<Dll> Dll::load(const AString& path)
 	auto lib = LoadLibrary(fullname.c_str());
 	if (!lib)
 	{
-		throw DllLoadException("Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));
+		throw AProgramModuleLoadException("Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));
 	}
-	return aui::ptr::manage(new Dll(lib));
+	return aui::ptr::manage(new AProgramModule(lib));
 #elif AUI_PLATFORM_ANDROID
 	auto name = ("lib" + fullname).toStdString();
 	auto lib = dlopen(name.c_str(), RTLD_LAZY);
 	if (!lib)
 	{
-		throw DllLoadException("Could not load shared library: " + fullname + ": " + dlerror());
+		throw AProgramModuleLoadException("Could not load shared library: " + fullname + ": " + dlerror());
 	}
-	return aui::ptr::manage(new Dll(lib));
+	return aui::ptr::manage(new AProgramModule(lib));
 #else
 	char buf[0x1000];
 	getcwd(buf, sizeof(buf));
 
 	APath paths[] = {
             ""_as,
+            "lib/"_as,
             AString(buf) + "/",
             AString(buf) + "/../lib/",
             "/usr/local/lib/"_as,
@@ -109,11 +110,11 @@ _<Dll> Dll::load(const AString& path)
         ++counter;
 	}
 
-    throw DllLoadException(diagnostic);
+    throw AProgramModuleLoadException(diagnostic);
 #endif
 }
 
-AString Dll::getDllExtension()
+AString AProgramModule::getDllExtension()
 {
 #if AUI_PLATFORM_WIN
 	return "dll";
@@ -122,7 +123,7 @@ AString Dll::getDllExtension()
 #endif
 }
 
-void(*Dll::getProcAddressRawPtr(const AString& name) const noexcept)()
+void(*AProgramModule::getProcAddressRawPtr(const AString& name) const noexcept)()
 {
 #if AUI_PLATFORM_WIN
 	auto r = reinterpret_cast<void(*)()>(
@@ -131,8 +132,15 @@ void(*Dll::getProcAddressRawPtr(const AString& name) const noexcept)()
     auto r = reinterpret_cast<void(*)()>(
             dlsym(mHandle, name.toStdString().c_str()));
 #endif
-    assert(r);
     return r;
 }
 
-DllLoadException::~DllLoadException() = default;
+AProgramModuleLoadException::~AProgramModuleLoadException() = default;
+
+_<AProgramModule> AProgramModule::self() {
+#if AUI_PLATFORM_WIN
+    return aui::ptr::manage(new AProgramModule(GetModuleHandle(nullptr)));
+#else
+    return aui::ptr::manage(new AProgramModule(nullptr));
+#endif
+}

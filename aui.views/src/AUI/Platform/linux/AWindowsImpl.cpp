@@ -99,8 +99,11 @@ void AWindow::setWindowStyle(WindowStyle ws) {
 
 void AWindow::updateDpi() {
     emit dpiChanged;
-
-    mDpiRatio = Platform::getDpiRatio();
+    if (mHandle == 0) {
+        mDpiRatio = 1.f;
+    } else {
+        mDpiRatio = Platform::getDpiRatio();
+    }
     onDpiChanged();
 }
 

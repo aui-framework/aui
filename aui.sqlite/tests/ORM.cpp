@@ -23,7 +23,7 @@
 // Created by alex2 on 31.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Data/ASqlDatabase.h>
 #include <AUI/Autumn/Autumn.h>
 #include <AUI/Data/AMigrationManager.h>
@@ -94,20 +94,20 @@ BOOST_AUTO_TEST_SUITE(ORM)
         u.save();
         {
             auto foundById = Account::byId(u.id);
-            BOOST_CHECK_EQUAL(foundById.id, u.id);
-            BOOST_CHECK_EQUAL(foundById.name, u.name);
-            BOOST_CHECK_EQUAL(foundById.age, u.age);
+            ASSERT_EQ(foundById.id, u.id);
+            ASSERT_EQ(foundById.name, u.name);
+            ASSERT_EQ(foundById.age, u.age);
         }
 
         u.name = "Jenny";
         u.save();
         {
             auto foundById = Account::byId(u.id);
-            BOOST_CHECK_EQUAL(foundById.name, "Jenny");
+            ASSERT_EQ(foundById.name, "Jenny");
         }
 
         u.remove();
-        BOOST_CHECK_THROW(Account::byId(u.id), AException);
+        ASSERT_THROW(Account::byId(u.id), AException);
     }
 
     BOOST_AUTO_TEST_CASE(One2Many) {
@@ -138,18 +138,18 @@ BOOST_AUTO_TEST_SUITE(ORM)
 
         for (Post& p : john.getPosts()->get()) {
             Account u = p.getUser();
-            BOOST_CHECK_EQUAL(u.id, john.id);
-            BOOST_CHECK_EQUAL(u.name, john.name);
-            BOOST_CHECK_EQUAL(u.age, john.age);
-            BOOST_TEST((p.message.contains("cars") || p.message.contains("girlz") || p.message.contains("vodka")));
+            ASSERT_EQ(u.id, john.id);
+            ASSERT_EQ(u.name, john.name);
+            ASSERT_EQ(u.age, john.age);
+            ASSERT_TRUE((p.message.contains("cars") || p.message.contains("girlz") || p.message.contains("vodka")));
         }
 
         for (Post& p : jenny.getPosts()->get()) {
             Account u = p.getUser();
-            BOOST_CHECK_EQUAL(u.id, jenny.id);
-            BOOST_CHECK_EQUAL(u.name, jenny.name);
-            BOOST_CHECK_EQUAL(u.age, jenny.age);
-            BOOST_TEST((p.message.contains("eat") || p.message.contains("sea") || p.message.contains("stupid")));
+            ASSERT_EQ(u.id, jenny.id);
+            ASSERT_EQ(u.name, jenny.name);
+            ASSERT_EQ(u.age, jenny.age);
+            ASSERT_TRUE((p.message.contains("eat") || p.message.contains("sea") || p.message.contains("stupid")));
         }
     }
 

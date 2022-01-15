@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,35 +14,44 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 31.08.2020.
-//
+#pragma once
 
-#include <boost/test/unit_test.hpp>
-#include <AUI/Data/ASqlDatabase.h>
-#include <AUI/Data/AMeta.h>
+#include <type_traits>
+#include <cassert>
+#include <utility>
 
-using namespace boost::unit_test;
+namespace aui {
+    /**
+     * Null-checking wrapper when usage of null is fatal.
+     * @tparam T any pointer or pointer-like type
+     */
+    template<typename T>
+    class assert_not_used_when_null {
+    private:
+        T mValue;
 
-BOOST_AUTO_TEST_SUITE(Meta)
+    public:
+        assert_not_used_when_null(T value) noexcept: mValue(std::move(value)) {}
 
+        template<typename AnyType>
+        operator AnyType() noexcept {
+            assert(("value is used when null" && mValue != nullptr));
+            return reinterpret_cast<AnyType>(mValue);
+        }
 
-BOOST_AUTO_TEST_CASE(Meta) {
-        Autumn::put(ASqlDatabase::connect("sqlite", ":memory:"));
-        AMeta::set("kek", 4);
-        AMeta::set("lol", "azaza");
-        BOOST_CHECK_EQUAL(AMeta::get("kek"), 4);
-        BOOST_CHECK_EQUAL(AMeta::get("lol"), "azaza");
-        AMeta::set("kek", "four");
-        AMeta::set("lol", 42.0);
-        BOOST_CHECK_EQUAL(AMeta::get("kek"), "four");
-        BOOST_CHECK_EQUAL(AMeta::get("lol"), 42.0);
+        template<typename AnyType>
+        bool operator==(const AnyType& v) const noexcept {
+            return mValue == v;
+        }
+
+        template<typename AnyType>
+        bool operator!=(const AnyType& v) const noexcept {
+            return mValue != v;
+        }
+    };
 }
-
-
-BOOST_AUTO_TEST_SUITE_END()

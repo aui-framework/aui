@@ -39,6 +39,7 @@ void Platform::playSystemSound(Sound s)
 float Platform::getDpiRatio()
 {
     CommonRenderingContext::ensureXLibInitialized();
+    if (CommonRenderingContext::ourDisplay == nullptr) return 1.f;
     char *resourceString = XResourceManagerString(CommonRenderingContext::ourDisplay);
     XrmDatabase db;
     XrmValue value;

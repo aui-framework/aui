@@ -30,8 +30,12 @@ namespace aui {
 
     template<typename T>
     inline AString to_string(const T& t) {
-        return std::to_wstring(t);
-    };
+        if constexpr (std::is_same_v<T, std::string>) {
+            return t;
+        } else {
+            return std::to_wstring(t);
+        }
+    }
 
     template<typename T>
     inline AString to_string(T* t) {

@@ -4,60 +4,96 @@
 #include <AUI/Image/PngImageLoader.h>
 #include <AUI/IO/AFileOutputStream.h>
 #include "UITestCase.h"
-#include "Matcher.h"
-#include <boost/test/tree/test_unit.hpp>
-#include <boost/test/unit_test_log.hpp>
+#include "UIMatcher.h"
+#include "AUI/Util/kAUI.h"
 #include <AUI/Traits/strings.h>
 
-using namespace boost::unit_test;
+class MyListener: public ::testing::EmptyTestEventListener {
+private:
+    static APath saveScreenshot(const AString& testFilePath, const AString& name) noexcept {
+        if (!AWindow::current()) return {};
+        auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
+        if (image.getData().empty()) return {};
+        auto p = APath("reports")[APath(testFilePath).filenameWithoutExtension()];
+        p.makeDirs();
+        p = p[name];
+        AFileOutputStream fos(p);
+        PngImageLoader::save(fos, image);
+        return p;
+    }
 
-APath saveScreenshot(const AString& testFilePath, const AString& name) {
-    auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
-    if (image.getData().empty()) return {};
-    auto p = APath("reports")[APath(testFilePath).filenameWithoutExtension()];
-    p.makeDirs();
-    p = p[name];
-    AFileOutputStream fos(p);
-    PngImageLoader::save(fos, image);
-    return p;
-}
+public:
+    MyListener() noexcept = default;
 
-void UITestCaseScope::test_unit_aborted(const test_unit& unit) {
-    test_observer::test_unit_aborted(unit);
+    void OnTestPartResult(const testing::TestPartResult& result) override {
+        EmptyTestEventListener::OnTestPartResult(result);
 
-    // draw red rects to highlight views
-    if (auto matcher = Matcher::current()) {
-        for (auto& v: matcher->toSet()) {
-            Render::drawRectBorder(ASolidBrush{0xaae00000_argb},
-                                   v->getPositionInWindow() - glm::ivec2{1, 1},
-                                   v->getSize() + glm::ivec2{2, 2});
+        if (result.failed()) {
+            // draw red rects to highlight views
+            if (auto matcher = ::UIMatcher::current()) {
+                for (auto& v: matcher->toSet()) {
+                    Render::drawRectBorder(ASolidBrush{0xaae00000_argb},
+                                           v->getPositionInWindow() - glm::ivec2{1, 1},
+                                           v->getSize() + glm::ivec2{2, 2});
+                }
+            }
+
+            // do some hacking here
+            // current_test_info causes deadlock on Linux because it's already locked AddTestPartResult for current thread
+            struct ScaryHackingShit {
+                void* vtable;
+                testing::internal::Mutex mutex;
+            };
+            auto pShit = reinterpret_cast<ScaryHackingShit*>(testing::UnitTest::GetInstance());
+            pShit->mutex.Unlock();
+            decltype(auto) info = testing::UnitTest::GetInstance()->current_test_info();
+            pShit->mutex.Lock();
+
+            auto p = saveScreenshot(info->test_suite_name(), "fail-{}.png"_format(info->name()));
+
+            if (!p.empty()) {
+                std::cout << p.absolute().systemSlashDirection().toStdString()
+                          << ": "
+                          << info->test_suite_name()
+                          << "::"
+                          << info->name()
+                          << " report saved"
+                          << std::endl;
+            }
         }
     }
 
-    auto name = std::string(unit.p_file_name.begin(),  unit.p_file_name.end());
-    auto p = saveScreenshot(name, "abort-{}_{}.png"_format(unit.p_name->c_str(), unit.p_line_num));
+    void OnTestEnd(const testing::TestInfo& info) override {
+        EmptyTestEventListener::OnTestEnd(info);
 
-    if (!p.empty()) {
-        std::cout << name
-                  << '(' << unit.p_line_num << "): report saved at "
-                  << p.absolute().systemSlashDirection().toStdString()
-                  << std::endl;
+
+        auto p = saveScreenshot(info.test_suite_name(), "finish-{}.png"_format(info.name()));
+
+        if (!p.empty()) {
+            std::cout << p.absolute().systemSlashDirection().toStdString()
+                      << ": "
+                      << info.test_suite_name()
+                      << "::"
+                      << info.name()
+                      << " final screenshot saved"
+                      << std::endl;
+        }
     }
+};
+
+
+void testing::UITest::SetUp() {
+    do_once {
+        testing::UnitTest::GetInstance()->listeners().Append(new MyListener);
+    }
+
+    Test::SetUp();
+    Render::setRenderer(std::make_unique<SoftwareRenderer>());
+    AWindow::setWindowManager<UITestWindowManager>();
+    ABaseWindow::currentWindowStorage() = nullptr;
 }
 
-void UITestCaseScope::test_unit_finish(const test_unit& unit, unsigned long i) {
-    UITest::frame();
-    test_observer::test_unit_finish(unit, i);
-
-    auto name = std::string(unit.p_file_name.begin(),  unit.p_file_name.end());
-    auto p = saveScreenshot(name, "finish-{}_{}.png"_format(unit.p_name->c_str(), unit.p_line_num));
-
-    if (!p.empty()) {
-        std::cout << name
-                  << '(' << unit.p_line_num << "): screenshot saved at "
-                  << p.absolute().systemSlashDirection().toStdString()
-                  << std::endl;
-    }
-
-    delete this;
+void testing::UITest::TearDown() {
+    Test::TearDown();
+    AWindow::destroyWindowManager();
 }

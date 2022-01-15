@@ -23,14 +23,11 @@
 // Created by alex2 on 31.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Autumn/Autumn.h>
 
-using namespace boost::unit_test;
 
-BOOST_AUTO_TEST_SUITE(DependencyInjection)
-
-BOOST_AUTO_TEST_CASE(Anonymous) {
+TEST(DI, Anonymous) {
         class MyData {
             private:
             AString mString;
@@ -44,10 +41,10 @@ BOOST_AUTO_TEST_CASE(Anonymous) {
         };
         Autumn::put(_new<MyData>("hello"));
 
-        BOOST_CHECK_EQUAL(Autumn::get<MyData>()->getString(), "hello");
+        ASSERT_EQ(Autumn::get<MyData>()->getString(), "hello");
 }
 
-BOOST_AUTO_TEST_CASE(Named) {
+TEST(DI, Named) {
         class MyData {
             private:
             AString mString;
@@ -62,12 +59,12 @@ BOOST_AUTO_TEST_CASE(Named) {
         Autumn::put("obj_foo", _new<MyData>("foo"));
         Autumn::put("obj_bar", _new<MyData>("bar"));
 
-        BOOST_CHECK_EQUAL(Autumn::get<MyData>("obj_foo")->getString(), "foo");
-        BOOST_CHECK_EQUAL(Autumn::get<MyData>("obj_bar")->getString(), "bar");
-        BOOST_CHECK_THROW(Autumn::get<MyData>("obj_nonexistent"), AException);
+        ASSERT_EQ(Autumn::get<MyData>("obj_foo")->getString(), "foo");
+        ASSERT_EQ(Autumn::get<MyData>("obj_bar")->getString(), "bar");
+        ASSERT_THROW(Autumn::get<MyData>("obj_nonexistent"), AException);
 }
 
-BOOST_AUTO_TEST_CASE(Constructor) {
+TEST(DI, Constructor) {
         class BasicComponent {
             private:
             AString mName;
@@ -134,9 +131,7 @@ BOOST_AUTO_TEST_CASE(Constructor) {
 
         auto computer = Autumn::construct<Computer>::with<Motherboard, CPU, Videocard>();
 
-        BOOST_CHECK_EQUAL(computer->getMotherboard()->getName(), "B450");
-        BOOST_CHECK_EQUAL(computer->getCpu()->getName(), "3600U");
-        BOOST_CHECK_EQUAL(computer->getVideocard()->getName(), "750Ti");
+        ASSERT_EQ(computer->getMotherboard()->getName(), "B450");
+        ASSERT_EQ(computer->getCpu()->getName(), "3600U");
+        ASSERT_EQ(computer->getVideocard()->getName(), "750Ti");
 }
-
-BOOST_AUTO_TEST_SUITE_END()

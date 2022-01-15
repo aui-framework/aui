@@ -23,8 +23,6 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 
-using namespace boost::unit_test;
-
 /**
  * This test suite checks a simple program.
  * There's a button "Say hello":
@@ -44,24 +42,37 @@ using namespace boost::unit_test;
  *
  * that's it.
  */
-BOOST_AUTO_TEST_SUITE(Click)
 
-class TestWindow: public AWindow {
-private:
-    _<ALabel> mHelloLabel;
-
+class UIClick: public testing::UITest {
 public:
-    TestWindow() {
-        setContents(Centered {
-            Vertical {
-                _new<AButton>("Say hello").connect(&AView::clicked, this, [&] {
-                    mHelloLabel->setVisibility(Visibility::VISIBLE);
-                }) let { it->setDefault(); },
-                mHelloLabel = _new<ALabel>("Hello!") let { it->setVisibility(Visibility::INVISIBLE); }
-            }
-        });
+protected:
+    void SetUp() override {
+        UITest::SetUp();
 
-        pack();
+        class TestWindow: public AWindow {
+        private:
+            _<ALabel> mHelloLabel;
+
+        public:
+            TestWindow() {
+                setContents(Centered {
+                        Vertical {
+                                _new<AButton>("Say hello").connect(&AView::clicked, this, [&] {
+                                    mHelloLabel->setVisibility(Visibility::VISIBLE);
+                                }) let { it->setDefault(); },
+                                mHelloLabel = _new<ALabel>("Hello!") let { it->setVisibility(Visibility::INVISIBLE); }
+                        }
+                });
+
+                pack();
+            }
+        };
+
+        _new<TestWindow>()->show();
+    }
+
+    void TearDown() override {
+        UITest::TearDown();
     }
 };
 
@@ -70,27 +81,18 @@ public:
 /**
  * Checks that the message is not appeared yet.
  */
-UI_TEST_CASE(HelloIsNotAppeared) {
-    // prepare the window
-    _new<TestWindow>()->show();
-
+TEST_F(UIClick, HelloIsNotAppeared) {
     // check label is not visible
-    By::text("Hello!").require(notVisible(), "label is visible");
+    By::text("Hello!").check(notVisible(), "label is visible");
 }
 
 /**
  * Checks that the message appears when button is clicked.
  */
-UI_TEST_CASE(HelloAppearsAfterClick) {
-    // prepare the window
-    _new<TestWindow>()->show();
-
-
+TEST_F(UIClick, HelloAppearsAfterClick) {
     // press the button
     By::text("Say hello").perform(click());
 
     // check label is appeared
-    By::text("Hello!").require(visible(), "label is not appeared");
+    By::text("Hello!").check(visible(), "label is not appeared");
 }
-
-BOOST_AUTO_TEST_SUITE_END()

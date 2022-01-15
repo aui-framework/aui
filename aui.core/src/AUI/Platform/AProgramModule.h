@@ -35,25 +35,25 @@ typedef void* HMODULE;
 #endif
 class AString;
 
-class API_AUI_CORE DllLoadException: public AException
+class API_AUI_CORE AProgramModuleLoadException: public AException
 {
 public:
-	explicit DllLoadException(const AString& message)
+	explicit AProgramModuleLoadException(const AString& message)
 		: AException(message)
 	{
 	}
-	virtual ~DllLoadException();
+	virtual ~AProgramModuleLoadException();
 };
 
-class API_AUI_CORE Dll
+class API_AUI_CORE AProgramModule
 {
 private:
 	HMODULE mHandle;
 
-	Dll(const Dll&) = delete;
+	AProgramModule(const AProgramModule&) = delete;
 	
 public:
-    Dll(HMODULE handle) noexcept
+    AProgramModule(HMODULE handle) noexcept
             : mHandle(handle)
     {
     }
@@ -72,11 +72,13 @@ public:
 	 * \brief Loads a dynamic load library (shared object).
 	 * \param path Path to a dynamic load library without extension (extension is added based on current platform)
 	 */
-	static _<Dll> load(const AString& path);
+	static _<AProgramModule> load(const AString& path);
 
 	/**
 	 * \brief Extension of a dynamic load library of current platform
 	 * \return dll for Windows, so for Linux, dylib for Apple
 	 */
 	static AString getDllExtension();
+
+    static _<AProgramModule> self();
 };

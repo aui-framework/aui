@@ -23,13 +23,9 @@
 // Created by alex2 on 31.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Traits/algorithms.h>
 #include <AUI/Common/AVector.h>
-
-using namespace boost::unit_test;
-
-BOOST_AUTO_TEST_SUITE(Algorithms)
 
 void performSearchOn(const AVector<int>::const_iterator& begin, const AVector<int>::const_iterator& end) {
     auto theoreticalComplexity = std::log2(end - begin) + 1; // for complexity check
@@ -49,25 +45,25 @@ void performSearchOn(const AVector<int>::const_iterator& begin, const AVector<in
         });
 
         // perform result check
-        BOOST_CHECK_EQUAL(*resultToCheck, searchingFor);
+        ASSERT_EQ(*resultToCheck, searchingFor);
         if (*resultToCheck != searchingFor) {
-            BOOST_FAIL("Check failed!");
+            ADD_FAILURE() << "Check failed!";
         }
 
         // check we fit into the log2(size) complexity
-        BOOST_CHECK_LE(calledTimes, theoreticalComplexity);
+        ASSERT_LE(calledTimes, theoreticalComplexity);
     }
 
     // also check if we search for *unexisting* value the algorithm results end arg
-    BOOST_TEST((aui::binary_search(begin, end, [](const AVector<int>::const_iterator& it) { return -1; }) == end), "binary_search found unexisting element (wtf?)");
-    BOOST_TEST((aui::binary_search(begin, end, [](const AVector<int>::const_iterator& it) { return  1; }) == end), "binary_search found unexisting element (wtf?)");
+    ASSERT_TRUE((aui::binary_search(begin, end, [](const AVector<int>::const_iterator& it) { return -1; }) == end)) << "binary_search found unexisting element (wtf?)";
+    ASSERT_TRUE((aui::binary_search(begin, end, [](const AVector<int>::const_iterator& it) { return  1; }) == end)) << "binary_search found unexisting element (wtf?)";
 }
 
 void performSearchOn(const AVector<int>& v) {
     performSearchOn(v.begin(),  v.end());
 }
 
-BOOST_AUTO_TEST_CASE(BinarySearch1) {
+TEST(Algorithms, BinarySearch1) {
     AVector<int> dataset = { 1, 2, 7, 9, 11, 21, 33, 64, 96, 102, 299, 412414, 58989129, 58989131, 58989153 };
 
     // search all variants starting with empty range and ending with full vector
@@ -82,6 +78,5 @@ BOOST_AUTO_TEST_CASE(BinarySearch1) {
 
     // try to confuse binary search algorithm
     dataset[0] = 228;
-    BOOST_TEST((aui::binary_search(dataset.begin(), dataset.end(), [](const AVector<int>::const_iterator& it) { return -1; }) == dataset.end()), "binary_search found unexisting element (wtf?)");
+    ASSERT_TRUE(aui::binary_search(dataset.begin(), dataset.end(), [](const AVector<int>::const_iterator& it) { return -1; }) == dataset.end()) << "binary_search found unexisting element (wtf?)";
 }
-BOOST_AUTO_TEST_SUITE_END()

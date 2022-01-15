@@ -85,18 +85,3 @@ inline _<T>& _<T>::connect(SignalField signalField, Function&& function) {
     return *this;
 }
 
-
-struct shared_t {};
-
-#define shared shared_t()
-
-template<typename T>
-inline _<T> operator>>(T& object, shared_t)
-{
-    return _new<T>(std::move(object));
-}
-template<typename T>
-inline _<T> operator>>(T&& object, shared_t)
-{
-    return _new<T>(std::forward<T>(object));
-}

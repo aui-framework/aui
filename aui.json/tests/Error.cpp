@@ -23,28 +23,24 @@
 // Created by alex2 on 30.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Json/AJsonElement.h>
 #include <AUI/Json/AJson.h>
 #include <AUI/Json/JsonException.h>
 #include <AUI/IO/StringStream.h>
 
-using namespace boost::unit_test;
-BOOST_AUTO_TEST_SUITE(Json)
 
 
-BOOST_AUTO_TEST_CASE(Error)
+TEST(JsonErrors, Error)
 {
-    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"kek": truz})")), AException);
-    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"kek": falz})")), AException);
-    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"array": [1,2,3,x]})")), AException);
-    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"array": [1,2,3})")), AException);
-    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"object": {"1"s:1,)")), AException);
-    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"object": {"1":1,})")), AException);
-    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"object": {"1":2})")), AException);
-    BOOST_CHECK_THROW(AJson::read(_new<StringStream>(R"({"object": {"1":2 xs})")), AException);
+    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"kek": truz})")), AException);
+    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"kek": falz})")), AException);
+    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"array": [1,2,3,x]})")), AException);
+    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"array": [1,2,3})")), AException);
+    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"object": {"1"s:1,)")), AException);
+    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"object": {"1":1,})")), AException);
+    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"object": {"1":2})")), AException);
+    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"object": {"1":2 xs})")), AException);
 }
-
-BOOST_AUTO_TEST_SUITE_END()
 

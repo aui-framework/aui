@@ -23,12 +23,10 @@
 // Created by alex2 on 31.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 
 #include <AUI/Util/ABitField.h>
 #include <AUI/Util/EnumUtil.h>
-
-using namespace boost::unit_test;
 
 
 ENUM_FLAG(Flags) {
@@ -37,77 +35,73 @@ ENUM_FLAG(Flags) {
     FLAG3 = 0x4,
 };
 
-BOOST_AUTO_TEST_SUITE(BitField1)
+TEST(Bitfield, Put) {
+    ABitField<Flags> f;
+    f << Flags::FLAG1;
+    Flags x = f;
+    ASSERT_TRUE(!!(x & Flags::FLAG1));
+    ASSERT_TRUE(!!(!(x & ~Flags::FLAG1)));
+    f << Flags::FLAG2;
+    x = f;
+    ASSERT_TRUE(!!(x & Flags::FLAG1));
+    ASSERT_TRUE(!!(x & Flags::FLAG2));
+    ASSERT_TRUE(!!((x & ~Flags::FLAG1)));
+    ASSERT_TRUE(!!((x & ~Flags::FLAG2)));
+}
 
-    BOOST_AUTO_TEST_CASE(Put) {
-        ABitField<Flags> f;
-        f << Flags::FLAG1;
-        Flags x = f;
-        BOOST_TEST(!!(x & Flags::FLAG1));
-        BOOST_TEST(!!(!(x & ~Flags::FLAG1)));
-        f << Flags::FLAG2;
-        x = f;
-        BOOST_TEST(!!(x & Flags::FLAG1));
-        BOOST_TEST(!!(x & Flags::FLAG2));
-        BOOST_TEST(!!((x & ~Flags::FLAG1)));
-        BOOST_TEST(!!((x & ~Flags::FLAG2)));
-    }
+TEST(Bitfield, Take) {
+    ABitField<Flags> f;
+    f << Flags::FLAG1 << Flags::FLAG2;
+    Flags x = f;
+    ASSERT_TRUE(!!(x & Flags::FLAG1));
+    ASSERT_TRUE(!!(x & Flags::FLAG2));
+    f >> Flags::FLAG2;
+    x = f;
+    ASSERT_TRUE(!!(x & Flags::FLAG1));
+    ASSERT_TRUE(!!(!(x & Flags::FLAG2)));
+}
 
-    BOOST_AUTO_TEST_CASE(Take) {
-        ABitField<Flags> f;
-        f << Flags::FLAG1 << Flags::FLAG2;
-        Flags x = f;
-        BOOST_TEST(!!(x & Flags::FLAG1));
-        BOOST_TEST(!!(x & Flags::FLAG2));
-        f >> Flags::FLAG2;
-        x = f;
-        BOOST_TEST(!!(x & Flags::FLAG1));
-        BOOST_TEST(!!(!(x & Flags::FLAG2)));
-    }
+TEST(Bitfield, CheckTake1) {
+    ABitField<Flags> f;
+    f << Flags::FLAG1 << Flags::FLAG2;
+    Flags x = f;
+    ASSERT_TRUE(!!(x & Flags::FLAG1));
+    ASSERT_TRUE(!!(x & Flags::FLAG2));
+    ASSERT_TRUE(f.checkAndSet(Flags::FLAG2));
+    x = f;
+    ASSERT_TRUE(!!(x & Flags::FLAG1));
+    ASSERT_TRUE(!!(!(x & Flags::FLAG2)));
+}
+TEST(Bitfield, CheckTake2) {
+    ABitField<Flags> f;
+    f << Flags::FLAG1;
+    Flags x = f;
+    ASSERT_TRUE(!!(x & Flags::FLAG1));
+    ASSERT_TRUE(!!(!(x & Flags::FLAG2)));
+    ASSERT_TRUE(!f.checkAndSet(Flags::FLAG2));
+    x = f;
+    ASSERT_TRUE(!!(x & Flags::FLAG1));
+    ASSERT_TRUE(!!(!(x & Flags::FLAG2)));
+}
+TEST(Bitfield, Check) {
+    ABitField<Flags> f;
+    f << Flags::FLAG1;
 
-    BOOST_AUTO_TEST_CASE(CheckTake1) {
-        ABitField<Flags> f;
-        f << Flags::FLAG1 << Flags::FLAG2;
-        Flags x = f;
-        BOOST_TEST(!!(x & Flags::FLAG1));
-        BOOST_TEST(!!(x & Flags::FLAG2));
-        BOOST_TEST(f.checkAndSet(Flags::FLAG2));
-        x = f;
-        BOOST_TEST(!!(x & Flags::FLAG1));
-        BOOST_TEST(!!(!(x & Flags::FLAG2)));
-    }
-    BOOST_AUTO_TEST_CASE(CheckTake2) {
-        ABitField<Flags> f;
-        f << Flags::FLAG1;
-        Flags x = f;
-        BOOST_TEST(!!(x & Flags::FLAG1));
-        BOOST_TEST(!!(!(x & Flags::FLAG2)));
-        BOOST_TEST(!f.checkAndSet(Flags::FLAG2));
-        x = f;
-        BOOST_TEST(!!(x & Flags::FLAG1));
-        BOOST_TEST(!!(!(x & Flags::FLAG2)));
-    }
-    BOOST_AUTO_TEST_CASE(Check) {
-        ABitField<Flags> f;
-        f << Flags::FLAG1;
+    ASSERT_TRUE(!!((f.check(Flags::FLAG1) && (f & Flags::FLAG1))));
+    ASSERT_TRUE(!f.check(Flags::FLAG2));
+    ASSERT_TRUE(!f.check(Flags::FLAG3));
 
-        BOOST_TEST(!!((f.check(Flags::FLAG1) && (f & Flags::FLAG1))));
-        BOOST_TEST(!f.check(Flags::FLAG2));
-        BOOST_TEST(!f.check(Flags::FLAG3));
+    f << Flags::FLAG2;
 
-        f << Flags::FLAG2;
+    ASSERT_TRUE(f.check(Flags::FLAG1));
+    ASSERT_TRUE(f.check(Flags::FLAG2));
+    ASSERT_TRUE(!f.check(Flags::FLAG3));
 
-        BOOST_TEST(f.check(Flags::FLAG1));
-        BOOST_TEST(f.check(Flags::FLAG2));
-        BOOST_TEST(!f.check(Flags::FLAG3));
+    f >> Flags::FLAG3;
+    f >> Flags::FLAG1;
 
-        f >> Flags::FLAG3;
-        f >> Flags::FLAG1;
+    ASSERT_TRUE(!f.check(Flags::FLAG1));
+    ASSERT_TRUE(f.check(Flags::FLAG2));
+    ASSERT_TRUE(!f.check(Flags::FLAG3));
+}
 
-        BOOST_TEST(!f.check(Flags::FLAG1));
-        BOOST_TEST(f.check(Flags::FLAG2));
-        BOOST_TEST(!f.check(Flags::FLAG3));
-    }
-
-
-BOOST_AUTO_TEST_SUITE_END()

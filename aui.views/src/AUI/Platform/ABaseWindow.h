@@ -9,11 +9,14 @@
 #include "AOverlappingSurface.h"
 #include <optional>
 
+namespace testing {
+    class UITest;
+}
 
 
 class API_AUI_VIEWS ABaseWindow: public AViewContainer {
     friend class SoftwareRenderer;
-    friend class UITestCaseScope;
+    friend class testing::UITest;
     friend class IRenderingContext::Init;
 private:
     _weak<AView> mFocusedView;

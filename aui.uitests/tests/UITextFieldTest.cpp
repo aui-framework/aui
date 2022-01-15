@@ -23,7 +23,6 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/ATextField.h>
 
-using namespace boost::unit_test;
 using namespace ass;
 
 std::ostream& operator<<(std::ostream& o, const ACursorSelectable::Selection& e) noexcept{
@@ -36,23 +35,32 @@ std::ostream& operator<<(std::ostream& o, const ACursorSelectable::Selection& e)
     return o;
 }
 
-/**
- * Checks behaviour of ATextField
- */
-BOOST_AUTO_TEST_SUITE(TextField)
 
-class TestWindow: public AWindow {
+class UITextField: public testing::UITest {
 public:
-    TestWindow() {
-        setContents(Centered {
-            _new<ATextField>() with_style { FixedSize { 300_dp, {} } } let {
-                it->setText("hello world!");
+protected:
+    void SetUp() override {
+        UITest::SetUp();
+
+        class TestWindow: public AWindow {
+        public:
+            TestWindow() {
+                setContents(Centered {
+                        _new<ATextField>() with_style { FixedSize { 300_dp, {} } } let {
+                            it->setText("hello world!");
+                        }
+                });
+                pack();
             }
-        });
-        pack();
+        };
+
+        _new<TestWindow>()->show();
+    }
+
+    void TearDown() override {
+        UITest::TearDown();
     }
 };
-
 
 struct SelectionMatchesAssert {
     ACursorSelectable::Selection selection;
@@ -62,7 +70,7 @@ struct SelectionMatchesAssert {
 
     bool operator()(const _<AView>& view) const {
         if (auto t = _cast<ACursorSelectable>(view)) {
-            BOOST_REQUIRE_EQUAL(t->getSelection(), selection);
+            EXPECT_EQ(t->getSelection(), selection);
         }
         return true;
     }
@@ -73,10 +81,7 @@ using selectionMatches = SelectionMatchesAssert;
 /**
  * Checks that then clicking at the left border of the text field, cursor jumps to the first symbol.
  */
-UI_TEST_CASE(CursorAppearsAtTheStart) {
-    // prepare the window
-    _new<TestWindow>()->show();
-
+TEST_F(UITextField, CursorAppearsAtTheStart) {
     By::type<ATextField>().perform(click({0_dp, 0_dp})) // click at the left border
                           .check(selectionMatches(0));
 }
@@ -84,10 +89,7 @@ UI_TEST_CASE(CursorAppearsAtTheStart) {
 /**
  * Checks that then clicking at the right border of the text field, cursor jumps to the last symbol.
  */
-UI_TEST_CASE(CursorAppearsAtTheEnd) {
-    // prepare the window
-    _new<TestWindow>()->show();
-
+TEST_F(UITextField, CursorAppearsAtTheEnd) {
     By::type<ATextField>().perform(click({299_dp, 0_dp})) // click at the right border
                           .check(selectionMatches(12));
 }
@@ -95,10 +97,7 @@ UI_TEST_CASE(CursorAppearsAtTheEnd) {
 /**
  * Checks that when doubleclicking a whole word is selected
  */
-UI_TEST_CASE(DoubleClickWordSelection1) {
-    // prepare the window
-    _new<TestWindow>()->show();
-
+TEST_F(UITextField, DoubleClickWordSelection1) {
     By::type<ATextField>().perform(doubleClick({20_dp, 0_dp})) // click at the first word
                           .check(selectionMatches(0, 5));
 }
@@ -106,10 +105,7 @@ UI_TEST_CASE(DoubleClickWordSelection1) {
 /**
  * Checks that when doubleclicking a whole word is selected
  */
-UI_TEST_CASE(DoubleClickWordSelection2) {
-    // prepare the window
-    _new<TestWindow>()->show();
-
+TEST_F(UITextField, DoubleClickWordSelection2) {
     By::type<ATextField>().perform(doubleClick({54_dp, 0_dp})) // click at the second word
                           .check(selectionMatches(6, 12));
 }
@@ -117,22 +113,14 @@ UI_TEST_CASE(DoubleClickWordSelection2) {
 /**
  * Checks cursor position when clicking between 'l' and 'o'.
  */
-UI_TEST_CASE(CursorClickPos1) {
-    // prepare the window
-    _new<TestWindow>()->show();
-
-    By::type<ATextField>().perform(click({25_dp, 0_dp})) // hardcoded mouse position
+TEST_F(UITextField, CursorClickPos1) {
+    By::type<ATextField>().perform(click({23_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(4));
 }
 /**
  * Checks cursor position when clicking between 'o' and 'r'.
  */
-UI_TEST_CASE(CursorClickPos2) {
-    // prepare the window
-    _new<TestWindow>()->show();
-
+TEST_F(UITextField, CursorClickPos2) {
     By::type<ATextField>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(8));
 }
-
-BOOST_AUTO_TEST_SUITE_END()

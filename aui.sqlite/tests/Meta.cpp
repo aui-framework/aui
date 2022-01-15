@@ -23,17 +23,20 @@
 // Created by alex2 on 31.08.2020.
 //
 
-#include <AUI/Autumn/Autumn.h>
+#include <gtest/gtest.h>
 #include <AUI/Data/ASqlDatabase.h>
-#include <AUI/Data/AMigrationManager.h>
-#include <AUI/Data/ASqlBlueprint.h>
+#include <AUI/Data/AMeta.h>
 
-void setupSimpleDatabase() {
+
+TEST(Meta, Meta) {
     Autumn::put(ASqlDatabase::connect("sqlite", ":memory:"));
-    AMigrationManager mm;
-    mm.registerMigration("initial", [&]() {
-        ASqlBlueprintTable t("users");
-        t.varchar("name");
-    });
-    mm.doMigration();
+    AMeta::set("kek", 4);
+    AMeta::set("lol", "azaza");
+    ASSERT_EQ(AMeta::get("kek"), 4);
+    ASSERT_EQ(AMeta::get("lol"), "azaza");
+    AMeta::set("kek", "four");
+    AMeta::set("lol", 42.0);
+    ASSERT_EQ(AMeta::get("kek"), "four");
+    ASSERT_EQ(AMeta::get("lol"), 42.0);
 }
+

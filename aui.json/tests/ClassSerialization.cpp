@@ -23,13 +23,11 @@
 // Created by alex2 on 30.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Json/AJsonElement.h>
 #include <AUI/Json/AJson.h>
 
-using namespace boost::unit_test;
-BOOST_AUTO_TEST_SUITE(Json)
 
 // ORM data class
 struct Data {
@@ -39,16 +37,16 @@ struct Data {
     AJSON_FIELDS(name, year)
 };
 
-BOOST_AUTO_TEST_CASE(ClassSerialization)
+TEST(JsonSerialization, ClassSerialization)
 {
     // arrange
     Data d = {"Alex2772", 2020};
 
     // check for serialization
-    BOOST_CHECK_EQUAL(AJson::toString(d.toJson()), R"({"name":"Alex2772","year":2020})");
+    ASSERT_EQ(AJson::toString(d.toJson()), R"({"name":"Alex2772","year":2020})");
 }
 
-BOOST_AUTO_TEST_CASE(ClassDeserialization)
+TEST(JsonSerialization, ClassDeserialization)
 {
     // arrange
     auto jsonString = R"({"name":"Azaza","year":2021})";
@@ -57,18 +55,16 @@ BOOST_AUTO_TEST_CASE(ClassDeserialization)
     auto jsonParsed = AJson::fromString(jsonString);
 
     // when serialized back, the json should not change
-    BOOST_CHECK_EQUAL(AJson::toString(jsonParsed), jsonString);
+    ASSERT_EQ(AJson::toString(jsonParsed), jsonString);
 
     // read json
     Data d;
     d.readJson(jsonParsed);
 
     // assert
-    BOOST_CHECK_EQUAL(d.name, "Azaza");
-    BOOST_CHECK_EQUAL(d.year, 2021);
+    ASSERT_EQ(d.name, "Azaza");
+    ASSERT_EQ(d.year, 2021);
 }
 
 
-
-BOOST_AUTO_TEST_SUITE_END()
 

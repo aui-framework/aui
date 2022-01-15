@@ -23,94 +23,88 @@
 // Created by alex2 on 30.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Json/AJsonElement.h>
 #include <AUI/Json/AJson.h>
 #include <AUI/Json/JsonException.h>
 
-using namespace boost::unit_test;
-BOOST_AUTO_TEST_SUITE(Json)
 
-
-BOOST_AUTO_TEST_CASE(TypeObject)
+TEST(JsonTypeChecks, TypeObject)
 {
     // arrange data
     AJsonObject root;
 
     // type checks
-    BOOST_CHECK(root.isObject());
-    BOOST_CHECK(!root.isInt());
-    BOOST_CHECK(!root.isString());
-    BOOST_CHECK(!root.isBool());
-    BOOST_CHECK(!root.isVariant());
-    BOOST_CHECK(!root.isNull());
-    BOOST_CHECK(!root.isArray());
+    EXPECT_TRUE(root.isObject());
+    EXPECT_TRUE(!root.isInt());
+    EXPECT_TRUE(!root.isString());
+    EXPECT_TRUE(!root.isBool());
+    EXPECT_TRUE(!root.isVariant());
+    EXPECT_TRUE(!root.isNull());
+    EXPECT_TRUE(!root.isArray());
 
-    BOOST_CHECK_NO_THROW(root.asObject());
-    BOOST_CHECK_THROW(root.asArray(), JsonException);
-    BOOST_CHECK_THROW(root.asVariant(), JsonException);
-    BOOST_CHECK_THROW(root.asInt(), JsonException);
-    BOOST_CHECK_THROW(root.asBool(), JsonException);
+    ASSERT_NO_THROW(root.asObject());
+    ASSERT_THROW(root.asArray(), JsonException);
+    ASSERT_THROW(root.asVariant(), JsonException);
+    ASSERT_THROW(root.asInt(), JsonException);
+    ASSERT_THROW(root.asBool(), JsonException);
 }
-BOOST_AUTO_TEST_CASE(TypeVariant)
+TEST(JsonTypeChecks, TypeVariant)
 {
     // arrange data
     AJsonValue root("string");
 
 
     // isType checks
-    BOOST_CHECK(!root.isInt());
-    BOOST_CHECK(root.isString());
-    BOOST_CHECK(!root.isBool());
-    BOOST_CHECK(root.isVariant());
-    BOOST_CHECK(!root.isNull());
-    BOOST_CHECK(!root.isArray());
-    BOOST_CHECK(!root.isObject());
+    EXPECT_TRUE(!root.isInt());
+    EXPECT_TRUE(root.isString());
+    EXPECT_TRUE(!root.isBool());
+    EXPECT_TRUE(root.isVariant());
+    EXPECT_TRUE(!root.isNull());
+    EXPECT_TRUE(!root.isArray());
+    EXPECT_TRUE(!root.isObject());
 
-    BOOST_CHECK_THROW(root.asObject(), JsonException);
-    BOOST_CHECK_THROW(root.asArray(), JsonException);
+    ASSERT_THROW(root.asObject(), JsonException);
+    ASSERT_THROW(root.asArray(), JsonException);
 }
 
-BOOST_AUTO_TEST_CASE(TypeArray)
+TEST(JsonTypeChecks, TypeArray)
 {
     // arrange data
     AJsonArray root;
 
 
     // isType checks
-    BOOST_CHECK(!root.isInt());
-    BOOST_CHECK(!root.isString());
-    BOOST_CHECK(!root.isBool());
-    BOOST_CHECK(!root.isVariant());
-    BOOST_CHECK(!root.isNull());
-    BOOST_CHECK(root.isArray());
-    BOOST_CHECK(!root.isObject());
+    EXPECT_TRUE(!root.isInt());
+    EXPECT_TRUE(!root.isString());
+    EXPECT_TRUE(!root.isBool());
+    EXPECT_TRUE(!root.isVariant());
+    EXPECT_TRUE(!root.isNull());
+    EXPECT_TRUE(root.isArray());
+    EXPECT_TRUE(!root.isObject());
 
-    BOOST_CHECK_THROW(root.asObject(), JsonException);
-    BOOST_CHECK_NO_THROW(root.asArray());
-    BOOST_CHECK_THROW(root.asVariant(), JsonException);
+    ASSERT_THROW(root.asObject(), JsonException);
+    ASSERT_NO_THROW(root.asArray());
+    ASSERT_THROW(root.asVariant(), JsonException);
 }
 
-BOOST_AUTO_TEST_CASE(TypeNull)
+TEST(JsonTypeChecks, TypeNull)
 {
     // arrange data
     AJsonElement root(nullptr);
 
 
     // isType checks
-    BOOST_CHECK(!root.isInt());
-    BOOST_CHECK(!root.isString());
-    BOOST_CHECK(!root.isBool());
-    BOOST_CHECK(!root.isVariant());
-    BOOST_CHECK(root.isNull());
-    BOOST_CHECK(!root.isArray());
-    BOOST_CHECK(!root.isObject());
+    EXPECT_TRUE(!root.isInt());
+    EXPECT_TRUE(!root.isString());
+    EXPECT_TRUE(!root.isBool());
+    EXPECT_TRUE(!root.isVariant());
+    EXPECT_TRUE(root.isNull());
+    EXPECT_TRUE(!root.isArray());
+    EXPECT_TRUE(!root.isObject());
 
-    BOOST_CHECK_THROW(root.asObject(), JsonException);
-    BOOST_CHECK_THROW(root.asArray(), JsonException);
-    BOOST_CHECK_THROW(root.asVariant(), JsonException);
+    ASSERT_THROW(root.asObject(), JsonException);
+    ASSERT_THROW(root.asArray(), JsonException);
+    ASSERT_THROW(root.asVariant(), JsonException);
 }
-
-BOOST_AUTO_TEST_SUITE_END()
-

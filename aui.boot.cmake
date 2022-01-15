@@ -26,6 +26,14 @@ if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
     file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
 endif()
 
+
+if (MSVC)
+    if (NOT CMAKE_MSVC_RUNTIME_LIBRARY)
+        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
+        message(STATUS "AUI.Boot CMAKE_MSVC_RUNTIME_LIBRARY is not set - defaulting to ${CMAKE_MSVC_RUNTIME_LIBRARY}")
+    endif()
+endif()
+
 # rpath fix
 if (APPLE)
     set(CMAKE_MACOSX_RPATH 1)
@@ -105,6 +113,12 @@ endif()
 macro(auib_import AUI_MODULE_NAME URL)
     set(_locked FALSE)
 
+    set(FINDPACKAGE_QUIET QUIET)
+    if (AUI_BOOT_VERBOSE)
+        set(FINDPACKAGE_QUIET "")
+    endif()
+
+
     cmake_policy(SET CMP0087 NEW)
     cmake_policy(SET CMP0074 NEW)
     # https://stackoverflow.com/a/46057018
@@ -131,6 +145,12 @@ macro(auib_import AUI_MODULE_NAME URL)
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE Debug)
     endif()
+
+    if (NOT DEFINED BUILD_SHARED_LIBS)
+        # default it to ON
+        set(BUILD_SHARED_LIBS ON)
+    endif()
+
     if (BUILD_SHARED_LIBS)
         set(SHARED_OR_STATIC shared)
     else()
@@ -166,14 +186,33 @@ macro(auib_import AUI_MODULE_NAME URL)
         # avoid compilation if we have existing installation
         set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX})
         if (EXISTS ${DEP_INSTALLED_FLAG})
-            if (AUIB_IMPORT_COMPONENTS)
-                find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS})
+            # BEGIN: try find
+            while(TRUE)
+                if (AUIB_IMPORT_COMPONENTS)
+                    find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} ${FINDPACKAGE_QUIET})
+                else()
+                    find_package(${AUI_MODULE_NAME} ${FINDPACKAGE_QUIET})
+                endif()
+                if (NOT (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND))
+                    if (CMAKE_FIND_PACKAGE_PREFER_CONFIG)
+                        break()
+                    endif()
+                    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+                else()
+                    break()
+                endif()
+            endwhile()
+            unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG)
+            # expose result ignoring case sensitivity
+            if (AUI_MODULE_NAME OR AUI_MODULE_NAME_UPPER)
+                set(${AUI_MODULE_NAME}_FOUND TRUE)
             else()
-                find_package(${AUI_MODULE_NAME})
+                set(${AUI_MODULE_NAME}_FOUND FALSE)
             endif()
+            # END: try find
         endif()
     endif()
-    if (((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND)) AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_SOURCE_DIR}/CMakeLists.txt) AND DEP_ADD_SUBDIRECTORY))
+    if ((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_SOURCE_DIR}/CMakeLists.txt) AND DEP_ADD_SUBDIRECTORY))
         # some shit with INSTALLED flag because find_package finds by ${AUI_MODULE_NAME}_ROOT only if REQUIRED flag is set
         # so we have to compile and install
         if (NOT DEP_ADD_SUBDIRECTORY)
@@ -207,7 +246,7 @@ macro(auib_import AUI_MODULE_NAME URL)
 
         file(REMOVE_RECURSE ${DEP_SOURCE_DIR} ${DEP_BINARY_DIR})
         FetchContent_Declare(${AUI_MODULE_NAME}_FC
-                PREFIX "${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
+                PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
                 GIT_REPOSITORY "${URL}"
                 GIT_TAG ${AUIB_IMPORT_VERSION}
                 GIT_PROGRESS TRUE # show progress of download
@@ -264,6 +303,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                         )
             endif()
 
+
             # forward all necessary variables to child cmake build
             foreach(_varname
                     CMAKE_TOOLCHAIN_FILE
@@ -276,13 +316,12 @@ macro(auib_import AUI_MODULE_NAME URL)
                     CMAKE_INSTALL_RPATH
                     CMAKE_MAKE_PROGRAM
                     CMAKE_TOOLCHAIN_FILE
+                    CMAKE_MSVC_RUNTIME_LIBRARY
+                    CMAKE_C_LINKER_FLAGS
+                    CMAKE_EXE_LINKER_FLAGS
                     ${ANDROID_VARS})
                 list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
             endforeach()
-            if (NOT DEFINED BUILD_SHARED_LIBS)
-                # default it to ON
-                set(BUILD_SHARED_LIBS ON)
-            endif()
             list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
             if (IOS)
                 list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_C_FLAGS=-Wno-error-implicit-function-declaration")
@@ -310,6 +349,7 @@ macro(auib_import AUI_MODULE_NAME URL)
                     ${CMAKE_COMMAND}
                     --build ${DEP_BINARY_DIR}
                     --target install
+                    --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                     RESULT_VARIABLE ERROR_CODE)
@@ -318,6 +358,9 @@ macro(auib_import AUI_MODULE_NAME URL)
                 message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
             endif()
             file(TOUCH ${DEP_INSTALLED_FLAG})
+            if (NOT EXISTS ${DEP_INSTALLED_FLAG})
+                message(FATAL_ERROR "Dependency failed to install: ${AUI_MODULE_NAME} - check the compilation and installation logs above")
+            endif()
         endif()
         if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
             if (NOT AUI_BOOT) # recursive deadlock fix
@@ -329,14 +372,47 @@ macro(auib_import AUI_MODULE_NAME URL)
         message(STATUS "${AUI_MODULE_NAME} imported as a subdirectory: ${DEP_SOURCE_DIR}")
         add_subdirectory(${DEP_SOURCE_DIR} "aui.boot-build-${AUI_MODULE_NAME}")
     else()
-        if (AUIB_IMPORT_COMPONENTS)
-            find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS})
+        # BEGIN: try find
+        while(TRUE)
+            if (AUIB_IMPORT_COMPONENTS)
+                find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} ${FINDPACKAGE_QUIET})
+            else()
+                find_package(${AUI_MODULE_NAME} ${FINDPACKAGE_QUIET})
+            endif()
+            if (NOT (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND))
+                if (CMAKE_FIND_PACKAGE_PREFER_CONFIG)
+                    break()
+                endif()
+                set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+            else()
+                break()
+            endif()
+        endwhile()
+        unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG)
+        # expose result ignoring case sensitivity
+        if (AUI_MODULE_NAME OR AUI_MODULE_NAME_UPPER)
+            set(${AUI_MODULE_NAME}_FOUND TRUE)
         else()
-            find_package(${AUI_MODULE_NAME})
+            set(${AUI_MODULE_NAME}_FOUND FALSE)
         endif()
+        # END: try find
+        if (NOT ${AUI_MODULE_NAME}_FOUND)
+            # list possible find_package names if available
+            file(GLOB_RECURSE _find "${DEP_INSTALL_PREFIX}/*onfig.cmake")
+            unset(possible_names)
+            foreach(_i ${_find})
+                get_filename_component(_name ${_i} NAME)
+                string(REGEX REPLACE "([Cc]onfig)\\.cmake" "" _name ${_name})
+                list(APPEND possible_names "${_name}")
+            endforeach()
 
-        if (NOT ${AUI_MODULE_NAME}_FOUND AND NOT ${AUI_MODULE_NAME_UPPER}_FOUND)
-            message(FATAL_ERROR "AUI.Boot could not resolve dependency: ${AUI_MODULE_NAME}")
+            # construct error message
+            set(error_message "AUI.Boot could not resolve dependency: ${AUI_MODULE_NAME}")
+            if (possible_names)
+                string(JOIN " or " possible_names_joined ${possible_names})
+                set(error_message "${error_message}\nnote: did you mean " ${possible_names_joined} ?)
+            endif()
+            message(FATAL_ERROR ${error_message})
         endif()
 
         # create links to runtime dependencies

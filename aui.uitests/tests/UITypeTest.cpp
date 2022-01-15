@@ -24,8 +24,6 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/ATextField.h>
 
-using namespace boost::unit_test;
-
 /**
  * There's a text field and a button:
  * _____________________-[]X_
@@ -44,37 +42,50 @@ using namespace boost::unit_test;
  *
  * when text field is empty, hello message should be hidden.
  */
-BOOST_AUTO_TEST_SUITE(Type)
 
-
-class TestWindow: public AWindow {
-private:
-    _<ATextField> mTextField;
-    _<ALabel> mHelloLabel;
-
+class UIType: public testing::UITest {
 public:
-    TestWindow() {
-        setContents(Centered {
-            Vertical {
-                Horizontal {
-                    mTextField = _new<ATextField>() << "#username",
-                    _new<AButton>("Say hello").connect(&AView::clicked, this, [&] {
-                        if (mTextField->getText().empty()) {
-                            mHelloLabel->setVisibility(Visibility::INVISIBLE);
-                            return;
-                        }
-                        mHelloLabel->setText("Hello, {}!"_format(mTextField->getText()));
-                        mHelloLabel->setVisibility(Visibility::VISIBLE);
-                    }) let { it->setDefault(); },
-                },
-                mHelloLabel = _new<ALabel>() let {
-                    it->setVisibility(Visibility::INVISIBLE);
-                    it << "#hello";
-                }
-            }
-        });
+protected:
+    void SetUp() override {
+        UITest::SetUp();
 
-        pack();
+        class TestWindow: public AWindow {
+        private:
+            _<ATextField> mTextField;
+            _<ALabel> mHelloLabel;
+
+        public:
+            TestWindow() {
+                setContents(Centered {
+                        Vertical {
+                                Horizontal {
+                                        mTextField = _new<ATextField>() << "#username",
+                                        _new<AButton>("Say hello").connect(&AView::clicked, this, [&] {
+                                            if (mTextField->getText().empty()) {
+                                                mHelloLabel->setVisibility(Visibility::INVISIBLE);
+                                                return;
+                                            }
+                                            mHelloLabel->setText("Hello, {}!"_format(mTextField->getText()));
+                                            mHelloLabel->setVisibility(Visibility::VISIBLE);
+                                        }) let { it->setDefault(); },
+                                },
+                                mHelloLabel = _new<ALabel>() let {
+                                    it->setVisibility(Visibility::INVISIBLE);
+                                    it << "#hello";
+                                }
+                        }
+                });
+
+                pack();
+            }
+        };
+
+        // prepare the window
+        _new<TestWindow>()->show();
+    }
+
+    void TearDown() override {
+        UITest::TearDown();
     }
 };
 
@@ -83,26 +94,21 @@ public:
 /**
  * Checks that the message is not appeared yet.
  */
-UI_TEST_CASE(HelloIsNotAppeared) {
-    // prepare the window
-    _new<TestWindow>()->show();
+TEST_F(UIType, HelloIsNotAppeared) {
 
     // check label is not visible
-    By::text("Hello!").require(notVisible(), "label is visible");
+    By::text("Hello!").check(notVisible(), "label is visible");
 }
 
 /**
  * Checks that the message does not appear when button is clicked.
  */
-UI_TEST_CASE(HelloNotAppearsAfterClick) {
-    // prepare the window
-    _new<TestWindow>()->show();
-
+TEST_F(UIType, HelloNotAppearsAfterClick) {
     // press the button
     By::text("Say hello").perform(click());
 
     // check label is NOT appeared
-    By::name("#hello").require(notVisible(), "label is appeared");
+    By::name("#hello").check(notVisible(), "label is appeared");
 }
 
 /**
@@ -111,10 +117,7 @@ UI_TEST_CASE(HelloNotAppearsAfterClick) {
  * 1. types "Steve" to the text field
  * 2. clicks the button
  */
-UI_TEST_CASE(HelloAppearsAfterClick) {
-    // prepare the window
-    _new<TestWindow>()->show();
-
+TEST_F(UIType, HelloAppearsAfterClick) {
     // type "Steve" to the text field
     By::name("#username").perform(type("Steve"));
 
@@ -122,8 +125,8 @@ UI_TEST_CASE(HelloAppearsAfterClick) {
     By::text("Say hello").perform(click());
 
     // check label is appeared and contains text "Hello, Steve!"
-    By::name("#hello").require(visible(), "label is not appeared")
-                      .require(text("Hello, Steve!"), "invalid text");
+    By::name("#hello").check(visible(), "label is not appeared")
+                      .check(text("Hello, Steve!"), "invalid text");
 }
 
 /**
@@ -134,10 +137,7 @@ UI_TEST_CASE(HelloAppearsAfterClick) {
  * 3. clears the text field
  * 4. clicks the button again
  */
-UI_TEST_CASE(HelloDisappearsAfterClick) {
-    // prepare the window
-    _new<TestWindow>()->show();
-
+TEST_F(UIType, HelloDisappearsAfterClick) {
     // type "Steve" to the text field
     By::name("#username").perform(type("Steve"));
 
@@ -145,7 +145,6 @@ UI_TEST_CASE(HelloDisappearsAfterClick) {
     By::text("Say hello").perform(click());
 
     // check label is appeared and contains text "Hello, Steve!"
-    By::name("#hello").require(visible(), "label is not appeared")
-                            .require(text("Hello, Steve!"), "invalid text");
+    By::name("#hello").check(visible(), "label is not appeared")
+                            .check(text("Hello, Steve!"), "invalid text");
 }
-BOOST_AUTO_TEST_SUITE_END()

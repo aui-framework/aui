@@ -3,11 +3,11 @@
 //
 
 
-#include "Matcher.h"
+#include "UIMatcher.h"
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Platform/AWindowManager.h>
 
-ASet<_<AView>> Matcher::toSet() const {
+ASet<_<AView>> UIMatcher::toSet() const {
     ASet<_<AView>> result;
 
     for (auto& window : ABaseWindow::getWindowManager().getWindows()) {
@@ -16,12 +16,12 @@ ASet<_<AView>> Matcher::toSet() const {
     return result;
 }
 
-Matcher*& Matcher::currentImpl() {
-    thread_local Matcher* matcher;
+UIMatcher*& UIMatcher::currentImpl() {
+    thread_local UIMatcher* matcher;
     return matcher;
 }
 
-void Matcher::processContainer(ASet<_<AView>>& destination, const _<AViewContainer>& container) const {
+void UIMatcher::processContainer(ASet<_<AView>>& destination, const _<AViewContainer>& container) const {
     for (auto& view : container) {
         if (mIncludeInvisibleViews || view->getVisibility() == Visibility::VISIBLE) {
             if (mMatcher->matches(view)) {

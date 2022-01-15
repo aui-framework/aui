@@ -23,14 +23,10 @@
 // Created by alex2 on 30.08.2020.
 //
 
-#include <boost/test/unit_test.hpp>
+#include <gtest/gtest.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Json/AJson.h>
 #include <AUI/Json/AJsonElement.h>
-
-
-using namespace boost::unit_test;
-BOOST_AUTO_TEST_SUITE(Json)
 
 
 
@@ -54,21 +50,18 @@ std::ostream& operator<<(std::ostream& o, const Data2& d) {
     return o;
 }
 
-BOOST_AUTO_TEST_CASE(CustomConverter)
+TEST(JsonCustomConverter, CustomConverter)
 {
     // arrange
     Data2 d = { {1, 2, 3} };
 
     // check for serialization
     auto jsonObject = d.toJson();
-    BOOST_CHECK_EQUAL(AJson::toString(jsonObject), R"({"values":[1,2,3]})");
+    ASSERT_EQ(AJson::toString(jsonObject), R"({"values":[1,2,3]})");
 
     Data2 d2;
     d2.readJson(jsonObject);
-    BOOST_CHECK_EQUAL(d, d2);
+    ASSERT_EQ(d, d2);
 }
 
-
-
-BOOST_AUTO_TEST_SUITE_END()
 
