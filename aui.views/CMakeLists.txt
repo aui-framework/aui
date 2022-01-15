@@ -3,11 +3,24 @@ cmake_minimum_required(VERSION 3.10)
 
 set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH TRUE)
 find_package(OpenGL)
+if (AUI_PLATFORM_LINUX)
+	find_package(X11 REQUIRED)
+	if(BUILD_SHARED_LIBS)
+		find_package(FindFontconfig REQUIRED)
+	endif()
+endif()
 set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
 
 if (OPENGL_FOUND OR ANDROID OR IOS)
 
-	auib_import(Freetype https://github.com/aui-framework/freetype)
+	auib_import(Freetype https://github.com/aui-framework/freetype
+			    CMAKE_ARGS -DFT_DISABLE_HARFBUZZ=TRUE
+			               -DFT_DISABLE_PNG=TRUE
+			               -DFT_DISABLE_ZLIB=TRUE
+			               -DFT_DISABLE_BZIP2=TRUE
+			               -DFT_DISABLE_BROTLI=TRUE)
+
+	aui_module(aui.views EXPORT aui)
 
 	if(NOT ANDROID AND NOT IOS)
 		auib_import(GLEW https://github.com/aui-framework/glew-cmake
@@ -15,27 +28,28 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 
 		if (NOT WIN32 AND NOT APPLE)
 			FIND_PACKAGE(PkgConfig REQUIRED)
-			PKG_CHECK_MODULES(GTK3 gtk+-3.0)
+			PKG_CHECK_MODULES(GTK REQUIRED gtk+-3.0)
 
 			if (NOT GTK3_FOUND)
 				message(WARNING "Could not find GTK3; Disabling aui.views. Hint: install package libgtk-3-dev")
 				return()
 			endif()
+			link_directories(${GTK_LIBRARY_DIRS})
+			add_definitions(${GTK_CFLAGS_OTHER})
+			target_include_directories(aui.views PRIVATE ${GTK_INCLUDE_DIRS})
+			aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${GTK_LIBRARIES})
+			if (NOT BUILD_SHARED_LIBS)
+				# link Freetype's deps
+				target_link_libraries(aui.views PUBLIC ${Fontconfig_LIBRARIES})
+			endif()
 		endif ()
 	endif()
 
-	aui_module(aui.views EXPORT aui)
 	target_include_directories(aui.views PRIVATE 3rdparty)
 	if (NOT AUI_PLATFORM_WINDOWS)
 		aui_compile_assets(aui.views)
 	else()
 		aui_compile_assets(aui.views EXCLUDE uni/font/Roboto.ttf)
-	endif()
-
-	if(AUI_PLATFORM_LINUX)
-		include_directories (${GTK3_INCLUDE_DIRS})
-		link_directories (${GTK3_LIBRARY_DIRS})
-		aui_link(aui.views PRIVATE gtk-3)
 	endif()
 
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
