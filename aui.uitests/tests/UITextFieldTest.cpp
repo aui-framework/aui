@@ -114,7 +114,7 @@ TEST_F(UITextField, DoubleClickWordSelection2) {
  * Checks cursor position when clicking between 'l' and 'o'.
  */
 TEST_F(UITextField, CursorClickPos1) {
-    By::type<ATextField>().perform(click({25_dp, 0_dp})) // hardcoded mouse position
+    By::type<ATextField>().perform(click({23_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(4));
 }
 /**
