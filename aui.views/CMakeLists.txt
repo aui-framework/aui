@@ -20,7 +20,6 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 			               -DFT_DISABLE_BZIP2=TRUE
 			               -DFT_DISABLE_BROTLI=TRUE)
 
-	aui_module(aui.views EXPORT aui)
 
 	if(NOT ANDROID AND NOT IOS)
 		auib_import(GLEW https://github.com/aui-framework/glew-cmake
@@ -30,19 +29,24 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 			FIND_PACKAGE(PkgConfig REQUIRED)
 			PKG_CHECK_MODULES(GTK REQUIRED gtk+-3.0)
 
-			if (NOT GTK3_FOUND)
+			if (NOT GTK_FOUND)
 				message(WARNING "Could not find GTK3; Disabling aui.views. Hint: install package libgtk-3-dev")
 				return()
 			endif()
 			link_directories(${GTK_LIBRARY_DIRS})
 			add_definitions(${GTK_CFLAGS_OTHER})
-			target_include_directories(aui.views PRIVATE ${GTK_INCLUDE_DIRS})
-			aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${GTK_LIBRARIES})
-			if (NOT BUILD_SHARED_LIBS)
-				# link Freetype's deps
-				target_link_libraries(aui.views PUBLIC ${Fontconfig_LIBRARIES})
-			endif()
 		endif ()
+	endif()
+
+	aui_module(aui.views EXPORT aui)
+
+	if (AUI_PLATFORM_LINUX)
+		target_include_directories(aui.views PRIVATE ${GTK_INCLUDE_DIRS})
+		aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${GTK_LIBRARIES})
+		if (NOT BUILD_SHARED_LIBS)
+			# link Freetype's deps
+			target_link_libraries(aui.views PUBLIC ${Fontconfig_LIBRARIES})
+		endif()
 	endif()
 
 	target_include_directories(aui.views PRIVATE 3rdparty)

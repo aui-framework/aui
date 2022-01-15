@@ -28,7 +28,7 @@ void CommonRenderingContext::ensureXLibInitialized() {
 
     public:
         DisplayInstance() {
-            auto d = CommonRenderingContext::ourDisplay = nullptr;//XOpenDisplay(nullptr);
+            auto d = CommonRenderingContext::ourDisplay = XOpenDisplay(nullptr);
             if (d == nullptr) return;
             XSetErrorHandler(xerrorhandler);
             CommonRenderingContext::ourScreen = DefaultScreenOfDisplay(CommonRenderingContext::ourDisplay);
