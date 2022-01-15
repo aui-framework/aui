@@ -636,6 +636,9 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
 
             if (MSVC AND _wholearchive)
                 target_link_options(${AUI_MODULE_NAME} PRIVATE "/WHOLEARCHIVE:$<TARGET_FILE:${_lib}>")
+            elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND _wholearchive)
+                #message("--whole-archive $<TARGET_FILE:${_lib}> --no-whole-archive")
+                target_link_libraries(${AUI_MODULE_NAME} PRIVATE "-Wl,--whole-archive $<TARGET_FILE:${_lib}> -Wl,--no-whole-archive")
             else()
                 list(APPEND _${_visibility} ${_lib})
             endif()
