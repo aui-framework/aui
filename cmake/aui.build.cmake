@@ -163,11 +163,47 @@ function(aui_add_properties AUI_MODULE_NAME)
 endfunction(aui_add_properties)
 
 macro(aui_enable_tests)
+    if(NOT TARGET GTest::gtest)
+        find_package(GTest REQUIRED) # probably pulled from aui.boot
+    endif()
+
+    if (NOT TARGET GTest::gtest)
+        message(FATAL_ERROR "GTest::gtest not found!")
+    endif()
+
     enable_testing()
     if (NOT ANDROID AND NOT IOS)
         get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
         if (NOT TARGET Tests)
-            aui_tests(Tests ${TESTS_SRCS})
+            set(TESTS_MODULE_NAME Tests)
+
+            file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp [[
+#include <gtest/gtest.h>
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}]])
+            add_executable(${TESTS_MODULE_NAME} ${TESTS_SRCS} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
+            include(GoogleTest)
+            gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
+            set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
+            target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
+            get_target_property(_t GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
+            aui_link(${TESTS_MODULE_NAME} PUBLIC GTest::gtest)
+            target_compile_definitions(${TESTS_MODULE_NAME} PUBLIC AUI_TESTS_MODULE=1)
+
+            if (TARGET aui.core)
+                aui_link(${TESTS_MODULE_NAME} PUBLIC aui.core)
+            else()
+                aui_link(${TESTS_MODULE_NAME} PUBLIC aui::core)
+            endif()
+
+            if (TARGET aui::uitests)
+                aui_link(${TESTS_MODULE_NAME} PUBLIC aui::uitests)
+            endif()
+
+            aui_add_properties(${TESTS_MODULE_NAME})
+            set_target_properties(${TESTS_MODULE_NAME} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
         else()
             target_sources(Tests PRIVATE ${TESTS_SRCS}) # append sources
         endif()
@@ -197,41 +233,6 @@ macro(aui_enable_tests)
         set_property(GLOBAL PROPERTY TESTS_DEPS "")
     endif()
 endmacro()
-
-function(aui_tests TESTS_MODULE_NAME)
-    if(TARGET GTest::gtest)
-        enable_testing()
-        file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp [[
-#include <gtest/gtest.h>
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}]])
-        add_executable(${ARGV} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
-        include(GoogleTest)
-        gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
-        set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
-        target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
-        get_target_property(_t GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
-        aui_link(${TESTS_MODULE_NAME} PUBLIC GTest::gtest)
-        target_compile_definitions(${TESTS_MODULE_NAME} PUBLIC AUI_TESTS_MODULE=1)
-
-        if (TARGET aui.core)
-            aui_link(${TESTS_MODULE_NAME} PUBLIC aui.core)
-        else()
-            aui_link(${TESTS_MODULE_NAME} PUBLIC aui::core)
-        endif()
-
-        if (TARGET aui::uitests)
-            aui_link(${TESTS_MODULE_NAME} PUBLIC aui::uitests)
-        endif()
-
-        aui_add_properties(${TESTS_MODULE_NAME})
-        set_target_properties(${TESTS_MODULE_NAME} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
-    else()
-        message(FATAL_ERROR "GTest not found")
-    endif()
-endfunction(aui_tests)
 
 function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)

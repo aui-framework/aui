@@ -141,6 +141,12 @@ set(AUI_COMPONENT_${_module}_LINK_LIBS ${_link_libs2})
 endforeach()
 
 
+# test aui.boot on ci/cd
+if (AUI_TEST_BOOT_BRANCH)
+    add_subdirectory(test/aui.boot)
+endif()
+
+
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 #install(EXPORT AUI DESTINATION cmake/)
 install(
