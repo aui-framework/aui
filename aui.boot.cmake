@@ -185,6 +185,7 @@ function(auib_import AUI_MODULE_NAME URL)
     if (NOT DEP_ADD_SUBDIRECTORY)
         # avoid compilation if we have existing installation
         set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX})
+        set(${AUI_MODULE_NAME_UPPER}_DIR ${DEP_INSTALL_PREFIX})
         if (EXISTS ${DEP_INSTALLED_FLAG})
             # BEGIN: try find
             while(TRUE)
