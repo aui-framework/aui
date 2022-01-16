@@ -199,7 +199,7 @@ macro(aui_enable_tests)
 endmacro()
 
 function(aui_tests TESTS_MODULE_NAME)
-    if(GTest_FOUND)
+    if(TARGET GTest::gtest)
         enable_testing()
         file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp [[
 #include <gtest/gtest.h>
@@ -228,6 +228,8 @@ int main(int argc, char **argv) {
 
         aui_add_properties(${TESTS_MODULE_NAME})
         set_target_properties(${TESTS_MODULE_NAME} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
+    else()
+        message(FATAL_ERROR "GTest not found")
     endif()
 endfunction(aui_tests)
 

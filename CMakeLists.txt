@@ -42,6 +42,9 @@ include(cmake/aui.build.cmake)
 
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
 
+auib_import(GTest https://github.com/google/googletest
+            VERSION main
+            CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
 
 
 function(define_aui_component AUI_COMPONENT_NAME)
@@ -54,10 +57,6 @@ function(define_aui_component AUI_COMPONENT_NAME)
     add_subdirectory("aui.${AUI_COMPONENT_NAME}")
 endfunction()
 
-
-auib_import(GTest https://github.com/google/googletest
-            VERSION main
-            CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
 
 define_aui_component(core)
 if (NOT ANDROID AND NOT IOS)
