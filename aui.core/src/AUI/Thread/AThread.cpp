@@ -111,7 +111,7 @@ void AThread::start()
 	mThread = new std::thread([&, t] ()
 	{
 		threadStorage() = t;
-		auto f = mFunctor;
+		auto f = std::move(mFunctor);
 		mFunctor = nullptr;
 		mId = std::this_thread::get_id();
 
@@ -179,7 +179,7 @@ void AThread::resetInterruptFlag()
 
 void AThread::join()
 {
-	mThread->join();
+	if (mThread->joinable()) mThread->join();
 }
 
 void AAbstractThread::enqueue(const std::function<void()>& f)

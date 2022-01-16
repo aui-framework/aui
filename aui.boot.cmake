@@ -110,7 +110,7 @@ if (NOT EXISTS ${AUI_CACHE_DIR}/repo)
 endif()
 
 # TODO add a way to provide file access to the repository
-macro(auib_import AUI_MODULE_NAME URL)
+function(auib_import AUI_MODULE_NAME URL)
     set(_locked FALSE)
 
     set(FINDPACKAGE_QUIET QUIET)
@@ -463,4 +463,4 @@ macro(auib_import AUI_MODULE_NAME URL)
         endforeach()
         set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
     endif()
-endmacro()
+endfunction()

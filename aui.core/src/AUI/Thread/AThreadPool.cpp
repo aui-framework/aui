@@ -91,7 +91,10 @@ void AThreadPool::Worker::thread_fn() {
 
 AThreadPool::Worker::~Worker() {
 	mEnabled = false;
+	std::unique_lock<std::mutex> lck(mMutex);
+	mTP.mCV.notify_all();
 	mThread->interrupt();
+	lck.unlock();
 	mThread->join();
 	mThread = nullptr;
 }
@@ -176,7 +179,6 @@ AThreadPool::~AThreadPool() {
 		f->disable();
 	}
 	for (auto& f : mWorkers) {
-		mCV.notify_all();
 		delete f;
 	}
 }

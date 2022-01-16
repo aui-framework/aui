@@ -38,11 +38,14 @@ include(aui.boot.cmake)
 
 # use msvc dll
 cmake_policy(SET CMP0091 NEW)
+include(cmake/aui.build.cmake)
 
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
 
+auib_import(GTest https://github.com/google/googletest
+            VERSION main
+            CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
 
-include(cmake/aui.build.cmake)
 
 function(define_aui_component AUI_COMPONENT_NAME)
     if (AUI_BOOT_COMPONENTS)
@@ -53,6 +56,7 @@ function(define_aui_component AUI_COMPONENT_NAME)
     endif()
     add_subdirectory("aui.${AUI_COMPONENT_NAME}")
 endfunction()
+
 
 define_aui_component(core)
 if (NOT ANDROID AND NOT IOS)
