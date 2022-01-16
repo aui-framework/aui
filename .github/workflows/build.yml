@@ -70,11 +70,11 @@ jobs:
 
       - name: Build project
         # Build your program with the given configuration
-        run: cmake ${{github.workspace}}/build --parallel --config ${{matrix.config.build_type}}
+        run: cmake ${{github.workspace}}/build --config ${{matrix.config.build_type}} --parallel
 
       - name: Build tests
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --parallel --config ${{matrix.config.build_type}} --target Tests
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} --target Tests --parallel
 
       - name: Test
         # Build your program with the given configuration
