@@ -142,6 +142,9 @@ endforeach()
 
 
 # test aui.boot on ci/cd
+if (NOT AUI_TEST_BOOT_BRANCH)
+    set(AUI_TEST_BOOT_BRANCH $ENV{GITHUB_SHA})
+endif()
 if (AUI_TEST_BOOT_BRANCH)
     add_subdirectory(test/aui.boot)
 endif()
