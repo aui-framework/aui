@@ -132,20 +132,21 @@ TEST(Threading, Future3) {
     ASSERT_EQ(*v1231, 1231.f);
 }
 
-TEST(Threading, PararellVoid) {
+TEST(Threading, ParallelVoid) {
     for (int i = 0; i < 1000; ++i) {
         AVector<int> ints;
         for (int j = 0; j < i; ++j) {
             ints.push_back(j);
         }
-        AThreadPool::global().parallel(ints.begin(),
+        AThreadPool tp(2);
+        tp.parallel(ints.begin(),
                                        ints.end(),
                                        [](AVector<int>::iterator begin, AVector<int>::iterator end) {
-            for (auto it = begin; it != end; ++it) {
-                *it += 2;
-            }
-            return 0;
-        }).waitForAll();
+                                           for (auto it = begin; it != end; ++it) {
+                                               *it += 2;
+                                           }
+                                           return 0;
+                                       }).waitForAll();
 
         for (int j = 0; j < i; ++j) {
             if (ints[j] != j + 2) ADD_FAILURE() << "invalid result";
