@@ -55,8 +55,7 @@ private:
     private:
         bool mEnabled = true;
         _<AThread> mThread;
-        AMutex mMutex;
-        bool processQueue(AQueue<std::function<void()>>& queue);
+        bool processQueue(std::unique_lock<std::mutex>& mutex, AQueue<std::function<void()>>& queue);
         void thread_fn();
         AThreadPool& mTP;
     public:
@@ -64,16 +63,6 @@ private:
         ~Worker();
         void disable();
     };
-
-    struct FenceHelper {
-        unsigned enqueuedTasks = 0;
-        std::atomic_uint doneTasks;
-        bool waitingForNotify = false;
-        AConditionVariable cv;
-        std::mutex mutex;
-    };
-
-    FenceHelper*& fenceHelperStorage();
 
 public:
     enum Priority
@@ -89,9 +78,9 @@ protected:
     AQueue<task> mQueueMedium;
     AQueue<task> mQueueLowest;
     AQueue<task> mQueueTryLater;
-    std::recursive_mutex mQueueLock;
+    std::mutex mQueueLock;
     std::condition_variable mCV;
-    std::atomic_uint mIdleWorkers;
+    size_t mIdleWorkers = 0;
 
 public:
     AThreadPool(size_t size);
@@ -111,37 +100,6 @@ public:
     size_t getIdleWorkerCount() const {
         return mIdleWorkers;
     }
-
-    /**
-     * \brief Wraps lambda. Guarantees that all tasks enqueued inside this lambda will be finished after this function
-     *        call.
-     * \tparam Callable
-     * \param callable
-     */
-    template<typename Callable>
-    void fence(Callable callable) {
-        assert(fenceHelperStorage() == nullptr);
-        FenceHelper fenceHelper;
-        fenceHelperStorage() = &fenceHelper;
-        struct s {
-            AThreadPool& th;
-            s(AThreadPool& th) : th(th) {}
-
-            ~s() {
-                th.fenceHelperStorage() = nullptr;
-            }
-        } s(*this);
-
-        std::unique_lock l(fenceHelper.mutex);
-        callable();
-        if (fenceHelper.enqueuedTasks == 0)
-            return;
-        fenceHelper.waitingForNotify = true;
-        do {
-            fenceHelper.cv.wait(l);
-        } while (fenceHelper.doneTasks != fenceHelper.enqueuedTasks);
-    }
-
 
     /**
      * Parallels work of some range, grouping tasks per thread (i.e. for 8 items on a 4-core processor each core will

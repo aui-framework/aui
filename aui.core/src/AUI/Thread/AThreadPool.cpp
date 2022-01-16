@@ -35,25 +35,14 @@ mTP(tp)
 	mThread->start();
 }
 
-bool AThreadPool::Worker::processQueue(AQueue<std::function<void()>>& queue)
+bool AThreadPool::Worker::processQueue(std::unique_lock<std::mutex>& mutex, AQueue<std::function<void()>>& queue)
 {
-	std::unique_lock tpLock(mTP.mQueueLock);
 	if (!queue.empty()) {
 		auto func = std::move(queue.front());
 		queue.pop();
-		tpLock.unlock();
+		mutex.unlock();
 		try {
 			func();
-            if (auto h = mTP.fenceHelperStorage()) {
-                if ((h->doneTasks += 1) == h->enqueuedTasks) {
-                    if (h->waitingForNotify) {
-                        std::unique_lock lock(h->mutex);
-                        if (h->waitingForNotify) {
-                            h->cv.notify_one();
-                        }
-                    }
-                }
-            }
 		}
 		catch (const AException& e) {
             ALogger::err("uncaught exception in thread pool: " + e.getMessage());
@@ -64,37 +53,38 @@ bool AThreadPool::Worker::processQueue(AQueue<std::function<void()>>& queue)
 		}
 		catch (const TryLaterException&)
 		{
-			tpLock.lock();
+			mutex.lock();
 			mTP.mQueueTryLater.push(func);
-			tpLock.unlock();
+			return true;
 		}
+		mutex.lock();
 		return true;
 	}
 	return false;
 }
 
 void AThreadPool::Worker::thread_fn() {
-    std::unique_lock<std::mutex> lck(mMutex);
+	std::unique_lock tpLock(mTP.mQueueLock);
 	while (mEnabled) {
 		while (!mTP.mQueueHighest.empty() || !mTP.mQueueMedium.empty() || !mTP.mQueueLowest.empty()) {
-			if (processQueue(mTP.mQueueHighest))
+			if (processQueue(tpLock, mTP.mQueueHighest))
 				continue;
-			if (processQueue(mTP.mQueueMedium))
+			if (processQueue(tpLock, mTP.mQueueMedium))
 				continue;
-			processQueue(mTP.mQueueLowest);
+			processQueue(tpLock, mTP.mQueueLowest);
 		}
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "ConstantConditionsOC"
+        if (!mEnabled) return;
+#pragma clang diagnostic pop
         mTP.mIdleWorkers += 1;
-		mTP.mCV.wait(lck);
+		assert(tpLock.owns_lock());
+		mTP.mCV.wait(tpLock);
         mTP.mIdleWorkers -= 1;
 	}
 }
 
 AThreadPool::Worker::~Worker() {
-	mEnabled = false;
-	std::unique_lock<std::mutex> lck(mMutex);
-	mTP.mCV.notify_all();
-	mThread->interrupt();
-	lck.unlock();
 	mThread->join();
 	mThread = nullptr;
 }
@@ -106,9 +96,7 @@ void AThreadPool::Worker::disable() {
 
 void AThreadPool::run(const std::function<void()>& fun, Priority priority) {
 	std::unique_lock lck(mQueueLock);
-	if (auto h = fenceHelperStorage()) {
-	    h->enqueuedTasks += 1;
-	}
+
 	switch (priority)
 	{
 	case PRIORITY_MEDIUM:
@@ -175,20 +163,19 @@ AThreadPool::AThreadPool() :
 }
 
 AThreadPool::~AThreadPool() {
+	std::unique_lock lck(mQueueLock);
 	for (auto& f : mWorkers) {
 		f->disable();
 	}
 	for (auto& f : mWorkers) {
+        mCV.notify_all();
+		lck.unlock();
 		delete f;
+		lck.lock();
 	}
 }
 
 size_t AThreadPool::getPendingTaskCount()
 {
 	return mQueueHighest.size() + mQueueLowest.size() + mQueueMedium.size();
-}
-
-AThreadPool::FenceHelper*& AThreadPool::fenceHelperStorage() {
-    static FenceHelper* helper = nullptr;
-    return helper;
 }
