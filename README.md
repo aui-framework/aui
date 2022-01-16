@@ -22,7 +22,7 @@ file(
         ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
-# link AUI
+# import AUI
 auib_import(
         aui https://github.com/aui-framework/aui
         COMPONENTS core views)

@@ -67,11 +67,14 @@ if (NOT ANDROID AND NOT IOS)
     define_aui_component(mysql)
     define_aui_component(sqlite)
     define_aui_component(network)
-    define_aui_component(uitests)
 endif()
 define_aui_component(views)
 define_aui_component(xml)
 define_aui_component(json)
+
+if (NOT ANDROID AND NOT IOS)
+    define_aui_component(uitests)
+endif()
 
 if(NOT ANDROID AND AUI_BUILD_EXAMPLES)
     add_subdirectory(examples/AUI.Example.Views)
@@ -141,6 +144,15 @@ set(AUI_COMPONENT_${_module}_LINK_LIBS ${_link_libs2})
 endforeach()
 
 
+# test aui.boot on ci/cd
+if (NOT AUI_TEST_BOOT_BRANCH)
+    set(AUI_TEST_BOOT_BRANCH $ENV{GITHUB_SHA})
+endif()
+if (AUI_TEST_BOOT_BRANCH)
+    add_subdirectory(test/aui.boot)
+endif()
+
+
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 #install(EXPORT AUI DESTINATION cmake/)
 install(
@@ -152,5 +164,3 @@ install(
         FILES
         cmake/aui.build.cmake
         DESTINATION "cmake/")
-
-

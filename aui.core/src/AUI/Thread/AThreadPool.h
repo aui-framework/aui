@@ -55,7 +55,7 @@ private:
     private:
         bool mEnabled = true;
         _<AThread> mThread;
-        std::mutex mMutex;
+        AMutex mMutex;
         bool processQueue(AQueue<std::function<void()>>& queue);
         void thread_fn();
         AThreadPool& mTP;
@@ -69,7 +69,7 @@ private:
         unsigned enqueuedTasks = 0;
         std::atomic_uint doneTasks;
         bool waitingForNotify = false;
-        std::condition_variable cv;
+        AConditionVariable cv;
         std::mutex mutex;
     };
 

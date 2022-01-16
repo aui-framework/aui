@@ -27,7 +27,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 
 		if (NOT WIN32 AND NOT APPLE)
 			FIND_PACKAGE(PkgConfig REQUIRED)
-			PKG_CHECK_MODULES(GTK REQUIRED gtk+-3.0)
+			PKG_CHECK_MODULES(GTK gtk+-3.0)
 
 			if (NOT GTK_FOUND)
 				message(WARNING "Could not find GTK3; Disabling aui.views. Hint: install package libgtk-3-dev")

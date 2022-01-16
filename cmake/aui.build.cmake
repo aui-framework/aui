@@ -163,11 +163,47 @@ function(aui_add_properties AUI_MODULE_NAME)
 endfunction(aui_add_properties)
 
 macro(aui_enable_tests)
+    if(NOT TARGET GTest::gtest)
+        find_package(GTest REQUIRED) # probably pulled from aui.boot
+    endif()
+
+    if (NOT TARGET GTest::gtest)
+        message(FATAL_ERROR "GTest::gtest not found!")
+    endif()
+
     enable_testing()
     if (NOT ANDROID AND NOT IOS)
         get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
         if (NOT TARGET Tests)
-            aui_tests(Tests ${TESTS_SRCS})
+            set(TESTS_MODULE_NAME Tests)
+
+            file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp [[
+#include <gtest/gtest.h>
+int main(int argc, char **argv) {
+  ::testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}]])
+            add_executable(${TESTS_MODULE_NAME} ${TESTS_SRCS} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
+            include(GoogleTest)
+            gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
+            set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
+            target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
+            get_target_property(_t GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
+            aui_link(${TESTS_MODULE_NAME} PUBLIC GTest::gtest)
+            target_compile_definitions(${TESTS_MODULE_NAME} PUBLIC AUI_TESTS_MODULE=1)
+
+            if (TARGET aui.core)
+                aui_link(${TESTS_MODULE_NAME} PUBLIC aui.core)
+            else()
+                aui_link(${TESTS_MODULE_NAME} PUBLIC aui::core)
+            endif()
+
+            if (TARGET aui::uitests)
+                aui_link(${TESTS_MODULE_NAME} PUBLIC aui::uitests)
+            endif()
+
+            aui_add_properties(${TESTS_MODULE_NAME})
+            set_target_properties(${TESTS_MODULE_NAME} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
         else()
             target_sources(Tests PRIVATE ${TESTS_SRCS}) # append sources
         endif()
@@ -197,41 +233,6 @@ macro(aui_enable_tests)
         set_property(GLOBAL PROPERTY TESTS_DEPS "")
     endif()
 endmacro()
-
-function(aui_tests TESTS_MODULE_NAME)
-    if(TARGET GTest::gtest)
-        enable_testing()
-        file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp [[
-#include <gtest/gtest.h>
-int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
-}]])
-        add_executable(${ARGV} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
-        include(GoogleTest)
-        gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
-        set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
-        target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
-        get_target_property(_t GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
-        aui_link(${TESTS_MODULE_NAME} PUBLIC GTest::gtest)
-        target_compile_definitions(${TESTS_MODULE_NAME} PUBLIC AUI_TESTS_MODULE=1)
-
-        if (TARGET aui.core)
-            aui_link(${TESTS_MODULE_NAME} PUBLIC aui.core)
-        else()
-            aui_link(${TESTS_MODULE_NAME} PUBLIC aui::core)
-        endif()
-
-        if (TARGET aui::uitests)
-            aui_link(${TESTS_MODULE_NAME} PUBLIC aui::uitests)
-        endif()
-
-        aui_add_properties(${TESTS_MODULE_NAME})
-        set_target_properties(${TESTS_MODULE_NAME} PROPERTIES EXCLUDE_FROM_ALL 1 EXCLUDE_FROM_DEFAULT_BUILD 1)
-    else()
-        message(FATAL_ERROR "GTest not found")
-    endif()
-endfunction(aui_tests)
 
 function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
@@ -620,41 +621,76 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
     cmake_parse_arguments(AUIL "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
 
-    foreach(_visibility ${multiValueArgs})
-        foreach(_lib ${AUIL_${_visibility}})
-            list(APPEND _${_visibility} ${_lib})
-
-            # check for wholearchive target flag
-            set(_wholearchive OFF)
-            if (NOT BUILD_SHARED_LIBS)
-                if (TARGET ${_lib})
-                    get_target_property(_wholearchive ${_lib} AUI_WHOLEARCHIVE)
-                endif()
-            endif()
-
-            if (MSVC AND _wholearchive)
-                target_link_options(${AUI_MODULE_NAME} PRIVATE "/WHOLEARCHIVE:$<TARGET_FILE:${_lib}>")
-            elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND _wholearchive)
-                #message("--whole-archive $<TARGET_FILE:${_lib}> --no-whole-archive")
-                target_link_libraries(${AUI_MODULE_NAME} PRIVATE "-Wl,--whole-archive $<TARGET_FILE:${_lib}> -Wl,--no-whole-archive")
+    if (NOT BUILD_SHARED_LIBS)
+        # static build is a kind of shit where all static libraries' dependencies should be linked to the final exe or
+        # dll.
+        # thus, some libraries (such as aui.views) require wholearchive linking in order to import all
+        # statically-initialized variables (like AStylesheet) to the final execution module.
+        foreach(_visibility ${multiValueArgs})
+            if (_visibility STREQUAL "PRIVATE")
+                set(_public_visibility PUBLIC)
             else()
-                list(APPEND _${_visibility} ${_lib})
+                set(_public_visibility ${_visibility})
             endif()
+            foreach(_dep ${AUIL_${_visibility}})
+                # check for wholearchive target flag
+                set(_wholearchive OFF)
+                if (NOT BUILD_SHARED_LIBS)
+                    if (TARGET ${_dep})
+                        get_target_property(_wholearchive ${_dep} AUI_WHOLEARCHIVE)
+                    endif()
+                endif()
+                # set fallback value
+                set(_link_target_file ${_dep})
+                if (TARGET ${_dep})
+                    # adding target's interface include directories and definitions keeping original visibility.
+                    get_target_property(_dep_includes ${_dep} INTERFACE_INCLUDE_DIRECTORIES)
+                    if (_dep_includes)
+                        target_include_directories(${AUI_MODULE_NAME} ${_visibility} ${_dep_includes})
+                    endif()
+
+                    get_target_property(_dep_defs ${_dep} INTERFACE_COMPILE_DEFINITIONS)
+                    if (_dep_defs)
+                        target_compile_definitions(${AUI_MODULE_NAME} ${_visibility} ${_dep_defs})
+                    endif()
+                endif()
+                if (_wholearchive)
+                    if (MSVC)
+                        # avoid duplicates when using wholearchive
+                        get_target_property(_already_linked_libs ${AUI_MODULE_NAME} INTERFACE_LINK_OPTIONS)
+                        set(_link_target_file_opt $<TARGET_FILE:${_link_target_file}>)
+                        set(_link_target_file_opt "/WHOLEARCHIVE:${_link_target_file_opt}")
+
+                        if (${_link_target_file_opt} IN_LIST _already_linked_libs)
+                            continue()
+                        endif()
+
+                        # using both target_link_options and target_link_libraries here!!!
+                        target_link_options(${AUI_MODULE_NAME} ${_public_visibility} ${_link_target_file_opt})
+                    elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+                        # avoid duplicates when using wholearchive
+                        get_target_property(_already_linked_libs ${AUI_MODULE_NAME} INTERFACE_LINK_LIBRARIES)
+                        if (${_link_target_file} IN_LIST _already_linked_libs)
+                            continue()
+                        endif()
+                        set(_link_target_file -Wl,--whole-archive ${_link_target_file} -Wl,--no-whole-archive)
+                    endif()
+                endif()
+
+                # linking library preferring public visibility.
+                target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} ${_link_target_file})
+            endforeach()
         endforeach()
-    endforeach()
-    if (AUIL_PRIVATE)
-        # do the job
-        if (BUILD_SHARED_LIBS)
-            target_link_libraries(${AUI_MODULE_NAME} PRIVATE ${_PRIVATE})
-        else()
-            target_link_libraries(${AUI_MODULE_NAME} PUBLIC ${_PRIVATE})
+    else()
+        if (AUIL_PRIVATE)
+            target_link_libraries(${AUI_MODULE_NAME} PRIVATE ${AUIL_PRIVATE})
         endif()
-    endif()
-    if (AUIL_INTERFACE)
-        target_link_libraries(${AUI_MODULE_NAME} INTERFACE ${_INTERFACE})
-    endif()
-    if (AUIL_PUBLIC)
-        target_link_libraries(${AUI_MODULE_NAME} PUBLIC ${_PUBLIC})
+        if (AUIL_INTERFACE)
+            target_link_libraries(${AUI_MODULE_NAME} INTERFACE ${AUIL_INTERFACE})
+        endif()
+        if (AUIL_PUBLIC)
+            target_link_libraries(${AUI_MODULE_NAME} PUBLIC ${AUIL_PUBLIC})
+        endif()
     endif()
 endfunction()
 

@@ -74,6 +74,7 @@ bool AThreadPool::Worker::processQueue(AQueue<std::function<void()>>& queue)
 }
 
 void AThreadPool::Worker::thread_fn() {
+    std::unique_lock<std::mutex> lck(mMutex);
 	while (mEnabled) {
 		while (!mTP.mQueueHighest.empty() || !mTP.mQueueMedium.empty() || !mTP.mQueueLowest.empty()) {
 			if (processQueue(mTP.mQueueHighest))
@@ -82,7 +83,6 @@ void AThreadPool::Worker::thread_fn() {
 				continue;
 			processQueue(mTP.mQueueLowest);
 		}
-		std::unique_lock<std::mutex> lck(mMutex);
         mTP.mIdleWorkers += 1;
 		mTP.mCV.wait(lck);
         mTP.mIdleWorkers -= 1;

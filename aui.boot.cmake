@@ -347,7 +347,7 @@ function(auib_import AUI_MODULE_NAME URL)
             message(STATUS "Installing ${AUI_MODULE_NAME}")
             execute_process(COMMAND
                     ${CMAKE_COMMAND}
-                    --build ${DEP_BINARY_DIR}
+                    --build ${DEP_BINARY_DIR} --parallel
                     --target install
                     --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
@@ -463,4 +463,5 @@ function(auib_import AUI_MODULE_NAME URL)
         endforeach()
         set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
     endif()
+    message(STATUS "Imported: ${AUI_MODULE_NAME}")
 endfunction()
