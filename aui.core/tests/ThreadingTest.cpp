@@ -30,6 +30,7 @@
 #include <AUI/Util/Util.h>
 #include <random>
 #include <ctime>
+#include "AUI/Common/ATimer.h"
 
 
 TEST(Threading, Async) {
@@ -133,6 +134,19 @@ TEST(Threading, Future3) {
 }
 
 TEST(Threading, ParallelVoid) {
+    bool watchdogTrigger = false;
+    auto watchdog = _new<AThread>([&] {
+        while (!AThread::current()->isInterrupted()) {
+            AThread::sleep(5000);
+            if (watchdogTrigger) {
+                ADD_FAILURE() << "deadlock";
+                exit(-1);
+            } else {
+                watchdogTrigger = true;
+            }
+        }
+    });
+    watchdog->start();
     for (int i = 0; i < 1000; ++i) {
         AVector<int> ints;
         for (int j = 0; j < i; ++j) {
@@ -140,18 +154,21 @@ TEST(Threading, ParallelVoid) {
         }
         AThreadPool tp(2);
         tp.parallel(ints.begin(),
-                                       ints.end(),
-                                       [](AVector<int>::iterator begin, AVector<int>::iterator end) {
-                                           for (auto it = begin; it != end; ++it) {
-                                               *it += 2;
-                                           }
-                                           return 0;
-                                       }).waitForAll();
+                    ints.end(),
+                    [](AVector<int>::iterator begin, AVector<int>::iterator end) {
+                        for (auto it = begin; it != end; ++it) {
+                            *it += 2;
+                        }
+                        return 0;
+                    }).waitForAll();
 
         for (int j = 0; j < i; ++j) {
             if (ints[j] != j + 2) ADD_FAILURE() << "invalid result";
         }
+        watchdogTrigger = false;
     }
+    watchdog->interrupt();
+    watchdog->join();
 }
 
 TEST(Threading, PararellWithResult) {

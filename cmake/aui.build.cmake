@@ -653,17 +653,26 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                     if (_dep_defs)
                         target_compile_definitions(${AUI_MODULE_NAME} ${_visibility} ${_dep_defs})
                     endif()
-                else()
                 endif()
                 if (_wholearchive)
-                    # avoid duplicates when using wholearchive/
-                    get_target_property(_already_linked_libs ${AUI_MODULE_NAME} INTERFACE_LINK_LIBRARIES)
-                    if (${_link_target_file} IN_LIST _already_linked_libs)
-                        continue()
-                    endif()
                     if (MSVC)
-                        set(_link_target_file "/WHOLEARCHIVE:${_link_target_file}")
+                        # avoid duplicates when using wholearchive
+                        get_target_property(_already_linked_libs ${AUI_MODULE_NAME} INTERFACE_LINK_OPTIONS)
+                        set(_link_target_file_opt $<TARGET_FILE:${_link_target_file}>)
+                        set(_link_target_file_opt "/WHOLEARCHIVE:${_link_target_file_opt}")
+
+                        if (${_link_target_file_opt} IN_LIST _already_linked_libs)
+                            continue()
+                        endif()
+
+                        # using both target_link_options and target_link_libraries here!!!
+                        target_link_options(${AUI_MODULE_NAME} ${_public_visibility} ${_link_target_file_opt})
                     elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
+                        # avoid duplicates when using wholearchive
+                        get_target_property(_already_linked_libs ${AUI_MODULE_NAME} INTERFACE_LINK_LIBRARIES)
+                        if (${_link_target_file} IN_LIST _already_linked_libs)
+                            continue()
+                        endif()
                         set(_link_target_file -Wl,--whole-archive ${_link_target_file} -Wl,--no-whole-archive)
                     endif()
                 endif()
