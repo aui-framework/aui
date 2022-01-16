@@ -34,10 +34,6 @@ define_property(TARGET PROPERTY AUI_WHOLEARCHIVE
         FULL_DOCS "Use wholearchive when linking this library to another")
 
 
-auib_import(GTest https://github.com/google/googletest
-            VERSION main
-            CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
-
 set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
 set_property(GLOBAL PROPERTY TESTS_SRCS "")
 
