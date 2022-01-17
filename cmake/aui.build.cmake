@@ -534,7 +534,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
     cmake_parse_arguments(ASSETS "" "" "EXCLUDE" ${ARGN})
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES AUI_WHOLEARCHIVE ON)
 
-    if(ANDROID)
+    if(CMAKE_CROSSCOMPILING)
         set(TARGET_DIR ${AUI_SDK_BIN})
     else()
         get_target_property(TARGET_DIR ${AUI_MODULE_NAME} ARCHIVE_OUTPUT_DIRECTORY)
@@ -558,7 +558,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
             # the worst case because we (possibly) have to compile aui.toolbox for the host system
             # FIXME assume that aui.toolbox is already built for our system
             find_program(AUI_TOOLBOX_EXE aui.toolbox
-                    HINTS ${AUI_DIR}/bin
+                    HINTS ${AUI_ROOT}/bin
                     REQUIRED)
         elseif (TARGET aui.toolbox)
             set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox")
