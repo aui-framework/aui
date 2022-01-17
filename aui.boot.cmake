@@ -181,8 +181,10 @@ function(auib_import AUI_MODULE_NAME URL)
     set(DEP_BINARY_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/build/${BUILD_SPECIFIER}/${CMAKE_GENERATOR}")
     set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
+    # creating uppercase variables in order to ease the case insensitive checks
     set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
     set(${AUI_MODULE_NAME_UPPER}_DIR ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
+    set(${AUI_MODULE_NAME_UPPER}_ROOT ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
 
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
     if (NOT DEP_ADD_SUBDIRECTORY)
@@ -206,7 +208,7 @@ function(auib_import AUI_MODULE_NAME URL)
             endwhile()
             unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG)
             # expose result ignoring case sensitivity
-            if (AUI_MODULE_NAME OR AUI_MODULE_NAME_UPPER)
+            if (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND)
                 set(${AUI_MODULE_NAME}_FOUND TRUE)
             else()
                 set(${AUI_MODULE_NAME}_FOUND FALSE)
@@ -391,7 +393,7 @@ function(auib_import AUI_MODULE_NAME URL)
         endwhile()
         unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG)
         # expose result ignoring case sensitivity
-        if (AUI_MODULE_NAME OR AUI_MODULE_NAME_UPPER)
+        if (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND)
             set(${AUI_MODULE_NAME}_FOUND TRUE)
         else()
             set(${AUI_MODULE_NAME}_FOUND FALSE)
