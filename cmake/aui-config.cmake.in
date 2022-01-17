@@ -119,5 +119,9 @@ endif()
 
 if (views IN_LIST AUI_FIND_COMPONENTS AND NOT ANDROID AND NOT IOS)
     find_package(GLEW REQUIRED)
+
+    set(prev CMAKE_FIND_USE_CMAKE_SYSTEM_PATH)
+    set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH TRUE)
     find_package(OpenGL REQUIRED)
+    set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${prev})
 endif()
