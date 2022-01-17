@@ -213,10 +213,10 @@ void ALabel::doRenderText() {
             int y = mPadding.top;
 
             if (mVerticalAlign == VerticalAlign::MIDDLE) {
-                y = (glm::max)(y, int(getContentHeight() - (getFontStyleLabel().size)) / 2) + 1;
+                y = (glm::max)(y, int(getContentHeight() - (getFontStyleLabel().size)) / 2);
+            } else {
+                y -= getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size);
             }
-            y -= getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size);
-
             RenderHints::PushMatrix m;
             Render::translate({ mTextLeftOffset + mPadding.left, y });
             mPrerendered->draw();
