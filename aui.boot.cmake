@@ -181,11 +181,12 @@ function(auib_import AUI_MODULE_NAME URL)
     set(DEP_BINARY_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/build/${BUILD_SPECIFIER}/${CMAKE_GENERATOR}")
     set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
+    set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX})
+    set(${AUI_MODULE_NAME_UPPER}_DIR ${DEP_INSTALL_PREFIX})
+
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
     if (NOT DEP_ADD_SUBDIRECTORY)
         # avoid compilation if we have existing installation
-        set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX})
-        set(${AUI_MODULE_NAME_UPPER}_DIR ${DEP_INSTALL_PREFIX})
         if (EXISTS ${DEP_INSTALLED_FLAG})
             # BEGIN: try find
             while(TRUE)
