@@ -49,11 +49,12 @@ if (AUI_BOOT)
 endif()
 
 if (IOS)
-    option(BUILD_SHARED_LIBS "Build using shared libraries" OFF)
+    set(_build_shared OFF)
     message(STATUS "Linking everything statically because target platform is iOS")
 else()
-    option(BUILD_SHARED_LIBS "Build using shared libraries" ON)
+    set(_build_shared ON)
 endif()
+set(BUILD_SHARED_LIBS ${_build_shared} CACHE BOOL "Build using shared libraries")
 
 
 # platform definitions
