@@ -5,6 +5,7 @@ foreach(_varname
         )
     list(APPEND TEST_CMAKE_ARGS "-D${_varname}=${${_varname}}")
 endforeach()
+
 file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/helper.cmake "set(TEST_CMAKE_ARGS \"${TEST_CMAKE_ARGS}\")"
         [[
 
@@ -12,11 +13,17 @@ file(REMOVE_RECURSE b)
 file(MAKE_DIRECTORY ${directory} b)
 execute_process(COMMAND ${CMAKE_COMMAND} ../test_project -DAUI_TEST_BOOT_BRANCH=${AUI_TEST_BOOT_BRANCH} ${TEST_CMAKE_ARGS}
                 WORKING_DIRECTORY b
-                COMMAND_ERROR_IS_FATAL ANY)
+                RESULT_VARIABLE _r)
+if (NOT _r STREQUAL "0")
+    message(FATAL_ERROR "Test program failed")
+endif()
+
 execute_process(COMMAND ${CMAKE_COMMAND} --build .
                 WORKING_DIRECTORY b
-                COMMAND_ERROR_IS_FATAL ANY)
-
+                RESULT_VARIABLE _r)
+if (NOT _r STREQUAL "0")
+    message(FATAL_ERROR "Test program failed")
+endif()
         ]])
 
 function(define_aui_boot_test NAME)

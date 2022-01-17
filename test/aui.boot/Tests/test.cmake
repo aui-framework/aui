@@ -11,8 +11,15 @@ include(../helper.cmake)
 
 execute_process(COMMAND ${CMAKE_COMMAND} --build . --target Tests
         WORKING_DIRECTORY b
-        COMMAND_ERROR_IS_FATAL ANY)
+        RESULT_VARIABLE _r)
+
+if (NOT _r STREQUAL "0")
+    message(FATAL_ERROR "Test program failed")
+endif()
+
 find_program(_test_project Tests PATHS b/bin b/bin/Debug REQUIRED)
 
-execute_process(COMMAND ${_test_project}
-                COMMAND_ERROR_IS_FATAL ANY)
+execute_process(COMMAND ${_test_project} RESULT_VARIABLE _r)
+if (NOT _r STREQUAL "0")
+    message(FATAL_ERROR "Test program failed")
+endif()
