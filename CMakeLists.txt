@@ -139,7 +139,7 @@ set(AUI_COMPONENT_${_module}_LINK_LIBS ${_link_libs2})
 ")
     if (_wholearchive)
         set(AUI_CONFIG_VARS "${AUI_CONFIG_VARS}\
-set(AUI_COMPONENT_${_module}_WHOLEARCHIVE)
+set(AUI_COMPONENT_${_module}_WHOLEARCHIVE ON)
 ")
     endif()
 endforeach()
