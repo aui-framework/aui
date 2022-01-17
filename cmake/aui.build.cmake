@@ -164,7 +164,10 @@ endfunction(aui_add_properties)
 
 macro(aui_enable_tests)
     if(NOT TARGET GTest::gtest)
-        find_package(GTest REQUIRED) # probably pulled from aui.boot
+        auib_import(GTest https://github.com/google/googletest
+                    VERSION main
+                    CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
+        set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
 
     if (NOT TARGET GTest::gtest)

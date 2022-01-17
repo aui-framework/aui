@@ -42,11 +42,6 @@ include(cmake/aui.build.cmake)
 
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
 
-auib_import(GTest https://github.com/google/googletest
-            VERSION main
-            CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
-
-
 function(define_aui_component AUI_COMPONENT_NAME)
     if (AUI_BOOT_COMPONENTS)
         if (NOT ${AUI_COMPONENT_NAME} IN_LIST AUI_BOOT_COMPONENTS)

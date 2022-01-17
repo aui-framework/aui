@@ -9,6 +9,9 @@ endif()
 
 include(../helper.cmake)
 
+execute_process(COMMAND ${CMAKE_COMMAND} --build . --target Tests
+        WORKING_DIRECTORY b
+        COMMAND_ERROR_IS_FATAL ANY)
 find_program(_test_project Tests PATHS b/bin b/bin/Debug REQUIRED)
 
 execute_process(COMMAND ${_test_project}
