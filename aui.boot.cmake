@@ -317,7 +317,6 @@ function(auib_import AUI_MODULE_NAME URL)
                     CMAKE_INSTALL_NAME_DIR
                     CMAKE_INSTALL_RPATH
                     CMAKE_MAKE_PROGRAM
-                    CMAKE_TOOLCHAIN_FILE
                     CMAKE_MSVC_RUNTIME_LIBRARY
                     CMAKE_C_LINKER_FLAGS
                     CMAKE_EXE_LINKER_FLAGS

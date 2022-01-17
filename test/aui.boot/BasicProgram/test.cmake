@@ -6,14 +6,7 @@ if (NOT AUI_TEST_BOOT_BRANCH)
     message(FATAL_ERROR "AUI_TEST_BOOT_BRANCH is not set")
 endif()
 
-file(REMOVE_RECURSE b)
-file(MAKE_DIRECTORY ${directory} b)
-execute_process(COMMAND ${CMAKE_COMMAND} ../test_project -DAUI_TEST_BOOT_BRANCH=${AUI_TEST_BOOT_BRANCH} -DAUI_CACHE_DIR=auib_cache -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}
-                WORKING_DIRECTORY b
-                COMMAND_ERROR_IS_FATAL ANY)
-execute_process(COMMAND ${CMAKE_COMMAND} --build .
-                WORKING_DIRECTORY b
-                COMMAND_ERROR_IS_FATAL ANY)
+include(../helper.cmake)
 
 find_program(_test_project test_project PATHS b/bin b/bin/Debug REQUIRED)
 

@@ -39,6 +39,16 @@ foreach(_entry ${AUI_BOOT_ROOT_ENTRIES})
     list(GET _entry 1 VAR_VALUE)
     message("Forwarded ${VAR_NAME} with ${VAR_VALUE}")
     set(${VAR_NAME} ${VAR_VALUE})
+    set(${VAR_NAME} ${VAR_VALUE} PARENT_SCOPE)
+
+    # import required targets when static build is enabled.
+    if (NOT BUILD_SHARED_LIBS)
+        # remove the _ROOT suffix
+        string(LENGTH ${VAR_NAME} _len)
+        math(EXPR _len "${_len}-5")
+        string(SUBSTRING ${VAR_NAME} 0 ${_len} MODULE_NAME)
+        find_package(${MODULE_NAME} REQUIRED)
+    endif()
 endforeach()
 
 set(AUI_FOUND TRUE)
@@ -110,19 +120,4 @@ endif()
 if (views IN_LIST AUI_FIND_COMPONENTS AND NOT ANDROID AND NOT IOS)
     find_package(GLEW REQUIRED)
     find_package(OpenGL REQUIRED)
-endif()
-
-# import required targets when static build is enabled.
-if (NOT BUILD_SHARED_LIBS)
-    foreach(_entry ${AUI_BOOT_ROOT_ENTRIES})
-        string(REPLACE "=" ";" _entry ${_entry})
-        list(GET _entry 0 VAR_NAME)
-        list(GET _entry 1 VAR_VALUE)
-
-        # remove the _ROOT suffix
-        string(LENGTH ${VAR_NAME} _len)
-        math(EXPR _len "${_len}-5")
-        string(SUBSTRING ${VAR_NAME} 0 ${_len} MODULE_NAME)
-        find_package(${MODULE_NAME} REQUIRED)
-    endforeach()
 endif()
