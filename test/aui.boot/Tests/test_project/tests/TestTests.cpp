@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,22 +14,25 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
-#pragma once
+//
+// Created by alex2 on 31.08.2020.
+//
 
-#ifdef AUI_STATIC
-    #define AUI_IMPORT
-    #define AUI_EXPORT
-#else
-    #if defined(_WIN32)
-        #define AUI_IMPORT __declspec(dllimport)
-        #define AUI_EXPORT __declspec(dllexport)
-    #else
-        #define AUI_IMPORT
-        #define AUI_EXPORT __attribute__((visibility("default")))
-    #endif
-#endif
+#include <gtest/gtest.h>
+#include <AUI/Traits/algorithms.h>
+#include <AUI/Common/AVector.h>
+
+int someFunctionFromExecutable(int a, int b);
+
+TEST(Test, Test1) {
+    AVector<int> items = { 1, 2, 3 };
+    ASSERT_TRUE(items.contains(2));
+}
+TEST(Test, Test2) {
+    ASSERT_EQ(someFunctionFromExecutable(2, 2), 4);
+}

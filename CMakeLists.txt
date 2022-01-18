@@ -42,11 +42,6 @@ include(cmake/aui.build.cmake)
 
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
 
-auib_import(GTest https://github.com/google/googletest
-            VERSION main
-            CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
-
-
 function(define_aui_component AUI_COMPONENT_NAME)
     if (AUI_BOOT_COMPONENTS)
         if (NOT ${AUI_COMPONENT_NAME} IN_LIST AUI_BOOT_COMPONENTS)
@@ -128,6 +123,7 @@ foreach(_module ${AUI_BOOT_COMPONENTS})
     set(_target "aui.${_module}")
     get_target_property(_compile_definitions ${_target} INTERFACE_COMPILE_DEFINITIONS)
     get_target_property(_link_libs ${_target} INTERFACE_LINK_LIBRARIES)
+    get_target_property(_wholearchive ${_target} AUI_WHOLEARCHIVE)
     unset(_link_libs2)
     foreach(_lib ${_link_libs})
         # skip NOTFOUNDs
@@ -141,17 +137,18 @@ foreach(_module ${AUI_BOOT_COMPONENTS})
 set(AUI_COMPONENT_${_module}_COMPILE_DEFINITIONS ${_compile_definitions})
 set(AUI_COMPONENT_${_module}_LINK_LIBS ${_link_libs2})
 ")
+    if (_wholearchive)
+        set(AUI_CONFIG_VARS "${AUI_CONFIG_VARS}\
+set(AUI_COMPONENT_${_module}_WHOLEARCHIVE ON)
+")
+    endif()
 endforeach()
 
 
 # test aui.boot on ci/cd
-if (NOT AUI_TEST_BOOT_BRANCH)
-    set(AUI_TEST_BOOT_BRANCH $ENV{GITHUB_SHA})
-endif()
-if (AUI_TEST_BOOT_BRANCH)
+if (DEFINED ENV{GITHUB_SHA})
     add_subdirectory(test/aui.boot)
 endif()
-
 
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 #install(EXPORT AUI DESTINATION cmake/)
