@@ -36,6 +36,7 @@
 #include "AUI/Platform/Platform.h"
 #include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/OpenGLRenderingContext.h"
+#include "AUI/UITestState.h"
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
@@ -99,7 +100,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
 
 void AWindow::updateDpi() {
     emit dpiChanged;
-    if (mHandle == 0) {
+    if (UITestState::isTesting()) {
         mDpiRatio = 1.f;
     } else {
         mDpiRatio = Platform::getDpiRatio();
