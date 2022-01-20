@@ -1,4 +1,4 @@
-//
+
 // Created by Alex2772 on 12/18/2021.
 //
 #include <AUI/Image/PngImageLoader.h>
@@ -6,7 +6,9 @@
 #include "UITestCase.h"
 #include "UIMatcher.h"
 #include "AUI/Util/kAUI.h"
+#include "AUI/UITestState.h"
 #include <AUI/Traits/strings.h>
+#include <AUI/UITest.h>
 
 class MyListener: public ::testing::EmptyTestEventListener {
 private:
@@ -86,7 +88,7 @@ void testing::UITest::SetUp() {
     do_once {
         testing::UnitTest::GetInstance()->listeners().Append(new MyListener);
     }
-
+    UITestState::beginUITest();
     Test::SetUp();
     Render::setRenderer(std::make_unique<SoftwareRenderer>());
     AWindow::setWindowManager<UITestWindowManager>();
