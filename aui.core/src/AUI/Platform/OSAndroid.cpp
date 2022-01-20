@@ -97,7 +97,7 @@ void AAndroid::requestRedraw() {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_ru_alex2772_aui_MyGLRenderer_handleInit(JNIEnv *env, jclass clazz) {
+Java_com_github_aui_android_MyGLRenderer_handleInit(JNIEnv *env, jclass clazz) {
     //replace with one of your classes in the line below
 
     _gClassAUI = env->FindClass("ru/alex2772/aui/AUI");
