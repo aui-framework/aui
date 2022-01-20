@@ -191,12 +191,16 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
 }
 
 AFuture<APath> ADesktop::browseForDir(const APath &startingLocation) {
-    return nullptr;
+    return async {
+        return APath();
+    };
 }
 
 AFuture<APath>
 ADesktop::browseForFile(const APath &startingLocation, const AVector <FileExtension> &extensions) {
-    return nullptr;
+    return async {
+        return APath();
+    };
 }
 
 void ADesktop::openUrl(const AString &url) {

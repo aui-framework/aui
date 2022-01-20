@@ -72,7 +72,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height)
         if (containsExpandingItems && view == last)
         {
             // the last element should stick right to the border.
-            int viewPosY = glm::round(posY) + margins.top;
+            int viewPosY = posY + margins.top;
             int viewHeight = height - viewPosY - margins.bottom + y;
             view->setGeometry(x + margins.left,
                               viewPosY,
@@ -83,7 +83,7 @@ void AVerticalLayout::onResize(int x, int y, int width, int height)
             int viewHeight = glm::clamp(availableSpace * e.expanding / sum, e.minSpace, maxSize.y);
 
             view->setGeometry(x + margins.left,
-                              glm::round(posY) + margins.top,
+                              posY + margins.top,
                               glm::min(width - margins.horizontal(), maxSize.x),
                               viewHeight);
 

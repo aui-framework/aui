@@ -166,8 +166,8 @@ endfunction(aui_add_properties)
 macro(aui_enable_tests)
     if(NOT TARGET GTest::gtest)
         auib_import(GTest https://github.com/google/googletest
-                    VERSION main
-                    CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
+                VERSION main
+                CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
 
@@ -559,15 +559,22 @@ function(aui_compile_assets AUI_MODULE_NAME)
             # the worst case because we (possibly) have to compile aui.toolbox for the host system
             # FIXME assume that aui.toolbox is already built for our system
             find_program(AUI_TOOLBOX_EXE aui.toolbox
-                    HINTS ${AUI_ROOT}/bin
-                    REQUIRED)
+                    HINTS ${AUI_ROOT}/bin)
+            if (NOT AUI_TOOLBOX_EXE)
+                file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/*/aui.toolbox)
+                if (AUI_TOOLBOX_EXE)
+                    list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
+                else()
+                    message(FATAL_ERROR "When crosscompiling, aui.toolbox for your host system is required. Please set AUI_TOOLBOX_EXE.")
+                endif()
+            endif()
         elseif (TARGET aui.toolbox)
             set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox")
         else()
             set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox")
         endif()
-        message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
     endif()
+    message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})
         set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
