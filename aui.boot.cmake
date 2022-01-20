@@ -40,8 +40,9 @@ if (APPLE)
     set(CMAKE_INSTALL_NAME_DIR "@rpath")
     set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
 elseif(UNIX)
-    set(CMAKE_INSTALL_RPATH $ORIGIN)
-    set(CMAKE_BUILD_RPATH ${CMAKE_BINARY_DIR}/lib)
+    #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--enable-new-dtags")
+    set(CMAKE_BUILD_RPATH $ORIGIN/../lib)
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 endif()
 
 define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES

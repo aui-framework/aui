@@ -11,6 +11,7 @@ if (NOT TARGET aui::views)
 
     # import AUI
     auib_import(AUI https://github.com/aui-framework/aui
+                VERSION develop
                 COMPONENTS core views)
 
 endif()
