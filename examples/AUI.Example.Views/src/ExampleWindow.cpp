@@ -307,7 +307,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
             }))
         } let { it->setExpanding(); }, "Splitters");
 
-        it->addTab(Vertical {
+        it->addTab(AScrollArea::Builder().withContents(Vertical {
             ASplitter::Horizontal().withItems({
                 Vertical::Expanding {
                     _new<ALabel>("Default"),
@@ -344,7 +344,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 }
                 return Horizontal { v1, v2 };
             }(),
-        } let { it->setExpanding(); }, "Text");
+        } let { it->setExpanding(); }), "Text");
 
         it->addTab(Vertical {
             // Rulers
