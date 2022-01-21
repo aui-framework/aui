@@ -149,9 +149,13 @@ ABaseWindow* AWindow::current() {
 }
 
 bool AWindow::shouldDisplayHoverAnimations() {
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+    return false;
+#else
     return current()->isFocused() && !AInput::isKeyDown(AInput::LButton)
                                   && !AInput::isKeyDown(AInput::CButton)
                                   && !AInput::isKeyDown(AInput::RButton);
+#endif
 }
 
 

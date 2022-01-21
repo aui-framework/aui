@@ -53,7 +53,7 @@ public:
     ATreeView();
     ATreeView(const _<ITreeModel<AString>>& model);
     void setModel(const _<ITreeModel<AString>>& model);
-    void onMouseWheel(glm::ivec2 pos, int delta) override;
+    void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
     void setSize(int width, int height) override;
     int getContentMinimumHeight() override;
     void handleMouseMove(ItemView* pView);

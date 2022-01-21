@@ -166,7 +166,7 @@ void AListView::updateScrollbarDimensions() {
     mScrollbar->setScrollDimensions(getHeight(), mContent->AViewContainer::getContentMinimumHeight());
 }
 
-void AListView::onMouseWheel(glm::ivec2 pos, int delta) {
+void AListView::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
     if (!mScrollbar) return;
     //AViewContainer::onMouseWheel(pos, delta);
     mScrollbar->onMouseWheel(pos, delta);
@@ -221,4 +221,13 @@ void AListView::selectItem(size_t i) {
     clearSelection();
     mSelectionModel = { AModelIndex(i) };
     _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
+}
+
+bool AListView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
+    if (std::holds_alternative<AFingerDragEvent>(event)) {
+        if (transformGestureEventsToDesktop(origin, event)) {
+            return true;
+        }
+    }
+    return AViewContainer::onGesture(origin, event);
 }

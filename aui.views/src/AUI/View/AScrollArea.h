@@ -44,8 +44,11 @@ public:
     _<AViewContainer> getContentContainer() const;
     int getContentMinimumHeight() override;
     void setSize(int width, int height) override;
-    void onMouseWheel(glm::ivec2 pos, int delta) override;
     void setContents(const _<AViewContainer>& container);
+
+    bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
+
+    void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
 
     class Builder {
     friend class AScrollArea;

@@ -378,7 +378,7 @@ int ATextArea::getContentMinimumHeight() {
     return 80_dp;
 }
 
-void ATextArea::onMouseWheel(glm::ivec2 pos, int delta) {
+void ATextArea::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
     //AViewContainer::onMouseWheel(pos, delta);
     mScrollbar->onMouseWheel({}, delta);
 }

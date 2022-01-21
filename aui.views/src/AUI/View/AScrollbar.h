@@ -100,7 +100,7 @@ public:
     void updateScrollHandleSize();
     void setScroll(int scroll);
 
-    void onMouseWheel(glm::ivec2 pos, int delta) override;
+    void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
 signals:
 
     emits<int> scrolled;

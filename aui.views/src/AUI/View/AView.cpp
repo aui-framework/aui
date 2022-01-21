@@ -34,6 +34,7 @@
 #include <AUI/ASS/AStylesheet.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Logging/ALogger.h>
+#include <AUI/Traits/callables.h>
 
 #include "AUI/Platform/ADesktop.h"
 #include "AUI/Platform/AFontManager.h"
@@ -357,7 +358,7 @@ void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
     emit doubleClicked(button);
 }
 
-void AView::onMouseWheel(glm::ivec2 pos, int delta) {
+void AView::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
 
 }
 
@@ -538,3 +539,22 @@ void AView::notifyParentEnabledStateChanged(bool enabled) {
     updateEnableState();
 }
 
+bool AView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
+    return transformGestureEventsToDesktop(origin, event);
+}
+bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event) {
+    return std::visit(aui::lambda_overloaded {
+        [&](const AFingerDragEvent& e) {
+            onMouseWheel(origin, e.delta);
+            return true;
+        },
+        [&](const ALongPressEvent& e) {
+            onMousePressed(origin, AInput::RButton);
+            onMouseReleased(origin, AInput::RButton);
+            return true;
+        },
+        [&](const auto& e) {
+            return false;
+        }
+    }, event);
+}
