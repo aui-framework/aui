@@ -18,6 +18,9 @@ android {
             cmake {
                 cppFlags ''
             }
+            ndkBuild {
+                targets "aui.example.views"
+            }
         }
     }
 

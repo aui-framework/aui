@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.15)
 
 if (NOT TARGET aui::views)
 
@@ -11,8 +11,8 @@ if (NOT TARGET aui::views)
 
     # import AUI
     auib_import(AUI https://github.com/aui-framework/aui
-                VERSION develop
-                COMPONENTS core views)
+            VERSION develop
+            COMPONENTS core views)
 
 endif()
 

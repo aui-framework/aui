@@ -11,6 +11,7 @@
         android:theme="@style/Theme.Auiexampleviews">
         <activity
             android:name="com.github.aui.android.MainActivity"
+            android:configChanges="orientation"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
