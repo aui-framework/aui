@@ -92,6 +92,7 @@ struct TexturedShaderHelper {
 };
 
 
+std::string put_if(bool value, const char* str) { if (value) return str; return ""; }
 OpenGLRenderer::OpenGLRenderer() {
     mSolidShader.load(
             "attribute vec3 pos;"
@@ -153,7 +154,7 @@ OpenGLRenderer::OpenGLRenderer() {
                 "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
                 "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
                 "}");
-        auto produceRoundedAntialiasedShader = [](GL::Shader& shader, const AString& uniforms, const AString& color) {
+        auto produceRoundedAntialiasedShader = [](GL::Shader& shader, const AString& uniforms, const AString& color, bool isBorder) {
             shader.load(
                     "attribute vec3 pos;"
                     "attribute vec2 uv;"
@@ -177,13 +178,12 @@ OpenGLRenderer::OpenGLRenderer() {
                     "void main(void) {"
                     "vec2 outer_uv = abs(pass_uv);"
                     "vec2 inner_uv = outer_uv * outer_to_inner;"
-                    "float alpha = 1.f;"
+                    "float alpha = 1.0;"
                     "ivec2 i;"
                     "for (i.x = -2; i.x <= 2; ++i.x) {"
                     "for (i.y = -2; i.y <= 2; ++i.y) {"
-                    "alpha -= (is_outside(inner_uv + innerTexelSize * vec2(i), innerSize)"
-                    " == "
-                    "is_outside(outer_uv + outerTexelSize * vec2(i), outerSize)"
+                    "alpha -= (" + put_if(isBorder, "is_outside(inner_uv + innerTexelSize * vec2(i), innerSize)"
+                    " == ") + "is_outside(outer_uv + outerTexelSize * vec2(i), outerSize)"
                     ") ? (1.0 / 25.0) : 0.0;"
                     "}"
                     "}"
@@ -193,14 +193,21 @@ OpenGLRenderer::OpenGLRenderer() {
         };
         produceRoundedAntialiasedShader(mRoundedSolidShaderAntialiased,
                                         {},
-                                        "vec4 fcolor = color;");
+                                        "vec4 fcolor = color;",
+                                        false);
+
+        produceRoundedAntialiasedShader(mRoundedSolidShaderAntialiasedBorder,
+                                        {},
+                                        "vec4 fcolor = color;",
+                                        true);
 
         produceRoundedAntialiasedShader(mRoundedGradientShaderAntialiased,
                                         "uniform vec4 color_tl;"
                                         "uniform vec4 color_tr;"
                                         "uniform vec4 color_bl;"
                                         "uniform vec4 color_br;",
-                                        "vec4 fcolor = mix(mix(color_tl, color_tr, pass_uv.x), mix(color_bl, color_br, pass_uv.x), pass_uv.y) * color;");
+                                        "vec4 fcolor = mix(mix(color_tl, color_tr, pass_uv.x), mix(color_bl, color_br, pass_uv.x), pass_uv.y) * color;",
+                                        false);
     }
 
     mSolidTransformShader.load(
@@ -350,7 +357,6 @@ void OpenGLRenderer::drawRoundedRectAntialiased(const ABrush& brush,
     uploadToShaderCommon();
 
     GL::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-    GL::Shader::currentShader()->set(aui::ShaderUniforms::INNER_SIZE, glm::vec2{9999});
     GL::Shader::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, glm::vec2{0, 0});
     GL::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
     GL::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, glm::vec2{0});
@@ -409,7 +415,7 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(mRoundedSolidShaderAntialiased),
+            SolidShaderHelper(mRoundedSolidShaderAntialiasedBorder),
     }, brush);
 
     glm::vec2 innerSize = { size.x - borderWidth * 2,

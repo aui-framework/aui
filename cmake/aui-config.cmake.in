@@ -105,7 +105,7 @@ foreach(_module ${AUI_FIND_COMPONENTS})
 
                 target_compile_definitions(${_module_target_name} INTERFACE ${AUI_COMPONENT_${_module}_COMPILE_DEFINITIONS})
                 if (AUI_COMPONENT_${_module}_WHOLEARCHIVE)
-                    set_target_properties(${_module_target_name} PROPERTIES AUI_WHOLEARCHIVE ON)
+                    set_target_properties(${_module_target_name} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
                 endif()
                 continue()
             endif()
