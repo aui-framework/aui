@@ -20,6 +20,7 @@ private:
     GL::Shader mGradientShader;
     GL::Shader mRoundedSolidShader;
     GL::Shader mRoundedSolidShaderAntialiased;
+    GL::Shader mRoundedSolidShaderAntialiasedBorder;
     GL::Shader mRoundedGradientShaderAntialiased;
     GL::Shader mSolidTransformShader;
     GL::Shader mBoxShadowShader;

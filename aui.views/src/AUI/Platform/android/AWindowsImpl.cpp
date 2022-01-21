@@ -25,6 +25,7 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Render/Render.h"
+#include "AUI/Platform/OSAndroid.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -103,7 +104,9 @@ void AWindow::flagRedraw() {
 
 
 void AWindow::setSize(int width, int height) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
+    nullsafe(mRenderingContext)->beginResize(*this);
+    AViewContainer::setSize(width, height);
+    nullsafe(mRenderingContext)->endResize(*this);
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
@@ -127,9 +130,9 @@ void AWindow::hide() {
 }
 
 void AWindowManager::notifyProcessMessages() {
-
+    AAndroid::requestRedraw();
 }
 
 void AWindowManager::loop() {
-
+    AThread::current()->processMessages();
 }

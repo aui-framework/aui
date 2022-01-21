@@ -98,7 +98,7 @@ void AScrollArea::setSize(int width, int height) {
     mVerticalScrollbar->setScrollDimensions(mContentContainer->getContentHeight() + mContentContainer->getTotalFieldVertical(), mContentContainer->AViewContainer::getContentMinimumHeight());
 }
 
-void AScrollArea::onMouseWheel(glm::ivec2 pos, int delta) {
+void AScrollArea::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
     AViewContainer::onMouseWheel(pos, delta);
     mVerticalScrollbar->onMouseWheel(pos, delta);
 }
@@ -113,4 +113,13 @@ _<AViewContainer> AScrollArea::getContentContainer() const {
 
 void AScrollArea::setContents(const _<AViewContainer>& container) {
     mContentContainer->setContent(container);
+}
+
+bool AScrollArea::onGesture(const glm::ivec2 &origin, const AGestureEvent &event) {
+    if (std::holds_alternative<AFingerDragEvent>(event)) {
+        if (transformGestureEventsToDesktop(origin, event)) {
+            return true;
+        }
+    }
+    return AViewContainer::onGesture(origin, event);
 }

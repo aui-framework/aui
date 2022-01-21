@@ -224,19 +224,19 @@ AStylesheet::AStylesheet() {
             t<ACheckBoxInner>(),
             BackgroundSolid { 0xffffff_rgb },
             Margin { 1_dp, 1_dp, 1_dp, 4_dp },
-            Border { 1_px, 0x333333_rgb },
+            Border { 1_dp, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
             BackgroundImage {0x333333_rgb },
         },
         {
             t<ACheckBoxInner>::hover(),
-            Border { 1_px, 0x0078d7_rgb },
+            Border { 1_dp, 0x0078d7_rgb },
             BackgroundImage {0x0078d7_rgb },
         },
         {
             t<ACheckBoxInner>::hover(),
             BackgroundSolid { 0xcce4f7_rgb },
-            Border { 1_px, 0x005499_rgb },
+            Border { 1_dp, 0x005499_rgb },
             BackgroundImage {0x005499_rgb },
         },
         {
@@ -290,20 +290,20 @@ AStylesheet::AStylesheet() {
             t<ARadioButtonInner>(),
             BackgroundSolid { 0xffffff_rgb },
             Margin { 3_dp, 1_dp, 1_dp, 4_dp },
-            Border { 1_px, 0x333333_rgb },
+            Border { 1_dp, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
             BorderRadius { 6_dp },
             BackgroundImage {0x333333_rgb },
         },
         {
             t<ARadioButtonInner>::hover(),
-            Border { 1_px, 0x0078d7_rgb },
+            Border { 1_dp, 0x0078d7_rgb },
             BackgroundImage {0x0078d7_rgb },
         },
         {
             t<ARadioButtonInner>::hover(),
             BackgroundSolid { 0xcce4f7_rgb },
-            Border { 1_px, 0x005499_rgb },
+            Border { 1_dp, 0x005499_rgb },
             BackgroundImage {0x005499_rgb },
         },
         {
@@ -318,7 +318,7 @@ AStylesheet::AStylesheet() {
             t<ARadioButton>()["disabled"] > t<ARadioButtonInner>(),
             BackgroundSolid { 0xe5e5e5_rgb },
             BackgroundImage { 0xa0a0a0_rgb },
-            Border { 1_px, 0xa0a0a0_rgb },
+            Border { 1_dp, 0xa0a0a0_rgb },
         },
 
         // AComboBox
@@ -331,8 +331,8 @@ AStylesheet::AStylesheet() {
         {
             {t<AListView>(), t<ATreeView>()},
             BackgroundSolid { 0xffffff_rgb },
-            Border { 1_px, 0x828790_rgb },
-            Padding { 2_px, 0, 2_px, 2_px },
+            Border { 1_dp, 0x828790_rgb },
+            Padding { 2_dp, 0, 2_dp, 2_dp },
             Margin {2_dp, 4_dp},
             Expanding { 0, 1 },
             MinSize { 120_dp, 80_dp },
@@ -357,7 +357,7 @@ AStylesheet::AStylesheet() {
         {
             {t<AListView>() > t<AViewContainer>() > t<ALabel>(), c(".list-item")},
             Margin { 0 },
-            Padding { 1_px, 4_px, 4_px },
+            Padding { 1_dp, 4_dp, 4_dp },
         },
         {
             {t<AListView>() > t<AViewContainer>() > t<ALabel>::hover(), c::hover(".list-item"),},

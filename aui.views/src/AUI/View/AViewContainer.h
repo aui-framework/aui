@@ -98,7 +98,9 @@ public:
 	void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
 	void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
-    void onMouseWheel(glm::ivec2 pos, int delta) override;
+    void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
+
+    bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
 
     bool consumesClick(const glm::ivec2& pos) override;
     void setSize(int width, int height) override;

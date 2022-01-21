@@ -74,7 +74,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 		if (containsExpandingItems && view == last)
 		{
 			// the last element should stick right to the border.
-			int viewPosX = glm::round(posX) + margins.left;
+			int viewPosX = posX + margins.left;
 			int viewWidth = width - viewPosX - margins.right + x;
 			view->setGeometry(viewPosX,
                               y + margins.top,
@@ -84,7 +84,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 		else {
 			int viewWidth = glm::clamp(availableSpace * e.expanding / sum, e.minSpace, maxSize.x);
 
-			view->setGeometry(glm::round(posX) + margins.left,
+			view->setGeometry(posX + margins.left,
                               y + margins.top,
                               viewWidth,
                               glm::min(height - margins.vertical(), maxSize.y));

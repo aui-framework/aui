@@ -58,6 +58,7 @@
 #include <AUI/View/AGridSplitter.h>
 #include <AUI/View/AText.h>
 #include <AUI/View/ADrawableView.h>
+#include <AUI/Traits/platform.h>
 
 using namespace ass;
 
@@ -101,7 +102,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
     });
     _<ATabView> tabView;
     addView(tabView = _new<ATabView>() let {
-        it->addTab(Horizontal {
+        it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {
             Vertical {
                 // buttons
                 _new<ALabel>("Buttons"),
@@ -284,7 +285,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 "COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
                                 "OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.) ") let { it->setExpanding(); },
             }
-        }, "Common");
+        }), "Common");
 
         it->addTab(Vertical {
             _new<ALabel>("Horizontal splitter"),
@@ -307,7 +308,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
             }))
         } let { it->setExpanding(); }, "Splitters");
 
-        it->addTab(Vertical {
+        it->addTab(AScrollArea::Builder().withContents(Vertical {
             ASplitter::Horizontal().withItems({
                 Vertical::Expanding {
                     _new<ALabel>("Default"),
@@ -344,7 +345,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 }
                 return Horizontal { v1, v2 };
             }(),
-        } let { it->setExpanding(); }, "Text");
+        } let { it->setExpanding(); }), "Text");
 
         it->addTab(Vertical {
             // Rulers

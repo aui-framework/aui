@@ -168,7 +168,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
 
         // align right to border
         if (r.finalPos + r.finalSize > x + width) {
-            r.finalSize = x + width - r.finalPos;
+            r.finalSize = y + height - r.finalPos;
         }
         pos += r.finalSize + mSpacing;
     }

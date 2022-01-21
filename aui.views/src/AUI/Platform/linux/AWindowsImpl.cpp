@@ -459,10 +459,10 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                                                    (AInput::Key) (AInput::LButton + ev.xbutton.button - 1));
                             break;
                         case 4: // wheel down
-                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, -120);
+                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, { 0, -120 });
                             break;
                         case 5: // wheel up
-                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, 120);
+                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, { 0, 120 });
                             break;
                     }
                     break;

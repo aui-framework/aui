@@ -123,7 +123,7 @@ foreach(_module ${AUI_BOOT_COMPONENTS})
     set(_target "aui.${_module}")
     get_target_property(_compile_definitions ${_target} INTERFACE_COMPILE_DEFINITIONS)
     get_target_property(_link_libs ${_target} INTERFACE_LINK_LIBRARIES)
-    get_target_property(_wholearchive ${_target} AUI_WHOLEARCHIVE)
+    get_target_property(_wholearchive ${_target} INTERFACE_AUI_WHOLEARCHIVE)
     unset(_link_libs2)
     foreach(_lib ${_link_libs})
         # skip NOTFOUNDs

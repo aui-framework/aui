@@ -1,4 +1,4 @@
-package ru.alex2772.aui;
+package com.github.aui.android;
 
 import android.content.Context;
 import android.content.DialogInterface;

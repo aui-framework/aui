@@ -42,6 +42,7 @@
 #include <functional>
 #include <array>
 #include <AUI/Enum/MouseCollisionPolicy.h>
+#include <AUI/Event/AGestureEvent.h>
 
 class Render;
 class AWindow;
@@ -186,6 +187,20 @@ protected:
 	 */
 	void updateAssState();
 
+
+    /**
+     * Converts touch screen events to desktop.
+     * <dl>
+     *   <dt><b>AFingerDragEvent</b></dt>
+     *   <dd>Emulates mouse wheel scroll</dd>
+     *   <dt><b>ALongPressEvent</b></dt>
+     *   <dd>Emulates right click</dd>
+     * </dl>
+     * @param origin position where the event(s) started to occur from.
+     * @param event gesture event.
+     * @return true if consumed
+     */
+    bool transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event);
 
 public:
     AView();
@@ -586,6 +601,17 @@ public:
      */
     virtual _<AView> determineSharedPointer();
 
+    /**
+     * Handles touch screen gesture event.
+     * @param origin position where the event(s) started to occur from.
+     * @param event gesture event.
+     * @note The standard implementation <code>AView::onGesture</code> emulates desktop events such as right click and
+     *       scroll.
+     * @see transformGestureEventsToDesktop
+     * @return true, if consumed
+     */
+    virtual bool onGesture(const glm::ivec2& origin, const AGestureEvent& event);
+
 	virtual void onMouseEnter();
     virtual void onMouseMove(glm::ivec2 pos);
     virtual void onMouseLeave();
@@ -596,11 +622,11 @@ public:
     virtual void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button);
 
     /**
-     * Handles mouse wheel events
-     * @param pos mouse cursor position
+     * Handles mouse wheel events.
+     * @param pos mouse cursor position.
      * @param delta the distance mouse wheel scrolled. 120 = mouse scroll down, -120 = mouse scroll up.
      */
-    virtual void onMouseWheel(glm::ivec2 pos, int delta);
+    virtual void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta);
     virtual void onKeyDown(AInput::Key key);
     virtual void onKeyRepeat(AInput::Key key);
     virtual void onKeyUp(AInput::Key key);

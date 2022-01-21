@@ -77,7 +77,7 @@ float AAndroid::getDpiRatio() {
     auto j = getJNI();
     if (!j) return 1.f;
     if (!_gClassAUI) {
-        _gClassAUI = j->FindClass("ru/alex2772/aui/AUI");
+        _gClassAUI = j->FindClass("com/github/aui/android/AUI");
         if (!_gClassAUI) {
             return 1.f;
         }
@@ -97,11 +97,11 @@ void AAndroid::requestRedraw() {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_ru_alex2772_aui_MyGLRenderer_handleInit(JNIEnv *env, jclass clazz) {
+Java_com_github_aui_android_MyGLRenderer_handleInit(JNIEnv *env, jclass clazz) {
     //replace with one of your classes in the line below
 
-    _gClassAUI = env->FindClass("ru/alex2772/aui/AUI");
-    _gClassMyGLSurfaceView = env->FindClass("ru/alex2772/aui/MyGLSurfaceView");
+    _gClassAUI = env->FindClass("com/github/aui/android/AUI");
+    _gClassMyGLSurfaceView = env->FindClass("com/github/aui/android/MyGLSurfaceView");
 
 
     _gEntry({});

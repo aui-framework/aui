@@ -11,7 +11,7 @@
 #if AUI_PLATFORM_WIN
 // unimplemented
 
-#else
+#elif AUI_PLATFORM_LINUX
 
 extern "C" {
 #include <signal.h>

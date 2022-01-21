@@ -47,7 +47,7 @@ public:
 
     int getContentMinimumHeight() override;
 
-    void onMouseWheel(glm::ivec2 pos, int delta) override;
+    void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
 };
 
 

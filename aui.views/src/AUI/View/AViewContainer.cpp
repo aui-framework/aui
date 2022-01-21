@@ -198,7 +198,7 @@ void AViewContainer::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
 		p->onMouseDoubleClicked(pos - p->getPosition(), button);
 }
 
-void AViewContainer::onMouseWheel(glm::ivec2 pos, int delta) {
+void AViewContainer::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
     AView::onMouseWheel(pos, delta);
     auto p = getViewAt(pos);
     if (p && p->isEnabled())
@@ -358,4 +358,11 @@ void AViewContainer::notifyParentEnabledStateChanged(bool enabled) {
 
 void AViewContainer::focus() {
     // we don't want to focus containers.
+}
+
+bool AViewContainer::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
+    auto p = getViewAt(origin);
+    if (p && p->isEnabled())
+        return p->onGesture(origin - p->getPosition(), event);
+    return false;
 }

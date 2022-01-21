@@ -29,10 +29,9 @@ define_property(GLOBAL PROPERTY TESTS_DEPS
         BRIEF_DOCS "Global list of test dependencies"
         FULL_DOCS "Global list of test dependencies")
 
-define_property(TARGET PROPERTY AUI_WHOLEARCHIVE
+define_property(TARGET PROPERTY INTERFACE_AUI_WHOLEARCHIVE
         BRIEF_DOCS "Use wholearchive when linking this library to another"
         FULL_DOCS "Use wholearchive when linking this library to another")
-
 
 set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
 set_property(GLOBAL PROPERTY TESTS_SRCS "")
@@ -48,9 +47,9 @@ if (AUI_BOOT)
     set(AUI_INSTALL_RUNTIME_DEPENDENCIES ON)
 endif()
 
-if (IOS)
+if (ANDROID OR IOS)
     set(_build_shared OFF)
-    message(STATUS "Linking everything statically because target platform is iOS")
+    message(STATUS "Forcing static build because you are building for mobile platform.")
 else()
     set(_build_shared ON)
 endif()
@@ -67,49 +66,49 @@ else()
 endif()
 
 if (WIN32)
-    set(AUI_PLATFORM_WIN 1)
+    set(AUI_PLATFORM_WIN 1 CACHE BOOL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS win32)
 else()
-    set(AUI_PLATFORM_WIN 0)
+    set(AUI_PLATFORM_WIN 0 CACHE BOOL "Platform")
 endif()
 if (UNIX AND NOT APPLE AND NOT ANDROID)
-    set(AUI_PLATFORM_LINUX 1)
+    set(AUI_PLATFORM_LINUX 1 CACHE BOOL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS linux)
 else()
-    set(AUI_PLATFORM_LINUX 0)
+    set(AUI_PLATFORM_LINUX 0 CACHE BOOL "Platform")
 endif()
 
 if (UNIX AND APPLE)
-    set(AUI_PLATFORM_APPLE 1)
+    set(AUI_PLATFORM_APPLE 1 CACHE BOOL "Platform")
 else()
-    set(AUI_PLATFORM_APPLE 0)
+    set(AUI_PLATFORM_APPLE 0 CACHE BOOL "Platform")
 endif()
 
 if (UNIX AND APPLE AND NOT IOS)
-    set(AUI_PLATFORM_MACOS 1)
+    set(AUI_PLATFORM_MACOS 1 CACHE BOOL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS macos)
 else()
-    set(AUI_PLATFORM_MACOS 0)
+    set(AUI_PLATFORM_MACOS 0 CACHE BOOL "Platform")
 endif()
 
 if (ANDROID)
-    set(AUI_PLATFORM_ANDROID 1)
+    set(AUI_PLATFORM_ANDROID 1 CACHE BOOL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS android)
 else()
-    set(AUI_PLATFORM_ANDROID 0)
+    set(AUI_PLATFORM_ANDROID 0 CACHE BOOL "Platform")
 endif()
 
 if (IOS)
-    set(AUI_PLATFORM_IOS 1)
+    set(AUI_PLATFORM_IOS 1 CACHE BOOL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS ios)
 else()
-    set(AUI_PLATFORM_IOS 0)
+    set(AUI_PLATFORM_IOS 0 CACHE BOOL "Platform")
 endif()
 
 if (UNIX)
-    set(AUI_PLATFORM_UNIX 1)
+    set(AUI_PLATFORM_UNIX 1 CACHE BOOL "Platform")
 else()
-    set(AUI_PLATFORM_UNIX 0)
+    set(AUI_PLATFORM_UNIX 0 CACHE BOOL "Platform")
 endif()
 
 # determine compiler home dir for mingw when crosscompiling
@@ -166,8 +165,8 @@ endfunction(aui_add_properties)
 macro(aui_enable_tests)
     if(NOT TARGET GTest::gtest)
         auib_import(GTest https://github.com/google/googletest
-                    VERSION main
-                    CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
+                VERSION main
+                CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
 
@@ -533,7 +532,7 @@ endfunction(aui_static_link)
 
 function(aui_compile_assets AUI_MODULE_NAME)
     cmake_parse_arguments(ASSETS "" "" "EXCLUDE" ${ARGN})
-    set_target_properties(${AUI_MODULE_NAME} PROPERTIES AUI_WHOLEARCHIVE ON)
+    set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
 
     if(CMAKE_CROSSCOMPILING)
         set(TARGET_DIR ${AUI_SDK_BIN})
@@ -559,15 +558,22 @@ function(aui_compile_assets AUI_MODULE_NAME)
             # the worst case because we (possibly) have to compile aui.toolbox for the host system
             # FIXME assume that aui.toolbox is already built for our system
             find_program(AUI_TOOLBOX_EXE aui.toolbox
-                    HINTS ${AUI_ROOT}/bin
-                    REQUIRED)
+                    HINTS ${AUI_ROOT}/bin)
+            if (NOT AUI_TOOLBOX_EXE)
+                file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/*/aui.toolbox)
+                if (AUI_TOOLBOX_EXE)
+                    list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
+                else()
+                    message(FATAL_ERROR "When crosscompiling, aui.toolbox for your host system is required. Please set AUI_TOOLBOX_EXE.")
+                endif()
+            endif()
         elseif (TARGET aui.toolbox)
             set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox")
         else()
             set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox")
         endif()
-        message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
     endif()
+    message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})
         set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
@@ -641,7 +647,7 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                 set(_wholearchive OFF)
                 if (NOT BUILD_SHARED_LIBS)
                     if (TARGET ${_dep})
-                        get_target_property(_wholearchive ${_dep} AUI_WHOLEARCHIVE)
+                        get_target_property(_wholearchive ${_dep} INTERFACE_AUI_WHOLEARCHIVE)
                     endif()
                 endif()
                 # set fallback value
@@ -770,11 +776,11 @@ function(aui_module AUI_MODULE_NAME)
 
     if (AUIE_COMPILE_ASSETS)
         _aui_compile_assets(${AUI_MODULE_NAME})
-        set_target_properties(${AUI_MODULE_NAME} PROPERTIES AUI_WHOLEARCHIVE ON)
+        set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
     endif()
 
     if (AUIE_PLUGIN)
-        set_target_properties(${AUI_MODULE_NAME} PROPERTIES AUI_WHOLEARCHIVE ON)
+        set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
 
         # define plugin entry for plugins
         if (BUILD_SHARED_LIBS)

@@ -63,7 +63,7 @@ public:
 	}
 
     void setSize(int width, int height) override;
-    void onMouseWheel(glm::ivec2 pos, int delta) override;
+    void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
 
     void insertItem(size_t at, const AString& value) override;
     void updateItem(size_t at, const AString& value) override;
@@ -77,4 +77,6 @@ signals:
 	emits<unsigned> itemDoubleClicked;
 
     void clearSelection();
+
+    bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
 };
