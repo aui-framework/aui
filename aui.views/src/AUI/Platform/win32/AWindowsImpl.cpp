@@ -416,6 +416,24 @@ glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
     return {p.x, p.y};
 }
 
+void AWindow::show() {
+    if (!getWindowManager().mWindows.contains(shared_from_this())) {
+        getWindowManager().mWindows << shared_from_this();
+    }
+    try {
+        mSelfHolder = shared_from_this();
+    } catch (...) {
+        mSelfHolder = nullptr;
+    }
+    AThread::current() << [&]() {
+        redraw();
+    };
+
+    UpdateWindow(mHandle);
+    ShowWindow(mHandle, SW_SHOWNORMAL);
+
+    emit shown();
+}
 void AWindow::setIcon(const AImage& image) {
     if (!mHandle) return;
     assert(image.getFormat() & AImage::BYTE);

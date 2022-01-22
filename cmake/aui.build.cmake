@@ -453,7 +453,7 @@ endfunction(aui_deploy_library)
 
 function(aui_executable AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h src/*.mm)
 
     set(options )
     set(oneValueArgs COMPILE_ASSETS)
@@ -721,7 +721,7 @@ function(aui_module AUI_MODULE_NAME)
         endforeach()
     endif()
 
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp src/*.mm)
     if (BUILD_SHARED_LIBS)
         if (WIN32)
             if (EXISTS "${CMAKE_SOURCE_DIR}/Resource.rc")
@@ -790,6 +790,297 @@ function(aui_module AUI_MODULE_NAME)
         endif()
     endif()
 endfunction(aui_module)
+
+
+macro(aui_app)
+    # defaults
+    # ios
+    set(APP_IOS_VERSION 14.3)
+    set(APP_IOS_DEVICE BOTH)
+    set(APP_VERSION 1.0)
+
+    set(options )
+    set(oneValueArgs
+            # common
+            TARGET
+            NAME
+            COPYRIGHT
+            VERSION
+
+            # apple
+            APPLE_TEAM_ID
+            APPLE_BUNDLE_IDENTIFIER
+            APPLE_SIGN_IDENTITY
+
+            # ios
+            IOS_VERSION
+            IOS_DEVICE)
+    set(multiValueArgs ADDITIONAL_SRCS)
+    cmake_parse_arguments(APP "${options}" "${oneValueArgs}"
+            "${multiValueArgs}" ${ARGN} )
+    unset(_error_msg)
+    if (NOT APP_TARGET OR NOT TARGET ${APP_TARGET})
+        list(APPEND _error_msg "TARGET which is your app's executable target.")
+    endif()
+    if (NOT APP_NAME)
+        list(APPEND _error_msg "NAME which is your app's display name.")
+    endif()
+    list(APPEND _error_msg_opt "COPYRIGHT which is your copyright string (defaults to \"Unknown\").")
+    list(APPEND _error_msg_opt "VERSION which is your app's version (defaults to \"1.0\").")
+    if (IOS)
+        if (NOT APP_APPLE_TEAM_ID)
+            list(APPEND _error_msg "APPLE_TEAM_ID which is your Apple Team ID (https://discussions.apple.com/thread/7942941).")
+        endif()
+        if (NOT APP_APPLE_BUNDLE_IDENTIFIER)
+            list(APPEND _error_msg "APPLE_BUNDLE_IDENTIFIER which is your app's bundle identifier.")
+        endif()
+        if (NOT APP_APPLE_SIGN_IDENTITY)
+            list(APPEND _error_msg "APPLE_SIGN_IDENTITY which is your code sign identity (# /usr/bin/env xcrun security find-identity -v -p codesigning).")
+        endif()
+        list(APPEND _error_msg_opt "IOS_VERSION which is target IOS version (defaults to 14.3).")
+        list(APPEND _error_msg_opt "IOS_DEVICE which is target IOS device: either IPHONE, IPAD or BOTH (defaults to BOTH).")
+    endif()
+
+    if (IOS)
+        if (APP_IOS_DEVICE STREQUAL IPHONE)
+            set(APP_IOS_DEVICE "1")
+        elseif (APP_IOS_DEVICE STREQUAL IPAD)
+            set(APP_IOS_DEVICE "2")
+        elseif (APP_IOS_DEVICE STREQUAL BOTH)
+            set(APP_IOS_DEVICE "1,2")
+        endif()
+
+        set(LOGIC_ONLY_TESTS 0)                                     # <== Set to 1 if you do not want tests to be hosted by the application, speeds up pure logic tests but you can not run them on real devices
+
+        set(_SYSTEM_PROCESSOR ${CMAKE_SYSTEM_PROCESSOR})
+        set(CMAKE_SYSTEM_PROCESSOR ${_SYSTEM_PROCESSOR})
+        include(BundleUtilities)
+        include(FindXCTest)
+        if (CMAKE_TOOLCHAIN_FILE)
+            get_filename_component(CMAKE_TOOLCHAIN_FILE ${CMAKE_TOOLCHAIN_FILE} ABSOLUTE)
+        endif()
+
+        message(STATUS XCTestFound:${XCTest_FOUND})
+
+        set(PRODUCT_NAME ${APP_NAME})
+        set(EXECUTABLE_NAME ${APP_NAME})
+        set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_NAME})
+        set(MACOSX_BUNDLE_INFO_STRING ${APP_APPLE_BUNDLE_IDENTIFIER})
+        set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_APPLE_BUNDLE_IDENTIFIER})
+        set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_APPLE_BUNDLE_IDENTIFIER})
+        set(MACOSX_BUNDLE_ICON_FILE "")
+        set(MACOSX_BUNDLE_LONG_VERSION_STRING ${APP_VERSION})
+        set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${APP_VERSION})
+        set(MACOSX_BUNDLE_BUNDLE_VERSION ${APP_VERSION})
+        set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
+        set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
+
+        file(GLOB_RECURSE APP_SOURCE_FILES src/*.cpp src/*.m src/*.mm)
+
+        set(RESOURCES
+                src/Main.storyboard
+                src/LaunchScreen.storyboard
+                )
+
+        add_executable(
+                ${APP_NAME}
+                MACOSX_BUNDLE
+                ${APP_SOURCE_FILES}
+                ${RESOURCES}
+        )
+        set_target_properties(${APP_NAME} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
+        target_link_libraries(${APP_NAME} PRIVATE
+                -Wl,-force_load game
+                -Wl,-force_load aui::views)
+        set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD 17)
+
+        # bzip2
+        find_package(bzip2 REQUIRED)
+        target_link_libraries(${APP_NAME} PUBLIC ${BZIP2_LIBRARIES})
+
+        # To disable bitcode:
+        # set_target_properties(${APP_NAME} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
+
+        # To link a statically linked Framework from the filesystem:
+        # Note: dynamic frameworks require copying to the app bundle. Statically linked are copied into the executable itself.
+        # target_link_libraries(${APP_NAME}
+        # ${PROJECT_SOURCE_DIR}/Torch.framework
+        # )
+
+
+        # Include the same headers for the statically linked framework:
+        # Include headers to they're available as #import <Header/Header.h> from a framework
+        # target_include_directories(${APP_NAME}
+        # PUBLIC ${PROJECT_SOURCE_DIR}/Torch.framework/Headers
+        # )
+
+
+        # Static Link a library archive into the executable
+        # target_link_libraries(${APP_NAME}
+        #   ${PROJECT_SOURCE_DIR}/framework/lib/libtorch.a
+        # )
+
+
+        # Include a source directory outside a framework
+        # target_include_directories(${APP_NAME}
+        #   PUBLIC ${PROJECT_SOURCE_DIR}/framework/include
+        # )
+
+
+        # Locate system libraries on iOS
+        find_library(UIKIT UIKit REQUIRED)
+        find_library(OPENGL OpenGLES REQUIRED)
+        find_library(GLKIT GLKit REQUIRED)
+        find_library(FOUNDATION Foundation REQUIRED)
+        find_library(MOBILECORESERVICES MobileCoreServices REQUIRED)
+        find_library(CFNETWORK CFNetwork REQUIRED)
+        find_library(SYSTEMCONFIGURATION SystemConfiguration REQUIRED)
+
+        # link the frameworks located above
+        target_link_libraries(${APP_NAME}
+                PRIVATE
+                ${OPENGL}
+                ${UIKIT}
+                ${GLKIT}
+                ${FOUNDATION}
+                ${MOBILECORESERVICES}
+                ${CFNETWORK}
+                ${SYSTEMCONFIGURATION})
+
+
+        # Turn on ARC
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc")
+
+        # Create the app target
+        set_target_properties(${APP_NAME} PROPERTIES
+                XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym"
+                XCODE_ATTRIBUTE_GCC_PREFIX_HEADER "src/Prefix.pch"
+                RESOURCE "${RESOURCES}"
+                XCODE_ATTRIBUTE_GCC_PRECOMPILE_PREFIX_HEADER "YES"
+                XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${APP_IOS_VERSION}
+                XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ${APP_APPLE_SIGN_IDENTITY}
+                XCODE_ATTRIBUTE_DEVELOPMENT_TEAM ${APP_APPLE_TEAM_ID}
+                XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY ${APP_IOS_DEVICE}
+                MACOSX_BUNDLE_INFO_PLIST src/plist.in
+                XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
+                XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES NO
+                XCODE_ATTRIBUTE_INSTALL_PATH "$(LOCAL_APPS_DIR)"
+                XCODE_ATTRIBUTE_ENABLE_TESTABILITY YES
+                XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES
+                )
+
+        target_include_directories(${APP_NAME} PRIVATE src)
+
+        # Include framework headers, needed to make "Build" Xcode action work.
+        # "Archive" works fine just relying on default search paths as it has different
+        # build product output directory.
+
+
+        # Set the app's linker search path to the default location on iOS
+        set_target_properties(
+                ${APP_NAME}
+                PROPERTIES
+                XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS
+                "@executable_path/Frameworks"
+        )
+
+        add_subdirectory(../magicsea build)
+
+        # Note that commands below are indented just for readability. They will endup as
+        # one liners after processing and unescaped ; will disappear so \; are needed.
+        # First condition in each command is for normal build, second for archive.
+        # \&\>/dev/null makes sure that failure of one command and success of other
+        # is not printed and does not make Xcode complain that /bin/sh failed and build
+        # continued.
+
+        # Create Frameworks directory in app bundle
+        add_custom_command(
+                TARGET
+                ${APP_NAME}
+                POST_BUILD COMMAND /bin/sh -c
+                \"COMMAND_DONE=0 \;
+                if ${CMAKE_COMMAND} -E make_directory
+                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks
+        \&\>/dev/null \; then
+        COMMAND_DONE=1 \;
+        fi \;
+        if ${CMAKE_COMMAND} -E make_directory
+        \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks
+        \&\>/dev/null \; then
+        COMMAND_DONE=1 \;
+        fi \;
+        if [ \\$$COMMAND_DONE -eq 0 ] \; then
+        echo Failed to create Frameworks directory in app bundle \;
+        exit 1 \;
+        fi\"
+        )
+
+        # Copy the framework into the app bundle
+        add_custom_command(
+                TARGET
+                ${APP_NAME}
+                POST_BUILD COMMAND /bin/sh -c
+                \"COMMAND_DONE=0 \;
+                if ${CMAKE_COMMAND} -E copy_directory
+                ${PROJECT_BINARY_DIR}/cppframework/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/
+                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks
+        \&\>/dev/null \; then
+        COMMAND_DONE=1 \;
+        fi \;
+        if ${CMAKE_COMMAND} -E copy_directory
+        \${BUILT_PRODUCTS_DIR}/${FRAMEWORK_NAME}.framework
+        \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
+        \&\>/dev/null \; then
+        COMMAND_DONE=1 \;
+        fi \;
+        if [ \\$$COMMAND_DONE -eq 0 ] \; then
+        echo Failed to copy the framework into the app bundle \;
+        exit 1 \;
+        fi\"
+        )
+
+        # Codesign the framework in it's new spot
+        add_custom_command(
+                TARGET
+                ${APP_NAME}
+                POST_BUILD COMMAND /bin/sh -c
+                \"COMMAND_DONE=0 \;
+                if codesign --force --verbose
+                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                --sign ${APP_APPLE_SIGN_IDENTITY}
+        \&\>/dev/null \; then
+        COMMAND_DONE=1 \;
+        fi \;
+        if codesign --force --verbose
+        \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
+        --sign ${APP_APPLE_SIGN_IDENTITY}
+        \&\>/dev/null \; then
+        COMMAND_DONE=1 \;
+        fi \;
+        if [ \\$$COMMAND_DONE -eq 0 ] \; then
+        echo Framework codesign failed \;
+        exit 1 \;
+        fi\"
+        )
+
+        # Add a "PlugIns" folder as a kludge fix for how the XcTest package generates paths
+        add_custom_command(
+                TARGET
+                ${APP_NAME}
+                POST_BUILD COMMAND /bin/sh -c
+                \"COMMAND_DONE=0 \;
+                if ${CMAKE_COMMAND} -E make_directory
+                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/PlugIns
+        \&\>/dev/null \; then
+        COMMAND_DONE=1 \;
+        fi \;
+        if [ \\$$COMMAND_DONE -eq 0 ] \; then
+        echo Failed to create PlugIns directory in EFFECTIVE_PLATFORM_NAME folder. \;
+        exit 1 \;
+        fi\"
+        )
+    endif()
+endmacro()
 
 if (MINGW OR UNIX)
     # strip for release

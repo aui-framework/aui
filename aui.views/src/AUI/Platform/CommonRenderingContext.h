@@ -25,6 +25,10 @@ protected:
 #if AUI_PLATFORM_LINUX
     void initX11Window(const Init& init, XSetWindowAttributes& swa, XVisualInfo* vi);
 #endif
+#if AUI_PLATFORM_MACOS
+    AWindow* mWindow;
+    void* mDisplayLink;
+#endif
 public:
 #if AUI_PLATFORM_LINUX
     static aui::assert_not_used_when_null<Display*> ourDisplay;
@@ -49,8 +53,9 @@ public:
         Atom netWmSyncRequestCounter;
     } ourAtoms;
 #endif
-
-    static void ensureXLibInitialized();
+#if AUI_PLATFORM_MACOS
+    void requestFrame();
+#endif
 
     void init(const Init& init) override;
 

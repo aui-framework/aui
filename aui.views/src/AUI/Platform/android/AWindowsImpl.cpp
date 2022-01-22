@@ -136,3 +136,18 @@ void AWindowManager::notifyProcessMessages() {
 void AWindowManager::loop() {
     AThread::current()->processMessages();
 }
+void AWindow::show() {
+    if (!getWindowManager().mWindows.contains(shared_from_this())) {
+        getWindowManager().mWindows << shared_from_this();
+    }
+    try {
+        mSelfHolder = shared_from_this();
+    } catch (...) {
+        mSelfHolder = nullptr;
+    }
+    AThread::current() << [&]() {
+        redraw();
+    };
+
+    emit shown();
+}

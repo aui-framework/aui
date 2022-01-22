@@ -83,7 +83,21 @@ bool AWindow::isMinimized() const {
     return false;
 }
 
+void AWindow::show() {
+    if (!getWindowManager().mWindows.contains(shared_from_this())) {
+        getWindowManager().mWindows << shared_from_this();
+    }
+    try {
+        mSelfHolder = shared_from_this();
+    } catch (...) {
+        mSelfHolder = nullptr;
+    }
+    AThread::current() << [&]() {
+        redraw();
+    };
 
+    emit shown();
+}
 bool AWindow::isMaximized() const {
     return false;
 }

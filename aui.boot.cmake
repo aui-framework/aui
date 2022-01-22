@@ -59,7 +59,7 @@ else()
 endif()
 
 if (NOT CMAKE_CXX_COMPILER_ID)
-    message(FATAL_ERROR "Please include aui.boot AFTER project() call.")
+    message(FATAL_ERROR "CMAKE_CXX_COMPILER_ID is not set.\nnote: Please include aui.boot AFTER project() call.")
 endif()
 
 if (ANDROID_ABI)
@@ -311,7 +311,6 @@ function(auib_import AUI_MODULE_NAME URL)
 
             # forward all necessary variables to child cmake build
             foreach(_varname
-                    CMAKE_TOOLCHAIN_FILE
                     CMAKE_GENERATOR_PLATFORM
                     CMAKE_VS_PLATFORM_NAME
                     CMAKE_BUILD_TYPE
@@ -326,6 +325,10 @@ function(auib_import AUI_MODULE_NAME URL)
                     ${ANDROID_VARS})
                 list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
             endforeach()
+            if (CMAKE_TOOLCHAIN_FILE) # resolve absolute path to the toolchain file - it's possibly relative thus invalid
+                get_filename_component(_toolchain ${CMAKE_TOOLCHAIN_FILE} ABSOLUTE)
+                list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_TOOLCHAIN_FILE=${_toolchain}")
+            endif()
             list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
             if (IOS)
                 list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_C_FLAGS=-Wno-error-implicit-function-declaration")

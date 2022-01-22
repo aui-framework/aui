@@ -164,24 +164,6 @@ void AWindow::flagUpdateLayout() {
     mUpdateLayoutFlag = true;
 }
 
-void AWindow::show() {
-    if (!getWindowManager().mWindows.contains(shared_from_this())) {
-        getWindowManager().mWindows << shared_from_this();
-    }
-    try {
-        mSelfHolder = shared_from_this();
-    } catch (...) {
-        mSelfHolder = nullptr;
-    }
-    AThread::current() << [&]() {
-        redraw();
-    };
-#if AUI_PLATFORM_WIN
-    UpdateWindow(mHandle);
-    ShowWindow(mHandle, SW_SHOWNORMAL);
-#endif
-    emit shown();
-}
 
 void AWindow::onCloseButtonClicked() {
     emit closed();

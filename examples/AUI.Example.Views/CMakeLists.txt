@@ -21,3 +21,6 @@ aui_compile_assets(aui.example.views)
 
 
 aui_link(aui.example.views PRIVATE aui::core aui::views)
+
+
+aui_app()
