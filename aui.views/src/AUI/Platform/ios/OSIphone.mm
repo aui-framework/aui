@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,21 +19,18 @@
  * =====================================================================================================================
  */
 
-#include "AUI/Platform/Platform.h"
-#include "AUI/Common/AString.h"
-#include "AUI/IO/APath.h"
-#include <AUI/Util/kAUI.h>
-#include <AUI/Platform/android/OSAndroid.h>
 
+#include <AUI/Logging/ALogger.h>
+#include <AUI/Platform/Entry.h>
+#import <UIKit/UIKit.h>
+#import "AppDelegate.h"
 
+int(* _gEntry)(const AStringVector&);
 
-void Platform::playSystemSound(Sound s)
-{
-    // unsupported
-}
+AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
+    _gEntry = aui_entry;
+    //AThread::current()->setThreadName("UI thread");
+    NSString * appDelegateClassName = appDelegateClassName = NSStringFromClass([AppDelegate class]);;
 
-
-float Platform::getDpiRatio()
-{
-    return AAndroid::getDpiRatio();
+    return UIApplicationMain(argc, argv, nil, appDelegateClassName);
 }

@@ -25,7 +25,7 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Render/Render.h"
-#include "AUI/Platform/OSAndroid.h"
+#include "AUI/Platform/android/OSAndroid.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 

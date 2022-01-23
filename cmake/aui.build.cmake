@@ -453,7 +453,7 @@ endfunction(aui_deploy_library)
 
 function(aui_executable AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h src/*.mm)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h src/*.mm src/*.m)
 
     set(options )
     set(oneValueArgs COMPILE_ASSETS)
@@ -503,6 +503,8 @@ function(aui_executable AUI_MODULE_NAME)
             aui_common(preview.${AUI_MODULE_NAME})
 
             add_dependencies(aui.preview preview.${AUI_MODULE_NAME})
+        elseif(IOS)
+            add_executable(${AUI_MODULE_NAME} MACOSX_BUNDLE ${ADDITIONAL_SRCS} ${SRCS})
         else()
             add_executable(${AUI_MODULE_NAME} ${ADDITIONAL_SRCS} ${SRCS})
         endif()
@@ -683,7 +685,11 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                         if (${_link_target_file} IN_LIST _already_linked_libs)
                             continue()
                         endif()
-                        set(_link_target_file -Wl,--whole-archive ${_link_target_file} -Wl,--no-whole-archive)
+                        if (IOS)
+                            set(_link_target_file -Wl,-force_load ${_link_target_file})
+                        else()
+                            set(_link_target_file -Wl,--whole-archive ${_link_target_file} -Wl,--no-whole-archive)
+                        endif()
                     endif()
                 endif()
 
@@ -721,7 +727,7 @@ function(aui_module AUI_MODULE_NAME)
         endforeach()
     endif()
 
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp src/*.mm)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp src/*.mm src/*.m)
     if (BUILD_SHARED_LIBS)
         if (WIN32)
             if (EXISTS "${CMAKE_SOURCE_DIR}/Resource.rc")
@@ -793,12 +799,6 @@ endfunction(aui_module)
 
 
 macro(aui_app)
-    # defaults
-    # ios
-    set(APP_IOS_VERSION 14.3)
-    set(APP_IOS_DEVICE BOTH)
-    set(APP_VERSION 1.0)
-
     set(options )
     set(oneValueArgs
             # common
@@ -818,6 +818,22 @@ macro(aui_app)
     set(multiValueArgs ADDITIONAL_SRCS)
     cmake_parse_arguments(APP "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
+
+    # defaults
+    # ios
+    if (NOT APP_IOS_VERSION)
+        set(APP_IOS_VERSION 14.3)
+    endif()
+    if (NOT APP_IOS_DEVICE)
+        set(APP_IOS_DEVICE BOTH)
+    endif()
+    if (NOT APP_VERSION)
+        set(APP_VERSION 1.0)
+    endif()
+    if (NOT APP_APPLE_SIGN_IDENTITY)
+        set(APP_APPLE_SIGN_IDENTITY "iPhone Developer")
+    endif()
+
     unset(_error_msg)
     if (NOT APP_TARGET OR NOT TARGET ${APP_TARGET})
         list(APPEND _error_msg "TARGET which is your app's executable target.")
@@ -834,11 +850,15 @@ macro(aui_app)
         if (NOT APP_APPLE_BUNDLE_IDENTIFIER)
             list(APPEND _error_msg "APPLE_BUNDLE_IDENTIFIER which is your app's bundle identifier.")
         endif()
-        if (NOT APP_APPLE_SIGN_IDENTITY)
-            list(APPEND _error_msg "APPLE_SIGN_IDENTITY which is your code sign identity (# /usr/bin/env xcrun security find-identity -v -p codesigning).")
-        endif()
+        list(APPEND _error_msg_opt "APPLE_SIGN_IDENTITY which is your code sign identity (defaults to \"iPhone Developer\").")
         list(APPEND _error_msg_opt "IOS_VERSION which is target IOS version (defaults to 14.3).")
         list(APPEND _error_msg_opt "IOS_DEVICE which is target IOS device: either IPHONE, IPAD or BOTH (defaults to BOTH).")
+    endif()
+
+    if (_error_msg)
+        list(JOIN _error_msg \n v1)
+        list(JOIN _error_msg_opt \n v2)
+        message(FATAL_ERROR "The following arguments are required for aui_app():\n${v1}\nnote: the following optional variables can be also set:\n${v2}")
     endif()
 
     if (IOS)
@@ -854,7 +874,7 @@ macro(aui_app)
 
         set(_SYSTEM_PROCESSOR ${CMAKE_SYSTEM_PROCESSOR})
         set(CMAKE_SYSTEM_PROCESSOR ${_SYSTEM_PROCESSOR})
-        include(BundleUtilities)
+        #include(BundleUtilities)
         include(FindXCTest)
         if (CMAKE_TOOLCHAIN_FILE)
             get_filename_component(CMAKE_TOOLCHAIN_FILE ${CMAKE_TOOLCHAIN_FILE} ABSOLUTE)
@@ -863,8 +883,8 @@ macro(aui_app)
         message(STATUS XCTestFound:${XCTest_FOUND})
 
         set(PRODUCT_NAME ${APP_NAME})
-        set(EXECUTABLE_NAME ${APP_NAME})
-        set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_NAME})
+        set(EXECUTABLE_NAME ${APP_TARGET})
+        set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_TARGET})
         set(MACOSX_BUNDLE_INFO_STRING ${APP_APPLE_BUNDLE_IDENTIFIER})
         set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_APPLE_BUNDLE_IDENTIFIER})
         set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_APPLE_BUNDLE_IDENTIFIER})
@@ -875,57 +895,18 @@ macro(aui_app)
         set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
         set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
 
-        file(GLOB_RECURSE APP_SOURCE_FILES src/*.cpp src/*.m src/*.mm)
+        if (NOT AUI_ROOT)
+            set(AUI_ROOT ${CMAKE_SOURCE_DIR})
+        endif()
 
         set(RESOURCES
-                src/Main.storyboard
-                src/LaunchScreen.storyboard
+                ${AUI_ROOT}/ios/Main.storyboard
+                ${AUI_ROOT}/ios/LaunchScreen.storyboard
                 )
 
-        add_executable(
-                ${APP_NAME}
-                MACOSX_BUNDLE
-                ${APP_SOURCE_FILES}
-                ${RESOURCES}
-        )
-        set_target_properties(${APP_NAME} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
-        target_link_libraries(${APP_NAME} PRIVATE
-                -Wl,-force_load game
-                -Wl,-force_load aui::views)
-        set_property(TARGET ${APP_NAME} PROPERTY CXX_STANDARD 17)
 
-        # bzip2
-        find_package(bzip2 REQUIRED)
-        target_link_libraries(${APP_NAME} PUBLIC ${BZIP2_LIBRARIES})
-
-        # To disable bitcode:
-        # set_target_properties(${APP_NAME} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
-
-        # To link a statically linked Framework from the filesystem:
-        # Note: dynamic frameworks require copying to the app bundle. Statically linked are copied into the executable itself.
-        # target_link_libraries(${APP_NAME}
-        # ${PROJECT_SOURCE_DIR}/Torch.framework
-        # )
-
-
-        # Include the same headers for the statically linked framework:
-        # Include headers to they're available as #import <Header/Header.h> from a framework
-        # target_include_directories(${APP_NAME}
-        # PUBLIC ${PROJECT_SOURCE_DIR}/Torch.framework/Headers
-        # )
-
-
-        # Static Link a library archive into the executable
-        # target_link_libraries(${APP_NAME}
-        #   ${PROJECT_SOURCE_DIR}/framework/lib/libtorch.a
-        # )
-
-
-        # Include a source directory outside a framework
-        # target_include_directories(${APP_NAME}
-        #   PUBLIC ${PROJECT_SOURCE_DIR}/framework/include
-        # )
-
+        target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
+        set_target_properties(${APP_TARGET} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
 
         # Locate system libraries on iOS
         find_library(UIKIT UIKit REQUIRED)
@@ -937,7 +918,7 @@ macro(aui_app)
         find_library(SYSTEMCONFIGURATION SystemConfiguration REQUIRED)
 
         # link the frameworks located above
-        target_link_libraries(${APP_NAME}
+        target_link_libraries(${APP_TARGET}
                 PRIVATE
                 ${OPENGL}
                 ${UIKIT}
@@ -952,24 +933,21 @@ macro(aui_app)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc")
 
         # Create the app target
-        set_target_properties(${APP_NAME} PROPERTIES
+        set_target_properties(${APP_TARGET} PROPERTIES
                 XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym"
-                XCODE_ATTRIBUTE_GCC_PREFIX_HEADER "src/Prefix.pch"
                 RESOURCE "${RESOURCES}"
                 XCODE_ATTRIBUTE_GCC_PRECOMPILE_PREFIX_HEADER "YES"
                 XCODE_ATTRIBUTE_IPHONEOS_DEPLOYMENT_TARGET ${APP_IOS_VERSION}
                 XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ${APP_APPLE_SIGN_IDENTITY}
                 XCODE_ATTRIBUTE_DEVELOPMENT_TEAM ${APP_APPLE_TEAM_ID}
                 XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY ${APP_IOS_DEVICE}
-                MACOSX_BUNDLE_INFO_PLIST src/plist.in
+                MACOSX_BUNDLE_INFO_PLIST ${AUI_ROOT}/ios/plist.in
                 XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
                 XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES NO
                 XCODE_ATTRIBUTE_INSTALL_PATH "$(LOCAL_APPS_DIR)"
                 XCODE_ATTRIBUTE_ENABLE_TESTABILITY YES
                 XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES
                 )
-
-        target_include_directories(${APP_NAME} PRIVATE src)
 
         # Include framework headers, needed to make "Build" Xcode action work.
         # "Archive" works fine just relying on default search paths as it has different
@@ -978,13 +956,11 @@ macro(aui_app)
 
         # Set the app's linker search path to the default location on iOS
         set_target_properties(
-                ${APP_NAME}
+                ${APP_TARGET}
                 PROPERTIES
                 XCODE_ATTRIBUTE_LD_RUNPATH_SEARCH_PATHS
                 "@executable_path/Frameworks"
         )
-
-        add_subdirectory(../magicsea build)
 
         # Note that commands below are indented just for readability. They will endup as
         # one liners after processing and unescaped ; will disappear so \; are needed.
@@ -996,16 +972,16 @@ macro(aui_app)
         # Create Frameworks directory in app bundle
         add_custom_command(
                 TARGET
-                ${APP_NAME}
+                ${APP_TARGET}
                 POST_BUILD COMMAND /bin/sh -c
                 \"COMMAND_DONE=0 \;
                 if ${CMAKE_COMMAND} -E make_directory
-                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks
+                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks
         \&\>/dev/null \; then
         COMMAND_DONE=1 \;
         fi \;
         if ${CMAKE_COMMAND} -E make_directory
-        \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks
+        \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks
         \&\>/dev/null \; then
         COMMAND_DONE=1 \;
         fi \;
@@ -1018,18 +994,18 @@ macro(aui_app)
         # Copy the framework into the app bundle
         add_custom_command(
                 TARGET
-                ${APP_NAME}
+                ${APP_TARGET}
                 POST_BUILD COMMAND /bin/sh -c
                 \"COMMAND_DONE=0 \;
                 if ${CMAKE_COMMAND} -E copy_directory
                 ${PROJECT_BINARY_DIR}/cppframework/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/
-                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks
+                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks
         \&\>/dev/null \; then
         COMMAND_DONE=1 \;
         fi \;
         if ${CMAKE_COMMAND} -E copy_directory
         \${BUILT_PRODUCTS_DIR}/${FRAMEWORK_NAME}.framework
-        \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
+        \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
         \&\>/dev/null \; then
         COMMAND_DONE=1 \;
         fi \;
@@ -1042,17 +1018,17 @@ macro(aui_app)
         # Codesign the framework in it's new spot
         add_custom_command(
                 TARGET
-                ${APP_NAME}
+                ${APP_TARGET}
                 POST_BUILD COMMAND /bin/sh -c
                 \"COMMAND_DONE=0 \;
                 if codesign --force --verbose
-                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
                 --sign ${APP_APPLE_SIGN_IDENTITY}
         \&\>/dev/null \; then
         COMMAND_DONE=1 \;
         fi \;
         if codesign --force --verbose
-        \${BUILT_PRODUCTS_DIR}/${APP_NAME}.app/Frameworks/${FRAMEWORK_NAME}.framework
+        \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
         --sign ${APP_APPLE_SIGN_IDENTITY}
         \&\>/dev/null \; then
         COMMAND_DONE=1 \;
@@ -1066,7 +1042,7 @@ macro(aui_app)
         # Add a "PlugIns" folder as a kludge fix for how the XcTest package generates paths
         add_custom_command(
                 TARGET
-                ${APP_NAME}
+                ${APP_TARGET}
                 POST_BUILD COMMAND /bin/sh -c
                 \"COMMAND_DONE=0 \;
                 if ${CMAKE_COMMAND} -E make_directory

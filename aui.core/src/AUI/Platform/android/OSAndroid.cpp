@@ -19,16 +19,11 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2772 on 9/12/20.
-//
-
-#if AUI_PLATFORM_ANDROID
 
 #include <jni.h>
 #include <AUI/Logging/ALogger.h>
 #include "OSAndroid.h"
-#include "Entry.h"
+#include <AUI/Platform/Entry.h>
 
 JavaVM* _gVM;
 
@@ -112,5 +107,3 @@ AAndroid::Ref &AAndroid::Ref::operator=(jobject object) {
     mObject = object ? AAndroid::getJNI()->NewGlobalRef(object) : nullptr;
     return *this;
 }
-
-#endif

@@ -117,7 +117,7 @@ void AWindow::flagRedraw() {
 
 
 void AWindow::setSize(int width, int height) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
+    AViewContainer::setSize(width, height);
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {

@@ -19,7 +19,7 @@
  * =====================================================================================================================
  */
 
-#if !AUI_PLATFORM_ANDROID
+#if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
 #include <AUI/api.h>
 #include <AUI/Common/AStringVector.h>
 #include <AUI/Thread/IEventLoop.h>

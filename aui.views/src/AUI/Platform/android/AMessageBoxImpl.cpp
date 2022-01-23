@@ -22,7 +22,7 @@
 #include "AUI/Platform/AMessageBox.h"
 
 
-#include <AUI/Platform/OSAndroid.h>
+#include <AUI/Platform/android/OSAndroid.h>
 #include <AUI/Platform/AMessageBox.h>
 
 AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b) {

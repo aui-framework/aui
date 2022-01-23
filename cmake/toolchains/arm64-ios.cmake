@@ -173,4 +173,3 @@ macro (find_host_package)
 endmacro (find_host_package)
 
 set (CMAKE_SYSTEM_PROCESSOR ${IOS_ARCH} CACHE STRING "")
-set(CMAKE_CXX_COMPILER_ID Clang CACHE STRING "")

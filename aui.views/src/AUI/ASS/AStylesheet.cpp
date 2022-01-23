@@ -69,7 +69,11 @@ AStylesheet::AStylesheet() {
         {
             t<AWindow>(),
             BackgroundSolid {0xf0f0f0_rgb},
+#if AUI_PLATFORM_IOS
+            Padding { 24_dp, 4_dp, 4_dp }, // TODO temporary fix
+#else
             Padding { 4_dp },
+#endif
         },
 
          // ASpinner
@@ -469,7 +473,13 @@ AStylesheet::AStylesheet() {
         },
         {
             t<AScrollbarHandle>(),
+#if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
+            FixedSize { 6_dp, {} },
+            BorderRadius { 3_dp },
+#else
             FixedSize { 15_dp, {} },
+#endif
+
             MinSize { {}, 40_dp },
             BackgroundSolid { 0xcccccc_rgb },
             Margin {1_px, 0},
@@ -480,6 +490,9 @@ AStylesheet::AStylesheet() {
         },
         {
             t<AScrollbarButton>(),
+#if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
+            Visibility::GONE,
+#endif
             FixedSize { 15_dp, 15_dp },
             BackgroundImage { {}, 0x404040_rgb },
             Margin {0 },
