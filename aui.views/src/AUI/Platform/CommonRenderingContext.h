@@ -31,6 +31,7 @@ protected:
 #endif
 public:
 #if AUI_PLATFORM_LINUX
+    static void ensureXLibInitialized();
     static aui::assert_not_used_when_null<Display*> ourDisplay;
     static Screen* ourScreen;
 
