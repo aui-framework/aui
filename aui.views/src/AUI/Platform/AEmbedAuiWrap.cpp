@@ -66,6 +66,7 @@ void AEmbedAuiWrap::windowMakeCurrent() {
 }
 
 void AEmbedAuiWrap::windowRender() {
+    Render::setWindow(mContainer.get());
     mContainer->render();
 }
 
