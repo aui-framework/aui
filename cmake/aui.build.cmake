@@ -714,11 +714,15 @@ function(aui_module AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
 
 
-    set(options PLUGIN)
+    set(options PLUGIN FORCE_STATIC FORCE_SHARED)
     set(oneValueArgs EXPORT)
     set(multiValueArgs ADDITIONAL_SRCS)
     cmake_parse_arguments(AUIE "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
+
+    if (AUIE_FORCE_SHARED AND AUIE_FORCE_STATIC)
+        message(FATAL_ERROR "FORCE_SHARED AND FORCE_STATIC flags are exclusive!")
+    endif()
 
     if (SRCS_TESTS_TMP)
         set_property(GLOBAL APPEND PROPERTY TESTS_DEPS ${AUI_MODULE_NAME})
@@ -740,6 +744,13 @@ function(aui_module AUI_MODULE_NAME)
     foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
         list(FILTER SRCS EXCLUDE REGEX ".*\\/${PLATFORM_NAME}\\/.*")
     endforeach()
+
+    if (AUIE_FORCE_SHARED)
+        set(AUIE_ADDITIONAL_SRCS SHARED ${AUIE_ADDITIONAL_SRCS})
+    endif()
+    if (AUIE_FORCE_STATIC)
+        set(AUIE_ADDITIONAL_SRCS STATIC ${AUIE_ADDITIONAL_SRCS})
+    endif()
 
     add_library(${AUI_MODULE_NAME} ${AUIE_ADDITIONAL_SRCS} ${SRCS})
     get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
