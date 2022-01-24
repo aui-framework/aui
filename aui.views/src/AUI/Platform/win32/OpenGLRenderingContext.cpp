@@ -169,12 +169,7 @@ void OpenGLRenderingContext::beginPaint(AWindow& window) {
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
-#if !(AUI_PLATFORM_ANDROID)
     glEnable(GL_MULTISAMPLE);
-#else
-    glClearColor(1.f, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-#endif
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
