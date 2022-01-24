@@ -82,6 +82,12 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 				find_package(ZLIB REQUIRED)
 				aui_link(aui.views PRIVATE ZLIB::ZLIB)
 			endif()
+		elseif(AUI_PLATFORM_MACOS)
+			target_link_libraries(aui.views PUBLIC "-framework AppKit"
+				                                   "-framework Cocoa"
+				                                   "-framework CoreData"
+				                                   "-framework Foundation"
+				                                   "-framework QuartzCore")
 		endif()
 	endif()
 else()

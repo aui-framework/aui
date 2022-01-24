@@ -15,7 +15,7 @@
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
-    // stub
+    Render::setRenderer(std::make_unique<OpenGLRenderer>());
 }
 
 void OpenGLRenderingContext::destroyNativeWindow(AWindow& window) {
@@ -38,6 +38,7 @@ void OpenGLRenderingContext::beginPaint(AWindow& window) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // stencil
+    glClear(GL_STENCIL_BUFFER_BIT);
     glClearStencil(0);
     glStencilMask(0xff);
     glDisable(GL_SCISSOR_TEST);

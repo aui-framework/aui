@@ -73,7 +73,11 @@ private:
     } mXsyncRequestCounter;
     bool mWasMaximized = false;
 #endif
+#ifdef AUI_PLATFORM_MACOS
+    bool mRedrawFlag = false;
+#else
     bool mRedrawFlag = true;
+#endif
     bool mUpdateLayoutFlag = true;
     AString mWindowClass;
     AWindow* mParentWindow;

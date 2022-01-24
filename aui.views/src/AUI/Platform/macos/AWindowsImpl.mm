@@ -19,8 +19,8 @@
  * =====================================================================================================================
  */
 
-
 #include "AUI/GL/gl.h"
+#import <Cocoa/Cocoa.h>
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
@@ -36,6 +36,7 @@
 #include "AUI/Platform/Platform.h"
 #include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/OpenGLRenderingContext.h"
+#import "MacosApp.h"
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
@@ -45,8 +46,6 @@
 #include <AUI/Traits/arrays.h>
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
-
-#include <X11/extensions/sync.h>
 
 
 
@@ -62,15 +61,32 @@ void AWindow::quit() {
         mSelfHolder = nullptr;
     });
 }
+void AWindow::show() {
+    if (!getWindowManager().mWindows.contains(shared_from_this())) {
+        getWindowManager().mWindows << shared_from_this();
+    }
+    try {
+        mSelfHolder = shared_from_this();
+    } catch (...) {
+        mSelfHolder = nullptr;
+    }
+    AThread::current() << [&]() {
+        redraw();
+    };
 
+    auto ns = static_cast<NSWindow*>(mHandle);
+    [ns orderFront:nil];
+    [ns setIsVisible:YES];
+
+    emit shown();
+}
 void AWindow::setWindowStyle(WindowStyle ws) {
     mWindowStyle = ws;
 }
 
 void AWindow::updateDpi() {
     emit dpiChanged;
-
-    mDpiRatio = Platform::getDpiRatio();
+    mDpiRatio = float([static_cast<NSWindow*>(mHandle) backingScaleFactor]);
     onDpiChanged();
 }
 
@@ -100,7 +116,12 @@ glm::ivec2 AWindow::getWindowPosition() const {
 
 
 void AWindow::flagRedraw() {
-    mRedrawFlag = true;
+    if (!mRedrawFlag) {
+        if (auto crc = dynamic_cast<CommonRenderingContext*>(mRenderingContext.get())) {
+            mRedrawFlag = true;
+            crc->requestFrame();
+        }
+    }
 }
 
 
@@ -133,5 +154,5 @@ void AWindowManager::notifyProcessMessages() {
 }
 
 void AWindowManager::loop() {
-
+    MacosApp::inst().run();
 }

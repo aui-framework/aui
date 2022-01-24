@@ -125,13 +125,37 @@ namespace aui::platform {
             return false;
         }
     }
+    namespace os_ios {
+        using namespace mobile;
+
+        constexpr char path_variable_separator = ':';
+
+        static const char* name() {
+            return "ios";
+        }
+
+
+        constexpr bool is_windows() {
+            return false;
+        }
+
+        constexpr bool is_unix() {
+            return true;
+        }
+
+        constexpr bool is_apple() {
+            return true;
+        }
+    }
 
 #if AUI_PLATFORM_WIN
     namespace current = os_windows;
 #elif AUI_PLATFORM_ANDROID
     namespace current = os_android;
-#elif defined(__APPLE__)
+#elif AUI_PLATFORM_MACOS
     namespace current = macos;
+#elif AUI_PLATFORM_IOS
+    namespace current = os_ios;
 #else
     namespace current = os_unix;
 #endif

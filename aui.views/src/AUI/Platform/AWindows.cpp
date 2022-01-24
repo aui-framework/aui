@@ -87,6 +87,7 @@ void AWindow::redraw() {
 
         // fps restriction
         {
+#if AUI_PLATFORM_WIN || AUI_PLATFORM_LINUX
             auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
             auto delta = now - _gLastFrameTime;
             // restriction 16ms = up to 60 frames per second
@@ -96,6 +97,7 @@ void AWindow::redraw() {
                 std::this_thread::sleep_for(FRAME_DURATION - delta);
             }
             _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+#endif
         }
 
         mRenderingContext->beginPaint(*this);
@@ -164,24 +166,6 @@ void AWindow::flagUpdateLayout() {
     mUpdateLayoutFlag = true;
 }
 
-void AWindow::show() {
-    if (!getWindowManager().mWindows.contains(shared_from_this())) {
-        getWindowManager().mWindows << shared_from_this();
-    }
-    try {
-        mSelfHolder = shared_from_this();
-    } catch (...) {
-        mSelfHolder = nullptr;
-    }
-    AThread::current() << [&]() {
-        redraw();
-    };
-#if AUI_PLATFORM_WIN
-    UpdateWindow(mHandle);
-    ShowWindow(mHandle, SW_SHOWNORMAL);
-#endif
-    emit shown();
-}
 
 void AWindow::onCloseButtonClicked() {
     emit closed();

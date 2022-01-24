@@ -25,7 +25,7 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Render/Render.h"
-#include "AUI/Platform/OSAndroid.h"
+#include "AUI/Platform/android/OSAndroid.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -135,4 +135,19 @@ void AWindowManager::notifyProcessMessages() {
 
 void AWindowManager::loop() {
     AThread::current()->processMessages();
+}
+void AWindow::show() {
+    if (!getWindowManager().mWindows.contains(shared_from_this())) {
+        getWindowManager().mWindows << shared_from_this();
+    }
+    try {
+        mSelfHolder = shared_from_this();
+    } catch (...) {
+        mSelfHolder = nullptr;
+    }
+    AThread::current() << [&]() {
+        redraw();
+    };
+
+    emit shown();
 }

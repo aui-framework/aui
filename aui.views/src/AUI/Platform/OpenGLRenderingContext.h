@@ -14,6 +14,8 @@ private:
     static HGLRC ourHrc;
 #elif AUI_PLATFORM_LINUX
     static GLXContext ourContext;
+#elif AUI_PLATFORM_MACOS
+    void* mContext;
 #endif
 
 public:

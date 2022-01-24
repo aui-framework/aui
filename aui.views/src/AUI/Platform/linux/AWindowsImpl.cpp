@@ -258,7 +258,21 @@ glm::ivec2 AWindow::getWindowPosition() const {
 void AWindow::flagRedraw() {
     mRedrawFlag = true;
 }
+void AWindow::show() {
+    if (!getWindowManager().mWindows.contains(shared_from_this())) {
+        getWindowManager().mWindows << shared_from_this();
+    }
+    try {
+        mSelfHolder = shared_from_this();
+    } catch (...) {
+        mSelfHolder = nullptr;
+    }
+    AThread::current() << [&]() {
+        redraw();
+    };
 
+    emit shown();
+}
 
 void AWindow::setSize(int width, int height) {
     setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
