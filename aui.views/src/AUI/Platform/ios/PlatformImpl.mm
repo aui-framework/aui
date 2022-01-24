@@ -33,5 +33,5 @@ void Platform::playSystemSound(Sound s)
 
 float Platform::getDpiRatio()
 {
-    return float([[UIScreen mainScreen] scale]);
+    return float([[UIScreen mainScreen] scale]) * 1.2f;
 }
