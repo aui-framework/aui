@@ -59,14 +59,14 @@ void AEmbedAuiWrap::onMouseScroll(int mouseX, int mouseY, int scrollX, int scrol
 
 AEmbedAuiWrap::AEmbedAuiWrap()
 {
-#if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
-    glewExperimental = true;
-    auto r = glewInit();
-    assert(r == 0);
-#endif
-    Render::setRenderer(std::make_unique<OpenGLRenderer>());
-    mContainer = _new<EmbedWindow>();
-    mContainer->setPosition({ 0, 0 });
+}
+
+void AEmbedAuiWrap::windowMakeCurrent() {
+    mContainer->makeCurrent();
+}
+
+void AEmbedAuiWrap::windowRender() {
+    mContainer->render();
 }
 
 void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
@@ -78,41 +78,8 @@ void AEmbedAuiWrap::setViewportSize(int width, int height) {
     mContainer->makeCurrent();
     mSize = { width, height };
     mContainer->setSize(width, height);
-
-    resetGLState();
 }
 
-void AEmbedAuiWrap::render() {
-    mContainer->makeCurrent();
-    AThread::current()->processMessages();
-
-    glEnable(GL_STENCIL_TEST);
-    glDisable(GL_DEPTH_TEST);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    GL::State::activeTexture(0);
-    GL::State::useProgram(0);
-    GL::State::bindVertexArray(0);
-    GL::State::bindTexture(GL_TEXTURE_2D, 0);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    Render::setColorForced(1.f);
-    Render::setTransformForced(glm::ortho(0.f,
-                                                 static_cast<float>(mSize.x),
-                                                 static_cast<float>(mSize.y),
-                                                 0.f));
-    mContainer->render();
-
-    resetGLState();
-}
-
-void AEmbedAuiWrap::resetGLState() {
-    glBindTexture(GL_TEXTURE_2D, 0);
-    if (glBindVertexArray) {
-        glBindVertexArray(0);
-    }
-}
 
 void AEmbedAuiWrap::onMousePressed(int x, int y, AInput::Key button) {
     mContainer->makeCurrent();
@@ -156,4 +123,10 @@ void AEmbedAuiWrap::clearFocus() {
 
 ABaseWindow* AEmbedAuiWrap::getWindow() {
     return mContainer.get();
+}
+
+void AEmbedAuiWrap::windowInit(_unique<IRenderingContext> context) {
+    mContainer = _new<EmbedWindow>();
+    mContainer->mRenderingContext = std::move(context);
+    mContainer->setPosition({ 0, 0 });
 }

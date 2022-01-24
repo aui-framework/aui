@@ -32,6 +32,9 @@ template<typename T>
 using _weak = std::weak_ptr<T>;
 
 template<typename T>
+using _unique = std::unique_ptr<T>;
+
+template<typename T>
 class _;
 
 namespace aui {
@@ -55,6 +58,14 @@ namespace aui {
          */
         template<typename T, typename Deleter>
         static _<T> manage(T* raw, Deleter deleter);
+        /**
+         * Delegates memory management of the raw pointer <code>T* raw</code> to the unique pointer, which is returned
+         * @tparam T any type
+         * @param raw raw pointer to manage memory of
+         * @return unique pointer
+         */
+        template<typename T>
+        static _unique<T> unique(T* raw);
 
         /**
          * Creates fake shared pointer to <code>T* raw</code> with empty destructor, which does nothing. It's useful
@@ -232,11 +243,12 @@ namespace aui {
     _<T> ptr::manage(T* raw, Deleter deleter) {
         return _<T>(raw, deleter);
     }
+    template<typename T>
+    _unique<T> ptr::unique(T* raw) {
+        return _unique<T>(raw);
+    }
 }
 
-
-template<typename T>
-using _unique = std::unique_ptr<T>;
 
 
 template<typename TO, typename FROM>

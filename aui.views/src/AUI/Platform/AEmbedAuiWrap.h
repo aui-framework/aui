@@ -31,14 +31,19 @@
 #include "ABaseWindow.h"
 
 /**
- * Helper for applications which initialize OpenGL by themselves.
+ * Helper for applications with custom window initialization.
+ * @note This class is abstract; use <a href="AGLEmbedAuiWrap">AGLEmbedAuiWrap</a> or
+ *       <a href="ASoftwareEmbedAuiWrap">ASoftwareEmbedAuiWrap</a> instead.
  */
 class API_AUI_VIEWS AEmbedAuiWrap {
-private:
+protected:
     class EmbedWindow;
     _<EmbedWindow> mContainer;
     glm::ivec2 mSize;
 
+    void windowInit(_unique<IRenderingContext> context);
+    void windowMakeCurrent();
+    void windowRender();
 public:
     explicit AEmbedAuiWrap();
 
@@ -46,9 +51,6 @@ public:
 
     void setContainer(const _<AViewContainer>& container);
     void setViewportSize(int width, int height);
-    void render();
-
-    void resetGLState();
 
     /**
      * @return true if UI is opaque for mouse at specified position
