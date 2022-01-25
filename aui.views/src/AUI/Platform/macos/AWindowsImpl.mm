@@ -84,10 +84,8 @@ void AWindow::setWindowStyle(WindowStyle ws) {
     mWindowStyle = ws;
 }
 
-void AWindow::updateDpi() {
-    emit dpiChanged;
-    mDpiRatio = float([static_cast<NSWindow*>(mHandle) backingScaleFactor]);
-    onDpiChanged();
+float AWindow::fetchDpiFromSystem() const {
+    return float([static_cast<NSWindow*>(mHandle) backingScaleFactor]);
 }
 
 void AWindow::restore() {

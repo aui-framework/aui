@@ -16,6 +16,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Util/ALayoutInflater.h>
 #include <AUI/Util/AViewProfiler.h>
+#include <AUI/UITestState.h>
 
 ABaseWindow::ABaseWindow() {
     mDpiRatio = Platform::getDpiRatio();
@@ -25,6 +26,16 @@ ABaseWindow::~ABaseWindow() {
     if (currentWindowStorage() == this) {
         currentWindowStorage() = nullptr;
     }
+}
+
+float ABaseWindow::fetchDpiFromSystem() const {
+    return Platform::getDpiRatio();
+}
+
+void ABaseWindow::updateDpi() {
+    emit dpiChanged;
+    mDpiRatio = UITestState::isTesting() ? 1.f : fetchDpiFromSystem();
+    onDpiChanged();
 }
 
 _unique<AWindowManager>& ABaseWindow::getWindowManagerImpl() {

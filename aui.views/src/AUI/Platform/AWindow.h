@@ -122,6 +122,7 @@ protected:
     AWindow(std::nullptr_t) {}
 
     void createDevtoolsWindow() override;
+    float fetchDpiFromSystem() const;
 
 public:
     AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
@@ -132,7 +133,6 @@ public:
 
     void redraw();
 
-    void updateDpi();
 
     _<AView> determineSharedPointer() override;
 

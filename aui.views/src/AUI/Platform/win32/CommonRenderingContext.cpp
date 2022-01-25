@@ -72,17 +72,23 @@ void CommonRenderingContext::init(const Init& init) {
     IRenderingContext::init(init);
 }
 
-void CommonRenderingContext::destroyNativeWindow(AWindow& window) {
-    ReleaseDC(window.mHandle, mWindowDC);
+void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+    if (auto w = dynamic_cast<AWindow*>(&window)) {
+        ReleaseDC(w->mHandle, mWindowDC);
 
-    DestroyWindow(window.mHandle);
+        DestroyWindow(w->mHandle);
+    }
     UnregisterClass(mWindowClass.c_str(), GetModuleHandle(nullptr));
 }
 
-void CommonRenderingContext::beginPaint(AWindow& window) {
-    mPainterDC = BeginPaint(window.mHandle, &mPaintstruct);
+void CommonRenderingContext::beginPaint(ABaseWindow& window) {
+    if (auto w = dynamic_cast<AWindow*>(&window)) {
+        mPainterDC = BeginPaint(w->mHandle, &mPaintstruct);
+    }
 }
 
-void CommonRenderingContext::endPaint(AWindow& window) {
-    EndPaint(window.mHandle, &mPaintstruct);
+void CommonRenderingContext::endPaint(ABaseWindow& window) {
+    if (auto w = dynamic_cast<AWindow*>(&window)) {
+        EndPaint(w->mHandle, &mPaintstruct);
+    }
 }

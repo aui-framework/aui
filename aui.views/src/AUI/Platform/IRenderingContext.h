@@ -7,6 +7,7 @@
 #include <AUI/Enum/WindowStyle.h>
 #include <AUI/Image/AImage.h>
 
+class ABaseWindow;
 class AWindow;
 
 class API_AUI_VIEWS IRenderingContext {
@@ -23,12 +24,12 @@ public:
     };
     virtual void init(const Init& init);
     virtual ~IRenderingContext() = default;
-    virtual void destroyNativeWindow(AWindow& window) = 0;
+    virtual void destroyNativeWindow(ABaseWindow& window) = 0;
 
     virtual AImage makeScreenshot() = 0;
 
-    virtual void beginPaint(AWindow& window) = 0;
-    virtual void endPaint(AWindow& window) = 0;
-    virtual void beginResize(AWindow& window) = 0;
-    virtual void endResize(AWindow& window) = 0;
+    virtual void beginPaint(ABaseWindow& window) = 0;
+    virtual void endPaint(ABaseWindow& window) = 0;
+    virtual void beginResize(ABaseWindow& window) = 0;
+    virtual void endResize(ABaseWindow& window) = 0;
 };

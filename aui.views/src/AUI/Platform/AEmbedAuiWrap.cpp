@@ -33,8 +33,12 @@
 
 class AEmbedAuiWrap::EmbedWindow: public ABaseWindow {
     friend class AEmbedAuiWrap;
+private:
+    AEmbedAuiWrap* mTheWrap;
+    bool mRequiresRedraw = false;
+
 public:
-    EmbedWindow() {
+    EmbedWindow(AEmbedAuiWrap* theWrap): mTheWrap(theWrap) {
         currentWindowStorage() = this;
     }
 
@@ -50,6 +54,19 @@ public:
 
     void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) override {
         removeView(surface);
+    }
+
+    void flagRedraw() override {
+        ABaseWindow::flagRedraw();
+        mRequiresRedraw = true;
+    }
+
+protected:
+    float fetchDpiFromSystem() const override {
+        if (mTheWrap->mCustomDpiRatio) {
+            return *mTheWrap->mCustomDpiRatio;
+        }
+        return ABaseWindow::fetchDpiFromSystem();
     }
 };
 
@@ -67,7 +84,10 @@ void AEmbedAuiWrap::windowMakeCurrent() {
 
 void AEmbedAuiWrap::windowRender() {
     Render::setWindow(mContainer.get());
+    nullsafe(mContainer->getRenderingContext())->beginPaint(*mContainer);
+    mContainer->mRequiresRedraw = false;
     mContainer->render();
+    nullsafe(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 
 void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
@@ -78,7 +98,10 @@ void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
 void AEmbedAuiWrap::setViewportSize(int width, int height) {
     mContainer->makeCurrent();
     mSize = { width, height };
+    nullsafe(mContainer->getRenderingContext())->beginResize(*mContainer);
     mContainer->setSize(width, height);
+    nullsafe(mContainer->getRenderingContext())->endResize(*mContainer);
+    mContainer->mRequiresRedraw = true;
 }
 
 
@@ -127,7 +150,20 @@ ABaseWindow* AEmbedAuiWrap::getWindow() {
 }
 
 void AEmbedAuiWrap::windowInit(_unique<IRenderingContext> context) {
-    mContainer = _new<EmbedWindow>();
+    mContainer = _new<EmbedWindow>(this);
     mContainer->mRenderingContext = std::move(context);
     mContainer->setPosition({ 0, 0 });
+}
+
+void AEmbedAuiWrap::setCustomDpiRatio(float r) {
+    if (mCustomDpiRatio) {
+        if (*mCustomDpiRatio == r) {
+            return;
+        }
+    }
+    mCustomDpiRatio = r;
+    mContainer->updateDpi();
+}
+bool AEmbedAuiWrap::requiresRedraw() {
+    return mContainer->mRequiresRedraw;
 }

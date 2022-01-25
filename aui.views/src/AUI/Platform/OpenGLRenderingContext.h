@@ -24,9 +24,9 @@ public:
 
     AImage makeScreenshot() override;
 
-    void destroyNativeWindow(AWindow& window) override;
-    void beginPaint(AWindow& window) override;
-    void endPaint(AWindow& window) override;
-    void beginResize(AWindow& window) override;
-    void endResize(AWindow& window) override;
+    void destroyNativeWindow(ABaseWindow& window) override;
+    void beginPaint(ABaseWindow& window) override;
+    void endPaint(ABaseWindow& window) override;
+    void beginResize(ABaseWindow& window) override;
+    void endResize(ABaseWindow& window) override;
 };

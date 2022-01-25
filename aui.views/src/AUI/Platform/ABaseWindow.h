@@ -21,13 +21,13 @@ class API_AUI_VIEWS ABaseWindow: public AViewContainer {
 private:
     _weak<AView> mFocusedView;
     _weak<AView> mProfiledView;
+    float mDpiRatio = 1.f;
 
 
     glm::ivec2 mMousePos;
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
 
 protected:
-    float mDpiRatio = 1.f;
     bool mIsFocused = true;
     _unique<IRenderingContext> mRenderingContext;
 
@@ -42,6 +42,8 @@ protected:
     virtual void createDevtoolsWindow();
 
     static _unique<AWindowManager>& getWindowManagerImpl();
+
+    virtual float fetchDpiFromSystem() const;
 
 public:
 
@@ -64,6 +66,8 @@ public:
     const _unique<IRenderingContext>& getRenderingContext() const {
         return mRenderingContext;
     }
+
+    void updateDpi();
 
     float getDpiRatio()
     {

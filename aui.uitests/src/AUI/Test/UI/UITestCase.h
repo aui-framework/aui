@@ -19,15 +19,15 @@ public:
 
     ~UITestRenderingContext() override = default;
 
-    void destroyNativeWindow(AWindow& window) override {
+    void destroyNativeWindow(ABaseWindow& window) override {
 
     }
 
-    void beginPaint(AWindow& window) override {
+    void beginPaint(ABaseWindow& window) override {
         std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
     }
 
-    void endPaint(AWindow& window) override {
+    void endPaint(ABaseWindow& window) override {
 
     }
 

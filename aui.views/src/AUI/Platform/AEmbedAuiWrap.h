@@ -40,17 +40,22 @@ protected:
     class EmbedWindow;
     _<EmbedWindow> mContainer;
     glm::ivec2 mSize;
-
+    std::optional<float> mCustomDpiRatio;
     void windowInit(_unique<IRenderingContext> context);
     void windowMakeCurrent();
     void windowRender();
+
 public:
     explicit AEmbedAuiWrap();
 
     void clearFocus();
 
     void setContainer(const _<AViewContainer>& container);
-    void setViewportSize(int width, int height);
+    virtual void setViewportSize(int width, int height);
+
+    void setCustomDpiRatio(float r);
+
+    bool requiresRedraw();
 
     /**
      * @return true if UI is opaque for mouse at specified position

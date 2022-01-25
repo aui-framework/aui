@@ -242,9 +242,9 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
 
         case WM_DPICHANGED: {
-            auto prevDpi = mDpiRatio;
+            auto prevDpi = getDpiRatio();
             updateDpi();
-            setSize(getWidth() * mDpiRatio / prevDpi, getHeight() * mDpiRatio / prevDpi);
+            setSize(getWidth() * getDpiRatio() / prevDpi, getHeight() * getDpiRatio() / prevDpi);
             return 0;
         }
 
@@ -331,23 +331,18 @@ void AWindow::setWindowStyle(WindowStyle ws) {
 }
 
 
-void AWindow::updateDpi() {
-    emit dpiChanged;
-
+float AWindow::fetchDpiFromSystem() const {
     if (mHandle) {
         typedef UINT(WINAPI* GetDpiForWindow_t)(_In_ HWND);
         static auto GetDpiForWindow = (GetDpiForWindow_t) GetProcAddress(GetModuleHandleA("User32.dll"),
                                                                          "GetDpiForWindow");
         if (GetDpiForWindow) {
-            mDpiRatio = GetDpiForWindow(mHandle) / 96.f;
+            return GetDpiForWindow(mHandle) / 96.f;
         } else {
-            mDpiRatio = Platform::getDpiRatio();
+            return Platform::getDpiRatio();
         }
-    } else {
-        mDpiRatio = 1.f;
     }
-
-    onDpiChanged();
+    return 1.f;
 }
 
 void AWindow::restore() {

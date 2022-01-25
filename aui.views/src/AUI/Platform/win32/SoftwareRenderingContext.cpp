@@ -16,32 +16,34 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init& init) {
     }
 }
 
-void SoftwareRenderingContext::destroyNativeWindow(AWindow& window) {
+void SoftwareRenderingContext::destroyNativeWindow(ABaseWindow& window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void SoftwareRenderingContext::beginPaint(AWindow& window) {
+void SoftwareRenderingContext::beginPaint(ABaseWindow& window) {
     CommonRenderingContext::beginPaint(window);
     std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
 }
 
-void SoftwareRenderingContext::endPaint(AWindow& window) {
-    StretchDIBits(mPainterDC,
-                  0, 0,
-                  mBitmapSize.x, mBitmapSize.y,
-                  0, 0,
-                  mBitmapSize.x, mBitmapSize.y,
-                  mBitmapInfo->bmiColors,
-                  mBitmapInfo,
-                  DIB_RGB_COLORS,
-                  SRCCOPY);
+void SoftwareRenderingContext::endPaint(ABaseWindow& window) {
+    if (mPainterDC != 0) {
+        StretchDIBits(mPainterDC,
+                      0, 0,
+                      mBitmapSize.x, mBitmapSize.y,
+                      0, 0,
+                      mBitmapSize.x, mBitmapSize.y,
+                      mBitmapInfo->bmiColors,
+                      mBitmapInfo,
+                      DIB_RGB_COLORS,
+                      SRCCOPY);
+    }
     CommonRenderingContext::endPaint(window);
 }
 
-void SoftwareRenderingContext::beginResize(AWindow& window) {
+void SoftwareRenderingContext::beginResize(ABaseWindow& window) {
 }
 
-void SoftwareRenderingContext::endResize(AWindow& window) {
+void SoftwareRenderingContext::endResize(ABaseWindow& window) {
     mBitmapSize = window.getSize();
     mBitmapBlob.reallocate(mBitmapSize.x * mBitmapSize.y * 4 + sizeof(*mBitmapInfo));
     mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);

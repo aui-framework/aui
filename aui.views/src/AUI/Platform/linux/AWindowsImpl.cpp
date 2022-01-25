@@ -98,14 +98,8 @@ void AWindow::setWindowStyle(WindowStyle ws) {
     }
 }
 
-void AWindow::updateDpi() {
-    emit dpiChanged;
-    if (UITestState::isTesting()) {
-        mDpiRatio = 1.f;
-    } else {
-        mDpiRatio = Platform::getDpiRatio();
-    }
-    onDpiChanged();
+float AWindow::fetchDpiFromSystem() const {
+    return Platform::getDpiRatio();
 }
 
 void AWindow::restore() {

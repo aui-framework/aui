@@ -18,7 +18,7 @@ protected:
     /**
      * BeginPaint() HDC
      */
-    HDC mPainterDC;
+    HDC mPainterDC = nullptr;
 
     PAINTSTRUCT mPaintstruct;
 #endif
@@ -60,11 +60,11 @@ public:
 
     void init(const Init& init) override;
 
-    void beginPaint(AWindow& window) override;
+    void beginPaint(ABaseWindow& window) override;
 
-    void endPaint(AWindow& window) override;
+    void endPaint(ABaseWindow& window) override;
 
     ~CommonRenderingContext() override = default;
 
-    void destroyNativeWindow(AWindow& window) override;
+    void destroyNativeWindow(ABaseWindow& window) override;
 };
