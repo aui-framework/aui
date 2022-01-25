@@ -131,13 +131,14 @@ void CommonRenderingContext::init(const Init& init) {
     IRenderingContext::init(init);
 }
 
-void CommonRenderingContext::destroyNativeWindow(AWindow& window) {
-
-    XDestroyWindow(ourDisplay, window.mHandle);
+void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
+    if (auto w = dynamic_cast<AWindow*>(&window)) {
+        XDestroyWindow(ourDisplay, w->mHandle);
+    }
 }
 
-void CommonRenderingContext::beginPaint(AWindow& window) {
+void CommonRenderingContext::beginPaint(ABaseWindow& window) {
 }
 
-void CommonRenderingContext::endPaint(AWindow& window) {
+void CommonRenderingContext::endPaint(ABaseWindow& window) {
 }

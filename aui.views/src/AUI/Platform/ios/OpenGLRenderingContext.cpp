@@ -18,11 +18,11 @@ void OpenGLRenderingContext::init(const Init& init) {
     Render::setRenderer(std::make_unique<OpenGLRenderer>());
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(AWindow& window) {
+void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void OpenGLRenderingContext::beginPaint(AWindow& window) {
+void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     CommonRenderingContext::beginPaint(window);
     
     GL::State::activeTexture(0);
@@ -48,14 +48,14 @@ void OpenGLRenderingContext::beginPaint(AWindow& window) {
     glStencilFunc(GL_EQUAL, 0, 0xff);
 }
 
-void OpenGLRenderingContext::beginResize(AWindow& window) {
+void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
 }
 
-void OpenGLRenderingContext::endResize(AWindow& window) {
+void OpenGLRenderingContext::endResize(ABaseWindow& window) {
 
 }
 
-void OpenGLRenderingContext::endPaint(AWindow& window) {
+void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
     CommonRenderingContext::endPaint(window);
 }
 

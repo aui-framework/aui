@@ -51,15 +51,15 @@ void CommonRenderingContext::init(const Init& init) {
 
 }
 
-void CommonRenderingContext::destroyNativeWindow(AWindow& window) {
+void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
     assert(mDisplayLink != nullptr);
     CVDisplayLinkStop(static_cast<CVDisplayLinkRef>(mDisplayLink));
     CVDisplayLinkRelease(static_cast<CVDisplayLinkRef>(mDisplayLink));
     mDisplayLink = nullptr;
 }
 
-void CommonRenderingContext::beginPaint(AWindow& window) {
+void CommonRenderingContext::beginPaint(ABaseWindow& window) {
 }
 
-void CommonRenderingContext::endPaint(AWindow& window) {
+void CommonRenderingContext::endPaint(ABaseWindow& window) {
 }

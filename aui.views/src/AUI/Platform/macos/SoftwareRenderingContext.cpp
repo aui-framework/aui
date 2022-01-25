@@ -8,19 +8,19 @@ SoftwareRenderingContext::~SoftwareRenderingContext() {
 
 }
 
-void SoftwareRenderingContext::destroyNativeWindow(AWindow &window) {
+void SoftwareRenderingContext::destroyNativeWindow(ABaseWindow &window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void SoftwareRenderingContext::beginPaint(AWindow &window) {
+void SoftwareRenderingContext::beginPaint(ABaseWindow &window) {
     CommonRenderingContext::beginPaint(window);
 }
 
-void SoftwareRenderingContext::endPaint(AWindow &window) {
+void SoftwareRenderingContext::endPaint(ABaseWindow &window) {
     CommonRenderingContext::endPaint(window);
 }
 
-void SoftwareRenderingContext::beginResize(AWindow &window) {
+void SoftwareRenderingContext::beginResize(ABaseWindow &window) {
 
 }
 
@@ -28,7 +28,7 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     CommonRenderingContext::init(init);
 }
 
-void SoftwareRenderingContext::endResize(AWindow &window) {
+void SoftwareRenderingContext::endResize(ABaseWindow &window) {
 
 }
 AImage SoftwareRenderingContext::makeScreenshot() {

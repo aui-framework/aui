@@ -84,12 +84,12 @@ void OpenGLRenderingContext::init(const Init& init) {
     //assert(("no stencil bits" && stencilBits > 0));
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(AWindow& window) {
+void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
     CommonRenderingContext::destroyNativeWindow(window);
     //wglMakeCurrent(nullptr, nullptr);
 }
 
-void OpenGLRenderingContext::beginPaint(AWindow& window) {
+void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     CommonRenderingContext::beginPaint(window);
     //bool ok = wglMakeCurrent(mPainterDC, ourHrc);
     //assert(ok);
@@ -123,15 +123,15 @@ void OpenGLRenderingContext::beginPaint(AWindow& window) {
     glStencilFunc(GL_EQUAL, 0, 0xff);
 }
 
-void OpenGLRenderingContext::beginResize(AWindow& window) {
+void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
     //wglMakeCurrent(mWindowDC, ourHrc);
 }
 
-void OpenGLRenderingContext::endResize(AWindow& window) {
+void OpenGLRenderingContext::endResize(ABaseWindow& window) {
 
 }
 
-void OpenGLRenderingContext::endPaint(AWindow& window) {
+void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
     //SwapBuffers(mPainterDC);
     //wglMakeCurrent(mWindowDC, ourHrc);
     [static_cast<NSOpenGLContext*>(mContext) flushBuffer];

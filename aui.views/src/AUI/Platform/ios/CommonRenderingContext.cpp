@@ -13,12 +13,12 @@ void CommonRenderingContext::init(const Init& init) {
     IRenderingContext::init(init);
 }
 
-void CommonRenderingContext::destroyNativeWindow(AWindow& window) {
+void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
 
 }
 
-void CommonRenderingContext::beginPaint(AWindow& window) {
+void CommonRenderingContext::beginPaint(ABaseWindow& window) {
 }
 
-void CommonRenderingContext::endPaint(AWindow& window) {
+void CommonRenderingContext::endPaint(ABaseWindow& window) {
 }
