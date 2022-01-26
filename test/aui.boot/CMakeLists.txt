@@ -37,6 +37,7 @@ endfunction()
 define_aui_boot_test(BasicProgram)
 define_aui_boot_test(ImportAUIDependency)
 define_aui_boot_test(Tests)
+define_aui_boot_test(BuildSharedLibsAddSubdirectory)
 if (NOT UNIX) # github ci/cd  could not handle this test on linux for unknown reason
     define_aui_boot_test(Assets)
 endif()
