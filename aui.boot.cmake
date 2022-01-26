@@ -236,7 +236,6 @@ function(auib_import AUI_MODULE_NAME URL)
             endif()
         endif()
 
-        include(FetchContent)
         # TODO add protocol check
         if(AUI_BOOT_SOURCEDIR_COMPAT)
             unset(SOURCE_BINARY_DIRS_ARG)
@@ -254,25 +253,32 @@ function(auib_import AUI_MODULE_NAME URL)
         message(STATUS "Fetching ${AUI_MODULE_NAME}")
 
         file(REMOVE_RECURSE ${DEP_SOURCE_DIR} ${DEP_BINARY_DIR})
-        FetchContent_Declare(${AUI_MODULE_NAME}_FC
-                PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
-                GIT_REPOSITORY "${URL}"
-                GIT_TAG ${AUIB_IMPORT_VERSION}
-                GIT_PROGRESS TRUE # show progress of download
-                USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
-                USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
-                ${SOURCE_BINARY_DIRS_ARG}
-                )
 
-        FetchContent_Populate(${AUI_MODULE_NAME}_FC)
+        # check for local existence
+        if (EXISTS ${URL})
+            get_filename_component(DEP_SOURCE_DIR ${URL} ABSOLUTE)
+            message(STATUS "Using local: ${DEP_SOURCE_DIR}")
+        else()
+            include(FetchContent)
+            FetchContent_Declare(${AUI_MODULE_NAME}_FC
+                    PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
+                    GIT_REPOSITORY "${URL}"
+                    GIT_TAG ${AUIB_IMPORT_VERSION}
+                    GIT_PROGRESS TRUE # show progress of download
+                    USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
+                    USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
+                    ${SOURCE_BINARY_DIRS_ARG}
+                    )
+
+            FetchContent_Populate(${AUI_MODULE_NAME}_FC)
 
 
-        FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
-                BINARY_DIR DEP_BINARY_DIR
-                SOURCE_DIR DEP_SOURCE_DIR
-                )
-
-        message("Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+            FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
+                    BINARY_DIR DEP_BINARY_DIR
+                    SOURCE_DIR DEP_SOURCE_DIR
+                    )
+            message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+        endif()
 
         if (NOT DEP_ADD_SUBDIRECTORY)
             message(STATUS "Compiling ${AUI_MODULE_NAME}")
@@ -408,6 +414,30 @@ function(auib_import AUI_MODULE_NAME URL)
         endif()
         # END: try find
         if (NOT ${AUI_MODULE_NAME}_FOUND)
+            # print verbosely find procedure
+
+            set(CMAKE_FIND_DEBUG_MODE TRUE)
+            # BEGIN: try find
+            message("[AUI.BOOT] Verbose output:")
+            while(TRUE)
+                if (AUIB_IMPORT_COMPONENTS)
+                    find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} ${FINDPACKAGE_QUIET})
+                else()
+                    find_package(${AUI_MODULE_NAME} ${FINDPACKAGE_QUIET})
+                endif()
+                if (NOT (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND))
+                    if (CMAKE_FIND_PACKAGE_PREFER_CONFIG)
+                        message("[AUI.BOOT] Dependency not found - giving up")
+                        break()
+                    endif()
+                    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+                    message("[AUI.BOOT] Using config instead")
+                else()
+                    break()
+                endif()
+            endwhile()
+            unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG)
+
             # list possible find_package names if available
             file(GLOB_RECURSE _find "${DEP_INSTALL_PREFIX}/*onfig.cmake")
             unset(possible_names)
@@ -418,10 +448,12 @@ function(auib_import AUI_MODULE_NAME URL)
             endforeach()
 
             # construct error message
-            set(error_message "AUI.Boot could not resolve dependency: ${AUI_MODULE_NAME}")
+            set(error_message "AUI.Boot could not resolve dependency: ${AUI_MODULE_NAME} (see verbose find output above)")
             if (possible_names)
                 string(JOIN " or " possible_names_joined ${possible_names})
                 set(error_message "${error_message}\nnote: did you mean " ${possible_names_joined} ?)
+            else()
+                set(error_message "${error_message}\nnote: looks like a config file does not exist for your project (${AUI_MODULE_NAME}Config.cmake or ${AUI_MODULE_NAME}-config.cmake).")
             endif()
             message(FATAL_ERROR ${error_message})
         endif()
