@@ -29,7 +29,7 @@
 
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
-#include <AUI/IO/StringStream.h>
+#include <AUI/IO/AStringStream.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/ASS/AStylesheet.h>
 #include <AUI/Traits/memory.h>

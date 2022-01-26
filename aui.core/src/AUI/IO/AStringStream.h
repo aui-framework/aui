@@ -24,16 +24,16 @@
 #include "IInputStream.h"
 #include "IOutputStream.h"
 
-class API_AUI_CORE StringStream: public IInputStream, public IOutputStream
+class API_AUI_CORE AStringStream: public IInputStream, public IOutputStream
 {
 private:
 	std::string mString;
 	size_t mReadPos = 0;
 
 public:
-    StringStream();
-	explicit StringStream(const AString& string);
-	virtual ~StringStream() = default;
+    AStringStream();
+	explicit AStringStream(const AString& string);
+	virtual ~AStringStream() = default;
 
 	void seekRead(size_t position);
 

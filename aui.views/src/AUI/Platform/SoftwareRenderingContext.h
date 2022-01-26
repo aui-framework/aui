@@ -37,8 +37,11 @@ public:
         return mBitmapSize;
     }
 
-#if AUI_PLATFORM_WIN
     inline void putPixel(const glm::uvec2& position, const glm::u8vec3& color) noexcept {
+        putPixel(position, glm::u8vec4(color, 255));
+    }
+#if AUI_PLATFORM_WIN
+    inline void putPixel(const glm::uvec2& position, const glm::u8vec4& color) noexcept {
         assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
 
         auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
@@ -46,14 +49,14 @@ public:
         dataPtr[0] = color[2];
         dataPtr[1] = color[1];
         dataPtr[2] = color[0];
-        dataPtr[3] = 255;
+        dataPtr[3] = color[3];
     }
-    inline glm::u8vec3 getPixel(const glm::uvec2& position) noexcept {
+    inline glm::u8vec4 getPixel(const glm::uvec2& position) noexcept {
         assert(("image out of bounds" && glm::all(glm::lessThan(position, mBitmapSize))));
         auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
                                                   + (mBitmapSize.x * position.y + position.x) * 4);
 
-        return { dataPtr[2], dataPtr[1], dataPtr[0] };
+        return { dataPtr[2], dataPtr[1], dataPtr[0], dataPtr[3] };
     }
 #else
     inline void putPixel(const glm::uvec2& position, const glm::u8vec3& color) noexcept {

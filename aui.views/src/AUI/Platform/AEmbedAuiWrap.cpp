@@ -93,6 +93,7 @@ void AEmbedAuiWrap::windowRender() {
 void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
     mContainer->setContents(container);
     mContainer->makeCurrent();
+    mContainer->flagRedraw();
 }
 
 void AEmbedAuiWrap::setViewportSize(int width, int height) {

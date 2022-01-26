@@ -77,7 +77,14 @@ if(NOT ANDROID AND AUI_BUILD_EXAMPLES)
     #add_subdirectory(examples/AUI.Example.Minesweeper)
 endif()
 
-aui_enable_tests()
+if (AUI_BOOT)
+    # cleanup tests data when using aui thru aui.boot with add_subdirectory
+    set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
+    set_property(GLOBAL PROPERTY TESTS_SRCS "")
+    set_property(GLOBAL PROPERTY TESTS_DEPS "")
+else()
+    aui_enable_tests()
+endif()
 
 #install(EXPORT AUI DESTINATION "cmake/")
 set(AUI_ALL_COMPONENTS core

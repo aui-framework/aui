@@ -19,15 +19,15 @@
  * =====================================================================================================================
  */
 
-#include "StringStream.h"
+#include "AStringStream.h"
 
 
-StringStream::StringStream(const AString& string): mString(string.toStdString())
+AStringStream::AStringStream(const AString& string): mString(string.toStdString())
 {
 }
-StringStream::StringStream() = default;
+AStringStream::AStringStream() = default;
 
-size_t StringStream::read(char* dst, size_t size)
+size_t AStringStream::read(char* dst, size_t size)
 {
 	if (mReadPos >= mString.length())
 		return 0;
@@ -38,11 +38,11 @@ size_t StringStream::read(char* dst, size_t size)
 	return toRead;
 }
 
-size_t StringStream::write(const char *src, size_t size) {
+size_t AStringStream::write(const char *src, size_t size) {
     mString.append(src, src + size);
     return size;
 }
 
-void StringStream::seekRead(size_t position) {
+void AStringStream::seekRead(size_t position) {
 	mReadPos = position;
 }

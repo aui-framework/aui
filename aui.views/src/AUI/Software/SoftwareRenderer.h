@@ -44,19 +44,35 @@ public:
                 switch (actualBlending) {
                     case Blending::NORMAL:
                         if (color.a >= 0.9999f) {
-                            mContext->putPixel(uposition, glm::u8vec3(glm::vec3(color) * 255.f));
+                            mContext->putPixel(uposition, glm::u8vec4(glm::vec4(color) * 255.f));
                         } else {
                             // blending
                             auto u8srcColor = mContext->getPixel(uposition);
-                            auto srcColor = glm::vec3(u8srcColor.r, u8srcColor.g, u8srcColor.b);
-                            mContext->putPixel(uposition, glm::u8vec3(glm::mix(srcColor, glm::vec3(color) * 255.f, color.a)));
+                            if (u8srcColor.a == 0) {
+                                // put the color "as is"
+                                mContext->putPixel(uposition, glm::u8vec4(color * 255.f));
+                            } else {
+                                auto srcColor = glm::vec3(u8srcColor.r, u8srcColor.g, u8srcColor.b);
+                                if (u8srcColor.a == 255) {
+                                    mContext->putPixel(uposition,
+                                                       glm::u8vec4(glm::mix(srcColor, glm::vec3(color) * 255.f, color.a), 255));
+                                } else {
+                                    // blend with the src color; calculate final alpha
+                                    auto dstColor = glm::vec3(color) * 255.f;
+                                    auto srcAlpha = float(u8srcColor.a) / 255.f;
+                                    float finalAlpha = srcAlpha + (1.f - srcAlpha) * color.a;
+                                    mContext->putPixel(uposition,
+                                                       glm::u8vec4(glm::u8vec3(srcColor * srcAlpha + dstColor * color.a), uint8_t(finalAlpha * 255.f)));
+                                }
+                            }
                         }
                         break;
 
                     case Blending::ADDITIVE: {
-                        auto src = glm::uvec3(glm::vec3(color) * 255.f);
-                        auto dst = glm::uvec3(mContext->getPixel(uposition));
-                        mContext->putPixel(uposition, (glm::min)(src + dst, glm::uvec3(255)));
+                        auto src = glm::uvec4(glm::vec4(color) * 255.f);
+                        src.a = (src.x + src.y + src.z) / 3.f;
+                        auto dst = glm::uvec4(mContext->getPixel(uposition));
+                        mContext->putPixel(uposition, glm::u8vec4((glm::min)(src + dst, glm::uvec4(255))));
                         break;
                     }
                     case Blending::INVERSE_DST: {
@@ -67,8 +83,9 @@ public:
                     }
                     case Blending::INVERSE_SRC:
                         auto src = glm::vec3(color);
-                        auto dst = glm::vec3(mContext->getPixel(uposition)) / 255.f;
-                        mContext->putPixel(uposition, (glm::min)(glm::uvec3(((1.f - src) * dst) * 255.f), glm::uvec3(255)));
+                        auto dstA = glm::vec4(mContext->getPixel(uposition)) / 255.f;
+                        auto dst = glm::vec3(dstA);
+                        mContext->putPixel(uposition, glm::u8vec4((glm::min)(glm::uvec3(((1.f - src) * dst) * 255.f), glm::uvec3(255)), glm::clamp(color.x + color.y + color.z, dstA.a, 1.f) * 255));
                         break;
                 }
             }

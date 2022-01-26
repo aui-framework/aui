@@ -54,4 +54,31 @@ namespace aui {
             return mValue != v;
         }
     };
+
+
+    template<typename T>
+    struct non_null_lateinit {
+    private:
+        void checkForNull() const { assert(("this value couldn't be null" && value != nullptr)); }
+    public:
+        T value;
+        non_null_lateinit() {
+
+        }
+
+        non_null_lateinit(T value): value(value) {
+            checkForNull();
+        }
+
+        operator T() {
+            checkForNull();
+            return value;
+        }
+    };
+
+    template<typename T>
+    struct non_null: non_null_lateinit<T> {
+        non_null(T value): non_null_lateinit<T>(value) {}
+    };
+
 }

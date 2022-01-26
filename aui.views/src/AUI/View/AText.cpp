@@ -3,7 +3,7 @@
 //
 
 #include <AUI/Traits/callables.h>
-#include <AUI/IO/StringStream.h>
+#include <AUI/IO/AStringStream.h>
 #include <AUI/Xml/AXml.h>
 #include "AText.h"
 #include "AButton.h"
@@ -88,7 +88,7 @@ _<AText> AText::fromItems(std::initializer_list<std::variant<AString, _<AView>>>
 
 _<AText> AText::fromHtml(const AString& html, const Flags& flags) {
     auto parsedFlags = parseFlags(flags);
-    StringStream stringStream(html);
+    AStringStream stringStream(html);
     struct CommonEntityVisitor: IXmlDocumentVisitor {
         _<AText> text = aui::ptr::manage(new AText());
         AVector<_<AWordWrappingEngine::Entry>> entries;

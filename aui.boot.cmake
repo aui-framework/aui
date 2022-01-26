@@ -26,7 +26,6 @@ if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
     file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
 endif()
 
-
 if (MSVC)
     if (NOT CMAKE_MSVC_RUNTIME_LIBRARY)
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
@@ -110,6 +109,12 @@ if (NOT EXISTS ${AUI_CACHE_DIR}/repo)
     file(MAKE_DIRECTORY ${AUI_CACHE_DIR}/repo)
 endif()
 
+
+function(_auib_import_subdirectory DEP_SOURCE_DIR AUI_MODULE_NAME) # helper function to keep scope
+    set(AUI_BOOT TRUE)
+    add_subdirectory(${DEP_SOURCE_DIR} "aui.boot-build-${AUI_MODULE_NAME}")
+endfunction()
+
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
     set(_locked FALSE)
@@ -151,7 +156,6 @@ function(auib_import AUI_MODULE_NAME URL)
         # default it to ON
         set(BUILD_SHARED_LIBS ON)
     endif()
-
     if (BUILD_SHARED_LIBS)
         set(SHARED_OR_STATIC shared)
     else()
@@ -376,8 +380,8 @@ function(auib_import AUI_MODULE_NAME URL)
         endif()
     endif()
     if (DEP_ADD_SUBDIRECTORY)
+        _auib_import_subdirectory(${DEP_SOURCE_DIR} ${AUI_MODULE_NAME})
         message(STATUS "${AUI_MODULE_NAME} imported as a subdirectory: ${DEP_SOURCE_DIR}")
-        add_subdirectory(${DEP_SOURCE_DIR} "aui.boot-build-${AUI_MODULE_NAME}")
     else()
         # BEGIN: try find
         while(TRUE)

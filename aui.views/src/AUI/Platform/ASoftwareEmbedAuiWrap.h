@@ -4,7 +4,7 @@
 #include "AEmbedAuiWrap.h"
 #include "SoftwareRenderingContext.h"
 
-class ASoftwareEmbedAuiWrap: public AEmbedAuiWrap {
+class API_AUI_VIEWS ASoftwareEmbedAuiWrap: public AEmbedAuiWrap {
 private:
     SoftwareRenderingContext* mContext;
 

@@ -3,7 +3,7 @@
 
 #include "AEmbedAuiWrap.h"
 
-class AGLEmbedAuiWrap: public AEmbedAuiWrap {
+class API_AUI_VIEWS AGLEmbedAuiWrap: public AEmbedAuiWrap {
 public:
     AGLEmbedAuiWrap();
     void render();

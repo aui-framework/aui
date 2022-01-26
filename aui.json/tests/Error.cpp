@@ -28,19 +28,19 @@
 #include <AUI/Json/AJsonElement.h>
 #include <AUI/Json/AJson.h>
 #include <AUI/Json/JsonException.h>
-#include <AUI/IO/StringStream.h>
+#include <AUI/IO/AStringStream.h>
 
 
 
 TEST(JsonErrors, Error)
 {
-    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"kek": truz})")), AException);
-    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"kek": falz})")), AException);
-    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"array": [1,2,3,x]})")), AException);
-    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"array": [1,2,3})")), AException);
-    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"object": {"1"s:1,)")), AException);
-    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"object": {"1":1,})")), AException);
-    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"object": {"1":2})")), AException);
-    ASSERT_THROW(AJson::read(_new<StringStream>(R"({"object": {"1":2 xs})")), AException);
+    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"kek": truz})")), AException);
+    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"kek": falz})")), AException);
+    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"array": [1,2,3,x]})")), AException);
+    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"array": [1,2,3})")), AException);
+    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"object": {"1"s:1,)")), AException);
+    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"object": {"1":1,})")), AException);
+    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"object": {"1":2})")), AException);
+    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"object": {"1":2 xs})")), AException);
 }
 

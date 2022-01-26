@@ -83,7 +83,7 @@ public:
 	
 	AColor operator*(float other) const
 	{
-		return AColor(x * other, y * other, z * other, w);
+		return AColor(x * other, y * other, z * other, w * other);
 	}
 
     API_AUI_CORE AString toString() const;

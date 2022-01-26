@@ -23,6 +23,10 @@ void SoftwareRenderingContext::destroyNativeWindow(ABaseWindow& window) {
 void SoftwareRenderingContext::beginPaint(ABaseWindow& window) {
     CommonRenderingContext::beginPaint(window);
     std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
+    for (size_t i = 0; i < mBitmapSize.x * mBitmapSize.y; ++i) {
+        auto dataPtr = reinterpret_cast<uint32_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO) + i * 4);
+        *dataPtr = 0;
+    }
 }
 
 void SoftwareRenderingContext::endPaint(ABaseWindow& window) {

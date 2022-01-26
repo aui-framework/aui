@@ -23,10 +23,10 @@
 #include "AUI/Common/AStringVector.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/Common/ASet.h"
-#include "AUI/IO/StringStream.h"
+#include "AUI/IO/AStringStream.h"
 
 ATokenizer::ATokenizer(const AString& fromString):
-	mInput(_new<StringStream>(fromString))
+	mInput(_new<AStringStream>(fromString))
 {
 }
 
