@@ -68,9 +68,6 @@ TEST_F(UILayoutManager, Height) {
  * Checks alignment (see "Alex2772, 2021, alex2772.ru" - it is not perfectly aligned)
  */
 TEST_F(UILayoutManager, LastElementAlignment) {
-    // check alignment
-    (By::name("#copyright") | By::type<ATextField>()).check(rightAligned(), "bad alignment");
-
     // copyright width can be also not minimal
     By::name("#copyright").check(widthIsMinimal(), "copyright width should be minimal");
 }
