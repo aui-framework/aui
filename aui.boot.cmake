@@ -21,6 +21,8 @@
 
 cmake_minimum_required(VERSION 3.16)
 
+option(AUI_BOOT_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
+
 # fix "Failed to get the hash for HEAD" error
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
     file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
@@ -112,6 +114,15 @@ endif()
 
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
+    if (AUI_BOOT_DISABLE)
+        if (AUIB_IMPORT_COMPONENTS)
+            find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} REQUIRED)
+        else()
+            find_package(${AUI_MODULE_NAME} REQUIRED)
+        endif()
+        return()
+    endif()
+
     set(_locked FALSE)
 
     set(FINDPACKAGE_QUIET QUIET)
