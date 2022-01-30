@@ -8,7 +8,7 @@
 #include <AUI/Util/EnumUtil.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AMap.h>
-
+#include <AUI/Traits/types.h>
 
 template<typename enum_t>
 class AEnumerate {
@@ -88,6 +88,7 @@ struct AEnumerateAllValues<enum_t>{        \
 
 template<typename enum_t>
 const AMap<AString, enum_t>& AEnumerate<enum_t>::all() {
+    static_assert(aui::is_complete<AEnumerateAllValues<enum_t>>, "ENUM_VALUES is not defined for this enum type");
     auto v = AEnumerateAllValues<enum_t>::get();
 
     return allImpl(v);
