@@ -26,14 +26,12 @@ public:
     static AString valueName() {
 #ifdef _MSC_VER
         AString s = __FUNCSIG__;
-        auto end = s.rfind('>');
-        size_t begin;
-        begin = s.rfind('<') + 1;
-        auto namespacePos = s.rfind("::", end);
-        if (namespacePos < end) {
-            begin = namespacePos + 2;
-        }
-        AString result = {s.begin() + begin, s.begin() + end};
+        AString::iterator end = s.begin() + s.rfind('>');
+        AString::iterator begin = (std::find_if(std::make_reverse_iterator(end), s.rend(), [](char c) {
+            return c == ':' || c == '<';
+        })).base();
+
+        AString result(begin, end);
 #else
         AString s = __PRETTY_FUNCTION__;
         auto end = s.rfind(';');
@@ -80,8 +78,7 @@ private:
 };
 
 template<typename enum_t>
-struct AEnumerateAllValues {
-};
+struct AEnumerateAllValues;
 
 #define ENUM_VALUES(enum_t, ...) template<>\
 struct AEnumerateAllValues<enum_t>{        \

@@ -44,6 +44,11 @@ namespace namespaceeee {
         V2,
         V3,
     };
+    enum class ATest2 {
+        TEST2_1,
+        TEST2_2,
+        TEST2_3,
+    };
 }
 
 struct MyStruct {};
@@ -52,8 +57,13 @@ namespace AzazaATest {
     struct ATest {};
 }
 
+enum class EnumWithoutEnumValue {
+    SOME_VALUE1
+};
+
 ENUM_VALUES(ATest, VALUE1, VALUE2, VALUE3, VALUE4)
 ENUM_VALUES(namespaceeee::ATest, namespaceeee::V1, namespaceeee::V2, namespaceeee::V3)
+ENUM_VALUES(namespaceeee::ATest2, namespaceeee::ATest2::TEST2_1, namespaceeee::ATest2::TEST2_2, namespaceeee::ATest2::TEST2_3)
 
 
 TEST(Reflect, NameClass) {
@@ -86,10 +96,11 @@ TEST(Reflect, EnumerateAll) {
             {"VALUE1", VALUE1},
             {"VALUE2", VALUE2},
             {"VALUE3", VALUE3},
+            {"VALUE4", VALUE4},
     };
 
-    auto test = AEnumerate<ATest>::names<VALUE1, VALUE2, VALUE3>();
-    ASSERT_TRUE((test == ref));
+    auto test = AEnumerate<ATest>::all();
+    ASSERT_EQ(test, ref);
 }
 
 TEST(Reflect, NamespaceEnumerateNames) {
@@ -99,5 +110,19 @@ TEST(Reflect, NamespaceEnumerateNames) {
             {"V3", namespaceeee::V3},
     };
     auto test = AEnumerate<namespaceeee::ATest>::all();
-    ASSERT_TRUE((test == ref));
+    ASSERT_EQ(test, ref);
+}
+
+TEST(Reflect, NamespaceEnumerateEnumClassNames) {
+    AMap<AString, namespaceeee::ATest2> ref = {
+            {"TEST2_1", namespaceeee::ATest2::TEST2_1},
+            {"TEST2_2", namespaceeee::ATest2::TEST2_2},
+            {"TEST2_3", namespaceeee::ATest2::TEST2_3},
+    };
+    auto test = AEnumerate<namespaceeee::ATest2>::all();
+    ASSERT_EQ(test, ref);
+}
+
+TEST(Reflect, EnumWithoutEnumValueCase) {
+    ASSERT_EQ(AEnumerate<EnumWithoutEnumValue>::valueName<EnumWithoutEnumValue::SOME_VALUE1>(), "SOME_VALUE1");
 }
