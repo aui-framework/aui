@@ -29,7 +29,7 @@ public:
         auto end = s.rfind('>');
         size_t begin;
         begin = s.rfind('<') + 1;
-        auto namespacePos = s.find("::", begin);
+        auto namespacePos = s.rfind("::", end);
         if (namespacePos < end) {
             begin = namespacePos + 2;
         }

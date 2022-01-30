@@ -120,6 +120,8 @@ namespace ass {
             void renderFor(AView* view) override;
 
             DeclarationSlot getDeclarationSlot() const override;
+
+            const BackgroundImage& value() const { return mInfo; }
         };
 
     }
