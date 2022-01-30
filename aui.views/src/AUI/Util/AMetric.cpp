@@ -1,4 +1,5 @@
-﻿/**
+﻿
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -35,50 +36,50 @@ AMetric::AMetric(float value, Unit unit): mValue(value),
 
 AMetric::AMetric(const AString& text)
 {
-	ATokenizer p(_new<AStringStream>(text));
-	mValue = p.readFloat();
+    ATokenizer p(_new<AStringStream>(text));
+    mValue = p.readFloat();
 
-	auto unitName = p.readString();
+    auto unitName = p.readString();
 
-	if (unitName.empty())
-	{
-		mUnit = T_PX;
-	}
-	else {
-		AMap<AString, Unit> unitMapping = {
-			{ "px", T_PX },
-			{ "em", T_DP },
-			{ "pt", T_PT },
-		};
+    if (unitName.empty())
+    {
+        mUnit = T_PX;
+    }
+    else {
+        AMap<AString, Unit> unitMapping = {
+            { "px", T_PX },
+            { "em", T_DP },
+            { "pt", T_PT },
+        };
 
-		if (auto x = unitMapping.contains(unitName))
-		{
-			mUnit = x->second;
-		}
-	}
-	
+        if (auto x = unitMapping.contains(unitName))
+        {
+            mUnit = x->second;
+        }
+    }
+
 }
 
 float AMetric::getValuePx() const
 {
-	float dpi;
-	if (AWindow::current())
-		dpi = AWindow::current()->getDpiRatio();
-	else
-		dpi = Platform::getDpiRatio();
-	
-	switch (mUnit)
-	{
-	case T_PX:
-		return mValue;
-	case T_DP:
-		return mValue * dpi;
-	case T_PT:
-		return mValue * dpi / 3.f * 4.f;
-		
-	default:
-		return mValue;
-	}
+    float dpi;
+    if (AWindow::current())
+        dpi = AWindow::current()->getDpiRatio();
+    else
+        dpi = Platform::getDpiRatio();
+
+    switch (mUnit)
+    {
+    case T_PX:
+        return mValue;
+    case T_DP:
+        return mValue * dpi;
+    case T_PT:
+        return mValue * dpi / 3.f * 4.f;
+
+    default:
+        return mValue;
+    }
 }
 
 float AMetric::fromPxToMetric(float value, AMetric::Unit unit) {

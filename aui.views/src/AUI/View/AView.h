@@ -46,6 +46,7 @@
 
 class Render;
 class AWindow;
+class ABaseWindow;
 class AViewContainer;
 class AAnimator;
 class AAssHelper;
@@ -214,7 +215,7 @@ public:
      * \brief Determines window which this AView belongs to.
      * \return window which this AView belongs to. Could be nullptr
      */
-    AWindow* getWindow();
+    ABaseWindow* getWindow();
 
 	virtual void drawStencilMask();
 

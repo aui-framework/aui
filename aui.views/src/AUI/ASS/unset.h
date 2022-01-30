@@ -27,6 +27,7 @@
 
 #include <cassert>
 #include <algorithm>
+#include <ostream>
 
 namespace ass {
 
@@ -75,8 +76,20 @@ namespace ass {
             }
         }
 
-
         unset_wrap<T>& operator=(const unset_wrap<T>& v) noexcept;
+
+        bool operator==(const unset_wrap<T>& other) const {
+            if (set != other.set) {
+                return false;
+            }
+            if (set) {
+                return stored == other.stored;
+            }
+            return true;
+        }
+        bool operator!=(const unset_wrap<T>& other) const {
+            return !(*this == other);
+        }
 
         void reset() noexcept {
             set = false;
@@ -116,4 +129,14 @@ namespace ass {
         return *this;
     }
 
+}
+
+template<typename T>
+std::ostream& operator<<(std::ostream& o, const ass::unset_wrap<T>& wrap) {
+    if (wrap) {
+        o << *wrap;
+    } else {
+        o << "<unset>";
+    }
+    return o;
 }

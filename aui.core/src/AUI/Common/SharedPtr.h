@@ -33,12 +33,13 @@ inline _<T> _new(Args&& ... args)
 		auto o = new T(std::forward<Args>(args)...);
 		return _<T>(o, [](T* obj)
 		{
+            obj->beforeObjectRemoval();
 			static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
 			{
                 obj->clearSignals();
 				static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
 				{
-					delete obj;
+					delete obj; // TODO reimplement dis shit
 				});
 			});
 		});

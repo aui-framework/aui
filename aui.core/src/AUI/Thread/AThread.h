@@ -143,8 +143,7 @@ public:
 	 * \param fun callable function
 	 */
 	template <class Callable>
-    inline void operator<<(Callable fun)
-    {
+    inline void operator<<(Callable fun) {
         enqueue(fun);
     }
 

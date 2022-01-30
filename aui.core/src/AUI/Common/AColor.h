@@ -24,6 +24,7 @@
 #include <glm/glm.hpp>
 #include <AUI/Core.h>
 #include <glm/gtx/norm.hpp>
+#include <ostream>
 
 class AString;
 
@@ -108,6 +109,9 @@ public:
     bool isFullyTransparent() const {
         return a < 0.001f;
     }
+    bool isFullyOpaque() const {
+        return a > 0.999f;
+    }
 
     AColor readableBlackOrWhite() const {
         return glm::length2(glm::vec3{*this}) > 1.5f ? fromRRGGBB(0) : fromRRGGBB(0xffffff);
@@ -117,13 +121,26 @@ public:
         return {x, y, z, a * d};
     }
 
-
     static const AColor BLACK;
     static const AColor WHITE;
 };
 
 inline const AColor AColor::BLACK = {0.f, 0.f, 0.f, 1.f};
 inline const AColor AColor::WHITE = {1.f, 1.f, 1.f, 1.f};
+
+
+std::ostream& operator<<(std::ostream& o, const AColor& color) {
+
+    o << "#";
+    char buf[16];
+    if (!color.isFullyOpaque()) {
+        std::sprintf(buf, "%02x", uint8_t(color.a * 255.f));
+        o << buf;
+    }
+    std::sprintf(buf, "%02x%02x%02x", uint8_t(color.r * 255.f), uint8_t(color.g * 255.f), uint8_t(color.b * 255.f));
+    o << buf;
+    return o;
+}
 
 /**
  * \brief Construct with hex integer

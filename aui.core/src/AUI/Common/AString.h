@@ -585,3 +585,8 @@ namespace std
 		}
 	};
 }
+
+// gtest printer for AString
+inline void PrintTo(const AString& s, std::ostream* stream) {
+    *stream << s.toStdString();
+}

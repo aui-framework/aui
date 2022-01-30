@@ -46,7 +46,8 @@
 #undef max
 #undef min
 
-AWindow* AView::getWindow()
+
+ABaseWindow* AView::getWindow()
 {
 
     AView* parent = nullptr;
@@ -55,7 +56,7 @@ AWindow* AView::getWindow()
         parent = target;
     }
 
-    return dynamic_cast<AWindow*>(parent);
+    return dynamic_cast<ABaseWindow*>(parent);
 }
 
 AView::AView()
@@ -67,10 +68,8 @@ AView::AView()
 void AView::redraw()
 {
 
-    if (auto w = getWindow()) {
-        w->flagRedraw();
-    }
-    //AWindow::current()->flagRedraw();
+    nullsafe(getWindow())->flagRedraw(); else nullsafe(AWindow::current())->flagRedraw();
+
 }
 
 void AView::drawStencilMask()

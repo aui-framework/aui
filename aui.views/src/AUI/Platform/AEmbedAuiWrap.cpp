@@ -30,12 +30,14 @@
 #include <AUI/GL/State.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/Util/ALayoutInflater.h>
 
 class AEmbedAuiWrap::EmbedWindow: public ABaseWindow {
     friend class AEmbedAuiWrap;
 private:
     AEmbedAuiWrap* mTheWrap;
     bool mRequiresRedraw = false;
+    bool mRequiresLayoutUpdate = false;
 
 public:
     EmbedWindow(AEmbedAuiWrap* theWrap): mTheWrap(theWrap) {
@@ -56,6 +58,11 @@ public:
         removeView(surface);
     }
 
+    void flagUpdateLayout() override {
+        flagRedraw();
+        mRequiresLayoutUpdate = true;
+    }
+
     void flagRedraw() override {
         ABaseWindow::flagRedraw();
         mRequiresRedraw = true;
@@ -74,7 +81,8 @@ void AEmbedAuiWrap::onMouseScroll(int mouseX, int mouseY, int scrollX, int scrol
     mContainer->onMouseWheel({mouseX, mouseY}, {scrollX, scrollY});
 }
 
-AEmbedAuiWrap::AEmbedAuiWrap()
+AEmbedAuiWrap::AEmbedAuiWrap():
+        mEventLoopHandle(this)
 {
 }
 
@@ -83,7 +91,12 @@ void AEmbedAuiWrap::windowMakeCurrent() {
 }
 
 void AEmbedAuiWrap::windowRender() {
+    AThread::current()->processMessages();
     Render::setWindow(mContainer.get());
+    if (mContainer->mRequiresLayoutUpdate) {
+        mContainer->mRequiresLayoutUpdate = false;
+        mContainer->updateLayout();
+    }
     nullsafe(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
     mContainer->render();
@@ -91,8 +104,11 @@ void AEmbedAuiWrap::windowRender() {
 }
 
 void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
-    mContainer->setContents(container);
+    ALayoutInflater::inflate(mContainer, container);
+    mContainer->setPosition({0, 0});
+    container->setPosition({0, 0});
     mContainer->makeCurrent();
+    mContainer->flagUpdateLayout();
     mContainer->flagRedraw();
 }
 
@@ -142,6 +158,10 @@ void AEmbedAuiWrap::onKeyReleased(AInput::Key key) {
     mContainer->onKeyUp(key);
 }
 
+void AEmbedAuiWrap::loop() {
+    // stub
+}
+
 void AEmbedAuiWrap::clearFocus() {
     mContainer->setFocusedView(nullptr);
 }
@@ -167,4 +187,8 @@ void AEmbedAuiWrap::setCustomDpiRatio(float r) {
 }
 bool AEmbedAuiWrap::requiresRedraw() {
     return mContainer->mRequiresRedraw;
+}
+
+void AEmbedAuiWrap::notifyProcessMessages() {
+    onNotifyProcessMessages();
 }

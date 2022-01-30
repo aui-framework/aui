@@ -23,6 +23,7 @@
 
 #include <AUI/Core.h>
 #include <type_traits>
+#include <ostream>
 
 class AString;
 
@@ -34,17 +35,17 @@ class AString;
 class API_AUI_VIEWS AMetric
 {
 public:
-	enum Unit
-	{
-		T_UNKNOWN,
-		T_PX,
-		T_DP,
-		T_PT,
-	};
-	
+    enum Unit
+    {
+        T_UNKNOWN,
+        T_PX,
+        T_DP,
+        T_PT,
+    };
+
 private:
-	float mValue;
-	Unit mUnit;
+    float mValue;
+    Unit mUnit;
 
     float convertValueToMyUnit(const AMetric& anotherMetric) {
         return fromPxToMetric(anotherMetric.getValuePx(), mUnit);
@@ -74,44 +75,70 @@ public:
                 "AMetric without literal", value == 0));
     }
 
-	AMetric(float value, Unit unit);
-	AMetric(const AString& text);
+    AMetric(float value, Unit unit);
+    AMetric(const AString& text);
 
-	[[nodiscard]] float getRawValue() const
-	{
-		return mValue;
-	}
+    [[nodiscard]] float getRawValue() const
+    {
+        return mValue;
+    }
 
-	[[nodiscard]] Unit getUnit() const
-	{
-		return mUnit;
-	}
+    [[nodiscard]] Unit getUnit() const
+    {
+        return mUnit;
+    }
 
-	[[nodiscard]] float getValuePx() const;
-	[[nodiscard]] float getValueDp() const;
+    [[nodiscard]] float getValuePx() const;
+    [[nodiscard]] float getValueDp() const;
 
     static float fromPxToMetric(float value, Unit unit);
 
-	operator float() const {
-	    return getValuePx();
-	}
+    operator float() const {
+        return getValuePx();
+    }
     
-	AMetric operator-() const {
-	    return {-mValue, mUnit};
-	}
+    AMetric operator-() const {
+        return {-mValue, mUnit};
+    }
 
+    bool operator==(const AMetric& rhs) const {
+        return std::tie(mValue, mUnit) == std::tie(rhs.mValue, rhs.mUnit);
+    }
+
+    bool operator!=(const AMetric& rhs) const {
+        return !(rhs == *this);
+    }
 };
 
 
 inline AMetric operator"" _px(unsigned long long v)
 {
-	return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PX);
+    return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PX);
 }
 inline AMetric operator"" _dp(unsigned long long v)
 {
-	return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_DP);
+    return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_DP);
 }
 inline AMetric operator"" _pt(unsigned long long v)
 {
-	return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PT);
+    return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PT);
+}
+
+std::ostream& operator<<(std::ostream& o, const AMetric& value) {
+    o << value.getRawValue();
+    switch (value.getUnit()) {
+        case AMetric::T_PX:
+            o << "_px";
+            break;
+        case AMetric::T_DP:
+            o << "_dp";
+            break;
+        case AMetric::T_PT:
+            o << "_pt";
+            break;
+
+        default:
+            break;
+    }
+    return o;
 }

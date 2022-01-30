@@ -35,7 +35,10 @@
  * @note This class is abstract; use <a href="AGLEmbedAuiWrap">AGLEmbedAuiWrap</a> or
  *       <a href="ASoftwareEmbedAuiWrap">ASoftwareEmbedAuiWrap</a> instead.
  */
-class API_AUI_VIEWS AEmbedAuiWrap {
+class API_AUI_VIEWS AEmbedAuiWrap: public IEventLoop {
+private:
+    IEventLoop::Handle mEventLoopHandle;
+
 protected:
     class EmbedWindow;
     _<EmbedWindow> mContainer;
@@ -45,6 +48,7 @@ protected:
     void windowMakeCurrent();
     void windowRender();
 
+    virtual void onNotifyProcessMessages() = 0;
 public:
     explicit AEmbedAuiWrap();
 
@@ -56,6 +60,8 @@ public:
     void setCustomDpiRatio(float r);
 
     bool requiresRedraw();
+
+    void notifyProcessMessages() override;
 
     /**
      * @return true if UI is opaque for mouse at specified position
@@ -99,6 +105,8 @@ public:
     void onKeyReleased(AInput::Key key);
 
     ABaseWindow* getWindow();
+
+    void loop() override;
 };
 
 

@@ -34,15 +34,14 @@ namespace ass {
         unset_wrap<glm::vec2> offset;
         unset_wrap<glm::vec2> size;
 
-        BackgroundCropping() = default;
-        BackgroundCropping(const glm::vec2& offset, const unset_wrap<glm::vec2>& size):
+        BackgroundCropping() noexcept = default;
+        BackgroundCropping(const glm::vec2& offset, const unset_wrap<glm::vec2>& size) noexcept:
             offset(offset), size(size) {}
 
-
-        static BackgroundCropping H4_1() { return { glm::vec2{0.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} }; }
-        static BackgroundCropping H4_2() { return { glm::vec2{1.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} }; }
-        static BackgroundCropping H4_3() { return { glm::vec2{2.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} }; }
-        static BackgroundCropping H4_4() { return { glm::vec2{3.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} }; }
+        static const BackgroundCropping H4_1;
+        static const BackgroundCropping H4_2;
+        static const BackgroundCropping H4_3;
+        static const BackgroundCropping H4_4;
     };
 
     namespace decl {
@@ -57,8 +56,16 @@ namespace ass {
             }
 
             void applyFor(AView* view) override;
+
+            const BackgroundCropping& value() {
+                return mInfo;
+            }
         };
 
     }
 }
 
+inline const ass::BackgroundCropping ass::BackgroundCropping::H4_1 = { glm::vec2{0.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} };
+inline const ass::BackgroundCropping ass::BackgroundCropping::H4_2 = { glm::vec2{1.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} };
+inline const ass::BackgroundCropping ass::BackgroundCropping::H4_3 = { glm::vec2{2.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} };
+inline const ass::BackgroundCropping ass::BackgroundCropping::H4_4 = { glm::vec2{3.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} };
