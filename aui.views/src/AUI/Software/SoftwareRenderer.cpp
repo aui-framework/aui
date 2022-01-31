@@ -32,7 +32,15 @@ struct BrushHelper {
         }
         if (textureHelper->slowMethod) {
             // slower method
-            auto color = AColor(textureHelper->texture->getImage()->getPixelAt(x - position.x, y - position.y)) / 255.f;
+            auto rawPixelPos = glm::vec2{x, y};
+            auto surfaceUvCoords = (rawPixelPos - position) / (end - position);
+            auto uv1 = brush.uv1.value_or(glm::ivec2{0, 0});
+            auto uv2 = brush.uv2.value_or(glm::ivec2{0, 0});
+            auto uv = glm::vec2{ glm::mix(uv1.x, uv2.x, surfaceUvCoords.x), glm::mix(uv1.y, uv2.y, surfaceUvCoords.y) };
+            auto& image = textureHelper->texture->getImage();
+            auto imagePixelCoords = glm::ivec2{glm::vec2(image->getSize()) * uv};
+
+            auto color = AColor(image->getPixelAt(imagePixelCoords.x, imagePixelCoords.y)) / 255.f;
             renderer->putPixel({ x, y }, renderer->getColor() * color);
         } else {
             // faster method
