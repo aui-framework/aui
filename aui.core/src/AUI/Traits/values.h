@@ -24,6 +24,7 @@
 #include <type_traits>
 #include <cassert>
 #include <utility>
+#include <optional>
 
 namespace aui {
     /**
