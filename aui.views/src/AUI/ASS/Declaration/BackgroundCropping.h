@@ -35,6 +35,7 @@ namespace ass {
         unset_wrap<glm::vec2> size;
 
         BackgroundCropping() noexcept = default;
+        BackgroundCropping(const BackgroundCropping&) noexcept = default;
         BackgroundCropping(const glm::vec2& offset, const unset_wrap<glm::vec2>& size) noexcept:
             offset(offset), size(size) {}
 
