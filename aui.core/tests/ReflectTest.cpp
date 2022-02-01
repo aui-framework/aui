@@ -61,6 +61,28 @@ enum class EnumWithoutEnumValue {
     SOME_VALUE1
 };
 
+template<typename T>
+inline std::ostream& operator<<(std::ostream& o, ATest t) {
+    o << int(t);
+    return o;
+}
+template<typename T>
+inline std::ostream& operator<<(std::ostream& o, namespaceeee::ATest t) {
+    o << int(t);
+    return o;
+}
+template<typename T>
+inline std::ostream& operator<<(std::ostream& o, namespaceeee::ATest2 t) {
+    o << int(t);
+    return o;
+}
+template<typename T>
+inline std::ostream& operator<<(std::ostream& o, EnumWithoutEnumValue t) {
+    o << int(t);
+    return o;
+}
+
+
 ENUM_VALUES(ATest, VALUE1, VALUE2, VALUE3, VALUE4)
 ENUM_VALUES(namespaceeee::ATest, namespaceeee::V1, namespaceeee::V2, namespaceeee::V3)
 ENUM_VALUES(namespaceeee::ATest2, namespaceeee::ATest2::TEST2_1, namespaceeee::ATest2::TEST2_2, namespaceeee::ATest2::TEST2_3)
@@ -120,7 +142,7 @@ TEST(Reflect, NamespaceEnumerateEnumClassNames) {
             {"TEST2_3", namespaceeee::ATest2::TEST2_3},
     };
     auto test = AEnumerate<namespaceeee::ATest2>::all();
-    ASSERT_EQ(test, ref);
+    ASSERT_TRUE((test == ref));
 }
 
 TEST(Reflect, EnumWithoutEnumValueCase) {

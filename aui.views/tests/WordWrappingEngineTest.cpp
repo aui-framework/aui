@@ -23,7 +23,7 @@
 #include <AUI/Util/AWordWrappingEngine.h>
 
 template<typename T>
-std::ostream& operator<<(std::ostream& o, const glm::tvec2<T>& v) {
+inline std::ostream& operator<<(std::ostream& o, const glm::tvec2<T>& v) {
     return o << "{ " << v.x << ", " << v.y << " }";
 }
 

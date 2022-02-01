@@ -688,7 +688,7 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                         if (IOS)
                             set(_link_target_file -Wl,-force_load ${_link_target_file})
                         else()
-                            set(_link_target_file -Wl,--whole-archive ${_link_target_file} -Wl,--no-whole-archive)
+                            set(_link_target_file -Wl,--whole-archive,--allow-multiple-definition ${_link_target_file} -Wl,--no-whole-archive)
                         endif()
                     endif()
                 endif()

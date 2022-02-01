@@ -24,6 +24,7 @@
 #include <AUI/Core.h>
 #include <type_traits>
 #include <ostream>
+#include <tuple>
 
 class AString;
 

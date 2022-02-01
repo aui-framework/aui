@@ -40,5 +40,5 @@ namespace aui {
      * Determines whether <code>T</code> is complete or not.
      */
     template<typename T>
-    inline constexpr bool is_complete = typename impl::is_complete<T>::type::value;
+    inline constexpr bool is_complete = impl::is_complete<T>::type::value;
 }
