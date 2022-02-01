@@ -129,6 +129,10 @@ if (AUI_FOUND AND NOT TARGET aui)
             INTERFACE_LINK_LIBRARIES "${AUI_IMPORTED_TARGETS}")
 endif()
 
+if (UNIX AND NOT APPLE)
+    find_package(Threads REQUIRED)
+endif()
+
 if (AUI_views_FOUND AND NOT ANDROID AND NOT IOS)
     find_package(GLEW REQUIRED)
 
