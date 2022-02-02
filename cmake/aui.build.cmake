@@ -111,6 +111,8 @@ else()
     set(AUI_PLATFORM_UNIX 0 CACHE BOOL "Platform")
 endif()
 
+set(AUI_EXCLUDE_PLATFORMS ${AUI_EXCLUDE_PLATFORMS} CACHE STRING "")
+
 # determine compiler home dir for mingw when crosscompiling
 if (MINGW AND CMAKE_CROSSCOMPILING)
     get_filename_component(C_COMPILER_NAME ${CMAKE_C_COMPILER} NAME)
@@ -470,7 +472,7 @@ function(aui_executable AUI_MODULE_NAME)
 
     # remove platform dependent files
     foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
-        list(FILTER SRCS EXCLUDE REGEX ".*\\/Platform/${PLATFORM_NAME}\\/.*")
+        list(FILTER SRCS EXCLUDE REGEX "(.*\\/)?Platform/${PLATFORM_NAME}\\/.*")
     endforeach()
 
     #message("ASSDIR ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp")
@@ -825,7 +827,8 @@ macro(aui_app)
 
             # ios
             IOS_VERSION
-            IOS_DEVICE)
+            IOS_DEVICE
+            IOS_CONTROLLER)
     set(multiValueArgs ADDITIONAL_SRCS)
     cmake_parse_arguments(APP "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
@@ -843,6 +846,9 @@ macro(aui_app)
     endif()
     if (NOT APP_APPLE_SIGN_IDENTITY)
         set(APP_APPLE_SIGN_IDENTITY "iPhone Developer")
+    endif()
+    if (NOT APP_IOS_CONTROLLER)
+        set(APP_IOS_CONTROLLER "AUIViewController")
     endif()
 
     unset(_error_msg)
@@ -864,6 +870,7 @@ macro(aui_app)
         list(APPEND _error_msg_opt "APPLE_SIGN_IDENTITY which is your code sign identity (defaults to \"iPhone Developer\").")
         list(APPEND _error_msg_opt "IOS_VERSION which is target IOS version (defaults to 14.3).")
         list(APPEND _error_msg_opt "IOS_DEVICE which is target IOS device: either IPHONE, IPAD or BOTH (defaults to BOTH).")
+        list(APPEND _error_msg_opt "IOS_CONTROLLER which is your controller name (defaults to AUIViewController)")
     endif()
 
     if (_error_msg)
@@ -907,14 +914,16 @@ macro(aui_app)
         set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
 
         if (NOT AUI_ROOT)
-            set(AUI_ROOT ${CMAKE_SOURCE_DIR})
+            set(AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
         endif()
 
         set(RESOURCES
-                ${AUI_ROOT}/ios/Main.storyboard
-                ${AUI_ROOT}/ios/LaunchScreen.storyboard
+                ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard
+                ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
                 )
 
+        configure_file(${AUI_ROOT}/ios/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
+        configure_file(${AUI_ROOT}/ios/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
 
         target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
         set_target_properties(${APP_TARGET} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")

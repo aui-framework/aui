@@ -357,7 +357,7 @@ APath APath::workingDir() {
 
 APath APath::getDefaultPath(APath::DefaultPath path) {
     switch (path) {
-#if AUI_PLATFORM_ANDROID
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
         case APPDATA:
             return APath(".").absolute()["__aui_appdata"];
         case TEMP:

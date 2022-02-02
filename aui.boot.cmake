@@ -341,6 +341,7 @@ function(auib_import AUI_MODULE_NAME URL)
                     CMAKE_INSTALL_RPATH
                     CMAKE_MAKE_PROGRAM
                     CMAKE_MSVC_RUNTIME_LIBRARY
+                    CMAKE_FIND_PACKAGE_PREFER_CONFIG
                     CMAKE_FIND_ROOT_PATH_MODE_PROGRAM
                     CMAKE_FIND_ROOT_PATH_MODE_LIBRARY
                     CMAKE_FIND_ROOT_PATH_MODE_INCLUDE
