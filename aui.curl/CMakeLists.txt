@@ -5,7 +5,8 @@ if (MINGW)
 else()
     auib_import(CURL https://github.com/curl/curl
             VERSION curl-7_79_1
-            CMAKE_ARGS -DCMAKE_USE_OPENSSL=ON)
+            CMAKE_ARGS -DCMAKE_USE_OPENSSL=ON
+            )
 
     aui_module(aui.curl EXPORT aui)
     aui_link(aui.curl PUBLIC aui.core)
