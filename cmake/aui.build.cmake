@@ -685,7 +685,7 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                         if (${_link_target_file} IN_LIST _already_linked_libs)
                             continue()
                         endif()
-                        if (IOS)
+                        if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
                             set(_link_target_file -Wl,-force_load ${_link_target_file})
                         else()
                             set(_link_target_file -Wl,--whole-archive,--allow-multiple-definition ${_link_target_file} -Wl,--no-whole-archive)
