@@ -34,9 +34,8 @@
 #include <AUI/Enum/WindowStyle.h>
 
 #if AUI_PLATFORM_WIN
-#undef ui
 #include <windows.h>
-#define ui (*getThread()) * [=]()
+
 #elif AUI_PLATFORM_ANDROID
 #include <jni.h>
 #elif AUI_PLATFORM_APPLE
