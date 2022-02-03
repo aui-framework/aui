@@ -11,5 +11,8 @@ public:
     static MacosApp& inst();
 
     void run();
+    void activateIgnoringOtherApps();
+
+    void quit();
 };
 

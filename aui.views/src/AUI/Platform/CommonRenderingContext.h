@@ -28,6 +28,7 @@ protected:
 #if AUI_PLATFORM_MACOS
     AWindow* mWindow;
     void* mDisplayLink;
+    bool mFrameScheduled = false;
 #endif
 public:
 #if AUI_PLATFORM_LINUX
