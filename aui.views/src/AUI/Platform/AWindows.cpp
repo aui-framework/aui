@@ -96,8 +96,8 @@ void AWindow::redraw() {
             if (FRAME_DURATION > delta) {
                 std::this_thread::sleep_for(FRAME_DURATION - delta);
             }
-            _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
 #endif
+            _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         }
 
         mRenderingContext->beginPaint(*this);
