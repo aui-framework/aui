@@ -12,7 +12,7 @@
 #include <AUI/Platform/AInput.h>
 
 namespace AInput {
-    static AInput::Key fromSDL(SDL_Keycode keycode) {
+    static AInput::Key fromSDL(MS::Keyboard keycode) {
         AInput::Key vkey;
         switch (keycode) {
             default:           vkey = AInput::Unknown;     break;

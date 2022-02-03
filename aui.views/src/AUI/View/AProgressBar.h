@@ -46,6 +46,8 @@ public:
     AProgressBar();
 
     void setSize(int width, int height) override;
+
+    void render() override;
 };
 
 
