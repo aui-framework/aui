@@ -129,8 +129,7 @@ inline const AColor AColor::BLACK = {0.f, 0.f, 0.f, 1.f};
 inline const AColor AColor::WHITE = {1.f, 1.f, 1.f, 1.f};
 
 
-std::ostream& operator<<(std::ostream& o, const AColor& color) {
-
+inline std::ostream& operator<<(std::ostream& o, const AColor& color) {
     o << "#";
     char buf[16];
     if (!color.isFullyOpaque()) {

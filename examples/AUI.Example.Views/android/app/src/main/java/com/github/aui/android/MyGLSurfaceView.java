@@ -13,13 +13,14 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingDeque;
 
+import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 public class MyGLSurfaceView extends GLSurfaceView implements View.OnTouchListener {
     private static MyGLSurfaceView ourLastSurface;
     private GestureDetector mGestureDetector;
 
-    private final MyGLRenderer mRenderer;
+    private final GLSurfaceView.Renderer mRenderer;
     private static Queue<Runnable> ourOnUiThread = new LinkedBlockingDeque<Runnable>();
 
     public MyGLSurfaceView(Context context) {
@@ -53,14 +54,25 @@ public class MyGLSurfaceView extends GLSurfaceView implements View.OnTouchListen
 
             @Override
             public boolean onFling(MotionEvent start, MotionEvent current, float velX, float velY) {
-                Log.i("test", String.format("onFling %f, %f", velX, velY));
                 return false;
             }
         });
         ourLastSurface = this;
         setEGLContextClientVersion(2);
         setEGLConfigChooser(8, 8, 8, 8, 16, 8);
-        setRenderer(mRenderer = new MyGLRenderer() {
+        String internalStoragePath = context.getFilesDir().getPath();
+        setRenderer(mRenderer = new GLSurfaceView.Renderer() {
+
+            @Override
+            public void onSurfaceCreated(GL10 gl, EGLConfig config) {
+                handleInit(internalStoragePath);
+            }
+
+            @Override
+            public void onSurfaceChanged(GL10 gl, int width, int height) {
+                handleResize(width, height);
+            }
+
             @Override
             public void onDrawFrame(GL10 gl) {
                 try {
@@ -68,10 +80,11 @@ public class MyGLSurfaceView extends GLSurfaceView implements View.OnTouchListen
                         i.run();
                     }
                 } catch (NoSuchElementException ignored) {}
-                super.onDrawFrame(gl);
+                handleRedraw();
             }
+
         });
-        setRenderMode(RENDERMODE_WHEN_DIRTY);
+        setRenderMode(RENDERMODE_CONTINUOUSLY);
         setOnTouchListener(this);
     }
 
@@ -89,6 +102,10 @@ public class MyGLSurfaceView extends GLSurfaceView implements View.OnTouchListen
     private static native void handleMouseButtonUp(int x, int y);
     private static native void handleMouseMove(int x, int y);
     private static native void handleScroll(int originX, int originY, float velX, float velY);
+
+    private static native void handleInit(String internalStoragePath);
+    private static native void handleRedraw();
+    private static native void handleResize(int width, int height);
 
     @Override
     public boolean onTouch(View v, MotionEvent event) {

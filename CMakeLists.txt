@@ -21,6 +21,10 @@ cmake_minimum_required(VERSION 3.16)
 
 project(AUI)
 
+if (NOT AUI_ROOT)
+    set(AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "AUI src location")
+endif()
+
 
 if(AUI_BOOT_COMPONENTS)
     # adding required dependencies to the components
@@ -55,14 +59,14 @@ endfunction()
 
 define_aui_component(core)
 if (NOT ANDROID AND NOT IOS)
-    define_aui_component(crypt)
     define_aui_component(toolbox)
-    define_aui_component(curl)
     define_aui_component(data)
     define_aui_component(mysql)
     define_aui_component(sqlite)
     define_aui_component(network)
 endif()
+define_aui_component(crypt)
+define_aui_component(curl)
 define_aui_component(views)
 define_aui_component(xml)
 define_aui_component(json)

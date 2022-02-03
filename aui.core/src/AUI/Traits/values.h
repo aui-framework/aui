@@ -24,6 +24,7 @@
 #include <type_traits>
 #include <cassert>
 #include <utility>
+#include <optional>
 
 namespace aui {
     /**
@@ -81,4 +82,52 @@ namespace aui {
         non_null(T value): non_null_lateinit<T>(value) {}
     };
 
+    /**
+     * A value that initializes when accessed for the first time.
+     * @tparam T
+     */
+    template<typename T>
+    struct lazy {
+    private:
+        mutable std::optional<T> value;
+        std::function<T()> initializer;
+    public:
+        template<typename Factory, std::enable_if_t<std::is_invocable_r_v<T, Factory>, bool> = true>
+        lazy(Factory&& initializer) noexcept : initializer(std::forward<Factory>(initializer)) {}
+
+        lazy(const lazy<int>& other) noexcept: value(other.value), initializer(other.initializer) {}
+        lazy(lazy<int>&& other) noexcept: value(std::move(other.value)), initializer(std::move(other.initializer)) {}
+
+        T& get() {
+            if (!value) {
+                value = initializer();
+                initializer = nullptr;
+            }
+            return *value;
+        }
+        const T& get() const {
+            return const_cast<lazy<T>*>(this)->get();
+        }
+
+        operator T&() {
+            return get();
+        }
+        operator const T&() const {
+            return get();
+        }
+
+        T& operator*() {
+            return get();
+        }
+        const T& operator*() const {
+            return get();
+        }
+
+        T* operator->() {
+            return &get();
+        }
+        T const * operator->() const {
+            return &get();
+        }
+    };
 }

@@ -111,7 +111,7 @@ protected:
 
     virtual void doDrawWindow();
     virtual void onClosed();
-    void onCloseButtonClicked();
+
     void windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws);
 
     /**
@@ -121,7 +121,7 @@ protected:
     AWindow(std::nullptr_t) {}
 
     void createDevtoolsWindow() override;
-    float fetchDpiFromSystem() const;
+    float fetchDpiFromSystem() const override;
 
 public:
     AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
@@ -200,6 +200,10 @@ public:
     Window getNativeHandle() { return mHandle; }
 #endif
 
+    auto nativeHandle() const {
+        return mHandle;
+    }
+
     const AString& getWindowTitle() const
     {
         return mWindowTitle;
@@ -261,6 +265,7 @@ public:
     _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override;
 
     void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) override;
+    void onCloseButtonClicked();
 
 signals:
     emits<> closed;

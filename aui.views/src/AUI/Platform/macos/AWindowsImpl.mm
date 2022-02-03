@@ -60,6 +60,9 @@ void AWindow::quit() {
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;
     });
+    if (getWindowManager().mWindows.empty()) {
+        MacosApp::inst().quit();
+    }
 }
 void AWindow::show() {
     if (!getWindowManager().mWindows.contains(shared_from_this())) {
@@ -77,6 +80,7 @@ void AWindow::show() {
     auto ns = static_cast<NSWindow*>(mHandle);
     [ns orderFront:nil];
     [ns setIsVisible:YES];
+    MacosApp::inst().activateIgnoringOtherApps();
 
     emit shown();
 }
@@ -114,11 +118,9 @@ glm::ivec2 AWindow::getWindowPosition() const {
 
 
 void AWindow::flagRedraw() {
-    if (!mRedrawFlag) {
-        if (auto crc = dynamic_cast<CommonRenderingContext*>(mRenderingContext.get())) {
-            mRedrawFlag = true;
-            crc->requestFrame();
-        }
+    if (auto crc = dynamic_cast<CommonRenderingContext*>(mRenderingContext.get())) {
+        mRedrawFlag = true;
+        crc->requestFrame();
     }
 }
 
@@ -148,7 +150,9 @@ void AWindow::hide() {
 }
 
 void AWindowManager::notifyProcessMessages() {
-
+    dispatch_async(dispatch_get_main_queue(), ^{
+        AThread::current()->processMessages();
+    });
 }
 
 void AWindowManager::loop() {

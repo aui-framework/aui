@@ -24,6 +24,7 @@
 #include <AUI/Logging/ALogger.h>
 #include "OSAndroid.h"
 #include <AUI/Platform/Entry.h>
+#include <unistd.h>
 
 JavaVM* _gVM;
 
@@ -92,12 +93,16 @@ void AAndroid::requestRedraw() {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_MyGLRenderer_handleInit(JNIEnv *env, jclass clazz) {
+Java_com_github_aui_android_MyGLSurfaceView_handleInit(JNIEnv *env, jclass clazz, jstring internalStoragePathR) {
     //replace with one of your classes in the line below
 
     _gClassAUI = env->FindClass("com/github/aui/android/AUI");
     _gClassMyGLSurfaceView = env->FindClass("com/github/aui/android/MyGLSurfaceView");
 
+    jboolean isCopy;
+    auto internalStoragePath = env->GetStringUTFChars(internalStoragePathR, &isCopy);
+    chdir(internalStoragePath);
+    env->ReleaseStringUTFChars(internalStoragePathR, internalStoragePath);
 
     _gEntry({});
 }

@@ -24,6 +24,7 @@
 #include <AUI/Core.h>
 #include <type_traits>
 #include <ostream>
+#include <tuple>
 
 class AString;
 
@@ -124,7 +125,7 @@ inline AMetric operator"" _pt(unsigned long long v)
     return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PT);
 }
 
-std::ostream& operator<<(std::ostream& o, const AMetric& value) {
+inline std::ostream& operator<<(std::ostream& o, const AMetric& value) {
     o << value.getRawValue();
     switch (value.getUnit()) {
         case AMetric::T_PX:

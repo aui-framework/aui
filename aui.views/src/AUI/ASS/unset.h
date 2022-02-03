@@ -38,7 +38,7 @@ namespace ass {
         bool set;
 
     public:
-        unset_wrap():
+        unset_wrap() noexcept:
             set(false)
         {
         }

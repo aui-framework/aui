@@ -76,12 +76,15 @@ bool AWindow::isRedrawWillBeEfficient() {
     return 8ms < delta;
 }
 void AWindow::redraw() {
+    auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
     if (mUpdateLayoutFlag) {
         mUpdateLayoutFlag = false;
         updateLayout();
     }
 #if AUI_PLATFORM_WIN
     mRedrawFlag = true;
+#elif AUI_PLATFORM_MACOS
+    mRedrawFlag = false;
 #endif
     {
 
@@ -96,13 +99,28 @@ void AWindow::redraw() {
             if (FRAME_DURATION > delta) {
                 std::this_thread::sleep_for(FRAME_DURATION - delta);
             }
-            _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
 #endif
+            _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         }
 
         mRenderingContext->beginPaint(*this);
         Render::setWindow(this);
         doDrawWindow();
+
+        // measure frame time
+        auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+        unsigned millis = unsigned((after - before).count());
+        if (millis > 16) {
+            static auto lastNotification = 0ms;
+            if (after - lastNotification > 10s) {
+                lastNotification = after;
+                if (millis > 40) {
+                    ALogger::warn("Frame render took {}ms! Unacceptably bad performance"_format(millis));
+                } else {
+                    ALogger::warn("Frame render took {}ms! Bad performance"_format(millis));
+                }
+            }
+        }
         mRenderingContext->endPaint(*this);
     }
 

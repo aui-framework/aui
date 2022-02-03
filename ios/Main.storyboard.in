@@ -11,7 +11,7 @@
         <!--GLKit View Controller-->
         <scene sceneID="kqZ-mx-K2X">
             <objects>
-                <glkViewController preferredFramesPerSecond="30" id="Qmb-2B-ziP" customClass="AUIViewController" sceneMemberID="viewController">
+                <glkViewController preferredFramesPerSecond="30" id="Qmb-2B-ziP" customClass="@APP_IOS_CONTROLLER@" sceneMemberID="viewController">
                     <glkView key="view" opaque="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="center" enableSetNeedsDisplay="NO" id="OOF-Ep-lPu">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

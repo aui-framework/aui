@@ -19,26 +19,35 @@
  * =====================================================================================================================
  */
 
-#pragma once
+//
+// Created by alex2 on 31.08.2020.
+//
 
-#include <type_traits>
+#include <gtest/gtest.h>
+#include <AUI/Traits/values.h>
 
-namespace aui {
-    namespace impl {
-        template<typename T>
-        struct is_complete {
-        private:
-            template<typename P>
-            static auto test(P*) -> std::bool_constant<sizeof(sizeof(T) == sizeof(P))>;
-            static auto test(...) -> std::false_type;
-        public:
-            using type = decltype(test((T*)nullptr));
-        };
-    }
+TEST(Lazy, Unused) {
+    aui::lazy<int> unused = [] {
+        EXPECT_TRUE(false) << "initializer function called";
+        return 0;
+    };
+}
+TEST(Lazy, Used) {
+    bool called = false;
+    aui::lazy<int> used = [&] {
+        EXPECT_FALSE(called) << "initializer function called twice";
+        called = true;
+        return 123;
+    };
+    ASSERT_FALSE(called);
+    ASSERT_EQ(int(used), 123);
+    ASSERT_TRUE(called);
+    ASSERT_EQ(*used, 123);
+    ASSERT_EQ(used, 123);
 
-    /**
-     * Determines whether <code>T</code> is complete or not.
-     */
-    template<typename T>
-    inline constexpr bool is_complete = impl::is_complete<T>::type::value;
+    ASSERT_EQ(int((const aui::lazy<int>)used), 123);
+    ASSERT_EQ(*((const aui::lazy<int>)used), 123);
+    ASSERT_EQ(((const aui::lazy<int>)used), 123);
+
+    ASSERT_TRUE(called);
 }

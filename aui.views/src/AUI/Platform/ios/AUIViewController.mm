@@ -35,6 +35,10 @@ std::string ios_get_path_in_bundle() {
     CGPoint prevTransation;
 }
 
++ (AUIViewController*)instance {
+    return controller;
+}
+
 extern int(* _gEntry)(const AStringVector&);
 
 - (void)viewDidLoad
@@ -79,6 +83,7 @@ extern int(* _gEntry)(const AStringVector&);
 
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
+    AThread::current()->processMessages();
     auiWindow()->redraw();
 }
 - (void)viewDidLayoutSubviews {

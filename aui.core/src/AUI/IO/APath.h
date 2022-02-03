@@ -277,6 +277,7 @@ public:
          * \brief Folder for application data.
          * Windows: C:/Users/%user%/.appdata/Roaming/
          * Linux: %homedir%/.local/share/
+         * Android: <internal_storage_path>/__aui_appdata
          */
         APPDATA,
 
@@ -284,6 +285,7 @@ public:
          * \brief Folder for temporary data.
          * Windows: User's temp folder (%temp%)
          * Linux: /tmp
+         * Android: <internal_storage_path>/__aui_tmp
          */
         TEMP,
     };
