@@ -24,6 +24,7 @@
 
 #include <cassert>
 #include <curl/curl.h>
+#include <AUI/Util/kAUI.h>
 
 #include "AUI/Common/AString.h"
 
@@ -76,11 +77,40 @@ ACurl::Builder::~Builder() {
 	assert(mCURL == nullptr);
 }
 
+_<IInputStream> ACurl::Builder::toInputStream() {
+    class CurlInputStream: public IInputStream {
+    private:
+        ACurl mCurl;
+        AFuture<> mFuture;
+        APipe mPipe;
 
-ACurl::ACurl(const AString& url):
-	ACurl(Builder(url))
-{
+    public:
+        CurlInputStream(ACurl curl) : mCurl(std::move(curl)) {
+            mFuture = async {
+                mCurl.mWriteCallback = [&](const AByteBufferRef& buf) {
+                    mPipe << buf;
+                    return buf.size();
+                };
+                mCurl.run();
+            };
+        }
 
+        size_t read(char* dst, size_t size) override {
+            return mPipe.read(dst, size);
+        }
+    };
+    return _new<CurlInputStream>(ACurl(*this));
+}
+
+AByteBuffer ACurl::Builder::toByteBuffer() {
+    AByteBuffer out;
+    mWriteCallback = [&](const AByteBufferRef& buf) {
+        out << buf;
+        return buf.size();
+    };
+    ACurl r(*this);
+    r.run();
+    return out;
 }
 
 ACurl::ACurl(Builder&& url):

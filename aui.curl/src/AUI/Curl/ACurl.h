@@ -90,15 +90,30 @@ public:
          * \return this
          */
         Builder& withRanges(size_t begin, size_t end);
+
+        /**
+         * Makes input stream from curl builder.
+         * @note creates async task where curl's loop lives in.
+         * @throws AIOException
+         * @return input stream
+         */
+        _<IInputStream> toInputStream();
+
+        /**
+         * Makes bytebuffer from curl builder.
+         * @throws AIOException
+         */
+         AByteBuffer toByteBuffer();
     };
 
-    explicit ACurl(const AString& url);
 	explicit ACurl(Builder& builder):
 	    ACurl(std::move(builder))
 	{
 
 	}
 	explicit ACurl(Builder&& builder);
+    ACurl(ACurl&&) noexcept = default;
+
 	~ACurl();
 
 	int64_t getContentLength() const;
