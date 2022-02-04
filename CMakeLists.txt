@@ -103,6 +103,7 @@ set(AUI_ALL_COMPONENTS core
         views
         xml
         uitests
+        toolbox
         )
 
 

@@ -29,7 +29,7 @@
 
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/AString.h>
-
+#include <AUI/Model/IListModel.h>
 
 
 class DemoListModel: public AObject, public IListModel<AString> {
