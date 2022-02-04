@@ -11,6 +11,7 @@ namespace AStreams {
                 throw AEOFException();
             }
             os.write(buf, r);
+            bytes -= r;
         }
     }
 }
