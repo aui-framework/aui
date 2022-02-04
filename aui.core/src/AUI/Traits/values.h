@@ -76,6 +76,10 @@ namespace aui {
             checkForNull();
             return value;
         }
+        T* operator->() const {
+            checkForNull();
+            return &*value;
+        }
     };
 
     template<typename T>

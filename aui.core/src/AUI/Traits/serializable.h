@@ -35,9 +35,8 @@ namespace aui {
 #include <AUI/Common/AByteBuffer.h>
 
 namespace aui {
-    // ints, floats, doubles, etc...
     template<typename T>
-    struct serializable<T, std::enable_if_t<std::is_arithmetic_v<T>>> {
+    struct raw_serializable {
         static void write(IOutputStream& os, const T& value) {
             os.write(reinterpret_cast<const char*>(&value), sizeof(value));
         }
@@ -47,6 +46,10 @@ namespace aui {
             return t;
         }
     };
+
+    // ints, floats, doubles, etc...
+    template<typename T>
+    struct serializable<T, std::enable_if_t<std::is_arithmetic_v<T>>>: raw_serializable<T> {};
 
     // _<SerializableType>
     template<typename T>
@@ -135,7 +138,6 @@ namespace aui {
 
     struct without_string_size {
         std::string value;
-        without_string_size(std::string&& value) : value(std::forward<std::string>(value)) {}
         without_string_size(const AString& value) : value(value.toStdString()) {}
     };
 
@@ -146,4 +148,3 @@ namespace aui {
         }
     };
 }
-
