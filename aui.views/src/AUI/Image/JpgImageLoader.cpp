@@ -30,7 +30,7 @@
 bool JpgImageLoader::matches(AByteBuffer& buffer) {
     const uint8_t header[] = {0xff, 0xd8 };
     uint8_t read_header[sizeof(header)];
-    buffer.get((char*) read_header, sizeof(read_header));
+    buffer.read((char*) read_header, sizeof(read_header));
     return memcmp(header, read_header, sizeof(read_header)) == 0;
 }
 
@@ -40,7 +40,7 @@ _<IDrawable> JpgImageLoader::getDrawable(AByteBuffer& buffer) {
 
 _<AImage> JpgImageLoader::getRasterImage(AByteBuffer& buffer) {
     int x, y, channels;
-    if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer.getCurrentPosAddress(), buffer.getAvailable(),
+    if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer.readIterator(), buffer.availableToRead(),
                                               &x, &y, &channels, 4)) {
         channels = 4;
         uint32_t format = AImage::BYTE;

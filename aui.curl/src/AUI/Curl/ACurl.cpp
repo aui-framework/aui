@@ -30,7 +30,8 @@
 
 #undef min
 
-ACurl::Builder::Builder(const AString& url) {
+ACurl::Builder::Builder(const AString& url)
+{
 	class Global
 	{
 	public:
@@ -54,13 +55,13 @@ ACurl::Builder::Builder(const AString& url) {
 	res = curl_easy_setopt(mCURL, CURLOPT_URL, url.toStdString().c_str());
 	assert(res == 0);
 
-	res = curl_easy_setopt(mCURL, CURLOPT_WRITEFUNCTION, writeCallback);
+	res = curl_easy_setopt(mCURL, CURLOPT_WRITEFUNCTION, ACurl::writeCallback);
 	assert(res == 0);
 	res = curl_easy_setopt(mCURL, CURLOPT_SSL_VERIFYPEER, false);
 	assert(res == 0);
 }
 
-ACurl::Builder& ACurl::Builder::setRanges(size_t begin, size_t end) {
+ACurl::Builder& ACurl::Builder::withRanges(size_t begin, size_t end) {
 	if (begin || end) {
 		std::string s = std::to_string(begin) + "-";
 		if (end) {
@@ -83,62 +84,39 @@ ACurl::ACurl(const AString& url):
 }
 
 ACurl::ACurl(Builder&& url):
-	mCURLcode(0)
+	mCURLcode(0),
+    mCURL(url.mCURL),
+    mWriteCallback(std::move(url.mWriteCallback))
 {
-	mCURL = url.mCURL;
 	url.mCURL = nullptr;
 
 	CURLcode res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
 
-	mWorkerThread = _new<AThread>([&]()
-	{
-		CURLcode r = curl_easy_perform(mCURL);
-		//assert(r == 0 || r == CURLE_PARTIAL_FILE);
-
-		mCURLcode = r;
-		mFinished = true;
-
-        curl_easy_cleanup(mCURL);
-
-        mPipe.close();
-	});
-	mWorkerThread->start();
 
 }
 
 ACurl::~ACurl()
 {
     mDestructorFlag = true;
-    mPipe.close();
-	mWorkerThread->join();
 }
 
-size_t ACurl::read(char* dst, size_t size)
-{
-    if (mFinished && !mPipe.available()) {
-        if (mCURLcode == CURLE_WRITE_ERROR)
-            return -1;
-        return 0;
-    }
-    return mPipe.read(dst, size);
-}
-
-size_t ACurl::onDataReceived(char* ptr, size_t size)
-{
-    if (mDestructorFlag)
-        return -1;
-    return mPipe.write(ptr, size);
-}
 
 size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata)
 {
-	ACurl* c = static_cast<ACurl*>(userdata);
-	return c->onDataReceived(ptr, nmemb);;
+	auto c = static_cast<ACurl*>(userdata);
+	return c->mWriteCallback({ptr, nmemb});
 }
 
 int64_t ACurl::getContentLength() const {
     curl_off_t s;
     curl_easy_getinfo(mCURL, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &s);
     return s;
+}
+
+void ACurl::run() {
+    auto c = curl_easy_perform(mCURL);
+    if (c != CURLE_OK) {
+        throw Exception(curl_easy_strerror(c));
+    }
 }

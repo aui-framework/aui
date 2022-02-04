@@ -55,6 +55,7 @@ BOOL WINAPI DllMain(
 #include <AUI/Url/AUrl.h>
 #include <AUI/Curl/ACurl.h>
 
+/*
 struct main {
     main() {
         AUrl::registerResolver("http", [](const AUrl& u) {
@@ -64,4 +65,4 @@ struct main {
             return _new<ACurl>(u.getFull());
         });
     }
-} m;
+} m;*/

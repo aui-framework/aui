@@ -22,111 +22,86 @@
 #pragma once
 #include "AEOFException.h"
 
-#include <AUI/Common/AByteBuffer.h>
 #include <glm/glm.hpp>
 
 class IOutputStream;
 
-class API_AUI_CORE IInputStream
+class IInputStream
 {
 public:
     virtual ~IInputStream() = default;
 
     /**
      * @brief Reads up to <code>size</code> bytes from stream. Implementation must read at least one byte. Blocking
-     *        (waiting for new data) is allowed. Returns 0 if stream has reached the end. Returns -1 if stream has
-     *        encountered an error.
+     *        (waiting for new data) is allowed.
      * <dl>
      *   <dt><b>Sneaky exceptions</b></dt>
      *   <dd>An implementation can throw any exception that subclasses <a href="#AIOException">AIOException</a>.</dd>
      * </dl>
      * @param dst destination buffer
      * @param size destination buffer's size. > 0
-     * @return  0 - EOF (end of file)
-     *         >0 - count of read bytes
+     * @return number of read bytes (including 0)
      */
     virtual size_t read(char* dst, size_t size) = 0;
 
     /**
-     * \brief Reads up to 0x10000 and puts them AByteBuffer
-     * \param dst destination buffer
+     * @brief Reads up to <code>size</code> bytes from stream. Implementation must read at least one byte. Blocking
+     *        (waiting for new data) is allowed.
+     * <dl>
+     *   <dt><b>Sneaky exceptions</b></dt>
+     *   <dd>An implementation can throw any exception that subclasses <a href="#AIOException">AIOException</a>.</dd>
+     * </dl>
+     * @param dst destination buffer
+     * @param size destination buffer's size. > 0
+     * @return number of read bytes (including 0)
      */
-    inline void readBuffer(AByteBuffer& dst, size_t bufferSize = 0x10000)
-    {
-        if (dst.getReserved() - dst.getCurrentPos() < size_t(bufferSize)) {
-            dst.reserve(dst.getCurrentPos() + bufferSize);
-        }
-        size_t r = read(dst.getCurrentPosAddress(), bufferSize);
-
-        if (r == 0)
-            throw AEOFException();
-
-        dst.setSize(dst.getCurrentPos() + r);
-        dst.setCurrentPos(dst.getCurrentPos() + bufferSize);
+    size_t read(char* dst, size_t size) const {
+        return const_cast<IInputStream*>(this)->read(dst, size); // const wrapper
     }
 
     /**
-     * \brief Reads raw data and stores to out. Does not applicable to types with pointers.
-     * \tparam storage data type
-     * \param out result
-     * \return this
+     * @brief Reads exact <code>size</code> bytes from stream. Blocking (waiting for new data) is allowed.
+     * <dl>
+     *   <dt><b>Sneaky exceptions</b></dt>
+     *   <dd>An implementation can throw any exception that subclasses <a href="#AIOException">AIOException</a>.</dd>
+     * </dl>
+     * @throws Throws <a href="#AEOFException">AEOFException</a> when could not read EXACT <code>size</code> bytes.
+     * @param dst destination buffer.
+     * @param size destination buffer's size.
      */
-    template<typename T>
-    inline IInputStream& operator>>(T& out);
+    void readExact(char* dst, size_t size) const {
+        char* begin = dst;
+        char* end = dst + size;
+        while (begin != end) {
+            size_t r = read(begin, end - begin);
+            if (r == 0) {
+                throw AEOFException();
+            }
+            begin += r;
+        }
+    }
 
     /**
-     * \brief Redirects all this input stream data to output stream.
-     * \note This declaration is strange because it overloads the <code>inline IInputStream& operator>>(T& out)</code>
-     *       function
-     * \tparam base of IOutputStream
-     * \param os IOutputStream
-     * \return this
+     * Reads data using AUI serialization (see AUI/Traits/serializable.h)
+     * @param t value to write
      */
     template<typename T>
-    inline IInputStream& operator>>(const _<T>& os) {
-        operator>>(*os);
+    T read() const;
+
+    /**
+     * Reads data using AUI serialization (see AUI/Traits/serializable.h)
+     * @param t value to write
+     */
+    template<typename T>
+    const IInputStream& operator>>(T& dst) const {
+        dst = read<T>();
         return *this;
-    }
-
-    /**
-     * \brief Reads the AByteBuffer in the following format: uint32_t as size, %size% bytes...
-     * \see IOutputStream::writeSizedBuffer
-     * \return produced AByteBuffer
-     */
-    inline AByteBuffer readSizedBuffer() {
-        AByteBuffer buf;
-        uint32_t length;
-        *this >> length;
-        if (length) {
-            buf.reserve(length);
-            buf.setSize(length);
-            size_t r = read(buf.data(), length);
-            assert(r == length);  // NOLINT(clang-diagnostic-sign-compare)
-        }
-        return buf;
     }
 };
 
-
-#include "IOutputStream.h"
+#include <AUI/Traits/serializable.h>
 
 template<typename T>
-IInputStream& IInputStream::operator>>(T& out) {
-    if constexpr (std::is_base_of_v<IOutputStream, T>) {
-        out << *this;
-    } else {
-        static_assert(std::is_standard_layout_v<T>, "data is too complex to be read from stream");
-        auto dst = reinterpret_cast<char*>(&out);
-
-        size_t accumulator = sizeof(T);
-
-        for (size_t r = 0; accumulator; dst += r, accumulator -= r) {
-            r = read(dst, accumulator);
-            if (r < 0)
-                throw AIOException("something went wrong while reading from the stream");
-            if (r == 0)
-                throw AEOFException();
-        }
-    }
-    return *this;
+inline T IInputStream::read() const {
+    return aui::deserialize<T>(const_cast<IInputStream&>(*this));
 }

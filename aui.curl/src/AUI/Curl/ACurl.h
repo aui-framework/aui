@@ -25,35 +25,62 @@
 #include <AUI/ACurl.h>
 
 #include "AUI/IO/IInputStream.h"
+#include "AUI/Traits/values.h"
 #include <AUI/IO/APipe.h>
 
 class AString;
 typedef void CURL;
 
-class API_AUI_CURL ACurl: public IInputStream {
+class API_AUI_CURL ACurl {
+public:
+    using WriteCallback = std::function<size_t(const AByteBufferRef&)>;
 private:
 	CURL* mCURL;
     int mCURLcode{};
-    APipe mPipe;
 
-	size_t onDataReceived(char* ptr, size_t size);
 	static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata);
-
-	_<AThread> mWorkerThread;
 
 	bool mFinished = false;
 	bool mDestructorFlag = false;
 
+    WriteCallback mWriteCallback;
+
 public:
+    class Exception: public AIOException {
+    public:
+        using AIOException::AIOException;
+    };
+
     class API_AUI_CURL Builder {
     friend class ACurl;
     private:
         CURL* mCURL;
+        WriteCallback mWriteCallback;
 
     public:
         explicit Builder(const AString& url);
         Builder(const Builder&) = delete;
         ~Builder();
+
+        Builder& withWriteCallback(WriteCallback callback) {
+            assert(("write callback already set" && mWriteCallback == nullptr));
+            mWriteCallback = std::move(callback);
+            return *this;
+        }
+
+        Builder& withDestinationBuffer(aui::promise::no_copy<AByteBuffer> dst) {
+            return withWriteCallback([dst](const AByteBufferRef& b) {
+                (*dst) << b;
+                return b.size();
+            });
+        }
+
+        Builder& withOutputStream(_<IOutputStream> dst) {
+            return withWriteCallback([dst = std::move(dst)](const AByteBufferRef& b) {
+                (*dst) << b;
+                return b.size();
+            });
+        }
 
         /**
          * \brief Sets: Accept-Ranges: begin-end
@@ -62,7 +89,7 @@ public:
          * \param end end index of the part. Zero means end of the file.
          * \return this
          */
-        Builder& setRanges(size_t begin, size_t end);
+        Builder& withRanges(size_t begin, size_t end);
     };
 
     explicit ACurl(const AString& url);
@@ -74,7 +101,7 @@ public:
 	explicit ACurl(Builder&& builder);
 	~ACurl();
 
-	size_t read(char* dst, size_t size) override;
-
 	int64_t getContentLength() const;
+
+    void run();
 };

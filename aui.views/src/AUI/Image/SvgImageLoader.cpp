@@ -31,7 +31,7 @@ SvgImageLoader::SvgImageLoader()
 bool SvgImageLoader::matches(AByteBuffer& buffer)
 {
 	char buf[8];
-	buffer.get(buf, 5);
+	buffer.read(buf, 5);
 
 	return memcmp(buf, "<?xml", 5) == 0 ||
            memcmp(buf, "<svg", 4) == 0;

@@ -70,7 +70,7 @@ void scanSrcDir(const APath& srcDir, AMap<AString, AString>& dst) {
 
 void saveLangFile(const APath& path, const AMap<AString, AString>& data) {
     auto fos = _new<AFileOutputStream>(path);
-    *fos << "# AUI lang file\n";
+    fos << "# AUI lang file\n";
 
     for (auto& i : data) {
         *fos << i.first.replacedAll("=", "\\=") << "=" << i.second.replacedAll("=", "\\=") << "\n";

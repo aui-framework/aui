@@ -28,36 +28,22 @@
 #include <stdexcept>
 #include <cassert>
 #include "AUI/Core.h"
+#include <AUI/IO/IInputStream.h>
+#include <AUI/IO/IOutputStream.h>
+#include "AByteBufferRef.h"
 
-class IInputStream;
 
-class AByteBufferRef {
-private:
-    const char* mBuffer;
-    size_t mSize;
-
-public:
-    AByteBufferRef(): mBuffer(nullptr), mSize(0) {}
-    AByteBufferRef(const char* buffer, size_t size) : mBuffer(buffer), mSize(size) {}
-
-    const char* data() const {
-        return mBuffer;
-    }
-    size_t size() const {
-        return mSize;
-    }
-};
-
-class API_AUI_CORE AByteBuffer {
+class API_AUI_CORE AByteBuffer: public IInputStream, public IOutputStream {
 private:
     char* mBuffer = nullptr;
     size_t mReserved = 0;
     size_t mSize = 0;
-    mutable size_t mCurrentPos = 0;
+    mutable size_t mReadPos = 0;
 
 public:
     AByteBuffer();
     AByteBuffer(const char* buffer, size_t size);
+    explicit AByteBuffer(size_t reserved);
     AByteBuffer(const unsigned char* buffer, size_t size);
     ~AByteBuffer();
 
@@ -68,10 +54,34 @@ public:
         return { mBuffer, mSize };
     }
 
+    size_t read(char* dst, size_t size) override;
+
+    void write(const char* src, size_t size) override;
+
+    operator AByteBufferRef() const {
+        return ref();
+    }
+
     void clear() {
         delete[] mBuffer;
         mBuffer = nullptr;
-        mSize = mReserved = mCurrentPos = 0;
+        mSize = mReserved = mReadPos = 0;
+    }
+
+    const char* readIterator() const {
+        return mBuffer + mReadPos;
+    }
+
+    size_t getCurrentPos() const {
+        return mReadPos;
+    }
+
+    void increaseCurrentPos(size_t by) const {
+        mReadPos += by;
+    }
+
+    size_t availableToRead() const {
+        return end() - readIterator();
     }
 
     /**
@@ -79,19 +89,6 @@ public:
      */
     void reserve(size_t size);
 
-    /**
-     * \brief Appends data to the buffer. Twices internal buffer's size if needed.
-     * \param buffer pointer to data
-     * \param size data size to write in bytes
-     */
-    void put(const char* buffer, size_t size);
-
-    /**
-     * \brief Retrieves next <code>size</code> bytes from the buffer.
-     * \param buffer pointer to destination buffer
-     * \param size data size to read in bytes
-     */
-    void get(char* buffer, size_t size) const;
 
     /**
      * \return Internal buffer.
@@ -112,66 +109,6 @@ public:
     {
         return *reinterpret_cast<T*>(mBuffer + byteIndex);
     }
-
-    /**
-     * \brief Wrapper around put
-     */
-    template <typename T>
-    AByteBuffer& operator<<(const T& data) {
-        // static_assert(std::is_standard_layout_v<T>, "data is too complex to be put onto buffer");
-        put(reinterpret_cast<const char*>(&data), sizeof(T));
-        return *this;
-    }
-
-
-    /**
-     * \brief Wrapper around get
-     */
-    template <typename T>
-    const AByteBuffer& operator>>(T& dst) const {
-        // static_assert(std::is_standard_layout_v<T>, "data is too complex to be read from buffer");
-        get(reinterpret_cast<char*>(&dst), sizeof(T));
-        return *this;
-    }
-
-    /**
-     * \brief Puts string size and its contents to the buffer.
-     */
-    AByteBuffer& operator<<(const std::string& data) {
-        *this << uint32_t(data.length());
-        put(data.c_str(), data.length());
-        return *this;
-    }
-
-    /**
-     * \brief Reads string size and string contents.
-     */
-    const AByteBuffer& operator>>(std::string& dst) const {
-        uint32_t s;
-        *this >> s;
-        if (s > 128)
-            throw std::runtime_error(std::string("illegal string size: ") + std::to_string(s));
-        dst.resize(s);
-        get(&(dst[0]), s);
-        return *this;
-    }
-
-    /**
-     * \brief Puts another byte buffer.
-     */
-    AByteBuffer& operator<<(const AByteBuffer& data) {
-        put(data.data(), data.getSize());
-        return *this;
-    }
-
-    /**
-     * \brief Put this bytebuffer to another byte buffer.
-     */
-    const AByteBuffer& operator>>(AByteBuffer& dst) const {
-        dst.put(data(), getSize());
-        return *this;
-    }
-
 
     /**
      * Forces new size of the buffer.
@@ -223,56 +160,36 @@ public:
     }
 
     /**
+     * \return size of payload (valid data)
+     */
+    size_t size() const {
+        return mSize;
+    }
+
+    /**
      * \return size of internal buffer. Must be greater that getSize()
      */
     size_t getReserved() const {
         return mReserved;
     }
 
-    /**
-     * \return pointer to data including reading/writing offset.
-     */
-    const char* getCurrentPosAddress() const {
-        return mBuffer + mCurrentPos;
-    }
 
     /**
-     * \return pointer to data including reading/writing offset.
-     */
-    char* getCurrentPosAddress() {
-        return mBuffer + mCurrentPos;
-    }
-
-    /**
-     * \return number of available (unread) bytes.
-     */
-    size_t getAvailable() const
-    {
-        return mSize - mCurrentPos;
-    }
-
-    /**
-     * \param p new reading/writing offset
+     * \param p new reading offset
      */
     void setCurrentPos(size_t p) const {
-        mCurrentPos = p;
+        mReadPos = p;
     }
 
-    /**
-     * \return reading/writing offset
-     */
-    size_t getCurrentPos() const {
-        return mCurrentPos;
-    }
 
     AByteBuffer& operator=(AByteBuffer&& other) {
         mBuffer = other.mBuffer;
-        mCurrentPos = other.mCurrentPos;
+        mReadPos = other.mReadPos;
         mReserved = other.mReserved;
         mSize = other.mSize;
 
         other.mBuffer = nullptr;
-        other.mCurrentPos = 0;
+        other.mReadPos = 0;
         other.mReserved = 0;
         other.mSize = 0;
         return *this;
@@ -288,6 +205,10 @@ public:
     char* end()
     {
         return mBuffer + mSize;
+    }
+    char* endReserved()
+    {
+        return mBuffer + mReserved;
     }
     const char* begin() const
     {

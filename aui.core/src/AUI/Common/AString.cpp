@@ -22,6 +22,7 @@
 #include <cstring>
 #include "AString.h"
 #include "AStringVector.h"
+#include <AUI/Common/AByteBuffer.h>
 
 inline static void fromUtf8_impl(AString& destination, const char* str, size_t length) {
     destination.reserve(length);
@@ -92,19 +93,21 @@ AByteBuffer AString::toUtf8() const noexcept
                         static_cast<char>(0b11100000 | (c >> 12 & 0b1111)),
                         static_cast<char>(0b10000000 | (c >> 6 & 0b111111)),
                         static_cast<char>(0b10000000 | (c & 0b111111)),
+                        0,
                 };
-                buf.put(b, sizeof(b));
+                buf << b;
             } else if (c >= 0x80)
             {
                 char b[] = {
                         static_cast<char>(0b11000000 | (c >> 6 & 0b11111)),
                         static_cast<char>(0b10000000 | (c & 0b111111)),
+                        0,
                 };
-                buf.put(b, sizeof(b));
+                buf << b;
             }
         } else
         {
-            buf.put(reinterpret_cast<char*>(&c), 1);
+            buf << *reinterpret_cast<char*>(&c);
         }
     }
     return buf;
@@ -234,18 +237,7 @@ bool AString::toBool() const noexcept
 
 AString AString::fromLatin1(const AByteBuffer& buffer)
 {
-    AString result;
-
-    result.reserve(buffer.getAvailable());
-
-    while (buffer.getAvailable())
-    {
-        char b;
-        buffer.get(&b, 1);
-        result += b;
-    }
-
-    return result;
+    return {buffer.readIterator(), buffer.end() };
 }
 
 

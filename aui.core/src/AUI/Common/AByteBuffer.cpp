@@ -32,22 +32,26 @@
 AByteBuffer::AByteBuffer() {
     reserve(64);
 }
+AByteBuffer::AByteBuffer(size_t reserved) {
+    reserve(reserved);
+}
 
 AByteBuffer::AByteBuffer(const char* buffer, size_t size)
 {
-    put(buffer, size);
+    write(buffer, size);
 }
 
 AByteBuffer::AByteBuffer(const unsigned char* buffer, size_t size)
 {
-    put(reinterpret_cast<const char*>(buffer), size);
+    write(reinterpret_cast<const char*>(buffer), size);
 }
 
-AByteBuffer::AByteBuffer(const AByteBuffer& other) noexcept {
+AByteBuffer::AByteBuffer(const AByteBuffer& other) noexcept:
+    mSize(other.mSize),
+    mReadPos(other.mReadPos)
+{
     reserve(other.mReserved);
     memcpy(mBuffer, other.mBuffer, other.mSize);
-    mSize = other.mSize;
-    mCurrentPos = other.mCurrentPos;
 }
 
 AByteBuffer::AByteBuffer(AByteBuffer&& other) noexcept
@@ -65,21 +69,23 @@ void AByteBuffer::reserve(size_t size) {
     mBuffer = buffer;
 }
 
-void AByteBuffer::put(const char* buffer, size_t size) {
+void AByteBuffer::write(const char* buffer, size_t size) {
     if (size) {
         if (mSize + size > mReserved) {
             reserve(mSize * 2 + size);
         }
-        memcpy(mBuffer + mSize, buffer, size);
+        memcpy(end(), buffer, size);
         mSize += size;
     }
 }
 
-void AByteBuffer::get(char* buffer, size_t size) const {
-    if (mCurrentPos + size > mSize)
-        throw AIOException("bytebuffer overflow");
-    memcpy(buffer, mBuffer + mCurrentPos, size);
-    mCurrentPos += size;
+size_t AByteBuffer::read(char* buffer, size_t size) {
+    if (mReadPos + size > mSize) {
+        size = availableToRead();
+    }
+    memcpy(buffer, readIterator(), size);
+    mReadPos += size;
+    return size;
 }
 
 
@@ -101,7 +107,7 @@ AByteBuffer AByteBuffer::fromStream(IInputStream& is)
 
     for (size_t last; (last = is.read(tmp, sizeof(tmp))) > 0;)
     {
-        buf.put(tmp, last);
+        buf.write(tmp, last);
     }
     return buf;
 }
@@ -112,7 +118,7 @@ AByteBuffer AByteBuffer::fromStream(IInputStream& is, size_t sizeRestriction) {
     char tmp[4096];
     for (size_t last; (last = is.read(tmp, glm::min(sizeof(tmp), sizeRestriction))) > 0; sizeRestriction -= last)
     {
-        buf.put(tmp, last);
+        buf.write(tmp, last);
     }
     return buf;
 }
@@ -122,7 +128,7 @@ std::ostream& operator<<(std::ostream& o, const AByteBuffer& r)
 {
     char formatBuf[8];
     o << '[';
-    while (r.getAvailable())
+    while (r.readIterator() != r.end())
     {
         unsigned char c;
         r >> c;
@@ -141,8 +147,7 @@ AByteBuffer::~AByteBuffer() {
 AByteBuffer AByteBuffer::fromString(const AString& string) {
     AByteBuffer b;
     auto s = string.toStdString();
-    b.put(s.data(), s.length());
-    b.setCurrentPos(0);
+    b.write(s.data(), s.length());
     return b;
 }
 
@@ -185,9 +190,11 @@ static const std::string BASE64_CHARS =
         "abcdefghijklmnopqrstuvwxyz"
         "0123456789+/";
 
+
 static inline bool is_base64(unsigned char c) {
     return (isalnum(c) || (c == '+') || (c == '/'));
 }
+
 AByteBuffer AByteBuffer::fromBase64String(const AString& encodedString) {
     int in_len = encodedString.size();
     int i = 0;

@@ -38,9 +38,8 @@ size_t AStringStream::read(char* dst, size_t size)
 	return toRead;
 }
 
-size_t AStringStream::write(const char *src, size_t size) {
+void AStringStream::write(const char *src, size_t size) {
     mString.append(src, src + size);
-    return size;
 }
 
 void AStringStream::seekRead(size_t position) {

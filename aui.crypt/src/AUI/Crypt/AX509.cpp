@@ -52,7 +52,7 @@ bool AX509::checkTrust() const
 
 _<AX509> AX509::fromPEM(_<AByteBuffer> buffer)
 {
-	BIO* inputBuffer = BIO_new_mem_buf(buffer->getCurrentPosAddress(), buffer->getAvailable());
+	BIO* inputBuffer = BIO_new_mem_buf(buffer->readIterator(), buffer->end() - buffer->readIterator());
 	X509* rsa = nullptr;
 	PEM_read_bio_X509(inputBuffer, (X509**)&rsa, nullptr, nullptr);
 	BIO_free(inputBuffer);

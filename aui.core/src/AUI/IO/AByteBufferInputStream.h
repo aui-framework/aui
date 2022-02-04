@@ -27,15 +27,13 @@
 class API_AUI_CORE AByteBufferInputStream: public IInputStream
 {
 private:
-    AByteBuffer mBuffer;
-	
+    const char* mCurrent;
+    const char* mEnd;
+
+
 public:
-	AByteBufferInputStream(const AByteBuffer& buffer)
-		: mBuffer(buffer)
-	{
-	}
-	AByteBufferInputStream(AByteBuffer&& buffer)
-		: mBuffer(std::forward<AByteBuffer>(buffer))
+	AByteBufferInputStream(const AByteBufferRef& buffer)
+		: mCurrent(buffer.data()), mEnd(buffer.data() + buffer.size())
 	{
 	}
 
