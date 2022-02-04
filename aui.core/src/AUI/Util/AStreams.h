@@ -14,4 +14,7 @@ namespace AStreams {
             bytes -= r;
         }
     }
+    inline void copyAll(const IInputStream& is, IOutputStream&& os, size_t bytes) {
+        copyAll(is, os ,bytes);
+    }
 }
