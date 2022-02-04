@@ -87,13 +87,13 @@ TEST_F(SignalSlot, BasicNoArgs) {
 }
 
 TEST_F(SignalSlot, Multithread) {
-    auto t = async {
-        slave = _new<Slave>("hello");
-    };
-    t.wait();
+    slave = _new<Slave>("hello");
 
-    ASSERT_FALSE(slave->getThread() == master->getThread());
 
     AObject::connect(master->message, slot(slave)::acceptMessage);
-    master->broadcastMessage("hello");
+
+    auto t = async {
+        master->broadcastMessage("hello");
+    };
+    t.wait();
 }
