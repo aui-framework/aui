@@ -45,7 +45,7 @@ public:
     virtual ~APipe();
 
     size_t read(char* dst, size_t size) override;
-    size_t write(const char* src, size_t size) override;
+    void write(const char* src, size_t size) override;
 
     size_t available();
 

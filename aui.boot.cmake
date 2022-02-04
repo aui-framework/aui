@@ -341,10 +341,19 @@ function(auib_import AUI_MODULE_NAME URL)
                     CMAKE_INSTALL_RPATH
                     CMAKE_MAKE_PROGRAM
                     CMAKE_MSVC_RUNTIME_LIBRARY
-                    CMAKE_C_LINKER_FLAGS
-                    CMAKE_EXE_LINKER_FLAGS
+                    CMAKE_FIND_PACKAGE_PREFER_CONFIG
+                    CMAKE_FIND_ROOT_PATH_MODE_PROGRAM
+                    CMAKE_FIND_ROOT_PATH_MODE_LIBRARY
+                    CMAKE_FIND_ROOT_PATH_MODE_INCLUDE
+                    CMAKE_FIND_ROOT_PATH_MODE_PACKAGE
+                    ONLY_CMAKE_FIND_ROOT_PATH
                     ${ANDROID_VARS})
-                list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
+
+                # ${_varname} can be possibly false (e.g. -DBUILD_SHARED_LIBS=FALSE) so using STREQUAL check instead for
+                # emptiness
+                if (NOT ${_varname} STREQUAL "")
+                    list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
+                endif()
             endforeach()
             if (CMAKE_TOOLCHAIN_FILE) # resolve absolute path to the toolchain file - it's possibly relative thus invalid
                 get_filename_component(_toolchain ${CMAKE_TOOLCHAIN_FILE} ABSOLUTE)

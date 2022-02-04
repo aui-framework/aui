@@ -51,12 +51,35 @@ public:
     ~AInvocationTargetException() noexcept override = default;
 };
 
+namespace aui::impl {
+    /**
+     * This class calls cancel() and wait() methods of AFuture::Inner BEFORE AFuture::Inner destruction in order to keep
+     * alive the weak reference created in AThreadPool::operator<<.
+     */
+    template<typename Inner>
+    struct CancellationWrapper {
+        _<Inner> wrapped;
 
-template<typename Value>
+        explicit CancellationWrapper(_<Inner> wrapped) : wrapped(std::move(wrapped)) {}
+
+        ~CancellationWrapper() {
+            wrapped->cancel();
+            wrapped->wait();
+        }
+        Inner* operator->() const noexcept {
+            return wrapped.get();
+        }
+    };
+}
+
+
+template<typename Value = void>
 class AFuture
 {
+friend class AThreadPool;
 private:
     struct Inner {
+        bool interrupted = false;
         std::optional<Value> value;
         std::optional<AInvocationTargetException> exception;
         AMutex mutex;
@@ -69,7 +92,7 @@ private:
 
         [[nodiscard]]
         bool hasResult() const noexcept {
-            return value || exception;
+            return value || exception || interrupted;
         }
 
         bool setThread(_<AAbstractThread> thr) noexcept {
@@ -77,6 +100,13 @@ private:
             if (cancelled) return true;
             thread = std::move(thr);
             return false;
+        }
+
+        void wait() noexcept {
+            std::unique_lock lock(mutex);
+            while ((thread || !cancelled) && !hasResult()) {
+                cv.wait(lock);
+            }
         }
 
         void cancel() noexcept {
@@ -96,6 +126,12 @@ private:
             nullsafe(onSuccess)(*value);
         }
 
+        void reportInterrupted() noexcept {
+            std::unique_lock lock(mutex);
+            interrupted = true;
+            cv.notify_all();
+        }
+
         void reportException(const AException& e) noexcept {
             std::unique_lock lock(mutex);
             exception = AInvocationTargetException(e.getMessage(), AReflect::name(&e)); // NOLINT(bugprone-throw-keyword-missing)
@@ -103,33 +139,26 @@ private:
             nullsafe(onError)(*exception);
         }
 
-        ~Inner() {
-            cancel();
-        }
     };
-    _<Inner> mInner;
+    _<aui::impl::CancellationWrapper<Inner>> mInner;
 
 
 public:
-
-    template<typename Callable>
-    static AFuture make(AThreadPool& tp, Callable&& func) noexcept;
-
-    AFuture() noexcept: mInner(aui::ptr::manage(new Inner)) {}
+    AFuture() noexcept: mInner(_new<aui::impl::CancellationWrapper<Inner>>(aui::ptr::manage(new Inner))) {}
 
 
     void result(Value v) noexcept {
-        mInner->result(std::move(v));
+        (*mInner)->result(std::move(v));
     }
 
     void reportException(const AException& e) noexcept {
-        mInner->reportException(e);
+        (*mInner)->reportException(e);
     }
 
     template<typename Callback>
     AFuture& onSuccess(Callback&& callback) noexcept {
-        std::unique_lock lock(mInner->mutex);
-        mInner->onSuccess = [innerStorage = mInner, callback = std::forward<Callback>(callback)](const Value& v) {
+        std::unique_lock lock((*mInner)->mutex);
+        (*mInner)->onSuccess = [innerStorage = mInner, callback = std::forward<Callback>(callback)](const Value& v) {
             callback(v);
         };
         return *this;
@@ -137,15 +166,20 @@ public:
 
     template<typename Callback>
     AFuture& onError(Callback&& callback) noexcept {
-        std::unique_lock lock(mInner->mutex);
-        mInner->onError = [innerStorage = mInner, callback = std::forward<Callback>(callback)](const AException& v) {
+        std::unique_lock lock((*mInner)->mutex);
+        (*mInner)->onError = [innerStorage = mInner, callback = std::forward<Callback>(callback)](const AException& v) {
             callback(v);
         };
         return *this;
     }
 
+
     void cancel() noexcept {
-        mInner->cancel();
+        (*mInner)->cancel();
+    }
+
+    void reportInterrupted() {
+        (*mInner)->reportInterrupted();
     }
 
     /**
@@ -157,12 +191,9 @@ public:
      * @return the object stored from the another thread.
      */
     Value& operator*() {
-        std::unique_lock lock(mInner->mutex);
-        while (!(mInner->value || mInner->exception)) {
-            mInner->cv.wait(lock);
-        }
-        if (mInner->exception) throw *mInner->exception;
-        return *mInner->value;
+        (*mInner)->wait();
+        if ((*mInner)->exception) throw *(*mInner)->exception;
+        return *(*mInner)->value;
     }
 
     /**
@@ -201,6 +232,142 @@ public:
         return **const_cast<AFuture*>(this);
     }
 
+};
+
+template<>
+class AFuture<void>
+{
+friend class AThreadPool;
+private:
+    struct Inner {
+        bool value = false;
+        bool interrupted = false;
+        std::optional<AInvocationTargetException> exception;
+        AMutex mutex;
+        AConditionVariable cv;
+        AAbstractThread* worker = nullptr;
+        std::function<void()> onSuccess;
+        std::function<void(const AException& exception)> onError;
+        _<AAbstractThread> thread;
+        bool cancelled = false;
+
+        [[nodiscard]]
+        bool hasResult() const noexcept {
+            return value || exception || interrupted;
+        }
+
+        void reportInterrupted() noexcept {
+            std::unique_lock lock(mutex);
+            interrupted = true;
+            cv.notify_all();
+        }
+
+        bool setThread(_<AAbstractThread> thr) noexcept {
+            std::unique_lock lock(mutex);
+            if (cancelled) return true;
+            thread = std::move(thr);
+            return false;
+        }
+
+        /**
+         * Whats for result or cancellation or interruption or exception.
+         */
+        void wait() noexcept {
+            std::unique_lock lock(mutex);
+            while ((thread || !cancelled) && !hasResult()) {
+                cv.wait(lock);
+            }
+        }
+
+        void cancel() noexcept {
+            std::unique_lock lock(mutex);
+            if (!cancelled) {
+                cancelled = true;
+                if (thread && !hasResult()) {
+                    thread->interrupt();
+                }
+
+            }
+        }
+
+        void result() noexcept {
+            std::unique_lock lock(mutex);
+            value = true;
+            cv.notify_all();
+            nullsafe(onSuccess)();
+        }
+
+        void reportException(const AException& e) noexcept {
+            std::unique_lock lock(mutex);
+            exception = AInvocationTargetException(e.getMessage(), AReflect::name(&e)); // NOLINT(bugprone-throw-keyword-missing)
+            cv.notify_all();
+            nullsafe(onError)(*exception);
+        }
+
+        ~Inner() {
+            cancel();
+            wait();
+        }
+    };
+    _<aui::impl::CancellationWrapper<Inner>> mInner;
+
+
+public:
+    AFuture() noexcept: mInner(_new<aui::impl::CancellationWrapper<Inner>>(aui::ptr::manage(new Inner))) {}
+
+
+    void result() noexcept {
+        (*mInner)->result();
+    }
+
+    /**
+     * Whats for result or cancellation or interruption or exception.
+     */
+    void wait() const noexcept {
+        (*mInner)->wait();
+    }
+
+    void reportException(const AException& e) noexcept {
+        (*mInner)->reportException(e);
+    }
+
+    template<typename Callback>
+    AFuture& onSuccess(Callback&& callback) noexcept {
+        std::unique_lock lock((*mInner)->mutex);
+        (*mInner)->onSuccess = [innerStorage = mInner, callback = std::forward<Callback>(callback)]() {
+            callback();
+        };
+        return *this;
+    }
+
+    template<typename Callback>
+    AFuture& onError(Callback&& callback) noexcept {
+        std::unique_lock lock((*mInner)->mutex);
+        (*mInner)->onError = [innerStorage = mInner, callback = std::forward<Callback>(callback)]() {
+            callback();
+        };
+        return *this;
+    }
+
+    void cancel() noexcept {
+        (*mInner)->cancel();
+    }
+    void reportInterrupted() noexcept {
+        (*mInner)->reportInterrupted();
+    }
+
+    /**
+     * Sleeps if the result is not currently available.
+     * <dl>
+     *   <dt><b>Sneaky exceptions</b></dt>
+     *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
+     * </dl>
+     * @return the object stored from the another thread.
+     */
+    void operator*() const {
+        wait();
+        if ((*mInner)->exception) throw *(*mInner)->exception;
+    }
 };
 
 #include <AUI/Thread/AThreadPool.h>

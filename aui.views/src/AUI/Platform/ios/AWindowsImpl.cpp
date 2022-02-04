@@ -108,6 +108,10 @@ void AWindow::flagRedraw() {
     mRedrawFlag = true;
 }
 
+float AWindow::fetchDpiFromSystem() const {
+    return Platform::getDpiRatio();
+}
+
 
 void AWindow::setSize(int width, int height) {
     AViewContainer::setSize(width, height);

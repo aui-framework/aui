@@ -39,7 +39,6 @@ private:
     ASet<AAbstractSignal*> mSignals;
 	bool mSignalsEnabled = true;
 
-	static AObject*& sender_impl();
 	static bool& isDisconnected();
 
 protected:

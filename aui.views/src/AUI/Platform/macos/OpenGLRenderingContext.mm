@@ -125,10 +125,13 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
 
 void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
     //wglMakeCurrent(mWindowDC, ourHrc);
+    GLint swapInterval = 0;
+    [static_cast<NSOpenGLContext*>(mContext) setValues:&swapInterval forParameter:NSOpenGLCPSwapInterval];
 }
 
 void OpenGLRenderingContext::endResize(ABaseWindow& window) {
-
+    [static_cast<NSOpenGLContext*>(mContext) update];
+    [static_cast<NSOpenGLContext*>(mContext) makeCurrentContext];
 }
 
 void OpenGLRenderingContext::endPaint(ABaseWindow& window) {

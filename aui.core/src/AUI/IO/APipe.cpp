@@ -44,23 +44,22 @@ size_t APipe::read(char* dst, size_t size) {
     return read;
 }
 
-size_t APipe::write(const char* src, size_t size) {
+void APipe::write(const char* src, size_t size) {
     std::unique_lock lock(mMutex);
     if (mClosed) {
-        return -1;
+        throw AException("pipe is closed");
     }
     for (uint16_t i = 0; i < size; ++i, ++mWriterPos) {
         while (mWriterPos + 1 == mReaderPos) {
             mConditionVariable.notify_one();
             mConditionVariable.wait_for(lock, 100ms);
             if (mClosed) {
-                return -1;
+                throw AException("pipe is closed");
             }
         }
         mCircularBuffer[mWriterPos] = src[i];
     }
     mConditionVariable.notify_one();
-    return size;
 }
 
 void APipe::close() {

@@ -27,26 +27,13 @@
 
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/AQueue.h>
+#include <AUI/Common/AException.h>
 #include <AUI/Util/kAUI.h>
 #include <glm/glm.hpp>
 
 template<typename T>
 class AFuture;
 
-namespace aui::detail {
-    template<typename T>
-    struct future_helper
-    {
-        using return_type = AFuture<T>;
-    };
-
-    template<>
-    struct future_helper<void>
-    {
-        using return_type = void;
-    };
-
-}
 
 class API_AUI_CORE AThreadPool
 {
@@ -119,16 +106,37 @@ public:
     auto parallel(Iterator begin, Iterator end, Functor&& functor);
 
     template <typename Callable>
-    typename aui::detail::future_helper<std::invoke_result_t<Callable>>::return_type operator<<(Callable fun)
+    [[nodiscard]]
+    AFuture<std::invoke_result_t<Callable>> operator<<(Callable&& func)
     {
-        if constexpr (std::is_void_v<std::invoke_result_t<Callable>>) {
-            run(fun);
-        } else
-        {
-            return AFuture<std::invoke_result_t<Callable>>::make(*this, fun);
-        }
+        using Value = std::invoke_result_t<Callable>;
+        AFuture<Value> future;
+        run([innerWeak = future.mInner->wrapped.weak(), func = std::forward<Callable>(func)]()
+               {
+                   if (auto inner = innerWeak.lock()) {
+                       if (inner->setThread(AThread::current())) return;
+                       try {
+                           inner = nullptr;
+                           if constexpr(std::is_same_v<Value, void>) {
+                               func();
+                               nullsafe(innerWeak.lock())->result();
+                           } else {
+                               auto result = func();
+                               nullsafe(innerWeak.lock())->result(std::move(result));
+                           }
+                       } catch (const AException& e) {
+                           nullsafe(innerWeak.lock())->reportException(e);
+                       } catch (...) {
+                           nullsafe(innerWeak.lock())->reportInterrupted();
+                           throw;
+                       }
+                   }
+               }, AThreadPool::PRIORITY_LOWEST);
+        return future;
     }
+
     template <typename Callable>
+    [[nodiscard]]
     inline auto operator*(Callable fun)
     {
         return *this << fun;
@@ -139,7 +147,7 @@ public:
 
 #include <AUI/Thread/AFuture.h>
 
-template<typename T>
+template<typename T = void>
 class AFutureSet: public AVector<AFuture<T>> {
 public:
     using AVector<AFuture<T>>::AVector;
@@ -176,24 +184,3 @@ auto AThreadPool::parallel(Iterator begin, Iterator end, Functor &&functor) {
 
 
 #include <AUI/Reflect/AReflect.h>
-
-template <typename Value>
-template <typename Callable>
-inline AFuture<Value> AFuture<Value>::make(AThreadPool& tp, Callable&& func) noexcept
-{
-    AFuture<Value> future;
-    tp.run([innerWeak = future.mInner.weak(), func = std::forward<Callable>(func)]()
-           {
-               if (auto inner = innerWeak.lock()) {
-                   if (inner->setThread(AThread::current())) return;
-                   try {
-                       inner = nullptr;
-                       auto result = func();
-                       nullsafe(innerWeak.lock())->result(std::move(result));
-                   } catch (const AException& e) {
-                       nullsafe(innerWeak.lock())->reportException(e);
-                   }
-               }
-           }, AThreadPool::PRIORITY_LOWEST);
-    return future;
-}

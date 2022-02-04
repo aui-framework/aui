@@ -1,6 +1,7 @@
 //
 // Created by Alexey Titov on 22.01.2022.
 //
+#import <AUI/Platform/AWindow.h>
 #import <Cocoa/Cocoa.h>
 #include "MacosApp.h"
 
@@ -38,4 +39,16 @@ MacosApp::MacosApp() {
 
 void MacosApp::run() {
     [static_cast<AUINSApplication*>(mNsApp) run];
+}
+void MacosApp::activateIgnoringOtherApps() {
+    auto app = static_cast<AUINSApplication*>(mNsApp);
+    [app activateIgnoringOtherApps:YES];
+    if (auto w = dynamic_cast<AWindow*>(AWindow::current())) {
+        [static_cast<NSWindow*>(w->nativeHandle()) makeKeyAndOrderFront:app];
+    }
+}
+
+void MacosApp::quit() {
+    [static_cast<AUINSApplication*>(mNsApp) stop:nil];
+    [static_cast<AUINSApplication*>(mNsApp) terminate:nil];
 }

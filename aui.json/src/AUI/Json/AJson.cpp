@@ -19,7 +19,6 @@
  * =====================================================================================================================
  */
 
-#include <AUI/IO/AByteBufferOutputStream.h>
 #include <AUI/IO/AByteBufferInputStream.h>
 #include "AJson.h"
 #include "AUI/Util/ATokenizer.h"
@@ -143,14 +142,14 @@ void API_AUI_JSON AJson::write(IOutputStream& os, const AJsonElement& json) {
 
 AString AJson::toString(const AJsonElement& json) {
     auto bb = _new<AByteBuffer>();
-    write(AByteBufferOutputStream(bb), json);
+    write(bb, json);
     return {bb->data(), bb->data() + bb->getSize()};
 }
 
 AJsonElement AJson::fromString(const AString& json) {
     AByteBuffer bb;
     auto s = json.toStdString();
-    bb.put(s.c_str(), s.length());
+    bb.write(s.c_str(), s.length());
     bb.setCurrentPos(0);
     return read(AByteBufferInputStream(bb));
 }

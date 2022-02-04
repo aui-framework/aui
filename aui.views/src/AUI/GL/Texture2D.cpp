@@ -51,7 +51,7 @@ struct Result
 	bool operator==(const Result& rhs) const;
 };
 
-bool Result::operator==(const Result& rhs) const
+inline bool Result::operator==(const Result& rhs) const
 {
 	return memcmp(this, &rhs, sizeof(rhs)) == 0;
 }

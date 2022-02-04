@@ -35,12 +35,13 @@
 
 TEST(Threading, Async) {
     auto someInt = _new<std::atomic_int>(0);
-    for (int i = 0; i < 100; ++i)
-        async{
-                (*someInt) += 1;
+    AFutureSet<> f;
+    for (int i = 0; i < 100; ++i) {
+        f << async {
+            (*someInt) += 1;
         };
-
-    AThread::sleep(1000);
+    }
+    f.waitForAll();
 
     ASSERT_EQ(*someInt, 100);
 }
@@ -104,7 +105,7 @@ TEST(Threading, Future1) {
 
 TEST(Threading, Future2) {
     auto b = _new<bool>(false);
-    async{
+    auto f = async{
             AThread::sleep(1000);
             *b = true;
     };
@@ -205,14 +206,16 @@ TEST(Threading, FutureCancellationBeforeExecution) {
         }
         foreignLambdaCallCount += 1;
     };
-    localThreadPool * foreignLambda;
+    auto exec = localThreadPool * foreignLambda;
     {
-        auto future = localThreadPool * [&] {
-            ADD_FAILURE() << "lambda has called";
-            return 0;
-        };
-        localThreadPool * foreignLambda;
-
+        AFuture<> future;
+        {
+            auto future1 = localThreadPool * [&] {
+                ADD_FAILURE() << "lambda has called";
+            };
+            future = localThreadPool * foreignLambda;
+        }
+        future.wait();
         AThread::sleep(250);
     }
     AThread::sleep(1000);
@@ -227,7 +230,6 @@ TEST(Threading, FutureCancellationWhileExecution) {
             // hard work
             AThread::sleep(1000);
             ADD_FAILURE() << "this line should not have reached";
-            return 0;
         };
         AThread::sleep(500);
         ASSERT_TRUE(called) << "lambda has not called either";
@@ -239,10 +241,10 @@ TEST(Threading, FutureCancellationAfterExecution) {
     AThreadPool localThreadPool(1);
     bool foreignLambdaCalled = false;
     {
-        auto future = localThreadPool * [&] {
+        auto future1 = localThreadPool * [&] {
             return 0;
         };
-        localThreadPool * [&] {
+        auto future2 = localThreadPool * [&] {
             foreignLambdaCalled = true;
         };
         AThread::sleep(250);

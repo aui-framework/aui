@@ -26,7 +26,7 @@
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_MyGLRenderer_handleRedraw(JNIEnv *env, jclass clazz) {
+Java_com_github_aui_android_MyGLSurfaceView_handleRedraw(JNIEnv *env, jclass clazz) {
     if (auto el = AThread::current()->getCurrentEventLoop())
         el->loop();
     nullsafe(dynamic_cast<AWindow*>(AWindow::current()))->AWindow::redraw();
@@ -34,7 +34,7 @@ Java_com_github_aui_android_MyGLRenderer_handleRedraw(JNIEnv *env, jclass clazz)
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_MyGLRenderer_handleResize(JNIEnv *env, jclass clazz, jint width, jint height) {
+Java_com_github_aui_android_MyGLSurfaceView_handleResize(JNIEnv *env, jclass clazz, jint width, jint height) {
     nullsafe(AWindow::current())->setSize(width, height);
 }
 

@@ -66,5 +66,3 @@ void AFileInputStream::seek(std::streamoff offset, AFileInputStream::Seek dir) {
 void AFileInputStream::seek(std::streampos pos) {
     fseek(mFile, pos, SEEK_SET);
 }
-
-

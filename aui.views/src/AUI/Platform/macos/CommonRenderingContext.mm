@@ -8,7 +8,8 @@
 #import "MainView.h"
 
 void CommonRenderingContext::requestFrame() {
-    CVDisplayLinkStart(static_cast<CVDisplayLinkRef>(mDisplayLink));
+    if (!CVDisplayLinkIsRunning(static_cast<CVDisplayLinkRef>(mDisplayLink)))
+        CVDisplayLinkStart(static_cast<CVDisplayLinkRef>(mDisplayLink));
 }
 
 void CommonRenderingContext::init(const Init& init) {
@@ -32,7 +33,6 @@ void CommonRenderingContext::init(const Init& init) {
     [nsWindow setAcceptsMouseMovedEvents:YES];
     [nsWindow setRestorable:NO];
     [nsWindow setTitle: [NSString stringWithUTF8String:(init.name.toStdString().c_str())]];
-    // Should be retained by window now
     [view release];
 
     mWindow = &window;
@@ -40,11 +40,20 @@ void CommonRenderingContext::init(const Init& init) {
 
     CVDisplayLinkCreateWithActiveCGDisplays(reinterpret_cast<CVDisplayLinkRef*>(&mDisplayLink));
     CVDisplayLinkSetOutputCallback(reinterpret_cast<CVDisplayLinkRef>(mDisplayLink), [](CVDisplayLinkRef displayLink, const CVTimeStamp* _now, const CVTimeStamp* outputTime, CVOptionFlags flagsIn, CVOptionFlags* flagsOut, void* ctx) -> CVReturn {
-        auto myCtx = reinterpret_cast<CommonRenderingContext*>(ctx);
-        dispatch_async(dispatch_get_main_queue(), ^{
-            myCtx->mWindow->redraw();
-            CVDisplayLinkStop(static_cast<CVDisplayLinkRef>(myCtx->mDisplayLink));
-        });
+        auto myCtx = reinterpret_cast<CommonRenderingContext *>(ctx);
+        if (!myCtx->mFrameScheduled)
+        {
+            myCtx->mFrameScheduled = true;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                myCtx->mWindow->mRedrawFlag = false;
+                myCtx->mWindow->redraw();
+                myCtx->mFrameScheduled = false;
+                if (!myCtx->mWindow->mRedrawFlag) {
+                    // next redraw is not needed
+                    CVDisplayLinkStop(static_cast<CVDisplayLinkRef>(myCtx->mDisplayLink));
+                }
+            });
+        }
         return kCVReturnSuccess;
     }, this);
 
@@ -56,6 +65,7 @@ void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
     CVDisplayLinkStop(static_cast<CVDisplayLinkRef>(mDisplayLink));
     CVDisplayLinkRelease(static_cast<CVDisplayLinkRef>(mDisplayLink));
     mDisplayLink = nullptr;
+    [static_cast<NSWindow*>(mWindow->nativeHandle()) close];
 }
 
 void CommonRenderingContext::beginPaint(ABaseWindow& window) {

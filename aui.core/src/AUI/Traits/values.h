@@ -24,6 +24,7 @@
 #include <type_traits>
 #include <cassert>
 #include <utility>
+#include <functional>
 #include <optional>
 
 namespace aui {
@@ -74,6 +75,10 @@ namespace aui {
         operator T() {
             checkForNull();
             return value;
+        }
+        T* operator->() const {
+            checkForNull();
+            return &*value;
         }
     };
 
@@ -130,4 +135,32 @@ namespace aui {
             return &get();
         }
     };
+
+    namespace promise {
+        /**
+         * Forbids copy of the wrapped value.
+         * The caller can be sure his value wouldn't be copied.
+         * @tparam T
+         */
+        template<typename T>
+        class no_copy {
+        private:
+            T* value;
+
+        public:
+            no_copy(T& value): value(&value) {          // implicit initializer
+
+            }
+            operator T&() const {                      // implicit conversion
+                return *value;
+            }
+
+            T& operator*() const {                     // std dereference
+                return *value;
+            }
+            T* operator->() const {                    // allow pointer-style calls
+                return value;
+            }
+        };
+    }
 }

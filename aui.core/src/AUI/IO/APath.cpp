@@ -213,7 +213,7 @@ ADeque<APath> APath::listDir(ListFlags f) const {
 APath APath::absolute() const {
     // *nix requires file existence but windows doesn't - unifying the behaviour
     if (!exists()) {
-        throw AFileNotFoundException(*this);
+        throw AFileNotFoundException("could not find absolute file " +*this);
     }
 #ifdef WIN32
     wchar_t buf[0x1000];
@@ -225,7 +225,7 @@ APath APath::absolute() const {
 #else
     char buf[0x1000];
     if (realpath(toStdString().c_str(), buf) == nullptr) {
-        throw AIOException("could not find absolute file" + *this ERROR_DESCRIPTION);
+        throw AFileNotFoundException("could not find absolute file " + *this ERROR_DESCRIPTION);
     }
 
     return buf;
@@ -357,6 +357,12 @@ APath APath::workingDir() {
 
 APath APath::getDefaultPath(APath::DefaultPath path) {
     switch (path) {
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+        case APPDATA:
+            return APath(".").absolute()["__aui_appdata"];
+        case TEMP:
+            return APath(".").absolute()["__aui_tmp"];
+#else
         case APPDATA:
             return APath(getpwuid(getuid())->pw_dir).file(".local/share");
 
@@ -364,6 +370,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
             return "/tmp";
         default:
             assert(0);
+#endif
     }
     return {};
 }
