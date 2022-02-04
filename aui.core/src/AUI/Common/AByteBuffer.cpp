@@ -236,3 +236,12 @@ AByteBuffer AByteBuffer::fromBase64String(const AString& encodedString) {
     return ret;
 }
 
+void AByteBuffer::write(const IInputStream& stream, size_t size) {
+    auto avail = mReserved - mSize;
+    if (avail < size) {
+        reserve(mReserved + size);
+    }
+    stream.readExact(end(), size);
+    mSize += size;
+}
+

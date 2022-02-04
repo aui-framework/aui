@@ -34,6 +34,8 @@ if(AUI_BOOT_COMPONENTS)
         if (NOT CMAKE_CROSSCOMPILING)
             list(APPEND AUI_BOOT_COMPONENTS crypt toolbox)
         endif()
+    elseif (toolbox IN_LIST AUI_BOOT_COMPONENTS AND NOT CMAKE_CROSSCOMPILING)
+        list(APPEND AUI_BOOT_COMPONENTS crypt)
     endif()
 endif()
 list(REMOVE_DUPLICATES AUI_BOOT_COMPONENTS)
@@ -103,6 +105,7 @@ set(AUI_ALL_COMPONENTS core
         views
         xml
         uitests
+        toolbox
         )
 
 

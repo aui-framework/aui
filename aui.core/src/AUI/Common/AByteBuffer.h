@@ -58,6 +58,13 @@ public:
 
     void write(const char* src, size_t size) override;
 
+    /**
+     * Reads exact <code>size</code> bytes from <code>stream</code>.
+     * @param stream
+     * @param size
+     */
+    void write(const IInputStream& stream, size_t size);
+
     operator AByteBufferRef() const {
         return ref();
     }

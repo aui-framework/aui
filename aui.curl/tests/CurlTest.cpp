@@ -8,9 +8,7 @@
 #include "AUI/IO/AFileInputStream.h"
 
 TEST(CurlTest, ToByteBuffer) {
-    AByteBuffer buffer;
-    ACurl a(ACurl::Builder("https://github.com").withDestinationBuffer(buffer));
-    a.run();
+    AByteBuffer buffer = ACurl::Builder("https://github.com").toByteBuffer();
     ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
 }
 
