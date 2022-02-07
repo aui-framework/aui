@@ -901,7 +901,7 @@ macro(aui_app)
     if (AUI_PLATFORM_LINUX)
         if (NOT APP_LINUX_DESKTOP)
             # generate desktop file
-            set(_exec \$<TARGET_FILE_NAME:hackers-mc-launcher>)
+            set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
             set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_exec}\nType=Application\nTerminal=false\nCategories=Utility")
             if (APP_ICON)
                 set(_icon "${PROJECT_BINARY_DIR}/app.icon.svg")
