@@ -72,6 +72,7 @@ foreach(_module ${AUI_FIND_COMPONENTS})
     if (${_module} IN_LIST AUI_AVAILABLE_COMPONENTS)
         set(_module_dir "${SELF_DIR}/aui.${_module}")
         if (EXISTS ${_module_dir})
+            set(_user_install_dir "${CMAKE_CURRENT_BINARY_DIR}/lib")
             set(AUI_${_module}_FOUND TRUE)
             if (WIN32)
                 find_file(AUI_${_module}_LIBRARY
@@ -85,7 +86,7 @@ foreach(_module ${AUI_FIND_COMPONENTS})
                              NO_CACHE)
             else()
                 find_library(AUI_${_module}_LIBRARY "aui.${_module}"
-                             PATHS "${SELF_DIR}/aui.${_module}/lib"
+                             PATHS ${_user_install_dir} "${SELF_DIR}/aui.${_module}/lib"
                              NO_DEFAULT_PATH
                              NO_CACHE)
             endif()
