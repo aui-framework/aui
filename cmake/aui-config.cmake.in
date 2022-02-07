@@ -144,3 +144,7 @@ if (AUI_views_FOUND AND NOT ANDROID AND NOT IOS)
     find_package(OpenGL REQUIRED)
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${prev})
 endif()
+
+if (AUI_uitests_FOUND AND NOT ANDROID AND NOT IOS)
+    find_package(GTest REQUIRED)
+endif()
