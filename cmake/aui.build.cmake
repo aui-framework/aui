@@ -815,6 +815,11 @@ endfunction(aui_module)
 
 
 macro(aui_app)
+    # for pulling some resources (cmake scripts, ios storyboards, etc...)
+    if (NOT AUI_ROOT)
+        set(AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+    endif()
+
     set(options )
     set(oneValueArgs
             # common
@@ -822,6 +827,9 @@ macro(aui_app)
             NAME
             COPYRIGHT
             VERSION
+
+            # linux
+            LINUX_DESKTOP
 
             # apple
             APPLE_TEAM_ID
@@ -861,6 +869,9 @@ macro(aui_app)
     if (NOT APP_NAME)
         list(APPEND _error_msg "NAME which is your app's display name.")
     endif()
+    if (NOT APP_ICON)
+        list(APPEND _error_msg_opt "ICON which is path to your app's display icon.")
+    endif()
     list(APPEND _error_msg_opt "COPYRIGHT which is your copyright string (defaults to \"Unknown\").")
     list(APPEND _error_msg_opt "VERSION which is your app's version (defaults to \"1.0\").")
     if (IOS)
@@ -876,12 +887,43 @@ macro(aui_app)
         list(APPEND _error_msg_opt "IOS_CONTROLLER which is your controller name (defaults to AUIViewController)")
     endif()
 
+    if (AUI_PLATFORM_LINUX)
+        if (NOT APP_LINUX_DESKTOP_FILE)
+            list(APPEND _error_msg_opt "LINUX_DESKTOP_FILE which is your custom *.desktop file")
+        endif()
+    endif()
+
     if (_error_msg)
         list(JOIN _error_msg \n v1)
         list(JOIN _error_msg_opt \n v2)
         message(FATAL_ERROR "The following arguments are required for aui_app():\n${v1}\nnote: the following optional variables can be also set:\n${v2}")
     endif()
 
+    # DESKTOP LINUX ====================================================================================================
+    if (AUI_PLATFORM_LINUX)
+        if (NOT APP_LINUX_DESKTOP)
+            file(GENERATE
+                    OUTPUT "${PROJECT_BINARY_DIR}/app.desktop"
+                    CONTENT [[
+[Desktop Entry]
+Name=${APP_NAME}
+Exec=$<TARGET_FILE_NAME:app>
+Icon=icon.svg
+Type=Application
+        ]])
+            configure_file(${AUI_ROOT}/cmake/appimage-generate.cmake.in ${PROJECT_BINARY_DIR}/appimage-generate.cmake @ONLY)
+            set(APP_LINUX_DESKTOP ${PROJECT_BINARY_DIR}/appimage-generate.cmake)
+        endif()
+
+        list(APPEND CPACK_GENERATOR External)
+
+        set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${PROJECT_BINARY_DIR}/appimage-generate.cmake")
+        set(CPACK_EXTERNAL_ENABLE_STAGING YES)
+        set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${PROJECT_VERSION})
+        include(CPack)
+    endif()
+
+    # IOS ==============================================================================================================
     if (IOS)
         if (APP_IOS_DEVICE STREQUAL IPHONE)
             set(APP_IOS_DEVICE "1")
@@ -916,9 +958,6 @@ macro(aui_app)
         set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
         set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
 
-        if (NOT AUI_ROOT)
-            set(AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
-        endif()
 
         set(RESOURCES
                 ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard
