@@ -1,3 +1,4 @@
+include(appimage-generate-vars.cmake)
 include(CMakePrintHelpers)
 cmake_print_variables(CPACK_TEMPORARY_DIRECTORY)
 cmake_print_variables(CPACK_TOPLEVEL_DIRECTORY)
@@ -27,13 +28,13 @@ execute_process(
         VERSION=$<IF:$<BOOL:${CPACK_PACKAGE_VERSION}>,${CPACK_PACKAGE_VERSION},0.1.0>
         ${LINUXDEPLOY_EXECUTABLE}
         --appdir=${CPACK_TEMPORARY_DIRECTORY}
-        --executable=$<TARGET_FILE:app>
-        $<$<BOOL:$<TARGET_PROPERTY:app,APPIMAGE_DESKTOP_FILE>>:--desktop-file=$<TARGET_PROPERTY:app,APPIMAGE_DESKTOP_FILE>>
-        $<$<BOOL:$<TARGET_PROPERTY:app,APPIMAGE_ICON_FILE>>:--icon-file=$<TARGET_PROPERTY:app,APPIMAGE_ICON_FILE>>
+        --desktop-file=${DESKTOP_FILE}
+        --executable=${EXECUTABLE}
         --output=appimage
+        --icon-file=${ICON_FILE}
         #    --verbosity=2
 )
-]])
+
 
 list(APPEND CPACK_GENERATOR External)
 

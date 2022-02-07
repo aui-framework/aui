@@ -39,13 +39,10 @@ set_property(GLOBAL PROPERTY TESTS_SRCS "")
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
-set(AUI_INSTALL_RUNTIME_DEPENDENCIES OFF CACHE BOOL "Install runtime dependencies along with the project")
+set(AUI_INSTALL_RUNTIME_DEPENDENCIES ${AUI_BOOT} CACHE BOOL "Install runtime dependencies along with the project")
 
 cmake_policy(SET CMP0072 NEW)
 
-if (AUI_BOOT)
-    set(AUI_INSTALL_RUNTIME_DEPENDENCIES ON)
-endif()
 
 if (ANDROID OR IOS)
     set(_build_shared OFF)
@@ -827,6 +824,7 @@ macro(aui_app)
             NAME
             COPYRIGHT
             VERSION
+            ICON
 
             # linux
             LINUX_DESKTOP
@@ -902,24 +900,33 @@ macro(aui_app)
     # DESKTOP LINUX ====================================================================================================
     if (AUI_PLATFORM_LINUX)
         if (NOT APP_LINUX_DESKTOP)
+            # generate desktop file
+            set(_exec \$<TARGET_FILE_NAME:hackers-mc-launcher>)
+            set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_exec}\nType=Application\nTerminal=false\nCategories=Utility")
+            if (APP_ICON)
+                set(_icon "${PROJECT_BINARY_DIR}/app.icon.svg")
+                configure_file(${APP_ICON} "${_icon}" COPYONLY)
+                set(APP_ICON ${_icon})
+                set(_desktop "${_desktop}\nIcon=app.icon")
+            endif()
             file(GENERATE
-                    OUTPUT "${PROJECT_BINARY_DIR}/app.desktop"
-                    CONTENT [[
-[Desktop Entry]
-Name=${APP_NAME}
-Exec=$<TARGET_FILE_NAME:app>
-Icon=icon.svg
-Type=Application
-        ]])
-            configure_file(${AUI_ROOT}/cmake/appimage-generate.cmake.in ${PROJECT_BINARY_DIR}/appimage-generate.cmake @ONLY)
-            set(APP_LINUX_DESKTOP ${PROJECT_BINARY_DIR}/appimage-generate.cmake)
+                 OUTPUT "${PROJECT_BINARY_DIR}/app.desktop"
+                 CONTENT ${_desktop})
+            set(APP_LINUX_DESKTOP ${PROJECT_BINARY_DIR}/app.desktop)
         endif()
+        file(GENERATE
+                OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate.cmake
+                INPUT ${AUI_SOURCE_DIR}/cmake/appimage-generate.cmake.in)
+        file(GENERATE
+                OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate-vars.cmake
+                CONTENT "set(EXECUTABLE $<TARGET_FILE:${APP_TARGET}>)\nset(DESKTOP_FILE ${APP_LINUX_DESKTOP})\nset(ICON_FILE ${APP_ICON})")
+        set(APP_LINUX_DESKTOP ${PROJECT_BINARY_DIR}/appimage-generate.cmake)
 
         list(APPEND CPACK_GENERATOR External)
 
         set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${PROJECT_BINARY_DIR}/appimage-generate.cmake")
         set(CPACK_EXTERNAL_ENABLE_STAGING YES)
-        set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${PROJECT_VERSION})
+        set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${APP_VERSION})
         include(CPack)
     endif()
 
