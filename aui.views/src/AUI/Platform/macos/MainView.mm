@@ -120,4 +120,20 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
     onMouseButtonUp(mAWindow, event, AInput::LButton);
 }
 
+- (void)scrollWheel:(NSEvent *)event {
+    CGFloat deltaX;
+    CGFloat deltaY;
+    if ([event hasPreciseScrollingDeltas]) {
+        deltaX = [event scrollingDeltaX];
+        deltaY = [event scrollingDeltaY];
+    } else {
+        // https://github.com/chromium/chromium/blob/2dc93b871d2b02f895ada7f1a6fbb642cb6ec9da/ui/events/cocoa/events_mac.mm#L138-L157
+        deltaX = [event deltaX] * 40.0;
+        deltaY = [event deltaY] * 40.0;
+    }
+    CGFloat scale = mAWindow->getDpiRatio();
+    deltaX *= scale;
+    deltaY *= scale;
+    mAWindow->onMouseWheel(pos(mAWindow, event), glm::ivec2{ -deltaX, -deltaY });
+}
 @end
