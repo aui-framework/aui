@@ -164,14 +164,17 @@ function(aui_add_properties AUI_MODULE_NAME)
     endif()
 endfunction(aui_add_properties)
 
-macro(aui_enable_tests)
+macro(_aui_import_gtest)
     if(NOT TARGET GTest::gtest)
         auib_import(GTest https://github.com/google/googletest
                 VERSION main
                 CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
+endmacro()
 
+macro(aui_enable_tests)
+    _aui_import_gtest()
     if (NOT TARGET GTest::gtest)
         message(FATAL_ERROR "GTest::gtest not found!")
     endif()
