@@ -871,6 +871,9 @@ macro(aui_app)
     if (NOT APP_VERSION)
         set(APP_VERSION 1.0)
     endif()
+    if (NOT APP_COPYRIGHT)
+        set(APP_COPYRIGHT "Copyright is not specified")
+    endif()
     if (NOT APP_APPLE_SIGN_IDENTITY)
         set(APP_APPLE_SIGN_IDENTITY "iPhone Developer")
     endif()
@@ -919,8 +922,9 @@ macro(aui_app)
     # common cpack
     set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
     set(CPACK_PACKAGE_FILE_NAME ${APP_NAME}-${APP_VERSION})
-    set(CPACK_BUNDLE_NAME ${CPACK_PACKAGE_FILE_NAME})
+    set(CPACK_BUNDLE_NAME ${APP_NAME})
     set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
+    set(CPACK_BUNDLE_PLIST ${PROJECT_BINARY_DIR}/MacOSXBundleInfo.plist)
 
     # WINDOWS ==========================================================================================================
     if (AUI_PLATFORM_WINDOWS)
@@ -965,22 +969,39 @@ macro(aui_app)
             set(APP_APPLE_BUNDLE_IDENTIFIER ${APP_NAME})
         endif()
         set(PRODUCT_NAME ${APP_NAME})
-        set(EXECUTABLE_NAME ${APP_TARGET})
-        set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_TARGET})
+        set(EXECUTABLE_NAME ${APP_NAME})
+        set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_NAME})
         set(MACOSX_BUNDLE_INFO_STRING ${APP_APPLE_BUNDLE_IDENTIFIER})
         set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_APPLE_BUNDLE_IDENTIFIER})
         set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_APPLE_BUNDLE_IDENTIFIER})
-        set(MACOSX_BUNDLE_ICON_FILE "")
+        set(MACOSX_BUNDLE_ICON_FILE "app.icns")
         set(MACOSX_BUNDLE_LONG_VERSION_STRING ${APP_VERSION})
         set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${APP_VERSION})
         set(MACOSX_BUNDLE_BUNDLE_VERSION ${APP_VERSION})
         set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
         set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
+        if (AUI_PLATFORM_MACOS)
+            configure_file(${AUI_SOURCE_DIR}/macos/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+        endif()
+        set_target_properties(${APP_TARGET} PROPERTIES
+                              MACOSX_BUNDLE TRUE
+                              BUNDLE TRUE
+                              OUTPUT_NAME ${APP_NAME}
+                              MACOSX_BUNDLE_INFO_PLIST           ${CPACK_BUNDLE_PLIST}
+                              MACOSX_BUNDLE_EXECUTABLE_NAME      ${MACOSX_BUNDLE_EXECUTABLE_NAME}
+                              MACOSX_BUNDLE_INFO_STRING          ${MACOSX_BUNDLE_INFO_STRING}
+                              MACOSX_BUNDLE_GUI_IDENTIFIER       ${MACOSX_BUNDLE_GUI_IDENTIFIER}
+                              MACOSX_BUNDLE_BUNDLE_NAME          ${MACOSX_BUNDLE_BUNDLE_NAME}
+                              MACOSX_BUNDLE_ICON_FILE            ${MACOSX_BUNDLE_ICON_FILE}
+                              MACOSX_BUNDLE_LONG_VERSION_STRING  ${MACOSX_BUNDLE_LONG_VERSION_STRING}
+                              MACOSX_BUNDLE_SHORT_VERSION_STRING ${MACOSX_BUNDLE_SHORT_VERSION_STRING}
+                              MACOSX_BUNDLE_BUNDLE_VERSION       ${MACOSX_BUNDLE_BUNDLE_VERSION}
+                              MACOSX_BUNDLE_COPYRIGHT            ${MACOSX_BUNDLE_COPYRIGHT}
+                              MACOSX_DEPLOYMENT_TARGET           ${MACOSX_DEPLOYMENT_TARGET}  )
     endif()
 
     # MACOS ============================================================================================================
     if (AUI_PLATFORM_MACOS)
-        set(CPACK_BUNDLE_PLIST ${PROJECT_BINARY_DIR}/MAcOSXBundleInfo.plist)
         configure_file(${AUI_SOURCE_DIR}/macos/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
 
         # generate icns
@@ -996,11 +1017,16 @@ macro(aui_app)
             add_dependencies(${APP_TARGET} aui.toolbox)
         endif()
         get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
+        set(_icon_icns ${PROJECT_BINARY_DIR}/app.icns)
         add_custom_command(
-                TARGET ${APP_TARGET}
-                POST_BUILD
+                OUTPUT ${_icon_icns}
                 COMMAND ${AUI_TOOLBOX_EXE}
-                ARGS svg2png ${_icon_absolute} -r=${_resolutions_comma} -o=${_icons_dir} -p=icon)
+                ARGS svg2png ${_icon_absolute} -r=${_resolutions_comma} -o=${_icons_dir} -p=icon
+                COMMAND iconutil # iconset to icns
+                ARGS -c icns ${_icons_dir}
+        )
+        set_source_files_properties(${_icon_icns} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+        target_sources(${APP_TARGET} PRIVATE ${_icon_icns})
     endif()
 
     # IOS ==============================================================================================================
