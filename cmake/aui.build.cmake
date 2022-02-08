@@ -921,7 +921,7 @@ macro(aui_app)
 
     # common cpack
     set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
-    set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${APP_VERSION})
+    set(CPACK_PACKAGE_FILE_NAME ${APP_NAME}-${APP_VERSION})
     set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
 
     # WINDOWS ==========================================================================================================
