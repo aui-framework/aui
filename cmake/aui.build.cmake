@@ -984,7 +984,23 @@ macro(aui_app)
         configure_file(${AUI_SOURCE_DIR}/macos/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
 
         # generate icns
-        #add_custom_command(OUTPUT)
+        set(_icons_dir ${PROJECT_BINARY_DIR}/app.iconset)
+        set(_resolutions 16 32 64 128 256 512 1024)
+
+        unset(_outputs)
+        foreach(_res ${_resolutions})
+            list(APPEND _outputs "${_icons_dir}/icon_${_res}x${_res}.png")
+        endforeach()
+        list(JOIN _resolutions , _resolutions_comma)
+        if (TARGET aui.toolbox)
+            add_dependencies(${APP_TARGET} aui.toolbox)
+        endif()
+        get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
+        add_custom_command(
+                TARGET ${APP_TARGET}
+                POST_BUILD
+                COMMAND ${AUI_TOOLBOX_EXE}
+                ARGS svg2png ${_icon_absolute} -r=${_resolutions_comma} -o=${_icons_dir} -p=icon)
     endif()
 
     # IOS ==============================================================================================================
