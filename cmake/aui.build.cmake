@@ -856,7 +856,7 @@ macro(aui_app)
             IOS_VERSION
             IOS_DEVICE
             IOS_CONTROLLER)
-    set(multiValueArgs ADDITIONAL_SRCS)
+    set(multiValueArgs )
     cmake_parse_arguments(APP "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
 
@@ -898,9 +898,6 @@ macro(aui_app)
         if (NOT APP_APPLE_TEAM_ID)
             list(APPEND _error_msg "APPLE_TEAM_ID which is your Apple Team ID (https://discussions.apple.com/thread/7942941).")
         endif()
-        if (NOT APP_APPLE_BUNDLE_IDENTIFIER)
-            list(APPEND _error_msg "APPLE_BUNDLE_IDENTIFIER which is your app's bundle identifier.")
-        endif()
         list(APPEND _error_msg_opt "APPLE_SIGN_IDENTITY which is your code sign identity (defaults to \"iPhone Developer\").")
         list(APPEND _error_msg_opt "IOS_VERSION which is target IOS version (defaults to 14.3).")
         list(APPEND _error_msg_opt "IOS_DEVICE which is target IOS device: either IPHONE, IPAD or BOTH (defaults to BOTH).")
@@ -922,6 +919,7 @@ macro(aui_app)
     # common cpack
     set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
     set(CPACK_PACKAGE_FILE_NAME ${APP_NAME}-${APP_VERSION})
+    set(CPACK_BUNDLE_NAME ${CPACK_PACKAGE_FILE_NAME})
     set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
 
     # WINDOWS ==========================================================================================================
@@ -961,6 +959,34 @@ macro(aui_app)
         set(CPACK_EXTERNAL_ENABLE_STAGING YES)
     endif()
 
+    # IOS AND MACOS ====================================================================================================
+    if (APPLE)
+        if (NOT APP_APPLE_BUNDLE_IDENTIFIER)
+            set(APP_APPLE_BUNDLE_IDENTIFIER ${APP_NAME})
+        endif()
+        set(PRODUCT_NAME ${APP_NAME})
+        set(EXECUTABLE_NAME ${APP_TARGET})
+        set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_TARGET})
+        set(MACOSX_BUNDLE_INFO_STRING ${APP_APPLE_BUNDLE_IDENTIFIER})
+        set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_APPLE_BUNDLE_IDENTIFIER})
+        set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_APPLE_BUNDLE_IDENTIFIER})
+        set(MACOSX_BUNDLE_ICON_FILE "")
+        set(MACOSX_BUNDLE_LONG_VERSION_STRING ${APP_VERSION})
+        set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${APP_VERSION})
+        set(MACOSX_BUNDLE_BUNDLE_VERSION ${APP_VERSION})
+        set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
+        set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
+    endif()
+
+    # MACOS ============================================================================================================
+    if (AUI_PLATFORM_MACOS)
+        set(CPACK_BUNDLE_PLIST ${PROJECT_BINARY_DIR}/MAcOSXBundleInfo.plist)
+        configure_file(${AUI_SOURCE_DIR}/macos/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+
+        # generate icns
+        #add_custom_command(OUTPUT)
+    endif()
+
     # IOS ==============================================================================================================
     if (IOS)
         if (APP_IOS_DEVICE STREQUAL IPHONE)
@@ -982,20 +1008,6 @@ macro(aui_app)
         endif()
 
         message(STATUS XCTestFound:${XCTest_FOUND})
-
-        set(PRODUCT_NAME ${APP_NAME})
-        set(EXECUTABLE_NAME ${APP_TARGET})
-        set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_TARGET})
-        set(MACOSX_BUNDLE_INFO_STRING ${APP_APPLE_BUNDLE_IDENTIFIER})
-        set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_APPLE_BUNDLE_IDENTIFIER})
-        set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_APPLE_BUNDLE_IDENTIFIER})
-        set(MACOSX_BUNDLE_ICON_FILE "")
-        set(MACOSX_BUNDLE_LONG_VERSION_STRING ${APP_VERSION})
-        set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${APP_VERSION})
-        set(MACOSX_BUNDLE_BUNDLE_VERSION ${APP_VERSION})
-        set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
-        set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
-
 
         set(RESOURCES
                 ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard
