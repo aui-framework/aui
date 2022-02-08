@@ -199,20 +199,33 @@ AStylesheet::AStylesheet() {
         {
             t<ANumberPicker>(),
             MinSize { 60_dp, {} },
+            Overflow::HIDDEN,
         },
         {
             class_of(".up-down-wrapper"),
             Padding { 1_px },
-            Margin { 1_px },
+            Margin { 0 },
             LayoutSpacing { 1_px },
-            BackgroundSolid { 0xf0f0f0_rgb }
+            //BackgroundSolid { 0xf0f0f0_rgb }
         },
         {
             t<ANumberPicker>() >> t<AButton>(),
-            Margin { 0 },
             Padding { 3_dp, 0 },
             FixedSize { 19_dp, {} },
-            MinSize { {}, 3_dp }
+            MinSize { {}, 3_dp },
+            BoxShadow { nullptr },
+            BorderRadius { 0 },
+            Margin { 0 },
+            Border { nullptr },
+            BackgroundImage {{}, getOsThemeColor().readableBlackOrWhite().opacify(0.7f), {}, Sizing::FIT_PADDING },
+        },
+        {
+            t<ANumberPicker>() >> c(".up"),
+            BackgroundImage { ":uni/svg/up.svg", {} },
+        },
+        {
+            t<ANumberPicker>() >> c(".down"),
+            BackgroundImage { ":uni/svg/down.svg", {} },
         },
 
         // ACheckBox
@@ -336,7 +349,7 @@ AStylesheet::AStylesheet() {
             {t<AListView>(), t<ATreeView>()},
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_dp, 0x828790_rgb },
-            Padding { 2_dp, 0, 2_dp, 2_dp },
+            Padding { 2_dp },
             Margin {2_dp, 4_dp},
             Expanding { 0, 1 },
             MinSize { 120_dp, 80_dp },
