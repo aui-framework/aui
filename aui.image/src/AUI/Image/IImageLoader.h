@@ -20,39 +20,38 @@
  */
 
 #pragma once
-
-#include <AUI/Url/AUrl.h>
-#include <AUI/Logging/ALogger.h>
-#include <AUI/Util/Cache.h>
-#include "IImageLoader.h"
-#include "AUI/Common/ADeque.h"
 #include "AUI/Common/SharedPtr.h"
+#include "AImage.h"
+#include "IImageFactory.h"
+
+class AByteBuffer;
+class IDrawable;
 
 /**
- * Image loader used for IDrawable::fromUrl and Images::get
+ * \brief Class-loader of abstract images that can be displayed on the screen.
  */
-class API_AUI_CORE AImageLoaderRegistry
+class IImageLoader
 {
-    friend class AImage::Cache;
-    friend class IDrawable;
-
-private:
-	ADeque<_<IImageLoader>> mImageLoaders;
-
-    _<IDrawable> loadDrawable(AByteBuffer& buffer);
-    _<AImage> loadImage(AByteBuffer& buffer);
-    inline _<IDrawable> loadDrawable(const AUrl& url) {
-        auto s = AByteBuffer::fromStream(url.open());
-        return loadDrawable(s);
-    }
-    _<AImage> loadImage(const AUrl& url);
-
 public:
-	AImageLoaderRegistry()
-	{
-	}
+	/**
+	 * \param buffer buffer with the raw image file contents.
+	 * \return true, if this IImageLoader accepts image stored in this buffer
+	 */
+	virtual bool matches(const AByteBuffer& buffer) = 0;
 
-	void registerImageLoader(_<IImageLoader> imageLoader);
+	/**
+	 * \brief The drawable (vector) image loader implementation.
+	 * \note Called if and only if <code>matches</code> returned true.
+	 * \return image factory. Can be <code>nullptr</code> if <code>getRasterImage</code> implemented.
+	 */
+	virtual _<IImageFactory> getImageFactory(const AByteBuffer& buffer) { return nullptr; };
 
-	static AImageLoaderRegistry& inst();
+	/**
+	 * \brief The image loader implementation (raster).
+	 * \note Called if and only if <code>matches</code> returned true.
+	 * \return raster image. Can be <code>nullptr</code> if <code>getDrawable</code> implemented.
+	 */
+	virtual _<AImage> getRasterImage(const AByteBuffer& buffer) = 0;
 };
+
+#include "AUI/Common/AByteBuffer.h"

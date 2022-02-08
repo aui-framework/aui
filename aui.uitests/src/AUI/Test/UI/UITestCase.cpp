@@ -1,7 +1,7 @@
 
 // Created by Alex2772 on 12/18/2021.
 //
-#include <AUI/Image/PngImageLoader.h>
+#include <AUI/Image/png/PngImageLoader.h>
 #include <AUI/IO/AFileOutputStream.h>
 #include "UITestCase.h"
 #include "UIMatcher.h"

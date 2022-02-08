@@ -49,3 +49,7 @@ void AProgressBar::updateInnerWidth() {
                         int(mValue * float(getContentWidth() - mPadding.horizontal())),
                         getContentHeight() - mPadding.vertical());
 }
+
+void AProgressBar::render() {
+    AViewContainer::render();
+}

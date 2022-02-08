@@ -24,11 +24,12 @@
 
 size_t AByteBufferInputStream::read(char* dst, size_t size)
 {
-	const int toRead = glm::min(mBuffer.getAvailable(), static_cast<size_t>(size));
-	if (toRead)
-	{
-		mBuffer.get(dst, toRead);
-		return toRead;
-	}
-	return 0;
+    auto last = mCurrent + size;
+    if (last > mEnd) {
+        last = mEnd;
+    }
+    auto sizeToCopy = last - mCurrent;
+    std::memcpy(dst, mCurrent, sizeToCopy);
+    mCurrent = last;
+	return sizeToCopy;
 }

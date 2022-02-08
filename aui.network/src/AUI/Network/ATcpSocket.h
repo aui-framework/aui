@@ -37,16 +37,12 @@ class API_AUI_NETWORK ATcpSocket: public AAbstractSocket, public IInputStream, p
 friend class ATcpServerSocket;
 public:
 
-	/**
-	 * \brief ������ TCP ������-�������
-	 * \param destinationAddress ���� ������������
-	 */
 	ATcpSocket(const AInet4Address& destinationAddress);
 
 	~ATcpSocket() override;
 
 	size_t read(char* dst, size_t size) override;
-	size_t write(const char* buffer, size_t size) override;
+	void write(const char* buffer, size_t size) override;
 
 
 protected:

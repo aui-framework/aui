@@ -20,20 +20,29 @@
  */
 
 //
-// Created by alex2 on 26.08.2020.
+// Created by alex2 on 23.10.2020.
 //
 
 #pragma once
 
 
-#include <AUI/Image/IImageLoader.h>
+#include <AUI/Image/IDrawable.h>
+#include <AUI/Common/SharedPtrTypes.h>
+#include <AUI/Image/AImage.h>
+#include <AUI/Render/Render.h>
 
-class JpgImageLoader: public IImageLoader {
+class AImageDrawable: public IDrawable {
+private:
+    Render::Texture mTexture;
+    glm::ivec2 mSize;
+
 public:
-    bool matches(AByteBuffer& buffer) override;
+    explicit AImageDrawable(const _<AImage> image);
+    virtual ~AImageDrawable();
 
-    _<IDrawable> getDrawable(AByteBuffer& buffer) override;
-    _<AImage> getRasterImage(AByteBuffer& buffer) override;
+    void draw(const Params& params) override;
+
+    glm::ivec2 getSizeHint() override;
 };
 
 

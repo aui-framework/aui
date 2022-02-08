@@ -28,14 +28,11 @@
 
 #include <AUI/Image/IImageLoader.h>
 
-class PngImageLoader: public IImageLoader {
+class JpgImageLoader: public IImageLoader {
 public:
-    bool matches(AByteBuffer& buffer) override;
+    bool matches(const AByteBuffer& buffer) override;
 
-    API_AUI_VIEWS static void save(IOutputStream& outputStream, const AImage& image);
-
-    _<IDrawable> getDrawable(AByteBuffer& buffer) override;
-    _<AImage> getRasterImage(AByteBuffer& buffer) override;
+    _<AImage> getRasterImage(const AByteBuffer& buffer) override;
 };
 
 

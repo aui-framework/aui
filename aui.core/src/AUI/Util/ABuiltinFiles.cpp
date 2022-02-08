@@ -30,19 +30,12 @@ void ABuiltinFiles::loadBuffer(AByteBuffer& data)
 	AByteBuffer unpacked;
 	LZ::decompress(data, unpacked);
 
-	while (unpacked.getAvailable())
+	while (unpacked.availableToRead())
 	{
 		std::string file;
-		unpacked >> file;
-
-		uint32_t s;
-		unpacked >> s;
-
         AByteBuffer b;
-		b.reserve(s);
-		b.setSize(s);
-
-		unpacked.get(b.data(), s);
+        unpacked >> file;
+		unpacked >> b;
         inst().mBuffers[AString(file)] = std::move(b);
 	}
 }

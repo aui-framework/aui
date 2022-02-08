@@ -19,21 +19,29 @@
  * =====================================================================================================================
  */
 
-#pragma once
-#include "IOutputStream.h"
-#include "AUI/Common/AByteBuffer.h"
-#include "AUI/Common/SharedPtr.h"
+#include <cstring>
+#include "SvgImageLoader.h"
 
-class API_AUI_CORE AByteBufferOutputStream: public IOutputStream
+#include "SvgImageFactory.h"
+
+SvgImageLoader::SvgImageLoader()
 {
-private:
-    _<AByteBuffer> mBuffer;
+}
 
-public:
-    AByteBufferOutputStream(const _<AByteBuffer>& buffer)
-            : mBuffer(buffer)
-    {
-    }
+bool SvgImageLoader::matches(const AByteBuffer& buffer)
+{
+	char buf[8];
+	buffer.readExact(buf, 5);
 
-    size_t write(const char* src, size_t size) override;
-};
+	return memcmp(buf, "<?xml", 5) == 0 ||
+           memcmp(buf, "<svg", 4) == 0;
+}
+
+
+_<IImageFactory> SvgImageLoader::getImageFactory(const AByteBuffer& buffer) {
+    return _new<SvgImageFactory>(buffer);
+}
+
+_<AImage> SvgImageLoader::getRasterImage(const AByteBuffer& buffer) {
+    return nullptr;
+}

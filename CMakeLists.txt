@@ -32,8 +32,10 @@ if(AUI_BOOT_COMPONENTS)
     if (views IN_LIST AUI_BOOT_COMPONENTS)
         list(APPEND AUI_BOOT_COMPONENTS xml)
         if (NOT CMAKE_CROSSCOMPILING)
-            list(APPEND AUI_BOOT_COMPONENTS crypt toolbox)
+            list(APPEND AUI_BOOT_COMPONENTS crypt toolbox image)
         endif()
+    elseif (toolbox IN_LIST AUI_BOOT_COMPONENTS AND NOT CMAKE_CROSSCOMPILING)
+        list(APPEND AUI_BOOT_COMPONENTS crypt)
     endif()
 endif()
 list(REMOVE_DUPLICATES AUI_BOOT_COMPONENTS)
@@ -67,6 +69,7 @@ if (NOT ANDROID AND NOT IOS)
 endif()
 define_aui_component(crypt)
 define_aui_component(curl)
+define_aui_component(image)
 define_aui_component(views)
 define_aui_component(xml)
 define_aui_component(json)
@@ -86,6 +89,7 @@ if (AUI_BOOT)
     set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
     set_property(GLOBAL PROPERTY TESTS_SRCS "")
     set_property(GLOBAL PROPERTY TESTS_DEPS "")
+    _aui_import_gtest()
 else()
     aui_enable_tests()
 endif()
@@ -103,6 +107,7 @@ set(AUI_ALL_COMPONENTS core
         views
         xml
         uitests
+        toolbox
         )
 
 

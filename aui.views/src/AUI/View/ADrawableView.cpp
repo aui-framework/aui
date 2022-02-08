@@ -26,7 +26,7 @@
 #include "ADrawableView.h"
 #include <AUI/Render/Render.h>
 #include <AUI/ASS/ASS.h>
-#include <AUI/Util/ImageDrawable.h>
+#include <AUI/Util/AImageDrawable.h>
 
 ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable) {
 

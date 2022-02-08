@@ -26,6 +26,7 @@
 #include <Command/PackManual.h>
 
 #include "Toolbox.h"
+#include "Command/Svg2png.h"
 
 Toolbox toolbox;
 
@@ -39,6 +40,7 @@ Toolbox::Toolbox() {
     registerCommand<Lang>();
     registerCommand<Css2ass>();
     registerCommand<PackManual>();
+    registerCommand<Svg2png>();
 }
 Toolbox::~Toolbox() {
     for (auto& c : commands) {

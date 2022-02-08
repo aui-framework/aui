@@ -20,29 +20,22 @@
  */
 
 //
-// Created by alex2 on 23.10.2020.
+// Created by alex2 on 26.08.2020.
 //
 
 #pragma once
 
 
-#include <AUI/Image/IDrawable.h>
-#include <AUI/Common/SharedPtrTypes.h>
-#include <AUI/Image/AImage.h>
-#include <AUI/Render/Render.h>
+#include <AUI/Image/IImageLoader.h>
+#include <AUI/api.h>
 
-class ImageDrawable: public IDrawable {
-private:
-    Render::Texture mTexture;
-    glm::ivec2 mSize;
-
+class PngImageLoader: public IImageLoader {
 public:
-    explicit ImageDrawable(const _<AImage> image);
-    virtual ~ImageDrawable();
+    bool matches(const AByteBuffer& buffer) override;
 
-    void draw(const Params& params) override;
+    API_AUI_IMAGE static void save(IOutputStream& outputStream, const AImage& image);
 
-    glm::ivec2 getSizeHint() override;
+    _<AImage> getRasterImage(const AByteBuffer& buffer) override;
 };
 
 

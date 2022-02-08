@@ -20,40 +20,41 @@
  */
 
 //
-// Created by alex2 on 30.08.2020.
+// Created by alex2 on 26.08.2020.
 //
 
-#include <gtest/gtest.h>
-#include <AUI/Common/AString.h>
+#include "JpgImageLoader.h"
+#include <AUI/Common/AByteBuffer.h>
+#include <stb_image.h>
 
-
-
-TEST(String, UTF8)
-{
-    const char* someUtfString = "Ютф строка! \u0228";
-
-    AString s = someUtfString;
-
-    ASSERT_TRUE(s == someUtfString);
-    ASSERT_TRUE(memcmp(s.toUtf8().data(), someUtfString, strlen(someUtfString)) == 0);
-
-}
-TEST(String, lowercase_en)
-{
-    ASSERT_EQ("Hello"_as.lowercase(), "hello");
-}
-TEST(String, uppercase_en)
-{
-    ASSERT_EQ("Hello"_as.uppercase(), "HELLO");
+bool JpgImageLoader::matches(const AByteBuffer& buffer) {
+    const uint8_t header[] = {0xff, 0xd8 };
+    uint8_t read_header[sizeof(header)];
+    buffer.readExact((char*) read_header, sizeof(read_header));
+    return memcmp(header, read_header, sizeof(read_header)) == 0;
 }
 
-TEST(String, lowercase_ru)
-{
-    ASSERT_EQ("Привет"_as.lowercase(), "привет");
+_<AImage> JpgImageLoader::getRasterImage(const AByteBuffer& buffer) {
+    int x, y, channels;
+    if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer.readIterator(), buffer.availableToRead(),
+                                              &x, &y, &channels, 4)) {
+        channels = 4;
+        uint32_t format = AImage::BYTE;
+        switch (channels) {
+            case 3:
+                format |= AImage::RGB;
+                break;
+            case 4:
+                format |= AImage::RGBA;
+                break;
+            default:
+                assert(0);
+        }
+        auto img = _new<AImage>(
+                AVector<uint8_t>{static_cast<uint8_t*>(data), static_cast<uint8_t*>(data + x * y * channels)}, x, y,
+                format);
+        stbi_image_free(data);
+        return img;
+    }
+    return nullptr;
 }
-TEST(String, uppercase_ru)
-{
-    ASSERT_EQ("Привет"_as.uppercase(), "ПРИВЕТ");
-}
-
-

@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,35 +14,24 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
-
-#include <cstring>
-#include "SvgImageLoader.h"
-
-#include "SvgDrawable.h"
-
-SvgImageLoader::SvgImageLoader()
-{
-}
-
-bool SvgImageLoader::matches(AByteBuffer& buffer)
-{
-	char buf[8];
-	buffer.get(buf, 5);
-
-	return memcmp(buf, "<?xml", 5) == 0 ||
-           memcmp(buf, "<svg", 4) == 0;
-}
+#pragma once
 
 
-_<IDrawable> SvgImageLoader::getDrawable(AByteBuffer& buffer)
-{
-	return _new<SvgDrawable>(buffer);
-}
+#include "AUI/Image/IImageFactory.h"
 
-_<AImage> SvgImageLoader::getRasterImage(AByteBuffer& buffer) {
-    return nullptr;
-}
+class API_AUI_IMAGE SvgImageFactory: public IImageFactory {
+private:
+    void* mNsvg;
+public:
+    SvgImageFactory(const AByteBuffer& buf);
+    ~SvgImageFactory();
+    _<AImage> provideImage(const glm::ivec2& size) override;
+
+    glm::ivec2 getSizeHint() override;
+};
+
+

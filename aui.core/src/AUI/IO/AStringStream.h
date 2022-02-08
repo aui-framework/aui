@@ -38,5 +38,5 @@ public:
 	void seekRead(size_t position);
 
 	size_t read(char* dst, size_t size) override;
-    size_t write(const char *src, size_t size) override;
+    void write(const char *src, size_t size) override;
 };

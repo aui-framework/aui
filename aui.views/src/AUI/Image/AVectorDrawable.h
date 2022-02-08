@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,13 +19,33 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 18.09.2020.
-//
+#pragma once
+#include <functional>
+#include <AUI/Common/SharedPtrTypes.h>
 
-#include "AByteBufferOutputStream.h"
+#include "AUI/Common/ADeque.h"
+#include "AUI/Image/IDrawable.h"
+#include "AUI/Image/IImageFactory.h"
+#include <AUI/Render/Render.h>
 
-size_t AByteBufferOutputStream::write(const char* src, size_t size) {
-    mBuffer->put(src, size);
-    return size;
-}
+
+class AVectorDrawable: public IDrawable
+{
+private:
+    struct Pair {
+        uint64_t key;
+        Render::Texture texture;
+    };
+
+    ADeque<Pair> mRasterized;
+    _<IImageFactory> mFactory;
+public:
+    explicit AVectorDrawable(_<IImageFactory> factory): mFactory(std::move(factory)) {}
+    ~AVectorDrawable();
+
+	void draw(const Params& params) override;
+	glm::ivec2 getSizeHint() override;
+
+	bool isDpiDependent() const override;
+
+};

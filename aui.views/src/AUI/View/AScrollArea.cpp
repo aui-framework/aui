@@ -41,11 +41,14 @@ public:
         return 30_dp;
     }
 
-    void updateLayout() override {
-        if (auto l = getLayout())
-            l->onResize(mPadding.left, mPadding.top - mScroll,
-                              getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
-        updateParentsLayoutIfNecessary();
+    void render() override {
+        AView::render();
+        Render::translate(glm::vec2{ 0, -mScroll });
+        drawViews(mViews.begin(), mViews.end());
+    }
+
+    _<AView> getViewAt(glm::ivec2 pos, bool ignoreGone) override {
+        return AViewContainer::getViewAt(pos - glm::ivec2{ 0, mScroll }, ignoreGone);
     }
 
     int getContentMinimumHeight() override {

@@ -42,9 +42,10 @@ AFileOutputStream::~AFileOutputStream()
     close();
 }
 
-size_t AFileOutputStream::write(const char* src, size_t size)
+void AFileOutputStream::write(const char* src, size_t size)
 {
-	return fwrite(src, 1, size, mFile);
+	auto v = fwrite(src, 1, size, mFile);
+    assert(v == size);
 }
 
 void AFileOutputStream::close() {

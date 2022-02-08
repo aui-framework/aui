@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,46 +19,38 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 26.08.2020.
-//
+#pragma once
 
-#include "JpgImageLoader.h"
-#include <AUI/Common/AByteBuffer.h>
-#include <stb_image.h>
+#include <AUI/Url/AUrl.h>
+#include <AUI/Logging/ALogger.h>
+#include <AUI/Util/Cache.h>
+#include "IImageLoader.h"
+#include "AUI/Common/ADeque.h"
+#include "AUI/Common/SharedPtr.h"
 
-bool JpgImageLoader::matches(AByteBuffer& buffer) {
-    const uint8_t header[] = {0xff, 0xd8 };
-    uint8_t read_header[sizeof(header)];
-    buffer.get((char*) read_header, sizeof(read_header));
-    return memcmp(header, read_header, sizeof(read_header)) == 0;
-}
+/**
+ * Image loader used for IDrawable::fromUrl and Images::get
+ */
+class API_AUI_IMAGE AImageLoaderRegistry
+{
+    friend class AImage::Cache;
+    friend class IDrawable;
 
-_<IDrawable> JpgImageLoader::getDrawable(AByteBuffer& buffer) {
-    return nullptr;
-}
+private:
+	ADeque<_<IImageLoader>> mImageLoaders;
 
-_<AImage> JpgImageLoader::getRasterImage(AByteBuffer& buffer) {
-    int x, y, channels;
-    if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer.getCurrentPosAddress(), buffer.getAvailable(),
-                                              &x, &y, &channels, 4)) {
-        channels = 4;
-        uint32_t format = AImage::BYTE;
-        switch (channels) {
-            case 3:
-                format |= AImage::RGB;
-                break;
-            case 4:
-                format |= AImage::RGBA;
-                break;
-            default:
-                assert(0);
-        }
-        auto img = _new<AImage>(
-                AVector<uint8_t>{static_cast<uint8_t*>(data), static_cast<uint8_t*>(data + x * y * channels)}, x, y,
-                format);
-        stbi_image_free(data);
-        return img;
+    _<IImageFactory> loadVector(const AByteBuffer& buffer);
+    _<AImage> loadRaster(const AByteBuffer& buffer);
+    inline _<IImageFactory> loadVector(const AUrl& url) {
+        auto s = AByteBuffer::fromStream(url.open());
+        return loadVector(s);
     }
-    return nullptr;
-}
+    _<AImage> loadImage(const AUrl& url);
+
+public:
+	AImageLoaderRegistry() = default;
+
+	void registerImageLoader(_<IImageLoader> imageLoader);
+
+	static AImageLoaderRegistry& inst();
+};

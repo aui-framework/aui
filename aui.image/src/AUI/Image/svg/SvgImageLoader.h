@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -20,34 +20,17 @@
  */
 
 #pragma once
-#include <functional>
-#include <AUI/Common/SharedPtrTypes.h>
+#include "AUI/Image/IImageLoader.h"
 
-#include "AUI/Common/ADeque.h"
-#include "AUI/Image/IDrawable.h"
-#include <nanosvg.h>
-#include <nanosvgrast.h>
-#include <AUI/Render/Render.h>
-
-
-class SvgDrawable: public IDrawable
+class SvgImageLoader: public IImageLoader
 {
-private:
-    struct Pair {
-        uint64_t key;
-        Render::Texture texture;
-    };
-
-    NSVGimage* mImage;
-    ADeque<Pair> mRasterized;
-
 public:
-    explicit SvgDrawable(AByteBuffer& data);
-    ~SvgDrawable();
+	SvgImageLoader();
+	virtual ~SvgImageLoader() = default;
 
-	void draw(const Params& params) override;
-	glm::ivec2 getSizeHint() override;
+	bool matches(const AByteBuffer& buffer) override;
 
-	bool isDpiDependent() const override;
+    _<AImage> getRasterImage(const AByteBuffer& buffer) override;
 
+    _<IImageFactory> getImageFactory(const AByteBuffer& buffer) override;
 };

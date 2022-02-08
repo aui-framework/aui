@@ -23,10 +23,11 @@
 
 #include <string>
 #include <iostream>
-#include "AByteBuffer.h"
 #include "AUI/Core.h"
+#include <AUI/Common/ASet.h>
 
 class API_AUI_CORE AStringVector;
+class API_AUI_CORE AByteBuffer;
 
 class API_AUI_CORE AString: std::wstring
 {

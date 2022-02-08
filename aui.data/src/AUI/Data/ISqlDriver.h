@@ -21,6 +21,7 @@
 
 #pragma once
 #include <AUI/Common/AString.h>
+#include <AUI/Common/SharedPtr.h>
 
 class ISqlDatabase;
 

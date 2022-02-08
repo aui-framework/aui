@@ -95,12 +95,12 @@ void ALogger::log(Level level, const AString& str)
     std::unique_lock lock(mSync);
 
     std::cout << '[' << timebuf << "] " << levelName << ": " << str << std::endl;
-    if (mLogFile) {
-        *mLogFile << '[';
-        mLogFile->write(timebuf, strlen(timebuf));
-        *mLogFile << "] ";
-        mLogFile->write(levelName, strlen(levelName));
-        *mLogFile << ": " << str << "\n";
+    if (auto l = mLogFile) {
+        *l << '[';
+        l->write(timebuf, strlen(timebuf));
+        *l << "] ";
+        l->write(levelName, strlen(levelName));
+        *l << ": " << str << "\n";
     }
 #endif
 }

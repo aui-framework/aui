@@ -29,6 +29,7 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Reflect/AClass.h>
+#include <AUI/Common/AByteBuffer.h>
 
 
 class SomeBuilderClass {

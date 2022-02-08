@@ -30,7 +30,7 @@
 #include <AUI/ASS/AAssHelper.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Image/AImageLoaderRegistry.h>
-#include <AUI/Util/ImageDrawable.h>
+#include <AUI/Util/AImageDrawable.h>
 
 void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
     ass::BackgroundImage& info = view->getAssHelper()->state.backgroundUrl;

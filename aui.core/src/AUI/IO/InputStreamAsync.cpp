@@ -20,6 +20,7 @@
  */
 
 #include "InputStreamAsync.h"
+#include <AUI/Common/AByteBuffer.h>
 
 InputStreamAsync::InputStreamAsync(_<IInputStream> inputStream):
 	mReadThread(_new<AThread>([&, inputStream]()
@@ -27,8 +28,10 @@ InputStreamAsync::InputStreamAsync(_<IInputStream> inputStream):
 		try {
 			for (;;)
 			{
-				auto buffer = _new<AByteBuffer>();
-				inputStream->readBuffer(*buffer);
+                const size_t RESERVED = 0x1000;
+				auto buffer = _new<AByteBuffer>(RESERVED);
+				auto r = inputStream->read(buffer->end(), RESERVED);
+                buffer->setSize(r);
 				emit read(std::move(buffer));
 			}
 		} catch (...)

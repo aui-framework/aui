@@ -28,12 +28,12 @@
 #include <zlib.h>
 
 
-void LZ::compress(const AByteBuffer& b, AByteBuffer& dst)
+void LZ::compress(const AByteBufferRef& b, AByteBuffer& dst)
 {
-    uLong len = b.getAvailable() * 3 / 2 + 0xff;
+    uLong len = b.size() * 3 / 2 + 0xff;
 	dst.reserve(dst.getSize() + len);
-	int r = compress2(reinterpret_cast<Bytef*>(const_cast<char*>(dst.getCurrentPosAddress())), &len,
-		reinterpret_cast<Bytef*>(const_cast<char*>(b.getCurrentPosAddress())), b.getAvailable(), Z_BEST_COMPRESSION);
+	int r = compress2(reinterpret_cast<Bytef*>(const_cast<char*>(dst.end())), &len,
+                      reinterpret_cast<Bytef*>(const_cast<char*>(b.data())), b.size(), Z_BEST_COMPRESSION);
 	if (r != Z_OK)
 	{
 		throw std::runtime_error(std::string("zlib compress error ") + std::to_string(r));
@@ -42,13 +42,13 @@ void LZ::compress(const AByteBuffer& b, AByteBuffer& dst)
 	dst.setCurrentPos(dst.getSize());
 }
 
-void LZ::decompress(const AByteBuffer& b, AByteBuffer& dst)
+void LZ::decompress(const AByteBufferRef& b, AByteBuffer& dst)
 {
 	for (size_t i = 4;; i++) {
-		dst.reserve(b.getAvailable() * i);
-		uLong len = dst.getReserved();
-		int r = uncompress(reinterpret_cast<Bytef*>(const_cast<char*>(dst.getCurrentPosAddress())), &len,
-			reinterpret_cast<Bytef*>(const_cast<char*>(b.getCurrentPosAddress())), b.getAvailable());
+		dst.reserve(b.size() * i);
+        uLong len = dst.endReserved() - dst.end();
+		int r = uncompress(reinterpret_cast<Bytef*>(dst.end()), &len,
+                           reinterpret_cast<Bytef*>(const_cast<char*>(b.data())), b.size());
 		switch (r) {
 		case Z_BUF_ERROR:
 			continue;

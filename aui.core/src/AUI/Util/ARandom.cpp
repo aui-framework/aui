@@ -59,7 +59,7 @@ AByteBuffer ARandom::nextBytes(unsigned count)
 	for (unsigned i = 0; i < count; ++i)
 	{
 		unsigned char c = std::uniform_int_distribution<unsigned>()(mRandom) % 0xff;
-		buf.put(reinterpret_cast<char*>(&c), 1);
+		buf.write(reinterpret_cast<char*>(&c), 1);
 	}
 	return buf;
 }

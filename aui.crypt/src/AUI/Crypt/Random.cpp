@@ -33,8 +33,8 @@ _<AByteBuffer> ACrypto::safeRandom() {
 
     const size_t GARBAGE_SIZE = 0x1000;
     char* garbage = new char[GARBAGE_SIZE];
-    bb->put(garbage, GARBAGE_SIZE);
-    bb << garbage;
+    bb->write(garbage, GARBAGE_SIZE);
+    bb->write(reinterpret_cast<const char*>(&garbage), sizeof(&garbage));
     delete[] garbage;
 
     auto seed2 = std::chrono::high_resolution_clock::now().time_since_epoch().count();
