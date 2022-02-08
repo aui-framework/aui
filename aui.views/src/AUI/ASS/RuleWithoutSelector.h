@@ -57,7 +57,10 @@ private:
 
     template<typename T>
     void processDeclaration(T&& t) {
-        mDeclarations.emplace_back(new ass::decl::Declaration<T>(t));
+        using declaration_t = ass::decl::Declaration<std::decay_t<T>>;
+        static_assert(aui::is_complete<declaration_t>, "ass::decl::Declaration template specialization is not defined for this declaration");
+
+        mDeclarations.emplace_back(new declaration_t(t));
     }
 
     AVector<ass::decl::IDeclarationBase*> mDeclarations;

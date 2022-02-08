@@ -266,7 +266,7 @@ public:
     _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override;
 
     void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) override;
-    void onCloseButtonClicked();
+    virtual void onCloseButtonClicked();
 
 signals:
     emits<> closed;

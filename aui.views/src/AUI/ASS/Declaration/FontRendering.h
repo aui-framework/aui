@@ -40,6 +40,10 @@ namespace ass {
             }
 
             void applyFor(AView* view) override;
+
+            const FontRendering& value() const {
+                return mInfo;
+            }
         };
 
     }

@@ -51,16 +51,19 @@ AUrl::AUrl(const AString& full)
 	}
 }
 
-AMap<AString, std::function<_<IInputStream>(const AUrl&)>> AUrl::ourResolvers = {
+AMap<AString, std::function<_<IInputStream>(const AUrl&)>>& AUrl::resolvers() {
+    static AMap<AString, std::function<_<IInputStream>(const AUrl&)>> storage = {
         {"builtin", [](const AUrl& u) {
             return ABuiltinFiles::open(u.getPath());
         }},
-        {"file", [](const AUrl& u) {
+        {"file",    [](const AUrl& u) {
             return _new<AFileInputStream>(u.getPath());
         }},
-};
+    };
+    return storage;
+}
 _<IInputStream> AUrl::open() const {
-	if (auto c = ourResolvers.contains(mProtocol)) {
+	if (auto c = resolvers().contains(mProtocol)) {
 		if (auto is = c->second(*this))
 			return is;
 	}
@@ -69,5 +72,5 @@ _<IInputStream> AUrl::open() const {
 
 
 void AUrl::registerResolver(const AString& protocol, const std::function<_<IInputStream>(const AUrl&)>& factory) {
-    ourResolvers[protocol] = factory;
+    resolvers()[protocol] = factory;
 }

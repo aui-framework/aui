@@ -54,12 +54,7 @@ namespace ass::decl {
         }
     };
     template<typename DeclarationStruct>
-    struct Declaration: IDeclarationBase {
-    protected:
-        DeclarationStruct mDeclarationStruct;
-    public:
-        Declaration(const DeclarationStruct& data): mDeclarationStruct(data) {}
-    };
+    struct Declaration;
 }
 
 #include "AUI/View/AView.h"

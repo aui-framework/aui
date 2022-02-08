@@ -21,8 +21,8 @@
 
 #pragma once
 
-#include <AUI/Enum/Visibility.h>
 #include "IDeclaration.h"
+#include <AUI/Enum/Visibility.h>
 
 namespace ass::decl {
     template<>

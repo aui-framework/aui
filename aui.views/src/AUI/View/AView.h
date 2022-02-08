@@ -203,6 +203,8 @@ protected:
      */
     bool transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event);
 
+    void applyAssRule(const RuleWithoutSelector& rule);
+
 public:
     AView();
     virtual ~AView() = default;

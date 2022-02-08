@@ -175,22 +175,13 @@ void AView::updateAssState() {
     mAssHelper->state.backgroundUrl.sizing.reset();
     mAssHelper->state.backgroundUrl.url.reset();
 
-    auto applyRule = [&](const RuleWithoutSelector& r) {
-        for (auto& d : r.getDeclarations()) {
-            auto slot = d->getDeclarationSlot();
-            if (slot != ass::decl::DeclarationSlot::NONE) {
-                mAss[int(slot)] = d->isNone() ? nullptr : d;
-            }
-            d->applyFor(this);
-        }
-    };
 
     for (auto& r : mAssHelper->mPossiblyApplicableRules) {
         if (r->getSelector().isStateApplicable(this)) {
-            applyRule(* r);
+            applyAssRule(* r);
         }
     }
-    applyRule(mCustomAssRule);
+    applyAssRule(mCustomAssRule);
 
     redraw();
 }
@@ -555,4 +546,14 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
             return false;
         }
     }, event);
+}
+
+void AView::applyAssRule(const RuleWithoutSelector& rule) {
+    for (auto& d : rule.getDeclarations()) {
+        auto slot = d->getDeclarationSlot();
+        if (slot != ass::decl::DeclarationSlot::NONE) {
+            mAss[int(slot)] = d->isNone() ? nullptr : d;
+        }
+        d->applyFor(this);
+    }
 }
