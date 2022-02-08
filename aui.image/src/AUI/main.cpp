@@ -74,11 +74,11 @@ BOOL WINAPI DllMain(
 #include <AUI/Image/svg/SvgImageLoader.h>
 
 
-struct initialize
+struct AImageInit
 {
-    initialize() {
+    AImageInit() {
         AImageLoaderRegistry::inst().registerImageLoader(_new<SvgImageLoader>());
         AImageLoaderRegistry::inst().registerImageLoader(_new<PngImageLoader>());
         AImageLoaderRegistry::inst().registerImageLoader(_new<JpgImageLoader>());
     }
-} init;
+} _aimageinit;

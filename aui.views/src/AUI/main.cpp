@@ -57,9 +57,9 @@ BOOL WINAPI DllMain(
 
 
 
-struct initialize
+struct AViewsInit
 {
-    initialize() {
+    AViewsInit() {
 #if AUI_PLATFORM_WIN
 #ifndef AUI_DISABLE_HIDPI
         typedef BOOL(WINAPI *SetProcessDpiAwarenessContext_t)(HANDLE);
