@@ -49,7 +49,6 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 		endif()
 	endif()
 
-	target_include_directories(aui.views PRIVATE 3rdparty)
 	if (NOT AUI_PLATFORM_WINDOWS)
 		aui_compile_assets(aui.views)
 	else()
@@ -58,7 +57,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
 
-	aui_link(aui.views PUBLIC aui::core)
+	aui_link(aui.views PUBLIC aui::core aui::image)
 	aui_link(aui.views PRIVATE aui::xml)
 	set_target_properties(Freetype::Freetype PROPERTIES INSTALL_NAME_DIR "@rpath" BUILD_WITH_INSTALL_RPATH 1)
 	if(ANDROID)

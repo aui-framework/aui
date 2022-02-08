@@ -29,18 +29,15 @@
 #include <stb_image.h>
 #include <stb_image_write.h>
 
-bool PngImageLoader::matches(AByteBuffer& buffer) {
+bool PngImageLoader::matches(const AByteBuffer& buffer) {
     const uint8_t png_header[] = {0x89, 0x50, 0x4e, 0x47};
     uint8_t read_header[sizeof(png_header)];
-    buffer.read((char*) read_header, sizeof(read_header));
+    buffer.readExact((char*) read_header, sizeof(read_header));
     return memcmp(png_header, read_header, sizeof(read_header)) == 0;
 }
 
-_<IDrawable> PngImageLoader::getDrawable(AByteBuffer& buffer) {
-    return nullptr;
-}
 
-_<AImage> PngImageLoader::getRasterImage(AByteBuffer& buffer) {
+_<AImage> PngImageLoader::getRasterImage(const AByteBuffer& buffer) {
     int x, y, channels;
     if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer.readIterator(), buffer.availableToRead(),
                                               &x, &y, &channels, 4)) {

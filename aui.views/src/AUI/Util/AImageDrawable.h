@@ -23,37 +23,26 @@
 // Created by alex2 on 23.10.2020.
 //
 
-#include "ADrawableView.h"
+#pragma once
+
+
+#include <AUI/Image/IDrawable.h>
+#include <AUI/Common/SharedPtrTypes.h>
+#include <AUI/Image/AImage.h>
 #include <AUI/Render/Render.h>
-#include <AUI/ASS/ASS.h>
-#include <AUI/Util/AImageDrawable.h>
 
-ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable) {
+class AImageDrawable: public IDrawable {
+private:
+    Render::Texture mTexture;
+    glm::ivec2 mSize;
 
-}
+public:
+    explicit AImageDrawable(const _<AImage> image);
+    virtual ~AImageDrawable();
 
-void ADrawableView::render() {
-    AView::render();
-    Render::setColor(getAssHelper()->state.backgroundUrl.overlayColor.or_default(0xffffff_rgb));
-    if (mDrawable) {
-        IDrawable::Params p;
-        p.size = getSize();
-        mDrawable->draw(p);
-    }
-}
+    void draw(const Params& params) override;
 
-ADrawableView::ADrawableView(const AUrl& url): ADrawableView(IDrawable::fromUrl(url)) {
+    glm::ivec2 getSizeHint() override;
+};
 
-}
 
-/*
-void
-ADrawableView::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) {
-    processor(css::T_AUI_BACKGROUND_OVERLAY, [&](property p)
-    {
-        if (p->getArgs().size() == 1) {
-            mColorOverlay = AColor(p->getArgs()[0]);
-        }
-    });
-}
-*/

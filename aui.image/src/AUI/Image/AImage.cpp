@@ -212,7 +212,7 @@ _<AImage> AImage::Cache::load(const AUrl& key)
     try {
         auto buffer = AByteBuffer::fromStream(AUrl(key).open(), 0x100000);
 
-        if (auto raster = AImageLoaderRegistry::inst().loadImage(buffer))
+        if (auto raster = AImageLoaderRegistry::inst().loadRaster(buffer))
             return raster;
     } catch (const AException& e) {
         ALogger::err("Could not load image: " + key.getFull() + ": " + e.getMessage());

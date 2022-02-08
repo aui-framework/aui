@@ -52,24 +52,33 @@ BOOL WINAPI DllMain(
     return TRUE;  // Successful DLL_PROCESS_ATTACH.
 }
 
+#elif AUI_PLATFORM_ANDROID
+
+#elif AUI_PLATFORM_APPLE
+#else
+#include <gtk/gtk.h>
+#include <AUI/Logging/ALogger.h>
+
 #endif
 
 
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image.h>
+#include <stb_image_write.h>
+#include "AUI/Common/Plugin.h"
+#include <AUI/Logging/ALogger.h>
+#include <AUI/Image/jpg/JpgImageLoader.h>
+#include <AUI/Image/png/PngImageLoader.h>
+#include <AUI/Image/AImageLoaderRegistry.h>
+#include <AUI/Image/svg/SvgImageLoader.h>
 
 
 struct initialize
 {
     initialize() {
-#if AUI_PLATFORM_WIN
-#ifndef AUI_DISABLE_HIDPI
-        typedef BOOL(WINAPI *SetProcessDpiAwarenessContext_t)(HANDLE);
-        auto SetProcessDpiAwarenessContext = (SetProcessDpiAwarenessContext_t)GetProcAddress(GetModuleHandleA("User32.dll"), "SetProcessDpiAwarenessContext");
-
-        if (SetProcessDpiAwarenessContext) {
-            // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
-            SetProcessDpiAwarenessContext((HANDLE) -4);
-        }
-#endif
-#endif
+        AImageLoaderRegistry::inst().registerImageLoader(_new<SvgImageLoader>());
+        AImageLoaderRegistry::inst().registerImageLoader(_new<PngImageLoader>());
+        AImageLoaderRegistry::inst().registerImageLoader(_new<JpgImageLoader>());
     }
 } init;

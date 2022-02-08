@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,40 +19,23 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 26.08.2020.
+//
+
 #pragma once
 
-#include <AUI/Url/AUrl.h>
-#include <AUI/Logging/ALogger.h>
-#include <AUI/Util/Cache.h>
-#include "IImageLoader.h"
-#include "AUI/Common/ADeque.h"
-#include "AUI/Common/SharedPtr.h"
 
-/**
- * Image loader used for IDrawable::fromUrl and Images::get
- */
-class API_AUI_CORE AImageLoaderRegistry
-{
-    friend class AImage::Cache;
-    friend class IDrawable;
+#include <AUI/Image/IImageLoader.h>
+#include <AUI/api.h>
 
-private:
-	ADeque<_<IImageLoader>> mImageLoaders;
-
-    _<IDrawable> loadDrawable(AByteBuffer& buffer);
-    _<AImage> loadImage(AByteBuffer& buffer);
-    inline _<IDrawable> loadDrawable(const AUrl& url) {
-        auto s = AByteBuffer::fromStream(url.open());
-        return loadDrawable(s);
-    }
-    _<AImage> loadImage(const AUrl& url);
-
+class PngImageLoader: public IImageLoader {
 public:
-	AImageLoaderRegistry()
-	{
-	}
+    bool matches(const AByteBuffer& buffer) override;
 
-	void registerImageLoader(_<IImageLoader> imageLoader);
+    API_AUI_IMAGE static void save(IOutputStream& outputStream, const AImage& image);
 
-	static AImageLoaderRegistry& inst();
+    _<AImage> getRasterImage(const AByteBuffer& buffer) override;
 };
+
+

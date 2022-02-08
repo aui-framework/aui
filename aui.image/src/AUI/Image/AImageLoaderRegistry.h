@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -20,16 +20,37 @@
  */
 
 #pragma once
-#include "AUI/Image/IImageLoader.h"
 
-class SvgImageLoader: public IImageLoader
+#include <AUI/Url/AUrl.h>
+#include <AUI/Logging/ALogger.h>
+#include <AUI/Util/Cache.h>
+#include "IImageLoader.h"
+#include "AUI/Common/ADeque.h"
+#include "AUI/Common/SharedPtr.h"
+
+/**
+ * Image loader used for IDrawable::fromUrl and Images::get
+ */
+class API_AUI_IMAGE AImageLoaderRegistry
 {
+    friend class AImage::Cache;
+    friend class IDrawable;
+
+private:
+	ADeque<_<IImageLoader>> mImageLoaders;
+
+    _<IImageFactory> loadVector(const AByteBuffer& buffer);
+    _<AImage> loadRaster(const AByteBuffer& buffer);
+    inline _<IImageFactory> loadVector(const AUrl& url) {
+        auto s = AByteBuffer::fromStream(url.open());
+        return loadVector(s);
+    }
+    _<AImage> loadImage(const AUrl& url);
+
 public:
-	SvgImageLoader();
-	virtual ~SvgImageLoader() = default;
+	AImageLoaderRegistry() = default;
 
-	bool matches(AByteBuffer& buffer) override;
-	_<IDrawable> getDrawable(AByteBuffer& buffer) override;
+	void registerImageLoader(_<IImageLoader> imageLoader);
 
-    _<AImage> getRasterImage(AByteBuffer& buffer) override;
+	static AImageLoaderRegistry& inst();
 };

@@ -40,14 +40,14 @@ AString Css2ass::getName() {
 }
 
 AString Css2ass::getSignature() {
-    return "<path to source css> <path to application src/ folder> [f]";
+    return "<path to source css> <path to application src/ folder> [-f]";
 }
 
 AString Css2ass::getDescription() {
     return "converts CSS (cascading style sheets) to the src/Style.cpp file containing appropriate ASS (aui style sheets) "
            "definitions. aui.toolbox will use src/ folder to find files to #include. Please note that this command will "
            "not generate 100% equal ASS analogue to CSS because of differences between ASS and CSS.\n"
-           "\tf\tignore already existent destination file (warning! overrides contents)";
+           "\t-f\tignore already existent destination file (warning! overrides contents)";
 }
 
 void Css2ass::run(Toolbox& t) {
@@ -60,7 +60,7 @@ void Css2ass::run(Toolbox& t) {
             throw AException("source file " + sourceCssPath + " does not exist");
         }
 
-        if (destinationAssPath.isRegularFileExists() && !t.args.contains("f")) {
+        if (destinationAssPath.isRegularFileExists() && !t.args.contains("-f")) {
             throw AException("destination file " + sourceCssPath + " already exists. Please specify another "
                              "destination file or specify the f flag (warning! f flag overrides contents)");
         }

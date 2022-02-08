@@ -211,7 +211,7 @@ AStylesheet::AStylesheet() {
         {
             t<ANumberPicker>() >> t<AButton>(),
             Padding { 3_dp, 0 },
-            FixedSize { 19_dp, {} },
+            FixedSize { 19_dp, 10_dp },
             MinSize { {}, 3_dp },
             BoxShadow { nullptr },
             BorderRadius { 0 },

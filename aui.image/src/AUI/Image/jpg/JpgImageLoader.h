@@ -20,40 +20,19 @@
  */
 
 //
-// Created by alex2 on 23.10.2020.
+// Created by alex2 on 26.08.2020.
 //
 
-#include "ADrawableView.h"
-#include <AUI/Render/Render.h>
-#include <AUI/ASS/ASS.h>
-#include <AUI/Util/AImageDrawable.h>
+#pragma once
 
-ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable) {
 
-}
+#include <AUI/Image/IImageLoader.h>
 
-void ADrawableView::render() {
-    AView::render();
-    Render::setColor(getAssHelper()->state.backgroundUrl.overlayColor.or_default(0xffffff_rgb));
-    if (mDrawable) {
-        IDrawable::Params p;
-        p.size = getSize();
-        mDrawable->draw(p);
-    }
-}
+class JpgImageLoader: public IImageLoader {
+public:
+    bool matches(const AByteBuffer& buffer) override;
 
-ADrawableView::ADrawableView(const AUrl& url): ADrawableView(IDrawable::fromUrl(url)) {
+    _<AImage> getRasterImage(const AByteBuffer& buffer) override;
+};
 
-}
 
-/*
-void
-ADrawableView::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) {
-    processor(css::T_AUI_BACKGROUND_OVERLAY, [&](property p)
-    {
-        if (p->getArgs().size() == 1) {
-            mColorOverlay = AColor(p->getArgs()[0]);
-        }
-    });
-}
-*/
