@@ -842,6 +842,7 @@ macro(aui_app)
             COPYRIGHT
             VERSION
             ICON
+            VENDOR
 
             # linux
             LINUX_DESKTOP
@@ -887,6 +888,9 @@ macro(aui_app)
     if (NOT APP_ICON)
         list(APPEND _error_msg_opt "ICON which is path to your app's display icon.")
     endif()
+    if (NOT APP_VENDOR)
+        list(APPEND _error_msg_opt "VENDOR which is path to your app's developer name.")
+    endif()
     list(APPEND _error_msg_opt "COPYRIGHT which is your copyright string (defaults to \"Unknown\").")
     list(APPEND _error_msg_opt "VERSION which is your app's version (defaults to \"1.0\").")
     list(APPEND _error_msg_opt "NO_INCLUDE_CPACK forbids aui_app to include(CPack).")
@@ -914,6 +918,17 @@ macro(aui_app)
         list(JOIN _error_msg_opt \n v2)
         message(FATAL_ERROR "The following arguments are required for aui_app():\n${v1}\nnote: the following optional variables can be also set:\n${v2}")
     endif()
+
+    # common cpack
+    set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
+    set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${APP_VERSION})
+    set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
+
+    # WINDOWS ==========================================================================================================
+    if (AUI_PLATFORM_WINDOWS)
+        list(APPEND CPACK_GENERATOR WIX)
+    endif()
+
 
     # DESKTOP LINUX ====================================================================================================
     if (AUI_PLATFORM_LINUX)
