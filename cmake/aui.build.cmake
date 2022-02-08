@@ -458,7 +458,7 @@ function(aui_executable AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h src/*.mm src/*.m)
 
     set(options )
-    set(oneValueArgs COMPILE_ASSETS)
+    set(oneValueArgs COMPILE_ASSETS EXPORT)
     set(multiValueArgs ADDITIONAL_SRCS)
     cmake_parse_arguments(AUIE "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
@@ -523,6 +523,23 @@ function(aui_executable AUI_MODULE_NAME)
 
     aui_common(${AUI_MODULE_NAME})
 
+    if (AUIE_EXPORT)
+        install(
+                TARGETS ${AUI_MODULE_NAME}
+                EXPORT ${AUIE_EXPORT}
+                ARCHIVE       DESTINATION "lib"
+                LIBRARY       DESTINATION "lib"
+                RUNTIME       DESTINATION "bin"
+        )
+
+        install(
+                DIRECTORY src/
+                DESTINATION "${AUI_MODULE_NAME}/include/"
+                FILES_MATCHING PATTERN "*.h"
+                PATTERN "*.hpp"
+
+        )
+    endif()
 endfunction(aui_executable)
 
 function(aui_static_link AUI_MODULE_NAME LIBRARY_NAME)
@@ -817,7 +834,7 @@ macro(aui_app)
         set(AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
     endif()
 
-    set(options )
+    set(options NO_INCLUDE_CPACK)
     set(oneValueArgs
             # common
             TARGET
@@ -872,6 +889,7 @@ macro(aui_app)
     endif()
     list(APPEND _error_msg_opt "COPYRIGHT which is your copyright string (defaults to \"Unknown\").")
     list(APPEND _error_msg_opt "VERSION which is your app's version (defaults to \"1.0\").")
+    list(APPEND _error_msg_opt "NO_INCLUDE_CPACK forbids aui_app to include(CPack).")
     if (IOS)
         if (NOT APP_APPLE_TEAM_ID)
             list(APPEND _error_msg "APPLE_TEAM_ID which is your Apple Team ID (https://discussions.apple.com/thread/7942941).")
@@ -926,8 +944,6 @@ macro(aui_app)
 
         set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${PROJECT_BINARY_DIR}/appimage-generate.cmake")
         set(CPACK_EXTERNAL_ENABLE_STAGING YES)
-        set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${APP_VERSION})
-        include(CPack)
     endif()
 
     # IOS ==============================================================================================================
@@ -1124,6 +1140,9 @@ macro(aui_app)
         exit 1 \;
         fi\"
         )
+    endif()
+    if (NOT APP_NO_INCLUDE_CPACK)
+        include(CPack)
     endif()
 endmacro()
 
