@@ -83,6 +83,7 @@ void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
 
 void CommonRenderingContext::beginPaint(ABaseWindow& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
+        assert(mPainterDC == nullptr);
         mPainterDC = BeginPaint(w->mHandle, &mPaintstruct);
     }
 }
@@ -90,5 +91,6 @@ void CommonRenderingContext::beginPaint(ABaseWindow& window) {
 void CommonRenderingContext::endPaint(ABaseWindow& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         EndPaint(w->mHandle, &mPaintstruct);
+        mPainterDC = nullptr;
     }
 }

@@ -36,7 +36,7 @@ AJsonElement::AJsonElement(std::nullptr_t) :
 }
 
 bool AJsonElement::isNull() const {
-    return mJson->isNull();
+    return !mJson || mJson->isNull();
 }
 
 
