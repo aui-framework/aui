@@ -128,6 +128,13 @@ function(auib_import AUI_MODULE_NAME URL)
         return()
     endif()
 
+    get_property(AUI_BOOT_IMPORTED_MODULES GLOBAL PROPERTY AUI_BOOT_IMPORTED_MODULES)
+
+    if (${AUI_MODULE_NAME} IN_LIST AUI_BOOT_IMPORTED_MODULES)
+        # the module is already imported; skipping
+        return()
+    endif()
+
     set(_locked FALSE)
 
     set(FINDPACKAGE_QUIET QUIET)
@@ -526,5 +533,7 @@ function(auib_import AUI_MODULE_NAME URL)
         endforeach()
         set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
     endif()
+    set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME})
+
     message(STATUS "Imported: ${AUI_MODULE_NAME}")
 endfunction()
