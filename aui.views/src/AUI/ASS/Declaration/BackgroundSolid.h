@@ -51,6 +51,10 @@ namespace ass {
             bool isNone() override;
 
             DeclarationSlot getDeclarationSlot() const override;
+
+            const BackgroundSolid& value() const {
+                return mInfo;
+            }
         };
 
     }

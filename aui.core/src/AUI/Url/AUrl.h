@@ -32,7 +32,7 @@ private:
 	AString mPath;
 
 
-    static AMap<AString, std::function<_<IInputStream>(const AUrl&)>> ourResolvers;
+    static AMap<AString, std::function<_<IInputStream>(const AUrl&)>>& resolvers();
 
 public:
 	AUrl(const AString& full);

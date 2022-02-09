@@ -1,4 +1,4 @@
-/**
+﻿/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,30 +19,39 @@
  * =====================================================================================================================
  */
 
-#include <cstring>
-#include "SvgImageLoader.h"
+#pragma once
+#include "AUI/Common/SharedPtr.h"
+#include "AImage.h"
+#include "IImageFactory.h"
 
-#include "SvgDrawable.h"
+class AByteBuffer;
+class IDrawable;
 
-SvgImageLoader::SvgImageLoader()
+/**
+ * \brief Class-loader of abstract images that can be displayed on the screen.
+ */
+class IImageLoader
 {
-}
+public:
+	/**
+	 * \param buffer buffer with the raw image file contents.
+	 * \return true, if this IImageLoader accepts image stored in this buffer
+	 */
+	virtual bool matches(const AByteBuffer& buffer) = 0;
 
-bool SvgImageLoader::matches(AByteBuffer& buffer)
-{
-	char buf[8];
-	buffer.read(buf, 5);
+	/**
+	 * \brief The drawable (vector) image loader implementation.
+	 * \note Called if and only if <code>matches</code> returned true.
+	 * \return image factory. Can be <code>nullptr</code> if <code>getRasterImage</code> implemented.
+	 */
+	virtual _<IImageFactory> getImageFactory(const AByteBuffer& buffer) { return nullptr; };
 
-	return memcmp(buf, "<?xml", 5) == 0 ||
-           memcmp(buf, "<svg", 4) == 0;
-}
+	/**
+	 * \brief The image loader implementation (raster).
+	 * \note Called if and only if <code>matches</code> returned true.
+	 * \return raster image. Can be <code>nullptr</code> if <code>getDrawable</code> implemented.
+	 */
+	virtual _<AImage> getRasterImage(const AByteBuffer& buffer) = 0;
+};
 
-
-_<IDrawable> SvgImageLoader::getDrawable(AByteBuffer& buffer)
-{
-	return _new<SvgDrawable>(buffer);
-}
-
-_<AImage> SvgImageLoader::getRasterImage(AByteBuffer& buffer) {
-    return nullptr;
-}
+#include "AUI/Common/AByteBuffer.h"

@@ -24,6 +24,7 @@
 #include "AUI/Layout/AVerticalLayout.h"
 #include "AButton.h"
 #include "AUI/Platform/Platform.h"
+#include <AUI/Util/kAUI.h>
 
 bool ANumberPicker::ANumberPickerField::isValidText(const AString& text)
 {
@@ -84,10 +85,8 @@ ANumberPicker::ANumberPicker()
 	
 	auto c = _new<AViewContainer>();
     c->addAssName(".up-down-wrapper");
-	auto up = _new<AButton>();
-	up->setIcon(IDrawable::fromUrl(":uni/svg/up.svg"));
-	auto down = _new<AButton>();
-	down->setIcon(IDrawable::fromUrl(":uni/svg/down.svg"));
+	auto up = _new<AButton>() let { it->setDefault(); it  << ".up"; };
+	auto down = _new<AButton>() let { it->setDefault(); it  << ".down"; };
 	c->setLayout(_new<AVerticalLayout>());
 	c->setExpanding({ 0, 0 });
 	c->addView(up);

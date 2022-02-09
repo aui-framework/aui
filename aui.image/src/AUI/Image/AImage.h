@@ -32,7 +32,7 @@
 #include <AUI/Url/AUrl.h>
 #include <AUI/IO/APath.h>
 
-class API_AUI_CORE AImage {
+class API_AUI_IMAGE AImage {
 private:
     class Cache;
     friend class ::Cache<AImage, Cache, AUrl>;

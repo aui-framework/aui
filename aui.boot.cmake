@@ -42,8 +42,8 @@ if (APPLE)
     set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
 elseif(UNIX)
     #SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,--enable-new-dtags")
-    set(CMAKE_BUILD_RPATH $ORIGIN/../lib)
-    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+    set(CMAKE_INSTALL_RPATH $ORIGIN/../lib)
+    set(CMAKE_INSTALL_RPATH_USE_LINK_PATH FALSE)
 endif()
 
 define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
@@ -125,6 +125,13 @@ function(auib_import AUI_MODULE_NAME URL)
         else()
             find_package(${AUI_MODULE_NAME} REQUIRED)
         endif()
+        return()
+    endif()
+
+    get_property(AUI_BOOT_IMPORTED_MODULES GLOBAL PROPERTY AUI_BOOT_IMPORTED_MODULES)
+
+    if (${AUI_MODULE_NAME} IN_LIST AUI_BOOT_IMPORTED_MODULES)
+        # the module is already imported; skipping
         return()
     endif()
 
@@ -526,5 +533,7 @@ function(auib_import AUI_MODULE_NAME URL)
         endforeach()
         set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
     endif()
+    set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME})
+
     message(STATUS "Imported: ${AUI_MODULE_NAME}")
 endfunction()

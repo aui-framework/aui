@@ -76,6 +76,10 @@ namespace ass {
             bool isNone() override;
 
             DeclarationSlot getDeclarationSlot() const override;
+
+            const BoxShadow& value() const {
+                return mInfo;
+            }
         };
     }
 }

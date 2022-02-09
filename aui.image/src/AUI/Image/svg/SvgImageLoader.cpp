@@ -19,30 +19,29 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 23.10.2020.
-//
+#include <cstring>
+#include "SvgImageLoader.h"
 
-#pragma once
+#include "SvgImageFactory.h"
 
+SvgImageLoader::SvgImageLoader()
+{
+}
 
-#include <AUI/Image/IDrawable.h>
-#include <AUI/Common/SharedPtrTypes.h>
-#include <AUI/Image/AImage.h>
-#include <AUI/Render/Render.h>
+bool SvgImageLoader::matches(const AByteBuffer& buffer)
+{
+	char buf[8];
+	buffer.readExact(buf, 5);
 
-class ImageDrawable: public IDrawable {
-private:
-    Render::Texture mTexture;
-    glm::ivec2 mSize;
-
-public:
-    explicit ImageDrawable(const _<AImage> image);
-    virtual ~ImageDrawable();
-
-    void draw(const Params& params) override;
-
-    glm::ivec2 getSizeHint() override;
-};
+	return memcmp(buf, "<?xml", 5) == 0 ||
+           memcmp(buf, "<svg", 4) == 0;
+}
 
 
+_<IImageFactory> SvgImageLoader::getImageFactory(const AByteBuffer& buffer) {
+    return _new<SvgImageFactory>(buffer);
+}
+
+_<AImage> SvgImageLoader::getRasterImage(const AByteBuffer& buffer) {
+    return nullptr;
+}

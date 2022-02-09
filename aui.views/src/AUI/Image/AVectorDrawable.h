@@ -20,37 +20,32 @@
  */
 
 #pragma once
-#include "AUI/Common/SharedPtr.h"
-#include "AImage.h"
+#include <functional>
+#include <AUI/Common/SharedPtrTypes.h>
 
-class AByteBuffer;
-class IDrawable;
+#include "AUI/Common/ADeque.h"
+#include "AUI/Image/IDrawable.h"
+#include "AUI/Image/IImageFactory.h"
+#include <AUI/Render/Render.h>
 
-/**
- * \brief Class-loader of abstract images that can be displayed on the screen.
- */
-class IImageLoader
+
+class AVectorDrawable: public IDrawable
 {
+private:
+    struct Pair {
+        uint64_t key;
+        Render::Texture texture;
+    };
+
+    ADeque<Pair> mRasterized;
+    _<IImageFactory> mFactory;
 public:
-	/**
-	 * \param buffer buffer with the raw image file contents.
-	 * \return true, if this IImageLoader accepts image stored in this buffer
-	 */
-	virtual bool matches(AByteBuffer& buffer) = 0;
+    explicit AVectorDrawable(_<IImageFactory> factory): mFactory(std::move(factory)) {}
+    ~AVectorDrawable();
 
-	/**
-	 * \brief The drawable (vector) image loader implementation.
-	 * \note Called if and only if <code>matches</code> returned true.
-	 * \return drawable (vector) image. Can be <code>nullptr</code> if <code>getRasterImage</code> implemented.
-	 */
-	virtual _<IDrawable> getDrawable(AByteBuffer& buffer) = 0;
+	void draw(const Params& params) override;
+	glm::ivec2 getSizeHint() override;
 
-	/**
-	 * \brief The image loader implementation (raster).
-	 * \note Called if and only if <code>matches</code> returned true.
-	 * \return raster image. Can be <code>nullptr</code> if <code>getDrawable</code> implemented.
-	 */
-	virtual _<AImage> getRasterImage(AByteBuffer& buffer) = 0;
+	bool isDpiDependent() const override;
+
 };
-
-#include "AUI/Common/AByteBuffer.h"

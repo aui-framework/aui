@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
+ * 
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,62 +14,35 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
+ 
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
-#if AUI_PLATFORM_WIN
-#include <windows.h>
-#include <AUI/Url/AUrl.h>
+//
+// Created by alex2 on 23.10.2020.
+//
+
+#pragma once
 
 
-BOOL WINAPI DllMain(
-        HINSTANCE hinstDLL,  // handle to DLL module
-        DWORD fdwReason,     // reason for calling function
-        LPVOID lpReserved)  // reserved
-{
-    // Perform actions based on the reason for calling.
-    switch (fdwReason)
-    {
-        case DLL_PROCESS_ATTACH:
-            // Initialize once for each new process.
-            // Return FALSE to fail DLL load.
-            break;
+#include <AUI/Image/IDrawable.h>
+#include <AUI/Common/SharedPtrTypes.h>
+#include <AUI/Image/AImage.h>
+#include <AUI/Render/Render.h>
 
-        case DLL_THREAD_ATTACH:
-            // Do thread-specific initialization.
-            break;
+class AImageDrawable: public IDrawable {
+private:
+    Render::Texture mTexture;
+    glm::ivec2 mSize;
 
-        case DLL_THREAD_DETACH:
-            // Do thread-specific cleanup.
-            break;
+public:
+    explicit AImageDrawable(const _<AImage> image);
+    virtual ~AImageDrawable();
 
-        case DLL_PROCESS_DETACH:
-            // Perform any necessary cleanup.
-            break;
-    }
-    return TRUE;  // Successful DLL_PROCESS_ATTACH.
-}
+    void draw(const Params& params) override;
 
-#endif
+    glm::ivec2 getSizeHint() override;
+};
 
 
-
-
-struct AViewsInit
-{
-    AViewsInit() {
-#if AUI_PLATFORM_WIN
-#ifndef AUI_DISABLE_HIDPI
-        typedef BOOL(WINAPI *SetProcessDpiAwarenessContext_t)(HANDLE);
-        auto SetProcessDpiAwarenessContext = (SetProcessDpiAwarenessContext_t)GetProcAddress(GetModuleHandleA("User32.dll"), "SetProcessDpiAwarenessContext");
-
-        if (SetProcessDpiAwarenessContext) {
-            // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
-            SetProcessDpiAwarenessContext((HANDLE) -4);
-        }
-#endif
-#endif
-    }
-} init;

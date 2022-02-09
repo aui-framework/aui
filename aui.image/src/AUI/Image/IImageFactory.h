@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,40 +14,27 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
 #pragma once
-#include <functional>
-#include <AUI/Common/SharedPtrTypes.h>
+#include "AUI/Common/SharedPtr.h"
+#include "AImage.h"
 
-#include "AUI/Common/ADeque.h"
-#include "AUI/Image/IDrawable.h"
-#include <nanosvg.h>
-#include <nanosvgrast.h>
-#include <AUI/Render/Render.h>
-
-
-class SvgDrawable: public IDrawable
+/**
+ * \brief Produces images by the specified size.
+ */
+class IImageFactory
 {
-private:
-    struct Pair {
-        uint64_t key;
-        Render::Texture texture;
-    };
-
-    NSVGimage* mImage;
-    ADeque<Pair> mRasterized;
-
 public:
-    explicit SvgDrawable(AByteBuffer& data);
-    ~SvgDrawable();
+    virtual _<AImage> provideImage(const glm::ivec2& size) = 0;
 
-	void draw(const Params& params) override;
-	glm::ivec2 getSizeHint() override;
-
-	bool isDpiDependent() const override;
-
+    /**
+     * @see <a href="IDrawable::getSizeHint">IDrawable::getSizeHint</a>
+     */
+    virtual glm::ivec2 getSizeHint() {
+        return {0, 0};
+    }
 };

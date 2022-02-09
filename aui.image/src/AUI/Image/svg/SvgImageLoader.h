@@ -19,21 +19,18 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 26.08.2020.
-//
-
 #pragma once
+#include "AUI/Image/IImageLoader.h"
 
-
-#include <AUI/Image/IImageLoader.h>
-
-class JpgImageLoader: public IImageLoader {
+class SvgImageLoader: public IImageLoader
+{
 public:
-    bool matches(AByteBuffer& buffer) override;
+	SvgImageLoader();
+	virtual ~SvgImageLoader() = default;
 
-    _<IDrawable> getDrawable(AByteBuffer& buffer) override;
-    _<AImage> getRasterImage(AByteBuffer& buffer) override;
+	bool matches(const AByteBuffer& buffer) override;
+
+    _<AImage> getRasterImage(const AByteBuffer& buffer) override;
+
+    _<IImageFactory> getImageFactory(const AByteBuffer& buffer) override;
 };
-
-

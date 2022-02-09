@@ -39,13 +39,10 @@ set_property(GLOBAL PROPERTY TESTS_SRCS "")
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
-set(AUI_INSTALL_RUNTIME_DEPENDENCIES OFF CACHE BOOL "Install runtime dependencies along with the project")
+set(AUI_INSTALL_RUNTIME_DEPENDENCIES ${AUI_BOOT} CACHE BOOL "Install runtime dependencies along with the project")
 
 cmake_policy(SET CMP0072 NEW)
 
-if (AUI_BOOT)
-    set(AUI_INSTALL_RUNTIME_DEPENDENCIES ON)
-endif()
 
 if (ANDROID OR IOS)
     set(_build_shared OFF)
@@ -164,14 +161,17 @@ function(aui_add_properties AUI_MODULE_NAME)
     endif()
 endfunction(aui_add_properties)
 
-macro(aui_enable_tests)
+macro(_aui_import_gtest)
     if(NOT TARGET GTest::gtest)
         auib_import(GTest https://github.com/google/googletest
                 VERSION main
                 CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
+endmacro()
 
+macro(aui_enable_tests)
+    _aui_import_gtest()
     if (NOT TARGET GTest::gtest)
         message(FATAL_ERROR "GTest::gtest not found!")
     endif()
@@ -458,7 +458,7 @@ function(aui_executable AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h src/*.mm src/*.m)
 
     set(options )
-    set(oneValueArgs COMPILE_ASSETS)
+    set(oneValueArgs COMPILE_ASSETS EXPORT)
     set(multiValueArgs ADDITIONAL_SRCS)
     cmake_parse_arguments(AUIE "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
@@ -523,6 +523,23 @@ function(aui_executable AUI_MODULE_NAME)
 
     aui_common(${AUI_MODULE_NAME})
 
+    if (AUIE_EXPORT)
+        install(
+                TARGETS ${AUI_MODULE_NAME}
+                EXPORT ${AUIE_EXPORT}
+                ARCHIVE       DESTINATION "lib"
+                LIBRARY       DESTINATION "lib"
+                RUNTIME       DESTINATION "bin"
+        )
+
+        install(
+                DIRECTORY src/
+                DESTINATION "${AUI_MODULE_NAME}/include/"
+                FILES_MATCHING PATTERN "*.h"
+                PATTERN "*.hpp"
+
+        )
+    endif()
 endfunction(aui_executable)
 
 function(aui_static_link AUI_MODULE_NAME LIBRARY_NAME)
@@ -812,13 +829,23 @@ endfunction(aui_module)
 
 
 macro(aui_app)
-    set(options )
+    # for pulling some resources (cmake scripts, ios storyboards, etc...)
+    if (NOT AUI_ROOT)
+        set(AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+    endif()
+
+    set(options NO_INCLUDE_CPACK)
     set(oneValueArgs
             # common
             TARGET
             NAME
             COPYRIGHT
             VERSION
+            ICON
+            VENDOR
+
+            # linux
+            LINUX_DESKTOP
 
             # apple
             APPLE_TEAM_ID
@@ -829,7 +856,7 @@ macro(aui_app)
             IOS_VERSION
             IOS_DEVICE
             IOS_CONTROLLER)
-    set(multiValueArgs ADDITIONAL_SRCS)
+    set(multiValueArgs )
     cmake_parse_arguments(APP "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
 
@@ -843,6 +870,9 @@ macro(aui_app)
     endif()
     if (NOT APP_VERSION)
         set(APP_VERSION 1.0)
+    endif()
+    if (NOT APP_COPYRIGHT)
+        set(APP_COPYRIGHT "Copyright is not specified")
     endif()
     if (NOT APP_APPLE_SIGN_IDENTITY)
         set(APP_APPLE_SIGN_IDENTITY "iPhone Developer")
@@ -858,19 +888,29 @@ macro(aui_app)
     if (NOT APP_NAME)
         list(APPEND _error_msg "NAME which is your app's display name.")
     endif()
+    if (NOT APP_ICON)
+        list(APPEND _error_msg_opt "ICON which is path to your app's display icon.")
+    endif()
+    if (NOT APP_VENDOR)
+        list(APPEND _error_msg_opt "VENDOR which is path to your app's developer name.")
+    endif()
     list(APPEND _error_msg_opt "COPYRIGHT which is your copyright string (defaults to \"Unknown\").")
     list(APPEND _error_msg_opt "VERSION which is your app's version (defaults to \"1.0\").")
+    list(APPEND _error_msg_opt "NO_INCLUDE_CPACK forbids aui_app to include(CPack).")
     if (IOS)
         if (NOT APP_APPLE_TEAM_ID)
             list(APPEND _error_msg "APPLE_TEAM_ID which is your Apple Team ID (https://discussions.apple.com/thread/7942941).")
-        endif()
-        if (NOT APP_APPLE_BUNDLE_IDENTIFIER)
-            list(APPEND _error_msg "APPLE_BUNDLE_IDENTIFIER which is your app's bundle identifier.")
         endif()
         list(APPEND _error_msg_opt "APPLE_SIGN_IDENTITY which is your code sign identity (defaults to \"iPhone Developer\").")
         list(APPEND _error_msg_opt "IOS_VERSION which is target IOS version (defaults to 14.3).")
         list(APPEND _error_msg_opt "IOS_DEVICE which is target IOS device: either IPHONE, IPAD or BOTH (defaults to BOTH).")
         list(APPEND _error_msg_opt "IOS_CONTROLLER which is your controller name (defaults to AUIViewController)")
+    endif()
+
+    if (AUI_PLATFORM_LINUX)
+        if (NOT APP_LINUX_DESKTOP_FILE)
+            list(APPEND _error_msg_opt "LINUX_DESKTOP_FILE which is your custom *.desktop file")
+        endif()
     endif()
 
     if (_error_msg)
@@ -879,6 +919,117 @@ macro(aui_app)
         message(FATAL_ERROR "The following arguments are required for aui_app():\n${v1}\nnote: the following optional variables can be also set:\n${v2}")
     endif()
 
+    # common cpack
+    set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
+    set(CPACK_PACKAGE_FILE_NAME ${APP_NAME}-${APP_VERSION})
+    set(CPACK_BUNDLE_NAME ${APP_NAME})
+    set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
+    set(CPACK_BUNDLE_PLIST ${PROJECT_BINARY_DIR}/MacOSXBundleInfo.plist)
+
+    # WINDOWS ==========================================================================================================
+    if (AUI_PLATFORM_WINDOWS)
+        list(APPEND CPACK_GENERATOR WIX)
+    endif()
+
+
+    # DESKTOP LINUX ====================================================================================================
+    if (AUI_PLATFORM_LINUX)
+        if (NOT APP_LINUX_DESKTOP)
+            # generate desktop file
+            set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
+            set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_exec}\nType=Application\nTerminal=false\nCategories=Utility")
+            if (APP_ICON)
+                set(_icon "${PROJECT_BINARY_DIR}/app.icon.svg")
+                configure_file(${APP_ICON} "${_icon}" COPYONLY)
+                set(APP_ICON ${_icon})
+                set(_desktop "${_desktop}\nIcon=app.icon")
+            endif()
+            file(GENERATE
+                 OUTPUT "${PROJECT_BINARY_DIR}/app.desktop"
+                 CONTENT ${_desktop})
+            set(APP_LINUX_DESKTOP ${PROJECT_BINARY_DIR}/app.desktop)
+        endif()
+        file(GENERATE
+                OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate.cmake
+                INPUT ${AUI_SOURCE_DIR}/cmake/appimage-generate.cmake.in)
+        file(GENERATE
+                OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate-vars.cmake
+                CONTENT "set(EXECUTABLE $<TARGET_FILE:${APP_TARGET}>)\nset(DESKTOP_FILE ${APP_LINUX_DESKTOP})\nset(ICON_FILE ${APP_ICON})")
+        set(APP_LINUX_DESKTOP ${PROJECT_BINARY_DIR}/appimage-generate.cmake)
+
+        list(APPEND CPACK_GENERATOR External)
+
+        set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${PROJECT_BINARY_DIR}/appimage-generate.cmake")
+        set(CPACK_EXTERNAL_ENABLE_STAGING YES)
+    endif()
+
+    # IOS AND MACOS ====================================================================================================
+    if (APPLE)
+        if (NOT APP_APPLE_BUNDLE_IDENTIFIER)
+            set(APP_APPLE_BUNDLE_IDENTIFIER ${APP_NAME})
+        endif()
+        set(PRODUCT_NAME ${APP_NAME})
+        set(EXECUTABLE_NAME ${APP_NAME})
+        set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_NAME})
+        set(MACOSX_BUNDLE_INFO_STRING ${APP_APPLE_BUNDLE_IDENTIFIER})
+        set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_APPLE_BUNDLE_IDENTIFIER})
+        set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_APPLE_BUNDLE_IDENTIFIER})
+        set(MACOSX_BUNDLE_ICON_FILE "app.icns")
+        set(MACOSX_BUNDLE_LONG_VERSION_STRING ${APP_VERSION})
+        set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${APP_VERSION})
+        set(MACOSX_BUNDLE_BUNDLE_VERSION ${APP_VERSION})
+        set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
+        set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
+        if (AUI_PLATFORM_MACOS)
+            configure_file(${AUI_SOURCE_DIR}/macos/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+        endif()
+        set_target_properties(${APP_TARGET} PROPERTIES
+                              MACOSX_BUNDLE TRUE
+                              BUNDLE TRUE
+                              OUTPUT_NAME ${APP_NAME}
+                              MACOSX_BUNDLE_INFO_PLIST           ${CPACK_BUNDLE_PLIST}
+                              MACOSX_BUNDLE_EXECUTABLE_NAME      ${MACOSX_BUNDLE_EXECUTABLE_NAME}
+                              MACOSX_BUNDLE_INFO_STRING          ${MACOSX_BUNDLE_INFO_STRING}
+                              MACOSX_BUNDLE_GUI_IDENTIFIER       ${MACOSX_BUNDLE_GUI_IDENTIFIER}
+                              MACOSX_BUNDLE_BUNDLE_NAME          ${MACOSX_BUNDLE_BUNDLE_NAME}
+                              MACOSX_BUNDLE_ICON_FILE            ${MACOSX_BUNDLE_ICON_FILE}
+                              MACOSX_BUNDLE_LONG_VERSION_STRING  ${MACOSX_BUNDLE_LONG_VERSION_STRING}
+                              MACOSX_BUNDLE_SHORT_VERSION_STRING ${MACOSX_BUNDLE_SHORT_VERSION_STRING}
+                              MACOSX_BUNDLE_BUNDLE_VERSION       ${MACOSX_BUNDLE_BUNDLE_VERSION}
+                              MACOSX_BUNDLE_COPYRIGHT            ${MACOSX_BUNDLE_COPYRIGHT}
+                              MACOSX_DEPLOYMENT_TARGET           ${MACOSX_DEPLOYMENT_TARGET}  )
+    endif()
+
+    # MACOS ============================================================================================================
+    if (AUI_PLATFORM_MACOS)
+        configure_file(${AUI_SOURCE_DIR}/macos/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+
+        # generate icns
+        set(_icons_dir ${PROJECT_BINARY_DIR}/app.iconset)
+        set(_resolutions 16 32 64 128 256 512 1024)
+
+        unset(_outputs)
+        foreach(_res ${_resolutions})
+            list(APPEND _outputs "${_icons_dir}/icon_${_res}x${_res}.png")
+        endforeach()
+        list(JOIN _resolutions , _resolutions_comma)
+        if (TARGET aui.toolbox)
+            add_dependencies(${APP_TARGET} aui.toolbox)
+        endif()
+        get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
+        set(_icon_icns ${PROJECT_BINARY_DIR}/app.icns)
+        add_custom_command(
+                OUTPUT ${_icon_icns}
+                COMMAND ${AUI_TOOLBOX_EXE}
+                ARGS svg2png ${_icon_absolute} -r=${_resolutions_comma} -o=${_icons_dir} -p=icon
+                COMMAND iconutil # iconset to icns
+                ARGS -c icns ${_icons_dir}
+        )
+        set_source_files_properties(${_icon_icns} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+        target_sources(${APP_TARGET} PRIVATE ${_icon_icns})
+    endif()
+
+    # IOS ==============================================================================================================
     if (IOS)
         if (APP_IOS_DEVICE STREQUAL IPHONE)
             set(APP_IOS_DEVICE "1")
@@ -899,23 +1050,6 @@ macro(aui_app)
         endif()
 
         message(STATUS XCTestFound:${XCTest_FOUND})
-
-        set(PRODUCT_NAME ${APP_NAME})
-        set(EXECUTABLE_NAME ${APP_TARGET})
-        set(MACOSX_BUNDLE_EXECUTABLE_NAME ${APP_TARGET})
-        set(MACOSX_BUNDLE_INFO_STRING ${APP_APPLE_BUNDLE_IDENTIFIER})
-        set(MACOSX_BUNDLE_GUI_IDENTIFIER ${APP_APPLE_BUNDLE_IDENTIFIER})
-        set(MACOSX_BUNDLE_BUNDLE_NAME ${APP_APPLE_BUNDLE_IDENTIFIER})
-        set(MACOSX_BUNDLE_ICON_FILE "")
-        set(MACOSX_BUNDLE_LONG_VERSION_STRING ${APP_VERSION})
-        set(MACOSX_BUNDLE_SHORT_VERSION_STRING ${APP_VERSION})
-        set(MACOSX_BUNDLE_BUNDLE_VERSION ${APP_VERSION})
-        set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
-        set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
-
-        if (NOT AUI_ROOT)
-            set(AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
-        endif()
 
         set(RESOURCES
                 ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard
@@ -1075,6 +1209,9 @@ macro(aui_app)
         exit 1 \;
         fi\"
         )
+    endif()
+    if (NOT APP_NO_INCLUDE_CPACK)
+        include(CPack)
     endif()
 endmacro()
 

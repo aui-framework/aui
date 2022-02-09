@@ -25,10 +25,10 @@
 
 void AImageLoaderRegistry::registerImageLoader(_<IImageLoader> imageLoader)
 {
-	mImageLoaders << imageLoader;
+	mImageLoaders << std::move(imageLoader);
 }
 
-_<IDrawable> AImageLoaderRegistry::loadDrawable(AByteBuffer& buffer)
+_<IImageFactory> AImageLoaderRegistry::loadVector(const AByteBuffer& buffer)
 {
 	for (auto& loader : mImageLoaders)
 	{
@@ -37,9 +37,9 @@ _<IDrawable> AImageLoaderRegistry::loadDrawable(AByteBuffer& buffer)
 			buffer.setCurrentPos(0);
 			if (matches)
 			{
-				if (auto drawable = loader->getDrawable(buffer))
+				if (auto imageFactory = loader->getImageFactory(buffer))
 				{
-					return drawable;
+					return imageFactory;
 				}
 				buffer.setCurrentPos(0);
 			}
@@ -51,7 +51,7 @@ _<IDrawable> AImageLoaderRegistry::loadDrawable(AByteBuffer& buffer)
 	return nullptr;
 }
 
-_<AImage> AImageLoaderRegistry::loadImage(AByteBuffer& buffer) {
+_<AImage> AImageLoaderRegistry::loadRaster(const AByteBuffer& buffer) {
     for (auto& loader : mImageLoaders)
     {
         try {
@@ -75,7 +75,7 @@ _<AImage> AImageLoaderRegistry::loadImage(AByteBuffer& buffer) {
 
 _<AImage> AImageLoaderRegistry::loadImage(const AUrl& url) {
     auto buffer = AByteBuffer::fromStream(url.open());
-    if (auto r = loadImage(buffer))
+    if (auto r = loadRaster(buffer))
         return r;
     ALogger::warn("No applicable image loader for " + url.getFull());
     return nullptr;
