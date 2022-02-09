@@ -56,7 +56,6 @@ BOOL WINAPI DllMain(
 
 #elif AUI_PLATFORM_APPLE
 #else
-#include <gtk/gtk.h>
 #include <AUI/Logging/ALogger.h>
 
 #endif
