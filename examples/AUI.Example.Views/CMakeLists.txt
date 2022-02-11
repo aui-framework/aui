@@ -3,16 +3,22 @@ cmake_minimum_required(VERSION 3.15)
 if (NOT TARGET aui::views)
 
     # Use AUI.Boot
+
+    set(AUI_VERSION master)
+    if ($env{GITHUB_SHA})
+        set(AUI_VERSION $env{GITHUB_SHA}) # changed by github actions
+    endif()
+
     file(
             DOWNLOAD
-            https://raw.githubusercontent.com/aui-framework/aui/develop/aui.boot.cmake
+            https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
             ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
     include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
     # import AUI
     auib_import(AUI https://github.com/aui-framework/aui
-            VERSION develop
-            COMPONENTS core views)
+                VERSION ${AUI_VERSION}
+                COMPONENTS core views)
 
 endif()
 
