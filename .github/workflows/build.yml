@@ -23,7 +23,7 @@ jobs:
         with:
           submodules: true
       - uses: actions/setup-java@v1
-        with: { java-version: 1.8 }
+        with: { java-version: '11' }
 
       - name: Install ubuntu packages
         run: sudo apt-get update && sudo apt-get install build-essential cmake ninja-build
