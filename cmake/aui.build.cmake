@@ -981,7 +981,7 @@ macro(aui_app)
         set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
         set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
         if (AUI_PLATFORM_MACOS)
-            configure_file(${AUI_SOURCE_DIR}/macos/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+            configure_file(${AUI_SOURCE_DIR}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
         endif()
         set_target_properties(${APP_TARGET} PROPERTIES
                               MACOSX_BUNDLE TRUE
@@ -1002,7 +1002,7 @@ macro(aui_app)
 
     # MACOS ============================================================================================================
     if (AUI_PLATFORM_MACOS)
-        configure_file(${AUI_SOURCE_DIR}/macos/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+        configure_file(${AUI_SOURCE_DIR}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
 
         # generate icns
         set(_icons_dir ${PROJECT_BINARY_DIR}/app.iconset)
