@@ -23,7 +23,7 @@ jobs:
         with:
           submodules: true
       - name: Gradle build
-        run: cd aui/examples/AUI.Example.Views/android && ./gradlew assembleDebug
+        run: cd examples/AUI.Example.Views/android && ./gradlew assembleDebug
 
   build-desktop:
     name: ${{ matrix.config.name }}
