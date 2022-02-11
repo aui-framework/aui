@@ -34,7 +34,7 @@ if (NOT AUI_FIND_COMPONENTS)
 else()
     # add dependencies
     if (views IN_LIST AUI_FIND_COMPONENTS)
-        list(APPEND AUI_FIND_COMPONENTS xml)
+        list(APPEND AUI_FIND_COMPONENTS xml image)
     endif()
     list(REMOVE_DUPLICATES AUI_FIND_COMPONENTS)
 endif()
