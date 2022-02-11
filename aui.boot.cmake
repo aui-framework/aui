@@ -145,6 +145,11 @@ function(auib_import AUI_MODULE_NAME URL)
         return()
     endif()
 
+    if(EXISTS ${URL})
+        # url is a local file
+        get_filename_component(URL ${URL} ABSOLUTE)
+    endif()
+
     set(_locked FALSE)
 
     set(FINDPACKAGE_QUIET QUIET)
