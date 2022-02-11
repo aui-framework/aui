@@ -28,6 +28,16 @@ if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
     file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
 endif()
 
+
+if (ANDROID OR IOS)
+    set(_build_shared OFF)
+    message(STATUS "Forcing static build because you are building for mobile platform.")
+else()
+    set(_build_shared ON)
+endif()
+set(BUILD_SHARED_LIBS ${_build_shared} CACHE BOOL "Build using shared libraries")
+
+
 if (MSVC)
     if (NOT CMAKE_MSVC_RUNTIME_LIBRARY)
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")

@@ -44,15 +44,6 @@ set(AUI_INSTALL_RUNTIME_DEPENDENCIES ${AUI_BOOT} CACHE BOOL "Install runtime dep
 cmake_policy(SET CMP0072 NEW)
 
 
-if (ANDROID OR IOS)
-    set(_build_shared OFF)
-    message(STATUS "Forcing static build because you are building for mobile platform.")
-else()
-    set(_build_shared ON)
-endif()
-set(BUILD_SHARED_LIBS ${_build_shared} CACHE BOOL "Build using shared libraries")
-
-
 # platform definitions
 # platform exclusion (AUI/Platform/<platform name>/...)
 set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios)
