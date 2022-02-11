@@ -15,6 +15,16 @@ env:
   GIT_SUBMODULE_STRATEGY: recursive
 
 jobs:
+  build-android:
+    name: "Android"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Gradle build
+        run: cd aui/examples/AUI.Example.Views/android && ./gradlew assembleDebug
+
   build-desktop:
     name: ${{ matrix.config.name }}
     runs-on: ${{ matrix.config.os }}
