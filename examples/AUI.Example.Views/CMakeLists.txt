@@ -4,10 +4,9 @@ if (NOT TARGET aui::views)
 
     # Use AUI.Boot
 
-    set(AUI_VERSION master)
-    message(FATAL_ERROR "GITHUB_SHA: $ENV{GITHUB_SHA}")
-    if ($ENV{GITHUB_SHA})
-        set(AUI_VERSION $ENV{GITHUB_SHA}) # changed by github actions
+    set(AUI_VERSION $ENV{GITHUB_SHA}) # changed by github actions
+    if (NOT AUI_VERSION)
+        set(AUI_VERSION master)
     endif()
 
     file(
