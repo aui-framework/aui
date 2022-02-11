@@ -2,13 +2,8 @@ cmake_minimum_required(VERSION 3.10)
 
 project(test_project)
 
-file(
-        DOWNLOAD
-        https://raw.githubusercontent.com/aui-framework/aui/${AUI_TEST_BOOT_BRANCH}/aui.boot.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
-include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
-auib_import(AUI https://github.com/aui-framework/aui
-            VERSION ${AUI_TEST_BOOT_BRANCH}
+include(../../../../aui.boot.cmake)
+auib_import(AUI ../../../../
             COMPONENTS core)
 
 aui_executable(test_project)
