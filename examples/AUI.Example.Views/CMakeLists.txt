@@ -5,8 +5,8 @@ if (NOT TARGET aui::views)
     # Use AUI.Boot
 
     set(AUI_VERSION master)
-    if ($env{GITHUB_SHA})
-        set(AUI_VERSION $env{GITHUB_SHA}) # changed by github actions
+    if ($ENV{GITHUB_SHA})
+        set(AUI_VERSION $ENV{GITHUB_SHA}) # changed by github actions
     endif()
 
     file(
