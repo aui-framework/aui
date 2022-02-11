@@ -173,7 +173,9 @@ install(
         ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
         DESTINATION ".")
 
+file(GLOB_RECURSE _cmake_dir cmake/*)
+
 install(
         FILES
-        cmake/aui.build.cmake
+        ${_cmake_dir}
         DESTINATION "cmake/")
