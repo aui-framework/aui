@@ -166,7 +166,7 @@ endforeach()
 
 # test aui.boot on ci/cd
 if (DEFINED ENV{GITHUB_SHA})
-    add_subdirectory(test/aui.boot)
+    add_subdirectory(test/)
 endif()
 
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)

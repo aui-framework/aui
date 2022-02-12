@@ -43,6 +43,13 @@ set(AUI_INSTALL_RUNTIME_DEPENDENCIES ${AUI_BOOT} CACHE BOOL "Install runtime dep
 
 cmake_policy(SET CMP0072 NEW)
 
+if (ANDROID OR IOS)
+    set(_build_shared OFF)
+    message(STATUS "Forcing static build because you are building for mobile platform.")
+else()
+    set(_build_shared ON)
+endif()
+set(BUILD_SHARED_LIBS ${_build_shared} CACHE BOOL "Build using shared libraries")
 
 # platform definitions
 # platform exclusion (AUI/Platform/<platform name>/...)
@@ -542,6 +549,45 @@ function(aui_static_link AUI_MODULE_NAME LIBRARY_NAME)
 endfunction(aui_static_link)
 
 
+macro(_aui_try_find_toolbox)
+    find_program(AUI_TOOLBOX_EXE aui.toolbox
+            HINTS ${AUI_ROOT}/bin)
+    if (NOT AUI_TOOLBOX_EXE)
+        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/*/aui.toolbox)
+        if (AUI_TOOLBOX_EXE)
+            list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
+        else()
+            # compile aui.toolbox for the host system
+            message(STATUS "aui.toolbox for the host system is not found - compiling")
+        endif()
+    endif()
+endmacro()
+
+macro(_aui_provide_toolbox_for_host)
+    set(_workdir ${CMAKE_CURRENT_BINARY_DIR}/aui_toolbox_provider)
+    file(MAKE_DIRECTORY ${_workdir})
+    file(MAKE_DIRECTORY ${_workdir}/b)
+    file(WRITE ${_workdir}/CMakeLists.txt [[
+cmake_minimum_required(VERSION 3.16)
+
+file(
+        DOWNLOAD
+        https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+
+auib_import(AUI https://github.com/aui-framework/aui
+            COMPONENTS core toolbox image)
+]])
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -DAUI_CACHE_DIR=${AUI_CACHE_DIR} WORKING_DIRECTORY ${_workdir}/b RESULT_VARIABLE _r)
+    if (NOT _r STREQUAL 0)
+        message(FATAL_ERROR "CMake subprocess failed")
+    endif()
+    _aui_try_find_toolbox()
+    set(AUI_TOOLBOX_EXE ${AUI_TOOLBOX_EXE} CACHE FILEPATH "aui.toolbox location")
+endmacro()
+
+
 function(aui_compile_assets AUI_MODULE_NAME)
     cmake_parse_arguments(ASSETS "" "" "EXCLUDE" ${ARGN})
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
@@ -568,16 +614,9 @@ function(aui_compile_assets AUI_MODULE_NAME)
     if (NOT AUI_TOOLBOX_EXE)
         if (CMAKE_CROSSCOMPILING)
             # the worst case because we (possibly) have to compile aui.toolbox for the host system
-            # FIXME assume that aui.toolbox is already built for our system
-            find_program(AUI_TOOLBOX_EXE aui.toolbox
-                    HINTS ${AUI_ROOT}/bin)
+            _aui_try_find_toolbox()
             if (NOT AUI_TOOLBOX_EXE)
-                file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/*/aui.toolbox)
-                if (AUI_TOOLBOX_EXE)
-                    list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
-                else()
-                    message(FATAL_ERROR "When crosscompiling, aui.toolbox for your host system is required. Please set AUI_TOOLBOX_EXE.")
-                endif()
+                _aui_provide_toolbox_for_host()
             endif()
         elseif (TARGET aui.toolbox)
             set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox")
@@ -951,6 +990,7 @@ macro(aui_app)
         file(GENERATE
                 OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate.cmake
                 INPUT ${AUI_ROOT}/cmake/appimage-generate.cmake.in)
+
         file(GENERATE
                 OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate-vars.cmake
                 CONTENT "set(EXECUTABLE $<TARGET_FILE:${APP_TARGET}>)\nset(DESKTOP_FILE ${APP_LINUX_DESKTOP})\nset(ICON_FILE ${APP_ICON})")

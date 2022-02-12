@@ -28,15 +28,17 @@ if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
     file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
 endif()
 
-
-if (ANDROID OR IOS)
-    set(_build_shared OFF)
-    message(STATUS "Forcing static build because you are building for mobile platform.")
+if (DEFINED BUILD_SHARED_LIBS)
+    set(_build_shared ${BUILD_SHARED_LIBS})
 else()
-    set(_build_shared ON)
+    if (ANDROID OR IOS)
+        set(_build_shared OFF)
+        message(STATUS "Forcing static build because you are building for mobile platform.")
+    else()
+        set(_build_shared ON)
+    endif()
 endif()
-set(BUILD_SHARED_LIBS ${_build_shared} CACHE BOOL "Build using shared libraries")
-
+set(BUILD_SHARED_LIBS ${_build_shared})
 
 if (MSVC)
     if (NOT CMAKE_MSVC_RUNTIME_LIBRARY)
@@ -143,6 +145,11 @@ function(auib_import AUI_MODULE_NAME URL)
     if (${AUI_MODULE_NAME} IN_LIST AUI_BOOT_IMPORTED_MODULES)
         # the module is already imported; skipping
         return()
+    endif()
+
+    if(EXISTS ${URL})
+        # url is a local file
+        get_filename_component(URL ${URL} ABSOLUTE)
     endif()
 
     set(_locked FALSE)
@@ -542,6 +549,7 @@ function(auib_import AUI_MODULE_NAME URL)
             endif()
         endforeach()
     endif()
+
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME})
 
