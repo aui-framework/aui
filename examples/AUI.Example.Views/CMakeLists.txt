@@ -3,16 +3,23 @@ cmake_minimum_required(VERSION 3.15)
 if (NOT TARGET aui::views)
 
     # Use AUI.Boot
-    file(
-            DOWNLOAD
-            https://raw.githubusercontent.com/aui-framework/aui/develop/aui.boot.cmake
-            ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
-    include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
-    # import AUI
-    auib_import(AUI https://github.com/aui-framework/aui
-            VERSION develop
-            COMPONENTS core views)
+    # in your projects you should use this code in order to pull aui:
+    # file(
+    #         DOWNLOAD
+    #         https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
+    #         ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+    # include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+    #
+    # auib_import(AUI https://github.com/aui-framework/aui
+    #             COMPONENTS core views)
+    #
+    # using local repository instead in order to make checks easier in CI.
+    include(../../aui.boot.cmake)
+
+    auib_import(AUI ../../
+                COMPONENTS core views)
+
 
 endif()
 

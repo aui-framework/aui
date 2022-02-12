@@ -43,7 +43,6 @@ set(AUI_INSTALL_RUNTIME_DEPENDENCIES ${AUI_BOOT} CACHE BOOL "Install runtime dep
 
 cmake_policy(SET CMP0072 NEW)
 
-
 if (ANDROID OR IOS)
     set(_build_shared OFF)
     message(STATUS "Forcing static build because you are building for mobile platform.")
@@ -51,7 +50,6 @@ else()
     set(_build_shared ON)
 endif()
 set(BUILD_SHARED_LIBS ${_build_shared} CACHE BOOL "Build using shared libraries")
-
 
 # platform definitions
 # platform exclusion (AUI/Platform/<platform name>/...)
@@ -551,6 +549,45 @@ function(aui_static_link AUI_MODULE_NAME LIBRARY_NAME)
 endfunction(aui_static_link)
 
 
+macro(_aui_try_find_toolbox)
+    find_program(AUI_TOOLBOX_EXE aui.toolbox
+            HINTS ${AUI_ROOT}/bin)
+    if (NOT AUI_TOOLBOX_EXE)
+        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/*/aui.toolbox)
+        if (AUI_TOOLBOX_EXE)
+            list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
+        else()
+            # compile aui.toolbox for the host system
+            message(STATUS "aui.toolbox for the host system is not found - compiling")
+        endif()
+    endif()
+endmacro()
+
+macro(_aui_provide_toolbox_for_host)
+    set(_workdir ${CMAKE_CURRENT_BINARY_DIR}/aui_toolbox_provider)
+    file(MAKE_DIRECTORY ${_workdir})
+    file(MAKE_DIRECTORY ${_workdir}/b)
+    file(WRITE ${_workdir}/CMakeLists.txt [[
+cmake_minimum_required(VERSION 3.16)
+
+file(
+        DOWNLOAD
+        https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+
+auib_import(AUI https://github.com/aui-framework/aui
+            COMPONENTS core toolbox image)
+]])
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -DAUI_CACHE_DIR=${AUI_CACHE_DIR} WORKING_DIRECTORY ${_workdir}/b RESULT_VARIABLE _r)
+    if (NOT _r STREQUAL 0)
+        message(FATAL_ERROR "CMake subprocess failed")
+    endif()
+    _aui_try_find_toolbox()
+    set(AUI_TOOLBOX_EXE ${AUI_TOOLBOX_EXE} CACHE FILEPATH "aui.toolbox location")
+endmacro()
+
+
 function(aui_compile_assets AUI_MODULE_NAME)
     cmake_parse_arguments(ASSETS "" "" "EXCLUDE" ${ARGN})
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
@@ -577,16 +614,9 @@ function(aui_compile_assets AUI_MODULE_NAME)
     if (NOT AUI_TOOLBOX_EXE)
         if (CMAKE_CROSSCOMPILING)
             # the worst case because we (possibly) have to compile aui.toolbox for the host system
-            # FIXME assume that aui.toolbox is already built for our system
-            find_program(AUI_TOOLBOX_EXE aui.toolbox
-                    HINTS ${AUI_ROOT}/bin)
+            _aui_try_find_toolbox()
             if (NOT AUI_TOOLBOX_EXE)
-                file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/*/aui.toolbox)
-                if (AUI_TOOLBOX_EXE)
-                    list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
-                else()
-                    message(FATAL_ERROR "When crosscompiling, aui.toolbox for your host system is required. Please set AUI_TOOLBOX_EXE.")
-                endif()
+                _aui_provide_toolbox_for_host()
             endif()
         elseif (TARGET aui.toolbox)
             set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox")
@@ -704,7 +734,7 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                         if (${_link_target_file} IN_LIST _already_linked_libs)
                             continue()
                         endif()
-                        if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+                        if (APPLE)
                             set(_link_target_file -Wl,-force_load ${_link_target_file})
                         else()
                             set(_link_target_file -Wl,--whole-archive,--allow-multiple-definition ${_link_target_file} -Wl,--no-whole-archive)
@@ -831,7 +861,15 @@ endfunction(aui_module)
 macro(aui_app)
     # for pulling some resources (cmake scripts, ios storyboards, etc...)
     if (NOT AUI_ROOT)
-        set(AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+        foreach(_probe ${CMAKE_CURRENT_SOURCE_DIR} ${AUI_SOURCE_DIR})
+            if (EXISTS ${_probe}/aui.build.cmake)
+                set(AUI_ROOT ${_probe})
+                break()
+            endif()
+        endforeach()
+        if (NOT AUI_ROOT)
+            message(FATAL_ERROR "Could not determine aui.build.cmake")
+        endif()
     endif()
 
     set(options NO_INCLUDE_CPACK)
@@ -945,13 +983,14 @@ macro(aui_app)
                 set(_desktop "${_desktop}\nIcon=app.icon")
             endif()
             file(GENERATE
-                 OUTPUT "${PROJECT_BINARY_DIR}/app.desktop"
-                 CONTENT ${_desktop})
+                    OUTPUT "${PROJECT_BINARY_DIR}/app.desktop"
+                    CONTENT ${_desktop})
             set(APP_LINUX_DESKTOP ${PROJECT_BINARY_DIR}/app.desktop)
         endif()
         file(GENERATE
                 OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate.cmake
-                INPUT ${AUI_SOURCE_DIR}/cmake/appimage-generate.cmake.in)
+                INPUT ${AUI_ROOT}/cmake/appimage-generate.cmake.in)
+
         file(GENERATE
                 OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate-vars.cmake
                 CONTENT "set(EXECUTABLE $<TARGET_FILE:${APP_TARGET}>)\nset(DESKTOP_FILE ${APP_LINUX_DESKTOP})\nset(ICON_FILE ${APP_ICON})")
@@ -981,28 +1020,28 @@ macro(aui_app)
         set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
         set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
         if (AUI_PLATFORM_MACOS)
-            configure_file(${AUI_SOURCE_DIR}/macos/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+            configure_file(${AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
         endif()
         set_target_properties(${APP_TARGET} PROPERTIES
-                              MACOSX_BUNDLE TRUE
-                              BUNDLE TRUE
-                              OUTPUT_NAME ${APP_NAME}
-                              MACOSX_BUNDLE_INFO_PLIST           ${CPACK_BUNDLE_PLIST}
-                              MACOSX_BUNDLE_EXECUTABLE_NAME      ${MACOSX_BUNDLE_EXECUTABLE_NAME}
-                              MACOSX_BUNDLE_INFO_STRING          ${MACOSX_BUNDLE_INFO_STRING}
-                              MACOSX_BUNDLE_GUI_IDENTIFIER       ${MACOSX_BUNDLE_GUI_IDENTIFIER}
-                              MACOSX_BUNDLE_BUNDLE_NAME          ${MACOSX_BUNDLE_BUNDLE_NAME}
-                              MACOSX_BUNDLE_ICON_FILE            ${MACOSX_BUNDLE_ICON_FILE}
-                              MACOSX_BUNDLE_LONG_VERSION_STRING  ${MACOSX_BUNDLE_LONG_VERSION_STRING}
-                              MACOSX_BUNDLE_SHORT_VERSION_STRING ${MACOSX_BUNDLE_SHORT_VERSION_STRING}
-                              MACOSX_BUNDLE_BUNDLE_VERSION       ${MACOSX_BUNDLE_BUNDLE_VERSION}
-                              MACOSX_BUNDLE_COPYRIGHT            ${MACOSX_BUNDLE_COPYRIGHT}
-                              MACOSX_DEPLOYMENT_TARGET           ${MACOSX_DEPLOYMENT_TARGET}  )
+                MACOSX_BUNDLE TRUE
+                BUNDLE TRUE
+                OUTPUT_NAME ${APP_NAME}
+                MACOSX_BUNDLE_INFO_PLIST           ${CPACK_BUNDLE_PLIST}
+                MACOSX_BUNDLE_EXECUTABLE_NAME      ${MACOSX_BUNDLE_EXECUTABLE_NAME}
+                MACOSX_BUNDLE_INFO_STRING          ${MACOSX_BUNDLE_INFO_STRING}
+                MACOSX_BUNDLE_GUI_IDENTIFIER       ${MACOSX_BUNDLE_GUI_IDENTIFIER}
+                MACOSX_BUNDLE_BUNDLE_NAME          ${MACOSX_BUNDLE_BUNDLE_NAME}
+                MACOSX_BUNDLE_ICON_FILE            ${MACOSX_BUNDLE_ICON_FILE}
+                MACOSX_BUNDLE_LONG_VERSION_STRING  ${MACOSX_BUNDLE_LONG_VERSION_STRING}
+                MACOSX_BUNDLE_SHORT_VERSION_STRING ${MACOSX_BUNDLE_SHORT_VERSION_STRING}
+                MACOSX_BUNDLE_BUNDLE_VERSION       ${MACOSX_BUNDLE_BUNDLE_VERSION}
+                MACOSX_BUNDLE_COPYRIGHT            ${MACOSX_BUNDLE_COPYRIGHT}
+                MACOSX_DEPLOYMENT_TARGET           ${MACOSX_DEPLOYMENT_TARGET}  )
     endif()
 
     # MACOS ============================================================================================================
     if (AUI_PLATFORM_MACOS)
-        configure_file(${AUI_SOURCE_DIR}/macos/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+        configure_file(${AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
 
         # generate icns
         set(_icons_dir ${PROJECT_BINARY_DIR}/app.iconset)

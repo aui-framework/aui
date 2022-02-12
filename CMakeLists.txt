@@ -30,11 +30,14 @@ if(AUI_BOOT_COMPONENTS)
     # adding required dependencies to the components
     list(APPEND AUI_BOOT_COMPONENTS core)
     if (views IN_LIST AUI_BOOT_COMPONENTS)
-        list(APPEND AUI_BOOT_COMPONENTS xml)
+        list(APPEND AUI_BOOT_COMPONENTS xml image)
         if (NOT CMAKE_CROSSCOMPILING)
-            list(APPEND AUI_BOOT_COMPONENTS crypt toolbox image)
+            list(APPEND AUI_BOOT_COMPONENTS crypt toolbox)
         endif()
     elseif (toolbox IN_LIST AUI_BOOT_COMPONENTS AND NOT CMAKE_CROSSCOMPILING)
+        list(APPEND AUI_BOOT_COMPONENTS crypt)
+    endif()
+    if (curl IN_LIST AUI_BOOT_COMPONENTS)
         list(APPEND AUI_BOOT_COMPONENTS crypt)
     endif()
 endif()
@@ -163,7 +166,7 @@ endforeach()
 
 # test aui.boot on ci/cd
 if (DEFINED ENV{GITHUB_SHA})
-    add_subdirectory(test/aui.boot)
+    add_subdirectory(test/)
 endif()
 
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
@@ -173,7 +176,9 @@ install(
         ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
         DESTINATION ".")
 
+file(GLOB_RECURSE _cmake_dir cmake/*)
+
 install(
         FILES
-        cmake/aui.build.cmake
+        ${_cmake_dir}
         DESTINATION "cmake/")

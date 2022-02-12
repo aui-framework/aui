@@ -96,6 +96,31 @@ public:
      */
     void reserve(size_t size);
 
+    /**
+     * \brief Increases internal buffer.
+     */
+    void increaseInternalBuffer(size_t size) {
+        reserve(mReserved + size);
+    }
+
+    /**
+     * \brief If <code>getReserved() - getSize()</code> is less than <code>size</code> increases internal buffer size
+     *        enough to store <code>size</code> bytes.
+     */
+    void ensureReserved(size_t size) {
+        auto availableToWrite = getAvailableToWrite();
+        if (availableToWrite < size) {
+            increaseInternalBuffer((glm::max)(getReserved() * 2, size_t(size - availableToWrite)));
+        }
+    }
+
+    /**
+     * @return delta between internal buffer size and payload size.
+     */
+    size_t getAvailableToWrite() const {
+        return getReserved() - getSize();
+    }
+
 
     /**
      * \return Internal buffer.
@@ -131,6 +156,21 @@ public:
     void setSize(size_t s) {
         assert(("size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?" && s <= mReserved));
         mSize = s;
+    }
+    /**
+     * Forces new size of the buffer.
+     * <dl>
+     *  <dt><b>Sneaky assert:</b></dt>
+     *  <dd>
+     *      Assert fails when new size is greater that reserved buffer size. Use <code>AByteBuffer::resize</code> to
+     *      avoid this.
+     *  </dd>
+     * </dl>
+     * @param s new size of the payload
+     */
+    void increaseSize(size_t s) {
+        mSize += s;
+        assert(("size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?" && mSize <= mReserved));
     }
 
     /**
