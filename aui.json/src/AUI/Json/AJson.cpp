@@ -105,7 +105,7 @@ static _<IJsonElement> read(ATokenizer& t) {
             }
 
             case '\"':
-                result = _new<JsonValue>(t.readStringUntilUnescaped('\"').processEscapes());
+                result = _new<JsonValue>(t.readStringUntilUnescaped('\"'));
                 return result;
         }
 
