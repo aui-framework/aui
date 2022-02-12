@@ -147,8 +147,10 @@ function(auib_import AUI_MODULE_NAME URL)
         return()
     endif()
 
+    unset(_local_repo)
     if(EXISTS ${URL})
         # url is a local file
+        set(_local_repo TRUE)
         get_filename_component(URL ${URL} ABSOLUTE)
     endif()
 
@@ -210,7 +212,11 @@ function(auib_import AUI_MODULE_NAME URL)
     else()
         set(DEP_ADD_SUBDIRECTORY FALSE)
     endif()
-    string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
+    if (_local_repo)
+        set(URL_PATH ${AUI_MODULE_NAME})
+    else()
+        string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
+    endif()
 
     if (DEP_ADD_SUBDIRECTORY)
         # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project's name
