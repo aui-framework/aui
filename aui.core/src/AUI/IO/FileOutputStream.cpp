@@ -23,7 +23,7 @@
 
 #include "AUI/Common/AString.h"
 
-AFileOutputStream::AFileOutputStream(const AString& path, bool append)
+AFileOutputStream::AFileOutputStream(const AString& path, bool append): mPath(path)
 {
 #if AUI_PLATFORM_WIN
 	// КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
@@ -45,6 +45,9 @@ AFileOutputStream::~AFileOutputStream()
 void AFileOutputStream::write(const char* src, size_t size)
 {
 	auto v = fwrite(src, 1, size, mFile);
+	if (v == 0) {
+		throw WriteException(mPath);
+	}
     assert(v == size);
 }
 

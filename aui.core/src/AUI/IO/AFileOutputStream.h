@@ -30,6 +30,7 @@ class API_AUI_CORE AFileOutputStream : public IOutputStream
 {
 private:
     FILE* mFile;
+    AString mPath;
 
 public:
     AFileOutputStream(const AString& path, bool append = false);
@@ -37,4 +38,23 @@ public:
 
     void write(const char* src, size_t size) override;
     void close();
+
+    /**
+     * Probably thrown when target storage went out of space
+     */
+    class WriteException: public AIOException {
+    private:
+        AString mPath;
+
+    public:
+        WriteException(const AString &mPath) : mPath(mPath) {}
+
+        const AString& getPath() const {
+            return mPath;
+        }
+
+        AString getMessage() const noexcept override {
+            return "failed to write to file: " + mPath;
+        }
+    };
 };
