@@ -119,7 +119,9 @@ public:
             // read next blob
             mBufferEnd = mBuffer + mInput->read(mBuffer, sizeof(mBuffer));
             mBufferRead = mBuffer;
-            assert(mBufferEnd != mBufferRead);
+            if (mBufferEnd == mBufferRead) {
+                throw AEOFException();
+            }
         }
 
         mLastByte = *(mBufferRead++);
