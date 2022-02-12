@@ -64,7 +64,7 @@ static _<IJsonElement> read(ATokenizer& t) {
                 while (t.readChar() != '}') {
                     if (!isspace(t.getLastCharacter())) {
                         if (t.getLastCharacter() == '\"') {
-                            AString key = t.readStringUntilUnescaped('\"').processEscapes();
+                            AString key = t.readStringUntilUnescaped('\"');
 
                             for (char c = 0;;) {
                                 c = t.readChar();
@@ -105,7 +105,7 @@ static _<IJsonElement> read(ATokenizer& t) {
             }
 
             case '\"':
-                result = _new<JsonValue>(t.readStringUntilUnescaped('\"').processEscapes());
+                result = _new<JsonValue>(t.readStringUntilUnescaped('\"'));
                 return result;
         }
 

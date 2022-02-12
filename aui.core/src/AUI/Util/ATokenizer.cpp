@@ -82,25 +82,6 @@ AString ATokenizer::readString(const ASet<char>& applicableChars)
 	return res;
 }
 
-char ATokenizer::readChar()
-{
-	if (mReverse) {
-		mReverse = false;
-		return mLastByte;
-	}
-
-	*mInput >> mLastByte;
-
-	if (mLastByte == '\n')
-	{
-		mRow += 1;
-		mColumn = 1;
-	} else
-	{
-		mColumn += 1;
-	}
-	return mLastByte;
-}
 
 void ATokenizer::reverseByte()
 {
@@ -284,8 +265,13 @@ void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
 		{
 			if (current == '\\')
 			{
-				out += '\\';
-				out += readChar();
+                char tmp = readChar();
+                switch (tmp) {
+                    case 'r': out += '\r'; break;
+                    case 'n': out += '\n'; break;
+                    case 't': out += '\t'; break;
+                    default: out += tmp;
+                }
 			}
 			else
 			{
