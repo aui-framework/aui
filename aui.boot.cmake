@@ -142,13 +142,19 @@ function(auib_import AUI_MODULE_NAME URL)
 
     get_property(AUI_BOOT_IMPORTED_MODULES GLOBAL PROPERTY AUI_BOOT_IMPORTED_MODULES)
 
-    if (${AUI_MODULE_NAME} IN_LIST AUI_BOOT_IMPORTED_MODULES)
+    # these constants are needed to ignore case on *nix platforms
+    string(TOLOWER "${AUI_MODULE_NAME}" AUI_MODULE_NAME_LOWER)
+    string(TOUPPER "${AUI_MODULE_NAME}" AUI_MODULE_NAME_UPPER)
+
+    if (${AUI_MODULE_NAME_LOWER} IN_LIST AUI_BOOT_IMPORTED_MODULES)
         # the module is already imported; skipping
         return()
     endif()
 
+    unset(_local_repo)
     if(EXISTS ${URL})
         # url is a local file
+        set(_local_repo TRUE)
         get_filename_component(URL ${URL} ABSOLUTE)
     endif()
 
@@ -196,7 +202,7 @@ function(auib_import AUI_MODULE_NAME URL)
     else()
         set(SHARED_OR_STATIC static)
     endif()
-    set(BUILD_SPECIFIER "${AUI_MODULE_NAME}/${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}")
+    set(BUILD_SPECIFIER "${AUI_MODULE_NAME_LOWER}/${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}")
     set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
 
     # append our location to module path
@@ -204,17 +210,20 @@ function(auib_import AUI_MODULE_NAME URL)
     #    list(APPEND CMAKE_PREFIX_PATH ${DEP_INSTALL_PREFIX})
     #endif()
 
-    string(TOUPPER "${AUI_MODULE_NAME}" AUI_MODULE_NAME_UPPER) # ignore case
     if (AUI_BOOT_${AUI_MODULE_NAME_UPPER}_ADD_SUBDIRECTORY OR AUIB_IMPORT_ADD_SUBDIRECTORY)
         set(DEP_ADD_SUBDIRECTORY TRUE)
     else()
         set(DEP_ADD_SUBDIRECTORY FALSE)
     endif()
-    string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
+    if (_local_repo)
+        set(URL_PATH ${AUI_MODULE_NAME_LOWER})
+    else()
+        string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
+    endif()
 
     if (DEP_ADD_SUBDIRECTORY)
         # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project's name
-        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME}")
+        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME_LOWER}")
     else()
         set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/src")
     endif()
@@ -551,7 +560,7 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
 
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
-    set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME})
+    set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
 
     message(STATUS "Imported: ${AUI_MODULE_NAME}")
 endfunction()
