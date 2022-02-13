@@ -7,7 +7,9 @@
 
 const _<AViewContainer>& ALayoutInflater::inflate(const _<AViewContainer>& root, const _<AView>& view) {
     root->setLayout(_new<AStackedLayout>());
-    view->setExpanding();
-    root->addView(view);
+    if (view) {
+        view->setExpanding();
+        root->addView(view);
+    }
     return root;
 }
