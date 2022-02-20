@@ -25,7 +25,10 @@
 
 #pragma once
 
+
+#include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Reflect/AReflect.h>
+#include <AUI/Common/AString.h>
 
 /**
  * Object that can be converted to string
