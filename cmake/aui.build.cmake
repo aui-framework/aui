@@ -1043,29 +1043,31 @@ macro(aui_app)
     if (AUI_PLATFORM_MACOS)
         configure_file(${AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
 
-        # generate icns
-        set(_icons_dir ${PROJECT_BINARY_DIR}/app.iconset)
-        set(_resolutions 16 32 64 128 256 512 1024)
+        if (APP_ICON)
+            # generate icns
+            set(_icons_dir ${PROJECT_BINARY_DIR}/app.iconset)
+            set(_resolutions 16 32 64 128 256 512 1024)
 
-        unset(_outputs)
-        foreach(_res ${_resolutions})
-            list(APPEND _outputs "${_icons_dir}/icon_${_res}x${_res}.png")
-        endforeach()
-        list(JOIN _resolutions , _resolutions_comma)
-        if (TARGET aui.toolbox)
-            add_dependencies(${APP_TARGET} aui.toolbox)
+            unset(_outputs)
+            foreach(_res ${_resolutions})
+                list(APPEND _outputs "${_icons_dir}/icon_${_res}x${_res}.png")
+            endforeach()
+            list(JOIN _resolutions , _resolutions_comma)
+            if (TARGET aui.toolbox)
+                add_dependencies(${APP_TARGET} aui.toolbox)
+            endif()
+            get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
+            set(_icon_icns ${PROJECT_BINARY_DIR}/app.icns)
+            add_custom_command(
+                    OUTPUT ${_icon_icns}
+                    COMMAND ${AUI_TOOLBOX_EXE}
+                    ARGS svg2png ${_icon_absolute} -r=${_resolutions_comma} -o=${_icons_dir} -p=icon
+                    COMMAND iconutil # iconset to icns
+                    ARGS -c icns ${_icons_dir}
+            )
+            set_source_files_properties(${_icon_icns} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
+            target_sources(${APP_TARGET} PRIVATE ${_icon_icns})
         endif()
-        get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
-        set(_icon_icns ${PROJECT_BINARY_DIR}/app.icns)
-        add_custom_command(
-                OUTPUT ${_icon_icns}
-                COMMAND ${AUI_TOOLBOX_EXE}
-                ARGS svg2png ${_icon_absolute} -r=${_resolutions_comma} -o=${_icons_dir} -p=icon
-                COMMAND iconutil # iconset to icns
-                ARGS -c icns ${_icons_dir}
-        )
-        set_source_files_properties(${_icon_icns} PROPERTIES MACOSX_PACKAGE_LOCATION "Resources")
-        target_sources(${APP_TARGET} PRIVATE ${_icon_icns})
     endif()
 
     # IOS ==============================================================================================================
@@ -1095,8 +1097,8 @@ macro(aui_app)
                 ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
                 )
 
-        configure_file(${AUI_ROOT}/ios/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
-        configure_file(${AUI_ROOT}/ios/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
+        configure_file(${AUI_ROOT}/cmake/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
+        configure_file(${AUI_ROOT}/cmake/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
 
         target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
         set_target_properties(${APP_TARGET} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
@@ -1134,7 +1136,7 @@ macro(aui_app)
                 XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ${APP_APPLE_SIGN_IDENTITY}
                 XCODE_ATTRIBUTE_DEVELOPMENT_TEAM ${APP_APPLE_TEAM_ID}
                 XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY ${APP_IOS_DEVICE}
-                MACOSX_BUNDLE_INFO_PLIST ${AUI_ROOT}/ios/plist.in
+                MACOSX_BUNDLE_INFO_PLIST ${AUI_ROOT}/cmake/plist.in
                 XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
                 XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES NO
                 XCODE_ATTRIBUTE_INSTALL_PATH "$(LOCAL_APPS_DIR)"
