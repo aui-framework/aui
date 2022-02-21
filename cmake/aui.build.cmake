@@ -735,7 +735,7 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                             continue()
                         endif()
                         if (APPLE)
-                            set(_link_target_file -Wl,-force_load ${_link_target_file})
+                            target_link_options(${AUI_MODULE_NAME} ${_public_visibility} "-Wl,-force_load,$<TARGET_FILE:${_link_target_file}>")
                         else()
                             set(_link_target_file -Wl,--whole-archive,--allow-multiple-definition ${_link_target_file} -Wl,--no-whole-archive)
                         endif()
