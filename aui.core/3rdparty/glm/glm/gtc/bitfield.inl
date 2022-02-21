@@ -1,6 +1,6 @@
 /// @ref gtc_bitfield
 
-#include "../simd/integer.h"
+#include "../gsimd/integer.h"
 
 namespace glm{
 namespace detail

@@ -1,5 +1,5 @@
 /// @ref simd
-/// @file glm/simd/integer.h
+/// @file glm/gsimd/integer.h
 
 #pragma once
 
