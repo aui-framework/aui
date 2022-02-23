@@ -53,7 +53,7 @@ set(BUILD_SHARED_LIBS ${_build_shared} CACHE BOOL "Build using shared libraries"
 
 # platform definitions
 # platform exclusion (AUI/Platform/<platform name>/...)
-set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios)
+set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios apple)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(AUI_DEBUG TRUE)
 else()
@@ -75,6 +75,7 @@ endif()
 
 if (UNIX AND APPLE)
     set(AUI_PLATFORM_APPLE 1 CACHE BOOL "Platform")
+    list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS apple)
 else()
     set(AUI_PLATFORM_APPLE 0 CACHE BOOL "Platform")
 endif()
