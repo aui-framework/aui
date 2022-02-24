@@ -110,7 +110,7 @@ void AWindow::redraw() {
         // measure frame time
         auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         unsigned millis = unsigned((after - before).count());
-        if (millis > 16) {
+        if (millis > 17) {
             static auto lastNotification = 0ms;
             if (after - lastNotification > 10s) {
                 lastNotification = after;

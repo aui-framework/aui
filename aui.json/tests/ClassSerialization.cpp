@@ -33,9 +33,9 @@
 struct Data {
     AString name;
     int year;
-
-    AJSON_FIELDS(name, year)
 };
+
+AJSON_FIELDS()
 
 TEST(JsonSerialization, ClassSerialization)
 {

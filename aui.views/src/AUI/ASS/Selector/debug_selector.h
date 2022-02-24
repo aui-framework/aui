@@ -26,7 +26,6 @@
 #pragma once
 
 
-#include "attribute.h"
 #include <AUI/Util/kAUI.h>
 #include <AUI/View/AView.h>
 #include <AUI/ASS/AAssHelper.h>
@@ -53,7 +52,7 @@ namespace ass {
         };
     }
 
-    struct debug_selector: detail::debug_selector, AttributeHelper<debug_selector> {
+    struct debug_selector: detail::debug_selector {
     public:
         debug_selector() = default;
 

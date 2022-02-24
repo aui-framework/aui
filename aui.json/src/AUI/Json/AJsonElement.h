@@ -22,7 +22,6 @@
 #pragma once
 
 #include "AUI/Common/SharedPtrTypes.h"
-#include "AUI/Common/AVariant.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/Common/AVector.h"
 #include <AUI/IO/IOutputStream.h>
@@ -35,118 +34,17 @@
 #include <AUI/Data/AModelMeta.h>
 #endif
 
-class IJsonElement;
 class AJsonElement;
-
-namespace AJson
-{
-    void API_AUI_JSON write(IOutputStream& os, const AJsonElement& json);
-}
-
-
-class API_AUI_JSON AJsonElement {
-
-    API_AUI_JSON friend void AJson::write(IOutputStream& os, const AJsonElement& json);
-
-protected:
-    void serialize(IOutputStream& param) const;
-
-    _<IJsonElement> mJson;
-public:
-	explicit AJsonElement(const _<IJsonElement>& json_element);
-	AJsonElement(std::nullptr_t);
-	AJsonElement();
-
-	AJsonElement& operator=(const AVariant& value);
-	AJsonElement& operator=(const AJsonElement& value) = default;
-
-	[[nodiscard]] bool isVariant() const;
-	[[nodiscard]] bool isObject() const;
-	[[nodiscard]] bool isArray() const;
-	[[nodiscard]] bool isNull() const;
-	[[nodiscard]] bool isString() const;
-	[[nodiscard]] bool isBool() const;
-	[[nodiscard]] bool isInt() const;
-
-	[[nodiscard]] bool contains(const AString& key) const {
-	    return asObject().contains(key);
-	}
-
-	[[nodiscard]] const AVariant& asVariant() const;
-	[[nodiscard]] int asInt() const;
-	[[nodiscard]] int asBool() const;
-	[[nodiscard]] AString asString() const;
-	[[nodiscard]] AString asStringOrDefault(const AString& d = "") const {
-	    try {
-	        return asString();
-	    } catch (...) {
-	        return d;
-        }
-	}
-	[[nodiscard]] const AMap<AString, AJsonElement>& asObject() const;
-	[[nodiscard]] const AVector<AJsonElement>& asArray() const;
-
-	[[nodiscard]] const AJsonElement& operator[](size_t index) const;
-	[[nodiscard]] AJsonElement operator[](const AString& key) const;
-
-#ifdef API_AUI_DATA
-    template<typename Model>
-    _<IListModel<Model>> asModelList(const AStringVector& columns) const {
-        auto list = _new<AListModel<Model>>();
-        auto fields = AModelMeta<Model>::getFields();
-        for (AJsonElement i : asArray()) {
-            auto jsonRow = i.asArray();
-            Model modelRow;
-            assert(columns.size() == jsonRow.size());
-            for (size_t i = 0; i < columns.size(); ++i) {
-                fields[columns[i]]->set(modelRow, jsonRow[i].asVariant());
-            }
-            list << modelRow;
-        }
-        return list;
-    }
-#endif
+class AJsonObject: public AMap<AString, AJsonElement> {
 
 };
 
-class API_AUI_JSON AJsonValue: public AJsonElement
-{
-public:
-	AJsonValue(const AVariant& value);
-};
-class API_AUI_JSON AJsonObject: public AJsonElement
-{
-public:
-	AJsonObject(const AMap<AString, AJsonElement>& value);
-	AJsonObject();
-    [[nodiscard]] AJsonElement& operator[](const AString& key);
-    [[nodiscard]] AJsonElement operator[](const AString& key) const {
-        return AJsonElement::operator[](key);
-    }
+class AJsonArray: public AVector<AJsonElement> {
 
-    auto contains(const AString& key) const {
-        return asObject().contains(key);
-    }
-
-    using Iterator = AMap<AString, AJsonElement>::iterator;
-    using ConstIterator = AMap<AString, AJsonElement>::const_iterator;
-    using Pair = AMap<AString, AJsonElement>::value_type;
 };
 
-template<>
-inline AJsonElement AVariant::to<AJsonElement>() const {
-    return AJsonValue(*this);
-}
-
-class API_AUI_JSON AJsonArray: public AJsonElement
-{
+class AJsonElement: public std::variant<int, float, bool, std::nullptr_t, AString, AJsonArray, AJsonObject> {
 public:
-	AJsonArray(const AVector<AJsonElement>& value);
-	AJsonArray();
-
-	bool empty() const;
-	void push_back(const AJsonElement& value);
-	AJsonArray& operator<<(const AJsonElement& value);
-
-    static AJsonArray fromVariantArray(const AVector<AVariant>& value);
 };
+
+#include <AUI/Json/AJsonSerialization.h>

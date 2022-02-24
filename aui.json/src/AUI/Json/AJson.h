@@ -27,51 +27,48 @@
 #include "AJsonElement.h"
 #include <AUI/Traits/arrays.h>
 #include <AUI/Common/AUuid.h>
+#include <AUI/Json/AJson.h>
+#include <AUI/Json/AJsonException.h>
 
-
-namespace aui::json::conv {
+namespace aui::json {
+    /**
+     * <p>Json conversion trait.</p>
+     * <p>
+     *     In order to convert use <a href="aui::to_json">aui::to_json</a>/<a href="aui::from_json">aui::from_json</a>
+     *     functions instead.
+     * </p>
+     * <p><code>static AJsonElement to_json(const T&)</code> converts the type to <a href="AJsonElement">AJsonElement</a></p>
+     * <p><code>static T from_json(const AJsonElement&)</code> converts <a href="AJsonElement">AJsonElement</a> to the type</p>
+     * <p>
+     * <code>
+     * template&lt;&gt; <br />
+     * struct conv&lt;YOURTYPE&gt; { <br />
+     * &emsp;static AJsonElement to_json(const YOURTYPE& t) {} <br />
+     * &emsp;static YOURTYPE from_json(const AJsonElement& json) {} <br />
+     * };
+     * </code>
+     * </p>
+     * @tparam T the type converted.
+     */
     template<typename T>
-    struct conv {
-    private:
-        static constexpr bool not_uses_variant() {
-            return std::is_class_v<T> && !std::is_base_of_v<AString, T>;
-        }
-    public:
-        static T from_json(const AJsonElement& v) {
-            if constexpr (not_uses_variant()) {
-                // for AJSON_FIELDS
-                T t;
-                t.readJson(v);
-                return t;
-            } else {
-                return v.asVariant().to<T>();
-            }
-        }
-
-        static AJsonElement to_json(const T& t) {
-            if constexpr (not_uses_variant()) {
-                // for AJSON_FIELDS
-                return t.toJson();
-            } else {
-                return AJsonValue(t);
-            }
-        }
-    };
+    struct conv;
 }
-
 
 namespace aui {
     template<typename T>
     inline AJsonElement to_json(const T& t) {
-        return json::conv::conv<T>::to_json(t);
+        static_assert(aui::is_complete<json::conv<T>>, "this type does not implement aui::json::conv<T> trait");
+        return json::conv<T>::to_json(t);
     }
     template<typename T>
     inline T from_json(const AJsonElement& v) {
-        return json::conv::conv<T>::from_json(v);
+        static_assert(aui::is_complete<json::conv<T>>, "this type does not implement aui::json::conv<T> trait");
+        return json::conv<T>::from_json(v);
     }
 }
 
-namespace aui::json::conv {
+/*
+namespace aui::json {
 
     template<>
     struct conv<AUuid> {
@@ -80,7 +77,7 @@ namespace aui::json::conv {
         }
 
         static AJsonElement to_json(const AUuid& t) {
-            return AJsonValue(t.toString());
+            return t.toString();
         }
     };
     template<>
@@ -128,53 +125,6 @@ namespace aui::json::conv {
     };
 }
 
-
-namespace aui::json::impl {
-    struct helper {
-        template<typename T>
-        static void toJson(AJsonObject& j, const char*& name, T& value) {
-            const char* end;
-            for (end = name; *end && *end != ','; ++end);
-            j[AString(name, end)] = conv::conv<std::decay_t<T>>::to_json(value);
-            if (*++end == ' ') { ++end; }
-            name = end;
-        }
-        template<typename T, typename... Args>
-        static void toJson(AJsonObject& j, const char* name, T& value, Args&... args) {
-            toJson(j, name, value);
-            toJson(j, name, std::forward<Args>(args)...);
-        }
-
-        template<typename T>
-        static void fromJson(const AJsonElement& j, const char*& name, T& value) {
-            const char* end;
-            for (end = name; *end && *end != ','; ++end);
-            try {
-                value = conv::conv<std::decay_t<T>>::from_json(j[AString(name, end)]);
-            } catch (...) {}
-            if (*++end == ' ') { ++end; }
-            name = end;
-        }
-        template<typename T, typename... Args>
-        static void fromJson(const AJsonElement& j, const char* name, T& value, Args&... args) {
-            fromJson(j, name, value);
-            fromJson(j, name, args...);
-        }
-    };
-}
-
-#define AJSON_FIELDS(...)                                                           \
-    AJsonObject toJson() const {                                                    \
-        AJsonObject j;                                                              \
-        const char* fieldNames = { #__VA_ARGS__ };                                  \
-        aui::json::impl::helper::toJson(j, fieldNames, __VA_ARGS__);                \
-        return j;                                                                   \
-    };                                                                              \
-    void readJson(const AJsonElement& json) {                                       \
-        const char* fieldNames = { #__VA_ARGS__ };                                  \
-        aui::json::impl::helper::fromJson(json, fieldNames, __VA_ARGS__);           \
-    };                                                                              \
-
 namespace AJson
 {
     [[nodiscard]] API_AUI_JSON AJsonElement read(IInputStream& is);
@@ -196,3 +146,5 @@ namespace AJson
     [[nodiscard]] API_AUI_JSON AString toString(const AJsonElement& json);
     [[nodiscard]] API_AUI_JSON AJsonElement fromString(const AString& json);
 }
+*/
+

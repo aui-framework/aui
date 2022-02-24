@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,7 +14,7 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
@@ -22,27 +22,24 @@
 #include <AUI/IO/AByteBufferInputStream.h>
 #include "AJson.h"
 #include "AUI/Util/ATokenizer.h"
-#include "JsonArray.h"
-#include "JsonValue.h"
-#include "JsonObject.h"
-#include "JsonNull.h"
-#include "JsonException.h"
 #include "AJsonElement.h"
+#include "AJsonSerialization.h"
 
 
-static _<IJsonElement> read(ATokenizer& t) {
-    _<IJsonElement> result;
+static AJsonElement read(ATokenizer& t) {
+    std::optional<AJsonElement> result;
 
     auto unexpectedCharacter = [&]() {
-        throw JsonException(
+        throw AJsonParseException(
                 AString("unexpected character ") + t.getLastCharacter() + " at " + AString::number(t.getRow()) + ":"
                 + AString::number(t.getColumn()));
     };
     auto unexpectedToken = [&](const AString& token) {
-        throw JsonException(
+        throw AJsonParseException(
                 AString("unexpected token ") + token + " at " + AString::number(t.getRow()) + ":"
                 + AString::number(t.getColumn()));
     };
+    /*
     for (;;) {
         switch (t.readChar()) {
             case '[':
@@ -120,36 +117,19 @@ static _<IJsonElement> read(ATokenizer& t) {
             return _new<JsonNull>();
         }
         t.readChar();
-    }
+    }*/
     assert(!isspace(t.getLastCharacter()));
-    return result;
-}
-
-AJsonElement AJson::read(IInputStream& is) {
-    ATokenizer t(aui::ptr::fake(&is));
-    try {
-        return AJsonElement(read(t));
-    } catch (const AException& e) {
-        throw AException(AString::number(t.getRow()) + ":" + AString::number(t.getColumn()) + ": " + e.getMessage());
+    if (!result) {
+        throw AJsonParseException("internal parser error");
     }
-    return AJsonElement();
-}
-
-void API_AUI_JSON AJson::write(IOutputStream& os, const AJsonElement& json) {
-    json.serialize(os);
+    return *result;
 }
 
 
-AString AJson::toString(const AJsonElement& json) {
-    auto bb = _new<AByteBuffer>();
-    write(bb, json);
-    return {bb->data(), bb->data() + bb->getSize()};
-}
+void aui::serializable<AJsonElement>::write(IOutputStream& os, const AJsonElement& value) {
 
-AJsonElement AJson::fromString(const AString& json) {
-    AByteBuffer bb;
-    auto s = json.toStdString();
-    bb.write(s.c_str(), s.length());
-    bb.setCurrentPos(0);
-    return read(AByteBufferInputStream(bb));
+}
+AJsonElement aui::serializable<AJsonElement>::read(IInputStream& is) {
+    ATokenizer t(aui::ptr::fake(&is));
+    return ::read(t);
 }

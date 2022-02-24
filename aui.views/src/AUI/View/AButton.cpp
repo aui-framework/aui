@@ -32,9 +32,9 @@ AButton::AButton(const AString& text): ALabel(text)
 
 }
 
-void AButton::setDefault()
+void AButton::setDefault(bool isDefault)
 {
-	mDefault = true;
+	mDefault = isDefault;
 	connect(AWindow::current()->keyDown, this, [&](AInput::Key k) {
 	    if (!mDefault) {
 	        AObject::disconnect();
@@ -45,13 +45,6 @@ void AButton::setDefault()
         }
 	});
 
-}
-
-void AButton::getCustomCssAttributes(AMap<AString, AVariant>& map)
-{
-	AView::getCustomCssAttributes(map);
-	if (mDefault)
-		map["default"] = true;
 }
 
 bool AButton::consumesClick(const glm::ivec2& pos) {

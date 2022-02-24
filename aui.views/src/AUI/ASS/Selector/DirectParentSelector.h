@@ -35,7 +35,7 @@ namespace ass {
         R r;
 
     public:
-        DirectParentSubSelector(L&& l, R&& r) : l(l), r(r) {}
+        DirectParentSubSelector(L l, R r) : l(std::move(l)), r(std::move(r)) {}
 
         bool isPossiblyApplicable(AView* view) override {
             if (r.isPossiblyApplicable(view)) {

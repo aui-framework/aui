@@ -25,7 +25,6 @@
 
 #pragma once
 
-#include "attribute.h"
 #include <AUI/Util/kAUI.h>
 #include <AUI/View/AView.h>
 #include <AUI/ASS/AAssHelper.h>
@@ -39,7 +38,7 @@ namespace ass {
 
     namespace detail {
         template<typename T>
-        struct Type : virtual IAssSubSelector {
+        struct Type : IAssSubSelector {
             static_assert(std::is_polymorphic_v<T>, "Your type is not polymorphic! Please define at least virtual "
                                                     "destructor for using type_of (t) style selector "
                                                     "(see https://en.cppreference.com/w/cpp/language/object#Polymorphic_objects)");
@@ -52,7 +51,7 @@ namespace ass {
     }
 
     template<typename T>
-    struct type_of: detail::Type<T>, AttributeHelper<type_of<T>> {
+    struct type_of: detail::Type<T> {
     public:
 
         using hover = ass::hovered<detail::Type<T>>;
