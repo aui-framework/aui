@@ -35,10 +35,7 @@ void ABuiltinFiles::loadBuffer(AByteBuffer& data)
 		std::string file;
         AByteBuffer b;
         bis >> aui::serialize_sized(file);
-        std::uint32_t len;
-        bis >> len;
-        b.resize(len);
-        bis.read(b.data(), len);
+        bis >> aui::serialize_sized(b);
         inst().mBuffers[AString(file)] = std::move(b);
 	}
 }

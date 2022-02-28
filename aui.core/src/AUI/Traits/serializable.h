@@ -129,6 +129,7 @@ struct ASerializable<aui::serialize_sized<T>> {
     static void read(IInputStream& is, aui::serialize_sized<T>& t) {
         std::uint32_t s;
         is >> s;
+        t.value->resize(s);
         is.read(reinterpret_cast<char*>(t.value->data()), sizeof(*t.value->data()) * t.value->size());
     }
 };
