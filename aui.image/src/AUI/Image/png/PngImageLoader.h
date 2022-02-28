@@ -31,11 +31,11 @@
 
 class PngImageLoader: public IImageLoader {
 public:
-    bool matches(const AByteBuffer& buffer) override;
+    bool matches(AByteBufferView buffer) override;
 
     API_AUI_IMAGE static void save(IOutputStream& outputStream, const AImage& image);
 
-    _<AImage> getRasterImage(const AByteBuffer& buffer) override;
+    _<AImage> getRasterImage(AByteBufferView buffer) override;
 };
 
 

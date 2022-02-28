@@ -26,42 +26,47 @@
 #include <gtest/gtest.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Json/AJson.h>
-#include <AUI/Json/AJsonElement.h>
-
-
+#include <AUI/Json/AJson.h>
+#include <AUI/Traits/parameter_pack.h>
+#include <AUI/Traits/members.h>
 
 // ORM data class
 struct Data2 {
     AVector<int> values;
+    int i;
 
     bool operator==(const Data2& o) const {
-        return values == o.values;
+        return std::tie(values, i) == std::tie(o.values, o.i);
     }
-
-    AJSON_FIELDS(values)
 };
+
+template<>
+inline auto AJsonConvFields<Data2> = std::make_tuple(
+        AJsonField<&Data2::values>{"values"},
+        AJsonField<&Data2::i>{"i"}
+);
+
+// todo maybe AJsonConvFieldsDescriptor(&Data2::values, "values")(&Data2::i, "i")
+// maybe apply-like struct extension magic shit (not to use to-member pointers, use regular instead)
 
 std::ostream& operator<<(std::ostream& o, const Data2& d) {
     o << '[';
     for (auto& v : d.values) {
         o << v << ", ";
     }
-    o << ']';
+    o << "]," << d.i;
     return o;
 }
 
 TEST(JsonCustomConverter, CustomConverter)
 {
     // arrange
-    Data2 d = { {1, 2, 3} };
+    Data2 d = { {1, 2, 3}, 228 };
 
     // check for serialization
-    auto jsonObject = d.toJson();
-    ASSERT_EQ(AJson::toString(jsonObject), R"({"values":[1,2,3]})");
+    auto jsonObject = aui::to_json(d);
+    ASSERT_EQ(AJson::toString(jsonObject), R"({"i":228,"values":[1,2,3]})");
 
-    Data2 d2;
-    d2.readJson(jsonObject);
+    auto d2 = aui::from_json<Data2>(jsonObject);
     ASSERT_EQ(d, d2);
 }
-
-

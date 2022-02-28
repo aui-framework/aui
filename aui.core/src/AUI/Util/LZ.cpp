@@ -28,7 +28,7 @@
 #include <zlib.h>
 
 
-void LZ::compress(const AByteBufferRef& b, AByteBuffer& dst)
+void LZ::compress(AByteBufferView b, AByteBuffer& dst)
 {
     uLong len = b.size() * 3 / 2 + 0xff;
 	dst.reserve(dst.getSize() + len);
@@ -39,10 +39,9 @@ void LZ::compress(const AByteBufferRef& b, AByteBuffer& dst)
 		throw std::runtime_error(std::string("zlib compress error ") + std::to_string(r));
 	}
 	dst.setSize(dst.getSize() + len);
-	dst.setCurrentPos(dst.getSize());
 }
 
-void LZ::decompress(const AByteBufferRef& b, AByteBuffer& dst)
+void LZ::decompress(AByteBufferView b, AByteBuffer& dst)
 {
 	for (size_t i = 4;; i++) {
 		dst.reserve(b.size() * i);

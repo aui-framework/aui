@@ -6,33 +6,41 @@
 
 #include "values.h"
 #include "types.h"
-#include <AUI/Common/AByteBufferRef.h>
 
 class IInputStream;
 class IOutputStream;
 
+template<typename T, typename T2 = void>
+struct ASerializable;
+
 namespace aui {
-    template<typename T, typename T2 = void>
-    struct serializable;
 
     template<typename T>
-    constexpr bool is_serializable = aui::is_complete<serializable<T>>;
+    constexpr bool is_serializable = aui::is_complete<ASerializable<T>>;
 
     template<typename T>
     inline void serialize(IOutputStream& dst, const T& t) {
         static_assert(is_serializable<T>, "T is not serializable");
-        aui::serializable<T>::write(dst, t);
+        ASerializable<T>::write(dst, t);
     }
+
     template<typename T>
-    inline T deserialize(const IInputStream& from) {
+    inline T deserialize(IInputStream& from, T& t) {
         static_assert(is_serializable<T>, "T is not serializable");
-        return aui::serializable<T>::read(from);
+        ASerializable<T>::read(from, t);
+        return t;
+    }
+
+    template<typename T>
+    inline T deserialize(IInputStream& from) {
+        T t;
+        deserialize<T>(from, t);
+        return t;
     }
 }
 
 #include <AUI/IO/IInputStream.h>
 #include <AUI/IO/IOutputStream.h>
-#include <AUI/Common/AByteBuffer.h>
 
 namespace aui {
     template<typename T>
@@ -40,111 +48,88 @@ namespace aui {
         static void write(IOutputStream& os, const T& value) {
             os.write(reinterpret_cast<const char*>(&value), sizeof(value));
         }
-        static T read(const IInputStream& is) {
-            T t;
+        static void read(IInputStream& is, T& t) {
             is.readExact(reinterpret_cast<char*>(&t), sizeof(T));
-            return t;
         }
     };
 
-    // ints, floats, doubles, etc...
     template<typename T>
-    struct serializable<T, std::enable_if_t<std::is_arithmetic_v<T>>>: raw_serializable<T> {};
+    struct serialize_sized {
+        T* value;
 
-    // _<SerializableType>
-    template<typename T>
-    struct serializable<_<T>> {
-        static void write(IOutputStream& os, const _<T>& value) {
-            serialize(os, *value);
-        }
-        static _<T> read(const IInputStream& is) {
-            return _new<T>(std::move(deserialize<T>(is)));
-        }
-    };
-
-    // std::string
-    template<>
-    struct serializable<std::string> {
-        static void write(IOutputStream& os, const std::string& value) {
-            os << uint32_t(value.length());
-            os.write(value.data(), value.length());
-        }
-        static std::string read(const IInputStream& is) {
-            auto length = is.read<uint32_t>();
-            std::string s(length, '\0');
-            is.read(s.data(), length);
-            return s;
-        }
-    };
-
-    // input stream
-    template<typename T>
-    struct serializable<T, std::enable_if_t<std::is_base_of_v<IInputStream, T>>> {
-        static void write(IOutputStream& os, const T& value) {
-            if constexpr (std::is_same_v<T, AByteBuffer>) {
-                os << uint32_t(value.size());
-                os.write(value.readIterator(), value.end() - value.readIterator());
-            } else {
-                char buf[0x1000];
-                for (size_t r; (r = const_cast<T&>(value).read(buf, sizeof(buf))) != 0;) {
-                    os.write(buf, r);
-                }
-            }
-        }
-        static T read(const IInputStream& is) {
-            static_assert(std::is_same_v<T, AByteBuffer>, "stream could not be read");
-            uint32_t s;
-            is >> s;
-            T buffer(s);
-            is.read(buffer.end(), s);
-            buffer.setSize(s);
-            return buffer;
-        }
-    };
-
-    // string literal
-    template<int L>
-    struct serializable<char[L]> {
-        static void write(IOutputStream& os, const char* value) {
-            os.write(value, L - 1);
-        }
-    };
-
-    // also string literal, but unknown blob size
-    template<>
-    struct serializable<const char*> {
-        static void write(IOutputStream& os, const char* value) {
-            os.write(value, std::strlen(value));
-        }
-    };
-
-
-    template<>
-    struct serializable<AString> {
-        static void write(IOutputStream& os, const AString& value) {
-            aui::serialize(os, value.toStdString());
-        }
-        static AString read(const IInputStream& is) {
-            return aui::deserialize<std::string>(is);
-        }
-    };
-
-    template<>
-    struct serializable<AByteBufferRef> {
-        static void write(IOutputStream& os, const AByteBufferRef& value) {
-            os.write(value.data(), value.size());
-        }
-    };
-
-    struct without_string_size {
-        std::string value;
-        without_string_size(const AString& value) : value(value.toStdString()) {}
-    };
-
-    template<>
-    struct serializable<without_string_size> {
-        static void write(IOutputStream& os, const without_string_size& value) {
-            os.write(value.value.data(), value.value.size());
-        }
+        serialize_sized(T& value): value(&value) {}
+        serialize_sized(T&& value): value(&value) {}
     };
 }
+
+// ints, floats, doubles, etc...
+template<typename T>
+struct ASerializable<T, std::enable_if_t<std::is_arithmetic_v<T>>>: aui::raw_serializable<T> {};
+
+// _<SerializableType>
+template<typename T>
+struct ASerializable<_<T>> {
+    static void write(IOutputStream& os, const _<T>& value) {
+        aui::serialize(os, *value);
+    }
+    static void read(IInputStream& is, _<T>& t) {
+        t = _new<T>(std::move(aui::deserialize<T>(is)));
+    }
+};
+
+// std::string
+template<>
+struct ASerializable<std::string> {
+    static void write(IOutputStream& os, const std::string& value) {
+        os.write(value.data(), value.length());
+    }
+};
+
+// input stream
+template<typename T>
+struct ASerializable<T, std::enable_if_t<std::is_base_of_v<IInputStream, T>>> {
+    static void write(IOutputStream& os, const T& value) {
+        char buf[0x1000];
+        for (size_t r; (r = const_cast<T&>(value).read(buf, sizeof(buf))) != 0;) {
+            os.write(buf, r);
+        }
+    }
+};
+
+// string literal
+template<int L>
+struct ASerializable<char[L]> {
+    static void write(IOutputStream& os, const char* value) {
+        os.write(value, L - 1);
+    }
+};
+
+// also string literal, but unknown blob size
+template<>
+struct ASerializable<const char*> {
+    static void write(IOutputStream& os, const char* value) {
+        os.write(value, std::strlen(value));
+    }
+};
+
+
+template<>
+struct ASerializable<AString> {
+    static void write(IOutputStream& os, const AString& value) {
+        aui::serialize(os, value.toStdString());
+    }
+};
+
+
+template<typename T>
+struct ASerializable<aui::serialize_sized<T>> {
+    static void write(IOutputStream& os, aui::serialize_sized<T> value) {
+        os << std::uint32_t(value.value->size()) << *value.value;
+    }
+    static void read(IInputStream& is, aui::serialize_sized<T>& t) {
+        std::uint32_t s;
+        is >> s;
+        is.read(reinterpret_cast<char*>(t.value->data()), sizeof(*t.value->data()) * t.value->size());
+    }
+};
+

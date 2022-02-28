@@ -21,30 +21,18 @@
 
 #pragma once
 
-#include "AUI/Common/SharedPtrTypes.h"
-#include "AUI/Common/AMap.h"
-#include "AUI/Common/AVector.h"
-#include <AUI/IO/IOutputStream.h>
-#include <AUI/Thread/AThreadPool.h>
-#include <AUI/Model/IListModel.h>
-#include <AUI/Model/AListModel.h>
-#include <AUI/Common/AStringVector.h>
+#include <algorithm>
 
-#ifdef API_AUI_DATA
-#include <AUI/Data/AModelMeta.h>
-#endif
+namespace aui {
 
-class AJsonElement;
-class AJsonObject: public AMap<AString, AJsonElement> {
+    template<typename Type>
+    struct member;
 
-};
+    template<typename Type, typename Clazz>
+    struct member<Type(Clazz::*)> {
+        using type = Type;
+        using clazz= Clazz;
+    };
 
-class AJsonArray: public AVector<AJsonElement> {
 
-};
-
-class AJsonElement: public std::variant<int, float, bool, std::nullptr_t, AString, AJsonArray, AJsonObject> {
-public:
-};
-
-#include <AUI/Json/AJsonSerialization.h>
+}

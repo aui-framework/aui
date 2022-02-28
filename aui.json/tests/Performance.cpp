@@ -23,9 +23,11 @@
 // Created by alex2 on 30.08.2020.
 //
 
+/*
+
 #include <gtest/gtest.h>
 #include <AUI/Common/AString.h>
-#include <AUI/Json/AJsonElement.h>
+#include <AUI/Json/AJson.h>
 #include <AUI/Json/AJson.h>
 #include <AUI/Json/JsonException.h>
 #include <AUI/Curl/ACurl.h>
@@ -53,3 +55,4 @@ TEST(Json, Performance) {
     ASSERT_TRUE((delta < 3s)) << "too slow (" << delta.count() << "ms)";
     ASSERT_TRUE((delta > 5ms)) << "too fast (probably something went wrong)";
 }
+*/

@@ -46,7 +46,6 @@ _<AByteBuffer> ACrypto::safeRandom() {
     }
     auto seed3 = std::chrono::high_resolution_clock::now().time_since_epoch().count();
     bb << seed3 << seed1 << seed2;
-    bb->setCurrentPos(0);
 
     return bb;
 }

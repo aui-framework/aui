@@ -28,9 +28,9 @@ public:
 	SvgImageLoader();
 	virtual ~SvgImageLoader() = default;
 
-	bool matches(const AByteBuffer& buffer) override;
+	bool matches(AByteBufferView buffer) override;
 
-    _<AImage> getRasterImage(const AByteBuffer& buffer) override;
+    _<AImage> getRasterImage(AByteBufferView buffer) override;
 
-    _<IImageFactory> getImageFactory(const AByteBuffer& buffer) override;
+    _<IImageFactory> getImageFactory(AByteBufferView buffer) override;
 };

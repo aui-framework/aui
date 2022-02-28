@@ -30,9 +30,9 @@
 
 class JpgImageLoader: public IImageLoader {
 public:
-    bool matches(const AByteBuffer& buffer) override;
+    bool matches(AByteBufferView buffer) override;
 
-    _<AImage> getRasterImage(const AByteBuffer& buffer) override;
+    _<AImage> getRasterImage(AByteBufferView buffer) override;
 };
 
 

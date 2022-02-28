@@ -22,13 +22,12 @@
 #include <AUI/IO/AByteBufferInputStream.h>
 #include "AJson.h"
 #include "AUI/Util/ATokenizer.h"
-#include "AJsonElement.h"
-#include "AJsonSerialization.h"
+#include "AJson.h"
+#include "Serialization.h"
+#include "AUI/Traits/callables.h"
 
 
-static AJsonElement read(ATokenizer& t) {
-    std::optional<AJsonElement> result;
-
+static AJson read(ATokenizer& t) {
     auto unexpectedCharacter = [&]() {
         throw AJsonParseException(
                 AString("unexpected character ") + t.getLastCharacter() + " at " + AString::number(t.getRow()) + ":"
@@ -39,14 +38,14 @@ static AJsonElement read(ATokenizer& t) {
                 AString("unexpected token ") + token + " at " + AString::number(t.getRow()) + ":"
                 + AString::number(t.getColumn()));
     };
-    /*
+
     for (;;) {
         switch (t.readChar()) {
-            case '[':
-                result = _new<JsonArray>();
+            case '[': {
+                aui::impl::JsonArray result;
                 while (t.readChar() != ']') {
                     t.reverseByte();
-                    result->asArray() << AJsonElement(read(t));
+                    result << read(t);
                     char c = t.readChar();
                     for (; c != ',' && c != ']'; c = t.readChar()) {
                         if (!isspace(c))
@@ -55,9 +54,10 @@ static AJsonElement read(ATokenizer& t) {
                     if (c == ']')
                         break;
                 }
-                return result;
-            case '{':
-                result = _new<JsonObject>();
+                return std::move(result);
+            }
+            case '{': {
+                aui::impl::JsonObject result;
                 while (t.readChar() != '}') {
                     if (!isspace(t.getLastCharacter())) {
                         if (t.getLastCharacter() == '\"') {
@@ -70,22 +70,21 @@ static AJsonElement read(ATokenizer& t) {
                                 if (!isspace(c))
                                     unexpectedCharacter();
                             }
-                            result->asObject()[key] = AJsonElement(read(t));
+                            result[key] = read(t);
                         } else if (t.getLastCharacter() != ',') {
                             unexpectedCharacter();
                         }
                     }
                 }
 
-                return result;
-
+                return std::move(result);
+            }
             case 't': // true?
             {
                 t.reverseByte();
                 auto s = t.readString();
                 if (s == "true") {
-                    result = _new<JsonValue>(true);
-                    return result;
+                    return true;
                 }
                 unexpectedToken(s);
             }
@@ -95,41 +94,75 @@ static AJsonElement read(ATokenizer& t) {
                 t.reverseByte();
                 auto s = t.readString();
                 if (s == "false") {
-                    result = _new<JsonValue>(false);
-                    return result;
+                    return false;
                 }
                 unexpectedToken(s);
             }
 
             case '\"':
-                result = _new<JsonValue>(t.readStringUntilUnescaped('\"'));
-                return result;
+                return t.readStringUntilUnescaped('\"');
         }
 
         if (isdigit(uint8_t(t.getLastCharacter()))) {
             t.reverseByte();
-            return _new<JsonValue>(t.readInt());
+            return t.readInt();
         }
 
         t.reverseByte();
         AString keyword = t.readString();
         if (keyword == "null") {
-            return _new<JsonNull>();
+            return nullptr;
         }
         t.readChar();
-    }*/
-    assert(!isspace(t.getLastCharacter()));
-    if (!result) {
-        throw AJsonParseException("internal parser error");
     }
-    return *result;
+    throw AJsonParseException("internal parser error");
 }
 
 
-void aui::serializable<AJsonElement>::write(IOutputStream& os, const AJsonElement& value) {
-
+void ASerializable<AJson>::write(IOutputStream& os, const AJson& value) {
+    std::visit(aui::lambda_overloaded {
+        [&](int v) {
+            os << AString::number(v);
+        },
+        [&](float v) {
+            os << AString::number(v);
+        },
+        [&](bool v) {
+            os << (v ? "true" : "false");
+        },
+        [&](const AString& v) {
+            os << '"' << v.replacedAll("\"", "\\\"") << '"';
+        },
+        [&](std::nullptr_t) {
+            os << "null";
+        },
+        [&](const aui::impl::JsonArray& v) {
+            os << '[';
+            for (auto it = v.begin(); it != v.end(); ++it) {
+                if (it != v.begin()) {
+                    os << ',';
+                }
+                os << *it;
+            }
+            os << ']';
+        },
+        [&](const aui::impl::JsonObject & v) {
+            os << '{';
+            for (auto it = v.begin(); it != v.end(); ++it) {
+                if (it != v.begin()) {
+                    os << ',';
+                }
+                os << '"' << it->first.replacedAll("\"", "\\\"") << "\":" << it->second;
+            }
+            os << '}';
+        },
+        [&](std::nullopt_t) {
+            // empty value
+        },
+    }, static_cast<const aui::impl::JsonVariant&>(value));
 }
-AJsonElement aui::serializable<AJsonElement>::read(IInputStream& is) {
+
+void ASerializable<AJson>::read(IInputStream& is, AJson& dst) {
     ATokenizer t(aui::ptr::fake(&is));
-    return ::read(t);
+    dst = ::read(t);
 }

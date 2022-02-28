@@ -28,20 +28,17 @@ SvgImageLoader::SvgImageLoader()
 {
 }
 
-bool SvgImageLoader::matches(const AByteBuffer& buffer)
+bool SvgImageLoader::matches(AByteBufferView buffer)
 {
-	char buf[8];
-	buffer.readExact(buf, 5);
-
-	return memcmp(buf, "<?xml", 5) == 0 ||
-           memcmp(buf, "<svg", 4) == 0;
+	return memcmp(buffer.data(), "<?xml", 5) == 0 ||
+           memcmp(buffer.data(), "<svg", 4) == 0;
 }
 
 
-_<IImageFactory> SvgImageLoader::getImageFactory(const AByteBuffer& buffer) {
+_<IImageFactory> SvgImageLoader::getImageFactory(AByteBufferView buffer) {
     return _new<SvgImageFactory>(buffer);
 }
 
-_<AImage> SvgImageLoader::getRasterImage(const AByteBuffer& buffer) {
+_<AImage> SvgImageLoader::getRasterImage(AByteBufferView buffer) {
     return nullptr;
 }

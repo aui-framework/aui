@@ -100,7 +100,7 @@ ENUM_FLAG(ListFlags) {
  *       </ul>
  * \note In most file systems, both a regular file and a folder with the same name can exist on the same path.
  */
-class API_AUI_CORE APath: public AString {
+class API_AUI_CORE APath final: public AString {
 private:
     APath ensureSlashEnding() const;
     APath ensureNonSlashEnding() const;

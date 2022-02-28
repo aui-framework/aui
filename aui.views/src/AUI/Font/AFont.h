@@ -32,7 +32,7 @@
 
 #include "AUI/Common/AStringVector.h"
 #include "AFontFamily.h"
-
+#include <AUI/Common/AByteBuffer.h>
 
 class AString;
 class AFontManager;

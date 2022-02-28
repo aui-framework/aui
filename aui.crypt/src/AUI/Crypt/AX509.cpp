@@ -50,9 +50,9 @@ bool AX509::checkTrust() const
 	return X509_trusted((X509*)mX509);
 }
 
-_<AX509> AX509::fromPEM(_<AByteBuffer> buffer)
+_<AX509> AX509::fromPEM(AByteBufferView buffer)
 {
-	BIO* inputBuffer = BIO_new_mem_buf(buffer->readIterator(), buffer->end() - buffer->readIterator());
+	BIO* inputBuffer = BIO_new_mem_buf(buffer.data(), buffer.size());
 	X509* rsa = nullptr;
 	PEM_read_bio_X509(inputBuffer, (X509**)&rsa, nullptr, nullptr);
 	BIO_free(inputBuffer);
