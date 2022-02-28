@@ -28,46 +28,40 @@ void AImageLoaderRegistry::registerImageLoader(_<IImageLoader> imageLoader)
 	mImageLoaders << std::move(imageLoader);
 }
 
-_<IImageFactory> AImageLoaderRegistry::loadVector(const AByteBuffer& buffer)
+_<IImageFactory> AImageLoaderRegistry::loadVector(AByteBufferView buffer)
 {
 	for (auto& loader : mImageLoaders)
 	{
 		try {
 			bool matches = loader->matches(buffer);
-			buffer.setCurrentPos(0);
 			if (matches)
 			{
 				if (auto imageFactory = loader->getImageFactory(buffer))
 				{
 					return imageFactory;
 				}
-				buffer.setCurrentPos(0);
 			}
 		} catch(...)
 		{
-			buffer.setCurrentPos(0);
 		}
 	}
 	return nullptr;
 }
 
-_<AImage> AImageLoaderRegistry::loadRaster(const AByteBuffer& buffer) {
+_<AImage> AImageLoaderRegistry::loadRaster(AByteBufferView buffer) {
     for (auto& loader : mImageLoaders)
     {
         try {
             bool matches = loader->matches(buffer);
-            buffer.setCurrentPos(0);
             if (matches)
             {
                 if (auto drawable = loader->getRasterImage(buffer))
                 {
                     return drawable;
                 }
-                buffer.setCurrentPos(0);
             }
         } catch(...)
         {
-            buffer.setCurrentPos(0);
         }
     }
     return nullptr;

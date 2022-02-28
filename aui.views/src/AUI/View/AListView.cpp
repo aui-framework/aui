@@ -94,13 +94,6 @@ public:
 
 	virtual ~AListItem() = default;
 
-    void getCustomCssAttributes(AMap<AString, AVariant>& map) override
-	{
-		ALabel::getCustomCssAttributes(map);
-		if (mSelected)
-			map["selected"] = true;
-	}
-
 	void setSelected(const bool selected)
 	{
 		mSelected = selected;

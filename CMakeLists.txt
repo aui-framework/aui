@@ -65,9 +65,9 @@ endfunction()
 define_aui_component(core)
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(toolbox)
-    define_aui_component(data)
+    # define_aui_component(data) -- outdated; need reworking
     define_aui_component(mysql)
-    define_aui_component(sqlite)
+    # define_aui_component(data) -- outdated; need reworking
     define_aui_component(network)
 endif()
 define_aui_component(crypt)

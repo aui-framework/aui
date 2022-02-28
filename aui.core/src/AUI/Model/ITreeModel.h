@@ -27,7 +27,6 @@
 #pragma once
 
 #include <AUI/Common/ASignal.h>
-#include "AUI/Common/AVariant.h"
 #include "AModelRange.h"
 
 class ATreeIndex {

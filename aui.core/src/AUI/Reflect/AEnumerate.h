@@ -12,6 +12,13 @@
 
 template<typename enum_t>
 class AEnumerate {
+private:
+    struct enum_less {
+        constexpr bool operator()(enum_t l, enum_t r) const {
+            return static_cast<std::underlying_type_t<enum_t>>(l) < static_cast<std::underlying_type_t<enum_t>>(r);
+        }
+    };
+
 public:
     static_assert(std::is_enum_v<enum_t>, "AEnumerate accepts only enums");
 
@@ -62,15 +69,15 @@ public:
     }
 
     template<enum_t... values>
-    static const AMap<enum_t, AString>& mapNameByValue() {
-        static AMap<enum_t, AString> map = {
+    static const AMap<enum_t, AString, enum_less>& mapNameByValue() {
+        static AMap<enum_t, AString, enum_less> map = {
             {values, valueName<values>() }...
         };
         return map;
     }
 
     static const AMap<AString, enum_t>& all();
-    static const AMap<enum_t, AString>& names();
+    static const AMap<enum_t, AString, enum_less>& names();
 
     static enum_t byName(const AString& name) {
         if (auto c = all().contains(name.uppercase())) {
@@ -85,7 +92,7 @@ private:
         return mapValueByName<values...>();
     }
     template<enum_t... values>
-    static const AMap<enum_t, AString>& mapNameByValueImpl(const Values<values...>& v) {
+    static const AMap<enum_t, AString, enum_less>& mapNameByValueImpl(const Values<values...>& v) {
         return mapNameByValue<values...>();
     }
 };
@@ -102,15 +109,15 @@ const AMap<AString, enum_t>& AEnumerate<enum_t>::all() {
 }
 
 template<typename enum_t>
-const AMap<enum_t, AString>& AEnumerate<enum_t>::names() {
+const AMap<enum_t, AString, typename AEnumerate<enum_t>::enum_less>& AEnumerate<enum_t>::names() {
     static_assert(aui::is_complete<AEnumerateAllValues<enum_t>>, "ENUM_VALUES is not defined for this enum type");
     auto v = AEnumerateAllValues<enum_t>::get();
 
     return mapNameByValueImpl(v);
 }
 
-#define ENUM_VALUES(enum_t, ...) template<>\
-struct AEnumerateAllValues<enum_t>{        \
+#define ENUM_VALUES(enum_t, ...) template<> \
+struct AEnumerateAllValues<enum_t>{         \
     static inline constexpr AEnumerate<enum_t>::Values<__VA_ARGS__> get() {return {}; } \
 };                                         \
 inline std::ostream& operator<<(std::ostream& o, enum_t v) { return o << AEnumerate<enum_t>::names()[v]; }

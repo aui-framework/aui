@@ -38,8 +38,8 @@ private:
 public:
 	~ARsa();
 
-	AByteBuffer encrypt(const AByteBuffer& in);
-	AByteBuffer decrypt(const AByteBuffer& in);
+	AByteBuffer encrypt(AByteBufferView in);
+	AByteBuffer decrypt(AByteBufferView in);
 
 	size_t getKeyLength() const;
 
@@ -47,6 +47,6 @@ public:
 	AByteBuffer getPublicKeyPEM() const;
 	
 	static _<ARsa> generate(int bits = 0x800);
-	static _<ARsa> fromPrivateKeyPEM(const AByteBuffer& buffer);
-	static _<ARsa> fromPublicKeyPEM(const AByteBuffer& buffer);
+	static _<ARsa> fromPrivateKeyPEM(AByteBufferView buffer);
+	static _<ARsa> fromPublicKeyPEM(AByteBufferView buffer);
 };

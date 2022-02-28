@@ -22,13 +22,22 @@
 #pragma once
 #include "ALabel.h"
 #include "AViewContainer.h"
-#include <AUI/Util/ADataBinding.h>
+#include <AUI/ASS/Selector/Selected.h>
 
 
-class ACheckBoxInner: public AView
+class API_AUI_VIEWS ACheckBox;
+
+class ACheckBoxInner: public AView, public ass::ISelectable
 {
+private:
+    ACheckBox* mCheckBox;
+
+protected:
+    bool selectableIsSelectedImpl() override;
+
 public:
-    ACheckBoxInner() = default;
+    ACheckBoxInner(ACheckBox* checkBox) : mCheckBox(checkBox) {}
+
     virtual ~ACheckBoxInner() = default;
 
     void update();
@@ -37,12 +46,14 @@ public:
 /**
  * Represents a simple check box.
  */
-class API_AUI_VIEWS ACheckBox: public AViewContainer
+class API_AUI_VIEWS ACheckBox: public AViewContainer, public ass::ISelectable
 {
 private:
 	_<ALabel> mText;
 	bool mChecked = false;
-	
+protected:
+    bool selectableIsSelectedImpl() override;
+
 public:
 	ACheckBox();
 	ACheckBox(const ::AString& text);
@@ -67,9 +78,8 @@ public:
 	}
 
     bool consumesClick(const glm::ivec2& pos) override;
-
-    void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+
 signals:
 	emits<bool> checked;
 };

@@ -261,9 +261,9 @@ inline _<TO> _cast(_<FROM> object)
 /**
  * Parody to null-safety.
  * @example
- * <code>
- * _&lt;AView&gt; view;<br/>
+ * @code{.cpp}
+ * _&lt;AView&gt; view;
  * nullsafe(view)->enable();
- * </code>
+ * @endcode
  */
 #define nullsafe(s) if(decltype(auto) _tmp = (s))_tmp

@@ -64,12 +64,12 @@
 #include "Selector/ParentSelector.h"
 #include "Selector/DirectParentSelector.h"
 #include "Selector/type_of.h"
-#include "Selector/attribute.h"
 #include "Selector/active.h"
 #include "Selector/disabled.h"
 #include "Selector/debug_selector.h"
 #include "Selector/hovered.h"
 #include "Selector/class_of.h"
+#include "Selector/Selected.h"
 
 // Other
 #include "unset.h"

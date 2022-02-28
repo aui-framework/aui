@@ -385,18 +385,6 @@ bool AView::handlesNonMouseNavigation() {
     return false;
 }
 
-void AView::getCustomCssAttributes(AMap<AString, AVariant>& map)
-{
-    if (mEnabled)
-    {
-        map["enabled"] = true;
-    }
-    else
-    {
-        map["disabled"] = true;
-    }
-}
-
 void AView::setEnabled(bool enabled)
 {
     mDirectlyEnabled = enabled;

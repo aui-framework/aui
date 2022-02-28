@@ -23,6 +23,7 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AImage.h"
 #include "IImageFactory.h"
+#include <AUI/Common/AByteBufferView.h>
 
 class AByteBuffer;
 class IDrawable;
@@ -37,21 +38,21 @@ public:
 	 * \param buffer buffer with the raw image file contents.
 	 * \return true, if this IImageLoader accepts image stored in this buffer
 	 */
-	virtual bool matches(const AByteBuffer& buffer) = 0;
+	virtual bool matches(AByteBufferView buffer) = 0;
 
 	/**
 	 * \brief The drawable (vector) image loader implementation.
 	 * \note Called if and only if <code>matches</code> returned true.
 	 * \return image factory. Can be <code>nullptr</code> if <code>getRasterImage</code> implemented.
 	 */
-	virtual _<IImageFactory> getImageFactory(const AByteBuffer& buffer) { return nullptr; };
+	virtual _<IImageFactory> getImageFactory(AByteBufferView buffer) { return nullptr; };
 
 	/**
 	 * \brief The image loader implementation (raster).
 	 * \note Called if and only if <code>matches</code> returned true.
 	 * \return raster image. Can be <code>nullptr</code> if <code>getDrawable</code> implemented.
 	 */
-	virtual _<AImage> getRasterImage(const AByteBuffer& buffer) = 0;
+	virtual _<AImage> getRasterImage(AByteBufferView buffer) = 0;
 };
 
 #include "AUI/Common/AByteBuffer.h"

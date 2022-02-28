@@ -37,8 +37,6 @@ private:
 public:
     APageSwitch(const AString& text, unsigned pageNumber, const _<APageView>& pageView);
 
-    void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
-
     int getContentMinimumWidth() override;
 };
 

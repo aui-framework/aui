@@ -28,6 +28,7 @@
 #include "ALabel.h"
 #include "AViewContainer.h"
 #include <AUI/Common/AMap.h>
+#include <AUI/ASS/Selector/Selected.h>
 
 
 class ARadioButtonInner: public AView
@@ -40,10 +41,12 @@ public:
 };
 
 
-class API_AUI_VIEWS ARadioButton : public AViewContainer {
+class API_AUI_VIEWS ARadioButton : public AViewContainer, public ass::ISelectable {
 private:
     _<ALabel> mText;
     bool mChecked = false;
+protected:
+    bool selectableIsSelectedImpl() override;
 
 public:
     ARadioButton();
@@ -64,7 +67,6 @@ public:
         emit ARadioButton::checked(checked);
     }
 
-    void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
     class API_AUI_VIEWS Group: public AObject {

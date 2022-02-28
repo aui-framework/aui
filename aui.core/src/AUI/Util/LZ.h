@@ -25,7 +25,7 @@
 #include "AUI/Common/AException.h"
 
 class AByteBuffer;
-class AByteBufferRef;
+class AByteBufferView;
 
 class AZLibException: public AException
 {
@@ -41,6 +41,6 @@ public:
 };
 
 namespace LZ {
-	void API_AUI_CORE compress(const AByteBufferRef& b, AByteBuffer& dst);
-	void API_AUI_CORE decompress(const AByteBufferRef& b, AByteBuffer& dst);
+	void API_AUI_CORE compress(AByteBufferView b, AByteBuffer& dst);
+	void API_AUI_CORE decompress(AByteBufferView b, AByteBuffer& dst);
 }

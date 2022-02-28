@@ -22,12 +22,13 @@
 
 
 #include "AUI/Image/IImageFactory.h"
+#include "AUI/Common/AByteBufferView.h"
 
 class API_AUI_IMAGE SvgImageFactory: public IImageFactory {
 private:
     void* mNsvg;
 public:
-    SvgImageFactory(const AByteBuffer& buf);
+    SvgImageFactory(AByteBufferView buf);
     ~SvgImageFactory();
     _<AImage> provideImage(const glm::ivec2& size) override;
 

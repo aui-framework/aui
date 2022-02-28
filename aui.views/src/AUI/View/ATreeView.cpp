@@ -58,7 +58,7 @@ public:
         return 40;
     }
 };
-class ATreeView::ItemView: public AViewContainer
+class ATreeView::ItemView: public AViewContainer, public ass::ISelectable
 {
 private:
     bool mSelected = false;
@@ -67,6 +67,10 @@ private:
     _<ADrawableView> mCollapseDisplay;
     ATreeIndex mIndex;
     ATreeView* mTreeView;
+protected:
+    bool selectableIsSelectedImpl() override {
+        return mSelected;
+    }
 
 public:
     ItemView(ATreeView* treeView, const _<AView>& display, bool hasChildren, const ATreeIndex& index)
@@ -132,13 +136,6 @@ public:
 
     const ATreeIndex& getIndex() const {
         return mIndex;
-    }
-
-    void getCustomCssAttributes(AMap<AString, AVariant>& map) override
-    {
-        AViewContainer::getCustomCssAttributes(map);
-        if (mSelected)
-            map["selected"] = true;
     }
 
     void setSelected(const bool selected)
