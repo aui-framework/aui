@@ -86,6 +86,8 @@ public:
 
     }
 
+    AJson(const char* name): aui::impl::JsonVariant(AString(name)) {}
+
     AJson(): aui::impl::JsonVariant(std::nullopt) {}
 
     [[nodiscard]]
