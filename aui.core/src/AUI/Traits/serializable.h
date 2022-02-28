@@ -25,14 +25,14 @@ namespace aui {
     }
 
     template<typename T>
-    inline T deserialize(IInputStream& from, T& t) {
+    inline T deserialize(aui::no_escape<IInputStream> from, T& t) {
         static_assert(is_serializable<T>, "T is not serializable");
-        ASerializable<T>::read(from, t);
+        ASerializable<T>::read(*from, t);
         return t;
     }
 
     template<typename T>
-    inline T deserialize(IInputStream& from) {
+    inline T deserialize(aui::no_escape<IInputStream> from) {
         T t;
         deserialize<T>(from, t);
         return t;

@@ -43,44 +43,92 @@ namespace aui {
     }
 }
 
-template<auto f>
-struct AJsonField {
-private:
-    const char* name;
+namespace aui::impl::json {
 
-    using field = aui::member<decltype(f)>;
-    using clazz = typename field::clazz;
-    using type = typename field::type;
+    template<typename T>
+    struct Field {
+        T& value;
+        const char* name;
 
-public:
-    AJsonField(const char* name): name(name) {}
-    AJsonField(const char* name, const char* customName): name(customName) {}
+        Field(T& value, const char* name) : value(value), name(name) {}
 
-    void operator()(const clazz& data, AJson::Object& json) {
-        json[name] = aui::to_json(data.*f);
+        void operator()(const AJson::Object& object) {
+            value = aui::from_json<T>(object[name]);
+        }
+        void operator()(AJson::Object& object) {
+            object[name] = aui::to_json<T>(value);
+        }
+    };
+}
+
+template<typename... Items>
+struct my_tuple: std::tuple<Items...> {
+    using std::tuple<Items...>::tuple;
+
+    my_tuple(Items... items): std::tuple<Items...>(std::move(items)...) {}
+
+    template<typename T>
+    auto operator()(T& v, const char* n) {
+        return std::apply([&](auto&&... args) {
+            return ::my_tuple(args..., aui::impl::json::Field(v, n));
+        }, stdTuple());
     }
-    void operator()(clazz& data, const AJson::Object& json) {
-        data.*f = aui::from_json<type>(json[name]);
+
+    std::tuple<Items...>& stdTuple() {
+        return (std::tuple<Items...>&)*this;
+    }
+};
+
+struct empty_tuple {
+    template<typename T>
+    auto operator()(T& v, const char* n) {
+        return my_tuple(aui::impl::json::Field(v, n));
     }
 };
 
 template<typename T>
-inline bool AJsonConvFields = false;
+struct AJsonConvFieldDescriptor;
+
+/**
+ * Json fields definition.
+ * @example
+ * @code{.cpp}
+ * struct SomeModel {
+ *     int value1;
+ *     AString value2;
+ * };
+ *
+ * AJSON_FIELDS(SomeModel,
+ *     (value1, "value1")
+ *     (value2, "value2")
+ * )
+ * @endcode
+ */
+#define AJSON_FIELDS(N, ...) \
+template<> struct AJsonConvFieldDescriptor<N>: N { \
+    auto operator()() { \
+        return empty_tuple() \
+                __VA_ARGS__ \
+                ; \
+    } \
+};
+
 
 /**
  * Simplified conversion for class fields.
+ * @note Use <a href="AJSON_FIELDS">AJSON_FIELDS</a> macro.
  * @tparam T class type.
  */
 template<typename T>
-struct AJsonConv<T, typename std::enable_if_t<std::is_class_v<T> && !std::is_same_v<decltype(AJsonConvFields<T>), bool>>>{
+struct AJsonConv<T, std::enable_if_t<aui::is_complete<AJsonConvFieldDescriptor<T>>>> {
 
     static AJson toJson(const T& t) {
         AJson::Object json;
         std::apply([&](auto&&... fields) {
             aui::parameter_pack::for_each([&](auto&& field) {
-                field(t, json);
+                field(json);
             }, fields...);
-        }, AJsonConvFields<T>);
+        }, ((AJsonConvFieldDescriptor<T>&)t)().stdTuple());
         return std::move(json);
     }
 
@@ -89,9 +137,9 @@ struct AJsonConv<T, typename std::enable_if_t<std::is_class_v<T> && !std::is_sam
         const auto& jsonObject = json.asObject();
         std::apply([&](auto&&... fields) {
             aui::parameter_pack::for_each([&](auto&& field) {
-                field(t, jsonObject);
+                field(jsonObject);
             }, fields...);
-        }, AJsonConvFields<T>);
+        }, ((AJsonConvFieldDescriptor<T>&)t)().stdTuple());
         return t;
     }
 };

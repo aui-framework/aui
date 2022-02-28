@@ -25,6 +25,7 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/IO/IInputStream.h"
 #include "AJson.h"
+#include "AUI/Common/AByteBufferView.h"
 #include <AUI/Traits/arrays.h>
 #include <AUI/Common/AUuid.h>
 #include <AUI/Common/AMap.h>
@@ -199,6 +200,7 @@ public:
 
     [[nodiscard]] static API_AUI_JSON AString toString(const AJson& json);
     [[nodiscard]] static API_AUI_JSON AJson fromString(const AString& json);
+    [[nodiscard]] static API_AUI_JSON AJson fromBuffer(AByteBufferView buffer);
 };
 
 

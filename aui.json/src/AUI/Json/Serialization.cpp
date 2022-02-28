@@ -28,92 +28,96 @@
 
 
 static AJson read(ATokenizer& t) {
-    auto unexpectedCharacter = [&]() {
-        throw AJsonParseException(
-                AString("unexpected character ") + t.getLastCharacter() + " at " + AString::number(t.getRow()) + ":"
-                + AString::number(t.getColumn()));
-    };
-    auto unexpectedToken = [&](const AString& token) {
-        throw AJsonParseException(
-                AString("unexpected token ") + token + " at " + AString::number(t.getRow()) + ":"
-                + AString::number(t.getColumn()));
-    };
+    try {
+        auto unexpectedCharacter = [&]() {
+            throw AJsonParseException(
+                    AString("unexpected character ") + t.getLastCharacter() + " at " + AString::number(t.getRow()) + ":"
+                    + AString::number(t.getColumn()));
+        };
+        auto unexpectedToken = [&](const AString& token) {
+            throw AJsonParseException(
+                    AString("unexpected token ") + token + " at " + AString::number(t.getRow()) + ":"
+                    + AString::number(t.getColumn()));
+        };
 
-    for (;;) {
-        switch (t.readChar()) {
-            case '[': {
-                aui::impl::JsonArray result;
-                while (t.readChar() != ']') {
-                    t.reverseByte();
-                    result << read(t);
-                    char c = t.readChar();
-                    for (; c != ',' && c != ']'; c = t.readChar()) {
-                        if (!isspace(c))
-                            unexpectedCharacter();
+        for (;;) {
+            switch (t.readChar()) {
+                case '[': {
+                    aui::impl::JsonArray result;
+                    while (t.readChar() != ']') {
+                        t.reverseByte();
+                        result << read(t);
+                        char c = t.readChar();
+                        for (; c != ',' && c != ']'; c = t.readChar()) {
+                            if (!isspace(c))
+                                unexpectedCharacter();
+                        }
+                        if (c == ']')
+                            break;
                     }
-                    if (c == ']')
-                        break;
+                    return std::move(result);
                 }
-                return std::move(result);
-            }
-            case '{': {
-                aui::impl::JsonObject result;
-                while (t.readChar() != '}') {
-                    if (!isspace(t.getLastCharacter())) {
-                        if (t.getLastCharacter() == '\"') {
-                            AString key = t.readStringUntilUnescaped('\"');
+                case '{': {
+                    aui::impl::JsonObject result;
+                    while (t.readChar() != '}') {
+                        if (!isspace(t.getLastCharacter())) {
+                            if (t.getLastCharacter() == '\"') {
+                                AString key = t.readStringUntilUnescaped('\"');
 
-                            for (char c = 0;;) {
-                                c = t.readChar();
-                                if (c == ':')
-                                    break;
-                                if (!isspace(c))
-                                    unexpectedCharacter();
+                                for (char c = 0;;) {
+                                    c = t.readChar();
+                                    if (c == ':')
+                                        break;
+                                    if (!isspace(c))
+                                        unexpectedCharacter();
+                                }
+                                result[key] = read(t);
+                            } else if (t.getLastCharacter() != ',') {
+                                unexpectedCharacter();
                             }
-                            result[key] = read(t);
-                        } else if (t.getLastCharacter() != ',') {
-                            unexpectedCharacter();
                         }
                     }
+
+                    return std::move(result);
+                }
+                case 't': // true?
+                {
+                    t.reverseByte();
+                    auto s = t.readString();
+                    if (s == "true") {
+                        return true;
+                    }
+                    unexpectedToken(s);
                 }
 
-                return std::move(result);
+                case 'f': // false?
+                {
+                    t.reverseByte();
+                    auto s = t.readString();
+                    if (s == "false") {
+                        return false;
+                    }
+                    unexpectedToken(s);
+                }
+
+                case '\"':
+                    return t.readStringUntilUnescaped('\"');
             }
-            case 't': // true?
-            {
+
+            if (isdigit(uint8_t(t.getLastCharacter()))) {
                 t.reverseByte();
-                auto s = t.readString();
-                if (s == "true") {
-                    return true;
-                }
-                unexpectedToken(s);
+                return t.readInt();
             }
 
-            case 'f': // false?
-            {
-                t.reverseByte();
-                auto s = t.readString();
-                if (s == "false") {
-                    return false;
-                }
-                unexpectedToken(s);
-            }
-
-            case '\"':
-                return t.readStringUntilUnescaped('\"');
-        }
-
-        if (isdigit(uint8_t(t.getLastCharacter()))) {
             t.reverseByte();
-            return t.readInt();
+            AString keyword = t.readString();
+            if (keyword == "null") {
+                return nullptr;
+            }
+            t.readChar();
         }
-
-        t.reverseByte();
-        AString keyword = t.readString();
-        if (keyword == "null") {
-            return nullptr;
-        }
-        t.readChar();
+    } catch (const AEOFException& e) {
+        throw AJsonParseException("unexpected end of json stream");
     }
     throw AJsonParseException("internal parser error");
 }

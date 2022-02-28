@@ -40,14 +40,10 @@ struct Data2 {
     }
 };
 
-template<>
-inline auto AJsonConvFields<Data2> = std::make_tuple(
-        AJsonField<&Data2::values>{"values"},
-        AJsonField<&Data2::i>{"i"}
-);
-
-// todo maybe AJsonConvFieldsDescriptor(&Data2::values, "values")(&Data2::i, "i")
-// maybe apply-like struct extension magic shit (not to use to-member pointers, use regular instead)
+AJSON_FIELDS(Data2,
+        (values, "values")
+        (i, "i")
+)
 
 std::ostream& operator<<(std::ostream& o, const Data2& d) {
     o << '[';
