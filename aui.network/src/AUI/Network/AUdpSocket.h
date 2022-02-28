@@ -32,6 +32,7 @@
 #include "AUI/IO/IOutputStream.h"
 
 #include "AInet4Address.h"
+#include "AUI/Common/AByteBufferView.h"
 
 class AByteBuffer;
 
@@ -60,7 +61,7 @@ public:
      * \param buf data buffer
      * \param dst destination delivery address
      */
-	void write(const AByteBuffer& buf, const AInet4Address& dst);
+	void write(AByteBufferView buf, const AInet4Address& dst);
 
 	/**
 	 * \brief Read data.
