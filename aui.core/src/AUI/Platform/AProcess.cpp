@@ -24,6 +24,7 @@
 //
 
 #include "AProcess.h"
+#include "AUI/IO/AFileOutputStream.h"
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
