@@ -71,7 +71,7 @@ public:
      * @param t value to write
      */
     template<typename T>
-    T read();
+    T deserialize();
 
     /**
      * Reads data using AUI serialization (see AUI/Traits/serializable.h)
@@ -90,7 +90,7 @@ public:
 #include <AUI/Traits/serializable.h>
 
 template<typename T>
-inline T IInputStream::read() {
+inline T IInputStream::deserialize() {
     return aui::deserialize<T>(*this);
 }
 

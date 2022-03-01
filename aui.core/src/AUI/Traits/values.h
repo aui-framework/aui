@@ -77,7 +77,7 @@ namespace aui {
             checkForNull();
             return value;
         }
-        T* operator->() const {
+        auto operator->() const {
             checkForNull();
             return &*value;
         }

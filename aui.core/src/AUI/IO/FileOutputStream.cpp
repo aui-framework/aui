@@ -44,6 +44,7 @@ AFileOutputStream::~AFileOutputStream()
 
 void AFileOutputStream::write(const char* src, size_t size)
 {
+    if (size == 0) return;
 	auto v = fwrite(src, 1, size, mFile);
 	if (v == 0) {
 		throw WriteException(mPath);
