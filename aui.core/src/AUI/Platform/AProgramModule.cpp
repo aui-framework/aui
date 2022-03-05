@@ -80,7 +80,7 @@ _<AProgramModule> AProgramModule::load(const AString& path)
             "/lib/"_as,
     };
 
-	std::string dlErrors[aui::array_length(paths)];
+	AString dlErrors[aui::array_length(paths)];
 
 	size_t counter = 0;
 	for (auto& fp : paths) {

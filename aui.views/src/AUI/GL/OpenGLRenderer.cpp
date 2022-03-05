@@ -615,9 +615,6 @@ public:
     }
 
     void addString(const glm::ivec2& position, const AString& text) noexcept override {
-        if (text.contains(L'х')) {
-            printf("s");
-        }
         mVertices.reserve(mVertices.capacity() + text.length() * 4);
         auto& font = mFontStyle.font;
         auto& texturePacker = mEntryData->texturePacker;

@@ -79,8 +79,8 @@ public:
     static const AMap<AString, enum_t>& all();
     static const AMap<enum_t, AString, enum_less>& names();
 
-    static enum_t byName(const AString& name) {
-        if (auto c = all().contains(name.uppercase())) {
+    static enum_t byName(AStringView name) {
+        if (auto c = all().contains(name.uppercased())) {
             return c->second;
         }
         return (enum_t)0;

@@ -258,7 +258,7 @@ public:
 AVector<_<AProcess>> AProcess::all() {
     AVector<_<AProcess>> result;
     for (auto& f : APath("/proc/").listDir(ListFlags::DIRS)) {
-        pid_t p = f.filename().toUInt();
+        pid_t p = *f.filename().toUInt();
         if (p != 0) {
             result << _new<AOtherProcess>(p);
         }
@@ -267,9 +267,9 @@ AVector<_<AProcess>> AProcess::all() {
 }
 
 _<AProcess> AProcess::self() {
-    char buf[0x100];
+    char buf[0x1000];
     readlink("/proc/self", buf, sizeof(buf));
-    return _new<AOtherProcess>(AString(buf).toUInt());
+    return _new<AOtherProcess>(*AString(buf).toUInt());
 }
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {

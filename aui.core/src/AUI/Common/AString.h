@@ -723,6 +723,12 @@ public:
         return mImpl[index];
     }
 
+    [[nodiscard]]
+    char& operator[](std::size_t index) noexcept {
+        assert(("string index violation", index < length()));
+        return mImpl[index];
+    }
+
     template<typename T, typename std::enable_if_t<std::is_convertible_v<T, AStringView>, bool> = true>
     [[nodiscard]]
     bool operator==(const T& t) const noexcept {

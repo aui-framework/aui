@@ -93,7 +93,7 @@ AFontManager::AFontManager() :
 }
 
 AString AFontManager::getPathToFont(const AString& font) {
-    if (APath(font.toStdString()).isRegularFileExists())
+    if (APath(font).isRegularFileExists())
         return font;
 
     // reference: qt ./qtbase/src/gui/text/unix/qfontconfigdatabase.cpp

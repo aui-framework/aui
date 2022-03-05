@@ -182,7 +182,7 @@ ADeque<APath> APath::listDir(ListFlags f) const {
 #endif
 
         if (!(f & ListFlags::DONT_IGNORE_DOTS)) {
-            if (std::wstring_view(L".") == filename || std::wstring_view(L"..") == filename) {
+            if (std::string_view(".") == filename || std::string_view("..") == filename) {
                 continue;
             }
         }

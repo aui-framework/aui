@@ -273,9 +273,8 @@ void ADesktop::setMousePos(const glm::ivec2& pos)
     XFlush(CommonRenderingContext::ourDisplay);
 }
 
-void ADesktop::openUrl(const AString& url) {
-    std::string s = "xdg-open ";
-    s += url.toStdString();
+void ADesktop::openUrl(AStringView url) {
+    auto s = "xdg-open " + url;
     system(s.c_str());
 }
 
