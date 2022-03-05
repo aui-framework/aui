@@ -288,9 +288,11 @@ glm::vec2 ATokenizer::readVec2() {
 
 AString ATokenizer::readString(size_t n) {
     AString result;
-    result.reserve(n);
-    for (size_t i = 0; i < n; ++i) {
-        result += readChar();
+    if (n > 0) {
+        result.reserve(n);
+        result += readChar(); // consume mLastChar
+        result.resize(n);
+        mInput->read(result.data() + 1, n - 1);
     }
     return result;
 }
