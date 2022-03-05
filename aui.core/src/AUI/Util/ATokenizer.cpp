@@ -25,162 +25,142 @@
 #include "AUI/Common/ASet.h"
 #include "AUI/IO/AStringStream.h"
 
-ATokenizer::ATokenizer(const AString& fromString):
-	mInput(_new<AStringStream>(fromString))
-{
+ATokenizer::ATokenizer(const AString& fromString) :
+        mInput(_new<AStringStream>(fromString)) {
 }
 
-AString ATokenizer::readString()
-{
-	AString res;
-	char c;
+AString ATokenizer::readString() {
+    AString res;
+    char c;
 
-	try
-	{
-		for (;;) {
-			c = readChar();
-			if (isalnum(uint8_t (c)))
-			{
-				res << c;
-			}
-			else
-			{
-				reverseByte();
-				return res;
-			}
-		}
-	} catch (...)
-	{
-        mEof = true;
-	}
-	return res;
-}
-AString ATokenizer::readString(const ASet<char>& applicableChars)
-{
-	AString res;
-	res.reserve(128);
-	char c;
-
-	try
-	{
-		for (;;) {
-			c = readChar();
-			if (isalnum(uint8_t (c)) || applicableChars.find(c) != applicableChars.end())
-			{
-				res << c;
-			}
-			else
-			{
-				reverseByte();
-				return res;
-			}
-		}
-	} catch (...)
-	{
-        mEof = true;
-	}
-	return res;
-}
-
-
-void ATokenizer::reverseByte()
-{
-	mReverse = true;
-}
-
-float ATokenizer::readFloat()
-{
-	AString tmp;
-	try {
-		bool dot = false;
-		char c;
-		for (;;)
-		{
-			c = readChar();
-			switch (c)
-			{
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-			case '-':
-				tmp += c;
-				break;
-			case '.':
-				if (!dot)
-				{
-					tmp += c;
-					break;
-				}
-			default:
-				reverseByte();
-				return tmp.toFloat();
-			}
-		}
-	} catch (...) {
+    try {
+        for (;;) {
+            c = readChar();
+            if (isalnum(uint8_t(c))) {
+                res << c;
+            } else {
+                reverseByte();
+                return res;
+            }
+        }
+    } catch (...) {
         mEof = true;
     }
-	return tmp.toFloat();
+    return res;
 }
 
-int ATokenizer::readInt()
-{
-	AString tmp;
-	try {
-		char c;
-		for (;;)
-		{
-			c = readChar();
-			switch (c)
-			{
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-			case 'x':
-			case 'X':
+AString ATokenizer::readString(const ASet<char>& applicableChars) {
+    AString res;
+    res.reserve(128);
+    char c;
 
-			    // hex
-			case 'a':
-			case 'A':
-			case 'b':
-			case 'B':
-			case 'c':
-			case 'C':
-			case 'd':
-			case 'D':
-			case 'e':
-			case 'E':
-			case 'f':
-			case 'F':
-				tmp += c;
-				break;
-			default:
-				reverseByte();
-				return tmp.toInt();
-			}
-		}
-	}
-	catch (...) {
+    try {
+        for (;;) {
+            c = readChar();
+            if (isalnum(uint8_t(c)) || applicableChars.find(c) != applicableChars.end()) {
+                res << c;
+            } else {
+                reverseByte();
+                return res;
+            }
+        }
+    } catch (...) {
         mEof = true;
     }
-	return tmp.toInt();
+    return res;
+}
+
+
+void ATokenizer::reverseByte() {
+    mReverse = true;
+}
+
+float ATokenizer::readFloat() {
+    AString tmp;
+    try {
+        bool dot = false;
+        char c;
+        for (;;) {
+            c = readChar();
+            switch (c) {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                case '-':
+                    tmp += c;
+                    break;
+                case '.':
+                    if (!dot) {
+                        tmp += c;
+                        break;
+                    }
+                default:
+                    reverseByte();
+                    return *tmp.toFloat();
+            }
+        }
+    } catch (...) {
+        mEof = true;
+    }
+    return tmp.toFloat().value_or(0);
+}
+
+int ATokenizer::readInt() {
+    AString tmp;
+    try {
+        char c;
+        for (;;) {
+            c = readChar();
+            switch (c) {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                case 'x':
+                case 'X':
+
+                    // hex
+                case 'a':
+                case 'A':
+                case 'b':
+                case 'B':
+                case 'c':
+                case 'C':
+                case 'd':
+                case 'D':
+                case 'e':
+                case 'E':
+                case 'f':
+                case 'F':
+                    tmp += c;
+                    break;
+                default:
+                    reverseByte();
+                    return tmp.toInt().value_or(0);
+            }
+        }
+    }
+    catch (...) {
+        mEof = true;
+    }
+    return tmp.toInt().value_or(0);
 }
 
 unsigned ATokenizer::readUInt() {
-    auto [value, _] = readUIntX();
+    auto[value, _] = readUIntX();
     return value;
 }
 
@@ -190,11 +170,9 @@ std::tuple<unsigned, bool> ATokenizer::readUIntX() {
     bool isHex = false;
     try {
         char c;
-        for (;;)
-        {
+        for (;;) {
             c = readChar();
-            switch (c)
-            {
+            switch (c) {
                 case 'x':
                 case 'X':
                     isHex = true;
@@ -226,91 +204,86 @@ std::tuple<unsigned, bool> ATokenizer::readUIntX() {
                     break;
                 default:
                     reverseByte();
-                    return {tmp.toUInt(), isHex};
+                    return {tmp.toUInt().value_or(0), isHex};
             }
         }
     }
     catch (...) {
         mEof = true;
     }
-    return {tmp.toUInt(), isHex};
+    return {tmp.toUInt().value_or(0), isHex};
 }
 
 void ATokenizer::skipUntilUnescaped(char c) {
-    for (char current; (current = readChar()) != c;)
-    {
-        if (current == '\\')
-        {
+    for (char current; (current = readChar()) != c;) {
+        if (current == '\\') {
             readChar();
         }
     }
 }
 
-AString ATokenizer::readStringUntilUnescaped(char c)
-{
-	std::string result;
-	readStringUntilUnescaped(result, c);
-	return result;
-}
-AString ATokenizer::readStringUntilUnescaped(const ASet<char>& characters) {
-	std::string result;
-	readStringUntilUnescaped(result, characters);
-	return result;
+AString ATokenizer::readStringUntilUnescaped(char c) {
+    AString result;
+    readStringUntilUnescaped(result, c);
+    return result;
 }
 
-void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
-{
-	try {
-		for (char current; (current = readChar()) != c;)
-		{
-			if (current == '\\')
-			{
+AString ATokenizer::readStringUntilUnescaped(const ASet<char>& characters) {
+    AString result;
+    readStringUntilUnescaped(result, characters);
+    return result;
+}
+
+void ATokenizer::readStringUntilUnescaped(AString& out, char c) {
+    try {
+        for (char current; (current = readChar()) != c;) {
+            if (current == '\\') {
                 char tmp = readChar();
                 switch (tmp) {
-                    case 'r': out += '\r'; break;
-                    case 'n': out += '\n'; break;
-                    case 't': out += '\t'; break;
-                    default: out += tmp;
+                    case 'r':
+                        out += '\r';
+                        break;
+                    case 'n':
+                        out += '\n';
+                        break;
+                    case 't':
+                        out += '\t';
+                        break;
+                    default:
+                        out += tmp;
                 }
-			}
-			else
-			{
-				out += current;
-			}
-		}
-	}
-	catch (...) {
+            } else {
+                out += current;
+            }
+        }
+    }
+    catch (...) {
         mEof = true;
     }
 }
 
-void ATokenizer::readStringUntilUnescaped(std::string& out, const ASet<char>& characters) {
-	try {
-		for (char current; !characters.contains(current = readChar());)
-		{
-			if (current == '\\')
-			{
-				out += '\\';
-				out += readChar();
-			}
-			else
-			{
-				out += current;
-			}
-		}
-	}
-	catch (...) {
+void ATokenizer::readStringUntilUnescaped(AString& out, const ASet<char>& characters) {
+    try {
+        for (char current; !characters.contains(current = readChar());) {
+            if (current == '\\') {
+                out += '\\';
+                out += readChar();
+            } else {
+                out += current;
+            }
+        }
+    }
+    catch (...) {
         mEof = true;
     }
 }
 
-glm::vec2 ATokenizer::readVec2()
-{
-	glm::vec2 result;
-	result.x = readFloat();
-	readChar();
-	result.y = readFloat();
-	return result;
+glm::vec2 ATokenizer::readVec2() {
+    glm::vec2 result;
+    result.x = readFloat();
+    readChar();
+    result.y = readFloat();
+    return result;
 }
 
 AString ATokenizer::readString(size_t n) {
@@ -323,5 +296,5 @@ AString ATokenizer::readString(size_t n) {
 }
 
 void ATokenizer::skipUntil(char c) {
-    for (char x; (x = readChar()) != c; );
+    for (char x; (x = readChar()) != c;);
 }

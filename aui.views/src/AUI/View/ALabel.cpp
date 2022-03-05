@@ -85,7 +85,7 @@ void ALabel::setText(const AString& newText)
             return;
         }
     } else {
-        mText.resize(newText.size());
+        mText.resize(newText.length());
         destinationIterator = mText.begin();
     }
     for (; sourceIterator != newText.end(); ++sourceIterator, ++destinationIterator) {
@@ -229,9 +229,9 @@ AString ALabel::getTransformedText() {
         return {};
     switch (mTextTransform) {
         case TextTransform::UPPERCASE:
-            return getText().uppercase();
+            return getText().uppercased();
         case TextTransform::LOWERCASE:
-            return getText().lowercase();
+            return getText().lowercased();
     }
     return getText();
 }

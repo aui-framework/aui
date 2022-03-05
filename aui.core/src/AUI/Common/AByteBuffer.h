@@ -238,7 +238,7 @@ public:
 
     static AByteBuffer fromString(const AString& string);
     static AByteBuffer fromHexString(const AString& string);
-    static AByteBuffer fromBase64String(const AString& encodedString);
+    static AByteBuffer fromBase64String(AStringView encodedString);
 };
 
 API_AUI_CORE std::ostream& operator<<(std::ostream& o, AByteBufferView buffer);

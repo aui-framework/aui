@@ -23,571 +23,851 @@
 
 #include <string>
 #include <iostream>
+#include <optional>
 #include "AUI/Core.h"
 #include <AUI/Common/ASet.h>
 
 class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
+class API_AUI_CORE AString;
 
-class API_AUI_CORE AString: std::wstring
-{
+/**
+ * @brief Not owning representation of the string which provides full string functionality set.
+ * @note Pass <code>AStringView</code> only by value - copy is cheap and passing by value will allow compiler to
+ *       store the value in registers instead of memory.
+ *
+ * <p>
+ * Intended to use as a function argument that accepts both const char* and <a href="AString">AString</a> without any
+ * overhead. Also it can be used to efficiently work with a slice of the string (i.e. substr).
+ * </p>
+ * <p>
+ * Use this class instead of <a href="AString">AString</a> in the following cases:
+ * <ul>
+ *   <li>The referenced string data will not be released until <code>AStringView</code> destruction.</li>
+ *   <li>You are not going to modify contents of the string.</li>
+ *   <li>You are not going to use <code>c_str()</code> function.</li>
+ *   <li>You want to point to the slice of <code>const char*</code> or <a href="AString">AString</a>.</li>
+ * </ul>
+ * </p>
+ */
+class API_AUI_CORE AStringView {
 private:
-	friend struct std::hash<AString>;
+    std::string_view mImpl;
 public:
-	
-	using iterator = std::wstring::iterator;
-	using const_iterator = std::wstring::const_iterator;
-	using reverse_iterator = std::wstring::reverse_iterator;
-	using const_reverse_iterator = std::wstring::const_reverse_iterator;
-	auto constexpr static NPOS = std::wstring::npos;
+    constexpr static inline auto npos = std::string_view::npos;
 
+    AStringView() = default;
+    AStringView(const char* str): mImpl(str) {}
+    AStringView(const char* str, std::size_t len): mImpl(str, len) {}
+    AStringView(const AString& str);
 
-	AString(AString&& other) noexcept
-		: std::wstring(static_cast<basic_string&&>(other))
-	{
-	}
-	
-	AString(const basic_string& other) noexcept
-		: basic_string<wchar_t>(other)
-	{
-	}
-	AString(const std::string& str) noexcept;
-
-	AString(const AString& other) noexcept
-		: std::wstring(other.c_str())
-	{
-	}
-
-	AString(const basic_string& _Right, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Right, _Al)
-	{
-	}
-
-	template <class Iterator>
-	AString(Iterator first, Iterator last) noexcept : std::wstring(first, last) {}
-	
-	AString() noexcept
-	{
-	}
-
-	AString(wchar_t c) noexcept : std::wstring(&c, &c + 1)
-	{
-		
-	}
-
-	AString(const char* str) noexcept;
-
-	explicit AString(const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Al)
-	{
-	}
-
-	AString(const basic_string& _Right, size_type _Roff, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Right, _Roff, _Al)
-	{
-	}
-
-	AString(const basic_string& _Right, size_type _Roff, size_type _Count, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Right, _Roff, _Count, _Al)
-	{
-	}
-
-	AString(const wchar_t* _Ptr, size_type _Count) noexcept
-		: basic_string<wchar_t>(_Ptr, _Count)
-	{
-	}
-
-	AString(const wchar_t* _Ptr, size_type _Count, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Ptr, _Count, _Al)
-	{
-	}
-
-	AString(const wchar_t* _Ptr) noexcept
-		: basic_string<wchar_t>(_Ptr)
-	{
-	}
-
-	AString(const wchar_t* _Ptr, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Ptr, _Al)
-	{
-	}
-
-	AString(size_type _Count, wchar_t _Ch) noexcept
-		: basic_string<wchar_t>(_Count, _Ch)
-	{
-	}
-
-	AString(size_type _Count, wchar_t _Ch, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Count, _Ch, _Al)
-	{
-	}
-
-	AString(basic_string&& _Right) noexcept
-		: basic_string<wchar_t>(_Right)
-	{
-	}
-
-	AString(basic_string&& _Right, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Right, _Al)
-	{
-	}
-
-	AString(std::initializer_list<wchar_t> _Ilist) noexcept
-		: basic_string<wchar_t>(_Ilist)
-	{
-	}
-
-	virtual ~AString() = default;
-
-
-	void push_back(wchar_t c) noexcept
-	{
-		std::wstring::push_back(c);
-	}
-	void pop_back() noexcept
-	{
-		std::wstring::pop_back();
-	}
-
-    AString uppercase() const;
-    AString lowercase() const;
-
-	bool startsWith(const AString& other) const noexcept
-	{
-		return rfind(other, 0) == 0;
-	}
-	bool startsWith(wchar_t c) const noexcept
-	{
-		return rfind(c, 0) == 0;
-	}
-	bool endsWith(const AString& other) const noexcept
-	{
-		if (length() < other.length())
-		{
-			return false;
-		}
-		size_t offset = length() - other.length();
-		return std::wstring::find(other, offset) == offset;
-	}
-	bool endsWith(wchar_t c) const noexcept
-	{
-		size_t offset = length() - 1;
-		return std::wstring::find(c, offset) == offset;
-	}
-
-	AStringVector split(wchar_t c) const noexcept;
-
-	AString mid(size_t pos, size_t count = npos) const noexcept
-	{
-		return substr(pos, count);
-	}
-
-	size_type find(char c, size_type offset = 0) const noexcept
-	{
-		return std::wstring::find(c, offset);
-	}
-	size_type find(wchar_t c, size_type offset = 0) const noexcept
-	{
-		return std::wstring::find(c, offset);
-	}
-	size_type find(const AString& str, size_type offset = 0) const noexcept
-	{
-		return std::wstring::find(str, offset);
-	}
-	size_type rfind(char c, size_type offset = NPOS) const noexcept
-	{
-		return std::wstring::rfind(c, offset);
-	}
-	size_type rfind(wchar_t c, size_type offset = NPOS) const noexcept
-	{
-		return std::wstring::rfind(c, offset);
-	}
-	size_type rfind(const AString& str, size_type offset = NPOS) const noexcept
-	{
-		return std::wstring::rfind(str, offset);
-	}
-	size_type length() const noexcept
-	{
-		return std::wstring::length();
-	}
-	AString trimLeft(wchar_t symbol = ' ') const noexcept;
-	AString trimRight(wchar_t symbol = ' ') const noexcept;
-
-	AString trim(wchar_t symbol = ' ') const noexcept
-	{
-		return trimRight(symbol).trimLeft(symbol);
-	}
-
-	void reserve(size_t s)
-	{
-		std::wstring::reserve(s);
-	}
-	void resize(size_t s)
-	{
-		std::wstring::resize(s);
-	}
-
-	AString restrictLength(size_t s, const AString& stringAtEnd = "...") const;
-
-	wchar_t* data() noexcept
-	{
-		return std::wstring::data();
-	}
-	
-	const wchar_t* data() const noexcept
-	{
-		return std::wstring::data();
-	}
-	[[nodiscard]] AString replacedAll(const AString& from, const AString& to) const noexcept;
-    [[nodiscard]] inline AString replacedAll(wchar_t from, wchar_t to) const noexcept {
-	    AString copy;
-	    copy.reserve(length() + 10);
-	    for (auto c : *this) {
-	        if (c == from) {
-	            copy << to;
-	        } else {
-	            copy << c;
-	        }
-	    }
-        return copy;
-	}
-    [[nodiscard]] inline AString replacedAll(const ASet<wchar_t> from, wchar_t to) const noexcept {
-	    AString copy;
-	    copy.reserve(length() + 10);
-	    for (auto c : *this) {
-	        if (from.contains(c)) {
-	            copy << to;
-	        } else {
-	            copy << c;
-	        }
-	    }
-        return copy;
-	}
-	void replaceAll(wchar_t from, wchar_t to) noexcept;
-
-	[[nodiscard]]
-	float toFloat() const noexcept;
-
-	[[nodiscard]]
-	double toDouble() const noexcept;
-
-	[[nodiscard]]
-	int toInt() const noexcept;
 
     [[nodiscard]]
-	unsigned toUInt() const noexcept;
+    static AStringView fromBuffer(const AByteBuffer& buffer);
 
-	[[nodiscard]]
-	bool toBool() const noexcept;
+    /**
+     * Creates <a href="AString">AString</a> from <code>AStringView</code>.
+     */
+    [[nodiscard]]
+    AString str() const noexcept;
 
-	[[nodiscard]]
-	bool contains(wchar_t c) const noexcept
-	{
-		return find(c) != npos;
-	}
-	[[nodiscard]]
-	bool contains(const AString& other) const noexcept
-	{
-		return find(other) != npos;
-	}
+    [[nodiscard]]
+    int compare(AStringView other) {
+        return mImpl.compare(other.mImpl);
+    }
 
-	static AString fromLatin1(const AByteBuffer& buffer);
-	static AString fromUtf8(const AByteBuffer& buffer);
-	static AString fromUtf8(const char* buffer, size_t length);
-	static AString fromLatin1(const char* buffer);
+    /**
+     * @return std string view
+     */
+    [[nodiscard]]
+    std::string_view std() const noexcept {
+        return mImpl;
+    }
 
-	static AString numberHex(int i) noexcept;
 
-    template<typename T, std::enable_if_t<std::is_integral_v<std::decay_t<T>> || std::is_floating_point_v<std::decay_t<T>>, int> = 0>
-	static AString number(T i) noexcept {
-	    if constexpr (std::is_same_v<bool, std::decay_t<T>>) {
+    /**
+     * @return length of the stored string.
+     * @note use <a href="empty">empty</a> instead of <code>length() == 0</code>.
+     */
+    [[nodiscard]]
+    std::size_t length() const noexcept {
+        return mImpl.length();
+    }
+
+    [[nodiscard]]
+    bool empty() const noexcept {
+        return mImpl.empty();
+    }
+
+    [[nodiscard]]
+    auto begin() noexcept {
+        return mImpl.begin();
+    }
+
+    [[nodiscard]]
+    auto begin() const noexcept {
+        return mImpl.begin();
+    }
+
+    [[nodiscard]]
+    auto end() noexcept {
+        return mImpl.end();
+    }
+
+    [[nodiscard]]
+    auto end() const noexcept {
+        return mImpl.end();
+    }
+
+    [[nodiscard]]
+    auto rbegin() noexcept {
+        return mImpl.rbegin();
+    }
+
+    [[nodiscard]]
+    auto rbegin() const noexcept {
+        return mImpl.rbegin();
+    }
+
+    [[nodiscard]]
+    auto rend() noexcept {
+        return mImpl.rend();
+    }
+
+    [[nodiscard]]
+    auto rend() const noexcept {
+        return mImpl.rend();
+    }
+
+    [[nodiscard]]
+    std::size_t find(char c, std::size_t offset = 0) const noexcept {
+        return mImpl.find(c, offset);
+    }
+
+    [[nodiscard]]
+    std::size_t find(AStringView str, std::size_t offset = 0) const noexcept {
+        return mImpl.find(str.mImpl, offset);
+    }
+    [[nodiscard]]
+    std::size_t rfind(AStringView str, std::size_t offset = std::string_view::npos) const noexcept {
+        return mImpl.rfind(str.mImpl, offset);
+    }
+
+    [[nodiscard]]
+    bool startsWith(AStringView prefix) const noexcept {
+        if (length() < prefix.length()) {
+            return false;
+        }
+        return substr(0, prefix.length()) == prefix;
+    }
+
+    [[nodiscard]]
+    bool endsWith(AStringView suffix) const noexcept {
+        if (length() < suffix.length()) {
+            return false;
+        }
+        return substr(length() - suffix.length()) == suffix;
+    }
+
+    [[nodiscard]]
+    char first() const {
+        return *begin();
+    }
+
+    [[nodiscard]]
+    char last() const {
+        return *(end() - 1);
+    }
+
+    [[nodiscard]]
+    bool startsWith(char c) const noexcept {
+        if (empty()) return false;
+        return first() == c;
+    }
+
+    [[nodiscard]]
+    bool endsWith(char c) const noexcept {
+        return last() == c;
+    }
+
+    [[nodiscard]]
+    AStringView trimLeft(char symbol = ' ') const noexcept {
+        for (auto i = begin(); i != end(); ++i) {
+            if (*i != symbol) {
+                return {&*i, std::size_t(end() - i)};
+            }
+        }
+        return {};
+    }
+
+    /**
+     * @return string data pointer.
+     * @note this function DOES NOT guarantee that the string will be null-terminated.
+     */
+    [[nodiscard]]
+    const char* data() const noexcept {
+        return mImpl.data();
+    }
+
+    [[nodiscard]]
+    AStringView trimRight(char symbol = ' ') const noexcept {
+
+        for (auto i = rbegin(); i != rend(); ++i) {
+            if (*i != symbol) {
+                return {data(), std::size_t(begin() - i.base())};
+            }
+        }
+        return {};
+    }
+
+    [[nodiscard]]
+    AStringView trim(char symbol = ' ') const noexcept {
+        return trimRight(symbol).trimLeft(symbol);
+    }
+
+    [[nodiscard]]
+    AStringVector split(char symbol = ' ') const;
+
+    /**
+     * @return contents copy but in uppercase.
+     */
+    [[nodiscard]]
+    AString uppercased() const;
+
+    /**
+     * @return contents copy but in lowercase.
+     */
+    [[nodiscard]]
+    AString lowercased() const;
+
+    AString replacedAll(char from, char to) const noexcept;
+
+    [[nodiscard]]
+    AStringView substr(std::size_t beginning, std::size_t count = npos) const noexcept {
+        assert(("bad substring beginning", beginning <= length()));
+        if (count == npos) {
+            count = length() - beginning;
+        } else {
+            assert(("bad substring ending", beginning + count <= length()));
+        }
+        return {data() + beginning, count};
+    }
+
+    [[nodiscard]]
+    AString restrictLength(size_t s, AStringView stringAtEnd = "...") const;
+
+    [[nodiscard]]
+    AString processEscapes() const;
+
+
+    /**
+     * @return converts utf8 string to utf16.
+     */
+    [[nodiscard]]
+    std::wstring toUtf16() const;
+
+    template<typename... Args>
+    AString format(Args&&... args) const;
+
+    [[nodiscard]]
+    char operator[](std::size_t index) const noexcept {
+        assert(("string index violation", index < length()));
+        return mImpl[index];
+    }
+
+    [[nodiscard]]
+    std::optional<float> toFloat() const noexcept;
+
+    [[nodiscard]]
+    std::optional<double> toDouble() const noexcept;
+
+    [[nodiscard]]
+    std::optional<int> toInt() const noexcept;
+
+    [[nodiscard]]
+    std::optional<int> toIntHex() const noexcept;
+
+    [[nodiscard]]
+    std::optional<unsigned> toUInt() const noexcept;
+
+    [[nodiscard]]
+    std::optional<bool> toBool() const noexcept;
+
+
+    template<typename T, typename std::enable_if_t<std::is_convertible_v<T, AStringView>, bool> = true>
+    [[nodiscard]]
+    bool operator==(const T& t) const noexcept {
+        return mImpl == AStringView(t).std();
+    }
+
+    template<typename T, typename std::enable_if_t<std::is_convertible_v<T, AStringView>, bool> = true>
+    [[nodiscard]]
+    bool operator!=(const T& t) const noexcept {
+        return mImpl != AStringView(t).std();
+    }
+
+    [[nodiscard]]
+    bool contains(char c) const noexcept {
+        return find(c) != npos;
+    }
+
+    [[nodiscard]]
+    bool contains(AStringView other) const noexcept {
+        return find(other) != npos;
+    }
+
+};
+
+/**
+ * Exclusive-owning representation of the string which provides full string functionality set.
+ */
+class API_AUI_CORE AString {
+private:
+    friend struct std::hash<AString>;
+    std::string mImpl;
+
+    [[nodiscard]]
+    AStringView makeView() const {
+        return {data(), length()};
+    }
+
+public:
+
+    using iterator = std::string::iterator;
+    using const_iterator = std::string::const_iterator;
+    using reverse_iterator = std::string::reverse_iterator;
+    using const_reverse_iterator = std::string::const_reverse_iterator;
+    constexpr static inline auto npos = std::string::npos;
+
+    AString() = default;
+
+    [[nodiscard]]
+    const char* data() const {
+        return mImpl.data();
+    }
+
+    [[nodiscard]]
+    char* data() {
+        return mImpl.data();
+    }
+
+    /*
+    operator AStringView() const {
+        return makeView();
+    }*/
+
+    AString(AStringView stringView) : mImpl(stringView.data(), stringView.length()) {}
+    explicit AString(std::string&& other) : mImpl(std::forward<std::string>(other)) {}
+    explicit AString(const std::string& other) : mImpl(other) {}
+    explicit AString(char c, std::size_t count = 1) : mImpl(count, c) {}
+
+    AString(const AString& other) : mImpl(other.mImpl) {}
+    AString(const char* string) : mImpl(string) {}
+    AString(const wchar_t* string);
+    AString(const char* string, std::size_t length) : mImpl(string, length) {}
+    AString(AString&& other): mImpl(std::move(other.mImpl)) {}
+
+    template<typename Iterator>
+    AString(Iterator begin, Iterator end): mImpl(begin, end) {}
+
+    ~AString() = default;
+
+    AString& uppercase();
+    AString& lowercase();
+
+    AString& operator=(const AString&) = default;
+    AString& operator=(AString&&) = default;
+
+    [[nodiscard]]
+    AString uppercased() const {
+        AString copy = *this;
+        return copy.uppercase();
+    }
+
+    [[nodiscard]]
+    AString lowercased() const {
+        AString copy = *this;
+        return copy.lowercase();
+    }
+
+    [[nodiscard]]
+    bool startsWith(AStringView other) const noexcept {
+        return makeView().startsWith(other);
+    }
+
+    [[nodiscard]]
+    bool startsWith(char c) const noexcept {
+        return makeView().startsWith(c);
+    }
+
+    [[nodiscard]]
+    bool endsWith(AStringView other) const noexcept {
+        return makeView().endsWith(other);
+    }
+
+    [[nodiscard]]
+    bool endsWith(char c) const noexcept {
+        return makeView().endsWith(c);
+    }
+
+    /**
+     * Sets convents size. If internal buffer's capacity is not enough, it will be reallocated.
+     * @param newCapacity new size
+     */
+    void resize(std::size_t newCapacity) {
+        mImpl.resize(newCapacity);
+    }
+
+
+    /**
+     * Sets capacity of the internal buffer.
+     * @param newCapacity new internal buffer capacity.
+     */
+    void reserve(std::size_t newCapacity) {
+        mImpl.reserve(newCapacity);
+    }
+
+    /**
+     * @return length of the stored string.
+     * @note use <a href="empty">empty</a> instead of <code>length() == 0</code>.
+     */
+    [[nodiscard]]
+    std::size_t length() const noexcept {
+        return mImpl.length();
+    }
+
+    [[nodiscard]]
+    bool empty() const noexcept {
+        return mImpl.empty();
+    }
+
+    [[nodiscard]]
+    auto begin() noexcept {
+        return mImpl.begin();
+    }
+
+    [[nodiscard]]
+    auto begin() const noexcept {
+        return mImpl.begin();
+    }
+
+    [[nodiscard]]
+    auto end() noexcept {
+        return mImpl.end();
+    }
+
+    [[nodiscard]]
+    auto end() const noexcept {
+        return mImpl.end();
+    }
+    [[nodiscard]]
+    auto rbegin() noexcept {
+        return mImpl.rbegin();
+    }
+
+    [[nodiscard]]
+    auto rbegin() const noexcept {
+        return mImpl.rbegin();
+    }
+
+    [[nodiscard]]
+    auto rend() noexcept {
+        return mImpl.rend();
+    }
+
+    [[nodiscard]]
+    auto rend() const noexcept {
+        return mImpl.rend();
+    }
+
+    [[nodiscard]]
+    AStringVector split(char c = ' ') const;
+
+    [[nodiscard]]
+    AString restrictLength(size_t s, AStringView stringAtEnd = "...") const {
+        return makeView().restrictLength(s, stringAtEnd);
+    }
+
+    [[nodiscard]] AString replacedAll(const AString& from, const AString& to) const noexcept;
+
+    [[nodiscard]] AString replacedAll(char from, char to) const {
+        AString copy;
+        copy.reserve(length() + 10);
+        for (auto c: *this) {
+            if (c == from) {
+                copy << to;
+            } else {
+                copy << c;
+            }
+        }
+        return copy;
+    }
+
+    AString& replaceAll(char from, char to) {
+        for (auto& r : *this) {
+            if (r == from) {
+                r = to;
+            }
+        }
+
+        return *this;
+    }
+
+    [[nodiscard]] AString replacedAll(const ASet<char>& from, char to) const noexcept {
+        AString copy;
+        copy.reserve(length() + 10);
+        for (auto c: *this) {
+            if (from.contains(c)) {
+                copy << to;
+            } else {
+                copy << c;
+            }
+        }
+        return copy;
+    }
+
+    [[nodiscard]]
+    std::optional<float> toFloat() const noexcept {
+        return makeView().toFloat();
+    }
+
+    [[nodiscard]]
+    std::optional<double> toDouble() const noexcept {
+        return makeView().toDouble();
+    }
+
+    [[nodiscard]]
+    std::optional<int> toInt() const noexcept {
+        return makeView().toInt();
+    }
+
+    [[nodiscard]]
+    std::optional<int> toIntHex() const noexcept {
+        return makeView().toIntHex();
+    }
+
+    [[nodiscard]]
+    std::optional<unsigned> toUInt() const noexcept {
+        return makeView().toUInt();
+    }
+
+    [[nodiscard]]
+    std::optional<bool> toBool() const noexcept {
+        return makeView().toBool();
+    }
+
+    [[nodiscard]]
+    bool contains(char c) const noexcept {
+        return find(c) != npos;
+    }
+
+    [[nodiscard]]
+    bool contains(AStringView other) const noexcept {
+        return find(other) != npos;
+    }
+
+    [[nodiscard]]
+    std::size_t find(char c, std::size_t offset = 0) const noexcept {
+        return mImpl.find(c, offset);
+    }
+
+    [[nodiscard]]
+    std::size_t find(AStringView v, std::size_t offset = 0) const noexcept {
+        return makeView().find(v, offset);
+    }
+
+    [[nodiscard]]
+    std::size_t rfind(char c, std::size_t offset = npos) const noexcept {
+        return mImpl.rfind(c, offset);
+    }
+
+    [[nodiscard]]
+    std::size_t rfind(AStringView v, std::size_t offset = npos) const noexcept {
+        return makeView().rfind(v, offset);
+    }
+
+    [[nodiscard]]
+    static AString fromLatin1(const AByteBuffer& buffer);
+
+    [[nodiscard]]
+    static AString fromBuffer(const AByteBuffer& buffer);
+
+    [[nodiscard]]
+    static AString fromLatin1(const char* buffer);
+
+    [[nodiscard]]
+    static AString numberHex(int i) noexcept;
+
+    template<typename T, std::enable_if_t<
+            std::is_integral_v<std::decay_t<T>> || std::is_floating_point_v<std::decay_t<T>>, int> = 0>
+    static AString number(T i) noexcept {
+        if constexpr (std::is_same_v<bool, std::decay_t<T>>) {
             if (i)
                 return "true";
             return "false";
-	    } else {
-            return std::to_wstring(i);
+        } else {
+            return AString(std::to_string(i));
         }
-	}
-	int toNumberDec() const noexcept;
-	int toNumberHex() const noexcept;
+    }
+
+    int toNumberDec() const noexcept;
 
     /**
-     * @return utf8-encoded std::string.
+     * @return converts utf8 string to utf16.
      */
-	std::string toStdString() const noexcept;
+    [[nodiscard]]
+    std::wstring toUtf16() const {
+        return makeView().toUtf16();
+    }
 
-    void resizeToNullTerminator();
+    /**
+     * TODO STUB
+     */
+    const std::string& toStdString() const noexcept {
+        return mImpl;
+    }
 
-	iterator erase(const_iterator begin, const_iterator end) noexcept
-	{
-		return std::wstring::erase(begin, end);
-	}
-	iterator erase(const_iterator begin) noexcept
-	{
-		return std::wstring::erase(begin);
-	}
+    const std::string& std() const noexcept {
+        return mImpl;
+    }
 
-	AString& erase(size_type offset) noexcept
-	{
-		std::wstring::erase(offset);
-		return *this;
-	}
-	AString& erase(size_type offset, size_type count) noexcept
-	{
-		std::wstring::erase(offset, count);
-		return *this;
-	}
+    void removeAt(unsigned index) noexcept {
+        mImpl.erase(begin() + index);
+    }
 
-	AByteBuffer toUtf8() const noexcept;
+    /**
+     * @return copy of the string but multiple spaces in a row replaced by the single space.
+     */
+    AString excessSpacesRemoved() const noexcept;
 
-	void removeAt(unsigned index) noexcept
-	{
-		erase(begin() + index);
-	}
-	AString excessSpacesRemoved() const noexcept;
+    void push_back(char c) {
+        mImpl.push_back(c);
+    }
 
-	iterator insert(size_type at, wchar_t c) noexcept
-	{
-		return std::wstring::insert(begin() + at, 1, c);
-	}
-	iterator insert(size_type at, const AString& c) noexcept
-	{
-		return std::wstring::insert(begin() + at, c.begin(), c.end());
-	}
-	
-	template<typename Iterator>
-	iterator insert(const_iterator at, Iterator begin, Iterator end) noexcept
-	{
-		return std::wstring::insert(at, begin, end);
-	}
-	
-	AString& operator<<(char c) noexcept
-	{
-		append(1, c);
-		return *this;
-	}
-	AString& operator<<(wchar_t c) noexcept
-	{
-		append(1, c);
-		return *this;
-	}
-	
-	inline ::AString& operator+=(const AString& str) noexcept
-	{
-		append(str);
-		return *this;
-	}
-	inline ::AString& operator+=(const char* str) noexcept
-	{
-		*this += AString(str);
-		return *this;
-	}
+    AString& operator<<(char c) {
+        push_back(c);
+        return *this;
+    }
 
-	[[nodiscard]] bool empty() const noexcept {
-		return std::wstring::empty();
-	}
-	[[nodiscard]] size_type size() const noexcept {
-		return std::wstring::size();
-	}
-	wchar_t operator[](size_type index) const
-	{
-		return std::wstring::at(index);
-	}
-	wchar_t& operator[](size_type index)
-	{
-		return std::wstring::at(index);
-	}
-	bool operator<(const AString& other) const noexcept
-	{
-		return compare(other) < 0;
-	}
+    int compare(AStringView other) const noexcept {
+        return makeView().compare(other);
+    }
 
-	void clear() noexcept
-	{
-		std::wstring::clear();
-	}
+    bool operator<(const AString& other) const noexcept {
+        return compare(other) < 0;
+    }
 
-	wchar_t& front() noexcept
-	{
-		return std::wstring::front();
-	}
-	wchar_t& back() noexcept
-	{
-		return std::wstring::back();
-	}
-	const wchar_t& front() const noexcept
-	{
-		return std::wstring::front();
-	}
-	const wchar_t& back() const noexcept
-	{
-		return std::wstring::back();
-	}
-	wchar_t& first() noexcept
-	{
-		return std::wstring::front();
-	}
-	wchar_t& last() noexcept
-	{
-		return std::wstring::back();
-	}
-	const wchar_t& first() const noexcept
-	{
-		return std::wstring::front();
-	}
-	const wchar_t& last() const noexcept
-	{
-		return std::wstring::back();
-	}
+    char& front() noexcept {
+        return mImpl.front();
+    }
 
-	const wchar_t* c_str() const
-	{
-		return std::wstring::c_str();
-	}
+    char& back() noexcept {
+        return mImpl.back();
+    }
 
-	iterator begin() noexcept
-	{
-		return std::wstring::begin();
-	}
-	iterator end() noexcept
-	{
-		return std::wstring::end();
-	}
+    char front() const noexcept {
+        return mImpl.front();
+    }
 
-	const_iterator begin() const noexcept
-	{
-		return std::wstring::begin();
-	}
-	const_iterator end() const noexcept
-	{
-		return std::wstring::end();
-	}
+    char back() const noexcept {
+        return mImpl.back();
+    }
 
-	reverse_iterator rbegin() noexcept
-	{
-		return std::wstring::rbegin();
-	}
-	reverse_iterator rend() noexcept
-	{
-		return std::wstring::rend();
-	}
+    char& first() noexcept {
+        return mImpl.front();
+    }
 
-	const_reverse_iterator rbegin() const noexcept
-	{
-		return std::wstring::rbegin();
-	}
-	const_reverse_iterator rend() const noexcept
-	{
-		return std::wstring::rend();
-	}
+    char& last() noexcept {
+        return mImpl.back();
+    }
 
-	AString& append(const AString& s) noexcept
-	{
-		std::wstring::append(s);
-		return *this;
-	}
+    char first() const noexcept {
+        return mImpl.front();
+    }
 
-	AString& append(size_t count, wchar_t ch) noexcept
-	{
-		std::wstring::append(count, ch);
-		return *this;
-	}
+    char last() const noexcept {
+        return mImpl.back();
+    }
 
-	const AString& operator=(const AString& value) noexcept
-	{
-		std::wstring::operator=(value);
-		return *this;
-	}
+    AString& append(AStringView s) {
+        mImpl.append(s.std());
+        return *this;
+    }
 
-	const AString& operator=(AString&& value) noexcept
-	{
-		std::wstring::operator=(value);
-		return *this;
-	}
-	
-	bool operator==(const AString& other) const noexcept
-	{
-		return wcscmp(c_str(), other.c_str()) == 0;
-	}
-	bool operator==(const wchar_t* other) const noexcept
-	{
-		return wcscmp(c_str(), other) == 0;
-	}
-	bool operator==(const char* other) const noexcept
-	{
-		return *this == AString(other);
-	}
-
-	bool operator!=(const AString& other) const noexcept
-	{
-		return wcscmp(c_str(), other.c_str()) != 0;
-	}
-	bool operator!=(const wchar_t* other) const noexcept
-	{
-		return wcscmp(c_str(), other) != 0;
-	}
-	bool operator!=(const char* other) const noexcept
-	{
-		return *this != AString(other);
-	}
+    AString& operator+=(char c)  {
+        mImpl += c;
+        return *this;
+    }
+    AString& operator+=(AStringView c)  {
+        mImpl += c.std();
+        return *this;
+    }
 
     template<typename... Args>
-    inline AString format(Args&&... args);
+    AString format(Args&&... args) const {
+        return makeView().format(std::forward<Args>(args)...);
+    }
 
-    AString processEscapes() const;
+    AString processEscapes() const {
+        return makeView().processEscapes();
+    }
+
+    [[nodiscard]]
+    AStringView substr(std::size_t beginning, std::size_t count = npos) const noexcept {
+        return makeView().substr(beginning, count);
+    }
+
+    [[nodiscard]]
+    char operator[](std::size_t index) const noexcept {
+        assert(("string index violation", index < length()));
+        return mImpl[index];
+    }
+
+    template<typename T, typename std::enable_if_t<std::is_convertible_v<T, AStringView>, bool> = true>
+    [[nodiscard]]
+    bool operator==(const T& t) const noexcept {
+        return mImpl == AStringView(t).std();
+    }
+
+    template<typename T, typename std::enable_if_t<std::is_convertible_v<T, AStringView>, bool> = true>
+    [[nodiscard]]
+    bool operator!=(const T& t) const noexcept {
+        return mImpl != AStringView(t).std();
+    }
+
+    [[nodiscard]]
+    const char* c_str() const noexcept {
+        return mImpl.c_str();
+    }
+
+    /**
+     * Clears the string.
+     */
+    void clear() noexcept {
+        mImpl.clear();
+    }
+
+
+    [[nodiscard]]
+    AStringView trimLeft(char symbol = ' ') const noexcept {
+        return makeView().trimLeft(symbol);
+    }
+
+    [[nodiscard]]
+    AStringView trimRight(char symbol = ' ') const noexcept {
+        return makeView().trimRight(symbol);
+    }
+
+    [[nodiscard]]
+    AStringView trim(char symbol = ' ') const noexcept {
+        return makeView().trim(symbol);
+    }
+
+    iterator insert(const const_iterator& where, char c) {
+        return mImpl.insert(where, c);
+    }
+    iterator insert(const const_iterator& where, AStringView s) {
+        return mImpl.insert(where, s.data(), s.data() + s.length());
+    }
+    AString& insert(std::size_t where, char c) {
+        mImpl.insert(where, 1, c);
+        return *this;
+    }
+    AString& insert(std::size_t where, AStringView s) {
+        mImpl.insert(where, s.std());
+        return *this;
+    }
+
+    template<typename Iterator>
+    iterator insert(const const_iterator& where, Iterator begin, Iterator end) {
+        return mImpl.insert(where, begin, end);
+    }
+
+    iterator erase(const const_iterator& begin, const const_iterator& end) noexcept {
+        return mImpl.erase(begin, end);
+    }
+
+    AString& erase(std::size_t where) noexcept {
+        mImpl.erase(where);
+        return *this;
+    }
+
+    AString& erase(std::size_t where, std::size_t count) noexcept {
+        mImpl.erase(where, count);
+        return *this;
+    }
 };
 
-inline AString operator+(const AString& l, const AString& r) noexcept
-{
-	auto x = l;
-	x.append(r);
-	return x;
-}
-inline AString operator+(const AString& l, wchar_t r) noexcept
-{
-	auto x = l;
-	x.append(r);
-	return x;
-}
-inline AString operator+(const AString& one, const char* other) noexcept
-{
-	return one + AString(other);
+inline AStringView operator "" _as(const char* str, size_t len) {
+    return {str, len};
 }
 
-inline AString operator+(const char* other, const AString& one) noexcept {
-	return AString(other) + one;
+inline AString AStringView::uppercased() const {
+    auto copy = AString(*this);
+    copy.uppercase();
+    return copy;
 }
 
-inline AString operator+(char lhs, const AString& cs) noexcept
-{
-	AString s(lhs);
-	s += cs;
-	return s;
+inline AString AStringView::lowercased() const {
+    auto copy = AString(*this);
+    copy.lowercase();
+    return copy;
 }
 
-inline AString operator"" _as(const char* str, size_t len)
-{
-    return {str};
+inline AString AStringView::replacedAll(char from, char to) const noexcept {
+    auto copy = AString(*this);
+    copy.replaceAll(from, to);
+    return copy;
 }
 
-inline std::ostream& operator<<(std::ostream& o, const AString& s)
-{
-	o << s.toStdString();
-	return o;
+inline std::ostream& operator<<(std::ostream& o, const AString& s) {
+    o << s.toStdString();
+    return o;
 }
-namespace std
-{
-	template<>
-	struct hash<AString>
-	{
-		size_t operator()(const AString& t) const
-		{
-			return hash<std::wstring>()(t);
-		}
-	};
+
+namespace std {
+    template<>
+    struct hash<AString> {
+        size_t operator()(const AString& t) const {
+            return hash<std::string>()(t.std());
+        }
+    };
+}
+
+//template<typename T1, typename T2, typename std::enable_if_t<std::is_integral_v<T>, bool> = 0>
+
+[[nodiscard]]
+inline AString operator+(const AStringView& v1, const AStringView& v2) {
+    AString str;
+    str.reserve(v1.length() + v2.length());
+    str += v1;
+    str += v2;
+    return str;
+}
+
+[[nodiscard]]
+inline AString operator+(const AStringView& v1, char v2) {
+    AString str;
+    str.reserve(v1.length() + 1);
+    str += v1;
+    str += v2;
+    return str;
+}
+
+inline AString AStringView::str() const noexcept {
+    return AString(*this);
+}
+
+inline AStringView::AStringView(const AString& str): mImpl(str.data(), str.length()) {
+
 }
 
 // gtest printer for AString
 inline void PrintTo(const AString& s, std::ostream* stream) {
-    *stream << s.toStdString();
+    *stream << s;
+}
+
+// gtest printer for AStringView
+inline void PrintTo(AStringView s, std::ostream* stream) {
+    *stream << s;
 }

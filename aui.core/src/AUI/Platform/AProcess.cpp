@@ -50,12 +50,15 @@ int AProcess::execute(const AString& applicationFile, const AString& args, const
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
     SHELLEXECUTEINFO sei = { sizeof(sei) };
 
+    auto wApplicationFile = applicationFile.toUtf16();
+    auto wArgs = args.toUtf16();
+    auto wWorkingDirectory = workingDirectory.toUtf16();
 
     sei.lpVerb = L"runas";
-    sei.lpFile = applicationFile.c_str();
-    sei.lpParameters = args.c_str();
-    sei.lpDirectory = workingDirectory.c_str();
-    sei.hwnd = NULL;
+    sei.lpFile = wApplicationFile.c_str();
+    sei.lpParameters = wArgs.c_str();
+    sei.lpDirectory = wWorkingDirectory.c_str();
+    sei.hwnd = nullptr;
     sei.nShow = SW_NORMAL;
     sei.fMask = SEE_MASK_NOCLOSEPROCESS;
 
@@ -143,15 +146,18 @@ void AChildProcess::run() {
     aui::zero(startupInfo);
     startupInfo.cb = sizeof(startupInfo);
 
+    auto wApplicationFile = mApplicationFile.toUtf16();
+    auto wArgs = mArgs.toUtf16();
+    auto wWorkingDirectory = mWorkingDirectory.toUtf16();
 
-    if (!CreateProcess(mApplicationFile.c_str(),
-                       const_cast<wchar_t*>(mArgs.empty() ? nullptr : mArgs.c_str()),
+    if (!CreateProcess(wApplicationFile.c_str(),
+                       const_cast<wchar_t*>(wArgs.empty() ? nullptr : wArgs.c_str()),
                        nullptr,
                        nullptr,
                        false,
                        0,
                        nullptr,
-                       mWorkingDirectory.empty() ? nullptr : mWorkingDirectory.c_str(),
+                       wWorkingDirectory.empty() ? nullptr : wWorkingDirectory.c_str(),
                        &startupInfo,
                        &mProcessInformation)) {
         AString message = "Could not create process " + mApplicationFile;

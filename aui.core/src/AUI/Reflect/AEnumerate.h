@@ -44,7 +44,7 @@ public:
         auto end = s.rfind(';');
         size_t begin;
         begin = s.rfind("value =", end);
-        if (begin == AString::NPOS) {
+        if (begin == AString::npos) {
             begin = s.rfind('[', end) + 1;
         } else {
             begin += 8;
@@ -52,8 +52,8 @@ public:
         AString result = {s.begin() + begin, s.begin() + end};
 
 
-        for (size_t p; (p = result.find("::")) != AString::NPOS;) {
-            result = result.mid(p + 2);
+        for (size_t p; (p = result.find("::")) != AString::npos;) {
+            result = result.substr(p + 2);
         }
 
 #endif

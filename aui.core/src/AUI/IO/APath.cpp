@@ -31,7 +31,10 @@
 #include "AIOException.h"
 #include "AFileInputStream.h"
 #include "AFileOutputStream.h"
+#include "AUI/Traits/arrays.h"
 #include <AUI/Traits/platform.h>
+
+constexpr std::size_t PATH_BUFFER_SIZE = 0x1000;
 
 #ifdef WIN32
 #include <windows.h>
@@ -47,7 +50,7 @@ AString error_message() {
     size_t size = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                                  NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&messageBuffer, 0, NULL);
 
-    AString message(messageBuffer, size);
+    AString message(messageBuffer);
 
     //Free the buffer.
     LocalFree(messageBuffer);
@@ -63,27 +66,27 @@ AString error_message() {
 
 APath APath::parent() const {
     auto c = ensureNonSlashEnding().rfind(L'/');
-    if (c != NPOS) {
-        return mid(0, c);
+    if (c != npos) {
+        return substr(0, c);
     }
     return {};
 }
 
 AString APath::filename() const {
      auto i = rfind(L'/');
-     if (i == NPOS) {
+     if (i == npos) {
          return *this;
      }
-    return mid(i + 1);
+    return substr(i + 1);
 }
 
 AString APath::filenameWithoutExtension() const {
     auto name = filename();
     auto it = name.rfind('.');
-    if (it == NPOS) {
+    if (it == npos) {
         return name;
     }
-    return name.mid(0, it);
+    return name.substr(0, it);
 }
 
 APath APath::file(const AString& fileName) const {
@@ -99,7 +102,7 @@ APath APath::ensureSlashEnding() const {
 
 APath APath::ensureNonSlashEnding() const {
     if (endsWith("/")) {
-        return mid(0, length() - 1);
+        return substr(0, length() - 1);
     }
     return *this;
 }
@@ -108,12 +111,12 @@ AString APath::relativelyTo(const APath& dir) const {
     if (isAbsolute() == dir.isAbsolute()) {
         auto f = dir.ensureSlashEnding();
         assert(startsWith(f));
-        return mid(f.length());
+        return substr(f.length());
     }
     auto meButAbsolute = absolute();
     auto f = dir.absolute().ensureSlashEnding();
     assert(meButAbsolute.startsWith(f));
-    return meButAbsolute.mid(f.length());
+    return meButAbsolute.substr(f.length());
 }
 bool APath::exists() const {
     return stat().st_mode & (S_IFDIR | S_IFREG);
@@ -128,12 +131,12 @@ bool APath::isDirectoryExists() const {
 
 const APath& APath::removeFile() const {
 #if AUI_PLATFORM_WIN
-    if (::_wremove(c_str()) != 0) {
+    if (::_wremove(toUtf16().c_str()) != 0) {
 #else
     if (::remove(toStdString().c_str()) != 0) {
 #endif
 #if AUI_PLATFORM_WIN
-        if (RemoveDirectory(c_str()))
+        if (RemoveDirectory(toUtf16().c_str()))
             return *this;
 #endif
         throw AIOException("could not remove file " + *this ERROR_DESCRIPTION);
@@ -157,7 +160,7 @@ ADeque<APath> APath::listDir(ListFlags f) const {
 
 #ifdef WIN32
     WIN32_FIND_DATA fd;
-    HANDLE dir = FindFirstFile(file("*").c_str(), &fd);
+    HANDLE dir = FindFirstFile(file("*").toUtf16().c_str(), &fd);
 
     if (dir == INVALID_HANDLE_VALUE)
 #else
@@ -179,7 +182,7 @@ ADeque<APath> APath::listDir(ListFlags f) const {
 #endif
 
         if (!(f & ListFlags::DONT_IGNORE_DOTS)) {
-            if ("."_as == filename || ".."_as == filename) {
+            if (std::wstring_view(L".") == filename || std::wstring_view(L"..") == filename) {
                 continue;
             }
         }
@@ -191,9 +194,9 @@ ADeque<APath> APath::listDir(ListFlags f) const {
             for (auto& file : childDir.listDir(f)) {
                 if (file.startsWith(childDir)) {
                     // absolute path
-                    auto p = file.mid(childDir.length());
+                    auto p = file.substr(childDir.length());
                     if (p.startsWith("/")) {
-                        p = p.mid(1);
+                        p = p.substr(1);
                     }
                     list << childDir.file(p);
                 } else {
@@ -216,14 +219,14 @@ APath APath::absolute() const {
         throw AFileNotFoundException("could not find absolute file " +*this);
     }
 #ifdef WIN32
-    wchar_t buf[0x1000];
-    if (_wfullpath(buf, c_str(), sizeof(buf) / sizeof(wchar_t)) == nullptr) {
+    wchar_t buf[PATH_BUFFER_SIZE];
+    if (_wfullpath(buf, toUtf16().c_str(), PATH_BUFFER_SIZE) == nullptr) {
         throw AIOException("could not find absolute file" + *this ERROR_DESCRIPTION);
     }
 
     return APath(buf);
 #else
-    char buf[0x1000];
+    char buf[PATH_BUFFER_SIZE];
     if (realpath(toStdString().c_str(), buf) == nullptr) {
         throw AFileNotFoundException("could not find absolute file " + *this ERROR_DESCRIPTION);
     }
@@ -234,8 +237,8 @@ APath APath::absolute() const {
 
 const APath& APath::makeDir() const {
 #ifdef WIN32
-    //                           VV - КОЗЛЫ, МЛЯТЬ!
-    if (::_wmkdir(c_str()) == 0) {
+    //                                 VVV - КОЗЛЫ, МЛЯТЬ!
+    if (::_wmkdir(toUtf16().c_str()) == 0) {
         auto s = "could not create directory: "_as + absolute() ERROR_DESCRIPTION;
         auto et = GetLastError();
         switch (et) {
@@ -278,7 +281,7 @@ bool APath::isAbsolute() const {
     if (length() >= 1) {
         if (first() == '/')
             return true;
-        if (length() >= 2 && (*this)[1] == ':') {
+        if (length() >= 2 && AString::operator[](1) == ':') {
             return true;
         }
     }
@@ -292,7 +295,7 @@ size_t APath::fileSize() const {
 #if AUI_PLATFORM_WIN
 struct _stat64 APath::stat() const {
     struct _stat64 s = {0};
-    _wstat64(c_str(), &s);
+    _wstat64(toUtf16().c_str(), &s);
     return s;
 }
 #else
@@ -312,19 +315,18 @@ void APath::copy(const APath& source, const APath& destination) {
 #include <shlobj.h>
 
 APath APath::getDefaultPath(APath::DefaultPath path) {
-    APath result;
-    result.resize(0x800);
+    wchar_t buf[PATH_BUFFER_SIZE];
     switch (path) {
         case APPDATA:
-            SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_DEFAULT, result.data());
+            SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_DEFAULT, buf);
             break;
         case TEMP:
-            GetTempPath(result.length(), result.data());
+            GetTempPath(PATH_BUFFER_SIZE, buf);
             break;
         default:
             assert(0);
     }
-    result.resizeToNullTerminator();
+    APath result(buf);
     result.removeBackSlashes();
     return result;
 }
@@ -332,16 +334,15 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
 
 APath APath::withoutUppermostFolder() const {
     auto r = AString::find('/');
-    if (r == NPOS)
+    if (r == npos)
         return *this;
-    return mid(r + 1);
+    return substr(r + 1);
 }
 
 APath APath::workingDir() {
-    APath p;
-    p.resize(0x800);
-    p.resize(GetCurrentDirectory(0x800, p.data()));
-    return p;
+    wchar_t buf[PATH_BUFFER_SIZE];
+    GetCurrentDirectory(PATH_BUFFER_SIZE, buf);
+    return APath(buf);
 }
 
 #else
@@ -350,7 +351,7 @@ APath APath::workingDir() {
 #include <pwd.h>
 
 APath APath::workingDir() {
-    char buf[0x1000];
+    char buf[PATH_BUFFER_SIZE];
     getcwd(buf, sizeof(buf));
     return buf;
 }

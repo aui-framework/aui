@@ -60,7 +60,7 @@ AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& titl
             break;
     }
 
-    switch (::MessageBox(window, message.c_str(), title.c_str(), flags)) {
+    switch (::MessageBox(window, message.toUtf16().c_str(), title.toUtf16().c_str(), flags)) {
         case IDOK:
             return ResultButton::OK;
         case IDCANCEL:

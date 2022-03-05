@@ -35,13 +35,13 @@ private:
     static AMap<AString, std::function<_<IInputStream>(const AUrl&)>>& resolvers();
 
 public:
-	AUrl(const AString& full);
-	inline AUrl(const char* full): AUrl(AString(full)) {}
+	AUrl(AStringView full);
+	AUrl(const char* full): AUrl(AStringView(full)) {}
 
-    AUrl(const AString& protocol, const AString& path) : mProtocol(protocol), mPath(path) {}
+    AUrl(AString protocol, AString path) : mProtocol(std::move(protocol)), mPath(std::move(path)) {}
 
-    static AUrl file(const AString& file) {
-        return { "file", file };
+    static AUrl file(AString file) {
+        return { "file", std::move(file) };
     }
 
 	_<IInputStream> open() const;
@@ -70,5 +70,5 @@ public:
 
 inline AUrl operator"" _url(const char* input, size_t s)
 {
-    return AUrl(std::string{input, input + s});
+    return { AStringView{input, s} };
 }

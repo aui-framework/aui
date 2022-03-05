@@ -20,6 +20,7 @@
  */
 
 #include <cstring>
+#include <charconv>
 #include "AString.h"
 #include "AStringVector.h"
 #include <AUI/Common/AByteBuffer.h>
@@ -32,7 +33,7 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
     {
         if (*str & 0x80)
         {
-            wchar_t t;
+            char t;
             // utf8 symbol
             if (*str & 0b00100000)
             {
@@ -59,31 +60,12 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
     }
 }
 
-AString::AString(const char* str) noexcept
-{
-    fromUtf8_impl(*this, str, strlen(str));
+AString AString::fromBuffer(const AByteBuffer& buffer) {
+    return { buffer.data(), buffer.getSize() };
 }
 
-AString::AString(const std::string& str) noexcept
-{
-    fromUtf8_impl(*this, str.c_str(), str.length());
-}
-
-AString AString::fromUtf8(const AByteBuffer& buffer) {
-    return AString::fromUtf8(buffer.data(), buffer.getSize());
-}
-
-AString AString::fromUtf8(const char* buffer, size_t length) {
-    AString result;
-    fromUtf8_impl(result, buffer, length);
-    return result;
-}
-
-
-AByteBuffer AString::toUtf8() const noexcept
-{
-    AByteBuffer buf;
-    for (wchar_t c : *this)
+AString::AString(const wchar_t* string) {
+    for (wchar_t c; (c = *string); ++string)
     {
         if (c >= 0x80)
         {
@@ -93,36 +75,70 @@ AByteBuffer AString::toUtf8() const noexcept
                         static_cast<char>(0b11100000 | (c >> 12 & 0b1111)),
                         static_cast<char>(0b10000000 | (c >> 6 & 0b111111)),
                         static_cast<char>(0b10000000 | (c & 0b111111)),
-                        0,
                 };
-                buf << b;
+                insert(end(), b, b + sizeof(b));
             } else if (c >= 0x80)
             {
                 char b[] = {
                         static_cast<char>(0b11000000 | (c >> 6 & 0b11111)),
                         static_cast<char>(0b10000000 | (c & 0b111111)),
-                        0,
                 };
-                buf << b;
+                insert(end(), b, b + sizeof(b));
             }
         } else
         {
-            buf << *reinterpret_cast<char*>(&c);
+            push_back(*reinterpret_cast<char*>(&c));
         }
     }
-    return buf;
 }
 
-AStringVector AString::split(wchar_t c) const noexcept
+std::wstring AStringView::toUtf16() const {
+    std::wstring result;
+    result.reserve(length());
+
+    // parse utf8
+    for (auto str = begin(); str != end();)
+    {
+        if (*str & 0x80)
+        {
+            wchar_t t;
+            // utf8 symbol
+            if (*str & 0b00100000)
+            {
+                // 3-byte symbol
+                t = *(str++) & 0b1111;
+                t <<= 6;
+                t |= *(str++) & 0b111111;
+                t <<= 6;
+                t |= *(str++) & 0b111111;
+                result.push_back(t);
+            } else
+            {
+                // 2-byte symbol
+                t = *(str++) & 0b11111;
+                t <<= 6;
+                t |= *(str++) & 0b111111;
+                result.push_back(t);
+            }
+        } else
+        {
+            // ascii symbol
+            result.push_back(*(str++));
+        }
+    }
+    return result;
+}
+
+AStringVector AStringView::split(char c) const
 {
     if (empty()) {
         return {};
     }
     AStringVector result;
     result.reserve(length() / 10);
-    for (size_type s = 0;;)
+    for (std::size_t s = 0;;)
     {
-        auto next = std::wstring::find(c, s);
+        auto next = find(c, s);
         if (next == npos)
         {
             result << substr(s);
@@ -135,37 +151,18 @@ AStringVector AString::split(wchar_t c) const noexcept
     return result;
 }
 
-AString AString::trimLeft(wchar_t symbol) const noexcept
-{
-    for (auto i = begin(); i != end(); ++i)
-    {
-        if (*i != symbol)
-        {
-            return { i, end() };
-        }
-    }
-    return {};
+AStringVector AString::split(char c) const {
+    return makeView().split(c);
 }
 
-AString AString::trimRight(wchar_t symbol) const noexcept
-{
-    for (auto i = rbegin(); i != rend(); ++i)
-    {
-        if (*i != symbol)
-        {
-            return { begin(),i.base() };
-        }
-    }
-    return {};
-}
 
 AString AString::replacedAll(const AString& from, const AString& to) const noexcept
 {
     AString result;
-    for (size_type pos = 0;;)
+    for (std::size_t pos = 0;;)
     {
         auto next = find(from, pos);
-        if (next == NPOS)
+        if (next == npos)
         {
             result.insert(result.end(), begin() + pos, end());
             return result;
@@ -176,63 +173,51 @@ AString AString::replacedAll(const AString& from, const AString& to) const noexc
     }
 }
 
-float AString::toFloat() const noexcept
-{
-    try {
-        return std::stof(*this);
-    } catch (...)
-    {
-        return 0.f;
+template<typename T>
+std::optional<T> toNumericImpl(const AStringView& self) {
+    T result;
+    if (std::from_chars(self.data(), self.data() + self.length(), result).ec == std::errc()) {
+        return result;
     }
+    return std::nullopt;
 }
 
-double AString::toDouble() const noexcept
-{
-    try {
-        return std::stod(*this);
+template<typename T>
+std::optional<T> toNumericImpl(const AStringView& self, int base) {
+    T result;
+    if (std::from_chars(self.data(), self.data() + self.length(), result, base).ec == std::errc()) {
+        return result;
     }
-    catch (...)
-    {
-        return 0.0;
-    }
+    return std::nullopt;
 }
 
-int AString::toInt() const noexcept
-{
-    try
-    {
-        if (length() >= 2) {
-            if ((*this)[1] == 'x' || (*this)[1] == 'X') {
-                // hex
-                return std::stoi(AString{begin() + 2, end()}, nullptr, 16);
-            }
-        }
-        return std::stoi(*this);
-    } catch (...)
-    {
-        return 0;
-    }
-}
-unsigned AString::toUInt() const noexcept
-{
-    try
-    {
-        if (length() >= 2) {
-            if ((*this)[1] == 'x' || (*this)[1] == 'X') {
-                // hex
-                return std::stoul(AString{begin() + 2, end()}, nullptr, 16);
-            }
-        }
-        return std::stoul(*this);
-    } catch (...)
-    {
-        return 0;
-    }
+std::optional<float> AStringView::toFloat() const noexcept {
+    return toNumericImpl<float>(*this);
 }
 
-bool AString::toBool() const noexcept
-{
-    return *this == "true";
+std::optional<double> AStringView::toDouble() const noexcept {
+    return toNumericImpl<double>(*this);
+}
+
+std::optional<int> AStringView::toInt() const noexcept {
+    return toNumericImpl<int>(*this);
+}
+
+std::optional<int> AStringView::toIntHex() const noexcept {
+    return toNumericImpl<int>(*this, 16);
+}
+
+std::optional<unsigned> AStringView::toUInt() const noexcept {
+    return toNumericImpl<unsigned int>(*this);
+}
+
+std::optional<bool> AStringView::toBool() const noexcept {
+    if (*this == "true") {
+        return true;
+    } else if (*this == "false") {
+        return false;
+    }
+    return std::nullopt;
 }
 
 AString AString::fromLatin1(const AByteBuffer& buffer)
@@ -250,38 +235,9 @@ AString AString::fromLatin1(const char* buffer) {
 }
 
 
-int AString::toNumberDec() const noexcept
-{
-    int n;
-    if (std::swscanf(c_str(), L"%d", &n) < 0)
-        return -1;
-
-    return n;
-}
-
-int AString::toNumberHex() const noexcept
-{
-    int n;
-    if (std::swscanf(c_str(), L"%x", &n) < 0)
-        return -1;
-
-    return n;
-}
-
-std::string AString::toStdString() const noexcept
-{
-    auto encoded = toUtf8();
-    std::string dst;
-    dst.reserve(encoded.getSize());
-    dst.insert(0, encoded.data(), encoded.getSize());
-
-    return dst;
-}
-
-AString AString::uppercase() const {
-    std::string buf = toStdString();
+AString& AString::uppercase() {
     {
-        auto p = reinterpret_cast<unsigned char *>(buf.data());
+        auto p = reinterpret_cast<unsigned char *>(data());
         unsigned char* pExtChar = 0;
         while (*p) {
             if ((*p >= 0x61) && (*p <= 0x7a)) // US ASCII
@@ -681,13 +637,12 @@ AString AString::uppercase() const {
         }
     }
 
-    return buf;
+    return *this;
 }
 
-AString AString::lowercase() const {
-    std::string buf = toStdString();
+AString& AString::lowercase() {
     {
-        auto p = reinterpret_cast<unsigned char *>(buf.data());
+        auto p = reinterpret_cast<unsigned char *>(data());
         unsigned char* pExtChar = 0;
         while (*p) {
             if ((*p >= 0x41) && (*p <= 0x5a)) // US ASCII
@@ -1088,25 +1043,13 @@ AString AString::lowercase() const {
         }
     }
 
-    return buf;
+    return *this;
 }
 
-void AString::replaceAll(wchar_t from, wchar_t to) noexcept {
-    for (auto& s : *this) {
-        if (s == from)
-            s = to;
-    }
-}
 
-void AString::resizeToNullTerminator() {
-    wchar_t* i;
-    for (i = data(); *i; ++i);
-    resize(i - data());
-}
-
-AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
+AString AStringView::restrictLength(size_t s, AStringView stringAtEnd) const {
     if (length() > s) {
-        return mid(0, s) + stringAtEnd;
+        return substr(0, s) + stringAtEnd;
     }
     return *this;
 }
@@ -1117,7 +1060,7 @@ AString AString::numberHex(int i) noexcept {
     return buf;
 }
 
-AString AString::processEscapes() const {
+AString AStringView::processEscapes() const {
     AString result;
     result.reserve(length());
     bool doEscape = false;
@@ -1141,6 +1084,10 @@ AString AString::processEscapes() const {
         }
     }
     return result;
+}
+
+AStringView AStringView::fromBuffer(const AByteBuffer& buffer) {
+    return { buffer.data(), buffer.getSize() };
 }
 
 AString AString::excessSpacesRemoved() const noexcept {

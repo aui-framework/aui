@@ -52,7 +52,7 @@ _<AProgramModule> AProgramModule::load(const AString& path)
     auto fullname = "lib" + path + "." + getDllExtension();
 #endif
 #if AUI_PLATFORM_WIN
-	auto lib = LoadLibrary(fullname.c_str());
+	auto lib = LoadLibraryA(fullname.c_str());
 	if (!lib)
 	{
 		throw AProgramModuleLoadException("Could not load shared library: " + fullname + ": " + AString::number(int(GetLastError())));

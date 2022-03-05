@@ -9,7 +9,7 @@
 
 TEST(CurlTest, ToByteBuffer) {
     AByteBuffer buffer = ACurl::Builder("https://github.com").toByteBuffer();
-    ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
+    ASSERT_TRUE(AStringView::fromBuffer(buffer).contains("DOCTYPE"));
 }
 
 TEST(CurlTest, ToStream) {
@@ -18,7 +18,7 @@ TEST(CurlTest, ToStream) {
         a.run();
     }
     auto buffer = AByteBuffer::fromStream(AFileInputStream("temp.html"));
-    ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
+    ASSERT_TRUE(AStringView::fromBuffer(buffer).contains("DOCTYPE"));
 }
 
 TEST(CurlTest, Fail) {

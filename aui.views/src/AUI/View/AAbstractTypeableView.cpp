@@ -56,7 +56,7 @@ void AAbstractTypeableView::updateCursorBlinking()
 
 void AAbstractTypeableView::updateCursorPos()
 {
-    auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().mid(0, mCursorIndex)));
+    auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().substr(0, mCursorIndex)));
 
     const int SCROLL_ADVANCEMENT = getContentWidth() * 4 / 10;
 
@@ -163,7 +163,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
             if (mCursorIndex < length()) {
                 if (AInput::isKeyDown(AInput::LControl)) {
                     auto index = typeableFind(' ', mCursorIndex);
-                    if (index == AString::NPOS) {
+                    if (index == AString::npos) {
                         mCursorIndex = length();
                     } else {
                         mCursorIndex = index + 1;

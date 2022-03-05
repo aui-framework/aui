@@ -6,11 +6,11 @@
 AString AJson::toString(const AJson& json) {
     AByteBuffer buffer;
     aui::serialize(buffer, json);
-    return AString::fromUtf8(buffer);
+    return AString::fromBuffer(buffer);
 }
 
-AJson AJson::fromString(const AString& json) {
-    AStringStream sis(json);
+AJson AJson::fromString(AString json) {
+    AStringStream sis(std::move(json));
     return aui::deserialize<AJson>(sis);
 }
 

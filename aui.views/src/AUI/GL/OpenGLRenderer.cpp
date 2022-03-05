@@ -92,7 +92,7 @@ struct TexturedShaderHelper {
 };
 
 
-std::string put_if(bool value, const char* str) { if (value) return str; return ""; }
+AString put_if(bool value, const char* str) { if (value) return str; return ""; }
 OpenGLRenderer::OpenGLRenderer() {
     mSolidShader.load(
             "attribute vec3 pos;"

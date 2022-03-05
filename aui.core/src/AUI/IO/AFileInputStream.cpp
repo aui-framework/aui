@@ -28,13 +28,13 @@ AFileInputStream::AFileInputStream(const AString& path)
 {
 #if AUI_PLATFORM_WIN
     // КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
-    _wfopen_s(&mFile, path.c_str(), L"rb");
+    fopen_s(&mFile, path.c_str(), "rb");
 #else
     mFile = fopen(path.toStdString().c_str(), "rb");
 #endif
 	if (!mFile)
 	{
-		throw AIOException("could not read from " + path.toStdString());
+		throw AIOException("could not read from " + path);
 	}
 }
 

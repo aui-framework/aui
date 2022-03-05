@@ -107,16 +107,16 @@ void Css2ass::run(Toolbox& t) {
                             size_t colonIndex = subSelectorCss.find(':');
 
                             AString subClass;
-                            if (colonIndex != AString::NPOS) {
-                                subClass = subSelectorCss.mid(colonIndex + 1);
-                                subSelectorCss = subSelectorCss.mid(0, colonIndex);
+                            if (colonIndex != AString::npos) {
+                                subClass = subSelectorCss.substr(colonIndex + 1);
+                                subSelectorCss = subSelectorCss.substr(0, colonIndex);
                             }
 
                             // selector routine
                             if (subSelectorCss.startsWith(".") || subSelectorCss.startsWith("#")) {
                                 // css class or id
                                 currentSubSelectorAss += "class_of(\"";
-                                currentSubSelectorAss += subSelectorCss.mid(1);
+                                currentSubSelectorAss += subSelectorCss.substr(1);
                                 currentSubSelectorAss += "\")";
                             } else {
                                 // some type
@@ -194,9 +194,9 @@ void Css2ass::run(Toolbox& t) {
                         AString line = t.readStringUntilUnescaped({';', '\n'}).trim();
 
                         auto colonIndex = line.find(':');
-                        if (colonIndex != AString::NPOS) {
-                            AString property = line.mid(0, colonIndex);
-                            AString value = line.mid(colonIndex + 1).trim();
+                        if (colonIndex != AString::npos) {
+                            AString property = line.substr(0, colonIndex);
+                            AString value = line.substr(colonIndex + 1).trim();
 
                             try {
                                 processRule(code, property, value);
@@ -268,9 +268,9 @@ public:
 
     AString property(const AString& value) override {
         if (value.startsWith("url")) {
-            return "\"" + value.mid(5, value.length() - 6) + "\"";
+            return "\"" + value.substr(5, value.length() - 6) + "\"";
         }
-        return "\"" + value.mid(1, value.length() - 2) + "\"";
+        return "\"" + value.substr(1, value.length() - 2) + "\"";
     }
 };
 struct Common: PropertyWrapper {
@@ -286,7 +286,7 @@ public:
                 continue;
             if (arg.startsWith("#")) {
                 // it's possibly color
-                arg = arg.mid(1);
+                arg = arg.substr(1);
                 switch (arg.length()) {
                     case 3: // #fff
                         result << ("0x" + AString(arg[0]) + "0" + arg[1] + "0" + arg[2] + "0" + "_rgb");
@@ -295,10 +295,10 @@ public:
                         result << ("0x" + AString(arg[3]) + "0" + arg[0] + "0" + arg[1] + "0" + arg[2] + "0" + "_argb");
                         break;
                     case 6: // #ffffff
-                        result << ("0x" + arg.mid(0, 2) + arg.mid(2, 2) + arg.mid(4, 2) + "_rgb");
+                        result << ("0x" + arg.substr(0, 2) + arg.substr(2, 2) + arg.substr(4, 2) + "_rgb");
                         break;
                     case 8: // #ffffffff
-                        result << ("0x" + arg.mid(6, 2) + arg.mid(0, 2) + arg.mid(2, 2) + arg.mid(4, 2) + "_argb");
+                        result << ("0x" + arg.substr(6, 2) + arg.substr(0, 2) + arg.substr(2, 2) + arg.substr(4, 2) + "_argb");
                         break;
 
                     default:
@@ -310,11 +310,11 @@ public:
                 if (arg.length() >= 3) {
                     // it's possibly contains literal suffix (px, em, dp)
                     if (isalpha(arg.last())) {
-                        suffix = arg.mid(arg.length() - 2, 2);
+                        suffix = arg.substr(arg.length() - 2, 2);
                         if (suffix == "em")
                             suffix = "dp";
                         suffix = "_" + suffix;
-                        arg = arg.mid(0, arg.length() - 2);
+                        arg = arg.substr(0, arg.length() - 2);
                     }
                 }
                 if (arg == "0")
@@ -333,10 +333,10 @@ public:
 void Css2ass::processRule(AVector<AString>& code, const AString& property, const AString& value) {
     const AMap<AString, std::function<AString(const AString&)>> procs = {
             {"-aui-font-rendering", [&](const AString&) {
-                return "FontRendering::" + value.uppercase();
+                return "FontRendering::" + value.uppercased();
             }},
             {"cursor", [&](const AString&) {
-                return "ACursor::" + value.uppercase();
+                return "ACursor::" + value.uppercased();
             }},
             {"font-family", Url("FontFamily")},
             {"font-size", Common("FontSize")},

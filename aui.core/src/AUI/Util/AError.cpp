@@ -31,7 +31,7 @@ void AError::handleErrno(const AString& furtherInfo) {
         case EBUSY: throw AResourceBusyException("device or resource is busy: " + furtherInfo);
 
         default:
-            throw AException("unknown exception (errno " + std::to_string(e) + "): " + furtherInfo);
+            throw AException("unknown exception (errno " + AString::number(e) + "): " + furtherInfo);
     }
 
 }

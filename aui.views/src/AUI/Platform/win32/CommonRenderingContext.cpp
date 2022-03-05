@@ -21,35 +21,38 @@ void CommonRenderingContext::init(const Init& init) {
 
     auto& window = init.window;
 
-    // CREATE WINDOW
-    WNDCLASSEX winClass;
 
 
     ARandom r;
-    for (;;) {
-        mWindowClass = "AUI-" + AString::number(r.nextInt());
-        winClass.lpszClassName = mWindowClass.c_str();
-        winClass.cbSize = sizeof(WNDCLASSEX);
-        winClass.style = CS_HREDRAW | CS_VREDRAW;
-        winClass.lpfnWndProc = WindowProc;
-        winClass.hInstance = GetModuleHandle(nullptr);
-        //winClass.hIcon = LoadIcon(mInst, (LPCTSTR)101);
-        //winClass.hIconSm = LoadIcon(mInst, (LPCTSTR)101);
-        winClass.hIcon = 0;
-        winClass.hIconSm = 0;
-        winClass.hbrBackground = nullptr;
-        winClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-        winClass.lpszMenuName = mWindowClass.c_str();
-        winClass.cbClsExtra = 0;
-        winClass.cbWndExtra = 0;
-        if (RegisterClassEx(&winClass)) {
-            break;
+    {
+        // CREATE WINDOW
+        WNDCLASSEX winClass;
+        for (;;) {
+            mWindowClass = "AUI-" + AString::number(r.nextInt());
+            auto wWindowClass = mWindowClass.toUtf16();
+            winClass.lpszClassName = wWindowClass.c_str();
+            winClass.cbSize = sizeof(WNDCLASSEX);
+            winClass.style = CS_HREDRAW | CS_VREDRAW;
+            winClass.lpfnWndProc = WindowProc;
+            winClass.hInstance = GetModuleHandle(nullptr);
+            //winClass.hIcon = LoadIcon(mInst, (LPCTSTR)101);
+            //winClass.hIconSm = LoadIcon(mInst, (LPCTSTR)101);
+            winClass.hIcon = 0;
+            winClass.hIconSm = 0;
+            winClass.hbrBackground = nullptr;
+            winClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
+            winClass.lpszMenuName = wWindowClass.c_str();
+            winClass.cbClsExtra = 0;
+            winClass.cbWndExtra = 0;
+            if (RegisterClassEx(&winClass)) {
+                break;
+            }
         }
     }
 
     DWORD style = WS_OVERLAPPEDWINDOW;
 
-    window.mHandle = CreateWindowEx(WS_EX_DLGMODALFRAME, mWindowClass.c_str(), init.name.c_str(), style,
+    window.mHandle = CreateWindowEx(WS_EX_DLGMODALFRAME, mWindowClass.toUtf16().c_str(), init.name.toUtf16().c_str(), style,
                              GetSystemMetrics(SM_CXSCREEN) / 2 - init.width / 2,
                              GetSystemMetrics(SM_CYSCREEN) / 2 - init.height / 2, init.width, init.height,
                              init.parent != nullptr ? init.parent->mHandle : nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
@@ -78,7 +81,7 @@ void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
 
         DestroyWindow(w->mHandle);
     }
-    UnregisterClass(mWindowClass.c_str(), GetModuleHandle(nullptr));
+    UnregisterClass(mWindowClass.toUtf16().c_str(), GetModuleHandle(nullptr));
 }
 
 void CommonRenderingContext::beginPaint(ABaseWindow& window) {

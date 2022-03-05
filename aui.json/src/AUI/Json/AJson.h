@@ -201,7 +201,7 @@ public:
     }
 
     [[nodiscard]] static API_AUI_JSON AString toString(const AJson& json);
-    [[nodiscard]] static API_AUI_JSON AJson fromString(const AString& json);
+    [[nodiscard]] static API_AUI_JSON AJson fromString(AString json);
     [[nodiscard]] static API_AUI_JSON AJson fromBuffer(AByteBufferView buffer);
 };
 

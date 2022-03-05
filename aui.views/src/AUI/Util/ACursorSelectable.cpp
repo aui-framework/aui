@@ -85,7 +85,7 @@ int ACursorSelectable::drawSelectionPre() {
 }
 
 int ACursorSelectable::getPosByIndex(int end, int begin) {
-    return -getMouseSelectionScroll().x + int(getMouseSelectionFont().getWidth(getDisplayText().mid(begin, end - begin)));
+    return -getMouseSelectionScroll().x + int(getMouseSelectionFont().getWidth(getDisplayText().substr(begin, end - begin)));
 }
 
 void ACursorSelectable::drawSelectionPost() {
@@ -158,10 +158,10 @@ void ACursorSelectable::handleMouseDoubleClicked(const glm::ivec2& pos, AInput::
     auto end = text.find(' ', clickIndex);
     auto begin = text.rfind(' ', clickIndex);
 
-    if (end == AString::NPOS) {
+    if (end == AString::npos) {
         end = text.length();
     }
-    if (begin == AString::NPOS) {
+    if (begin == AString::npos) {
         begin = 0;
     } else {
         begin += 1;

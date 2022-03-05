@@ -70,7 +70,7 @@ AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
             for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
                 APath current = i;
                 current.replaceAll('/', '\\');
-                SHCreateItemFromParsingName(current.data(), nullptr, IID_IShellItem,
+                SHCreateItemFromParsingName(current.toUtf16().data(), nullptr, IID_IShellItem,
                                             reinterpret_cast<void**>(&psiFolder));
             }
             if (psiFolder) {
@@ -94,7 +94,7 @@ AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
                 // Display the file name to the user.
                 if (SUCCEEDED(hr))
                 {
-                    result = pszFilePath;
+                    result = AString(pszFilePath);
                     CoTaskMemFree(pszFilePath);
                 }
                 pItem->Release();
@@ -128,7 +128,7 @@ AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVec
             auto extFilter = "*." + ext.extension;
             storage << extFilter;
             storage << ext.name + " (" + extFilter + ")";
-            filter << COMDLG_FILTERSPEC{ (storage.end()-1)->c_str(), (storage.end()-2)->c_str() };
+            filter << COMDLG_FILTERSPEC{ (storage.end()-1)->toUtf16().c_str(), (storage.end()-2)->toUtf16().c_str() };
         }
 
 
@@ -140,7 +140,7 @@ AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVec
             for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
                 APath current = i;
                 current.replaceAll('/', '\\');
-                SHCreateItemFromParsingName(current.data(), nullptr, IID_IShellItem,
+                SHCreateItemFromParsingName(current.toUtf16().data(), nullptr, IID_IShellItem,
                                             reinterpret_cast<void**>(&psiFolder));
             }
             if (psiFolder) {
@@ -164,7 +164,7 @@ AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVec
                 // Display the file name to the user.
                 if (SUCCEEDED(hr))
                 {
-                    result = pszFilePath;
+                    result = AString(pszFilePath);
                     CoTaskMemFree(pszFilePath);
                 }
                 pItem->Release();
@@ -176,8 +176,8 @@ AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVec
         return result;
     };
 }
-void ADesktop::openUrl(const AString& url) {
-    ShellExecute(nullptr, L"open", url.c_str(), nullptr, nullptr, SW_NORMAL);
+void ADesktop::openUrl(AStringView url) {
+    ShellExecute(nullptr, L"open", url.toUtf16().c_str(), nullptr, nullptr, SW_NORMAL);
 }
 
 

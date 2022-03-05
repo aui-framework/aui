@@ -119,13 +119,13 @@ void Lang::run(Toolbox& t) {
         for (auto& l : langDir.listDir()) {
             auto filename = l.filename();
             auto dotPos = filename.find('.');
-            if (dotPos == AString::NPOS)
+            if (dotPos == AString::npos)
                 continue;
 
             AString langName;
 
             try {
-                langName = ALanguageCode(filename.mid(0, dotPos)).toString();
+                langName = ALanguageCode(filename.substr(0, dotPos)).toString();
             } catch (...) {
                 continue;
             }

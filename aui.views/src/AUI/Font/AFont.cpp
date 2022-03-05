@@ -56,7 +56,7 @@ AFont::AFont(AFontManager* fm, const AUrl& url):
 AString AFont::getFontFamilyName() const {
     FT_SfntName name;
     FT_Get_Sfnt_Name(mFace, 0, &name);
-    return std::string(name.string, name.string + name.string_len);
+    return { name.string, name.string + name.string_len };
 }
 
 AFontFamily::Weight AFont::getFontWeight() const {

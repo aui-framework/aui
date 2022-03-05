@@ -116,7 +116,7 @@ private:
 
 public:
     APath() = default;
-    APath(AString&& other) noexcept: AString(other) {
+    APath(AString&& other) noexcept: AString(std::forward<AString>(other)) {
         removeBackSlashes();
     }
     APath(const AString& other) noexcept: AString(other) {
@@ -125,7 +125,8 @@ public:
     APath(const char* str) noexcept: AString(str) {
         removeBackSlashes();
     }
-    APath(const wchar_t * str) noexcept: AString(str) {
+
+    APath(AStringView stringView) noexcept: AString(stringView) {
         removeBackSlashes();
     }
 

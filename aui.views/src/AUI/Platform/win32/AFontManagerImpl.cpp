@@ -39,7 +39,7 @@ AFontManager::AFontManager() :
 AString AFontManager::getPathToFont(const AString& font) {
 
     try {
-        if (APath(font.toStdString()).isRegularFileExists())
+        if (APath(font).isRegularFileExists())
             return font;
     } catch(...) {}
     try {
@@ -73,7 +73,7 @@ AString AFontManager::getPathToFont(const AString& font) {
                 // Found a match
                 if (AString(valueName).startsWith(font + " (")) {
                     RegCloseKey(fontsKey);
-                    return AString{valueData, valueDataSize};
+                    return AString{valueData};
                 }
             }
         }

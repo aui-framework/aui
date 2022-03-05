@@ -27,26 +27,26 @@
 #include "AUI/Common/AMap.h"
 #include "AUI/Util/ABuiltinFiles.h"
 
-AUrl::AUrl(const AString& full)
+AUrl::AUrl(AStringView full)
 {
 	auto posColon = full.find(':');
-	if (posColon == AString::NPOS)
+	if (posColon == AString::npos)
 	{
-		mPath = full;
+		mPath = full.str();
 		if (mPath.startsWith("./")) {
-			mPath = mPath.mid(2);
+			mPath = mPath.substr(2);
 		}
 		mProtocol = "file";
 	} else
 	{
-		mProtocol = full.mid(0, posColon);
+		mProtocol = full.substr(0, posColon);
 		if (mProtocol.empty())
 		{
 			mProtocol = "builtin";
-			mPath = full.mid(posColon + 1);
+			mPath = full.substr(posColon + 1);
 		} else
 		{
-            mPath = full.mid(posColon + 3);
+            mPath = full.substr(posColon + 3);
 		}
 	}
 }

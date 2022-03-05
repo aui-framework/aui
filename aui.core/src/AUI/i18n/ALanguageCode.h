@@ -41,17 +41,17 @@ public:
 
     [[nodiscard]]
     AString toString() const {
-        return AString(mGroup[0]) + mGroup[1] + "-" + mSubGroup[0] + mSubGroup[1];
+        return getGroup() + "-" + getSubGroup();
     }
 
     [[nodiscard]]
-    AString getGroup() const {
-        return AString(mGroup, mGroup + 2);
+    AStringView getGroup() const {
+        return {mGroup, 2};
     }
 
     [[nodiscard]]
-    AString getSubGroup() const {
-        return AString(mSubGroup, mSubGroup + 2);
+    AStringView getSubGroup() const {
+        return {mSubGroup, 2};
     }
 };
 

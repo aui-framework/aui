@@ -39,7 +39,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
     if (info.url && !info.url->empty()) {
         if (!view->getAssHelper()->state.backgroundImage) {
             // resolve background image by url
-            view->getAssHelper()->state.backgroundImage = IDrawable::fromUrl(*info.url);
+            view->getAssHelper()->state.backgroundImage = IDrawable::fromUrl(AUrl(*info.url));
         }
         if (auto drawable = *view->getAssHelper()->state.backgroundImage) {
             auto scale = info.scale.or_default(glm::vec2{1, 1});

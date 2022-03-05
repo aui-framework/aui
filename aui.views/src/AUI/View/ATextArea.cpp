@@ -302,7 +302,7 @@ protected:
                         mLines.insert(mLines.begin() + at, {});
                     } else {
                         // split line
-                        auto secondPart = text.mid(at);
+                        auto secondPart = text.substr(at);
                         text.resize(at);
                         mLines.insert(mLines.begin() + at, {secondPart, {}});
                         mLines[i].prerendered = nullptr;
@@ -335,16 +335,16 @@ protected:
                 s = absoluteEnd;
                 continue;
             }
-            if (r != AString::NPOS) {
+            if (r != AString::npos) {
                 return r + s;
             }
             s = absoluteEnd;
         }
-        return AString::NPOS;
+        return AString::npos;
     }
 
     size_t typeableReverseFind(wchar_t c, size_t startPos) override {
-        return AString::NPOS;
+        return AString::npos;
     }
 
     size_t length() const override {

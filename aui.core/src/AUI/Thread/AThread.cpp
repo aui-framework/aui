@@ -56,7 +56,7 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
         }
     } s;
     if (s) {
-        s(handle, name.c_str());
+        s(handle, std::wstring(name.begin(), name.end()).c_str());
     }
 }
 #endif

@@ -76,7 +76,7 @@ GL::Shader::~Shader() {
 
 uint32_t GL::Shader::load(const AString& data, uint32_t type) {
 	uint32_t shader = glCreateShader(type);
-	std::string code = data.toStdString();
+    auto code = data;
 	assert(!code.empty());
 
 #if AUI_PLATFORM_APPLE

@@ -225,14 +225,14 @@ public:
      * \param out read string
      * \param c character to read until to
      */
-    void readStringUntilUnescaped(std::string& out, char c);
+    void readStringUntilUnescaped(AString& out, char c);
 
     /**
      * \brief Reads string until unescaped c.
      * \param out read string
      * \param characters characters to read until to
      */
-    void readStringUntilUnescaped(std::string& out, const ASet<char>& characters);
+    void readStringUntilUnescaped(AString& out, const ASet<char>& characters);
 
 	/**
 	 * \brief reads 2 floats divided by any symbol.

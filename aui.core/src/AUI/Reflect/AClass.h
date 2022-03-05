@@ -32,18 +32,18 @@ public:
 	static AString name()
 	{
 #if defined(_MSC_VER)
-		AString s = __FUNCSIG__;
+		AStringView s = __FUNCSIG__;
 		auto openTag = s.find('<') + 1;
 		auto closeTag = s.find('>');
-		auto name = s.mid(openTag, closeTag - openTag).split(' ').last();
+		auto name = s.substr(openTag, closeTag - openTag).split(' ').last();
 		if (name.endsWith(" &"))
-			name = name.mid(0, name.length() - 2);
+			name = name.substr(0, name.length() - 2);
 		return name;
 #elif AUI_PLATFORM_ANDROID
 		AString s = __PRETTY_FUNCTION__;
 		auto b = s.find("=") + 1;
 		auto e = s.find("&", b);
-		auto result = s.mid(b, e - b);
+		auto result = s.substr(b, e - b);
 		result = result.trim();
 		return result;
 #else
@@ -56,7 +56,7 @@ public:
 	static AString nameWithoutNamespace() {
         auto s = name();
         auto p = s.rfind("::");
-        if (p != AString::NPOS) {
+        if (p != AString::npos) {
             return {s.begin() + p + 2, s.end()};
         }
         return s;

@@ -69,14 +69,14 @@ void AI18n::loadFromStreamInto(const _<IInputStream>& iis, AMap<AString, AString
                 t.reverseByte();
 
                 auto key = t.readStringUntilUnescaped('=');
-                std::string value;
+                AString value;
                 try {
                     t.readStringUntilUnescaped(value, '\n');
                 } catch (...) {
                     running = false;
                 }
 
-                langData[key] = AString(value).processEscapes();
+                langData[key] = value.processEscapes();
             }
         }
     } catch (...) {

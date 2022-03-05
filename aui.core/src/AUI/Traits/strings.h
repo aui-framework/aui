@@ -31,9 +31,9 @@ namespace aui {
     template<typename T>
     inline AString to_string(const T& t) {
         if constexpr (std::is_same_v<T, std::string>) {
-            return t;
+            return AString(t);
         } else {
-            return std::to_wstring(t);
+            return AString(std::to_string(t));
         }
     }
 
@@ -133,7 +133,7 @@ namespace aui {
      * \return formatted string.
      */
     template <typename... Args>
-    inline AString format(const AString& format, Args&&... args) {
+    inline AString format(AStringView format, Args&&... args) {
         AStringVector stringArgs;
         stringArgs.reserve(sizeof...(Args));
         detail::format::to_string_array(stringArgs, std::forward<Args>(args)...);
@@ -147,7 +147,7 @@ namespace aui {
         size_t parameterIndex = 0;
 
         for (auto i = format.begin(); i != format.end(); ++i) {
-            wchar_t c = *i;
+            auto c = *i;
             switch (c) {
                 case '{':
                     if (ignoreCurledBrackets) {
@@ -174,13 +174,13 @@ namespace aui {
 }
 
 template<typename... Args>
-inline AString AString::format(Args&& ... args) {
+AString AStringView::format(Args&& ... args) const {
     return aui::format(*this, std::forward<Args>(args)...);
 }
 
 
 struct AStringFormatHelper {
-    AString string;
+    AStringView string;
 
     template<typename... Args>
     inline AString operator()(Args&& ... args) {
@@ -190,5 +190,5 @@ struct AStringFormatHelper {
 
 inline AStringFormatHelper operator"" _format(const char* str, size_t len)
 {
-    return {str};
+    return {{str, len}};
 }

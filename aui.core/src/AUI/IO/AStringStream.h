@@ -27,13 +27,13 @@
 class API_AUI_CORE AStringStream: public IInputStream, public IOutputStream
 {
 private:
-	std::string mString;
+	AString mString;
 	size_t mReadPos = 0;
 
 public:
     AStringStream();
-	explicit AStringStream(const AString& string);
-	virtual ~AStringStream() = default;
+	explicit AStringStream(AString string): mString(std::move(string)) {}
+	~AStringStream() override = default;
 
 	void seekRead(size_t position);
 

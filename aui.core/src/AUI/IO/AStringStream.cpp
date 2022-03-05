@@ -21,10 +21,6 @@
 
 #include "AStringStream.h"
 
-
-AStringStream::AStringStream(const AString& string): mString(string.toStdString())
-{
-}
 AStringStream::AStringStream() = default;
 
 size_t AStringStream::read(char* dst, size_t size)
@@ -39,7 +35,7 @@ size_t AStringStream::read(char* dst, size_t size)
 }
 
 void AStringStream::write(const char *src, size_t size) {
-    mString.append(src, src + size);
+    mString.append({src, size});
 }
 
 void AStringStream::seekRead(size_t position) {
