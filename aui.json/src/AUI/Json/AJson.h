@@ -89,10 +89,10 @@ public:
     AJson(const char* name): aui::impl::JsonVariant(AString(name)) {}
 
     AJson(): aui::impl::JsonVariant(std::nullopt) {}
-    AJson(const AJson&) = default;
-    AJson(AJson&&) = default;
+    AJson(const AJson& json) = default;
+    AJson(AJson&&) noexcept = default;
     AJson& operator=(const AJson&) = default;
-    AJson& operator=(AJson&&) = default;
+    AJson& operator=(AJson&&) noexcept = default;
 
     [[nodiscard]]
     bool isInt() const noexcept {

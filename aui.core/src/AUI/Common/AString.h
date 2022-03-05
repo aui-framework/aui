@@ -357,7 +357,7 @@ public:
     }*/
 
     AString(AStringView stringView) : mImpl(stringView.data(), stringView.length()) {}
-    explicit AString(std::string&& other) : mImpl(std::forward<std::string>(other)) {}
+    explicit AString(std::string&& other) noexcept : mImpl(std::forward<std::string>(other)) {}
     explicit AString(const std::string& other) : mImpl(other) {}
     explicit AString(char c, std::size_t count = 1) : mImpl(count, c) {}
 
@@ -365,7 +365,7 @@ public:
     AString(const char* string) : mImpl(string) {}
     AString(const wchar_t* string);
     AString(const char* string, std::size_t length) : mImpl(string, length) {}
-    AString(AString&& other): mImpl(std::move(other.mImpl)) {}
+    AString(AString&& other) noexcept: mImpl(std::move(other.mImpl)) {}
 
     template<typename Iterator>
     AString(Iterator begin, Iterator end): mImpl(begin, end) {}
@@ -376,7 +376,7 @@ public:
     AString& lowercase();
 
     AString& operator=(const AString&) = default;
-    AString& operator=(AString&&) = default;
+    AString& operator=(AString&&) noexcept = default;
 
     [[nodiscard]]
     AString uppercased() const {
@@ -689,16 +689,16 @@ public:
         return mImpl.back();
     }
 
-    AString& append(AStringView s) {
+    AString& append(AStringView s) noexcept {
         mImpl.append(s.std());
         return *this;
     }
 
-    AString& operator+=(char c)  {
+    AString& operator+=(char c) noexcept {
         mImpl += c;
         return *this;
     }
-    AString& operator+=(AStringView c)  {
+    AString& operator+=(AStringView c) noexcept {
         mImpl += c.std();
         return *this;
     }
