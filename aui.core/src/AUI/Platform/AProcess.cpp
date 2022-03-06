@@ -144,8 +144,9 @@ void AChildProcess::run() {
     startupInfo.cb = sizeof(startupInfo);
 
 
-    if (!CreateProcess(mApplicationFile.c_str(),
-                       const_cast<wchar_t*>(mArgs.empty() ? nullptr : mArgs.c_str()),
+    AString commandLine = "\"" + mApplicationFile + "\" " + mArgs;
+    if (!CreateProcess(nullptr,
+                       const_cast<wchar_t*>(commandLine.c_str()),
                        nullptr,
                        nullptr,
                        false,

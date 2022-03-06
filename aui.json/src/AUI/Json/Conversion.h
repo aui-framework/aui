@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AUI/Json/AJson.h>
+#include <AUI/IO/APath.h>
 #include "AUI/Traits/parameter_pack.h"
 #include "AUI/Traits/members.h"
 
@@ -154,6 +155,15 @@ struct AJsonConv<int> {
         return json.asInt();
     }
 };
+template<>
+struct AJsonConv<short> {
+    static AJson toJson(int v) {
+        return v;
+    }
+    static int fromJson(const AJson& json) {
+        return json.asInt();
+    }
+};
 
 template<>
 struct AJsonConv<float> {
@@ -182,6 +192,26 @@ struct AJsonConv<AString> {
     }
     static AString fromJson(const AJson& json) {
         return json.asString();
+    }
+};
+template<>
+struct AJsonConv<APath> {
+    static AJson toJson(APath v) {
+        return v;
+    }
+    static APath fromJson(const AJson& json) {
+        return json.asString();
+    }
+};
+
+template<typename T1, typename T2>
+struct AJsonConv<std::pair<T1, T2>> {
+    static AJson toJson(std::pair<T1, T2> v) {
+        return AJson::Array({aui::to_json(v.first), aui::to_json(v.second)});
+    }
+    static std::pair<T1, T2> fromJson(const AJson& json) {
+        const auto& array = json.asArray();
+        return { aui::from_json<T1>(array.at(0)), aui::from_json<T2>(array.at(1)) };
     }
 };
 

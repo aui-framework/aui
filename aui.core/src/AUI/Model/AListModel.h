@@ -236,4 +236,9 @@ public:
         }
         return list;
     }
+
+    template<typename UnaryOperation>
+    auto map(UnaryOperation&& transformer) {
+        return mVector.map(std::forward<UnaryOperation>(transformer));
+    }
 };

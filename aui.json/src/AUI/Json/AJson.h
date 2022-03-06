@@ -183,6 +183,11 @@ public:
         return as<Object>();
     }
 
+    [[nodiscard]]
+    bool contains(const AString& mapKey) const {
+        return as<Object>().contains(mapKey);
+    }
+
     AJson& operator[](const AString& mapKey) {
         return as<Object>()[mapKey];
     }
@@ -206,6 +211,7 @@ public:
 
     [[nodiscard]] static API_AUI_JSON AString toString(const AJson& json);
     [[nodiscard]] static API_AUI_JSON AJson fromString(const AString& json);
+    [[nodiscard]] static API_AUI_JSON AJson fromStream(aui::no_escape<IInputStream> input);
     [[nodiscard]] static API_AUI_JSON AJson fromBuffer(AByteBufferView buffer);
 };
 

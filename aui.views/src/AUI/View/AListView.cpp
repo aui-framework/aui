@@ -76,7 +76,7 @@ public:
     }
 };
 
-class AListItem: public ALabel
+class AListItem: public ALabel, public ass::ISelectable
 {
 private:
 	bool mSelected = false;
@@ -99,6 +99,13 @@ public:
 		mSelected = selected;
 		emit customCssPropertyChanged;
 	}
+
+protected:
+    bool selectableIsSelectedImpl() override {
+        return mSelected;
+    }
+
+public:
 
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override {
         AView::onMousePressed(pos, button);

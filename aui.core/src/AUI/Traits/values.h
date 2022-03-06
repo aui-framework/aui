@@ -111,8 +111,12 @@ namespace aui {
         no_escape(T& value): value(&value) {}
         no_escape(T&& value): value(&value) {}
         no_escape(T* value): value(value) {}
-        no_escape(const _<T>& value): value(&*value) {}
-        no_escape(const _unique<T>& value): value(&*value) {}
+
+        template<typename ConvertibleToT>
+        no_escape(const _<ConvertibleToT>& value): value(&*value) {}
+
+        template<typename ConvertibleToT>
+        no_escape(const _unique<ConvertibleToT>& value): value(&*value) {}
 
         T* operator->() const {
             return value;

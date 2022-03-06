@@ -77,14 +77,14 @@
  * };<br />
  * ...<br />
  * auto worker = _new&lt;Worker&gt;();<br />
- * apply(worker, {<br />
+ * perform_as_member(worker, {<br />
  * &#09;buildHouse();<br />
  * &#09;plantTree();<br />
  * &#09;raiseSon();<br />
  * });<br />
  * </code>
  */
-#define apply(object, lambda)                                                  \
+#define perform_as_member(object, lambda)                                                  \
     struct __apply ## __FUNCTION__ ## __LINE__   : std::decay_t<decltype(object)>::stored_t { \
         void operator()() {                                                    \
             lambda;                                                            \
