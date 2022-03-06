@@ -22,9 +22,6 @@ void ASplitterHelper::beginDrag(const glm::ivec2& mousePos) {
 
 bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
     if (isDragging()) {
-        if (AInput::isKeyDown(AInput::LControl)) {
-            printf("\n");
-        }
         int newDragOffset = getAxisValue(mousePos);
 
         // positive delta = movement of the slider to right, negative delta = movement of the slider to left
