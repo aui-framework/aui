@@ -54,6 +54,10 @@ class API_AUI_CORE AStringView {
 private:
     std::string_view mImpl;
 public:
+    using iterator = std::string_view::iterator;
+    using const_iterator = std::string_view::const_iterator;
+    using reverse_iterator = std::string_view::reverse_iterator;
+    using const_reverse_iterator = std::string_view::const_reverse_iterator;
     constexpr static inline auto npos = std::string_view::npos;
 
     AStringView() = default;
