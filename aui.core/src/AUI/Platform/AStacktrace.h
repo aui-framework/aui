@@ -15,8 +15,6 @@ public:
         std::optional<AString> mFileName;
         std::optional<unsigned> mLineNumber;
 
-        void resolveIfNeeded() const noexcept;
-
     public:
         explicit Entry(void* ptr) : mPtr(ptr), mFunctionName(std::nullopt) {}
 

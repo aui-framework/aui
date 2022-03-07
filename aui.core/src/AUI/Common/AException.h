@@ -23,6 +23,7 @@
 #include <exception>
 
 #include "AString.h"
+#include "AUI/Reflect/AReflect.h"
 #include <AUI/Common/AVector.h>
 #include <AUI/Platform/AStacktrace.h>
 
@@ -60,3 +61,12 @@ public:
         return mStacktrace;
     }
 };
+
+inline std::ostream& operator<<(std::ostream& o, const AException& e) noexcept {
+    return o << "("
+             << AReflect::name(&e)
+             << ") "
+             << e.getMessage()
+             << std::endl
+             << e.stacktrace();
+}

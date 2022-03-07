@@ -24,6 +24,7 @@
 #include <AUI/Common/AStringVector.h>
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Common/AException.h>
+#include "AUI/Logging/ALogger.h"
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>

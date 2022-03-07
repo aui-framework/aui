@@ -5,10 +5,6 @@ auib_import(ZLIB https://github.com/aui-framework/zlib)
 
 aui_module(aui.core EXPORT aui)
 
-if (NOT WIN32)
-	find_package(Backtrace)
-endif()
-
 
 # segfault functionality
 if (NOT MSVC AND AUI_CATCH_SEGFAULT)
@@ -34,13 +30,31 @@ if (AUI_CATCH_SEGFAULT)
 	target_compile_definitions(aui.core PUBLIC AUI_CATCH_SEGFAULT=1)
 endif()
 
-if(Backtrace_FOUND AND Backtrace_LIBRARIES)
+if (NOT WIN32)
+	# probe for backtrace
+	file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test)
+	file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test.cpp [[
+	#include <execinfo.h>
+	#include <backtrace.h>
+	int main() {
+		void* buffer[1024];
+		int n = backtrace(buffer, 1024);
+		return 0;
+	}
+	]])
+
+	try_compile(_use_backtrace ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test/b ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test.cpp OUTPUT_VARIABLE _tmp)
+endif()
+
+if(_use_backtrace)
 	message(STATUS "Stacktrace backend: backtrace")
-	aui_link(aui.core PRIVATE ${Backtrace_LIBRARIES})
+	aui_link(aui.core PRIVATE backtrace)
 	target_compile_definitions(aui.core PRIVATE AUI_USE_BACKTRACE=1)
 elseif(WIN32)
 	aui_link(aui.core PRIVATE dbghelp)
 	message(STATUS "Stacktrace backend: dbghelp")
+else()
+	message(STATUS "Stacktrace backend: none")
 endif()
 
 if (WIN32)
