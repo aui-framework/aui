@@ -4,7 +4,6 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Util/ARandom.h>
-#include <AUI/Util/AError.h>
 #include <X11/extensions/sync.h>
 #include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Util/kAUI.h"

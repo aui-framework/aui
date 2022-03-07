@@ -24,10 +24,11 @@
 #include <AUI/Common/AStringVector.h>
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Common/AException.h>
-#include <AUI/Util/AError.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
+#include <AUI/Logging/ALogger.h>
+
 #endif
 
 
@@ -72,9 +73,11 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
             el->loop();
         }
     } catch (const AException& e) {
-        AError::handle(e, "uncaught exception");
+        ALogger::err("AUI") << "Uncaught exception: " << e;
+    } catch (const std::exception& e) {
+        ALogger::err("AUI") << "Uncaught exception: " << e.what();
     } catch (...) {
-        ALogger::err("Uncaught exception of unknown type");
+        ALogger::err("AUI") << "Uncaught unknown exception";
     }
     return r;
 }

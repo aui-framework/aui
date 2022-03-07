@@ -109,7 +109,7 @@ public:
             }
 
             template<typename T>
-            LogWriter& operator<<(const T& t) {
+            LogWriter& operator<<(const T& t) noexcept {
                 // avoid usage of std::ostream because it's expensive
                 if constexpr(std::is_constructible_v<std::string_view, T>) {
                     std::string_view stringView(t);
@@ -117,7 +117,12 @@ public:
                 } else if constexpr(std::is_base_of_v<AString, T>) {
                     *this << t.toStdString();
                 } else if constexpr(std::is_base_of_v<AException, T>) {
-                    *this << "(" << AReflect::name(&t) << ") " << t.getMessage();
+                    *this << "("
+                          << AReflect::name(&t)
+                          << ") "
+                          << t.getMessage()
+                          << '\n'
+                          << t.stacktrace();
                 } else if constexpr(std::is_base_of_v<std::exception, T>) {
                     *this << "(" << AReflect::name(&t) << ") " << t.what();
                 } else {

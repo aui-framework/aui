@@ -55,7 +55,6 @@
 
 #include <GL/wglew.h>
 #include <AUI/Util/Cache.h>
-#include <AUI/Util/AError.h>
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/Platform/AMessageBox.h>
