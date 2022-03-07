@@ -170,7 +170,7 @@ public:
     auto toVector(BinaryOperation&& transformer) const -> AVector<decltype(transformer(std::declval<KeyType>(), std::declval<ValueType>()))> {
         AVector<decltype(transformer(std::declval<KeyType>(), std::declval<ValueType>()))> result;
         result.reserve(parent::size());
-        std::transform(parent::begin(), parent::end(), std::back_inserter(result), [transformer = std::forward<BinaryOperation>(transformer)](const parent::value_type& p){
+        std::transform(parent::begin(), parent::end(), std::back_inserter(result), [transformer = std::forward<BinaryOperation>(transformer)](const typename parent::value_type& p){
             return transformer(p.first, p.second);
         });
         return result;
