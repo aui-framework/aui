@@ -93,8 +93,9 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
     if (message.length() == 0) {
         printf("[%s][%s]: %s\n", timebuf, levelName, prefix.data());
     } else {
-        printf("[%s][%s][%s]: %s\n", timebuf, levelName, prefix.data(), message.data());
+        printf("[%s][%s][%s]: %s\n", timebuf, prefix.data(), levelName, message.data());
     }
+    fflush(stdout);
 #endif
 }
 

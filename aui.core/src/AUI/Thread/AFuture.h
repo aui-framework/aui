@@ -279,6 +279,11 @@ private:
             }
         }
 
+        [[nodiscard]]
+        bool isWaitNeeded() noexcept {
+            return (thread || !cancelled) && !hasResult();
+        }
+
         void cancel() noexcept {
             std::unique_lock lock(mutex);
             if (!cancelled) {
@@ -318,6 +323,23 @@ public:
 
     void result() noexcept {
         (*mInner)->result();
+    }
+
+    /**
+     * @return true when the task finished no matter successfully or with exception
+     */
+    [[nodiscard]]
+    bool hasResult() noexcept {
+        return (*mInner)->hasResult();
+    }
+
+
+    /**
+     * @return true when <a href="wait()">wait()</a> function will block the execution
+     */
+    [[nodiscard]]
+    bool isWaitNeeded() noexcept {
+        return (*mInner)->isWaitNeeded();
     }
 
     /**
