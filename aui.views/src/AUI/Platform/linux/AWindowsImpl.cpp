@@ -489,7 +489,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
                         auto maximized = window->isMaximized();
                         if (maximized != window->mWasMaximized) {
-                            apply(window, {
+                            perform_as_member(window, {
                                 if (mWasMaximized) {
                                     emit restored();
                                 } else {
