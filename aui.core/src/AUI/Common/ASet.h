@@ -46,23 +46,9 @@ public:
      * @return iterator pointing to the first element inserted.
      */
     template<typename OtherContainer>
-    iterator insertAll(const OtherContainer& c) noexcept {
-        return insertAll(p::end(), c);
+    void insertAll(const OtherContainer& c) noexcept {
+        p::insert(c.begin(), c.end());
     }
-
-
-    /**
-     * Inserts all values of the specified container.
-     * @tparam OtherContainer other container type.
-     * @param at position to insert at.
-     * @param c other container
-     * @return iterator pointing to the first element inserted.
-     */
-    template<typename OtherContainer>
-    iterator insertAll(iterator at, const OtherContainer& c) noexcept {
-        return p::insert(at, c.begin(), c.end());
-    }
-
 
     /**
      * Removes elements equal to <code>item</code>.

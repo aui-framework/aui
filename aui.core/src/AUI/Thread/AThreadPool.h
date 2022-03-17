@@ -92,6 +92,11 @@ public:
      * Parallels work of some range, grouping tasks per thread (i.e. for 8 items on a 4-core processor each core will
      * process 2 items)
      *
+     * @param begin range begin
+     * @param end range end
+     * @param functor a functor of the following signature:
+     * @code{cpp} Result(Iterator begin, Iterator end) @endcode
+     *
      * @return future set per thread (i.e. for 8 items on a 4-core processor there will be 4 futures)
      *
      * <dl>
@@ -162,7 +167,6 @@ public:
 template<typename Iterator, typename Functor>
 auto AThreadPool::parallel(Iterator begin, Iterator end, Functor &&functor) {
     using ResultType = decltype(std::declval<Functor>()(std::declval<Iterator>(), std::declval<Iterator>()));
-    static_assert(!std::is_same_v<ResultType, void>, "functor must return a value");
     AFutureSet<ResultType> futureSet;
 
     size_t itemCount = end - begin;
