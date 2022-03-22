@@ -145,4 +145,38 @@ namespace aui {
     joined_range<Items...> join(Items... items) {
         return { (&items)... };
     }
+
+    /**
+     * Allows to iterate multiple containers in parallel.
+     * @example
+     * @code{cpp}
+     * std::array&lt;int, 3&gt; ints = { 1, 2, 3 };
+     * std::array&lt;std::string, 3&gt; strings = { "one", "two", "three" };
+     * for (auto&[i, s] : aui::zip(ints, strings)) {
+     *     std::cout &lt;&lt; i &lt;&lt; ", " &lt;&lt; s &lt;&lt; std::endl;
+     * }
+     * @endcode
+     * <pre>
+     * 1, one<br />
+     * 2, two<br />
+     * 3, three<br />
+     * </pre>
+     */
+    template<typename... Containers>
+    struct zip {
+    private:
+        template<typename Iterator>
+        struct iterator_range {
+            Iterator begin;
+            Iterator end;
+        };
+
+        std::tuple<iterator_range<typename Containers::iterator>...> iterators_;
+
+    public:
+
+        zip(Containers&&... c) {
+
+        }
+    };
 }
