@@ -30,7 +30,9 @@ TEST(Iterators, Zip) {
     std::array<int, 3> ints = { 1, 2, 3 };
     std::array<std::string, 3> strings = { "one", "two", "three" };
     std::size_t index = 0;
-    for (auto&[i, s] : aui::zip(ints, strings)) {
+
+
+    for (auto[i, s] : aui::zip(ints, strings)) {
         EXPECT_EQ(i, ints[index]);
         EXPECT_EQ(s, strings[index]);
         ++index;

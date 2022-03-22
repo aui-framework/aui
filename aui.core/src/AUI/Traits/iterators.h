@@ -24,6 +24,8 @@
 #include <tuple>
 #include <variant>
 #include <cstdint>
+#include <iterator>
+#include "parameter_pack.h"
 
 namespace aui {
 
@@ -165,18 +167,50 @@ namespace aui {
     template<typename... Containers>
     struct zip {
     private:
-        template<typename Iterator>
-        struct iterator_range {
-            Iterator begin;
-            Iterator end;
-        };
+        using iterator_parallel = std::tuple<typename Containers::iterator...>;
 
-        std::tuple<iterator_range<typename Containers::iterator>...> iterators_;
+        iterator_parallel begins_;
+        iterator_parallel ends_;
 
     public:
+        struct iterator {
+            iterator_parallel iterators_;
 
-        zip(Containers&&... c) {
+            iterator(iterator_parallel iterators) : iterators_(std::move(iterators)) {}
 
+            iterator& operator++() noexcept {
+                std::apply([](auto&&... v) {
+                    aui::parameter_pack::for_each([](auto& i) {
+                        ++i;
+                    }, v...);
+                }, iterators_);
+                return *this;
+            }
+
+            auto operator*() noexcept {
+                return std::apply([](auto&&... v) {
+                    return std::make_tuple((*v)...);
+                }, iterators_);
+            }
+
+            bool operator==(const iterator& rhs) const noexcept {
+                return iterators_ == rhs.iterators_;
+            }
+
+            bool operator!=(const iterator& rhs) const noexcept {
+                return iterators_ != rhs.iterators_;
+            }
+        };
+
+        zip(Containers&... c): begins_(c.begin()...), ends_(c.end()...) {
+
+        }
+
+        iterator begin() noexcept {
+            return iterator(begins_);
+        }
+        iterator end() noexcept {
+            return iterator(ends_);
         }
     };
 }
