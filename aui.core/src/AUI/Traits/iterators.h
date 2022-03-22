@@ -189,7 +189,7 @@ namespace aui {
 
             auto operator*() noexcept {
                 return std::apply([](auto&&... v) {
-                    return std::make_tuple((*v)...);
+                    return std::tuple<std::remove_reference_t<decltype(*v)>&...>((*v)...);
                 }, iterators_);
             }
 
