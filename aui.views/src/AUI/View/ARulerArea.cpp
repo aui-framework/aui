@@ -91,12 +91,12 @@ void ARulerArea::render() {
         }
 
         Render::setBlending(Blending::INVERSE_DST);
-        Render::drawRect(ASolidBrush{},
-                         { mMousePos.x, 0.f },
-                         { 1, mMousePos.y });
-        Render::drawRect(ASolidBrush{},
-                         { 0.f, mMousePos.y },
-                         { mMousePos.x, 1 });
+        Render::rect(ASolidBrush{},
+                     {mMousePos.x, 0.f},
+                     {1, mMousePos.y});
+        Render::rect(ASolidBrush{},
+                     {0.f, mMousePos.y},
+                     {mMousePos.x, 1});
 
 
         Render::setBlending(Blending::NORMAL);

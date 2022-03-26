@@ -62,9 +62,9 @@ public:
      * @param position rectangle position (px)
      * @param size rectangle size (px)
      */
-    static void drawRect(const ABrush& brush,
-                         const glm::vec2& position,
-                         const glm::vec2& size) {
+    static void rect(const ABrush& brush,
+                     const glm::vec2& position,
+                     const glm::vec2& size) {
         ourRenderer->drawRect(brush, position, size);
     }
 
@@ -76,10 +76,10 @@ public:
      * @param size rectangle size (px)
      * @param radius corner radius (px)
      */
-    static void drawRoundedRect(const ABrush& brush,
-                                const glm::vec2& position,
-                                const glm::vec2& size,
-                                float radius) {
+    static void roundedRect(const ABrush& brush,
+                            const glm::vec2& position,
+                            const glm::vec2& size,
+                            float radius) {
         ourRenderer->drawRoundedRect(brush, position, size, radius);
     }
 
@@ -90,10 +90,10 @@ public:
      * @param size rectangle size (px)
      * @param radius corner radius (px)
      */
-    static void drawRoundedRectAntialiased(const ABrush& brush,
-                                           const glm::vec2& position,
-                                           const glm::vec2& size,
-                                           float radius) {
+    static void roundedRectAntialiased(const ABrush& brush,
+                                       const glm::vec2& position,
+                                       const glm::vec2& size,
+                                       float radius) {
         ourRenderer->drawRoundedRectAntialiased(brush, position, size, radius);
     }
 
@@ -104,10 +104,10 @@ public:
      * @param size rectangle size (px)
      * @param lineWidth border line width (px)
      */
-    static void drawRectBorder(const ABrush& brush,
-                               const glm::vec2& position,
-                               const glm::vec2& size,
-                               float lineWidth = 1.f) {
+    static void rectBorder(const ABrush& brush,
+                           const glm::vec2& position,
+                           const glm::vec2& size,
+                           float lineWidth = 1.f) {
         ourRenderer->drawRectBorder(brush, position, size, lineWidth);
     }
     /**
@@ -118,11 +118,11 @@ public:
      * @param radius corner radius (px)
      * @param borderWidth border line width (px)
      */
-    static void drawRectBorder(const ABrush& brush,
-                               const glm::vec2& position,
-                               const glm::vec2& size,
-                               float radius,
-                               int borderWidth) {
+    static void rectBorder(const ABrush& brush,
+                           const glm::vec2& position,
+                           const glm::vec2& size,
+                           float radius,
+                           int borderWidth) {
         ourRenderer->drawRectBorder(brush, position, size, radius, borderWidth);
     }
 
@@ -134,10 +134,10 @@ public:
      * @param blurRadius blur radius
      * @param color shadow color
      */
-    static void drawBoxShadow(const glm::vec2& position,
-                              const glm::vec2& size,
-                              float blurRadius,
-                              const AColor& color) {
+    static void boxShadow(const glm::vec2& position,
+                          const glm::vec2& size,
+                          float blurRadius,
+                          const AColor& color) {
         ourRenderer->drawBoxShadow(position, size, blurRadius, color);
     }
 
@@ -157,9 +157,9 @@ public:
      * @param string string to render
      * @param fs font style (optional)
      */
-    static void drawString(const glm::vec2& position,
-                           const AString& string,
-                           const AFontStyle& fs = {}) {
+    static void string(const glm::vec2& position,
+                       const AString& string,
+                       const AFontStyle& fs = {}) {
         ourRenderer->drawString(position, string, fs);
     }
 
