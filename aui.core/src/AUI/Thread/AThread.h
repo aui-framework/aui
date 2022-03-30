@@ -227,7 +227,7 @@ public:
 	static _<AAbstractThread> current();
 
 	/**
-	 * \return Interruption point. It's required for <code>AThread::interrupt</code>.
+	 * \brief Interruption point. It's required for <code>AThread::interrupt</code>.
 	 */
 	static void interruptionPoint();
 
