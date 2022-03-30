@@ -9,7 +9,13 @@ using modern C++17.
 
 [Documentation](https://github.com/aui-framework/aui/wiki) | [Getting started](https://github.com/aui-framework/aui/wiki/Getting-started-with-AUI)
 
-Quickstart
+# Quickstart
+
+## Ubuntu dependencies
+```bash
+sudo apt-get install pkg-config libgtk-3-dev libfontconfig-dev
+```
+
 ```cmake
 # Standard routine
 cmake_minimum_required(VERSION 3.16)
