@@ -182,11 +182,11 @@ void AThread::join()
 	if (mThread->joinable()) mThread->join();
 }
 
-void AAbstractThread::enqueue(const std::function<void()>& f)
+void AAbstractThread::enqueue(std::function<void()> f)
 {
 	{
 		std::unique_lock lock(mQueueLock);
-		mMessageQueue << f;
+		mMessageQueue << std::move(f);
 	}
 	{
 		std::unique_lock lock(mEventLoopLock);

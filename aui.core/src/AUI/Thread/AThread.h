@@ -55,7 +55,7 @@ private:
 	/**
 	 * \brief Message queue mutex.
 	 */
-	std::recursive_mutex mQueueLock;
+	AMutex mQueueLock;
 
 	/**
 	 * \brief Thread ID.
@@ -78,7 +78,7 @@ private:
     /**
      * \brief Mutex for mCurrentEventLoop.
      */
-    std::recursive_mutex mEventLoopLock;
+    AMutex mEventLoopLock;
 
 	AAbstractThread() = default;
 	AAbstractThread(const id& id);
@@ -100,7 +100,7 @@ public:
 	 *        itself using AEventLoop. This behaviour may be overwritten using the <code>AThread::processMessages()
 	 *        </code> function.
 	 */
-	void enqueue(const std::function<void()>& f);
+	void enqueue(std::function<void()> f);
 
 	/**
 	 * \brief Processes messages from other threads. It's called by framework itself using IEventLoop. This function can
