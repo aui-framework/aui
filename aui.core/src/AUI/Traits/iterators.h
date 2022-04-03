@@ -167,7 +167,7 @@ namespace aui {
     template<typename... Containers>
     struct zip {
     private:
-        using iterator_parallel = std::tuple<typename Containers::iterator...>;
+        using iterator_parallel = std::tuple<decltype(std::declval<Containers>().begin())...>;
 
         iterator_parallel begins_;
         iterator_parallel ends_;
@@ -187,9 +187,9 @@ namespace aui {
                 return *this;
             }
 
-            auto operator*() noexcept {
+            std::tuple<decltype(*std::declval<Containers>().begin())&...> operator*() noexcept {
                 return std::apply([](auto&&... v) {
-                    return std::make_tuple((*v)...);
+                    return std::tuple<decltype(*std::declval<Containers>().begin())&...>((*v)...);
                 }, iterators_);
             }
 

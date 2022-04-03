@@ -89,9 +89,13 @@ namespace aui {
     };
 
     /**
-     * @brief intended to use in function arguments. Promises that the contained object wouldn't be copied/moved outside
-     *        of the function thus does not take responsibility of deleting the object. This allows to accept both
-     *        lvalue and rvalue references, pointers, unique_ptr and shared_ptr without ref counter modification.
+     * @brief Does not allow escaping, allowing to accept lvalue ref, rvalue ref, shared_ptr and etc without overhead
+     *
+     *        Promises that the contained object wouldn't be copied/moved outside of the function thus does not take
+     *        responsibility of deleting the object. This allows to accept lvalue and rvalue references, pointers,
+     *        unique_ptr and shared_ptr without ref counter modification.
+     *
+     *        Intended to use in function arguments.
      *
      *        Accepts lvalue ref, rvalue ref, ptr and shared_ptr. Does not accepts null.
      *
@@ -104,9 +108,6 @@ namespace aui {
     private:
         T* value;
 
-        void checkNull() {
-            assert(("uref could not be null", value != nullptr));
-        }
     public:
         no_escape(T& value): value(&value) {}
         no_escape(T&& value): value(&value) {}
