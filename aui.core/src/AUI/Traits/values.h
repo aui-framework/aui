@@ -30,6 +30,26 @@
 
 namespace aui {
     /**
+     * @brief Forbids copy of your class.
+     *
+     * @code{cpp}
+     * class MyObject: public aui::noncopyable {
+     * private:
+     *     void* mResource;
+     * }
+     * ...
+     * MyObject obj1;
+     * MyObject obj2 = obj1; // error
+     * MyObject obj3 = std::move(obj); // but this one is ok
+     * @endcode
+     */
+    struct noncopyable {
+        noncopyable() = default;
+        noncopyable(const noncopyable&) = delete;
+    };
+
+
+    /**
      * Null-checking wrapper when usage of null is fatal.
      * @tparam T any pointer or pointer-like type
      */

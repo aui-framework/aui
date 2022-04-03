@@ -24,13 +24,14 @@
 #include "SharedPtrTypes.h"
 #include "AUI/Core.h"
 #include "AUI/Common/ASet.h"
+#include "AUI/Traits/values.h"
 #include <AUI/Thread/AMutex.h>
 
 class AString;
 class AAbstractSignal;
 class AAbstractThread;
 
-class API_AUI_CORE AObject
+class API_AUI_CORE AObject: public aui::noncopyable
 {
 	friend class AAbstractSignal;
 private:
