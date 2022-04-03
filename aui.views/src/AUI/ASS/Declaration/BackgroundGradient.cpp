@@ -46,9 +46,9 @@ void ass::decl::Declaration<ass::BackgroundGradient>::renderFor(AView* view) {
                                      mInfo.bottomRightColor};
     }
     if (view->getBorderRadius() > 0) {
-        Render::drawRoundedRectAntialiased(brush, {0, 0}, view->getSize(), view->getBorderRadius());
+        Render::roundedRectAntialiased(brush, {0, 0}, view->getSize(), view->getBorderRadius());
     } else  {
-        Render::drawRect(brush, {0, 0}, view->getSize());
+        Render::rect(brush, {0, 0}, view->getSize());
     }
     IDeclarationBase::renderFor(view);
 }

@@ -39,3 +39,15 @@ TEST(Iterators, Zip) {
     }
 }
 
+
+TEST(Iterators, ZipModification) {
+    std::array<int, 3> vec1 = { 1, 2, 3 };
+    std::array<int, 3> vec2 = { 4, 5, 6 };
+
+
+    for (auto[v1, v2] : aui::zip(vec1, vec2)) {
+        v1 += v2;
+    }
+    EXPECT_EQ(vec1, (std::array<int, 3>{5, 7, 9}));
+}
+

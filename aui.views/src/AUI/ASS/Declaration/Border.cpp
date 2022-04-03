@@ -37,11 +37,11 @@ void ass::decl::Declaration<ass::Border>::renderFor(AView* view) {
                                mInfo.width);
     } else {
         */
-        Render::drawRectBorder(ASolidBrush{mInfo.color},
-                               {0, 0},
-                               view->getSize(),
-                               view->getBorderRadius(),
-                               mInfo.width);
+    Render::rectBorder(ASolidBrush{mInfo.color},
+                       {0, 0},
+                       view->getSize(),
+                       view->getBorderRadius(),
+                       mInfo.width);
     //}
 }
 
