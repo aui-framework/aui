@@ -24,7 +24,7 @@
 #include <AUI/Core.h>
 #include <vector>
 #include <cassert>
-#include "SharedPtr.h"
+#include "SharedPtrTypes.h"
 #include <algorithm>
 #include <ostream>
 #include "ASet.h"

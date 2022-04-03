@@ -23,6 +23,7 @@
 
 #include <iterator>
 #include <AUI/Common/AString.h>
+#include <AUI/Common/ADeque.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Util/EnumUtil.h>
 

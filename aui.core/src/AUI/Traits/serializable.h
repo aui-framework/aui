@@ -6,6 +6,7 @@
 
 #include "values.h"
 #include "types.h"
+#include <AUI/Common/SharedPtr.h>
 
 class IInputStream;
 class IOutputStream;

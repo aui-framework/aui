@@ -169,6 +169,7 @@ macro(_aui_import_gtest)
                 VERSION main
                 CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
+        set_property(TARGET GTest::gmock PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
 endmacro()
 
@@ -196,7 +197,7 @@ int main(int argc, char **argv) {
             set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
             target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
             get_target_property(_t GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
-            aui_link(${TESTS_MODULE_NAME} PUBLIC GTest::gtest)
+            aui_link(${TESTS_MODULE_NAME} PUBLIC GTest::gtest GTest::gmock)
             target_compile_definitions(${TESTS_MODULE_NAME} PUBLIC AUI_TESTS_MODULE=1)
 
             if (TARGET aui.core)

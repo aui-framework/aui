@@ -251,7 +251,7 @@ public:
 	    }
         return copy;
 	}
-    [[nodiscard]] inline AString replacedAll(const ASet<wchar_t> from, wchar_t to) const noexcept {
+    [[nodiscard]] inline AString replacedAll(const ASet<wchar_t>& from, wchar_t to) const noexcept {
 	    AString copy;
 	    copy.reserve(length() + 10);
 	    for (auto c : *this) {
