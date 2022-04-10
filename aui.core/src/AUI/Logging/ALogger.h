@@ -45,40 +45,69 @@ public:
             ALogger& mLogger;
             Level mLevel;
             AString mPrefix;
-            struct StackBuffer {
+            struct Buffer {
             private:
-                char* currentIterator = buffer;
-                char buffer[4096];
+                struct StackBuffer {
+                    char buffer[2048];
+                    char* currentIterator = buffer;
+                };
+                using HeapBuffer = AVector<char>;
+                std::variant<StackBuffer, HeapBuffer> mBuffer;
 
+                void switchToHeap() {
+                    HeapBuffer h;
+                    h.reserve(16384);
+                    auto& stack = std::get<StackBuffer>(mBuffer);
+                    h.insert(h.end(), stack.buffer, stack.currentIterator);
+                    mBuffer = std::move(h);
+                }
             public:
+
                 size_t write(const char* t, size_t s) {
-                    if (currentIterator + s <= buffer + sizeof(buffer)) {
-                        std::memcpy(currentIterator, t, s);
-                        currentIterator += s;
-                        return s;
+                    if (std::holds_alternative<StackBuffer>(mBuffer)) {
+                        auto& stack = std::get<StackBuffer>(mBuffer);
+                        if (stack.currentIterator + s <= stack.buffer + sizeof(stack.buffer)) {
+                            std::memcpy(stack.currentIterator, t, s);
+                            stack.currentIterator += s;
+                            return s;
+                        }
+                        switchToHeap();
                     }
-                    return 0;
+                    auto& h = std::get<HeapBuffer>(mBuffer);
+                    h.insert(h.end(), t, t + s);
+                    return s;
                 }
                 void write(char c) {
-                    if (currentIterator + sizeof(c) <= buffer + sizeof(buffer)) {
-                        *currentIterator = c;
-                        currentIterator += 1;
+                    if (std::holds_alternative<StackBuffer>(mBuffer)) {
+                        auto& stack = std::get<StackBuffer>(mBuffer);
+                        if (stack.currentIterator + sizeof(c) <= stack.buffer + sizeof(stack.buffer)) {
+                            *stack.currentIterator = c;
+                            stack.currentIterator += 1;
+                            return;
+                        }
+                        switchToHeap();
                     }
+                    std::get<HeapBuffer>(mBuffer).push_back(c);
                 }
 
                 [[nodiscard]]
                 std::string_view str() const {
-                    // assuming there's null terminator
-                    return {buffer, static_cast<std::string_view::size_type>(currentIterator - buffer) - 1};
+                    // assuming there's a null terminator
+                    if (std::holds_alternative<StackBuffer>(mBuffer)) {
+                        auto& stack = std::get<StackBuffer>(mBuffer);
+                        return {stack.buffer, static_cast<std::string_view::size_type>(stack.currentIterator - stack.buffer) - 1};
+                    }
+                    auto& h = std::get<HeapBuffer>(mBuffer);
+                    return {h.data(), h.size()};
                 }
             };
 
             struct LazyStreamBuf final: std::streambuf {
             private:
-                StackBuffer& stackBuffer;
+                Buffer& stackBuffer;
             public:
                 std::ostream stream;
-                LazyStreamBuf(StackBuffer& stackBuffer) : stackBuffer(stackBuffer), stream(this) {}
+                LazyStreamBuf(Buffer& stackBuffer) : stackBuffer(stackBuffer), stream(this) {}
 
             protected:
                 std::streamsize xsputn(const char_type* s, std::streamsize n) override {
@@ -92,7 +121,7 @@ public:
             };
             std::optional<LazyStreamBuf> mStreamBuf;
 
-            StackBuffer mStackBuffer;
+            Buffer mBuffer;
 
         public:
             LogWriter(ALogger& logger, Level level, AString prefix) :
@@ -103,8 +132,8 @@ public:
             }
 
             ~LogWriter() {
-                mStackBuffer.write(0); // null terminator
-                auto s = mStackBuffer.str();
+                mBuffer.write(0); // null terminator
+                auto s = mBuffer.str();
                 mLogger.log(mLevel, mPrefix.toStdString().c_str(), s);
             }
 
@@ -113,7 +142,7 @@ public:
                 // avoid usage of std::ostream because it's expensive
                 if constexpr(std::is_constructible_v<std::string_view, T>) {
                     std::string_view stringView(t);
-                    mStackBuffer.write(stringView.data(), stringView.size());
+                    mBuffer.write(stringView.data(), stringView.size());
                 } else if constexpr(std::is_base_of_v<AString, T>) {
                     *this << t.toStdString();
                 } else if constexpr(std::is_base_of_v<AException, T>) {
@@ -127,7 +156,7 @@ public:
                     *this << "(" << AReflect::name(&t) << ") " << t.what();
                 } else {
                     if (!mStreamBuf) {
-                        mStreamBuf.emplace(mStackBuffer);
+                        mStreamBuf.emplace(mBuffer);
                     }
                     mStreamBuf->stream << t;
                 }

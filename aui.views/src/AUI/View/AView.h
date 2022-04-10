@@ -514,10 +514,15 @@ public:
 	}
 	Visibility getVisibilityRecursive() const;
 
-	void setVisibility(Visibility visibility)
+	void setVisibility(Visibility visibility) noexcept
 	{
 		mVisibility = visibility;
 		redraw();
+	}
+
+	void setVisible(bool visible) noexcept
+	{
+        setVisibility(visible ? Visibility::VISIBLE : Visibility::INVISIBLE);
 	}
 
 	[[nodiscard]]
