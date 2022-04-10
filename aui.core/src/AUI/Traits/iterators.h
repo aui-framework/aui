@@ -24,6 +24,8 @@
 #include <tuple>
 #include <variant>
 #include <cstdint>
+#include <iterator>
+#include "parameter_pack.h"
 
 namespace aui {
 
@@ -145,4 +147,70 @@ namespace aui {
     joined_range<Items...> join(Items... items) {
         return { (&items)... };
     }
+
+    /**
+     * Allows to iterate multiple containers in parallel.
+     * @example
+     * @code{cpp}
+     * std::array&lt;int, 3&gt; ints = { 1, 2, 3 };
+     * std::array&lt;std::string, 3&gt; strings = { "one", "two", "three" };
+     * for (auto&[i, s] : aui::zip(ints, strings)) {
+     *     std::cout &lt;&lt; i &lt;&lt; ", " &lt;&lt; s &lt;&lt; std::endl;
+     * }
+     * @endcode
+     * <pre>
+     * 1, one<br />
+     * 2, two<br />
+     * 3, three<br />
+     * </pre>
+     */
+    template<typename... Containers>
+    struct zip {
+    private:
+        using iterator_parallel = std::tuple<decltype(std::declval<Containers>().begin())...>;
+
+        iterator_parallel begins_;
+        iterator_parallel ends_;
+
+    public:
+        struct iterator {
+            iterator_parallel iterators_;
+
+            iterator(iterator_parallel iterators) : iterators_(std::move(iterators)) {}
+
+            iterator& operator++() noexcept {
+                std::apply([](auto&&... v) {
+                    aui::parameter_pack::for_each([](auto& i) {
+                        ++i;
+                    }, v...);
+                }, iterators_);
+                return *this;
+            }
+
+            std::tuple<decltype(*std::declval<Containers>().begin())&...> operator*() noexcept {
+                return std::apply([](auto&&... v) {
+                    return std::tuple<decltype(*std::declval<Containers>().begin())&...>((*v)...);
+                }, iterators_);
+            }
+
+            bool operator==(const iterator& rhs) const noexcept {
+                return iterators_ == rhs.iterators_;
+            }
+
+            bool operator!=(const iterator& rhs) const noexcept {
+                return iterators_ != rhs.iterators_;
+            }
+        };
+
+        zip(Containers&... c): begins_(c.begin()...), ends_(c.end()...) {
+
+        }
+
+        iterator begin() noexcept {
+            return iterator(begins_);
+        }
+        iterator end() noexcept {
+            return iterator(ends_);
+        }
+    };
 }

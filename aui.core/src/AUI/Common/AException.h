@@ -26,6 +26,7 @@
 #include "AUI/Reflect/AReflect.h"
 #include <AUI/Common/AVector.h>
 #include <AUI/Platform/AStacktrace.h>
+#include <AUI/Traits/strings.h>
 
 class API_AUI_CORE AException: public std::exception
 {

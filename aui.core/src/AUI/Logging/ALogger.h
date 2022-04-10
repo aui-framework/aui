@@ -123,6 +123,17 @@ public:
 
             Buffer mBuffer;
 
+            void writeTimestamp(const char* fmt, std::chrono::system_clock::time_point t) noexcept {
+                char buf[128];
+                auto inTimeT = std::chrono::system_clock::to_time_t(t);
+                std::size_t strLen;
+                {
+                    std::unique_lock lock(mLogger.mLocalTimeMutex);
+                    strLen = std::strftime(buf, sizeof(buf), fmt, std::localtime(&inTimeT));
+                }
+                mStackBuffer.write(buf, strLen);
+            }
+
         public:
             LogWriter(ALogger& logger, Level level, AString prefix) :
                 mLogger(logger),
@@ -154,6 +165,10 @@ public:
                           << t.stacktrace();
                 } else if constexpr(std::is_base_of_v<std::exception, T>) {
                     *this << "(" << AReflect::name(&t) << ") " << t.what();
+                } else if constexpr(std::is_same_v<std::chrono::seconds, T>) {
+                    writeTimestamp("%D %T", std::chrono::system_clock::time_point(t));
+                } else if constexpr(std::is_same_v<std::chrono::minutes, T> || std::is_same_v<std::chrono::hours, T>) {
+                    writeTimestamp("%D %R", std::chrono::system_clock::time_point(t));
                 } else {
                     if (!mStreamBuf) {
                         mStreamBuf.emplace(mBuffer);
@@ -167,6 +182,8 @@ public:
 private:
 	ALogger();
 	static ALogger& instance();
+
+    AMutex mLocalTimeMutex;
 
     /**
      * Writes a log entry

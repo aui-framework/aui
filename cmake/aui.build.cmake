@@ -28,6 +28,9 @@ define_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS
 define_property(GLOBAL PROPERTY TESTS_DEPS
         BRIEF_DOCS "Global list of test dependencies"
         FULL_DOCS "Global list of test dependencies")
+define_property(GLOBAL PROPERTY TESTS_EXECUTABLES
+        BRIEF_DOCS "Global list of test executables"
+        FULL_DOCS "Global list of test executables")
 
 define_property(TARGET PROPERTY INTERFACE_AUI_WHOLEARCHIVE
         BRIEF_DOCS "Use wholearchive when linking this library to another"
@@ -166,6 +169,7 @@ macro(_aui_import_gtest)
                 VERSION main
                 CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
+        set_property(TARGET GTest::gmock PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
 endmacro()
 
@@ -193,7 +197,7 @@ int main(int argc, char **argv) {
             set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
             target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
             get_target_property(_t GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
-            aui_link(${TESTS_MODULE_NAME} PUBLIC GTest::gtest)
+            aui_link(${TESTS_MODULE_NAME} PUBLIC GTest::gtest GTest::gmock)
             target_compile_definitions(${TESTS_MODULE_NAME} PUBLIC AUI_TESTS_MODULE=1)
 
             if (TARGET aui.core)
@@ -212,6 +216,22 @@ int main(int argc, char **argv) {
             target_sources(Tests PRIVATE ${TESTS_SRCS}) # append sources
         endif()
         if (TARGET Tests)
+            # executables
+            get_property(TESTS_EXECUTABLES GLOBAL PROPERTY TESTS_EXECUTABLES)
+            foreach(_executable ${TESTS_EXECUTABLES})
+                get_target_property(_t ${_executable} SOURCES)
+                target_sources(Tests PRIVATE ${_t})
+                get_target_property(_t ${_executable} INCLUDE_DIRECTORIES)
+                target_include_directories(Tests PRIVATE ${_t})
+                get_target_property(_t ${_executable} COMPILE_DEFINITIONS)
+                if(_t)
+                    target_compile_definitions(Tests PRIVATE ${_t})
+                endif()
+                get_target_property(_t ${_executable} LINK_LIBRARIES)
+                target_link_libraries(Tests PRIVATE ${_t})
+            endforeach()
+
+            # libraries
             get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
             get_property(TESTS_INCLUDE_DIRS GLOBAL PROPERTY TESTS_INCLUDE_DIRS)
             foreach(_dep ${TESTS_DEPS})
@@ -235,6 +255,7 @@ int main(int argc, char **argv) {
         set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
         set_property(GLOBAL PROPERTY TESTS_SRCS "")
         set_property(GLOBAL PROPERTY TESTS_DEPS "")
+        set_property(GLOBAL PROPERTY TESTS_EXECUTABLES "")
     endif()
 endmacro()
 
@@ -465,8 +486,8 @@ function(aui_executable AUI_MODULE_NAME)
     # for tests
     # executable's sources
     if (SRCS_TESTS_TMP)
-        set_property(GLOBAL APPEND PROPERTY TESTS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
         set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${SRCS_TESTS_TMP} ${SRCS})
+        set_property(GLOBAL APPEND PROPERTY TESTS_EXECUTABLES ${AUI_MODULE_NAME})
     endif()
 
     # remove platform dependent files

@@ -74,15 +74,15 @@ void AVectorDrawable::draw(const Params& params) {
             pos.y = glm::round((size.y - sizeHint.y * scale) / 2.f);
         }
         pos += params.offset;
-        Render::drawRect(ATexturedBrush {
-              texture,
-              std::nullopt,
-              uvModifiedFlag ? static_cast<decltype(ATexturedBrush::uv1)>(uv) : std::nullopt,
-              params.imageRendering,
-              params.repeat,
-            },
-            pos,
-            size);
+        Render::rect(ATexturedBrush{
+                             texture,
+                             std::nullopt,
+                             uvModifiedFlag ? static_cast<decltype(ATexturedBrush::uv1)>(uv) : std::nullopt,
+                             params.imageRendering,
+                             params.repeat,
+                     },
+                     pos,
+                     size);
     };
     for (auto& p : mRasterized) {
         if (p.key == key) {

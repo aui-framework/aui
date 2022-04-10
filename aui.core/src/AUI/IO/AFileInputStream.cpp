@@ -49,7 +49,7 @@ size_t AFileInputStream::read(char* dst, size_t size)
 	return r;
 }
 
-void AFileInputStream::seek(std::streamoff offset, AFileInputStream::Seek dir) {
+void AFileInputStream::seek(std::streamoff offset, AFileInputStream::Seek dir) noexcept {
     fseek(mFile, offset, [&] {
         switch (dir) {
             case Seek::BEGIN:
@@ -63,6 +63,10 @@ void AFileInputStream::seek(std::streamoff offset, AFileInputStream::Seek dir) {
     }());
 }
 
-void AFileInputStream::seek(std::streampos pos) {
+void AFileInputStream::seek(std::streampos pos) noexcept {
     fseek(mFile, pos, SEEK_SET);
+}
+
+std::streampos AFileInputStream::tell() noexcept {
+    return ftell(mFile);
 }
