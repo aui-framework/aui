@@ -60,12 +60,12 @@ public:
     public:
         Builder() = default;
 
-        Builder& withExternalVerticalScrollbar(const _<AScrollbar>& externalVerticalScrollbar) {
-            mExternalVerticalScrollbar = externalVerticalScrollbar;
+        Builder& withExternalVerticalScrollbar(_<AScrollbar> externalVerticalScrollbar) {
+            mExternalVerticalScrollbar = std::move(externalVerticalScrollbar);
             return *this;
         }
-        Builder& withContents(const _<AViewContainer>& contents) {
-            mContents = contents;
+        Builder& withContents(_<AViewContainer> contents) {
+            mContents = std::move(contents);
             return *this;
         }
 

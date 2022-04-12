@@ -27,6 +27,7 @@
 #include <AUI/Layout/AAdvancedGridLayout.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/Util/kAUI.h>
+#include <AUI/Util/UIBuildingHelpers.h>
 
 class AScrollAreaContainer: public AViewContainer {
 private:
@@ -86,7 +87,8 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
     mContentContainer->setExpanding();
 
     if (builder.mContents) {
-        setContents(builder.mContents);
+        builder.mContents->setExpanding();
+        setContents(Stacked { builder.mContents } );
     }
 
     setExpanding();
