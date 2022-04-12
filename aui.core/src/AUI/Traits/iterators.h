@@ -217,6 +217,14 @@ namespace aui {
         }
     };
 
+    namespace impl {
+        template<typename Iterator, class = void>
+        static constexpr bool is_forward_iterator = true;
+
+        template<typename Iterator>
+        static constexpr bool is_forward_iterator<Iterator, decltype(void(sizeof(std::declval<Iterator>().base())))> = false;
+    }
+
     /**
      * @brief Reverses iterator direction (i.e. converts iterator to reverse_iterator, reverse_iterator to iterators).
      *
@@ -227,13 +235,20 @@ namespace aui {
      * @param iterator iterator
      * @return same iterator but reverse direction
      */
-    template<typename Iterator, typename>
-    auto reverse_iterator_direction(Iterator iterator) noexcept {
+    template<typename Iterator>
+    auto reverse_iterator_direction(Iterator iterator) noexcept ->
+        std::enable_if_t<!impl::is_forward_iterator<Iterator>,
+                         decltype((iterator + 1).base())
+                         > {
         return (iterator + 1).base();
     }
 
     template<typename Iterator>
-    auto reverse_iterator_direction(Iterator iterator) noexcept {
+    auto reverse_iterator_direction(Iterator iterator) noexcept ->
+        std::enable_if_t<impl::is_forward_iterator<Iterator>,
+                         decltype(std::make_reverse_iterator(std::declval<Iterator>()))
+                         > {
+
         return std::make_reverse_iterator(iterator + 1);
     }
 }

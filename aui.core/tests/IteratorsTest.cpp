@@ -54,6 +54,9 @@ TEST(Iterators, ZipModification) {
 }
 
 TEST(Iterators, Reverse) {
+    static_assert(aui::impl::is_forward_iterator<AVector<int>::iterator>, "AVector<int>::iterator should be a forward iterator");
+    static_assert(!aui::impl::is_forward_iterator<AVector<int>::reverse_iterator>, "AVector<int>::reverse_iterator should not be a forward iterator");
+
     AVector<int> ints = { 1, 2, 3, 4 };
 
     EXPECT_EQ(*ints.begin(), 1);
@@ -61,5 +64,8 @@ TEST(Iterators, Reverse) {
 
     EXPECT_EQ(*ints.rbegin(), 4);
     EXPECT_EQ(*aui::reverse_iterator_direction(ints.rbegin()), 4);
+
+    AVector<int>::iterator iterator = aui::reverse_iterator_direction(ints.rbegin());
+    EXPECT_EQ(*iterator, 4);
 }
 
