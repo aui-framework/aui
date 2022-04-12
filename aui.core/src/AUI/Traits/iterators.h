@@ -217,8 +217,23 @@ namespace aui {
         }
     };
 
-    template<typename Iterator>
+    /**
+     * @brief Reverses iterator direction (i.e. converts iterator to reverse_iterator, reverse_iterator to iterators).
+     *
+     * A reversed iterator points to the same element of the container.
+     *
+     * Works on AVector.
+     * @tparam Iterator iterator
+     * @param iterator iterator
+     * @return same iterator but reverse direction
+     */
+    template<typename Iterator, typename>
     auto reverse_iterator_direction(Iterator iterator) noexcept {
         return (iterator + 1).base();
+    }
+
+    template<typename Iterator>
+    auto reverse_iterator_direction(Iterator iterator) noexcept {
+        return std::make_reverse_iterator(iterator + 1);
     }
 }

@@ -24,7 +24,9 @@
 //
 
 #include <gtest/gtest.h>
+#include <AUI/Common/AVector.h>
 #include <AUI/Traits/iterators.h>
+#include <array>
 
 TEST(Iterators, Zip) {
     std::array<int, 3> ints = { 1, 2, 3 };
@@ -54,5 +56,10 @@ TEST(Iterators, ZipModification) {
 TEST(Iterators, Reverse) {
     AVector<int> ints = { 1, 2, 3, 4 };
 
+    EXPECT_EQ(*ints.begin(), 1);
+    EXPECT_EQ(*aui::reverse_iterator_direction(ints.begin()), 1);
+
+    EXPECT_EQ(*ints.rbegin(), 4);
+    EXPECT_EQ(*aui::reverse_iterator_direction(ints.rbegin()), 4);
 }
 
