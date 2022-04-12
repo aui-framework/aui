@@ -46,6 +46,11 @@ public:
     void setSize(int width, int height) override;
     void setContents(const _<AViewContainer>& container);
 
+    void scroll(int deltaByX, int deltaByY) noexcept {
+        nullsafe(mHorizontalScrollbar)->scroll(deltaByX);
+        nullsafe(mVerticalScrollbar)->scroll(deltaByY);
+    }
+
     bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
 
     void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
