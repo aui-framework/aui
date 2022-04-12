@@ -138,7 +138,7 @@ public:
 
 
 	/**
-	 * \brief Enqueue message to execute.
+	 * \brief Enqueue message to make.
 	 * \tparam Callable callable
 	 * \param fun callable function
 	 */
@@ -148,7 +148,7 @@ public:
     }
 
     /**
-     * \brief Enqueue message to execute. Helper function for async, asyncX, ui, uiX
+     * \brief Enqueue message to make. Helper function for async, asyncX, ui, uiX
      * \tparam Callable callable
      * \param fun callable function
      */

@@ -263,7 +263,7 @@ public:
 	    }
         return copy;
 	}
-	void replaceAll(wchar_t from, wchar_t to) noexcept;
+	AString& replaceAll(wchar_t from, wchar_t to) noexcept;
 
 	[[nodiscard]]
 	float toFloat() const noexcept;
@@ -535,6 +535,11 @@ public:
     inline AString format(Args&&... args);
 
     AString processEscapes() const;
+
+    AString& removeAll(wchar_t c) noexcept {
+        erase(std::remove(begin(), end(), c));
+        return *this;
+    }
 };
 
 inline AString operator+(const AString& l, const AString& r) noexcept

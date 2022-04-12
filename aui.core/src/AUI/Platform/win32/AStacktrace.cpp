@@ -7,6 +7,7 @@
 #include <AUI/Traits/arrays.h>
 #include <dbghelp.h>
 #include <AUI/IO/APath.h>
+#include <mutex>
 
 struct Win32SymService {
     HANDLE process;

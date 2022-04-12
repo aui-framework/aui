@@ -131,7 +131,7 @@ public:
                     std::unique_lock lock(mLogger.mLocalTimeMutex);
                     strLen = std::strftime(buf, sizeof(buf), fmt, std::localtime(&inTimeT));
                 }
-                mStackBuffer.write(buf, strLen);
+                mBuffer.write(buf, strLen);
             }
 
         public:

@@ -56,7 +56,7 @@ set(BUILD_SHARED_LIBS ${_build_shared} CACHE BOOL "Build using shared libraries"
 
 # platform definitions
 # platform exclusion (AUI/Platform/<platform name>/...)
-set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios apple)
+set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios apple unix)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(AUI_DEBUG TRUE)
 else()
@@ -106,6 +106,7 @@ endif()
 
 if (UNIX)
     set(AUI_PLATFORM_UNIX 1 CACHE BOOL "Platform")
+    list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS unix)
 else()
     set(AUI_PLATFORM_UNIX 0 CACHE BOOL "Platform")
 endif()
@@ -987,7 +988,7 @@ macro(aui_app)
     set(CPACK_BUNDLE_PLIST ${PROJECT_BINARY_DIR}/MacOSXBundleInfo.plist)
 
     # WINDOWS ==========================================================================================================
-    if (AUI_PLATFORM_WINDOWS)
+    if (AUI_PLATFORM_WIN)
         list(APPEND CPACK_GENERATOR WIX)
     endif()
 

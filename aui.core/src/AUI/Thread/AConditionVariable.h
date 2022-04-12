@@ -93,7 +93,7 @@ public:
     /**
      * Waits for the notification.
      * @param lock lock.
-     * @param duration duration to wait for.
+     * @param duration duration to waitForExitCode for.
      */
     template<typename Lock, typename Duration>
     void wait_for(Lock& lock, Duration duration) {
@@ -104,7 +104,7 @@ public:
     /**
      * Waits for the notification.
      * @param lock lock.
-     * @param duration duration to wait for.
+     * @param duration duration to waitForExitCode for.
      * @param predicate which returns false if the waiting should be continued.
      */
     template<typename Lock, typename Duration, typename Predicate>

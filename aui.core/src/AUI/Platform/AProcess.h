@@ -29,10 +29,17 @@
 #include <AUI/IO/APath.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Common/AVector.h>
+#include <AUI/Common/AObject.h>
+#include <AUI/Common/ASignal.h>
+#include <AUI/IO/IInputStream.h>
+#include <AUI/IO/IOutputStream.h>
+#include <AUI/Platform/win32/WinEventHandle.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
 #endif
+
+class AChildProcess;
 
 class AProcessException: public AException {
 public:
@@ -42,7 +49,7 @@ public:
 /**
  * Retrieves data about processes.
  */
-class API_AUI_CORE AProcess {
+class API_AUI_CORE AProcess: public aui::noncopyable {
 
 public:
     virtual ~AProcess() = default;
@@ -66,22 +73,31 @@ public:
      * \brief Wait for process to be finished and returns exit code.
      * \return exit code
      */
-    virtual int wait() = 0;
+    virtual int waitForExitCode() = 0;
 
 
     /**
      * \brief Launches executable.
      * \param applicationFile executable file
      * \param args arguments
-     * \param workingDirectory pro
-     * \param waitForExit should function wait for exit. If false, function will return zero because exit code of
-     *        process is unknown during it's execution
-     * \return exit code if waitForExit = true, zero otherwise
+     * \param workingDirectory working directory
+     * \return AChildProcess instance
      */
-    static int execute(const AString& applicationFile,
-                       const AString& args = {},
-                       const APath& workingDirectory = {},
-                       bool waitForExit = true);
+    static _<AChildProcess> make(AString applicationFile,
+                                       AString args = {},
+                                       APath workingDirectory = {});
+
+
+    /**
+     * \brief Launches executable.
+     * \param applicationFile executable file
+     * \param args arguments
+     * \param workingDirectory working directory
+     * \return exit code
+     */
+    static int executeWaitForExit(AString applicationFile,
+                                  AString args = {},
+                                  APath workingDirectory = {});
 
 
     /**
@@ -118,62 +134,105 @@ public:
     static _<AProcess> fromPid(uint32_t pid);
 };
 
+ENUM_FLAG(ASubProcessExecutionFlags) {
+    MERGE_STDOUT_STDERR = 0b1,
+    DEFAULT = 0
+};
+
 /**
  * Creates child process of this application.
  */
-class AChildProcess: public AProcess {
+class AChildProcess: public AProcess, public AObject {
 friend class AProcess;
-private:
-    AString mApplicationFile;
-    AString mArgs;
-    APath mWorkingDirectory;
-
-#if AUI_PLATFORM_WIN
-    PROCESS_INFORMATION mProcessInformation;
-#else
-    pid_t mPid;
-
-    int mPipes[2];
-#endif
-
 public:
-    AChildProcess(const AString& applicationFile) : mApplicationFile(applicationFile) {}
+    AChildProcess() = default;
+    ~AChildProcess() = default;
+    
+    void setApplicationFile(AString applicationFile) noexcept {
+        mApplicationFile = std::move(applicationFile);
+    }
+
+    void setArgs(AString args) noexcept {
+        mArgs = std::move(args);
+    }
+
+    void setWorkingDirectory(APath workingDirectory) noexcept {
+        mWorkingDirectory = std::move(workingDirectory);
+    }
+
+    [[nodiscard]]
     const AString& getApplicationFile() const {
         return mApplicationFile;
     }
 
+    [[nodiscard]]
     const AString& getArgs() const {
         return mArgs;
     }
 
-    void setArgs(const AString& args) {
-        mArgs = args;
-    }
-
+    [[nodiscard]]
     const APath& getWorkingDirectory() const {
         return mWorkingDirectory;
     }
 
-    void setWorkingDirectory(const APath& workingDirectory) {
-        mWorkingDirectory = workingDirectory;
-    }
-
     APath getPathToExecutable() override;
+
 
     /**
      * \brief Launches process.
      */
-    void run();
+    void run(ASubProcessExecutionFlags flags = ASubProcessExecutionFlags::DEFAULT);
 
     /**
      * \brief Wait for process to be finished.
      * \return exit code
      */
-    int wait() override;
+    int waitForExitCode() override;
 
     uint32_t getPid() override;
 
     APath getModuleName() override;
+
+    [[nodiscard]]
+    const _<IInputStream>& getStdOutStream() const {
+        return mStdOutStream;
+    }
+
+    [[nodiscard]]
+    const _<IInputStream>& getStdErrStream() const {
+        return mStdErrStream;
+    }
+
+    [[nodiscard]]
+    const _<IOutputStream>& getStdInStream() const {
+        return mStdInStream;
+    }
+
+signals:
+    emits<> finished;
+    emits<> readyReadStdOut;
+    emits<> readyReadStdErr;
+
+
+private:
+    AString mApplicationFile;
+    AString mArgs;
+    APath mWorkingDirectory;
+
+    _<IOutputStream> mStdInStream;
+    _<IInputStream> mStdOutStream;
+    _<IInputStream> mStdErrStream;
+
+#if AUI_PLATFORM_WIN
+    PROCESS_INFORMATION mProcessInformation;
+    WinEventHandle mExitEvent;
+    WinEventHandle mStdOutEvent;
+    WinEventHandle mStdErrEvent;
+#else
+    pid_t mPid;
+
+    int mPipes[2];
+#endif
 };
 
 

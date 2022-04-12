@@ -143,6 +143,9 @@ namespace aui {
         }
     };
 
+    /**
+     * Converts a sequence of containers to a single iterator range.
+     */
     template<typename... Items>
     joined_range<Items...> join(Items... items) {
         return { (&items)... };
@@ -213,4 +216,9 @@ namespace aui {
             return iterator(ends_);
         }
     };
+
+    template<typename Iterator>
+    auto reverse_iterator_direction(Iterator iterator) noexcept {
+        return (iterator + 1).base();
+    }
 }

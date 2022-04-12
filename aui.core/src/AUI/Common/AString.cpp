@@ -1091,11 +1091,12 @@ AString AString::lowercase() const {
     return buf;
 }
 
-void AString::replaceAll(wchar_t from, wchar_t to) noexcept {
+AString& AString::replaceAll(wchar_t from, wchar_t to) noexcept {
     for (auto& s : *this) {
         if (s == from)
             s = to;
     }
+    return *this;
 }
 
 void AString::resizeToNullTerminator() {

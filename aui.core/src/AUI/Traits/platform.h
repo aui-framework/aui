@@ -148,6 +148,9 @@ namespace aui::platform {
         }
     }
 
+    constexpr bool is_64_bit = sizeof(void*) == 8;
+    constexpr bool is_32_bit = sizeof(void*) == 4;
+
 #if AUI_PLATFORM_WIN
     namespace current = os_windows;
 #elif AUI_PLATFORM_ANDROID

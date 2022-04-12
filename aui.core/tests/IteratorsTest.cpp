@@ -51,3 +51,8 @@ TEST(Iterators, ZipModification) {
     EXPECT_EQ(vec1, (std::array<int, 3>{5, 7, 9}));
 }
 
+TEST(Iterators, Reverse) {
+    AVector<int> ints = { 1, 2, 3, 4 };
+
+}
+
