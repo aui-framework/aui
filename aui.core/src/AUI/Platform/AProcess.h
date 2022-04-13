@@ -33,9 +33,9 @@
 #include <AUI/Common/ASignal.h>
 #include <AUI/IO/IInputStream.h>
 #include <AUI/IO/IOutputStream.h>
-#include <AUI/Platform/win32/WinEventHandle.h>
 
 #if AUI_PLATFORM_WIN
+#include <AUI/Platform/win32/WinEventHandle.h>
 #include <windows.h>
 #endif
 
@@ -230,8 +230,6 @@ private:
     WinEventHandle mStdErrEvent;
 #else
     pid_t mPid;
-
-    int mPipes[2];
 #endif
 };
 

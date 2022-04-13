@@ -5,10 +5,15 @@
 
 class PipeOutputStream: public IOutputStream {
 public:
-    explicit PipeOutputStream(Pipe pipe) : mPipe(std::move(pipe)) {}
+    explicit PipeOutputStream(Pipe pipe);
+    ~PipeOutputStream();
 
     void write(const char* src, size_t size) override;
 
 private:
     Pipe mPipe;
+
+#if AUI_PLATFORM_UNIX
+    FILE* mFileHandle;
+#endif
 };
