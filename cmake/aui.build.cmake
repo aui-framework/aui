@@ -169,7 +169,7 @@ macro(_aui_import_gtest)
         auib_import(GTest https://github.com/google/googletest
                 VERSION release-1.11.0
                 CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
-        #set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
+        set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
         set_property(TARGET GTest::gmock PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
 endmacro()
