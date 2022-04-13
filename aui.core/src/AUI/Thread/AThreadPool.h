@@ -49,7 +49,7 @@ private:
     public:
         Worker(AThreadPool& tp, size_t index);
         ~Worker();
-        void disable();
+        void aboutToDelete();
     };
 
 public:
@@ -61,7 +61,7 @@ public:
     };
 protected:
     typedef std::function<void()> task;
-    AVector<Worker*> mWorkers;
+    AVector<std::unique_ptr<Worker>> mWorkers;
     AQueue<task> mQueueHighest;
     AQueue<task> mQueueMedium;
     AQueue<task> mQueueLowest;
@@ -79,6 +79,8 @@ public:
     void clear();
     void runLaterTasks();
     static void enqueue(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
+
+    void setWorkersCount(std::size_t workersCount);
 
     static AThreadPool& global();
 
@@ -166,7 +168,7 @@ public:
 };
 
 template<typename Iterator, typename Functor>
-auto AThreadPool::parallel(Iterator begin, Iterator end, Functor &&functor) {
+auto AThreadPool::parallel(Iterator begin, Iterator end, Functor&& functor) {
     using ResultType = decltype(std::declval<Functor>()(std::declval<Iterator>(), std::declval<Iterator>()));
     AFutureSet<ResultType> futureSet;
 
