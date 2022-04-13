@@ -93,7 +93,7 @@ namespace aui {
             checkForNull();
         }
 
-        operator T() {
+        operator T() const noexcept {
             checkForNull();
             return value;
         }

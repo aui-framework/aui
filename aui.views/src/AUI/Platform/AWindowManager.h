@@ -23,14 +23,8 @@
 #include <AUI/Thread/IEventLoop.h>
 #include "IRenderingContext.h"
 
-#if AUI_PLATFORM_LINUX
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/keysymdef.h>
-
-#endif
-
 class AWindow;
+typedef union _XEvent XEvent;
 
 
 class API_AUI_VIEWS AWindowManager: public IEventLoop {

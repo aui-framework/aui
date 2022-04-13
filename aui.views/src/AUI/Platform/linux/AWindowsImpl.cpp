@@ -409,7 +409,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     KeySym keysym = 0;
                     char buf[0x20];
                     Status status = 0;
-                    count = Xutf8LookupString(window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
+                    count = Xutf8LookupString((XIC)window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
                                               &status);
 
                     // delete key

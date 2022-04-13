@@ -108,6 +108,27 @@ private:
         }
     };
 
+    template<typename Lambda, typename A1, typename A2, typename A3>
+    struct call_helper<void(Lambda::*)(A1, A2, A3) const>
+    {
+        Lambda l;
+
+        explicit call_helper(Lambda l)
+                : l(l)
+        {
+        }
+
+        template<typename... Others>
+        void call(A1 a1, A2 a2, A3 a3, Others...)
+        {
+            l(a1, a2, a3);
+        }
+
+        void operator()(Args... args) {
+            call(args...);
+        }
+    };
+
 
 
     // Member function

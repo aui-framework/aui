@@ -9,11 +9,8 @@
 using AWindowNativePtr = HWND;
 
 #elif AUI_PLATFORM_LINUX
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/keysymdef.h>
 
-using AWindowNativePtr = Window;
+using AWindowNativePtr = unsigned long;
 
 #elif AUI_PLATFORM_APPLE
 

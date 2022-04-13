@@ -40,12 +40,7 @@
 #include <jni.h>
 #elif AUI_PLATFORM_APPLE
 #else
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/keysymdef.h>
-#include <GL/gl.h>
-#include <GL/glx.h>
-#include <X11/Xatom.h>
+
 #endif
 
 class Render;
@@ -68,7 +63,7 @@ private:
     struct {
         uint32_t lo = 0;
         uint32_t hi = 0;
-        XID counter;
+        /* XID */ unsigned long counter;
     } mXsyncRequestCounter;
     bool mWasMaximized = false;
 #endif
@@ -93,8 +88,8 @@ private:
 #elif AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_APPLE
 #else
-    unsigned long xGetWindowProperty(Atom property, Atom type, unsigned char** value) const;
-    void xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) const;
+    unsigned long xGetWindowProperty(unsigned long property, unsigned long type, unsigned char** value) const;
+    void xSendEventToWM(unsigned long atom, long a, long b, long c, long d, long e) const;
 #endif
 
 protected:
@@ -104,7 +99,7 @@ protected:
 #elif AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_APPLE
 #else
-    XIC mIC;
+    void* mIC;
 #endif
     AWindowNativePtr mHandle = 0; // on linux AWindowNativePtr is not a pointer type so using zero here
     WindowStyle mWindowStyle = WindowStyle::DEFAULT;
@@ -197,7 +192,7 @@ public:
     jobject getNativeHandle() { return mHandle; }
 #elif AUI_PLATFORM_APPLE
 #else
-    Window getNativeHandle() { return mHandle; }
+    AWindowNativePtr getNativeHandle() { return mHandle; }
 #endif
 
     auto nativeHandle() const {

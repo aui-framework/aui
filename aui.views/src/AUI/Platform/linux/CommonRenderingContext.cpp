@@ -109,7 +109,7 @@ void CommonRenderingContext::initX11Window(const IRenderingContext::Init &init, 
     if (window.mIC == NULL) {
         throw AException("Could not get IC");
     }
-    XSetICFocus(window.mIC);
+    XSetICFocus((XIC)window.mIC);
 
 
     XMapWindow(ourDisplay, window.mHandle);
