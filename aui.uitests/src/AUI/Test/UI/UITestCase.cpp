@@ -9,6 +9,7 @@
 #include "AUI/UITestState.h"
 #include <AUI/Traits/strings.h>
 #include <AUI/UITest.h>
+#include <gmock/gmock.h>
 
 class MyListener: public ::testing::EmptyTestEventListener {
 private:

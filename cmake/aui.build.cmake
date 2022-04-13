@@ -169,7 +169,7 @@ macro(_aui_import_gtest)
         auib_import(GTest https://github.com/google/googletest
                 VERSION release-1.11.0
                 CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
-        set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
+        #set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
         set_property(TARGET GTest::gmock PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
 endmacro()
@@ -183,22 +183,25 @@ macro(aui_enable_tests)
     enable_testing()
     if (NOT ANDROID AND NOT IOS)
         get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
+
         if (NOT TARGET Tests)
             set(TESTS_MODULE_NAME Tests)
 
             file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp [[
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    // Since Google Mock depends on Google Test, InitGoogleMock() is
+    // also responsible for initializing Google Test.  Therefore there's
+    testing::InitGoogleMock(&argc, argv);
+    return RUN_ALL_TESTS();
 }]])
             add_executable(${TESTS_MODULE_NAME} ${TESTS_SRCS} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
             include(GoogleTest)
             gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
             set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
             target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
-            get_target_property(_t GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
-            aui_link(${TESTS_MODULE_NAME} PUBLIC GTest::gtest GTest::gmock)
+            target_link_libraries(${TESTS_MODULE_NAME} PUBLIC GTest::gmock)
+
             target_compile_definitions(${TESTS_MODULE_NAME} PUBLIC AUI_TESTS_MODULE=1)
 
             if (TARGET aui.core)
@@ -221,6 +224,14 @@ int main(int argc, char **argv) {
             get_property(TESTS_EXECUTABLES GLOBAL PROPERTY TESTS_EXECUTABLES)
             foreach(_executable ${TESTS_EXECUTABLES})
                 get_target_property(_t ${_executable} SOURCES)
+
+                # remove unexisting sources; otherwise cmake would fail for unknown reason
+                foreach(_e ${_t})
+                    if (NOT EXISTS ${_e})
+                        list(REMOVE_ITEM _t ${_e})
+                    endif()
+                endforeach()
+
                 target_sources(Tests PRIVATE ${_t})
                 get_target_property(_t ${_executable} INCLUDE_DIRECTORIES)
                 target_include_directories(Tests PRIVATE ${_t})

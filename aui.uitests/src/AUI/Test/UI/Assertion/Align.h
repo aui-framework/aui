@@ -46,12 +46,45 @@ namespace uitest::impl {
             return current == *value;
         }
     };
+
+    template<ASide side>
+    struct less_of {
+        UIMatcher matcher;
+
+        less_of(UIMatcher matcher) : matcher(std::move(matcher)) {}
+
+        bool operator()(const _<AView>& rhs) {
+            auto views = matcher.toSet();
+            return std::all_of(views.begin(), views.end(), [&](const _<AView>& lhs) {
+                return side_value<side>{}(lhs) < side_value<side>{}(rhs);
+            });
+        }
+    };
+
+    template<ASide side>
+    struct greater_of {
+        UIMatcher matcher;
+
+        greater_of(UIMatcher matcher) : matcher(std::move(matcher)) {}
+
+        bool operator()(const _<AView>& rhs) {
+            auto views = matcher.toSet();
+            return std::all_of(views.begin(), views.end(), [&](const _<AView>& lhs) {
+                return side_value<side>{}(lhs) > side_value<side>{}(rhs);
+            });
+        }
+    };
 }
 
 using leftAligned = uitest::impl::align<ASide::LEFT>;
 using topAligned = uitest::impl::align<ASide::TOP>;
 using rightAligned = uitest::impl::align<ASide::RIGHT>;
 using bottomAligned = uitest::impl::align<ASide::BOTTOM>;
+
+
+using bottomAboveBottomOf = uitest::impl::less_of<ASide::BOTTOM>;
+using bottomBelowBottomOf = uitest::impl::greater_of<ASide::BOTTOM>;
+
 
 using leftRightAligned = uitest::impl::both<uitest::impl::align<ASide::LEFT>, uitest::impl::align<ASide::RIGHT>>;
 using topBottomAligned = uitest::impl::both<uitest::impl::align<ASide::TOP>, uitest::impl::align<ASide::BOTTOM>>;

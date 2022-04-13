@@ -24,7 +24,28 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/ATextField.h>
 #include <AUI/View/AScrollArea.h>
+#include <gmock/gmock.h>
 
+class MockedViewContainer: public AViewContainer {
+public:
+    MockedViewContainer() {
+        ON_CALL(*this, setSize).WillByDefault([this](int width, int height) {
+            AViewContainer::setSize(width, height);
+        });
+
+        setContents(
+            Vertical {
+                _new<ALabel>("Content") with_style { ass::MinSize{ {}, 300_dp } },
+            }
+        );
+        *this << ".container";
+        setCustomAss({ ass::BackgroundSolid{ 0xff0000_rgb, } });
+
+        EXPECT_CALL(*this, setSize(testing::_, testing::_)).Times(testing::AtLeast(1));
+    }
+
+    MOCK_METHOD(void, setSize, (int width, int height), (override));
+};
 
 class UIScrollTest: public testing::UITest {
 public:
@@ -32,37 +53,10 @@ protected:
 
     class TestWindow: public AWindow {
     public:
-        _<AScrollArea> mScrollArea;
-        _<AViewContainer> mContainer;
-
-        TestWindow() {
+        TestWindow(): AWindow("Test window", 200_dp, 100_dp) {
             setContents(Vertical {
-                    mScrollArea = AScrollArea::Builder().withContents(
-                            mContainer = Vertical {
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                                    _new<ALabel>("Content"),
-                            } with_style { ass::BackgroundSolid{ 0xff0000_rgb, } } ).withExpanding().build()
+                    AScrollArea::Builder().withContents(_new<MockedViewContainer>()).withExpanding().build()
             });
-
-            pack();
         }
     };
     _<TestWindow> mTestWindow;
@@ -77,6 +71,9 @@ protected:
     }
 
     void TearDown() override {
+        // delete mocked objects
+        mTestWindow->removeAllViews();
+        AThread::current()->processMessages();
         UITest::TearDown();
     }
 };
@@ -85,8 +82,9 @@ protected:
 
 TEST_F(UIScrollTest, ContainedViewExpanded) {
     // scroll a little to see whether container view expanded properly
-    mTestWindow->mScrollArea->scroll(0, 10);
     mTestWindow->updateLayout();
-    By::type<AScrollArea>().perform(scroll({0, 10}));
-    EXPECT_GE(mTestWindow->mContainer->getHeight(), mTestWindow->getHeight());
+    By::type<AScrollArea>().perform(scroll({0, 500}));
+    By::name(".container").check(uitest::impl::not$(bottomAboveBottomOf(By::type<AScrollArea>())));
+
+
 }
