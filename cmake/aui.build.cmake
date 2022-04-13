@@ -582,10 +582,16 @@ function(aui_static_link AUI_MODULE_NAME LIBRARY_NAME)
     target_link_libraries(${AUI_MODULE_NAME} PUBLIC ${LIBRARY_NAME})
 endfunction(aui_static_link)
 
+macro(_aui_find_root)
+    if (NOT AUI_BUILD_AUI_ROOT)
+        set(AUI_BUILD_AUI_ROOT ${AUI_ROOT})
+    endif()
+endmacro()
 
 macro(_aui_try_find_toolbox)
+    _aui_find_root()
     find_program(AUI_TOOLBOX_EXE aui.toolbox
-            HINTS ${AUI_ROOT}/bin)
+            HINTS ${AUI_BUILD_AUI_ROOT}/bin)
     if (NOT AUI_TOOLBOX_EXE)
         file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/*/aui.toolbox)
         if (AUI_TOOLBOX_EXE)
@@ -891,20 +897,8 @@ function(aui_module AUI_MODULE_NAME)
     endif()
 endfunction(aui_module)
 
-
 macro(aui_app)
-    # for pulling some resources (cmake scripts, ios storyboards, etc...)
-    if (NOT AUI_ROOT)
-        foreach(_probe ${CMAKE_CURRENT_SOURCE_DIR} ${AUI_SOURCE_DIR})
-            if (EXISTS ${_probe}/aui.build.cmake)
-                set(AUI_ROOT ${_probe})
-                break()
-            endif()
-        endforeach()
-        if (NOT AUI_ROOT)
-            message(FATAL_ERROR "Could not determine aui.build.cmake")
-        endif()
-    endif()
+    _aui_find_root()
 
     set(options NO_INCLUDE_CPACK)
     set(oneValueArgs
@@ -1023,7 +1017,7 @@ macro(aui_app)
         endif()
         file(GENERATE
                 OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate.cmake
-                INPUT ${AUI_ROOT}/cmake/appimage-generate.cmake.in)
+                INPUT ${AUI_BUILD_AUI_ROOT}/cmake/appimage-generate.cmake.in)
 
         file(GENERATE
                 OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate-vars.cmake
@@ -1054,7 +1048,7 @@ macro(aui_app)
         set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
         set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
         if (AUI_PLATFORM_MACOS)
-            configure_file(${AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+            configure_file(${AUI_BUILD_AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
         endif()
         set_target_properties(${APP_TARGET} PROPERTIES
                 MACOSX_BUNDLE TRUE
@@ -1075,7 +1069,7 @@ macro(aui_app)
 
     # MACOS ============================================================================================================
     if (AUI_PLATFORM_MACOS)
-        configure_file(${AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+        configure_file(${AUI_BUILD_AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
 
         if (APP_ICON)
             # generate icns
@@ -1131,8 +1125,8 @@ macro(aui_app)
                 ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
                 )
 
-        configure_file(${AUI_ROOT}/cmake/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
-        configure_file(${AUI_ROOT}/cmake/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
+        configure_file(${AUI_BUILD_AUI_ROOT}/cmake/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
+        configure_file(${AUI_BUILD_AUI_ROOT}/cmake/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
 
         target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
         set_target_properties(${APP_TARGET} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
@@ -1170,7 +1164,7 @@ macro(aui_app)
                 XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ${APP_APPLE_SIGN_IDENTITY}
                 XCODE_ATTRIBUTE_DEVELOPMENT_TEAM ${APP_APPLE_TEAM_ID}
                 XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY ${APP_IOS_DEVICE}
-                MACOSX_BUNDLE_INFO_PLIST ${AUI_ROOT}/cmake/plist.in
+                MACOSX_BUNDLE_INFO_PLIST ${AUI_BUILD_AUI_ROOT}/cmake/plist.in
                 XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
                 XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES NO
                 XCODE_ATTRIBUTE_INSTALL_PATH "$(LOCAL_APPS_DIR)"
