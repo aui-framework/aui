@@ -325,5 +325,19 @@ public:
      * @return full path to the found file; if file not found, an empty string is returned.
      */
     static AVector<APath> find(const AString& filename, const AVector<APath>& locations, PathFinder flags = PathFinder::NONE);
+
+    /**
+     * @brief Building path right in the code
+     * @code{cpp}
+     * AString filename = "file.txt";
+     * APath path = "path" / "to" / "your" / filename;
+     * @endcode
+     * Which would result into "path/to/your/file.txt"
+     */
+    [[nodiscard]]
+    APath operator/(const AString& filename) const {
+        return operator[](filename);
+    }
+
 };
 
