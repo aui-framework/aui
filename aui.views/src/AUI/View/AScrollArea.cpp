@@ -32,7 +32,6 @@
 class AScrollAreaContainer: public AViewContainer {
 private:
     glm::uvec2 mScroll = {0, 0}; // TODO horizontal
-    _<AViewContainer> mTargetChild;
 
 public:
     AScrollAreaContainer() {
@@ -44,7 +43,7 @@ public:
     }
 
     void updateLayout() override {
-        nullsafe(mTargetChild)->setGeometry(0, -mScroll.y, getContentWidth(), getContentHeight() + mScroll.y);
+        child()->setGeometry(0, -mScroll.y, getContentWidth(), getContentHeight() + mScroll.y);
     }
 
     int getContentMinimumHeight() override {
@@ -55,15 +54,17 @@ public:
         mScroll.y = scroll;
         updateLayout();
     }
-    void setContent(const _<AViewContainer>& view) {
+
+    void setContent(const _<AView>& view) {
         removeAllViews();
         addView(view);
-        mTargetChild = view;
     }
 
     [[nodiscard]]
     const _<AView>& child() const noexcept {
-        return mTargetChild;
+        assert(("no scrollarea child specified", !getViews().empty()));
+        assert(("scrollarea can have only one child", getViews().size() == 1));
+        return getViews().first();
     }
 };
 
@@ -101,7 +102,8 @@ AScrollArea::~AScrollArea() = default;
 
 void AScrollArea::setSize(int width, int height) {
     AViewContainer::setSize(width, height);
-    mVerticalScrollbar->setScrollDimensions(mContentContainer->getContentHeight() + mContentContainer->getTotalFieldVertical(), mContentContainer->child()->getContentMinimumHeight());
+    mVerticalScrollbar->setScrollDimensions(mContentContainer->getContentHeight() + mContentContainer->getTotalFieldVertical(),
+                                            mContentContainer->child()->getContentMinimumHeight());
 }
 
 void AScrollArea::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
