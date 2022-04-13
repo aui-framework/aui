@@ -1,5 +1,7 @@
 #include <AUI/Platform/PipeInputStream.h>
 
+PipeInputStream::PipeInputStream(Pipe pipe) : mPipe(std::move(pipe)) {}
+PipeInputStream::~PipeInputStream() = default;
 
 size_t PipeInputStream::read(char* dst, size_t size) {
     DWORD bytesRead;

@@ -126,6 +126,9 @@ public:
     APath(const char* str) noexcept: AString(str) {
         removeBackSlashes();
     }
+    APath(const char* str, std::size_t length) noexcept: AString(str, str + length) {
+        removeBackSlashes();
+    }
     APath(const wchar_t * str) noexcept: AString(str) {
         removeBackSlashes();
     }

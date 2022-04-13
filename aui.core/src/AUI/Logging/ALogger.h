@@ -62,7 +62,7 @@ public:
                     mBuffer = std::move(h);
                 }
             public:
-
+                Buffer(): mBuffer(StackBuffer()) {}
                 size_t write(const char* t, size_t s) {
                     if (std::holds_alternative<StackBuffer>(mBuffer)) {
                         auto& stack = std::get<StackBuffer>(mBuffer);

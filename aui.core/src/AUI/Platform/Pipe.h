@@ -1,9 +1,9 @@
 #pragma once
 
-#if AUI_PLATFORM_WIN
-#include <Windows.h>
 #include <AUI/Traits/values.h>
 
+#if AUI_PLATFORM_WIN
+#include <Windows.h>
 #else
 #include <unistd.h>
 #include <sys/types.h>
@@ -41,6 +41,6 @@ public:
     void closeOut() noexcept;
 
 private:
-    pipe_t mIn;
     pipe_t mOut;
+    pipe_t mIn;
 };

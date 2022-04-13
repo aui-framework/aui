@@ -25,6 +25,9 @@
 
 #include <AUI/Platform/AProcess.h>
 #include "AUI/IO/AFileOutputStream.h"
+#include "AUI/Platform/Pipe.h"
+#include "AUI/Platform/PipeInputStream.h"
+#include "AUI/Platform/PipeOutputStream.h"
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -61,8 +64,7 @@ public:
         char buf[0x800];
         char path[0x100];
         sprintf(path, "/proc/%u/exe", mHandle);
-        readlink(path, buf, sizeof(buf));
-        return APath(buf);
+        return APath(buf, readlink(path, buf, sizeof(buf)));
     }
 
     uint32_t getPid() override {
@@ -94,66 +96,62 @@ _<AProcess> AProcess::fromPid(uint32_t pid) {
     return nullptr;
 }
 
-int AProcess::execute(const AString& applicationFile, const AString& args, const APath& workingDirectory, bool waitForExit) {
-    AChildProcess p(applicationFile);
-    p.setArgs(args);
-    p.setWorkingDirectory(workingDirectory);
-    p.run();
-
-    if (waitForExit) {
-        auto f = fdopen(p.mPipes[0],"r");
-        char buf[0x1000];
-        int r;
-        while ((r = fread(buf, 1, sizeof(buf), f)) > 0) {
-            write(STDOUT_FILENO, buf, r);
-        }
-
-        fclose(f);
-        return p.wait();
-    }
-
-    return 0;
-}
-
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
     assert(0);
 }
 extern char **environ;
 
-void AChildProcess::run() {
-    auto splt = mArgs.split(' ');
-    char** argv = new char*[splt.size() + 1];
-    size_t counter = 0;
-    {
-        auto s = mApplicationFile.toStdString();
-        argv[0] = new char[s.length() + 1];
-        strcpy(argv[0], s.c_str());
-    }
-    for (auto& s : splt) {
-        auto stdString = s.toStdString();
-        auto cString = new char[stdString.length() + 1];
-        strcpy(cString, stdString.c_str());
-        argv[++counter] = cString;
-    }
-    argv[splt.size()] = nullptr;
+void AChildProcess::run(ASubProcessExecutionFlags flags) {
+    bool mergeStdoutStderr = bool(flags & ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
 
-    if (pipe(mPipes) == -1) {
-        throw AException("could not create unix pipe");
+    AVector<std::string> argsStdString;
+    {
+        auto splt = mArgs.split(' ');
+        argsStdString.reserve(splt.size() + 1);
+        argsStdString << mApplicationFile.toStdString();
+        for (auto& arg: splt) {
+            argsStdString << arg.toStdString();
+        }
     }
+    AVector<char*> argv;
+    argv.reserve(argsStdString.size());
+    for (auto& arg : argsStdString) {
+        argv << arg.data();
+    }
+    argv << nullptr;
+
+
+    Pipe pipeStdin;
+    Pipe pipeStdout;
+    Pipe pipeStderr;
 
     auto pid = fork();
     if (pid == 0) {
-        while ((dup2(mPipes[1], STDOUT_FILENO) == -1) && (errno == EINTR)) {}
+        while ((dup2(pipeStdin.out(), STDIN_FILENO) == -1) && (errno == EINTR)) {}
+        while ((dup2(pipeStdout.in(), STDOUT_FILENO) == -1) && (errno == EINTR)) {}
+        while ((dup2(mergeStdoutStderr ? pipeStdout.in() : pipeStderr.in(), STDERR_FILENO) == -1) && (errno == EINTR)) {}
         //close(mPipes[0]);
         //close(mPipes[1]);
 
         // we are in a new process
         chdir(mWorkingDirectory.toStdString().c_str());
-        execve(mApplicationFile.toStdString().c_str(), argv, environ);
+        execve(mApplicationFile.toStdString().c_str(), argv.data(), environ);
     } else {
         // we are in old process
         mPid = pid;
-        close(mPipes[1]);
+        pipeStdin.closeOut();
+        pipeStdout.closeIn();
+        pipeStderr.closeIn();
+
+        // create std pipes
+        mStdOutStream = _new<PipeInputStream>(std::move(pipeStdout));
+        if (mergeStdoutStderr) {
+            mStdErrStream = mStdOutStream;
+        } else {
+            mStdErrStream = _new<PipeInputStream>(std::move(pipeStderr));
+        }
+
+        mStdInStream = _new<PipeOutputStream>(std::move(pipeStdin));
     }
 }
 

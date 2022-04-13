@@ -222,7 +222,7 @@ namespace aui {
         static constexpr bool is_forward_iterator = true;
 
         template<typename Iterator>
-        static constexpr bool is_forward_iterator<Iterator, decltype(void(sizeof(std::declval<Iterator>().base())))> = false;
+        static constexpr bool is_forward_iterator<std::reverse_iterator<Iterator>> = false;
     }
 
     /**
