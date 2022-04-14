@@ -29,7 +29,7 @@ int(* _gEntry)(const AStringVector&);
 
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
     _gEntry = aui_entry;
-    //AThread::current()->setThreadName("UI thread");
+    //AThread::setThreadName("UI thread");
     NSString * appDelegateClassName = appDelegateClassName = NSStringFromClass([AppDelegate class]);;
 
     return UIApplicationMain(argc, argv, nil, appDelegateClassName);

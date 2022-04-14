@@ -83,7 +83,7 @@ extern int(* _gEntry)(const AStringVector&);
 
 
 - (void)glkView:(GLKView *)view drawInRect:(CGRect)rect {
-    AThread::current()->processMessages();
+    AThread::processMessages();
     auiWindow()->redraw();
 }
 - (void)viewDidLayoutSubviews {

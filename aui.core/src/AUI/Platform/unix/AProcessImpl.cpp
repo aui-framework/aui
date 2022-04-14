@@ -40,6 +40,7 @@
 #include <AUI/IO/AFileOutputStream.h>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Logging/ALogger.h>
+#include <fcntl.h>
 
 class AOtherProcess: public AProcess {
 private:
@@ -129,6 +130,8 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     Pipe pipeStdin;
     Pipe pipeStdout;
     Pipe pipeStderr;
+
+    //fcntl(pipeStdout.out(), F_SETOWN, callback);
 
     auto pid = fork();
     if (pid == 0) {

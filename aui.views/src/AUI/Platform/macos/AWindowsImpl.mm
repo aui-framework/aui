@@ -151,7 +151,7 @@ void AWindow::hide() {
 
 void AWindowManager::notifyProcessMessages() {
     dispatch_async(dispatch_get_main_queue(), ^{
-        AThread::current()->processMessages();
+        AThread::processMessages();
     });
 }
 

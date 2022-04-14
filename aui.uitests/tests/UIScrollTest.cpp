@@ -73,7 +73,7 @@ protected:
     void TearDown() override {
         // delete mocked objects
         mTestWindow->removeAllViews();
-        AThread::current()->processMessages();
+        AThread::processMessages();
         UITest::TearDown();
     }
 };

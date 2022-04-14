@@ -65,7 +65,7 @@ public:
      */
     void TearDown() override {
         Test::TearDown();
-        AThread::current()->processMessages();
+        AThread::processMessages();
         AThread::sleep(500);
         ASSERT_TRUE(slave->mMessageReceived);
         master = nullptr;

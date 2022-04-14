@@ -29,7 +29,8 @@
 #include <AUI/Traits/iterators.h>
 #include <array>
 #include "AUI/Platform/AProcess.h"
-
+#include "AUI/Util/kAUI.h"
+#include <gmock/gmock.h>
 
 class Process : public ::testing::Test {
 protected:
@@ -53,9 +54,40 @@ TEST_F(Process, Self) {
 TEST_F(Process, ExitCode) {
     EXPECT_EQ(AProcess::executeWaitForExit(mSelf, "--help"), 0);
 }
+
 TEST_F(Process, Stdout) {
     auto p = AProcess::make(mSelf, "--help");
     p->run();
     EXPECT_TRUE(AString::fromUtf8(AByteBuffer::fromStream(p->getStdOutStream())).contains("This program contains tests written using Google Test."));
+}
+
+class ProcessSignalReceiver: public AObject {
+public:
+    MOCK_METHOD(void, slotMock, ());
+};
+
+TEST_F(Process, FinishedSignal) {
+    auto receiver = _new<ProcessSignalReceiver>();
+    EXPECT_CALL(*receiver, slotMock()).Times(1);
+    auto p = AProcess::make(mSelf, "--help");
+    AObject::connect(p->finished, slot(receiver)::slotMock);
+    p->run();
+    p->waitForExitCode();
+
+    receiver = nullptr; // gmock wants object to be removed
+    AThread::processMessages();
+}
+
+
+TEST_F(Process, StdoutSignal) {
+    auto receiver = _new<ProcessSignalReceiver>();
+    EXPECT_CALL(*receiver, slotMock()).Times(testing::AtLeast(1));
+    auto p = AProcess::make(mSelf, "--help");
+    AObject::connect(p->readyReadStdOut, slot(receiver)::slotMock);
+    p->run();
+    p->waitForExitCode();
+
+    receiver = nullptr; // gmock wants object to be removed
+    AThread::processMessages();
 }
 

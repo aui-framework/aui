@@ -570,7 +570,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
             std::unique_lock lock(mXNotifyLock);
             mXNotifyCV.wait_for(lock, std::chrono::microseconds(500));
         }
-        AThread::current()->processMessages();
+        AThread::processMessages();
         if (AWindow::isRedrawWillBeEfficient()) {
             for (auto &window : mWindows) {
                 if (window->mRedrawFlag) {

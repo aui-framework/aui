@@ -131,7 +131,7 @@ void AWindowManager::notifyProcessMessages() {
 }
 
 void AWindowManager::loop() {
-    AThread::current()->processMessages();
+    AThread::processMessages();
 }
 void AWindow::show() {
     if (!getWindowManager().mWindows.contains(shared_from_this())) {

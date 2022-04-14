@@ -91,7 +91,7 @@ void AEmbedAuiWrap::windowMakeCurrent() {
 }
 
 void AEmbedAuiWrap::windowRender() {
-    AThread::current()->processMessages();
+    AThread::processMessages();
     Render::setWindow(mContainer.get());
     if (mContainer->mRequiresLayoutUpdate) {
         mContainer->mRequiresLayoutUpdate = false;
@@ -124,7 +124,7 @@ void AEmbedAuiWrap::setViewportSize(int width, int height) {
 
 void AEmbedAuiWrap::onMousePressed(int x, int y, AInput::Key button) {
     mContainer->makeCurrent();
-    AThread::current()->processMessages();
+    AThread::processMessages();
     mContainer->onMousePressed(glm::ivec2{ x, y }, button);
 }
 

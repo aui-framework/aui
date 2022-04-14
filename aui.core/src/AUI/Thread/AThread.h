@@ -25,6 +25,7 @@
 #include "AUI/Common/ADeque.h"
 #include "AMutex.h"
 #include "AUI/Common/SharedPtrTypes.h"
+#include "AUI/Common/AString.h"
 #include <functional>
 
 class IEventLoop;
@@ -102,13 +103,6 @@ public:
 	 */
 	void enqueue(std::function<void()> f);
 
-	/**
-	 * \brief Processes messages from other threads. It's called by framework itself using IEventLoop. This function can
-	 *        be called from any place of this thread's execution. This function shouldn't be called from another
-	 *        thread.
-	 */
-	void processMessages();
-
 	virtual ~AAbstractThread();
 
 	/**
@@ -158,12 +152,16 @@ public:
         enqueue(fun);
     }
 
+    [[nodiscard]]
+    const AString& threadName() const noexcept {
+        return mThreadName;
+    }
 
-    /**
-     * Sets name of the thread for debugger.
-     * @param name new name of the thread
-     */
-    virtual void setThreadName(const AString& name);
+protected:
+    AString mThreadName;
+
+    void updateThreadName() noexcept;
+    void processMessagesImpl();
 };
 
 #include "AUI/Common/AObject.h"
@@ -188,7 +186,6 @@ private:
 	 */
 	std::thread* mThread = nullptr;
 
-	_unique<AString> mThreadName;
 
 	/**
 	 * \brief Function that is called by <code>AThread::start()</code>. Becomes nullptr after call to
@@ -233,6 +230,25 @@ public:
 	 */
 	static void interruptionPoint();
 
+
+
+    /**
+     * Sets name of the current thread for debugger.
+     * @param name new name of the thread
+     */
+    static void setName(AString name) noexcept {
+        auto cur = current();
+        cur->mThreadName = std::move(name);
+        cur->updateThreadName();
+    }
+    /**
+     * \brief Processes messages from other threads of current thread.
+     * Called by framework itself using IEventLoop.
+     */
+    static void processMessages() {
+        current()->processMessagesImpl();
+    }
+
 	bool isInterrupted() override;
 	void resetInterruptFlag() override;
     void interrupt() override;
@@ -241,14 +257,6 @@ public:
      * \brief Waits for thread to be finished.
      */
 	void join();
-
-	/**
-	 * Sets name of the thread for debugger.
-	 * @param name new name of the thread
-	 */
-	void setThreadName(const AString& name) override;
-
-	void updateThreadName();
 
 };
 

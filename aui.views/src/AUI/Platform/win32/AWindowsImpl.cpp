@@ -114,7 +114,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         case WM_PAINT: {
             // process thread messages because queue freezes when window is frequently redrawn
-            AThread::current()->processMessages();
+            AThread::processMessages();
 
             //if (!painter::painting)
             {
@@ -504,6 +504,6 @@ void AWindowManager::loop() {
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-        AThread::current()->processMessages();
+        AThread::processMessages();
     }
 }

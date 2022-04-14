@@ -8,7 +8,7 @@
 
 void AGLEmbedAuiWrap::render() {
     windowMakeCurrent();
-    AThread::current()->processMessages();
+    AThread::processMessages();
 
     glEnable(GL_STENCIL_TEST);
     glDisable(GL_DEPTH_TEST);
