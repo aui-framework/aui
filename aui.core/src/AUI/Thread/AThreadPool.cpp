@@ -27,7 +27,7 @@
 AThreadPool::Worker::Worker(AThreadPool& tp, size_t index) :
 	mThread(_new<AThread>([&, index]()
 {
-    mThread->setThreadName("AThreadPool worker #" + AString::number(index + 1));
+    mThread->setThreadName("AThreadPool #" + AString::number(index + 1));
 	thread_fn();
 })),
 mTP(tp)

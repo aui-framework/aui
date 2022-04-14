@@ -207,6 +207,8 @@ public:
 
     virtual ~AThread();
 
+    void detach();
+
 	/**
 	 * \brief Start thread execution.
 	 */

@@ -229,6 +229,12 @@ AThread::~AThread()
 	}
 }
 
+void AThread::detach() {
+    mThread->detach();
+    delete mThread;
+    mThread = nullptr;
+}
+
 
 void AAbstractThread::setThreadName(const AString& name) {
     // just stub
@@ -244,9 +250,13 @@ void AThread::updateThreadName() {
 #if AUI_PLATFORM_WIN
         setThreadNameImpl((HANDLE) mThread->native_handle(), *mThreadName);
 #elif AUI_PLATFORM_APPLE
-        pthread_setname_np(mThreadName->toStdString().c_str());
+        auto name = mThreadName->toStdString();
+        assert(("on unix thread name restricted to 15 chars length", name.size() < 16));
+        pthread_setname_np(name.c_str());
 #else
-        pthread_setname_np(mThread->native_handle(), mThreadName->toStdString().c_str());
+        auto name = mThreadName->toStdString();
+        assert(("on unix thread name restricted to 15 chars length", name.size() < 16));
+        pthread_setname_np(mThread->native_handle(), name.c_str());
 #endif
     }
 }
