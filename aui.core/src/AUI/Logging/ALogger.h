@@ -49,7 +49,7 @@ public:
             private:
                 struct StackBuffer {
                     char buffer[2048];
-                    char* currentIterator = buffer;
+                    char* currentIterator;
                 };
                 using HeapBuffer = AVector<char>;
                 std::variant<StackBuffer, HeapBuffer> mBuffer;
@@ -62,7 +62,10 @@ public:
                     mBuffer = std::move(h);
                 }
             public:
-                Buffer(): mBuffer(StackBuffer()) {}
+                Buffer() noexcept: mBuffer({}) {
+                    auto& sb = std::get<StackBuffer>(mBuffer);
+                    sb.currentIterator = sb.buffer;
+                }
                 size_t write(const char* t, size_t s) {
                     if (std::holds_alternative<StackBuffer>(mBuffer)) {
                         auto& stack = std::get<StackBuffer>(mBuffer);
