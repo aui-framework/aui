@@ -445,3 +445,9 @@ const APath& APath::touch() const {
     AFileOutputStream fos(*this);
     return *this;
 }
+
+void APath::chmod(int newMode) const {
+    if (::chmod(toStdString().c_str(), newMode) != 0) {
+        throw AIOException("unable to chmod {}"_format(*this) ERROR_DESCRIPTION);
+    }
+}

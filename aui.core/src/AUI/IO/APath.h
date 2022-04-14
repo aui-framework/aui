@@ -276,6 +276,8 @@ public:
     time_t fileModifyTime() const;
     size_t fileSize() const;
 
+    void chmod(int newMode) const;
+
     enum DefaultPath {
         /**
          * \brief Folder for application data.
