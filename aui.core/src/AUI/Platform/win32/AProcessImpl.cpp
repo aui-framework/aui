@@ -209,6 +209,7 @@ int AChildProcess::waitForExitCode() {
     return exitCode;
 }
 
+AChildProcess::~AChildProcess() = default;
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {
     auto handle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid);

@@ -146,7 +146,7 @@ class AChildProcess: public AProcess, public AObject {
 friend class AProcess;
 public:
     AChildProcess() = default;
-    ~AChildProcess() = default;
+    ~AChildProcess();
     
     void setApplicationFile(AString applicationFile) noexcept {
         mApplicationFile = std::move(applicationFile);
@@ -230,6 +230,10 @@ private:
     WinEventHandle mStdErrEvent;
 #else
     pid_t mPid;
+    AMutex mExitMutex;
+    AConditionVariable mExitCV;
+    std::optional<int> mExitCode;
+    _<AThread> mWatchdog;
 #endif
 };
 

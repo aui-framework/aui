@@ -3,10 +3,12 @@
 #include "AUI/Common/AException.h"
 
 Pipe::Pipe() {
-
-    if (pipe(&mOut) == -1) {
+    int pipes[2];
+    if (pipe(pipes) == -1) {
         throw AException("could not create unix pipe");
     }
+    mOut = pipes[0];
+    mIn = pipes[1];
 }
 
 Pipe::~Pipe() {

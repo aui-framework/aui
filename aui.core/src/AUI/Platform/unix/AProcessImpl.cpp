@@ -39,6 +39,7 @@
 #include <AUI/Util/ATokenizer.h>
 #include <AUI/IO/AFileOutputStream.h>
 #include <AUI/IO/AFileInputStream.h>
+#include <AUI/Logging/ALogger.h>
 
 class AOtherProcess: public AProcess {
 private:
@@ -102,6 +103,10 @@ void AProcess::executeAsAdministrator(const AString& applicationFile, const AStr
 extern char **environ;
 
 void AChildProcess::run(ASubProcessExecutionFlags flags) {
+    if (!APath(mApplicationFile).isRegularFileExists()) {
+        throw AFileNotFoundException(mApplicationFile);
+    }
+
     bool mergeStdoutStderr = bool(flags & ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
 
     AVector<std::string> argsStdString;
@@ -130,14 +135,30 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         while ((dup2(pipeStdin.out(), STDIN_FILENO) == -1) && (errno == EINTR)) {}
         while ((dup2(pipeStdout.in(), STDOUT_FILENO) == -1) && (errno == EINTR)) {}
         while ((dup2(mergeStdoutStderr ? pipeStdout.in() : pipeStderr.in(), STDERR_FILENO) == -1) && (errno == EINTR)) {}
-        //close(mPipes[0]);
-        //close(mPipes[1]);
+
+        //ipeStdin.closeIn();
+        //ipeStdout.closeOut();
+        //ipeStderr.closeOut();
 
         // we are in a new process
         chdir(mWorkingDirectory.toStdString().c_str());
         execve(mApplicationFile.toStdString().c_str(), argv.data(), environ);
+        exit(-1);
     } else {
         // we are in old process
+        ALOG_DEBUG("AProcess") << "Started new process: " << pid;
+        std::unique_lock lock(mExitMutex);
+
+        mWatchdog = _new<AThread>([&] {
+            std::unique_lock lock(mExitMutex);
+            int loc;
+            waitpid(mPid, &loc, 0);
+            mExitCode = WEXITSTATUS(loc);
+            mExitCV.notify_all();
+            emit finished;
+        });
+        mWatchdog->start();
+
         mPid = pid;
         pipeStdin.closeOut();
         pipeStdout.closeIn();
@@ -155,10 +176,16 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     }
 }
 
+AChildProcess::~AChildProcess() {
+
+}
+
 int AChildProcess::waitForExitCode() {
-    int loc;
-    waitpid(mPid, &loc, 0);
-    return WEXITSTATUS(loc);
+   std::unique_lock lock(mExitMutex);
+   while (!mExitCode) {
+       mExitCV.wait(lock);
+   }
+   return *mExitCode;
 }
 
 
