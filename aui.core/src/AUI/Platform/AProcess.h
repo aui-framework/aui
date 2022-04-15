@@ -67,7 +67,7 @@ public:
     /**
      * \return process' ID.
      */
-    virtual uint32_t getPid() = 0;
+    virtual uint32_t getPid() const noexcept = 0;
 
     /**
      * \brief Wait for process to be finished and returns exit code.
@@ -132,6 +132,8 @@ public:
      * @return process by id
      */
     static _<AProcess> fromPid(uint32_t pid);
+
+    void kill() const noexcept;
 };
 
 ENUM_FLAG(ASubProcessExecutionFlags) {
@@ -177,6 +179,15 @@ public:
 
     APath getPathToExecutable() override;
 
+    [[nodiscard]]
+    std::optional<int> exitCodeNonBlocking() const noexcept {
+        return mExitCode;
+    }
+
+    [[nodiscard]]
+    bool isFinished() const noexcept {
+        return mExitCode.has_value();
+    }
 
     /**
      * \brief Launches process.
@@ -189,7 +200,7 @@ public:
      */
     int waitForExitCode() override;
 
-    uint32_t getPid() override;
+    uint32_t getPid() const noexcept override;
 
     APath getModuleName() override;
 
@@ -228,6 +239,7 @@ private:
     WinEventHandle mExitEvent;
     WinEventHandle mStdOutEvent;
     WinEventHandle mStdErrEvent;
+    std::optional<int> mExitCode;
 #else
     pid_t mPid;
     AMutex mExitMutex;

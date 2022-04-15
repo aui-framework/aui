@@ -175,7 +175,7 @@ void AListView::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
 
 void AListView::handleMousePressed(AListItem* item) {
 
-    if (!AInput::isKeyDown(AInput::LControl)) {
+    if (!AInput::isKeyDown(AInput::LControl) || !mAllowMultipleSelection) {
         clearSelection();
     }
     mSelectionModel << AModelIndex(mContent->getIndex());
@@ -230,4 +230,9 @@ bool AListView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) 
         }
     }
     return AViewContainer::onGesture(origin, event);
+}
+
+void AListView::setAllowMultipleSelection(bool allowMultipleSelection) {
+    mAllowMultipleSelection = allowMultipleSelection;
+    clearSelection();
 }

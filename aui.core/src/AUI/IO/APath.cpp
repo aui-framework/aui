@@ -447,7 +447,12 @@ const APath& APath::touch() const {
 }
 
 void APath::chmod(int newMode) const {
-    if (::chmod(toStdString().c_str(), newMode) != 0) {
+#if AUI_PLATFORM_WIN
+    if (::_wchmod(c_str(), newMode) != 0)
+#else
+    if (::chmod(toStdString().c_str(), newMode) != 0)
+#endif
+    {
         throw AIOException("unable to chmod {}"_format(*this) ERROR_DESCRIPTION);
     }
 }

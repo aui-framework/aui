@@ -49,6 +49,7 @@ public:
     AListModel() = default;
     AListModel(const self& s): mVector(s.mVector) {}
     AListModel(self&& s): mVector(std::move(s.mVector)) {}
+    explicit AListModel(AVector<StoredType>&& vector): mVector(std::move(vector)) {}
 
     void setItem(const AModelIndex& item, const StoredType& value) override {
         mVector[item.getRow()] = value;

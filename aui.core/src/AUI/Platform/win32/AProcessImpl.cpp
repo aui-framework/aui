@@ -58,6 +58,7 @@ void AProcess::executeAsAdministrator(const AString& applicationFile, const AStr
     }
 }
 
+
 class AOtherProcess: public AProcess {
 private:
     HANDLE mHandle;
@@ -90,7 +91,7 @@ public:
         return getPathToExecutable().filename();
     }
 
-    uint32_t getPid() override {
+    uint32_t getPid() const noexcept override {
         return GetProcessId(mHandle);
     }
 };
@@ -172,6 +173,9 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         throw AProcessException(message);
     }
     mExitEvent.registerWaitForSingleObject(mProcessInformation.hProcess, [&] {
+        assert(("process already finished; os signaled process termination second time",
+                !isFinished()));
+        mExitCode = waitForExitCode();
         emit finished;
     }, INFINITE, WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
 
@@ -223,7 +227,13 @@ _<AProcess> AProcess::fromPid(uint32_t pid) {
     return nullptr;
 }
 
-uint32_t AChildProcess::getPid() {
+uint32_t AChildProcess::getPid() const noexcept {
     return mProcessInformation.dwProcessId;
 }
 
+
+void AProcess::kill() const noexcept {
+    auto process = OpenProcess(PROCESS_TERMINATE, false, getPid());
+    TerminateProcess(process, 1);
+    CloseHandle(process);
+}
