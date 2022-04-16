@@ -50,7 +50,7 @@ TEST_F(Process, Self) {
 #endif
     EXPECT_TRUE(mSelf.isRegularFileExists());
 }
-
+/*
 TEST_F(Process, ExitCode) {
     EXPECT_EQ(AProcess::executeWaitForExit(mSelf, "--help"), 0);
 }
@@ -91,3 +91,4 @@ TEST_F(Process, StdoutSignal) {
     AThread::processMessages();
 }
 
+*/

@@ -144,7 +144,7 @@ ENUM_FLAG(ASubProcessExecutionFlags) {
 /**
  * Creates child process of this application.
  */
-class AChildProcess: public AProcess, public AObject {
+class API_AUI_CORE AChildProcess: public AProcess, public AObject {
 friend class AProcess;
 public:
     AChildProcess() = default;
