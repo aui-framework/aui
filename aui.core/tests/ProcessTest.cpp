@@ -74,8 +74,11 @@ TEST_F(Process, FinishedSignal) {
     p->run();
     p->waitForExitCode();
 
-    receiver = nullptr; // gmock wants object to be removed
+    AThread::sleep(500);
+
     AThread::processMessages();
+
+    receiver = nullptr; // gmock wants object to be removed
 }
 
 
@@ -87,7 +90,10 @@ TEST_F(Process, StdoutSignal) {
     p->run();
     p->waitForExitCode();
 
-    receiver = nullptr; // gmock wants object to be removed
+    AThread::sleep(500);
+
     AThread::processMessages();
+
+    receiver = nullptr; // gmock wants object to be removed
 }
 

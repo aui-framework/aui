@@ -180,12 +180,19 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     }, INFINITE, WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
 
     // setup pipe event handlers
-    mStdOutEvent.registerWaitForSingleObject(pipeStdout.out(), [this] {
-        emit readyReadStdOut;
-    });
-    mStdErrEvent.registerWaitForSingleObject(pipeStdout.out(), [this] {
-        emit readyReadStdErr;
-    });
+    if (mergeStdoutStderr) {
+        mStdOutEvent.registerWaitForSingleObject(pipeStdout.out(), [this] {
+            emit readyReadStdOut;
+            emit readyReadStdErr;
+        });
+    } else {
+        mStdOutEvent.registerWaitForSingleObject(pipeStdout.out(), [this] {
+            emit readyReadStdOut;
+        });
+        mStdErrEvent.registerWaitForSingleObject(pipeStderr.out(), [this] {
+            emit readyReadStdErr;
+        });
+    }
 
     // close subprocess' side of pipes otherwise ReadFile of PipeInputStream would block the thread
     pipeStdout.closeIn();

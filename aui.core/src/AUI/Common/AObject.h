@@ -49,8 +49,6 @@ public:
 	AObject();
 	virtual ~AObject();
 
-    virtual void beforeObjectRemoval();
-
 	void clearSignals();
 
     /**
