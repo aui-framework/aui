@@ -25,26 +25,25 @@
 
 #include <gtest/gtest.h>
 #include <AUI/Common/AString.h>
-#include <AUI/Json/AJsonElement.h>
 #include <AUI/Json/AJson.h>
-#include <AUI/Json/JsonException.h>
+#include <AUI/Json/AJson.h>
 
 
 // check const access
-void check_girlfriend(const AJsonObject& o) {
+void check_girlfriend(const AJson& o) {
     EXPECT_TRUE(o["girlfriend"].isNull());
 
     // unexisting object
-    EXPECT_TRUE(o["unexisting_object"].isNull());
+    EXPECT_TRUE(o["unexisting_object"].isEmpty());
 }
 
 TEST(JsonBasic, ObjectAssignValue)
 {
     // arrange data
-    AJsonObject o;
+    AJson o;
     o["name"] = "Alex2772";
     o["year"] = 2020;
-    o["girlfriend"] = AJsonValue(nullptr);
+    o["girlfriend"] = nullptr;
 
     // check for resulting json
     ASSERT_EQ(AJson::toString(o), R"({"girlfriend":null,"name":"Alex2772","year":2020})");
@@ -54,11 +53,11 @@ TEST(JsonBasic, ObjectAssignValue)
 TEST(JsonBasic, ObjectAssignObject)
 {
     // arrange data
-    AJsonObject o;
+    AJson o;
     o["name"] = "Alex2772";
     o["year"] = 2020;
 
-    AJsonObject root;
+    AJson root;
     // assign object to another object. this is what we want check for
     root["user"] = o;
 
@@ -68,7 +67,7 @@ TEST(JsonBasic, ObjectAssignObject)
 TEST(JsonBasic, StringEscape)
 {
     // arrange data
-    AJsonObject root;
+    AJson root;
     root["user"] = "u\"";
     auto s = AJson::toString(root);
 
@@ -83,30 +82,30 @@ TEST(JsonBasic, StringEscape)
 TEST(JsonBasic, BraceInitialization)
 {
     // arrange data
-    AJsonObject root({
-            {"array", AJsonArray({
-                AJsonValue("value1"),
-                AJsonValue("value2"),
-            })},
-            {"key", AJsonValue(1)},
-    });
+    AJson root = {
+        {"array", AJson::Array{
+            "value1",
+            "value2",
+        }},
+        {"key", 1},
+    };
 
     // check for resulting json
-    ASSERT_EQ(AJson::toString(root), R"({"array":["value1","value2"],"key":1})");
+    auto str = AJson::toString(root);
+    ASSERT_EQ(str, R"({"array":["value1","value2"],"key":1})");
 }
 
 TEST(JsonBasic, Array)
 {
     // arrange data
-    auto root = AJsonArray::fromVariantArray({1, 2, 3});
+    AJson root = AJson::Array{1, 2, 3};
 
     // check for resulting json
-    EXPECT_TRUE(!root.empty());
     ASSERT_EQ(AJson::toString(root), R"([1,2,3])");
 
     // check push
-    root << AJsonValue(10);
-    root.push_back(AJsonValue(9));
+    root.push_back(10);
+    root.push_back(9);
     ASSERT_EQ(AJson::toString(root), R"([1,2,3,10,9])");
     ASSERT_EQ(root[1].asInt(), 2);
 }

@@ -30,6 +30,7 @@ template<typename T, typename... Args>
 inline _<T> _new(Args&& ... args)
 {
 	if constexpr (std::is_base_of_v<AObject, T>) {
+        // TODO make_shared
 		auto o = new T(std::forward<Args>(args)...);
 		return _<T>(o, [](T* obj)
 		{

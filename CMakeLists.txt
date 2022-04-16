@@ -65,9 +65,9 @@ endfunction()
 define_aui_component(core)
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(toolbox)
-    define_aui_component(data)
+    # define_aui_component(data) -- outdated; need reworking
     define_aui_component(mysql)
-    define_aui_component(sqlite)
+    # define_aui_component(data) -- outdated; need reworking
     define_aui_component(network)
 endif()
 define_aui_component(crypt)
@@ -145,9 +145,9 @@ foreach(_module ${AUI_BOOT_COMPONENTS})
     get_target_property(_wholearchive ${_target} INTERFACE_AUI_WHOLEARCHIVE)
     unset(_link_libs2)
     foreach(_lib ${_link_libs})
-        # skip NOTFOUNDs
-        if (_lib)
-            string(REPLACE "aui." "aui::" _lib ${_lib})
+        if (_lib) # skips NOTFOUNDs
+            string(REPLACE "aui." "aui::" _lib ${_lib}) # use imported targets instead
+            string(REPLACE " " "\\ " _lib ${_lib}) # fixes -framework entries on macos
             list(APPEND _link_libs2 ${_lib})
         endif()
     endforeach()

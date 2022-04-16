@@ -59,8 +59,6 @@ public:
     void setSelectionId(int id);
     int getContentMinimumWidth() override;
 
-    void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
-
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 
     void destroyWindow();

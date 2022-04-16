@@ -237,7 +237,7 @@ bool AString::toBool() const noexcept
 
 AString AString::fromLatin1(const AByteBuffer& buffer)
 {
-    return {buffer.readIterator(), buffer.end() };
+    return {buffer.begin(), buffer.end() };
 }
 
 

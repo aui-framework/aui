@@ -22,13 +22,13 @@
 #pragma once
 
 #include <AUI/Core.h>
+#include <AUI/IO/IOutputStream.h>
+#include <AUI/Reflect/AReflect.h>
 #include "AUI/Thread/AMutex.h"
-#include "AUI/IO/AFileOutputStream.h"
-#include <sstream>
 
 class AString;
 
-class API_AUI_CORE ALogger
+class API_AUI_CORE ALogger final
 {
 public:
 	enum Level
@@ -38,60 +38,139 @@ public:
 		ERR,
         DEBUG,
 	};
+
+
+    struct LogWriter {
+        private:
+            ALogger& mLogger;
+            Level mLevel;
+            AString mPrefix;
+            struct StackBuffer {
+            private:
+                char* currentIterator = buffer;
+                char buffer[4096];
+
+            public:
+                size_t write(const char* t, size_t s) {
+                    if (currentIterator + s <= buffer + sizeof(buffer)) {
+                        std::memcpy(currentIterator, t, s);
+                        currentIterator += s;
+                        return s;
+                    }
+                    return 0;
+                }
+                void write(char c) {
+                    if (currentIterator + sizeof(c) <= buffer + sizeof(buffer)) {
+                        *currentIterator = c;
+                        currentIterator += 1;
+                    }
+                }
+
+                [[nodiscard]]
+                std::string_view str() const {
+                    // assuming there's null terminator
+                    return {buffer, static_cast<std::string_view::size_type>(currentIterator - buffer) - 1};
+                }
+            };
+
+            struct LazyStreamBuf final: std::streambuf {
+            private:
+                StackBuffer& stackBuffer;
+            public:
+                std::ostream stream;
+                LazyStreamBuf(StackBuffer& stackBuffer) : stackBuffer(stackBuffer), stream(this) {}
+
+            protected:
+                std::streamsize xsputn(const char_type* s, std::streamsize n) override {
+                    return stackBuffer.write(s, n);
+                }
+
+                int overflow(int_type __c) override {
+                    stackBuffer.write(__c);
+                    return 1;
+                }
+            };
+            std::optional<LazyStreamBuf> mStreamBuf;
+
+            StackBuffer mStackBuffer;
+
+        public:
+            LogWriter(ALogger& logger, Level level, AString prefix) :
+                mLogger(logger),
+                mLevel(level),
+                mPrefix(std::move(prefix)) {
+
+            }
+
+            ~LogWriter() {
+                mStackBuffer.write(0); // null terminator
+                auto s = mStackBuffer.str();
+                mLogger.log(mLevel, mPrefix.toStdString().c_str(), s);
+            }
+
+            template<typename T>
+            LogWriter& operator<<(const T& t) {
+                // avoid usage of std::ostream because it's expensive
+                if constexpr(std::is_constructible_v<std::string_view, T>) {
+                    std::string_view stringView(t);
+                    mStackBuffer.write(stringView.data(), stringView.size());
+                } else if constexpr(std::is_base_of_v<AString, T>) {
+                    *this << t.toStdString();
+                } else if constexpr(std::is_base_of_v<AException, T>) {
+                    *this << "(" << AReflect::name(&t) << ") " << t.getMessage();
+                } else if constexpr(std::is_base_of_v<std::exception, T>) {
+                    *this << "(" << AReflect::name(&t) << ") " << t.what();
+                } else {
+                    if (!mStreamBuf) {
+                        mStreamBuf.emplace(mStackBuffer);
+                    }
+                    mStreamBuf->stream << t;
+                }
+                return *this;
+            }
+    };
+
 private:
 	ALogger();
 	static ALogger& instance();
-	AMutex mSync;
-	_<AFileOutputStream> mLogFile;
-	
-	void log(Level level, const AString& str);
 
-    void rawWrite(const char* data, size_t length);
+    /**
+     * Writes a log entry
+     * @param level log level
+     * @param prefix prefix
+     * @param message log message. If empty, prefix used as a message
+     */
+    void log(Level level, std::string_view prefix, std::string_view message);
 
+    bool mDebug = true;
 public:
 
-    static void setLogFile(const AString& str);
-
-    struct RawLogPusher {
-        friend class ALogger;
-    private:
-        ALogger& inst;
-
-        explicit RawLogPusher(ALogger& l): inst(l) {
-
-        }
-    public:
-
-        template<typename T>
-        RawLogPusher& operator<<(const T& t) {
-            std::stringstream ss;
-            ss << t;
-            auto s = ss.str();
-            inst.rawWrite(s.c_str(), s.length());
-            return *this;
-        }
-    };
-
-    static RawLogPusher raw() {
-        return RawLogPusher{instance()};
+    static void setDebugMode(bool debug) {
+        instance().mDebug = debug;
+    }
+    static bool isDebug() {
+        return instance().mDebug;
     }
 
-	static void info(const AString& str)
+	static LogWriter info(const AString& str)
 	{
-		instance().log(INFO, str);
+		return {instance(), INFO, str};
 	}	
-	static void warn(const AString& str)
+	static LogWriter warn(const AString& str)
 	{
-		instance().log(WARN, str);
+        return {instance(), WARN, str};
 	}	
-	static void err(const AString& str)
+	static LogWriter err(const AString& str)
 	{
-		instance().log(ERR, str);
+        return {instance(), ERR, str};
 	}
-	static void debug(const AString& str)
+	static LogWriter debug(const AString& str)
 	{
-		instance().log(DEBUG, str);
+        return {instance(), DEBUG, str};
 	}
 };
+
+
+#define ALOG_DEBUG(str) if (ALogger::isDebug()) ALogger::debug(str)
 
 #include <AUI/Traits/strings.h>

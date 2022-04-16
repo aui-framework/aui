@@ -51,18 +51,15 @@ void ARadioButton::setText(const AString& text)
     mText->setText(text);
 }
 
-void ARadioButton::getCustomCssAttributes(AMap<AString, AVariant>& map)
-{
-    AViewContainer::getCustomCssAttributes(map);
-    if (mChecked)
-        map["checked"] = true;
-}
-
 void ARadioButton::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
     AView::onMouseReleased(pos, button);
     if (!mChecked)
         emit checked(mChecked = true);
+}
+
+bool ARadioButton::selectableIsSelectedImpl() {
+    return mChecked;
 }
 
 _<ARadioButton> ARadioButton::Group::addRadioButton(const _<ARadioButton>& radio, int id) {

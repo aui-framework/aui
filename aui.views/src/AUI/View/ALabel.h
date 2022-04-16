@@ -137,3 +137,4 @@ public:
         return &ALabel::setText;
     }
 };
+

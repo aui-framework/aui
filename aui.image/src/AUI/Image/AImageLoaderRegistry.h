@@ -39,8 +39,8 @@ class API_AUI_IMAGE AImageLoaderRegistry
 private:
 	ADeque<_<IImageLoader>> mImageLoaders;
 
-    _<IImageFactory> loadVector(const AByteBuffer& buffer);
-    _<AImage> loadRaster(const AByteBuffer& buffer);
+    _<IImageFactory> loadVector(AByteBufferView buffer);
+    _<AImage> loadRaster(AByteBufferView buffer);
     inline _<IImageFactory> loadVector(const AUrl& url) {
         auto s = AByteBuffer::fromStream(url.open());
         return loadVector(s);

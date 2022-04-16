@@ -25,11 +25,10 @@
 
 #pragma once
 
-#include "attribute.h"
 
 namespace ass {
     template<typename Base>
-    struct focus: Base, AttributeHelper<focus<Base>> {
+    struct focus: Base {
         template<typename... Args>
         focus(Args&&... args):
                 Base(std::forward<Args>(args)...)

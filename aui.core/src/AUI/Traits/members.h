@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,53 +19,20 @@
  * =====================================================================================================================
  */
 
-#include "JsonValue.h"
-#include "JsonException.h"
+#pragma once
 
-JsonValue::~JsonValue()
-{
-}
+#include <algorithm>
 
-bool JsonValue::isVariant()
-{
-	return true;
-}
+namespace aui {
 
-bool JsonValue::isObject()
-{
-	return false;
-}
+    template<typename Type>
+    struct member;
 
-bool JsonValue::isArray()
-{
-	return false;
-}
+    template<typename Type, typename Clazz>
+    struct member<Type(Clazz::*)> {
+        using type = Type;
+        using clazz= Clazz;
+    };
 
-AVariant& JsonValue::asVariant()
-{
-	return mValue;
-}
 
-AMap<AString, AJsonElement>& JsonValue::asObject()
-{
-    throw JsonException(formatMiscastException("value is not an object"));
-}
-
-AVector<AJsonElement>& JsonValue::asArray()
-{
-    throw JsonException(formatMiscastException("value is not an array"));
-}
-
-void JsonValue::serialize(IOutputStream& os) const {
-    auto myStr = mValue.toString();
-    if (mValue.getType() == AVariantType::AV_STRING) {
-        os.write("\"", 1);
-        myStr = myStr.replacedAll("\"", "\\\"");
-        auto s = myStr.toStdString();
-        os.write(s.c_str(), s.length());
-        os.write("\"", 1);
-    } else {
-        auto s = myStr.toStdString();
-        os.write(s.c_str(), s.length());
-    }
 }

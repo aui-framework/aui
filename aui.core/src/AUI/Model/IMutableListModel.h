@@ -23,7 +23,6 @@
 
 #include <AUI/Common/ASignal.h>
 #include <AUI/Model/AModelSelection.h>
-#include "AUI/Common/AVariant.h"
 #include "AModelRange.h"
 
 template<typename T>

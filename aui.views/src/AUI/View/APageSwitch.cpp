@@ -39,13 +39,6 @@ APageSwitch::APageSwitch(const AString& text, unsigned pageNumber, const _<APage
     });
 }
 
-void APageSwitch::getCustomCssAttributes(AMap<AString, AVariant>& map) {
-    AView::getCustomCssAttributes(map);
-    if (mPageView->getPageId() == mPageNumber) {
-        map["current"] = true;
-    }
-}
-
 int APageSwitch::getContentMinimumWidth() {
     return ALabel::getContentMinimumWidth();
 }

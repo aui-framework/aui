@@ -24,21 +24,16 @@
 #include <type_traits>
 
 namespace aui {
-    namespace impl {
-        template<typename T>
-        struct is_complete {
-        private:
-            template<typename P>
-            static auto test(P*) -> std::bool_constant<sizeof(sizeof(T) == sizeof(P))>;
-            static auto test(...) -> std::false_type;
-        public:
-            using type = decltype(test((T*)nullptr));
-        };
-    }
+
+    /**
+     * Determines whether <code>T</code> is complete or not.
+     */
+    template<typename T, class = void>
+    inline constexpr bool is_complete = false;
 
     /**
      * Determines whether <code>T</code> is complete or not.
      */
     template<typename T>
-    inline constexpr bool is_complete = impl::is_complete<T>::type::value;
+    inline constexpr bool is_complete<T, decltype(void(sizeof(T)))> = true;
 }

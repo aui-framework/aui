@@ -110,7 +110,7 @@ TEST(Reflect, EnumerateNames) {
         {"VALUE3", VALUE3},
     };
 
-    ASSERT_TRUE((AEnumerate<ATest>::names<VALUE1, VALUE2, VALUE3>() == ref));
+    ASSERT_TRUE((AEnumerate<ATest>::mapValueByName<VALUE1, VALUE2, VALUE3>() == ref));
 }
 
 TEST(Reflect, EnumerateAll) {

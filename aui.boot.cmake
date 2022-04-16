@@ -575,3 +575,13 @@ function(auib_import AUI_MODULE_NAME URL)
 
     message(STATUS "Imported: ${AUI_MODULE_NAME}")
 endfunction()
+
+
+macro(auib_use_system_libs_begin)
+    set(AUIB_PREV_CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${CMAKE_FIND_USE_CMAKE_SYSTEM_PATH})
+    set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH TRUE)
+endmacro()
+
+macro(auib_use_system_libs_end)
+    set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${AUIB_PREV_CMAKE_FIND_USE_CMAKE_SYSTEM_PATH})
+endmacro()

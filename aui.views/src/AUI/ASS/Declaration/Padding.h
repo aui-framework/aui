@@ -77,6 +77,10 @@ namespace ass {
             }
 
             void applyFor(AView* view) override;
+
+            const Padding& value() const {
+                return mInfo;
+            }
         };
     }
 }

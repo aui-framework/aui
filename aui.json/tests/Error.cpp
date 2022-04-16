@@ -25,22 +25,20 @@
 
 #include <gtest/gtest.h>
 #include <AUI/Common/AString.h>
-#include <AUI/Json/AJsonElement.h>
 #include <AUI/Json/AJson.h>
-#include <AUI/Json/JsonException.h>
 #include <AUI/IO/AStringStream.h>
 
 
 
 TEST(JsonErrors, Error)
 {
-    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"kek": truz})")), AException);
-    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"kek": falz})")), AException);
-    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"array": [1,2,3,x]})")), AException);
-    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"array": [1,2,3})")), AException);
-    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"object": {"1"s:1,)")), AException);
-    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"object": {"1":1,})")), AException);
-    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"object": {"1":2})")), AException);
-    ASSERT_THROW(AJson::read(_new<AStringStream>(R"({"object": {"1":2 xs})")), AException);
+    EXPECT_THROW(AJson::fromString(R"({"kek": truz})"), AJsonParseException);
+    EXPECT_THROW(AJson::fromString(R"({"kek": falz})"), AJsonParseException);
+    EXPECT_THROW(AJson::fromString(R"({"array": [1,2,3,x]})"), AJsonParseException);
+    EXPECT_THROW(AJson::fromString(R"({"array": [1,2,3})"), AJsonParseException);
+    EXPECT_THROW(AJson::fromString(R"({"object": {"1"s:1,)"), AJsonParseException);
+    EXPECT_THROW(AJson::fromString(R"({"object": {"1":1,})"), AJsonParseException);
+    EXPECT_THROW(AJson::fromString(R"({"object": {"1":2})"), AJsonParseException);
+    EXPECT_THROW(AJson::fromString(R"({"object": {"1":2 xs})"), AJsonParseException);
 }
 

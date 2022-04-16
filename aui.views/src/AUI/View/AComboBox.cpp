@@ -139,12 +139,6 @@ void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     }
 }
 
-void AComboBox::getCustomCssAttributes(AMap<AString, AVariant>& map) {
-    AButton::getCustomCssAttributes(map);
-    if (mPopup)
-        map["pressed"] = true;
-}
-
 AComboBox::~AComboBox() {
     if (auto l = mComboWindow.lock())
         l->close();

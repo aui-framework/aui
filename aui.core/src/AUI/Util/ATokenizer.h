@@ -33,6 +33,10 @@ class API_AUI_CORE ATokenizer
 private:
 	_<IInputStream> mInput;
 
+    char mBuffer[4096];
+    char* mBufferRead = nullptr;
+    char* mBufferEnd = nullptr;
+
 	char mLastByte;
 	bool mReverse = false;
     bool mEof = false;
@@ -105,7 +109,33 @@ public:
 	 * \brief Reads character.
 	 * \return read character
 	 */
-	char readChar();
+	char readChar() {
+        if (mReverse) {
+            mReverse = false;
+            return mLastByte;
+        }
+
+        if (mBufferRead >= mBufferEnd) {
+            // read next blob
+            mBufferEnd = mBuffer + mInput->read(mBuffer, sizeof(mBuffer));
+            mBufferRead = mBuffer;
+            if (mBufferEnd == mBufferRead) {
+                throw AEOFException();
+            }
+        }
+
+        mLastByte = *(mBufferRead++);
+
+        if (mLastByte == '\n')
+        {
+            mRow += 1;
+            mColumn = 1;
+        } else
+        {
+            mColumn += 1;
+        }
+        return mLastByte;
+    }
 
 	/**
 	 * \brief Rejects the last read byte and return it into the "stream". Applicable for parsing algorithms.

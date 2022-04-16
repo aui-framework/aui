@@ -87,7 +87,7 @@ _<IInputStream> ACurl::Builder::toInputStream() {
     public:
         CurlInputStream(ACurl curl) : mCurl(std::move(curl)) {
             mFuture = async {
-                mCurl.mWriteCallback = [&](const AByteBufferRef& buf) {
+                mCurl.mWriteCallback = [&](AByteBufferView buf) {
                     mPipe << buf;
                     return buf.size();
                 };
@@ -104,7 +104,7 @@ _<IInputStream> ACurl::Builder::toInputStream() {
 
 AByteBuffer ACurl::Builder::toByteBuffer() {
     AByteBuffer out;
-    mWriteCallback = [&](const AByteBufferRef& buf) {
+    mWriteCallback = [&](AByteBufferView buf) {
         out << buf;
         return buf.size();
     };

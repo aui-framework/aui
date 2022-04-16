@@ -26,7 +26,6 @@
 #include "AUI/Common/ABoxFields.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/AObject.h"
-#include "AUI/Common/AVariant.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Platform/ACursor.h"
 #include "AUI/Platform/AInput.h"
@@ -637,8 +636,6 @@ public:
     virtual void onFocusLost();
 
 	virtual void onCharEntered(wchar_t c);
-
-	virtual void getCustomCssAttributes(AMap<AString, AVariant>& map);
 
 	/**
 	 * \return true if this AView accepts tab focus

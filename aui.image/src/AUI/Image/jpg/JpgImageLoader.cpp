@@ -27,16 +27,14 @@
 #include <AUI/Common/AByteBuffer.h>
 #include <stb_image.h>
 
-bool JpgImageLoader::matches(const AByteBuffer& buffer) {
+bool JpgImageLoader::matches(AByteBufferView buffer) {
     const uint8_t header[] = {0xff, 0xd8 };
-    uint8_t read_header[sizeof(header)];
-    buffer.readExact((char*) read_header, sizeof(read_header));
-    return memcmp(header, read_header, sizeof(read_header)) == 0;
+    return memcmp(header, buffer.data(), sizeof(header)) == 0;
 }
 
-_<AImage> JpgImageLoader::getRasterImage(const AByteBuffer& buffer) {
+_<AImage> JpgImageLoader::getRasterImage(AByteBufferView buffer) {
     int x, y, channels;
-    if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer.readIterator(), buffer.availableToRead(),
+    if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer.data(), buffer.size(),
                                               &x, &y, &channels, 4)) {
         channels = 4;
         uint32_t format = AImage::BYTE;

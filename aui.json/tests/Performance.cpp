@@ -19,43 +19,37 @@
  * =====================================================================================================================
  */
 
-#pragma once
+//
+// Created by alex2 on 30.08.2020.
+//
 
-#include <AUI/Common/AVariant.h>
+#include <gtest/gtest.h>
+#include <AUI/Common/AString.h>
+#include <AUI/Json/AJson.h>
+#include <AUI/Json/AJson.h>
+#include <AUI/Curl/ACurl.h>
+#include <AUI/Util/kAUI.h>
+#include <chrono>
+#include <AUI/IO/AFileInputStream.h>
+#include <AUI/IO/AFileOutputStream.h>
+#include "AUI/IO/APath.h"
 
-template<class Klass>
-class AField {
-public:
-    virtual void set(Klass& object, const AVariant& value) = 0;
-    virtual AVariant get(const Klass& object) = 0;
+using namespace std::chrono;
+using namespace std::chrono_literals;
 
-    template<typename T>
-    inline static _<AField<Klass>> make(T(Klass::*field));
-};
+TEST(Json, Performance) {
+    AByteBuffer buffer;
+    if (APath("tmp.json").isRegularFileExists()) {
+        buffer = AByteBuffer::fromStream(AFileInputStream("tmp.json"));
+    } else {
+        buffer = ACurl::Builder("https://raw.githubusercontent.com/json-iterator/test-data/master/large-file.json").toByteBuffer();
+        AFileOutputStream("tmp.json") << buffer;
+    }
 
-namespace aui::detail {
-    template<typename Klass, typename T>
-    class AFieldImpl: public AField<Klass> {
-    private:
-        typedef T(Klass::*field_t);
-        field_t mFieldPtr;
-
-    public:
-        AFieldImpl(field_t fieldPtr) : mFieldPtr(fieldPtr) {}
-
-        void set(Klass& object, const AVariant& value) override {
-            object.*mFieldPtr = value.to<T>();
-        }
-
-        AVariant get(const Klass& object) override {
-            return object.*mFieldPtr;
-        }
-    };
-}
-
-
-template<class Klass>
-template<typename T>
-_<AField<Klass>> AField<Klass>::make(T(Klass::*field)) {
-    return _new<aui::detail::AFieldImpl<Klass, T>>(field);
+    auto start = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+    auto j = AJson::fromBuffer(buffer);
+    auto end = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+    auto delta = end - start;
+    ASSERT_TRUE((delta < 3s)) << "too slow (" << delta.count() << "ms)";
+    ASSERT_TRUE((delta > 5ms)) << "too fast (probably something went wrong)";
 }

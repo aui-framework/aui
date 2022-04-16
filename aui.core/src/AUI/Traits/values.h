@@ -26,6 +26,7 @@
 #include <utility>
 #include <functional>
 #include <optional>
+#include <AUI/Common/SharedPtrTypes.h>
 
 namespace aui {
     /**
@@ -76,7 +77,7 @@ namespace aui {
             checkForNull();
             return value;
         }
-        T* operator->() const {
+        auto operator->() const {
             checkForNull();
             return &*value;
         }
@@ -85,6 +86,41 @@ namespace aui {
     template<typename T>
     struct non_null: non_null_lateinit<T> {
         non_null(T value): non_null_lateinit<T>(value) {}
+    };
+
+    /**
+     * @brief intended to use in function arguments. Promises that the contained object wouldn't be copied/moved outside
+     *        of the function thus does not take responsibility of deleting the object. This allows to accept both
+     *        lvalue and rvalue references, pointers, unique_ptr and shared_ptr without ref counter modification.
+     *
+     *        Accepts lvalue ref, rvalue ref, ptr and shared_ptr. Does not accepts null.
+     *
+     * @tparam T undecorated type
+     */
+    template<typename T>
+    struct no_escape {
+    static_assert(!std::is_reference<T>::value, "use undecorated type (without reference)");
+    static_assert(!std::is_pointer_v<T>, "use undecorated type (without pointer)");
+    private:
+        T* value;
+
+        void checkNull() {
+            assert(("uref could not be null", value != nullptr));
+        }
+    public:
+        no_escape(T& value): value(&value) {}
+        no_escape(T&& value): value(&value) {}
+        no_escape(T* value): value(value) {}
+        no_escape(const _<T>& value): value(&*value) {}
+        no_escape(const _unique<T>& value): value(&*value) {}
+
+        T* operator->() const {
+            return value;
+        }
+
+        T& operator*() const {
+            return *value;
+        }
     };
 
     /**

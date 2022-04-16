@@ -32,8 +32,8 @@
 AByteBuffer::AByteBuffer() {
     reserve(64);
 }
-AByteBuffer::AByteBuffer(size_t reserved) {
-    reserve(reserved);
+AByteBuffer::AByteBuffer(size_t initialCapacity) {
+    reserve(initialCapacity);
 }
 
 AByteBuffer::AByteBuffer(const char* buffer, size_t size)
@@ -47,10 +47,9 @@ AByteBuffer::AByteBuffer(const unsigned char* buffer, size_t size)
 }
 
 AByteBuffer::AByteBuffer(const AByteBuffer& other) noexcept:
-    mSize(other.mSize),
-    mReadPos(other.mReadPos)
+    mSize(other.mSize)
 {
-    reserve(other.mReserved);
+    reserve(other.mCapacity);
     memcpy(mBuffer, other.mBuffer, other.mSize);
 }
 
@@ -62,32 +61,22 @@ AByteBuffer::AByteBuffer(AByteBuffer&& other) noexcept
 void AByteBuffer::reserve(size_t size) {
     char* buffer = new char[size];
     if (mBuffer) {
-        memcpy(buffer, mBuffer, glm::min(mReserved, size));
+        memcpy(buffer, mBuffer, glm::min(mCapacity, size));
         delete[] mBuffer;
     }
-    mReserved = size;
+    mCapacity = size;
     mBuffer = buffer;
 }
 
 void AByteBuffer::write(const char* buffer, size_t size) {
     if (size) {
-        if (mSize + size > mReserved) {
+        if (mSize + size > mCapacity) {
             reserve(mSize * 2 + size);
         }
         memcpy(end(), buffer, size);
         mSize += size;
     }
 }
-
-size_t AByteBuffer::read(char* buffer, size_t size) {
-    if (mReadPos + size > mSize) {
-        size = availableToRead();
-    }
-    memcpy(buffer, readIterator(), size);
-    mReadPos += size;
-    return size;
-}
-
 
 bool AByteBuffer::operator==(const AByteBuffer& r) const {
     if (getSize() == r.getSize()) {
@@ -100,23 +89,23 @@ bool AByteBuffer::operator!=(const AByteBuffer& r) const {
     return !(*this == r);
 }
 
-AByteBuffer AByteBuffer::fromStream(IInputStream& is)
+AByteBuffer AByteBuffer::fromStream(aui::no_escape<IInputStream> is)
 {
     AByteBuffer buf;
     char tmp[0x10000];
 
-    for (size_t last; (last = is.read(tmp, sizeof(tmp))) > 0;)
+    for (size_t last; (last = is->read(tmp, sizeof(tmp))) > 0;)
     {
         buf.write(tmp, last);
     }
     return buf;
 }
 
-AByteBuffer AByteBuffer::fromStream(IInputStream& is, size_t sizeRestriction) {
+AByteBuffer AByteBuffer::fromStream(aui::no_escape<IInputStream> is, size_t sizeRestriction) {
     AByteBuffer buf;
     buf.reserve(sizeRestriction);
     char tmp[4096];
-    for (size_t last; (last = is.read(tmp, glm::min(sizeof(tmp), sizeRestriction))) > 0; sizeRestriction -= last)
+    for (size_t last; (last = is->read(tmp, glm::min(sizeof(tmp), sizeRestriction))) > 0; sizeRestriction -= last)
     {
         buf.write(tmp, last);
     }
@@ -124,14 +113,12 @@ AByteBuffer AByteBuffer::fromStream(IInputStream& is, size_t sizeRestriction) {
 }
 
 
-std::ostream& operator<<(std::ostream& o, const AByteBuffer& r)
+std::ostream& operator<<(std::ostream& o, AByteBufferView buffer)
 {
     char formatBuf[8];
     o << '[';
-    while (r.readIterator() != r.end())
+    for (auto c : buffer)
     {
-        unsigned char c;
-        r >> c;
         sprintf(formatBuf, "%02x ", c);
         o << formatBuf;
     }
@@ -236,10 +223,10 @@ AByteBuffer AByteBuffer::fromBase64String(const AString& encodedString) {
     return ret;
 }
 
-void AByteBuffer::write(const IInputStream& stream, size_t size) {
-    auto avail = mReserved - mSize;
+void AByteBuffer::write(IInputStream& stream, size_t size) {
+    auto avail = mCapacity - mSize;
     if (avail < size) {
-        reserve(mReserved + size);
+        reserve(mCapacity + size);
     }
     stream.readExact(end(), size);
     mSize += size;

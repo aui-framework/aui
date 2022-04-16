@@ -25,8 +25,6 @@
 
 #pragma once
 
-
-#include "attribute.h"
 #include <AUI/Util/kAUI.h>
 #include <AUI/View/AView.h>
 #include <AUI/ASS/AAssHelper.h>
@@ -39,7 +37,7 @@
 namespace ass {
 
     namespace detail {
-        struct ClassOf : virtual IAssSubSelector {
+        struct ClassOf: IAssSubSelector {
         private:
             AStringVector mClasses;
             
@@ -66,7 +64,7 @@ namespace ass {
         };
     }
 
-    struct class_of: detail::ClassOf, AttributeHelper<class_of> {
+    struct class_of: detail::ClassOf {
     public:
         class_of(const AStringVector& classes) : ClassOf(classes) {}
         class_of(const AString& clazz) : ClassOf(clazz) {}

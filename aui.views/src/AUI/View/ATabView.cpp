@@ -56,15 +56,13 @@ void ATabView::setTabId(unsigned int tabId) {
     mPageView->setPageId(tabId);
 }
 
-void ATabButtonView::getCustomCssAttributes(AMap<AString, AVariant>& map) {
-    AView::getCustomCssAttributes(map);
-    if (mCurrent)
-        map["current"] = true;
-}
-
 void ATabButtonView::setCurrent(bool current) {
     mCurrent = current;
     emit customCssPropertyChanged;
+}
+
+bool ATabButtonView::selectableIsSelectedImpl() {
+    return mCurrent;
 }
 
 ATabButtonRow::ATabButtonRow() {
