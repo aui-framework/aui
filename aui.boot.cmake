@@ -193,6 +193,13 @@ function(auib_import AUI_MODULE_NAME URL)
     elseif(AUIB_IMPORT_VERSION)
         set(TAG_OR_HASH ${AUIB_IMPORT_VERSION})
     endif()
+
+    # should restrict version length; on windows msvc path length restricted by 260 chars
+    string(LENGTH ${TAG_OR_HASH} _length)
+    if (_length GREATER 16)
+        string(SUBSTRING ${TAG_OR_HASH} 0 16 TAG_OR_HASH)
+    endif()
+
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE Debug)
     endif()
