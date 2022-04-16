@@ -42,22 +42,22 @@ jobs:
           - {
             name: "Windows Latest MSVC x86 shared", artifact: "aui_windows-msvc-x86-shared.tar.xz",
             os: windows-latest,
-            build_type: "Release", generator: "Visual Studio 16 2019", additional_cmake_flags: "-A Win32"
+            build_type: "Release", generator: "Visual Studio 17 2022", additional_cmake_flags: "-A Win32"
           }
           - {
             name: "Windows Latest MSVC x86_64 shared", artifact: "aui_windows-msvc-x86_64-shared.tar.xz",
             os: windows-latest,
-            build_type: "Release", generator: "Visual Studio 16 2019", additional_cmake_flags: "-A x64"
+            build_type: "Release", generator: "Visual Studio 17 2022", additional_cmake_flags: "-A x64"
           }
           - {
             name: "Windows Latest MSVC x86 static", artifact: "aui_windows-msvc-x86-static.tar.xz",
             os: windows-latest,
-            build_type: "Release", generator: "Visual Studio 16 2019", additional_cmake_flags: "-A Win32 -DBUILD_SHARED_LIBS=OFF"
+            build_type: "Release", generator: "Visual Studio 17 2022", additional_cmake_flags: "-A Win32 -DBUILD_SHARED_LIBS=OFF"
           }
           - {
             name: "Windows Latest MSVC x86_64 static", artifact: "aui_windows-msvc-x86_64-static.tar.xz",
             os: windows-latest,
-            build_type: "Release", generator: "Visual Studio 16 2019", additional_cmake_flags: "-A x64 -DBUILD_SHARED_LIBS=OFF"
+            build_type: "Release", generator: "Visual Studio 17 2022", additional_cmake_flags: "-A x64 -DBUILD_SHARED_LIBS=OFF"
           }
 
           - {
