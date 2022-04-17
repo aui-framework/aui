@@ -39,7 +39,7 @@ protected:
 
     void SetUp() override {
         Test::SetUp();
-        mSelf = AProcess::self()->getPathToExecutable().absolute();
+        mSelf = AProcess::self()->getPathToExecutable();
     }
 };
 
@@ -50,6 +50,7 @@ TEST_F(Process, Self) {
     EXPECT_EQ(mSelf.filename(), "Tests");
 #endif
     ALogger::info("Process.Self") << mSelf;
+    EXPECT_TRUE(mSelf.isAbsolute());
     EXPECT_TRUE(mSelf.isRegularFileExists());
 }
 /*

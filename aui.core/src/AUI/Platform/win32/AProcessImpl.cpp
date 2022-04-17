@@ -72,8 +72,8 @@ public:
 
     APath getPathToExecutable() override {
         wchar_t buf[0x800];
-        GetProcessImageFileName(mHandle, buf, sizeof(buf));
-        return APath(buf).filename();
+        auto length = GetModuleFileNameEx(mHandle, nullptr, buf, sizeof(buf));
+        return APath(buf, length);
     }
 
     int waitForExitCode() override {
@@ -87,8 +87,8 @@ public:
 
     APath getModuleName() override {
         wchar_t buf[0x800];
-        GetProcessImageFileName(mHandle, buf, sizeof(buf));
-        return getPathToExecutable().filename();
+        auto length = GetProcessImageFileName(mHandle, buf, sizeof(buf));
+        return APath(buf, length).filename();
     }
 
     uint32_t getPid() const noexcept override {

@@ -72,7 +72,7 @@ void Svg2png::run(Toolbox& t) {
     outputDir.makeDirs();
     for (auto& r : resolutions) {
         auto outputFilename = "{}_{}x{}.png"_format(filenamePrefix, r, r);
-        AFileOutputStream fos(outputDir[outputFilename]);
+        AFileOutputStream fos(outputDir / outputFilename);
         PngImageLoader::save(fos, *img.provideImage({r, r}));
         std::cout << filename << " -> " << outputFilename << std::endl;
     }
