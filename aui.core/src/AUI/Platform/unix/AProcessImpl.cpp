@@ -69,7 +69,7 @@ public:
         return APath(buf, readlink(path, buf, sizeof(buf)));
     }
 
-    uint32_t getPid() override {
+    uint32_t getPid() const noexcept override {
         return mHandle;
     }
 };
@@ -192,6 +192,6 @@ int AChildProcess::waitForExitCode() {
 }
 
 
-uint32_t AChildProcess::getPid() {
+uint32_t AChildProcess::getPid() const noexcept {
     return mPid;
 }
