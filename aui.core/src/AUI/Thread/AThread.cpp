@@ -96,7 +96,7 @@ void AAbstractThread::resetInterruptFlag()
 void AThread::start()
 {
 	assert(mThread == nullptr);
-	auto t = shared_from_this();
+	auto t = _cast<AThread>(objectSharedPtr());
     updateThreadName();
 	mThread = new std::thread([&, t] ()
 	{
@@ -179,10 +179,12 @@ void AAbstractThread::enqueue(std::function<void()> f)
 		mMessageQueue << std::move(f);
 	}
 	{
-		std::unique_lock lock(mEventLoopLock);
-		if (mCurrentEventLoop)
-		{
-			mCurrentEventLoop->notifyProcessMessages();
+		if (mCurrentEventLoop) {
+			std::unique_lock lock(mEventLoopLock);
+			if (mCurrentEventLoop)
+			{
+				mCurrentEventLoop->notifyProcessMessages();
+			}
 		}
 	}
 }

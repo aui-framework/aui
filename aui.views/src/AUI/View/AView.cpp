@@ -459,18 +459,6 @@ bool AView::consumesClick(const glm::ivec2& pos) {
     return true;
 }
 
-
-_<AView> AView::determineSharedPointer() {
-    if (mParent) {
-        for (auto& p : mParent->getViews()) {
-            if (p.get() == this) {
-                return p;
-            }
-        }
-    }
-    return nullptr;
-}
-
 void AView::focus() {
     // holding reference here
     auto mySharedPtr = determineSharedPointer();

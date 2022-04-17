@@ -200,12 +200,6 @@ glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) 
 }
 
 
-_<AView> AWindow::determineSharedPointer() {
-    return (shared_from_this());
-}
-
-
-
 AWindowManager::AWindowManager(): mHandle(this) {}
 
 AWindowManager::~AWindowManager() {

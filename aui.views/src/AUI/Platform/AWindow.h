@@ -46,7 +46,7 @@
 class Render;
 class AWindowManager;
 
-class API_AUI_VIEWS AWindow: public ABaseWindow, public std::enable_shared_from_this<AWindow>
+class API_AUI_VIEWS AWindow: public ABaseWindow
 {
     friend class OpenGLRenderingContext;
     friend class CommonRenderingContext;
@@ -127,8 +127,6 @@ public:
 
     void redraw();
 
-
-    _<AView> determineSharedPointer() override;
 
     /**
      * \brief Checks whether last monitor frame is displayed and redraw will be efficient.

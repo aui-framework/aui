@@ -169,7 +169,7 @@ protected:
 /**
  * \brief Thread.
  */
-class API_AUI_CORE AThread : public AAbstractThread, public AObject, public std::enable_shared_from_this<AThread>
+class API_AUI_CORE AThread : public AAbstractThread, public AObject
 {
 public:
 	/**

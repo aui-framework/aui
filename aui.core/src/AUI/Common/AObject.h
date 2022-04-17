@@ -31,7 +31,7 @@ class AString;
 class AAbstractSignal;
 class AAbstractThread;
 
-class API_AUI_CORE AObject: public aui::noncopyable
+class API_AUI_CORE AObject: public aui::noncopyable, public std::enable_shared_from_this<AObject>
 {
 	friend class AAbstractSignal;
 private:
@@ -45,11 +45,19 @@ private:
 protected:
 	static void disconnect();
 
+    [[nodiscard]]
+    _<AObject> objectSharedPtr() {
+        return std::enable_shared_from_this<AObject>::shared_from_this();
+    }
+
+    [[nodiscard]]
+    _weak<AObject> objectWeakPtr() {
+        return std::enable_shared_from_this<AObject>::weak_from_this();
+    }
+
 public:
 	AObject();
 	virtual ~AObject();
-
-    virtual void beforeObjectRemoval();
 
 	void clearSignals();
 
@@ -64,15 +72,31 @@ public:
      * @param function slot. Can be lambda
      */
 	template<class Signal, class Object, typename Function>
-	static void connect(Signal& signal, Object object, Function function)
+	static void connect(Signal& signal, Object* object, Function function)
 	{
-		static_assert(std::is_base_of_v<AObject, typename std::remove_pointer<Object>::type>, "the passed object should be a base of the AObject class (use class YourObject: public AObject)");
+		static_assert(std::is_base_of_v<AObject, Object>, "the passed object should be a base of the AObject class (use class YourObject: public AObject)");
 		static_assert(std::is_base_of_v<AAbstractSignal, Signal>, "expected signal as first argument");
-		static_assert(std::is_pointer_v<Object>, "the object should be a pointer (use &yourObject)");
 
-		if constexpr (std::is_base_of_v<AObject, typename std::remove_pointer<Object>::type> && std::is_pointer_v<Object>) {
-			signal.connect(object, function);
-		}
+        signal.connect(object, function);
+	}
+
+    /**
+     * Connects signal to the slot of the specified object.
+     * @example
+     * <code>
+     * connect(view->clicked, slot(otherObject)::handleButtonClicked);
+     * </code>
+     * @param signal signal
+     * @param object instance of <code>AObject</code>
+     * @param function slot. Can be lambda
+     */
+	template<class Signal, class Object, typename Function>
+	static void connect(Signal& signal, Object& object, Function function)
+	{
+		static_assert(std::is_base_of_v<AObject, Object>, "the passed object should be a base of the AObject class (use class YourObject: public AObject)");
+		static_assert(std::is_base_of_v<AAbstractSignal, Signal>, "expected signal as first argument");
+
+        signal.connect(&object, function);
 	}
 
     /**
