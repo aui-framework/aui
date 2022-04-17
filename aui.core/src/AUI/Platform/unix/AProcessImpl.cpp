@@ -92,7 +92,7 @@ _<AProcess> AProcess::self() {
 }
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {
-    if (APath("/proc")[AString::number(pid)].isDirectoryExists()) {
+    if ((APath("/proc") / AString::number(pid)).isDirectoryExists()) {
         return _new<AOtherProcess>(pid_t(pid));
     }
     return nullptr;

@@ -64,7 +64,7 @@ namespace aui {
         template<typename AnyType>
         operator AnyType() noexcept {
             assert(("value is used when null" && mValue != nullptr));
-            return reinterpret_cast<AnyType>(mValue);
+            return AnyType(mValue);
         }
 
         template<typename AnyType>
