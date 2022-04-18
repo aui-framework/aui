@@ -6,7 +6,7 @@
  * Acts like std::string_view but for AByteBuffer.
  * @note don't use const reference of the object. Passing by value allows compiler to use only registers.
  */
-class AByteBufferView {
+class API_AUI_CORE AByteBufferView {
 private:
     const char* mBuffer;
     size_t mSize;
@@ -14,6 +14,9 @@ private:
 public:
     AByteBufferView(): mBuffer(nullptr), mSize(0) {}
     AByteBufferView(const char* buffer, size_t size) : mBuffer(buffer), mSize(size) {}
+
+    [[nodiscard]]
+    AString toHexString() const;
 
     const char* data() const {
         return mBuffer;
