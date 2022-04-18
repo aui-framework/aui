@@ -17,9 +17,9 @@ private:
         if (!AWindow::current()) return {};
         auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
         if (image.getData().empty()) return {};
-        auto p = APath("reports")[APath(testFilePath).filenameWithoutExtension()];
+        auto p = APath("reports") / APath(testFilePath).filenameWithoutExtension();
         p.makeDirs();
-        p = p[name];
+        p = p / name;
         AFileOutputStream fos(p);
         PngImageLoader::save(fos, image);
         return p;

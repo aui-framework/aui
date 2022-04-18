@@ -49,15 +49,15 @@ private:
     void invokeSignal(const std::tuple<Args...>& args = {});
 
     template<typename Lambda, typename... A>
-    struct call_helper {};
+    struct argument_ignore_helper {};
 
     // empty arguments
     template<typename Lambda>
-    struct call_helper<void(Lambda::*)() const>
+    struct argument_ignore_helper<void(Lambda::*)() const>
     {
         Lambda l;
 
-        explicit call_helper(Lambda l)
+        explicit argument_ignore_helper(Lambda l)
                 : l(l)
         {
         }
@@ -68,64 +68,64 @@ private:
     };
 
     template<typename Lambda, typename A1>
-    struct call_helper<void(Lambda::*)(A1) const>
+    struct argument_ignore_helper<void(Lambda::*)(A1) const>
     {
         Lambda l;
 
-        explicit call_helper(Lambda l)
+        explicit argument_ignore_helper(Lambda l)
                 : l(l)
         {
         }
 
         template<typename... Others>
-        void call(A1 a1, Others...)
+        void call(A1&& a1, Others...)
         {
-            l(a1);
+            l(std::forward<A1>(a1));
         }
 
-        void operator()(Args... args) {
-            call(args...);
+        void operator()(Args&&... args) {
+            call(std::forward<Args>(args)...);
         }
     };
     template<typename Lambda, typename A1, typename A2>
-    struct call_helper<void(Lambda::*)(A1, A2) const>
+    struct argument_ignore_helper<void(Lambda::*)(A1, A2) const>
     {
         Lambda l;
 
-        explicit call_helper(Lambda l)
+        explicit argument_ignore_helper(Lambda l)
                 : l(l)
         {
         }
 
         template<typename... Others>
-        void call(A1 a1, A2 a2, Others...)
+        void call(A1&& a1, A2&& a2, Others...)
         {
-            l(a1, a2);
+            l(std::forward<A1>(a1), std::forward<A2>(a2));
         }
 
-        void operator()(Args... args) {
-            call(args...);
+        void operator()(Args&&... args) {
+            call(std::forward<Args>(args)...);
         }
     };
 
     template<typename Lambda, typename A1, typename A2, typename A3>
-    struct call_helper<void(Lambda::*)(A1, A2, A3) const>
+    struct argument_ignore_helper<void(Lambda::*)(A1, A2, A3) const>
     {
         Lambda l;
 
-        explicit call_helper(Lambda l)
+        explicit argument_ignore_helper(Lambda l)
                 : l(l)
         {
         }
 
         template<typename... Others>
-        void call(A1 a1, A2 a2, A3 a3, Others...)
+        void call(A1&& a1, A2&& a2, A3&& a3, Others...)
         {
-            l(a1, a2, a3);
+            l(std::forward<A1>(a1), std::forward<A2>(a2), std::forward<A3>(a3));
         }
 
-        void operator()(Args... args) {
-            call(args...);
+        void operator()(Args&&... args) {
+            call(std::forward<Args>(args)...);
         }
     };
 
@@ -149,7 +149,7 @@ private:
         static_assert(std::is_class_v<Lambda>, "the lambda should be a class");
 
         std::unique_lock lock(mSlotsLock);
-        mSlots.push_back({ object, call_helper<decltype(&Lambda::operator())>(lambda) });
+        mSlots.push_back({ object, argument_ignore_helper<decltype(&Lambda::operator())>(lambda) });
 
         linkSlot(object);
     }
@@ -223,12 +223,16 @@ void ASignal<Args...>::invokeSignal(const std::tuple<Args...>& args)
     {
         if (i->object->getThread() != AThread::current())
         {
-            i->object->getThread()->enqueue([this, obj = i->object, func = i->func, args = args]() {
-                AAbstractSignal::isDisconnected() = false;
-                (std::apply)(func, args);
-                if (AAbstractSignal::isDisconnected()) {
-                    std::unique_lock lock(mSlotsLock);
-                    unlinkSlot(obj);
+            // perform crossthread call; should make weak ptr to the object and queue call to thread message queue
+            auto objectWeakPtr = weakPtrFromObject(i->object);
+            i->object->getThread()->enqueue([this, objectWeakPtr = std::move(objectWeakPtr), func = i->func, args = args]() {
+                if (auto objectPtr = objectWeakPtr.lock()) {
+                    AAbstractSignal::isDisconnected() = false;
+                    (std::apply)(func, args);
+                    if (AAbstractSignal::isDisconnected()) {
+                        std::unique_lock lock(mSlotsLock);
+                        unlinkSlot(objectPtr.get());
+                    }
                 }
             });
             ++i;

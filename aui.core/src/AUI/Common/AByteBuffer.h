@@ -57,7 +57,7 @@ public:
      */
     void write(IInputStream& stream, size_t size);
 
-    operator AByteBufferView() const {
+    operator AByteBufferView() const noexcept {
         return { mBuffer, mSize };
     }
 
@@ -231,7 +231,16 @@ public:
         return mBuffer + mSize;
     }
 
-    AString toHexString();
+
+    template<typename T>
+    T as() const {
+        return AByteBufferView(*this).template as<T>();
+    }
+
+    [[nodiscard]]
+    AString toHexString() const {
+        return AByteBufferView(*this).toHexString();
+    }
 
     static AByteBuffer fromStream(aui::no_escape<IInputStream> is);
     static AByteBuffer fromStream(aui::no_escape<IInputStream> is, size_t sizeRestriction);

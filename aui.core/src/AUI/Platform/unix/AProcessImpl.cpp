@@ -69,7 +69,7 @@ public:
         return APath(buf, readlink(path, buf, sizeof(buf)));
     }
 
-    uint32_t getPid() override {
+    uint32_t getPid() const noexcept override {
         return mHandle;
     }
 };
@@ -92,7 +92,7 @@ _<AProcess> AProcess::self() {
 }
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {
-    if (APath("/proc")[AString::number(pid)].isDirectoryExists()) {
+    if ((APath("/proc") / AString::number(pid)).isDirectoryExists()) {
         return _new<AOtherProcess>(pid_t(pid));
     }
     return nullptr;
@@ -192,6 +192,6 @@ int AChildProcess::waitForExitCode() {
 }
 
 
-uint32_t AChildProcess::getPid() {
+uint32_t AChildProcess::getPid() const noexcept {
     return mPid;
 }

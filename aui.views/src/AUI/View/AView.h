@@ -604,9 +604,12 @@ public:
     void ensureAssUpdated();
 
     /**
-     * \brief Tries to determine std::shared_ptr for this object.
+     * \brief Tries to determine std::shared_ptr for this view.
      */
-    virtual _<AView> determineSharedPointer();
+    [[nodiscard]]
+    _<AView> determineSharedPointer() {
+        return _cast<AView>(objectSharedPtr());
+    }
 
     /**
      * Handles touch screen gesture event.

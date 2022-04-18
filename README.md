@@ -9,7 +9,20 @@ using modern C++17.
 
 [Documentation](https://github.com/aui-framework/aui/wiki) | [Getting started](https://github.com/aui-framework/aui/wiki/Getting-started-with-AUI)
 
-Quickstart
+# Quickstart
+
+## Linux dependencies
+
+If you are using Linux, install following dependencies:
+
+```bash
+sudo apt-get install pkg-config libgtk-3-dev libfontconfig-dev
+```
+
+## Your project CMake script
+
+To link AUI to your project, use the following CMake script:
+
 ```cmake
 # Standard routine
 cmake_minimum_required(VERSION 3.16)
@@ -37,7 +50,7 @@ target_link_libraries(aui_app PRIVATE aui::core aui::views)
 
 ```
 
-## Key features
+# Key features
 - Extended common types (containers, strings, streams, etc...)
 - Graphical User Interfaces, including framework tools for fast declarative UI producing using modern C++ capabilities
 - Resource compiler (assets)

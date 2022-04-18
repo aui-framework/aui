@@ -23,6 +23,13 @@
 // Created by alex2 on 31.10.2020.
 //
 
+#include "AProcess.h"
+#include "AUI/IO/AFileOutputStream.h"
+
+#include <windows.h>
+#include <AUI/Traits/memory.h>
+#include <AUI/Logging/ALogger.h>
+#include <psapi.h>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include "AProcess.h"
@@ -62,7 +69,7 @@ _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
     }
 
     // try to find by tmp file
-    auto f = APath::getDefaultPath(APath::TEMP)["." + yourProjectName + ".pid"];
+    auto f = APath::getDefaultPath(APath::TEMP) / ("." + yourProjectName + ".pid");
     try {
         ATokenizer t(_new<AFileInputStream>(f));
         auto p = t.readInt();
@@ -80,11 +87,11 @@ _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
 
         public:
             RemoveHelper(APath&& path) : mPath(std::forward<APath>(path)) {
-                auto fos = _new<AFileOutputStream>(mPath);
+                AFileOutputStream fos(mPath);
 
                 auto n = std::to_string(self()->getPid());
-                fos->write(n.c_str(), n.length());
-                fos->close();
+                fos.write(n.c_str(), n.length());
+                fos.close();
             }
 
             ~RemoveHelper() {

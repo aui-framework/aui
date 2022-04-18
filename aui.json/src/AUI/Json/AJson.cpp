@@ -17,7 +17,3 @@ AJson AJson::fromString(const AString& json) {
 AJson AJson::fromBuffer(AByteBufferView buffer) {
     return aui::deserialize<AJson>(AByteBufferInputStream(buffer));
 }
-
-AJson AJson::fromStream(aui::no_escape<IInputStream> input) {
-    return aui::deserialize<AJson>(input);
-}

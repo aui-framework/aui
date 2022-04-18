@@ -6,7 +6,7 @@
  * Acts like std::string_view but for AByteBuffer.
  * @note don't use const reference of the object. Passing by value allows compiler to use only registers.
  */
-class AByteBufferView {
+class API_AUI_CORE AByteBufferView {
 private:
     const char* mBuffer;
     size_t mSize;
@@ -28,6 +28,17 @@ public:
     }
     auto end() const {
         return data() + size();
+    }
+
+    [[nodiscard]]
+    AString toHexString() const;
+
+    template<typename T>
+    T as() const {
+        if (mSize != sizeof(T)) {
+            throw AException("as<T>(): invalid size");
+        }
+        return *reinterpret_cast<const T*>(mBuffer);
     }
 };
 
