@@ -81,7 +81,15 @@ AJSON_FIELDS(DataOptional,
 TEST(JsonFieldsTest, Optional)
 {
     // should not throw an exception since v2 is optional
-    EXPECT_NO_THROW(aui::from_json<DataOptional>(AJson::fromString(R"({"v1":228})")));
+    DataOptional dst { 1, 2 };
+    EXPECT_NO_THROW(aui::from_json<DataOptional>(AJson::fromString(R"({"v1":228})"), dst));
+    EXPECT_EQ(dst.v1, 228); // should have modified presented value
+    EXPECT_EQ(dst.v2, 2); // but should have kept previous value
+
+    // it should not ignore the value when it present
+    auto d2 = aui::from_json<DataOptional>(AJson::fromString(R"({"v1":228, "v2":229})"));
+    EXPECT_EQ(d2.v1, 228);
+    EXPECT_EQ(d2.v2, 229);
 
     // here it should throw an exception since v1 is not optional
     EXPECT_THROW(aui::from_json<DataOptional>(AJson::fromString(R"({"v2":228})")), AJsonException);
