@@ -62,7 +62,7 @@ _<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
     }
 
     // try to find by tmp file
-    auto f = APath::getDefaultPath(APath::TEMP)["." + yourProjectName + ".pid"];
+    auto f = APath::getDefaultPath(APath::TEMP) / ("." + yourProjectName + ".pid");
     try {
         ATokenizer t(_new<AFileInputStream>(f));
         auto p = t.readInt();

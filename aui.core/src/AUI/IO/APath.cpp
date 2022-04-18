@@ -278,8 +278,11 @@ bool APath::isAbsolute() const {
     if (length() >= 1) {
         if (first() == '/')
             return true;
-        if (length() >= 2 && (*this)[1] == ':') {
-            return true;
+        if (length() >= 2) {
+            auto secondChar = operator[](1);
+            if (secondChar == ':') {
+                return true;
+            }
         }
     }
     return false;
@@ -384,7 +387,7 @@ AVector<APath> APath::find(const AString& filename, const AVector<APath>& locati
     auto locateImpl = [&](const AVector<AString>& container) {
         auto c = [&](auto& c, const AVector<AString>& container) mutable {
             for (const APath& pathEntry : container) {
-                auto fullPath = pathEntry[filename];
+                auto fullPath = pathEntry / filename;
                 if (fullPath.isRegularFileExists()) {
                     result << fullPath;
                     if (doReturn()) {

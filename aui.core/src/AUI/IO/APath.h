@@ -133,6 +133,10 @@ public:
         removeBackSlashes();
     }
 
+    APath(const wchar_t * str, std::size_t length) noexcept: AString(str, str + length) {
+        removeBackSlashes();
+    }
+
     /**
      * Creates a file.
      * @return this.
@@ -171,16 +175,6 @@ public:
      * \return path to child file relatively to this folder
      */
     [[nodiscard]] APath file(const AString& fileName) const;
-
-    /**
-     * \brief Path of the child element. Relevant only for folders.
-     * \example with fileName = work: <pre>/home/user -> /home/user/work</pre>
-     * \param name of child file
-     * \return path to child file relatively to this folder
-     */
-    [[nodiscard]] APath operator[](const AString& fileName) const {
-        return file(fileName);
-    }
 
     /**
      * \brief File name.
@@ -332,16 +326,17 @@ public:
     static AVector<APath> find(const AString& filename, const AVector<APath>& locations, PathFinder flags = PathFinder::NONE);
 
     /**
-     * @brief Building path right in the code
+     * @brief Path of the child element. Relevant only for folders.
      * @code{cpp}
      * AString filename = "file.txt";
      * APath path = "path" / "to" / "your" / filename;
      * @endcode
      * Which would result into "path/to/your/file.txt"
+     * @return path to child file relatively to this folder
      */
     [[nodiscard]]
     APath operator/(const AString& filename) const {
-        return operator[](filename);
+        return file(filename);
     }
 
 };

@@ -30,6 +30,7 @@
 #include <array>
 #include "AUI/Platform/AProcess.h"
 #include "AUI/Util/kAUI.h"
+#include "AUI/Logging/ALogger.h"
 #include <gmock/gmock.h>
 
 class Process : public ::testing::Test {
@@ -48,6 +49,8 @@ TEST_F(Process, Self) {
 #else
     EXPECT_EQ(mSelf.filename(), "Tests");
 #endif
+    ALogger::info("Process.Self") << mSelf;
+    EXPECT_TRUE(mSelf.isAbsolute());
     EXPECT_TRUE(mSelf.isRegularFileExists());
 }
 /*

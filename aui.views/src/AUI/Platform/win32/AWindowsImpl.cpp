@@ -268,7 +268,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(shared_from_this());
+    getWindowManager().mWindows.removeFirst(_cast<AWindow>(objectSharedPtr()));
 
     // parent window should be activated BEFORE child is closed.
     if (mHandle) {
@@ -411,11 +411,11 @@ glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
 }
 
 void AWindow::show() {
-    if (!getWindowManager().mWindows.contains(shared_from_this())) {
-        getWindowManager().mWindows << shared_from_this();
+    if (!getWindowManager().mWindows.contains(_cast<AWindow>(objectSharedPtr()))) {
+        getWindowManager().mWindows << _cast<AWindow>(objectSharedPtr());
     }
     try {
-        mSelfHolder = shared_from_this();
+        mSelfHolder = _cast<AWindow>(objectSharedPtr());
     } catch (...) {
         mSelfHolder = nullptr;
     }
