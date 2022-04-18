@@ -54,7 +54,7 @@ std::ostream& operator<<(std::ostream& o, const Data2& d) {
     return o;
 }
 
-TEST(JsonCustomConverter, CustomConverter)
+TEST(JsonFieldsTest, Basic)
 {
     // arrange
     Data2 d = { {1, 2, 3}, 228 };
@@ -65,4 +65,24 @@ TEST(JsonCustomConverter, CustomConverter)
 
     auto d2 = aui::from_json<Data2>(jsonObject);
     ASSERT_EQ(d, d2);
+
+    EXPECT_THROW(aui::from_json<Data2>(AJson::fromString(R"({"i":228})") /* no "values" field present */), AJsonException);
+}
+
+struct DataOptional {
+    int v1;
+    int v2;
+};
+
+AJSON_FIELDS(DataOptional,
+             (v1, "v1")
+             (v2, "v2", AJsonFieldFlags::OPTIONAL))
+
+TEST(JsonFieldsTest, Optional)
+{
+    // should not throw an exception since v2 is optional
+    EXPECT_NO_THROW(aui::from_json<DataOptional>(AJson::fromString(R"({"v1":228})")));
+
+    // here it should throw an exception since v1 is not optional
+    EXPECT_THROW(aui::from_json<DataOptional>(AJson::fromString(R"({"v2":228})")), AJsonException);
 }
