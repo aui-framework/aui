@@ -138,17 +138,6 @@ AByteBuffer AByteBuffer::fromString(const AString& string) {
     return b;
 }
 
-AString AByteBuffer::toHexString() {
-    AString result;
-    result.reserve(getSize() * 2 + 10);
-    char buf[8];
-
-    for (size_t i = 0; i < getSize(); ++i) {
-        sprintf(buf, "%02x", static_cast<unsigned>(mBuffer[i]) & 0xff);
-        result += buf;
-    }
-    return result;
-}
 
 uint8_t hexCharToNumber(char c) {
     if (c >= '0' && c <= '9')

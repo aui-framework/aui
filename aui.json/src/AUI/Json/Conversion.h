@@ -4,6 +4,8 @@
 #include <AUI/IO/APath.h>
 #include "AUI/Traits/parameter_pack.h"
 #include "AUI/Traits/members.h"
+#include <AUI/Util/EnumUtil.h>
+#include <AUI/Traits/strings.h>
 
 /**
  * <p>Json conversion trait.</p>
@@ -18,7 +20,7 @@
  * template&lt;&gt; <br />
  * struct AJsonConv&lt;YOURTYPE&gt; { <br />
  * &emsp;static AJson toJson(const YOURTYPE& t) {} <br />
- * &emsp;static YOURTYPE fromJson(const AJson& json) {} <br />
+ * &emsp;static void fromJson(const AJson& json, YOURTYPE& dst) {} <br />
  * };
  * </code>
  * </p>
@@ -40,9 +42,27 @@ namespace aui {
     template<typename T>
     inline T from_json(const AJson& v) {
         static_assert(aui::has_json_converter<T>, "this type does not implement AJsonConv<T> trait");
-        return AJsonConv<T>::fromJson(v);
+        T dst;
+        AJsonConv<T>::fromJson(v, dst);
+        return dst;
+    }
+
+    template<typename T>
+    inline void from_json(const AJson& v, T& dst) {
+        static_assert(aui::has_json_converter<T>, "this type does not implement AJsonConv<T> trait");
+        AJsonConv<T>::fromJson(v, dst);
     }
 }
+
+
+ENUM_FLAG(AJsonFieldFlags) {
+    DEFAULT = 0b0,
+
+    /**
+     * Normally, when field does not exists in json model an exception is thrown. This flag silences the exception.
+     */
+    OPTIONAL = 0b1,
+};
 
 namespace aui::impl::json {
 
@@ -50,48 +70,82 @@ namespace aui::impl::json {
     struct Field {
         T& value;
         const char* name;
+        AJsonFieldFlags flags;
 
-        Field(T& value, const char* name) : value(value), name(name) {}
+        Field(T& value, const char* name, AJsonFieldFlags flags) : value(value), name(name), flags(flags) {}
 
         void operator()(const AJson::Object& object) {
-            value = aui::from_json<T>(object[name]);
+            if (auto c = object.contains(name)) {
+                value = aui::from_json<T>(c->second);
+            } else {
+                if (!(flags & AJsonFieldFlags::OPTIONAL)) {
+                    throw AJsonException(R"(field "{}" is not present)"_format(name));
+                }
+            }
         }
         void operator()(AJson::Object& object) {
             object[name] = aui::to_json<T>(value);
         }
     };
+
+    template<typename... Items>
+    struct my_tuple: std::tuple<Items...> {
+        using std::tuple<Items...>::tuple;
+
+        my_tuple(Items... items): std::tuple<Items...>(std::move(items)...) {}
+
+        template<typename T>
+        auto operator()(T& v, const char* n, AJsonFieldFlags flags = AJsonFieldFlags::DEFAULT) {
+            return (std::apply)([&](auto&&... args) {
+                return aui::impl::json::my_tuple(args..., aui::impl::json::Field(v, n, flags));
+            }, stdTuple());
+        }
+
+        std::tuple<Items...>& stdTuple() {
+            return (std::tuple<Items...>&)*this;
+        }
+    };
+
+    struct empty_tuple {
+        template<typename T>
+        auto operator()(T& v, const char* n, AJsonFieldFlags flags = AJsonFieldFlags::DEFAULT) {
+            return my_tuple(aui::impl::json::Field(v, n, flags));
+        }
+    };
 }
 
-template<typename... Items>
-struct my_tuple: std::tuple<Items...> {
-    using std::tuple<Items...>::tuple;
-
-    my_tuple(Items... items): std::tuple<Items...>(std::move(items)...) {}
-
-    template<typename T>
-    auto operator()(T& v, const char* n) {
-        return std::apply([&](auto&&... args) {
-            return ::my_tuple(args..., aui::impl::json::Field(v, n));
-        }, stdTuple());
-    }
-
-    std::tuple<Items...>& stdTuple() {
-        return (std::tuple<Items...>&)*this;
-    }
-};
-
-struct empty_tuple {
-    template<typename T>
-    auto operator()(T& v, const char* n) {
-        return my_tuple(aui::impl::json::Field(v, n));
-    }
-};
 
 template<typename T>
 struct AJsonConvFieldDescriptor;
 
 /**
- * Json fields definition.
+ * @brief Json fields definition.
+ * @code{.cpp}
+ * struct SomeModel {
+ *     type1 field1;
+ *     type2 field2;
+ *     ...
+ * };
+ *
+ * AJSON_FIELDS(SomeModel,
+ *     (field1, "name1")
+ *     (field2, "name2")
+ *     ...
+ * )
+ * @endcode
+ *
+ * Also, flags can be set:
+ *
+ * @code{.cpp}
+ * AJSON_FIELDS(SomeModel,
+ *     (field1, "name1")
+ *     (field2, "name2", AJsonFieldFlags::OPTIONAL)
+ *     ...
+ * )
+ * @endcode
+ *
+ * @see AJsonFieldFlags
+ *
  * @example
  * @code{.cpp}
  * struct SomeModel {
@@ -108,7 +162,7 @@ struct AJsonConvFieldDescriptor;
 #define AJSON_FIELDS(N, ...) \
 template<> struct AJsonConvFieldDescriptor<N>: N { \
     auto operator()() { \
-        return empty_tuple() \
+        return aui::impl::json::empty_tuple() \
                 __VA_ARGS__ \
                 ; \
     } \
@@ -133,15 +187,13 @@ struct AJsonConv<T, std::enable_if_t<aui::is_complete<AJsonConvFieldDescriptor<T
         return std::move(json);
     }
 
-    static T fromJson(const AJson& json) {
-        T t;
+    static void fromJson(const AJson& json, T& dst) {
         const auto& jsonObject = json.asObject();
         std::apply([&](auto&&... fields) {
             aui::parameter_pack::for_each([&](auto&& field) {
                 field(jsonObject);
             }, fields...);
-        }, ((AJsonConvFieldDescriptor<T>&)t)().stdTuple());
-        return t;
+        }, ((AJsonConvFieldDescriptor<T>&)dst)().stdTuple());
     }
 };
 
@@ -151,8 +203,8 @@ struct AJsonConv<int> {
     static AJson toJson(int v) {
         return v;
     }
-    static int fromJson(const AJson& json) {
-        return json.asInt();
+    static void fromJson(const AJson& json, int& dst) {
+        dst = json.asInt();
     }
 };
 template<>
@@ -170,8 +222,8 @@ struct AJsonConv<float> {
     static AJson toJson(float v) {
         return v;
     }
-    static float fromJson(const AJson& json) {
-        return json.asNumber();
+    static void fromJson(const AJson& json, float& dst) {
+        dst = json.asNumber();
     }
 };
 
@@ -180,8 +232,8 @@ struct AJsonConv<bool> {
     static AJson toJson(bool v) {
         return v;
     }
-    static bool fromJson(const AJson& json) {
-        return json.asBool();
+    static void fromJson(const AJson& json, bool& dst) {
+        dst = json.asBool();
     }
 };
 
@@ -190,8 +242,8 @@ struct AJsonConv<AString> {
     static AJson toJson(AString v) {
         return v;
     }
-    static AString fromJson(const AJson& json) {
-        return json.asString();
+    static void fromJson(const AJson& json, AString& dst) {
+        dst = json.asString();
     }
 };
 template<>
@@ -220,8 +272,8 @@ struct AJsonConv<AJson::Array> {
     static AJson toJson(AJson::Array v) {
         return std::move(v);
     }
-    static AJson::Array fromJson(const AJson& json) {
-        return json.asArray();
+    static void fromJson(const AJson& json, AJson::Array& dst) {
+        dst = json.asArray();
     }
 };
 
@@ -230,8 +282,8 @@ struct AJsonConv<AJson::Object> {
     static AJson toJson(AJson::Object v) {
         return std::move(v);
     }
-    static AJson::Object fromJson(const AJson& json) {
-        return json.asObject();
+    static void fromJson(const AJson& json, AJson::Object& dst) {
+        dst = json.asObject();
     }
 };
 
@@ -245,14 +297,12 @@ struct AJsonConv<AVector<T>, typename std::enable_if_t<aui::has_json_converter<T
         }
         return std::move(array);
     }
-    static AVector<T> fromJson(const AJson& json) {
-        const auto& array = json.asArray();
-        AVector<T> result;
-        result.reserve(array.size());
+    static void fromJson(const AJson& json, AVector<T>& dst) {
+        auto& array = json.asArray();
+        dst.reserve(array.size());
         for (const auto& elem : array) {
-            result << aui::from_json<T>(elem);
+            dst << aui::from_json<T>(elem);
         }
-        return result;
     }
 };
 
