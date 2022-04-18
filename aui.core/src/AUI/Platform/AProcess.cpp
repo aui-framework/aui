@@ -26,7 +26,6 @@
 #include "AProcess.h"
 #include "AUI/IO/AFileOutputStream.h"
 
-#if AUI_PLATFORM_WIN
 #include <windows.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Logging/ALogger.h>
