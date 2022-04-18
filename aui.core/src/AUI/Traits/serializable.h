@@ -19,9 +19,9 @@ namespace aui {
     constexpr bool is_serializable = aui::is_complete<ASerializable<T>>;
 
     template<typename T>
-    inline void serialize(IOutputStream& dst, const T& t) {
+    inline void serialize(aui::no_escape<IOutputStream> dst, const T& t) {
         static_assert(is_serializable<T>, "T is not serializable");
-        ASerializable<T>::write(dst, t);
+        ASerializable<T>::write(*dst, t);
     }
 
     template<typename T>

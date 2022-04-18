@@ -69,7 +69,7 @@ struct my_tuple: std::tuple<Items...> {
 
     template<typename T>
     auto operator()(T& v, const char* n) {
-        return std::apply([&](auto&&... args) {
+        return (std::apply)([&](auto&&... args) {
             return ::my_tuple(args..., aui::impl::json::Field(v, n));
         }, stdTuple());
     }

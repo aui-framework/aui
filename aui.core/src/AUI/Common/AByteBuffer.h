@@ -231,6 +231,12 @@ public:
         return mBuffer + mSize;
     }
 
+
+    template<typename T>
+    T as() const {
+        return AByteBufferView(*this).template as<T>();
+    }
+
     [[nodiscard]]
     AString toHexString() const {
         return AByteBufferView(*this).toHexString();

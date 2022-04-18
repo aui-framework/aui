@@ -3,18 +3,15 @@
 #include <AUI/Traits/serializable.h>
 
 namespace AStreams {
-    inline void copyAll(IInputStream& is, IOutputStream& os, size_t bytes) {
+    inline void copyAll(aui::no_escape<IInputStream> is, aui::no_escape<IOutputStream> os, size_t bytes) {
         char buf[0x1000];
         while (bytes > 0) {
-            size_t r = is.read(buf, (glm::min)(bytes, sizeof(buf)));
+            size_t r = is->read(buf, (glm::min)(bytes, sizeof(buf)));
             if (r == 0) {
                 throw AEOFException();
             }
-            os.write(buf, r);
+            os->write(buf, r);
             bytes -= r;
         }
-    }
-    inline void copyAll(IInputStream& is, IOutputStream&& os, size_t bytes) {
-        copyAll(is, os ,bytes);
     }
 }

@@ -15,9 +15,6 @@ public:
     AByteBufferView(): mBuffer(nullptr), mSize(0) {}
     AByteBufferView(const char* buffer, size_t size) : mBuffer(buffer), mSize(size) {}
 
-    [[nodiscard]]
-    AString toHexString() const;
-
     const char* data() const {
         return mBuffer;
     }
@@ -31,6 +28,17 @@ public:
     }
     auto end() const {
         return data() + size();
+    }
+
+    [[nodiscard]]
+    AString toHexString() const;
+
+    template<typename T>
+    T as() const {
+        if (mSize != sizeof(T)) {
+            throw AException("as<T>(): invalid size");
+        }
+        return *reinterpret_cast<const T*>(mBuffer);
     }
 };
 

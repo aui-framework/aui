@@ -202,6 +202,9 @@ public:
 
     [[nodiscard]] static API_AUI_JSON AString toString(const AJson& json);
     [[nodiscard]] static API_AUI_JSON AJson fromString(const AString& json);
+    [[nodiscard]] static AJson fromStream(aui::no_escape<IInputStream> stream) {
+        return aui::deserialize<AJson>(stream);
+    }
     [[nodiscard]] static API_AUI_JSON AJson fromBuffer(AByteBufferView buffer);
 };
 

@@ -111,8 +111,15 @@ namespace aui {
         no_escape(T& value): value(&value) {}
         no_escape(T&& value): value(&value) {}
         no_escape(T* value): value(value) {}
+
         no_escape(const _<T>& value): value(&*value) {}
         no_escape(const _unique<T>& value): value(&*value) {}
+
+        template<typename DerivedFromT, std::enable_if_t<std::is_base_of_v<T, DerivedFromT> && !std::is_same_v<DerivedFromT, T>, bool> = true>
+        no_escape(const _<DerivedFromT>& value): value(&*value) {}
+
+        template<typename DerivedFromT, std::enable_if_t<std::is_base_of_v<T, DerivedFromT> && !std::is_same_v<DerivedFromT, T>, bool> = true>
+        no_escape(const _unique<DerivedFromT>& value): value(&*value) {}
 
         T* operator->() const {
             return value;
