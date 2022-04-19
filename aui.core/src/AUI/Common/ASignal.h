@@ -225,6 +225,11 @@ void ASignal<Args...>::invokeSignal(const std::tuple<Args...>& args)
         {
             // perform crossthread call; should make weak ptr to the object and queue call to thread message queue
             auto objectWeakPtr = weakPtrFromObject(i->object);
+
+            // that's because shared_ptr counting mechanism is used when doing a crossthread call.
+            // it could not track the object existence without shared_ptr block.
+            assert(("crossthread signal-slot relation is not allowed for receiver object which is not shared_ptr",
+                    objectWeakPtr.lock() != nullptr));
             i->object->getThread()->enqueue([this, objectWeakPtr = std::move(objectWeakPtr), func = i->func, args = args]() {
                 if (auto objectPtr = objectWeakPtr.lock()) {
                     AAbstractSignal::isDisconnected() = false;

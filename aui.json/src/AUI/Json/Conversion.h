@@ -54,6 +54,11 @@ namespace aui {
     }
 }
 
+// win fix
+#ifdef OPTIONAL
+#undef OPTIONAL
+#endif
+
 
 ENUM_FLAG(AJsonFieldFlags) {
     DEFAULT = 0b0,
@@ -251,8 +256,8 @@ struct AJsonConv<APath> {
     static AJson toJson(APath v) {
         return v;
     }
-    static APath fromJson(const AJson& json) {
-        return json.asString();
+    static void fromJson(const AJson& json, APath& dst) {
+        dst = json.asString();
     }
 };
 
@@ -261,9 +266,9 @@ struct AJsonConv<std::pair<T1, T2>> {
     static AJson toJson(std::pair<T1, T2> v) {
         return AJson::Array({aui::to_json(v.first), aui::to_json(v.second)});
     }
-    static std::pair<T1, T2> fromJson(const AJson& json) {
+    static void fromJson(const AJson& json, std::pair<T1, T2>& dst) {
         const auto& array = json.asArray();
-        return { aui::from_json<T1>(array.at(0)), aui::from_json<T2>(array.at(1)) };
+        dst = { aui::from_json<T1>(array.at(0)), aui::from_json<T2>(array.at(1)) };
     }
 };
 
