@@ -156,3 +156,40 @@ TEST_F(SignalSlot, ObjectRemovalMultithread) {
         AThread::processMessages();
     }
 }
+
+
+TEST_F(SignalSlot, ObjectRemovalMultithreadStackObject) {
+
+    repeat(100) {
+
+        class Slave2 : public AObject {
+        public:
+            Slave2(bool& called) : mCalled(called) {}
+
+            void acceptMessage() {
+                mCalled = true;
+            }
+
+        private:
+            bool& mCalled;
+        };
+
+        bool called = false;
+
+        {
+            Slave2 slave2(called);
+
+            AObject::connect(master->message, slot(slave2)::acceptMessage);
+
+            auto task = async {
+                ASSERT_DEATH({master->broadcastMessage("hello");}, "crossthread.*");
+            };
+
+            AThread::processMessages();
+            task.wait();
+
+            // slave will delete here; check for crash
+        }
+        AThread::processMessages();
+    }
+}
