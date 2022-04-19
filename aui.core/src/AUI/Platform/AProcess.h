@@ -37,6 +37,9 @@
 #if AUI_PLATFORM_WIN
 #include <AUI/Platform/win32/WinEventHandle.h>
 #include <windows.h>
+#include "AUI/Platform/win32/WinIoAsync.h"
+#include "Pipe.h"
+
 #endif
 
 class AChildProcess;
@@ -205,25 +208,14 @@ public:
     APath getModuleName() override;
 
     [[nodiscard]]
-    const _<IInputStream>& getStdOutStream() const {
-        return mStdOutStream;
-    }
-
-    [[nodiscard]]
-    const _<IInputStream>& getStdErrStream() const {
-        return mStdErrStream;
-    }
-
-    [[nodiscard]]
     const _<IOutputStream>& getStdInStream() const {
         return mStdInStream;
     }
 
 signals:
     emits<> finished;
-    emits<> readyReadStdOut;
-    emits<> readyReadStdErr;
-
+    emits<AByteBuffer> stdOut;
+    emits<AByteBuffer> stdErr;
 
 private:
     AString mApplicationFile;
@@ -231,14 +223,11 @@ private:
     APath mWorkingDirectory;
 
     _<IOutputStream> mStdInStream;
-    _<IInputStream> mStdOutStream;
-    _<IInputStream> mStdErrStream;
+    WinIoAsync mStdoutAsync;
 
 #if AUI_PLATFORM_WIN
     PROCESS_INFORMATION mProcessInformation;
     WinEventHandle mExitEvent;
-    WinEventHandle mStdOutEvent;
-    WinEventHandle mStdErrEvent;
     std::optional<int> mExitCode;
 #else
     pid_t mPid;

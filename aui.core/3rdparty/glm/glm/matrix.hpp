@@ -93,7 +93,7 @@ namespace detail
 	 /// @{
 
 	 /// Multiply matrix x by matrix y component-wise, i.e.,
-	 /// result[i][j] is the scalar product of x[i][j] and y[i][j].
+	 /// supplyResult[i][j] is the scalar product of x[i][j] and y[i][j].
 	 ///
 	 /// @tparam C Integer between 1 and 4 included that qualify the number a column
 	 /// @tparam R Integer between 1 and 4 included that qualify the number a row

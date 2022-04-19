@@ -25,6 +25,8 @@
 
 #include <AUI/Platform/AProcess.h>
 #include "AUI/IO/AFileOutputStream.h"
+#include "WinIoCompletionPort.h"
+#include "WinIoAsync.h"
 #include <windows.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Logging/ALogger.h>
@@ -154,6 +156,11 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
 
     AString commandLine = "\"" + mApplicationFile + "\" " + mArgs;
 
+    mStdoutAsync.init(pipeStdout.stealOut(), [&](const AByteBuffer& buffer) {
+        if (buffer.size() > 0 && bool(stdOut)) {
+            emit stdOut(buffer);
+        }
+    });
 
     if (!CreateProcess(nullptr,
                        const_cast<wchar_t*>(commandLine.c_str()),
@@ -179,6 +186,9 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         emit finished;
     }, INFINITE, WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
 
+
+
+    /*
     // setup pipe event handlers
     if (mergeStdoutStderr) {
         mStdOutEvent.registerWaitForSingleObject(pipeStdout.out(), [this] {
@@ -192,20 +202,12 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         mStdErrEvent.registerWaitForSingleObject(pipeStderr.out(), [this] {
             emit readyReadStdErr;
         });
-    }
+    }*/
 
     // close subprocess' side of pipes otherwise ReadFile of PipeInputStream would block the thread
     pipeStdout.closeIn();
     pipeStderr.closeIn();
     pipeStdin.closeOut();
-
-    // create std pipes
-    mStdOutStream = _new<PipeInputStream>(std::move(pipeStdout));
-    if (mergeStdoutStderr) {
-        mStdErrStream = mStdOutStream;
-    } else {
-        mStdErrStream = _new<PipeInputStream>(std::move(pipeStderr));
-    }
 
     mStdInStream = _new<PipeOutputStream>(std::move(pipeStdin));
 }

@@ -24,7 +24,7 @@
 ///
 /// @defgroup core_vector_precision Vector types with precision qualifiers
 ///
-/// @brief Vector types with precision qualifiers which may result in various precision in term of ULPs
+/// @brief Vector types with precision qualifiers which may supplyResult in various precision in term of ULPs
 ///
 /// GLSL allows defining qualifiers for particular variables.
 /// With OpenGL's GLSL, these qualifiers have no effect; they are there for compatibility,
@@ -48,7 +48,7 @@
 ///
 /// @defgroup core_matrix_precision Matrix types with precision qualifiers
 ///
-/// @brief Matrix types with precision qualifiers which may result in various precision in term of ULPs
+/// @brief Matrix types with precision qualifiers which may supplyResult in various precision in term of ULPs
 ///
 /// GLSL allows defining qualifiers for particular variables.
 /// With OpenGL's GLSL, these qualifiers have no effect; they are there for compatibility,

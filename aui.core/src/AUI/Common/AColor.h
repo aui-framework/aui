@@ -94,7 +94,7 @@ public:
     /**
      * \brief Multiply all color components except alpha channel (rgb * d, a)
      * \param multiplier
-     * \return result color
+     * \return supplyResult color
      */
     inline AColor mul(float d) {
         return AColor(r * d, g * d, b * d, a);

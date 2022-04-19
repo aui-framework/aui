@@ -39,7 +39,7 @@ namespace glm
 	template<length_t L, typename T, qualifier Q>
 	GLM_FUNC_DECL T distance(vec<L, T, Q> const& p0, vec<L, T, Q> const& p1);
 
-	/// Returns the dot product of x and y, i.e., result = x * y.
+	/// Returns the dot product of x and y, i.e., supplyResult = x * y.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.
 	/// @tparam T Floating-point scalar types.
@@ -59,7 +59,7 @@ namespace glm
 	GLM_FUNC_DECL GLM_CONSTEXPR vec<3, T, Q> cross(vec<3, T, Q> const& x, vec<3, T, Q> const& y);
 
 	/// Returns a vector in the same direction as x but with length of 1.
-	/// According to issue 10 GLSL 1.10 specification, if length(x) == 0 then result is undefined and generate an error.
+	/// According to issue 10 GLSL 1.10 specification, if length(x) == 0 then supplyResult is undefined and generate an error.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.
 	/// @tparam T Floating-point scalar types.
@@ -83,7 +83,7 @@ namespace glm
 		vec<L, T, Q> const& Nref);
 
 	/// For the incident vector I and surface orientation N,
-	/// returns the reflection direction : result = I - 2.0 * dot(N, I) * N.
+	/// returns the reflection direction : supplyResult = I - 2.0 * dot(N, I) * N.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.
 	/// @tparam T Floating-point scalar types.

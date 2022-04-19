@@ -28,6 +28,7 @@
 
 class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
+class API_AUI_CORE AByteBufferView;
 
 class API_AUI_CORE AString: std::wstring
 {
@@ -292,7 +293,7 @@ public:
 	}
 
 	static AString fromLatin1(const AByteBuffer& buffer);
-	static AString fromUtf8(const AByteBuffer& buffer);
+	static AString fromUtf8(const AByteBufferView& buffer);
 	static AString fromUtf8(const char* buffer, size_t length);
 	static AString fromLatin1(const char* buffer);
 

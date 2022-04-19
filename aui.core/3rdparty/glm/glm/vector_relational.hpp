@@ -27,7 +27,7 @@ namespace glm
 	/// @addtogroup core_func_vector_relational
 	/// @{
 
-	/// Returns the component-wise comparison result of x < y.
+	/// Returns the component-wise comparison supplyResult of x < y.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.
 	/// @tparam T A floating-point or integer scalar type.
@@ -37,7 +37,7 @@ namespace glm
 	template<length_t L, typename T, qualifier Q>
 	GLM_FUNC_DECL GLM_CONSTEXPR vec<L, bool, Q> lessThan(vec<L, T, Q> const& x, vec<L, T, Q> const& y);
 
-	/// Returns the component-wise comparison of result x <= y.
+	/// Returns the component-wise comparison of supplyResult x <= y.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.
 	/// @tparam T A floating-point or integer scalar type.
@@ -47,7 +47,7 @@ namespace glm
 	template<length_t L, typename T, qualifier Q>
 	GLM_FUNC_DECL GLM_CONSTEXPR vec<L, bool, Q> lessThanEqual(vec<L, T, Q> const& x, vec<L, T, Q> const& y);
 
-	/// Returns the component-wise comparison of result x > y.
+	/// Returns the component-wise comparison of supplyResult x > y.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.
 	/// @tparam T A floating-point or integer scalar type.
@@ -57,7 +57,7 @@ namespace glm
 	template<length_t L, typename T, qualifier Q>
 	GLM_FUNC_DECL GLM_CONSTEXPR vec<L, bool, Q> greaterThan(vec<L, T, Q> const& x, vec<L, T, Q> const& y);
 
-	/// Returns the component-wise comparison of result x >= y.
+	/// Returns the component-wise comparison of supplyResult x >= y.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.
 	/// @tparam T A floating-point or integer scalar type.
@@ -67,7 +67,7 @@ namespace glm
 	template<length_t L, typename T, qualifier Q>
 	GLM_FUNC_DECL GLM_CONSTEXPR vec<L, bool, Q> greaterThanEqual(vec<L, T, Q> const& x, vec<L, T, Q> const& y);
 
-	/// Returns the component-wise comparison of result x == y.
+	/// Returns the component-wise comparison of supplyResult x == y.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.
 	/// @tparam T A floating-point, integer or bool scalar type.
@@ -77,7 +77,7 @@ namespace glm
 	template<length_t L, typename T, qualifier Q>
 	GLM_FUNC_DECL GLM_CONSTEXPR vec<L, bool, Q> equal(vec<L, T, Q> const& x, vec<L, T, Q> const& y);
 
-	/// Returns the component-wise comparison of result x != y.
+	/// Returns the component-wise comparison of supplyResult x != y.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.
 	/// @tparam T A floating-point, integer or bool scalar type.

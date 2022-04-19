@@ -127,10 +127,10 @@ public:
                            inner = nullptr;
                            if constexpr(std::is_same_v<Value, void>) {
                                func();
-                               nullsafe(innerWeak.lock())->result();
+                               nullsafe(innerWeak.lock())->supplyResult();
                            } else {
                                auto result = func();
-                               nullsafe(innerWeak.lock())->result(std::move(result));
+                               nullsafe(innerWeak.lock())->supplyResult(std::move(result));
                            }
                        } catch (const AException& e) {
                            nullsafe(innerWeak.lock())->reportException(e);
