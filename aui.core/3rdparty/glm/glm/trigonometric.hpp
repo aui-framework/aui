@@ -7,7 +7,7 @@
 /// @ingroup core
 ///
 /// Function parameters specified as angle are assumed to be in units of radians.
-/// In no case will any of these functions result in a divide by zero error. If
+/// In no case will any of these functions supplyResult in a divide by zero error. If
 /// the divisor of a ratio is 0, then results will be undefined.
 ///
 /// These all operate component-wise. The description is per component.
@@ -26,7 +26,7 @@ namespace glm
 	/// @addtogroup core_func_trigonometric
 	/// @{
 
-	/// Converts degrees to radians and returns the result.
+	/// Converts degrees to radians and returns the supplyResult.
 	///
 	/// @tparam L Integer between 1 and 4 included that qualify the dimension of the vector
 	/// @tparam T Floating-point scalar types
@@ -37,7 +37,7 @@ namespace glm
 	template<length_t L, typename T, qualifier Q>
 	GLM_FUNC_DECL GLM_CONSTEXPR vec<L, T, Q> radians(vec<L, T, Q> const& degrees);
 
-	/// Converts radians to degrees and returns the result.
+	/// Converts radians to degrees and returns the supplyResult.
 	///
 	/// @tparam L Integer between 1 and 4 included that qualify the dimension of the vector
 	/// @tparam T Floating-point scalar types

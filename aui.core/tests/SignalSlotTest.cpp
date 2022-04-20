@@ -156,3 +156,4 @@ TEST_F(SignalSlot, ObjectRemovalMultithread) {
         AThread::processMessages();
     }
 }
+

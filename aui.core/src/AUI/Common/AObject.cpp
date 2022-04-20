@@ -54,4 +54,3 @@ void AObject::clearSignals()
 bool& AObject::isDisconnected() {
     return gIsDisconnected;
 }
-

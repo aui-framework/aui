@@ -28,6 +28,7 @@
 #include "AUI/Platform/Pipe.h"
 #include "AUI/Platform/PipeInputStream.h"
 #include "AUI/Platform/PipeOutputStream.h"
+#include "UnixIoThread.h"
 
 #include <unistd.h>
 #include <sys/types.h>
@@ -150,14 +151,11 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     } else {
         // we are in old process
         ALOG_DEBUG("AProcess") << "Started new process: " << pid;
-        std::unique_lock lock(mExitMutex);
 
         mWatchdog = _new<AThread>([&] {
-            std::unique_lock lock(mExitMutex);
             int loc;
             waitpid(mPid, &loc, 0);
-            mExitCode = WEXITSTATUS(loc);
-            mExitCV.notify_all();
+            mExitCode.supplyResult(WEXITSTATUS(loc));
             emit finished;
         });
         mWatchdog->start();
@@ -167,13 +165,9 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         pipeStdout.closeIn();
         pipeStderr.closeIn();
 
-        // create std pipes
-        mStdOutStream = _new<PipeInputStream>(std::move(pipeStdout));
-        if (mergeStdoutStderr) {
-            mStdErrStream = mStdOutStream;
-        } else {
-            mStdErrStream = _new<PipeInputStream>(std::move(pipeStderr));
-        }
+        mStdoutAsync.init(pipeStdout.stealOut(), [&](const AByteBuffer& b) {
+            if (stdOut && b.size() > 0) emit stdOut(b);
+        });
 
         mStdInStream = _new<PipeOutputStream>(std::move(pipeStdin));
     }
@@ -184,10 +178,6 @@ AChildProcess::~AChildProcess() {
 }
 
 int AChildProcess::waitForExitCode() {
-   std::unique_lock lock(mExitMutex);
-   while (!mExitCode) {
-       mExitCV.wait(lock);
-   }
    return *mExitCode;
 }
 

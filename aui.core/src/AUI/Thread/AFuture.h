@@ -95,6 +95,11 @@ private:
             return value || exception || interrupted;
         }
 
+        [[nodiscard]]
+        bool hasValue() const noexcept {
+            return bool(value);
+        }
+
         bool setThread(_<AAbstractThread> thr) noexcept {
             std::unique_lock lock(mutex);
             if (cancelled) return true;
@@ -119,7 +124,7 @@ private:
             }
         }
 
-        void result(Value v) noexcept {
+        void supplyResult(Value v) noexcept {
             std::unique_lock lock(mutex);
             value = std::move(v);
             cv.notify_all();
@@ -147,8 +152,24 @@ public:
     AFuture() noexcept: mInner(_new<aui::impl::CancellationWrapper<Inner>>(aui::ptr::manage(new Inner))) {}
 
 
-    void result(Value v) noexcept {
-        (*mInner)->result(std::move(v));
+    /**
+     * @return true if the value or exception or interruption received.
+     */
+    [[nodiscard]]
+    bool hasResult() const noexcept {
+        return (*mInner)->hasResult();
+    }
+
+    /**
+     * @return true if the value can be obtained without waiting.
+     */
+    [[nodiscard]]
+    bool hasValue() const noexcept {
+        return (*mInner)->hasValue();
+    }
+
+    void supplyResult(Value v) noexcept {
+        (*mInner)->supplyResult(std::move(v));
     }
 
     void reportException(const AException& e) noexcept {
@@ -183,7 +204,7 @@ public:
     }
 
     /**
-     * Returns the result from the another thread. Sleeps if the result is not currently available.
+     * Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
      * <dl>
      *   <dt><b>Sneaky exceptions</b></dt>
      *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -197,7 +218,7 @@ public:
     }
 
     /**
-     * Returns the result from the another thread. Sleeps if the result is not currently available.
+     * Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
      * <dl>
      *   <dt><b>Sneaky exceptions</b></dt>
      *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -209,7 +230,7 @@ public:
     }
 
     /**
-     * Returns the result from the another thread. Sleeps if the result is not currently available.
+     * Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
      * <dl>
      *   <dt><b>Sneaky exceptions</b></dt>
      *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -221,7 +242,7 @@ public:
     }
 
     /**
-     * Returns the result from the another thread. Sleeps if the result is not currently available.
+     * Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
      * <dl>
      *   <dt><b>Sneaky exceptions</b></dt>
      *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -270,7 +291,7 @@ private:
         }
 
         /**
-         * Whats for result or cancellation or interruption or exception.
+         * Whats for supplyResult or cancellation or interruption or exception.
          */
         void wait() noexcept {
             std::unique_lock lock(mutex);
@@ -295,7 +316,7 @@ private:
             }
         }
 
-        void result() noexcept {
+        void supplyResult() noexcept {
             std::unique_lock lock(mutex);
             value = true;
             cv.notify_all();
@@ -321,8 +342,8 @@ public:
     AFuture() noexcept: mInner(_new<aui::impl::CancellationWrapper<Inner>>(aui::ptr::manage(new Inner))) {}
 
 
-    void result() noexcept {
-        (*mInner)->result();
+    void supplyResult() noexcept {
+        (*mInner)->supplyResult();
     }
 
     /**
@@ -343,7 +364,7 @@ public:
     }
 
     /**
-     * Whats for result or cancellation or interruption or exception.
+     * Whats for supplyResult or cancellation or interruption or exception.
      */
     void wait() const noexcept {
         (*mInner)->wait();
@@ -379,7 +400,7 @@ public:
     }
 
     /**
-     * Sleeps if the result is not currently available.
+     * Sleeps if the supplyResult is not currently available.
      * <dl>
      *   <dt><b>Sneaky exceptions</b></dt>
      *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>

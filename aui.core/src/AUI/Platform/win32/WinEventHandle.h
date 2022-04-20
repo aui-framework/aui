@@ -16,7 +16,8 @@ public:
     WinEventHandle() noexcept = default;
     ~WinEventHandle() {
         if (mNewWaitObject != nullptr) {
-            UnregisterWait(mNewWaitObject);
+            auto r = UnregisterWaitEx(mNewWaitObject, INVALID_HANDLE_VALUE);
+            assert(r != 0);
         }
     }
 
@@ -26,7 +27,8 @@ public:
         mCallback = std::move(callback);
 
         auto r = RegisterWaitForSingleObject(&mNewWaitObject, baseHandle, [](PVOID context, BOOLEAN){
-            reinterpret_cast<WinEventHandle*>(context)->mCallback();
+            auto self = reinterpret_cast<WinEventHandle*>(context);
+            self->mCallback();
         }, this, timeout, flags);
         assert(r != 0);
     }

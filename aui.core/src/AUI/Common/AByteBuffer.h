@@ -178,21 +178,28 @@ public:
     /**
      * \return size of payload (valid data)
      */
-    size_t getSize() const {
+    size_t getSize() const noexcept {
         return mSize;
     }
 
     /**
      * \return size of payload (valid data)
      */
-    size_t size() const {
+    size_t size() const noexcept {
         return mSize;
+    }
+
+    /**
+     * \return size of whole buffer (including possibly invalid data)
+     */
+    size_t capacity() const noexcept {
+        return mCapacity;
     }
 
     /**
      * \return size of internal buffer. Must be greater that getSize()
      */
-    size_t getReserved() const {
+    size_t getReserved() const noexcept {
         return mCapacity;
     }
 

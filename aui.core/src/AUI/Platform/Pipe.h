@@ -22,10 +22,18 @@ public:
 #endif
 
     Pipe();
-    Pipe(Pipe&& rhs) noexcept: mIn(rhs.mIn), mOut(rhs.mOut) {
-        rhs.mIn = rhs.mOut = static_cast<pipe_t>(0);
+    Pipe(Pipe&& rhs) noexcept {
+        operator=(std::move(rhs));
     }
     ~Pipe();
+
+    Pipe& operator=(Pipe&& rhs) noexcept {
+        mIn = rhs.mIn;
+        mOut = rhs.mOut;
+        rhs.mIn = rhs.mOut = static_cast<pipe_t>(0);
+        return *this;
+    }
+
 
     [[nodiscard]]
     pipe_t in() const noexcept {
@@ -39,6 +47,20 @@ public:
 
     void closeIn() noexcept;
     void closeOut() noexcept;
+
+    [[nodiscard]]
+    pipe_t stealIn() noexcept {
+        auto copy = mIn;
+        mIn = 0;
+        return copy;
+    }
+
+    [[nodiscard]]
+    pipe_t stealOut() noexcept {
+        auto copy = mOut;
+        mOut = 0;
+        return copy;
+    }
 
 private:
     pipe_t mOut;

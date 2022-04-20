@@ -150,7 +150,7 @@ namespace glm
 	/// Returns an unsigned integer obtained by converting the components of a two-component floating-point vector
 	/// to the 16-bit floating-point representation found in the OpenGL Specification,
 	/// and then packing these two 16- bit integers into a 32-bit unsigned integer.
-	/// The first vector component specifies the 16 least-significant bits of the result;
+	/// The first vector component specifies the 16 least-significant bits of the supplyResult;
 	/// the second component specifies the 16 most-significant bits.
 	///
 	/// @see <a href="http://www.opengl.org/sdk/docs/manglsl/xhtml/packHalf2x16.xml">GLSL packHalf2x16 man page</a>

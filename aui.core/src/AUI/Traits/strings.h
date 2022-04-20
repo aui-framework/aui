@@ -142,7 +142,7 @@ namespace aui {
         size_t bufferLength = format.length() + detail::format::format_length(std::forward<Args>(args)...) + 100;
         result.reserve(bufferLength);
 
-        bool ignoreCurledBrackets = false;
+        bool backslashEscaping = false;
 
         size_t parameterIndex = 0;
 
@@ -150,8 +150,8 @@ namespace aui {
             wchar_t c = *i;
             switch (c) {
                 case '{':
-                    if (ignoreCurledBrackets) {
-                        ignoreCurledBrackets = false;
+                    if (backslashEscaping) {
+                        backslashEscaping = false;
                     } else {
                         // inside {} format but it's not supported :)
                         c = *(++i);
@@ -161,10 +161,20 @@ namespace aui {
                         break;
                     }
                 default:
+                    if (backslashEscaping) {
+                        result += '\\';
+                    }
                     result += c;
+                    backslashEscaping = false;
                     break;
                 case '\\':
-                    ignoreCurledBrackets = true;
+                    if (backslashEscaping) {
+                        result += '\\';
+                        result += '\\';
+                        backslashEscaping = false;
+                    } else {
+                        backslashEscaping = true;
+                    }
                     break;
             }
         }

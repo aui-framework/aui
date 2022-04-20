@@ -53,15 +53,22 @@ TEST_F(Process, Self) {
     EXPECT_TRUE(mSelf.isAbsolute());
     EXPECT_TRUE(mSelf.isRegularFileExists());
 }
-/*
+
 TEST_F(Process, ExitCode) {
     EXPECT_EQ(AProcess::executeWaitForExit(mSelf, "--help"), 0);
 }
 
 TEST_F(Process, Stdout) {
     auto p = AProcess::make(mSelf, "--help");
+
+    AString accumulator;
+    AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) {
+        accumulator += AString::fromUtf8(buffer);
+    });
     p->run();
-    EXPECT_TRUE(AString::fromUtf8(AByteBuffer::fromStream(p->getStdOutStream())).contains("This program contains tests written using Google Test."));
+    p->waitForExitCode();
+    AThread::processMessages();
+    EXPECT_TRUE(accumulator.contains("This program contains tests written using Google Test."));
 }
 
 class ProcessSignalReceiver: public AObject {
@@ -77,8 +84,11 @@ TEST_F(Process, FinishedSignal) {
     p->run();
     p->waitForExitCode();
 
-    receiver = nullptr; // gmock wants object to be removed
+    AThread::sleep(500);
+
     AThread::processMessages();
+
+    receiver = nullptr; // gmock wants object to be removed
 }
 
 
@@ -86,12 +96,14 @@ TEST_F(Process, StdoutSignal) {
     auto receiver = _new<ProcessSignalReceiver>();
     EXPECT_CALL(*receiver, slotMock()).Times(testing::AtLeast(1));
     auto p = AProcess::make(mSelf, "--help");
-    AObject::connect(p->readyReadStdOut, slot(receiver)::slotMock);
+    AObject::connect(p->stdOut, slot(receiver)::slotMock);
     p->run();
     p->waitForExitCode();
 
-    receiver = nullptr; // gmock wants object to be removed
+    AThread::sleep(500);
+
     AThread::processMessages();
+
+    receiver = nullptr; // gmock wants object to be removed
 }
 
-*/

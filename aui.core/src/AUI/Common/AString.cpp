@@ -69,8 +69,8 @@ AString::AString(const std::string& str) noexcept
     fromUtf8_impl(*this, str.c_str(), str.length());
 }
 
-AString AString::fromUtf8(const AByteBuffer& buffer) {
-    return AString::fromUtf8(buffer.data(), buffer.getSize());
+AString AString::fromUtf8(const AByteBufferView& buffer) {
+    return AString::fromUtf8(buffer.data(), buffer.size());
 }
 
 AString AString::fromUtf8(const char* buffer, size_t length) {

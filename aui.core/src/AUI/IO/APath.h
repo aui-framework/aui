@@ -331,7 +331,7 @@ public:
      * AString filename = "file.txt";
      * APath path = "path" / "to" / "your" / filename;
      * @endcode
-     * Which would result into "path/to/your/file.txt"
+     * Which would supplyResult into "path/to/your/file.txt"
      * @return path to child file relatively to this folder
      */
     [[nodiscard]]
