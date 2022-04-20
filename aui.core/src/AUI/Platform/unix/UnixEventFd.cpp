@@ -4,6 +4,7 @@
 
 #include "UnixEventFd.h"
 #include <sys/eventfd.h>
+#include <unistd.h>
 #include <csignal>
 #include <cstdint>
 
