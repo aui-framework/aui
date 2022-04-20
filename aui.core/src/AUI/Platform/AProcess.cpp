@@ -26,10 +26,8 @@
 #include "AProcess.h"
 #include "AUI/IO/AFileOutputStream.h"
 
-#include <windows.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Logging/ALogger.h>
-#include <psapi.h>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include "AProcess.h"

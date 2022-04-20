@@ -61,7 +61,7 @@ private:
     void nextRead() {
         if (!ReadFileEx(mFileHandle,
                         mBuffer.data(),
-                        mBuffer.size(),
+                        mBuffer.capacity(),
                         &mOverlapped,
                         [](DWORD dwErrorCode, DWORD bytesTransferred, LPOVERLAPPED overlapped) {
                             reinterpret_cast<WinIoAsync::Impl*>(overlapped->Pointer)->handleCallback(dwErrorCode, bytesTransferred);

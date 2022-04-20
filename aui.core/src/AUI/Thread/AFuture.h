@@ -95,6 +95,11 @@ private:
             return value || exception || interrupted;
         }
 
+        [[nodiscard]]
+        bool hasValue() const noexcept {
+            return bool(value);
+        }
+
         bool setThread(_<AAbstractThread> thr) noexcept {
             std::unique_lock lock(mutex);
             if (cancelled) return true;
@@ -146,6 +151,22 @@ private:
 public:
     AFuture() noexcept: mInner(_new<aui::impl::CancellationWrapper<Inner>>(aui::ptr::manage(new Inner))) {}
 
+
+    /**
+     * @return true if the value or exception or interruption received.
+     */
+    [[nodiscard]]
+    bool hasResult() const noexcept {
+        return (*mInner)->hasResult();
+    }
+
+    /**
+     * @return true if the value can be obtained without waiting.
+     */
+    [[nodiscard]]
+    bool hasValue() const noexcept {
+        return (*mInner)->hasValue();
+    }
 
     void supplyResult(Value v) noexcept {
         (*mInner)->supplyResult(std::move(v));

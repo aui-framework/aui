@@ -33,13 +33,15 @@
 #include <AUI/Common/ASignal.h>
 #include <AUI/IO/IInputStream.h>
 #include <AUI/IO/IOutputStream.h>
+#include <AUI/Thread/AFuture.h>
 
 #if AUI_PLATFORM_WIN
 #include <AUI/Platform/win32/WinEventHandle.h>
+#include <AUI/Platform/win32/WinIoAsync.h>
 #include <windows.h>
-#include "AUI/Platform/win32/WinIoAsync.h"
 #include "Pipe.h"
-
+#else
+#include "AUI/Platform/unix/UnixIoAsync.h"
 #endif
 
 class AChildProcess;
@@ -184,12 +186,15 @@ public:
 
     [[nodiscard]]
     std::optional<int> exitCodeNonBlocking() const noexcept {
-        return mExitCode;
+        if (mExitCode.hasValue()) {
+            return *mExitCode;
+        }
+        return std::nullopt;
     }
 
     [[nodiscard]]
     bool isFinished() const noexcept {
-        return mExitCode.has_value();
+        return mExitCode.hasValue();
     }
 
     /**
@@ -223,18 +228,16 @@ private:
     APath mWorkingDirectory;
 
     _<IOutputStream> mStdInStream;
-    WinIoAsync mStdoutAsync;
 
+    AFuture<int> mExitCode;
 #if AUI_PLATFORM_WIN
     PROCESS_INFORMATION mProcessInformation;
     WinEventHandle mExitEvent;
-    std::optional<int> mExitCode;
+    WinIoAsync mStdoutAsync;
 #else
     pid_t mPid;
-    AMutex mExitMutex;
-    AConditionVariable mExitCV;
-    std::optional<int> mExitCode;
     _<AThread> mWatchdog;
+    UnixIoAsync mStdoutAsync;
 #endif
 };
 
