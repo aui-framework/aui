@@ -194,12 +194,6 @@ function(auib_import AUI_MODULE_NAME URL)
         set(TAG_OR_HASH ${AUIB_IMPORT_VERSION})
     endif()
 
-    # should restrict version length; on windows msvc path length restricted by 260 chars
-    string(LENGTH ${TAG_OR_HASH} _length)
-    if (_length GREATER 16)
-        string(SUBSTRING ${TAG_OR_HASH} 0 16 TAG_OR_HASH)
-    endif()
-
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE Debug)
     endif()
@@ -214,6 +208,10 @@ function(auib_import AUI_MODULE_NAME URL)
         set(SHARED_OR_STATIC static)
     endif()
     set(BUILD_SPECIFIER "${AUI_MODULE_NAME_LOWER}/${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}")
+
+    # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
+    string(MD5 BUILD_SPECIFIER ${BUILD_SPECIFIER})
+
     set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
 
     # append our location to module path
@@ -376,13 +374,13 @@ function(auib_import AUI_MODULE_NAME URL)
 
             if(MSVC)
                 # force msvc compiler to parallel build
-                list(APPEND CMAKE_C_FLAGS "/MP")
-                list(APPEND CMAKE_CXX_FLAGS "/MP")
+                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
+                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
             endif()
 
             if (IOS)
                 # fix multiple definitions on ios
-                list(APPEND CMAKE_C_FLAGS "-Wno-error-implicit-function-declaration")
+                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error-implicit-function-declaration")
             endif()
 
             # forward all necessary variables to child cmake build
@@ -452,7 +450,7 @@ function(auib_import AUI_MODULE_NAME URL)
             message(STATUS "Installing ${AUI_MODULE_NAME}")
             execute_process(COMMAND
                     ${CMAKE_COMMAND}
-                    --install
+                    --install .
                     --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
