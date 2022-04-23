@@ -374,8 +374,22 @@ function(auib_import AUI_MODULE_NAME URL)
             endif()
 
 
+            if(MSVC)
+                # force msvc compiler to parallel build
+                list(APPEND CMAKE_C_FLAGS "/MP")
+                list(APPEND CMAKE_CXX_FLAGS "/MP")
+            endif()
+
+            if (IOS)
+                # fix multiple definitions on ios
+                list(APPEND CMAKE_C_FLAGS "-Wno-error-implicit-function-declaration")
+            endif()
+
             # forward all necessary variables to child cmake build
             foreach(_varname
+                    AUI_CACHE_DIR
+                    CMAKE_C_FLAGS
+                    CMAKE_CXX_FLAGS
                     CMAKE_GENERATOR_PLATFORM
                     CMAKE_VS_PLATFORM_NAME
                     CMAKE_BUILD_TYPE
@@ -404,17 +418,14 @@ function(auib_import AUI_MODULE_NAME URL)
                 list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_TOOLCHAIN_FILE=${_toolchain}")
             endif()
             list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
-            if (IOS)
-                list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_C_FLAGS=-Wno-error-implicit-function-declaration")
-            endif()
 
-            message("Building and installing ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
+            message("Configuring CMake ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
             execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                     RESULT_VARIABLE STATUS_CODE)
 
             if (NOT STATUS_CODE EQUAL 0)
-                message(STATUS "CMake configure failed, clearing dir and trying again...")
+                message(STATUS "Dependency CMake configure failed, clearing dir and trying again...")
                 file(REMOVE_RECURSE ${DEP_BINARY_DIR})
                 file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
                 execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
@@ -425,11 +436,23 @@ function(auib_import AUI_MODULE_NAME URL)
                 endif()
             endif()
 
-            message(STATUS "Installing ${AUI_MODULE_NAME}")
+            message(STATUS "Building ${AUI_MODULE_NAME}")
             execute_process(COMMAND
                     ${CMAKE_COMMAND}
                     --build ${DEP_BINARY_DIR} --parallel
-                    --target install
+                    --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
+
+                    WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                    RESULT_VARIABLE ERROR_CODE)
+
+            if (NOT STATUS_CODE EQUAL 0)
+                message(FATAL_ERROR "Dependency build failed: ${AUI_MODULE_NAME}")
+            endif()
+
+            message(STATUS "Installing ${AUI_MODULE_NAME}")
+            execute_process(COMMAND
+                    ${CMAKE_COMMAND}
+                    --install
                     --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
