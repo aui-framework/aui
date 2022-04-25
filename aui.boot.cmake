@@ -194,6 +194,12 @@ function(auib_import AUI_MODULE_NAME URL)
         set(TAG_OR_HASH ${AUIB_IMPORT_VERSION})
     endif()
 
+    # should restrict version length; in order to make equal "f116a123b9b44f362c96632ad5cec980aab8b46c" and "f116a123"
+    string(LENGTH ${TAG_OR_HASH} _length)
+    if (_length GREATER 16)
+        string(SUBSTRING ${TAG_OR_HASH} 0 7 TAG_OR_HASH)
+    endif()
+
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE Debug)
     endif()
@@ -303,7 +309,7 @@ function(auib_import AUI_MODULE_NAME URL)
             set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
                     BINARY_DIR ${DEP_BINARY_DIR})
         endif()
-        message(STATUS "Fetching ${AUI_MODULE_NAME}")
+        message(STATUS "Fetching ${AUI_MODULE_NAME} (${TAG_OR_HASH})")
 
         file(REMOVE_RECURSE ${DEP_SOURCE_DIR} ${DEP_BINARY_DIR})
 
