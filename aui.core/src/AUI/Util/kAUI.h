@@ -84,7 +84,7 @@
  * });<br />
  * </code>
  */
-#define apply(object, lambda)                                                  \
+#define perform_as_member(object, lambda)                                                  \
     struct __apply ## __FUNCTION__ ## __LINE__   : std::decay_t<decltype(object)>::stored_t { \
         void operator()() {                                                    \
             lambda;                                                            \
