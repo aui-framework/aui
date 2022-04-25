@@ -57,7 +57,7 @@ AWindow::~AWindow() {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(shared_from_this());
+    getWindowManager().mWindows.removeFirst(_cast<AWindow>(objectSharedPtr()));
 
     XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
 
@@ -253,17 +253,20 @@ void AWindow::flagRedraw() {
     mRedrawFlag = true;
 }
 void AWindow::show() {
-    if (!getWindowManager().mWindows.contains(shared_from_this())) {
-        getWindowManager().mWindows << shared_from_this();
+    if (!getWindowManager().mWindows.contains(_cast<AWindow>(objectSharedPtr()))) {
+        getWindowManager().mWindows << _cast<AWindow>(objectSharedPtr());
     }
     try {
-        mSelfHolder = shared_from_this();
+        mSelfHolder = _cast<AWindow>(objectSharedPtr());
     } catch (...) {
         mSelfHolder = nullptr;
     }
     AThread::current() << [&]() {
         redraw();
     };
+    if (bool(CommonRenderingContext::ourDisplay) && mHandle) {
+        XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
+    }
 
     emit shown();
 }
@@ -409,7 +412,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     KeySym keysym = 0;
                     char buf[0x20];
                     Status status = 0;
-                    count = Xutf8LookupString(window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
+                    count = Xutf8LookupString((XIC)window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
                                               &status);
 
                     // delete key
@@ -569,7 +572,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
             std::unique_lock lock(mXNotifyLock);
             mXNotifyCV.wait_for(lock, std::chrono::microseconds(500));
         }
-        AThread::current()->processMessages();
+        AThread::processMessages();
         if (AWindow::isRedrawWillBeEfficient()) {
             for (auto &window : mWindows) {
                 if (window->mRedrawFlag) {

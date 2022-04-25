@@ -44,6 +44,21 @@
  */
 #define me this, &std::remove_reference_t<decltype(*this)>
 
+namespace aui::impl::slot {
+    template<typename T>
+    struct decode_type {
+        using type = T;
+    };
+
+    template<typename T>
+    struct decode_type<_<T>> {
+        using type = T;
+    };
+
+    template<typename T>
+    using decode_type_t = typename decode_type<T>::type;
+}
+
 /**
  * \brief Passes some variable and type of the variable separated by comma. It's convenient to use with the connect
  *        function:
@@ -60,7 +75,7 @@
   *}
  * </code>
  */
-#define slot(v) v, &std::decay_t<decltype(v)>::stored_t
+#define slot(v) v, &aui::impl::slot::decode_type_t<std::decay_t<decltype(v)>>
 
 /**
  * \brief Performs multiple operations on a single object without repeating its name.
@@ -77,7 +92,7 @@
  * };<br />
  * ...<br />
  * auto worker = _new&lt;Worker&gt;();<br />
- * apply(worker, {<br />
+ * perform_as_member(worker, {<br />
  * &#09;buildHouse();<br />
  * &#09;plantTree();<br />
  * &#09;raiseSon();<br />

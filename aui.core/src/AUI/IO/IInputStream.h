@@ -21,12 +21,12 @@
 
 #pragma once
 #include "AEOFException.h"
-
+#include <AUI/Traits/values.h>
 #include <glm/glm.hpp>
 
 class IOutputStream;
 
-class IInputStream
+class IInputStream: public aui::noncopyable
 {
 public:
     virtual ~IInputStream() = default;

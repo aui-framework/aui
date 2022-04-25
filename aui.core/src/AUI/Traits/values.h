@@ -30,6 +30,26 @@
 
 namespace aui {
     /**
+     * @brief Forbids copy of your class.
+     *
+     * @code{cpp}
+     * class MyObject: public aui::noncopyable {
+     * private:
+     *     void* mResource;
+     * }
+     * ...
+     * MyObject obj1;
+     * MyObject obj2 = obj1; // error
+     * MyObject obj3 = std::move(obj); // but this one is ok
+     * @endcode
+     */
+    struct noncopyable {
+        noncopyable() = default;
+        noncopyable(const noncopyable&) = delete;
+    };
+
+
+    /**
      * Null-checking wrapper when usage of null is fatal.
      * @tparam T any pointer or pointer-like type
      */
@@ -44,7 +64,7 @@ namespace aui {
         template<typename AnyType>
         operator AnyType() noexcept {
             assert(("value is used when null" && mValue != nullptr));
-            return reinterpret_cast<AnyType>(mValue);
+            return AnyType(mValue);
         }
 
         template<typename AnyType>
@@ -73,7 +93,7 @@ namespace aui {
             checkForNull();
         }
 
-        operator T() {
+        operator T() const noexcept {
             checkForNull();
             return value;
         }
@@ -89,9 +109,13 @@ namespace aui {
     };
 
     /**
-     * @brief intended to use in function arguments. Promises that the contained object wouldn't be copied/moved outside
-     *        of the function thus does not take responsibility of deleting the object. This allows to accept both
-     *        lvalue and rvalue references, pointers, unique_ptr and shared_ptr without ref counter modification.
+     * @brief Does not allow escaping, allowing to accept lvalue ref, rvalue ref, shared_ptr and etc without overhead
+     *
+     *        Promises that the contained object wouldn't be copied/moved outside of the function thus does not take
+     *        responsibility of deleting the object. This allows to accept lvalue and rvalue references, pointers,
+     *        unique_ptr and shared_ptr without ref counter modification.
+     *
+     *        Intended to use in function arguments.
      *
      *        Accepts lvalue ref, rvalue ref, ptr and shared_ptr. Does not accepts null.
      *
@@ -104,9 +128,6 @@ namespace aui {
     private:
         T* value;
 
-        void checkNull() {
-            assert(("uref could not be null", value != nullptr));
-        }
     public:
         no_escape(T& value): value(&value) {}
         no_escape(T&& value): value(&value) {}

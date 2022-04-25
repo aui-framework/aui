@@ -24,7 +24,7 @@
 #include <AUI/Core.h>
 #include <vector>
 #include <cassert>
-#include "SharedPtr.h"
+#include "SharedPtrTypes.h"
 #include <algorithm>
 #include <ostream>
 #include "ASet.h"
@@ -246,6 +246,14 @@ public:
 
     ASet<StoredType> toSet() const noexcept {
         return ASet<StoredType>(p::begin(), p::end());
+    }
+
+    template<typename UnaryOperation>
+    auto map(UnaryOperation&& transformer) const -> AVector<decltype(transformer(std::declval<StoredType>()))> {
+        AVector<decltype(transformer(std::declval<StoredType>()))> result;
+        result.reserve(p::size());
+        std::transform(p::begin(), p::end(), std::back_inserter(result), std::forward<UnaryOperation>(transformer));
+        return result;
     }
 };
 

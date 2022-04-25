@@ -12,7 +12,7 @@ ASoftwareEmbedAuiWrap::ASoftwareEmbedAuiWrap() {
 
 AImage ASoftwareEmbedAuiWrap::render() {
     windowMakeCurrent();
-    AThread::current()->processMessages();
+    AThread::processMessages();
     windowRender();
     return mContext->makeScreenshot();
 }

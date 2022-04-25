@@ -28,6 +28,9 @@ define_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS
 define_property(GLOBAL PROPERTY TESTS_DEPS
         BRIEF_DOCS "Global list of test dependencies"
         FULL_DOCS "Global list of test dependencies")
+define_property(GLOBAL PROPERTY TESTS_EXECUTABLES
+        BRIEF_DOCS "Global list of test executables"
+        FULL_DOCS "Global list of test executables")
 
 define_property(TARGET PROPERTY INTERFACE_AUI_WHOLEARCHIVE
         BRIEF_DOCS "Use wholearchive when linking this library to another"
@@ -53,7 +56,7 @@ set(BUILD_SHARED_LIBS ${_build_shared} CACHE BOOL "Build using shared libraries"
 
 # platform definitions
 # platform exclusion (AUI/Platform/<platform name>/...)
-set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios apple)
+set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios apple unix)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(AUI_DEBUG TRUE)
 else()
@@ -103,6 +106,7 @@ endif()
 
 if (UNIX)
     set(AUI_PLATFORM_UNIX 1 CACHE BOOL "Platform")
+    list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS unix)
 else()
     set(AUI_PLATFORM_UNIX 0 CACHE BOOL "Platform")
 endif()
@@ -163,9 +167,10 @@ endfunction(aui_add_properties)
 macro(_aui_import_gtest)
     if(NOT TARGET GTest::gtest)
         auib_import(GTest https://github.com/google/googletest
-                VERSION main
+                VERSION release-1.11.0
                 CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
+        set_property(TARGET GTest::gmock PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
 endmacro()
 
@@ -178,22 +183,25 @@ macro(aui_enable_tests)
     enable_testing()
     if (NOT ANDROID AND NOT IOS)
         get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
+
         if (NOT TARGET Tests)
             set(TESTS_MODULE_NAME Tests)
 
             file(WRITE ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp [[
-#include <gtest/gtest.h>
+#include <gmock/gmock.h>
 int main(int argc, char **argv) {
-  ::testing::InitGoogleTest(&argc, argv);
-  return RUN_ALL_TESTS();
+    // Since Google Mock depends on Google Test, InitGoogleMock() is
+    // also responsible for initializing Google Test.  Therefore there's
+    testing::InitGoogleMock(&argc, argv);
+    return RUN_ALL_TESTS();
 }]])
             add_executable(${TESTS_MODULE_NAME} ${TESTS_SRCS} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
             include(GoogleTest)
             gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
             set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
             target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
-            get_target_property(_t GTest::gtest INTERFACE_INCLUDE_DIRECTORIES)
-            aui_link(${TESTS_MODULE_NAME} PUBLIC GTest::gtest)
+            target_link_libraries(${TESTS_MODULE_NAME} PUBLIC GTest::gmock)
+
             target_compile_definitions(${TESTS_MODULE_NAME} PUBLIC AUI_TESTS_MODULE=1)
 
             if (TARGET aui.core)
@@ -212,6 +220,30 @@ int main(int argc, char **argv) {
             target_sources(Tests PRIVATE ${TESTS_SRCS}) # append sources
         endif()
         if (TARGET Tests)
+            # executables
+            get_property(TESTS_EXECUTABLES GLOBAL PROPERTY TESTS_EXECUTABLES)
+            foreach(_executable ${TESTS_EXECUTABLES})
+                get_target_property(_t ${_executable} SOURCES)
+
+                # remove unexisting sources; otherwise cmake would fail for unknown reason
+                foreach(_e ${_t})
+                    if (NOT EXISTS ${_e})
+                        list(REMOVE_ITEM _t ${_e})
+                    endif()
+                endforeach()
+
+                target_sources(Tests PRIVATE ${_t})
+                get_target_property(_t ${_executable} INCLUDE_DIRECTORIES)
+                target_include_directories(Tests PRIVATE ${_t})
+                get_target_property(_t ${_executable} COMPILE_DEFINITIONS)
+                if(_t)
+                    target_compile_definitions(Tests PRIVATE ${_t})
+                endif()
+                get_target_property(_t ${_executable} LINK_LIBRARIES)
+                target_link_libraries(Tests PRIVATE ${_t})
+            endforeach()
+
+            # libraries
             get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
             get_property(TESTS_INCLUDE_DIRS GLOBAL PROPERTY TESTS_INCLUDE_DIRS)
             foreach(_dep ${TESTS_DEPS})
@@ -235,6 +267,7 @@ int main(int argc, char **argv) {
         set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
         set_property(GLOBAL PROPERTY TESTS_SRCS "")
         set_property(GLOBAL PROPERTY TESTS_DEPS "")
+        set_property(GLOBAL PROPERTY TESTS_EXECUTABLES "")
     endif()
 endmacro()
 
@@ -465,8 +498,8 @@ function(aui_executable AUI_MODULE_NAME)
     # for tests
     # executable's sources
     if (SRCS_TESTS_TMP)
-        set_property(GLOBAL APPEND PROPERTY TESTS_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/src)
         set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${SRCS_TESTS_TMP} ${SRCS})
+        set_property(GLOBAL APPEND PROPERTY TESTS_EXECUTABLES ${AUI_MODULE_NAME})
     endif()
 
     # remove platform dependent files
@@ -551,10 +584,16 @@ function(aui_static_link AUI_MODULE_NAME LIBRARY_NAME)
     target_link_libraries(${AUI_MODULE_NAME} PUBLIC ${LIBRARY_NAME})
 endfunction(aui_static_link)
 
+macro(_aui_find_root)
+    if (NOT AUI_BUILD_AUI_ROOT)
+        set(AUI_BUILD_AUI_ROOT ${AUI_ROOT})
+    endif()
+endmacro()
 
 macro(_aui_try_find_toolbox)
+    _aui_find_root()
     find_program(AUI_TOOLBOX_EXE aui.toolbox
-            HINTS ${AUI_ROOT}/bin)
+            HINTS ${AUI_BUILD_AUI_ROOT}/bin)
     if (NOT AUI_TOOLBOX_EXE)
         file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/*/aui.toolbox)
         if (AUI_TOOLBOX_EXE)
@@ -860,20 +899,8 @@ function(aui_module AUI_MODULE_NAME)
     endif()
 endfunction(aui_module)
 
-
 macro(aui_app)
-    # for pulling some resources (cmake scripts, ios storyboards, etc...)
-    if (NOT AUI_ROOT)
-        foreach(_probe ${CMAKE_CURRENT_SOURCE_DIR} ${AUI_SOURCE_DIR})
-            if (EXISTS ${_probe}/aui.build.cmake)
-                set(AUI_ROOT ${_probe})
-                break()
-            endif()
-        endforeach()
-        if (NOT AUI_ROOT)
-            message(FATAL_ERROR "Could not determine aui.build.cmake")
-        endif()
-    endif()
+    _aui_find_root()
 
     set(options NO_INCLUDE_CPACK)
     set(oneValueArgs
@@ -968,7 +995,7 @@ macro(aui_app)
     set(CPACK_BUNDLE_PLIST ${PROJECT_BINARY_DIR}/MacOSXBundleInfo.plist)
 
     # WINDOWS ==========================================================================================================
-    if (AUI_PLATFORM_WINDOWS)
+    if (AUI_PLATFORM_WIN)
         list(APPEND CPACK_GENERATOR WIX)
     endif()
 
@@ -992,7 +1019,7 @@ macro(aui_app)
         endif()
         file(GENERATE
                 OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate.cmake
-                INPUT ${AUI_ROOT}/cmake/appimage-generate.cmake.in)
+                INPUT ${AUI_BUILD_AUI_ROOT}/cmake/appimage-generate.cmake.in)
 
         file(GENERATE
                 OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate-vars.cmake
@@ -1023,7 +1050,7 @@ macro(aui_app)
         set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
         set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
         if (AUI_PLATFORM_MACOS)
-            configure_file(${AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+            configure_file(${AUI_BUILD_AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
         endif()
         set_target_properties(${APP_TARGET} PROPERTIES
                 MACOSX_BUNDLE TRUE
@@ -1044,7 +1071,7 @@ macro(aui_app)
 
     # MACOS ============================================================================================================
     if (AUI_PLATFORM_MACOS)
-        configure_file(${AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+        configure_file(${AUI_BUILD_AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
 
         if (APP_ICON)
             # generate icns
@@ -1100,8 +1127,8 @@ macro(aui_app)
                 ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
                 )
 
-        configure_file(${AUI_ROOT}/cmake/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
-        configure_file(${AUI_ROOT}/cmake/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
+        configure_file(${AUI_BUILD_AUI_ROOT}/cmake/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
+        configure_file(${AUI_BUILD_AUI_ROOT}/cmake/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
 
         target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
         set_target_properties(${APP_TARGET} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
@@ -1139,7 +1166,7 @@ macro(aui_app)
                 XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ${APP_APPLE_SIGN_IDENTITY}
                 XCODE_ATTRIBUTE_DEVELOPMENT_TEAM ${APP_APPLE_TEAM_ID}
                 XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY ${APP_IOS_DEVICE}
-                MACOSX_BUNDLE_INFO_PLIST ${AUI_ROOT}/cmake/plist.in
+                MACOSX_BUNDLE_INFO_PLIST ${AUI_BUILD_AUI_ROOT}/cmake/plist.in
                 XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
                 XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES NO
                 XCODE_ATTRIBUTE_INSTALL_PATH "$(LOCAL_APPS_DIR)"

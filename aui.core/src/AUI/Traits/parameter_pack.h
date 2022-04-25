@@ -24,12 +24,19 @@
 #include <algorithm>
 
 namespace aui {
+    namespace impl {
+        template<typename First, typename... Up>
+        struct first {
+            using type = First;
+        };
+    }
     struct parameter_pack {
         template<typename Callable, typename... Args>
         inline static void for_each(Callable c, Args&&... args) {
             invoke(std::move(c), std::forward<Args>(args)...);
         }
-
+        template<typename... Types>
+        using first = typename impl::first<Types...>::type;
     private:
 
         template<typename Callable, typename Arg1>
@@ -41,5 +48,6 @@ namespace aui {
             c(std::forward<Arg1>(arg1));
             invoke(std::move(c), std::forward<Args>(args)...);
         }
+
     };
 }

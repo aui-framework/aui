@@ -27,27 +27,36 @@ ARandom::ARandom()
 	mRandom.seed(std::time(nullptr) ^ std::chrono::high_resolution_clock::now().time_since_epoch().count());
 }
 
-int ARandom::nextInt()
+int ARandom::nextInt() noexcept
 {
 	return std::uniform_int_distribution<int>()(mRandom);
 }
 
-float ARandom::nextFloat()
+float ARandom::nextFloat() noexcept
 {
 	return std::uniform_real_distribution<float>()(mRandom);
 }
 
-float ARandom::nextFloat(float min, float max)
+float ARandom::nextFloat(float min, float max) noexcept
 {
 	return std::uniform_real_distribution<float>(min, max)(mRandom);
 }
+double ARandom::nextDouble() noexcept
+{
+	return std::uniform_real_distribution<double>()(mRandom);
+}
 
-glm::vec2 ARandom::nextVec2()
+double ARandom::nextDouble(double min, double max) noexcept
+{
+	return std::uniform_real_distribution<double>(min, max)(mRandom);
+}
+
+glm::vec2 ARandom::nextVec2() noexcept
 {
 	return { nextFloat(), nextFloat() };
 }
 
-glm::vec2 ARandom::nextVec2(float min, float max)
+glm::vec2 ARandom::nextVec2(float min, float max) noexcept
 {
 	return { nextFloat(min, max), nextFloat(min, max) };
 }
@@ -64,7 +73,7 @@ AByteBuffer ARandom::nextBytes(unsigned count)
 	return buf;
 }
 
-AUuid ARandom::nextUuid() {
+AUuid ARandom::nextUuid() noexcept {
 	std::array<uint8_t, 16> array;
 	for (auto& v : array) {
 		v = std::uniform_int_distribution<unsigned>()(mRandom) % 0xff;

@@ -28,6 +28,7 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/AQueue.h>
 #include <AUI/Common/AException.h>
+#include <AUI/Thread/AThread.h>
 #include <AUI/Util/kAUI.h>
 #include <glm/glm.hpp>
 
@@ -48,7 +49,7 @@ private:
     public:
         Worker(AThreadPool& tp, size_t index);
         ~Worker();
-        void disable();
+        void aboutToDelete();
     };
 
 public:
@@ -60,7 +61,7 @@ public:
     };
 protected:
     typedef std::function<void()> task;
-    AVector<Worker*> mWorkers;
+    AVector<std::unique_ptr<Worker>> mWorkers;
     AQueue<task> mQueueHighest;
     AQueue<task> mQueueMedium;
     AQueue<task> mQueueLowest;
@@ -79,6 +80,8 @@ public:
     void runLaterTasks();
     static void enqueue(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
 
+    void setWorkersCount(std::size_t workersCount);
+
     static AThreadPool& global();
 
     size_t getTotalWorkerCount() const {
@@ -91,6 +94,11 @@ public:
     /**
      * Parallels work of some range, grouping tasks per thread (i.e. for 8 items on a 4-core processor each core will
      * process 2 items)
+     *
+     * @param begin range begin
+     * @param end range end
+     * @param functor a functor of the following signature:
+     * @code{cpp} Result(Iterator begin, Iterator end) @endcode
      *
      * @return future set per thread (i.e. for 8 items on a 4-core processor there will be 4 futures)
      *
@@ -119,10 +127,10 @@ public:
                            inner = nullptr;
                            if constexpr(std::is_same_v<Value, void>) {
                                func();
-                               nullsafe(innerWeak.lock())->result();
+                               nullsafe(innerWeak.lock())->supplyResult();
                            } else {
                                auto result = func();
-                               nullsafe(innerWeak.lock())->result(std::move(result));
+                               nullsafe(innerWeak.lock())->supplyResult(std::move(result));
                            }
                        } catch (const AException& e) {
                            nullsafe(innerWeak.lock())->reportException(e);
@@ -160,9 +168,8 @@ public:
 };
 
 template<typename Iterator, typename Functor>
-auto AThreadPool::parallel(Iterator begin, Iterator end, Functor &&functor) {
+auto AThreadPool::parallel(Iterator begin, Iterator end, Functor&& functor) {
     using ResultType = decltype(std::declval<Functor>()(std::declval<Iterator>(), std::declval<Iterator>()));
-    static_assert(!std::is_same_v<ResultType, void>, "functor must return a value");
     AFutureSet<ResultType> futureSet;
 
     size_t itemCount = end - begin;

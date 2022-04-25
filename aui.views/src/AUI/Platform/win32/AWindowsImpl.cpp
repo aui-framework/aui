@@ -55,7 +55,6 @@
 
 #include <GL/wglew.h>
 #include <AUI/Util/Cache.h>
-#include <AUI/Util/AError.h>
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/Platform/AMessageBox.h>
@@ -115,7 +114,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         case WM_PAINT: {
             // process thread messages because queue freezes when window is frequently redrawn
-            AThread::current()->processMessages();
+            AThread::processMessages();
 
             //if (!painter::painting)
             {
@@ -269,7 +268,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(shared_from_this());
+    getWindowManager().mWindows.removeFirst(_cast<AWindow>(objectSharedPtr()));
 
     // parent window should be activated BEFORE child is closed.
     if (mHandle) {
@@ -412,11 +411,11 @@ glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
 }
 
 void AWindow::show() {
-    if (!getWindowManager().mWindows.contains(shared_from_this())) {
-        getWindowManager().mWindows << shared_from_this();
+    if (!getWindowManager().mWindows.contains(_cast<AWindow>(objectSharedPtr()))) {
+        getWindowManager().mWindows << _cast<AWindow>(objectSharedPtr());
     }
     try {
-        mSelfHolder = shared_from_this();
+        mSelfHolder = _cast<AWindow>(objectSharedPtr());
     } catch (...) {
         mSelfHolder = nullptr;
     }
@@ -505,6 +504,6 @@ void AWindowManager::loop() {
         }
         TranslateMessage(&msg);
         DispatchMessage(&msg);
-        AThread::current()->processMessages();
+        AThread::processMessages();
     }
 }

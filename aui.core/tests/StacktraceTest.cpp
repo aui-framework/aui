@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,55 +19,36 @@
  * =====================================================================================================================
  */
 
-/*
-#include "AException.h"
-#include <AUI/Logging/ALogger.h>
-class AException::Stacktrace {
-public:
-    struct Entry {
-        std::string mName;
-        int lineno;
-    };
+//
+// Created by alex2 on 30.08.2020.
+//
 
-    AVector<Entry> mEntries;
-};
+#include <gtest/gtest.h>
+#include <AUI/Common/SharedPtr.h>
+#include <AUI/Thread/AFuture.h>
+#include <AUI/Util/kAUI.h>
+#include <AUI/Util/Util.h>
+#include <random>
+#include <ctime>
+#include "AUI/Common/ATimer.h"
+#include "AUI/Logging/ALogger.h"
 
-
-#ifdef AUI_USE_BACKTRACE
-#include <backtrace.h>
-#include <AUI/Platform/AProcess.h>
-
-void aui_backtrace_error_callback(void *data, const char *msg,
-                                  int errnum) {
-    ALogger::err("Backtrace error: "_as + msg);
+void someFunction() {
+    throw AException("my exception");
 }
-int aui_backtrace_full_callback(void *data,
-                                uintptr_t pc,
-                                const char *filename,
-                                int lineno,
-                                const char *function) {
-    auto exception = reinterpret_cast<AException*>(data);
-    exception->mStacktrace->mEntries << AException::Stacktrace::Entry {
-        function
-        ? function
-        : (filename
-           ? filename
-           : std::to_string(pc)
-           ),
-        lineno
-    };
-    return 0;
+
+
+TEST(Exception, Stacktrace) {
+    try {
+        someFunction();
+        FAIL() << "exception not thrown";
+    } catch (const AException& e) {
+        std::stringstream ss;
+        ss << e;
+        AString s = ss.str();
+        EXPECT_TRUE(s.contains("my exception"));
+        EXPECT_TRUE(s.contains("AException"));
+        EXPECT_TRUE(s.contains("- at"));
+        ALogger::info("Exception::Stacktrace") << e;
+    }
 }
-AException::AException() {
-    mStacktrace = new AException::Stacktrace;
-    static auto pathToExecutable = AProcess::self()->getPathToExecutable().toStdString();
-    static auto state = backtrace_create_state(pathToExecutable.c_str(), true, aui_backtrace_error_callback, nullptr);
-    backtrace_full(state, 0, aui_backtrace_full_callback, aui_backtrace_error_callback, this);
-}
-#else
-
-#endif
-
-
-
-*/

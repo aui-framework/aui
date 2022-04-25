@@ -64,16 +64,6 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
 class CurrentThread: public AAbstractThread {
 public:
     using AAbstractThread::AAbstractThread;
-
-    void setThreadName(const AString& name) override {
-#if AUI_PLATFORM_WIN
-        setThreadNameImpl((HANDLE) GetCurrentThread(), name);
-#elif AUI_PLATFORM_APPLE
-        pthread_setname_np(name.toStdString().c_str());
-#else
-        pthread_setname_np(pthread_self(), name.toStdString().c_str());
-#endif
-    }
 };
 
 AAbstractThread::AAbstractThread(const id& id): mId(id)
@@ -106,7 +96,7 @@ void AAbstractThread::resetInterruptFlag()
 void AThread::start()
 {
 	assert(mThread == nullptr);
-	auto t = shared_from_this();
+	auto t = _cast<AThread>(objectSharedPtr());
     updateThreadName();
 	mThread = new std::thread([&, t] ()
 	{
@@ -182,22 +172,24 @@ void AThread::join()
 	if (mThread->joinable()) mThread->join();
 }
 
-void AAbstractThread::enqueue(const std::function<void()>& f)
+void AAbstractThread::enqueue(std::function<void()> f)
 {
 	{
 		std::unique_lock lock(mQueueLock);
-		mMessageQueue << f;
+		mMessageQueue << std::move(f);
 	}
 	{
-		std::unique_lock lock(mEventLoopLock);
-		if (mCurrentEventLoop)
-		{
-			mCurrentEventLoop->notifyProcessMessages();
+		if (mCurrentEventLoop) {
+			std::unique_lock lock(mEventLoopLock);
+			if (mCurrentEventLoop)
+			{
+				mCurrentEventLoop->notifyProcessMessages();
+			}
 		}
 	}
 }
 
-void AAbstractThread::processMessages()
+void AAbstractThread::processMessagesImpl()
 {
     assert(("AAbstractThread::processMessages() should not be called from other thread",
             mId == std::this_thread::get_id()));
@@ -229,24 +221,26 @@ AThread::~AThread()
 	}
 }
 
-
-void AAbstractThread::setThreadName(const AString& name) {
-    // just stub
+void AThread::detach() {
+    mThread->detach();
+    delete mThread;
+    mThread = nullptr;
 }
 
-void AThread::setThreadName(const AString& name) {
-    mThreadName = std::make_unique<AString>(name);
-    updateThreadName();
-}
 
-void AThread::updateThreadName() {
-    if (mThreadName && mThread) {
+
+void AAbstractThread::updateThreadName() noexcept {
+    if (!mThreadName.empty()) {
 #if AUI_PLATFORM_WIN
-        setThreadNameImpl((HANDLE) mThread->native_handle(), *mThreadName);
+        setThreadNameImpl((HANDLE) GetCurrentThread(), mThreadName);
 #elif AUI_PLATFORM_APPLE
-        pthread_setname_np(mThreadName->toStdString().c_str());
+        auto name = mThreadName->toStdString();
+        assert(("on unix thread name restricted to 15 chars length", name.size() < 16));
+        pthread_setname_np(name.c_str());
 #else
-        pthread_setname_np(mThread->native_handle(), mThreadName->toStdString().c_str());
+        auto name = mThreadName.toStdString();
+        assert(("on unix thread name restricted to 15 chars length", name.size() < 16));
+        pthread_setname_np(pthread_self(), name.c_str());
 #endif
     }
 }

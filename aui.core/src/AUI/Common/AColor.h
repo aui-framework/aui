@@ -94,7 +94,7 @@ public:
     /**
      * \brief Multiply all color components except alpha channel (rgb * d, a)
      * \param multiplier
-     * \return result color
+     * \return supplyResult color
      */
     inline AColor mul(float d) {
         return AColor(r * d, g * d, b * d, a);
@@ -133,10 +133,10 @@ inline std::ostream& operator<<(std::ostream& o, const AColor& color) {
     o << "#";
     char buf[16];
     if (!color.isFullyOpaque()) {
-        std::sprintf(buf, "%02x", uint8_t(color.a * 255.f));
+        std::snprintf(buf, sizeof(buf), "%02x", uint8_t(color.a * 255.f));
         o << buf;
     }
-    std::sprintf(buf, "%02x%02x%02x", uint8_t(color.r * 255.f), uint8_t(color.g * 255.f), uint8_t(color.b * 255.f));
+    std::snprintf(buf, sizeof(buf), "%02x%02x%02x", uint8_t(color.r * 255.f), uint8_t(color.g * 255.f), uint8_t(color.b * 255.f));
     o << buf;
     return o;
 }

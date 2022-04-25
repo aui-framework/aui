@@ -164,4 +164,31 @@ public:
         }
         return r;
 	}
+
+    /**
+     * If value of specified key exists, the existing value returned. Otherwise, <code>factory</code> function called.
+     * @param keyType key;
+     * @param factory factory function that will return a new value. Called only if map does not contain value of
+     *        specified key.
+     * @return stored or new value.
+     */
+    template<typename Factory>
+    ValueType& getOrInsert(const KeyType& keyType, Factory&& factory) noexcept(noexcept(factory())) {
+        auto[it, isElementCreated] = parent::insert(typename parent::value_type(keyType, ValueType{}));
+        static_assert(std::is_same_v<decltype(it), typename parent::iterator>, "govno");
+        if (isElementCreated) {
+            it->second = factory();
+        }
+        return it->second;
+    }
+
+    template<typename BinaryOperation>
+    auto toVector(BinaryOperation&& transformer) const -> AVector<decltype(transformer(std::declval<KeyType>(), std::declval<ValueType>()))> {
+        AVector<decltype(transformer(std::declval<KeyType>(), std::declval<ValueType>()))> result;
+        result.reserve(parent::size());
+        std::transform(parent::begin(), parent::end(), std::back_inserter(result), [transformer = std::forward<BinaryOperation>(transformer)](const typename parent::value_type& p){
+            return transformer(p.first, p.second);
+        });
+        return result;
+    }
 };

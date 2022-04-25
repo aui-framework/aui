@@ -54,7 +54,7 @@ namespace glm
 		vec<L, uint, Q> & borrow);
 
 	/// Multiplies 32-bit integers x and y, producing a 64-bit
-	/// result. The 32 least-significant bits are returned in lsb.
+	/// supplyResult. The 32 least-significant bits are returned in lsb.
 	/// The 32 most-significant bits are returned in msb.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.
@@ -69,7 +69,7 @@ namespace glm
 		vec<L, uint, Q> & lsb);
 
 	/// Multiplies 32-bit integers x and y, producing a 64-bit
-	/// result. The 32 least-significant bits are returned in lsb.
+	/// supplyResult. The 32 least-significant bits are returned in lsb.
 	/// The 32 most-significant bits are returned in msb.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.
@@ -84,12 +84,12 @@ namespace glm
 		vec<L, int, Q> & lsb);
 
 	/// Extracts bits [offset, offset + bits - 1] from value,
-	/// returning them in the least significant bits of the result.
+	/// returning them in the least significant bits of the supplyResult.
 	/// For unsigned data types, the most significant bits of the
-	/// result will be set to zero. For signed data types, the
+	/// supplyResult will be set to zero. For signed data types, the
 	/// most significant bits will be set to the value of bit offset + base - 1.
 	///
-	/// If bits is zero, the result will be zero. The result will be
+	/// If bits is zero, the supplyResult will be zero. The supplyResult will be
 	/// undefined if offset or bits is negative, or if the sum of
 	/// offset and bits is greater than the number of bits used
 	/// to store the operand.
@@ -107,10 +107,10 @@ namespace glm
 
 	/// Returns the insertion the bits least-significant bits of insert into base.
 	///
-	/// The result will have bits [offset, offset + bits - 1] taken
+	/// The supplyResult will have bits [offset, offset + bits - 1] taken
 	/// from bits [0, bits - 1] of insert, and all other bits taken
 	/// directly from the corresponding bits of base. If bits is
-	/// zero, the result will simply be base. The result will be
+	/// zero, the supplyResult will simply be base. The supplyResult will be
 	/// undefined if offset or bits is negative, or if the sum of
 	/// offset and bits is greater than the number of bits used to
 	/// store the operand.
@@ -128,7 +128,7 @@ namespace glm
 		int Bits);
 
 	/// Returns the reversal of the bits of value.
-	/// The bit numbered n of the result will be taken from bit (bits - 1) - n of value,
+	/// The bit numbered n of the supplyResult will be taken from bit (bits - 1) - n of value,
 	/// where bits is the total number of bits used to represent value.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.
@@ -182,8 +182,8 @@ namespace glm
 	GLM_FUNC_DECL vec<L, int, Q> findLSB(vec<L, T, Q> const& v);
 
 	/// Returns the bit number of the most significant bit in the binary representation of value.
-	/// For positive integers, the result will be the bit number of the most significant bit set to 1.
-	/// For negative integers, the result will be the bit number of the most significant
+	/// For positive integers, the supplyResult will be the bit number of the most significant bit set to 1.
+	/// For negative integers, the supplyResult will be the bit number of the most significant
 	/// bit set to 0. For a value of zero or negative one, -1 will be returned.
 	///
 	/// @tparam genIUType Signed or unsigned integer scalar types.
@@ -194,8 +194,8 @@ namespace glm
 	GLM_FUNC_DECL int findMSB(genIUType x);
 
 	/// Returns the bit number of the most significant bit in the binary representation of value.
-	/// For positive integers, the result will be the bit number of the most significant bit set to 1.
-	/// For negative integers, the result will be the bit number of the most significant
+	/// For positive integers, the supplyResult will be the bit number of the most significant bit set to 1.
+	/// For negative integers, the supplyResult will be the bit number of the most significant
 	/// bit set to 0. For a value of zero or negative one, -1 will be returned.
 	///
 	/// @tparam L An integer between 1 and 4 included that qualify the dimension of the vector.

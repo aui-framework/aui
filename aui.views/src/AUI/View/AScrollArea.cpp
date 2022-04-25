@@ -27,10 +27,11 @@
 #include <AUI/Layout/AAdvancedGridLayout.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/Util/kAUI.h>
+#include <AUI/Util/UIBuildingHelpers.h>
 
 class AScrollAreaContainer: public AViewContainer {
 private:
-    int mScroll = 0;
+    glm::uvec2 mScroll = {0, 0}; // TODO horizontal
 
 public:
     AScrollAreaContainer() {
@@ -41,26 +42,29 @@ public:
         return 30_dp;
     }
 
-    void render() override {
-        AView::render();
-        Render::translate(glm::vec2{ 0, -mScroll });
-        drawViews(mViews.begin(), mViews.end());
-    }
-
-    _<AView> getViewAt(glm::ivec2 pos, bool ignoreGone) override {
-        return AViewContainer::getViewAt(pos - glm::ivec2{ 0, mScroll }, ignoreGone);
+    void updateLayout() override {
+        child()->setGeometry(0, -mScroll.y, getContentWidth(), getContentHeight() + mScroll.y);
     }
 
     int getContentMinimumHeight() override {
         return 30_dp;
     }
 
-    void setScrollY(int scroll) {
-        mScroll = scroll;
+    void setScrollY(unsigned scroll) {
+        mScroll.y = scroll;
         updateLayout();
     }
-    void setContent(const _<AViewContainer>& view) {
-        setContents(view);
+
+    void setContent(const _<AView>& view) {
+        removeAllViews();
+        addView(view);
+    }
+
+    [[nodiscard]]
+    const _<AView>& child() const noexcept {
+        assert(("no scrollarea child specified", !getViews().empty()));
+        assert(("scrollarea can have only one child", getViews().size() == 1));
+        return getViews().first();
     }
 };
 
@@ -98,7 +102,8 @@ AScrollArea::~AScrollArea() = default;
 
 void AScrollArea::setSize(int width, int height) {
     AViewContainer::setSize(width, height);
-    mVerticalScrollbar->setScrollDimensions(mContentContainer->getContentHeight() + mContentContainer->getTotalFieldVertical(), mContentContainer->AViewContainer::getContentMinimumHeight());
+    mVerticalScrollbar->setScrollDimensions(mContentContainer->getContentHeight() + mContentContainer->getTotalFieldVertical(),
+                                            mContentContainer->child()->getContentMinimumHeight());
 }
 
 void AScrollArea::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {

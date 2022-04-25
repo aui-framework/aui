@@ -52,8 +52,9 @@ public:
 	    END
 	};
 
-	void seek(std::streamoff offset, Seek dir);
-	void seek(std::streampos pos);
+	void seek(std::streamoff offset, Seek dir) noexcept;
+	void seek(std::streampos pos) noexcept;
+    std::streampos tell() noexcept;
 
 	size_t read(char* dst, size_t size) override;
 };

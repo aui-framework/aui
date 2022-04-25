@@ -31,14 +31,14 @@
 void ass::decl::Declaration<ass::BackgroundSolid>::renderFor(AView* view) {
     ASolidBrush brush = { mInfo.color };
     if (view->getBorderRadius() > 0) {
-        Render::drawRoundedRectAntialiased(brush,
-                                           {0, 0},
-                                           view->getSize(),
-                                           view->getBorderRadius());
+        Render::roundedRectAntialiased(brush,
+                                       {0, 0},
+                                       view->getSize(),
+                                       view->getBorderRadius());
     } else  {
-        Render::drawRect(brush,
-                         {0, 0},
-                         view->getSize());
+        Render::rect(brush,
+                     {0, 0},
+                     view->getSize());
 
     }
 

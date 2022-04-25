@@ -23,6 +23,7 @@
 
 #include <iterator>
 #include <AUI/Common/AString.h>
+#include <AUI/Common/ADeque.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Util/EnumUtil.h>
 
@@ -125,7 +126,14 @@ public:
     APath(const char* str) noexcept: AString(str) {
         removeBackSlashes();
     }
+    APath(const char* str, std::size_t length) noexcept: AString(str, str + length) {
+        removeBackSlashes();
+    }
     APath(const wchar_t * str) noexcept: AString(str) {
+        removeBackSlashes();
+    }
+
+    APath(const wchar_t * str, std::size_t length) noexcept: AString(str, str + length) {
         removeBackSlashes();
     }
 
@@ -167,16 +175,6 @@ public:
      * \return path to child file relatively to this folder
      */
     [[nodiscard]] APath file(const AString& fileName) const;
-
-    /**
-     * \brief Path of the child element. Relevant only for folders.
-     * \example with fileName = work: <pre>/home/user -> /home/user/work</pre>
-     * \param name of child file
-     * \return path to child file relatively to this folder
-     */
-    [[nodiscard]] APath operator[](const AString& fileName) const {
-        return file(fileName);
-    }
 
     /**
      * \brief File name.
@@ -272,6 +270,8 @@ public:
     time_t fileModifyTime() const;
     size_t fileSize() const;
 
+    void chmod(int newMode) const;
+
     enum DefaultPath {
         /**
          * \brief Folder for application data.
@@ -324,5 +324,20 @@ public:
      * @return full path to the found file; if file not found, an empty string is returned.
      */
     static AVector<APath> find(const AString& filename, const AVector<APath>& locations, PathFinder flags = PathFinder::NONE);
+
+    /**
+     * @brief Path of the child element. Relevant only for folders.
+     * @code{cpp}
+     * AString filename = "file.txt";
+     * APath path = "path" / "to" / "your" / filename;
+     * @endcode
+     * Which would supplyResult into "path/to/your/file.txt"
+     * @return path to child file relatively to this folder
+     */
+    [[nodiscard]]
+    APath operator/(const AString& filename) const {
+        return file(filename);
+    }
+
 };
 

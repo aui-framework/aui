@@ -41,23 +41,23 @@ void AViewProfiler::displayBoundsOn(const AView& v) {
 
     // content
     {
-        Render::drawRect(ASolidBrush{ 0x7cb6c180u },
-                         { v.getPadding().left, v.getPadding().top },
-                         { v.getWidth() - v.getPadding().horizontal(), v.getHeight() - v.getPadding().vertical() });
+        Render::rect(ASolidBrush{0x7cb6c180u},
+                     {v.getPadding().left, v.getPadding().top},
+                     {v.getWidth() - v.getPadding().horizontal(), v.getHeight() - v.getPadding().vertical()});
     }
 
     // padding
     {
-        Render::drawRect(ASolidBrush{ 0xbccf9180u },
-                         { 0, 0 },
-                         v.getSize());
+        Render::rect(ASolidBrush{0xbccf9180u},
+                     {0, 0},
+                     v.getSize());
     }
 
     // margin
     {
-        Render::drawRect(ASolidBrush{ 0xffcca4a0u },
-                         { -v.getMargin().left, -v.getMargin().top },
-                         { v.getWidth() + v.getMargin().horizontal(), v.getHeight() + v.getMargin().vertical() });
+        Render::rect(ASolidBrush{0xffcca4a0u},
+                     {-v.getMargin().left, -v.getMargin().top},
+                     {v.getWidth() + v.getMargin().horizontal(), v.getHeight() + v.getMargin().vertical()});
     }
 
     glDisable(GL_STENCIL_TEST);
@@ -77,9 +77,9 @@ void AViewProfiler::displayBoundsOn(const AView& v) {
                                          : v.getCssNames().back() + "\n"_as + AString::number(v.getSize().x) + "x"_as + AString::number(v.getSize().y), fs);
 
         {
-            Render::drawRect(ASolidBrush{ 0x00000070u },
-                             { x, y },
-                             { s->getWidth() + 4_dp, fs.size * 2.5 + 2_dp });
+            Render::rect(ASolidBrush{0x00000070u},
+                         {x, y},
+                         {s->getWidth() + 4_dp, fs.size * 2.5 + 2_dp});
         }
         s->draw();
     }

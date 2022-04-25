@@ -25,6 +25,7 @@
 #include "AUI/Common/ADeque.h"
 #include "AMutex.h"
 #include "AUI/Common/SharedPtrTypes.h"
+#include "AUI/Common/AString.h"
 #include <functional>
 
 class IEventLoop;
@@ -55,7 +56,7 @@ private:
 	/**
 	 * \brief Message queue mutex.
 	 */
-	std::recursive_mutex mQueueLock;
+	AMutex mQueueLock;
 
 	/**
 	 * \brief Thread ID.
@@ -78,7 +79,7 @@ private:
     /**
      * \brief Mutex for mCurrentEventLoop.
      */
-    std::recursive_mutex mEventLoopLock;
+    AMutex mEventLoopLock;
 
 	AAbstractThread() = default;
 	AAbstractThread(const id& id);
@@ -100,14 +101,7 @@ public:
 	 *        itself using AEventLoop. This behaviour may be overwritten using the <code>AThread::processMessages()
 	 *        </code> function.
 	 */
-	void enqueue(const std::function<void()>& f);
-
-	/**
-	 * \brief Processes messages from other threads. It's called by framework itself using IEventLoop. This function can
-	 *        be called from any place of this thread's execution. This function shouldn't be called from another
-	 *        thread.
-	 */
-	void processMessages();
+	void enqueue(std::function<void()> f);
 
 	virtual ~AAbstractThread();
 
@@ -138,7 +132,7 @@ public:
 
 
 	/**
-	 * \brief Enqueue message to execute.
+	 * \brief Enqueue message to make.
 	 * \tparam Callable callable
 	 * \param fun callable function
 	 */
@@ -148,7 +142,7 @@ public:
     }
 
     /**
-     * \brief Enqueue message to execute. Helper function for async, asyncX, ui, uiX
+     * \brief Enqueue message to make. Helper function for async, asyncX, ui, uiX
      * \tparam Callable callable
      * \param fun callable function
      */
@@ -158,12 +152,16 @@ public:
         enqueue(fun);
     }
 
+    [[nodiscard]]
+    const AString& threadName() const noexcept {
+        return mThreadName;
+    }
 
-    /**
-     * Sets name of the thread for debugger.
-     * @param name new name of the thread
-     */
-    virtual void setThreadName(const AString& name);
+protected:
+    AString mThreadName;
+
+    void updateThreadName() noexcept;
+    void processMessagesImpl();
 };
 
 #include "AUI/Common/AObject.h"
@@ -171,7 +169,7 @@ public:
 /**
  * \brief Thread.
  */
-class API_AUI_CORE AThread : public AAbstractThread, public AObject, public std::enable_shared_from_this<AThread>
+class API_AUI_CORE AThread : public AAbstractThread, public AObject
 {
 public:
 	/**
@@ -188,7 +186,6 @@ private:
 	 */
 	std::thread* mThread = nullptr;
 
-	_unique<AString> mThreadName;
 
 	/**
 	 * \brief Function that is called by <code>AThread::start()</code>. Becomes nullptr after call to
@@ -206,6 +203,8 @@ public:
 	AThread(std::function<void()> functor);
 
     virtual ~AThread();
+
+    void detach();
 
 	/**
 	 * \brief Start thread execution.
@@ -227,9 +226,28 @@ public:
 	static _<AAbstractThread> current();
 
 	/**
-	 * \return Interruption point. It's required for <code>AThread::interrupt</code>.
+	 * \brief Interruption point. It's required for <code>AThread::interrupt</code>.
 	 */
 	static void interruptionPoint();
+
+
+
+    /**
+     * Sets name of the current thread for debugger.
+     * @param name new name of the thread
+     */
+    static void setName(AString name) noexcept {
+        auto cur = current();
+        cur->mThreadName = std::move(name);
+        cur->updateThreadName();
+    }
+    /**
+     * \brief Processes messages from other threads of current thread.
+     * Called by framework itself using IEventLoop.
+     */
+    static void processMessages() {
+        current()->processMessagesImpl();
+    }
 
 	bool isInterrupted() override;
 	void resetInterruptFlag() override;
@@ -239,14 +257,6 @@ public:
      * \brief Waits for thread to be finished.
      */
 	void join();
-
-	/**
-	 * Sets name of the thread for debugger.
-	 * @param name new name of the thread
-	 */
-	void setThreadName(const AString& name) override;
-
-	void updateThreadName();
 
 };
 
