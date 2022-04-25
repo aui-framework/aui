@@ -45,7 +45,7 @@ auib_import(AUI https://github.com/aui-framework/aui
 aui_executable(aui_app)
 
 # Link required libs
-target_link_libraries(aui_app PRIVATE aui::core aui::views)
+aui_link(aui_app PRIVATE aui::core aui::views)
 
 
 ```
