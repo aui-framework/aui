@@ -85,7 +85,7 @@ if(NOT ANDROID AND AUI_BUILD_EXAMPLES)
     #add_subdirectory(examples/AUI.Example.Minesweeper)
 endif()
 
-if (AUI_NO_TESTS)
+if (NOT AUI_NO_TESTS)
     if (AUI_BOOT)
         # cleanup tests data when using aui thru aui.boot with add_subdirectory
         set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
