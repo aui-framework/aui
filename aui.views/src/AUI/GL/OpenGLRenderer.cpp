@@ -26,6 +26,8 @@ public:
     }
 };
 
+static constexpr GLuint RECT_INDICES[] = {0, 1, 2, 2, 1, 3 };
+
 
 template<typename Brush>
 struct UnsupportedBrushHelper {
@@ -81,12 +83,13 @@ struct TexturedShaderHelper {
         glm::vec2 uv2 = brush.uv2 ? *brush.uv2 : glm::vec2{1, 1};
         tempVao.bind();
         glEnableVertexAttribArray(1);
-        tempVao.insert(1, {
-                glm::vec2{uv1.x, uv2.y},
-                glm::vec2{uv2.x, uv2.y},
-                glm::vec2{uv1.x, uv1.y},
-                glm::vec2{uv2.x, uv1.y},
-        });
+        const glm::vec2 uvs[] = {
+            {uv1.x, uv2.y},
+            {uv2.x, uv2.y},
+            {uv1.x, uv1.y},
+            {uv2.x, uv1.y},
+        };
+        tempVao.insert(1, uvs);
         _cast<OpenGLTexture2D>(brush.texture)->bind();
     }
 };
@@ -273,13 +276,13 @@ OpenGLRenderer::OpenGLRenderer() {
 
     mTempVao.bind();
 
-    mTempVao.insert(1, {
-                            {0, 1},
-                            {1, 1},
-                            {0, 0},
-                            {1, 0}
-                    }
-    );
+    const glm::vec2 uvs[] = {
+        {0, 1},
+        {1, 1},
+        {0, 0},
+        {1, 0}
+    };
+    mTempVao.insert(1, uvs);
 }
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
@@ -323,8 +326,8 @@ void OpenGLRenderer::drawRectImpl(const glm::vec2& position, const glm::vec2& si
 
     mTempVao.insert(0, getVerticesForRect(position, size));
 
-    mTempVao.indices({0, 1, 2, 2, 1, 3 });
-    mTempVao.draw();
+    mTempVao.indices(RECT_INDICES);
+    mTempVao.drawElements();
 }
 
 void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
@@ -400,9 +403,10 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
                             glm::vec3(mTransform * glm::vec4{ x + lineDelta, y            , 1, 1 }),
                     });
 
-    mTempVao.indices({ 0, 1, 2, 3, 4, 5, 6, 7});
+    constexpr GLuint INDICES[] = { 0, 1, 2, 3, 4, 5, 6, 7};
+    mTempVao.indices(INDICES);
     glLineWidth(lineWidth);
-    mTempVao.draw(GL_LINES);
+    mTempVao.drawElements(GL_LINES);
     drawRectImpl(position, size);
     endDraw(brush);
 }
@@ -455,15 +459,16 @@ void OpenGLRenderer::drawBoxShadow(const glm::vec2& position,
     w += blurRadius;
     h += blurRadius;
 
-    mTempVao.insert(0, AVector<glm::vec2>{
-            glm::vec2{ x, h },
-            glm::vec2{ w, h },
-            glm::vec2{ x, y },
-            glm::vec2{ w, y },
-    });
+    const glm::vec2 uvs[] = {
+        { x, h },
+        { w, h },
+        { x, y },
+        { w, y },
+    };
+    mTempVao.insert(0, uvs);
 
-    mTempVao.indices({ 0, 1, 2, 2, 1, 3 });
-    mTempVao.draw();
+    mTempVao.indices(RECT_INDICES);
+    mTempVao.drawElements();
 }
 
 void OpenGLRenderer::drawString(const glm::vec2& position,
@@ -787,5 +792,73 @@ void OpenGLRenderer::popMaskAfter() {
     glColorMask(true, true, true, true);
     glStencilMask(0x00);
     glStencilFunc(GL_EQUAL, --mStencilDepth, 0xff);
+}
+
+void OpenGLRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
+    std::visit(aui::lambda_overloaded {
+            GradientShaderHelper(mGradientShader),
+            TexturedShaderHelper(mTexturedShader, mTempVao),
+            SolidShaderHelper(mSolidShader),
+    }, brush);
+    uploadToShaderCommon();
+
+    mTempVao.bind();
+
+    const glm::vec4 positions[] = {
+        mTransform * glm::vec4(p1, 0, 1),
+        mTransform * glm::vec4(p2, 0, 1),
+    };
+    mTempVao.insert(0, positions);
+    mTempVao.drawArrays(GL_LINES, 2);
+
+    endDraw(brush);
+}
+
+void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points) {
+    if (points.size() < 2) return;
+    std::visit(aui::lambda_overloaded {
+            GradientShaderHelper(mGradientShader),
+            TexturedShaderHelper(mTexturedShader, mTempVao),
+            SolidShaderHelper(mSolidShader),
+    }, brush);
+    uploadToShaderCommon();
+
+    mTempVao.bind();
+
+    AVector<glm::vec4> positions;
+    positions.reserve(points.size());
+
+    for (const auto& point : points) {
+        positions << mTransform * glm::vec4(point, 0, 1);
+    }
+
+    mTempVao.insert(0, positions);
+    mTempVao.drawArrays(GL_LINE_STRIP, points.size());
+
+    endDraw(brush);
+}
+
+void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) {
+    std::visit(aui::lambda_overloaded {
+            GradientShaderHelper(mGradientShader),
+            TexturedShaderHelper(mTexturedShader, mTempVao),
+            SolidShaderHelper(mSolidShader),
+    }, brush);
+    uploadToShaderCommon();
+
+    mTempVao.bind();
+
+    AVector<glm::vec4> positions;
+    positions.reserve(points.size());
+
+    for (const auto& [p1, p2] : points) {
+        positions << mTransform * glm::vec4(p1, 0, 1);
+        positions << mTransform * glm::vec4(p2, 0, 1);
+    }
+
+    mTempVao.insert(0, positions);
+    mTempVao.drawArrays(GL_LINES, points.size());
+
+    endDraw(brush);
 }
 

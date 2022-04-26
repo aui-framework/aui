@@ -97,6 +97,12 @@ public:
 
     glm::mat4 getProjectionMatrix() const override;
 
+    void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) override;
+
+    void drawLines(const ABrush& brush, AArrayView<glm::vec2> points) override;
+
+    void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) override;
+
     void pushMaskBefore() override;
     void pushMaskAfter() override;
     void popMaskBefore() override;

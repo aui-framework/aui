@@ -54,7 +54,7 @@ void GL::Vao::bind() {
 }
 
 
-void GL::Vao::draw(GLenum type, GLsizei count) {
+void GL::Vao::drawArrays(GLenum type, GLsizei count) {
 	bind();
 	glDrawArrays(type, 0, count);
 }
@@ -94,32 +94,33 @@ void GL::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize,
 	mBuffers.push_back(buffer);
 }
 
-void GL::Vao::insert(GLuint index, const AVector<float>& data) {
-	insert(index, (const char*)data.data(), data.size() * sizeof(float), 1, GL_FLOAT);
+void GL::Vao::insert(GLuint index, AArrayView<float> data) {
+	insert(index, (const char*)data.data(), data.sizeInBytes(), 1, GL_FLOAT);
 }
-void GL::Vao::insert(GLuint index, const AVector<glm::vec2>& data) {
-	insert(index, (const char*)data.data(), data.size() * sizeof(glm::vec2), 2, GL_FLOAT);
-}
-
-void GL::Vao::insert(GLuint index, const AVector<glm::vec3>& data) {
-	insert(index, (const char*)data.data(), data.size() * sizeof(glm::vec3), 3, GL_FLOAT);
+void GL::Vao::insert(GLuint index, AArrayView<glm::vec2> data) {
+	insert(index, (const char*)data.data(), data.sizeInBytes(), 2, GL_FLOAT);
 }
 
-void GL::Vao::insert(GLuint index, const AVector<glm::vec4>& data) {
-	insert(index, (const char*)data.data(), data.size() * sizeof(glm::vec4), 4, GL_FLOAT);
-}
-void GL::Vao::insert(GLuint index, const AVector<GLuint>& data) {
-	insertInteger(index, (const char*)data.data(), data.size() * sizeof(GLuint), 1, GL_UNSIGNED_INT);
+void GL::Vao::insert(GLuint index, AArrayView<glm::vec3> data) {
+	insert(index, (const char*)data.data(), data.sizeInBytes(), 3, GL_FLOAT);
 }
 
-void GL::Vao::draw(GLenum type) {
+void GL::Vao::insert(GLuint index, AArrayView<glm::vec4> data) {
+	insert(index, (const char*)data.data(), data.sizeInBytes(), 4, GL_FLOAT);
+}
+void GL::Vao::insert(GLuint index, AArrayView<GLuint> data) {
+	insertInteger(index, (const char*)data.data(), data.sizeInBytes(), 1, GL_UNSIGNED_INT);
+}
+
+void GL::Vao::drawElements(GLenum type) {
 	assert(mIndicesBuffer);
 	bind();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndicesBuffer);
  	glDrawElements(type, mIndicesCount, GL_UNSIGNED_INT, 0);
 }
 
-void GL::Vao::indices(const AVector<GLuint>& data) {
+
+void GL::Vao::indices(AArrayView<GLuint> data) {
 	GLenum drawType = GL_DYNAMIC_DRAW;
 	if (mIndicesBuffer == 0) {
 		glGenBuffers(1, &mIndicesBuffer);
@@ -128,5 +129,5 @@ void GL::Vao::indices(const AVector<GLuint>& data) {
 	}
 	mIndicesCount = static_cast<GLsizei>(data.size());
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndicesBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.size() * sizeof(GLuint), data.data(), drawType);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.sizeInBytes(), data.data(), drawType);
 }

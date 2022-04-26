@@ -22,6 +22,7 @@
 #pragma once
 
 #include <AUI/Reflect/AEnumerate.h>
+#include <AUI/Util/AArrayView.h>
 #include "IRenderer.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -110,6 +111,7 @@ public:
                            float lineWidth = 1.f) {
         ourRenderer->drawRectBorder(brush, position, size, lineWidth);
     }
+
     /**
      * Draws rectangle's border (with antialiasing).
      * @param brush brush to use
@@ -124,6 +126,40 @@ public:
                            float radius,
                            int borderWidth) {
         ourRenderer->drawRectBorder(brush, position, size, radius, borderWidth);
+    }
+
+    /**
+     * Draws a line between <code>p1</code> and <code>p2</code>.
+     * @param brush brush
+     * @param p1 first point
+     * @param p2 second point
+     *
+     * <dl>
+     *   <dt><b>Performance note</b></dt>
+     *   <dd>if you want to drawElements multiple lines, consider using <code>Render::lines</code> function instead.</dd>
+     * </dl>
+     */
+    static void line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
+        ourRenderer->drawLine(brush, p1, p2);
+    }
+
+
+    /**
+     * Draws polyline (non-loop line strip).
+     * @param brush brush
+     * @param points polyline points
+     */
+    static void lines(const ABrush& brush, AArrayView<glm::vec2> points) {
+        ourRenderer->drawLines(brush, points);
+    }
+
+    /**
+     * Draws multiple individual lines in a batch.
+     * @param brush brush
+     * @param points line points
+     */
+    static void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) {
+        ourRenderer->drawLines(brush, points);
     }
 
 
