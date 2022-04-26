@@ -60,7 +60,7 @@ public:
 
 TEST(SharedPtrs, Builder1) {
     auto builder = _new<SomeBuilderClass>();
-    apply(builder, {
+    perform_as_member(builder, {
        setUsername("John");
        setAge(23);
     });
@@ -155,7 +155,7 @@ TEST(SharedPtrs, ConnectBuilder) {
             .connect(&SendObject::someSignal, receiver, &ReceiverObject::receiveSignal);
 
 
-    apply(sender, {
+    perform_as_member(sender, {
         invokeSignal();
     });
 

@@ -34,12 +34,13 @@ private:
 public:
 	ARandom();
 
-	AUuid nextUuid();
-	int nextInt();
-	float nextFloat();
-	float nextFloat(float min, float max);
-	glm::vec2 nextVec2();
-	glm::vec2 nextVec2(float min, float max);
-
+	AUuid nextUuid() noexcept;
+	int nextInt() noexcept;
+	float nextFloat() noexcept;
+	float nextFloat(float min, float max) noexcept;
+	double nextDouble() noexcept;
+	double nextDouble(double min, double max) noexcept;
+	glm::vec2 nextVec2() noexcept;
+	glm::vec2 nextVec2(float min, float max) noexcept;
 	AByteBuffer nextBytes(unsigned count);
 };

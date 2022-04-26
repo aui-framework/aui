@@ -113,7 +113,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 // checkboxes
                 _new<ALabel>("Checkboxes"),
                 _new<ACheckBox>("Unchecked checkbox"),
-                _new<ACheckBox>("Checked checkbox") let { it->setChecked(true); },
+                _new<ACheckBox>("Selected checkbox") let { it->setChecked(true); },
                 _new<ACheckBox>("Disabled checkbox") let { it->setDisabled(); },
 
                 // radiobuttons

@@ -21,23 +21,33 @@
 
 #pragma once
 
+#include <algorithm>
+
 namespace aui {
+    namespace impl {
+        template<typename First, typename... Up>
+        struct first {
+            using type = First;
+        };
+    }
     struct parameter_pack {
         template<typename Callable, typename... Args>
         inline static void for_each(Callable c, Args&&... args) {
-            invoke(c, std::forward<Args>(args)...);
+            invoke(std::move(c), std::forward<Args>(args)...);
         }
-
+        template<typename... Types>
+        using first = typename impl::first<Types...>::type;
     private:
 
         template<typename Callable, typename Arg1>
         inline static void invoke(Callable c, Arg1&& arg1) {
-            c(arg1);
+            c(std::forward<Arg1>(arg1));
         }
         template<typename Callable, typename Arg1, typename... Args>
         inline static void invoke(Callable c, Arg1&& arg1, Args&&... args) {
-            c(arg1);
-            invoke(c, args...);
+            c(std::forward<Arg1>(arg1));
+            invoke(std::move(c), std::forward<Args>(args)...);
         }
+
     };
 }

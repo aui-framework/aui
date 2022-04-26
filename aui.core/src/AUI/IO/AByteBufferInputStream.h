@@ -24,7 +24,7 @@
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/Common/SharedPtr.h"
 
-class API_AUI_CORE AByteBufferInputStream: public IInputStream
+class API_AUI_CORE AByteBufferInputStream final: public IInputStream
 {
 private:
     const char* mCurrent;
@@ -32,10 +32,14 @@ private:
 
 
 public:
-	AByteBufferInputStream(const AByteBufferRef& buffer)
+	AByteBufferInputStream(AByteBufferView buffer)
 		: mCurrent(buffer.data()), mEnd(buffer.data() + buffer.size())
 	{
 	}
 
 	size_t read(char* dst, size_t size) override;
+
+    size_t available() const {
+        return mEnd - mCurrent;
+    }
 };

@@ -271,7 +271,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                                            glm::vec3{glm::vec2(viewSize - imageSize) / 2.f, 0.f}));
 
                     RenderHints::PushMask mask([&] {
-                        Render::drawRect(ASolidBrush{}, {0, 0}, view->getSize());
+                        Render::rect(ASolidBrush{}, {0, 0}, view->getSize());
                     });
 
                     drawableDrawWrapper(imageSize);
@@ -279,7 +279,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                 }
                 case Sizing::NONE: {
                     RenderHints::PushMask mask([&] {
-                        Render::drawRect(ASolidBrush{}, {0, 0}, view->getSize());
+                        Render::rect(ASolidBrush{}, {0, 0}, view->getSize());
                     });
                     glm::vec2 imageSize = glm::vec2(drawable->getSizeHint());
 

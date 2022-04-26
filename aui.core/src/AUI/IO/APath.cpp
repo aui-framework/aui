@@ -278,8 +278,11 @@ bool APath::isAbsolute() const {
     if (length() >= 1) {
         if (first() == '/')
             return true;
-        if (length() >= 2 && (*this)[1] == ':') {
-            return true;
+        if (length() >= 2) {
+            auto secondChar = operator[](1);
+            if (secondChar == ':') {
+                return true;
+            }
         }
     }
     return false;
@@ -384,7 +387,7 @@ AVector<APath> APath::find(const AString& filename, const AVector<APath>& locati
     auto locateImpl = [&](const AVector<AString>& container) {
         auto c = [&](auto& c, const AVector<AString>& container) mutable {
             for (const APath& pathEntry : container) {
-                auto fullPath = pathEntry[filename];
+                auto fullPath = pathEntry / filename;
                 if (fullPath.isRegularFileExists()) {
                     result << fullPath;
                     if (doReturn()) {
@@ -444,4 +447,15 @@ AString APath::systemSlashDirection() const {
 const APath& APath::touch() const {
     AFileOutputStream fos(*this);
     return *this;
+}
+
+void APath::chmod(int newMode) const {
+#if AUI_PLATFORM_WIN
+    if (::_wchmod(c_str(), newMode) != 0)
+#else
+    if (::chmod(toStdString().c_str(), newMode) != 0)
+#endif
+    {
+        throw AIOException("unable to chmod {}"_format(*this) ERROR_DESCRIPTION);
+    }
 }

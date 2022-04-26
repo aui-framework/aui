@@ -25,11 +25,9 @@
 
 #pragma once
 
-#include "attribute.h"
-
 namespace ass {
     template<typename Base>
-    struct disabled: Base, AttributeHelper<disabled<Base>> {
+    struct disabled: Base {
         template<typename... Args>
         disabled(Args&&... args):
             Base(std::forward<Args>(args)...)

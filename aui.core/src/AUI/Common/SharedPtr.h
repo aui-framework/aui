@@ -25,28 +25,12 @@
 
 #include <AUI/Common/AObject.h>
 #include <AUI/Thread/AThread.h>
+#include <AUI/Reflect/AClass.h>
 
 template<typename T, typename... Args>
 inline _<T> _new(Args&& ... args)
 {
-	if constexpr (std::is_base_of_v<AObject, T>) {
-		auto o = new T(std::forward<Args>(args)...);
-		return _<T>(o, [](T* obj)
-		{
-            obj->beforeObjectRemoval();
-			static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
-			{
-                obj->clearSignals();
-				static_cast<AObject*>(obj)->getThread()->enqueue([obj]()
-				{
-					delete obj; // TODO reimplement dis shit
-				});
-			});
-		});
-	}
-	else {
-		return static_cast<_<T>>(std::make_shared<T>(std::forward<Args>(args)...));
-	}
+    return static_cast<_<T>>(std::make_shared<T>(std::forward<Args>(args)...));
 }
 
 template<typename T, typename E>
@@ -71,6 +55,17 @@ inline _<T> _new(std::initializer_list<E> il) {
     }
 }
 
+
+template<typename T>
+std::ostream& operator<<(std::ostream& os, const _<T>& rhs) noexcept {
+    return os << "[" << AClass<T>::name() << " " << rhs.get() << "]";
+}
+
+// gtest printer
+template<typename T>
+inline void PrintTo(const _<T>& ptr, std::ostream* stream) {
+    *stream << ptr;
+}
 
 template<typename T>
 template<typename SignalField, typename Object, typename Function>

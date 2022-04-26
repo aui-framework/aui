@@ -119,9 +119,9 @@ void ACursorSelectable::drawSelectionRects() {
 
     auto draw = [&]() {
         auto fs = getMouseSelectionFont();
-        Render::drawRect(ASolidBrush{},
-                         { p.x + absoluteBeginPos, p.y + row * fs.getLineHeight() },
-                         { absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 2 });
+        Render::rect(ASolidBrush{},
+                     {p.x + absoluteBeginPos, p.y + row * fs.getLineHeight()},
+                     {absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 2});
     };
 
     auto t = getDisplayText();

@@ -28,6 +28,7 @@
 
 class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
+class API_AUI_CORE AByteBufferView;
 
 class API_AUI_CORE AString: std::wstring
 {
@@ -251,7 +252,7 @@ public:
 	    }
         return copy;
 	}
-    [[nodiscard]] inline AString replacedAll(const ASet<wchar_t> from, wchar_t to) const noexcept {
+    [[nodiscard]] inline AString replacedAll(const ASet<wchar_t>& from, wchar_t to) const noexcept {
 	    AString copy;
 	    copy.reserve(length() + 10);
 	    for (auto c : *this) {
@@ -263,7 +264,7 @@ public:
 	    }
         return copy;
 	}
-	void replaceAll(wchar_t from, wchar_t to) noexcept;
+	AString& replaceAll(wchar_t from, wchar_t to) noexcept;
 
 	[[nodiscard]]
 	float toFloat() const noexcept;
@@ -292,7 +293,7 @@ public:
 	}
 
 	static AString fromLatin1(const AByteBuffer& buffer);
-	static AString fromUtf8(const AByteBuffer& buffer);
+	static AString fromUtf8(const AByteBufferView& buffer);
 	static AString fromUtf8(const char* buffer, size_t length);
 	static AString fromLatin1(const char* buffer);
 
@@ -535,6 +536,11 @@ public:
     inline AString format(Args&&... args);
 
     AString processEscapes() const;
+
+    AString& removeAll(wchar_t c) noexcept {
+        erase(std::remove(begin(), end(), c));
+        return *this;
+    }
 };
 
 inline AString operator+(const AString& l, const AString& r) noexcept

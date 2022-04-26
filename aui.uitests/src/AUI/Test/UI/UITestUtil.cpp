@@ -12,5 +12,5 @@ void UITest::frame() {
         w->getRenderingContext()->endResize(*w);
         w->redraw();
     }
-    AThread::current()->processMessages();
+    AThread::processMessages();
 }

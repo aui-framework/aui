@@ -46,6 +46,11 @@ public:
     void setSize(int width, int height) override;
     void setContents(const _<AViewContainer>& container);
 
+    void scroll(int deltaByX, int deltaByY) noexcept {
+        nullsafe(mHorizontalScrollbar)->scroll(deltaByX);
+        nullsafe(mVerticalScrollbar)->scroll(deltaByY);
+    }
+
     bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
 
     void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
@@ -60,12 +65,12 @@ public:
     public:
         Builder() = default;
 
-        Builder& withExternalVerticalScrollbar(const _<AScrollbar>& externalVerticalScrollbar) {
-            mExternalVerticalScrollbar = externalVerticalScrollbar;
+        Builder& withExternalVerticalScrollbar(_<AScrollbar> externalVerticalScrollbar) {
+            mExternalVerticalScrollbar = std::move(externalVerticalScrollbar);
             return *this;
         }
-        Builder& withContents(const _<AViewContainer>& contents) {
-            mContents = contents;
+        Builder& withContents(_<AViewContainer> contents) {
+            mContents = std::move(contents);
             return *this;
         }
 

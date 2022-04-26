@@ -3,15 +3,17 @@
 //
 
 #include "SvgImageFactory.h"
+#include "AUI/Common/AByteBuffer.h"
+
 #define NANOSVG_IMPLEMENTATION
 #define NANOSVGRAST_IMPLEMENTATION
 #include <nanosvg.h>
 #include <nanosvgrast.h>
 
 
-SvgImageFactory::SvgImageFactory(const AByteBuffer& buf) {
-    auto copy = buf;
-    copy << '\0';
+SvgImageFactory::SvgImageFactory(AByteBufferView buf) {
+    AByteBuffer copy;
+    copy << buf << '\0';
     mNsvg = nsvgParse(copy.data(), "px", 96.f);
 }
 

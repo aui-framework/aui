@@ -21,6 +21,7 @@
 
 #include <cassert>
 #include <AUI/Network/AUdpSocket.h>
+#include <AUI/Common/AByteBuffer.h>
 
 #include "Exceptions.h"
 
@@ -50,12 +51,12 @@ AUdpSocket::AUdpSocket() :
 }
 
 
-void AUdpSocket::write(const AByteBuffer& buf, const AInet4Address& dst) {
-	assert(buf.getSize() < 32768);
+void AUdpSocket::write(AByteBufferView buf, const AInet4Address& dst) {
+	assert(buf.size() < 32768);
 	//static boost::mutex m;
 	//boost::unique_lock lock(m);
 	auto addr = dst.addr();
-	if (sendto(getHandle(), buf.data(), static_cast<int>(buf.getSize()), 0, (sockaddr*)&addr, sizeof(sockaddr_in)) <=
+	if (sendto(getHandle(), buf.data(), static_cast<int>(buf.size()), 0, (sockaddr*)&addr, sizeof(sockaddr_in)) <=
         0) {
 		throw AIOException(AString("sendto error ") + getErrorString());
 	}

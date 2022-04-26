@@ -193,6 +193,13 @@ function(auib_import AUI_MODULE_NAME URL)
     elseif(AUIB_IMPORT_VERSION)
         set(TAG_OR_HASH ${AUIB_IMPORT_VERSION})
     endif()
+
+    # should restrict version length; in order to make equal "f116a123b9b44f362c96632ad5cec980aab8b46c" and "f116a123"
+    string(LENGTH ${TAG_OR_HASH} _length)
+    if (_length GREATER 16)
+        string(SUBSTRING ${TAG_OR_HASH} 0 7 TAG_OR_HASH)
+    endif()
+
     if (NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE Debug)
     endif()
@@ -207,6 +214,10 @@ function(auib_import AUI_MODULE_NAME URL)
         set(SHARED_OR_STATIC static)
     endif()
     set(BUILD_SPECIFIER "${AUI_MODULE_NAME_LOWER}/${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}")
+
+    # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
+    string(MD5 BUILD_SPECIFIER ${BUILD_SPECIFIER})
+
     set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
 
     # append our location to module path
@@ -298,7 +309,7 @@ function(auib_import AUI_MODULE_NAME URL)
             set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
                     BINARY_DIR ${DEP_BINARY_DIR})
         endif()
-        message(STATUS "Fetching ${AUI_MODULE_NAME}")
+        message(STATUS "Fetching ${AUI_MODULE_NAME} (${TAG_OR_HASH})")
 
         file(REMOVE_RECURSE ${DEP_SOURCE_DIR} ${DEP_BINARY_DIR})
 
@@ -367,8 +378,22 @@ function(auib_import AUI_MODULE_NAME URL)
             endif()
 
 
+            if(MSVC)
+                # force msvc compiler to parallel build
+                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
+                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+            endif()
+
+            if (IOS)
+                # fix multiple definitions on ios
+                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error-implicit-function-declaration")
+            endif()
+
             # forward all necessary variables to child cmake build
             foreach(_varname
+                    AUI_CACHE_DIR
+                    CMAKE_C_FLAGS
+                    CMAKE_CXX_FLAGS
                     CMAKE_GENERATOR_PLATFORM
                     CMAKE_VS_PLATFORM_NAME
                     CMAKE_BUILD_TYPE
@@ -397,17 +422,14 @@ function(auib_import AUI_MODULE_NAME URL)
                 list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_TOOLCHAIN_FILE=${_toolchain}")
             endif()
             list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
-            if (IOS)
-                list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_C_FLAGS=-Wno-error-implicit-function-declaration")
-            endif()
 
-            message("Building and installing ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
+            message("Configuring CMake ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
             execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                     RESULT_VARIABLE STATUS_CODE)
 
             if (NOT STATUS_CODE EQUAL 0)
-                message(STATUS "CMake configure failed, clearing dir and trying again...")
+                message(STATUS "Dependency CMake configure failed, clearing dir and trying again...")
                 file(REMOVE_RECURSE ${DEP_BINARY_DIR})
                 file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
                 execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
@@ -418,11 +440,23 @@ function(auib_import AUI_MODULE_NAME URL)
                 endif()
             endif()
 
-            message(STATUS "Installing ${AUI_MODULE_NAME}")
+            message(STATUS "Building ${AUI_MODULE_NAME}")
             execute_process(COMMAND
                     ${CMAKE_COMMAND}
                     --build ${DEP_BINARY_DIR} --parallel
-                    --target install
+                    --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
+
+                    WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                    RESULT_VARIABLE ERROR_CODE)
+
+            if (NOT STATUS_CODE EQUAL 0)
+                message(FATAL_ERROR "Dependency build failed: ${AUI_MODULE_NAME}")
+            endif()
+
+            message(STATUS "Installing ${AUI_MODULE_NAME}")
+            execute_process(COMMAND
+                    ${CMAKE_COMMAND}
+                    --install .
                     --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
@@ -566,5 +600,15 @@ function(auib_import AUI_MODULE_NAME URL)
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
 
-    message(STATUS "Imported: ${AUI_MODULE_NAME}")
+    message(STATUS "Imported: ${AUI_MODULE_NAME} (${${AUI_MODULE_NAME}_ROOT})")
 endfunction()
+
+
+macro(auib_use_system_libs_begin)
+    set(AUIB_PREV_CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${CMAKE_FIND_USE_CMAKE_SYSTEM_PATH})
+    set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH TRUE)
+endmacro()
+
+macro(auib_use_system_libs_end)
+    set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${AUIB_PREV_CMAKE_FIND_USE_CMAKE_SYSTEM_PATH})
+endmacro()

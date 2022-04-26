@@ -24,16 +24,23 @@
 #include <AUI/Common/AStringVector.h>
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Common/AException.h>
-#include <AUI/Util/AError.h>
+#include "AUI/Logging/ALogger.h"
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
+#include <AUI/Logging/ALogger.h>
+
 #endif
 
 
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
     AStringVector args;
-    AThread::current()->setThreadName("UI thread");
+
+    // renames all threads to "UI thread" on linux
+#if !AUI_PLATFORM_LINUX
+    AThread::setName("UI thread");
+#endif
+
 #if AUI_PLATFORM_WIN
     if (argc == 0) {
         // remove quotation marks
@@ -72,9 +79,11 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
             el->loop();
         }
     } catch (const AException& e) {
-        AError::handle(e, "uncaught exception");
+        ALogger::err("AUI") << "Uncaught exception: " << e;
+    } catch (const std::exception& e) {
+        ALogger::err("AUI") << "Uncaught exception: " << e.what();
     } catch (...) {
-        ALogger::err("Uncaught exception of unknown type");
+        ALogger::err("AUI") << "Uncaught unknown exception";
     }
     return r;
 }

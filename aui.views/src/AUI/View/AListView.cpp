@@ -76,7 +76,7 @@ public:
     }
 };
 
-class AListItem: public ALabel
+class AListItem: public ALabel, public ass::ISelectable
 {
 private:
 	bool mSelected = false;
@@ -94,18 +94,18 @@ public:
 
 	virtual ~AListItem() = default;
 
-    void getCustomCssAttributes(AMap<AString, AVariant>& map) override
-	{
-		ALabel::getCustomCssAttributes(map);
-		if (mSelected)
-			map["selected"] = true;
-	}
-
 	void setSelected(const bool selected)
 	{
 		mSelected = selected;
 		emit customCssPropertyChanged;
 	}
+
+protected:
+    bool selectableIsSelectedImpl() override {
+        return mSelected;
+    }
+
+public:
 
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override {
         AView::onMousePressed(pos, button);
@@ -175,7 +175,7 @@ void AListView::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
 
 void AListView::handleMousePressed(AListItem* item) {
 
-    if (!AInput::isKeyDown(AInput::LControl)) {
+    if (!AInput::isKeyDown(AInput::LControl) || !mAllowMultipleSelection) {
         clearSelection();
     }
     mSelectionModel << AModelIndex(mContent->getIndex());
@@ -230,4 +230,9 @@ bool AListView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) 
         }
     }
     return AViewContainer::onGesture(origin, event);
+}
+
+void AListView::setAllowMultipleSelection(bool allowMultipleSelection) {
+    mAllowMultipleSelection = allowMultipleSelection;
+    clearSelection();
 }

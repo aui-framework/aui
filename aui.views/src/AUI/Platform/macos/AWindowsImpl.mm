@@ -55,7 +55,7 @@ AWindow::~AWindow() {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(shared_from_this());
+    getWindowManager().mWindows.removeFirst(_cast<AWindow>(objectSharedPtr()));
 
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;
@@ -65,11 +65,11 @@ void AWindow::quit() {
     }
 }
 void AWindow::show() {
-    if (!getWindowManager().mWindows.contains(shared_from_this())) {
-        getWindowManager().mWindows << shared_from_this();
+    if (!getWindowManager().mWindows.contains(_cast<AWindow>(objectSharedPtr()))) {
+        getWindowManager().mWindows << _cast<AWindow>(objectSharedPtr());
     }
     try {
-        mSelfHolder = shared_from_this();
+        mSelfHolder = _cast<AWindow>(objectSharedPtr());
     } catch (...) {
         mSelfHolder = nullptr;
     }
@@ -151,7 +151,7 @@ void AWindow::hide() {
 
 void AWindowManager::notifyProcessMessages() {
     dispatch_async(dispatch_get_main_queue(), ^{
-        AThread::current()->processMessages();
+        AThread::processMessages();
     });
 }
 

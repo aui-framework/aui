@@ -4,7 +4,7 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Util/ARandom.h>
-#include <AUI/Util/AError.h>
+#include <AUI/Logging/ALogger.h>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto window = reinterpret_cast<AWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
@@ -12,7 +12,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         if (window)
             return window->winProc(hwnd, uMsg, wParam, lParam);
     } catch (const AException& e) {
-        AError::handle(e);
+        ALogger::err("AUI") << "Uncaught exception in window proc: " << e;
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }

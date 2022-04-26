@@ -26,8 +26,29 @@
 #include <utility>
 #include <functional>
 #include <optional>
+#include <AUI/Common/SharedPtrTypes.h>
 
 namespace aui {
+    /**
+     * @brief Forbids copy of your class.
+     *
+     * @code{cpp}
+     * class MyObject: public aui::noncopyable {
+     * private:
+     *     void* mResource;
+     * }
+     * ...
+     * MyObject obj1;
+     * MyObject obj2 = obj1; // error
+     * MyObject obj3 = std::move(obj); // but this one is ok
+     * @endcode
+     */
+    struct noncopyable {
+        noncopyable() = default;
+        noncopyable(const noncopyable&) = delete;
+    };
+
+
     /**
      * Null-checking wrapper when usage of null is fatal.
      * @tparam T any pointer or pointer-like type
@@ -43,7 +64,7 @@ namespace aui {
         template<typename AnyType>
         operator AnyType() noexcept {
             assert(("value is used when null" && mValue != nullptr));
-            return reinterpret_cast<AnyType>(mValue);
+            return AnyType(mValue);
         }
 
         template<typename AnyType>
@@ -72,11 +93,11 @@ namespace aui {
             checkForNull();
         }
 
-        operator T() {
+        operator T() const noexcept {
             checkForNull();
             return value;
         }
-        T* operator->() const {
+        auto operator->() const {
             checkForNull();
             return &*value;
         }
@@ -85,6 +106,49 @@ namespace aui {
     template<typename T>
     struct non_null: non_null_lateinit<T> {
         non_null(T value): non_null_lateinit<T>(value) {}
+    };
+
+    /**
+     * @brief Does not allow escaping, allowing to accept lvalue ref, rvalue ref, shared_ptr and etc without overhead
+     *
+     *        Promises that the contained object wouldn't be copied/moved outside of the function thus does not take
+     *        responsibility of deleting the object. This allows to accept lvalue and rvalue references, pointers,
+     *        unique_ptr and shared_ptr without ref counter modification.
+     *
+     *        Intended to use in function arguments.
+     *
+     *        Accepts lvalue ref, rvalue ref, ptr and shared_ptr. Does not accepts null.
+     *
+     * @tparam T undecorated type
+     */
+    template<typename T>
+    struct no_escape {
+    static_assert(!std::is_reference<T>::value, "use undecorated type (without reference)");
+    static_assert(!std::is_pointer_v<T>, "use undecorated type (without pointer)");
+    private:
+        T* value;
+
+    public:
+        no_escape(T& value): value(&value) {}
+        no_escape(T&& value): value(&value) {}
+        no_escape(T* value): value(value) {}
+
+        no_escape(const _<T>& value): value(&*value) {}
+        no_escape(const _unique<T>& value): value(&*value) {}
+
+        template<typename DerivedFromT, std::enable_if_t<std::is_base_of_v<T, DerivedFromT> && !std::is_same_v<DerivedFromT, T>, bool> = true>
+        no_escape(const _<DerivedFromT>& value): value(&*value) {}
+
+        template<typename DerivedFromT, std::enable_if_t<std::is_base_of_v<T, DerivedFromT> && !std::is_same_v<DerivedFromT, T>, bool> = true>
+        no_escape(const _unique<DerivedFromT>& value): value(&*value) {}
+
+        T* operator->() const {
+            return value;
+        }
+
+        T& operator*() const {
+            return *value;
+        }
     };
 
     /**

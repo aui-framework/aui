@@ -24,6 +24,8 @@
 #include <tuple>
 #include <variant>
 #include <cstdint>
+#include <iterator>
+#include "parameter_pack.h"
 
 namespace aui {
 
@@ -141,8 +143,112 @@ namespace aui {
         }
     };
 
+    /**
+     * Converts a sequence of containers to a single iterator range.
+     */
     template<typename... Items>
     joined_range<Items...> join(Items... items) {
         return { (&items)... };
+    }
+
+    /**
+     * Allows to iterate multiple containers in parallel.
+     * @example
+     * @code{cpp}
+     * std::array&lt;int, 3&gt; ints = { 1, 2, 3 };
+     * std::array&lt;std::string, 3&gt; strings = { "one", "two", "three" };
+     * for (auto&[i, s] : aui::zip(ints, strings)) {
+     *     std::cout &lt;&lt; i &lt;&lt; ", " &lt;&lt; s &lt;&lt; std::endl;
+     * }
+     * @endcode
+     * <pre>
+     * 1, one<br />
+     * 2, two<br />
+     * 3, three<br />
+     * </pre>
+     */
+    template<typename... Containers>
+    struct zip {
+    private:
+        using iterator_parallel = std::tuple<decltype(std::declval<Containers>().begin())...>;
+
+        iterator_parallel begins_;
+        iterator_parallel ends_;
+
+    public:
+        struct iterator {
+            iterator_parallel iterators_;
+
+            iterator(iterator_parallel iterators) : iterators_(std::move(iterators)) {}
+
+            iterator& operator++() noexcept {
+                std::apply([](auto&&... v) {
+                    aui::parameter_pack::for_each([](auto& i) {
+                        ++i;
+                    }, v...);
+                }, iterators_);
+                return *this;
+            }
+
+            std::tuple<decltype(*std::declval<Containers>().begin())&...> operator*() noexcept {
+                return std::apply([](auto&&... v) {
+                    return std::tuple<decltype(*std::declval<Containers>().begin())&...>((*v)...);
+                }, iterators_);
+            }
+
+            bool operator==(const iterator& rhs) const noexcept {
+                return iterators_ == rhs.iterators_;
+            }
+
+            bool operator!=(const iterator& rhs) const noexcept {
+                return iterators_ != rhs.iterators_;
+            }
+        };
+
+        zip(Containers&... c): begins_(c.begin()...), ends_(c.end()...) {
+
+        }
+
+        iterator begin() noexcept {
+            return iterator(begins_);
+        }
+        iterator end() noexcept {
+            return iterator(ends_);
+        }
+    };
+
+    namespace impl {
+        template<typename Iterator, class = void>
+        static constexpr bool is_forward_iterator = true;
+
+        template<typename Iterator>
+        static constexpr bool is_forward_iterator<std::reverse_iterator<Iterator>> = false;
+    }
+
+    /**
+     * @brief Reverses iterator direction (i.e. converts iterator to reverse_iterator, reverse_iterator to iterators).
+     *
+     * A reversed iterator points to the same element of the container.
+     *
+     * Works on AVector.
+     * @tparam Iterator iterator
+     * @param iterator iterator
+     * @return same iterator but reverse direction
+     */
+    template<typename Iterator>
+    auto reverse_iterator_direction(Iterator iterator) noexcept ->
+        std::enable_if_t<!impl::is_forward_iterator<Iterator>,
+                         decltype((iterator + 1).base())
+                         > {
+        return (iterator + 1).base();
+    }
+
+    template<typename Iterator>
+    auto reverse_iterator_direction(Iterator iterator) noexcept ->
+        std::enable_if_t<impl::is_forward_iterator<Iterator>,
+                         decltype(std::make_reverse_iterator(std::declval<Iterator>()))
+                         > {
+
+        return std::make_reverse_iterator(iterator + 1);
     }
 }

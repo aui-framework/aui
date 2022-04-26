@@ -54,7 +54,3 @@ void AObject::clearSignals()
 bool& AObject::isDisconnected() {
     return gIsDisconnected;
 }
-
-void AObject::beforeObjectRemoval() {
-
-}

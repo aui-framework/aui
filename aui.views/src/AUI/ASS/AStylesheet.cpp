@@ -127,7 +127,7 @@ AStylesheet::AStylesheet() {
             BackgroundSolid{0xfafafa_rgb},
         },
         {
-            { debug_selector(), t<AButton>()["default"], c(".btn_default")},
+            { debug_selector(), Button::Default(t<AButton>()), c(".btn_default")},
             FontRendering::ANTIALIASING,
             BackgroundGradient {getOsThemeColor().lighter(0.15f),
                                 getOsThemeColor().darker(0.15f),
@@ -137,7 +137,7 @@ AStylesheet::AStylesheet() {
             TextColor { 0xffffff_rgb },
         },
         {
-            { t<AButton>::hover()["default"], c::hover(".btn_default")},
+            { Button::Default(t<AButton>::hover()), c::hover(".btn_default")},
             BoxShadow { 0, 1_dp, 6_dp, -1_dp, getOsThemeColor() },
         },
         {
@@ -146,20 +146,20 @@ AStylesheet::AStylesheet() {
             BoxShadow { nullptr },
         },
         {
-            { t<AButton>::hover()["default"], c::hover(".btn_default")},
+            { Button::Default(t<AButton>::hover()), c::hover(".btn_default")},
             BackgroundGradient {getOsThemeColor().lighter(0.2f),
                                 getOsThemeColor().darker(0.15f),
                                 LayoutDirection::VERTICAL },
         },
         {
-            { t<AButton>::active()["default"], c::active(".btn_default")},
+            { Button::Default(t<AButton>::active()), c::active(".btn_default")},
             BackgroundSolid { getOsThemeColor() }
         },
         {
-            { t<AButton>()["disabled"], c(".btn")["disabled"]},
+            { t<AButton>::disabled(), c::disabled(".btn") },
             BackgroundSolid { 0xcccccc_rgb },
             BoxShadow { nullptr },
-            Border {1_dp, 0xbfbfbf_rgb },
+            Border { 1_dp, 0xbfbfbf_rgb },
             TextColor { 0x838383_rgb }
         },
 
@@ -257,15 +257,15 @@ AStylesheet::AStylesheet() {
             BackgroundImage {0x005499_rgb },
         },
         {
-            t<ACheckBox>()["checked"] >> t<ACheckBoxInner>(),
+                Selected(t<ACheckBox>()) >> t<ACheckBoxInner>(),
             BackgroundImage {":uni/svg/checkbox.svg" },
         },
         {
-            t<ACheckBox>()["disabled"] > t<ALabel>(),
+            t<ACheckBox>::disabled() > t<ALabel>(),
             TextColor { 0xa0a0a0_rgb },
         },
         {
-            t<ACheckBox>()["disabled"] >> t<ACheckBoxInner>(),
+            t<ACheckBox>::disabled() >> t<ACheckBoxInner>(),
             BackgroundSolid { 0xe5e5e5_rgb },
             BackgroundImage { 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
@@ -324,15 +324,15 @@ AStylesheet::AStylesheet() {
             BackgroundImage {0x005499_rgb },
         },
         {
-            t<ARadioButton>()["checked"] > t<ARadioButtonInner>(),
+                Selected(t<ARadioButton>()) > t<ARadioButtonInner>(),
             BackgroundImage {":uni/svg/radio.svg" },
         },
         {
-            t<ARadioButton>()["disabled"] > t<ALabel>(),
+            t<ARadioButton>::disabled() > t<ALabel>(),
             TextColor { 0xa0a0a0_rgb },
         },
         {
-            t<ARadioButton>()["disabled"] > t<ARadioButtonInner>(),
+            t<ARadioButton>::disabled() > t<ARadioButtonInner>(),
             BackgroundSolid { 0xe5e5e5_rgb },
             BackgroundImage { 0xa0a0a0_rgb },
             Border { 1_dp, 0xa0a0a0_rgb },
@@ -381,7 +381,7 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0xe5f3ff_rgb },
         },
         {
-            {t<AListView>() > t<AViewContainer>() > t<ALabel>()["selected"], c(".list-item")["selected"]},
+            {t<AListView>() > t<AViewContainer>() > Selected(t<ALabel>()), Selected(c(".list-item"))},
             BackgroundSolid { 0xcde8ff_rgb },
         },
 
@@ -466,7 +466,7 @@ AStylesheet::AStylesheet() {
             Padding { 8_dp, 4_dp },
         },
         {
-            t<ATabButtonView>()["current"],
+            Selected(t<ATabButtonView>()),
             BorderBottom { 2_dp, getOsThemeColor() },
         },
         {

@@ -69,8 +69,8 @@ AString::AString(const std::string& str) noexcept
     fromUtf8_impl(*this, str.c_str(), str.length());
 }
 
-AString AString::fromUtf8(const AByteBuffer& buffer) {
-    return AString::fromUtf8(buffer.data(), buffer.getSize());
+AString AString::fromUtf8(const AByteBufferView& buffer) {
+    return AString::fromUtf8(buffer.data(), buffer.size());
 }
 
 AString AString::fromUtf8(const char* buffer, size_t length) {
@@ -237,7 +237,7 @@ bool AString::toBool() const noexcept
 
 AString AString::fromLatin1(const AByteBuffer& buffer)
 {
-    return {buffer.readIterator(), buffer.end() };
+    return {buffer.begin(), buffer.end() };
 }
 
 
@@ -1091,11 +1091,12 @@ AString AString::lowercase() const {
     return buf;
 }
 
-void AString::replaceAll(wchar_t from, wchar_t to) noexcept {
+AString& AString::replaceAll(wchar_t from, wchar_t to) noexcept {
     for (auto& s : *this) {
         if (s == from)
             s = to;
     }
+    return *this;
 }
 
 void AString::resizeToNullTerminator() {

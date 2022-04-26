@@ -24,7 +24,7 @@
 #include <AUI/Core.h>
 #include <vector>
 #include <cassert>
-#include "SharedPtr.h"
+#include "SharedPtrTypes.h"
 #include <algorithm>
 #include <ostream>
 #include "ASet.h"
@@ -109,7 +109,7 @@ public:
      * @param rhs value to push
      * @return self
      */
-    inline self& operator<<(const StoredType& rhs) noexcept
+    self& operator<<(const StoredType& rhs) noexcept
     {
         p::push_back(rhs);
         return *this;
@@ -120,7 +120,7 @@ public:
      * @param rhs value to push
      * @return self
      */
-    inline self& operator<<(StoredType&& rhs) noexcept
+    self& operator<<(StoredType&& rhs) noexcept
     {
         p::push_back(std::forward<StoredType>(rhs));
         return *this;
@@ -132,7 +132,7 @@ public:
      * @return self
      */
     template<typename OtherContainer, std::enable_if_t<!std::is_convertible_v<OtherContainer, StoredType>, bool> = true>
-    inline self& operator<<(const OtherContainer& c) noexcept
+    self& operator<<(const OtherContainer& c) noexcept
     {
         insertAll(c);
         return *this;
@@ -246,6 +246,14 @@ public:
 
     ASet<StoredType> toSet() const noexcept {
         return ASet<StoredType>(p::begin(), p::end());
+    }
+
+    template<typename UnaryOperation>
+    auto map(UnaryOperation&& transformer) const -> AVector<decltype(transformer(std::declval<StoredType>()))> {
+        AVector<decltype(transformer(std::declval<StoredType>()))> result;
+        result.reserve(p::size());
+        std::transform(p::begin(), p::end(), std::back_inserter(result), std::forward<UnaryOperation>(transformer));
+        return result;
     }
 };
 

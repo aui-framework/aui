@@ -24,175 +24,199 @@
 #include <AUI/IO/IOutputStream.h>
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/IO/IInputStream.h"
-#include "AJsonElement.h"
+#include "AJson.h"
+#include "AUI/Common/AByteBufferView.h"
 #include <AUI/Traits/arrays.h>
 #include <AUI/Common/AUuid.h>
+#include <AUI/Common/AMap.h>
+#include <AUI/Json/AJson.h>
+#include <AUI/Json/Exception.h>
+#include <variant>
 
-
-namespace aui::json::conv {
-    template<typename T>
-    struct conv {
-    private:
-        static constexpr bool not_uses_variant() {
-            return std::is_class_v<T> && !std::is_base_of_v<AString, T>;
-        }
-    public:
-        static T from_json(const AJsonElement& v) {
-            if constexpr (not_uses_variant()) {
-                // for AJSON_FIELDS
-                T t;
-                t.readJson(v);
-                return t;
-            } else {
-                return v.asVariant().to<T>();
-            }
-        }
-
-        static AJsonElement to_json(const T& t) {
-            if constexpr (not_uses_variant()) {
-                // for AJSON_FIELDS
-                return t.toJson();
-            } else {
-                return AJsonValue(t);
-            }
-        }
-    };
+class AJson;
+namespace aui::impl {
+    using JsonObject = AMap<AString, AJson>;
+    using JsonArray = AVector<AJson>;
+    using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, float, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
 }
 
+class AJson: public aui::impl::JsonVariant {
+private:
 
-namespace aui {
     template<typename T>
-    inline AJsonElement to_json(const T& t) {
-        return json::conv::conv<T>::to_json(t);
+    [[nodiscard]]
+    bool is() const noexcept {
+        return std::holds_alternative<T>(*this);
     }
     template<typename T>
-    inline T from_json(const AJsonElement& v) {
-        return json::conv::conv<T>::from_json(v);
+    [[nodiscard]]
+    T& as() {
+        if (isEmpty()) {
+            *this = T();
+        }
+        try {
+            return std::get<T>(*this);
+        } catch (...) {
+            throw AJsonTypeMismatchException("not a " + AClass<T>::name());
+        }
     }
-}
-
-namespace aui::json::conv {
-
-    template<>
-    struct conv<AUuid> {
-        static AUuid from_json(const AJsonElement& v) {
-            return AUuid(v.asString());
-        }
-
-        static AJsonElement to_json(const AUuid& t) {
-            return AJsonValue(t.toString());
-        }
-    };
-    template<>
-    struct conv<AVariant> {
-        static AVariant from_json(const AJsonElement& v) {
-            return v.asVariant();
-        }
-
-        static AJsonElement to_json(const AVariant& t) {
-            return AJsonValue(t);
-        }
-    };
 
     template<typename T>
-    struct conv<AVector<T>> {
-        static AVector<T> from_json(const AJsonElement& v) {
-            AVector<T> result;
-            for (auto& f : v.asArray()) {
-                result << conv<T>::from_json(f);
+    [[nodiscard]]
+    const T& as() const {
+        try {
+            return std::get<T>(*this);
+        } catch (...) {
+            if constexpr(std::is_same_v<T, aui::impl::JsonObject>) {
+                throw AJsonTypeMismatchException("not an object");
+            } else if constexpr(std::is_same_v<T, aui::impl::JsonArray>) {
+                throw AJsonTypeMismatchException("not an array");
+            } else {
+                throw AJsonTypeMismatchException("not a " + AClass<T>::name());
             }
-            return result;
         }
+    }
+public:
+    using aui::impl::JsonVariant::variant;
 
-        static AJsonElement to_json(const AVector<T>& t) {
-            AJsonArray result;
-            for (auto& v : t) {
-                result << conv<T>::to_json(v);
-            }
-            return result;
-        }
-    };
+    using Array = aui::impl::JsonArray;
+    using Object = aui::impl::JsonObject;
 
-    template<typename T1, typename T2>
-    struct conv<std::pair<T1, T2>> {
-        static std::pair<T1, T2> from_json(const AJsonElement& v) {
-            return std::pair<T1, T2>{ aui::from_json<T1>(v["k"]), aui::from_json<T2>(v["v"]) };
-        }
+    AJson(std::initializer_list<std::pair<const AString, AJson>> elems): aui::impl::JsonVariant(aui::impl::JsonObject(std::move(elems))) {
 
-        static AJsonElement to_json(const std::pair<T1, T2>& t) {
-            AJsonObject r;
-            r["k"] = aui::to_json<T1>(t.first);
-            r["v"] = aui::to_json<T2>(t.second);
-            return r;
-        }
-    };
-}
+    }
 
+    AJson(const char* name): aui::impl::JsonVariant(AString(name)) {}
+    AJson(const AJson& json) = default;
+    AJson(AJson&&) noexcept = default;
+    AJson& operator=(const AJson&) = default;
+    AJson& operator=(AJson&&) noexcept = default;
 
-namespace aui::json::impl {
-    struct helper {
-        template<typename T>
-        static void toJson(AJsonObject& j, const char*& name, T& value) {
-            const char* end;
-            for (end = name; *end && *end != ','; ++end);
-            j[AString(name, end)] = conv::conv<std::decay_t<T>>::to_json(value);
-            if (*++end == ' ') { ++end; }
-            name = end;
-        }
-        template<typename T, typename... Args>
-        static void toJson(AJsonObject& j, const char* name, T& value, Args&... args) {
-            toJson(j, name, value);
-            toJson(j, name, std::forward<Args>(args)...);
-        }
+    AJson() noexcept: aui::impl::JsonVariant(std::nullopt) {}
 
-        template<typename T>
-        static void fromJson(const AJsonElement& j, const char*& name, T& value) {
-            const char* end;
-            for (end = name; *end && *end != ','; ++end);
+    [[nodiscard]]
+    bool isInt() const noexcept {
+        return is<int>();
+    }
+
+    [[nodiscard]]
+    bool isEmpty() const noexcept {
+        return is<std::nullopt_t>();
+    }
+
+    [[nodiscard]]
+    bool isNumber() const noexcept {
+        return isInt() || is<float>();
+    }
+
+    [[nodiscard]]
+    bool isBool() const noexcept {
+        return is<bool>();
+    }
+
+    [[nodiscard]]
+    bool isNull() const noexcept {
+        return is<std::nullptr_t>();
+    }
+
+    [[nodiscard]]
+    bool isString() const noexcept {
+        return is<AString>();
+    }
+
+    [[nodiscard]]
+    bool isArray() const noexcept {
+        return is<aui::impl::JsonArray>();
+    }
+
+    [[nodiscard]]
+    bool isObject() const noexcept {
+        return is<aui::impl::JsonObject>();
+    }
+
+    [[nodiscard]]
+    int asInt() const {
+        return as<int>();
+    }
+
+    [[nodiscard]]
+    float asNumber() const {
+        try {
             try {
-                value = conv::conv<std::decay_t<T>>::from_json(j[AString(name, end)]);
-            } catch (...) {}
-            if (*++end == ' ') { ++end; }
-            name = end;
+                return std::get<float>(*this);
+            } catch (...) {
+                return float(std::get<int>(*this));
+            }
+        } catch (...) {
+            throw AJsonTypeMismatchException("not a number");
         }
-        template<typename T, typename... Args>
-        static void fromJson(const AJsonElement& j, const char* name, T& value, Args&... args) {
-            fromJson(j, name, value);
-            fromJson(j, name, args...);
-        }
-    };
-}
-
-#define AJSON_FIELDS(...)                                                           \
-    AJsonObject toJson() const {                                                    \
-        AJsonObject j;                                                              \
-        const char* fieldNames = { #__VA_ARGS__ };                                  \
-        aui::json::impl::helper::toJson(j, fieldNames, __VA_ARGS__);                \
-        return j;                                                                   \
-    };                                                                              \
-    void readJson(const AJsonElement& json) {                                       \
-        const char* fieldNames = { #__VA_ARGS__ };                                  \
-        aui::json::impl::helper::fromJson(json, fieldNames, __VA_ARGS__);           \
-    };                                                                              \
-
-namespace AJson
-{
-    [[nodiscard]] API_AUI_JSON AJsonElement read(IInputStream& is);
-    [[nodiscard]] inline AJsonElement read(const _<IInputStream>& is) {
-        return read(*is);
-    }
-    [[nodiscard]] inline AJsonElement read(IInputStream&& is) {
-        return read(is);
     }
 
-    API_AUI_JSON void write(IOutputStream& os, const AJsonElement& json);
-    inline void write(const _<IOutputStream>& os, const AJsonElement& json) {
-        write(*os, json);
-    }
-    inline void write(IOutputStream&& os, const AJsonElement& json) {
-        write(os, json);
+    [[nodiscard]]
+    bool asBool() const {
+        return as<bool>();
     }
 
-    [[nodiscard]] API_AUI_JSON AString toString(const AJsonElement& json);
-    [[nodiscard]] API_AUI_JSON AJsonElement fromString(const AString& json);
-}
+    [[nodiscard]]
+    const AString& asString() const {
+        return as<AString>();
+    }
+
+    [[nodiscard]]
+    const aui::impl::JsonArray& asArray() const {
+        return as<aui::impl::JsonArray>();
+    }
+
+    [[nodiscard]]
+    const aui::impl::JsonObject& asObject() const {
+        return as<aui::impl::JsonObject>();
+    }
+
+
+    [[nodiscard]]
+    aui::impl::JsonArray& asArray() {
+        return as<aui::impl::JsonArray>();
+    }
+
+    [[nodiscard]]
+    aui::impl::JsonObject& asObject() {
+        return as<Object>();
+    }
+
+    [[nodiscard]]
+    bool contains(const AString& mapKey) const {
+        return as<Object>().contains(mapKey);
+    }
+
+    AJson& operator[](const AString& mapKey) {
+        return as<Object>()[mapKey];
+    }
+
+    const AJson& operator[](const AString& mapKey) const {
+        return const_cast<AJson&>(*this)[mapKey];
+    }
+
+
+    AJson& operator[](int arrayIndex) {
+        return as<Array>()[arrayIndex];
+    }
+
+    const AJson& operator[](int arrayIndex) const {
+        return const_cast<AJson&>(*this)[arrayIndex];
+    }
+
+    void push_back(AJson elem) {
+        asArray().push_back(std::move(elem));
+    }
+
+    [[nodiscard]] static API_AUI_JSON AString toString(const AJson& json);
+    [[nodiscard]] static API_AUI_JSON AJson fromString(const AString& json);
+    [[nodiscard]] static AJson fromStream(aui::no_escape<IInputStream> stream) {
+        return aui::deserialize<AJson>(stream);
+    }
+    [[nodiscard]] static API_AUI_JSON AJson fromBuffer(AByteBufferView buffer);
+};
+
+
+#include <AUI/Json/Conversion.h>
+#include <AUI/Json/Serialization.h>

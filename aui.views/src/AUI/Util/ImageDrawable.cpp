@@ -43,10 +43,10 @@ glm::ivec2 AImageDrawable::getSizeHint() {
 
 
 void AImageDrawable::draw(const IDrawable::Params& params) {
-    Render::drawRect(ATexturedBrush {
-        mTexture,
-        params.cropUvTopLeft,
-        params.cropUvBottomRight,
-        params.imageRendering,
+    Render::rect(ATexturedBrush{
+            mTexture,
+            params.cropUvTopLeft,
+            params.cropUvBottomRight,
+            params.imageRendering,
     }, params.offset, params.size);
 }

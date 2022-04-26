@@ -23,17 +23,23 @@
 #include <exception>
 
 #include "AString.h"
+#include "AUI/Reflect/AReflect.h"
 #include <AUI/Common/AVector.h>
+#include <AUI/Platform/AStacktrace.h>
+#include <AUI/Traits/strings.h>
 
-class AException: public std::exception
+class API_AUI_CORE AException: public std::exception
 {
     mutable std::optional<std::string> mMessage;
 
-protected:
+private:
+    AStacktrace mStacktrace;
 
 
 public:
-	AException() = default;
+	AException(): mStacktrace(AStacktrace::capture(2)) {
+
+    }
 
 	AException(const AString& message)
 		: AException()
@@ -51,4 +57,17 @@ public:
         if (!mMessage) mMessage = getMessage().toStdString();
         return mMessage->c_str();
     }
+
+    const AStacktrace& stacktrace() const noexcept {
+        return mStacktrace;
+    }
 };
+
+inline std::ostream& operator<<(std::ostream& o, const AException& e) noexcept {
+    return o << "("
+             << AReflect::name(&e)
+             << ") "
+             << e.getMessage()
+             << std::endl
+             << e.stacktrace();
+}

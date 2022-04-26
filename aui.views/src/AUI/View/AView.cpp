@@ -75,14 +75,14 @@ void AView::redraw()
 void AView::drawStencilMask()
 {
     if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
-        Render::drawRoundedRect(ASolidBrush {},
-                                { mPadding.left, mPadding.top },
-                                { getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical() },
-                                mBorderRadius);
+        Render::roundedRect(ASolidBrush{},
+                            {mPadding.left, mPadding.top},
+                            {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
+                            mBorderRadius);
     } else {
-        Render::drawRect(ASolidBrush {},
-                         { mPadding.left, mPadding.top },
-                         { getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical() });
+        Render::rect(ASolidBrush{},
+                     {mPadding.left, mPadding.top},
+                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
     }
 }
 
@@ -118,9 +118,9 @@ void AView::render()
         {
             e->draw([&]()
                     {
-                        Render::drawRect(ASolidBrush{},
-                                         { 0, 0 },
-                                         getSize());
+                        Render::rect(ASolidBrush{},
+                                     {0, 0},
+                                     getSize());
                     });
         }
 
@@ -385,18 +385,6 @@ bool AView::handlesNonMouseNavigation() {
     return false;
 }
 
-void AView::getCustomCssAttributes(AMap<AString, AVariant>& map)
-{
-    if (mEnabled)
-    {
-        map["enabled"] = true;
-    }
-    else
-    {
-        map["disabled"] = true;
-    }
-}
-
 void AView::setEnabled(bool enabled)
 {
     mDirectlyEnabled = enabled;
@@ -469,18 +457,6 @@ void AView::setGeometry(int x, int y, int width, int height) {
 
 bool AView::consumesClick(const glm::ivec2& pos) {
     return true;
-}
-
-
-_<AView> AView::determineSharedPointer() {
-    if (mParent) {
-        for (auto& p : mParent->getViews()) {
-            if (p.get() == this) {
-                return p;
-            }
-        }
-    }
-    return nullptr;
 }
 
 void AView::focus() {

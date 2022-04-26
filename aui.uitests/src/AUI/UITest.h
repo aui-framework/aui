@@ -35,6 +35,7 @@
 #include <AUI/Test/UI/Action/DoubleClick.h>
 #include <AUI/Test/UI/Action/Type.h>
 #include <AUI/Test/UI/Action/MouseMove.h>
+#include <AUI/Test/UI/Action/Scroll.h>
 
 #include <AUI/Test/UI/Assertion/Align.h>
 #include <AUI/Test/UI/Assertion/Empty.h>

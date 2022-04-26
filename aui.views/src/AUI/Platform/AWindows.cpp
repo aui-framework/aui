@@ -110,7 +110,7 @@ void AWindow::redraw() {
         // measure frame time
         auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         unsigned millis = unsigned((after - before).count());
-        if (millis > 16) {
+        if (millis > 17) {
             static auto lastNotification = 0ms;
             if (after - lastNotification > 10s) {
                 lastNotification = after;
@@ -198,12 +198,6 @@ void AWindow::setPosition(const glm::ivec2& position) {
 glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) {
     return other->mapPosition(unmapPosition(position));
 }
-
-
-_<AView> AWindow::determineSharedPointer() {
-    return (shared_from_this());
-}
-
 
 
 AWindowManager::AWindowManager(): mHandle(this) {}

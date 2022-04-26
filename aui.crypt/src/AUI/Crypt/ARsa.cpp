@@ -39,20 +39,20 @@ ARsa::~ARsa()
 	RSA_free(static_cast<RSA*>(mRsa));
 }
 
-AByteBuffer ARsa::encrypt(const AByteBuffer& in)
+AByteBuffer ARsa::encrypt(AByteBufferView in)
 {
     AByteBuffer buf;
-	buf.reserve(in.end() - in.readIterator() + 0x1000);
-	while (in.end() != in.readIterator()) {
-		auto toRead = glm::min(size_t(in.end() - in.readIterator()), getKeyLength() - RSA_PKCS1_PADDING_SIZE);
-		int r = RSA_public_encrypt(toRead, reinterpret_cast<const unsigned char*>(in.readIterator()),
+	buf.reserve(in.size() + 0x1000);
+	for (auto it = in.begin(); it != in.end();) {
+		auto toRead = glm::min(size_t(in.end() - it), getKeyLength() - RSA_PKCS1_PADDING_SIZE);
+		int r = RSA_public_encrypt(toRead, reinterpret_cast<const unsigned char*>(it),
 			reinterpret_cast<unsigned char*>(buf.data() + buf.getSize()), static_cast<RSA*>(mRsa),
 			RSA_PKCS1_PADDING);
 
 		if (r < 0)
 			throw AException("Could not RSA_public_encrypt");
 
-		in.increaseCurrentPos(toRead);
+		it += toRead;
 		
 		buf.setSize(buf.getSize() + r);
 	}
@@ -60,19 +60,20 @@ AByteBuffer ARsa::encrypt(const AByteBuffer& in)
 	return buf;
 }
 
-AByteBuffer ARsa::decrypt(const AByteBuffer& in)
+AByteBuffer ARsa::decrypt(AByteBufferView in)
 {
     AByteBuffer buf;
-	buf.reserve(in.availableToRead() + 0x1000);
-	while (in.availableToRead()) {
-		auto toRead = glm::min(in.availableToRead(), getKeyLength());
-		int r = RSA_private_decrypt(toRead, reinterpret_cast<const unsigned char*>(in.readIterator()),
+	buf.reserve(in.size() + 0x1000);
+    for (auto it = in.begin(); it != in.end();) {
+		auto toRead = glm::min(size_t(in.end() - it), getKeyLength());
+		int r = RSA_private_decrypt(toRead, reinterpret_cast<const unsigned char*>(it),
 			reinterpret_cast<unsigned char*>(buf.data() + buf.getSize()), static_cast<RSA*>(mRsa),
 			RSA_PKCS1_PADDING);
 		if (r < 0)
 			throw AException("Could not RSA_private_decrypt");
 
-		in.setCurrentPos(in.getCurrentPos() + toRead);
+        it += toRead;
+
 		buf.setSize(buf.getSize() + r);
 	}
 	return buf;
@@ -116,9 +117,9 @@ _<ARsa> ARsa::generate(int bits)
 	return aui::ptr::manage(new ARsa(RSA_generate_key(bits, RSA_F4, nullptr, nullptr)));
 }
 
-_<ARsa> ARsa::fromPrivateKeyPEM(const AByteBuffer& buffer)
+_<ARsa> ARsa::fromPrivateKeyPEM(AByteBufferView buffer)
 {
-	BIO* inputBuffer = BIO_new_mem_buf(buffer.readIterator(), buffer.availableToRead());
+	BIO* inputBuffer = BIO_new_mem_buf(buffer.data(), buffer.size());
 	RSA* rsa = nullptr;
 	PEM_read_bio_RSAPrivateKey(inputBuffer, (RSA**)&rsa, nullptr, gKey);
 	BIO_free(inputBuffer);
@@ -129,9 +130,9 @@ _<ARsa> ARsa::fromPrivateKeyPEM(const AByteBuffer& buffer)
 	return aui::ptr::manage(new ARsa(rsa));
 }
 
-_<ARsa> ARsa::fromPublicKeyPEM(const AByteBuffer& buffer)
+_<ARsa> ARsa::fromPublicKeyPEM(AByteBufferView buffer)
 {
-	BIO* inputBuffer = BIO_new_mem_buf(buffer.readIterator(), buffer.availableToRead());
+	BIO* inputBuffer = BIO_new_mem_buf(buffer.data(), buffer.size());
 	RSA* rsa = nullptr;
 	PEM_read_bio_RSAPublicKey(inputBuffer, (RSA**)&rsa, nullptr, nullptr);
 	BIO_free(inputBuffer);

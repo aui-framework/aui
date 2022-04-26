@@ -4,6 +4,15 @@
 #include "AWindow.h"
 #include "AUI/Traits/values.h"
 
+#if AUI_PLATFORM_LINUX
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/keysymdef.h>
+#include <GL/gl.h>
+#include <GL/glx.h>
+#include <X11/Xatom.h>
+#endif
+
 class CommonRenderingContext: public IRenderingContext {
 protected:
 #if AUI_PLATFORM_WIN

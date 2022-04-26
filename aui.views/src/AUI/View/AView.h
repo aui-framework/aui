@@ -26,7 +26,6 @@
 #include "AUI/Common/ABoxFields.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/AObject.h"
-#include "AUI/Common/AVariant.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Platform/ACursor.h"
 #include "AUI/Platform/AInput.h"
@@ -515,10 +514,15 @@ public:
 	}
 	Visibility getVisibilityRecursive() const;
 
-	void setVisibility(Visibility visibility)
+	void setVisibility(Visibility visibility) noexcept
 	{
 		mVisibility = visibility;
 		redraw();
+	}
+
+	void setVisible(bool visible) noexcept
+	{
+        setVisibility(visible ? Visibility::VISIBLE : Visibility::INVISIBLE);
 	}
 
 	[[nodiscard]]
@@ -600,9 +604,12 @@ public:
     void ensureAssUpdated();
 
     /**
-     * \brief Tries to determine std::shared_ptr for this object.
+     * \brief Tries to determine std::shared_ptr for this view.
      */
-    virtual _<AView> determineSharedPointer();
+    [[nodiscard]]
+    _<AView> determineSharedPointer() {
+        return _cast<AView>(objectSharedPtr());
+    }
 
     /**
      * Handles touch screen gesture event.
@@ -637,8 +644,6 @@ public:
     virtual void onFocusLost();
 
 	virtual void onCharEntered(wchar_t c);
-
-	virtual void getCustomCssAttributes(AMap<AString, AVariant>& map);
 
 	/**
 	 * \return true if this AView accepts tab focus

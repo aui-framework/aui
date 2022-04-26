@@ -1,4 +1,4 @@
-#include "../simd/integer.h"
+#include "../gsimd/integer.h"
 
 #if GLM_ARCH & GLM_ARCH_SSE2_BIT
 

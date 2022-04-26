@@ -177,9 +177,9 @@ public:
                     redraw();
                 }
 
-                Render::drawRect(ASolidBrush{},
-                                 { mPadding.left + absoluteCursorPos, mPadding.top },
-                                 { glm::ceil(1_dp), getFontStyle().size + 3 });
+                Render::rect(ASolidBrush{},
+                             {mPadding.left + absoluteCursorPos, mPadding.top},
+                             {glm::ceil(1_dp), getFontStyle().size + 3});
             }
             // TODO STUB
             // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

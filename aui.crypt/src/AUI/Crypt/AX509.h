@@ -38,5 +38,5 @@ public:
 	bool checkHost(const AString& name) const;
 	bool checkTrust() const;
 	
-	static _<AX509> fromPEM(_<AByteBuffer> buffer);
+	static _<AX509> fromPEM(AByteBufferView buffer);
 };

@@ -140,10 +140,9 @@ endif()
 if (AUI_views_FOUND AND NOT ANDROID AND NOT IOS)
     find_package(GLEW REQUIRED)
 
-    set(prev CMAKE_FIND_USE_CMAKE_SYSTEM_PATH)
-    set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH TRUE)
+    auib_use_system_libs_begin()
     find_package(OpenGL REQUIRED)
-    set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${prev})
+    auib_use_system_libs_end()
 endif()
 
 if (AUI_uitests_FOUND AND NOT ANDROID AND NOT IOS)

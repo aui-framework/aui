@@ -22,13 +22,13 @@
 #pragma once
 
 #include <AUI/Core.h>
+#include <AUI/IO/IOutputStream.h>
+#include <AUI/Reflect/AReflect.h>
 #include "AUI/Thread/AMutex.h"
-#include "AUI/IO/AFileOutputStream.h"
-#include <sstream>
 
 class AString;
 
-class API_AUI_CORE ALogger
+class API_AUI_CORE ALogger final
 {
 public:
 	enum Level
@@ -38,60 +38,193 @@ public:
 		ERR,
         DEBUG,
 	};
+
+
+    struct LogWriter {
+        private:
+            ALogger& mLogger;
+            Level mLevel;
+            AString mPrefix;
+            struct Buffer {
+            private:
+                struct StackBuffer {
+                    char buffer[2048];
+                    char* currentIterator;
+                };
+                using HeapBuffer = AVector<char>;
+                std::variant<StackBuffer, HeapBuffer> mBuffer;
+
+                void switchToHeap() {
+                    HeapBuffer h;
+                    h.reserve(16384);
+                    auto& stack = std::get<StackBuffer>(mBuffer);
+                    h.insert(h.end(), stack.buffer, stack.currentIterator);
+                    mBuffer = std::move(h);
+                }
+            public:
+                Buffer() noexcept: mBuffer({}) {
+                    auto& sb = std::get<StackBuffer>(mBuffer);
+                    sb.currentIterator = sb.buffer;
+                }
+                size_t write(const char* t, size_t s) {
+                    if (std::holds_alternative<StackBuffer>(mBuffer)) {
+                        auto& stack = std::get<StackBuffer>(mBuffer);
+                        if (stack.currentIterator + s <= stack.buffer + sizeof(stack.buffer)) {
+                            std::memcpy(stack.currentIterator, t, s);
+                            stack.currentIterator += s;
+                            return s;
+                        }
+                        switchToHeap();
+                    }
+                    auto& h = std::get<HeapBuffer>(mBuffer);
+                    h.insert(h.end(), t, t + s);
+                    return s;
+                }
+                void write(char c) {
+                    if (std::holds_alternative<StackBuffer>(mBuffer)) {
+                        auto& stack = std::get<StackBuffer>(mBuffer);
+                        if (stack.currentIterator + sizeof(c) <= stack.buffer + sizeof(stack.buffer)) {
+                            *stack.currentIterator = c;
+                            stack.currentIterator += 1;
+                            return;
+                        }
+                        switchToHeap();
+                    }
+                    std::get<HeapBuffer>(mBuffer).push_back(c);
+                }
+
+                [[nodiscard]]
+                std::string_view str() const {
+                    // assuming there's a null terminator
+                    if (std::holds_alternative<StackBuffer>(mBuffer)) {
+                        auto& stack = std::get<StackBuffer>(mBuffer);
+                        return {stack.buffer, static_cast<std::string_view::size_type>(stack.currentIterator - stack.buffer) - 1};
+                    }
+                    auto& h = std::get<HeapBuffer>(mBuffer);
+                    return {h.data(), h.size()};
+                }
+            };
+
+            struct LazyStreamBuf final: std::streambuf {
+            private:
+                Buffer& stackBuffer;
+            public:
+                std::ostream stream;
+                LazyStreamBuf(Buffer& stackBuffer) : stackBuffer(stackBuffer), stream(this) {}
+
+            protected:
+                std::streamsize xsputn(const char_type* s, std::streamsize n) override {
+                    return stackBuffer.write(s, n);
+                }
+
+                int overflow(int_type __c) override {
+                    stackBuffer.write(__c);
+                    return 1;
+                }
+            };
+            std::optional<LazyStreamBuf> mStreamBuf;
+
+            Buffer mBuffer;
+
+            void writeTimestamp(const char* fmt, std::chrono::system_clock::time_point t) noexcept {
+                char buf[128];
+                auto inTimeT = std::chrono::system_clock::to_time_t(t);
+                std::size_t strLen;
+                {
+                    std::unique_lock lock(mLogger.mLocalTimeMutex);
+                    strLen = std::strftime(buf, sizeof(buf), fmt, std::localtime(&inTimeT));
+                }
+                mBuffer.write(buf, strLen);
+            }
+
+        public:
+            LogWriter(ALogger& logger, Level level, AString prefix) :
+                mLogger(logger),
+                mLevel(level),
+                mPrefix(std::move(prefix)) {
+
+            }
+
+            ~LogWriter() {
+                mBuffer.write(0); // null terminator
+                auto s = mBuffer.str();
+                mLogger.log(mLevel, mPrefix.toStdString().c_str(), s);
+            }
+
+            template<typename T>
+            LogWriter& operator<<(const T& t) noexcept {
+                // avoid usage of std::ostream because it's expensive
+                if constexpr(std::is_constructible_v<std::string_view, T>) {
+                    std::string_view stringView(t);
+                    mBuffer.write(stringView.data(), stringView.size());
+                } else if constexpr(std::is_base_of_v<AString, T>) {
+                    *this << t.toStdString();
+                } else if constexpr(std::is_base_of_v<AException, T>) {
+                    *this << "("
+                          << AReflect::name(&t)
+                          << ") "
+                          << t.getMessage()
+                          << '\n'
+                          << t.stacktrace();
+                } else if constexpr(std::is_base_of_v<std::exception, T>) {
+                    *this << "(" << AReflect::name(&t) << ") " << t.what();
+                } else if constexpr(std::is_same_v<std::chrono::seconds, T>) {
+                    writeTimestamp("%D %T", std::chrono::system_clock::time_point(t));
+                } else if constexpr(std::is_same_v<std::chrono::minutes, T> || std::is_same_v<std::chrono::hours, T>) {
+                    writeTimestamp("%D %R", std::chrono::system_clock::time_point(t));
+                } else {
+                    if (!mStreamBuf) {
+                        mStreamBuf.emplace(mBuffer);
+                    }
+                    mStreamBuf->stream << t;
+                }
+                return *this;
+            }
+    };
+
 private:
 	ALogger();
 	static ALogger& instance();
-	AMutex mSync;
-	_<AFileOutputStream> mLogFile;
-	
-	void log(Level level, const AString& str);
 
-    void rawWrite(const char* data, size_t length);
+    AMutex mLocalTimeMutex;
 
+    /**
+     * Writes a log entry
+     * @param level log level
+     * @param prefix prefix
+     * @param message log message. If empty, prefix used as a message
+     */
+    void log(Level level, std::string_view prefix, std::string_view message);
+
+    bool mDebug = true;
 public:
 
-    static void setLogFile(const AString& str);
-
-    struct RawLogPusher {
-        friend class ALogger;
-    private:
-        ALogger& inst;
-
-        explicit RawLogPusher(ALogger& l): inst(l) {
-
-        }
-    public:
-
-        template<typename T>
-        RawLogPusher& operator<<(const T& t) {
-            std::stringstream ss;
-            ss << t;
-            auto s = ss.str();
-            inst.rawWrite(s.c_str(), s.length());
-            return *this;
-        }
-    };
-
-    static RawLogPusher raw() {
-        return RawLogPusher{instance()};
+    static void setDebugMode(bool debug) {
+        instance().mDebug = debug;
+    }
+    static bool isDebug() {
+        return instance().mDebug;
     }
 
-	static void info(const AString& str)
+	static LogWriter info(const AString& str)
 	{
-		instance().log(INFO, str);
+		return {instance(), INFO, str};
 	}	
-	static void warn(const AString& str)
+	static LogWriter warn(const AString& str)
 	{
-		instance().log(WARN, str);
+        return {instance(), WARN, str};
 	}	
-	static void err(const AString& str)
+	static LogWriter err(const AString& str)
 	{
-		instance().log(ERR, str);
+        return {instance(), ERR, str};
 	}
-	static void debug(const AString& str)
+	static LogWriter debug(const AString& str)
 	{
-		instance().log(DEBUG, str);
+        return {instance(), DEBUG, str};
 	}
 };
+
+
+#define ALOG_DEBUG(str) if (ALogger::isDebug()) ALogger::debug(str)
 
 #include <AUI/Traits/strings.h>

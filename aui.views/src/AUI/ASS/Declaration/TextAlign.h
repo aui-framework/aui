@@ -41,6 +41,10 @@ namespace ass {
             }
 
             void applyFor(AView* view) override;
+
+            TextAlign value() const {
+                return mInfo;
+            }
         };
     }
 }

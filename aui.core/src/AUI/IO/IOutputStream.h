@@ -22,10 +22,11 @@
 #pragma once
 
 #include <cstring>
+#include <AUI/Traits/values.h>
 #include "AEOFException.h"
 
 
-class IOutputStream
+class IOutputStream: public aui::noncopyable
 {
 public:
 	virtual ~IOutputStream() = default;

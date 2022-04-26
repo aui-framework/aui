@@ -29,13 +29,13 @@ void ABuiltinFiles::loadBuffer(AByteBuffer& data)
 {
 	AByteBuffer unpacked;
 	LZ::decompress(data, unpacked);
-
-	while (unpacked.availableToRead())
+    AByteBufferInputStream bis(unpacked);
+	while (bis.available())
 	{
 		std::string file;
         AByteBuffer b;
-        unpacked >> file;
-		unpacked >> b;
+        bis >> aui::serialize_sized(file);
+        bis >> aui::serialize_sized(b);
         inst().mBuffers[AString(file)] = std::move(b);
 	}
 }
@@ -44,16 +44,15 @@ _<IInputStream> ABuiltinFiles::open(const AString& file)
 {
 	if (auto c = inst().mBuffers.contains(file))
 	{
-	    c->second.setCurrentPos(0);
 		return _new<AByteBufferInputStream>(c->second);
 	}
 	return nullptr;
 }
 
-std::optional<AByteBufferRef> ABuiltinFiles::getBuffer(const AString& file) {
+std::optional<AByteBufferView> ABuiltinFiles::getBuffer(const AString& file) {
     if (auto c = inst().mBuffers.contains(file))
     {
-        return c->second.ref();
+        return c->second;
     }
     return std::nullopt;
 }

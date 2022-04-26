@@ -25,11 +25,10 @@
 
 #pragma once
 
-#include "attribute.h"
 
 namespace ass {
     template<typename Base>
-    struct active: Base, AttributeHelper<active<Base>> {
+    struct active: Base {
         template<typename... Args>
         active(Args&&... args):
             Base(std::forward<Args>(args)...)

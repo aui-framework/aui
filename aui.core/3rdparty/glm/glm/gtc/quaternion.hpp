@@ -41,7 +41,7 @@ namespace glm
 	/// @{
 
 	/// Returns euler angles, pitch as x, yaw as y, roll as z.
-	/// The result is expressed in radians.
+	/// The supplyResult is expressed in radians.
 	///
 	/// @tparam T Floating-point scalar types.
 	///
@@ -105,7 +105,7 @@ namespace glm
 	template<typename T, qualifier Q>
 	GLM_FUNC_DECL qua<T, Q> quat_cast(mat<4, 4, T, Q> const& x);
 
-	/// Returns the component-wise comparison result of x < y.
+	/// Returns the component-wise comparison supplyResult of x < y.
 	///
 	/// @tparam T Floating-point scalar types
 	/// @tparam Q Value from qualifier enum
@@ -114,7 +114,7 @@ namespace glm
 	template<typename T, qualifier Q>
 	GLM_FUNC_DECL vec<4, bool, Q> lessThan(qua<T, Q> const& x, qua<T, Q> const& y);
 
-	/// Returns the component-wise comparison of result x <= y.
+	/// Returns the component-wise comparison of supplyResult x <= y.
 	///
 	/// @tparam T Floating-point scalar types
 	/// @tparam Q Value from qualifier enum
@@ -123,7 +123,7 @@ namespace glm
 	template<typename T, qualifier Q>
 	GLM_FUNC_DECL vec<4, bool, Q> lessThanEqual(qua<T, Q> const& x, qua<T, Q> const& y);
 
-	/// Returns the component-wise comparison of result x > y.
+	/// Returns the component-wise comparison of supplyResult x > y.
 	///
 	/// @tparam T Floating-point scalar types
 	/// @tparam Q Value from qualifier enum
@@ -132,7 +132,7 @@ namespace glm
 	template<typename T, qualifier Q>
 	GLM_FUNC_DECL vec<4, bool, Q> greaterThan(qua<T, Q> const& x, qua<T, Q> const& y);
 
-	/// Returns the component-wise comparison of result x >= y.
+	/// Returns the component-wise comparison of supplyResult x >= y.
 	///
 	/// @tparam T Floating-point scalar types
 	/// @tparam Q Value from qualifier enum

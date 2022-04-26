@@ -39,6 +39,7 @@ private:
     _<AScrollbar> mScrollbar;
 	ASet<AModelIndex> mSelectionModel;
 	_<AListModelObserver<AString>> mObserver;
+    bool mAllowMultipleSelection = false;
 
     void updateScrollbarDimensions();
     void handleMousePressed(AListItem* item);
@@ -58,7 +59,9 @@ public:
         return getLayout()->getMinimumHeight() + 8;
     }
 
-	[[nodiscard]] AModelSelection<AString> getSelectionModel() const {
+    void setAllowMultipleSelection(bool allowMultipleSelection);
+
+    [[nodiscard]] AModelSelection<AString> getSelectionModel() const {
 	    return AModelSelection<AString>(mSelectionModel, mObserver->getModel().get());
 	}
 

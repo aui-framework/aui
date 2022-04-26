@@ -27,13 +27,15 @@
 #include "AUI/IO/IInputStream.h"
 #include "AUI/Traits/values.h"
 #include <AUI/IO/APipe.h>
+#include <AUI/Common/AByteBufferView.h>
+#include <AUI/Common/AByteBuffer.h>
 
 class AString;
 typedef void CURL;
 
 class API_AUI_CURL ACurl {
 public:
-    using WriteCallback = std::function<size_t(const AByteBufferRef&)>;
+    using WriteCallback = std::function<size_t(AByteBufferView)>;
 private:
 	CURL* mCURL;
     int mCURLcode{};
@@ -69,14 +71,14 @@ public:
         }
 
         Builder& withDestinationBuffer(aui::promise::no_copy<AByteBuffer> dst) {
-            return withWriteCallback([dst](const AByteBufferRef& b) {
+            return withWriteCallback([dst](AByteBufferView b) {
                 (*dst) << b;
                 return b.size();
             });
         }
 
         Builder& withOutputStream(_<IOutputStream> dst) {
-            return withWriteCallback([dst = std::move(dst)](const AByteBufferRef& b) {
+            return withWriteCallback([dst = std::move(dst)](AByteBufferView b) {
                 (*dst) << b;
                 return b.size();
             });

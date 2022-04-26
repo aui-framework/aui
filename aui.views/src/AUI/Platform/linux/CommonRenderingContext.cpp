@@ -4,7 +4,6 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Util/ARandom.h>
-#include <AUI/Util/AError.h>
 #include <X11/extensions/sync.h>
 #include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Util/kAUI.h"
@@ -110,7 +109,7 @@ void CommonRenderingContext::initX11Window(const IRenderingContext::Init &init, 
     if (window.mIC == NULL) {
         throw AException("Could not get IC");
     }
-    XSetICFocus(window.mIC);
+    XSetICFocus((XIC)window.mIC);
 
 
     XMapWindow(ourDisplay, window.mHandle);

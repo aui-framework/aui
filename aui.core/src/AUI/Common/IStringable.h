@@ -25,7 +25,10 @@
 
 #pragma once
 
+
+#include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Reflect/AReflect.h>
+#include <AUI/Common/AString.h>
 
 /**
  * Object that can be converted to string
@@ -38,7 +41,7 @@ public:
     virtual AString toString() const = 0;
 
     /**
-     * Wrapper function. If the passed object is an instance of IStringable the result of toString of this object will
+     * Wrapper function. If the passed object is an instance of IStringable the supplyResult of toString of this object will
      * be returned, AReflect::name() of this pointer otherwise
      */
     template<typename T>
@@ -59,7 +62,7 @@ public:
     }
 
     /**
-     * Wrapper function. If the passed object is an instance of IStringable the result of toString of this object will
+     * Wrapper function. If the passed object is an instance of IStringable the supplyResult of toString of this object will
      * be returned, AReflect::name() of this pointer otherwise
      */
     template<typename T>

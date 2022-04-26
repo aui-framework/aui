@@ -21,12 +21,12 @@
 
 #pragma once
 #include "AEOFException.h"
-
+#include <AUI/Traits/values.h>
 #include <glm/glm.hpp>
 
 class IOutputStream;
 
-class IInputStream
+class IInputStream: public aui::noncopyable
 {
 public:
     virtual ~IInputStream() = default;
@@ -45,21 +45,6 @@ public:
     virtual size_t read(char* dst, size_t size) = 0;
 
     /**
-     * @brief Reads up to <code>size</code> bytes from stream. Implementation must read at least one byte. Blocking
-     *        (waiting for new data) is allowed.
-     * <dl>
-     *   <dt><b>Sneaky exceptions</b></dt>
-     *   <dd>An implementation can throw any exception that subclasses <a href="#AIOException">AIOException</a>.</dd>
-     * </dl>
-     * @param dst destination buffer
-     * @param size destination buffer's size. > 0
-     * @return number of read bytes (including 0)
-     */
-    size_t read(char* dst, size_t size) const {
-        return const_cast<IInputStream*>(this)->read(dst, size); // const wrapper
-    }
-
-    /**
      * @brief Reads exact <code>size</code> bytes from stream. Blocking (waiting for new data) is allowed.
      * <dl>
      *   <dt><b>Sneaky exceptions</b></dt>
@@ -69,7 +54,7 @@ public:
      * @param dst destination buffer.
      * @param size destination buffer's size.
      */
-    void readExact(char* dst, size_t size) const {
+    void readExact(char* dst, size_t size) {
         char* begin = dst;
         char* end = dst + size;
         while (begin != end) {
@@ -86,22 +71,37 @@ public:
      * @param t value to write
      */
     template<typename T>
-    T read() const;
+    T deserialize();
 
     /**
      * Reads data using AUI serialization (see AUI/Traits/serializable.h)
      * @param t value to write
      */
     template<typename T>
-    const IInputStream& operator>>(T& dst) const {
-        dst = read<T>();
-        return *this;
-    }
+    IInputStream& operator>>(T& dst);
+    /**
+     * Reads data using AUI serialization (see AUI/Traits/serializable.h)
+     * @param t value to write
+     */
+    template<typename T>
+    IInputStream& operator>>(T&& dst);
 };
 
 #include <AUI/Traits/serializable.h>
 
 template<typename T>
-inline T IInputStream::read() const {
-    return aui::deserialize<T>(const_cast<IInputStream&>(*this));
+inline T IInputStream::deserialize() {
+    return aui::deserialize<T>(*this);
+}
+
+template<typename T>
+IInputStream& IInputStream::operator>>(T& dst) {
+    aui::deserialize<T>(*this, dst);
+    return *this;
+}
+
+template<typename T>
+IInputStream& IInputStream::operator>>(T&& dst) {
+    aui::deserialize<T>(*this, dst);
+    return *this;
 }

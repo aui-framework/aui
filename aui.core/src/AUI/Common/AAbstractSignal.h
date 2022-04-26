@@ -23,7 +23,8 @@
 
 #include <exception>
 
-#include "AUI/Core.h"
+#include <AUI/Core.h>
+#include <AUI/Common/SharedPtrTypes.h>
 
 class AObject;
 
@@ -38,6 +39,8 @@ protected:
 
 
 	static bool& isDisconnected();
+
+    static _weak<AObject> weakPtrFromObject(AObject* object);
 	
 public:
 	virtual void clearAllConnectionsWith(AObject* object) = 0;
@@ -55,4 +58,8 @@ public:
 
 inline bool& AAbstractSignal::isDisconnected() {
     return AObject::isDisconnected();
+}
+
+inline _weak<AObject> AAbstractSignal::weakPtrFromObject(AObject* object) { // AAbstractSignal is a friend of AObject
+    return object->objectWeakPtr();
 }

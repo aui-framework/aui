@@ -28,9 +28,11 @@
 #include "APageView.h"
 #include "ALabel.h"
 
-class API_AUI_VIEWS ATabButtonView: public ALabel {
+class API_AUI_VIEWS ATabButtonView: public ALabel, public ass::ISelectable {
 private:
     bool mCurrent = false;
+protected:
+    bool selectableIsSelectedImpl() override;
 
 public:
     ATabButtonView() {
@@ -40,7 +42,6 @@ public:
 
     }
 
-    void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
     void setCurrent(bool current);
 };
 

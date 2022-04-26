@@ -24,6 +24,8 @@
 #include <android/log.h>
 #else
 #include <ctime>
+#include <AUI/IO/AFileOutputStream.h>
+
 #endif
 
 ALogger::ALogger()
@@ -37,7 +39,7 @@ ALogger& ALogger::instance()
 	return l;
 }
 
-void ALogger::log(Level level, const AString& str)
+void ALogger::log(Level level, std::string_view prefix, std::string_view message)
 {
 #if AUI_PLATFORM_ANDROID
 
@@ -58,16 +60,12 @@ void ALogger::log(Level level, const AString& str)
         default:
             assert(0);
     }
-    __android_log_print(prio, "AUI", "%ls", str.c_str());
-#else
-    if (!mLogFile) {
-        try {
-            mLogFile = _new<AFileOutputStream>("latest.log");
-        } catch (const AException& e) {
-            //log(WARN, e.getMessage());
-        }
+    if (message.length() == 0) {
+        __android_log_print(prio, "AUI", "%s", prefix.data());
+    } else {
+        __android_log_print(prio, prefix.data(), "%s", message.data());
     }
-
+#else
     const char* levelName = "UNKNOWN";
 
     switch (level)
@@ -92,37 +90,12 @@ void ALogger::log(Level level, const AString& str)
     char timebuf[64];
     std::strftime(timebuf, sizeof(timebuf), "%H:%M:%S", tm);
 
-    std::unique_lock lock(mSync);
-
-    std::cout << '[' << timebuf << "] " << levelName << ": " << str << std::endl;
-    if (auto l = mLogFile) {
-        *l << '[';
-        l->write(timebuf, strlen(timebuf));
-        *l << "] ";
-        l->write(levelName, strlen(levelName));
-        *l << ": " << str << "\n";
+    if (message.length() == 0) {
+        printf("[%s][%s]: %s\n", timebuf, levelName, prefix.data());
+    } else {
+        printf("[%s][%s][%s]: %s\n", timebuf, prefix.data(), levelName, message.data());
     }
+    fflush(stdout);
 #endif
 }
 
-void ALogger::setLogFile(const AString& str) {
-#if !(AUI_PLATFORM_ANDROID)
-    try {
-        if (str.empty()) {
-            instance().mLogFile = nullptr;
-        } else {
-            instance().mLogFile = _new<AFileOutputStream>(str);
-        }
-    } catch (const AException& e) {
-        //log(WARN, e.getMessage());
-    }
-#endif
-
-}
-
-void ALogger::rawWrite(const char *data, size_t length) {
-    std::cout.write(data, length);
-    if (mLogFile) {
-        mLogFile->write(data, length);
-    }
-}

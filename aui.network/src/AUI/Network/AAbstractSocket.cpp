@@ -62,7 +62,6 @@ void aui_wsa_init()
 #include <cstring>
 #include <netdb.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/Util/AError.h>
 
 #endif
 

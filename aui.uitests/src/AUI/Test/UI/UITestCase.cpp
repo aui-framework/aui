@@ -9,6 +9,7 @@
 #include "AUI/UITestState.h"
 #include <AUI/Traits/strings.h>
 #include <AUI/UITest.h>
+#include <gmock/gmock.h>
 
 class MyListener: public ::testing::EmptyTestEventListener {
 private:
@@ -16,9 +17,9 @@ private:
         if (!AWindow::current()) return {};
         auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
         if (image.getData().empty()) return {};
-        auto p = APath("reports")[APath(testFilePath).filenameWithoutExtension()];
+        auto p = APath("reports") / APath(testFilePath).filenameWithoutExtension();
         p.makeDirs();
-        p = p[name];
+        p = p / name;
         AFileOutputStream fos(p);
         PngImageLoader::save(fos, image);
         return p;
@@ -34,9 +35,9 @@ public:
             // draw red rects to highlight views
             if (auto matcher = ::UIMatcher::current()) {
                 for (auto& v: matcher->toSet()) {
-                    Render::drawRectBorder(ASolidBrush{0xaae00000_argb},
-                                           v->getPositionInWindow() - glm::ivec2{1, 1},
-                                           v->getSize() + glm::ivec2{2, 2});
+                    Render::rectBorder(ASolidBrush{0xaae00000_argb},
+                                       v->getPositionInWindow() - glm::ivec2{1, 1},
+                                       v->getSize() + glm::ivec2{2, 2});
                 }
             }
 

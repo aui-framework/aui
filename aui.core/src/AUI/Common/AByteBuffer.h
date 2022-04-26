@@ -28,33 +28,25 @@
 #include <stdexcept>
 #include <cassert>
 #include "AUI/Core.h"
-#include <AUI/IO/IInputStream.h>
-#include <AUI/IO/IOutputStream.h>
-#include "AByteBufferRef.h"
+#include <AUI/Traits/serializable.h>
+#include "AByteBufferView.h"
 
 
-class API_AUI_CORE AByteBuffer: public IInputStream, public IOutputStream {
+class API_AUI_CORE AByteBuffer final: public IOutputStream {
 private:
     char* mBuffer = nullptr;
-    size_t mReserved = 0;
+    size_t mCapacity = 0;
     size_t mSize = 0;
-    mutable size_t mReadPos = 0;
 
 public:
     AByteBuffer();
     AByteBuffer(const char* buffer, size_t size);
-    explicit AByteBuffer(size_t reserved);
+    explicit AByteBuffer(size_t initialCapacity);
     AByteBuffer(const unsigned char* buffer, size_t size);
     ~AByteBuffer();
 
     AByteBuffer(const AByteBuffer& other) noexcept;
     AByteBuffer(AByteBuffer&& other) noexcept;
-
-    AByteBufferRef ref() const {
-        return { mBuffer, mSize };
-    }
-
-    size_t read(char* dst, size_t size) override;
 
     void write(const char* src, size_t size) override;
 
@@ -63,32 +55,16 @@ public:
      * @param stream
      * @param size
      */
-    void write(const IInputStream& stream, size_t size);
+    void write(IInputStream& stream, size_t size);
 
-    operator AByteBufferRef() const {
-        return ref();
+    operator AByteBufferView() const noexcept {
+        return { mBuffer, mSize };
     }
 
     void clear() {
         delete[] mBuffer;
         mBuffer = nullptr;
-        mSize = mReserved = mReadPos = 0;
-    }
-
-    const char* readIterator() const {
-        return mBuffer + mReadPos;
-    }
-
-    size_t getCurrentPos() const {
-        return mReadPos;
-    }
-
-    void increaseCurrentPos(size_t by) const {
-        mReadPos += by;
-    }
-
-    size_t availableToRead() const {
-        return end() - readIterator();
+        mSize = mCapacity = 0;
     }
 
     /**
@@ -100,7 +76,7 @@ public:
      * \brief Increases internal buffer.
      */
     void increaseInternalBuffer(size_t size) {
-        reserve(mReserved + size);
+        reserve(mCapacity + size);
     }
 
     /**
@@ -154,7 +130,7 @@ public:
      * @param s new size of the payload
      */
     void setSize(size_t s) {
-        assert(("size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?" && s <= mReserved));
+        assert(("size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?" && s <= mCapacity));
         mSize = s;
     }
     /**
@@ -170,7 +146,7 @@ public:
      */
     void increaseSize(size_t s) {
         mSize += s;
-        assert(("size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?" && mSize <= mReserved));
+        assert(("size cannot be greater than reserved buffer size; did you mean AByteBuffer::resize?" && mSize <= mCapacity));
     }
 
     /**
@@ -179,7 +155,7 @@ public:
      * @param s new size of the payload
      */
     void resize(size_t s) {
-        if (mReserved < s) {
+        if (mCapacity < s) {
             reserve(s);
         }
         mSize = s;
@@ -191,10 +167,10 @@ public:
      * @param s new size of the payload
      */
     void reallocate(size_t s) {
-        if (mReserved != s) {
+        if (mCapacity != s) {
             delete[] mBuffer;
             mBuffer = new char[s];
-            mReserved = s;
+            mCapacity = s;
         }
         mSize = s;
     }
@@ -202,42 +178,38 @@ public:
     /**
      * \return size of payload (valid data)
      */
-    size_t getSize() const {
+    size_t getSize() const noexcept {
         return mSize;
     }
 
     /**
      * \return size of payload (valid data)
      */
-    size_t size() const {
+    size_t size() const noexcept {
         return mSize;
+    }
+
+    /**
+     * \return size of whole buffer (including possibly invalid data)
+     */
+    size_t capacity() const noexcept {
+        return mCapacity;
     }
 
     /**
      * \return size of internal buffer. Must be greater that getSize()
      */
-    size_t getReserved() const {
-        return mReserved;
+    size_t getReserved() const noexcept {
+        return mCapacity;
     }
-
-
-    /**
-     * \param p new reading offset
-     */
-    void setCurrentPos(size_t p) const {
-        mReadPos = p;
-    }
-
 
     AByteBuffer& operator=(AByteBuffer&& other) {
         mBuffer = other.mBuffer;
-        mReadPos = other.mReadPos;
-        mReserved = other.mReserved;
+        mCapacity = other.mCapacity;
         mSize = other.mSize;
 
         other.mBuffer = nullptr;
-        other.mReadPos = 0;
-        other.mReserved = 0;
+        other.mCapacity = 0;
         other.mSize = 0;
         return *this;
     }
@@ -255,7 +227,7 @@ public:
     }
     char* endReserved()
     {
-        return mBuffer + mReserved;
+        return mBuffer + mCapacity;
     }
     const char* begin() const
     {
@@ -266,25 +238,30 @@ public:
         return mBuffer + mSize;
     }
 
-    AString toHexString();
 
-    static AByteBuffer fromStream(IInputStream& is);
-    static AByteBuffer fromStream(IInputStream& is, size_t sizeRestriction);
-    static AByteBuffer fromStream(IInputStream&& is) {
-		return fromStream(is);
-	}
-    static AByteBuffer fromStream(IInputStream&& is, size_t sizeRestriction) {
-		return fromStream(is, sizeRestriction);
-	}
-    static AByteBuffer fromStream(const _<IInputStream>& is) {
-        return fromStream(*is);
+    template<typename T>
+    T as() const {
+        return AByteBufferView(*this).template as<T>();
     }
-    static AByteBuffer fromStream(const _<IInputStream>& is, size_t sizeRestriction) {
-        return fromStream(*is, sizeRestriction);
+
+    [[nodiscard]]
+    AString toHexString() const {
+        return AByteBufferView(*this).toHexString();
     }
+
+    static AByteBuffer fromStream(aui::no_escape<IInputStream> is);
+    static AByteBuffer fromStream(aui::no_escape<IInputStream> is, size_t sizeRestriction);
+
     static AByteBuffer fromString(const AString& string);
     static AByteBuffer fromHexString(const AString& string);
     static AByteBuffer fromBase64String(const AString& encodedString);
 };
 
-API_AUI_CORE std::ostream& operator<<(std::ostream& o, const AByteBuffer& r);
+API_AUI_CORE std::ostream& operator<<(std::ostream& o, AByteBufferView buffer);
+
+template<>
+struct ASerializable<AByteBuffer> {
+    static void write(IOutputStream& os, const AByteBuffer& value) {
+        os.write(value.data(), value.size());
+    }
+};

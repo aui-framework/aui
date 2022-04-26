@@ -17,7 +17,7 @@ namespace testing {
 class API_AUI_VIEWS ABaseWindow: public AViewContainer {
     friend class SoftwareRenderer;
     friend class testing::UITest;
-    friend class IRenderingContext::Init;
+    friend struct IRenderingContext::Init;
 private:
     _weak<AView> mFocusedView;
     _weak<AView> mProfiledView;

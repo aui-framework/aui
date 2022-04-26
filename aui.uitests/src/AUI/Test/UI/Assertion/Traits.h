@@ -14,4 +14,13 @@ namespace uitest::impl {
             return L::operator()(v) && R::operator()(v);
         }
     };
+
+    template<typename P>
+    struct not$: P {
+        explicit not$(P p): P(std::move(p)) {}
+
+        bool operator()(const _<AView>& v) {
+            return !P::operator()(v);
+        }
+    };
 }

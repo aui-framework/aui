@@ -25,11 +25,10 @@
 
 #pragma once
 
-#include "attribute.h"
 
 namespace ass {
     template<typename Base>
-    struct hovered: Base, AttributeHelper<hovered<Base>> {
+    struct hovered: Base {
         template<typename... Args>
         hovered(Args&&... args):
             Base(std::forward<Args>(args)...)

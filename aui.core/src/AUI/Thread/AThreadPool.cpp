@@ -27,7 +27,7 @@
 AThreadPool::Worker::Worker(AThreadPool& tp, size_t index) :
 	mThread(_new<AThread>([&, index]()
 {
-    mThread->setThreadName("AThreadPool worker #" + AString::number(index + 1));
+    AThread::setName("AThreadPool #" + AString::number(index + 1));
 	thread_fn();
 })),
 mTP(tp)
@@ -89,7 +89,7 @@ AThreadPool::Worker::~Worker() {
 	mThread = nullptr;
 }
 
-void AThreadPool::Worker::disable() {
+void AThreadPool::Worker::aboutToDelete() {
 	mEnabled = false;
 }
 
@@ -153,8 +153,9 @@ AThreadPool& AThreadPool::global()
 }
 
 AThreadPool::AThreadPool(size_t size) {
+    mWorkers.reserve(size);
 	for (size_t i = 0; i < size; ++i)
-		mWorkers.push_back(new Worker(*this, i));
+		mWorkers.push_back(std::make_unique<Worker>(*this, i));
 }
 
 AThreadPool::AThreadPool() :
@@ -165,14 +166,34 @@ AThreadPool::AThreadPool() :
 AThreadPool::~AThreadPool() {
 	std::unique_lock lck(mQueueLock);
 	for (auto& f : mWorkers) {
-		f->disable();
+        f->aboutToDelete();
 	}
 	for (auto& f : mWorkers) {
         mCV.notify_all();
 		lck.unlock();
-		delete f;
+		f.reset();
 		lck.lock();
 	}
+}
+
+void AThreadPool::setWorkersCount(std::size_t workersCount) {
+    assert(("invalid worker count", workersCount >= 2 && workersCount <= 1000));
+    std::unique_lock lck(mQueueLock);
+    if (mWorkers.size() >= workersCount) {
+        while (mWorkers.size() >= workersCount) {
+            mCV.notify_all();
+            mWorkers.last()->aboutToDelete();
+            lck.unlock();
+            mWorkers.pop_back();
+            lck.lock();
+        }
+    } else {
+        // have to add new workers
+        mWorkers.reserve(workersCount);
+        while (mWorkers.size() < workersCount) {
+            mWorkers.push_back(std::make_unique<Worker>(*this, mWorkers.size()));
+        }
+    }
 }
 
 size_t AThreadPool::getPendingTaskCount()

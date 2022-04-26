@@ -27,15 +27,17 @@ void ACheckBoxInner::update() {
     emit customCssPropertyChanged;
 }
 
+bool ACheckBoxInner::selectableIsSelectedImpl() {
+    return mCheckBox->isChecked();
+}
+
 
 ACheckBox::ACheckBox()
 {
-
-
     setLayout(_new<AHorizontalLayout>());
 
     mText = _new<ALabel>();
-    auto checkbox = _new<ACheckBoxInner>();
+    auto checkbox = _new<ACheckBoxInner>(this);
     addView(Stacked{checkbox});
     addView(mText);
     mText->setVisibility(Visibility::GONE);
@@ -58,13 +60,6 @@ void ACheckBox::setText(const AString& text)
     mText->setText(text);
 }
 
-void ACheckBox::getCustomCssAttributes(AMap<AString, AVariant>& map)
-{
-    AViewContainer::getCustomCssAttributes(map);
-    if (mChecked)
-        map["checked"] = true;
-}
-
 void ACheckBox::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
     AView::onMouseReleased(pos, button);
@@ -75,4 +70,8 @@ void ACheckBox::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 
 bool ACheckBox::consumesClick(const glm::ivec2& pos) {
     return true;
+}
+
+bool ACheckBox::selectableIsSelectedImpl() {
+    return mChecked;
 }

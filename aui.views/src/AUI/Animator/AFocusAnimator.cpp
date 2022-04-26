@@ -36,10 +36,10 @@ void AFocusAnimator::doAnimation(AView* view, float theta) {
     const float SIZE = 4.f;
     if (theta < 0.99999f) {
         float t = glm::pow(1.f - theta, 4.f);
-        Render::drawRectBorder(
+        Render::rectBorder(
                 ASolidBrush{{0, 0, 0, t}},
-                { -t * SIZE, -t * SIZE },
-                { t * SIZE * 2 + view->getWidth(),t * SIZE * 2 + view->getHeight() },
+                {-t * SIZE, -t * SIZE},
+                {t * SIZE * 2 + view->getWidth(), t * SIZE * 2 + view->getHeight()},
                 2.f);
     }
 }
