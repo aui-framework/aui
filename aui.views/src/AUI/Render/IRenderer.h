@@ -7,6 +7,7 @@
 #include <AUI/Common/AColor.h>
 #include <AUI/Render/ABrush.h>
 #include <AUI/Util/APool.h>
+#include <AUI/Util/AArrayView.h>
 #include "AUI/Font/AFontStyle.h"
 #include "ITexture.h"
 #include "ATextLayoutHelper.h"
@@ -61,7 +62,7 @@ enum class Blending {
      *   <dd>Alpha-based</dd>
      *   <dt><b>Behaviour</b></dt>
      *   <dd>
-     *     <p>When <code>S.a</code> is 0, <code>NORMAL</code> does not draw anything.
+     *     <p>When <code>S.a</code> is 0, <code>NORMAL</code> does not drawElements anything.
      *     <p>When <code>S.a</code> is 1, <code>NORMAL</code> ignores <code>D</code>.
      *   </dd>
      * </dl>
@@ -78,7 +79,7 @@ enum class Blending {
      *   <dd>Color-based</dd>
      *   <dt><b>Behaviour</b></dt>
      *   <dd>
-     *     <p>When <code>S</code> is black, <code>ADDITIVE</code> does not draw anything.</p>
+     *     <p>When <code>S</code> is black, <code>ADDITIVE</code> does not drawElements anything.</p>
      *     <p>When <code>S</code> is white, <code>ADDITIVE</code> draws white.</p>
      *   </dd>
      * </dl>
@@ -94,7 +95,7 @@ enum class Blending {
      *   <dd>Color-based</dd>
      *   <dt><b>Behaviour</b></dt>
      *   <dd>
-     *     <p>When <code>S</code> is black, <code>INVERSE_DST</code> does not draw anything.</p>
+     *     <p>When <code>S</code> is black, <code>INVERSE_DST</code> does not drawElements anything.</p>
      *     <p>When <code>S</code> is white, <code>INVERSE_DST</code> does full inverse.</p>
      *   </dd>
      * </dl>
@@ -110,7 +111,7 @@ enum class Blending {
      *   <dd>Color-based</dd>
      *   <dt><b>Behaviour</b></dt>
      *   <dd>
-     *     <p>When <code>S</code> is black, <code>INVERSE_SRC</code> does not draw anything.</p>
+     *     <p>When <code>S</code> is black, <code>INVERSE_SRC</code> does not drawElements anything.</p>
      *     <p>When <code>S</code> is white, <code>INVERSE_SRC</code> draws black.</p>
      *   </dd>
      * </dl>
@@ -170,7 +171,7 @@ public:
 
         /**
          * @note invalidates IMultiStringCanvas which speeds up some implementations of IMultiStringCanvas.
-         * @return instance of <code>Render::PrerenderedString</code> to draw with.
+         * @return instance of <code>Render::PrerenderedString</code> to drawElements with.
          */
         virtual _<IRenderer::IPrerenderedString> finalize() noexcept = 0;
 
@@ -312,6 +313,34 @@ public:
      */
     virtual _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, const AFontStyle& fs) = 0;
 
+
+
+    /**
+     * Draws a line between <code>p1</code> and <code>p2</code>.
+     * @param brush brush
+     * @param p1 first point
+     * @param p2 second point
+     *
+     * <dl>
+     *   <dt><b>Performance note</b></dt>
+     *   <dd>if you want to drawElements multiple lines, consider using <code>Render::lines</code> function instead.</dd>
+     * </dl>
+     */
+    virtual void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) = 0;
+
+    /**
+     * Draws polyline (non-loop line strip).
+     * @param brush brush
+     * @param points polyline points
+     */
+    virtual void drawLines(const ABrush& brush, AArrayView<glm::vec2> points) = 0;
+
+    /**
+     * Draws multiple individual lines in a batch.
+     * @param brush brush
+     * @param points line points
+     */
+    virtual void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) = 0;
 
     /**
      * Sets the color which is multiplied with any brush.

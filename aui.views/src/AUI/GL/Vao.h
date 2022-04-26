@@ -24,6 +24,7 @@
 #include "AUI/GL/gl.h"
 #include <glm/glm.hpp>
 #include "AUI/Common/AVector.h"
+#include "AUI/Util/AArrayView.h"
 #include "AUI/Views.h"
 
 namespace GL {
@@ -65,24 +66,24 @@ namespace GL {
 
 		void bind();
 
-		void insert(GLuint index, const AVector<float>& data);
-		void insert(GLuint index, const AVector<glm::vec2>& data);
-		void insert(GLuint index, const AVector<glm::vec3>& data);
-		void insert(GLuint index, const AVector<glm::vec4>& data);
-		void insert(GLuint index, const AVector<GLuint>& data);
+		void insert(GLuint index, AArrayView<float> data);
+		void insert(GLuint index, AArrayView<glm::vec2> data);
+		void insert(GLuint index, AArrayView<glm::vec3> data);
+		void insert(GLuint index, AArrayView<glm::vec4> data);
+		void insert(GLuint index, AArrayView<GLuint> data);
 
         /**
          * \brief Uploads VBO indices
          * \param data indices
          */
-		void indices(const AVector<GLuint>& data);
+		void indices(AArrayView<GLuint> data);
 
-		void draw(GLenum type, GLsizei count);
+		void drawArrays(GLenum type, GLsizei count);
 
         /**
          * \brief Draws buffer. Don't forget to upload indices with <code>indices</code> function/
          * \param type Primitive type
          */
-		void draw(GLenum type = GL_TRIANGLES);
+		void drawElements(GLenum type = GL_TRIANGLES);
 	};
 }

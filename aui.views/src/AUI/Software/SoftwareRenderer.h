@@ -145,6 +145,11 @@ public:
 
     void popMaskAfter() override;
 
+    void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) override;
+
+    void drawLines(const ABrush& brush, AArrayView<glm::vec2> points) override;
+
+    void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) override;
 
 protected:
     ITexture* createNewTexture() override;

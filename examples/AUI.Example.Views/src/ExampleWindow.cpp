@@ -37,6 +37,7 @@
 #include "DemoListModel.h"
 #include "DemoTreeModel.h"
 #include "AUI/View/ASpinner.h"
+#include "DemoGraphView.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/AComboBox.h>
 #include <AUI/i18n/AI18n.h>
@@ -352,7 +353,11 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
             _new<ALabel>("ARulerArea"),
             _new<ARulerArea>(_new<AView>() with_style { MinSize { 100_dp, 100_dp },
                                                         BackgroundGradient { 0x0_rgb, 0x404040_rgb, LayoutDirection::VERTICAL },
+                                                        MaxSize { {}, 300_dp },
                                                         Expanding{}, }) with_style { Expanding{} },
+
+            _new<DemoGraphView>(),
+
         } let { it->setExpanding(); }, "Others");
 
         it->setExpanding();
