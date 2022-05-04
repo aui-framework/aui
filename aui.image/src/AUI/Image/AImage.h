@@ -128,5 +128,6 @@ public:
 
     static _<AImage> fromUrl(const AUrl& url);
     static _<AImage> fromFile(const APath& path);
+    static _<AImage> fromBuffer(AByteBufferView buffer);
 };
 

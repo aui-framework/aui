@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,39 +19,21 @@
  * =====================================================================================================================
  */
 
+//
+// Created by alex2 on 26.08.2020.
+//
+
 #pragma once
 
-#include <AUI/Url/AUrl.h>
-#include <AUI/Logging/ALogger.h>
-#include <AUI/Util/Cache.h>
-#include "IImageLoader.h"
-#include "AUI/Common/ADeque.h"
-#include "AUI/Common/SharedPtr.h"
 
-/**
- * Image loader used for IDrawable::fromUrl and Images::get
- */
-class API_AUI_IMAGE AImageLoaderRegistry
-{
-    friend class AImage::Cache;
-    friend class IDrawable;
-    friend class AImage;
+#include <AUI/Image/IImageLoader.h>
+#include <AUI/api.h>
 
-private:
-	ADeque<_<IImageLoader>> mImageLoaders;
-
-    _<IImageFactory> loadVector(AByteBufferView buffer);
-    _<AImage> loadRaster(AByteBufferView buffer);
-    inline _<IImageFactory> loadVector(const AUrl& url) {
-        auto s = AByteBuffer::fromStream(url.open());
-        return loadVector(s);
-    }
-    _<AImage> loadImage(const AUrl& url);
-
+class BmpImageLoader: public IImageLoader {
 public:
-	AImageLoaderRegistry() = default;
+    bool matches(AByteBufferView buffer) override;
 
-	void registerImageLoader(_<IImageLoader> imageLoader);
-
-	static AImageLoaderRegistry& inst();
+    _<AImage> getRasterImage(AByteBufferView buffer) override;
 };
+
+
