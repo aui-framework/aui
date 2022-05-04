@@ -207,6 +207,16 @@ _<AImage> AImage::fromFile(const APath& path) {
     return fromUrl(AUrl("file://" + path));
 }
 
+_<AImage> AImage::fromBuffer(AByteBufferView buffer) {
+    try {
+        if (auto raster = AImageLoaderRegistry::inst().loadRaster(buffer))
+            return raster;
+    } catch (const AException& e) {
+        ALogger::err("Could not load image: " + e.getMessage());
+    }
+    return nullptr;
+}
+
 _<AImage> AImage::Cache::load(const AUrl& key)
 {
     try {

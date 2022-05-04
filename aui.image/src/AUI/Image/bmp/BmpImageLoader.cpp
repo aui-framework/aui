@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,39 +19,43 @@
  * =====================================================================================================================
  */
 
-#pragma once
+//
+// Created by alex2 on 26.08.2020.
+//
 
-#include <AUI/Url/AUrl.h>
-#include <AUI/Logging/ALogger.h>
-#include <AUI/Util/Cache.h>
-#include "IImageLoader.h"
-#include "AUI/Common/ADeque.h"
-#include "AUI/Common/SharedPtr.h"
+#include "BmpImageLoader.h"
+#include <AUI/Common/AByteBuffer.h>
 
-/**
- * Image loader used for IDrawable::fromUrl and Images::get
- */
-class API_AUI_IMAGE AImageLoaderRegistry
-{
-    friend class AImage::Cache;
-    friend class IDrawable;
-    friend class AImage;
+#include <stb_image.h>
+#include <stb_image_write.h>
 
-private:
-	ADeque<_<IImageLoader>> mImageLoaders;
+bool BmpImageLoader::matches(AByteBufferView buffer) {
+    const uint8_t bmp_header[] = {'B', 'M'};
+    return memcmp(bmp_header, buffer.data(), sizeof(bmp_header)) == 0;
+}
 
-    _<IImageFactory> loadVector(AByteBufferView buffer);
-    _<AImage> loadRaster(AByteBufferView buffer);
-    inline _<IImageFactory> loadVector(const AUrl& url) {
-        auto s = AByteBuffer::fromStream(url.open());
-        return loadVector(s);
+
+_<AImage> BmpImageLoader::getRasterImage(AByteBufferView buffer) {
+    int x, y, channels;
+    if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer.data(), buffer.size(),
+                                              &x, &y, &channels, 4)) {
+        channels = 4;
+        uint32_t format = AImage::BYTE;
+        switch (channels) {
+            case 3:
+                format |= AImage::RGB;
+                break;
+            case 4:
+                format |= AImage::RGBA;
+                break;
+            default:
+                assert(0);
+        }
+        auto img = _new<AImage>(
+                AVector<uint8_t>{static_cast<uint8_t*>(data), static_cast<uint8_t*>(data + x * y * channels)}, x, y,
+                format);
+        stbi_image_free(data);
+        return img;
     }
-    _<AImage> loadImage(const AUrl& url);
-
-public:
-	AImageLoaderRegistry() = default;
-
-	void registerImageLoader(_<IImageLoader> imageLoader);
-
-	static AImageLoaderRegistry& inst();
-};
+    return nullptr;
+}
