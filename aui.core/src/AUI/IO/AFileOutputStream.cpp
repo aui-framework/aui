@@ -23,17 +23,17 @@
 
 #include "AUI/Common/AString.h"
 
-AFileOutputStream::AFileOutputStream(const AString& path, bool append): mPath(path)
+AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move(path))
 {
 #if AUI_PLATFORM_WIN
 	// КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
-	_wfopen_s(&mFile, path.c_str(), append ? L"a+b" : L"wb");
+	_wfopen_s(&mFile, mPath.c_str(), append ? L"a+b" : L"wb");
 #else
 	mFile = fopen(path.toStdString().c_str(), append ? "a+b" : "wb");
 #endif
 	if (!mFile)
 	{
-		throw AIOException("could not write to " + path.toStdString());
+		throw AIOException("could not write to " + mPath.toStdString());
 	}
 }
 
@@ -44,6 +44,7 @@ AFileOutputStream::~AFileOutputStream()
 
 void AFileOutputStream::write(const char* src, size_t size)
 {
+    assert(("file not open", mFile != nullptr));
     if (size == 0) return;
 	auto v = fwrite(src, 1, size, mFile);
 	if (v == 0) {
