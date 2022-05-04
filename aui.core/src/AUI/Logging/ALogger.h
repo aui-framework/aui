@@ -25,6 +25,7 @@
 #include <AUI/IO/IOutputStream.h>
 #include <AUI/Reflect/AReflect.h>
 #include "AUI/Thread/AMutex.h"
+#include "AUI/IO/AFileOutputStream.h"
 
 class AString;
 
@@ -184,8 +185,10 @@ public:
 
 private:
 	ALogger();
+    ~ALogger();
 	static ALogger& instance();
 
+    AFileOutputStream mLogFile;
     AMutex mLocalTimeMutex;
 
     /**
@@ -197,6 +200,9 @@ private:
     void log(Level level, std::string_view prefix, std::string_view message);
 
     bool mDebug = true;
+
+    void setLogFileImpl(AString path);
+
 public:
 
     static void setDebugMode(bool debug) {
@@ -204,6 +210,13 @@ public:
     }
     static bool isDebug() {
         return instance().mDebug;
+    }
+
+    static void setLogFile(APath path) {
+        instance().setLogFileImpl(std::move(path));
+    }
+    static const AString& logFile() {
+        return instance().mLogFile.path();
     }
 
 	static LogWriter info(const AString& str)

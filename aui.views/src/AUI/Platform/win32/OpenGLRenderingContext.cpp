@@ -17,6 +17,8 @@
 
 HGLRC OpenGLRenderingContext::ourHrc = nullptr;
 
+static constexpr auto LOG_TAG = "OpenGL";
+
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
 
@@ -24,7 +26,7 @@ void OpenGLRenderingContext::init(const Init& init) {
     static PIXELFORMATDESCRIPTOR pfd;
     static int pxf;
     if (ourHrc == nullptr) {
-        ALogger::info("Creating OpenGL context...");
+        ALogger::info(LOG_TAG) << ("Creating context...");
         struct FakeWindow {
             HWND mHwnd;
             HDC mDC;
@@ -57,16 +59,16 @@ void OpenGLRenderingContext::init(const Init& init) {
         ourHrc = wglCreateContext(fakeWindow.mDC);
         wglMakeCurrent(fakeWindow.mDC, ourHrc);
 
-        ALogger::info("Initialized temporary GL context");
+        ALogger::info(LOG_TAG) << ("Initialized temporary context");
 
         if (!glewExperimental) {
-            ALogger::info((const char*) glGetString(GL_VERSION));
-            ALogger::info((const char*) glGetString(GL_VENDOR));
-            ALogger::info((const char*) glGetString(GL_RENDERER));
-            ALogger::info((const char*) glGetString(GL_EXTENSIONS));
+            ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_VERSION));
+            ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_VENDOR));
+            ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_RENDERER));
+            ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_EXTENSIONS));
             glewExperimental = true;
             if (glewInit() != GLEW_OK) {
-                AMessageBox::show(nullptr, "OpenGL", "Could not initialize OpenGL context");
+                AMessageBox::show(nullptr, "OpenGL", "Could not initialize context");
                 throw std::runtime_error("glewInit failed");
             }
         }
@@ -97,16 +99,16 @@ void OpenGLRenderingContext::init(const Init& init) {
         };
         makeContext(16);
         if (!k) {
-            ALogger::info("Could not set pixel format with MSAA; trying to do the same but without MSAA");
+            ALogger::info(LOG_TAG) << ("Could not set pixel format with MSAA; trying to do the same but without MSAA");
             makeContext(0);
             if (!k) {
-                ALogger::info("Could not set pixel format even without MSAA. Giving up.");
+                ALogger::info(LOG_TAG) << ("Could not set pixel format even without MSAA. Giving up.");
                 throw AException("Could set pixel format");
             } else {
-                ALogger::info("Successfully set pixel format without MSAA");
+                ALogger::info(LOG_TAG) << ("Successfully set pixel format without MSAA");
             }
         } else {
-            ALogger::info("Successfully set pixel format with MSAA");
+            ALogger::info(LOG_TAG) << ("Successfully set pixel format with MSAA");
         }
         GLint attribs[] =
                 {
@@ -123,7 +125,7 @@ void OpenGLRenderingContext::init(const Init& init) {
             } else
                 throw std::runtime_error("Failed to create OpenGL 2.0 context");
         }
-        ALogger::info("OpenGL context is ready");
+        ALogger::info(LOG_TAG) << ("Context is ready");
 
         // vsync
         wglSwapIntervalEXT(true);

@@ -35,6 +35,19 @@ public:
 	AFileInputStream(const AString& path);
 	virtual ~AFileInputStream();
 
+    AFileInputStream(AFileInputStream&& rhs) noexcept {
+        operator=(std::move(rhs));
+    }
+    AFileInputStream& operator=(AFileInputStream&& rhs) noexcept {
+        mFile = rhs.mFile;
+        rhs.mFile = nullptr;
+        return *this;
+    }
+
+    FILE* nativeHandle() const {
+        return mFile;
+    }
+
 	enum class Seek {
 	    /**
 	     * Seek relatively to the begin of file

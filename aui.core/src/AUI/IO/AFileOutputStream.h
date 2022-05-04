@@ -33,11 +33,31 @@ private:
     AString mPath;
 
 public:
-    AFileOutputStream(const AString& path, bool append = false);
+    AFileOutputStream(): mFile(nullptr) {}
+    AFileOutputStream(AString path, bool append = false);
+
     virtual ~AFileOutputStream();
 
     void write(const char* src, size_t size) override;
     void close();
+
+
+    AFileOutputStream(AFileOutputStream&& rhs) noexcept {
+        operator=(std::move(rhs));
+    }
+    AFileOutputStream& operator=(AFileOutputStream&& rhs) noexcept {
+        mFile = rhs.mFile;
+        mPath = std::move(rhs.mPath);
+        rhs.mFile = nullptr;
+        return *this;
+    }
+
+    FILE* nativeHandle() const {
+        return mFile;
+    }
+    const AString& path() const {
+        return mPath;
+    }
 
     /**
      * Probably thrown when target storage went out of space

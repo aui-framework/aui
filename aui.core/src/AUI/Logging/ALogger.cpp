@@ -20,6 +20,8 @@
  */
 
 #include "ALogger.h"
+#include "AUI/Platform/AProcess.h"
+
 #if AUI_PLATFORM_ANDROID
 #include <android/log.h>
 #else
@@ -90,12 +92,26 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
     char timebuf[64];
     std::strftime(timebuf, sizeof(timebuf), "%H:%M:%S", tm);
 
+    if (mLogFile.nativeHandle() == nullptr) {
+        setLogFileImpl(APath::getDefaultPath(APath::TEMP) / "aui.{}.log"_format(AProcess::self()->getPid()));
+    }
+
     if (message.length() == 0) {
         printf("[%s][%s]: %s\n", timebuf, levelName, prefix.data());
+        fprintf(mLogFile.nativeHandle(), "[%s][%s]: %s\n", timebuf, levelName, prefix.data());
     } else {
         printf("[%s][%s][%s]: %s\n", timebuf, prefix.data(), levelName, message.data());
+        fprintf(mLogFile.nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, prefix.data(), levelName, message.data());
     }
     fflush(stdout);
+    fflush(mLogFile.nativeHandle());
 #endif
 }
 
+
+void ALogger::setLogFileImpl(AString path) {
+    mLogFile = AFileOutputStream(std::move(path));
+    ALogger::info("Logger") << "Log file: " << mLogFile.path();
+}
+
+ALogger::~ALogger() = default;
