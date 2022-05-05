@@ -10,7 +10,9 @@ private:
     void requestTargetUpdate();
 public:
     explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(ADeque<ass::decl::IDeclarationBase*>& applicableDeclarations, const RuleWithoutSelector* rule);
+    void displayApplicableRule(const _<AViewContainer>& dst,
+                               ADeque<ass::decl::IDeclarationBase*>& applicableDeclarations,
+                               const RuleWithoutSelector* rule);
     void setTargetView(const _<AView>& targetView);
 };
 

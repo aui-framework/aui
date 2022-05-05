@@ -43,7 +43,7 @@ public:
     }
 
     void updateLayout() override {
-        child()->setGeometry(0, -mScroll.y, getContentWidth(), getContentHeight() + mScroll.y);
+        if (hasChild()) child()->setGeometry(0, -mScroll.y, getContentWidth(), getContentHeight() + mScroll.y);
     }
 
     int getContentMinimumHeight() override {
@@ -58,6 +58,10 @@ public:
     void setContent(const _<AView>& view) {
         removeAllViews();
         addView(view);
+    }
+
+    bool hasChild() const noexcept {
+        return !getViews().empty();
     }
 
     [[nodiscard]]
@@ -102,8 +106,11 @@ AScrollArea::~AScrollArea() = default;
 
 void AScrollArea::setSize(int width, int height) {
     AViewContainer::setSize(width, height);
-    mVerticalScrollbar->setScrollDimensions(mContentContainer->getContentHeight() + mContentContainer->getTotalFieldVertical(),
-                                            mContentContainer->child()->getContentMinimumHeight());
+    if (mContentContainer->hasChild()) {
+        mVerticalScrollbar->setScrollDimensions(
+                mContentContainer->getContentHeight() + mContentContainer->getTotalFieldVertical(),
+                mContentContainer->child()->getContentMinimumHeight());
+    }
 }
 
 void AScrollArea::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
