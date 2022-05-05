@@ -9,7 +9,11 @@
 AString Devtools::prettyViewName(AView* view) {
     AString name;
     if (auto c = dynamic_cast<AViewContainer*>(view)) {
-        name = AReflect::name(c->getLayout().get());
+        if (c->getLayout()) {
+            name = AReflect::name(c->getLayout().get());
+        } else {
+            name = "<no layout>";
+        }
     } else {
         name = AReflect::name(view);
     }
