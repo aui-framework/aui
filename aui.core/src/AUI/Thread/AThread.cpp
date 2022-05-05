@@ -96,7 +96,7 @@ void AAbstractThread::resetInterruptFlag()
 void AThread::start()
 {
 	assert(mThread == nullptr);
-	auto t = _cast<AThread>(objectSharedPtr());
+	auto t = _cast<AThread>(sharedPtr());
     updateThreadName();
 	mThread = new std::thread([&, t] ()
 	{

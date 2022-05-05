@@ -603,12 +603,15 @@ public:
 
     void ensureAssUpdated();
 
-    /**
-     * \brief Tries to determine std::shared_ptr for this view.
-     */
+
     [[nodiscard]]
-    _<AView> determineSharedPointer() {
-        return _cast<AView>(objectSharedPtr());
+    _<AView> sharedPtr() {
+        return _cast<AView>(AObject::sharedPtr());
+    }
+
+    [[nodiscard]]
+    _weak<AView> weakPtr() {
+        return _weak<AView>(sharedPtr());
     }
 
     /**

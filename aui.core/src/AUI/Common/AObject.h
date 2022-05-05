@@ -45,19 +45,20 @@ private:
 protected:
 	static void disconnect();
 
+public:
+	AObject();
+	virtual ~AObject();
+
+
     [[nodiscard]]
-    _<AObject> objectSharedPtr() {
+    _<AObject> sharedPtr() {
         return std::enable_shared_from_this<AObject>::shared_from_this();
     }
 
     [[nodiscard]]
-    _weak<AObject> objectWeakPtr() {
+    _weak<AObject> weakPtr() {
         return std::enable_shared_from_this<AObject>::weak_from_this();
     }
-
-public:
-	AObject();
-	virtual ~AObject();
 
 	void clearSignals();
 

@@ -461,17 +461,18 @@ bool AView::consumesClick(const glm::ivec2& pos) {
 
 void AView::focus() {
     // holding reference here
-    auto mySharedPtr = determineSharedPointer();
+    auto mySharedPtr = sharedPtr();
     auto window = AWindow::current();
-    ui_threadX [&, window, mySharedPtr]() {
-        if (mySharedPtr) {
+
+    try {
+        auto windowSharedPtr = window->sharedPtr(); // may throw bad_weak
+
+        ui_threadX [window, mySharedPtr = std::move(mySharedPtr), windowSharedPtr = std::move(windowSharedPtr)]() {
             window->setFocusedView(mySharedPtr);
-        } else {
-            auto s = determineSharedPointer();
-            assert(s);
-            window->setFocusedView(s);
-        }
-    };
+        };
+    } catch (...) {
+        window->setFocusedView(mySharedPtr);
+    }
 }
 
 Visibility AView::getVisibilityRecursive() const {

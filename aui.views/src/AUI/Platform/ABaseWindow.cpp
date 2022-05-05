@@ -134,7 +134,7 @@ void ABaseWindow::focusNextView() {
         if (auto c = mFocusedView.lock()) {
             c->onFocusLost();
         }
-        mFocusedView = target->determineSharedPointer();
+        mFocusedView = target->sharedPtr();
         if (target) {
             if (!target->hasFocus()) {
                 target->onFocusAcquired();
