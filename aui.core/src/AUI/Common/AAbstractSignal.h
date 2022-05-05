@@ -61,5 +61,5 @@ inline bool& AAbstractSignal::isDisconnected() {
 }
 
 inline _weak<AObject> AAbstractSignal::weakPtrFromObject(AObject* object) { // AAbstractSignal is a friend of AObject
-    return object->objectWeakPtr();
+    return object->weakPtr();
 }
