@@ -451,9 +451,15 @@ function(auib_import AUI_MODULE_NAME URL)
             endif()
 
             message(STATUS "Building ${AUI_MODULE_NAME}")
+
+            set(_flags "")
+            if (NOT MSVC)
+                LIST(APPEND _flags "--parallel") # --parallel breaks multithread build for MSVC
+            endif()
+
             execute_process(COMMAND
                     ${CMAKE_COMMAND}
-                    --build ${DEP_BINARY_DIR} --parallel
+                    --build ${DEP_BINARY_DIR} ${_flags}
                     --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
                     WORKING_DIRECTORY "${DEP_BINARY_DIR}"
