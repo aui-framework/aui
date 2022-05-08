@@ -55,7 +55,7 @@ AWindow::~AWindow() {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(_cast<AWindow>(objectSharedPtr()));
+    getWindowManager().mWindows.removeFirst(_cast<AWindow>(sharedPtr()));
 
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;
@@ -134,11 +134,11 @@ void AWindowManager::loop() {
     AThread::processMessages();
 }
 void AWindow::show() {
-    if (!getWindowManager().mWindows.contains(_cast<AWindow>(objectSharedPtr()))) {
-        getWindowManager().mWindows << _cast<AWindow>(objectSharedPtr());
+    if (!getWindowManager().mWindows.contains(_cast<AWindow>(sharedPtr()))) {
+        getWindowManager().mWindows << _cast<AWindow>(sharedPtr());
     }
     try {
-        mSelfHolder = _cast<AWindow>(objectSharedPtr());
+        mSelfHolder = _cast<AWindow>(sharedPtr());
     } catch (...) {
         mSelfHolder = nullptr;
     }

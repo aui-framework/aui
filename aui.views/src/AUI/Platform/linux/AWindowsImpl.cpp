@@ -57,7 +57,7 @@ AWindow::~AWindow() {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(_cast<AWindow>(objectSharedPtr()));
+    getWindowManager().mWindows.removeFirst(_cast<AWindow>(sharedPtr()));
 
     XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
 
@@ -253,11 +253,11 @@ void AWindow::flagRedraw() {
     mRedrawFlag = true;
 }
 void AWindow::show() {
-    if (!getWindowManager().mWindows.contains(_cast<AWindow>(objectSharedPtr()))) {
-        getWindowManager().mWindows << _cast<AWindow>(objectSharedPtr());
+    if (!getWindowManager().mWindows.contains(_cast<AWindow>(sharedPtr()))) {
+        getWindowManager().mWindows << _cast<AWindow>(sharedPtr());
     }
     try {
-        mSelfHolder = _cast<AWindow>(objectSharedPtr());
+        mSelfHolder = _cast<AWindow>(sharedPtr());
     } catch (...) {
         mSelfHolder = nullptr;
     }

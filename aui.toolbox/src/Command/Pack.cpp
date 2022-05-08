@@ -159,6 +159,6 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
     }
     catch (std::exception& e)
     {
-        std::cout << "Warning: could not read file " << outputCpp << ": " << e.what() << std::endl;
+        std::cout << "Warning: could not pack file " << outputCpp << ": " << e.what() << std::endl;
     }
 }

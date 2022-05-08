@@ -29,11 +29,11 @@ AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move
 	// КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
 	_wfopen_s(&mFile, mPath.c_str(), append ? L"a+b" : L"wb");
 #else
-	mFile = fopen(path.toStdString().c_str(), append ? "a+b" : "wb");
+	mFile = fopen(mPath.toStdString().c_str(), append ? "a+b" : "wb");
 #endif
 	if (!mFile)
 	{
-		throw AIOException("could not write to " + mPath.toStdString());
+		throw AIOException("could not open {} for writing"_format(mPath.toStdString()));
 	}
 }
 
