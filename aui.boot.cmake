@@ -213,10 +213,13 @@ function(auib_import AUI_MODULE_NAME URL)
     else()
         set(SHARED_OR_STATIC static)
     endif()
-    set(BUILD_SPECIFIER "${AUI_MODULE_NAME_LOWER}/${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}")
+    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}")
 
     # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
     string(MD5 BUILD_SPECIFIER ${BUILD_SPECIFIER})
+
+    # append module name to build specifier in order to distinguish modules in prefix/ dir
+    set(BUILD_SPECIFIER "${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER}")
 
     set(DEP_INSTALL_PREFIX "${AUI_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
 
@@ -233,8 +236,15 @@ function(auib_import AUI_MODULE_NAME URL)
     if (_local_repo)
         set(URL_PATH ${AUI_MODULE_NAME_LOWER})
     else()
+        # find url path by removing url protocol section (i.e. http://)
         string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
     endif()
+
+    # we need only last dir name from URL_PATH (i.e. aui-framework/aui -> aui)
+    string(FIND "${URL_PATH}" "/" _t REVERSE)
+    math(EXPR _t "${_t} + 1") # t += 1
+    string(SUBSTRING ${URL_PATH} ${_t} -1 URL_PATH)
+
 
     if (DEP_ADD_SUBDIRECTORY)
         # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project's name
