@@ -159,7 +159,7 @@ AThreadPool::AThreadPool(size_t size) {
 }
 
 AThreadPool::AThreadPool() :
-	AThreadPool(glm::max(std::thread::hardware_concurrency() - 1, 1u))
+	AThreadPool(glm::max(std::thread::hardware_concurrency() - 1, 2u))
 {
 }
 
