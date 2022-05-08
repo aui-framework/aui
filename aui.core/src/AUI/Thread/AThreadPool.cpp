@@ -180,7 +180,7 @@ void AThreadPool::setWorkersCount(std::size_t workersCount) {
     assert(("invalid worker count", workersCount >= 2 && workersCount <= 1000));
     std::unique_lock lck(mQueueLock);
     if (mWorkers.size() >= workersCount) {
-        while (mWorkers.size() >= workersCount) {
+        while (mWorkers.size() > workersCount) {
             mCV.notify_all();
             mWorkers.last()->aboutToDelete();
             lck.unlock();
