@@ -75,7 +75,7 @@ namespace aui {
         template<typename T>
         struct type_length {
             inline static constexpr size_t format_length(const T& t) {
-                return glm::pow(2llu, sizeof(T)) + 1;
+                return glm::ceil(glm::log(glm::pow(2llu, sizeof(T) * 8)) / glm::log(10)) + 1;
             }
         };
         template<>
@@ -93,6 +93,12 @@ namespace aui {
         template<>
         struct type_length<AString> {
             inline static size_t format_length(const AString& t) {
+                return t.length();
+            }
+        };
+        template<>
+        struct type_length<std::string> {
+            inline static size_t format_length(const std::string& t) {
                 return t.length();
             }
         };

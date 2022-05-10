@@ -33,7 +33,7 @@ AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move
 #endif
 	if (!mFile)
 	{
-		throw AIOException("could not open {} for writing"_format(mPath.toStdString()));
+		throw AIOException("AFileOutputStream: could not open {}"_format(mPath));
 	}
 }
 
