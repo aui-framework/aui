@@ -234,20 +234,20 @@ APath APath::absolute() const {
 
 const APath& APath::makeDir() const {
 #ifdef WIN32
-    //                           VV - КОЗЛЫ, МЛЯТЬ!
-    if (::_wmkdir(c_str()) != 0) {
-        auto s = "could not create directory: "_as + absolute() ERROR_DESCRIPTION;
-        auto et = GetLastError();
-        switch (et) {
-            case ERROR_FILE_NOT_FOUND:
-                throw AFileNotFoundException(s);
-            case ERROR_ACCESS_DENIED:
-                throw AAccessDeniedException(s);
-            case ERROR_ALREADY_EXISTS:
-                break;
-            default:
-                throw AIOException(s);
-        }
+    // VV - КОЗЛЫ, МЛЯТЬ!
+    ::_wmkdir(c_str());
+    auto et = GetLastError();
+    if (et == ERROR_SUCCESS) return *this;
+    auto s = "could not create directory: "_as + absolute() ERROR_DESCRIPTION;
+    switch (et) {
+        case ERROR_FILE_NOT_FOUND:
+            throw AFileNotFoundException(s);
+        case ERROR_ACCESS_DENIED:
+            throw AAccessDeniedException(s);
+        case ERROR_ALREADY_EXISTS:
+            break;
+        default:
+            throw AIOException(s);
     }
 #else
     if (::mkdir(toStdString().c_str(), 0755) != 0) {
