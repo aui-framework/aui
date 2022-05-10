@@ -54,7 +54,7 @@ std::ostream& operator<<(std::ostream& o, const Data2& d) {
     return o;
 }
 
-TEST(JsonFieldsTest, Basic)
+TEST(Json, FieldsTestBasic)
 {
     // arrange
     Data2 d = { {1, 2, 3}, 228 };
@@ -78,7 +78,7 @@ AJSON_FIELDS(DataOptional,
              (v1, "v1")
              (v2, "v2", AJsonFieldFlags::OPTIONAL))
 
-TEST(JsonFieldsTest, Optional)
+TEST(Json, FieldsTestOptional)
 {
     // should not throw an exception since v2 is optional
     DataOptional dst { 1, 2 };
