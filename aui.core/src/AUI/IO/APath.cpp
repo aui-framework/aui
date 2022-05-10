@@ -235,7 +235,7 @@ APath APath::absolute() const {
 const APath& APath::makeDir() const {
 #ifdef WIN32
     //                           VV - КОЗЛЫ, МЛЯТЬ!
-    if (::_wmkdir(c_str()) == 0) {
+    if (::_wmkdir(c_str()) != 0) {
         auto s = "could not create directory: "_as + absolute() ERROR_DESCRIPTION;
         auto et = GetLastError();
         switch (et) {
