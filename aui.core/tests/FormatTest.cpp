@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,59 +14,29 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
-#include "AFileInputStream.h"
+//
+// Created by alex2 on 31.08.2020.
+//
 
+#include <gtest/gtest.h>
+#include <AUI/Traits/algorithms.h>
+#include <AUI/Common/AVector.h>
+#include <AUI/Traits/strings.h>
 
-#include "AUI/Common/AString.h"
-
-AFileInputStream::AFileInputStream(const AString& path)
-{
-#if AUI_PLATFORM_WIN
-    // КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
-    _wfopen_s(&mFile, path.c_str(), L"rb");
-#else
-    mFile = fopen(path.toStdString().c_str(), "rb");
-#endif
-    if (!mFile)
-    {
-        throw AIOException("AFileInputStream: could not open {}"_format(path));
-    }
+TEST(Format, String) {
+    EXPECT_EQ("test {}"_format("azaza"), "test azaza");
 }
 
-AFileInputStream::~AFileInputStream()
-{
-	fclose(mFile);
+TEST(Format, Int) {
+    EXPECT_EQ("test {}"_format(1), "test 1");
 }
-
-size_t AFileInputStream::read(char* dst, size_t size)
-{
-	size_t r = ::fread(dst, 1, size, mFile);
-	return r;
-}
-
-void AFileInputStream::seek(std::streamoff offset, AFileInputStream::Seek dir) noexcept {
-    fseek(mFile, offset, [&] {
-        switch (dir) {
-            case Seek::BEGIN:
-                return SEEK_SET;
-            case Seek::CURRENT:
-                return SEEK_CUR;
-            case Seek::END:
-                return SEEK_CUR;
-        }
-        return 0;
-    }());
-}
-
-void AFileInputStream::seek(std::streampos pos) noexcept {
-    fseek(mFile, pos, SEEK_SET);
-}
-
-std::streampos AFileInputStream::tell() noexcept {
-    return ftell(mFile);
+TEST(Format, Length) {
+    EXPECT_EQ(aui::detail::format::format_length(std::uint8_t{}), 4);
+    EXPECT_EQ(aui::detail::format::format_length(std::uint16_t{}), 6);
+    EXPECT_EQ(aui::detail::format::format_length(std::uint32_t{}), 11 /* 4294967295 */);
 }
