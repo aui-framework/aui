@@ -37,7 +37,7 @@ void check_girlfriend(const AJson& o) {
     EXPECT_TRUE(o["unexisting_object"].isEmpty());
 }
 
-TEST(JsonBasic, ObjectAssignValue)
+TEST(Json, ObjectAssignValue)
 {
     // arrange data
     AJson o;
@@ -50,7 +50,7 @@ TEST(JsonBasic, ObjectAssignValue)
     check_girlfriend(o);
 }
 
-TEST(JsonBasic, ObjectAssignObject)
+TEST(Json, ObjectAssignObject)
 {
     // arrange data
     AJson o;
@@ -64,7 +64,7 @@ TEST(JsonBasic, ObjectAssignObject)
     // check for resulting json
     ASSERT_EQ(AJson::toString(root), R"({"user":{"name":"Alex2772","year":2020}})");
 }
-TEST(JsonBasic, StringEscape)
+TEST(Json, StringEscape)
 {
     // arrange data
     AJson root;
@@ -79,7 +79,7 @@ TEST(JsonBasic, StringEscape)
     ASSERT_EQ(deserialized["user"].asString(), "u\"");
 }
 
-TEST(JsonBasic, BraceInitialization)
+TEST(Json, BraceInitialization)
 {
     // arrange data
     AJson root = {
@@ -95,7 +95,7 @@ TEST(JsonBasic, BraceInitialization)
     ASSERT_EQ(str, R"({"array":["value1","value2"],"key":1})");
 }
 
-TEST(JsonBasic, Array)
+TEST(Json, Array)
 {
     // arrange data
     AJson root = AJson::Array{1, 2, 3};
@@ -110,7 +110,7 @@ TEST(JsonBasic, Array)
     ASSERT_EQ(root[1].asInt(), 2);
 }
 
-TEST(JsonBasic, SerializationDeserialization)
+TEST(Json, SerializationDeserialization)
 {
     // arrange data
     const char* str = R"({"a":null,"b":[1,2,3],"c":false,"d":true,"e":{"v":"123"}})";

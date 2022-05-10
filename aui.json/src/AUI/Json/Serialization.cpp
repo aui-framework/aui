@@ -114,7 +114,7 @@ static AJson read(ATokenizer& t) {
             if (keyword == "null") {
                 return nullptr;
             }
-            t.readChar();
+            throw AJsonParseException("invalid char: {}"_format(t.readChar()));
         }
     } catch (const AEOFException& e) {
         throw AJsonParseException("unexpected end of json stream");

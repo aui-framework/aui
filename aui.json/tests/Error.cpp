@@ -30,7 +30,7 @@
 
 
 
-TEST(JsonErrors, Error)
+TEST(Json, Error)
 {
     EXPECT_THROW(AJson::fromString(R"({"kek": truz})"), AJsonParseException);
     EXPECT_THROW(AJson::fromString(R"({"kek": falz})"), AJsonParseException);
@@ -40,5 +40,6 @@ TEST(JsonErrors, Error)
     EXPECT_THROW(AJson::fromString(R"({"object": {"1":1,})"), AJsonParseException);
     EXPECT_THROW(AJson::fromString(R"({"object": {"1":2})"), AJsonParseException);
     EXPECT_THROW(AJson::fromString(R"({"object": {"1":2 xs})"), AJsonParseException);
+    EXPECT_THROW(AJson::fromString(R"(<?xml version='1.0' encoding='UTF-8'?>)"), AJsonParseException);
 }
 
