@@ -182,13 +182,38 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
 
-    set(options ADD_SUBDIRECTORY)
+    set(options ADD_SUBDIRECTORY ARCHIVE)
     set(oneValueArgs VERSION CMAKE_WORKING_DIR)
     set(multiValueArgs CMAKE_ARGS COMPONENTS)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
+
+    if (AUIB_IMPORT_ARCHIVE AND AUIB_IMPORT_VERSION)
+        message(FATAL_ERROR "ARCHIVE and VERSION arguments are incompatible")
+    endif()
+
+    if (AUI_BOOT_${AUI_MODULE_NAME_UPPER}_ADD_SUBDIRECTORY OR AUIB_IMPORT_ADD_SUBDIRECTORY)
+        set(DEP_ADD_SUBDIRECTORY TRUE)
+    else()
+        set(DEP_ADD_SUBDIRECTORY FALSE)
+    endif()
+    if (_local_repo)
+        set(URL_PATH ${AUI_MODULE_NAME_LOWER})
+    else()
+        # find url path by removing url protocol section (i.e. http://)
+        string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
+    endif()
+
+    # we need only last dir name from URL_PATH (i.e. aui-framework/aui -> aui)
+    string(FIND "${URL_PATH}" "/" _t REVERSE)
+    math(EXPR _t "${_t} + 1") # t += 1
+    string(SUBSTRING ${URL_PATH} ${_t} -1 URL_PATH)
+
+
     set(TAG_OR_HASH latest)
-    if (AUIB_IMPORT_HASH)
+    if (AUIB_IMPORT_ARCHIVE)
+        set(TAG_OR_HASH ${URL_PATH})
+    elseif (AUIB_IMPORT_HASH)
         set(TAG_OR_HASH ${AUIB_IMPORT_HASH})
     elseif(AUIB_IMPORT_VERSION)
         set(TAG_OR_HASH ${AUIB_IMPORT_VERSION})
@@ -227,23 +252,6 @@ function(auib_import AUI_MODULE_NAME URL)
     #if (NOT "${DEP_INSTALL_PREFIX}" IN_LIST CMAKE_PREFIX_PATH)
     #    list(APPEND CMAKE_PREFIX_PATH ${DEP_INSTALL_PREFIX})
     #endif()
-
-    if (AUI_BOOT_${AUI_MODULE_NAME_UPPER}_ADD_SUBDIRECTORY OR AUIB_IMPORT_ADD_SUBDIRECTORY)
-        set(DEP_ADD_SUBDIRECTORY TRUE)
-    else()
-        set(DEP_ADD_SUBDIRECTORY FALSE)
-    endif()
-    if (_local_repo)
-        set(URL_PATH ${AUI_MODULE_NAME_LOWER})
-    else()
-        # find url path by removing url protocol section (i.e. http://)
-        string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
-    endif()
-
-    # we need only last dir name from URL_PATH (i.e. aui-framework/aui -> aui)
-    string(FIND "${URL_PATH}" "/" _t REVERSE)
-    math(EXPR _t "${_t} + 1") # t += 1
-    string(SUBSTRING ${URL_PATH} ${_t} -1 URL_PATH)
 
 
     if (DEP_ADD_SUBDIRECTORY)
@@ -329,9 +337,16 @@ function(auib_import AUI_MODULE_NAME URL)
             message(STATUS "Using local: ${DEP_SOURCE_DIR}")
         else()
             include(FetchContent)
+
+            if (AUIB_IMPORT_ARCHIVE)
+                set(_import_type URL)
+            else()
+                set(_import_type GIT_REPOSITORY)
+            endif()
+
             FetchContent_Declare(${AUI_MODULE_NAME}_FC
                     PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
-                    GIT_REPOSITORY "${URL}"
+                    ${_import_type} "${URL}"
                     GIT_TAG ${AUIB_IMPORT_VERSION}
                     GIT_PROGRESS TRUE # show progress of download
                     USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
