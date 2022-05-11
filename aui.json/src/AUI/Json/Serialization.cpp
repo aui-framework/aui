@@ -78,7 +78,7 @@ static AJson read(ATokenizer& t) {
                         }
                     }
 
-                    return std::move(result);
+                    return result;
                 }
                 case 't': // true?
                 {
@@ -114,7 +114,11 @@ static AJson read(ATokenizer& t) {
             if (keyword == "null") {
                 return nullptr;
             }
-            throw AJsonParseException("invalid char: {}"_format(t.readChar()));
+            if (!keyword.empty()) throw AJsonParseException("invalid keyword: {}"_format(keyword));
+
+            if (char c = t.readChar(); !isspace(c)) {
+                throw AJsonParseException("invalid char: {}"_format(c));
+            }
         }
     } catch (const AEOFException& e) {
         throw AJsonParseException("unexpected end of json stream");
