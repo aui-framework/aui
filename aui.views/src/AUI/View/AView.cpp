@@ -71,6 +71,12 @@ void AView::redraw()
     nullsafe(getWindow())->flagRedraw(); else nullsafe(AWindow::current())->flagRedraw();
 
 }
+void AView::requestLayoutUpdate()
+{
+
+    nullsafe(getWindow())->flagUpdateLayout(); else nullsafe(AWindow::current())->flagUpdateLayout();
+
+}
 
 void AView::drawStencilMask()
 {
