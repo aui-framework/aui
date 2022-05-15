@@ -577,6 +577,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
             for (auto &window : mWindows) {
                 if (window->mRedrawFlag) {
                     window->mRedrawFlag = false;
+                    AWindow::currentWindowStorage() = window.get();
                     window->redraw();
                 }
             }
