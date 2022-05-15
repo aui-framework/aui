@@ -105,7 +105,8 @@ foreach(_module ${AUI_FIND_COMPONENTS})
                 set_target_properties(${_module_target_name} PROPERTIES
                         IMPORTED_LOCATION "${_lib}"
                         IMPORTED_IMPLIB "${AUI_${_module}_IMPLIBRARY}"
-                        INTERFACE_INCLUDE_DIRECTORIES "${_include}")
+                        INTERFACE_INCLUDE_DIRECTORIES "${_include}"
+                        INTERFACE_LINK_DIRECTORIES "${SELF_DIR}/aui.${_module}/lib")
 
                 target_compile_definitions(${_module_target_name} INTERFACE ${AUI_COMPONENT_${_module}_COMPILE_DEFINITIONS})
                 if (AUI_COMPONENT_${_module}_WHOLEARCHIVE)
