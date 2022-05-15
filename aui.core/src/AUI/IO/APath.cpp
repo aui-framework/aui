@@ -316,13 +316,18 @@ void APath::copy(const APath& source, const APath& destination) {
 
 APath APath::getDefaultPath(APath::DefaultPath path) {
     APath result;
-    result.resize(0x800);
+    result.resize(MAX_PATH);
     switch (path) {
         case APPDATA:
             SHGetFolderPath(nullptr, CSIDL_APPDATA, nullptr, SHGFP_TYPE_DEFAULT, result.data());
             break;
+
         case TEMP:
             GetTempPath(result.length(), result.data());
+            break;
+
+        case HOME:
+            SHGetFolderPath(nullptr, CSIDL_PROFILE, nullptr, SHGFP_TYPE_DEFAULT, result.data());
             break;
         default:
             assert(0);
