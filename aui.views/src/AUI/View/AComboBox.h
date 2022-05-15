@@ -42,6 +42,10 @@ protected:
     virtual void updateText();
     virtual void onComboBoxWindowCreated();
 
+    _<AViewContainer> comboWindow() {
+        return mComboWindow.lock();
+    }
+
 public:
     explicit AComboBox(const _<IListModel<AString>>& model);
     AComboBox();

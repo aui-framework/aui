@@ -41,13 +41,18 @@ AObject::~AObject()
 	clearSignals();
 }
 
-void AObject::clearSignals()
+void AObject::clearSignals() noexcept
 {
     std::unique_lock lock(mSignalsLock);
-	for (auto& a : mSignals)
+	for (auto it = mSignals.begin(); !mSignals.empty();  it = mSignals.begin())
 	{
-	    if (!a->isDestroyed())
-		    a->clearAllConnectionsWith(this);
+        auto signal = *it;
+	    if (!signal->isDestroyed()) {
+            mSignals.erase(it);
+            lock.unlock();
+            signal->clearAllConnectionsWith(this);
+            lock.lock();
+        }
 	}
 }
 

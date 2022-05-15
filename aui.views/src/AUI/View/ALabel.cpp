@@ -95,6 +95,7 @@ void ALabel::setText(const AString& newText)
 	mPrerendered = nullptr;
 
     AWindow::current()->flagUpdateLayout();
+    redraw();
 }
 
 

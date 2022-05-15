@@ -27,7 +27,7 @@
 #include "AAbstractSignal.h"
 
 template<typename... Args>
-class ASignal: public AAbstractSignal
+class ASignal final: public AAbstractSignal
 {
     friend class AObject;
 
@@ -190,25 +190,37 @@ public:
         return !mSlots.empty();
     }
 
-    void clearAllConnections() override
+    void clearAllConnections() noexcept override
     {
-        std::unique_lock lock(mSlotsLock);
-        mSlots.clear();
+        clearAllConnectionsIf([](const auto&){ return true; });
     }
-    void clearAllConnectionsWith(AObject* object) override
+    void clearAllConnectionsWith(AObject* object) noexcept override
     {
+        clearAllConnectionsIf([&](const slot& p){ return p.object == object; });
+    }
+
+private:
+
+    template<typename Predicate>
+    void clearAllConnectionsIf(Predicate&& predicate) noexcept {
+        /*
+         * Removal of connections before end of execution of clearAllConnectionsIf may cause this ASignal destruction,
+         * causing undefined behaviour. Destructing these connections after mSlotsLock unlocking solves the problem.
+         */
+        AVector<func_t> slotsToRemove;
+
         std::unique_lock lock(mSlotsLock);
-        for (auto it = mSlots.begin(); it != mSlots.end();)
-        {
-            if (it->object == object)
-            {
-                it = mSlots.erase(it);
+        slotsToRemove.reserve(mSlots.size());
+        mSlots.removeIf([&slotsToRemove, predicate = std::move(predicate)](const slot& p) {
+            if (predicate(p)) {
+                slotsToRemove << std::move(p.func);
+                return true;
             }
-            else
-            {
-                ++it;
-            }
-        }
+            return false;
+        });
+        lock.unlock();
+
+        slotsToRemove.clear();
     }
 };
 #include <AUI/Thread/AThread.h>

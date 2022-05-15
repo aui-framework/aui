@@ -278,8 +278,8 @@ void AWindow::quit() {
         ShowWindow(mHandle, SW_HIDE);
     }
 
-    AThread::current()->enqueue([&]() {
-        mSelfHolder = nullptr;
+    AThread::current()->enqueue([s = std::move(mSelfHolder)]() mutable {
+        s = nullptr;
     });
 }
 
