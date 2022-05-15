@@ -64,6 +64,7 @@ void AComboBox::setSelectionId(int id) {
 
 void AComboBox::updateText() {
     if (mModel->listSize() == 0) {
+        redraw();
         return;
     }
     setText(mModel->listItemAt(mSelectionId));
@@ -110,7 +111,7 @@ void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
                         (glm::max)(getWidth(), list->getMinimumWidth()),
                         listHeight
                 });
-        comboWindow->setLayout(_new<AStackedLayout>());
+        comboWindow->setLayout(_new<AVerticalLayout>());
         comboWindow->addView(list);
         mComboWindow = comboWindow;
 

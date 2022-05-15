@@ -202,9 +202,6 @@ public:
     void removeAt(size_t index) noexcept
     {
         aui::container::remove_at(*this, index);
-        emit this->dataRemoved(AModelRange{AModelIndex(index    ),
-                                           AModelIndex(index + 1),
-                                           this});
     }
 
     const_iterator begin() const {

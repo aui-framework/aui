@@ -30,28 +30,29 @@ class AObject;
 
 class API_AUI_CORE AAbstractSignal
 {
-private:
-    bool mDestroyed = false;
-
-protected:
-	void linkSlot(AObject* object) noexcept;
-	void unlinkSlot(AObject* object) noexcept;
-
-
-	static bool& isDisconnected();
-
-    static _weak<AObject> weakPtrFromObject(AObject* object);
-	
+    friend class AObject;
 public:
-	virtual void clearAllConnectionsWith(AObject* object) = 0;
-	virtual void clearAllConnections() = 0;
-	virtual ~AAbstractSignal() {
-	    mDestroyed = true;
-	}
+    virtual ~AAbstractSignal() {
+        mDestroyed = true;
+    }
 
-    [[nodiscard]] bool isDestroyed() const {
+    [[nodiscard]] bool isDestroyed() const noexcept {
         return mDestroyed;
     }
+
+    virtual void clearAllConnectionsWith(AObject* object) noexcept = 0;
+    virtual void clearAllConnections() noexcept = 0;
+
+protected:
+    void linkSlot(AObject* object) noexcept;
+    void unlinkSlot(AObject* object) noexcept;
+
+    static bool& isDisconnected();
+
+    static _weak<AObject> weakPtrFromObject(AObject* object);
+
+private:
+    bool mDestroyed = false;
 };
 
 #include <AUI/Common/AObject.h>

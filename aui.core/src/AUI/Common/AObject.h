@@ -60,7 +60,7 @@ public:
         return std::enable_shared_from_this<AObject>::weak_from_this();
     }
 
-	void clearSignals();
+	void clearSignals() noexcept;
 
     /**
      * Connects signal to the slot of the specified object.

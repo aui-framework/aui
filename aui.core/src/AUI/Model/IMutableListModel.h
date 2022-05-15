@@ -33,7 +33,7 @@ public:
     virtual void removeItems(const AModelRange<T>& items) = 0;
     virtual void removeItems(const AModelSelection<T>& items) {
         for (const auto& r : items.ranges()) {
-            removeItems(items);
+            removeItems(r);
         }
     }
     virtual void removeItem(const AModelIndex& item) = 0;
