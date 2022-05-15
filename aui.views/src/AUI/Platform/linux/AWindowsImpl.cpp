@@ -57,7 +57,9 @@ AWindow::~AWindow() {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(_cast<AWindow>(sharedPtr()));
+    getWindowManager().mWindows.removeIf([this](const auto& p) {
+        return p.get() == this;
+    });
 
     XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
 

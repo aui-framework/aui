@@ -288,6 +288,13 @@ public:
          * Android: <internal_storage_path>/__aui_tmp
          */
         TEMP,
+
+        /**
+         * \brief User home directory.
+         * Windows: User's home folder (C:\Users\USERNAME)
+         * Linux: /home/$USER
+         */
+        HOME,
     };
 
     /**

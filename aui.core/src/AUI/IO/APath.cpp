@@ -367,7 +367,13 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
             return APath(".").absolute()["__aui_tmp"];
 #else
         case APPDATA:
-            return APath(getpwuid(getuid())->pw_dir).file(".local/share");
+            return getDefaultPath(HOME) / ".local/share";
+
+        case HOME:
+            if (auto home = getenv("HOME")) {
+                return home;
+            }
+            return getpwuid(getuid())->pw_dir;
 
         case TEMP:
             return "/tmp";
