@@ -47,8 +47,8 @@ void AObject::clearSignals() noexcept
 	for (auto it = mSignals.begin(); !mSignals.empty();  it = mSignals.begin())
 	{
         auto signal = *it;
+        mSignals.erase(it);
 	    if (!signal->isDestroyed()) {
-            mSignals.erase(it);
             lock.unlock();
             signal->clearAllConnectionsWith(this);
             lock.lock();

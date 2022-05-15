@@ -188,6 +188,8 @@ protected:
 	void updateAssState();
 
 
+    void requestLayoutUpdate();
+
     /**
      * Converts touch screen events to desktop.
      * <dl>
