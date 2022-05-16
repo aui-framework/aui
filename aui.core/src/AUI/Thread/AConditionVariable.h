@@ -38,7 +38,6 @@ private:
             auto thread = AThread::current();
             std::unique_lock lock(thread->mCurrentCV.mutex);
             thread->mCurrentCV.cv = nullptr;
-            AThread::interruptionPoint();
         }
     };
 
