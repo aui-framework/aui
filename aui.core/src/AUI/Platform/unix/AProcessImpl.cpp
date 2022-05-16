@@ -185,3 +185,7 @@ int AChildProcess::waitForExitCode() {
 uint32_t AChildProcess::getPid() const noexcept {
     return mPid;
 }
+
+void AProcess::kill() const noexcept {
+    ::kill(getPid(), SIGKILL);
+}
