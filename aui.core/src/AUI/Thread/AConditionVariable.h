@@ -74,8 +74,11 @@ public:
 
     template<typename Lock>
     void wait(Lock& lock) {
-        WaitHelper w(*this);
-        mImpl.wait(lock);
+        {
+            WaitHelper w(*this);
+            mImpl.wait(lock);
+        }
+        AThread::interruptionPoint();
     }
 
     /**
@@ -85,8 +88,11 @@ public:
      */
     template<typename Lock, typename Predicate>
     void wait(Lock& lock, Predicate&& predicate) {
-        WaitHelper w(*this);
-        mImpl.wait(lock, PredicateHelper(std::forward<Predicate>(predicate)));
+        {
+            WaitHelper w(*this);
+            mImpl.wait(lock, PredicateHelper(std::forward<Predicate>(predicate)));
+        }
+        AThread::interruptionPoint();
     }
 
     /**
@@ -96,8 +102,11 @@ public:
      */
     template<typename Lock, typename Duration>
     void wait_for(Lock& lock, Duration duration) {
-        WaitHelper w(*this);
-        mImpl.wait_for(lock, duration);
+        {
+            WaitHelper w(*this);
+            mImpl.wait_for(lock, duration);
+        }
+        AThread::interruptionPoint();
     }
 
     /**
@@ -108,7 +117,10 @@ public:
      */
     template<typename Lock, typename Duration, typename Predicate>
     void wait_for(Lock& lock, Duration duration, Predicate&& predicate) {
-        WaitHelper w(*this);
-        mImpl.wait_for(lock, duration, PredicateHelper(std::forward<Predicate>(predicate)));
+        {
+            WaitHelper w(*this);
+            mImpl.wait_for(lock, duration, PredicateHelper(std::forward<Predicate>(predicate)));
+        }
+        AThread::interruptionPoint();
     }
 };
