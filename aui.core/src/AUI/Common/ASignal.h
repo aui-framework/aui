@@ -238,20 +238,27 @@ void ASignal<Args...>::invokeSignal(const std::tuple<Args...>& args)
             // perform crossthread call; should make weak ptr to the object and queue call to thread message queue
             auto objectWeakPtr = weakPtrFromObject(i->object);
 
-            // that's because shared_ptr counting mechanism is used when doing a crossthread call.
-            // it could not track the object existence without shared_ptr block.
-            assert(("crossthread signal-slot relation is not allowed for receiver object which is not shared_ptr",
-                    objectWeakPtr.lock() != nullptr));
-            i->object->getThread()->enqueue([this, objectWeakPtr = std::move(objectWeakPtr), func = i->func, args = args]() {
-                if (auto objectPtr = objectWeakPtr.lock()) {
-                    AAbstractSignal::isDisconnected() = false;
-                    (std::apply)(func, args);
-                    if (AAbstractSignal::isDisconnected()) {
-                        std::unique_lock lock(mSlotsLock);
-                        unlinkSlot(objectPtr.get());
+            /*
+             * That's because shared_ptr counting mechanism is used when doing a crossthread call.
+             * It could not track the object existence without shared_ptr block.
+             * Also, objectWeakPtr.lock() may be null here because object is in different thread and being destructed
+             * by shared_ptr but have not reached clearSignals() yet.
+             */
+            if (objectWeakPtr.lock() != nullptr) {
+                i->object->getThread()->enqueue([this,
+                                                        objectWeakPtr = std::move(objectWeakPtr),
+                                                        func = i->func,
+                                                        args = args]() {
+                    if (auto objectPtr = objectWeakPtr.lock()) {
+                        AAbstractSignal::isDisconnected() = false;
+                        (std::apply)(func, args);
+                        if (AAbstractSignal::isDisconnected()) {
+                            std::unique_lock lock(mSlotsLock);
+                            unlinkSlot(objectPtr.get());
+                        }
                     }
-                }
-            });
+                });
+            }
             ++i;
         }
         else
