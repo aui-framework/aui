@@ -36,29 +36,10 @@
 #ifdef WIN32
 #include <windows.h>
 #include <direct.h>
+#include <AUI/Platform/ErrorToException.h>
 
-AString error_message() {
-    //Get the error message, if any.
-    DWORD errorMessageID = ::GetLastError();
-    if(errorMessageID == 0)
-        return {}; //No error message has been recorded
-
-    LPWSTR messageBuffer = nullptr;
-    size_t size = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                 NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&messageBuffer, 0, NULL);
-
-    AString message(messageBuffer, size);
-
-    //Free the buffer.
-    LocalFree(messageBuffer);
-
-    return message;
-}
-
-#define ERROR_DESCRIPTION + ": " + error_message()
 #else
 #include <dirent.h>
-#define ERROR_DESCRIPTION  + ": " + strerror(errno)
 #endif
 
 APath APath::parent() const {
@@ -128,16 +109,21 @@ bool APath::isDirectoryExists() const {
 
 const APath& APath::removeFile() const {
 #if AUI_PLATFORM_WIN
-    if (::_wremove(c_str()) != 0) {
+    if (isRegularFileExists()) {
+        if (!DeleteFile(c_str())) {
+            aui::impl::lastErrorToException("could not remove file " + *this);
+        }
+    } else if (isDirectoryExists()) {
+        if (!RemoveDirectory(c_str())) {
+            aui::impl::lastErrorToException("could not remove directory " + *this);
+        }
+    } else {
+        throw AFileNotFoundException("could not remove file " + *this + ": not exists");
+    }
 #else
     if (::remove(toStdString().c_str()) != 0) {
-#endif
-#if AUI_PLATFORM_WIN
-        if (RemoveDirectory(c_str()))
-            return *this;
-#endif
         throw AIOException("could not remove file " + *this ERROR_DESCRIPTION);
-    }
+#endif
     return *this;
 }
 
@@ -164,7 +150,7 @@ ADeque<APath> APath::listDir(ListFlags f) const {
     DIR* dir = opendir(toStdString().c_str());
     if (!dir)
 #endif
-        throw AAccessDeniedException("could not list " + *this ERROR_DESCRIPTION);
+        aui::impl::lastErrorToException("could not list " + *this);
 
 #ifdef WIN32
     for (bool t = true; t; t = FindNextFile(dir, &fd)) {
@@ -218,7 +204,7 @@ APath APath::absolute() const {
 #ifdef WIN32
     wchar_t buf[0x1000];
     if (_wfullpath(buf, c_str(), sizeof(buf) / sizeof(wchar_t)) == nullptr) {
-        throw AIOException("could not find absolute file" + *this ERROR_DESCRIPTION);
+        aui::impl::lastErrorToException("could not find absolute file \"" + *this + "\"");
     }
 
     return APath(buf);
@@ -238,22 +224,13 @@ const APath& APath::makeDir() const {
     ::_wmkdir(c_str());
     auto et = GetLastError();
     if (et == ERROR_SUCCESS) return *this;
-    auto s = "could not create directory: "_as + absolute() ERROR_DESCRIPTION;
-    switch (et) {
-        case ERROR_FILE_NOT_FOUND:
-            throw AFileNotFoundException(s);
-        case ERROR_ACCESS_DENIED:
-            throw AAccessDeniedException(s);
-        case ERROR_ALREADY_EXISTS:
-            break;
-        default:
-            throw AIOException(s);
-    }
+
 #else
-    if (::mkdir(toStdString().c_str(), 0755) != 0) {
-        throw AIOException("could not create directory: "_as + absolute() ERROR_DESCRIPTION);
+    if (::mkdir(toStdString().c_str(), 0755) == 0) {
+        return *this;
     }
 #endif
+    aui::impl::lastErrorToException("could not create directory: "_as + absolute());
     return *this;
 }
 
@@ -460,13 +437,14 @@ const APath& APath::touch() const {
     return *this;
 }
 
-void APath::chmod(int newMode) const {
+const APath& APath::chmod(int newMode) const {
 #if AUI_PLATFORM_WIN
     if (::_wchmod(c_str(), newMode) != 0)
 #else
     if (::chmod(toStdString().c_str(), newMode) != 0)
 #endif
     {
-        throw AIOException("unable to chmod {}"_format(*this) ERROR_DESCRIPTION);
+        aui::impl::lastErrorToException("unable to chmod {}"_format(*this));
     }
+    return *this;
 }

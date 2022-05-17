@@ -270,7 +270,7 @@ public:
     time_t fileModifyTime() const;
     size_t fileSize() const;
 
-    void chmod(int newMode) const;
+    const APath& chmod(int newMode) const;
 
     enum DefaultPath {
         /**
