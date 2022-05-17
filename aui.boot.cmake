@@ -23,6 +23,10 @@ cmake_minimum_required(VERSION 3.16)
 
 option(AUI_BOOT_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
 
+define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
+        BRIEF_DOCS "Global list of imported targets"
+        FULL_DOCS "Global list of imported targets (since CMake 3.21)")
+
 # fix "Failed to get the hash for HEAD" error
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
     file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
@@ -128,6 +132,16 @@ if (NOT EXISTS ${AUI_CACHE_DIR}/repo)
 endif()
 
 
+macro(_auib_update_imported_targets_list) # used for displaying imported target names
+    get_property(_imported_targets_before GLOBAL PROPERTY AUIB_IMPORTED_TARGETS)
+    get_property(_imported_targets_after DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY IMPORTED_TARGETS)
+
+    # find the new targets by excluding _imported_targets_before from _imported_targets_after
+    list(REMOVE_ITEM _imported_targets_after ${_imported_targets_before})
+    list(APPEND _imported_targets_before ${_imported_targets_after})
+    set_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS ${_imported_targets_before})
+endmacro()
+
 function(_auib_import_subdirectory DEP_SOURCE_DIR AUI_MODULE_NAME) # helper function to keep scope
     set(AUI_BOOT TRUE)
     add_subdirectory(${DEP_SOURCE_DIR} "aui.boot-build-${AUI_MODULE_NAME}")
@@ -168,7 +182,6 @@ function(auib_import AUI_MODULE_NAME URL)
     if (AUI_BOOT_VERBOSE)
         set(FINDPACKAGE_QUIET "")
     endif()
-
 
     cmake_policy(SET CMP0087 NEW)
     cmake_policy(SET CMP0074 NEW)
@@ -253,6 +266,9 @@ function(auib_import AUI_MODULE_NAME URL)
     #    list(APPEND CMAKE_PREFIX_PATH ${DEP_INSTALL_PREFIX})
     #endif()
 
+    if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
+        _auib_update_imported_targets_list()
+    endif()
 
     if (DEP_ADD_SUBDIRECTORY)
         # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project's name
@@ -631,7 +647,14 @@ function(auib_import AUI_MODULE_NAME URL)
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
 
-    message(STATUS "Imported: ${AUI_MODULE_NAME} (${${AUI_MODULE_NAME}_ROOT})")
+    # display the imported targets (available since CMake 3.21)
+    if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
+        _auib_update_imported_targets_list()
+        message(STATUS "Imported: ${AUI_MODULE_NAME} (${_imported_targets_after}) (${${AUI_MODULE_NAME}_ROOT})")
+    else()
+        message(STATUS "Imported: ${AUI_MODULE_NAME} (${${AUI_MODULE_NAME}_ROOT})")
+    endif()
+
 endfunction()
 
 
