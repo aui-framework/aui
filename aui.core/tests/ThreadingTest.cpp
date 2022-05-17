@@ -201,7 +201,7 @@ TEST(Threading, FutureCancellationBeforeExecution) {
     auto foreignLambda = [&] {
         try {
             AThread::sleep(500);
-        } catch (const AThread::AInterrupted& e) {
+        } catch (const AThread::Interrupted& e) {
             ADD_FAILURE() << "interrupted exception thrown in a foreign lambda";
         }
         foreignLambdaCallCount += 1;
@@ -252,6 +252,8 @@ TEST(Threading, FutureCancellationAfterExecution) {
     AThread::sleep(250);
     ASSERT_TRUE(foreignLambdaCalled) << "foreign lambda has not called";
 }
+
+
 
 
 TEST(Threading, FutureOnDone) {
