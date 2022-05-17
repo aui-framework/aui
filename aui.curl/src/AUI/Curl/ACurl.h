@@ -40,7 +40,7 @@ private:
 	CURL* mCURL;
     int mCURLcode{};
 
-	static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata);
+	static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
 
 	bool mFinished = false;
 	bool mDestructorFlag = false;

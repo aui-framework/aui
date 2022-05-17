@@ -47,7 +47,7 @@ bool AThreadPool::Worker::processQueue(std::unique_lock<std::mutex>& mutex, AQue
 		catch (const AException& e) {
             ALogger::err("uncaught exception in thread pool: " + e.getMessage());
         }
-		catch (const AThread::AInterrupted&)
+		catch (const AThread::Interrupted&)
 		{
 			//AThread::current()->resetInterruptFlag();
 		}

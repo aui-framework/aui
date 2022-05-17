@@ -176,8 +176,17 @@ public:
 	 * \brief Exception that is thrown by <code>AThread::interruptionPoint()</code>, if interruption is requested for
 	 *        this thread. Handled by <code>AThread::start</code.
 	 */
-	class AInterrupted
+	class Interrupted
 	{
+    public:
+        /**
+         * @brief Schedules AThread::Interrupted exception to the next interruption point.
+         * Sometimes you could not throw exceptions (i.e. in a noexcept function or destructor). In this case
+         * you may call needRethrow in order to throw Interrupted exception at the next interruption point.
+         */
+        void needRethrow() const noexcept {
+            AThread::current()->interrupt();
+        }
 	};
 
 private:

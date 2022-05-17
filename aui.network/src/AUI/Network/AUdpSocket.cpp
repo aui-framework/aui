@@ -75,7 +75,7 @@ void AUdpSocket::read(AByteBuffer& buf, AInet4Address& dst) {
 #if AUI_PLATFORM_WIN
 			switch (WSAGetLastError()) {
 			case WSAEINTR:
-				throw AThread::AInterrupted();
+				throw AThread::Interrupted();
 			case WSAECONNRESET:
 				// https://stackoverflow.com/questions/30749423/is-winsock-error-10054-wsaeconnreset-normal-with-udp-to-from-localhost
 				continue; // wtf why does it work?

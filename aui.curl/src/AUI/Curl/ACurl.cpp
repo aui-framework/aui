@@ -132,9 +132,12 @@ ACurl::~ACurl()
 }
 
 
-size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata)
+size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept
 {
-	auto c = static_cast<ACurl*>(userdata);
+    if (AThread::current()->isInterrupted()) {
+        return 0;
+    }
+    auto c = static_cast<ACurl*>(userdata);
 	return c->mWriteCallback({ptr, nmemb});
 }
 
@@ -146,6 +149,7 @@ int64_t ACurl::getContentLength() const {
 
 void ACurl::run() {
     auto c = curl_easy_perform(mCURL);
+    AThread::interruptionPoint();
     if (c != CURLE_OK) {
         throw Exception(curl_easy_strerror(c));
     }

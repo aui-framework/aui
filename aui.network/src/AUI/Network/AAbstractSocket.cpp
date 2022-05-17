@@ -118,7 +118,7 @@ void AAbstractSocket::handleError(const AString& message, int code)
 #if AUI_PLATFORM_WIN
 	switch (WSAGetLastError()) {
 	case WSAEINTR:
-		throw AThread::AInterrupted();
+		throw AThread::Interrupted();
 	case WSAECONNRESET:
 		throw AEOFException();
 	default:

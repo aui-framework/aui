@@ -109,7 +109,7 @@ void AThread::start()
 			f();
 		} catch (const AException& e) {
             ALogger::err("uncaught exception: " + e.getMessage());
-        } catch (AInterrupted)
+        } catch (Interrupted)
 		{
 
 		}
@@ -153,7 +153,7 @@ void AThread::interruptionPoint()
 	if (current()->isInterrupted())
 	{
         current()->resetInterruptFlag();
-		throw AInterrupted();
+		throw Interrupted();
 	}
 }
 

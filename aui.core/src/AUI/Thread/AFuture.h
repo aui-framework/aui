@@ -108,9 +108,14 @@ private:
         }
 
         void wait() noexcept {
-            std::unique_lock lock(mutex);
-            while ((thread || !cancelled) && !hasResult()) {
-                cv.wait(lock);
+            try {
+                std::unique_lock lock(mutex);
+                while ((thread || !cancelled) && !hasResult()) {
+                    cv.wait(lock);
+                }
+            } catch (const AThread::Interrupted& interrupted) {
+                interrupted.needRethrow();
+                reportInterrupted();
             }
         }
 
@@ -214,6 +219,7 @@ public:
     Value& operator*() {
         (*mInner)->wait();
         if ((*mInner)->exception) throw *(*mInner)->exception;
+        if ((*mInner)->interrupted) throw AInvocationTargetException("AFuture execution interrupted", "AThread::Interrupted");
         return *(*mInner)->value;
     }
 
@@ -294,9 +300,14 @@ private:
          * Whats for supplyResult or cancellation or interruption or exception.
          */
         void wait() noexcept {
-            std::unique_lock lock(mutex);
-            while ((thread || !cancelled) && !hasResult()) {
-                cv.wait(lock);
+            try {
+                std::unique_lock lock(mutex);
+                while ((thread || !cancelled) && !hasResult()) {
+                    cv.wait(lock);
+                }
+            } catch (const AThread::Interrupted& e) {
+                e.needRethrow();
+                reportInterrupted();
             }
         }
 
