@@ -127,7 +127,7 @@ void AAbstractSocket::handleError(const AString& message, int code)
 #else
     switch (code) {
         case EINTR:
-            throw AThread::AInterrupted();
+            throw AThread::Interrupted();
         case ECONNRESET:
             throw AEOFException();
         default:

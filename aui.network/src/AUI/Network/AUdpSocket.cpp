@@ -84,7 +84,7 @@ void AUdpSocket::read(AByteBuffer& buf, AInet4Address& dst) {
 #else
             switch (res) {
                 case EINTR:
-                    throw AThread::AInterrupted();
+                    throw AThread::Interrupted();
                 default:
                     throw SocketException(msg, dst);
 #endif
