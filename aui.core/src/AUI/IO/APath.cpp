@@ -31,6 +31,7 @@
 #include "AIOException.h"
 #include "AFileInputStream.h"
 #include "AFileOutputStream.h"
+#include "AUI/Platform/ErrorToException.h"
 #include <AUI/Traits/platform.h>
 
 #ifdef WIN32
@@ -40,6 +41,32 @@
 
 #else
 #include <dirent.h>
+#include <cstring>
+
+
+/**
+ * @brief Creates APath object from rawString with guaranteed exception safety. rawString is freed.
+ * @param rawString raw string which should be converted to path
+ * @param throwExceptionCallback called then rawString is null (error has occurred)
+ * @return APath object
+ */
+template<typename Callback>
+static APath safePathFromRawString(const char* rawString, Callback&& throwExceptionCallback) {
+    if (rawString == nullptr) {
+        throwExceptionCallback();
+    }
+
+    try {
+        auto result = APath(rawString);
+        delete [] rawString;
+        return result;
+    } catch (...) {
+        delete [] rawString;
+        throw;
+    }
+}
+
+
 #endif
 
 APath APath::parent() const {
@@ -122,7 +149,8 @@ const APath& APath::removeFile() const {
     }
 #else
     if (::remove(toStdString().c_str()) != 0) {
-        throw AIOException("could not remove file " + *this ERROR_DESCRIPTION);
+        aui::impl::lastErrorToException("could not remove file " + *this);
+    }
 #endif
     return *this;
 }
@@ -209,12 +237,9 @@ APath APath::absolute() const {
 
     return APath(buf);
 #else
-    char buf[0x1000];
-    if (realpath(toStdString().c_str(), buf) == nullptr) {
-        throw AFileNotFoundException("could not find absolute file " + *this ERROR_DESCRIPTION);
-    }
-
-    return buf;
+    return safePathFromRawString(realpath(toStdString().c_str(), nullptr), [&] {
+        aui::impl::lastErrorToException("could not find absolute file " + *this);
+    });
 #endif
 }
 
@@ -335,9 +360,9 @@ APath APath::workingDir() {
 #include <pwd.h>
 
 APath APath::workingDir() {
-    char buf[0x1000];
-    getcwd(buf, sizeof(buf));
-    return buf;
+    return safePathFromRawString(getcwd(nullptr, 0), [] {
+        aui::impl::lastErrorToException("could not find workingDir");
+    });
 }
 
 APath APath::getDefaultPath(APath::DefaultPath path) {
@@ -419,7 +444,13 @@ time_t APath::fileModifyTime() const {
 }
 
 void APath::move(const APath& source, const APath& destination) {
-    rename(source.toStdString().c_str(), destination.toStdString().c_str());
+#if AUI_PLATFORM_WIN
+    if (MoveFile(source.c_str(), destination.c_str()) == 0) {
+#else
+    if (rename(source.toStdString().c_str(), destination.toStdString().c_str())) {
+#endif
+        aui::impl::lastErrorToException(R"(could not rename "{}" to "{}")"_format(source, destination));
+    }
 }
 
 AString APath::systemSlashDirection() const {
