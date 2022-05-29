@@ -115,39 +115,17 @@ public:
 
     template <typename Callable>
     [[nodiscard]]
-    AFuture<std::invoke_result_t<Callable>> operator<<(Callable&& func)
-    {
-        using Value = std::invoke_result_t<Callable>;
-        AFuture<Value> future;
-        run([innerWeak = future.mInner->wrapped.weak(), func = std::forward<Callable>(func)]()
-               {
-                   if (auto inner = innerWeak.lock()) {
-                       if (inner->setThread(AThread::current())) return;
-                       try {
-                           inner = nullptr;
-                           if constexpr(std::is_same_v<Value, void>) {
-                               func();
-                               nullsafe(innerWeak.lock())->supplyResult();
-                           } else {
-                               auto result = func();
-                               nullsafe(innerWeak.lock())->supplyResult(std::move(result));
-                           }
-                       } catch (const AException& e) {
-                           nullsafe(innerWeak.lock())->reportException(e);
-                       } catch (...) {
-                           nullsafe(innerWeak.lock())->reportInterrupted();
-                           throw;
-                       }
-                   }
-               }, AThreadPool::PRIORITY_LOWEST);
-        return future;
-    }
-
-    template <typename Callable>
-    [[nodiscard]]
     inline auto operator*(Callable fun)
     {
-        return *this << fun;
+        using Value = std::invoke_result_t<Callable>;
+        AFuture<Value> future(std::move(fun));
+        run([innerWeak = future.mInner->wrapped.weak()]()
+            {
+                auto innerUnsafePointer = innerWeak.lock().get(); // using .get() here in order to bypass null check in
+                                                                  // operator->
+                innerUnsafePointer->tryExecute(innerWeak);
+            }, AThreadPool::PRIORITY_LOWEST);
+        return future;
     }
 
     class TryLaterException {};

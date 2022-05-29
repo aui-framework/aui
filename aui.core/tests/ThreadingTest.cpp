@@ -218,8 +218,9 @@ TEST(Threading, FutureCancellationBeforeExecution) {
         future.wait();
         AThread::sleep(250);
     }
-    AThread::sleep(1000);
+    AThread::sleep(500);
     ASSERT_EQ(foreignLambdaCallCount, 2);
+    exec.wait();
 }
 
 TEST(Threading, FutureCancellationWhileExecution) {

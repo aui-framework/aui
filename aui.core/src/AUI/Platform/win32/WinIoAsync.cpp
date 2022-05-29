@@ -4,6 +4,7 @@
 
 #include "WinIoAsync.h"
 #include "WinIoThread.h"
+#include "AUI/Thread/ACutoffSignal.h"
 #include <AUI/Thread/AFuture.h>
 
 class WinIoAsync::Impl: public std::enable_shared_from_this<WinIoAsync::Impl> {
@@ -11,15 +12,15 @@ public:
     void init(HANDLE fileHandle, std::function<void(const AByteBuffer&)> callback) {
         mCallback = std::move(callback);
         auto self = shared_from_this();
-        AFuture<> future;
+        ACutoffSignal cutoff;
         WinIoThread::enqueue([&, self = std::move(self), fileHandle] {
             self->mBuffer.resize(0x1000);
             self->mOverlapped.Pointer = self.get();
             self->mFileHandle = fileHandle;
             nextRead();
-            future.supplyResult();
+            cutoff.makeSignal();
         });
-        future.wait();
+        cutoff.waitForSignal();
     }
 
 
