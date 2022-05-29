@@ -52,6 +52,16 @@ public:
 };
 
 
+/**
+ * Controls <code>AFuture::wait</code> behaviour.
+ * @see AFuture::wait
+ */
+ENUM_FLAG(AFutureWait) {
+    DEFAULT = 0b01,
+    ASYNC_ONLY = 0b00,
+};
+
+
 namespace aui::impl::future {
     /**
      * This class calls cancel() and wait() methods of AFuture::Inner BEFORE AFuture::Inner destruction in order to keep
@@ -65,8 +75,14 @@ namespace aui::impl::future {
 
         ~CancellationWrapper() {
             wrapped->cancel();
-            wrapped->wait();
+            wrapped->wait(wrapped);
         }
+
+        [[nodiscard]]
+        const _<Inner>& sharedPtr() noexcept {
+            return wrapped;
+        }
+
         Inner* operator->() const noexcept {
             return wrapped.get();
         }
@@ -133,9 +149,17 @@ namespace aui::impl::future {
                 return false;
             }
 
-            void wait() noexcept {
+            void wait(const _weak<Inner>& innerWeak, AFutureWait flags = AFutureWait::DEFAULT) noexcept {
                 try {
                     std::unique_lock lock(mutex);
+                    if ((thread || !cancelled) && !hasResult() && int(flags) & 0b1 && task) {
+                        // task is not have picked up by the threadpool; execute it here
+                        lock.unlock();
+                        if (tryExecute(innerWeak)) {
+                            return;
+                        }
+                        lock.lock();
+                    }
                     while ((thread || !cancelled) && !hasResult()) {
                         cv.wait(lock);
                     }
@@ -168,11 +192,15 @@ namespace aui::impl::future {
                  * It allows callers to pass a weak_ptr in any state.
                  */
                 if (auto inner = innerWeak.lock()) {
-                    assert(("value is already present", !value));
+                    if (value) return false;
                     if (inner->setThread(AThread::current())) return false;
                     try {
-                        assert(task != nullptr);
+                        if (task == nullptr) { // task is executed in wait() function
+                            return false;
+                        }
+                        std::unique_lock lock(mutex);
                         auto func = std::move(task);
+                        lock.unlock();
                         inner = nullptr;
                         if constexpr(isVoid) {
                             func();
@@ -193,11 +221,13 @@ namespace aui::impl::future {
                         }
                     } catch (const AException& e) {
                         nullsafe(innerWeak.lock())->reportException(e);
+                        return false;
                     } catch (...) {
                         nullsafe(innerWeak.lock())->reportInterrupted();
                         throw;
                     }
                 }
+                return true;
             }
 
             void reportInterrupted() noexcept {
@@ -280,10 +310,29 @@ namespace aui::impl::future {
         }
 
         /**
-         * Sleeps if the supplyResult is not currently available
+         * Sleeps if the supplyResult is not currently available.
+         * @note The task will be executed inside wait() function if the threadpool have not taken the task to execute
+         *       yet. This behaviour can be disabled by <code>AFutureWait::ASYNC_ONLY</code> flag.
          */
-        void wait() noexcept {
-            (*mInner)->wait();
+        void wait(AFutureWait flags = AFutureWait::DEFAULT) noexcept {
+            (*mInner)->wait(mInner->sharedPtr(), flags);
+        }
+
+        /**
+         * Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
+         * <dl>
+         *   <dt><b>Sneaky exceptions</b></dt>
+         *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
+         * </dl>
+         * @return the object stored from the another thread.
+         */
+        decltype(auto) get(AFutureWait flags = AFutureWait::DEFAULT) {
+            (*mInner)->wait(mInner->sharedPtr(), flags);
+            if ((*mInner)->exception) throw *(*mInner)->exception;
+            if ((*mInner)->interrupted) throw AInvocationTargetException("Future execution interrupted", "AThread::Interrupted");
+            if constexpr(!isVoid) {
+                return *(*mInner)->value;
+            }
         }
 
         /**
@@ -295,12 +344,7 @@ namespace aui::impl::future {
          * @return the object stored from the another thread.
          */
         decltype(auto) operator*() {
-            (*mInner)->wait();
-            if ((*mInner)->exception) throw *(*mInner)->exception;
-            if ((*mInner)->interrupted) throw AInvocationTargetException("Future execution interrupted", "AThread::Interrupted");
-            if constexpr(!isVoid) {
-                return *(*mInner)->value;
-            }
+            return get();
         }
 
         /**
