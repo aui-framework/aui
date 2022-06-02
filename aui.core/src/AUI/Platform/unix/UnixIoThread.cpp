@@ -4,6 +4,7 @@
 
 #include "UnixIoThread.h"
 #include "UnixEventFd.h"
+#include "AUI/Thread/ACutoffSignal.h"
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Thread/AFuture.h>
 #include <sys/poll.h>
@@ -87,9 +88,9 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     };
     mThread->start();
 
-    AFuture<> future;
+    ACutoffSignal cv;
     mThread->enqueue([&] {
-        future.supplyResult();
+        cv.makeSignal();
     });
-    future.wait();
+    cv.waitForSignal();
 }
