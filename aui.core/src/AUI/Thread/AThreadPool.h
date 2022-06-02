@@ -119,7 +119,7 @@ public:
     {
         using Value = std::invoke_result_t<Callable>;
         AFuture<Value> future(std::move(fun));
-        run([innerWeak = future.mInner->wrapped.weak()]()
+        run([innerWeak = future.inner()->wrapped.weak()]()
             {
                 auto innerUnsafePointer = innerWeak.lock().get(); // using .get() here in order to bypass null check in
                                                                   // operator->

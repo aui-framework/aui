@@ -100,15 +100,12 @@ namespace aui::impl::future {
     template<typename Value = void>
     class Future
     {
-        friend class AThreadPool;
-
     public:
         static constexpr bool isVoid = std::is_same_v<void, Value>;
         using TaskCallback = std::function<Value()>;
 
         using OnSuccessCallback = typename OnSuccessCallback<Value>::type;
 
-    protected:
         struct Inner {
             bool interrupted = false;
             /**
@@ -244,6 +241,8 @@ namespace aui::impl::future {
             }
 
         };
+
+    protected:
         _<CancellationWrapper<Inner>> mInner;
 
 
@@ -254,6 +253,10 @@ namespace aui::impl::future {
          */
         Future(TaskCallback task = nullptr) noexcept: mInner(_new<CancellationWrapper<Inner>>(aui::ptr::manage(new Inner(std::move(task))))) {}
 
+        [[nodiscard]]
+        const _<CancellationWrapper<Inner>>& inner() {
+            return mInner;
+        }
 
         /**
          * @return true if the value or exception or interruption received.
@@ -426,6 +429,7 @@ public:
         assert(("task is already provided", inner->task == nullptr));
 
         std::unique_lock lock(inner->mutex);
+        inner->value = true;
         inner->cv.notify_all();
         nullsafe(inner->onSuccess)();
     }
