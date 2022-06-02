@@ -80,11 +80,11 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
         }
     } catch (const AException& e) {
         ALogger::err("AUI") << "Uncaught exception: " << e;
-    } catch (const std::exception& e) {
+    } /* catch (const std::exception& e) {
         ALogger::err("AUI") << "Uncaught std exception: " << e.what();
     } catch (...) {
         ALogger::err("AUI") << "Uncaught unknown exception";
-    }
+    }*/
     return r;
 }
 #endif
