@@ -727,6 +727,7 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
     if (NOT BUILD_SHARED_LIBS)
         # static build is a kind of shit where all static libraries' dependencies should be linked to the final exe or
         # dll.
+        #
         # thus, some libraries (such as aui.views) require wholearchive linking in order to import all
         # statically-initialized variables (like AStylesheet) to the final execution module.
         foreach(_visibility ${multiValueArgs})
