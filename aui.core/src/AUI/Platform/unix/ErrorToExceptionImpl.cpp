@@ -7,18 +7,5 @@
 
 
 void aui::impl::lastErrorToException(AString message) {
-    auto lastError = errno;
-    message += ": ";
-    message += strerror(lastError);
-    switch (lastError) {
-        case ENOENT:
-            throw AFileNotFoundException(message);
-        case EPERM:
-        case EACCES:
-            throw AAccessDeniedException(message);
-        case EEXIST:
-            break;
-        default:
-            throw AIOException(message);
-    }
+    aui::impl::unix::lastErrorToException(std::move(message));
 }

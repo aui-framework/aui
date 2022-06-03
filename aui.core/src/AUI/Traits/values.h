@@ -27,6 +27,7 @@
 #include <functional>
 #include <optional>
 #include <AUI/Common/SharedPtrTypes.h>
+#include <AUI/Thread/AMutex.h>
 
 namespace aui {
     /**
@@ -152,7 +153,7 @@ namespace aui {
     };
 
     /**
-     * A value that initializes when accessed for the first time.
+     * @brief A value that initializes when accessed for the first time.
      * @tparam T
      */
     template<typename T>
@@ -164,13 +165,12 @@ namespace aui {
         template<typename Factory, std::enable_if_t<std::is_invocable_r_v<T, Factory>, bool> = true>
         lazy(Factory&& initializer) noexcept : initializer(std::forward<Factory>(initializer)) {}
 
-        lazy(const lazy<int>& other) noexcept: value(other.value), initializer(other.initializer) {}
-        lazy(lazy<int>&& other) noexcept: value(std::move(other.value)), initializer(std::move(other.initializer)) {}
+        lazy(const lazy<T>& other) noexcept: value(other.value), initializer(other.initializer) {}
+        lazy(lazy<T>&& other) noexcept: value(std::move(other.value)), initializer(std::move(other.initializer)) {}
 
         T& get() {
             if (!value) {
                 value = initializer();
-                initializer = nullptr;
             }
             return *value;
         }
@@ -197,6 +197,97 @@ namespace aui {
         }
         T const * operator->() const {
             return &get();
+        }
+
+        lazy<T>& operator=(T&& t) {
+            value = std::forward<T>(t);
+            return *this;
+        }
+        lazy<T>& operator=(const T& t) {
+            value = t;
+            return *this;
+        }
+
+        void reset() {
+            value.reset();
+        }
+    };
+
+    /**
+     * @brief A value that initializes when accessed for the first time.
+     * Unlike <code>aui::lazy</code>, internal logic of <code>aui::atomic_lazy</code> is threadsafe.
+     * @tparam T
+     */
+    template<typename T>
+    struct atomic_lazy {
+    private:
+        mutable AMutex sync;
+        mutable std::optional<T> value;
+        std::function<T()> initializer;
+    public:
+        template<typename Factory, std::enable_if_t<std::is_invocable_r_v<T, Factory>, bool> = true>
+        atomic_lazy(Factory&& initializer) : initializer(std::forward<Factory>(initializer)) {}
+
+        atomic_lazy(const atomic_lazy<T>& other) {
+            std::unique_lock lock(other.sync);
+            value = other.value;
+            initializer = other.initializer;
+        }
+        atomic_lazy(atomic_lazy<T>&& other) noexcept {
+            std::unique_lock lock(other.sync);
+            value = std::move(other.value);
+            initializer = std::move(other.initializer);
+        }
+
+        T& get() {
+            if (!value) {
+                std::unique_lock lock(sync);
+                if (!value) {
+                    value = initializer();
+                }
+            }
+            return *value;
+        }
+        const T& get() const {
+            return const_cast<atomic_lazy<T>*>(this)->get();
+        }
+
+        operator T&() {
+            return get();
+        }
+        operator const T&() const {
+            return get();
+        }
+
+        T& operator*() {
+            return get();
+        }
+        const T& operator*() const {
+            return get();
+        }
+
+        T* operator->() {
+            return &get();
+        }
+        T const * operator->() const {
+            return &get();
+        }
+
+        atomic_lazy<T>& operator=(T&& t) {
+            std::unique_lock lock(sync);
+            value = std::forward<T>(t);
+            return *this;
+        }
+
+        atomic_lazy<T>& operator=(const T& t) {
+            std::unique_lock lock(sync);
+            value = t;
+            return *this;
+        }
+
+        void reset() {
+            std::unique_lock lock(sync);
+            value.reset();
         }
     };
 

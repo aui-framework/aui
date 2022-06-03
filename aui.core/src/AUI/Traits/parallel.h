@@ -37,7 +37,7 @@ namespace aui {
     namespace impl::parallel {
         template<typename Container>
         struct LambdaCapturer {
-            using iterator = typename Container::iterator;
+            using iterator = decltype(std::declval<Container>().begin());
             iterator begin, end;
             LambdaCapturer(Container& c):
                 begin(c.begin()),
