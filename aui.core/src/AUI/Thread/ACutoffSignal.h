@@ -8,7 +8,7 @@
  */
 class ACutoffSignal {
 public:
-    ACutoffSignal() noexcept = default;
+    ACutoffSignal() = default;
 
     void makeSignal() {
         std::unique_lock lock(mMutex);

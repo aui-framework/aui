@@ -129,6 +129,11 @@ namespace aui::impl::future {
             }
 
             [[nodiscard]]
+            bool isWaitNeeded() noexcept {
+                return (thread || !cancelled) && !hasResult();
+            }
+
+            [[nodiscard]]
             bool hasResult() const noexcept {
                 return value || exception || interrupted;
             }
@@ -256,6 +261,14 @@ namespace aui::impl::future {
         [[nodiscard]]
         const _<CancellationWrapper<Inner>>& inner() {
             return mInner;
+        }
+
+        /**
+         * @return true if call to wait() function would cause thread block.
+         */
+        [[nodiscard]]
+        bool isWaitNeeded() const noexcept {
+            return (*mInner)->isWaitNeeded();
         }
 
         /**
