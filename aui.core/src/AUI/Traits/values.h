@@ -212,7 +212,8 @@ namespace aui {
             value.reset();
         }
 
-        operator bool() const noexcept {
+        [[nodiscard]]
+        bool has_value() const noexcept {
             return value.has_value();
         }
     };
@@ -294,7 +295,8 @@ namespace aui {
             value.reset();
         }
 
-        operator bool() const noexcept {
+        [[nodiscard]]
+        bool has_value() const noexcept {
             return value.has_value();
         }
     };
