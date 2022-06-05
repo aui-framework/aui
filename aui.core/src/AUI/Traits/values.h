@@ -211,6 +211,10 @@ namespace aui {
         void reset() {
             value.reset();
         }
+
+        operator bool() const noexcept {
+            return value.has_value();
+        }
     };
 
     /**
@@ -288,6 +292,10 @@ namespace aui {
         void reset() {
             std::unique_lock lock(sync);
             value.reset();
+        }
+
+        operator bool() const noexcept {
+            return value.has_value();
         }
     };
 

@@ -58,7 +58,7 @@ public:
  */
 ENUM_FLAG(AFutureWait) {
     DEFAULT = 0b01,
-    ASYNC_ONLY = 0b00,
+    ASYNC_ONLY = 0b00
 };
 
 
@@ -75,7 +75,7 @@ namespace aui::impl::future {
 
         ~CancellationWrapper() {
             wrapped->cancel();
-            wrapped->wait(wrapped);
+            wrapped->waitForTask();
         }
 
         [[nodiscard]]
@@ -128,6 +128,21 @@ namespace aui::impl::future {
                 }
             }
 
+            void waitForTask() noexcept {
+                std::unique_lock lock(mutex);
+                bool rethrowInterrupted = false;
+                while ((thread) && !hasResult()) {
+                    try {
+                        cv.wait(lock);
+                    } catch (const AThread::Interrupted& i) {
+                        rethrowInterrupted = true;
+                    }
+                }
+                if (rethrowInterrupted) {
+                    AThread::current()->interrupt();
+                }
+            }
+
             [[nodiscard]]
             bool isWaitNeeded() noexcept {
                 return (thread || !cancelled) && !hasResult();
@@ -152,8 +167,8 @@ namespace aui::impl::future {
             }
 
             void wait(const _weak<Inner>& innerWeak, AFutureWait flags = AFutureWait::DEFAULT) noexcept {
+                std::unique_lock lock(mutex);
                 try {
-                    std::unique_lock lock(mutex);
                     if ((thread || !cancelled) && !hasResult() && int(flags) & 0b1 && task) {
                         // task is not have picked up by the threadpool; execute it here
                         lock.unlock();
@@ -165,9 +180,8 @@ namespace aui::impl::future {
                     while ((thread || !cancelled) && !hasResult()) {
                         cv.wait(lock);
                     }
-                } catch (const AThread::Interrupted& interrupted) {
-                    interrupted.needRethrow();
-                    reportInterrupted();
+                } catch (const AThread::Interrupted& e) {
+                    e.needRethrow();
                 }
             }
 
@@ -343,7 +357,9 @@ namespace aui::impl::future {
          * @return the object stored from the another thread.
          */
         decltype(auto) get(AFutureWait flags = AFutureWait::DEFAULT) {
+            AThread::interruptionPoint();
             (*mInner)->wait(mInner->sharedPtr(), flags);
+            AThread::interruptionPoint();
             if ((*mInner)->exception) throw *(*mInner)->exception;
             if ((*mInner)->interrupted) throw AInvocationTargetException("Future execution interrupted", "AThread::Interrupted");
             if constexpr(!isVoid) {
