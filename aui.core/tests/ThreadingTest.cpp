@@ -31,6 +31,7 @@
 #include <random>
 #include <ctime>
 #include "AUI/Common/ATimer.h"
+#include "AUI/Traits/parallel.h"
 
 
 TEST(Threading, Async) {
@@ -255,6 +256,26 @@ TEST(Threading, FutureCancellationAfterExecution) {
 }
 
 
+TEST(Threading, FutureInterruptionCascade) {
+    {
+        static bool interrupted = false;
+        {
+            auto t = asyncX [&] {
+                auto items = AVector<int>::generate(10000, [](std::size_t i) { return i; });
+                auto tasks = AUI_PARALLEL_MP(items) {
+                    for (auto it = begin; it != end; ++it) {
+                        EXPECT_FALSE(interrupted);
+                        AThread::sleep(100);
+                    }
+                };
+                tasks.waitForAll();
+            };
+            AThread::sleep(500);
+            t.cancel();
+        }
+        interrupted = true;
+    }
+}
 
 
 TEST(Threading, FutureOnDone) {
