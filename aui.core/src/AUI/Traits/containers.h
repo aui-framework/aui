@@ -79,6 +79,9 @@ namespace aui::container {
         }
     }
 
+    template<typename Iterator, typename UnaryOperation>
+    [[nodiscard]]
+    auto to_map(Iterator begin, Iterator end, UnaryOperation&& transformer); // implemented in AMap.h
 
     /**
      * @return true if <code>r</code> container is a subset of <code>l</code> container, false otherwise.

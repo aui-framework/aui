@@ -29,25 +29,15 @@
 #include <AUI/IO/APipe.h>
 #include <AUI/Common/AByteBufferView.h>
 #include <AUI/Common/AByteBuffer.h>
+#include <AUI/Common/ASignal.h>
 
 class AString;
-typedef void CURL;
 
-class API_AUI_CURL ACurl {
+class API_AUI_CURL ACurl: public AObject {
+friend class ACurlMulti;
 public:
     using WriteCallback = std::function<size_t(AByteBufferView)>;
-private:
-	CURL* mCURL;
-    int mCURLcode{};
 
-	static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
-
-	bool mFinished = false;
-	bool mDestructorFlag = false;
-
-    WriteCallback mWriteCallback;
-
-public:
     class Exception: public AIOException {
     public:
         using AIOException::AIOException;
@@ -56,7 +46,7 @@ public:
     class API_AUI_CURL Builder {
     friend class ACurl;
     private:
-        CURL* mCURL;
+        void* mCURL;
         WriteCallback mWriteCallback;
 
     public:
@@ -121,4 +111,27 @@ public:
 	int64_t getContentLength() const;
 
     void run();
+
+    [[nodiscard]]
+    void* handle() const noexcept {
+        return mCURL;
+    }
+
+private:
+    void* mCURL;
+    int mCURLcode{};
+
+    static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
+
+    bool mFinished = false;
+    bool mDestructorFlag = false;
+
+    WriteCallback mWriteCallback;
+
+    void reportFinished() {
+        emit finished;
+    }
+
+signals:
+    emits<> finished;
 };

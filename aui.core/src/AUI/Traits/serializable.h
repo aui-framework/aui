@@ -120,11 +120,15 @@ struct ASerializable<AString> {
     }
 };
 
+template<>
+struct ASerializable<APath>: ASerializable<AString> {};
+
 
 template<typename T>
 struct ASerializable<aui::serialize_sized<T>> {
-    static void write(IOutputStream& os, aui::serialize_sized<T> value) {
-        os << std::uint32_t(value.value->size()) << *value.value;
+    static void write(IOutputStream& os, aui::serialize_sized<T> t) {
+        os << std::uint32_t(t.value->size());
+        os.write(reinterpret_cast<const char*>(t.value->data()), sizeof(*t.value->data()) * t.value->size());
     }
     static void read(IInputStream& is, aui::serialize_sized<T>& t) {
         std::uint32_t s;

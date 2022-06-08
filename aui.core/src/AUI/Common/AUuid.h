@@ -25,6 +25,7 @@
 #include <array>
 #include "AString.h"
 #include "AException.h"
+#include <AUI/Traits/serializable.h>
 
 
 /**
@@ -108,3 +109,6 @@ private:
     using AException::AException;
 public:
 };
+
+template<>
+struct ASerializable<AUuid>: aui::raw_serializable<AUuid> {};

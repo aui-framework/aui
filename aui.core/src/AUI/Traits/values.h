@@ -297,6 +297,7 @@ namespace aui {
 
         [[nodiscard]]
         bool has_value() const noexcept {
+            std::unique_lock lock(sync);
             return value.has_value();
         }
     };

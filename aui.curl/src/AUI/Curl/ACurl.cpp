@@ -80,18 +80,18 @@ ACurl::Builder::~Builder() {
 _<IInputStream> ACurl::Builder::toInputStream() {
     class CurlInputStream: public IInputStream {
     private:
-        ACurl mCurl;
+        _<ACurl> mCurl;
         AFuture<> mFuture;
         APipe mPipe;
 
     public:
-        CurlInputStream(ACurl curl) : mCurl(std::move(curl)) {
+        CurlInputStream(_<ACurl> curl) : mCurl(std::move(curl)) {
             mFuture = async {
-                mCurl.mWriteCallback = [&](AByteBufferView buf) {
+                mCurl->mWriteCallback = [&](AByteBufferView buf) {
                     mPipe << buf;
                     return buf.size();
                 };
-                mCurl.run();
+                mCurl->run();
             };
         }
 
@@ -99,7 +99,7 @@ _<IInputStream> ACurl::Builder::toInputStream() {
             return mPipe.read(dst, size);
         }
     };
-    return _new<CurlInputStream>(ACurl(*this));
+    return _new<CurlInputStream>(_new<ACurl>(*this));
 }
 
 AByteBuffer ACurl::Builder::toByteBuffer() {
@@ -138,7 +138,11 @@ size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata
         return 0;
     }
     auto c = static_cast<ACurl*>(userdata);
-	return c->mWriteCallback({ptr, nmemb});
+    try {
+        return c->mWriteCallback({ptr, nmemb});
+    } catch (...) {
+        return 0;
+    }
 }
 
 int64_t ACurl::getContentLength() const {
@@ -153,4 +157,5 @@ void ACurl::run() {
     if (c != CURLE_OK) {
         throw Exception(curl_easy_strerror(c));
     }
+    reportFinished();
 }

@@ -27,7 +27,6 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/Util/EnumUtil.h>
 
-
 /**
  * Flag enum for APath::find
  */
@@ -347,4 +346,3 @@ public:
     }
 
 };
-
