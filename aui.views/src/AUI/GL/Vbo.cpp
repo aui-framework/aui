@@ -4,14 +4,14 @@
 
 #include "Vbo.h"
 
-GL::detail::VboImpl::VboImpl() {
-    glGenBuffers(1, &mHandle);
+template<gl::ResourceKind T>
+GL::detail::VboImpl<T>::VboImpl() {
+    mHandle = gl::ResourcePool<T>::get();
 }
 
-GL::detail::VboImpl::~VboImpl() {
-    if (mHandle != 0) {
-        glDeleteBuffers(1, &mHandle);
-    }
+template<gl::ResourceKind T>
+GL::detail::VboImpl<T>::~VboImpl() {
+    if (mHandle) gl::ResourcePool<T>::put(mHandle);
 }
 
 void GL::VertexBuffer::bind() {

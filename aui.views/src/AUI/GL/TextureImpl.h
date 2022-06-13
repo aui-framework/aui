@@ -23,12 +23,13 @@
 
 #include "Texture.h"
 #include "gl.h"
+#include "ResourcePool.h"
 #include <AUI/GL/State.h>
 
 
 template<unsigned int TEXTURE_TARGET>
 GL::Texture<TEXTURE_TARGET>::Texture() {
-    glGenTextures(1, &mTexture);
+    mTexture = gl::ResourcePool<gl::ResourceKind::TEXTURE>::get();
     GL::State::bindTexture(TEXTURE_TARGET, mTexture);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -38,7 +39,7 @@ GL::Texture<TEXTURE_TARGET>::Texture() {
 
 template<unsigned int TEXTURE_TARGET>
 GL::Texture<TEXTURE_TARGET>::~Texture() {
-    glDeleteTextures(1, &mTexture);
+    gl::ResourcePool<gl::ResourceKind::TEXTURE>::put(mTexture);
     GL::State::bindTexture(TEXTURE_TARGET, 0);
 }
 

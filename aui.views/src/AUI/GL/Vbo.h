@@ -3,9 +3,11 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/GL/gl.h>
 #include <glm/glm.hpp>
+#include "ResourcePool.h"
 
 namespace GL {
     namespace detail {
+        template<gl::ResourceKind T>
         class API_AUI_VIEWS VboImpl {
         protected:
             GLuint mHandle;
@@ -23,7 +25,8 @@ namespace GL {
         };
     }
 
-    class API_AUI_VIEWS VertexBuffer: public detail::VboImpl {
+
+    class API_AUI_VIEWS VertexBuffer: public detail::VboImpl<gl::ResourceKind::VERTEX_BUFFER> {
     private:
         void insert(const char* data, size_t length);
 
@@ -43,7 +46,7 @@ namespace GL {
         }
     };
 
-    class API_AUI_VIEWS IndexBuffer: public detail::VboImpl {
+    class API_AUI_VIEWS IndexBuffer: public detail::VboImpl<gl::ResourceKind::INDEX_BUFFER> {
     private:
         size_t mIndicesCount;
     public:
