@@ -277,8 +277,10 @@ void AWindow::quit() {
         }
         ShowWindow(mHandle, SW_HIDE);
     }
+    mViews.clear();
+    setLayout(nullptr);
 
-    AThread::current()->enqueue([s = std::move(mSelfHolder)]() mutable {
+    AThread::current()->enqueue([s = std::move(mSelfHolder)]() mutable noexcept {
         s = nullptr;
     });
 }

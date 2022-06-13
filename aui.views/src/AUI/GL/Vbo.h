@@ -57,6 +57,7 @@ namespace GL {
         void draw(GLenum primitiveType) {
             bind();
             glDrawElements(primitiveType, GLsizei(mIndicesCount), GL_UNSIGNED_INT, nullptr);
+            glGetError();
         }
 
         [[nodiscard]]

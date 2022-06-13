@@ -77,6 +77,7 @@ bool AWindow::isRedrawWillBeEfficient() {
 }
 void AWindow::redraw() {
     auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+    mRenderingContext->beginPaint(*this);
     if (mUpdateLayoutFlag) {
         mUpdateLayoutFlag = false;
         updateLayout();
@@ -103,7 +104,6 @@ void AWindow::redraw() {
             _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         }
 
-        mRenderingContext->beginPaint(*this);
         Render::setWindow(this);
         doDrawWindow();
 
