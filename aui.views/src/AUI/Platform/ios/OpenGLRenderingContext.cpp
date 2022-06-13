@@ -25,10 +25,10 @@ void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
 void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     CommonRenderingContext::beginPaint(window);
     
-    GL::State::activeTexture(0);
-    GL::State::bindTexture(GL_TEXTURE_2D, 0);
-    GL::State::bindVertexArray(0);
-    GL::State::useProgram(0);
+    gl::State::activeTexture(0);
+    gl::State::bindTexture(GL_TEXTURE_2D, 0);
+    gl::State::bindVertexArray(0);
+    gl::State::useProgram(0);
 
     glViewport(0, 0, window.getWidth(), window.getHeight());
 

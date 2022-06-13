@@ -29,7 +29,7 @@
 #include "gl.h"
 #include "TextureImpl.h"
 
-template class GL::Texture<GL::TEXTURE_2D>;
+template class gl::Texture<gl::TEXTURE_2D>;
 
 struct Result
 {
@@ -115,7 +115,7 @@ Result recognize(const AImage& image)
 	return res;
 }
 
-void GL::Texture2D::tex2D(const AImage& image) {
+void gl::Texture2D::tex2D(const AImage& image) {
 	bind();
 	Result types = recognize(image);
 

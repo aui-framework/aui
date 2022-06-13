@@ -22,23 +22,23 @@
 #include "ShaderUniforms.h"
 
 namespace aui::ShaderUniforms {
-    GL::Shader::Uniform COLOR("color");
-    GL::Shader::Uniform TRANSFORM("transform");
-    GL::Shader::Uniform SIZE("size");
-    GL::Shader::Uniform MAT("mat");
-    GL::Shader::Uniform UV_SCALE("uv_scale");
-    GL::Shader::Uniform SIGMA("sigma");
-    GL::Shader::Uniform LOWER("lower");
-    GL::Shader::Uniform UPPER("upper");
-    GL::Shader::Uniform OUTER_SIZE("outerSize");
-    GL::Shader::Uniform INNER_SIZE("innerSize");
-    GL::Shader::Uniform INNER_TEXEL_SIZE("innerTexelSize");
-    GL::Shader::Uniform OUTER_TEXEL_SIZE("outerTexelSize");
-    GL::Shader::Uniform OUTER_TO_INNER("outer_to_inner");
+    gl::Shader::Uniform COLOR("color");
+    gl::Shader::Uniform TRANSFORM("transform");
+    gl::Shader::Uniform SIZE("size");
+    gl::Shader::Uniform MAT("mat");
+    gl::Shader::Uniform UV_SCALE("uv_scale");
+    gl::Shader::Uniform SIGMA("sigma");
+    gl::Shader::Uniform LOWER("lower");
+    gl::Shader::Uniform UPPER("upper");
+    gl::Shader::Uniform OUTER_SIZE("outerSize");
+    gl::Shader::Uniform INNER_SIZE("innerSize");
+    gl::Shader::Uniform INNER_TEXEL_SIZE("innerTexelSize");
+    gl::Shader::Uniform OUTER_TEXEL_SIZE("outerTexelSize");
+    gl::Shader::Uniform OUTER_TO_INNER("outer_to_inner");
 
-    GL::Shader::Uniform COLOR_TL("color_tl");
-    GL::Shader::Uniform COLOR_TR("color_tr");
-    GL::Shader::Uniform COLOR_BL("color_bl");
-    GL::Shader::Uniform COLOR_BR("color_br");
+    gl::Shader::Uniform COLOR_TL("color_tl");
+    gl::Shader::Uniform COLOR_TR("color_tr");
+    gl::Shader::Uniform COLOR_BL("color_bl");
+    gl::Shader::Uniform COLOR_BR("color_br");
 
 }

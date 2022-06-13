@@ -27,7 +27,7 @@
 #include "AUI/Util/AArrayView.h"
 #include "AUI/Views.h"
 
-namespace GL {
+namespace gl {
 	class API_AUI_VIEWS Vao {
 	private:
 		GLuint mHandle;

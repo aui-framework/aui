@@ -25,7 +25,7 @@
 #include "AUI/Image/AImage.h"
 #include "Texture.h"
 
-namespace GL {
+namespace gl {
 	class API_AUI_VIEWS Texture2D: public Texture<TEXTURE_2D> {
 	public:
 		void tex2D(const AImage& image);

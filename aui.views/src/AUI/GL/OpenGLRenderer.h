@@ -11,23 +11,23 @@ friend class OpenGLMultiStringCanvas;
 public:
     struct FontEntryData {
         Util::SimpleTexturePacker texturePacker;
-        GL::Texture2D texture;
+        gl::Texture2D texture;
         bool isTextureInvalid = true;
     };
 
 private:
-    GL::Shader mSolidShader;
-    GL::Shader mGradientShader;
-    GL::Shader mRoundedSolidShader;
-    GL::Shader mRoundedSolidShaderAntialiased;
-    GL::Shader mRoundedSolidShaderAntialiasedBorder;
-    GL::Shader mRoundedGradientShaderAntialiased;
-    GL::Shader mSolidTransformShader;
-    GL::Shader mBoxShadowShader;
-    GL::Shader mTexturedShader;
-    GL::Shader mSymbolShader;
-    GL::Shader mSymbolShaderSubPixel;
-    GL::Vao mTempVao;
+    gl::Shader mSolidShader;
+    gl::Shader mGradientShader;
+    gl::Shader mRoundedSolidShader;
+    gl::Shader mRoundedSolidShaderAntialiased;
+    gl::Shader mRoundedSolidShaderAntialiasedBorder;
+    gl::Shader mRoundedGradientShaderAntialiased;
+    gl::Shader mSolidTransformShader;
+    gl::Shader mBoxShadowShader;
+    gl::Shader mTexturedShader;
+    gl::Shader mSymbolShader;
+    gl::Shader mSymbolShaderSubPixel;
+    gl::Vao mTempVao;
 
 
     struct CharacterData {

@@ -27,14 +27,14 @@
 
 class API_AUI_VIEWS SimpleShadingEffect: public IShadingEffect {
 private:
-	GL::Shader mShader;
+	gl::Shader mShader;
 	
 public:
 	SimpleShadingEffect(const AStringVector& uniforms, const AString& fragmentCode);
 
 	void draw(const std::function<void()>& callback) override;
 
-	const GL::Shader& getShader() const {
+	const gl::Shader& getShader() const {
 		return mShader;
 	}
 };

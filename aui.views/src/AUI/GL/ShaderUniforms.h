@@ -22,22 +22,22 @@
 #include <AUI/GL/Shader.h>
 
 namespace aui::ShaderUniforms {
-    extern GL::Shader::Uniform COLOR;
-    extern GL::Shader::Uniform TRANSFORM;
-    extern GL::Shader::Uniform SIZE;
-    extern GL::Shader::Uniform MAT;
-    extern GL::Shader::Uniform UV_SCALE;
-    extern GL::Shader::Uniform SIGMA;
-    extern GL::Shader::Uniform LOWER;
-    extern GL::Shader::Uniform UPPER;
-    extern GL::Shader::Uniform OUTER_SIZE;
-    extern GL::Shader::Uniform INNER_SIZE;
-    extern GL::Shader::Uniform INNER_TEXEL_SIZE;
-    extern GL::Shader::Uniform OUTER_TEXEL_SIZE;
-    extern GL::Shader::Uniform OUTER_TO_INNER;
+    extern gl::Shader::Uniform COLOR;
+    extern gl::Shader::Uniform TRANSFORM;
+    extern gl::Shader::Uniform SIZE;
+    extern gl::Shader::Uniform MAT;
+    extern gl::Shader::Uniform UV_SCALE;
+    extern gl::Shader::Uniform SIGMA;
+    extern gl::Shader::Uniform LOWER;
+    extern gl::Shader::Uniform UPPER;
+    extern gl::Shader::Uniform OUTER_SIZE;
+    extern gl::Shader::Uniform INNER_SIZE;
+    extern gl::Shader::Uniform INNER_TEXEL_SIZE;
+    extern gl::Shader::Uniform OUTER_TEXEL_SIZE;
+    extern gl::Shader::Uniform OUTER_TO_INNER;
 
-    extern GL::Shader::Uniform COLOR_TL;
-    extern GL::Shader::Uniform COLOR_TR;
-    extern GL::Shader::Uniform COLOR_BL;
-    extern GL::Shader::Uniform COLOR_BR;
+    extern gl::Shader::Uniform COLOR_TL;
+    extern gl::Shader::Uniform COLOR_TR;
+    extern gl::Shader::Uniform COLOR_BL;
+    extern gl::Shader::Uniform COLOR_BR;
 }

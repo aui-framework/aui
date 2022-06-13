@@ -14,7 +14,7 @@
 
 class OpenGLTexture2D: public ITexture {
 private:
-    GL::Texture2D mTexture;
+    gl::Texture2D mTexture;
 
 public:
     void setImage(const _<AImage>& image) override {
@@ -37,9 +37,9 @@ struct UnsupportedBrushHelper {
 };
 
 struct GradientShaderHelper {
-    GL::Shader& shader;
+    gl::Shader& shader;
 
-    GradientShaderHelper(GL::Shader& shader) : shader(shader) {}
+    GradientShaderHelper(gl::Shader& shader) : shader(shader) {}
 
     void operator()(const ALinearGradientBrush& brush) const {
         shader.use();
@@ -52,9 +52,9 @@ struct GradientShaderHelper {
 };
 
 struct SolidShaderHelper {
-    GL::Shader& shader;
+    gl::Shader& shader;
 
-    SolidShaderHelper(GL::Shader& shader) : shader(shader) {}
+    SolidShaderHelper(gl::Shader& shader) : shader(shader) {}
 
     void operator()(const ASolidBrush& brush) const {
         shader.use();
@@ -63,19 +63,19 @@ struct SolidShaderHelper {
 };
 
 struct TexturedShaderHelper {
-    GL::Shader& shader;
-    GL::Vao& tempVao;
+    gl::Shader& shader;
+    gl::Vao& tempVao;
 
-    TexturedShaderHelper(GL::Shader& shader, GL::Vao& tempVao) : shader(shader), tempVao(tempVao) {}
+    TexturedShaderHelper(gl::Shader& shader, gl::Vao& tempVao) : shader(shader), tempVao(tempVao) {}
 
     void operator()(const ATexturedBrush& brush) const {
         shader.use();
         switch (brush.imageRendering) {
             case ImageRendering::PIXELATED:
-                GL::Texture2D::setupNearest();
+                gl::Texture2D::setupNearest();
                 break;
             case ImageRendering::SMOOTH:
-                GL::Texture2D::setupLinear();
+                gl::Texture2D::setupLinear();
                 break;
         }
         shader.set(aui::ShaderUniforms::COLOR, Render::getColor());
@@ -157,7 +157,7 @@ OpenGLRenderer::OpenGLRenderer() {
                 "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
                 "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
                 "}");
-        auto produceRoundedAntialiasedShader = [](GL::Shader& shader, const AString& uniforms, const AString& color, bool isBorder) {
+        auto produceRoundedAntialiasedShader = [](gl::Shader& shader, const AString& uniforms, const AString& color, bool isBorder) {
             shader.load(
                     "attribute vec3 pos;"
                     "attribute vec2 uv;"
@@ -290,7 +290,7 @@ glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
 }
 
 void OpenGLRenderer::uploadToShaderCommon() {
-    GL::Shader::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
+    gl::Shader::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
 }
 
 AVector<glm::vec3> OpenGLRenderer::getVerticesForRect(const glm::vec2& position, const glm::vec2& size)
@@ -359,10 +359,10 @@ void OpenGLRenderer::drawRoundedRectAntialiased(const ABrush& brush,
 
     uploadToShaderCommon();
 
-    GL::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-    GL::Shader::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, glm::vec2{0, 0});
-    GL::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
-    GL::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, glm::vec2{0});
+    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
+    gl::Shader::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, glm::vec2{0, 0});
+    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
+    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, glm::vec2{0});
 
     drawRectImpl(position, size);
     endDraw(brush);
@@ -425,12 +425,12 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     glm::vec2 innerSize = { size.x - borderWidth * 2,
                             size.y - borderWidth * 2 };
 
-    GL::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-    GL::Shader::currentShader()->set(aui::ShaderUniforms::INNER_SIZE, 2.f * (radius - borderWidth) / innerSize);
-    GL::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, size / innerSize);
+    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
+    gl::Shader::currentShader()->set(aui::ShaderUniforms::INNER_SIZE, 2.f * (radius - borderWidth) / innerSize);
+    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, size / innerSize);
 
-    GL::Shader::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, 2.f / 5.f / innerSize);
-    GL::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
+    gl::Shader::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, 2.f / 5.f / innerSize);
+    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
 
     drawRectImpl(position, size);
     endDraw(brush);
@@ -502,8 +502,8 @@ public:
         glm::vec2 uv;
     };
     OpenGLRenderer* mRenderer;
-    GL::VertexBuffer mVertexBuffer;
-    GL::IndexBuffer mIndexBuffer;
+    gl::VertexBuffer mVertexBuffer;
+    gl::IndexBuffer mIndexBuffer;
     int mTextWidth;
     int mTextHeight;
     OpenGLRenderer::FontEntryData* mEntryData;
@@ -511,8 +511,8 @@ public:
     FontRendering mFontRendering;
 
     OpenGLPrerenderedString(OpenGLRenderer* renderer,
-                            GL::VertexBuffer vertexBuffer,
-                            GL::IndexBuffer indexBuffer,
+                            gl::VertexBuffer vertexBuffer,
+                            gl::IndexBuffer indexBuffer,
                             int textWidth,
                             int textHeight,
                             OpenGLRenderer::FontEntryData* entryData,
@@ -539,7 +539,7 @@ public:
                 glGenVertexArrays(1, &a);
                 return a;
             }();
-            GL::State::bindVertexArray(g);
+            gl::State::bindVertexArray(g);
         }
 
         decltype(auto) img = mEntryData->texturePacker.getImage();
@@ -556,7 +556,7 @@ public:
         } else {
             mEntryData->texture.bind();
         }
-        GL::Texture2D::setupNearest();
+        gl::Texture2D::setupNearest();
 
         mVertexBuffer.bind();
 
@@ -703,7 +703,7 @@ public:
     }
 
     _<IRenderer::IPrerenderedString> finalize() noexcept override {
-        GL::VertexBuffer vertexBuffer;
+        gl::VertexBuffer vertexBuffer;
         vertexBuffer.set(mVertices);
 
         // build indices
@@ -717,7 +717,7 @@ public:
             indices.push_back(i * 4 + 1);
             indices.push_back(i * 4 + 3);
         }
-        GL::IndexBuffer indexBuffer;
+        gl::IndexBuffer indexBuffer;
         indexBuffer.set(indices);
 
         return _new<OpenGLPrerenderedString>(mRenderer,

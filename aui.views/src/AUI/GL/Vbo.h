@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include "ResourcePool.h"
 
-namespace GL {
+namespace gl {
     namespace detail {
         template<gl::ResourceKind T>
         class API_AUI_VIEWS VboImpl {
@@ -36,7 +36,7 @@ namespace GL {
 
         template<typename T>
         void set(const T* data, size_t count) {
-            static_assert(std::is_standard_layout_v<T>, "you may use only standard layout types in GL::VertexBuffer::set");
+            static_assert(std::is_standard_layout_v<T>, "you may use only standard layout types in gl::VertexBuffer::set");
             insert(reinterpret_cast<const char*>(data), count * sizeof(T));
         }
 

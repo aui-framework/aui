@@ -32,7 +32,7 @@
 
 #define SO_STATE
 
-namespace GL {
+namespace gl {
 	/**
 	 * \brief Helper class for optimizing gl calls count
 	 */

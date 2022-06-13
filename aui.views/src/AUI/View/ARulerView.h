@@ -33,7 +33,7 @@
 class API_AUI_VIEWS ARulerView: public AView {
 private:
     LayoutDirection mLayoutDirection;
-    _<GL::Vao> mPrecompiledLines;
+    _<gl::Vao> mPrecompiledLines;
 
     int mOffsetPx = 0;
 

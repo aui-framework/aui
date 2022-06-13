@@ -76,7 +76,7 @@ FractalView::FractalView():
     mShader.set("tr", mTransform);
     mShader.set("sq", 1.f);
 
-    mTexture = _new<GL::Texture2D>();
+    mTexture = _new<gl::Texture2D>();
     mTexture->tex2D(AImage::fromUrl(":img/color_scheme_wikipedia.png"));
 }
 

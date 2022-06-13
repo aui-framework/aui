@@ -33,7 +33,7 @@
 
 class AString;
 
-namespace GL {
+namespace gl {
 	class API_AUI_VIEWS Shader {
 	private:
 		uint32_t mProgram;
@@ -88,20 +88,20 @@ namespace GL {
 
         int32_t getLocation(const Uniform& uniform) const;
 
-		void set(const GL::Shader::Uniform& uniform, int value) const;
-		void set(const GL::Shader::Uniform& uniform, float value) const;
-		void set(const GL::Shader::Uniform& uniform, double value) const;
-		void set(const GL::Shader::Uniform& uniform, glm::mat4 value) const;
-		void set(const GL::Shader::Uniform& uniform, glm::dmat4 value) const;
-		void set(const GL::Shader::Uniform& uniform, glm::vec2 value) const;
-		void set(const GL::Shader::Uniform& uniform, glm::vec3 value) const;
-		void set(const GL::Shader::Uniform& uniform, glm::vec4 value) const;
+		void set(const gl::Shader::Uniform& uniform, int value) const;
+		void set(const gl::Shader::Uniform& uniform, float value) const;
+		void set(const gl::Shader::Uniform& uniform, double value) const;
+		void set(const gl::Shader::Uniform& uniform, glm::mat4 value) const;
+		void set(const gl::Shader::Uniform& uniform, glm::dmat4 value) const;
+		void set(const gl::Shader::Uniform& uniform, glm::vec2 value) const;
+		void set(const gl::Shader::Uniform& uniform, glm::vec3 value) const;
+		void set(const gl::Shader::Uniform& uniform, glm::vec4 value) const;
 
-		void setArray(const GL::Shader::Uniform& uniform, const AVector<float>& value) const;
+		void setArray(const gl::Shader::Uniform& uniform, const AVector<float>& value) const;
 
-		static GL::Shader*& currentShader()
+		static gl::Shader*& currentShader()
 		{
-			static GL::Shader* c;
+			static gl::Shader* c;
 			return c;
 		}
 	};
