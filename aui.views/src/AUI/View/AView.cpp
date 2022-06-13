@@ -320,7 +320,8 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
         if (w != this) {
             connect(w->mouseReleased, this, [&]()
                 {
-                    AThread::current()->enqueue([&]()
+                    auto selfHolder = sharedPtr();
+                    AThread::current()->enqueue([&, selfHolder = std::move(selfHolder)]()
                         {
                             // to be sure that isPressed will be false.
                             if (mPressed) {

@@ -14,6 +14,9 @@ gl::detail::VboImpl<T>::~VboImpl() {
     if (mHandle) gl::ResourcePool<T>::put(mHandle);
 }
 
+template class gl::detail::VboImpl<gl::ResourceKind::VERTEX_BUFFER>;
+template class gl::detail::VboImpl<gl::ResourceKind::INDEX_BUFFER>;
+
 void gl::VertexBuffer::bind() {
     glBindBuffer(GL_ARRAY_BUFFER, mHandle);
 }

@@ -25,7 +25,6 @@ namespace gl {
         };
     }
 
-
     class API_AUI_VIEWS VertexBuffer: public detail::VboImpl<gl::ResourceKind::VERTEX_BUFFER> {
     private:
         void insert(const char* data, size_t length);
