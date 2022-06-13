@@ -102,13 +102,45 @@ TEST_F(SignalSlot, StackAllocatedObject) {
     EXPECT_CALL(slave, die()).Times(1);
 }
 
+/**
+ * Checks that the program is not crashed when one of the object is destroyed.
+ */
 TEST_F(SignalSlot, ObjectRemoval) {
     slave = _new<Slave>();
     {
         testing::InSequence s;
         AObject::connect(master->message, slot(slave)::acceptMessage); // imitate signal-slot relations
         EXPECT_CALL(*slave, die()).Times(1);
-        slave = nullptr; // perform removal
+    }
+}
+
+/**
+ * Destroys master in a signal handler
+ */
+TEST_F(SignalSlot, ObjectDestroyMasterInSignalHandler) {
+    slave = _new<Slave>();
+    {
+        testing::InSequence s;
+        AObject::connect(master->message, slave, [&] {
+            master = nullptr;
+        });
+        master->broadcastMessage("hello");
+        EXPECT_TRUE(master == nullptr);
+    }
+}
+
+/**
+ * Destroys slave in it's signal handler
+ */
+TEST_F(SignalSlot, ObjectDestroySlaveInSignalHandler) {
+    slave = _new<Slave>();
+    {
+        testing::InSequence s;
+        AObject::connect(master->message, slave, [&] {
+            slave = nullptr;
+        });
+        master->broadcastMessage("hello");
+        EXPECT_TRUE(slave == nullptr);
     }
 }
 

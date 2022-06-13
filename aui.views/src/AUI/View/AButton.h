@@ -52,7 +52,7 @@ signals:
 	emits<> noLongerDefault;
 
 private:
-	Watchable<bool> mDefault = Watchable<bool>(defaultState, becameDefault, noLongerDefault);
+	AWatchable<bool> mDefault = AWatchable<bool>(defaultState, becameDefault, noLongerDefault);
 };
 
 

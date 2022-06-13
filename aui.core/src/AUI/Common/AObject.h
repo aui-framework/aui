@@ -144,7 +144,7 @@ public:
     template<typename T>
 	void operator^(T&& t) {
 	    if (mSignalsEnabled) {
-	        t.invokeSignal();
+	        t.invokeSignal(this);
 	    }
 	}
 

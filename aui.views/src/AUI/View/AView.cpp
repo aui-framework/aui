@@ -289,7 +289,7 @@ void AView::ensureAssUpdated()
 void AView::onMouseEnter()
 {
     if (AWindow::shouldDisplayHoverAnimations()) {
-        mHovered = true;
+        mHovered.set(this, true);
     }
 }
 
@@ -301,14 +301,14 @@ void AView::onMouseMove(glm::ivec2 pos)
 void AView::onMouseLeave()
 {
     if (AWindow::shouldDisplayHoverAnimations()) {
-        mHovered = false;
+        mHovered.set(this, false);
     }
 }
 
 
 void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 {
-    mPressed = true;
+    mPressed.set(this, true);
 
     /**
      * If button is pressed on this view, we want to know when the mouse will be released even if mouse outside
@@ -336,7 +336,7 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
 
 void AView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
-    mPressed = false;
+    mPressed.set(this, false);
     emit clickedButton(button);
     switch (button)
     {
@@ -375,12 +375,12 @@ void AView::onKeyUp(AInput::Key key)
 
 void AView::onFocusAcquired()
 {
-    mHasFocus = true;
+    mHasFocus.set(this, true);
 }
 
 void AView::onFocusLost()
 {
-    mHasFocus = false;
+    mHasFocus.set(this, false);
 }
 
 void AView::onCharEntered(wchar_t c)
@@ -399,7 +399,7 @@ void AView::setEnabled(bool enabled)
 }
 void AView::updateEnableState()
 {
-    mEnabled = mDirectlyEnabled && mParentEnabled;
+    mEnabled.set(this, mDirectlyEnabled && mParentEnabled);
     emit customCssPropertyChanged();
     setSignalsEnabled(mEnabled);
     emit customCssPropertyChanged();

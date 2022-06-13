@@ -31,7 +31,7 @@
 #include "AUI/Platform/AInput.h"
 #include "AUI/Reflect/AClass.h"
 #include "AUI/Font/AFontStyle.h"
-#include "AUI/Util/Watchable.h"
+#include "AUI/Util/AWatchable.h"
 #include "AUI/Util/IShadingEffect.h"
 #include <AUI/ASS/RuleWithoutSelector.h>
 #include <AUI/Enum/Overflow.h>
@@ -715,11 +715,11 @@ signals:
 	emits<> focusLost;
 
 private:
-	Watchable<bool> mHovered = Watchable<bool>(hoveredState, mouseEnter, mouseLeave);
-	Watchable<bool> mPressed = Watchable<bool>(pressedState, mousePressed, mouseReleased);
-	//Watchable<bool> mFocused = Watchable<bool>(pressedState, mousePressed, mouseReleased);
-	Watchable<bool> mEnabled = Watchable<bool>(enabledState, enabled, disabled, true);
+	AWatchable<bool> mHovered = AWatchable<bool>(hoveredState, mouseEnter, mouseLeave);
+	AWatchable<bool> mPressed = AWatchable<bool>(pressedState, mousePressed, mouseReleased);
+	//AWatchable<bool> mFocused = AWatchable<bool>(pressedState, mousePressed, mouseReleased);
+	AWatchable<bool> mEnabled = AWatchable<bool>(enabledState, enabled, disabled, true);
     bool mDirectlyEnabled = true;
     bool mParentEnabled = true;
-	Watchable<bool> mHasFocus = Watchable<bool>(focusState, focusAcquired, focusLost, false);
+	AWatchable<bool> mHasFocus = AWatchable<bool>(focusState, focusAcquired, focusLost, false);
 };
