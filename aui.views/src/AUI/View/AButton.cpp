@@ -39,7 +39,7 @@ void AButton::setDefault(bool isDefault)
 	    if (!mDefault) {
 	        AObject::disconnect();
 	    } else {
-            if (k == AInput::Return) {
+            if (k == AInput::RETURN) {
                 emit clicked();
             }
         }

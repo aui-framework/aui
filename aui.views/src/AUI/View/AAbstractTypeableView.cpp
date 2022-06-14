@@ -31,6 +31,7 @@
 #include "AUI/Platform/Platform.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Render/RenderHints.h"
+#include "AUI/Util/ARaiiHelper.h"
 #include <AUI/Util/AMetric.h>
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/kAUI.h>
@@ -112,12 +113,12 @@ void AAbstractTypeableView::onKeyDown(AInput::Key key)
 
 void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
 {
-    if (AInput::isKeyDown(AInput::LButton))
+    if (AInput::isKeyDown(AInput::LBUTTON))
         return;
 
 
     auto fastenSelection = [&]() {
-        if (!AInput::isKeyDown(AInput::LShift) && !AInput::isKeyDown(AInput::RShift)) {
+        if (!AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT)) {
             mCursorSelection = -1;
         } else if (mCursorSelection == -1)
         {
@@ -128,10 +129,11 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
     mTextChangedFlag = true;
     switch (key)
     {
-        case AInput::Delete:
+        case AInput::DEL:
             if (hasSelection()) {
                 auto sel = getSelection();
                 typeableErase(sel.begin, sel.end);
+                invalidatePrerenderedString();
                 mCursorSelection = -1;
                 mCursorIndex = sel.begin;
             } else
@@ -139,14 +141,15 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
                 if (mCursorIndex < length())
                 {
                     typeableErase(mCursorIndex, mCursorIndex + 1);
+                    invalidatePrerenderedString();
                 }
             }
             break;
 
-        case AInput::Left:
+        case AInput::LEFT:
             fastenSelection();
             if (mCursorIndex) {
-                if (AInput::isKeyDown(AInput::LControl)) {
+                if (AInput::isKeyDown(AInput::LCONTROL)) {
                     if (mCursorIndex <= 1) {
                         mCursorIndex = 0;
                     } else {
@@ -158,10 +161,10 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
             }
             break;
 
-        case AInput::Right:
+        case AInput::RIGHT:
             fastenSelection();
             if (mCursorIndex < length()) {
-                if (AInput::isKeyDown(AInput::LControl)) {
+                if (AInput::isKeyDown(AInput::LCONTROL)) {
                     auto index = typeableFind(' ', mCursorIndex);
                     if (index == AString::NPOS) {
                         mCursorIndex = length();
@@ -174,17 +177,17 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
             }
             break;
 
-        case AInput::Home:
+        case AInput::HOME:
             fastenSelection();
             mCursorIndex = 0;
             break;
-        case AInput::End:
+        case AInput::END:
             fastenSelection();
             mCursorIndex = length();
             break;
 
         default:
-            if (AInput::isKeyDown(AInput::LControl) || AInput::isKeyDown(AInput::RControl)) {
+            if (AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) {
                 switch (key) {
                     case AInput::A: // select all
                         selectAll();
@@ -222,7 +225,9 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
 
 void AAbstractTypeableView::pasteFromClipboard() {
     auto pastePos = mCursorIndex;
+    std::optional<AString> prevContents;
     if (mCursorSelection != -1) {
+        prevContents = getText();
         auto sel = getSelection();
         pastePos = sel.begin;
         typeableErase(sel.begin, sel.end);
@@ -233,12 +238,16 @@ void AAbstractTypeableView::pasteFromClipboard() {
     if (!mIsMultiline) {
         toPaste = toPaste.replacedAll("\n", "");
     }
-    typeableInsert(pastePos, toPaste);
-    mCursorIndex = pastePos + toPaste.length();
-    mCursorSelection = -1;
+    if (typeableInsert(pastePos, toPaste)) {
+        mCursorIndex = pastePos + toPaste.length();
+        mCursorSelection = -1;
 
-    invalidatePrerenderedString();
-    emit textChanged;
+        invalidatePrerenderedString();
+        updateCursorPos();
+        emit textChanged;
+    } else if (prevContents) {
+        setText(*prevContents);
+    }
 }
 
 void AAbstractTypeableView::cutToClipboard() {
@@ -256,9 +265,9 @@ void AAbstractTypeableView::selectAll() { ACursorSelectable::selectAll(); }
 
 void AAbstractTypeableView::enterChar(wchar_t c)
 {
-    if (AInput::isKeyDown(AInput::LButton) ||
-        AInput::isKeyDown(AInput::LControl) ||
-        AInput::isKeyDown(AInput::RControl) ||
+    if (AInput::isKeyDown(AInput::LBUTTON) ||
+        AInput::isKeyDown(AInput::LCONTROL) ||
+        AInput::isKeyDown(AInput::RCONTROL) ||
         c == '\t')
         return;
     if (c == '\r') {
@@ -278,8 +287,11 @@ void AAbstractTypeableView::enterChar(wchar_t c)
                 mCursorIndex = sel.begin;
                 break;
             default:
-                typeableInsert(sel.begin, c);
-                mCursorIndex = sel.begin + 1;
+                if (typeableInsert(sel.begin, c)) {
+                    mCursorIndex = sel.begin + 1;
+                } else {
+                    mCursorIndex = sel.begin;
+                }
         }
         mCursorSelection = -1;
     } else {
@@ -294,14 +306,18 @@ void AAbstractTypeableView::enterChar(wchar_t c)
             default:
                 if (mMaxTextLength <= length())
                     return;
-                typeableInsert(mCursorIndex++, c);
+                if (!typeableInsert(mCursorIndex, c)) {
+                    return;
+                }
+                ++mCursorIndex;
+
         }
     }
     invalidatePrerenderedString();
     updateCursorBlinking();
     updateCursorPos();
 
-    if (!AInput::isKeyDown(AInput::LShift) && !AInput::isKeyDown(AInput::RShift))
+    if (!AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT))
     {
         mCursorSelection = -1;
     }
@@ -335,17 +351,21 @@ void AAbstractTypeableView::onMouseMove(glm::ivec2 pos)
     ACursorSelectable::handleMouseMove(pos);
 }
 
+bool AAbstractTypeableView::isLButtonPressed() {
+    return isMousePressed();
+}
+
 void AAbstractTypeableView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
     AView::onMouseReleased(pos, button);
 
-    if (button == AInput::RButton) {
+    if (button == AInput::RBUTTON) {
         AMenu::show({
-                            { "aui.cut"_i18n, [&]{cutToClipboard();}, AInput::LControl + AInput::X, hasSelection() },
-                            { "aui.copy"_i18n, [&]{copyToClipboard();}, AInput::LControl + AInput::C, hasSelection() },
-                            { "aui.paste"_i18n, [&]{pasteFromClipboard();}, AInput::LControl + AInput::V, !AClipboard::isEmpty() },
+                            { "aui.cut"_i18n, [&]{cutToClipboard();}, AInput::LCONTROL + AInput::X, hasSelection() },
+                            { "aui.copy"_i18n, [&]{copyToClipboard();}, AInput::LCONTROL + AInput::C, hasSelection() },
+                            { "aui.paste"_i18n, [&]{pasteFromClipboard();}, AInput::LCONTROL + AInput::V, !AClipboard::isEmpty() },
                             AMenu::SEPARATOR,
-                            { "aui.select_all"_i18n, [&]{selectAll();}, AInput::LControl + AInput::A, !getText().empty() }
+                            { "aui.select_all"_i18n, [&]{selectAll();}, AInput::LCONTROL + AInput::A, !getText().empty() }
                     });
     } else {
         ACursorSelectable::handleMouseReleased(pos, button);

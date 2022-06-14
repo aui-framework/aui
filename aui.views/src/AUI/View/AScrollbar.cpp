@@ -63,9 +63,7 @@ AScrollbar::AScrollbar(LayoutDirection direction) :
     addView(_new<ASpacer>() let { it->setMinimumSize({0, 0}); });
     addView(mForwardButton);
 
-    ui_thread {
-        setScroll(0);
-    };
+    setScroll(0);
 }
 
 void AScrollbar::setOffset(size_t o) {
@@ -162,7 +160,7 @@ void AScrollbar::scrollForward() {
     setScroll(mCurrentScroll + 10);
     mScrollButtonTimer->start();
     connect(mScrollButtonTimer->fired, this, [&] {
-        if (AInput::isKeyDown(AInput::LButton)) {
+        if (AInput::isKeyDown(AInput::LBUTTON)) {
             setScroll(mCurrentScroll + 10);
         } else {
             mScrollButtonTimer->stop();
@@ -175,7 +173,7 @@ void AScrollbar::scrollBackward() {
     setScroll(mCurrentScroll - 10);
     mScrollButtonTimer->start();
     connect(mScrollButtonTimer->fired, this, [&] {
-        if (AInput::isKeyDown(AInput::LButton)) {
+        if (AInput::isKeyDown(AInput::LBUTTON)) {
             setScroll(mCurrentScroll - 10);
         } else {
             mScrollButtonTimer->stop();

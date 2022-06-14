@@ -42,18 +42,18 @@ bool ANumberPicker::ANumberPickerField::isValidText(const AString& text)
 void ANumberPicker::ANumberPickerField::onKeyRepeat(AInput::Key key) {
 
     switch (key) {
-        case AInput::Down:
+        case AInput::DOWN:
             if (mPicker.getValue() > mPicker.getMin()) {
-                if (AInput::isKeyDown(AInput::LControl)) {
+                if (AInput::isKeyDown(AInput::LCONTROL)) {
                     mPicker.setValue(glm::max(mPicker.getValue() - 10, mPicker.getMin()));
                 } else {
                     mPicker.setValue(mPicker.getValue() - 1);
                 }
             }
             break;
-        case AInput::Up:
+        case AInput::UP:
             if (mPicker.getValue() < mPicker.getMax()) {
-                if (AInput::isKeyDown(AInput::LControl)) {
+                if (AInput::isKeyDown(AInput::LCONTROL)) {
                     mPicker.setValue(glm::min(mPicker.getValue() + 10, mPicker.getMax()));
                 } else {
                     mPicker.setValue(mPicker.getValue() + 1);

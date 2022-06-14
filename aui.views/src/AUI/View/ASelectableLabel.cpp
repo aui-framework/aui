@@ -120,7 +120,7 @@ void ASelectableLabel::onFocusLost() {
 void ASelectableLabel::onKeyDown(AInput::Key key) {
     AView::onKeyDown(key);
 
-    if (AInput::isKeyDown(AInput::LControl) || AInput::isKeyDown(AInput::RControl))
+    if (AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL))
         switch (key) {
             case AInput::A:
                 selectAll();

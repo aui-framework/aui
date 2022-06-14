@@ -233,8 +233,8 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
 
     _<AObject> emitterPtr, receiverPtr;
 
-    if (auto sharedPtr = emitter->sharedPtr()) { // avoid emitter removal during signal processing
-        emitterPtr = std::move(sharedPtr);
+    if (auto sharedPtr = weakPtrFromObject(emitter).lock()) { // avoid emitter removal during signal processing
+        emitterPtr = std::move(static_cast<_<AObject>>(sharedPtr));
     }
 
     std::unique_lock lock(mSlotsLock);

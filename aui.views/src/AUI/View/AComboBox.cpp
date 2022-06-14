@@ -84,22 +84,19 @@ int AComboBox::getContentMinimumWidth() {
     return ALabel::getContentMinimumWidth() + 20;
 }
 
-void AComboBox::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    AView::onMousePressed(pos, button);
-    if (mClickConsumer) {
-        mClickConsumer = false;
-        return;
-    }
+void AComboBox::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
+    AView::onMouseReleased(pos, button);
+
     if (!mComboWindow.lock()) {
-        auto w = AWindow::current();
-        if (!w) return;
+        auto parentWindow = getWindow();
+        if (!parentWindow) return;
 
         auto list = _new<AListView>(mModel) with_style { ass::Margin { 0 }, ass::Expanding{}, ass::MinSize {  AMetric(getWidth(), AMetric::T_PX), 0, } };
         list << ".combobox_list";
         int listHeight = list->getContentFullHeight() + list->getMinimumHeight() + 2; // bias
         auto comboBoxPos = getPositionInWindow();
         unsigned usedPositionIndex;
-        auto comboWindow = w->createOverlappingSurface(
+        auto comboWindow = parentWindow->createOverlappingSurface(
                 [&](unsigned attempt) -> std::optional<glm::ivec2> {
                     usedPositionIndex = attempt;
                     switch (attempt) {
