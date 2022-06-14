@@ -32,6 +32,7 @@
 #include <ctime>
 #include "AUI/Common/ATimer.h"
 #include "AUI/Traits/parallel.h"
+#include "AUI/Thread/AAsyncHolder.h"
 
 
 TEST(Threading, Async) {
@@ -80,7 +81,7 @@ TEST(Threading, ConditionVariableInterruption) {
 
 TEST(Threading, Future1) {
     ADeque<AFuture<double>> taskList;
-    auto time = Util::measureTimeInMillis([&]() {
+    auto time = util::measureExecutionTime<std::chrono::milliseconds>([&]() {
         repeat(1000)
         {
             taskList << async{
@@ -96,7 +97,7 @@ TEST(Threading, Future1) {
         for (auto& f : taskList) *f;
 
         printf("Ok, supplyResult: %f\n", *taskList.first());
-    });
+    }).count();
 
     printf("Finished in %llu ms\n", time);
     ASSERT_EQ(*taskList.first(),
@@ -308,4 +309,25 @@ TEST(Threading, FutureExecuteOnCallingThread) {
     };
     future.wait();
     ASSERT_TRUE(called) << "callback has not called";
+}
+
+TEST(Threading, AsyncHolder) {
+
+    bool holderDestroyed = false;
+
+    AThreadPool localThreadPool(1);
+    {
+        AAsyncHolder holder;
+        holder << localThreadPool * [&] {
+            AThread::sleep(500);
+            ASSERT_FALSE(holderDestroyed);
+        };
+        holder << localThreadPool * [&] {
+            AThread::sleep(500);
+            ASSERT_FALSE(holderDestroyed);
+        };
+        AThread::sleep(700);
+        EXPECT_EQ(holder.size(), 1);
+    }
+    holderDestroyed = true;
 }

@@ -20,3 +20,4 @@
  */
 
 #include "AFuture.h"
+#include "AAsyncHolder.h"

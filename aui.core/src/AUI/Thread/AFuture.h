@@ -309,14 +309,32 @@ namespace aui::impl::future {
         Future& onSuccess(Callback&& callback) noexcept {
             std::unique_lock lock((*mInner)->mutex);
             if constexpr(isVoid) {
-                (*mInner)->onSuccess = [innerStorage = mInner, callback = std::forward<Callback>(callback)]() {
-                    callback();
-                };
+                if ((*mInner)->onSuccess) {
+                    (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
+                                            innerStorage = mInner,
+                                            callback = std::forward<Callback>(callback)]() {
+                        prev();
+                        callback();
+                    };
+                } else {
+                    (*mInner)->onSuccess = [innerStorage = mInner, callback = std::forward<Callback>(callback)]() {
+                        callback();
+                    };
+                }
             } else {
-                (*mInner)->onSuccess = [innerStorage = mInner, callback = std::forward<Callback>(callback)](
-                        const Value& v) {
-                    callback(v);
-                };
+                if ((*mInner)->onSuccess) {
+                    (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
+                            innerStorage = mInner,
+                            callback = std::forward<Callback>(callback)](const Value& v) {
+                        prev(v);
+                        callback(v);
+                    };
+                } else {
+                    (*mInner)->onSuccess = [innerStorage = mInner, callback = std::forward<Callback>(callback)](
+                            const Value& v) {
+                        callback(v);
+                    };
+                }
             }
             return *this;
         }
@@ -324,9 +342,20 @@ namespace aui::impl::future {
         template<typename Callback>
         Future& onError(Callback&& callback) noexcept {
             std::unique_lock lock((*mInner)->mutex);
-            (*mInner)->onError = [innerStorage = mInner, callback = std::forward<Callback>(callback)](const AException& v) {
-                callback(v);
-            };
+
+            if ((*mInner)->onError) {
+                (*mInner)->onError = [prev = std::move((*mInner)->onError),
+                        innerStorage = mInner,
+                        callback = std::forward<Callback>(callback)](const AException& v) {
+                    prev(v);
+                    callback(v);
+                };
+            } else {
+                (*mInner)->onError = [innerStorage = mInner, callback = std::forward<Callback>(callback)](
+                        const AException& v) {
+                    callback(v);
+                };
+            }
             return *this;
         }
 
@@ -423,15 +452,15 @@ namespace aui::impl::future {
 template<typename T = void>
 class AFuture final: public aui::impl::future::Future<T> {
 private:
-    using parent = typename aui::impl::future::Future<T>;
+    using super = typename aui::impl::future::Future<T>;
 
 public:
-    using Task = typename parent::TaskCallback;
+    using Task = typename super::TaskCallback;
 
-    AFuture(Task task = nullptr) noexcept: parent(std::move(task)) {}
+    AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
 
     void supplyResult(T v) noexcept {
-        auto& inner = (*parent::mInner);
+        auto& inner = (*super::mInner);
         assert(("task is already provided", inner->task == nullptr));
 
         std::unique_lock lock(inner->mutex);
@@ -440,27 +469,46 @@ public:
         nullsafe(inner->onSuccess)(*inner->value);
     }
 
+    AFuture& operator=(std::nullptr_t) noexcept {
+        super::mInner = nullptr;
+        return *this;
+    }
+
+    [[nodiscard]]
+    bool operator==(const AFuture& r) const noexcept {
+        return super::mInner == r.mInner;
+    }
 };
 
 template<>
 class AFuture<void> final: public aui::impl::future::Future<void> {
 private:
     using T = void;
-    using parent = typename aui::impl::future::Future<T>;
+    using super = typename aui::impl::future::Future<T>;
 
 public:
-    using Task = typename parent::TaskCallback;
+    using Task = typename super::TaskCallback;
 
-    AFuture(Task task = nullptr) noexcept: parent(std::move(task)) {}
+    AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
 
     void supplyResult() noexcept {
-        auto& inner = (*parent::mInner);
+        auto& inner = (*super::mInner);
         assert(("task is already provided", inner->task == nullptr));
 
         std::unique_lock lock(inner->mutex);
         inner->value = true;
         inner->cv.notify_all();
         nullsafe(inner->onSuccess)();
+    }
+
+    AFuture& operator=(std::nullptr_t) noexcept {
+        super::mInner = nullptr;
+        return *this;
+    }
+
+    [[nodiscard]]
+    bool operator==(const AFuture& r) const noexcept {
+        return super::mInner == r.mInner;
     }
 };
 
