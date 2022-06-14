@@ -41,20 +41,20 @@ unsigned ACursorSelectable::getCursorIndexByPos(glm::ivec2 pos) {
 }
 
 void ACursorSelectable::handleMousePressed(const glm::ivec2& pos, AInput::Key button) {
-    if (button == AInput::LButton) {
+    if (button == AInput::LBUTTON) {
         mCursorSelection = mCursorIndex = getCursorIndexByPos(pos);
     }
 }
 
 void ACursorSelectable::handleMouseMove(const glm::ivec2& pos) {
-    if (!mIgnoreSelection && AInput::isKeyDown(AInput::LButton)) {
+    if (!mIgnoreSelection && AInput::isKeyDown(AInput::LBUTTON)) {
         mCursorIndex = getCursorIndexByPos(pos);
         doRedraw();
     }
 }
 
 void ACursorSelectable::handleMouseReleased(const glm::ivec2& pos, AInput::Key button) {
-    if (button == AInput::LButton)
+    if (button == AInput::LBUTTON)
     {
         mIgnoreSelection = false;
         if (mCursorSelection == mCursorIndex)

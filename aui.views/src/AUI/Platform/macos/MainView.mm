@@ -105,19 +105,19 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 }
 
 - (void)mouseDown:(NSEvent *)event {
-    onMouseButtonDown(mAWindow, event, AInput::LButton);
+    onMouseButtonDown(mAWindow, event, AInput::LBUTTON);
 }
 
 - (void)mouseUp:(NSEvent *)event {
-    onMouseButtonUp(mAWindow, event, AInput::LButton);
+    onMouseButtonUp(mAWindow, event, AInput::LBUTTON);
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
-    onMouseButtonDown(mAWindow, event, AInput::LButton);
+    onMouseButtonDown(mAWindow, event, AInput::LBUTTON);
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
-    onMouseButtonUp(mAWindow, event, AInput::LButton);
+    onMouseButtonUp(mAWindow, event, AInput::LBUTTON);
 }
 
 - (void)scrollWheel:(NSEvent *)event {

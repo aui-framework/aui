@@ -69,7 +69,7 @@ extern int(* _gEntry)(const AStringVector&);
     CGPoint p = [sender locationInView:self.view];
     float scale = (float)self.view.contentScaleFactor;
     //IosEntry::handleClick(p.y * scale, [[UIScreen mainScreen] nativeBounds].size.width - p.x * scale);
-    auiWindow()->onMouseReleased(glm::ivec2{p.x * scale, p.y * scale}, AInput::LButton);
+    auiWindow()->onMouseReleased(glm::ivec2{p.x * scale, p.y * scale}, AInput::LBUTTON);
 }
 
 -(void)gestureHandlerMethodScroll:(UIPanGestureRecognizer*)sender {
@@ -95,7 +95,7 @@ extern int(* _gEntry)(const AStringVector&);
     float scale = (float)self.view.contentScaleFactor;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self.view];
-        auiWindow()->onMousePressed(glm::ivec2{location.x * scale, location.y * scale}, AInput::LButton);
+        auiWindow()->onMousePressed(glm::ivec2{location.x * scale, location.y * scale}, AInput::LBUTTON);
     }
     prevTransation = {0, 0};
 }
@@ -110,7 +110,7 @@ extern int(* _gEntry)(const AStringVector&);
     float scale = (float)self.view.contentScaleFactor;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self.view];
-        auiWindow()->onMouseReleased(glm::ivec2{location.x * scale, location.y * scale}, AInput::LButton);
+        auiWindow()->onMouseReleased(glm::ivec2{location.x * scale, location.y * scale}, AInput::LBUTTON);
     }
 }
 

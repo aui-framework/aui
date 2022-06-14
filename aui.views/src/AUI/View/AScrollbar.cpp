@@ -160,7 +160,7 @@ void AScrollbar::scrollForward() {
     setScroll(mCurrentScroll + 10);
     mScrollButtonTimer->start();
     connect(mScrollButtonTimer->fired, this, [&] {
-        if (AInput::isKeyDown(AInput::LButton)) {
+        if (AInput::isKeyDown(AInput::LBUTTON)) {
             setScroll(mCurrentScroll + 10);
         } else {
             mScrollButtonTimer->stop();
@@ -173,7 +173,7 @@ void AScrollbar::scrollBackward() {
     setScroll(mCurrentScroll - 10);
     mScrollButtonTimer->start();
     connect(mScrollButtonTimer->fired, this, [&] {
-        if (AInput::isKeyDown(AInput::LButton)) {
+        if (AInput::isKeyDown(AInput::LBUTTON)) {
             setScroll(mCurrentScroll - 10);
         } else {
             mScrollButtonTimer->stop();

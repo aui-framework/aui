@@ -26,7 +26,8 @@
 namespace AInput
 {
 	enum Key {
-		Unknown = -1, ///< Unhandled key
+        /* Based on SFML */
+		UNKNOWN = -1, ///< Unhandled key
 		A = 0,        ///< The A key
 		B,            ///< The B key
 		C,            ///< The C key
@@ -53,65 +54,65 @@ namespace AInput
 		X,            ///< The X key
 		Y,            ///< The Y key
 		Z,            ///< The Z key
-		Num0,         ///< The 0 key
-		Num1,         ///< The 1 key
-		Num2,         ///< The 2 key
-		Num3,         ///< The 3 key
-		Num4,         ///< The 4 key
-		Num5,         ///< The 5 key
-		Num6,         ///< The 6 key
-		Num7,         ///< The 7 key
-		Num8,         ///< The 8 key
-		Num9,         ///< The 9 key
-		Escape,       ///< The Escape key
-		LControl,     ///< The left Control key
-		LShift,       ///< The left Shift key
-		LAlt,         ///< The left Alt key
-		LSystem,      ///< The left OS specific key: window (Windows and Linux), apple (MacOS X), ...
-		RControl,     ///< The right Control key
-		RShift,       ///< The right Shift key
-		RAlt,         ///< The right Alt key
-		RSystem,      ///< The right OS specific key: window (Windows and Linux), apple (MacOS X), ...
-		Menu,         ///< The Menu key
-		LBracket,     ///< The [ key
-		RBracket,     ///< The ] key
-		SemiColon,    ///< The ; key
-		Comma,        ///< The , key
-		Period,       ///< The . key
-		Quote,        ///< The ' key
-		Slash,        ///< The / key
-		BackSlash,    ///< The \ key
-		Tilde,        ///< The ~ key
-		Equal,        ///< The = key
-		Dash,         ///< The - key
-		Space,        ///< The Space key
-		Return,       ///< The Return key
-		BackSpace,    ///< The Backspace key
-		Tab,          ///< The Tabulation key
-		PageUp,       ///< The Page up key
-		PageDown,     ///< The Page down key
-		End,          ///< The End key
-		Home,         ///< The Home key
-		Insert,       ///< The Insert key
-		Delete,       ///< The Delete key
-		Add,          ///< The + key
-		Subtract,     ///< The - key
-		Multiply,     ///< The * key
-		Divide,       ///< The / key
-		Left,         ///< Left arrow
-		Right,        ///< Right arrow
-		Up,           ///< Up arrow
-		Down,         ///< Down arrow
-		Numpad0,      ///< The numpad 0 key
-		Numpad1,      ///< The numpad 1 key
-		Numpad2,      ///< The numpad 2 key
-		Numpad3,      ///< The numpad 3 key
-		Numpad4,      ///< The numpad 4 key
-		Numpad5,      ///< The numpad 5 key
-		Numpad6,      ///< The numpad 6 key
-		Numpad7,      ///< The numpad 7 key
-		Numpad8,      ///< The numpad 8 key
-		Numpad9,      ///< The numpad 9 key
+		NUM0,         ///< The 0 key
+		NUM1,         ///< The 1 key
+		NUM2,         ///< The 2 key
+		NUM3,         ///< The 3 key
+		NUM4,         ///< The 4 key
+		NUM5,         ///< The 5 key
+		NUM6,         ///< The 6 key
+		NUM7,         ///< The 7 key
+		NUM8,         ///< The 8 key
+		NUM9,         ///< The 9 key
+		ESCAPE,       ///< The Escape key
+		LCONTROL,     ///< The left Control key
+		LSHIFT,       ///< The left Shift key
+		LALT,         ///< The left Alt key
+		LSYSTEM,      ///< The left OS specific key: window (Windows and Linux), apple (MacOS X), ...
+		RCONTROL,     ///< The right Control key
+		RSHIFT,       ///< The right Shift key
+		RALT,         ///< The right Alt key
+		RSYSTEM,      ///< The right OS specific key: window (Windows and Linux), apple (MacOS X), ...
+		MENU,         ///< The Menu key
+		LBRACKET,     ///< The [ key
+		RBRACKET,     ///< The ] key
+		SEMICOLON,    ///< The ; key
+		COMMA,        ///< The , key
+		PERIOD,       ///< The . key
+		QUOTE,        ///< The ' key
+		SLASH,        ///< The / key
+		BACKSLASH,    ///< The \ key
+		TILDE,        ///< The ~ key
+		EQUAL,        ///< The = key
+		DASH,         ///< The - key
+		SPACE,        ///< The Space key
+		RETURN,       ///< The Return key
+		BACKSPACE,    ///< The Backspace key
+		TAB,          ///< The Tabulation key
+		PAGEUP,       ///< The Page up key
+		PAGEDOWN,     ///< The Page down key
+		END,          ///< The End key
+		HOME,         ///< The Home key
+		INSERT,       ///< The Insert key
+		DEL,          ///< The Delete key
+		ADD,          ///< The + key
+		SUBTRACT,     ///< The - key
+		MULTIPLY,     ///< The * key
+		DIVIDE,       ///< The / key
+		LEFT,         ///< Left arrow
+		RIGHT,        ///< Right arrow
+		UP,           ///< Up arrow
+		DOWN,         ///< Down arrow
+		NUMPAD0,      ///< The numpad 0 key
+		NUMPAD1,      ///< The numpad 1 key
+		NUMPAD2,      ///< The numpad 2 key
+		NUMPAD3,      ///< The numpad 3 key
+		NUMPAD4,      ///< The numpad 4 key
+		NUMPAD5,      ///< The numpad 5 key
+		NUMPAD6,      ///< The numpad 6 key
+		NUMPAD7,      ///< The numpad 7 key
+		NUMPAD8,      ///< The numpad 8 key
+		NUMPAD9,      ///< The numpad 9 key
 		F1,           ///< The F1 key
 		F2,           ///< The F2 key
 		F3,           ///< The F3 key
@@ -127,11 +128,11 @@ namespace AInput
 		F13,          ///< The F13 key
 		F14,          ///< The F14 key
 		F15,          ///< The F15 key
-		Pause,        ///< The Pause key
-		LButton,
-		CButton,
-		RButton,
-		KeyCount      ///< Keep last -- the total number of keyboard keys
+		PAUSE,        ///< The Pause key
+		LBUTTON,      /// Left Mouse Button
+		CBUTTON,      /// Center Mouse Button
+		RBUTTON,      /// Right Mouse Button
+		KEYCOUNT      ///< Keep last -- the total number of keyboard keys
 	};
 	API_AUI_VIEWS Key fromNative(int w);
     API_AUI_VIEWS int toNative(Key w);

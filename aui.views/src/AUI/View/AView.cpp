@@ -340,10 +340,10 @@ void AView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
     emit clickedButton(button);
     switch (button)
     {
-        case AInput::LButton:
+        case AInput::LBUTTON:
             emit clicked();
             break;
-        case AInput::RButton:
+        case AInput::RBUTTON:
             emit clickedRight();
             break;
     }
@@ -360,7 +360,7 @@ void AView::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
 
 void AView::onKeyDown(AInput::Key key)
 {
-    if (key == AInput::Tab) {
+    if (key == AInput::TAB) {
         AWindow::current()->focusNextView();
     }
 }
@@ -522,8 +522,8 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
             return true;
         },
         [&](const ALongPressEvent& e) {
-            onMousePressed(origin, AInput::RButton);
-            onMouseReleased(origin, AInput::RButton);
+            onMousePressed(origin, AInput::RBUTTON);
+            onMouseReleased(origin, AInput::RBUTTON);
             return true;
         },
         [&](const auto& e) {

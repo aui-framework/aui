@@ -11,15 +11,15 @@ struct ViewActionDoubleClick {
     void operator()(const _<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
-        window->onMousePressed(coords, AInput::LButton);
+        window->onMousePressed(coords, AInput::LBUTTON);
         UITest::frame();
-        window->onMouseReleased(coords, AInput::LButton);
+        window->onMouseReleased(coords, AInput::LBUTTON);
         UITest::frame();
-        window->onMousePressed(coords, AInput::LButton);
+        window->onMousePressed(coords, AInput::LBUTTON);
         UITest::frame();
-        window->onMouseReleased(coords, AInput::LButton);
+        window->onMouseReleased(coords, AInput::LBUTTON);
         UITest::frame();
-        window->onMouseDoubleClicked(coords, AInput::LButton);
+        window->onMouseDoubleClicked(coords, AInput::LBUTTON);
         UITest::frame();
     }
 };
