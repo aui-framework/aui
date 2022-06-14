@@ -43,12 +43,12 @@ protected:
     void prerenderStringIfNeeded();
 
     void typeableErase(size_t begin, size_t end) override;
-    void typeableInsert(size_t at, const AString& toInsert) override;
+    bool typeableInsert(size_t at, const AString& toInsert) override;
     size_t typeableFind(wchar_t c, size_t startPos) override;
     size_t typeableReverseFind(wchar_t c, size_t startPos) override;
     size_t length() const override;
 
-    void typeableInsert(size_t at, wchar_t toInsert) override;
+    bool typeableInsert(size_t at, wchar_t toInsert) override;
 
     AString getDisplayText() override;
 

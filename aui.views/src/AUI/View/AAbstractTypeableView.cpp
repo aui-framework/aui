@@ -31,6 +31,7 @@
 #include "AUI/Platform/Platform.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Render/RenderHints.h"
+#include "AUI/Util/ARaiiHelper.h"
 #include <AUI/Util/AMetric.h>
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/kAUI.h>
@@ -224,7 +225,9 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
 
 void AAbstractTypeableView::pasteFromClipboard() {
     auto pastePos = mCursorIndex;
+    std::optional<AString> prevContents;
     if (mCursorSelection != -1) {
+        prevContents = getText();
         auto sel = getSelection();
         pastePos = sel.begin;
         typeableErase(sel.begin, sel.end);
@@ -235,13 +238,16 @@ void AAbstractTypeableView::pasteFromClipboard() {
     if (!mIsMultiline) {
         toPaste = toPaste.replacedAll("\n", "");
     }
-    typeableInsert(pastePos, toPaste);
-    mCursorIndex = pastePos + toPaste.length();
-    mCursorSelection = -1;
+    if (typeableInsert(pastePos, toPaste)) {
+        mCursorIndex = pastePos + toPaste.length();
+        mCursorSelection = -1;
 
-    invalidatePrerenderedString();
-    updateCursorPos();
-    emit textChanged;
+        invalidatePrerenderedString();
+        updateCursorPos();
+        emit textChanged;
+    } else if (prevContents) {
+        setText(*prevContents);
+    }
 }
 
 void AAbstractTypeableView::cutToClipboard() {
@@ -281,8 +287,11 @@ void AAbstractTypeableView::enterChar(wchar_t c)
                 mCursorIndex = sel.begin;
                 break;
             default:
-                typeableInsert(sel.begin, c);
-                mCursorIndex = sel.begin + 1;
+                if (typeableInsert(sel.begin, c)) {
+                    mCursorIndex = sel.begin + 1;
+                } else {
+                    mCursorIndex = sel.begin;
+                }
         }
         mCursorSelection = -1;
     } else {
@@ -297,7 +306,11 @@ void AAbstractTypeableView::enterChar(wchar_t c)
             default:
                 if (mMaxTextLength <= length())
                     return;
-                typeableInsert(mCursorIndex++, c);
+                if (!typeableInsert(mCursorIndex, c)) {
+                    return;
+                }
+                ++mCursorIndex;
+
         }
     }
     invalidatePrerenderedString();

@@ -45,7 +45,6 @@ private:
     bool mTextChangedFlag = false;
     bool mIsMultiline = false;
 
-
 protected:
     int mHorizontalScroll = 0;
     size_t mMaxTextLength = 0x200;
@@ -61,8 +60,24 @@ protected:
 
     virtual void invalidatePrerenderedString() = 0;
     virtual void typeableErase(size_t begin, size_t end) = 0;
-    virtual void typeableInsert(size_t at, const AString& toInsert) = 0;
-    virtual void typeableInsert(size_t at, wchar_t toInsert) = 0;
+
+    /**
+     * Inserts string.
+     * @return true, if successfully inserted; false otherwise
+     * @note when insert could not be completed (i.e. isValidText discarded the new string contents), the state is left
+     *       unchanged as like if <code>typeableInsert</code> have not been called.
+     */
+    [[nodiscard]]
+    virtual bool typeableInsert(size_t at, const AString& toInsert) = 0;
+
+    /**
+     * Inserts string.
+     * @return true, if successfully inserted; false otherwise
+     * @note when insert could not be completed (i.e. isValidText discarded the new string contents), the state is left
+     *       unchanged as like if <code>typeableInsert</code> have not been called.
+     */
+    [[nodiscard]]
+    virtual bool typeableInsert(size_t at, wchar_t toInsert) = 0;
     virtual size_t typeableFind(wchar_t c, size_t startPos = -1) = 0;
     virtual size_t typeableReverseFind(wchar_t c, size_t startPos = -1) = 0;
     virtual size_t length() const = 0;

@@ -140,12 +140,22 @@ void AAbstractTextField::typeableErase(size_t begin, size_t end) {
     mContents.erase(mContents.begin() + begin, mContents.begin() + end);
 }
 
-void AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
+bool AAbstractTextField::typeableInsert(size_t at, const AString& toInsert) {
     mContents.insert(at, toInsert);
+    if (!isValidText(mContents)) {
+        mContents.erase(at, toInsert.length()); // undo insert
+        return false;
+    }
+    return true;
 }
 
-void AAbstractTextField::typeableInsert(size_t at, wchar_t toInsert) {
+bool AAbstractTextField::typeableInsert(size_t at, wchar_t toInsert) {
     mContents.insert(at, toInsert);
+    if (!isValidText(mContents)) {
+        mContents.erase(at, 1); // undo insert
+        return false;
+    }
+    return true;
 }
 
 size_t AAbstractTextField::typeableFind(wchar_t c, size_t startPos) {
@@ -194,6 +204,8 @@ void AAbstractTextField::prerenderStringIfNeeded() {
             canvas->addString({ 0, 0 }, text);
             setTextLayoutHelper(canvas->getTextLayoutHelper());
             mPrerenderedString = canvas->finalize();
+        } else {
+            setTextLayoutHelper({});
         }
     }
 }

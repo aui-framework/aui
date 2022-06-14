@@ -29,7 +29,7 @@
 #include "ACursorSelectable.h"
 
 ACursorSelectable::Selection ACursorSelectable::getSelection() const {
-    return { glm::min(mCursorIndex, mCursorSelection), glm::max(mCursorIndex, mCursorSelection) };
+    return { glm::min(mCursorIndex, unsigned(mCursorSelection)), glm::max(mCursorIndex, unsigned(mCursorSelection)) };
 }
 
 bool ACursorSelectable::hasSelection() const {
