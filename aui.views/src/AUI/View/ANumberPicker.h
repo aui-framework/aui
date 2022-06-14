@@ -25,7 +25,7 @@
 #include <limits>
 
 /**
- * \brief A text field for numbers with increase/decrease buttons.
+ * @brief A text field for numbers with increase/decrease buttons.
  */
 class API_AUI_VIEWS ANumberPicker: public AViewContainer
 {
@@ -78,12 +78,12 @@ public:
 
 signals:
     /**
-     * \brief Number changed.
+     * @brief Number changed.
      */
     emits<int> valueChanged;
 
     /**
-     * \brief Number is changing.
+     * @brief Number is changing.
      */
     emits<> valueChanging;
 };

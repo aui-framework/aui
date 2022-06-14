@@ -99,9 +99,9 @@ void AWindow::redraw() {
             if (after - lastNotification > 10s) {
                 lastNotification = after;
                 if (millis > 40) {
-                    ALogger::warn("Frame render took {}ms! Unacceptably bad performance"_format(millis));
+                    ALogger::warn("Performance") << "Frame render took {}ms! Unacceptably bad performance"_format(millis);
                 } else {
-                    ALogger::warn("Frame render took {}ms! Bad performance"_format(millis));
+                    ALogger::warn("Performance") << "Frame render took {}ms! Bad performance"_format(millis);
                 }
             }
         }

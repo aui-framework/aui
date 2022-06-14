@@ -59,7 +59,7 @@ public:
         return mEntries.end();
     }
 
-    static AStacktrace capture(unsigned skipFrames = 0) noexcept;
+    static AStacktrace capture(unsigned skipFrames = 0, unsigned maxFrames = 128) noexcept;
 };
 
 inline std::ostream& operator<<(std::ostream& o, const AStacktrace& stacktrace) noexcept {

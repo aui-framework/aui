@@ -34,7 +34,7 @@
 
 namespace gl {
 	/**
-	 * \brief Helper class for optimizing gl calls count
+	 * @brief Helper class for optimizing gl calls count
 	 */
 	class API_AUI_VIEWS State {
 	private:

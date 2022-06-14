@@ -52,7 +52,7 @@ class AAssHelper;
 
 
 /**
- * \brief A class that describes the minimum unit that can be placed in a container (including a window) that takes up
+ * @brief A class that describes the minimum unit that can be placed in a container (including a window) that takes up
  *        some space on the screen that responds to changes in size, position, moving the cursor, pressing / releasing
  *        keys and buttons, movement mouse wheel, etc...
  *
@@ -64,12 +64,12 @@ class API_AUI_VIEWS AView: public AObject
 private:
 
 	/**
-	 * \brief Animation.
+	 * @brief Animation.
 	 */
 	_<AAnimator> mAnimator;
 
 	/**
-	 * \brief Determines whether display graphics that go out of the bounds of this AView or not.
+	 * @brief Determines whether display graphics that go out of the bounds of this AView or not.
 	 */
 	Overflow mOverflow = Overflow::VISIBLE;
 
@@ -79,17 +79,17 @@ private:
 	Visibility mVisibility = Visibility::VISIBLE;
 
     /**
-     * \brief Helper middleware object for handling ASS state updates (hover, active, etc...)
+     * @brief Helper middleware object for handling ASS state updates (hover, active, etc...)
      */
     _<AAssHelper> mAssHelper;
 
 	/**
-	 * \brief Background effects (custom rendered backgrounds)
+	 * @brief Background effects (custom rendered backgrounds)
 	 */
 	ADeque<_<IShadingEffect>> mBackgroundEffects;
 
 	/**
-	 * \brief border-radius, specified in ASS.
+	 * @brief border-radius, specified in ASS.
 	 */
     float mBorderRadius = 0;
 
@@ -97,12 +97,12 @@ private:
 	MouseCollisionPolicy mMouseCollisionPolicy = MouseCollisionPolicy::DEFAULT;
 
 	/**
-	 * \brief Font style for this AView.
+	 * @brief Font style for this AView.
 	 */
 	AFontStyle mFontStyle;
 
     /**
-     * \brief opacity, specified in ASS.
+     * @brief opacity, specified in ASS.
      */
     float mOpacity = 1;
 
@@ -110,80 +110,80 @@ private:
 
 protected:
 	/**
-	 * \brief Parent AView.
+	 * @brief Parent AView.
 	 */
 	AViewContainer* mParent = nullptr;
 
 
     /**
-     * \brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
+     * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
      */
     std::array<ass::decl::IDeclarationBase*, int(ass::decl::DeclarationSlot::COUNT)> mAss;
 
     /**
-     * \brief Custom ASS Rules
+     * @brief Custom ASS Rules
      */
     RuleWithoutSelector mCustomAssRule;
 
 	/**
-	 * \brief Determines shape which should pointer take when it's above this AView.
+	 * @brief Determines shape which should pointer take when it's above this AView.
 	 */
 	ACursor mCursor = ACursor::DEFAULT;
 
 	/**
-	 * \brief Top left corner's position relative to top left corner's position of the parent AView.
+	 * @brief Top left corner's position relative to top left corner's position of the parent AView.
 	 */
 	glm::ivec2 mPosition;
 
 	/**
-	 * \brief Size, including content area, border and padding.
+	 * @brief Size, including content area, border and padding.
 	 */
 	glm::ivec2 mSize = glm::ivec2(20, 20);
 
 	/**
-	 * \brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
+	 * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
 	 *        AViews in the same container.
 	 */
 	glm::ivec2 mExpanding = {0, 0};
 
 	/**
-	 * \brief Minimal size.
+	 * @brief Minimal size.
 	 */
 	glm::ivec2 mMinSize = {0, 0};
 
 	/**
-	 * \brief Maximal size.
+	 * @brief Maximal size.
 	 */
 	glm::ivec2 mMaxSize = {0x7fffffff, 0x7fffffff};
 
 	/**
-	 * \brief Fixed size.
+	 * @brief Fixed size.
 	 */
 	glm::ivec2 mFixedSize = {0, 0};
 
 	/**
-	 * \brief Margin, which defines the spacing around this AView. Processed by the layout manager.
+	 * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
 	 */
 	ABoxFields mMargin;
 
 	/**
-	 * \brief Padding, which defines the spacing around content area. Processed by AView implementation.
+	 * @brief Padding, which defines the spacing around content area. Processed by AView implementation.
 	 */
 	ABoxFields mPadding;
 
 
 	/**
-	 * \brief ASS class names.
+	 * @brief ASS class names.
 	 */
 	ADeque<AString> mAssNames;
 
 	/**
-	 * \brief Determines which ASS style rules should be applied to this AView and fills the mAss field.
+	 * @brief Determines which ASS style rules should be applied to this AView and fills the mAss field.
 	 */
 	virtual void recompileAss();
 
 	/**
-	 * \brief Updates state selectors for ASS.
+	 * @brief Updates state selectors for ASS.
 	 */
 	void updateAssState();
 
@@ -210,12 +210,12 @@ public:
     AView();
     virtual ~AView() = default;
 	/**
-	 * \brief Request window manager to redraw this AView.
+	 * @brief Request window manager to redraw this AView.
 	 */
 	void redraw();
 
     /**
-     * \brief Determines window which this AView belongs to.
+     * @brief Determines window which this AView belongs to.
      * \return window which this AView belongs to. Could be nullptr
      */
     ABaseWindow* getWindow();
@@ -224,7 +224,7 @@ public:
 
 
 	/**
-	 * \brief Draws this AView. Noone should call this function except rendering routine.
+	 * @brief Draws this AView. Noone should call this function except rendering routine.
 	 */
 	virtual void render();
 
@@ -238,7 +238,7 @@ public:
     }
 
     /**
-     * \brief Top left corner's position relative to top left corner's position of the parent AView.
+     * @brief Top left corner's position relative to top left corner's position of the parent AView.
      */
 	const glm::ivec2& getPosition() const
 
@@ -247,7 +247,7 @@ public:
 	}
 
     /**
-     * \brief Size, including content area, border and padding.
+     * @brief Size, including content area, border and padding.
      */
 	const glm::ivec2& getSize() const
 	{
@@ -266,7 +266,7 @@ public:
     }
 
     /**
-     * \brief Determines whether display graphics that go out of the bounds of this AView or not.
+     * @brief Determines whether display graphics that go out of the bounds of this AView or not.
      */
     Overflow getOverflow() const
 	{
@@ -278,7 +278,7 @@ public:
 	}
 
     /**
-     * \brief border-radius, specified in ASS.
+     * @brief border-radius, specified in ASS.
      */
 	float getBorderRadius() const {
 	    return mBorderRadius;
@@ -314,7 +314,7 @@ public:
 	}
 
     /**
-     * \brief Margin, which defines the spacing around this AView. Processed by the layout manager.
+     * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
      */
 	[[nodiscard]]
 	const ABoxFields& getMargin() const
@@ -326,14 +326,14 @@ public:
     }
 
     /**
-     * \brief Determines whether this AView processes this click or passes it thru.
+     * @brief Determines whether this AView processes this click or passes it thru.
      * \param pos mouse position
      * \return true if AView processes this click
      */
 	virtual bool consumesClick(const glm::ivec2& pos);
 
     /**
-     * \brief Padding, which defines the spacing around content area. Processed by AView implementation.
+     * @brief Padding, which defines the spacing around content area. Processed by AView implementation.
      */
 	[[nodiscard]]
 	const ABoxFields& getPadding() const
@@ -360,7 +360,7 @@ public:
 
 
     /**
-     * \brief Parent AView.
+     * @brief Parent AView.
      */
 	AViewContainer* getParent() const
 	{
@@ -368,7 +368,7 @@ public:
 	}
 
     /**
-     * \brief Determines shape which should pointer take when it's above this AView.
+     * @brief Determines shape which should pointer take when it's above this AView.
      */
 	ACursor getCursor() const
 	{
@@ -485,7 +485,7 @@ public:
 
 
     /**
-     * \brief Fixed size.
+     * @brief Fixed size.
      */
     const glm::ivec2& getFixedSize() {
 	    return mFixedSize;
@@ -545,12 +545,12 @@ public:
     }
 
 	/**
-	 * \brief Sets minimal size.
+	 * @brief Sets minimal size.
 	 */
 	void pack();
 
 	/**
-	 * \brief Requests focus for this AView. It's overridden for AViewContainer.
+	 * @brief Requests focus for this AView. It's overridden for AViewContainer.
 	 */
 	 virtual void focus();
 
@@ -563,19 +563,19 @@ public:
 	const ADeque<AString>& getCssNames() const;
 
 	/**
-	 * \brief Adds an ASS class to this AView.
+	 * @brief Adds an ASS class to this AView.
 	 * \param assName new ASS name
 	 */
     void addAssName(const AString& assName);
 
 	/**
-	 * \brief Removes an ASS class to this AView.
+	 * @brief Removes an ASS class to this AView.
 	 * \param assName ASS name to remove
 	 */
     void removeAssName(const AString& assName);
 
 	/**
-	 * \brief Wraps the addAssName function to make it easier to add ASS class names.
+	 * @brief Wraps the addAssName function to make it easier to add ASS class names.
 	 * \example
 	 * <code>
 	 * ...
@@ -692,17 +692,17 @@ signals:
     emits<> disabled;
 
 	/**
-	 * \brief Some mouse button clicked.
+	 * @brief Some mouse button clicked.
 	 */
 	emits<AInput::Key> clickedButton;
 
 	/**
-	 * \brief Left mouse button clicked.
+	 * @brief Left mouse button clicked.
 	 */
 	emits<> clicked;
 
 	/**
-	 * \brief Right mouse button clicked.
+	 * @brief Right mouse button clicked.
 	 */
 	emits<> clickedRight;
 

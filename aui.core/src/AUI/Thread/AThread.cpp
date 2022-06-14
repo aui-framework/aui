@@ -66,7 +66,7 @@ public:
     using AAbstractThread::AAbstractThread;
 };
 
-AAbstractThread::AAbstractThread(const id& id): mId(id)
+AAbstractThread::AAbstractThread(const id& id) noexcept: mId(id)
 {
 }
 
@@ -176,7 +176,7 @@ void AAbstractThread::enqueue(std::function<void()> f)
 {
 	{
 		std::unique_lock lock(mQueueLock);
-		mMessageQueue << std::move(f);
+		mMessageQueue << Message{ AStacktrace::capture(2, 4), std::move(f) };
 	}
 	{
 		if (mCurrentEventLoop) {
@@ -196,10 +196,10 @@ void AAbstractThread::processMessagesImpl()
 	std::unique_lock lock(mQueueLock);
 	while (!mMessageQueue.empty())
 	{
-		auto f = mMessageQueue.front();
+        auto f = std::move(mMessageQueue.front());
 		mMessageQueue.pop_front();
 		lock.unlock();
-		f();
+		f.proc();
 		lock.lock();
 	}
 }

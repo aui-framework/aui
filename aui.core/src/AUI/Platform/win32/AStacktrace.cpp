@@ -24,10 +24,11 @@ static Win32SymService& symService() noexcept {
     return symService;
 }
 
-AStacktrace AStacktrace::capture(unsigned skipFrames) noexcept {
+AStacktrace AStacktrace::capture(unsigned skipFrames, unsigned maxFrames) noexcept {
     symService();
     void* backtrace[128];
-    std::size_t entryCount = CaptureStackBackTrace(skipFrames + 1, aui::array_length(backtrace), backtrace, nullptr);
+    assert(("too many", maxFrames <= aui::array_length(backtrace)));
+    std::size_t entryCount = CaptureStackBackTrace(skipFrames + 1, maxFrames, backtrace, nullptr);
 
     AVector<Entry> entries;
     entries.reserve(entryCount);

@@ -203,7 +203,7 @@ public:
 
 signals:
     /**
-     * \brief Data in the model has changed.
+     * @brief Data in the model has changed.
      */
     emits<> modelChanged;
 };

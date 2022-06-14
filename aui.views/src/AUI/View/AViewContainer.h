@@ -56,13 +56,13 @@ protected:
 
 
     /**
-     * \brief Updates layout of the parent AViewContainer if size of this AViewContainer was changed.
+     * @brief Updates layout of the parent AViewContainer if size of this AViewContainer was changed.
      */
     virtual void updateParentsLayoutIfNecessary();
 
 
     /**
-     * \brief Moves all children and layout of specified container to this container.
+     * @brief Moves all children and layout of specified container to this container.
      * \param container container. Cannot be derivative from <a href="AViewContainer">AViewContainer</a>.
      * \note If access to this function is restricted or you want to pass an object derived from
      * <a href="AViewContainer">AViewContainer</a>, you should use
@@ -114,7 +114,7 @@ public:
     }
 
 	/**
-	 * \brief Set new layout manager for this AViewContainer. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
+	 * @brief Set new layout manager for this AViewContainer. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
 	 */
 	void setLayout(_<ALayout> layout);
 	_<ALayout> getLayout() const;
