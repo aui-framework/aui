@@ -79,7 +79,7 @@ void AAbstractTextField::render()
 
             Render::rect(ASolidBrush{},
                          {mPadding.left + absoluteCursorPos, mPadding.top},
-                         {glm::ceil(1_dp), getFontStyle().size + 3});
+                         {1, getFontStyle().size + 3});
         }
 
         Render::setBlending(Blending::NORMAL);

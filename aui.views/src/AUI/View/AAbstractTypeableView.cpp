@@ -240,6 +240,7 @@ void AAbstractTypeableView::pasteFromClipboard() {
     mCursorSelection = -1;
 
     invalidatePrerenderedString();
+    updateCursorPos();
     emit textChanged;
 }
 
