@@ -63,9 +63,7 @@ AScrollbar::AScrollbar(LayoutDirection direction) :
     addView(_new<ASpacer>() let { it->setMinimumSize({0, 0}); });
     addView(mForwardButton);
 
-    ui_thread {
-        setScroll(0);
-    };
+    setScroll(0);
 }
 
 void AScrollbar::setOffset(size_t o) {

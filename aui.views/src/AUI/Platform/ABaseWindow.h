@@ -173,7 +173,8 @@ public:
     }
     void closeOverlappingSurface(AOverlappingSurface* surface) {
         closeOverlappingSurfaceImpl(surface);
-        mOverlappingSurfaces.erase(aui::ptr::fake(surface));
+        auto r = mOverlappingSurfaces.erase(aui::ptr::fake(surface));
+        assert(("the surface wasn't in mOverlappingSurfaces?", (r == 1)));
     }
 
     void onFocusLost() override;

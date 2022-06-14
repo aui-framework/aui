@@ -88,22 +88,6 @@ void AWindow::redraw() {
     mRedrawFlag = false;
 #endif
     {
-
-        // fps restriction
-        {
-#if AUI_PLATFORM_WIN || AUI_PLATFORM_LINUX
-            auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-            auto delta = now - _gLastFrameTime;
-            // restriction 16ms = up to 60 frames per second
-            const auto FRAME_DURATION = 16ms;
-
-            if (FRAME_DURATION > delta) {
-                std::this_thread::sleep_for(FRAME_DURATION - delta);
-            }
-#endif
-            _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        }
-
         Render::setWindow(this);
         doDrawWindow();
 
