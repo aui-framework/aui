@@ -30,9 +30,9 @@
 #if AUI_PLATFORM_WIN
 #include <windows.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/Util/Util.h>
 
 #endif
+
 
 
 class UIThread: public AAbstractThread {

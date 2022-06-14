@@ -5,7 +5,6 @@
 #if AUI_USE_BACKTRACE
 #include <AUI/Platform/AStacktrace.h>
 #include <AUI/Platform/AProcess.h>
-
 #include <AUI/IO/APath.h>
 #include <execinfo.h>
 #include <backtrace.h>

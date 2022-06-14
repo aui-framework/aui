@@ -4,7 +4,6 @@
 
 #include <AUI/Platform/AStacktrace.h>
 #include <Windows.h>
-
 #include <dbghelp.h>
 #include <AUI/IO/APath.h>
 #include <mutex>
