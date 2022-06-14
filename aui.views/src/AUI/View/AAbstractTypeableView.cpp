@@ -132,6 +132,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
             if (hasSelection()) {
                 auto sel = getSelection();
                 typeableErase(sel.begin, sel.end);
+                invalidatePrerenderedString();
                 mCursorSelection = -1;
                 mCursorIndex = sel.begin;
             } else
@@ -139,6 +140,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
                 if (mCursorIndex < length())
                 {
                     typeableErase(mCursorIndex, mCursorIndex + 1);
+                    invalidatePrerenderedString();
                 }
             }
             break;
