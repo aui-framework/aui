@@ -159,3 +159,18 @@ void ACurl::run() {
     }
     reportFinished();
 }
+
+
+template<typename Ret>
+Ret ACurl::getInfo(int curlInfo) const {
+    Ret result;
+    if (auto r = curl_easy_getinfo(mCURL, static_cast<CURLINFO>(curlInfo), &result); r != CURLE_OK) {
+        throw Exception(curl_easy_strerror(r));
+    }
+    return result;
+}
+
+
+ACurl::ResponseCode ACurl::getResponseCode() const {
+    return static_cast<ACurl::ResponseCode>(getInfo<long>(CURLINFO_RESPONSE_CODE));
+}

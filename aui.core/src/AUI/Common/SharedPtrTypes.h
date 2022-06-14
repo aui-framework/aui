@@ -27,15 +27,25 @@
 
 class AObject;
 
+template<typename T>
+class _;
 
 template<typename T>
-using _weak = std::weak_ptr<T>;
+struct _weak: public std::weak_ptr<T> {
+private:
+    using super = std::weak_ptr<T>;
+
+public:
+    using super::weak_ptr;
+
+    _<T> lock() const noexcept {
+        return static_cast<_<T>>(super::lock());
+    }
+};
 
 template<typename T>
 using _unique = std::unique_ptr<T>;
 
-template<typename T>
-class _;
 
 namespace aui {
     struct ptr {

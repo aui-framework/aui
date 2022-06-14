@@ -24,7 +24,7 @@ void ACurlMulti::run() {
     int isStillRunning;
     while(!mCancelled && !mEasyCurls.empty()) {
         auto status = curl_multi_perform(mMulti, &isStillRunning);
-        if (!isStillRunning) break;
+
         if (status) {
             throw ACurl::Exception("curl perform failed: {}"_format(status));
         }
