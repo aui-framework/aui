@@ -47,7 +47,7 @@ bool isMouseKeyDown(AInput::Key button) {
 	return false;
 }
 AInput::Key AInput::fromNative(int k) {
-    if (CommonRenderingContext::ourDisplay == nullptr) return AInput::Unknown;
+    if (CommonRenderingContext::ourDisplay == nullptr) return AInput::UNKNOWN;
 	Key key;
 	KeySym keycode = XKeycodeToKeysym(CommonRenderingContext::ourDisplay, k, 0);
 	switch (keycode) {
@@ -81,7 +81,7 @@ AInput::Key AInput::fromNative(int k) {
 	case XK_End: key = AInput::END; break;
 	case XK_Home: key = AInput::HOME; break;
 	case XK_Insert: key = AInput::INSERT; break;
-	case XK_Delete: key = AInput::DELETE; break;
+	case XK_Delete: key = AInput::DEL; break;
 	case XK_KP_Add: key = AInput::ADD; break;
 	case XK_KP_Subtract: key = AInput::SUBTRACT; break;
 	case XK_KP_Multiply: key = AInput::MULTIPLY; break;
@@ -190,7 +190,7 @@ int AInput::toNative(Key key) {
 	case AInput::END:        keysym = XK_End;          break;
 	case AInput::HOME:       keysym = XK_Home;         break;
 	case AInput::INSERT:     keysym = XK_Insert;       break;
-	case AInput::DELETE:     keysym = XK_Delete;       break;
+	case AInput::DEL:     keysym = XK_Delete;       break;
 	case AInput::ADD:        keysym = XK_KP_Add;       break;
 	case AInput::SUBTRACT:   keysym = XK_KP_Subtract;  break;
 	case AInput::MULTIPLY:   keysym = XK_KP_Multiply;  break;
