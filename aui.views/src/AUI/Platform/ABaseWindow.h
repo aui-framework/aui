@@ -181,6 +181,8 @@ public:
 
     void render() override;
 
+    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;

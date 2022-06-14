@@ -338,6 +338,10 @@ void AAbstractTypeableView::onMouseMove(glm::ivec2 pos)
     ACursorSelectable::handleMouseMove(pos);
 }
 
+bool AAbstractTypeableView::isLButtonPressed() {
+    return isMousePressed();
+}
+
 void AAbstractTypeableView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
     AView::onMouseReleased(pos, button);

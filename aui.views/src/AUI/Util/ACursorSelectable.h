@@ -45,6 +45,7 @@ protected:
     virtual glm::ivec2 getMouseSelectionPadding() = 0;
     virtual glm::ivec2 getMouseSelectionScroll() = 0;
     virtual AFontStyle getMouseSelectionFont() = 0;
+    virtual bool isLButtonPressed() = 0;
     virtual AString getDisplayText() = 0;
     virtual void doRedraw() = 0;
 

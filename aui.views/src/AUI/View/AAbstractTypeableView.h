@@ -80,6 +80,8 @@ protected:
     AString getDisplayText() override;
     void doRedraw() override;
 
+    bool isLButtonPressed() override;
+
 public:
     AAbstractTypeableView();
     virtual ~AAbstractTypeableView();

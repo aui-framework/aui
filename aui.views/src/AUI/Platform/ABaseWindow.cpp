@@ -191,6 +191,10 @@ void ABaseWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     AMenu::close();
 }
 
+void ABaseWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
+    AViewContainer::onMouseReleased(pos, button);
+}
+
 void ABaseWindow::onMouseMove(glm::ivec2 pos) {
     mMousePos = pos;
     AViewContainer::onMouseMove(pos);

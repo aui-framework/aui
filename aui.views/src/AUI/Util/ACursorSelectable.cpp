@@ -47,7 +47,7 @@ void ACursorSelectable::handleMousePressed(const glm::ivec2& pos, AInput::Key bu
 }
 
 void ACursorSelectable::handleMouseMove(const glm::ivec2& pos) {
-    if (!mIgnoreSelection && AInput::isKeyDown(AInput::LBUTTON)) {
+    if (!mIgnoreSelection && isLButtonPressed()) {
         mCursorIndex = getCursorIndexByPos(pos);
         doRedraw();
     }
