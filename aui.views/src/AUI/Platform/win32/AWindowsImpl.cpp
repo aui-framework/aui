@@ -123,6 +123,10 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
             return 0;
         }
+
+        case WM_MENUCHAR: return MNC_CLOSE << 16; // silence message beep
+
+        case WM_SYSKEYDOWN:
         case WM_KEYDOWN:
             if (lParam & (1 << 30)) {
                 // autoupdate
