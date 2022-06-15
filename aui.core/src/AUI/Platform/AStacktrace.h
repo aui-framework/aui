@@ -8,7 +8,7 @@
 class API_AUI_CORE AStacktrace {
 public:
     class Entry {
-    friend class AStacktrace;
+        friend class AStacktrace;
     private:
         void* mPtr;
         std::optional<AString> mFunctionName;
