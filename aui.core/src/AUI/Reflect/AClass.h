@@ -21,7 +21,6 @@
 
 #pragma once
 #include "AUI/Common/AString.h"
-#include "AUI/Common/AStringVector.h"
 
 
 
@@ -35,7 +34,8 @@ public:
 		AString s = __FUNCSIG__;
 		auto openTag = s.find('<') + 1;
 		auto closeTag = s.find('>');
-		auto name = s.mid(openTag, closeTag - openTag).split(' ').last();
+		auto name = s.mid(openTag, closeTag - openTag);
+        name = name.mid(name.rfind(' ') + 1);
 		if (name.endsWith(" &"))
 			name = name.mid(0, name.length() - 2);
 		return name;

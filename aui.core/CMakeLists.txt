@@ -83,3 +83,8 @@ foreach(_var AUI_PLATFORM_WIN
 	         AUI_PLATFORM_UNIX)
 	target_compile_definitions(aui.core PUBLIC ${_var}=${${_var}})
 endforeach()
+
+
+if (AUI_SHARED_PTR_FIND_INSTANCES)
+	target_compile_definitions(aui.core PUBLIC AUI_SHARED_PTR_FIND_INSTANCES=1)
+endif()

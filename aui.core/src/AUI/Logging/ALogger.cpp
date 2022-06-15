@@ -32,7 +32,11 @@
 
 ALogger::ALogger()
 {
-
+#ifdef AUI_SHARED_PTR_FIND_INSTANCES
+    log(WARN, "Performance", "AUI_SHARED_PTR_FIND_INSTANCES is enabled which dramatically drops performance"
+                             " since it creates stacktrace on every shared_ptr (_<T>) construction. Use it if"
+                             " and only if it's actually needed.");
+#endif
 }
 
 ALogger& ALogger::instance()
@@ -118,7 +122,7 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
 
 void ALogger::setLogFileImpl(AString path) {
     mLogFile = AFileOutputStream(std::move(path));
-    ALogger::info("Logger") << "Log file: " << mLogFile.path();
+    log(INFO, "Logger",  ("Log file: " + mLogFile.path()).toStdString());
 }
 
 ALogger::~ALogger() = default;

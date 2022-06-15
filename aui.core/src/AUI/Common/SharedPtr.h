@@ -70,14 +70,21 @@ inline void PrintTo(const _<T>& ptr, std::ostream* stream) {
 template<typename T>
 template<typename SignalField, typename Object, typename Function>
 inline _<T>& _<T>::connect(SignalField signalField, Object object, Function&& function) {
-    AObject::connect(parent::get()->*signalField, object, std::forward<Function>(function));
+    AObject::connect(super::get()->*signalField, object, std::forward<Function>(function));
     return *this;
 }
 
 template<typename T>
 template<typename SignalField, typename Function>
 inline _<T>& _<T>::connect(SignalField signalField, Function&& function) {
-    AObject::connect(parent::get()->*signalField, _<T>::get(), std::forward<Function>(function));
+    AObject::connect(super::get()->*signalField, _<T>::get(), std::forward<Function>(function));
     return *this;
 }
 
+
+#ifdef AUI_SHARED_PTR_FIND_INSTANCES
+template<typename T>
+AStacktrace _<T>::makeStacktrace() {
+    return AStacktrace::capture(2);
+}
+#endif

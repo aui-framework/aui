@@ -254,7 +254,7 @@ namespace aui::impl::future {
 
             void reportException(const AException& e) noexcept {
                 std::unique_lock lock(mutex);
-                exception = AInvocationTargetException(e.getMessage(), AReflect::name(&e)); // NOLINT(bugprone-throw-keyword-missing)
+                exception.emplace(e.getMessage(), AReflect::name(&e)); // NOLINT(bugprone-throw-keyword-missing)
                 cv.notify_all();
                 nullsafe(onError)(*exception);
             }

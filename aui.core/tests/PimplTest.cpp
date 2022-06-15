@@ -1,4 +1,4 @@
-﻿/**
+/**
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,43 +14,51 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
-#include "SharedPtr.h"
-#include "SharedPtrTypes.h"
-#include "AUI/Logging/ALogger.h"
+//
+// Created by alex2 on 30.08.2020.
+//
 
-#ifdef AUI_SHARED_PTR_FIND_INSTANCES
+#include <gtest/gtest.h>
+#include <AUI/Common/AVector.h>
+#include "AUI/Util/APimpl.h"
+#include "AUI/Traits/values.h"
+#include "AUI/Common/AException.h"
+#include "AUI/Thread/AFuture.h"
 
-aui::impl::shared_ptr::InstancesDict& aui::impl::shared_ptr::instances() noexcept {
-    static aui::impl::shared_ptr::InstancesDict r;
-    return r;
+TEST(Pimpl, Test1) {
+
+    struct MyClass;
+    std::optional<aui::fast_pimpl<MyClass, 8>> pimpl;
+
+    struct MyClass {
+        int field = 2;
+    };
+    pimpl = MyClass();
+
+    EXPECT_EQ((*pimpl)->field, 2);
 }
 
-void aui::impl::shared_ptr::printAllInstancesOf(void* ptrToSharedPtr) noexcept {
-    static constexpr auto LOG_TAG = "AUI_SHARED_PTR_FIND_INSTANCES";
-    auto& sharedPtr = reinterpret_cast<_<void>&>(ptrToSharedPtr);
-    void* pointingTo = sharedPtr.get();
-    std::printf("[%s] shared_ptrs pointing to %p:\n", LOG_TAG, pointingTo);
-    std::unique_lock lock(instances().sync);
-    if (auto it = instances().map.find(pointingTo); it != instances().map.end()) {
-        if (it->second.empty()) {
-            std::printf("[%s] <empty set>", LOG_TAG);
-        } else {
-            for (const auto& pSharedPtr : it->second) {
-                auto& anotherSharedPtr = *reinterpret_cast<_<void>*>(pSharedPtr);
-                assert(anotherSharedPtr.get() == pointingTo);
-                std::printf("[%s] %p at\n", LOG_TAG, pSharedPtr);
-                std::cout << *anotherSharedPtr.mInstanceDescriber.stacktrace;
-            }
+TEST(Pimpl, DestructorTest) {
+    thread_local bool destructorCalled = false;
+
+    struct MyClass;
+    std::optional<aui::fast_pimpl<MyClass, 8>> pimpl;
+
+    struct MyClass {
+        int field = 2;
+
+        ~MyClass() {
+            destructorCalled = true;
         }
-    } else {
-        std::printf("[%s] <unknown ptr>", LOG_TAG);
-    }
-    std::flush(std::cout);
-}
+    };
 
-#endif
+    pimpl = MyClass();
+    pimpl.reset();
+
+    EXPECT_TRUE(destructorCalled);
+}

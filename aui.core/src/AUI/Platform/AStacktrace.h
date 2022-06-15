@@ -8,7 +8,7 @@
 class API_AUI_CORE AStacktrace {
 public:
     class Entry {
-    friend class AStacktrace;
+        friend class AStacktrace;
     private:
         void* mPtr;
         std::optional<AString> mFunctionName;
@@ -41,6 +41,8 @@ private:
 
     explicit AStacktrace(AVector<Entry> entries) : mEntries(std::move(entries)) {}
 public:
+    AStacktrace(const AStacktrace&) = default;
+    AStacktrace(AStacktrace&&) noexcept = default;
 
     void resolveSymbolsIfNeeded() const noexcept;
 
