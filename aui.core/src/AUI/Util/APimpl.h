@@ -80,13 +80,13 @@ namespace aui {
         }
 
         [[nodiscard]]
-        T* operator*() noexcept {
-            return &reinterpret_cast<T&>(mStorage);
+        T& operator*() noexcept {
+            return reinterpret_cast<T&>(mStorage);
         }
 
         [[nodiscard]]
-        const T* operator*() const noexcept {
-            return &reinterpret_cast<const T&>(mStorage);
+        const T& operator*() const noexcept {
+            return reinterpret_cast<const T&>(mStorage);
         }
 
 

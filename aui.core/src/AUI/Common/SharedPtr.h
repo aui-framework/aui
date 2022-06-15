@@ -85,6 +85,6 @@ inline _<T>& _<T>::connect(SignalField signalField, Function&& function) {
 #ifdef AUI_SHARED_PTR_FIND_INSTANCES
 template<typename T>
 AStacktrace _<T>::makeStacktrace() {
-    return AStacktrace::capture(2);
+    return AStacktrace::capture(3);
 }
 #endif

@@ -137,24 +137,31 @@ private:
     struct InstanceDescriber {
         aui::fast_pimpl<AStacktrace, sizeof(std::vector<int>) + 8, alignof(std::vector<int>)> stacktrace;
         _<T>* self;
+        T* pointingTo;
 
-        InstanceDescriber(_<T>* self): stacktrace(_<T>::makeStacktrace()), self(self) {
-            if (self->get() == nullptr) return;
+        InstanceDescriber(_<T>* self): stacktrace(_<T>::makeStacktrace()), self(self), pointingTo(self->get()) {
+            if (pointingTo == nullptr) return;
             std::unique_lock lock(aui::impl::shared_ptr::instances().sync);
-            aui::impl::shared_ptr::instances().map[self->get()].insert(self);
-            //std::printf("[AUI_SHARED_PTR_FIND_INSTANCES] %s << %p\n", AClass<T>::name().toStdString().c_str(), self->get());
+            aui::impl::shared_ptr::instances().map[pointingTo].insert(self);
+            //std::printf("[AUI_SHARED_PTR_FIND_INSTANCES] %s << %p\n", AClass<T>::name().toStdString().c_str(), pointingTo);
         }
+
+        InstanceDescriber(const InstanceDescriber&) = delete;
+        InstanceDescriber(InstanceDescriber&&) = delete;
+
         ~InstanceDescriber() {
-            if (self->get() == nullptr) return;
+            if (pointingTo == nullptr) return;
             auto& inst = aui::impl::shared_ptr::instances();
             std::unique_lock lock(inst.sync);
-            if (auto it = inst.map.find(self->get()); it != inst.map.end()) {
-                it->second.erase(self->get());
-                if (it->second.empty()) {
+            if (auto mapIt = inst.map.find(pointingTo); mapIt != inst.map.end()) {
+                auto setIt = mapIt->second.find(self);
+                assert(setIt != mapIt->second.end());
+                mapIt->second.erase(setIt);
+                if (mapIt->second.empty()) {
                     //inst.map.erase(it);
                 }
             }
-            //std::printf("[AUI_SHARED_PTR_FIND_INSTANCES] %s >> %p\n", AClass<T>::name().toStdString().c_str(), self->get());
+            //std::printf("[AUI_SHARED_PTR_FIND_INSTANCES] %s >> %p\n", AClass<T>::name().toStdString().c_str(), pointingTo);
         }
     } mInstanceDescriber = this;
 
@@ -167,6 +174,9 @@ public:
 #ifdef AUI_SHARED_PTR_FIND_INSTANCES
     void printAllInstances() {
         aui::impl::shared_ptr::printAllInstancesOf(this);
+    }
+    void printAllInstances() const {
+        const_cast<_<T>&>(*this).printAllInstances();
     }
 #endif
 
@@ -193,6 +203,18 @@ public:
 
     _(const std::shared_ptr<T>& v): std::shared_ptr<T>(v) {}
     _(std::shared_ptr<T>&& v): std::shared_ptr<T>(std::forward<std::shared_ptr<T>>(v)) {}
+    _(const _& v): std::shared_ptr<T>(v) {}
+    _(_&& v): std::shared_ptr<T>(std::forward<_>(v)) {}
+
+    _& operator=(const _& rhs) noexcept {
+        std::shared_ptr<T>::operator=(rhs);
+        return *this;
+    }
+
+    _& operator=(_&& rhs) noexcept {
+        std::shared_ptr<T>::operator=(std::forward<_>(rhs));
+        return *this;
+    }
 
     /**
      * <p>Trap constructor</p>

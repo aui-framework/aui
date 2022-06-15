@@ -32,23 +32,27 @@ aui::impl::shared_ptr::InstancesDict& aui::impl::shared_ptr::instances() noexcep
 
 void aui::impl::shared_ptr::printAllInstancesOf(void* ptrToSharedPtr) noexcept {
     static constexpr auto LOG_TAG = "AUI_SHARED_PTR_FIND_INSTANCES";
-    auto& sharedPtr = reinterpret_cast<_<void>&>(ptrToSharedPtr);
+    auto& sharedPtr = *reinterpret_cast<_<void>*>(ptrToSharedPtr);
     void* pointingTo = sharedPtr.get();
-    std::printf("[%s] shared_ptrs pointing to %p:\n", LOG_TAG, pointingTo);
+    std::cout << "[" << LOG_TAG << "] shared_ptrs pointing to " << pointingTo << std::endl;
     std::unique_lock lock(instances().sync);
     if (auto it = instances().map.find(pointingTo); it != instances().map.end()) {
         if (it->second.empty()) {
-            std::printf("[%s] <empty set>", LOG_TAG);
+            std::cout << "[" << LOG_TAG << "] <empty set>" << std::endl;
         } else {
             for (const auto& pSharedPtr : it->second) {
                 auto& anotherSharedPtr = *reinterpret_cast<_<void>*>(pSharedPtr);
                 assert(anotherSharedPtr.get() == pointingTo);
-                std::printf("[%s] %p at\n", LOG_TAG, pSharedPtr);
-                std::cout << *anotherSharedPtr.mInstanceDescriber.stacktrace;
+                std::cout << "[" << LOG_TAG << "] "  << pSharedPtr;
+                if (&sharedPtr == &anotherSharedPtr) {
+                    std::cout << " (this)";
+                }
+                std::cout << " at:" << std::endl
+                          << *anotherSharedPtr.mInstanceDescriber.stacktrace;
             }
         }
     } else {
-        std::printf("[%s] <unknown ptr>", LOG_TAG);
+        std::cout << "[" << LOG_TAG << "] <unknown ptr>" << std::endl;
     }
     std::flush(std::cout);
 }
