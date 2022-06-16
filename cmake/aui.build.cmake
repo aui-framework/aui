@@ -787,6 +787,14 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
 
                 # linking library preferring public visibility.
                 target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} ${_link_target_file})
+
+                # link child targets recursively
+                if (TARGET ${_link_target_file})
+                    get_target_property(_t ${_link_target_file} INTERFACE_LINK_LIBRARIES)
+                    if (_t)
+                        aui_link(${AUI_MODULE_NAME} PUBLIC ${_t})
+                    endif()
+                endif()
             endforeach()
         endforeach()
     else()
