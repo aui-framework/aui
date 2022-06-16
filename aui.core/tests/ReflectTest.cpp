@@ -83,9 +83,9 @@ inline std::ostream& operator<<(std::ostream& o, EnumWithoutEnumValue t) {
 }
 
 
-ENUM_VALUES(ATest, VALUE1, VALUE2, VALUE3, VALUE4)
-ENUM_VALUES(namespaceeee::ATest, namespaceeee::V1, namespaceeee::V2, namespaceeee::V3)
-ENUM_VALUES(namespaceeee::ATest2, namespaceeee::ATest2::TEST2_1, namespaceeee::ATest2::TEST2_2, namespaceeee::ATest2::TEST2_3)
+AUI_ENUM_VALUES(ATest, VALUE1, VALUE2, VALUE3, VALUE4)
+AUI_ENUM_VALUES(namespaceeee::ATest, namespaceeee::V1, namespaceeee::V2, namespaceeee::V3)
+AUI_ENUM_VALUES(namespaceeee::ATest2, namespaceeee::ATest2::TEST2_1, namespaceeee::ATest2::TEST2_2, namespaceeee::ATest2::TEST2_3)
 
 
 TEST(Reflect, NameClass) {

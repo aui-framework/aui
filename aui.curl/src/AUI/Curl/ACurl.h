@@ -83,7 +83,7 @@ public:
         HTTP_504_GATEWAY_TIMEOUT                 = 504,
         HTTP_505_HTTP_VERSION_NOT_SUPPORTED      = 505,
 
-        /* don't forget to update ENUM_VALUES at the bottom */
+        /* don't forget to update AUI_ENUM_VALUES at the bottom */
     };
 
 
