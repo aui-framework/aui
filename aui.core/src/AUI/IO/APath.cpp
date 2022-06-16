@@ -331,6 +331,7 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
         case HOME:
             SHGetFolderPath(nullptr, CSIDL_PROFILE, nullptr, SHGFP_TYPE_DEFAULT, result.data());
             break;
+
         default:
             assert(0);
     }

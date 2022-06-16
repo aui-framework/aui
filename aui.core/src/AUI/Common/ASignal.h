@@ -272,7 +272,6 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
         {
             AAbstractSignal::isDisconnected() = false;
 
-
             if (auto sharedPtr = receiverWeakPtr.lock()) { // avoid receiver removal during signal processing
                 receiverPtr = std::move(sharedPtr);
             }
