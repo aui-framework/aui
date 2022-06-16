@@ -31,6 +31,8 @@
 #include <random>
 #include <ctime>
 #include "AUI/Common/ATimer.h"
+#include "AUI/Traits/parallel.h"
+#include "AUI/Thread/AAsyncHolder.h"
 
 
 TEST(Threading, Async) {
@@ -79,7 +81,7 @@ TEST(Threading, ConditionVariableInterruption) {
 
 TEST(Threading, Future1) {
     ADeque<AFuture<double>> taskList;
-    auto time = Util::measureTimeInMillis([&]() {
+    auto time = util::measureExecutionTime<std::chrono::milliseconds>([&]() {
         repeat(1000)
         {
             taskList << async{
@@ -95,7 +97,7 @@ TEST(Threading, Future1) {
         for (auto& f : taskList) *f;
 
         printf("Ok, supplyResult: %f\n", *taskList.first());
-    });
+    }).count();
 
     printf("Finished in %llu ms\n", time);
     ASSERT_EQ(*taskList.first(),
@@ -201,7 +203,7 @@ TEST(Threading, FutureCancellationBeforeExecution) {
     auto foreignLambda = [&] {
         try {
             AThread::sleep(500);
-        } catch (const AThread::AInterrupted& e) {
+        } catch (const AThread::Interrupted& e) {
             ADD_FAILURE() << "interrupted exception thrown in a foreign lambda";
         }
         foreignLambdaCallCount += 1;
@@ -218,8 +220,9 @@ TEST(Threading, FutureCancellationBeforeExecution) {
         future.wait();
         AThread::sleep(250);
     }
-    AThread::sleep(1000);
+    AThread::sleep(500);
     ASSERT_EQ(foreignLambdaCallCount, 2);
+    exec.wait();
 }
 
 TEST(Threading, FutureCancellationWhileExecution) {
@@ -254,6 +257,28 @@ TEST(Threading, FutureCancellationAfterExecution) {
 }
 
 
+TEST(Threading, FutureInterruptionCascade) {
+    {
+        static bool interrupted = false;
+        {
+            auto t = asyncX [&] {
+                auto items = AVector<int>::generate(10000, [](std::size_t i) { return i; });
+                auto tasks = AUI_PARALLEL_MP(items) {
+                    for (auto it = begin; it != end; ++it) {
+                        EXPECT_FALSE(interrupted);
+                        AThread::sleep(100);
+                    }
+                };
+                tasks.waitForAll();
+            };
+            AThread::sleep(500);
+            t.cancel();
+        }
+        interrupted = true;
+    }
+}
+
+
 TEST(Threading, FutureOnDone) {
     bool called = false;
     {
@@ -269,28 +294,40 @@ TEST(Threading, FutureOnDone) {
     AThread::sleep(500);
     ASSERT_TRUE(called) << "onSuccess callback has not called";
 }
-/*
-TEST(Threading, Fence) {
-    std::default_random_engine e(std::time(nullptr));
-    repeat(10) {
-        std::atomic_int test = 0;
-        std::mutex m;
 
-        AThreadPool::global().fence([&]() {
-            repeat(1000) {
-                asyncX [&]() {
-                    int s;
-                    {
-                        std::unique_lock lock(m);
-                        s = std::uniform_int_distribution(5, 100)(e);
-                    }
-                    AThread::sleep(s);
-                    ++test;
-                };
-            }
+TEST(Threading, FutureExecuteOnCallingThread) {
+    AThreadPool localThreadPool(1);
+    localThreadPool.run([] {
+        AThread::sleep(1000); // long task
+    });
 
-            EXPECT_TRUE_LE(test, 1000);
-        });
-        ASSERT_EQ(test, 1000);
+    auto callerThreadId = std::this_thread::get_id();
+    bool called = false;
+    auto future = localThreadPool * [&called, callerThreadId] {
+        called = true;
+        EXPECT_EQ(std::this_thread::get_id(), callerThreadId);
+    };
+    future.wait();
+    ASSERT_TRUE(called) << "callback has not called";
+}
+
+TEST(Threading, AsyncHolder) {
+
+    bool holderDestroyed = false;
+
+    AThreadPool localThreadPool(1);
+    {
+        AAsyncHolder holder;
+        holder << localThreadPool * [&] {
+            AThread::sleep(500);
+            ASSERT_FALSE(holderDestroyed);
+        };
+        holder << localThreadPool * [&] {
+            AThread::sleep(500);
+            ASSERT_FALSE(holderDestroyed);
+        };
+        AThread::sleep(700);
+        EXPECT_EQ(holder.size(), 1);
     }
-}*/
+    holderDestroyed = true;
+}

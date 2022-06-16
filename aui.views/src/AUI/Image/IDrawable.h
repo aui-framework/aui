@@ -29,7 +29,7 @@
 
 
 /**
- * \brief An abstract image that determines itself how it is displayed. Essentially an abstraction from vector and
+ * @brief An abstract image that determines itself how it is displayed. Essentially an abstraction from vector and
  *        raster graphics.
  */
 class IDrawable
@@ -59,7 +59,7 @@ public:
     };
 
 	/**
-	 * \brief Called when the image needs to be displayed. It is assumed that the renderer is already set to the
+	 * @brief Called when the image needs to be displayed. It is assumed that the renderer is already set to the
 	 *        desired state (coordinates, color, etc.)
 	 */
 	virtual void draw(const Params& params) = 0;

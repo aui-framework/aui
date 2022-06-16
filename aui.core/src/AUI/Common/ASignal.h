@@ -32,7 +32,7 @@ class ASignal final: public AAbstractSignal
     friend class AObject;
 
     template <typename T>
-    friend class Watchable;
+    friend class AWatchable;
 public:
     using func_t = std::function<void(Args...)>;
 
@@ -46,7 +46,7 @@ private:
     AMutex mSlotsLock;
     ADeque<slot> mSlots;
 
-    void invokeSignal(const std::tuple<Args...>& args = {});
+    void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
 
     template<typename Lambda, typename... A>
     struct argument_ignore_helper {};
@@ -160,8 +160,8 @@ public:
         ASignal& signal;
         std::tuple<Args...> args;
 
-        void invokeSignal() {
-            signal.invokeSignal(args);
+        void invokeSignal(AObject* emitter) {
+            signal.invokeSignal(emitter, args);
         }
     };
 
@@ -226,35 +226,42 @@ private:
 #include <AUI/Thread/AThread.h>
 
 template <typename ... Args>
-void ASignal<Args...>::invokeSignal(const std::tuple<Args...>& args)
+void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>& args)
 {
     if (mSlots.empty())
         return;
+
+    _<AObject> emitterPtr, receiverPtr;
+
+    if (auto sharedPtr = weakPtrFromObject(emitter).lock()) { // avoid emitter removal during signal processing
+        emitterPtr = std::move(static_cast<_<AObject>>(sharedPtr));
+    }
+
     std::unique_lock lock(mSlotsLock);
     for (auto i = mSlots.begin(); i != mSlots.end();)
     {
+        auto receiverWeakPtr = weakPtrFromObject(i->object);
         if (i->object->getThread() != AThread::current())
         {
             // perform crossthread call; should make weak ptr to the object and queue call to thread message queue
-            auto objectWeakPtr = weakPtrFromObject(i->object);
 
             /*
              * That's because shared_ptr counting mechanism is used when doing a crossthread call.
              * It could not track the object existence without shared_ptr block.
-             * Also, objectWeakPtr.lock() may be null here because object is in different thread and being destructed
+             * Also, receiverWeakPtr.lock() may be null here because object is in different thread and being destructed
              * by shared_ptr but have not reached clearSignals() yet.
              */
-            if (objectWeakPtr.lock() != nullptr) {
+            if (receiverWeakPtr.lock() != nullptr) {
                 i->object->getThread()->enqueue([this,
-                                                        objectWeakPtr = std::move(objectWeakPtr),
-                                                        func = i->func,
-                                                        args = args]() {
-                    if (auto objectPtr = objectWeakPtr.lock()) {
+                                                 receiverWeakPtr = std::move(receiverWeakPtr),
+                                                 func = i->func,
+                                                 args = args]() {
+                    if (auto receiverPtr = receiverWeakPtr.lock()) {
                         AAbstractSignal::isDisconnected() = false;
                         (std::apply)(func, args);
                         if (AAbstractSignal::isDisconnected()) {
                             std::unique_lock lock(mSlotsLock);
-                            unlinkSlot(objectPtr.get());
+                            unlinkSlot(receiverPtr.get());
                         }
                     }
                 });
@@ -264,6 +271,11 @@ void ASignal<Args...>::invokeSignal(const std::tuple<Args...>& args)
         else
         {
             AAbstractSignal::isDisconnected() = false;
+
+            if (auto sharedPtr = receiverWeakPtr.lock()) { // avoid receiver removal during signal processing
+                receiverPtr = std::move(sharedPtr);
+            }
+
             (std::apply)(i->func, args);
             if (AAbstractSignal::isDisconnected()) {
                 unlinkSlot(i->object);
@@ -273,6 +285,8 @@ void ASignal<Args...>::invokeSignal(const std::tuple<Args...>& args)
             ++i;
         }
     }
+    (void)emitterPtr;  // silence "unused variable" warning
+    (void)receiverPtr; //
     AAbstractSignal::isDisconnected() = false;
 }
 

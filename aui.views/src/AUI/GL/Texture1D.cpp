@@ -27,13 +27,13 @@
 
 #include "TextureImpl.h"
 
-template class GL::Texture<GL::TEXTURE_1D>;
+template class gl::Texture<gl::TEXTURE_1D>;
 
-void GL::Texture1D::tex1D(const AVector<AColor>& image) {
+void gl::Texture1D::tex1D(const AVector<AColor>& image) {
     bind();
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
-    glTexImage2D(GL::TEXTURE_2D, 0, GL_RGBA, image.size(), 1, 0, GL_RGBA, GL_FLOAT, image.data());
+    glTexImage2D(gl::TEXTURE_2D, 0, GL_RGBA, image.size(), 1, 0, GL_RGBA, GL_FLOAT, image.data());
 #else
-    glTexImage1D(GL::TEXTURE_1D, 0, GL_RGBA, image.size(), 0, GL_RGBA, GL_FLOAT, image.data());
+    glTexImage1D(gl::TEXTURE_1D, 0, GL_RGBA, image.size(), 0, GL_RGBA, GL_FLOAT, image.data());
 #endif
 }

@@ -727,6 +727,7 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
     if (NOT BUILD_SHARED_LIBS)
         # static build is a kind of shit where all static libraries' dependencies should be linked to the final exe or
         # dll.
+        #
         # thus, some libraries (such as aui.views) require wholearchive linking in order to import all
         # statically-initialized variables (like AStylesheet) to the final execution module.
         foreach(_visibility ${multiValueArgs})
@@ -987,12 +988,14 @@ macro(aui_app)
         message(FATAL_ERROR "The following arguments are required for aui_app():\n${v1}\nnote: the following optional variables can be also set:\n${v2}")
     endif()
 
+    set(_current_app_build_files ${PROJECT_BINARY_DIR}/${APP_TARGET})
+
     # common cpack
     set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
     set(CPACK_PACKAGE_FILE_NAME ${APP_NAME}-${APP_VERSION})
     set(CPACK_BUNDLE_NAME ${APP_NAME})
     set(CPACK_PACKAGE_VENDOR ${APP_VENDOR})
-    set(CPACK_BUNDLE_PLIST ${PROJECT_BINARY_DIR}/MacOSXBundleInfo.plist)
+    set(CPACK_BUNDLE_PLIST ${_current_app_build_files}/MacOSXBundleInfo.plist)
 
     # WINDOWS ==========================================================================================================
     if (AUI_PLATFORM_WIN)
@@ -1007,28 +1010,28 @@ macro(aui_app)
             set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
             set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_exec}\nType=Application\nTerminal=false\nCategories=Utility")
             if (APP_ICON)
-                set(_icon "${PROJECT_BINARY_DIR}/app.icon.svg")
+                set(_icon "${_current_app_build_files}/app.icon.svg")
                 configure_file(${APP_ICON} "${_icon}" COPYONLY)
                 set(APP_ICON ${_icon})
                 set(_desktop "${_desktop}\nIcon=app.icon")
             endif()
             file(GENERATE
-                    OUTPUT "${PROJECT_BINARY_DIR}/app.desktop"
+                    OUTPUT "${_current_app_build_files}/app.desktop"
                     CONTENT ${_desktop})
-            set(APP_LINUX_DESKTOP ${PROJECT_BINARY_DIR}/app.desktop)
+            set(APP_LINUX_DESKTOP ${_current_app_build_files}/app.desktop)
         endif()
         file(GENERATE
-                OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate.cmake
+                OUTPUT ${_current_app_build_files}/appimage-generate.cmake
                 INPUT ${AUI_BUILD_AUI_ROOT}/cmake/appimage-generate.cmake.in)
 
         file(GENERATE
-                OUTPUT ${PROJECT_BINARY_DIR}/appimage-generate-vars.cmake
+                OUTPUT ${_current_app_build_files}/appimage-generate-vars.cmake
                 CONTENT "set(EXECUTABLE $<TARGET_FILE:${APP_TARGET}>)\nset(DESKTOP_FILE ${APP_LINUX_DESKTOP})\nset(ICON_FILE ${APP_ICON})")
-        set(APP_LINUX_DESKTOP ${PROJECT_BINARY_DIR}/appimage-generate.cmake)
+        set(APP_LINUX_DESKTOP ${_current_app_build_files}/appimage-generate.cmake)
 
         list(APPEND CPACK_GENERATOR External)
 
-        set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${PROJECT_BINARY_DIR}/appimage-generate.cmake")
+        set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${_current_app_build_files}/appimage-generate.cmake")
         set(CPACK_EXTERNAL_ENABLE_STAGING YES)
     endif()
 
@@ -1075,7 +1078,7 @@ macro(aui_app)
 
         if (APP_ICON)
             # generate icns
-            set(_icons_dir ${PROJECT_BINARY_DIR}/app.iconset)
+            set(_icons_dir ${_current_app_build_files}/app.iconset)
             set(_resolutions 16 32 64 128 256 512 1024)
 
             unset(_outputs)
@@ -1087,7 +1090,7 @@ macro(aui_app)
                 add_dependencies(${APP_TARGET} aui.toolbox)
             endif()
             get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
-            set(_icon_icns ${PROJECT_BINARY_DIR}/app.icns)
+            set(_icon_icns ${_current_app_build_files}/app.icns)
             add_custom_command(
                     OUTPUT ${_icon_icns}
                     COMMAND ${AUI_TOOLBOX_EXE}
@@ -1201,7 +1204,7 @@ macro(aui_app)
                 POST_BUILD COMMAND /bin/sh -c
                 \"COMMAND_DONE=0 \;
                 if ${CMAKE_COMMAND} -E make_directory
-                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks
+                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks
         \&\>/dev/null \; then
         COMMAND_DONE=1 \;
         fi \;
@@ -1223,8 +1226,8 @@ macro(aui_app)
                 POST_BUILD COMMAND /bin/sh -c
                 \"COMMAND_DONE=0 \;
                 if ${CMAKE_COMMAND} -E copy_directory
-                ${PROJECT_BINARY_DIR}/cppframework/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/
-                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks
+                ${_current_app_build_files}/cppframework/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/
+                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks
         \&\>/dev/null \; then
         COMMAND_DONE=1 \;
         fi \;
@@ -1247,7 +1250,7 @@ macro(aui_app)
                 POST_BUILD COMMAND /bin/sh -c
                 \"COMMAND_DONE=0 \;
                 if codesign --force --verbose
-                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
                 --sign ${APP_APPLE_SIGN_IDENTITY}
         \&\>/dev/null \; then
         COMMAND_DONE=1 \;
@@ -1271,7 +1274,7 @@ macro(aui_app)
                 POST_BUILD COMMAND /bin/sh -c
                 \"COMMAND_DONE=0 \;
                 if ${CMAKE_COMMAND} -E make_directory
-                ${PROJECT_BINARY_DIR}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/PlugIns
+                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/PlugIns
         \&\>/dev/null \; then
         COMMAND_DONE=1 \;
         fi \;
@@ -1281,7 +1284,7 @@ macro(aui_app)
         fi\"
         )
     endif()
-    if (NOT APP_NO_INCLUDE_CPACK)
+    if (NOT APP_NO_INCLUDE_CPACK AND NOT CPack_CMake_INCLUDED)
         include(CPack)
     endif()
 endmacro()

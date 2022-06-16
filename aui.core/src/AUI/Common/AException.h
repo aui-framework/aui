@@ -31,11 +31,6 @@
 class API_AUI_CORE AException: public std::exception
 {
     mutable std::optional<std::string> mMessage;
-
-private:
-    AStacktrace mStacktrace;
-
-
 public:
 	AException(): mStacktrace(AStacktrace::capture(2)) {
 
@@ -43,6 +38,13 @@ public:
 
 	AException(const AString& message)
 		: AException()
+	{
+        mMessage = message.toStdString();
+	}
+
+	AException(const AString& message, std::exception_ptr causedBy, AStacktrace stacktrace = AStacktrace::capture(2))
+		: mCausedBy(std::move(causedBy)),
+          mStacktrace(std::move(stacktrace))
 	{
         mMessage = message.toStdString();
 	}
@@ -61,13 +63,36 @@ public:
     const AStacktrace& stacktrace() const noexcept {
         return mStacktrace;
     }
+
+    [[nodiscard]]
+    const std::exception_ptr& causedBy() const noexcept {
+        return mCausedBy;
+    }
+
+private:
+    AStacktrace mStacktrace;
+    std::exception_ptr mCausedBy;
+
 };
 
 inline std::ostream& operator<<(std::ostream& o, const AException& e) noexcept {
-    return o << "("
-             << AReflect::name(&e)
-             << ") "
-             << e.getMessage()
-             << std::endl
-             << e.stacktrace();
+    o << "("
+      << AReflect::name(&e)
+      << ") "
+      << e.getMessage()
+      << std::endl
+      << e.stacktrace();
+    if (e.causedBy()) {
+        o << "Caused by: ";
+        try {
+            std::rethrow_exception(e.causedBy());
+        } catch (const AException& e) {
+            o << e;
+        } catch (const std::exception& e) {
+            o << e.what();
+        } catch (...) {
+            o << "unknown exception";
+        }
+    }
+    return o;
 }

@@ -26,7 +26,7 @@
 #include "AUI/IO/IInputStream.h"
 #include "AJson.h"
 #include "AUI/Common/AByteBufferView.h"
-#include <AUI/Traits/arrays.h>
+
 #include <AUI/Common/AUuid.h>
 #include <AUI/Common/AMap.h>
 #include <AUI/Json/AJson.h>

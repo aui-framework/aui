@@ -27,7 +27,7 @@
 #include "AUI/Util/AArrayView.h"
 #include "AUI/Views.h"
 
-namespace GL {
+namespace gl {
 	class API_AUI_VIEWS Vao {
 	private:
 		GLuint mHandle;
@@ -38,7 +38,7 @@ namespace GL {
 
 
         /**
-         * \brief Creates VBO
+         * @brief Creates VBO
          * \param index index in VAO
          * \param data vertex data
          * \param dataSize vertex data size in bytes
@@ -48,7 +48,7 @@ namespace GL {
 
 
         /**
-         * \brief Creates integer VBO
+         * @brief Creates integer VBO
          * \param index index in VAO
          * \param data vertex data
          * \param dataSize vertex data size in bytes
@@ -73,7 +73,7 @@ namespace GL {
 		void insert(GLuint index, AArrayView<GLuint> data);
 
         /**
-         * \brief Uploads VBO indices
+         * @brief Uploads VBO indices
          * \param data indices
          */
 		void indices(AArrayView<GLuint> data);
@@ -81,7 +81,7 @@ namespace GL {
 		void drawArrays(GLenum type, GLsizei count);
 
         /**
-         * \brief Draws buffer. Don't forget to upload indices with <code>indices</code> function/
+         * @brief Draws buffer. Don't forget to upload indices with <code>indices</code> function/
          * \param type Primitive type
          */
 		void drawElements(GLenum type = GL_TRIANGLES);

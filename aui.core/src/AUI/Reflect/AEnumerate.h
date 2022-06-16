@@ -102,7 +102,7 @@ struct AEnumerateAllValues;
 
 template<typename enum_t>
 const AMap<AString, enum_t>& AEnumerate<enum_t>::all() {
-    static_assert(aui::is_complete<AEnumerateAllValues<enum_t>>, "ENUM_VALUES is not defined for this enum type");
+    static_assert(aui::is_complete<AEnumerateAllValues<enum_t>>, "AUI_ENUM_VALUES is not defined for this enum type");
     auto v = AEnumerateAllValues<enum_t>::get();
 
     return mapValueByNameImpl(v);
@@ -110,13 +110,13 @@ const AMap<AString, enum_t>& AEnumerate<enum_t>::all() {
 
 template<typename enum_t>
 const AMap<enum_t, AString, typename AEnumerate<enum_t>::enum_less>& AEnumerate<enum_t>::names() {
-    static_assert(aui::is_complete<AEnumerateAllValues<enum_t>>, "ENUM_VALUES is not defined for this enum type");
+    static_assert(aui::is_complete<AEnumerateAllValues<enum_t>>, "AUI_ENUM_VALUES is not defined for this enum type");
     auto v = AEnumerateAllValues<enum_t>::get();
 
     return mapNameByValueImpl(v);
 }
 
-#define ENUM_VALUES(enum_t, ...) template<> \
+#define AUI_ENUM_VALUES(enum_t, ...) template<> \
 struct AEnumerateAllValues<enum_t>{         \
     static inline constexpr AEnumerate<enum_t>::Values<__VA_ARGS__> get() {return {}; } \
 };                                         \

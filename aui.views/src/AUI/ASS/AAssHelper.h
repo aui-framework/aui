@@ -37,7 +37,7 @@ struct Rule;
 class IDrawable;
 
 /**
- * \brief Remember, ASS is not a butt. ASS is Aui Style Sheets
+ * @brief Remember, ASS is not a butt. ASS is Aui Style Sheets
  */
 class AAssHelper: public AObject {
     friend class AView;

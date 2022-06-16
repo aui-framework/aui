@@ -26,6 +26,7 @@
 #include "AMutex.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AUI/Common/AString.h"
+#include <AUI/Platform/AStacktrace.h>
 #include <functional>
 
 class IEventLoop;
@@ -33,62 +34,21 @@ class AString;
 class AConditionVariable;
 
 /**
- * \brief Abstract thread. Not all threads are created through AThread - these are interfaced with AAbstractThread.
+ * @brief Abstract thread. Not all threads are created through AThread - these are interfaced with AAbstractThread.
  */
 class API_AUI_CORE AAbstractThread
 {
 	friend class IEventLoop;
 	friend class AThread;
 	friend class AConditionVariable;
+    friend void setupUIThread() noexcept; // OSDesktop.cpp
 public:
 
 	/**
-	 * \brief Thread ID type.
+	 * @brief Thread ID type.
 	 */
 	typedef std::thread::id id;
 
-private:
-	/**
-	 * \brief Message queue.
-	 */
-	ADeque<std::function<void()>> mMessageQueue;
-
-	/**
-	 * \brief Message queue mutex.
-	 */
-	AMutex mQueueLock;
-
-	/**
-	 * \brief Thread ID.
-	 */
-	id mId;
-
-    /**
-     * \brief A condition variable that's currently locking the thread. Used for thread interruption.
-     */
-	struct {
-        AMutex mutex;
-        AConditionVariable* cv = nullptr;
-    } mCurrentCV;
-	
-	/**
-	 * \brief Current IEventLoop for this thread. Used for inter thread message delivery.
-	 */
-	IEventLoop* mCurrentEventLoop = nullptr;
-
-    /**
-     * \brief Mutex for mCurrentEventLoop.
-     */
-    AMutex mEventLoopLock;
-
-	AAbstractThread() = default;
-	AAbstractThread(const id& id);
-
-
-	/**
-	 * \brief AAbstractThread threadLocalStorage of current thread.
-	 */
-	static _<AAbstractThread>& threadStorage();
 
 public:
 	/**
@@ -97,7 +57,7 @@ public:
 	id getId() const;
 
 	/**
-	 * \brief Delivers task for execution (message) to this thread's event queue. Messages are processed by framework
+	 * @brief Delivers task for execution (message) to this thread's event queue. Messages are processed by framework
 	 *        itself using AEventLoop. This behaviour may be overwritten using the <code>AThread::processMessages()
 	 *        </code> function.
 	 */
@@ -111,19 +71,19 @@ public:
 	virtual bool isInterrupted();
 
 	/**
-	 * \brief Reset interruption flag.
+	 * @brief Reset interruption flag.
 	 */
 	virtual void resetInterruptFlag();
 
     /**
-     * \brief Interrupt thread's execution.
+     * @brief Interrupt thread's execution.
      *        This function requires the interrupted code contain calls to the <code>AThread::interruptionPoint()</code>
      *        function since C++ is native programming language (not managed)
      */
     virtual void interrupt();
 
     /**
-     * \brief Get current event loop for this thread.
+     * @brief Get current event loop for this thread.
      * \return current event loop for this thread
      */
 	IEventLoop* getCurrentEventLoop() const {
@@ -132,9 +92,9 @@ public:
 
 
 	/**
-	 * \brief Enqueue message to make.
-	 * \tparam Callable callable
-	 * \param fun callable function
+	 * @brief Enqueue message to make.
+	 * @tparam Callable callable
+	 * @param fun callable function
 	 */
 	template <class Callable>
     inline void operator<<(Callable fun) {
@@ -142,9 +102,9 @@ public:
     }
 
     /**
-     * \brief Enqueue message to make. Helper function for async, asyncX, ui, uiX
-     * \tparam Callable callable
-     * \param fun callable function
+     * @brief Enqueue message to make. Helper function for async, asyncX, ui, uiX
+     * @tparam Callable callable
+     * @param fun callable function
      */
     template <class Callable>
     inline void operator*(Callable fun)
@@ -158,43 +118,102 @@ public:
     }
 
 protected:
+    /**
+     * @brief Thread ID.
+     */
+    id mId;
+
     AString mThreadName;
 
+    /**
+     * @brief Message queue mutex.
+     */
+    AMutex mQueueLock;
+
+    struct Message {
+        AStacktrace stacktrace;
+        std::function<void()> proc;
+    };
+
+    /**
+     * @brief Message queue.
+     */
+    ADeque<Message> mMessageQueue;
+
+    AAbstractThread(const id& id) noexcept;
     void updateThreadName() noexcept;
-    void processMessagesImpl();
+    virtual void processMessagesImpl();
+
+
+private:
+
+    /**
+     * @brief A condition variable that's currently locking the thread. Used for thread interruption.
+     */
+    struct {
+        AMutex mutex;
+        AConditionVariable* cv = nullptr;
+    } mCurrentCV;
+
+    /**
+     * @brief Current IEventLoop for this thread. Used for inter thread message delivery.
+     */
+    IEventLoop* mCurrentEventLoop = nullptr;
+
+    /**
+     * @brief Mutex for mCurrentEventLoop.
+     */
+    AMutex mEventLoopLock;
+
+    AAbstractThread() = default;
+
+
+    /**
+     * @brief AAbstractThread threadLocalStorage of current thread.
+     */
+    static _<AAbstractThread>& threadStorage();
 };
 
 #include "AUI/Common/AObject.h"
 
 /**
- * \brief Thread.
+ * @brief Thread.
  */
 class API_AUI_CORE AThread : public AAbstractThread, public AObject
 {
 public:
 	/**
-	 * \brief Exception that is thrown by <code>AThread::interruptionPoint()</code>, if interruption is requested for
+	 * @brief Exception that is thrown by <code>AThread::interruptionPoint()</code>, if interruption is requested for
 	 *        this thread. Handled by <code>AThread::start</code.
 	 */
-	class AInterrupted
+	class Interrupted
 	{
+    public:
+        /**
+         * @brief Schedules AThread::Interrupted exception to the next interruption point.
+         * Sometimes you could not throw exceptions (i.e. in a noexcept function or destructor). In this case
+         * you may call needRethrow in order to throw Interrupted exception at the next interruption point.
+         */
+        void needRethrow() const noexcept {
+            AThread::current()->interrupt();
+        }
 	};
 
 private:
 	/**
-	 * \brief Native thread handle.
+	 * @brief Native thread handle.
 	 */
 	std::thread* mThread = nullptr;
 
 
 	/**
-	 * \brief Function that is called by <code>AThread::start()</code>. Becomes nullptr after call to
+	 * @brief Function that is called by <code>AThread::start()</code>. Becomes nullptr after call to
 	 *        <code>AThread::start()</code>
 	 */
 	std::function<void()> mFunctor;
 
 	/**
-	 * \brief true if interrupt requested for this thread.
+	 * @brief true if interrupt requested for this thread.
 	 */
 	bool mInterrupted = false;
 
@@ -207,16 +226,16 @@ public:
     void detach();
 
 	/**
-	 * \brief Start thread execution.
+	 * @brief Start thread execution.
 	 */
 	void start();
 
 
 	/**
-	 * \brief Sleep for specified duration.
+	 * @brief Sleep for specified duration.
 	 *        Most operation systems guarantee that elasped time will be greater than specified.
 	 *        <code>AThread::interrupt()</code> is supported.
-	 * \param durationInMs duration in milliseconds.
+	 * @param durationInMs duration in milliseconds.
 	 */
 	static void sleep(unsigned durationInMs);
 
@@ -226,7 +245,7 @@ public:
 	static _<AAbstractThread> current();
 
 	/**
-	 * \brief Interruption point. It's required for <code>AThread::interrupt</code>.
+	 * @brief Interruption point. It's required for <code>AThread::interrupt</code>.
 	 */
 	static void interruptionPoint();
 
@@ -242,7 +261,7 @@ public:
         cur->updateThreadName();
     }
     /**
-     * \brief Processes messages from other threads of current thread.
+     * @brief Processes messages from other threads of current thread.
      * Called by framework itself using IEventLoop.
      */
     static void processMessages() {
@@ -254,7 +273,7 @@ public:
     void interrupt() override;
 
     /**
-     * \brief Waits for thread to be finished.
+     * @brief Waits for thread to be finished.
      */
 	void join();
 

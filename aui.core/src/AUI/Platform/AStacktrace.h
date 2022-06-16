@@ -8,7 +8,7 @@
 class API_AUI_CORE AStacktrace {
 public:
     class Entry {
-    friend class AStacktrace;
+        friend class AStacktrace;
     private:
         void* mPtr;
         std::optional<AString> mFunctionName;
@@ -34,13 +34,9 @@ public:
             return mPtr;
         }
     };
-
-private:
-    mutable AVector<Entry> mEntries;
-    mutable bool mSymbolNamesResolved = false;
-
-    explicit AStacktrace(AVector<Entry> entries) : mEntries(std::move(entries)) {}
 public:
+    AStacktrace(const AStacktrace&) = default;
+    AStacktrace(AStacktrace&&) noexcept = default;
 
     void resolveSymbolsIfNeeded() const noexcept;
 
@@ -59,7 +55,20 @@ public:
         return mEntries.end();
     }
 
-    static AStacktrace capture(unsigned skipFrames = 0) noexcept;
+    /**
+     * @brief Creates stacktrace of the current thread.
+     * @param skipFrames number of frames to skip.
+     * @param maxFrames max number of frames.
+     * @note A call to <code>AStacktrace::capture</code> is always skipped in the stacktrace.
+     * @return
+     */
+    static AStacktrace capture(unsigned skipFrames = 0, unsigned maxFrames = 128) noexcept;
+
+private:
+    mutable AVector<Entry> mEntries;
+    mutable bool mSymbolNamesResolved = false;
+
+    explicit AStacktrace(AVector<Entry> entries) : mEntries(std::move(entries)) {}
 };
 
 inline std::ostream& operator<<(std::ostream& o, const AStacktrace& stacktrace) noexcept {

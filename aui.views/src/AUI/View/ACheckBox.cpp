@@ -63,7 +63,7 @@ void ACheckBox::setText(const AString& text)
 void ACheckBox::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
     AView::onMouseReleased(pos, button);
-    if (button == AInput::LButton) {
+    if (button == AInput::LBUTTON) {
         emit checked(mChecked = !mChecked);
     }
 }

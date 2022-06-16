@@ -30,7 +30,7 @@
 /**
  * Describes sides of the rectangle.
  */
-ENUM_FLAG(ASide)
+AUI_ENUM_FLAG(ASide)
 {
 	NONE = 0,
 	LEFT = 1,

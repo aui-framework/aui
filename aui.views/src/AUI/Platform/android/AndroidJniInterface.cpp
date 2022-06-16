@@ -42,13 +42,13 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonDown(JNIEnv *env, jclass clazz, jint x,
                                                            jint y) {
-    nullsafe(AWindow::current())->onMousePressed({x, y}, AInput::LButton);
+    nullsafe(AWindow::current())->onMousePressed({x, y}, AInput::LBUTTON);
 }
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonUp(JNIEnv *env, jclass clazz, jint x,
                                                            jint y) {
-    nullsafe(AWindow::current())->onMouseReleased({x, y}, AInput::LButton);
+    nullsafe(AWindow::current())->onMouseReleased({x, y}, AInput::LBUTTON);
 }
 
 extern "C"

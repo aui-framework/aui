@@ -24,6 +24,6 @@
 //
 #pragma once
 
-namespace GL {
+namespace gl {
     void setupDebug();
 }

@@ -172,13 +172,16 @@ public:
         return tmp;
     }
     void closeOverlappingSurface(AOverlappingSurface* surface) {
-        closeOverlappingSurfaceImpl(surface);
-        mOverlappingSurfaces.erase(aui::ptr::fake(surface));
+        if (mOverlappingSurfaces.erase(aui::ptr::fake(surface)) > 0) {
+            closeOverlappingSurfaceImpl(surface);
+        }
     }
 
     void onFocusLost() override;
 
     void render() override;
+
+    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
 signals:
     emits<>            dpiChanged;

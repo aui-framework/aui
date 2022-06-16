@@ -30,8 +30,8 @@ enum class TextAlign {
     JUSTIFY,
 };
 
-ENUM_VALUES(TextAlign, TextAlign::LEFT,
-                       TextAlign::CENTER,
-                       TextAlign::RIGHT,
-                       TextAlign::JUSTIFY)
+AUI_ENUM_VALUES(TextAlign, TextAlign::LEFT,
+                TextAlign::CENTER,
+                TextAlign::RIGHT,
+                TextAlign::JUSTIFY)
 

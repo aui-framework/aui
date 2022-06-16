@@ -3,9 +3,11 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/GL/gl.h>
 #include <glm/glm.hpp>
+#include "ResourcePool.h"
 
-namespace GL {
+namespace gl {
     namespace detail {
+        template<gl::ResourceKind T>
         class API_AUI_VIEWS VboImpl {
         protected:
             GLuint mHandle;
@@ -23,7 +25,7 @@ namespace GL {
         };
     }
 
-    class API_AUI_VIEWS VertexBuffer: public detail::VboImpl {
+    class API_AUI_VIEWS VertexBuffer: public detail::VboImpl<gl::ResourceKind::VERTEX_BUFFER> {
     private:
         void insert(const char* data, size_t length);
 
@@ -33,7 +35,7 @@ namespace GL {
 
         template<typename T>
         void set(const T* data, size_t count) {
-            static_assert(std::is_standard_layout_v<T>, "you may use only standard layout types in GL::VertexBuffer::set");
+            static_assert(std::is_standard_layout_v<T>, "you may use only standard layout types in gl::VertexBuffer::set");
             insert(reinterpret_cast<const char*>(data), count * sizeof(T));
         }
 
@@ -43,7 +45,7 @@ namespace GL {
         }
     };
 
-    class API_AUI_VIEWS IndexBuffer: public detail::VboImpl {
+    class API_AUI_VIEWS IndexBuffer: public detail::VboImpl<gl::ResourceKind::INDEX_BUFFER> {
     private:
         size_t mIndicesCount;
     public:
@@ -57,6 +59,7 @@ namespace GL {
         void draw(GLenum primitiveType) {
             bind();
             glDrawElements(primitiveType, GLsizei(mIndicesCount), GL_UNSIGNED_INT, nullptr);
+            glGetError();
         }
 
         [[nodiscard]]

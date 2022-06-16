@@ -28,7 +28,7 @@
 #include <unistd.h>
 #include <AUI/IO/APath.h>
 #include <AUI/Common/AStringVector.h>
-#include <AUI/Traits/arrays.h>
+
 
 #endif
 
@@ -80,7 +80,7 @@ _<AProgramModule> AProgramModule::load(const AString& path)
             "/lib/"_as,
     };
 
-	std::string dlErrors[aui::array_length(paths)];
+	std::string dlErrors[std::size(paths)];
 
 	size_t counter = 0;
 	for (auto& fp : paths) {

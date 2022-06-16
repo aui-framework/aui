@@ -42,7 +42,7 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Traits/strings.h>
-#include <AUI/Traits/arrays.h>
+
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 

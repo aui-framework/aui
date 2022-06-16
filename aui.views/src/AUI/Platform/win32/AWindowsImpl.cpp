@@ -44,7 +44,6 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Traits/strings.h>
-#include <AUI/Traits/arrays.h>
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 
@@ -123,6 +122,10 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
             return 0;
         }
+
+        case WM_MENUCHAR: return MNC_CLOSE << 16; // silence message beep
+
+        case WM_SYSKEYDOWN:
         case WM_KEYDOWN:
             if (lParam & (1 << 30)) {
                 // autoupdate
@@ -218,25 +221,25 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case WM_LBUTTONDOWN:
             if (isMousePressed()) {
                 // fix assert(!mPressed);
-                onMouseReleased(POS, AInput::LButton);
+                onMouseReleased(POS, AInput::LBUTTON);
             }
-            onMousePressed(POS, AInput::LButton);
+            onMousePressed(POS, AInput::LBUTTON);
             SetCapture(mHandle);
             return 0;
         case WM_MOUSEWHEEL :
             onMouseWheel(mapPosition(POS), {0, -(GET_WHEEL_DELTA_WPARAM(wParam))});
             return 0;
         case WM_LBUTTONUP: {
-            onMouseReleased(POS, AInput::LButton);
+            onMouseReleased(POS, AInput::LBUTTON);
             ReleaseCapture();
             return 0;
         }
         case WM_RBUTTONDOWN:
-            onMousePressed(POS, AInput::RButton);
+            onMousePressed(POS, AInput::RBUTTON);
             SetCapture(mHandle);
             return 0;
         case WM_RBUTTONUP:
-            onMouseReleased(POS, AInput::RButton);
+            onMouseReleased(POS, AInput::RBUTTON);
             ReleaseCapture();
             return 0;
 
@@ -277,8 +280,10 @@ void AWindow::quit() {
         }
         ShowWindow(mHandle, SW_HIDE);
     }
+    mViews.clear();
+    setLayout(nullptr);
 
-    AThread::current()->enqueue([s = std::move(mSelfHolder)]() mutable {
+    AThread::current()->enqueue([s = std::move(mSelfHolder)]() mutable noexcept {
         s = nullptr;
     });
 }

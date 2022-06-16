@@ -23,7 +23,7 @@
 
 #include <cstdint>
 
-namespace GL {
+namespace gl {
     constexpr uint32_t TEXTURE_1D = 0x0DE1;
     constexpr uint32_t TEXTURE_2D = 0x0DE1;
     constexpr uint32_t TEXTURE_3D = 0x806F;

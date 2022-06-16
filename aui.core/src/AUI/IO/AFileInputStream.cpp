@@ -19,6 +19,7 @@
  * =====================================================================================================================
  */
 
+#include <AUI/Platform/ErrorToException.h>
 #include "AFileInputStream.h"
 
 
@@ -34,7 +35,7 @@ AFileInputStream::AFileInputStream(const AString& path)
 #endif
     if (!mFile)
     {
-        throw AIOException("AFileInputStream: could not open {}"_format(path));
+        aui::impl::unix::lastErrorToException("unable to open {}"_format(path));
     }
 }
 

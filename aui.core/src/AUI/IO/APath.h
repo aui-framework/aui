@@ -27,11 +27,10 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/Util/EnumUtil.h>
 
-
 /**
  * Flag enum for APath::find
  */
-ENUM_FLAG(PathFinder) {
+AUI_ENUM_FLAG(PathFinder) {
     NONE,
 
     /**
@@ -50,7 +49,7 @@ ENUM_FLAG(PathFinder) {
     SINGLE = 1 << 2
 };
 
-ENUM_FLAG(ListFlags) {
+AUI_ENUM_FLAG(ListFlags) {
     NONE = 0,
 
     /**
@@ -270,7 +269,7 @@ public:
     time_t fileModifyTime() const;
     size_t fileSize() const;
 
-    void chmod(int newMode) const;
+    const APath& chmod(int newMode) const;
 
     enum DefaultPath {
         /**
@@ -347,4 +346,3 @@ public:
     }
 
 };
-

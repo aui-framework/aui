@@ -77,6 +77,7 @@ bool AWindow::isRedrawWillBeEfficient() {
 }
 void AWindow::redraw() {
     auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+    mRenderingContext->beginPaint(*this);
     if (mUpdateLayoutFlag) {
         mUpdateLayoutFlag = false;
         updateLayout();
@@ -87,23 +88,6 @@ void AWindow::redraw() {
     mRedrawFlag = false;
 #endif
     {
-
-        // fps restriction
-        {
-#if AUI_PLATFORM_WIN || AUI_PLATFORM_LINUX
-            auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-            auto delta = now - _gLastFrameTime;
-            // restriction 16ms = up to 60 frames per second
-            const auto FRAME_DURATION = 16ms;
-
-            if (FRAME_DURATION > delta) {
-                std::this_thread::sleep_for(FRAME_DURATION - delta);
-            }
-#endif
-            _gLastFrameTime = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        }
-
-        mRenderingContext->beginPaint(*this);
         Render::setWindow(this);
         doDrawWindow();
 
@@ -115,9 +99,9 @@ void AWindow::redraw() {
             if (after - lastNotification > 10s) {
                 lastNotification = after;
                 if (millis > 40) {
-                    ALogger::warn("Frame render took {}ms! Unacceptably bad performance"_format(millis));
+                    ALogger::warn("Performance") << "Frame render took {}ms! Unacceptably bad performance"_format(millis);
                 } else {
-                    ALogger::warn("Frame render took {}ms! Bad performance"_format(millis));
+                    ALogger::warn("Performance") << "Frame render took {}ms! Bad performance"_format(millis);
                 }
             }
         }
@@ -172,9 +156,9 @@ bool AWindow::shouldDisplayHoverAnimations() {
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
     return false;
 #else
-    return current()->isFocused() && !AInput::isKeyDown(AInput::LButton)
-                                  && !AInput::isKeyDown(AInput::CButton)
-                                  && !AInput::isKeyDown(AInput::RButton);
+    return current()->isFocused() && !AInput::isKeyDown(AInput::LBUTTON)
+                                  && !AInput::isKeyDown(AInput::CBUTTON)
+                                  && !AInput::isKeyDown(AInput::RBUTTON);
 #endif
 }
 

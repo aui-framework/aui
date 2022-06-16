@@ -29,7 +29,7 @@
 class AString;
 
 /**
- * \brief Used to store dimensions in scalable units (dp, pt, etc...).
+ * @brief Used to store dimensions in scalable units (dp, pt, etc...).
  * \note It's highly recommended to use only Density-independent Pixel unit (_dp) to make your application correctly
  *       handle systems with high DPI.
  */
@@ -57,7 +57,7 @@ public:
         AMetric(0, T_PX) {}
 
     /**
-     * \brief Constructor for AMetric a; a = 0 without unit specifier. Can be used only for zero initialization (see
+     * @brief Constructor for AMetric a; a = 0 without unit specifier. Can be used only for zero initialization (see
      *        example)
      * \example
      * <code>

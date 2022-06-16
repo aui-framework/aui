@@ -27,15 +27,50 @@
 
 class AObject;
 
+#ifdef AUI_SHARED_PTR_FIND_INSTANCES
+#include <AUI/api.h>
+#include <AUI/Util/APimpl.h>
+#include <map>
+#include <set>
+#include <mutex>
+#include <AUI/Reflect/AClass.h>
+
+class API_AUI_CORE AStacktrace;
+
+namespace aui::impl::shared_ptr {
+    struct InstancesDict {
+        std::mutex sync;
+        std::map<void*, std::set<void*>> map;
+    };
+
+    API_AUI_CORE InstancesDict& instances() noexcept;
+    API_AUI_CORE void printAllInstancesOf(void* ptrToSharedPtr) noexcept;
+}
+
+#endif
 
 template<typename T>
-using _weak = std::weak_ptr<T>;
+class _;
+
+template<typename T>
+struct _weak: public std::weak_ptr<T> {
+private:
+    using super = std::weak_ptr<T>;
+
+public:
+    using super::weak_ptr;
+
+    _weak(const std::weak_ptr<T>& v): std::weak_ptr<T>(v) {}
+    _weak(std::weak_ptr<T>&& v): std::weak_ptr<T>(std::forward<std::weak_ptr<T>>(v)) {}
+
+    _<T> lock() const noexcept {
+        return static_cast<_<T>>(super::lock());
+    }
+};
 
 template<typename T>
 using _unique = std::unique_ptr<T>;
 
-template<typename T>
-class _;
 
 namespace aui {
     struct ptr {
@@ -88,39 +123,103 @@ namespace aui {
 template<typename T>
 class _ : public std::shared_ptr<T>
 {
-friend struct aui::ptr;
+    friend struct aui::ptr;
 private:
-	using parent = std::shared_ptr<T>;
+    using super = std::shared_ptr<T>;
 
     _(T* raw, std::nullopt_t): std::shared_ptr<T>(raw) {
 
     }
 
+#ifdef AUI_SHARED_PTR_FIND_INSTANCES
+    friend API_AUI_CORE void aui::impl::shared_ptr::printAllInstancesOf(void* ptrToSharedPtr) noexcept;
+    struct InstanceDescriber;
+
+    static AStacktrace makeStacktrace();
+
+    struct InstanceDescriber {
+        aui::fast_pimpl<AStacktrace, sizeof(std::vector<int>) + 8, alignof(std::vector<int>)> stacktrace;
+        _<T>* self;
+        T* pointingTo;
+
+        InstanceDescriber(_<T>* self): stacktrace(_<T>::makeStacktrace()), self(self), pointingTo(self->get()) {
+            if (pointingTo == nullptr) return;
+            std::unique_lock lock(aui::impl::shared_ptr::instances().sync);
+            aui::impl::shared_ptr::instances().map[pointingTo].insert(self);
+            //std::printf("[AUI_SHARED_PTR_FIND_INSTANCES] %s << %p\n", AClass<T>::name().toStdString().c_str(), pointingTo);
+        }
+
+        InstanceDescriber(const InstanceDescriber&) = delete;
+        InstanceDescriber(InstanceDescriber&&) = delete;
+
+        ~InstanceDescriber() {
+            if (pointingTo == nullptr) return;
+            auto& inst = aui::impl::shared_ptr::instances();
+            std::unique_lock lock(inst.sync);
+            if (auto mapIt = inst.map.find(pointingTo); mapIt != inst.map.end()) {
+                auto setIt = mapIt->second.find(self);
+                assert(setIt != mapIt->second.end());
+                mapIt->second.erase(setIt);
+                if (mapIt->second.empty()) {
+                    //inst.map.erase(it);
+                }
+            }
+            //std::printf("[AUI_SHARED_PTR_FIND_INSTANCES] %s >> %p\n", AClass<T>::name().toStdString().c_str(), pointingTo);
+        }
+    } mInstanceDescriber = this;
+
+#endif
+
 public:
     using stored_t = T;
 
-	class SafeCallWrapper
-	{
-	private:
-		_<T>& mPtr;
 
-	public:
-		SafeCallWrapper(_<T>& ptr)
-			: mPtr(ptr)
-		{
-		}
+#ifdef AUI_SHARED_PTR_FIND_INSTANCES
+    void printAllInstances() {
+        aui::impl::shared_ptr::printAllInstancesOf(this);
+    }
+    void printAllInstances() const {
+        const_cast<_<T>&>(*this).printAllInstances();
+    }
+#endif
 
-		template<typename MemberFunction, typename... Args>
-		SafeCallWrapper& operator()(MemberFunction memberFunction, Args&& ... args) {
-			if (mPtr)
-				(mPtr.get()->*memberFunction)(std::forward<Args>(args)...);
-			return *this;
-		}
-	};
+    class SafeCallWrapper
+    {
+    private:
+        _<T>& mPtr;
+
+    public:
+        SafeCallWrapper(_<T>& ptr)
+                : mPtr(ptr)
+        {
+        }
+
+        template<typename MemberFunction, typename... Args>
+        SafeCallWrapper& operator()(MemberFunction memberFunction, Args&& ... args) {
+            if (mPtr)
+                (mPtr.get()->*memberFunction)(std::forward<Args>(args)...);
+            return *this;
+        }
+    };
 
     using std::shared_ptr<T>::shared_ptr;
 
     _(const std::shared_ptr<T>& v): std::shared_ptr<T>(v) {}
+    _(std::shared_ptr<T>&& v): std::shared_ptr<T>(std::forward<std::shared_ptr<T>>(v)) {}
+    _(const _& v): std::shared_ptr<T>(v) {}
+    _(_&& v): std::shared_ptr<T>(std::forward<_>(v)) {}
+    _(const std::weak_ptr<T>& v): std::shared_ptr<T>(v) {}
+    _(const _weak<T>& v): std::shared_ptr<T>(v) {}
+
+    _& operator=(const _& rhs) noexcept {
+        std::shared_ptr<T>::operator=(rhs);
+        return *this;
+    }
+
+    _& operator=(_&& rhs) noexcept {
+        std::shared_ptr<T>::operator=(std::forward<_>(rhs));
+        return *this;
+    }
 
     /**
      * <p>Trap constructor</p>
@@ -137,93 +236,93 @@ public:
         return _weak<T>(*this);
     }
 
-	template<typename SignalField, typename Object, typename Function>
-	inline _<T>& connect(SignalField signalField, Object object, Function&& function);
+    template<typename SignalField, typename Object, typename Function>
+    inline _<T>& connect(SignalField signalField, Object object, Function&& function);
 
-	template<typename SignalField, typename Function>
-	inline _<T>& connect(SignalField signalField, Function&& function);
+    template<typename SignalField, typename Function>
+    inline _<T>& connect(SignalField signalField, Function&& function);
 
 
-	template <typename Functor>
-	inline _<T>& operator^(Functor&& functor) {
-	    functor(*this);
-	    return *this;
-	}
+    template <typename Functor>
+    inline _<T>& operator^(Functor&& functor) {
+        functor(*this);
+        return *this;
+    }
 
-	/**
-	 * \brief Guarantees that further builder calls will be executed if and only if this pointer
+    /**
+     * \brief Guarantees that further builder calls will be executed if and only if this pointer
      *        not equal to null.
-	 * \return safe builder
-	 */
+     * \return safe builder
+     */
     inline auto safe()
-	{
-		return SafeCallWrapper(*this);
-	}
+    {
+        return SafeCallWrapper(*this);
+    }
 
-	// forward ranged-for loops
-	auto begin() const {
-	    return parent::operator->()->begin();
-	}
-	auto end() const {
-	    return parent::operator->()->end();
-	}
-	auto begin() {
-	    return parent::operator->()->begin();
-	}
-	auto end() {
-	    return parent::operator->()->end();
-	}
+    // forward ranged-for loops
+    auto begin() const {
+        return super::operator->()->begin();
+    }
+    auto end() const {
+        return super::operator->()->end();
+    }
+    auto begin() {
+        return super::operator->()->begin();
+    }
+    auto end() {
+        return super::operator->()->end();
+    }
 
-	// operators
+    // operators
 
     template<typename Arg>
-	const _<T>& operator<<(Arg&& value) const {
-        (*parent::get()) << std::forward<Arg>(value);
+    const _<T>& operator<<(Arg&& value) const {
+        (*super::get()) << std::forward<Arg>(value);
         return *this;
     }
 
     template<typename Arg>
-	_<T>& operator<<(Arg&& value) {
-        (*parent::get()) << std::forward<Arg>(value);
+    _<T>& operator<<(Arg&& value) {
+        (*super::get()) << std::forward<Arg>(value);
         return *this;
     }
 
     template<typename Arg>
-	const _<T>& operator+(Arg&& value) const {
-        (*parent::get()) + std::forward<Arg>(value);
+    const _<T>& operator+(Arg&& value) const {
+        (*super::get()) + std::forward<Arg>(value);
         return *this;
     }
 
     template<typename Arg>
-	_<T>& operator+(Arg&& value) {
-        (*parent::get()) + std::forward<Arg>(value);
+    _<T>& operator+(Arg&& value) {
+        (*super::get()) + std::forward<Arg>(value);
         return *this;
     }
     template<typename Arg>
-	const _<T>& operator-(Arg&& value) const {
-        (*parent::get()) - std::forward<Arg>(value);
+    const _<T>& operator-(Arg&& value) const {
+        (*super::get()) - std::forward<Arg>(value);
         return *this;
     }
 
     template<typename Arg>
-	_<T>& operator-(Arg&& value) {
-        (*parent::get()) - std::forward<Arg>(value);
+    _<T>& operator-(Arg&& value) {
+        (*super::get()) - std::forward<Arg>(value);
         return *this;
     }
     template<typename Arg>
-	_<T>& operator>>(Arg&& value) {
-        (*parent::get()) >> std::forward<Arg>(value);
+    _<T>& operator>>(Arg&& value) {
+        (*super::get()) >> std::forward<Arg>(value);
         return *this;
     }
 
     template<typename...Args>
-	_<T>& operator()(const Args&... value) {
-        (*parent::get())(value...);
+    _<T>& operator()(const Args&... value) {
+        (*super::get())(value...);
         return *this;
     }
     template<typename...Args>
-	auto operator()(Args&&... value) {
-        return (*parent::get())(std::forward<Args>(value)...);
+    auto operator()(Args&&... value) {
+        return (*super::get())(std::forward<Args>(value)...);
     }
 };
 
@@ -254,7 +353,7 @@ namespace aui {
 template<typename TO, typename FROM>
 inline _<TO> _cast(_<FROM> object)
 {
-	return std::dynamic_pointer_cast<TO, FROM>(object);
+    return std::dynamic_pointer_cast<TO, FROM>(object);
 }
 
 

@@ -22,7 +22,7 @@
 #include <AUI/Platform/AInput.h>
 
 AInput::Key AInput::fromNative(int k) {
-    return Unknown;
+    return UNKNOWN;
 }
 int AInput::toNative(Key key) {
     return 0;

@@ -76,7 +76,7 @@ FractalView::FractalView():
     mShader.set("tr", mTransform);
     mShader.set("sq", 1.f);
 
-    mTexture = _new<GL::Texture2D>();
+    mTexture = _new<gl::Texture2D>();
     mTexture->tex2D(AImage::fromUrl(":img/color_scheme_wikipedia.png"));
 }
 
@@ -133,16 +133,16 @@ void FractalView::onKeyRepeat(AInput::Key key) {
     AView::onKeyRepeat(key);
     constexpr float SPEED = 0.2f;
     switch (key) {
-        case AInput::Up:
+        case AInput::UP:
             mTransform = glm::translate(mTransform, {0, -SPEED, 0});
             break;
-        case AInput::Down:
+        case AInput::DOWN:
             mTransform = glm::translate(mTransform, {0, SPEED, 0});
             break;
-        case AInput::Left:
+        case AInput::LEFT:
             mTransform = glm::translate(mTransform, {-SPEED, 0, 0});
             break;
-        case AInput::Right:
+        case AInput::RIGHT:
             mTransform = glm::translate(mTransform, {SPEED, 0, 0});
             break;
         case AInput::PageDown:

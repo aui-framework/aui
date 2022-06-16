@@ -171,7 +171,7 @@ void ABaseWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     using namespace std::chrono;
     using namespace std::chrono_literals;
     static milliseconds lastButtonPressedTime = 0ms;
-    static AInput::Key lastButtonPressed = AInput::Unknown;
+    static AInput::Key lastButtonPressed = AInput::UNKNOWN;
     static glm::ivec2 lastPosition = {0, 0};
 
     auto now = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
@@ -189,6 +189,10 @@ void ABaseWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
         lastPosition = pos;
     }
     AMenu::close();
+}
+
+void ABaseWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
+    AViewContainer::onMouseReleased(pos, button);
 }
 
 void ABaseWindow::onMouseMove(glm::ivec2 pos) {
@@ -214,7 +218,7 @@ void ABaseWindow::onKeyDown(AInput::Key key) {
         v->onKeyDown(key);
 
 #ifdef AUI_DEBUG
-    if (key == AInput::F12 && AInput::isKeyDown(AInput::LControl)) {
+    if (key == AInput::F12 && AInput::isKeyDown(AInput::LCONTROL)) {
         createDevtoolsWindow();
     }
 #endif

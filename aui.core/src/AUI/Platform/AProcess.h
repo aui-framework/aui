@@ -141,7 +141,7 @@ public:
     void kill() const noexcept;
 };
 
-ENUM_FLAG(ASubProcessExecutionFlags) {
+AUI_ENUM_FLAG(ASubProcessExecutionFlags) {
     MERGE_STDOUT_STDERR = 0b1,
     DEFAULT = 0
 };

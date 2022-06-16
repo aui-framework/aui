@@ -36,7 +36,6 @@ private:
     int mSelectionId = 0;
     bool mPopup = false;
     _weak<AOverlappingSurface> mComboWindow;
-    bool mClickConsumer = false;
 
 protected:
     virtual void updateText();
@@ -63,7 +62,7 @@ public:
     void setSelectionId(int id);
     int getContentMinimumWidth() override;
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
     void destroyWindow();
 

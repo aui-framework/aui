@@ -23,13 +23,14 @@
 
 #include "Texture.h"
 #include "gl.h"
+#include "ResourcePool.h"
 #include <AUI/GL/State.h>
 
 
 template<unsigned int TEXTURE_TARGET>
-GL::Texture<TEXTURE_TARGET>::Texture() {
-    glGenTextures(1, &mTexture);
-    GL::State::bindTexture(TEXTURE_TARGET, mTexture);
+gl::Texture<TEXTURE_TARGET>::Texture() {
+    mTexture = gl::ResourcePool<gl::ResourceKind::TEXTURE>::get();
+    gl::State::bindTexture(TEXTURE_TARGET, mTexture);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -37,31 +38,31 @@ GL::Texture<TEXTURE_TARGET>::Texture() {
 }
 
 template<unsigned int TEXTURE_TARGET>
-GL::Texture<TEXTURE_TARGET>::~Texture() {
-    glDeleteTextures(1, &mTexture);
-    GL::State::bindTexture(TEXTURE_TARGET, 0);
+gl::Texture<TEXTURE_TARGET>::~Texture() {
+    gl::ResourcePool<gl::ResourceKind::TEXTURE>::put(mTexture);
+    gl::State::bindTexture(TEXTURE_TARGET, 0);
 }
 
 template<unsigned int TEXTURE_TARGET>
-void GL::Texture<TEXTURE_TARGET>::setupNearest() {
+void gl::Texture<TEXTURE_TARGET>::setupNearest() {
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 template<unsigned int TEXTURE_TARGET>
-void GL::Texture<TEXTURE_TARGET>::setupLinear() {
+void gl::Texture<TEXTURE_TARGET>::setupLinear() {
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
 
 template<unsigned int TEXTURE_TARGET>
-void GL::Texture<TEXTURE_TARGET>::setupMirroredRepeat() {
+void gl::Texture<TEXTURE_TARGET>::setupMirroredRepeat() {
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 }
 
 template<unsigned int TEXTURE_TARGET>
-void GL::Texture<TEXTURE_TARGET>::bind(uint8_t index) {
-    GL::State::activeTexture(index);
-    GL::State::bindTexture(TEXTURE_TARGET, mTexture);
+void gl::Texture<TEXTURE_TARGET>::bind(uint8_t index) {
+    gl::State::activeTexture(index);
+    gl::State::bindTexture(TEXTURE_TARGET, mTexture);
 }
 

@@ -127,13 +127,13 @@ namespace ass {
     }
 }
 
-ENUM_VALUES(ass::Sizing,
-            ass::Sizing::NONE,
-            ass::Sizing::FIT,
-            ass::Sizing::CENTER,
-            ass::Sizing::FIT_PADDING,
-            ass::Sizing::COVER,
-            ass::Sizing::CONTAIN,
-            ass::Sizing::SPLIT_2X2,
-            ass::Sizing::CROPPED
+AUI_ENUM_VALUES(ass::Sizing,
+                ass::Sizing::NONE,
+                ass::Sizing::FIT,
+                ass::Sizing::CENTER,
+                ass::Sizing::FIT_PADDING,
+                ass::Sizing::COVER,
+                ass::Sizing::CONTAIN,
+                ass::Sizing::SPLIT_2X2,
+                ass::Sizing::CROPPED
             )

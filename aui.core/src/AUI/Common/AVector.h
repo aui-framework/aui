@@ -29,8 +29,9 @@
 #include <ostream>
 #include "ASet.h"
 #include <AUI/Traits/containers.h>
+#include "AContainerPrototypes.h"
 
-template <class StoredType, class Allocator = std::allocator<StoredType>>
+template <class StoredType, class Allocator>
 class AVector: public std::vector<StoredType, Allocator>
 {
 protected:
@@ -254,6 +255,20 @@ public:
         result.reserve(p::size());
         std::transform(p::begin(), p::end(), std::back_inserter(result), std::forward<UnaryOperation>(transformer));
         return result;
+    }
+
+    template<typename UnaryOperation>
+    [[nodiscard]]
+    auto toMap(UnaryOperation&& transformer) const -> AMap<decltype(transformer(std::declval<StoredType>()).first),
+                                                           decltype(transformer(std::declval<StoredType>()).second)> {
+        return aui::container::to_map(p::begin(), p::end(), transformer);
+    }
+
+    template<typename UnaryOperation>
+    [[nodiscard]]
+    auto toMap(UnaryOperation&& transformer) -> AMap<decltype(transformer(std::declval<StoredType>()).first),
+                                                     decltype(transformer(std::declval<StoredType>()).second)> {
+        return aui::container::to_map(p::begin(), p::end(), transformer);
     }
 };
 

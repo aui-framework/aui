@@ -36,7 +36,7 @@ namespace Platform
     };
 
     /**
-     * \brief Play system sound asynchronously.
+     * @brief Play system sound asynchronously.
      */
     API_AUI_VIEWS void playSystemSound(Sound s);
 

@@ -276,16 +276,17 @@ protected:
         }
     }
 
-    void typeableInsert(size_t at, const AString& toInsert) override {
+    bool typeableInsert(size_t at, const AString& toInsert) override {
         if (!mTextArea.mEditable) {
-            return;
+            return false;
         }
         assert(0);
+        return true;
     }
 
-    void typeableInsert(size_t at, wchar_t toInsert) override {
+    bool typeableInsert(size_t at, wchar_t toInsert) override {
         if (!mTextArea.mEditable) {
-            return;
+            return false;
         }
         for (size_t i = 0; i < mLines.size(); ++i) {
             auto& text = mLines[i].text;
@@ -310,7 +311,7 @@ protected:
                 } else {
                     mLines[i].prerendered = nullptr;
                 }
-                return;
+                return true;
             } else {
                 // not found, continue searching
                 at -= length;
@@ -319,6 +320,7 @@ protected:
 
         // no lines, create a new one
         mLines.push_back({AString(toInsert), {}});
+        return false;
     }
 
     size_t typeableFind(wchar_t c, size_t startPos) override {

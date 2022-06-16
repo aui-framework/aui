@@ -32,9 +32,9 @@
 
 #define SO_STATE
 
-namespace GL {
+namespace gl {
 	/**
-	 * \brief Helper class for optimizing gl calls count
+	 * @brief Helper class for optimizing gl calls count
 	 */
 	class API_AUI_VIEWS State {
 	private:

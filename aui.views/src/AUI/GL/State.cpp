@@ -25,7 +25,7 @@
 
 #include "State.h"
 
-using namespace GL;
+using namespace gl;
 
 
 State::State() {

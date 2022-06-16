@@ -24,9 +24,11 @@
 #include "AUI/Core.h"
 #include "AException.h"
 #include <AUI/Common/AVector.h>
+#include <AUI/Traits/containers.h>
 #include <AUI/Reflect/AClass.h>
+#include "AContainerPrototypes.h"
 
-template <class KeyType, class ValueType, class Predicate = std::less<KeyType>, class Allocator = std::allocator<std::pair<const KeyType, ValueType>>>
+template <class KeyType, class ValueType, class Predicate, class Allocator>
 class AMap: public std::map<KeyType, ValueType, Predicate, Allocator>
 {
 public:
@@ -152,6 +154,7 @@ public:
 
 	AVector<KeyType> keyVector() {
         AVector<KeyType> r;
+        r.reserve(parent::size());
         for (auto& p : *this) {
             r << p.first;
         }
@@ -159,6 +162,7 @@ public:
 	}
 	AVector<ValueType> valueVector() {
         AVector<ValueType> r;
+        r.reserve(parent::size());
         for (auto& p : *this) {
             r << p.second;
         }
@@ -192,3 +196,18 @@ public:
         return result;
     }
 };
+
+
+template<typename Iterator, typename UnaryOperation>
+inline auto aui::container::to_map(Iterator begin,
+                                   Iterator end,
+                                   UnaryOperation&& transformer) {
+    AMap<decltype(transformer(*begin).first),
+         decltype(transformer(*begin).second)> result;
+
+    for (auto it = begin; it != end; ++it) {
+        auto[key, value] = transformer(*it);
+        result[std::move(key)] = std::move(value);
+    }
+    return result;
+}

@@ -34,12 +34,12 @@ AButton::AButton(const AString& text): ALabel(text)
 
 void AButton::setDefault(bool isDefault)
 {
-	mDefault = isDefault;
+	mDefault.set(this, isDefault);
 	connect(AWindow::current()->keyDown, this, [&](AInput::Key k) {
 	    if (!mDefault) {
 	        AObject::disconnect();
 	    } else {
-            if (k == AInput::Return) {
+            if (k == AInput::RETURN) {
                 emit clicked();
             }
         }

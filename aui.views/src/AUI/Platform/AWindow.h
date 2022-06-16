@@ -77,7 +77,7 @@ private:
     AWindow* mParentWindow;
 
     /**
-     * \brief Handles self shared pointer.
+     * @brief Handles self shared pointer.
      */
     _<AWindow> mSelfHolder;
 
@@ -110,7 +110,7 @@ protected:
     void windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws);
 
     /**
-     * \brief Constructor for custom initialization logic
+     * @brief Constructor for custom initialization logic
      * \note Please call windowNativePreInit
      */
     AWindow(std::nullptr_t) {}
@@ -129,7 +129,7 @@ public:
 
 
     /**
-     * \brief Checks whether last monitor frame is displayed and redraw will be efficient.
+     * @brief Checks whether last monitor frame is displayed and redraw will be efficient.
      *        If some object often updates UI thread for displaying some data it may cause extra CPU and GPU overload.
      *        AUI throttles window redraws and FPS does not go above 60 FPS but UI views may also cause extra CPU and
      *        GPU overload that does not have visual difference.
@@ -140,14 +140,14 @@ public:
     void setIcon(const AImage& image);
 
     /**
-     * \brief Removes window from AWindowManager.
+     * @brief Removes window from AWindowManager.
      */
     void quit();
 
     void setWindowStyle(WindowStyle ws);
 
     /**
-     * \brief Minimizes window (hide window to the taskbar, iconifies)
+     * @brief Minimizes window (hide window to the taskbar, iconifies)
      */
     void minimize();
 
@@ -157,7 +157,7 @@ public:
     bool isMinimized() const;
 
     /**
-     * \brief Maximizes window (makes window fullscreen)
+     * @brief Maximizes window (makes window fullscreen)
      */
     void maximize();
 
@@ -167,7 +167,7 @@ public:
     bool isMaximized() const;
 
     /**
-     * \brief Restores window (shows window from taskbar)
+     * @brief Restores window (shows window from taskbar)
      */
     void restore();
 
@@ -228,13 +228,13 @@ public:
     static ABaseWindow* current();
 
     /**
-     * \brief Determines whether views should display hover animations.
+     * @brief Determines whether views should display hover animations.
      * \return false when any keyboard button is pressed
      */
     static bool shouldDisplayHoverAnimations();
 
     /**
-     * \brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.
+     * @brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.
      * \param position coordinates in the space of this window
      * \param other other window
      * \return coordinates in the space of the other window
@@ -242,14 +242,14 @@ public:
     [[nodiscard]] glm::ivec2 mapPositionTo(const glm::ivec2& position, _<AWindow> other);
 
     /**
-     * \brief Translates coordinates from the coordinate space of this window to the coordinate space of the monitor.
+     * @brief Translates coordinates from the coordinate space of this window to the coordinate space of the monitor.
      * \param position coordinates in the space of this window
      * \return the coordinates in space of the monitor
      */
     [[nodiscard]] glm::ivec2 unmapPosition(const glm::ivec2& position);
 
     /**
-     * \brief Translates coordinates from the monitor's coordinate space to the coordinate space of this window.
+     * @brief Translates coordinates from the monitor's coordinate space to the coordinate space of this window.
      * \param position the coordinate in screen space
      * \return coordinates in the space of this window
      */
@@ -267,23 +267,23 @@ signals:
     emits<> shown;
 
     /**
-     * \brief Window is moving.
+     * @brief Window is moving.
      * \param client area position.
      */
     emits<glm::vec2> moving;
 
     /**
-     * \brief Window is maximized.
+     * @brief Window is maximized.
      */
     emits<> maximized;
 
     /**
-     * \brief Window is minimized (hidden to the taskbar, iconified).
+     * @brief Window is minimized (hidden to the taskbar, iconified).
      */
     emits<> minimized;
 
     /**
-     * \brief Window is restored (shown from the taskbar, deiconified).
+     * @brief Window is restored (shown from the taskbar, deiconified).
      */
     emits<> restored;
 

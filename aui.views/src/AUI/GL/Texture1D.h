@@ -31,7 +31,7 @@
 #include <AUI/Common/AColor.h>
 #include "Texture.h"
 
-namespace GL {
+namespace gl {
     class API_AUI_VIEWS Texture1D: public Texture<TEXTURE_1D> {
     public:
         void tex1D(const AVector<AColor>& image);

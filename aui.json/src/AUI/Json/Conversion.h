@@ -60,7 +60,7 @@ namespace aui {
 #endif
 
 
-ENUM_FLAG(AJsonFieldFlags) {
+AUI_ENUM_FLAG(AJsonFieldFlags) {
     DEFAULT = 0b0,
 
     /**

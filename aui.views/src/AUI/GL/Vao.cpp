@@ -28,38 +28,38 @@
 
 
 
-GL::Vao::Vao() {
+gl::Vao::Vao() {
     glGenVertexArrays(1, &mHandle);
 	bind();
 }
 
-GL::Vao::~Vao() {
+gl::Vao::~Vao() {
 	auto buffers = mBuffers;
 	auto handle = mHandle;
 
-	GL::State::bindVertexArray(handle);
+	gl::State::bindVertexArray(handle);
 	glDeleteBuffers(1, &mIndicesBuffer);
 	glDeleteBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
 	glDeleteVertexArrays(1, &handle);
-	GL::State::bindVertexArray(0);
+	gl::State::bindVertexArray(0);
 }
 
-const AVector<GLuint>& GL::Vao::getBuffers() const
+const AVector<GLuint>& gl::Vao::getBuffers() const
 {
 	return mBuffers;
 }
 
-void GL::Vao::bind() {
-	GL::State::bindVertexArray(mHandle);
+void gl::Vao::bind() {
+	gl::State::bindVertexArray(mHandle);
 }
 
 
-void GL::Vao::drawArrays(GLenum type, GLsizei count) {
+void gl::Vao::drawArrays(GLenum type, GLsizei count) {
 	bind();
 	glDrawArrays(type, 0, count);
 }
 
-void GL::Vao::insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType) {
+void gl::Vao::insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType) {
 	bind();
 	bool newFlag = true;
 	if (mBuffers.size() <= index) {
@@ -83,7 +83,7 @@ void GL::Vao::insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint
     glVertexAttribPointer(index, vertexSize, dataType, GL_TRUE, 0, nullptr);
 }
 
-void GL::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType) {
+void gl::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType) {
 	GLuint buffer;
 	bind();
 	glGenBuffers(1, &buffer);
@@ -94,25 +94,25 @@ void GL::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize,
 	mBuffers.push_back(buffer);
 }
 
-void GL::Vao::insert(GLuint index, AArrayView<float> data) {
+void gl::Vao::insert(GLuint index, AArrayView<float> data) {
 	insert(index, (const char*)data.data(), data.sizeInBytes(), 1, GL_FLOAT);
 }
-void GL::Vao::insert(GLuint index, AArrayView<glm::vec2> data) {
+void gl::Vao::insert(GLuint index, AArrayView<glm::vec2> data) {
 	insert(index, (const char*)data.data(), data.sizeInBytes(), 2, GL_FLOAT);
 }
 
-void GL::Vao::insert(GLuint index, AArrayView<glm::vec3> data) {
+void gl::Vao::insert(GLuint index, AArrayView<glm::vec3> data) {
 	insert(index, (const char*)data.data(), data.sizeInBytes(), 3, GL_FLOAT);
 }
 
-void GL::Vao::insert(GLuint index, AArrayView<glm::vec4> data) {
+void gl::Vao::insert(GLuint index, AArrayView<glm::vec4> data) {
 	insert(index, (const char*)data.data(), data.sizeInBytes(), 4, GL_FLOAT);
 }
-void GL::Vao::insert(GLuint index, AArrayView<GLuint> data) {
+void gl::Vao::insert(GLuint index, AArrayView<GLuint> data) {
 	insertInteger(index, (const char*)data.data(), data.sizeInBytes(), 1, GL_UNSIGNED_INT);
 }
 
-void GL::Vao::drawElements(GLenum type) {
+void gl::Vao::drawElements(GLenum type) {
 	assert(mIndicesBuffer);
 	bind();
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndicesBuffer);
@@ -120,7 +120,7 @@ void GL::Vao::drawElements(GLenum type) {
 }
 
 
-void GL::Vao::indices(AArrayView<GLuint> data) {
+void gl::Vao::indices(AArrayView<GLuint> data) {
 	GLenum drawType = GL_DYNAMIC_DRAW;
 	if (mIndicesBuffer == 0) {
 		glGenBuffers(1, &mIndicesBuffer);

@@ -56,7 +56,7 @@ static void GLAPIENTRY debugProc(GLenum source,
     ALogger::info("GL") << "[" << typeString << "] " << message;
 }
 
-void GL::setupDebug() {
+void gl::setupDebug() {
     if (glDebugMessageCallback) {
         glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
         glEnable(GL_DEBUG_OUTPUT);
@@ -65,7 +65,7 @@ void GL::setupDebug() {
 }
 #else
 
-void GL::setupDebug() {
+void gl::setupDebug() {
     // stub
 }
 

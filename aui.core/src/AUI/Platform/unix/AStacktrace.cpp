@@ -5,7 +5,6 @@
 #if AUI_USE_BACKTRACE
 #include <AUI/Platform/AStacktrace.h>
 #include <AUI/Platform/AProcess.h>
-#include <AUI/Traits/arrays.h>
 #include <AUI/IO/APath.h>
 #include <execinfo.h>
 #include <backtrace.h>
@@ -32,9 +31,11 @@ static BacktraceService& backtraceService() noexcept {
     return s;
 }
 
-AStacktrace AStacktrace::capture(unsigned skipFrames) noexcept {
-    void* buffer[128];
-    std::size_t entryCount = backtrace(buffer, aui::array_length(buffer));
+AStacktrace AStacktrace::capture(unsigned skipFrames, unsigned maxFrames) noexcept {
+    void* buffer[256];
+    maxFrames += skipFrames + 1;
+    assert(("too many", maxFrames <= 256));
+    std::size_t entryCount = backtrace(buffer, maxFrames);
 
     AVector<Entry> entries;
     entries.reserve(entryCount);
@@ -82,7 +83,7 @@ void AStacktrace::resolveSymbolsIfNeeded() const noexcept {
 
 }
 
-AStacktrace AStacktrace::capture(unsigned int skipFrames) noexcept {
+AStacktrace AStacktrace::capture(unsigned int skipFrames, unsigned maxFrames) noexcept {
     return AStacktrace({});
 }
 

@@ -27,7 +27,7 @@
 template <class StoredType>
 class AQueue : public std::queue<StoredType>
 {
-	using parent = std::queue<StoredType>;
+	using super = std::queue<StoredType>;
 public:
     /**
      * Removes all occurrences of <code>item</code>.
@@ -50,14 +50,14 @@ public:
 
 	AQueue<StoredType>& operator<<(const StoredType& rhs)
 	{
-		parent::push(rhs);
+		super::push(rhs);
 		return *this;
 	}
 
 
 	AQueue<StoredType>& operator<<(StoredType&& rhs)
 	{
-		parent::push(std::forward<StoredType>(rhs));
+		super::push(std::forward<StoredType>(rhs));
 		return *this;
 	}
 
@@ -78,4 +78,19 @@ public:
         return aui::container::is_subset(*this, c);
     }
 
+    /**
+     * @brief Pops the element and returns it. If queue is empty, the result of <code>factory()</code> returned.
+     * The result of <code>factory()</code> is never added to the queue.
+     * @return result of <code>front()</code> if not empty; result of <code>factory()</code> otherwise
+     */
+    template<typename Factory>
+    [[nodiscard]]
+    StoredType popOrGenerate(Factory&& factory) noexcept(noexcept(factory())) {
+        if (super::empty()) {
+            return factory();
+        }
+        auto v = std::move(super::front());
+        super::pop();
+        return v;
+    }
 };

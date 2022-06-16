@@ -25,6 +25,7 @@
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Common/AException.h>
 #include "AUI/Logging/ALogger.h"
+#include "AUI/Util/Util.h"
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
@@ -33,8 +34,47 @@
 #endif
 
 
+
+class UIThread: public AAbstractThread {
+public:
+    UIThread() noexcept: AAbstractThread(std::this_thread::get_id()) {}
+
+protected:
+    void processMessagesImpl() override {
+        assert(("AAbstractThread::processMessages() should not be called from other thread",
+                mId == std::this_thread::get_id()));
+        std::unique_lock lock(mQueueLock);
+
+        using namespace std::chrono;
+        using namespace std::chrono_literals;
+
+        while (!mMessageQueue.empty())
+        {
+            auto f = std::move(mMessageQueue.front());
+            mMessageQueue.pop_front();
+            lock.unlock();
+            auto time = util::measureExecutionTime<microseconds>(f.proc);
+
+            if (time >= 1ms) {
+                ALogger::warn("Performance")
+                    << "Execution of a task took " << time.count() << "us to execute which may cause UI lag.\n"
+                    << f.stacktrace
+                    << " - ...\n";
+            }
+
+            lock.lock();
+        }
+    }
+};
+
+void setupUIThread() noexcept {
+    AAbstractThread::threadStorage() = _new<UIThread>();
+}
+
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
     AStringVector args;
+
+    setupUIThread();
 
     // renames all threads to "UI thread" on linux
 #if !AUI_PLATFORM_LINUX

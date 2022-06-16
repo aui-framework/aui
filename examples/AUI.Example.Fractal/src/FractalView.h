@@ -28,8 +28,8 @@
 
 class FractalView: public AView {
 private:
-    GL::Shader mShader;
-    _<GL::Texture2D> mTexture;
+    gl::Shader mShader;
+    _<gl::Texture2D> mTexture;
     glm::dmat4 mTransform;
 
     float mAspectRatio;
@@ -52,11 +52,11 @@ public:
 
     void setSize(int width, int height) override;
 
-    GL::Shader& getShader() {
+    gl::Shader& getShader() {
         return mShader;
     }
 
-    const _<GL::Texture2D>& getTexture() const {
+    const _<gl::Texture2D>& getTexture() const {
         return mTexture;
     }
 

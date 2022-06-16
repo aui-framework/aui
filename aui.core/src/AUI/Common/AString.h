@@ -34,13 +34,15 @@ class API_AUI_CORE AString: std::wstring
 {
 private:
 	friend struct std::hash<AString>;
+    using super = std::wstring;
+
 public:
 	
-	using iterator = std::wstring::iterator;
-	using const_iterator = std::wstring::const_iterator;
-	using reverse_iterator = std::wstring::reverse_iterator;
-	using const_reverse_iterator = std::wstring::const_reverse_iterator;
-	auto constexpr static NPOS = std::wstring::npos;
+	using iterator = super::iterator;
+	using const_iterator = super::const_iterator;
+	using reverse_iterator = super::reverse_iterator;
+	using const_reverse_iterator = super::const_reverse_iterator;
+	auto constexpr static NPOS = super::npos;
 
 
 	AString(AString&& other) noexcept
@@ -55,7 +57,7 @@ public:
 	AString(const std::string& str) noexcept;
 
 	AString(const AString& other) noexcept
-		: std::wstring(other.c_str())
+		: super(other.c_str())
 	{
 	}
 
@@ -65,13 +67,13 @@ public:
 	}
 
 	template <class Iterator>
-	AString(Iterator first, Iterator last) noexcept : std::wstring(first, last) {}
+	AString(Iterator first, Iterator last) noexcept : super(first, last) {}
 	
 	AString() noexcept
 	{
 	}
 
-	AString(wchar_t c) noexcept : std::wstring(&c, &c + 1)
+	AString(wchar_t c) noexcept : super(&c, &c + 1)
 	{
 		
 	}
@@ -143,11 +145,11 @@ public:
 
 	void push_back(wchar_t c) noexcept
 	{
-		std::wstring::push_back(c);
+		super::push_back(c);
 	}
 	void pop_back() noexcept
 	{
-		std::wstring::pop_back();
+		super::pop_back();
 	}
 
     AString uppercase() const;
@@ -168,12 +170,12 @@ public:
 			return false;
 		}
 		size_t offset = length() - other.length();
-		return std::wstring::find(other, offset) == offset;
+		return super::find(other, offset) == offset;
 	}
 	bool endsWith(wchar_t c) const noexcept
 	{
 		size_t offset = length() - 1;
-		return std::wstring::find(c, offset) == offset;
+		return super::find(c, offset) == offset;
 	}
 
 	AStringVector split(wchar_t c) const noexcept;
@@ -185,31 +187,31 @@ public:
 
 	size_type find(char c, size_type offset = 0) const noexcept
 	{
-		return std::wstring::find(c, offset);
+		return super::find(c, offset);
 	}
 	size_type find(wchar_t c, size_type offset = 0) const noexcept
 	{
-		return std::wstring::find(c, offset);
+		return super::find(c, offset);
 	}
 	size_type find(const AString& str, size_type offset = 0) const noexcept
 	{
-		return std::wstring::find(str, offset);
+		return super::find(str, offset);
 	}
 	size_type rfind(char c, size_type offset = NPOS) const noexcept
 	{
-		return std::wstring::rfind(c, offset);
+		return super::rfind(c, offset);
 	}
 	size_type rfind(wchar_t c, size_type offset = NPOS) const noexcept
 	{
-		return std::wstring::rfind(c, offset);
+		return super::rfind(c, offset);
 	}
 	size_type rfind(const AString& str, size_type offset = NPOS) const noexcept
 	{
-		return std::wstring::rfind(str, offset);
+		return super::rfind(str, offset);
 	}
 	size_type length() const noexcept
 	{
-		return std::wstring::length();
+		return super::length();
 	}
 	AString trimLeft(wchar_t symbol = ' ') const noexcept;
 	AString trimRight(wchar_t symbol = ' ') const noexcept;
@@ -221,23 +223,23 @@ public:
 
 	void reserve(size_t s)
 	{
-		std::wstring::reserve(s);
+		super::reserve(s);
 	}
 	void resize(size_t s)
 	{
-		std::wstring::resize(s);
+		super::resize(s);
 	}
 
 	AString restrictLength(size_t s, const AString& stringAtEnd = "...") const;
 
 	wchar_t* data() noexcept
 	{
-		return std::wstring::data();
+		return super::data();
 	}
 	
 	const wchar_t* data() const noexcept
 	{
-		return std::wstring::data();
+		return super::data();
 	}
 	[[nodiscard]] AString replacedAll(const AString& from, const AString& to) const noexcept;
     [[nodiscard]] inline AString replacedAll(wchar_t from, wchar_t to) const noexcept {
@@ -321,45 +323,49 @@ public:
 
 	iterator erase(const_iterator begin, const_iterator end) noexcept
 	{
-		return std::wstring::erase(begin, end);
+		return super::erase(begin, end);
 	}
 	iterator erase(const_iterator begin) noexcept
 	{
-		return std::wstring::erase(begin);
+		return super::erase(begin);
 	}
 
 	AString& erase(size_type offset) noexcept
 	{
-		std::wstring::erase(offset);
+		super::erase(offset);
 		return *this;
 	}
 	AString& erase(size_type offset, size_type count) noexcept
 	{
-		std::wstring::erase(offset, count);
+		super::erase(offset, count);
 		return *this;
 	}
 
 	AByteBuffer toUtf8() const noexcept;
 
-	void removeAt(unsigned index) noexcept
+	void removeAt(unsigned at) noexcept
 	{
-		erase(begin() + index);
+        assert(at <= length());
+		erase(begin() + at);
 	}
 	AString excessSpacesRemoved() const noexcept;
 
 	iterator insert(size_type at, wchar_t c) noexcept
 	{
-		return std::wstring::insert(begin() + at, 1, c);
+        assert(at <= length());
+		return super::insert(begin() + at, 1, c);
 	}
 	iterator insert(size_type at, const AString& c) noexcept
 	{
-		return std::wstring::insert(begin() + at, c.begin(), c.end());
+        assert(at <= length());
+		return super::insert(begin() + at, c.begin(), c.end());
 	}
 	
 	template<typename Iterator>
 	iterator insert(const_iterator at, Iterator begin, Iterator end) noexcept
 	{
-		return std::wstring::insert(at, begin, end);
+        assert(std::distance(super::cbegin(), at) <= length());
+		return super::insert(at, begin, end);
 	}
 	
 	AString& operator<<(char c) noexcept
@@ -385,18 +391,18 @@ public:
 	}
 
 	[[nodiscard]] bool empty() const noexcept {
-		return std::wstring::empty();
+		return super::empty();
 	}
 	[[nodiscard]] size_type size() const noexcept {
-		return std::wstring::size();
+		return super::size();
 	}
 	wchar_t operator[](size_type index) const
 	{
-		return std::wstring::at(index);
+		return super::at(index);
 	}
 	wchar_t& operator[](size_type index)
 	{
-		return std::wstring::at(index);
+		return super::at(index);
 	}
 	bool operator<(const AString& other) const noexcept
 	{
@@ -405,104 +411,104 @@ public:
 
 	void clear() noexcept
 	{
-		std::wstring::clear();
+		super::clear();
 	}
 
 	wchar_t& front() noexcept
 	{
-		return std::wstring::front();
+		return super::front();
 	}
 	wchar_t& back() noexcept
 	{
-		return std::wstring::back();
+		return super::back();
 	}
 	const wchar_t& front() const noexcept
 	{
-		return std::wstring::front();
+		return super::front();
 	}
 	const wchar_t& back() const noexcept
 	{
-		return std::wstring::back();
+		return super::back();
 	}
 	wchar_t& first() noexcept
 	{
-		return std::wstring::front();
+		return super::front();
 	}
 	wchar_t& last() noexcept
 	{
-		return std::wstring::back();
+		return super::back();
 	}
 	const wchar_t& first() const noexcept
 	{
-		return std::wstring::front();
+		return super::front();
 	}
 	const wchar_t& last() const noexcept
 	{
-		return std::wstring::back();
+		return super::back();
 	}
 
 	const wchar_t* c_str() const
 	{
-		return std::wstring::c_str();
+		return super::c_str();
 	}
 
 	iterator begin() noexcept
 	{
-		return std::wstring::begin();
+		return super::begin();
 	}
 	iterator end() noexcept
 	{
-		return std::wstring::end();
+		return super::end();
 	}
 
 	const_iterator begin() const noexcept
 	{
-		return std::wstring::begin();
+		return super::begin();
 	}
 	const_iterator end() const noexcept
 	{
-		return std::wstring::end();
+		return super::end();
 	}
 
 	reverse_iterator rbegin() noexcept
 	{
-		return std::wstring::rbegin();
+		return super::rbegin();
 	}
 	reverse_iterator rend() noexcept
 	{
-		return std::wstring::rend();
+		return super::rend();
 	}
 
 	const_reverse_iterator rbegin() const noexcept
 	{
-		return std::wstring::rbegin();
+		return super::rbegin();
 	}
 	const_reverse_iterator rend() const noexcept
 	{
-		return std::wstring::rend();
+		return super::rend();
 	}
 
 	AString& append(const AString& s) noexcept
 	{
-		std::wstring::append(s);
+		super::append(s);
 		return *this;
 	}
 
 	AString& append(size_t count, wchar_t ch) noexcept
 	{
-		std::wstring::append(count, ch);
+		super::append(count, ch);
 		return *this;
 	}
 
 	const AString& operator=(const AString& value) noexcept
 	{
-		std::wstring::operator=(value);
+		super::operator=(value);
 		return *this;
 	}
 
 	const AString& operator=(AString&& value) noexcept
 	{
-		std::wstring::operator=(value);
+		super::operator=(value);
 		return *this;
 	}
 	

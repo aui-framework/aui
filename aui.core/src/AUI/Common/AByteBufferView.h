@@ -12,21 +12,32 @@ private:
     size_t mSize;
 
 public:
-    AByteBufferView(): mBuffer(nullptr), mSize(0) {}
-    AByteBufferView(const char* buffer, size_t size) : mBuffer(buffer), mSize(size) {}
+    AByteBufferView() noexcept: mBuffer(nullptr), mSize(0) {}
+    AByteBufferView(const char* buffer, size_t size) noexcept: mBuffer(buffer), mSize(size) {}
 
-    const char* data() const {
+
+    [[nodiscard]]
+    AByteBufferView slice(std::size_t offset, std::size_t size) const noexcept {
+        assert(("out of bounds", offset + size <= mSize));
+        return { mBuffer + offset, size };
+    }
+
+    [[nodiscard]]
+    const char* data() const noexcept {
         return mBuffer;
     }
 
-    size_t size() const {
+    [[nodiscard]]
+    size_t size() const noexcept {
         return mSize;
     }
 
-    auto begin() const {
+    [[nodiscard]]
+    auto begin() const noexcept {
         return data();
     }
-    auto end() const {
+    [[nodiscard]]
+    auto end() const noexcept {
         return data() + size();
     }
 
@@ -34,11 +45,18 @@ public:
     AString toHexString() const;
 
     template<typename T>
-    T as() const {
+    [[nodiscard]]
+    const T& as() const {
         if (mSize != sizeof(T)) {
             throw AException("as<T>(): invalid size");
         }
         return *reinterpret_cast<const T*>(mBuffer);
+    }
+
+    template<typename T>
+    [[nodiscard]]
+    static AByteBufferView fromRaw(const T& data) noexcept {
+        return { reinterpret_cast<const char*>(&data), sizeof(data) };
     }
 };
 

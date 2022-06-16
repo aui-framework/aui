@@ -23,7 +23,7 @@
 #include "AUI/Common/ASignal.h"
 
 template <typename T>
-class Watchable
+class AWatchable
 {
 public:
 	using signal_t = ASignal<T>&;
@@ -32,13 +32,13 @@ private:
 	T mValue;
 
 public:
-	Watchable(signal_t signal, T initial = T()):
+	AWatchable(signal_t signal, T initial = T()):
 		mSignal(signal), mValue(initial)
 	{
 		
 	}
 
-	Watchable& operator=(const T& t)
+	AWatchable& operator=(const T& t)
 	{
 		if (mValue != t) {
 			mValue = t;
@@ -53,7 +53,7 @@ public:
 };
 
 template <>
-class Watchable<bool>
+class AWatchable<bool>
 {
 	using T = bool;
 public:
@@ -66,7 +66,7 @@ private:
 	T mValue;
 
 public:
-	Watchable(signal_t signal, signal_sub_t signalTrue, signal_sub_t signalFalse, T initial = false)
+	AWatchable(signal_t signal, signal_sub_t signalTrue, signal_sub_t signalFalse, T initial = false)
 		: mSignal(signal),
 		  mSignalTrue(signalTrue),
 		  mSignalFalse(signalFalse),
@@ -74,18 +74,18 @@ public:
 	{
 	}
 
-	Watchable& operator=(const T& t)
+	AWatchable& set(AObject* emitter, const T& t)
 	{
 		if (mValue != t) {
 			mValue = t;
-			mSignal(t).invokeSignal();
+			mSignal(t).invokeSignal(emitter);
 			if (t)
 			{
-				mSignalTrue().invokeSignal();
+				mSignalTrue().invokeSignal(emitter);
 			}
 			else
 			{
-				mSignalFalse().invokeSignal();
+				mSignalFalse().invokeSignal(emitter);
 			}
 		}
 		return *this;

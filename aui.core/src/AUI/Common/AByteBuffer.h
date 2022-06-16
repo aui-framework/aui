@@ -50,6 +50,12 @@ public:
 
     void write(const char* src, size_t size) override;
 
+
+    [[nodiscard]]
+    AByteBufferView slice(std::size_t offset, std::size_t size) const noexcept {
+        return operator AByteBufferView().slice(offset, size);
+    }
+
     /**
      * Reads exact <code>size</code> bytes from <code>stream</code>.
      * @param stream

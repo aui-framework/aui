@@ -160,14 +160,7 @@ public:
                     mBuffer.write(stringView.data(), stringView.size());
                 } else if constexpr(std::is_base_of_v<AString, T>) {
                     *this << t.toStdString();
-                } else if constexpr(std::is_base_of_v<AException, T>) {
-                    *this << "("
-                          << AReflect::name(&t)
-                          << ") "
-                          << t.getMessage()
-                          << '\n'
-                          << t.stacktrace();
-                } else if constexpr(std::is_base_of_v<std::exception, T>) {
+                } else if constexpr(std::is_base_of_v<std::exception, T> && !std::is_base_of_v<AException, T>) {
                     *this << "(" << AReflect::name(&t) << ") " << t.what();
                 } else if constexpr(std::is_same_v<std::chrono::seconds, T>) {
                     writeTimestamp("%D %T", std::chrono::system_clock::time_point(t));
