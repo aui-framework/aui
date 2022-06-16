@@ -53,8 +53,15 @@ ACurl::Builder::Builder(const AString& url)
 	assert(mCURL);
 	CURLcode res;
 
+
 	res = curl_easy_setopt(mCURL, CURLOPT_URL, url.toStdString().c_str());
 	assert(res == 0);
+
+    // at least 1kb/sec during 10sec
+    res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_TIME, 10L);
+    assert(res == 0);
+    res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_LIMIT, 1'024);
+    assert(res == 0);
 
 	res = curl_easy_setopt(mCURL, CURLOPT_WRITEFUNCTION, ACurl::writeCallback);
 	assert(res == 0);
@@ -113,22 +120,42 @@ AByteBuffer ACurl::Builder::toByteBuffer() {
     return out;
 }
 
-ACurl::ACurl(Builder&& url):
-	mCURLcode(0),
-    mCURL(url.mCURL),
-    mWriteCallback(std::move(url.mWriteCallback))
-{
-	url.mCURL = nullptr;
+ACurl& ACurl::operator=(Builder&& builder) noexcept {
+    mCURL = builder.mCURL;
+    mWriteCallback = std::move(builder.mWriteCallback);
+    if (builder.mErrorCallback) {
+        connect(fail, [callback = std::move(builder.mErrorCallback)](const ErrorDescription& e) {
+            callback(e);
+        });
+    } else if (builder.mThrowExceptionOnError) {
+        connect(fail, [](const ErrorDescription& e) {
+            e.throwException();
+        });
+    }
+    assert(("buffer size mismatch", std::size(mErrorBuffer) == CURL_ERROR_SIZE));
+    builder.mCURL = nullptr;
 
-	CURLcode res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
+	CURLcode res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
+    assert(res == 0);
+    res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
+    return *this;
+}
 
+ACurl& ACurl::operator=(ACurl&& o) noexcept {
+    mCURL = o.mCURL;
+    mWriteCallback = std::move(o.mWriteCallback);
 
+    o.mCURL = nullptr;
+    CURLcode res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
+    assert(res == 0);
+    res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
+    assert(res == 0);
+    return *this;
 }
 
 ACurl::~ACurl()
 {
-    mDestructorFlag = true;
 }
 
 
@@ -145,19 +172,15 @@ size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata
     }
 }
 
-int64_t ACurl::getContentLength() const {
-    curl_off_t s;
-    curl_easy_getinfo(mCURL, CURLINFO_CONTENT_LENGTH_DOWNLOAD_T, &s);
-    return s;
-}
 
 void ACurl::run() {
     auto c = curl_easy_perform(mCURL);
     AThread::interruptionPoint();
     if (c != CURLE_OK) {
-        throw Exception(curl_easy_strerror(c));
+        reportFail(c);
+    } else {
+        reportSuccess();
     }
-    reportFinished();
 }
 
 
@@ -165,12 +188,20 @@ template<typename Ret>
 Ret ACurl::getInfo(int curlInfo) const {
     Ret result;
     if (auto r = curl_easy_getinfo(mCURL, static_cast<CURLINFO>(curlInfo), &result); r != CURLE_OK) {
-        throw Exception(curl_easy_strerror(r));
+        throw Exception(mErrorBuffer);
     }
     return result;
 }
 
 
+int64_t ACurl::getContentLength() const {
+    return getInfo<curl_off_t>(CURLINFO_CONTENT_LENGTH_DOWNLOAD_T);
+}
+
 ACurl::ResponseCode ACurl::getResponseCode() const {
     return static_cast<ACurl::ResponseCode>(getInfo<long>(CURLINFO_RESPONSE_CODE));
+}
+
+void ACurl::ErrorDescription::throwException() const {
+    throw ACurl::Exception(*this);
 }

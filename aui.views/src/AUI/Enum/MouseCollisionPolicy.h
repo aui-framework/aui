@@ -39,4 +39,4 @@ enum class MouseCollisionPolicy {
     MARGIN,
 };
 
-ENUM_VALUES(MouseCollisionPolicy, MouseCollisionPolicy::DEFAULT, MouseCollisionPolicy::MARGIN)
+AUI_ENUM_VALUES(MouseCollisionPolicy, MouseCollisionPolicy::DEFAULT, MouseCollisionPolicy::MARGIN)

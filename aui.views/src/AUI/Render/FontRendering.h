@@ -31,4 +31,4 @@ enum class FontRendering
 	SUBPIXEL = 2,
 };
 
-ENUM_VALUES(FontRendering, FontRendering::NEAREST, FontRendering::ANTIALIASING, FontRendering::SUBPIXEL)
+AUI_ENUM_VALUES(FontRendering, FontRendering::NEAREST, FontRendering::ANTIALIASING, FontRendering::SUBPIXEL)

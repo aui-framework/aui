@@ -48,7 +48,7 @@ public:
  * Controls <code>AFuture::wait</code> behaviour.
  * @see AFuture::wait
  */
-ENUM_FLAG(AFutureWait) {
+AUI_ENUM_FLAG(AFutureWait) {
     DEFAULT = 0b01,
     ASYNC_ONLY = 0b00
 };
@@ -381,8 +381,12 @@ namespace aui::impl::future {
             AThread::interruptionPoint();
             (*mInner)->wait(mInner->sharedPtr(), flags);
             AThread::interruptionPoint();
-            if ((*mInner)->exception) throw *(*mInner)->exception;
-            if ((*mInner)->interrupted) throw AInvocationTargetException("Future execution interrupted");
+            if ((*mInner)->exception) {
+                throw *(*mInner)->exception;
+            }
+            if ((*mInner)->interrupted) {
+                throw AInvocationTargetException("Future execution interrupted");
+            }
             if constexpr(!isVoid) {
                 return *(*mInner)->value;
             }

@@ -30,7 +30,7 @@
 /**
  * Flag enum for APath::find
  */
-ENUM_FLAG(PathFinder) {
+AUI_ENUM_FLAG(PathFinder) {
     NONE,
 
     /**
@@ -49,7 +49,7 @@ ENUM_FLAG(PathFinder) {
     SINGLE = 1 << 2
 };
 
-ENUM_FLAG(ListFlags) {
+AUI_ENUM_FLAG(ListFlags) {
     NONE = 0,
 
     /**

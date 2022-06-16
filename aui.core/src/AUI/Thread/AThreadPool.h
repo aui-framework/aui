@@ -143,6 +143,13 @@ public:
             v.operator*();
         }
     }
+    void checkForExceptions() const {
+        for (const AFuture<T>& v : *this) {
+            if (v.hasResult()) {
+                v.operator*(); // TODO bad design
+            }
+        }
+    }
 };
 
 template<typename Iterator, typename Functor>

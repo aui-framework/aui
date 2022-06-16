@@ -43,4 +43,4 @@ enum class Visibility {
     GONE
 };
 
-ENUM_VALUES(Visibility, Visibility::VISIBLE, Visibility::INVISIBLE, Visibility::GONE)
+AUI_ENUM_VALUES(Visibility, Visibility::VISIBLE, Visibility::INVISIBLE, Visibility::GONE)

@@ -32,4 +32,4 @@ enum class WordBreak {
     BREAK_ALL
 };
 
-ENUM_VALUES(WordBreak, WordBreak::NORMAL, WordBreak::BREAK_ALL)
+AUI_ENUM_VALUES(WordBreak, WordBreak::NORMAL, WordBreak::BREAK_ALL)

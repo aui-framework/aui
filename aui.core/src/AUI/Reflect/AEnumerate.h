@@ -116,7 +116,7 @@ const AMap<enum_t, AString, typename AEnumerate<enum_t>::enum_less>& AEnumerate<
     return mapNameByValueImpl(v);
 }
 
-#define ENUM_VALUES(enum_t, ...) template<> \
+#define AUI_ENUM_VALUES(enum_t, ...) template<> \
 struct AEnumerateAllValues<enum_t>{         \
     static inline constexpr AEnumerate<enum_t>::Values<__VA_ARGS__> get() {return {}; } \
 };                                         \

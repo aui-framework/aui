@@ -33,4 +33,4 @@ enum class ImageRendering {
     SMOOTH
 };
 
-ENUM_VALUES(ImageRendering, ImageRendering::PIXELATED, ImageRendering::SMOOTH)
+AUI_ENUM_VALUES(ImageRendering, ImageRendering::PIXELATED, ImageRendering::SMOOTH)

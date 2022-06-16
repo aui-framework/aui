@@ -30,6 +30,7 @@
 #include <AUI/Common/AByteBufferView.h>
 #include <AUI/Common/AByteBuffer.h>
 #include <AUI/Common/ASignal.h>
+#include <AUI/Reflect/AEnumerate.h>
 
 class AString;
 
@@ -81,14 +82,37 @@ public:
         HTTP_503_SERVICE_UNAVAILABLE             = 503,
         HTTP_504_GATEWAY_TIMEOUT                 = 504,
         HTTP_505_HTTP_VERSION_NOT_SUPPORTED      = 505,
+
+        /* don't forget to update ENUM_VALUES at the bottom */
     };
 
 
+    struct ErrorDescription {
+        int curlStatus;
+        AString description;
+
+        API_AUI_CURL void throwException() const;
+    };
+
     using WriteCallback = std::function<size_t(AByteBufferView)>;
+    using ErrorCallback = std::function<void(const ErrorDescription& description)>;
+
 
     class Exception: public AIOException {
     public:
         using AIOException::AIOException;
+        Exception(const ErrorDescription& errorDescription): AIOException(errorDescription.description),
+                                                             mCurlStatus(errorDescription.curlStatus) {
+
+        }
+
+        [[nodiscard]]
+        int curlStatus() const noexcept {
+            return mCurlStatus;
+        }
+
+    private:
+        int mCurlStatus;
     };
 
     class API_AUI_CURL Builder {
@@ -96,6 +120,8 @@ public:
     private:
         void* mCURL;
         WriteCallback mWriteCallback;
+        ErrorCallback mErrorCallback;
+        bool mThrowExceptionOnError = true;
 
     public:
         explicit Builder(const AString& url);
@@ -105,6 +131,15 @@ public:
         Builder& withWriteCallback(WriteCallback callback) {
             assert(("write callback already set" && mWriteCallback == nullptr));
             mWriteCallback = std::move(callback);
+            return *this;
+        }
+
+        /**
+         * @note Also disables throwing exception on error
+         */
+        Builder& withErrorCallback(ErrorCallback callback) {
+            assert(("error callback already set" && mErrorCallback == nullptr));
+            mErrorCallback = std::move(callback);
             return *this;
         }
 
@@ -120,6 +155,11 @@ public:
                 (*dst) << b;
                 return b.size();
             });
+        }
+
+        Builder& throwExceptionOnError(bool throwExceptionOnError) noexcept {
+            mThrowExceptionOnError = throwExceptionOnError;
+            return *this;
         }
 
         /**
@@ -151,10 +191,17 @@ public:
 	{
 
 	}
-	explicit ACurl(Builder&& builder);
-    ACurl(ACurl&&) noexcept = default;
-
+	explicit ACurl(Builder&& builder) noexcept {
+        operator=(std::move(builder));
+    }
+    ACurl(ACurl&& o) noexcept {
+        operator=(std::move(o));
+    }
+    ACurl() noexcept: mCURL(nullptr) {}
 	~ACurl();
+
+    ACurl& operator=(Builder&& o) noexcept;
+    ACurl& operator=(ACurl&& o) noexcept;
 
 	int64_t getContentLength() const;
 
@@ -170,17 +217,18 @@ public:
 
 private:
     void* mCURL;
-    int mCURLcode{};
+    char mErrorBuffer[256];
 
     static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
 
-    bool mFinished = false;
-    bool mDestructorFlag = false;
-
     WriteCallback mWriteCallback;
 
-    void reportFinished() {
-        emit finished;
+    void reportSuccess() {
+        emit success;
+    }
+
+    void reportFail(int statusCode) {
+        emit fail(ErrorDescription{statusCode, AString(mErrorBuffer)});
     }
 
     template<typename Ret>
@@ -188,5 +236,65 @@ private:
 
 
 signals:
-    emits<> finished;
+
+    /**
+     * @brief Emitted on network error.
+     * @note A protocol-level error (like HTTP(S) 404) is not treated as a fail. Check for response code via the
+     *       <code>getResponseCode()</code> function.
+     */
+    emits<const ErrorDescription&> fail;
+
+    /**
+     * @brief Emitted on success.
+     * @note A protocol-level error (like HTTP(S) 404) is not treated as a fail. Check for response code via the
+     *       <code>getResponseCode()</code> function.
+     */
+    emits<> success;
 };
+
+
+AUI_ENUM_VALUES(ACurl::ResponseCode,
+                ACurl::ResponseCode::HTTP_100_CONTINUE,
+                ACurl::ResponseCode::HTTP_101_SWITCHING_PROTOCOL,
+                ACurl::ResponseCode::HTTP_102_PROCESSING,
+                ACurl::ResponseCode::HTTP_103_EARLY_HINTS,
+                ACurl::ResponseCode::HTTP_200_OK,
+                ACurl::ResponseCode::HTTP_201_CREATED,
+                ACurl::ResponseCode::HTTP_202_ACCEPTED,
+                ACurl::ResponseCode::HTTP_203_NON_AUTHORITATIVE_INFORMATION,
+                ACurl::ResponseCode::HTTP_204_NO_CONTENT,
+                ACurl::ResponseCode::HTTP_205_RESET_CONTENT,
+                ACurl::ResponseCode::HTTP_206_PARTIAL_CONTENT,
+                ACurl::ResponseCode::HTTP_300_MULTIPLE_CHOICE,
+                ACurl::ResponseCode::HTTP_301_MOVED_PERMANENTLY,
+                ACurl::ResponseCode::HTTP_302_FOUND,
+                ACurl::ResponseCode::HTTP_303_SEE_OTHER,
+                ACurl::ResponseCode::HTTP_304_NOT_MODIFIED,
+                ACurl::ResponseCode::HTTP_305_USE_PROXY,
+                ACurl::ResponseCode::HTTP_306_SWITCH_PROXY,
+                ACurl::ResponseCode::HTTP_307_TEMPORARY_REDIRECT,
+                ACurl::ResponseCode::HTTP_308_PERMANENT_REDIRECT,
+                ACurl::ResponseCode::HTTP_400_BAD_REQUEST,
+                ACurl::ResponseCode::HTTP_401_UNAUTHORIZED,
+                ACurl::ResponseCode::HTTP_402_PAYMENT_REQUIRED,
+                ACurl::ResponseCode::HTTP_403_FORBIDDEN,
+                ACurl::ResponseCode::HTTP_404_NOT_FOUND,
+                ACurl::ResponseCode::HTTP_405_METHOD_NOT_ALLOWED,
+                ACurl::ResponseCode::HTTP_406_NOT_ACCEPTABLE,
+                ACurl::ResponseCode::HTTP_407_PROXY_AUTHENTICATION_REQUIRED,
+                ACurl::ResponseCode::HTTP_408_REQUEST_TIMEOUT,
+                ACurl::ResponseCode::HTTP_409_CONFLICT,
+                ACurl::ResponseCode::HTTP_410_GONE,
+                ACurl::ResponseCode::HTTP_411_LENGTH_REQUIRED,
+                ACurl::ResponseCode::HTTP_412_PRECONDITION_FAILED,
+                ACurl::ResponseCode::HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                ACurl::ResponseCode::HTTP_414_REQUEST_URI_TOO_LONG,
+                ACurl::ResponseCode::HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+                ACurl::ResponseCode::HTTP_416_REQUESTED_RANGE_NOT_SATISFIABLE,
+                ACurl::ResponseCode::HTTP_417_EXPECTATION_FAILED,
+                ACurl::ResponseCode::HTTP_500_INTERNAL_SERVER_ERROR,
+                ACurl::ResponseCode::HTTP_501_NOT_IMPLEMENTED,
+                ACurl::ResponseCode::HTTP_502_BAD_GATEWAY,
+                ACurl::ResponseCode::HTTP_503_SERVICE_UNAVAILABLE,
+                ACurl::ResponseCode::HTTP_504_GATEWAY_TIMEOUT,
+                ACurl::ResponseCode::HTTP_505_HTTP_VERSION_NOT_SUPPORTED)
