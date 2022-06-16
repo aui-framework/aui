@@ -25,6 +25,7 @@
 #include <AUI/Thread/IEventLoop.h>
 #include <AUI/Common/AException.h>
 #include "AUI/Logging/ALogger.h"
+#include "AUI/Util/Util.h"
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
@@ -66,7 +67,7 @@ protected:
     }
 };
 
-static void setupUIThread() noexcept {
+void setupUIThread() noexcept {
     AAbstractThread::threadStorage() = _new<UIThread>();
 }
 

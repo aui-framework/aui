@@ -60,6 +60,9 @@ private:
 public:
     using super::weak_ptr;
 
+    _weak(const std::weak_ptr<T>& v): std::weak_ptr<T>(v) {}
+    _weak(std::weak_ptr<T>&& v): std::weak_ptr<T>(std::forward<std::weak_ptr<T>>(v)) {}
+
     _<T> lock() const noexcept {
         return static_cast<_<T>>(super::lock());
     }
@@ -205,6 +208,8 @@ public:
     _(std::shared_ptr<T>&& v): std::shared_ptr<T>(std::forward<std::shared_ptr<T>>(v)) {}
     _(const _& v): std::shared_ptr<T>(v) {}
     _(_&& v): std::shared_ptr<T>(std::forward<_>(v)) {}
+    _(const std::weak_ptr<T>& v): std::shared_ptr<T>(v) {}
+    _(const _weak<T>& v): std::shared_ptr<T>(v) {}
 
     _& operator=(const _& rhs) noexcept {
         std::shared_ptr<T>::operator=(rhs);

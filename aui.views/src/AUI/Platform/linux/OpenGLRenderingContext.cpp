@@ -11,7 +11,7 @@
 
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/GL/State.h>
-#include "AUI/Traits/arrays.h"
+
 
 
 
@@ -43,9 +43,9 @@ void OpenGLRenderingContext::init(const Init& init) {
 
         if (fbc == nullptr || fbcount <= 0) {
             // try to reduce system requirements
-            size_t indexToReduce = aui::array_length(att) - 2;
+            size_t indexToReduce = std::size(att) - 2;
             do {
-                ALogger::warn("[OpenGL compatibility] Reduced OpenGL requirements: pass {}"_format((aui::array_length(att) - indexToReduce) / 2 - 1));
+                ALogger::warn("[OpenGL compatibility] Reduced OpenGL requirements: pass {}"_format((std::size(att) - indexToReduce) / 2 - 1));
                 att[indexToReduce] = 0;
                 indexToReduce -= 2;
                 fbc = glXChooseFBConfig(ourDisplay, DefaultScreen(ourDisplay), att, &fbcount);

@@ -4,7 +4,7 @@
 
 #include <AUI/Platform/AStacktrace.h>
 #include <Windows.h>
-#include <AUI/Traits/arrays.h>
+
 #include <dbghelp.h>
 #include <AUI/IO/APath.h>
 #include <mutex>
@@ -27,7 +27,7 @@ static Win32SymService& symService() noexcept {
 AStacktrace AStacktrace::capture(unsigned skipFrames, unsigned maxFrames) noexcept {
     symService();
     void* backtrace[128];
-    assert(("too many", maxFrames <= aui::array_length(backtrace)));
+    assert(("too many", maxFrames <= std::size(backtrace)));
     std::size_t entryCount = CaptureStackBackTrace(skipFrames + 1, maxFrames, backtrace, nullptr);
 
     AVector<Entry> entries;

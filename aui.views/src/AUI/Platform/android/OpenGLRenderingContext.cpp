@@ -11,7 +11,7 @@
 
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/GL/State.h>
-#include "AUI/Traits/arrays.h"
+
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);

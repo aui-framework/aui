@@ -4,7 +4,7 @@
 
 #include "ASegfaultException.h"
 #include "AUI/Traits/memory.h"
-#include "AUI/Traits/arrays.h"
+
 
 #ifdef AUI_CATCH_SEGFAULT
 
@@ -40,7 +40,7 @@ static void onSegfault(int, siginfo_t * info, void *_p __attribute__ ((__unused_
     printf("Caught SEGFAULT!\n");
 
     void* buffer[1024];
-    if (int n = backtrace(buffer, aui::array_length(buffer))) {
+    if (int n = backtrace(buffer, std::size(buffer))) {
         for (int i = 0; i < n; ++i) {
             printf(" - at %p", buffer[i]);
             Dl_info dlInfo;
