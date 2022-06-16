@@ -243,7 +243,7 @@ public:
      * \brief Create all nonexistent folders on the path.
      * \return this
      */
-    const APath& makeDirs() const noexcept;
+    const APath& makeDirs() const;
 
     /**
      * \brief Returns same path but without <code>folder</code>

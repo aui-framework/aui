@@ -19,7 +19,7 @@ static AString errorMessage(DWORD errorMessageID) noexcept {
     //Free the buffer.
     LocalFree(messageBuffer);
 
-    return message;
+    return message.trim().removeAll('\r').removeAll('\n');
 }
 void aui::impl::lastErrorToException(AString message) {
     auto lastError = GetLastError();

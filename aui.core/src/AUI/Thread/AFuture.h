@@ -107,7 +107,6 @@ namespace aui::impl::future {
             std::optional<AInvocationTargetException> exception;
             AMutex mutex;
             AConditionVariable cv;
-            AAbstractThread* worker = nullptr;
             TaskCallback task;
             OnSuccessCallback onSuccess;
             std::function<void(const AException& exception)> onError;
@@ -207,7 +206,11 @@ namespace aui::impl::future {
                             return false;
                         }
                         std::unique_lock lock(mutex);
+                        if (task == nullptr) { // task is executed in wait() function
+                            return false;
+                        }
                         auto func = std::move(task);
+                        assert(bool(func));
                         lock.unlock();
                         inner = nullptr;
                         if constexpr(isVoid) {

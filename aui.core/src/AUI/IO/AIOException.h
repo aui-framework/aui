@@ -54,3 +54,7 @@ class AResourceBusyException: public AIOException {
 public:
     using AIOException::AIOException;
 };
+class ANoSpaceLeftException: public AIOException {
+public:
+    using AIOException::AIOException;
+};

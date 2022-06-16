@@ -18,6 +18,8 @@ void aui::impl::unix::lastErrorToException(AString message) {
             throw AAccessDeniedException(message);
         case EEXIST:
             break;
+        case ENOSPC:
+            throw ANoSpaceLeftException(message);
         default:
             throw AIOException(message);
     }

@@ -255,20 +255,16 @@ const APath& APath::makeDir() const {
         return *this;
     }
 #endif
-    aui::impl::lastErrorToException("could not create directory: "_as + absolute());
+    aui::impl::lastErrorToException("could not create directory: {}"_format(*this));
     return *this;
 }
 
-const APath& APath::makeDirs() const noexcept {
-    try {
-        if (!empty()) {
-            if (!isDirectoryExists()) {
-                parent().makeDirs();
-                makeDir();
-            }
+const APath& APath::makeDirs() const {
+    if (!empty()) {
+        if (!isDirectoryExists()) {
+            parent().makeDirs();
+            makeDir();
         }
-    } catch (...) {
-
     }
     return *this;
 }
