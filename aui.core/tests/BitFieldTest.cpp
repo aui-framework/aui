@@ -29,7 +29,7 @@
 #include <AUI/Util/EnumUtil.h>
 
 
-ENUM_FLAG(Flags) {
+AUI_ENUM_FLAG(Flags) {
     FLAG1 = 0x1,
     FLAG2 = 0x2,
     FLAG3 = 0x4,

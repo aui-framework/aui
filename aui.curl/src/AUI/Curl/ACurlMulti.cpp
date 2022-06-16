@@ -8,14 +8,11 @@
 ACurlMulti::ACurlMulti() noexcept:
     mMulti(curl_multi_init())
 {
-
 }
 
 ACurlMulti::~ACurlMulti() {
     if (mMulti) {
-        for (const auto&[handle,acurl] : mEasyCurls) {
-            curl_multi_remove_handle(mMulti, handle);
-        }
+        clear();
         curl_multi_cleanup(mMulti);
     }
 }
@@ -42,7 +39,12 @@ void ACurlMulti::run() {
                 if (auto c = mEasyCurls.contains(msg->easy_handle)) {
                     auto s = std::move(c->second);
                     *this >> s;
-                    s->reportFinished();
+
+                    if (msg->data.result != CURLE_OK) {
+                        s->reportFail(msg->data.result);
+                    } else {
+                        s->reportSuccess();
+                    }
                 }
             }
         }
@@ -60,4 +62,12 @@ ACurlMulti& ACurlMulti::operator>>(const _<ACurl>& curl) {
     curl_multi_remove_handle(mMulti, curl->handle());
     mEasyCurls.erase(curl->handle());
     return *this;
+}
+
+void ACurlMulti::clear() {
+    assert(mMulti);
+    for (const auto&[handle,acurl] : mEasyCurls) {
+        curl_multi_remove_handle(mMulti, handle);
+    }
+    mEasyCurls.clear();
 }

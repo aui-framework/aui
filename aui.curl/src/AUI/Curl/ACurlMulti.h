@@ -21,6 +21,8 @@ public:
         mCancelled = true;
     }
 
+    void clear();
+
     [[nodiscard]]
     const AMap<void*, _<ACurl>>& curls() const {
         return mEasyCurls;

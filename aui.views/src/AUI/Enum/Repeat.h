@@ -7,11 +7,11 @@
 
 #include <AUI/Reflect/AEnumerate.h>
 
-ENUM_FLAG(Repeat) {
+AUI_ENUM_FLAG(Repeat) {
         NONE = 0,
         X_Y = 0b11,
         X = 0b01,
         Y = 0b10,
 };
 
-ENUM_VALUES(Repeat, Repeat::NONE, Repeat::X, Repeat::Y, Repeat::X_Y)
+AUI_ENUM_VALUES(Repeat, Repeat::NONE, Repeat::X, Repeat::Y, Repeat::X_Y)

@@ -23,7 +23,7 @@
 #include "AUI/Util/EnumUtil.h"
 
 
-ENUM_FLAG(FieldCell)
+AUI_ENUM_FLAG(FieldCell)
 {
 	F_HAS_BOMB = 1,
 		F_HAS_FLAG = 4,

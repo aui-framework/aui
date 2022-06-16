@@ -2,7 +2,7 @@
 
 #include <AUI/Util/EnumUtil.h>
 
-ENUM_FLAG(WindowStyle)
+AUI_ENUM_FLAG(WindowStyle)
 {
     DEFAULT = 0,
     /**

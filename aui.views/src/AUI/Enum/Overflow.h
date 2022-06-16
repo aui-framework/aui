@@ -32,4 +32,4 @@ enum class Overflow {
     HIDDEN
 };
 
-ENUM_VALUES(Overflow, Overflow::VISIBLE, Overflow::HIDDEN)
+AUI_ENUM_VALUES(Overflow, Overflow::VISIBLE, Overflow::HIDDEN)
