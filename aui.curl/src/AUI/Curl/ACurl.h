@@ -228,7 +228,7 @@ private:
     }
 
     void reportFail(int statusCode) {
-        emit fail(ErrorDescription{statusCode, AString(mErrorBuffer)});
+        emit fail(ErrorDescription{statusCode, AString::fromLatin1(mErrorBuffer)});
     }
 
     template<typename Ret>
@@ -242,7 +242,7 @@ signals:
      * @note A protocol-level error (like HTTP(S) 404) is not treated as a fail. Check for response code via the
      *       <code>getResponseCode()</code> function.
      */
-    emits<const ErrorDescription&> fail;
+    emits<ErrorDescription> fail;
 
     /**
      * @brief Emitted on success.

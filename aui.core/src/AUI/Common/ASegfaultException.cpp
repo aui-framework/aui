@@ -37,32 +37,7 @@ static void unblock_signal(int signum __attribute__((__unused__)))
 #endif
 }
 static void onSegfault(int, siginfo_t * info, void *_p __attribute__ ((__unused__))) {
-    printf("Caught SEGFAULT!\n");
-
-    void* buffer[1024];
-    if (int n = backtrace(buffer, std::size(buffer))) {
-        for (int i = 0; i < n; ++i) {
-            printf(" - at %p", buffer[i]);
-            Dl_info dlInfo;
-            aui::zero(dlInfo);
-            dladdr(buffer[i], &dlInfo);
-            if (dlInfo.dli_sname) {
-                int status;
-                auto ptr = abi::__cxa_demangle(dlInfo.dli_sname, nullptr, nullptr, &status);
-                if (!status) {
-                    printf(" (%s+%p)\n", ptr, dlInfo.dli_saddr);
-                } else {
-                    printf(" (%s+%p)\n", dlInfo.dli_sname, dlInfo.dli_saddr);
-                }
-                if (ptr) free(ptr);
-            } else if (dlInfo.dli_fname) {
-                printf(" (%s+%p)\n", dlInfo.dli_fname, dlInfo.dli_fbase);
-            } else {
-                printf("\n");
-            }
-        }
-    }
-
+    std::cout << "Caught SEGFAULT!" << std::endl << AStacktrace::capture(3);
 
     unblock_signal(SIGSEGV);
     throw ASegfaultException(info->si_addr);
