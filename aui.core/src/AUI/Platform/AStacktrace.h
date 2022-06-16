@@ -8,7 +8,7 @@
 class API_AUI_CORE AStacktrace {
 public:
     class Entry {
-        friend class AStacktrace;
+    friend class AStacktrace;
     private:
         void* mPtr;
         std::optional<AString> mFunctionName;
@@ -34,12 +34,6 @@ public:
             return mPtr;
         }
     };
-
-private:
-    mutable AVector<Entry> mEntries;
-    mutable bool mSymbolNamesResolved = false;
-
-    explicit AStacktrace(AVector<Entry> entries) : mEntries(std::move(entries)) {}
 public:
     AStacktrace(const AStacktrace&) = default;
     AStacktrace(AStacktrace&&) noexcept = default;
@@ -69,6 +63,12 @@ public:
      * @return
      */
     static AStacktrace capture(unsigned skipFrames = 0, unsigned maxFrames = 128) noexcept;
+
+private:
+    mutable AVector<Entry> mEntries;
+    mutable bool mSymbolNamesResolved = false;
+
+    explicit AStacktrace(AVector<Entry> entries) : mEntries(std::move(entries)) {}
 };
 
 inline std::ostream& operator<<(std::ostream& o, const AStacktrace& stacktrace) noexcept {

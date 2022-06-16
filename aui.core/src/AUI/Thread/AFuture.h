@@ -35,18 +35,10 @@ class AThreadPool;
 
 
 class AInvocationTargetException: public AException {
-private:
-    AString mExceptionType;
-    AString mMessage;
 
 public:
-    AInvocationTargetException(AString message, AString exceptionType):
-        mMessage(std::move(message)),
-        mExceptionType(std::move(exceptionType)) {}
+    AInvocationTargetException(const AString& message = {}): AException(message, std::current_exception(), AStacktrace::capture(3)) {}
 
-    AString getMessage() const noexcept override {
-        return "Exception of type " + mExceptionType + " has caught by AFuture: " + mMessage;
-    }
 
     ~AInvocationTargetException() noexcept override = default;
 };
@@ -236,7 +228,7 @@ namespace aui::impl::future {
                             }
                         }
                     } catch (const AException& e) {
-                        nullsafe(innerWeak.lock())->reportException(e);
+                        nullsafe(innerWeak.lock())->reportException();
                         return false;
                     } catch (...) {
                         nullsafe(innerWeak.lock())->reportInterrupted();
@@ -252,9 +244,9 @@ namespace aui::impl::future {
                 cv.notify_all();
             }
 
-            void reportException(const AException& e) noexcept {
+            void reportException() noexcept {
                 std::unique_lock lock(mutex);
-                exception.emplace(e.getMessage(), AReflect::name(&e)); // NOLINT(bugprone-throw-keyword-missing)
+                exception.emplace();
                 cv.notify_all();
                 nullsafe(onError)(*exception);
             }
@@ -301,8 +293,8 @@ namespace aui::impl::future {
             return (*mInner)->hasValue();
         }
 
-        void reportException(const AException& e) noexcept {
-            (*mInner)->reportException(e);
+        void reportException() noexcept {
+            (*mInner)->reportException();
         }
 
         template<typename Callback>
@@ -390,7 +382,7 @@ namespace aui::impl::future {
             (*mInner)->wait(mInner->sharedPtr(), flags);
             AThread::interruptionPoint();
             if ((*mInner)->exception) throw *(*mInner)->exception;
-            if ((*mInner)->interrupted) throw AInvocationTargetException("Future execution interrupted", "AThread::Interrupted");
+            if ((*mInner)->interrupted) throw AInvocationTargetException("Future execution interrupted");
             if constexpr(!isVoid) {
                 return *(*mInner)->value;
             }
