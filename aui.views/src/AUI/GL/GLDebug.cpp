@@ -43,7 +43,7 @@ static void GLAPIENTRY debugProc(GLenum source,
     switch (type)
     {
         case GL_DEBUG_TYPE_ERROR: {
-            ALogger::err("GL") << "[Error] " << message << AStacktrace::capture(2);
+            ALogger::err("OpenGL") << "[Error] " << message << AStacktrace::capture(2);
         }
         case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR: typeString = "Deprecated";  break;
         case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:  typeString = "Undefined";   break;
@@ -53,7 +53,7 @@ static void GLAPIENTRY debugProc(GLenum source,
         default:                                return;
     }
 
-    ALogger::info("GL") << "[" << typeString << "] " << message;
+    ALogger::info("OpenGL") << "[" << typeString << "] " << message;
 }
 
 void gl::setupDebug() {

@@ -5,6 +5,7 @@
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
+#include "AUI/Platform/ARenderingContextOptions.h"
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto window = reinterpret_cast<AWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
@@ -83,14 +84,18 @@ void CommonRenderingContext::destroyNativeWindow(ABaseWindow& window) {
 
 void CommonRenderingContext::beginPaint(ABaseWindow& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
-        assert(mPainterDC == nullptr);
-        mPainterDC = BeginPaint(w->mHandle, &mPaintstruct);
+        if (mSmoothResize) {
+            assert(mPainterDC == nullptr);
+            mPainterDC = BeginPaint(w->mHandle, &mPaintstruct);
+        }
     }
 }
 
 void CommonRenderingContext::endPaint(ABaseWindow& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
-        EndPaint(w->mHandle, &mPaintstruct);
-        mPainterDC = nullptr;
+        if (mSmoothResize) {
+            EndPaint(w->mHandle, &mPaintstruct);
+            mPainterDC = nullptr;
+        }
     }
 }

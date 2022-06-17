@@ -6,19 +6,12 @@
 
 
 #include "CommonRenderingContext.h"
+#include "ARenderingContextOptions.h"
 
 class OpenGLRenderingContext: public CommonRenderingContext {
-private:
-
-#if AUI_PLATFORM_WIN
-    static HGLRC ourHrc;
-#elif AUI_PLATFORM_LINUX
-    static GLXContext ourContext;
-#elif AUI_PLATFORM_MACOS
-    void* mContext;
-#endif
-
 public:
+    OpenGLRenderingContext(const ARenderingContextOptions::OpenGL& config) : mConfig(config) {}
+
     void init(const Init& init) override;
     ~OpenGLRenderingContext() override;
 
@@ -29,4 +22,17 @@ public:
     void endPaint(ABaseWindow& window) override;
     void beginResize(ABaseWindow& window) override;
     void endResize(ABaseWindow& window) override;
+
+private:
+    ARenderingContextOptions::OpenGL mConfig;
+
+#if AUI_PLATFORM_WIN
+    static HGLRC ourHrc;
+    static void makeCurrent(HDC hdc) noexcept;
+#elif AUI_PLATFORM_LINUX
+    static GLXContext ourContext;
+#elif AUI_PLATFORM_MACOS
+    void* mContext;
+#endif
+
 };

@@ -12,12 +12,23 @@
 #include <GL/wglew.h>
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/GL/State.h>
-
+#include "AUI/Util/kAUI.h"
 
 
 HGLRC OpenGLRenderingContext::ourHrc = nullptr;
 
 static constexpr auto LOG_TAG = "OpenGL";
+
+void OpenGLRenderingContext::makeCurrent(HDC hdc) noexcept {
+    static HDC prev = nullptr;
+    if (prev != hdc)
+    {
+        prev = hdc;
+        bool ok = wglMakeCurrent(hdc, ourHrc);
+        assert(ok);
+    }
+}
+
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
@@ -57,7 +68,7 @@ void OpenGLRenderingContext::init(const Init& init) {
 
         // context initialization
         ourHrc = wglCreateContext(fakeWindow.mDC);
-        wglMakeCurrent(fakeWindow.mDC, ourHrc);
+        makeCurrent(fakeWindow.mDC);
 
         ALogger::info(LOG_TAG) << ("Initialized temporary context");
 
@@ -69,7 +80,7 @@ void OpenGLRenderingContext::init(const Init& init) {
             glewExperimental = true;
             if (glewInit() != GLEW_OK) {
                 AMessageBox::show(nullptr, "OpenGL", "Could not initialize context");
-                throw std::runtime_error("glewInit failed");
+                throw AException("glewInit failed");
             }
         }
         bool k;
@@ -112,33 +123,35 @@ void OpenGLRenderingContext::init(const Init& init) {
         }
         GLint attribs[] =
                 {
-                        WGL_CONTEXT_MAJOR_VERSION_ARB, 2,
-                        WGL_CONTEXT_MINOR_VERSION_ARB, 0,
-                        WGL_CONTEXT_PROFILE_MASK_ARB, WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+                        WGL_CONTEXT_MAJOR_VERSION_ARB, mConfig.majorVersion,
+                        WGL_CONTEXT_MINOR_VERSION_ARB, mConfig.minorVersion,
+                        WGL_CONTEXT_PROFILE_MASK_ARB, mConfig.profile == ARenderingContextOptions::OpenGL::Profile::CORE
+                                                        ? WGL_CONTEXT_CORE_PROFILE_BIT_ARB : WGL_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
                         0
                 };
         {
-            HGLRC CompHRC = wglCreateContextAttribsARB(mWindowDC, nullptr, attribs);
-            if (CompHRC && wglMakeCurrent(mWindowDC, CompHRC)) {
-                wglDeleteContext(ourHrc);
-                ourHrc = CompHRC;
+            HGLRC compHrc = wglCreateContextAttribsARB(mWindowDC, nullptr, attribs);
+            if (compHrc) {
+                auto prevContext = ourHrc;
+                ourHrc = compHrc;
+                makeCurrent(mWindowDC);
+                wglDeleteContext(prevContext);
             } else
-                throw std::runtime_error("Failed to create OpenGL 2.0 context");
+                throw AException("Failed to create OpenGL {}.{} {} context"_format(mConfig.majorVersion, mConfig.minorVersion, mConfig.profile));
         }
         ALogger::info(LOG_TAG) << ("Context is ready");
 
-        // vsync
-        wglSwapIntervalEXT(true);
-
         Render::setRenderer(std::make_unique<OpenGLRenderer>());
 
-        //wglMakeCurrent(mDC, nullptr);
+        //makeCurrent(mDC);
     } else {
         bool k = SetPixelFormat(mWindowDC, pxf, &pfd);
         assert(k);
     }
 
-    wglMakeCurrent(mWindowDC, ourHrc);
+    makeCurrent(mWindowDC);
+    // vsync
+    wglSwapIntervalEXT(true);
 
 #if defined(_DEBUG)
     gl::setupDebug();
@@ -153,13 +166,13 @@ void OpenGLRenderingContext::init(const Init& init) {
 
 void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
     CommonRenderingContext::destroyNativeWindow(window);
-    wglMakeCurrent(nullptr, nullptr);
+    makeCurrent(nullptr);
 }
 
 void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     CommonRenderingContext::beginPaint(window);
-    bool ok = wglMakeCurrent(mPainterDC, ourHrc);
-    assert(ok);
+
+    makeCurrent(mSmoothResize ? mPainterDC : mWindowDC);
 
 
     gl::State::activeTexture(0);
@@ -186,7 +199,7 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
 }
 
 void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
-    wglMakeCurrent(mWindowDC, ourHrc);
+    makeCurrent(mWindowDC);
 }
 
 void OpenGLRenderingContext::endResize(ABaseWindow& window) {
@@ -194,8 +207,8 @@ void OpenGLRenderingContext::endResize(ABaseWindow& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
-    SwapBuffers(mPainterDC);
-    //wglMakeCurrent(mWindowDC, ourHrc);
+    SwapBuffers(mSmoothResize ? mPainterDC : mWindowDC);
+    //makeCurrent(mWindowDC);
     CommonRenderingContext::endPaint(window);
 }
 
