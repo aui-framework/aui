@@ -102,6 +102,7 @@ foreach(_module ${AUI_FIND_COMPONENTS})
                 list(APPEND AUI_IMPORTED_TARGETS "${_module_target_name}")
                 add_library(${_module_target_name} SHARED IMPORTED)
                 target_link_libraries(${_module_target_name} INTERFACE ${AUI_COMPONENT_${_module}_LINK_LIBS})
+                target_link_options(${_module_target_name} INTERFACE ${AUI_COMPONENT_${_module}_LINK_OPTIONS})
                 set_target_properties(${_module_target_name} PROPERTIES
                         IMPORTED_LOCATION "${_lib}"
                         IMPORTED_IMPLIB "${AUI_${_module}_IMPLIBRARY}"
