@@ -14,6 +14,11 @@ AUI_ENUM_FLAG(ARenderContextFlags) {
      * performance is increased by 10-50% especially in games.
      */
     NO_SMOOTH = 0b1,
+
+    /**
+     * @brief Disables vsync, causing the machine render as frequently as possible.
+     */
+    NO_VSYNC = 0b10,
 };
 
 struct API_AUI_VIEWS ARenderingContextOptions {

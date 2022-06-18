@@ -24,8 +24,10 @@ void OpenGLRenderingContext::makeCurrent(HDC hdc) noexcept {
     if (prev != hdc)
     {
         prev = hdc;
-        bool ok = wglMakeCurrent(hdc, ourHrc);
-        assert(ok);
+        if (hdc != nullptr) {
+            bool ok = wglMakeCurrent(hdc, ourHrc);
+            assert(ok);
+        }
     }
 }
 
@@ -151,7 +153,7 @@ void OpenGLRenderingContext::init(const Init& init) {
 
     makeCurrent(mWindowDC);
     // vsync
-    wglSwapIntervalEXT(true);
+    wglSwapIntervalEXT(!(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));
 
 #if defined(_DEBUG)
     gl::setupDebug();
