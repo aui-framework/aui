@@ -36,6 +36,7 @@
 #include <AUI/Platform/Pipe.h>
 #include <AUI/Platform/PipeInputStream.h>
 #include <AUI/Platform/PipeOutputStream.h>
+#include <AUI/Platform/ErrorToException.h>
 
 
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
@@ -177,6 +178,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
             message += " with args " + mArgs;
         if (!mWorkingDirectory.empty())
             message += " in " + mWorkingDirectory;
+        message += ": " + aui::impl::lastError().description;
         throw AProcessException(message);
     }
     mExitEvent.registerWaitForSingleObject(mProcessInformation.hProcess, [&] {
