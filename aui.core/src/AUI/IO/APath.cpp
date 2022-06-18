@@ -245,11 +245,7 @@ APath APath::absolute() const {
 
 const APath& APath::makeDir() const {
 #ifdef WIN32
-    // VV - КОЗЛЫ, МЛЯТЬ!
-    ::_wmkdir(c_str());
-    auto et = GetLastError();
-    if (et == ERROR_SUCCESS) return *this;
-
+    if (CreateDirectory(c_str(), nullptr)) return *this;
 #else
     if (::mkdir(toStdString().c_str(), 0755) == 0) {
         return *this;
