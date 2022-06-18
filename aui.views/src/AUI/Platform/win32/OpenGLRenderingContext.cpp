@@ -24,8 +24,10 @@ void OpenGLRenderingContext::makeCurrent(HDC hdc) noexcept {
     if (prev != hdc)
     {
         prev = hdc;
-        bool ok = wglMakeCurrent(hdc, ourHrc);
-        assert(ok);
+        if (hdc != nullptr) {
+            bool ok = wglMakeCurrent(hdc, ourHrc);
+            assert(ok);
+        }
     }
 }
 
