@@ -151,7 +151,7 @@ void OpenGLRenderingContext::init(const Init& init) {
 
     makeCurrent(mWindowDC);
     // vsync
-    wglSwapIntervalEXT(true);
+    wglSwapIntervalEXT(!(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));
 
 #if defined(_DEBUG)
     gl::setupDebug();
