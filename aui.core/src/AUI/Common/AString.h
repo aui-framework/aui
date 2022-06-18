@@ -539,7 +539,7 @@ public:
 	}
 
     template<typename... Args>
-    inline AString format(Args&&... args);
+    inline AString format(Args&&... args) const;
 
     AString processEscapes() const;
 

@@ -190,7 +190,7 @@ namespace aui {
 }
 
 template<typename... Args>
-inline AString AString::format(Args&& ... args) {
+inline AString AString::format(Args&& ... args) const {
     return aui::format(*this, std::forward<Args>(args)...);
 }
 
