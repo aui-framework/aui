@@ -257,7 +257,7 @@ AStylesheet::AStylesheet() {
             BackgroundImage {0x005499_rgb },
         },
         {
-                Selected(t<ACheckBox>()) >> t<ACheckBoxInner>(),
+            Selected(t<ACheckBox>()) >> t<ACheckBoxInner>(),
             BackgroundImage {":uni/svg/checkbox.svg" },
         },
         {

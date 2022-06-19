@@ -37,8 +37,8 @@ public:
      *   <dt><b>Sneaky exceptions</b></dt>
      *   <dd>An implementation can throw any exception that subclasses <a href="#AIOException">AIOException</a>.</dd>
      * </dl>
-     * \param dst source buffer
-     * \param size source buffer's size. > 0
+     * @param dst source buffer
+     * @param size source buffer's size. > 0
      */
 	virtual void write(const char* src, size_t size) = 0;
 

@@ -33,7 +33,7 @@ struct AModelMetaBase {
 
 /**
  * @brief Defines model metadata (list of fields, name of appropriate sql table, etc...)
- * \tparam T Model
+ * @tparam T Model
  * \code
  * // user model
  * struct User: ASqlModel<User> {

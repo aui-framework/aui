@@ -31,6 +31,10 @@
 #include "AScrollbar.h"
 #include <AUI/Model/ITreeModel.h>
 
+/**
+ * @brief Displays a tree model of strings.
+ * @ingroup useful_views
+ */
 class API_AUI_VIEWS ATreeView: public AViewContainer {
 private:
     class ContainerView;

@@ -31,6 +31,11 @@
 #include <AUI/Traits/containers.h>
 #include "AContainerPrototypes.h"
 
+
+/**
+ * @brief A std::vector with AUI extensions.
+ * @ingroup core
+ */
 template <class StoredType, class Allocator>
 class AVector: public std::vector<StoredType, Allocator>
 {

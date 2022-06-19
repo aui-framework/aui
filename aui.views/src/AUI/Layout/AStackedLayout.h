@@ -22,6 +22,21 @@
 #pragma once
 #include "ALayout.h"
 
+
+/**
+ * @brief Places views in a stack (along z axis).
+ * @ingroup layout_managers
+ * @details
+ * <dl>
+ *   <dt><b>UI Builder</b></dt>
+ *   <dd><code>Stacked</code></dd>
+ *   <dd><code>Centered</code></dd>
+ * </dl>
+ * Stacked layout manager places views stacking them onto each other. If the @ref AView "view" is not expanding,
+ * the @ref AView "view" is centered.
+ *
+ * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/stacked2.jpg">
+ */
 class API_AUI_VIEWS AStackedLayout: public ALayout
 {
 public:

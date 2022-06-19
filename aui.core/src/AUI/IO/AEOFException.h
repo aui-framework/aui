@@ -22,6 +22,10 @@
 #pragma once
 #include "AIOException.h"
 
+/**
+ * @brief Thrown when stream has reached end (end of file).
+ * @ingroup core
+ */
 class AEOFException: public AIOException
 {
 public:

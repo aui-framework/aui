@@ -24,6 +24,10 @@
 #include "IInputStream.h"
 #include "IOutputStream.h"
 
+/**
+ * @brief A buffer input/output stream based on std::string.
+ * @ingroup core
+ */
 class API_AUI_CORE AStringStream: public IInputStream, public IOutputStream
 {
 private:
@@ -39,4 +43,9 @@ public:
 
 	size_t read(char* dst, size_t size) override;
     void write(const char *src, size_t size) override;
+
+    [[nodiscard]]
+    const std::string& str() const noexcept {
+        return mString;
+    }
 };

@@ -1,6 +1,10 @@
 #pragma once
 
 
+/**
+ * @brief Represents a single 32-bit char.
+ * @ingroup core
+ */
 class AChar {
 private:
     char32_t mValue;

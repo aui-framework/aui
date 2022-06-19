@@ -29,6 +29,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls the font family of AView.
+     * @ingroup ass
+     */
     struct FontFamily {
         AString family;
     };

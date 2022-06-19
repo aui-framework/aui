@@ -36,6 +36,10 @@ template<typename T>
 class AFuture;
 
 
+/**
+ * @brief Thread pool implementation.
+ * @see AThreadPool::global()
+ */
 class API_AUI_CORE AThreadPool
 {
 private:
@@ -71,7 +75,15 @@ protected:
     size_t mIdleWorkers = 0;
 
 public:
+    /**
+     * @brief Initializes the thread pool with size of threads.
+     * @param size thread count to initialize.
+     */
     AThreadPool(size_t size);
+
+    /**
+     * @brief Initializes the thread pool with <code>max(std::thread::hardware_concurrency() - 1, 2)</code> of threads.
+     */
     AThreadPool();
     ~AThreadPool();
     size_t getPendingTaskCount();
@@ -82,6 +94,9 @@ public:
 
     void setWorkersCount(std::size_t workersCount);
 
+    /**
+     * @return a global thread pool created with the default constructor.
+     */
     static AThreadPool& global();
 
     size_t getTotalWorkerCount() const {

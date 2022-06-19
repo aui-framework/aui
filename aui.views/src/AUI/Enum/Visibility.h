@@ -25,6 +25,11 @@
 
 #pragma once
 
+/**
+ * @brief Controls the visibility of AView.
+ * @ingroup ass
+ * @ingroup views
+ */
 enum class Visibility {
 
     /**

@@ -46,7 +46,7 @@ AString Lang::getDescription() {
 }
 
 void scanSrcDir(const APath& srcDir, AMap<AString, AString>& dst) {
-    for (auto& i : srcDir.listDir(ListFlags::RECURSIVE | ListFlags::DEFAULT_FLAGS)) {
+    for (auto& i : srcDir.listDir(AFileListFlags::RECURSIVE | AFileListFlags::DEFAULT_FLAGS)) {
         if (!i.endsWith(".cpp") && !i.endsWith(".h") && i.endsWith(".hpp")) {
             continue;
         }

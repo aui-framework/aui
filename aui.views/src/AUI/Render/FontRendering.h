@@ -24,6 +24,11 @@
 #include "AUI/Reflect/AEnumerate.h"
 
 
+/**
+ * @brief Controls the expanding of AView.
+ * @ingroup ass
+ * @ingroup views
+ */
 enum class FontRendering
 {
 	NEAREST = 0,

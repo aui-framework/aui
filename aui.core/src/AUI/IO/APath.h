@@ -28,9 +28,10 @@
 #include <AUI/Util/EnumUtil.h>
 
 /**
- * Flag enum for APath::find
+ * @brief Flag enum for APath::find
+ * @ingroup core
  */
-AUI_ENUM_FLAG(PathFinder) {
+AUI_ENUM_FLAG(APathFinder) {
     NONE,
 
     /**
@@ -49,7 +50,11 @@ AUI_ENUM_FLAG(PathFinder) {
     SINGLE = 1 << 2
 };
 
-AUI_ENUM_FLAG(ListFlags) {
+/**
+ * @brief Flag enum for APath::listDir
+ * @ingroup core
+ */
+AUI_ENUM_FLAG(AFileListFlags) {
     NONE = 0,
 
     /**
@@ -84,12 +89,20 @@ AUI_ENUM_FLAG(ListFlags) {
      */
     RECURSIVE = 1 << 3,
 
-    DEFAULT_FLAGS = ListFlags::DIRS | ListFlags::REGULAR_FILES
+    DEFAULT_FLAGS = AFileListFlags::DIRS | AFileListFlags::REGULAR_FILES
 };
 
 /**
  * @brief An add-on to AString with functions for working with the path.
- * \note Sometimes the word "file" refers to both a <i>regular file</i> (txt, png, jpeg, etc.) and a <i>folder</i>
+ * @ingroup core
+ * @note In most file systems, both a regular file and a folder with the same name can exist on the same path.
+ * @details
+ * Example usage:
+ * @code{cpp}
+ * APath someDir = "someDir";
+ * APath filePath = someDir / "myfile.txt"; // "/" replaced with a system file separator
+ * @endcode
+ * @note Sometimes the word "file" refers to both a <i>regular file</i> (txt, png, jpeg, etc.) and a <i>folder</i>
  *       (directory, a file that contains other regular files and folders), i.e. a unit of the file system, which is
  *       often a confusion in terminology. Here and further:
  *       <ul>
@@ -98,7 +111,6 @@ AUI_ENUM_FLAG(ListFlags) {
  *                                    or a stream of bytes.</li>
  *          <li><b>folder</b> (directory) - a file that may have child files (both regular files and folders)</li>
  *       </ul>
- * \note In most file systems, both a regular file and a folder with the same name can exist on the same path.
  */
 class API_AUI_CORE APath final: public AString {
 private:
@@ -149,56 +161,56 @@ public:
 
     /**
      * @brief Get the absolute (full) path to the file.
-     * \return the absolute (full) path to the file
+     * @return the absolute (full) path to the file
      */
     APath absolute() const;
 
     /**
      * @brief Get list of (by default) direct children of this folder. This function outputs paths including the path
      *        listDir was called on.
-     * \note Use ListFlags enum flags to customize behaviour of this function.
-     * \return list of children of this folder.
+     * @note Use AFileListFlags enum flags to customize behaviour of this function.
+     * @return list of children of this folder.
      */
-    ADeque<APath> listDir(ListFlags f = ListFlags::DEFAULT_FLAGS) const;
+    ADeque<APath> listDir(AFileListFlags f = AFileListFlags::DEFAULT_FLAGS) const;
 
     /**
      * \example <pre>/home/user -> /home</pre>
-     * \return path to parent folder
+     * @return path to parent folder
      */
     [[nodiscard]] APath parent() const;
 
     /**
      * @brief Path of the child element. Relevant only for folders.
      * \example with fileName = work: <pre>/home/user -> /home/user/work</pre>
-     * \param name of child file
-     * \return path to child file relatively to this folder
+     * @param name of child file
+     * @return path to child file relatively to this folder
      */
     [[nodiscard]] APath file(const AString& fileName) const;
 
     /**
      * @brief File name.
      * \example <pre>/home/user/file.cpp -> file.cpp
-     * \return file name
+     * @return file name
      */
     [[nodiscard]] AString filename() const;
 
     /**
      * @brief File name without extension.
      * \example <pre>/home/user/file.cpp -> file
-     * \return file name without extension
+     * @return file name without extension
      */
     [[nodiscard]] AString filenameWithoutExtension() const;
 
     /**
      * @brief Remove the uppermost folder from this path
      * \example v1.0.0/client/azaza.zip -> client/azaza.zip
-     * \return The same path except uppermost folder
+     * @return The same path except uppermost folder
      */
     [[nodiscard]] APath withoutUppermostFolder() const;
 
     /**
-     * \return true if whether regular file or a folder exists on this path
-     * \note A file can exist as a regular file or(and) as a folder. This function will return false only if neither
+     * @return true if whether regular file or a folder exists on this path
+     * @note A file can exist as a regular file or(and) as a folder. This function will return false only if neither
      *       the folder nor the file does not exists on this path.
      *
      *       Checkout the <code>isRegularFileExists</code> or <code>isDirectoryExists</code> function to check which
@@ -208,59 +220,59 @@ public:
 
 
     /**
-     * \return true if regular file exists on this path
-     * \note A file can exist as a regular file or(and) as a folder. This function will return false only if regular
+     * @return true if regular file exists on this path
+     * @note A file can exist as a regular file or(and) as a folder. This function will return false only if regular
      *       file does not exists on this path.
      */
     bool isRegularFileExists() const;
 
     /**
-     * \return true if folder exists on this path
-     * \note A file can exist as a regular file or(and) as a folder. This function will return false only if folder does
+     * @return true if folder exists on this path
+     * @note A file can exist as a regular file or(and) as a folder. This function will return false only if folder does
      *       not exists on this path.
      */
     bool isDirectoryExists() const;
 
     /**
      * @brief Delete file. Relevant for empty folders and regular files.
-     * \return this
+     * @return this
      */
     const APath& removeFile() const;
 
     /**
      * @brief Delete files recursively. Relevant for folders.
-     * \return this
+     * @return this
      */
     const APath& removeFileRecursive() const;
 
     /**
      * @brief Create folder.
-     * \return this
+     * @return this
      */
     const APath& makeDir() const;
 
     /**
      * @brief Create all nonexistent folders on the path.
-     * \return this
+     * @return this
      */
     const APath& makeDirs() const;
 
     /**
      * @brief Returns same path but without <code>folder</code>
-     * \param dir some parent, grandparent, grandgrandparent... dir
+     * @param dir some parent, grandparent, grandgrandparent... dir
      * \example APath("C:/work/mon/test.txt").relativelyTo("C:/work") -> mon/test.txt
-     * \return same path but without <code>dir</code>
+     * @return same path but without <code>dir</code>
      */
     AString relativelyTo(const APath& dir) const;
 
     /**
      * @brief Checks whether path absolute or not.
-     * \return true if path is absolute
+     * @return true if path is absolute
      */
     bool isAbsolute() const;
     /**
      * @brief Checks whether path absolute or not.
-     * \return true if path is relative
+     * @return true if path is relative
      */
     bool isRelative() const {
         return !isAbsolute();
@@ -298,27 +310,27 @@ public:
 
     /**
      * @brief Get system's default folder.
-     * \note See the <code>APath::DefaultPath</code> definition.
-     * \return absolute path to default folder.
+     * @note See the <code>APath::DefaultPath</code> definition.
+     * @return absolute path to default folder.
      */
     static APath getDefaultPath(DefaultPath path);
 
     /**
      * @brief Copy regular file.
-     * \param source source file
-     * \param destination destination file
+     * @param source source file
+     * @param destination destination file
      */
     static void copy(const APath& source, const APath& destination);
 
     /**
      * @brief Move regular file.
-     * \param source source file
-     * \param destination destination file
+     * @param source source file
+     * @param destination destination file
      */
     static void move(const APath& source, const APath& destination);
 
     /**
-     * \return working dir of application
+     * @return working dir of application
      */
     static APath workingDir();
 
@@ -329,7 +341,7 @@ public:
      * @param locations paths to directories to search for the file in
      * @return full path to the found file; if file not found, an empty string is returned.
      */
-    static AVector<APath> find(const AString& filename, const AVector<APath>& locations, PathFinder flags = PathFinder::NONE);
+    static AVector<APath> find(const AString& filename, const AVector<APath>& locations, APathFinder flags = APathFinder::NONE);
 
     /**
      * @brief Path of the child element. Relevant only for folders.

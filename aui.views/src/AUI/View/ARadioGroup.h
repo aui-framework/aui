@@ -29,6 +29,13 @@
 #include "ARadioButton.h"
 #include <AUI/Model/IListModel.h>
 
+/**
+ * @brief A group of radio buttons.
+ * @ingroup useful_views
+ * @details
+ * ARadioGroup initializes radio buttons by itself. Since ARadioGroup is a @ref AViewContainer "view container" it
+ * places the initialized radio buttons to itself.
+ */
 class API_AUI_VIEWS ARadioGroup: public AViewContainer {
 private:
     _<IListModel<AString>> mModel;

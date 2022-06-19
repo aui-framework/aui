@@ -30,6 +30,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls the rendering offset transform of AView.
+     * @ingroup ass
+     */
     struct TransformOffset {
         AMetric offsetX;
         AMetric offsetY;

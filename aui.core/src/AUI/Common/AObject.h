@@ -31,6 +31,15 @@ class AString;
 class AAbstractSignal;
 class AAbstractThread;
 
+/**
+ * @brief A base object class.
+ * @ingroup core
+ * @details
+ * AObject is required to use signal slot system.
+ *
+ * AObject keeps reference to itself via std::enable_shared_from_this. It can be accessed with sharedPtr() and weakPtr()
+ * functions.
+ */
 class API_AUI_CORE AObject: public aui::noncopyable, public std::enable_shared_from_this<AObject>
 {
 	friend class AAbstractSignal;

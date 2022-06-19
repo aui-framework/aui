@@ -23,6 +23,11 @@
 #include "AAbstractSocket.h"
 #include "ATcpSocket.h"
 
+
+/**
+ * @brief TCP server socket.
+ * @ingroup network
+ */
 class API_AUI_NETWORK ATcpServerSocket: public AAbstractSocket
 {
 protected:
@@ -31,5 +36,9 @@ public:
 	ATcpServerSocket(uint16_t serverPort);
 	~ATcpServerSocket() override;
 
+    /**
+     * Blocks the thread until next connection.
+     * @return new connection
+     */
 	_<ATcpSocket> accept();
 };

@@ -24,6 +24,11 @@
 #include "AUI/Common/AString.h"
 
 
+
+/**
+ * @brief Visit xml entity.
+ * @ingroup xml
+ */
 class IXmlEntityVisitor
 {
 public:

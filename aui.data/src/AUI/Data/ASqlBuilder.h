@@ -58,7 +58,7 @@ public:
          * ASqlBuilder("users").insert({"username", "age"}, {"John", 23})
          *              .also().delete().where("username", '=', "Paul");
          * \endcode
-         * \return appropriate ASqlBuilder.
+         * @return appropriate ASqlBuilder.
          */
         ASqlBuilder& also() {
             return mBuilder;
@@ -169,13 +169,13 @@ public:
 
         /**
          * @brief Gets query result.
-         * \return query result
+         * @return query result
          */
         AVector<AVector<AVariant>> get();
 
         /**
          * @brief Gets query result in ORM.
-         * \return query result in ORM
+         * @return query result in ORM
          */
         template<class Model>
         AVector<Model> as() {
@@ -260,16 +260,16 @@ public:
 
     /**
      * @brief Does the INSERT query to DB.
-     * \param columnNames column names
-     * \return helper object for adding rows
+     * @param columnNames column names
+     * @return helper object for adding rows
      */
     Insert insert(const AStringVector& columnNames);
 
 
     /**
      * @brief Does the INSERT query to DB.
-     * \param args... column names
-     * \return helper object for adding rows
+     * @param args... column names
+     * @return helper object for adding rows
      */
     template<typename... Args>
     Insert ins(Args&&... args) {
@@ -283,15 +283,15 @@ public:
 
     /**
      * @brief Does the SELECT query to DB.
-     * \param columnNames column names
-     * \return helper object for retrieving rows
+     * @param columnNames column names
+     * @return helper object for retrieving rows
      */
     Select select(const AStringVector& columnNames = {});
 
     /**
      * @brief Does the SELECT query to DB.
-     * \param args... column names
-     * \return helper object for retrieving rows
+     * @param args... column names
+     * @return helper object for retrieving rows
      */
     template<typename... Args>
     Select sel(Args&&... args) {
@@ -304,23 +304,23 @@ public:
 
     /**
      * @brief Does the UPDATE query to DB.
-     * \param data data pairs {key, value}
-     * \return helper object for adding data (additional data)
+     * @param data data pairs {key, value}
+     * @return helper object for adding data (additional data)
      */
     Update update(const AMap<AString, AVariant>& data = {});
 
     /**
      * @brief Does the DELETE query to DB.
-     * \return helper object for WHERE condition
+     * @return helper object for WHERE condition
      */
     Delete remove();
 
 
     /**
      * @brief Inserts ORM object.
-     * \tparam Model ORM 
-     * \param model ORM
-     * \return row id
+     * @tparam Model ORM
+     * @param model ORM
+     * @return row id
      */
     template<typename Model>
     id_t insertORM(const Model& model) {
@@ -336,8 +336,8 @@ public:
 
     /**
      * @brief Updates ORM object.
-     * \tparam Model ORM 
-     * \param model ORM
+     * @tparam Model ORM
+     * @param model ORM
      */
     template<typename Model>
     void updateORM(const Model& model) {
@@ -353,8 +353,8 @@ public:
 
     /**
      * @brief Removes ORM object.
-     * \tparam Model ORM 
-     * \param model ORM
+     * @tparam Model ORM
+     * @param model ORM
      */
     template<typename Model>
     void removeORM(const Model& model) {

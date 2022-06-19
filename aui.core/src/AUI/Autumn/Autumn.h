@@ -27,7 +27,7 @@
 
 /**
  * @brief Minimal Dependency Injection implementation
- * @ingroup aui_core
+ * @ingroup core
  */
 namespace Autumn
 {
@@ -89,7 +89,7 @@ namespace Autumn
 
     /**
      * @brief Temporary replace object in Autumn.
-     * \tparam object type.
+     * @tparam object type.
      */
     template <typename T>
     class Temporary {

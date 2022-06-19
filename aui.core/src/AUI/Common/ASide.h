@@ -28,7 +28,9 @@
 #include "AUI/Util/EnumUtil.h"
 
 /**
- * Describes sides of the rectangle.
+ * @brierf Describes sides of a 2D rectangle.
+ * @ingroup core
+ * @see ASides
  */
 AUI_ENUM_FLAG(ASide)
 {

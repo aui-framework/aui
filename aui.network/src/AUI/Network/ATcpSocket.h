@@ -32,6 +32,10 @@
 
 class AByteBuffer;
 
+/**
+ * @brief A bidirectional TCP connection (either a client connection or returned by ATcpServerSocket).
+ * @ingroup network
+ */
 class API_AUI_NETWORK ATcpSocket: public AAbstractSocket, public IInputStream, public IOutputStream
 {
 friend class ATcpServerSocket;

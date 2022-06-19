@@ -5,6 +5,13 @@
 #include "ASplitterHelper.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 
+/**
+ * @brief A resizable grid layout.
+ * @ingroup useful_views
+ * @details
+ * AGridSplitter represents a grid layout which can be resized by user. Unlike ASplitter, works in both directions.
+ * AGridSplitter can be constructed with AGridSplitter::Builder.
+ */
 class API_AUI_VIEWS AGridSplitter: public AViewContainer {
 public:
     class Builder {

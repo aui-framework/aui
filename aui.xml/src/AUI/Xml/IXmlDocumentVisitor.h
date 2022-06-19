@@ -24,8 +24,15 @@
 #include "IXmlHeaderVisitor.h"
 #include "AUI/Common/SharedPtr.h"
 
+/**
+ * @brief Xml document visitor.
+ * @ingroup xml
+ */
 class IXmlDocumentVisitor: public IXmlEntityVisitor
 {
 public:
+    /**
+     * @brief Visits xml header.
+     */
 	virtual _<IXmlHeaderVisitor> visitHeader() { return nullptr; };
 };

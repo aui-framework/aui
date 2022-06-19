@@ -47,8 +47,8 @@ public:
 
     /**
      * @brief Sets flag.
-     * \param flag flag
-     * \return this
+     * @param flag flag
+     * @return this
      */
     ABitField& operator<<(T flag) {
         mStorage |= flag;
@@ -57,8 +57,8 @@ public:
 
     /**
      * @brief Resets flag.
-     * \param flag flag
-     * \return this
+     * @param flag flag
+     * @return this
      */
     ABitField& operator>>(T flag) {
         mStorage &= ~flag;
@@ -67,8 +67,8 @@ public:
 
     /**
      * @brief Determines whether flag set or not and resets flag.
-     * \param flag flag
-     * \return true if flag was set
+     * @param flag flag
+     * @return true if flag was set
      */
     bool checkAndSet(T flag) {
         if (!!(mStorage & flag)) {
@@ -80,8 +80,8 @@ public:
 
     /**
      * @brief Determines whether flag set or not and sets flag.
-     * \param flag flag
-     * \return true if flag was reset
+     * @param flag flag
+     * @return true if flag was reset
      */
     bool checkAndReset(T flag)
     {
@@ -95,9 +95,9 @@ public:
 
     /**
      * @brief Determines whether flag(s) set or not.
-     * \param flags flag(s)
-     * \return true if flag(s) set
-     * \note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
+     * @param flags flag(s)
+     * @return true if flag(s) set
+     * @note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
      */
     bool check(T flags) const {
         return (mStorage & flags) == flags;
@@ -105,9 +105,9 @@ public:
 
     /**
      * @brief Determines whether flag(s) set or not.
-     * \param flags flag(s)
-     * \return true if flag(s) set
-     * \note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
+     * @param flags flag(s)
+     * @return true if flag(s) set
+     * @note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
      */
     bool operator&(T flags) const {
         return check(flags);

@@ -29,6 +29,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls the font of AView.
+     * @ingroup ass
+     */
     struct Font {
         AUrl url;
     };

@@ -30,6 +30,10 @@ class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
 class API_AUI_CORE AByteBufferView;
 
+/**
+ * @brief Represents a wide char string.
+ * @ingroup core
+ */
 class API_AUI_CORE AString: std::wstring
 {
 private:
@@ -49,11 +53,18 @@ public:
 		: std::wstring(static_cast<basic_string&&>(other))
 	{
 	}
-	
+
+    /**
+     * @param str utf8 string
+     */
 	AString(const basic_string& other) noexcept
 		: basic_string<wchar_t>(other)
 	{
 	}
+
+    /**
+     * @param str utf8 string
+     */
 	AString(const std::string& str) noexcept;
 
 	AString(const AString& other) noexcept
@@ -78,6 +89,9 @@ public:
 		
 	}
 
+    /**
+     * @param str utf8 string
+     */
 	AString(const char* str) noexcept;
 
 	explicit AString(const std::allocator<wchar_t>& _Al) noexcept

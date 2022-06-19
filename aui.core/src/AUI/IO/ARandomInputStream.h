@@ -4,6 +4,10 @@
 #include <random>
 #include "IInputStream.h"
 
+/**
+ * @brief An input stream that generates random bytes.
+ * @ingroup core
+ */
 class API_AUI_CORE ARandomInputStream: public IInputStream {
 private:
     std::mt19937 mRandomEngine;

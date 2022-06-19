@@ -52,7 +52,7 @@ public:
 
 public:
 	/**
-	 * \return thread ID
+	 * @return thread ID
 	 */
 	id getId() const;
 
@@ -66,7 +66,7 @@ public:
 	virtual ~AAbstractThread();
 
 	/**
-	 * \return true if interrupt requested for this thread.
+	 * @return true if interrupt requested for this thread.
 	 */
 	virtual bool isInterrupted();
 
@@ -84,7 +84,7 @@ public:
 
     /**
      * @brief Get current event loop for this thread.
-     * \return current event loop for this thread
+     * @return current event loop for this thread
      */
 	IEventLoop* getCurrentEventLoop() const {
 		return mCurrentEventLoop;
@@ -240,7 +240,7 @@ public:
 	static void sleep(unsigned durationInMs);
 
 	/**
-	 * \return current thread.
+	 * @return current thread.
 	 */
 	static _<AAbstractThread> current();
 

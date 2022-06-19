@@ -6,6 +6,12 @@
 
 #include "AException.h"
 
+/**
+ * @brief An exception that thrown when access violation (segfault) occurs.
+ * @ingroup core
+ * @details
+ * Your application may handle ASegfaultException and continue normal execution.
+ */
 class ASegfaultException: public AException {
 private:
     void* mAddress;

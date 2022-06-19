@@ -23,6 +23,11 @@
 
 #include <AUI/Reflect/AEnumerate.h>
 
+/**
+ * @brief Controls the text alignment of AView.
+ * @ingroup ass
+ * @ingroup views
+ */
 enum class TextAlign {
 	LEFT,
 	CENTER,

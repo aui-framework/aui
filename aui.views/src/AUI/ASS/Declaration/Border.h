@@ -30,6 +30,10 @@
 #include "IDeclaration.h"
 
 namespace ass {
+    /**
+     * @brief Represents border.
+     * @ingroup ass
+     */
     struct Border {
         enum BorderType {
             SOLID,

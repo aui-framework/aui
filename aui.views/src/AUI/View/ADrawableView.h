@@ -30,8 +30,7 @@
 
 /**
  * @brief Simple view to draw an IDrawable.
- * @ingroup views
- * @ingroup Views
+ * @ingroup useful_views
  */
 class API_AUI_VIEWS ADrawableView: public AView {
 private:

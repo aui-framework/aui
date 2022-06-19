@@ -19,11 +19,70 @@
  * =====================================================================================================================
  */
 
-/**
+/*
  * It's not an ASS, it's Aui Style Sheets!!
  */
 
 #pragma once
+
+/**
+ * @defgroup ass Aui Style Sheets
+ * @ingroup views
+ * @brief CSS-like styling system
+ * @details
+ * AUI uses a CSS-like stylesheet domain specific language, ASS (stands for Aui Style Sheets). Like CSS, ASS is a list
+ * of rules. A rule consists of a @ref ass_selector "selector" and a list of @ref ass_declaration "declarations".
+ * Selector is a basic matcher that determines whether apply a rule to the specific @ref AView "view" or not.
+ * @ref ass_declaration "Declaration" controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
+ * "call setFontSize(18_pt) for every matched view").
+ * <table>
+ *   <tr>
+ *     <td>CSS</td>
+ *     <td>AUI ASS</td>
+ *     <td>Meaning</td>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       @code{css}
+ *       AButton {
+ *         background: red;
+ *       }
+ *       @endcode
+ *     </td>
+ *     <td>
+ *       @code{cpp}
+ *       {
+ *         t<AButton>(),
+ *         BackgroundColor { AColor::RED },
+ *       },
+ *       @endcode
+ *     </td>
+ *     <td>
+ *       Set all buttons' background to red
+ *     </td>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       @code{css}
+ *       ATextField::hover {
+ *         border: 1px solid #00f;
+ *       }
+ *       @endcode
+ *     </td>
+ *     <td>
+ *       @code{cpp}
+ *       {
+ *         t<ATextField>::hover(),
+ *         Border { 1_dp, 0x0000ff_rgb },
+ *       },
+ *       @endcode
+ *     </td>
+ *     <td>
+ *       Set all text fields' border to #00f (blue) on hover
+ *     </td>
+ *   </tr>
+ * </table>
+ */
 
 // Declarations
 #include "Declaration/BackgroundImage.h"

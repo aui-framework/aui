@@ -28,6 +28,10 @@
 #include "AInet4Address.h"
 #include "AUI/Common/AString.h"
 
+/**
+ * @brief Base class for all sockets.
+ * @ingroup network
+ */
 class API_AUI_NETWORK AAbstractSocket
 {	
 private:
@@ -59,7 +63,7 @@ protected:
 	
 	/**
 	 * @brief Bind socket for port. Used for ATcpServerSocket and AUdpSocket
-	 * \param bindingPort port
+	 * @param bindingPort port
 	 */
 	void bind(uint16_t bindingPort);
 

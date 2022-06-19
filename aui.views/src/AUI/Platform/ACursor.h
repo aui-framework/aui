@@ -21,6 +21,11 @@
 
 #pragma once
 
+/**
+ * @brief Represents cursor type.
+ * @ingroup views
+ * @ingroup ass
+ */
 enum class ACursor
 {
     /**

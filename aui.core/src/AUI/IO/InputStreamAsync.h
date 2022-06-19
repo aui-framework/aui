@@ -23,6 +23,10 @@
 #include "IInputStream.h"
 #include "AUI/Common/ASignal.h"
 
+/**
+ * @brief Converts a basic input stream to an asynchronous input stream so it's read in a separate thread.
+ * @ingroup core
+ */
 class API_AUI_CORE InputStreamAsync: public AObject
 {
 private:

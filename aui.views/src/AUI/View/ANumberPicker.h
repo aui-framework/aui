@@ -26,6 +26,7 @@
 
 /**
  * @brief A text field for numbers with increase/decrease buttons.
+ * @ingroup useful_views
  */
 class API_AUI_VIEWS ANumberPicker: public AViewContainer
 {
