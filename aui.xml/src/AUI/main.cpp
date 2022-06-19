@@ -23,3 +23,8 @@
 #include <windows.h>
 
 #endif
+
+/**
+* @defgroup xml aui::xml
+* @brief XML parser library.
+*/

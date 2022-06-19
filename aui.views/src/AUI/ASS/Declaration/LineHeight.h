@@ -29,6 +29,10 @@
 #include "IDeclaration.h"
 
 namespace ass {
+    /**
+     * @brief Controls line height of font of AView.
+     * @ingroup ass
+     */
     struct LineHeight {
         float spacing;
     };

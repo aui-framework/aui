@@ -29,8 +29,8 @@
 /**
  * @brief Defines a model that can be stored in an SQL database. Implements queries for this type to the database
  *        (insert, update, select, delete)
- * \tparam Model ORM model.
- * \note Model should implement AModelMeta (see AUI/Data/AModelMeta.h)
+ * @tparam Model ORM model.
+ * @note Model should implement AModelMeta (see AUI/Data/AModelMeta.h)
  */
 template<typename Model>
 struct ASqlModel {
@@ -102,7 +102,7 @@ struct ASqlModel {
 
         /**
          * @brief Get query result in ORM.
-         * \return query result in ORM
+         * @return query result in ORM
          */
         AVector<Model> get() {
             auto idField = AField<ASqlModel<Model>>::make(&ASqlModel<Model>::id);
@@ -133,7 +133,7 @@ struct ASqlModel {
          * @brief Do query and get first row in ORM
          * \throws NoSuchRowException when database returned zero rows
          *         TooManyRowsException when database returned two or more rows
-         * \return ORM structure
+         * @return ORM structure
          */
         inline Model first() {
             auto result = get();
@@ -154,8 +154,8 @@ struct ASqlModel {
 
     /**
      * @brief Get a row from the table by ID.
-     * \param id ID of the required string
-     * \return the string table for the specified ID
+     * @param id ID of the required string
+     * @return the string table for the specified ID
      * \throws NoSuchRowException if no string was found for the specified ID
      */
     static Model byId(id_t id) {
@@ -182,9 +182,9 @@ struct ASqlModel {
 
     /**
      * @brief Creates a model and saves it to the database.
-     * \tparam Args the types of constructor arguments
-     * \param args the constructor arguments
-     * \return the ORM structure
+     * @tparam Args the types of constructor arguments
+     * @param args the constructor arguments
+     * @return the ORM structure
      */
     template<typename ... Args>
     static Model make(Args&&... args) {
@@ -195,7 +195,7 @@ struct ASqlModel {
 
 
     /**
-     * \return name of the relation column for other tables.
+     * @return name of the relation column for other tables.
      * \example struct User -> table users -> column user_id is the result.
      */
     static AString getIdColumnNameInOtherTables() {
@@ -218,9 +218,9 @@ protected:    /* ORM RELATIONSHIP */
      * &nbsp;&nbsp;|-- Post::getAuthor() -> belongsTo<Post>()<br />
      * &nbsp;&nbsp;....
      *  </pre>
-     * \tparam Other ORM model relation will created with
-     * \return incomplete SQL request (see ASqlModel::IncompleteSelectRequest)
-     * \see ASqlModel::IncompleteSelectRequest
+     * @tparam Other ORM model relation will created with
+     * @return incomplete SQL request (see ASqlModel::IncompleteSelectRequest)
+     * @see ASqlModel::IncompleteSelectRequest
      */
     template<typename Other>
     _<typename Other::IncompleteSelectRequest> hasMany() {

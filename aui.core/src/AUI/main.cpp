@@ -39,8 +39,15 @@
 
 
 /**
+ * @defgroup useful_macros Useful macros
+ * @ingroup core
+ * @brief A set of functionality that introduces non-standard syntax which seems like the C++ features.
+ */
+
+
+/**
  * @mainpage AUI Framework
- * Welcome to AUI Framework documentation!
+ * @htmlinclude ./docs/index.html
  */
 
 #if AUI_PLATFORM_WIN

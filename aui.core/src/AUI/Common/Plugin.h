@@ -38,6 +38,17 @@ class AString;
 
 namespace aui
 {
+    /**
+     * @brief imports plugin by it's name.
+     * @param name plugin name
+     * @ingroup core
+     */
 	API_AUI_CORE void importPlugin(const AString& name);
+
+    /**
+     * @brief imports plugin by it's path.
+     * @param path plugin path
+     * @ingroup core
+     */
 	API_AUI_CORE void importPluginPath(const APath& path);
 };

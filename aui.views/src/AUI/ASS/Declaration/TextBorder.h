@@ -29,6 +29,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls the text border of AView.
+     * @ingroup ass
+     */
     struct TextBorder {
         AColor borderColor;
     };

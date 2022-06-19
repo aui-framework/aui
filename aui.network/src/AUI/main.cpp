@@ -23,3 +23,8 @@
 #include <windows.h>
 
 #endif
+
+/**
+ *@defgroup network aui::network
+* @brief Provides raw network capabilities.
+*/

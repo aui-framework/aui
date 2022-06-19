@@ -36,13 +36,17 @@
 
 class AByteBuffer;
 
+/**
+ * @brief A bidirectional UDP socket.
+ * @ingroup network
+ */
 class API_AUI_NETWORK AUdpSocket : public AAbstractSocket
 {
 public:
 
     /**
      * @brief Creates socket
-     * \param port port
+     * @param port port
      */
     AUdpSocket(uint16_t port);
 
@@ -58,15 +62,15 @@ public:
 
     /**
      * @brief Sends data by address.
-     * \param buf data buffer
-     * \param dst destination delivery address
+     * @param buf data buffer
+     * @param dst destination delivery address
      */
 	void write(AByteBufferView buf, const AInet4Address& dst);
 
 	/**
 	 * @brief Read data.
-	 * \param buf (out) received data
-	 * \param dst (out) sender address
+	 * @param buf (out) received data
+	 * @param dst (out) sender address
 	 */
 	void read(AByteBuffer& buf, AInet4Address& dst);
 

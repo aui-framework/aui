@@ -28,6 +28,10 @@
 #include <AUI/Reflect/AClass.h>
 #include "AContainerPrototypes.h"
 
+/**
+ * @brief A std::map with AUI extensions.
+ * @ingroup core
+ */
 template <class KeyType, class ValueType, class Predicate, class Allocator>
 class AMap: public std::map<KeyType, ValueType, Predicate, Allocator>
 {

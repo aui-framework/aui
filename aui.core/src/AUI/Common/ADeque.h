@@ -26,6 +26,11 @@
 #include "ASet.h"
 #include <AUI/Traits/containers.h>
 
+
+/**
+ * @brief A std::deque with AUI extensions.
+ * @ingroup core
+ */
 template <class StoredType,
 	class Allocator = std::allocator<StoredType>>
 class ADeque: public std::deque<StoredType, Allocator>

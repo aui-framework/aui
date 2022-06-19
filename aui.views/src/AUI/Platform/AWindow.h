@@ -111,7 +111,7 @@ protected:
 
     /**
      * @brief Constructor for custom initialization logic
-     * \note Please call windowNativePreInit
+     * @note Please call windowNativePreInit
      */
     AWindow(std::nullptr_t) {}
 
@@ -133,7 +133,7 @@ public:
      *        If some object often updates UI thread for displaying some data it may cause extra CPU and GPU overload.
      *        AUI throttles window redraws and FPS does not go above 60 FPS but UI views may also cause extra CPU and
      *        GPU overload that does not have visual difference.
-     * \return true if 16 milliseconds elapsed since last frame
+     * @return true if 16 milliseconds elapsed since last frame
      */
     static bool isRedrawWillBeEfficient();
 
@@ -152,7 +152,7 @@ public:
     void minimize();
 
     /**
-     * \return true if window minimized (hidden in taskbar, iconified)
+     * @return true if window minimized (hidden in taskbar, iconified)
      */
     bool isMinimized() const;
 
@@ -162,7 +162,7 @@ public:
     void maximize();
 
     /**
-     * \return true if window maximized (fullscreen)
+     * @return true if window maximized (fullscreen)
      */
     bool isMaximized() const;
 
@@ -223,35 +223,35 @@ public:
     static _<AWindow> wrapViewToWindow(const _<AView>& view, const AString& title, int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT);
 
     /**
-     * \return Current window for current thread.
+     * @return Current window for current thread.
      */
     static ABaseWindow* current();
 
     /**
      * @brief Determines whether views should display hover animations.
-     * \return false when any keyboard button is pressed
+     * @return false when any keyboard button is pressed
      */
     static bool shouldDisplayHoverAnimations();
 
     /**
      * @brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.
-     * \param position coordinates in the space of this window
-     * \param other other window
-     * \return coordinates in the space of the other window
+     * @param position coordinates in the space of this window
+     * @param other other window
+     * @return coordinates in the space of the other window
      */
     [[nodiscard]] glm::ivec2 mapPositionTo(const glm::ivec2& position, _<AWindow> other);
 
     /**
      * @brief Translates coordinates from the coordinate space of this window to the coordinate space of the monitor.
-     * \param position coordinates in the space of this window
-     * \return the coordinates in space of the monitor
+     * @param position coordinates in the space of this window
+     * @return the coordinates in space of the monitor
      */
     [[nodiscard]] glm::ivec2 unmapPosition(const glm::ivec2& position);
 
     /**
      * @brief Translates coordinates from the monitor's coordinate space to the coordinate space of this window.
-     * \param position the coordinate in screen space
-     * \return coordinates in the space of this window
+     * @param position the coordinate in screen space
+     * @return coordinates in the space of this window
      */
     [[nodiscard]] glm::ivec2 mapPosition(const glm::ivec2& position);
 
@@ -268,7 +268,7 @@ signals:
 
     /**
      * @brief Window is moving.
-     * \param client area position.
+     * @param client area position.
      */
     emits<glm::vec2> moving;
 

@@ -31,9 +31,9 @@ namespace RenderHints
 {
     /**
      * @brief Increases mask stack. Used by AView.
-     * \note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
+     * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
      *       wrapper class instead.
-     * \param maskRenderer function - mask renderer
+     * @param maskRenderer function - mask renderer
      */
     template<typename Callable>
     static void pushMask(Callable&& maskRenderer) {
@@ -44,9 +44,9 @@ namespace RenderHints
 
     /**
      * @brief Decreases mask stack. Used by AView.
-     * \note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
+     * @note This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
      *       wrapper class instead.
-     * \param maskRenderer function - mask renderer
+     * @param maskRenderer function - mask renderer
      */
     template<typename Callable>
     static void popMask(Callable&& maskRenderer) {

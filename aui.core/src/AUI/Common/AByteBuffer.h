@@ -32,6 +32,10 @@
 #include "AByteBufferView.h"
 
 
+/**
+ * @brief std::vector-like growing array for byte storage.
+ * @ingroup core
+ */
 class API_AUI_CORE AByteBuffer final: public IOutputStream {
 private:
     char* mBuffer = nullptr;
@@ -105,7 +109,7 @@ public:
 
 
     /**
-     * \return Internal buffer.
+     * @return Internal buffer.
      */
     char* data() const
     {
@@ -114,9 +118,9 @@ public:
 
     /**
      * @brief Gets value of specified type by byte index relative to the beginning of internal buffer.
-     * \tparam T data type
-     * \param byteIndex byte offset realtive to the beginning of internal buffer
-     * \return data
+     * @tparam T data type
+     * @param byteIndex byte offset realtive to the beginning of internal buffer
+     * @return data
      */
     template <typename T>
     T& at(size_t byteIndex)
@@ -182,28 +186,28 @@ public:
     }
 
     /**
-     * \return size of payload (valid data)
+     * @return size of payload (valid data)
      */
     size_t getSize() const noexcept {
         return mSize;
     }
 
     /**
-     * \return size of payload (valid data)
+     * @return size of payload (valid data)
      */
     size_t size() const noexcept {
         return mSize;
     }
 
     /**
-     * \return size of whole buffer (including possibly invalid data)
+     * @return size of whole buffer (including possibly invalid data)
      */
     size_t capacity() const noexcept {
         return mCapacity;
     }
 
     /**
-     * \return size of internal buffer. Must be greater that getSize()
+     * @return size of internal buffer. Must be greater that getSize()
      */
     size_t getReserved() const noexcept {
         return mCapacity;

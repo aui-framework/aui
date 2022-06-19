@@ -25,9 +25,10 @@
 #include "AUI/Common/AByteBuffer.h"
 
 /**
- * @brief Stores public and/or private RSA key
+ * @brief Stores public and/or private RSA key.
+ * @ingroup crypt
  */
-class API_AUI_CRYPT ARsa
+class API_AUI_CRYPT ARsa: public aui::noncopyable
 {
 private:
 	void* mRsa = nullptr;

@@ -27,6 +27,10 @@
 #pragma once
 
 
+/**
+ * @brief Controls the text vertical alignment of AView.
+ * @ingroup ass
+ */
 enum class VerticalAlign {
     DEFAULT,
     MIDDLE,

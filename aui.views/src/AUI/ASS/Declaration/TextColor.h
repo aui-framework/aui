@@ -28,6 +28,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls the text color of AView.
+     * @ingroup ass
+     */
     struct TextColor {
         AColor color;
     };

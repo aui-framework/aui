@@ -58,13 +58,13 @@ public:
 
 	/**
 	 * @brief Reads string while isalnum == true.
-	 * \return read string
+	 * @return read string
 	 */
 	AString readString();
 
 	/**
 	 * @brief Reads string while pred(char) == true.
-	 * \return read string
+	 * @return read string
 	 */
     template<typename Callable>
 	AString readStringWhile(Callable pred) {
@@ -94,20 +94,20 @@ public:
 
 	/**
 	 * @brief Reads <code>n</code> symbols.
-	 * \return read string
+	 * @return read string
 	 */
 	AString readString(size_t n);
 
 	/**
 	 * @brief Reads string while isalnum == true and characters contain in <code>applicableChars</code>.
-	 * \return read string
+	 * @return read string
 	 */
 	AString readString(const ASet<char>& applicableChars);
 
 
 	/**
 	 * @brief Reads character.
-	 * \return read character
+	 * @return read character
 	 */
 	char readChar() {
         if (mReverse) {
@@ -144,31 +144,31 @@ public:
 
 	/**
 	 * @brief Reads float point number.
-	 * \return read float point number
+	 * @return read float point number
 	 */
 	float readFloat();
 
 
 	/**
 	 * @brief Reads integer number.
-	 * \return read integer number
+	 * @return read integer number
 	 */
 	int readInt();
 
 	/**
 	 * @brief Reads unsigned integer number.
-	 * \return read unsigned integer number
+	 * @return read unsigned integer number
 	 */
 	unsigned readUInt();
 
 	/**
 	 * @brief Reads unsigned integer number.
-	 * \return read unsigned integer number + bool isHex
+	 * @return read unsigned integer number + bool isHex
 	 */
 	std::tuple<unsigned, bool> readUIntX();
 
 	/**
-	 * \return last read byte. Applicable with <code>ATokenizer::reverseByte()</code>
+	 * @return last read byte. Applicable with <code>ATokenizer::reverseByte()</code>
 	 */
 	char getLastCharacter()
 	{
@@ -177,7 +177,7 @@ public:
 
 	/**
 	 * @brief Get row counter value. Applicable for error reporting
-	 * \return row counter
+	 * @return row counter
 	 */
 	int getRow() const
 	{
@@ -186,7 +186,7 @@ public:
 
     /**
      * @brief Get column counter value. Applicable for error reporting
-     * \return column counter
+     * @return column counter
      */
 	int getColumn() const
 	{
@@ -195,48 +195,48 @@ public:
 
 	/**
 	 * @brief Skips character until unescaped c.
-	 * \param c character to read until to
+	 * @param c character to read until to
 	 */
 	void skipUntilUnescaped(char c);
 
 	/**
 	 * @brief Skips character until c.
-	 * \param c character to read until to
+	 * @param c character to read until to
 	 */
 	void skipUntil(char c);
 
 
     /**
      * @brief Reads string until unescaped c.
-     * \param c character to read until to
-     * \return read string
+     * @param c character to read until to
+     * @return read string
      */
 	AString readStringUntilUnescaped(char c);
 
     /**
      * @brief Reads string until unescaped c.
-     * \param characters characters to read until to
-     * \return read string
+     * @param characters characters to read until to
+     * @return read string
      */
 	AString readStringUntilUnescaped(const ASet<char>& characters);
 
     /**
      * @brief Reads string until unescaped c.
-     * \param out read string
-     * \param c character to read until to
+     * @param out read string
+     * @param c character to read until to
      */
     void readStringUntilUnescaped(std::string& out, char c);
 
     /**
      * @brief Reads string until unescaped c.
-     * \param out read string
-     * \param characters characters to read until to
+     * @param out read string
+     * @param characters characters to read until to
      */
     void readStringUntilUnescaped(std::string& out, const ASet<char>& characters);
 
 	/**
 	 * @brief reads 2 floats divided by any symbol.
-	 * \return vec2
+	 * @return vec2
 	 */
 	glm::vec2 readVec2();
 };

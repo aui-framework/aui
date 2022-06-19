@@ -32,8 +32,7 @@
 
 /**
  * @brief A button with dropdown list.
- * @ingroup views
- * @ingroup Views
+ * @ingroup useful_views
  * @todo Rename to ADropdown
  */
 class API_AUI_VIEWS AComboBox: public AButton {

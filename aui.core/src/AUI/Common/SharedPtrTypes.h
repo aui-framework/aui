@@ -52,6 +52,10 @@ namespace aui::impl::shared_ptr {
 template<typename T>
 class _;
 
+/**
+ * @brief An std::weak_ptr with AUI extensions.
+ * @tparam T
+ */
 template<typename T>
 struct _weak: public std::weak_ptr<T> {
 private:
@@ -116,8 +120,8 @@ namespace aui {
 
 
 /**
- * @brief std::shared_ptr<T> wrapper
- * \note  Of course, it is not good tone to define a class with _ type but it significantly increases coding speed.
+ * @brief @brief An std::weak_ptr with AUI extensions.
+ * @note  Of course, it is not good tone to define a class with _ type but it significantly increases coding speed.
  *        Instead of writing every time std::shared_ptr you should write only the _ symbol.
  */
 template<typename T>
@@ -252,7 +256,7 @@ public:
     /**
      * @brief Guarantees that further builder calls will be executed if and only if this pointer
      *        not equal to null.
-     * \return safe builder
+     * @return safe builder
      */
     inline auto safe()
     {
@@ -358,11 +362,44 @@ inline _<TO> _cast(_<FROM> object)
 
 
 /**
- * Parody to null-safety.
- * @example
- * @code{.cpp}
- * _<AView> view;
- * nullsafe(view)->enable();
+ * @brief Nullsafe call (see examples).
+ * @ingroup useful_macros
+ *
+ * <table>
+ *   <tr>
+ *     <td>without</td>
+ *     <td>with</td>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       @code{cpp}
+ *       if (getAnimator()) getAnimator()->postRender(this);
+ *       @endcode
+ *     </td>
+ *     <td>
+ *       @code{cpp}
+ *       nullsafe(getAnimator())->postRender(this);
+ *       @endcode
+ *     </td>
+ *   </tr>
+ * </table>
+ *
+ * which is shorter, avoids code duplication and calls <code>getAnimator()</code> only once because <code>nullsafe</code> expands to:
+ *
+ * @code{cpp}
+ * if (auto& _tmp = (getAnimator())) _tmp->postRender(this);
+ * @endcode
+ *
+ * Since `nullsafe` is a macro that expands to `if`, you can use `else` keyword:
+ *
+ * @code{cpp}
+ * nullsafe(getWindow())->flagRedraw(); else ALogger::info("Window is null!");
+ * @endcode
+ *
+ * and even combine multiple `nullsafe` statements:
+ *
+ * @code{cpp}
+ * nullsafe(getWindow())->flagRedraw(); else nullsafe(AWindow::current())->flagRedraw();
  * @endcode
  */
 #define nullsafe(s) if(decltype(auto) _tmp = (s))_tmp

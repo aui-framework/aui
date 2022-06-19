@@ -60,33 +60,33 @@ public:
     virtual ~AProcess() = default;
 
     /**
-     * \return process' executable file name.
+     * @return process' executable file name.
      */
     virtual APath getModuleName() = 0;
 
     /**
-     * \return path to the process' executable.
+     * @return path to the process' executable.
      */
     virtual APath getPathToExecutable() = 0;
 
     /**
-     * \return process' ID.
+     * @return process' ID.
      */
     virtual uint32_t getPid() const noexcept = 0;
 
     /**
      * @brief Wait for process to be finished and returns exit code.
-     * \return exit code
+     * @return exit code
      */
     virtual int waitForExitCode() = 0;
 
 
     /**
      * @brief Launches executable.
-     * \param applicationFile executable file
-     * \param args arguments
-     * \param workingDirectory working directory
-     * \return AChildProcess instance
+     * @param applicationFile executable file
+     * @param args arguments
+     * @param workingDirectory working directory
+     * @return AChildProcess instance
      */
     static _<AChildProcess> make(AString applicationFile,
                                        AString args = {},
@@ -95,10 +95,10 @@ public:
 
     /**
      * @brief Launches executable.
-     * \param applicationFile executable file
-     * \param args arguments
-     * \param workingDirectory working directory
-     * \return exit code
+     * @param applicationFile executable file
+     * @param args arguments
+     * @param workingDirectory working directory
+     * @return exit code
      */
     static int executeWaitForExit(AString applicationFile,
                                   AString args = {},
@@ -107,10 +107,10 @@ public:
 
     /**
      * @brief Launches executable with administrator rights.
-     * \param applicationFile executable file
-     * \param args arguments
-     * \param workingDirectory pro
-     * \note This function could not determine exit code because of MS Windows restrictions
+     * @param applicationFile executable file
+     * @param args arguments
+     * @param workingDirectory pro
+     * @note This function could not determine exit code because of MS Windows restrictions
      */
     static void executeAsAdministrator(const AString& applicationFile,
                                       const AString& args = {},
@@ -204,7 +204,7 @@ public:
 
     /**
      * @brief Wait for process to be finished.
-     * \return exit code
+     * @return exit code
      */
     int waitForExitCode() override;
 

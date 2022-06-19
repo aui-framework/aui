@@ -26,7 +26,9 @@
 #include <AUI/Util/ADataBinding.h>
 
 /**
- * <p>Represents an editable field with text to receive a text input from the user.</p>
+ * @brief Represents an editable field with text to receive a text input from the user.
+ * @ingroup useful_views
+ * @details
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/ATextField.gif">
  */
 class API_AUI_VIEWS ATextField: public AAbstractTextField

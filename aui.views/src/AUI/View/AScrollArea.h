@@ -27,6 +27,10 @@
 
 class AScrollAreaContainer;
 
+/**
+ * @brief A container with vertical and horizontal scrollbars.
+ * @ingroup useful_views
+ */
 class API_AUI_VIEWS AScrollArea: public AViewContainer {
 public:
     class Builder;

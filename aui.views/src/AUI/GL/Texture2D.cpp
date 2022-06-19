@@ -31,25 +31,29 @@
 
 template class gl::Texture<gl::TEXTURE_2D>;
 
-struct Result
-{
-	/**
-	 * GL_R16F / GL_RGB16F / GL_RGBA16F / GL_RGBA ....
-	 */
-	GLint internalformat = 0;
+namespace {
+    /**
+     * @internal
+     */
+    struct Result {
+        /*
+         * GL_R16F / GL_RGB16F / GL_RGBA16F / GL_RGBA ....
+         */
+        GLint internalformat = 0;
 
-	/**
-	 * GL_RED / GL_RGB / GL_RGBA
-	 */
-	GLenum format = 0;
+        /*
+         * GL_RED / GL_RGB / GL_RGBA
+         */
+        GLenum format = 0;
 
-	/**
-	 * GL_FLOAT / GL_UNSIGNED_BYTE
-	 */
-	GLenum type = GL_FLOAT;
+        /*
+         * GL_FLOAT / GL_UNSIGNED_BYTE
+         */
+        GLenum type = GL_FLOAT;
 
-	bool operator==(const Result& rhs) const;
-};
+        bool operator==(const Result& rhs) const;
+    };
+}
 
 inline bool Result::operator==(const Result& rhs) const
 {

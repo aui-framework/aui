@@ -29,6 +29,25 @@
 
 class AString;
 
+/**
+ * @brief A logger class.
+ * @ingroup core
+ * @details
+ * A logger is used to journal application events like errors or some user actions.
+ *
+ * It provides some extra functions like logging to file and output formatting.
+ *
+ * It provides `std::cout`-like API.
+ *
+ * Example:
+ * @code{cpp}
+ * ALogger::info("MyApp") << "Hello world!";
+ * @endcode
+ * Possible output:
+ * ```
+ * [00:47:02][UI Thread][Logger][INFO]: Hello world
+ * ```
+ */
 class API_AUI_CORE ALogger final
 {
 public:

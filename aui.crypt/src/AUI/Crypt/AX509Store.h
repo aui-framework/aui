@@ -24,7 +24,11 @@
 #include "AUI/Common/AByteBuffer.h"
 #include "AX509.h"
 
-class API_AUI_CRYPT AX509Store
+/**
+ * @brief x509 certificate store object.
+ * @ingroup crypt
+ */
+class API_AUI_CRYPT AX509Store: public aui::noncopyable
 {
 private:
 	void* mX509Store;

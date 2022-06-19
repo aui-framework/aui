@@ -23,6 +23,11 @@
 #include "AObject.h"
 #include "ASignal.h"
 
+
+/**
+ * @brief Async timer.
+ * @ingroup core
+ */
 class API_AUI_CORE ATimer: public AObject
 {
 private:

@@ -28,6 +28,11 @@
 
 #include <AUI/Reflect/AEnumerate.h>
 
+/**
+ * @brief Controls the image rendering type.
+ * @ingroup ass
+ * @ingroup views
+ */
 enum class ImageRendering {
     PIXELATED,
     SMOOTH

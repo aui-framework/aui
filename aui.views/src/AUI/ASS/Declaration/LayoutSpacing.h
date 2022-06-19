@@ -27,6 +27,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls the @ref ALayout::setSpacing "layout spacing" expanding of AViewContainer's layout.
+     * @ingroup ass
+     */
     struct LayoutSpacing {
         AMetric spacing;
     };

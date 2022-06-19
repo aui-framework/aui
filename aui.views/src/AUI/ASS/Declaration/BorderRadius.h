@@ -30,6 +30,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls border radius.
+     * @ingroup ass
+     */
     struct BorderRadius {
         AMetric radius;
     };

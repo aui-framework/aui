@@ -32,7 +32,10 @@
 #include "AScrollbar.h"
 
 /**
- * Word breaking fast text area.
+ * @brief Multiline text field.
+ * @ingroup useful_views
+ * @details
+ * Word breaking text area.
  */
 class API_AUI_VIEWS ATextArea: public AViewContainer {
 private:

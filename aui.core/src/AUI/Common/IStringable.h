@@ -31,7 +31,10 @@
 #include <AUI/Common/AString.h>
 
 /**
- * Object that can be converted to string
+ * @brief Object that can be converted to string.
+ * @ingroup core
+ * @details
+ * Used in reflection.
  */
 class IStringable {
 public:

@@ -24,6 +24,29 @@
 #include "ALayout.h"
 #include <AUI/Util/LayoutDirection.h>
 
+/**
+ * @brief Places views in a column.
+ * @ingroup layout_managers
+ * @details
+ * <dl>
+ *   <dt><b>UI Builder</b></dt>
+ *   <dd><code>Vertical</code></dd>
+ * </dl>
+ * Vertical layout manager places views in a column, fitting their width to the container's height.
+ * Has a `Vertical` shortcut that allows easy usage in UI building:
+ * @code{cpp}
+ * setContents(
+ *   Vertical {
+ *     _new<AButton>("1"),
+ *     _new<AButton>("2"),
+ *     _new<AButton>("3"),
+ *   }
+ * );
+ * @endcode
+ *
+ * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_040046.png">
+ * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/vertical.jpg">
+ */
 class API_AUI_VIEWS AVerticalLayout : public ALayout
 {
 private:

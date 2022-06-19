@@ -30,8 +30,7 @@
 /**
  * @brief Text field implementation
  * @details ATextField is separated into the different class in order to simplify styling.
- * @ingroup views
- * @ingroup Views
+ * @ingroup useful_views
  */
 class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView, public IStringable
 {

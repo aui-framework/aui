@@ -29,7 +29,8 @@
 
 
 /**
- * AUI universally unique identifier (UUID) implementation
+ * @brief Implements universally unique identifier (UUID)
+ * @ingroup core
  */
 class API_AUI_CORE AUuid {
 private:

@@ -29,9 +29,50 @@
 class AString;
 
 /**
- * @brief Used to store dimensions in scalable units (dp, pt, etc...).
- * \note It's highly recommended to use only Density-independent Pixel unit (_dp) to make your application correctly
- *       handle systems with high DPI.
+ * @brief Stores dimensions in scalable units (dp, pt, etc...).
+ * @details
+ * It's highly recommended to use only Density-independent Pixel unit (`_dp`) to make your application correctly handle
+ * systems with high DPI. In AUI, all units are density independent except `_px`. The only purpose of the `_px` unit is to
+ * define lines of exact one or two pixels wide.
+ *
+ * # Initialization
+ * Common usage:
+ * @code{cpp}
+ * AMetric a = 5_dp;
+ * a.getValuePx() // 5 on 100% scale, 6 on 125% scale, etc
+ * @endcode
+ *
+ * AMetric can be also initialized via value and unit:
+ *
+ * @code{cpp}
+ * AMetric a(5, T_DP);
+ * @endcode
+ *
+ * AMetric can be also initialized with zero without unit specified (in this case, AMetric::getUnit will return T_PX):
+ *
+ * @code{cpp}
+ * AMetric zero1 = 0; // zero pixels
+ * AMetric zero2 = {}; // also zero pixels
+ * @endcode
+ *
+ * However, if you try to specify nonzero integer without unit, it will produce a runtime error:
+ *
+ * @code{cpp}
+ * AMetric a = 5; // runtime error
+ * @endcode{cpp}
+ *
+ * ## Supported units
+ *
+ * Currently supported units:
+ *
+ * | Unit                       | Enum | Literal | Value                       |
+ * | -------------------------- | ---- | ------- | --------------------------- |
+ * | Density-independent Pixels | T_DP | _dp     | px * `scale_factor`         |
+ * | Typography point           | T_PT | _pt     | px * `scale_factor` * 4 / 3 |
+ * | Pixels                     | T_PX | _px     | px                          |
+ *
+ * @note It's highly recommended to use only Density-independent Pixel unit (_dp). DP guarantees that your application
+ * will correctly handle systems with hidpi screens.
  */
 class API_AUI_VIEWS AMetric
 {
@@ -59,14 +100,15 @@ public:
     /**
      * @brief Constructor for AMetric a; a = 0 without unit specifier. Can be used only for zero initialization (see
      *        example)
-     * \example
+     * @code{cpp}
      * <code>
      * AMetric a = 0; // ok<br />
      * AMetric b = 5_dp; // ok<br />
      * AMetric c = 5; // produces error<br />
      * </code>
-     * \tparam T integer
-     * \param value should be zero
+     * @endcode
+     * @tparam T integer
+     * @param value should be zero
      */
     template<typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = 0>
     AMetric(T value):

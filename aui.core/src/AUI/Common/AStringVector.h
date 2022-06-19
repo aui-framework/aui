@@ -23,6 +23,11 @@
 #include "AString.h"
 #include "AVector.h"
 
+
+/**
+ * @brief An AVector with string-related functions.
+ * @ingroup core
+ */
 class API_AUI_CORE AStringVector: public AVector<AString>
 {
 public:

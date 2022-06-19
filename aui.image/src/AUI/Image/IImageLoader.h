@@ -35,22 +35,22 @@ class IImageLoader
 {
 public:
 	/**
-	 * \param buffer buffer with the raw image file contents.
-	 * \return true, if this IImageLoader accepts image stored in this buffer
+	 * @param buffer buffer with the raw image file contents.
+	 * @return true, if this IImageLoader accepts image stored in this buffer
 	 */
 	virtual bool matches(AByteBufferView buffer) = 0;
 
 	/**
 	 * @brief The drawable (vector) image loader implementation.
-	 * \note Called if and only if <code>matches</code> returned true.
-	 * \return image factory. Can be <code>nullptr</code> if <code>getRasterImage</code> implemented.
+	 * @note Called if and only if <code>matches</code> returned true.
+	 * @return image factory. Can be <code>nullptr</code> if <code>getRasterImage</code> implemented.
 	 */
 	virtual _<IImageFactory> getImageFactory(AByteBufferView buffer) { return nullptr; };
 
 	/**
 	 * @brief The image loader implementation (raster).
-	 * \note Called if and only if <code>matches</code> returned true.
-	 * \return raster image. Can be <code>nullptr</code> if <code>getDrawable</code> implemented.
+	 * @note Called if and only if <code>matches</code> returned true.
+	 * @return raster image. Can be <code>nullptr</code> if <code>getDrawable</code> implemented.
 	 */
 	virtual _<AImage> getRasterImage(AByteBufferView buffer) = 0;
 };

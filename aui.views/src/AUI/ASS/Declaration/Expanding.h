@@ -29,6 +29,10 @@
 #include "IDeclaration.h"
 
 namespace ass {
+    /**
+     * @brief Controls the expanding of AView.
+     * @ingroup ass
+     */
     struct Expanding {
         unset_wrap<unsigned> expandingX;
         unset_wrap<unsigned> expandingY;

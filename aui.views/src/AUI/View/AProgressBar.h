@@ -23,6 +23,13 @@
 
 #include <AUI/View/AViewContainer.h>
 
+/**
+ * @brief A progress bar.
+ * @ingroup useful_views
+ * @details
+ * A progress bar is used to express a long operation (i.e. file copy) with known progress and reassure the user that
+ * application is still running.
+ */
 class API_AUI_VIEWS AProgressBar: public AViewContainer {
 public:
     class Inner: public AView {
@@ -31,23 +38,26 @@ public:
     };
     ~AProgressBar() override;
 
+    /**
+     * Set progress bar value.
+     * @param value progress value, where `0.0f` = 0%, `1.0f` = 100%
+     */
     void setValue(float value) {
         mValue = value;
         updateInnerWidth();
         redraw();
     }
 
-private:
-    float mValue = 0.f;
-    void updateInnerWidth();
-    _<Inner> mInner;
-
 public:
     AProgressBar();
 
     void setSize(int width, int height) override;
-
     void render() override;
+
+private:
+    float mValue = 0.f;
+    void updateInnerWidth();
+    _<Inner> mInner;
 };
 
 

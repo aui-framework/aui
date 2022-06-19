@@ -3,8 +3,10 @@
 #include <AUI/Traits/serializable.h>
 
 /**
- * Acts like std::string_view but for AByteBuffer.
- * @note don't use const reference of the object. Passing by value allows compiler to use only registers.
+ * @brief Acts like std::string_view but for AByteBuffer.
+ * @ingroup core
+ * @note don't use const reference of AByteBufferView. Passing by const reference forces compiler to use memory instead
+ * of registers.
  */
 class API_AUI_CORE AByteBufferView {
 private:

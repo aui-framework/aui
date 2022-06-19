@@ -29,6 +29,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls view's @ref AView::setMargin "margins".
+     * @ingroup ass
+     */
     struct Margin {
         unset_wrap<AMetric> left;
         unset_wrap<AMetric> top;

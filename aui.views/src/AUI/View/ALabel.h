@@ -34,8 +34,7 @@
 /**
  * @brief Represents a simple single-line text.
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/ALabel.png">
- * @ingroup views
- * @ingroup Views
+ * @ingroup useful_views
  */
 class API_AUI_VIEWS ALabel: public AView, public IStringable
 {

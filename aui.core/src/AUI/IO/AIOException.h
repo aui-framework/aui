@@ -25,7 +25,8 @@
 #include "AUI/Common/AException.h"
 
 /**
- * Exception caused by input/output stream.
+ * @brief Exception caused by input/output stream.
+ * @ingroup core
  */
 class AIOException: public AException
 {

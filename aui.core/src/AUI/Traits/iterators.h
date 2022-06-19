@@ -35,7 +35,7 @@ namespace aui {
      * <pre>
      * for (auto& view : aui::reverse_iterator_wrap(mViews)) { ... }
      * </pre>
-     * \tparam T ReverseIterable
+     * @tparam T ReverseIterable
      */
     template <typename T>
     struct reverse_iterator_wrap {

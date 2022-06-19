@@ -28,6 +28,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Represents solid (single color) background.
+     * @ingroup ass
+     */
     struct BackgroundSolid {
         AColor color;
 

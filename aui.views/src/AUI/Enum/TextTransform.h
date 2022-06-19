@@ -26,6 +26,11 @@
 
 #pragma once
 
+/**
+ * @brief Controls the text transform of AView.
+ * @ingroup ass
+ * @ingroup views
+ */
 enum class TextTransform {
     NONE,
     UPPERCASE,

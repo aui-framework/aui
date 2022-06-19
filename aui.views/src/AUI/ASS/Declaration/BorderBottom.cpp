@@ -5,7 +5,7 @@
 #include <AUI/Render/RenderHints.h>
 #include "BorderBottom.h"
 
-void ass::decl::Declaration<BorderBottom>::renderFor(AView* view) {
+void ass::decl::Declaration<ass::BorderBottom>::renderFor(AView* view) {
     RenderHints::PushColor x;
     int w = mInfo.width;
     Render::rect(ASolidBrush{mInfo.color},
@@ -13,10 +13,10 @@ void ass::decl::Declaration<BorderBottom>::renderFor(AView* view) {
                  {view->getWidth(), w});
 }
 
-bool ass::decl::Declaration<BorderBottom>::isNone() {
+bool ass::decl::Declaration<ass::BorderBottom>::isNone() {
     return mInfo.width <= 0.001f;
 }
 
-ass::decl::DeclarationSlot ass::decl::Declaration<BorderBottom>::getDeclarationSlot() const {
+ass::decl::DeclarationSlot ass::decl::Declaration<ass::BorderBottom>::getDeclarationSlot() const {
     return ass::decl::DeclarationSlot::BORDER;
 }

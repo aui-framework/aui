@@ -29,6 +29,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls the text shadow of AView.
+     * @ingroup ass
+     */
     struct TextShadow {
         AColor shadowColor;
     };

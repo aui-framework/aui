@@ -30,6 +30,10 @@
 #include <AUI/IO/IInputStream.h>
 #include "ALanguageCode.h"
 
+/**
+ * @brief Provides i18n (internationalization) support.
+ * @ingroup core
+ */
 class API_AUI_CORE AI18n {
     friend class Lang;
 private:

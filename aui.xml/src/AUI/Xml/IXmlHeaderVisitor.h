@@ -22,6 +22,10 @@
 #pragma once
 #include "AUI/Common/SharedPtr.h"
 
+/**
+ * @brief Xml header visitor.
+ * @ingroup xml
+ */
 class IXmlHeaderVisitor
 {
 public:

@@ -30,6 +30,10 @@
 #include <AUI/Util/LayoutDirection.h>
 #include <AUI/GL/Vao.h>
 
+/**
+ * @brief A Photoshop-like ruler for measuring display units.
+ * @ingroup userful_views
+ */
 class API_AUI_VIEWS ARulerView: public AView {
 private:
     LayoutDirection mLayoutDirection;

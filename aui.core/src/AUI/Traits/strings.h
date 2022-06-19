@@ -136,7 +136,7 @@ namespace aui {
     /**
      * @brief Formats string.
      *        String formatting is inspired by Rust's string formatting rules.
-     * \return formatted string.
+     * @return formatted string.
      */
     template <typename... Args>
     inline AString format(const AString& format, Args&&... args) {

@@ -29,6 +29,10 @@
 #include "IDeclaration.h"
 
 namespace ass {
+    /**
+     * @brief Represents gradient background.
+     * @ingroup ass
+     */
     struct BackgroundGradient {
         bool null = false;
         AColor topLeftColor;

@@ -26,6 +26,10 @@
 
 class AString;
 
+/**
+ * @brief Opens a file for a binary read.
+ * @ingroup core
+ */
 class API_AUI_CORE AFileInputStream: public IInputStream
 {
 private:

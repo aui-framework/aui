@@ -29,6 +29,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls the font size of AView.
+     * @ingroup ass
+     */
     struct FontSize {
         AMetric size;
     };

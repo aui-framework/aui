@@ -33,8 +33,7 @@ class AListViewContainer;
 
 /**
  * @brief Displays a list model of strings.
- * @ingroup views
- * @ingroup Views
+ * @ingroup useful_views
  */
 class API_AUI_VIEWS AListView: public AViewContainer, public AListModelObserver<AString>::IListModelListener
 {

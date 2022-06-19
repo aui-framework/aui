@@ -30,6 +30,7 @@ class AObject;
 
 /**
  * @defgroup signal_slot Signal-slot
+ * @ingroup core
  * @brief Signal-slots is an object messaging mechanism that creates seamless relations between objects.
  * @details Signal-slots originally implemented in Qt and it has proven itself as an object messaging mechanism making
  * it easy to implement the observer pattern without boilerplate code.

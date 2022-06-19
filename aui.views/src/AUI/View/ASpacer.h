@@ -22,6 +22,12 @@
 #pragma once
 #include "AView.h"
 
+/**
+ * @brief Expanding view which is useful in UI building.
+ * @ingroup useful_views
+ * @details
+ * ASpacer is an by default expanding view which tries acquire space as much as possible.
+ */
 class API_AUI_VIEWS ASpacer: public AView
 {
 private:

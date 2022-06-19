@@ -28,6 +28,10 @@
 
 #include "AViewContainer.h"
 
+/**
+ * @brief Like ATabView but without tabs line.
+ * @ingroup useful_views
+ */
 class API_AUI_VIEWS APageView: public AViewContainer {
 private:
     unsigned mPageId = 0;

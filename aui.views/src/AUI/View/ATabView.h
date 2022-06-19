@@ -59,6 +59,14 @@ public:
     }
 };
 
+/**
+ * @brief Tab host
+ * @ingroup useful_views
+ * @details
+ * Used for screen space saving by grouping views.
+ *
+ * Unlike APageView, has a row with buttons to switch tabs (pages).
+ */
 class API_AUI_VIEWS ATabView: public AViewContainer {
 private:
     _<APageView> mPageView;
