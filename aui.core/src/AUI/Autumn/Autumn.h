@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -26,7 +26,8 @@
 #include "AUI/Common/AException.h"
 
 /**
- * \brief Minimal Dependency Injection implementation
+ * @brief Minimal Dependency Injection implementation
+ * @ingroup aui_core
  */
 namespace Autumn
 {
@@ -87,7 +88,7 @@ namespace Autumn
 
 
     /**
-     * \brief Temporary replace object in Autumn.
+     * @brief Temporary replace object in Autumn.
      * \tparam object type.
      */
     template <typename T>

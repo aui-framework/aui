@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -86,17 +86,17 @@ public:
 
 signals:
     /**
-     * \brief Model data was changed
+     * @brief Model data was changed
      */
     emits<AModelRange<T>> dataChanged;
 
     /**
-     * \brief Model data was added
+     * @brief Model data was added
      */
     emits<AModelRange<T>> dataInserted;
 
     /**
-     * \brief Model data about to remove
+     * @brief Model data about to remove
      */
     emits<AModelRange<T>> dataRemoved;
 };

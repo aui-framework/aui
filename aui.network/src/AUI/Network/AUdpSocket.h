@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -41,14 +41,14 @@ class API_AUI_NETWORK AUdpSocket : public AAbstractSocket
 public:
 
     /**
-     * \brief Creates socket
+     * @brief Creates socket
      * \param port port
      */
     AUdpSocket(uint16_t port);
 
 
     /**
-     * \brief Creates socket with random port (used for "client" socket)
+     * @brief Creates socket with random port (used for "client" socket)
      */
 	AUdpSocket();
 
@@ -57,14 +57,14 @@ public:
 
 
     /**
-     * \brief Sends data by address.
+     * @brief Sends data by address.
      * \param buf data buffer
      * \param dst destination delivery address
      */
 	void write(AByteBufferView buf, const AInet4Address& dst);
 
 	/**
-	 * \brief Read data.
+	 * @brief Read data.
 	 * \param buf (out) received data
 	 * \param dst (out) sender address
 	 */

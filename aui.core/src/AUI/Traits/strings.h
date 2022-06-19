@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -134,7 +134,7 @@ namespace aui {
 
 
     /**
-     * \brief Formats string.
+     * @brief Formats string.
      *        String formatting is inspired by Rust's string formatting rules.
      * \return formatted string.
      */

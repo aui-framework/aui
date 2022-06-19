@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -35,7 +35,7 @@ public:
 	ATextField();
 	~ATextField() override;
 
-    void setText2(const AString& t) {setText(t);}
+    void setText2(const AString& t) {setText(t);} // TODO why text2?
 
 protected:
 	bool isValidText(const AString& text) override;

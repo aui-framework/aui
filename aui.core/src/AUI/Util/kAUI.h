@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -26,7 +26,7 @@
 #include <type_traits>
 
 /**
- * \brief Passes the current class and type of the current class separated by comma. It's convenient to use with the
+ * @brief Passes the current class and type of the current class separated by comma. It's convenient to use with the
  *        connect function:
  * \example
  * <code>
@@ -60,7 +60,7 @@ namespace aui::impl::slot {
 }
 
 /**
- * \brief Passes some variable and type of the variable separated by comma. It's convenient to use with the connect
+ * @brief Passes some variable and type of the variable separated by comma. It's convenient to use with the connect
  *        function:
  * \example
  * <code>
@@ -78,7 +78,7 @@ namespace aui::impl::slot {
 #define slot(v) v, &aui::impl::slot::decode_type_t<std::decay_t<decltype(v)>>
 
 /**
- * \brief Performs multiple operations on a single object without repeating its name.
+ * @brief Performs multiple operations on a single object without repeating its name.
  * \param object object to perform operations on
  * \param lambda code executed in the context of an object (as its member function)
  * \note analogue to <code>with</code>, <code>apply</code> in Kotlin
@@ -91,7 +91,7 @@ namespace aui::impl::slot {
  * &#09;void raiseSon();<br />
  * };<br />
  * ...<br />
- * auto worker = _new&lt;Worker&gt;();<br />
+ * auto worker = _new<Worker>();<br />
  * perform_as_member(worker, {<br />
  * &#09;buildHouse();<br />
  * &#09;plantTree();<br />
@@ -108,7 +108,7 @@ namespace aui::impl::slot {
     (*reinterpret_cast<__apply ## __FUNCTION__ ## __LINE__ *>(object.get()))()
 
 /**
- * \brief Performs multiple operations on a single object without repeating its name (in place)
+ * @brief Performs multiple operations on a single object without repeating its name (in place)
  *        This function can be used as an operator on object.
  * \param T object type to perform operations on
  * \param lambda code executed in the context of an object (as its member function)
@@ -122,7 +122,7 @@ namespace aui::impl::slot {
  * &#09;void raiseSon();<br />
  * };<br />
  * ...<br />
- * auto worker = _new&lt;Worker&gt;() let {<br />
+ * auto worker = _new<Worker>() let {<br />
  * &#09;it->buildHouse();<br />
  * &#09;it->plantTree();<br />
  * &#09;it->raiseSon();<br />
@@ -134,8 +134,8 @@ namespace aui::impl::slot {
 #define with_style + RuleWithoutSelector
 
 /**
- * \brief Executes following {} block asynchronously in standard thread pool. Does now allow to set lambda's capture.
- * \return nothing, if lambda does not contain <code>return</code>; <code>_&lt;AFuture&lt;T&gt;&gt;</code> if lambda
+ * @brief Executes following {} block asynchronously in standard thread pool. Does now allow to set lambda's capture.
+ * \return nothing, if lambda does not contain <code>return</code>; <code>_<AFuture<T>></code> if lambda
  *         contains <code>return</code> where <code>T</code> - return type of the lambda.
  * \see asyncX
  * \example
@@ -159,9 +159,9 @@ namespace aui::impl::slot {
 
 
 /**
- * \brief Executes following {} block asynchronously in standard thread pool. Allows to set lambda's capture but you
+ * @brief Executes following {} block asynchronously in standard thread pool. Allows to set lambda's capture but you
  *        should always specify lambda's capture.
- * \return nothing, if lambda does not contain <code>return</code>; <code>_&lt;AFuture&lt;T&gt;&gt;</code> if lambda
+ * \return nothing, if lambda does not contain <code>return</code>; <code>_<AFuture<T>></code> if lambda
  *         contains <code>return</code> where <code>T</code> - return type of the lambda.
  * \see async
  * \example
@@ -184,7 +184,7 @@ namespace aui::impl::slot {
 #define asyncX AThreadPool::global() *
 
 /**
- * \brief Executes following function call or {} block once per program execution.
+ * @brief Executes following function call or {} block once per program execution.
  * \example
  * <p>Example with {} block</p>
  * <code>
@@ -200,12 +200,12 @@ namespace aui::impl::slot {
 #define do_once static uint8_t _aui_once = 0; if(!_aui_once++)
 
 /**
- * \brief Executes lambda on current object's thread.
+ * @brief Executes lambda on current object's thread.
  */
 #define ui_thread (*getThread()) * [=]()
 
 /**
- * \brief Executes lambda on current object's thread. Allows to determine lambda's capture.
+ * @brief Executes lambda on current object's thread. Allows to determine lambda's capture.
  */
 #define ui_threadX (*getThread()) *
 #define repeat(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex)

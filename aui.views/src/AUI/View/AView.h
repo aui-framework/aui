@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -52,11 +52,18 @@ class AAssHelper;
 
 
 /**
+ * @defgroup Views
+ * @brief Views
+ */
+
+/**
  * @brief A class that describes the minimum unit that can be placed in a container (including a window) that takes up
  *        some space on the screen that responds to changes in size, position, moving the cursor, pressing / releasing
  *        keys and buttons, movement mouse wheel, etc...
  *
- *        Analogue to QWidget, View.
+ * @details Analogue to QWidget, View.
+ * @ingroup views
+ * @ingroup Views
  */
 class API_AUI_VIEWS AView: public AObject
 {

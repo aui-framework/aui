@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -26,7 +26,7 @@
 
 namespace aui {
     /**
-     * \brief Fill with zeros object's memory.
+     * @brief Fill with zeros object's memory.
      * \tparam T object type
      * \param data object itself
      */

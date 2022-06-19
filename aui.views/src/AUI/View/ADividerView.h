@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -28,6 +28,9 @@
 
 #include "AView.h"
 
+/**
+ * @brief Base class for AHDividerView and AVDivierView.
+ */
 class API_AUI_VIEWS ADividerView: public AView {
 public:
     ADividerView();

@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -75,14 +75,14 @@ public:
     virtual uint32_t getPid() const noexcept = 0;
 
     /**
-     * \brief Wait for process to be finished and returns exit code.
+     * @brief Wait for process to be finished and returns exit code.
      * \return exit code
      */
     virtual int waitForExitCode() = 0;
 
 
     /**
-     * \brief Launches executable.
+     * @brief Launches executable.
      * \param applicationFile executable file
      * \param args arguments
      * \param workingDirectory working directory
@@ -94,7 +94,7 @@ public:
 
 
     /**
-     * \brief Launches executable.
+     * @brief Launches executable.
      * \param applicationFile executable file
      * \param args arguments
      * \param workingDirectory working directory
@@ -106,7 +106,7 @@ public:
 
 
     /**
-     * \brief Launches executable with administrator rights.
+     * @brief Launches executable with administrator rights.
      * \param applicationFile executable file
      * \param args arguments
      * \param workingDirectory pro
@@ -198,12 +198,12 @@ public:
     }
 
     /**
-     * \brief Launches process.
+     * @brief Launches process.
      */
     void run(ASubProcessExecutionFlags flags = ASubProcessExecutionFlags::DEFAULT);
 
     /**
-     * \brief Wait for process to be finished.
+     * @brief Wait for process to be finished.
      * \return exit code
      */
     int waitForExitCode() override;

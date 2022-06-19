@@ -11238,11 +11238,11 @@ static void output_html_string(FILE *out, const char *z){
       utf8_printf(out,"%.*s",i,z);
     }
     if( z[i]=='<' ){
-      raw_printf(out,"&lt;");
+      raw_printf(out,"<");
     }else if( z[i]=='&' ){
       raw_printf(out,"&amp;");
     }else if( z[i]=='>' ){
-      raw_printf(out,"&gt;");
+      raw_printf(out,">");
     }else if( z[i]=='\"' ){
       raw_printf(out,"&quot;");
     }else if( z[i]=='\'' ){

@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -33,8 +33,8 @@
 
 
 /**
- * Basic implementation of type shortcuts and selection for editable text fields.
- * Used as base in ATextArea and ATextField, both of them using own way of handling and rendering text
+ * @brief Basic implementation of type shortcuts and selection for editable text fields.
+ * @details Used as base in ATextArea and ATextField, both of them using own way of text handling and rendering.
  */
 class API_AUI_VIEWS AAbstractTypeableView: public AView, public ACursorSelectable {
 private:

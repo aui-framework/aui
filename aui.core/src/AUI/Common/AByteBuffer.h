@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -74,19 +74,19 @@ public:
     }
 
     /**
-     * \brief Resizes internal buffer.
+     * @brief Resizes internal buffer.
      */
     void reserve(size_t size);
 
     /**
-     * \brief Increases internal buffer.
+     * @brief Increases internal buffer.
      */
     void increaseInternalBuffer(size_t size) {
         reserve(mCapacity + size);
     }
 
     /**
-     * \brief If <code>getReserved() - getSize()</code> is less than <code>size</code> increases internal buffer size
+     * @brief If <code>getReserved() - getSize()</code> is less than <code>size</code> increases internal buffer size
      *        enough to store <code>size</code> bytes.
      */
     void ensureReserved(size_t size) {
@@ -113,7 +113,7 @@ public:
     }
 
     /**
-     * \brief Gets value of specified type by byte index relative to the beginning of internal buffer.
+     * @brief Gets value of specified type by byte index relative to the beginning of internal buffer.
      * \tparam T data type
      * \param byteIndex byte offset realtive to the beginning of internal buffer
      * \return data

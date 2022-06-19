@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -28,6 +28,12 @@
 
 #include "AViewContainer.h"
 
+/**
+ * @brief Wrapping container to drag views inside of it.
+ * @details Contained views must be either wrapped by convertToDraggable or have an ADragArea::ADraggableHandle inside.
+ * @ingroup views
+ * @ingroup Views
+ */
 class API_AUI_VIEWS ADragArea: public AViewContainer {
 private:
     _weak<AViewContainer> mDraggedContainer;
