@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -30,7 +30,7 @@
 namespace aui {
 
     /**
-     * \brief Helper wrapper for objects implementing rbegin and rend for using in foreach loops
+     * @brief Helper wrapper for objects implementing rbegin and rend for using in foreach loops
      * \example
      * <pre>
      * for (auto& view : aui::reverse_iterator_wrap(mViews)) { ... }
@@ -155,10 +155,10 @@ namespace aui {
      * Allows to iterate multiple containers in parallel.
      * @example
      * @code{cpp}
-     * std::array&lt;int, 3&gt; ints = { 1, 2, 3 };
-     * std::array&lt;std::string, 3&gt; strings = { "one", "two", "three" };
+     * std::array<int, 3> ints = { 1, 2, 3 };
+     * std::array<std::string, 3> strings = { "one", "two", "three" };
      * for (auto&[i, s] : aui::zip(ints, strings)) {
-     *     std::cout &lt;&lt; i &lt;&lt; ", " &lt;&lt; s &lt;&lt; std::endl;
+     *     std::cout << i << ", " << s << std::endl;
      * }
      * @endcode
      * <pre>

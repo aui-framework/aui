@@ -8,6 +8,10 @@
 #include <AUI/View/AListView.h>
 #include <AUI/View/AButton.h>
 
+
+/**
+ * @brief Helper UI to edit list models.
+ */
 class ABasicListEditor: public AViewContainer {
 private:
 

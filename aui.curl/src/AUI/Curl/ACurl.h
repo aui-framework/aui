@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -163,7 +163,7 @@ public:
         }
 
         /**
-         * \brief Sets: Accept-Ranges: begin-end
+         * @brief Sets: Accept-Ranges: begin-end
          *        (download part of the file)
          * \param begin start index of the part
          * \param end end index of the part. Zero means end of the file.

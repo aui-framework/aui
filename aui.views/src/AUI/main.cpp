@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -29,6 +29,11 @@ processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 #endif
 
+/**
+ * @defgroup views aui::views
+ * @brief Graphical User Interface library.
+ * @details AUI's flagship module which provides modern declarative ways to create graphical user interfaces.
+ */
 
 
 

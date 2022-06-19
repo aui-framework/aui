@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -44,7 +44,9 @@ public:
 };
 
 /**
- * Represents a simple check box.
+ * @brief Check box with a label. Possible states: checked and unchecked.
+ * @ingroup views
+ * @ingroup Views
  */
 class API_AUI_VIEWS ACheckBox: public AViewContainer, public ass::ISelectable
 {

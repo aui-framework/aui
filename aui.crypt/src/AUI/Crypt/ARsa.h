@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -25,7 +25,7 @@
 #include "AUI/Common/AByteBuffer.h"
 
 /**
- * \brief Stores public and/or private RSA key
+ * @brief Stores public and/or private RSA key
  */
 class API_AUI_CRYPT ARsa
 {

@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -32,7 +32,7 @@ public:
 	virtual ~IOutputStream() = default;
 
     /**
-     * \brief Writes exact <code>size</code> bytes to stream. Blocking (waiting for write all data) is allowed.
+     * @brief Writes exact <code>size</code> bytes to stream. Blocking (waiting for write all data) is allowed.
      * <dl>
      *   <dt><b>Sneaky exceptions</b></dt>
      *   <dd>An implementation can throw any exception that subclasses <a href="#AIOException">AIOException</a>.</dd>

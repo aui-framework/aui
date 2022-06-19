@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -116,7 +116,7 @@ namespace aui {
 
 
 /**
- * \brief std::shared_ptr<T> wrapper
+ * @brief std::shared_ptr<T> wrapper
  * \note  Of course, it is not good tone to define a class with _ type but it significantly increases coding speed.
  *        Instead of writing every time std::shared_ptr you should write only the _ symbol.
  */
@@ -250,7 +250,7 @@ public:
     }
 
     /**
-     * \brief Guarantees that further builder calls will be executed if and only if this pointer
+     * @brief Guarantees that further builder calls will be executed if and only if this pointer
      *        not equal to null.
      * \return safe builder
      */
@@ -361,7 +361,7 @@ inline _<TO> _cast(_<FROM> object)
  * Parody to null-safety.
  * @example
  * @code{.cpp}
- * _&lt;AView&gt; view;
+ * _<AView> view;
  * nullsafe(view)->enable();
  * @endcode
  */

@@ -5861,8 +5861,8 @@ SQLITE_API void sqlite3_result_subtype(sqlite3_context*,unsigned int);
 ** <ol>
 ** <li> If A==B then B==A.
 ** <li> If A==B and B==C then A==C.
-** <li> If A&lt;B THEN B&gt;A.
-** <li> If A&lt;B and B&lt;C then A&lt;C.
+** <li> If A<B THEN B>A.
+** <li> If A<B and B<C then A<C.
 ** </ol>
 **
 ** If a collating function fails any of the above constraints and that
@@ -6760,7 +6760,7 @@ struct sqlite3_module {
 **
 ** <blockquote>column OP expr</blockquote>
 **
-** where OP is =, &lt;, &lt;=, &gt;, or &gt;=.)^  ^(The particular operator is
+** where OP is =, <, <=, >, or >=.)^  ^(The particular operator is
 ** stored in aConstraint[].op using one of the
 ** [SQLITE_INDEX_CONSTRAINT_EQ | SQLITE_INDEX_CONSTRAINT_ values].)^
 ** ^(The index of the column is stored in

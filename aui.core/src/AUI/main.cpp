@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -17,6 +17,30 @@
  
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
+ */
+
+
+/**
+ * @defgroup core aui::core
+ * @brief Main central library.
+ * @details AUI's core central library without graphical components used by other modules.
+ * Adds these features to C++:
+ * - signal-slot system
+ * - interruptable threads
+ * - primitive dependency injection
+ * - input-output
+ * - i18n
+ * - logging
+ * - data models
+ * - reflection
+ * - trait classes
+ * - url
+ */
+
+
+/**
+ * @mainpage AUI Framework
+ * Welcome to AUI Framework documentation!
  */
 
 #if AUI_PLATFORM_WIN

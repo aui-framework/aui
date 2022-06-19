@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -23,7 +23,7 @@
 
 
 /**
- * \brief Bit field implementation.
+ * @brief Bit field implementation.
  */
 template <typename T = uint32_t>
 class ABitField {
@@ -46,7 +46,7 @@ public:
     }
 
     /**
-     * \brief Sets flag.
+     * @brief Sets flag.
      * \param flag flag
      * \return this
      */
@@ -56,7 +56,7 @@ public:
     }
 
     /**
-     * \brief Resets flag.
+     * @brief Resets flag.
      * \param flag flag
      * \return this
      */
@@ -66,7 +66,7 @@ public:
     }
 
     /**
-     * \brief Determines whether flag set or not and resets flag.
+     * @brief Determines whether flag set or not and resets flag.
      * \param flag flag
      * \return true if flag was set
      */
@@ -79,7 +79,7 @@ public:
     }
 
     /**
-     * \brief Determines whether flag set or not and sets flag.
+     * @brief Determines whether flag set or not and sets flag.
      * \param flag flag
      * \return true if flag was reset
      */
@@ -94,7 +94,7 @@ public:
     }
 
     /**
-     * \brief Determines whether flag(s) set or not.
+     * @brief Determines whether flag(s) set or not.
      * \param flags flag(s)
      * \return true if flag(s) set
      * \note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
@@ -104,7 +104,7 @@ public:
     }
 
     /**
-     * \brief Determines whether flag(s) set or not.
+     * @brief Determines whether flag(s) set or not.
      * \param flags flag(s)
      * \return true if flag(s) set
      * \note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).

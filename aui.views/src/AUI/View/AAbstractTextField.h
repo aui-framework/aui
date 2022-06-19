@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -27,6 +27,12 @@
 #include <AUI/Common/IStringable.h>
 #include <AUI/Render/Render.h>
 
+/**
+ * @brief Text field implementation
+ * @details ATextField is separated into the different class in order to simplify styling.
+ * @ingroup views
+ * @ingroup Views
+ */
 class API_AUI_VIEWS AAbstractTextField : public AAbstractTypeableView, public IStringable
 {
 private:

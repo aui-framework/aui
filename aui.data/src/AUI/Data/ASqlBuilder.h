@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -53,7 +53,7 @@ public:
         virtual ~Statement() = default;
 
         /**
-         * \brief Does the another request to the same table.
+         * @brief Does the another request to the same table.
          * \code
          * ASqlBuilder("users").insert({"username", "age"}, {"John", 23})
          *              .also().delete().where("username", '=', "Paul");
@@ -168,13 +168,13 @@ public:
         }
 
         /**
-         * \brief Gets query result.
+         * @brief Gets query result.
          * \return query result
          */
         AVector<AVector<AVariant>> get();
 
         /**
-         * \brief Gets query result in ORM.
+         * @brief Gets query result in ORM.
          * \return query result in ORM
          */
         template<class Model>
@@ -259,7 +259,7 @@ public:
     ASqlBuilder(const AString& tableName);
 
     /**
-     * \brief Does the INSERT query to DB.
+     * @brief Does the INSERT query to DB.
      * \param columnNames column names
      * \return helper object for adding rows
      */
@@ -267,7 +267,7 @@ public:
 
 
     /**
-     * \brief Does the INSERT query to DB.
+     * @brief Does the INSERT query to DB.
      * \param args... column names
      * \return helper object for adding rows
      */
@@ -282,14 +282,14 @@ public:
 
 
     /**
-     * \brief Does the SELECT query to DB.
+     * @brief Does the SELECT query to DB.
      * \param columnNames column names
      * \return helper object for retrieving rows
      */
     Select select(const AStringVector& columnNames = {});
 
     /**
-     * \brief Does the SELECT query to DB.
+     * @brief Does the SELECT query to DB.
      * \param args... column names
      * \return helper object for retrieving rows
      */
@@ -303,21 +303,21 @@ public:
     }
 
     /**
-     * \brief Does the UPDATE query to DB.
+     * @brief Does the UPDATE query to DB.
      * \param data data pairs {key, value}
      * \return helper object for adding data (additional data)
      */
     Update update(const AMap<AString, AVariant>& data = {});
 
     /**
-     * \brief Does the DELETE query to DB.
+     * @brief Does the DELETE query to DB.
      * \return helper object for WHERE condition
      */
     Delete remove();
 
 
     /**
-     * \brief Inserts ORM object.
+     * @brief Inserts ORM object.
      * \tparam Model ORM 
      * \param model ORM
      * \return row id
@@ -335,7 +335,7 @@ public:
     }
 
     /**
-     * \brief Updates ORM object.
+     * @brief Updates ORM object.
      * \tparam Model ORM 
      * \param model ORM
      */
@@ -352,7 +352,7 @@ public:
     }
 
     /**
-     * \brief Removes ORM object.
+     * @brief Removes ORM object.
      * \tparam Model ORM 
      * \param model ORM
      */
