@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -48,38 +48,38 @@ public:
 	~ASqlDatabase();
 
     /**
-     * \brief Execute a query with the result (SELECT).
+     * @brief Execute a query with the result (SELECT).
      *
-     * \param query the SQL query
-     * \param params query arguments
-     * \return query result
+     * @param query the SQL query
+     * @param params query arguments
+     * @return query result
      * \throws SQLException when any error occurs
      */
 	_<ASqlQueryResult> query(const AString& query, const AVector<AVariant>& params = {});
 
 	/**
-	 * \brief Execute a query with no result (UPDATE, INSERT, DELETE, etc.)
+	 * @brief Execute a query with no result (UPDATE, INSERT, DELETE, etc.)
      *
-     * \param query the SQL query
-     * \param params query arguments
-     * \return number of affected rows
+     * @param query the SQL query
+     * @param params query arguments
+     * @return number of affected rows
      * \throws SQLException if any error occurs
 	 */
 	int execute(const AString& query, const AVector<AVariant>& params = {});
 
 
 	/**
-	 * \brief Connect to the database using the specified details and driver.
-     * \param drivername name of the database driver. If the driver is not loaded, an attempt will be made to load the
+	 * @brief Connect to the database using the specified details and driver.
+     * @param drivername name of the database driver. If the driver is not loaded, an attempt will be made to load the
      *        driver based on the template aui.DRIVERNAME (aui.DRIVERNAME.dll for Windows, libaui.DRIVERNAME.so for
      *        Linux, etc...). If the driver failed to load SQLException will be thrown.
      *
-     * \param address server host (IP address or domain)
-     * \param port server port
-     * \param databaseName name of the database
-     * \param username user name; optional in some DBMS
-     * \param password user password; optional in some DBMS
-     * \return object for communicating with the database; in some DBMS - optional
+     * @param address server host (IP address or domain)
+     * @param port server port
+     * @param databaseName name of the database
+     * @param username user name; optional in some DBMS
+     * @param password user password; optional in some DBMS
+     * @return object for communicating with the database; in some DBMS - optional
      * \throws SQLException when any error occurs
 	 */
 	static _<ASqlDatabase> connect(const AString& driverName, const AString& address, uint16_t port = 0,
@@ -87,8 +87,8 @@ public:
 	                               const AString& password = {});
 
 	/**
-	 * \brief the type of the driver. Required to correct queries in the database due to driver differences.
-     * \return type of driver
+	 * @brief the type of the driver. Required to correct queries in the database due to driver differences.
+     * @return type of driver
 	 */
 	SqlDriverType getDriverType();
 

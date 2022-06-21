@@ -3,6 +3,10 @@
 #include <AUI/Common/AString.h>
 #include "UIMatcher.h"
 
+/**
+ * @brief Matcher factory namespace.
+ * @ingroup uitests
+ */
 namespace By {
     API_AUI_UITESTS UIMatcher text(const AString& text);
     API_AUI_UITESTS UIMatcher name(const AString& name);

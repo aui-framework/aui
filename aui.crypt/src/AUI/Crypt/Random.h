@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -29,6 +29,11 @@
 #include <AUI/Common/AByteBuffer.h>
 
 namespace ACrypto {
+    /**
+     * @brief (Probably) safe random based on multiple sources.
+     * @return buffer with random length of random data.
+     * @ingroup crypt
+     */
     API_AUI_CRYPT _<AByteBuffer> safeRandom();
 };
 

@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -70,6 +70,10 @@ namespace ass {
         CROPPED,
     };
 
+    /**
+     * @brief Represents textured (image) background.
+     * @ingroup ass
+     */
     struct BackgroundImage {
         unset_wrap<AString> url;
         unset_wrap<AColor> overlayColor;

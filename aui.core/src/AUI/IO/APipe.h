@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -29,6 +29,13 @@
 #include "IInputStream.h"
 #include "IOutputStream.h"
 
+/**
+ * @brief A thread safe buffer that converts an IInputStream to IOutputStream (and otherwise).
+ * @ingroup code
+ * @details
+ * APipe is similar to the unix pipes. It's capable to store up to 65,536 bytes. It's implemented like a ring buffer.
+ * If this limit is reached, a write() method blocks thread until buffer is read from.
+ */
 class API_AUI_CORE APipe: public IInputStream, public IOutputStream {
 private:
     char mCircularBuffer[0x10000];

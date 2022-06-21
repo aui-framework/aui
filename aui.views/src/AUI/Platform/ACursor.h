@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -21,6 +21,11 @@
 
 #pragma once
 
+/**
+ * @brief Represents cursor type.
+ * @ingroup views
+ * @ingroup ass
+ */
 enum class ACursor
 {
     /**

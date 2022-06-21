@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -28,6 +28,10 @@
 
 class AString;
 
+/**
+ * @brief Represents a 4-component floating point color.
+ * @ingroup core
+ */
 class AColor: public glm::vec4
 {
 public:
@@ -42,8 +46,8 @@ public:
 	AColor(float r, float g, float b, float a) : glm::vec4(r, g, b, a) {}
 
 	/**
-	 * \brief Construct with hex integer
-	 * \param color integer representing color in 0xRRGGBBAA
+	 * @brief Construct with hex integer
+	 * @param color integer representing color in 0xRRGGBBAA
 	 * \example AColor(0xff0000ff) will represent opaque bright red
 	 */
 	AColor(unsigned int color) : glm::vec4(
@@ -53,8 +57,8 @@ public:
 		((color) & 0xff) / 255.f) {}
 
     /**
-     * \brief Construct with hex integer
-     * \param color integer representing color in 0xAARRGGBB
+     * @brief Construct with hex integer
+     * @param color integer representing color in 0xAARRGGBB
      * \example AColor(0xff0000ff) will represent opaque bright blue
      */
 	static AColor fromAARRGGBB(unsigned int color)
@@ -68,8 +72,8 @@ public:
 	}
 
     /**
-     * \brief Construct with hex integer
-     * \param color integer representing color in 0xRRGGBB
+     * @brief Construct with hex integer
+     * @param color integer representing color in 0xRRGGBB
      * \example AColor(0x00ff00) will represent opaque bright green
      */
 	static AColor fromRRGGBB(unsigned int color)
@@ -92,9 +96,9 @@ public:
     API_AUI_CORE float readabilityOfForegroundColor(const AColor &foreground);
 
     /**
-     * \brief Multiply all color components except alpha channel (rgb * d, a)
-     * \param multiplier
-     * \return supplyResult color
+     * @brief Multiply all color components except alpha channel (rgb * d, a)
+     * @param multiplier
+     * @return supplyResult color
      */
     inline AColor mul(float d) {
         return AColor(r * d, g * d, b * d, a);
@@ -142,8 +146,8 @@ inline std::ostream& operator<<(std::ostream& o, const AColor& color) {
 }
 
 /**
- * \brief Construct with hex integer
- * \param color integer representing color in 0xAARRGGBB
+ * @brief Construct with hex integer
+ * @param color integer representing color in 0xAARRGGBB
  * \example AColor(0xff0000ff) will represent opaque bright blue
  */
 inline AColor operator"" _argb(unsigned long long v)
@@ -153,8 +157,8 @@ inline AColor operator"" _argb(unsigned long long v)
 
 
 /**
- * \brief Construct with hex integer
- * \param color integer representing color in 0xRRGGBB
+ * @brief Construct with hex integer
+ * @param color integer representing color in 0xRRGGBB
  * \example AColor(0x00ff00) will represent opaque bright green
  */
 inline AColor operator"" _rgb(unsigned long long v)

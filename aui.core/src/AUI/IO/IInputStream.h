@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -26,6 +26,10 @@
 
 class IOutputStream;
 
+/**
+ * @brief Represents an input stream.
+ * @ingroup core
+ */
 class IInputStream: public aui::noncopyable
 {
 public:

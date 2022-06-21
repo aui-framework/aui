@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -98,7 +98,7 @@ public:
     }
 
     /**
-     * \return bytes per pixel.
+     * @return bytes per pixel.
      */
     uint8_t getBytesPerPixel() const;
 

@@ -3,6 +3,7 @@
 #include "IRenderingContext.h"
 #include "AWindow.h"
 #include "AUI/Traits/values.h"
+#include "ARenderingContextOptions.h"
 
 #if AUI_PLATFORM_LINUX
 #include <X11/Xlib.h>
@@ -14,31 +15,6 @@
 #endif
 
 class CommonRenderingContext: public IRenderingContext {
-protected:
-#if AUI_PLATFORM_WIN
-
-    AString mWindowClass;
-
-    /**
-     * GetDC() HDC
-     */
-    HDC mWindowDC;
-
-    /**
-     * BeginPaint() HDC
-     */
-    HDC mPainterDC = nullptr;
-
-    PAINTSTRUCT mPaintstruct;
-#endif
-#if AUI_PLATFORM_LINUX
-    void initX11Window(const Init& init, XSetWindowAttributes& swa, XVisualInfo* vi);
-#endif
-#if AUI_PLATFORM_MACOS
-    AWindow* mWindow;
-    void* mDisplayLink;
-    bool mFrameScheduled = false;
-#endif
 public:
 #if AUI_PLATFORM_LINUX
     static void ensureXLibInitialized();
@@ -77,4 +53,32 @@ public:
     ~CommonRenderingContext() override = default;
 
     void destroyNativeWindow(ABaseWindow& window) override;
+
+protected:
+#if AUI_PLATFORM_WIN
+
+    AString mWindowClass;
+
+    /**
+     * GetDC() HDC
+     */
+    HDC mWindowDC;
+
+    /**
+     * BeginPaint() HDC
+     */
+    HDC mPainterDC = nullptr;
+
+    PAINTSTRUCT mPaintstruct;
+#endif
+#if AUI_PLATFORM_LINUX
+    void initX11Window(const Init& init, XSetWindowAttributes& swa, XVisualInfo* vi);
+#endif
+#if AUI_PLATFORM_MACOS
+    AWindow* mWindow;
+    void* mDisplayLink;
+    bool mFrameScheduled = false;
+#endif
+
+    bool mSmoothResize = !(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_SMOOTH);
 };

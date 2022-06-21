@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -30,6 +30,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls the rendering scale transform of AView.
+     * @ingroup ass
+     */
     struct TransformScale {
         float scaleX;
         float scaleY;

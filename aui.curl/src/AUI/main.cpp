@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -26,6 +26,12 @@
 
 #include <AUI/Url/AUrl.h>
 #include <AUI/Curl/ACurl.h>
+
+
+/**
+ * @defgroup curl aui::curl
+ * @brief aui::curl is a http(s)/ftp driver based on cURL.
+ */
 
 /*
 struct main {

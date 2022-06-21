@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -24,6 +24,11 @@
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/Common/SharedPtr.h"
 
+
+/**
+ * @brief Converts a AByteBuffer to an IInputStream.
+ * @ingroup core
+ */
 class API_AUI_CORE AByteBufferInputStream final: public IInputStream
 {
 private:

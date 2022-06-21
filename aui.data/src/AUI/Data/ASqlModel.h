@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -27,20 +27,20 @@
 #include <utility>
 
 /**
- * \brief Defines a model that can be stored in an SQL database. Implements queries for this type to the database
+ * @brief Defines a model that can be stored in an SQL database. Implements queries for this type to the database
  *        (insert, update, select, delete)
- * \tparam Model ORM model.
- * \note Model should implement AModelMeta (see AUI/Data/AModelMeta.h)
+ * @tparam Model ORM model.
+ * @note Model should implement AModelMeta (see AUI/Data/AModelMeta.h)
  */
 template<typename Model>
 struct ASqlModel {
     /**
-     * \brief Thrown when a single row is expected to be received, but the database did not return any rows.
+     * @brief Thrown when a single row is expected to be received, but the database did not return any rows.
      */
     class NoSuchRowException: public AException {};
 
     /**
-     * \brief Thrown when one row is expected to be received, but the database returned more than one row.
+     * @brief Thrown when one row is expected to be received, but the database returned more than one row.
      */
     class TooManyRowsException: public AException {};
 
@@ -49,7 +49,7 @@ struct ASqlModel {
     id_t id = 0;
 
     /**
-     * \brief Saves this model in DB.
+     * @brief Saves this model in DB.
      *        If id = 0 then a new row will be created in the table, and the id of the created row will be assigned in
      *        the structure field.
      *        If id != 0 then the existing row in the table will be updated.
@@ -63,7 +63,7 @@ struct ASqlModel {
     }
 
     /**
-     * \brief Removes row from the table by ID.
+     * @brief Removes row from the table by ID.
      */
     void remove() {
         assert(id != 0);
@@ -101,8 +101,8 @@ struct ASqlModel {
         }
 
         /**
-         * \brief Get query result in ORM.
-         * \return query result in ORM
+         * @brief Get query result in ORM.
+         * @return query result in ORM
          */
         AVector<Model> get() {
             auto idField = AField<ASqlModel<Model>>::make(&ASqlModel<Model>::id);
@@ -130,10 +130,10 @@ struct ASqlModel {
         }
 
         /**
-         * \brief Do query and get first row in ORM
+         * @brief Do query and get first row in ORM
          * \throws NoSuchRowException when database returned zero rows
          *         TooManyRowsException when database returned two or more rows
-         * \return ORM structure
+         * @return ORM structure
          */
         inline Model first() {
             auto result = get();
@@ -153,9 +153,9 @@ struct ASqlModel {
     }
 
     /**
-     * \brief Get a row from the table by ID.
-     * \param id ID of the required string
-     * \return the string table for the specified ID
+     * @brief Get a row from the table by ID.
+     * @param id ID of the required string
+     * @return the string table for the specified ID
      * \throws NoSuchRowException if no string was found for the specified ID
      */
     static Model byId(id_t id) {
@@ -181,10 +181,10 @@ struct ASqlModel {
 
 
     /**
-     * \brief Creates a model and saves it to the database.
-     * \tparam Args the types of constructor arguments
-     * \param args the constructor arguments
-     * \return the ORM structure
+     * @brief Creates a model and saves it to the database.
+     * @tparam Args the types of constructor arguments
+     * @param args the constructor arguments
+     * @return the ORM structure
      */
     template<typename ... Args>
     static Model make(Args&&... args) {
@@ -195,7 +195,7 @@ struct ASqlModel {
 
 
     /**
-     * \return name of the relation column for other tables.
+     * @return name of the relation column for other tables.
      * \example struct User -> table users -> column user_id is the result.
      */
     static AString getIdColumnNameInOtherTables() {
@@ -210,7 +210,7 @@ struct ASqlModel {
 protected:    /* ORM RELATIONSHIP */
 
     /**
-     * \brief Implementation of one-to-many relation between ORM structures. Used with belongsTo.
+     * @brief Implementation of one-to-many relation between ORM structures. Used with belongsTo.
      * <pre>
      * User::getPosts() -> hasMany<Post>()<br />
      * &nbsp;&nbsp;|-- Post::getAuthor() -> belongsTo<Post>()<br />
@@ -218,9 +218,9 @@ protected:    /* ORM RELATIONSHIP */
      * &nbsp;&nbsp;|-- Post::getAuthor() -> belongsTo<Post>()<br />
      * &nbsp;&nbsp;....
      *  </pre>
-     * \tparam Other ORM model relation will created with
-     * \return incomplete SQL request (see ASqlModel::IncompleteSelectRequest)
-     * \see ASqlModel::IncompleteSelectRequest
+     * @tparam Other ORM model relation will created with
+     * @return incomplete SQL request (see ASqlModel::IncompleteSelectRequest)
+     * @see ASqlModel::IncompleteSelectRequest
      */
     template<typename Other>
     _<typename Other::IncompleteSelectRequest> hasMany() {

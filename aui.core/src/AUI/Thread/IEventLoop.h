@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -30,12 +30,12 @@ public:
 	virtual ~IEventLoop() {}
 
 	/**
-	 * \brief Notifies this IEventLoop that its thread got a new message to process.
+	 * @brief Notifies this IEventLoop that its thread got a new message to process.
 	 */
 	virtual void notifyProcessMessages() = 0;
 
 	/**
-	 * \brief Do message processing loop.
+	 * @brief Do message processing loop.
 	 */
 	virtual void loop() = 0;
 

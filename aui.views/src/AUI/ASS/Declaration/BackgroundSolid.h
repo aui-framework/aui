@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -28,6 +28,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Represents solid (single color) background.
+     * @ingroup ass
+     */
     struct BackgroundSolid {
         AColor color;
 

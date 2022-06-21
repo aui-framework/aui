@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -24,6 +24,30 @@
 #include "ALayout.h"
 #include <AUI/Util/LayoutDirection.h>
 
+
+/**
+ * @brief Places views in a row.
+ * @ingroup layout_managers
+ * @details
+ * <dl>
+ *   <dt><b>UI Builder</b></dt>
+ *   <dd><code>Horizontal</code></dd>
+ * </dl>
+ * Horizontal layout manager places views in a row, fitting their height to the container's height.
+ * Has a `Horizontal` shortcut that allows easy usage in UI building:
+ * @code{cpp}
+ * setContents(
+ *   Horizontal {
+ *     _new<AButton>("1"),
+ *     _new<AButton>("2"),
+ *     _new<AButton>("3"),
+ *   }
+ * );
+ * @endcode
+ *
+ * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_035347.png">
+ * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/horizontal.jpg">
+ */
 class API_AUI_VIEWS AHorizontalLayout: public ALayout
 {
 private:

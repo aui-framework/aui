@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -21,6 +21,10 @@
 
 #pragma once
 
+/**
+ * @defgroup uitests aui::uitests
+ * @brief ui tests library.
+ */
 
 #include <AUI/View/AView.h>
 

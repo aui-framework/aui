@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -23,6 +23,8 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
 #include "SoftwareRenderingContext.h"
+#include "ARenderingContextOptions.h"
+#include "AUI/Traits/callables.h"
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Action/AMenu.h>
@@ -232,14 +234,27 @@ void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
     }
 }
 void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
-    try {
-        auto context = std::make_unique<OpenGLRenderingContext>();
-        //auto context = std::make_unique<SoftwareRenderingContext>();
-        context->init(init);
-        init.setRenderingContext(std::move(context));
-    } catch (...) {
-        auto context = std::make_unique<SoftwareRenderingContext>();
-        context->init(init);
-        init.setRenderingContext(std::move(context));
+    for (const auto& graphicsApi : ARenderingContextOptions::get().initializationOrder) {
+        try {
+            std::visit(aui::lambda_overloaded{
+                    [](const ARenderingContextOptions::DirectX11&) {
+                        throw AException("DirectX is not supported");
+                    },
+                    [&](const ARenderingContextOptions::OpenGL& config) {
+                        auto context = std::make_unique<OpenGLRenderingContext>(config);
+                        context->init(init);
+                        init.setRenderingContext(std::move(context));
+                    },
+                    [&](const ARenderingContextOptions::Software&) {
+                        auto context = std::make_unique<SoftwareRenderingContext>();
+                        context->init(init);
+                        init.setRenderingContext(std::move(context));
+                    },
+            }, graphicsApi);
+            return;
+        } catch (const AException& e) {
+            ALogger::warn("AWindowManager") << "Unable to initialize graphics API:" << e;
+        }
     }
+    throw AException("unable to initialize graphics");
 }

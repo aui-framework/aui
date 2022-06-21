@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -29,8 +29,9 @@
 #include "IInputStream.h"
 
 /**
- * \brief Input stream that will pass through a maximum of a certain number of bytes - then it will return eof
+ * @brief Input stream that will pass through a maximum of a certain number of bytes - then it will return eof
  *        (end of stream)
+ * @ingroup core
  */
 class API_AUI_CORE ALimitedInputStream: public IInputStream {
 private:

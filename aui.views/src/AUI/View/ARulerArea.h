@@ -3,6 +3,12 @@
 #include <AUI/View/AViewContainer.h>
 #include "ARulerView.h"
 
+/**
+ * @brief Photoshop-like ruler area for measuring display units.
+ * @ingroup useful_views
+ * @details
+ * Consists of vertical and horizontal @ref ARulerView "rulers".
+ */
 class API_AUI_VIEWS ARulerArea: public AViewContainer {
 private:
     _<AView> mWrappedView;

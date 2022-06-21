@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -27,6 +27,93 @@
 
 class AViewContainer;
 
+/**
+ * @brief Layout manager is an object that manages placement and size of @ref AView "views" inside
+ * @ref AViewContainer "containers".
+ * @defgroup layout_managers Layout Managers
+ * @ingroup views
+ * @details In AUI, layout building consists of layout managers. Layout manager determines position and size of
+ * @ref AViewContainer "container"'s children @ref AView "views". A @ref AViewContainer "container" is a @ref AView
+ * "view" that consists of other @ref AView "views", called children. In general, layout manager does not allow going
+ * beyond the border of the @ref AViewContainer "container". A @ref AViewContainer "container" can be a child of an
+ * another @ref AViewContainer "container" i.e., nesting is allowed.
+ *
+ * # Examples
+ *
+ * @ref AHorizontalLayout "Horizontal" layout:
+ * <table>
+ *   <tr>
+ *     <th>Code</th>
+ *     <th>Result</th>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       @code{cpp}
+ *       setContents(
+ *         Horizontal {
+ *           _new<AButton>("1"),
+ *           _new<AButton>("2"),
+ *           _new<AButton>("3"),
+ *         }
+ *       );
+ *       @endcode
+ *     </td>
+ *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_035347.png" /></td>
+ *   </tr>
+ * </table>
+ *
+ * @ref AVerticalLayout "Vertical" layout:
+ * <table>
+ *   <tr>
+ *     <th>Code</th>
+ *     <th>Result</th>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       @code{cpp}
+ *       setContents(
+ *         Vertical {
+ *           _new<AButton>("1"),
+ *           _new<AButton>("2"),
+ *           _new<AButton>("3"),
+ *         }
+ *       );
+ *       @endcode
+ *     </td>
+ *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_040046.png" /></td>
+ *   </tr>
+ * </table>
+ *
+ * Since container can be child of other container, we can create complex UIs using basic layout managers:
+ * <table>
+ *   <tr>
+ *     <th>Code</th>
+ *     <th>Result</th>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       @code{cpp}
+ *       setContents(
+ *         Vertical {
+ *           _new<AButton>("Up"),
+ *           Horizontal {
+ *               _new<AButton>("Left"),
+ *               _new<AButton>("Right"),
+ *           },
+ *           _new<AButton>("Down"),
+ *         }
+ *       );
+ *       @endcode
+ *     </td>
+ *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20210714_041807.png" /></td>
+ *   </tr>
+ * </table>
+ */
+
+/**
+ * @brief Base class for all layout managers.
+ * @ingroup layout_managers
+ */
 class API_AUI_VIEWS ALayout: public AObject
 {
 protected:
@@ -40,5 +127,10 @@ public:
 	virtual void removeView(size_t index, const _<AView>& view);
 	virtual int getMinimumWidth() = 0;
 	virtual int getMinimumHeight() = 0;
+
+    /**
+     * @brief Layout spacing.
+     * @param spacing spacing in px.
+     */
 	virtual void setSpacing(int spacing);
 };

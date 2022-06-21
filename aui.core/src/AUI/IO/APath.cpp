@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -166,7 +166,7 @@ const APath& APath::removeFileRecursive() const {
     return *this;
 }
 
-ADeque<APath> APath::listDir(ListFlags f) const {
+ADeque<APath> APath::listDir(AFileListFlags f) const {
     ADeque<APath> list;
 
 #ifdef WIN32
@@ -192,15 +192,15 @@ ADeque<APath> APath::listDir(ListFlags f) const {
         bool isDirectory = i->d_type & DT_DIR;
 #endif
 
-        if (!(f & ListFlags::DONT_IGNORE_DOTS)) {
+        if (!(f & AFileListFlags::DONT_IGNORE_DOTS)) {
             if ("."_as == filename || ".."_as == filename) {
                 continue;
             }
         }
-        if ((f & ListFlags::DIRS && isDirectory) || (f & ListFlags::REGULAR_FILES && isFile)) {
+        if ((f & AFileListFlags::DIRS && isDirectory) || (f & AFileListFlags::REGULAR_FILES && isFile)) {
             list << file(APath(filename));
         }
-        if (f & ListFlags::RECURSIVE && isDirectory) {
+        if (f & AFileListFlags::RECURSIVE && isDirectory) {
             auto childDir = file(APath(filename));
             for (auto& file : childDir.listDir(f)) {
                 if (file.startsWith(childDir)) {
@@ -245,30 +245,22 @@ APath APath::absolute() const {
 
 const APath& APath::makeDir() const {
 #ifdef WIN32
-    // VV - КОЗЛЫ, МЛЯТЬ!
-    ::_wmkdir(c_str());
-    auto et = GetLastError();
-    if (et == ERROR_SUCCESS) return *this;
-
+    if (CreateDirectory(c_str(), nullptr)) return *this;
 #else
     if (::mkdir(toStdString().c_str(), 0755) == 0) {
         return *this;
     }
 #endif
-    aui::impl::lastErrorToException("could not create directory: "_as + absolute());
+    aui::impl::lastErrorToException("could not create directory: {}"_format(*this));
     return *this;
 }
 
-const APath& APath::makeDirs() const noexcept {
-    try {
-        if (!empty()) {
-            if (!isDirectoryExists()) {
-                parent().makeDirs();
-                makeDir();
-            }
+const APath& APath::makeDirs() const {
+    if (!empty()) {
+        if (!isDirectoryExists()) {
+            parent().makeDirs();
+            makeDir();
         }
-    } catch (...) {
-
     }
     return *this;
 }
@@ -393,10 +385,10 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
 }
 #endif
 
-AVector<APath> APath::find(const AString& filename, const AVector<APath>& locations, PathFinder flags) {
+AVector<APath> APath::find(const AString& filename, const AVector<APath>& locations, APathFinder flags) {
     AVector<APath> result;
     auto doReturn = [&] {
-        return !!(flags & PathFinder::SINGLE) && !result.empty();
+        return !!(flags & APathFinder::SINGLE) && !result.empty();
     };
     auto locateImpl = [&](const AVector<AString>& container) {
         auto c = [&](auto& c, const AVector<AString>& container) mutable {
@@ -409,7 +401,7 @@ AVector<APath> APath::find(const AString& filename, const AVector<APath>& locati
                     }
                 }
 
-                if (!!(flags & PathFinder::RECURSIVE)) {
+                if (!!(flags & APathFinder::RECURSIVE)) {
                     if (pathEntry.isDirectoryExists()) {
                         try {
                             auto list = pathEntry.listDir();
@@ -428,7 +420,7 @@ AVector<APath> APath::find(const AString& filename, const AVector<APath>& locati
         return result;
     }
 
-    if (!!(flags & PathFinder::USE_SYSTEM_PATHS)) {
+    if (!!(flags & APathFinder::USE_SYSTEM_PATHS)) {
         locateImpl(AString(getenv("PATH")).split(aui::platform::current::path_variable_separator));
     }
     return result;

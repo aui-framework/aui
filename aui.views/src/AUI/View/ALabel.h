@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -32,8 +32,9 @@
 #include <AUI/Common/IStringable.h>
 
 /**
- * Represents a simple text.
+ * @brief Represents a simple single-line text.
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/ALabel.png">
+ * @ingroup useful_views
  */
 class API_AUI_VIEWS ALabel: public AView, public IStringable
 {

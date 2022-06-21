@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -24,7 +24,7 @@
 #include "AImage.h"
 
 /**
- * \brief Produces images by the specified size.
+ * @brief Produces images by the specified size.
  */
 class IImageFactory
 {

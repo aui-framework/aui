@@ -806,7 +806,7 @@ function(aui_module AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
 
 
-    set(options PLUGIN FORCE_STATIC FORCE_SHARED)
+    set(options WHOLEARCHIVE PLUGIN FORCE_STATIC FORCE_SHARED)
     set(oneValueArgs EXPORT)
     set(multiValueArgs ADDITIONAL_SRCS)
     cmake_parse_arguments(AUIE "${options}" "${oneValueArgs}"
@@ -888,14 +888,16 @@ function(aui_module AUI_MODULE_NAME)
         set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
     endif()
 
-    if (AUIE_PLUGIN)
+    if (AUIE_PLUGIN OR AUIE_WHOLEARCHIVE)
         set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
 
-        # define plugin entry for plugins
-        if (BUILD_SHARED_LIBS)
-            target_compile_definitions(${AUI_MODULE_NAME} PRIVATE _AUI_PLUGIN_ENTRY_N=aui_plugin_entry)
-        else()
-            target_compile_definitions(${AUI_MODULE_NAME} PRIVATE _AUI_PLUGIN_ENTRY_N=aui_plugin_entry_${BUILD_DEF_NAME})
+        if (AUIE_PLUGIN)
+            # define plugin entry for plugins
+            if (BUILD_SHARED_LIBS)
+                target_compile_definitions(${AUI_MODULE_NAME} PRIVATE _AUI_PLUGIN_ENTRY_N=aui_plugin_entry)
+            else()
+                target_compile_definitions(${AUI_MODULE_NAME} PRIVATE _AUI_PLUGIN_ENTRY_N=aui_plugin_entry_${BUILD_DEF_NAME})
+            endif()
         endif()
     endif()
 endfunction(aui_module)

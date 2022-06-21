@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -30,6 +30,10 @@
 
 namespace ass {
 
+    /**
+     * @brief Controls background texture cropping.
+     * @ingroup ass
+     */
     struct BackgroundCropping {
         unset_wrap<glm::vec2> offset;
         unset_wrap<glm::vec2> size;

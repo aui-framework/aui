@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -44,7 +44,12 @@ public:
 };
 
 /**
- * Represents a simple check box.
+ * @brief A check box with a label.
+ * @ingroup useful_views
+ * @details
+ * A checkbox is a checkable button that typically used to enable/disable some action.
+ *
+ * Whenever the radio button is checked or unchecked, it emits checked() signal.
  */
 class API_AUI_VIEWS ACheckBox: public AViewContainer, public ass::ISelectable
 {

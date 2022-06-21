@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -39,20 +39,20 @@ namespace gl {
 
         /**
          * @brief Creates VBO
-         * \param index index in VAO
-         * \param data vertex data
-         * \param dataSize vertex data size in bytes
-         * \param vertexSize count of floats per vertex
+         * @param index index in VAO
+         * @param data vertex data
+         * @param dataSize vertex data size in bytes
+         * @param vertexSize count of floats per vertex
          */
 		void insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType);
 
 
         /**
          * @brief Creates integer VBO
-         * \param index index in VAO
-         * \param data vertex data
-         * \param dataSize vertex data size in bytes
-         * \param vertexSize count of integers per vertex
+         * @param index index in VAO
+         * @param data vertex data
+         * @param dataSize vertex data size in bytes
+         * @param vertexSize count of integers per vertex
          */
 		void insertInteger(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType);
 
@@ -74,7 +74,7 @@ namespace gl {
 
         /**
          * @brief Uploads VBO indices
-         * \param data indices
+         * @param data indices
          */
 		void indices(AArrayView<GLuint> data);
 
@@ -82,7 +82,7 @@ namespace gl {
 
         /**
          * @brief Draws buffer. Don't forget to upload indices with <code>indices</code> function/
-         * \param type Primitive type
+         * @param type Primitive type
          */
 		void drawElements(GLenum type = GL_TRIANGLES);
 	};

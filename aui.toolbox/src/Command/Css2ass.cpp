@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -127,7 +127,7 @@ void Css2ass::run(Toolbox& t) {
                                     processedTypes << subSelectorCss;
                                     bool found = false;
                                     // try to find type's header file in order to include it
-                                    for (auto& targetFile : srcPath.listDir(ListFlags::REGULAR_FILES | ListFlags::RECURSIVE)) {
+                                    for (auto& targetFile : srcPath.listDir(AFileListFlags::REGULAR_FILES | AFileListFlags::RECURSIVE)) {
                                         // only for C++ headers
                                         if (targetFile.endsWith(".h") || targetFile.endsWith(".hpp")) {
                                             if (targetFile.filenameWithoutExtension() == subSelectorCss) {

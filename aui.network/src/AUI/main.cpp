@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -23,3 +23,8 @@
 #include <windows.h>
 
 #endif
+
+/**
+ *@defgroup network aui::network
+* @brief Provides raw network capabilities.
+*/

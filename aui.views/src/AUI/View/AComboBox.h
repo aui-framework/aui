@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -30,6 +30,11 @@
 #include <AUI/Model/IListModel.h>
 #include <AUI/Platform/AOverlappingSurface.h>
 
+/**
+ * @brief A button with dropdown list.
+ * @ingroup useful_views
+ * @todo Rename to ADropdown
+ */
 class API_AUI_VIEWS AComboBox: public AButton {
 private:
     _<IListModel<AString>> mModel;

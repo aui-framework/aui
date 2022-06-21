@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -40,6 +40,10 @@ namespace aui::impl {
     using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, float, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
 }
 
+/**
+ * @brief Json atom.
+ * @ingroup json
+ */
 class AJson: public aui::impl::JsonVariant {
 private:
 

@@ -5,7 +5,7 @@
 #include <AUI/Render/RenderHints.h>
 #include "BorderLeft.h"
 
-void ass::decl::Declaration<BorderLeft>::renderFor(AView* view) {
+void ass::decl::Declaration<ass::BorderLeft>::renderFor(AView* view) {
     RenderHints::PushColor x;
     int w = mInfo.width;
 
@@ -15,10 +15,10 @@ void ass::decl::Declaration<BorderLeft>::renderFor(AView* view) {
 
 }
 
-bool ass::decl::Declaration<BorderLeft>::isNone() {
+bool ass::decl::Declaration<ass::BorderLeft>::isNone() {
     return mInfo.width <= 0.001f;
 }
 
-ass::decl::DeclarationSlot ass::decl::Declaration<BorderLeft>::getDeclarationSlot() const {
+ass::decl::DeclarationSlot ass::decl::Declaration<ass::BorderLeft>::getDeclarationSlot() const {
     return ass::decl::DeclarationSlot::BORDER;
 }

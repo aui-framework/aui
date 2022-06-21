@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -26,7 +26,9 @@
 #include <AUI/Util/ADataBinding.h>
 
 /**
- * <p>Represents an editable field with text to receive a text input from the user.</p>
+ * @brief Represents an editable field with text to receive a text input from the user.
+ * @ingroup useful_views
+ * @details
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/ATextField.gif">
  */
 class API_AUI_VIEWS ATextField: public AAbstractTextField
@@ -35,7 +37,7 @@ public:
 	ATextField();
 	~ATextField() override;
 
-    void setText2(const AString& t) {setText(t);}
+    void setText2(const AString& t) {setText(t);} // TODO why text2?
 
 protected:
 	bool isValidText(const AString& text) override;

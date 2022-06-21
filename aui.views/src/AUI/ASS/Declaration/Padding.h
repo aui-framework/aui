@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -29,6 +29,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls the padding of AView.
+     * @ingroup ass
+     */
     struct Padding {
         unset_wrap<AMetric> left;
         unset_wrap<AMetric> top;

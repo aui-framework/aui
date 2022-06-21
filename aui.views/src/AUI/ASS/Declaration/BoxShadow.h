@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -30,6 +30,12 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Represents box shadow.
+     * @ingroup ass.
+     * @note Unlike CSS, box shadow is not affected by BorderRadius.
+     */
     struct BoxShadow {
         AMetric offsetX;
         AMetric offsetY;

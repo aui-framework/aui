@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -23,7 +23,11 @@
 #include "AUI/Rsa.h"
 #include "AUI/Common/AByteBuffer.h"
 
-class API_AUI_CRYPT AX509
+/**
+ * @brief x509 certificate object.
+ * @ingroup crypt
+ */
+class API_AUI_CRYPT AX509: public aui::noncopyable
 {
 	friend class AX509Store;
 private:

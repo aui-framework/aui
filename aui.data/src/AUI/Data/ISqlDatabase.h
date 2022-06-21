@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -27,7 +27,7 @@
 #include "AUI/Data/ASqlDriverType.h"
 
 /*
- * \brief Driver-to-aui.data interface. See ASqlDatabase for Application-to-aui.data interface
+ * @brief Driver-to-aui.data interface. See ASqlDatabase for Application-to-aui.data interface
  */
 class ISqlDatabase
 {

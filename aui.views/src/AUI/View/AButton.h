@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -27,8 +27,9 @@
 #include "AUI/ASS/Selector/AAssSelector.h"
 
 /**
- * <p>Represents a simple button with text, which can be pushed to make some action.</p>
+ * @brief Button with text, which can be pushed to make some action.
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/AButton.gif">
+ * @ingroup useful_views
  */
 class API_AUI_VIEWS AButton: public ALabel
 {	

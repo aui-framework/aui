@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -29,6 +29,11 @@
 #include "IDeclaration.h"
 
 namespace ass {
+
+    /**
+     * @brief Controls the min size of AView.
+     * @ingroup ass
+     */
     struct MinSize {
         unset_wrap<AMetric> width;
         unset_wrap<AMetric> height;

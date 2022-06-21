@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -66,13 +66,13 @@ public:
 
 	
 	/**
-	 * \return Size of the stored image. Can be ignored by the renderer. If the size is unknown, it can be {0, 0}
+	 * @return Size of the stored image. Can be ignored by the renderer. If the size is unknown, it can be {0, 0}
 	 */
 	virtual glm::ivec2 getSizeHint() = 0;
 
 
 	/**
-	 * \return true if the size hint of this drawable needs to be multiplied by the DPI ratio
+	 * @return true if the size hint of this drawable needs to be multiplied by the DPI ratio
 	 */
 	virtual bool isDpiDependent() const
 	{

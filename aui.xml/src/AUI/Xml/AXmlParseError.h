@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -22,6 +22,10 @@
 #pragma once
 #include <stdexcept>
 
+/**
+ * @brief Thrown when a parse error occur.
+ * @ingroup xml
+ */
 class AXmlParseError: public std::runtime_error
 {
 public:

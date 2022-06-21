@@ -7,6 +7,15 @@
 #include <variant>
 #include <AUI/Enum/WordBreak.h>
 
+
+/**
+ * @brief HTML-capable text container.
+ * @ingroup useful_views
+ * @details
+ * Used to display rich text or large texts.
+ *
+ * Unlike ALabel, AText is optimized to store, render, word break large texts.
+ */
 class API_AUI_VIEWS AText: public AViewContainer {
 public:
     using Flags = AVector<std::variant<WordBreak>>;

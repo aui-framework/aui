@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -26,6 +26,11 @@
 #include <ostream>
 #include <AUI/Traits/containers.h>
 
+
+/**
+ * @brief A std::set with AUI extensions.
+ * @ingroup core
+ */
 template <class KeyType, class Comparator = std::less<KeyType>, class Allocator = std::allocator<KeyType>>
 class ASet: public std::set<KeyType, Comparator, Allocator>
 {

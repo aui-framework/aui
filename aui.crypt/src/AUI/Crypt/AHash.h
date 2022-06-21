@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -28,6 +28,10 @@
 
 #include <AUI/Common/AByteBuffer.h>
 
+/**
+ * @brief Various hash functions
+ * @ingroup crypt
+ */
 namespace AHash {
     [[nodiscard]] API_AUI_CRYPT AByteBuffer sha512(const AByteBuffer& in);
     [[nodiscard]] API_AUI_CRYPT AByteBuffer sha512(IInputStream& in);

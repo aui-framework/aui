@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -29,6 +29,9 @@
 #include <AUI/Util/ACursorSelectable.h>
 #include "ALabel.h"
 
+/**
+ * @brief Like ALabel but with cursor selection capabilities.
+ */
 class API_AUI_VIEWS ASelectableLabel: public ALabel, public ACursorSelectable {
 public:
     ASelectableLabel();

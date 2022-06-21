@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -134,9 +134,9 @@ namespace aui {
 
 
     /**
-     * \brief Formats string.
+     * @brief Formats string.
      *        String formatting is inspired by Rust's string formatting rules.
-     * \return formatted string.
+     * @return formatted string.
      */
     template <typename... Args>
     inline AString format(const AString& format, Args&&... args) {
@@ -190,7 +190,7 @@ namespace aui {
 }
 
 template<typename... Args>
-inline AString AString::format(Args&& ... args) {
+inline AString AString::format(Args&& ... args) const {
     return aui::format(*this, std::forward<Args>(args)...);
 }
 

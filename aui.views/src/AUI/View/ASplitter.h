@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -30,6 +30,13 @@
 #include "ASplitterHelper.h"
 #include <AUI/View/ASpacer.h>
 
+/**
+ * @brief A spinner view to display some long operation.
+ * @ingroup useful_views
+ * @details
+ * A progress bar is used to express a long operation (i.e. file copy) with unknown progress and reassure the user that
+ * application is still running.
+ */
 class API_AUI_VIEWS ASplitter: public AViewContainer
 {
 private:

@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -24,6 +24,11 @@
 #include "AUI/Common/AString.h"
 
 
+
+/**
+ * @brief Visit xml entity.
+ * @ingroup xml
+ */
 class IXmlEntityVisitor
 {
 public:

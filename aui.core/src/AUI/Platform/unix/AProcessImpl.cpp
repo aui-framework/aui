@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -77,7 +77,7 @@ public:
 
 AVector<_<AProcess>> AProcess::all() {
     AVector<_<AProcess>> result;
-    for (auto& f : APath("/proc/").listDir(ListFlags::DIRS)) {
+    for (auto& f : APath("/proc/").listDir(AFileListFlags::DIRS)) {
         pid_t p = f.filename().toUInt();
         if (p != 0) {
             result << _new<AOtherProcess>(p);

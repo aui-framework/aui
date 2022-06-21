@@ -7,7 +7,7 @@
 Cross-platform high performance efficient module-based framework for developing and deploying hardware accelerated graphical desktop applications
 using modern C++17.
 
-[Documentation](https://github.com/aui-framework/aui/wiki) | [Getting started](https://github.com/aui-framework/aui/wiki/Getting-started-with-AUI)
+[Documentation](https://aui-framework.github.io) | [Getting started](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html)
 
 # Quickstart
 

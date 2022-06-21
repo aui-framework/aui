@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -34,6 +34,12 @@
 
 class AString;
 
+/**
+ * @brief Easy curl instance.
+ * @ingroup curl
+ * @details
+ * ACurl::Builder is used to construct ACurl.
+ */
 class API_AUI_CURL ACurl: public AObject {
 friend class ACurlMulti;
 public:
@@ -163,11 +169,11 @@ public:
         }
 
         /**
-         * \brief Sets: Accept-Ranges: begin-end
+         * @brief Sets: Accept-Ranges: begin-end
          *        (download part of the file)
-         * \param begin start index of the part
-         * \param end end index of the part. Zero means end of the file.
-         * \return this
+         * @param begin start index of the part
+         * @param end end index of the part. Zero means end of the file.
+         * @return this
          */
         Builder& withRanges(size_t begin, size_t end);
 

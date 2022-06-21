@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -105,7 +105,7 @@ public:
  *
  * <p>Example:</p>
  * <code>
- * _new&lt;ATextField&gt;() && dataBinding(&User::username)
+ * _new<ATextField>() && dataBinding(&User::username)
  * </code>
  * <p>This code will bind ATextField with username field in the User model.</p>
  *

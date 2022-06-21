@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -26,7 +26,16 @@
 #include "AUI/Xml.h"
 
 
+/**
+ * @brief Common aui::xml namespace.
+ * @ingroup xml
+ */
 namespace AXml
 {
+
+    /**
+     * @brief Parses xml from the input stream to the IXmlDocumentVisitor.
+     * @ingroup xml
+     */
 	void API_AUI_XML read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor);
 }

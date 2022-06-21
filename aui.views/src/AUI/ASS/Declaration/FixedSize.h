@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -29,6 +29,10 @@
 #include "IDeclaration.h"
 
 namespace ass {
+    /**
+     * @brief Controls the fixed size of AView.
+     * @ingroup ass
+     */
     struct FixedSize {
         unset_wrap<AMetric> width;
         unset_wrap<AMetric> height;

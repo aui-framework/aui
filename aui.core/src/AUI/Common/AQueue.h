@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -24,6 +24,11 @@
 #include <AUI/Core.h>
 #include <AUI/Traits/containers.h>
 
+
+/**
+ * @brief A std::queue with AUI extensions.
+ * @ingroup core
+ */
 template <class StoredType>
 class AQueue : public std::queue<StoredType>
 {

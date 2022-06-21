@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -21,6 +21,10 @@
 
 #pragma once
 
+/**
+ * @brief Represents a rectangle fields. Useful for margin and padding around AViews.
+ * @ingroup core
+ */
 struct ABoxFields
 {
     int left = 0;

@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -29,47 +29,20 @@
 #include "AUI/Render/Render.h"
 #include "AUI/Render/RenderHints.h"
 
+/**
+ * @brief A view that represents a set of views.
+ * @ingroup useful_views
+ * @details
+ * AViewContainer can store, render, resize, provide events to and handle the child views.
+ *
+ * AViewContainer does not control the position and size of the child views by itself; instead, it delegates that
+ * responsibility to it's @ref layout_managers "layout manager".
+ *
+ * Since AViewContainer is an instance of AView, AViewContainer can handle AViewContainers recursively, thus, making
+ * possible complex UI by nested AViewContainers with different layout managers.
+ */
 class API_AUI_VIEWS AViewContainer: public AView
 {
-private:
-	_<ALayout> mLayout;
-    bool mSizeSet = false;
-	glm::ivec2 mPreviousSize = mSize;
-
-    void notifyParentEnabledStateChanged(bool enabled) override;
-
-protected:
-	AVector<_<AView>> mViews;
-	
-	void drawView(const _<AView>& view);
-
-	template <typename Iterator>
-	void drawViews(Iterator begin, Iterator end)
-	{
-		for (auto i = begin; i != end; ++i)
-		{
-			drawView(*i);
-		}
-	}
-
-    void recompileAss() override;
-
-
-    /**
-     * @brief Updates layout of the parent AViewContainer if size of this AViewContainer was changed.
-     */
-    virtual void updateParentsLayoutIfNecessary();
-
-
-    /**
-     * @brief Moves all children and layout of specified container to this container.
-     * \param container container. Cannot be derivative from <a href="AViewContainer">AViewContainer</a>.
-     * \note If access to this function is restricted or you want to pass an object derived from
-     * <a href="AViewContainer">AViewContainer</a>, you should use
-     * <a href="ALayoutInflater::inflate">ALayoutInflater::inflate</a> instead.
-     */
-    void setContents(const _<AViewContainer>& container);
-
 public:
 	AViewContainer();
 	virtual ~AViewContainer();
@@ -147,12 +120,49 @@ public:
 
 	virtual void updateLayout();
 
-public:
-
     const AVector<_<AView>>& getViews() const
 	{
 		return mViews;
 	}
 
     void addViewCustomLayout(const _<AView>& view);
+
+protected:
+    AVector<_<AView>> mViews;
+
+    void drawView(const _<AView>& view);
+
+    template <typename Iterator>
+    void drawViews(Iterator begin, Iterator end)
+    {
+        for (auto i = begin; i != end; ++i)
+        {
+            drawView(*i);
+        }
+    }
+
+    void recompileAss() override;
+
+
+    /**
+     * @brief Updates layout of the parent AViewContainer if size of this AViewContainer was changed.
+     */
+    virtual void updateParentsLayoutIfNecessary();
+
+
+    /**
+     * @brief Moves (like via std::move) all children and layout of the specified container to this container.
+     * @param container container. Must be pure AViewContainer (cannot be a derivative from AViewContainer).
+     * @note If access to this function is restricted or you want to pass an object derived from AViewContainer, you
+     * should use ALayoutInflater::inflate instead.
+     */
+    void setContents(const _<AViewContainer>& container);
+
+private:
+    _<ALayout> mLayout;
+    bool mSizeSet = false;
+    glm::ivec2 mPreviousSize = mSize;
+
+    void notifyParentEnabledStateChanged(bool enabled) override;
+
 };

@@ -3,6 +3,12 @@
 #include "ACurl.h"
 #include <AUI/Common/AMap.h>
 
+/**
+ * @brief Multi curl instance.
+ * @ingroup curl
+ * @details
+ * Provides support to multiple simultaneous curl requests in a one thread.
+ */
 class API_AUI_CURL ACurlMulti: public aui::noncopyable {
 public:
     ACurlMulti() noexcept;

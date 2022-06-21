@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -31,6 +31,10 @@
 class AListItem;
 class AListViewContainer;
 
+/**
+ * @brief Displays a list model of strings.
+ * @ingroup useful_views
+ */
 class API_AUI_VIEWS AListView: public AViewContainer, public AListModelObserver<AString>::IListModelListener
 {
     friend class AListItem;

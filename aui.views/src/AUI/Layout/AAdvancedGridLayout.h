@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -23,6 +23,10 @@
 
 #include "ALayout.h"
 
+/**
+ * @brief Grid layout. Unlike AGridLayout, cells may have different sizes.
+ * @ingroup layout_managers
+ */
 class API_AUI_VIEWS AAdvancedGridLayout: public ALayout {
 private:
     int mCurrentIndex = 0;

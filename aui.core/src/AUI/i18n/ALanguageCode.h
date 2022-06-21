@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -29,7 +29,8 @@
 #include <AUI/Common/AString.h>
 
 /**
- * \brief Language code in ISO 639-1, for example, en-US or ru-RU
+ * @brief Represents a language code in ISO 639-1, for example, en-US or ru-RU
+ * @ingroup core
  */
 class API_AUI_CORE ALanguageCode {
 private:

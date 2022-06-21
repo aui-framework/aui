@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -52,11 +52,22 @@ class AAssHelper;
 
 
 /**
- * @brief A class that describes the minimum unit that can be placed in a container (including a window) that takes up
- *        some space on the screen that responds to changes in size, position, moving the cursor, pressing / releasing
- *        keys and buttons, movement mouse wheel, etc...
+ * @defgroup useful_views Views
+ * @ingroup views
+ * @brief All views that ready to use
+ */
+
+/**
+ * @brief Base class of all UI objects.
  *
- *        Analogue to QWidget, View.
+ * @details
+ * A class that describes the minimum unit that can be placed in a container (including a window) that takes up
+*  some space on the screen that responds to changes in size, position, moving the cursor, pressing / releasing
+*  keys and buttons, movement mouse wheel, etc...
+ *
+ * Analogue to QWidget, View.
+ *
+ * @ingroup useful_views
  */
 class API_AUI_VIEWS AView: public AObject
 {
@@ -74,7 +85,7 @@ private:
 	Overflow mOverflow = Overflow::VISIBLE;
 
 	/**
-	 * \see Visibility
+	 * @see Visibility
 	 */
 	Visibility mVisibility = Visibility::VISIBLE;
 
@@ -216,7 +227,7 @@ public:
 
     /**
      * @brief Determines window which this AView belongs to.
-     * \return window which this AView belongs to. Could be nullptr
+     * @return window which this AView belongs to. Could be nullptr
      */
     ABaseWindow* getWindow();
 
@@ -298,7 +309,7 @@ public:
 	}
 
 	/**
-	 * \return pixel count which this AView acquired by width including content area, padding, border and margin.
+	 * @return pixel count which this AView acquired by width including content area, padding, border and margin.
 	 */
 	float getTotalOccupiedWidth() const
 	{
@@ -306,7 +317,7 @@ public:
 	}
 
     /**
-	 * \return pixel count which this AView acquired by height including content area, padding, border and margin.
+	 * @return pixel count which this AView acquired by height including content area, padding, border and margin.
      */
     float getTotalOccupiedHeight() const
 	{
@@ -327,8 +338,8 @@ public:
 
     /**
      * @brief Determines whether this AView processes this click or passes it thru.
-     * \param pos mouse position
-     * \return true if AView processes this click
+     * @param pos mouse position
+     * @return true if AView processes this click
      */
 	virtual bool consumesClick(const glm::ivec2& pos);
 
@@ -347,13 +358,13 @@ public:
 
 
 	/**
-	 * \return pixel count which this AView's margin and padding acquired by width.
+	 * @return pixel count which this AView's margin and padding acquired by width.
 	 */
 	[[nodiscard]]
 	float getTotalFieldHorizontal() const;
 
 	/**
-	 * \return pixel count which this AView's margin and padding acquired by height.
+	 * @return pixel count which this AView's margin and padding acquired by height.
 	 */
 	[[nodiscard]]
 	float getTotalFieldVertical() const;
@@ -380,13 +391,13 @@ public:
 	}
 
 	/**
-	 * \return minimal content-area width.
+	 * @return minimal content-area width.
 	 */
 	virtual int getContentMinimumWidth();
 
 
     /**
-     * \return minimal content-area height.
+     * @return minimal content-area height.
      */
 	virtual int getContentMinimumHeight();
 
@@ -556,7 +567,7 @@ public:
 
 
 	/**
-	 * \return Coords of this AView relative to window
+	 * @return Coords of this AView relative to window
 	 */
     [[nodiscard]] glm::ivec2 getPositionInWindow() const;
 
@@ -564,13 +575,13 @@ public:
 
 	/**
 	 * @brief Adds an ASS class to this AView.
-	 * \param assName new ASS name
+	 * @param assName new ASS name
 	 */
     void addAssName(const AString& assName);
 
 	/**
 	 * @brief Removes an ASS class to this AView.
-	 * \param assName ASS name to remove
+	 * @param assName ASS name to remove
 	 */
     void removeAssName(const AString& assName);
 
@@ -582,8 +593,8 @@ public:
 	 * _new<ALabel>("Components") << ".components_title"
 	 * ...
 	 * </code>
-	 * \param assName new ASS name
-	 * \return this
+	 * @param assName new ASS name
+	 * @return this
 	 */
 	inline AView& operator<<(const AString& assName) {
         addAssName(assName);
@@ -651,7 +662,7 @@ public:
 	virtual void onCharEntered(wchar_t c);
 
 	/**
-	 * \return true if this AView accepts tab focus
+	 * @return true if this AView accepts tab focus
 	 */
 	virtual bool handlesNonMouseNavigation();
 

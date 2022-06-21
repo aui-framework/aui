@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -56,7 +56,7 @@ protected:
     void handleMouseMove(const glm::ivec2& pos);
 
     /**
-     * \return absoluteCursorPos
+     * @return absoluteCursorPos
      */
     int drawSelectionPre();
 

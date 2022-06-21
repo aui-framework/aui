@@ -120,4 +120,5 @@ const AMap<enum_t, AString, typename AEnumerate<enum_t>::enum_less>& AEnumerate<
 struct AEnumerateAllValues<enum_t>{         \
     static inline constexpr AEnumerate<enum_t>::Values<__VA_ARGS__> get() {return {}; } \
 };                                         \
-inline std::ostream& operator<<(std::ostream& o, enum_t v) { return o << AEnumerate<enum_t>::names()[v]; }
+inline std::ostream& operator<<(std::ostream& o, enum_t v) { return o << AEnumerate<enum_t>::names()[v]; } \
+namespace std { inline AString to_wstring(enum_t v) { return AEnumerate<enum_t>::names()[v]; } }

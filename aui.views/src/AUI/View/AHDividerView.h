@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -27,6 +27,10 @@
 
 #include "ADividerView.h"
 
+/**
+ * @brief A horizontal line.
+ * @ingroup useful_views
+ */
 class API_AUI_VIEWS AHDividerView: public ADividerView {
 public:
     AHDividerView();

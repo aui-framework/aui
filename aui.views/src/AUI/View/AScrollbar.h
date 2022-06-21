@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -66,6 +66,12 @@ public:
         return 0;
     }
 };
+
+/**
+ * @brief A single scrollbar
+ * @ingroup useful_views
+ * @see AScrollArea
+ */
 class API_AUI_VIEWS AScrollbar: public AViewContainer {
     friend class AScrollbarHandle;
 private:

@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -30,6 +30,10 @@
 #include "IDeclaration.h"
 
 namespace ass {
+    /**
+     * @brief Represents border.
+     * @ingroup ass
+     */
     struct Border {
         enum BorderType {
             SOLID,

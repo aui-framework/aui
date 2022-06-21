@@ -6,25 +6,26 @@
 #include <AUI/IO/AIOException.h>
 #include <AUI/Platform/ErrorToException.h>
 
-static AString errorMessage(DWORD errorMessageID) noexcept {
-    if(errorMessageID == 0)
+aui::impl::Error aui::impl::lastError() {
+    int errorCode = GetLastError();
+    if(errorCode == 0)
         return {}; //No error message has been recorded
 
     LPWSTR messageBuffer = nullptr;
     size_t size = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                                NULL, errorMessageID, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&messageBuffer, 0, NULL);
+                                NULL, errorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), (LPWSTR)&messageBuffer, 0, NULL);
 
     AString message(messageBuffer, size);
 
     //Free the buffer.
     LocalFree(messageBuffer);
 
-    return message;
+    return { errorCode, message.trim().removeAll('\r').removeAll('\n') };
 }
 void aui::impl::lastErrorToException(AString message) {
-    auto lastError = GetLastError();
+    auto[lastError, description] = lastError();
     message += ": ";
-    message += errorMessage(lastError);
+    message += description;
     switch (lastError) {
         case ERROR_FILE_NOT_FOUND:
             throw AFileNotFoundException(message);

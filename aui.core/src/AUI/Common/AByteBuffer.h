@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -32,6 +32,10 @@
 #include "AByteBufferView.h"
 
 
+/**
+ * @brief std::vector-like growing array for byte storage.
+ * @ingroup core
+ */
 class API_AUI_CORE AByteBuffer final: public IOutputStream {
 private:
     char* mBuffer = nullptr;
@@ -74,19 +78,19 @@ public:
     }
 
     /**
-     * \brief Resizes internal buffer.
+     * @brief Resizes internal buffer.
      */
     void reserve(size_t size);
 
     /**
-     * \brief Increases internal buffer.
+     * @brief Increases internal buffer.
      */
     void increaseInternalBuffer(size_t size) {
         reserve(mCapacity + size);
     }
 
     /**
-     * \brief If <code>getReserved() - getSize()</code> is less than <code>size</code> increases internal buffer size
+     * @brief If <code>getReserved() - getSize()</code> is less than <code>size</code> increases internal buffer size
      *        enough to store <code>size</code> bytes.
      */
     void ensureReserved(size_t size) {
@@ -105,7 +109,7 @@ public:
 
 
     /**
-     * \return Internal buffer.
+     * @return Internal buffer.
      */
     char* data() const
     {
@@ -113,10 +117,10 @@ public:
     }
 
     /**
-     * \brief Gets value of specified type by byte index relative to the beginning of internal buffer.
-     * \tparam T data type
-     * \param byteIndex byte offset realtive to the beginning of internal buffer
-     * \return data
+     * @brief Gets value of specified type by byte index relative to the beginning of internal buffer.
+     * @tparam T data type
+     * @param byteIndex byte offset realtive to the beginning of internal buffer
+     * @return data
      */
     template <typename T>
     T& at(size_t byteIndex)
@@ -182,28 +186,28 @@ public:
     }
 
     /**
-     * \return size of payload (valid data)
+     * @return size of payload (valid data)
      */
     size_t getSize() const noexcept {
         return mSize;
     }
 
     /**
-     * \return size of payload (valid data)
+     * @return size of payload (valid data)
      */
     size_t size() const noexcept {
         return mSize;
     }
 
     /**
-     * \return size of whole buffer (including possibly invalid data)
+     * @return size of whole buffer (including possibly invalid data)
      */
     size_t capacity() const noexcept {
         return mCapacity;
     }
 
     /**
-     * \return size of internal buffer. Must be greater that getSize()
+     * @return size of internal buffer. Must be greater that getSize()
      */
     size_t getReserved() const noexcept {
         return mCapacity;

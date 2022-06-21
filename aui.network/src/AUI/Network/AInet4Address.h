@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -27,6 +27,10 @@
 
 struct sockaddr_in;
 
+/**
+ * @brief Represents an ipv4 address with port.
+ * @ingroup network
+ */
 class API_AUI_NETWORK AInet4Address
 {
 private:

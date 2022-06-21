@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -23,3 +23,8 @@
 #include <windows.h>
 
 #endif
+
+/**
+* @defgroup json aui::json
+* @brief aui::json is a json parser/writer.
+*/

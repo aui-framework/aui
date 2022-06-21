@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -26,9 +26,9 @@
 
 namespace aui {
     /**
-     * \brief Fill with zeros object's memory.
-     * \tparam T object type
-     * \param data object itself
+     * @brief Fill with zeros object's memory.
+     * @tparam T object type
+     * @param data object itself
      */
     template<typename T>
     inline void zero(T& data) {

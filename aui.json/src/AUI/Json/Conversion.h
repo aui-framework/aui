@@ -17,8 +17,8 @@
  * <p><code>static T from_json(const AJson&)</code> converts <a href="AJson">AJson</a> to the type</p>
  * <p>
  * <code>
- * template&lt;&gt; <br />
- * struct AJsonConv&lt;YOURTYPE&gt; { <br />
+ * template<> <br />
+ * struct AJsonConv<YOURTYPE> { <br />
  * &emsp;static AJson toJson(const YOURTYPE& t) {} <br />
  * &emsp;static void fromJson(const AJson& json, YOURTYPE& dst) {} <br />
  * };

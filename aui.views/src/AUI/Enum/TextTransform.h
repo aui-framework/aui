@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -26,6 +26,11 @@
 
 #pragma once
 
+/**
+ * @brief Controls the text transform of AView.
+ * @ingroup ass
+ * @ingroup views
+ */
 enum class TextTransform {
     NONE,
     UPPERCASE,

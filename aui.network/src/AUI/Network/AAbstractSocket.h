@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -28,6 +28,10 @@
 #include "AInet4Address.h"
 #include "AUI/Common/AString.h"
 
+/**
+ * @brief Base class for all sockets.
+ * @ingroup network
+ */
 class API_AUI_NETWORK AAbstractSocket
 {	
 private:
@@ -53,19 +57,19 @@ protected:
 	}
 	
 	/**
-	 * \brief Initialise socket
+	 * @brief Initialise socket
 	 */
 	void init();
 	
 	/**
-	 * \brief Bind socket for port. Used for ATcpServerSocket and AUdpSocket
-	 * \param bindingPort port
+	 * @brief Bind socket for port. Used for ATcpServerSocket and AUdpSocket
+	 * @param bindingPort port
 	 */
 	void bind(uint16_t bindingPort);
 
 
 	/**
-	 * \brief Create socket handle. Use ::socket()
+	 * @brief Create socket handle. Use ::socket()
 	 */
 	virtual int createSocket() = 0;
 	

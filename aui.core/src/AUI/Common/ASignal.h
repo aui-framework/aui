@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -26,6 +26,13 @@
 #include "AUI/Thread/AMutex.h"
 #include "AAbstractSignal.h"
 
+
+/**
+ * @brief Represents a signal.
+ * @tparam Args signal arguments
+ * @ingroup core
+ * @ingroup signal_slot
+ */
 template<typename... Args>
 class ASignal final: public AAbstractSignal
 {

@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -25,7 +25,8 @@
 #include "AUI/Common/AException.h"
 
 /**
- * Exception caused by input/output stream.
+ * @brief Exception caused by input/output stream.
+ * @ingroup core
  */
 class AIOException: public AException
 {
@@ -51,6 +52,10 @@ public:
     using AIOException::AIOException;
 };
 class AResourceBusyException: public AIOException {
+public:
+    using AIOException::AIOException;
+};
+class ANoSpaceLeftException: public AIOException {
 public:
     using AIOException::AIOException;
 };

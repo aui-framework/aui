@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -28,6 +28,10 @@
 #include <AUI/Image/IDrawable.h>
 #include "AView.h"
 
+/**
+ * @brief Simple view to draw an IDrawable.
+ * @ingroup useful_views
+ */
 class API_AUI_VIEWS ADrawableView: public AView {
 private:
     _<IDrawable> mDrawable;

@@ -5,7 +5,8 @@
 #include "ALayout.h"
 
 /**
- * Imitates behaviour of word wrapping, but AViews instead words
+ * @brief Imitates behaviour of word wrapping, but uses @ref AView "views" instead words
+ * @ingroup layout_managers
  */
 class API_AUI_VIEWS AWordWrappingLayout: public ALayout {
 private:

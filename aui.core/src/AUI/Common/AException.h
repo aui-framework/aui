@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -28,6 +28,13 @@
 #include <AUI/Platform/AStacktrace.h>
 #include <AUI/Traits/strings.h>
 
+/**
+ * @brief Abstract AUI exception.
+ * @ingroup core
+ * @details
+ * Unlike std::exception, AException is capable to capture stack traces and efficiently output them to std::ostream.
+ * Also exception nesting is possible (via causedBy()).
+ */
 class API_AUI_CORE AException: public std::exception
 {
     mutable std::optional<std::string> mMessage;

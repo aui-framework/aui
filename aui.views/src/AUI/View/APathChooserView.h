@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -30,6 +30,10 @@
 #include "AViewContainer.h"
 #include "ATextField.h"
 
+/**
+ * @brief A text field with "..." button prompting path.
+ * @ingroup useful_views
+ */
 class API_AUI_VIEWS APathChooserView: public AViewContainer {
 private:
     _<ATextField> mPathField;

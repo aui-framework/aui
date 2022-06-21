@@ -1,4 +1,4 @@
-﻿/**
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -22,6 +22,11 @@
 #pragma once
 #include "ALayout.h"
 
+/**
+ * @brief Grid layout with fixed-size cells.
+ * @see AAdvancedGridLayout
+ * @ingroup layout_managers
+ */
 class API_AUI_VIEWS AGridLayout: public ALayout
 {
 private:

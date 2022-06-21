@@ -1,4 +1,4 @@
-/**
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -17,6 +17,12 @@
  
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
+ */
+
+
+/**
+ * @defgroup crypt aui::crypt
+ * @brief aui::crypt is an decryption/encryption/hash library.
  */
 
 #if AUI_PLATFORM_WIN
