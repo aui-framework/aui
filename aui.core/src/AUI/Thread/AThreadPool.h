@@ -148,16 +148,33 @@ public:
 
 #include <AUI/Thread/AFuture.h>
 
+/**
+ * @brief Manages multiple futures.
+ * @ingroup core
+ * @tparam T future's return type
+ * @details
+ * AFutureSet involves functions to efficiently manage multiple AFutures.
+ *
+ * Guarantees that held futures will never be executed or be during execution after AAsyncHolder is destroyed.
+ */
 template<typename T = void>
 class AFutureSet: public AVector<AFuture<T>> {
 public:
     using AVector<AFuture<T>>::AVector;
 
+    /**
+     * @brief Wait for the result of every AFuture.
+     */
     void waitForAll() const {
         for (const AFuture<T>& v : *this) {
             v.operator*();
         }
     }
+
+    /**
+     * @brief Find AFutures that encountered an exception. If such AFuture is found, AInvocationTargetException is
+     * thrown.
+     */
     void checkForExceptions() const {
         for (const AFuture<T>& v : *this) {
             if (v.hasResult()) {

@@ -28,7 +28,7 @@ class AString;
 
 /**
  * @brief Opens a file for a binary write.
- * @ingroup core
+ * @ingroup io
  */
 class API_AUI_CORE AFileOutputStream : public IOutputStream
 {

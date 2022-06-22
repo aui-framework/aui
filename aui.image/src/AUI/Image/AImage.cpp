@@ -225,7 +225,7 @@ _<AImage> AImage::Cache::load(const AUrl& key)
         if (auto raster = AImageLoaderRegistry::inst().loadRaster(buffer))
             return raster;
     } catch (const AException& e) {
-        ALogger::err("Could not load image: " + key.getFull() + ": " + e.getMessage());
+        ALogger::err("Could not load image: " + key.full() + ": " + e.getMessage());
     }
     return nullptr;
 }

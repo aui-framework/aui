@@ -60,7 +60,7 @@ public class MyGLSurfaceView extends GLSurfaceView implements View.OnTouchListen
         ourLastSurface = this;
         setEGLContextClientVersion(2);
         setEGLConfigChooser(8, 8, 8, 8, 16, 8);
-        String internalStoragePath = context.getFilesDir().getPath();
+        String internalStoragePath = context.getFilesDir().path();
         setRenderer(mRenderer = new GLSurfaceView.Renderer() {
 
             @Override

@@ -448,6 +448,45 @@ namespace aui::impl::future {
 }
 
 
+/**
+ * @brief Represents the result of an asynchronous operation.
+ * @ingroup core
+ * @tparam T result type (void is default)
+ * @details
+ * AFuture is returned by @ref async keyword:
+ *
+ * @code{cpp}
+ * AFuture<int> theFuture = async {
+ *   AThread::sleep(1000); // long operation
+ *   return 123;
+ * };
+ * cout << *theFuture; // 123
+ * @endcode
+ *
+ * However, it can be default-constructed and the result can be supplied manually with the supplyResult() function:
+ *
+ * @code{cpp}
+ * AFuture<int> theFuture;
+ * AThread t([=] {
+ *   AThread::sleep(1000); // long operation
+ *   theFuture.supplyResult(123);
+ * });
+ * t.start();
+ * cout << *theFuture; // 123
+ * @endcode
+ *
+ * AFuture provides a set of functions to manage the process execution: waitForTask(), cancel(), wait(), hasResult(),
+ * hasValue().
+ *
+ * AFuture is a shared_ptr-based wrapper so it can be easily copied, pointing to the same task.
+ *
+ * If all AFutures of the task are destroyed, the task is cancelled. If the task is executing when cancel() is
+ * called, AFuture waits for the task, however, task's thread is still requested for interrupt. It's guarantees that
+ * your task cannot be executed or be executing when AFuture destroyed and allows to efficiently utilize c++'s RAII
+ * feature.
+ *
+ * To manage multiple AFutures, use AAsyncHolder and AFutureSet classes.
+ */
 template<typename T = void>
 class AFuture final: public aui::impl::future::Future<T> {
 private:

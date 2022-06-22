@@ -26,7 +26,7 @@
 
 /**
  * @brief A buffer input/output stream based on std::string.
- * @ingroup core
+ * @ingroup io
  */
 class API_AUI_CORE AStringStream: public IInputStream, public IOutputStream
 {

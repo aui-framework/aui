@@ -6,7 +6,7 @@
 
 /**
  * @brief An input stream that generates random bytes.
- * @ingroup core
+ * @ingroup io
  */
 class API_AUI_CORE ARandomInputStream: public IInputStream {
 private:

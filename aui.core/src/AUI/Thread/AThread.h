@@ -34,7 +34,9 @@ class AString;
 class AConditionVariable;
 
 /**
- * @brief Abstract thread. Not all threads are created through AThread - these are interfaced with AAbstractThread.
+ * @brief Represents an abstract thread. Not all threads are created through AThread - these are interfaced with
+ *        AAbstractThread.
+ * @ingroup core
  */
 class API_AUI_CORE AAbstractThread
 {
@@ -77,8 +79,9 @@ public:
 
     /**
      * @brief Interrupt thread's execution.
-     *        This function requires the interrupted code contain calls to the <code>AThread::interruptionPoint()</code>
-     *        function since C++ is native programming language (not managed)
+     * @details
+     * Raises the interruption flag of the thread. In order to check whether thread interrupted use
+     * AThread::interruptionPoint() or AAbstractThread::isInterrupted().
      */
     virtual void interrupt();
 
@@ -177,14 +180,15 @@ private:
 #include "AUI/Common/AObject.h"
 
 /**
- * @brief Thread.
+ * @brief Represents a user-defined thread.
+ * @ingroup core
  */
 class API_AUI_CORE AThread : public AAbstractThread, public AObject
 {
 public:
 	/**
 	 * @brief Exception that is thrown by <code>AThread::interruptionPoint()</code>, if interruption is requested for
-	 *        this thread. Handled by <code>AThread::start</code.
+	 *        this thread. Handled by <code>AThread::start</code>.
 	 */
 	class Interrupted
 	{
@@ -245,7 +249,13 @@ public:
 	static _<AAbstractThread> current();
 
 	/**
-	 * @brief Interruption point. It's required for <code>AThread::interrupt</code>.
+	 * @brief Interruption point
+	 * @details
+	 * If the interruption flag is raised for the caller thread then flag is reset and AThread::Interrupted exception is
+	 * thrown, efficiently stopping the task execution and safely freeing resources with C++'s RAII feature.
+	 *
+	 * async, asyncX, AThreadPool::enqueue, AUI_ENTRY handle AThread::Interrupted, so throwing AThread::Interrupted is
+	 * safe.
 	 */
 	static void interruptionPoint();
 
