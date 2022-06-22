@@ -28,7 +28,7 @@ class IOutputStream;
 
 /**
  * @brief Represents an input stream.
- * @ingroup core
+ * @ingroup io
  */
 class IInputStream: public aui::noncopyable
 {

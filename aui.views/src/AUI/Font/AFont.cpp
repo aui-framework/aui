@@ -40,16 +40,16 @@ AFont::AFont(AFontManager* fm, const AString& path) :
 
 AFont::AFont(AFontManager* fm, const AUrl& url):
     ft(fm->mFreeType) {
-    if (url.getProtocol() == "file") {
-        if (FT_New_Face(fm->mFreeType->getFt(), url.getPath().toStdString().c_str(), 0, &mFace)) {
-            throw AException("Could not load font: " + url.getFull());
+    if (url.schema() == "file") {
+        if (FT_New_Face(fm->mFreeType->getFt(), url.path().toStdString().c_str(), 0, &mFace)) {
+            throw AException("Could not load font: " + url.full());
         }
         return;
     }
     mFontDataBuffer = AByteBuffer::fromStream(url.open());
 
     if (FT_New_Memory_Face(fm->mFreeType->getFt(), (const FT_Byte*) mFontDataBuffer.data(), mFontDataBuffer.getSize(), 0, &mFace)) {
-        throw AException("Could not load font: " + url.getFull());
+        throw AException("Could not load font: " + url.full());
     }
 }
 

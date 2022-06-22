@@ -3,8 +3,13 @@
 #include "AFuture.h"
 
 /**
- * @brief Holds set of futures keeping them valid. Guarantees that held futures will never be executed or be during
- * execution after AAsyncHolder is destroyed.
+ * @brief Holds a set of futures keeping them valid.
+ * @ingroup core
+ * @details
+ * Unlike AFutureSet, AAsyncHolder is intended to hold void futures (AFuture<void>). When AFuture's task is complete,
+ * the AFuture is removed from AAsyncHolder.
+ *
+ * Guarantees that held futures will never be executed or be during execution after AAsyncHolder is destroyed.
  */
 class AAsyncHolder {
 public:

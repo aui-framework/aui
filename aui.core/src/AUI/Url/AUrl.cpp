@@ -27,22 +27,22 @@
 #include "AUI/Common/AMap.h"
 #include "AUI/Util/ABuiltinFiles.h"
 
-AUrl::AUrl(const AString& full)
+AUrl::AUrl(AString full)
 {
 	auto posColon = full.find(':');
 	if (posColon == AString::NPOS)
 	{
-		mPath = full;
+		mPath = std::move(full);
 		if (mPath.startsWith("./")) {
 			mPath = mPath.mid(2);
 		}
-		mProtocol = "file";
+        mSchema = "file";
 	} else
 	{
-		mProtocol = full.mid(0, posColon);
-		if (mProtocol.empty())
+        mSchema = full.mid(0, posColon);
+		if (mSchema.empty())
 		{
-			mProtocol = "builtin";
+            mSchema = "builtin";
 			mPath = full.mid(posColon + 1);
 		} else
 		{
@@ -54,20 +54,20 @@ AUrl::AUrl(const AString& full)
 AMap<AString, std::function<_<IInputStream>(const AUrl&)>>& AUrl::resolvers() {
     static AMap<AString, std::function<_<IInputStream>(const AUrl&)>> storage = {
         {"builtin", [](const AUrl& u) {
-            return ABuiltinFiles::open(u.getPath());
+            return ABuiltinFiles::open(u.path());
         }},
         {"file",    [](const AUrl& u) {
-            return _new<AFileInputStream>(u.getPath());
+            return _new<AFileInputStream>(u.path());
         }},
     };
     return storage;
 }
 _<IInputStream> AUrl::open() const {
-	if (auto c = resolvers().contains(mProtocol)) {
+	if (auto c = resolvers().contains(mSchema)) {
 		if (auto is = c->second(*this))
 			return is;
 	}
-	throw AIOException("could not open url: " + getFull());
+	throw AIOException("could not open url: " + full());
 }
 
 

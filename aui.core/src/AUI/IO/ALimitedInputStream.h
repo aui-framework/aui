@@ -31,7 +31,7 @@
 /**
  * @brief Input stream that will pass through a maximum of a certain number of bytes - then it will return eof
  *        (end of stream)
- * @ingroup core
+ * @ingroup io
  */
 class API_AUI_CORE ALimitedInputStream: public IInputStream {
 private:

@@ -41,7 +41,7 @@ _<IDrawable> IDrawable::Cache::load(const AUrl& key)
         if (auto raster = AImageLoaderRegistry::inst().loadRaster(buffer))
             return _new<AImageDrawable>(raster);
     } catch (const AException& e) {
-        ALogger::err("Could not load image: " + key.getFull() + ": " + e.getMessage());
+        ALogger::err("Could not load image: " + key.full() + ": " + e.getMessage());
     }
     return nullptr;
 }
