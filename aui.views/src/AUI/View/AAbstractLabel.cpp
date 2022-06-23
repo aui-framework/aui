@@ -20,9 +20,10 @@
  * =====================================================================================================================
  */
 
-#include "ALabel.h"
+#include "AAbstractLabel.h"
 #include <AUI/Render/RenderHints.h>
 #include <glm/gtc/matrix_transform.hpp>
+#include <utility>
 
 #include "AViewContainer.h"
 
@@ -30,18 +31,13 @@
 #include <AUI/Util/kAUI.h>
 
 
-ALabel::ALabel()
+AAbstractLabel::AAbstractLabel()
 {
 
 }
 
-ALabel::ALabel(const AString& text):
-	mText(text)
-{
 
-}
-
-void ALabel::render()
+void AAbstractLabel::render()
 {
 	AView::render();
 
@@ -49,7 +45,7 @@ void ALabel::render()
 }
 
 
-int ALabel::getContentMinimumWidth()
+int AAbstractLabel::getContentMinimumWidth()
 {
 	if (!mPrerendered) {
 	    doPrerender();
@@ -61,50 +57,22 @@ int ALabel::getContentMinimumWidth()
     return acc;
 }
 
-int ALabel::getContentMinimumHeight()
+int AAbstractLabel::getContentMinimumHeight()
 {
 	if (mText.empty())
 		return 0;
-	return getFontStyleLabel().size + getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size);
-}
 
-void ALabel::setText(const AString& newText)
-{
-    // try to determine is text changed.
-
-    auto sourceIterator = newText.begin();
-    auto destinationIterator = mText.begin();
-
-    if (newText.length() == mText.length()) {
-        for (; sourceIterator != newText.end(); ++sourceIterator, ++destinationIterator) {
-            if (*destinationIterator != *sourceIterator) {
-                break;
-            }
-        }
-        if (sourceIterator == newText.end()) {
-            return;
-        }
-    } else {
-        mText.resize(newText.size());
-        destinationIterator = mText.begin();
-    }
-    for (; sourceIterator != newText.end(); ++sourceIterator, ++destinationIterator) {
-        *destinationIterator = *sourceIterator;
-    }
-
-	mPrerendered = nullptr;
-
-    requestLayoutUpdate();
-    redraw();
+    return getFontStyleLabel().size;
 }
 
 
-void ALabel::setSize(int width, int height) {
+
+void AAbstractLabel::setSize(int width, int height) {
     auto oldWidth = getWidth();
     AView::setSize(width, height);
 }
 
-AFontStyle ALabel::getFontStyleLabel() {
+AFontStyle AAbstractLabel::getFontStyleLabel() {
     auto fs = getFontStyle();
     if (mFontOverride)
         fs.font = mFontOverride;
@@ -114,7 +82,7 @@ AFontStyle ALabel::getFontStyleLabel() {
 }
 
 /*
-void ALabel::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) {
+void AAbstractLabel::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor) {
     mPrerendered.mVao = nullptr;
     mVerticalAlign = Align::LEFT;
     processor(css::T_VERTICAL_ALIGN, [&](property p)
@@ -138,7 +106,7 @@ void ALabel::userProcessStyleSheet(const std::function<void(css, const std::func
     });
 }*/
 
-void ALabel::doPrerender() {
+void AAbstractLabel::doPrerender() {
     auto fs = getFontStyleLabel();
     if (!mText.empty()) {
         mPrerendered = Render::prerenderString({0, 0}, getTransformedText(), fs);
@@ -146,7 +114,7 @@ void ALabel::doPrerender() {
     }
 }
 
-void ALabel::doRenderText() {
+void AAbstractLabel::doRenderText() {
     if (!mPrerendered)
     {
         doPrerender();
@@ -156,15 +124,16 @@ void ALabel::doRenderText() {
     if (mPrerendered)
     {
         mTextLeftOffset = 0;
+        auto requiredSpace = getIconSize();
+        auto iconY = glm::ceil((getHeight() - requiredSpace.y) / 2.0);
         switch (getFontStyleLabel().align) {
             case TextAlign::LEFT:
                 if (mIcon) {
-                    auto requiredSpace = getIconSize();
                     requiredSpace *= getHeight() / requiredSpace.y;
                     RenderHints::PushState s;
                     Render::setColor(mIconColor);
                     Render::setTransform(glm::translate(glm::mat4(1.f),
-                                                        glm::vec3(mPadding.left + mTextLeftOffset, 2_dp, 0)));
+                                                        glm::vec3(mPadding.left + mTextLeftOffset, iconY, 0)));
                     IDrawable::Params p;
                     p.size = requiredSpace;
                     mIcon->draw(p);
@@ -175,14 +144,13 @@ void ALabel::doRenderText() {
             case TextAlign::CENTER:
                 mTextLeftOffset += (getContentWidth() - mPrerendered->getWidth()) / 2;
                 if (mIcon) {
-                    auto requiredSpace = getIconSize();
                     mTextLeftOffset += requiredSpace.x / 2;
                     RenderHints::PushState s;
                     Render::setColor(mIconColor);
                     Render::setTransform(glm::translate(glm::mat4(1.f),
                                                         glm::vec3(mTextLeftOffset - (mPrerendered->getWidth()) / 2 -
                                                                   requiredSpace.x,
-                                                                  (getHeight() - requiredSpace.y) / 2, 0)));
+                                                                  iconY, 0)));
 
                     IDrawable::Params p;
                     p.size = requiredSpace;
@@ -194,14 +162,13 @@ void ALabel::doRenderText() {
             case TextAlign::RIGHT:
                 mTextLeftOffset += getContentWidth() - mPrerendered->getWidth();
                 if (mIcon) {
-                    auto requiredSpace = getIconSize();
                     RenderHints::PushState s;
                     Render::setColor(mIconColor);
                     Render::setTransform(glm::translate(glm::mat4(1.f),
                                                         glm::vec3(mPadding.left + mTextLeftOffset -
                                                                   (mPrerendered ? mPrerendered->getWidth() : 0) -
                                                                   requiredSpace.x / 2,
-                                                                  (getHeight() - requiredSpace.y) / 2, 0)));
+                                                                  iconY, 0)));
 
                     IDrawable::Params p;
                     p.size = requiredSpace;
@@ -214,9 +181,9 @@ void ALabel::doRenderText() {
             int y = mPadding.top;
 
             if (mVerticalAlign == VerticalAlign::MIDDLE) {
-                y = (glm::max)(y, int(getContentHeight() - (getFontStyleLabel().size)) / 2);
-            } else {
-                y -= getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size);
+                auto ascenderHeight = getFontStyleLabel().font->getAscenderHeight(getFontStyleLabel().size);
+                auto descenderHeight = getFontStyleLabel().font->getDescenderHeight(getFontStyleLabel().size);
+                y = (glm::max)(y, y + int(glm::ceil((getContentHeight() - int(ascenderHeight + descenderHeight)) / 2.0)));
             }
             RenderHints::PushMatrix m;
             Render::translate({ mTextLeftOffset + mPadding.left, y });
@@ -225,7 +192,7 @@ void ALabel::doRenderText() {
     }
 }
 
-AString ALabel::getTransformedText() {
+AString AAbstractLabel::getTransformedText() {
     if (getText().empty())
         return {};
     switch (mTextTransform) {
@@ -237,7 +204,7 @@ AString ALabel::getTransformedText() {
     return getText();
 }
 
-void ALabel::onDpiChanged() {
+void AAbstractLabel::onDpiChanged() {
     AView::onDpiChanged();
     ui_threadX [&] {
         mPrerendered = nullptr;
@@ -245,23 +212,23 @@ void ALabel::onDpiChanged() {
     };
 }
 
-void ALabel::invalidateFont() {
+void AAbstractLabel::invalidateFont() {
     mPrerendered = nullptr;
     redraw();
 }
 
-glm::ivec2 ALabel::getIconSize() const {
+glm::ivec2 AAbstractLabel::getIconSize() const {
     if (mIcon) {
         return {mIcon->getSizeHint().x * getContentHeight() / mIcon->getSizeHint().y, getContentHeight()};
     }
     return {};
 }
 
-bool ALabel::consumesClick(const glm::ivec2& pos) {
+bool AAbstractLabel::consumesClick(const glm::ivec2& pos) {
     return false;
 }
 
-AString ALabel::toString() const {
+AString AAbstractLabel::toString() const {
     return mText;
 }
 

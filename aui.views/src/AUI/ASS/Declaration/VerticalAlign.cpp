@@ -24,11 +24,11 @@
 //
 
 
-#include <AUI/View/ALabel.h>
+#include <AUI/View/AAbstractLabel.h>
 #include "VerticalAlign.h"
 
 void ass::decl::Declaration<VerticalAlign>::applyFor(AView* view) {
-    if (auto label = dynamic_cast<ALabel*>(view)) {
+    if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
         label->setVerticalAlign(mInfo);
     }
 }
