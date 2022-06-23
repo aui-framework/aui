@@ -71,7 +71,7 @@ void setupUIThread() noexcept {
     AAbstractThread::threadStorage() = _new<UIThread>();
 }
 
-AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
+AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
     AStringVector args;
 
     setupUIThread();
@@ -114,7 +114,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
     }
     int r = -1;
     try {
-        r = aui_entry(args);
+        r = aui_entry(std::move(args));
         if (auto el = AThread::current()->getCurrentEventLoop()) {
             el->loop();
         }

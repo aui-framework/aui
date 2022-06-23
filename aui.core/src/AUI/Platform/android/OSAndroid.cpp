@@ -35,9 +35,9 @@ AAndroid::Ref _gClassAUI;
 AAndroid::Ref _gClassMyGLSurfaceView;
 
 
-int(*_gEntry)(const AStringVector&);
+int(*_gEntry)(AStringVector);
 
-AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(const AStringVector&)) {
+AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(AStringVector)) {
     _gVM = vm;
     _gEntry = aui_entry;
     /*
