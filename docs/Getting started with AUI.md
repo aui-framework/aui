@@ -48,9 +48,11 @@ target_link_libraries(project_template PRIVATE aui::core)
 ```cpp
 #include <AUI/Platform/Entry.h>
 #include <AUI/Logging/ALogger.h>
+ 
+static constexpr auto LOG_TAG = "MyApp";
 
 AUI_ENTRY {
-    ALogger::info("Hello world!");
+    ALogger::info(LOG_TAG) << "Hello world!";
     return 0;
 }
 ```
@@ -67,10 +69,10 @@ To build a CMake project:
 4. Build your project: `cmake . --build`
 5. Run your project: `bin/project_template`
 
-Output:
+Possible output:
 
 ```
-[13:58:33] INFO: Hello world!
+[13:24:02][UI Thread][Logger][INFO]: Hello world!
 ```
 
 # Graphical hello world

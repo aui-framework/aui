@@ -45,7 +45,7 @@ class AString;
  * @endcode
  * Possible output:
  * ```
- * [00:47:02][UI Thread][Logger][INFO]: Hello world
+ * [00:47:02][UI Thread][Logger][INFO]: Hello world!
  * ```
  *
  * It's convenient to define `LOG_TAG` variable for your class:
