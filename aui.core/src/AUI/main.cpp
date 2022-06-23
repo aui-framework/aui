@@ -28,13 +28,13 @@
  * - @ref signal_slot "signal-slot system"
  * - @ref AAbstractThread::interrupt() "interruptable threads"
  * - @ref Autumn "primitive dependency injection"
- * - @ref io input-output
- * - @ref AI18n i18n
- * - @ref ALogger logging
+ * - @ref io "input-output"
+ * - @ref AI18n "i18n"
+ * - @ref ALogger "logging"
  * - data models
  * - reflection
  * - trait classes
- * - @ref AUrl url
+ * - @ref AUrl "urls"
  */
 
 
