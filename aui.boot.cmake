@@ -205,7 +205,7 @@ function(auib_import AUI_MODULE_NAME URL)
         message(FATAL_ERROR "ARCHIVE and VERSION arguments are incompatible")
     endif()
 
-    if (AUI_BOOT_${AUI_MODULE_NAME_UPPER}_ADD_SUBDIRECTORY OR AUIB_IMPORT_ADD_SUBDIRECTORY)
+    if (AUIB_${AUI_MODULE_NAME_UPPER}_AS OR AUIB_ALL_AS)
         set(DEP_ADD_SUBDIRECTORY TRUE)
     else()
         set(DEP_ADD_SUBDIRECTORY FALSE)
