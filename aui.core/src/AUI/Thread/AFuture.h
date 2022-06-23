@@ -355,6 +355,15 @@ namespace aui::impl::future {
         }
 
 
+        /**
+         * @brief Cancels the AFuture's task.
+         * @details
+         * When cancel() is called, there are 3 possible cases:
+         * 1. AFuture's task is not taken by AThreadPool. The task is simply removed from the AThreadPool queue.
+         * 2. AFuture's task is being executed. The task's thread is
+         * @ref AAbstractThread::interrupt() "requested for interrupt".
+         * 3. AFuture's task is already completed. cancel() does nothing.
+         */
         void cancel() noexcept {
             (*mInner)->cancel();
         }
@@ -364,7 +373,7 @@ namespace aui::impl::future {
         }
 
         /**
-         * Sleeps if the supplyResult is not currently available.
+         * @brief Sleeps if the supplyResult is not currently available.
          * @note The task will be executed inside wait() function if the threadpool have not taken the task to execute
          *       yet. This behaviour can be disabled by <code>AFutureWait::ASYNC_ONLY</code> flag.
          */
@@ -373,7 +382,7 @@ namespace aui::impl::future {
         }
 
         /**
-         * Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
+         * @brief Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
          * <dl>
          *   <dt><b>Sneaky exceptions</b></dt>
          *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -396,7 +405,7 @@ namespace aui::impl::future {
         }
 
         /**
-         * Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
+         * @brief Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
          * <dl>
          *   <dt><b>Sneaky exceptions</b></dt>
          *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -408,7 +417,7 @@ namespace aui::impl::future {
         }
 
         /**
-         * Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
+         * @brief Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
          * <dl>
          *   <dt><b>Sneaky exceptions</b></dt>
          *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -420,7 +429,7 @@ namespace aui::impl::future {
         }
 
         /**
-         * Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
+         * @brief Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
          * <dl>
          *   <dt><b>Sneaky exceptions</b></dt>
          *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -432,7 +441,7 @@ namespace aui::impl::future {
         }
 
         /**
-         * Returns the task result from the another thread. Sleeps if the task result is not currently available.
+         * @brief Returns the task result from the another thread. Sleeps if the task result is not currently available.
          * <dl>
          *   <dt><b>Sneaky exceptions</b></dt>
          *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
@@ -475,8 +484,7 @@ namespace aui::impl::future {
  * cout << *theFuture; // 123
  * @endcode
  *
- * AFuture provides a set of functions to manage the process execution: waitForTask(), cancel(), wait(), hasResult(),
- * hasValue().
+ * AFuture provides a set of functions to manage the process execution: cancel(), wait(), hasResult(), hasValue().
  *
  * AFuture is a shared_ptr-based wrapper so it can be easily copied, pointing to the same task.
  *

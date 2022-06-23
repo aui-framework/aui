@@ -34,9 +34,9 @@ class AObject;
  * @brief Signal-slots is an object messaging mechanism that creates seamless relations between objects.
  * @details Signal-slots originally implemented in Qt and it has proven itself as an object messaging mechanism making
  * it easy to implement the observer pattern without boilerplate code.
- * Signal-slot tracks object existence on the both ends so destruction either sender or receiver object breaks the link
- * between them. When the sender or receiver object is destroyed slot execution is never possible even in a multithread
- * environment. Almost any signal can be connected to almost any slot (even lambda) by any code.
+ * Signal-slot tracks object existence on the both ends so destruction of either sender or receiver object breaks the
+ * link between them. When the sender or receiver object is destroyed slot execution is never possible even in a
+ * multithreaded environment. Almost any signal can be connected to almost any slot (even lambda) by any code.
  *
  * <h1>Basic example</h1>
  * @code{cpp}
