@@ -23,8 +23,8 @@
 
 #include <AUI/api.h>
 
-class AView;
-class AAssHelper;
+class API_AUI_VIEWS AView;
+class API_AUI_VIEWS AAssHelper;
 
 namespace ass::decl {
     enum class DeclarationSlot {
