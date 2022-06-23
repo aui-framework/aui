@@ -41,7 +41,7 @@ struct AViewsInit
 {
     AViewsInit() {
 #if AUI_PLATFORM_WIN
-#ifndef AUI_DISABLE_HIDPI
+#ifndef AUI_NO_HIDPI
         typedef BOOL(WINAPI *SetProcessDpiAwarenessContext_t)(HANDLE);
         auto SetProcessDpiAwarenessContext = (SetProcessDpiAwarenessContext_t)GetProcAddress(GetModuleHandleA("User32.dll"), "SetProcessDpiAwarenessContext");
 

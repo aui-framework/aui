@@ -182,7 +182,6 @@ protected:
 	 */
 	ABoxFields mPadding;
 
-
 	/**
 	 * @brief ASS class names.
 	 */
@@ -368,6 +367,7 @@ public:
 	}
 
 
+
 	/**
 	 * @return pixel count which this AView's margin and padding acquired by width.
 	 */
@@ -464,6 +464,8 @@ public:
     const _<AAnimator>& getAnimator() const {
 	    return mAnimator;
 	}
+
+
 
     void setAnimator(const _<AAnimator>& animator);
     void getTransform(glm::mat4& transform) const;
