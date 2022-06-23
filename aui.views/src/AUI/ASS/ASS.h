@@ -37,9 +37,9 @@
  * "call setFontSize(18_pt) for every matched view").
  * <table>
  *   <tr>
- *     <td>CSS</td>
- *     <td>AUI ASS</td>
- *     <td>Meaning</td>
+ *     <th>CSS</th>
+ *     <th>AUI ASS</th>
+ *     <th>Meaning</th>
  *   </tr>
  *   <tr>
  *     <td>
