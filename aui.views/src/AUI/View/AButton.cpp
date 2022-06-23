@@ -27,10 +27,6 @@ AButton::AButton()
 
 }
 
-AButton::AButton(const AString& text): ALabel(text)
-{
-
-}
 
 void AButton::setDefault(bool isDefault)
 {

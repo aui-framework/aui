@@ -24,11 +24,11 @@
 //
 
 #include "TextBorder.h"
-#include <AUI/View/ALabel.h>
+#include <AUI/View/AAbstractLabel.h>
 #include <AUI/Render/RenderHints.h>
 
 void ass::decl::Declaration<ass::TextBorder>::renderFor(AView* view) {
-    if (auto label = dynamic_cast<ALabel*>(view)) {
+    if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
         RenderHints::PushColor c;
         Render::setColor(mInfo.borderColor);
 

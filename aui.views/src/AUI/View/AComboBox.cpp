@@ -70,7 +70,7 @@ void AComboBox::updateText() {
     setText(mModel->listItemAt(mSelectionId));
 }
 void AComboBox::render() {
-    ALabel::render();
+    AAbstractLabel::render();
     if (auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg")) {
         auto size = arrow->getSizeHint();
         IDrawable::Params p;
@@ -81,7 +81,7 @@ void AComboBox::render() {
 }
 
 int AComboBox::getContentMinimumWidth() {
-    return ALabel::getContentMinimumWidth() + 20;
+    return AAbstractLabel::getContentMinimumWidth() + 20;
 }
 
 void AComboBox::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
