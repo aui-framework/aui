@@ -21,6 +21,7 @@
             <tab type="user" url="@ref md_docs_Getting_started_with_AUI" title="Getting started with AUI" />
             <tab type="user" url="@ref md_docs_AUI_Boot" title="AUI Boot" />
             <tab type="user" url="@ref md_docs_AUI_configure_flags" title="AUI configure flags" />
+            <tab type="user" url="@ref md_docs_Writing_tests" title="Writing tests" />
         </tab>
         <tab type="usergroup" title="Reference" visible="yes">
             <tab type="modules" visible="yes" title="All AUI Modules" intro=""/>
