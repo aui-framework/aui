@@ -4,6 +4,7 @@
 
 #include "WinIoCompletionPort.h"
 #include "AUI/Common/AException.h"
+#include <atomic>
 
 void WinIoCompletionPort::create(HANDLE fileHandle) {
     mKey = nextKey();
