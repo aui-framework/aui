@@ -24,6 +24,10 @@ project(AUI)
 # AUI_BUILD_AUI_ROOT intended for pulling resources by aui.build.cmake (cmake scripts, ios storyboards, etc...)
 set(AUI_BUILD_AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "AUI src location" FORCE)
 
+if (MINGW)
+    message(FATAL_ERROR "MinGW is not supported")
+endif()
+
 if(AUI_BOOT_COMPONENTS)
     # adding required dependencies to the components
     list(APPEND AUI_BOOT_COMPONENTS core)
