@@ -27,9 +27,12 @@ Suppose whe want to create a module called `aui::my_module`:
 1. In the main `CMakeLists.txt`:
    1. Find the `# define all components` anchor, put `define_aui_component(my_module)`.
    2. Find the `# all components for exporting` anchor, put `my_module` to `AUI_ALL_COMPONENTS`.
-2. If `aui::my_module` has dependencies (excluding `aui::core`), handle them at `# add dependencies` in 
+2. In `docs/Doxyfile`:
+   1. Append `aui.my_module/src` to the `STRIP_FROM_INC_PATH` variable.
+   2. Append `aui.my_module` to the `INPUT` variable.
+3. If `aui::my_module` has dependencies (excluding `aui::core`), handle them at `# add dependencies` in 
    `cmake/aui-config.cmake.in`.
-3. Put the reference to the module in `docs/index.html`.
-4. Create `aui.my_module` dir.
-5. Copy & paste `CMakeLists.txt` from any small module (i.e. `aui::xml`) and configure it for your module.
-6. Use `API_AUI_MY_MODULE` to export symbols from your module (it's created by `aui_module`).
+4. Put the reference to the module in `docs/index.html`.
+5. Create `aui.my_module` dir.
+6. Copy & paste `CMakeLists.txt` from any small module (i.e. `aui::xml`) and configure it for your module.
+7. Use `API_AUI_MY_MODULE` to export symbols from your module (it's created by the `aui_module` CMake function).
