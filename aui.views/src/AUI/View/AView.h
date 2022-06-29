@@ -734,6 +734,10 @@ signals:
 
 	emits<> customCssPropertyChanged;
 
+    /**
+     * @brief Focus state changed.
+     * @param first whether focused or not.
+     */
 	emits<bool> focusState;
 	emits<> focusAcquired;
 	emits<> focusLost;

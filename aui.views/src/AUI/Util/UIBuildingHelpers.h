@@ -44,13 +44,12 @@
 
 
 template<typename Layout, typename... Args>
-inline auto _container(const AVector<_<AView>>& views, Args&&... args)
+inline auto _container(AVector<_<AView>> views, Args&&... args)
 {
 	auto c = _new<AViewContainer>();
-	c->setLayout(_new<Layout>(args...));
+	c->setLayout(_new<Layout>(std::forward<Args>(args)...));
 
-	for (const auto& v : views)
-		c->addView(v);
+    c->setViews(std::move(views));
 
 	return c;
 }
@@ -94,6 +93,24 @@ namespace aui::detail {
                         mViews << v;
                     }
                 }
+            }
+
+            operator _<AView>() {
+                return (_container<Layout>(std::move(mViews)) let {it->setExpanding();});
+            }
+            operator _<AViewContainer>() {
+                return (_container<Layout>(std::move(mViews)) let {it->setExpanding();});
+            }
+            _<AViewContainer> operator<<(const AString& assEntry) {
+                return (_container<Layout>(std::move(mViews)) let {it->setExpanding();}) << assEntry;
+            }
+            template<typename T>
+            _<AViewContainer> operator^(const T& t) {
+                return (_container<Layout>(std::move(mViews)) let {it->setExpanding();}) ^ t;
+            }
+            template<typename T>
+            _<AViewContainer> operator+(const T& t) {
+                return (_container<Layout>(std::move(mViews)) let {it->setExpanding();}) + t;
             }
 
             operator _<AView>() const {

@@ -46,6 +46,16 @@ class API_AUI_VIEWS AViewContainer: public AView
 public:
 	AViewContainer();
 	virtual ~AViewContainer();
+
+    void setViews(AVector<_<AView>> views) {
+        mViews = std::move(views);
+
+        for (const auto& view : mViews) {
+            view->mParent = this;
+            if (mLayout)
+                mLayout->addView(-1, view);
+        }
+    }
 	void addView(const _<AView>& view);
 	void addView(size_t index, const _<AView>& view);
 	void removeView(const _<AView>& view);
