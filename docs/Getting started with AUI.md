@@ -75,7 +75,7 @@ Possible output:
 [13:24:02][UI Thread][Logger][INFO]: Hello world!
 ```
 
-# Graphical hello world
+# Introduction to UI building
 
 **Project:** `docs/projects/hello_world/ui`
 
@@ -169,4 +169,6 @@ Please note that if any window in shown, an event loop is created after returnin
 The example above produces the following window:
 
 ![Label](https://github.com/aui-framework/aui/blob/master/docs/imgs/Screenshot_20210408_024201.jpg?raw=true)
+
+## Accessing setContents() elementes 
 
