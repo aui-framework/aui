@@ -129,7 +129,7 @@ void AAbstractTextField::doRedraw() {
     redraw();
 }
 
-AString AAbstractTextField::getText() const {
+const AString& AAbstractTextField::text() const {
     return mContents;
 }
 
@@ -214,7 +214,7 @@ bool AAbstractTextField::isValidText(const AString& text) {
     return true;
 }
 
-size_t AAbstractTextField::getTextLength() const {
+size_t AAbstractTextField::textLength() const {
     return mContents.length();
 }
 

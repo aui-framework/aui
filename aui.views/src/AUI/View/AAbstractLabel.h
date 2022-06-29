@@ -108,7 +108,7 @@ public:
     }
 
     [[nodiscard]]
-    const AString& getText() const
+    const AString& text() const
     {
         return mText;
     }

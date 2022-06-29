@@ -45,7 +45,7 @@ private:
     /**
      * Full text. Must be set to null if mLines changed.
      */
-    std::optional<AString> mFullText;
+    mutable std::optional<AString> mFullText;
 
     int mScroll = 0;
 
@@ -78,7 +78,7 @@ public:
         AView::setSize(width, height);
 
         if (widthChanged) {
-            updateWordWrap(getText());
+            updateWordWrap(text());
         } else if (heightChanged) {
             updateScrollDimensions();
         }
@@ -94,21 +94,20 @@ public:
      * @note This function is expensive!
      * @return containing text
      */
-    AString getText() const override {
-        if (mFullText) {
-            return *mFullText;
-        }
-        AString s;
-        s.reserve(length());
+    const AString& text() const override {
+        if (!mFullText) {
+            AString s;
+            s.reserve(length());
 
-        for (auto& l : mLines) {
-            s += l.text;
+            for (auto& l: mLines) {
+                s += l.text;
+            }
+            mFullText = std::move(s);
         }
-
-        return s;
+        return *mFullText;
     }
 
-    size_t getTextLength() const override {
+    size_t textLength() const override {
         size_t length = 0;
         for (auto& l : mLines) {
             length += l.text.length();
