@@ -26,7 +26,7 @@
 
 /**
  * @brief Exception caused by input/output stream.
- * @ingroup core
+ * @ingroup io
  */
 class AIOException: public AException
 {

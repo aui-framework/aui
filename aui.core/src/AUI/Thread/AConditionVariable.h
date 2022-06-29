@@ -23,6 +23,12 @@
 #include <condition_variable>
 #include "AThread.h"
 
+/**
+ * @brief Represents a condition variable.
+ * @ingroup core
+ * @details
+ * AConditionVariable extends std::condition_variable with @ref AThread::interrupt() "thread interruption functionality".
+ */
 class AConditionVariable
 {
 private:

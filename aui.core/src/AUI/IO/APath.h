@@ -29,7 +29,7 @@
 
 /**
  * @brief Flag enum for APath::find
- * @ingroup core
+ * @ingroup io
  */
 AUI_ENUM_FLAG(APathFinder) {
     NONE,
@@ -52,7 +52,7 @@ AUI_ENUM_FLAG(APathFinder) {
 
 /**
  * @brief Flag enum for APath::listDir
- * @ingroup core
+ * @ingroup io
  */
 AUI_ENUM_FLAG(AFileListFlags) {
     NONE = 0,
@@ -94,7 +94,7 @@ AUI_ENUM_FLAG(AFileListFlags) {
 
 /**
  * @brief An add-on to AString with functions for working with the path.
- * @ingroup core
+ * @ingroup io
  * @note In most file systems, both a regular file and a folder with the same name can exist on the same path.
  * @details
  * Example usage:

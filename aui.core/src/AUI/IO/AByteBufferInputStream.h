@@ -27,7 +27,7 @@
 
 /**
  * @brief Converts a AByteBuffer to an IInputStream.
- * @ingroup core
+ * @ingroup io
  */
 class API_AUI_CORE AByteBufferInputStream final: public IInputStream
 {

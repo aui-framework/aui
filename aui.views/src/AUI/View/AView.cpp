@@ -541,3 +541,4 @@ void AView::applyAssRule(const RuleWithoutSelector& rule) {
         d->applyFor(this);
     }
 }
+

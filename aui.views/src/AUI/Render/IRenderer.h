@@ -296,7 +296,7 @@ public:
      *         function instead.
      *     </dd>
      * </dl>
-     * @param position string's top left corner position
+     * @param position string's top left point
      * @param string string to render
      * @param fs font style (optional)
      */
@@ -307,6 +307,7 @@ public:
     /**
      * Analyzes string and creates an instance of <code>IRenderer::IPrerenderedString</code> which helps
      * <code>IRenderer</code> to efficiently render the string.
+     * @param position string's top left point
      * @param text string to prerender
      * @param fs font style
      * @return an instance of IPrerenderedString

@@ -24,7 +24,7 @@
 
 /**
  * @brief Thrown when stream has reached end (end of file).
- * @ingroup core
+ * @ingroup io
  */
 class AEOFException: public AIOException
 {

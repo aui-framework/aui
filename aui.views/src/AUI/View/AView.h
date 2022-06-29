@@ -62,10 +62,10 @@ class AAssHelper;
  *
  * @details
  * A class that describes the minimum unit that can be placed in a container (including a window) that takes up
-*  some space on the screen that responds to changes in size, position, moving the cursor, pressing / releasing
-*  keys and buttons, movement mouse wheel, etc...
+*  some space on the screen, responds to changes in size, position, moving the cursor, pressing / releasing
+*  keys and buttons, mouse wheel, etc...
  *
- * Analogue to QWidget, View.
+ * Analogue to Qt's QWidget, Android's View.
  *
  * @ingroup useful_views
  */
@@ -178,10 +178,9 @@ protected:
 	ABoxFields mMargin;
 
 	/**
-	 * @brief Padding, which defines the spacing around content area. Processed by AView implementation.
+	 * @brief Padding, which defines the spacing around content area inside the view. Processed by AView implementation.
 	 */
 	ABoxFields mPadding;
-
 
 	/**
 	 * @brief ASS class names.
@@ -325,13 +324,19 @@ public:
 	}
 
     /**
-     * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
+     * @brief Returns the @ref AView::mMargin "margin".
+     * @return margin
      */
 	[[nodiscard]]
 	const ABoxFields& getMargin() const
 	{
 		return mMargin;
 	}
+
+    /**
+     * @brief Sets the @ref AView::mMargin "margin".
+     * @param margin margin
+     */
     void setMargin(const ABoxFields& margin) {
         mMargin = margin;
     }
@@ -344,7 +349,8 @@ public:
 	virtual bool consumesClick(const glm::ivec2& pos);
 
     /**
-     * @brief Padding, which defines the spacing around content area. Processed by AView implementation.
+     * @brief Returns the @ref AView::mPadding "padding".
+     * @return padding
      */
 	[[nodiscard]]
 	const ABoxFields& getPadding() const
@@ -352,9 +358,14 @@ public:
 		return mPadding;
 	}
 
+    /**
+     * @brief Sets the @ref AView::mPadding "padding".
+     * @param padding padding
+     */
 	void setPadding(const ABoxFields& padding) {
 	    mPadding = padding;
 	}
+
 
 
 	/**
@@ -453,6 +464,8 @@ public:
     const _<AAnimator>& getAnimator() const {
 	    return mAnimator;
 	}
+
+
 
     void setAnimator(const _<AAnimator>& animator);
     void getTransform(glm::mat4& transform) const;

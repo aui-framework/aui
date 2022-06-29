@@ -28,7 +28,7 @@
 #include "AUI/Util/EnumUtil.h"
 
 /**
- * @brierf Describes sides of a 2D rectangle.
+ * @brief Describes sides of a 2D rectangle.
  * @ingroup core
  * @see ASides
  */

@@ -91,18 +91,18 @@ AStylesheet::AStylesheet() {
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,
         },
-        // ALabel
+        // AAbstractLabel
         {
-            t<ALabel>(),
+            t<AAbstractLabel>(),
             Padding {1_dp, 0, 2_dp},
             VerticalAlign::MIDDLE,
         },
         {
-            t<ALabel>::disabled(),
+            t<AAbstractLabel>::disabled(),
             TextColor { 0x444444_rgb },
         },
         {
-            t<ALabel>(),
+            t<AAbstractLabel>(),
             Margin {2_dp, 4_dp},
         },
 
@@ -112,10 +112,11 @@ AStylesheet::AStylesheet() {
             BackgroundSolid {0xffffff_rgb},
             Padding {3_dp, 6_dp},
             Margin {2_dp, 4_dp},
-            MinSize {60_dp, 14_dp},
+            MinSize {60_dp, {} },
             Border { 1_dp, 0xcacaca_rgb },
             BorderRadius {4_dp},
             TextAlign::CENTER,
+            VerticalAlign::MIDDLE,
             BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},
         },
         {
@@ -142,7 +143,7 @@ AStylesheet::AStylesheet() {
         },
         {
             { t<AButton>::active(), c::active(".btn")},
-            Padding {5_dp, 8_dp, 3_dp},
+            Padding { 4_dp, {}, 2_dp },
             BoxShadow { nullptr },
         },
         {
@@ -234,7 +235,7 @@ AStylesheet::AStylesheet() {
             Margin { 1_dp, 4_dp },
         },
         {
-            t<ACheckBox>() > t<ALabel>(),
+            t<ACheckBox>() > t<AAbstractLabel>(),
             Margin { 1_dp, 4_dp },
         },
         {
@@ -261,7 +262,7 @@ AStylesheet::AStylesheet() {
             BackgroundImage {":uni/svg/checkbox.svg" },
         },
         {
-            t<ACheckBox>::disabled() > t<ALabel>(),
+            t<ACheckBox>::disabled() > t<AAbstractLabel>(),
             TextColor { 0xa0a0a0_rgb },
         },
         {
@@ -300,7 +301,7 @@ AStylesheet::AStylesheet() {
             Margin { 1_dp, 4_dp },
         },
         {
-            t<ARadioButton>() > t<ALabel>(),
+            t<ARadioButton>() > t<AAbstractLabel>(),
             Margin { 1_dp, 4_dp },
         },
         {
@@ -328,7 +329,7 @@ AStylesheet::AStylesheet() {
             BackgroundImage {":uni/svg/radio.svg" },
         },
         {
-            t<ARadioButton>::disabled() > t<ALabel>(),
+            t<ARadioButton>::disabled() > t<AAbstractLabel>(),
             TextColor { 0xa0a0a0_rgb },
         },
         {
@@ -356,7 +357,7 @@ AStylesheet::AStylesheet() {
             Overflow::HIDDEN,
         },
         {
-            t<ATreeView>() > t<AViewContainer>() > c(".list-item") > t<ALabel>(),
+            t<ATreeView>() > t<AViewContainer>() > c(".list-item") > t<AAbstractLabel>(),
             Padding { 0, 2_dp },
             Margin { 0 },
         },
@@ -372,16 +373,16 @@ AStylesheet::AStylesheet() {
             BorderLeft { 1_dp, 0x0_rgb },
         },
         {
-            {t<AListView>() > t<AViewContainer>() > t<ALabel>(), c(".list-item")},
+            {t<AListView>() > t<AViewContainer>() > t<AAbstractLabel>(), c(".list-item")},
             Margin { 0 },
             Padding { 1_dp, 4_dp, 4_dp },
         },
         {
-            {t<AListView>() > t<AViewContainer>() > t<ALabel>::hover(), c::hover(".list-item"),},
+            {t<AListView>() > t<AViewContainer>() > t<AAbstractLabel>::hover(), c::hover(".list-item"),},
             BackgroundSolid { 0xe5f3ff_rgb },
         },
         {
-            {t<AListView>() > t<AViewContainer>() > Selected(t<ALabel>()), Selected(c(".list-item"))},
+            {t<AListView>() > t<AViewContainer>() > Selected(t<AAbstractLabel>()), Selected(c(".list-item"))},
             BackgroundSolid { 0xcde8ff_rgb },
         },
 

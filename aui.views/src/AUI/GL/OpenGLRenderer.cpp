@@ -628,7 +628,7 @@ public:
         const bool hasKerning = font->isHasKerning();
 
         int advanceX = position.x;
-        int advanceY = position.y;
+        int advanceY = position.y - mFontStyle.font->getDescenderHeight(mFontStyle.size);
         size_t counter = 0;
         int advance = advanceX;
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {

@@ -25,42 +25,54 @@
 #include "AUI/IO/IInputStream.h"
 #include <AUI/Common/AMap.h>
 
+#include <utility>
+
+/**
+ * @brief Uniform Resource Locator implementation.
+ * @ingroup core
+ * @details
+ * Handles standard web url (schema://host:port/path).
+ */
 class API_AUI_CORE AUrl
 {
 private:
-	AString mProtocol;
+	AString mSchema;
 	AString mPath;
-
 
     static AMap<AString, std::function<_<IInputStream>(const AUrl&)>>& resolvers();
 
 public:
-	AUrl(const AString& full);
+	AUrl(AString full);
 	inline AUrl(const char* full): AUrl(AString(full)) {}
 
-    AUrl(const AString& protocol, const AString& path) : mProtocol(protocol), mPath(path) {}
+    AUrl(AString schema, AString path) : mSchema(std::move(schema)), mPath(std::move(path)) {}
 
     static AUrl file(const AString& file) {
         return { "file", file };
     }
 
+    [[nodiscard]]
 	_<IInputStream> open() const;
 
-	const AString& getPath() const
+    [[nodiscard]]
+	const AString& path() const noexcept
 	{
 		return mPath;
 	}
-	const AString& getProtocol() const
+
+    [[nodiscard]]
+	const AString& schema() const noexcept
 	{
-		return mProtocol;
+		return mSchema;
 	}
 
-	AString getFull() const {
-	    return mProtocol + "://" + mPath;
+    [[nodiscard]]
+	AString full() const {
+	    return mSchema + "://" + mPath;
 	}
 
     bool operator<(const AUrl& u) const {
-        return getFull() < u.getFull();
+        return full() < u.full();
     }
 
 	static void registerResolver(const AString& protocol, const std::function<_<IInputStream>(const AUrl&)>& factory);

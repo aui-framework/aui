@@ -33,7 +33,7 @@ class AString;
  * @brief A logger class.
  * @ingroup core
  * @details
- * A logger is used to journal application events like errors or some user actions.
+ * Logger is used for journaling application events like errors or some user actions.
  *
  * It provides some extra functions like logging to file and output formatting.
  *
@@ -45,8 +45,22 @@ class AString;
  * @endcode
  * Possible output:
  * ```
- * [00:47:02][UI Thread][Logger][INFO]: Hello world
+ * [00:47:02][UI Thread][Logger][INFO]: Hello world!
  * ```
+ *
+ * It's convenient to define `LOG_TAG` variable for your class:
+ * @code{cpp}
+ * static constexpr auto LOG_TAG = "MyDownloader";
+ * class MyDownloader {
+ * public:
+ *   void someAction() {
+ *     ALogger::info(LOG_TAG) << "someAction() called";
+ *   }
+ *   void downloadFile(const AString& name) {
+ *     ALogger::info(LOG_TAG) << "Downloading file: " << name;
+ *   }
+ * }
+ * @endcode
  */
 class API_AUI_CORE ALogger final
 {

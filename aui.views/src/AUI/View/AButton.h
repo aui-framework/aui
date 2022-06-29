@@ -23,7 +23,7 @@
 #include "AView.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Render/Render.h"
-#include "ALabel.h"
+#include "AAbstractLabel.h"
 #include "AUI/ASS/Selector/AAssSelector.h"
 
 /**
@@ -31,11 +31,11 @@
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/AButton.gif">
  * @ingroup useful_views
  */
-class API_AUI_VIEWS AButton: public ALabel
+class API_AUI_VIEWS AButton: public AAbstractLabel
 {	
 public:
 	AButton();
-	explicit AButton(const AString& text);
+	explicit AButton(AString text) noexcept: AAbstractLabel(std::move(text)) {}
 	virtual ~AButton() = default;
 
     [[nodiscard]]

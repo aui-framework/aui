@@ -25,16 +25,16 @@
  * @brief Main central library.
  * @details AUI's core central library without graphical components used by other modules.
  * Adds these features to C++:
- * - signal-slot system
- * - interruptable threads
- * - primitive dependency injection
- * - input-output
- * - i18n
- * - logging
+ * - @ref signal_slot "signal-slot system"
+ * - @ref AAbstractThread::interrupt() "interruptable threads"
+ * - @ref Autumn "primitive dependency injection"
+ * - @ref io "input-output"
+ * - @ref AI18n "i18n"
+ * - @ref ALogger "logging"
  * - data models
  * - reflection
  * - trait classes
- * - url
+ * - @ref AUrl "urls"
  */
 
 
@@ -42,6 +42,12 @@
  * @defgroup useful_macros Useful macros
  * @ingroup core
  * @brief A set of functionality that introduces non-standard syntax which seems like the C++ features.
+ */
+
+/**
+ * @defgroup io IO streams
+ * @ingroup core
+ * @brief Input-output streams
  */
 
 

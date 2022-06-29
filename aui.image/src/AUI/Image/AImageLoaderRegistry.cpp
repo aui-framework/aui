@@ -71,7 +71,7 @@ _<AImage> AImageLoaderRegistry::loadImage(const AUrl& url) {
     auto buffer = AByteBuffer::fromStream(url.open());
     if (auto r = loadRaster(buffer))
         return r;
-    ALogger::warn("No applicable image loader for " + url.getFull());
+    ALogger::warn("No applicable image loader for " + url.full());
     return nullptr;
 }
 
