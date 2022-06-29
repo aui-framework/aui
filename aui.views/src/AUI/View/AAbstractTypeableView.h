@@ -122,7 +122,7 @@ public:
     }
 
     void trimText() {
-        setText(getText().trim());
+        setText(text().trim());
     }
 
 

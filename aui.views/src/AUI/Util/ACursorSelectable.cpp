@@ -28,7 +28,7 @@
 #include <AUI/Render/RenderHints.h>
 #include "ACursorSelectable.h"
 
-ACursorSelectable::Selection ACursorSelectable::getSelection() const {
+ACursorSelectable::Selection ACursorSelectable::selection() const {
     return { glm::min(mCursorIndex, unsigned(mCursorSelection)), glm::max(mCursorIndex, unsigned(mCursorSelection)) };
 }
 
@@ -36,19 +36,19 @@ bool ACursorSelectable::hasSelection() const {
     return mCursorIndex != mCursorSelection && mCursorSelection != -1;
 }
 
-unsigned ACursorSelectable::getCursorIndexByPos(glm::ivec2 pos) {
+unsigned ACursorSelectable::cursorIndexByPos(glm::ivec2 pos) {
     return mTextLayoutHelper.posToIndexFixedLineHeight(pos - getMouseSelectionPadding(), getMouseSelectionFont());
 }
 
 void ACursorSelectable::handleMousePressed(const glm::ivec2& pos, AInput::Key button) {
     if (button == AInput::LBUTTON) {
-        mCursorSelection = mCursorIndex = getCursorIndexByPos(pos);
+        mCursorSelection = mCursorIndex = cursorIndexByPos(pos);
     }
 }
 
 void ACursorSelectable::handleMouseMove(const glm::ivec2& pos) {
     if (!mIgnoreSelection && isLButtonPressed()) {
-        mCursorIndex = getCursorIndexByPos(pos);
+        mCursorIndex = cursorIndexByPos(pos);
         doRedraw();
     }
 }
@@ -97,7 +97,7 @@ void ACursorSelectable::drawSelectionPost() {
 }
 
 void ACursorSelectable::selectAll() {
-    size_t length = getTextLength();
+    size_t length = textLength();
     if (length > 0) {
         mCursorSelection = 0;
         mCursorIndex = length;
@@ -125,7 +125,7 @@ void ACursorSelectable::drawSelectionRects() {
     };
 
     auto t = getDisplayText();
-    auto sel = getSelection();
+    auto sel = selection();
     size_t lineBeginIndex = 0;
     for (size_t i = 0; i != sel.begin; ++i) {
         if (t[i] == '\n') {
@@ -151,7 +151,7 @@ void ACursorSelectable::handleMouseDoubleClicked(const glm::ivec2& pos, AInput::
     auto text = getDisplayText();
 
     // select word
-    auto clickIndex = getCursorIndexByPos(pos);
+    auto clickIndex = cursorIndexByPos(pos);
 
 
     // determine the begin and end indices of the word
