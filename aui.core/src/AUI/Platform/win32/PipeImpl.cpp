@@ -2,6 +2,7 @@
 #include <AUI/Traits/strings.h>
 #include <cassert>
 #include "AUI/Common/AException.h"
+#include <atomic>
 
 static std::uintptr_t nextUniqueId() noexcept {
     static std::atomic_uintptr_t id = 0;
