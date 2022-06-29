@@ -23,6 +23,7 @@
             <tab type="user" url="@ref md_docs_AUI_configure_flags" title="AUI configure flags" />
             <tab type="user" url="@ref md_docs_Writing_tests" title="Writing tests" />
             <tab type="user" url="@ref md_docs_Code_style_and_recommendations" title="Code style and recommendations" />
+            <tab type="user" url="@ref md_docs_Contributing_to_AUI" title="Contributing to AUI" />
         </tab>
         <tab type="usergroup" title="Reference" visible="yes">
             <tab type="modules" visible="yes" title="All AUI Modules" intro=""/>
