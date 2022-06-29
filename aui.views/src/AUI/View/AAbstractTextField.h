@@ -84,7 +84,7 @@ public:
 	bool handlesNonMouseNavigation() override;
     void onFocusAcquired() override;
 
-    AString getText() const override;
+    AString getText() const override; // TODO why not const reference?
 
     size_t getTextLength() const override;
 
