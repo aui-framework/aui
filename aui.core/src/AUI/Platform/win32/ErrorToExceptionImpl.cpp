@@ -23,10 +23,10 @@ aui::impl::Error aui::impl::lastError() {
     return { errorCode, message.trim().removeAll('\r').removeAll('\n') };
 }
 void aui::impl::lastErrorToException(AString message) {
-    auto[lastError, description] = lastError();
+    auto[lastErrorCode, description] = lastError();
     message += ": ";
     message += description;
-    switch (lastError) {
+    switch (lastErrorCode) {
         case ERROR_FILE_NOT_FOUND:
             throw AFileNotFoundException(message);
         case ERROR_ACCESS_DENIED:
