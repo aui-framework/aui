@@ -156,7 +156,7 @@ namespace aui {
      * @brief A value that initializes when accessed for the first time.
      * @tparam T
      */
-    template<typename T>
+    template<typename T = void>
     struct lazy {
     private:
         mutable std::optional<T> value;
@@ -215,6 +215,50 @@ namespace aui {
         [[nodiscard]]
         bool has_value() const noexcept {
             return value.has_value();
+        }
+    };
+
+    /**
+     * @brief A value that initializes when accessed for the first time.
+     * @tparam T
+     */
+    template<>
+    struct lazy<void> {
+    private:
+        mutable bool value = false;
+        std::function<void()> initializer;
+    public:
+        template<typename Factory, std::enable_if_t<std::is_invocable_r_v<void, Factory>, bool> = true>
+        lazy(Factory&& initializer) noexcept : initializer(std::forward<Factory>(initializer)) {}
+
+        lazy(const lazy<void>& other) noexcept: value(other.value), initializer(other.initializer) {}
+        lazy(lazy<void>&& other) noexcept: value(other.value), initializer(std::move(other.initializer)) {}
+
+        void get() {
+            if (!value) {
+                value = true;
+                initializer();
+            }
+        }
+        void get() const {
+            return const_cast<lazy<void>*>(this)->get();
+        }
+
+        void operator*() {
+            return get();
+        }
+        const void operator*() const {
+            return get();
+        }
+
+
+        void reset() {
+            value = false;
+        }
+
+        [[nodiscard]]
+        bool has_value() const noexcept {
+            return value;
         }
     };
 
