@@ -71,46 +71,46 @@ class AAssHelper;
  */
 class API_AUI_VIEWS AView: public AObject
 {
-	friend class AViewContainer;
+    friend class AViewContainer;
 private:
 
-	/**
-	 * @brief Animation.
-	 */
-	_<AAnimator> mAnimator;
+    /**
+     * @brief Animation.
+     */
+    _<AAnimator> mAnimator;
 
-	/**
-	 * @brief Determines whether display graphics that go out of the bounds of this AView or not.
-	 */
-	Overflow mOverflow = Overflow::VISIBLE;
+    /**
+     * @brief Determines whether display graphics that go out of the bounds of this AView or not.
+     */
+    Overflow mOverflow = Overflow::VISIBLE;
 
-	/**
-	 * @see Visibility
-	 */
-	Visibility mVisibility = Visibility::VISIBLE;
+    /**
+     * @see Visibility
+     */
+    Visibility mVisibility = Visibility::VISIBLE;
 
     /**
      * @brief Helper middleware object for handling ASS state updates (hover, active, etc...)
      */
     _<AAssHelper> mAssHelper;
 
-	/**
-	 * @brief Background effects (custom rendered backgrounds)
-	 */
-	ADeque<_<IShadingEffect>> mBackgroundEffects;
+    /**
+     * @brief Background effects (custom rendered backgrounds)
+     */
+    ADeque<_<IShadingEffect>> mBackgroundEffects;
 
-	/**
-	 * @brief border-radius, specified in ASS.
-	 */
+    /**
+     * @brief border-radius, specified in ASS.
+     */
     float mBorderRadius = 0;
 
 
-	MouseCollisionPolicy mMouseCollisionPolicy = MouseCollisionPolicy::DEFAULT;
+    MouseCollisionPolicy mMouseCollisionPolicy = MouseCollisionPolicy::DEFAULT;
 
-	/**
-	 * @brief Font style for this AView.
-	 */
-	AFontStyle mFontStyle;
+    /**
+     * @brief Font style for this AView.
+     */
+    AFontStyle mFontStyle;
 
     /**
      * @brief opacity, specified in ASS.
@@ -120,10 +120,10 @@ private:
     virtual void notifyParentEnabledStateChanged(bool enabled);
 
 protected:
-	/**
-	 * @brief Parent AView.
-	 */
-	AViewContainer* mParent = nullptr;
+    /**
+     * @brief Parent AView.
+     */
+    AViewContainer* mParent = nullptr;
 
 
     /**
@@ -136,66 +136,66 @@ protected:
      */
     RuleWithoutSelector mCustomAssRule;
 
-	/**
-	 * @brief Determines shape which should pointer take when it's above this AView.
-	 */
-	ACursor mCursor = ACursor::DEFAULT;
+    /**
+     * @brief Determines shape which should pointer take when it's above this AView.
+     */
+    ACursor mCursor = ACursor::DEFAULT;
 
-	/**
-	 * @brief Top left corner's position relative to top left corner's position of the parent AView.
-	 */
-	glm::ivec2 mPosition;
+    /**
+     * @brief Top left corner's position relative to top left corner's position of the parent AView.
+     */
+    glm::ivec2 mPosition;
 
-	/**
-	 * @brief Size, including content area, border and padding.
-	 */
-	glm::ivec2 mSize = glm::ivec2(20, 20);
+    /**
+     * @brief Size, including content area, border and padding.
+     */
+    glm::ivec2 mSize = glm::ivec2(20, 20);
 
-	/**
-	 * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
-	 *        AViews in the same container.
-	 */
-	glm::ivec2 mExpanding = {0, 0};
+    /**
+     * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other
+     *        AViews in the same container.
+     */
+    glm::ivec2 mExpanding = {0, 0};
 
-	/**
-	 * @brief Minimal size.
-	 */
-	glm::ivec2 mMinSize = {0, 0};
+    /**
+     * @brief Minimal size.
+     */
+    glm::ivec2 mMinSize = {0, 0};
 
-	/**
-	 * @brief Maximal size.
-	 */
-	glm::ivec2 mMaxSize = {0x7fffffff, 0x7fffffff};
+    /**
+     * @brief Maximal size.
+     */
+    glm::ivec2 mMaxSize = {0x7fffffff, 0x7fffffff};
 
-	/**
-	 * @brief Fixed size.
-	 */
-	glm::ivec2 mFixedSize = {0, 0};
+    /**
+     * @brief Fixed size.
+     */
+    glm::ivec2 mFixedSize = {0, 0};
 
-	/**
-	 * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
-	 */
-	ABoxFields mMargin;
+    /**
+     * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
+     */
+    ABoxFields mMargin;
 
-	/**
-	 * @brief Padding, which defines the spacing around content area inside the view. Processed by AView implementation.
-	 */
-	ABoxFields mPadding;
+    /**
+     * @brief Padding, which defines the spacing around content area inside the view. Processed by AView implementation.
+     */
+    ABoxFields mPadding;
 
-	/**
-	 * @brief ASS class names.
-	 */
-	ADeque<AString> mAssNames;
+    /**
+     * @brief ASS class names.
+     */
+    ADeque<AString> mAssNames;
 
-	/**
-	 * @brief Determines which ASS style rules should be applied to this AView and fills the mAss field.
-	 */
-	virtual void recompileAss();
+    /**
+     * @brief Determines which ASS style rules should be applied to this AView and fills the mAss field.
+     */
+    virtual void recompileAss();
 
-	/**
-	 * @brief Updates state selectors for ASS.
-	 */
-	void updateAssState();
+    /**
+     * @brief Updates state selectors for ASS.
+     */
+    void updateAssState();
 
 
     void requestLayoutUpdate();
@@ -219,10 +219,10 @@ protected:
 public:
     AView();
     virtual ~AView() = default;
-	/**
-	 * @brief Request window manager to redraw this AView.
-	 */
-	void redraw();
+    /**
+     * @brief Request window manager to redraw this AView.
+     */
+    void redraw();
 
     /**
      * @brief Determines window which this AView belongs to.
@@ -230,19 +230,19 @@ public:
      */
     ABaseWindow* getWindow();
 
-	virtual void drawStencilMask();
+    virtual void drawStencilMask();
 
 
-	/**
-	 * @brief Draws this AView. Noone should call this function except rendering routine.
-	 */
-	virtual void render();
+    /**
+     * @brief Draws this AView. Noone should call this function except rendering routine.
+     */
+    virtual void render();
 
-	virtual void postRender();
+    virtual void postRender();
 
-	void popStencilIfNeeded();
+    void popStencilIfNeeded();
 
-	[[nodiscard]]
+    [[nodiscard]]
     const ADeque<AString>& getAssNames() const {
         return mAssNames;
     }
@@ -250,23 +250,32 @@ public:
     /**
      * @brief Top left corner's position relative to top left corner's position of the parent AView.
      */
-	const glm::ivec2& getPosition() const
+    const glm::ivec2& getPosition() const
 
-	{
-		return mPosition;
-	}
+    {
+        return mPosition;
+    }
+
+    /**
+     * @return The center point position of the view relatively to top left corner of the window.
+     */
+    [[nodiscard]]
+    glm::ivec2 getCenterPointInWindow() const
+    {
+        return getPositionInWindow() + getSize() / 2;
+    }
 
     /**
      * @brief Size, including content area, border and padding.
      */
-	const glm::ivec2& getSize() const
-	{
-		return mSize;
-	}
+    const glm::ivec2& getSize() const
+    {
+        return mSize;
+    }
 
-	/**
-	 * @return minSize (ignoring fixedSize)
-	 */
+    /**
+     * @return minSize (ignoring fixedSize)
+     */
     const glm::ivec2& getMinSize() const {
         return mMinSize;
     }
@@ -279,59 +288,59 @@ public:
      * @brief Determines whether display graphics that go out of the bounds of this AView or not.
      */
     Overflow getOverflow() const
-	{
-		return mOverflow;
-	}
+    {
+        return mOverflow;
+    }
     void setOverflow(Overflow overflow)
-	{
-		mOverflow = overflow;
-	}
+    {
+        mOverflow = overflow;
+    }
 
     /**
      * @brief border-radius, specified in ASS.
      */
-	float getBorderRadius() const {
-	    return mBorderRadius;
-	}
-	void setBorderRadius(float radius) {
-	    mBorderRadius = radius;
-	}
+    float getBorderRadius() const {
+        return mBorderRadius;
+    }
+    void setBorderRadius(float radius) {
+        mBorderRadius = radius;
+    }
 
-	int getWidth() const
-	{
-		return mSize.x;
-	}
+    int getWidth() const
+    {
+        return mSize.x;
+    }
 
-	int getHeight() const
-	{
-		return mSize.y;
-	}
-
-	/**
-	 * @return pixel count which this AView acquired by width including content area, padding, border and margin.
-	 */
-	float getTotalOccupiedWidth() const
-	{
-		return mVisibility == Visibility::GONE ? 0 : mSize.x + getTotalFieldHorizontal();
-	}
+    int getHeight() const
+    {
+        return mSize.y;
+    }
 
     /**
-	 * @return pixel count which this AView acquired by height including content area, padding, border and margin.
+     * @return pixel count which this AView acquired by width including content area, padding, border and margin.
+     */
+    float getTotalOccupiedWidth() const
+    {
+        return mVisibility == Visibility::GONE ? 0 : mSize.x + getTotalFieldHorizontal();
+    }
+
+    /**
+     * @return pixel count which this AView acquired by height including content area, padding, border and margin.
      */
     float getTotalOccupiedHeight() const
-	{
+    {
         return mVisibility == Visibility::GONE ? 0 : mSize.y + getTotalFieldVertical();
-	}
+    }
 
     /**
      * @brief Returns the @ref AView::mMargin "margin".
      * @return margin
      */
-	[[nodiscard]]
-	const ABoxFields& getMargin() const
-	{
-		return mMargin;
-	}
+    [[nodiscard]]
+    const ABoxFields& getMargin() const
+    {
+        return mMargin;
+    }
 
     /**
      * @brief Sets the @ref AView::mMargin "margin".
@@ -346,124 +355,124 @@ public:
      * @param pos mouse position
      * @return true if AView processes this click
      */
-	virtual bool consumesClick(const glm::ivec2& pos);
+    virtual bool consumesClick(const glm::ivec2& pos);
 
     /**
      * @brief Returns the @ref AView::mPadding "padding".
      * @return padding
      */
-	[[nodiscard]]
-	const ABoxFields& getPadding() const
-	{
-		return mPadding;
-	}
+    [[nodiscard]]
+    const ABoxFields& getPadding() const
+    {
+        return mPadding;
+    }
 
     /**
      * @brief Sets the @ref AView::mPadding "padding".
      * @param padding padding
      */
-	void setPadding(const ABoxFields& padding) {
-	    mPadding = padding;
-	}
+    void setPadding(const ABoxFields& padding) {
+        mPadding = padding;
+    }
 
 
 
-	/**
-	 * @return pixel count which this AView's margin and padding acquired by width.
-	 */
-	[[nodiscard]]
-	float getTotalFieldHorizontal() const;
+    /**
+     * @return pixel count which this AView's margin and padding acquired by width.
+     */
+    [[nodiscard]]
+    float getTotalFieldHorizontal() const;
 
-	/**
-	 * @return pixel count which this AView's margin and padding acquired by height.
-	 */
-	[[nodiscard]]
-	float getTotalFieldVertical() const;
+    /**
+     * @return pixel count which this AView's margin and padding acquired by height.
+     */
+    [[nodiscard]]
+    float getTotalFieldVertical() const;
 
 
     /**
      * @brief Parent AView.
      */
-	AViewContainer* getParent() const
-	{
-		return mParent;
-	}
+    AViewContainer* getParent() const
+    {
+        return mParent;
+    }
 
     /**
      * @brief Determines shape which should pointer take when it's above this AView.
      */
-	ACursor getCursor() const
-	{
-		return mCursor;
-	}
-	void setCursor(ACursor cursor)
-	{
-		mCursor = cursor;
-	}
+    ACursor getCursor() const
+    {
+        return mCursor;
+    }
+    void setCursor(ACursor cursor)
+    {
+        mCursor = cursor;
+    }
 
-	/**
-	 * @return minimal content-area width.
-	 */
-	virtual int getContentMinimumWidth();
+    /**
+     * @return minimal content-area width.
+     */
+    virtual int getContentMinimumWidth();
 
 
     /**
      * @return minimal content-area height.
      */
-	virtual int getContentMinimumHeight();
+    virtual int getContentMinimumHeight();
 
-	bool hasFocus() const;
+    bool hasFocus() const;
 
 
-	virtual int getMinimumWidth();
+    virtual int getMinimumWidth();
     virtual int getMinimumHeight();
 
-	glm::ivec2 getMinimumSize() {
-	    return {getMinimumWidth(), getMinimumHeight()};
-	}
+    glm::ivec2 getMinimumSize() {
+        return {getMinimumWidth(), getMinimumHeight()};
+    }
 
     void setMaxSize(const glm::ivec2& maxSize) {
         mMaxSize = maxSize;
     }
 
-	/**
-	 * @return maxSize (ignoring fixedSize)
-	 */
-	[[nodiscard]] const glm::ivec2& getMaxSize() const
-	{
-		return mMaxSize;
-	}
+    /**
+     * @return maxSize (ignoring fixedSize)
+     */
+    [[nodiscard]] const glm::ivec2& getMaxSize() const
+    {
+        return mMaxSize;
+    }
 
-	int getContentWidth() const
-	{
-		return static_cast<int>(mSize.x - mPadding.horizontal());
-	}
+    int getContentWidth() const
+    {
+        return static_cast<int>(mSize.x - mPadding.horizontal());
+    }
 
     int getContentHeight() const
-	{
-		return static_cast<int>(mSize.y - mPadding.vertical());
-	}
+    {
+        return static_cast<int>(mSize.y - mPadding.vertical());
+    }
     [[nodiscard]]
-	const glm::ivec2& getExpanding() const
-	{
-		return mExpanding;
-	}
-	void setExpanding(const glm::ivec2& expanding)
-	{
-		mExpanding = expanding;
-	}
-	void setExpanding(int expanding)
-	{
-		mExpanding = { expanding, expanding };
-	}
+    const glm::ivec2& getExpanding() const
+    {
+        return mExpanding;
+    }
+    void setExpanding(const glm::ivec2& expanding)
+    {
+        mExpanding = expanding;
+    }
+    void setExpanding(int expanding)
+    {
+        mExpanding = { expanding, expanding };
+    }
     void setExpanding()
     {
         mExpanding = glm::ivec2(2);
     }
 
     const _<AAnimator>& getAnimator() const {
-	    return mAnimator;
-	}
+        return mAnimator;
+    }
 
 
 
@@ -471,14 +480,14 @@ public:
     void getTransform(glm::mat4& transform) const;
 
     int getExpandingHorizontal() const
-	{
-		return mExpanding.x;
-	}
+    {
+        return mExpanding.x;
+    }
     int getExpandingVertical() const
-	{
-		return mExpanding.y;
-	}
-	AFontStyle& getFontStyle();
+    {
+        return mExpanding.y;
+    }
+    AFontStyle& getFontStyle();
 
     [[nodiscard]] float getOpacity() const {
         return mOpacity;
@@ -488,79 +497,79 @@ public:
     }
 
     virtual void invalidateFont();
-	virtual void setPosition(const glm::ivec2& position);
+    virtual void setPosition(const glm::ivec2& position);
 
-	void setSize(const glm::ivec2& size) {
+    void setSize(const glm::ivec2& size) {
         setSize(size.x, size.y);
-	}
+    }
 
     /**
      * Set size ignoring all restrictions (i.e. min size, max size, fixed size, etc...). Used by AAnimator.
      * @param size
      */
-	void setSizeForced(const glm::ivec2& size) {
+    void setSizeForced(const glm::ivec2& size) {
         mSize = size;
-	}
+    }
     virtual void setSize(int width, int height);
     virtual void setGeometry(int x, int y, int width, int height);
     void setGeometry(const glm::ivec2& position, const glm::ivec2& size) {
-		setGeometry(position.x, position.y, size.x, size.y);
-	}
+        setGeometry(position.x, position.y, size.x, size.y);
+    }
 
 
     /**
      * @brief Fixed size.
      */
     const glm::ivec2& getFixedSize() {
-	    return mFixedSize;
-	}
-	void setFixedSize(const glm::ivec2& size) {
-	    mFixedSize = size;
-	}
+        return mFixedSize;
+    }
+    void setFixedSize(const glm::ivec2& size) {
+        mFixedSize = size;
+    }
 
-	bool isMouseHover() const
-	{
-		return mHovered;
-	}
+    bool isMouseHover() const
+    {
+        return mHovered;
+    }
 
     bool isMousePressed() const
-	{
-		return mPressed;
-	}
+    {
+        return mPressed;
+    }
     bool isEnabled() const
-	{
-		return mEnabled;
-	}
-	bool isFocused() const {
+    {
+        return mEnabled;
+    }
+    bool isFocused() const {
         return mHasFocus;
     }
-	Visibility getVisibility() const
-	{
-		return mVisibility;
-	}
-	Visibility getVisibilityRecursive() const;
+    Visibility getVisibility() const
+    {
+        return mVisibility;
+    }
+    Visibility getVisibilityRecursive() const;
 
-	void setVisibility(Visibility visibility) noexcept
-	{
-		mVisibility = visibility;
-		redraw();
-	}
+    void setVisibility(Visibility visibility) noexcept
+    {
+        mVisibility = visibility;
+        redraw();
+    }
 
-	void setVisible(bool visible) noexcept
-	{
+    void setVisible(bool visible) noexcept
+    {
         setVisibility(visible ? Visibility::VISIBLE : Visibility::INVISIBLE);
-	}
+    }
 
-	[[nodiscard]]
-	MouseCollisionPolicy getMouseCollisionPolicy() const {
-		return mMouseCollisionPolicy;
-	}
+    [[nodiscard]]
+    MouseCollisionPolicy getMouseCollisionPolicy() const {
+        return mMouseCollisionPolicy;
+    }
 
-	void setMouseCollisionPolicy(MouseCollisionPolicy mouseCollisionPolicy) {
-		mMouseCollisionPolicy = mouseCollisionPolicy;
-	}
+    void setMouseCollisionPolicy(MouseCollisionPolicy mouseCollisionPolicy) {
+        mMouseCollisionPolicy = mouseCollisionPolicy;
+    }
 
-	/**
+    /**
      * Simulates click on the view. Useful then you want to call clicked() slots of this view.
      */
     void click() {
@@ -568,64 +577,64 @@ public:
         emit clicked();
     }
 
-	/**
-	 * @brief Sets minimal size.
-	 */
-	void pack();
+    /**
+     * @brief Sets minimal size.
+     */
+    void pack();
 
-	/**
-	 * @brief Requests focus for this AView. It's overridden for AViewContainer.
-	 */
-	 virtual void focus();
+    /**
+     * @brief Requests focus for this AView. It's overridden for AViewContainer.
+     */
+     virtual void focus();
 
 
-	/**
-	 * @return Coords of this AView relative to window
-	 */
+    /**
+     * @return Coords of this AView relative to window
+     */
     [[nodiscard]] glm::ivec2 getPositionInWindow() const;
 
-	const ADeque<AString>& getCssNames() const;
+    const ADeque<AString>& getCssNames() const;
 
-	/**
-	 * @brief Adds an ASS class to this AView.
-	 * @param assName new ASS name
-	 */
+    /**
+     * @brief Adds an ASS class to this AView.
+     * @param assName new ASS name
+     */
     void addAssName(const AString& assName);
 
-	/**
-	 * @brief Removes an ASS class to this AView.
-	 * @param assName ASS name to remove
-	 */
+    /**
+     * @brief Removes an ASS class to this AView.
+     * @param assName ASS name to remove
+     */
     void removeAssName(const AString& assName);
 
-	/**
-	 * @brief Wraps the addAssName function to make it easier to add ASS class names.
-	 * \example
-	 * <code>
-	 * ...
-	 * _new<ALabel>("Components") << ".components_title"
-	 * ...
-	 * </code>
-	 * @param assName new ASS name
-	 * @return this
-	 */
-	inline AView& operator<<(const AString& assName) {
+    /**
+     * @brief Wraps the addAssName function to make it easier to add ASS class names.
+     * \example
+     * <code>
+     * ...
+     * _new<ALabel>("Components") << ".components_title"
+     * ...
+     * </code>
+     * @param assName new ASS name
+     * @return this
+     */
+    inline AView& operator<<(const AString& assName) {
         addAssName(assName);
-	    return *this;
-	}
+        return *this;
+    }
 
-	const _<AAssHelper>& getAssHelper() const {
-	    return mAssHelper;
-	}
+    const _<AAssHelper>& getAssHelper() const {
+        return mAssHelper;
+    }
 
-	const RuleWithoutSelector& getCustomAss() const {
-		return mCustomAssRule;
-	}
+    const RuleWithoutSelector& getCustomAss() const {
+        return mCustomAssRule;
+    }
 
-	void setCustomAss(const RuleWithoutSelector& rule) {
-		mCustomAssRule = rule;
+    void setCustomAss(const RuleWithoutSelector& rule) {
+        mCustomAssRule = rule;
         mAssHelper = nullptr;
-	}
+    }
 
     void ensureAssUpdated();
 
@@ -651,12 +660,12 @@ public:
      */
     virtual bool onGesture(const glm::ivec2& origin, const AGestureEvent& event);
 
-	virtual void onMouseEnter();
+    virtual void onMouseEnter();
     virtual void onMouseMove(glm::ivec2 pos);
     virtual void onMouseLeave();
     virtual void onDpiChanged();
 
-	virtual void onMousePressed(glm::ivec2 pos, AInput::Key button);
+    virtual void onMousePressed(glm::ivec2 pos, AInput::Key button);
     virtual void onMouseReleased(glm::ivec2 pos, AInput::Key button);
     virtual void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button);
 
@@ -672,32 +681,32 @@ public:
     virtual void onFocusAcquired();
     virtual void onFocusLost();
 
-	virtual void onCharEntered(wchar_t c);
+    virtual void onCharEntered(wchar_t c);
 
-	/**
-	 * @return true if this AView accepts tab focus
-	 */
-	virtual bool handlesNonMouseNavigation();
+    /**
+     * @return true if this AView accepts tab focus
+     */
+    virtual bool handlesNonMouseNavigation();
 
-	virtual void setEnabled(bool enabled = true);
+    virtual void setEnabled(bool enabled = true);
     void setDisabled(bool disabled = true) {
         setEnabled(!disabled);
     }
 
     void updateEnableState();
 
-	void enable()
-	{
-		setEnabled(true);
-	}
+    void enable()
+    {
+        setEnabled(true);
+    }
     void disable()
-	{
-		setEnabled(false);
-	}
+    {
+        setEnabled(false);
+    }
 
-	/**
-	 * Helper function for kAUI.h:with_style
-	 */
+    /**
+     * Helper function for kAUI.h:with_style
+     */
     void operator+(const RuleWithoutSelector& rule) {
         setCustomAss(rule);
     }
@@ -707,47 +716,47 @@ signals:
     emits<> mouseEnter;
     emits<> mouseLeave;
 
-	emits<bool> pressedState;
+    emits<bool> pressedState;
     emits<> mousePressed;
     emits<> mouseReleased;
 
-	emits<bool> enabledState;
+    emits<bool> enabledState;
     emits<> enabled;
     emits<> disabled;
 
-	/**
-	 * @brief Some mouse button clicked.
-	 */
-	emits<AInput::Key> clickedButton;
+    /**
+     * @brief Some mouse button clicked.
+     */
+    emits<AInput::Key> clickedButton;
 
-	/**
-	 * @brief Left mouse button clicked.
-	 */
-	emits<> clicked;
+    /**
+     * @brief Left mouse button clicked.
+     */
+    emits<> clicked;
 
-	/**
-	 * @brief Right mouse button clicked.
-	 */
-	emits<> clickedRight;
+    /**
+     * @brief Right mouse button clicked.
+     */
+    emits<> clickedRight;
 
-	emits<AInput::Key> doubleClicked;
+    emits<AInput::Key> doubleClicked;
 
-	emits<> customCssPropertyChanged;
+    emits<> customCssPropertyChanged;
 
     /**
      * @brief Focus state changed.
      * @param first whether focused or not.
      */
-	emits<bool> focusState;
-	emits<> focusAcquired;
-	emits<> focusLost;
+    emits<bool> focusState;
+    emits<> focusAcquired;
+    emits<> focusLost;
 
 private:
-	AWatchable<bool> mHovered = AWatchable<bool>(hoveredState, mouseEnter, mouseLeave);
-	AWatchable<bool> mPressed = AWatchable<bool>(pressedState, mousePressed, mouseReleased);
-	//AWatchable<bool> mFocused = AWatchable<bool>(pressedState, mousePressed, mouseReleased);
-	AWatchable<bool> mEnabled = AWatchable<bool>(enabledState, enabled, disabled, true);
+    AWatchable<bool> mHovered = AWatchable<bool>(hoveredState, mouseEnter, mouseLeave);
+    AWatchable<bool> mPressed = AWatchable<bool>(pressedState, mousePressed, mouseReleased);
+    //AWatchable<bool> mFocused = AWatchable<bool>(pressedState, mousePressed, mouseReleased);
+    AWatchable<bool> mEnabled = AWatchable<bool>(enabledState, enabled, disabled, true);
     bool mDirectlyEnabled = true;
     bool mParentEnabled = true;
-	AWatchable<bool> mHasFocus = AWatchable<bool>(focusState, focusAcquired, focusLost, false);
+    AWatchable<bool> mHasFocus = AWatchable<bool>(focusState, focusAcquired, focusLost, false);
 };
