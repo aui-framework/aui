@@ -133,3 +133,8 @@
 // Other
 #include "unset.h"
 #include "AStylesheet.h"
+
+
+namespace declarative {
+    using namespace ass;
+}

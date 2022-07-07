@@ -13,3 +13,8 @@ class API_AUI_VIEWS ALabel: public AAbstractLabel {
 public:
     using AAbstractLabel::AAbstractLabel;
 };
+
+
+namespace declarative {
+    using Label = aui::ui_building::view<ALabel>;
+}

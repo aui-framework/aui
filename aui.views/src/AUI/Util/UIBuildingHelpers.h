@@ -41,17 +41,18 @@
 #include <AUI/i18n/AI18n.h>
 #include <AUI/ASS/ASS.h>
 #include <AUI/Traits/strings.h>
+#include "Declarative.h"
 
 
 template<typename Layout, typename... Args>
 inline auto _container(AVector<_<AView>> views, Args&&... args)
 {
-	auto c = _new<AViewContainer>();
-	c->setLayout(_new<Layout>(std::forward<Args>(args)...));
+    auto c = _new<AViewContainer>();
+    c->setLayout(_new<Layout>(std::forward<Args>(args)...));
 
     c->setViews(std::move(views));
 
-	return c;
+    return c;
 }
 
 inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AView>>>& views)
@@ -73,97 +74,6 @@ inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AVi
 	return c;
 }
 
-namespace aui::detail {
-    template<typename Layout>
-    struct container_helper {
-    private:
-        AVector<_<AView>> mViews;
-
-    public:
-
-        struct Expanding {
-        private:
-            AVector<_<AView>> mViews;
-
-        public:
-            Expanding(std::initializer_list<_<AView>> views) {
-                mViews.reserve(views.size());
-                for (auto& v : views) {
-                    if (v) {
-                        mViews << v;
-                    }
-                }
-            }
-
-            operator _<AView>() {
-                return (_container<Layout>(std::move(mViews)) let {it->setExpanding();});
-            }
-            operator _<AViewContainer>() {
-                return (_container<Layout>(std::move(mViews)) let {it->setExpanding();});
-            }
-            _<AViewContainer> operator<<(const AString& assEntry) {
-                return (_container<Layout>(std::move(mViews)) let {it->setExpanding();}) << assEntry;
-            }
-            template<typename T>
-            _<AViewContainer> operator^(const T& t) {
-                return (_container<Layout>(std::move(mViews)) let {it->setExpanding();}) ^ t;
-            }
-            template<typename T>
-            _<AViewContainer> operator+(const T& t) {
-                return (_container<Layout>(std::move(mViews)) let {it->setExpanding();}) + t;
-            }
-
-            operator _<AView>() const {
-                return (_container<Layout>(mViews) let {it->setExpanding();});
-            }
-            operator _<AViewContainer>() const {
-                return (_container<Layout>(mViews) let {it->setExpanding();});
-            }
-            _<AViewContainer> operator<<(const AString& assEntry) const {
-                return (_container<Layout>(mViews) let {it->setExpanding();}) << assEntry;
-            }
-            template<typename T>
-            _<AViewContainer> operator^(const T& t) const {
-                return (_container<Layout>(mViews) let {it->setExpanding();}) ^ t;
-            }
-            template<typename T>
-            _<AViewContainer> operator+(const T& t) const {
-                return (_container<Layout>(mViews) let {it->setExpanding();}) + t;
-            }
-        };
-
-
-        container_helper(std::initializer_list<_<AView>> views) {
-            mViews.reserve(views.size());
-            for (auto& v : views) {
-                if (v) {
-                    mViews << v;
-                }
-            }
-        }
-        operator _<AView>() const {
-            return _container<Layout>(mViews);
-        }
-        operator _<AViewContainer>() const {
-            return _container<Layout>(mViews);
-        }
-        _<AViewContainer> operator<<(const AString& assEntry) const {
-            return _container<Layout>(mViews) << assEntry;
-        }
-        template<typename T>
-        _<AViewContainer> operator^(const T& t) const {
-            return _container<Layout>(mViews) ^ t;
-        }
-        template<typename T>
-        _<AViewContainer> operator+(const T& t) const {
-            return _container<Layout>(mViews) + t;
-        }
-
-        _<AViewContainer> operator->() const {
-            return _container<Layout>(mViews);
-        }
-    };
-}
 
 /**
  * Places views in a column.
@@ -176,7 +86,7 @@ namespace aui::detail {
  *  </dl>
  * </p>
  */
-using Vertical = aui::detail::container_helper<AVerticalLayout>;
+using Vertical = aui::ui_building::layouted_container_factory<AVerticalLayout>;
 
 /**
  * Places views in a row.
@@ -189,7 +99,7 @@ using Vertical = aui::detail::container_helper<AVerticalLayout>;
  *  </dl>
  * </p>
  */
-using Horizontal = aui::detail::container_helper<AHorizontalLayout>;
+using Horizontal = aui::ui_building::layouted_container_factory<AHorizontalLayout>;
 
 /**
  * Places views in a stack, centering them.
@@ -202,7 +112,7 @@ using Horizontal = aui::detail::container_helper<AHorizontalLayout>;
  *  </dl>
  * </p>
  */
-using Stacked = aui::detail::container_helper<AStackedLayout>;
+using Stacked = aui::ui_building::layouted_container_factory<AStackedLayout>;
 
 /**
  * <p>

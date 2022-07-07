@@ -20,6 +20,11 @@
  */
 
 #pragma once
+
+#include <chrono>
+#include <functional>
+#include <array>
+
 #include <glm/glm.hpp>
 
 #include <AUI/ASS/Declaration/IDeclaration.h>
@@ -36,12 +41,9 @@
 #include <AUI/ASS/RuleWithoutSelector.h>
 #include <AUI/Enum/Overflow.h>
 #include <AUI/Enum/Visibility.h>
-
-#include <chrono>
-#include <functional>
-#include <array>
 #include <AUI/Enum/MouseCollisionPolicy.h>
 #include <AUI/Event/AGestureEvent.h>
+
 
 class Render;
 class AWindow;

@@ -23,7 +23,9 @@
 #include "AView.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Render/Render.h"
+#include "AUI/Layout/AHorizontalLayout.h"
 #include "AAbstractLabel.h"
+#include "AViewContainer.h"
 #include "AUI/ASS/Selector/AAssSelector.h"
 
 /**
@@ -56,8 +58,21 @@ private:
 	AWatchable<bool> mDefault = AWatchable<bool>(defaultState, becameDefault, noLongerDefault);
 };
 
+/**
+ * @brief Unlike AButton, AButtonEx is a container which looks like a button.
+ */
+class AButtonEx: public AViewContainer {
+public:
+    AButtonEx() {
+        addAssName(".btn");
+    }
+};
 
-namespace ass::Button {
+namespace declarative {
+    using Button = aui::ui_building::layouted_container_factory<AHorizontalLayout, AButtonEx>;
+}
+
+namespace ass::button {
     struct Default: IAssSubSelector {
     private:
         _unique<IAssSubSelector> mWrapped;

@@ -26,6 +26,7 @@
 #pragma once
 
 #include <AUI/Image/IDrawable.h>
+#include <AUI/Util/Declarative.h>
 #include "AView.h"
 
 /**
@@ -51,3 +52,6 @@ protected:
 };
 
 
+namespace declarative {
+    using Icon = aui::ui_building::view<ADrawableView>;
+}
