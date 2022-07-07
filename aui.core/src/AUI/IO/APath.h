@@ -134,10 +134,10 @@ public:
     APath(const AString& other) noexcept: AString(other) {
         removeBackSlashes();
     }
-    APath(const char* str) noexcept: AString(str) {
+    APath(const char* utf8) noexcept: AString(utf8) {
         removeBackSlashes();
     }
-    APath(const char* str, std::size_t length) noexcept: AString(str, str + length) {
+    APath(const char* utf8, std::size_t length) noexcept: AString(utf8, utf8 + length) {
         removeBackSlashes();
     }
     APath(const wchar_t * str) noexcept: AString(str) {
@@ -358,3 +358,8 @@ public:
     }
 
 };
+
+
+inline APath operator""_path(const char* str, unsigned long long length) {
+    return APath(str, length);
+}

@@ -59,14 +59,19 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
     }
 }
 
-AString::AString(const char* str) noexcept
+AString::AString(const char* utf8) noexcept
 {
-    fromUtf8_impl(*this, str, strlen(str));
+    fromUtf8_impl(*this, utf8, std::strlen(utf8));
 }
 
-AString::AString(const std::string& str) noexcept
+AString::AString(std::string_view utf8) noexcept
 {
-    fromUtf8_impl(*this, str.c_str(), str.length());
+    fromUtf8_impl(*this, utf8.data(), utf8.length());
+}
+
+AString::AString(const std::string& utf8) noexcept
+{
+    fromUtf8_impl(*this, utf8.c_str(), utf8.length());
 }
 
 AString AString::fromUtf8(const AByteBufferView& buffer) {

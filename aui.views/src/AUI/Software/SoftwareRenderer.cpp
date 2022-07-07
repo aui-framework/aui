@@ -300,13 +300,6 @@ void SoftwareRenderer::drawBoxShadow(const glm::vec2& position,
     }
 }
 
-void SoftwareRenderer::drawString(const glm::vec2& position,
-                                  const AString& string,
-                                  const AFontStyle& fs) {
-
-}
-
-
 void SoftwareRenderer::setBlending(Blending blending) {
     mBlending = blending;
 }
@@ -421,7 +414,7 @@ public:
         int prevWidth = -1;
 
         int advanceX = position.x;
-        int advanceY = position.y;
+        int advanceY = position.y - mFontStyle.font->getDescenderHeight(mFontStyle.size);
         size_t counter = 0;
         int advance = advanceX;
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
@@ -478,6 +471,15 @@ public:
                                                mFontStyle.fontRendering);
     }
 };
+
+
+void SoftwareRenderer::drawString(const glm::vec2& position,
+                                  const AString& string,
+                                  const AFontStyle& fs) {
+    SoftwareMultiStringCanvas c(this, fs);
+    c.addString(position, string);
+    c.finalize()->draw();
+}
 
 _<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(const glm::vec2& position,
                                                                    const AString& text,

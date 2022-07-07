@@ -64,6 +64,59 @@ public:
         return *this;
     }
 
+    /**
+     * @brief Finds the nearest view to the specified one.
+     * @details
+     * Finds the nearest view to the bottom right corner of the specified view. The bottom right corner is chosen in
+     * order to simulate human eye scanning (which is from top-left to bottom-right).
+     *
+     * Useful when finding fields by their labels:
+     * @code{cpp}
+     * _new<ALabel>("Login"),
+     * _new<ATextField>(),
+     * _new<ALabel>("Password"),
+     * _new<ATextField>(),
+     * ...
+     * By::type<ATextField>().findNearestTo(By::name("Login")) // <- matches the first ATextField
+     * By::type<ATextField>().findNearestTo(By::name("Password")) // <- matches the second ATextField
+     * @endcode
+     * @param matcher UIMatcher of a view to find the nearest to. The UIMatcher is expected to match only one view.
+     * @return the nearest view
+     */
+    UIMatcher findNearestTo(UIMatcher matcher) {
+        auto mySet = toSet();
+        if (mySet.size() == 1) {
+            throw AException("expected to match one view, matched {}"_format(mySet.size()));
+        }
+        auto targets = matcher.toSet();
+
+        if (targets.empty()) {
+            throw AException("findNearestTo requires at least one element to match");
+        }
+
+        auto nearestToView = (*mySet.begin());
+        auto nearestToPoint = glm::vec2(nearestToView->getPositionInWindow() + nearestToView->getSize());
+        auto target = std::min_element(targets.begin(), targets.end(), [&](const _<AView>& lhs, const _<AView>& rhs) {
+            float dst1 = glm::distance2(nearestToPoint, glm::vec2(lhs->getCenterPointInWindow()));
+            float dst2 = glm::distance2(nearestToPoint, glm::vec2(rhs->getCenterPointInWindow()));
+            return dst1 < dst2;
+        });
+        EXPECT_TRUE(target != targets.end());
+
+        class ToOneMatcher: public IMatcher {
+        public:
+            explicit ToOneMatcher(_<AView> view) : mView(std::move(view)) {}
+
+            bool matches(const _<AView>& view) override {
+                return view == mView;
+            }
+        private:
+            _<AView> mView;
+        };
+
+        return { _new<ToOneMatcher>(std::move(*target)) };
+    }
+
 
     template<class Assertion>
     UIMatcher& check(Assertion&& assertion, const char* msg = "no msg") {

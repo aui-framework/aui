@@ -37,520 +37,525 @@ class API_AUI_CORE AByteBufferView;
 class API_AUI_CORE AString: std::wstring
 {
 private:
-	friend struct std::hash<AString>;
+    friend struct std::hash<AString>;
     using super = std::wstring;
 
 public:
-	
-	using iterator = super::iterator;
-	using const_iterator = super::const_iterator;
-	using reverse_iterator = super::reverse_iterator;
-	using const_reverse_iterator = super::const_reverse_iterator;
-	auto constexpr static NPOS = super::npos;
+
+    using iterator = super::iterator;
+    using const_iterator = super::const_iterator;
+    using reverse_iterator = super::reverse_iterator;
+    using const_reverse_iterator = super::const_reverse_iterator;
+    auto constexpr static NPOS = super::npos;
 
 
-	AString(AString&& other) noexcept
-		: std::wstring(static_cast<basic_string&&>(other))
-	{
-	}
-
-    /**
-     * @param str utf8 string
-     */
-	AString(const basic_string& other) noexcept
-		: basic_string<wchar_t>(other)
-	{
-	}
+    AString(AString&& other) noexcept
+            : std::wstring(static_cast<basic_string&&>(other))
+    {
+    }
 
     /**
-     * @param str utf8 string
+     * @param other utf8 string
      */
-	AString(const std::string& str) noexcept;
-
-	AString(const AString& other) noexcept
-		: super(other.c_str())
-	{
-	}
-
-	AString(const basic_string& _Right, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Right, _Al)
-	{
-	}
-
-	template <class Iterator>
-	AString(Iterator first, Iterator last) noexcept : super(first, last) {}
-	
-	AString() noexcept
-	{
-	}
-
-	AString(wchar_t c) noexcept : super(&c, &c + 1)
-	{
-		
-	}
+    AString(const basic_string& other) noexcept
+            : basic_string<wchar_t>(other)
+    {
+    }
 
     /**
-     * @param str utf8 string
+     * @param utf8 utf8 string
      */
-	AString(const char* str) noexcept;
+    AString(const std::string& utf8) noexcept;
 
-	explicit AString(const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Al)
-	{
-	}
+    AString(const AString& other) noexcept
+            : super(other.c_str())
+    {
+    }
 
-	AString(const basic_string& _Right, size_type _Roff, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Right, _Roff, _Al)
-	{
-	}
+    AString(const basic_string& _Right, const std::allocator<wchar_t>& _Al) noexcept
+            : basic_string<wchar_t>(_Right, _Al)
+    {
+    }
 
-	AString(const basic_string& _Right, size_type _Roff, size_type _Count, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Right, _Roff, _Count, _Al)
-	{
-	}
+    template <class Iterator>
+    AString(Iterator first, Iterator last) noexcept : super(first, last) {}
 
-	AString(const wchar_t* _Ptr, size_type _Count) noexcept
-		: basic_string<wchar_t>(_Ptr, _Count)
-	{
-	}
+    AString() noexcept
+    {
+    }
 
-	AString(const wchar_t* _Ptr, size_type _Count, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Ptr, _Count, _Al)
-	{
-	}
+    AString(wchar_t c) noexcept : super(&c, &c + 1)
+    {
 
-	AString(const wchar_t* _Ptr) noexcept
-		: basic_string<wchar_t>(_Ptr)
-	{
-	}
+    }
 
-	AString(const wchar_t* _Ptr, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Ptr, _Al)
-	{
-	}
+    /**
+     * @param utf8 utf8 string
+     */
+    AString(const char* utf8) noexcept;
 
-	AString(size_type _Count, wchar_t _Ch) noexcept
-		: basic_string<wchar_t>(_Count, _Ch)
-	{
-	}
+    /**
+     * @param utf8 utf8 string
+     */
+    AString(std::string_view utf8) noexcept;
 
-	AString(size_type _Count, wchar_t _Ch, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Count, _Ch, _Al)
-	{
-	}
+    explicit AString(const std::allocator<wchar_t>& _Al) noexcept
+            : basic_string<wchar_t>(_Al)
+    {
+    }
 
-	AString(basic_string&& _Right) noexcept
-		: basic_string<wchar_t>(_Right)
-	{
-	}
+    AString(const basic_string& _Right, size_type _Roff, const std::allocator<wchar_t>& _Al) noexcept
+            : basic_string<wchar_t>(_Right, _Roff, _Al)
+    {
+    }
 
-	AString(basic_string&& _Right, const std::allocator<wchar_t>& _Al) noexcept
-		: basic_string<wchar_t>(_Right, _Al)
-	{
-	}
+    AString(const basic_string& _Right, size_type _Roff, size_type _Count, const std::allocator<wchar_t>& _Al) noexcept
+            : basic_string<wchar_t>(_Right, _Roff, _Count, _Al)
+    {
+    }
 
-	AString(std::initializer_list<wchar_t> _Ilist) noexcept
-		: basic_string<wchar_t>(_Ilist)
-	{
-	}
+    AString(const wchar_t* _Ptr, size_type _Count) noexcept
+            : basic_string<wchar_t>(_Ptr, _Count)
+    {
+    }
 
-	virtual ~AString() = default;
+    AString(const wchar_t* _Ptr, size_type _Count, const std::allocator<wchar_t>& _Al) noexcept
+            : basic_string<wchar_t>(_Ptr, _Count, _Al)
+    {
+    }
+
+    AString(const wchar_t* _Ptr) noexcept
+            : basic_string<wchar_t>(_Ptr)
+    {
+    }
+
+    AString(const wchar_t* _Ptr, const std::allocator<wchar_t>& _Al) noexcept
+            : basic_string<wchar_t>(_Ptr, _Al)
+    {
+    }
+
+    AString(size_type _Count, wchar_t _Ch) noexcept
+            : basic_string<wchar_t>(_Count, _Ch)
+    {
+    }
+
+    AString(size_type _Count, wchar_t _Ch, const std::allocator<wchar_t>& _Al) noexcept
+            : basic_string<wchar_t>(_Count, _Ch, _Al)
+    {
+    }
+
+    AString(basic_string&& _Right) noexcept
+            : basic_string<wchar_t>(_Right)
+    {
+    }
+
+    AString(basic_string&& _Right, const std::allocator<wchar_t>& _Al) noexcept
+            : basic_string<wchar_t>(_Right, _Al)
+    {
+    }
+
+    AString(std::initializer_list<wchar_t> _Ilist) noexcept
+            : basic_string<wchar_t>(_Ilist)
+    {
+    }
+
+    virtual ~AString() = default;
 
 
-	void push_back(wchar_t c) noexcept
-	{
-		super::push_back(c);
-	}
-	void pop_back() noexcept
-	{
-		super::pop_back();
-	}
+    void push_back(wchar_t c) noexcept
+    {
+        super::push_back(c);
+    }
+    void pop_back() noexcept
+    {
+        super::pop_back();
+    }
 
     AString uppercase() const;
     AString lowercase() const;
 
-	bool startsWith(const AString& other) const noexcept
-	{
-		return rfind(other, 0) == 0;
-	}
-	bool startsWith(wchar_t c) const noexcept
-	{
-		return rfind(c, 0) == 0;
-	}
-	bool endsWith(const AString& other) const noexcept
-	{
-		if (length() < other.length())
-		{
-			return false;
-		}
-		size_t offset = length() - other.length();
-		return super::find(other, offset) == offset;
-	}
-	bool endsWith(wchar_t c) const noexcept
-	{
-		size_t offset = length() - 1;
-		return super::find(c, offset) == offset;
-	}
+    bool startsWith(const AString& other) const noexcept
+    {
+        return rfind(other, 0) == 0;
+    }
+    bool startsWith(wchar_t c) const noexcept
+    {
+        return rfind(c, 0) == 0;
+    }
+    bool endsWith(const AString& other) const noexcept
+    {
+        if (length() < other.length())
+        {
+            return false;
+        }
+        size_t offset = length() - other.length();
+        return super::find(other, offset) == offset;
+    }
+    bool endsWith(wchar_t c) const noexcept
+    {
+        size_t offset = length() - 1;
+        return super::find(c, offset) == offset;
+    }
 
-	AStringVector split(wchar_t c) const noexcept;
+    AStringVector split(wchar_t c) const noexcept;
 
-	AString mid(size_t pos, size_t count = npos) const noexcept
-	{
-		return substr(pos, count);
-	}
+    AString mid(size_t pos, size_t count = npos) const noexcept
+    {
+        return substr(pos, count);
+    }
 
-	size_type find(char c, size_type offset = 0) const noexcept
-	{
-		return super::find(c, offset);
-	}
-	size_type find(wchar_t c, size_type offset = 0) const noexcept
-	{
-		return super::find(c, offset);
-	}
-	size_type find(const AString& str, size_type offset = 0) const noexcept
-	{
-		return super::find(str, offset);
-	}
-	size_type rfind(char c, size_type offset = NPOS) const noexcept
-	{
-		return super::rfind(c, offset);
-	}
-	size_type rfind(wchar_t c, size_type offset = NPOS) const noexcept
-	{
-		return super::rfind(c, offset);
-	}
-	size_type rfind(const AString& str, size_type offset = NPOS) const noexcept
-	{
-		return super::rfind(str, offset);
-	}
-	size_type length() const noexcept
-	{
-		return super::length();
-	}
-	AString trimLeft(wchar_t symbol = ' ') const noexcept;
-	AString trimRight(wchar_t symbol = ' ') const noexcept;
+    size_type find(char c, size_type offset = 0) const noexcept
+    {
+        return super::find(c, offset);
+    }
+    size_type find(wchar_t c, size_type offset = 0) const noexcept
+    {
+        return super::find(c, offset);
+    }
+    size_type find(const AString& str, size_type offset = 0) const noexcept
+    {
+        return super::find(str, offset);
+    }
+    size_type rfind(char c, size_type offset = NPOS) const noexcept
+    {
+        return super::rfind(c, offset);
+    }
+    size_type rfind(wchar_t c, size_type offset = NPOS) const noexcept
+    {
+        return super::rfind(c, offset);
+    }
+    size_type rfind(const AString& str, size_type offset = NPOS) const noexcept
+    {
+        return super::rfind(str, offset);
+    }
+    size_type length() const noexcept
+    {
+        return super::length();
+    }
+    AString trimLeft(wchar_t symbol = ' ') const noexcept;
+    AString trimRight(wchar_t symbol = ' ') const noexcept;
 
-	AString trim(wchar_t symbol = ' ') const noexcept
-	{
-		return trimRight(symbol).trimLeft(symbol);
-	}
+    AString trim(wchar_t symbol = ' ') const noexcept
+    {
+        return trimRight(symbol).trimLeft(symbol);
+    }
 
-	void reserve(size_t s)
-	{
-		super::reserve(s);
-	}
-	void resize(size_t s)
-	{
-		super::resize(s);
-	}
+    void reserve(size_t s)
+    {
+        super::reserve(s);
+    }
+    void resize(size_t s)
+    {
+        super::resize(s);
+    }
 
-	AString restrictLength(size_t s, const AString& stringAtEnd = "...") const;
+    AString restrictLength(size_t s, const AString& stringAtEnd = "...") const;
 
-	wchar_t* data() noexcept
-	{
-		return super::data();
-	}
-	
-	const wchar_t* data() const noexcept
-	{
-		return super::data();
-	}
-	[[nodiscard]] AString replacedAll(const AString& from, const AString& to) const noexcept;
+    wchar_t* data() noexcept
+    {
+        return super::data();
+    }
+
+    const wchar_t* data() const noexcept
+    {
+        return super::data();
+    }
+    [[nodiscard]] AString replacedAll(const AString& from, const AString& to) const noexcept;
     [[nodiscard]] inline AString replacedAll(wchar_t from, wchar_t to) const noexcept {
-	    AString copy;
-	    copy.reserve(length() + 10);
-	    for (auto c : *this) {
-	        if (c == from) {
-	            copy << to;
-	        } else {
-	            copy << c;
-	        }
-	    }
+        AString copy;
+        copy.reserve(length() + 10);
+        for (auto c : *this) {
+            if (c == from) {
+                copy << to;
+            } else {
+                copy << c;
+            }
+        }
         return copy;
-	}
+    }
     [[nodiscard]] inline AString replacedAll(const ASet<wchar_t>& from, wchar_t to) const noexcept {
-	    AString copy;
-	    copy.reserve(length() + 10);
-	    for (auto c : *this) {
-	        if (from.contains(c)) {
-	            copy << to;
-	        } else {
-	            copy << c;
-	        }
-	    }
+        AString copy;
+        copy.reserve(length() + 10);
+        for (auto c : *this) {
+            if (from.contains(c)) {
+                copy << to;
+            } else {
+                copy << c;
+            }
+        }
         return copy;
-	}
-	AString& replaceAll(wchar_t from, wchar_t to) noexcept;
-
-	[[nodiscard]]
-	float toFloat() const noexcept;
-
-	[[nodiscard]]
-	double toDouble() const noexcept;
-
-	[[nodiscard]]
-	int toInt() const noexcept;
+    }
+    AString& replaceAll(wchar_t from, wchar_t to) noexcept;
 
     [[nodiscard]]
-	unsigned toUInt() const noexcept;
+    float toFloat() const noexcept;
 
-	[[nodiscard]]
-	bool toBool() const noexcept;
+    [[nodiscard]]
+    double toDouble() const noexcept;
 
-	[[nodiscard]]
-	bool contains(wchar_t c) const noexcept
-	{
-		return find(c) != npos;
-	}
-	[[nodiscard]]
-	bool contains(const AString& other) const noexcept
-	{
-		return find(other) != npos;
-	}
+    [[nodiscard]]
+    int toInt() const noexcept;
 
-	static AString fromLatin1(const AByteBuffer& buffer);
-	static AString fromUtf8(const AByteBufferView& buffer);
-	static AString fromUtf8(const char* buffer, size_t length);
-	static AString fromLatin1(const char* buffer);
+    [[nodiscard]]
+    unsigned toUInt() const noexcept;
 
-	static AString numberHex(int i) noexcept;
+    [[nodiscard]]
+    bool toBool() const noexcept;
+
+    [[nodiscard]]
+    bool contains(wchar_t c) const noexcept
+    {
+        return find(c) != npos;
+    }
+    [[nodiscard]]
+    bool contains(const AString& other) const noexcept
+    {
+        return find(other) != npos;
+    }
+
+    static AString fromLatin1(const AByteBuffer& buffer);
+    static AString fromUtf8(const AByteBufferView& buffer);
+    static AString fromUtf8(const char* buffer, size_t length);
+    static AString fromLatin1(const char* buffer);
+
+    static AString numberHex(int i) noexcept;
 
     template<typename T, std::enable_if_t<std::is_integral_v<std::decay_t<T>> || std::is_floating_point_v<std::decay_t<T>>, int> = 0>
-	static AString number(T i) noexcept {
-	    if constexpr (std::is_same_v<bool, std::decay_t<T>>) {
+    static AString number(T i) noexcept {
+        if constexpr (std::is_same_v<bool, std::decay_t<T>>) {
             if (i)
                 return "true";
             return "false";
-	    } else {
+        } else {
             return std::to_wstring(i);
         }
-	}
-	int toNumberDec() const noexcept;
-	int toNumberHex() const noexcept;
+    }
+    int toNumberDec() const noexcept;
+    int toNumberHex() const noexcept;
 
     /**
      * @return utf8-encoded std::string.
      */
-	std::string toStdString() const noexcept;
+    std::string toStdString() const noexcept;
 
     void resizeToNullTerminator();
 
-	iterator erase(const_iterator begin, const_iterator end) noexcept
-	{
-		return super::erase(begin, end);
-	}
-	iterator erase(const_iterator begin) noexcept
-	{
-		return super::erase(begin);
-	}
+    iterator erase(const_iterator begin, const_iterator end) noexcept
+    {
+        return super::erase(begin, end);
+    }
+    iterator erase(const_iterator begin) noexcept
+    {
+        return super::erase(begin);
+    }
 
-	AString& erase(size_type offset) noexcept
-	{
-		super::erase(offset);
-		return *this;
-	}
-	AString& erase(size_type offset, size_type count) noexcept
-	{
-		super::erase(offset, count);
-		return *this;
-	}
+    AString& erase(size_type offset) noexcept
+    {
+        super::erase(offset);
+        return *this;
+    }
+    AString& erase(size_type offset, size_type count) noexcept
+    {
+        super::erase(offset, count);
+        return *this;
+    }
 
-	AByteBuffer toUtf8() const noexcept;
+    AByteBuffer toUtf8() const noexcept;
 
-	void removeAt(unsigned at) noexcept
-	{
+    void removeAt(unsigned at) noexcept
+    {
         assert(at <= length());
-		erase(begin() + at);
-	}
-	AString excessSpacesRemoved() const noexcept;
+        erase(begin() + at);
+    }
+    AString excessSpacesRemoved() const noexcept;
 
-	iterator insert(size_type at, wchar_t c) noexcept
-	{
+    iterator insert(size_type at, wchar_t c) noexcept
+    {
         assert(at <= length());
-		return super::insert(begin() + at, 1, c);
-	}
-	iterator insert(size_type at, const AString& c) noexcept
-	{
+        return super::insert(begin() + at, 1, c);
+    }
+    iterator insert(size_type at, const AString& c) noexcept
+    {
         assert(at <= length());
-		return super::insert(begin() + at, c.begin(), c.end());
-	}
-	
-	template<typename Iterator>
-	iterator insert(const_iterator at, Iterator begin, Iterator end) noexcept
-	{
+        return super::insert(begin() + at, c.begin(), c.end());
+    }
+
+    template<typename Iterator>
+    iterator insert(const_iterator at, Iterator begin, Iterator end) noexcept
+    {
         assert(std::distance(super::cbegin(), at) <= length());
-		return super::insert(at, begin, end);
-	}
-	
-	AString& operator<<(char c) noexcept
-	{
-		append(1, c);
-		return *this;
-	}
-	AString& operator<<(wchar_t c) noexcept
-	{
-		append(1, c);
-		return *this;
-	}
-	
-	inline ::AString& operator+=(const AString& str) noexcept
-	{
-		append(str);
-		return *this;
-	}
-	inline ::AString& operator+=(const char* str) noexcept
-	{
-		*this += AString(str);
-		return *this;
-	}
+        return super::insert(at, begin, end);
+    }
 
-	[[nodiscard]] bool empty() const noexcept {
-		return super::empty();
-	}
-	[[nodiscard]] size_type size() const noexcept {
-		return super::size();
-	}
-	wchar_t operator[](size_type index) const
-	{
-		return super::at(index);
-	}
-	wchar_t& operator[](size_type index)
-	{
-		return super::at(index);
-	}
-	bool operator<(const AString& other) const noexcept
-	{
-		return compare(other) < 0;
-	}
+    AString& operator<<(char c) noexcept
+    {
+        append(1, c);
+        return *this;
+    }
+    AString& operator<<(wchar_t c) noexcept
+    {
+        append(1, c);
+        return *this;
+    }
 
-	void clear() noexcept
-	{
-		super::clear();
-	}
+    inline ::AString& operator+=(const AString& str) noexcept
+    {
+        append(str);
+        return *this;
+    }
+    inline ::AString& operator+=(const char* str) noexcept
+    {
+        *this += AString(str);
+        return *this;
+    }
 
-	wchar_t& front() noexcept
-	{
-		return super::front();
-	}
-	wchar_t& back() noexcept
-	{
-		return super::back();
-	}
-	const wchar_t& front() const noexcept
-	{
-		return super::front();
-	}
-	const wchar_t& back() const noexcept
-	{
-		return super::back();
-	}
-	wchar_t& first() noexcept
-	{
-		return super::front();
-	}
-	wchar_t& last() noexcept
-	{
-		return super::back();
-	}
-	const wchar_t& first() const noexcept
-	{
-		return super::front();
-	}
-	const wchar_t& last() const noexcept
-	{
-		return super::back();
-	}
+    [[nodiscard]] bool empty() const noexcept {
+        return super::empty();
+    }
+    [[nodiscard]] size_type size() const noexcept {
+        return super::size();
+    }
+    wchar_t operator[](size_type index) const
+    {
+        return super::at(index);
+    }
+    wchar_t& operator[](size_type index)
+    {
+        return super::at(index);
+    }
+    bool operator<(const AString& other) const noexcept
+    {
+        return compare(other) < 0;
+    }
 
-	const wchar_t* c_str() const
-	{
-		return super::c_str();
-	}
+    void clear() noexcept
+    {
+        super::clear();
+    }
 
-	iterator begin() noexcept
-	{
-		return super::begin();
-	}
-	iterator end() noexcept
-	{
-		return super::end();
-	}
+    wchar_t& front() noexcept
+    {
+        return super::front();
+    }
+    wchar_t& back() noexcept
+    {
+        return super::back();
+    }
+    const wchar_t& front() const noexcept
+    {
+        return super::front();
+    }
+    const wchar_t& back() const noexcept
+    {
+        return super::back();
+    }
+    wchar_t& first() noexcept
+    {
+        return super::front();
+    }
+    wchar_t& last() noexcept
+    {
+        return super::back();
+    }
+    const wchar_t& first() const noexcept
+    {
+        return super::front();
+    }
+    const wchar_t& last() const noexcept
+    {
+        return super::back();
+    }
 
-	const_iterator begin() const noexcept
-	{
-		return super::begin();
-	}
-	const_iterator end() const noexcept
-	{
-		return super::end();
-	}
+    const wchar_t* c_str() const
+    {
+        return super::c_str();
+    }
 
-	reverse_iterator rbegin() noexcept
-	{
-		return super::rbegin();
-	}
-	reverse_iterator rend() noexcept
-	{
-		return super::rend();
-	}
+    iterator begin() noexcept
+    {
+        return super::begin();
+    }
+    iterator end() noexcept
+    {
+        return super::end();
+    }
 
-	const_reverse_iterator rbegin() const noexcept
-	{
-		return super::rbegin();
-	}
-	const_reverse_iterator rend() const noexcept
-	{
-		return super::rend();
-	}
+    const_iterator begin() const noexcept
+    {
+        return super::begin();
+    }
+    const_iterator end() const noexcept
+    {
+        return super::end();
+    }
 
-	AString& append(const AString& s) noexcept
-	{
-		super::append(s);
-		return *this;
-	}
+    reverse_iterator rbegin() noexcept
+    {
+        return super::rbegin();
+    }
+    reverse_iterator rend() noexcept
+    {
+        return super::rend();
+    }
 
-	AString& append(size_t count, wchar_t ch) noexcept
-	{
-		super::append(count, ch);
-		return *this;
-	}
+    const_reverse_iterator rbegin() const noexcept
+    {
+        return super::rbegin();
+    }
+    const_reverse_iterator rend() const noexcept
+    {
+        return super::rend();
+    }
 
-	const AString& operator=(const AString& value) noexcept
-	{
-		super::operator=(value);
-		return *this;
-	}
+    AString& append(const AString& s) noexcept
+    {
+        super::append(s);
+        return *this;
+    }
 
-	const AString& operator=(AString&& value) noexcept
-	{
-		super::operator=(value);
-		return *this;
-	}
-	
-	bool operator==(const AString& other) const noexcept
-	{
-		return wcscmp(c_str(), other.c_str()) == 0;
-	}
-	bool operator==(const wchar_t* other) const noexcept
-	{
-		return wcscmp(c_str(), other) == 0;
-	}
-	bool operator==(const char* other) const noexcept
-	{
-		return *this == AString(other);
-	}
+    AString& append(size_t count, wchar_t ch) noexcept
+    {
+        super::append(count, ch);
+        return *this;
+    }
 
-	bool operator!=(const AString& other) const noexcept
-	{
-		return wcscmp(c_str(), other.c_str()) != 0;
-	}
-	bool operator!=(const wchar_t* other) const noexcept
-	{
-		return wcscmp(c_str(), other) != 0;
-	}
-	bool operator!=(const char* other) const noexcept
-	{
-		return *this != AString(other);
-	}
+    const AString& operator=(const AString& value) noexcept
+    {
+        super::operator=(value);
+        return *this;
+    }
+
+    const AString& operator=(AString&& value) noexcept
+    {
+        super::operator=(value);
+        return *this;
+    }
+
+    bool operator==(const AString& other) const noexcept
+    {
+        return wcscmp(c_str(), other.c_str()) == 0;
+    }
+    bool operator==(const wchar_t* other) const noexcept
+    {
+        return wcscmp(c_str(), other) == 0;
+    }
+    bool operator==(const char* other) const noexcept
+    {
+        return *this == AString(other);
+    }
+
+    bool operator!=(const AString& other) const noexcept
+    {
+        return wcscmp(c_str(), other.c_str()) != 0;
+    }
+    bool operator!=(const wchar_t* other) const noexcept
+    {
+        return wcscmp(c_str(), other) != 0;
+    }
+    bool operator!=(const char* other) const noexcept
+    {
+        return *this != AString(other);
+    }
 
     template<typename... Args>
     inline AString format(Args&&... args) const;
@@ -565,30 +570,30 @@ public:
 
 inline AString operator+(const AString& l, const AString& r) noexcept
 {
-	auto x = l;
-	x.append(r);
-	return x;
+    auto x = l;
+    x.append(r);
+    return x;
 }
 inline AString operator+(const AString& l, wchar_t r) noexcept
 {
-	auto x = l;
-	x.append(r);
-	return x;
+    auto x = l;
+    x.append(r);
+    return x;
 }
 inline AString operator+(const AString& one, const char* other) noexcept
 {
-	return one + AString(other);
+    return one + AString(other);
 }
 
 inline AString operator+(const char* other, const AString& one) noexcept {
-	return AString(other) + one;
+    return AString(other) + one;
 }
 
 inline AString operator+(char lhs, const AString& cs) noexcept
 {
-	AString s(lhs);
-	s += cs;
-	return s;
+    AString s(lhs);
+    s += cs;
+    return s;
 }
 
 inline AString operator"" _as(const char* str, size_t len)
@@ -598,19 +603,19 @@ inline AString operator"" _as(const char* str, size_t len)
 
 inline std::ostream& operator<<(std::ostream& o, const AString& s)
 {
-	o << s.toStdString();
-	return o;
+    o << s.toStdString();
+    return o;
 }
 namespace std
 {
-	template<>
-	struct hash<AString>
-	{
-		size_t operator()(const AString& t) const
-		{
-			return hash<std::wstring>()(t);
-		}
-	};
+    template<>
+    struct hash<AString>
+    {
+        size_t operator()(const AString& t) const
+        {
+            return hash<std::wstring>()(t);
+        }
+    };
 }
 
 // gtest printer for AString
