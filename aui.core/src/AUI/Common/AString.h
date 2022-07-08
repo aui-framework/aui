@@ -171,6 +171,7 @@ public:
         super::pop_back();
     }
 
+
     AString uppercase() const;
     AString lowercase() const;
 

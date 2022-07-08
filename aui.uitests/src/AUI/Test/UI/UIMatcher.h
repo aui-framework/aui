@@ -85,23 +85,23 @@ public:
      */
     UIMatcher findNearestTo(UIMatcher matcher) {
         auto mySet = toSet();
-        if (mySet.size() == 1) {
-            throw AException("expected to match one view, matched {}"_format(mySet.size()));
-        }
         auto targets = matcher.toSet();
 
-        if (targets.empty()) {
+        if (targets.size() != 1) {
+            throw AException("expected to match one view, matched {}"_format(mySet.size()));
+        }
+        if (mySet.empty()) {
             throw AException("findNearestTo requires at least one element to match");
         }
 
-        auto nearestToView = (*mySet.begin());
+        auto nearestToView = (*targets.begin());
         auto nearestToPoint = glm::vec2(nearestToView->getPositionInWindow() + nearestToView->getSize());
-        auto target = std::min_element(targets.begin(), targets.end(), [&](const _<AView>& lhs, const _<AView>& rhs) {
+        auto target = std::min_element(mySet.begin(), mySet.end(), [&](const _<AView>& lhs, const _<AView>& rhs) {
             float dst1 = glm::distance2(nearestToPoint, glm::vec2(lhs->getCenterPointInWindow()));
             float dst2 = glm::distance2(nearestToPoint, glm::vec2(rhs->getCenterPointInWindow()));
             return dst1 < dst2;
         });
-        EXPECT_TRUE(target != targets.end());
+        EXPECT_TRUE(target != mySet.end());
 
         class ToOneMatcher: public IMatcher {
         public:
