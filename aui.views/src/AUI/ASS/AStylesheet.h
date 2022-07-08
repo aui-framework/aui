@@ -47,14 +47,6 @@ public:
         }
     }
 
-    void addRule(const Rule& r) {
-        if (mIgnoreRules) {
-            return;
-        }
-        mRules << r;
-    }
-
-
     void addRule(Rule&& r) {
         if (mIgnoreRules) {
             return;

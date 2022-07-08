@@ -84,9 +84,9 @@ void ViewPropertiesView::displayApplicableRule(const _<AViewContainer>& dst,
                                                ADeque<ass::decl::IDeclarationBase*>& applicableDeclarations,
                                                const RuleWithoutSelector* rule) {
 
-    for (auto& decl : rule->getDeclarations()) {
-        applicableDeclarations.push_front(decl);
-        dst->addView(_new<ALabel>("<internal {}>"_format(AReflect::name(decl))) with_style{Opacity {0.7f } });
+    for (const auto& decl : rule->getDeclarations()) {
+        applicableDeclarations.push_front(decl.get());
+        dst->addView(_new<ALabel>("<internal {}>"_format(AReflect::name(decl.get()))) with_style{ Opacity {0.7f } });
     }
     dst->addView(Horizontal {
             _new<ALabel>("},") << ".declaration_br",

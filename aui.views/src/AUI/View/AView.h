@@ -633,8 +633,8 @@ public:
         return mCustomAssRule;
     }
 
-    void setCustomAss(const RuleWithoutSelector& rule) {
-        mCustomAssRule = rule;
+    void setCustomAss(RuleWithoutSelector rule) {
+        mCustomAssRule = std::move(rule);
         mAssHelper = nullptr;
     }
 
@@ -707,10 +707,10 @@ public:
     }
 
     /**
-     * Helper function for kAUI.h:with_style
+     * @brief Helper function for kAUI.h:with_style
      */
-    void operator+(const RuleWithoutSelector& rule) {
-        setCustomAss(rule);
+    void operator+(RuleWithoutSelector rule) {
+        setCustomAss(std::move(rule));
     }
 
 signals:

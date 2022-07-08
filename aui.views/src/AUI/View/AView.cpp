@@ -533,10 +533,10 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
 }
 
 void AView::applyAssRule(const RuleWithoutSelector& rule) {
-    for (auto& d : rule.getDeclarations()) {
+    for (const auto& d : rule.getDeclarations()) {
         auto slot = d->getDeclarationSlot();
         if (slot != ass::decl::DeclarationSlot::NONE) {
-            mAss[int(slot)] = d->isNone() ? nullptr : d;
+            mAss[int(slot)] = d->isNone() ? nullptr : d.get();
         }
         d->applyFor(this);
     }
