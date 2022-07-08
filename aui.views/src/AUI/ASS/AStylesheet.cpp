@@ -128,6 +128,16 @@ AStylesheet::AStylesheet() {
             BackgroundSolid{0xfafafa_rgb},
         },
         {
+            t<AButtonEx>(),
+            LayoutSpacing { 2_dp },
+            MinSize { 2_dp },
+        },
+        {
+            t<AButtonEx>() > t<ALabel>(),
+            Margin { 0 },
+            Padding { 0 },
+        },
+        {
             { debug_selector(), button::Default(t<AButton>()), c(".btn_default")},
             FontRendering::ANTIALIASING,
             BackgroundGradient {getOsThemeColor().lighter(0.15f),

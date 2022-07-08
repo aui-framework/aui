@@ -5,10 +5,10 @@
 
 
 namespace aui::ui_building {
-    template<typename ContainerFactory>
-    struct container_helper {
+    template<typename ViewFactory>
+    struct view_helper {
     public:
-        container_helper(ContainerFactory& factory): mFactory(factory) {}
+        view_helper(ViewFactory& factory): mFactory(factory) {}
 
         operator _<AView>() const {
             return mFactory();
@@ -32,8 +32,24 @@ namespace aui::ui_building {
             return mFactory();
         }
 
+
+        template<typename SignalField, typename Object, typename Function>
+        auto connect(SignalField&& signalField, Object&& object, Function&& function) {
+            return mFactory().connect(std::forward<SignalField>(signalField), std::forward<Object>(object), std::forward<Function>(function));
+        }
+
+        template<typename Object, typename Function>
+        auto clicked(Object&& object, Function&& function) {
+            return connect(&AView::clicked, std::forward<Object>(object), std::forward<Function>(function));
+        }
+
+        template<typename SignalField, typename Function>
+        auto connect(SignalField&& signalField, Function&& function) {
+            return mFactory().connect(std::forward<SignalField>(signalField), std::forward<Function>(function));
+        }
+
     private:
-        ContainerFactory& mFactory;
+        ViewFactory& mFactory;
     };
 
     template<typename View>
@@ -52,7 +68,7 @@ namespace aui::ui_building {
     };
 
     template<typename Layout, typename Container = AViewContainer>
-    struct layouted_container_factory: container_helper<layouted_container_factory<Layout, Container>> {
+    struct layouted_container_factory: view_helper<layouted_container_factory<Layout, Container>> {
     private:
         AVector<_<AView>> mViews;
 
@@ -68,7 +84,7 @@ namespace aui::ui_building {
             }
         };
 
-        layouted_container_factory(std::initializer_list<_<AView>> views): container_helper<layouted_container_factory<Layout, Container>>(*this) {
+        layouted_container_factory(std::initializer_list<_<AView>> views): view_helper<layouted_container_factory<Layout, Container>>(*this) {
             mViews.reserve(views.size());
             for (const auto& v : views) {
                 if (v) {
