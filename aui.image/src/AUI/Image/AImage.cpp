@@ -19,15 +19,13 @@
  * =====================================================================================================================
  */
 
-//
-// Created by Алексей on 25.07.2018.
-//
 
 #include <utility>
 #include <cstring>
 #include "AImage.h"
 #include "AImageLoaderRegistry.h"
 #include <stdexcept>
+#include <AUI/Traits/memory.h>
 
 AImage::AImage()
 {
@@ -236,3 +234,17 @@ AImage::Cache& AImage::Cache::inst() {
 }
 
 
+AColor AImage::averageColor() const noexcept {
+    glm::ivec4 accumulator;
+    aui::zero(accumulator);
+
+    for (uint32_t y = 0; y < mHeight; ++y) {
+        for (uint32_t x = 0; x < mWidth; ++x) {
+            accumulator += getPixelAt(x, y);
+        }
+    }
+
+    accumulator /= mWidth * mHeight;
+
+    return glm::vec4(accumulator) / 255.f;
+}

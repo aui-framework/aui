@@ -77,8 +77,8 @@ public:
      * _new<ALabel>("Password"),
      * _new<ATextField>(),
      * ...
-     * By::type<ATextField>().findNearestTo(By::name("Login")) // <- matches the first ATextField
-     * By::type<ATextField>().findNearestTo(By::name("Password")) // <- matches the second ATextField
+     * By::type<ATextField>().findNearestTo(By::text("Login")) // <- matches the first ATextField
+     * By::type<ATextField>().findNearestTo(By::text("Password")) // <- matches the second ATextField
      * @endcode
      * @param matcher UIMatcher of a view to find the nearest to. The UIMatcher is expected to match only one view.
      * @return the nearest view
