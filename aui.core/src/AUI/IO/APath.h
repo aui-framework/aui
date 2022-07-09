@@ -360,6 +360,6 @@ public:
 };
 
 
-inline APath operator""_path(const char* str, unsigned long long length) {
+inline APath operator""_path(const char* str, std::size_t length) {
     return APath(str, length);
 }
