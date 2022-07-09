@@ -67,15 +67,14 @@ AView::AView()
 
 void AView::redraw()
 {
-
+    assert(("views could not be used from non ui thread", AThread::current() == getThread()));
     nullsafe(getWindow())->flagRedraw(); else nullsafe(AWindow::current())->flagRedraw();
 
 }
 void AView::requestLayoutUpdate()
 {
-
+    assert(("views could not be used from non ui thread", AThread::current() == getThread()));
     nullsafe(getWindow())->flagUpdateLayout(); else nullsafe(AWindow::current())->flagUpdateLayout();
-
 }
 
 void AView::drawStencilMask()
