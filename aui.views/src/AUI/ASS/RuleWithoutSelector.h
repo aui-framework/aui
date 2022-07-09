@@ -27,7 +27,7 @@
 
 #include "Declaration/IDeclaration.h"
 
-struct RuleWithoutSelector: aui::noncopyable {
+struct RuleWithoutSelector {
 public:
     template<typename... Declarations>
     RuleWithoutSelector(Declarations&&... declarations)
@@ -39,11 +39,11 @@ public:
 
     }
 
-    [[nodiscard]] const AVector<std::unique_ptr<ass::decl::IDeclarationBase>>& getDeclarations() const noexcept {
+    [[nodiscard]] const AVector<_<ass::decl::IDeclarationBase>>& getDeclarations() const noexcept {
         return mDeclarations;
     }
 
-    void addDeclaration(std::unique_ptr<ass::decl::IDeclarationBase> declaration) {
+    void addDeclaration(_<ass::decl::IDeclarationBase> declaration) {
         mDeclarations << std::move(declaration);
     }
 
@@ -65,9 +65,9 @@ private:
             static_assert(aui::is_complete<declaration_t>,
                           "ass::decl::Declaration template specialization is not defined for this declaration");
 
-            mDeclarations.emplace_back(std::make_unique<declaration_t>(t));
+            mDeclarations.emplace_back(_new<declaration_t>(t));
         }
     }
 
-    AVector<std::unique_ptr<ass::decl::IDeclarationBase>> mDeclarations;
+    AVector<_<ass::decl::IDeclarationBase>> mDeclarations;
 };
