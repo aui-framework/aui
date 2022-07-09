@@ -117,7 +117,7 @@ namespace aui::ui_building {
     template<typename Layout, typename Container = AViewContainer>
     struct layouted_container_factory: layouted_container_factory_impl<Layout, Container>, view_helper<layouted_container_factory<Layout, Container>> {
 
-        layouted_container_factory(std::initializer_list<_<AView>> views): layouted_container_factory_impl<Layout>(views),
+        layouted_container_factory(std::initializer_list<_<AView>> views): layouted_container_factory_impl<Layout, Container>(views),
                                                                            view_helper<layouted_container_factory<Layout, Container>>(*this) {
 
         }
