@@ -77,23 +77,26 @@ namespace aui::ui_building {
     };
 
     template<typename Layout, typename Container = AViewContainer>
-    struct layouted_container_factory: view_helper<layouted_container_factory<Layout, Container>> {
+    struct layouted_container_factory_impl {
     private:
         AVector<_<AView>> mViews;
 
     public:
-        struct Expanding: layouted_container_factory<Layout> {
+        struct Expanding: layouted_container_factory_impl<Layout, Container>, view_helper<Expanding> {
         public:
-            Expanding(std::initializer_list<_<AView>> views): layouted_container_factory<Layout>(views) {
+            Expanding(std::initializer_list<_<AView>> views): layouted_container_factory_impl<Layout>(views),
+                                                              view_helper<Expanding>(*this) {
 
             }
 
             _<AViewContainer> operator()() {
-                return layouted_container_factory<Layout>::operator()() let { it->setExpanding(); };
+                return layouted_container_factory_impl<Layout>::operator()() let {
+                    it->setExpanding();
+                };
             }
         };
 
-        layouted_container_factory(std::initializer_list<_<AView>> views): view_helper<layouted_container_factory<Layout, Container>>(*this) {
+        layouted_container_factory_impl(std::initializer_list<_<AView>> views) {
             mViews.reserve(views.size());
             for (const auto& v : views) {
                 if (v) {
@@ -109,4 +112,17 @@ namespace aui::ui_building {
             return c;
         }
     };
+
+
+    template<typename Layout, typename Container = AViewContainer>
+    struct layouted_container_factory: layouted_container_factory_impl<Layout, Container>, view_helper<layouted_container_factory<Layout, Container>> {
+
+        layouted_container_factory(std::initializer_list<_<AView>> views): layouted_container_factory_impl<Layout>(views),
+                                                                           view_helper<layouted_container_factory<Layout, Container>>(*this) {
+
+        }
+
+    };
+
+
 }

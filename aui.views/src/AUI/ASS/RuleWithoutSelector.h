@@ -65,7 +65,7 @@ private:
             static_assert(aui::is_complete<declaration_t>,
                           "ass::decl::Declaration template specialization is not defined for this declaration");
 
-            mDeclarations.emplace_back(_new<declaration_t>(t));
+            mDeclarations << _new<declaration_t>(t);
         }
     }
 
