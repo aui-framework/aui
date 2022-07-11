@@ -24,7 +24,7 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Layout/AHorizontalLayout.h"
-#include "AAbstractLabel.h"
+#include "ALabel.h"
 #include "AViewContainer.h"
 #include "AUI/ASS/Selector/AAssSelector.h"
 
@@ -69,7 +69,10 @@ public:
 };
 
 namespace declarative {
-    using Button = aui::ui_building::layouted_container_factory<AHorizontalLayout, AButtonEx>;
+    struct Button: aui::ui_building::layouted_container_factory<AHorizontalLayout, AButtonEx> {
+        using aui::ui_building::layouted_container_factory<AHorizontalLayout, AButtonEx>::layouted_container_factory;
+        Button(AString text): layouted_container_factory<AHorizontalLayout, AButtonEx>({Label { std::move(text) }}) {}
+    };
 }
 
 namespace ass::button {

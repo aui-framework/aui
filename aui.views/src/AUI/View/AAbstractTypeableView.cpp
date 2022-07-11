@@ -393,7 +393,7 @@ void AAbstractTypeableView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key but
 }
 
 glm::ivec2 AAbstractTypeableView::getMouseSelectionPadding() {
-    return {mPadding.left, mPadding.top};
+    return {mPadding.left, mPadding.top + getVerticalAlignmentOffset() };
 }
 
 glm::ivec2 AAbstractTypeableView::getMouseSelectionScroll() {
