@@ -37,7 +37,8 @@ bool ACursorSelectable::hasSelection() const {
 }
 
 unsigned ACursorSelectable::cursorIndexByPos(glm::ivec2 pos) {
-    return mTextLayoutHelper.posToIndexFixedLineHeight(pos - getMouseSelectionPadding(), getMouseSelectionFont());
+    return mTextLayoutHelper.posToIndexFixedLineHeight(pos - getMouseSelectionPadding() + getMouseSelectionScroll(),
+                                                       getMouseSelectionFont());
 }
 
 void ACursorSelectable::handleMousePressed(const glm::ivec2& pos, AInput::Key button) {
@@ -120,8 +121,8 @@ void ACursorSelectable::drawSelectionRects() {
     auto draw = [&]() {
         auto fs = getMouseSelectionFont();
         Render::rect(ASolidBrush{},
-                     {p.x + absoluteBeginPos, p.y + row * fs.getLineHeight()},
-                     {absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 3});
+                     {p.x + absoluteBeginPos, p.y + row * fs.getLineHeight() - 1},
+                     {absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 4});
     };
 
     auto t = getDisplayText();

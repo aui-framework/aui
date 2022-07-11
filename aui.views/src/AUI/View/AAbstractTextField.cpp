@@ -36,7 +36,6 @@ AAbstractTextField::AAbstractTextField() {
 void AAbstractTextField::onFocusAcquired() {
     AView::onFocusAcquired();
     updateCursorBlinking();
-    clearSelection();
 }
 
 AAbstractTextField::~AAbstractTextField()
