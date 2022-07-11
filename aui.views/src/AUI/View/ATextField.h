@@ -49,6 +49,6 @@ public:
         return (ASignal<AString> ATextField::*)&ATextField::textChanging;
     }
     static auto getSetter() {
-        return &ATextField::setText; // TODO possibly would break
+        return (void(ATextField::*)(const AString& t)) &ATextField::setText;
     }
 };
