@@ -42,7 +42,7 @@ FractalWindow::FractalWindow():
 
     auto centerPosDisplay = _new<ALabel>("-");
     {
-        centerPosDisplay->setCustomAss({
+        centerPosDisplay->setCustomStyle({
             BackgroundSolid { 0x80000000_argb },
             Padding { 4_dp },
             TextColor { 0xffffff_rgb },
@@ -88,7 +88,7 @@ FractalWindow::FractalWindow():
             },
             _new<ALabel>("Gradient:"),
             _new<AImageView>(fractal->getTexture()) let {
-                it->setCustomAss({
+                it->setCustomStyle({
                     FixedSize { {}, 10_dp },
                     Margin { 4_dp }
                 });

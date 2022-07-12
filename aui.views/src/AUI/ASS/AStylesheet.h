@@ -36,8 +36,11 @@ private:
 
 public:
     AStylesheet();
+    AStylesheet(std::initializer_list<Rule> rules) {
+        addRules(rules);
+    }
 
-    inline void addRules(std::initializer_list<Rule> rules) {
+    void addRules(std::initializer_list<Rule> rules) {
         if (mIgnoreRules) {
             return;
         }
@@ -73,6 +76,8 @@ public:
 
     static AColor getOsThemeColor();
 
-    static AStylesheet& inst();
-    static _<AStylesheet>& instStorage();
+    static AStylesheet& global();
+
+private:
+    static _<AStylesheet>& globalStorage();
 };

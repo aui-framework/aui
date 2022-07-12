@@ -90,7 +90,7 @@ public:
 ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 {
     setLayout(_new<AVerticalLayout>());
-    AStylesheet::inst().addRules({
+    AStylesheet::global().addRules({
          {
              c(".all_views_wrap") > t<AViewContainer>(),
              Padding { 16_dp },

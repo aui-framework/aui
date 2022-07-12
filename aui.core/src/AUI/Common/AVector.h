@@ -62,6 +62,18 @@ public:
 
 
     /**
+     * Inserts all values of the specified container to the end.
+     * @tparam OtherContainer other container type.
+     * @param c other container
+     * @return iterator pointing to the first element inserted.
+     */
+    template<typename OtherContainer>
+    iterator insertAll(OtherContainer&& c) noexcept {
+        return insertAll(p::end(), std::forward<OtherContainer>(c));
+    }
+
+
+    /**
      * Inserts all values of the specified container.
      * @tparam OtherContainer other container type.
      * @param at position to insert at.
@@ -71,6 +83,19 @@ public:
     template<typename OtherContainer>
     iterator insertAll(iterator at, const OtherContainer& c) noexcept {
         return p::insert(at, c.begin(), c.end());
+    }
+
+
+    /**
+     * Inserts all values of the specified container.
+     * @tparam OtherContainer other container type.
+     * @param at position to insert at.
+     * @param c other container
+     * @return iterator pointing to the first element inserted.
+     */
+    template<typename OtherContainer>
+    iterator insertAll(iterator at, OtherContainer&& c) noexcept {
+        return p::insert(at, std::make_move_iterator(c.begin()), std::make_move_iterator(c.end()));
     }
 
 
@@ -141,6 +166,18 @@ public:
     self& operator<<(const OtherContainer& c) noexcept
     {
         insertAll(c);
+        return *this;
+    }
+
+    /**
+     * Shortcut to <code>insertAll</code>.
+     * @param rhs container to push
+     * @return self
+     */
+    template<typename OtherContainer, std::enable_if_t<!std::is_convertible_v<OtherContainer, StoredType>, bool> = true>
+    self& operator<<(OtherContainer&& c) noexcept
+    {
+        insertAll(std::forward<OtherContainer>(c));
         return *this;
     }
 

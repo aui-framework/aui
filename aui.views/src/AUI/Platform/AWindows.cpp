@@ -213,7 +213,7 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     public:
         AOverlappingWindow(AWindow* parent):
         AWindow("MENU", 100, 100, parent, WindowStyle::SYS) {
-            setCustomAss({ ass::Padding { 0 } });
+            setCustomStyle({ ass::Padding { 0 } });
         }
     };
     auto window = _new<AOverlappingWindow>(this);

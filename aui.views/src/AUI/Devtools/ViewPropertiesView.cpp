@@ -16,7 +16,7 @@
 using namespace ass;
 
 ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
-    setCustomAss({ Border {
+    setCustomStyle({ Border {
                            1_px,
                            0x505050_rgb,
                    },

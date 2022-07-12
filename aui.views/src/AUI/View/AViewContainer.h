@@ -151,7 +151,7 @@ protected:
         }
     }
 
-    void recompileAss() override;
+    void invalidateAllStyles() override;
 
 
     /**

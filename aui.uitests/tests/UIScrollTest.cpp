@@ -39,7 +39,7 @@ public:
             }
         );
         *this << ".container";
-        setCustomAss({ ass::BackgroundSolid{ 0xff0000_rgb, } });
+        setCustomStyle({ ass::BackgroundSolid{ 0xff0000_rgb, } });
 
         EXPECT_CALL(*this, setSize(testing::_, testing::_)).Times(testing::AtLeast(1));
     }

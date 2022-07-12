@@ -643,11 +643,11 @@ AColor AStylesheet::getOsThemeColor() {
 #endif
 }
 
-AStylesheet& AStylesheet::inst() {
-    return *instStorage();
+AStylesheet& AStylesheet::global() {
+    return *globalStorage();
 }
 
-_<AStylesheet>& AStylesheet::instStorage() {
+_<AStylesheet>& AStylesheet::globalStorage() {
     static _<AStylesheet> s = _new<AStylesheet>();
     return s;
 }

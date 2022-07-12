@@ -30,24 +30,53 @@ namespace aui {
             using type = First;
         };
     }
-    struct parameter_pack {
+
+    /**
+     * @brief Provides an easy way to iterate over a parameter pack.
+     * @ingroup useful_templates
+     * @details
+     * <table>
+     *   <tr>
+     *     <td>without</td>
+     *     <td>with</td>
+     *   </tr>
+     *   <tr>
+     *     <td>
+     *       @code{cpp}
+     *       template<typename Arg, typename... Args> void helperFunc(Arg&& arg, Args&&... args) {
+     *          // do something with arg
+     *          std::cout << std::forward<Arg>(arg) << std::endl;
+     *
+     *          if constexpr (sizeof...(args) > 0) {
+     *              helperFunc(std::forward<Args>(args)...); // continue iteration
+     *          }
+     *       }
+     *       template<typename... Args> void yourFunc(Args&&... args) {
+     *           helperFunc(std::forward<Args>(args)...);
+     *       }
+     *       @endcode
+     *     </td>
+     *     <td>
+     *       @code{cpp}
+     *       template<typename... Args> void yourFunc(Args&&... args) {
+     *           aui::parameter_pack::for_each([](auto&& i) {
+     *               // do something with arg
+     *               std::cout << i << " ";
+     *           }, std::forward<Args>(args)...);
+     *       }
+     *       @endcode
+     *     </td>
+     *   </tr>
+     * </table>
+     */
+    namespace parameter_pack {
         template<typename Callable, typename... Args>
-        inline static void for_each(Callable c, Args&&... args) {
-            invoke(std::move(c), std::forward<Args>(args)...);
+        static void for_each(Callable&& c, Args&&... args) {
+            (..., [&] {
+                c(std::forward<Args>(args));
+            }());
         }
         template<typename... Types>
         using first = typename impl::first<Types...>::type;
-    private:
-
-        template<typename Callable, typename Arg1>
-        inline static void invoke(Callable c, Arg1&& arg1) {
-            c(std::forward<Arg1>(arg1));
-        }
-        template<typename Callable, typename Arg1, typename... Args>
-        inline static void invoke(Callable c, Arg1&& arg1, Args&&... args) {
-            c(std::forward<Arg1>(arg1));
-            invoke(std::move(c), std::forward<Args>(args)...);
-        }
-
     };
 }

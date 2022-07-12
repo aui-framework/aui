@@ -2,18 +2,26 @@
 
 #include <AUI/View/AViewContainer.h>
 #include <AUI/Util/kAUI.h>
+#include <AUI/Traits/callables.h>
+#include <AUI/Traits/parameter_pack.h>
 
 
 namespace aui::ui_building {
+
+    using View = _<AView>;
+    using ViewContainer = _<AViewContainer>;
+    using ViewGroup = AVector<_<AView>>;
+    using ViewOrViewGroup = std::variant<_<AView>, AVector<_<AView>>>;
+
     template<typename ViewFactory>
     struct view_helper {
     public:
         view_helper(ViewFactory& factory): mFactory(factory) {}
 
-        operator _<AView>() const {
+        operator View() const {
             return mFactory();
         }
-        operator _<AViewContainer>() const {
+        operator ViewContainer() const {
             return mFactory();
         }
         auto operator<<(const AString& assEntry) const {
@@ -76,36 +84,49 @@ namespace aui::ui_building {
         _<View> mView;
     };
 
+    static_assert(std::is_convertible_v<view<AView>, View>, "declarative view wrapper is not convertible to _<AView>");
+
     template<typename Layout, typename Container = AViewContainer>
     struct layouted_container_factory_impl {
     private:
-        AVector<_<AView>> mViews;
+        AVector<View> mViews;
 
     public:
         struct Expanding: layouted_container_factory_impl<Layout, Container>, view_helper<Expanding> {
         public:
-            Expanding(std::initializer_list<_<AView>> views): layouted_container_factory_impl<Layout>(views),
-                                                              view_helper<Expanding>(*this) {
+            Expanding(std::initializer_list<ViewOrViewGroup> views): layouted_container_factory_impl<Layout>(views),
+                                                                     view_helper<Expanding>(*this) {
 
             }
 
-            _<AViewContainer> operator()() {
+            ViewContainer operator()() {
                 return layouted_container_factory_impl<Layout>::operator()() let {
                     it->setExpanding();
                 };
             }
         };
 
-        layouted_container_factory_impl(std::initializer_list<_<AView>> views) {
-            mViews.reserve(views.size());
-            for (const auto& v : views) {
-                if (v) {
-                    mViews << std::move(const_cast<_<AView>&>(v));
+        template<typename... Views>
+        layouted_container_factory_impl(Views&&... views) {
+            mViews.reserve(sizeof...(views));
+            aui::parameter_pack::for_each([this](auto&& item) {
+                using type = decltype(item);
+                constexpr bool isViewGroup = std::is_convertible_v<type, ViewGroup>;
+                constexpr bool isView = std::is_convertible_v<type, View>;
+
+                static_assert(isViewGroup || isView, "the item is neither convertible to View nor ViewGroup");
+
+                if constexpr (isViewGroup) {
+                    auto asViewGroup = ViewGroup(item);
+                    mViews << std::move(asViewGroup);
+                } else if constexpr (isView) {
+                    auto asView = View(item);
+                    mViews << std::move(asView);
                 }
-            }
+            }, std::forward<Views>(views)...);
         }
 
-        _<AViewContainer> operator()() {
+        ViewContainer operator()() {
             auto c = _new<Container>();
             c->setLayout(_new<Layout>());
             c->setViews(std::move(mViews));
@@ -117,8 +138,9 @@ namespace aui::ui_building {
     template<typename Layout, typename Container = AViewContainer>
     struct layouted_container_factory: layouted_container_factory_impl<Layout, Container>, view_helper<layouted_container_factory<Layout, Container>> {
 
-        layouted_container_factory(std::initializer_list<_<AView>> views): layouted_container_factory_impl<Layout, Container>(views),
-                                                                           view_helper<layouted_container_factory<Layout, Container>>(*this) {
+        template<typename... Views>
+        layouted_container_factory(Views&&... views): layouted_container_factory_impl<Layout, Container>(std::forward<Views>(views)...),
+                                                      view_helper<layouted_container_factory<Layout, Container>>(*this) {
 
         }
 

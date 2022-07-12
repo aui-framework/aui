@@ -45,7 +45,7 @@ APathChooserView::APathChooserView(const APath& defaultPath) {
             });
         });
     }) let {
-        it->setCustomAss({
+        it->setCustomStyle({
             ass::MinSize { 15_dp, {} }
         });
     });

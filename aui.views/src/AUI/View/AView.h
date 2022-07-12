@@ -51,6 +51,7 @@ class ABaseWindow;
 class AViewContainer;
 class AAnimator;
 class AAssHelper;
+class AStylesheet;
 
 
 /**
@@ -107,6 +108,9 @@ private:
     float mBorderRadius = 0;
 
 
+    /**
+     * @brief Mouse collision policy. See MouseCollisionPolicy.
+     */
     MouseCollisionPolicy mMouseCollisionPolicy = MouseCollisionPolicy::DEFAULT;
 
     /**
@@ -119,6 +123,22 @@ private:
      */
     float mOpacity = 1;
 
+    /**
+     * @brief Extra stylesheet, specified by declarative::Style.
+     * @details
+     * Extra stylesheet is applied for this view and all his children recursively.
+     *
+     * Unlike custom style, extra stylesheet has multiple rules with selectors and it applies for the children
+     * recursively.
+     *
+     * Extra stylesheet overrides the global stylesheet on conflicts.
+     */
+    _<AStylesheet> mExtraStylesheet;
+
+    /**
+     * @brief Called when parent's enable state is changed. Overridden in AViewContainer.
+     * @param enabled
+     */
     virtual void notifyParentEnabledStateChanged(bool enabled);
 
 protected:
@@ -136,7 +156,7 @@ protected:
     /**
      * @brief Custom ASS Rules
      */
-    RuleWithoutSelector mCustomAssRule;
+    RuleWithoutSelector mCustomStyleRule;
 
     /**
      * @brief Determines shape which should pointer take when it's above this AView.
@@ -190,14 +210,33 @@ protected:
     ADeque<AString> mAssNames;
 
     /**
-     * @brief Determines which ASS style rules should be applied to this AView and fills the mAss field.
+     * @brief Invalidates all styles, causing to iterate over all rules in global and parent stylesheets.
+     * @details
+     * Unlike invalidateStateStyles(), completely resets styles for this view, causing it to iterate over all rules in
+     * global and parent stylesheets. This operation is much more expensive than invalidateStateStyles because
+     * invalidateStateStyles iterates over a small set of rules and performs fewer checks.
+     *
+     * Prefer invalidateAllStyles over invalidateStateStyles when:
+     * <ul>
+     *   <li>Added/removed rules to applicable stylesheets</li>
+     *   <li>The view is reinflated to other layout</li>
+     *   <li>Added/removed/changed ass names of this or parent views</li>
+     * </ul>
      */
-    virtual void recompileAss();
+    virtual void invalidateAllStyles();
 
     /**
      * @brief Updates state selectors for ASS.
+     * @details
+     * Unlike invalidateAllStyles, iterates on an already calculated small set of rules which is much more cheap that
+     * invalidateAllStyles.
+     *
+     * Prefer invalidateStateStyles over invalidateAllStyles when:
+     * <ul>
+     *   <li>Changed state (hover, active, focus) of this view</li>
+     * </ul>
      */
-    void updateAssState();
+    void invalidateStateStyles();
 
 
     void requestLayoutUpdate();
@@ -284,6 +323,15 @@ public:
 
     void setMinSize(const glm::ivec2& minSize) {
         mMinSize = minSize;
+    }
+
+
+    /**
+     * @see mExtraStylesheet
+     */
+    void setExtraStylesheet(_<AStylesheet> extraStylesheet) {
+        mExtraStylesheet = std::move(extraStylesheet);
+        if (mAssHelper) invalidateAllStyles();
     }
 
     /**
@@ -630,11 +678,11 @@ public:
     }
 
     const RuleWithoutSelector& getCustomAss() const {
-        return mCustomAssRule;
+        return mCustomStyleRule;
     }
 
-    void setCustomAss(RuleWithoutSelector rule) {
-        mCustomAssRule = std::move(rule);
+    void setCustomStyle(RuleWithoutSelector rule) {
+        mCustomStyleRule = std::move(rule);
         mAssHelper = nullptr;
     }
 
@@ -710,7 +758,7 @@ public:
      * @brief Helper function for kAUI.h:with_style
      */
     void operator+(RuleWithoutSelector rule) {
-        setCustomAss(std::move(rule));
+        setCustomStyle(std::move(rule));
     }
 
 signals:

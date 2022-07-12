@@ -35,6 +35,7 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Traits/callables.h>
+#include <AUI/Traits/iterators.h>
 
 #include "AUI/Platform/ADesktop.h"
 #include "AUI/Platform/AFontManager.h"
@@ -146,8 +147,9 @@ void AView::render()
     }
 }
 
-void AView::recompileAss()
+void AView::invalidateAllStyles()
 {
+    assert(("invalidateAllStyles requires mAssHelper to be initialized", mAssHelper != nullptr));
     mCursor = ACursor::DEFAULT;
     mOverflow = Overflow::VISIBLE;
     mMargin = {};
@@ -158,16 +160,34 @@ void AView::recompileAss()
     mFontStyle = {};
     mBackgroundEffects.clear();
 
-    for (auto& r : AStylesheet::inst().getRules()) {
-        if (r.getSelector().isPossiblyApplicable(this)) {
-            mAssHelper->mPossiblyApplicableRules << &r;
-            r.getSelector().setupConnections(this, mAssHelper);
+    auto applyStylesheet = [this](const AStylesheet& sh) {
+        for (const auto& r : sh.getRules()) {
+            if (r.getSelector().isPossiblyApplicable(this)) {
+                mAssHelper->mPossiblyApplicableRules << &r;
+                r.getSelector().setupConnections(this, mAssHelper);
+            }
+        }
+    };
+
+    applyStylesheet(AStylesheet::global());
+
+    std::queue<AView*> viewTree;
+
+    for (auto target = this; target != nullptr; target = target->getParent()) {
+        if (target->mExtraStylesheet) {
+            viewTree.push(target);
         }
     }
-    updateAssState();
+
+    while (!viewTree.empty()) {
+        applyStylesheet(*viewTree.front()->mExtraStylesheet);
+        viewTree.pop();
+    }
+
+    invalidateStateStyles();
 }
 
-void AView::updateAssState() {
+void AView::invalidateStateStyles() {
     aui::zero(mAss);
     if (!mAssHelper) return;
     mAssHelper->state.backgroundCropping.size.reset();
@@ -186,16 +206,11 @@ void AView::updateAssState() {
             applyAssRule(* r);
         }
     }
-    applyAssRule(mCustomAssRule);
+    applyAssRule(mCustomStyleRule);
 
     redraw();
 }
 
-/*
-void AView::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)
-{
-}
-*/
 
 float AView::getTotalFieldHorizontal() const
 {
@@ -279,9 +294,9 @@ void AView::ensureAssUpdated()
         {
             mAssHelper = nullptr;
         });
-        connect(mAssHelper->invalidateStateAss, me::updateAssState);
+        connect(mAssHelper->invalidateStateAss, me::invalidateStateStyles);
 
-        recompileAss();
+        invalidateAllStyles();
     }
 }
 

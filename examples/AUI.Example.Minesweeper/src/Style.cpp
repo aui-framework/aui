@@ -34,7 +34,7 @@ using namespace ass;
 
 struct style {
     style() {
-        AStylesheet::inst().addRules({
+        AStylesheet::global().addRules({
             {
                 any<CellView>(),
                 FixedSize { 26_dp },

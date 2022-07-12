@@ -25,16 +25,16 @@
 #include <AUI/Reflect/AEnumerate.h>
 
 /**
- * Determines which area of view handles mouse (clicks and movement).
+ * Determines which area of the view handles mouse (clicks and movement).
  */
 enum class MouseCollisionPolicy {
     /**
-     * Standard behaviour. Handles mouse only inside view's borders area.
+     * Standard behaviour. Handle mouse only inside view's borders area.
      */
     DEFAULT,
 
     /**
-     * Handles mouse inside view's margin area.
+     * Handle mouse inside view's margin area.
      */
     MARGIN,
 };
