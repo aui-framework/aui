@@ -28,7 +28,7 @@ private:
             mIncludeInvisibleViews = true;
             set = toSet();
         }
-        UITest::frame();
+        uitest::frame();
         if (msg == nullptr) std::cout << "Assertion message is empty";
         if constexpr(!std::is_same_v<Assertion, empty>) {
             if (set.empty()) std::cout << "UIMatcher is empty so check is not performed";
@@ -40,11 +40,23 @@ private:
 public:
     UIMatcher(const _<IMatcher>& matcher) : mMatcher(matcher) {}
 
+    ~UIMatcher() {
+        if (current() == this) {
+            currentImpl() = nullptr;
+        }
+    }
+
     static UIMatcher* current() {
         return currentImpl();
     }
 
     ASet<_<AView>> toSet() const;
+
+    _<AView> one() const {
+        auto set = toSet();
+        EXPECT_EQ(set.size(), 1);
+        return *set.begin();
+    }
 
     UIMatcher& includeInvisibleViews() {
         mIncludeInvisibleViews = true;
@@ -56,10 +68,10 @@ public:
         auto set = toSet();
         if (set.empty()) std::cout << "UIMatcher is empty so action is not performed";
 
-        UITest::frame();
+        uitest::frame();
         for (auto& v : set) {
             action(v);
-            UITest::frame();
+            uitest::frame();
         }
         return *this;
     }

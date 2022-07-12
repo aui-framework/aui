@@ -8,7 +8,7 @@ struct ViewActionScroll {
 
     void operator()(const _<AView>& view) {
         view->onMouseWheel({0, 0}, delta);
-        UITest::frame();
+        uitest::frame();
     }
 };
 

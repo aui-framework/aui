@@ -78,6 +78,10 @@ public:
 
     static AStylesheet& global();
 
+    void setRules(AVector<Rule> rules) {
+        mRules = std::move(rules);
+    }
+
 private:
     static _<AStylesheet>& globalStorage();
 };

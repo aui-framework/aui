@@ -12,9 +12,9 @@ struct ViewActionClick {
         auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
         window->onMousePressed(coords, AInput::LBUTTON);
-        UITest::frame();
+        uitest::frame();
         window->onMouseReleased(coords, AInput::LBUTTON);
-        UITest::frame();
+        uitest::frame();
     }
 };
 
