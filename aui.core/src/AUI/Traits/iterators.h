@@ -76,6 +76,14 @@ namespace aui {
         }
     };
 
+    /**
+     * @brief If Container is const, Container::const_iterator is aliased; Container::iterator otherwise.
+     */
+    template<typename Container>
+    using const_iterator_if_const = std::conditional_t<std::is_const_v<Container>,
+                                                       typename Container::const_iterator,
+                                                       typename Container::iterator>;
+
     template<typename...Items>
     struct joined_range {
     private:
@@ -91,8 +99,19 @@ namespace aui {
         friend joined_range_t;
         private:
             joined_range_t& mJoinedRange;
-            std::variant<typename Items::iterator...> mIterator;
+            std::variant<const_iterator_if_const<Items>...> mIterator;
             std::size_t mIndex = 0;
+
+            using first_container_t = aui::parameter_pack::first<Items...>;
+            using decayed_value = std::decay_t<
+                                      typename std::iterator_traits<
+                                          const_iterator_if_const<
+                                              first_container_t
+                                          >
+                                      >::value_type
+                                   >;
+
+            using value = std::conditional_t<std::is_const_v<first_container_t>, const decayed_value, decayed_value>;
 
         public:
             my_iterator(joined_range_t& mJoinedRange) :
@@ -118,20 +137,23 @@ namespace aui {
                 return mIterator == other.mIterator;
             }
 
-            auto operator->()
+            value* operator->()
             {
                 return std::visit([](auto&& arg){
                     return &*arg;
                 }, mIterator);
             }
-            auto operator*()
+            value& operator*()
             {
-                return *this;
+                return std::visit([](auto&& arg) -> value& {
+                    return *arg;
+                }, mIterator);
             }
-
-            auto operator*() const
+            const value& operator*() const
             {
-                return *this;
+                return std::visit([](auto&& arg) -> const value& {
+                    return *arg;
+                }, mIterator);
             }
         };
 
@@ -144,16 +166,27 @@ namespace aui {
     };
 
     /**
-     * Converts a sequence of containers to a single iterator range.
+     * @brief Converts a sequence of containers to a single iterator range.
+     * @ingroup useful_templates
+     * @details
+     * @code{cpp}
+     * std::vector<int> vals1 = { 1, 2, 3 };
+     * std::vector<int> vals2 = { 4, 5, 6 };
+     * for (const auto val : aui::join(vals1, vals2)) {
+     *   std::cout << ' ' << val;
+     * }
+     * // output: 1 2 3 4 5 6
+     * @endcode
      */
     template<typename... Items>
-    joined_range<Items...> join(Items... items) {
+    joined_range<Items...> join(Items&... items) {
         return { (&items)... };
     }
 
     /**
-     * Allows to iterate multiple containers in parallel.
-     * @example
+     * @brief Iterates multiple containers in parallel.
+     * @ingroup useful_templates
+     * @details
      * @code{cpp}
      * std::array<int, 3> ints = { 1, 2, 3 };
      * std::array<std::string, 3> strings = { "one", "two", "three" };
@@ -183,9 +216,7 @@ namespace aui {
 
             iterator& operator++() noexcept {
                 std::apply([](auto&&... v) {
-                    aui::parameter_pack::for_each([](auto& i) {
-                        ++i;
-                    }, v...);
+                    (++v, ...);
                 }, iterators_);
                 return *this;
             }
@@ -227,13 +258,15 @@ namespace aui {
 
     /**
      * @brief Reverses iterator direction (i.e. converts iterator to reverse_iterator, reverse_iterator to iterators).
-     *
-     * A reversed iterator points to the same element of the container.
-     *
-     * Works on AVector.
+     * @ingroup useful_macros
      * @tparam Iterator iterator
      * @param iterator iterator
      * @return same iterator but reverse direction
+     *
+     * @details
+     * A reversed iterator points to the same element of the container.
+     *
+     * Works on AVector.
      */
     template<typename Iterator>
     auto reverse_iterator_direction(Iterator iterator) noexcept ->
