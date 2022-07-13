@@ -19,24 +19,26 @@
  * =====================================================================================================================
  */
 
-
 #pragma once
 
-#include <AUI/Reflect/AEnumerate.h>
-
 /**
- * Determines which area of the view handles mouse (clicks and movement).
+ * @brief AUI template library
+ * @defgroup useful_templates
  */
-enum class MouseCollisionPolicy {
-    /**
-     * Standard behaviour. Handle mouse only inside view's borders area.
-     */
-    DEFAULT,
 
-    /**
-     * Handle mouse inside view's margin area.
-     */
-    MARGIN,
-};
-
-AUI_ENUM_VALUES(MouseCollisionPolicy, MouseCollisionPolicy::DEFAULT, MouseCollisionPolicy::MARGIN)
+#include "algorithms.h"
+#include "callables.h"
+#include "containers.h"
+#include "iterators.h"
+#include "members.h"
+#include "memory.h"
+#include "parallel.h"
+#include "parameter_pack.h"
+#include "platform.h"
+#include "sequence.h"
+#include "serializable.h"
+#include "strings.h"
+#include "ternary.h"
+#include "types.h"
+#include "types.h"
+#include "values.h"

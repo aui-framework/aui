@@ -53,9 +53,9 @@ namespace uitest::impl {
 
         less_of(UIMatcher matcher) : matcher(std::move(matcher)) {}
 
-        bool operator()(const _<AView>& rhs) {
+        bool operator()(const _<AView>& lhs) {
             auto views = matcher.toSet();
-            return std::all_of(views.begin(), views.end(), [&](const _<AView>& lhs) {
+            return std::all_of(views.begin(), views.end(), [&](const _<AView>& rhs) {
                 return side_value<side>{}(lhs) < side_value<side>{}(rhs);
             });
         }
@@ -67,9 +67,9 @@ namespace uitest::impl {
 
         greater_of(UIMatcher matcher) : matcher(std::move(matcher)) {}
 
-        bool operator()(const _<AView>& rhs) {
+        bool operator()(const _<AView>& lhs) {
             auto views = matcher.toSet();
-            return std::all_of(views.begin(), views.end(), [&](const _<AView>& lhs) {
+            return std::all_of(views.begin(), views.end(), [&](const _<AView>& rhs) {
                 return side_value<side>{}(lhs) > side_value<side>{}(rhs);
             });
         }

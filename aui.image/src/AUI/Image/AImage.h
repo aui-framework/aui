@@ -31,6 +31,7 @@
 #include <AUI/Util/Cache.h>
 #include <AUI/Url/AUrl.h>
 #include <AUI/IO/APath.h>
+#include "AUI/Common/AColor.h"
 
 class API_AUI_IMAGE AImage {
 private:
@@ -78,21 +79,26 @@ public:
         allocate();
     }
 
+    [[nodiscard]]
     AVector<uint8_t>& getData() {
         return mData;
     }
 
+    [[nodiscard]]
     const AVector<uint8_t>& getData() const {
         return mData;
     }
 
-    [[nodiscard]] inline uint32_t getWidth() const {
+    [[nodiscard]]
+    inline uint32_t getWidth() const {
         return mWidth;
     }
-    [[nodiscard]] inline uint32_t getHeight() const {
+    [[nodiscard]]
+    inline uint32_t getHeight() const {
         return mHeight;
     }
 
+    [[nodiscard]]
     inline unsigned getFormat() const {
         return mFormat;
     }
@@ -100,9 +106,11 @@ public:
     /**
      * @return bytes per pixel.
      */
+    [[nodiscard]]
     uint8_t getBytesPerPixel() const;
 
 
+    [[nodiscard]]
     inline glm::ivec2 getSize() const {
         return {getWidth(), getHeight()};
     }
@@ -111,23 +119,45 @@ public:
     AImage sub(uint32_t x, uint32_t y, uint32_t width, uint32_t height) const;
 
     [[nodiscard]]
+    AImage sub(glm::ivec2 position, glm::ivec2 size) const {
+        return sub(position.x, position.y, size.x, size.y);
+    }
+
+    [[nodiscard]]
     glm::ivec4 getPixelAt(uint32_t x, uint32_t y) const;
     void setPixelAt(uint32_t x, uint32_t y, const glm::ivec4& val);
 
+
+    [[nodiscard]]
     static AImage addAlpha(const AImage& AImage);
+
+    [[nodiscard]]
     static AImage resize(const AImage& src, uint32_t width, uint32_t height);
+
+    [[nodiscard]]
     static AImage resizeLinearDownscale(const AImage& src, uint32_t width, uint32_t height);
     static void copy(const AImage& src, AImage& dst, uint32_t x, uint32_t y);
 
+    [[nodiscard]]
     uint8_t& at(uint32_t x, uint32_t y) {
         return mData[(y * getWidth() + x) * getBytesPerPixel()];
     }
+
+    [[nodiscard]]
     const uint8_t& at(uint32_t x, uint32_t y) const {
         return mData[(y * getWidth() + x) * getBytesPerPixel()];
     }
 
+    [[nodiscard]]
+    AColor averageColor() const noexcept;
+
+    [[nodiscard]]
     static _<AImage> fromUrl(const AUrl& url);
+
+    [[nodiscard]]
     static _<AImage> fromFile(const APath& path);
+
+    [[nodiscard]]
     static _<AImage> fromBuffer(AByteBufferView buffer);
 };
 

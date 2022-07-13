@@ -289,8 +289,8 @@ void AViewContainer::setSize(int width, int height)
     updateLayout();
 }
 
-void AViewContainer::recompileAss() {
-    AView::recompileAss();
+void AViewContainer::invalidateAllStyles() {
+    AView::invalidateAllStyles();
     if (mSizeSet)
         updateLayout();
 }
@@ -339,7 +339,7 @@ void AViewContainer::setContents(const _<AViewContainer>& container) {
     for (auto& v : mViews) {
         v->mParent = this;
     }
-    mCustomAssRule = std::move(container->mCustomAssRule);
+    mCustomStyleRule = std::move(container->mCustomStyleRule);
     mAssNames.insertAll(container->mAssNames);
     mAssHelper = nullptr;
 }

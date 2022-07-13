@@ -21,7 +21,7 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-option(AUI_BOOT_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
+option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
@@ -149,7 +149,7 @@ endfunction()
 
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
-    if (AUI_BOOT_DISABLE)
+    if (AUIB_DISABLE)
         if (AUIB_IMPORT_COMPONENTS)
             find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} REQUIRED)
         else()
@@ -196,7 +196,7 @@ function(auib_import AUI_MODULE_NAME URL)
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
 
     set(options ADD_SUBDIRECTORY ARCHIVE)
-    set(oneValueArgs VERSION CMAKE_WORKING_DIR)
+    set(oneValueArgs VERSION CMAKE_WORKING_DIR CMAKELISTS_CUSTOM)
     set(multiValueArgs CMAKE_ARGS COMPONENTS)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
@@ -205,7 +205,7 @@ function(auib_import AUI_MODULE_NAME URL)
         message(FATAL_ERROR "ARCHIVE and VERSION arguments are incompatible")
     endif()
 
-    if (AUIB_${AUI_MODULE_NAME_UPPER}_AS OR AUIB_ALL_AS)
+    if (AUIB_${AUI_MODULE_NAME_UPPER}_AS OR AUIB_ALL_AS OR AUIB_IMPORT_ADD_SUBDIRECTORY)
         set(DEP_ADD_SUBDIRECTORY TRUE)
     else()
         set(DEP_ADD_SUBDIRECTORY FALSE)
@@ -285,6 +285,7 @@ function(auib_import AUI_MODULE_NAME URL)
     set(${AUI_MODULE_NAME_UPPER}_ROOT ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
 
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
+
     if (NOT DEP_ADD_SUBDIRECTORY)
         # avoid compilation if we have existing installation
         if (EXISTS ${DEP_INSTALLED_FLAG})
@@ -380,11 +381,16 @@ function(auib_import AUI_MODULE_NAME URL)
             message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
         endif()
 
+        if (AUIB_IMPORT_CMAKE_WORKING_DIR)
+            set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
+        endif()
+
         if (NOT DEP_ADD_SUBDIRECTORY)
-            message(STATUS "Compiling ${AUI_MODULE_NAME}")
-            if (AUIB_IMPORT_CMAKE_WORKING_DIR)
-                set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
+            if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
+                configure_file(${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${DEP_SOURCE_DIR}/CMakeLists.txt COPYONLY)
             endif()
+
+            message(STATUS "Compiling ${AUI_MODULE_NAME}")
 
             get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
             unset(FORWARDED_LIBS)
@@ -402,7 +408,7 @@ function(auib_import AUI_MODULE_NAME URL)
                 list(JOIN AUIB_IMPORT_COMPONENTS "\\\;" TMP_LIST)
                 set(FINAL_CMAKE_ARGS
                         ${FINAL_CMAKE_ARGS}
-                        -DAUI_BOOT_COMPONENTS=${TMP_LIST})
+                        -DAUIB_COMPONENTS=${TMP_LIST})
             endif()
 
             if(ANDROID)
@@ -512,10 +518,10 @@ function(auib_import AUI_MODULE_NAME URL)
             if (NOT STATUS_CODE EQUAL 0)
                 message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
             endif()
-            file(TOUCH ${DEP_INSTALLED_FLAG})
-            if (NOT EXISTS ${DEP_INSTALLED_FLAG})
+            if (NOT EXISTS ${DEP_INSTALL_PREFIX})
                 message(FATAL_ERROR "Dependency failed to install: ${AUI_MODULE_NAME} - check the compilation and installation logs above")
             endif()
+            file(TOUCH ${DEP_INSTALLED_FLAG})
         endif()
         if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
             if (NOT AUI_BOOT) # recursive deadlock fix
@@ -525,6 +531,9 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
     if (DEP_ADD_SUBDIRECTORY)
         set(${AUI_MODULE_NAME}_ROOT ${DEP_SOURCE_DIR})
+        if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
+            configure_file(${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${DEP_SOURCE_DIR}/CMakeLists.txt COPYONLY)
+        endif()
         _auib_import_subdirectory(${DEP_SOURCE_DIR} ${AUI_MODULE_NAME})
         message(STATUS "${AUI_MODULE_NAME} imported as a subdirectory: ${DEP_SOURCE_DIR}")
     else()

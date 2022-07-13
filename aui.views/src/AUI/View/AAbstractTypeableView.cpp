@@ -131,7 +131,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
     {
         case AInput::DEL:
             if (hasSelection()) {
-                auto sel = getSelection();
+                auto sel = selection();
                 typeableErase(sel.begin, sel.end);
                 invalidatePrerenderedString();
                 mCursorSelection = -1;
@@ -214,7 +214,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
     }
 
     if (textChanging) {
-        emit textChanging(getText());
+        emit textChanging(text());
     }
 
     updateCursorPos();
@@ -227,8 +227,8 @@ void AAbstractTypeableView::pasteFromClipboard() {
     auto pastePos = mCursorIndex;
     std::optional<AString> prevContents;
     if (mCursorSelection != -1) {
-        prevContents = getText();
-        auto sel = getSelection();
+        prevContents = text();
+        auto sel = selection();
         pastePos = sel.begin;
         typeableErase(sel.begin, sel.end);
     }
@@ -251,15 +251,15 @@ void AAbstractTypeableView::pasteFromClipboard() {
 }
 
 void AAbstractTypeableView::cutToClipboard() {
-    auto sel = getSelection();
-    AClipboard::copyToClipboard(getSelectedText());
+    auto sel = selection();
+    AClipboard::copyToClipboard(selectedText());
     typeableErase(sel.begin, sel.end);
     mCursorIndex = sel.begin;
     mCursorSelection = -1;
     invalidatePrerenderedString();
 }
 
-void AAbstractTypeableView::copyToClipboard() const { AClipboard::copyToClipboard(getSelectedText()); }
+void AAbstractTypeableView::copyToClipboard() const { AClipboard::copyToClipboard(selectedText()); }
 
 void AAbstractTypeableView::selectAll() { ACursorSelectable::selectAll(); }
 
@@ -278,7 +278,7 @@ void AAbstractTypeableView::enterChar(wchar_t c)
     auto cursorIndexCopy = mCursorIndex;
 
     if (hasSelection()) {
-        auto sel = getSelection();
+        auto sel = selection();
         typeableErase(sel.begin, sel.end);
 
         switch (c)
@@ -332,7 +332,7 @@ void AAbstractTypeableView::onFocusLost()
     {
         mTextChangedFlag = false;
         if (textChanged) {
-            emit textChanged(getText());
+            emit textChanged(text());
         }
     }
 
@@ -365,7 +365,7 @@ void AAbstractTypeableView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
                             { "aui.copy"_i18n, [&]{copyToClipboard();}, AInput::LCONTROL + AInput::C, hasSelection() },
                             { "aui.paste"_i18n, [&]{pasteFromClipboard();}, AInput::LCONTROL + AInput::V, !AClipboard::isEmpty() },
                             AMenu::SEPARATOR,
-                            { "aui.select_all"_i18n, [&]{selectAll();}, AInput::LCONTROL + AInput::A, !getText().empty() }
+                            { "aui.select_all"_i18n, [&]{selectAll();}, AInput::LCONTROL + AInput::A, !text().empty() }
                     });
     } else {
         ACursorSelectable::handleMouseReleased(pos, button);
@@ -393,7 +393,7 @@ void AAbstractTypeableView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key but
 }
 
 glm::ivec2 AAbstractTypeableView::getMouseSelectionPadding() {
-    return {mPadding.left, mPadding.top};
+    return {mPadding.left, mPadding.top + getVerticalAlignmentOffset() };
 }
 
 glm::ivec2 AAbstractTypeableView::getMouseSelectionScroll() {
@@ -405,7 +405,7 @@ AFontStyle AAbstractTypeableView::getMouseSelectionFont() {
 }
 
 AString AAbstractTypeableView::getDisplayText() {
-    return getText();
+    return text();
 }
 
 

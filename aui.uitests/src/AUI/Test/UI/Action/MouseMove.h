@@ -12,7 +12,7 @@ struct ViewActionMouseMove {
         auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
         window->onMouseMove(coords);
-        UITest::frame();
+        uitest::frame();
     }
 };
 

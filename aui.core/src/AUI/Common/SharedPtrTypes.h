@@ -257,7 +257,9 @@ public:
      * @brief Guarantees that further builder calls will be executed if and only if this pointer
      *        not equal to null.
      * @return safe builder
+     * @deprecated use nullsafe() instead
      */
+    [[deprecated]]
     inline auto safe()
     {
         return SafeCallWrapper(*this);

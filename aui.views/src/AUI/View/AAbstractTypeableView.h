@@ -97,6 +97,12 @@ protected:
 
     bool isLButtonPressed() override;
 
+    int getVerticalAlignmentOffset() noexcept {
+        auto ascenderHeight = getFontStyle().font->getAscenderHeight(getFontStyle().size);
+        auto descenderHeight = getFontStyle().font->getDescenderHeight(getFontStyle().size);
+        return (glm::max)(0, int(glm::ceil((getContentHeight() - int(ascenderHeight + descenderHeight)) / 2.0)));
+    }
+
 public:
     AAbstractTypeableView();
     virtual ~AAbstractTypeableView();
@@ -122,7 +128,7 @@ public:
     }
 
     void trimText() {
-        setText(getText().trim());
+        setText(text().trim());
     }
 
 
@@ -130,6 +136,12 @@ public:
 
     bool handlesNonMouseNavigation() override;
     void onFocusAcquired() override;
+
+
+    void selectAll();
+    void copyToClipboard() const;
+    void cutToClipboard();
+    void pasteFromClipboard();
 
 signals:
     /**
@@ -148,12 +160,6 @@ signals:
      * </dl>
      */
     emits<AString> textChanging;
-
-    void selectAll();
-    void copyToClipboard() const;
-    void cutToClipboard();
-    void pasteFromClipboard();
-
 };
 
 

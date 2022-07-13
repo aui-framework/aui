@@ -35,6 +35,7 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Traits/callables.h>
+#include <AUI/Traits/iterators.h>
 
 #include "AUI/Platform/ADesktop.h"
 #include "AUI/Platform/AFontManager.h"
@@ -67,15 +68,14 @@ AView::AView()
 
 void AView::redraw()
 {
-
+    assert(("views could not be used from non ui thread", AThread::current() == getThread()));
     nullsafe(getWindow())->flagRedraw(); else nullsafe(AWindow::current())->flagRedraw();
 
 }
 void AView::requestLayoutUpdate()
 {
-
+    assert(("views could not be used from non ui thread", AThread::current() == getThread()));
     nullsafe(getWindow())->flagUpdateLayout(); else nullsafe(AWindow::current())->flagUpdateLayout();
-
 }
 
 void AView::drawStencilMask()
@@ -147,8 +147,9 @@ void AView::render()
     }
 }
 
-void AView::recompileAss()
+void AView::invalidateAllStyles()
 {
+    assert(("invalidateAllStyles requires mAssHelper to be initialized", mAssHelper != nullptr));
     mCursor = ACursor::DEFAULT;
     mOverflow = Overflow::VISIBLE;
     mMargin = {};
@@ -159,16 +160,34 @@ void AView::recompileAss()
     mFontStyle = {};
     mBackgroundEffects.clear();
 
-    for (auto& r : AStylesheet::inst().getRules()) {
-        if (r.getSelector().isPossiblyApplicable(this)) {
-            mAssHelper->mPossiblyApplicableRules << &r;
-            r.getSelector().setupConnections(this, mAssHelper);
+    auto applyStylesheet = [this](const AStylesheet& sh) {
+        for (const auto& r : sh.getRules()) {
+            if (r.getSelector().isPossiblyApplicable(this)) {
+                mAssHelper->mPossiblyApplicableRules << &r;
+                r.getSelector().setupConnections(this, mAssHelper);
+            }
+        }
+    };
+
+    applyStylesheet(AStylesheet::global());
+
+    std::queue<AView*> viewTree;
+
+    for (auto target = this; target != nullptr; target = target->getParent()) {
+        if (target->mExtraStylesheet) {
+            viewTree.push(target);
         }
     }
-    updateAssState();
+
+    while (!viewTree.empty()) {
+        applyStylesheet(*viewTree.front()->mExtraStylesheet);
+        viewTree.pop();
+    }
+
+    invalidateStateStyles();
 }
 
-void AView::updateAssState() {
+void AView::invalidateStateStyles() {
     aui::zero(mAss);
     if (!mAssHelper) return;
     mAssHelper->state.backgroundCropping.size.reset();
@@ -187,16 +206,11 @@ void AView::updateAssState() {
             applyAssRule(* r);
         }
     }
-    applyAssRule(mCustomAssRule);
+    applyAssRule(mCustomStyleRule);
 
     redraw();
 }
 
-/*
-void AView::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)
-{
-}
-*/
 
 float AView::getTotalFieldHorizontal() const
 {
@@ -280,9 +294,9 @@ void AView::ensureAssUpdated()
         {
             mAssHelper = nullptr;
         });
-        connect(mAssHelper->invalidateStateAss, me::updateAssState);
+        connect(mAssHelper->invalidateStateAss, me::invalidateStateStyles);
 
-        recompileAss();
+        invalidateAllStyles();
     }
 }
 
@@ -533,10 +547,10 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
 }
 
 void AView::applyAssRule(const RuleWithoutSelector& rule) {
-    for (auto& d : rule.getDeclarations()) {
+    for (const auto& d : rule.getDeclarations()) {
         auto slot = d->getDeclarationSlot();
         if (slot != ass::decl::DeclarationSlot::NONE) {
-            mAss[int(slot)] = d->isNone() ? nullptr : d;
+            mAss[int(slot)] = d->isNone() ? nullptr : d.get();
         }
         d->applyFor(this);
     }

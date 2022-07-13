@@ -129,7 +129,7 @@ void ASelectableLabel::onKeyDown(AInput::Key key) {
             case AInput::X:
             case AInput::C:
                 if (hasSelection())
-                    AClipboard::copyToClipboard(getSelectedText());
+                    AClipboard::copyToClipboard(selectedText());
                 break;
     }
 }
@@ -148,6 +148,6 @@ void ASelectableLabel::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) 
     ACursorSelectable::handleMouseDoubleClicked(pos, button);
 }
 
-size_t ASelectableLabel::getTextLength() const {
-    return ALabel::getText().length();
+size_t ASelectableLabel::textLength() const {
+    return ALabel::text().length();
 }

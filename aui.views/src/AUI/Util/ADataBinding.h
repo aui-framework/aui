@@ -24,6 +24,7 @@
 #include <type_traits>
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Common/ASignal.h>
+#include <AUI/Traits/members.h>
 
 
 template<typename View, typename FieldType>
@@ -241,11 +242,33 @@ _<Klass1> operator&&(const _<Klass1>& object, const ADataBindingLinker<Model, Kl
     return object;
 }
 
+
+namespace aui::detail {
+    template<typename ForcedClazz, typename Type>
+    struct pointer_to_member {
+        template<typename... Args>
+        struct with_args {
+            with_args(aui::type_list<Args...>) {}
+
+            using type = Type(ForcedClazz::*)(Args...);
+        };
+    };
+}
+
 template<typename View, typename Model, typename Data>
 _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>& linker) {
     ADataBindingDefault<View, Data>::setup(object);
+
+    using setter = aui::member<decltype(ADataBindingDefault<View, Data>::getSetter())>;
+
+    using setter_ret = typename setter::type;
+    using setter_args = typename setter::args;
+
+    using pointer_to_setter = decltype(aui::detail::pointer_to_member<View, setter_ret>::with_args(std::declval<setter_args>()));
+    using pointer_to_setter_t = typename pointer_to_setter::type;
+
     object && (*linker.getBinder())(linker.getField(),
-                                    ADataBindingDefault<View, Data>::getGetter(),
-                                    ADataBindingDefault<View, Data>::getSetter());
+                                    static_cast<ASignal<Data>(View::*)>(ADataBindingDefault<View, Data>::getGetter()),
+                                    static_cast<pointer_to_setter_t>(ADataBindingDefault<View, Data>::getSetter()));
     return object;
 }

@@ -229,7 +229,7 @@ void Css2ass::run(Toolbox& t) {
         fos << "\n"
                "struct Style" << randomToken << " {\n"
                "    Style" << randomToken << "() {\n"
-               "        AStylesheet::inst().addRules({\n";
+               "        AStylesheet::global().addRules({\n";
 
         for (auto& line : code) {
             fos << "        " << line << '\n';

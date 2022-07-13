@@ -37,8 +37,6 @@ public:
 	ATextField();
 	~ATextField() override;
 
-    void setText2(const AString& t) {setText(t);} // TODO why text2?
-
 protected:
 	bool isValidText(const AString& text) override;
 };
@@ -51,6 +49,6 @@ public:
         return (ASignal<AString> ATextField::*)&ATextField::textChanging;
     }
     static auto getSetter() {
-        return &ATextField::setText2;
+        return (void(ATextField::*)(const AString& t)) &ATextField::setText;
     }
 };

@@ -70,7 +70,7 @@ struct SelectionMatchesAssert {
 
     bool operator()(const _<AView>& view) const {
         if (auto t = _cast<ACursorSelectable>(view)) {
-            EXPECT_EQ(t->getSelection(), selection);
+            EXPECT_EQ(t->selection(), selection);
         }
         return true;
     }

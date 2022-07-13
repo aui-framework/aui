@@ -33,10 +33,71 @@
 #include <AUI/Platform/AInput.h>
 
 class API_AUI_VIEWS ACursorSelectable {
-private:
-    int mAbsoluteBegin, mAbsoluteEnd;
-    bool mIgnoreSelection = false;
-    ATextLayoutHelper mTextLayoutHelper;
+public:
+
+    struct Selection
+    {
+        unsigned begin;
+        unsigned end;
+
+        bool operator==(const Selection& rhs) const noexcept {
+            return std::tie(begin, end) == std::tie(rhs.begin, rhs.end);
+        }
+
+        bool operator!=(const Selection& rhs) const noexcept {
+            return !(rhs == *this);
+        }
+    };
+
+    /**
+     * @return Text field text.
+     * <dl>
+     *   <dt><b>Performance note</b></dt>
+     *   <dd>If text length is needed, use textLength() function instead. On some implementations it's faster that
+     *   text().</dd>
+     * </dl>
+     */
+    [[nodiscard]] virtual const AString& text() const = 0;
+
+    /**
+     * @return Text field text length.
+     */
+    [[nodiscard]] virtual size_t textLength() const = 0;
+    [[nodiscard]] AString selectedText() const
+    {
+        if (!hasSelection())
+            return {};
+        auto t = text();
+    	return {t.begin() + selection().begin, t.begin() + selection().end };
+    }
+
+    /**
+     * @return Selection.
+     */
+    [[nodiscard]] Selection selection() const;
+
+    /**
+     * @return true if selection is present.
+     */
+    [[nodiscard]] bool hasSelection() const;
+
+    /**
+     * @return Character index by pixel position.
+     */
+    [[nodiscard]] unsigned cursorIndexByPos(glm::ivec2 pos);
+    [[nodiscard]] int getPosByIndex(int end, int begin = 0);
+
+
+    /**
+     * @brief Select whole text in the text field.
+     */
+    void selectAll();
+
+    /**
+     * @brief Remove selection from the text field.
+     */
+    void clearSelection();
+
 
 protected:
     unsigned mCursorIndex = 0;
@@ -62,46 +123,16 @@ protected:
 
     void drawSelectionPost();
 
+    void drawSelectionRects();
 
     void setTextLayoutHelper(ATextLayoutHelper textLayoutHelper) {
         mTextLayoutHelper = std::move(textLayoutHelper);
     }
 
-public:
-
-    struct Selection
-    {
-        unsigned begin;
-        unsigned end;
-
-        bool operator==(const Selection& rhs) const noexcept {
-            return std::tie(begin, end) == std::tie(rhs.begin, rhs.end);
-        }
-
-        bool operator!=(const Selection& rhs) const noexcept {
-            return !(rhs == *this);
-        }
-    };
-    [[nodiscard]] virtual AString getText() const = 0;
-    [[nodiscard]] virtual size_t getTextLength() const = 0;
-    [[nodiscard]] AString getSelectedText() const
-    {
-        if (!hasSelection())
-            return {};
-        auto text = getText();
-    	return { text.begin() + getSelection().begin, text.begin() + getSelection().end };
-    }
-
-    [[nodiscard]] Selection getSelection() const;
-    [[nodiscard]] bool hasSelection() const;
-
-    [[nodiscard]] unsigned getCursorIndexByPos(glm::ivec2 pos);
-    [[nodiscard]] int getPosByIndex(int end, int begin = 0);
-
-    void selectAll();
-    void clearSelection();
-
-    void drawSelectionRects();
+private:
+    int mAbsoluteBegin, mAbsoluteEnd;
+    bool mIgnoreSelection = false;
+    ATextLayoutHelper mTextLayoutHelper;
 };
 
 

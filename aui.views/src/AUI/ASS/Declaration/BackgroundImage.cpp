@@ -54,7 +54,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                 drawable->draw(p);
             };
 
-            switch (info.sizing.or_default(Sizing::NONE)) {
+            switch (info.sizing.or_default(Sizing::FIT_PADDING)) {
                 case Sizing::FIT: {
                     drawableDrawWrapper(view->getSize());
                     break;

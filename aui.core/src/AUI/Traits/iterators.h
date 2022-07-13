@@ -76,84 +76,19 @@ namespace aui {
         }
     };
 
-    template<typename...Items>
-    struct joined_range {
-    private:
-        std::tuple<Items*...> mItems;
-
-    public:
-        joined_range(const std::tuple<Items*...>& items) : mItems(items) {}
-
-    public:
-        using joined_range_t = joined_range<Items...>;
-
-        struct my_iterator {
-        friend joined_range_t;
-        private:
-            joined_range_t& mJoinedRange;
-            std::variant<typename Items::iterator...> mIterator;
-            std::size_t mIndex = 0;
-
-        public:
-            my_iterator(joined_range_t& mJoinedRange) :
-                mJoinedRange(mJoinedRange),
-                mIterator(std::get<0>(mJoinedRange.mItems)->begin()),
-                mIndex(0)
-                {}
-
-            my_iterator& operator++()
-            {
-                std::visit([](auto&& arg){
-                    ++arg;
-                }, mIterator);
-                return *this;
-            }
-
-            bool operator!=(const my_iterator& other) const
-            {
-                return mIterator != other.mIterator;
-            }
-            bool operator==(const my_iterator& other) const
-            {
-                return mIterator == other.mIterator;
-            }
-
-            auto operator->()
-            {
-                return std::visit([](auto&& arg){
-                    return &*arg;
-                }, mIterator);
-            }
-            auto operator*()
-            {
-                return *this;
-            }
-
-            auto operator*() const
-            {
-                return *this;
-            }
-        };
-
-        my_iterator begin() {
-            return my_iterator{*this };
-        }
-        my_iterator end() {
-            return my_iterator{*this };
-        }
-    };
-
     /**
-     * Converts a sequence of containers to a single iterator range.
+     * @brief If Container is const, Container::const_iterator is aliased; Container::iterator otherwise.
      */
-    template<typename... Items>
-    joined_range<Items...> join(Items... items) {
-        return { (&items)... };
-    }
+    template<typename Container>
+    using const_iterator_if_const = std::conditional_t<std::is_const_v<Container>,
+                                                       typename Container::const_iterator,
+                                                       typename Container::iterator>;
+
 
     /**
-     * Allows to iterate multiple containers in parallel.
-     * @example
+     * @brief Iterates multiple containers in parallel.
+     * @ingroup useful_templates
+     * @details
      * @code{cpp}
      * std::array<int, 3> ints = { 1, 2, 3 };
      * std::array<std::string, 3> strings = { "one", "two", "three" };
@@ -183,9 +118,7 @@ namespace aui {
 
             iterator& operator++() noexcept {
                 std::apply([](auto&&... v) {
-                    aui::parameter_pack::for_each([](auto& i) {
-                        ++i;
-                    }, v...);
+                    (++v, ...);
                 }, iterators_);
                 return *this;
             }
@@ -227,13 +160,15 @@ namespace aui {
 
     /**
      * @brief Reverses iterator direction (i.e. converts iterator to reverse_iterator, reverse_iterator to iterators).
-     *
-     * A reversed iterator points to the same element of the container.
-     *
-     * Works on AVector.
+     * @ingroup useful_macros
      * @tparam Iterator iterator
      * @param iterator iterator
      * @return same iterator but reverse direction
+     *
+     * @details
+     * A reversed iterator points to the same element of the container.
+     *
+     * Works on AVector.
      */
     template<typename Iterator>
     auto reverse_iterator_direction(Iterator iterator) noexcept ->

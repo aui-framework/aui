@@ -34,16 +34,17 @@ public:
     {
         processDeclarations(std::forward<Declarations>(declarations)...);
     }
+
     RuleWithoutSelector() {
 
     }
 
-    [[nodiscard]] const AVector<ass::decl::IDeclarationBase*>& getDeclarations() const {
+    [[nodiscard]] const AVector<_<ass::decl::IDeclarationBase>>& getDeclarations() const noexcept {
         return mDeclarations;
     }
 
-    void addDeclaration(ass::decl::IDeclarationBase* declaration) {
-        mDeclarations << declaration;
+    void addDeclaration(_<ass::decl::IDeclarationBase> declaration) {
+        mDeclarations << std::move(declaration);
     }
 
 private:
@@ -57,11 +58,16 @@ private:
 
     template<typename T>
     void processDeclaration(T&& t) {
-        using declaration_t = ass::decl::Declaration<std::decay_t<T>>;
-        static_assert(aui::is_complete<declaration_t>, "ass::decl::Declaration template specialization is not defined for this declaration");
+        if constexpr(std::is_same_v<T, RuleWithoutSelector>) {
+            mDeclarations = std::move(t.mDeclarations);
+        } else {
+            using declaration_t = ass::decl::Declaration<std::decay_t<T>>;
+            static_assert(aui::is_complete<declaration_t>,
+                          "ass::decl::Declaration template specialization is not defined for this declaration");
 
-        mDeclarations.emplace_back(new declaration_t(t));
+            mDeclarations << _new<declaration_t>(t);
+        }
     }
 
-    AVector<ass::decl::IDeclarationBase*> mDeclarations;
+    AVector<_<ass::decl::IDeclarationBase>> mDeclarations;
 };

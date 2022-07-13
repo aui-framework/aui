@@ -193,15 +193,15 @@ void AAbstractLabel::doRenderText() {
 }
 
 AString AAbstractLabel::getTransformedText() {
-    if (getText().empty())
+    if (text().empty())
         return {};
     switch (mTextTransform) {
         case TextTransform::UPPERCASE:
-            return getText().uppercase();
+            return text().uppercase();
         case TextTransform::LOWERCASE:
-            return getText().lowercase();
+            return text().lowercase();
     }
-    return getText();
+    return text();
 }
 
 void AAbstractLabel::onDpiChanged() {

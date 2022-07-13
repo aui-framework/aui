@@ -36,7 +36,6 @@ AAbstractTextField::AAbstractTextField() {
 void AAbstractTextField::onFocusAcquired() {
     AView::onFocusAcquired();
     updateCursorBlinking();
-    clearSelection();
 }
 
 AAbstractTextField::~AAbstractTextField()
@@ -91,7 +90,7 @@ void AAbstractTextField::render()
 
 void AAbstractTextField::doDrawString() {
     RenderHints::PushMatrix m;
-    Render::translate({ mPadding.left - mHorizontalScroll, mPadding.top });
+    Render::translate({ mPadding.left - mHorizontalScroll, mPadding.top + getVerticalAlignmentOffset() });
     if (mPrerenderedString) mPrerenderedString->draw();
 }
 
@@ -129,7 +128,7 @@ void AAbstractTextField::doRedraw() {
     redraw();
 }
 
-AString AAbstractTextField::getText() const {
+const AString& AAbstractTextField::text() const {
     return mContents;
 }
 
@@ -214,7 +213,7 @@ bool AAbstractTextField::isValidText(const AString& text) {
     return true;
 }
 
-size_t AAbstractTextField::getTextLength() const {
+size_t AAbstractTextField::textLength() const {
     return mContents.length();
 }
 

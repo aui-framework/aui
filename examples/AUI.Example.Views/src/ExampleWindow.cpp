@@ -90,7 +90,7 @@ public:
 ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 {
     setLayout(_new<AVerticalLayout>());
-    AStylesheet::inst().addRules({
+    AStylesheet::global().addRules({
          {
              c(".all_views_wrap") > t<AViewContainer>(),
              Padding { 16_dp },
@@ -364,9 +364,11 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
     });
 
     addView(Horizontal{
-        _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] {
-            _new<AllViewsWindow>()->show();
-        }),
+        Centered {
+            _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] {
+                _new<AllViewsWindow>()->show();
+            })
+        },
         _new<ASpacer>(),
         _new<ASpinner>(),
         _new<ACheckBox>("Enabled") let {

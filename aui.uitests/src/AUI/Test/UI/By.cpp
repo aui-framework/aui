@@ -16,7 +16,8 @@ UIMatcher By::text(const AString& text) {
         ~TextMatcher() override = default;
 
         bool matches(const _<AView>& view) override {
-            return IStringable::toString(view) == mText;
+            auto s = IStringable::toString(view);
+            return s == mText;
         }
     };
     return { _new<TextMatcher>(text) };

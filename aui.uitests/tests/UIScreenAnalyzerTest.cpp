@@ -24,26 +24,12 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/ATextField.h>
 
-/**
- * There's a text field and a button:
- * _____________________-[]X_
- * |                        |
- * |  [       ][Say hello]  |
- * |                        |
- * |________________________|
- *
- *
- * user types his name. When it's button is pressed, a message appears:
- * _____________________-[]X_
- * |                        |
- * |  [Steve  ][Say hello]  |
- * |      Hello, Steve!     |
- * |________________________|
- *
- * when text field is empty, hello message should be hidden.
- */
+using namespace ass;
 
-class UIType: public testing::UITest {
+/**
+ * This suite tests aui::uitests' ability to determine what's going on on the screen.
+ */
+class UIScreenAnalyzer: public testing::UITest {
 public:
 protected:
     void SetUp() override {
@@ -67,12 +53,13 @@ protected:
                                             }
                                             mHelloLabel->setText("Hello, {}!"_format(mTextField->text()));
                                             mHelloLabel->setVisibility(Visibility::VISIBLE);
-                                        }) let { it->setDefault(); },
+                                        }) with_style { BackgroundSolid { 0xff0000_rgb } } let { it->setDefault(); },
                                 },
                                 mHelloLabel = _new<ALabel>() let {
                                     it->setVisibility(Visibility::INVISIBLE);
                                     it << "#hello";
-                                }
+                                },
+                                _new<AButton>("A basic button")
                         }
                 });
 
@@ -92,59 +79,10 @@ protected:
 
 
 /**
- * Checks that the message is not appeared yet.
+ * Checks averageColor.
  */
-TEST_F(UIType, HelloIsNotAppeared) {
-
-    // check label is not visible
-    By::text("Hello!").check(notVisible(), "label is visible");
-}
-
-/**
- * Checks that the message does not appear when button is clicked.
- */
-TEST_F(UIType, HelloNotAppearsAfterClick) {
-    // press the button
-    By::text("Say hello").perform(click());
-
-    // check label is NOT appeared
-    By::name("#hello").check(notVisible(), "label is appeared");
-}
-
-/**
- * Checks that the message does not appear when button is clicked.
- *
- * 1. types "Steve" to the text field
- * 2. clicks the button
- */
-TEST_F(UIType, HelloAppearsAfterClick) {
-    // type "Steve" to the text field
-    By::name("#username").perform(type("Steve"));
-
-    // press the button
-    By::text("Say hello").perform(click());
-
-    // check label is appeared and contains text "Hello, Steve!"
-    By::name("#hello").check(visible(), "label is not appeared")
-                      .check(text("Hello, Steve!"), "invalid text");
-}
-
-/**
- * Checks that the message disappears.
- *
- * 1. types "Steve" to the text field
- * 2. clicks the button
- * 3. clears the text field
- * 4. clicks the button again
- */
-TEST_F(UIType, HelloDisappearsAfterClick) {
-    // type "Steve" to the text field
-    By::name("#username").perform(type("Steve"));
-
-    // press the button
-    By::text("Say hello").perform(click());
-
-    // check label is appeared and contains text "Hello, Steve!"
-    By::name("#hello").check(visible(), "label is not appeared")
-                            .check(text("Hello, Steve!"), "invalid text");
+TEST_F(UIScreenAnalyzer, AverageColor) {
+    // check the button is red
+    By::text("Say hello").check(averageColor(0xff0000_rgb), "the button is not red");
+    By::text("A basic button").check(uitest::impl::not$(averageColor(0xff0000_rgb)), "the button is red");
 }

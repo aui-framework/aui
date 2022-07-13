@@ -84,9 +84,9 @@ public:
 	bool handlesNonMouseNavigation() override;
     void onFocusAcquired() override;
 
-    AString getText() const override;
+    const AString& text() const override;
 
-    size_t getTextLength() const override;
+    size_t textLength() const override;
 
     void onCharEntered(wchar_t c) override;
     void invalidateFont() override;

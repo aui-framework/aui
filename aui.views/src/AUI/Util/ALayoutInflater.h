@@ -14,7 +14,7 @@ public:
      * @note Stolen from Android.
      * @return <code>root</code>
      */
-    static const _<AViewContainer>& inflate(const _<AViewContainer>& root, const _<AView>& view);
+    static void inflate(aui::no_escape<AViewContainer> root, const _<AView>& view);
 };
 
 

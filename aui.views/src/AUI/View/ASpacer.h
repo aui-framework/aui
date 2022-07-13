@@ -21,6 +21,7 @@
 
 #pragma once
 #include "AView.h"
+#include <AUI/Util/Declarative.h>
 
 /**
  * @brief Expanding view which is useful in UI building.
@@ -49,3 +50,8 @@ public:
     int getContentMinimumWidth() override;
     int getContentMinimumHeight() override;
 };
+
+
+namespace declarative {
+    using Spacer = aui::ui_building::view<ASpacer>;
+}

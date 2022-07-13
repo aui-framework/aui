@@ -37,12 +37,12 @@ public:
     ASelectableLabel();
     explicit ASelectableLabel(const AString& text);
 
-    [[nodiscard]] AString getText() const override
+    [[nodiscard]] const AString& text() const override
     {
-        return ALabel::getText();
+        return ALabel::text();
     }
 
-    size_t getTextLength() const override;
+    size_t textLength() const override;
 
     void render() override;
 

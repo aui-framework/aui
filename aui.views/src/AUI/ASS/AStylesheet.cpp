@@ -128,7 +128,17 @@ AStylesheet::AStylesheet() {
             BackgroundSolid{0xfafafa_rgb},
         },
         {
-            { debug_selector(), Button::Default(t<AButton>()), c(".btn_default")},
+            t<AButtonEx>(),
+            LayoutSpacing { 2_dp },
+            MinSize { 2_dp },
+        },
+        {
+            t<AButtonEx>() > t<ALabel>(),
+            Margin { 0 },
+            Padding { 0 },
+        },
+        {
+            { debug_selector(), button::Default(t<AButton>()), c(".btn_default")},
             FontRendering::ANTIALIASING,
             BackgroundGradient {getOsThemeColor().lighter(0.15f),
                                 getOsThemeColor().darker(0.15f),
@@ -138,7 +148,7 @@ AStylesheet::AStylesheet() {
             TextColor { 0xffffff_rgb },
         },
         {
-            { Button::Default(t<AButton>::hover()), c::hover(".btn_default")},
+            { button::Default(t<AButton>::hover()), c::hover(".btn_default")},
             BoxShadow { 0, 1_dp, 6_dp, -1_dp, getOsThemeColor() },
         },
         {
@@ -147,13 +157,13 @@ AStylesheet::AStylesheet() {
             BoxShadow { nullptr },
         },
         {
-            { Button::Default(t<AButton>::hover()), c::hover(".btn_default")},
+            { button::Default(t<AButton>::hover()), c::hover(".btn_default")},
             BackgroundGradient {getOsThemeColor().lighter(0.2f),
                                 getOsThemeColor().darker(0.15f),
                                 LayoutDirection::VERTICAL },
         },
         {
-            { Button::Default(t<AButton>::active()), c::active(".btn_default")},
+            { button::Default(t<AButton>::active()), c::active(".btn_default")},
             BackgroundSolid { getOsThemeColor() }
         },
         {
@@ -602,6 +612,11 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { getOsThemeColor() },
             BorderRadius { 4_dp },
         },
+
+        {
+            t<ADrawableView>(),
+            MinSize { 12_dp },
+        }
     });
 }
 
@@ -628,11 +643,11 @@ AColor AStylesheet::getOsThemeColor() {
 #endif
 }
 
-AStylesheet& AStylesheet::inst() {
-    return *instStorage();
+AStylesheet& AStylesheet::global() {
+    return *globalStorage();
 }
 
-_<AStylesheet>& AStylesheet::instStorage() {
+_<AStylesheet>& AStylesheet::globalStorage() {
     static _<AStylesheet> s = _new<AStylesheet>();
     return s;
 }

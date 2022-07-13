@@ -60,7 +60,7 @@ Commit hash, tag or branch name to `checkout`.
 
 ### COMPONENTS
 List of components to import which will be passed to `find_package`. Also, passed as semicolon-separated list to
-dependency's `CMakeLists.txt` via `AUI_BOOT_COMPONENTS` variable.
+dependency's `CMakeLists.txt` via `AUIB_COMPONENTS` variable.
 
 # Using same dependencies
 ## Case 1
