@@ -16,7 +16,8 @@ private:
 public:
     AByteBufferView() noexcept: mBuffer(nullptr), mSize(0) {}
     AByteBufferView(const char* buffer, size_t size) noexcept: mBuffer(buffer), mSize(size) {}
-
+    explicit AByteBufferView(const std::string& string) noexcept: mBuffer(string.data()), mSize(string.size()) {}
+    explicit AByteBufferView(std::string_view string) noexcept: mBuffer(string.data()), mSize(string.size()) {}
 
     [[nodiscard]]
     AByteBufferView slice(std::size_t offset, std::size_t size) const noexcept {
@@ -45,6 +46,9 @@ public:
 
     [[nodiscard]]
     AString toHexString() const;
+
+    [[nodiscard]]
+    AString toBase64String() const;
 
     template<typename T>
     [[nodiscard]]
