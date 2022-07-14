@@ -622,7 +622,11 @@ AStylesheet::AStylesheet() {
         // AGroupBox
         {
             c(".agroupbox-title"),
-            Margin { {}, 12_dp },
+            Margin { {}, 4_dp },
+        },
+        {
+            c(".agroupbox-title") > t<AView>(),
+            Padding { {}, 4_dp },
         },
         {
             c(".agroupbox-inner"),

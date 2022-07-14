@@ -4,6 +4,7 @@
 
 #include "AGroupBox.h"
 #include "AUI/Util/UIBuildingHelpers.h"
+#include "ACheckBox.h"
 
 using namespace declarative;
 
@@ -19,8 +20,9 @@ namespace {
 
             RenderHints::PushMatrix transform;
             auto d = mTitle->getPositionInWindow() - getPositionInWindow();
-            Render::translate(d);
-            mTitle->drawStencilMask();
+            Render::rect(ASolidBrush{},
+                         d,
+                         mTitle->getSize());
         }
 
     private:
@@ -49,10 +51,15 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
                 }  << ".agroupbox-inner"
             } with_style {
                 Expanding {},
-                Overflow::HIDDEN, // forces to call drawStencilMas
+                Overflow::HIDDEN, // forces to call drawStencilMask
             });
         },
     });
+
+    if (auto asCheckbox = _cast<ACheckBox>(mTitle)) {
+        connect(asCheckbox->checked, me::updateCheckboxState);
+        updateCheckboxState(asCheckbox->isChecked());
+    }
 }
 
 void AGroupBox::updateLayout() {
@@ -67,4 +74,8 @@ int AGroupBox::getContentMinimumHeight() {
 
 int AGroupBox::getFrameForcedPosition() const noexcept {
     return mTitle->getPosition().y + mTitle->getSize().y / 2;
+}
+
+void AGroupBox::updateCheckboxState(bool checked) {
+    mFrame->setEnabled(checked);
 }

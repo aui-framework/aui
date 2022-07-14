@@ -118,7 +118,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
                 // checkboxes
                 GroupBox {
-                    Label { "Checkboxes" },
+                    CheckBox { "Checkboxes" },
                     Vertical {
                         _new<ACheckBox>("Unchecked checkbox"),
                         _new<ACheckBox>("Selected checkbox") let { it->setChecked(true); },
