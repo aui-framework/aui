@@ -70,13 +70,13 @@ namespace aui::ui_building {
     };
 
     template<typename View>
-    struct view {
+    struct view: view_helper<view<View>> {
 
     public:
         template<typename... Args>
-        view(Args&&... args): mView(_new<View>(std::forward<Args>(args)...)) {}
+        view(Args&&... args): view_helper<view<View>>(*this), mView(_new<View>(std::forward<Args>(args)...)) {}
 
-        operator _<AView>() {
+        _<AView> operator()() {
             return std::move(mView);
         }
 
@@ -114,8 +114,9 @@ namespace aui::ui_building {
                 using type = decltype(item);
                 constexpr bool isViewGroup = std::is_convertible_v<type, ViewGroup>;
                 constexpr bool isView = std::is_convertible_v<type, View>;
+                constexpr bool isInvokable = std::is_invocable_v<type>;
 
-                static_assert(isViewGroup || isView, "the item is neither convertible to View nor ViewGroup");
+                static_assert(isViewGroup || isView || isInvokable, "the item is neither convertible to View nor ViewGroup, nor invokable");
 
                 if constexpr (isViewGroup) {
                     auto asViewGroup = ViewGroup(item);
@@ -123,6 +124,8 @@ namespace aui::ui_building {
                 } else if constexpr (isView) {
                     auto asView = View(item);
                     mViews << std::move(asView);
+                } else if constexpr(isInvokable) {
+                    mViews << item();
                 }
             }, std::forward<Views>(views)...);
         }
