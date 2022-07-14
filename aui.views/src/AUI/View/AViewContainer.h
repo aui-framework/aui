@@ -48,6 +48,9 @@ public:
 	virtual ~AViewContainer();
 
     void setViews(AVector<_<AView>> views) {
+        views.removeIf([](const _<AView>& v){
+            return v == nullptr;
+        });
         mViews = std::move(views);
 
         for (const auto& view : mViews) {
