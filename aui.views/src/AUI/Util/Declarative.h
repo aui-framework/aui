@@ -94,8 +94,9 @@ namespace aui::ui_building {
     public:
         struct Expanding: layouted_container_factory_impl<Layout, Container>, view_helper<Expanding> {
         public:
-            Expanding(std::initializer_list<ViewOrViewGroup> views): layouted_container_factory_impl<Layout>(views),
-                                                                     view_helper<Expanding>(*this) {
+            template<typename... Views>
+            Expanding(Views&&... views): layouted_container_factory_impl<Layout>(std::forward<Views>(views)...),
+                                         view_helper<Expanding>(*this) {
 
             }
 
