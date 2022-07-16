@@ -210,6 +210,9 @@ void OpenGLRenderingContext::endResize(ABaseWindow& window) {
 
 void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
     SwapBuffers(mSmoothResize ? mPainterDC : mWindowDC);
+    if (mSmoothResize) {
+        makeCurrent(nullptr);
+    }
     //makeCurrent(mWindowDC);
     CommonRenderingContext::endPaint(window);
 }

@@ -21,6 +21,8 @@
 
 #pragma once
 
+#include <glm/glm.hpp>
+
 /**
  * @brief Represents a rectangle fields. Useful for margin and padding around AViews.
  * @ingroup core
@@ -31,6 +33,27 @@ struct ABoxFields
     int right = 0;
     int top = 0;
     int bottom = 0;
+
+
+    [[nodiscard]]
+    glm::ivec2 leftTop() const noexcept {
+        return { left, top };
+    }
+
+    [[nodiscard]]
+    glm::ivec2 rightTop() const noexcept {
+        return { right, top };
+    }
+
+    [[nodiscard]]
+    glm::ivec2 leftBottom() const noexcept {
+        return { left, bottom };
+    }
+
+    [[nodiscard]]
+    glm::ivec2 rightBottom() const noexcept {
+        return { right, bottom };
+    }
 
     [[nodiscard]]
     int horizontal() const noexcept

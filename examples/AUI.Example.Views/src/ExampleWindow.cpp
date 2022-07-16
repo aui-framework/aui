@@ -38,6 +38,7 @@
 #include "DemoTreeModel.h"
 #include "AUI/View/ASpinner.h"
 #include "DemoGraphView.h"
+#include "AUI/View/AGroupBox.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/AComboBox.h>
 #include <AUI/i18n/AI18n.h>
@@ -61,7 +62,7 @@
 #include <AUI/View/ADrawableView.h>
 #include <AUI/Traits/platform.h>
 
-using namespace ass;
+using namespace declarative;
 
 struct MyModel {
     AColor color;
@@ -106,185 +107,223 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {
             Vertical {
                 // buttons
-                _new<ALabel>("Buttons"),
-                _new<AButton>("Common button"),
-                _new<AButton>("Default button") let { it->setDefault(); },
-                _new<AButton>("Disabled button") let { it->setDisabled(); },
+                GroupBox {
+                    Label { "Buttons" },
+                    Vertical {
+                        _new<AButton>("Common button"),
+                        _new<AButton>("Default button") let { it->setDefault(); },
+                        _new<AButton>("Disabled button") let { it->setDisabled(); },
+                    },
+                },
 
                 // checkboxes
-                _new<ALabel>("Checkboxes"),
-                _new<ACheckBox>("Unchecked checkbox"),
-                _new<ACheckBox>("Selected checkbox") let { it->setChecked(true); },
-                _new<ACheckBox>("Disabled checkbox") let { it->setDisabled(); },
+                GroupBox {
+                    CheckBox { "Checkboxes" },
+                    Vertical {
+                        _new<ACheckBox>("Unchecked checkbox"),
+                        _new<ACheckBox>("Selected checkbox") let { it->setChecked(true); },
+                        _new<ACheckBox>("Disabled checkbox") let { it->setDisabled(); },
+                    },
+                },
 
                 // radiobuttons
-                _new<ALabel>("Radiobuttons"),
-                _new<ARadioGroup>(AListModel<AString>::make({"Radiobutton 1",
-                                                                  "Radiobutton 2",
-                                                                  "Radiobutton 3",
-                                                                  "Disabled radiobutton"})) let {
-                    it->getViews()[3]->setDisabled();
+                GroupBox {
+                    Label { "Radiobuttons" },
+                    _new<ARadioGroup>(AListModel<AString>::make({"Radiobutton 1",
+                                                                      "Radiobutton 2",
+                                                                      "Radiobutton 3",
+                                                                      "Disabled radiobutton"})) let {
+                        it->getViews()[3]->setDisabled();
+                    },
                 },
 
                 // comboboxes
-                _new<ALabel>("Comboboxes"),
-                _new<AComboBox>(AListModel<AString>::make({
-                                                                  "Combobox 1",
-                                                                  "Combobox 2",
-                                                                  "Combobox 3",
-                                                                  "Combobox 4",
-                                                                  "Combobox 5",
-                                                                  "Combobox 6",
-                                                          })),
-                _new<AComboBox>(AListModel<AString>::make({"Disabled combobox"})) let { it->setDisabled(); },
-                _new<ADragArea>() let {
-                    it with_style {
-                            MinSize { 100_dp },
-                            Border { 1_px, 0x0_rgb, },
-                    };
-                    it->addView(ADragArea::convertToDraggable(_new<AButton>("Drag me!"), false));
+                GroupBox {
+                    Label  { "Comboboxes" },
+                    Vertical {
+                        _new<AComboBox>(AListModel<AString>::make({
+                                                                          "Combobox 1",
+                                                                          "Combobox 2",
+                                                                          "Combobox 3",
+                                                                          "Combobox 4",
+                                                                          "Combobox 5",
+                                                                          "Combobox 6",
+                                                                  })),
+                        _new<AComboBox>(AListModel<AString>::make({"Disabled combobox"})) let { it->setDisabled(); },
+                    },
                 },
+                GroupBox {
+                    Label { "Drag area" },
+
+                    _new<ADragArea>() let {
+                        it with_style {
+                                MinSize { 100_dp },
+                                Border { 1_px, 0x0_rgb, },
+                        };
+                        it->addView(ADragArea::convertToDraggable(_new<AButton>("Drag me!"), false));
+                    },
+                } with_style { Expanding{} },
             },
             Vertical {
-                _new<ALabel>("Windows"),
-                _new<AButton>("Common window").connect(&AButton::clicked, this, [&] {
-                    auto w = _new<AWindow>("Common window", 400_dp, 300_dp);
-                    fillWindow(w);
-                    w->show();
-                    mWindows << w;
-                }),
-                _new<AButton>("Dialog window").connect(&AButton::clicked, this, [&] {
-                    auto w = _new<AWindow>("Dialog window", 400_dp, 300_dp);
-                    fillWindow(w);
-                    w->show();
-                    w->setWindowStyle(WindowStyle::MODAL);
-                    mWindows << w;
-                }),
-                _new<AButton>("Modal window").connect(&AButton::clicked, this, [&] {
-                    auto w = _new<AWindow>("Modal window", 400_dp, 300_dp, this, WindowStyle::MODAL);
-                    fillWindow(w);
-                    w->show();
-                    mWindows << w;
-                }),
-                _new<AButton>("Custom window with caption").connect(&AButton::clicked, this, [&] {
-                    auto w = _new<ACustomCaptionWindow>("Custom window with caption", 400_dp, 300_dp);
-                    w->getCaptionContainer()->setLayout(_new<AStackedLayout>());
-                    w->getCaptionContainer()->addView(_new<AButton>("Custom button here"));
-                    fillWindow(w->getContentContainer());
-                    w->show();
-                    //w->setWindowStyle(WindowStyle::DIALOG);
-                    mWindows << w;
-                }),
-                _new<AButton>("Custom window without caption").connect(&AButton::clicked, this, [&] {
-                    auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
-                    fillWindow(w);
-                    w->show();
-                    w->setWindowStyle(WindowStyle::MODAL);
-                    mWindows << w;
-                }),
-                _new<AButton>("Close all windows").connect(&AButton::clicked, this, [&] {
-                    for (auto& w : mWindows)
-                        w->close();
-                    mWindows.clear();
-                }),
+                GroupBox {
+                    Label { "Windows" },
+                    Vertical {
+                        _new<AButton>("Common window").connect(&AButton::clicked, this, [&] {
+                            auto w = _new<AWindow>("Common window", 400_dp, 300_dp);
+                            fillWindow(w);
+                            w->show();
+                            mWindows << w;
+                        }),
+                        _new<AButton>("Dialog window").connect(&AButton::clicked, this, [&] {
+                            auto w = _new<AWindow>("Dialog window", 400_dp, 300_dp);
+                            fillWindow(w);
+                            w->show();
+                            w->setWindowStyle(WindowStyle::MODAL);
+                            mWindows << w;
+                        }),
+                        _new<AButton>("Modal window").connect(&AButton::clicked, this, [&] {
+                            auto w = _new<AWindow>("Modal window", 400_dp, 300_dp, this, WindowStyle::MODAL);
+                            fillWindow(w);
+                            w->show();
+                            mWindows << w;
+                        }),
+                        _new<AButton>("Custom window with caption").connect(&AButton::clicked, this, [&] {
+                            auto w = _new<ACustomCaptionWindow>("Custom window with caption", 400_dp, 300_dp);
+                            w->getCaptionContainer()->setLayout(_new<AStackedLayout>());
+                            w->getCaptionContainer()->addView(_new<AButton>("Custom button here"));
+                            fillWindow(w->getContentContainer());
+                            w->show();
+                            //w->setWindowStyle(WindowStyle::DIALOG);
+                            mWindows << w;
+                        }),
+                        _new<AButton>("Custom window without caption").connect(&AButton::clicked, this, [&] {
+                            auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
+                            fillWindow(w);
+                            w->show();
+                            w->setWindowStyle(WindowStyle::MODAL);
+                            mWindows << w;
+                        }),
+                        _new<AButton>("Close all windows").connect(&AButton::clicked, this, [&] {
+                            for (auto& w : mWindows)
+                                w->close();
+                            mWindows.clear();
+                        }),
+                    }
+                },
 
-                _new<ALabel>("System dialog"),
-                _new<AButton>("Show file chooser").connect(&AView::clicked, this, [&] {
-                    ADesktop::browseForFile().onSuccess([&](const APath& f) {
-                        if (f.empty()) {
-                            AMessageBox::show(this, "Result", "Cancelled");
-                        } else {
-                            AMessageBox::show(this, "Result", "File: {}"_format(f));
-                        }
-                    });
-                }),
-                _new<AButton>("Show folder chooser").connect(&AView::clicked, this, [&] {
-                    ADesktop::browseForDir().onSuccess([&](const APath& f) {
-                        if (f.empty()) {
-                            AMessageBox::show(this, "Result", "Cancelled");
-                        } else {
-                            AMessageBox::show(this, "Result", "Folder: {}"_format(f));
-                        }
-                    });
-                }),
+                GroupBox {
+                    Label { "System dialog" },
+                    Vertical{
+                        _new<AButton>("Show file chooser").connect(&AView::clicked, this, [&] {
+                            ADesktop::browseForFile().onSuccess([&](const APath& f) {
+                                if (f.empty()) {
+                                    AMessageBox::show(this, "Result", "Cancelled");
+                                } else {
+                                    AMessageBox::show(this, "Result", "File: {}"_format(f));
+                                }
+                            });
+                        }),
+                        _new<AButton>("Show folder chooser").connect(&AView::clicked, this, [&] {
+                            ADesktop::browseForDir().onSuccess([&](const APath& f) {
+                                if (f.empty()) {
+                                    AMessageBox::show(this, "Result", "Cancelled");
+                                } else {
+                                    AMessageBox::show(this, "Result", "Folder: {}"_format(f));
+                                }
+                            });
+                        }),
+                    }
+                },
+
                 // list view
-                _new<ALabel>("List view"),
-                [] { // lambda style inlining
-                    auto model = _new<DemoListModel>();
+                GroupBox {
+                    Label { "List view" },
+                    [] { // lambda style inlining
+                        auto model = _new<DemoListModel>();
 
-                    return Vertical {
-                            Horizontal {
-                                    _new<AButton>("Add").connect(&AButton::clicked, slot(model)::addItem),
-                                    _new<AButton>("Remove").connect(&AButton::clicked, slot(model)::removeItem),
-                                    _new<ASpacer>(),
-                            },
-                            _new<AListView>(model)
-                    };
-                }(),
+                        return Vertical {
+                                Horizontal {
+                                        _new<AButton>("Add").connect(&AButton::clicked, slot(model)::addItem),
+                                        _new<AButton>("Remove").connect(&AButton::clicked, slot(model)::removeItem),
+                                        _new<ASpacer>(),
+                                },
+                                _new<AListView>(model)
+                        };
+                    }(),
+                },
 
-                    // foreach
-                _new<ALabel>("AForEachUI"),
-                [this] { // lambda style inlining
-                    auto model = _new<AListModel<MyModel>>();
+                // foreach
+                GroupBox {
+                    Label { "AForEachUI" },
+                    [this] { // lambda style inlining
+                        auto model = _new<AListModel<MyModel>>();
 
-                    return Vertical {
-                            Horizontal {
-                                    _new<AButton>("Add").connect(&AButton::clicked, this, [model] {
-                                        static std::default_random_engine re;
-                                        do_once {
-                                        re.seed(std::time(nullptr));
-                                    };
-                                        static std::uniform_real_distribution<float> d(0.f, 1.f);
-                                        model->push_back({ AColor(d(re), d(re), d(re), 1.f) });
-                                    }),
-                                    _new<AButton>("Remove").connect(&AButton::clicked, this, [model] {
-                                        if (!model->empty()) {
-                                            model->pop_back();
-                                        }
-                                    }),
-                                    _new<ASpacer>(),
-                            },
-                            ui_for (i, model, AWordWrappingLayout) {
-                                return Horizontal {
-                                        _new<ALabel>(i.color.toString()) with_style {
-                                                TextColor { i.color.readableBlackOrWhite() },
-                                        }
-                                } with_style {
-                                               BackgroundSolid { i.color },
-                                               BorderRadius { 6_pt },
-                                               Margin { 2_dp, 4_dp },
-                                       };
-                            }
-                    };
-                }(),
+                        return Vertical {
+                                Horizontal {
+                                        _new<AButton>("Add").connect(&AButton::clicked, this, [model] {
+                                            static std::default_random_engine re;
+                                            do_once {
+                                            re.seed(std::time(nullptr));
+                                        };
+                                            static std::uniform_real_distribution<float> d(0.f, 1.f);
+                                            model->push_back({ AColor(d(re), d(re), d(re), 1.f) });
+                                        }),
+                                        _new<AButton>("Remove").connect(&AButton::clicked, this, [model] {
+                                            if (!model->empty()) {
+                                                model->pop_back();
+                                            }
+                                        }),
+                                        _new<ASpacer>(),
+                                },
+                                ui_for (i, model, AWordWrappingLayout) {
+                                    return Horizontal {
+                                            _new<ALabel>(i.color.toString()) with_style {
+                                                    TextColor { i.color.readableBlackOrWhite() },
+                                            }
+                                    } with_style {
+                                                   BackgroundSolid { i.color },
+                                                   BorderRadius { 6_pt },
+                                                   Margin { 2_dp, 4_dp },
+                                           };
+                                }
+                        };
+                    }(),
+                },
+
                 // tree view
-                _new<ALabel>("Tree view"),
-                [] { // lambda style inlining
-                    auto model = _new<DemoTreeModel>();
+                GroupBox {
+                    Label { "Tree view" },
+                    [] { // lambda style inlining
+                        auto model = _new<DemoTreeModel>();
 
-                    return _new<ATreeView>(model);
-                }()
+                        return _new<ATreeView>(model);
+                    }(),
+                },
             },
             Vertical::Expanding {
                 // fields
-                _new<ALabel>("Fields"),
-                _new<ALabel>("Text field"),
-                _new<ATextField>() let { it->focus(); },
-                _new<ALabel>("Number picker"),
-                _new<ANumberPicker>(),
-                _new<ALabel>("Text area"),
-                _new<ATextArea>("Copyright (c) 2021 Alex2772\n\n"
-                                "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated "
-                                "documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the "
-                                "rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to "
-                                "permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\n"
+                GroupBox {
+                    Label { "Fields" },
+                    Vertical::Expanding {
+                        Label { "Text field" },
+                        _new<ATextField>() let { it->focus(); },
+                        Label { "Number picker" },
+                        _new<ANumberPicker>(),
+                        Label { "Text area" },
+                        _new<ATextArea>("Copyright (c) 2021 Alex2772\n\n"
+                                        "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated "
+                                        "documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the "
+                                        "rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to "
+                                        "permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\n"
 
-                                "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the "
-                                "Software.\n\n"
-                                "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE "
-                                "WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR "
-                                "COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
-                                "OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.) ") let { it->setExpanding(); },
+                                        "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the "
+                                        "Software.\n\n"
+                                        "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE "
+                                        "WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR "
+                                        "COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
+                                        "OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.) ") let { it->setExpanding(); },
+                    }
+                } with_style { Expanding{} }
             }
         }), "Common");
 

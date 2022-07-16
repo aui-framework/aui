@@ -48,6 +48,7 @@
 #include "AStylesheet.h"
 #include "ASS.h"
 #include "AUI/View/ASpinner.h"
+#include "AUI/View/AGroupBox.h"
 
 
 AStylesheet::AStylesheet() {
@@ -251,7 +252,7 @@ AStylesheet::AStylesheet() {
         {
             t<ACheckBoxInner>(),
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 1_dp, 1_dp, 1_dp, 4_dp },
+            Margin { 1_dp, 1_dp, 1_dp, 0 },
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
             BackgroundImage {0x333333_rgb },
@@ -317,7 +318,7 @@ AStylesheet::AStylesheet() {
         {
             t<ARadioButtonInner>(),
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 3_dp, 1_dp, 1_dp, 4_dp },
+            Margin { 3_dp, 1_dp, 1_dp, 0 },
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
             BorderRadius { 6_dp },
@@ -616,7 +617,25 @@ AStylesheet::AStylesheet() {
         {
             t<ADrawableView>(),
             MinSize { 12_dp },
-        }
+        },
+
+        // AGroupBox
+        {
+            c(".agroupbox-title"),
+            Margin { {}, 4_dp },
+        },
+        {
+            c(".agroupbox-title") > t<AView>(),
+            Padding { {}, 4_dp },
+        },
+        {
+            c(".agroupbox-inner"),
+            Border { 2_dp, 0x30808080_argb },
+            BorderRadius { 4_dp },
+            Padding { 8_dp, 6_dp },
+            Margin { 0, 4_dp},
+            Overflow::HIDDEN,
+        },
     });
 }
 
