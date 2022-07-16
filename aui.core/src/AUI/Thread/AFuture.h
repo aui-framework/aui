@@ -125,7 +125,7 @@ namespace aui::impl::future {
                 while ((thread) && !hasResult()) {
                     try {
                         cv.wait(lock);
-                    } catch (const AThread::Interrupted& i) {
+                    } catch (const AThread::Interrupted&) {
                         rethrowInterrupted = true;
                     }
                 }
@@ -230,7 +230,7 @@ namespace aui::impl::future {
                                 nullsafe(onSuccess)(*value);
                             }
                         }
-                    } catch (const AException& e) {
+                    } catch (const AException&) {
                         nullsafe(innerWeak.lock())->reportException();
                         return false;
                     } catch (...) {
