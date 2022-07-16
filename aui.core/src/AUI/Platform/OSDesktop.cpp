@@ -30,6 +30,7 @@
 #if AUI_PLATFORM_WIN
 #include <windows.h>
 #include <AUI/Logging/ALogger.h>
+#include <AUI/Util/ACleanup.h>
 
 #endif
 
@@ -69,6 +70,10 @@ protected:
 
 void setupUIThread() noexcept {
     AAbstractThread::threadStorage() = _new<UIThread>();
+}
+
+static void afterEntryCleanup() {
+    ACleanup::inst().afterEntryPerform();
 }
 
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
@@ -125,6 +130,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
     } catch (...) {
         ALogger::err("AUI") << "Uncaught unknown exception";
     }
+    afterEntryCleanup();
     return r;
 }
 #endif

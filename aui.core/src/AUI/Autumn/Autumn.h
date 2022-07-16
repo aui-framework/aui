@@ -20,6 +20,9 @@
  */
 
 #pragma once
+
+#include <AUI/Util/kAUI.h>
+#include <AUI/Util/ACleanup.h>
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Common/AMap.h"
@@ -37,18 +40,33 @@ namespace Autumn
 		_<T>& globalStorage()
 		{
             static _<T> t = nullptr;
+            do_once {
+                ACleanup::afterEntry([&] {
+                    t = nullptr;
+                });
+            }
             return t;
 		}
 		template <typename T>
 		_<T>& threadLocalStorage()
 		{
             thread_local _<T> t = nullptr;
+            do_once {
+                ACleanup::afterEntry([&] {
+                    t = nullptr;
+                });
+            }
             return t;
 		}
 		template <typename T>
 		AMap<AString, _<T>>& storageMap()
 		{
 			static AMap<AString, _<T>> t;
+            do_once {
+                ACleanup::afterEntry([&] {
+                    t.clear();
+                });
+            }
 			return t;
 		}
 	}
