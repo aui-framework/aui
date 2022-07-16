@@ -189,7 +189,13 @@ AImage AImage::sub(uint32_t x, uint32_t y, uint32_t width, uint32_t height) cons
  */
 std::uint8_t AImage::getBytesPerPixel() const
 {
-    std::uint8_t b = static_cast<std::uint8_t>(mFormat & 15);
+    std::uint8_t b;
+    switch (static_cast<std::uint8_t>(mFormat & ~(FLOAT | BYTE))) {
+        case R: b = 1;   break;
+        case RG: b = 2;  break;
+        case RGB: b = 3; break;
+        default: b = 4;  break;
+    }
     if (mFormat & FLOAT)
     {
         b *= 4;
@@ -247,4 +253,66 @@ AColor AImage::averageColor() const noexcept {
     accumulator /= mWidth * mHeight;
 
     return glm::vec4(accumulator) / 255.f;
+}
+
+AByteBuffer AImage::imageDataOfFormat(unsigned format) const {
+    assert(("unsupported", (format & BYTE)));
+
+    bool flipY = format & FLIP_Y;
+    format &= ~FLIP_Y;
+
+    AByteBuffer output;
+    for (std::uint32_t iY = 0; iY < getHeight(); ++iY) {
+        int y;
+        if (flipY) {
+            y = getHeight() - iY - 1;
+        } else {
+            y = iY;
+        }
+
+        for (std::uint32_t x = 0; x < getWidth(); ++x) {
+            auto color = getPixelAt(x, y);
+            switch (format & ~BYTE) {
+                case R:
+                    output << std::uint8_t(color.r);
+                    break;
+
+                case RG:
+                    output << std::uint8_t(color.r);
+                    output << std::uint8_t(color.g);
+                    break;
+
+                case RGB:
+                    output << std::uint8_t(color.r);
+                    output << std::uint8_t(color.g);
+                    output << std::uint8_t(color.b);
+                    break;
+
+                case RGBA:
+                    output << std::uint8_t(color.r);
+                    output << std::uint8_t(color.g);
+                    output << std::uint8_t(color.b);
+                    output << std::uint8_t(color.a);
+                    break;
+
+                case BGRA:
+                    output << std::uint8_t(color.b);
+                    output << std::uint8_t(color.g);
+                    output << std::uint8_t(color.r);
+                    output << std::uint8_t(color.a);
+                    break;
+
+                case ARGB:
+                    output << std::uint8_t(color.a);
+                    output << std::uint8_t(color.r);
+                    output << std::uint8_t(color.g);
+                    output << std::uint8_t(color.b);
+                    break;
+
+                default:
+                    assert(0);
+            }
+        }
+    }
+    return output;
 }

@@ -991,6 +991,7 @@ macro(aui_app)
     endif()
 
     set(_current_app_build_files ${PROJECT_BINARY_DIR}/${APP_TARGET})
+    get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
 
     # common cpack
     set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
@@ -1002,6 +1003,18 @@ macro(aui_app)
     # WINDOWS ==========================================================================================================
     if (AUI_PLATFORM_WIN)
         list(APPEND CPACK_GENERATOR WIX)
+
+        if (APP_ICON)
+            set(_ico "${_current_app_build_files}/app.ico")
+            add_custom_command(
+                OUTPUT ${_ico}
+                COMMAND ${AUI_TOOLBOX_EXE}
+                ARGS svg2ico ${_icon_absolute} ${_ico}
+            )
+
+            configure_file(${AUI_BUILD_AUI_ROOT}/cmake/win32-res.rc.in ${_current_app_build_files}/win32-res.rc)
+            target_sources(${APP_TARGET} PRIVATE ${_current_app_build_files}/win32-res.rc ${_ico})
+        endif()
     endif()
 
 
@@ -1091,7 +1104,6 @@ macro(aui_app)
             if (TARGET aui.toolbox)
                 add_dependencies(${APP_TARGET} aui.toolbox)
             endif()
-            get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
             set(_icon_icns ${_current_app_build_files}/app.icns)
             add_custom_command(
                     OUTPUT ${_icon_icns}

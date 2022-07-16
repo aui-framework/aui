@@ -1,0 +1,3 @@
+#include <Windows.h>
+
+MAINICON ICON "@_ico@"
