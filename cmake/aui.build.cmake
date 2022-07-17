@@ -991,7 +991,9 @@ macro(aui_app)
     endif()
 
     set(_current_app_build_files ${PROJECT_BINARY_DIR}/${APP_TARGET})
-    get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
+    if (APP_ICON)
+        get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
+    endif()
 
     # common cpack
     set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)

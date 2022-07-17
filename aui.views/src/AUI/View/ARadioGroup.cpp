@@ -42,6 +42,12 @@ ARadioGroup::ARadioGroup():
     });
 }
 
+ARadioGroup::ARadioGroup(const AVector<_<ARadioButton>>& radioButtons) {
+    for (const auto& r : radioButtons) {
+        mGroup->addRadioButton(r);
+        addView(r);
+    }
+}
 
 ARadioGroup::~ARadioGroup() {
 
@@ -68,5 +74,5 @@ void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
         });
     }
 
-    AWindow::current()->flagUpdateLayout();
+    requestLayoutUpdate();
 }

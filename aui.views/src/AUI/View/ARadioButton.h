@@ -114,3 +114,7 @@ public:
 signals:
     emits<bool> checked;
 };
+
+namespace declarative {
+    using RadioButton = aui::ui_building::view<ARadioButton>;
+}
