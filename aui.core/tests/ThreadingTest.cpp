@@ -290,6 +290,7 @@ TEST(Threading, FutureOnDone) {
             called = true;
         });
         // check that cancellation does not triggers here
+        future.wait();
     }
     AThread::sleep(500);
     ASSERT_TRUE(called) << "onSuccess callback has not called";

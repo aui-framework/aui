@@ -382,7 +382,7 @@ namespace aui::impl::future {
          *       yet. This behaviour can be disabled by <code>AFutureWait::ASYNC_ONLY</code> flag.
          */
         void wait(AFutureWait flags = AFutureWait::DEFAULT) noexcept {
-            (*mInner)->wait(mInner->sharedPtr(), flags);
+            (*mInner)->wait(mInner, flags);
         }
 
         /**

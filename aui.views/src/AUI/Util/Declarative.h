@@ -77,7 +77,11 @@ namespace aui::ui_building {
         template<typename... Args>
         view(Args&&... args): view_helper<view<View>>(*this), mView(_new<View>(std::forward<Args>(args)...)) {}
 
-        _<AView> operator()() {
+        _<View> operator()() {
+            return std::move(mView);
+        }
+
+        operator _<View>() {
             return std::move(mView);
         }
 

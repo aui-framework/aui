@@ -28,26 +28,6 @@
 #include "ARadioButton.h"
 #include <AUI/Platform/AWindow.h>
 
-ARadioGroup::ARadioGroup(const _<IListModel<AString>>& model):
-    ARadioGroup()
-{
-    setModel(model);
-}
-
-ARadioGroup::ARadioGroup():
-        mGroup(_new<ARadioButton::Group>())
-{
-    connect(mGroup->selectionChanged, this, [&](int id) {
-        emit selectionChanged(AModelIndex(id));
-    });
-}
-
-ARadioGroup::ARadioGroup(const AVector<_<ARadioButton>>& radioButtons) {
-    for (const auto& r : radioButtons) {
-        mGroup->addRadioButton(r);
-        addView(r);
-    }
-}
 
 ARadioGroup::~ARadioGroup() {
 
