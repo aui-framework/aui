@@ -166,37 +166,14 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
             },
             Vertical {
                 GroupBox {
-                    Label { "Windows" },
+                    Label { "Window factory" },
                     Vertical {
-                        _new<AButton>("Common window").connect(&AButton::clicked, this, [&] {
-                            auto w = _new<AWindow>("Common window", 400_dp, 300_dp);
-                            fillWindow(w);
-                            w->show();
-                            mWindows << w;
-                        }),
-                        _new<AButton>("Dialog window").connect(&AButton::clicked, this, [&] {
-                            auto w = _new<AWindow>("Dialog window", 400_dp, 300_dp);
-                            fillWindow(w);
-                            w->show();
-                            w->setWindowStyle(WindowStyle::MODAL);
-                            mWindows << w;
-                        }),
-                        _new<AButton>("Modal window").connect(&AButton::clicked, this, [&] {
-                            auto w = _new<AWindow>("Modal window", 400_dp, 300_dp, this, WindowStyle::MODAL);
-                            fillWindow(w);
-                            w->show();
-                            mWindows << w;
-                        }),
-                        _new<AButton>("Custom window with caption").connect(&AButton::clicked, this, [&] {
-                            auto w = _new<ACustomCaptionWindow>("Custom window with caption", 400_dp, 300_dp);
-                            w->getCaptionContainer()->setLayout(_new<AStackedLayout>());
-                            w->getCaptionContainer()->addView(_new<AButton>("Custom button here"));
-                            fillWindow(w->getContentContainer());
-                            w->show();
-                            //w->setWindowStyle(WindowStyle::DIALOG);
-                            mWindows << w;
-                        }),
-                        _new<AButton>("Custom window without caption").connect(&AButton::clicked, this, [&] {
+                        Label { "Frame:" },
+                        RadioGroup {
+                            RadioButton { "" }
+                        },
+                        CheckBox { "Resizeable" },
+                        _new<AButton>("Show window").connect(&AButton::clicked, this, [&] {
                             auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
                             fillWindow(w);
                             w->show();

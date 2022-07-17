@@ -27,6 +27,7 @@
 
 #include "AViewContainer.h"
 #include "ARadioButton.h"
+#include "AUI/Model/AListModel.h"
 #include <AUI/Model/IListModel.h>
 
 /**
@@ -43,6 +44,8 @@ private:
 
 public:
     explicit ARadioGroup(const _<IListModel<AString>>& model);
+    explicit ARadioGroup(AVector<AString> model): ARadioGroup(AListModel<AString>::fromVector(std::move(model))) {}
+    explicit ARadioGroup(const AVector<_<ARadioButton>>& radioButtons);
     ARadioGroup();
     ~ARadioGroup() override;
 
@@ -60,3 +63,10 @@ signals:
 };
 
 
+namespace declarative {
+    struct RadioGroup: aui::ui_building::view<ARadioGroup> {
+    public:
+        using view<ARadioGroup>::view;
+
+    };
+}
