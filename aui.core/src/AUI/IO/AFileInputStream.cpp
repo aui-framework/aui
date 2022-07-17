@@ -58,7 +58,7 @@ void AFileInputStream::seek(std::streamoff offset, AFileInputStream::Seek dir) n
             case Seek::CURRENT:
                 return SEEK_CUR;
             case Seek::END:
-                return SEEK_CUR;
+                return SEEK_END;
         }
         return 0;
     }());

@@ -28,6 +28,8 @@
 
 enum class ACursor;
 
+class ABaseWindow;
+
 
 namespace ADesktop
 {
@@ -38,7 +40,33 @@ namespace ADesktop
 
 	API_AUI_VIEWS glm::ivec2 getMousePosition();
 	API_AUI_VIEWS void setMousePos(const glm::ivec2& pos);
-	API_AUI_VIEWS AFuture<APath> browseForDir(const APath& startingLocation = {});
-	API_AUI_VIEWS AFuture<APath> browseForFile(const APath& startingLocation = {}, const AVector<FileExtension>& extensions = {});
+
+    /**
+     * @brief Opens native browse for directory dialog.
+     * @param parent parent window which is put in the ABaseWindow::blockUserInput state while the dialog is active. Can be
+     *               nullptr.
+     * @param startingLocation path where the file browser dialog opened initially. Can be empty.
+     * @return AFuture returning selected path. If user cancelled the operation, the returned path is empty.
+     * @note
+     * The future is returned instead of the regular path due to platform limitations on Windows. Never try to call
+     * blocking getter since it would cause deadlock. Use AFuture::onSuccess callback instead.
+     */
+    API_AUI_VIEWS AFuture<APath> browseForDir(ABaseWindow* parent,
+                                              const APath& startingLocation = {});
+
+    /**
+     * @brief Opens native browse for file dialog.
+     * @param parent parent window which is put in the ABaseWindow::blockUserInput state while the dialog is active. Can be
+     *               nullptr.
+     * @param startingLocation path where the file browser dialog opened initially. Can be empty.
+     * @param extensions extensions.
+     * @return AFuture returning selected path. If user cancelled the operation, the returned path is empty.
+     * @note
+     * The future is returned instead of the regular path due to platform limitations on Windows. Never try to call
+     * blocking getter since it would cause deadlock. Use AFuture::onSuccess callback instead.
+     */
+	API_AUI_VIEWS AFuture<APath> browseForFile(ABaseWindow* parent,
+                                               const APath& startingLocation = {},
+                                               const AVector<FileExtension>& extensions = {});
 	API_AUI_VIEWS void openUrl(const AString& url);
 }

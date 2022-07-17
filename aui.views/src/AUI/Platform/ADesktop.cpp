@@ -38,6 +38,7 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Logging/ALogger.h>
+#include <AUI/Thread/ACutoffSignal.h>
 
 glm::ivec2 ADesktop::getMousePosition() {
     POINT p;
@@ -50,8 +51,9 @@ void ADesktop::setMousePos(const glm::ivec2& pos) {
 }
 
 
-AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
-    return async {
+AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& startingLocation) {
+    nullsafe(parent)->blockUserInput();
+    return async noexcept {
         APath result;
         OleInitialize(0);
         HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
@@ -79,7 +81,15 @@ AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
             }
         }
 
-        hr = pFileOpen->Show(NULL);
+
+        HWND nativeParentWindow;
+        if (auto d = dynamic_cast<AWindow*>(parent)) {
+            nativeParentWindow = d->nativeHandle();
+        } else {
+            nativeParentWindow = nullptr;
+        }
+
+        hr = pFileOpen->Show(nativeParentWindow);
 
         // Get the file name from the dialog box.
         if (SUCCEEDED(hr))
@@ -100,15 +110,22 @@ AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
                 pItem->Release();
             }
         }
-        pFileOpen->Release();
-        CoUninitialize();
-        OleUninitialize();
+
+        nullsafe(parent)->getThread()->enqueue([parent, pFileOpen] {
+            parent->blockUserInput(false);
+
+            pFileOpen->Release();
+            CoUninitialize();
+            OleUninitialize();
+        });
+
         return result;
     };
 }
 
-AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVector<FileExtension>& extensions) {
-    return async {
+AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
+    nullsafe(parent)->blockUserInput();
+    return async noexcept {
         APath result;
         OleInitialize(0);
         HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
@@ -149,7 +166,14 @@ AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVec
             }
         }
 
-        hr = pFileOpen->Show(NULL);
+        HWND nativeParentWindow;
+        if (auto d = dynamic_cast<AWindow*>(parent)) {
+            nativeParentWindow = d->nativeHandle();
+        } else {
+            nativeParentWindow = nullptr;
+        }
+
+        hr = pFileOpen->Show(nativeParentWindow);
 
         // Get the file name from the dialog box.
         if (SUCCEEDED(hr))
@@ -170,9 +194,15 @@ AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVec
                 pItem->Release();
             }
         }
-        pFileOpen->Release();
-        CoUninitialize();
-        OleUninitialize();
+
+        nullsafe(parent)->getThread()->enqueue([parent, pFileOpen] {
+            parent->blockUserInput(false);
+
+            pFileOpen->Release();
+            CoUninitialize();
+            OleUninitialize();
+        });
+
         return result;
     };
 }

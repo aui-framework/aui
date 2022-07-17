@@ -134,10 +134,10 @@ public:
     {
         using Value = std::invoke_result_t<Callable>;
         AFuture<Value> future(std::move(fun));
-        run([innerWeak = future.inner()->wrapped.weak()]()
+        run([innerWeak = future.inner().weak()]()
             {
-                auto innerUnsafePointer = innerWeak.lock().get(); // using .get() here in order to bypass null check in
-                                                                  // operator->
+                auto innerUnsafePointer = innerWeak.lock()->ptr().get(); // using .get() here in order to bypass
+                                                                         // null check in operator->
                 innerUnsafePointer->tryExecute(innerWeak);
             }, AThreadPool::PRIORITY_LOWEST);
         return future;

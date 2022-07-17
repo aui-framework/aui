@@ -4,6 +4,7 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/Traits/callables.h>
 #include <AUI/Traits/parameter_pack.h>
+#include <AUI/ASS/ASS.h>
 
 
 namespace aui::ui_building {
@@ -149,6 +150,47 @@ namespace aui::ui_building {
         }
 
     };
+}
 
+namespace declarative {
 
+    /**
+     * @brief Extra styles wrapper.
+     * @ingroup declarative
+     * @details
+     * @code{cpp}
+     * Button { "Default button" },
+     * Style{
+     *     {
+     *         c(".btn"),
+     *         BackgroundSolid { 0xff0000_rgb },
+     *     },
+     * } ({
+     *     Button { "Red button" },
+     *     Button { "Another red button" },
+     * }),
+     * @endcode
+     */
+    struct Style {
+    public:
+        Style(std::initializer_list<Rule> rules): mStylesheet(_new<AStylesheet>(AStylesheet(rules))) {
+
+        }
+
+        Style& operator()(AVector<_<AView>> views) {
+            for (const auto& view : views) {
+                view->setExtraStylesheet(mStylesheet);
+            }
+            mViews = std::move(views);
+            return *this;
+        }
+
+        operator AVector<_<AView>>() noexcept {
+            return std::move(mViews);
+        }
+
+    private:
+        _<AStylesheet> mStylesheet;
+        AVector<_<AView>> mViews;
+    };
 }
