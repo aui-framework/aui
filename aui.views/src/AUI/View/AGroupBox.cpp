@@ -12,7 +12,8 @@ namespace {
     class Inner: public AViewContainer {
     friend class AGroupBox;
     public:
-        Inner(_<AView> title) : mTitle(std::move(title)) {
+        Inner(_<AView> title, const _<AViewContainer>& contents) : mTitle(std::move(title)) {
+            setContents(contents);
         }
 
         void drawStencilMask() override {
@@ -40,19 +41,19 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
     using namespace declarative;
     setContents(Vertical {
         Horizontal { mTitle } << ".agroupbox-title",
-        mFrame = _new<Inner>(mTitle) let {
-            /*
-             * Using two nested container because view's masking does not affect it's background (style), but does for
-             * it's children.
-             */
-            it->setContents(Vertical {
-                Vertical::Expanding {
-                    mContent let { it->setExpanding(); }
-                }  << ".agroupbox-inner"
-            } with_style {
-                Expanding {},
-                Overflow::HIDDEN, // forces to call drawStencilMask
-            });
+        mFrame = _new<Inner>(mTitle,
+                            /*
+                             * Using two nested container because view's masking does not affect it's background (style), but does for
+                             * it's children.
+                             */
+                             Vertical {
+                                 Vertical::Expanding {
+                                     mContent let { it->setExpanding(); }
+                                 }  << ".agroupbox-inner"
+                             } with_style {
+                                 Expanding {},
+                                 Overflow::HIDDEN, // forces to call drawStencilMask
+                             }) let {
         },
     });
 
