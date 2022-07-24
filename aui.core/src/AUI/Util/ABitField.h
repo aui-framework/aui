@@ -31,7 +31,7 @@ private:
     T mStorage;
 
 public:
-    ABitField(T storage = static_cast<T>(0)) : mStorage(storage) {}
+    constexpr ABitField(T storage = static_cast<T>(0)) : mStorage(storage) {}
 
     operator T() {
         return mStorage;
@@ -71,7 +71,7 @@ public:
      * @return true if flag was set
      */
     bool checkAndSet(T flag) {
-        if (!!(mStorage & flag)) {
+        if (mStorage & flag) {
             mStorage &= ~flag;
             return true;
         }
@@ -119,5 +119,9 @@ public:
         } else {
             mStorage &= ~flag;
         }
+    }
+
+    constexpr operator bool() const noexcept {
+        return mStorage != static_cast<T>(0);
     }
 };
