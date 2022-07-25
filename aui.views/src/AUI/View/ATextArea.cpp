@@ -302,7 +302,7 @@ protected:
                         mLines.insert(mLines.begin() + at, {});
                     } else {
                         // split line
-                        auto secondPart = text.mid(at);
+                        auto secondPart = text.substr(at);
                         text.resize(at);
                         mLines.insert(mLines.begin() + at, {secondPart, {}});
                         mLines[i].prerendered = nullptr;

@@ -57,7 +57,7 @@ void AAbstractTypeableView::updateCursorBlinking()
 
 void AAbstractTypeableView::updateCursorPos()
 {
-    auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().mid(0, mCursorIndex)));
+    auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().substr(0, mCursorIndex)));
 
     const int SCROLL_ADVANCEMENT = getContentWidth() * 4 / 10;
 
