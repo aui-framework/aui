@@ -257,6 +257,18 @@ namespace aui::impl::slot {
  * };
  * int status = *futureStatus;
  * @endcode
+ *
+ * Lambda operators are supported:
+ * @code{cpp}
+ * auto futureStatus = async mutable noexcept {
+ *   int status;
+ *   ...
+ *   AThread::sleep(1000); // a long task
+ *   ...
+ *   return status;
+ * };
+ * int status = *futureStatus;
+ * @endcode
  */
 #define async AThreadPool::global() * [=]()
 
@@ -320,7 +332,7 @@ namespace aui::impl::slot {
  *   </tr>
  * </table>
  */
-#define do_once static uint8_t _aui_once = 0; if(!_aui_once++)
+#define do_once if(static uint8_t _aui_once = 0; !_aui_once++)
 
 /**
  * @brief Executes lambda on current object's thread.

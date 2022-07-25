@@ -236,7 +236,7 @@ public:
      * @return weak reference
      */
     [[nodiscard]]
-    _weak<T> weak() {
+    _weak<T> weak() const {
         return _weak<T>(*this);
     }
 

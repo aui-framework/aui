@@ -63,11 +63,11 @@ inline bool Result::operator==(const Result& rhs) const
 Result recognize(const AImage& image)
 {
 	Result res;
-	switch (image.getFormat() & 15)
+	switch (image.getFormat() & AImage::STRUCTURE)
 	{
 	case AImage::R:
 		res.format = GL_RED;
-		switch (image.getFormat() & (~15))
+		switch (image.getFormat() & (~AImage::STRUCTURE))
 		{
 		case AImage::FLOAT:
 			res.internalformat = GL_R16F;
@@ -83,7 +83,7 @@ Result recognize(const AImage& image)
 		break;
 	case AImage::RGB:
 		res.format = GL_RGB;
-		switch (image.getFormat() & (~15))
+		switch (image.getFormat() & (~AImage::STRUCTURE))
 		{
 		case AImage::FLOAT:
 			res.internalformat = GL_RGB16F;
@@ -99,7 +99,7 @@ Result recognize(const AImage& image)
 		break;
 	case AImage::RGBA:
 		res.format = GL_RGBA;
-		switch (image.getFormat() & (~15))
+		switch (image.getFormat() & (~AImage::STRUCTURE))
 		{
 		case AImage::FLOAT:
 			res.internalformat = GL_RGBA16F;

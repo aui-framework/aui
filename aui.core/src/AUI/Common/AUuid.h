@@ -26,6 +26,7 @@
 #include "AString.h"
 #include "AException.h"
 #include <AUI/Traits/serializable.h>
+#include <AUI/Traits/memory.h>
 
 
 /**
@@ -39,8 +40,21 @@ private:
     static uint8_t fromHex(char c);
 
 public:
-    AUuid() = default;
+    AUuid() {
+        aui::zero(mData);
+    }
     explicit AUuid(const std::array<uint8_t, 16>& data) : mData(data) {}
+
+
+    [[nodiscard]]
+    const std::array<uint8_t, 16>& data() const noexcept {
+        return mData;
+    }
+
+    [[nodiscard]]
+    std::array<uint8_t, 16>& data() noexcept {
+        return mData;
+    }
 
     /**
      * Construct UUID value from string. Supported the following formats:

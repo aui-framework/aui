@@ -120,13 +120,13 @@ float ATokenizer::readFloat()
 				}
 			default:
 				reverseByte();
-				return tmp.toFloat();
+				return tmp.toFloat().value_or(0);
 			}
 		}
 	} catch (...) {
         mEof = true;
     }
-	return tmp.toFloat();
+	return tmp.toFloat().value_or(0);
 }
 
 int ATokenizer::readInt()
@@ -169,14 +169,14 @@ int ATokenizer::readInt()
 				break;
 			default:
 				reverseByte();
-				return tmp.toInt();
+				return tmp.toInt().value_or(0);
 			}
 		}
 	}
 	catch (...) {
         mEof = true;
     }
-	return tmp.toInt();
+	return tmp.toInt().value_or(0);
 }
 
 unsigned ATokenizer::readUInt() {
@@ -226,14 +226,14 @@ std::tuple<unsigned, bool> ATokenizer::readUIntX() {
                     break;
                 default:
                     reverseByte();
-                    return {tmp.toUInt(), isHex};
+                    return {tmp.toUInt().value_or(0), isHex};
             }
         }
     }
     catch (...) {
         mEof = true;
     }
-    return {tmp.toUInt(), isHex};
+    return {tmp.toUInt().value_or(0), isHex};
 }
 
 void ATokenizer::skipUntilUnescaped(char c) {

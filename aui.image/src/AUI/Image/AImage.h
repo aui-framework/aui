@@ -48,14 +48,26 @@ private:
 public:
     AImage(uint32_t width, uint32_t height, int format);
 
-    enum Format : unsigned {
+    enum Format : std::uint32_t {
         UNKNOWN = 0,
-        R = 1,
-        RG = 2,
-        RGB = 3,
-        RGBA = 4,
-        FLOAT = 8,
-        BYTE = 16
+        BYTE = 0b1,
+        FLOAT = 0b10,
+        R    = 0b00100,
+        RG   = 0b01000,
+        RGB  = 0b01100,
+        RGBA = 0b10000,
+        ARGB = 0b10100,
+        BGRA = 0b11000,
+
+
+        FLIP_Y = 0b10000000,
+
+
+    };
+
+    enum Meta : std::uint32_t {
+        META = 0b11,
+        STRUCTURE = ~META
     };
 private:
     AVector<uint8_t> mData;
@@ -78,6 +90,9 @@ public:
         mHeight = size.y;
         allocate();
     }
+
+    [[nodiscard]]
+    AByteBuffer imageDataOfFormat(unsigned format) const;
 
     [[nodiscard]]
     AVector<uint8_t>& getData() {

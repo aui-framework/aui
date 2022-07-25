@@ -271,17 +271,18 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(_cast<AWindow>(sharedPtr()));
+
+    getWindowManager().mWindows.removeFirst(mSelfHolder);
+    mViews.clear();
+    setLayout(nullptr);
 
     // parent window should be activated BEFORE child is closed.
     if (mHandle) {
         if (mParentWindow) {
             EnableWindow(mParentWindow->mHandle, true);
+            BringWindowToTop(mParentWindow->mHandle);
         }
-        ShowWindow(mHandle, SW_HIDE);
     }
-    mViews.clear();
-    setLayout(nullptr);
 
     AThread::current()->enqueue([s = std::move(mSelfHolder)]() mutable noexcept {
         s = nullptr;
@@ -290,6 +291,7 @@ void AWindow::quit() {
 
 
 AWindow::~AWindow() {
+    ShowWindow(mHandle, SW_HIDE);
     mRenderingContext->destroyNativeWindow(*this);
 }
 
@@ -511,4 +513,8 @@ void AWindowManager::loop() {
         DispatchMessage(&msg);
         AThread::processMessages();
     }
+}
+
+void AWindow::blockUserInput(bool blockUserInput) {
+    EnableWindow(mHandle, !blockUserInput);
 }

@@ -4,6 +4,7 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/Traits/callables.h>
 #include <AUI/Traits/parameter_pack.h>
+#include <AUI/ASS/ASS.h>
 
 
 namespace aui::ui_building {
@@ -70,13 +71,17 @@ namespace aui::ui_building {
     };
 
     template<typename View>
-    struct view {
+    struct view: view_helper<view<View>> {
 
     public:
         template<typename... Args>
-        view(Args&&... args): mView(_new<View>(std::forward<Args>(args)...)) {}
+        view(Args&&... args): view_helper<view<View>>(*this), mView(_new<View>(std::forward<Args>(args)...)) {}
 
-        operator _<AView>() {
+        _<View> operator()() {
+            return std::move(mView);
+        }
+
+        operator _<View>() {
             return std::move(mView);
         }
 
@@ -94,8 +99,9 @@ namespace aui::ui_building {
     public:
         struct Expanding: layouted_container_factory_impl<Layout, Container>, view_helper<Expanding> {
         public:
-            Expanding(std::initializer_list<ViewOrViewGroup> views): layouted_container_factory_impl<Layout>(views),
-                                                                     view_helper<Expanding>(*this) {
+            template<typename... Views>
+            Expanding(Views&&... views): layouted_container_factory_impl<Layout>(std::forward<Views>(views)...),
+                                         view_helper<Expanding>(*this) {
 
             }
 
@@ -113,8 +119,9 @@ namespace aui::ui_building {
                 using type = decltype(item);
                 constexpr bool isViewGroup = std::is_convertible_v<type, ViewGroup>;
                 constexpr bool isView = std::is_convertible_v<type, View>;
+                constexpr bool isInvokable = std::is_invocable_v<type>;
 
-                static_assert(isViewGroup || isView, "the item is neither convertible to View nor ViewGroup");
+                static_assert(isViewGroup || isView || isInvokable, "the item is neither convertible to View nor ViewGroup, nor invokable");
 
                 if constexpr (isViewGroup) {
                     auto asViewGroup = ViewGroup(item);
@@ -122,6 +129,8 @@ namespace aui::ui_building {
                 } else if constexpr (isView) {
                     auto asView = View(item);
                     mViews << std::move(asView);
+                } else if constexpr(isInvokable) {
+                    mViews << item();
                 }
             }, std::forward<Views>(views)...);
         }
@@ -145,6 +154,47 @@ namespace aui::ui_building {
         }
 
     };
+}
 
+namespace declarative {
 
+    /**
+     * @brief Extra styles wrapper.
+     * @ingroup declarative
+     * @details
+     * @code{cpp}
+     * Button { "Default button" },
+     * Style{
+     *     {
+     *         c(".btn"),
+     *         BackgroundSolid { 0xff0000_rgb },
+     *     },
+     * } ({
+     *     Button { "Red button" },
+     *     Button { "Another red button" },
+     * }),
+     * @endcode
+     */
+    struct Style {
+    public:
+        Style(std::initializer_list<Rule> rules): mStylesheet(_new<AStylesheet>(AStylesheet(rules))) {
+
+        }
+
+        Style& operator()(AVector<_<AView>> views) {
+            for (const auto& view : views) {
+                view->setExtraStylesheet(mStylesheet);
+            }
+            mViews = std::move(views);
+            return *this;
+        }
+
+        operator AVector<_<AView>>() noexcept {
+            return std::move(mViews);
+        }
+
+    private:
+        _<AStylesheet> mStylesheet;
+        AVector<_<AView>> mViews;
+    };
 }

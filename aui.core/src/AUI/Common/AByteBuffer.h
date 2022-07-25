@@ -259,6 +259,11 @@ public:
         return AByteBufferView(*this).toHexString();
     }
 
+    [[nodiscard]]
+    AString toBase64String() const {
+        return AByteBufferView(*this).toBase64String();
+    }
+
     static AByteBuffer fromStream(aui::no_escape<IInputStream> is);
     static AByteBuffer fromStream(aui::no_escape<IInputStream> is, size_t sizeRestriction);
 

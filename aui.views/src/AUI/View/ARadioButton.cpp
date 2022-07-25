@@ -66,7 +66,8 @@ _<ARadioButton> ARadioButton::Group::addRadioButton(const _<ARadioButton>& radio
     if (id == -1) id = int(mButtons.size());
     assert(("this id is already used; please choose another id" && !mButtons.contains(id)));
     mButtons[id] = radio;
-    connect(radio->checked, this, [&, radio, id](bool checked) {
+
+    auto onChecked = [&, radio, id](bool checked) {
         if (checked) {
             if (auto s = mSelectedRadio.lock()) {
                 s->setChecked(false);
@@ -75,7 +76,9 @@ _<ARadioButton> ARadioButton::Group::addRadioButton(const _<ARadioButton>& radio
             mSelectedId = id;
             emit selectionChanged(getSelectedId());
         }
-    });
+    };
+    if (radio->isChecked()) onChecked(true);
+    connect(radio->checked, this, std::move(onChecked));
     return radio;
 }
 

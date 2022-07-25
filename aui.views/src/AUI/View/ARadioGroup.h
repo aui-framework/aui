@@ -27,6 +27,8 @@
 
 #include "AViewContainer.h"
 #include "ARadioButton.h"
+#include "AUI/Model/AListModel.h"
+#include "AUI/Layout/AVerticalLayout.h"
 #include <AUI/Model/IListModel.h>
 
 /**
@@ -42,7 +44,14 @@ private:
     _<ARadioButton::Group> mGroup;
 
 public:
-    explicit ARadioGroup(const _<IListModel<AString>>& model);
+    template<typename... RadioButtons>
+    explicit ARadioGroup(RadioButtons&&... radioButtons): mGroup(_new<ARadioButton::Group>()) {
+        setLayout(_new<AVerticalLayout>());
+        aui::parameter_pack::for_each([&](const _<ARadioButton>& v) {
+            mGroup->addRadioButton(v);
+            addView(v);
+        }, std::forward<RadioButtons>(radioButtons)...);
+    }
     ARadioGroup();
     ~ARadioGroup() override;
 
@@ -60,3 +69,10 @@ signals:
 };
 
 
+namespace declarative {
+    struct RadioGroup: aui::ui_building::view<ARadioGroup> {
+    public:
+        using view<ARadioGroup>::view;
+
+    };
+}

@@ -127,6 +127,7 @@ public:
 
     void redraw();
 
+    void blockUserInput(bool blockUserInput = true) override;
 
     /**
      * @brief Checks whether last monitor frame is displayed and redraw will be efficient.

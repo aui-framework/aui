@@ -270,3 +270,6 @@ void ABaseWindow::onFocusLost() {
     closeOverlappingSurfacesOnClick();
 }
 
+void ABaseWindow::blockUserInput(bool blockUserInput) {
+
+}

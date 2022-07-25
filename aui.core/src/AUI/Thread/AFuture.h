@@ -61,9 +61,8 @@ namespace aui::impl::future {
      */
     template<typename Inner>
     struct CancellationWrapper {
-        _<Inner> wrapped;
 
-        explicit CancellationWrapper(_<Inner> wrapped) : wrapped(std::move(wrapped)) {}
+        explicit CancellationWrapper(_unique<Inner> wrapped) : wrapped(std::move(wrapped)) {}
 
         ~CancellationWrapper() {
             wrapped->cancel();
@@ -71,13 +70,16 @@ namespace aui::impl::future {
         }
 
         [[nodiscard]]
-        const _<Inner>& sharedPtr() noexcept {
+        const _unique<Inner>& ptr() noexcept {
             return wrapped;
         }
 
         Inner* operator->() const noexcept {
             return wrapped.get();
         }
+
+    private:
+        _unique<Inner> wrapped;
     };
 
     template<typename T>
@@ -125,7 +127,7 @@ namespace aui::impl::future {
                 while ((thread) && !hasResult()) {
                     try {
                         cv.wait(lock);
-                    } catch (const AThread::Interrupted& i) {
+                    } catch (const AThread::Interrupted&) {
                         rethrowInterrupted = true;
                     }
                 }
@@ -157,7 +159,7 @@ namespace aui::impl::future {
                 return false;
             }
 
-            void wait(const _weak<Inner>& innerWeak, AFutureWait flags = AFutureWait::DEFAULT) noexcept {
+            void wait(const _weak<CancellationWrapper<Inner>>& innerWeak, AFutureWait flags = AFutureWait::DEFAULT) noexcept {
                 std::unique_lock lock(mutex);
                 try {
                     if ((thread || !cancelled) && !hasResult() && int(flags) & 0b1 && task) {
@@ -192,14 +194,15 @@ namespace aui::impl::future {
              * @param innerWeak self weak_ptr
              * @return true, then task is successfully executed and supplied result.
              */
-            bool tryExecute(const _weak<Inner>& innerWeak) {
+            bool tryExecute(const _weak<CancellationWrapper<Inner>>& innerWeak) {
                 /*
                  * We should assume that this == nullptr or invalid.
                  * We can assert that this pointer is safe only if we hold at least one shared_ptr.
                  * It allows callers to pass a weak_ptr in any state.
                  */
-                if (auto inner = innerWeak.lock()) {
+                if (auto innerCancellation = innerWeak.lock()) {
                     if (value) return false;
+                    auto& inner = innerCancellation->ptr();
                     if (inner->setThread(AThread::current())) return false;
                     try {
                         if (task == nullptr) { // task is executed in wait() function
@@ -212,29 +215,35 @@ namespace aui::impl::future {
                         auto func = std::move(task);
                         assert(bool(func));
                         lock.unlock();
-                        inner = nullptr;
+                        innerCancellation = nullptr;
                         if constexpr(isVoid) {
                             func();
                             if (auto sharedPtrLock = innerWeak.lock()) {
-                                std::unique_lock lock(mutex);
+                                lock.lock();
                                 value = true;
                                 cv.notify_all();
                                 nullsafe(onSuccess)();
+
+                                (void)sharedPtrLock; // sharedPtrLock is *used*
+                                lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
                             }
                         } else {
                             auto result = func();
                             if (auto sharedPtrLock = innerWeak.lock()) {
-                                std::unique_lock lock(mutex);
+                                lock.lock();
                                 value = std::move(result);
                                 cv.notify_all();
                                 nullsafe(onSuccess)(*value);
+
+                                (void)sharedPtrLock; // sharedPtrLock is *used*
+                                lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
                             }
                         }
-                    } catch (const AException& e) {
-                        nullsafe(innerWeak.lock())->reportException();
+                    } catch (const AException&) {
+                        inner->reportException();
                         return false;
                     } catch (...) {
-                        nullsafe(innerWeak.lock())->reportInterrupted();
+                        inner->reportInterrupted();
                         throw;
                     }
                 }
@@ -265,10 +274,10 @@ namespace aui::impl::future {
          * @param task a callback which will be executed by Future::Inner::tryExecute. Can be null. If null, the result
          *        should be provided by AFuture::supplyResult function.
          */
-        Future(TaskCallback task = nullptr) noexcept: mInner(_new<CancellationWrapper<Inner>>(aui::ptr::manage(new Inner(std::move(task))))) {}
+        Future(TaskCallback task = nullptr) noexcept: mInner(_new<CancellationWrapper<Inner>>((_unique<Inner>)(new Inner(std::move(task))))) {}
 
         [[nodiscard]]
-        const _<CancellationWrapper<Inner>>& inner() {
+        const _<CancellationWrapper<Inner>>& inner() const noexcept {
             return mInner;
         }
 
@@ -301,57 +310,52 @@ namespace aui::impl::future {
         }
 
         template<typename Callback>
-        Future& onSuccess(Callback&& callback) noexcept {
+        void onSuccess(Callback&& callback) noexcept {
             std::unique_lock lock((*mInner)->mutex);
             if constexpr(isVoid) {
                 if ((*mInner)->onSuccess) {
                     (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
-                                            innerStorage = mInner,
                                             callback = std::forward<Callback>(callback)]() {
                         prev();
                         callback();
                     };
                 } else {
-                    (*mInner)->onSuccess = [innerStorage = mInner, callback = std::forward<Callback>(callback)]() {
+                    (*mInner)->onSuccess = [callback = std::forward<Callback>(callback)]() {
                         callback();
                     };
                 }
             } else {
                 if ((*mInner)->onSuccess) {
                     (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
-                            innerStorage = mInner,
                             callback = std::forward<Callback>(callback)](const Value& v) {
                         prev(v);
                         callback(v);
                     };
                 } else {
-                    (*mInner)->onSuccess = [innerStorage = mInner, callback = std::forward<Callback>(callback)](
+                    (*mInner)->onSuccess = [callback = std::forward<Callback>(callback)](
                             const Value& v) {
                         callback(v);
                     };
                 }
             }
-            return *this;
         }
 
         template<typename Callback>
-        Future& onError(Callback&& callback) noexcept {
+        void onError(Callback&& callback) noexcept {
             std::unique_lock lock((*mInner)->mutex);
 
             if ((*mInner)->onError) {
                 (*mInner)->onError = [prev = std::move((*mInner)->onError),
-                        innerStorage = mInner,
                         callback = std::forward<Callback>(callback)](const AException& v) {
                     prev(v);
                     callback(v);
                 };
             } else {
-                (*mInner)->onError = [innerStorage = mInner, callback = std::forward<Callback>(callback)](
+                (*mInner)->onError = [callback = std::forward<Callback>(callback)](
                         const AException& v) {
                     callback(v);
                 };
             }
-            return *this;
         }
 
 
@@ -378,7 +382,7 @@ namespace aui::impl::future {
          *       yet. This behaviour can be disabled by <code>AFutureWait::ASYNC_ONLY</code> flag.
          */
         void wait(AFutureWait flags = AFutureWait::DEFAULT) noexcept {
-            (*mInner)->wait(mInner->sharedPtr(), flags);
+            (*mInner)->wait(mInner, flags);
         }
 
         /**
@@ -391,7 +395,7 @@ namespace aui::impl::future {
          */
         decltype(auto) get(AFutureWait flags = AFutureWait::DEFAULT) {
             AThread::interruptionPoint();
-            (*mInner)->wait(mInner->sharedPtr(), flags);
+            (*mInner)->wait(mInner, flags);
             AThread::interruptionPoint();
             if ((*mInner)->exception) {
                 throw *(*mInner)->exception;
@@ -504,6 +508,7 @@ public:
     using Task = typename super::TaskCallback;
 
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
+    ~AFuture() = default;
 
     void supplyResult(T v) noexcept {
         auto& inner = (*super::mInner);
@@ -524,6 +529,18 @@ public:
     bool operator==(const AFuture& r) const noexcept {
         return super::mInner == r.mInner;
     }
+
+    template<typename Callback>
+    AFuture& onSuccess(Callback&& callback) noexcept {
+        super::onSuccess(std::forward<Callback>(callback));
+        return *this;
+    }
+
+    template<typename Callback>
+    AFuture& onError(Callback&& callback) noexcept {
+        super::onError(std::forward<Callback>(callback));
+        return *this;
+    }
 };
 
 template<>
@@ -536,6 +553,7 @@ public:
     using Task = typename super::TaskCallback;
 
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
+    ~AFuture() = default;
 
     void supplyResult() noexcept {
         auto& inner = (*super::mInner);
@@ -555,6 +573,18 @@ public:
     [[nodiscard]]
     bool operator==(const AFuture& r) const noexcept {
         return super::mInner == r.mInner;
+    }
+
+    template<typename Callback>
+    AFuture& onSuccess(Callback&& callback) noexcept {
+        super::onSuccess(std::forward<Callback>(callback));
+        return *this;
+    }
+
+    template<typename Callback>
+    AFuture& onError(Callback&& callback) noexcept {
+        super::onError(std::forward<Callback>(callback));
+        return *this;
     }
 };
 

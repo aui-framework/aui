@@ -86,7 +86,7 @@ int ACursorSelectable::drawSelectionPre() {
 }
 
 int ACursorSelectable::getPosByIndex(int end, int begin) {
-    return -getMouseSelectionScroll().x + int(getMouseSelectionFont().getWidth(getDisplayText().mid(begin, end - begin)));
+    return -getMouseSelectionScroll().x + int(getMouseSelectionFont().getWidth(getDisplayText().substr(begin, end - begin)));
 }
 
 void ACursorSelectable::drawSelectionPost() {

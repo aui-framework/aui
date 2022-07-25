@@ -37,11 +37,11 @@ void Svg2png::run(Toolbox& t) {
     for (auto& f : t.args) {
         if (f.length() >= 3) {
             if (f[2] == '=') {
-                auto value = f.mid(3);
+                auto value = f.substr(3);
                 switch (f[1]) {
                     case 'r': {
                         for (auto& resolution: value.split(',')) {
-                            resolutions << resolution.toInt();
+                            resolutions << resolution.toInt().value_or(0);
                         }
                         break;
                     }

@@ -201,7 +201,7 @@ struct ASqlModel {
     static AString getIdColumnNameInOtherTables() {
         AString tableName = AModelMeta<Model>::getSqlTable();
         if (tableName.endsWith("s")) {
-            tableName = tableName.mid(0, tableName.length() - 1);
+            tableName = tableName.substr(0, tableName.length() - 1);
         }
         tableName += "_id";
         return tableName;

@@ -101,3 +101,7 @@ public:
         return &ACheckBox::setChecked;
     }
 };
+
+namespace declarative {
+    using CheckBox = aui::ui_building::view<ACheckBox>;
+}

@@ -28,20 +28,6 @@
 #include "ARadioButton.h"
 #include <AUI/Platform/AWindow.h>
 
-ARadioGroup::ARadioGroup(const _<IListModel<AString>>& model):
-    ARadioGroup()
-{
-    setModel(model);
-}
-
-ARadioGroup::ARadioGroup():
-        mGroup(_new<ARadioButton::Group>())
-{
-    connect(mGroup->selectionChanged, this, [&](int id) {
-        emit selectionChanged(AModelIndex(id));
-    });
-}
-
 
 ARadioGroup::~ARadioGroup() {
 
@@ -68,5 +54,5 @@ void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
         });
     }
 
-    AWindow::current()->flagUpdateLayout();
+    requestLayoutUpdate();
 }

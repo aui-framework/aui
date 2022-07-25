@@ -49,6 +49,23 @@ public:
 
     ABaseWindow();
 
+
+    /**
+     * @brief Enables or disables user input for this window.
+     * @param blockUserInput whether block user input or not.
+     * @details
+     * Visually nothing changes, but when the user tries to interact with the window, nothing happens with the window
+     * and on some platforms a system sound played notifying the user that the window is blocked.
+     *
+     * It is userful when you open a modal window and you want the user to complete the action in the modal window first
+     * in order to continue interacting with the parent window.
+     *
+     * @note
+     * When displaying a modal dialog and has blocked the parent window, the application must unblock the parent window
+     * before the modal dialog destroyed, otherwise, another window will receive the keyboard focus and be activated.
+     */
+    virtual void blockUserInput(bool blockUserInput = true);
+
     virtual ~ABaseWindow();
     static AWindowManager& getWindowManager() {
         return *getWindowManagerImpl();

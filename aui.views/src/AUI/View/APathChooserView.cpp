@@ -37,7 +37,7 @@ APathChooserView::APathChooserView(const APath& defaultPath) {
     mPathField->setExpanding({2, 0});
     addView(_new<AButton>("...").connect(&AButton::clicked, this, [&]() {
         auto c = mPathField;
-        ADesktop::browseForDir(mPathField->text()).onSuccess([&, c](const AString& path) {
+        ADesktop::browseForDir(getWindow(), mPathField->text()).onSuccess([&, c](const AString& path) {
             c->getThread()->enqueue([path, c]() {
                 if (!path.empty()) {
                     c->setText(path);
