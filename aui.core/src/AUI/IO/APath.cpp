@@ -72,7 +72,7 @@ static APath safePathFromRawString(const char* rawString, Callback&& throwExcept
 APath APath::parent() const {
     auto c = ensureNonSlashEnding().rfind(L'/');
     if (c != NPOS) {
-        return mid(0, c);
+        return substr(0, c);
     }
     return {};
 }
@@ -82,7 +82,7 @@ AString APath::filename() const {
      if (i == NPOS) {
          return *this;
      }
-    return mid(i + 1);
+    return substr(i + 1);
 }
 
 AString APath::filenameWithoutExtension() const {
@@ -91,7 +91,7 @@ AString APath::filenameWithoutExtension() const {
     if (it == NPOS) {
         return name;
     }
-    return name.mid(0, it);
+    return name.substr(0, it);
 }
 
 APath APath::file(const AString& fileName) const {
@@ -107,7 +107,7 @@ APath APath::ensureSlashEnding() const {
 
 APath APath::ensureNonSlashEnding() const {
     if (endsWith("/")) {
-        return mid(0, length() - 1);
+        return substr(0, length() - 1);
     }
     return *this;
 }
@@ -116,12 +116,12 @@ AString APath::relativelyTo(const APath& dir) const {
     if (isAbsolute() == dir.isAbsolute()) {
         auto f = dir.ensureSlashEnding();
         assert(startsWith(f));
-        return mid(f.length());
+        return substr(f.length());
     }
     auto meButAbsolute = absolute();
     auto f = dir.absolute().ensureSlashEnding();
     assert(meButAbsolute.startsWith(f));
-    return meButAbsolute.mid(f.length());
+    return meButAbsolute.substr(f.length());
 }
 bool APath::exists() const {
     return stat().st_mode & (S_IFDIR | S_IFREG);
@@ -205,9 +205,9 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
             for (auto& file : childDir.listDir(f)) {
                 if (file.startsWith(childDir)) {
                     // absolute path
-                    auto p = file.mid(childDir.length());
+                    auto p = file.substr(childDir.length());
                     if (p.startsWith("/")) {
-                        p = p.mid(1);
+                        p = p.substr(1);
                     }
                     list << childDir.file(p);
                 } else {
@@ -337,7 +337,7 @@ APath APath::withoutUppermostFolder() const {
     auto r = AString::find('/');
     if (r == NPOS)
         return *this;
-    return mid(r + 1);
+    return substr(r + 1);
 }
 
 APath APath::workingDir() {

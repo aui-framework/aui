@@ -1,4 +1,4 @@
-﻿/*
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,58 +19,43 @@
  * =====================================================================================================================
  */
 
-#include "AUrl.h"
+//
+// Created by alex2 on 30.08.2020.
+//
 
-#include <functional>
-#include <AUI/IO/AFileInputStream.h>
+#include <gtest/gtest.h>
+#include <AUI/Common/AString.h>
 
-#include "AUI/Common/AMap.h"
-#include "AUI/Util/ABuiltinFiles.h"
 
-AUrl::AUrl(AString full)
-{
-	auto posColon = full.find(':');
-	if (posColon == AString::NPOS)
-	{
-		mPath = std::move(full);
-		if (mPath.startsWith("./")) {
-			mPath = mPath.substr(2);
-		}
-        mSchema = "file";
-	} else
-	{
-        mSchema = full.substr(0, posColon);
-		if (mSchema.empty())
-		{
-            mSchema = "builtin";
-			mPath = full.substr(posColon + 1);
-		} else
-		{
-            mPath = full.substr(posColon + 3);
-		}
-	}
+TEST(Strings, ToInt) {
+    EXPECT_EQ("123"_as.toInt(), 123);
+    EXPECT_EQ("0"_as.toInt(), 0);
+    EXPECT_EQ("-251"_as.toInt(), -251);
+    EXPECT_EQ("123abs"_as.toInt(), std::nullopt);
+    EXPECT_EQ("1a23"_as.toInt(), std::nullopt);
+    EXPECT_EQ("a123"_as.toInt(), std::nullopt);
+    EXPECT_EQ("0x"_as.toInt(), 0);
+    EXPECT_EQ("0x123"_as.toInt(), 0x123);
+    EXPECT_EQ("0xabcdef"_as.toInt(), 0xabcdef);
+    EXPECT_EQ("0xabcdef123456"_as.toInt(), std::nullopt); // overflow
+    EXPECT_EQ("123456214214"_as.toInt(), std::nullopt); // overflow
 }
 
-AMap<AString, std::function<_<IInputStream>(const AUrl&)>>& AUrl::resolvers() {
-    static AMap<AString, std::function<_<IInputStream>(const AUrl&)>> storage = {
-        {"builtin", [](const AUrl& u) {
-            return ABuiltinFiles::open(u.path());
-        }},
-        {"file",    [](const AUrl& u) {
-            return _new<AFileInputStream>(u.path());
-        }},
-    };
-    return storage;
-}
-_<IInputStream> AUrl::open() const {
-	if (auto c = resolvers().contains(mSchema)) {
-		if (auto is = c->second(*this))
-			return is;
-	}
-	throw AIOException("could not open url: " + full());
+TEST(Strings, ToUInt) {
+    EXPECT_EQ("123"_as.toUInt(), 123);
+    EXPECT_EQ("123abs"_as.toUInt(), std::nullopt);
+    EXPECT_EQ("1a23"_as.toUInt(), std::nullopt);
+    EXPECT_EQ("a123"_as.toUInt(), std::nullopt);
 }
 
+TEST(Strings, ToFloat) {
+    constexpr float ABS_ERROR = 0.01;
 
-void AUrl::registerResolver(const AString& protocol, const std::function<_<IInputStream>(const AUrl&)>& factory) {
-    resolvers()[protocol] = factory;
+    EXPECT_NEAR("123"_as.toFloat().value_or(0), 123, ABS_ERROR);
+    EXPECT_NEAR("123.456"_as.toFloat().value_or(0), 123.456, ABS_ERROR);
+    EXPECT_NEAR("-123.456"_as.toFloat().value_or(0), -123.456, ABS_ERROR);
+    EXPECT_NEAR("-0.0"_as.toFloat().value_or(99999), 0, ABS_ERROR);
+    EXPECT_EQ("123abs"_as.toUInt(), std::nullopt);
+    EXPECT_EQ("1a23"_as.toUInt(), std::nullopt);
+    EXPECT_EQ("a123"_as.toUInt(), std::nullopt);
 }

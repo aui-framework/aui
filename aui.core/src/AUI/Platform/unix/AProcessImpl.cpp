@@ -78,9 +78,8 @@ public:
 AVector<_<AProcess>> AProcess::all() {
     AVector<_<AProcess>> result;
     for (auto& f : APath("/proc/").listDir(AFileListFlags::DIRS)) {
-        pid_t p = f.filename().toUInt();
-        if (p != 0) {
-            result << _new<AOtherProcess>(p);
+        if (auto pid = f.filename().toUInt()) {
+            result << _new<AOtherProcess>(*pid);
         }
     }
     return result;
@@ -88,8 +87,7 @@ AVector<_<AProcess>> AProcess::all() {
 
 _<AProcess> AProcess::self() {
     char buf[0x100];
-    readlink("/proc/self", buf, sizeof(buf));
-    return _new<AOtherProcess>(AString(buf).toUInt());
+    return _new<AOtherProcess>(*AString::fromUtf8(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
 }
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {

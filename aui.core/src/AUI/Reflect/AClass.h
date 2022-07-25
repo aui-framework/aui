@@ -34,16 +34,16 @@ public:
 		AString s = __FUNCSIG__;
 		auto openTag = s.find('<') + 1;
 		auto closeTag = s.find('>');
-		auto name = s.mid(openTag, closeTag - openTag);
-        name = name.mid(name.rfind(' ') + 1);
+		auto name = s.substr(openTag, closeTag - openTag);
+        name = name.substr(name.rfind(' ') + 1);
 		if (name.endsWith(" &"))
-			name = name.mid(0, name.length() - 2);
+			name = name.substr(0, name.length() - 2);
 		return name;
 #elif AUI_PLATFORM_ANDROID
 		AString s = __PRETTY_FUNCTION__;
 		auto b = s.find("=") + 1;
 		auto e = s.find("&", b);
-		auto result = s.mid(b, e - b);
+		auto result = s.substr(b, e - b);
 		result = result.trim();
 		return result;
 #else
