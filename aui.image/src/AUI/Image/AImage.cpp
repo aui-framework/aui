@@ -164,6 +164,8 @@ void AImage::copy(const AImage& src, AImage& dst, uint32_t x, uint32_t y)
 
 AImage AImage::sub(uint32_t x, uint32_t y, uint32_t width, uint32_t height) const
 {
+    assert(x + width <= mWidth);
+    assert(y + height <= mHeight);
     AImage image(width, height, getFormat());
 
 
