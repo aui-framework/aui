@@ -50,8 +50,6 @@ namespace ass {
 
             void applyFor(AView* view) override;
 
-            const LineHeight& value() const { return mInfo; }
-
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
