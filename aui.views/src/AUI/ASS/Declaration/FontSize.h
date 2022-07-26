@@ -51,7 +51,10 @@ namespace ass {
 
             void applyFor(AView* view) override;
 
-            const FontSize& value() const { return mInfo; }
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
         };
     }
 }
