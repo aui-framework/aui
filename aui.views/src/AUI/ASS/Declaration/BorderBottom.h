@@ -35,6 +35,11 @@ namespace ass {
             bool isNone() override;
 
             DeclarationSlot getDeclarationSlot() const override;
+
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
         };
     }
 }

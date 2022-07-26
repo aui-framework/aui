@@ -42,7 +42,8 @@ namespace ass {
 
             void applyFor(AView* view) override;
 
-            TextAlign value() const {
+            [[nodiscard]]
+            const auto& value() const noexcept {
                 return mInfo;
             }
         };

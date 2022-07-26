@@ -125,7 +125,10 @@ namespace ass {
 
             DeclarationSlot getDeclarationSlot() const override;
 
-            const BackgroundImage& value() const { return mInfo; }
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
         };
 
     }

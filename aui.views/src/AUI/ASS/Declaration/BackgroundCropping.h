@@ -62,7 +62,8 @@ namespace ass {
 
             void applyFor(AView* view) override;
 
-            const BackgroundCropping& value() {
+            [[nodiscard]]
+            const auto& value() const noexcept {
                 return mInfo;
             }
         };

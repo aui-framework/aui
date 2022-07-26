@@ -83,7 +83,8 @@ namespace ass {
 
             void applyFor(AView* view) override;
 
-            const Padding& value() const {
+            [[nodiscard]]
+            const auto& value() const noexcept {
                 return mInfo;
             }
         };
