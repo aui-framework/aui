@@ -29,43 +29,53 @@
 #include "IDeclaration.h"
 
 namespace ass {
+    /**
+     * @brief Determines sizing rules of a background texture (BackgroundImage).
+     * @ingroup ass
+     */
     enum class Sizing {
+        /**
+         * @brief Image is kept in it's original size.
+         */
         NONE,
 
         /**
-         * Resize image to view's area without keeping aspect ratio.
+         * @brief Resize image to view's area without keeping aspect ratio.
          */
         FIT,
 
         /**
-         * Center the image
+         * @brief Center the image.
          */
         CENTER,
 
         /**
-         * Resize image to view's content area without keeping aspect ratio.
+         * @brief Resize image to view's content area without keeping aspect ratio.
          */
         FIT_PADDING,
 
         /**
-         * Resize image to view's area keeping aspect ratio and cutting of excess parts. Matches CSS
+         * @brief Resize image to view's area keeping aspect ratio and cutting of excess parts. Matches CSS
          * background-size: cover
          */
         COVER,
 
         /**
-         * Resize image to view's area keeping aspect ratio and keeping space not covered by the image. Matches CSS
-         * background-size: contain
+         * @brief Resize image to view's area keeping aspect ratio and keeping space not covered by the image. Matches
+         * CSS background-size: contain
          */
         CONTAIN,
 
         /**
-         * Texture divided to 4 parts cutting center.
+         * @brief Texture divided by 4 parts of the same size, keeping their original size. Useful for textured buttons
+         * and inputs in games.
+         * @details When the view is larger than the texture, the free space is covered by stretching the central row
+         * (for vertical) and the central column (for horizontal).
          */
         SPLIT_2X2,
 
         /**
-         * Texture is cropped by BackgroundCropping rule.
+         * @brief Texture is cropped by BackgroundCropping rule.
          */
         CROPPED,
     };
