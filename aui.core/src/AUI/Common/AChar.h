@@ -1,42 +1,79 @@
 #pragma once
 
+#include <locale>
 
 /**
- * @brief Represents a single 32-bit char.
+ * @brief Represents a single 16-bit char.
  * @ingroup core
  */
 class AChar {
 private:
-    char32_t mValue;
+    wchar_t mValue;
 
 public:
-    AChar(char c): mValue(c) {}
+    AChar(wchar_t c): mValue(c) {}
 
     [[nodiscard]]
-    bool digit() const {
+    bool whitespace() const noexcept {
+        switch (mValue) {
+            case ' ':
+            case '\f':
+            case '\n':
+            case '\r':
+            case '\t':
+            case '\v':
+                return true;
+            default: return false;
+        }
+    }
+
+    [[nodiscard]]
+    bool digit() const noexcept {
         return mValue >= '0' && mValue <= '9';
     }
 
     [[nodiscard]]
-    bool alpha() const {
+    bool alpha() const noexcept {
         return (mValue >= 'a' && mValue <= 'z') || (mValue >= 'A' && mValue <= 'Z');
     }
 
     [[nodiscard]]
-    bool alnum() const {
+    bool alnum() const noexcept {
         return alpha() || digit();
     }
 
     [[nodiscard]]
-    char asAscii() const {
+    char asAscii() const noexcept {
         return char(mValue);
     }
 
-    operator char32_t() const {
+    operator wchar_t () const noexcept {
         return mValue;
+    }
+
+    bool operator==(AChar rhs) const noexcept {
+        return mValue == rhs.mValue;
+    }
+
+    bool operator!=(AChar rhs) const noexcept {
+        return mValue != rhs.mValue;
+    }
+
+    bool operator<(AChar rhs) const noexcept {
+        return mValue < rhs.mValue;
+    }
+
+    bool operator<=(AChar rhs) const noexcept {
+        return mValue <= rhs.mValue;
+    }
+
+    bool operator>(AChar rhs) const noexcept {
+        return mValue > rhs.mValue;
+    }
+
+    bool operator>=(AChar rhs) const noexcept {
+        return mValue >= rhs.mValue;
     }
 };
 
-static_assert(sizeof(AChar) == 4, "AChar should be exact 4 bytes");
-
-
+static_assert(sizeof(AChar) == 2, "AChar should be exact 2 bytes");

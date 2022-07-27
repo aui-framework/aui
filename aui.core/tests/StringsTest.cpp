@@ -59,3 +59,36 @@ TEST(Strings, ToFloat) {
     EXPECT_EQ("1a23"_as.toUInt(), std::nullopt);
     EXPECT_EQ("a123"_as.toUInt(), std::nullopt);
 }
+
+TEST(Strings, FindChar) {
+    EXPECT_EQ(L"abcabc"_as.find('a'), 0);
+    EXPECT_EQ(L"abcabc"_as.find('b'), 1);
+    EXPECT_EQ(L"abcabc"_as.find('c'), 2);
+    EXPECT_EQ(L"abcabc"_as.find('?'), -1);
+}
+
+TEST(Strings, RFindChar) {
+    EXPECT_EQ(L"abcabc"_as.rfind('a'), 3);
+    EXPECT_EQ(L"abcabc"_as.rfind('b'), 4);
+    EXPECT_EQ(L"abcabc"_as.rfind('c'), 5);
+    EXPECT_EQ(L"abcabc"_as.rfind('d'), -1);
+}
+
+TEST(Strings, FindString) {
+    EXPECT_EQ(L"abcabc"_as.find(L"abc"), 0);
+    EXPECT_EQ(L"abcabc"_as.find(L"abc", 1), 1);
+}
+
+TEST(Strings, RFindString) {
+    EXPECT_EQ(L"abcabc"_as.rfind('a'), 3);
+    EXPECT_EQ(L"abcabc"_as.rfind('b'), 4);
+    EXPECT_EQ(L"abcabc"_as.rfind('c'), 5);
+    EXPECT_EQ(L"abcabc"_as.rfind('d'), -1);
+}
+
+TEST(Strings, TrimLeft) {
+    EXPECT_EQ(L" abc"_as.trimLeft(), "abc");
+    EXPECT_EQ(L" abc "_as.trimLeft(), "abc ");
+    EXPECT_EQ(L" абв "_as.trimLeft(), "абв ");
+    EXPECT_EQ(L"abc"_as.trimLeft(), "abc");
+}

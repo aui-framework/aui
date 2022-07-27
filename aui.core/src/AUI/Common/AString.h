@@ -25,6 +25,7 @@
 #include <iostream>
 #include "AUI/Core.h"
 #include <AUI/Common/ASet.h>
+#include <AUI/Common/AStringView.h>
 #include <optional>
 
 class API_AUI_CORE AStringVector;
@@ -160,6 +161,8 @@ public:
     {
     }
 
+    AString(AStringView stringView): basic_string<wchar_t>(stringView.data(), stringView.length()) {}
+
     virtual ~AString() = default;
 
 
@@ -246,7 +249,7 @@ public:
         super::resize(s);
     }
 
-    AString restrictLength(size_t s, const AString& stringAtEnd = "...") const;
+    AString& restrictLength(size_t s, AStringView stringAtEnd = L"...") const;
 
     wchar_t* data() noexcept
     {
@@ -601,42 +604,8 @@ public:
     AString substr(std::size_t offset, std::size_t count = npos) const {
         return super::substr(offset, count);
     }
-
-private:
-    /**
-     * @brief Converts the string to integer values. Used in AString::toInt, AString::toUInt, etc.
-     */
-    template<typename T>
-    std::optional<T> toNumberImpl() const noexcept;
 };
 
-inline AString operator+(const AString& l, const AString& r) noexcept
-{
-    auto x = l;
-    x.append(r);
-    return x;
-}
-inline AString operator+(const AString& l, wchar_t r) noexcept
-{
-    auto x = l;
-    x.append(r);
-    return x;
-}
-inline AString operator+(const AString& one, const char* other) noexcept
-{
-    return one + AString(other);
-}
-
-inline AString operator+(const char* other, const AString& one) noexcept {
-    return AString(other) + one;
-}
-
-inline AString operator+(char lhs, const AString& cs) noexcept
-{
-    AString s(lhs);
-    s += cs;
-    return s;
-}
 
 inline AString operator"" _as(const char* str, size_t len)
 {
