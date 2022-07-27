@@ -34,7 +34,7 @@ namespace ass {
      * @ingroup ass
      */
     struct LineHeight {
-        float spacing;
+        AMetric spacing;
     };
 
     namespace decl {

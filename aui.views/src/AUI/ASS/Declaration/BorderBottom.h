@@ -16,6 +16,9 @@ namespace ass {
     struct BorderBottom {
         AMetric width;
         AColor color;
+
+        BorderBottom(std::nullptr_t): width(0) {}
+        BorderBottom(const AMetric &width, const AColor &color) : width(width), color(color) {}
     };
 
 

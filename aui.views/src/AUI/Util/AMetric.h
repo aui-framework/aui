@@ -23,6 +23,7 @@
 
 #include <AUI/Core.h>
 #include <type_traits>
+#include <cassert>
 #include <ostream>
 #include <tuple>
 

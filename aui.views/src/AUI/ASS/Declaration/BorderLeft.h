@@ -16,6 +16,9 @@ namespace ass {
     struct BorderLeft {
         AMetric width;
         AColor color;
+
+        BorderLeft(std::nullptr_t): width(0) {}
+        BorderLeft(const AMetric &width, const AColor &color) : width(width), color(color) {}
     };
 
     namespace decl {
