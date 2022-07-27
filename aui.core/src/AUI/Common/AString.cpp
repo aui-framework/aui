@@ -1110,6 +1110,7 @@ AString AString::excessSpacesRemoved() const noexcept {
 
 template<typename T>
 std::optional<T> AString::toNumberImpl() const noexcept {
+    if (empty()) return std::nullopt;
     T value = 0;
     T prevValue = 0;
     bool negative = false;
