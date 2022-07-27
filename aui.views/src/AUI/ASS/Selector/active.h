@@ -42,7 +42,7 @@ namespace ass {
 
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
             Base::setupConnections(view, helper);
-            view->focusState.clearAllConnectionsWith(helper.get());
+            view->pressedState.clearAllConnectionsWith(helper.get());
             AObject::connect(view->pressedState, slot(helper)::onInvalidateStateAss);
         }
     };
