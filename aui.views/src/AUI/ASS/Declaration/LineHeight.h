@@ -30,11 +30,11 @@
 
 namespace ass {
     /**
-     * @brief Controls line height of font of AView.
+     * @brief Controls line height multiplier of the font of the AView.
      * @ingroup ass
      */
     struct LineHeight {
-        AMetric spacing;
+        float spacing;
     };
 
     namespace decl {
