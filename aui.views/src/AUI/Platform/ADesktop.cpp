@@ -20,6 +20,7 @@
  */
 
 #include "ADesktop.h"
+#include <AUI/Util/ARaiiHelper.h>
 
 #ifdef __MINGW32__
 // Explicitly setting NTDDI version, this is necessary for the MinGW compiler
@@ -309,8 +310,14 @@ void ADesktop::openUrl(const AString& url) {
     system(s.c_str());
 }
 
-AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVector<FileExtension>& extensions) {
+AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
+    parent->blockUserInput();
     return async {
+        ARaiiHelper windowUnblocker = [&] {
+            parent->getThread()->enqueue([parent] {
+                parent->blockUserInput(false);
+            });
+        };
         aui_gtk_init();
         GtkWidget *dialog;
         GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
@@ -356,8 +363,14 @@ AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVec
     };
 }
 
-AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
-    return async {
+AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& startingLocation) {
+    parent->blockUserInput();
+    return async  {
+        ARaiiHelper windowUnblocker = [&] {
+            parent->getThread()->enqueue([parent] {
+                parent->blockUserInput(false);
+            });
+        };
         aui_gtk_init();
         GtkWidget *dialog;
         GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER;

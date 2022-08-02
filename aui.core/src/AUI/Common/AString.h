@@ -25,6 +25,7 @@
 #include <iostream>
 #include "AUI/Core.h"
 #include <AUI/Common/ASet.h>
+#include <optional>
 
 class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
@@ -200,11 +201,6 @@ public:
 
     AStringVector split(wchar_t c) const noexcept;
 
-    AString mid(size_t pos, size_t count = npos) const noexcept
-    {
-        return substr(pos, count);
-    }
-
     size_type find(char c, size_type offset = 0) const noexcept
     {
         return super::find(c, offset);
@@ -288,20 +284,53 @@ public:
     }
     AString& replaceAll(wchar_t from, wchar_t to) noexcept;
 
-    [[nodiscard]]
-    float toFloat() const noexcept;
 
+    /**
+     * @brief Converts the string to a float number.
+     * @return The string converted to a float number.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
     [[nodiscard]]
-    double toDouble() const noexcept;
+    std::optional<float> toFloat() const noexcept;
 
+    /**
+     * @brief Converts the string to a double number.
+     * @return The string converted to a double number.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
     [[nodiscard]]
-    int toInt() const noexcept;
+    std::optional<double> toDouble() const noexcept;
 
+    /**
+     * @brief Converts the string to int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
     [[nodiscard]]
-    unsigned toUInt() const noexcept;
+    std::optional<int> toInt() const noexcept;
 
+    /**
+     * @brief Converts the string to int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
     [[nodiscard]]
-    bool toBool() const noexcept;
+    std::optional<unsigned> toUInt() const noexcept;
+
+    /**
+     * @brief Converts the string to boolean value.
+     * @return If the string equals to "true", true returned, false otherwise.
+     */
+    [[nodiscard]]
+    bool toBool() const noexcept {
+        return *this == "true";
+    }
 
     [[nodiscard]]
     bool contains(wchar_t c) const noexcept
@@ -567,6 +596,18 @@ public:
         erase(std::remove(begin(), end(), c));
         return *this;
     }
+
+    [[nodiscard]]
+    AString substr(std::size_t offset, std::size_t count = npos) const {
+        return super::substr(offset, count);
+    }
+
+private:
+    /**
+     * @brief Converts the string to integer values. Used in AString::toInt, AString::toUInt, etc.
+     */
+    template<typename T>
+    std::optional<T> toNumberImpl() const noexcept;
 };
 
 inline AString operator+(const AString& l, const AString& r) noexcept

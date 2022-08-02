@@ -53,7 +53,7 @@ public:
 
 
         for (size_t p; (p = result.find("::")) != AString::NPOS;) {
-            result = result.mid(p + 2);
+            result = result.substr(p + 2);
         }
 
 #endif

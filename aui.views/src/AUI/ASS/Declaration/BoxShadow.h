@@ -83,7 +83,8 @@ namespace ass {
 
             DeclarationSlot getDeclarationSlot() const override;
 
-            const BoxShadow& value() const {
+            [[nodiscard]]
+            const auto& value() const noexcept {
                 return mInfo;
             }
         };

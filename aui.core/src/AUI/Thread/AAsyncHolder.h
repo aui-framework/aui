@@ -2,6 +2,7 @@
 
 #include "AFuture.h"
 #include <any>
+#include <list>
 
 
 /**
@@ -41,28 +42,26 @@ public:
     template<typename T>
     AAsyncHolder& operator<<(AFuture<T> future) {
         std::unique_lock lock(mSync);
-        auto uniquePtr = std::make_unique<Future<T>>(future);
-        auto ptr = uniquePtr.get();
-        mCustomTypeFutures.push_back(std::move(uniquePtr));
-        future.onSuccess([this, ptr](const T& result) {
-            std::unique_lock lock(mSync);
-            mCustomTypeFutures.erase(std::remove_if(mCustomTypeFutures.begin(), mCustomTypeFutures.end(), [&](const auto& uniquePtr) {
-                return uniquePtr.get() == ptr;
-            }), mCustomTypeFutures.end());
-        });
-        return *this;
-    }
-    template<>
-    AAsyncHolder& operator<<(AFuture<void> future) {
-        std::unique_lock lock(mSync);
-        auto impl = future.inner().get();
-        future.onSuccess([this, impl]() {
-            std::unique_lock lock(mSync);
-            mFutureSet.removeIf([&](const AFuture<>& f) {
-                return f.inner().get() == impl;
+        if constexpr (std::is_same_v<void, T>) {
+            auto impl = future.inner().get();
+            future.onSuccess([this, impl]() {
+                std::unique_lock lock(mSync);
+                mFutureSet.removeIf([&](const AFuture<>& f) {
+                    return f.inner().get() == impl;
+                });
             });
-        });
-        mFutureSet << std::move(future);
+            mFutureSet << std::move(future);
+        } else {
+            auto uniquePtr = std::make_unique<Future<T>>(future);
+            auto ptr = uniquePtr.get();
+            mCustomTypeFutures.push_back(std::move(uniquePtr));
+            future.onSuccess([this, ptr](const T& result) {
+                std::unique_lock lock(mSync);
+                mCustomTypeFutures.erase(std::remove_if(mCustomTypeFutures.begin(), mCustomTypeFutures.end(), [&](const auto& uniquePtr) {
+                    return uniquePtr.get() == ptr;
+                }), mCustomTypeFutures.end());
+            });
+        }
         return *this;
     }
 

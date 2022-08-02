@@ -181,65 +181,6 @@ AString AString::replacedAll(const AString& from, const AString& to) const noexc
     }
 }
 
-float AString::toFloat() const noexcept
-{
-    try {
-        return std::stof(*this);
-    } catch (...)
-    {
-        return 0.f;
-    }
-}
-
-double AString::toDouble() const noexcept
-{
-    try {
-        return std::stod(*this);
-    }
-    catch (...)
-    {
-        return 0.0;
-    }
-}
-
-int AString::toInt() const noexcept
-{
-    try
-    {
-        if (length() >= 2) {
-            if ((*this)[1] == 'x' || (*this)[1] == 'X') {
-                // hex
-                return std::stoi(AString{begin() + 2, end()}, nullptr, 16);
-            }
-        }
-        return std::stoi(*this);
-    } catch (...)
-    {
-        return 0;
-    }
-}
-unsigned AString::toUInt() const noexcept
-{
-    try
-    {
-        if (length() >= 2) {
-            if ((*this)[1] == 'x' || (*this)[1] == 'X') {
-                // hex
-                return std::stoul(AString{begin() + 2, end()}, nullptr, 16);
-            }
-        }
-        return std::stoul(*this);
-    } catch (...)
-    {
-        return 0;
-    }
-}
-
-bool AString::toBool() const noexcept
-{
-    return *this == "true";
-}
-
 AString AString::fromLatin1(const AByteBuffer& buffer)
 {
     return {buffer.begin(), buffer.end() };
@@ -1112,7 +1053,7 @@ void AString::resizeToNullTerminator() {
 
 AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
     if (length() > s) {
-        return mid(0, s) + stringAtEnd;
+        return substr(0, s) + stringAtEnd;
     }
     return *this;
 }
@@ -1165,4 +1106,100 @@ AString AString::excessSpacesRemoved() const noexcept {
         s << c;
     }
     return s;
+}
+
+template<typename T>
+std::optional<T> AString::toNumberImpl() const noexcept {
+    if (empty()) return std::nullopt;
+    T value = 0;
+    T prevValue = 0;
+    bool negative = false;
+
+    if constexpr (std::is_integral_v<T>) {
+        if (startsWith("0x") || startsWith("0X")) {
+            // hex
+            for (auto c : substr(2)) {
+                value *= 16;
+                if (value < prevValue) { // overflow check
+                    return std::nullopt;
+                }
+                prevValue = value;
+                if (c >= '0' && c <= '9') {
+                    value += c - '0';
+                } else if (c >= 'a' && c <= 'f') {
+                    value += (c - 'a') + 10;
+                } else if (c >= 'A' && c <= 'F') {
+                    value += (c - 'A') + 10;
+                } else {
+                    return std::nullopt;
+                }
+            }
+        } else {
+            auto i = begin();
+            if (*i == '-') {
+                negative = true;
+                ++i;
+            }
+            for (; i != end(); ++i) {
+                value *= 10;
+                if (value < prevValue) { // overflow check
+                    return std::nullopt;
+                }
+                prevValue = value;
+                auto c = *i;
+                if (c >= '0' && c <= '9') {
+                    value += c - '0';
+                } else {
+                    return std::nullopt;
+                }
+            }
+        }
+    } else if constexpr (std::is_floating_point_v<T>) {
+        bool fractionalPart = false;
+        double fractionalPower = 0.1;
+
+        auto i = begin();
+        if (*i == '-') {
+            negative = true;
+            ++i;
+        }
+        for (; i != end(); ++i) {
+            auto c = *i;
+            if (c >= '0' && c <= '9') {
+                T digitValue = c - '0';
+                if (fractionalPart) {
+                    value += digitValue * fractionalPower;
+                    fractionalPower *= 0.1;
+                } else {
+                    value *= 10;
+                    value += digitValue;
+                }
+            } else if (c == '.') {
+                if (fractionalPart) {
+                    return std::nullopt;
+                }
+                fractionalPart = true;
+            } else {
+                return std::nullopt;
+            }
+        }
+    }
+
+    return negative ? -value : value;
+}
+
+std::optional<int> AString::toInt() const noexcept {
+    return toNumberImpl<int>();
+}
+
+std::optional<unsigned> AString::toUInt() const noexcept {
+    return toNumberImpl<unsigned>();
+}
+
+std::optional<double> AString::toDouble() const noexcept {
+    return toNumberImpl<double>();
+}
+
+std::optional<float> AString::toFloat() const noexcept {
+    return toNumberImpl<float>();
 }

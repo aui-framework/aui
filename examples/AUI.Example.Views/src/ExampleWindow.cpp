@@ -129,11 +129,11 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 // radiobuttons
                 GroupBox {
                     Label { "Radiobuttons" },
-                    _new<ARadioGroup>(AListModel<AString>::make({"Radiobutton 1",
-                                                                      "Radiobutton 2",
-                                                                      "Radiobutton 3",
-                                                                      "Disabled radiobutton"})) let {
-                        it->getViews()[3]->setDisabled();
+                    RadioGroup {
+                        RadioButton { "Radiobutton 1" } let { it->setChecked(true); },
+                        RadioButton { "Radiobutton 2" },
+                        RadioButton { "Radiobutton 3" },
+                        RadioButton { "Disabled radiobutton" } let { it->disable(); },
                     },
                 },
 
@@ -168,10 +168,6 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 GroupBox {
                     Label { "Window factory" },
                     Vertical {
-                        Label { "Frame:" },
-                        RadioGroup {
-                            RadioButton { "" }
-                        },
                         CheckBox { "Resizeable" },
                         _new<AButton>("Show window").connect(&AButton::clicked, this, [&] {
                             auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
@@ -192,7 +188,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                     Label { "System dialog" },
                     Vertical{
                         _new<AButton>("Show file chooser").connect(&AView::clicked, this, [&] {
-                            ADesktop::browseForFile().onSuccess([&](const APath& f) {
+                            ADesktop::browseForFile(this).onSuccess([&](const APath& f) {
                                 if (f.empty()) {
                                     AMessageBox::show(this, "Result", "Cancelled");
                                 } else {
@@ -201,7 +197,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                             });
                         }),
                         _new<AButton>("Show folder chooser").connect(&AView::clicked, this, [&] {
-                            ADesktop::browseForDir().onSuccess([&](const APath& f) {
+                            ADesktop::browseForDir(this).onSuccess([&](const APath& f) {
                                 if (f.empty()) {
                                     AMessageBox::show(this, "Result", "Cancelled");
                                 } else {

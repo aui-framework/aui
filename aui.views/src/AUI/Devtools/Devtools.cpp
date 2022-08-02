@@ -20,10 +20,10 @@ AString Devtools::prettyViewName(AView* view) {
 
     // remove 'class '
     if (name.startsWith("class ")) {
-        name = name.mid(6);
+        name = name.substr(6);
     }
     if (name.startsWith("LayoutVisitor::")) {
-        name = "A" + name.mid(15);
+        name = "A" + name.substr(15);
     }
     return name;
 }

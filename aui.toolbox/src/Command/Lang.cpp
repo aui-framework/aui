@@ -125,7 +125,7 @@ void Lang::run(Toolbox& t) {
             AString langName;
 
             try {
-                langName = ALanguageCode(filename.mid(0, dotPos)).toString();
+                langName = ALanguageCode(filename.substr(0, dotPos)).toString();
             } catch (...) {
                 continue;
             }

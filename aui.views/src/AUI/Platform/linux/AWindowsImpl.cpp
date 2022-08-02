@@ -654,3 +654,8 @@ void AWindowManager::xClipboardCopyImpl(const AString& text) {
     mXClipboardText = text.toStdString();
     XSetSelectionOwner(CommonRenderingContext::ourDisplay, CommonRenderingContext::ourAtoms.clipboard, auiWindow->mHandle, CurrentTime);
 }
+
+void AWindow::blockUserInput(bool blockUserInput) {
+    ABaseWindow::blockUserInput(blockUserInput);
+    // TODO linux impl
+}

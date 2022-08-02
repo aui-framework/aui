@@ -59,6 +59,12 @@ namespace ass {
             void renderFor(AView* view) override;
 
             DeclarationSlot getDeclarationSlot() const override;
+
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
+
         };
 
     }

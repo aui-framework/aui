@@ -26,11 +26,11 @@
 #include <AUI/Common/AException.h>
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Util/Util.h"
+#include <AUI/Util/ACleanup.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/Util/ACleanup.h>
 
 #endif
 
@@ -72,7 +72,7 @@ void setupUIThread() noexcept {
     AAbstractThread::threadStorage() = _new<UIThread>();
 }
 
-static void afterEntryCleanup() {
+void afterEntryCleanup() {
     ACleanup::inst().afterEntryPerform();
 }
 

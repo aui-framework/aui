@@ -19,6 +19,7 @@ permissions:
 
 jobs:
   doxygen:
+    if: github.event_name != 'pull_request'
     name: Doxygen
     runs-on: ubuntu-latest
     steps:

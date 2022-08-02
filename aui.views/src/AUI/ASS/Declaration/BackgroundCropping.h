@@ -31,7 +31,7 @@
 namespace ass {
 
     /**
-     * @brief Controls background texture cropping.
+     * @brief Controls background texture cropping by exact UV coordinates. Useful for texture atlases.
      * @ingroup ass
      */
     struct BackgroundCropping {
@@ -62,7 +62,8 @@ namespace ass {
 
             void applyFor(AView* view) override;
 
-            const BackgroundCropping& value() {
+            [[nodiscard]]
+            const auto& value() const noexcept {
                 return mInfo;
             }
         };

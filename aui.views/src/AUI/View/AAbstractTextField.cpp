@@ -76,9 +76,10 @@ void AAbstractTextField::render()
                 redraw();
             }
 
+            auto p = getMouseSelectionPadding();
             Render::rect(ASolidBrush{},
-                         {mPadding.left + absoluteCursorPos, mPadding.top},
-                         {1, getFontStyle().size + 3});
+                         {p.x + absoluteCursorPos, p.y - 1},
+                         {1, getMouseSelectionFont().size + 2});
         }
 
         Render::setBlending(Blending::NORMAL);

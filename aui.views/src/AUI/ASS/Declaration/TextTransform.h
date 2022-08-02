@@ -40,6 +40,11 @@ namespace ass::decl {
 
         }
 
-    void applyFor(AView* view) override;
-};
+        void applyFor(AView* view) override;
+
+        [[nodiscard]]
+        const auto& value() const noexcept {
+            return mInfo;
+        }
+    };
 }

@@ -20,36 +20,42 @@
  */
 
 //
-// Created by alex2 on 29.12.2020.
+// Created by alex2 on 30.08.2020.
 //
 
-#pragma once
+#include <gtest/gtest.h>
+#include <AUI/Common/AString.h>
 
-#include <AUI/Util/LayoutDirection.h>
-#include "IDeclaration.h"
-#include <AUI/Enum/ImageRendering.h>
 
-namespace ass {
+TEST(Strings, ToInt) {
+    EXPECT_EQ("123"_as.toInt(), 123);
+    EXPECT_EQ("0"_as.toInt(), 0);
+    EXPECT_EQ("-251"_as.toInt(), -251);
+    EXPECT_EQ("123abs"_as.toInt(), std::nullopt);
+    EXPECT_EQ("1a23"_as.toInt(), std::nullopt);
+    EXPECT_EQ("a123"_as.toInt(), std::nullopt);
+    EXPECT_EQ("0x"_as.toInt(), 0);
+    EXPECT_EQ("0x123"_as.toInt(), 0x123);
+    EXPECT_EQ("0xabcdef"_as.toInt(), 0xabcdef);
+    EXPECT_EQ("0xabcdef123456"_as.toInt(), std::nullopt); // overflow
+    EXPECT_EQ("123456214214"_as.toInt(), std::nullopt); // overflow
+}
 
-    namespace decl {
-        template<>
-        struct API_AUI_VIEWS Declaration<ImageRendering>: IDeclarationBase {
-        private:
-            ImageRendering mInfo;
+TEST(Strings, ToUInt) {
+    EXPECT_EQ("123"_as.toUInt(), 123);
+    EXPECT_EQ("123abs"_as.toUInt(), std::nullopt);
+    EXPECT_EQ("1a23"_as.toUInt(), std::nullopt);
+    EXPECT_EQ("a123"_as.toUInt(), std::nullopt);
+}
 
-        public:
-            Declaration(const ImageRendering& info) : mInfo(info) {
+TEST(Strings, ToFloat) {
+    constexpr float ABS_ERROR = 0.01;
 
-            }
-
-            void renderFor(AView* view) override;
-            DeclarationSlot getDeclarationSlot() const override;
-
-            [[nodiscard]]
-            const auto& value() const noexcept {
-                return mInfo;
-            }
-        };
-
-    }
+    EXPECT_NEAR("123"_as.toFloat().value_or(0), 123, ABS_ERROR);
+    EXPECT_NEAR("123.456"_as.toFloat().value_or(0), 123.456, ABS_ERROR);
+    EXPECT_NEAR("-123.456"_as.toFloat().value_or(0), -123.456, ABS_ERROR);
+    EXPECT_NEAR("-0.0"_as.toFloat().value_or(99999), 0, ABS_ERROR);
+    EXPECT_EQ("123abs"_as.toUInt(), std::nullopt);
+    EXPECT_EQ("1a23"_as.toUInt(), std::nullopt);
+    EXPECT_EQ("a123"_as.toUInt(), std::nullopt);
 }

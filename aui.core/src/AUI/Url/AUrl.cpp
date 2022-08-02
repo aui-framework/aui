@@ -34,19 +34,19 @@ AUrl::AUrl(AString full)
 	{
 		mPath = std::move(full);
 		if (mPath.startsWith("./")) {
-			mPath = mPath.mid(2);
+			mPath = mPath.substr(2);
 		}
         mSchema = "file";
 	} else
 	{
-        mSchema = full.mid(0, posColon);
+        mSchema = full.substr(0, posColon);
 		if (mSchema.empty())
 		{
             mSchema = "builtin";
-			mPath = full.mid(posColon + 1);
+			mPath = full.substr(posColon + 1);
 		} else
 		{
-            mPath = full.mid(posColon + 3);
+            mPath = full.substr(posColon + 3);
 		}
 	}
 }

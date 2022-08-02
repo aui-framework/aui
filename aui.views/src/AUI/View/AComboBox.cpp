@@ -67,6 +67,9 @@ void AComboBox::updateText() {
         redraw();
         return;
     }
+    if (mModel->listSize() <= mSelectionId) {
+        mSelectionId = 0;
+    }
     setText(mModel->listItemAt(mSelectionId));
 }
 void AComboBox::render() {

@@ -136,9 +136,12 @@ public:
         AFuture<Value> future(std::move(fun));
         run([innerWeak = future.inner().weak()]()
             {
-                auto innerUnsafePointer = innerWeak.lock()->ptr().get(); // using .get() here in order to bypass
-                                                                         // null check in operator->
-                innerUnsafePointer->tryExecute(innerWeak);
+                if (auto lock = innerWeak.lock()) {
+                    auto innerUnsafePointer = lock->ptr().get(); // using .get() here in order to bypass
+                                                                 // null check in operator->
+                    lock = nullptr;
+                    innerUnsafePointer->tryExecute(innerWeak);
+                }
             }, AThreadPool::PRIORITY_LOWEST);
         return future;
     }

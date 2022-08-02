@@ -86,7 +86,7 @@ int ACursorSelectable::drawSelectionPre() {
 }
 
 int ACursorSelectable::getPosByIndex(int end, int begin) {
-    return -getMouseSelectionScroll().x + int(getMouseSelectionFont().getWidth(getDisplayText().mid(begin, end - begin)));
+    return -getMouseSelectionScroll().x + int(getMouseSelectionFont().getWidth(getDisplayText().substr(begin, end - begin)));
 }
 
 void ACursorSelectable::drawSelectionPost() {
@@ -122,7 +122,7 @@ void ACursorSelectable::drawSelectionRects() {
         auto fs = getMouseSelectionFont();
         Render::rect(ASolidBrush{},
                      {p.x + absoluteBeginPos, p.y + row * fs.getLineHeight() - 1},
-                     {absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 4});
+                     {absoluteEndPos - absoluteBeginPos + 1, getMouseSelectionFont().size + 2});
     };
 
     auto t = getDisplayText();
