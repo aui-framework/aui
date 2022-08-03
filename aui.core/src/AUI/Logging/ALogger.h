@@ -209,58 +209,81 @@ public:
             }
     };
 
+
+    /**
+     * @brief Constructor for an extra log file.
+     * @param filename file name
+     * @details
+     * For the global logger, use ALogger::info, ALogger::warn, etc...
+     */
+    ALogger(AString filename) {
+        setLogFileImpl(std::move(filename));
+    }
+
+    ~ALogger();
+
+    static ALogger& global();
+
+    static void setDebugMode(bool debug) {
+        global().mDebug = debug;
+    }
+    static bool isDebug() {
+        return global().mDebug;
+    }
+
+    static void setLogFile(APath path) {
+        global().setLogFileImpl(std::move(path));
+    }
+    static const AString& logFile() {
+        return global().mLogFile.path();
+    }
+
+    static LogWriter info(const AString& str)
+    {
+        return {global(), INFO, str};
+    }
+    static LogWriter warn(const AString& str)
+    {
+        return {global(), WARN, str};
+    }
+    static LogWriter err(const AString& str)
+    {
+        return {global(), ERR, str};
+    }
+    static LogWriter debug(const AString& str)
+    {
+        return {global(), DEBUG, str};
+    }
+
+    /**
+     * @brief Writer a log entry with LogWriter helper.
+     * @param level level
+     * @param prefix prefix
+     */
+    LogWriter log(Level level, const AString& prefix)
+    {
+        return {*this, level, prefix};
+    }
+
+
 private:
 	ALogger();
-    ~ALogger();
-	static ALogger& instance();
 
     AFileOutputStream mLogFile;
     AMutex mLocalTimeMutex;
-
-    /**
-     * Writes a log entry
-     * @param level log level
-     * @param prefix prefix
-     * @param message log message. If empty, prefix used as a message
-     */
-    void log(Level level, std::string_view prefix, std::string_view message);
 
     bool mDebug = true;
 
     void setLogFileImpl(AString path);
 
-public:
 
-    static void setDebugMode(bool debug) {
-        instance().mDebug = debug;
-    }
-    static bool isDebug() {
-        return instance().mDebug;
-    }
-
-    static void setLogFile(APath path) {
-        instance().setLogFileImpl(std::move(path));
-    }
-    static const AString& logFile() {
-        return instance().mLogFile.path();
-    }
-
-	static LogWriter info(const AString& str)
-	{
-		return {instance(), INFO, str};
-	}	
-	static LogWriter warn(const AString& str)
-	{
-        return {instance(), WARN, str};
-	}	
-	static LogWriter err(const AString& str)
-	{
-        return {instance(), ERR, str};
-	}
-	static LogWriter debug(const AString& str)
-	{
-        return {instance(), DEBUG, str};
-	}
+    /**
+     * @brief Writes a log entry.
+     * @param level log level
+     * @param prefix prefix
+     * @param message log message. If empty, prefix used as a message
+     */
+    void log(Level level, std::string_view prefix, std::string_view message);
 };
 
 
