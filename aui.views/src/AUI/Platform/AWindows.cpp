@@ -25,6 +25,7 @@
 #include "SoftwareRenderingContext.h"
 #include "ARenderingContextOptions.h"
 #include "AUI/Traits/callables.h"
+#include "AUI/Util/ARaiiHelper.h"
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Action/AMenu.h>
@@ -78,18 +79,21 @@ bool AWindow::isRedrawWillBeEfficient() {
     return 8ms < delta;
 }
 void AWindow::redraw() {
-    auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-    mRenderingContext->beginPaint(*this);
-    if (mUpdateLayoutFlag) {
-        mUpdateLayoutFlag = false;
-        updateLayout();
-    }
-#if AUI_PLATFORM_WIN
-    mRedrawFlag = true;
-#elif AUI_PLATFORM_MACOS
-    mRedrawFlag = false;
-#endif
     {
+        auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+        mRenderingContext->beginPaint(*this);
+        ARaiiHelper endPaintCaller = [&] {
+            mRenderingContext->endPaint(*this);
+        };
+        if (mUpdateLayoutFlag) {
+            mUpdateLayoutFlag = false;
+            updateLayout();
+        }
+#if AUI_PLATFORM_WIN
+        mRedrawFlag = true;
+#elif AUI_PLATFORM_MACOS
+        mRedrawFlag = false;
+#endif
         Render::setWindow(this);
         doDrawWindow();
 
@@ -107,7 +111,6 @@ void AWindow::redraw() {
                 }
             }
         }
-        mRenderingContext->endPaint(*this);
     }
 
     emit redrawn();

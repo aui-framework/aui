@@ -37,7 +37,7 @@ const int AUI_TITLE_HEIGHT = 30;
 #include <AUI/Util/kAUI.h>
 
 
-LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept
 {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))

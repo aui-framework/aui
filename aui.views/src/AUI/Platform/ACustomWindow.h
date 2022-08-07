@@ -30,7 +30,7 @@ private:
     bool mDragging = false;
 
 protected:
-	LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) override;
+	LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept override;
 	void doDrawWindow() override;
 
 public:
