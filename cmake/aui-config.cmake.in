@@ -55,10 +55,10 @@ foreach(_entry ${AUI_BOOT_ROOT_ENTRIES})
         string(SUBSTRING ${VAR_NAME} 0 ${_len} MODULE_NAME)
 
         # some targets can be found using the config mode only or the module mode only; the point is to try the both ways
-        set(CMAKE_FIND_PACKAGE_PREFER_CONFIG FALSE)
+        set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
         find_package(${MODULE_NAME})
         if (NOT ${MODULE_NAME}_FOUND)
-            set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+            set(CMAKE_FIND_PACKAGE_PREFER_CONFIG FALSE)
             find_package(${MODULE_NAME} REQUIRED)
         endif()
     endif()
