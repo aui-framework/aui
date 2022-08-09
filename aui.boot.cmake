@@ -277,6 +277,22 @@ function(auib_import AUI_MODULE_NAME URL)
         set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/src")
     endif()
     set(DEP_BINARY_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/build/${BUILD_SPECIFIER}")
+
+    # invalidate all previous values.
+    foreach(_v2 FOUND
+            INCLUDE_DIR
+            LIBRARY
+            LIBRARY_DEBUG
+            LIBRARY_RELEASE
+            ROOT
+            DIR)
+        foreach(_v1 ${AUI_MODULE_NAME} ${AUI_MODULE_NAME_UPPER})
+            unset(${_v1}_${_v2} PARENT_SCOPE)
+            unset(${_v1}_${_v2} CACHE)
+        endforeach()
+    endforeach()
+
+    # variable is CACHE here in order to make it as global as possible.
     set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
     # creating uppercase variables in order to ease the case insensitive checks
@@ -286,40 +302,12 @@ function(auib_import AUI_MODULE_NAME URL)
 
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
 
-    # check if the version changed; if so, erase the previous find cache info
-    if (DEP_INSTALL_PREFIX MATCHES "^${AUI_CACHE_DIR}")
-        if (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND)
-            unset(_version_mismatch)
-            if (${AUI_MODULE_NAME}_INCLUDE_DIR MATCHES "^${AUI_CACHE_DIR}")
-                if (NOT ${AUI_MODULE_NAME}_INCLUDE_DIR MATCHES "^${DEP_INSTALL_PREFIX}")
-                    set(_version_mismatch TRUE)
-                    unset(${AUI_MODULE_NAME}_FOUND)
-                    unset(${AUI_MODULE_NAME}_INCLUDE_DIR)
-                    unset(${AUI_MODULE_NAME}_LIBRARY)
-                    unset(${AUI_MODULE_NAME}_LIBRARY_DEBUG)
-                    unset(${AUI_MODULE_NAME}_LIBRARY_RELEASE)
-                endif()
-            endif()
-            if (${AUI_MODULE_NAME_UPPER}_INCLUDE_DIR MATCHES "^${AUI_CACHE_DIR}")
-                if (NOT ${AUI_MODULE_NAME_UPPER}_INCLUDE_DIR MATCHES "^${DEP_INSTALL_PREFIX}")
-                    set(_version_mismatch TRUE)
-                    unset(${AUI_MODULE_NAME_UPPER}_FOUND)
-                    unset(${AUI_MODULE_NAME_UPPER}_INCLUDE_DIR)
-                    unset(${AUI_MODULE_NAME_UPPER}_LIBRARY)
-                    unset(${AUI_MODULE_NAME_UPPER}_LIBRARY_DEBUG)
-                    unset(${AUI_MODULE_NAME_UPPER}_LIBRARY_RELEASE)
-                endif()
-            endif()
-            if (_version_mismatch)
-                message(STATUS "[AUI.BOOT] Version mismatch detected for ${AUI_MODULE_NAME}, reinstalling")
-            endif()
-        endif()
-    endif()
-
     if (NOT DEP_ADD_SUBDIRECTORY)
         # avoid compilation if we have existing installation
         if (EXISTS ${DEP_INSTALLED_FLAG})
             # BEGIN: try find
+
+            set(CMAKE_FIND_PACKAGE_PREFER_CONFIG FALSE)
             while(TRUE)
                 if (AUIB_IMPORT_COMPONENTS)
                     find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} ${FINDPACKAGE_QUIET})
@@ -567,7 +555,9 @@ function(auib_import AUI_MODULE_NAME URL)
         _auib_import_subdirectory(${DEP_SOURCE_DIR} ${AUI_MODULE_NAME})
         message(STATUS "${AUI_MODULE_NAME} imported as a subdirectory: ${DEP_SOURCE_DIR}")
     else()
+
         # BEGIN: try find
+        set(CMAKE_FIND_PACKAGE_PREFER_CONFIG FALSE)
         while(TRUE)
             if (AUIB_IMPORT_COMPONENTS)
                 find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} ${FINDPACKAGE_QUIET})
@@ -596,6 +586,8 @@ function(auib_import AUI_MODULE_NAME URL)
 
             set(CMAKE_FIND_DEBUG_MODE TRUE)
             # BEGIN: try find
+
+            set(CMAKE_FIND_PACKAGE_PREFER_CONFIG FALSE)
             message("[AUI.BOOT] Verbose output:")
             while(TRUE)
                 if (AUIB_IMPORT_COMPONENTS)
@@ -621,12 +613,13 @@ function(auib_import AUI_MODULE_NAME URL)
             unset(possible_names)
             foreach(_i ${_find})
                 get_filename_component(_name ${_i} NAME)
-                string(REGEX REPLACE "([Cc]onfig)\\.cmake" "" _name ${_name})
-                list(APPEND possible_names "${_name}")
+                string(REGEX REPLACE "-?([Cc]onfig)\\.cmake" "" _name ${_name})
+                list(APPEND possible_names "\"${_name}\"")
             endforeach()
 
             # construct error message
             set(error_message "AUI.Boot could not resolve dependency: ${AUI_MODULE_NAME} (see verbose find output above)")
+            set(error_message "${error_message}\nnote: package names are case sensitive")
             if (possible_names)
                 string(JOIN " or " possible_names_joined ${possible_names})
                 set(error_message "${error_message}\nnote: did you mean " ${possible_names_joined} ?)
