@@ -205,6 +205,12 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 }
                             });
                         }),
+                        _new<AButton>("Message box").connect(&AView::clicked, this, [&] {
+                            AMessageBox::show(this, "Title", "Message", AMessageBox::Icon::INFO);
+                        }),
+                        _new<AButton>("Cause assertion fail").connect(&AView::clicked, this, [&] {
+                            assert(("assertion fail", false));
+                        }),
                     }
                 },
 
