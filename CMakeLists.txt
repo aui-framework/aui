@@ -83,7 +83,7 @@ if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
 endif()
 
-if(NOT ANDROID AND AUI_BUILD_EXAMPLES)
+if(AUI_BUILD_EXAMPLES)
     add_subdirectory(examples/AUI.Example.Views)
     #add_subdirectory(examples/AUI.Example.Fractal)
     #add_subdirectory(examples/AUI.Example.Minesweeper)

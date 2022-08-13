@@ -362,9 +362,9 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
     switch (path) {
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
         case APPDATA:
-            return APath(".").absolute()["__aui_appdata"];
+            return APath(".").absolute() / "__aui_appdata";
         case TEMP:
-            return APath(".").absolute()["__aui_tmp"];
+            return APath(".").absolute() / "__aui_tmp";
 #else
         case APPDATA:
             return getDefaultPath(HOME) / ".local/share";

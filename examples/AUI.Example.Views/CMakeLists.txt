@@ -1,3 +1,4 @@
+project(aui.example.views)
 cmake_minimum_required(VERSION 3.15)
 
 if (NOT TARGET aui::views)
@@ -17,7 +18,7 @@ if (NOT TARGET aui::views)
     # using local repository instead in order to make checks easier in CI.
     include(../../aui.boot.cmake)
 
-    auib_import(AUI ../../
+    auib_import(aui ../../
                 COMPONENTS core views)
 
 

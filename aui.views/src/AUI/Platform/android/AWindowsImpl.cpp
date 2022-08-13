@@ -148,3 +148,7 @@ void AWindow::show() {
 
     emit shown();
 }
+
+void AWindow::blockUserInput(bool block) {
+
+}

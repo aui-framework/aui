@@ -222,14 +222,17 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
 
 }
 
-AFuture<APath> ADesktop::browseForDir(const APath &startingLocation) {
+AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent,
+                                      const APath& startingLocation)  {
     return async {
         return APath();
     };
 }
 
 AFuture<APath>
-ADesktop::browseForFile(const APath &startingLocation, const AVector <FileExtension> &extensions) {
+ADesktop::browseForFile(ABaseWindow* parent,
+                        const APath& startingLocation,
+                        const AVector<FileExtension>& extensions) {
     return async {
         return APath();
     };
