@@ -486,8 +486,13 @@ function(aui_deploy_library AUI_MODULE_NAME)
 endfunction(aui_deploy_library)
 
 function(aui_executable AUI_MODULE_NAME)
-    file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h src/*.mm src/*.m)
+    file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
+                                     ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.m)
 
     set(options WIN32_SUBSYSTEM_CONSOLE)
     set(oneValueArgs COMPILE_ASSETS EXPORT)
@@ -803,7 +808,8 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
 endfunction()
 
 function(aui_module AUI_MODULE_NAME)
-    file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
+    file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
+                                     ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
 
 
     set(options WHOLEARCHIVE PLUGIN FORCE_STATIC FORCE_SHARED)
@@ -823,7 +829,13 @@ function(aui_module AUI_MODULE_NAME)
         endforeach()
     endif()
 
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp src/*.mm src/*.m)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.manifest
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.m)
+    
     if (BUILD_SHARED_LIBS)
         if (WIN32)
             if (EXISTS "${CMAKE_SOURCE_DIR}/Resource.rc")
