@@ -52,6 +52,10 @@ namespace ass {
 
             void applyFor(AView* view) override;
 
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
         };
     }
 }

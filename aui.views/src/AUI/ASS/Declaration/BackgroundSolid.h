@@ -57,7 +57,8 @@ namespace ass {
 
             DeclarationSlot getDeclarationSlot() const override;
 
-            const BackgroundSolid& value() const {
+            [[nodiscard]]
+            const auto& value() const noexcept {
                 return mInfo;
             }
         };

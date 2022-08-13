@@ -95,7 +95,7 @@ private:
 protected:
 #if AUI_PLATFORM_WIN
 	HICON mIcon = nullptr;
-    virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
 #elif AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_APPLE
 #else

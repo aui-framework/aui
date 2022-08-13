@@ -39,7 +39,7 @@ ALogger::ALogger()
 #endif
 }
 
-ALogger& ALogger::instance()
+ALogger& ALogger::global()
 {
 	static ALogger l;
 	return l;

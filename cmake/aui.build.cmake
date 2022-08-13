@@ -486,8 +486,13 @@ function(aui_deploy_library AUI_MODULE_NAME)
 endfunction(aui_deploy_library)
 
 function(aui_executable AUI_MODULE_NAME)
-    file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h src/*.mm src/*.m)
+    file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
+                                     ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.m)
 
     set(options WIN32_SUBSYSTEM_CONSOLE)
     set(oneValueArgs COMPILE_ASSETS EXPORT)
@@ -606,6 +611,7 @@ macro(_aui_try_find_toolbox)
 endmacro()
 
 macro(_aui_provide_toolbox_for_host)
+    message(STATUS "Compiling aui.toolbox for the host platform")
     set(_workdir ${CMAKE_CURRENT_BINARY_DIR}/aui_toolbox_provider)
     file(MAKE_DIRECTORY ${_workdir})
     file(MAKE_DIRECTORY ${_workdir}/b)
@@ -618,7 +624,7 @@ file(
         ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
-auib_import(AUI https://github.com/aui-framework/aui
+auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core toolbox image)
 ]])
     execute_process(COMMAND ${CMAKE_COMMAND} .. -DAUI_CACHE_DIR=${AUI_CACHE_DIR} WORKING_DIRECTORY ${_workdir}/b RESULT_VARIABLE _r)
@@ -803,7 +809,8 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
 endfunction()
 
 function(aui_module AUI_MODULE_NAME)
-    file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
+    file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
+                                     ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
 
 
     set(options WHOLEARCHIVE PLUGIN FORCE_STATIC FORCE_SHARED)
@@ -823,7 +830,13 @@ function(aui_module AUI_MODULE_NAME)
         endforeach()
     endif()
 
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp src/*.mm src/*.m)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.manifest
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
+                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.m)
+    
     if (BUILD_SHARED_LIBS)
         if (WIN32)
             if (EXISTS "${CMAKE_SOURCE_DIR}/Resource.rc")
@@ -834,7 +847,7 @@ function(aui_module AUI_MODULE_NAME)
 
     # remove platform dependent files
     foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
-        list(FILTER SRCS EXCLUDE REGEX ".*\\/${PLATFORM_NAME}\\/.*")
+        list(FILTER SRCS EXCLUDE REGEX "(.*\\/)?Platform/${PLATFORM_NAME}\\/.*")
     endforeach()
 
     if (AUIE_FORCE_SHARED)

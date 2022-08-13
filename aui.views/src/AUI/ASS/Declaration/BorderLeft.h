@@ -16,6 +16,9 @@ namespace ass {
     struct BorderLeft {
         AMetric width;
         AColor color;
+
+        BorderLeft(std::nullptr_t): width(0) {}
+        BorderLeft(const AMetric &width, const AColor &color) : width(width), color(color) {}
     };
 
     namespace decl {
@@ -35,6 +38,11 @@ namespace ass {
             bool isNone() override;
 
             DeclarationSlot getDeclarationSlot() const override;
+
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
         };
     }
 }

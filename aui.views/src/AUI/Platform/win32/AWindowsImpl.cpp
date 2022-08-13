@@ -59,7 +59,7 @@
 #include <AUI/Platform/AMessageBox.h>
 
 
-LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
 #define POS glm::ivec2(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))
@@ -70,6 +70,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     currentWindowStorage() = this;
 
+    /*
     if (uMsg != WM_PAINT) {
         if (!mRedrawFlag) {
             // REMIND VINDOVWS ABOUT MY VINDOW I WANT TO REDRAW!!!
@@ -80,7 +81,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         //bool ok = wglMakeCurrent(GetDC(mHandle), AWindow::context.hrc);
         //assert(ok);
     }
-
+*/
 
     switch (uMsg) {
 /*
@@ -112,9 +113,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 
         case WM_PAINT: {
-            // process thread messages because queue freezes when window is frequently redrawn
-            AThread::processMessages();
-
+            AThread::processMessages(); // process thread messages because queue freezes when window is frequently redrawn
             //if (!painter::painting)
             {
                 redraw();
@@ -383,7 +382,9 @@ glm::ivec2 AWindow::getWindowPosition() const {
 
 void AWindow::flagRedraw() {
     if (mRedrawFlag && mHandle) {
-        InvalidateRect(mHandle, nullptr, true);
+        getThread()->enqueue([handle = mHandle] {
+            InvalidateRect(handle, nullptr, true);
+        });
         mRedrawFlag = false;
     }
 }

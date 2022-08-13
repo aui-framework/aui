@@ -247,11 +247,9 @@ namespace aui::detail {
     template<typename ForcedClazz, typename Type>
     struct pointer_to_member {
         template<typename... Args>
-        struct with_args {
-            with_args(aui::type_list<Args...>) {}
-
-            using type = Type(ForcedClazz::*)(Args...);
-        };
+        static Type(ForcedClazz::*with_args(aui::type_list<Args...>))(Args...) {
+            return nullptr;
+        }
     };
 }
 
@@ -264,11 +262,12 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>
     using setter_ret = typename setter::type;
     using setter_args = typename setter::args;
 
-    using pointer_to_setter = decltype(aui::detail::pointer_to_member<View, setter_ret>::with_args(std::declval<setter_args>()));
-    using pointer_to_setter_t = typename pointer_to_setter::type;
+    using my_pointer_to_member = typename aui::detail::pointer_to_member<View, setter_ret>;
+
+    using pointer_to_setter = decltype( my_pointer_to_member::with_args(std::declval<setter_args>()));
 
     object && (*linker.getBinder())(linker.getField(),
                                     static_cast<ASignal<Data>(View::*)>(ADataBindingDefault<View, Data>::getGetter()),
-                                    static_cast<pointer_to_setter_t>(ADataBindingDefault<View, Data>::getSetter()));
+                                    static_cast<pointer_to_setter>(ADataBindingDefault<View, Data>::getSetter()));
     return object;
 }
