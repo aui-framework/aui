@@ -611,6 +611,7 @@ macro(_aui_try_find_toolbox)
 endmacro()
 
 macro(_aui_provide_toolbox_for_host)
+    message(STATUS "Compiling aui.toolbox for the host platform")
     set(_workdir ${CMAKE_CURRENT_BINARY_DIR}/aui_toolbox_provider)
     file(MAKE_DIRECTORY ${_workdir})
     file(MAKE_DIRECTORY ${_workdir}/b)
@@ -623,7 +624,7 @@ file(
         ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
-auib_import(AUI https://github.com/aui-framework/aui
+auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core toolbox image)
 ]])
     execute_process(COMMAND ${CMAKE_COMMAND} .. -DAUI_CACHE_DIR=${AUI_CACHE_DIR} WORKING_DIRECTORY ${_workdir}/b RESULT_VARIABLE _r)
@@ -846,7 +847,7 @@ function(aui_module AUI_MODULE_NAME)
 
     # remove platform dependent files
     foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
-        list(FILTER SRCS EXCLUDE REGEX ".*\\/${PLATFORM_NAME}\\/.*")
+        list(FILTER SRCS EXCLUDE REGEX "(.*\\/)?Platform/${PLATFORM_NAME}\\/.*")
     endforeach()
 
     if (AUIE_FORCE_SHARED)
