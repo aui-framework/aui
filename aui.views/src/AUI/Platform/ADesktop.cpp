@@ -31,6 +31,7 @@
 
 #if AUI_PLATFORM_WIN
 
+#include "AWindow.h"
 #include "ADesktop.h"
 #include "ACursor.h"
 #include <windows.h>
