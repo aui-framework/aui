@@ -149,6 +149,10 @@ void AWindow::setIcon(const AImage& image) {
 void AWindow::hide() {
 }
 
+void AWindow::blockUserInput(bool blockUserInput) {
+
+}
+
 void AWindowManager::notifyProcessMessages() {
     dispatch_async(dispatch_get_main_queue(), ^{
         AThread::processMessages();

@@ -137,6 +137,10 @@ void AWindow::setIcon(const AImage& image) {
 void AWindow::hide() {
 }
 
+void AWindow::blockUserInput(bool blockUserInput) {
+
+}
+
 void AWindowManager::notifyProcessMessages() {
 
 }
@@ -144,3 +148,4 @@ void AWindowManager::notifyProcessMessages() {
 void AWindowManager::loop() {
 
 }
+

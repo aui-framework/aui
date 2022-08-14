@@ -31,9 +31,9 @@
 
 #if AUI_PLATFORM_WIN
 
+#include "AWindow.h"
 #include "ADesktop.h"
 #include "ACursor.h"
-#include "AWindow.h"
 #include <windows.h>
 #include <shlobj.h>
 #include <AUI/Traits/memory.h>
@@ -244,6 +244,7 @@ void ADesktop::openUrl(const AString &url) {
 
 #elif AUI_PLATFORM_APPLE
 
+#include "AWindow.h"
 // TODO apple
 glm::ivec2 ADesktop::getMousePosition() {
     return glm::ivec2();
@@ -253,11 +254,11 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
 
 }
 
-AFuture<APath> ADesktop::browseForDir(const APath &startingLocation) {
+AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath &startingLocation) {
     return AFuture<APath>();
 }
 
-AFuture<APath> ADesktop::browseForFile(const APath &startingLocation, const AVector<FileExtension> &extensions) {
+AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath &startingLocation, const AVector<FileExtension> &extensions) {
     return AFuture<APath>();
 }
 
@@ -277,6 +278,7 @@ void ADesktop::openUrl(const AString &url) {
 #include "ACursor.h"
 #include "AWindow.h"
 #include "CommonRenderingContext.h"
+#include "AWindow.h"
 
 void aui_gtk_init() {
     do_once {
