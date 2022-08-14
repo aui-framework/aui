@@ -234,7 +234,7 @@ void AAbstractThread::updateThreadName() noexcept {
 #if AUI_PLATFORM_WIN
         setThreadNameImpl((HANDLE) GetCurrentThread(), mThreadName);
 #elif AUI_PLATFORM_APPLE
-        auto name = mThreadName->toStdString();
+        auto name = mThreadName.toStdString();
         assert(("on unix thread name restricted to 15 chars length", name.size() < 16));
         pthread_setname_np(name.c_str());
 #else

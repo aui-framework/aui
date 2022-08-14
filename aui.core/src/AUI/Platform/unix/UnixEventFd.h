@@ -17,11 +17,15 @@ public:
 
     [[nodiscard]]
     int handle() noexcept {
-        return mHandle;
+        return mIn;
     }
 
 private:
+#if AUI_PLATFORM_APPLE
+    int mOut, mIn;
+#else
     int mHandle;
+#endif
 };
 
 

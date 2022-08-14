@@ -21,6 +21,7 @@
 
 #include "ADesktop.h"
 #include <AUI/Util/ARaiiHelper.h>
+#include "AWindow.h"
 
 #ifdef __MINGW32__
 // Explicitly setting NTDDI version, this is necessary for the MinGW compiler
@@ -33,7 +34,6 @@
 
 #include "ADesktop.h"
 #include "ACursor.h"
-#include "AWindow.h"
 #include <windows.h>
 #include <shlobj.h>
 #include <AUI/Traits/memory.h>
@@ -253,11 +253,11 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
 
 }
 
-AFuture<APath> ADesktop::browseForDir(const APath &startingLocation) {
+AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath &startingLocation) {
     return AFuture<APath>();
 }
 
-AFuture<APath> ADesktop::browseForFile(const APath &startingLocation, const AVector<FileExtension> &extensions) {
+AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath &startingLocation, const AVector<FileExtension> &extensions) {
     return AFuture<APath>();
 }
 
