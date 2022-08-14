@@ -21,7 +21,6 @@
 
 #include "ADesktop.h"
 #include <AUI/Util/ARaiiHelper.h>
-#include "AWindow.h"
 
 #ifdef __MINGW32__
 // Explicitly setting NTDDI version, this is necessary for the MinGW compiler
@@ -244,6 +243,7 @@ void ADesktop::openUrl(const AString &url) {
 
 #elif AUI_PLATFORM_APPLE
 
+#include "AWindow.h"
 // TODO apple
 glm::ivec2 ADesktop::getMousePosition() {
     return glm::ivec2();
@@ -277,6 +277,7 @@ void ADesktop::openUrl(const AString &url) {
 #include "ACursor.h"
 #include "AWindow.h"
 #include "CommonRenderingContext.h"
+#include "AWindow.h"
 
 void aui_gtk_init() {
     do_once {
