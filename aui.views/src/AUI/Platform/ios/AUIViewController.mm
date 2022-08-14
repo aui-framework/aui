@@ -39,7 +39,7 @@ std::string ios_get_path_in_bundle() {
     return controller;
 }
 
-extern int(* _gEntry)(const AStringVector&);
+extern int(* _gEntry)(AStringVector);
 
 - (void)viewDidLoad
 {
