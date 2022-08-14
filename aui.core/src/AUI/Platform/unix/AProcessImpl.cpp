@@ -87,15 +87,21 @@ AVector<_<AProcess>> AProcess::all() {
 }
 
 _<AProcess> AProcess::self() {
+#if AUI_PLATFORM_APPLE
+    return _new<AOtherProcess>(getpid());
+#else
     char buf[0x100];
     return _new<AOtherProcess>(*AString::fromUtf8(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
+#endif
 }
 
 _<AProcess> AProcess::fromPid(uint32_t pid) {
-    if ((APath("/proc") / AString::number(pid)).isDirectoryExists()) {
-        return _new<AOtherProcess>(pid_t(pid));
+#if !AUI_PLATFORM_APPLE
+    if (!(APath("/proc") / AString::number(pid)).isDirectoryExists()) {
+        return nullptr;
     }
-    return nullptr;
+#endif
+    return _new<AOtherProcess>(pid_t(pid));
 }
 
 void AProcess::executeAsAdministrator(const AString& applicationFile, const AString& args, const APath& workingDirectory) {
