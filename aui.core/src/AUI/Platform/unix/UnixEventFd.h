@@ -17,7 +17,11 @@ public:
 
     [[nodiscard]]
     int handle() noexcept {
+#if AUI_PLATFORM_APPLE
         return mIn;
+#else
+        return mHandle;
+#endif
     }
 
 private:
