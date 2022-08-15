@@ -97,7 +97,7 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
     std::strftime(timebuf, sizeof(timebuf), "%H:%M:%S", tm);
 
     if (mLogFile.nativeHandle() == nullptr) {
-        setLogFileImpl(APath::getDefaultPath(APath::TEMP) / "aui.{}.log"_format(AProcess::self()->getPid()));
+        setLogFileImpl(APath::getDefaultPath(APath::TEMP).makeDirs() / "aui.{}.log"_format(AProcess::self()->getPid()));
     }
 
     std::string threadName;
