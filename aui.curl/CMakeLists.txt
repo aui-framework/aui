@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10)
 if (MINGW)
     message(STATUS "curl is not supported on MinGW (see https://github.com/aui-framework/aui/issues/31). Disabling aui.curl")
 else()
-    auib_import(CURL https://github.com/curl/curl/archive/refs/tags/curl-7_79_1.zip
+    auib_import(CURL https://github.com/aui-framework/curl/archive/refs/heads/aui-patches.zip
                 ARCHIVE
                 CMAKE_ARGS -DCMAKE_USE_OPENSSL=ON -DBUILD_CURL_EXE=FALSE)
 
