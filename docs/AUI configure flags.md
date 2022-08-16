@@ -38,3 +38,7 @@ to work on the dependency along with your project.
 
 This behaviour can be set for the particular dependency by `AUIB_${AUI_MODULE_NAME_UPPER}_AS` flag, where
 `${AUI_MODULE_NAME_UPPER}` is the dependency name (i.e. for AUI it's `-DAUIB_AUI_AS=ON`).
+
+## AUIB_SKIP_REPOSITORY_WAIT
+
+Disables "Waiting for repository" lock.
