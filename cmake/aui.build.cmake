@@ -627,7 +627,7 @@ include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core toolbox image)
 ]])
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -DAUI_CACHE_DIR=${AUI_CACHE_DIR} WORKING_DIRECTORY ${_workdir}/b RESULT_VARIABLE _r)
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -DAUI_CACHE_DIR=${AUI_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=TRUE WORKING_DIRECTORY ${_workdir}/b RESULT_VARIABLE _r)
     if (NOT _r STREQUAL 0)
         message(FATAL_ERROR "CMake subprocess failed")
     endif()
