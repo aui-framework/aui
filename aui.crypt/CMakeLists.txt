@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
 auib_import(OpenSSL https://github.com/aui-framework/openssl-cmake/archive/refs/heads/master.zip
-            ARCHIVE)
+            ARCHIVE
+            PRECOMPILED_URL_PREFIX https://github.com/aui-framework/openssl-cmake/releases/download/refs%2Fheads%2Fmaster)
 
 aui_module(aui.crypt EXPORT aui)
 aui_link(aui.crypt PUBLIC aui.core)
