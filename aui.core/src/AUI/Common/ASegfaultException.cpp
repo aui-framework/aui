@@ -36,11 +36,22 @@ static void unblock_signal(int signum __attribute__((__unused__)))
     sigprocmask(SIG_UNBLOCK, &sigs, NULL);
 #endif
 }
-static void onSegfault(int, siginfo_t * info, void *_p __attribute__ ((__unused__))) {
-    std::cout << "Caught SEGFAULT!" << std::endl << AStacktrace::capture(3);
+static void onSegfault(int c, siginfo_t * info, void *_p __attribute__ ((__unused__))) {
+    switch (c) {
+    case SIGSEGV:
+        std::cout << "Caught SEGFAULT!";
+        break;
 
-    unblock_signal(SIGSEGV);
-    throw ASegfaultException(info->si_addr);
+    case SIGABRT:
+        std::cout << "Caught assertion fail!";
+        break;
+    }
+    std::cout << std::endl << AStacktrace::capture(3);
+
+    if (c == SIGSEGV) {
+        unblock_signal(SIGSEGV);
+        throw ASegfaultException(info->si_addr);
+    }
 }
 
 struct segfault_handler_registrar {
@@ -54,6 +65,7 @@ struct segfault_handler_registrar {
         //auto r = syscall(SYS_rt_sigaction, SIGSEGV, &act, nullptr, _NSIG / 8);
         //assert(r == 0);
         sigaction(SIGSEGV, &act, nullptr);
+        sigaction(SIGABRT, &act, nullptr); // for assertions
 
     }
 } my_segfault_handler_registrar;

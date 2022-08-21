@@ -64,7 +64,9 @@ namespace aui {
 
         template<typename AnyType>
         operator AnyType() noexcept {
-            assert(("value is used when null" && mValue != nullptr));
+            if constexpr(!std::is_same_v<AnyType, bool>) {
+                assert(("value is used when null" && mValue != nullptr));
+            }
             return AnyType(mValue);
         }
 

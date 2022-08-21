@@ -201,7 +201,6 @@ function(_auib_try_download_precompiled_binary)
     endif()
 
     foreach(_binary_download_url ${_binary_download_urls})
-        message("Checking ${_binary_download_url}")
         if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
             # since CMake 3.19 there's a way to check for file existence
 
@@ -230,6 +229,7 @@ function(_auib_try_download_precompiled_binary)
             return()
         endif()
     endforeach()
+    message(STATUS "Precompiled binary for ${AUI_MODULE_NAME} is not available")
 endfunction()
 
 # TODO add a way to provide file access to the repository
