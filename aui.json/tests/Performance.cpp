@@ -37,6 +37,7 @@
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
+/*
 TEST(Json, Performance) {
     AByteBuffer buffer;
     if (APath("tmp.json").isRegularFileExists()) {
@@ -53,3 +54,4 @@ TEST(Json, Performance) {
     ASSERT_TRUE((delta < 3s)) << "too slow (" << delta.count() << "ms)";
     ASSERT_TRUE((delta > 5ms)) << "too fast (probably something went wrong)";
 }
+*/
