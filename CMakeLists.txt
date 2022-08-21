@@ -198,3 +198,5 @@ install(
         FILES
         ${_cmake_dir}
         DESTINATION "cmake/")
+
+auib_precompiled_binary()
