@@ -147,6 +147,17 @@ function(_auib_import_subdirectory DEP_SOURCE_DIR AUI_MODULE_NAME) # helper func
     add_subdirectory(${DEP_SOURCE_DIR} "aui.boot-build-${AUI_MODULE_NAME}")
 endfunction()
 
+function(_auib_precompiled_archive_name _output_var _project_name)
+    if (BUILD_SHARED_LIBS)
+        set(SHARED_OR_STATIC shared)
+    else()
+        set(SHARED_OR_STATIC static)
+    endif()
+    set(_tmp "${_project_name}_${CMAKE_SYSTEM_NAME}-${AUI_TARGET_ABI}-${SHARED_OR_STATIC}-${CMAKE_BUILD_TYPE}")
+    string(TOLOWER ${_tmp} _tmp)
+    set(${_output_var} ${_tmp} PARENT_SCOPE)
+endfunction()
+
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
     if (AUIB_DISABLE)
@@ -699,4 +710,12 @@ endmacro()
 
 macro(auib_use_system_libs_end)
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${AUIB_PREV_CMAKE_FIND_USE_CMAKE_SYSTEM_PATH})
+endmacro()
+
+macro(auib_precompiled_binary)
+    set(CPACK_GENERATOR "TGZ")
+    _auib_precompiled_archive_name(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME})
+    message(STATUS "[AUI.BOOT] Output precompiled archive name: ${CPACK_PACKAGE_FILE_NAME}")
+    set(CPACK_VERBATIM_VARIABLES YES)
+    include(CPack)
 endmacro()
