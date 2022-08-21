@@ -107,12 +107,12 @@ jobs:
 
       - name: Pack
         working-directory: ${{github.workspace}}/build
-        run: cpack .
+        run: cpack . -C ${{ matrix.debug_or_release }}
 
       - name: Upload
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
+          path: ${{github.workspace}}/build/*.tar.gz
           name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
 
   release:
@@ -133,3 +133,36 @@ jobs:
           prerelease: false
     outputs:
       upload_url: ${{ steps.create_release.outputs.upload_url }}
+
+  publish:
+    if: contains(github.ref, 'tags/v')
+    name: Publish ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest]
+        debug_or_release: [Debug, Release]
+        shared_or_static: [shared, static]
+
+    needs: release
+    steps:
+      - name: Download artifact
+        uses: actions/download-artifact@v1
+        with:
+          path: ./
+          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{matrix.debug_or_release }}
+
+      - id: getfilename
+        run: echo "::set-output name=file::$(ls *.tar.gz)"
+
+      - name: Upload to Release
+        id: upload_to_release
+        uses: actions/upload-release-asset@v1.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.release.outputs.upload_url }}
+          asset_path: ${{ steps.getfilename.outputs.file }}
+          asset_name: ${{ steps.getfilename.outputs.file }}
+          asset_content_type: application/x-gtar
