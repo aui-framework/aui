@@ -455,6 +455,12 @@ function(auib_import AUI_MODULE_NAME URL)
                         SOURCE_DIR DEP_SOURCE_DIR
                         )
                 message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+            else()
+                if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
+                    if (NOT AUI_BOOT) # recursive deadlock fix
+                        file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+                    endif()
+                endif()
             endif()
         endif()
 
