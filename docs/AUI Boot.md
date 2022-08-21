@@ -29,11 +29,11 @@ target_link_libraries(YOUR_APP PUBLIC sentry::sentry)
 # Importing project as a subdirectory
 
 ```
--DAUI_BOOT_LIB_ADD_SUBDIRECTORY=ON
+-DAUIB_LIB_AS=ON
 ```
 , where 'LIB' is external project name. For example, to import AUI as a subdirectory:
 ```
--DAUI_BOOT_AUI_ADD_SUBDIRECTORY=ON
+-DAUIB_AUI_AS=ON
 ```
 
 # CMake commands
@@ -46,7 +46,9 @@ If needed, downloads and compiles project. Adds an `IMPORTED` target. Built on t
 ```cmake
 auib_import(<PackageName> <URL>
             [VERSION version]
-            [COMPONENTS components...])
+            [COMPONENTS components...]
+            [PRECOMPILED_URL_PREFIX <PrecompiledUrlPrefix>]
+            [ADD_SUBDIRECTORY])
 ```
 
 ### PackageName
@@ -61,6 +63,15 @@ Commit hash, tag or branch name to `checkout`.
 ### COMPONENTS
 List of components to import which will be passed to `find_package`. Also, passed as semicolon-separated list to
 dependency's `CMakeLists.txt` via `AUIB_COMPONENTS` variable.
+
+### ADD_SUBDIRECTORY
+
+Uses `add_subdirectory` instead of `find_package` as project importing mechanism as if `AUIB_<PackageName>_AS` was specified.
+
+### PrecompiledUrlPrefix
+
+Specifies url prefix where the precompiled binaries downloaded from.
+
 
 # Using same dependencies
 ## Case 1

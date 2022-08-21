@@ -189,37 +189,47 @@ endmacro()
 
 function(_auib_try_download_precompiled_binary)
     _auib_precompiled_archive_name(_archive_name ${AUI_MODULE_NAME})
-    set(_binary_download_url "${URL}/releases/download/${TAG_OR_HASH}/${_archive_name}.tar.gz")
-    message(STATUS "GitHub detected, checking for precompiled binary at ${_binary_download_url}")
-    if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
-        # since CMake 3.19 there's a way to check for file existence
+    if (AUIB_IMPORT_PRECOMPILED_URL_PREFIX)
+        set(_binary_download_urls "${AUIB_IMPORT_PRECOMPILED_URL_PREFIX}/${_archive_name}.tar.gz")
+        message(STATUS "Checking for precompiled binary...")
+    else()
+        if (TAG_OR_HASH STREQUAL "latest")
+            set(TAG_OR_HASH master)
+        endif()
+        set(_binary_download_urls "${URL}/releases/download/${TAG_OR_HASH}/${_archive_name}.tar.gz" "${URL}/releases/download/refs%2Fheads%2F${TAG_OR_HASH}/${_archive_name}.tar.gz")
+        message(STATUS "GitHub detected, checking for precompiled binary...")
+    endif()
 
-        file(DOWNLOAD ${_binary_download_url} STATUS _status)
+    foreach(_binary_download_url ${_binary_download_urls})
+        message("Checking ${_binary_download_url}")
+        if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
+            # since CMake 3.19 there's a way to check for file existence
+
+            file(DOWNLOAD ${_binary_download_url} STATUS _status)
+            list(GET _status 0 _status)
+            if (NOT _status STREQUAL 0)
+                continue()
+            endif()
+        endif()
+
+        file(DOWNLOAD ${_binary_download_url} ${CMAKE_CURRENT_BINARY_DIR}/binary.tar.gz SHOW_PROGRESS STATUS _status)
         list(GET _status 0 _status)
         if (NOT _status STREQUAL 0)
-            message(STATUS "Precompiled binary for ${AUI_MODULE_NAME} is not available")
+            continue()
+        endif()
+
+        message(STATUS "Unpacking precompiled binary for ${AUI_MODULE_NAME}...")
+        file(MAKE_DIRECTORY ${DEP_INSTALL_PREFIX})
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_BINARY_DIR}/binary.tar.gz
+                        WORKING_DIRECTORY ${DEP_INSTALL_PREFIX})
+
+        _auib_try_find()
+        if (${AUI_MODULE_NAME}_FOUND)
+            set(_skip_compilation TRUE PARENT_SCOPE)
+            file(TOUCH ${DEP_INSTALLED_FLAG})
             return()
         endif()
-    else()
-    endif()
-
-    file(DOWNLOAD ${_binary_download_url} ${CMAKE_CURRENT_BINARY_DIR}/binary.tar.gz SHOW_PROGRESS STATUS _status)
-    list(GET _status 0 _status)
-    if (NOT _status STREQUAL 0)
-        message(STATUS "Precompiled binary for ${AUI_MODULE_NAME} is not available")
-        return()
-    endif()
-
-    message(STATUS "Unpacking precompiled binary for ${AUI_MODULE_NAME}...")
-    file(MAKE_DIRECTORY ${DEP_INSTALL_PREFIX})
-    execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_BINARY_DIR}/binary.tar.gz
-                    WORKING_DIRECTORY ${DEP_INSTALL_PREFIX})
-
-    _auib_try_find()
-    if (${AUI_MODULE_NAME}_FOUND)
-        set(_skip_compilation TRUE PARENT_SCOPE)
-        file(TOUCH ${DEP_INSTALLED_FLAG})
-    endif()
+    endforeach()
 endfunction()
 
 # TODO add a way to provide file access to the repository
@@ -271,7 +281,7 @@ function(auib_import AUI_MODULE_NAME URL)
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
 
     set(options ADD_SUBDIRECTORY ARCHIVE)
-    set(oneValueArgs VERSION CMAKE_WORKING_DIR CMAKELISTS_CUSTOM)
+    set(oneValueArgs VERSION CMAKE_WORKING_DIR CMAKELISTS_CUSTOM PRECOMPILED_URL_PREFIX)
     set(multiValueArgs CMAKE_ARGS COMPONENTS)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
@@ -424,7 +434,7 @@ function(auib_import AUI_MODULE_NAME URL)
             unset(_skip_compilation) # set by _auib_try_download_precompiled_binary
 
             # check for GitHub Release
-            if (URL MATCHES "^https://github.com/")
+            if (URL MATCHES "^https://github.com/" OR AUIB_IMPORT_PRECOMPILED_URL_PREFIX)
                 _auib_try_download_precompiled_binary()
             endif()
 
