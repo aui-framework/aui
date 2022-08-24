@@ -1,4 +1,4 @@
-set(_gradle_project_dir ${CMAKE_CURRENT_BINARY_DIR}/gradle_project)
+set(_gradle_project_dir ${CMAKE_CURRENT_BINARY_DIR}/gradle_project CACHE INTERNAL "")
 message("\n"
         "     ###############################################################################################\n"
         "     # AUI runs in Android build mode which means that AUI will generate Android Gradle project.   #\n"
