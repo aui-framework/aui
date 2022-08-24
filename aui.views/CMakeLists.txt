@@ -17,6 +17,10 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 	auib_import(Freetype https://github.com/aui-framework/freetype/archive/refs/heads/master.zip ARCHIVE
 			    PRECOMPILED_URL_PREFIX https://github.com/aui-framework/freetype/releases/download/refs%2Fheads%2Fmaster)
 
+	if (NOT TARGET freetype)
+		message(FATAL_ERROR "Freetype not imported")
+	endif()
+
 
 	if(NOT ANDROID AND NOT IOS)
 		auib_import(GLEW https://github.com/aui-framework/glew-cmake

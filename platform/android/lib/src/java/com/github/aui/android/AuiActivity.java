@@ -6,7 +6,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.os.Bundle;
 
-public class MainActivity extends AppCompatActivity {
+public class AuiActivity extends AppCompatActivity {
     private String getApplicationName() {
         Context ctx = getApplicationContext();
         ApplicationInfo applicationInfo = ctx.getApplicationInfo();
@@ -17,7 +17,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        System.loadLibrary(getApplicationName());
 
         AUI.ourContext = this;
 

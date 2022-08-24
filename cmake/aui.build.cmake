@@ -64,54 +64,54 @@ else()
 endif()
 
 if (WIN32)
-    set(AUI_PLATFORM_WIN 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_WIN 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS win32)
 else()
-    set(AUI_PLATFORM_WIN 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_WIN 0 CACHE INTERNAL "Platform")
 endif()
 if (UNIX AND NOT APPLE AND NOT ANDROID)
-    set(AUI_PLATFORM_LINUX 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_LINUX 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS linux)
 else()
-    set(AUI_PLATFORM_LINUX 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_LINUX 0 CACHE INTERNAL "Platform")
 endif()
 
 if (UNIX AND APPLE)
-    set(AUI_PLATFORM_APPLE 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_APPLE 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS apple)
 else()
-    set(AUI_PLATFORM_APPLE 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_APPLE 0 CACHE INTERNAL "Platform")
 endif()
 
 if (UNIX AND APPLE AND NOT IOS)
-    set(AUI_PLATFORM_MACOS 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_MACOS 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS macos)
 else()
-    set(AUI_PLATFORM_MACOS 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_MACOS 0 CACHE INTERNAL "Platform")
 endif()
 
 if (ANDROID)
-    set(AUI_PLATFORM_ANDROID 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_ANDROID 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS android)
 else()
-    set(AUI_PLATFORM_ANDROID 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_ANDROID 0 CACHE INTERNAL "Platform")
 endif()
 
 if (IOS)
-    set(AUI_PLATFORM_IOS 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_IOS 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS ios)
 else()
-    set(AUI_PLATFORM_IOS 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_IOS 0 CACHE INTERNAL "Platform")
 endif()
 
 if (UNIX)
-    set(AUI_PLATFORM_UNIX 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_UNIX 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS unix)
 else()
-    set(AUI_PLATFORM_UNIX 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_UNIX 0 CACHE INTERNAL "Platform")
 endif()
 
-set(AUI_EXCLUDE_PLATFORMS ${AUI_EXCLUDE_PLATFORMS} CACHE STRING "")
+set(AUI_EXCLUDE_PLATFORMS ${AUI_EXCLUDE_PLATFORMS} CACHE INTERNAL "")
 
 # determine compiler home dir for mingw when crosscompiling
 if (MINGW AND CMAKE_CROSSCOMPILING)
@@ -486,6 +486,10 @@ function(aui_deploy_library AUI_MODULE_NAME)
 endfunction(aui_deploy_library)
 
 function(aui_executable AUI_MODULE_NAME)
+    if (AUI_ANDROID_GRADLE_GENERATOR)
+        return()
+    endif()
+
     file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
                                      ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
@@ -637,6 +641,9 @@ endmacro()
 
 
 function(aui_compile_assets AUI_MODULE_NAME)
+    if (AUI_ANDROID_GRADLE_GENERATOR)
+        return()
+    endif()
     cmake_parse_arguments(ASSETS "" "" "EXCLUDE" ${ARGN})
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
 
@@ -724,6 +731,9 @@ function(aui_compile_assets_add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
 endfunction(aui_compile_assets_add)
 
 function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues/25
+    if (AUI_ANDROID_GRADLE_GENERATOR)
+        return()
+    endif()
     set(options )
     set(oneValueArgs )
     set(multiValueArgs PRIVATE;PUBLIC;INTERFACE)
@@ -809,6 +819,9 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
 endfunction()
 
 function(aui_module AUI_MODULE_NAME)
+    if (AUI_ANDROID_GRADLE_GENERATOR)
+        return()
+    endif()
     file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
                                      ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
 
@@ -928,6 +941,9 @@ macro(aui_app)
             ICON
             VENDOR
 
+            # android
+            ANDROID_PACKAGE
+
             # linux
             LINUX_DESKTOP
 
@@ -966,8 +982,10 @@ macro(aui_app)
     endif()
 
     unset(_error_msg)
-    if (NOT APP_TARGET OR NOT TARGET ${APP_TARGET})
-        list(APPEND _error_msg "TARGET which is your app's executable target.")
+    if (NOT APP_TARGET)
+        if (NOT TARGET ${APP_TARGET} AND NOT AUI_ANDROID_GRADLE_GENERATOR)
+            list(APPEND _error_msg "TARGET which is your app's executable target.")
+        endif()
     endif()
     if (NOT APP_NAME)
         list(APPEND _error_msg "NAME which is your app's display name.")
@@ -988,18 +1006,29 @@ macro(aui_app)
         list(APPEND _error_msg_opt "APPLE_SIGN_IDENTITY which is your code sign identity (defaults to \"iPhone Developer\").")
         list(APPEND _error_msg_opt "IOS_VERSION which is target IOS version (defaults to 14.3).")
         list(APPEND _error_msg_opt "IOS_DEVICE which is target IOS device: either IPHONE, IPAD or BOTH (defaults to BOTH).")
-        list(APPEND _error_msg_opt "IOS_CONTROLLER which is your controller name (defaults to AUIViewController)")
+        list(APPEND _error_msg_opt "IOS_CONTROLLER which is your controller name (defaults to AUIViewController).")
     endif()
 
     if (AUI_PLATFORM_LINUX)
         if (NOT APP_LINUX_DESKTOP_FILE)
-            list(APPEND _error_msg_opt "LINUX_DESKTOP_FILE which is your custom *.desktop file")
+            list(APPEND _error_msg_opt "LINUX_DESKTOP_FILE which is your custom *.desktop file.")
+        endif()
+    endif()
+
+    if (AUI_PLATFORM_ANDROID)
+        if (NOT APP_ANDROID_PACKAGE)
+            list(APPEND _error_msg "ANDROID_PACKAGE which is android app package name.")
         endif()
     endif()
 
     if (_error_msg)
-        list(JOIN _error_msg \n v1)
-        list(JOIN _error_msg_opt \n v2)
+        list(JOIN _error_msg "\n - " v1)
+        list(JOIN _error_msg_opt "\n - " v2)
+        foreach(_i v1 v2)
+            if (${_i})
+                set(${_i} " - ${${_i}}")
+            endif()
+        endforeach()
         message(FATAL_ERROR "The following arguments are required for aui_app():\n${v1}\nnote: the following optional variables can be also set:\n${v2}")
     endif()
 
@@ -1027,7 +1056,7 @@ macro(aui_app)
                 ARGS svg2ico ${_icon_absolute} ${_ico}
             )
 
-            configure_file(${AUI_BUILD_AUI_ROOT}/cmake/win32-res.rc.in ${_current_app_build_files}/win32-res.rc)
+            configure_file(${AUI_BUILD_AUI_ROOT}/platform/win32/res.rc.in ${_current_app_build_files}/win32-res.rc)
             target_sources(${APP_TARGET} PRIVATE ${_current_app_build_files}/win32-res.rc ${_ico})
         endif()
     endif()
@@ -1083,7 +1112,7 @@ macro(aui_app)
         set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
         set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
         if (AUI_PLATFORM_MACOS)
-            configure_file(${AUI_BUILD_AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+            configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
         endif()
         set_target_properties(${APP_TARGET} PROPERTIES
                 MACOSX_BUNDLE TRUE
@@ -1104,7 +1133,7 @@ macro(aui_app)
 
     # MACOS ============================================================================================================
     if (AUI_PLATFORM_MACOS)
-        configure_file(${AUI_BUILD_AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+        configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
 
         if (APP_ICON)
             # generate icns
@@ -1159,8 +1188,8 @@ macro(aui_app)
                 ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
                 )
 
-        configure_file(${AUI_BUILD_AUI_ROOT}/cmake/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
-        configure_file(${AUI_BUILD_AUI_ROOT}/cmake/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
+        configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
+        configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
 
         target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
         set_target_properties(${APP_TARGET} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
@@ -1198,7 +1227,7 @@ macro(aui_app)
                 XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ${APP_APPLE_SIGN_IDENTITY}
                 XCODE_ATTRIBUTE_DEVELOPMENT_TEAM ${APP_APPLE_TEAM_ID}
                 XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY ${APP_IOS_DEVICE}
-                MACOSX_BUNDLE_INFO_PLIST ${AUI_BUILD_AUI_ROOT}/cmake/plist.in
+                MACOSX_BUNDLE_INFO_PLIST ${AUI_BUILD_AUI_ROOT}/platform/apple/plist.in
                 XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
                 XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES NO
                 XCODE_ATTRIBUTE_INSTALL_PATH "$(LOCAL_APPS_DIR)"
@@ -1315,6 +1344,10 @@ macro(aui_app)
     endif()
     if (NOT APP_NO_INCLUDE_CPACK AND NOT CPack_CMake_INCLUDED)
         include(CPack)
+    endif()
+
+    if (AUI_ANDROID_GRADLE_GENERATOR)
+        _aui_android_app()
     endif()
 endmacro()
 

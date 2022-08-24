@@ -6,7 +6,7 @@ import android.content.DialogInterface;
 import androidx.appcompat.app.AlertDialog;
 
 public class AUI {
-    public static MainActivity ourContext;
+    public static AuiActivity ourContext;
 
     public static void showMessageBox(final String title, final String message) {
         ourContext.runOnUiThread(new Runnable() {

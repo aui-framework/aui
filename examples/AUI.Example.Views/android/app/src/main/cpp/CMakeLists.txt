@@ -3,4 +3,5 @@ project(app)
 
 set(AUI_BUILD_EXAMPLES TRUE CACHE BOOL "")
 
-add_subdirectory(../../../../../../../ build)
+add_subdirectory(../../../../../ build)
+#add_subdirectory(../../../../../../../ build)

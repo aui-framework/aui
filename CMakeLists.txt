@@ -51,9 +51,13 @@ include(aui.boot.cmake)
 cmake_policy(SET CMP0091 NEW)
 include(cmake/aui.build.cmake)
 
+
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
 
 function(define_aui_component AUI_COMPONENT_NAME)
+    if (AUI_ANDROID_GRADLE_GENERATOR)
+        return()
+    endif()
     if (AUIB_COMPONENTS)
         if (NOT ${AUI_COMPONENT_NAME} IN_LIST AUIB_COMPONENTS)
             return()
@@ -83,10 +87,18 @@ if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
 endif()
 
+if (AUI_ANDROID_GRADLE_GENERATOR)
+    include(cmake/aui.build.android.cmake)
+endif()
+
 if(AUI_BUILD_EXAMPLES)
     add_subdirectory(examples/AUI.Example.Views)
     #add_subdirectory(examples/AUI.Example.Fractal)
     #add_subdirectory(examples/AUI.Example.Minesweeper)
+endif()
+
+if (AUI_ANDROID_GRADLE_GENERATOR)
+    return()
 endif()
 
 if (NOT AUI_NO_TESTS)
@@ -198,5 +210,13 @@ install(
         FILES
         ${_cmake_dir}
         DESTINATION "cmake/")
+
+
+file(GLOB_RECURSE _platform_dir platform/*)
+
+install(
+        FILES
+        ${_platform_dir}
+        DESTINATION "platform/")
 
 auib_precompiled_binary()
