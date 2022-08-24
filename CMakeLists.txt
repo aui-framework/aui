@@ -193,10 +193,10 @@ install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
         DESTINATION ".")
 
-install(DIRECTORY cmake
+install(DIRECTORY cmake/
         DESTINATION cmake)
 
-install(DIRECTORY platform
+install(DIRECTORY platform/
         DESTINATION platform)
 
 auib_precompiled_binary()
