@@ -42,7 +42,7 @@ set_property(GLOBAL PROPERTY TESTS_SRCS "")
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
-set(AUI_BUILD_FOR "" CACHE INTERNAL "Specifies target cross-compilation platform")
+set(AUI_BUILD_FOR "" CACHE STRING "Specifies target cross-compilation platform")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES ${AUI_BOOT} CACHE BOOL "Install runtime dependencies along with the project")
 
 cmake_policy(SET CMP0072 NEW)
@@ -492,12 +492,12 @@ endfunction(aui_deploy_library)
 
 function(aui_executable AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
-                                     ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.m)
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.m)
 
     set(options WIN32_SUBSYSTEM_CONSOLE)
     set(oneValueArgs COMPILE_ASSETS EXPORT)
@@ -597,6 +597,9 @@ endfunction(aui_static_link)
 macro(_aui_find_root)
     if (NOT AUI_BUILD_AUI_ROOT)
         set(AUI_BUILD_AUI_ROOT ${AUI_ROOT})
+        if (NOT AUI_BUILD_AUI_ROOT)
+            message(FATAL_ERROR "Could not find AUI root")
+        endif()
     endif()
 endmacro()
 
@@ -815,7 +818,7 @@ endfunction()
 
 function(aui_module AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
-                                     ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
 
 
     set(options WHOLEARCHIVE PLUGIN FORCE_STATIC FORCE_SHARED)
@@ -836,12 +839,12 @@ function(aui_module AUI_MODULE_NAME)
     endif()
 
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.manifest
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
-                           ${CMAKE_CURRENT_SOURCE_DIR}/src/*.m)
-    
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.manifest
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.m)
+
     if (BUILD_SHARED_LIBS)
         if (WIN32)
             if (EXISTS "${CMAKE_SOURCE_DIR}/Resource.rc")
@@ -1007,7 +1010,7 @@ macro(aui_app)
         endif()
     endif()
 
-    if (AUI_PLATFORM_ANDROID)
+    if (AUI_PLATFORM_ANDROID OR AUI_BUILD_FOR STREQUAL "android")
         if (NOT APP_ANDROID_PACKAGE)
             list(APPEND _error_msg "ANDROID_PACKAGE which is android app package name.")
         endif()
@@ -1043,9 +1046,9 @@ macro(aui_app)
         if (APP_ICON)
             set(_ico "${_current_app_build_files}/app.ico")
             add_custom_command(
-                OUTPUT ${_ico}
-                COMMAND ${AUI_TOOLBOX_EXE}
-                ARGS svg2ico ${_icon_absolute} ${_ico}
+                    OUTPUT ${_ico}
+                    COMMAND ${AUI_TOOLBOX_EXE}
+                    ARGS svg2ico ${_icon_absolute} ${_ico}
             )
 
             configure_file(${AUI_BUILD_AUI_ROOT}/platform/win32/res.rc.in ${_current_app_build_files}/win32-res.rc)
@@ -1358,6 +1361,8 @@ endif()
 #    endif()
 #endif()
 
+
 if (AUI_BUILD_FOR STREQUAL "android")
+    _aui_find_root()
     include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.android.cmake)
 endif()

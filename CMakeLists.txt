@@ -189,24 +189,14 @@ endif()
 
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 #install(EXPORT AUI DESTINATION cmake/)
-install(
-        FILES
+install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
         DESTINATION ".")
 
-file(GLOB_RECURSE _cmake_dir cmake/*)
+install(DIRECTORY cmake
+        DESTINATION cmake)
 
-install(
-        FILES
-        ${_cmake_dir}
-        DESTINATION "cmake/")
-
-
-file(GLOB_RECURSE _platform_dir platform/*)
-
-install(
-        FILES
-        ${_platform_dir}
-        DESTINATION "platform/")
+install(DIRECTORY platform
+        DESTINATION platform)
 
 auib_precompiled_binary()
