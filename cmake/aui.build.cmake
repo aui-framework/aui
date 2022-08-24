@@ -42,9 +42,14 @@ set_property(GLOBAL PROPERTY TESTS_SRCS "")
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
+set(AUI_BUILD_FOR "" CACHE INTERNAL "Specifies target cross-compilation platform")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES ${AUI_BOOT} CACHE BOOL "Install runtime dependencies along with the project")
 
 cmake_policy(SET CMP0072 NEW)
+
+if (CMAKE_CROSSCOMPILING AND AUI_BUILD_FOR)
+    message(FATAL_ERROR "CMAKE_CROSSCOMPILING and AUI_BUILD_FOR are exclusive vars.")
+endif()
 
 if (ANDROID OR IOS)
     set(_build_shared OFF)
@@ -486,10 +491,6 @@ function(aui_deploy_library AUI_MODULE_NAME)
 endfunction(aui_deploy_library)
 
 function(aui_executable AUI_MODULE_NAME)
-    if (AUI_ANDROID_GRADLE_GENERATOR)
-        return()
-    endif()
-
     file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
                                      ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
@@ -641,9 +642,6 @@ endmacro()
 
 
 function(aui_compile_assets AUI_MODULE_NAME)
-    if (AUI_ANDROID_GRADLE_GENERATOR)
-        return()
-    endif()
     cmake_parse_arguments(ASSETS "" "" "EXCLUDE" ${ARGN})
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
 
@@ -731,9 +729,6 @@ function(aui_compile_assets_add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
 endfunction(aui_compile_assets_add)
 
 function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues/25
-    if (AUI_ANDROID_GRADLE_GENERATOR)
-        return()
-    endif()
     set(options )
     set(oneValueArgs )
     set(multiValueArgs PRIVATE;PUBLIC;INTERFACE)
@@ -819,9 +814,6 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
 endfunction()
 
 function(aui_module AUI_MODULE_NAME)
-    if (AUI_ANDROID_GRADLE_GENERATOR)
-        return()
-    endif()
     file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
                                      ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
 
@@ -983,7 +975,7 @@ macro(aui_app)
 
     unset(_error_msg)
     if (NOT APP_TARGET)
-        if (NOT TARGET ${APP_TARGET} AND NOT AUI_ANDROID_GRADLE_GENERATOR)
+        if (NOT TARGET ${APP_TARGET})
             list(APPEND _error_msg "TARGET which is your app's executable target.")
         endif()
     endif()
@@ -1346,7 +1338,7 @@ macro(aui_app)
         include(CPack)
     endif()
 
-    if (AUI_ANDROID_GRADLE_GENERATOR)
+    if (AUI_BUILD_FOR STREQUAL "android")
         _aui_android_app()
     endif()
 endmacro()
@@ -1366,6 +1358,6 @@ endif()
 #    endif()
 #endif()
 
-if (AUI_ANDROID_GRADLE_GENERATOR)
+if (AUI_BUILD_FOR STREQUAL "android")
     include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.android.cmake)
 endif()
