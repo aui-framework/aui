@@ -647,7 +647,7 @@ function(auib_import AUI_MODULE_NAME URL)
         endif()
         _auib_import_subdirectory(${DEP_SOURCE_DIR} ${AUI_MODULE_NAME})
         message(STATUS "${AUI_MODULE_NAME} imported as a subdirectory: ${DEP_SOURCE_DIR}")
-    else()
+    elseif(NOT ${AUI_MODULE_NAME}_FOUND)
 
         # BEGIN: try find
         set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
