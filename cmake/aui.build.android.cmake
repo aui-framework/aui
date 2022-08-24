@@ -14,15 +14,15 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${AUI_BUILD_AUI_ROOT}
 add_custom_target(apks ALL)
 
 
-set(AUI_ANDROID_SDK_ROOT $ENV{ANDROID_SDK_ROOT} CACHE PATH "Path to Android SDK")
-
-if (NOT AUI_ANDROID_SDK_ROOT)
+set(_sdk_root $ENV{AUI_ANDROID_SDK_ROOT})
+if (NOT _sdk_root)
     set(_probe "$ENV{HOME}/Android/Sdk")
     if (EXISTS ${_probe})
         message(STATUS "Found Android SDK at ${_probe}")
-        set(AUI_ANDROID_SDK_ROOT ${_probe})
+        set(_sdk_root ${_probe})
     endif()
 endif()
+set(AUI_ANDROID_SDK_ROOT ${_sdk_root} CACHE PATH "Path to Android SDK")
 
 if (AUI_ANDROID_SDK_ROOT)
     message(STATUS "Android SDK: ${AUI_ANDROID_SDK_ROOT}")
@@ -35,14 +35,23 @@ endif()
 
 function(_aui_android_app)
     if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-        set(_gradle_exe "gradlew.bat")
+        set(_gradle_exe "${_gradle_project_dir}/gradlew.bat")
     else()
-        set(_gradle_exe "./gradlew")
+        set(_gradle_exe "${_gradle_project_dir}/gradlew")
+        file(CHMOD ${_gradle_exe}
+                PERMISSIONS
+                OWNER_READ
+                OWNER_WRITE
+                OWNER_EXECUTE
+                GROUP_READ
+                GROUP_EXECUTE
+                WORLD_READ
+                WORLD_EXECUTE)
     endif()
 
     add_custom_target(${APP_TARGET}.apk
-                      COMMAND ${_gradle_exe} build
-                      WORKING_DIRECTORY ${_gradle_project_dir}
+            COMMAND ${_gradle_exe} build
+            WORKING_DIRECTORY ${_gradle_project_dir}
             )
 
     set(_main "${_gradle_project_dir}/app/src/main")
