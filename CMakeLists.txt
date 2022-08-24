@@ -53,6 +53,7 @@ include(cmake/aui.build.cmake)
 
 
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
+auib_mark_var_forwardable(AUI_BUILD_EXAMPLES)
 
 function(define_aui_component AUI_COMPONENT_NAME)
     if (AUIB_COMPONENTS)

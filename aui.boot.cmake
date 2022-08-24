@@ -27,6 +27,10 @@ define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
         FULL_DOCS "Global list of imported targets (since CMake 3.21)")
 
+define_property(GLOBAL PROPERTY AUIB_FORWARDABLE_VARS
+        BRIEF_DOCS "Global list of forwarded vars"
+        FULL_DOCS "Global list of forwarded vars")
+
 # fix "Failed to get the hash for HEAD" error
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
     file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
@@ -505,8 +509,10 @@ function(auib_import AUI_MODULE_NAME URL)
                             -DAUIB_COMPONENTS=${TMP_LIST})
                 endif()
 
+                unset(_forwardable_vars)
+                get_property(_forwardable_vars GLOBAL PROPERTY AUIB_FORWARDABLE_VARS)
                 if(ANDROID)
-                    set(ANDROID_VARS
+                    list(APPEND _forwardable_vars
                             CMAKE_SYSTEM_NAME
                             CMAKE_EXPORT_COMPILE_COMMANDS
                             CMAKE_SYSTEM_VERSION
@@ -517,6 +523,14 @@ function(auib_import AUI_MODULE_NAME URL)
                             CMAKE_ANDROID_NDK
                             )
                 endif()
+
+                get_cmake_property(CACHE_VARS CACHE_VARIABLES)
+
+                foreach(CACHE_VAR ${CACHE_VARS})
+                    if(_forwardable)
+                        list(APPEND _forwardable_vars ${CACHE_VAR})
+                    endif()
+                endforeach()
 
 
                 if(MSVC)
@@ -552,7 +566,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         CMAKE_FIND_ROOT_PATH_MODE_INCLUDE
                         CMAKE_FIND_ROOT_PATH_MODE_PACKAGE
                         ONLY_CMAKE_FIND_ROOT_PATH
-                        ${ANDROID_VARS})
+                        ${_forwardable_vars})
 
                     # ${_varname} can be possibly false (e.g. -DBUILD_SHARED_LIBS=FALSE) so using STREQUAL check instead for
                     # emptiness
@@ -786,4 +800,9 @@ macro(auib_precompiled_binary)
     set(CPACK_VERBATIM_VARIABLES YES)
     set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
     include(CPack)
+endmacro()
+
+
+macro(auib_mark_var_forwardable VAR)
+    set_property(GLOBAL APPEND PROPERTY AUIB_FORWARDABLE_VARS ${VAR})
 endmacro()
