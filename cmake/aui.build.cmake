@@ -1365,3 +1365,7 @@ endif()
 #        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
 #    endif()
 #endif()
+
+if (AUI_ANDROID_GRADLE_GENERATOR)
+    include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.android.cmake)
+endif()

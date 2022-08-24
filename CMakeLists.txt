@@ -87,10 +87,6 @@ if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
 endif()
 
-if (AUI_ANDROID_GRADLE_GENERATOR)
-    include(cmake/aui.build.android.cmake)
-endif()
-
 if(AUI_BUILD_EXAMPLES)
     add_subdirectory(examples/AUI.Example.Views)
     #add_subdirectory(examples/AUI.Example.Fractal)
