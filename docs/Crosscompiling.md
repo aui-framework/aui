@@ -20,7 +20,8 @@ extra project directory for the target platform's development environment.
 
 To build target platform's final application package, run build the `apps` target. 
 
-Example (assuming working directory is the build directory):
+### Example
+Assuming working directory is the build directory:
 
 To configure the project use
 ```

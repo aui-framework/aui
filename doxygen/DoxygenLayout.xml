@@ -25,7 +25,7 @@
             <tab type="user" url="@ref md_docs_Writing_platform_dependent_code" title="Writing platform dependent code" />
             <tab type="user" url="@ref md_docs_Code_style_and_recommendations" title="Code style and recommendations" />
             <tab type="user" url="@ref md_docs_Troubleshoot_list" title="Troubleshoot list" />
-            <tab type="user" url="@ref md_docs_Crosscompiling.html">Crosscompiling (Android and iOS)</tab>
+            <tab type="user" url="@ref md_docs_Crosscompiling.html" title="Crosscompiling (Android and iOS)" />
         </tab>
         <tab type="usergroup" title="Reference" visible="yes">
             <tab type="modules" visible="yes" title="All AUI Modules" intro=""/>
