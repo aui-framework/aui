@@ -1343,6 +1343,8 @@ macro(aui_app)
 
     if (AUI_BUILD_FOR STREQUAL "android")
         _aui_android_app()
+    elseif (AUI_BUILD_FOR STREQUAL "ios")
+        _aui_ios_app()
     endif()
 endmacro()
 
@@ -1365,4 +1367,9 @@ endif()
 if (AUI_BUILD_FOR STREQUAL "android")
     _aui_find_root()
     include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.android.cmake)
+endif()
+
+if (AUI_BUILD_FOR STREQUAL "ios")
+    _aui_find_root()
+    include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.ios.cmake)
 endif()

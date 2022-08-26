@@ -52,14 +52,14 @@ void OpenGLRenderingContext::init(const Init& init) {
 
     auto pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attributes];
     if (nil == pixelFormat) {
-        throw std::runtime_error("Failed to initialize NSOpenGLPixelFormat");
+        throw AException("Failed to initialize NSOpenGLPixelFormat");
     }
 
     // create context
     auto context = [[NSOpenGLContext alloc] initWithFormat:pixelFormat shareContext:nil];
     if (nil == context) {
         [pixelFormat release];
-        throw std::runtime_error("Failed to initialize NSOpenGLContext");
+        throw AException("Failed to initialize NSOpenGLContext");
     }
 
     auto contentView  = [static_cast<NSWindow*>(window.mHandle) contentView];
