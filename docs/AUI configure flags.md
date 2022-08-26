@@ -46,3 +46,7 @@ Disables "Waiting for repository" lock.
 ## AUIB_NO_PRECOMPILED
 
 Disables precompiled binaries.
+
+## AUI_BUILD_FOR
+
+Specifies target platform for cross-compilation (see [cross-compiling](md)).

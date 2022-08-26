@@ -3,7 +3,7 @@ message("\n"
         "     ###############################################################################################\n"
         "     # AUI runs in Android build mode which means that AUI will generate Android Gradle project.   #\n"
         "     # Define your application with aui_app command.                                               #\n"
-        "     # To build an apk, run the apks target.                                                       #\n"
+        "     # To build an apk, run the apps target.                                                       #\n"
         "     # To develop in Android Studio environment, open the gradle project dir (path is below).      #\n"
         "     ###############################################################################################\n"
         )
@@ -11,7 +11,7 @@ message(STATUS "Android gradle project dir: ${_gradle_project_dir}")
 
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${AUI_BUILD_AUI_ROOT}/platform/android/project ${_gradle_project_dir})
 
-add_custom_target(apks ALL)
+add_custom_target(apps ALL)
 
 
 set(_sdk_root $ENV{AUI_ANDROID_SDK_ROOT})
@@ -49,7 +49,7 @@ function(_aui_android_app)
                 WORLD_EXECUTE)
     endif()
 
-    add_custom_target(${APP_TARGET}.apk
+    add_custom_target(${APP_TARGET}.app
             COMMAND ${_gradle_exe} build
             WORKING_DIRECTORY ${_gradle_project_dir}
             )
@@ -80,5 +80,5 @@ function(_aui_android_app)
             ${ALL_CMAKE_ARGS}
             "add_subdirectory(${CMAKE_SOURCE_DIR} build)")
 
-    add_dependencies(apks ${APP_TARGET}.apk)
+    add_dependencies(apps ${APP_TARGET}.app)
 endfunction()
