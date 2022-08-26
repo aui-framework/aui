@@ -59,7 +59,7 @@ jobs:
        run: sudo apt-get update && sudo apt-get install build-essential cmake ninja-build
 
      - name: Configure
-       run: cmake -DAUI_BUILD_FOR=android -B ${{github.workspace}}/build
+       run: cmake -DAUI_BUILD_FOR=android -DAUI_BUILD_EXAMPLES=TRUE -B ${{github.workspace}}/build
 
      - name: Build
        run: cmake --build ${{github.workspace}}/build -t apps
