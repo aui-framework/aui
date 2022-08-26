@@ -48,20 +48,19 @@ foreach(_entry ${AUI_BOOT_ROOT_ENTRIES})
     set(${VAR_NAME} ${VAR_VALUE})
     set(${VAR_NAME} ${VAR_VALUE} PARENT_SCOPE)
 
-    # import required targets when static build is enabled.
-    if (NOT BUILD_SHARED_LIBS)
-        # remove the _ROOT suffix
-        string(LENGTH ${VAR_NAME} _len)
-        math(EXPR _len "${_len}-5")
-        string(SUBSTRING ${VAR_NAME} 0 ${_len} MODULE_NAME)
+    # import required targets
 
-        # some targets can be found using the config mode only or the module mode only; the point is to try the both ways
-        set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
-        find_package(${MODULE_NAME})
-        if (NOT ${MODULE_NAME}_FOUND)
-            set(CMAKE_FIND_PACKAGE_PREFER_CONFIG FALSE)
-            find_package(${MODULE_NAME} REQUIRED)
-        endif()
+    # remove the _ROOT suffix
+    string(LENGTH ${VAR_NAME} _len)
+    math(EXPR _len "${_len}-5")
+    string(SUBSTRING ${VAR_NAME} 0 ${_len} MODULE_NAME)
+
+    # some targets can be found using the config mode only or the module mode only; the point is to try the both ways
+    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+    find_package(${MODULE_NAME})
+    if (NOT ${MODULE_NAME}_FOUND)
+        set(CMAKE_FIND_PACKAGE_PREFER_CONFIG FALSE)
+        find_package(${MODULE_NAME} REQUIRED)
     endif()
 endforeach()
 
@@ -148,8 +147,6 @@ if (UNIX AND NOT APPLE)
 endif()
 
 if (AUI_views_FOUND AND NOT ANDROID AND NOT IOS)
-    find_package(GLEW REQUIRED)
-
     auib_use_system_libs_begin()
     if (UNIX AND NOT APPLE)
         find_package(X11 REQUIRED)
