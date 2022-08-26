@@ -151,7 +151,7 @@ if (AUI_views_FOUND AND NOT ANDROID AND NOT IOS)
     find_package(GLEW REQUIRED)
 
     auib_use_system_libs_begin()
-    if (UNIX)
+    if (UNIX AND NOT APPLE)
         find_package(X11 REQUIRED)
     endif()
     find_package(OpenGL REQUIRED)
