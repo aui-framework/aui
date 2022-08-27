@@ -14,7 +14,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory ${AUI_BUILD_AUI_ROOT}
 add_custom_target(apps ALL)
 
 
-set(_sdk_root $ENV{AUI_ANDROID_SDK_ROOT})
+set(_sdk_root $ENV{ANDROID_SDK_ROOT})
 if (NOT _sdk_root)
     set(_probe "$ENV{HOME}/Android/Sdk")
     if (EXISTS ${_probe})
