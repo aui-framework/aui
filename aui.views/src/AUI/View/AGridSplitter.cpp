@@ -3,14 +3,14 @@
 //
 
 #include <AUI/Layout/AAdvancedGridLayout.h>
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Util/ALayoutDirection.h>
 #include "AGridSplitter.h"
 
 const auto CLICK_BIAS = 8_dp;
 
 AGridSplitter::AGridSplitter():
-    mHorizontalHelper(LayoutDirection::HORIZONTAL),
-    mVerticalHelper(LayoutDirection::VERTICAL)
+    mHorizontalHelper(ALayoutDirection::HORIZONTAL),
+    mVerticalHelper(ALayoutDirection::VERTICAL)
 {
 
 }

@@ -35,10 +35,10 @@ public:
             auto splitter = aui::ptr::manage(new AGridSplitter);
             if (mAddSpacers) {
                 for (auto& row: mItems) {
-                    row.push_back(_new<ASpacer>());
+                    row.push_back(_new<ASpacerExpanding>());
                 }
                 mItems.push_back(
-                        AVector<_<AView>>::generate(mItems.first().size(), [](size_t) { return _new<ASpacer>(); }));
+                        AVector<_<AView>>::generate(mItems.first().size(), [](size_t) { return _new<ASpacerExpanding>(); }));
             }
             splitter->mItems = std::move(mItems);
             splitter->updateSplitterItems();

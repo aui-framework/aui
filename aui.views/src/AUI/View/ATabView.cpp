@@ -68,7 +68,7 @@ bool ATabButtonView::selectableIsSelectedImpl() {
 ATabButtonRow::ATabButtonRow() {
     setContents(Horizontal {
         mContents = _container<AHorizontalLayout>({}) << ".tabview_row",
-        _new<ASpacer>(),
+        _new<ASpacerExpanding>(),
     });
     addAssName(".tabview_row_wrap");
 }

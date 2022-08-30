@@ -95,6 +95,27 @@ public:
 
     API_AUI_CORE float readabilityOfForegroundColor(const AColor &foreground);
 
+
+    /**
+     * @brief Increases the alpha channel by the given value.
+     */
+    [[nodiscard]]
+    AColor opacify(float alpha) const noexcept {
+        AColor c = *this;
+        c.a += alpha;
+        return c;
+    }
+
+    /**
+     * @brief Decreases the alpha channel by the given value.
+     */
+    [[nodiscard]]
+    AColor transparentize(float alpha) const noexcept {
+        AColor c = *this;
+        c.a -= alpha;
+        return c;
+    }
+
     /**
      * @brief Multiply all color components except alpha channel (rgb * d, a)
      * @param multiplier

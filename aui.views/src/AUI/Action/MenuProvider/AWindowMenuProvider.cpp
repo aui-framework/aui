@@ -51,7 +51,7 @@ public:
                     } else {
                         addView(view = Horizontal {
                                 _new<ALabel>(i.name) << ".menu-item-name",
-                                _new<ASpacer>(),
+                                _new<ASpacerExpanding>(),
                                 _new<ALabel>(i.shortcut) << ".menu-item-shortcut"
                         } << ".menu-item");
                     }
@@ -75,7 +75,7 @@ public:
                 case AMenu::SUBLIST: {
                     addView(view = Horizontal {
                             _new<ALabel>(i.name) << ".menu-item-name",
-                            _new<ASpacer>(),
+                            _new<ASpacerExpanding>(),
                             _new<ALabel>(">")
                     } << ".menu-item");
 

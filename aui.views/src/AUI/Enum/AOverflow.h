@@ -19,27 +19,48 @@
  * =====================================================================================================================
  */
 
-#include "SimpleShadingEffect.h"
+//
+// Created by alex2 on 04.01.2021.
+//
 
-#include "AUI/Common/AStringVector.h"
+#pragma once
 
-SimpleShadingEffect::SimpleShadingEffect(const AStringVector& uniforms, const AString& fragmentCode)
-{
-	AString src;
-	for (const auto& x : uniforms)
-	{
-		src += "uniform " + x + ";\n";
-	}
-	mShader.load(
-		"attribute vec3 pos;"
-		"void main(void) {gl_Position = vec4(pos, 1);}",
-		src +
-		"void main() {" + fragmentCode + "}");
-	mShader.compile();
-}
+#include <AUI/Reflect/AEnumerate.h>
 
-void SimpleShadingEffect::draw(const std::function<void()>& callback)
-{
-	mShader.use();
-	callback();
-}
+/**
+ * @brief Controls visibility of the overflowed contents of AView.
+ * @ingroup ass
+ * @ingroup views
+ */
+enum class AOverflow {
+    VISIBLE,
+    HIDDEN
+};
+
+
+/**
+ * @brief Controls the behaviour of the default AView::drawStencilMask() implementation.
+ * @ingroup ass
+ * @ingroup views
+ * @details
+ * Controls how does the overflow mask is produced.
+ *
+ * Analogous to the -webkit-background-clip CSS rule.
+ */
+enum class AOverflowMask {
+    /**
+     * @brief Mask is produced from the (rounded) rect of the AView. The default value.
+     */
+    ROUNDED_RECT,
+
+    /**
+     * @brief Mask is produced from the alpha channel of the BackgroundImage.
+     *
+     * Helps in creating custom-shaped gradients, textures and effects.
+     */
+    BACKGROUND_IMAGE_ALPHA,
+};
+
+AUI_ENUM_VALUES(AOverflowMask,
+                AOverflowMask::ROUNDED_RECT,
+                AOverflowMask::BACKGROUND_IMAGE_ALPHA)

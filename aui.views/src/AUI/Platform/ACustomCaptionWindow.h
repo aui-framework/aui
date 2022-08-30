@@ -22,7 +22,7 @@
 #pragma once
 #include "ACustomWindow.h"
 #include <AUI/View/AButton.h>
-#include <AUI/View/ASpacer.h>
+#include <AUI/View/ASpacerExpanding.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "CustomCaptionWindowImplWin32.h"
 

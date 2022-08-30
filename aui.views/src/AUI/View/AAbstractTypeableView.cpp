@@ -100,7 +100,7 @@ bool AAbstractTypeableView::handlesNonMouseNavigation() {
     return true;
 }
 
-int AAbstractTypeableView::getContentMinimumHeight()
+int AAbstractTypeableView::getContentMinimumHeight(ALayoutDirection layout)
 {
     return getFontStyle().size;
 }

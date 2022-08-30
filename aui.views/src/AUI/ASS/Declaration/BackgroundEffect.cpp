@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,14 +14,34 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
 
-#pragma once
+//
+// Created by alex2 on 29.12.2020.
+//
 
-enum class LayoutDirection {
-    HORIZONTAL,
-    VERTICAL
-};
+#include <AUI/Render/RenderHints.h>
+#include "BackgroundEffect.h"
+#include "IDeclaration.h"
+
+
+void ass::decl::Declaration<ass::BackgroundEffect>::renderFor(AView* view) {
+    for (auto& e : mInfo.mEffects)
+    {
+        e->draw(view);
+    }
+
+    IDeclarationBase::renderFor(view);
+}
+
+bool ass::decl::Declaration<ass::BackgroundEffect>::isNone() {
+    return mInfo.mEffects.empty();
+}
+ass::decl::DeclarationSlot ass::decl::Declaration<ass::BackgroundEffect>::getDeclarationSlot() const {
+    return ass::decl::DeclarationSlot::BACKGROUND_EFFECT;
+}
+
+

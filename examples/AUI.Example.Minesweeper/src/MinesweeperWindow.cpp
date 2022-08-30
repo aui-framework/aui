@@ -35,10 +35,10 @@ MinesweeperWindow::MinesweeperWindow(): AWindow("Minesweeper", 100_dp, 100_dp)
     // top frame
     addView(_container<AHorizontalLayout>({
         // center with two spacers
-        _new<ASpacer>(),
+        _new<ASpacerExpanding>(),
         // create a button and assign a slot in place
         _new<AButton>("New game...").connect(&AButton::clicked, me::newGame),
-        _new<ASpacer>(),
+        _new<ASpacerExpanding>(),
     }) << ".frame");
     // ^^^^^^^^^^^ add a ASS class (see Style.cpp)
 

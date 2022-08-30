@@ -51,8 +51,8 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
                                      mContent let { it->setExpanding(); }
                                  }  << ".agroupbox-inner"
                              } with_style {
-                                 Expanding {},
-                                 Overflow::HIDDEN, // forces to call drawStencilMask
+                                     Expanding {},
+                                     AOverflow::HIDDEN, // forces to call drawStencilMask
                              }) let {
         },
     });
@@ -69,8 +69,8 @@ void AGroupBox::updateLayout() {
     mFrame->setGeometry({mFrame->getPosition().x, getFrameForcedPosition()}, mFrame->getSize());
 }
 
-int AGroupBox::getContentMinimumHeight() {
-    return AViewContainer::getContentMinimumHeight() + mFrame->getPosition().y - getFrameForcedPosition();
+int AGroupBox::getContentMinimumHeight(ALayoutDirection layout) {
+    return AViewContainer::getContentMinimumHeight(ALayoutDirection::NONE) + mFrame->getPosition().y - getFrameForcedPosition();
 }
 
 int AGroupBox::getFrameForcedPosition() const noexcept {

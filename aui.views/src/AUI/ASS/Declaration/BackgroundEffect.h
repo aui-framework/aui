@@ -20,21 +20,47 @@
  */
 
 #pragma once
-#include "AUI/GL/Shader.h"
-#include "AUI/Common/AString.h"
-#include "AUI/Common/AStringVector.h"
 
+#include "IDeclaration.h"
 
-class API_AUI_VIEWS SimpleShadingEffect: public IShadingEffect {
-private:
-	gl::Shader mShader;
-	
-public:
-	SimpleShadingEffect(const AStringVector& uniforms, const AString& fragmentCode);
+namespace ass {
 
-	void draw(const std::function<void()>& callback) override;
+    /**
+     * @brief Represents custom-rendered background effect.
+     * @ingroup ass
+     * @see background_effect
+     */
+    struct BackgroundEffect {
+        AVector<_<IBackgroundEffect>> mEffects;
 
-	const gl::Shader& getShader() const {
-		return mShader;
-	}
-};
+        BackgroundEffect(std::nullptr_t) {}
+
+        template<typename... Args>
+        BackgroundEffect(Args&&... args): mEffects({ _new<Args>(std::move(args))... }) {}
+    };
+
+    namespace decl {
+        template<>
+        struct API_AUI_VIEWS Declaration<BackgroundEffect>: IDeclarationBase {
+        private:
+            BackgroundEffect mInfo;
+
+        public:
+            Declaration(const BackgroundEffect& info) : mInfo(info) {
+
+            }
+
+            void renderFor(AView* view) override;
+
+            bool isNone() override;
+
+            DeclarationSlot getDeclarationSlot() const override;
+
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
+        };
+
+    }
+}

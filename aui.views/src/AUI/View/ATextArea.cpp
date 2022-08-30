@@ -375,7 +375,7 @@ ATextArea::ATextArea(const AString& text):
     mTextField->setText(text);
 }
 
-int ATextArea::getContentMinimumHeight() {
+int ATextArea::getContentMinimumHeight(ALayoutDirection layout) {
     return 80_dp;
 }
 

@@ -57,7 +57,7 @@ private:
 public:
     ANumberPicker();
 
-    int getContentMinimumHeight() override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
 
     void setValue(int v);
     int getValue() const;

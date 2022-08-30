@@ -1,4 +1,4 @@
-/*
+﻿/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -19,22 +19,40 @@
  * =====================================================================================================================
  */
 
-//
-// Created by alex2 on 04.01.2021.
-//
-
 #pragma once
-
-#include <AUI/Reflect/AEnumerate.h>
+#include "AView.h"
+#include <AUI/Util/Declarative.h>
 
 /**
- * @brief Controls the expanding of AView.
- * @ingroup ass
- * @ingroup views
+ * @brief Expanding view which is useful in UI building.
+ * @ingroup useful_views
+ * @details
+ *
+ * AExpandingSpacer is expanding blank view which tries acquire space as much as possible.
  */
-enum class Overflow {
-    VISIBLE,
-    HIDDEN
+class API_AUI_VIEWS ASpacerExpanding: public AView
+{
+private:
+    glm::ivec2 mMinimumSize = {20, 20};
+
+public:
+	ASpacerExpanding(int w = 4, int h = 4)
+	{
+		setExpanding({ w, h });
+	}
+	virtual ~ASpacerExpanding() = default;
+
+    void setMinimumSize(const glm::ivec2& minimumSize) {
+        mMinimumSize = minimumSize;
+    }
+
+    bool consumesClick(const glm::ivec2& pos) override;
+
+    int getContentMinimumWidth(ALayoutDirection layout) override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
 };
 
-AUI_ENUM_VALUES(Overflow, Overflow::VISIBLE, Overflow::HIDDEN)
+
+namespace declarative {
+    using SpacerExpanding = aui::ui_building::view<ASpacerExpanding>;
+}

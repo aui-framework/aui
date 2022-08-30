@@ -118,7 +118,8 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
         auto fixed = v.view->getFixedSize();
         if (fixed.x != 0) e.x = 0;
         if (fixed.y != 0) e.y = 0;
-        glm::ivec2 m = {v.view->getMinimumWidth(), v.view->getMinimumHeight()};
+        glm::ivec2 m = {v.view->getMinimumWidth(ALayoutDirection::NONE), v.view->getMinimumHeight(
+                ALayoutDirection::NONE)};
         glm::ivec2 minSpace = m + glm::ivec2{v.view->getMargin().horizontal(), v.view->getMargin().vertical()};
 
         columns[v.x].expandingSum += e.x;
@@ -237,7 +238,7 @@ int AAdvancedGridLayout::getMinimumWidth()
         int minForColumn = 0;
         for (auto& view : getRow(x))
         {
-            minForColumn = glm::max(int(view->getMinimumWidth() + view->getMargin().horizontal()), minForColumn);
+            minForColumn = glm::max(int(view->getMinimumWidth(ALayoutDirection::NONE) + view->getMargin().horizontal()), minForColumn);
         }
         min += minForColumn + mSpacing;
     }
@@ -252,7 +253,7 @@ int AAdvancedGridLayout::getMinimumHeight()
         int minForRow = 0;
         for (auto& view : getRow(y))
         {
-            minForRow = glm::max(int(view->getMinimumHeight() + view->getMargin().vertical()), minForRow);
+            minForRow = glm::max(int(view->getMinimumHeight(ALayoutDirection::NONE) + view->getMargin().vertical()), minForRow);
         }
         min += minForRow + mSpacing;
     }

@@ -50,7 +50,7 @@ public:
                     } else {
                         addView(view = Horizontal {
                                 _new<ALabel>(i.name) << ".menu-item-name",
-                                _new<ASpacer>(),
+                                _new<ASpacerExpanding>(),
                                 _new<ALabel>(i.shortcut) << ".menu-item-shortcut"
                         } << ".menu-item");
                     }
@@ -74,7 +74,7 @@ public:
                 case AMenu::SUBLIST: {
                     addView(view = Horizontal {
                             _new<ALabel>(i.name) << ".menu-item-name",
-                            _new<ASpacer>(),
+                            _new<ASpacerExpanding>(),
                             _new<ALabel>(">")
                     } << ".menu-item");
 
@@ -87,8 +87,8 @@ public:
 
                             mSubWindow = _new<MenuContainer>(items);
                             auto pos = (view->getPositionInWindow() + glm::ivec2{view->getWidth(), 0});
-                            mSubWindow->setGeometry(pos.x, pos.y, mSubWindow->getMinimumWidth(),
-                                                    mSubWindow->getMinimumHeight());
+                            mSubWindow->setGeometry(pos.x, pos.y, mSubWindow->getMinimumWidth(ALayoutDirection::NONE),
+                                                    mSubWindow->getMinimumHeight(ALayoutDirection::NONE));
                             getParent()->addViewCustomLayout(mSubWindow);
                         });
                     } else {
@@ -118,7 +118,9 @@ void AEmbedMenuProvider::createMenu(const AVector<MenuItem>& vector) {
     closeMenu();
     mWindow = _new<MenuContainer>(vector);
     auto mousePos = AWindow::current()->getMousePos();
-    mWindow->setGeometry(mousePos.x, mousePos.y, mWindow->getMinimumWidth(), mWindow->getMinimumHeight());
+    mWindow->setGeometry(mousePos.x, mousePos.y, mWindow->getMinimumWidth(ALayoutDirection::NONE),
+                         mWindow->getMinimumHeight(
+                                 ALayoutDirection::NONE));
     AWindow::current()->addViewCustomLayout(mWindow);
 }
 

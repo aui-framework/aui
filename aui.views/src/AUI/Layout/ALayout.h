@@ -128,6 +128,8 @@ public:
 	virtual int getMinimumWidth() = 0;
 	virtual int getMinimumHeight() = 0;
 
+    virtual ALayoutDirection getLayoutDirection();
+
     /**
      * @brief Layout spacing.
      * @param spacing spacing in px.

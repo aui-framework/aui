@@ -53,7 +53,7 @@ JumpToCoordsWindow::JumpToCoordsWindow(_<FractalView> fractalView, AWindow* pare
     }));
 
     addView(_container<AHorizontalLayout>({
-        _new<ASpacer>(),
+        _new<ASpacerExpanding>(),
         _new<AButton>("Jump").connect(&AButton::clicked, this, [&, fractalView, re, im, scale]() {
             try {
                 auto dRe = std::stod(re->getText().toStdString());

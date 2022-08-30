@@ -46,7 +46,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 		view->ensureAssUpdated();
         if (view->getVisibility() == Visibility::GONE) continue;
 		int e = view->getExpandingHorizontal();
-		int minSpace = view->getMinimumWidth();
+		int minSpace = view->getMinimumWidth(ALayoutDirection::HORIZONTAL);
 		sum += e;
 		if (e == 0 || view->getFixedSize().x != 0)
             availableSpace -= minSpace + view->getMargin().horizontal() + mSpacing;
@@ -103,7 +103,7 @@ int AHorizontalLayout::getMinimumWidth()
 	for (auto& v : mViews)
 	{
         if (v->getVisibility() == Visibility::GONE) continue;
-		minWidth += v->getMinimumWidth() + mSpacing + v->getMargin().horizontal();
+		minWidth += v->getMinimumWidth(ALayoutDirection::HORIZONTAL) + mSpacing + v->getMargin().horizontal();
 	}
 
 	return glm::max(minWidth, 0);
@@ -115,7 +115,7 @@ int AHorizontalLayout::getMinimumHeight()
 	for (auto& v : mViews)
 	{
         if (v->getVisibility() == Visibility::GONE) continue;
-	    auto h = v->getMinimumHeight();
+	    auto h = v->getMinimumHeight(ALayoutDirection::HORIZONTAL);
 		minHeight = glm::max(minHeight, int(h + v->getMargin().vertical()));
 	}
 	return minHeight;
@@ -124,5 +124,9 @@ int AHorizontalLayout::getMinimumHeight()
 void AHorizontalLayout::setSpacing(int spacing)
 {
 	mSpacing = spacing;
+}
+
+ALayoutDirection AHorizontalLayout::getLayoutDirection() {
+    return ALayoutDirection::HORIZONTAL;
 }
 

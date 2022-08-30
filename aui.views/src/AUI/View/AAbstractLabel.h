@@ -70,8 +70,8 @@ public:
     void render() override;
     void doRenderText();
 
-    int getContentMinimumWidth() override;
-    int getContentMinimumHeight() override;
+    int getContentMinimumWidth(ALayoutDirection layout) override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
 
     void invalidateFont() override;
 

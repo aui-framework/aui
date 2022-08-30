@@ -22,7 +22,7 @@
 #pragma once
 
 #include "ALayout.h"
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Util/ALayoutDirection.h>
 
 
 /**
@@ -55,7 +55,7 @@ private:
 
 public:
     // for template<> logic
-    static constexpr LayoutDirection DIRECTION = LayoutDirection::HORIZONTAL;
+    static constexpr ALayoutDirection DIRECTION = ALayoutDirection::HORIZONTAL;
 
 	AHorizontalLayout()
 	{
@@ -70,4 +70,6 @@ public:
 	int getMinimumHeight() override;
 
 	void setSpacing(int spacing) override;
+
+    ALayoutDirection getLayoutDirection() override;
 };

@@ -152,23 +152,23 @@ void AViewContainer::onMouseLeave()
 	}
 }
 
-int AViewContainer::getContentMinimumWidth()
+int AViewContainer::getContentMinimumWidth(ALayoutDirection layout)
 {
 	if (mLayout)
 	{
-		return (glm::max)(mLayout->getMinimumWidth(), AView::getContentMinimumWidth());
+		return (glm::max)(mLayout->getMinimumWidth(), AView::getContentMinimumWidth(ALayoutDirection::NONE));
 	}
-	return AView::getContentMinimumWidth();
+	return AView::getContentMinimumWidth(ALayoutDirection::NONE);
 }
 
 
-int AViewContainer::getContentMinimumHeight()
+int AViewContainer::getContentMinimumHeight(ALayoutDirection layout)
 {
 	if (mLayout)
 	{
-        return (glm::max)(mLayout->getMinimumHeight(), AView::getContentMinimumHeight());
+        return (glm::max)(mLayout->getMinimumHeight(), AView::getContentMinimumHeight(ALayoutDirection::NONE));
 	}
-	return AView::getContentMinimumHeight();
+	return AView::getContentMinimumHeight(ALayoutDirection::NONE);
 }
 
 void AViewContainer::onMousePressed(glm::ivec2 pos, AInput::Key button)

@@ -27,7 +27,7 @@
 #pragma once
 
 #include <AUI/View/AView.h>
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Util/ALayoutDirection.h>
 #include <AUI/GL/Vao.h>
 
 /**
@@ -36,7 +36,7 @@
  */
 class API_AUI_VIEWS ARulerView: public AView {
 private:
-    LayoutDirection mLayoutDirection;
+    ALayoutDirection mLayoutDirection;
     _<gl::Vao> mPrecompiledLines;
 
     int mOffsetPx = 0;
@@ -47,7 +47,7 @@ private:
     int getShortestSide() const;
 
 public:
-    explicit ARulerView(LayoutDirection layoutDirection);
+    explicit ARulerView(ALayoutDirection layoutDirection);
 
     void render() override;
 

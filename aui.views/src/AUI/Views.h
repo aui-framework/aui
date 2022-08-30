@@ -25,15 +25,15 @@
 #include "AUI/api.h"
 #include "AUI/Autumn/Autumn.h"
 #include "AUI/Util/Factory.h"
-#include "Util/IShadingEffect.h"
+#include "Util/IBackgroundEffect.h"
 
 
 namespace AViews
 {
-	API_AUI_VIEWS void mergeAutumnObjects(const AMap<AString, _<Factory<IShadingEffect>>>& data);
+	API_AUI_VIEWS void mergeAutumnObjects(const AMap<AString, _<Factory<IBackgroundEffect>>>& data);
 	inline void mergeAutumnObjects()
 	{
-		auto res = Autumn::detail::storageMap<Factory<IShadingEffect>>();
+		auto res = Autumn::detail::storageMap<Factory<IBackgroundEffect>>();
 		mergeAutumnObjects(res);
 	}
 }

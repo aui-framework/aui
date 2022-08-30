@@ -25,10 +25,10 @@
 
 #pragma once
 
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Util/ALayoutDirection.h>
 #include <AUI/Common/ATimer.h>
 #include "AViewContainer.h"
-#include "ASpacer.h"
+#include "ASpacerExpanding.h"
 
 class AScrollbarButton: public AView {
 public:
@@ -52,17 +52,18 @@ public:
 
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 };
-class AScrollbarOffsetSpacer: public ASpacer {
+
+class AScrollbarOffsetSpacer: public ASpacerExpanding {
 public:
-    AScrollbarOffsetSpacer(): ASpacer(0, 0) {
+    AScrollbarOffsetSpacer(): ASpacerExpanding(0, 0) {
 
     }
 
-    int getMinimumWidth() override {
+    int getMinimumWidth(ALayoutDirection) override {
         return 0;
     }
 
-    int getMinimumHeight() override {
+    int getMinimumHeight(ALayoutDirection) override {
         return 0;
     }
 };
@@ -75,8 +76,8 @@ public:
 class API_AUI_VIEWS AScrollbar: public AViewContainer {
     friend class AScrollbarHandle;
 private:
-    LayoutDirection mDirection;
-    _<ASpacer> mOffsetSpacer;
+    ALayoutDirection mDirection;
+    _<ASpacerExpanding> mOffsetSpacer;
     _<AScrollbarHandle> mHandle;
     _<AScrollbarButton> mForwardButton;
     _<AScrollbarButton> mBackwardButton;
@@ -96,7 +97,7 @@ private:
 
 public:
 
-    explicit AScrollbar(LayoutDirection direction = LayoutDirection::VERTICAL);
+    explicit AScrollbar(ALayoutDirection direction = ALayoutDirection::VERTICAL);
 
     [[nodiscard]] int getCurrentScroll() const {
         return mCurrentScroll;

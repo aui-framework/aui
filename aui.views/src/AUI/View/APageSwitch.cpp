@@ -39,6 +39,6 @@ APageSwitch::APageSwitch(const AString& text, unsigned pageNumber, const _<APage
     });
 }
 
-int APageSwitch::getContentMinimumWidth() {
-    return ALabel::getContentMinimumWidth();
+int APageSwitch::getContentMinimumWidth(ALayoutDirection layout) {
+    return ALabel::getContentMinimumWidth(ALayoutDirection::NONE);
 }

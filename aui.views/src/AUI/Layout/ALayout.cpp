@@ -43,3 +43,7 @@ void ALayout::removeView(size_t index, const _<AView>& view)
 void ALayout::setSpacing(int spacing)
 {
 }
+
+ALayoutDirection ALayout::getLayoutDirection() {
+    return ALayoutDirection::NONE;
+}

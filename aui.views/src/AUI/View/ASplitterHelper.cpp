@@ -47,9 +47,9 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
             currentItem->setFixedSize({0, 0});
 
             // check if current view can handle us all free space
-            int minSize = mDirection == LayoutDirection::VERTICAL
-                          ? currentItem->getMinimumHeight()
-                          : currentItem->getMinimumWidth();
+            int minSize = mDirection == ALayoutDirection::VERTICAL
+                          ? currentItem->getMinimumHeight(ALayoutDirection::NONE)
+                          : currentItem->getMinimumWidth(ALayoutDirection::NONE);
             int currentSize = getAxisValue(currentItem->getSize());
             int currentDelta = currentSize - minSize;
             if (currentDelta >= amountToShrink) {

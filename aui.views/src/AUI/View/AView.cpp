@@ -36,6 +36,7 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Traits/callables.h>
 #include <AUI/Traits/iterators.h>
+#include <stack>
 
 #include "AUI/Platform/ADesktop.h"
 #include "AUI/Platform/AFontManager.h"
@@ -80,15 +81,25 @@ void AView::requestLayoutUpdate()
 
 void AView::drawStencilMask()
 {
-    if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
-        Render::roundedRect(ASolidBrush{},
-                            {mPadding.left, mPadding.top},
-                            {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
-                            mBorderRadius);
-    } else {
-        Render::rect(ASolidBrush{},
-                     {mPadding.left, mPadding.top},
-                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+    switch (mOverflowMask) {
+        case AOverflowMask::ROUNDED_RECT:
+            if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
+                Render::roundedRect(ASolidBrush{},
+                                    {mPadding.left, mPadding.top},
+                                    {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
+                                    mBorderRadius);
+            } else {
+                Render::rect(ASolidBrush{},
+                             {mPadding.left, mPadding.top},
+                             {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+            }
+            break;
+
+        case AOverflowMask::BACKGROUND_IMAGE_ALPHA:
+            if (auto s = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_IMAGE)]) {
+                s->renderFor(this);
+            }
+            break;
     }
 }
 
@@ -99,7 +110,7 @@ void AView::postRender() {
 }
 
 void AView::popStencilIfNeeded() {
-    if (getOverflow() == Overflow::HIDDEN)
+    if (getOverflow() == AOverflow::HIDDEN)
     {
         /*
          * If the AView's Overflow set to Overflow::HIDDEN AView pushed it's mask into the stencil buffer but AView
@@ -120,30 +131,25 @@ void AView::render()
     {
         ensureAssUpdated();
 
-        for (auto& e : mBackgroundEffects)
-        {
-            e->draw([&]()
-                    {
-                        Render::rect(ASolidBrush{},
-                                     {0, 0},
-                                     getSize());
-                    });
-        }
-
         // draw list
-        for (auto& w : mAss) {
-            if (w) {
+        for (unsigned i = 0; i < int(ass::decl::DeclarationSlot::COUNT); ++i) {
+            if (i == int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)) continue;
+            if (auto w = mAss[i]) {
                 w->renderFor(this);
             }
         }
     }
 
     // stencil
-    if (mOverflow == Overflow::HIDDEN)
+    if (mOverflow == AOverflow::HIDDEN)
     {
         RenderHints::pushMask([&]() {
             drawStencilMask();
         });
+    }
+
+    if (auto w = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)]) {
+        w->renderFor(this);
     }
 }
 
@@ -151,14 +157,13 @@ void AView::invalidateAllStyles()
 {
     assert(("invalidateAllStyles requires mAssHelper to be initialized", mAssHelper != nullptr));
     mCursor = ACursor::DEFAULT;
-    mOverflow = Overflow::VISIBLE;
+    mOverflow = AOverflow::VISIBLE;
     mMargin = {};
     mMinSize = {};
     mBorderRadius = 0.f;
     //mForceStencilForBackground = false;
     mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     mFontStyle = {};
-    mBackgroundEffects.clear();
 
     auto applyStylesheet = [this](const AStylesheet& sh) {
         for (const auto& r : sh.getRules()) {
@@ -171,7 +176,7 @@ void AView::invalidateAllStyles()
 
     applyStylesheet(AStylesheet::global());
 
-    std::queue<AView*> viewTree;
+    std::stack<AView*> viewTree;
 
     for (auto target = this; target != nullptr; target = target->getParent()) {
         if (target->mExtraStylesheet) {
@@ -180,7 +185,7 @@ void AView::invalidateAllStyles()
     }
 
     while (!viewTree.empty()) {
-        applyStylesheet(*viewTree.front()->mExtraStylesheet);
+        applyStylesheet(*viewTree.top()->mExtraStylesheet);
         viewTree.pop();
     }
 
@@ -222,12 +227,12 @@ float AView::getTotalFieldVertical() const
     return mPadding.vertical() + mMargin.vertical();
 }
 
-int AView::getContentMinimumWidth()
+int AView::getContentMinimumWidth(ALayoutDirection layout)
 {
     return 0;
 }
 
-int AView::getContentMinimumHeight()
+int AView::getContentMinimumHeight(ALayoutDirection layout)
 {
     return 0;
 }
@@ -237,16 +242,16 @@ bool AView::hasFocus() const
     return mHasFocus;
 }
 
-int AView::getMinimumWidth()
+int AView::getMinimumWidth(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.x == 0 ? ((glm::max)(getContentMinimumWidth(), mMinSize.x) + mPadding.horizontal()) : mFixedSize.x);
+    return (mFixedSize.x == 0 ? ((glm::max)(getContentMinimumWidth(layout), mMinSize.x) + mPadding.horizontal()) : mFixedSize.x);
 }
 
-int AView::getMinimumHeight()
+int AView::getMinimumHeight(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.y == 0 ? ((glm::max)(getContentMinimumHeight(), mMinSize.y) + mPadding.vertical()) : mFixedSize.y);
+    return (mFixedSize.y == 0 ? ((glm::max)(getContentMinimumHeight(layout), mMinSize.y) + mPadding.vertical()) : mFixedSize.y);
 }
 
 void AView::getTransform(glm::mat4& transform) const
@@ -262,7 +267,7 @@ AFontStyle& AView::getFontStyle()
 
 void AView::pack()
 {
-    setSize(getMinimumWidth(), getMinimumHeight());
+    setSize(getMinimumWidth(parentLayoutDirection()), getMinimumHeight(parentLayoutDirection()));
 }
 
 const ADeque<AString>& AView::getCssNames() const
@@ -554,5 +559,11 @@ void AView::applyAssRule(const RuleWithoutSelector& rule) {
         }
         d->applyFor(this);
     }
+}
+
+ALayoutDirection AView::parentLayoutDirection() const noexcept {
+    if (mParent == nullptr) return ALayoutDirection::NONE;
+    if (mParent->getLayout() == nullptr) return ALayoutDirection::NONE;
+    return mParent->getLayout()->getLayoutDirection();
 }
 

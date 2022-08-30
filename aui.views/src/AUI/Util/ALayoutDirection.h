@@ -20,10 +20,9 @@
  */
 
 #pragma once
-#include <functional>
 
-class IShadingEffect
-{
-public:
-	virtual void draw(const std::function<void()>& callback) = 0;
+enum class ALayoutDirection {
+    NONE,
+    HORIZONTAL,
+    VERTICAL,
 };

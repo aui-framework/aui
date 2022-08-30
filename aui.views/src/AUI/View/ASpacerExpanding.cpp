@@ -19,16 +19,16 @@
  * =====================================================================================================================
  */
 
-#include "ASpacer.h"
+#include "ASpacerExpanding.h"
 
-int ASpacer::getContentMinimumWidth() {
+int ASpacerExpanding::getContentMinimumWidth(ALayoutDirection layout) {
     return mMinimumSize.x;
 }
 
-int ASpacer::getContentMinimumHeight() {
+int ASpacerExpanding::getContentMinimumHeight(ALayoutDirection layout) {
     return mMinimumSize.y;
 }
 
-bool ASpacer::consumesClick(const glm::ivec2& pos) {
+bool ASpacerExpanding::consumesClick(const glm::ivec2& pos) {
     return false;
 }

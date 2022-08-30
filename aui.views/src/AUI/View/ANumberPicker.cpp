@@ -131,9 +131,9 @@ ANumberPicker::ANumberPicker()
 	addView(c);
 }
 
-int ANumberPicker::getContentMinimumHeight()
+int ANumberPicker::getContentMinimumHeight(ALayoutDirection layout)
 {
-	return AViewContainer::getContentMinimumHeight();
+	return AViewContainer::getContentMinimumHeight(ALayoutDirection::NONE);
 }
 
 void ANumberPicker::setValue(int v)

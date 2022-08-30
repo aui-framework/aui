@@ -25,7 +25,7 @@
 
 #pragma once
 
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Util/ALayoutDirection.h>
 #include "IDeclaration.h"
 #include <AUI/Enum/ImageRendering.h>
 

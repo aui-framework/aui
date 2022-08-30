@@ -1,4 +1,4 @@
-﻿/*
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -20,38 +20,16 @@
  */
 
 #pragma once
-#include "AView.h"
-#include <AUI/Util/Declarative.h>
+
+#include <AUI/View/AView.h>
 
 /**
- * @brief Expanding view which is useful in UI building.
- * @ingroup useful_views
- * @details
- * ASpacer is an by default expanding view which tries acquire space as much as possible.
+ * @defgroup background_effect
+ * @brief Custom-rendered background effect.
  */
-class API_AUI_VIEWS ASpacer: public AView
+class API_AUI_VIEWS IBackgroundEffect
 {
-private:
-    glm::ivec2 mMinimumSize = {20, 20};
-
 public:
-	ASpacer(int w = 4, int h = 4)
-	{
-		setExpanding({ w, h });
-	}
-	virtual ~ASpacer() = default;
-
-    void setMinimumSize(const glm::ivec2& minimumSize) {
-        mMinimumSize = minimumSize;
-    }
-
-    bool consumesClick(const glm::ivec2& pos) override;
-
-    int getContentMinimumWidth() override;
-    int getContentMinimumHeight() override;
+    virtual void draw(AView* view) = 0;
+    virtual ~IBackgroundEffect() = default;
 };
-
-
-namespace declarative {
-    using Spacer = aui::ui_building::view<ASpacer>;
-}

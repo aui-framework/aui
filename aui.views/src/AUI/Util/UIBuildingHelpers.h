@@ -29,7 +29,7 @@
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/AMetric.h>
-#include <AUI/View/ASpacer.h>
+#include <AUI/View/ASpacerExpanding.h>
 #include <AUI/View/AForEachUI.h>
 #include <AUI/Layout/AWordWrappingLayout.h>
 #include <AUI/Layout/AHorizontalLayout.h>

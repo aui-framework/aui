@@ -28,12 +28,30 @@
 namespace ass {
     namespace decl {
         template<>
-        struct API_AUI_VIEWS Declaration<Overflow>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<AOverflow>: IDeclarationBase {
         private:
-            Overflow mInfo;
+            AOverflow mInfo;
 
         public:
-            Declaration(const Overflow& info) : mInfo(info) {
+            Declaration(const AOverflow& info) : mInfo(info) {
+
+            }
+
+            void applyFor(AView* view) override;
+
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
+        };
+
+        template<>
+        struct API_AUI_VIEWS Declaration<AOverflowMask>: IDeclarationBase {
+        private:
+            AOverflowMask mInfo;
+
+        public:
+            Declaration(const AOverflowMask& info) : mInfo(info) {
 
             }
 

@@ -66,7 +66,7 @@ public:
 	AAbstractTextField();
 	virtual ~AAbstractTextField();
 
-	int getContentMinimumHeight() override;
+	int getContentMinimumHeight(ALayoutDirection layout) override;
 	void setText(const AString& t) override;
 
     void render() override;

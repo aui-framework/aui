@@ -45,7 +45,7 @@ void AAbstractLabel::render()
 }
 
 
-int AAbstractLabel::getContentMinimumWidth()
+int AAbstractLabel::getContentMinimumWidth(ALayoutDirection layout)
 {
 	if (!mPrerendered) {
 	    doPrerender();
@@ -57,7 +57,7 @@ int AAbstractLabel::getContentMinimumWidth()
     return acc;
 }
 
-int AAbstractLabel::getContentMinimumHeight()
+int AAbstractLabel::getContentMinimumHeight(ALayoutDirection layout)
 {
 	if (mText.empty())
 		return 0;

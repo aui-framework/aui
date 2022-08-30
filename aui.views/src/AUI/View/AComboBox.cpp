@@ -83,8 +83,8 @@ void AComboBox::render() {
     }
 }
 
-int AComboBox::getContentMinimumWidth() {
-    return AAbstractLabel::getContentMinimumWidth() + 20;
+int AComboBox::getContentMinimumWidth(ALayoutDirection layout) {
+    return AAbstractLabel::getContentMinimumWidth(ALayoutDirection::NONE) + 20;
 }
 
 void AComboBox::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
@@ -96,7 +96,7 @@ void AComboBox::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
 
         auto list = _new<AListView>(mModel) with_style { ass::Margin { 0 }, ass::Expanding{}, ass::MinSize {  AMetric(getWidth(), AMetric::T_PX), 0, } };
         list << ".combobox_list";
-        int listHeight = list->getContentFullHeight() + list->getMinimumHeight() + 2; // bias
+        int listHeight = list->getContentFullHeight() + list->getMinimumHeight(ALayoutDirection::NONE) + 2; // bias
         auto comboBoxPos = getPositionInWindow();
         unsigned usedPositionIndex;
         auto comboWindow = parentWindow->createOverlappingSurface(
@@ -108,7 +108,7 @@ void AComboBox::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
                         default: return std::nullopt;
                     }
                 },{
-                        (glm::max)(getWidth(), list->getMinimumWidth()),
+                        (glm::max)(getWidth(), list->getMinimumWidth(ALayoutDirection::NONE)),
                         listHeight
                 });
         comboWindow->setLayout(_new<AVerticalLayout>());

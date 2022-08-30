@@ -29,10 +29,10 @@
 #include <AUI/View/ALabel.h>
 #include <AUI/View/AAbstractTextField.h>
 #include "AScrollbar.h"
-#include "ASpacer.h"
+#include "ASpacerExpanding.h"
 
 
-AScrollbar::AScrollbar(LayoutDirection direction) :
+AScrollbar::AScrollbar(ALayoutDirection direction) :
     mScrollButtonTimer(_new<ATimer>(80)),
     mDirection(direction) {
 
@@ -43,13 +43,13 @@ AScrollbar::AScrollbar(LayoutDirection direction) :
     connect(mBackwardButton->mousePressed, me::scrollBackward);
 
     switch (direction) {
-        case LayoutDirection::HORIZONTAL:
+        case ALayoutDirection::HORIZONTAL:
             setLayout(_new<AHorizontalLayout>());
 
             mForwardButton << ".scrollbar_right";
             mBackwardButton << ".scrollbar_left";
             break;
-        case LayoutDirection::VERTICAL:
+        case ALayoutDirection::VERTICAL:
             setLayout(_new<AVerticalLayout>());
             mForwardButton << ".scrollbar_down";
             mBackwardButton << ".scrollbar_up";
@@ -60,7 +60,7 @@ AScrollbar::AScrollbar(LayoutDirection direction) :
     addView(mBackwardButton);
     addView(mOffsetSpacer = _new<AScrollbarOffsetSpacer>() let { it->setMinimumSize({0, 0}); });
     addView(mHandle);
-    addView(_new<ASpacer>() let { it->setMinimumSize({0, 0}); });
+    addView(_new<ASpacerExpanding>() let { it->setMinimumSize({0, 0}); });
     addView(mForwardButton);
 
     setScroll(0);
@@ -68,10 +68,10 @@ AScrollbar::AScrollbar(LayoutDirection direction) :
 
 void AScrollbar::setOffset(size_t o) {
     switch (mDirection) {
-        case LayoutDirection::HORIZONTAL:
+        case ALayoutDirection::HORIZONTAL:
             mOffsetSpacer->setSize(o, 0);
             break;
-        case LayoutDirection::VERTICAL:
+        case ALayoutDirection::VERTICAL:
             mOffsetSpacer->setSize(0, o);
             break;
     }
@@ -88,10 +88,10 @@ void AScrollbar::updateScrollHandleSize() {
     float scrollbarSpace = 0;
 
     switch (mDirection) {
-        case LayoutDirection::HORIZONTAL:
+        case ALayoutDirection::HORIZONTAL:
             scrollbarSpace = getWidth() - (mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth());
             break;
-        case LayoutDirection::VERTICAL:
+        case ALayoutDirection::VERTICAL:
             scrollbarSpace = getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight());
             break;
     }
@@ -102,10 +102,10 @@ void AScrollbar::updateScrollHandleSize() {
         setEnabled();
         mHandle->setVisibility(Visibility::VISIBLE);
         switch (mDirection) {
-            case LayoutDirection::HORIZONTAL:
+            case ALayoutDirection::HORIZONTAL:
                 mHandle->setFixedSize({o, mHandle->getHeight()});
                 break;
-            case LayoutDirection::VERTICAL:
+            case ALayoutDirection::VERTICAL:
                 mHandle->setFixedSize({mHandle->getWidth(), o});
                 break;
         }
@@ -139,10 +139,10 @@ void AScrollbar::updateScrollHandleOffset(int max) {
     int handlePos = float(mCurrentScroll) / max * availableSpace;
 
     switch (mDirection) {
-        case LayoutDirection::HORIZONTAL:
+        case ALayoutDirection::HORIZONTAL:
             mOffsetSpacer->setFixedSize(glm::ivec2{handlePos, 0});
             break;
-        case LayoutDirection::VERTICAL:
+        case ALayoutDirection::VERTICAL:
             mOffsetSpacer->setFixedSize(glm::ivec2{0, handlePos});
             break;
     }
@@ -197,10 +197,10 @@ int AScrollbar::getMaxScroll() {
 float AScrollbar::getAvailableSpaceForSpacer() {
 
     switch (mDirection) {
-        case LayoutDirection::HORIZONTAL:
+        case ALayoutDirection::HORIZONTAL:
             return getWidth() - (mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth() + mHandle->getTotalOccupiedWidth());
 
-        case LayoutDirection::VERTICAL:
+        case ALayoutDirection::VERTICAL:
             return getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight() + mHandle->getTotalOccupiedHeight());
 
     }

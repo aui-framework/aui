@@ -183,6 +183,7 @@ namespace declarative {
 
         Style& operator()(AVector<_<AView>> views) {
             for (const auto& view : views) {
+                assert(("extra stylesheet already specified", view->extraStylesheet() == nullptr));
                 view->setExtraStylesheet(mStylesheet);
             }
             mViews = std::move(views);

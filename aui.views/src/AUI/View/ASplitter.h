@@ -21,14 +21,14 @@
 
 #pragma once
 
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Util/ALayoutDirection.h>
 #include <AUI/Layout/AVerticalLayout.h>
 #include <AUI/Layout/AHorizontalLayout.h>
 #include "AViewContainer.h"
 #include "AHDividerView.h"
 #include "AVDividerView.h"
 #include "ASplitterHelper.h"
-#include <AUI/View/ASpacer.h>
+#include <AUI/View/ASpacerExpanding.h>
 
 /**
  * @brief A spinner view to display some long operation.
@@ -64,7 +64,7 @@ private:
            splitter->mHelper.setDirection(Layout::DIRECTION);
 
 
-           if (splitter->mHelper.mDirection == LayoutDirection::VERTICAL) {
+           if (splitter->mHelper.mDirection == ALayoutDirection::VERTICAL) {
                splitter->setLayout(_new<AVerticalLayout>());
            } else {
                splitter->setLayout(_new<AHorizontalLayout>());
@@ -76,7 +76,7 @@ private:
                atLeastOneItemHasExpanding |= splitter->mHelper.getAxisValue(item->getExpanding()) > 0;
            }
            if (!atLeastOneItemHasExpanding) {
-               auto spacer = _new<ASpacer>();
+               auto spacer = _new<ASpacerExpanding>();
                splitter->addView(spacer);
                mItems << spacer;
            }

@@ -150,11 +150,11 @@ _<AText> AText::fromHtml(const AString& html, const Flags& flags) {
     return text;
 }
 
-int AText::getContentMinimumWidth() {
+int AText::getContentMinimumWidth(ALayoutDirection layout) {
     return 10;
 }
 
-int AText::getContentMinimumHeight() {
+int AText::getContentMinimumHeight(ALayoutDirection layout) {
     return mPrerenderedString ? mPrerenderedString->getHeight() : 0;
 }
 
@@ -197,7 +197,7 @@ void AText::prerenderString() {
 
 void AText::setSize(int width, int height) {
     bool widthDiffers = width != getWidth();
-    int prevContentMinimumHeight = getContentMinimumHeight();
+    int prevContentMinimumHeight = getContentMinimumHeight(ALayoutDirection::NONE);
     AViewContainer::setSize(width, height);
     if (widthDiffers) {
         prerenderString();
