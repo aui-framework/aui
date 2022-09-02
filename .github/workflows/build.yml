@@ -78,6 +78,11 @@ jobs:
           - os: ubuntu-latest
             generator: "Unix Makefiles"
             additional_cmake_args: ''
+          - os: ubuntu-latest
+            generator: "Unix Makefiles"
+            additional_cmake_args: ''
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
 
     steps:
       - uses: actions/checkout@v2
