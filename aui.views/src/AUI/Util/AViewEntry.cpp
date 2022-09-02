@@ -5,7 +5,7 @@
 #include "AViewEntry.h"
 
 glm::ivec2 AViewEntry::getSize() {
-    return {mView->getMinimumWidth(ALayoutDirection::NONE) + mView->getMargin().horizontal(), mView->getMinimumHeight(
+    return {mView->getMinimumWidth() + mView->getMargin().horizontal(), mView->getMinimumHeight(
             ALayoutDirection::NONE) + mView->getMargin().vertical() };
 }
 

@@ -503,11 +503,11 @@ public:
     bool hasFocus() const;
 
 
-    virtual int getMinimumWidth(ALayoutDirection layout);
-    virtual int getMinimumHeight(ALayoutDirection layout);
+    virtual int getMinimumWidth(ALayoutDirection layout = ALayoutDirection::NONE);
+    virtual int getMinimumHeight(ALayoutDirection layout = ALayoutDirection::NONE);
 
     glm::ivec2 getMinimumSize() {
-        return {getMinimumWidth(ALayoutDirection::NONE), getMinimumHeight(ALayoutDirection::NONE)};
+        return {getMinimumWidth(), getMinimumHeight()};
     }
 
     void setMaxSize(const glm::ivec2& maxSize) {

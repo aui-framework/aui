@@ -268,7 +268,6 @@ void ADesktop::openUrl(const AString &url) {
 
 #else
 
-#include <gtk/gtk.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysymdef.h>
@@ -279,6 +278,8 @@ void ADesktop::openUrl(const AString &url) {
 #include "AWindow.h"
 #include "CommonRenderingContext.h"
 #include "AWindow.h"
+#undef signals
+#include <gtk/gtk.h>
 
 void aui_gtk_init() {
     do_once {

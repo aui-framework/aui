@@ -20,6 +20,7 @@
  */
 
 #include "AUI/Platform/AMessageBox.h"
+#undef signals
 #include <gtk/gtk.h>
 #include <AUI/Util/kAUI.h>
 
