@@ -121,6 +121,8 @@ signals:
     void updateScrollHandleOffset(int max);
 
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+
+    void setSize(int width, int height) override;
 };
 
 

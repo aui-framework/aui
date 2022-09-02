@@ -224,3 +224,8 @@ void AScrollbarHandle::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     AView::onMouseReleased(pos, button);
     mDragging = false;
 }
+
+void AScrollbar::setSize(int width, int height) {
+    AViewContainer::setSize(width, height);
+    updateScrollHandleSize();
+}
