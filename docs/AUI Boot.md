@@ -68,6 +68,10 @@ dependency's `CMakeLists.txt` via `AUIB_COMPONENTS` variable.
 
 Uses `add_subdirectory` instead of `find_package` as project importing mechanism as if `AUIB_<PackageName>_AS` was specified.
 
+### CONFIG_ONLY
+
+Forces `find_package` to use the config mode only.
+
 ### PrecompiledUrlPrefix
 
 Specifies url prefix where the precompiled binaries downloaded from.
