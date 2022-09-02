@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 3.15)
 #         ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 # include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 #
-# auib_import(AUI https://github.com/aui-framework/aui
+# auib_import(aui https://github.com/aui-framework/aui
 #             COMPONENTS core views)
 #
 # using local repository instead in order to make checks easier in CI.
