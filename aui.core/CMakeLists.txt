@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
 option(AUI_CATCH_SEGFAULT "Catch segfault" ON)
-auib_import(ZLIB https://github.com/aui-framework/zlib)
 
 aui_module(aui.core EXPORT aui)
 

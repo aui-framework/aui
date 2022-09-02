@@ -161,7 +161,7 @@ int AGridLayout::getMinimumWidth()
 		int minForRow = 0;
 		for (auto& view : getRow(y))
 		{
-			minForRow = glm::max(int(view->getMinimumWidth(ALayoutDirection::NONE) + view->getMargin().horizontal()), minForRow);
+			minForRow = glm::max(int(view->getMinimumWidth() + view->getMargin().horizontal()), minForRow);
 		}
 		min = glm::max(minForRow * mCellsX, min);
 	}
@@ -176,7 +176,7 @@ int AGridLayout::getMinimumHeight()
 		int minForColumn = 0;
 		for (auto& view : getColumn(x))
 		{
-			minForColumn = glm::max(int(view->getMinimumHeight(ALayoutDirection::NONE) + view->getMargin().vertical()), minForColumn);
+			minForColumn = glm::max(int(view->getMinimumHeight() + view->getMargin().vertical()), minForColumn);
 		}
 		min = glm::max(minForColumn * mCellsY, min);
 	}

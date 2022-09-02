@@ -65,6 +65,7 @@ function(define_aui_component AUI_COMPONENT_NAME)
     add_subdirectory("aui.${AUI_COMPONENT_NAME}")
 endfunction()
 
+auib_import(ZLIB https://github.com/aui-framework/zlib)
 
 define_aui_component(core)
 if (NOT ANDROID AND NOT IOS)

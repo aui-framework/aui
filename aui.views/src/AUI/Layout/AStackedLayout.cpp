@@ -31,7 +31,7 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
         auto margins = v->getMargin();
 		if (v->getExpandingHorizontal() == 0)
 		{
-			finalWidth = v->getMinimumWidth(ALayoutDirection::NONE) + margins.horizontal();
+			finalWidth = v->getMinimumWidth() + margins.horizontal();
 			finalX = (width - finalWidth) / 2;
 		} else
 		{
@@ -40,7 +40,7 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
 		}
 		if (v->getExpandingVertical() == 0)
 		{
-			finalHeight = v->getMinimumHeight(ALayoutDirection::NONE) + margins.vertical();
+			finalHeight = v->getMinimumHeight() + margins.vertical();
 			finalY = (height - finalHeight) / 2;
 		} else
 		{
@@ -58,7 +58,7 @@ int ::AStackedLayout::getMinimumWidth()
 	int m = 0;
 	for (auto& v : mViews)
 		if (v->getVisibility() != Visibility::GONE)
-			m = glm::max(int(v->getMinimumWidth(ALayoutDirection::NONE) + v->getMargin().horizontal()), m);
+			m = glm::max(int(v->getMinimumWidth() + v->getMargin().horizontal()), m);
 	return m;
 }
 
@@ -67,7 +67,7 @@ int ::AStackedLayout::getMinimumHeight()
 	int m = 0;
 	for (auto& v : mViews) {
 		if (v->getVisibility() != Visibility::GONE)
-			m = glm::max(int(v->getMinimumHeight(ALayoutDirection::NONE) + v->getMargin().vertical()), m);
+			m = glm::max(int(v->getMinimumHeight() + v->getMargin().vertical()), m);
 	}
 	return m;
 }

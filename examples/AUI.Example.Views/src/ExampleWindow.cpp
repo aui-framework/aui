@@ -370,7 +370,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
             // Rulers
             _new<ALabel>("ARulerArea"),
             _new<ARulerArea>(_new<AView>() with_style { MinSize { 100_dp, 100_dp },
-                                                        BackgroundGradient { 0x0_rgb, 0x404040_rgb, LayoutDirection::VERTICAL },
+                                                        BackgroundGradient { 0x0_rgb, 0x404040_rgb, ALayoutDirection::VERTICAL },
                                                         MaxSize { {}, 300_dp },
                                                         Expanding{}, }) with_style { Expanding{} },
 

@@ -87,8 +87,8 @@ public:
 
                             mSubWindow = _new<MenuContainer>(items);
                             auto pos = (view->getPositionInWindow() + glm::ivec2{view->getWidth(), 0});
-                            mSubWindow->setGeometry(pos.x, pos.y, mSubWindow->getMinimumWidth(ALayoutDirection::NONE),
-                                                    mSubWindow->getMinimumHeight(ALayoutDirection::NONE));
+                            mSubWindow->setGeometry(pos.x, pos.y, mSubWindow->getMinimumWidth(),
+                                                    mSubWindow->getMinimumHeight());
                             getParent()->addViewCustomLayout(mSubWindow);
                         });
                     } else {
@@ -118,7 +118,7 @@ void AEmbedMenuProvider::createMenu(const AVector<MenuItem>& vector) {
     closeMenu();
     mWindow = _new<MenuContainer>(vector);
     auto mousePos = AWindow::current()->getMousePos();
-    mWindow->setGeometry(mousePos.x, mousePos.y, mWindow->getMinimumWidth(ALayoutDirection::NONE),
+    mWindow->setGeometry(mousePos.x, mousePos.y, mWindow->getMinimumWidth(),
                          mWindow->getMinimumHeight(
                                  ALayoutDirection::NONE));
     AWindow::current()->addViewCustomLayout(mWindow);
