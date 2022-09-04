@@ -72,12 +72,16 @@ AString AFontManager::getPathToFont(const AString& font) {
 
                 // Found a match
                 if (AString(valueName).startsWith(font + " (")) {
+                    APath path{valueData, valueDataSize};
+                    if (path.empty()) continue;
+                    if (!path.isRegularFileExists()) continue;
+
                     RegCloseKey(fontsKey);
-                    return AString{valueData, valueDataSize};
+                    return path;
                 }
             }
         }
         RegCloseKey(fontsKey);
     } catch(...) {}
-	return "C:/Windows/Fonts/" + font + ".ttf";
+    return "C:/Windows/Fonts/" + font + ".ttf";
 }
