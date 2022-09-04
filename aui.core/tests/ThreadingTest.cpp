@@ -282,20 +282,28 @@ TEST(Threading, FutureInterruptionCascade) {
 
 
 TEST(Threading, FutureOnDone) {
-    bool called = false;
-    {
-        auto future = async {
-            return 322;
-        };
-        future.onSuccess([&](int i) {
-            ASSERT_EQ(i, 322);
-            called = true;
+
+    repeat(100) {
+        AThreadPool localThreadPool(1);
+        localThreadPool.run([] {
+            AThread::sleep(10); // long task
         });
-        // check that cancellation does not triggers here
-        future.wait();
+
+
+        bool called = false;
+        {
+            auto future = localThreadPool * [] {
+                return 322;
+            };
+            future.onSuccess([&](int i) {
+                ASSERT_EQ(i, 322);
+                called = true;
+            });
+            // check that cancellation does not triggers here
+            future.wait(AFutureWait::ASYNC_ONLY);
+        }
+        ASSERT_TRUE(called) << "onSuccess callback has not called";
     }
-    AThread::sleep(500);
-    ASSERT_TRUE(called) << "onSuccess callback has not called";
 }
 
 TEST(Threading, FutureOnSuccess) {
@@ -311,12 +319,13 @@ TEST(Threading, FutureOnSuccess) {
     };                                                                                         //
     ARaiiHelper<std::function<void()>> raiiDestructorCallback = std::move(destructorCallback); //
 
+    AAsyncHolder holder;
     bool called = false;
     {
         auto future = localThreadPool * [] {
             return 322;
         };
-        future.onSuccess([&, raiiDestructorCallback = std::move(raiiDestructorCallback)](int i) {
+        holder << future.onSuccess([&, raiiDestructorCallback = std::move(raiiDestructorCallback)](int i) {
             ASSERT_EQ(i, 322);
             called = true;
         });
@@ -324,6 +333,7 @@ TEST(Threading, FutureOnSuccess) {
     AThread::sleep(2000);
     ASSERT_TRUE(called) << "onSuccess callback has not called";
     ASSERT_TRUE(destructorCalled) << "AFuture internal logic is not destructed";
+    ASSERT_TRUE(holder.size() == 0) << "holder is not empty";
 }
 
 TEST(Threading, FutureExecuteOnCallingThread) {

@@ -162,7 +162,7 @@ namespace aui::impl::future {
             void wait(const _weak<CancellationWrapper<Inner>>& innerWeak, AFutureWait flags = AFutureWait::DEFAULT) noexcept {
                 std::unique_lock lock(mutex);
                 try {
-                    if ((thread || !cancelled) && !hasResult() && int(flags) & 0b1 && task) {
+                    if ((thread || !cancelled) && !hasResult() && int(flags) & int(AFutureWait::DEFAULT) && task) {
                         // task is not have picked up by the threadpool; execute it here
                         lock.unlock();
                         if (tryExecute(innerWeak)) {
@@ -223,8 +223,6 @@ namespace aui::impl::future {
                                 value = true;
                                 cv.notify_all();
                                 nullsafe(onSuccess)();
-                                onSuccess = nullptr; // delete keepInnerRef
-                                onError = nullptr;   // same
 
                                 (void)sharedPtrLock; // sharedPtrLock is *used*
                                 lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
@@ -236,8 +234,6 @@ namespace aui::impl::future {
                                 value = std::move(result);
                                 cv.notify_all();
                                 nullsafe(onSuccess)(*value);
-                                onSuccess = nullptr; // delete keepInnerRef
-                                onError = nullptr;   // same
 
                                 (void)sharedPtrLock; // sharedPtrLock is *used*
                                 lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
@@ -245,13 +241,9 @@ namespace aui::impl::future {
                         }
                     } catch (const AException&) {
                         inner->reportException();
-                        onSuccess = nullptr; // delete keepInnerRef
-                        onError = nullptr;   // same
                         return false;
                     } catch (...) {
                         inner->reportInterrupted();
-                        onSuccess = nullptr; // delete keepInnerRef
-                        onError = nullptr;   // same
                         throw;
                     }
                 }
@@ -323,26 +315,24 @@ namespace aui::impl::future {
             if constexpr(isVoid) {
                 if ((*mInner)->onSuccess) {
                     (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
-                                            callback = std::forward<Callback>(callback),
-                                            keepInnerRef = mInner]() {
+                            callback = std::forward<Callback>(callback)]() {
                         prev();
                         callback();
                     };
                 } else {
-                    (*mInner)->onSuccess = [callback = std::forward<Callback>(callback), keepInnerRef = mInner]() {
+                    (*mInner)->onSuccess = [callback = std::forward<Callback>(callback)]() {
                         callback();
                     };
                 }
             } else {
                 if ((*mInner)->onSuccess) {
                     (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
-                                            callback = std::forward<Callback>(callback),
-                                            keepInnerRef = mInner](const Value& v) {
+                            callback = std::forward<Callback>(callback)](const Value& v) {
                         prev(v);
                         callback(v);
                     };
                 } else {
-                    (*mInner)->onSuccess = [callback = std::forward<Callback>(callback), keepInnerRef = mInner](
+                    (*mInner)->onSuccess = [callback = std::forward<Callback>(callback)](
                             const Value& v) {
                         callback(v);
                     };
@@ -356,13 +346,12 @@ namespace aui::impl::future {
 
             if ((*mInner)->onError) {
                 (*mInner)->onError = [prev = std::move((*mInner)->onError),
-                                      callback = std::forward<Callback>(callback),
-                                      keepInnerRef = mInner](const AException& v) {
+                        callback = std::forward<Callback>(callback)](const AException& v) {
                     prev(v);
                     callback(v);
                 };
             } else {
-                (*mInner)->onError = [callback = std::forward<Callback>(callback), keepInnerRef = mInner](
+                (*mInner)->onError = [callback = std::forward<Callback>(callback)](
                         const AException& v) {
                     callback(v);
                 };
@@ -541,28 +530,12 @@ public:
         return super::mInner == r.mInner;
     }
 
-    /**
-     * @brief Add onSuccess callback to the future.
-     * @details
-     * The callback will be called on the worker's thread when the async task is returned a result.
-     *
-     * onSuccess expands AFuture's lifespan until callback is called so the task cannot be implicitly cancelled. If
-     * there's no AFutures pointing to the same task, the internal data structured are self destructed.
-     */
     template<typename Callback>
     AFuture& onSuccess(Callback&& callback) noexcept {
         super::onSuccess(std::forward<Callback>(callback));
         return *this;
     }
 
-    /**
-     * @brief Add onSuccess callback to the future.
-     * @details
-     * The callback will be called on the worker's thread when the async task is returned a result.
-     *
-     * onSuccess expands AFuture's lifespan until callback is called so the task cannot be implicitly cancelled. If
-     * there's no AFutures pointing to the same task, the internal data structured are self destructed.
-     */
     template<typename Callback>
     AFuture& onError(Callback&& callback) noexcept {
         super::onError(std::forward<Callback>(callback));
@@ -607,8 +580,7 @@ public:
      * @details
      * The callback will be called on the worker's thread when the async task is returned a result.
      *
-     * onSuccess expands AFuture's lifespan until callback is called so the task cannot be implicitly cancelled. If
-     * there's no AFutures pointing to the same task, the internal data structured are self destructed.
+     * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
      */
     template<typename Callback>
     AFuture& onSuccess(Callback&& callback) noexcept {
@@ -621,8 +593,7 @@ public:
      * @details
      * The callback will be called on the worker's thread when the async task is returned a result.
      *
-     * onSuccess expands AFuture's lifespan until callback is called so the task cannot be implicitly cancelled. If
-     * there's no AFutures pointing to the same task, the internal data structured are self destructed.
+     * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
      */
     template<typename Callback>
     AFuture& onError(Callback&& callback) noexcept {
