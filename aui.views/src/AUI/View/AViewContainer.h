@@ -155,7 +155,7 @@ protected:
     }
 
     void invalidateAllStyles() override;
-
+    void invalidateAssHelper() override;
 
     /**
      * @brief Updates layout of the parent AViewContainer if size of this AViewContainer was changed.

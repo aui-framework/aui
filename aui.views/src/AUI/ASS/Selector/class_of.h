@@ -47,7 +47,7 @@ namespace ass {
 
             bool isPossiblyApplicable(AView* view) override {
                 for (auto& v : mClasses) {
-                    if (view->getCssNames().contains(v)) {
+                    if (view->getAssNames().contains(v)) {
                         return true;
                     }
                 }

@@ -15,6 +15,8 @@ class API_AUI_VIEWS ASpacerFixed: public AView {
 public:
     ASpacerFixed(AMetric space): mSpace(space) {}
 
+    bool consumesClick(const glm::ivec2& pos) override;
+
     int getContentMinimumWidth(ALayoutDirection layout) override;
 
     int getContentMinimumHeight(ALayoutDirection layout) override;

@@ -366,3 +366,11 @@ bool AViewContainer::onGesture(const glm::ivec2& origin, const AGestureEvent& ev
         return p->onGesture(origin - p->getPosition(), event);
     return false;
 }
+
+void AViewContainer::invalidateAssHelper() {
+    AView::invalidateAssHelper();
+    for (const auto& v : mViews) {
+        v->invalidateAssHelper();
+    }
+}
+

@@ -216,7 +216,7 @@ protected:
     /**
      * @brief ASS class names.
      */
-    ADeque<AString> mAssNames;
+    ASet<AString> mAssNames;
 
     /**
      * @brief Invalidates all styles, causing to iterate over all rules in global and parent stylesheets.
@@ -246,6 +246,12 @@ protected:
      * </ul>
      */
     void invalidateStateStyles();
+
+
+    /**
+     * @brief Resets mAssHelper.
+     */
+    virtual void invalidateAssHelper();
 
 
     void requestLayoutUpdate();
@@ -293,7 +299,7 @@ public:
     void popStencilIfNeeded();
 
     [[nodiscard]]
-    const ADeque<AString>& getAssNames() const {
+    const ASet<AString>& getAssNames() const noexcept {
         return mAssNames;
     }
 
@@ -671,8 +677,6 @@ public:
      * @return Coords of this AView relative to window
      */
     [[nodiscard]] glm::ivec2 getPositionInWindow() const;
-
-    const ADeque<AString>& getCssNames() const;
 
     /**
      * @brief Adds an ASS class to this AView.

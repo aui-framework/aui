@@ -270,22 +270,20 @@ void AView::pack()
     setSize(getMinimumWidth(parentLayoutDirection()), getMinimumHeight(parentLayoutDirection()));
 }
 
-const ADeque<AString>& AView::getCssNames() const
-{
-    return mAssNames;
-}
-
 void AView::addAssName(const AString& assName)
 {
     mAssNames << assName;
     assert(("empty ass name" && !assName.empty()));
-    mAssHelper = nullptr;
+    invalidateAssHelper();
 }
+
+void AView::invalidateAssHelper() { mAssHelper = nullptr; }
+
 void AView::removeAssName(const AString& assName)
 {
-    mAssNames.removeFirst(assName);
+    mAssNames >> assName;
     assert(("empty ass name" && !assName.empty()));
-    mAssHelper = nullptr;
+    invalidateAssHelper();
 }
 
 void AView::ensureAssUpdated()

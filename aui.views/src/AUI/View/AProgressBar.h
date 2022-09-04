@@ -46,6 +46,8 @@ public:
         mValue = value;
         updateInnerWidth();
         redraw();
+
+        emit valueChanged(value);
     }
 
 public:
@@ -58,6 +60,10 @@ private:
     float mValue = 0.f;
     void updateInnerWidth();
     _<Inner> mInner;
+
+
+signals:
+    emits<float> valueChanged;
 };
 
 
