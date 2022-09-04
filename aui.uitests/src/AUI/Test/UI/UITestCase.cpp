@@ -99,4 +99,5 @@ void testing::UITest::SetUp() {
 void testing::UITest::TearDown() {
     Test::TearDown();
     AWindow::destroyWindowManager();
+    Render::setRenderer(nullptr);
 }

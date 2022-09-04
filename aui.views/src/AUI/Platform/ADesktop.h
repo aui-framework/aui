@@ -67,6 +67,6 @@ namespace ADesktop
      */
 	API_AUI_VIEWS AFuture<APath> browseForFile(ABaseWindow* parent,
                                                const APath& startingLocation = {},
-                                               const AVector<FileExtension>& extensions = {});
+                                               const AVector<FileExtension>& extensions = { {"All", "*"} });
 	API_AUI_VIEWS void openUrl(const AString& url);
 }

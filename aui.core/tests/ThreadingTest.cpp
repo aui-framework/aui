@@ -33,6 +33,8 @@
 #include "AUI/Common/ATimer.h"
 #include "AUI/Traits/parallel.h"
 #include "AUI/Thread/AAsyncHolder.h"
+#include "AUI/Util/ARaiiHelper.h"
+#include "AUI/Thread/ACutoffSignal.h"
 
 
 TEST(Threading, Async) {
@@ -294,6 +296,34 @@ TEST(Threading, FutureOnDone) {
     }
     AThread::sleep(500);
     ASSERT_TRUE(called) << "onSuccess callback has not called";
+}
+
+TEST(Threading, FutureOnSuccess) {
+    AThreadPool localThreadPool(1);
+    localThreadPool.run([] {
+        AThread::sleep(1000); // long task
+    });
+
+
+    bool destructorCalled = false;                                                             // used to check future
+    std::function<void()> destructorCallback = [&destructorCalled] {                           // destruction
+        destructorCalled = true;                                                               //
+    };                                                                                         //
+    ARaiiHelper<std::function<void()>> raiiDestructorCallback = std::move(destructorCallback); //
+
+    bool called = false;
+    {
+        auto future = localThreadPool * [] {
+            return 322;
+        };
+        future.onSuccess([&, raiiDestructorCallback = std::move(raiiDestructorCallback)](int i) {
+            ASSERT_EQ(i, 322);
+            called = true;
+        });
+    }
+    AThread::sleep(2000);
+    ASSERT_TRUE(called) << "onSuccess callback has not called";
+    ASSERT_TRUE(destructorCalled) << "AFuture internal logic is not destructed";
 }
 
 TEST(Threading, FutureExecuteOnCallingThread) {
