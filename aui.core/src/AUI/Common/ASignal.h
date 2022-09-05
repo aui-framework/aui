@@ -48,6 +48,11 @@ private:
     {
         AObject* object; // TODO replace with weak_ptr
         func_t func;
+
+        [[nodiscard]]
+        bool operator==(const slot& rhs) const noexcept {
+            return object == rhs.object && func.template target<std::uintptr_t>() == rhs.func.template target<std::uintptr_t>();
+        }
     };
 
     AMutex mSlotsLock;
@@ -269,6 +274,8 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
                         if (AAbstractSignal::isDisconnected()) {
                             std::unique_lock lock(mSlotsLock);
                             unlinkSlot(receiverPtr.get());
+                            slot s = { receiverPtr.get(), func };
+                            mSlots.removeFirst(s);
                         }
                     }
                 });
