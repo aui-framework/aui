@@ -72,11 +72,11 @@ TEST(Json, StringEscape)
     auto s = AJson::toString(root);
 
     // check for whole composition
-    ASSERT_EQ(s, "{\"user\":\"u\\\"\"}");
+    EXPECT_EQ(s, "{\"user\":\"u\\\"\"}");
 
     // check for string itself
     auto deserialized = AJson::fromString(s);
-    ASSERT_EQ(deserialized["user"].asString(), "u\"");
+    EXPECT_EQ(deserialized["user"].asString(), "u\"");
 }
 
 TEST(Json, BraceInitialization)
