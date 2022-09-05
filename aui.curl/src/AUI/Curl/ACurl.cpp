@@ -67,6 +67,8 @@ ACurl::Builder::Builder(const AString& url)
 	assert(res == 0);
 	res = curl_easy_setopt(mCURL, CURLOPT_SSL_VERIFYPEER, false);
 	assert(res == 0);
+
+	assert(res == 0);
 }
 
 ACurl::Builder& ACurl::Builder::withRanges(size_t begin, size_t end) {
@@ -139,6 +141,15 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
     assert(res == 0);
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
+
+    if (!builder.mHeaders.empty()) {
+        for (const auto& h : builder.mHeaders) {
+            mCurlHeaders = curl_slist_append(mCurlHeaders, h.toStdString().c_str());
+        }
+        res = curl_easy_setopt(mCURL, CURLOPT_HTTPHEADER, mCurlHeaders);
+        assert(res == 0);
+    }
+
     return *this;
 }
 
@@ -156,6 +167,8 @@ ACurl& ACurl::operator=(ACurl&& o) noexcept {
 
 ACurl::~ACurl()
 {
+    curl_easy_cleanup(mCURL);
+    if (mCurlHeaders) curl_slist_free_all(mCurlHeaders);
 }
 
 

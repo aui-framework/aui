@@ -177,6 +177,12 @@ public:
          */
         Builder& withRanges(size_t begin, size_t end);
 
+
+        Builder& withHeaders(AVector<AString> headers) {
+            mHeaders = std::move(headers);
+            return *this;
+        }
+
         /**
          * Makes input stream from curl builder.
          * @note creates async task where curl's loop lives in.
@@ -190,6 +196,9 @@ public:
          * @throws AIOException
          */
          AByteBuffer toByteBuffer();
+
+    private:
+        AVector<AString> mHeaders;
     };
 
 	explicit ACurl(Builder& builder):
@@ -223,6 +232,7 @@ public:
 
 private:
     void* mCURL;
+    struct curl_slist* mCurlHeaders = nullptr;
     char mErrorBuffer[256];
 
     static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
