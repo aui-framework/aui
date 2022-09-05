@@ -81,7 +81,7 @@ private:
     _<AScrollbarHandle> mHandle;
     _<AScrollbarButton> mForwardButton;
     _<AScrollbarButton> mBackwardButton;
-    _<ATimer> mScrollButtonTimer;
+    static _<ATimer> ourScrollButtonTimer;
 
     size_t mViewportSize = 0, mFullSize = 0;
     int mCurrentScroll = 0;
