@@ -60,6 +60,13 @@ namespace aui {
         serialize_sized(T& value): value(&value) {}
         serialize_sized(T&& value): value(&value) {}
     };
+    template<typename T>
+    struct serialize_raw {
+        T* value;
+
+        serialize_raw(T& value): value(&value) {}
+        serialize_raw(T&& value): value(&value) {}
+    };
 }
 
 // ints, floats, doubles, etc...
@@ -138,3 +145,12 @@ struct ASerializable<aui::serialize_sized<T>> {
     }
 };
 
+template<typename T>
+struct ASerializable<aui::serialize_raw<T>> {
+    static void write(IOutputStream& os, aui::serialize_raw<T> t) {
+        os.write(reinterpret_cast<const char*>(&t.value), sizeof(T));
+    }
+    static void read(IInputStream& is, aui::serialize_raw<T>& t) {
+        is.read(reinterpret_cast<char*>(&t.value), sizeof(T));
+    }
+};
