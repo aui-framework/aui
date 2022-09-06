@@ -43,6 +43,21 @@ class AString;
 class API_AUI_CURL ACurl: public AObject {
 friend class ACurlMulti;
 public:
+    enum class Http {
+        VERSION_NONE, /* setting this means we don't care, and that we'd
+                         like the library to choose the best possible
+                         for us! */
+        VERSION_1_0,  /* please use HTTP 1.0 in the request */
+        VERSION_1_1,  /* please use HTTP 1.1 in the request */
+        VERSION_2_0,  /* please use HTTP 2 in the request */
+        VERSION_2TLS, /* use version 2 for HTTPS, version 1.1 for HTTP */
+        VERSION_2_PRIOR_KNOWLEDGE,  /* please use HTTP 2 without HTTP/1.1
+                                       Upgrade */
+        VERSION_3 = 30, /* Makes use of explicit HTTP/3 without fallback.
+                           Use CURLOPT_ALTSVC to enable HTTP/3 upgrade */
+        VERSION_LAST /* *ILLEGAL* http version */
+    };
+
     enum class ResponseCode {
         HTTP_100_CONTINUE                        = 100,
         HTTP_101_SWITCHING_PROTOCOL              = 101,
@@ -100,7 +115,30 @@ public:
         API_AUI_CURL void throwException() const;
     };
 
-    using WriteCallback = std::function<size_t(AByteBufferView)>;
+    /**
+     * @brief A read callback.
+     * @param data received data
+     * @return bytes written to the destination buffer. Zero means buffer does not have enough space to store supplied
+     *         data (but the stream may be continued in the future), the supplied data is not discarded and being kept
+     *         in the curl buffers.
+     * @details
+     * Unlike regular streams, blocking is not allowed. To indicate buffer overflow, return zero. To indicate
+     * end of file, throw an AEOFException.
+     */
+    using WriteCallback = std::function<size_t(AByteBufferView data)>;
+
+    /**
+     * @brief A read callback.
+     * @param dst destination buffer you should write to.
+     * @param maxLen destination buffer size aka max length.
+     * @return bytes written to the destination buffer. Zero means data unavailability (but the stream may be continued
+     *         in the future).
+     * @details
+     * Unlike regular streams, blocking is not allowed. To indicate the data unavailability, return zero. To indicate
+     * end of file, throw an AEOFException.
+     */
+    using ReadCallback = std::function<std::size_t(char* dst, size_t maxLen)>;
+    using HeaderCallback = std::function<void(AByteBufferView)>;
     using ErrorCallback = std::function<void(const ErrorDescription& description)>;
 
 
@@ -126,8 +164,11 @@ public:
     private:
         void* mCURL;
         WriteCallback mWriteCallback;
+        ReadCallback mReadCallback;
         ErrorCallback mErrorCallback;
+        HeaderCallback mHeaderCallback;
         bool mThrowExceptionOnError = true;
+        AVector<AString> mHeaders;
 
     public:
         explicit Builder(const AString& url);
@@ -137,6 +178,16 @@ public:
         Builder& withWriteCallback(WriteCallback callback) {
             assert(("write callback already set" && mWriteCallback == nullptr));
             mWriteCallback = std::move(callback);
+            return *this;
+        }
+        Builder& withReadCallback(ReadCallback callback) {
+            assert(("write callback already set" && mReadCallback == nullptr));
+            mReadCallback = std::move(callback);
+            return *this;
+        }
+
+        Builder& withHeaderCallback(HeaderCallback headerCallback) {
+            mHeaderCallback = std::move(headerCallback);
             return *this;
         }
 
@@ -177,6 +228,10 @@ public:
          */
         Builder& withRanges(size_t begin, size_t end);
 
+        Builder& withHttpVersion(Http version);
+        Builder& withUpload(bool upload);
+        Builder& withCustomRequest(const AString& v);
+
 
         Builder& withHeaders(AVector<AString> headers) {
             mHeaders = std::move(headers);
@@ -196,9 +251,6 @@ public:
          * @throws AIOException
          */
          AByteBuffer toByteBuffer();
-
-    private:
-        AVector<AString> mHeaders;
     };
 
 	explicit ACurl(Builder& builder):
@@ -222,6 +274,22 @@ public:
 
     void run();
 
+    /**
+     * @brief Breaks curl loop in the run() method, closing underlying curl connection.
+     * @details
+     * curl does not have a function which immediately stops the transfer
+     * (see https://curl.se/docs/faq.html#How_do_I_stop_an_ongoing_transfe). The stop functionality is handled in ACurl
+     * by returning error code on all callbacks. close() function is non-blocking, and some time would be taken until
+     * the run() method finally returns.
+     *
+     * After calling close() method, none of the result signals (like fail, success) will be called.
+     *
+     * close() is non-blocking function.
+     *
+     * close() is thread-safe.
+     */
+    void close();
+
     [[nodiscard]]
     void* handle() const noexcept {
         return mCURL;
@@ -234,10 +302,15 @@ private:
     void* mCURL;
     struct curl_slist* mCurlHeaders = nullptr;
     char mErrorBuffer[256];
+    bool mCloseRequested = false;
 
     static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
+    static size_t readCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
+    static size_t headerCallback(char *buffer, size_t size, size_t nitems, void *userdata) noexcept;
 
     WriteCallback mWriteCallback;
+    ReadCallback mReadCallback;
+    HeaderCallback mHeaderCallback;
 
     void reportSuccess() {
         emit success;

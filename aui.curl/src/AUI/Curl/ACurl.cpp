@@ -27,6 +27,7 @@
 #include <AUI/Util/kAUI.h>
 
 #include "AUI/Common/AString.h"
+#include "AUI/Logging/ALogger.h"
 
 
 #undef min
@@ -67,8 +68,6 @@ ACurl::Builder::Builder(const AString& url)
 	assert(res == 0);
 	res = curl_easy_setopt(mCURL, CURLOPT_SSL_VERIFYPEER, false);
 	assert(res == 0);
-
-	assert(res == 0);
 }
 
 ACurl::Builder& ACurl::Builder::withRanges(size_t begin, size_t end) {
@@ -77,9 +76,27 @@ ACurl::Builder& ACurl::Builder::withRanges(size_t begin, size_t end) {
 		if (end) {
 			s += std::to_string(end);
 		}
-		curl_easy_setopt(mCURL, CURLOPT_RANGE, s.c_str());
+		auto res = curl_easy_setopt(mCURL, CURLOPT_RANGE, s.c_str());
+        assert(res == CURLE_OK);
 	}
 	return *this;
+}
+
+ACurl::Builder& ACurl::Builder::withHttpVersion(ACurl::Http version) {
+    auto res = curl_easy_setopt(mCURL, CURLOPT_HTTP_VERSION, version);
+    assert(res == CURLE_OK);
+    return *this;
+}
+
+ACurl::Builder& ACurl::Builder::withUpload(bool upload) {
+    auto res = curl_easy_setopt(mCURL, CURLOPT_UPLOAD, upload ? 1L : 0L);
+    assert(res == CURLE_OK);
+    return *this;
+}
+ACurl::Builder& ACurl::Builder::withCustomRequest(const AString& v) {
+    auto res = curl_easy_setopt(mCURL, CURLOPT_CUSTOMREQUEST, v.toStdString().c_str());
+    assert(res == CURLE_OK);
+    return *this;
 }
 
 ACurl::Builder::~Builder() {
@@ -125,6 +142,7 @@ AByteBuffer ACurl::Builder::toByteBuffer() {
 ACurl& ACurl::operator=(Builder&& builder) noexcept {
     mCURL = builder.mCURL;
     mWriteCallback = std::move(builder.mWriteCallback);
+    mReadCallback = std::move(builder.mReadCallback);
     if (builder.mErrorCallback) {
         connect(fail, [callback = std::move(builder.mErrorCallback)](const ErrorDescription& e) {
             callback(e);
@@ -142,12 +160,25 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
 
+    if (mReadCallback) {
+        curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
+        curl_easy_setopt(mCURL, CURLOPT_READFUNCTION, readCallback);
+    }
+
     if (!builder.mHeaders.empty()) {
         for (const auto& h : builder.mHeaders) {
             mCurlHeaders = curl_slist_append(mCurlHeaders, h.toStdString().c_str());
         }
         res = curl_easy_setopt(mCURL, CURLOPT_HTTPHEADER, mCurlHeaders);
         assert(res == 0);
+    }
+
+    if (builder.mHeaderCallback){
+        mHeaderCallback = std::move(builder.mHeaderCallback);
+        res = curl_easy_setopt(mCURL, CURLOPT_HEADERDATA, this);
+        assert(res == CURLE_OK);
+        res = curl_easy_setopt(mCURL, CURLOPT_HEADERFUNCTION, ACurl::headerCallback);
+        assert(res == CURLE_OK);
     }
 
     return *this;
@@ -171,6 +202,30 @@ ACurl::~ACurl()
     if (mCurlHeaders) curl_slist_free_all(mCurlHeaders);
 }
 
+size_t ACurl::readCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept {
+    if (AThread::current()->isInterrupted()) {
+        return 0;
+    }
+    auto c = static_cast<ACurl*>(userdata);
+    if (c->mCloseRequested) {
+        return 0;
+    }
+
+    try {
+        auto r = c->mReadCallback(ptr, size * nmemb);
+        if (c->mCloseRequested) {
+            return 0;
+        }
+        if (r > 0) {
+            return r;
+        }
+    } catch (const AEOFException&) {
+        return 0;
+    } catch (const AException& e) {
+        ALogger::err("curl") << "Read callback failed: " << e;
+    }
+    return CURL_READFUNC_PAUSE;
+}
 
 size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept
 {
@@ -178,16 +233,43 @@ size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata
         return 0;
     }
     auto c = static_cast<ACurl*>(userdata);
-    try {
-        return c->mWriteCallback({ptr, nmemb});
-    } catch (...) {
+    if (c->mCloseRequested) {
         return 0;
     }
+    try {
+        auto r = c->mWriteCallback({ptr, nmemb});
+        if (c->mCloseRequested) {
+            return 0;
+        }
+        if (r > 0) {
+            return r;
+        }
+    } catch (const AEOFException&) {
+        return 0;
+    } catch (const AException& e) {
+        ALogger::err("curl") << "Write callback failed: " << e;
+        return 0;
+    }
+    return CURL_WRITEFUNC_PAUSE;
+}
+
+size_t ACurl::headerCallback(char* buffer, size_t size, size_t nitems, void* userdata) noexcept {
+    try {
+        auto self = reinterpret_cast<ACurl*>(userdata);
+        self->mHeaderCallback(AByteBufferView(buffer, size * nitems));
+        return size * nitems;
+    } catch (const AException& e) {
+        ALogger::err("curl") << "Header callback failed: " << e;
+    }
+    return 0;
 }
 
 
 void ACurl::run() {
     auto c = curl_easy_perform(mCURL);
+    if (mCloseRequested) { // the failure may be caused by close() method
+        return;
+    }
     AThread::interruptionPoint();
     if (c != CURLE_OK) {
         reportFail(c);
@@ -196,6 +278,10 @@ void ACurl::run() {
     }
 }
 
+void ACurl::close() {
+    mCloseRequested = true;
+    curl_easy_pause(mCURL, 0); // unpause transfers in order to force curl to call callbacks
+}
 
 template<typename Ret>
 Ret ACurl::getInfo(int curlInfo) const {
