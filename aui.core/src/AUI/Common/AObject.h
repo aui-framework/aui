@@ -51,13 +51,11 @@ private:
 
 	static bool& isDisconnected();
 
-protected:
-	static void disconnect();
-
 public:
 	AObject();
 	virtual ~AObject();
 
+    static void disconnect();
 
     [[nodiscard]]
     _<AObject> sharedPtr() {
