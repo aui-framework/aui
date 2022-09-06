@@ -115,6 +115,45 @@ TEST_F(SignalSlot, ObjectRemoval) {
 }
 
 /**
+ * Checks for disconnect functionality.
+ */
+TEST_F(SignalSlot, ObjectDisonnect1) {
+    slave = _new<Slave>();
+    AObject::connect(master->message, slave, [slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+        AObject::disconnect();
+    });
+
+    EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(1);
+    master->broadcastMessage("hello");
+    master->broadcastMessage("hello");
+}
+
+/**
+ * Checks for disconnect functionality when one of the signals disconnected.
+ */
+TEST_F(SignalSlot, ObjectDisonnect2) {
+    slave = _new<Slave>();
+
+    bool called = false;
+    AObject::connect(master->message, slave, [&, slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+        called = true;
+    });
+
+    AObject::connect(master->message, slave, [slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+        AObject::disconnect();
+    });
+
+    EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(3);
+    master->broadcastMessage("hello");
+    called = false;
+    master->broadcastMessage("hello");
+    EXPECT_TRUE(called);
+}
+
+/**
  * Destroys master in a signal handler
  */
 TEST_F(SignalSlot, ObjectDestroyMasterInSignalHandler) {
