@@ -14,7 +14,6 @@ namespace {
 
     static inline void myHton(uint8_t *mem, uint8_t len)
     {
-#if __BYTE_ORDER__ == __BIG_ENDIAN
         uint8_t *bytes;
         uint8_t i, mid;
 
@@ -27,7 +26,6 @@ namespace {
             bytes[i] = bytes[len - i - 1];
             bytes[len - i - 1] = tmp;
         }
-#endif
     }
 }
 
