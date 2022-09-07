@@ -36,8 +36,7 @@ public:
     virtual ~IInputStream() = default;
 
     /**
-     * @brief Reads up to <code>size</code> bytes from stream. Implementation must read at least one byte. Blocking
-     *        (waiting for new data) is allowed.
+     * @brief Reads up to <code>size</code> bytes from stream. Blocking (waiting for new data) is allowed.
      * <dl>
      *   <dt><b>Sneaky exceptions</b></dt>
      *   <dd>An implementation can throw any exception that subclasses <a href="#AIOException">AIOException</a>.</dd>
