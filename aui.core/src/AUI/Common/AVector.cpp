@@ -20,3 +20,8 @@
  */
 
 #include "AVector.h"
+#include "AException.h"
+
+void aui::impl::outOfBoundsException() {
+    throw AException("index out of bounds");
+}

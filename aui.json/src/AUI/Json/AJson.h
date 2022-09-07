@@ -202,7 +202,7 @@ public:
 
 
     AJson& operator[](int arrayIndex) {
-        return as<Array>()[arrayIndex];
+        return as<Array>().at(arrayIndex);
     }
 
     const AJson& operator[](int arrayIndex) const {

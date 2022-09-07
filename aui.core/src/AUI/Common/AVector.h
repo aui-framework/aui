@@ -32,6 +32,10 @@
 #include "AContainerPrototypes.h"
 
 
+namespace aui::impl {
+    API_AUI_CORE void outOfBoundsException();
+}
+
 /**
  * @brief A std::vector with AUI extensions.
  * @ingroup core
@@ -132,6 +136,22 @@ public:
      */
     bool contains(const StoredType& value) const noexcept {
         return aui::container::contains(*this, value);
+    }
+
+    [[nodiscard]]
+    StoredType& at(std::size_t index) {
+        if (index >= p::size()) {
+            aui::impl::outOfBoundsException();
+        }
+        return p::operator[](index);
+    }
+
+    [[nodiscard]]
+    const StoredType& at(std::size_t index) const {
+        if (index >= p::size()) {
+            aui::impl::outOfBoundsException();
+        }
+        return p::operator[](index);
     }
 
 
