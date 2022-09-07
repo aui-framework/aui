@@ -81,10 +81,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
 
     setupUIThread();
 
-    // renames all threads to "UI thread" on linux
-#if !AUI_PLATFORM_LINUX
     AThread::setName("UI thread");
-#endif
 
 #if AUI_PLATFORM_WIN
     if (argc == 0) {
