@@ -32,7 +32,7 @@ namespace {
 }
 
 AWebsocket::AWebsocket(const AString& url, AString key):
-ACurl(ACurl::Builder(url.replacedAll("wss://", "https://"))
+ACurl(ACurl::Builder(url.replacedAll("wss://", "https://").replacedAll("ws://", "http://"))
     .withHeaders({
         "Expect: 101",
         "Transfer-Encoding:",
@@ -47,7 +47,6 @@ ACurl(ACurl::Builder(url.replacedAll("wss://", "https://"))
     .withCustomRequest("GET")
     .withHeaderCallback([this](AByteBufferView v) {
         auto asStr = AString::fromUtf8(v);
-        // ALogger::debug("curl") << asStr;
         if (asStr.startsWith("Sec-WebSocket-Accept: ")) {
             asStr = asStr.trimRight('\n').trimRight('\r');
             auto serverKeyBase64 = asStr.substr(asStr.find(": ") + 2);
@@ -223,4 +222,9 @@ void AWebsocket::writeRawMasked(const std::uint8_t* mask, AByteBufferView messag
 
 void AWebsocket::write(const char* src, size_t size) {
     writeMessage(Opcode::TEXT, { src, size });
+}
+
+void AWebsocket::close() {
+    writeMessage(Opcode::CLOSE, {nullptr, 0});
+    ACurl::close();
 }

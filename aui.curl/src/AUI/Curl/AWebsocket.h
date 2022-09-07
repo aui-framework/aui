@@ -17,6 +17,7 @@ public:
     AWebsocket(const AString& url, AString key = generateKeyString());
     void write(const char* src, size_t size) override;
 
+    void close();
 
     enum class Opcode {
         CONTINUATION = 0x0,
