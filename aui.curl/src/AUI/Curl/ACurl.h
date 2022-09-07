@@ -39,6 +39,8 @@ class AString;
  * @ingroup curl
  * @details
  * ACurl::Builder is used to construct ACurl.
+ *
+ * Analogous to Qt's QNetworkRequest.
  */
 class API_AUI_CURL ACurl: public AObject {
 friend class ACurlMulti;
@@ -265,7 +267,7 @@ public:
         operator=(std::move(o));
     }
     ACurl() noexcept: mCURL(nullptr) {}
-	~ACurl();
+	virtual ~ACurl();
 
     ACurl& operator=(Builder&& o) noexcept;
     ACurl& operator=(ACurl&& o) noexcept;
@@ -288,7 +290,7 @@ public:
      *
      * close() is thread-safe.
      */
-    void close();
+    virtual void close();
 
     [[nodiscard]]
     void* handle() const noexcept {
@@ -339,6 +341,9 @@ signals:
      *       <code>getResponseCode()</code> function.
      */
     emits<> success;
+
+
+    emits<> closeRequested;
 };
 
 

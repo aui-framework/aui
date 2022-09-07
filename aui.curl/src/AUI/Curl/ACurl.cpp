@@ -284,6 +284,7 @@ void ACurl::run() {
 void ACurl::close() {
     mCloseRequested = true;
     curl_easy_pause(mCURL, 0); // unpause transfers in order to force curl to call callbacks
+    emit closeRequested;
 }
 
 template<typename Ret>

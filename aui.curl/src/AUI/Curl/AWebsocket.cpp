@@ -144,7 +144,7 @@ std::size_t AWebsocket::onDataReceived(AByteBufferView data) {
         assert(mLastPayload.size() <= mLastPayloadLength);
 
         if (mLastPayload.size() == mLastPayloadLength) {
-            emit received(AByteBufferView(mLastPayload));
+            emit received(mLastPayload);
             mLastPayload.clear();
             mLastHeader.reset();
         }

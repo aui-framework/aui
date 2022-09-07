@@ -3,6 +3,7 @@
 //
 
 #include "ACurlMulti.h"
+#include "AUI/Util/kAUI.h"
 #include <curl/curl.h>
 
 ACurlMulti::ACurlMulti() noexcept:
@@ -17,15 +18,16 @@ ACurlMulti::~ACurlMulti() {
     }
 }
 
-void ACurlMulti::run() {
+void ACurlMulti::run(bool infinite) {
     int isStillRunning;
-    while(!mCancelled && !mEasyCurls.empty()) {
+    while(!mCancelled && (!mEasyCurls.empty() || infinite)) {
         auto status = curl_multi_perform(mMulti, &isStillRunning);
 
         if (status) {
             throw ACurl::Exception("curl perform failed: {}"_format(status));
         }
 
+        AThread::processMessages();
         status = curl_multi_poll(mMulti, nullptr, 0, 100, nullptr);
         AThread::interruptionPoint();
 
@@ -52,22 +54,50 @@ void ACurlMulti::run() {
 }
 
 ACurlMulti& ACurlMulti::operator<<(_<ACurl> curl) {
-    auto c = curl_multi_add_handle(mMulti, curl->handle());
-    assert(c == CURLM_OK);
-    mEasyCurls[curl->handle()] = std::move(curl);
+    ui_threadX [this, curl = std::move(curl)]() mutable {
+        connect(curl->closeRequested, [this, curl = curl.weak()] {
+            if (auto c = curl.lock()) {
+                *this >> c;
+            }
+        });
+        auto c = curl_multi_add_handle(mMulti, curl->handle());
+        assert(c == CURLM_OK);
+        mEasyCurls[curl->handle()] = std::move(curl);
+    };
     return *this;
 }
 
 ACurlMulti& ACurlMulti::operator>>(const _<ACurl>& curl) {
-    curl_multi_remove_handle(mMulti, curl->handle());
-    mEasyCurls.erase(curl->handle());
+    ui_thread {
+        curl_multi_remove_handle(mMulti, curl->handle());
+        mEasyCurls.erase(curl->handle());
+        curl->closeRequested.clearAllConnectionsWith(curl.get());
+    };
     return *this;
 }
 
 void ACurlMulti::clear() {
-    assert(mMulti);
-    for (const auto&[handle,acurl] : mEasyCurls) {
-        curl_multi_remove_handle(mMulti, handle);
-    }
-    mEasyCurls.clear();
+    ui_thread {
+        assert(mMulti);
+        for (const auto& [handle, acurl]: mEasyCurls) {
+            curl_multi_remove_handle(mMulti, handle);
+        }
+        mEasyCurls.clear();
+    };
+}
+
+ACurlMulti& ACurlMulti::global() noexcept {
+    static struct Instance {
+        ACurlMulti multi;
+        _<AThread> thread = _new<AThread>([this] {
+            AThread::setName("AUI CURL IO");
+            multi.run(true);
+        });
+
+        Instance() {
+            thread->start();
+        }
+    } instance;
+
+    return instance.multi;
 }

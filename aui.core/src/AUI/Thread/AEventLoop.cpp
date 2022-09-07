@@ -11,16 +11,22 @@ AEventLoop::~AEventLoop() {
 
 void AEventLoop::notifyProcessMessages() {
     std::unique_lock lock(mMutex);
-    mLoopFlag = true;
+    mNotified = true;
     mCV.notify_all();
 }
 
 void AEventLoop::loop() {
-    for (;;) {
-        AThread::processMessages();
-        std::unique_lock lock(mMutex);
-        if (!mLoopFlag) {
-            mCV.wait(lock);
-        }
+    mRunning = true;
+    while (mRunning) {
+        iteration();
+    }
+}
+
+void AEventLoop::iteration() {
+    AThread::processMessages();
+    std::unique_lock lock(mMutex);
+    if (!mNotified) {
+        mNotified = false;
+        mCV.wait(lock);
     }
 }

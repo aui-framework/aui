@@ -17,7 +17,7 @@ public:
     AWebsocket(const AString& url, AString key = generateKeyString());
     void write(const char* src, size_t size) override;
 
-    void close();
+    void close() override;
 
     enum class Opcode {
         CONTINUATION = 0x0,
@@ -88,7 +88,7 @@ private:
 
 signals:
     emits<> connected;
-    emits<AByteBufferView> received;
+    emits<AByteBuffer> received;
 };
 
 AUI_ENUM_VALUES(AWebsocket::Opcode,

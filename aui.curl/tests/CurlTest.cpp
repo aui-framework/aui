@@ -7,7 +7,11 @@
 #include "AUI/IO/AFileOutputStream.h"
 #include "AUI/IO/AFileInputStream.h"
 #include "AUI/Curl/AWebsocket.h"
+#include "AUI/Thread/AEventLoop.h"
+#include "AUI/Util/kAUI.h"
+#include "AUI/Curl/ACurlMulti.h"
 #include <random>
+#include <gmock/gmock.h>
 
 TEST(CurlTest, ToByteBuffer) {
     AByteBuffer buffer = ACurl::Builder("https://github.com").toByteBuffer();
@@ -76,4 +80,49 @@ TEST(CurlTest, WebSocketLong) {
     });
     ws->run();
     EXPECT_EQ(dataActual, dataReceived);
+}
+
+
+class Slave: public AObject {
+public:
+    MOCK_METHOD(void, acceptMessage, (const AString& message));
+
+    void acceptMessageSlot(AByteBufferView data) {
+        auto msg = AString::fromUtf8(data);
+        acceptMessage(msg);
+    }
+};
+
+_<AWebsocket> makeWebsocket(std::string message, const _<Slave>& receiver) {
+    auto ws = _new<AWebsocket>("wss://ws.postman-echo.com/raw");
+
+    AObject::connect(ws->connected, ws, [message = std::move(message), ws = ws.get()] {
+        ws->write(message.data(), message.size());
+    });
+
+    AObject::connect(ws->received, slot(receiver)::acceptMessageSlot);
+    AObject::connect(ws->received, ws, [ws = ws.get()] {
+        ws->close();
+    });
+    return ws;
+}
+
+
+TEST(CurlTest, WebSocketMulti) {
+    auto receiver1 = _new<Slave>();
+    EXPECT_CALL(*receiver1, acceptMessage("hello"_as));
+
+    auto receiver2 = _new<Slave>();
+    EXPECT_CALL(*receiver2, acceptMessage("world"_as));
+
+    ACurlMulti::global() << makeWebsocket("hello", receiver1);
+    ACurlMulti::global() << makeWebsocket("world", receiver2);
+
+    AEventLoop l;
+    IEventLoop::Handle h(&l);
+    AThread::processMessages();
+    while (!ACurlMulti::global().curls().empty()) {
+        l.iteration();
+    }
+    AThread::processMessages(); // avoid possible data race
 }
