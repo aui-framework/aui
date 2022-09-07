@@ -242,6 +242,9 @@ size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata
             return 0;
         }
         if (r > 0) {
+            assert(("You returned a non-zero value not matching the passed buffer size, which is treated by curl as "
+                    "an error, but it's more likely you accidentally have not read all the data. If you really wanted "
+                    "to raise an error, please throw an exception instead.", r == size * nmemb));
             return r;
         }
     } catch (const AEOFException&) {

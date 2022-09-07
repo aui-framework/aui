@@ -22,6 +22,12 @@ public:
     void write(const char* src, size_t size) override;
     size_t read(char* dst, size_t size) override;
 
+
+    [[nodiscard]]
+    bool empty() const noexcept {
+        return mQueue.empty();
+    }
+
 private:
     static constexpr std::size_t FRAGMENT_CAPACITY = 0x10000;
 

@@ -14,7 +14,7 @@ namespace {
 
     static inline void myHton(uint8_t *mem, uint8_t len)
     {
-#if __BYTE_ORDER__ != __BIG_ENDIAN
+#if __BYTE_ORDER__ == __BIG_ENDIAN
         uint8_t *bytes;
         uint8_t i, mid;
 
@@ -47,7 +47,7 @@ ACurl(ACurl::Builder(url.replacedAll("wss://", "https://"))
     .withCustomRequest("GET")
     .withHeaderCallback([this](AByteBufferView v) {
         auto asStr = AString::fromUtf8(v);
-        ALogger::debug("curl") << asStr;
+        // ALogger::debug("curl") << asStr;
         if (asStr.startsWith("Sec-WebSocket-Accept: ")) {
             asStr = asStr.trimRight('\n').trimRight('\r');
             auto serverKeyBase64 = asStr.substr(asStr.find(": ") + 2);
@@ -76,55 +76,90 @@ std::size_t AWebsocket::onDataReceived(AByteBufferView data) {
     auto begin = data.begin();
     auto end = data.end();
 
-    Header h;
-    if (!mLastHeader) {
-        if (data.size() < sizeof(Header)) {
-            return 0; // not enough
-        }
-        h = *reinterpret_cast<const Header*>(begin);
-        begin += sizeof(Header);
-        if (h.payload_len > data.size()) {
+    while (begin != end) {
+        Header h;
+        if (!mLastHeader) {
+            if (std::distance(begin, end) < sizeof(Header)) {
+                return 0; // not enough
+            }
+            h = *reinterpret_cast<const Header*>(begin);
+
+            if (h.mask) { // 5.1 "client MUST close a connection if it detects a masked frame"
+                ALogger::err("websocket") << "Received masked frame, closing connection";
+                close();
+                return 0;
+            }
+
+            begin += sizeof(Header);
+
+            switch (h.payload_len) {
+                case 126: {
+                    auto payloadLength = *reinterpret_cast<const std::uint16_t*>(begin);
+                    myHton(reinterpret_cast<uint8_t*>(&payloadLength), sizeof(payloadLength));
+                    mLastPayloadLength = payloadLength;
+                    begin += sizeof(payloadLength);
+                    break;
+                }
+
+                case 127: {
+                    auto payloadLength = *reinterpret_cast<const std::uint64_t*>(begin);
+                    myHton(reinterpret_cast<uint8_t*>(&payloadLength), sizeof(payloadLength));
+                    mLastPayloadLength = payloadLength;
+                    begin += sizeof(payloadLength);
+                    break;
+                }
+                default:
+                    mLastPayloadLength = h.payload_len;
+            }
+
             mLastHeader = h;
+            switch (h.opcode) {
+                case int(Opcode::BINARY):
+                case int(Opcode::TEXT):
+                case int(Opcode::CONTINUATION):
+                    break;
+
+                case int(Opcode::CLOSE):
+                    close();
+                    return 0;
+
+                case int(Opcode::PING):
+                    writeMessage(Opcode::PONG, {});
+                    break;
+
+                case int(Opcode::PONG):
+                    break;
+
+                default:
+                    ALogger::err("websocket") << "Unknown opcode: " << AString::numberHex(h.opcode) << ", closing connection";
+                    close();
+                    return 0;
+            }
         }
-        switch (h.opcode) {
-            case int(Opcode::BINARY):
-            case int(Opcode::TEXT):
-            case int(Opcode::CONTINUATION):
-                break;
 
-            case int(Opcode::CLOSE):
-            case int(Opcode::PING):
-            case int(Opcode::PONG):
-                ALogger::err("websocket") << "Unsupported opcode: " << (Opcode)h.opcode;
-                break;
 
-            default:
-                ALogger::err("websocket") << "Unknown opcode: " << AString::numberHex(h.opcode);
-                break;
+        std::size_t dataToRead = glm::min(std::size_t(std::distance(begin, end)),
+                                          mLastPayloadLength - mLastPayload.size());
+        mLastPayload << AByteBufferView(begin, dataToRead);
+        begin += dataToRead;
+        assert(begin <= end);
+
+        assert(mLastPayload.size() <= mLastPayloadLength);
+
+        if (mLastPayload.size() == mLastPayloadLength) {
+            emit received(AByteBufferView(mLastPayload));
+            mLastPayload.clear();
+            mLastHeader.reset();
         }
     }
 
-    std::size_t dataToRead = glm::min(std::size_t(std::distance(begin, end)),
-                                      h.payload_len - mLastPayload.size());
-    mLastPayload << AByteBufferView(begin, dataToRead);
-    begin += dataToRead;
-    assert(begin <= end);
-
-    assert(mLastPayload.size() <= h.payload_len);
-
-    if (mLastPayload.size() == h.payload_len) {
-        emit received(AByteBufferView(mLastPayload));
-        mLastPayload.clear();
-        mLastHeader.reset();
-    }
-
-    return std::distance(data.begin(), begin);
+    return data.size();
 }
 
 
 
 std::size_t AWebsocket::onDataSend(char* dst, std::size_t maxLen) {
-    if (mRead.available() == 0) {
+    if (mRead.empty()) {
         return 0;
     }
     return mRead.read(dst, maxLen);
@@ -135,13 +170,12 @@ AString AWebsocket::generateKeyString() {
     AString s;
     s.resize(16);
     for (auto& v : s) {
-        v = std::uniform_int_distribution('a', 'z')(gRandomEngine);
+        v = std::uniform_int_distribution(int('a'), int('z'))(gRandomEngine);
     }
     return s;
 }
 
 void AWebsocket::writeRaw(const char* src, size_t size) {
-    curl_easy_pause(handle(), 0);
     mRead.write(src, size);
     curl_easy_pause(handle(), 0);
 }
@@ -149,14 +183,13 @@ void AWebsocket::writeRaw(const char* src, size_t size) {
 void AWebsocket::writeMessage(AWebsocket::Opcode opcode, AByteBufferView message) {
     Header h;
     h.fin = 1;
+    h.rsv = 0;
     h.opcode = static_cast<uint8_t>(opcode);
     h.mask = 1;
     h.payload_len = ((message.size() > std::numeric_limits<std::uint16_t>::max())
                      ? 127
                      : (message.size() > 125) ? 126 : message.size());
 
-    std::uint8_t mask[4];
-    for (auto& v : mask) v = std::uniform_int_distribution(std::numeric_limits<std::uint8_t>::min(), std::numeric_limits<std::uint8_t>::max())(gRandomEngine);
     writeRaw(reinterpret_cast<const char*>(&h), sizeof(h));
 
     if (h.payload_len == 127) {
@@ -169,24 +202,23 @@ void AWebsocket::writeMessage(AWebsocket::Opcode opcode, AByteBufferView message
         writeRaw(reinterpret_cast<const char*>(&payload_len), sizeof(payload_len));
     }
 
+    std::uint8_t mask[4];
+    for (auto& v : mask) v = std::uniform_int_distribution(int(std::numeric_limits<std::uint8_t>::min()),
+                                                           int(std::numeric_limits<std::uint8_t>::max()))(gRandomEngine);
     writeRaw(reinterpret_cast<const char*>(mask), sizeof(mask));
 
-    return writeRawMasked(mask, message);
+    writeRawMasked(mask, message);
 }
 
 void AWebsocket::writeRawMasked(const std::uint8_t* mask, AByteBufferView message) {
-    const uint8_t* itrBegin = reinterpret_cast<const uint8_t*>(message.data());
-    const uint8_t* itr = itrBegin;
-    const uint8_t* itrEnd = itr + message.size();
-    uint8_t tmpbuf[4096];
+    AByteBuffer temporaryBuffer;
+    temporaryBuffer.resize(message.size());
 
-    while (itr < itrEnd) {
-        uint8_t *o = tmpbuf, *o_end = tmpbuf + sizeof(tmpbuf);
-        for (; o < o_end && itr < itrEnd; o++, itr++) {
-            *o = *itr ^ mask[(itr - itrBegin) & 0x3];
-        }
-        writeRaw(reinterpret_cast<const char*>(tmpbuf), o - tmpbuf);
+    for (std::size_t i = 0; i < message.size(); ++i) {
+        temporaryBuffer.at<std::uint8_t>(i) = message.at<std::uint8_t>(i) ^ mask[i % 4];
     }
+
+    writeRaw(temporaryBuffer.data(), temporaryBuffer.size());
 }
 
 void AWebsocket::write(const char* src, size_t size) {

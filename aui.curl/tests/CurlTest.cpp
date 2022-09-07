@@ -7,6 +7,7 @@
 #include "AUI/IO/AFileOutputStream.h"
 #include "AUI/IO/AFileInputStream.h"
 #include "AUI/Curl/AWebsocket.h"
+#include <random>
 
 TEST(CurlTest, ToByteBuffer) {
     AByteBuffer buffer = ACurl::Builder("https://github.com").toByteBuffer();
@@ -36,8 +37,10 @@ TEST(CurlTest, WebSocket) {
         AObject::connect(ws->received, ws, [&](AByteBufferView data) {
             EXPECT_EQ(AString::fromUtf8(data), "hello");
             AObject::disconnect();
+            ws->write("world", 5);
+            c++;
             AObject::connect(ws->received, ws, [&](AByteBufferView data) {
-                EXPECT_EQ(AString::fromUtf8(data), "hello");
+                EXPECT_EQ(AString::fromUtf8(data), "world");
                 AObject::disconnect();
                 ws->close();
                 c++;
@@ -46,4 +49,31 @@ TEST(CurlTest, WebSocket) {
     });
     ws->run();
     EXPECT_EQ(c, 2) << "not enough payloads received";
+}
+
+TEST(CurlTest, WebSocketLong) {
+    auto ws = _new<AWebsocket>("wss://ws.postman-echo.com/raw");
+
+
+    constexpr auto PAYLOAD_SIZE = 60'000;
+    std::string dataActual;
+    dataActual.reserve(PAYLOAD_SIZE);
+    std::default_random_engine re;
+    for (auto i = 0; i < PAYLOAD_SIZE; ++i) {
+        dataActual.push_back(std::uniform_int_distribution(int('a'), int('z'))(re));
+    }
+
+    std::string dataReceived;
+
+    AObject::connect(ws->connected, ws, [&] {
+
+        ws->write(dataActual.data(), dataActual.length());
+
+        AObject::connect(ws->received, ws, [&](AByteBufferView payload) {
+            dataReceived += std::string_view(payload.data(), payload.size());
+            if (dataReceived.size() == PAYLOAD_SIZE) ws->close();
+        });
+    });
+    ws->run();
+    EXPECT_EQ(dataActual, dataReceived);
 }

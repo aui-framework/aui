@@ -6,6 +6,7 @@
 
 
 #include "ACurl.h"
+#include "AUI/IO/ADynamicPipe.h"
 
 /**
  * @brief Websocket implementation.
@@ -28,7 +29,7 @@ public:
 
 private:
     AString mKey;
-    APipe mRead;
+    ADynamicPipe mRead;
     bool mAccepted = false;
 
     /**
@@ -37,7 +38,7 @@ private:
      * @details
      * WebSocket is a framed protocol in the format:
      *
-     *    0                   1                   2                   3
+     *    0               1                   2                   3
      *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
      *   +-+-+-+-+-------+-+-------------+-------------------------------+
      *   |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
@@ -61,7 +62,7 @@ private:
     struct Header {
         /* first byte: fin + opcode */
         uint8_t opcode: 4;
-        uint8_t _reserved: 3;
+        uint8_t rsv: 3;
         uint8_t fin: 1;
 
         /* second byte: mask + payload length */
@@ -72,6 +73,7 @@ private:
         uint8_t mask: 1; /* if 1, uses 4 extra bytes */
     };
     std::optional<Header> mLastHeader;
+    std::uint64_t mLastPayloadLength;
     AByteBuffer mLastPayload;
 
     static AString generateKeyString();
