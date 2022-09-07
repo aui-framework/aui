@@ -145,7 +145,7 @@ void ANumberPicker::setValue(int v)
 
 int ANumberPicker::getValue() const
 {
-	return *mTextField->text().toInt();
+	return mTextField->text().toInt().value_or(0);
 }
 
 void ANumberPicker::setMin(const int min)
