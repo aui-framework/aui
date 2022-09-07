@@ -67,6 +67,8 @@ private:
     void* mMulti;
     bool mCancelled = false;
     AMap<void*, _<ACurl>> mEasyCurls;
+
+    void removeCurl(const _<ACurl>& curl);
 };
 
 

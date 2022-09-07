@@ -23,8 +23,12 @@ void ACurlMulti::run(bool infinite) {
     while(!mCancelled && (!mEasyCurls.empty() || infinite)) {
         auto status = curl_multi_perform(mMulti, &isStillRunning);
 
-        if (status) {
-            throw ACurl::Exception("curl perform failed: {}"_format(status));
+        if (status) { // failure
+            for (const auto&[handle, curl] : mEasyCurls) {
+                removeCurl(curl);
+                curl->reportFail(0);
+            }
+            continue;
         }
 
         AThread::processMessages();
@@ -40,7 +44,7 @@ void ACurlMulti::run(bool infinite) {
             if (msg->msg == CURLMSG_DONE) {
                 if (auto c = mEasyCurls.contains(msg->easy_handle)) {
                     auto s = std::move(c->second);
-                    *this >> s;
+                    removeCurl(s);
 
                     if (msg->data.result != CURLE_OK) {
                         s->reportFail(msg->data.result);
@@ -69,11 +73,15 @@ ACurlMulti& ACurlMulti::operator<<(_<ACurl> curl) {
 
 ACurlMulti& ACurlMulti::operator>>(const _<ACurl>& curl) {
     ui_thread {
-        curl_multi_remove_handle(mMulti, curl->handle());
-        mEasyCurls.erase(curl->handle());
-        curl->closeRequested.clearAllConnectionsWith(curl.get());
+        removeCurl(curl);
     };
     return *this;
+}
+
+void ACurlMulti::removeCurl(const _<ACurl>& curl) {
+    curl_multi_remove_handle(mMulti, curl->handle());
+    mEasyCurls.erase(curl->handle());
+    curl->closeRequested.clearAllConnectionsWith(curl.get());
 }
 
 void ACurlMulti::clear() {
