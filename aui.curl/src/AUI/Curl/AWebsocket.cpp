@@ -136,7 +136,7 @@ std::size_t AWebsocket::onDataReceived(AByteBufferView data) {
 
 
         std::size_t dataToRead = glm::min(std::size_t(std::distance(begin, end)),
-                                          mLastPayloadLength - mLastPayload.size());
+                                          std::size_t(mLastPayloadLength - mLastPayload.size()));
         mLastPayload << AByteBufferView(begin, dataToRead);
         begin += dataToRead;
         assert(begin <= end);

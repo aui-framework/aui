@@ -169,7 +169,7 @@ public:
         ReadCallback mReadCallback;
         ErrorCallback mErrorCallback;
         HeaderCallback mHeaderCallback;
-        bool mThrowExceptionOnError = true;
+        bool mThrowExceptionOnError = false;
         AVector<AString> mHeaders;
 
     public:
