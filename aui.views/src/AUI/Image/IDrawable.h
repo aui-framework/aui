@@ -51,8 +51,8 @@ public:
     struct Params {
         glm::vec2 offset = {0.f, 0.f};
         glm::vec2 size;
-        std::optional<glm::vec2> cropUvTopLeft;
-        std::optional<glm::vec2> cropUvBottomRight;
+        AOptional<glm::vec2> cropUvTopLeft;
+        AOptional<glm::vec2> cropUvBottomRight;
 
         Repeat repeat = Repeat::NONE;
         ImageRendering imageRendering;

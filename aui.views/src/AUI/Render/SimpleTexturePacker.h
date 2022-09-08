@@ -27,14 +27,14 @@
 namespace Util {
     class SimpleTexturePacker : public ::Util::TexturePacker<AImage> {
     private:
-        std::optional<AImage> mImage;
+        AOptional<AImage> mImage;
     public:
         SimpleTexturePacker();
         ~SimpleTexturePacker();
         glm::vec4 insert(AImage& data) override;
         SimpleTexturePacker(const SimpleTexturePacker&) = delete;
 
-        std::optional<AImage>& getImage() {
+        AOptional<AImage>& getImage() {
             return mImage;
         }
     protected:

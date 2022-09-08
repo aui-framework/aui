@@ -49,10 +49,10 @@ _<IInputStream> ABuiltinFiles::open(const AString& file)
 	return nullptr;
 }
 
-std::optional<AByteBufferView> ABuiltinFiles::getBuffer(const AString& file) {
+AOptional<AByteBufferView> ABuiltinFiles::getBuffer(const AString& file) {
     if (auto c = inst().mBuffers.contains(file))
     {
-        return c->second;
+        return AByteBufferView(c->second);
     }
     return std::nullopt;
 }

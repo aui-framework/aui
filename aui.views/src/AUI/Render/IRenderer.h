@@ -130,7 +130,7 @@ public:
     };
     class IMultiStringCanvas {
     private:
-        std::optional<ATextLayoutHelper::Symbols> mSymbols;
+        AOptional<ATextLayoutHelper::Symbols> mSymbols;
 
     protected:
 

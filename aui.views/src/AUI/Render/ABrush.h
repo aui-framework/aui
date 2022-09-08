@@ -44,7 +44,7 @@ struct ATexturedBrush {
      *     <dd>When set, on software renderer it produces extra CPU costs.</dd>
      * </dl>
      */
-    std::optional<glm::vec2> uv1;
+    AOptional<glm::vec2> uv1;
 
     /**
      * Optional. Top left UV coords of the texture.
@@ -53,7 +53,7 @@ struct ATexturedBrush {
      *     <dd>When set, on software renderer it produces extra CPU costs.</dd>
      * </dl>
      */
-    std::optional<glm::vec2> uv2;
+    AOptional<glm::vec2> uv2;
 
     /**
      * Optional. Controls how does the image is scaled.

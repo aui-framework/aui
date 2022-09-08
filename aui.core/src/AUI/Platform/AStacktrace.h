@@ -11,22 +11,22 @@ public:
         friend class AStacktrace;
     private:
         void* mPtr;
-        std::optional<AString> mFunctionName;
-        std::optional<AString> mFileName;
-        std::optional<unsigned> mLineNumber;
+        AOptional<AString> mFunctionName;
+        AOptional<AString> mFileName;
+        AOptional<unsigned> mLineNumber;
 
     public:
         explicit Entry(void* ptr) : mPtr(ptr), mFunctionName(std::nullopt) {}
 
-        const std::optional<AString>& functionName() const noexcept {
+        const AOptional<AString>& functionName() const noexcept {
             return mFunctionName;
         }
 
-        const std::optional<AString>& fileName() const noexcept {
+        const AOptional<AString>& fileName() const noexcept {
             return mFileName;
         }
 
-        std::optional<unsigned> lineNumber() const noexcept {
+        AOptional<unsigned> lineNumber() const noexcept {
             return mLineNumber;
         }
 

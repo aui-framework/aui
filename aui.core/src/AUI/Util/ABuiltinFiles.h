@@ -42,5 +42,5 @@ public:
 	static void loadBuffer(AByteBuffer& data);
 	static void load(const unsigned char* data, size_t size);
 	static _<IInputStream> open(const AString& file);
-    static std::optional<AByteBufferView> getBuffer(const AString& file);
+    static AOptional<AByteBufferView> getBuffer(const AString& file);
 };

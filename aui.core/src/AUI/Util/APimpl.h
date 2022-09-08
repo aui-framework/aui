@@ -6,15 +6,15 @@
 
 namespace aui {
     /**
-     * Utility wrapper implementing the stack-allocated (fast) pimpl idiom.
+     * @brief Utility wrapper implementing the stack-allocated (fast) pimpl idiom.
+     * @ingroup useful_templates
      * @note the following functions can be called only if <code>T</code> is a complete type:
      * <ul>
      *   <li>ctor</li>
      *   <li>dtor</li>
-     *   <li>dtor</li>
      * </ul>
      *
-     * @see https://youtu.be/mkPTreWiglk?t=157 (Russian)
+     * See https://youtu.be/mkPTreWiglk?t=157 (Russian)
      */
     template<typename T, std::size_t storageSize, std::size_t storageAlignment = alignof(int)>
     struct fast_pimpl {

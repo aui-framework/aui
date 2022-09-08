@@ -73,7 +73,7 @@ private:
                               */
         uint8_t mask: 1; /* if 1, uses 4 extra bytes */
     };
-    std::optional<Header> mLastHeader;
+    AOptional<Header> mLastHeader;
     std::uint64_t mLastPayloadLength;
     AByteBuffer mLastPayload;
 

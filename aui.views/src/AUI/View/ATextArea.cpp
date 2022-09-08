@@ -45,7 +45,7 @@ private:
     /**
      * Full text. Must be set to null if mLines changed.
      */
-    mutable std::optional<AString> mFullText;
+    mutable AOptional<AString> mFullText;
 
     int mScroll = 0;
 

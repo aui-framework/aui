@@ -105,8 +105,8 @@ namespace aui::impl::future {
             /**
              * When isVoid = true, bool is a flag whether "void value" supplied or not
              */
-            std::conditional_t<isVoid, bool, std::optional<Value>> value;
-            std::optional<AInvocationTargetException> exception;
+            std::conditional_t<isVoid, bool, AOptional<Value>> value;
+            AOptional<AInvocationTargetException> exception;
             AMutex mutex;
             AConditionVariable cv;
             TaskCallback task;
