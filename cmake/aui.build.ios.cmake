@@ -1,4 +1,4 @@
-set(_xcode_project_dir ${CMAKE_CURRENT_BINARY_DIR}/xcode_project CACHE INTERNAL "")
+set(_xcode_project_dir ${CMAKE_BINARY_DIR}/app_project CACHE INTERNAL "")
 message("\n"
         "     ###############################################################################################\n"
         "     # AUI runs in iOS build mode which means that AUI will generate iOS Xcode project.            #\n"

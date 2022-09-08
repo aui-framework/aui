@@ -38,8 +38,8 @@ cmake --build . -t apps
 
 | `AUI_BUILD_FOR` value | Target platform | Project environment                        | Project dir                                  |
 |-----------------------|-----------------|--------------------------------------------|----------------------------------------------|
-| `android`             | Android         | Gradle (can be opened with Android Studio) | `${CMAKE_CURRENT_BINARY_DIR}/gradle_project` |
-| `ios`                 | iOS             | Xcode                                      | `${CMAKE_CURRENT_BINARY_DIR}/xcode_project`  |
+| `android`             | Android         | Gradle (can be opened with Android Studio) | `${CMAKE_BINARY_DIR}/app_project` |
+| `ios`                 | iOS             | Xcode                                      | `${CMAKE_BINARY_DIR}/app_project`  |
 
 
 ### Limitations
