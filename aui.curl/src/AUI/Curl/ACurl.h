@@ -300,6 +300,11 @@ public:
     [[nodiscard]]
     ResponseCode getResponseCode() const;
 
+    [[nodiscard]]
+    AString getErrorString() const noexcept {
+        return AString::fromLatin1(mErrorBuffer);
+    }
+
 private:
     void* mCURL;
     struct curl_slist* mCurlHeaders = nullptr;
