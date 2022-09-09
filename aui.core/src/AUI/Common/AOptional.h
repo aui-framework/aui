@@ -14,22 +14,37 @@
 template<typename T>
 class AOptional {
 public:
-    AOptional() noexcept = default;
-    AOptional(std::nullopt_t) noexcept {}
+    constexpr AOptional() noexcept = default;
+    constexpr AOptional(std::nullopt_t) noexcept {}
 
-    AOptional(T&& rhs) noexcept {
-        operator=(std::forward<T>(rhs));
+
+    template<typename U = T,
+             std::enable_if_t<std::is_constructible_v<T, U> && std::is_convertible_v<U&&, T>, bool> = true>
+    constexpr AOptional(U&& rhs) noexcept: mInitialized(true) {
+        new (ptrUnsafe()) T(std::forward<U>(rhs));
     }
 
-    AOptional(const T& rhs) {
+    template<typename U = T,
+             std::enable_if_t<std::is_constructible_v<T, U> && !std::is_convertible_v<U&&, T>, bool> = true>
+    explicit constexpr AOptional(U&& rhs) noexcept: mInitialized(true) {
+        new (ptrUnsafe()) T(std::forward<U>(rhs));
+    }
+
+    constexpr AOptional(const AOptional& rhs) {
         operator=(rhs);
     }
 
-    AOptional(const AOptional& rhs) {
+    constexpr AOptional(AOptional&& rhs) noexcept {
+        operator=(std::move(rhs));
+    }
+
+    template<typename U>
+    constexpr AOptional(const AOptional<U>& rhs) {
         operator=(rhs);
     }
 
-    AOptional(AOptional&& rhs) noexcept {
+    template<typename U>
+    constexpr AOptional(AOptional<U>&& rhs) noexcept {
         operator=(std::move(rhs));
     }
 
@@ -43,12 +58,12 @@ public:
         return mInitialized;
     }
 
-    operator bool() const noexcept {
+    constexpr explicit operator bool() const noexcept {
         return hasValue();
     }
 
     template<typename... Args>
-    AOptional<T>& emplace(Args&&... args) {
+    constexpr AOptional<T>& emplace(Args&&... args) {
         if (mInitialized) {
             ptrUnsafe()->~T();
         }
@@ -57,7 +72,7 @@ public:
         return *this;
     }
 
-    AOptional<T>& operator=(std::nullopt_t) noexcept {
+    constexpr AOptional<T>& operator=(std::nullopt_t) noexcept {
         if (mInitialized) {
             ptrUnsafe()->~T();
             mInitialized = false;
@@ -65,14 +80,24 @@ public:
         return *this;
     }
 
-    AOptional<T>& operator=(const AOptional& rhs) noexcept {
+    template<typename U = T, typename std::enable_if_t<std::is_convertible_v<U&&, T>, bool> = true>
+    constexpr AOptional<T>& operator=(U&& rhs) noexcept {
+        if (mInitialized) {
+            ptrUnsafe()->~T();
+        }
+        new (ptrUnsafe()) T(std::forward<U>(rhs));
+        mInitialized = true;
+        return *this;
+    }
+
+    constexpr AOptional<T>& operator=(const AOptional& rhs) noexcept {
         if (rhs) {
             operator=(rhs.value());
         }
         return *this;
     }
 
-    AOptional<T>& operator=(AOptional&& rhs) noexcept {
+    constexpr AOptional<T>& operator=(AOptional&& rhs) noexcept {
         if (rhs) {
             operator=(std::move(rhs.value()));
             rhs.reset();
@@ -80,20 +105,29 @@ public:
         return *this;
     }
 
-    AOptional<T>& operator=(T&& rhs) noexcept {
+    template<typename U>
+    constexpr AOptional<T>& operator=(const AOptional<U>& rhs) noexcept {
+        if (rhs) {
+            operator=(rhs.value());
+        }
+        return *this;
+    }
+
+    template<typename U>
+    constexpr AOptional<T>& operator=(AOptional<U>&& rhs) noexcept {
+        if (rhs) {
+            operator=(std::move(rhs.value()));
+            rhs.reset();
+        }
+        return *this;
+    }
+
+    template<typename U = T>
+    constexpr AOptional<T>& operator=(T&& rhs) noexcept {
         if (mInitialized) {
             ptrUnsafe()->~T();
         }
         new (ptrUnsafe()) T(std::forward<T>(rhs));
-        mInitialized = true;
-        return *this;
-    }
-
-    AOptional<T>& operator=(const T& rhs) {
-        if (mInitialized) {
-            ptrUnsafe()->~T();
-        }
-        new (ptrUnsafe()) T(rhs);
         mInitialized = true;
         return *this;
     }
@@ -174,6 +208,23 @@ public:
                 return alternative();
             }
         }
+    }
+
+    template<typename U>
+    [[nodiscard]]
+    bool operator==(const AOptional<U>& rhs) const noexcept {
+        return (mInitialized == rhs.mInitialized) && (!mInitialized || value() == rhs.value());
+    }
+
+    template<typename U>
+    [[nodiscard]]
+    bool operator==(const U& rhs) const noexcept {
+        return mInitialized && value() == rhs;
+    }
+
+    [[nodiscard]]
+    bool operator==(const std::nullopt_t& rhs) const noexcept {
+        return !mInitialized;
     }
 
 private:

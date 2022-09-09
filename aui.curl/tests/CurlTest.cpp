@@ -28,7 +28,9 @@ TEST(CurlTest, ToStream) {
 }
 
 TEST(CurlTest, Fail) {
-    ACurl a(ACurl::Builder("https://snonejklgnjkwernjkg3ernjknerjk.sfjgsjknsdgjknsdgjknjksdgnjkzdg").withOutputStream(_new<AFileOutputStream>("temp.html")));
+    ACurl a(ACurl::Builder("https://snonejklgnjkwernjkg3ernjknerjk.sfjgsjknsdgjknsdgjknjksdgnjkzdg")
+                .withOutputStream(_new<AFileOutputStream>("temp.html"))
+                .throwExceptionOnError(true));
     EXPECT_THROW(a.run(), ACurl::Exception);
 }
 
