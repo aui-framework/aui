@@ -104,7 +104,7 @@ static AJson read(ATokenizer& t) {
                     return t.readStringUntilUnescaped('\"').replacedAll("\\\\", "\\");
             }
 
-            if (isdigit(uint8_t(t.getLastCharacter()))) {
+            if (isdigit(uint8_t(t.getLastCharacter())) || t.getLastCharacter() == '-') {
                 t.reverseByte();
                 return t.readInt();
             }

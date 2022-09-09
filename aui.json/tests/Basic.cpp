@@ -118,3 +118,11 @@ TEST(Json, SerializationDeserialization)
 }
 
 
+TEST(Json, NegativeNumber)
+{
+    auto v = AJson::fromString(R"({"code":-2010,"msg":"error"})");
+    EXPECT_EQ(v["code"].asNumber(), -2010);
+    EXPECT_EQ(v["msg"].asString(), "error");
+}
+
+

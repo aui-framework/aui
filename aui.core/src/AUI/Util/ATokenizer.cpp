@@ -165,6 +165,7 @@ int ATokenizer::readInt()
 			case 'E':
 			case 'f':
 			case 'F':
+			case '-':
 				tmp += c;
 				break;
 			default:
