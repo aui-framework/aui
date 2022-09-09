@@ -33,41 +33,19 @@
  * @ingroup crypt
  */
 namespace AHash {
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha512(const AByteBuffer& in);
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha512(IInputStream& in);
-    [[nodiscard]] inline AByteBuffer sha512(const _<IInputStream>& in) {
-        return sha512(*in);
-    }
-    [[nodiscard]] inline AByteBuffer sha512(IInputStream&& in) {
-        return sha512(in);
-    }
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha512(AByteBufferView in);
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha512(aui::no_escape<IInputStream> in);
 
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha256(const AByteBuffer& in);
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha256(IInputStream& in);
-    [[nodiscard]] inline AByteBuffer sha256(const _<IInputStream>& in) {
-        return sha256(*in);
-    }
-    [[nodiscard]] inline AByteBuffer sha256(IInputStream&& in) {
-        return sha256(in);
-    }
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha256(AByteBufferView in);
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha256(aui::no_escape<IInputStream> in);
 
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha1(const AByteBuffer& in);
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha1(IInputStream& in);
-    [[nodiscard]] inline AByteBuffer sha1(const _<IInputStream>& in) {
-        return sha1(*in);
-    }
-    [[nodiscard]] inline AByteBuffer sha1(IInputStream&& in) {
-        return sha1(in);
-    }
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha1(AByteBufferView in);
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha1(aui::no_escape<IInputStream> in);
 
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer md5(const AByteBuffer& in);
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer md5(IInputStream& in);
-    [[nodiscard]] inline AByteBuffer md5(const _<IInputStream>& in) {
-        return md5(*in);
-    }
-    [[nodiscard]] inline AByteBuffer md5(IInputStream&& in) {
-        return md5(in);
-    }
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer md5(AByteBufferView in);
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer md5(aui::no_escape<IInputStream> in);
+
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha256hmac(AByteBufferView in, AByteBufferView key);
 }
 
 
