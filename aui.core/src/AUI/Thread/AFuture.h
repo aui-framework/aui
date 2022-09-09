@@ -510,7 +510,7 @@ public:
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
 
-    void supplyResult(T v) noexcept {
+    void supplyResult(T v) const noexcept {
         auto& inner = (*super::mInner);
         assert(("task is already provided", inner->task == nullptr));
 
@@ -555,7 +555,7 @@ public:
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
 
-    void supplyResult() noexcept {
+    void supplyResult() const noexcept {
         auto& inner = (*super::mInner);
         assert(("task is already provided", inner->task == nullptr));
 
