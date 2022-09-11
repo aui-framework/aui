@@ -32,6 +32,7 @@
 #include "AUI/View/ACheckBox.h"
 #include "AUI/View/ATextField.h"
 #include "AUI/View/ANumberPicker.h"
+#include "AUI/View/ADoubleNumberPicker.h"
 #include "AUI/View/ASpacerExpanding.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "DemoListModel.h"
@@ -288,6 +289,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                         _new<ATextField>() let { it->focus(); },
                         Label { "Number picker" },
                         _new<ANumberPicker>(),
+                        _new<ADoubleNumberPicker>(),
                         Label { "Text area" },
                         _new<ATextArea>("Copyright (c) 2021 Alex2772\n\n"
                                         "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated "

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * =====================================================================================================================
  * Copyright (c) 2021 Alex2772
  *
@@ -6,7 +6,7 @@
  * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
  * Software.
  *
@@ -14,7 +14,7 @@
  * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
  * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
+
  * Original code located at https://github.com/aui-framework/aui
  * =====================================================================================================================
  */
@@ -28,20 +28,20 @@
  * @brief A text field for numbers with increase/decrease buttons.
  * @ingroup useful_views
  */
-class API_AUI_VIEWS ANumberPicker: public AViewContainer
+class API_AUI_VIEWS ADoubleNumberPicker: public AViewContainer
 {
 private:
-    class ANumberPickerField: public AAbstractTextField
+    class ADoubleNumberPickerField: public AAbstractTextField
     {
     private:
-        ANumberPicker& mPicker;
+        ADoubleNumberPicker& mPicker;
     public:
-        ANumberPickerField(::ANumberPicker& picker)
+        ADoubleNumberPickerField(::ADoubleNumberPicker& picker)
                 : mPicker(picker)
         {
         }
 
-        virtual ~ANumberPickerField() = default;
+        virtual ~ADoubleNumberPickerField() = default;
 
         void onKeyRepeat(AInput::Key key) override;
 
@@ -49,48 +49,52 @@ private:
         bool isValidText(const AString& text) override;
     };
 
-    _<ANumberPickerField> mTextField;
+    _<ADoubleNumberPickerField> mTextField;
 
-    int mMin = 0;
-    int mMax = 100;
+    double mMin = 0;
+    double mMax = 100;
 
 public:
-    ANumberPicker();
+    ADoubleNumberPicker();
 
     int getContentMinimumHeight(ALayoutDirection layout) override;
 
-    void setValue(int v);
-    int getValue() const;
+    void setValue(double v);
 
     [[nodiscard]]
     const AString& text() const noexcept {
         return mTextField->text();
     }
 
-    void increase();
-    void decrease();
-    void changeBy(int v);
+    [[nodiscard]]
+    double getValue() const {
+        return mTextField->text().toDouble().valueOr(0.0);
+    }
 
 
-    [[nodiscard]] int getMin() const
+    [[nodiscard]] double getMin() const
     {
         return mMin;
     }
 
-    [[nodiscard]] int getMax() const
+    [[nodiscard]] double getMax() const
     {
         return mMax;
     }
 
 
-    void setMin(const int min);
-    void setMax(const int max);
+    void setMin(double min);
+    void setMax(double max);
+
+    void increase();
+    void decrease();
+    void changeBy(double v);
 
 signals:
     /**
      * @brief Number changed.
      */
-    emits<int> valueChanged;
+    emits<double> valueChanged;
 
     /**
      * @brief Number is changing.
@@ -100,28 +104,21 @@ signals:
 
 namespace aui::impl {
     template<typename Num>
-    struct ADataBindingDefaultNumberPicker {
+    struct ADataBindingDefaultDoubleNumberPicker {
     public:
 
-        static void setup(const _<ANumberPicker>& view) {
-            view->setMin((std::numeric_limits<int>::min)());
-            view->setMax((std::numeric_limits<int>::max)());
+        static void setup(const _<ADoubleNumberPicker>& view) {
         }
 
         static auto getGetter() {
-            return &ANumberPicker::valueChanged;
+            return &ADoubleNumberPicker::valueChanged;
         }
 
         static auto getSetter() {
-            return &ANumberPicker::setValue;
+            return &ADoubleNumberPicker::setValue;
         }
     };
 }
 
-template<> struct ADataBindingDefault<ANumberPicker, uint8_t>: aui::impl::ADataBindingDefaultNumberPicker<uint8_t> {};
-template<> struct ADataBindingDefault<ANumberPicker, int8_t>: aui::impl::ADataBindingDefaultNumberPicker<int8_t> {};
-template<> struct ADataBindingDefault<ANumberPicker, uint16_t>: aui::impl::ADataBindingDefaultNumberPicker<uint16_t> {};
-template<> struct ADataBindingDefault<ANumberPicker, int16_t>: aui::impl::ADataBindingDefaultNumberPicker<int16_t> {};
-template<> struct ADataBindingDefault<ANumberPicker, uint32_t>: aui::impl::ADataBindingDefaultNumberPicker<uint32_t> {};
-template<> struct ADataBindingDefault<ANumberPicker, int32_t>: aui::impl::ADataBindingDefaultNumberPicker<int32_t> {};
-
+template<> struct ADataBindingDefault<ADoubleNumberPicker, double>: aui::impl::ADataBindingDefaultDoubleNumberPicker<double> {};
+template<> struct ADataBindingDefault<ADoubleNumberPicker, float>: aui::impl::ADataBindingDefaultDoubleNumberPicker<float> {};

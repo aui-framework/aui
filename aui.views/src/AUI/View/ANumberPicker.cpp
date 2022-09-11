@@ -43,22 +43,10 @@ void ANumberPicker::ANumberPickerField::onKeyRepeat(AInput::Key key) {
 
     switch (key) {
         case AInput::DOWN:
-            if (mPicker.getValue() > mPicker.getMin()) {
-                if (AInput::isKeyDown(AInput::LCONTROL)) {
-                    mPicker.setValue(glm::max(mPicker.getValue() - 10, mPicker.getMin()));
-                } else {
-                    mPicker.setValue(mPicker.getValue() - 1);
-                }
-            }
+            mPicker.decrease();
             break;
         case AInput::UP:
-            if (mPicker.getValue() < mPicker.getMax()) {
-                if (AInput::isKeyDown(AInput::LCONTROL)) {
-                    mPicker.setValue(glm::min(mPicker.getValue() + 10, mPicker.getMax()));
-                } else {
-                    mPicker.setValue(mPicker.getValue() + 1);
-                }
-            }
+            mPicker.increase();
             break;
         default:
             AAbstractTextField::onKeyRepeat(key);
@@ -73,6 +61,7 @@ ANumberPicker::ANumberPicker()
 	setLayout(_new<AHorizontalLayout>());
 	addView(mTextField = _new<ANumberPickerField>(*this));
     addAssName(".input-field");
+    addAssName(".number-picker");
 
 	mTextField->setExpanding({ 1, 1 });
 	connect(mTextField->focusState, this, [&](bool c)
@@ -92,14 +81,8 @@ ANumberPicker::ANumberPicker()
 	c->addView(up);
 	c->addView(down);
 
-	connect(up->clicked, this, [&]()
-	{
-		setValue(getValue() + 1);
-	});
-	connect(down->clicked, this, [&]()
-	{
-		setValue(getValue() - 1);
-	});
+	connect(up->clicked, me::increase);
+	connect(down->clicked, me::decrease);
 
 	connect(mTextField->textChanged, this, [&]()
 	{
@@ -139,7 +122,6 @@ int ANumberPicker::getContentMinimumHeight(ALayoutDirection layout)
 void ANumberPicker::setValue(int v)
 {
 	mTextField->setText(AString::number(v));
-	emit valueChanging();
     redraw();
 }
 
@@ -162,3 +144,16 @@ void ANumberPicker::setMax(const int max)
 		setValue(max);
 }
 
+
+void ANumberPicker::increase() {
+    changeBy(AInput::isKeyDown(AInput::LCONTROL) ? 10 : 1);
+}
+
+void ANumberPicker::decrease() {
+    changeBy(AInput::isKeyDown(AInput::LCONTROL) ? -10 : -1);
+}
+
+void ANumberPicker::changeBy(int v) {
+    setValue(getValue() + v);
+    emit valueChanging();
+}
