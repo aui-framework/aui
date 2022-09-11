@@ -94,37 +94,3 @@ public:
         acceptMessage(msg);
     }
 };
-
-_<AWebsocket> makeWebsocket(std::string message, const _<Slave>& receiver) {
-    auto ws = _new<AWebsocket>("wss://ws.postman-echo.com/raw");
-
-    AObject::connect(ws->connected, ws, [message = std::move(message), ws = ws.get()] {
-        ws->write(message.data(), message.size());
-    });
-
-    AObject::connect(ws->received, slot(receiver)::acceptMessageSlot);
-    AObject::connect(ws->received, ws, [ws = ws.get()] {
-        ws->close();
-    });
-    return ws;
-}
-
-
-TEST(CurlTest, WebSocketMulti) {
-    auto receiver1 = _new<Slave>();
-    EXPECT_CALL(*receiver1, acceptMessage("hello"_as));
-
-    auto receiver2 = _new<Slave>();
-    EXPECT_CALL(*receiver2, acceptMessage("world"_as));
-
-    ACurlMulti::global() << makeWebsocket("hello", receiver1);
-    ACurlMulti::global() << makeWebsocket("world", receiver2);
-
-    AEventLoop l;
-    IEventLoop::Handle h(&l);
-    AThread::processMessages();
-    while (!ACurlMulti::global().curls().empty()) {
-        l.iteration();
-    }
-    AThread::processMessages(); // avoid possible data race
-}
