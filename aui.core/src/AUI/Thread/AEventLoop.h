@@ -9,7 +9,7 @@
  * @brief Default event loop implementation.
  * @ingroup core
  */
-class AEventLoop: public IEventLoop {
+class API_AUI_CORE AEventLoop: public IEventLoop {
 public:
     ~AEventLoop() override;
 
