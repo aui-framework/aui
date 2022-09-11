@@ -28,7 +28,7 @@
 
 bool ADoubleNumberPicker::ADoubleNumberPickerField::isValidText(const AString& text)
 {
-    return text.toDouble().hasValue();
+    return text.toDouble().hasValue() || text.empty();
 }
 
 void ADoubleNumberPicker::ADoubleNumberPickerField::onKeyRepeat(AInput::Key key) {
@@ -111,7 +111,6 @@ int ADoubleNumberPicker::getContentMinimumHeight(ALayoutDirection layout)
 void ADoubleNumberPicker::setValue(double v)
 {
     mTextField->setText(AString::number(v));
-    emit valueChanging();
     redraw();
 }
 
@@ -141,4 +140,5 @@ void ADoubleNumberPicker::decrease() {
 
 void ADoubleNumberPicker::changeBy(double v) {
     setValue(getValue() + v);
+    emit valueChanging();
 }

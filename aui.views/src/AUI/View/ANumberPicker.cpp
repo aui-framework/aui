@@ -122,7 +122,6 @@ int ANumberPicker::getContentMinimumHeight(ALayoutDirection layout)
 void ANumberPicker::setValue(int v)
 {
 	mTextField->setText(AString::number(v));
-	emit valueChanging();
     redraw();
 }
 
@@ -156,4 +155,5 @@ void ANumberPicker::decrease() {
 
 void ANumberPicker::changeBy(int v) {
     setValue(getValue() + v);
+    emit valueChanging();
 }

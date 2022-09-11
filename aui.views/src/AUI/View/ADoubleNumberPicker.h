@@ -62,6 +62,11 @@ public:
     void setValue(double v);
 
     [[nodiscard]]
+    const AString& text() const noexcept {
+        return mTextField->text();
+    }
+
+    [[nodiscard]]
     double getValue() const {
         return mTextField->text().toDouble().valueOr(0.0);
     }

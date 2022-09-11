@@ -62,6 +62,11 @@ public:
     void setValue(int v);
     int getValue() const;
 
+    [[nodiscard]]
+    const AString& text() const noexcept {
+        return mTextField->text();
+    }
+
     void increase();
     void decrease();
     void changeBy(int v);
