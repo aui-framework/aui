@@ -126,3 +126,11 @@ TEST(Json, NegativeNumber)
 }
 
 
+
+TEST(Json, Long)
+{
+    auto v = AJson::fromString(R"({"value":-1499040000000})");
+    EXPECT_EQ(v["value"].asLongInt(), -1499040000000);
+}
+
+

@@ -322,6 +322,16 @@ public:
      * If conversion to int is not possible, nullopt is returned.
      */
     [[nodiscard]]
+    AOptional<int64_t> toLongInt() const noexcept;
+
+    /**
+     * @brief Converts the string to int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
+    [[nodiscard]]
     AOptional<unsigned> toUInt() const noexcept;
 
     /**

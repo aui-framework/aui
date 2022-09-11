@@ -106,7 +106,12 @@ static AJson read(ATokenizer& t) {
 
             if (isdigit(uint8_t(t.getLastCharacter())) || t.getLastCharacter() == '-') {
                 t.reverseByte();
-                return t.readInt();
+                auto longInt = t.readLongInt();
+                int basicInt = longInt;
+                if (longInt == basicInt) {
+                    return basicInt;
+                }
+                return longInt;
             }
 
             t.reverseByte();
@@ -130,6 +135,9 @@ static AJson read(ATokenizer& t) {
 void ASerializable<AJson>::write(IOutputStream& os, const AJson& value) {
     std::visit(aui::lambda_overloaded {
         [&](int v) {
+            os << AString::number(v);
+        },
+        [&](int64_t v) {
             os << AString::number(v);
         },
         [&](float v) {

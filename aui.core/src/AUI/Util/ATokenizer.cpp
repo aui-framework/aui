@@ -129,64 +129,66 @@ float ATokenizer::readFloat()
 	return tmp.toFloat().valueOr(0);
 }
 
-int ATokenizer::readInt()
-{
-	AString tmp;
-	try {
-		char c;
-		for (;;)
-		{
-			c = readChar();
-			switch (c)
-			{
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-			case 'x':
-			case 'X':
+template<typename T>
+T ATokenizer::readIntImpl() {
+    static_assert(std::is_integral_v<T>, "readIntImpl accepts only integral type");
+    AString tmp;
+    auto value = [&] {
+        if constexpr(sizeof(T) > 4) {
+            return tmp.toLongInt().valueOr(0);
+        } else {
+            return tmp.toInt().valueOr(0);
+        }
+    };
+    try {
+        char c;
+        for (;;)
+        {
+            c = readChar();
+            switch (c)
+            {
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                case 'x':
+                case 'X':
 
-			    // hex
-			case 'a':
-			case 'A':
-			case 'b':
-			case 'B':
-			case 'c':
-			case 'C':
-			case 'd':
-			case 'D':
-			case 'e':
-			case 'E':
-			case 'f':
-			case 'F':
-			case '-':
-				tmp += c;
-				break;
-			default:
-				reverseByte();
-				return tmp.toInt().valueOr(0);
-			}
-		}
-	}
-	catch (...) {
+                    // hex
+                case 'a':
+                case 'A':
+                case 'b':
+                case 'B':
+                case 'c':
+                case 'C':
+                case 'd':
+                case 'D':
+                case 'e':
+                case 'E':
+                case 'f':
+                case 'F':
+                case '-':
+                    tmp += c;
+                    break;
+                default:
+                    reverseByte();
+                    return value();
+            }
+        }
+    }
+    catch (...) {
         mEof = true;
     }
-	return tmp.toInt().valueOr(0);
+    return value();
 }
 
-unsigned ATokenizer::readUInt() {
-    auto [value, _] = readUIntX();
-    return value;
-}
-
-
-std::tuple<unsigned, bool> ATokenizer::readUIntX() {
+ATokenizer::Hexable<unsigned> ATokenizer::readUIntX() {
     AString tmp;
     bool isHex = false;
     try {

@@ -1192,6 +1192,10 @@ AOptional<int> AString::toInt() const noexcept {
     return toNumberImpl<int>();
 }
 
+AOptional<int64_t> AString::toLongInt() const noexcept {
+    return toNumberImpl<int64_t>();
+}
+
 AOptional<unsigned> AString::toUInt() const noexcept {
     return toNumberImpl<unsigned>();
 }
