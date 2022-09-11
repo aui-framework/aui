@@ -145,7 +145,6 @@ macro(_auib_copy_runtime_dependencies)
     else()
         set(LIB_EXT so*)
     endif()
-    message(STATUS "Quering: ${DEP_INSTALL_PREFIX}")
     file(GLOB_RECURSE DEP_RUNTIME LIST_DIRECTORIES false ${DEP_INSTALL_PREFIX}/*.${LIB_EXT})
 
     if (WIN32)
