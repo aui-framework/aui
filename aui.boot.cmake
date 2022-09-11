@@ -411,6 +411,7 @@ function(auib_import AUI_MODULE_NAME URL)
         set(SHARED_OR_STATIC shared)
     else()
         set(SHARED_OR_STATIC static)
+        set(CMAKE_POSITION_INDEPENDENT_CODE ON) # -fPIC required on linux
     endif()
     set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_GENERATOR}")
 
@@ -640,6 +641,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         CMAKE_FIND_ROOT_PATH_MODE_INCLUDE
                         CMAKE_FIND_ROOT_PATH_MODE_PACKAGE
                         ONLY_CMAKE_FIND_ROOT_PATH
+                        CMAKE_POSITION_INDEPENDENT_CODE
                         ${_forwardable_vars})
 
                     # ${_varname} can be possibly false (e.g. -DBUILD_SHARED_LIBS=FALSE) so using STREQUAL check instead for
