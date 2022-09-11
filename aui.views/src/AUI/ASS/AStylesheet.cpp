@@ -209,9 +209,9 @@ AStylesheet::AStylesheet() {
 
         // ANumberPicker
         {
-            t<ANumberPicker>(),
-                MinSize { 60_dp, {} },
-                AOverflow::HIDDEN,
+            c(".number-picker"),
+            MinSize { 60_dp, {} },
+            AOverflow::HIDDEN,
         },
         {
             class_of(".up-down-wrapper"),
@@ -221,7 +221,7 @@ AStylesheet::AStylesheet() {
             //BackgroundSolid { 0xf0f0f0_rgb }
         },
         {
-            t<ANumberPicker>() >> t<AButton>(),
+            c(".number-picker") >> t<AButton>(),
             Padding { 3_dp, 0 },
             FixedSize { 19_dp, 10_dp },
             MinSize { {}, 3_dp },
@@ -232,11 +232,11 @@ AStylesheet::AStylesheet() {
             BackgroundImage {{}, getOsThemeColor().readableBlackOrWhite().opacify(0.7f), {}, Sizing::FIT_PADDING },
         },
         {
-            t<ANumberPicker>() >> c(".up"),
+            c(".number-picker") >> c(".up"),
             BackgroundImage { ":uni/svg/up.svg", {} },
         },
         {
-            t<ANumberPicker>() >> c(".down"),
+            c(".number-picker") >> c(".down"),
             BackgroundImage { ":uni/svg/down.svg", {} },
         },
 

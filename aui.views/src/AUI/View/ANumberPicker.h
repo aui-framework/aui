@@ -62,6 +62,10 @@ public:
     void setValue(int v);
     int getValue() const;
 
+    void increase();
+    void decrease();
+    void changeBy(int v);
+
 
     [[nodiscard]] int getMin() const
     {

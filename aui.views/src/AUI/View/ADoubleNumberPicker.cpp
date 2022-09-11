@@ -32,25 +32,12 @@ bool ADoubleNumberPicker::ADoubleNumberPickerField::isValidText(const AString& t
 }
 
 void ADoubleNumberPicker::ADoubleNumberPickerField::onKeyRepeat(AInput::Key key) {
-
     switch (key) {
         case AInput::DOWN:
-            if (mPicker.getValue() > mPicker.getMin()) {
-                if (AInput::isKeyDown(AInput::LCONTROL)) {
-                    mPicker.setValue(glm::max(mPicker.getValue() - 10, mPicker.getMin()));
-                } else {
-                    mPicker.setValue(mPicker.getValue() - 1);
-                }
-            }
+            mPicker.decrease();
             break;
         case AInput::UP:
-            if (mPicker.getValue() < mPicker.getMax()) {
-                if (AInput::isKeyDown(AInput::LCONTROL)) {
-                    mPicker.setValue(glm::min(mPicker.getValue() + 10, mPicker.getMax()));
-                } else {
-                    mPicker.setValue(mPicker.getValue() + 1);
-                }
-            }
+            mPicker.increase();
             break;
         default:
             AAbstractTextField::onKeyRepeat(key);
@@ -60,11 +47,10 @@ void ADoubleNumberPicker::ADoubleNumberPickerField::onKeyRepeat(AInput::Key key)
 
 ADoubleNumberPicker::ADoubleNumberPicker()
 {
-
-
     setLayout(_new<AHorizontalLayout>());
     addView(mTextField = _new<ADoubleNumberPickerField>(*this));
     addAssName(".input-field");
+    addAssName(".number-picker");
 
     mTextField->setExpanding({ 1, 1 });
     connect(mTextField->focusState, this, [&](bool c)
@@ -84,18 +70,12 @@ ADoubleNumberPicker::ADoubleNumberPicker()
     c->addView(up);
     c->addView(down);
 
-    connect(up->clicked, this, [&]()
-    {
-        setValue(getValue() + 1);
-    });
-    connect(down->clicked, this, [&]()
-    {
-        setValue(getValue() - 1);
-    });
+    connect(up->clicked, me::increase);
+    connect(down->clicked, me::decrease);
 
     connect(mTextField->textChanged, this, [&]()
     {
-        int v = getValue();
+        double v = getValue();
         if (v < mMin)
         {
             v = mMin;
@@ -128,17 +108,13 @@ int ADoubleNumberPicker::getContentMinimumHeight(ALayoutDirection layout)
     return AViewContainer::getContentMinimumHeight(ALayoutDirection::NONE);
 }
 
-void ADoubleNumberPicker::setValue(int v)
+void ADoubleNumberPicker::setValue(double v)
 {
     mTextField->setText(AString::number(v));
     emit valueChanging();
     redraw();
 }
 
-int ADoubleNumberPicker::getValue() const
-{
-    return *mTextField->text().toInt();
-}
 
 void ADoubleNumberPicker::setMin(double min)
 {
@@ -154,3 +130,15 @@ void ADoubleNumberPicker::setMax(double max)
         setValue(max);
 }
 
+
+void ADoubleNumberPicker::increase() {
+    changeBy(AInput::isKeyDown(AInput::LCONTROL) ? 0.1 : 1);
+}
+
+void ADoubleNumberPicker::decrease() {
+    changeBy(AInput::isKeyDown(AInput::LCONTROL) ? -0.1 : -1);
+}
+
+void ADoubleNumberPicker::changeBy(double v) {
+    setValue(getValue() + v);
+}

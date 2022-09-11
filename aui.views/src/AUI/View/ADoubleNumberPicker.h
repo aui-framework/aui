@@ -59,16 +59,20 @@ public:
 
     int getContentMinimumHeight(ALayoutDirection layout) override;
 
-    void setValue(int v);
-    int getValue() const;
+    void setValue(double v);
+
+    [[nodiscard]]
+    double getValue() const {
+        return mTextField->text().toDouble().valueOr(0.0);
+    }
 
 
-    [[nodiscard]] int getMin() const
+    [[nodiscard]] double getMin() const
     {
         return mMin;
     }
 
-    [[nodiscard]] int getMax() const
+    [[nodiscard]] double getMax() const
     {
         return mMax;
     }
@@ -76,6 +80,10 @@ public:
 
     void setMin(double min);
     void setMax(double max);
+
+    void increase();
+    void decrease();
+    void changeBy(double v);
 
 signals:
     /**
@@ -91,7 +99,7 @@ signals:
 
 namespace aui::impl {
     template<typename Num>
-    struct ADataBindingDefaultNumberPicker {
+    struct ADataBindingDefaultDoubleNumberPicker {
     public:
 
         static void setup(const _<ADoubleNumberPicker>& view) {
@@ -107,5 +115,5 @@ namespace aui::impl {
     };
 }
 
-template<> struct ADataBindingDefault<ADoubleNumberPicker, double>: aui::impl::ADataBindingDefaultNumberPicker<double> {};
-template<> struct ADataBindingDefault<ADoubleNumberPicker, float>: aui::impl::ADataBindingDefaultNumberPicker<float> {};
+template<> struct ADataBindingDefault<ADoubleNumberPicker, double>: aui::impl::ADataBindingDefaultDoubleNumberPicker<double> {};
+template<> struct ADataBindingDefault<ADoubleNumberPicker, float>: aui::impl::ADataBindingDefaultDoubleNumberPicker<float> {};
