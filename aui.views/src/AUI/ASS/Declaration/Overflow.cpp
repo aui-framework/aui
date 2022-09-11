@@ -26,6 +26,11 @@
 #include "Overflow.h"
 
 
-void ass::decl::Declaration<Overflow>::applyFor(AView* view) {
+void ass::decl::Declaration<AOverflow>::applyFor(AView* view) {
     view->setOverflow(mInfo);
+}
+
+
+void ass::decl::Declaration<AOverflowMask>::applyFor(AView* view) {
+    view->setOverflowMask(mInfo);
 }

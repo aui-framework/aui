@@ -38,6 +38,7 @@ namespace ass::decl {
         IMAGE_RENDERING,
         BACKGROUND_SOLID,
         BACKGROUND_IMAGE,
+        BACKGROUND_EFFECT,
         BORDER,
         TEXT_SHADOW,
 

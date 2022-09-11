@@ -48,6 +48,11 @@ private:
     {
         AObject* object; // TODO replace with weak_ptr
         func_t func;
+
+        [[nodiscard]]
+        bool operator==(const slot& rhs) const noexcept {
+            return object == rhs.object && func.target_type() == rhs.func.target_type();
+        }
     };
 
     AMutex mSlotsLock;
@@ -245,7 +250,9 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
     }
 
     std::unique_lock lock(mSlotsLock);
-    for (auto i = mSlots.begin(); i != mSlots.end();)
+    auto slots = mSlots; // needed to safely unlock the mutex
+    lock.unlock();
+    for (auto i = slots.begin(); i != slots.end();)
     {
         auto receiverWeakPtr = weakPtrFromObject(i->object);
         if (i->object->getThread() != AThread::current())
@@ -269,6 +276,8 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
                         if (AAbstractSignal::isDisconnected()) {
                             std::unique_lock lock(mSlotsLock);
                             unlinkSlot(receiverPtr.get());
+                            slot s = { receiverPtr.get(), func };
+                            mSlots.removeFirst(s);
                         }
                     }
                 });
@@ -285,9 +294,10 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
 
             (std::apply)(i->func, args);
             if (AAbstractSignal::isDisconnected()) {
+                lock.lock();
                 unlinkSlot(i->object);
-                i = mSlots.erase(i);
-                continue;
+                mSlots.removeFirst(*i);
+                lock.unlock();
             }
             ++i;
         }

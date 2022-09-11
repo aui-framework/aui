@@ -33,6 +33,8 @@
 #include "AUI/Common/ATimer.h"
 #include "AUI/Traits/parallel.h"
 #include "AUI/Thread/AAsyncHolder.h"
+#include "AUI/Util/ARaiiHelper.h"
+#include "AUI/Thread/ACutoffSignal.h"
 
 
 TEST(Threading, Async) {
@@ -280,20 +282,58 @@ TEST(Threading, FutureInterruptionCascade) {
 
 
 TEST(Threading, FutureOnDone) {
+
+    repeat(100) {
+        AThreadPool localThreadPool(1);
+        localThreadPool.run([] {
+            AThread::sleep(10); // long task
+        });
+
+
+        bool called = false;
+        {
+            auto future = localThreadPool * [] {
+                return 322;
+            };
+            future.onSuccess([&](int i) {
+                ASSERT_EQ(i, 322);
+                called = true;
+            });
+            // check that cancellation does not triggers here
+            future.wait(AFutureWait::ASYNC_ONLY);
+        }
+        ASSERT_TRUE(called) << "onSuccess callback has not called";
+    }
+}
+
+TEST(Threading, FutureOnSuccess) {
+    AThreadPool localThreadPool(1);
+    localThreadPool.run([] {
+        AThread::sleep(1000); // long task
+    });
+
+
+    bool destructorCalled = false;                                                             // used to check future
+    std::function<void()> destructorCallback = [&destructorCalled] {                           // destruction
+        destructorCalled = true;                                                               //
+    };                                                                                         //
+    ARaiiHelper<std::function<void()>> raiiDestructorCallback = std::move(destructorCallback); //
+
+    AAsyncHolder holder;
     bool called = false;
     {
-        auto future = async {
+        auto future = localThreadPool * [] {
             return 322;
         };
-        future.onSuccess([&](int i) {
+        holder << future.onSuccess([&, raiiDestructorCallback = std::move(raiiDestructorCallback)](int i) {
             ASSERT_EQ(i, 322);
             called = true;
         });
-        // check that cancellation does not triggers here
-        future.wait();
     }
-    AThread::sleep(500);
+    AThread::sleep(2000);
     ASSERT_TRUE(called) << "onSuccess callback has not called";
+    ASSERT_TRUE(destructorCalled) << "AFuture internal logic is not destructed";
+    ASSERT_TRUE(holder.size() == 0) << "holder is not empty";
 }
 
 TEST(Threading, FutureExecuteOnCallingThread) {

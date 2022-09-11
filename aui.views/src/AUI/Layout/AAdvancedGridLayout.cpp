@@ -118,7 +118,8 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
         auto fixed = v.view->getFixedSize();
         if (fixed.x != 0) e.x = 0;
         if (fixed.y != 0) e.y = 0;
-        glm::ivec2 m = {v.view->getMinimumWidth(), v.view->getMinimumHeight()};
+        glm::ivec2 m = {v.view->getMinimumWidth(), v.view->getMinimumHeight(
+                ALayoutDirection::NONE)};
         glm::ivec2 minSpace = m + glm::ivec2{v.view->getMargin().horizontal(), v.view->getMargin().vertical()};
 
         columns[v.x].expandingSum += e.x;

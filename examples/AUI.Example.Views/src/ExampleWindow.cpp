@@ -32,7 +32,8 @@
 #include "AUI/View/ACheckBox.h"
 #include "AUI/View/ATextField.h"
 #include "AUI/View/ANumberPicker.h"
-#include "AUI/View/ASpacer.h"
+#include "AUI/View/ADoubleNumberPicker.h"
+#include "AUI/View/ASpacerExpanding.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "DemoListModel.h"
 #include "DemoTreeModel.h"
@@ -224,7 +225,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 Horizontal {
                                         _new<AButton>("Add").connect(&AButton::clicked, slot(model)::addItem),
                                         _new<AButton>("Remove").connect(&AButton::clicked, slot(model)::removeItem),
-                                        _new<ASpacer>(),
+                                        _new<ASpacerExpanding>(),
                                 },
                                 _new<AListView>(model)
                         };
@@ -252,7 +253,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                                 model->pop_back();
                                             }
                                         }),
-                                        _new<ASpacer>(),
+                                        _new<ASpacerExpanding>(),
                                 },
                                 ui_for (i, model, AWordWrappingLayout) {
                                     return Horizontal {
@@ -288,6 +289,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                         _new<ATextField>() let { it->focus(); },
                         Label { "Number picker" },
                         _new<ANumberPicker>(),
+                        _new<ADoubleNumberPicker>(),
                         Label { "Text area" },
                         _new<ATextArea>("Copyright (c) 2021 Alex2772\n\n"
                                         "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated "
@@ -370,7 +372,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
             // Rulers
             _new<ALabel>("ARulerArea"),
             _new<ARulerArea>(_new<AView>() with_style { MinSize { 100_dp, 100_dp },
-                                                        BackgroundGradient { 0x0_rgb, 0x404040_rgb, LayoutDirection::VERTICAL },
+                                                        BackgroundGradient { 0x0_rgb, 0x404040_rgb, ALayoutDirection::VERTICAL },
                                                         MaxSize { {}, 300_dp },
                                                         Expanding{}, }) with_style { Expanding{} },
 
@@ -387,7 +389,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 _new<AllViewsWindow>()->show();
             })
         },
-        _new<ASpacer>(),
+        _new<ASpacerExpanding>(),
         _new<ASpinner>(),
         _new<ACheckBox>("Enabled") let {
             it->setChecked();

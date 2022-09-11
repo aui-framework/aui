@@ -83,8 +83,8 @@ void AComboBox::render() {
     }
 }
 
-int AComboBox::getContentMinimumWidth() {
-    return AAbstractLabel::getContentMinimumWidth() + 20;
+int AComboBox::getContentMinimumWidth(ALayoutDirection layout) {
+    return AAbstractLabel::getContentMinimumWidth(ALayoutDirection::NONE) + 20;
 }
 
 void AComboBox::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
@@ -100,7 +100,7 @@ void AComboBox::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
         auto comboBoxPos = getPositionInWindow();
         unsigned usedPositionIndex;
         auto comboWindow = parentWindow->createOverlappingSurface(
-                [&](unsigned attempt) -> std::optional<glm::ivec2> {
+                [&](unsigned attempt) -> AOptional<glm::ivec2> {
                     usedPositionIndex = attempt;
                     switch (attempt) {
                         case 0: return comboBoxPos + glm::ivec2(0, getHeight()); // below

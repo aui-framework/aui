@@ -1109,7 +1109,7 @@ AString AString::excessSpacesRemoved() const noexcept {
 }
 
 template<typename T>
-std::optional<T> AString::toNumberImpl() const noexcept {
+AOptional<T> AString::toNumberImpl() const noexcept {
     if (empty()) return std::nullopt;
     T value = 0;
     T prevValue = 0;
@@ -1188,18 +1188,18 @@ std::optional<T> AString::toNumberImpl() const noexcept {
     return negative ? -value : value;
 }
 
-std::optional<int> AString::toInt() const noexcept {
+AOptional<int> AString::toInt() const noexcept {
     return toNumberImpl<int>();
 }
 
-std::optional<unsigned> AString::toUInt() const noexcept {
+AOptional<unsigned> AString::toUInt() const noexcept {
     return toNumberImpl<unsigned>();
 }
 
-std::optional<double> AString::toDouble() const noexcept {
+AOptional<double> AString::toDouble() const noexcept {
     return toNumberImpl<double>();
 }
 
-std::optional<float> AString::toFloat() const noexcept {
+AOptional<float> AString::toFloat() const noexcept {
     return toNumberImpl<float>();
 }

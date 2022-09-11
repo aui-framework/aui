@@ -106,7 +106,7 @@ public:
     AAbstractTypeableView();
     virtual ~AAbstractTypeableView();
 
-    int getContentMinimumHeight() override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
 
     void onKeyDown(AInput::Key key) override;
     void onKeyRepeat(AInput::Key key) override;

@@ -25,7 +25,7 @@
 
 #pragma once
 
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Util/ALayoutDirection.h>
 #include "IDeclaration.h"
 
 namespace ass {
@@ -37,9 +37,9 @@ namespace ass {
         bool null = false;
         AColor topLeftColor;
         AColor bottomRightColor;
-        LayoutDirection direction;
+        ALayoutDirection direction;
 
-        BackgroundGradient(const AColor& topLeftColor, const AColor& bottomRightColor, LayoutDirection direction)
+        BackgroundGradient(const AColor& topLeftColor, const AColor& bottomRightColor, ALayoutDirection direction)
                 : topLeftColor(topLeftColor), bottomRightColor(bottomRightColor), direction(direction) {}
 
         BackgroundGradient(std::nullptr_t): null(true) {}

@@ -19,6 +19,23 @@ public:
     explicit AByteBufferView(const std::string& string) noexcept: mBuffer(string.data()), mSize(string.size()) {}
     explicit AByteBufferView(std::string_view string) noexcept: mBuffer(string.data()), mSize(string.size()) {}
 
+    /**
+     * @brief Gets value of specified type by byte index relative to the beginning of internal buffer.
+     * @tparam T data type
+     * @param byteIndex byte offset realtive to the beginning of internal buffer
+     * @return data
+     */
+    template <typename T>
+    const T& at(size_t byteIndex)
+    {
+        return *reinterpret_cast<const T*>(mBuffer + byteIndex);
+    }
+
+    [[nodiscard]]
+    AByteBufferView slice(std::size_t offset) const noexcept {
+        return slice(offset, size() - offset);
+    }
+
     [[nodiscard]]
     AByteBufferView slice(std::size_t offset, std::size_t size) const noexcept {
         assert(("out of bounds", offset + size <= mSize));

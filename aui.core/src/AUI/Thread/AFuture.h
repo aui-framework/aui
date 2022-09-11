@@ -105,8 +105,8 @@ namespace aui::impl::future {
             /**
              * When isVoid = true, bool is a flag whether "void value" supplied or not
              */
-            std::conditional_t<isVoid, bool, std::optional<Value>> value;
-            std::optional<AInvocationTargetException> exception;
+            std::conditional_t<isVoid, bool, AOptional<Value>> value;
+            AOptional<AInvocationTargetException> exception;
             AMutex mutex;
             AConditionVariable cv;
             TaskCallback task;
@@ -162,7 +162,7 @@ namespace aui::impl::future {
             void wait(const _weak<CancellationWrapper<Inner>>& innerWeak, AFutureWait flags = AFutureWait::DEFAULT) noexcept {
                 std::unique_lock lock(mutex);
                 try {
-                    if ((thread || !cancelled) && !hasResult() && int(flags) & 0b1 && task) {
+                    if ((thread || !cancelled) && !hasResult() && int(flags) & int(AFutureWait::DEFAULT) && task) {
                         // task is not have picked up by the threadpool; execute it here
                         lock.unlock();
                         if (tryExecute(innerWeak)) {
@@ -315,7 +315,7 @@ namespace aui::impl::future {
             if constexpr(isVoid) {
                 if ((*mInner)->onSuccess) {
                     (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
-                                            callback = std::forward<Callback>(callback)]() {
+                            callback = std::forward<Callback>(callback)]() {
                         prev();
                         callback();
                     };
@@ -510,7 +510,7 @@ public:
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
 
-    void supplyResult(T v) noexcept {
+    void supplyResult(T v) const noexcept {
         auto& inner = (*super::mInner);
         assert(("task is already provided", inner->task == nullptr));
 
@@ -555,7 +555,7 @@ public:
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
 
-    void supplyResult() noexcept {
+    void supplyResult() const noexcept {
         auto& inner = (*super::mInner);
         assert(("task is already provided", inner->task == nullptr));
 
@@ -575,12 +575,26 @@ public:
         return super::mInner == r.mInner;
     }
 
+    /**
+     * @brief Add onSuccess callback to the future.
+     * @details
+     * The callback will be called on the worker's thread when the async task is returned a result.
+     *
+     * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
+     */
     template<typename Callback>
     AFuture& onSuccess(Callback&& callback) noexcept {
         super::onSuccess(std::forward<Callback>(callback));
         return *this;
     }
 
+    /**
+     * @brief Add onSuccess callback to the future.
+     * @details
+     * The callback will be called on the worker's thread when the async task is returned a result.
+     *
+     * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
+     */
     template<typename Callback>
     AFuture& onError(Callback&& callback) noexcept {
         super::onError(std::forward<Callback>(callback));

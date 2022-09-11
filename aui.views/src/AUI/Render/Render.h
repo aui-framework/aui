@@ -37,9 +37,7 @@ public:
     using PrerenderedString = _<IRenderer::IPrerenderedString>;
     using Texture = _<ITexture>;
 
-    static void setRenderer(_unique<IRenderer> renderer) {
-        ourRenderer = std::move(renderer);
-    }
+    static void setRenderer(_unique<IRenderer> renderer);
 
     static const _unique<IRenderer>& getRenderer() {
         return ourRenderer;

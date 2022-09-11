@@ -156,7 +156,7 @@ public:
                     return 1;
                 }
             };
-            std::optional<LazyStreamBuf> mStreamBuf;
+            AOptional<LazyStreamBuf> mStreamBuf;
 
             Buffer mBuffer;
 

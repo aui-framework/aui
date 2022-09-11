@@ -26,6 +26,7 @@
 #include "AUI/Core.h"
 #include <AUI/Common/ASet.h>
 #include <optional>
+#include <AUI/Common/AOptional.h>
 
 class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
@@ -292,7 +293,7 @@ public:
      * If conversion to int is not possible, nullopt is returned.
      */
     [[nodiscard]]
-    std::optional<float> toFloat() const noexcept;
+    AOptional<float> toFloat() const noexcept;
 
     /**
      * @brief Converts the string to a double number.
@@ -301,7 +302,7 @@ public:
      * If conversion to int is not possible, nullopt is returned.
      */
     [[nodiscard]]
-    std::optional<double> toDouble() const noexcept;
+    AOptional<double> toDouble() const noexcept;
 
     /**
      * @brief Converts the string to int value.
@@ -311,7 +312,7 @@ public:
      * If conversion to int is not possible, nullopt is returned.
      */
     [[nodiscard]]
-    std::optional<int> toInt() const noexcept;
+    AOptional<int> toInt() const noexcept;
 
     /**
      * @brief Converts the string to int value.
@@ -321,7 +322,7 @@ public:
      * If conversion to int is not possible, nullopt is returned.
      */
     [[nodiscard]]
-    std::optional<unsigned> toUInt() const noexcept;
+    AOptional<unsigned> toUInt() const noexcept;
 
     /**
      * @brief Converts the string to boolean value.
@@ -607,7 +608,7 @@ private:
      * @brief Converts the string to integer values. Used in AString::toInt, AString::toUInt, etc.
      */
     template<typename T>
-    std::optional<T> toNumberImpl() const noexcept;
+    AOptional<T> toNumberImpl() const noexcept;
 };
 
 inline AString operator+(const AString& l, const AString& r) noexcept

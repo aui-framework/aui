@@ -72,9 +72,9 @@ void AViewProfiler::displayBoundsOn(const AView& v) {
         fs.size = 9_pt;
 
         auto s = Render::prerenderString({ x + 2_dp, y + 1_dp },
-                                         v.getCssNames().empty()
+                                         v.getAssNames().empty()
                                          ? typeid(v).name()
-                                         : v.getCssNames().back() + "\n"_as + AString::number(v.getSize().x) + "x"_as + AString::number(v.getSize().y), fs);
+                                         : *v.getAssNames().begin() + "\n"_as + AString::number(v.getSize().x) + "x"_as + AString::number(v.getSize().y), fs);
 
         {
             Render::rect(ASolidBrush{0x00000070u},

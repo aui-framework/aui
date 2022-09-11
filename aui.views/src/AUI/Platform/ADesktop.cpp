@@ -67,6 +67,17 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
 
         assert(SUCCEEDED(hr));
 
+
+        ARaiiHelper d = [&] {
+            nullsafe(parent)->getThread()->enqueue([parent, pFileOpen] {
+                parent->blockUserInput(false);
+
+                pFileOpen->Release();
+                CoUninitialize();
+                OleUninitialize();
+            });
+        };
+
         pFileOpen->SetOptions(FOS_PICKFOLDERS);
         {
             IShellItem* psiFolder = nullptr;
@@ -112,14 +123,6 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
             }
         }
 
-        nullsafe(parent)->getThread()->enqueue([parent, pFileOpen] {
-            parent->blockUserInput(false);
-
-            pFileOpen->Release();
-            CoUninitialize();
-            OleUninitialize();
-        });
-
         return result;
     };
 }
@@ -136,6 +139,17 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
         // Create the FileOpenDialog object.
         hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
                               IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+
+
+        ARaiiHelper d = [&] {
+            nullsafe(parent)->getThread()->enqueue([parent, pFileOpen] {
+                parent->blockUserInput(false);
+
+                pFileOpen->Release();
+                CoUninitialize();
+                OleUninitialize();
+            });
+        };
 
         assert(SUCCEEDED(hr));
         AVector<COMDLG_FILTERSPEC> filter;
@@ -196,13 +210,6 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
             }
         }
 
-        nullsafe(parent)->getThread()->enqueue([parent, pFileOpen] {
-            parent->blockUserInput(false);
-
-            pFileOpen->Release();
-            CoUninitialize();
-            OleUninitialize();
-        });
 
         return result;
     };
@@ -268,7 +275,6 @@ void ADesktop::openUrl(const AString &url) {
 
 #else
 
-#include <gtk/gtk.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysymdef.h>
@@ -279,6 +285,8 @@ void ADesktop::openUrl(const AString &url) {
 #include "AWindow.h"
 #include "CommonRenderingContext.h"
 #include "AWindow.h"
+#undef signals
+#include <gtk/gtk.h>
 
 void aui_gtk_init() {
     do_once {

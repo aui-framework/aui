@@ -58,7 +58,7 @@ public:
 
     void selectItem(size_t i);
 
-    int getContentMinimumHeight() override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
     int getContentFullHeight() {
         return getLayout()->getMinimumHeight() + 8;
     }

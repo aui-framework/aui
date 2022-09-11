@@ -19,7 +19,7 @@ struct ViewAssertionSize {
 
 template<int I>
 struct ViewAssertionSizeSame {
-    std::optional<int> value;
+    AOptional<int> value;
 
     bool operator()(const _<AView>& v) {
         if (!value) {
@@ -32,7 +32,7 @@ struct ViewAssertionSizeSame {
 
 template<int I>
 struct ViewAssertionSizeIsMinimal {
-    std::optional<int> value;
+    AOptional<int> value;
 
     bool operator()(const _<AView>& v) {
         return v->getSize()[I] == v->getMinimumSize()[I];

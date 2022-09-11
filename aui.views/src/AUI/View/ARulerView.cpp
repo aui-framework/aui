@@ -28,13 +28,13 @@
 #include <AUI/Platform/AWindow.h>
 #include <glm/gtc/matrix_transform.hpp>
 
-ARulerView::ARulerView(LayoutDirection layoutDirection) : mLayoutDirection(layoutDirection) {
+ARulerView::ARulerView(ALayoutDirection layoutDirection) : mLayoutDirection(layoutDirection) {
 
     switch (mLayoutDirection) {
-        case LayoutDirection::VERTICAL:
+        case ALayoutDirection::VERTICAL:
             setExpanding({0, 2});
             break;
-        case LayoutDirection::HORIZONTAL:
+        case ALayoutDirection::HORIZONTAL:
             setExpanding({2, 0});
     }
 }
@@ -42,7 +42,7 @@ ARulerView::ARulerView(LayoutDirection layoutDirection) : mLayoutDirection(layou
 void ARulerView::render() {
     AView::render();
 
-    if (mLayoutDirection == LayoutDirection::VERTICAL) {
+    if (mLayoutDirection == ALayoutDirection::VERTICAL) {
         Render::setTransform(glm::translate(
                     glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3{0, 0, 1.f}),
                     glm::vec3{0, -getWidth(), 0}));
@@ -102,18 +102,18 @@ void ARulerView::render() {
 
 int ARulerView::getLongestSide() const {
     switch (mLayoutDirection) {
-        case LayoutDirection::VERTICAL:
+        case ALayoutDirection::VERTICAL:
             return getHeight();
-        case LayoutDirection::HORIZONTAL:
+        case ALayoutDirection::HORIZONTAL:
             return getWidth();
     }
     return -1;
 }
 int ARulerView::getShortestSide() const {
     switch (mLayoutDirection) {
-        case LayoutDirection::VERTICAL:
+        case ALayoutDirection::VERTICAL:
             return getWidth();
-        case LayoutDirection::HORIZONTAL:
+        case ALayoutDirection::HORIZONTAL:
             return getHeight();
     }
     return -1;

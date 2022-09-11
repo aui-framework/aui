@@ -77,8 +77,8 @@ public:
     void onDpiChanged() override;
 
 
-    int getContentMinimumWidth() override;
-	int getContentMinimumHeight() override;
+    int getContentMinimumWidth(ALayoutDirection layout) override;
+	int getContentMinimumHeight(ALayoutDirection layout) override;
 	
 	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 	void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
@@ -155,7 +155,7 @@ protected:
     }
 
     void invalidateAllStyles() override;
-
+    void invalidateAssHelper() override;
 
     /**
      * @brief Updates layout of the parent AViewContainer if size of this AViewContainer was changed.

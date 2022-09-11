@@ -37,12 +37,13 @@
 #include "AUI/Reflect/AClass.h"
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Util/AWatchable.h"
-#include "AUI/Util/IShadingEffect.h"
+#include "AUI/Util/IBackgroundEffect.h"
 #include <AUI/ASS/RuleWithoutSelector.h>
-#include <AUI/Enum/Overflow.h>
+#include <AUI/Enum/AOverflow.h>
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Enum/MouseCollisionPolicy.h>
 #include <AUI/Event/AGestureEvent.h>
+#include <AUI/Util/ALayoutDirection.h>
 
 
 class Render;
@@ -85,7 +86,12 @@ private:
     /**
      * @brief Determines whether display graphics that go out of the bounds of this AView or not.
      */
-    Overflow mOverflow = Overflow::VISIBLE;
+    AOverflow mOverflow = AOverflow::VISIBLE;
+
+    /**
+     * @brief Controls how does the overflow (stencil) mask is produced.
+     */
+    AOverflowMask mOverflowMask = AOverflowMask::ROUNDED_RECT;
 
     /**
      * @see Visibility
@@ -96,11 +102,6 @@ private:
      * @brief Helper middleware object for handling ASS state updates (hover, active, etc...)
      */
     _<AAssHelper> mAssHelper;
-
-    /**
-     * @brief Background effects (custom rendered backgrounds)
-     */
-    ADeque<_<IShadingEffect>> mBackgroundEffects;
 
     /**
      * @brief border-radius, specified in ASS.
@@ -140,6 +141,14 @@ private:
      * @param enabled
      */
     virtual void notifyParentEnabledStateChanged(bool enabled);
+
+
+    /**
+     * @brief Returns parent layout direction. If there's no parent, or parent does not have layout,
+     *        ALayoutDirection::NONE returned.
+     */
+    [[nodiscard]]
+    ALayoutDirection parentLayoutDirection() const noexcept;
 
 protected:
     /**
@@ -207,7 +216,7 @@ protected:
     /**
      * @brief ASS class names.
      */
-    ADeque<AString> mAssNames;
+    ASet<AString> mAssNames;
 
     /**
      * @brief Invalidates all styles, causing to iterate over all rules in global and parent stylesheets.
@@ -237,6 +246,12 @@ protected:
      * </ul>
      */
     void invalidateStateStyles();
+
+
+    /**
+     * @brief Resets mAssHelper.
+     */
+    virtual void invalidateAssHelper();
 
 
     void requestLayoutUpdate();
@@ -284,7 +299,7 @@ public:
     void popStencilIfNeeded();
 
     [[nodiscard]]
-    const ADeque<AString>& getAssNames() const {
+    const ASet<AString>& getAssNames() const noexcept {
         return mAssNames;
     }
 
@@ -335,15 +350,35 @@ public:
     }
 
     /**
+     * @see mExtraStylesheet
+     */
+    [[nodiscard]]
+    const _<AStylesheet>& extraStylesheet() const noexcept {
+        return mExtraStylesheet;
+    }
+
+    /**
      * @brief Determines whether display graphics that go out of the bounds of this AView or not.
      */
-    Overflow getOverflow() const
+    AOverflow getOverflow() const
     {
         return mOverflow;
     }
-    void setOverflow(Overflow overflow)
+    void setOverflow(AOverflow overflow)
     {
         mOverflow = overflow;
+    }
+
+    /**
+     * @brief Controls how does the overflow (stencil) mask is produced.
+     */
+    AOverflowMask getOverflowMask() const
+    {
+        return mOverflowMask;
+    }
+    void setOverflowMask(AOverflowMask overflow)
+    {
+        mOverflowMask = overflow;
     }
 
     /**
@@ -463,19 +498,19 @@ public:
     /**
      * @return minimal content-area width.
      */
-    virtual int getContentMinimumWidth();
+    virtual int getContentMinimumWidth(ALayoutDirection layout);
 
 
     /**
      * @return minimal content-area height.
      */
-    virtual int getContentMinimumHeight();
+    virtual int getContentMinimumHeight(ALayoutDirection layout);
 
     bool hasFocus() const;
 
 
-    virtual int getMinimumWidth();
-    virtual int getMinimumHeight();
+    virtual int getMinimumWidth(ALayoutDirection layout = ALayoutDirection::NONE);
+    virtual int getMinimumHeight(ALayoutDirection layout = ALayoutDirection::NONE);
 
     glm::ivec2 getMinimumSize() {
         return {getMinimumWidth(), getMinimumHeight()};
@@ -642,8 +677,6 @@ public:
      * @return Coords of this AView relative to window
      */
     [[nodiscard]] glm::ivec2 getPositionInWindow() const;
-
-    const ADeque<AString>& getCssNames() const;
 
     /**
      * @brief Adds an ASS class to this AView.

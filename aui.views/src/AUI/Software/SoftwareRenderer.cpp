@@ -34,8 +34,8 @@ struct BrushHelper {
             // slower method
             auto rawPixelPos = glm::vec2{x, y};
             auto surfaceUvCoords = (rawPixelPos - position) / (end - position);
-            auto uv1 = brush.uv1.value_or(glm::ivec2{0, 0});
-            auto uv2 = brush.uv2.value_or(glm::ivec2{0, 0});
+            auto uv1 = brush.uv1.valueOr(glm::ivec2{0, 0});
+            auto uv2 = brush.uv2.valueOr(glm::ivec2{0, 0});
             auto uv = glm::vec2{ glm::mix(uv1.x, uv2.x, surfaceUvCoords.x), glm::mix(uv1.y, uv2.y, surfaceUvCoords.y) };
             auto& image = textureHelper->texture->getImage();
             auto imagePixelCoords = glm::ivec2{glm::vec2(image->getSize()) * uv};
@@ -63,7 +63,7 @@ private:
         bool slowMethod;
         SoftwareTexture* texture;
     };
-    std::optional<TextureHelper> textureHelper;
+    AOptional<TextureHelper> textureHelper;
 
     [[nodiscard]]
     glm::vec2 calculateUv() const noexcept {

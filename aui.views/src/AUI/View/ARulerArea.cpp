@@ -31,11 +31,11 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
             Vertical {
                 _container<AAdvancedGridLayout>({
                     _new<ALabel>("dp") << ".arulerarea-unit",
-                    mHorizontalRuler = _new<ARulerView>(LayoutDirection::HORIZONTAL),
-                    mVerticalRuler = _new<ARulerView>(LayoutDirection::VERTICAL),
-                    wrapper with_style { Overflow::HIDDEN },
+                    mHorizontalRuler = _new<ARulerView>(ALayoutDirection::HORIZONTAL),
+                    mVerticalRuler = _new<ARulerView>(ALayoutDirection::VERTICAL),
+                    wrapper with_style {AOverflow::HIDDEN },
                 }, 2, 2) with_style { Expanding { 2, 2 } },
-                _new<AScrollbar>(LayoutDirection::HORIZONTAL),
+                _new<AScrollbar>(ALayoutDirection::HORIZONTAL),
 
             } with_style { Expanding { 2, 2 } },
             _new<AScrollbar>(),
@@ -45,12 +45,14 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
     setExpanding({10, 10});
 
 
-    mWrappedView->setSize(mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight());
+    mWrappedView->setSize(mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight(
+            ALayoutDirection::NONE));
 }
 
 void ARulerArea::setSize(int width, int height) {
     AViewContainer::setSize(width, height);
-    mWrappedView->setSize(mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight());
+    mWrappedView->setSize(mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight(
+            ALayoutDirection::NONE));
     updatePosition();
 }
 

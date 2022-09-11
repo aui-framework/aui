@@ -51,7 +51,9 @@ include(aui.boot.cmake)
 cmake_policy(SET CMP0091 NEW)
 include(cmake/aui.build.cmake)
 
+
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
+auib_mark_var_forwardable(AUI_BUILD_EXAMPLES)
 
 function(define_aui_component AUI_COMPONENT_NAME)
     if (AUIB_COMPONENTS)
@@ -63,6 +65,7 @@ function(define_aui_component AUI_COMPONENT_NAME)
     add_subdirectory("aui.${AUI_COMPONENT_NAME}")
 endfunction()
 
+auib_import(ZLIB https://github.com/aui-framework/zlib)
 
 define_aui_component(core)
 if (NOT ANDROID AND NOT IOS)
@@ -187,16 +190,14 @@ endif()
 
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 #install(EXPORT AUI DESTINATION cmake/)
-install(
-        FILES
+install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
         DESTINATION ".")
 
-file(GLOB_RECURSE _cmake_dir cmake/*)
+install(DIRECTORY cmake/
+        DESTINATION cmake)
 
-install(
-        FILES
-        ${_cmake_dir}
-        DESTINATION "cmake/")
+install(DIRECTORY platform/
+        DESTINATION platform)
 
 auib_precompiled_binary()

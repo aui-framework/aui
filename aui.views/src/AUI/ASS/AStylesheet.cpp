@@ -143,7 +143,7 @@ AStylesheet::AStylesheet() {
             FontRendering::ANTIALIASING,
             BackgroundGradient {getOsThemeColor().lighter(0.15f),
                                 getOsThemeColor().darker(0.15f),
-                                LayoutDirection::VERTICAL },
+                                ALayoutDirection::VERTICAL },
             BoxShadow { 0, 1_dp, 3_dp, -1_dp, getOsThemeColor() },
             Border { nullptr },
             TextColor { 0xffffff_rgb },
@@ -161,7 +161,7 @@ AStylesheet::AStylesheet() {
             { button::Default(t<AButton>::hover()), c::hover(".btn_default")},
             BackgroundGradient {getOsThemeColor().lighter(0.2f),
                                 getOsThemeColor().darker(0.15f),
-                                LayoutDirection::VERTICAL },
+                                ALayoutDirection::VERTICAL },
         },
         {
             { button::Default(t<AButton>::active()), c::active(".btn_default")},
@@ -183,13 +183,13 @@ AStylesheet::AStylesheet() {
         },
         {
             class_of(".input-field"),
-            TextColor { 0_rgb },
-            BackgroundSolid { 0xffffff_rgb },
+                TextColor { 0_rgb },
+                BackgroundSolid { 0xffffff_rgb },
             Border { 1_dp, 0xa0a0a0_rgb },
-            BorderRadius { 4_dp },
-            Margin { 2_dp, 4_dp },
+                BorderRadius { 4_dp },
+                Margin { 2_dp, 4_dp },
             MinSize { 100_dp, 17_dp },
-            Overflow::HIDDEN
+                AOverflow::HIDDEN
         },
         {
             class_of::hover(".input-field"),
@@ -209,9 +209,9 @@ AStylesheet::AStylesheet() {
 
         // ANumberPicker
         {
-            t<ANumberPicker>(),
+            c(".number-picker"),
             MinSize { 60_dp, {} },
-            Overflow::HIDDEN,
+            AOverflow::HIDDEN,
         },
         {
             class_of(".up-down-wrapper"),
@@ -221,7 +221,7 @@ AStylesheet::AStylesheet() {
             //BackgroundSolid { 0xf0f0f0_rgb }
         },
         {
-            t<ANumberPicker>() >> t<AButton>(),
+            c(".number-picker") >> t<AButton>(),
             Padding { 3_dp, 0 },
             FixedSize { 19_dp, 10_dp },
             MinSize { {}, 3_dp },
@@ -232,11 +232,11 @@ AStylesheet::AStylesheet() {
             BackgroundImage {{}, getOsThemeColor().readableBlackOrWhite().opacify(0.7f), {}, Sizing::FIT_PADDING },
         },
         {
-            t<ANumberPicker>() >> c(".up"),
+            c(".number-picker") >> c(".up"),
             BackgroundImage { ":uni/svg/up.svg", {} },
         },
         {
-            t<ANumberPicker>() >> c(".down"),
+            c(".number-picker") >> c(".down"),
             BackgroundImage { ":uni/svg/down.svg", {} },
         },
 
@@ -286,11 +286,11 @@ AStylesheet::AStylesheet() {
         // ARulerView
         {
             t<ARulerView>(),
-            MinSize { 16_dp },
-            BackgroundSolid { 0x20000000_argb },
+                MinSize { 16_dp },
+                BackgroundSolid { 0x20000000_argb },
             TextColor { 0x40000000_argb },
-            Overflow::HIDDEN,
-            FontSize { 8_pt },
+                AOverflow::HIDDEN,
+                FontSize { 8_pt },
         },
         {
             c(".arulerarea-content"),
@@ -359,13 +359,13 @@ AStylesheet::AStylesheet() {
         // AListView
         {
             {t<AListView>(), t<ATreeView>()},
-            BackgroundSolid { 0xffffff_rgb },
-            Border { 1_dp, 0x828790_rgb },
+                BackgroundSolid { 0xffffff_rgb },
+                Border { 1_dp, 0x828790_rgb },
             Padding { 2_dp },
-            Margin {2_dp, 4_dp},
-            Expanding { 0, 1 },
+                Margin {2_dp, 4_dp},
+                Expanding { 0, 1 },
             MinSize { 120_dp, 80_dp },
-            Overflow::HIDDEN,
+                AOverflow::HIDDEN,
         },
         {
             t<ATreeView>() > t<AViewContainer>() > c(".list-item") > t<AAbstractLabel>(),
@@ -489,7 +489,7 @@ AStylesheet::AStylesheet() {
         // scroll area
         {
             c(".scrollarea_inner"),
-            Overflow::HIDDEN
+                AOverflow::HIDDEN
         },
         // scrollbar
         {
@@ -630,11 +630,11 @@ AStylesheet::AStylesheet() {
         },
         {
             c(".agroupbox-inner"),
-            Border { 2_dp, 0x30808080_argb },
-            BorderRadius { 4_dp },
+                Border { 2_dp, 0x30808080_argb },
+                BorderRadius { 4_dp },
             Padding { 8_dp, 6_dp },
-            Margin { 0, 4_dp},
-            Overflow::HIDDEN,
+                Margin { 0, 4_dp},
+                AOverflow::HIDDEN,
         },
     });
 }

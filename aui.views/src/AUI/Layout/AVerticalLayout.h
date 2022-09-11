@@ -22,7 +22,7 @@
 #pragma once
 
 #include "ALayout.h"
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Util/ALayoutDirection.h>
 
 /**
  * @brief Places views in a column.
@@ -54,7 +54,7 @@ private:
 
 public:
     // for template<> logic
-    static constexpr LayoutDirection DIRECTION = LayoutDirection::VERTICAL;
+    static constexpr ALayoutDirection DIRECTION = ALayoutDirection::VERTICAL;
 
 	AVerticalLayout()
 	{
@@ -70,4 +70,6 @@ public:
 
 
 	void setSpacing(int spacing) override;
+
+    ALayoutDirection getLayoutDirection() override;
 };

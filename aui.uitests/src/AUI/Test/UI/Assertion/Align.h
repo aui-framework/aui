@@ -35,7 +35,7 @@ namespace uitest::impl {
 
     template<ASide side>
     struct align {
-        std::optional<int> value;
+        AOptional<int> value;
 
         bool operator()(const _<AView>& v) {
             int current = side_value<side>{}(v);

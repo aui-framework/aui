@@ -68,7 +68,7 @@ public:
     };
 
     struct FontData {
-        AVector<std::optional<Character>> characters;
+        AVector<AOptional<Character>> characters;
         void* rendererData = nullptr;
     };
 

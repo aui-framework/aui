@@ -71,7 +71,7 @@ public:
         return mIndex;
     }
 
-    int getContentMinimumHeight() override {
+    int getContentMinimumHeight(ALayoutDirection layout) override {
         return 40;
     }
 };
@@ -122,7 +122,7 @@ public:
 
 
 
-int AListView::getContentMinimumHeight()
+int AListView::getContentMinimumHeight(ALayoutDirection layout)
 {
 	return 40;
 }
@@ -163,7 +163,8 @@ void AListView::setSize(int width, int height) {
 
 void AListView::updateScrollbarDimensions() {
     if (!mScrollbar) return;
-    mScrollbar->setScrollDimensions(getHeight(), mContent->AViewContainer::getContentMinimumHeight());
+    mScrollbar->setScrollDimensions(getHeight(), mContent->AViewContainer::getContentMinimumHeight(
+            ALayoutDirection::NONE));
 }
 
 void AListView::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {

@@ -42,3 +42,11 @@ This behaviour can be set for the particular dependency by `AUIB_${AUI_MODULE_NA
 ## AUIB_SKIP_REPOSITORY_WAIT
 
 Disables "Waiting for repository" lock.
+
+## AUIB_NO_PRECOMPILED
+
+Disables precompiled binaries.
+
+## AUI_BUILD_FOR
+
+Specifies target platform for cross-compilation (see [cross-compiling](md)).

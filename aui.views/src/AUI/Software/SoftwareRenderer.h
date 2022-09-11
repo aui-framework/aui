@@ -27,7 +27,7 @@ public:
      * @param blending blending. Optional. Cheaper. When set, the one set by the <code>setBlending</code> function is
      *        ignored.
      */
-    inline void putPixel(const glm::ivec2& position, const AColor& color, std::optional<Blending> blending = std::nullopt) noexcept {
+    inline void putPixel(const glm::ivec2& position, const AColor& color, AOptional<Blending> blending = std::nullopt) noexcept {
         assert(("context is null" && mContext != nullptr));
         auto actualBlending = blending ? *blending : mBlending;
         glm::uvec2 uposition(position);

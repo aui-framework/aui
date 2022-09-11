@@ -72,11 +72,11 @@ TEST(Json, StringEscape)
     auto s = AJson::toString(root);
 
     // check for whole composition
-    ASSERT_EQ(s, "{\"user\":\"u\\\"\"}");
+    EXPECT_EQ(s, "{\"user\":\"u\\\"\"}");
 
     // check for string itself
     auto deserialized = AJson::fromString(s);
-    ASSERT_EQ(deserialized["user"].asString(), "u\"");
+    EXPECT_EQ(deserialized["user"].asString(), "u\"");
 }
 
 TEST(Json, BraceInitialization)
@@ -115,6 +115,14 @@ TEST(Json, SerializationDeserialization)
     // arrange data
     const char* str = R"({"a":null,"b":[1,2,3],"c":false,"d":true,"e":{"v":"123"}})";
     ASSERT_EQ(AJson::toString(AJson::fromString(str)), str);
+}
+
+
+TEST(Json, NegativeNumber)
+{
+    auto v = AJson::fromString(R"({"code":-2010,"msg":"error"})");
+    EXPECT_EQ(v["code"].asNumber(), -2010);
+    EXPECT_EQ(v["msg"].asString(), "error");
 }
 
 

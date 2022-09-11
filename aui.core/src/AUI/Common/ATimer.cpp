@@ -41,6 +41,7 @@ void ATimer::start()
 {
 	mThread = _new<AThread>([&]()
 	{
+        AThread::setName("Timer thread");
 		for (;;) {
 			try {
 				AThread::sleep(mMsPeriod);

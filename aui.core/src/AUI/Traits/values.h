@@ -27,6 +27,7 @@
 #include <functional>
 #include <optional>
 #include <AUI/Common/SharedPtrTypes.h>
+#include <AUI/Common/AOptional.h>
 #include <AUI/Thread/AMutex.h>
 
 namespace aui {
@@ -161,7 +162,7 @@ namespace aui {
     template<typename T = void>
     struct lazy {
     private:
-        mutable std::optional<T> value;
+        mutable AOptional<T> value;
         std::function<T()> initializer;
     public:
         template<typename Factory, std::enable_if_t<std::is_invocable_r_v<T, Factory>, bool> = true>
@@ -273,7 +274,7 @@ namespace aui {
     struct atomic_lazy {
     private:
         mutable AMutex sync;
-        mutable std::optional<T> value;
+        mutable AOptional<T> value;
         std::function<T()> initializer;
     public:
         template<typename Factory, std::enable_if_t<std::is_invocable_r_v<T, Factory>, bool> = true>

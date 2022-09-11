@@ -33,7 +33,7 @@
 TEST(Pimpl, Test1) {
 
     struct MyClass;
-    std::optional<aui::fast_pimpl<MyClass, 8>> pimpl;
+    AOptional<aui::fast_pimpl<MyClass, 8>> pimpl;
 
     struct MyClass {
         int field = 2;
@@ -47,7 +47,7 @@ TEST(Pimpl, DestructorTest) {
     thread_local bool destructorCalled = false;
 
     struct MyClass;
-    std::optional<aui::fast_pimpl<MyClass, 8>> pimpl;
+    AOptional<aui::fast_pimpl<MyClass, 8>> pimpl;
 
     struct MyClass {
         int field = 2;

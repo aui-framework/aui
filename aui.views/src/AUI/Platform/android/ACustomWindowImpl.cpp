@@ -48,7 +48,7 @@ bool ACustomWindow::isCaptionAt(const glm::ivec2& pos) {
     if (pos.y <= AUI_TITLE_HEIGHT) {
         if (auto v = getViewAtRecursive(pos)) {
             if (!(_cast<AButton>(v)) &&
-                !v->getCssNames().contains(".override-title-dragging")) {
+                !v->getAssNames().contains(".override-title-dragging")) {
                 return true;
             }
         }

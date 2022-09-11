@@ -51,10 +51,10 @@ TEST(Strings, ToUInt) {
 TEST(Strings, ToFloat) {
     constexpr float ABS_ERROR = 0.01;
 
-    EXPECT_NEAR("123"_as.toFloat().value_or(0), 123, ABS_ERROR);
-    EXPECT_NEAR("123.456"_as.toFloat().value_or(0), 123.456, ABS_ERROR);
-    EXPECT_NEAR("-123.456"_as.toFloat().value_or(0), -123.456, ABS_ERROR);
-    EXPECT_NEAR("-0.0"_as.toFloat().value_or(99999), 0, ABS_ERROR);
+    EXPECT_NEAR("123"_as.toFloat().valueOr(0), 123, ABS_ERROR);
+    EXPECT_NEAR("123.456"_as.toFloat().valueOr(0), 123.456, ABS_ERROR);
+    EXPECT_NEAR("-123.456"_as.toFloat().valueOr(0), -123.456, ABS_ERROR);
+    EXPECT_NEAR("-0.0"_as.toFloat().valueOr(99999), 0, ABS_ERROR);
     EXPECT_EQ("123abs"_as.toUInt(), std::nullopt);
     EXPECT_EQ("1a23"_as.toUInt(), std::nullopt);
     EXPECT_EQ("a123"_as.toUInt(), std::nullopt);

@@ -45,7 +45,7 @@ private:
     /**
      * Full text. Must be set to null if mLines changed.
      */
-    mutable std::optional<AString> mFullText;
+    mutable AOptional<AString> mFullText;
 
     int mScroll = 0;
 
@@ -375,7 +375,7 @@ ATextArea::ATextArea(const AString& text):
     mTextField->setText(text);
 }
 
-int ATextArea::getContentMinimumHeight() {
+int ATextArea::getContentMinimumHeight(ALayoutDirection layout) {
     return 80_dp;
 }
 

@@ -56,16 +56,6 @@ public:
     }
 
     /**
-     * Removes elements equal to <code>item</code>.
-     * @param item element to remove.
-     */
-    void removeAll(const KeyType& item) noexcept
-    {
-        aui::container::remove_all(*this, item);
-    }
-
-
-    /**
      * @return true if <code>c</code> container is a subset of this container, false otherwise.
      */
     template<typename OtherContainer>
@@ -86,13 +76,23 @@ public:
     }
 
     /**
-     * Shortcut to <code>push_back</code>.
+     * Shortcut to <code>insert</code>.
      * @param rhs value to push
      * @return self
      */
     inline self& operator<<(KeyType&& rhs) noexcept
     {
         p::insert(std::forward<KeyType>(rhs));
+        return *this;
+    }
+    /**
+     * Shortcut to <code>erase</code>.
+     * @param rhs value to push
+     * @return self
+     */
+    inline self& operator>>(const KeyType& rhs) noexcept
+    {
+        p::erase(rhs);
         return *this;
     }
 

@@ -185,7 +185,7 @@ public:
     APath getPathToExecutable() override;
 
     [[nodiscard]]
-    std::optional<int> exitCodeNonBlocking() const noexcept {
+    AOptional<int> exitCodeNonBlocking() const noexcept {
         if (mExitCode.hasValue()) {
             return *mExitCode;
         }

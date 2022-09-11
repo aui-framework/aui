@@ -64,7 +64,7 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
         to->addView(mContentContainer = _new<AViewContainer>());
         to->addView(_container<AVerticalLayout>({
                                                     caption,
-                                                    _new<ASpacer>(),
+                                                    _new<ASpacerExpanding>(),
                                             }) let { it->setExpanding({1, 1}); });
     } else {
         to->setLayout(_new<AVerticalLayout>());

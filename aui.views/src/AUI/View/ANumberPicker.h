@@ -57,10 +57,19 @@ private:
 public:
     ANumberPicker();
 
-    int getContentMinimumHeight() override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
 
     void setValue(int v);
     int getValue() const;
+
+    [[nodiscard]]
+    const AString& text() const noexcept {
+        return mTextField->text();
+    }
+
+    void increase();
+    void decrease();
+    void changeBy(int v);
 
 
     [[nodiscard]] int getMin() const

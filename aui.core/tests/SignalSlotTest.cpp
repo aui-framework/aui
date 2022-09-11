@@ -115,6 +115,90 @@ TEST_F(SignalSlot, ObjectRemoval) {
 }
 
 /**
+ * Checks for nested connection.
+ */
+TEST_F(SignalSlot, NestedConnection) {
+    slave = _new<Slave>();
+    AObject::connect(master->message, slave, [this, slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+        AObject::connect(master->message, slave, [slave] (const AString& msg) {
+            slave->acceptMessage(msg);
+        });
+    });
+
+    EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(3);
+    master->broadcastMessage("hello");
+    master->broadcastMessage("hello");
+}
+
+/**
+ * Checks for disconnect functionality.
+ */
+TEST_F(SignalSlot, ObjectDisconnect1) {
+    slave = _new<Slave>();
+    AObject::connect(master->message, slave, [slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+        AObject::disconnect();
+    });
+
+    EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(1);
+    master->broadcastMessage("hello");
+    master->broadcastMessage("hello");
+}
+
+/**
+ * Checks for disconnect functionality when one of the signals disconnected.
+ */
+TEST_F(SignalSlot, ObjectDisconnect2) {
+    slave = _new<Slave>();
+
+    bool called = false;
+    AObject::connect(master->message, slave, [&, slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+        called = true;
+    });
+
+    AObject::connect(master->message, slave, [slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+        AObject::disconnect();
+    });
+
+    EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(3);
+    master->broadcastMessage("hello");
+    called = false;
+    master->broadcastMessage("hello");
+    EXPECT_TRUE(called);
+}
+
+
+/**
+ * Checks for both disconnect and nested connect.
+ */
+TEST_F(SignalSlot, ObjectNestedConnectWithDisconnect) {
+    slave = _new<Slave>();
+
+    bool called1 = false;
+    bool called2 = false;
+
+    AObject::connect(master->message, slave, [&] (const AString& msg) {
+        AObject::disconnect();
+        EXPECT_FALSE(called1);
+        called1 = true;
+
+        AObject::connect(master->message, slave, [&] (const AString& msg) {
+            EXPECT_TRUE(called1);
+            EXPECT_FALSE(called2);
+            called2 = true;
+        });
+    });
+
+    master->broadcastMessage("hello");
+    master->broadcastMessage("hello");
+    EXPECT_TRUE(called1);
+    EXPECT_TRUE(called2);
+}
+
+/**
  * Destroys master in a signal handler
  */
 TEST_F(SignalSlot, ObjectDestroyMasterInSignalHandler) {

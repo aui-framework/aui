@@ -119,7 +119,7 @@ std::ostream& operator<<(std::ostream& o, AByteBufferView buffer)
     o << '[';
     for (auto c : buffer)
     {
-        sprintf(formatBuf, "%02x ", c);
+        sprintf(formatBuf, "%02x ", std::uint8_t(c));
         o << formatBuf;
     }
     o << ']';

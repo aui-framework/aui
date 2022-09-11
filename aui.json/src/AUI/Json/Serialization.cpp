@@ -101,10 +101,10 @@ static AJson read(ATokenizer& t) {
                 }
 
                 case '\"':
-                    return t.readStringUntilUnescaped('\"');
+                    return t.readStringUntilUnescaped('\"').replacedAll("\\\\", "\\");
             }
 
-            if (isdigit(uint8_t(t.getLastCharacter()))) {
+            if (isdigit(uint8_t(t.getLastCharacter())) || t.getLastCharacter() == '-') {
                 t.reverseByte();
                 return t.readInt();
             }
@@ -139,7 +139,7 @@ void ASerializable<AJson>::write(IOutputStream& os, const AJson& value) {
             os << (v ? "true" : "false");
         },
         [&](const AString& v) {
-            os << '"' << v.replacedAll("\"", "\\\"") << '"';
+            os << '"' << v.replacedAll("\\", "\\\\").replacedAll("\"", "\\\"") << '"';
         },
         [&](std::nullptr_t) {
             os << "null";

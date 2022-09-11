@@ -13,9 +13,12 @@ aui_app(
     [VENDOR <vendor-name>]
     [COPYRIGHT <copyright-string>]
     [VERSION <version>]
-
+        
     [NO_INCLUDE_CPACK]
 
+    # android only
+    [ANDROID_PACKAGE <android-app-package>]
+        
     # linux only
     [LINUX_DESKTOP <path-to-desktop-file>]
     
@@ -40,7 +43,7 @@ Specify main executable of the application which will be executed when your appl
 |Windows|+||
 |Linux|+||
 |macOS|+||
-|Android|+|does not matter|
+|Android|+||
 |iOS|+||
 
 ### NAME
@@ -108,6 +111,18 @@ Specify application version. If not set, the value of `PROJECT_VERSION` used ins
 ### NO_INCLUDE_CPACK
 
 By default `aui_app` includes CPack in order to allow to generate packages using CPack. You can disable this behaviour by specifying `NO_INCLUDE_CPACK` flag.
+
+### ANDROID_PACKAGE
+
+Android app package name.
+
+|Platform|Required|Traits|
+|--------|--------|------|
+|Windows|||
+|Linux|||
+|macOS|||
+|Android|+||
+|iOS|||
 
 ### LINUX_DESKTOP
 

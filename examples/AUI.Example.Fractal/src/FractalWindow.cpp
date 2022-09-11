@@ -60,9 +60,9 @@ FractalWindow::FractalWindow():
     addView(_container<AStackedLayout>({
         fractal,
         _container<AVerticalLayout>({
-            _new<ASpacer>(),
+            _new<ASpacerExpanding>(),
             _container<AHorizontalLayout>({
-                _new<ASpacer>(),
+                _new<ASpacerExpanding>(),
                 centerPosDisplay
             })
         }) let {

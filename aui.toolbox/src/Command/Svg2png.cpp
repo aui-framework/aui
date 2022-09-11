@@ -41,7 +41,7 @@ void Svg2png::run(Toolbox& t) {
                 switch (f[1]) {
                     case 'r': {
                         for (auto& resolution: value.split(',')) {
-                            resolutions << resolution.toInt().value_or(0);
+                            resolutions << resolution.toInt().valueOr(0);
                         }
                         break;
                     }

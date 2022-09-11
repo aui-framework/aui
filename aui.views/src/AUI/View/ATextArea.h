@@ -48,7 +48,7 @@ public:
     ATextArea();
     explicit ATextArea(const AString& text);
 
-    int getContentMinimumHeight() override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
 
     void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
 };

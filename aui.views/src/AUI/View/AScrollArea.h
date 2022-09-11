@@ -46,7 +46,7 @@ public:
     virtual ~AScrollArea();
 
     _<AViewContainer> getContentContainer() const;
-    int getContentMinimumHeight() override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
     void setSize(int width, int height) override;
     void setContents(const _<AViewContainer>& container);
 

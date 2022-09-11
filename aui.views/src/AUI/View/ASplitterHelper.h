@@ -1,27 +1,27 @@
 #pragma once
 
 
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Util/ALayoutDirection.h>
 #include <AUI/View/AView.h>
 
 class ASplitterHelper {
     friend class ASplitter;
 private:
-    LayoutDirection mDirection; // will be initialized in the Builder
+    ALayoutDirection mDirection; // will be initialized in the Builder
     size_t mDraggingDividerIndex = -1;
     int mDragOffset; // may be uninitialized
     AVector<_<AView>> mItems;
 
     float getTotalOccupiedSizeOf(const _<AView>& view) {
-        return mDirection == LayoutDirection::VERTICAL ? view->getTotalOccupiedHeight() : view->getTotalOccupiedWidth();
+        return mDirection == ALayoutDirection::VERTICAL ? view->getTotalOccupiedHeight() : view->getTotalOccupiedWidth();
     }
 
     template<typename T>
     [[nodiscard]]
     T& getAxisValue(glm::tvec2<T>& v) {
         switch (mDirection) {
-            case LayoutDirection::VERTICAL  : return v.y;
-            case LayoutDirection::HORIZONTAL: return v.x;
+            case ALayoutDirection::VERTICAL  : return v.y;
+            case ALayoutDirection::HORIZONTAL: return v.x;
         }
         throw;
     }
@@ -29,8 +29,8 @@ private:
     [[nodiscard]]
     T getAxisValue(const glm::tvec2<T>& v) {
         switch (mDirection) {
-            case LayoutDirection::VERTICAL  : return v.y;
-            case LayoutDirection::HORIZONTAL: return v.x;
+            case ALayoutDirection::VERTICAL  : return v.y;
+            case ALayoutDirection::HORIZONTAL: return v.x;
         }
         throw;
     }
@@ -38,9 +38,9 @@ private:
 
 public:
     ASplitterHelper() = default;
-    ASplitterHelper(LayoutDirection direction) : mDirection(direction) {}
+    ASplitterHelper(ALayoutDirection direction) : mDirection(direction) {}
 
-    void setDirection(LayoutDirection direction) {
+    void setDirection(ALayoutDirection direction) {
         mDirection = direction;
     }
 

@@ -3,7 +3,7 @@
 #include <AUI/Platform/AWindow.h>
 
 struct ViewActionMouseMove {
-    std::optional<glm::ivec2> position;
+    AOptional<glm::ivec2> position;
     ViewActionMouseMove() = default;
 
     ViewActionMouseMove(const glm::ivec2& position) : position(position) {}

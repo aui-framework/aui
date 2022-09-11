@@ -100,7 +100,7 @@ bool AAbstractTypeableView::handlesNonMouseNavigation() {
     return true;
 }
 
-int AAbstractTypeableView::getContentMinimumHeight()
+int AAbstractTypeableView::getContentMinimumHeight(ALayoutDirection layout)
 {
     return getFontStyle().size;
 }
@@ -225,7 +225,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
 
 void AAbstractTypeableView::pasteFromClipboard() {
     auto pastePos = mCursorIndex;
-    std::optional<AString> prevContents;
+    AOptional<AString> prevContents;
     if (mCursorSelection != -1) {
         prevContents = text();
         auto sel = selection();

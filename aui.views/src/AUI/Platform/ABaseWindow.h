@@ -145,7 +145,7 @@ public:
     _<AOverlappingSurface> createOverlappingSurface(const glm::ivec2& position,
                                                     const glm::ivec2& size,
                                                     bool closeOnClick = true) {
-        return createOverlappingSurface([&](unsigned attempt) -> std::optional<glm::ivec2> {
+        return createOverlappingSurface([&](unsigned attempt) -> AOptional<glm::ivec2> {
             switch (attempt) {
                 case 0: return position;
                 case 1: return glm::clamp(position, {0, 0}, {getSize() - size});
@@ -164,14 +164,14 @@ public:
      *        dropdown and context menus.
      * @return a new surface.
      */
-    _<AOverlappingSurface> createOverlappingSurface(const std::function<std::optional<glm::ivec2>(unsigned)>& positionFactory,
+    _<AOverlappingSurface> createOverlappingSurface(const std::function<AOptional<glm::ivec2>(unsigned)>& positionFactory,
                                                     const glm::ivec2& size,
                                                     bool closeOnClick = true) {
         glm::ivec2 position = {0, 0};
         auto maxPos = getSize() - size;
         for (unsigned index = 0; ; ++index) {
             auto optionalPosition = positionFactory(index);
-            if (optionalPosition.has_value()) {
+            if (optionalPosition) {
                 position = *optionalPosition;
 
                 if (position.x >= 0 && position.y >= 0 && glm::all(glm::lessThan(position, maxPos))) {

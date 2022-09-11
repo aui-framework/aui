@@ -37,7 +37,7 @@
  */
 class API_AUI_CORE AException: public std::exception
 {
-    mutable std::optional<std::string> mMessage;
+    mutable AOptional<std::string> mMessage;
 public:
 	AException(): mStacktrace(AStacktrace::capture(2)) {
 

@@ -34,7 +34,7 @@ public:
 	CellView(FieldCell& cell);
 
 
-	int getContentMinimumWidth() override;
+	int getContentMinimumWidth(ALayoutDirection layout) override;
 	void render() override;
 	void getCustomCssAttributes(AMap<AString, AVariant>& map) override;
 };

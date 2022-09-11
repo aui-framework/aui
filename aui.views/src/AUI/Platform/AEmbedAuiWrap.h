@@ -43,7 +43,7 @@ protected:
     class EmbedWindow;
     _<EmbedWindow> mContainer;
     glm::ivec2 mSize;
-    std::optional<float> mCustomDpiRatio;
+    AOptional<float> mCustomDpiRatio;
     void windowInit(_unique<IRenderingContext> context);
     void windowMakeCurrent();
     void windowRender();

@@ -38,7 +38,7 @@ public:
         addAssName(".scrollarea_inner");
     }
 
-    int getContentMinimumWidth() override {
+    int getContentMinimumWidth(ALayoutDirection layout) override {
         return 30_dp;
     }
 
@@ -46,7 +46,7 @@ public:
         if (hasChild()) child()->setGeometry(0, -mScroll.y, getContentWidth(), getContentHeight() + mScroll.y);
     }
 
-    int getContentMinimumHeight() override {
+    int getContentMinimumHeight(ALayoutDirection layout) override {
         return 30_dp;
     }
 
@@ -84,11 +84,11 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
     mContentContainer = contentContainer;
     addView(contentContainer);
     if (!builder.mExternalVerticalScrollbar) {
-        addView(mVerticalScrollbar = _new<AScrollbar>(LayoutDirection::VERTICAL));
+        addView(mVerticalScrollbar = _new<AScrollbar>(ALayoutDirection::VERTICAL));
     } else {
         mVerticalScrollbar = builder.mExternalVerticalScrollbar;
     }
-    addView(mHorizontalScrollbar = _new<AScrollbar>(LayoutDirection::HORIZONTAL));
+    addView(mHorizontalScrollbar = _new<AScrollbar>(ALayoutDirection::HORIZONTAL));
 
     mHorizontalScrollbar->setVisibility(Visibility::GONE);
     mContentContainer->setExpanding();
@@ -109,7 +109,7 @@ void AScrollArea::setSize(int width, int height) {
     if (mContentContainer->hasChild()) {
         mVerticalScrollbar->setScrollDimensions(
                 mContentContainer->getContentHeight() + mContentContainer->getTotalFieldVertical(),
-                mContentContainer->child()->getContentMinimumHeight());
+                mContentContainer->child()->getContentMinimumHeight(ALayoutDirection::NONE));
     }
 }
 
@@ -118,7 +118,7 @@ void AScrollArea::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
     mVerticalScrollbar->onMouseWheel(pos, delta);
 }
 
-int AScrollArea::getContentMinimumHeight() {
+int AScrollArea::getContentMinimumHeight(ALayoutDirection layout) {
     return 30;
 }
 

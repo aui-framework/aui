@@ -59,7 +59,7 @@ public:
     void setModel(const _<ITreeModel<AString>>& model);
     void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
     void setSize(int width, int height) override;
-    int getContentMinimumHeight() override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
     void handleMouseMove(ItemView* pView);
 
     void setViewFactory(const std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeIndex&)>& viewFactory) {

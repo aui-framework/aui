@@ -34,7 +34,7 @@ void ass::decl::Declaration<ass::BackgroundGradient>::renderFor(AView* view) {
     RenderHints::PushColor x;
 
     ABrush brush;
-    if (mInfo.direction == LayoutDirection::VERTICAL) {
+    if (mInfo.direction == ALayoutDirection::VERTICAL) {
         brush = ALinearGradientBrush{mInfo.topLeftColor,
                                      mInfo.topLeftColor,
                                      mInfo.bottomRightColor,

@@ -98,7 +98,7 @@ NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper):
 
 	// buttons
 	addView(_container<AHorizontalLayout>({
-	    _new<ASpacer>(),
+	    _new<ASpacerExpanding>(),
         _new<AButton>("Start game") let {
             setDefault();
         }).connect(&AButton::clicked, me::begin),

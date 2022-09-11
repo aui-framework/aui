@@ -5,7 +5,8 @@
 #include "AViewEntry.h"
 
 glm::ivec2 AViewEntry::getSize() {
-    return { mView->getMinimumWidth() + mView->getMargin().horizontal(), mView->getMinimumHeight() + mView->getMargin().vertical() };
+    return {mView->getMinimumWidth() + mView->getMargin().horizontal(), mView->getMinimumHeight(
+            ALayoutDirection::NONE) + mView->getMargin().vertical() };
 }
 
 void AViewEntry::setPosition(const glm::ivec2& position) {

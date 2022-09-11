@@ -65,7 +65,7 @@ public:
         return mSelectionId;
     }
     void setSelectionId(int id);
-    int getContentMinimumWidth() override;
+    int getContentMinimumWidth(ALayoutDirection layout) override;
 
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
