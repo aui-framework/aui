@@ -140,7 +140,7 @@ void ASerializable<AJson>::write(IOutputStream& os, const AJson& value) {
         [&](int64_t v) {
             os << AString::number(v);
         },
-        [&](float v) {
+        [&](double v) {
             os << AString::number(v);
         },
         [&](bool v) {

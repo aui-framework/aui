@@ -37,7 +37,7 @@ class AJson;
 namespace aui::impl {
     using JsonObject = AMap<AString, AJson>;
     using JsonArray = AVector<AJson>;
-    using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, int64_t, float, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
+    using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, int64_t, double, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
 }
 
 /**
@@ -115,7 +115,7 @@ public:
 
     [[nodiscard]]
     bool isNumber() const noexcept {
-        return isInt() || is<float>();
+        return isInt() || is<double>();
     }
 
     [[nodiscard]]
@@ -154,7 +154,7 @@ public:
             try {
                 return std::get<int64_t>(*this);
             } catch (...) {
-                return float(std::get<int>(*this));
+                return double(std::get<int>(*this));
             }
         } catch (...) {
             throw AJsonTypeMismatchException("not a long int");
@@ -162,12 +162,12 @@ public:
     }
 
     [[nodiscard]]
-    float asNumber() const {
+    double asNumber() const {
         try {
             try {
-                return std::get<float>(*this);
+                return std::get<double>(*this);
             } catch (...) {
-                return float(std::get<int>(*this));
+                return double(std::get<int>(*this));
             }
         } catch (...) {
             throw AJsonTypeMismatchException("not a number");
