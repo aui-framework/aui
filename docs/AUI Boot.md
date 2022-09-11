@@ -48,7 +48,8 @@ auib_import(<PackageName> <URL>
             [VERSION version]
             [COMPONENTS components...]
             [PRECOMPILED_URL_PREFIX <PrecompiledUrlPrefix>]
-            [ADD_SUBDIRECTORY])
+            [ADD_SUBDIRECTORY]
+            [LINK <STATIC|SHARED>])
 ```
 
 ### PackageName
@@ -76,6 +77,10 @@ Forces `find_package` to use the config mode only.
 
 Specifies url prefix where the precompiled binaries downloaded from.
 
+
+### LINK
+
+Overrides `BUILD_SHARED_LIBS` of the dependency, specifying `SHARED` or `STATIC` linking.
 
 # Using same dependencies
 ## Case 1
