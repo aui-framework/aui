@@ -39,13 +39,35 @@ private:
     bool mRequiresRedraw = false;
     bool mRequiresLayoutUpdate = false;
 
+    unsigned mFrameMillis = 1;
+
 public:
     EmbedWindow(AEmbedAuiWrap* theWrap): mTheWrap(theWrap) {
         currentWindowStorage() = this;
     }
 
+    unsigned int frameMillis() const noexcept override {
+        return mFrameMillis;
+    }
+
+    void setFrameMillis(unsigned int frameMillis) {
+        mFrameMillis = frameMillis;
+    }
+
     _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override {
-        auto container = _new<AOverlappingSurface>();
+        class MyOverlappingSurface: public AOverlappingSurface {
+        public:
+            void setOverlappingSurfacePosition(glm::ivec2 position) override {
+                emit positionSet(position);
+            }
+        signals:
+            emits<glm::ivec2> positionSet;
+        };
+
+        auto container = _new<MyOverlappingSurface>();
+        connect(container->positionSet, [container = container.get()](glm::ivec2 p) {
+            container->setPosition(p);
+        });
         addViewCustomLayout(container);
 
         auto windowSize = getSize();

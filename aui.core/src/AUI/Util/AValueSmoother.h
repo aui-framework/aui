@@ -19,12 +19,18 @@ public:
 
     T nextValue(T value) noexcept
     {
-        mCurrent += (value - mCurrent) * mSmoothK;
+        auto delta = glm::abs(mCurrent - value);
+        auto toAdd = (value - mCurrent) * mSmoothK;
+        if (delta < glm::abs(toAdd)) { // avoid chatter
+            mCurrent = value;
+        } else {
+            mCurrent += toAdd;
+        }
         return mCurrent;
     }
 
 
-    void setCurrent(float value) noexcept
+    void setCurrent(T value) noexcept
     {
         mCurrent = value;
     }

@@ -76,6 +76,8 @@ private:
     AString mWindowClass;
     AWindow* mParentWindow;
 
+    unsigned mFrameMillis = 1;
+
     /**
      * @brief Handles self shared pointer.
      */
@@ -124,6 +126,11 @@ public:
         Render::setWindow(this);
     }
     virtual ~AWindow();
+
+    [[nodiscard]]
+    unsigned frameMillis() const noexcept override {
+        return mFrameMillis;
+    }
 
     void redraw();
 

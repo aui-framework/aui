@@ -328,3 +328,15 @@ AString ATokenizer::readString(size_t n) {
 void ATokenizer::skipUntil(char c) {
     for (char x; (x = readChar()) != c; );
 }
+
+unsigned ATokenizer::readUInt() {
+    return readIntImpl<unsigned>();
+}
+
+int ATokenizer::readInt() {
+    return readIntImpl<int>();
+}
+
+int64_t ATokenizer::readLongInt() {
+    return readIntImpl<int64_t>();
+}

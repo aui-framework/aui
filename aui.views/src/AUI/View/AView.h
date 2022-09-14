@@ -150,6 +150,15 @@ private:
     [[nodiscard]]
     ALayoutDirection parentLayoutDirection() const noexcept;
 
+    /**
+     * @brief Redraw requested flag for this particular view/
+     * @details
+     * This flag is set in redraw() method and reset in AView::render(). redraw() method does not actually requests
+     * redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the view is not even
+     * drawn.
+     */
+    bool mRedrawRequested = false;
+
 protected:
     /**
      * @brief Parent AView.

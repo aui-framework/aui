@@ -139,24 +139,18 @@ public:
 	/**
 	 * @brief Reads integer number.
 	 */
-    int64_t readLongInt() {
-        return readIntImpl<int64_t>();
-    }
+    int64_t readLongInt();
 
 
 	/**
 	 * @brief Reads integer number.
 	 */
-	int readInt() {
-        return readIntImpl<int>();
-    }
+	int readInt();
 
 	/**
 	 * @brief Reads unsigned integer number.
 	 */
-	unsigned readUInt() {
-        return readIntImpl<unsigned>();
-    }
+	unsigned readUInt();
 
 	/**
 	 * @brief Reads unsigned integer number + flag the read value is marked as hex (prefixed with 0x)

@@ -67,6 +67,19 @@ public:
     virtual void blockUserInput(bool blockUserInput = true);
 
     virtual ~ABaseWindow();
+
+
+    /**
+     * @brief Returns previous frame's rendering duration in millis.
+     * @details
+     * Returns previous frame's rendering duration in millis, including native rendering preparation and buffer
+     * swapping. The value does not include the elapsed time between frames.
+     *
+     * The value is updated after native buffer swap.
+     */
+    [[nodiscard]]
+    virtual unsigned frameMillis() const noexcept = 0;
+
     static AWindowManager& getWindowManager() {
         return *getWindowManagerImpl();
     }
@@ -183,7 +196,7 @@ public:
         }
 
         auto tmp = createOverlappingSurfaceImpl(position, size);
-        tmp->mWindow = this;
+        tmp->mParentWindow = this;
         tmp->mCloseOnClick = closeOnClick;
         mOverlappingSurfaces << tmp;
         return tmp;

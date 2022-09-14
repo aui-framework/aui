@@ -69,6 +69,10 @@ AView::AView()
 
 void AView::redraw()
 {
+    if (mRedrawRequested) {
+        return;
+    }
+    mRedrawRequested = true;
     assert(("views could not be used from non ui thread", AThread::current() == getThread()));
     nullsafe(getWindow())->flagRedraw(); else nullsafe(AWindow::current())->flagRedraw();
 
@@ -151,6 +155,7 @@ void AView::render()
     if (auto w = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)]) {
         w->renderFor(this);
     }
+    mRedrawRequested = false;
 }
 
 void AView::invalidateAllStyles()

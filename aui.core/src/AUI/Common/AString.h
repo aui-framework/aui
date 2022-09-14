@@ -368,7 +368,13 @@ public:
                 return "true";
             return "false";
         } else {
-            return std::to_wstring(i);
+            auto v = std::to_wstring(i);
+            if constexpr (std::is_floating_point_v<T>) {
+                // remove trailing zeros
+                v.erase(v.find_last_not_of('0') + 1, std::wstring::npos);
+                v.erase(v.find_last_not_of('.') + 1, std::wstring::npos);
+            }
+            return v;
         }
     }
     int toNumberDec() const noexcept;

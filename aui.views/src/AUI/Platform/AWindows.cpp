@@ -99,7 +99,7 @@ void AWindow::redraw() {
 
         // measure frame time
         auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        unsigned millis = unsigned((after - before).count());
+        unsigned millis = mFrameMillis = unsigned((after - before).count());
         if (millis > 17) {
             static auto lastNotification = 0ms;
             if (after - lastNotification > 10s) {
@@ -225,8 +225,20 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     // show later
     window->show();
 
-    auto surface = _new<AOverlappingSurface>();
+    class MyOverlappingSurface: public AOverlappingSurface {
+    public:
+        void setOverlappingSurfacePosition(glm::ivec2 position) override {
+            emit positionSet(position);
+        }
+    signals:
+        emits<glm::ivec2> positionSet;
+    };
+
+    auto surface = _new<MyOverlappingSurface>();
     ALayoutInflater::inflate(window, surface);
+    connect(surface->positionSet, window, [this, window = window.get()](const glm::ivec2& newPos) {
+        window->setPosition(unmapPosition(newPos));
+    });
 
     return surface;
 }

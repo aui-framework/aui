@@ -5,7 +5,12 @@
 #include <utility>
 #include <optional>
 #include <stdexcept>
+#include <AUI/Core.h>
 
+
+namespace aui::impl::optional {
+    API_AUI_CORE void throwException(const char* message);
+}
 
 /**
  * @brief Utility wrapper implementing the stack-allocated (fast) optional idiom.
@@ -182,7 +187,18 @@ public:
     }
 
     /**
-     * @brief valueOr
+     * @brief value or exception
+     */
+    T valueOrException(const char* message = "empty optional") const {
+        if (mInitialized) {
+            return value();
+        }
+        aui::impl::optional::throwException(message);
+        throw std::logic_error("should not have reached here"); // silence "not all control paths return a value" warning
+    }
+
+    /**
+     * @brief value or alternative (either value or callback)
      * @tparam F same as T or invocable returning T or invokable throwing a exception
      * @param alternative
      * @return
