@@ -8,9 +8,10 @@
 #include <shlobj.h>
 #include <new>  // std::nothrow
 #include "Ole.h"
+#include "AComBase.h"
 
 namespace {
-    class MyDataObject: public IDataObject {
+    class MyDataObject: public AComBase<MyDataObject, IDataObject> {
     public:
         HRESULT GetData(FORMATETC* pformatetcIn, STGMEDIUM* pmedium) override {
             return 0;
@@ -38,7 +39,7 @@ namespace {
         }
 
         HRESULT SetData(FORMATETC* pformatetc, STGMEDIUM* pmedium, BOOL fRelease) override {
-            return 0;
+            return E_NOTIMPL;
         }
 
         HRESULT EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC** ppenumFormatEtc) override {
@@ -69,31 +70,9 @@ namespace {
             return E_NOTIMPL;
         }
 
-        HRESULT QueryInterface(const IID& riid, void** ppv) override {
-            static const QITAB qit[] = {
-                    QITABENT(MyDataObject, IDataObject),
-                    { 0 },
-            };
-            return QISearch(this, qit, riid, ppv);
-        }
-
-        ULONG AddRef(void) override {
-            ++mRefCounter;
-            return 0;
-        }
-
-        ULONG Release(void) override {
-            if (--mRefCounter == 0) {
-                delete this;
-            }
-            return 0;
-        }
-
-    private:
-        std::atomic_uint mRefCounter = 1;
     };
 
-    class MyDropSource: public IDropSource {
+    class MyDropSource: public AComBase<MyDropSource, IDropSource> {
     private:
         bool mCancelled = false;
 
@@ -115,21 +94,6 @@ namespace {
             };
             return QISearch(this, qit, riid, ppv);
         }
-
-        ULONG AddRef(void) override {
-            ++mRefCounter;
-            return 0;
-        }
-
-        ULONG Release(void) override {
-            if (--mRefCounter == 0) {
-                delete this;
-            }
-            return 0;
-        }
-
-    private:
-        std::atomic_uint mRefCounter = 1;
     };
 }
 
