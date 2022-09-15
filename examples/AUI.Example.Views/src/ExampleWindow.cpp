@@ -40,6 +40,7 @@
 #include "AUI/View/ASpinner.h"
 #include "DemoGraphView.h"
 #include "AUI/View/AGroupBox.h"
+#include "AUI/View/ADragNDropView.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/AComboBox.h>
 #include <AUI/i18n/AI18n.h>
@@ -377,6 +378,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                                         Expanding{}, }) with_style { Expanding{} },
 
             _new<DemoGraphView>(),
+            _new<ADragNDropView>(),
 
         } let { it->setExpanding(); }, "Others");
 

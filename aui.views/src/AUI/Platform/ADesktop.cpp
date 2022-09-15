@@ -34,6 +34,7 @@
 #include "AWindow.h"
 #include "ADesktop.h"
 #include "ACursor.h"
+#include "AUI/Platform/win32/Ole.h"
 #include <windows.h>
 #include <shlobj.h>
 #include <AUI/Traits/memory.h>
@@ -56,13 +57,11 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
     nullsafe(parent)->blockUserInput();
     return async noexcept {
         APath result;
-        OleInitialize(0);
-        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-        assert(SUCCEEDED(hr));
+        Ole::inst();
         IFileOpenDialog *pFileOpen;
 
         // Create the FileOpenDialog object.
-        hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+        auto hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
                               IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
 
         assert(SUCCEEDED(hr));
@@ -73,8 +72,6 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
                 parent->blockUserInput(false);
 
                 pFileOpen->Release();
-                CoUninitialize();
-                OleUninitialize();
             });
         };
 
@@ -131,13 +128,11 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
     nullsafe(parent)->blockUserInput();
     return async noexcept {
         APath result;
-        OleInitialize(0);
-        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-        assert(SUCCEEDED(hr));
+        Ole::inst();
         IFileOpenDialog *pFileOpen;
 
         // Create the FileOpenDialog object.
-        hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+        auto hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
                               IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
 
 
@@ -146,8 +141,6 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
                 parent->blockUserInput(false);
 
                 pFileOpen->Release();
-                CoUninitialize();
-                OleUninitialize();
             });
         };
 
