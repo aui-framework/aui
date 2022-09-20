@@ -209,6 +209,14 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     getWindowManager().initNativeWindow({ *this, name, width, height, ws, parent });
 
     setWindowStyle(ws);
+
+#if !AUI_PLATFORM_WIN
+    // windows sends resize event during window initialization but other platforms doesn't.
+    // simulate the same behaviour here.
+    ui_thread {
+        emit resized(getWidth(), getHeight());
+    };
+#endif
 }
 
 _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
