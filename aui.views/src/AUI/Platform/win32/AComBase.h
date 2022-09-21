@@ -1,6 +1,9 @@
 #pragma once
 
 #include <Windows.h>
+#include <shlwapi.h>
+#include <strsafe.h>
+#include <shlobj.h>
 #include <type_traits>
 
 /**
