@@ -9,4 +9,4 @@ auib_import(aui ../../../../
 
 aui_executable(test_project)
 aui_link(test_project PUBLIC aui::core)
-aui_enable_tests()
+aui_enable_tests(test_project)

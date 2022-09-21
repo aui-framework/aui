@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 option(AUI_CATCH_SEGFAULT "Catch segfault" ON)
 
 aui_module(aui.core EXPORT aui)
+aui_enable_tests(aui.core)
 
 
 # segfault functionality

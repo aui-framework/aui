@@ -41,6 +41,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 	endif()
 
 	aui_module(aui.views EXPORT aui)
+	aui_enable_tests(aui.views)
 
 	if (AUI_PLATFORM_LINUX)
 		target_include_directories(aui.views PRIVATE ${GTK_INCLUDE_DIRS})
