@@ -33,48 +33,48 @@ ATimer::~ATimer()
 
 void ATimer::restart()
 {
-	mResetFlag = true;
-	mThread->interrupt();
+    stop();
+    start();
 }
 
 void ATimer::start()
 {
-	mThread = _new<AThread>([&]()
-	{
-        AThread::setName("Timer thread");
-		for (;;) {
-			try {
-				AThread::sleep(mMsPeriod);
-				emit fired();
-			}
-			catch (...)
-			{
-			    AThread::current()->resetInterruptFlag();
-				if (mResetFlag)
-				{
-					mResetFlag = false;
-				}
-				else
-				{
-					return;
-				}
-			}
-		}
-	});
-	mThread->start();
+    if (!mTimer) {
+        ATimer::timerThread();
+        mTimer = scheduler().timer(std::chrono::milliseconds(mMsPeriod), [this] {
+            emit fired;
+        });
+    }
 }
 
 void ATimer::stop()
 {
-	mResetFlag = false;
-	if (mThread) {
-        mThread->interrupt();
-        mThread->join();
-        mThread = nullptr;
+    if (mTimer) {
+        scheduler().removeTimer(*mTimer);
+        mTimer = std::nullopt;
     }
 }
 
 bool ATimer::isStarted()
 {
-	return mThread != nullptr;
+	return mTimer.hasValue();
+}
+
+_<AThread>& ATimer::timerThread() {
+    static _<AThread> thread = [] {
+        auto t = _new<AThread>([&]()
+            {
+                AThread::setName("Timer thread");
+                IEventLoop::Handle h(&ATimer::scheduler());
+                ATimer::scheduler().loop();
+            });
+        t->start();
+        return t;
+    }();
+    return thread;
+}
+
+AScheduler& ATimer::scheduler() {
+    static AScheduler scheduler;
+    return scheduler;
 }
