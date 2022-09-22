@@ -56,15 +56,17 @@ namespace {
             if (auto t = mimedData.text()) {
                 STGMEDIUM medium = {};
                 medium.tymed = TYMED_HGLOBAL;
-                auto utf8String = t->toStdString();
-                medium.hGlobal = GlobalAlloc(GPTR, utf8String.size() + 1);
+                std::wstring utf16String(t->begin(), t->end());
+                std::size_t lengthInBytes = (utf16String.size() + 1) * sizeof(wchar_t);
+                medium.hGlobal = GlobalAlloc(GPTR, lengthInBytes);
                 medium.pUnkForRelease = nullptr;
                 {
                     ScopedHGlobal hGlobalData(medium.hGlobal);
-                    std::memcpy(hGlobalData.data(), utf8String.c_str(), utf8String.size() + 1);
+                    std::memcpy(hGlobalData.data(), utf16String.c_str(), lengthInBytes);
                 }
 
-                mContents.push_back({ FORMATETC{ CF_UNICODETEXT, 0, 0, 0, TYMED_HGLOBAL }, medium });
+                mContents.push_back({ FORMATETC{ CF_UNICODETEXT, nullptr, 1, -1, TYMED_HGLOBAL }, medium });
+                //mContents.push_back({ FORMATETC{ CF_TEXT, nullptr, 1, -1, TYMED_HGLOBAL }, duplicateMedium(CF_TEXT, medium) });
             }
         }
 
@@ -91,12 +93,13 @@ namespace {
         }
 
         HRESULT QueryGetData(FORMATETC* pformatetc) override {
-
             for (const auto& content : mContents) {
                 if (content.formatEtc.cfFormat == pformatetc->cfFormat) {
+                    ALogger::debug(LOG_TAG) << "QueryGetData: " << content.toString();
                     return S_OK;
                 }
             }
+            //ALogger::debug(LOG_TAG) << "QueryGetData: DV_E_FORMATETC(" << pformatetc->cfFormat << ")";
             return DV_E_FORMATETC;
         }
 
@@ -212,8 +215,12 @@ class MyDropSource final: public AComBase<MyDropSource, IDropSource>, public aui
         bool mCancelled = false;
 
     public:
-        HRESULT QueryContinueDrag(BOOL fEscapePressed, DWORD grfKeyState) override {
+        HRESULT QueryContinueDrag(BOOL escapePressed, DWORD keyState) override {
             if (mCancelled) return DRAGDROP_S_CANCEL;
+
+            if (!(keyState & MK_LBUTTON) && !(keyState & MK_RBUTTON)) {
+                return DRAGDROP_S_DROP;
+            }
 
             return S_OK;
         }
@@ -237,6 +244,6 @@ void ADragNDrop::perform(ABaseWindow* sourceWindow) {
     auto obj = AComPtr(new MyDataObject(mData));
     auto source = AComPtr(new MyDropSource);
     DWORD dwEffect;
-    auto r = DoDragDrop(obj, source, DROPEFFECT_COPY | DROPEFFECT_LINK | DROPEFFECT_MOVE | DROPEFFECT_SCROLL | DROPEFFECT_NONE, &dwEffect);
+    DoDragDrop(obj, source, DROPEFFECT_COPY | DROPEFFECT_LINK | DROPEFFECT_MOVE | DROPEFFECT_SCROLL | DROPEFFECT_NONE, &dwEffect);
     return;
 }
