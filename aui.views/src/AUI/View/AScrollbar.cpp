@@ -32,7 +32,8 @@
 #include "ASpacerExpanding.h"
 
 
-_<ATimer> AScrollbar::ourScrollButtonTimer = _new<ATimer>(100);
+using namespace std::chrono_literals;
+_<ATimer> AScrollbar::ourScrollButtonTimer = _new<ATimer>(100ms);
 
 AScrollbar::AScrollbar(ALayoutDirection direction) :
     mDirection(direction) {

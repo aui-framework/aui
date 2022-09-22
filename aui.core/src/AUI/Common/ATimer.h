@@ -32,7 +32,7 @@
 class API_AUI_CORE ATimer: public AObject
 {
 private:
-	unsigned mMsPeriod;
+	std::chrono::milliseconds mPeriod;
 
     AOptional<AScheduler::TimerHandle> mTimer;
 
@@ -40,16 +40,13 @@ private:
     static AScheduler& scheduler();
 
 public:
-	explicit ATimer(unsigned msPeriod);
+	explicit ATimer(std::chrono::milliseconds period);
 	~ATimer();
 	
 	void restart();
 
 	void start();
 	void stop();
-	void setPeriodMs(unsigned period) {
-	    mMsPeriod = period;
-	}
 	bool isStarted();
 
 signals:

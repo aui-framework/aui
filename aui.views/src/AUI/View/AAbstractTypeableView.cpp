@@ -39,7 +39,8 @@
 
 ATimer& AAbstractTypeableView::blinkTimer()
 {
-    static ATimer t(500);
+    using namespace std::chrono_literals;
+    static ATimer t(500ms);
     if (!t.isStarted())
     {
         t.start();

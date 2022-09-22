@@ -21,9 +21,10 @@
 
 #include "ATimer.h"
 
-ATimer::ATimer(unsigned msPeriod):
-	mMsPeriod(msPeriod)
+ATimer::ATimer(std::chrono::milliseconds period):
+	mPeriod(period)
 {
+    assert(("zero period?", period.count() != 0));
 }
 
 ATimer::~ATimer()
@@ -41,7 +42,7 @@ void ATimer::start()
 {
     if (!mTimer) {
         ATimer::timerThread();
-        mTimer = scheduler().timer(std::chrono::milliseconds(mMsPeriod), [this] {
+        mTimer = scheduler().timer(mPeriod, [this] {
             emit fired;
         });
     }
