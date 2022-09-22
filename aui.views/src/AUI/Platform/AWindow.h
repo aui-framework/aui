@@ -112,6 +112,11 @@ protected:
     void windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws);
 
     /**
+     * @brief Enables drag-n-drop for this window.
+     */
+    void allowDragNDrop();
+
+    /**
      * @brief Constructor for custom initialization logic
      * @note Please call windowNativePreInit
      */

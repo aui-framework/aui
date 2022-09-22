@@ -152,3 +152,7 @@ void AWindow::show() {
 void AWindow::blockUserInput(bool block) {
 
 }
+
+void AWindow::allowDragNDrop() {
+
+}

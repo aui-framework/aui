@@ -149,3 +149,7 @@ void AWindowManager::loop() {
 
 }
 
+
+void AWindow::allowDragNDrop() {
+
+}

@@ -7,6 +7,7 @@
 #include <AUI/View/AViewContainer.h>
 #include "AWindowManager.h"
 #include "AOverlappingSurface.h"
+#include "ADragNDrop.h"
 #include <optional>
 
 namespace testing {
@@ -208,10 +209,24 @@ public:
     }
 
     void onFocusLost() override;
-
     void render() override;
-
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+
+    /**
+     * @brief Called when the user holds a drag-n-drop object over the window.
+     * @param event event data.
+     * @return true, if the application accepts the contents of the event, false otherwise.
+     * @details
+     * This event handler decides does the application accepts the supplied data. If true, the data supplied to the
+     * onDragDrop() method will be the same.
+     *
+     * onDragLeave() method will be called even if the application rejects the event.
+     *
+     * It's guaranteed that onDragDrop method will not be called when onDragEnter rejects the same data.
+     */
+    virtual bool onDragEnter(const ADragNDrop::EnterEvent& event);
+    virtual void onDragLeave();
+    virtual void onDragDrop(const ADragNDrop::DropEvent& event);
 
 signals:
     emits<>            dpiChanged;

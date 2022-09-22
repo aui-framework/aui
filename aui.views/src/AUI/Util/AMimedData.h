@@ -1,7 +1,8 @@
 #pragma once
 
 #include <AUI/Common/AMap.h>
-#include "AUI/Common/AByteBuffer.h"
+#include <AUI/Common/AByteBuffer.h>
+#include <AUI/Url/AUrl.h>
 
 /**
  * @brief Mime-type data associated storage.
@@ -9,13 +10,13 @@
  */
 class API_AUI_VIEWS AMimedData {
 public:
+    AOptional<AString> text() const;
+
     /**
      * @brief Sets "text/plain".
      */
     void setText(const AString& text);
 
-
-    AOptional<AString> text() const;
 
     void setData(const AString& mimeType, AByteBuffer data) {
         mStorage[mimeType] = std::move(data);
@@ -26,6 +27,12 @@ public:
         return mStorage;
     }
 
+    AOptional<AVector<AUrl>> urls() const;
+    void setUrls(const AVector<AUrl>& urls);
+
+    void clear() noexcept {
+        mStorage.clear();
+    }
 
 private:
     AMap<AString, AByteBuffer> mStorage;

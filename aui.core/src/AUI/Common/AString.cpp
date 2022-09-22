@@ -43,6 +43,7 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
                 t <<= 6;
                 t |= *(str++) & 0b111111;
                 destination.push_back(t);
+                length -= 2;
             } else
             {
                 // 2-byte symbol
@@ -50,6 +51,7 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
                 t <<= 6;
                 t |= *(str++) & 0b111111;
                 destination.push_back(t);
+                length -= 1;
             }
         } else
         {

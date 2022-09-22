@@ -20,6 +20,15 @@ public:
         return mAccessibleData;
     }
 
+    [[nodiscard]]
+    std::size_t size() const noexcept {
+        return GlobalSize(mBlob);
+    }
+
+    operator AByteBufferView() const noexcept {
+        return { data(), size() };
+    }
+
 private:
     HGLOBAL mBlob;
     char* mAccessibleData;

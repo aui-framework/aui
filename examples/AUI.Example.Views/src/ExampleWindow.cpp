@@ -92,6 +92,8 @@ public:
 
 ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 {
+    allowDragNDrop();
+
     setLayout(_new<AVerticalLayout>());
     AStylesheet::global().addRules({
          {
@@ -402,4 +404,20 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
             it->setEnabled(false);
         }
     });
+}
+
+void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
+    ABaseWindow::onDragDrop(event);
+
+    for (const auto&[k, v] : event.data.data()) {
+        ALogger::info("Drop") << "[" << k << "] = " << AString::fromUtf8(v);
+    }
+
+    if (!event.data.data().empty()) {
+        AMessageBox::show(this, "Drop event", "Caught drop event. See the logger output for contents.");
+    }
+}
+
+bool ExampleWindow::onDragEnter(const ADragNDrop::EnterEvent& event) {
+    return true;
 }

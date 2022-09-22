@@ -332,6 +332,18 @@ public:
                                                      decltype(transformer(std::declval<StoredType>()).second)> {
         return aui::container::to_map(p::begin(), p::end(), transformer);
     }
+
+    template<typename Predicate>
+    AVector filter(Predicate&& predicate) {
+        AVector result;
+        result.reserve(p::size());
+        for (const auto& element : *this) {
+            if (predicate(element)) {
+                result.push_back(element);
+            }
+        }
+        return result;
+    }
 };
 
 

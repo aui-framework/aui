@@ -659,3 +659,7 @@ void AWindow::blockUserInput(bool blockUserInput) {
     ABaseWindow::blockUserInput(blockUserInput);
     // TODO linux impl
 }
+
+void AWindow::allowDragNDrop() {
+
+}

@@ -1,8 +1,9 @@
 #pragma once
 
 
-#include "ABaseWindow.h"
 #include "AUI/Util/AMimedData.h"
+
+class ABaseWindow;
 
 /**
  * @brief Utility class for creating and processing drag-n-drop events.
@@ -45,6 +46,17 @@ public:
      * @brief Pushes out a drag-n-drop operation to the OS.
      */
     void perform(ABaseWindow* sourceWindow);
+
+
+    struct EnterEvent {
+        const AMimedData& data;
+        glm::ivec2 mousePosition;
+    };
+
+    struct DropEvent {
+        const AMimedData& data;
+        glm::ivec2 mousePosition;
+    };
 
 private:
     ABaseWindow* mWindow;

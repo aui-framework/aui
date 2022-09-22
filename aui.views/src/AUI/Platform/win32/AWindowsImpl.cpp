@@ -32,6 +32,7 @@
 #include "AUI/Util/ARandom.h"
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
+#include "Ole.h"
 #include <AUI/Platform/Platform.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/AWindowManager.h>
@@ -57,7 +58,7 @@
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/Platform/AMessageBox.h>
-
+#include <AUI/Platform/win32/AComBase.h>
 
 LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
@@ -518,4 +519,51 @@ void AWindowManager::loop() {
 
 void AWindow::blockUserInput(bool blockUserInput) {
     EnableWindow(mHandle, !blockUserInput);
+}
+
+void AWindow::allowDragNDrop() {
+    class DropTarget: public AComBase<DropTarget, IDropTarget> {
+    public:
+        DropTarget(ABaseWindow* window) : mWindow(window) {}
+
+        HRESULT DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
+            auto effect = DROPEFFECT_NONE;
+            mMimed = Ole::toMime(pDataObj);
+            if (mWindow->onDragEnter({ mMimed, { pt.x, pt.y } })) {
+                if (*pdwEffect & DROPEFFECT_COPY) {
+                    effect = DROPEFFECT_COPY;
+                } else {
+                    effect = DROPEFFECT_MOVE;
+                }
+            }
+            *pdwEffect = mOleEffect = effect;
+            return S_OK;
+        }
+
+        HRESULT DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
+            *pdwEffect = mOleEffect;
+            return S_OK;
+        }
+
+        HRESULT DragLeave() override {
+            mWindow->onDragLeave();
+            mMimed.clear();
+            return S_OK;
+        }
+
+        HRESULT Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
+            *pdwEffect = mOleEffect;
+            mWindow->onDragDrop({ mMimed, { pt.x, pt.y} });
+            return S_OK;
+        }
+
+    private:
+        AMimedData mMimed;
+        ABaseWindow* mWindow;
+        DWORD mOleEffect;
+    };
+    Ole::inst();
+
+    auto r = RegisterDragDrop(mHandle, new DropTarget(this));
+    assert(r == S_OK);
 }

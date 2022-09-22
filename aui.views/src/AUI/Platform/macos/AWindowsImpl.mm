@@ -162,3 +162,7 @@ void AWindowManager::notifyProcessMessages() {
 void AWindowManager::loop() {
     MacosApp::inst().run();
 }
+
+void AWindow::allowDragNDrop() {
+
+}

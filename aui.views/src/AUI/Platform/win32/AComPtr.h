@@ -21,6 +21,11 @@ public:
         }
     }
 
+    T** operator&() noexcept {
+        assert(("value already set", mValue == nullptr));
+        return &mValue;
+    }
+
     AComPtr(T* value): mValue(value) {}
     AComPtr(const AComPtr<T>& rhs): mValue(rhs.mValue) {
         if (mValue) {
@@ -52,6 +57,11 @@ public:
     [[nodiscard]]
     operator T*() const noexcept {
         return value();
+    }
+
+    [[nodiscard]]
+    operator bool() const noexcept {
+        return mValue != nullptr;
     }
 
 private:
