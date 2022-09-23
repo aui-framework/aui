@@ -126,7 +126,7 @@ void AWindow::flagRedraw() {
 
 
 void AWindow::setSize(glm::ivec2 size) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
+    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {

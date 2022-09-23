@@ -274,7 +274,7 @@ void AWindow::show() {
 }
 
 void AWindow::setSize(glm::ivec2 size) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
+    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
 
     if (!mHandle) return;
     if (!!(mWindowStyle & WindowStyle::NO_RESIZE)) {
@@ -284,8 +284,8 @@ void AWindow::setSize(glm::ivec2 size) {
 
         XGetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints, &userhints);
 
-        sizehints->min_width = sizehints->min_width = sizehints->max_width = sizehints->base_width = width;
-        sizehints->min_height = sizehints->min_height = sizehints->max_height = sizehints->base_height = height;
+        sizehints->min_width = sizehints->min_width = sizehints->max_width = sizehints->base_width = size.x;
+        sizehints->min_height = sizehints->min_height = sizehints->max_height = sizehints->base_height = size.y;
         sizehints->flags |= PMinSize | PMaxSize;
 
         XSetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints);
@@ -309,7 +309,7 @@ void AWindow::setSize(glm::ivec2 size) {
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
-    AViewContainer::setSize(size);
+    AViewContainer::setSize({width, height});
 
     if (!mHandle) return;
     XMoveWindow(CommonRenderingContext::ourDisplay, mHandle, x, y);
@@ -437,7 +437,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     window = locateWindow(ev.xconfigure.window);
                     glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
                     if (size.x >= 10 && size.y >= 10 && size != window->getSize())
-                        window->AViewContainer::setSize(size.x, size.y);
+                        window->AViewContainer::setSize(size);
                     if (auto w = _cast<ACustomWindow>(window)) {
                         w->handleXConfigureNotify();
                     }

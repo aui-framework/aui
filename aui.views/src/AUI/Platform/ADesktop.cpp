@@ -253,6 +253,11 @@ void ADesktop::openUrl(const AString &url) {
 
 }
 
+
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    return nullptr;
+}
+
 #elif AUI_PLATFORM_APPLE
 
 #include "AWindow.h"
@@ -277,6 +282,9 @@ void ADesktop::openUrl(const AString &url) {
 
 }
 
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    return nullptr;
+}
 #else
 
 #include <X11/Xlib.h>
@@ -433,4 +441,7 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
     };
 }
 
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    return nullptr;
+}
 #endif
