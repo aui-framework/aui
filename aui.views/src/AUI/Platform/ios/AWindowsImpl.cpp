@@ -113,13 +113,13 @@ float AWindow::fetchDpiFromSystem() const {
 }
 
 
-void AWindow::setSize(int width, int height) {
-    AViewContainer::setSize(width, height);
+void AWindow::setSize(glm::ivec2 size) {
+    AViewContainer::setSize(size);
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize(size);
 
 }
 

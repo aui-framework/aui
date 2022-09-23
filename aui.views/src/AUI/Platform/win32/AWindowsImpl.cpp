@@ -158,7 +158,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
                 GetClientRect(mHandle, &clientRect);
                 nullsafe(mRenderingContext)->beginResize(*this);
                 emit resized(LOWORD(lParam), HIWORD(lParam));
-                AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
+                AViewContainer::setSize({LOWORD(lParam), HIWORD(lParam)});
 
                 switch (wParam) {
                     case SIZE_MAXIMIZED:
@@ -246,7 +246,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
         case WM_DPICHANGED: {
             auto prevDpi = getDpiRatio();
             updateDpi();
-            setSize(getWidth() * getDpiRatio() / prevDpi, getHeight() * getDpiRatio() / prevDpi);
+            setSize({getWidth() * getDpiRatio() / prevDpi, getHeight() * getDpiRatio() / prevDpi});
             return 0;
         }
 
@@ -391,13 +391,13 @@ void AWindow::flagRedraw() {
 }
 
 
-void AWindow::setSize(int width, int height) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
+void AWindow::setSize(glm::ivec2 size) {
+    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize({width, height});
 
     if (!mHandle) return;
 

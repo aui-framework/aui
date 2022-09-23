@@ -72,10 +72,10 @@ public:
         addAssName(".text-area-field");
     }
 
-    void setSize(int width, int height) override {
-        bool widthChanged = getWidth() != width;
-        bool heightChanged = getHeight() != height;
-        AView::setSize(width, height);
+    void setSize(glm::ivec2 size) override {
+        bool widthChanged = getWidth() != size.x;
+        bool heightChanged = getHeight() != size.y;
+        AView::setSize(size);
 
         if (widthChanged) {
             updateWordWrap(text());

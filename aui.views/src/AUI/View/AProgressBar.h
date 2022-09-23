@@ -53,7 +53,7 @@ public:
 public:
     AProgressBar();
 
-    void setSize(int width, int height) override;
+    void setSize(glm::ivec2 size) override;
     void render() override;
 
 private:

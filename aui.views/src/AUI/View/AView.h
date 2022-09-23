@@ -591,20 +591,16 @@ public:
     }
 
     virtual void invalidateFont();
-    virtual void setPosition(const glm::ivec2& position);
-
-    void setSize(const glm::ivec2& size) {
-        setSize(size.x, size.y);
-    }
+    virtual void setPosition(glm::ivec2 position);
 
     /**
      * Set size ignoring all restrictions (i.e. min size, max size, fixed size, etc...). Used by AAnimator.
      * @param size
      */
-    void setSizeForced(const glm::ivec2& size) {
+    void setSizeForced(glm::ivec2 size) {
         mSize = size;
     }
-    virtual void setSize(int width, int height);
+    virtual void setSize(glm::ivec2 size);
     virtual void setGeometry(int x, int y, int width, int height);
     void setGeometry(const glm::ivec2& position, const glm::ivec2& size) {
         setGeometry(position.x, position.y, size.x, size.y);

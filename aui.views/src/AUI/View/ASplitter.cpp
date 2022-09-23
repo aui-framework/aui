@@ -33,8 +33,8 @@ void ASplitter::onMousePressed(glm::ivec2 pos, AInput::Key button) {
 }
 
 
-void ASplitter::setSize(int width, int height) {
-    AViewContainer::setSize(width, height);
+void ASplitter::setSize(glm::ivec2 size) {
+    AViewContainer::setSize(size);
 }
 
 void ASplitter::onMouseMove(glm::ivec2 pos) {

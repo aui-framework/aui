@@ -273,7 +273,7 @@ void AWindow::show() {
     emit shown();
 }
 
-void AWindow::setSize(int width, int height) {
+void AWindow::setSize(glm::ivec2 size) {
     setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
 
     if (!mHandle) return;
@@ -309,7 +309,7 @@ void AWindow::setSize(int width, int height) {
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize(size);
 
     if (!mHandle) return;
     XMoveWindow(CommonRenderingContext::ourDisplay, mHandle, x, y);

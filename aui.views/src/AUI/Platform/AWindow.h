@@ -217,8 +217,8 @@ public:
 
     glm::ivec2 getWindowPosition() const;
 
-    void setPosition(const glm::ivec2& position) override;
-    void setSize(int width, int height) override;
+    void setPosition(glm::ivec2 position) override;
+    void setSize(glm::ivec2 size) override;
     void setGeometry(int x, int y, int width, int height) override;
 
 

@@ -60,13 +60,22 @@ public:
             void setOverlappingSurfacePosition(glm::ivec2 position) override {
                 emit positionSet(position);
             }
+
+            void setOverlappingSurfaceSize(glm::ivec2 size) override {
+                emit sizeSet(size);
+            }
+
         signals:
             emits<glm::ivec2> positionSet;
+            emits<glm::ivec2> sizeSet;
         };
 
         auto container = _new<MyOverlappingSurface>();
         connect(container->positionSet, [container = container.get()](glm::ivec2 p) {
             container->setPosition(p);
+        });
+        connect(container->sizeSet, [container = container.get()](glm::ivec2 p) {
+            container->setSize(p);
         });
         addViewCustomLayout(container);
 
@@ -138,7 +147,7 @@ void AEmbedAuiWrap::setViewportSize(int width, int height) {
     mContainer->makeCurrent();
     mSize = { width, height };
     nullsafe(mContainer->getRenderingContext())->beginResize(*mContainer);
-    mContainer->setSize(width, height);
+    mContainer->setSize({width, height});
     nullsafe(mContainer->getRenderingContext())->endResize(*mContainer);
     mContainer->mRequiresRedraw = true;
 }

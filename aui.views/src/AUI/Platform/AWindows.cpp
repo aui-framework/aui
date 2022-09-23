@@ -179,7 +179,7 @@ void AWindow::onCloseButtonClicked() {
 }
 
 
-void AWindow::setPosition(const glm::ivec2& position) {
+void AWindow::setPosition(glm::ivec2 position) {
     setGeometry(position.x, position.y, getWidth(), getHeight());
 }
 
@@ -238,14 +238,23 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
         void setOverlappingSurfacePosition(glm::ivec2 position) override {
             emit positionSet(position);
         }
+
+        void setOverlappingSurfaceSize(glm::ivec2 size) override {
+            emit sizeSet(size);
+        }
+
     signals:
         emits<glm::ivec2> positionSet;
+        emits<glm::ivec2> sizeSet;
     };
 
     auto surface = _new<MyOverlappingSurface>();
     ALayoutInflater::inflate(window, surface);
     connect(surface->positionSet, window, [this, window = window.get()](const glm::ivec2& newPos) {
         window->setPosition(unmapPosition(newPos));
+    });
+    connect(surface->sizeSet, window, [this, window = window.get()](const glm::ivec2& size) {
+        window->setSize(size);
     });
 
     return surface;

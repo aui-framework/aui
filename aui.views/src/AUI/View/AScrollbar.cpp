@@ -71,10 +71,10 @@ AScrollbar::AScrollbar(ALayoutDirection direction) :
 void AScrollbar::setOffset(size_t o) {
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
-            mOffsetSpacer->setSize(o, 0);
+            mOffsetSpacer->setSize({o, 0});
             break;
         case ALayoutDirection::VERTICAL:
-            mOffsetSpacer->setSize(0, o);
+            mOffsetSpacer->setSize({0, o});
             break;
     }
 }
@@ -235,7 +235,7 @@ void AScrollbarHandle::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     mDragging = false;
 }
 
-void AScrollbar::setSize(int width, int height) {
-    AViewContainer::setSize(width, height);
+void AScrollbar::setSize(glm::ivec2 size) {
+    AViewContainer::setSize(size);
     updateScrollHandleSize();
 }

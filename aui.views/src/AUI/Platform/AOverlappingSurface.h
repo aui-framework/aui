@@ -5,7 +5,7 @@
 
 class ABaseWindow;
 
-class AOverlappingSurface: public AViewContainer {
+class API_AUI_VIEWS AOverlappingSurface: public AViewContainer {
     friend class ABaseWindow;
 private:
     ABaseWindow* mParentWindow;
@@ -26,4 +26,5 @@ public:
     }
 
     virtual void setOverlappingSurfacePosition(glm::ivec2 position) = 0;
+    virtual void setOverlappingSurfaceSize(glm::ivec2 size) = 0;
 };

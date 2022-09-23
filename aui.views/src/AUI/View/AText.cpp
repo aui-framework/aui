@@ -195,10 +195,10 @@ void AText::prerenderString() {
     }
 }
 
-void AText::setSize(int width, int height) {
-    bool widthDiffers = width != getWidth();
+void AText::setSize(glm::ivec2 size) {
+    bool widthDiffers = size.x != getWidth();
     int prevContentMinimumHeight = getContentMinimumHeight(ALayoutDirection::NONE);
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize(size);
     if (widthDiffers) {
         prerenderString();
         AWindow::current()->flagUpdateLayout();

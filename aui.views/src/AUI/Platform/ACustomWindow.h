@@ -37,7 +37,7 @@ public:
 	ACustomWindow(const AString& name, int width, int height);
 	ACustomWindow();
 	~ACustomWindow() override;
-	void setSize(int width, int height) override;
+	void setSize(glm::ivec2 size) override;
 
 	virtual bool isCaptionAt(const glm::ivec2& pos);
 

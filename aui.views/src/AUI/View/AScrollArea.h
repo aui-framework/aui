@@ -47,7 +47,7 @@ public:
 
     _<AViewContainer> getContentContainer() const;
     int getContentMinimumHeight(ALayoutDirection layout) override;
-    void setSize(int width, int height) override;
+    void setSize(glm::ivec2 size) override;
     void setContents(const _<AViewContainer>& container);
 
     void scroll(int deltaByX, int deltaByY) noexcept {

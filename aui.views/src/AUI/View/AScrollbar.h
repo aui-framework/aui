@@ -122,7 +122,7 @@ signals:
 
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 
-    void setSize(int width, int height) override;
+    void setSize(glm::ivec2 size) override;
 };
 
 

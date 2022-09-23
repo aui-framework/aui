@@ -100,15 +100,15 @@ float AWindow::fetchDpiFromSystem() const {
 }
 
 
-void AWindow::setSize(int width, int height) {
+void AWindow::setSize(glm::ivec2 size) {
     nullsafe(mRenderingContext)->beginResize(*this);
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize(size);
     nullsafe(mRenderingContext)->endResize(*this);
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize(size);
 
 }
 

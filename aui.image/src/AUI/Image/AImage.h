@@ -28,6 +28,7 @@
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <AUI/Common/AVector.h>
+#include <AUI/Common/AByteBuffer.h>
 #include <AUI/Util/Cache.h>
 #include <AUI/Url/AUrl.h>
 #include <AUI/IO/APath.h>
@@ -70,7 +71,7 @@ public:
         STRUCTURE = ~META
     };
 private:
-    AVector<uint8_t> mData;
+    AByteBuffer mData;
     uint32_t mWidth;
     uint32_t mHeight;
     unsigned mFormat = UNKNOWN;
@@ -80,7 +81,14 @@ public:
 
     AImage(unsigned int format) : mFormat(format) {}
 
-    AImage(AVector<uint8_t> mData, uint32_t mWidth, uint32_t mHeight, int mFormat);
+    AImage(AByteBuffer data,
+           uint32_t width,
+           uint32_t height,
+           unsigned int format):
+            mData(std::move(data)),
+            mWidth(width),
+            mHeight(height),
+            mFormat(format) {}
 
     void allocate() {
         mData.resize(mWidth * mHeight * getBytesPerPixel());
@@ -95,12 +103,12 @@ public:
     AByteBuffer imageDataOfFormat(unsigned format) const;
 
     [[nodiscard]]
-    AVector<uint8_t>& getData() {
+    AByteBuffer& getData() {
         return mData;
     }
 
     [[nodiscard]]
-    const AVector<uint8_t>& getData() const {
+    const AByteBuffer& getData() const {
         return mData;
     }
 
@@ -142,6 +150,7 @@ public:
     glm::ivec4 getPixelAt(uint32_t x, uint32_t y) const;
     void setPixelAt(uint32_t x, uint32_t y, const glm::ivec4& val);
 
+    void mirrorVertically();
 
     [[nodiscard]]
     static AImage addAlpha(const AImage& AImage);
@@ -155,12 +164,12 @@ public:
 
     [[nodiscard]]
     uint8_t& at(uint32_t x, uint32_t y) {
-        return mData[(y * getWidth() + x) * getBytesPerPixel()];
+        return mData.at<std::uint8_t>((y * getWidth() + x) * getBytesPerPixel());
     }
 
     [[nodiscard]]
     const uint8_t& at(uint32_t x, uint32_t y) const {
-        return mData[(y * getWidth() + x) * getBytesPerPixel()];
+        return mData.at<std::uint8_t>((y * getWidth() + x) * getBytesPerPixel());
     }
 
     [[nodiscard]]

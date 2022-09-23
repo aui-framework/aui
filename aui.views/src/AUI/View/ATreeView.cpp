@@ -224,8 +224,8 @@ void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeIndex
 }
 
 
-void ATreeView::setSize(int width, int height) {
-    AViewContainer::setSize(width, height);
+void ATreeView::setSize(glm::ivec2 size) {
+    AViewContainer::setSize(size);
 
     updateScrollbarDimensions();
 }

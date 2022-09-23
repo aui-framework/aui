@@ -104,8 +104,8 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
 
 AScrollArea::~AScrollArea() = default;
 
-void AScrollArea::setSize(int width, int height) {
-    AViewContainer::setSize(width, height);
+void AScrollArea::setSize(glm::ivec2 size) {
+    AViewContainer::setSize(size);
     if (mContentContainer->hasChild()) {
         mVerticalScrollbar->setScrollDimensions(
                 mContentContainer->getContentHeight() + mContentContainer->getTotalFieldVertical(),

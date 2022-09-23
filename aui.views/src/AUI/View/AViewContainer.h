@@ -89,7 +89,7 @@ public:
     bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
 
     bool consumesClick(const glm::ivec2& pos) override;
-    void setSize(int width, int height) override;
+    void setSize(glm::ivec2 size) override;
     void setEnabled(bool enabled = true) override;
 
     auto begin() const {

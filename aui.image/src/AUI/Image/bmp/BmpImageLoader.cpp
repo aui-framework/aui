@@ -51,9 +51,7 @@ _<AImage> BmpImageLoader::getRasterImage(AByteBufferView buffer) {
             default:
                 assert(0);
         }
-        auto img = _new<AImage>(
-                AVector<uint8_t>{static_cast<uint8_t*>(data), static_cast<uint8_t*>(data + x * y * channels)}, x, y,
-                format);
+        auto img = _new<AImage>(x, y, format);
         stbi_image_free(data);
         return img;
     }

@@ -35,6 +35,8 @@
 #include "ADesktop.h"
 #include "ACursor.h"
 #include "AUI/Platform/win32/Ole.h"
+#include "AUI/Util/AImageDrawable.h"
+#include "AUI/Platform/win32/Win32Util.h"
 #include <windows.h>
 #include <shlobj.h>
 #include <AUI/Traits/memory.h>
@@ -211,6 +213,15 @@ void ADesktop::openUrl(const AString& url) {
     ShellExecute(nullptr, L"open", url.c_str(), nullptr, nullptr, SW_NORMAL);
 }
 
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    SHFILEINFO info;
+    if (SUCCEEDED(SHGetFileInfo(file.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES))) {
+
+        ARaiiHelper destroyer = [&]{ DestroyIcon(info.hIcon); };
+        return _new<AImageDrawable>(_new<AImage>(aui::win32::iconToImage(info.hIcon)));
+    }
+    return nullptr;
+}
 
 #elif AUI_PLATFORM_ANDROID
 

@@ -128,6 +128,19 @@ public:
         return *reinterpret_cast<T*>(mBuffer + byteIndex);
     }
 
+
+    /**
+     * @brief Gets value of specified type by byte index relative to the beginning of internal buffer.
+     * @tparam T data type
+     * @param byteIndex byte offset realtive to the beginning of internal buffer
+     * @return data
+     */
+    template <typename T>
+    const T& at(size_t byteIndex) const
+    {
+        return *reinterpret_cast<T*>(mBuffer + byteIndex);
+    }
+
     /**
      * Forces new size of the buffer.
      * <dl>
@@ -190,6 +203,13 @@ public:
      */
     size_t getSize() const noexcept {
         return mSize;
+    }
+
+    /**
+     * @return true if size == 0
+     */
+    bool empty() const noexcept {
+        return mSize == 0;
     }
 
     /**

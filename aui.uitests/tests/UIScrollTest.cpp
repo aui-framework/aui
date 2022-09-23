@@ -30,7 +30,7 @@ class MockedViewContainer: public AViewContainer {
 public:
     MockedViewContainer() {
         ON_CALL(*this, setSize).WillByDefault([this](int width, int height) {
-            AViewContainer::setSize(width, height);
+            AViewContainer::setSize(size);
         });
 
         setContents(

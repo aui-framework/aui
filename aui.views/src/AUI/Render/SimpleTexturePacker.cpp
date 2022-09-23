@@ -35,9 +35,7 @@ void Util::SimpleTexturePacker::onResize(AImage& data, Util::dim side) {
 		mImage = AImage::resize(*mImage, static_cast<uint16_t>(side), static_cast<uint16_t>(side));
 	}
 	else {
-		AVector<uint8_t> c;
-		c.resize(static_cast<size_t>(side * side * data.getBytesPerPixel()));
-		mImage = AImage(c, side, side, data.getFormat());
+		mImage = AImage(side, side, data.getFormat());
 	}
 }
 

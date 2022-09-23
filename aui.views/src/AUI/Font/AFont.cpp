@@ -103,7 +103,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
 		
 		int height = g->bitmap.rows;
 
-		AVector<uint8_t> data;
+		AByteBuffer data;
 
 		if (fr == FontRendering::NEAREST) {
 		    // when nearest, freetype renders glyphs into the 1bit-depth image but OpenGL required at least8bit-depth,
@@ -113,7 +113,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
             for (unsigned r = 0; r < g->bitmap.rows; ++r) {
                 unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
                 for (unsigned c = 0; c < g->bitmap.width; ++c) {
-                    data[c + r * g->bitmap.width] = (bufPtr[c / 8] & (0b10000000 >> (c % 8))) ? 255 : 0;
+                    data.at<std::uint8_t>(c + r * g->bitmap.width) = (bufPtr[c / 8] & (0b10000000 >> (c % 8))) ? 255 : 0;
                 }
             }
         } else {
@@ -121,7 +121,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
 
             for (unsigned r = 0; r < g->bitmap.rows; ++r) {
                 unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
-                data.insert(data.end(), bufPtr, bufPtr + g->bitmap.width);
+                data.write(reinterpret_cast<const char*>(bufPtr), g->bitmap.width);
             }
 		}
 

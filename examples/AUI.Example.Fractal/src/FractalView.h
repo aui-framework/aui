@@ -50,7 +50,7 @@ public:
 
     void onMouseWheel(glm::ivec2 pos, int delta) override;
 
-    void setSize(int width, int height) override;
+    void setSize(glm::ivec2 size) override;
 
     gl::Shader& getShader() {
         return mShader;

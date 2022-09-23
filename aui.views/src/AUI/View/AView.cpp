@@ -272,7 +272,7 @@ AFontStyle& AView::getFontStyle()
 
 void AView::pack()
 {
-    setSize(getMinimumWidth(parentLayoutDirection()), getMinimumHeight(parentLayoutDirection()));
+    setSize({getMinimumWidth(parentLayoutDirection()), getMinimumHeight(parentLayoutDirection())});
 }
 
 void AView::addAssName(const AString& assName)
@@ -443,10 +443,10 @@ glm::ivec2 AView::getPositionInWindow() const {
 }
 
 
-void AView::setPosition(const glm::ivec2& position) {
+void AView::setPosition(glm::ivec2 position) {
     mPosition = position;
 }
-void AView::setSize(int width, int height)
+void AView::setSize(glm::ivec2 size)
 {
     /*
     int minWidth = getContentMinimumWidth();
@@ -462,7 +462,7 @@ void AView::setSize(int width, int height)
     }
     else
     {
-        mSize.x = width;
+        mSize.x = size.x;
         if (mMinSize.x != 0)
             mSize.x = glm::max(mMinSize.x, mSize.x);
     }
@@ -472,7 +472,7 @@ void AView::setSize(int width, int height)
     }
     else
     {
-        mSize.y = height;
+        mSize.y = size.y;
         if (mMinSize.y != 0)
             mSize.y = glm::max(mMinSize.y, mSize.y);
     }
@@ -481,7 +481,7 @@ void AView::setSize(int width, int height)
 
 void AView::setGeometry(int x, int y, int width, int height) {
     setPosition({ x, y });
-    setSize(width, height);
+    setSize({width, height});
 }
 
 bool AView::consumesClick(const glm::ivec2& pos) {
