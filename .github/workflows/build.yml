@@ -71,10 +71,12 @@ jobs:
         os: [windows-latest, ubuntu-latest]
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
+        is32bit: [false]
         include:
           - os: windows-latest
             generator: "Visual Studio 17 2022"
             additional_cmake_args: '-A Win32'
+            is32bit: true
           - os: windows-latest
             generator: "Visual Studio 17 2022"
             additional_cmake_args: '-A x64'
