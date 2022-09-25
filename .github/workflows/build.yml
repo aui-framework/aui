@@ -76,13 +76,18 @@ jobs:
           - os: windows-latest
             generator: "Visual Studio 17 2022"
             additional_cmake_args: '-A Win32'
+            debug_or_release: Debug
+            shared_or_static: shared
             is32bit: true
+
           - os: windows-latest
             generator: "Visual Studio 17 2022"
             additional_cmake_args: '-A x64'
+
           - os: ubuntu-latest
             generator: "Unix Makefiles"
             additional_cmake_args: ''
+
           - os: ubuntu-latest
             generator: "Unix Makefiles"
             additional_cmake_args: ''
