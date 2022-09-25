@@ -630,11 +630,16 @@ AStylesheet::AStylesheet() {
         },
         {
             c(".agroupbox-inner"),
-                Border { 2_dp, 0x30808080_argb },
-                BorderRadius { 4_dp },
+            Border { 2_dp, 0x30808080_argb },
+            BorderRadius { 4_dp },
             Padding { 8_dp, 6_dp },
-                Margin { 0, 4_dp},
-                AOverflow::HIDDEN,
+            Margin { 0, 4_dp},
+            AOverflow::HIDDEN,
+        },
+        {
+            c(".modal-scaffold-dim"),
+            BackgroundSolid { 0x40000000_argb },
+            Expanding{},
         },
     });
 }

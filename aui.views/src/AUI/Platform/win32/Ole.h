@@ -12,6 +12,7 @@ public:
     static Ole& inst();
 
     static AMimedData toMime(IDataObject* dataObject);
+    static IDataObject* fromMime(const AMimedData& data);
 
 private:
     Ole();
