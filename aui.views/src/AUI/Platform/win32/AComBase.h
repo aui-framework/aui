@@ -1,6 +1,5 @@
 #pragma once
 
-#include <Windows.h>
 #include <shlwapi.h>
 #include <strsafe.h>
 #include <shlobj.h>
@@ -15,19 +14,19 @@ class AComBase: public Base {
 public:
     virtual ~AComBase() = default;
 
-    ULONG AddRef(void) override {
+    ULONG __stdcall AddRef() override {
         ++mRefCounter;
         return 0;
     }
 
-    ULONG Release(void) override {
+    ULONG __stdcall Release() override {
         if (--mRefCounter == 0) {
             delete this;
         }
         return 0;
     }
 
-    HRESULT QueryInterface(const IID& riid, void** ppv) override {
+    HRESULT __stdcall QueryInterface(const IID& riid, void** ppv) override {
         static const QITAB qit[] = {
                 QITABENT(Child, Base),
                 { 0 },

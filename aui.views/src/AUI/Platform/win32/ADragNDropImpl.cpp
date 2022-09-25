@@ -12,13 +12,12 @@
 constexpr auto LOG_TAG = "ADragNDropImpl/win32";
 
 namespace {
-
-class MyDropSource final: public AComBase<MyDropSource, IDropSource>, public aui::noncopyable {
+    class MyDropSource final: public AComBase<MyDropSource, IDropSource>, public aui::noncopyable {
     private:
         bool mCancelled = false;
 
     public:
-        HRESULT QueryContinueDrag(BOOL escapePressed, DWORD keyState) override {
+        HRESULT __stdcall QueryContinueDrag(BOOL escapePressed, DWORD keyState) override {
             if (mCancelled) return DRAGDROP_S_CANCEL;
 
             if (!(keyState & MK_LBUTTON) && !(keyState & MK_RBUTTON)) {
@@ -28,7 +27,7 @@ class MyDropSource final: public AComBase<MyDropSource, IDropSource>, public aui
             return S_OK;
         }
 
-        HRESULT GiveFeedback(DWORD dwEffect) override {
+        HRESULT __stdcall GiveFeedback(DWORD dwEffect) override {
             return DRAGDROP_S_USEDEFAULTCURSORS;
         }
     };

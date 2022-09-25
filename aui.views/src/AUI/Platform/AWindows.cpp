@@ -231,7 +231,9 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     auto finalPos = unmapPosition(position);
     window->setGeometry(finalPos.x, finalPos.y, size.x, size.y);
     // show later
-    window->show();
+    ui_thread {
+        window->show();
+    };
 
     class MyOverlappingSurface: public AOverlappingSurface {
     public:
