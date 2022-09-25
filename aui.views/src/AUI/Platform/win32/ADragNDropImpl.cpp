@@ -70,7 +70,7 @@ namespace {
             }
         }
 
-        HRESULT GetData(FORMATETC* inFormatEtc, STGMEDIUM* medium) override {
+        HRESULT __stdcall GetData(FORMATETC* inFormatEtc, STGMEDIUM* medium) override {
             for (const auto& content : mContents) {
                 if (content.formatEtc.cfFormat != inFormatEtc->cfFormat ||
                     content.formatEtc.lindex != inFormatEtc->lindex ||
@@ -88,11 +88,11 @@ namespace {
             return DV_E_FORMATETC;
         }
 
-        HRESULT GetDataHere(FORMATETC* pformatetc, STGMEDIUM* pmedium) override {
+        HRESULT __stdcall GetDataHere(FORMATETC* pformatetc, STGMEDIUM* pmedium) override {
             return DATA_E_FORMATETC;
         }
 
-        HRESULT QueryGetData(FORMATETC* pformatetc) override {
+        HRESULT __stdcall QueryGetData(FORMATETC* pformatetc) override {
             for (const auto& content : mContents) {
                 if (content.formatEtc.cfFormat == pformatetc->cfFormat) {
                     ALogger::debug(LOG_TAG) << "QueryGetData: " << content.toString();
@@ -103,12 +103,12 @@ namespace {
             return DV_E_FORMATETC;
         }
 
-        HRESULT GetCanonicalFormatEtc(FORMATETC* pformatetcIn, FORMATETC* pFormatetcOut) override {
+        HRESULT __stdcall GetCanonicalFormatEtc(FORMATETC* pformatetcIn, FORMATETC* pFormatetcOut) override {
             pFormatetcOut->ptd = nullptr;
             return E_NOTIMPL;
         }
 
-        HRESULT SetData(FORMATETC* inFormatEtc, STGMEDIUM* inMedium, BOOL shouldRelease) override {
+        HRESULT __stdcall SetData(FORMATETC* inFormatEtc, STGMEDIUM* inMedium, BOOL shouldRelease) override {
             /*
              * If `shouldRelease` is true, the ownership of the original data in `inMedium` is transferred to `this`.
              * Otherwise, it remains with the caller. To prevent lifetime issues, we perform a deep copy of `inMedium`.
@@ -123,7 +123,7 @@ namespace {
             return S_OK;
         }
 
-        HRESULT EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC** ppenumFormatEtc) override {
+        HRESULT __stdcall EnumFormatEtc(DWORD dwDirection, IEnumFORMATETC** ppenumFormatEtc) override {
             if (dwDirection == DATADIR_GET)
             {
                 *ppenumFormatEtc = new FormatEtcEnumerator({mContents.begin(), mContents.end()});
@@ -132,15 +132,15 @@ namespace {
             return E_NOTIMPL;
         }
 
-        HRESULT DAdvise(FORMATETC* pformatetc, DWORD advf, IAdviseSink* pAdvSink, DWORD* pdwConnection) override {
+        HRESULT __stdcall DAdvise(FORMATETC* pformatetc, DWORD advf, IAdviseSink* pAdvSink, DWORD* pdwConnection) override {
             return OLE_E_ADVISENOTSUPPORTED;
         }
 
-        HRESULT DUnadvise(DWORD dwConnection) override {
+        HRESULT __stdcall DUnadvise(DWORD dwConnection) override {
             return OLE_E_ADVISENOTSUPPORTED;
         }
 
-        HRESULT EnumDAdvise(IEnumSTATDATA** ppenumAdvise) override {
+        HRESULT __stdcall EnumDAdvise(IEnumSTATDATA** ppenumAdvise) override {
             return OLE_E_ADVISENOTSUPPORTED;
         }
     private:
@@ -215,7 +215,7 @@ class MyDropSource final: public AComBase<MyDropSource, IDropSource>, public aui
         bool mCancelled = false;
 
     public:
-        HRESULT QueryContinueDrag(BOOL escapePressed, DWORD keyState) override {
+        HRESULT __stdcall QueryContinueDrag(BOOL escapePressed, DWORD keyState) override {
             if (mCancelled) return DRAGDROP_S_CANCEL;
 
             if (!(keyState & MK_LBUTTON) && !(keyState & MK_RBUTTON)) {
@@ -225,11 +225,11 @@ class MyDropSource final: public AComBase<MyDropSource, IDropSource>, public aui
             return S_OK;
         }
 
-        HRESULT GiveFeedback(DWORD dwEffect) override {
+        HRESULT __stdcall GiveFeedback(DWORD dwEffect) override {
             return DRAGDROP_S_USEDEFAULTCURSORS;
         }
 
-        HRESULT QueryInterface(const IID& riid, void** ppv) override {
+        HRESULT __stdcall QueryInterface(const IID& riid, void** ppv) override {
             static const QITAB qit[] = {
                     QITABENT(MyDataObject, IDataObject),
                     { 0 },

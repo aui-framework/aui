@@ -526,7 +526,7 @@ void AWindow::allowDragNDrop() {
     public:
         DropTarget(ABaseWindow* window) : mWindow(window) {}
 
-        HRESULT DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
+        HRESULT __stdcall DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
             auto effect = DROPEFFECT_NONE;
             mMimed = Ole::toMime(pDataObj);
             if (mWindow->onDragEnter({ mMimed, { pt.x, pt.y } })) {
@@ -540,18 +540,18 @@ void AWindow::allowDragNDrop() {
             return S_OK;
         }
 
-        HRESULT DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
+        HRESULT __stdcall DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
             *pdwEffect = mOleEffect;
             return S_OK;
         }
 
-        HRESULT DragLeave() override {
+        HRESULT __stdcall DragLeave() override {
             mWindow->onDragLeave();
             mMimed.clear();
             return S_OK;
         }
 
-        HRESULT Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
+        HRESULT __stdcall Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
             *pdwEffect = mOleEffect;
             mWindow->onDragDrop({ mMimed, { pt.x, pt.y} });
             return S_OK;
