@@ -63,7 +63,7 @@ jobs:
   #      run: ./gradlew assembleDebug
 
   build-desktop:
-    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_args }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -72,6 +72,9 @@ jobs:
         debug_or_release: [Debug, Release]
         shared_or_static: [shared, static]
         include:
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_args: '-A Win32'
           - os: windows-latest
             generator: "Visual Studio 17 2022"
             additional_cmake_args: '-A x64'
