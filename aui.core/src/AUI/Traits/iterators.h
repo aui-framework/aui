@@ -76,6 +76,10 @@ namespace aui {
         }
     };
 
+    // deduction guide
+    template<typename Container>
+    range(Container& c) -> range<decltype(c.begin())>;
+
     /**
      * @brief If Container is const, Container::const_iterator is aliased; Container::iterator otherwise.
      */

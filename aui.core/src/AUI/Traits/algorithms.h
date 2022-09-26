@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <cstddef>
 #include <cmath>
+#include "iterators.h"
 
 namespace aui {
 
@@ -38,11 +39,11 @@ namespace aui {
     template<typename Predicate, typename Iterator>
     struct BinarySearchNearestToZero {
     public:
-        BinarySearchNearestToZero(Predicate predicate, Iterator end): mPredicate(std::move(predicate)), mEnd(end) {}
+        BinarySearchNearestToZero(Predicate predicate, aui::range<Iterator> range): mPredicate(std::move(predicate)), mRange(range) {}
 
         BinarySearchResult operator()(Iterator c) {
             auto next = std::next(c);
-            if (next == mEnd) {
+            if (next == mRange.end()) {
                 return BinarySearchResult::MATCH;
             }
 
@@ -50,9 +51,18 @@ namespace aui {
             auto v2 = mPredicate(next);
 
             if (v1 <= 0 && v2 > 0) {
+                if (v2 + v1 < 0) {
+                    return BinarySearchResult::RIGHT;
+                }
                 return BinarySearchResult::MATCH;
             }
             if (v1 > 0) {
+                if (mRange.begin() == c) {
+                    return BinarySearchResult::MATCH;
+                }
+                if (auto v0 = mPredicate(std::prev(c)); v1 + v0 < 0) {
+                    return BinarySearchResult::MATCH;
+                }
                 return BinarySearchResult::LEFT;
             }
 
@@ -60,17 +70,23 @@ namespace aui {
         }
     private:
         Predicate mPredicate;
-        Iterator mEnd;
+        aui::range<Iterator> mRange;
     };
 
 
     /**
      * @brief Performs binary search on range [begin, end).
      *
-     * <p>
+     * @details
+     * For binary search to succeed, the range [begin, end) must be at least partially ordered with respect to predicate:
+     * <ul>
+     *   <li>Predicate returns BinarySearchResult::RIGHT for the all elements preceding the find subject.</li>
+     *   <li>Predicate returns BinarySearchResult::LEFT for the all elements following the find subject.</li>
+     *   <li>Predicate returns BinarySearchResult::MATCH for the find subject.</li>
+     * </ul>
+     *
      * It like a game "cold-warm" where <code>predicate</code> says searched object is stored either to the left or
-     * right relatively to the specified object.
-     * </p>
+     * right relatively to the find subject.
      *
      * @tparam Iterator iterator type
      * @tparam Predicate predicate (comparator) type
