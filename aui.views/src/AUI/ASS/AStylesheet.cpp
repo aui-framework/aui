@@ -400,13 +400,13 @@ AStylesheet::AStylesheet() {
         // ADividerView
         {
             t<AHDividerView>(),
-            FixedSize { {}, 2_dp },
+            FixedSize { {}, 1_px },
             Margin { 0, 2_dp },
             BackgroundSolid { 0x808080_rgb },
         },
         {
             t<AVDividerView>(),
-            FixedSize { 2_dp, {} },
+            FixedSize { 1_px, {} },
             Margin { 2_dp, 0 },
             BackgroundSolid { 0x808080_rgb },
         },

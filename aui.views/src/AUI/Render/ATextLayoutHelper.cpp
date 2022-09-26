@@ -24,15 +24,15 @@ size_t ATextLayoutHelper::xToIndex(const AVector<Symbol>& line, int pos) {
                 ? 0
                 : (posCurrent - (glm::max)((posCurrent - (it - 1)->position.x) / 2, 2) - 1);
 
-        if (pos < leftBound) return -1;
+        if (pos < leftBound) return aui::BinarySearchResult::LEFT;
 
         int rightBound = it == (line.end() - 1)
                 ? std::numeric_limits<int>::max()
                 : posCurrent + (glm::max)(((it + 1)->position.x - posCurrent) / 2, 2); // magic offset
 
-        if (pos >= rightBound) return 1;
+        if (pos >= rightBound) return aui::BinarySearchResult::RIGHT;
 
-        return 0;
+        return aui::BinarySearchResult::MATCH;
     });
     if (it != line.end()) {
         return it - line.begin();
