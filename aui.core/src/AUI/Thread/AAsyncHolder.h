@@ -44,17 +44,19 @@ public:
         std::unique_lock lock(mSync);
         if constexpr (std::is_same_v<void, T>) {
             auto impl = future.inner().get();
+            mFutureSet << std::move(future);
+            lock.unlock();
             future.onSuccess([this, impl]() {
                 std::unique_lock lock(mSync);
                 mFutureSet.removeIf([&](const AFuture<>& f) {
                     return f.inner().get() == impl;
                 });
             });
-            mFutureSet << std::move(future);
         } else {
             auto uniquePtr = std::make_unique<Future<T>>(future);
             auto ptr = uniquePtr.get();
             mCustomTypeFutures.push_back(std::move(uniquePtr));
+            lock.unlock();
             future.onSuccess([this, ptr](const T& result) {
                 std::unique_lock lock(mSync);
                 mCustomTypeFutures.erase(std::remove_if(mCustomTypeFutures.begin(), mCustomTypeFutures.end(), [&](const auto& uniquePtr) {

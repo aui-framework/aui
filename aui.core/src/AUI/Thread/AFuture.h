@@ -222,7 +222,7 @@ namespace aui::impl::future {
                                 lock.lock();
                                 value = true;
                                 cv.notify_all();
-                                nullsafe(onSuccess)();
+                                notifyOnSuccessCallback();
 
                                 (void)sharedPtrLock; // sharedPtrLock is *used*
                                 lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
@@ -233,7 +233,7 @@ namespace aui::impl::future {
                                 lock.lock();
                                 value = std::move(result);
                                 cv.notify_all();
-                                nullsafe(onSuccess)(*value);
+                                notifyOnSuccessCallback();
 
                                 (void)sharedPtrLock; // sharedPtrLock is *used*
                                 lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
@@ -263,6 +263,17 @@ namespace aui::impl::future {
                 nullsafe(onError)(*exception);
             }
 
+
+            void notifyOnSuccessCallback() {
+                if (value) {
+                    if constexpr(isVoid) {
+                        onSuccess();
+                    } else {
+                        onSuccess(*value);
+                    }
+                    onSuccess = nullptr;
+                }
+            }
         };
 
     protected:
@@ -338,6 +349,7 @@ namespace aui::impl::future {
                     };
                 }
             }
+            (*mInner)->notifyOnSuccessCallback();
         }
 
         template<typename Callback>

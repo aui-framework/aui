@@ -26,6 +26,8 @@
 #include <cstdint>
 #include <iterator>
 #include "parameter_pack.h"
+#include "macros.h"
+
 
 namespace aui {
 
@@ -61,18 +63,49 @@ namespace aui {
     public:
         range(Iterator mBegin, Iterator mEnd) : mBegin(mBegin), mEnd(mEnd) {}
 
+        ~range() {
+            AUI_NO_OPTIMIZE_OUT(range::size)
+        }
 
         template<typename Container>
         range(Container& c): mBegin(c.begin()), mEnd(c.end()) {
 
         }
 
-        Iterator& begin() {
+        [[nodiscard]]
+        [[maybe_unused]]
+        std::size_t size() const noexcept {
+            return std::distance(mBegin, mEnd);
+        }
+
+        [[nodiscard]]
+        Iterator& begin() noexcept {
             return mBegin;
         }
 
-        Iterator& end() {
+        [[nodiscard]]
+        Iterator& end() noexcept {
             return mEnd;
+        }
+
+        [[nodiscard]]
+        Iterator& begin() const noexcept {
+            return mBegin;
+        }
+
+        [[nodiscard]]
+        Iterator& end() const noexcept {
+            return mEnd;
+        }
+
+        [[nodiscard]]
+        const auto& first() const {
+            return *mBegin;
+        }
+
+        [[nodiscard]]
+        const auto& last() const {
+            return *std::prev(mEnd);
         }
     };
 
