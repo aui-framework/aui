@@ -29,6 +29,7 @@
 #include <ostream>
 #include "ASet.h"
 #include <AUI/Traits/containers.h>
+#include <AUI/Traits/iterators.h>
 #include "AContainerPrototypes.h"
 
 
@@ -51,6 +52,8 @@ public:
     using p::p;
     using iterator = typename p::iterator;
 
+    template<typename Iterator>
+    explicit AVector(aui::range<Iterator> range): AVector(range.begin(), range.end()) {}
 
 
     /**
