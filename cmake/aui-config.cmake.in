@@ -29,6 +29,11 @@ include(${SELF_DIR}/cmake/aui.build.cmake)
 
 @AUI_CONFIG_VARS@
 
+
+if (NOT AUI_FIND_COMPONENTS) # case fix
+    set(AUI_FIND_COMPONENTS ${aui_FIND_COMPONENTS})
+endif()
+
 if (NOT AUI_FIND_COMPONENTS)
     set(AUI_FIND_COMPONENTS ${AUI_AVAILABLE_COMPONENTS})
     set(_all TRUE)
