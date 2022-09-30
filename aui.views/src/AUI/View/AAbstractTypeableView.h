@@ -38,7 +38,9 @@
  */
 class API_AUI_VIEWS AAbstractTypeableView: public AView, public ACursorSelectable {
 private:
-    static ATimer& blinkTimer();
+    static _<ATimer> blinkTimer();
+
+    _<ATimer> mBlinkTimer = blinkTimer();
 
     unsigned mCursorBlinkCount = 0;
     bool mCursorBlinkVisible = true;
