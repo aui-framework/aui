@@ -265,7 +265,7 @@ namespace aui::impl::future {
 
 
             void notifyOnSuccessCallback() {
-                if (value) {
+                if (value && onSuccess) {
                     if constexpr(isVoid) {
                         onSuccess();
                     } else {
@@ -532,6 +532,15 @@ public:
         nullsafe(inner->onSuccess)(*inner->value);
     }
 
+    /**
+     * @brief Stores an exception from std::current_exception to the future.
+     */
+    void supplyException() const noexcept {
+        auto& inner = (*super::mInner);
+        std::unique_lock lock(inner->mutex);
+        inner->reportException();
+    }
+
     AFuture& operator=(std::nullptr_t) noexcept {
         super::mInner = nullptr;
         return *this;
@@ -566,6 +575,15 @@ public:
 
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
+
+    /**
+     * @brief Stores an exception from std::current_exception to the future.
+     */
+    void supplyException() const noexcept {
+        auto& inner = (*super::mInner);
+        std::unique_lock lock(inner->mutex);
+        inner->reportException();
+    }
 
     void supplyResult() const noexcept {
         auto& inner = (*super::mInner);
