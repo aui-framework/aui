@@ -44,12 +44,12 @@ protected:
     void processMessagesImpl() override {
         assert(("AAbstractThread::processMessages() should not be called from other thread",
                 mId == std::this_thread::get_id()));
-        std::unique_lock lock(mQueueLock);
+        std::unique_lock lock(mQueueLock, std::defer_lock);
 
         using namespace std::chrono;
         using namespace std::chrono_literals;
 
-        while (!mMessageQueue.empty())
+        for (std::size_t i = 0; i < 10 && !mMessageQueue.empty() && lock.try_lock(); ++i)
         {
             auto f = std::move(mMessageQueue.front());
             mMessageQueue.pop_front();
@@ -62,8 +62,6 @@ protected:
                     << f.stacktrace
                     << " - ...\n";
             }
-
-            lock.lock();
         }
     }
 };
