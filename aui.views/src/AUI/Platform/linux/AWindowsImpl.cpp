@@ -429,6 +429,22 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     break;
                 }
                 case KeyRelease:
+                    if (XEventsQueued(CommonRenderingContext::ourDisplay, QueuedAfterReading)) // check for key repeat
+                    {
+                        XEvent nextEvent;
+                        XPeekEvent(CommonRenderingContext::ourDisplay, &nextEvent);
+
+                        if (nextEvent.type == KeyPress &&
+                            nextEvent.xkey.time == ev.xkey.time &&
+                            nextEvent.xkey.keycode == ev.xkey.keycode) {
+                            // key wasn't actually released
+
+                            XNextEvent(CommonRenderingContext::ourDisplay, &nextEvent); // consume the event from queue
+
+                            break;
+                        }
+                    }
+
                     window = locateWindow(ev.xkey.window);
                     window->onKeyUp(AInput::fromNative(ev.xkey.keycode));
                     break;
