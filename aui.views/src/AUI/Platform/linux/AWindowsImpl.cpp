@@ -452,8 +452,10 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 case ConfigureNotify: {
                     window = locateWindow(ev.xconfigure.window);
                     glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
-                    if (size.x >= 10 && size.y >= 10 && size != window->getSize())
+                    if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
+                        AUI_EMIT_FOREIGN_SIGNAL(window)->resized(size.x, size.y);
                         window->AViewContainer::setSize(size);
+                    }
                     if (auto w = _cast<ACustomWindow>(window)) {
                         w->handleXConfigureNotify();
                     }
@@ -510,7 +512,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
                         auto maximized = window->isMaximized();
                         if (maximized != window->mWasMaximized) {
-                            perform_as_member(window, {
+                            AUI_PERFORM_AS_MEMBER(window, {
                                 if (mWasMaximized) {
                                     emit restored();
                                 } else {
