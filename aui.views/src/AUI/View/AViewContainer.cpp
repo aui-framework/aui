@@ -293,6 +293,10 @@ void AViewContainer::invalidateAllStyles() {
     AView::invalidateAllStyles();
     if (mSizeSet)
         updateLayout();
+
+    for (const auto& v : mViews) {
+        v->invalidateAssHelper();
+    }
 }
 
 void AViewContainer::updateLayout()
