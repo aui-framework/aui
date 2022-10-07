@@ -429,6 +429,22 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     break;
                 }
                 case KeyRelease:
+                    if (XEventsQueued(CommonRenderingContext::ourDisplay, QueuedAfterReading)) // check for key repeat
+                    {
+                        XEvent nextEvent;
+                        XPeekEvent(CommonRenderingContext::ourDisplay, &nextEvent);
+
+                        if (nextEvent.type == KeyPress &&
+                            nextEvent.xkey.time == ev.xkey.time &&
+                            nextEvent.xkey.keycode == ev.xkey.keycode) {
+                            // key wasn't actually released
+
+                            XNextEvent(CommonRenderingContext::ourDisplay, &nextEvent); // consume the event from queue
+
+                            break;
+                        }
+                    }
+
                     window = locateWindow(ev.xkey.window);
                     window->onKeyUp(AInput::fromNative(ev.xkey.keycode));
                     break;
@@ -436,8 +452,10 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 case ConfigureNotify: {
                     window = locateWindow(ev.xconfigure.window);
                     glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
-                    if (size.x >= 10 && size.y >= 10 && size != window->getSize())
+                    if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
+                        AUI_EMIT_FOREIGN_SIGNAL(window)->resized(size.x, size.y);
                         window->AViewContainer::setSize(size);
+                    }
                     if (auto w = _cast<ACustomWindow>(window)) {
                         w->handleXConfigureNotify();
                     }
@@ -494,7 +512,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
                         auto maximized = window->isMaximized();
                         if (maximized != window->mWasMaximized) {
-                            perform_as_member(window, {
+                            AUI_PERFORM_AS_MEMBER(window, {
                                 if (mWasMaximized) {
                                     emit restored();
                                 } else {

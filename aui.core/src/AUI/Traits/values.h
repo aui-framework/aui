@@ -216,8 +216,8 @@ namespace aui {
         }
 
         [[nodiscard]]
-        bool has_value() const noexcept {
-            return value.has_value();
+        bool hasValue() const noexcept {
+            return value.hasValue();
         }
     };
 
@@ -260,7 +260,7 @@ namespace aui {
         }
 
         [[nodiscard]]
-        bool has_value() const noexcept {
+        bool hasValue() const noexcept {
             return value;
         }
     };
@@ -343,9 +343,9 @@ namespace aui {
         }
 
         [[nodiscard]]
-        bool has_value() const noexcept {
+        bool hasValue() const noexcept {
             std::unique_lock lock(sync);
-            return value.has_value();
+            return value.hasValue();
         }
     };
 

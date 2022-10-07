@@ -19,6 +19,7 @@
  * =====================================================================================================================
  */
 
+#include <AUI/Util/ACleanup.h>
 #include "ATimer.h"
 
 ATimer::ATimer(std::chrono::milliseconds period):
@@ -62,6 +63,7 @@ bool ATimer::isStarted()
 }
 
 _<AThread>& ATimer::timerThread() {
+    ATimer::scheduler();
     static _<AThread> thread = [] {
         auto t = _new<AThread>([&]()
             {
@@ -72,6 +74,10 @@ _<AThread>& ATimer::timerThread() {
         t->start();
         return t;
     }();
+    std::atexit([] {
+        thread->interrupt();
+        thread->join();
+    });
     return thread;
 }
 

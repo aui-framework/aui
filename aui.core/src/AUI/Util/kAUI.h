@@ -133,7 +133,7 @@ namespace aui::impl::slot {
  *       };
  *       ...
  *       auto worker = _new<Worker>();
- *       perform_as_member(worker, {
+ *       AUI_PERFORM_AS_MEMBER(worker, {
  *         buildHouse();
  *         plantTree();
  *         raiseSon();
@@ -143,13 +143,50 @@ namespace aui::impl::slot {
  *   </tr>
  * </table>
  */
-#define perform_as_member(object, lambda)                                                  \
+#define AUI_PERFORM_AS_MEMBER(object, lambda)                                                  \
     struct __apply ## __FUNCTION__ ## __LINE__   : std::decay_t<decltype(object)>::stored_t { \
         void operator()() {                                                    \
             lambda;                                                            \
         }                                                                      \
     };                                                                         \
     (*reinterpret_cast<__apply ## __FUNCTION__ ## __LINE__ *>(object.get()))()
+
+/**
+ * @brief Emits a signal of a foreign object.
+ * @details
+ * <table>
+ *   <tr>
+ *     <td>without</td>
+ *     <td>with</td>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       @code{cpp}
+ *       class SomeObject {
+ *       public:
+ *         emits<> someSignal;
+ *       };
+ *       ...
+ *       auto obj = _new<SomeObject>();
+ *       (*obj) ^ obj->someSignal();
+ *       @endcode
+ *     </td>
+ *     <td>
+ *       @code{cpp}
+ *       class SomeObject {
+ *       public:
+ *         emits<> someSignal;
+ *       };
+ *       ...
+ *       auto obj = _new<SomeObject>();
+ *       AUI_EMIT_FOREIGN_SIGNAL(obj)->someSignal();
+ *       @endcode
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+#define AUI_EMIT_FOREIGN_SIGNAL(object) (*object) ^ object
+
 
 /**
  * @brief Performs multiple operations on a single object without repeating its name (in place)

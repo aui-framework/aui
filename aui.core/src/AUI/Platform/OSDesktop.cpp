@@ -27,6 +27,7 @@
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Util/Util.h"
 #include <AUI/Util/ACleanup.h>
+#include <AUI/Common/ATimer.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
@@ -78,6 +79,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
     AStringVector args;
 
     setupUIThread();
+    ATimer::scheduler();
 
     AThread::setName("UI thread");
 

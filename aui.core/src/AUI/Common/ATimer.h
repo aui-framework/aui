@@ -37,7 +37,6 @@ private:
     AOptional<AScheduler::TimerHandle> mTimer;
 
     static _<AThread>& timerThread();
-    static AScheduler& scheduler();
 
 public:
 	explicit ATimer(std::chrono::milliseconds period);
@@ -48,6 +47,8 @@ public:
 	void start();
 	void stop();
 	bool isStarted();
+
+    static AScheduler& scheduler();
 
 signals:
 	emits<> fired;

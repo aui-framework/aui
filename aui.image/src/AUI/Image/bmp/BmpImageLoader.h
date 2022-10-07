@@ -26,14 +26,12 @@
 #pragma once
 
 
-#include <AUI/Image/IImageLoader.h>
 #include <AUI/api.h>
+#include <AUI/Image/StbImageLoader.h>
 
-class BmpImageLoader: public IImageLoader {
+class BmpImageLoader: public StbImageLoader {
 public:
     bool matches(AByteBufferView buffer) override;
-
-    _<AImage> getRasterImage(AByteBufferView buffer) override;
 };
 
 

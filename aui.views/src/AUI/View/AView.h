@@ -227,41 +227,6 @@ protected:
      */
     ASet<AString> mAssNames;
 
-    /**
-     * @brief Invalidates all styles, causing to iterate over all rules in global and parent stylesheets.
-     * @details
-     * Unlike invalidateStateStyles(), completely resets styles for this view, causing it to iterate over all rules in
-     * global and parent stylesheets. This operation is much more expensive than invalidateStateStyles because
-     * invalidateStateStyles iterates over a small set of rules and performs fewer checks.
-     *
-     * Prefer invalidateAllStyles over invalidateStateStyles when:
-     * <ul>
-     *   <li>Added/removed rules to applicable stylesheets</li>
-     *   <li>The view is reinflated to other layout</li>
-     *   <li>Added/removed/changed ass names of this or parent views</li>
-     * </ul>
-     */
-    virtual void invalidateAllStyles();
-
-    /**
-     * @brief Updates state selectors for ASS.
-     * @details
-     * Unlike invalidateAllStyles, iterates on an already calculated small set of rules which is much more cheap that
-     * invalidateAllStyles.
-     *
-     * Prefer invalidateStateStyles over invalidateAllStyles when:
-     * <ul>
-     *   <li>Changed state (hover, active, focus) of this view</li>
-     * </ul>
-     */
-    void invalidateStateStyles();
-
-
-    /**
-     * @brief Resets mAssHelper.
-     */
-    virtual void invalidateAssHelper();
-
 
     void requestLayoutUpdate();
 
@@ -798,6 +763,43 @@ public:
     void operator+(RuleWithoutSelector rule) {
         setCustomStyle(std::move(rule));
     }
+
+
+    /**
+     * @brief Invalidates all styles, causing to iterate over all rules in global and parent stylesheets.
+     * @details
+     * Unlike invalidateStateStyles(), completely resets styles for this view, causing it to iterate over all rules in
+     * global and parent stylesheets. This operation is much more expensive than invalidateStateStyles because
+     * invalidateStateStyles iterates over a small set of rules and performs fewer checks.
+     *
+     * Prefer invalidateAllStyles over invalidateStateStyles when:
+     * <ul>
+     *   <li>Added/removed rules to applicable stylesheets</li>
+     *   <li>The view is reinflated to other layout</li>
+     *   <li>Added/removed/changed ass names of this or parent views</li>
+     * </ul>
+     */
+    virtual void invalidateAllStyles();
+
+    /**
+     * @brief Updates state selectors for ASS.
+     * @details
+     * Unlike invalidateAllStyles, iterates on an already calculated small set of rules which is much more cheap that
+     * invalidateAllStyles.
+     *
+     * Prefer invalidateStateStyles over invalidateAllStyles when:
+     * <ul>
+     *   <li>Changed state (hover, active, focus) of this view</li>
+     * </ul>
+     */
+    void invalidateStateStyles();
+
+
+    /**
+     * @brief Resets mAssHelper.
+     */
+    virtual void invalidateAssHelper();
+
 
 signals:
     emits<bool> hoveredState;
