@@ -407,7 +407,6 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     mTempVao.indices(INDICES);
     glLineWidth(lineWidth);
     mTempVao.drawElements(GL_LINES);
-    drawRectImpl(position, size);
     endDraw(brush);
 }
 

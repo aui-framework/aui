@@ -63,8 +63,8 @@ ABaseWindow* AView::getWindow()
 
 AView::AView()
 {
-
     aui::zero(mAss);
+    setSlotsCallsOnlyOnMyThread(true);
 }
 
 void AView::redraw()
