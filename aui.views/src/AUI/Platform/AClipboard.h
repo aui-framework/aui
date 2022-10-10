@@ -28,7 +28,7 @@
 
 #include <AUI/Common/AString.h>
 
-class AClipboard {
+class API_AUI_VIEWS AClipboard {
 public:
     static void copyToClipboard(const AString& text);
     static bool isEmpty();
