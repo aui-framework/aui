@@ -61,15 +61,15 @@ public:
 
 
     void removeItems(const AModelRange<ItemTo>& items) override {
-        nullsafe(mOtherMutable)->removeItems({items.begin().getIndex(), items.end().getIndex(), mOther.get()});
+        AUI_NULLSAFE(mOtherMutable)->removeItems({items.begin().getIndex(), items.end().getIndex(), mOther.get()});
     }
 
     void removeItems(const AModelSelection<ItemTo>& items) override {
-        nullsafe(mOtherMutable)->removeItems({items.getIndices(), mOther.get()});
+        AUI_NULLSAFE(mOtherMutable)->removeItems({items.getIndices(), mOther.get()});
     }
 
     void removeItem(const AModelIndex& item) override {
-        nullsafe(mOtherMutable)->removeItem(item);
+        AUI_NULLSAFE(mOtherMutable)->removeItem(item);
     }
 
 };

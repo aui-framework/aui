@@ -56,7 +56,7 @@ void ADesktop::setMousePos(const glm::ivec2& pos) {
 
 
 AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& startingLocation) {
-    nullsafe(parent)->blockUserInput();
+    AUI_NULLSAFE(parent)->blockUserInput();
     return async noexcept {
         APath result;
         Ole::inst();
@@ -70,7 +70,7 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
 
 
         ARaiiHelper d = [&] {
-            nullsafe(parent)->getThread()->enqueue([parent, pFileOpen] {
+            AUI_NULLSAFE(parent)->getThread()->enqueue([parent, pFileOpen] {
                 parent->blockUserInput(false);
 
                 pFileOpen->Release();
@@ -127,7 +127,7 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
 }
 
 AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
-    nullsafe(parent)->blockUserInput();
+    AUI_NULLSAFE(parent)->blockUserInput();
     return async noexcept {
         APath result;
         Ole::inst();
@@ -139,7 +139,7 @@ AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startin
 
 
         ARaiiHelper d = [&] {
-            nullsafe(parent)->getThread()->enqueue([parent, pFileOpen] {
+            AUI_NULLSAFE(parent)->getThread()->enqueue([parent, pFileOpen] {
                 parent->blockUserInput(false);
 
                 pFileOpen->Release();

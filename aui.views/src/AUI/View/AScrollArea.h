@@ -51,8 +51,8 @@ public:
     void setContents(const _<AViewContainer>& container);
 
     void scroll(int deltaByX, int deltaByY) noexcept {
-        nullsafe(mHorizontalScrollbar)->scroll(deltaByX);
-        nullsafe(mVerticalScrollbar)->scroll(deltaByY);
+        AUI_NULLSAFE(mHorizontalScrollbar)->scroll(deltaByX);
+        AUI_NULLSAFE(mVerticalScrollbar)->scroll(deltaByY);
     }
 
     bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;

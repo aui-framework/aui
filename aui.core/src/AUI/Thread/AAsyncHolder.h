@@ -54,14 +54,13 @@ public:
             });
         } else {
             auto uniquePtr = std::make_unique<Future<T>>(future);
-            auto ptr = uniquePtr.get();
-            mCustomTypeFutures.push_back(std::move(uniquePtr));
+            auto it = mCustomTypeFutures.insert(mCustomTypeFutures.end(), std::move(uniquePtr));
+
             lock.unlock();
-            future.onSuccess([this, ptr](const T& result) {
+
+            future.onSuccess([this, it](const T& result) {
                 std::unique_lock lock(mSync);
-                mCustomTypeFutures.erase(std::remove_if(mCustomTypeFutures.begin(), mCustomTypeFutures.end(), [&](const auto& uniquePtr) {
-                    return uniquePtr.get() == ptr;
-                }), mCustomTypeFutures.end());
+                mCustomTypeFutures.erase(it);
             });
         }
         return *this;
