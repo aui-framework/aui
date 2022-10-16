@@ -9,7 +9,11 @@
 import lldb
 
 def __lldb_init_module(debugger, internal_dict):
-    debugger.HandleCommand(f'type summary add -x ^aui::lazy<(.+)>$ -F {__name__}.lazy')
+    # aui::lazy<T>
+    debugger.HandleCommand(f'type summary add -x ^aui::lazy<(.+)>$ -F {__name__}.aui_lazy')
+
+    # aui::range<T>
+    debugger.HandleCommand(f'type summary add -x ^aui::range<(.+)>$ -F {__name__}.aui_range')
 
     # --inline-children shows the values of children in summaries, -O only shows values, not keys
     debugger.HandleCommand(f'type summary add -x ^AOptional<.+>$ --inline-children -O')
@@ -41,12 +45,9 @@ class Optional(object):
             self.valueType = self.value.EvaluateExpression("value()").GetType()
 
 
-def optional(value, internalDict):
-    isInitialized = value.GetChildMemberWithName("mInitialized").GetValueAsUnsigned() != 0
-    if not isInitialized:
-        return "empty"
-    return value.EvaluateExpression("value()").GetSummary()
-
-
-def lazy(value, internalDict):
+def aui_lazy(value, internalDict):
     return value.GetChildMemberWithName("value").GetSummary()
+
+
+def aui_range(value, internalDict):
+    return f'size = {value.EvaluateExpression("size()").GetSummary()}'
