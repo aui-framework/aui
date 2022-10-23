@@ -27,7 +27,6 @@
 
 #include <initializer_list>
 #include "Rule.h"
-#include <AUI/Autumn/Autumn.h>
 
 class API_AUI_VIEWS AStylesheet {
 private:
