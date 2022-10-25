@@ -31,6 +31,7 @@
 #include <AUI/Common/AMap.h>
 #include <AUI/Json/AJson.h>
 #include <AUI/Json/Exception.h>
+#include <AUI/Traits/callables.h>
 #include <variant>
 
 class AJson;
@@ -58,26 +59,25 @@ private:
         if (isEmpty()) {
             *this = T();
         }
-        try {
-            return std::get<T>(*this);
-        } catch (...) {
-            throw AJsonTypeMismatchException("not a " + AClass<T>::name());
+
+        if (auto p = std::get_if<T>(this)) {
+            return *p;
         }
+        throw AJsonTypeMismatchException("not a " + AClass<T>::name());
     }
 
     template<typename T>
     [[nodiscard]]
     const T& as() const {
-        try {
-            return std::get<T>(*this);
-        } catch (...) {
-            if constexpr(std::is_same_v<T, aui::impl::JsonObject>) {
-                throw AJsonTypeMismatchException("not an object");
-            } else if constexpr(std::is_same_v<T, aui::impl::JsonArray>) {
-                throw AJsonTypeMismatchException("not an array");
-            } else {
-                throw AJsonTypeMismatchException("not a " + AClass<T>::name());
-            }
+        if (auto p = std::get_if<T>(this)) {
+            return *p;
+        }
+        if constexpr(std::is_same_v<T, aui::impl::JsonObject>) {
+            throw AJsonTypeMismatchException("not an object");
+        } else if constexpr(std::is_same_v<T, aui::impl::JsonArray>) {
+            throw AJsonTypeMismatchException("not an array");
+        } else {
+            throw AJsonTypeMismatchException("not a " + AClass<T>::name());
         }
     }
 public:
@@ -150,28 +150,32 @@ public:
 
     [[nodiscard]]
     int64_t asLongInt() const {
-        try {
-            try {
-                return std::get<int64_t>(*this);
-            } catch (...) {
-                return double(std::get<int>(*this));
-            }
-        } catch (...) {
-            throw AJsonTypeMismatchException("not a long int");
-        }
+        return std::visit(aui::lambda_overloaded{
+            [](auto&& e) -> std::int64_t {
+                throw AJsonTypeMismatchException("not a long int");
+            },
+            [](std::int64_t v) -> std::int64_t {
+                return v;
+            },
+            [](int v) -> std::int64_t {
+                return v;
+            },
+        }, *this);
     }
 
     [[nodiscard]]
     double asNumber() const {
-        try {
-            try {
-                return std::get<double>(*this);
-            } catch (...) {
-                return double(std::get<int>(*this));
-            }
-        } catch (...) {
-            throw AJsonTypeMismatchException("not a number");
-        }
+        return std::visit(aui::lambda_overloaded{
+                [](auto&& e) -> double {
+                    throw AJsonTypeMismatchException("not a number");
+                },
+                [](double v) -> double {
+                    return v;
+                },
+                [](int v) -> double {
+                    return v;
+                },
+        }, *this);
     }
 
     [[nodiscard]]

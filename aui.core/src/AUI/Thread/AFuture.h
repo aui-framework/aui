@@ -326,25 +326,25 @@ namespace aui::impl::future {
             if constexpr(isVoid) {
                 if ((*mInner)->onSuccess) {
                     (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
-                            callback = std::forward<Callback>(callback)]() {
+                            callback = std::forward<Callback>(callback)]() mutable {
                         prev();
                         callback();
                     };
                 } else {
-                    (*mInner)->onSuccess = [callback = std::forward<Callback>(callback)]() {
+                    (*mInner)->onSuccess = [callback = std::forward<Callback>(callback)]() mutable {
                         callback();
                     };
                 }
             } else {
                 if ((*mInner)->onSuccess) {
                     (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
-                            callback = std::forward<Callback>(callback)](const Value& v) {
+                            callback = std::forward<Callback>(callback)](const Value& v) mutable {
                         prev(v);
                         callback(v);
                     };
                 } else {
                     (*mInner)->onSuccess = [callback = std::forward<Callback>(callback)](
-                            const Value& v) {
+                            const Value& v) mutable {
                         callback(v);
                     };
                 }

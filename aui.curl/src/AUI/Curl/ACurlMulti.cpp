@@ -5,6 +5,7 @@
 #include "ACurlMulti.h"
 #include "AUI/Util/kAUI.h"
 #include <curl/curl.h>
+#include <AUI/Thread/ACutoffSignal.h>
 
 ACurlMulti::ACurlMulti() noexcept:
     mMulti(curl_multi_init())
@@ -19,6 +20,7 @@ ACurlMulti::~ACurlMulti() {
 }
 
 void ACurlMulti::run(bool infinite) {
+    setThread(AThread::current());
     int isStillRunning;
     while(!mCancelled && (!mEasyCurls.empty() || infinite)) {
         auto status = curl_multi_perform(mMulti, &isStillRunning);
@@ -104,6 +106,12 @@ ACurlMulti& ACurlMulti::global() noexcept {
 
         Instance() {
             thread->start();
+
+            ACutoffSignal cs;
+            thread->enqueue([&] {
+                cs.makeSignal();
+            });
+            cs.waitForSignal();
         }
     } instance;
 

@@ -5,6 +5,7 @@
 #include "AUI/Traits/parameter_pack.h"
 #include "AUI/Traits/members.h"
 #include <AUI/Util/EnumUtil.h>
+#include <AUI/Reflect/AEnumerate.h>
 #include <AUI/Traits/strings.h>
 
 /**
@@ -233,6 +234,16 @@ struct AJsonConv<float> {
 };
 
 template<>
+struct AJsonConv<double> {
+    static AJson toJson(double v) {
+        return v;
+    }
+    static void fromJson(const AJson& json, double& dst) {
+        dst = json.asNumber();
+    }
+};
+
+template<>
 struct AJsonConv<bool> {
     static AJson toJson(bool v) {
         return v;
@@ -308,6 +319,17 @@ struct AJsonConv<AVector<T>, typename std::enable_if_t<aui::has_json_converter<T
         for (const auto& elem : array) {
             dst << aui::from_json<T>(elem);
         }
+    }
+};
+
+
+template<typename T>
+struct AJsonConv<T, typename std::enable_if_t<std::is_enum_v<T>>> {
+    static AJson toJson(const T& v) {
+        return AEnumerate<T>::names()[v];
+    }
+    static void fromJson(const AJson& json, T& dst) {
+        dst = AEnumerate<T>::byName(json.asString());
     }
 };
 

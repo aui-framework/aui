@@ -59,3 +59,7 @@ void AObject::clearSignals() noexcept
 bool& AObject::isDisconnected() {
     return gIsDisconnected;
 }
+
+void AObject::moveToThread(const _<AObject>& object, _<AAbstractThread> thread) {
+    object->setThread(std::move(thread));
+}

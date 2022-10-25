@@ -156,9 +156,18 @@ public:
         return mSlotsCallsOnlyOnMyThread;
     }
 
+    static void moveToThread(const _<AObject>& object, _<AAbstractThread> thread);
+
 protected:
     void setSlotsCallsOnlyOnMyThread(bool slotsCallsOnlyOnMyThread) {
         mSlotsCallsOnlyOnMyThread = slotsCallsOnlyOnMyThread;
+    }
+
+    /**
+     * @brief Set thread of the object.
+     */
+    void setThread(_<AAbstractThread> thread) {
+        mAttachedThread = std::move(thread);
     }
 
 private:
