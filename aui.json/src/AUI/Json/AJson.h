@@ -47,6 +47,7 @@ namespace aui::impl {
  */
 class AJson: public aui::impl::JsonVariant {
 private:
+    using super = aui::impl::JsonVariant;
 
     template<typename T>
     [[nodiscard]]
@@ -160,7 +161,7 @@ public:
             [](int v) -> std::int64_t {
                 return v;
             },
-        }, *this);
+        }, (super)const_cast<AJson&>(*this));
     }
 
     [[nodiscard]]
@@ -175,7 +176,7 @@ public:
                 [](int v) -> double {
                     return v;
                 },
-        }, *this);
+        }, (super)const_cast<AJson&>(*this));
     }
 
     [[nodiscard]]
