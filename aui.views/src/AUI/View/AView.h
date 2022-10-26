@@ -578,7 +578,7 @@ public:
     const glm::ivec2& getFixedSize() {
         return mFixedSize;
     }
-    void setFixedSize(const glm::ivec2& size) {
+    void setFixedSize(glm::ivec2 size) {
         mFixedSize = size;
     }
 

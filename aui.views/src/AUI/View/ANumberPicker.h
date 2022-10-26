@@ -83,8 +83,8 @@ public:
     }
 
 
-    void setMin(const int min);
-    void setMax(const int max);
+    void setMin(int min);
+    void setMax(int max);
 
 signals:
     /**

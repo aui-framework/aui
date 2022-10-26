@@ -130,14 +130,14 @@ int ANumberPicker::getValue() const
 	return mTextField->text().toInt().valueOr(0);
 }
 
-void ANumberPicker::setMin(const int min)
+void ANumberPicker::setMin(int min)
 {
 	mMin = min;
 	if (getValue() < min)
 		setValue(min);
 }
 
-void ANumberPicker::setMax(const int max)
+void ANumberPicker::setMax(int max)
 {
 	mMax = max;
 	if (getValue() > max)

@@ -364,7 +364,7 @@ inline _<TO> _cast(_<FROM> object)
 
 
 /**
- * @brief Nullsafe call (see examples).
+ * @brief nullsafe call (see examples).
  * @ingroup useful_macros
  *
  * <table>

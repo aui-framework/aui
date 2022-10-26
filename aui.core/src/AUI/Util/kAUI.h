@@ -369,7 +369,7 @@ namespace aui::impl::slot {
  *   </tr>
  * </table>
  */
-#define do_once if(static uint8_t _aui_once = 0; !_aui_once++)
+#define do_once if(static bool _aui_once = 0; (_aui_once == 0 && (_aui_once = true)))
 
 /**
  * @brief Executes lambda on current object's thread.

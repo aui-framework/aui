@@ -44,6 +44,7 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
              i += direction) {
             auto& currentItem = mItems[i];
 
+            const auto prevSize = currentItem->getFixedSize();
             currentItem->setFixedSize({0, 0});
 
             // check if current view can handle us all free space
@@ -54,14 +55,14 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
             int currentDelta = currentSize - minSize;
             if (currentDelta >= amountToShrink) {
                 // best case. current view handled all free space
-                glm::ivec2 fixedSize = {0, 0};
+                glm::ivec2 fixedSize = prevSize;
                 getAxisValue(fixedSize) = currentSize - amountToShrink;
                 currentItem->setFixedSize(fixedSize);
                 amountToShrink = 0;
                 break;
             } else if (currentDelta != 0) {
                 // worse case. current view partially handled free space, so we have to spread it to the next elements
-                glm::ivec2 fixedSize = {0, 0};
+                glm::ivec2 fixedSize = prevSize;
                 getAxisValue(fixedSize) = currentSize - currentDelta;
                 currentItem->setFixedSize(fixedSize);
                 amountToShrink -= currentDelta;

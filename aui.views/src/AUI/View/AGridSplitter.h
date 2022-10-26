@@ -21,8 +21,8 @@ public:
         bool mAddSpacers = true;
 
     public:
-        Builder& withItems(const AVector<AVector<_<AView>>>& items) {
-            mItems = items;
+        Builder& withItems(AVector<AVector<_<AView>>> items) {
+            mItems = std::move(items);
             return *this;
         }
 
