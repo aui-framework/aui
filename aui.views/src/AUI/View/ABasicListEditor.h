@@ -68,13 +68,13 @@ public:
             if (mModel->listSize() != 0) {
                 list->selectItem(0);
             } else {
-                nullsafe(removeButton)->disable();
-                nullsafe(modifyButton)->disable();
+                AUI_NULLSAFE(removeButton)->disable();
+                AUI_NULLSAFE(modifyButton)->disable();
             }
             auto updateEnabledState = [list, modifyButton, removeButton]() {
                 auto& s = list->getSelectionModel().getIndices();
-                nullsafe(modifyButton)->setDisabled(s.empty());
-                nullsafe(removeButton)->setDisabled(s.empty());
+                AUI_NULLSAFE(modifyButton)->setDisabled(s.empty());
+                AUI_NULLSAFE(removeButton)->setDisabled(s.empty());
             };
             connect(list->selectionChanged, c, updateEnabledState);
             connect(mModel->dataRemoved, c, updateEnabledState);

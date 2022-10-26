@@ -128,10 +128,10 @@ void AEmbedAuiWrap::windowRender() {
         mContainer->mRequiresLayoutUpdate = false;
         mContainer->updateLayout();
     }
-    nullsafe(mContainer->getRenderingContext())->beginPaint(*mContainer);
+    AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
     mContainer->render();
-    nullsafe(mContainer->getRenderingContext())->endPaint(*mContainer);
+    AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 
 void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
@@ -146,9 +146,9 @@ void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
 void AEmbedAuiWrap::setViewportSize(int width, int height) {
     mContainer->makeCurrent();
     mSize = { width, height };
-    nullsafe(mContainer->getRenderingContext())->beginResize(*mContainer);
+    AUI_NULLSAFE(mContainer->getRenderingContext())->beginResize(*mContainer);
     mContainer->setSize({width, height});
-    nullsafe(mContainer->getRenderingContext())->endResize(*mContainer);
+    AUI_NULLSAFE(mContainer->getRenderingContext())->endResize(*mContainer);
     mContainer->mRequiresRedraw = true;
 }
 

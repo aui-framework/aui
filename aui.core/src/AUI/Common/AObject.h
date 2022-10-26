@@ -43,14 +43,6 @@ class AAbstractThread;
 class API_AUI_CORE AObject: public aui::noncopyable, public std::enable_shared_from_this<AObject>
 {
 	friend class AAbstractSignal;
-private:
-	_<AAbstractThread> mAttachedThread;
-    AMutex mSignalsLock;
-    ASet<AAbstractSignal*> mSignals;
-	bool mSignalsEnabled = true;
-
-	static bool& isDisconnected();
-
 public:
 	AObject();
 	virtual ~AObject();
@@ -159,6 +151,41 @@ public:
     _<AAbstractThread> getThread() const {
         return mAttachedThread;
     }
+
+    bool isSlotsCallsOnlyOnMyThread() const noexcept {
+        return mSlotsCallsOnlyOnMyThread;
+    }
+
+    static void moveToThread(const _<AObject>& object, _<AAbstractThread> thread);
+
+protected:
+    void setSlotsCallsOnlyOnMyThread(bool slotsCallsOnlyOnMyThread) {
+        mSlotsCallsOnlyOnMyThread = slotsCallsOnlyOnMyThread;
+    }
+
+    /**
+     * @brief Set thread of the object.
+     */
+    void setThread(_<AAbstractThread> thread) {
+        mAttachedThread = std::move(thread);
+    }
+
+private:
+    _<AAbstractThread> mAttachedThread;
+    AMutex mSignalsLock;
+    ASet<AAbstractSignal*> mSignals;
+    bool mSignalsEnabled = true;
+
+    /*
+     * @brief Allows cross-thread signal call through event loop.
+     * @details
+     * If the object is sensitive to calls from other threads (i.e. view), it may set this flag to true in order to
+     * force signals to pass through the object's native thread instead of calls from the other threads.
+     */
+    bool mSlotsCallsOnlyOnMyThread = false;
+
+    static bool& isDisconnected();
+
 };
 
 #define emit (*this)^

@@ -182,6 +182,7 @@ public:
      */
     template<typename Factory>
     ValueType& getOrInsert(const KeyType& keyType, Factory&& factory) noexcept(noexcept(factory())) {
+        static_assert(std::is_constructible_v<ValueType>, "ValueType is expected to be default-constructible");
         auto[it, isElementCreated] = parent::insert(typename parent::value_type(keyType, ValueType{}));
         static_assert(std::is_same_v<decltype(it), typename parent::iterator>, "govno");
         if (isElementCreated) {

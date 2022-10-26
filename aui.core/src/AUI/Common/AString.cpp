@@ -169,6 +169,7 @@ AString AString::trimRight(wchar_t symbol) const noexcept
 AString AString::replacedAll(const AString& from, const AString& to) const noexcept
 {
     AString result;
+    result.reserve(size() * to.length() / from.length());
     for (size_type pos = 0;;)
     {
         auto next = find(from, pos);

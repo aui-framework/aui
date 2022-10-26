@@ -101,9 +101,9 @@ float AWindow::fetchDpiFromSystem() const {
 
 
 void AWindow::setSize(glm::ivec2 size) {
-    nullsafe(mRenderingContext)->beginResize(*this);
+    AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
     AViewContainer::setSize(size);
-    nullsafe(mRenderingContext)->endResize(*this);
+    AUI_NULLSAFE(mRenderingContext)->endResize(*this);
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {

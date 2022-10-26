@@ -156,7 +156,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
                 RECT windowRect, clientRect;
                 GetWindowRect(mHandle, &windowRect);
                 GetClientRect(mHandle, &clientRect);
-                nullsafe(mRenderingContext)->beginResize(*this);
+                AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
                 emit resized(LOWORD(lParam), HIWORD(lParam));
                 AViewContainer::setSize({LOWORD(lParam), HIWORD(lParam)});
 
@@ -171,7 +171,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
                         emit restored();
                         break;
                 }
-                nullsafe(mRenderingContext)->endResize(*this);
+                AUI_NULLSAFE(mRenderingContext)->endResize(*this);
             }
             return 0;
         }

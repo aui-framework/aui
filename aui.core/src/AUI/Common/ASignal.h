@@ -255,7 +255,7 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
     for (auto i = slots.begin(); i != slots.end();)
     {
         auto receiverWeakPtr = weakPtrFromObject(i->object);
-        if (i->object->getThread() != AThread::current())
+        if (i->object->isSlotsCallsOnlyOnMyThread() && i->object->getThread() != AThread::current())
         {
             // perform crossthread call; should make weak ptr to the object and queue call to thread message queue
 
