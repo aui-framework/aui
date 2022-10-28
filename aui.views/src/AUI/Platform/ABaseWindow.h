@@ -236,3 +236,10 @@ signals:
 };
 
 
+/**
+ * @brief Asserts that the macro invocation has been performed in the UI thread.
+ * @ingroup useful_macros
+ * @details
+ *
+ */
+#define AUI_ASSERT_UI_THREAD_ONLY() { assert(("this method should be used in ui thread only.", AThread::current() == AWindow::current()->getThread())); }

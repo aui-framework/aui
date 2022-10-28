@@ -159,9 +159,14 @@ public:
     ADataBindingLinker2<Model, Data> operator()(Data(Model::*field)) {
         return ADataBindingLinker2<Model, Data>(this, field);
     }
-    const Model& getModel() const {
+    const Model& getModel() const noexcept {
         return *mModel;
     }
+
+    Model const * operator->() const noexcept {
+        return &getModel();
+    }
+
     Model& getEditableModel() {
         return *mModel;
     }
