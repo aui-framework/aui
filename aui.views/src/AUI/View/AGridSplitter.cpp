@@ -6,7 +6,7 @@
 #include <AUI/Util/ALayoutDirection.h>
 #include "AGridSplitter.h"
 
-const auto CLICK_BIAS = 8_dp;
+static const auto CLICK_BIAS = 8_dp;
 
 AGridSplitter::AGridSplitter():
     mHorizontalHelper(ALayoutDirection::HORIZONTAL),
@@ -20,8 +20,8 @@ void AGridSplitter::onMousePressed(glm::ivec2 mousePos, AInput::Key button) {
     bool doVerticalDrag = true;
     for (auto& r : mItems) {
         auto& v = r.first();
-        auto viewPos = v->getPosition().y;
-        auto viewSize = v->getSize().y;
+        auto viewPos = v->getPosition().y + CLICK_BIAS.getValuePx();
+        auto viewSize = v->getSize().y - CLICK_BIAS.getValuePx() * 2.f;
 
         if (mousePos.y > viewPos && mousePos.y < viewPos + viewSize) {
             doVerticalDrag = false;
@@ -35,7 +35,7 @@ void AGridSplitter::onMousePressed(glm::ivec2 mousePos, AInput::Key button) {
     bool doHorizontalDrag = true;
     for (auto& v : mItems.first()) {
         auto viewPos = v->getPosition().x + CLICK_BIAS.getValuePx();
-        auto viewSize = v->getSize().x + - CLICK_BIAS.getValuePx() * 2.f;
+        auto viewSize = v->getSize().x - CLICK_BIAS.getValuePx() * 2.f;
 
         if (mousePos.x > viewPos && mousePos.x < viewPos + viewSize) {
             doHorizontalDrag = false;

@@ -124,7 +124,7 @@ namespace aui::impl::future {
             void waitForTask() noexcept {
                 std::unique_lock lock(mutex);
                 bool rethrowInterrupted = false;
-                while ((thread) && !hasResult()) {
+                while ((thread) && !hasResult() && !cancelled) {
                     try {
                         cv.wait(lock);
                     } catch (const AThread::Interrupted&) {

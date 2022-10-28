@@ -314,6 +314,20 @@ public:
         return ASet<StoredType>(p::begin(), p::end());
     }
 
+    /**
+     * @brief Constructs a new vector of transformed items of the range.
+     * @param range items to transform from.
+     * @param transformer transformer function.
+     * @return A new vector.
+     */
+    template<typename Iterator, typename UnaryOperation>
+    static auto fromRange(aui::range<Iterator> range, UnaryOperation&& transformer) -> AVector<decltype(transformer(range.first()))> {
+        AVector<decltype(transformer(range.first()))> result;
+        result.reserve(range.size());
+        std::transform(range.begin(), range.end(), std::back_inserter(result), std::forward<UnaryOperation>(transformer));
+        return result;
+    }
+
     template<typename UnaryOperation>
     auto map(UnaryOperation&& transformer) const -> AVector<decltype(transformer(std::declval<StoredType>()))> {
         AVector<decltype(transformer(std::declval<StoredType>()))> result;

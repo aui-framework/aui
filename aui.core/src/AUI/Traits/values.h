@@ -351,9 +351,10 @@ namespace aui {
 
     namespace promise {
         /**
-         * Forbids copy of the wrapped value.
-         * The caller can be sure his value wouldn't be copied.
+         * @brief Avoids copy of the wrapped value, pointing to a reference.
          * @tparam T
+         * @details
+         * The caller can be sure his value wouldn't be copied.
          */
         template<typename T>
         class no_copy {
@@ -373,6 +374,44 @@ namespace aui {
             }
             T* operator->() const {                    // allow pointer-style calls
                 return value;
+            }
+        };
+
+        /**
+         * @brief Wraps the object forbidding copy.
+         * @tparam T
+         * @details
+         * The caller can be sure his value wouldn't be copied even if copy constructor allows to do so.
+         */
+        template<typename T>
+        class move_only {
+        private:
+            T value;
+
+        public:
+            move_only(T&& rhs): value(std::move(rhs)) {
+
+            }
+            move_only(move_only&& rhs): value(std::move(rhs.value)) {
+
+            }
+            move_only(const move_only&) = delete;
+
+            operator const T&() const {
+                return value;
+            }
+            operator T&() {
+                return value;
+            }
+
+            const T& operator*() const {
+                return value;
+            }
+            const T* operator->() const {
+                return &value;
+            }
+            T* operator->() {
+                return &value;
             }
         };
     }
