@@ -72,6 +72,12 @@ namespace aui {
 
         }
 
+
+        template<typename Container>
+        range(const Container& c): mBegin(c.begin()), mEnd(c.end()) {
+
+        }
+
         [[nodiscard]]
         [[maybe_unused]]
         std::size_t size() const noexcept {
@@ -109,9 +115,11 @@ namespace aui {
         }
     };
 
-    // deduction guide
     template<typename Container>
     range(Container& c) -> range<decltype(c.begin())>;
+
+    template<typename Container>
+    range(const Container& c) -> range<decltype(c.begin())>;
 
     /**
      * @brief If Container is const, Container::const_iterator is aliased; Container::iterator otherwise.
