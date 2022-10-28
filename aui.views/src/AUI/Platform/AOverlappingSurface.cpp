@@ -7,5 +7,5 @@
 
 
 void AOverlappingSurface::close() {
-    mWindow->closeOverlappingSurface(this);
+    mParentWindow->closeOverlappingSurface(this);
 }

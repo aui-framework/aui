@@ -31,11 +31,6 @@ AImage::AImage()
 {
 }
 
-AImage::AImage(AVector<std::uint8_t> mData, uint32_t mWidth, uint32_t mHeight, int mFormat) : mData(std::move(
-        mData)), mWidth(mWidth), mHeight(mHeight), mFormat(mFormat)
-{
-}
-
 AImage::AImage(uint32_t width, uint32_t height, int format):
         mWidth(width),
         mHeight(height),
@@ -47,8 +42,7 @@ AImage::AImage(uint32_t width, uint32_t height, int format):
 
 AImage AImage::addAlpha(const AImage& src)
 {
-    AImage dst(AVector<std::uint8_t>(), src.getWidth(), src.getHeight(), RGBA | BYTE);
-    dst.getData().resize(src.getWidth() * src.getHeight() * dst.getBytesPerPixel());
+    AImage dst(src.getWidth(), src.getHeight(), RGBA | BYTE);
     memset(dst.getData().data(), 255, dst.getData().size());
 
     // https://stackoverflow.com/questions/9900854/opengl-creating-texture-atlas-at-run-time
@@ -62,7 +56,7 @@ AImage AImage::addAlpha(const AImage& src)
 
             for (int channel = 0; channel < src.getBytesPerPixel(); ++channel)
             {
-                dst.mData[to + channel] = src.mData[from + channel];
+                dst.mData.at<std::uint8_t>(to + channel) = src.mData.at<std::uint8_t>(from + channel);
             }
         }
     }
@@ -79,8 +73,8 @@ AImage AImage::resize(const AImage& src, uint32_t width, uint32_t height)
 
 glm::ivec4 AImage::getPixelAt(uint32_t x, uint32_t y) const
 {
-    const std::uint8_t* dataPtr = &mData[(mWidth * glm::clamp(y, static_cast<uint32_t>(0), mHeight - 1) + glm::clamp(
-            x, static_cast<uint32_t>(0), mWidth - 1)) * getBytesPerPixel()];
+    const std::uint8_t* dataPtr = &mData.at<std::uint8_t>((mWidth * glm::clamp(y, static_cast<uint32_t>(0), mHeight - 1) + glm::clamp(
+            x, static_cast<uint32_t>(0), mWidth - 1)) * getBytesPerPixel());
     switch (getBytesPerPixel())
     {
         case 1:
@@ -97,8 +91,8 @@ glm::ivec4 AImage::getPixelAt(uint32_t x, uint32_t y) const
 
 void AImage::setPixelAt(uint32_t x, uint32_t y, const glm::ivec4& val)
 {
-    std::uint8_t* dataPtr = &mData[(mWidth * glm::clamp(y, static_cast<uint32_t>(0), mHeight - 1) + glm::clamp(
-            x, static_cast<uint32_t>(0), mWidth - 1)) * getBytesPerPixel()];
+    std::uint8_t* dataPtr = &mData.at<std::uint8_t>((mWidth * glm::clamp(y, static_cast<uint32_t>(0), mHeight - 1) + glm::clamp(
+            x, static_cast<uint32_t>(0), mWidth - 1)) * getBytesPerPixel());
     switch (getBytesPerPixel())
     {
         case 4:
@@ -114,8 +108,7 @@ void AImage::setPixelAt(uint32_t x, uint32_t y, const glm::ivec4& val)
 
 AImage AImage::resizeLinearDownscale(const AImage& src, uint32_t width, uint32_t height)
 {
-    AImage n(AVector<std::uint8_t>(), width, height, src.getFormat());
-    n.getData().resize(width * height * n.getBytesPerPixel());
+    AImage n(width, height, src.getFormat());
 
     uint32_t deltaX = src.getWidth() / width;
     uint32_t deltaY = src.getHeight() / height;
@@ -156,7 +149,7 @@ void AImage::copy(const AImage& src, AImage& dst, uint32_t x, uint32_t y)
 
             for (uint32_t channel = 0; channel < dst.getBytesPerPixel(); ++channel)
             {
-                dst.mData[to + channel] = src.mData[from + channel];
+                dst.mData.at<std::uint8_t>(to + channel) = src.mData.at<std::uint8_t>(from + channel);
             }
         }
     }
@@ -178,7 +171,7 @@ AImage AImage::sub(uint32_t x, uint32_t y, uint32_t width, uint32_t height) cons
 
             for (uint32_t channel = 0; channel < getBytesPerPixel(); ++channel)
             {
-                image.mData[to + channel] = mData[from + channel];
+                image.mData.at<std::uint8_t>(to + channel) = mData.at<std::uint8_t>(from + channel);
             }
         }
     }
@@ -317,4 +310,15 @@ AByteBuffer AImage::imageDataOfFormat(unsigned format) const {
         }
     }
     return output;
+}
+
+void AImage::mirrorVertically() {
+    for (std::uint32_t y = 0; y < getHeight() / 2; ++y) {
+        auto mirroredY = getHeight() - y - 1;
+        auto l1 = getData().begin() + getBytesPerPixel() * getWidth() * y;
+        auto l2 = getData().begin() + getBytesPerPixel() * getHeight() * mirroredY;
+        for (std::uint32_t x = 0; x < getWidth() * getBytesPerPixel(); ++x, ++l1, ++l2) {
+            std::swap(*l1, *l2);
+        }
+    }
 }

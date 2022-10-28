@@ -25,6 +25,7 @@
 #include <glm/glm.hpp>
 #include <AUI/IO/APath.h>
 #include <AUI/Thread/AFuture.h>
+#include <AUI/Image/IDrawable.h>
 
 enum class ACursor;
 
@@ -69,4 +70,6 @@ namespace ADesktop
                                                const APath& startingLocation = {},
                                                const AVector<FileExtension>& extensions = { {"All", "*"} });
 	API_AUI_VIEWS void openUrl(const AString& url);
+
+    API_AUI_VIEWS _<IDrawable> iconOfFile(const APath& file);
 }

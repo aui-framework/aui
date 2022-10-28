@@ -282,10 +282,10 @@ _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos)
 	return target;
 }
 
-void AViewContainer::setSize(int width, int height)
+void AViewContainer::setSize(glm::ivec2 size)
 {
     mSizeSet = true;
-    AView::setSize(width, height);
+    AView::setSize(size);
     updateLayout();
 }
 

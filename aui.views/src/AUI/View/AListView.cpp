@@ -155,8 +155,8 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
     }
 }
 
-void AListView::setSize(int width, int height) {
-    AViewContainer::setSize(width, height);
+void AListView::setSize(glm::ivec2 size) {
+    AViewContainer::setSize(size);
 
     updateScrollbarDimensions();
 }

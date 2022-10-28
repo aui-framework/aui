@@ -150,6 +150,15 @@ private:
     [[nodiscard]]
     ALayoutDirection parentLayoutDirection() const noexcept;
 
+    /**
+     * @brief Redraw requested flag for this particular view/
+     * @details
+     * This flag is set in redraw() method and reset in AView::render(). redraw() method does not actually requests
+     * redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the view is not even
+     * drawn.
+     */
+    bool mRedrawRequested = false;
+
 protected:
     /**
      * @brief Parent AView.
@@ -217,41 +226,6 @@ protected:
      * @brief ASS class names.
      */
     ASet<AString> mAssNames;
-
-    /**
-     * @brief Invalidates all styles, causing to iterate over all rules in global and parent stylesheets.
-     * @details
-     * Unlike invalidateStateStyles(), completely resets styles for this view, causing it to iterate over all rules in
-     * global and parent stylesheets. This operation is much more expensive than invalidateStateStyles because
-     * invalidateStateStyles iterates over a small set of rules and performs fewer checks.
-     *
-     * Prefer invalidateAllStyles over invalidateStateStyles when:
-     * <ul>
-     *   <li>Added/removed rules to applicable stylesheets</li>
-     *   <li>The view is reinflated to other layout</li>
-     *   <li>Added/removed/changed ass names of this or parent views</li>
-     * </ul>
-     */
-    virtual void invalidateAllStyles();
-
-    /**
-     * @brief Updates state selectors for ASS.
-     * @details
-     * Unlike invalidateAllStyles, iterates on an already calculated small set of rules which is much more cheap that
-     * invalidateAllStyles.
-     *
-     * Prefer invalidateStateStyles over invalidateAllStyles when:
-     * <ul>
-     *   <li>Changed state (hover, active, focus) of this view</li>
-     * </ul>
-     */
-    void invalidateStateStyles();
-
-
-    /**
-     * @brief Resets mAssHelper.
-     */
-    virtual void invalidateAssHelper();
 
 
     void requestLayoutUpdate();
@@ -582,20 +556,16 @@ public:
     }
 
     virtual void invalidateFont();
-    virtual void setPosition(const glm::ivec2& position);
-
-    void setSize(const glm::ivec2& size) {
-        setSize(size.x, size.y);
-    }
+    virtual void setPosition(glm::ivec2 position);
 
     /**
      * Set size ignoring all restrictions (i.e. min size, max size, fixed size, etc...). Used by AAnimator.
      * @param size
      */
-    void setSizeForced(const glm::ivec2& size) {
+    void setSizeForced(glm::ivec2 size) {
         mSize = size;
     }
-    virtual void setSize(int width, int height);
+    virtual void setSize(glm::ivec2 size);
     virtual void setGeometry(int x, int y, int width, int height);
     void setGeometry(const glm::ivec2& position, const glm::ivec2& size) {
         setGeometry(position.x, position.y, size.x, size.y);
@@ -608,7 +578,7 @@ public:
     const glm::ivec2& getFixedSize() {
         return mFixedSize;
     }
-    void setFixedSize(const glm::ivec2& size) {
+    void setFixedSize(glm::ivec2 size) {
         mFixedSize = size;
     }
 
@@ -793,6 +763,43 @@ public:
     void operator+(RuleWithoutSelector rule) {
         setCustomStyle(std::move(rule));
     }
+
+
+    /**
+     * @brief Invalidates all styles, causing to iterate over all rules in global and parent stylesheets.
+     * @details
+     * Unlike invalidateStateStyles(), completely resets styles for this view, causing it to iterate over all rules in
+     * global and parent stylesheets. This operation is much more expensive than invalidateStateStyles because
+     * invalidateStateStyles iterates over a small set of rules and performs fewer checks.
+     *
+     * Prefer invalidateAllStyles over invalidateStateStyles when:
+     * <ul>
+     *   <li>Added/removed rules to applicable stylesheets</li>
+     *   <li>The view is reinflated to other layout</li>
+     *   <li>Added/removed/changed ass names of this or parent views</li>
+     * </ul>
+     */
+    virtual void invalidateAllStyles();
+
+    /**
+     * @brief Updates state selectors for ASS.
+     * @details
+     * Unlike invalidateAllStyles, iterates on an already calculated small set of rules which is much more cheap that
+     * invalidateAllStyles.
+     *
+     * Prefer invalidateStateStyles over invalidateAllStyles when:
+     * <ul>
+     *   <li>Changed state (hover, active, focus) of this view</li>
+     * </ul>
+     */
+    void invalidateStateStyles();
+
+
+    /**
+     * @brief Resets mAssHelper.
+     */
+    virtual void invalidateAssHelper();
+
 
 signals:
     emits<bool> hoveredState;

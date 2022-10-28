@@ -111,7 +111,7 @@ public:
     static _<AText> fromString(const AString& string, const Flags& flags = {});
 
     void render() override;
-    void setSize(int width, int height) override;
+    void setSize(glm::ivec2 size) override;
     int getContentMinimumWidth(ALayoutDirection layout) override;
     int getContentMinimumHeight(ALayoutDirection layout) override;
     void prerenderString();

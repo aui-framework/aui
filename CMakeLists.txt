@@ -99,8 +99,6 @@ if (NOT AUI_NO_TESTS)
         set_property(GLOBAL PROPERTY TESTS_SRCS "")
         set_property(GLOBAL PROPERTY TESTS_DEPS "")
         _aui_import_gtest()
-    else()
-        aui_enable_tests()
     endif()
 endif()
 

@@ -124,7 +124,7 @@ namespace aui::impl::future {
             void waitForTask() noexcept {
                 std::unique_lock lock(mutex);
                 bool rethrowInterrupted = false;
-                while ((thread) && !hasResult()) {
+                while ((thread) && !hasResult() && !cancelled) {
                     try {
                         cv.wait(lock);
                     } catch (const AThread::Interrupted&) {
@@ -222,7 +222,7 @@ namespace aui::impl::future {
                                 lock.lock();
                                 value = true;
                                 cv.notify_all();
-                                nullsafe(onSuccess)();
+                                notifyOnSuccessCallback();
 
                                 (void)sharedPtrLock; // sharedPtrLock is *used*
                                 lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
@@ -233,7 +233,7 @@ namespace aui::impl::future {
                                 lock.lock();
                                 value = std::move(result);
                                 cv.notify_all();
-                                nullsafe(onSuccess)(*value);
+                                notifyOnSuccessCallback();
 
                                 (void)sharedPtrLock; // sharedPtrLock is *used*
                                 lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
@@ -260,9 +260,20 @@ namespace aui::impl::future {
                 std::unique_lock lock(mutex);
                 exception.emplace();
                 cv.notify_all();
-                nullsafe(onError)(*exception);
+                AUI_NULLSAFE(onError)(*exception);
             }
 
+
+            void notifyOnSuccessCallback() {
+                if (value && onSuccess) {
+                    if constexpr(isVoid) {
+                        onSuccess();
+                    } else {
+                        onSuccess(*value);
+                    }
+                    onSuccess = nullptr;
+                }
+            }
         };
 
     protected:
@@ -310,38 +321,39 @@ namespace aui::impl::future {
         }
 
         template<typename Callback>
-        void onSuccess(Callback&& callback) noexcept {
+        void onSuccess(Callback&& callback) const noexcept {
             std::unique_lock lock((*mInner)->mutex);
             if constexpr(isVoid) {
                 if ((*mInner)->onSuccess) {
                     (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
-                            callback = std::forward<Callback>(callback)]() {
+                            callback = std::forward<Callback>(callback)]() mutable {
                         prev();
                         callback();
                     };
                 } else {
-                    (*mInner)->onSuccess = [callback = std::forward<Callback>(callback)]() {
+                    (*mInner)->onSuccess = [callback = std::forward<Callback>(callback)]() mutable {
                         callback();
                     };
                 }
             } else {
                 if ((*mInner)->onSuccess) {
                     (*mInner)->onSuccess = [prev = std::move((*mInner)->onSuccess),
-                            callback = std::forward<Callback>(callback)](const Value& v) {
+                            callback = std::forward<Callback>(callback)](const Value& v) mutable {
                         prev(v);
                         callback(v);
                     };
                 } else {
                     (*mInner)->onSuccess = [callback = std::forward<Callback>(callback)](
-                            const Value& v) {
+                            const Value& v) mutable {
                         callback(v);
                     };
                 }
             }
+            (*mInner)->notifyOnSuccessCallback();
         }
 
         template<typename Callback>
-        void onError(Callback&& callback) noexcept {
+        void onError(Callback&& callback) const noexcept {
             std::unique_lock lock((*mInner)->mutex);
 
             if ((*mInner)->onError) {
@@ -517,7 +529,16 @@ public:
         std::unique_lock lock(inner->mutex);
         inner->value = std::move(v);
         inner->cv.notify_all();
-        nullsafe(inner->onSuccess)(*inner->value);
+        AUI_NULLSAFE(inner->onSuccess)(*inner->value);
+    }
+
+    /**
+     * @brief Stores an exception from std::current_exception to the future.
+     */
+    void supplyException() const noexcept {
+        auto& inner = (*super::mInner);
+        std::unique_lock lock(inner->mutex);
+        inner->reportException();
     }
 
     AFuture& operator=(std::nullptr_t) noexcept {
@@ -531,13 +552,13 @@ public:
     }
 
     template<typename Callback>
-    AFuture& onSuccess(Callback&& callback) noexcept {
+    const AFuture& onSuccess(Callback&& callback) const noexcept {
         super::onSuccess(std::forward<Callback>(callback));
         return *this;
     }
 
     template<typename Callback>
-    AFuture& onError(Callback&& callback) noexcept {
+    const AFuture& onError(Callback&& callback) const noexcept {
         super::onError(std::forward<Callback>(callback));
         return *this;
     }
@@ -555,6 +576,15 @@ public:
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
 
+    /**
+     * @brief Stores an exception from std::current_exception to the future.
+     */
+    void supplyException() const noexcept {
+        auto& inner = (*super::mInner);
+        std::unique_lock lock(inner->mutex);
+        inner->reportException();
+    }
+
     void supplyResult() const noexcept {
         auto& inner = (*super::mInner);
         assert(("task is already provided", inner->task == nullptr));
@@ -562,7 +592,7 @@ public:
         std::unique_lock lock(inner->mutex);
         inner->value = true;
         inner->cv.notify_all();
-        nullsafe(inner->onSuccess)();
+        AUI_NULLSAFE(inner->onSuccess)();
     }
 
     AFuture& operator=(std::nullptr_t) noexcept {
@@ -583,7 +613,7 @@ public:
      * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
      */
     template<typename Callback>
-    AFuture& onSuccess(Callback&& callback) noexcept {
+    const AFuture& onSuccess(Callback&& callback) const noexcept {
         super::onSuccess(std::forward<Callback>(callback));
         return *this;
     }
@@ -596,7 +626,7 @@ public:
      * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
      */
     template<typename Callback>
-    AFuture& onError(Callback&& callback) noexcept {
+    const AFuture& onError(Callback&& callback) const noexcept {
         super::onError(std::forward<Callback>(callback));
         return *this;
     }

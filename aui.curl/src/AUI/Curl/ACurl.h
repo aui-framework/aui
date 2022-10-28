@@ -171,9 +171,10 @@ public:
         HeaderCallback mHeaderCallback;
         bool mThrowExceptionOnError = false;
         AVector<AString> mHeaders;
+        AString mUrl;
 
     public:
-        explicit Builder(const AString& url);
+        explicit Builder(AString url);
         Builder(const Builder&) = delete;
         ~Builder();
 
@@ -234,6 +235,11 @@ public:
         Builder& withUpload(bool upload);
         Builder& withCustomRequest(const AString& v);
 
+
+        /**
+         * @brief Appends HTTP GET params to the url.
+         */
+        Builder& withParams(const AVector<std::pair<AString, AString>>& params);
 
         Builder& withHeaders(AVector<AString> headers) {
             mHeaders = std::move(headers);

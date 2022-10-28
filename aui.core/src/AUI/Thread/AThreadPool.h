@@ -31,6 +31,7 @@
 #include <AUI/Thread/AThread.h>
 #include <AUI/Util/kAUI.h>
 #include <glm/glm.hpp>
+#include <utility>
 
 template<typename T>
 class AFuture;
@@ -162,6 +163,8 @@ public:
  */
 template<typename T = void>
 class AFutureSet: public AVector<AFuture<T>> {
+private:
+    using super = AVector<AFuture<T>>;
 public:
     using AVector<AFuture<T>>::AVector;
 

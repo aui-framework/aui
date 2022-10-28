@@ -19,9 +19,6 @@
 
 # CMake AUI building functions
 
-define_property(GLOBAL PROPERTY TESTS_SRCS
-        BRIEF_DOCS "Global list of test files"
-        FULL_DOCS "Global list of test files")
 define_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS
         BRIEF_DOCS "Global list of test include dirs"
         FULL_DOCS "Global list of test include dirs")
@@ -37,7 +34,6 @@ define_property(TARGET PROPERTY INTERFACE_AUI_WHOLEARCHIVE
         FULL_DOCS "Use wholearchive when linking this library to another")
 
 set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
-set_property(GLOBAL PROPERTY TESTS_SRCS "")
 
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
@@ -180,7 +176,7 @@ macro(_aui_import_gtest)
     endif()
 endmacro()
 
-macro(aui_enable_tests)
+function(aui_enable_tests AUI_MODULE_NAME)
     _aui_import_gtest()
     if (NOT TARGET GTest::gtest)
         message(FATAL_ERROR "GTest::gtest not found!")
@@ -188,7 +184,13 @@ macro(aui_enable_tests)
 
     enable_testing()
     if (NOT ANDROID AND NOT IOS)
-        get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
+        get_property(_source_dir TARGET ${AUI_MODULE_NAME} PROPERTY SOURCE_DIR)
+        unset(TESTS_SRCS)
+
+        if (NOT EXISTS ${_source_dir}/tests)
+            message(FATAL_ERROR "aui_enable_tests expects ${_source_dir}/tests to exist")
+        endif()
+        file(GLOB_RECURSE TESTS_SRCS ${_source_dir}/tests/*.cpp)
 
         if (NOT TARGET Tests)
             set(TESTS_MODULE_NAME Tests)
@@ -225,11 +227,12 @@ int main(int argc, char **argv) {
         else()
             target_sources(Tests PRIVATE ${TESTS_SRCS}) # append sources
         endif()
+
         if (TARGET Tests)
-            # executables
-            get_property(TESTS_EXECUTABLES GLOBAL PROPERTY TESTS_EXECUTABLES)
-            foreach(_executable ${TESTS_EXECUTABLES})
-                get_target_property(_t ${_executable} SOURCES)
+            # if the specified target is an executable, we should add it's srcs to the Tests target, otherwise just link it.
+            get_property(_type TARGET ${AUI_MODULE_NAME} PROPERTY TYPE)
+            if (_type STREQUAL EXECUTABLE)
+                get_target_property(_t ${AUI_MODULE_NAME} SOURCES)
 
                 # remove unexisting sources; otherwise cmake would fail for unknown reason
                 foreach(_e ${_t})
@@ -239,43 +242,20 @@ int main(int argc, char **argv) {
                 endforeach()
 
                 target_sources(Tests PRIVATE ${_t})
-                get_target_property(_t ${_executable} INCLUDE_DIRECTORIES)
+                get_target_property(_t ${AUI_MODULE_NAME} INCLUDE_DIRECTORIES)
                 target_include_directories(Tests PRIVATE ${_t})
-                get_target_property(_t ${_executable} COMPILE_DEFINITIONS)
+                get_target_property(_t ${AUI_MODULE_NAME} COMPILE_DEFINITIONS)
                 if(_t)
                     target_compile_definitions(Tests PRIVATE ${_t})
                 endif()
-                get_target_property(_t ${_executable} LINK_LIBRARIES)
+                get_target_property(_t ${AUI_MODULE_NAME} LINK_LIBRARIES)
                 target_link_libraries(Tests PRIVATE ${_t})
-            endforeach()
-
-            # libraries
-            get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
-            get_property(TESTS_INCLUDE_DIRS GLOBAL PROPERTY TESTS_INCLUDE_DIRS)
-            foreach(_dep ${TESTS_DEPS})
-                get_target_property(_type ${_dep} TYPE)
-
-                # if a target is executable we should add it's dependencies instead of the executable itself since
-                # executable's source are already built to our Tests target
-                if (_type STREQUAL "EXECUTABLE")
-                    get_target_property(_libs ${_dep} LINK_LIBRARIES)
-                    get_target_property(_defs ${_dep} COMPILE_DEFINITIONS)
-                    aui_link(Tests PRIVATE ${_libs})
-                    if (_defs)
-                        target_compile_definitions(Tests PRIVATE ${_defs})
-                    endif()
-                else()
-                    aui_link(Tests PRIVATE ${_dep})
-                endif()
-            endforeach()
-            target_include_directories(Tests PRIVATE ${TESTS_INCLUDE_DIRS})
+            else()
+                target_link_libraries(Tests PRIVATE ${AUI_MODULE_NAME})
+            endif()
         endif()
-        set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
-        set_property(GLOBAL PROPERTY TESTS_SRCS "")
-        set_property(GLOBAL PROPERTY TESTS_DEPS "")
-        set_property(GLOBAL PROPERTY TESTS_EXECUTABLES "")
     endif()
-endmacro()
+endfunction()
 
 function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
@@ -505,13 +485,6 @@ function(aui_executable AUI_MODULE_NAME)
     set(multiValueArgs ADDITIONAL_SRCS)
     cmake_parse_arguments(AUIE "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
-
-    # for tests
-    # executable's sources
-    if (SRCS_TESTS_TMP)
-        set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${SRCS_TESTS_TMP} ${SRCS})
-        set_property(GLOBAL APPEND PROPERTY TESTS_EXECUTABLES ${AUI_MODULE_NAME})
-    endif()
 
     # remove platform dependent files
     foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
@@ -832,12 +805,6 @@ function(aui_module AUI_MODULE_NAME)
         message(FATAL_ERROR "FORCE_SHARED AND FORCE_STATIC flags are exclusive!")
     endif()
 
-    if (SRCS_TESTS_TMP)
-        set_property(GLOBAL APPEND PROPERTY TESTS_DEPS ${AUI_MODULE_NAME})
-        foreach(child ${SRCS_TESTS_TMP})
-            set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${child})
-        endforeach()
-    endif()
 
     file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp

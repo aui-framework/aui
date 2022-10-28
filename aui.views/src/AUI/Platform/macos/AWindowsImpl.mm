@@ -125,13 +125,13 @@ void AWindow::flagRedraw() {
 }
 
 
-void AWindow::setSize(int width, int height) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
+void AWindow::setSize(glm::ivec2 size) {
+    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize(size);
 
 }
 
@@ -161,4 +161,8 @@ void AWindowManager::notifyProcessMessages() {
 
 void AWindowManager::loop() {
     MacosApp::inst().run();
+}
+
+void AWindow::allowDragNDrop() {
+
 }

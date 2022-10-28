@@ -273,8 +273,8 @@ void AWindow::show() {
     emit shown();
 }
 
-void AWindow::setSize(int width, int height) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
+void AWindow::setSize(glm::ivec2 size) {
+    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
 
     if (!mHandle) return;
     if (!!(mWindowStyle & WindowStyle::NO_RESIZE)) {
@@ -284,8 +284,8 @@ void AWindow::setSize(int width, int height) {
 
         XGetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints, &userhints);
 
-        sizehints->min_width = sizehints->min_width = sizehints->max_width = sizehints->base_width = width;
-        sizehints->min_height = sizehints->min_height = sizehints->max_height = sizehints->base_height = height;
+        sizehints->min_width = sizehints->min_width = sizehints->max_width = sizehints->base_width = size.x;
+        sizehints->min_height = sizehints->min_height = sizehints->max_height = sizehints->base_height = size.y;
         sizehints->flags |= PMinSize | PMaxSize;
 
         XSetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints);
@@ -309,7 +309,7 @@ void AWindow::setSize(int width, int height) {
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize({width, height});
 
     if (!mHandle) return;
     XMoveWindow(CommonRenderingContext::ourDisplay, mHandle, x, y);
@@ -429,6 +429,22 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     break;
                 }
                 case KeyRelease:
+                    if (XEventsQueued(CommonRenderingContext::ourDisplay, QueuedAfterReading)) // check for key repeat
+                    {
+                        XEvent nextEvent;
+                        XPeekEvent(CommonRenderingContext::ourDisplay, &nextEvent);
+
+                        if (nextEvent.type == KeyPress &&
+                            nextEvent.xkey.time == ev.xkey.time &&
+                            nextEvent.xkey.keycode == ev.xkey.keycode) {
+                            // key wasn't actually released
+
+                            XNextEvent(CommonRenderingContext::ourDisplay, &nextEvent); // consume the event from queue
+
+                            break;
+                        }
+                    }
+
                     window = locateWindow(ev.xkey.window);
                     window->onKeyUp(AInput::fromNative(ev.xkey.keycode));
                     break;
@@ -436,8 +452,10 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 case ConfigureNotify: {
                     window = locateWindow(ev.xconfigure.window);
                     glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
-                    if (size.x >= 10 && size.y >= 10 && size != window->getSize())
-                        window->AViewContainer::setSize(size.x, size.y);
+                    if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
+                        AUI_EMIT_FOREIGN_SIGNAL(window)->resized(size.x, size.y);
+                        window->AViewContainer::setSize(size);
+                    }
                     if (auto w = _cast<ACustomWindow>(window)) {
                         w->handleXConfigureNotify();
                     }
@@ -494,7 +512,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
                         auto maximized = window->isMaximized();
                         if (maximized != window->mWasMaximized) {
-                            perform_as_member(window, {
+                            AUI_PERFORM_AS_MEMBER(window, {
                                 if (mWasMaximized) {
                                     emit restored();
                                 } else {
@@ -658,4 +676,8 @@ void AWindowManager::xClipboardCopyImpl(const AString& text) {
 void AWindow::blockUserInput(bool blockUserInput) {
     ABaseWindow::blockUserInput(blockUserInput);
     // TODO linux impl
+}
+
+void AWindow::allowDragNDrop() {
+
 }

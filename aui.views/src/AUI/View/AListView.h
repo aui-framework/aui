@@ -69,7 +69,7 @@ public:
 	    return AModelSelection<AString>(mSelectionModel, mObserver->getModel().get());
 	}
 
-    void setSize(int width, int height) override;
+    void setSize(glm::ivec2 size) override;
     void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
 
     void insertItem(size_t at, const AString& value) override;

@@ -63,20 +63,24 @@ ABaseWindow* AView::getWindow()
 
 AView::AView()
 {
-
     aui::zero(mAss);
+    setSlotsCallsOnlyOnMyThread(true);
 }
 
 void AView::redraw()
 {
+    if (mRedrawRequested) {
+        return;
+    }
+    mRedrawRequested = true;
     assert(("views could not be used from non ui thread", AThread::current() == getThread()));
-    nullsafe(getWindow())->flagRedraw(); else nullsafe(AWindow::current())->flagRedraw();
+    AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(AWindow::current())->flagRedraw();
 
 }
 void AView::requestLayoutUpdate()
 {
     assert(("views could not be used from non ui thread", AThread::current() == getThread()));
-    nullsafe(getWindow())->flagUpdateLayout(); else nullsafe(AWindow::current())->flagUpdateLayout();
+    AUI_NULLSAFE(getWindow())->flagUpdateLayout(); else AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }
 
 void AView::drawStencilMask()
@@ -151,6 +155,7 @@ void AView::render()
     if (auto w = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)]) {
         w->renderFor(this);
     }
+    mRedrawRequested = false;
 }
 
 void AView::invalidateAllStyles()
@@ -267,7 +272,7 @@ AFontStyle& AView::getFontStyle()
 
 void AView::pack()
 {
-    setSize(getMinimumWidth(parentLayoutDirection()), getMinimumHeight(parentLayoutDirection()));
+    setSize({getMinimumWidth(parentLayoutDirection()), getMinimumHeight(parentLayoutDirection())});
 }
 
 void AView::addAssName(const AString& assName)
@@ -438,10 +443,10 @@ glm::ivec2 AView::getPositionInWindow() const {
 }
 
 
-void AView::setPosition(const glm::ivec2& position) {
+void AView::setPosition(glm::ivec2 position) {
     mPosition = position;
 }
-void AView::setSize(int width, int height)
+void AView::setSize(glm::ivec2 size)
 {
     /*
     int minWidth = getContentMinimumWidth();
@@ -457,7 +462,7 @@ void AView::setSize(int width, int height)
     }
     else
     {
-        mSize.x = width;
+        mSize.x = size.x;
         if (mMinSize.x != 0)
             mSize.x = glm::max(mMinSize.x, mSize.x);
     }
@@ -467,7 +472,7 @@ void AView::setSize(int width, int height)
     }
     else
     {
-        mSize.y = height;
+        mSize.y = size.y;
         if (mMinSize.y != 0)
             mSize.y = glm::max(mMinSize.y, mSize.y);
     }
@@ -476,7 +481,7 @@ void AView::setSize(int width, int height)
 
 void AView::setGeometry(int x, int y, int width, int height) {
     setPosition({ x, y });
-    setSize(width, height);
+    setSize({width, height});
 }
 
 bool AView::consumesClick(const glm::ivec2& pos) {

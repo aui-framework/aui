@@ -43,6 +43,7 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
                 t <<= 6;
                 t |= *(str++) & 0b111111;
                 destination.push_back(t);
+                length -= 2;
             } else
             {
                 // 2-byte symbol
@@ -50,6 +51,7 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
                 t <<= 6;
                 t |= *(str++) & 0b111111;
                 destination.push_back(t);
+                length -= 1;
             }
         } else
         {
@@ -167,6 +169,7 @@ AString AString::trimRight(wchar_t symbol) const noexcept
 AString AString::replacedAll(const AString& from, const AString& to) const noexcept
 {
     AString result;
+    result.reserve(size() * to.length() / from.length());
     for (size_type pos = 0;;)
     {
         auto next = find(from, pos);
@@ -1190,6 +1193,10 @@ AOptional<T> AString::toNumberImpl() const noexcept {
 
 AOptional<int> AString::toInt() const noexcept {
     return toNumberImpl<int>();
+}
+
+AOptional<int64_t> AString::toLongInt() const noexcept {
+    return toNumberImpl<int64_t>();
 }
 
 AOptional<unsigned> AString::toUInt() const noexcept {

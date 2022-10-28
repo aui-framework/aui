@@ -106,7 +106,12 @@ static AJson read(ATokenizer& t) {
 
             if (isdigit(uint8_t(t.getLastCharacter())) || t.getLastCharacter() == '-') {
                 t.reverseByte();
-                return t.readInt();
+                auto longInt = t.readLongInt();
+                int basicInt = longInt;
+                if (longInt == basicInt) {
+                    return basicInt;
+                }
+                return longInt;
             }
 
             t.reverseByte();
@@ -132,7 +137,10 @@ void ASerializable<AJson>::write(IOutputStream& os, const AJson& value) {
         [&](int v) {
             os << AString::number(v);
         },
-        [&](float v) {
+        [&](int64_t v) {
+            os << AString::number(v);
+        },
+        [&](double v) {
             os << AString::number(v);
         },
         [&](bool v) {

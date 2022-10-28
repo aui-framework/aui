@@ -88,8 +88,8 @@ void FractalView::render() {
     Render::drawRect(0, 0, getWidth(), getHeight());
 }
 
-void FractalView::setSize(int width, int height) {
-    AView::setSize(width, height);
+void FractalView::setSize(glm::ivec2 size) {
+    AView::setSize(size);
     mShader.use();
     mShader.set("ratio", mAspectRatio = float(width) / float(height));
 }

@@ -63,15 +63,15 @@ void SoftwareRenderingContext::endResize(ABaseWindow& window) {
 }
 
 AImage SoftwareRenderingContext::makeScreenshot() {
-    AVector<uint8_t> data;
+    AByteBuffer data;
     size_t s = mBitmapSize.x * mBitmapSize.y * 4;
     data.resize(s);
     for (size_t i = 0; i < s; i += 4) {
         uint8_t* ptr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFOHEADER) + i);
-        data[i    ] = ptr[2];
-        data[i + 1] = ptr[1];
-        data[i + 2] = ptr[0];
-        data[i + 3] = ptr[3];
+        data.at<std::uint8_t>(i    ) = ptr[2];
+        data.at<std::uint8_t>(i + 1) = ptr[1];
+        data.at<std::uint8_t>(i + 2) = ptr[0];
+        data.at<std::uint8_t>(i + 3) = ptr[3];
     }
     return {std::move(data), mBitmapSize.x, mBitmapSize.y, AImage::RGBA | AImage::BYTE};
 }

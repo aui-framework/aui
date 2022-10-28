@@ -22,6 +22,7 @@
 #pragma once
 #include "AObject.h"
 #include "ASignal.h"
+#include "AUI/Util/AScheduler.h"
 
 
 /**
@@ -31,22 +32,23 @@
 class API_AUI_CORE ATimer: public AObject
 {
 private:
-	_<AThread> mThread;
-	bool mResetFlag = false;
-	unsigned mMsPeriod;
-	
+	std::chrono::milliseconds mPeriod;
+
+    AOptional<AScheduler::TimerHandle> mTimer;
+
+    static _<AThread>& timerThread();
+
 public:
-	explicit ATimer(unsigned msPeriod);
-	virtual ~ATimer();
+	explicit ATimer(std::chrono::milliseconds period);
+	~ATimer();
 	
 	void restart();
 
 	void start();
 	void stop();
-	void setPeriodMs(unsigned period) {
-	    mMsPeriod = period;
-	}
 	bool isStarted();
+
+    static AScheduler& scheduler();
 
 signals:
 	emits<> fired;

@@ -148,9 +148,9 @@ struct ASerializable<aui::serialize_sized<T>> {
 template<typename T>
 struct ASerializable<aui::serialize_raw<T>> {
     static void write(IOutputStream& os, aui::serialize_raw<T> t) {
-        os.write(reinterpret_cast<const char*>(&t.value), sizeof(T));
+        os.write(reinterpret_cast<const char*>(t.value), sizeof(T));
     }
     static void read(IInputStream& is, aui::serialize_raw<T>& t) {
-        is.read(reinterpret_cast<char*>(&t.value), sizeof(T));
+        is.read(reinterpret_cast<char*>(t.value), sizeof(T));
     }
 };

@@ -29,33 +29,33 @@ JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleRedraw(JNIEnv *env, jclass clazz) {
     if (auto el = AThread::current()->getCurrentEventLoop())
         el->loop();
-    nullsafe(dynamic_cast<AWindow*>(AWindow::current()))->AWindow::redraw();
+    AUI_NULLSAFE(dynamic_cast<AWindow*>(AWindow::current()))->AWindow::redraw();
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleResize(JNIEnv *env, jclass clazz, jint width, jint height) {
-    nullsafe(AWindow::current())->setSize(width, height);
+    AUI_NULLSAFE(AWindow::current())->setSize(width, height);
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonDown(JNIEnv *env, jclass clazz, jint x,
                                                            jint y) {
-    nullsafe(AWindow::current())->onMousePressed({x, y}, AInput::LBUTTON);
+    AUI_NULLSAFE(AWindow::current())->onMousePressed({x, y}, AInput::LBUTTON);
 }
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonUp(JNIEnv *env, jclass clazz, jint x,
                                                            jint y) {
-    nullsafe(AWindow::current())->onMouseReleased({x, y}, AInput::LBUTTON);
+    AUI_NULLSAFE(AWindow::current())->onMouseReleased({x, y}, AInput::LBUTTON);
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleMouseMove(JNIEnv *env, jclass clazz, jint x,
                                                            jint y) {
-    nullsafe(AWindow::current())->onMouseMove({x, y});
+    AUI_NULLSAFE(AWindow::current())->onMouseMove({x, y});
 }
 
 extern "C"
@@ -65,5 +65,5 @@ Java_com_github_aui_android_MyGLSurfaceView_handleScroll(JNIEnv *env, jclass cla
                                                             jint originY,
                                                             jfloat velX,
                                                             jfloat velY) {
-    nullsafe(AWindow::current())->onGesture({originX, originY}, AFingerDragEvent{ {velX, velY} });
+    AUI_NULLSAFE(AWindow::current())->onGesture({originX, originY}, AFingerDragEvent{ {velX, velY} });
 }

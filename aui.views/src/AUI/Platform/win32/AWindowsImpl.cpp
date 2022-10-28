@@ -32,6 +32,7 @@
 #include "AUI/Util/ARandom.h"
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
+#include "Ole.h"
 #include <AUI/Platform/Platform.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/AWindowManager.h>
@@ -57,7 +58,7 @@
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/Platform/AMessageBox.h>
-
+#include <AUI/Platform/win32/AComBase.h>
 
 LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
@@ -155,9 +156,9 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
                 RECT windowRect, clientRect;
                 GetWindowRect(mHandle, &windowRect);
                 GetClientRect(mHandle, &clientRect);
-                nullsafe(mRenderingContext)->beginResize(*this);
+                AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
                 emit resized(LOWORD(lParam), HIWORD(lParam));
-                AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
+                AViewContainer::setSize({LOWORD(lParam), HIWORD(lParam)});
 
                 switch (wParam) {
                     case SIZE_MAXIMIZED:
@@ -170,7 +171,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
                         emit restored();
                         break;
                 }
-                nullsafe(mRenderingContext)->endResize(*this);
+                AUI_NULLSAFE(mRenderingContext)->endResize(*this);
             }
             return 0;
         }
@@ -245,7 +246,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
         case WM_DPICHANGED: {
             auto prevDpi = getDpiRatio();
             updateDpi();
-            setSize(getWidth() * getDpiRatio() / prevDpi, getHeight() * getDpiRatio() / prevDpi);
+            setSize({getWidth() * getDpiRatio() / prevDpi, getHeight() * getDpiRatio() / prevDpi});
             return 0;
         }
 
@@ -390,13 +391,13 @@ void AWindow::flagRedraw() {
 }
 
 
-void AWindow::setSize(int width, int height) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
+void AWindow::setSize(glm::ivec2 size) {
+    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize({width, height});
 
     if (!mHandle) return;
 
@@ -518,4 +519,51 @@ void AWindowManager::loop() {
 
 void AWindow::blockUserInput(bool blockUserInput) {
     EnableWindow(mHandle, !blockUserInput);
+}
+
+void AWindow::allowDragNDrop() {
+    class DropTarget: public AComBase<DropTarget, IDropTarget> {
+    public:
+        DropTarget(ABaseWindow* window) : mWindow(window) {}
+
+        HRESULT __stdcall DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
+            auto effect = DROPEFFECT_NONE;
+            mMimed = Ole::toMime(pDataObj);
+            if (mWindow->onDragEnter({ mMimed, { pt.x, pt.y } })) {
+                if (*pdwEffect & DROPEFFECT_COPY) {
+                    effect = DROPEFFECT_COPY;
+                } else {
+                    effect = DROPEFFECT_MOVE;
+                }
+            }
+            *pdwEffect = mOleEffect = effect;
+            return S_OK;
+        }
+
+        HRESULT __stdcall DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
+            *pdwEffect = mOleEffect;
+            return S_OK;
+        }
+
+        HRESULT __stdcall DragLeave() override {
+            mWindow->onDragLeave();
+            mMimed.clear();
+            return S_OK;
+        }
+
+        HRESULT __stdcall Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
+            *pdwEffect = mOleEffect;
+            mWindow->onDragDrop({ mMimed, { pt.x, pt.y} });
+            return S_OK;
+        }
+
+    private:
+        AMimedData mMimed;
+        ABaseWindow* mWindow;
+        DWORD mOleEffect;
+    };
+    Ole::inst();
+
+    auto r = RegisterDragDrop(mHandle, new DropTarget(this));
+    assert(r == S_OK);
 }

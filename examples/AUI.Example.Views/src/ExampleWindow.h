@@ -29,4 +29,8 @@ private:
 	
 public:
 	ExampleWindow();
+
+    void onDragDrop(const ADragNDrop::DropEvent& event) override;
+
+    bool onDragEnter(const ADragNDrop::EnterEvent& event) override;
 };

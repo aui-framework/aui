@@ -145,6 +145,30 @@ public:
         return {-mValue, mUnit};
     }
 
+    AMetric& operator+=(AMetric rhs) {
+        assert(mUnit == rhs.mUnit);
+        mValue += rhs.mValue;
+        return *this;
+    }
+
+    AMetric& operator-=(AMetric rhs) {
+        assert(mUnit == rhs.mUnit);
+        mValue -= rhs.mValue;
+        return *this;
+    }
+
+    AMetric& operator*=(AMetric rhs) {
+        assert(mUnit == rhs.mUnit);
+        mValue *= rhs.mValue;
+        return *this;
+    }
+
+    AMetric& operator/=(AMetric rhs) {
+        assert(mUnit == rhs.mUnit);
+        mValue /= rhs.mValue;
+        return *this;
+    }
+
     bool operator==(const AMetric& rhs) const {
         return std::tie(mValue, mUnit) == std::tie(rhs.mValue, rhs.mUnit);
     }

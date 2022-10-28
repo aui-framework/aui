@@ -5,14 +5,14 @@
 
 class ABaseWindow;
 
-class AOverlappingSurface: public AViewContainer {
+class API_AUI_VIEWS AOverlappingSurface: public AViewContainer {
     friend class ABaseWindow;
 private:
-    ABaseWindow* mWindow;
+    ABaseWindow* mParentWindow;
     bool mCloseOnClick;
 
 public:
-    AOverlappingSurface() {}
+    AOverlappingSurface() = default;
 
     virtual ~AOverlappingSurface() = default;
     void close();
@@ -24,4 +24,7 @@ public:
     void setCloseOnClick(bool closeOnClick) {
         mCloseOnClick = closeOnClick;
     }
+
+    virtual void setOverlappingSurfacePosition(glm::ivec2 position) = 0;
+    virtual void setOverlappingSurfaceSize(glm::ivec2 size) = 0;
 };

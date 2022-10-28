@@ -25,6 +25,7 @@
 #include <cassert>
 #include <curl/curl.h>
 #include <AUI/Util/kAUI.h>
+#include <numeric>
 
 #include "AUI/Common/AString.h"
 #include "AUI/Logging/ALogger.h"
@@ -32,7 +33,7 @@
 
 #undef min
 
-ACurl::Builder::Builder(const AString& url)
+ACurl::Builder::Builder(AString url): mUrl(std::move(url))
 {
 	class Global
 	{
@@ -53,10 +54,6 @@ ACurl::Builder::Builder(const AString& url)
 	mCURL = curl_easy_init();
 	assert(mCURL);
 	CURLcode res;
-
-
-	res = curl_easy_setopt(mCURL, CURLOPT_URL, url.toStdString().c_str());
-	assert(res == 0);
 
     // at least 1kb/sec during 10sec
     res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_TIME, 10L);
@@ -139,8 +136,31 @@ AByteBuffer ACurl::Builder::toByteBuffer() {
     return out;
 }
 
+ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AString>>& params) {
+    mUrl.reserve(std::accumulate(params.begin(), params.end(), mUrl.size() + 1, [](std::size_t l, const std::pair<AString, AString>& p) {
+        return l + p.first.size() + p.second.size() + 2;
+    }));
+
+    bool first = true;
+
+    for (const auto&[key, value] : params) {
+        if (first) {
+            mUrl += '?';
+            first = false;
+        } else {
+            mUrl += '&';
+        }
+        mUrl += key;
+        mUrl += "=";
+        mUrl += value;
+    }
+
+    return *this;
+}
+
 ACurl& ACurl::operator=(Builder&& builder) noexcept {
     mCURL = builder.mCURL;
+
     mWriteCallback = std::move(builder.mWriteCallback);
     mReadCallback = std::move(builder.mReadCallback);
     if (builder.mErrorCallback) {
@@ -155,7 +175,11 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
     assert(("buffer size mismatch", std::size(mErrorBuffer) == CURL_ERROR_SIZE));
     builder.mCURL = nullptr;
 
-	CURLcode res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
+
+    auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
+    assert(res == 0);
+
+	res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
     assert(res == 0);
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);

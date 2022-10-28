@@ -120,7 +120,7 @@ void AThread::interrupt()
 {
 	mInterrupted = true;
 	std::unique_lock lock(mCurrentCV.mutex);
-    nullsafe(mCurrentCV.cv)->notify_all();
+    AUI_NULLSAFE(mCurrentCV.cv)->notify_all();
 }
 
 void AThread::sleep(unsigned durationInMs)

@@ -407,7 +407,6 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     mTempVao.indices(INDICES);
     glLineWidth(lineWidth);
     mTempVao.drawElements(GL_LINES);
-    drawRectImpl(position, size);
     endDraw(brush);
 }
 
@@ -849,7 +848,7 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
     mTempVao.bind();
 
     AVector<glm::vec4> positions;
-    positions.reserve(points.size());
+    positions.reserve(points.size() * 2);
 
     for (const auto& [p1, p2] : points) {
         positions << mTransform * glm::vec4(p1, 0, 1);
@@ -857,7 +856,7 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
     }
 
     mTempVao.insert(0, positions);
-    mTempVao.drawArrays(GL_LINES, points.size());
+    mTempVao.drawArrays(GL_LINES, positions.size());
 
     endDraw(brush);
 }

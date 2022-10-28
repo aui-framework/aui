@@ -273,3 +273,15 @@ void ABaseWindow::onFocusLost() {
 void ABaseWindow::blockUserInput(bool blockUserInput) {
 
 }
+
+bool ABaseWindow::onDragEnter(const ADragNDrop::EnterEvent& event) {
+    return false;
+}
+
+void ABaseWindow::onDragLeave() {
+
+}
+
+void ABaseWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
+
+}

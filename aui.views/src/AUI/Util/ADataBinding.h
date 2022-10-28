@@ -115,8 +115,8 @@ public:
 template <typename Model>
 class ADataBinding: public AObject {
 private:
-    using Applier = std::function<void(const Model& model, unsigned)>;
-    ADeque<Applier> mLinkAppliers;
+    using Observer = std::function<void(const Model& model, unsigned)>;
+    ADeque<Observer> mLinkObservers;
 
     Model* mModel = nullptr;
     bool mOwning = false;
@@ -171,7 +171,7 @@ public:
         }
         mOwning = true;
         mModel = new Model(model);
-        update();
+        notifyUpdate();
     }
 
     void setModel(Model* model) {
@@ -180,27 +180,56 @@ public:
         }
         mOwning = false;
         mModel = model;
-        update();
+        notifyUpdate();
     }
 
     const void* getExclusion() const {
         return mExcept;
     }
 
-    void update(void* except = nullptr, unsigned field = -1) {
+    void notifyUpdate(void* except = nullptr, unsigned field = -1) {
         mExcept = except;
-        for (auto& applier : mLinkAppliers) {
+        for (auto& applier : mLinkObservers) {
             applier(*mModel, field);
         }
         emit modelChanged;
     }
 
-    void addApplier(const Applier& applier) {
-        mLinkAppliers << applier;
+    template<typename ModelField>
+    void setValue(ModelField(Model::*field), ModelField value) {
+        mModel->*field = std::move(value);
+        union converter {
+            unsigned i;
+            decltype(field) p;
+        } c;
+        c.p = field;
+        notifyUpdate(nullptr, c.i);
+    }
+
+    void addObserver(const Observer& applier) {
+        mLinkObservers << applier;
         if (mModel) {
-            mLinkAppliers.last()(*mModel, -1);
+            mLinkObservers.last()(*mModel, -1);
         }
     }
+
+    template<typename ModelField, typename FieldObserver>
+    void addObserver(ModelField(Model::*field), FieldObserver&& observer) {
+        mLinkObservers << [observer = std::forward<FieldObserver>(observer), field] (const Model& model, unsigned index) {
+            union converter {
+                unsigned i;
+                decltype(field) p;
+            } c;
+            c.p = field;
+            if (c.i == index || index == -1) {
+                observer(model.*field);
+            }
+        };
+        if (mModel) {
+            mLinkObservers.last()(*mModel, -1);
+        }
+    }
+
 
 signals:
     /**
@@ -222,13 +251,13 @@ _<Klass1> operator&&(const _<Klass1>& object, const ADataBindingLinker<Model, Kl
             linker.getBinder()->getEditableModel().*(linker.getField()) = data;
             converter c;
             c.p = linker.getField();
-            linker.getBinder()->update(object.get(), c.i);
+            linker.getBinder()->notifyUpdate(object.get(), c.i);
             object->setSignalsEnabled(true);
         });
     }
 
     if (linker.getSetterFunc()) {
-        linker.getBinder()->addApplier([object, linker](const Model& model, unsigned field) {
+        linker.getBinder()->addObserver([object, linker](const Model& model, unsigned field) {
             converter c;
             c.p = linker.getField();
             if (c.i == field || field == -1) {

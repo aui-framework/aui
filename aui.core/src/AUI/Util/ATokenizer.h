@@ -30,19 +30,6 @@
 
 class API_AUI_CORE ATokenizer
 {
-private:
-	_<IInputStream> mInput;
-
-    char mBuffer[4096];
-    char* mBufferRead = nullptr;
-    char* mBufferEnd = nullptr;
-
-	char mLastByte;
-	bool mReverse = false;
-    bool mEof = false;
-
-	int mRow = 1;
-	int mColumn = 1;
 	
 public:
 	ATokenizer(_<IInputStream> inputStream)
@@ -151,21 +138,29 @@ public:
 
 	/**
 	 * @brief Reads integer number.
-	 * @return read integer number
+	 */
+    int64_t readLongInt();
+
+
+	/**
+	 * @brief Reads integer number.
 	 */
 	int readInt();
 
 	/**
 	 * @brief Reads unsigned integer number.
-	 * @return read unsigned integer number
 	 */
 	unsigned readUInt();
 
 	/**
-	 * @brief Reads unsigned integer number.
-	 * @return read unsigned integer number + bool isHex
+	 * @brief Reads unsigned integer number + flag the read value is marked as hex (prefixed with 0x)
 	 */
-	std::tuple<unsigned, bool> readUIntX();
+	template<typename underlying_t>
+	struct Hexable {
+        underlying_t value;
+        bool isHex;
+    };
+    Hexable<unsigned> readUIntX();
 
 	/**
 	 * @return last read byte. Applicable with <code>ATokenizer::reverseByte()</code>
@@ -239,4 +234,22 @@ public:
 	 * @return vec2
 	 */
 	glm::vec2 readVec2();
+
+
+private:
+    _<IInputStream> mInput;
+
+    char mBuffer[4096];
+    char* mBufferRead = nullptr;
+    char* mBufferEnd = nullptr;
+
+    char mLastByte;
+    bool mReverse = false;
+    bool mEof = false;
+
+    int mRow = 1;
+    int mColumn = 1;
+
+    template<typename T>
+    T readIntImpl();
 };

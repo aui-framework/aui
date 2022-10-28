@@ -34,6 +34,9 @@
 #include "AWindow.h"
 #include "ADesktop.h"
 #include "ACursor.h"
+#include "AUI/Platform/win32/Ole.h"
+#include "AUI/Util/AImageDrawable.h"
+#include "AUI/Platform/win32/Win32Util.h"
 #include <windows.h>
 #include <shlobj.h>
 #include <AUI/Traits/memory.h>
@@ -53,28 +56,24 @@ void ADesktop::setMousePos(const glm::ivec2& pos) {
 
 
 AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& startingLocation) {
-    nullsafe(parent)->blockUserInput();
+    AUI_NULLSAFE(parent)->blockUserInput();
     return async noexcept {
         APath result;
-        OleInitialize(0);
-        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-        assert(SUCCEEDED(hr));
+        Ole::inst();
         IFileOpenDialog *pFileOpen;
 
         // Create the FileOpenDialog object.
-        hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+        auto hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
                               IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
 
         assert(SUCCEEDED(hr));
 
 
         ARaiiHelper d = [&] {
-            nullsafe(parent)->getThread()->enqueue([parent, pFileOpen] {
+            AUI_NULLSAFE(parent)->getThread()->enqueue([parent, pFileOpen] {
                 parent->blockUserInput(false);
 
                 pFileOpen->Release();
-                CoUninitialize();
-                OleUninitialize();
             });
         };
 
@@ -128,26 +127,22 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
 }
 
 AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
-    nullsafe(parent)->blockUserInput();
+    AUI_NULLSAFE(parent)->blockUserInput();
     return async noexcept {
         APath result;
-        OleInitialize(0);
-        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-        assert(SUCCEEDED(hr));
+        Ole::inst();
         IFileOpenDialog *pFileOpen;
 
         // Create the FileOpenDialog object.
-        hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+        auto hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
                               IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
 
 
         ARaiiHelper d = [&] {
-            nullsafe(parent)->getThread()->enqueue([parent, pFileOpen] {
+            AUI_NULLSAFE(parent)->getThread()->enqueue([parent, pFileOpen] {
                 parent->blockUserInput(false);
 
                 pFileOpen->Release();
-                CoUninitialize();
-                OleUninitialize();
             });
         };
 
@@ -218,6 +213,15 @@ void ADesktop::openUrl(const AString& url) {
     ShellExecute(nullptr, L"open", url.c_str(), nullptr, nullptr, SW_NORMAL);
 }
 
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    SHFILEINFO info;
+    if (SUCCEEDED(SHGetFileInfo(file.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES))) {
+
+        ARaiiHelper destroyer = [&]{ DestroyIcon(info.hIcon); };
+        return _new<AImageDrawable>(_new<AImage>(aui::win32::iconToImage(info.hIcon)));
+    }
+    return nullptr;
+}
 
 #elif AUI_PLATFORM_ANDROID
 
@@ -249,6 +253,11 @@ void ADesktop::openUrl(const AString &url) {
 
 }
 
+
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    return nullptr;
+}
+
 #elif AUI_PLATFORM_APPLE
 
 #include "AWindow.h"
@@ -273,6 +282,9 @@ void ADesktop::openUrl(const AString &url) {
 
 }
 
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    return nullptr;
+}
 #else
 
 #include <X11/Xlib.h>
@@ -429,4 +441,7 @@ AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& starting
     };
 }
 
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    return nullptr;
+}
 #endif

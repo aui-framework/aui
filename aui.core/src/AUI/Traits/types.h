@@ -26,14 +26,45 @@
 namespace aui {
 
     /**
-     * Determines whether <code>T</code> is complete or not.
+     * @brief Determines whether <code>T</code> is complete or not.
+     * @ingroup useful_traits
      */
     template<typename T, class = void>
     inline constexpr bool is_complete = false;
 
     /**
-     * Determines whether <code>T</code> is complete or not.
+     * @brief Determines whether <code>T</code> is complete or not.
+     * @ingroup useful_traits
      */
     template<typename T>
     inline constexpr bool is_complete<T, decltype(void(sizeof(T)))> = true;
+
+
+
+    namespace impl {
+        template<typename... Args>
+        struct select_overload {
+            template<typename R, typename C>
+            constexpr auto operator()(R(C::*ptr)(Args...)) const noexcept -> decltype(ptr) {
+                return ptr;
+            }
+        };
+    }
+    /**
+     * @brief Chooses specific overload of a method.
+     * @ingroup useful_traits
+     * @details
+     * Example:
+     * @code{cpp}
+     * struct GameObject {
+     * public:
+     *   void setPos(glm::vec3);
+     *   void setPos(glm::vec2);
+     * };
+     * ...
+     * auto setPosVec2 = aui::select_overload<glm::vec2>(&GameObject::setPos);
+     * @endcode
+     */
+    template<typename... Args>
+    constexpr impl::select_overload<Args...> select_overload = {};
 }

@@ -184,12 +184,12 @@ ACustomWindow::~ACustomWindow()
 {
 }
 
-void ACustomWindow::setSize(int width, int height)
+void ACustomWindow::setSize(glm::ivec2 size)
 {
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize(size);
     auto pos = getWindowPosition();
 
-    MoveWindow(mHandle, pos.x, pos.y, width, height, false);
+    MoveWindow(mHandle, pos.x, pos.y, size.x, size.y, false);
 }
 
 #elif AUI_PLATFORM_ANDROID

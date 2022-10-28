@@ -76,6 +76,8 @@ private:
     AString mWindowClass;
     AWindow* mParentWindow;
 
+    unsigned mFrameMillis = 1;
+
     /**
      * @brief Handles self shared pointer.
      */
@@ -110,6 +112,11 @@ protected:
     void windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws);
 
     /**
+     * @brief Enables drag-n-drop for this window.
+     */
+    void allowDragNDrop();
+
+    /**
      * @brief Constructor for custom initialization logic
      * @note Please call windowNativePreInit
      */
@@ -124,6 +131,11 @@ public:
         Render::setWindow(this);
     }
     virtual ~AWindow();
+
+    [[nodiscard]]
+    unsigned frameMillis() const noexcept override {
+        return mFrameMillis;
+    }
 
     void redraw();
 
@@ -205,8 +217,8 @@ public:
 
     glm::ivec2 getWindowPosition() const;
 
-    void setPosition(const glm::ivec2& position) override;
-    void setSize(int width, int height) override;
+    void setPosition(glm::ivec2 position) override;
+    void setSize(glm::ivec2 size) override;
     void setGeometry(int x, int y, int width, int height) override;
 
 

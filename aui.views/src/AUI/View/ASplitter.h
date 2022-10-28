@@ -98,7 +98,7 @@ public:
 
     void onMouseMove(glm::ivec2 pos) override;
 
-    void setSize(int width, int height) override;
+    void setSize(glm::ivec2 size) override;
 
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 

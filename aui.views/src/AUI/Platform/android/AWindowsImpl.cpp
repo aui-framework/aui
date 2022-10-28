@@ -100,15 +100,15 @@ float AWindow::fetchDpiFromSystem() const {
 }
 
 
-void AWindow::setSize(int width, int height) {
-    nullsafe(mRenderingContext)->beginResize(*this);
-    AViewContainer::setSize(width, height);
-    nullsafe(mRenderingContext)->endResize(*this);
+void AWindow::setSize(glm::ivec2 size) {
+    AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
+    AViewContainer::setSize(size);
+    AUI_NULLSAFE(mRenderingContext)->endResize(*this);
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize(size);
 
 }
 
@@ -150,5 +150,9 @@ void AWindow::show() {
 }
 
 void AWindow::blockUserInput(bool block) {
+
+}
+
+void AWindow::allowDragNDrop() {
 
 }

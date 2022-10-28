@@ -39,13 +39,44 @@ private:
     bool mRequiresRedraw = false;
     bool mRequiresLayoutUpdate = false;
 
+    unsigned mFrameMillis = 1;
+
 public:
     EmbedWindow(AEmbedAuiWrap* theWrap): mTheWrap(theWrap) {
         currentWindowStorage() = this;
     }
 
+    unsigned int frameMillis() const noexcept override {
+        return mFrameMillis;
+    }
+
+    void setFrameMillis(unsigned int frameMillis) {
+        mFrameMillis = frameMillis;
+    }
+
     _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override {
-        auto container = _new<AOverlappingSurface>();
+        class MyOverlappingSurface: public AOverlappingSurface {
+        public:
+            void setOverlappingSurfacePosition(glm::ivec2 position) override {
+                emit positionSet(position);
+            }
+
+            void setOverlappingSurfaceSize(glm::ivec2 size) override {
+                emit sizeSet(size);
+            }
+
+        signals:
+            emits<glm::ivec2> positionSet;
+            emits<glm::ivec2> sizeSet;
+        };
+
+        auto container = _new<MyOverlappingSurface>();
+        connect(container->positionSet, [container = container.get()](glm::ivec2 p) {
+            container->setPosition(p);
+        });
+        connect(container->sizeSet, [container = container.get()](glm::ivec2 p) {
+            container->setSize(p);
+        });
         addViewCustomLayout(container);
 
         auto windowSize = getSize();
@@ -97,10 +128,10 @@ void AEmbedAuiWrap::windowRender() {
         mContainer->mRequiresLayoutUpdate = false;
         mContainer->updateLayout();
     }
-    nullsafe(mContainer->getRenderingContext())->beginPaint(*mContainer);
+    AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
     mContainer->render();
-    nullsafe(mContainer->getRenderingContext())->endPaint(*mContainer);
+    AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 
 void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
@@ -115,9 +146,9 @@ void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
 void AEmbedAuiWrap::setViewportSize(int width, int height) {
     mContainer->makeCurrent();
     mSize = { width, height };
-    nullsafe(mContainer->getRenderingContext())->beginResize(*mContainer);
-    mContainer->setSize(width, height);
-    nullsafe(mContainer->getRenderingContext())->endResize(*mContainer);
+    AUI_NULLSAFE(mContainer->getRenderingContext())->beginResize(*mContainer);
+    mContainer->setSize({width, height});
+    AUI_NULLSAFE(mContainer->getRenderingContext())->endResize(*mContainer);
     mContainer->mRequiresRedraw = true;
 }
 

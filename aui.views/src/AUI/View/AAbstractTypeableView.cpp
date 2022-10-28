@@ -37,19 +37,22 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/i18n/AI18n.h>
 
-ATimer& AAbstractTypeableView::blinkTimer()
+_<ATimer> AAbstractTypeableView::blinkTimer()
 {
-    static ATimer t(500);
-    if (!t.isStarted())
-    {
-        t.start();
+    using namespace std::chrono_literals;
+    static _weak<ATimer> t;
+    if (auto l = t.lock()) {
+        return l;
     }
-    return t;
+    auto timer = _new<ATimer>(500ms);
+    timer->start();
+    t = timer;
+    return timer;
 }
 
 void AAbstractTypeableView::updateCursorBlinking()
 {
-    blinkTimer().restart();
+    mBlinkTimer->restart();
     mCursorBlinkVisible = true;
     mCursorBlinkCount = 0;
     redraw();
@@ -76,7 +79,7 @@ void AAbstractTypeableView::updateCursorPos()
 
 AAbstractTypeableView::AAbstractTypeableView()
 {
-    connect(blinkTimer().fired, this, [&]()
+    connect(mBlinkTimer->fired, this, [&]()
     {
         if (hasFocus() && mCursorBlinkCount < 60) {
             mCursorBlinkVisible = !mCursorBlinkVisible;

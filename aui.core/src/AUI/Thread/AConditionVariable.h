@@ -129,4 +129,33 @@ public:
         }
         AThread::interruptionPoint();
     }
+
+    /**
+     * Waits until the notification.
+     * @param lock lock.
+     * @param duration duration to waitForExitCode until.
+     */
+    template<typename Lock, typename Timepoint>
+    void wait_until(Lock& lock, Timepoint timepoint) {
+        {
+            WaitHelper w(*this);
+            mImpl.wait_until(lock, timepoint);
+        }
+        AThread::interruptionPoint();
+    }
+
+    /**
+     * Waits until the notification.
+     * @param lock lock.
+     * @param duration duration to waitForExitCode until.
+     * @param predicate which returns false if the waiting should be continued.
+     */
+    template<typename Lock, typename Duration, typename Predicate>
+    void wait_until(Lock& lock, Duration duration, Predicate&& predicate) {
+        {
+            WaitHelper w(*this);
+            mImpl.wait_until(lock, duration, PredicateHelper(std::forward<Predicate>(predicate)));
+        }
+        AThread::interruptionPoint();
+    }
 };

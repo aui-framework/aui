@@ -99,7 +99,7 @@ void AWindow::redraw() {
 
         // measure frame time
         auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        unsigned millis = unsigned((after - before).count());
+        unsigned millis = mFrameMillis = unsigned((after - before).count());
         if (millis > 17) {
             static auto lastNotification = 0ms;
             if (after - lastNotification > 10s) {
@@ -179,7 +179,7 @@ void AWindow::onCloseButtonClicked() {
 }
 
 
-void AWindow::setPosition(const glm::ivec2& position) {
+void AWindow::setPosition(glm::ivec2 position) {
     setGeometry(position.x, position.y, getWidth(), getHeight());
 }
 
@@ -209,6 +209,14 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     getWindowManager().initNativeWindow({ *this, name, width, height, ws, parent });
 
     setWindowStyle(ws);
+
+#if !AUI_PLATFORM_WIN
+    // windows sends resize event during window initialization but other platforms doesn't.
+    // simulate the same behaviour here.
+    ui_thread {
+        emit resized(getWidth(), getHeight());
+    };
+#endif
 }
 
 _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
@@ -223,10 +231,33 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     auto finalPos = unmapPosition(position);
     window->setGeometry(finalPos.x, finalPos.y, size.x, size.y);
     // show later
-    window->show();
+    ui_thread {
+        window->show();
+    };
 
-    auto surface = _new<AOverlappingSurface>();
+    class MyOverlappingSurface: public AOverlappingSurface {
+    public:
+        void setOverlappingSurfacePosition(glm::ivec2 position) override {
+            emit positionSet(position);
+        }
+
+        void setOverlappingSurfaceSize(glm::ivec2 size) override {
+            emit sizeSet(size);
+        }
+
+    signals:
+        emits<glm::ivec2> positionSet;
+        emits<glm::ivec2> sizeSet;
+    };
+
+    auto surface = _new<MyOverlappingSurface>();
     ALayoutInflater::inflate(window, surface);
+    connect(surface->positionSet, window, [this, window = window.get()](const glm::ivec2& newPos) {
+        window->setPosition(unmapPosition(newPos));
+    });
+    connect(surface->sizeSet, window, [this, window = window.get()](const glm::ivec2& size) {
+        window->setSize(size);
+    });
 
     return surface;
 }

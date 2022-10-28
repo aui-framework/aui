@@ -35,31 +35,6 @@ bool PngImageLoader::matches(AByteBufferView buffer) {
 }
 
 
-_<AImage> PngImageLoader::getRasterImage(AByteBufferView buffer) {
-    int x, y, channels;
-    if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer.data(), buffer.size(),
-                                              &x, &y, &channels, 4)) {
-        channels = 4;
-        uint32_t format = AImage::BYTE;
-        switch (channels) {
-            case 3:
-                format |= AImage::RGB;
-                break;
-            case 4:
-                format |= AImage::RGBA;
-                break;
-            default:
-                assert(0);
-        }
-        auto img = _new<AImage>(
-                AVector<uint8_t>{static_cast<uint8_t*>(data), static_cast<uint8_t*>(data + x * y * channels)}, x, y,
-                format);
-        stbi_image_free(data);
-        return img;
-    }
-    return nullptr;
-}
-
 void PngImageLoader::save(IOutputStream& outputStream, const AImage& image) {
     stbi_write_png_to_func([](void *context, void *data, int size) {
         reinterpret_cast<IOutputStream*>(context)->write(reinterpret_cast<char*>(data), size);

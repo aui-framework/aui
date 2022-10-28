@@ -26,16 +26,14 @@
 #pragma once
 
 
-#include <AUI/Image/IImageLoader.h>
 #include <AUI/api.h>
+#include <AUI/Image/StbImageLoader.h>
 
-class PngImageLoader: public IImageLoader {
+class PngImageLoader: public StbImageLoader {
 public:
     bool matches(AByteBufferView buffer) override;
 
     API_AUI_IMAGE static void save(IOutputStream& outputStream, const AImage& image);
-
-    _<AImage> getRasterImage(AByteBufferView buffer) override;
 };
 
 

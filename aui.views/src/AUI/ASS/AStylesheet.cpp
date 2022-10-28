@@ -400,13 +400,13 @@ AStylesheet::AStylesheet() {
         // ADividerView
         {
             t<AHDividerView>(),
-            FixedSize { {}, 2_dp },
+            FixedSize { {}, 1_px },
             Margin { 0, 2_dp },
             BackgroundSolid { 0x808080_rgb },
         },
         {
             t<AVDividerView>(),
-            FixedSize { 2_dp, {} },
+            FixedSize { 1_px, {} },
             Margin { 2_dp, 0 },
             BackgroundSolid { 0x808080_rgb },
         },
@@ -630,11 +630,16 @@ AStylesheet::AStylesheet() {
         },
         {
             c(".agroupbox-inner"),
-                Border { 2_dp, 0x30808080_argb },
-                BorderRadius { 4_dp },
+            Border { 2_dp, 0x30808080_argb },
+            BorderRadius { 4_dp },
             Padding { 8_dp, 6_dp },
-                Margin { 0, 4_dp},
-                AOverflow::HIDDEN,
+            Margin { 0, 4_dp},
+            AOverflow::HIDDEN,
+        },
+        {
+            c(".modal-scaffold-dim"),
+            BackgroundSolid { 0x40000000_argb },
+            Expanding{},
         },
     });
 }

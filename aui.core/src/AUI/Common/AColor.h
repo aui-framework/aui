@@ -121,13 +121,13 @@ public:
      * @param multiplier
      * @return supplyResult color
      */
-    inline AColor mul(float d) {
+    inline AColor mul(float d) const {
         return AColor(r * d, g * d, b * d, a);
     }
-    inline AColor darker(float d) {
+    inline AColor darker(float d) const {
         return mul(1.f - d);
     }
-    inline AColor lighter(float d) {
+    inline AColor lighter(float d) const {
         return mul(1.f + d);
     }
 

@@ -322,6 +322,16 @@ public:
      * If conversion to int is not possible, nullopt is returned.
      */
     [[nodiscard]]
+    AOptional<int64_t> toLongInt() const noexcept;
+
+    /**
+     * @brief Converts the string to int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
+    [[nodiscard]]
     AOptional<unsigned> toUInt() const noexcept;
 
     /**
@@ -358,7 +368,13 @@ public:
                 return "true";
             return "false";
         } else {
-            return std::to_wstring(i);
+            auto v = std::to_wstring(i);
+            if constexpr (std::is_floating_point_v<T>) {
+                // remove trailing zeros
+                v.erase(v.find_last_not_of('0') + 1, std::wstring::npos);
+                v.erase(v.find_last_not_of('.') + 1, std::wstring::npos);
+            }
+            return v;
         }
     }
     int toNumberDec() const noexcept;

@@ -60,7 +60,7 @@ public:
 
 TEST(SharedPtrs, Builder1) {
     auto builder = _new<SomeBuilderClass>();
-    perform_as_member(builder, {
+    AUI_PERFORM_AS_MEMBER(builder, {
        setUsername("John");
        setAge(23);
     });
@@ -78,55 +78,6 @@ TEST(SharedPtrs, Builder2) {
 
     ASSERT_EQ(builder->getUsername(), "John");
     ASSERT_EQ(builder->getAge(), 23);
-}
-
-
-TEST(SharedPtrs, NullSafety) {
-    class Person {
-    private:
-        AString mName;
-        int mAge;
-    public:
-
-        Person(const AString& name, int age)
-                : mName(name),
-                  mAge(age) {
-        }
-
-
-        [[nodiscard]] const AString& getName() const {
-            return mName;
-        }
-
-        void setName(const AString& name) {
-            mName = name;
-        }
-
-        [[nodiscard]] int getAge() const {
-            return mAge;
-        }
-
-        void setAge(const int age) {
-            mAge = age;
-        }
-    };
-
-    AVector<_<Person>> persons = {
-            _new<Person>("John", 23),
-            _new<Person>("Jenny", 21),
-            nullptr
-    };
-
-    for (auto& person : persons) {
-        person.safe()
-                (&Person::setAge, 80)
-                (&Person::setName, "Loh");
-    }
-    ASSERT_EQ(persons[0]->getAge(), 80);
-    ASSERT_EQ(persons[1]->getAge(), 80);
-    ASSERT_EQ(persons[0]->getName(), "Loh");
-    ASSERT_EQ(persons[1]->getName(), "Loh");
-    ASSERT_TRUE(persons[2] == nullptr);
 }
 
 class SendObject : public AObject {
@@ -155,7 +106,7 @@ TEST(SharedPtrs, ConnectBuilder) {
             .connect(&SendObject::someSignal, receiver, &ReceiverObject::receiveSignal);
 
 
-    perform_as_member(sender, {
+    AUI_PERFORM_AS_MEMBER(sender, {
         invokeSignal();
     });
 

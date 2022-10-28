@@ -29,8 +29,8 @@
 class MockedViewContainer: public AViewContainer {
 public:
     MockedViewContainer() {
-        ON_CALL(*this, setSize).WillByDefault([this](int width, int height) {
-            AViewContainer::setSize(width, height);
+        ON_CALL(*this, setSize).WillByDefault([this](glm::ivec2 size) {
+            AViewContainer::setSize(size);
         });
 
         setContents(
@@ -41,10 +41,10 @@ public:
         *this << ".container";
         setCustomStyle({ ass::BackgroundSolid{ 0xff0000_rgb, } });
 
-        EXPECT_CALL(*this, setSize(testing::_, testing::_)).Times(testing::AtLeast(1));
+        EXPECT_CALL(*this, setSize(testing::_)).Times(testing::AtLeast(1));
     }
 
-    MOCK_METHOD(void, setSize, (int width, int height), (override));
+    MOCK_METHOD(void, setSize, (glm::ivec2), (override));
 };
 
 class UIScrollTest: public testing::UITest {

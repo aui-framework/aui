@@ -38,8 +38,8 @@ AProgressBar::~AProgressBar() {
 
 }
 
-void AProgressBar::setSize(int width, int height) {
-    AViewContainer::setSize(width, height);
+void AProgressBar::setSize(glm::ivec2 size) {
+    AViewContainer::setSize(size);
     updateInnerWidth();
 }
 

@@ -31,13 +31,14 @@
 #include <AUI/Common/AMap.h>
 #include <AUI/Json/AJson.h>
 #include <AUI/Json/Exception.h>
+#include <AUI/Traits/callables.h>
 #include <variant>
 
 class AJson;
 namespace aui::impl {
     using JsonObject = AMap<AString, AJson>;
     using JsonArray = AVector<AJson>;
-    using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, float, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
+    using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, int64_t, double, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
 }
 
 /**
@@ -46,6 +47,7 @@ namespace aui::impl {
  */
 class AJson: public aui::impl::JsonVariant {
 private:
+    using super = aui::impl::JsonVariant;
 
     template<typename T>
     [[nodiscard]]
@@ -58,26 +60,25 @@ private:
         if (isEmpty()) {
             *this = T();
         }
-        try {
-            return std::get<T>(*this);
-        } catch (...) {
-            throw AJsonTypeMismatchException("not a " + AClass<T>::name());
+
+        if (auto p = std::get_if<T>(this)) {
+            return *p;
         }
+        throw AJsonTypeMismatchException("not a " + AClass<T>::name());
     }
 
     template<typename T>
     [[nodiscard]]
     const T& as() const {
-        try {
-            return std::get<T>(*this);
-        } catch (...) {
-            if constexpr(std::is_same_v<T, aui::impl::JsonObject>) {
-                throw AJsonTypeMismatchException("not an object");
-            } else if constexpr(std::is_same_v<T, aui::impl::JsonArray>) {
-                throw AJsonTypeMismatchException("not an array");
-            } else {
-                throw AJsonTypeMismatchException("not a " + AClass<T>::name());
-            }
+        if (auto p = std::get_if<T>(this)) {
+            return *p;
+        }
+        if constexpr(std::is_same_v<T, aui::impl::JsonObject>) {
+            throw AJsonTypeMismatchException("not an object");
+        } else if constexpr(std::is_same_v<T, aui::impl::JsonArray>) {
+            throw AJsonTypeMismatchException("not an array");
+        } else {
+            throw AJsonTypeMismatchException("not a " + AClass<T>::name());
         }
     }
 public:
@@ -104,13 +105,18 @@ public:
     }
 
     [[nodiscard]]
+    bool isLongInt() const noexcept {
+        return isInt() || is<int64_t>();
+    }
+
+    [[nodiscard]]
     bool isEmpty() const noexcept {
         return is<std::nullopt_t>();
     }
 
     [[nodiscard]]
     bool isNumber() const noexcept {
-        return isInt() || is<float>();
+        return isInt() || is<double>();
     }
 
     [[nodiscard]]
@@ -144,16 +150,33 @@ public:
     }
 
     [[nodiscard]]
-    float asNumber() const {
-        try {
-            try {
-                return std::get<float>(*this);
-            } catch (...) {
-                return float(std::get<int>(*this));
-            }
-        } catch (...) {
-            throw AJsonTypeMismatchException("not a number");
-        }
+    int64_t asLongInt() const {
+        return std::visit(aui::lambda_overloaded{
+            [](auto&& e) -> std::int64_t {
+                throw AJsonTypeMismatchException("not a long int");
+            },
+            [](std::int64_t v) -> std::int64_t {
+                return v;
+            },
+            [](int v) -> std::int64_t {
+                return v;
+            },
+        }, (super)const_cast<AJson&>(*this));
+    }
+
+    [[nodiscard]]
+    double asNumber() const {
+        return std::visit(aui::lambda_overloaded{
+                [](auto&& e) -> double {
+                    throw AJsonTypeMismatchException("not a number");
+                },
+                [](double v) -> double {
+                    return v;
+                },
+                [](int v) -> double {
+                    return v;
+                },
+        }, (super)const_cast<AJson&>(*this));
     }
 
     [[nodiscard]]

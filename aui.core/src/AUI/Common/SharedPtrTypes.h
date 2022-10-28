@@ -257,7 +257,7 @@ public:
      * @brief Guarantees that further builder calls will be executed if and only if this pointer
      *        not equal to null.
      * @return safe builder
-     * @deprecated use nullsafe() instead
+     * @deprecated use AUI_NULLSAFE() instead
      */
     [[deprecated]]
     inline auto safe()
@@ -364,7 +364,7 @@ inline _<TO> _cast(_<FROM> object)
 
 
 /**
- * @brief Nullsafe call (see examples).
+ * @brief nullsafe call (see examples).
  * @ingroup useful_macros
  *
  * <table>
@@ -380,28 +380,28 @@ inline _<TO> _cast(_<FROM> object)
  *     </td>
  *     <td>
  *       @code{cpp}
- *       nullsafe(getAnimator())->postRender(this);
+ *       AUI_NULLSAFE(getAnimator())->postRender(this);
  *       @endcode
  *     </td>
  *   </tr>
  * </table>
  *
- * which is shorter, avoids code duplication and calls <code>getAnimator()</code> only once because <code>nullsafe</code> expands to:
+ * which is shorter, avoids code duplication and calls <code>getAnimator()</code> only once because <code>AUI_NULLSAFE</code> expands to:
  *
  * @code{cpp}
  * if (auto& _tmp = (getAnimator())) _tmp->postRender(this);
  * @endcode
  *
- * Since `nullsafe` is a macro that expands to `if`, you can use `else` keyword:
+ * Since `AUI_NULLSAFE` is a macro that expands to `if`, you can use `else` keyword:
  *
  * @code{cpp}
- * nullsafe(getWindow())->flagRedraw(); else ALogger::info("Window is null!");
+ * AUI_NULLSAFE(getWindow())->flagRedraw(); else ALogger::info("Window is null!");
  * @endcode
  *
- * and even combine multiple `nullsafe` statements:
+ * and even combine multiple `AUI_NULLSAFE` statements:
  *
  * @code{cpp}
- * nullsafe(getWindow())->flagRedraw(); else nullsafe(AWindow::current())->flagRedraw();
+ * AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(AWindow::current())->flagRedraw();
  * @endcode
  */
-#define nullsafe(s) if(decltype(auto) _tmp = (s))_tmp
+#define AUI_NULLSAFE(s) if(decltype(auto) _tmp = (s))_tmp

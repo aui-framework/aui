@@ -67,9 +67,9 @@ int AAbstractLabel::getContentMinimumHeight(ALayoutDirection layout)
 
 
 
-void AAbstractLabel::setSize(int width, int height) {
+void AAbstractLabel::setSize(glm::ivec2 size) {
     auto oldWidth = getWidth();
-    AView::setSize(width, height);
+    AView::setSize(size);
 }
 
 AFontStyle AAbstractLabel::getFontStyleLabel() {

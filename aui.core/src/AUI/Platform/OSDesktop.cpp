@@ -27,6 +27,7 @@
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Util/Util.h"
 #include <AUI/Util/ACleanup.h>
+#include <AUI/Common/ATimer.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
@@ -44,12 +45,12 @@ protected:
     void processMessagesImpl() override {
         assert(("AAbstractThread::processMessages() should not be called from other thread",
                 mId == std::this_thread::get_id()));
-        std::unique_lock lock(mQueueLock);
+        std::unique_lock lock(mQueueLock, std::defer_lock);
 
         using namespace std::chrono;
         using namespace std::chrono_literals;
 
-        while (!mMessageQueue.empty())
+        for (std::size_t i = 0; i < 10 && !mMessageQueue.empty() && lock.try_lock(); ++i)
         {
             auto f = std::move(mMessageQueue.front());
             mMessageQueue.pop_front();
@@ -62,8 +63,6 @@ protected:
                     << f.stacktrace
                     << " - ...\n";
             }
-
-            lock.lock();
         }
     }
 };
@@ -80,6 +79,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
     AStringVector args;
 
     setupUIThread();
+    ATimer::scheduler();
 
     AThread::setName("UI thread");
 
