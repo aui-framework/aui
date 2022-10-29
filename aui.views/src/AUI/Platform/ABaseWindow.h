@@ -243,3 +243,11 @@ signals:
  *
  */
 #define AUI_ASSERT_UI_THREAD_ONLY() { assert(("this method should be used in ui thread only.", AThread::current() == AWindow::current()->getThread())); }
+
+/**
+ * @brief Asserts that the macro invocation has not been performed in the UI thread.
+ * @ingroup useful_macros
+ * @details
+ *
+ */
+#define AUI_ASSERT_WORKER_THREAD_ONLY() { assert(("this method should be used in worker thread only.", AThread::current() == AWindow::current()->getThread())); }
