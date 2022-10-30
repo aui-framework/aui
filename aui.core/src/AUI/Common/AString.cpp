@@ -191,18 +191,18 @@ AString& AString::replaceAll(const AString& from, const AString& to) {
                 *(begin() + next++) = c;
             }
         } else if (fromLength < toLength) {
-            auto diff = toLength - fromLength;
+            const auto diff = toLength - fromLength;
             for (auto c : aui::range(to.begin(), to.end() - diff)) {
                 *(begin() + next++) = c;
             }
-            insert(begin() + next, to.begin() + diff, to.end());
+            insert(begin() + next, to.begin() + fromLength, to.end());
             next += diff;
         } else {
             for (auto c : to) {
                 *(begin() + next++) = c;
             }
-            auto diff = toLength - fromLength;
-            erase(begin() + next, begin() + diff);
+            const auto diff = fromLength - toLength;
+            erase(begin() + next, begin() + next + diff);
         }
     }
     return *this;
