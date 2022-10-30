@@ -56,7 +56,7 @@ private:
     };
 
     std::recursive_mutex mSlotsLock;
-    ADeque<slot> mSlots;
+    AVector<slot> mSlots;
 
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
 
