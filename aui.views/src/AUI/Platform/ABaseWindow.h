@@ -250,4 +250,4 @@ signals:
  * @details
  *
  */
-#define AUI_ASSERT_WORKER_THREAD_ONLY() { assert(("this method should be used in worker thread only.", AThread::current() == AWindow::current()->getThread())); }
+#define AUI_ASSERT_WORKER_THREAD_ONLY() { assert(("this method should be used in worker thread only.", AThread::current() != AWindow::current()->getThread())); }

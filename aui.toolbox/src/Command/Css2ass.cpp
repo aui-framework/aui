@@ -191,7 +191,7 @@ void Css2ass::run(Toolbox& t) {
                     // now we in the rule body
                     // key: arguments;
                     for (;;) {
-                        AString line = t.readStringUntilUnescaped({';', '\n'}).trim();
+                        AString line = AString(t.readStringUntilUnescaped({';', '\n'})).trim();
 
                         auto colonIndex = line.find(':');
                         if (colonIndex != AString::NPOS) {
