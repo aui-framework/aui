@@ -55,7 +55,7 @@ private:
         }
     };
 
-    AMutex mSlotsLock;
+    std::recursive_mutex mSlotsLock;
     ADeque<slot> mSlots;
 
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
@@ -250,8 +250,7 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
     }
 
     std::unique_lock lock(mSlotsLock);
-    auto slots = mSlots; // needed to safely unlock the mutex
-    lock.unlock();
+    auto slots = std::move(mSlots); // needed to safely unlock the mutex
     for (auto i = slots.begin(); i != slots.end();)
     {
         auto receiverWeakPtr = weakPtrFromObject(i->object);
@@ -294,16 +293,22 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
 
             (std::apply)(i->func, args);
             if (AAbstractSignal::isDisconnected()) {
-                lock.lock();
                 unlinkSlot(i->object);
-                mSlots.removeFirst(*i);
-                lock.unlock();
+                i = slots.erase(i);
+            } else {
+                ++i;
             }
-            ++i;
         }
     }
-    (void)emitterPtr;  // silence "unused variable" warning
-    (void)receiverPtr; //
+    AUI_MARK_AS_USED(emitterPtr);
+    AUI_MARK_AS_USED(receiverPtr);
+
+    if (mSlots.empty()) {
+        mSlots = std::move(slots);
+    } else {
+        mSlots.insert(mSlots.begin(), std::make_move_iterator(slots.begin()), std::make_move_iterator(slots.end()));
+    }
+
     AAbstractSignal::isDisconnected() = false;
 }
 
