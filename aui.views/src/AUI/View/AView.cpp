@@ -63,6 +63,7 @@ ABaseWindow* AView::getWindow()
 
 AView::AView()
 {
+    AUI_ASSERT_UI_THREAD_ONLY()
     aui::zero(mAss);
     setSlotsCallsOnlyOnMyThread(true);
 }

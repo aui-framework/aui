@@ -47,10 +47,16 @@ public:
     AByteBuffer(const char* buffer, size_t size);
     explicit AByteBuffer(size_t initialCapacity);
     AByteBuffer(const unsigned char* buffer, size_t size);
-    ~AByteBuffer();
+    AByteBuffer(AByteBufferView other) {
+        reserve(other.size());
+        memcpy(mBuffer, other.data(), other.size());
+        mSize = other.size();
+    }
 
-    AByteBuffer(const AByteBuffer& other) noexcept;
+    AByteBuffer(const AByteBuffer& other): AByteBuffer(AByteBufferView(other)) {}
     AByteBuffer(AByteBuffer&& other) noexcept;
+
+    ~AByteBuffer();
 
     void write(const char* src, size_t size) override;
 

@@ -59,3 +59,35 @@ TEST(Strings, ToFloat) {
     EXPECT_EQ("1a23"_as.toUInt(), std::nullopt);
     EXPECT_EQ("a123"_as.toUInt(), std::nullopt);
 }
+
+TEST(Strings, ReplaceAll1) {
+    EXPECT_EQ("abcdef"_as.replaceAll("ab", "12"), "12cdef");
+}
+
+TEST(Strings, ReplaceAll2) {
+    EXPECT_EQ("abcdef"_as.replaceAll("ab", "1234"), "1234cdef");
+}
+
+TEST(Strings, ReplaceAll3) {
+    EXPECT_EQ("abcdef"_as.replaceAll("abcd", "1"), "1ef");
+}
+
+TEST(Strings, ReplaceAll4) {
+    EXPECT_EQ("abcdef"_as.replaceAll("abcd", ""), "ef");
+}
+
+TEST(Strings, ReplaceAll5) {
+    EXPECT_EQ("abcdef"_as.replaceAll("b", "12"), "a12cdef");
+}
+
+TEST(Strings, ReplaceAll6) {
+    EXPECT_EQ("abcdef"_as.replaceAll("b", "1234"), "a1234cdef");
+}
+
+TEST(Strings, ReplaceAll7) {
+    EXPECT_EQ("abcdef"_as.replaceAll("bcd", "1"), "a1ef");
+}
+
+TEST(Strings, ReplaceAll8) {
+    EXPECT_EQ("abcdef"_as.replaceAll("bcd", ""), "aef");
+}

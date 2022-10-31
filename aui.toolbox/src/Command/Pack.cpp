@@ -96,7 +96,7 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
             AString actualBeginning = t.readString(desiredBeginning.length());
             if (actualBeginning == desiredBeginning) {
                 // our client.
-                auto targetFileName = t.readStringUntilUnescaped('\n');
+                auto targetFileName = AString(t.readStringUntilUnescaped('\n'));
                 if (targetFileName != assetPath) {
                     std::cout << "command line input file path " << assetPath << " does not match with the "
                                                                                  "file path stored in " << outputCpp << "; please use another file name for cpp in "
@@ -110,7 +110,7 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
             actualBeginning = t.readString(desiredBeginning.length());
             if (actualBeginning == desiredBeginning) {
                 // our client.
-                auto targetFileHash = t.readStringUntilUnescaped('\n');
+                auto targetFileHash = AString(t.readStringUntilUnescaped('\n'));
                 if (targetFileHash == fileHash) {
                     std::cout << "skipped " << assetPath << std::endl;
                     return;

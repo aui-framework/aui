@@ -55,7 +55,7 @@ signals:
 	emits<> noLongerDefault;
 
 private:
-	AWatchable<bool> mDefault = AWatchable<bool>(defaultState, becameDefault, noLongerDefault);
+	AFieldSignalEmitter<bool> mDefault = AFieldSignalEmitter<bool>(defaultState, becameDefault, noLongerDefault);
 };
 
 /**

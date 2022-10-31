@@ -101,7 +101,9 @@ static AJson read(ATokenizer& t) {
                 }
 
                 case '\"':
-                    return t.readStringUntilUnescaped('\"').replacedAll("\\\\", "\\");
+                    AString result = t.readStringUntilUnescaped('\"');
+                    result.replaceAll("\\\\", "\\");
+                    return result;
             }
 
             if (isdigit(uint8_t(t.getLastCharacter())) || t.getLastCharacter() == '-') {

@@ -161,7 +161,7 @@ public:
     {
     }
 
-    virtual ~AString() = default;
+    ~AString() = default;
 
 
     void push_back(wchar_t c) noexcept
@@ -172,7 +172,6 @@ public:
     {
         super::pop_back();
     }
-
 
     AString uppercase() const;
     AString lowercase() const;
@@ -258,7 +257,8 @@ public:
     {
         return super::data();
     }
-    [[nodiscard]] AString replacedAll(const AString& from, const AString& to) const noexcept;
+    AString& replaceAll(const AString& from, const AString& to);
+    [[nodiscard]] AString replacedAll(const AString& from, const AString& to) const;
     [[nodiscard]] inline AString replacedAll(wchar_t from, wchar_t to) const noexcept {
         AString copy;
         copy.reserve(length() + 10);

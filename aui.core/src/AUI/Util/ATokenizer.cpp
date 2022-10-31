@@ -26,118 +26,117 @@
 #include "AUI/IO/AStringStream.h"
 
 ATokenizer::ATokenizer(const AString& fromString):
-	mInput(_new<AStringStream>(fromString))
+    mInput(_new<AStringStream>(fromString))
 {
 }
 
-AString ATokenizer::readString()
+const std::string& ATokenizer::readString()
 {
-	AString res;
-	char c;
+    mTemporaryStringBuffer.clear();
+    char c;
 
-	try
-	{
-		for (;;) {
-			c = readChar();
-			if (isalnum(uint8_t (c)))
-			{
-				res << c;
-			}
-			else
-			{
-				reverseByte();
-				return res;
-			}
-		}
-	} catch (...)
-	{
+    try
+    {
+        for (;;) {
+            c = readChar();
+            if (isalnum(uint8_t (c)))
+            {
+                mTemporaryStringBuffer.push_back(c);
+            }
+            else
+            {
+                reverseByte();
+                return mTemporaryStringBuffer;
+            }
+        }
+    } catch (...)
+    {
         mEof = true;
-	}
-	return res;
+    }
+    return mTemporaryStringBuffer;
 }
-AString ATokenizer::readString(const ASet<char>& applicableChars)
+const std::string& ATokenizer::readString(const ASet<char>& applicableChars)
 {
-	AString res;
-	res.reserve(128);
-	char c;
+    mTemporaryStringBuffer.clear();
+    char c;
 
-	try
-	{
-		for (;;) {
-			c = readChar();
-			if (isalnum(uint8_t (c)) || applicableChars.find(c) != applicableChars.end())
-			{
-				res << c;
-			}
-			else
-			{
-				reverseByte();
-				return res;
-			}
-		}
-	} catch (...)
-	{
+    try
+    {
+        for (;;) {
+            c = readChar();
+            if (isalnum(uint8_t (c)) || applicableChars.find(c) != applicableChars.end())
+            {
+                mTemporaryStringBuffer.push_back(c);
+            }
+            else
+            {
+                reverseByte();
+                return mTemporaryStringBuffer;
+            }
+        }
+    } catch (...)
+    {
         mEof = true;
-	}
-	return res;
+    }
+    return mTemporaryStringBuffer;
 }
 
 
 void ATokenizer::reverseByte()
 {
-	mReverse = true;
+    mReverse = true;
 }
 
 float ATokenizer::readFloat()
 {
-	AString tmp;
-	try {
-		bool dot = false;
-		char c;
-		for (;;)
-		{
-			c = readChar();
-			switch (c)
-			{
-			case '0':
-			case '1':
-			case '2':
-			case '3':
-			case '4':
-			case '5':
-			case '6':
-			case '7':
-			case '8':
-			case '9':
-			case '-':
-				tmp += c;
-				break;
-			case '.':
-				if (!dot)
-				{
-					tmp += c;
-					break;
-				}
-			default:
-				reverseByte();
-				return tmp.toFloat().valueOr(0);
-			}
-		}
-	} catch (...) {
+    mTemporaryAStringBuffer.clear();
+    try {
+        bool dot = false;
+        char c;
+        for (;;)
+        {
+            c = readChar();
+            switch (c)
+            {
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+            case '-':
+                mTemporaryAStringBuffer << c;
+                break;
+            case '.':
+                if (!dot)
+                {
+                    mTemporaryAStringBuffer << c;
+                    break;
+                }
+            default:
+                reverseByte();
+                return mTemporaryAStringBuffer.toFloat().valueOr(0);
+            }
+        }
+    } catch (...) {
         mEof = true;
     }
-	return tmp.toFloat().valueOr(0);
+    return mTemporaryAStringBuffer.toFloat().valueOr(0);
 }
 
 template<typename T>
 T ATokenizer::readIntImpl() {
     static_assert(std::is_integral_v<T>, "readIntImpl accepts only integral type");
-    AString tmp;
+    mTemporaryAStringBuffer.clear();
     auto value = [&] {
         if constexpr(sizeof(T) > 4) {
-            return tmp.toLongInt().valueOr(0);
+            return mTemporaryAStringBuffer.toLongInt().valueOr(0);
         } else {
-            return tmp.toInt().valueOr(0);
+            return mTemporaryAStringBuffer.toInt().valueOr(0);
         }
     };
     try {
@@ -174,7 +173,7 @@ T ATokenizer::readIntImpl() {
                 case 'f':
                 case 'F':
                 case '-':
-                    tmp += c;
+                    mTemporaryAStringBuffer << c;
                     break;
                 default:
                     reverseByte();
@@ -189,7 +188,7 @@ T ATokenizer::readIntImpl() {
 }
 
 ATokenizer::Hexable<unsigned> ATokenizer::readUIntX() {
-    AString tmp;
+    mTemporaryAStringBuffer.clear();
     bool isHex = false;
     try {
         char c;
@@ -225,18 +224,18 @@ ATokenizer::Hexable<unsigned> ATokenizer::readUIntX() {
                 case 'E':
                 case 'f':
                 case 'F':
-                    tmp += c;
+                    mTemporaryAStringBuffer << c;
                     break;
                 default:
                     reverseByte();
-                    return {tmp.toUInt().valueOr(0), isHex};
+                    return {mTemporaryAStringBuffer.toUInt().valueOr(0), isHex};
             }
         }
     }
     catch (...) {
         mEof = true;
     }
-    return {tmp.toUInt().valueOr(0), isHex};
+    return {mTemporaryAStringBuffer.toUInt().valueOr(0), isHex};
 }
 
 void ATokenizer::skipUntilUnescaped(char c) {
@@ -249,25 +248,25 @@ void ATokenizer::skipUntilUnescaped(char c) {
     }
 }
 
-AString ATokenizer::readStringUntilUnescaped(char c)
+const std::string& ATokenizer::readStringUntilUnescaped(char c)
 {
-	std::string result;
-	readStringUntilUnescaped(result, c);
-	return result;
+    mTemporaryStringBuffer.clear();
+    readStringUntilUnescaped(mTemporaryStringBuffer, c);
+    return mTemporaryStringBuffer;
 }
-AString ATokenizer::readStringUntilUnescaped(const ASet<char>& characters) {
-	std::string result;
-	readStringUntilUnescaped(result, characters);
-	return result;
+const std::string& ATokenizer::readStringUntilUnescaped(const ASet<char>& characters) {
+    mTemporaryStringBuffer.clear();
+    readStringUntilUnescaped(mTemporaryStringBuffer, characters);
+    return mTemporaryStringBuffer;
 }
 
 void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
 {
-	try {
-		for (char current; (current = readChar()) != c;)
-		{
-			if (current == '\\')
-			{
+    try {
+        for (char current; (current = readChar()) != c;)
+        {
+            if (current == '\\')
+            {
                 char tmp = readChar();
                 switch (tmp) {
                     case 'r': out += '\r'; break;
@@ -275,54 +274,54 @@ void ATokenizer::readStringUntilUnescaped(std::string& out, char c)
                     case 't': out += '\t'; break;
                     default: out += tmp;
                 }
-			}
-			else
-			{
-				out += current;
-			}
-		}
-	}
-	catch (...) {
+            }
+            else
+            {
+                out += current;
+            }
+        }
+    }
+    catch (...) {
         mEof = true;
     }
 }
 
 void ATokenizer::readStringUntilUnescaped(std::string& out, const ASet<char>& characters) {
-	try {
-		for (char current; !characters.contains(current = readChar());)
-		{
-			if (current == '\\')
-			{
-				out += '\\';
-				out += readChar();
-			}
-			else
-			{
-				out += current;
-			}
-		}
-	}
-	catch (...) {
+    try {
+        for (char current; !characters.contains(current = readChar());)
+        {
+            if (current == '\\')
+            {
+                out += '\\';
+                out += readChar();
+            }
+            else
+            {
+                out += current;
+            }
+        }
+    }
+    catch (...) {
         mEof = true;
     }
 }
 
 glm::vec2 ATokenizer::readVec2()
 {
-	glm::vec2 result;
-	result.x = readFloat();
-	readChar();
-	result.y = readFloat();
-	return result;
+    glm::vec2 result;
+    result.x = readFloat();
+    readChar();
+    result.y = readFloat();
+    return result;
 }
 
-AString ATokenizer::readString(size_t n) {
-    AString result;
-    result.reserve(n);
+const std::string& ATokenizer::readString(size_t n) {
+    mTemporaryStringBuffer.clear();
+    mTemporaryStringBuffer.reserve(n);
     for (size_t i = 0; i < n; ++i) {
-        result += readChar();
+        mTemporaryStringBuffer += readChar();
     }
-    return result;
+    return mTemporaryStringBuffer;
 }
 
 void ATokenizer::skipUntil(char c) {

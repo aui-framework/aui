@@ -172,7 +172,8 @@ public:
      * @brief Wait for the result of every AFuture.
      */
     void waitForAll() const {
-        for (const AFuture<T>& v : *this) {
+        // wait from the end to avoid idling (see AFuture::wait for details)
+        for (const AFuture<T>& v : aui::reverse_iterator_wrap(*this)) {
             v.operator*();
         }
     }
