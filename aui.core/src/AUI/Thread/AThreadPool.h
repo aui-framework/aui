@@ -137,11 +137,17 @@ public:
         AFuture<Value> future(std::move(fun));
         run([innerWeak = future.inner().weak()]()
             {
+                /*
+                 * Avoid holding a strong reference - we need to keep future cancellation on reference count exceeding
+                 * even while actual future execution.
+                 */
                 if (auto lock = innerWeak.lock()) {
                     auto innerUnsafePointer = lock->ptr().get(); // using .get() here in order to bypass
                                                                  // null check in operator->
-                    lock = nullptr;
-                    innerUnsafePointer->tryExecute(innerWeak);
+
+                    lock = nullptr;                              // destroy strong ref
+
+                    innerUnsafePointer->tryExecute(innerWeak);   // there's a check inside tryExecute to check its validity
                 }
             }, AThreadPool::PRIORITY_LOWEST);
         return future;

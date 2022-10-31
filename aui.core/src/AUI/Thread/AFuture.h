@@ -240,10 +240,14 @@ namespace aui::impl::future {
                             }
                         }
                     } catch (const AException&) {
-                        inner->reportException();
+                        if (auto sharedPtrLock = innerWeak.lock()) {
+                            inner->reportException();
+                        }
                         return false;
                     } catch (...) {
-                        inner->reportInterrupted();
+                        if (auto sharedPtrLock = innerWeak.lock()) {
+                            inner->reportInterrupted();
+                        }
                         throw;
                     }
                 }
