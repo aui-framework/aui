@@ -20,6 +20,8 @@
  */
 
 #pragma once
+
+#include <list>
 #include "AUI/Common/ASignal.h"
 
 /**
