@@ -60,6 +60,6 @@ bool& AObject::isDisconnected() {
     return gIsDisconnected;
 }
 
-void AObject::moveToThread(const _<AObject>& object, _<AAbstractThread> thread) {
+void AObject::moveToThread(aui::no_escape<AObject> object, _<AAbstractThread> thread) {
     object->setThread(std::move(thread));
 }

@@ -156,7 +156,7 @@ public:
         return mSlotsCallsOnlyOnMyThread;
     }
 
-    static void moveToThread(const _<AObject>& object, _<AAbstractThread> thread);
+    static void moveToThread(aui::no_escape<AObject> object, _<AAbstractThread> thread);
 
 protected:
     void setSlotsCallsOnlyOnMyThread(bool slotsCallsOnlyOnMyThread) {

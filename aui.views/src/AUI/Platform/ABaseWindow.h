@@ -242,4 +242,4 @@ signals:
  * @details
  *
  */
-#define AUI_ASSERT_UI_THREAD_ONLY() { assert(("this method should be used in ui thread only.", AThread::current() == AWindow::current()->getThread())); }
+#define AUI_ASSERT_UI_THREAD_ONLY() { assert(("this method should be used in ui thread only.", (AWindow::current() ? AThread::current() == AWindow::current()->getThread() : AThread::current() == getThread()))); }

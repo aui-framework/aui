@@ -10,6 +10,7 @@
 ACurlMulti::ACurlMulti() noexcept:
     mMulti(curl_multi_init())
 {
+    setThread(AThread::current());
 }
 
 ACurlMulti::~ACurlMulti() {
@@ -22,7 +23,9 @@ ACurlMulti::~ACurlMulti() {
 void ACurlMulti::run(bool infinite) {
     setThread(AThread::current());
     int isStillRunning;
-    while(!mCancelled && (!mEasyCurls.empty() || infinite)) {
+    processQueueAndThreadMessages();
+    while(!mCancelled && (!mEasyCurls.empty() || !mFunctionQueue.empty() || infinite)) {
+        processQueueAndThreadMessages();
         auto status = curl_multi_perform(mMulti, &isStillRunning);
 
         if (status) { // failure
@@ -33,7 +36,7 @@ void ACurlMulti::run(bool infinite) {
             continue;
         }
 
-        AThread::processMessages();
+        processQueueAndThreadMessages();
         status = curl_multi_poll(mMulti, nullptr, 0, 100, nullptr);
         AThread::interruptionPoint();
 
@@ -59,8 +62,9 @@ void ACurlMulti::run(bool infinite) {
     }
 }
 
+
 ACurlMulti& ACurlMulti::operator<<(_<ACurl> curl) {
-    ui_threadX [this, curl = std::move(curl)]() mutable {
+    mFunctionQueue << [this, curl = std::move(curl)]() mutable {
         connect(curl->closeRequested, [this, curl = curl.weak()] {
             if (auto c = curl.lock()) {
                 *this >> c;
@@ -74,7 +78,7 @@ ACurlMulti& ACurlMulti::operator<<(_<ACurl> curl) {
 }
 
 ACurlMulti& ACurlMulti::operator>>(const _<ACurl>& curl) {
-    ui_thread {
+    mFunctionQueue << [=] {
         removeCurl(curl);
     };
     return *this;
@@ -87,7 +91,7 @@ void ACurlMulti::removeCurl(const _<ACurl>& curl) {
 }
 
 void ACurlMulti::clear() {
-    ui_thread {
+    mFunctionQueue << [this] {
         assert(mMulti);
         for (const auto& [handle, acurl]: mEasyCurls) {
             curl_multi_remove_handle(mMulti, handle);
@@ -116,4 +120,9 @@ ACurlMulti& ACurlMulti::global() noexcept {
     } instance;
 
     return instance.multi;
+}
+
+void ACurlMulti::processQueueAndThreadMessages() {
+    AThread::processMessages();
+    mFunctionQueue.process();
 }
