@@ -108,7 +108,7 @@ void AWindow::setSize(glm::ivec2 size) {
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
-    AViewContainer::setSize(size);
+    AViewContainer::setSize({width, height});
 
 }
 

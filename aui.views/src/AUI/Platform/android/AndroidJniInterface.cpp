@@ -35,7 +35,7 @@ Java_com_github_aui_android_MyGLSurfaceView_handleRedraw(JNIEnv *env, jclass cla
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleResize(JNIEnv *env, jclass clazz, jint width, jint height) {
-    AUI_NULLSAFE(AWindow::current())->setSize(width, height);
+    AUI_NULLSAFE(AWindow::current())->setSize({width, height});
 }
 
 extern "C"
