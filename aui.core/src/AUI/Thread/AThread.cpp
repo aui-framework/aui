@@ -123,13 +123,13 @@ void AThread::interrupt()
     AUI_NULLSAFE(mCurrentCV.cv)->notify_all();
 }
 
-void AThread::sleep(unsigned durationInMs)
+void AThread::sleep(std::chrono::milliseconds duration)
 {
     AConditionVariable cv;
     AMutex mutex;
     std::unique_lock lock(mutex);
     // the condition variable helps with thread interruption.
-    cv.wait_for(lock, std::chrono::milliseconds(durationInMs));
+    cv.wait_for(lock, duration);
 }
 
 AAbstractThread::id AAbstractThread::getId() const
