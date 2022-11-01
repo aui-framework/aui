@@ -25,6 +25,7 @@
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Traits/members.h>
+#include <AUI/Util/AFieldObservable.h>
 
 
 template<typename View, typename FieldType>
@@ -159,9 +160,14 @@ public:
     ADataBindingLinker2<Model, Data> operator()(Data(Model::*field)) {
         return ADataBindingLinker2<Model, Data>(this, field);
     }
-    const Model& getModel() const {
+    const Model& getModel() const noexcept {
         return *mModel;
     }
+
+    Model const * operator->() const noexcept {
+        return &getModel();
+    }
+
     Model& getEditableModel() {
         return *mModel;
     }
@@ -298,5 +304,17 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>
     object && (*linker.getBinder())(linker.getField(),
                                     static_cast<ASignal<Data>(View::*)>(ADataBindingDefault<View, Data>::getGetter()),
                                     static_cast<pointer_to_setter>(ADataBindingDefault<View, Data>::getSetter()));
+    return object;
+}
+
+template<typename View, typename Data>
+_<View> operator&&(const _<View>& object, AFieldObservable<Data>& observable) {
+    auto observerHandle = observable << [object = object.get()](Data newValue) {
+        (object->*ADataBindingDefault<View, Data>::getSetter())(std::move(newValue));
+    };
+    AObject::connect(object.get()->*ADataBindingDefault<View, Data>::getGetter(), object, [&observable, observerHandle](Data newValue) {
+        observable.setValue(std::move(newValue), observerHandle);
+    });
+
     return object;
 }

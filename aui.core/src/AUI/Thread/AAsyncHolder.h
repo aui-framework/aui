@@ -60,6 +60,7 @@ public:
 
             future.onSuccess([this, it](const T& result) {
                 std::unique_lock lock(mSync);
+                assert(!mCustomTypeFutures.empty());
                 mCustomTypeFutures.erase(it);
             });
         }
@@ -72,10 +73,20 @@ public:
         return mFutureSet.size();
     }
 
+    void waitForAll() {
+        std::unique_lock lock(mSync);
+        mFutureSet.waitForAll();
+
+        while (!mCustomTypeFutures.empty()) {
+            mCustomTypeFutures.front()->wait(lock);
+        }
+    }
+
 private:
     struct IFuture {
         virtual ~IFuture() = default;
         virtual void get() = 0;
+        virtual void wait(std::unique_lock<AMutex>& lock) = 0;
     };
 
     template<typename T>
@@ -83,6 +94,12 @@ private:
         void get() override {
             mFuture.cancel();
             *mFuture;
+        }
+        void wait(std::unique_lock<AMutex>& lock) override {
+            auto copy = mFuture;
+            lock.unlock();
+            copy.wait();
+            lock.lock();
         }
         ~Future() override = default;
 

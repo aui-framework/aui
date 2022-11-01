@@ -2,6 +2,7 @@
 
 #include "ACurl.h"
 #include <AUI/Common/AMap.h>
+#include <AUI/Util/AFunctionQueue.h>
 
 /**
  * @brief Multi curl instance.
@@ -63,6 +64,10 @@ public:
 
 private:
     void run(bool infinite);
+
+    void processQueueAndThreadMessages();
+
+    AFunctionQueue mFunctionQueue;
 
     void* mMulti;
     bool mCancelled = false;

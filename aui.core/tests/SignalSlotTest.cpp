@@ -10,6 +10,8 @@
 #include <AUI/Util/kAUI.h>
 #include <gmock/gmock.h>
 
+using namespace std::chrono_literals;
+
 class Master: public AObject {
 public:
     void broadcastMessage(const char* msg) {
@@ -54,7 +56,7 @@ public:
     void TearDown() override {
         Test::TearDown();
         AThread::processMessages();
-        AThread::sleep(500);
+        AThread::sleep(500ms);
 
         master = nullptr;
         slave = nullptr;

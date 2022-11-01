@@ -239,9 +239,9 @@ public:
 	 * @brief Sleep for specified duration.
 	 *        Most operation systems guarantee that elasped time will be greater than specified.
 	 *        <code>AThread::interrupt()</code> is supported.
-	 * @param durationInMs duration in milliseconds.
+	 * @param duration sleep duration.
 	 */
-	static void sleep(unsigned durationInMs);
+	static void sleep(std::chrono::milliseconds duration);
 
 	/**
 	 * @return current thread.

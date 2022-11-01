@@ -46,12 +46,6 @@ AByteBuffer::AByteBuffer(const unsigned char* buffer, size_t size)
     write(reinterpret_cast<const char*>(buffer), size);
 }
 
-AByteBuffer::AByteBuffer(const AByteBuffer& other) noexcept:
-    mSize(other.mSize)
-{
-    reserve(other.mCapacity);
-    memcpy(mBuffer, other.mBuffer, other.mSize);
-}
 
 AByteBuffer::AByteBuffer(AByteBuffer&& other) noexcept
 {

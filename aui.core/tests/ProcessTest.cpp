@@ -33,6 +33,8 @@
 #include "AUI/Logging/ALogger.h"
 #include <gmock/gmock.h>
 
+using namespace std::chrono_literals;
+
 class Process : public ::testing::Test {
 protected:
     APath mSelf;
@@ -84,7 +86,7 @@ TEST_F(Process, FinishedSignal) {
     p->run();
     p->waitForExitCode();
 
-    AThread::sleep(500);
+    AThread::sleep(500ms);
 
     AThread::processMessages();
 
@@ -100,7 +102,7 @@ TEST_F(Process, StdoutSignal) {
     p->run();
     p->waitForExitCode();
 
-    AThread::sleep(500);
+    AThread::sleep(500ms);
 
     AThread::processMessages();
 

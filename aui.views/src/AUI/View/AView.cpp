@@ -63,23 +63,24 @@ ABaseWindow* AView::getWindow()
 
 AView::AView()
 {
+    AUI_ASSERT_UI_THREAD_ONLY()
     aui::zero(mAss);
     setSlotsCallsOnlyOnMyThread(true);
 }
 
 void AView::redraw()
 {
+    AUI_ASSERT_UI_THREAD_ONLY();
     if (mRedrawRequested) {
         return;
     }
     mRedrawRequested = true;
-    assert(("views could not be used from non ui thread", AThread::current() == getThread()));
     AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(AWindow::current())->flagRedraw();
 
 }
 void AView::requestLayoutUpdate()
 {
-    assert(("views could not be used from non ui thread", AThread::current() == getThread()));
+    AUI_ASSERT_UI_THREAD_ONLY();
     AUI_NULLSAFE(getWindow())->flagUpdateLayout(); else AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }
 

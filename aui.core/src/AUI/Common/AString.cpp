@@ -166,10 +166,54 @@ AString AString::trimRight(wchar_t symbol) const noexcept
     return {};
 }
 
-AString AString::replacedAll(const AString& from, const AString& to) const noexcept
+AString& AString::replaceAll(wchar_t from, wchar_t to) noexcept {
+    for (auto& s : *this) {
+        if (s == from)
+            s = to;
+    }
+    return *this;
+}
+
+AString& AString::replaceAll(const AString& from, const AString& to) {
+    for (size_type pos = 0;;)
+    {
+        auto next = find(from, pos);
+        if (next == NPOS)
+        {
+            return *this;
+        }
+
+        auto fromLength = from.length();
+        auto toLength = to.length();
+
+        if (fromLength == toLength) {
+            for (auto c : to) {
+                *(begin() + next++) = c;
+            }
+        } else if (fromLength < toLength) {
+            const auto diff = toLength - fromLength;
+            for (auto c : aui::range(to.begin(), to.end() - diff)) {
+                *(begin() + next++) = c;
+            }
+            insert(begin() + next, to.begin() + fromLength, to.end());
+            next += diff;
+        } else {
+            for (auto c : to) {
+                *(begin() + next++) = c;
+            }
+            const auto diff = fromLength - toLength;
+            erase(begin() + next, begin() + next + diff);
+        }
+    }
+    return *this;
+}
+
+AString AString::replacedAll(const AString& from, const AString& to) const
 {
     AString result;
-    result.reserve(size() * to.length() / from.length());
+
+    result.reserve(size());
+
     for (size_type pos = 0;;)
     {
         auto next = find(from, pos);
@@ -178,10 +222,14 @@ AString AString::replacedAll(const AString& from, const AString& to) const noexc
             result.insert(result.end(), begin() + pos, end());
             return result;
         }
+
         result.insert(result.end(), begin() + pos, begin() + next);
         result.insert(result.end(), to.begin(), to.end());
+
         pos = next + from.length();
     }
+
+    return result;
 }
 
 AString AString::fromLatin1(const AByteBuffer& buffer)
@@ -1038,14 +1086,6 @@ AString AString::lowercase() const {
     }
 
     return buf;
-}
-
-AString& AString::replaceAll(wchar_t from, wchar_t to) noexcept {
-    for (auto& s : *this) {
-        if (s == from)
-            s = to;
-    }
-    return *this;
 }
 
 void AString::resizeToNullTerminator() {

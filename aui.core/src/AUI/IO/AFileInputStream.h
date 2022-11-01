@@ -33,11 +33,11 @@ class AString;
 class API_AUI_CORE AFileInputStream: public IInputStream
 {
 private:
-	FILE* mFile;
-	
+    FILE* mFile;
+
 public:
-	AFileInputStream(const AString& path);
-	virtual ~AFileInputStream();
+    AFileInputStream(const AString& path);
+    virtual ~AFileInputStream();
 
     AFileInputStream(AFileInputStream&& rhs) noexcept {
         operator=(std::move(rhs));
@@ -52,26 +52,34 @@ public:
         return mFile;
     }
 
-	enum class Seek {
-	    /**
-	     * Seek relatively to the begin of file
-	     */
-	    BEGIN,
+    enum class Seek {
+        /**
+         * Seek relatively to the begin of file
+         */
+        BEGIN,
 
-	    /**
-	     * Seek relatively to the current position
-	     */
-	    CURRENT,
+        /**
+         * Seek relatively to the current position
+         */
+        CURRENT,
 
-	    /**
-	     * Seek relative to the end of file
-	     */
-	    END
-	};
+        /**
+         * Seek relative to the end of file
+         */
+        END
+    };
 
-	void seek(std::streamoff offset, Seek dir) noexcept;
-	void seek(std::streampos pos) noexcept;
+    void seek(std::streamoff offset, Seek dir) noexcept;
+    void seek(std::streampos pos) noexcept;
     std::streampos tell() noexcept;
 
-	size_t read(char* dst, size_t size) override;
+    std::size_t size() noexcept {
+        auto current = tell();
+        seek(0, Seek::END);
+        auto size = tell();
+        seek(current, Seek::BEGIN);
+        return size;
+    }
+
+    std::size_t read(char* dst, size_t size) override;
 };

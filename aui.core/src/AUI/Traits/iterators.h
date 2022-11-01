@@ -79,7 +79,11 @@ namespace aui {
         }
 
         [[nodiscard]]
-        [[maybe_unused]]
+        bool empty() const noexcept {
+            return mBegin == mEnd;
+        }
+
+        [[nodiscard]]
         std::size_t size() const noexcept {
             return std::distance(mBegin, mEnd);
         }

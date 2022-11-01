@@ -22,8 +22,12 @@
 #pragma once
 #include "AUI/Common/ASignal.h"
 
+/**
+ * @brief Stores a value and observes it's changes, emitting a signal.
+ * @ingroup core
+ */
 template <typename T>
-class AWatchable
+class AFieldSignalEmitter
 {
 public:
 	using signal_t = ASignal<T>&;
@@ -32,17 +36,17 @@ private:
 	T mValue;
 
 public:
-	AWatchable(signal_t signal, T initial = T()):
-		mSignal(signal), mValue(initial)
+	AFieldSignalEmitter(signal_t signal, T initial = T()):
+		mSignal(signal), mValue(std::move(initial))
 	{
 		
 	}
 
-	AWatchable& operator=(const T& t)
+	AFieldSignalEmitter& operator=(T t)
 	{
 		if (mValue != t) {
-			mValue = t;
-			mSignal(t);
+			mValue = std::move(t);
+			mSignal(mValue);
 		}
 		return *this;
 	}
@@ -53,7 +57,7 @@ public:
 };
 
 template <>
-class AWatchable<bool>
+class AFieldSignalEmitter<bool>
 {
 	using T = bool;
 public:
@@ -66,7 +70,7 @@ private:
 	T mValue;
 
 public:
-	AWatchable(signal_t signal, signal_sub_t signalTrue, signal_sub_t signalFalse, T initial = false)
+	AFieldSignalEmitter(signal_t signal, signal_sub_t signalTrue, signal_sub_t signalFalse, T initial = false)
 		: mSignal(signal),
 		  mSignalTrue(signalTrue),
 		  mSignalFalse(signalFalse),
@@ -74,7 +78,7 @@ public:
 	{
 	}
 
-	AWatchable& set(AObject* emitter, const T& t)
+	AFieldSignalEmitter& set(AObject* emitter, const T& t)
 	{
 		if (mValue != t) {
 			mValue = t;

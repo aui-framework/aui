@@ -36,7 +36,7 @@
 #include "AUI/Platform/AInput.h"
 #include "AUI/Reflect/AClass.h"
 #include "AUI/Font/AFontStyle.h"
-#include "AUI/Util/AWatchable.h"
+#include "AUI/Util/AFieldSignalEmitter.h"
 #include "AUI/Util/IBackgroundEffect.h"
 #include <AUI/ASS/RuleWithoutSelector.h>
 #include <AUI/Enum/AOverflow.h>
@@ -842,11 +842,11 @@ signals:
     emits<> focusLost;
 
 private:
-    AWatchable<bool> mHovered = AWatchable<bool>(hoveredState, mouseEnter, mouseLeave);
-    AWatchable<bool> mPressed = AWatchable<bool>(pressedState, mousePressed, mouseReleased);
+    AFieldSignalEmitter<bool> mHovered = AFieldSignalEmitter<bool>(hoveredState, mouseEnter, mouseLeave);
+    AFieldSignalEmitter<bool> mPressed = AFieldSignalEmitter<bool>(pressedState, mousePressed, mouseReleased);
     //AWatchable<bool> mFocused = AWatchable<bool>(pressedState, mousePressed, mouseReleased);
-    AWatchable<bool> mEnabled = AWatchable<bool>(enabledState, enabled, disabled, true);
+    AFieldSignalEmitter<bool> mEnabled = AFieldSignalEmitter<bool>(enabledState, enabled, disabled, true);
     bool mDirectlyEnabled = true;
     bool mParentEnabled = true;
-    AWatchable<bool> mHasFocus = AWatchable<bool>(focusState, focusAcquired, focusLost, false);
+    AFieldSignalEmitter<bool> mHasFocus = AFieldSignalEmitter<bool>(focusState, focusAcquired, focusLost, false);
 };

@@ -240,10 +240,14 @@ namespace aui::impl::future {
                             }
                         }
                     } catch (const AException&) {
-                        inner->reportException();
+                        if (auto sharedPtrLock = innerWeak.lock()) {
+                            inner->reportException();
+                        }
                         return false;
                     } catch (...) {
-                        inner->reportInterrupted();
+                        if (auto sharedPtrLock = innerWeak.lock()) {
+                            inner->reportInterrupted();
+                        }
                         throw;
                     }
                 }
@@ -510,6 +514,9 @@ namespace aui::impl::future {
  * feature.
  *
  * To manage multiple AFutures, use AAsyncHolder and AFutureSet classes.
+ *
+ * When waiting for result, AFuture may execute the task on the caller thread instead of waiting. See AFuture::wait for
+ * details.
  */
 template<typename T = void>
 class AFuture final: public aui::impl::future::Future<T> {

@@ -142,6 +142,11 @@ public:
     }
 
     [[nodiscard]]
+    std::size_t sizeInBytes() const noexcept {
+        return p::size() * sizeof(StoredType);
+    }
+
+    [[nodiscard]]
     StoredType& at(std::size_t index) {
         if (index >= p::size()) {
             aui::impl::outOfBoundsException();

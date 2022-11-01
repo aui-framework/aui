@@ -148,7 +148,7 @@ void AAbstractSocket::bind(uint16_t bindingPort)
                 handleError("failed to bind to port: " + AString::number(bindingPort), res);
             } else {
                 ALogger::err("failed to bind to port: " + AString::number(bindingPort) + ", trying again");
-                AThread::sleep(3000);
+                AThread::sleep(std::chrono::seconds(3));
             }
         } else {
             break;
