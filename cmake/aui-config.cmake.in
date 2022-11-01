@@ -73,7 +73,7 @@ set(AUI_FOUND TRUE)
 foreach(_module ${AUI_FIND_COMPONENTS})
     if (_module STREQUAL "toolbox")
         # ignore it
-        set(AUI_TOOLBOX_FOUND TRUE)
+        set(AUI_toolbox_FOUND TRUE)
         continue()
     endif()
 
