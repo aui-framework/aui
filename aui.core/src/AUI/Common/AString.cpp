@@ -211,7 +211,9 @@ AString& AString::replaceAll(const AString& from, const AString& to) {
 AString AString::replacedAll(const AString& from, const AString& to) const
 {
     AString result;
-    result.reserve(size() * to.length() / from.length());
+
+    result.reserve(size());
+
     for (size_type pos = 0;;)
     {
         auto next = find(from, pos);
@@ -220,10 +222,14 @@ AString AString::replacedAll(const AString& from, const AString& to) const
             result.insert(result.end(), begin() + pos, end());
             return result;
         }
+
         result.insert(result.end(), begin() + pos, begin() + next);
         result.insert(result.end(), to.begin(), to.end());
+
         pos = next + from.length();
     }
+
+    return result;
 }
 
 AString AString::fromLatin1(const AByteBuffer& buffer)
