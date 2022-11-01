@@ -463,11 +463,14 @@ function(auib_import AUI_MODULE_NAME URL)
 
     # variable is CACHE here in order to make it as global as possible.
     set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
+    set(${AUI_MODULE_NAME}_ROOT_DIR ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
     # creating uppercase variables in order to ease the case insensitive checks
     set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
     set(${AUI_MODULE_NAME_UPPER}_DIR ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
     set(${AUI_MODULE_NAME_UPPER}_ROOT ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
+    set(${AUI_MODULE_NAME_UPPER}_ROOT_DIR ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
+    set(${AUI_MODULE_NAME_UPPER}_ROOT_DIR ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
 
