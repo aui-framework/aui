@@ -71,6 +71,12 @@ endforeach()
 
 set(AUI_FOUND TRUE)
 foreach(_module ${AUI_FIND_COMPONENTS})
+    if (_module STREQUAL "toolbox")
+        # ignore it
+        set(AUI_TOOLBOX_FOUND TRUE)
+        continue()
+    endif()
+
     set(_module_target_name aui::${_module})
     if (TARGET ${_module_target_name})
         continue()
