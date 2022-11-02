@@ -25,187 +25,50 @@
 #include <AUI/IO/APath.h>
 #include <glm/glm.hpp>
 #include <cstring>
+#include "types.h"
+
+#include <fmt/format.h>
 
 namespace aui {
 
-    template<typename T>
-    inline AString to_string(const T& t) {
-        if constexpr (std::is_same_v<T, std::string>) {
-            return t;
-        } else {
-            return std::to_wstring(t);
-        }
-    }
-    template<>
-    inline AString to_string(const char& t) {
-        return AString(1, wchar_t(t));
-    }
+    namespace detail {
+        template<typename T, typename EnableIf = void>
+        struct fmt {
+            template<typename T2>
+            static decltype(auto) process(T2&& arg) {
+                return std::forward<T2>(arg);
+            }
+        };
 
-    template<>
-    inline AString to_string(const wchar_t& t) {
-        return AString(1, wchar_t(t));
-    }
-
-    template<typename T>
-    inline AString to_string(T* t) {
-        char buf[0xff];
-        sprintf(buf, "%p", t);
-        return buf;
-    }
-    template<>
-    inline AString to_string(const char* t) {
-        return t;
-    }
-    template<>
-    inline AString to_string(char* t) {
-        return t;
-    }
-
-    template<>
-    inline AString to_string(const char* const& t) {
-        return t;
-    };
-    template<>
-    inline AString to_string(char* const& t) {
-        return t;
-    };
-    template<>
-    inline AString to_string(const AString& t) {
-        return t;
-    };
-
-    template<>
-    inline AString to_string(const APath& t) {
-        return t;
-    };
-
-
-    namespace detail::format {
         template<typename T>
-        struct type_length {
-            inline static constexpr size_t format_length(const T& t) {
-                return glm::ceil(glm::log(glm::pow(2llu, sizeof(T) * 8)) / glm::log(10)) + 1;
+        struct fmt<T, std::enable_if_t<std::is_base_of_v<AString, T>>> {
+            template<typename T2>
+            static decltype(auto) process(T2&& arg) {
+                return arg.toStdString();
             }
         };
-        template<>
-        struct type_length<wchar_t*> {
-            inline static size_t format_length(const wchar_t* t) {
-                return wcslen(t);
-            }
-        };
-        template<>
-        struct type_length<char*> {
-            inline static size_t format_length(const char* t) {
-                return strlen(t);
-            }
-        };
-        template<>
-        struct type_length<AString> {
-            inline static size_t format_length(const AString& t) {
-                return t.length();
-            }
-        };
-        template<>
-        struct type_length<std::string> {
-            inline static size_t format_length(const std::string& t) {
-                return t.length();
-            }
-        };
-        template<>
-        struct type_length<APath> {
-            inline static size_t format_length(const APath& t) {
-                return t.length();
-            }
-        };
-
-
-        template <typename Arg>
-        inline size_t format_length(const Arg& arg) {
-            return type_length<std::remove_const_t<std::remove_reference_t<Arg>>>::format_length(arg);
-        }
-        template <typename Arg, typename... Args>
-        inline size_t format_length(const Arg& arg, const Args&... args) {
-            return type_length<std::remove_const_t<std::remove_reference_t<Arg>>>::format_length(arg)
-                + format_length(args...);
-        }
-
-
-        template <typename Arg>
-        inline void to_string_array(AStringVector& dst, Arg&& arg1) {
-            dst << to_string(std::forward<Arg>(arg1));
-        }
-        template <typename Arg, typename... Args>
-        inline void to_string_array(AStringVector& dst, Arg&& arg1, Args&&... args) {
-            dst << to_string(std::forward<Arg>(arg1));
-            to_string_array(dst, std::forward<Args>(args)...);
-        }
     }
-
 
     /**
      * @brief Formats string.
-     *        String formatting is inspired by Rust's string formatting rules.
      * @return formatted string.
+     * @details
+     * AUI uses fmt library. See documentation at https://fmt.dev/latest/index.html
      */
     template <typename... Args>
-    inline AString format(const AString& format, Args&&... args) {
-        AStringVector stringArgs;
-        stringArgs.reserve(sizeof...(Args));
-        detail::format::to_string_array(stringArgs, std::forward<Args>(args)...);
-
-        AString result;
-        size_t bufferLength = format.length() + detail::format::format_length(std::forward<Args>(args)...) + 100;
-        result.reserve(bufferLength);
-
-        bool backslashEscaping = false;
-
-        size_t parameterIndex = 0;
-
-        for (auto i = format.begin(); i != format.end(); ++i) {
-            wchar_t c = *i;
-            switch (c) {
-                case '{':
-                    if (backslashEscaping) {
-                        backslashEscaping = false;
-                    } else {
-                        // inside {} format but it's not supported :)
-                        c = *(++i);
-                        assert(c == '}');
-
-                        result += stringArgs[parameterIndex++];
-                        break;
-                    }
-                default:
-                    if (backslashEscaping) {
-                        result += '\\';
-                    }
-                    result += c;
-                    backslashEscaping = false;
-                    break;
-                case '\\':
-                    if (backslashEscaping) {
-                        result += '\\';
-                        result += '\\';
-                        backslashEscaping = false;
-                    } else {
-                        backslashEscaping = true;
-                    }
-                    break;
-            }
-        }
-
-        return result;
+    inline AString format(std::string_view format, Args&&... args) {
+        return fmt::format(format, detail::fmt<std::decay_t<Args>>::process(std::forward<Args>(args))...);
     }
 }
 
 template<typename... Args>
 inline AString AString::format(Args&& ... args) const {
-    return aui::format(*this, std::forward<Args>(args)...);
+    return aui::format(toStdString(), std::forward<Args>(args)...);
 }
 
 
 struct AStringFormatHelper {
-    AString string;
+    std::string_view string;
 
     template<typename... Args>
     inline AString operator()(Args&& ... args) {
@@ -213,7 +76,16 @@ struct AStringFormatHelper {
     }
 };
 
+/**
+ * @brief String literal format caller (see example).
+ * @ingroup core
+ * @details
+ * @code{cpp}
+ * "Hello {}!"_format("world") // -> "Hello world!"
+ * "test {:.2}"_format(1.2f)   // -> "test 1.2"
+ * @endcode
+ */
 inline AStringFormatHelper operator"" _format(const char* str, size_t len)
 {
-    return {str};
+    return {std::string_view(str, len)};
 }

@@ -34,9 +34,19 @@ TEST(Format, String) {
 
 TEST(Format, Int) {
     EXPECT_EQ("test {}"_format(1), "test 1");
+    EXPECT_EQ("test {}"_format(12), "test 12");
+    EXPECT_EQ("test {}"_format(123), "test 123");
+    EXPECT_EQ("test {}"_format(123456780), "test 123456780");
+    EXPECT_EQ("test {}"_format(1234567890), "test 1234567890");
 }
-TEST(Format, Length) {
-    EXPECT_EQ(aui::detail::format::format_length(std::uint8_t{}), 4);
-    EXPECT_EQ(aui::detail::format::format_length(std::uint16_t{}), 6);
-    EXPECT_EQ(aui::detail::format::format_length(std::uint32_t{}), 11 /* 4294967295 */);
+
+TEST(Format, IntNegative) {
+    EXPECT_EQ("test {}"_format(-1), "test -1");
+    EXPECT_EQ("test {}"_format(-12), "test -12");
+    EXPECT_EQ("test {}"_format(-123), "test -123");
+    EXPECT_EQ("test {}"_format(-123456780), "test -123456780");
+    EXPECT_EQ("test {}"_format(-1234567890), "test -1234567890");
+}
+TEST(Format, Float) {
+    EXPECT_EQ("test {:.2}"_format(1.2f), "test 1.2");
 }

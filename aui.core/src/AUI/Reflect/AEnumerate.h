@@ -9,6 +9,7 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AMap.h>
 #include <AUI/Traits/types.h>
+#include <fmt/format.h>
 
 template<typename enum_t>
 class AEnumerate {
@@ -122,3 +123,11 @@ struct AEnumerateAllValues<enum_t>{         \
 };                                         \
 inline std::ostream& operator<<(std::ostream& o, enum_t v) { return o << AEnumerate<enum_t>::names()[v]; } \
 namespace std { inline AString to_wstring(enum_t v) { return AEnumerate<enum_t>::names()[v]; } }
+
+template <typename T> struct fmt::formatter<T, char, std::enable_if_t<aui::is_complete<AEnumerateAllValues<T>>>>: formatter<std::string> {
+    // parse is inherited from formatter<string_view>.
+    template <typename FormatContext>
+    auto format(T c, FormatContext& ctx) const {
+        return formatter<string_view>::format(AEnumerate<T>::names()[c].toStdString(), ctx);
+    }
+};
