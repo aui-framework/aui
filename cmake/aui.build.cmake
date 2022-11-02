@@ -658,7 +658,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
     endif()
 
     if (NOT AUI_TOOLBOX_EXE)
-        message(FATAL_ERROR "${AUI_TOOLBOX_EXE}")
+        message(FATAL_ERROR "Internal AUI error: aui.toolbox is not available")
     endif()
 
     message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
