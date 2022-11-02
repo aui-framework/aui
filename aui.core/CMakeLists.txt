@@ -91,6 +91,7 @@ endif()
 
 
 auib_import(fmt https://github.com/fmtlib/fmt
-            VERSION 9.1.0)
+            VERSION 9.1.0
+            CMAKE_ARGS -DFMT_TEST=FALSE -DFMT_DOC=FALSE)
 
 aui_link(aui.core PUBLIC fmt::fmt-header-only)
