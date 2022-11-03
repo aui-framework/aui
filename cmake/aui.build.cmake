@@ -580,7 +580,8 @@ macro(_aui_try_find_toolbox)
     find_program(AUI_TOOLBOX_EXE aui.toolbox
             HINTS ${AUI_BUILD_AUI_ROOT}/bin)
     if (NOT AUI_TOOLBOX_EXE)
-        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/*/aui.toolbox)
+        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/prefix/aui.toolbox.exe ${AUI_CACHE_DIR}/prefix/aui.toolbox)
+
         if (AUI_TOOLBOX_EXE)
             list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
         else()
@@ -652,6 +653,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
             set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox")
         endif()
     endif()
+
     message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})

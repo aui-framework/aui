@@ -199,3 +199,4 @@ install(DIRECTORY platform/
         DESTINATION platform)
 
 auib_precompiled_binary()
+enable_testing()
