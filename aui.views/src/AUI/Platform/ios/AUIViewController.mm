@@ -89,7 +89,7 @@ extern int(* _gEntry)(AStringVector);
 - (void)viewDidLayoutSubviews {
     CGSize size = self.view.bounds.size;
     float scale = (float)self.view.contentScaleFactor;
-    auiWindow()->setSize(size.width * scale, size.height * scale);
+    auiWindow()->setSize({size.width * scale, size.height * scale});
 }
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     float scale = (float)self.view.contentScaleFactor;
