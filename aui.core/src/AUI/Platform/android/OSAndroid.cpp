@@ -20,7 +20,6 @@
  */
 
 
-#include <jni.h>
 #include <AUI/Logging/ALogger.h>
 #include "OSAndroid.h"
 #include <AUI/Platform/Entry.h>
