@@ -95,3 +95,7 @@ auib_import(fmt https://github.com/fmtlib/fmt
             CMAKE_ARGS -DFMT_TEST=FALSE -DFMT_DOC=FALSE)
 
 aui_link(aui.core PUBLIC fmt::fmt-header-only)
+
+if (AUI_PLATFORM_ANDROID)
+    target_include_directories(aui.core PUBLIC 3rdparty/cpp_java_glue)
+endif()

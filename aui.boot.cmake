@@ -364,22 +364,12 @@ function(auib_import AUI_MODULE_NAME URL)
     else()
         set(DEP_ADD_SUBDIRECTORY FALSE)
     endif()
-    if (_local_repo)
-        set(URL_PATH ${AUI_MODULE_NAME_LOWER})
-    else()
-        # find url path by removing url protocol section (i.e. http://)
-        string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
-    endif()
 
-    # we need only last dir name from URL_PATH (i.e. aui-framework/aui -> aui)
-    string(FIND "${URL_PATH}" "/" _t REVERSE)
-    math(EXPR _t "${_t} + 1") # t += 1
-    string(SUBSTRING ${URL_PATH} ${_t} -1 URL_PATH)
-
+    set(AUI_MODULE_PREFIX ${AUI_MODULE_NAME_LOWER})
 
     set(TAG_OR_HASH latest)
     if (AUIB_IMPORT_ARCHIVE)
-        set(TAG_OR_HASH ${URL_PATH})
+        set(TAG_OR_HASH ${AUI_MODULE_PREFIX})
     elseif (AUIB_IMPORT_HASH)
         set(TAG_OR_HASH ${AUIB_IMPORT_HASH})
     elseif(AUIB_IMPORT_VERSION)
@@ -442,11 +432,11 @@ function(auib_import AUI_MODULE_NAME URL)
 
     if (DEP_ADD_SUBDIRECTORY)
         # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project's name
-        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME_LOWER}")
+        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME_LOWER}")
     else()
-        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/src")
+        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
     endif()
-    set(DEP_BINARY_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/build/${BUILD_SPECIFIER}")
+    set(DEP_BINARY_DIR "${AUI_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
 
     # invalidate all previous values.
     foreach(_v2 FOUND
@@ -652,6 +642,11 @@ function(auib_import AUI_MODULE_NAME URL)
                         CMAKE_FIND_ROOT_PATH_MODE_INCLUDE
                         CMAKE_FIND_ROOT_PATH_MODE_PACKAGE
                         ONLY_CMAKE_FIND_ROOT_PATH
+                        PLATFORM
+                        CMAKE_OSX_ARCHITECTURES
+                        XCODE_VERSION
+                        SDK_VERSION
+                        APPLE_TARGET_TRIPLE
                         CMAKE_POSITION_INDEPENDENT_CODE
                         ${_forwardable_vars})
 

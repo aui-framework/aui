@@ -40,7 +40,7 @@ void SoftwareRenderingContext::endResize(ABaseWindow &window) {
 }
 
 AImage SoftwareRenderingContext::makeScreenshot() {
-    AVector<uint8_t> data;
+    AByteBuffer data;
     size_t s = mBitmapSize.x * mBitmapSize.y * 4;
     data.resize(s);
     std::memcpy(data.data(), mBitmapBlob.data(), s);
