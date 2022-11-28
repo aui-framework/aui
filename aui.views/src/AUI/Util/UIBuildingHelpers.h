@@ -81,8 +81,8 @@ inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AVi
  *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/vertical.jpg">
  *
  *  <dl>
- *    <dt><b>View:</b> <a href="#AViewContainer">AViewContainer</a></dt>
- *    <dt><b>Layout manager:</b> <a href="#AVerticalLayout">AVerticalLayout</a></dt>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AVerticalLayout</dt>
  *  </dl>
  * </p>
  */
@@ -94,8 +94,8 @@ using Vertical = aui::ui_building::layouted_container_factory<AVerticalLayout>;
  *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/horizontal.jpg">
  *
  *  <dl>
- *    <dt><b>View:</b> <a href="#AViewContainer">AViewContainer</a></dt>
- *    <dt><b>Layout manager:</b> <a href="#AHorizontalLayout">AHorizontalLayout</a></dt>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AHorizontalLayout</dt>
  *  </dl>
  * </p>
  */
@@ -107,16 +107,27 @@ using Horizontal = aui::ui_building::layouted_container_factory<AHorizontalLayou
  *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/stacked2.jpg">
  *
  *  <dl>
- *    <dt><b>View:</b> <a href="#AViewContainer">AViewContainer</a></dt>
- *    <dt><b>Layout manager:</b> <a href="#AStackedLayout">AStackedLayout</a></dt>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AStackedLayout</dt>
  *  </dl>
  * </p>
  */
 using Stacked = aui::ui_building::layouted_container_factory<AStackedLayout>;
 
 /**
+ * Does not actually set the layout. The views' geometry is determined manually.
  * <p>
- * <code>Center</code> is an alias to <a href="#Stacked">Stacked</a>. When <a href="#Stacked">Stacked</a> is used only for centering views, you can use
+ *  <dl>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> null</dt>
+ *  </dl>
+ * </p>
+ */
+using CustomLayout = aui::ui_building::layouted_container_factory<std::nullopt_t>;
+
+/**
+ * <p>
+ * <code>Center</code> is an alias to Stacked. When Stacked is used only for centering views, you can use
  * this alias in order to improve understanding of your code.
  * </p>
  */

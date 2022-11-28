@@ -137,7 +137,9 @@ namespace aui::ui_building {
 
         ViewContainer operator()() {
             auto c = _new<Container>();
-            c->setLayout(_new<Layout>());
+            if constexpr(!std::is_same_v<Layout, std::nullopt_t>) {
+                c->setLayout(_new<Layout>());
+            }
             c->setViews(std::move(mViews));
             return c;
         }
