@@ -378,11 +378,12 @@ void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
 }
 
 void AView::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
-
+    emit mouseScrolled(delta);
 }
 
 void AView::onKeyDown(AInput::Key key)
 {
+    emit keyPressed(key);
     if (key == AInput::TAB) {
         AWindow::current()->focusNextView();
     }
@@ -394,6 +395,7 @@ void AView::onKeyRepeat(AInput::Key key)
 
 void AView::onKeyUp(AInput::Key key)
 {
+    emit keyReleased(key);
 }
 
 void AView::onFocusAcquired()

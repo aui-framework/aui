@@ -825,6 +825,21 @@ signals:
     emits<> clicked;
 
     /**
+     * @brief Mouse scrolled.
+     */
+    emits<glm::ivec2> mouseScrolled;
+
+    /**
+     * @brief Keyboard key pressed.
+     */
+    emits<AInput::Key> keyPressed;
+
+    /**
+     * @brief Keyboard key released.
+     */
+    emits<AInput::Key> keyReleased;
+
+    /**
      * @brief Right mouse button clicked.
      */
     emits<> clickedRight;
