@@ -206,9 +206,9 @@ public:
     {
         clearAllConnectionsIf([](const auto&){ return true; });
     }
-    void clearAllConnectionsWith(AObject* object) noexcept override
+    void clearAllConnectionsWith(aui::no_escape<AObject> object) noexcept override
     {
-        clearAllConnectionsIf([&](const slot& p){ return p.object == object; });
+        clearAllConnectionsIf([&](const slot& p){ return p.object == object.ptr(); });
     }
 
 private:

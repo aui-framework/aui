@@ -60,6 +60,9 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
     if (auto asCheckbox = _cast<ACheckBox>(mTitle)) {
         connect(asCheckbox->checked, me::updateCheckboxState);
         updateCheckboxState(asCheckbox->isChecked());
+    } else if (auto asCheckbox = _cast<ACheckBoxWrapper>(mTitle)) {
+        connect(asCheckbox->checked, me::updateCheckboxState);
+        updateCheckboxState(asCheckbox->isChecked());
     }
 }
 

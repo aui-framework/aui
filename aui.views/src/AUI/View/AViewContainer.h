@@ -41,120 +41,167 @@
  * Since AViewContainer is an instance of AView, AViewContainer can handle AViewContainers recursively, thus, making
  * possible complex UI by nested AViewContainers with different layout managers.
  */
-class API_AUI_VIEWS AViewContainer: public AView
-{
+class API_AUI_VIEWS AViewContainer : public AView {
 public:
-	AViewContainer();
-	virtual ~AViewContainer();
+    AViewContainer();
+
+    virtual ~AViewContainer();
 
     void setViews(AVector<_<AView>> views) {
-        views.removeIf([](const _<AView>& v){
+        views.removeIf([](const _<AView>& v) {
             return v == nullptr;
         });
         mViews = std::move(views);
 
-        for (const auto& view : mViews) {
+        for (const auto& view: mViews) {
             view->mParent = this;
             if (mLayout)
                 mLayout->addView(-1, view);
         }
     }
-	void addView(const _<AView>& view);
-	void addView(size_t index, const _<AView>& view);
-	void removeView(const _<AView>& view);
-	void removeView(AView* view);
-	void removeView(size_t index);
-	void removeAllViews();
 
-	void render() override;
+    void addView(const _<AView>& view);
+    void addView(size_t index, const _<AView>& view);
+
+    void removeView(const _<AView>& view);
+    void removeView(AView* view);
+    void removeView(size_t index);
+    void removeAllViews();
+
+    void render() override;
 
     void focus() override;
 
     void onMouseEnter() override;
-	void onMouseMove(glm::ivec2 pos) override;
-	void onMouseLeave() override;
+
+    void onMouseMove(glm::ivec2 pos) override;
+
+    void onMouseLeave() override;
 
     void onDpiChanged() override;
 
 
     int getContentMinimumWidth(ALayoutDirection layout) override;
-	int getContentMinimumHeight(ALayoutDirection layout) override;
-	
-	void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
-	void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
-	void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+
+    int getContentMinimumHeight(ALayoutDirection layout) override;
+
+    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+
+    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
+
+    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
     void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
 
-    bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
+    bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 
     bool consumesClick(const glm::ivec2& pos) override;
+
     void setSize(glm::ivec2 size) override;
+
     void setEnabled(bool enabled = true) override;
 
     auto begin() const {
         return mViews.cbegin();
     }
+
     auto end() const {
         return mViews.cend();
     }
 
-	/**
-	 * @brief Set new layout manager for this AViewContainer. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
-	 */
-	void setLayout(_<ALayout> layout);
-	_<ALayout> getLayout() const;
+    /**
+     * @brief Set new layout manager for this AViewContainer. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
+     */
+    void setLayout(_<ALayout> layout);
 
-	virtual _<AView> getViewAt(glm::ivec2 pos, bool ignoreGone = true);
-	_<AView> getViewAtRecursive(glm::ivec2 pos);
+    _<ALayout> getLayout() const;
 
-	template<typename T>
-	_<T> getViewAtRecursiveOf(glm::ivec2 pos, bool ignoreGone = true) {
-		for (auto it = mViews.rbegin(); it != mViews.rend(); ++it)
-		{
-			auto view = *it;
-			auto targetPos = pos - view->getPosition();
+    virtual _<AView> getViewAt(glm::ivec2 pos, bool ignoreGone = true);
 
-			if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x && targetPos.y < view->getSize().y)
-			{
-				if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
-					if (auto applicable = _cast<T>(view))
-						return applicable;
-					if (auto container = _cast<AViewContainer>(view)) {
-						if (auto applicable = container->getViewAtRecursiveOf<T>(targetPos, ignoreGone)) {
-							return applicable;
-						}
-					}
-				}
-			}
-		}
+    _<AView> getViewAtRecursive(glm::ivec2 pos);
+
+    template<typename T>
+    _<T> getViewAtRecursiveOf(glm::ivec2 pos, bool ignoreGone = true) {
+        for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
+            auto view = *it;
+            auto targetPos = pos - view->getPosition();
+
+            if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x &&
+                targetPos.y < view->getSize().y) {
+                if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
+                    if (auto applicable = _cast<T>(view))
+                        return applicable;
+                    if (auto container = _cast<AViewContainer>(view)) {
+                        if (auto applicable = container->getViewAtRecursiveOf<T>(targetPos, ignoreGone)) {
+                            return applicable;
+                        }
+                    }
+                }
+            }
+        }
         return nullptr;
-	}
+    }
 
-	virtual void updateLayout();
 
-    const AVector<_<AView>>& getViews() const
-	{
-		return mViews;
-	}
+    /**
+     * @brief Set focus chain target.
+     * @param target a new focus chain view belonging to this container
+     * @details
+     * See mFocusChainTarget for further info.
+     */
+    void setFocusChainTarget(_weak<AView> target) {
+        if (auto v = target.lock()) {
+            assert(v->mParent == this);
+        }
+        mFocusChainTarget = std::move(target);
+    }
+    /**
+     * @return Focus chain target.
+     * @details
+     * See mFocusChainTarget for further info.
+     */
+    _<AView> focusChainTarget() {
+        if (auto v = mFocusChainTarget.lock()) {
+            if (v->mParent != this) {
+                mFocusChainTarget.reset();
+                return nullptr;
+            }
+            return v;
+        }
+        return nullptr;
+    }
+
+
+    virtual void updateLayout();
+
+    const AVector<_<AView>>& getViews() const {
+        return mViews;
+    }
 
     void addViewCustomLayout(const _<AView>& view);
+
+    void onKeyDown(AInput::Key key) override;
+
+    void onKeyRepeat(AInput::Key key) override;
+
+    void onKeyUp(AInput::Key key) override;
+
+    void onCharEntered(wchar_t c) override;
 
 protected:
     AVector<_<AView>> mViews;
 
     void drawView(const _<AView>& view);
 
-    template <typename Iterator>
-    void drawViews(Iterator begin, Iterator end)
-    {
-        for (auto i = begin; i != end; ++i)
-        {
+    template<typename Iterator>
+    void drawViews(Iterator begin, Iterator end) {
+        for (auto i = begin; i != end; ++i) {
             drawView(*i);
         }
     }
 
     void invalidateAllStyles() override;
+
     void invalidateAssHelper() override;
 
     /**
@@ -178,4 +225,11 @@ private:
 
     void notifyParentEnabledStateChanged(bool enabled) override;
 
+    /**
+     * @brief Focus chain target.
+     * @details
+     * Focus chain target is a view belonging to this container which focus-aware (i.e. keyboard) events are passed to.
+     * The focus chaining mechanism allows to catch such events and process them in the containers.
+     */
+    _weak<AView> mFocusChainTarget;
 };

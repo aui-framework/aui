@@ -123,11 +123,11 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
                 // checkboxes
                 GroupBox {
-                    CheckBox { "Checkboxes" },
+                    CheckBoxWrapper { Label { "Checkboxes" } } let { it->setChecked(true); },
                     Vertical {
-                        _new<ACheckBox>("Unchecked checkbox"),
-                        _new<ACheckBox>("Selected checkbox") let { it->setChecked(true); },
-                        _new<ACheckBox>("Disabled checkbox") let { it->setDisabled(); },
+                        CheckBoxWrapper { Label { "Unchecked checkbox" } },
+                        CheckBoxWrapper { Label { "Selected checkbox" } } let { it->setChecked(true); },
+                        CheckBoxWrapper { Label { "Disabled checkbox" } } let { it->setDisabled(); },
                     },
                 },
 
@@ -173,7 +173,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 GroupBox {
                     Label { "Window factory" },
                     Vertical {
-                        CheckBox { "Resizeable" },
+                        CheckBoxWrapper { Label { "Resizeable" } },
                         _new<AButton>("Show window").connect(&AButton::clicked, this, [&] {
                             auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
                             fillWindow(w);
@@ -396,7 +396,9 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
         },
         _new<ASpacerExpanding>(),
         _new<ASpinner>(),
-        _new<ACheckBox>("Enabled") let {
+        CheckBoxWrapper {
+            Label { "Enabled" },
+        } let {
             it->setChecked();
             connect(it->checked, slot(tabView)::setEnabled);
         },

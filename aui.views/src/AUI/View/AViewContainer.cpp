@@ -374,3 +374,22 @@ void AViewContainer::invalidateAssHelper() {
     }
 }
 
+void AViewContainer::onKeyDown(AInput::Key key) {
+    AView::onKeyDown(key);
+    AUI_NULLSAFE(focusChainTarget())->onKeyDown(key);
+}
+
+void AViewContainer::onKeyRepeat(AInput::Key key) {
+    AView::onKeyRepeat(key);
+    AUI_NULLSAFE(focusChainTarget())->onKeyRepeat(key);
+}
+
+void AViewContainer::onKeyUp(AInput::Key key) {
+    AView::onKeyUp(key);
+    AUI_NULLSAFE(focusChainTarget())->onKeyUp(key);
+}
+
+void AViewContainer::onCharEntered(wchar_t c) {
+    AView::onCharEntered(c);
+    AUI_NULLSAFE(focusChainTarget())->onCharEntered(c);
+}

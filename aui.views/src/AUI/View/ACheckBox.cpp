@@ -40,8 +40,12 @@ bool ACheckBox::selectableIsSelectedImpl() {
 
 ACheckBoxWrapper::ACheckBoxWrapper(const _<AView>& viewToWrap) {
     setLayout(_new<AHorizontalLayout>());
-    addView(mCheckBox = _new<ACheckBox>());
+    addView(Centered { mCheckBox = _new<ACheckBox>() });
     addView(viewToWrap);
+
+    connect(clicked, me::toggle);
+
+    mCheckBox->clicked.clearAllConnectionsWith(mCheckBox); // fixes double toggle
 
     connect(mCheckBox->checked, [this](bool v) {
         emit checked(v);

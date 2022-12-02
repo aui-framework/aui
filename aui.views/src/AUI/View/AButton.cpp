@@ -22,24 +22,22 @@
 #include "AButton.h"
 #include <AUI/Platform/AWindow.h>
 
-AButton::AButton()
-{
+AButton::AButton() {
 
 }
 
 
-void AButton::setDefault(bool isDefault)
-{
-	mDefault.set(this, isDefault);
-	connect(AWindow::current()->keyDown, this, [&](AInput::Key k) {
-	    if (!mDefault) {
-	        AObject::disconnect();
-	    } else {
+void AButton::setDefault(bool isDefault) {
+    mDefault.set(this, isDefault);
+    connect(AWindow::current()->keyDown, this, [&](AInput::Key k) {
+        if (!mDefault) {
+            AObject::disconnect();
+        } else {
             if (k == AInput::RETURN) {
                 emit clicked();
             }
         }
-	});
+    });
 
 }
 

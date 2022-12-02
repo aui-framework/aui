@@ -146,11 +146,16 @@ namespace aui {
         template<typename DerivedFromT, std::enable_if_t<std::is_base_of_v<T, DerivedFromT> && !std::is_same_v<DerivedFromT, T>, bool> = true>
         no_escape(const _unique<DerivedFromT>& value): value(&*value) {}
 
-        T* operator->() const {
+        [[nodiscard]]
+        T* ptr() const noexcept {
             return value;
         }
 
-        T& operator*() const {
+        T* operator->() const noexcept {
+            return value;
+        }
+
+        T& operator*() const noexcept {
             return *value;
         }
     };

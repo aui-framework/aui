@@ -49,8 +49,13 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
     if (auto c = mFocusedView.lock()) {
         c->onFocusLost();
     }
+
     mFocusedView = view;
+
     if (view) {
+        ui_thread {
+            updateFocusChain();
+        };
         if (!view->hasFocus()) {
             view->onFocusAcquired();
         }
@@ -213,9 +218,8 @@ void ABaseWindow::onMouseMove(glm::ivec2 pos) {
 }
 
 void ABaseWindow::onKeyDown(AInput::Key key) {
+    AViewContainer::onKeyDown(key);
     emit keyDown(key);
-    if (auto v = getFocusedView())
-        v->onKeyDown(key);
 
 #if AUI_DEBUG
     if (key == AInput::F12 && AInput::isKeyDown(AInput::LCONTROL)) {
@@ -254,16 +258,6 @@ ABaseWindow*& ABaseWindow::currentWindowStorage() {
     return global;
 }
 
-void ABaseWindow::onKeyUp(AInput::Key key) {
-    if (auto v = getFocusedView())
-        v->onKeyUp(key);
-}
-
-void ABaseWindow::onCharEntered(wchar_t c) {
-    if (auto v = getFocusedView()) {
-        v->onCharEntered(c);
-    }
-}
 
 void ABaseWindow::onFocusLost() {
     AView::onFocusLost();
@@ -284,4 +278,14 @@ void ABaseWindow::onDragLeave() {
 
 void ABaseWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 
+}
+
+void ABaseWindow::updateFocusChain() {
+    if (auto focusedView = mFocusedView.lock()) {
+        _weak<AView> focusChainTarget = mFocusedView;
+        for (auto target = focusedView->getParent(); target != nullptr; target = target->getParent()) {
+            target->setFocusChainTarget(std::move(focusChainTarget));
+            focusChainTarget = target->weakPtr();
+        }
+    }
 }

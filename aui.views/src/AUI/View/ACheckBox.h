@@ -81,9 +81,9 @@ signals:
  * @brief View container with a checkbox.
  * @ingroup userful_views
  */
-class ACheckBoxWrapper: public AViewContainer {
+class API_AUI_VIEWS ACheckBoxWrapper: public AViewContainer {
 public:
-    ACheckBoxWrapper(const _<AView>& viewToWrap);
+    explicit ACheckBoxWrapper(const _<AView>& viewToWrap);
 
     void toggle() {
         setChecked(!isChecked());

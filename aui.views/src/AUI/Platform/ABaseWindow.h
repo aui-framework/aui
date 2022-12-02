@@ -19,32 +19,6 @@ class API_AUI_VIEWS ABaseWindow: public AViewContainer {
     friend class SoftwareRenderer;
     friend class testing::UITest;
     friend struct IRenderingContext::Init;
-private:
-    _weak<AView> mFocusedView;
-    _weak<AView> mProfiledView;
-    float mDpiRatio = 1.f;
-
-
-    glm::ivec2 mMousePos;
-    ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
-
-protected:
-    bool mIsFocused = true;
-    _unique<IRenderingContext> mRenderingContext;
-
-    static ABaseWindow*& currentWindowStorage();
-
-    /**
-     * @see ABaseWindow::createOverlappingSurface
-     */
-    virtual _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
-    virtual void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) = 0;
-
-    virtual void createDevtoolsWindow();
-
-    static _unique<AWindowManager>& getWindowManagerImpl();
-
-    virtual float fetchDpiFromSystem() const;
 
 public:
 
@@ -138,10 +112,6 @@ public:
     virtual void flagRedraw();
     virtual void flagUpdateLayout();
 
-    void onKeyUp(AInput::Key key) override;
-
-    void onCharEntered(wchar_t c) override;
-
     void makeCurrent() {
         currentWindowStorage() = this;
     }
@@ -228,11 +198,41 @@ public:
     virtual void onDragLeave();
     virtual void onDragDrop(const ADragNDrop::DropEvent& event);
 
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
 
+protected:
+    bool mIsFocused = true;
+    _unique<IRenderingContext> mRenderingContext;
+
+    static ABaseWindow*& currentWindowStorage();
+
+    /**
+     * @see ABaseWindow::createOverlappingSurface
+     */
+    virtual _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
+    virtual void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) = 0;
+
+    virtual void createDevtoolsWindow();
+
+    static _unique<AWindowManager>& getWindowManagerImpl();
+
+    virtual float fetchDpiFromSystem() const;
+
+
+private:
+    _weak<AView> mFocusedView;
+    _weak<AView> mProfiledView;
+    float mDpiRatio = 1.f;
+
+
+    glm::ivec2 mMousePos;
+    ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
+
+    void updateFocusChain();
 };
 
 

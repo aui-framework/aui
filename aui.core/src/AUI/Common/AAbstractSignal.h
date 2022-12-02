@@ -25,6 +25,7 @@
 
 #include <AUI/Core.h>
 #include <AUI/Common/SharedPtrTypes.h>
+#include <AUI/Traits/values.h>
 
 class AObject;
 
@@ -135,7 +136,7 @@ public:
         return mDestroyed;
     }
 
-    virtual void clearAllConnectionsWith(AObject* object) noexcept = 0;
+    virtual void clearAllConnectionsWith(aui::no_escape<AObject> object) noexcept = 0;
     virtual void clearAllConnections() noexcept = 0;
 
 protected:
