@@ -38,7 +38,7 @@
 #include "AUI/View/ADragNDropView.h"
 #include "AUI/Util/ALayoutInflater.h"
 #include <AUI/Model/AListModel.h>
-#include <AUI/View/AComboBox.h>
+#include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
 #include <AUI/ASS/ASS.h>
 #include <AUI/View/ASelectableLabel.h>
@@ -141,7 +141,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 GroupBox {
                     Label  { "Comboboxes" },
                     Vertical {
-                        _new<AComboBox>(AListModel<AString>::make({
+                        _new<ADropdownList>(AListModel<AString>::make({
                                                                           "Combobox 1",
                                                                           "Combobox 2",
                                                                           "Combobox 3",
@@ -149,7 +149,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                                                           "Combobox 5",
                                                                           "Combobox 6",
                                                                   })),
-                        _new<AComboBox>(AListModel<AString>::make({"Disabled combobox"})) let { it->setDisabled(); },
+                        _new<ADropdownList>(AListModel<AString>::make({"Disabled combobox"})) let { it->setDisabled(); },
                     },
                 },
                 GroupBox {

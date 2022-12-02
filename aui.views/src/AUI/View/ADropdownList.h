@@ -28,9 +28,8 @@
 /**
  * @brief A button with dropdown list.
  * @ingroup useful_views
- * @todo Rename to ADropdown
  */
-class API_AUI_VIEWS AComboBox: public AButton {
+class API_AUI_VIEWS ADropdownList: public AButton {
 private:
     _<IListModel<AString>> mModel;
     int mSelectionId = 0;
@@ -46,9 +45,9 @@ protected:
     }
 
 public:
-    explicit AComboBox(const _<IListModel<AString>>& model);
-    AComboBox();
-    ~AComboBox() override;
+    explicit ADropdownList(const _<IListModel<AString>>& model);
+    ADropdownList();
+    ~ADropdownList() override;
 
     void setModel(const _<IListModel<AString>>& model);
     void render() override;

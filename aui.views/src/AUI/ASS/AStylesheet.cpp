@@ -28,7 +28,7 @@
 #include <AUI/View/ANumberPicker.h>
 #include <AUI/View/ACheckBox.h>
 #include <AUI/View/ARadioButton.h>
-#include <AUI/View/AComboBox.h>
+#include <AUI/View/ADropdownList.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/AVDividerView.h>
@@ -333,9 +333,9 @@ AStylesheet::AStylesheet() {
             Border { 1_dp, 0xa0a0a0_rgb },
         },
 
-        // AComboBox
+        // ADropdownList
         {
-            t<AComboBox>(),
+            t<ADropdownList>(),
             TextAlign::LEFT,
         },
 

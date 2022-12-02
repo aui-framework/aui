@@ -19,7 +19,7 @@
 //
 
 #include <AUI/Util/Cache.h>
-#include "AComboBox.h"
+#include "ADropdownList.h"
 #include "AListView.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Platform/AWindow.h>
@@ -30,26 +30,26 @@
 #include <AUI/Layout/AStackedLayout.h>
 #include <AUI/ASS/ASS.h>
 
-AComboBox::AComboBox(const _<IListModel<AString>>& model):
-        AComboBox()
+ADropdownList::ADropdownList(const _<IListModel<AString>>& model):
+        ADropdownList()
 {
     setModel(model);
 }
 
-AComboBox::AComboBox() {
+ADropdownList::ADropdownList() {
 
 }
 
-void AComboBox::setModel(const _<IListModel<AString>>& model) {
+void ADropdownList::setModel(const _<IListModel<AString>>& model) {
     mModel = model;
     setSelectionId(0);
 
-    connect(model->dataInserted, &AComboBox::updateText);
-    connect(model->dataRemoved,  &AComboBox::updateText);
-    connect(model->dataChanged,  &AComboBox::updateText);
+    connect(model->dataInserted, &ADropdownList::updateText);
+    connect(model->dataRemoved,  &ADropdownList::updateText);
+    connect(model->dataChanged,  &ADropdownList::updateText);
 }
 
-void AComboBox::setSelectionId(int id) {
+void ADropdownList::setSelectionId(int id) {
     mSelectionId = id;
     if (mModel->listSize() > id) {
         updateText();
@@ -57,7 +57,7 @@ void AComboBox::setSelectionId(int id) {
     emit selectionChanged(id);
 }
 
-void AComboBox::updateText() {
+void ADropdownList::updateText() {
     if (mModel->listSize() == 0) {
         redraw();
         return;
@@ -67,7 +67,7 @@ void AComboBox::updateText() {
     }
     setText(mModel->listItemAt(mSelectionId));
 }
-void AComboBox::render() {
+void ADropdownList::render() {
     AAbstractLabel::render();
     if (auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg")) {
         auto size = arrow->getSizeHint();
@@ -78,11 +78,11 @@ void AComboBox::render() {
     }
 }
 
-int AComboBox::getContentMinimumWidth(ALayoutDirection layout) {
+int ADropdownList::getContentMinimumWidth(ALayoutDirection layout) {
     return AAbstractLabel::getContentMinimumWidth(ALayoutDirection::NONE) + 20;
 }
 
-void AComboBox::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
+void ADropdownList::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     AView::onMouseReleased(pos, button);
 
     if (!mComboWindow.lock()) {
@@ -135,12 +135,12 @@ void AComboBox::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     }
 }
 
-AComboBox::~AComboBox() {
+ADropdownList::~ADropdownList() {
     if (auto l = mComboWindow.lock())
         l->close();
 }
 
-void AComboBox::destroyWindow() {
+void ADropdownList::destroyWindow() {
     mPopup = false;
     if (auto l = mComboWindow.lock()) {
         l->close();
@@ -151,7 +151,7 @@ void AComboBox::destroyWindow() {
     redraw();
 }
 
-void AComboBox::onComboBoxWindowCreated() {
+void ADropdownList::onComboBoxWindowCreated() {
 
 }
 

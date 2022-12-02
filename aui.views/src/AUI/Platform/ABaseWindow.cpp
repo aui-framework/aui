@@ -69,7 +69,8 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
     mFocusedView = view;
 
     if (view) {
-        ui_thread {
+        auto w = weak_from_this();
+        ui_threadX [this, self = w.lock()] {
             updateFocusChain();
         };
         if (!view->hasFocus()) {
