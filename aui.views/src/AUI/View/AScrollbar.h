@@ -75,7 +75,26 @@ public:
  */
 class API_AUI_VIEWS AScrollbar: public AViewContainer {
     friend class AScrollbarHandle;
-private:
+public:
+
+    explicit AScrollbar(ALayoutDirection direction = ALayoutDirection::VERTICAL);
+
+    [[nodiscard]] int getCurrentScroll() const {
+        return mCurrentScroll;
+    }
+
+    void setScrollDimensions(size_t viewportSize, size_t fullSize);
+    void updateScrollHandleSize();
+    void setScroll(int scroll);
+
+    void scroll(int delta) noexcept {
+        setScroll(mCurrentScroll + delta);
+    }
+
+    void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
+
+
+protected:
     ALayoutDirection mDirection;
     _<ASpacerExpanding> mOffsetSpacer;
     _<AScrollbarHandle> mHandle;
@@ -95,23 +114,7 @@ private:
 
     int getMaxScroll();
 
-public:
 
-    explicit AScrollbar(ALayoutDirection direction = ALayoutDirection::VERTICAL);
-
-    [[nodiscard]] int getCurrentScroll() const {
-        return mCurrentScroll;
-    }
-
-    void setScrollDimensions(size_t viewportSize, size_t fullSize);
-    void updateScrollHandleSize();
-    void setScroll(int scroll);
-
-    void scroll(int delta) noexcept {
-        setScroll(mCurrentScroll + delta);
-    }
-
-    void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
 signals:
 
     emits<int> scrolled;

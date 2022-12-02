@@ -133,6 +133,7 @@ public:
     template<class Assertion>
     UIMatcher& check(Assertion&& assertion, const char* msg = "no msg") {
         auto set = toSet();
+        EXPECT_FALSE(set.empty()) << msg << ": empty set";
         performHintChecks<Assertion>(msg, set);
         for (auto& s : set) {
             EXPECT_TRUE(assertion(s)) << msg;
