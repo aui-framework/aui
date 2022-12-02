@@ -102,7 +102,7 @@ void AWindow::redraw() {
         unsigned millis = mFrameMillis = unsigned((after - before).count());
         if (millis > 17) {
             static auto lastNotification = 0ms;
-            if (after - lastNotification > 10s) {
+            if (after - lastNotification > 5min) {
                 lastNotification = after;
                 if (millis > 40) {
                     ALogger::warn("Performance") << "Frame render took {}ms! Unacceptably bad performance"_format(millis);

@@ -20,73 +20,100 @@
  */
 
 #pragma once
+
 #include "ALabel.h"
 #include "AViewContainer.h"
 #include <AUI/ASS/Selector/Selected.h>
 
 
-class API_AUI_VIEWS ACheckBox;
-
-class ACheckBoxInner: public AView, public ass::ISelectable
-{
-private:
-    ACheckBox* mCheckBox;
-
-protected:
-    bool selectableIsSelectedImpl() override;
-
-public:
-    ACheckBoxInner(ACheckBox* checkBox) : mCheckBox(checkBox) {}
-
-    virtual ~ACheckBoxInner() = default;
-
-    void update();
-};
-
 /**
- * @brief A check box with a label.
+ * @brief A check box (without label).
  * @ingroup useful_views
  * @details
- * A checkbox is a checkable button that typically used to enable/disable some action.
+ * Checkbox is a checkable button that is typically used to enable/disable some action.
  *
  * Whenever the radio button is checked or unchecked, it emits checked() signal.
  */
-class API_AUI_VIEWS ACheckBox: public AViewContainer, public ass::ISelectable
-{
+class API_AUI_VIEWS ACheckBox : public AView, public ass::ISelectable {
 private:
-	_<ALabel> mText;
-	bool mChecked = false;
+    bool mChecked = false;
 protected:
     bool selectableIsSelectedImpl() override;
 
 public:
-	ACheckBox();
-	ACheckBox(const ::AString& text);
-	virtual ~ACheckBox();
+    ACheckBox();
 
-	void setText(const AString& text);
+    void toggle() {
+        setChecked(!isChecked());
+    }
 
+    [[nodiscard]] bool isChecked() const {
+        return mChecked;
+    }
 
-	[[nodiscard]] bool isChecked() const
-	{
-		return mChecked;
-	}
+    void check() {
+        setChecked(true);
+    }
 
-	void setChecked(bool checked = true)
-    {
-		mChecked = checked;
-		emit customCssPropertyChanged();
-		emit ACheckBox::checked(checked);
-	}
-	void setUnchecked(bool unchecked = true) {
-	    setChecked(!unchecked);
-	}
+    void uncheck() {
+        setChecked(false);
+    }
+
+    void setChecked(bool checked = true) {
+        mChecked = checked;
+        emit customCssPropertyChanged();
+        emit ACheckBox::checked(checked);
+    }
+
+    void setUnchecked(bool unchecked = true) {
+        setChecked(!unchecked);
+    }
 
     bool consumesClick(const glm::ivec2& pos) override;
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+
 
 signals:
-	emits<bool> checked;
+    emits<bool> checked;
+};
+
+
+/**
+ * @brief View container with a checkbox.
+ * @ingroup userful_views
+ */
+class ACheckBoxWrapper: public AViewContainer {
+public:
+    ACheckBoxWrapper(const _<AView>& viewToWrap);
+
+    void toggle() {
+        setChecked(!isChecked());
+    }
+
+    [[nodiscard]] bool isChecked() const {
+        return mCheckBox->isChecked();
+    }
+
+    void check() {
+        setChecked(true);
+    }
+
+    void uncheck() {
+        setChecked(false);
+    }
+
+    void setChecked(bool checked = true) {
+        mCheckBox->setChecked(checked);
+    }
+
+    void setUnchecked(bool unchecked = true) {
+        setChecked(!unchecked);
+    }
+
+private:
+    _<ACheckBox> mCheckBox;
+
+signals:
+    emits<bool> checked;
 };
 
 
@@ -94,14 +121,32 @@ template<>
 struct ADataBindingDefault<ACheckBox, bool> {
 public:
     static void setup(const _<ACheckBox>& view) {}
+
     static auto getGetter() {
         return &ACheckBox::checked;
     }
+
     static auto getSetter() {
         return &ACheckBox::setChecked;
     }
 };
 
+
+template<>
+struct ADataBindingDefault<ACheckBoxWrapper, bool> {
+public:
+    static void setup(const _<ACheckBoxWrapper>& view) {}
+
+    static auto getGetter() {
+        return &ACheckBoxWrapper::checked;
+    }
+
+    static auto getSetter() {
+        return &ACheckBoxWrapper::setChecked;
+    }
+};
+
 namespace declarative {
     using CheckBox = aui::ui_building::view<ACheckBox>;
+    using CheckBoxWrapper = aui::ui_building::view<ACheckBoxWrapper>;
 }

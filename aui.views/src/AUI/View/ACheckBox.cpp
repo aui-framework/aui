@@ -23,50 +23,12 @@
 #include "ACheckBox.h"
 #include "AUI/Layout/AHorizontalLayout.h"
 
-void ACheckBoxInner::update() {
-    emit customCssPropertyChanged;
-}
-
-bool ACheckBoxInner::selectableIsSelectedImpl() {
-    return mCheckBox->isChecked();
-}
-
 
 ACheckBox::ACheckBox()
 {
-    setLayout(_new<AHorizontalLayout>());
-
-    mText = _new<ALabel>();
-    auto checkbox = _new<ACheckBoxInner>(this);
-    addView(Stacked{checkbox});
-    addView(mText);
-    mText->setVisibility(Visibility::GONE);
-
-    connect(checked, checkbox, &ACheckBoxInner::update);
+    connect(clicked, me::toggle);
 }
 
-ACheckBox::ACheckBox(const ::AString& text): ACheckBox()
-{
-    setText(text);
-}
-
-ACheckBox::~ACheckBox()
-{
-}
-
-void ACheckBox::setText(const AString& text)
-{
-    mText->setVisibility(Visibility::VISIBLE);
-    mText->setText(text);
-}
-
-void ACheckBox::onMouseReleased(glm::ivec2 pos, AInput::Key button)
-{
-    AView::onMouseReleased(pos, button);
-    if (button == AInput::LBUTTON) {
-        emit checked(mChecked = !mChecked);
-    }
-}
 
 bool ACheckBox::consumesClick(const glm::ivec2& pos) {
     return true;
@@ -74,4 +36,14 @@ bool ACheckBox::consumesClick(const glm::ivec2& pos) {
 
 bool ACheckBox::selectableIsSelectedImpl() {
     return mChecked;
+}
+
+ACheckBoxWrapper::ACheckBoxWrapper(const _<AView>& viewToWrap) {
+    setLayout(_new<AHorizontalLayout>());
+    addView(mCheckBox = _new<ACheckBox>());
+    addView(viewToWrap);
+
+    connect(mCheckBox->checked, [this](bool v) {
+        emit checked(v);
+    });
 }

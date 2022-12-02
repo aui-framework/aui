@@ -243,14 +243,6 @@ AStylesheet::AStylesheet() {
         // ACheckBox
         {
             t<ACheckBox>(),
-            Margin { 1_dp, 4_dp },
-        },
-        {
-            t<ACheckBox>() > t<AAbstractLabel>(),
-            Margin { 1_dp, 4_dp },
-        },
-        {
-            t<ACheckBoxInner>(),
             BackgroundSolid { 0xffffff_rgb },
             Margin { 1_dp, 1_dp, 1_dp, 0 },
             Border { 1_dp, 0x333333_rgb },
@@ -258,26 +250,22 @@ AStylesheet::AStylesheet() {
             BackgroundImage {0x333333_rgb },
         },
         {
-            t<ACheckBoxInner>::hover(),
+            t<ACheckBox>::hover(),
             Border { 1_dp, 0x0078d7_rgb },
             BackgroundImage {0x0078d7_rgb },
         },
         {
-            t<ACheckBoxInner>::hover(),
+            t<ACheckBox>::active(),
             BackgroundSolid { 0xcce4f7_rgb },
             Border { 1_dp, 0x005499_rgb },
             BackgroundImage {0x005499_rgb },
         },
         {
-            Selected(t<ACheckBox>()) >> t<ACheckBoxInner>(),
+            Selected(t<ACheckBox>()),
             BackgroundImage {":uni/svg/checkbox.svg" },
         },
         {
-            t<ACheckBox>::disabled() > t<AAbstractLabel>(),
-            TextColor { 0xa0a0a0_rgb },
-        },
-        {
-            t<ACheckBox>::disabled() >> t<ACheckBoxInner>(),
+            t<ACheckBox>::disabled(),
             BackgroundSolid { 0xe5e5e5_rgb },
             BackgroundImage { 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },

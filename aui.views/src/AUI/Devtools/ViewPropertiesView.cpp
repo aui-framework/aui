@@ -31,16 +31,22 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
     ADeque<ass::decl::IDeclarationBase*> applicableDeclarations;
 
+    using namespace declarative;
     auto dst = Vertical {
             _new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize {14_pt } },
-            _new<ACheckBox>("Enabled") let {
+            CheckBoxWrapper {
+                Label { "Enabled "},
+            } let {
                 it->setChecked(targetView->isEnabled());
                 connect(it->checked, [this](bool v) {
                     if (auto s = mTargetView.lock()) s->setEnabled(v);
                     requestTargetUpdate();
                 });
             },
-            _new<ACheckBox>("Expanding") let {
+
+            CheckBoxWrapper {
+                Label {"Expanding"},
+            } let {
                 it->setChecked(targetView->getExpanding() != glm::ivec2(0));
                 connect(it->checked, [this](bool v) {
                     if (auto s = mTargetView.lock()) s->setExpanding(v);
