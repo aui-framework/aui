@@ -97,7 +97,7 @@ protected:
 TEST_F(UIType, HelloIsNotAppeared) {
 
     // check label is not visible
-    By::text("Hello!").check(notVisible(), "label is visible");
+    By::type<ALabel>().check(notVisible(), "label is visible");
 }
 
 /**

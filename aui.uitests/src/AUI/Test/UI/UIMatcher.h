@@ -25,7 +25,6 @@ private:
     void performHintChecks(const char* msg, ASet<_<AView>>& set) {
         currentImpl() = this;
         if constexpr (ignores_visibility<Assertion>::value) {
-            mIncludeInvisibleViews = true;
             set = toSet();
         }
         uitest::frame();
@@ -132,6 +131,7 @@ public:
 
     template<class Assertion>
     UIMatcher& check(Assertion&& assertion, const char* msg = "no msg") {
+        mIncludeInvisibleViews = ignores_visibility<Assertion>::value;
         auto set = toSet();
         EXPECT_FALSE(set.empty()) << msg << ": empty set";
         performHintChecks<Assertion>(msg, set);
