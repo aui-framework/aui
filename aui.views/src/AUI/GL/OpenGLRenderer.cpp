@@ -78,6 +78,14 @@ struct SolidShaderHelper {
     }
 };
 
+struct CustomShaderHelper {
+
+    CustomShaderHelper() {}
+
+    void operator()(const ACustomShaderBrush& brush) const {
+    }
+};
+
 struct TexturedShaderHelper {
     gl::Shader& shader;
     gl::Vao& tempVao;
@@ -329,6 +337,7 @@ void OpenGLRenderer::drawRect(const ABrush& brush, const glm::vec2& position, co
             GradientShaderHelper(mGradientShader),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
+            CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 
@@ -354,6 +363,7 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
             SolidShaderHelper(mRoundedSolidShader),
+            CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 
@@ -371,6 +381,7 @@ void OpenGLRenderer::drawRoundedRectAntialiased(const ABrush& brush,
             GradientShaderHelper(mRoundedGradientShaderAntialiased),
             UnsupportedBrushHelper<ATexturedBrush>(),
             SolidShaderHelper(mRoundedSolidShaderAntialiased),
+            CustomShaderHelper{},
     }, brush);
 
     uploadToShaderCommon();
@@ -392,6 +403,7 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
             SolidShaderHelper(mSolidShader),
+            CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
     mTempVao.bind();
@@ -435,6 +447,7 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
             SolidShaderHelper(mRoundedSolidShaderAntialiasedBorder),
+            CustomShaderHelper{},
     }, brush);
 
     glm::vec2 innerSize = { size.x - borderWidth * 2,
@@ -814,6 +827,7 @@ void OpenGLRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
             GradientShaderHelper(mGradientShader),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
+            CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 
@@ -835,6 +849,7 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points
             GradientShaderHelper(mGradientShader),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
+            CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 
@@ -858,6 +873,7 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
             GradientShaderHelper(mGradientShader),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
+            CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 

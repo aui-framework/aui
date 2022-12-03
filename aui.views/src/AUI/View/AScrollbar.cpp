@@ -147,7 +147,7 @@ void AScrollbar::updateScrollHandleOffset(int max) {
     redraw();
 }
 
-void AScrollbar::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
+void AScrollbar::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
     AViewContainer::onMouseWheel(pos, delta);
     // scroll 3 lines of text
     setScroll(mCurrentScroll + delta.y * 11_pt * 3 / 120);

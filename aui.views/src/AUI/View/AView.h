@@ -719,7 +719,7 @@ public:
      * @param pos mouse cursor position.
      * @param delta the distance mouse wheel scrolled. 120 = mouse scroll down, -120 = mouse scroll up.
      */
-    virtual void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta);
+    virtual void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta);
     virtual void onKeyDown(AInput::Key key);
     virtual void onKeyRepeat(AInput::Key key);
     virtual void onKeyUp(AInput::Key key);

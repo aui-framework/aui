@@ -74,6 +74,9 @@ struct BrushHelper {
         renderer->putPixel({ x, y }, renderer->getColor() * color);
     }
 
+    void operator()(const ACustomShaderBrush& brush) noexcept {
+    }
+
 private:
     struct TextureHelper {
         bool slowMethod;

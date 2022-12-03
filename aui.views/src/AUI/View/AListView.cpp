@@ -162,7 +162,7 @@ void AListView::updateScrollbarDimensions() {
             ALayoutDirection::NONE));
 }
 
-void AListView::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
+void AListView::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
     if (!mScrollbar) return;
     //AViewContainer::onMouseWheel(pos, delta);
     mScrollbar->onMouseWheel(pos, delta);

@@ -36,6 +36,14 @@ struct ASolidBrush {
 
 
 /**
+ * The brush used with a custom graphics API shaders.
+ */
+struct ACustomShaderBrush {
+
+};
+
+
+/**
  * Brush which produces linear gradient by rectangle.
  */
 struct ALinearGradientBrush {
@@ -92,4 +100,5 @@ struct ATexturedBrush {
  */
 using ABrush = std::variant<ASolidBrush,
                             ALinearGradientBrush,
-                            ATexturedBrush>;
+                            ATexturedBrush,
+                            ACustomShaderBrush>;
