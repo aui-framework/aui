@@ -86,7 +86,7 @@ public:
         setScroll(mCurrentScroll + delta);
     }
 
-    void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
+    void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
 
 
 protected:

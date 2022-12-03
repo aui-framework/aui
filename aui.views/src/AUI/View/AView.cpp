@@ -372,7 +372,7 @@ void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
     emit doubleClicked(button);
 }
 
-void AView::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
+void AView::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
     emit mouseScrolled(delta);
 }
 

@@ -108,7 +108,7 @@ void AScrollArea::setSize(glm::ivec2 size) {
     }
 }
 
-void AScrollArea::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
+void AScrollArea::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
     AViewContainer::onMouseWheel(pos, delta);
     mVerticalScrollbar->onMouseWheel(pos, delta);
 }

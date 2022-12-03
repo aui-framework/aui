@@ -25,7 +25,6 @@
 #include "FractalView.h"
 #include "JumpToCoordsWindow.h"
 #include <AUI/Util/UIBuildingHelpers.h>
-#include <AUI/View/AImageView.h>
 #include <AUI/ASS/ASS.h>
 
 using namespace ass;
@@ -80,13 +79,6 @@ FractalWindow::FractalWindow():
             }) let {
                 it->setMax(1000);
                 it->setValue(350);
-            },
-            _new<ALabel>("Gradient:"),
-            _new<AImageView>(fractal->getTexture()) let {
-                it->setCustomStyle({
-                    FixedSize { {}, 10_dp },
-                    Margin { 4_dp }
-                });
             },
     }));
     fractal->focus();

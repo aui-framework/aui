@@ -193,7 +193,7 @@ void AViewContainer::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
 		p->onMouseDoubleClicked(pos - p->getPosition(), button);
 }
 
-void AViewContainer::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
+void AViewContainer::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
     AView::onMouseWheel(pos, delta);
     auto p = getViewAt(pos);
     if (p && p->isEnabled())

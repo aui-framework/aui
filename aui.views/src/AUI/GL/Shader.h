@@ -47,7 +47,7 @@ namespace gl {
 		
 	public:
 
-        class Uniform
+        class API_AUI_VIEWS Uniform
         {
         private:
             const char* mUniformString;

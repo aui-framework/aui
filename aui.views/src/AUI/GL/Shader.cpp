@@ -111,7 +111,7 @@ uint32_t gl::Shader::load(const AString& data, uint32_t type) {
 		GLsizei len;
 		glGetShaderInfoLog(shader, sizeof(buf), &len, buf);
 		if (len) {
-			ALogger::warn(buf);
+			ALogger::warn("OpenGL") << "Shader compile message: " << buf;
 		}
 	}
 	if (!st) {
