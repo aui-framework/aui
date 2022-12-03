@@ -1,72 +1,29 @@
-﻿/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+﻿// AUI Framework - Declarative UI toolkit for modern C++17
+// Copyright (C) 2020-2022 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "ACheckBox.h"
 #include "AUI/Layout/AHorizontalLayout.h"
 
-void ACheckBoxInner::update() {
-    emit customCssPropertyChanged;
-}
-
-bool ACheckBoxInner::selectableIsSelectedImpl() {
-    return mCheckBox->isChecked();
-}
-
 
 ACheckBox::ACheckBox()
 {
-    setLayout(_new<AHorizontalLayout>());
-
-    mText = _new<ALabel>();
-    auto checkbox = _new<ACheckBoxInner>(this);
-    addView(Stacked{checkbox});
-    addView(mText);
-    mText->setVisibility(Visibility::GONE);
-
-    connect(checked, checkbox, &ACheckBoxInner::update);
+    connect(clicked, me::toggle);
 }
 
-ACheckBox::ACheckBox(const ::AString& text): ACheckBox()
-{
-    setText(text);
-}
-
-ACheckBox::~ACheckBox()
-{
-}
-
-void ACheckBox::setText(const AString& text)
-{
-    mText->setVisibility(Visibility::VISIBLE);
-    mText->setText(text);
-}
-
-void ACheckBox::onMouseReleased(glm::ivec2 pos, AInput::Key button)
-{
-    AView::onMouseReleased(pos, button);
-    if (button == AInput::LBUTTON) {
-        emit checked(mChecked = !mChecked);
-    }
-}
 
 bool ACheckBox::consumesClick(const glm::ivec2& pos) {
     return true;
@@ -74,4 +31,18 @@ bool ACheckBox::consumesClick(const glm::ivec2& pos) {
 
 bool ACheckBox::selectableIsSelectedImpl() {
     return mChecked;
+}
+
+ACheckBoxWrapper::ACheckBoxWrapper(const _<AView>& viewToWrap) {
+    setLayout(_new<AHorizontalLayout>());
+    addView(Centered { mCheckBox = _new<ACheckBox>() });
+    addView(viewToWrap);
+
+    connect(clicked, me::toggle);
+
+    mCheckBox->clicked.clearAllConnectionsWith(mCheckBox); // fixes double toggle
+
+    connect(mCheckBox->checked, [this](bool v) {
+        emit checked(v);
+    });
 }

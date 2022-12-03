@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++17
+// Copyright (C) 2020-2022 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by Alex2772 on 11/11/2021.
 //
@@ -31,16 +47,22 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
     ADeque<ass::decl::IDeclarationBase*> applicableDeclarations;
 
+    using namespace declarative;
     auto dst = Vertical {
             _new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize {14_pt } },
-            _new<ACheckBox>("Enabled") let {
+            CheckBoxWrapper {
+                Label { "Enabled "},
+            } let {
                 it->setChecked(targetView->isEnabled());
                 connect(it->checked, [this](bool v) {
                     if (auto s = mTargetView.lock()) s->setEnabled(v);
                     requestTargetUpdate();
                 });
             },
-            _new<ACheckBox>("Expanding") let {
+
+            CheckBoxWrapper {
+                Label {"Expanding"},
+            } let {
                 it->setChecked(targetView->getExpanding() != glm::ivec2(0));
                 connect(it->checked, [this](bool v) {
                     if (auto s = mTargetView.lock()) s->setExpanding(v);

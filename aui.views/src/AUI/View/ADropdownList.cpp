@@ -1,30 +1,25 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++17
+// Copyright (C) 2020-2022 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2 on 21.09.2020.
 //
 
 #include <AUI/Util/Cache.h>
-#include "AComboBox.h"
+#include "ADropdownList.h"
 #include "AListView.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Platform/AWindow.h>
@@ -35,26 +30,26 @@
 #include <AUI/Layout/AStackedLayout.h>
 #include <AUI/ASS/ASS.h>
 
-AComboBox::AComboBox(const _<IListModel<AString>>& model):
-        AComboBox()
+ADropdownList::ADropdownList(const _<IListModel<AString>>& model):
+        ADropdownList()
 {
     setModel(model);
 }
 
-AComboBox::AComboBox() {
+ADropdownList::ADropdownList() {
 
 }
 
-void AComboBox::setModel(const _<IListModel<AString>>& model) {
+void ADropdownList::setModel(const _<IListModel<AString>>& model) {
     mModel = model;
     setSelectionId(0);
 
-    connect(model->dataInserted, &AComboBox::updateText);
-    connect(model->dataRemoved,  &AComboBox::updateText);
-    connect(model->dataChanged,  &AComboBox::updateText);
+    connect(model->dataInserted, &ADropdownList::updateText);
+    connect(model->dataRemoved,  &ADropdownList::updateText);
+    connect(model->dataChanged,  &ADropdownList::updateText);
 }
 
-void AComboBox::setSelectionId(int id) {
+void ADropdownList::setSelectionId(int id) {
     mSelectionId = id;
     if (mModel->listSize() > id) {
         updateText();
@@ -62,7 +57,7 @@ void AComboBox::setSelectionId(int id) {
     emit selectionChanged(id);
 }
 
-void AComboBox::updateText() {
+void ADropdownList::updateText() {
     if (mModel->listSize() == 0) {
         redraw();
         return;
@@ -72,7 +67,7 @@ void AComboBox::updateText() {
     }
     setText(mModel->listItemAt(mSelectionId));
 }
-void AComboBox::render() {
+void ADropdownList::render() {
     AAbstractLabel::render();
     if (auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg")) {
         auto size = arrow->getSizeHint();
@@ -83,11 +78,11 @@ void AComboBox::render() {
     }
 }
 
-int AComboBox::getContentMinimumWidth(ALayoutDirection layout) {
+int ADropdownList::getContentMinimumWidth(ALayoutDirection layout) {
     return AAbstractLabel::getContentMinimumWidth(ALayoutDirection::NONE) + 20;
 }
 
-void AComboBox::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
+void ADropdownList::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     AView::onMouseReleased(pos, button);
 
     if (!mComboWindow.lock()) {
@@ -140,12 +135,12 @@ void AComboBox::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     }
 }
 
-AComboBox::~AComboBox() {
+ADropdownList::~ADropdownList() {
     if (auto l = mComboWindow.lock())
         l->close();
 }
 
-void AComboBox::destroyWindow() {
+void ADropdownList::destroyWindow() {
     mPopup = false;
     if (auto l = mComboWindow.lock()) {
         l->close();
@@ -156,7 +151,7 @@ void AComboBox::destroyWindow() {
     redraw();
 }
 
-void AComboBox::onComboBoxWindowCreated() {
+void ADropdownList::onComboBoxWindowCreated() {
 
 }
 
