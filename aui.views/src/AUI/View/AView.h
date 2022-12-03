@@ -684,10 +684,7 @@ public:
         return mCustomStyleRule;
     }
 
-    void setCustomStyle(RuleWithoutSelector rule) {
-        mCustomStyleRule = std::move(rule);
-        mAssHelper = nullptr;
-    }
+    void setCustomStyle(RuleWithoutSelector rule);
 
     void ensureAssUpdated();
 

@@ -571,3 +571,9 @@ ALayoutDirection AView::parentLayoutDirection() const noexcept {
     return mParent->getLayout()->getLayoutDirection();
 }
 
+void AView::setCustomStyle(RuleWithoutSelector rule) {
+    AUI_ASSERT_UI_THREAD_ONLY();
+    mCustomStyleRule = std::move(rule);
+    mAssHelper = nullptr;
+}
+
