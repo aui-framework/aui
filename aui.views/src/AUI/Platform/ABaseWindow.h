@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++17
+// Copyright (C) 2020-2022 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by alex2 on 6/9/2021.
 //
@@ -19,32 +35,6 @@ class API_AUI_VIEWS ABaseWindow: public AViewContainer {
     friend class SoftwareRenderer;
     friend class testing::UITest;
     friend struct IRenderingContext::Init;
-private:
-    _weak<AView> mFocusedView;
-    _weak<AView> mProfiledView;
-    float mDpiRatio = 1.f;
-
-
-    glm::ivec2 mMousePos;
-    ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
-
-protected:
-    bool mIsFocused = true;
-    _unique<IRenderingContext> mRenderingContext;
-
-    static ABaseWindow*& currentWindowStorage();
-
-    /**
-     * @see ABaseWindow::createOverlappingSurface
-     */
-    virtual _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
-    virtual void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) = 0;
-
-    virtual void createDevtoolsWindow();
-
-    static _unique<AWindowManager>& getWindowManagerImpl();
-
-    virtual float fetchDpiFromSystem() const;
 
 public:
 
@@ -138,10 +128,6 @@ public:
     virtual void flagRedraw();
     virtual void flagUpdateLayout();
 
-    void onKeyUp(AInput::Key key) override;
-
-    void onCharEntered(wchar_t c) override;
-
     void makeCurrent() {
         currentWindowStorage() = this;
     }
@@ -228,11 +214,41 @@ public:
     virtual void onDragLeave();
     virtual void onDragDrop(const ADragNDrop::DropEvent& event);
 
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
 
+protected:
+    bool mIsFocused = true;
+    _unique<IRenderingContext> mRenderingContext;
+
+    static ABaseWindow*& currentWindowStorage();
+
+    /**
+     * @see ABaseWindow::createOverlappingSurface
+     */
+    virtual _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
+    virtual void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) = 0;
+
+    virtual void createDevtoolsWindow();
+
+    static _unique<AWindowManager>& getWindowManagerImpl();
+
+    virtual float fetchDpiFromSystem() const;
+
+
+private:
+    _weak<AView> mFocusedView;
+    _weak<AView> mProfiledView;
+    float mDpiRatio = 1.f;
+
+
+    glm::ivec2 mMousePos;
+    ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
+
+    void updateFocusChain();
 };
 
 

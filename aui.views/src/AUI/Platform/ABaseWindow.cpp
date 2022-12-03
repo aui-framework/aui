@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++17
+// Copyright (C) 2020-2022 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by alex2 on 6/9/2021.
 //
@@ -49,8 +65,14 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
     if (auto c = mFocusedView.lock()) {
         c->onFocusLost();
     }
+
     mFocusedView = view;
+
     if (view) {
+        auto w = weak_from_this();
+        ui_threadX [this, self = w.lock()] {
+            updateFocusChain();
+        };
         if (!view->hasFocus()) {
             view->onFocusAcquired();
         }
@@ -213,9 +235,8 @@ void ABaseWindow::onMouseMove(glm::ivec2 pos) {
 }
 
 void ABaseWindow::onKeyDown(AInput::Key key) {
+    AViewContainer::onKeyDown(key);
     emit keyDown(key);
-    if (auto v = getFocusedView())
-        v->onKeyDown(key);
 
 #if AUI_DEBUG
     if (key == AInput::F12 && AInput::isKeyDown(AInput::LCONTROL)) {
@@ -254,16 +275,6 @@ ABaseWindow*& ABaseWindow::currentWindowStorage() {
     return global;
 }
 
-void ABaseWindow::onKeyUp(AInput::Key key) {
-    if (auto v = getFocusedView())
-        v->onKeyUp(key);
-}
-
-void ABaseWindow::onCharEntered(wchar_t c) {
-    if (auto v = getFocusedView()) {
-        v->onCharEntered(c);
-    }
-}
 
 void ABaseWindow::onFocusLost() {
     AView::onFocusLost();
@@ -284,4 +295,14 @@ void ABaseWindow::onDragLeave() {
 
 void ABaseWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 
+}
+
+void ABaseWindow::updateFocusChain() {
+    if (auto focusedView = mFocusedView.lock()) {
+        _weak<AView> focusChainTarget = mFocusedView;
+        for (auto target = focusedView->getParent(); target != nullptr; target = target->getParent()) {
+            target->setFocusChainTarget(std::move(focusChainTarget));
+            focusChainTarget = target->weakPtr();
+        }
+    }
 }
