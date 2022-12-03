@@ -304,12 +304,17 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>
 
 template<typename View, typename Data>
 _<View> operator&&(const _<View>& object, AFieldObservable<Data>& observable) {
-    auto observerHandle = observable << [object = object.get()](Data newValue) {
-        (object->*ADataBindingDefault<View, Data>::getSetter())(std::move(newValue));
-    };
-    AObject::connect(object.get()->*ADataBindingDefault<View, Data>::getGetter(), object, [&observable, observerHandle](Data newValue) {
-        observable.setValue(std::move(newValue), observerHandle);
-    });
+    typename std::decay_t<decltype(observable)>::ObserverHandle observerHandle = nullptr;
+    if (ADataBindingDefault<View, Data>::getSetter()) {
+        observerHandle = observable << [object = object.get()](Data newValue) {
+            (object->*ADataBindingDefault<View, Data>::getSetter())(std::move(newValue));
+        };
+    }
+    if (auto getter = ADataBindingDefault<View, Data>::getGetter()) {
+        AObject::connect(object.get()->*getter, object, [&observable, observerHandle](Data newValue) {
+            observable.setValue(std::move(newValue), observerHandle);
+        });
+    }
 
     return object;
 }
