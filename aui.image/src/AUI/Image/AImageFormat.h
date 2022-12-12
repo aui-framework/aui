@@ -140,7 +140,7 @@ namespace aui::image_format {
         static constexpr std::size_t countFrom = aui::image_format::traits<from>::COMPONENT_COUNT;
         static constexpr std::size_t countTo = aui::image_format::traits<to>::COMPONENT_COUNT;
 
-        aui::image_format::traits<to>::representation_t out;
+        typename aui::image_format::traits<to>::representation_t out;
 
         out.r = in.r;
         if constexpr(countTo > 1) {
