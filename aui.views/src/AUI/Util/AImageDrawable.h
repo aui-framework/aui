@@ -30,12 +30,15 @@ class AImageDrawable: public IDrawable {
 private:
     Render::Texture mTexture;
     glm::ivec2 mSize;
+    _<AImage> mImage;
 
 public:
     explicit AImageDrawable(const _<AImage> image);
     virtual ~AImageDrawable();
 
     void draw(const Params& params) override;
+
+    AImage rasterize(glm::ivec2 imageSize) override;
 
     glm::ivec2 getSizeHint() override;
 };

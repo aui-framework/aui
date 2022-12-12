@@ -35,12 +35,49 @@ AImage aui::win32::iconToImage(HICON hIcon) {
     return bitmapToImage(hBitmap);
 }
 
+aui::win32::Bitmap aui::win32::imageRgbToBitmap(const AImage& image, BitmapMode mode) {
+    aui::win32::DeviceContext hdcScreen = GetDC(nullptr);
+
+    aui::win32::DeviceContext hdcMemColor = CreateCompatibleDC(hdcScreen);
+
+
+    BITMAPINFO bmi;
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = image.getWidth();
+    bmi.bmiHeader.biHeight = image.getHeight();
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
+    bmi.bmiHeader.biSizeImage = bmi.bmiHeader.biWidth * bmi.bmiHeader.biHeight * 4;
+
+    bmi.bmiHeader.biHeight = -bmi.bmiHeader.biHeight;
+
+    VOID* data;
+    auto hbmpColor = CreateDIBSection(hdcMemColor, &bmi, DIB_RGB_COLORS, &data, nullptr, 0x0);
+    auto hbmpOldColor = (HBITMAP)SelectObject(hdcMemColor, hbmpColor);
+
+    if (image.getFormat() == (AImageFormat::BGRA | AImageFormat::BYTE)) {
+        std::memcpy(data, image.getData().data(), bmi.bmiHeader.biSizeImage);
+    } else {
+        for (int y = 0; y < image.getHeight(); ++y) {
+            for (int x = 0; x < image.getWidth(); ++x) {
+                reinterpret_cast<glm::u8vec4*>(data)[y * image.getWidth() + x] = image.getPixelAt<AImageFormat::BGRA | AImageFormat::BYTE>({x, y});
+            }
+        }
+    }
+
+    SelectObject(hdcMemColor, hbmpOldColor);
+
+
+    return hbmpColor;
+}
+
 AImage aui::win32::bitmapToImage(HBITMAP hbitmap) {
     BITMAP bmp = {0};
     BITMAPINFO info = {0};
     AByteBuffer pixels;
 
-    HDC compatDC = CreateCompatibleDC(nullptr);
+    aui::win32::DeviceContext compatDC = CreateCompatibleDC(nullptr);
     std::memset(&info, 0, sizeof(BITMAPINFO));
     auto oldBitmap = (HBITMAP)SelectObject(compatDC, hbitmap);
     GetObject(hbitmap, sizeof(bmp), &bmp);
@@ -59,10 +96,9 @@ AImage aui::win32::bitmapToImage(HBITMAP hbitmap) {
     SelectObject(compatDC, oldBitmap);
 
     height = std::abs(height);
-    DeleteDC(compatDC);
-    AImage image(std::move(pixels), width, height, AImage::RGBA | AImage::BYTE);
-    return {image.imageDataOfFormat(AImage::BGRA | AImage::BYTE | AImage::FLIP_Y),
+    AImage image(std::move(pixels), width, height, AImageFormat::RGBA | AImageFormat::BYTE);
+    return {image.imageDataOfFormat(AImageFormat::BGRA | AImageFormat::BYTE | AImageFormat::FLIP_Y),
             static_cast<uint32_t>(width),
             static_cast<uint32_t>(height),
-            AImage::RGBA | AImage::BYTE };
+            AImageFormat::RGBA | AImageFormat::BYTE };
 }

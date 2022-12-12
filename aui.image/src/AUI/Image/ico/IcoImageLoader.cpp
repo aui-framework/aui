@@ -92,7 +92,7 @@ void IcoImageLoader::save(aui::no_escape<IOutputStream> os, const AVector<AImage
 
         buffer << bitmapHeader;
 
-        auto data = image.imageDataOfFormat(AImage::FLIP_Y | AImage::BYTE | (image.getBytesPerPixel() == 4 ? AImage::BGRA : AImage::RGB));
+        auto data = image.imageDataOfFormat(AImageFormat::FLIP_Y | AImageFormat::BYTE | (image.getBytesPerPixel() == 4 ? AImageFormat::BGRA : AImageFormat::RGB));
 
         buffer << AByteBufferView { (const char*)data.data(), data.size() };
 

@@ -378,6 +378,10 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
             _new<DemoGraphView>(),
             _new<ADragNDropView>(),
 
+            Label { "Custom cursor" } with_style {
+                ACursor{ ":img/logo.svg" },
+            }
+
         } let { it->setExpanding(); }, "Others");
 
         it->setExpanding();

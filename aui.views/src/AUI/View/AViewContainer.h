@@ -17,6 +17,7 @@
 #pragma once
 
 #include <AUI/Views.h>
+#include <AUI/View/AView.h>
 #include "AUI/Common/SharedPtr.h"
 #include <glm/glm.hpp>
 #include "AUI/Layout/ALayout.h"

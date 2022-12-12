@@ -51,7 +51,7 @@ void Svg2ico::run(Toolbox& t) {
 
     AVector<AImage> images;
     for (auto size : { 16, 32, 48, 64, 128, 256}) {
-        images << std::move(*img.provideImage({size, size}));
+        images << std::move(img.provideImage({size, size}));
     }
     IcoImageLoader::save(AFileOutputStream(outputFile), images);
     std::cout << inputFile << " -> " << outputFile << std::endl;

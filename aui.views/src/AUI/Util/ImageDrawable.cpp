@@ -23,7 +23,7 @@
 #include "AImageDrawable.h"
 #include <AUI/Platform/AWindow.h>
 
-AImageDrawable::AImageDrawable(const _<AImage> image): mSize(image->getSize()) {
+AImageDrawable::AImageDrawable(_<AImage> image): mSize(image->getSize()), mImage(std::move(image)) {
     mTexture = Render::getNewTexture();
     mTexture->setImage(image);
 }
@@ -44,4 +44,8 @@ void AImageDrawable::draw(const IDrawable::Params& params) {
             params.cropUvBottomRight,
             params.imageRendering,
     }, params.offset, params.size);
+}
+
+AImage AImageDrawable::rasterize(glm::ivec2 imageSize) {
+    return AImage::resizeLinearDownscale(*mImage, imageSize.x, imageSize.y);
 }

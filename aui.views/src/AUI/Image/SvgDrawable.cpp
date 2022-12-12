@@ -100,7 +100,11 @@ void AVectorDrawable::draw(const Params& params) {
 
     // rasterization
     auto texture = Render::getNewTexture();
-    texture->setImage(mFactory->provideImage(textureSize));
+    texture->setImage(_new<AImage>(mFactory->provideImage(textureSize)));
     mRasterized.push_back({key, texture});
     doDraw(texture);
+}
+
+AImage AVectorDrawable::rasterize(glm::ivec2 imageSize) {
+    return mFactory->provideImage(imageSize);
 }

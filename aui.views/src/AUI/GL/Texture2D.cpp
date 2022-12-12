@@ -58,17 +58,17 @@ inline bool Result::operator==(const Result& rhs) const
 Result recognize(const AImage& image)
 {
 	Result res;
-	switch (image.getFormat() & AImage::STRUCTURE)
+	switch (image.getFormat() & AImageFormat::COMPONENT_BITS)
 	{
-	case AImage::R:
+	case AImageFormat::R:
 		res.format = GL_RED;
-		switch (image.getFormat() & (~AImage::STRUCTURE))
+		switch (image.getFormat() & AImageFormat::TYPE_BITS)
 		{
-		case AImage::FLOAT:
+		case AImageFormat::FLOAT:
 			res.internalformat = GL_R16F;
 			res.type = GL_FLOAT;
 			break;
-		case AImage::BYTE:
+		case AImageFormat::BYTE:
 			res.internalformat = GL_R8;
 			res.type = GL_UNSIGNED_BYTE;
 			break;
@@ -76,15 +76,15 @@ Result recognize(const AImage& image)
 			assert(0);
 		}
 		break;
-	case AImage::RGB:
+	case AImageFormat::RGB:
 		res.format = GL_RGB;
-		switch (image.getFormat() & (~AImage::STRUCTURE))
+		switch (image.getFormat() & AImageFormat::TYPE_BITS)
 		{
-		case AImage::FLOAT:
+		case AImageFormat::FLOAT:
 			res.internalformat = GL_RGB16F;
 			res.type = GL_FLOAT;
 			break;
-		case AImage::BYTE:
+		case AImageFormat::BYTE:
 			res.internalformat = GL_RGB;
 			res.type = GL_UNSIGNED_BYTE;
 			break;
@@ -92,15 +92,15 @@ Result recognize(const AImage& image)
 			assert(0);
 		}
 		break;
-	case AImage::RGBA:
+	case AImageFormat::RGBA:
 		res.format = GL_RGBA;
-		switch (image.getFormat() & (~AImage::STRUCTURE))
+		switch (image.getFormat() & AImageFormat::TYPE_BITS)
 		{
-		case AImage::FLOAT:
+		case AImageFormat::FLOAT:
 			res.internalformat = GL_RGBA16F;
 			res.type = GL_FLOAT;
 			break;
-		case AImage::BYTE:
+		case AImageFormat::BYTE:
 			res.internalformat = GL_RGBA;
 			res.type = GL_UNSIGNED_BYTE;
 			break;

@@ -46,4 +46,7 @@ IDrawable::Cache& IDrawable::Cache::inst() {
     return s;
 }
 
-
+AImage IDrawable::rasterize(glm::ivec2 imageSize) {
+    assert(("unimplemented", false));
+    throw AException("unimplemented");
+}

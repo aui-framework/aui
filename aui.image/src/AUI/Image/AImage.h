@@ -28,7 +28,14 @@
 #include <AUI/Url/AUrl.h>
 #include <AUI/IO/APath.h>
 #include "AUI/Common/AColor.h"
+#include "AImageFormat.h"
 
+/**
+ * @brief Image representation.
+ * @ingroup image
+ * @details
+ * TODO refactor!
+ */
 class API_AUI_IMAGE AImage {
 private:
     class Cache;
@@ -41,45 +48,33 @@ private:
         _<AImage> load(const AUrl& key) override;
     };
 
-public:
-    AImage(uint32_t width, uint32_t height, int format);
+    void setPixelAt(std::uint32_t index, glm::ivec4 color);
 
-    enum Format : std::uint32_t {
-        UNKNOWN = 0,
-        BYTE = 0b1,
-        FLOAT = 0b10,
-        R    = 0b00100,
-        RG   = 0b01000,
-        RGB  = 0b01100,
-        RGBA = 0b10000,
-        ARGB = 0b10100,
-        BGRA = 0b11000,
-
-
-        FLIP_Y = 0b10000000,
-
-
-    };
-
-    enum Meta : std::uint32_t {
-        META = 0b11,
-        STRUCTURE = ~META
-    };
 private:
     AByteBuffer mData;
     uint32_t mWidth;
     uint32_t mHeight;
-    unsigned mFormat = UNKNOWN;
+    AImageFormat mFormat = AImageFormat::UNKNOWN;
+
+
+    std::size_t coordToIndex(glm::uvec2 coords) const noexcept {
+        return mWidth * glm::clamp(coords.y, static_cast<uint32_t>(0), mHeight - 1) + glm::clamp(
+                coords.x, static_cast<uint32_t>(0), mWidth - 1);
+    }
 
 public:
+
     AImage();
 
-    AImage(unsigned int format) : mFormat(format) {}
+    AImage(AImageFormat format) : mFormat(format) {}
+
+
+    AImage(uint32_t width, uint32_t height, AImageFormat format);
 
     AImage(AByteBuffer data,
            uint32_t width,
            uint32_t height,
-           unsigned int format):
+           AImageFormat format):
             mData(std::move(data)),
             mWidth(width),
             mHeight(height),
@@ -93,6 +88,8 @@ public:
         mHeight = size.y;
         allocate();
     }
+
+    void fillColor(glm::ivec4 c);
 
     [[nodiscard]]
     AByteBuffer imageDataOfFormat(unsigned format) const;
@@ -125,7 +122,9 @@ public:
      * @return bytes per pixel.
      */
     [[nodiscard]]
-    uint8_t getBytesPerPixel() const;
+    uint8_t getBytesPerPixel() const {
+        return mFormat.getBytesPerPixel();
+    }
 
 
     [[nodiscard]]
@@ -141,14 +140,15 @@ public:
         return sub(position.x, position.y, size.x, size.y);
     }
 
-    [[nodiscard]]
-    glm::ivec4 getPixelAt(uint32_t x, uint32_t y) const;
     void setPixelAt(uint32_t x, uint32_t y, const glm::ivec4& val);
+
+    template<auto imageFormat = AImageFormat::RGBA | AImageFormat::BYTE>
+    typename aui::image_format::traits<imageFormat>::pixel_t getPixelAt(glm::uvec2 coords) const noexcept {
+        return aui::image_format::convert<imageFormat>(mFormat, (std::uint8_t*)mData.data() + getBytesPerPixel() * coordToIndex(coords));
+    }
 
     void mirrorVertically();
 
-    [[nodiscard]]
-    static AImage addAlpha(const AImage& AImage);
 
     [[nodiscard]]
     static AImage resize(const AImage& src, uint32_t width, uint32_t height);
