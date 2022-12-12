@@ -24,7 +24,7 @@
 #include "AUI/Common/SharedPtr.h"
 
 /**
- * Image loader used for IDrawable::fromUrl and Images::get
+ * Image loader used for IDrawable::fromUrl and AImage::fromUrl
  */
 class API_AUI_IMAGE AImageLoaderRegistry
 {

@@ -24,7 +24,7 @@
 class IImageFactory
 {
 public:
-    virtual _<AImage> provideImage(const glm::ivec2& size) = 0;
+    virtual AImage provideImage(const glm::ivec2& size) = 0;
 
     /**
      * @see <a href="IDrawable::getSizeHint">IDrawable::getSizeHint</a>

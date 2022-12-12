@@ -16,25 +16,48 @@
 
 #pragma once
 
+
+#include <variant>
+#include <AUI/Image/AImage.h>
+
+class AWindow;
+
 /**
  * @brief Represents cursor type.
  * @ingroup views
  * @ingroup ass
  */
-enum class ACursor
+class API_AUI_VIEWS ACursor
 {
-    /**
-     * Default arrow
-     */
-	DEFAULT,
+private:
+    struct Custom;
 
-	/**
-	 * Pointing finger
-	 */
-	POINTER,
+public:
+    enum System {
+        /**
+         * Default arrow
+         */
+        DEFAULT,
 
-	/**
-	 * 'I' beam
-	 */
-	TEXT,
+        /**
+         * Pointing finger
+         */
+        POINTER,
+
+        /**
+         * 'I' beam
+         */
+        TEXT,
+    };
+
+    ACursor(System systemCursor): mValue(systemCursor) {}
+    explicit ACursor(aui::no_escape<AImage> image);
+    explicit ACursor(const AUrl& imageUrl);
+
+    ~ACursor();
+
+    void applyNativeCursor(AWindow* pWindow);
+
+private:
+    std::variant<System, _<Custom>> mValue;
 };

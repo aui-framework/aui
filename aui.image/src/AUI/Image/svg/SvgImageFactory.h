@@ -25,7 +25,7 @@ private:
 public:
     SvgImageFactory(AByteBufferView buf);
     ~SvgImageFactory();
-    _<AImage> provideImage(const glm::ivec2& size) override;
+    AImage provideImage(const glm::ivec2& size) override;
 
     glm::ivec2 getSizeHint() override;
 };

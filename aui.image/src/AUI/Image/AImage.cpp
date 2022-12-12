@@ -26,7 +26,7 @@ AImage::AImage()
 {
 }
 
-AImage::AImage(uint32_t width, uint32_t height, int format):
+AImage::AImage(uint32_t width, uint32_t height, AImageFormat format):
         mWidth(width),
         mHeight(height),
         mFormat(format)
@@ -34,29 +34,6 @@ AImage::AImage(uint32_t width, uint32_t height, int format):
     mData.resize(mWidth * mHeight * getBytesPerPixel());
 }
 
-
-AImage AImage::addAlpha(const AImage& src)
-{
-    AImage dst(src.getWidth(), src.getHeight(), RGBA | BYTE);
-    memset(dst.getData().data(), 255, dst.getData().size());
-
-    // https://stackoverflow.com/questions/9900854/opengl-creating-texture-atlas-at-run-time
-    for (int sourceY = 0; sourceY < src.mHeight; ++sourceY)
-    {
-        for (int sourceX = 0; sourceX < src.mWidth; ++sourceX)
-        {
-            int from = (sourceY * src.mWidth * src.getBytesPerPixel()) + (sourceX * src.getBytesPerPixel());
-            // 4 bytes per pixel (assuming RGBA)
-            int to = ((sourceY) * dst.mWidth * dst.getBytesPerPixel()) + ((sourceX) * dst.getBytesPerPixel()); // same format as source
-
-            for (int channel = 0; channel < src.getBytesPerPixel(); ++channel)
-            {
-                dst.mData.at<std::uint8_t>(to + channel) = src.mData.at<std::uint8_t>(from + channel);
-            }
-        }
-    }
-    return dst;
-}
 
 AImage AImage::resize(const AImage& src, uint32_t width, uint32_t height)
 {
@@ -66,39 +43,26 @@ AImage AImage::resize(const AImage& src, uint32_t width, uint32_t height)
     return n;
 }
 
-glm::ivec4 AImage::getPixelAt(uint32_t x, uint32_t y) const
-{
-    const std::uint8_t* dataPtr = &mData.at<std::uint8_t>((mWidth * glm::clamp(y, static_cast<uint32_t>(0), mHeight - 1) + glm::clamp(
-            x, static_cast<uint32_t>(0), mWidth - 1)) * getBytesPerPixel());
+
+void AImage::setPixelAt(std::uint32_t index, glm::ivec4 color) {
+    std::uint8_t* dataPtr = &mData.at<std::uint8_t>(index * getBytesPerPixel());
     switch (getBytesPerPixel())
     {
-        case 1:
-            return {dataPtr[0], 0, 0, 0};
-        case 2:
-            return {dataPtr[0], dataPtr[1], 0, 0};
-        case 3:
-            return {dataPtr[0], dataPtr[1], dataPtr[2], 0};
         case 4:
-            return {dataPtr[0], dataPtr[1], dataPtr[2], dataPtr[3]};
+            dataPtr[3] = color.w;
+        case 3:
+            dataPtr[2] = color.z;
+        case 2:
+            dataPtr[1] = color.y;
+        case 1:
+            dataPtr[0] = color.x;
     }
-    return {};
 }
 
 void AImage::setPixelAt(uint32_t x, uint32_t y, const glm::ivec4& val)
 {
-    std::uint8_t* dataPtr = &mData.at<std::uint8_t>((mWidth * glm::clamp(y, static_cast<uint32_t>(0), mHeight - 1) + glm::clamp(
-            x, static_cast<uint32_t>(0), mWidth - 1)) * getBytesPerPixel());
-    switch (getBytesPerPixel())
-    {
-        case 4:
-            dataPtr[3] = val.w;
-        case 3:
-            dataPtr[2] = val.z;
-        case 2:
-            dataPtr[1] = val.y;
-        case 1:
-            dataPtr[0] = val.x;
-    }
+    setPixelAt(mWidth * glm::clamp(y, static_cast<uint32_t>(0), mHeight - 1) + glm::clamp(
+            x, static_cast<uint32_t>(0), mWidth - 1), val);
 }
 
 AImage AImage::resizeLinearDownscale(const AImage& src, uint32_t width, uint32_t height)
@@ -117,7 +81,7 @@ AImage AImage::resizeLinearDownscale(const AImage& src, uint32_t width, uint32_t
             {
                 for (uint32_t dx = 0; dx < deltaX; ++dx)
                 {
-                    block += src.getPixelAt(x * deltaX + dx, y * deltaY + dy);
+                    block += src.getPixelAt(glm::uvec2{x * deltaX + dx, y * deltaY + dy});
                 }
             }
             block /= deltaY * deltaX;
@@ -174,24 +138,6 @@ AImage AImage::sub(uint32_t x, uint32_t y, uint32_t width, uint32_t height) cons
     return image;
 }
 
-/*!
- * @return Количество байт на пиксель.
- */
-std::uint8_t AImage::getBytesPerPixel() const
-{
-    std::uint8_t b;
-    switch (static_cast<std::uint8_t>(mFormat & ~(FLOAT | BYTE))) {
-        case R: b = 1;   break;
-        case RG: b = 2;  break;
-        case RGB: b = 3; break;
-        default: b = 4;  break;
-    }
-    if (mFormat & FLOAT)
-    {
-        b *= 4;
-    }
-    return b;
-}
 
 _<AImage> AImage::fromUrl(const AUrl& url) {
     return Cache::get(url);
@@ -236,7 +182,7 @@ AColor AImage::averageColor() const noexcept {
 
     for (uint32_t y = 0; y < mHeight; ++y) {
         for (uint32_t x = 0; x < mWidth; ++x) {
-            accumulator += getPixelAt(x, y);
+            accumulator += getPixelAt({x, y});
         }
     }
 
@@ -246,10 +192,10 @@ AColor AImage::averageColor() const noexcept {
 }
 
 AByteBuffer AImage::imageDataOfFormat(unsigned format) const {
-    assert(("unsupported", (format & BYTE)));
+    assert(("unsupported", (format & AImageFormat::BYTE)));
 
-    bool flipY = format & FLIP_Y;
-    format &= ~FLIP_Y;
+    bool flipY = format & AImageFormat::FLIP_Y;
+    format &= ~AImageFormat::FLIP_Y;
 
     AByteBuffer output;
     for (std::uint32_t iY = 0; iY < getHeight(); ++iY) {
@@ -261,38 +207,38 @@ AByteBuffer AImage::imageDataOfFormat(unsigned format) const {
         }
 
         for (std::uint32_t x = 0; x < getWidth(); ++x) {
-            auto color = getPixelAt(x, y);
-            switch (format & ~BYTE) {
-                case R:
+            auto color = getPixelAt({x, y});
+            switch (format & ~AImageFormat::BYTE) {
+                case AImageFormat::R:
                     output << std::uint8_t(color.r);
                     break;
 
-                case RG:
+                case AImageFormat::RG:
                     output << std::uint8_t(color.r);
                     output << std::uint8_t(color.g);
                     break;
 
-                case RGB:
+                case AImageFormat::RGB:
                     output << std::uint8_t(color.r);
                     output << std::uint8_t(color.g);
                     output << std::uint8_t(color.b);
                     break;
 
-                case RGBA:
+                case AImageFormat::RGBA:
                     output << std::uint8_t(color.r);
                     output << std::uint8_t(color.g);
                     output << std::uint8_t(color.b);
                     output << std::uint8_t(color.a);
                     break;
 
-                case BGRA:
+                case AImageFormat::BGRA:
                     output << std::uint8_t(color.b);
                     output << std::uint8_t(color.g);
                     output << std::uint8_t(color.r);
                     output << std::uint8_t(color.a);
                     break;
 
-                case ARGB:
+                case AImageFormat::ARGB:
                     output << std::uint8_t(color.a);
                     output << std::uint8_t(color.r);
                     output << std::uint8_t(color.g);
@@ -315,5 +261,12 @@ void AImage::mirrorVertically() {
         for (std::uint32_t x = 0; x < getWidth() * getBytesPerPixel(); ++x, ++l1, ++l2) {
             std::swap(*l1, *l2);
         }
+    }
+}
+
+void AImage::fillColor(glm::ivec4 c) {
+    const auto s = mData.size() / getBytesPerPixel();
+    for (std::size_t i = 0; i < s; ++i) {
+        setPixelAt(i, c);
     }
 }

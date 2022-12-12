@@ -39,5 +39,9 @@ namespace ass {
                 return mInfo;
             }
         };
+        template<>
+        struct API_AUI_VIEWS Declaration<ACursor::System>: Declaration<ACursor> {
+            using Declaration<ACursor>::Declaration;
+        };
     }
 }

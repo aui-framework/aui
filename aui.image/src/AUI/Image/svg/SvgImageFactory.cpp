@@ -37,14 +37,14 @@ SvgImageFactory::~SvgImageFactory() {
     nsvgDelete(static_cast<NSVGimage*>(mNsvg));
 }
 
-_<AImage> SvgImageFactory::provideImage(const glm::ivec2& size) {
-    auto image = _new<AImage>(size.x, size.y, AImage::RGBA | AImage::BYTE);
-    image->allocate();
+AImage SvgImageFactory::provideImage(const glm::ivec2& size) {
+    AImage image(size.x, size.y, AImageFormat::RGBA | AImageFormat::BYTE);
+    image.allocate();
     auto rasterizer = nsvgCreateRasterizer();
     assert(rasterizer);
     auto svg = static_cast<NSVGimage*>(mNsvg);
     nsvgRasterize(rasterizer, svg, 0, 0, glm::min(size.x / svg->width, size.y / svg->height),
-                  reinterpret_cast<unsigned char*>(image->getData().data()), size.x, size.y, size.x * 4);
+                  reinterpret_cast<unsigned char*>(image.getData().data()), size.x, size.y, size.x * 4);
     nsvgDeleteRasterizer(rasterizer);
     return image;
 }

@@ -28,6 +28,7 @@
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
 #include "Ole.h"
+#include "Win32Util.h"
 #include <AUI/Platform/Platform.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/AWindowManager.h>
@@ -187,23 +188,8 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
 
         case WM_SETCURSOR: {
             if (LOWORD(lParam) == HTCLIENT) {
-                switch (mCursor) {
-                    case ACursor::DEFAULT: {
-                        static auto cursor = LoadCursor(nullptr, IDC_ARROW);
-                        SetCursor(cursor);
-                        return true;
-                    }
-                    case ACursor::POINTER: {
-                        static auto cursor = LoadCursor(nullptr, IDC_HAND);
-                        SetCursor(cursor);
-                        return true;
-                    }
-                    case ACursor::TEXT: {
-                        static auto cursor = LoadCursor(nullptr, IDC_IBEAM);
-                        SetCursor(cursor);
-                        return true;
-                    }
-                }
+                mCursor.applyNativeCursor(this);
+                return true;
             }
             break;
         }
@@ -434,50 +420,21 @@ void AWindow::show() {
 }
 void AWindow::setIcon(const AImage& image) {
     if (!mHandle) return;
-    assert(image.getFormat() & AImage::BYTE);
+    assert(image.getFormat() & AImageFormat::BYTE);
 
     if (mIcon) {
         DestroyIcon(mIcon);
     }
 
-    HDC hdcScreen = GetDC(nullptr);
 
-    HDC hdcMemColor = CreateCompatibleDC(hdcScreen);
-    HBITMAP hbmpColor = CreateCompatibleBitmap(hdcScreen, image.getWidth(), image.getHeight());
-    auto hbmpOldColor = (HBITMAP)SelectObject(hdcMemColor, hbmpColor);
-
-    HDC hdcMemMask = CreateCompatibleDC(hdcScreen);
-    HBITMAP hbmpMask = CreateCompatibleBitmap(hdcMemMask, image.getWidth(), image.getHeight());
-    auto hbmpOldMask = (HBITMAP)SelectObject(hdcMemMask, hbmpMask);
-
-    for (int y = 0; y < image.getHeight(); ++y) {
-        for (int x = 0; x < image.getWidth(); ++x) {
-            const uint8_t* color = &image.at(x, y);
-            if (image.getFormat() & AImage::RGBA) {
-                uint8_t a = 0xffu - color[3];
-                SetPixel(hdcMemMask, x, y, RGB(a, a, a));
-            }
-            SetPixel(hdcMemColor, x, y, RGB(color[0], color[1], color[2]));
-        }
-    }
-
-    SelectObject(hdcMemColor, hbmpOldColor);
-    DeleteObject(hdcMemColor);
-    SelectObject(hdcMemMask, hbmpOldMask);
-    DeleteObject(hdcMemMask);
+    auto bmpColor = aui::win32::imageRgbToBitmap(image);
+    auto bmpMask = aui::win32::imageRgbToBitmap(image, aui::win32::BitmapMode::A);
 
     ICONINFO ii;
     ii.fIcon = TRUE;
-    ii.hbmMask = hbmpMask;
-    ii.hbmColor = hbmpColor;
+    ii.hbmMask = bmpMask;
+    ii.hbmColor = bmpColor;
     mIcon = CreateIconIndirect(&ii);
-    DeleteObject(hbmpColor);
-
-    // Clean-up.
-    SelectObject(hdcMemColor, hbmpOldColor);
-    DeleteObject(hbmpColor);
-    DeleteDC(hdcMemColor);
-    ReleaseDC(NULL, hdcScreen);
 
     SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon);
 }

@@ -43,4 +43,6 @@ public:
 
 	bool isDpiDependent() const override;
 
+    AImage rasterize(glm::ivec2 imageSize) override;
+
 };

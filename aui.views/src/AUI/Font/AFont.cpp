@@ -120,11 +120,11 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
             }
 		}
 
-		int imageFormat = AImage::BYTE;
+		int imageFormat = AImageFormat::BYTE;
 		if (fr == FontRendering::SUBPIXEL)
-			imageFormat |= AImage::RGB;
+			imageFormat |= AImageFormat::RGB;
 		else
-			imageFormat |= AImage::R;
+			imageFormat |= AImageFormat::R;
 
 		return Character {
             _new<AImage>(data, width, height, imageFormat),

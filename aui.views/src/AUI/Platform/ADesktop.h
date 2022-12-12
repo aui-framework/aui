@@ -22,7 +22,7 @@
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Image/IDrawable.h>
 
-enum class ACursor;
+class ACursor;
 
 class ABaseWindow;
 

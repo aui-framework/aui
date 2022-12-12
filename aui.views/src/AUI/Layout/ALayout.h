@@ -19,6 +19,7 @@
 #include "AUI/Common/ADeque.h"
 #include "AUI/View/AView.h"
 #include "AUI/Common/SharedPtr.h"
+#include "AUI/Util/ALayoutDirection.h"
 
 class AViewContainer;
 

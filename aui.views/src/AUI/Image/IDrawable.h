@@ -21,6 +21,7 @@
 #include <AUI/Url/AUrl.h>
 #include <AUI/Enum/Repeat.h>
 #include <AUI/Enum/ImageRendering.h>
+#include <AUI/Image/AImage.h>
 
 
 /**
@@ -52,6 +53,15 @@ public:
         Repeat repeat = Repeat::NONE;
         ImageRendering imageRendering;
     };
+
+    /**
+     * @brief Converts possibly vector drawable to a raster image.
+     * @param imageSize image size
+     * @return rasterized image
+     * @details
+     * TODO Unimplemented for all drawables except raster image and svg
+     */
+    virtual AImage rasterize(glm::ivec2 imageSize);
 
 	/**
 	 * @brief Called when the image needs to be displayed. It is assumed that the renderer is already set to the
