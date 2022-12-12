@@ -25,7 +25,7 @@
 
 AImageDrawable::AImageDrawable(_<AImage> image): mSize(image->getSize()), mImage(std::move(image)) {
     mTexture = Render::getNewTexture();
-    mTexture->setImage(image);
+    mTexture->setImage(mImage);
 }
 
 AImageDrawable::~AImageDrawable() {
