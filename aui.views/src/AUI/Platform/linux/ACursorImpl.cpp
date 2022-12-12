@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++17
 // Copyright (C) 2020-2022 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -14,22 +14,20 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "ACursor.h"
+#include <AUI/Platform/ACursor.h>
 #include "AUI/Traits/callables.h"
 #include "AUI/Image/IDrawable.h"
 #include "AUI/Platform/AWindow.h"
 
 
+struct ACursor::Custom {
+public:
 
-ACursor::~ACursor() {
+private:
+};
+
+ACursor::ACursor(aui::no_escape<AImage> image, int size) : mValue(std::make_unique<ACursor::Custom>()), mSize(size) {}
+
+void ACursor::applyNativeCursor(AWindow* pWindow) {
 
 }
-
-ACursor::ACursor(_<IDrawable> drawable, int size): mValue(std::move(drawable)), mSize(size) {
-
-}
-
-ACursor::ACursor(AUrl imageUrl, int size): mValue(IDrawable::fromUrl(imageUrl)), mSize(size) {
-
-}
-
