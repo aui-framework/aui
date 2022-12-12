@@ -18,13 +18,14 @@
 #include "AUI/Platform/win32/Win32Util.h"
 #include "AUI/Traits/callables.h"
 #include "AUI/Image/IDrawable.h"
+#include "AUI/Platform/AWindow.h"
 
 struct ACursor::Custom {
 public:
     Custom(const AImage& img) {
         const auto color = aui::win32::imageRgbToBitmap(img, aui::win32::BitmapMode::RGB);
 
-        AImage white(32, 32, AImageFormat::RGBA | AImageFormat::BYTE);
+        AImage white(img.getWidth(), img.getHeight(), AImageFormat::RGBA | AImageFormat::BYTE);
         white.fillColor({0, 0, 0, 255});
 
         const auto mask = aui::win32::imageRgbToBitmap(white, aui::win32::BitmapMode::A);
@@ -51,14 +52,17 @@ private:
     HCURSOR mCursor;
 };
 
-ACursor::ACursor(aui::no_escape<AImage> image) : mValue(std::make_unique<ACursor::Custom>(*image)) {}
+ACursor::ACursor(aui::no_escape<AImage> image, int size) : mValue(std::make_unique<ACursor::Custom>(*image)), mSize(size) {}
 
 ACursor::~ACursor() {
 
 }
 
+ACursor::ACursor(_<IDrawable> drawable, int size): mValue(std::move(drawable)), mSize(size) {
 
-ACursor::ACursor(const AUrl& imageUrl): ACursor(IDrawable::fromUrl(imageUrl)->rasterize({32, 32})) {
+}
+
+ACursor::ACursor(AUrl imageUrl, int size): mValue(IDrawable::fromUrl(imageUrl)), mSize(size) {
 
 }
 
@@ -84,6 +88,15 @@ void ACursor::applyNativeCursor(AWindow* pWindow) {
             }
         },
         [](const _<Custom>& custom) {
+            SetCursor(custom->cursor());
+        },
+        [&](const _<IDrawable>& drawable) {
+            static AMap<_<IDrawable>, AMap<int, _<Custom>>> cache;
+
+            auto custom = cache[drawable].getOrInsert(int(pWindow->getDpiRatio() * 10), [&] {
+                return _new<Custom>(drawable->rasterize(glm::ivec2(mSize * pWindow->getDpiRatio())));
+            });
+
             SetCursor(custom->cursor());
         }
     }, mValue);
