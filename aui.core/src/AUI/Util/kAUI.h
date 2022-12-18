@@ -128,7 +128,7 @@ namespace aui::impl::slot {
  *       };
  *       ...
  *       auto worker = _new<Worker>();
- *       AUI_PERFORM_AS_MEMBER(worker, {
+ *       AUI_PERFORM_AS_MEMBER(*worker, {
  *         buildHouse();
  *         plantTree();
  *         raiseSon();
@@ -144,7 +144,7 @@ namespace aui::impl::slot {
             lambda;                                                            \
         }                                                                      \
     };                                                                         \
-    (*reinterpret_cast<__apply ## __FUNCTION__ ## __LINE__ *>(object.get()))()
+    (reinterpret_cast<__apply ## __FUNCTION__ ## __LINE__ &>(object))()
 
 /**
  * @brief Emits a signal of a foreign object.

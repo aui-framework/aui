@@ -34,10 +34,22 @@ namespace By {
             ~TypeMatcher() override = default;
 
             bool matches(const _<AView>& view) override {
-                return typeid(*view.get()) == typeid(T);
+                return dynamic_cast<T*>(view.get()) != nullptr;
             }
         };
         return { _new<TypeMatcher>() };
+    }
+    template<typename T>
+    UIMatcher exactType() {
+        class ExactTypeMatcher: public IMatcher {
+        public:
+            ~ExactTypeMatcher() override = default;
+
+            bool matches(const _<AView>& view) override {
+                return typeid(*view.get()) == typeid(T);
+            }
+        };
+        return { _new<ExactTypeMatcher>() };
     }
 }
 

@@ -56,6 +56,7 @@ public:
         }
     }
 
+    void addViews(AVector<_<AView>> views);
     void addView(const _<AView>& view);
     void addView(size_t index, const _<AView>& view);
 

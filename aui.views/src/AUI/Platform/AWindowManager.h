@@ -25,7 +25,7 @@ typedef union _XEvent XEvent;
 class API_AUI_VIEWS AWindowManager: public IEventLoop {
     friend class AWindow;
     friend class AClipboard;
-private:
+protected:
     IEventLoop::Handle mHandle;
     ADeque<_<AWindow>> mWindows;
     bool mLoopRunning = false;
@@ -44,6 +44,11 @@ private:
 public:
     AWindowManager();
     ~AWindowManager() override;
+
+
+    void removeAllWindows() {
+        mWindows.clear();
+    }
 
     void notifyProcessMessages() override;
     void loop() override;
