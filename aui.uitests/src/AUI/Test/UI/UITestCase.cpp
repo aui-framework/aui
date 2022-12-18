@@ -114,6 +114,15 @@ void testing::UITest::SetUp() {
 
 void testing::UITest::TearDown() {
     Test::TearDown();
+
+    AWindow::getWindowManager().removeAllWindows();
+
+    // to process all ui messages
+    repeat (10) {
+        uitest::frame();
+    };
+
     AWindow::destroyWindowManager();
     Render::setRenderer(nullptr);
+
 }

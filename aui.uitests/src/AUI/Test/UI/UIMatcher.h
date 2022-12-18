@@ -69,7 +69,10 @@ public:
 
     _<AView> one() const {
         auto set = toSet();
-        EXPECT_EQ(set.size(), 1);
+        if (set.empty()) {
+            SCOPED_TRACE("no views selected");
+            return nullptr;
+        }
         return *set.begin();
     }
 
