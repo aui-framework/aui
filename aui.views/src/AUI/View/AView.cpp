@@ -339,11 +339,11 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
             connect(w->mouseReleased, this, [&]()
                 {
                     auto selfHolder = sharedPtr();
-                    AThread::current()->enqueue([&, selfHolder = std::move(selfHolder)]()
+                    AThread::current()->enqueue([this, button, selfHolder = std::move(selfHolder)]()
                         {
                             // to be sure that isPressed will be false.
                             if (mPressed) {
-                                onMouseReleased(pos, button);
+                                onMouseReleased(getWindow()->getMousePos() - getPositionInWindow(), button);
                             }
                         });
                     disconnect();
@@ -502,6 +502,10 @@ void AView::focus() {
     }
 }
 
+bool AView::capturesFocus() {
+    return true;
+}
+
 Visibility AView::getVisibilityRecursive() const {
     if (mVisibility == Visibility::GONE)
         return Visibility::GONE;
@@ -574,3 +578,12 @@ void AView::setCustomStyle(RuleWithoutSelector rule) {
     mAssHelper = nullptr;
 }
 
+
+bool AView::hasIndirectParent(const _<AView>& v) {
+    for (auto p = getParent(); p != nullptr; p = p->getParent()) {
+        if (p == v.get()) {
+            return true;
+        }
+    }
+    return false;
+}

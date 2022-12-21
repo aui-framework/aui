@@ -18,6 +18,41 @@
 
 #include <AUI/Platform/AWindow.h>
 
+
+struct ViewActionMousePress {
+    AOptional<glm::ivec2> position;
+    ViewActionMousePress() = default;
+
+    ViewActionMousePress(const glm::ivec2& position) : position(position) {}
+
+    void operator()(const _<AView>& view) {
+        auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
+        auto window = view->getWindow();
+        AInput::overrideStateForTesting(AInput::LBUTTON, true);
+        window->onMousePressed(coords, AInput::LBUTTON);
+        uitest::frame();
+    }
+};
+
+using mousePress = ViewActionMousePress;
+
+
+struct ViewActionMouseRelease {
+    AOptional<glm::ivec2> position;
+    ViewActionMouseRelease() = default;
+
+    ViewActionMouseRelease(const glm::ivec2& position) : position(position) {}
+
+    void operator()(const _<AView>& view) {
+        auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
+        auto window = view->getWindow();
+        AInput::overrideStateForTesting(AInput::LBUTTON, false);
+        window->onMouseReleased(coords, AInput::LBUTTON);
+        uitest::frame();
+    }
+};
+
+
 struct ViewActionClick {
     AOptional<glm::ivec2> position;
     ViewActionClick() = default;
@@ -27,11 +62,15 @@ struct ViewActionClick {
     void operator()(const _<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
+        AInput::overrideStateForTesting(AInput::LBUTTON, false);
         window->onMousePressed(coords, AInput::LBUTTON);
         uitest::frame();
+        AInput::overrideStateForTesting(AInput::LBUTTON, true);
         window->onMouseReleased(coords, AInput::LBUTTON);
         uitest::frame();
     }
 };
 
 using click = ViewActionClick;
+
+using mouseRelease = ViewActionMouseRelease;

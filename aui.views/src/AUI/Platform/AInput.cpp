@@ -16,6 +16,8 @@
 
 #include <AUI/Platform/AInput.h>
 
+static bool gKeyStateForTesting[AInput::KEYCOUNT] = {0};
+
 AString AInput::getName(Key k)
 {
     switch (k)
@@ -122,4 +124,15 @@ AString AInput::getName(Key k)
         case AInput::RBUTTON: return "RButton";
         case AInput::CBUTTON: return "CButton";
     }
+}
+
+bool AInput::isKeyDown(Key k) {
+    if (gKeyStateForTesting[k]) {
+        return true;
+    }
+    return AInput::native::isKeyDown(k);
+}
+
+void AInput::overrideStateForTesting(AInput::Key k, bool value) {
+    gKeyStateForTesting[k] = value;
 }

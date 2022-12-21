@@ -246,6 +246,6 @@ int AInput::toNative(Key key) {
 	return vkey;
 }
 
-bool AInput::isKeyDown(Key k) {
+bool AInput::native::isKeyDown(Key k) {
 	return GetAsyncKeyState(toNative(k)) & 32768;
 }

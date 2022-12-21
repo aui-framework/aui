@@ -14,23 +14,27 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+//
+// Created by Alex2772 on 12/5/2021.
+//
+
 #pragma once
 
-#include <AUI/Platform/AWindow.h>
+#include <AUI/Util/AMetric.h>
+#include <AUI/Common/ASide.h>
+#include "Traits.h"
 
-struct ViewActionMouseMove {
-    AOptional<glm::ivec2> position;
-    ViewActionMouseMove() = default;
+struct ViewAssertionParentOf {
+    using IGNORE_VISIBILITY = std::true_type;
 
-    ViewActionMouseMove(const glm::ivec2& position) : position(position) {}
+    _<AView> checkedParent;
 
-    void operator()(const _<AView>& view) {
-        uitest::frame();
-        auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
-        auto window = view->getWindow();
-        window->onMouseMove(coords);
-        uitest::frame();
+    explicit ViewAssertionParentOf(_<AView> checkedParent) : checkedParent(std::move(checkedParent)) {}
+
+    bool operator()(const _<AView>& v) {
+        return checkedParent->hasIndirectParent(v);
     }
 };
 
-using mouseMove = ViewActionMouseMove;
+
+using isParentOf = ViewAssertionParentOf;

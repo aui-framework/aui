@@ -133,4 +133,10 @@ namespace AInput
     API_AUI_VIEWS int toNative(Key w);
     API_AUI_VIEWS AString getName(Key k);
     API_AUI_VIEWS bool isKeyDown(Key k);
+    API_AUI_VIEWS void overrideStateForTesting(Key k, bool value);
+
+
+    namespace native {
+        API_AUI_VIEWS bool isKeyDown(Key k);
+    }
 };
