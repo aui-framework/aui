@@ -67,8 +67,6 @@ public:
 
     void render() override;
 
-    void focus() override;
-
     void onMouseEnter() override;
 
     void onMouseMove(glm::ivec2 pos) override;
@@ -117,8 +115,8 @@ public:
 
     _<AView> getViewAtRecursive(glm::ivec2 pos);
 
-    template<typename T>
-    _<T> getViewAtRecursiveOf(glm::ivec2 pos, bool ignoreGone = true) {
+    template<typename Callback>
+    bool getViewAtRecursive(glm::ivec2 pos, const Callback& callback, bool ignoreGone = true) {
         for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
             auto view = *it;
             auto targetPos = pos - view->getPosition();
@@ -126,17 +124,24 @@ public:
             if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x &&
                 targetPos.y < view->getSize().y) {
                 if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
-                    if (auto applicable = _cast<T>(view))
-                        return applicable;
+                    if (callback(view))
+                        return true;
                     if (auto container = _cast<AViewContainer>(view)) {
-                        if (auto applicable = container->getViewAtRecursiveOf<T>(targetPos, ignoreGone)) {
-                            return applicable;
+                        if (container->getViewAtRecursive(targetPos, callback, ignoreGone)) {
+                            return true;
                         }
                     }
                 }
             }
         }
-        return nullptr;
+        return false;
+    }
+
+    template<typename T>
+    _<T> getViewAtRecursiveOf(glm::ivec2 pos, bool ignoreGone = true) {
+        _<T> result;
+        getViewAtRecursive(pos, [&] (const _<AView>& v) { return bool(result = _cast<T>(v)); }, ignoreGone);
+        return result;
     }
 
 
@@ -184,6 +189,8 @@ public:
     void onKeyUp(AInput::Key key) override;
 
     void onCharEntered(wchar_t c) override;
+
+    bool capturesFocus() override;
 
 protected:
     AVector<_<AView>> mViews;

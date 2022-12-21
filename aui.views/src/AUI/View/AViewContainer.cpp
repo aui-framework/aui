@@ -167,7 +167,7 @@ void AViewContainer::onMousePressed(glm::ivec2 pos, AInput::Key button) {
 
     auto p = getViewAt(pos);
     if (p && p->isEnabled()) {
-        p->focus();
+        if (p->capturesFocus()) p->focus();
         p->onMousePressed(pos - p->getPosition(), button);
     }
 }
@@ -340,8 +340,8 @@ void AViewContainer::notifyParentEnabledStateChanged(bool enabled) {
     }
 }
 
-void AViewContainer::focus() {
-    // we don't want to focus containers.
+bool AViewContainer::capturesFocus() {
+    return false; // we don't want every single container to catch focus.
 }
 
 bool AViewContainer::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {

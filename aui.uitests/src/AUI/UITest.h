@@ -45,3 +45,4 @@
 #include <AUI/Test/UI/Assertion/Text.h>
 #include <AUI/Test/UI/Assertion/Size.h>
 #include <AUI/Test/UI/Assertion/Color.h>
+#include <AUI/Test/UI/Assertion/ParentOf.h>

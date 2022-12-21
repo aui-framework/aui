@@ -633,10 +633,21 @@ public:
     void pack();
 
     /**
-     * @brief Requests focus for this AView. It's overridden for AViewContainer.
+     * @brief Requests focus for this AView.
      */
-     virtual void focus();
+     void focus();
 
+     /**
+      * @return Can this view capture focus.
+      * @details
+      * For containers, capturing focus is redundant.
+      */
+     virtual bool capturesFocus();
+
+    /**
+     * @brief Checks if the specified view is an indirect parent of this view.
+     */
+    bool hasIndirectParent(const _<AView>& v);
 
     /**
      * @return Coords of this AView relative to window
