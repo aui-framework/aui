@@ -57,6 +57,8 @@ void ADragArea::ADraggableHandle::onMousePressed(glm::ivec2 pos, AInput::Key but
     mDragging = true;
 
     auto [dragArea, container] = getDragAreaAndDraggingView();
+
+    if (!dragArea) return;
     connect(mouseMove, dragArea, &ADragArea::handleMouseMove);
     dragArea->startDragging(container);
 
@@ -76,6 +78,7 @@ void ADragArea::ADraggableHandle::onMouseReleased(glm::ivec2 pos, AInput::Key bu
     if (mDragging) {
         mDragging = false;
         auto[dragArea, _] = getDragAreaAndDraggingView();
+        if (!dragArea) return;
         mouseMove.clearAllConnectionsWith(dragArea);
         dragArea->endDragging();
     }

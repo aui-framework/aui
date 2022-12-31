@@ -39,6 +39,38 @@ public:
         WordBreak wordBreak = WordBreak::NORMAL;
     };
 
+public:
+    AText() {}
+
+    static _<AText> fromItems(std::initializer_list<std::variant<AString, _<AView>>> init, const Flags& flags = {}) {
+        auto v = aui::ptr::manage(new AText());
+        v->setItems(init, flags);
+        return v;
+    }
+    static _<AText> fromHtml(const AString& html, const Flags& flags = {}) {
+        auto v = aui::ptr::manage(new AText());
+        v->setHtml(html, flags);
+        return v;
+    }
+    static _<AText> fromString(const AString& string, const Flags& flags = {}) {
+        auto v = aui::ptr::manage(new AText());
+        v->setString(string, flags);
+        return v;
+    }
+
+    void setItems(std::initializer_list<std::variant<AString, _<AView>>> init, const Flags& flags = {});
+    void setHtml(const AString& html, const Flags& flags = {});
+    void setString(const AString& string, const Flags& flags = {});
+
+    void render() override;
+    void setSize(glm::ivec2 size) override;
+    int getContentMinimumWidth(ALayoutDirection layout) override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
+    void prerenderString();
+
+    void invalidateFont() override;
+
+
 private:
     class CharEntry: public AWordWrappingEngine::Entry {
     private:
@@ -48,7 +80,7 @@ private:
 
     public:
         CharEntry(AText* text, char32_t ch)
-            : mText(text), mChar(ch) {}
+                : mText(text), mChar(ch) {}
 
         glm::ivec2 getSize() override;
 
@@ -72,7 +104,7 @@ private:
 
     public:
         WordEntry(AText* text, AString word)
-            : mText(text), mWord(std::move(word)){}
+                : mText(text), mWord(std::move(word)){}
 
         glm::ivec2 getSize() override;
 
@@ -104,7 +136,7 @@ private:
         bool escapesEdges() override;
 
         ~WhitespaceEntry() override = default;
-    } mWhitespaceEntry;
+    } mWhitespaceEntry = this;
 
     AWordWrappingEngine mEngine;
     ADeque<WordEntry> mWordEntries;
@@ -114,23 +146,11 @@ private:
     ParsedFlags mParsedFlags;
 
 
-    AText(): mWhitespaceEntry(this) {}
     void pushWord(AVector<_<AWordWrappingEngine::Entry>>& entries,
                   const AString& word,
                   const ParsedFlags& flags);
 
     static ParsedFlags parseFlags(const Flags& flags);
-
-public:
-    static _<AText> fromItems(std::initializer_list<std::variant<AString, _<AView>>> init, const Flags& flags = {});
-    static _<AText> fromHtml(const AString& html, const Flags& flags = {});
-    static _<AText> fromString(const AString& string, const Flags& flags = {});
-
-    void render() override;
-    void setSize(glm::ivec2 size) override;
-    int getContentMinimumWidth(ALayoutDirection layout) override;
-    int getContentMinimumHeight(ALayoutDirection layout) override;
-    void prerenderString();
 };
 
 

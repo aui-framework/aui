@@ -177,6 +177,10 @@ AImage::Cache& AImage::Cache::inst() {
 
 
 AColor AImage::averageColor() const noexcept {
+    if (mWidth == 0 || mHeight == 0) {
+        return AColor::BLACK;
+    }
+
     glm::ivec4 accumulator;
     aui::zero(accumulator);
 
