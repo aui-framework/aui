@@ -62,10 +62,10 @@ struct ViewActionClick {
     void operator()(const _<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
-        AInput::overrideStateForTesting(AInput::LBUTTON, false);
+        AInput::overrideStateForTesting(AInput::LBUTTON, true);
         window->onMousePressed(coords, AInput::LBUTTON);
         uitest::frame();
-        AInput::overrideStateForTesting(AInput::LBUTTON, true);
+        AInput::overrideStateForTesting(AInput::LBUTTON, false);
         window->onMouseReleased(coords, AInput::LBUTTON);
         uitest::frame();
     }

@@ -63,50 +63,47 @@ AText::ParsedFlags AText::parseFlags(const AText::Flags& flags) {
     return pf;
 }
 
-_<AText> AText::fromString(const AString& string, const Flags& flags) {
+void AText::setString(const AString& string, const Flags& flags) {
     auto parsedFlags = parseFlags(flags);
-    auto text = aui::ptr::manage(new AText);
-    text->mParsedFlags = parsedFlags;
+    mParsedFlags = parsedFlags;
     AVector<_<AWordWrappingEngine::Entry>> entries;
     auto splt = string.split(' ');
     entries.reserve(splt.size());
     for (auto& w : splt) {
-        text->pushWord(entries, w, parsedFlags);
+        pushWord(entries, w, parsedFlags);
     }
 
-    text->mEngine.setEntries(std::move(entries));
-    return text;
+    mEngine.setEntries(std::move(entries));
 }
 
-_<AText> AText::fromItems(std::initializer_list<std::variant<AString, _<AView>>> init, const Flags& flags) {
+void AText::setItems(std::initializer_list<std::variant<AString, _<AView>>> init, const Flags& flags) {
     auto parsedFlags = parseFlags(flags);
     auto text = aui::ptr::manage(new AText);
-    text->mParsedFlags = parsedFlags;
+    mParsedFlags = parsedFlags;
     AVector<_<AWordWrappingEngine::Entry>> entries;
     entries.reserve(init.size());
     for (auto& item : init) {
         std::visit(aui::lambda_overloaded {
             [&](const AString& string) {
                 for (auto& w : string.split(' ')) {
-                    text->pushWord(entries, w, parsedFlags);
+                    pushWord(entries, w, parsedFlags);
                 }
             },
             [&](const _<AView>& view) {
-                text->addView(view);
+                addView(view);
                 entries << _new<AViewEntry>(view);
             },
         }, item);
     }
 
-    text->mEngine.setEntries(std::move(entries));
-    return text;
+    mEngine.setEntries(std::move(entries));
 }
 
-_<AText> AText::fromHtml(const AString& html, const Flags& flags) {
+void AText::setHtml(const AString& html, const Flags& flags) {
     auto parsedFlags = parseFlags(flags);
     AStringStream stringStream(html);
     struct CommonEntityVisitor: IXmlDocumentVisitor {
-        _<AText> text = aui::ptr::manage(new AText());
+        AText& text;
         AVector<_<AWordWrappingEngine::Entry>> entries;
         ParsedFlags& parsedFlags;
 
@@ -117,7 +114,7 @@ _<AText> AText::fromHtml(const AString& html, const Flags& flags) {
         } currentState;
         std::stack<State> stateStack;
 
-        CommonEntityVisitor(ParsedFlags& parsedFlags) : parsedFlags(parsedFlags) {}
+        CommonEntityVisitor(AText& text, ParsedFlags& parsedFlags) : text(text), parsedFlags(parsedFlags) {}
 
         void visitAttribute(const AString& name, AString value) override {};
         _<IXmlEntityVisitor> visitEntity(AString entityName) override {
@@ -143,7 +140,7 @@ _<AText> AText::fromHtml(const AString& html, const Flags& flags) {
 
                 ~ViewEntityVisitor() override {
                     auto view = _new<AButton>("hello {}"_format(name));
-                    parent.text->addView(view);
+                    parent.text.addView(view);
                     parent.entries << _new<AViewEntry>(view);
                 }
             };
@@ -152,18 +149,15 @@ _<AText> AText::fromHtml(const AString& html, const Flags& flags) {
         };
         void visitTextEntity(const AString& entity) override {
             for (auto& w : entity.split(' ')) {
-                text->pushWord(entries, w, parsedFlags);
+                text.pushWord(entries, w, parsedFlags);
             }
         };
 
-    } entityVisitor(parsedFlags);
+    } entityVisitor(*this, parsedFlags);
     AXml::read(aui::ptr::fake(&stringStream), aui::ptr::fake(&entityVisitor));
 
-    auto text = std::move(entityVisitor.text);
-    text->mParsedFlags = parsedFlags;
-    text->mEngine.setEntries(std::move(entityVisitor.entries));
-
-    return text;
+    mParsedFlags = parsedFlags;
+    mEngine.setEntries(std::move(entityVisitor.entries));
 }
 
 int AText::getContentMinimumWidth(ALayoutDirection layout) {
@@ -260,4 +254,8 @@ void AText::CharEntry::setPosition(const glm::ivec2& position) {
 
 Float AText::CharEntry::getFloat() const {
     return Float::NONE;
+}
+
+void AText::invalidateFont() {
+    mPrerenderedString.reset();
 }

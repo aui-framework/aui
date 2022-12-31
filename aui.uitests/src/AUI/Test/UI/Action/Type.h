@@ -29,9 +29,11 @@ struct ViewActionType: ViewActionClick {
 
         auto window = view->getWindow();
 
+        uitest::frame();
         // type
         for (auto c : text) {
             window->onCharEntered(c);
+            uitest::frame();
         }
     }
 };
