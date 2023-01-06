@@ -339,13 +339,15 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
             connect(w->mouseReleased, this, [&]()
                 {
                     auto selfHolder = sharedPtr();
-                    AThread::current()->enqueue([this, button, selfHolder = std::move(selfHolder)]()
-                        {
-                            // to be sure that isPressed will be false.
-                            if (mPressed) {
-                                onMouseReleased(getWindow()->getMousePos() - getPositionInWindow(), button);
-                            }
-                        });
+                    if (!selfHolder) return;
+                    AThread::current()->enqueue([this, button, selfHolder = std::move(selfHolder)]() {
+                        // to be sure that isPressed will be false.
+                        if (mPressed) {
+                            auto w = getWindow();
+                            if (!w) return;
+                            onMouseReleased(w->getMousePos() - getPositionInWindow(), button);
+                        }
+                    });
                     disconnect();
                 });
         }
