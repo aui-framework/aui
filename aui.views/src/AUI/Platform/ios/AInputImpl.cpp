@@ -26,6 +26,6 @@ int AInput::toNative(AInput::Key w) {
     return 0;
 }
 
-bool AInput::isKeyDown(AInput::Key k) {
+bool AInput::native::isKeyDown(AInput::Key k) {
     return false;
 }
