@@ -32,6 +32,7 @@
 #include <AUI/Traits/callables.h>
 #include <AUI/Traits/iterators.h>
 #include <stack>
+#include <AUI/Action/AMenu.h>
 
 #include "AUI/Platform/ADesktop.h"
 #include "AUI/Platform/AFontManager.h"
@@ -367,6 +368,17 @@ void AView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
             emit clickedRight();
             break;
     }
+
+    if (button == AInput::RBUTTON) {
+        auto menuModel = composeContextMenu();
+        if (!menuModel.empty()) {
+            AMenu::show(menuModel);
+        }
+    }
+}
+
+AMenuModel AView::composeContextMenu() {
+    return {};
 }
 
 void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)

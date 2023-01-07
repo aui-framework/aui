@@ -34,7 +34,7 @@ private:
     _weak<AMenuContainer> mMenuContainer;
 
 public:
-    void createMenu(const AVector<MenuItem>& vector) override;
+    void createMenu(const AVector<AMenuItem>& vector) override;
 
     bool isOpen() override;
 

@@ -39,6 +39,7 @@
 #include <AUI/Enum/MouseCollisionPolicy.h>
 #include <AUI/Event/AGestureEvent.h>
 #include <AUI/Util/ALayoutDirection.h>
+#include <AUI/Action/AMenu.h>
 
 
 class Render;
@@ -240,6 +241,12 @@ protected:
     bool transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event);
 
     void applyAssRule(const RuleWithoutSelector& rule);
+
+    /**
+     * @brief Produce context (right click) menu.
+     * @return menu model
+     */
+    virtual AMenuModel composeContextMenu();
 
 public:
     AView();
