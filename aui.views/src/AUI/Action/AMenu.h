@@ -27,15 +27,15 @@
 #include "AShortcut.h"
 
 class IMenuProvider;
-struct MenuItem;
+struct AMenuItem;
 
-using MenuModel = AVector<MenuItem>;
+using AMenuModel = AVector<AMenuItem>;
 
 class AMenu {
 private:
     static _<IMenuProvider>& provider();
 public:
-    static void show(const MenuModel& model);
+    static void show(const AMenuModel& model);
     static void close();
     static bool isOpen();
 
@@ -47,16 +47,16 @@ public:
 };
 
 
-struct MenuItem {
+struct AMenuItem {
     AMenu::Type type;
     AString name;
     AShortcut shortcut;
     std::function<void()> onAction;
-    AVector<MenuItem> subItems;
+    AVector<AMenuItem> subItems;
     bool enabled;
 
 
-    MenuItem(const AString& name, const std::function<void()>& onAction = {}, const AShortcut& shortcut = {}, bool enabled = true):
+    AMenuItem(const AString& name, const std::function<void()>& onAction = {}, const AShortcut& shortcut = {}, bool enabled = true):
         type(AMenu::SINGLE),
         name(name),
         onAction(onAction),
@@ -64,14 +64,14 @@ struct MenuItem {
         enabled(enabled) {
 
     }
-    MenuItem(const AString& name, const AVector<MenuItem>& subItems, bool enabled = true):
+    AMenuItem(const AString& name, const AVector<AMenuItem>& subItems, bool enabled = true):
         type(AMenu::SUBLIST),
         name(name),
         subItems(subItems),
         enabled(enabled) {
 
     }
-    MenuItem(AMenu::Type t): type(t) {
+    AMenuItem(AMenu::Type t): type(t) {
 
     }
 };

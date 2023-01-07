@@ -31,7 +31,7 @@ private:
     _<AMenuContainer> mSubWindow;
     _weak<AOverlappingSurface> mSurface;
 public:
-    AMenuContainer(const AVector<MenuItem>& vector)
+    AMenuContainer(const AVector<AMenuItem>& vector)
     {
         addAssName(".menu");
         setExpanding();
@@ -117,7 +117,7 @@ public:
     }
 };
 
-void AWindowMenuProvider::createMenu(const AVector<MenuItem>& vector) {
+void AWindowMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     closeMenu();
     mWindow = AWindow::current();
     auto menu = _new<AMenuContainer>(vector);

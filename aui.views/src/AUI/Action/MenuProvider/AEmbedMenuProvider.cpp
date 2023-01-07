@@ -30,7 +30,7 @@ class AEmbedMenuProvider::MenuContainer: public AViewContainer {
 private:
     _<MenuContainer> mSubWindow;
 public:
-    MenuContainer(const AVector<MenuItem>& vector)
+    MenuContainer(const AVector<AMenuItem>& vector)
     {
         addAssName(".menu");
         addAssName(".menu-background");
@@ -109,7 +109,7 @@ public:
     }
 };
 
-void AEmbedMenuProvider::createMenu(const AVector<MenuItem>& vector) {
+void AEmbedMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     closeMenu();
     mWindow = _new<MenuContainer>(vector);
     auto mousePos = AWindow::current()->getMousePos();

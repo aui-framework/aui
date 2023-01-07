@@ -99,6 +99,8 @@ protected:
         return (glm::max)(0, int(glm::ceil((getContentHeight() - getFontStyle().size) / 2.0)));
     }
 
+    AMenuModel composeContextMenu() override;
+
 public:
     AAbstractTypeableView();
     virtual ~AAbstractTypeableView();

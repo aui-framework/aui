@@ -357,18 +357,19 @@ void AAbstractTypeableView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
     AView::onMouseReleased(pos, button);
 
-    if (button == AInput::RBUTTON) {
-        AMenu::show({
-                            { "aui.cut"_i18n, [&]{cutToClipboard();}, AInput::LCONTROL + AInput::X, hasSelection() },
-                            { "aui.copy"_i18n, [&]{copyToClipboard();}, AInput::LCONTROL + AInput::C, hasSelection() },
-                            { "aui.paste"_i18n, [&]{pasteFromClipboard();}, AInput::LCONTROL + AInput::V, !AClipboard::isEmpty() },
-                            AMenu::SEPARATOR,
-                            { "aui.select_all"_i18n, [&]{selectAll();}, AInput::LCONTROL + AInput::A, !text().empty() }
-                    });
-    } else {
+    if (button != AInput::RBUTTON) {
         ACursorSelectable::handleMouseReleased(pos, button);
     }
 }
+
+AMenuModel AAbstractTypeableView::composeContextMenu() {
+    return { { "aui.cut"_i18n, [&]{cutToClipboard();}, AInput::LCONTROL + AInput::X, hasSelection() },
+             { "aui.copy"_i18n, [&]{copyToClipboard();}, AInput::LCONTROL + AInput::C, hasSelection() },
+             { "aui.paste"_i18n, [&]{pasteFromClipboard();}, AInput::LCONTROL + AInput::V, !AClipboard::isEmpty() },
+             AMenu::SEPARATOR,
+             { "aui.select_all"_i18n, [&]{selectAll();}, AInput::LCONTROL + AInput::A, !text().empty() } };
+}
+
 void AAbstractTypeableView::setText(const AString& t)
 {
     mHorizontalScroll = 0;
