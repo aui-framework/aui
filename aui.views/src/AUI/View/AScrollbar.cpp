@@ -52,7 +52,7 @@ AScrollbar::AScrollbar(ALayoutDirection direction) :
             mBackwardButton << ".scrollbar_up";
             break;
     }
-    mHandle = _new<AScrollbarHandle>();
+    mHandle = aui::ptr::manage(new AScrollbarHandle(*this));
 
     addView(mBackwardButton);
     addView(mOffsetSpacer = _new<AScrollbarOffsetSpacer>() let { it->setMinimumSize({0, 0}); });
@@ -100,20 +100,13 @@ void AScrollbar::updateScrollHandleSize() {
     }
     scrollbarSpace = glm::max(scrollbarSpace, 0.f);
 
-    size_t o = mFullSize > 0 ? scrollbarSpace * mViewportSize / mFullSize
-                             : 0;
+    int o = mFullSize > 0 ? scrollbarSpace * mViewportSize / mFullSize
+                          : 0;
 
     if (o < scrollbarSpace) {
         setEnabled();
         mHandle->setVisibility(Visibility::VISIBLE);
-        switch (mDirection) {
-            case ALayoutDirection::HORIZONTAL:
-                mHandle->setFixedSize({o, mHandle->getHeight()});
-                break;
-            case ALayoutDirection::VERTICAL:
-                mHandle->setFixedSize({mHandle->getWidth(), o});
-                break;
-        }
+        mHandle->setOverridenSize(o);
     } else {
         mHandle->setVisibility(Visibility::GONE);
         emit scrolled(mCurrentScroll = 0);
@@ -201,7 +194,7 @@ void AScrollbar::onMousePressed(glm::ivec2 pos, AInput::Key button) {
 }
 
 void AScrollbar::handleScrollbar(int s) {
-    setScroll(mCurrentScroll + s * getMaxScroll() / getAvailableSpaceForSpacer());
+    setScroll(mCurrentScroll + s * int(getMaxScroll()) / getAvailableSpaceForSpacer());
 }
 
 float AScrollbar::getAvailableSpaceForSpacer() {
@@ -220,7 +213,7 @@ float AScrollbar::getAvailableSpaceForSpacer() {
 void AScrollbarHandle::onMouseMove(glm::ivec2 pos) {
     AView::onMouseMove(pos);
     if (mDragging) {
-        dynamic_cast<AScrollbar*>(getParent())->handleScrollbar(pos.y - mScrollOffset);
+        mScrollbar.handleScrollbar(pos.y - mScrollOffset);
     }
 }
 
@@ -233,6 +226,20 @@ void AScrollbarHandle::onMousePressed(glm::ivec2 pos, AInput::Key button) {
 void AScrollbarHandle::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
     AView::onMouseReleased(pos, button);
     mDragging = false;
+}
+
+void AScrollbarHandle::setSize(glm::ivec2 size) {
+    switch (mScrollbar.mDirection) {
+        case ALayoutDirection::VERTICAL:
+            size.y = mOverridenSize;
+            break;
+
+        case ALayoutDirection::HORIZONTAL:
+            size.x = mOverridenSize;
+            break;
+    }
+
+    AView::setSize(size);
 }
 
 void AScrollbar::setSize(glm::ivec2 size) {
