@@ -260,7 +260,7 @@ int AInput::toNative(Key key) {
 	}
 	return keysym;
 }
-bool AInput::isKeyDown(Key k) {
+bool AInput::native::isKeyDown(Key k) {
     if (CommonRenderingContext::ourDisplay == nullptr) return false;
 	if (k == Key::LBUTTON || k == Key::RBUTTON) {
 		return isMouseKeyDown(k);
