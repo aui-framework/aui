@@ -33,6 +33,7 @@ public:
         return clip(view->getPositionInWindow(), view->getSize());
     }
     ScreenshotAnalyzer clip(glm::ivec2 position, glm::ivec2 size) const {
+        position = glm::max(position, {0, 0});
         return mImage.sub(position, glm::clamp(size, {0, 0}, mImage.getSize() - position));
     }
 

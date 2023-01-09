@@ -75,10 +75,16 @@ void AScrollbar::setOffset(size_t o) {
 }
 
 void AScrollbar::setScrollDimensions(size_t viewportSize, size_t fullSize) {
+    bool shouldScrollToEnd = mStickToEnd && mFullSize < fullSize && mCurrentScroll == getMaxScroll();
+
     mViewportSize = viewportSize;
     mFullSize = fullSize;
 
     updateScrollHandleSize();
+
+    if (shouldScrollToEnd) {
+        scrollToEnd();
+    }
 }
 
 void AScrollbar::updateScrollHandleSize() {
@@ -92,8 +98,10 @@ void AScrollbar::updateScrollHandleSize() {
             scrollbarSpace = getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight());
             break;
     }
+    scrollbarSpace = glm::max(scrollbarSpace, 0.f);
 
-    size_t o = glm::max(float(15_dp), scrollbarSpace * mViewportSize / mFullSize);
+    size_t o = mFullSize > 0 ? scrollbarSpace * mViewportSize / mFullSize
+                             : 0;
 
     if (o < scrollbarSpace) {
         setEnabled();
@@ -133,7 +141,8 @@ void AScrollbar::updateScrollHandleOffset(int max) {
     float availableSpace = getAvailableSpaceForSpacer();
 
 
-    int handlePos = float(mCurrentScroll) / max * availableSpace;
+    int handlePos = max > 0 ? float(mCurrentScroll) / max * availableSpace
+                            : 0;
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
@@ -195,18 +204,14 @@ void AScrollbar::handleScrollbar(int s) {
     setScroll(mCurrentScroll + s * getMaxScroll() / getAvailableSpaceForSpacer());
 }
 
-int AScrollbar::getMaxScroll() {
-    return mFullSize - mViewportSize + 15_dp;
-}
-
 float AScrollbar::getAvailableSpaceForSpacer() {
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
-            return getWidth() - (mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth() + mHandle->getTotalOccupiedWidth());
+            return glm::max(0.f, getWidth() - (mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth() + mHandle->getTotalOccupiedWidth()));
 
         case ALayoutDirection::VERTICAL:
-            return getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight() + mHandle->getTotalOccupiedHeight());
+            return glm::max(0.f, getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight() + mHandle->getTotalOccupiedHeight()));
 
     }
     return 0;
