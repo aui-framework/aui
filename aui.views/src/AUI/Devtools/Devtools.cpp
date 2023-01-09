@@ -30,6 +30,7 @@ AString Devtools::prettyViewName(AView* view) {
         } else {
             name = "<no layout>";
         }
+        name = "{} ({})"_format(name, AReflect::name(view));
     } else {
         name = AReflect::name(view);
     }
