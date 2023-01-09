@@ -581,6 +581,7 @@ public:
         return mFixedSize;
     }
     void setFixedSize(glm::ivec2 size) {
+        assert(("abnormal fixed size", glm::all(glm::greaterThanEqual(size, glm::ivec2(-100000)))));
         mFixedSize = size;
     }
 

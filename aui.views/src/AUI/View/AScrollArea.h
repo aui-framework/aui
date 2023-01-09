@@ -30,12 +30,6 @@ class API_AUI_VIEWS AScrollArea: public AViewContainer {
 public:
     class Builder;
 
-private:
-    _<AScrollAreaContainer> mContentContainer;
-    _<AScrollbar> mVerticalScrollbar;
-    _<AScrollbar> mHorizontalScrollbar;
-
-    explicit AScrollArea(const Builder& builder);
 public:
     AScrollArea();
     virtual ~AScrollArea();
@@ -44,6 +38,15 @@ public:
     int getContentMinimumHeight(ALayoutDirection layout) override;
     void setSize(glm::ivec2 size) override;
     void setContents(const _<AViewContainer>& container);
+
+    /**
+     * @brief Set stick to end.
+     * @see AScrollbar::setStickToEnd
+     */
+    void setStickToEnd(bool stickToEnd) {
+        AUI_NULLSAFE(mHorizontalScrollbar)->setStickToEnd(stickToEnd);
+        AUI_NULLSAFE(mVerticalScrollbar)->setStickToEnd(stickToEnd);
+    }
 
     void scroll(int deltaByX, int deltaByY) noexcept {
         AUI_NULLSAFE(mHorizontalScrollbar)->scroll(deltaByX);
@@ -90,5 +93,13 @@ public:
             return build();
         }
     };
+
+
+private:
+    _<AScrollAreaContainer> mContentContainer;
+    _<AScrollbar> mVerticalScrollbar;
+    _<AScrollbar> mHorizontalScrollbar;
+
+    explicit AScrollArea(const Builder& builder);
 };
 

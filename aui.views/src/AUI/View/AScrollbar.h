@@ -88,6 +88,39 @@ public:
 
     void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
 
+    /**
+     * @brief Set stick to end.
+     * @param stickToEnd
+     * @details
+     * When scroll area dimensions is updated (an element added to scroll area) if the scrollbar was scrolled to the end
+     * (bottom) the scrollbar automatically scrolls to the ends, keeping the scroll position in place.
+     */
+    void setStickToEnd(bool stickToEnd) {
+        mStickToEnd = stickToEnd;
+        if (stickToEnd) {
+            scrollToEnd();
+        }
+    }
+
+    void scrollToStart() {
+        setScroll(0);
+    }
+
+    void scrollToEnd() {
+        setScroll(getMaxScroll());
+    }
+
+signals:
+
+    emits<int> scrolled;
+
+    float getAvailableSpaceForSpacer();
+
+    void updateScrollHandleOffset(int max);
+
+    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+
+    void setSize(glm::ivec2 size) override;
 
 protected:
     ALayoutDirection mDirection;
@@ -107,20 +140,16 @@ protected:
 
     void handleScrollbar(int s);
 
-    int getMaxScroll();
+    std::size_t getMaxScroll() const noexcept {
+        if (mFullSize <= mViewportSize) {
+            return 0;
+        }
 
+        return mFullSize - mViewportSize;
+    }
 
-signals:
-
-    emits<int> scrolled;
-
-    float getAvailableSpaceForSpacer();
-
-    void updateScrollHandleOffset(int max);
-
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
-
-    void setSize(glm::ivec2 size) override;
+private:
+    bool mStickToEnd = false;
 };
 
 
