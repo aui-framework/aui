@@ -26,4 +26,5 @@ aui_app(TARGET aui.example.views
         APPLE_SIGN_IDENTITY "iPhone Developer"
         APPLE_TEAM_ID "98S256N2KJ"
         ANDROID_PACKAGE "com.github.aui.examples"
+        ICON "assets/img/logo.svg"
         )
