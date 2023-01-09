@@ -23,8 +23,41 @@
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Platform/AWindow.h>
 
+namespace {
+    class DragAreaLayout: public ALayout {
+    public:
+        void addView(size_t index, const _<AView>& view) override {
+            markViewToBeCentered(*view);
+        }
+
+        void removeView(size_t index, const _<AView>& view) override {
+
+        }
+
+        void onResize(int x, int y, int width, int height) override {
+
+        }
+
+        int getMinimumWidth() override {
+            return 0;
+        }
+
+        int getMinimumHeight() override {
+            return 0;
+        }
+
+        static void markViewToBeCentered(AView& v) {
+            v.setPosition({-1, -1});
+        }
+
+        static bool isViewMarkedToBeCentered(AView& v) {
+            return v.getPosition() == glm::ivec2(-1);
+        }
+    };
+}
+
 ADragArea::ADragArea() {
-    setLayout(_new<AStackedLayout>());
+    setLayout(_new<DragAreaLayout>());
     setExpanding({1, 1});
 }
 
@@ -103,8 +136,30 @@ void ADragArea::handleMouseMove() {
 }
 
 void ADragArea::updateLayout() {
-    for (auto& v : getViews()) {
-        setValidPositionFor(v, v->getPosition());
+    const auto x = getPadding().left;
+    const auto y = getPadding().top;
+    const auto width = getWidth() - mPadding.horizontal();
+    const auto height = getHeight() - mPadding.vertical();
+
+    for (const auto& v : getViews()) {
+        v->ensureAssUpdated();
+        auto margins = v->getMargin();
+        auto finalWidth = v->getMinimumWidth() + margins.horizontal();
+        auto finalX = (width - finalWidth) / 2;
+
+        auto finalHeight = v->getMinimumHeight() + margins.vertical();
+        auto finalY = (height - finalHeight) / 2;
+
+        if (DragAreaLayout::isViewMarkedToBeCentered(*v)) {
+            v->setGeometry(finalX + x + margins.left,
+                           finalY + y + margins.top,
+                           finalWidth - margins.horizontal(),
+                           finalHeight - margins.vertical());
+        } else {
+            v->setSize({finalWidth - margins.horizontal(),
+                        finalHeight - margins.vertical()});
+            setValidPositionFor(v, v->getPosition());
+        }
     }
     AViewContainer::updateLayout();
 }
