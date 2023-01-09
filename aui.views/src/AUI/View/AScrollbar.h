@@ -25,6 +25,7 @@
 #include "AViewContainer.h"
 #include "ASpacerExpanding.h"
 
+
 class AScrollbarButton: public AView {
 public:
     AScrollbarButton() {
@@ -32,20 +33,26 @@ public:
     }
 };
 class AScrollbarHandle: public AView {
+friend class API_AUI_VIEWS AScrollbar;
 private:
     int mScrollOffset = 0;
     bool mDragging = false;
 
 public:
-    AScrollbarHandle() {
+    void setSize(glm::ivec2 size) override;
+    void onMouseMove(glm::ivec2 pos) override;
+    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
 
+    void setOverridenSize(int overridenSize) {
+        mOverridenSize = overridenSize;
     }
 
-    void onMouseMove(glm::ivec2 pos) override;
+private:
+    explicit AScrollbarHandle(AScrollbar& scrollbar) : mScrollbar(scrollbar) {}
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
-
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    AScrollbar& mScrollbar;
+    int mOverridenSize;
 };
 
 class AScrollbarOffsetSpacer: public ASpacerExpanding {
