@@ -52,8 +52,8 @@ void CommonRenderingContext::init(const Init& init) {
         winClass.hInstance = GetModuleHandle(nullptr);
         //winClass.hIcon = LoadIcon(mInst, (LPCTSTR)101);
         //winClass.hIconSm = LoadIcon(mInst, (LPCTSTR)101);
-        winClass.hIcon = 0;
-        winClass.hIconSm = 0;
+        winClass.hIcon = LoadIcon(winClass.hInstance, L"MAINICON");
+        winClass.hIconSm = LoadIcon(winClass.hInstance, L"MAINICON");
         winClass.hbrBackground = nullptr;
         winClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
         winClass.lpszMenuName = mWindowClass.c_str();
