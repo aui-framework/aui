@@ -25,6 +25,7 @@
 #include "AViewContainer.h"
 #include "ASpacerExpanding.h"
 
+class API_AUI_VIEWS AScrollbar;
 
 class AScrollbarButton: public AView {
 public:
