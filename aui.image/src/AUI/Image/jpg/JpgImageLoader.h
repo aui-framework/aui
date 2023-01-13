@@ -20,7 +20,6 @@
 
 #pragma once
 
-
 #include <AUI/api.h>
 #include <AUI/Image/StbImageLoader.h>
 
