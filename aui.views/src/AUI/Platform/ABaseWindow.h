@@ -105,8 +105,6 @@ public:
     }
 
     void setFocusedView(const _<AView>& view);
-    void focusNextView();
-
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 
     void onMouseMove(glm::ivec2 pos) override;
@@ -122,9 +120,10 @@ public:
         return mMousePos;
     }
 
-
     void onKeyDown(AInput::Key key) override;
 
+
+    virtual void focusNextView();
     virtual void flagRedraw();
     virtual void flagUpdateLayout();
 
