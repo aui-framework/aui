@@ -393,7 +393,7 @@ void AView::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
 void AView::onKeyDown(AInput::Key key)
 {
     emit keyPressed(key);
-    if (key == AInput::TAB) {
+    if (key == AInput::TAB && mFocusNextViewOnTab) {
         AWindow::current()->focusNextView();
     }
 }
@@ -600,4 +600,8 @@ bool AView::hasIndirectParent(const _<AView>& v) {
         }
     }
     return false;
+}
+
+void AView::setFocusNextViewOnTab(bool value) {
+    mFocusNextViewOnTab = value;
 }
