@@ -519,3 +519,8 @@ void AWindow::allowDragNDrop() {
     auto r = RegisterDragDrop(mHandle, new DropTarget(this));
     assert(r == S_OK);
 }
+
+void AWindow::focusNextView() {
+    setFocusNextViewOnTab(false);
+    ABaseWindow::focusNextView();
+}

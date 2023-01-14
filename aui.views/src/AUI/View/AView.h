@@ -105,11 +105,6 @@ private:
     float mBorderRadius = 0;
 
     /**
-     * @brief defines if the next view must be focused on tab button pressed
-     */
-    bool mFocusNextViewOnTab = true;
-
-    /**
      * @brief Mouse collision policy. See MouseCollisionPolicy.
      */
     MouseCollisionPolicy mMouseCollisionPolicy = MouseCollisionPolicy::DEFAULT;
@@ -227,6 +222,10 @@ protected:
      */
     ASet<AString> mAssNames;
 
+    /**
+     * @brief defines if the next view must be focused on tab button pressed
+     */
+    bool mFocusNextViewOnTab = true;
 
     void requestLayoutUpdate();
 

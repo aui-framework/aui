@@ -181,6 +181,8 @@ public:
 
     void flagRedraw() override;
 
+    void focusNextView() override;
+
     /**
      * Shows the window.
      * <dl>
