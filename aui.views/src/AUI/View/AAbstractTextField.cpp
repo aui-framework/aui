@@ -99,9 +99,7 @@ void AAbstractTextField::setText(const AString& t)
         clearSelection();
         mCursorIndex = 0;
     }
-    else {
-        updateSelectionOnTextSet(t);
-    }
+
 	updateCursorBlinking();
 
     invalidatePrerenderedString();
