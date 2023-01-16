@@ -1,5 +1,5 @@
 ﻿// AUI Framework - Declarative UI toolkit for modern C++17
-// Copyright (C) 2020-2022 Alex2772
+// Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
 // modify it under the terms of the GNU Lesser General Public
