@@ -234,7 +234,11 @@ public:
         return mCapacity;
     }
 
-    AByteBuffer& operator=(AByteBuffer&& other) {
+    AByteBuffer& operator=(AByteBuffer&& other) noexcept {
+        if (&other == this) {
+            return *this;
+        }
+
         mBuffer = other.mBuffer;
         mCapacity = other.mCapacity;
         mSize = other.mSize;
@@ -242,6 +246,18 @@ public:
         other.mBuffer = nullptr;
         other.mCapacity = 0;
         other.mSize = 0;
+
+        return *this;
+    }
+    AByteBuffer& operator=(const AByteBuffer& other) {
+        if (&other == this) {
+            return *this;
+        }
+
+        mBuffer = other.mBuffer;
+        mCapacity = other.mCapacity;
+        mSize = other.mSize;
+
         return *this;
     }
 
