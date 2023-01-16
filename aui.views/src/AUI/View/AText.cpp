@@ -161,10 +161,18 @@ void AText::setHtml(const AString& html, const Flags& flags) {
 }
 
 int AText::getContentMinimumWidth(ALayoutDirection layout) {
-    return 10;
+    if (!mPrerenderedString) {
+        prerenderString();
+    }
+
+    return mPrerenderedString ? mPrerenderedString->getWidth() : 0;
 }
 
 int AText::getContentMinimumHeight(ALayoutDirection layout) {
+    if (!mPrerenderedString) {
+        prerenderString();
+    }
+
     return mPrerenderedString ? mPrerenderedString->getHeight() : 0;
 }
 
