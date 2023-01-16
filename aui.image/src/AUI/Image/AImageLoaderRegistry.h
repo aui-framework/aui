@@ -33,9 +33,12 @@ class API_AUI_IMAGE AImageLoaderRegistry
     friend class AImage;
 
 private:
-	ADeque<_<IImageLoader>> mImageLoaders;
+	ADeque<_<IImageLoader>> mRasterLoaders;
+    ADeque<_<IImageLoader>> mVectorLoaders;
+    ADeque<_<IImageLoader>> mAnimatedLoaders;
 
     _<IImageFactory> loadVector(AByteBufferView buffer);
+    _<IImageFactory> loadAnimated(AByteBufferView buffer);
     _<AImage> loadRaster(AByteBufferView buffer);
     inline _<IImageFactory> loadVector(const AUrl& url) {
         auto s = AByteBuffer::fromStream(url.open());
@@ -46,7 +49,9 @@ private:
 public:
 	AImageLoaderRegistry() = default;
 
-	void registerImageLoader(_<IImageLoader> imageLoader);
+	void registerRasterLoader(_<IImageLoader> imageLoader);
+    void registerVectorLoader(_<IImageLoader> imageLoader);
+    void registerAnimatedLoader(_<IImageLoader> imageLoader);
 
 	static AImageLoaderRegistry& inst();
 };

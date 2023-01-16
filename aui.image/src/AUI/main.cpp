@@ -33,6 +33,7 @@
 #include <stb_image_write.h>
 #include "AUI/Common/Plugin.h"
 #include "AUI/Image/bmp/BmpImageLoader.h"
+#include "AUI/Image/gif/GifImageLoader.h"
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Image/jpg/JpgImageLoader.h>
 #include <AUI/Image/png/PngImageLoader.h>
@@ -43,9 +44,10 @@
 struct AImageInit
 {
     AImageInit() {
-        AImageLoaderRegistry::inst().registerImageLoader(_new<SvgImageLoader>());
-        AImageLoaderRegistry::inst().registerImageLoader(_new<PngImageLoader>());
-        AImageLoaderRegistry::inst().registerImageLoader(_new<JpgImageLoader>());
-        AImageLoaderRegistry::inst().registerImageLoader(_new<BmpImageLoader>());
+        AImageLoaderRegistry::inst().registerVectorLoader(_new<SvgImageLoader>());
+        AImageLoaderRegistry::inst().registerRasterLoader(_new<PngImageLoader>());
+        AImageLoaderRegistry::inst().registerRasterLoader(_new<JpgImageLoader>());
+        AImageLoaderRegistry::inst().registerRasterLoader(_new<BmpImageLoader>());
+        AImageLoaderRegistry::inst().registerAnimatedLoader(_new<GifImageLoader>());
     }
 } _aimageinit;

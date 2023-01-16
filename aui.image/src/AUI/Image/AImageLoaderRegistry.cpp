@@ -18,33 +18,41 @@
 
 #include "AUI/Common/AByteBuffer.h"
 
-void AImageLoaderRegistry::registerImageLoader(_<IImageLoader> imageLoader)
-{
-	mImageLoaders << std::move(imageLoader);
+
+void AImageLoaderRegistry::registerRasterLoader(_<IImageLoader> imageLoader) {
+    mRasterLoaders << std::move(imageLoader);
+}
+
+void AImageLoaderRegistry::registerVectorLoader(_<IImageLoader> imageLoader) {
+    mVectorLoaders << std::move(imageLoader);
+}
+
+void AImageLoaderRegistry::registerAnimatedLoader(_<IImageLoader> imageLoader) {
+    mAnimatedLoaders << std::move(imageLoader);
 }
 
 _<IImageFactory> AImageLoaderRegistry::loadVector(AByteBufferView buffer)
 {
-	for (auto& loader : mImageLoaders)
-	{
-		try {
-			bool matches = loader->matches(buffer);
-			if (matches)
-			{
-				if (auto imageFactory = loader->getImageFactory(buffer))
-				{
-					return imageFactory;
-				}
-			}
-		} catch(...)
-		{
-		}
-	}
-	return nullptr;
+    for (auto& loader : mVectorLoaders)
+    {
+        try {
+            bool matches = loader->matches(buffer);
+            if (matches)
+            {
+                if (auto imageFactory = loader->getImageFactory(buffer))
+                {
+                    return imageFactory;
+                }
+            }
+        } catch(...)
+        {
+        }
+    }
+    return nullptr;
 }
 
 _<AImage> AImageLoaderRegistry::loadRaster(AByteBufferView buffer) {
-    for (auto& loader : mImageLoaders)
+    for (auto& loader : mRasterLoaders)
     {
         try {
             bool matches = loader->matches(buffer);
@@ -73,4 +81,23 @@ _<AImage> AImageLoaderRegistry::loadImage(const AUrl& url) {
 AImageLoaderRegistry& AImageLoaderRegistry::inst() {
     static AImageLoaderRegistry a;
     return a;
+}
+
+_<IImageFactory> AImageLoaderRegistry::loadAnimated(AByteBufferView buffer) {
+    for (auto& loader : mAnimatedLoaders)
+    {
+        try {
+            bool matches = loader->matches(buffer);
+            if (matches)
+            {
+                if (auto imageFactory = loader->getImageFactory(buffer))
+                {
+                    return imageFactory;
+                }
+            }
+        } catch(...)
+        {
+        }
+    }
+    return nullptr;
 }
