@@ -352,7 +352,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 },
             }),
             Horizontal {
-                    _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style { FixedSize { 100_dp } },
+                    _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style { FixedSize { 100_dp } }, // gif from https://tenor.com/view/cat-gif-26024730
                     AText::fromString("Add animated gif images!") with_style { Expanding{} },
             },
             [] {
