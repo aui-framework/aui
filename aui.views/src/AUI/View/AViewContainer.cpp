@@ -78,6 +78,7 @@ void AViewContainer::addView(const _<AView>& view) {
 void AViewContainer::addViewCustomLayout(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
+    view->setSize(view->getMinimumSize());
 }
 
 void AViewContainer::addView(size_t index, const _<AView>& view) {

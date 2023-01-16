@@ -102,6 +102,10 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
         _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) with_style { FixedSize { 32_dp } },
         AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") with_style { Expanding{} },
     });
+    addView(Horizontal {
+            _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style { FixedSize { 100_dp } },
+            AText::fromString("Add animated gif images!") with_style { Expanding{} },
+    });
     _<ATabView> tabView;
     addView(tabView = _new<ATabView>() let {
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {

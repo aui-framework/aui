@@ -16,6 +16,7 @@
 
 #include "IDrawable.h"
 #include "AVectorDrawable.h"
+#include "AAnimatedDrawable.h"
 #include <AUI/Image/AImageLoaderRegistry.h>
 #include <AUI/Util/AImageDrawable.h>
 
@@ -27,14 +28,21 @@ _<IDrawable> IDrawable::fromUrl(const AUrl& url) {
 _<IDrawable> IDrawable::Cache::load(const AUrl& key)
 {
     try {
-        auto buffer = AByteBuffer::fromStream(AUrl(key).open(), 0x100000);
-        auto d = AImageLoaderRegistry::inst()
-                .loadVector(buffer);
-        if (d)
-            return _new<AVectorDrawable>(d);
+        auto buffer = AByteBuffer::fromStream(AUrl(key).open());
 
-        if (auto raster = AImageLoaderRegistry::inst().loadRaster(buffer))
+        if (auto vec = AImageLoaderRegistry::inst().loadVector(buffer)) {
+            return _new<AVectorDrawable>(vec);
+        }
+
+        if (auto animated = AImageLoaderRegistry::inst().loadAnimated(buffer)) {
+            return _new<AAnimatedDrawable>(animated);
+        }
+
+        if (auto raster = AImageLoaderRegistry::inst().loadRaster(buffer)) {
             return _new<AImageDrawable>(raster);
+        }
+
+
     } catch (const AException& e) {
         ALogger::err("Could not load image: " + key.full() + ": " + e.getMessage());
     }

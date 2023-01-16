@@ -18,6 +18,7 @@
 // Created by alex2 on 23.10.2020.
 //
 
+#include <iostream>
 #include "ADrawableView.h"
 #include <AUI/Render/Render.h>
 #include <AUI/ASS/ASS.h>

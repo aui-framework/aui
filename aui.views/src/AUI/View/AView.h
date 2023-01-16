@@ -104,7 +104,6 @@ private:
      */
     float mBorderRadius = 0;
 
-
     /**
      * @brief Mouse collision policy. See MouseCollisionPolicy.
      */
@@ -223,6 +222,10 @@ protected:
      */
     ASet<AString> mAssNames;
 
+    /**
+     * @brief defines if the next view must be focused on tab button pressed
+     */
+    bool mFocusNextViewOnTab = true;
 
     void requestLayoutUpdate();
 
@@ -744,17 +747,20 @@ public:
     virtual void onKeyUp(AInput::Key key);
     virtual void onFocusAcquired();
     virtual void onFocusLost();
-
     virtual void onCharEntered(wchar_t c);
-
     /**
      * @return true if this AView accepts tab focus
      */
     virtual bool handlesNonMouseNavigation();
 
     virtual void setEnabled(bool enabled = true);
+
     void setDisabled(bool disabled = true) {
         setEnabled(!disabled);
+    }
+
+    void setFocusNextViewOnTab(bool value) {
+        mFocusNextViewOnTab = value;
     }
 
     void updateEnableState();

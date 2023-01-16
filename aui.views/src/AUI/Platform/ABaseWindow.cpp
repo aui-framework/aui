@@ -80,6 +80,9 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
 }
 
 void ABaseWindow::focusNextView() {
+    if (!mFocusNextViewOnTab)
+        return;
+
     AView* beginPoint = getFocusedView().get();
 
     bool triedToSearchFromBeginning = false;
