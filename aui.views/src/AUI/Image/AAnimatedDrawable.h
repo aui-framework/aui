@@ -10,6 +10,7 @@
 class AAnimatedDrawable : public IDrawable {
 private:
     _<IImageFactory> mFactory;
+    _<ITexture> mTexture;
 public:
     explicit AAnimatedDrawable(_<IImageFactory> factory): mFactory (std::move(factory)) {}
     ~AAnimatedDrawable() = default;

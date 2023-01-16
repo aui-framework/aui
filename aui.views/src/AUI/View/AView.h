@@ -759,7 +759,9 @@ public:
         setEnabled(!disabled);
     }
 
-    void setFocusNextViewOnTab(bool value);
+    void setFocusNextViewOnTab(bool value) {
+        mFocusNextViewOnTab = value;
+    }
 
     void updateEnableState();
 

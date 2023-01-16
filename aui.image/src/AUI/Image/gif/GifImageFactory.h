@@ -19,7 +19,8 @@ private:
     int mCurrentFrameIndex;
 
 public:
-    GifImageFactory(AByteBufferView buf);
+    explicit GifImageFactory(AByteBufferView buf);
     ~GifImageFactory();
     AImage provideImage(const glm::ivec2& size) override;
+    bool isNewImageAvailable() override;
 };

@@ -601,7 +601,3 @@ bool AView::hasIndirectParent(const _<AView>& v) {
     }
     return false;
 }
-
-void AView::setFocusNextViewOnTab(bool value) {
-    mFocusNextViewOnTab = value;
-}

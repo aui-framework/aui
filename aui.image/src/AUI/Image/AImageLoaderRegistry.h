@@ -39,7 +39,6 @@ private:
 
     _<IImageFactory> loadVector(AByteBufferView buffer);
     _<IImageFactory> loadAnimated(AByteBufferView buffer);
-    _<IImageFactory> findImageFactory(AByteBufferView buffer);
     _<AImage> loadRaster(AByteBufferView buffer);
     inline _<IImageFactory> loadVector(const AUrl& url) {
         auto s = AByteBuffer::fromStream(url.open());

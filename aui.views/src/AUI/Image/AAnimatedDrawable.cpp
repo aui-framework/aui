@@ -5,11 +5,16 @@
 #include "AAnimatedDrawable.h"
 
 void AAnimatedDrawable::draw(const IDrawable::Params &params) {
-    auto texture = Render::getNewTexture();
-    auto img = _new<AImage> (mFactory->provideImage(params.size));
-    texture->setImage(img);
+    if (!mTexture)
+        mTexture = Render::getNewTexture();
+
+    if (mFactory->isNewImageAvailable()) {
+        auto img = _new<AImage>(mFactory->provideImage(params.size));
+        mTexture->setImage(img);
+    }
+
     Render::rect(ATexturedBrush{
-            texture,
+            mTexture,
             params.cropUvTopLeft,
             params.cropUvBottomRight,
             params.imageRendering,

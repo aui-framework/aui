@@ -419,28 +419,28 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
         ALogger::info("Drop") << "[" << k << "] = " << AString::fromUtf8(v);
     }
 
-//    auto surface = createOverlappingSurface({0, 0}, {100, 100}, false);
-//    _<AViewContainer> popup = Vertical {
-//        Label { "Drop event" } with_style { FontSize { 18_pt }, TextAlign::CENTER, },
-//        [&]() -> _<AView> {
-//            if (auto u = event.data.urls()) {
-//                auto url = u->first();
-//                if (auto icon = ADesktop::iconOfFile(url.path())) {
-//                    return Centered { _new<ADrawableView>(icon) with_style { FixedSize { 64_dp } } };
-//                }
-//            }
-//            return nullptr;
-//        }(),
-//        AText::fromString("Caught drop event. See the logger output for contents.") with_style { TextAlign::CENTER, MinSize { 100_dp, 40_dp } },
-//        Centered { Button { "OK" }.clicked(this, [surface] {
-//            surface->close();
-//        }) }
-//    };
-//    ALayoutInflater::inflate(surface, popup);
-//    popup->pack();
-//
-//    surface->setOverlappingSurfaceSize(popup->getSize());
-//    surface->setOverlappingSurfacePosition((getSize() - popup->getSize()) / 2);
+    auto surface = createOverlappingSurface({0, 0}, {100, 100}, false);
+    _<AViewContainer> popup = Vertical {
+        Label { "Drop event" } with_style { FontSize { 18_pt }, TextAlign::CENTER, },
+        [&]() -> _<AView> {
+            if (auto u = event.data.urls()) {
+                auto url = u->first();
+                if (auto icon = ADesktop::iconOfFile(url.path())) {
+                    return Centered { _new<ADrawableView>(icon) with_style { FixedSize { 64_dp } } };
+                }
+            }
+            return nullptr;
+        }(),
+        AText::fromString("Caught drop event. See the logger output for contents.") with_style { TextAlign::CENTER, MinSize { 100_dp, 40_dp } },
+        Centered { Button { "OK" }.clicked(this, [surface] {
+            surface->close();
+        }) }
+    };
+    ALayoutInflater::inflate(surface, popup);
+    popup->pack();
+
+    surface->setOverlappingSurfaceSize(popup->getSize());
+    surface->setOverlappingSurfacePosition((getSize() - popup->getSize()) / 2);
 }
 
 bool ExampleWindow::onDragEnter(const ADragNDrop::EnterEvent& event) {
