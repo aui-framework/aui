@@ -161,6 +161,9 @@ void AText::setHtml(const AString& html, const Flags& flags) {
 }
 
 int AText::getContentMinimumWidth(ALayoutDirection layout) {
+    if (mTextOverflow != ATextOverflow::NONE)
+        return 0;
+
     if (!mPrerenderedString) {
         prerenderString();
     }
@@ -169,6 +172,9 @@ int AText::getContentMinimumWidth(ALayoutDirection layout) {
 }
 
 int AText::getContentMinimumHeight(ALayoutDirection layout) {
+    if (mTextOverflow != ATextOverflow::NONE)
+        return 0;
+
     if (!mPrerenderedString) {
         prerenderString();
     }

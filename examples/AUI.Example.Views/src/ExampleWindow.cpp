@@ -103,8 +103,19 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
         AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") with_style { Expanding{} },
     });
     addView(Horizontal {
-            _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style { FixedSize { 100_dp } },
+            _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style { FixedSize { 100_dp, 300_dp } },
             AText::fromString("Add animated gif images!") with_style { Expanding{} },
+    });
+
+    addView(Vertical {
+            Label { "Labelwithautosizesizeparaparaparapamparaparaparapam" } with_style { BackgroundSolid { 0xff0000_rgb }, TextAlign::CENTER },
+            Label { "Labelwithautosizesizeparaparaparpamparaparaparapam" } with_style { FixedSize {150_dp, 20_dp}, ATextOverflow::CLIP, BackgroundSolid { 0xff0000_rgb }, TextAlign::RIGHT },
+            Label { "Labelwithautosizesizeparaparaparaamparaparaparapam" } with_style { FixedSize {150_dp, 20_dp}, ATextOverflow::ELLIPSIS,  BackgroundSolid { 0xff0000_rgb }, TextAlign::LEFT },
+            Label { "Labelwithautosizesizeparaparaparapamparaparaparapam" } with_style { FixedSize {150_dp, 20_dp}, ATextOverflow::NONE,  BackgroundSolid { 0xff0000_rgb }, TextAlign::CENTER },
+            Label { "Labelwithautosizesizeparaparaparapamparaparaparapam" } with_style { MaxSize {150_dp, 20_dp}, ATextOverflow::CLIP,  BackgroundSolid { 0xff0000_rgb }, TextAlign::LEFT  },
+            Label { "Labelwithautosizesizeparaparaparapamparaparaparapam" } with_style { MaxSize {150_dp, 20_dp}, ATextOverflow::ELLIPSIS,  BackgroundSolid { 0xff0000_rgb }, TextAlign::RIGHT  },
+            Label { "Labelwithautosizesizeparaparaparapamparaparaparapam" } with_style { MaxSize {150_dp, 20_dp}, ATextOverflow::NONE,  BackgroundSolid { 0xff0000_rgb }, TextAlign::CENTER  },
+            AText::fromItems({"Labedksajlllllllllllllllllllllllllllllllllllllllllllllllllwi\nthauaparaparapam", "ewqdsa\ndsadgfdjklllllllllllllllllllllllllllllllllllllllsadsqfwqfqegq", "dqwdkwjqkdfdsjkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkjqwkdjkwq"}, { WordBreak::NORMAL }) with_style { BackgroundSolid { 0xff0000_rgb }, FixedSize { 500_dp, 200_dp }, TextAlign::CENTER }
     });
     _<ATabView> tabView;
     addView(tabView = _new<ATabView>() let {

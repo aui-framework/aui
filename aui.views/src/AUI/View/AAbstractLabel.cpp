@@ -42,6 +42,9 @@ void AAbstractLabel::render()
 
 int AAbstractLabel::getContentMinimumWidth(ALayoutDirection layout)
 {
+    if (mTextOverflow != ATextOverflow::NONE)
+        return 0;
+
 	if (!mPrerendered) {
 	    doPrerender();
 	}
@@ -53,8 +56,7 @@ int AAbstractLabel::getContentMinimumWidth(ALayoutDirection layout)
 }
 
 int AAbstractLabel::getContentMinimumHeight(ALayoutDirection layout)
-{
-	if (mText.empty())
+{	if (mText.empty())
 		return 0;
 
     return getFontStyleLabel().size;
@@ -101,10 +103,73 @@ void AAbstractLabel::userProcessStyleSheet(const std::function<void(css, const s
     });
 }*/
 
+template < class Iterator >
+int AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
+                                             const Iterator& end,
+                                             int overflowingWidth) {
+    size_t gotWidth = 0;
+    for (Iterator it = begin; it != end; ++it) {
+        gotWidth += getFontStyleLabel().getWidth(it, it + 1);
+        if (gotWidth <= overflowingWidth)
+            continue;
+
+        return it - begin;
+    }
+
+    return end - begin;
+}
+
+template < class Iterator >
+void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
+    int firstOverflowedIndex = findFirstOverflowedIndex(begin, end, overflowingWidth);
+    if (mTextOverflow == ATextOverflow::ELLIPSIS) {
+        if (firstOverflowedIndex >= 3) {
+            std::fill(begin + firstOverflowedIndex - 3, begin + firstOverflowedIndex, '.');
+        } else {
+            std::fill(begin, end, ' ');
+        }
+    }
+
+    std::fill(begin + firstOverflowedIndex, end, ' ');
+}
+
+void AAbstractLabel::processTextOverflow(AString& text) {
+    if (mTextOverflow == ATextOverflow::NONE)
+        return;
+
+    int overflowingWidth;
+    if (getFixedSize().x == 0) {
+        overflowingWidth = getMaxSize().x;
+    } else {
+        overflowingWidth = std::min(getMaxSize().x, getFixedSize().x);
+    }
+
+    switch (getFontStyleLabel().align) {
+        case TextAlign::LEFT:
+            processTextOverflow(text.begin(), text.end(), overflowingWidth);
+            break;
+        case TextAlign::RIGHT:
+            processTextOverflow(text.rbegin(), text.rend(), overflowingWidth);
+            break;
+        case TextAlign::CENTER:
+            if (getFontStyleLabel().getWidth(text) > overflowingWidth && overflowingWidth < getFontStyleLabel().getWidth("...c...")) {
+                std::fill(text.begin(), text.end(), ' ');
+                break;
+            }
+
+            int mid = text.size() / 2;
+            processTextOverflow(text.begin() + mid, text.end(), overflowingWidth / 2);
+            processTextOverflow(text.rbegin() + mid, text.rend(), overflowingWidth / 2);
+            break;
+    }
+}
+
 void AAbstractLabel::doPrerender() {
     auto fs = getFontStyleLabel();
     if (!mText.empty()) {
-        mPrerendered = Render::prerenderString({0, 0}, getTransformedText(), fs);
+        AString transformedText = getTransformedText();
+        processTextOverflow(transformedText);
+        mPrerendered = Render::prerenderString({0, 0}, transformedText, fs);
 
     }
 }

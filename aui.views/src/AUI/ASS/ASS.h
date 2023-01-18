@@ -114,6 +114,7 @@
 #include "Declaration/TransformScale.h"
 #include "Declaration/VerticalAlign.h"
 #include "Declaration/Visibility.h"
+#include "Declaration/TextOverflow.h"
 
 // Selectors
 #include "AUI/ASS/Selector/AAssSelector.h"

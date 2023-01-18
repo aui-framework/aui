@@ -40,14 +40,20 @@ struct API_AUI_VIEWS AFontStyle {
 
 	size_t getWidth(const AString& text) const;
 
+    template < class Iterator >
+    size_t getWidth(Iterator begin, Iterator end) const
+    {
+        return font->length(*this, std::move(begin), std::move(end));
+    }
+
 	AFont::Character& getCharacter(char32_t c) {
 		return font->getCharacter(getFontEntry(), c);
 	}
-
     [[nodiscard]]
     size_t getSpaceWidth() const {
         return font->getSpaceWidth(size);
     }
+
 	size_t getLineHeight() const;
 
     AFont::FontEntry getFontEntry() const {

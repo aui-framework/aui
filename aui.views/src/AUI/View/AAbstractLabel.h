@@ -43,6 +43,13 @@ private:
 
     glm::ivec2 getIconSize() const;
     AString getTransformedText();
+
+    template < class Iterator >
+    int findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int overflowingWidth);
+
+    template < class Iterator >
+    void processTextOverflow(Iterator begin, Iterator end, int overflowingWidth);
+
 protected:
     Render::PrerenderedString mPrerendered;
 
@@ -128,6 +135,7 @@ public:
     }
 
     void setSize(glm::ivec2 size) override;
+    void processTextOverflow(AString &text);
 };
 
 

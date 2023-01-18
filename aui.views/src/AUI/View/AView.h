@@ -80,11 +80,6 @@ private:
     _<AAnimator> mAnimator;
 
     /**
-     * @brief Determines whether display graphics that go out of the bounds of this AView or not.
-     */
-    AOverflow mOverflow = AOverflow::VISIBLE;
-
-    /**
      * @brief Controls how does the overflow (stencil) mask is produced.
      */
     AOverflowMask mOverflowMask = AOverflowMask::ROUNDED_RECT;
@@ -118,6 +113,11 @@ private:
      * @brief opacity, specified in ASS.
      */
     float mOpacity = 1;
+
+    /**
+     * @brief Determines whether display graphics that go out of the bounds of this AView or not.
+     */
+    AOverflow mOverflow = AOverflow::VISIBLE;
 
     /**
      * @brief Extra stylesheet, specified by declarative::Style.
@@ -160,6 +160,10 @@ protected:
      */
     AViewContainer* mParent = nullptr;
 
+    /**
+     * @brief Determines how to display text that go out of the bounds.
+     */
+    ATextOverflow mTextOverflow = ATextOverflow::NONE;
 
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
@@ -346,6 +350,10 @@ public:
     void setOverflow(AOverflow overflow)
     {
         mOverflow = overflow;
+    }
+
+    void setTextOverflow(ATextOverflow textOverflow) {
+        mTextOverflow = textOverflow;
     }
 
     /**
