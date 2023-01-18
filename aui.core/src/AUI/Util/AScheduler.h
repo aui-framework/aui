@@ -165,7 +165,9 @@ private:
             return asTask.executionTime < rhs.executionTime;
         });
 
-        return &*mTasks.insert(whereToInsert, std::move(asTask));
+        auto p = &*mTasks.insert(whereToInsert, std::move(asTask));
+        mCV.notify_all();
+        return p;
     }
 
 };

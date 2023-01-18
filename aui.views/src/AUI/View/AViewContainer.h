@@ -137,6 +137,23 @@ public:
         return false;
     }
 
+    template<typename Callback>
+    bool getViewRecursive(const Callback& callback, bool ignoreGone = true) {
+        for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
+            auto view = *it;
+            if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
+                if (callback(view))
+                    return true;
+                if (auto container = _cast<AViewContainer>(view)) {
+                    if (container->getViewRecursive(callback, ignoreGone)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
     template<typename T>
     _<T> getViewAtRecursiveOf(glm::ivec2 pos, bool ignoreGone = true) {
         _<T> result;
