@@ -182,6 +182,10 @@ void AView::invalidateAllStyles()
 
     for (auto target = this; target != nullptr; target = target->getParent()) {
         if (target->mExtraStylesheet) {
+            if (mAssNames.contains("CellStyle")) {
+                printf("\n");
+            }
+
             viewTree.push(target);
         }
     }
@@ -206,7 +210,6 @@ void AView::invalidateStateStyles() {
     mAssHelper->state.backgroundUrl.scale.reset();
     mAssHelper->state.backgroundUrl.sizing.reset();
     mAssHelper->state.backgroundUrl.url.reset();
-
 
     for (auto& r : mAssHelper->mPossiblyApplicableRules) {
         if (r->getSelector().isStateApplicable(this)) {

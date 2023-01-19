@@ -325,7 +325,7 @@ public:
      */
     void setExtraStylesheet(_<AStylesheet> extraStylesheet) {
         mExtraStylesheet = std::move(extraStylesheet);
-        if (mAssHelper) invalidateAllStyles();
+        invalidateAssHelper();
     }
 
     /**
