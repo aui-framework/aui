@@ -44,6 +44,8 @@ private:
     glm::ivec2 getIconSize() const;
     AString getTransformedText();
 
+    void processTextOverflow(AString &text);
+
     template < class Iterator >
     int findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int overflowingWidth);
 
@@ -64,6 +66,7 @@ protected:
 
     // for correct selection positioning (used in ASelectableLabel)
     int mTextLeftOffset = 0;
+    bool mIsTextTooLarge = false;
 
 public:
     AAbstractLabel();
@@ -135,7 +138,6 @@ public:
     }
 
     void setSize(glm::ivec2 size) override;
-    void processTextOverflow(AString &text);
 };
 
 
