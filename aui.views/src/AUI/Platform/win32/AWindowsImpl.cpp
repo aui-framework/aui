@@ -188,7 +188,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
 
         case WM_SETCURSOR: {
             if (LOWORD(lParam) == HTCLIENT) {
-                mCursor.applyNativeCursor(this);
+                AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
                 return true;
             }
             break;

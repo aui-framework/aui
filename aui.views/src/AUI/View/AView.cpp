@@ -158,7 +158,7 @@ void AView::render()
 void AView::invalidateAllStyles()
 {
     assert(("invalidateAllStyles requires mAssHelper to be initialized", mAssHelper != nullptr));
-    mCursor = ACursor::DEFAULT;
+    mCursor.reset();
     mOverflow = AOverflow::VISIBLE;
     mMargin = {};
     mMinSize = {};
