@@ -76,9 +76,8 @@ void AText::setString(const AString& string, const Flags& flags) {
     mEngine.setEntries(std::move(entries));
 }
 
-void AText::setItems(std::initializer_list<std::variant<AString, _<AView>>> init, const Flags& flags) {
+void AText::setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags) {
     auto parsedFlags = parseFlags(flags);
-    auto text = aui::ptr::manage(new AText);
     mParsedFlags = parsedFlags;
     AVector<_<AWordWrappingEngine::Entry>> entries;
     entries.reserve(init.size());
