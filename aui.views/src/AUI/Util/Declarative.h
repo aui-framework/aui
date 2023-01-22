@@ -58,6 +58,10 @@ namespace aui::ui_building {
             return mFactory() ^ std::forward<T>(t);
         }
         template<typename T>
+        auto operator&&(T&& t) const {
+            return mFactory() && std::forward<T>(t);
+        }
+        template<typename T>
         auto operator+(T&& t) const {
             return mFactory() + std::forward<T>(t);
         }
