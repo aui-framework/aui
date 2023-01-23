@@ -21,6 +21,7 @@
 #include "Devtools.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/ASS/ASS.h>
+#include <AUI/View/AButton.h>
 
 
 class ViewHierarchyTreeModel: public ITreeModel<AString> {
@@ -55,11 +56,16 @@ protected:
 
 DevtoolsPanel::DevtoolsPanel(ABaseWindow* targetWindow):
         mTargetWindow(targetWindow) {
-    setContents(Stacked {
-        ASplitter::Horizontal().withItems({
-            mViewHierarchyTree = _new<ATreeView>() with_style { ass::MinSize{ 300_dp } },
-            mViewPropertiesView = _new<ViewPropertiesView>(nullptr)
-        }).build() with_style { ass::Expanding{} },
+    using namespace declarative;
+
+    setContents(Vertical {
+            Horizontal {
+                    Button { "Force layout update" }.clicked(me::forceLayoutUpdate)
+            },
+            ASplitter::Horizontal().withItems({
+                                                      mViewHierarchyTree = _new<ATreeView>() with_style { ass::MinSize{ 300_dp } },
+                                                      mViewPropertiesView = _new<ViewPropertiesView>(nullptr)
+                                              }).build() with_style { ass::Expanding{} },
     });
     mViewHierarchyTree->setModel(_new<ViewHierarchyTreeModel>(aui::ptr::fake(targetWindow)));
     connect(mViewHierarchyTree->itemMouseClicked, [this](const ATreeIndex& index) {
@@ -75,6 +81,6 @@ DevtoolsPanel::DevtoolsPanel(ABaseWindow* targetWindow):
     });
 }
 
-
-
-//#endif
+void DevtoolsPanel::forceLayoutUpdate() {
+    mTargetWindow->updateLayout();
+}

@@ -178,7 +178,7 @@ protected:
     /**
      * @brief Determines shape which should pointer take when it's above this AView.
      */
-    ACursor mCursor = ACursor::DEFAULT;
+    AOptional<ACursor> mCursor = ACursor::DEFAULT;
 
     /**
      * @brief Top left corner's position relative to top left corner's position of the parent AView.
@@ -329,7 +329,7 @@ public:
      */
     void setExtraStylesheet(_<AStylesheet> extraStylesheet) {
         mExtraStylesheet = std::move(extraStylesheet);
-        if (mAssHelper) invalidateAllStyles();
+        invalidateAssHelper();
     }
 
     /**
@@ -473,13 +473,13 @@ public:
     /**
      * @brief Determines shape which should pointer take when it's above this AView.
      */
-    ACursor getCursor() const
+    const AOptional<ACursor>& getCursor() const
     {
         return mCursor;
     }
-    void setCursor(ACursor cursor)
+    void setCursor(AOptional<ACursor> cursor)
     {
-        mCursor = cursor;
+        mCursor = std::move(cursor);
     }
 
     /**

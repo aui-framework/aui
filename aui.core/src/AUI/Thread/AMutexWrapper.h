@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <AUI/Traits/values.h>
+
 /**
  * @brief Wraps the object with mutex, providing thread-safety layer and a runtime check.
  * @ingroup core

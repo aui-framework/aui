@@ -14,7 +14,6 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-//#ifdef _DEBUG
 #pragma once
 
 #include "AUI/View/ATreeView.h"
@@ -22,15 +21,14 @@
 #include "ViewPropertiesView.h"
 
 class DevtoolsPanel: public AViewContainer {
+public:
+    DevtoolsPanel(ABaseWindow* targetWindow);
+
 private:
     ABaseWindow* mTargetWindow;
 
     _<ATreeView> mViewHierarchyTree;
     _<ViewPropertiesView> mViewPropertiesView;
 
-public:
-    DevtoolsPanel(ABaseWindow* targetWindow);
-
+    void forceLayoutUpdate();
 };
-
-//#endif

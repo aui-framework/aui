@@ -223,10 +223,16 @@ void ABaseWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
 void ABaseWindow::onMouseMove(glm::ivec2 pos) {
     mMousePos = pos;
     AViewContainer::onMouseMove(pos);
-    auto v = getViewAtRecursive(pos);
-    if (v) {
-        mCursor = v->getCursor();
-    }
+    _<AView> v;
+    mCursor = ACursor::DEFAULT;
+
+    getViewAtRecursive(pos, [&](const _<AView>& view) {
+        if (const auto& c = view->getCursor()) {
+            mCursor = c;
+        }
+        v = view;
+        return false;
+    });
     if (!AWindow::shouldDisplayHoverAnimations()) {
         if (auto focused = mFocusedView.lock()) {
             if (focused != v) {
