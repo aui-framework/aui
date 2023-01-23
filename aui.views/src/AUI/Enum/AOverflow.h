@@ -32,6 +32,20 @@ enum class AOverflow {
     HIDDEN
 };
 
+/**
+ * @brief Controls behavior of the overflowed text.
+ * @ingroup ass
+ * @ingroup views
+ */
+enum class ATextOverflow {
+    NONE,
+    ELLIPSIS,
+    CLIP
+};
+
+AUI_ENUM_VALUES(ATextOverflow,
+                 ATextOverflow::ELLIPSIS,
+                 ATextOverflow::CLIP)
 
 /**
  * @brief Controls the behaviour of the default AView::drawStencilMask() implementation.
