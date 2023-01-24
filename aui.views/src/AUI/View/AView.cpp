@@ -497,6 +497,8 @@ void AView::setSize(glm::ivec2 size)
 void AView::setGeometry(int x, int y, int width, int height) {
     setPosition({ x, y });
     setSize({width, height});
+
+    emit geometryChanged({x, y}, {width, height});
 }
 
 bool AView::consumesClick(const glm::ivec2& pos) {
