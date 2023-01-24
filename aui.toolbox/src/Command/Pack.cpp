@@ -130,14 +130,25 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
                                                                              "#include \"AUI/Common/AByteBuffer.h\"\n"
                                                                              "#include \"AUI/Util/ABuiltinFiles.h\"\n"
                                                                              "const static unsigned char AUI_PACKED_asset" << cppObjectName
-             << "[] = {";
+             << "[] = ";
+
+#if AUI_PLATFORM_WIN
+        out << "{";
         for (uint8_t c : packed) {
             char buf[32];
             sprintf(buf, "0x%02x,", c);
             out << std::string(buf);
         }
         out << "};\n";
-
+#else
+        out << "\"";
+        for (uint8_t c : packed) {
+            char buf[32];
+            sprintf(buf, "\\x%02x", c);
+            out << std::string(buf);
+        }
+        out << "\";\n";
+#endif
 
         out << "struct Assets" << cppObjectName << " {\n"
              << "    Assets" << cppObjectName << "(){\n"

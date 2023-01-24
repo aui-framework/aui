@@ -158,25 +158,7 @@ AFont::Character& AFont::getCharacter(const FontEntry& charset, long glyph) {
 
 float AFont::length(const FontEntry& charset, const AString& text)
 {
-    int size = charset.first.size;
-	int advance = 0;
-
-	for (AString::const_iterator i = text.begin(); i != text.end(); i++) {
-		if (*i == ' ')
-			advance += getSpaceWidth(size);
-		else if (*i == '\n')
-		    advance = 0;
-		else {
-			Character& ch = getCharacter(charset, *i);
-			if (!ch.empty()) {
-                advance += ch.advanceX;
-                advance = glm::floor(advance);
-            }
-			else
-				advance += getSpaceWidth(size);
-		}
-	}
-	return advance;
+    return length(charset, text.begin(), text.end());
 }
 
 bool AFont::isHasKerning()
