@@ -163,7 +163,7 @@ protected:
     /**
      * @brief Determines how to display text that go out of the bounds.
      */
-    ATextOverflow mTextOverflow = ATextOverflow::NONE;
+    TextOverflow mTextOverflow = TextOverflow::NONE;
 
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
@@ -352,7 +352,7 @@ public:
         mOverflow = overflow;
     }
 
-    void setTextOverflow(ATextOverflow textOverflow) {
+    void setTextOverflow(TextOverflow textOverflow) {
         mTextOverflow = textOverflow;
     }
 
