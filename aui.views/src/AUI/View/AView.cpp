@@ -503,10 +503,21 @@ bool AView::consumesClick(const glm::ivec2& pos) {
     return true;
 }
 
+void AView::notifyParentChildFocused(const _<AView>& view) {
+    if (mParent == nullptr)
+        return;
+
+    if (mParent->mOnChildFocused)
+        mParent->mOnChildFocused(view);
+    mParent->notifyParentChildFocused(view);
+}
+
 void AView::focus() {
     // holding reference here
     auto mySharedPtr = sharedPtr();
     auto window = AWindow::current();
+
+    notifyParentChildFocused(mySharedPtr);
 
     try {
         auto windowSharedPtr = window->sharedPtr(); // may throw bad_weak
