@@ -856,6 +856,11 @@ signals:
     emits<> clicked;
 
     /**
+     * @brief Geometry (position and size) changed.
+     */
+    emits<glm::ivec2, glm::ivec2> geometryChanged;
+
+    /**
      * @brief Mouse scrolled.
      */
     emits<glm::ivec2> mouseScrolled;
