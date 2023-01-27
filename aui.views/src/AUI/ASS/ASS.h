@@ -115,6 +115,7 @@
 #include "Declaration/VerticalAlign.h"
 #include "Declaration/Visibility.h"
 #include "Declaration/TextOverflow.h"
+#include "Declaration/ScrollbarAppearance.h"
 
 // Selectors
 #include "AUI/ASS/Selector/AAssSelector.h"

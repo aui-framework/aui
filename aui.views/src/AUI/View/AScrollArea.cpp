@@ -38,7 +38,7 @@ public:
     }
 
     void updateLayout() override {
-        if (hasChild()) child()->setGeometry(0, -mScroll.y, getContentWidth(), getContentHeight() + mScroll.y);
+        if (hasChild()) child()->setGeometry(-mScroll.x, -mScroll.y, getContentWidth() + mScroll.x, getContentHeight() + mScroll.y);
     }
 
     int getContentMinimumHeight(ALayoutDirection layout) override {
@@ -47,6 +47,11 @@ public:
 
     void setScrollY(unsigned scroll) {
         mScroll.y = scroll;
+        updateLayout();
+    }
+
+    void setScrollX(unsigned scroll) {
+        mScroll.x = scroll;
         updateLayout();
     }
 
@@ -83,9 +88,13 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
     } else {
         mVerticalScrollbar = builder.mExternalVerticalScrollbar;
     }
-    addView(mHorizontalScrollbar = _new<AScrollbar>(ALayoutDirection::HORIZONTAL));
 
-    mHorizontalScrollbar->setVisibility(Visibility::GONE);
+    if (!builder.mExternalHorizontalScrollbar) {
+        addView(mHorizontalScrollbar = _new<AScrollbar>(ALayoutDirection::HORIZONTAL));
+    } else {
+        mHorizontalScrollbar = builder.mExternalHorizontalScrollbar;
+    }
+
     mContentContainer->setExpanding();
 
     if (builder.mContents) {
@@ -95,6 +104,7 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
     setExpanding();
 
     connect(mVerticalScrollbar->scrolled, slot(contentContainer)::setScrollY);
+    connect(mHorizontalScrollbar->scrolled, slot(contentContainer)::setScrollX);
 }
 
 AScrollArea::~AScrollArea() = default;
@@ -105,7 +115,29 @@ void AScrollArea::setSize(glm::ivec2 size) {
         mVerticalScrollbar->setScrollDimensions(
                 mContentContainer->getContentHeight() + mContentContainer->getTotalFieldVertical(),
                 mContentContainer->child()->getContentMinimumHeight(ALayoutDirection::NONE));
+
+        mHorizontalScrollbar->setScrollDimensions(
+                mContentContainer->getContentWidth() + mContentContainer->getTotalFieldHorizontal(),
+                mContentContainer->child()->getContentMinimumWidth(ALayoutDirection::NONE));
     }
+
+    //adjustContentSize();
+}
+
+void AScrollArea::adjustContentSize() {
+    if (mScrollbarAppearance.getVertical() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
+        adjustVerticalSizeToContent();
+
+    if (mScrollbarAppearance.getHorizontal() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
+        adjustHorizontalSizeToContent();
+}
+
+void AScrollArea::adjustHorizontalSizeToContent() {
+    setFixedSize(glm::ivec2(0, getFixedSize().y));
+}
+
+void AScrollArea::adjustVerticalSizeToContent() {
+    setFixedSize(glm::ivec2(getFixedSize().x, 0));
 }
 
 void AScrollArea::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {

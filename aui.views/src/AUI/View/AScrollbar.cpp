@@ -103,14 +103,33 @@ void AScrollbar::updateScrollHandleSize() {
     int o = mFullSize > 0 ? scrollbarSpace * mViewportSize / mFullSize
                           : 0;
 
-    if (o < scrollbarSpace) {
-        setEnabled();
-        mHandle->setVisibility(Visibility::VISIBLE);
-        mHandle->setOverridenSize(o);
+    if (mAppearance == ScrollbarAppearance::NO_SCROLL_HIDE_CONTENT || mAppearance == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT) {
+        setVisibility(Visibility::GONE);
+        setEnabled(false);
     } else {
-        mHandle->setVisibility(Visibility::GONE);
-        emit scrolled(mCurrentScroll = 0);
-        setDisabled();
+        if (o < scrollbarSpace) {
+            setVisibility(Visibility::VISIBLE);
+            mHandle->setVisibility(Visibility::VISIBLE);
+            mHandle->setOverridenSize(o);
+            setEnabled();
+        } else {
+            setDisabled();
+            switch (mAppearance) {
+                case ScrollbarAppearance::VISIBLE:
+                    mHandle->setVisibility(Visibility::VISIBLE);
+                    mHandle->setOverridenSize(scrollbarSpace);
+                    break;
+                case ScrollbarAppearance::INVISIBLE:
+                    mHandle->setVisibility(Visibility::GONE);
+                    break;
+                case ScrollbarAppearance::GONE:
+                    setVisibility(Visibility::GONE);
+                    mHandle->setVisibility(Visibility::GONE);
+                    break;
+            }
+
+            emit scrolled(mCurrentScroll = 0);
+        }
     }
 
     updateScrollHandleOffset(getMaxScroll());
@@ -213,13 +232,28 @@ float AScrollbar::getAvailableSpaceForSpacer() {
 void AScrollbarHandle::onMouseMove(glm::ivec2 pos) {
     AView::onMouseMove(pos);
     if (mDragging) {
-        mScrollbar.handleScrollbar(pos.y - mScrollOffset);
+        switch (mScrollbar.mDirection) {
+            case ALayoutDirection::HORIZONTAL:
+                mScrollbar.handleScrollbar(pos.x - mScrollOffset);
+                break;
+            case ALayoutDirection::VERTICAL:
+                mScrollbar.handleScrollbar(pos.y - mScrollOffset);
+                break;
+        }
     }
 }
 
 void AScrollbarHandle::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     AView::onMousePressed(pos, button);
-    mScrollOffset = pos.y;
+    switch (mScrollbar.mDirection) {
+        case ALayoutDirection::HORIZONTAL:
+            mScrollOffset = pos.x;
+            break;
+        case ALayoutDirection::VERTICAL:
+            mScrollOffset = pos.y;
+            break;
+    }
+
     mDragging = true;
 }
 
