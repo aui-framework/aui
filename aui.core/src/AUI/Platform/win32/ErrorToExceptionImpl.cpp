@@ -22,8 +22,7 @@
 #include <AUI/IO/AIOException.h>
 #include <AUI/Platform/ErrorToException.h>
 
-aui::impl::Error aui::impl::lastError() {
-    int errorCode = GetLastError();
+aui::impl::Error aui::impl::formatSystemError(int errorCode) {
     if(errorCode == 0)
         return {}; //No error message has been recorded
 
@@ -38,8 +37,13 @@ aui::impl::Error aui::impl::lastError() {
 
     return { errorCode, message.trim().removeAll('\r').removeAll('\n') };
 }
+
+aui::impl::Error aui::impl::formatSystemError() {
+    return formatSystemError(GetLastError());
+}
+
 void aui::impl::lastErrorToException(AString message) {
-    auto[lastErrorCode, description] = lastError();
+    auto[lastErrorCode, description] = formatSystemError();
     message += ": ";
     message += description;
     switch (lastErrorCode) {
