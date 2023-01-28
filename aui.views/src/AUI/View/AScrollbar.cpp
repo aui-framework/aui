@@ -113,7 +113,6 @@ void AScrollbar::updateScrollHandleSize() {
             mHandle->setOverridenSize(o);
             setEnabled();
         } else {
-            setDisabled();
             switch (mAppearance) {
                 case ScrollbarAppearance::VISIBLE:
                     mHandle->setVisibility(Visibility::VISIBLE);

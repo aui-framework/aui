@@ -121,7 +121,7 @@ void AScrollArea::setSize(glm::ivec2 size) {
                 mContentContainer->child()->getContentMinimumWidth(ALayoutDirection::NONE));
     }
 
-    //adjustContentSize();
+    adjustContentSize();
 }
 
 void AScrollArea::adjustContentSize() {
