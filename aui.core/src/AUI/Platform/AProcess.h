@@ -31,7 +31,7 @@
 #include <AUI/Thread/AFuture.h>
 
 #if AUI_PLATFORM_WIN
-#include <AUI/Platform/win32/WinEventHandle.h>
+#include <AUI/Platform/win32/AWin32EventWait.h>
 #include <AUI/Platform/win32/WinIoAsync.h>
 #include <windows.h>
 #include "Pipe.h"
@@ -227,7 +227,7 @@ private:
     AFuture<int> mExitCode;
 #if AUI_PLATFORM_WIN
     PROCESS_INFORMATION mProcessInformation;
-    WinEventHandle mExitEvent;
+    AWin32EventWait mExitEvent;
     WinIoAsync mStdoutAsync;
 #else
     pid_t mPid;
