@@ -539,7 +539,6 @@ public:
      */
     void supplyException() const noexcept {
         auto& inner = (*super::mInner);
-        std::unique_lock lock(inner->mutex);
         inner->reportException();
     }
 
@@ -583,7 +582,6 @@ public:
      */
     void supplyException() const noexcept {
         auto& inner = (*super::mInner);
-        std::unique_lock lock(inner->mutex);
         inner->reportException();
     }
 

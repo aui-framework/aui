@@ -156,8 +156,8 @@ public:
                 memcpy(&tmp_tv, ptr, sizeof(tmp_tv));
 
                 tvsub(tv, &tmp_tv);
-                auto tripTime = std::chrono::milliseconds(tv->tv_sec * 1000000 + tv->tv_usec);
-                mResult.supplyResult(tripTime);
+                auto tripTime = tv->tv_sec * 1000000 + tv->tv_usec;
+                mResult.supplyResult(std::chrono::milliseconds(tripTime));
             }
 
         }
@@ -229,8 +229,15 @@ public:
                     throw AIOException("ping send error: {}"_format(aui::impl::formatSystemError().description));
                 }
             }
+        } catch (...) {
+            mResult.supplyException();
+        }
 
+        return mResult;
+    }
 
+    bool receive() {
+        try {
             mIov.iov_base = mIovBuffer;
             mIov.iov_len = sizeof(mIovBuffer);
             memset(&mMsg, 0, sizeof(mMsg));
@@ -241,32 +248,33 @@ public:
             mMsg.msg_control = mAnsData;
             mMsg.msg_controllen = sizeof(mAnsData);
 
-            int cc = recvmsg(mSocket, &mMsg, 0);
+            int cc = recvmsg(mSocket, &mMsg, MSG_WAITALL);
             if (cc < 0) {
-                throw AIOException("ping recv error: {}"_format(aui::impl::formatSystemError().description));
+                return false;
             }
-            cmsghdr *c;
+            cmsghdr* c;
 
-            timeval *recv_timep = NULL;
+            timeval* recv_timep = NULL;
             for (c = CMSG_FIRSTHDR(&mMsg); c; c = CMSG_NXTHDR(&mMsg, c)) {
                 if (c->cmsg_level != SOL_SOCKET ||
                     c->cmsg_type != SO_TIMESTAMP)
                     continue;
                 if (c->cmsg_len < CMSG_LEN(sizeof(struct timeval)))
                     continue;
-                recv_timep = (struct timeval *)CMSG_DATA(c);
+                recv_timep = (struct timeval*) CMSG_DATA(c);
             }
             ping4ParseReply(&mMsg, cc, mAddressBuffer, recv_timep);
         } catch (...) {
             mResult.supplyException();
         }
-
-        return mResult;
+        return true;
     }
 
     ~IcmpImpl() {
         shutdown(mSocket, 0);
     }
+
+    int mSocket;
 
 private:
     uint16_t mId = 0;
@@ -275,7 +283,6 @@ private:
 
     iovec mIov;
     msghdr mMsg;
-    int mSocket;
     char mIovBuffer[192];
     char mAddressBuffer[128];
     char mAnsData[4096];
@@ -283,15 +290,14 @@ private:
 
 
 AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address destination, std::chrono::milliseconds timeout) noexcept {
-    IcmpImpl impl(destination);
+    auto impl = _new<IcmpImpl>(destination);
+
+    UnixIoThread::inst().registerCallback(impl->mSocket, POLLIN, [impl](int v) mutable {
+        if (impl->receive()) {
+            UnixIoThread::inst().unregisterCallback(impl->mSocket);
+        }
+    });
 
 
-
-    /*
-    UnixIoThread::inst().registerCallback([result, destination, timeout]() mutable {
-
-    });*/
-
-
-    return impl.send(timeout);
+    return impl->send(timeout);
 }
