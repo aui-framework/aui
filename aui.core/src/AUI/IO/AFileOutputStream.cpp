@@ -18,6 +18,7 @@
 
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/ErrorToException.h"
+#include "AUI/Util/kAUI.h"
 
 AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move(path))
 {
@@ -31,6 +32,10 @@ AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move
 	{
         aui::impl::unix::lastErrorToException("AFileOutputStream: could not open {}"_format(mPath));
 	}
+
+    async {
+
+    };
 }
 
 AFileOutputStream::~AFileOutputStream()
