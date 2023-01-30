@@ -509,7 +509,7 @@ void AView::notifyParentChildFocused(const _<AView>& view) {
     if (mParent == nullptr)
         return;
 
-    emit mParent->childFocused(mParent->weakPtr(), view);
+    emit mParent->childFocused(view);
     mParent->notifyParentChildFocused(view);
 }
 

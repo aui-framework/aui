@@ -23,8 +23,7 @@ protected:
                     }
             };
 
-            inner.connect(&AView::childFocused, this, [] (_<AView> invoker, _<AView> child) {
-                invoker->setVisibility(Visibility::INVISIBLE);
+            inner.connect(&AView::childFocused, this, [] (_<AView> child) {
                 child->setVisibility(Visibility::INVISIBLE);
             });
 
@@ -55,18 +54,15 @@ protected:
  */
 TEST_F(UIViewFocus, ChildFocusedTest) {
     auto buttonMatcher = By::text("Say hello");
-    auto containerMatcher = By::type<AViewContainer>();
 
     //check visible at first
     buttonMatcher.check(visible(), "Button visible before focus");
-    containerMatcher.check(visible(), "Container visible before focus");
 
     //focus child
     By::text("Say hello").one()->focus();
 
     //check not visible now
     buttonMatcher.check(notVisible(), "Button invisible after focus");
-    containerMatcher.check(notVisible(), "Container invisible after focus");
 }
 
 /**
