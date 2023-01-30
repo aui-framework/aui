@@ -36,12 +36,16 @@ public:
     static constexpr int SOCKET_TYPE = SOCK_DGRAM;
 
     static void setEUid() {
+#if AUI_PLATFORM_LINUX
         auto r = setuid(geteuid());
         assert(r >= 0);
+#endif
     }
     static void setUid() {
+#if AUI_PLATFORM_LINUX
         auto r = setuid(getuid());
         assert(r >= 0);
+#endif
     }
 
     IcmpImpl(const AInet4Address& mDestination) : mDestination(mDestination) {}
