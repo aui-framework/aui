@@ -885,7 +885,7 @@ signals:
     emits<> focusAcquired;
     emits<> focusLost;
 
-    emits<_<AView>, _<AView>> childFocused;
+    emits<_<AView>> childFocused;
 
 private:
     AFieldSignalEmitter<bool> mHovered = AFieldSignalEmitter<bool>(hoveredState, mouseEnter, mouseLeave);
