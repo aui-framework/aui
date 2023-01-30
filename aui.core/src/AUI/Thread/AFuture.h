@@ -315,7 +315,7 @@ namespace aui::impl::future {
             return (*mInner)->hasValue();
         }
 
-        void reportException() noexcept {
+        void reportException() const noexcept {
             (*mInner)->reportException();
         }
 
@@ -562,6 +562,25 @@ public:
     const AFuture& onError(Callback&& callback) const noexcept {
         super::onError(std::forward<Callback>(callback));
         return *this;
+    }
+
+    /**
+     * @brief Maps this AFuture to another type of AFuture.
+     */
+    template<typename Callback>
+    auto map(Callback&& callback) -> AFuture<decltype(callback(std::declval<T>()))> const {
+        AFuture<decltype(callback(std::declval<T>()))> result;
+        onSuccess([result, callback = std::forward<Callback>(callback)](const T& v) {
+            result.supplyResult(callback(v));
+        });
+        onError([result](const AException& v) {
+            try {
+                throw v;
+            } catch (...) {
+                result.reportException();
+            }
+        });
+        return result;
     }
 };
 
