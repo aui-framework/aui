@@ -73,7 +73,6 @@ class API_AUI_VIEWS AView: public AObject
 {
     friend class AViewContainer;
 private:
-
     /**
      * @brief Animation.
      */
@@ -163,7 +162,7 @@ protected:
     /**
      * @brief Determines how to display text that go out of the bounds.
      */
-    ATextOverflow mTextOverflow = ATextOverflow::NONE;
+    TextOverflow mTextOverflow = TextOverflow::NONE;
 
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
@@ -352,7 +351,7 @@ public:
         mOverflow = overflow;
     }
 
-    void setTextOverflow(ATextOverflow textOverflow) {
+    void setTextOverflow(TextOverflow textOverflow) {
         mTextOverflow = textOverflow;
     }
 
@@ -886,6 +885,8 @@ signals:
     emits<> focusAcquired;
     emits<> focusLost;
 
+    emits<_<AView>, _<AView>> childFocused;
+
 private:
     AFieldSignalEmitter<bool> mHovered = AFieldSignalEmitter<bool>(hoveredState, mouseEnter, mouseLeave);
     AFieldSignalEmitter<bool> mPressed = AFieldSignalEmitter<bool>(pressedState, mousePressed, mouseReleased);
@@ -894,4 +895,6 @@ private:
     bool mDirectlyEnabled = true;
     bool mParentEnabled = true;
     AFieldSignalEmitter<bool> mHasFocus = AFieldSignalEmitter<bool>(focusState, focusAcquired, focusLost, false);
+
+    void notifyParentChildFocused(const _<AView> &view);
 };

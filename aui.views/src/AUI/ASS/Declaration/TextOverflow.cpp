@@ -5,6 +5,6 @@
 #include "TextOverflow.h"
 
 
-void ass::decl::Declaration<ATextOverflow>::applyFor(AView* view) {
+void ass::decl::Declaration<TextOverflow>::applyFor(AView* view) {
     view->setTextOverflow(mInfo);
 }

@@ -11,12 +11,12 @@
 namespace ass {
     namespace decl {
         template<>
-        struct API_AUI_VIEWS Declaration<ATextOverflow>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<TextOverflow>: IDeclarationBase {
         private:
-            ATextOverflow mInfo;
+            TextOverflow mInfo;
 
         public:
-            Declaration(const ATextOverflow& info) : mInfo(info) {
+            Declaration(const TextOverflow& info) : mInfo(info) {
 
             }
 

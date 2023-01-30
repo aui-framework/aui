@@ -37,15 +37,15 @@ enum class AOverflow {
  * @ingroup ass
  * @ingroup views
  */
-enum class ATextOverflow {
+enum class TextOverflow {
     NONE,
     ELLIPSIS,
     CLIP
 };
 
-AUI_ENUM_VALUES(ATextOverflow,
-                 ATextOverflow::ELLIPSIS,
-                 ATextOverflow::CLIP)
+AUI_ENUM_VALUES(TextOverflow,
+                TextOverflow::ELLIPSIS,
+                TextOverflow::CLIP)
 
 /**
  * @brief Controls the behaviour of the default AView::drawStencilMask() implementation.

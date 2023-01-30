@@ -42,7 +42,7 @@ void AAbstractLabel::render()
 
 int AAbstractLabel::getContentMinimumWidth(ALayoutDirection layout)
 {
-    if (mTextOverflow != ATextOverflow::NONE)
+    if (mTextOverflow != TextOverflow::NONE)
         return 0;
 
 	if (!mPrerendered) {
@@ -122,7 +122,7 @@ int AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
 template < class Iterator >
 void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
     int firstOverflowedIndex = findFirstOverflowedIndex(begin, end, overflowingWidth);
-    if (mTextOverflow == ATextOverflow::ELLIPSIS) {
+    if (mTextOverflow == TextOverflow::ELLIPSIS) {
         if (firstOverflowedIndex != 0) {
             std::fill(begin + firstOverflowedIndex - 3, begin + firstOverflowedIndex, '.');
         } else {
@@ -134,7 +134,7 @@ void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overf
 }
 
 void AAbstractLabel::processTextOverflow(AString& text) {
-    if (mTextOverflow == ATextOverflow::NONE)
+    if (mTextOverflow == TextOverflow::NONE)
         return;
 
     int overflowingWidth;
