@@ -315,7 +315,7 @@ namespace aui::impl::future {
             return (*mInner)->hasValue();
         }
 
-        void reportException() noexcept {
+        void reportException() const noexcept {
             (*mInner)->reportException();
         }
 
@@ -504,14 +504,14 @@ namespace aui::impl::future {
  * AFuture is a shared_ptr-based wrapper so it can be easily copied, pointing to the same task.
  *
  * If all AFutures of the task are destroyed, the task is cancelled. If the task is executing when cancel() is
- * called, AFuture waits for the task, however, task's thread is still requested for interrupt. It's guarantees that
+ * called, AFuture waits for the task, however, task's thread is still requested for interrupt. It guarantees that
  * your task cannot be executed or be executing when AFuture destroyed and allows to efficiently utilize c++'s RAII
  * feature.
  *
  * To manage multiple AFutures, use AAsyncHolder and AFutureSet classes.
  *
- * When waiting for result, AFuture may execute the task on the caller thread instead of waiting. See AFuture::wait for
- * details.
+ * When waiting for result, AFuture may execute the task (if not default-constructed) on the caller thread instead of
+ * waiting. See AFuture::wait for details.
  */
 template<typename T = void>
 class AFuture final: public aui::impl::future::Future<T> {
@@ -539,7 +539,6 @@ public:
      */
     void supplyException() const noexcept {
         auto& inner = (*super::mInner);
-        std::unique_lock lock(inner->mutex);
         inner->reportException();
     }
 
@@ -564,6 +563,25 @@ public:
         super::onError(std::forward<Callback>(callback));
         return *this;
     }
+
+    /**
+     * @brief Maps this AFuture to another type of AFuture.
+     */
+    template<typename Callback>
+    auto map(Callback&& callback) -> AFuture<decltype(callback(std::declval<T>()))> const {
+        AFuture<decltype(callback(std::declval<T>()))> result;
+        onSuccess([result, callback = std::forward<Callback>(callback)](const T& v) {
+            result.supplyResult(callback(v));
+        });
+        onError([result](const AException& v) {
+            try {
+                throw v;
+            } catch (...) {
+                result.reportException();
+            }
+        });
+        return result;
+    }
 };
 
 template<>
@@ -583,7 +601,6 @@ public:
      */
     void supplyException() const noexcept {
         auto& inner = (*super::mInner);
-        std::unique_lock lock(inner->mutex);
         inner->reportException();
     }
 

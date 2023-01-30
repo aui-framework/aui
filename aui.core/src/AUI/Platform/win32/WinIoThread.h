@@ -19,7 +19,7 @@
 
 #include "AUI/Thread/AThread.h"
 
-class WinIoThread {
+class API_AUI_CORE WinIoThread {
 public:
     static WinIoThread& inst() noexcept;
 

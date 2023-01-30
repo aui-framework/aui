@@ -173,7 +173,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
             message += " with args " + mArgs;
         if (!mWorkingDirectory.empty())
             message += " in " + mWorkingDirectory;
-        message += ": " + aui::impl::lastError().description;
+        message += ": " + aui::impl::formatSystemError().description;
         throw AProcessException(message);
     }
     mExitEvent.registerWaitForSingleObject(mProcessInformation.hProcess, [&] {
