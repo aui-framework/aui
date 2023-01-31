@@ -70,6 +70,7 @@ public:
 
     void setPasswordMode(bool isPasswordMode) {
         mIsPasswordTextField = isPasswordMode;
+        setCopiable(!isPasswordMode);
     }
 
 	bool isPasswordMode() const {
