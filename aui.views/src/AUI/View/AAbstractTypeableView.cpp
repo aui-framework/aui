@@ -249,6 +249,9 @@ void AAbstractTypeableView::pasteFromClipboard() {
 }
 
 void AAbstractTypeableView::cutToClipboard() {
+    if (!mIsCopiable)
+        return;
+
     auto sel = selection();
     AClipboard::copyToClipboard(selectedText());
     typeableErase(sel.begin, sel.end);
@@ -257,7 +260,12 @@ void AAbstractTypeableView::cutToClipboard() {
     invalidatePrerenderedString();
 }
 
-void AAbstractTypeableView::copyToClipboard() const { AClipboard::copyToClipboard(selectedText()); }
+void AAbstractTypeableView::copyToClipboard() const {
+    if (!mIsCopiable)
+        return;
+
+    AClipboard::copyToClipboard(selectedText());
+}
 
 void AAbstractTypeableView::selectAll() { ACursorSelectable::selectAll(); }
 

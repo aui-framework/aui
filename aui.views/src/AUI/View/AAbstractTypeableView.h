@@ -41,6 +41,7 @@ private:
     bool mCursorBlinkVisible = true;
     bool mTextChangedFlag = false;
     bool mIsMultiline = false;
+    bool mIsCopiable = true;
 
 protected:
     int mHorizontalScroll = 0;
@@ -129,6 +130,9 @@ public:
         setText(text().trim());
     }
 
+    void setCopiable(bool isCopiable) {
+        mIsCopiable = isCopiable;
+    }
 
     virtual void setText(const AString& t);
 
