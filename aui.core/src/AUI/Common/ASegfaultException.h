@@ -30,11 +30,11 @@
  */
 class ASegfaultException: public AException {
 private:
-    inline static std::function<void(const ASegfaultException&)> handler;
+    inline static std::function<void(ASegfaultException*)> handler;
     void* mAddress;
 
 public:
-    ASegfaultException(void* address) : mAddress(address) {
+    explicit ASegfaultException(void* address) : mAddress(address) {
         if (handler)
             handler(this);
     }
@@ -49,7 +49,7 @@ public:
         return mAddress;
     }
 
-    static void setGlobalHandler(std::function<void(const ASegfaultException&)> globalHandler) {
+    static void setGlobalHandler(std::function<void(ASegfaultException*)> globalHandler) {
         handler = std::move(globalHandler);
     }
 };
