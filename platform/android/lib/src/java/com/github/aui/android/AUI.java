@@ -23,6 +23,11 @@ public class AUI {
         });
     }
 
+
+    private static void requestRedraw() {
+        MyGLSurfaceView.getLastSurface().requestRender();
+    }
+
     public static float getDpiRatio() {
         return ourContext.getResources().getDisplayMetrics().density * 1.2f;
     }
