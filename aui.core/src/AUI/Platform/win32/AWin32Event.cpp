@@ -14,27 +14,17 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by Alex2772 on 1/27/2023.
+//
 
-#include <AUI/Common/AString.h>
+#include "AWin32Event.h"
 
-#ifdef unix
-#undef unix
-#endif
+AWin32Event::AWin32Event(LPSECURITY_ATTRIBUTES securityAttributes, bool manualReset, bool initialState, LPCWSTR name):
+        mEvent(CreateEvent(securityAttributes, manualReset, initialState, name)) {
 
-namespace aui::impl {
-    struct Error {
-        int nativeCode;
-        AString description;
-    };
-
-    API_AUI_CORE void lastErrorToException(AString message);
-    API_AUI_CORE Error formatSystemError();
-    API_AUI_CORE Error formatSystemError(int status);
-
-    namespace unix {
-        API_AUI_CORE void lastErrorToException(AString message); // unix errors are suitable under windows
-        API_AUI_CORE Error formatSystemError();
-    }
 }
 
+AWin32Event::~AWin32Event() {
+    CloseHandle(mEvent);
+}

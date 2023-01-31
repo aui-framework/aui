@@ -16,25 +16,17 @@
 
 #pragma once
 
-#include <AUI/Common/AString.h>
+#include <AUI/Common/AObject.h>
+#include "AUI/Thread/AFuture.h"
+#include "AInet4Address.h"
 
-#ifdef unix
-#undef unix
-#endif
-
-namespace aui::impl {
-    struct Error {
-        int nativeCode;
-        AString description;
-    };
-
-    API_AUI_CORE void lastErrorToException(AString message);
-    API_AUI_CORE Error formatSystemError();
-    API_AUI_CORE Error formatSystemError(int status);
-
-    namespace unix {
-        API_AUI_CORE void lastErrorToException(AString message); // unix errors are suitable under windows
-        API_AUI_CORE Error formatSystemError();
-    }
-}
-
+namespace AIcmp {
+    /**
+     * @brief Sends ICMP ping echo packet.
+     * @param destination destination address
+     * @param timeout operation timeout
+     * @return echo response result
+     */
+    API_AUI_NETWORK AFuture<std::chrono::high_resolution_clock::duration> ping(AInet4Address destination,
+                                                                               std::chrono::milliseconds timeout = std::chrono::milliseconds(1000)) noexcept;
+};

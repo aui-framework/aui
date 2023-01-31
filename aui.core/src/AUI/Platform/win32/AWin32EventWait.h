@@ -21,16 +21,16 @@
 #include <cassert>
 
 /**
- * Encapsulates calls to RegisterWaitForSingleObject/UnregisterWait
+ * @brief Encapsulates calls to RegisterWaitForSingleObject/UnregisterWait
  */
-class WinEventHandle {
+class API_AUI_CORE AWin32EventWait: public aui::noncopyable {
 private:
     HANDLE mNewWaitObject = nullptr;
     std::function<void()> mCallback;
 
 public:
-    WinEventHandle() noexcept = default;
-    ~WinEventHandle() {
+    AWin32EventWait() noexcept = default;
+    ~AWin32EventWait() {
         if (mNewWaitObject != nullptr) {
             auto r = UnregisterWaitEx(mNewWaitObject, INVALID_HANDLE_VALUE);
             assert(r != 0);
@@ -43,7 +43,7 @@ public:
         mCallback = std::move(callback);
 
         auto r = RegisterWaitForSingleObject(&mNewWaitObject, baseHandle, [](PVOID context, BOOLEAN){
-            auto self = reinterpret_cast<WinEventHandle*>(context);
+            auto self = reinterpret_cast<AWin32EventWait*>(context);
             self->mCallback();
         }, this, timeout, flags);
         assert(r != 0);
