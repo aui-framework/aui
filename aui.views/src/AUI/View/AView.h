@@ -73,9 +73,6 @@ class API_AUI_VIEWS AView: public AObject
 {
     friend class AViewContainer;
 private:
-
-    std::function<void(const _<AView>&)> mOnChildFocused;
-
     /**
      * @brief Animation.
      */
@@ -332,10 +329,6 @@ public:
     void setExtraStylesheet(_<AStylesheet> extraStylesheet) {
         mExtraStylesheet = std::move(extraStylesheet);
         invalidateAssHelper();
-    }
-
-    void onChildFocused(std::function<void(const _<AView>&)> callback) {
-        mOnChildFocused = std::move(callback);
     }
 
     /**
@@ -891,6 +884,8 @@ signals:
     emits<bool> focusState;
     emits<> focusAcquired;
     emits<> focusLost;
+
+    emits<_<AView>> childFocused;
 
 private:
     AFieldSignalEmitter<bool> mHovered = AFieldSignalEmitter<bool>(hoveredState, mouseEnter, mouseLeave);

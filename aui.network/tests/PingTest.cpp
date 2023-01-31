@@ -14,27 +14,9 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+#include <gmock/gmock.h>
+#include "AUI/Network/AIcmp.h"
 
-#include <AUI/Common/AString.h>
-
-#ifdef unix
-#undef unix
-#endif
-
-namespace aui::impl {
-    struct Error {
-        int nativeCode;
-        AString description;
-    };
-
-    API_AUI_CORE void lastErrorToException(AString message);
-    API_AUI_CORE Error formatSystemError();
-    API_AUI_CORE Error formatSystemError(int status);
-
-    namespace unix {
-        API_AUI_CORE void lastErrorToException(AString message); // unix errors are suitable under windows
-        API_AUI_CORE Error formatSystemError();
-    }
+TEST(Ping, Case1) {
+    EXPECT_GE(AIcmp::ping(AInet4Address("8.8.8.8"))->count(), 0);
 }
-

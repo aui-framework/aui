@@ -88,8 +88,8 @@ public class MyGLSurfaceView extends GLSurfaceView implements View.OnTouchListen
         setOnTouchListener(this);
     }
 
-    private static void requestRedraw() {
-        ourLastSurface.requestRender();
+    public static MyGLSurfaceView getLastSurface() {
+        return ourLastSurface;
     }
 
     public static void onUiThread(Runnable runnable) {
