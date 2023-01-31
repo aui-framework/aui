@@ -30,10 +30,14 @@
  */
 class ASegfaultException: public AException {
 private:
+    inline static std::function<void(const ASegfaultException&)> handler;
     void* mAddress;
 
 public:
-    ASegfaultException(void* address) : mAddress(address) {}
+    ASegfaultException(void* address) : mAddress(address) {
+        if (handler)
+            handler(this);
+    }
 
     AString getMessage() const noexcept override {
         char buf[128];
@@ -43,5 +47,9 @@ public:
 
     void* getAddress() const {
         return mAddress;
+    }
+
+    static void setGlobalHandler(std::function<void(const ASegfaultException&)> globalHandler) {
+        handler = std::move(globalHandler);
     }
 };
