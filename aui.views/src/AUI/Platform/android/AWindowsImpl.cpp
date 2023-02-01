@@ -151,3 +151,11 @@ void AWindow::blockUserInput(bool block) {
 void AWindow::allowDragNDrop() {
 
 }
+
+void AWindow::requestTouchscreenKeyboard() {
+    AAndroid::showVirtualKeyboard();
+}
+
+void ABaseWindow::hideTouchscreenKeyboard() {
+    AAndroid::hideVirtualKeyboard();
+}

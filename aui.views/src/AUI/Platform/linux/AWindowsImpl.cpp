@@ -676,3 +676,12 @@ void AWindow::blockUserInput(bool blockUserInput) {
 void AWindow::allowDragNDrop() {
 
 }
+
+void AWindow::requestTouchscreenKeyboard() {
+    ABaseWindow::requestTouchscreenKeyboard();
+}
+
+void ABaseWindow::hideTouchscreenKeyboard() {
+
+}
+

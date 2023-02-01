@@ -161,3 +161,12 @@ void AWindowManager::loop() {
 void AWindow::allowDragNDrop() {
 
 }
+
+void AWindow::requestTouchscreenKeyboard() {
+    ABaseWindow::requestTouchscreenKeyboard();
+}
+
+
+void AWindow::hideTouchscreenKeyboard() {
+    ABaseWindow::hideTouchscreenKeyboard();
+}

@@ -268,6 +268,9 @@ public:
     void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) override;
     virtual void onCloseButtonClicked();
 
+
+    void requestTouchscreenKeyboard() override;
+
 signals:
     emits<> closed;
     emits<int, int> resized;

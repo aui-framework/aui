@@ -23,6 +23,8 @@ namespace AAndroid {
     void setJavaVM(JavaVM* vm);
     float getDpiRatio();
     void requestRedraw();
+    void showVirtualKeyboard();
+    void hideVirtualKeyboard();
 
     class Ref {
     private:

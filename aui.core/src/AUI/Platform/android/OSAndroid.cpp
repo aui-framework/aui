@@ -104,3 +104,19 @@ AAndroid::Ref &AAndroid::Ref::operator=(jobject object) {
     mObject = object ? AAndroid::getJNI()->NewGlobalRef(object) : nullptr;
     return *this;
 }
+
+void AAndroid::showVirtualKeyboard() {
+    if (auto j = getJNI()) {
+        if (auto methodGetDpiRatio = j->GetStaticMethodID(_gClassAUI.clazz(), "showKeyboard", "()V")) {
+            j->CallStaticVoidMethod(_gClassAUI.clazz(), methodGetDpiRatio);
+        }
+    }
+}
+
+void AAndroid::hideVirtualKeyboard() {
+    if (auto j = getJNI()) {
+        if (auto methodGetDpiRatio = j->GetStaticMethodID(_gClassAUI.clazz(), "hideKeyboard", "()V")) {
+            j->CallStaticVoidMethod(_gClassAUI.clazz(), methodGetDpiRatio);
+        }
+    }
+}

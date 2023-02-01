@@ -519,3 +519,11 @@ void AWindow::allowDragNDrop() {
     auto r = RegisterDragDrop(mHandle, new DropTarget(this));
     assert(r == S_OK);
 }
+
+void AWindow::requestTouchscreenKeyboard() {
+    ABaseWindow::requestTouchscreenKeyboard();
+}
+
+void ABaseWindow::hideTouchscreenKeyboard() {
+
+}

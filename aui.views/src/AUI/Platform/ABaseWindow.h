@@ -213,6 +213,17 @@ public:
     virtual void onDragLeave();
     virtual void onDragDrop(const ADragNDrop::DropEvent& event);
 
+    /**
+     * @brief On a mobile touchscreen device, shows system virtual keyboard.
+     * @details
+     * On a desktop device does nothing.
+     */
+    virtual void requestTouchscreenKeyboard();
+
+    /**
+     * @brief Hides virtual keyboard if visible
+     */
+    virtual void hideTouchscreenKeyboard();
 
 signals:
     emits<>            dpiChanged;

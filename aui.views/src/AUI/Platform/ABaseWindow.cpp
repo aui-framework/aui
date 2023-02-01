@@ -315,3 +315,11 @@ void ABaseWindow::updateFocusChain() {
         }
     }
 }
+
+void ABaseWindow::requestTouchscreenKeyboard() {
+
+}
+
+void ABaseWindow::hideTouchscreenKeyboard() {
+
+}

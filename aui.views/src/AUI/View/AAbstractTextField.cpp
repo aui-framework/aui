@@ -15,6 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include <AUI/Platform/AClipboard.h>
+#include <AUI/Platform/ABaseWindow.h>
 #include "AAbstractTextField.h"
 
 
@@ -25,7 +26,9 @@
 
 
 AAbstractTextField::AAbstractTextField() {
-
+    connect(clicked, [this] {
+        AUI_NULLSAFE(getWindow())->requestTouchscreenKeyboard();
+    });
 }
 
 void AAbstractTextField::onFocusAcquired() {
