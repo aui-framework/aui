@@ -249,7 +249,7 @@ void AAbstractTypeableView::pasteFromClipboard() {
 }
 
 void AAbstractTypeableView::cutToClipboard() {
-    if (!mIsCopiable)
+    if (!mIsCopyable)
         return;
 
     auto sel = selection();
@@ -261,7 +261,7 @@ void AAbstractTypeableView::cutToClipboard() {
 }
 
 void AAbstractTypeableView::copyToClipboard() const {
-    if (!mIsCopiable)
+    if (!mIsCopyable)
         return;
 
     AClipboard::copyToClipboard(selectedText());
