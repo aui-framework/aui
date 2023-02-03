@@ -44,7 +44,6 @@ public:
     void onMouseMove(glm::ivec2 pos) override;
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
-
     void setOverridenSize(int overridenSize) {
         mOverridenSize = overridenSize;
     }
@@ -110,6 +109,10 @@ public:
         }
     }
 
+    void setAppearance(ScrollbarAppearance::AxisValue appearance) {
+        mAppearance = appearance;
+    }
+
     void scrollToStart() {
         setScroll(0);
     }
@@ -158,6 +161,7 @@ protected:
 
 private:
     bool mStickToEnd = false;
+    ScrollbarAppearance::AxisValue mAppearance = ScrollbarAppearance::INVISIBLE;
 };
 
 
