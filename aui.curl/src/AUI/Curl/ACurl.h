@@ -267,7 +267,7 @@ public:
     ACurl(ACurl&& o) noexcept {
         operator=(std::move(o));
     }
-    ACurl() noexcept: mCURL(nullptr) {}
+
 	virtual ~ACurl();
 
     ACurl& operator=(Builder&& o) noexcept;
