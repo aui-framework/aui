@@ -156,6 +156,6 @@ void AWindow::requestTouchscreenKeyboard() {
     AAndroid::showVirtualKeyboard();
 }
 
-void ABaseWindow::hideTouchscreenKeyboard() {
+void AWindow::hideTouchscreenKeyboard() {
     AAndroid::hideVirtualKeyboard();
 }

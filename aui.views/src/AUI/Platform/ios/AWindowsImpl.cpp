@@ -153,6 +153,6 @@ void AWindow::requestTouchscreenKeyboard() {
 
 }
 
-void ABaseWindow::hideTouchscreenKeyboard() {
+void AWindow::hideTouchscreenKeyboard() {
 
 }
