@@ -75,3 +75,7 @@ bool GifImageFactory::isNewImageAvailable() {
     auto millisecondsSinceFrame = std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceLastFrame);
     return !mCurrentFrame || millisecondsSinceFrame.count() >= mDelays[mCurrentFrameIndex];
 }
+
+glm::ivec2 GifImageFactory::getSizeHint() {
+    return { mGifWidth, mGifHeight };
+}
