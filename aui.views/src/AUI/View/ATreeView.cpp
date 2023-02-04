@@ -139,14 +139,14 @@ public:
         emit customCssPropertyChanged;
     }
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override {
-        AViewContainer::onMousePressed(pos, button);
+    void onMousePressed(const AMouseButtonEvent& event) override {
+        AViewContainer::onMousePressed(event);
 
         mTreeView->handleMousePressed(this);
     }
 
-    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override {
-        AViewContainer::onMouseDoubleClicked(pos, button);
+    void onMouseDoubleClicked(const AMouseButtonEvent& event) override {
+        AViewContainer::onMouseDoubleClicked(event);
 
         mTreeView->handleMouseDoubleClicked(this);
     }

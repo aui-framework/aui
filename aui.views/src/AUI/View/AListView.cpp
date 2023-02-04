@@ -102,14 +102,14 @@ protected:
 
 public:
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override {
-        AView::onMousePressed(pos, button);
+    void onMousePressed(const AMouseButtonEvent& event) override {
+        AView::onMousePressed(event);
 
         dynamic_cast<AListView*>(getParent()->getParent())->handleMousePressed(this);
     }
 
-    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override {
-        AView::onMouseDoubleClicked(pos, button);
+    void onMouseDoubleClicked(const AMouseButtonEvent& event) override {
+        AView::onMouseDoubleClicked(event);
 
         dynamic_cast<AListView*>(getParent()->getParent())->handleMouseDoubleClicked(this);
     }

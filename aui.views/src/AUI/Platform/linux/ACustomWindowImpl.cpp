@@ -29,9 +29,9 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
     setWindowStyle(WindowStyle::NO_DECORATORS);
 }
 
-void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    if (pos.y < AUI_TITLE_HEIGHT && button == AInput::LBUTTON) {
-        if (isCaptionAt(pos)) {
+void ACustomWindow::onMousePressed(const AMouseButtonEvent& event) {
+    if (event.y < AUI_TITLE_HEIGHT && button == AInput::LBUTTON) {
+        if (isCaptionAt(event)) {
             XClientMessageEvent xclient;
             memset(&xclient, 0, sizeof(XClientMessageEvent));
             XUngrabPointer(CommonRenderingContext::ourDisplay, 0);
@@ -50,16 +50,16 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
                        (XEvent*) &xclient);
 
             mDragging = true;
-            mDragPos = pos;
-            emit dragBegin(pos);
+            mDragPos = event;
+            emit dragBegin(event);
         }
     }
-    AViewContainer::onMousePressed(pos, button);
+    AViewContainer::onMousePressed(event, button);
 }
 
 
-void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ACustomWindow::onMouseReleased(const AMouseButtonEvent& event) {
+    AViewContainer::onMouseReleased(event);
 }
 void ACustomWindow::handleXConfigureNotify() {
     emit dragEnd();

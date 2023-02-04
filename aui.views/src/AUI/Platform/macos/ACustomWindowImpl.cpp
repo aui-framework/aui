@@ -198,11 +198,11 @@ ACustomWindow::ACustomWindow(const AString &name, int width, int height) {
 }
 
 void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    ABaseWindow::onMousePressed(pos, button);
+    ABaseWindow::onMousePressed(event);
 }
 
-void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ACustomWindow::onMouseReleased(const AMouseButtonEvent& event) {
+    AViewContainer::onMouseReleased(event);
 }
 
 #elif AUI_PLATFORM_APPLE
@@ -223,12 +223,12 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
             emit dragBegin(pos);
         }
     }
-    AViewContainer::onMousePressed(pos, button);
+    AViewContainer::onMousePressed(event);
 }
 
 
-void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ACustomWindow::onMouseReleased(const AMouseButtonEvent& event) {
+    AViewContainer::onMouseReleased(event);
 }
 void ACustomWindow::handleXConfigureNotify() {
     emit dragEnd();
@@ -274,12 +274,12 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
             emit dragBegin(pos);
         }
     }
-    AViewContainer::onMousePressed(pos, button);
+    AViewContainer::onMousePressed(event);
 }
 
 
-void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ACustomWindow::onMouseReleased(const AMouseButtonEvent& event) {
+    AViewContainer::onMouseReleased(event);
 }
 void ACustomWindow::handleXConfigureNotify() {
     emit dragEnd();

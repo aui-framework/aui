@@ -112,12 +112,12 @@ public:
     void onKeyRepeat(AInput::Key key) override;
 
     void onFocusLost() override;
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+    void onMousePressed(const AMouseButtonEvent& event) override;
 
-    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
+    void onMouseDoubleClicked(const AMouseButtonEvent& event) override;
 
     void onMouseMove(glm::ivec2 pos) override;
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onMouseReleased(const AMouseButtonEvent& event) override;
 
     void clear() {
         setText({});

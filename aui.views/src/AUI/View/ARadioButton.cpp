@@ -46,9 +46,9 @@ void ARadioButton::setText(const AString& text)
     mText->setText(text);
 }
 
-void ARadioButton::onMouseReleased(glm::ivec2 pos, AInput::Key button)
+void ARadioButton::onMouseReleased(const AMouseButtonEvent& event)
 {
-    AView::onMouseReleased(pos, button);
+    AView::onMouseReleased(event);
     if (!mChecked)
         emit checked(mChecked = true);
 }

@@ -14,33 +14,12 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "ASplitter.h"
-#include <AUI/Util/UIBuildingHelpers.h>
+#pragma once
 
-ASplitter::ASplitter() {
-}
+#include <glm/glm.hpp>
 
-void ASplitter::onMousePressed(const AMouseButtonEvent& event) {
-    AViewContainer::onMousePressed(event);
-    if (getViewAt(event.position) == nullptr) {
-        mHelper.beginDrag(event.position);
-    }
-}
-
-
-void ASplitter::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
-}
-
-void ASplitter::onMouseMove(glm::ivec2 pos) {
-    AViewContainer::onMouseMove(pos);
-    if (mHelper.mouseDrag(pos)) {
-        updateLayout();
-        redraw();
-    }
-}
-
-void ASplitter::onMouseReleased(const AMouseButtonEvent& event) {
-    AViewContainer::onMouseReleased(event);
-    mHelper.endDrag();
-}
+struct AMouseButtonEvent {
+    glm::ivec2 position;
+    AInput::Key button;
+    bool occurredOutside;
+};

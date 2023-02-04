@@ -31,8 +31,9 @@ AGridSplitter::AGridSplitter():
 
 }
 
-void AGridSplitter::onMousePressed(glm::ivec2 mousePos, AInput::Key button) {
-    AViewContainer::onMousePressed(mousePos, button);
+void AGridSplitter::onMousePressed(const AMouseButtonEvent& event) {
+    AViewContainer::onMousePressed(event);
+    auto mousePos = event.position;
     bool doVerticalDrag = true;
     for (auto& r : mItems) {
         auto& v = r.first();
@@ -81,8 +82,8 @@ void AGridSplitter::onMouseMove(glm::ivec2 pos) {
     }
 }
 
-void AGridSplitter::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void AGridSplitter::onMouseReleased(const AMouseButtonEvent& event) {
+    AViewContainer::onMouseReleased(event);
     mVerticalHelper.endDrag();
     mHorizontalHelper.endDrag();
 }

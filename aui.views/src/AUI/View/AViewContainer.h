@@ -80,11 +80,11 @@ public:
 
     int getContentMinimumHeight(ALayoutDirection layout) override;
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+    void onMousePressed(const AMouseButtonEvent& event) override;
 
-    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
+    void onMouseDoubleClicked(const AMouseButtonEvent& event) override;
 
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onMouseReleased(const AMouseButtonEvent& event) override;
 
     void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
 

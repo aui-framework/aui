@@ -151,12 +151,18 @@ void AEmbedAuiWrap::setViewportSize(int width, int height) {
 void AEmbedAuiWrap::onMousePressed(int x, int y, AInput::Key button) {
     mContainer->makeCurrent();
     AThread::processMessages();
-    mContainer->onMousePressed(glm::ivec2{ x, y }, button);
+    mContainer->onMousePressed({
+        .position = glm::ivec2{x, y},
+        .button = button
+    });
 }
 
 void AEmbedAuiWrap::onMouseReleased(int x, int y, AInput::Key button) {
     mContainer->makeCurrent();
-    mContainer->onMouseReleased(glm::ivec2{ x, y }, button);
+    mContainer->onMouseReleased({
+        .position = glm::ivec2{x, y},
+        .button = button
+    });
 }
 
 bool AEmbedAuiWrap::isUIConsumesMouseAt(int x, int y) {

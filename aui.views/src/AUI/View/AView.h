@@ -40,6 +40,7 @@
 #include <AUI/Event/AGestureEvent.h>
 #include <AUI/Util/ALayoutDirection.h>
 #include <AUI/Action/AMenu.h>
+#include <AUI/Event/AMouseButtonEvent.h>
 
 
 class Render;
@@ -739,9 +740,9 @@ public:
     virtual void onMouseLeave();
     virtual void onDpiChanged();
 
-    virtual void onMousePressed(glm::ivec2 pos, AInput::Key button);
-    virtual void onMouseReleased(glm::ivec2 pos, AInput::Key button);
-    virtual void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button);
+    virtual void onMousePressed(const AMouseButtonEvent& event);
+    virtual void onMouseReleased(const AMouseButtonEvent& event);
+    virtual void onMouseDoubleClicked(const AMouseButtonEvent& event);
 
     /**
      * Handles mouse wheel events.

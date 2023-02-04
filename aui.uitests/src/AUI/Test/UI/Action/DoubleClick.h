@@ -27,11 +27,11 @@ struct ViewActionDoubleClick {
     void operator()(const _<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
-        window->onMousePressed(coords, AInput::LBUTTON);
+        window->onMousePressed(coords);
         uitest::frame();
         window->onMouseReleased(coords, AInput::LBUTTON);
         uitest::frame();
-        window->onMousePressed(coords, AInput::LBUTTON);
+        window->onMousePressed(coords);
         uitest::frame();
         window->onMouseReleased(coords, AInput::LBUTTON);
         uitest::frame();

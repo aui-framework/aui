@@ -77,11 +77,11 @@ private:
 public:
     void updateSplitterItems();
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+    void onMousePressed(const AMouseButtonEvent& event) override;
 
     void onMouseMove(glm::ivec2 pos) override;
 
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onMouseReleased(const AMouseButtonEvent& event) override;
 
     bool consumesClick(const glm::ivec2& pos) override;
 };

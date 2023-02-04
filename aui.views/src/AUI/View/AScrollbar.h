@@ -42,8 +42,8 @@ private:
 public:
     void setSize(glm::ivec2 size) override;
     void onMouseMove(glm::ivec2 pos) override;
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onMousePressed(const AMouseButtonEvent& event) override;
+    void onMouseReleased(const AMouseButtonEvent& event) override;
     void setOverridenSize(int overridenSize) {
         mOverridenSize = overridenSize;
     }
@@ -129,7 +129,7 @@ signals:
 
     void updateScrollHandleOffset(int max);
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+    void onMousePressed(const AMouseButtonEvent& event) override;
 
     void setSize(glm::ivec2 size) override;
 

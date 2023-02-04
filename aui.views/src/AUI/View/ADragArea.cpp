@@ -76,13 +76,13 @@ std::tuple<ADragArea*, AViewContainer*> ADragArea::ADraggableHandle::getDragArea
     return {nullptr, potentionalDraggingView};
 }
 
-void ADragArea::ADraggableHandle::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMousePressed(pos, button);
+void ADragArea::ADraggableHandle::onMousePressed(const AMouseButtonEvent& event) {
+    AViewContainer::onMousePressed(event);
 
     if (mCheckForClickConsumption) {
-        auto p = getViewAt(pos);
+        auto p = getViewAt(event.position);
         if (p) {
-            if (p->consumesClick(pos - p->getPosition())) {
+            if (p->consumesClick(event.position - p->getPosition())) {
                 return;
             }
         }
@@ -106,8 +106,8 @@ void ADragArea::ADraggableHandle::onMousePressed(glm::ivec2 pos, AInput::Key but
             });
 }
 
-void ADragArea::ADraggableHandle::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ADragArea::ADraggableHandle::onMouseReleased(const AMouseButtonEvent& event) {
+    AViewContainer::onMouseReleased(event);
     if (mDragging) {
         mDragging = false;
         auto[dragArea, _] = getDragAreaAndDraggingView();

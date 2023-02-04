@@ -344,10 +344,10 @@ void AAbstractTypeableView::onFocusLost()
 
 }
 
-void AAbstractTypeableView::onMousePressed(glm::ivec2 pos, AInput::Key button)
+void AAbstractTypeableView::onMousePressed(const AMouseButtonEvent& event)
 {
-    AView::onMousePressed(pos, button);
-    ACursorSelectable::handleMousePressed(pos, button);
+    AView::onMousePressed(event);
+    ACursorSelectable::handleMousePressed(event);
     updateCursorBlinking();
 }
 
@@ -361,12 +361,12 @@ bool AAbstractTypeableView::isLButtonPressed() {
     return isMousePressed();
 }
 
-void AAbstractTypeableView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
+void AAbstractTypeableView::onMouseReleased(const AMouseButtonEvent& event)
 {
-    AView::onMouseReleased(pos, button);
+    AView::onMouseReleased(event);
 
-    if (button != AInput::RBUTTON) {
-        ACursorSelectable::handleMouseReleased(pos, button);
+    if (event.button != AInput::RBUTTON) {
+        ACursorSelectable::handleMouseReleased(event);
     }
 }
 
@@ -393,9 +393,9 @@ void AAbstractTypeableView::updateSelectionOnTextSet(const AString& t) {
     mCursorSelection = 0;
 }
 
-void AAbstractTypeableView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) {
-    AView::onMouseDoubleClicked(pos, button);
-    ACursorSelectable::handleMouseDoubleClicked(pos, button);
+void AAbstractTypeableView::onMouseDoubleClicked(const AMouseButtonEvent& event) {
+    AView::onMouseDoubleClicked(event);
+    ACursorSelectable::handleMouseDoubleClicked(event);
     updateCursorBlinking();
 }
 

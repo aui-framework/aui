@@ -328,7 +328,7 @@ void AView::onMouseLeave()
 }
 
 
-void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
+void AView::onMousePressed(const AMouseButtonEvent& event)
 {
     mPressed.set(this, true);
 
@@ -340,6 +340,7 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
     if (auto w = AWindow::current())
     {
         if (w != this) {
+            auto button = event.button;
             connect(w->mouseReleased, this, [&, button]()
                 {
                     auto selfHolder = sharedPtr();
@@ -349,7 +350,11 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
                         if (mPressed) {
                             auto w = getWindow();
                             if (!w) return;
-                            onMouseReleased(w->getMousePos() - getPositionInWindow(), button);
+                            onMouseReleased({
+                                .position = w->getMousePos() - getPositionInWindow(),
+                                .button = button,
+                                .occurredOutside = true,
+                            });
                         }
                     });
                     disconnect();
@@ -358,24 +363,24 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
     }
 }
 
-void AView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
+void AView::onMouseReleased(const AMouseButtonEvent& event)
 {
     mPressed.set(this, false);
-    emit clickedButton(button);
-    switch (button)
-    {
-        case AInput::LBUTTON:
-            emit clicked();
-            break;
-        case AInput::RBUTTON:
-            emit clickedRight();
-            break;
-    }
+    if (!event.occurredOutside) {
+        emit clickedButton(event.button);
+        switch (event.button) {
+            case AInput::LBUTTON:
+                emit clicked();
+                break;
+            case AInput::RBUTTON:
+                emit clickedRight();
 
-    if (button == AInput::RBUTTON) {
-        auto menuModel = composeContextMenu();
-        if (!menuModel.empty()) {
-            AMenu::show(menuModel);
+                auto menuModel = composeContextMenu();
+                if (!menuModel.empty()) {
+                    AMenu::show(menuModel);
+                }
+
+                break;
         }
     }
 }
@@ -384,9 +389,9 @@ AMenuModel AView::composeContextMenu() {
     return {};
 }
 
-void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
+void AView::onMouseDoubleClicked(const AMouseButtonEvent& event)
 {
-    emit doubleClicked(button);
+    emit doubleClicked(event.button);
 }
 
 void AView::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
@@ -575,8 +580,8 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
             return true;
         },
         [&](const ALongPressEvent& e) {
-            onMousePressed(origin, AInput::RBUTTON);
-            onMouseReleased(origin, AInput::RBUTTON);
+            onMousePressed({ origin, AInput::RBUTTON });
+            onMouseReleased({ origin, AInput::RBUTTON });
             return true;
         },
         [&](const auto& e) {
