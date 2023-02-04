@@ -270,6 +270,7 @@ public:
 
 
     void requestTouchscreenKeyboard() override;
+    void hideTouchscreenKeyboard() override;
 
 signals:
     emits<> closed;
