@@ -21,5 +21,5 @@
 struct AMouseButtonEvent {
     glm::ivec2 position;
     AInput::Key button;
-    bool occurredOutside;
+    bool abortClick = false;
 };

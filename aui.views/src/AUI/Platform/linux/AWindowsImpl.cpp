@@ -481,8 +481,10 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         case 1:
                         case 2:
                         case 3:
-                            window->onMousePressed({ev.xbutton.x, ev.xbutton.y},
-                                                   (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1));
+                            window->onMousePressed({
+                                .position = { ev.xbutton.x, ev.xbutton.y },
+                                .button = (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1)
+                            });
                             break;
                         case 4: // wheel down
                             window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, { 0, -120 });
@@ -496,8 +498,10 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 case ButtonRelease: {
                     if (ev.xbutton.button < 4) {
                         window = locateWindow(ev.xbutton.window);
-                        window->onMouseReleased({ev.xbutton.x, ev.xbutton.y},
-                                                (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1));
+                        window->onMouseReleased({
+                             .position = { ev.xbutton.x, ev.xbutton.y },
+                             .button = (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1)
+                        });
                     }
                     break;
                 }

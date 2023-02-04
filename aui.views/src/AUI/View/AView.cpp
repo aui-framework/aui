@@ -353,7 +353,7 @@ void AView::onMousePressed(const AMouseButtonEvent& event)
                             onMouseReleased({
                                 .position = w->getMousePos() - getPositionInWindow(),
                                 .button = button,
-                                .occurredOutside = true,
+                                .abortClick = true,
                             });
                         }
                     });
@@ -366,7 +366,7 @@ void AView::onMousePressed(const AMouseButtonEvent& event)
 void AView::onMouseReleased(const AMouseButtonEvent& event)
 {
     mPressed.set(this, false);
-    if (!event.occurredOutside) {
+    if (!event.abortClick) {
         emit clickedButton(event.button);
         switch (event.button) {
             case AInput::LBUTTON:

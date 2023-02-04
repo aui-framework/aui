@@ -30,8 +30,8 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
 }
 
 void ACustomWindow::onMousePressed(const AMouseButtonEvent& event) {
-    if (event.y < AUI_TITLE_HEIGHT && button == AInput::LBUTTON) {
-        if (isCaptionAt(event)) {
+    if (event.position.y < AUI_TITLE_HEIGHT && event.button == AInput::LBUTTON) {
+        if (isCaptionAt(event.position)) {
             XClientMessageEvent xclient;
             memset(&xclient, 0, sizeof(XClientMessageEvent));
             XUngrabPointer(CommonRenderingContext::ourDisplay, 0);
@@ -50,11 +50,11 @@ void ACustomWindow::onMousePressed(const AMouseButtonEvent& event) {
                        (XEvent*) &xclient);
 
             mDragging = true;
-            mDragPos = event;
-            emit dragBegin(event);
+            mDragPos = event.position;
+            emit dragBegin(event.position);
         }
     }
-    AViewContainer::onMousePressed(event, button);
+    AViewContainer::onMousePressed(event);
 }
 
 
@@ -65,7 +65,7 @@ void ACustomWindow::handleXConfigureNotify() {
     emit dragEnd();
 
     // x11 does not send release button event
-    AViewContainer::onMouseReleased(mDragPos, AInput::LBUTTON);
+    AViewContainer::onMouseReleased({mDragPos, AInput::LBUTTON});
 }
 
 
