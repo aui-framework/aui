@@ -51,8 +51,8 @@ namespace aui {
      * AUI uses fmt library. See documentation at https://fmt.dev/latest/index.html
      */
     template <typename... Args>
-    inline AString format(std::string_view format, Args&&... args) {
-        return fmt::format(format, detail::fmt<std::decay_t<Args>>::process(std::forward<Args>(args))...);
+    inline AString format(std::string_view f, Args&&... args) {
+        return fmt::format(fmt::runtime(f), detail::fmt<std::decay_t<Args>>::process(std::forward<Args>(args))...);
     }
 }
 
