@@ -111,7 +111,7 @@ namespace aui::ui_building {
 
     static_assert(std::is_convertible_v<view<AView>, View>, "declarative view wrapper is not convertible to _<AView>");
 
-    template<typename Layout, std::derived_from<AViewContainer> Container = AViewContainer>
+    template<typename Layout, aui::derived_from<AViewContainer> Container = AViewContainer>
     struct layouted_container_factory_impl {
     private:
         AVector<View> mViews;
@@ -166,7 +166,7 @@ namespace aui::ui_building {
     };
 
 
-    template<typename Layout, std::derived_from<AViewContainer> Container = AViewContainer>
+    template<typename Layout, aui::derived_from<AViewContainer> Container = AViewContainer>
     struct layouted_container_factory: layouted_container_factory_impl<Layout, Container>, view_helper<layouted_container_factory<Layout, Container>> {
 
         template<typename... Views>

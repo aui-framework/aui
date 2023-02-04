@@ -31,7 +31,7 @@ ACustomWindow::ACustomWindow(const AString &name, int width, int height) {
 }
 
 void ACustomWindow::onMousePressed(const AMouseButtonEvent& event) {
-    ABaseWindow::onMousePressed(event, button);
+    ABaseWindow::onMousePressed(event);
 }
 
 void ACustomWindow::onMouseReleased(const AMouseButtonEvent& event) {

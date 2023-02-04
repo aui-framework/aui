@@ -18,7 +18,7 @@
 
 #include <AUI/Common/AObject.h>
 
-template<std::invocable Callback>
+template<aui::invocable Callback>
 class ARaiiHelper {
 public:
     ARaiiHelper(Callback&& callback) noexcept: mCallback(std::forward<Callback>(callback)) {

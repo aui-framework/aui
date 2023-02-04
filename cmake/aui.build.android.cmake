@@ -77,6 +77,7 @@ function(_aui_android_app)
     endforeach()
     file(WRITE ${_main}/CMakeLists.txt "cmake_minimum_required(VERSION 3.16)\n"
             "project(${APP_ANDROID_PACKAGE})\n"
+            "set(CMAKE_CXX_STANDARD 20)\n"
             ${ALL_CMAKE_ARGS}
             "add_subdirectory(${CMAKE_SOURCE_DIR} build)")
 

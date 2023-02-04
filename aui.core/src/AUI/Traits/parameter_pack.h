@@ -17,6 +17,7 @@
 #pragma once
 
 #include <algorithm>
+#include <AUI/Traits/concepts.h>
 
 namespace aui {
     namespace impl {
@@ -66,7 +67,7 @@ namespace aui {
      */
     namespace parameter_pack {
         template<typename Callable, typename... Args>
-        static void for_each(Callable&& c, Args&&... args) requires (... && std::invocable<Callable, Args>) {
+        static void for_each(Callable&& c, Args&&... args) requires (... && aui::invocable<Callable, Args>) {
             (..., [&] {
                 c(std::forward<Args>(args));
             }());
