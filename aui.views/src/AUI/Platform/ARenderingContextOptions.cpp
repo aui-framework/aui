@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -15,7 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
-// Created by Alex2772 on 6/17/2022.
+// Created by Alex2772 on 6/20/2022.
 //
 
 #include "ARenderingContextOptions.h"

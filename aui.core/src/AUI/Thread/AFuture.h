@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -81,6 +81,17 @@ namespace aui::impl::future {
     struct OnSuccessCallback {
         using type = std::function<void(const T& value)>;
     };
+
+    template<typename T>
+    struct FutureReturnType {
+        using type = T&;
+    };
+
+    template<>
+    struct FutureReturnType<void> {
+        using type = void;
+    };
+
 
     template<>
     struct OnSuccessCallback<void> {
@@ -351,7 +362,7 @@ namespace aui::impl::future {
             (*mInner)->notifyOnSuccessCallback();
         }
 
-        template<typename Callback>
+        template<std::invocable<const AException&> Callback>
         void onError(Callback&& callback) const noexcept {
             std::unique_lock lock((*mInner)->mutex);
 
@@ -404,7 +415,7 @@ namespace aui::impl::future {
          * </dl>
          * @return the object stored from the another thread.
          */
-        decltype(auto) get(AFutureWait flags = AFutureWait::DEFAULT) {
+        FutureReturnType<Value>::type get(AFutureWait flags = AFutureWait::DEFAULT) {
             AThread::interruptionPoint();
             (*mInner)->wait(mInner, flags);
             AThread::interruptionPoint();
@@ -419,6 +430,19 @@ namespace aui::impl::future {
             }
         }
 
+
+        /**
+         * @brief Returns the task result from the another thread. Sleeps if the task result is not currently available.
+         * <dl>
+         *   <dt><b>Sneaky exceptions</b></dt>
+         *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
+         * </dl>
+         * @return the object stored from the another thread.
+         */
+        FutureReturnType<Value>::type operator*() const {
+            return **const_cast<Future*>(this);
+        }
+
         /**
          * @brief Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
          * <dl>
@@ -427,7 +451,7 @@ namespace aui::impl::future {
          * </dl>
          * @return the object stored from the another thread.
          */
-        decltype(auto) operator*() {
+        FutureReturnType<Value>::type operator*() {
             return get();
         }
 
@@ -454,19 +478,6 @@ namespace aui::impl::future {
         Value const * operator->() const {
             return &operator*();
         }
-
-        /**
-         * @brief Returns the task result from the another thread. Sleeps if the task result is not currently available.
-         * <dl>
-         *   <dt><b>Sneaky exceptions</b></dt>
-         *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
-         * </dl>
-         * @return the object stored from the another thread.
-         */
-        decltype(auto) operator*() const {
-            return **const_cast<Future*>(this);
-        }
-
     };
 
 }
@@ -552,13 +563,13 @@ public:
         return super::mInner == r.mInner;
     }
 
-    template<typename Callback>
+    template<std::invocable<const T&> Callback>
     const AFuture& onSuccess(Callback&& callback) const noexcept {
         super::onSuccess(std::forward<Callback>(callback));
         return *this;
     }
 
-    template<typename Callback>
+    template<std::invocable<const AException&> Callback>
     const AFuture& onError(Callback&& callback) const noexcept {
         super::onError(std::forward<Callback>(callback));
         return *this;
@@ -567,7 +578,7 @@ public:
     /**
      * @brief Maps this AFuture to another type of AFuture.
      */
-    template<typename Callback>
+    template<std::invocable<const T&> Callback>
     auto map(Callback&& callback) -> AFuture<decltype(callback(std::declval<T>()))> const {
         AFuture<decltype(callback(std::declval<T>()))> result;
         onSuccess([result, callback = std::forward<Callback>(callback)](const T& v) {
@@ -631,7 +642,7 @@ public:
      *
      * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
      */
-    template<typename Callback>
+    template<std::invocable Callback>
     const AFuture& onSuccess(Callback&& callback) const noexcept {
         super::onSuccess(std::forward<Callback>(callback));
         return *this;
@@ -644,7 +655,7 @@ public:
      *
      * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
      */
-    template<typename Callback>
+    template<std::invocable<const AException&> Callback>
     const AFuture& onError(Callback&& callback) const noexcept {
         super::onError(std::forward<Callback>(callback));
         return *this;

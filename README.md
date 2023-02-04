@@ -5,7 +5,7 @@
 ![logo](https://raw.githubusercontent.com/aui-framework/aui/master/examples/AUI.Example.Views/assets/img/logo.svg)
 
 Cross-platform high performance efficient module-based framework for developing and deploying hardware accelerated graphical desktop applications
-using modern C++17.
+using modern C++20.
 
 [Documentation](https://aui-framework.github.io) | [Getting started](https://aui-framework.github.io/master/md_docs_Getting_started_with_AUI.html)
 
@@ -108,7 +108,7 @@ aui_link(aui_app PRIVATE aui::core aui::views)
 
 | Compiler                     | Support |
 |------------------------------|---------|
-| MSVC 19+ (Visual Studio 17+) | Full    |
+| MSVC 19+ (Visual Studio 20+) | Full    |
 | gcc (8+)                     | Full    |
 | MinGW (8+)                   | Partial |
 | Cross-compile MinGW          | Partial |

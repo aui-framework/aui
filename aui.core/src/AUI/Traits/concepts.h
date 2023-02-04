@@ -16,21 +16,16 @@
 
 #pragma once
 
-#include "AAbstractLabel.h"
+#include <concepts>
 
-/**
- * @brief Represents a simple single-line text display view.
- * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/ALabel.png">
- * @ingroup useful_views
- * @details
- * ALabel is used for displayed nonformatted single-line text.
- */
-class API_AUI_VIEWS ALabel: public AAbstractLabel {
-public:
-    using AAbstractLabel::AAbstractLabel;
-};
+namespace aui {
+    template<typename F, typename From, typename To>
+    concept mapper = requires(F&& f, From&& from) {
+        { std::invoke(f, std::forward<From>(from)) } -> std::convertible_to<To>;
+    };
 
-
-namespace declarative {
-    using Label = aui::ui_building::view<ALabel>;
+    template<typename F, typename ProducedObject>
+    concept factory = requires(F&& f) {
+        { std::invoke(f) } -> std::convertible_to<ProducedObject>;
+    };
 }

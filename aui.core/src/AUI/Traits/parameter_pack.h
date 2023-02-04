@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -66,7 +66,7 @@ namespace aui {
      */
     namespace parameter_pack {
         template<typename Callable, typename... Args>
-        static void for_each(Callable&& c, Args&&... args) {
+        static void for_each(Callable&& c, Args&&... args) requires (... && std::invocable<Callable, Args>) {
             (..., [&] {
                 c(std::forward<Args>(args));
             }());
