@@ -67,12 +67,12 @@ public:
      * @param function slot. Can be lambda
      */
 	template<class Signal, class Object, typename Function>
-	static void connect(Signal& signal, Object* object, Function function)
+	static void connect(Signal& signal, Object* object, Function&& function)
 	{
 		static_assert(std::is_base_of_v<AObject, Object>, "the passed object should be a base of the AObject class (use class YourObject: public AObject)");
 		static_assert(std::is_base_of_v<AAbstractSignal, Signal>, "expected signal as first argument");
 
-        signal.connect(object, function);
+        signal.connect(object, std::forward<Function>(function));
 	}
 
     /**
@@ -86,12 +86,12 @@ public:
      * @param function slot. Can be lambda
      */
 	template<class Signal, class Object, typename Function>
-	static void connect(Signal& signal, Object& object, Function function)
+	static void connect(Signal& signal, Object& object, Function&& function)
 	{
 		static_assert(std::is_base_of_v<AObject, Object>, "the passed object should be a base of the AObject class (use class YourObject: public AObject)");
 		static_assert(std::is_base_of_v<AAbstractSignal, Signal>, "expected signal as first argument");
 
-        signal.connect(&object, function);
+        signal.connect(&object, std::forward<Function>(function));
 	}
 
     /**
@@ -104,10 +104,10 @@ public:
      * @param function slot. Can be lambda
      */
 	template<class Signal, typename Function>
-	void connect(Signal& signal, Function function)
+	void connect(Signal& signal, Function&& function)
 	{
 		static_assert(std::is_base_of_v<AAbstractSignal, Signal>, "expected signal as first argument");
-		signal.connect(this, function);
+		signal.connect(this, std::forward<Function>(function));
 	}
 
     /**
@@ -121,12 +121,12 @@ public:
      * @param function slot. Can be lambda
      */
 	template<class Signal, class Object, typename Function>
-	static void connect(Signal& signal, _<Object> object, Function function)
+	static void connect(Signal& signal, _<Object> object, Function&& function)
 	{
 		static_assert(std::is_base_of_v<AObject, typename std::remove_pointer<Object>::type>, "the passed object should be a base of the AObject class (use class YourObject: public AObject)");
 		static_assert(std::is_base_of_v<AAbstractSignal, Signal>, "expected signal as first argument");
 		if constexpr (std::is_base_of_v<AObject, typename std::remove_pointer<Object>::type>) {
-			signal.connect(object.get(), function);
+			signal.connect(object.get(), std::forward<Function>(function));
 		}
 	}
 
