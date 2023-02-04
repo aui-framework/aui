@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -51,8 +51,8 @@ namespace aui {
      * AUI uses fmt library. See documentation at https://fmt.dev/latest/index.html
      */
     template <typename... Args>
-    inline AString format(std::string_view format, Args&&... args) {
-        return fmt::format(format, detail::fmt<std::decay_t<Args>>::process(std::forward<Args>(args))...);
+    inline AString format(std::string_view f, Args&&... args) {
+        return fmt::format(fmt::runtime(f), detail::fmt<std::decay_t<Args>>::process(std::forward<Args>(args))...);
     }
 }
 

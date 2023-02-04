@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -111,7 +111,7 @@ namespace aui::ui_building {
 
     static_assert(std::is_convertible_v<view<AView>, View>, "declarative view wrapper is not convertible to _<AView>");
 
-    template<typename Layout, typename Container = AViewContainer>
+    template<typename Layout, std::derived_from<AViewContainer> Container = AViewContainer>
     struct layouted_container_factory_impl {
     private:
         AVector<View> mViews;
@@ -166,7 +166,7 @@ namespace aui::ui_building {
     };
 
 
-    template<typename Layout, typename Container = AViewContainer>
+    template<typename Layout, std::derived_from<AViewContainer> Container = AViewContainer>
     struct layouted_container_factory: layouted_container_factory_impl<Layout, Container>, view_helper<layouted_container_factory<Layout, Container>> {
 
         template<typename... Views>

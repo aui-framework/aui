@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -95,7 +95,7 @@ void AWindow::redraw() {
         // measure frame time
         auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         unsigned millis = mFrameMillis = unsigned((after - before).count());
-        if (millis > 17) {
+        if (millis > 20) {
             static auto lastNotification = 0ms;
             if (after - lastNotification > 5min) {
                 lastNotification = after;
