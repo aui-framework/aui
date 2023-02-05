@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -213,8 +213,9 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
 
     setWindowStyle(WindowStyle::NO_DECORATORS);
 }
-void ACustomWindow::onPointerPressed(glm::ivec2 pos, AInput::Key button) {
-    if (pos.y < AUI_TITLE_HEIGHT && button == AInput::LBUTTON) {
+void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
+    const auto pos = event.position;
+    if (pos.y < AUI_TITLE_HEIGHT && event.button == AInput::LBUTTON) {
         if (isCaptionAt(pos)) {
             // TODO apple
 
@@ -234,7 +235,7 @@ void ACustomWindow::handleXConfigureNotify() {
     emit dragEnd();
 
     // x11 does not send release button event
-    AViewContainer::onPointerReleased(mDragPos, AInput::LBUTTON);
+    AViewContainer::onPointerReleased({mDragPos, AInput::LBUTTON});
 }
 
 
