@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -26,6 +26,8 @@
 #include <AUI/Traits/containers.h>
 #include <AUI/Traits/iterators.h>
 #include "AContainerPrototypes.h"
+#include "AUI/Traits/concepts.h"
+#include <concepts>
 
 
 namespace aui::impl {
@@ -300,7 +302,7 @@ public:
         p::erase(std::remove_if(p::begin(), p::end(), std::forward<Predicate>(predicate)), p::end());
     }
 
-    template<typename Callable>
+    template<aui::mapper<std::size_t, StoredType> Callable>
     inline static AVector<StoredType, Allocator> generate(size_t size, Callable&& callable) noexcept {
         AVector<StoredType, Allocator> s;
         s.reserve(size);
@@ -320,7 +322,7 @@ public:
      * @param transformer transformer function.
      * @return A new vector.
      */
-    template<typename Iterator, typename UnaryOperation>
+    template<std::incrementable Iterator, std::invocable<Iterator> UnaryOperation>
     static auto fromRange(aui::range<Iterator> range, UnaryOperation&& transformer) -> AVector<decltype(transformer(range.first()))> {
         AVector<decltype(transformer(range.first()))> result;
         result.reserve(range.size());
@@ -328,7 +330,7 @@ public:
         return result;
     }
 
-    template<typename UnaryOperation>
+    template<std::invocable<const StoredType&> UnaryOperation>
     auto map(UnaryOperation&& transformer) const -> AVector<decltype(transformer(std::declval<StoredType>()))> {
         AVector<decltype(transformer(std::declval<StoredType>()))> result;
         result.reserve(p::size());
@@ -336,21 +338,21 @@ public:
         return result;
     }
 
-    template<typename UnaryOperation>
+    template<std::invocable<const StoredType&> UnaryOperation>
     [[nodiscard]]
     auto toMap(UnaryOperation&& transformer) const -> AMap<decltype(transformer(std::declval<StoredType>()).first),
                                                            decltype(transformer(std::declval<StoredType>()).second)> {
         return aui::container::to_map(p::begin(), p::end(), transformer);
     }
 
-    template<typename UnaryOperation>
+    template<std::invocable<StoredType&> UnaryOperation>
     [[nodiscard]]
     auto toMap(UnaryOperation&& transformer) -> AMap<decltype(transformer(std::declval<StoredType>()).first),
                                                      decltype(transformer(std::declval<StoredType>()).second)> {
         return aui::container::to_map(p::begin(), p::end(), transformer);
     }
 
-    template<typename Predicate>
+    template<std::predicate<const StoredType&> Predicate>
     AVector filter(Predicate&& predicate) {
         AVector result;
         result.reserve(p::size());

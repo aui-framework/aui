@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++17
+﻿// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -30,7 +30,7 @@ namespace RenderHints
      *       wrapper class instead.
      * @param maskRenderer function - mask renderer
      */
-    template<typename Callable>
+    template<std::invocable Callable>
     static void pushMask(Callable&& maskRenderer) {
         Render::getRenderer()->pushMaskBefore();
         maskRenderer();
@@ -43,14 +43,14 @@ namespace RenderHints
      *       wrapper class instead.
      * @param maskRenderer function - mask renderer
      */
-    template<typename Callable>
+    template<std::invocable Callable>
     static void popMask(Callable&& maskRenderer) {
         Render::getRenderer()->popMaskBefore();
         maskRenderer();
         Render::getRenderer()->popMaskAfter();
     }
 
-    template<typename Callable>
+    template<std::invocable Callable>
     class PushMask
     {
     private:

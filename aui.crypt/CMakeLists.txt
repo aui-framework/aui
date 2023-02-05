@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
 
-set(CMAKE_FIND_DEBUG_MODE TRUE)
 auib_import(OpenSSL https://github.com/aui-framework/openssl-cmake/archive/refs/heads/master.zip
             ARCHIVE
             PRECOMPILED_URL_PREFIX https://github.com/aui-framework/openssl-cmake/releases/download/refs%2Fheads%2Fmaster)

@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -57,10 +57,23 @@ public:
 
     void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
 
+    void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) {
+        mScrollbarAppearance = scrollbarAppearance;
+        AUI_NULLSAFE(mHorizontalScrollbar)->setAppearance(scrollbarAppearance.getHorizontal());
+        AUI_NULLSAFE(mVerticalScrollbar)->setAppearance(scrollbarAppearance.getVertical());
+
+        adjustContentSize();
+    }
+
+    void adjustContentSize();
+    void adjustHorizontalSizeToContent();
+    void adjustVerticalSizeToContent();
+
     class Builder {
     friend class AScrollArea;
     private:
         _<AScrollbar> mExternalVerticalScrollbar;
+        _<AScrollbar> mExternalHorizontalScrollbar;
         _<AViewContainer> mContents;
         bool mExpanding = false;
 
@@ -71,6 +84,12 @@ public:
             mExternalVerticalScrollbar = std::move(externalVerticalScrollbar);
             return *this;
         }
+
+        Builder& withExternalHorizontalScrollbar(_<AScrollbar> externalHorizontalScrollbar) {
+            mExternalHorizontalScrollbar = std::move(externalHorizontalScrollbar);
+            return *this;
+        }
+
         Builder& withContents(_<AViewContainer> contents) {
             mContents = std::move(contents);
             return *this;
@@ -80,7 +99,6 @@ public:
             mExpanding = true;
             return *this;
         }
-
 
         _<AScrollArea> build() {
             return aui::ptr::manage(new AScrollArea(*this));
@@ -99,6 +117,7 @@ private:
     _<AScrollAreaContainer> mContentContainer;
     _<AScrollbar> mVerticalScrollbar;
     _<AScrollbar> mHorizontalScrollbar;
+    ScrollbarAppearance mScrollbarAppearance;
 
     explicit AScrollArea(const Builder& builder);
 };

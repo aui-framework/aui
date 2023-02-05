@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -115,6 +115,7 @@
 #include "Declaration/VerticalAlign.h"
 #include "Declaration/Visibility.h"
 #include "Declaration/TextOverflow.h"
+#include "Declaration/ScrollbarAppearance.h"
 
 // Selectors
 #include "AUI/ASS/Selector/AAssSelector.h"

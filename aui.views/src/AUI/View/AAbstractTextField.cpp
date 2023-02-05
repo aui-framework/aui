@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++17
+﻿// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -15,6 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include <AUI/Platform/AClipboard.h>
+#include <AUI/Platform/ABaseWindow.h>
 #include "AAbstractTextField.h"
 
 
@@ -25,7 +26,9 @@
 
 
 AAbstractTextField::AAbstractTextField() {
-
+    connect(clicked, [this] {
+        AUI_NULLSAFE(getWindow())->requestTouchscreenKeyboard();
+    });
 }
 
 void AAbstractTextField::onFocusAcquired() {

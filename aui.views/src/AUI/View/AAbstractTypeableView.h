@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -41,6 +41,7 @@ private:
     bool mCursorBlinkVisible = true;
     bool mTextChangedFlag = false;
     bool mIsMultiline = false;
+    bool mIsCopyable = true;
 
 protected:
     int mHorizontalScroll = 0;
@@ -129,6 +130,9 @@ public:
         setText(text().trim());
     }
 
+    void setCopyable(bool isCopyable) {
+        mIsCopyable = isCopyable;
+    }
 
     virtual void setText(const AString& t);
 

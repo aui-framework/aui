@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -37,6 +37,7 @@ class ASignal final: public AAbstractSignal
     friend class AWatchable;
 public:
     using func_t = std::function<void(Args...)>;
+    using args_t = std::tuple<Args...>;
 
 private:
     struct slot

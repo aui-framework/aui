@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -249,6 +249,9 @@ void AAbstractTypeableView::pasteFromClipboard() {
 }
 
 void AAbstractTypeableView::cutToClipboard() {
+    if (!mIsCopyable)
+        return;
+
     auto sel = selection();
     AClipboard::copyToClipboard(selectedText());
     typeableErase(sel.begin, sel.end);
@@ -257,7 +260,12 @@ void AAbstractTypeableView::cutToClipboard() {
     invalidatePrerenderedString();
 }
 
-void AAbstractTypeableView::copyToClipboard() const { AClipboard::copyToClipboard(selectedText()); }
+void AAbstractTypeableView::copyToClipboard() const {
+    if (!mIsCopyable)
+        return;
+
+    AClipboard::copyToClipboard(selectedText());
+}
 
 void AAbstractTypeableView::selectAll() { ACursorSelectable::selectAll(); }
 

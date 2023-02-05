@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -267,7 +267,7 @@ public:
     ACurl(ACurl&& o) noexcept {
         operator=(std::move(o));
     }
-    ACurl() noexcept: mCURL(nullptr) {}
+
 	virtual ~ACurl();
 
     ACurl& operator=(Builder&& o) noexcept;

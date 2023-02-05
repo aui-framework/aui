@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++17
+﻿// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -124,7 +124,7 @@ public:
     template<typename Iterator, typename Functor>
     auto parallel(Iterator begin, Iterator end, Functor&& functor);
 
-    template <typename Callable>
+    template <std::invocable Callable>
     [[nodiscard]]
     inline auto operator*(Callable fun)
     {

@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -30,10 +30,14 @@
  */
 class ASegfaultException: public AException {
 private:
+    inline static std::function<void(ASegfaultException*)> handler;
     void* mAddress;
 
 public:
-    ASegfaultException(void* address) : mAddress(address) {}
+    explicit ASegfaultException(void* address) : mAddress(address) {
+        if (handler)
+            handler(this);
+    }
 
     AString getMessage() const noexcept override {
         char buf[128];
@@ -43,5 +47,9 @@ public:
 
     void* getAddress() const {
         return mAddress;
+    }
+
+    static void setGlobalHandler(std::function<void(ASegfaultException*)> globalHandler) {
+        handler = std::move(globalHandler);
     }
 };

@@ -40,6 +40,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
 set(AUI_BUILD_FOR "" CACHE STRING "Specifies target cross-compilation platform")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES ${AUI_BOOT} CACHE BOOL "Install runtime dependencies along with the project")
+set(CMAKE_CXX_STANDARD 20)
 
 cmake_policy(SET CMP0072 NEW)
 
@@ -206,7 +207,7 @@ int main(int argc, char **argv) {
             add_executable(${TESTS_MODULE_NAME} ${TESTS_SRCS} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
             include(GoogleTest)
             gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
-            set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
+            set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 20)
             target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
             target_link_libraries(${TESTS_MODULE_NAME} PUBLIC GTest::gmock)
 
@@ -260,7 +261,7 @@ endfunction()
 function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
-    set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 17)
+    set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 20)
 
     if(NOT BUILD_SHARED_LIBS)
         target_compile_definitions(${AUI_MODULE_NAME} PUBLIC AUI_STATIC)

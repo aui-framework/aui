@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -150,4 +150,12 @@ void AWindow::blockUserInput(bool block) {
 
 void AWindow::allowDragNDrop() {
 
+}
+
+void AWindow::requestTouchscreenKeyboard() {
+    AAndroid::showVirtualKeyboard();
+}
+
+void AWindow::hideTouchscreenKeyboard() {
+    AAndroid::hideVirtualKeyboard();
 }
