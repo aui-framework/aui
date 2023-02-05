@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -26,7 +26,6 @@ JavaVM* _gVM;
 
 
 AAndroid::Ref _gClassAUI;
-AAndroid::Ref _gClassMyGLSurfaceView;
 
 
 int(*_gEntry)(AStringVector);
@@ -78,8 +77,8 @@ float AAndroid::getDpiRatio() {
 
 void AAndroid::requestRedraw() {
     if (auto j = getJNI()) {
-        if (auto methodGetDpiRatio = j->GetStaticMethodID(_gClassMyGLSurfaceView.clazz(), "requestRedraw", "()V")) {
-            j->CallStaticVoidMethod(_gClassMyGLSurfaceView.clazz(), methodGetDpiRatio);
+        if (auto methodGetDpiRatio = j->GetStaticMethodID(_gClassAUI.clazz(), "requestRedraw", "()V")) {
+            j->CallStaticVoidMethod(_gClassAUI.clazz(), methodGetDpiRatio);
         }
     }
 }
@@ -91,7 +90,6 @@ Java_com_github_aui_android_MyGLSurfaceView_handleInit(JNIEnv *env, jclass clazz
     //replace with one of your classes in the line below
 
     _gClassAUI = env->FindClass("com/github/aui/android/AUI");
-    _gClassMyGLSurfaceView = env->FindClass("com/github/aui/android/MyGLSurfaceView");
 
     jboolean isCopy;
     auto internalStoragePath = env->GetStringUTFChars(internalStoragePathR, &isCopy);
@@ -105,4 +103,20 @@ Java_com_github_aui_android_MyGLSurfaceView_handleInit(JNIEnv *env, jclass clazz
 AAndroid::Ref &AAndroid::Ref::operator=(jobject object) {
     mObject = object ? AAndroid::getJNI()->NewGlobalRef(object) : nullptr;
     return *this;
+}
+
+void AAndroid::showVirtualKeyboard() {
+    if (auto j = getJNI()) {
+        if (auto methodGetDpiRatio = j->GetStaticMethodID(_gClassAUI.clazz(), "showKeyboard", "()V")) {
+            j->CallStaticVoidMethod(_gClassAUI.clazz(), methodGetDpiRatio);
+        }
+    }
+}
+
+void AAndroid::hideVirtualKeyboard() {
+    if (auto j = getJNI()) {
+        if (auto methodGetDpiRatio = j->GetStaticMethodID(_gClassAUI.clazz(), "hideKeyboard", "()V")) {
+            j->CallStaticVoidMethod(_gClassAUI.clazz(), methodGetDpiRatio);
+        }
+    }
 }

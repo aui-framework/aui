@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -38,5 +38,5 @@ void AAnimatedDrawable::draw(const IDrawable::Params &params) {
 }
 
 glm::ivec2 AAnimatedDrawable::getSizeHint() {
-    return glm::ivec2();
+    return mFactory->getSizeHint();
 }

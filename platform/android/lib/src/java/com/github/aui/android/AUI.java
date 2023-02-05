@@ -23,6 +23,18 @@ public class AUI {
         });
     }
 
+
+    private static void requestRedraw() {
+        MyGLSurfaceView.getLastSurface().requestRender();
+    }
+    private static void showKeyboard() {
+        // TODO
+    }
+
+    private static void hideKeyboard() {
+        // TODO
+    }
+
     public static float getDpiRatio() {
         return ourContext.getResources().getDisplayMetrics().density * 1.2f;
     }

@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -162,8 +162,8 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
         r.finalSize = glm::round(glm::max(float(available.y * r.expandingSum) / sums.y, float(r.minSize)));
 
 
-        // align right to border
-        if (r.finalPos + r.finalSize > x + width) {
+        // align down to border
+        if (r.finalPos + r.finalSize > y + height) {
             r.finalSize = y + height - r.finalPos;
         }
         pos += r.finalSize + mSpacing;

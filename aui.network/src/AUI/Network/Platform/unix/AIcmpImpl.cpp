@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -24,6 +24,7 @@
 #include "AUI/Platform/ErrorToException.h"
 #include "AUI/Common/AByteBuffer.h"
 
+#if !AUI_PLATFORM_APPLE
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <csignal>
@@ -292,8 +293,13 @@ private:
     char mAnsData[4096];
 };
 
+#endif
 
 AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address destination, std::chrono::milliseconds timeout) noexcept {
+#if AUI_PLATFORM_APPLE
+    // not implemented
+    return AFuture<std::chrono::high_resolution_clock::duration>();
+#else
     auto impl = _new<IcmpImpl>(destination);
 
     UnixIoThread::inst().registerCallback(impl->mSocket, POLLIN, [impl](int v) mutable {
@@ -304,4 +310,5 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
 
 
     return impl->send(timeout);
+#endif
 }

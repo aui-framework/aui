@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++17
+﻿// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -115,7 +115,7 @@ public:
 
     _<AView> getViewAtRecursive(glm::ivec2 pos);
 
-    template<typename Callback>
+    template<aui::mapper<const _<AView>&, bool> Callback>
     bool getViewAtRecursive(glm::ivec2 pos, const Callback& callback, bool ignoreGone = true) {
         for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
             auto view = *it;
@@ -137,7 +137,7 @@ public:
         return false;
     }
 
-    template<typename Callback>
+    template<aui::mapper<const _<AView>&, bool> Callback>
     bool getViewRecursive(const Callback& callback, bool ignoreGone = true) {
         for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
             auto view = *it;

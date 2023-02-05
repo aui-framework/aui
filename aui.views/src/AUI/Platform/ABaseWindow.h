@@ -1,4 +1,4 @@
-// AUI Framework - Declarative UI toolkit for modern C++17
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -213,6 +213,17 @@ public:
     virtual void onDragLeave();
     virtual void onDragDrop(const ADragNDrop::DropEvent& event);
 
+    /**
+     * @brief On a mobile touchscreen device, shows system virtual keyboard.
+     * @details
+     * On a desktop device does nothing.
+     */
+    virtual void requestTouchscreenKeyboard();
+
+    /**
+     * @brief Hides virtual keyboard if visible
+     */
+    virtual void hideTouchscreenKeyboard();
 
 signals:
     emits<>            dpiChanged;
