@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 #pragma once
 
 
@@ -21,8 +37,8 @@ public:
         bool mAddSpacers = true;
 
     public:
-        Builder& withItems(const AVector<AVector<_<AView>>>& items) {
-            mItems = items;
+        Builder& withItems(AVector<AVector<_<AView>>> items) {
+            mItems = std::move(items);
             return *this;
         }
 
@@ -35,10 +51,10 @@ public:
             auto splitter = aui::ptr::manage(new AGridSplitter);
             if (mAddSpacers) {
                 for (auto& row: mItems) {
-                    row.push_back(_new<ASpacer>());
+                    row.push_back(_new<ASpacerExpanding>());
                 }
                 mItems.push_back(
-                        AVector<_<AView>>::generate(mItems.first().size(), [](size_t) { return _new<ASpacer>(); }));
+                        AVector<_<AView>>::generate(mItems.first().size(), [](size_t) { return _new<ASpacerExpanding>(); }));
             }
             splitter->mItems = std::move(mItems);
             splitter->updateSplitterItems();

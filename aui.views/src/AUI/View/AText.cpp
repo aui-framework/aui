@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by Alex2772 on 11/24/2021.
 //
@@ -47,50 +63,46 @@ AText::ParsedFlags AText::parseFlags(const AText::Flags& flags) {
     return pf;
 }
 
-_<AText> AText::fromString(const AString& string, const Flags& flags) {
+void AText::setString(const AString& string, const Flags& flags) {
     auto parsedFlags = parseFlags(flags);
-    auto text = aui::ptr::manage(new AText);
-    text->mParsedFlags = parsedFlags;
+    mParsedFlags = parsedFlags;
     AVector<_<AWordWrappingEngine::Entry>> entries;
     auto splt = string.split(' ');
     entries.reserve(splt.size());
     for (auto& w : splt) {
-        text->pushWord(entries, w, parsedFlags);
+        pushWord(entries, w, parsedFlags);
     }
 
-    text->mEngine.setEntries(std::move(entries));
-    return text;
+    mEngine.setEntries(std::move(entries));
 }
 
-_<AText> AText::fromItems(std::initializer_list<std::variant<AString, _<AView>>> init, const Flags& flags) {
+void AText::setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags) {
     auto parsedFlags = parseFlags(flags);
-    auto text = aui::ptr::manage(new AText);
-    text->mParsedFlags = parsedFlags;
+    mParsedFlags = parsedFlags;
     AVector<_<AWordWrappingEngine::Entry>> entries;
     entries.reserve(init.size());
     for (auto& item : init) {
         std::visit(aui::lambda_overloaded {
             [&](const AString& string) {
                 for (auto& w : string.split(' ')) {
-                    text->pushWord(entries, w, parsedFlags);
+                    pushWord(entries, w, parsedFlags);
                 }
             },
             [&](const _<AView>& view) {
-                text->addView(view);
+                addView(view);
                 entries << _new<AViewEntry>(view);
             },
         }, item);
     }
 
-    text->mEngine.setEntries(std::move(entries));
-    return text;
+    mEngine.setEntries(std::move(entries));
 }
 
-_<AText> AText::fromHtml(const AString& html, const Flags& flags) {
+void AText::setHtml(const AString& html, const Flags& flags) {
     auto parsedFlags = parseFlags(flags);
     AStringStream stringStream(html);
     struct CommonEntityVisitor: IXmlDocumentVisitor {
-        _<AText> text = aui::ptr::manage(new AText());
+        AText& text;
         AVector<_<AWordWrappingEngine::Entry>> entries;
         ParsedFlags& parsedFlags;
 
@@ -101,7 +113,7 @@ _<AText> AText::fromHtml(const AString& html, const Flags& flags) {
         } currentState;
         std::stack<State> stateStack;
 
-        CommonEntityVisitor(ParsedFlags& parsedFlags) : parsedFlags(parsedFlags) {}
+        CommonEntityVisitor(AText& text, ParsedFlags& parsedFlags) : text(text), parsedFlags(parsedFlags) {}
 
         void visitAttribute(const AString& name, AString value) override {};
         _<IXmlEntityVisitor> visitEntity(AString entityName) override {
@@ -127,7 +139,7 @@ _<AText> AText::fromHtml(const AString& html, const Flags& flags) {
 
                 ~ViewEntityVisitor() override {
                     auto view = _new<AButton>("hello {}"_format(name));
-                    parent.text->addView(view);
+                    parent.text.addView(view);
                     parent.entries << _new<AViewEntry>(view);
                 }
             };
@@ -136,25 +148,30 @@ _<AText> AText::fromHtml(const AString& html, const Flags& flags) {
         };
         void visitTextEntity(const AString& entity) override {
             for (auto& w : entity.split(' ')) {
-                text->pushWord(entries, w, parsedFlags);
+                text.pushWord(entries, w, parsedFlags);
             }
         };
 
-    } entityVisitor(parsedFlags);
+    } entityVisitor(*this, parsedFlags);
     AXml::read(aui::ptr::fake(&stringStream), aui::ptr::fake(&entityVisitor));
 
-    auto text = std::move(entityVisitor.text);
-    text->mParsedFlags = parsedFlags;
-    text->mEngine.setEntries(std::move(entityVisitor.entries));
-
-    return text;
+    mParsedFlags = parsedFlags;
+    mEngine.setEntries(std::move(entityVisitor.entries));
 }
 
-int AText::getContentMinimumWidth() {
-    return 10;
+int AText::getContentMinimumWidth(ALayoutDirection layout) {
+    if (!mPrerenderedString) {
+        prerenderString();
+    }
+
+    return mPrerenderedString ? mPrerenderedString->getWidth() : 0;
 }
 
-int AText::getContentMinimumHeight() {
+int AText::getContentMinimumHeight(ALayoutDirection layout) {
+    if (!mPrerenderedString) {
+        prerenderString();
+    }
+
     return mPrerenderedString ? mPrerenderedString->getHeight() : 0;
 }
 
@@ -195,10 +212,10 @@ void AText::prerenderString() {
     }
 }
 
-void AText::setSize(int width, int height) {
-    bool widthDiffers = width != getWidth();
-    int prevContentMinimumHeight = getContentMinimumHeight();
-    AViewContainer::setSize(width, height);
+void AText::setSize(glm::ivec2 size) {
+    bool widthDiffers = size.x != getWidth();
+    int prevContentMinimumHeight = getContentMinimumHeight(ALayoutDirection::NONE);
+    AViewContainer::setSize(size);
     if (widthDiffers) {
         prerenderString();
         AWindow::current()->flagUpdateLayout();
@@ -244,4 +261,8 @@ void AText::CharEntry::setPosition(const glm::ivec2& position) {
 
 Float AText::CharEntry::getFloat() const {
     return Float::NONE;
+}
+
+void AText::invalidateFont() {
+    mPrerenderedString.reset();
 }

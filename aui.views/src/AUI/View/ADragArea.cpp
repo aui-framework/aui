@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2 on 29.11.2020.
@@ -28,8 +23,41 @@
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Platform/AWindow.h>
 
+namespace {
+    class DragAreaLayout: public ALayout {
+    public:
+        void addView(size_t index, const _<AView>& view) override {
+            markViewToBeCentered(*view);
+        }
+
+        void removeView(size_t index, const _<AView>& view) override {
+
+        }
+
+        void onResize(int x, int y, int width, int height) override {
+
+        }
+
+        int getMinimumWidth() override {
+            return 0;
+        }
+
+        int getMinimumHeight() override {
+            return 0;
+        }
+
+        static void markViewToBeCentered(AView& v) {
+            v.setPosition({-1, -1});
+        }
+
+        static bool isViewMarkedToBeCentered(AView& v) {
+            return v.getPosition() == glm::ivec2(-1);
+        }
+    };
+}
+
 ADragArea::ADragArea() {
-    setLayout(_new<AStackedLayout>());
+    setLayout(_new<DragAreaLayout>());
     setExpanding({1, 1});
 }
 
@@ -62,6 +90,8 @@ void ADragArea::ADraggableHandle::onMousePressed(glm::ivec2 pos, AInput::Key but
     mDragging = true;
 
     auto [dragArea, container] = getDragAreaAndDraggingView();
+
+    if (!dragArea) return;
     connect(mouseMove, dragArea, &ADragArea::handleMouseMove);
     dragArea->startDragging(container);
 
@@ -81,6 +111,7 @@ void ADragArea::ADraggableHandle::onMouseReleased(glm::ivec2 pos, AInput::Key bu
     if (mDragging) {
         mDragging = false;
         auto[dragArea, _] = getDragAreaAndDraggingView();
+        if (!dragArea) return;
         mouseMove.clearAllConnectionsWith(dragArea);
         dragArea->endDragging();
     }
@@ -105,8 +136,30 @@ void ADragArea::handleMouseMove() {
 }
 
 void ADragArea::updateLayout() {
-    for (auto& v : getViews()) {
-        setValidPositionFor(v, v->getPosition());
+    const auto x = getPadding().left;
+    const auto y = getPadding().top;
+    const auto width = getWidth() - mPadding.horizontal();
+    const auto height = getHeight() - mPadding.vertical();
+
+    for (const auto& v : getViews()) {
+        v->ensureAssUpdated();
+        auto margins = v->getMargin();
+        auto finalWidth = v->getMinimumWidth() + margins.horizontal();
+        auto finalX = (width - finalWidth) / 2;
+
+        auto finalHeight = v->getMinimumHeight() + margins.vertical();
+        auto finalY = (height - finalHeight) / 2;
+
+        if (DragAreaLayout::isViewMarkedToBeCentered(*v)) {
+            v->setGeometry(finalX + x + margins.left,
+                           finalY + y + margins.top,
+                           finalWidth - margins.horizontal(),
+                           finalHeight - margins.vertical());
+        } else {
+            v->setSize({finalWidth - margins.horizontal(),
+                        finalHeight - margins.vertical()});
+            setValidPositionFor(v, v->getPosition());
+        }
     }
     AViewContainer::updateLayout();
 }

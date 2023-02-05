@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by Alex2772 on 11/11/2021.
 //
@@ -16,7 +32,7 @@
 using namespace ass;
 
 ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
-    setCustomAss({ Border {
+    setCustomStyle({ Border {
                            1_px,
                            0x505050_rgb,
                    },
@@ -31,16 +47,22 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
     ADeque<ass::decl::IDeclarationBase*> applicableDeclarations;
 
+    using namespace declarative;
     auto dst = Vertical {
             _new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize {14_pt } },
-            _new<ACheckBox>("Enabled") let {
+            CheckBoxWrapper {
+                Label { "Enabled "},
+            } let {
                 it->setChecked(targetView->isEnabled());
                 connect(it->checked, [this](bool v) {
                     if (auto s = mTargetView.lock()) s->setEnabled(v);
                     requestTargetUpdate();
                 });
             },
-            _new<ACheckBox>("Expanding") let {
+
+            CheckBoxWrapper {
+                Label {"Expanding"},
+            } let {
                 it->setChecked(targetView->getExpanding() != glm::ivec2(0));
                 connect(it->checked, [this](bool v) {
                     if (auto s = mTargetView.lock()) s->setExpanding(v);
@@ -84,9 +106,9 @@ void ViewPropertiesView::displayApplicableRule(const _<AViewContainer>& dst,
                                                ADeque<ass::decl::IDeclarationBase*>& applicableDeclarations,
                                                const RuleWithoutSelector* rule) {
 
-    for (auto& decl : rule->getDeclarations()) {
-        applicableDeclarations.push_front(decl);
-        dst->addView(_new<ALabel>("<internal {}>"_format(AReflect::name(decl))) with_style{Opacity {0.7f } });
+    for (const auto& decl : rule->getDeclarations()) {
+        applicableDeclarations.push_front(decl.get());
+        dst->addView(_new<ALabel>("<internal {}>"_format(AReflect::name(decl.get()))) with_style{ Opacity {0.7f } });
     }
     dst->addView(Horizontal {
             _new<ALabel>("},") << ".declaration_br",

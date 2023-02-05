@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 #pragma once
 
 
@@ -25,10 +41,9 @@ private:
     void performHintChecks(const char* msg, ASet<_<AView>>& set) {
         currentImpl() = this;
         if constexpr (ignores_visibility<Assertion>::value) {
-            mIncludeInvisibleViews = true;
             set = toSet();
         }
-        UITest::frame();
+        uitest::frame();
         if (msg == nullptr) std::cout << "Assertion message is empty";
         if constexpr(!std::is_same_v<Assertion, empty>) {
             if (set.empty()) std::cout << "UIMatcher is empty so check is not performed";
@@ -40,11 +55,26 @@ private:
 public:
     UIMatcher(const _<IMatcher>& matcher) : mMatcher(matcher) {}
 
+    ~UIMatcher() {
+        if (current() == this) {
+            currentImpl() = nullptr;
+        }
+    }
+
     static UIMatcher* current() {
         return currentImpl();
     }
 
     ASet<_<AView>> toSet() const;
+
+    _<AView> one() const {
+        auto set = toSet();
+        if (set.empty()) {
+            SCOPED_TRACE("no views selected");
+            return nullptr;
+        }
+        return *set.begin();
+    }
 
     UIMatcher& includeInvisibleViews() {
         mIncludeInvisibleViews = true;
@@ -56,18 +86,73 @@ public:
         auto set = toSet();
         if (set.empty()) std::cout << "UIMatcher is empty so action is not performed";
 
-        UITest::frame();
+        uitest::frame();
         for (auto& v : set) {
             action(v);
-            UITest::frame();
+            uitest::frame();
         }
         return *this;
+    }
+
+    /**
+     * @brief Finds the nearest view to the specified one.
+     * @details
+     * Finds the nearest view to the bottom right corner of the specified view. The bottom right corner is chosen in
+     * order to simulate human eye scanning (which is from top-left to bottom-right).
+     *
+     * Useful when finding fields by their labels:
+     * @code{cpp}
+     * _new<ALabel>("Login"),
+     * _new<ATextField>(),
+     * _new<ALabel>("Password"),
+     * _new<ATextField>(),
+     * ...
+     * By::type<ATextField>().findNearestTo(By::text("Login")) // <- matches the first ATextField
+     * By::type<ATextField>().findNearestTo(By::text("Password")) // <- matches the second ATextField
+     * @endcode
+     * @param matcher UIMatcher of a view to find the nearest to. The UIMatcher is expected to match only one view.
+     * @return the nearest view
+     */
+    UIMatcher findNearestTo(UIMatcher matcher) {
+        auto mySet = toSet();
+        auto targets = matcher.toSet();
+
+        if (targets.size() != 1) {
+            throw AException("expected to match one view, matched {}"_format(mySet.size()));
+        }
+        if (mySet.empty()) {
+            throw AException("findNearestTo requires at least one element to match");
+        }
+
+        auto nearestToView = (*targets.begin());
+        auto nearestToPoint = glm::vec2(nearestToView->getPositionInWindow() + nearestToView->getSize());
+        auto target = std::min_element(mySet.begin(), mySet.end(), [&](const _<AView>& lhs, const _<AView>& rhs) {
+            float dst1 = glm::distance2(nearestToPoint, glm::vec2(lhs->getCenterPointInWindow()));
+            float dst2 = glm::distance2(nearestToPoint, glm::vec2(rhs->getCenterPointInWindow()));
+            return dst1 < dst2;
+        });
+        EXPECT_TRUE(target != mySet.end());
+
+        class ToOneMatcher: public IMatcher {
+        public:
+            explicit ToOneMatcher(_<AView> view) : mView(std::move(view)) {}
+
+            bool matches(const _<AView>& view) override {
+                return view == mView;
+            }
+        private:
+            _<AView> mView;
+        };
+
+        return { _new<ToOneMatcher>(std::move(*target)) };
     }
 
 
     template<class Assertion>
     UIMatcher& check(Assertion&& assertion, const char* msg = "no msg") {
+        mIncludeInvisibleViews = ignores_visibility<Assertion>::value;
         auto set = toSet();
+        EXPECT_FALSE(set.empty()) << msg << ": empty set";
         performHintChecks<Assertion>(msg, set);
         for (auto& s : set) {
             EXPECT_TRUE(assertion(s)) << msg;

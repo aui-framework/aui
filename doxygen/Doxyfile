@@ -44,7 +44,7 @@ PROJECT_NUMBER         = $(GITHUB_REF_NAME)
 # for a project that appears at the top of each page and should give viewer a
 # quick idea about the purpose of the project. Keep the description short.
 
-PROJECT_BRIEF          = Cross-platform module-based framework for developing  C++17 desktop applications
+PROJECT_BRIEF          = Cross-platform module-based framework for developing  C++20 desktop applications
 
 # With the PROJECT_LOGO tag one can specify a logo or an icon that is included
 # in the documentation. The maximum height of the logo should not exceed 55
@@ -179,7 +179,15 @@ STRIP_FROM_PATH        =
 # specify the list of include paths that are normally passed to the compiler
 # using the -I flag.
 
-STRIP_FROM_INC_PATH    =
+STRIP_FROM_INC_PATH    = aui.core/src \
+                         aui.crypt/src \
+                         aui.curl/src \
+                         aui.data/src \
+                         aui.json/src \
+                         aui.network/src \
+                         aui.views/src \
+                         aui.xml/src \
+                         aui.uitests/src
 
 # If the SHORT_NAMES tag is set to YES, doxygen will generate much shorter (but
 # less readable) file names. This can be useful is your file systems doesn't
@@ -2236,7 +2244,7 @@ SEARCH_INCLUDES        = YES
 # preprocessor.
 # This tag requires that the tag SEARCH_INCLUDES is set to YES.
 
-INCLUDE_PATH           =
+INCLUDE_PATH           = .
 
 # You can use the INCLUDE_FILE_PATTERNS tag to specify one or more wildcard
 # patterns (like *.h and *.hpp) to filter out the header-files in the
@@ -2452,10 +2460,10 @@ DOT_UML_DETAILS        = NO
 # to display on a single line. If the actual line length exceeds this threshold
 # significantly it will wrapped across multiple lines. Some heuristics are apply
 # to avoid ugly line breaks.
-# Minimum value: 0, maximum value: 1000, default value: 17.
+# Minimum value: 0, maximum value: 1000, default value: 20.
 # This tag requires that the tag HAVE_DOT is set to YES.
 
-DOT_WRAP_THRESHOLD     = 17
+DOT_WRAP_THRESHOLD     = 20
 
 # If the TEMPLATE_RELATIONS tag is set to YES then the inheritance and
 # collaboration graphs will show the relations between templates and their

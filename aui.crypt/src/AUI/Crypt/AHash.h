@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2 on 23.09.2020.
@@ -33,41 +28,19 @@
  * @ingroup crypt
  */
 namespace AHash {
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha512(const AByteBuffer& in);
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha512(IInputStream& in);
-    [[nodiscard]] inline AByteBuffer sha512(const _<IInputStream>& in) {
-        return sha512(*in);
-    }
-    [[nodiscard]] inline AByteBuffer sha512(IInputStream&& in) {
-        return sha512(in);
-    }
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha512(AByteBufferView in);
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha512(aui::no_escape<IInputStream> in);
 
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha256(const AByteBuffer& in);
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha256(IInputStream& in);
-    [[nodiscard]] inline AByteBuffer sha256(const _<IInputStream>& in) {
-        return sha256(*in);
-    }
-    [[nodiscard]] inline AByteBuffer sha256(IInputStream&& in) {
-        return sha256(in);
-    }
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha256(AByteBufferView in);
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha256(aui::no_escape<IInputStream> in);
 
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha1(const AByteBuffer& in);
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha1(IInputStream& in);
-    [[nodiscard]] inline AByteBuffer sha1(const _<IInputStream>& in) {
-        return sha1(*in);
-    }
-    [[nodiscard]] inline AByteBuffer sha1(IInputStream&& in) {
-        return sha1(in);
-    }
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha1(AByteBufferView in);
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha1(aui::no_escape<IInputStream> in);
 
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer md5(const AByteBuffer& in);
-    [[nodiscard]] API_AUI_CRYPT AByteBuffer md5(IInputStream& in);
-    [[nodiscard]] inline AByteBuffer md5(const _<IInputStream>& in) {
-        return md5(*in);
-    }
-    [[nodiscard]] inline AByteBuffer md5(IInputStream&& in) {
-        return md5(in);
-    }
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer md5(AByteBufferView in);
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer md5(aui::no_escape<IInputStream> in);
+
+    [[nodiscard]] API_AUI_CRYPT AByteBuffer sha256hmac(AByteBufferView in, AByteBufferView key);
 }
 
 

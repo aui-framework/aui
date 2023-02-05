@@ -19,9 +19,6 @@
 
 # CMake AUI building functions
 
-define_property(GLOBAL PROPERTY TESTS_SRCS
-        BRIEF_DOCS "Global list of test files"
-        FULL_DOCS "Global list of test files")
 define_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS
         BRIEF_DOCS "Global list of test include dirs"
         FULL_DOCS "Global list of test include dirs")
@@ -37,14 +34,19 @@ define_property(TARGET PROPERTY INTERFACE_AUI_WHOLEARCHIVE
         FULL_DOCS "Use wholearchive when linking this library to another")
 
 set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
-set_property(GLOBAL PROPERTY TESTS_SRCS "")
 
 # generator expressions for install(CODE [[ ... ]])
 set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
+set(AUI_BUILD_FOR "" CACHE STRING "Specifies target cross-compilation platform")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES ${AUI_BOOT} CACHE BOOL "Install runtime dependencies along with the project")
+set(CMAKE_CXX_STANDARD 20)
 
 cmake_policy(SET CMP0072 NEW)
+
+if (CMAKE_CROSSCOMPILING AND AUI_BUILD_FOR)
+    message(FATAL_ERROR "CMAKE_CROSSCOMPILING and AUI_BUILD_FOR are exclusive vars.")
+endif()
 
 if (ANDROID OR IOS)
     set(_build_shared OFF)
@@ -60,58 +62,58 @@ set(AUI_EXCLUDE_PLATFORMS android linux macos win32 ios apple unix)
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set(AUI_DEBUG TRUE)
 else()
-    set(AUI_DEBUG TRUE)
+    set(AUI_DEBUG FALSE)
 endif()
 
 if (WIN32)
-    set(AUI_PLATFORM_WIN 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_WIN 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS win32)
 else()
-    set(AUI_PLATFORM_WIN 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_WIN 0 CACHE INTERNAL "Platform")
 endif()
 if (UNIX AND NOT APPLE AND NOT ANDROID)
-    set(AUI_PLATFORM_LINUX 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_LINUX 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS linux)
 else()
-    set(AUI_PLATFORM_LINUX 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_LINUX 0 CACHE INTERNAL "Platform")
 endif()
 
 if (UNIX AND APPLE)
-    set(AUI_PLATFORM_APPLE 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_APPLE 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS apple)
 else()
-    set(AUI_PLATFORM_APPLE 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_APPLE 0 CACHE INTERNAL "Platform")
 endif()
 
 if (UNIX AND APPLE AND NOT IOS)
-    set(AUI_PLATFORM_MACOS 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_MACOS 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS macos)
 else()
-    set(AUI_PLATFORM_MACOS 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_MACOS 0 CACHE INTERNAL "Platform")
 endif()
 
 if (ANDROID)
-    set(AUI_PLATFORM_ANDROID 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_ANDROID 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS android)
 else()
-    set(AUI_PLATFORM_ANDROID 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_ANDROID 0 CACHE INTERNAL "Platform")
 endif()
 
 if (IOS)
-    set(AUI_PLATFORM_IOS 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_IOS 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS ios)
 else()
-    set(AUI_PLATFORM_IOS 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_IOS 0 CACHE INTERNAL "Platform")
 endif()
 
 if (UNIX)
-    set(AUI_PLATFORM_UNIX 1 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_UNIX 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS unix)
 else()
-    set(AUI_PLATFORM_UNIX 0 CACHE BOOL "Platform")
+    set(AUI_PLATFORM_UNIX 0 CACHE INTERNAL "Platform")
 endif()
 
-set(AUI_EXCLUDE_PLATFORMS ${AUI_EXCLUDE_PLATFORMS} CACHE STRING "")
+set(AUI_EXCLUDE_PLATFORMS ${AUI_EXCLUDE_PLATFORMS} CACHE INTERNAL "")
 
 # determine compiler home dir for mingw when crosscompiling
 if (MINGW AND CMAKE_CROSSCOMPILING)
@@ -165,16 +167,17 @@ function(aui_add_properties AUI_MODULE_NAME)
 endfunction(aui_add_properties)
 
 macro(_aui_import_gtest)
-    if(NOT TARGET GTest::gtest)
+    if (NOT TARGET GTest::gtest)
         auib_import(GTest https://github.com/google/googletest
-                VERSION release-1.11.0
-                CMAKE_ARGS -Dgtest_force_shared_crt=TRUE)
+                    VERSION release-1.11.0
+                    CMAKE_ARGS -Dgtest_force_shared_crt=TRUE
+                    LINK STATIC)
         set_property(TARGET GTest::gtest PROPERTY IMPORTED_GLOBAL TRUE)
         set_property(TARGET GTest::gmock PROPERTY IMPORTED_GLOBAL TRUE)
     endif()
 endmacro()
 
-macro(aui_enable_tests)
+function(aui_enable_tests AUI_MODULE_NAME)
     _aui_import_gtest()
     if (NOT TARGET GTest::gtest)
         message(FATAL_ERROR "GTest::gtest not found!")
@@ -182,7 +185,13 @@ macro(aui_enable_tests)
 
     enable_testing()
     if (NOT ANDROID AND NOT IOS)
-        get_property(TESTS_SRCS GLOBAL PROPERTY TESTS_SRCS)
+        get_property(_source_dir TARGET ${AUI_MODULE_NAME} PROPERTY SOURCE_DIR)
+        unset(TESTS_SRCS)
+
+        if (NOT EXISTS ${_source_dir}/tests)
+            message(FATAL_ERROR "aui_enable_tests expects ${_source_dir}/tests to exist")
+        endif()
+        file(GLOB_RECURSE TESTS_SRCS ${_source_dir}/tests/*.cpp)
 
         if (NOT TARGET Tests)
             set(TESTS_MODULE_NAME Tests)
@@ -198,7 +207,7 @@ int main(int argc, char **argv) {
             add_executable(${TESTS_MODULE_NAME} ${TESTS_SRCS} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
             include(GoogleTest)
             gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
-            set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
+            set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 20)
             target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
             target_link_libraries(${TESTS_MODULE_NAME} PUBLIC GTest::gmock)
 
@@ -219,11 +228,12 @@ int main(int argc, char **argv) {
         else()
             target_sources(Tests PRIVATE ${TESTS_SRCS}) # append sources
         endif()
+
         if (TARGET Tests)
-            # executables
-            get_property(TESTS_EXECUTABLES GLOBAL PROPERTY TESTS_EXECUTABLES)
-            foreach(_executable ${TESTS_EXECUTABLES})
-                get_target_property(_t ${_executable} SOURCES)
+            # if the specified target is an executable, we should add it's srcs to the Tests target, otherwise just link it.
+            get_property(_type TARGET ${AUI_MODULE_NAME} PROPERTY TYPE)
+            if (_type STREQUAL EXECUTABLE)
+                get_target_property(_t ${AUI_MODULE_NAME} SOURCES)
 
                 # remove unexisting sources; otherwise cmake would fail for unknown reason
                 foreach(_e ${_t})
@@ -233,58 +243,33 @@ int main(int argc, char **argv) {
                 endforeach()
 
                 target_sources(Tests PRIVATE ${_t})
-                get_target_property(_t ${_executable} INCLUDE_DIRECTORIES)
+                get_target_property(_t ${AUI_MODULE_NAME} INCLUDE_DIRECTORIES)
                 target_include_directories(Tests PRIVATE ${_t})
-                get_target_property(_t ${_executable} COMPILE_DEFINITIONS)
+                get_target_property(_t ${AUI_MODULE_NAME} COMPILE_DEFINITIONS)
                 if(_t)
                     target_compile_definitions(Tests PRIVATE ${_t})
                 endif()
-                get_target_property(_t ${_executable} LINK_LIBRARIES)
+                get_target_property(_t ${AUI_MODULE_NAME} LINK_LIBRARIES)
                 target_link_libraries(Tests PRIVATE ${_t})
-            endforeach()
-
-            # libraries
-            get_property(TESTS_DEPS GLOBAL PROPERTY TESTS_DEPS)
-            get_property(TESTS_INCLUDE_DIRS GLOBAL PROPERTY TESTS_INCLUDE_DIRS)
-            foreach(_dep ${TESTS_DEPS})
-                get_target_property(_type ${_dep} TYPE)
-
-                # if a target is executable we should add it's dependencies instead of the executable itself since
-                # executable's source are already built to our Tests target
-                if (_type STREQUAL "EXECUTABLE")
-                    get_target_property(_libs ${_dep} LINK_LIBRARIES)
-                    get_target_property(_defs ${_dep} COMPILE_DEFINITIONS)
-                    aui_link(Tests PRIVATE ${_libs})
-                    if (_defs)
-                        target_compile_definitions(Tests PRIVATE ${_defs})
-                    endif()
-                else()
-                    aui_link(Tests PRIVATE ${_dep})
-                endif()
-            endforeach()
-            target_include_directories(Tests PRIVATE ${TESTS_INCLUDE_DIRS})
+            else()
+                target_link_libraries(Tests PRIVATE ${AUI_MODULE_NAME})
+            endif()
         endif()
-        set_property(GLOBAL PROPERTY TESTS_INCLUDE_DIRS "")
-        set_property(GLOBAL PROPERTY TESTS_SRCS "")
-        set_property(GLOBAL PROPERTY TESTS_DEPS "")
-        set_property(GLOBAL PROPERTY TESTS_EXECUTABLES "")
     endif()
-endmacro()
+endfunction()
 
 function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
-    set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 17)
+    set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 20)
 
     if(NOT BUILD_SHARED_LIBS)
         target_compile_definitions(${AUI_MODULE_NAME} PUBLIC AUI_STATIC)
     endif()
     if(AUI_DEBUG)
-        target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_DEBUG)
+        target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_DEBUG=1)
     else()
-        target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_RELEASE)
-        # Strip binary for release builds
-        #add_custom_command(TARGET ${AUI_MODULE_NAME} POST_BUILD COMMAND ${CMAKE_STRIP} ${PROJECT_NAME})
+        target_compile_definitions(${AUI_MODULE_NAME} INTERFACE AUI_DEBUG=0)
     endif()
 
     if ((UNIX OR MINGW) AND NOT ANDROID AND NOT APPLE)
@@ -486,21 +471,19 @@ function(aui_deploy_library AUI_MODULE_NAME)
 endfunction(aui_deploy_library)
 
 function(aui_executable AUI_MODULE_NAME)
-    file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.h src/*.mm src/*.m)
+    file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.m)
 
     set(options WIN32_SUBSYSTEM_CONSOLE)
     set(oneValueArgs COMPILE_ASSETS EXPORT)
     set(multiValueArgs ADDITIONAL_SRCS)
     cmake_parse_arguments(AUIE "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
-
-    # for tests
-    # executable's sources
-    if (SRCS_TESTS_TMP)
-        set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${SRCS_TESTS_TMP} ${SRCS})
-        set_property(GLOBAL APPEND PROPERTY TESTS_EXECUTABLES ${AUI_MODULE_NAME})
-    endif()
 
     # remove platform dependent files
     foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
@@ -587,6 +570,9 @@ endfunction(aui_static_link)
 macro(_aui_find_root)
     if (NOT AUI_BUILD_AUI_ROOT)
         set(AUI_BUILD_AUI_ROOT ${AUI_ROOT})
+        if (NOT AUI_BUILD_AUI_ROOT)
+            message(FATAL_ERROR "Could not find AUI root")
+        endif()
     endif()
 endmacro()
 
@@ -595,7 +581,8 @@ macro(_aui_try_find_toolbox)
     find_program(AUI_TOOLBOX_EXE aui.toolbox
             HINTS ${AUI_BUILD_AUI_ROOT}/bin)
     if (NOT AUI_TOOLBOX_EXE)
-        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/*/aui.toolbox)
+        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/prefix/aui.toolbox.exe ${AUI_CACHE_DIR}/prefix/aui.toolbox)
+
         if (AUI_TOOLBOX_EXE)
             list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
         else()
@@ -606,6 +593,7 @@ macro(_aui_try_find_toolbox)
 endmacro()
 
 macro(_aui_provide_toolbox_for_host)
+    message(STATUS "Compiling aui.toolbox for the host platform")
     set(_workdir ${CMAKE_CURRENT_BINARY_DIR}/aui_toolbox_provider)
     file(MAKE_DIRECTORY ${_workdir})
     file(MAKE_DIRECTORY ${_workdir}/b)
@@ -618,10 +606,10 @@ file(
         ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
-auib_import(AUI https://github.com/aui-framework/aui
+auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core toolbox image)
 ]])
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -DAUI_CACHE_DIR=${AUI_CACHE_DIR} WORKING_DIRECTORY ${_workdir}/b RESULT_VARIABLE _r)
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -DAUI_CACHE_DIR=${AUI_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=TRUE WORKING_DIRECTORY ${_workdir}/b RESULT_VARIABLE _r)
     if (NOT _r STREQUAL 0)
         message(FATAL_ERROR "CMake subprocess failed")
     endif()
@@ -666,6 +654,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
             set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox")
         endif()
     endif()
+
     message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})
@@ -780,7 +769,7 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                         if (APPLE)
                             target_link_options(${AUI_MODULE_NAME} ${_public_visibility} "-Wl,-force_load,$<TARGET_FILE:${_link_target_file}>")
                         else()
-                            set(_link_target_file -Wl,--whole-archive,--allow-multiple-definition ${_link_target_file} -Wl,--no-whole-archive)
+                            target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} -Wl,--whole-archive,--allow-multiple-definition,$<TARGET_FILE:${_link_target_file}> -Wl,--no-whole-archive)
                         endif()
                     endif()
                 endif()
@@ -803,7 +792,8 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
 endfunction()
 
 function(aui_module AUI_MODULE_NAME)
-    file(GLOB_RECURSE SRCS_TESTS_TMP tests/*.cpp tests/*.c tests/*.h)
+    file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
 
 
     set(options WHOLEARCHIVE PLUGIN FORCE_STATIC FORCE_SHARED)
@@ -816,14 +806,14 @@ function(aui_module AUI_MODULE_NAME)
         message(FATAL_ERROR "FORCE_SHARED AND FORCE_STATIC flags are exclusive!")
     endif()
 
-    if (SRCS_TESTS_TMP)
-        set_property(GLOBAL APPEND PROPERTY TESTS_DEPS ${AUI_MODULE_NAME})
-        foreach(child ${SRCS_TESTS_TMP})
-            set_property(GLOBAL APPEND PROPERTY TESTS_SRCS ${child})
-        endforeach()
-    endif()
 
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp src/*.cpp src/*.c src/*.manifest src/*.h src/*.hpp src/*.mm src/*.m)
+    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.manifest
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
+            ${CMAKE_CURRENT_SOURCE_DIR}/src/*.m)
+
     if (BUILD_SHARED_LIBS)
         if (WIN32)
             if (EXISTS "${CMAKE_SOURCE_DIR}/Resource.rc")
@@ -834,7 +824,7 @@ function(aui_module AUI_MODULE_NAME)
 
     # remove platform dependent files
     foreach(PLATFORM_NAME ${AUI_EXCLUDE_PLATFORMS})
-        list(FILTER SRCS EXCLUDE REGEX ".*\\/${PLATFORM_NAME}\\/.*")
+        list(FILTER SRCS EXCLUDE REGEX "(.*\\/)?Platform/${PLATFORM_NAME}\\/.*")
     endforeach()
 
     if (AUIE_FORCE_SHARED)
@@ -915,6 +905,9 @@ macro(aui_app)
             ICON
             VENDOR
 
+            # android
+            ANDROID_PACKAGE
+
             # linux
             LINUX_DESKTOP
 
@@ -953,8 +946,10 @@ macro(aui_app)
     endif()
 
     unset(_error_msg)
-    if (NOT APP_TARGET OR NOT TARGET ${APP_TARGET})
-        list(APPEND _error_msg "TARGET which is your app's executable target.")
+    if (NOT APP_TARGET)
+        if (NOT TARGET ${APP_TARGET})
+            list(APPEND _error_msg "TARGET which is your app's executable target.")
+        endif()
     endif()
     if (NOT APP_NAME)
         list(APPEND _error_msg "NAME which is your app's display name.")
@@ -975,22 +970,36 @@ macro(aui_app)
         list(APPEND _error_msg_opt "APPLE_SIGN_IDENTITY which is your code sign identity (defaults to \"iPhone Developer\").")
         list(APPEND _error_msg_opt "IOS_VERSION which is target IOS version (defaults to 14.3).")
         list(APPEND _error_msg_opt "IOS_DEVICE which is target IOS device: either IPHONE, IPAD or BOTH (defaults to BOTH).")
-        list(APPEND _error_msg_opt "IOS_CONTROLLER which is your controller name (defaults to AUIViewController)")
+        list(APPEND _error_msg_opt "IOS_CONTROLLER which is your controller name (defaults to AUIViewController).")
     endif()
 
     if (AUI_PLATFORM_LINUX)
         if (NOT APP_LINUX_DESKTOP_FILE)
-            list(APPEND _error_msg_opt "LINUX_DESKTOP_FILE which is your custom *.desktop file")
+            list(APPEND _error_msg_opt "LINUX_DESKTOP_FILE which is your custom *.desktop file.")
+        endif()
+    endif()
+
+    if (AUI_PLATFORM_ANDROID OR AUI_BUILD_FOR STREQUAL "android")
+        if (NOT APP_ANDROID_PACKAGE)
+            list(APPEND _error_msg "ANDROID_PACKAGE which is android app package name.")
         endif()
     endif()
 
     if (_error_msg)
-        list(JOIN _error_msg \n v1)
-        list(JOIN _error_msg_opt \n v2)
+        list(JOIN _error_msg "\n - " v1)
+        list(JOIN _error_msg_opt "\n - " v2)
+        foreach(_i v1 v2)
+            if (${_i})
+                set(${_i} " - ${${_i}}")
+            endif()
+        endforeach()
         message(FATAL_ERROR "The following arguments are required for aui_app():\n${v1}\nnote: the following optional variables can be also set:\n${v2}")
     endif()
 
     set(_current_app_build_files ${PROJECT_BINARY_DIR}/${APP_TARGET})
+    if (APP_ICON)
+        get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
+    endif()
 
     # common cpack
     set(_exec \$<TARGET_FILE_NAME:${APP_TARGET}>)
@@ -1002,6 +1011,18 @@ macro(aui_app)
     # WINDOWS ==========================================================================================================
     if (AUI_PLATFORM_WIN)
         list(APPEND CPACK_GENERATOR WIX)
+
+        if (APP_ICON)
+            set(_ico "${_current_app_build_files}/app.ico")
+            add_custom_command(
+                    OUTPUT ${_ico}
+                    COMMAND ${AUI_TOOLBOX_EXE}
+                    ARGS svg2ico ${_icon_absolute} ${_ico}
+            )
+
+            configure_file(${AUI_BUILD_AUI_ROOT}/platform/win32/res.rc.in ${_current_app_build_files}/win32-res.rc)
+            target_sources(${APP_TARGET} PRIVATE ${_current_app_build_files}/win32-res.rc ${_ico})
+        endif()
     endif()
 
 
@@ -1055,7 +1076,7 @@ macro(aui_app)
         set(MACOSX_BUNDLE_COPYRIGHT ${APP_COPYRIGHT})
         set(MACOSX_DEPLOYMENT_TARGET ${APP_IOS_VERSION})
         if (AUI_PLATFORM_MACOS)
-            configure_file(${AUI_BUILD_AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+            configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
         endif()
         set_target_properties(${APP_TARGET} PROPERTIES
                 MACOSX_BUNDLE TRUE
@@ -1076,7 +1097,7 @@ macro(aui_app)
 
     # MACOS ============================================================================================================
     if (AUI_PLATFORM_MACOS)
-        configure_file(${AUI_BUILD_AUI_ROOT}/cmake/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
+        configure_file(${AUI_BUILD_AUI_ROOT}/platform/apple/bundleinfo.plist.in ${CPACK_BUNDLE_PLIST})
 
         if (APP_ICON)
             # generate icns
@@ -1091,7 +1112,6 @@ macro(aui_app)
             if (TARGET aui.toolbox)
                 add_dependencies(${APP_TARGET} aui.toolbox)
             endif()
-            get_filename_component(_icon_absolute ${APP_ICON} ABSOLUTE)
             set(_icon_icns ${_current_app_build_files}/app.icns)
             add_custom_command(
                     OUTPUT ${_icon_icns}
@@ -1132,8 +1152,8 @@ macro(aui_app)
                 ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
                 )
 
-        configure_file(${AUI_BUILD_AUI_ROOT}/cmake/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
-        configure_file(${AUI_BUILD_AUI_ROOT}/cmake/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
+        configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
+        configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
 
         target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
         set_target_properties(${APP_TARGET} PROPERTIES XCODE_ATTRIBUTE_ENABLE_BITCODE "NO")
@@ -1171,7 +1191,7 @@ macro(aui_app)
                 XCODE_ATTRIBUTE_CODE_SIGN_IDENTITY ${APP_APPLE_SIGN_IDENTITY}
                 XCODE_ATTRIBUTE_DEVELOPMENT_TEAM ${APP_APPLE_TEAM_ID}
                 XCODE_ATTRIBUTE_TARGETED_DEVICE_FAMILY ${APP_IOS_DEVICE}
-                MACOSX_BUNDLE_INFO_PLIST ${AUI_BUILD_AUI_ROOT}/cmake/plist.in
+                MACOSX_BUNDLE_INFO_PLIST ${AUI_BUILD_AUI_ROOT}/platform/apple/plist.in
                 XCODE_ATTRIBUTE_CLANG_ENABLE_OBJC_ARC YES
                 XCODE_ATTRIBUTE_COMBINE_HIDPI_IMAGES NO
                 XCODE_ATTRIBUTE_INSTALL_PATH "$(LOCAL_APPS_DIR)"
@@ -1289,6 +1309,12 @@ macro(aui_app)
     if (NOT APP_NO_INCLUDE_CPACK AND NOT CPack_CMake_INCLUDED)
         include(CPack)
     endif()
+
+    if (AUI_BUILD_FOR STREQUAL "android")
+        _aui_android_app()
+    elseif (AUI_BUILD_FOR STREQUAL "ios")
+        _aui_ios_app()
+    endif()
 endmacro()
 
 if (MINGW OR UNIX)
@@ -1305,3 +1331,14 @@ endif()
 #        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --coverage")
 #    endif()
 #endif()
+
+
+if (AUI_BUILD_FOR STREQUAL "android")
+    _aui_find_root()
+    include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.android.cmake)
+endif()
+
+if (AUI_BUILD_FOR STREQUAL "ios")
+    _aui_find_root()
+    include(${AUI_BUILD_AUI_ROOT}/cmake/aui.build.ios.cmake)
+endif()

@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by Alex2772 on 2/8/2022.
 //
@@ -37,11 +53,11 @@ void Svg2png::run(Toolbox& t) {
     for (auto& f : t.args) {
         if (f.length() >= 3) {
             if (f[2] == '=') {
-                auto value = f.mid(3);
+                auto value = f.substr(3);
                 switch (f[1]) {
                     case 'r': {
                         for (auto& resolution: value.split(',')) {
-                            resolutions << resolution.toInt();
+                            resolutions << resolution.toInt().valueOr(0);
                         }
                         break;
                     }
@@ -73,7 +89,7 @@ void Svg2png::run(Toolbox& t) {
     for (auto& r : resolutions) {
         auto outputFilename = "{}_{}x{}.png"_format(filenamePrefix, r, r);
         AFileOutputStream fos(outputDir / outputFilename);
-        PngImageLoader::save(fos, *img.provideImage({r, r}));
+        PngImageLoader::save(fos, img.provideImage({r, r}));
         std::cout << filename << " -> " << outputFilename << std::endl;
     }
 }

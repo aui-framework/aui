@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by Alex2772 on 12/5/2021.
 //
@@ -35,7 +51,7 @@ namespace uitest::impl {
 
     template<ASide side>
     struct align {
-        std::optional<int> value;
+        AOptional<int> value;
 
         bool operator()(const _<AView>& v) {
             int current = side_value<side>{}(v);
@@ -53,9 +69,9 @@ namespace uitest::impl {
 
         less_of(UIMatcher matcher) : matcher(std::move(matcher)) {}
 
-        bool operator()(const _<AView>& rhs) {
+        bool operator()(const _<AView>& lhs) {
             auto views = matcher.toSet();
-            return std::all_of(views.begin(), views.end(), [&](const _<AView>& lhs) {
+            return std::all_of(views.begin(), views.end(), [&](const _<AView>& rhs) {
                 return side_value<side>{}(lhs) < side_value<side>{}(rhs);
             });
         }
@@ -67,9 +83,9 @@ namespace uitest::impl {
 
         greater_of(UIMatcher matcher) : matcher(std::move(matcher)) {}
 
-        bool operator()(const _<AView>& rhs) {
+        bool operator()(const _<AView>& lhs) {
             auto views = matcher.toSet();
-            return std::all_of(views.begin(), views.end(), [&](const _<AView>& lhs) {
+            return std::all_of(views.begin(), views.end(), [&](const _<AView>& rhs) {
                 return side_value<side>{}(lhs) > side_value<side>{}(rhs);
             });
         }

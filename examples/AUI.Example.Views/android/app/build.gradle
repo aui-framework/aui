@@ -17,8 +17,6 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags ''
-            }
-            ndkBuild {
                 targets "aui.example.views"
             }
         }
@@ -40,7 +38,7 @@ android {
     externalNativeBuild {
         cmake {
             path file('src/main/cpp/CMakeLists.txt')
-            version '3.16.0+'
+            version '3.18.0+'
         }
     }
 }

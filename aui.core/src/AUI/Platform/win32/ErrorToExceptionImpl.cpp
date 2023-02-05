@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by Alex2772 on 5/18/2022.
 //
@@ -6,8 +22,7 @@
 #include <AUI/IO/AIOException.h>
 #include <AUI/Platform/ErrorToException.h>
 
-aui::impl::Error aui::impl::lastError() {
-    int errorCode = GetLastError();
+aui::impl::Error aui::impl::formatSystemError(int errorCode) {
     if(errorCode == 0)
         return {}; //No error message has been recorded
 
@@ -22,11 +37,16 @@ aui::impl::Error aui::impl::lastError() {
 
     return { errorCode, message.trim().removeAll('\r').removeAll('\n') };
 }
+
+aui::impl::Error aui::impl::formatSystemError() {
+    return formatSystemError(GetLastError());
+}
+
 void aui::impl::lastErrorToException(AString message) {
-    auto[lastError, description] = lastError();
+    auto[lastErrorCode, description] = formatSystemError();
     message += ": ";
     message += description;
-    switch (lastError) {
+    switch (lastErrorCode) {
         case ERROR_FILE_NOT_FOUND:
             throw AFileNotFoundException(message);
         case ERROR_ACCESS_DENIED:

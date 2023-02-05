@@ -6,3 +6,5 @@ if (NOT TARGET aui::views)
 endif()
 aui_module(aui.uitests EXPORT aui)
 aui_link(aui.uitests PRIVATE aui::core aui::views GTest::gmock)
+
+aui_enable_tests(aui.uitests)

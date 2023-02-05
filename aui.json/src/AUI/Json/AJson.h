@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -31,13 +26,14 @@
 #include <AUI/Common/AMap.h>
 #include <AUI/Json/AJson.h>
 #include <AUI/Json/Exception.h>
+#include <AUI/Traits/callables.h>
 #include <variant>
 
 class AJson;
 namespace aui::impl {
     using JsonObject = AMap<AString, AJson>;
     using JsonArray = AVector<AJson>;
-    using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, float, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
+    using JsonVariant = std::variant<std::nullopt_t, std::nullptr_t, int, int64_t, double, bool, AString, aui::impl::JsonArray, aui::impl::JsonObject>;
 }
 
 /**
@@ -46,6 +42,7 @@ namespace aui::impl {
  */
 class AJson: public aui::impl::JsonVariant {
 private:
+    using super = aui::impl::JsonVariant;
 
     template<typename T>
     [[nodiscard]]
@@ -58,26 +55,25 @@ private:
         if (isEmpty()) {
             *this = T();
         }
-        try {
-            return std::get<T>(*this);
-        } catch (...) {
-            throw AJsonTypeMismatchException("not a " + AClass<T>::name());
+
+        if (auto p = std::get_if<T>(this)) {
+            return *p;
         }
+        throw AJsonTypeMismatchException("not a " + AClass<T>::name());
     }
 
     template<typename T>
     [[nodiscard]]
     const T& as() const {
-        try {
-            return std::get<T>(*this);
-        } catch (...) {
-            if constexpr(std::is_same_v<T, aui::impl::JsonObject>) {
-                throw AJsonTypeMismatchException("not an object");
-            } else if constexpr(std::is_same_v<T, aui::impl::JsonArray>) {
-                throw AJsonTypeMismatchException("not an array");
-            } else {
-                throw AJsonTypeMismatchException("not a " + AClass<T>::name());
-            }
+        if (auto p = std::get_if<T>(this)) {
+            return *p;
+        }
+        if constexpr(std::is_same_v<T, aui::impl::JsonObject>) {
+            throw AJsonTypeMismatchException("not an object");
+        } else if constexpr(std::is_same_v<T, aui::impl::JsonArray>) {
+            throw AJsonTypeMismatchException("not an array");
+        } else {
+            throw AJsonTypeMismatchException("not a " + AClass<T>::name());
         }
     }
 public:
@@ -104,13 +100,18 @@ public:
     }
 
     [[nodiscard]]
+    bool isLongInt() const noexcept {
+        return isInt() || is<int64_t>();
+    }
+
+    [[nodiscard]]
     bool isEmpty() const noexcept {
         return is<std::nullopt_t>();
     }
 
     [[nodiscard]]
     bool isNumber() const noexcept {
-        return isInt() || is<float>();
+        return isInt() || is<double>();
     }
 
     [[nodiscard]]
@@ -144,16 +145,33 @@ public:
     }
 
     [[nodiscard]]
-    float asNumber() const {
-        try {
-            try {
-                return std::get<float>(*this);
-            } catch (...) {
-                return float(std::get<int>(*this));
-            }
-        } catch (...) {
-            throw AJsonTypeMismatchException("not a number");
-        }
+    int64_t asLongInt() const {
+        return std::visit(aui::lambda_overloaded{
+            [](auto&& e) -> std::int64_t {
+                throw AJsonTypeMismatchException("not a long int");
+            },
+            [](std::int64_t v) -> std::int64_t {
+                return v;
+            },
+            [](int v) -> std::int64_t {
+                return v;
+            },
+        }, (super)const_cast<AJson&>(*this));
+    }
+
+    [[nodiscard]]
+    double asNumber() const {
+        return std::visit(aui::lambda_overloaded{
+                [](auto&& e) -> double {
+                    throw AJsonTypeMismatchException("not a number");
+                },
+                [](double v) -> double {
+                    return v;
+                },
+                [](int v) -> double {
+                    return v;
+                },
+        }, (super)const_cast<AJson&>(*this));
     }
 
     [[nodiscard]]
@@ -202,7 +220,7 @@ public:
 
 
     AJson& operator[](int arrayIndex) {
-        return as<Array>()[arrayIndex];
+        return as<Array>().at(arrayIndex);
     }
 
     const AJson& operator[](int arrayIndex) const {

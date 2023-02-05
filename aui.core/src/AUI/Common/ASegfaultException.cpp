@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by alex2772 on 1/14/22.
 //
@@ -36,11 +52,22 @@ static void unblock_signal(int signum __attribute__((__unused__)))
     sigprocmask(SIG_UNBLOCK, &sigs, NULL);
 #endif
 }
-static void onSegfault(int, siginfo_t * info, void *_p __attribute__ ((__unused__))) {
-    std::cout << "Caught SEGFAULT!" << std::endl << AStacktrace::capture(3);
+static void onSegfault(int c, siginfo_t * info, void *_p __attribute__ ((__unused__))) {
+    switch (c) {
+    case SIGSEGV:
+        std::cout << "Caught SEGFAULT!";
+        break;
 
-    unblock_signal(SIGSEGV);
-    throw ASegfaultException(info->si_addr);
+    case SIGABRT:
+        std::cout << "Caught assertion fail!";
+        break;
+    }
+    std::cout << std::endl << AStacktrace::capture(3);
+
+    if (c == SIGSEGV) {
+        unblock_signal(SIGSEGV);
+        throw ASegfaultException(info->si_addr);
+    }
 }
 
 struct segfault_handler_registrar {
@@ -54,6 +81,7 @@ struct segfault_handler_registrar {
         //auto r = syscall(SYS_rt_sigaction, SIGSEGV, &act, nullptr, _NSIG / 8);
         //assert(r == 0);
         sigaction(SIGSEGV, &act, nullptr);
+        sigaction(SIGABRT, &act, nullptr); // for assertions
 
     }
 } my_segfault_handler_registrar;

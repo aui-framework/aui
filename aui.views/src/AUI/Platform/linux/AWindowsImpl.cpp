@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "AUI/GL/gl.h"
@@ -273,8 +268,8 @@ void AWindow::show() {
     emit shown();
 }
 
-void AWindow::setSize(int width, int height) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
+void AWindow::setSize(glm::ivec2 size) {
+    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
 
     if (!mHandle) return;
     if (!!(mWindowStyle & WindowStyle::NO_RESIZE)) {
@@ -284,8 +279,8 @@ void AWindow::setSize(int width, int height) {
 
         XGetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints, &userhints);
 
-        sizehints->min_width = sizehints->min_width = sizehints->max_width = sizehints->base_width = width;
-        sizehints->min_height = sizehints->min_height = sizehints->max_height = sizehints->base_height = height;
+        sizehints->min_width = sizehints->min_width = sizehints->max_width = sizehints->base_width = size.x;
+        sizehints->min_height = sizehints->min_height = sizehints->max_height = sizehints->base_height = size.y;
         sizehints->flags |= PMinSize | PMaxSize;
 
         XSetWMNormalHints(CommonRenderingContext::ourDisplay, mHandle, sizehints);
@@ -309,7 +304,7 @@ void AWindow::setSize(int width, int height) {
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize({width, height});
 
     if (!mHandle) return;
     XMoveWindow(CommonRenderingContext::ourDisplay, mHandle, x, y);
@@ -429,6 +424,22 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     break;
                 }
                 case KeyRelease:
+                    if (XEventsQueued(CommonRenderingContext::ourDisplay, QueuedAfterReading)) // check for key repeat
+                    {
+                        XEvent nextEvent;
+                        XPeekEvent(CommonRenderingContext::ourDisplay, &nextEvent);
+
+                        if (nextEvent.type == KeyPress &&
+                            nextEvent.xkey.time == ev.xkey.time &&
+                            nextEvent.xkey.keycode == ev.xkey.keycode) {
+                            // key wasn't actually released
+
+                            XNextEvent(CommonRenderingContext::ourDisplay, &nextEvent); // consume the event from queue
+
+                            break;
+                        }
+                    }
+
                     window = locateWindow(ev.xkey.window);
                     window->onKeyUp(AInput::fromNative(ev.xkey.keycode));
                     break;
@@ -436,8 +447,10 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 case ConfigureNotify: {
                     window = locateWindow(ev.xconfigure.window);
                     glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
-                    if (size.x >= 10 && size.y >= 10 && size != window->getSize())
-                        window->AViewContainer::setSize(size.x, size.y);
+                    if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
+                        AUI_EMIT_FOREIGN_SIGNAL(window)->resized(size.x, size.y);
+                        window->AViewContainer::setSize(size);
+                    }
                     if (auto w = _cast<ACustomWindow>(window)) {
                         w->handleXConfigureNotify();
                     }
@@ -494,7 +507,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
                         auto maximized = window->isMaximized();
                         if (maximized != window->mWasMaximized) {
-                            perform_as_member(window, {
+                            AUI_PERFORM_AS_MEMBER(window, {
                                 if (mWasMaximized) {
                                     emit restored();
                                 } else {
@@ -654,3 +667,21 @@ void AWindowManager::xClipboardCopyImpl(const AString& text) {
     mXClipboardText = text.toStdString();
     XSetSelectionOwner(CommonRenderingContext::ourDisplay, CommonRenderingContext::ourAtoms.clipboard, auiWindow->mHandle, CurrentTime);
 }
+
+void AWindow::blockUserInput(bool blockUserInput) {
+    ABaseWindow::blockUserInput(blockUserInput);
+    // TODO linux impl
+}
+
+void AWindow::allowDragNDrop() {
+
+}
+
+void AWindow::requestTouchscreenKeyboard() {
+    ABaseWindow::requestTouchscreenKeyboard();
+}
+
+void AWindow::hideTouchscreenKeyboard() {
+    ABaseWindow::hideTouchscreenKeyboard();
+}
+

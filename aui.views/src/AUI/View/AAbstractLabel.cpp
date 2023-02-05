@@ -1,24 +1,19 @@
 ﻿
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "AAbstractLabel.h"
 #include <AUI/Render/RenderHints.h>
@@ -45,8 +40,11 @@ void AAbstractLabel::render()
 }
 
 
-int AAbstractLabel::getContentMinimumWidth()
+int AAbstractLabel::getContentMinimumWidth(ALayoutDirection layout)
 {
+    if (mTextOverflow != TextOverflow::NONE)
+        return 0;
+
 	if (!mPrerendered) {
 	    doPrerender();
 	}
@@ -57,9 +55,8 @@ int AAbstractLabel::getContentMinimumWidth()
     return acc;
 }
 
-int AAbstractLabel::getContentMinimumHeight()
-{
-	if (mText.empty())
+int AAbstractLabel::getContentMinimumHeight(ALayoutDirection layout)
+{	if (mText.empty())
 		return 0;
 
     return getFontStyleLabel().size;
@@ -67,9 +64,9 @@ int AAbstractLabel::getContentMinimumHeight()
 
 
 
-void AAbstractLabel::setSize(int width, int height) {
+void AAbstractLabel::setSize(glm::ivec2 size) {
     auto oldWidth = getWidth();
-    AView::setSize(width, height);
+    AView::setSize(size);
 }
 
 AFontStyle AAbstractLabel::getFontStyleLabel() {
@@ -106,11 +103,60 @@ void AAbstractLabel::userProcessStyleSheet(const std::function<void(css, const s
     });
 }*/
 
+template < class Iterator >
+int AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
+                                             const Iterator& end,
+                                             int overflowingWidth) {
+    size_t gotWidth = 0;
+    for (Iterator it = begin; it != end; ++it) {
+        gotWidth += getFontStyleLabel().getWidth(it, it + 1);
+        if (gotWidth <= overflowingWidth)
+            continue;
+
+        return it - begin;
+    }
+
+    return end - begin;
+}
+
+template < class Iterator >
+void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
+    int firstOverflowedIndex = findFirstOverflowedIndex(begin, end, overflowingWidth);
+    if (mTextOverflow == TextOverflow::ELLIPSIS) {
+        if (firstOverflowedIndex != 0) {
+            std::fill(begin + firstOverflowedIndex - 3, begin + firstOverflowedIndex, '.');
+        } else {
+            std::fill(begin, end, ' ');
+        }
+    }
+
+    std::fill(begin + firstOverflowedIndex, end, ' ');
+}
+
+void AAbstractLabel::processTextOverflow(AString& text) {
+    if (mTextOverflow == TextOverflow::NONE)
+        return;
+
+    int overflowingWidth;
+    if (getFixedSize().x == 0) {
+        overflowingWidth = getMaxSize().x;
+    } else {
+        overflowingWidth = std::min(getMaxSize().x, getFixedSize().x);
+    }
+
+    mIsTextTooLarge = getFontStyleLabel().getWidth(text) > overflowingWidth;
+    if (!mIsTextTooLarge)
+        return;
+
+    processTextOverflow(text.begin(), text.end(), overflowingWidth);
+}
+
 void AAbstractLabel::doPrerender() {
     auto fs = getFontStyleLabel();
     if (!mText.empty()) {
-        mPrerendered = Render::prerenderString({0, 0}, getTransformedText(), fs);
-
+        AString transformedText = getTransformedText();
+        processTextOverflow(transformedText);
+        mPrerendered = Render::prerenderString({0, 0}, transformedText, fs);
     }
 }
 
@@ -126,57 +172,65 @@ void AAbstractLabel::doRenderText() {
         mTextLeftOffset = 0;
         auto requiredSpace = getIconSize();
         auto iconY = glm::ceil((getHeight() - requiredSpace.y) / 2.0);
-        switch (getFontStyleLabel().align) {
-            case TextAlign::LEFT:
-                if (mIcon) {
-                    requiredSpace *= getHeight() / requiredSpace.y;
-                    RenderHints::PushState s;
-                    Render::setColor(mIconColor);
-                    Render::setTransform(glm::translate(glm::mat4(1.f),
-                                                        glm::vec3(mPadding.left + mTextLeftOffset, iconY, 0)));
-                    IDrawable::Params p;
-                    p.size = requiredSpace;
-                    mIcon->draw(p);
-                    mTextLeftOffset += requiredSpace.x + 4_dp;
-                }
-                break;
+        auto alignLeft = [&] {
+            if (mIcon) {
+                requiredSpace *= getHeight() / requiredSpace.y;
+                RenderHints::PushState s;
+                Render::setColor(mIconColor);
+                Render::setTransform(glm::translate(glm::mat4(1.f),
+                                                    glm::vec3(mPadding.left + mTextLeftOffset, iconY, 0)));
+                IDrawable::Params p;
+                p.size = requiredSpace;
+                mIcon->draw(p);
+                mTextLeftOffset += requiredSpace.x + 4_dp;
+            }
+        };
 
-            case TextAlign::CENTER:
-                mTextLeftOffset += (getContentWidth() - mPrerendered->getWidth()) / 2;
-                if (mIcon) {
-                    mTextLeftOffset += requiredSpace.x / 2;
-                    RenderHints::PushState s;
-                    Render::setColor(mIconColor);
-                    Render::setTransform(glm::translate(glm::mat4(1.f),
-                                                        glm::vec3(mTextLeftOffset - (mPrerendered->getWidth()) / 2 -
-                                                                  requiredSpace.x,
-                                                                  iconY, 0)));
+        if (mIsTextTooLarge) {
+            alignLeft();
+        } else {
+            switch (getFontStyleLabel().align) {
+                case TextAlign::LEFT:
+                    alignLeft();
+                    break;
+                case TextAlign::CENTER:
+                    mTextLeftOffset += (getContentWidth() - mPrerendered->getWidth()) / 2;
+                    if (mIcon) {
+                        mTextLeftOffset += requiredSpace.x / 2;
+                        RenderHints::PushState s;
+                        Render::setColor(mIconColor);
+                        Render::setTransform(glm::translate(glm::mat4(1.f),
+                                                            glm::vec3(mTextLeftOffset - (mPrerendered->getWidth()) / 2 -
+                                                                      requiredSpace.x,
+                                                                      iconY, 0)));
 
-                    IDrawable::Params p;
-                    p.size = requiredSpace;
-                    mIcon->draw(p);
-                }
+                        IDrawable::Params p;
+                        p.size = requiredSpace;
+                        mIcon->draw(p);
+                    }
 
-                break;
+                    break;
 
-            case TextAlign::RIGHT:
-                mTextLeftOffset += getContentWidth() - mPrerendered->getWidth();
-                if (mIcon) {
-                    RenderHints::PushState s;
-                    Render::setColor(mIconColor);
-                    Render::setTransform(glm::translate(glm::mat4(1.f),
-                                                        glm::vec3(mPadding.left + mTextLeftOffset -
-                                                                  (mPrerendered ? mPrerendered->getWidth() : 0) -
-                                                                  requiredSpace.x / 2,
-                                                                  iconY, 0)));
+                case TextAlign::RIGHT:
+                    mTextLeftOffset += getContentWidth() - mPrerendered->getWidth();
+                    if (mIcon) {
+                        RenderHints::PushState s;
+                        Render::setColor(mIconColor);
+                        Render::setTransform(glm::translate(glm::mat4(1.f),
+                                                            glm::vec3(mPadding.left + mTextLeftOffset -
+                                                                      (mPrerendered ? mPrerendered->getWidth() : 0) -
+                                                                      requiredSpace.x / 2,
+                                                                      iconY, 0)));
 
-                    IDrawable::Params p;
-                    p.size = requiredSpace;
-                    mIcon->draw(p);
-                }
+                        IDrawable::Params p;
+                        p.size = requiredSpace;
+                        mIcon->draw(p);
+                    }
 
-                break;
+                    break;
+            }
         }
+
         if (mPrerendered) {
             int y = mPadding.top;
 
@@ -193,15 +247,15 @@ void AAbstractLabel::doRenderText() {
 }
 
 AString AAbstractLabel::getTransformedText() {
-    if (getText().empty())
+    if (text().empty())
         return {};
     switch (mTextTransform) {
         case TextTransform::UPPERCASE:
-            return getText().uppercase();
+            return text().uppercase();
         case TextTransform::LOWERCASE:
-            return getText().lowercase();
+            return text().lowercase();
     }
-    return getText();
+    return text();
 }
 
 void AAbstractLabel::onDpiChanged() {

@@ -1,23 +1,18 @@
-﻿/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ANumberPicker.h"
 #include "AUI/Layout/AHorizontalLayout.h"
@@ -43,22 +38,10 @@ void ANumberPicker::ANumberPickerField::onKeyRepeat(AInput::Key key) {
 
     switch (key) {
         case AInput::DOWN:
-            if (mPicker.getValue() > mPicker.getMin()) {
-                if (AInput::isKeyDown(AInput::LCONTROL)) {
-                    mPicker.setValue(glm::max(mPicker.getValue() - 10, mPicker.getMin()));
-                } else {
-                    mPicker.setValue(mPicker.getValue() - 1);
-                }
-            }
+            mPicker.decrease();
             break;
         case AInput::UP:
-            if (mPicker.getValue() < mPicker.getMax()) {
-                if (AInput::isKeyDown(AInput::LCONTROL)) {
-                    mPicker.setValue(glm::min(mPicker.getValue() + 10, mPicker.getMax()));
-                } else {
-                    mPicker.setValue(mPicker.getValue() + 1);
-                }
-            }
+            mPicker.increase();
             break;
         default:
             AAbstractTextField::onKeyRepeat(key);
@@ -73,6 +56,7 @@ ANumberPicker::ANumberPicker()
 	setLayout(_new<AHorizontalLayout>());
 	addView(mTextField = _new<ANumberPickerField>(*this));
     addAssName(".input-field");
+    addAssName(".number-picker");
 
 	mTextField->setExpanding({ 1, 1 });
 	connect(mTextField->focusState, this, [&](bool c)
@@ -92,14 +76,8 @@ ANumberPicker::ANumberPicker()
 	c->addView(up);
 	c->addView(down);
 
-	connect(up->clicked, this, [&]()
-	{
-		setValue(getValue() + 1);
-	});
-	connect(down->clicked, this, [&]()
-	{
-		setValue(getValue() - 1);
-	});
+	connect(up->clicked, me::increase);
+	connect(down->clicked, me::decrease);
 
 	connect(mTextField->textChanged, this, [&]()
 	{
@@ -131,34 +109,46 @@ ANumberPicker::ANumberPicker()
 	addView(c);
 }
 
-int ANumberPicker::getContentMinimumHeight()
+int ANumberPicker::getContentMinimumHeight(ALayoutDirection layout)
 {
-	return AViewContainer::getContentMinimumHeight();
+	return AViewContainer::getContentMinimumHeight(ALayoutDirection::NONE);
 }
 
 void ANumberPicker::setValue(int v)
 {
 	mTextField->setText(AString::number(v));
-	emit valueChanging();
     redraw();
 }
 
 int ANumberPicker::getValue() const
 {
-	return mTextField->getText().toInt();
+	return mTextField->text().toInt().valueOr(0);
 }
 
-void ANumberPicker::setMin(const int min)
+void ANumberPicker::setMin(int min)
 {
 	mMin = min;
 	if (getValue() < min)
 		setValue(min);
 }
 
-void ANumberPicker::setMax(const int max)
+void ANumberPicker::setMax(int max)
 {
 	mMax = max;
 	if (getValue() > max)
 		setValue(max);
 }
 
+
+void ANumberPicker::increase() {
+    changeBy(AInput::isKeyDown(AInput::LCONTROL) ? 10 : 1);
+}
+
+void ANumberPicker::decrease() {
+    changeBy(AInput::isKeyDown(AInput::LCONTROL) ? -10 : -1);
+}
+
+void ANumberPicker::changeBy(int v) {
+    setValue(getValue() + v);
+    emit valueChanging();
+}

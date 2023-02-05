@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ACurl.h"
 
@@ -25,13 +20,15 @@
 #include <cassert>
 #include <curl/curl.h>
 #include <AUI/Util/kAUI.h>
+#include <numeric>
 
 #include "AUI/Common/AString.h"
+#include "AUI/Logging/ALogger.h"
 
 
 #undef min
 
-ACurl::Builder::Builder(const AString& url)
+ACurl::Builder::Builder(AString url): mUrl(std::move(url))
 {
 	class Global
 	{
@@ -53,10 +50,6 @@ ACurl::Builder::Builder(const AString& url)
 	assert(mCURL);
 	CURLcode res;
 
-
-	res = curl_easy_setopt(mCURL, CURLOPT_URL, url.toStdString().c_str());
-	assert(res == 0);
-
     // at least 1kb/sec during 10sec
     res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_TIME, 10L);
     assert(res == 0);
@@ -75,9 +68,27 @@ ACurl::Builder& ACurl::Builder::withRanges(size_t begin, size_t end) {
 		if (end) {
 			s += std::to_string(end);
 		}
-		curl_easy_setopt(mCURL, CURLOPT_RANGE, s.c_str());
+		auto res = curl_easy_setopt(mCURL, CURLOPT_RANGE, s.c_str());
+        assert(res == CURLE_OK);
 	}
 	return *this;
+}
+
+ACurl::Builder& ACurl::Builder::withHttpVersion(ACurl::Http version) {
+    auto res = curl_easy_setopt(mCURL, CURLOPT_HTTP_VERSION, version);
+    assert(res == CURLE_OK);
+    return *this;
+}
+
+ACurl::Builder& ACurl::Builder::withUpload(bool upload) {
+    auto res = curl_easy_setopt(mCURL, CURLOPT_UPLOAD, upload ? 1L : 0L);
+    assert(res == CURLE_OK);
+    return *this;
+}
+ACurl::Builder& ACurl::Builder::withCustomRequest(const AString& v) {
+    auto res = curl_easy_setopt(mCURL, CURLOPT_CUSTOMREQUEST, v.toStdString().c_str());
+    assert(res == CURLE_OK);
+    return *this;
 }
 
 ACurl::Builder::~Builder() {
@@ -120,9 +131,33 @@ AByteBuffer ACurl::Builder::toByteBuffer() {
     return out;
 }
 
+ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AString>>& params) {
+    mUrl.reserve(std::accumulate(params.begin(), params.end(), mUrl.size() + 1, [](std::size_t l, const std::pair<AString, AString>& p) {
+        return l + p.first.size() + p.second.size() + 2;
+    }));
+
+    bool first = true;
+
+    for (const auto&[key, value] : params) {
+        if (first) {
+            mUrl += '?';
+            first = false;
+        } else {
+            mUrl += '&';
+        }
+        mUrl += key;
+        mUrl += "=";
+        mUrl += value;
+    }
+
+    return *this;
+}
+
 ACurl& ACurl::operator=(Builder&& builder) noexcept {
     mCURL = builder.mCURL;
+
     mWriteCallback = std::move(builder.mWriteCallback);
+    mReadCallback = std::move(builder.mReadCallback);
     if (builder.mErrorCallback) {
         connect(fail, [callback = std::move(builder.mErrorCallback)](const ErrorDescription& e) {
             callback(e);
@@ -135,10 +170,36 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
     assert(("buffer size mismatch", std::size(mErrorBuffer) == CURL_ERROR_SIZE));
     builder.mCURL = nullptr;
 
-	CURLcode res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
+
+    auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
+    assert(res == 0);
+
+	res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
     assert(res == 0);
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);
+
+    if (mReadCallback) {
+        curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
+        curl_easy_setopt(mCURL, CURLOPT_READFUNCTION, readCallback);
+    }
+
+    if (!builder.mHeaders.empty()) {
+        for (const auto& h : builder.mHeaders) {
+            mCurlHeaders = curl_slist_append(mCurlHeaders, h.toStdString().c_str());
+        }
+        res = curl_easy_setopt(mCURL, CURLOPT_HTTPHEADER, mCurlHeaders);
+        assert(res == 0);
+    }
+
+    if (builder.mHeaderCallback){
+        mHeaderCallback = std::move(builder.mHeaderCallback);
+        res = curl_easy_setopt(mCURL, CURLOPT_HEADERDATA, this);
+        assert(res == CURLE_OK);
+        res = curl_easy_setopt(mCURL, CURLOPT_HEADERFUNCTION, ACurl::headerCallback);
+        assert(res == CURLE_OK);
+    }
+
     return *this;
 }
 
@@ -156,8 +217,34 @@ ACurl& ACurl::operator=(ACurl&& o) noexcept {
 
 ACurl::~ACurl()
 {
+    curl_easy_cleanup(mCURL);
+    if (mCurlHeaders) curl_slist_free_all(mCurlHeaders);
 }
 
+size_t ACurl::readCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept {
+    if (AThread::current()->isInterrupted()) {
+        return 0;
+    }
+    auto c = static_cast<ACurl*>(userdata);
+    if (c->mCloseRequested) {
+        return 0;
+    }
+
+    try {
+        auto r = c->mReadCallback(ptr, size * nmemb);
+        if (c->mCloseRequested) {
+            return 0;
+        }
+        if (r > 0) {
+            return r;
+        }
+    } catch (const AEOFException&) {
+        return 0;
+    } catch (const AException& e) {
+        ALogger::err("curl") << "Read callback failed: " << e;
+    }
+    return CURL_READFUNC_PAUSE;
+}
 
 size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept
 {
@@ -165,16 +252,46 @@ size_t ACurl::writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata
         return 0;
     }
     auto c = static_cast<ACurl*>(userdata);
-    try {
-        return c->mWriteCallback({ptr, nmemb});
-    } catch (...) {
+    if (c->mCloseRequested) {
         return 0;
     }
+    try {
+        auto r = c->mWriteCallback({ptr, nmemb});
+        if (c->mCloseRequested) {
+            return 0;
+        }
+        if (r > 0) {
+            assert(("You returned a non-zero value not matching the passed buffer size, which is treated by curl as "
+                    "an error, but it's more likely you accidentally have not read all the data. If you really wanted "
+                    "to raise an error, please throw an exception instead.", r == size * nmemb));
+            return r;
+        }
+    } catch (const AEOFException&) {
+        return 0;
+    } catch (const AException& e) {
+        ALogger::err("curl") << "Write callback failed: " << e;
+        return 0;
+    }
+    return CURL_WRITEFUNC_PAUSE;
+}
+
+size_t ACurl::headerCallback(char* buffer, size_t size, size_t nitems, void* userdata) noexcept {
+    try {
+        auto self = reinterpret_cast<ACurl*>(userdata);
+        self->mHeaderCallback(AByteBufferView(buffer, size * nitems));
+        return size * nitems;
+    } catch (const AException& e) {
+        ALogger::err("curl") << "Header callback failed: " << e;
+    }
+    return 0;
 }
 
 
 void ACurl::run() {
     auto c = curl_easy_perform(mCURL);
+    if (mCloseRequested) { // the failure may be caused by close() method
+        return;
+    }
     AThread::interruptionPoint();
     if (c != CURLE_OK) {
         reportFail(c);
@@ -183,6 +300,11 @@ void ACurl::run() {
     }
 }
 
+void ACurl::close() {
+    mCloseRequested = true;
+    curl_easy_pause(mCURL, 0); // unpause transfers in order to force curl to call callbacks
+    emit closeRequested;
+}
 
 template<typename Ret>
 Ret ACurl::getInfo(int curlInfo) const {

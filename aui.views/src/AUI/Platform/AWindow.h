@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -76,6 +71,8 @@ private:
     AString mWindowClass;
     AWindow* mParentWindow;
 
+    unsigned mFrameMillis = 1;
+
     /**
      * @brief Handles self shared pointer.
      */
@@ -95,7 +92,7 @@ private:
 protected:
 #if AUI_PLATFORM_WIN
 	HICON mIcon = nullptr;
-    virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
 #elif AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_APPLE
 #else
@@ -108,6 +105,11 @@ protected:
     virtual void onClosed();
 
     void windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws);
+
+    /**
+     * @brief Enables drag-n-drop for this window.
+     */
+    void allowDragNDrop();
 
     /**
      * @brief Constructor for custom initialization logic
@@ -125,8 +127,14 @@ public:
     }
     virtual ~AWindow();
 
+    [[nodiscard]]
+    unsigned frameMillis() const noexcept override {
+        return mFrameMillis;
+    }
+
     void redraw();
 
+    void blockUserInput(bool blockUserInput = true) override;
 
     /**
      * @brief Checks whether last monitor frame is displayed and redraw will be efficient.
@@ -204,8 +212,8 @@ public:
 
     glm::ivec2 getWindowPosition() const;
 
-    void setPosition(const glm::ivec2& position) override;
-    void setSize(int width, int height) override;
+    void setPosition(glm::ivec2 position) override;
+    void setSize(glm::ivec2 size) override;
     void setGeometry(int x, int y, int width, int height) override;
 
 
@@ -259,6 +267,10 @@ public:
 
     void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) override;
     virtual void onCloseButtonClicked();
+
+
+    void requestTouchscreenKeyboard() override;
+    void hideTouchscreenKeyboard() override;
 
 signals:
     emits<> closed;

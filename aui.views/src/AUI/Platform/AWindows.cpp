@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "AUI/Common/AString.h"
@@ -25,6 +20,7 @@
 #include "SoftwareRenderingContext.h"
 #include "ARenderingContextOptions.h"
 #include "AUI/Traits/callables.h"
+#include "AUI/Util/ARaiiHelper.h"
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Action/AMenu.h>
@@ -78,27 +74,30 @@ bool AWindow::isRedrawWillBeEfficient() {
     return 8ms < delta;
 }
 void AWindow::redraw() {
-    auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-    mRenderingContext->beginPaint(*this);
-    if (mUpdateLayoutFlag) {
-        mUpdateLayoutFlag = false;
-        updateLayout();
-    }
-#if AUI_PLATFORM_WIN
-    mRedrawFlag = true;
-#elif AUI_PLATFORM_MACOS
-    mRedrawFlag = false;
-#endif
     {
+        auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+        mRenderingContext->beginPaint(*this);
+        ARaiiHelper endPaintCaller = [&] {
+            mRenderingContext->endPaint(*this);
+        };
+        if (mUpdateLayoutFlag) {
+            mUpdateLayoutFlag = false;
+            updateLayout();
+        }
+#if AUI_PLATFORM_WIN
+        mRedrawFlag = true;
+#elif AUI_PLATFORM_MACOS
+        mRedrawFlag = false;
+#endif
         Render::setWindow(this);
         doDrawWindow();
 
         // measure frame time
         auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        unsigned millis = unsigned((after - before).count());
-        if (millis > 17) {
+        unsigned millis = mFrameMillis = unsigned((after - before).count());
+        if (millis > 20) {
             static auto lastNotification = 0ms;
-            if (after - lastNotification > 10s) {
+            if (after - lastNotification > 5min) {
                 lastNotification = after;
                 if (millis > 40) {
                     ALogger::warn("Performance") << "Frame render took {}ms! Unacceptably bad performance"_format(millis);
@@ -107,7 +106,6 @@ void AWindow::redraw() {
                 }
             }
         }
-        mRenderingContext->endPaint(*this);
     }
 
     emit redrawn();
@@ -176,7 +174,7 @@ void AWindow::onCloseButtonClicked() {
 }
 
 
-void AWindow::setPosition(const glm::ivec2& position) {
+void AWindow::setPosition(glm::ivec2 position) {
     setGeometry(position.x, position.y, getWidth(), getHeight());
 }
 
@@ -206,6 +204,14 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     getWindowManager().initNativeWindow({ *this, name, width, height, ws, parent });
 
     setWindowStyle(ws);
+
+#if !AUI_PLATFORM_WIN
+    // windows sends resize event during window initialization but other platforms doesn't.
+    // simulate the same behaviour here.
+    ui_thread {
+        emit resized(getWidth(), getHeight());
+    };
+#endif
 }
 
 _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
@@ -213,17 +219,40 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     public:
         AOverlappingWindow(AWindow* parent):
         AWindow("MENU", 100, 100, parent, WindowStyle::SYS) {
-            setCustomAss({ ass::Padding { 0 } });
+            setCustomStyle({ ass::Padding { 0 } });
         }
     };
     auto window = _new<AOverlappingWindow>(this);
     auto finalPos = unmapPosition(position);
     window->setGeometry(finalPos.x, finalPos.y, size.x, size.y);
     // show later
-    window->show();
+    ui_thread {
+        window->show();
+    };
 
-    auto surface = _new<AOverlappingSurface>();
+    class MyOverlappingSurface: public AOverlappingSurface {
+    public:
+        void setOverlappingSurfacePosition(glm::ivec2 position) override {
+            emit positionSet(position);
+        }
+
+        void setOverlappingSurfaceSize(glm::ivec2 size) override {
+            emit sizeSet(size);
+        }
+
+    signals:
+        emits<glm::ivec2> positionSet;
+        emits<glm::ivec2> sizeSet;
+    };
+
+    auto surface = _new<MyOverlappingSurface>();
     ALayoutInflater::inflate(window, surface);
+    connect(surface->positionSet, window, [this, window = window.get()](const glm::ivec2& newPos) {
+        window->setPosition(unmapPosition(newPos));
+    });
+    connect(surface->sizeSet, window, [this, window = window.get()](const glm::ivec2& size) {
+        window->setSize(size);
+    });
 
     return surface;
 }

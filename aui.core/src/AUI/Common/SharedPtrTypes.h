@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -236,7 +231,7 @@ public:
      * @return weak reference
      */
     [[nodiscard]]
-    _weak<T> weak() {
+    _weak<T> weak() const {
         return _weak<T>(*this);
     }
 
@@ -257,7 +252,9 @@ public:
      * @brief Guarantees that further builder calls will be executed if and only if this pointer
      *        not equal to null.
      * @return safe builder
+     * @deprecated use AUI_NULLSAFE() instead
      */
+    [[deprecated]]
     inline auto safe()
     {
         return SafeCallWrapper(*this);
@@ -362,7 +359,7 @@ inline _<TO> _cast(_<FROM> object)
 
 
 /**
- * @brief Nullsafe call (see examples).
+ * @brief nullsafe call (see examples).
  * @ingroup useful_macros
  *
  * <table>
@@ -378,28 +375,28 @@ inline _<TO> _cast(_<FROM> object)
  *     </td>
  *     <td>
  *       @code{cpp}
- *       nullsafe(getAnimator())->postRender(this);
+ *       AUI_NULLSAFE(getAnimator())->postRender(this);
  *       @endcode
  *     </td>
  *   </tr>
  * </table>
  *
- * which is shorter, avoids code duplication and calls <code>getAnimator()</code> only once because <code>nullsafe</code> expands to:
+ * which is shorter, avoids code duplication and calls <code>getAnimator()</code> only once because <code>AUI_NULLSAFE</code> expands to:
  *
  * @code{cpp}
  * if (auto& _tmp = (getAnimator())) _tmp->postRender(this);
  * @endcode
  *
- * Since `nullsafe` is a macro that expands to `if`, you can use `else` keyword:
+ * Since `AUI_NULLSAFE` is a macro that expands to `if`, you can use `else` keyword:
  *
  * @code{cpp}
- * nullsafe(getWindow())->flagRedraw(); else ALogger::info("Window is null!");
+ * AUI_NULLSAFE(getWindow())->flagRedraw(); else ALogger::info("Window is null!");
  * @endcode
  *
- * and even combine multiple `nullsafe` statements:
+ * and even combine multiple `AUI_NULLSAFE` statements:
  *
  * @code{cpp}
- * nullsafe(getWindow())->flagRedraw(); else nullsafe(AWindow::current())->flagRedraw();
+ * AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(AWindow::current())->flagRedraw();
  * @endcode
  */
-#define nullsafe(s) if(decltype(auto) _tmp = (s))_tmp
+#define AUI_NULLSAFE(s) if(decltype(auto) _tmp = (s))_tmp

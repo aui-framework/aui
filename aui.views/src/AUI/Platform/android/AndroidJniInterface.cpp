@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include <jni.h>
@@ -29,33 +24,33 @@ JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleRedraw(JNIEnv *env, jclass clazz) {
     if (auto el = AThread::current()->getCurrentEventLoop())
         el->loop();
-    nullsafe(dynamic_cast<AWindow*>(AWindow::current()))->AWindow::redraw();
+    AUI_NULLSAFE(dynamic_cast<AWindow*>(AWindow::current()))->AWindow::redraw();
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleResize(JNIEnv *env, jclass clazz, jint width, jint height) {
-    nullsafe(AWindow::current())->setSize(width, height);
+    AUI_NULLSAFE(AWindow::current())->setSize({width, height});
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonDown(JNIEnv *env, jclass clazz, jint x,
                                                            jint y) {
-    nullsafe(AWindow::current())->onMousePressed({x, y}, AInput::LBUTTON);
+    AUI_NULLSAFE(AWindow::current())->onMousePressed({x, y}, AInput::LBUTTON);
 }
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonUp(JNIEnv *env, jclass clazz, jint x,
                                                            jint y) {
-    nullsafe(AWindow::current())->onMouseReleased({x, y}, AInput::LBUTTON);
+    AUI_NULLSAFE(AWindow::current())->onMouseReleased({x, y}, AInput::LBUTTON);
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleMouseMove(JNIEnv *env, jclass clazz, jint x,
                                                            jint y) {
-    nullsafe(AWindow::current())->onMouseMove({x, y});
+    AUI_NULLSAFE(AWindow::current())->onMouseMove({x, y});
 }
 
 extern "C"
@@ -65,5 +60,5 @@ Java_com_github_aui_android_MyGLSurfaceView_handleScroll(JNIEnv *env, jclass cla
                                                             jint originY,
                                                             jfloat velX,
                                                             jfloat velY) {
-    nullsafe(AWindow::current())->onGesture({originX, originY}, AFingerDragEvent{ {velX, velY} });
+    AUI_NULLSAFE(AWindow::current())->onGesture({originX, originY}, AFingerDragEvent{ {velX, velY} });
 }

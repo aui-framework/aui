@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
 #include <AUI/api.h>
@@ -26,6 +21,8 @@
 #include <AUI/Common/AException.h>
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Util/Util.h"
+#include <AUI/Util/ACleanup.h>
+#include <AUI/Common/ATimer.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
@@ -43,12 +40,12 @@ protected:
     void processMessagesImpl() override {
         assert(("AAbstractThread::processMessages() should not be called from other thread",
                 mId == std::this_thread::get_id()));
-        std::unique_lock lock(mQueueLock);
+        std::unique_lock lock(mQueueLock, std::defer_lock);
 
         using namespace std::chrono;
         using namespace std::chrono_literals;
 
-        while (!mMessageQueue.empty())
+        for (std::size_t i = 0; i < 10 && !mMessageQueue.empty() && lock.try_lock(); ++i)
         {
             auto f = std::move(mMessageQueue.front());
             mMessageQueue.pop_front();
@@ -61,8 +58,6 @@ protected:
                     << f.stacktrace
                     << " - ...\n";
             }
-
-            lock.lock();
         }
     }
 };
@@ -71,15 +66,17 @@ void setupUIThread() noexcept {
     AAbstractThread::threadStorage() = _new<UIThread>();
 }
 
+void afterEntryCleanup() {
+    ACleanup::inst().afterEntryPerform();
+}
+
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
     AStringVector args;
 
     setupUIThread();
+    ATimer::scheduler();
 
-    // renames all threads to "UI thread" on linux
-#if !AUI_PLATFORM_LINUX
     AThread::setName("UI thread");
-#endif
 
 #if AUI_PLATFORM_WIN
     if (argc == 0) {
@@ -125,6 +122,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
     } catch (...) {
         ALogger::err("AUI") << "Uncaught unknown exception";
     }
+    afterEntryCleanup();
     return r;
 }
 #endif

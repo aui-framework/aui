@@ -1,16 +1,32 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by Alex2772 on 11/11/2021.
 //
 
 #include <AUI/Layout/AAdvancedGridLayout.h>
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Util/ALayoutDirection.h>
 #include "AGridSplitter.h"
 
-const auto CLICK_BIAS = 8_dp;
+static const auto CLICK_BIAS = 8_dp;
 
 AGridSplitter::AGridSplitter():
-    mHorizontalHelper(LayoutDirection::HORIZONTAL),
-    mVerticalHelper(LayoutDirection::VERTICAL)
+    mHorizontalHelper(ALayoutDirection::HORIZONTAL),
+    mVerticalHelper(ALayoutDirection::VERTICAL)
 {
 
 }
@@ -20,8 +36,8 @@ void AGridSplitter::onMousePressed(glm::ivec2 mousePos, AInput::Key button) {
     bool doVerticalDrag = true;
     for (auto& r : mItems) {
         auto& v = r.first();
-        auto viewPos = v->getPosition().y;
-        auto viewSize = v->getSize().y;
+        auto viewPos = v->getPosition().y + CLICK_BIAS.getValuePx();
+        auto viewSize = v->getSize().y - CLICK_BIAS.getValuePx() * 2.f;
 
         if (mousePos.y > viewPos && mousePos.y < viewPos + viewSize) {
             doVerticalDrag = false;
@@ -35,7 +51,7 @@ void AGridSplitter::onMousePressed(glm::ivec2 mousePos, AInput::Key button) {
     bool doHorizontalDrag = true;
     for (auto& v : mItems.first()) {
         auto viewPos = v->getPosition().x + CLICK_BIAS.getValuePx();
-        auto viewSize = v->getSize().x + - CLICK_BIAS.getValuePx() * 2.f;
+        auto viewSize = v->getSize().x - CLICK_BIAS.getValuePx() * 2.f;
 
         if (mousePos.x > viewPos && mousePos.x < viewPos + viewSize) {
             doHorizontalDrag = false;

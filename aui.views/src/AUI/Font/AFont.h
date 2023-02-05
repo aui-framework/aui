@@ -1,23 +1,18 @@
-﻿/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -68,7 +63,7 @@ public:
     };
 
     struct FontData {
-        AVector<std::optional<Character>> characters;
+        AVector<AOptional<Character>> characters;
         void* rendererData = nullptr;
     };
 
@@ -100,23 +95,46 @@ public:
 	glm::vec2 getKerning(wchar_t left, wchar_t right);
 	AFont(const AFont&) = delete;
 	Character& getCharacter(const FontEntry& charset, long glyph);
-	float length(const FontEntry& charset, const AString& text);
-	bool isHasKerning();
+    float length(const FontEntry& charset, const AString& text);
 
+    template<class Iterator>
+    float length(const FontEntry &charset, Iterator begin, Iterator end) {
+        int size = charset.first.size;
+        int advance = 0;
+
+        for (Iterator i = begin; i != end; i++) {
+            if (*i == ' ')
+                advance += getSpaceWidth(size);
+            else if (*i == '\n')
+                advance = 0;
+            else {
+                Character& ch = getCharacter(charset, *i);
+                if (!ch.empty()) {
+                    advance += ch.advanceX;
+                    advance = glm::floor(advance);
+                }
+                else
+                    advance += getSpaceWidth(size);
+            }
+        }
+        return advance;
+    }
+
+
+	bool isHasKerning();
 
     [[nodiscard]]
     AString getFontFamilyName() const;
 
     [[nodiscard]]
     AFontFamily::Weight getFontWeight() const;
-
     int getAscenderHeight(unsigned size) const;
     int getDescenderHeight(unsigned size) const;
+
     int getSpaceWidth(unsigned size) {
         return size * 10 / 23;
     }
 
     [[nodiscard]]
     bool isItalic() const;
-
 };

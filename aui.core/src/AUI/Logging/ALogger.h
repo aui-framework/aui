@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -156,7 +151,7 @@ public:
                     return 1;
                 }
             };
-            std::optional<LazyStreamBuf> mStreamBuf;
+            AOptional<LazyStreamBuf> mStreamBuf;
 
             Buffer mBuffer;
 
@@ -209,60 +204,95 @@ public:
             }
     };
 
+
+    /**
+     * @brief Constructor for an extra log file.
+     * @param filename file name
+     * @details
+     * For the global logger, use ALogger::info, ALogger::warn, etc...
+     */
+    ALogger(AString filename) {
+        setLogFileImpl(std::move(filename));
+    }
+
+    ~ALogger();
+
+    static ALogger& global();
+
+    static void setDebugMode(bool debug) {
+        global().mDebug = debug;
+    }
+    static bool isDebug() {
+        return global().mDebug;
+    }
+
+    static void setLogFile(APath path) {
+        global().setLogFileImpl(std::move(path));
+    }
+    static const AString& logFile() {
+        return global().mLogFile.path();
+    }
+
+    static LogWriter info(const AString& str)
+    {
+        return {global(), INFO, str};
+    }
+    static LogWriter warn(const AString& str)
+    {
+        return {global(), WARN, str};
+    }
+    static LogWriter err(const AString& str)
+    {
+        return {global(), ERR, str};
+    }
+    static LogWriter debug(const AString& str)
+    {
+        return {global(), DEBUG, str};
+    }
+
+    /**
+     * @brief Writer a log entry with LogWriter helper.
+     * @param level level
+     * @param prefix prefix
+     */
+    LogWriter log(Level level, const AString& prefix)
+    {
+        return {*this, level, prefix};
+    }
+
+
 private:
 	ALogger();
-    ~ALogger();
-	static ALogger& instance();
 
     AFileOutputStream mLogFile;
     AMutex mLocalTimeMutex;
-
-    /**
-     * Writes a log entry
-     * @param level log level
-     * @param prefix prefix
-     * @param message log message. If empty, prefix used as a message
-     */
-    void log(Level level, std::string_view prefix, std::string_view message);
 
     bool mDebug = true;
 
     void setLogFileImpl(AString path);
 
-public:
 
-    static void setDebugMode(bool debug) {
-        instance().mDebug = debug;
-    }
-    static bool isDebug() {
-        return instance().mDebug;
-    }
-
-    static void setLogFile(APath path) {
-        instance().setLogFileImpl(std::move(path));
-    }
-    static const AString& logFile() {
-        return instance().mLogFile.path();
-    }
-
-	static LogWriter info(const AString& str)
-	{
-		return {instance(), INFO, str};
-	}	
-	static LogWriter warn(const AString& str)
-	{
-        return {instance(), WARN, str};
-	}	
-	static LogWriter err(const AString& str)
-	{
-        return {instance(), ERR, str};
-	}
-	static LogWriter debug(const AString& str)
-	{
-        return {instance(), DEBUG, str};
-	}
+    /**
+     * @brief Writes a log entry.
+     * @param level log level
+     * @param prefix prefix
+     * @param message log message. If empty, prefix used as a message
+     */
+    void log(Level level, std::string_view prefix, std::string_view message);
 };
 
+
+template<std::size_t L, typename T, glm::qualifier Q>
+inline std::ostream& operator<<(std::ostream& o, glm::vec<L, T, Q> vec) {
+    o << "{ ";
+    for (std::size_t i = 0; i < L; ++i) {
+        if (i != 0) o << ", ";
+        o << vec[i];
+    }
+    o << " }";
+
+    return o;
+}
 
 #define ALOG_DEBUG(str) if (ALogger::isDebug()) ALogger::debug(str)
 

@@ -1,23 +1,18 @@
-﻿/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -47,10 +42,16 @@ public:
     AByteBuffer(const char* buffer, size_t size);
     explicit AByteBuffer(size_t initialCapacity);
     AByteBuffer(const unsigned char* buffer, size_t size);
-    ~AByteBuffer();
+    AByteBuffer(AByteBufferView other) {
+        reserve(other.size());
+        memcpy(mBuffer, other.data(), other.size());
+        mSize = other.size();
+    }
 
-    AByteBuffer(const AByteBuffer& other) noexcept;
+    AByteBuffer(const AByteBuffer& other): AByteBuffer(AByteBufferView(other)) {}
     AByteBuffer(AByteBuffer&& other) noexcept;
+
+    ~AByteBuffer();
 
     void write(const char* src, size_t size) override;
 
@@ -128,6 +129,19 @@ public:
         return *reinterpret_cast<T*>(mBuffer + byteIndex);
     }
 
+
+    /**
+     * @brief Gets value of specified type by byte index relative to the beginning of internal buffer.
+     * @tparam T data type
+     * @param byteIndex byte offset realtive to the beginning of internal buffer
+     * @return data
+     */
+    template <typename T>
+    const T& at(size_t byteIndex) const
+    {
+        return *reinterpret_cast<T*>(mBuffer + byteIndex);
+    }
+
     /**
      * Forces new size of the buffer.
      * <dl>
@@ -193,6 +207,13 @@ public:
     }
 
     /**
+     * @return true if size == 0
+     */
+    bool empty() const noexcept {
+        return mSize == 0;
+    }
+
+    /**
      * @return size of payload (valid data)
      */
     size_t size() const noexcept {
@@ -213,7 +234,11 @@ public:
         return mCapacity;
     }
 
-    AByteBuffer& operator=(AByteBuffer&& other) {
+    AByteBuffer& operator=(AByteBuffer&& other) noexcept {
+        if (&other == this) {
+            return *this;
+        }
+
         mBuffer = other.mBuffer;
         mCapacity = other.mCapacity;
         mSize = other.mSize;
@@ -221,6 +246,18 @@ public:
         other.mBuffer = nullptr;
         other.mCapacity = 0;
         other.mSize = 0;
+
+        return *this;
+    }
+    AByteBuffer& operator=(const AByteBuffer& other) {
+        if (&other == this) {
+            return *this;
+        }
+
+        mBuffer = other.mBuffer;
+        mCapacity = other.mCapacity;
+        mSize = other.mSize;
+
         return *this;
     }
 
@@ -257,6 +294,11 @@ public:
     [[nodiscard]]
     AString toHexString() const {
         return AByteBufferView(*this).toHexString();
+    }
+
+    [[nodiscard]]
+    AString toBase64String() const {
+        return AByteBufferView(*this).toBase64String();
     }
 
     static AByteBuffer fromStream(aui::no_escape<IInputStream> is);

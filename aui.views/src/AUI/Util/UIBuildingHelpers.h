@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 #include "AUI/Common/AVector.h"
@@ -29,7 +24,7 @@
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/AMetric.h>
-#include <AUI/View/ASpacer.h>
+#include <AUI/View/ASpacerExpanding.h>
 #include <AUI/View/AForEachUI.h>
 #include <AUI/Layout/AWordWrappingLayout.h>
 #include <AUI/Layout/AHorizontalLayout.h>
@@ -41,18 +36,18 @@
 #include <AUI/i18n/AI18n.h>
 #include <AUI/ASS/ASS.h>
 #include <AUI/Traits/strings.h>
+#include "Declarative.h"
 
 
 template<typename Layout, typename... Args>
-inline auto _container(const AVector<_<AView>>& views, Args&&... args)
+inline auto _container(AVector<_<AView>> views, Args&&... args)
 {
-	auto c = _new<AViewContainer>();
-	c->setLayout(_new<Layout>(args...));
+    auto c = _new<AViewContainer>();
+    c->setLayout(_new<Layout>(std::forward<Args>(args)...));
 
-	for (const auto& v : views)
-		c->addView(v);
+    c->setViews(std::move(views));
 
-	return c;
+    return c;
 }
 
 inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AView>>>& views)
@@ -74,79 +69,6 @@ inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AVi
 	return c;
 }
 
-namespace aui::detail {
-    template<typename Layout>
-    struct container_helper {
-    private:
-        AVector<_<AView>> mViews;
-
-    public:
-
-        struct Expanding {
-        private:
-            AVector<_<AView>> mViews;
-
-        public:
-            Expanding(std::initializer_list<_<AView>> views) {
-                mViews.reserve(views.size());
-                for (auto& v : views) {
-                    if (v) {
-                        mViews << v;
-                    }
-                }
-            }
-
-            operator _<AView>() const {
-                return (_container<Layout>(mViews) let {it->setExpanding();});
-            }
-            operator _<AViewContainer>() const {
-                return (_container<Layout>(mViews) let {it->setExpanding();});
-            }
-            _<AViewContainer> operator<<(const AString& assEntry) const {
-                return (_container<Layout>(mViews) let {it->setExpanding();}) << assEntry;
-            }
-            template<typename T>
-            _<AViewContainer> operator^(const T& t) const {
-                return (_container<Layout>(mViews) let {it->setExpanding();}) ^ t;
-            }
-            template<typename T>
-            _<AViewContainer> operator+(const T& t) const {
-                return (_container<Layout>(mViews) let {it->setExpanding();}) + t;
-            }
-        };
-
-
-        container_helper(std::initializer_list<_<AView>> views) {
-            mViews.reserve(views.size());
-            for (auto& v : views) {
-                if (v) {
-                    mViews << v;
-                }
-            }
-        }
-        operator _<AView>() const {
-            return _container<Layout>(mViews);
-        }
-        operator _<AViewContainer>() const {
-            return _container<Layout>(mViews);
-        }
-        _<AViewContainer> operator<<(const AString& assEntry) const {
-            return _container<Layout>(mViews) << assEntry;
-        }
-        template<typename T>
-        _<AViewContainer> operator^(const T& t) const {
-            return _container<Layout>(mViews) ^ t;
-        }
-        template<typename T>
-        _<AViewContainer> operator+(const T& t) const {
-            return _container<Layout>(mViews) + t;
-        }
-
-        _<AViewContainer> operator->() const {
-            return _container<Layout>(mViews);
-        }
-    };
-}
 
 /**
  * Places views in a column.
@@ -154,12 +76,12 @@ namespace aui::detail {
  *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/vertical.jpg">
  *
  *  <dl>
- *    <dt><b>View:</b> <a href="#AViewContainer">AViewContainer</a></dt>
- *    <dt><b>Layout manager:</b> <a href="#AVerticalLayout">AVerticalLayout</a></dt>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AVerticalLayout</dt>
  *  </dl>
  * </p>
  */
-using Vertical = aui::detail::container_helper<AVerticalLayout>;
+using Vertical = aui::ui_building::layouted_container_factory<AVerticalLayout>;
 
 /**
  * Places views in a row.
@@ -167,12 +89,12 @@ using Vertical = aui::detail::container_helper<AVerticalLayout>;
  *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/horizontal.jpg">
  *
  *  <dl>
- *    <dt><b>View:</b> <a href="#AViewContainer">AViewContainer</a></dt>
- *    <dt><b>Layout manager:</b> <a href="#AHorizontalLayout">AHorizontalLayout</a></dt>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AHorizontalLayout</dt>
  *  </dl>
  * </p>
  */
-using Horizontal = aui::detail::container_helper<AHorizontalLayout>;
+using Horizontal = aui::ui_building::layouted_container_factory<AHorizontalLayout>;
 
 /**
  * Places views in a stack, centering them.
@@ -180,16 +102,27 @@ using Horizontal = aui::detail::container_helper<AHorizontalLayout>;
  *  <img width="960" src="https://github.com/aui-framework/aui/raw/master/docs/imgs/stacked2.jpg">
  *
  *  <dl>
- *    <dt><b>View:</b> <a href="#AViewContainer">AViewContainer</a></dt>
- *    <dt><b>Layout manager:</b> <a href="#AStackedLayout">AStackedLayout</a></dt>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> AStackedLayout</dt>
  *  </dl>
  * </p>
  */
-using Stacked = aui::detail::container_helper<AStackedLayout>;
+using Stacked = aui::ui_building::layouted_container_factory<AStackedLayout>;
+
+/**
+ * Does not actually set the layout. The views' geometry is determined manually.
+ * <p>
+ *  <dl>
+ *    <dt><b>View:</b> AViewContainer</dt>
+ *    <dt><b>Layout manager:</b> null</dt>
+ *  </dl>
+ * </p>
+ */
+using CustomLayout = aui::ui_building::layouted_container_factory<std::nullopt_t>;
 
 /**
  * <p>
- * <code>Center</code> is an alias to <a href="#Stacked">Stacked</a>. When <a href="#Stacked">Stacked</a> is used only for centering views, you can use
+ * <code>Center</code> is an alias to Stacked. When Stacked is used only for centering views, you can use
  * this alias in order to improve understanding of your code.
  * </p>
  */

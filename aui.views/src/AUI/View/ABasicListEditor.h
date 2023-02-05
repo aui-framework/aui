@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 #pragma once
 
 
@@ -68,13 +84,13 @@ public:
             if (mModel->listSize() != 0) {
                 list->selectItem(0);
             } else {
-                nullsafe(removeButton)->disable();
-                nullsafe(modifyButton)->disable();
+                AUI_NULLSAFE(removeButton)->disable();
+                AUI_NULLSAFE(modifyButton)->disable();
             }
             auto updateEnabledState = [list, modifyButton, removeButton]() {
                 auto& s = list->getSelectionModel().getIndices();
-                nullsafe(modifyButton)->setDisabled(s.empty());
-                nullsafe(removeButton)->setDisabled(s.empty());
+                AUI_NULLSAFE(modifyButton)->setDisabled(s.empty());
+                AUI_NULLSAFE(removeButton)->setDisabled(s.empty());
             };
             connect(list->selectionChanged, c, updateEnabledState);
             connect(mModel->dataRemoved, c, updateEnabledState);

@@ -14,11 +14,13 @@ auib_use_system_libs_end()
 if (OPENGL_FOUND OR ANDROID OR IOS)
 
 	#auib_import(Freetype https://github.com/aui-framework/freetype
-	auib_import(Freetype https://github.com/freetype/freetype/archive/refs/tags/VER-2-12-1.zip ARCHIVE
-			    CMAKE_ARGS -DFT_DISABLE_HARFBUZZ=TRUE
-			               -DFT_DISABLE_PNG=TRUE
-			               -DFT_DISABLE_BZIP2=TRUE
-			               -DFT_DISABLE_BROTLI=TRUE)
+	auib_import(Freetype https://github.com/aui-framework/freetype/archive/refs/heads/master.zip ARCHIVE
+			    PRECOMPILED_URL_PREFIX https://github.com/aui-framework/freetype/releases/download/refs%2Fheads%2Fmaster
+			    CONFIG_ONLY)
+
+	if (NOT TARGET freetype)
+		message(FATAL_ERROR "Freetype not imported")
+	endif()
 
 
 	if(NOT ANDROID AND NOT IOS)
@@ -39,6 +41,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 	endif()
 
 	aui_module(aui.views EXPORT aui)
+	aui_enable_tests(aui.views)
 
 	if (AUI_PLATFORM_LINUX)
 		target_include_directories(aui.views PRIVATE ${GTK_INCLUDE_DIRS})
@@ -59,24 +62,25 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 
 	aui_link(aui.views PUBLIC aui::core aui::image)
 	aui_link(aui.views PRIVATE aui::xml)
-	set_target_properties(Freetype::Freetype PROPERTIES INSTALL_NAME_DIR "@rpath" BUILD_WITH_INSTALL_RPATH 1)
+	set_target_properties(freetype PROPERTIES INSTALL_NAME_DIR "@rpath" BUILD_WITH_INSTALL_RPATH 1)
 	if(ANDROID)
 		aui_link(aui.views PRIVATE EGL GLESv2 GLESv3)
-		aui_link(aui.views PRIVATE Freetype::Freetype)
+		aui_link(aui.views PRIVATE freetype)
 	elseif(IOS)
 		auib_use_system_libs_begin()
 		find_library(OPENGL OpenGLES REQUIRED)
 		auib_use_system_libs_end()
 		aui_link(aui.views PRIVATE ${OPENGL})
-		aui_link(aui.views PUBLIC Freetype::Freetype)
+		aui_link(aui.views PUBLIC freetype)
 	else()
-		aui_link(aui.views PRIVATE Freetype::Freetype)
+		aui_link(aui.views PRIVATE freetype)
 		aui_link(aui.views PRIVATE OpenGL::GL)
 		aui_link(aui.views PUBLIC GLEW::GLEW)
 
 		if(WIN32)
 			aui_link(aui.views PRIVATE dwmapi)
 			aui_link(aui.views PRIVATE winmm)
+			aui_link(aui.views PRIVATE shlwapi.lib)
 			if(MINGW)
 				find_package(ZLIB REQUIRED)
 				aui_link(aui.views PRIVATE ZLIB::ZLIB)

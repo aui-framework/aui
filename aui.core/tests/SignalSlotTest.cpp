@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by Alex2772 on 2/3/2022.
 //
@@ -9,6 +25,8 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Util/kAUI.h>
 #include <gmock/gmock.h>
+
+using namespace std::chrono_literals;
 
 class Master: public AObject {
 public:
@@ -54,7 +72,7 @@ public:
     void TearDown() override {
         Test::TearDown();
         AThread::processMessages();
-        AThread::sleep(500);
+        AThread::sleep(500ms);
 
         master = nullptr;
         slave = nullptr;
@@ -112,6 +130,90 @@ TEST_F(SignalSlot, ObjectRemoval) {
         AObject::connect(master->message, slot(slave)::acceptMessage); // imitate signal-slot relations
         EXPECT_CALL(*slave, die()).Times(1);
     }
+}
+
+/**
+ * Checks for nested connection.
+ */
+TEST_F(SignalSlot, NestedConnection) {
+    slave = _new<Slave>();
+    AObject::connect(master->message, slave, [this, slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+        AObject::connect(master->message, slave, [slave] (const AString& msg) {
+            slave->acceptMessage(msg);
+        });
+    });
+
+    EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(3);
+    master->broadcastMessage("hello");
+    master->broadcastMessage("hello");
+}
+
+/**
+ * Checks for disconnect functionality.
+ */
+TEST_F(SignalSlot, ObjectDisconnect1) {
+    slave = _new<Slave>();
+    AObject::connect(master->message, slave, [slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+        AObject::disconnect();
+    });
+
+    EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(1);
+    master->broadcastMessage("hello");
+    master->broadcastMessage("hello");
+}
+
+/**
+ * Checks for disconnect functionality when one of the signals disconnected.
+ */
+TEST_F(SignalSlot, ObjectDisconnect2) {
+    slave = _new<Slave>();
+
+    bool called = false;
+    AObject::connect(master->message, slave, [&, slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+        called = true;
+    });
+
+    AObject::connect(master->message, slave, [slave = slave.get()] (const AString& msg) {
+        slave->acceptMessage(msg);
+        AObject::disconnect();
+    });
+
+    EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(3);
+    master->broadcastMessage("hello");
+    called = false;
+    master->broadcastMessage("hello");
+    EXPECT_TRUE(called);
+}
+
+
+/**
+ * Checks for both disconnect and nested connect.
+ */
+TEST_F(SignalSlot, ObjectNestedConnectWithDisconnect) {
+    slave = _new<Slave>();
+
+    bool called1 = false;
+    bool called2 = false;
+
+    AObject::connect(master->message, slave, [&] (const AString& msg) {
+        AObject::disconnect();
+        EXPECT_FALSE(called1);
+        called1 = true;
+
+        AObject::connect(master->message, slave, [&] (const AString& msg) {
+            EXPECT_TRUE(called1);
+            EXPECT_FALSE(called2);
+            called2 = true;
+        });
+    });
+
+    master->broadcastMessage("hello");
+    master->broadcastMessage("hello");
+    EXPECT_TRUE(called1);
+    EXPECT_TRUE(called2);
 }
 
 /**

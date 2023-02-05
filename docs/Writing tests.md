@@ -118,3 +118,52 @@ AUI does the following fundamental things for you:
 5. If you are testing an executable, the executable's sources are automatically compiled with the `Tests` program and
    the `include` scope of the executable is copied to the `Tests` program (this is why we have easily accessed the
    `main.h` header)
+
+# Writing UI Tests
+
+Since AUI is a UI framework it is also capable of UI tests.
+
+In addition to the previous example, we'd create some window:
+
+```cpp
+#include <AUI/UITest.h>
+#include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/View/AButton.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/View/ATextField.h>
+#include <AUI/View/AScrollArea.h>
+#include <gmock/gmock.h>
+
+class TestWindow: public AWindow {
+public:
+    TestWindow() {
+        setContents(Centered {
+            _new<AButton>("Hello!")
+        });
+    }
+};
+
+class UIScrollTest: public testing::UITest {
+public:
+protected:
+
+    class TestWindow: public AWindow {
+    public:
+        TestWindow(): AWindow("Test window", 200_dp, 100_dp) {
+            setContents(Vertical {
+                    AScrollArea::Builder().withContents(_new<MockedViewContainer>()).withExpanding().build()
+            });
+        }
+    };
+    _<TestWindow> mTestWindow;
+
+
+    void SetUp() override {
+        UITest::SetUp();
+
+        // prepare the window
+        mTestWindow = _new<TestWindow>();
+        mTestWindow->show();
+    }
+};
+```

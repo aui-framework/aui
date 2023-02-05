@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by Alex2772 on 11/19/2021.
 //
@@ -59,6 +75,14 @@ struct SolidShaderHelper {
     void operator()(const ASolidBrush& brush) const {
         shader.use();
         shader.set(aui::ShaderUniforms::COLOR, Render::getColor() * brush.solidColor);
+    }
+};
+
+struct CustomShaderHelper {
+
+    CustomShaderHelper() {}
+
+    void operator()(const ACustomShaderBrush& brush) const {
     }
 };
 
@@ -313,6 +337,7 @@ void OpenGLRenderer::drawRect(const ABrush& brush, const glm::vec2& position, co
             GradientShaderHelper(mGradientShader),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
+            CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 
@@ -338,6 +363,7 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
             SolidShaderHelper(mRoundedSolidShader),
+            CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 
@@ -355,6 +381,7 @@ void OpenGLRenderer::drawRoundedRectAntialiased(const ABrush& brush,
             GradientShaderHelper(mRoundedGradientShaderAntialiased),
             UnsupportedBrushHelper<ATexturedBrush>(),
             SolidShaderHelper(mRoundedSolidShaderAntialiased),
+            CustomShaderHelper{},
     }, brush);
 
     uploadToShaderCommon();
@@ -376,6 +403,7 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
             SolidShaderHelper(mSolidShader),
+            CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
     mTempVao.bind();
@@ -407,7 +435,6 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     mTempVao.indices(INDICES);
     glLineWidth(lineWidth);
     mTempVao.drawElements(GL_LINES);
-    drawRectImpl(position, size);
     endDraw(brush);
 }
 
@@ -420,6 +447,7 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
             SolidShaderHelper(mRoundedSolidShaderAntialiasedBorder),
+            CustomShaderHelper{},
     }, brush);
 
     glm::vec2 innerSize = { size.x - borderWidth * 2,
@@ -799,6 +827,7 @@ void OpenGLRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
             GradientShaderHelper(mGradientShader),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
+            CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 
@@ -820,6 +849,7 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points
             GradientShaderHelper(mGradientShader),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
+            CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 
@@ -843,13 +873,14 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
             GradientShaderHelper(mGradientShader),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
+            CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 
     mTempVao.bind();
 
     AVector<glm::vec4> positions;
-    positions.reserve(points.size());
+    positions.reserve(points.size() * 2);
 
     for (const auto& [p1, p2] : points) {
         positions << mTransform * glm::vec4(p1, 0, 1);
@@ -857,7 +888,7 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
     }
 
     mTempVao.insert(0, positions);
-    mTempVao.drawArrays(GL_LINES, points.size());
+    mTempVao.drawArrays(GL_LINES, positions.size());
 
     endDraw(brush);
 }

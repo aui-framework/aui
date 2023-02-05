@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "AView.h"
 #include "AUI/Render/Render.h"
@@ -35,6 +30,9 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Traits/callables.h>
+#include <AUI/Traits/iterators.h>
+#include <stack>
+#include <AUI/Action/AMenu.h>
 
 #include "AUI/Platform/ADesktop.h"
 #include "AUI/Platform/AFontManager.h"
@@ -61,34 +59,48 @@ ABaseWindow* AView::getWindow()
 
 AView::AView()
 {
-
+    AUI_ASSERT_UI_THREAD_ONLY()
     aui::zero(mAss);
+    setSlotsCallsOnlyOnMyThread(true);
 }
 
 void AView::redraw()
 {
-
-    nullsafe(getWindow())->flagRedraw(); else nullsafe(AWindow::current())->flagRedraw();
+    AUI_ASSERT_UI_THREAD_ONLY();
+    if (mRedrawRequested) {
+        return;
+    }
+    mRedrawRequested = true;
+    AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(AWindow::current())->flagRedraw();
 
 }
 void AView::requestLayoutUpdate()
 {
-
-    nullsafe(getWindow())->flagUpdateLayout(); else nullsafe(AWindow::current())->flagUpdateLayout();
-
+    AUI_ASSERT_UI_THREAD_ONLY();
+    AUI_NULLSAFE(getWindow())->flagUpdateLayout(); else AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }
 
 void AView::drawStencilMask()
 {
-    if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
-        Render::roundedRect(ASolidBrush{},
-                            {mPadding.left, mPadding.top},
-                            {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
-                            mBorderRadius);
-    } else {
-        Render::rect(ASolidBrush{},
-                     {mPadding.left, mPadding.top},
-                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+    switch (mOverflowMask) {
+        case AOverflowMask::ROUNDED_RECT:
+            if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
+                Render::roundedRect(ASolidBrush{},
+                                    {mPadding.left, mPadding.top},
+                                    {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
+                                    mBorderRadius);
+            } else {
+                Render::rect(ASolidBrush{},
+                             {mPadding.left, mPadding.top},
+                             {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+            }
+            break;
+
+        case AOverflowMask::BACKGROUND_IMAGE_ALPHA:
+            if (auto s = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_IMAGE)]) {
+                s->renderFor(this);
+            }
+            break;
     }
 }
 
@@ -99,7 +111,7 @@ void AView::postRender() {
 }
 
 void AView::popStencilIfNeeded() {
-    if (getOverflow() == Overflow::HIDDEN)
+    if (getOverflow() == AOverflow::HIDDEN)
     {
         /*
          * If the AView's Overflow set to Overflow::HIDDEN AView pushed it's mask into the stencil buffer but AView
@@ -120,55 +132,73 @@ void AView::render()
     {
         ensureAssUpdated();
 
-        for (auto& e : mBackgroundEffects)
-        {
-            e->draw([&]()
-                    {
-                        Render::rect(ASolidBrush{},
-                                     {0, 0},
-                                     getSize());
-                    });
-        }
-
         // draw list
-        for (auto& w : mAss) {
-            if (w) {
+        for (unsigned i = 0; i < int(ass::decl::DeclarationSlot::COUNT); ++i) {
+            if (i == int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)) continue;
+            if (auto w = mAss[i]) {
                 w->renderFor(this);
             }
         }
     }
 
     // stencil
-    if (mOverflow == Overflow::HIDDEN)
+    if (mOverflow == AOverflow::HIDDEN)
     {
         RenderHints::pushMask([&]() {
             drawStencilMask();
         });
     }
+
+    if (auto w = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)]) {
+        w->renderFor(this);
+    }
+    mRedrawRequested = false;
 }
 
-void AView::recompileAss()
+void AView::invalidateAllStyles()
 {
-    mCursor = ACursor::DEFAULT;
-    mOverflow = Overflow::VISIBLE;
+    assert(("invalidateAllStyles requires mAssHelper to be initialized", mAssHelper != nullptr));
+    mCursor.reset();
+    mOverflow = AOverflow::VISIBLE;
     mMargin = {};
     mMinSize = {};
     mBorderRadius = 0.f;
     //mForceStencilForBackground = false;
     mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     mFontStyle = {};
-    mBackgroundEffects.clear();
 
-    for (auto& r : AStylesheet::inst().getRules()) {
-        if (r.getSelector().isPossiblyApplicable(this)) {
-            mAssHelper->mPossiblyApplicableRules << &r;
-            r.getSelector().setupConnections(this, mAssHelper);
+    auto applyStylesheet = [this](const AStylesheet& sh) {
+        for (const auto& r : sh.getRules()) {
+            if (r.getSelector().isPossiblyApplicable(this)) {
+                mAssHelper->mPossiblyApplicableRules << &r;
+                r.getSelector().setupConnections(this, mAssHelper);
+            }
+        }
+    };
+
+    applyStylesheet(AStylesheet::global());
+
+    std::stack<AView*> viewTree;
+
+    for (auto target = this; target != nullptr; target = target->getParent()) {
+        if (target->mExtraStylesheet) {
+            if (mAssNames.contains("CellStyle")) {
+                printf("\n");
+            }
+
+            viewTree.push(target);
         }
     }
-    updateAssState();
+
+    while (!viewTree.empty()) {
+        applyStylesheet(*viewTree.top()->mExtraStylesheet);
+        viewTree.pop();
+    }
+
+    invalidateStateStyles();
 }
 
-void AView::updateAssState() {
+void AView::invalidateStateStyles() {
     aui::zero(mAss);
     if (!mAssHelper) return;
     mAssHelper->state.backgroundCropping.size.reset();
@@ -181,22 +211,16 @@ void AView::updateAssState() {
     mAssHelper->state.backgroundUrl.sizing.reset();
     mAssHelper->state.backgroundUrl.url.reset();
 
-
     for (auto& r : mAssHelper->mPossiblyApplicableRules) {
         if (r->getSelector().isStateApplicable(this)) {
             applyAssRule(* r);
         }
     }
-    applyAssRule(mCustomAssRule);
+    applyAssRule(mCustomStyleRule);
 
     redraw();
 }
 
-/*
-void AView::userProcessStyleSheet(const std::function<void(css, const std::function<void(property)>&)>& processor)
-{
-}
-*/
 
 float AView::getTotalFieldHorizontal() const
 {
@@ -208,12 +232,12 @@ float AView::getTotalFieldVertical() const
     return mPadding.vertical() + mMargin.vertical();
 }
 
-int AView::getContentMinimumWidth()
+int AView::getContentMinimumWidth(ALayoutDirection layout)
 {
     return 0;
 }
 
-int AView::getContentMinimumHeight()
+int AView::getContentMinimumHeight(ALayoutDirection layout)
 {
     return 0;
 }
@@ -223,16 +247,16 @@ bool AView::hasFocus() const
     return mHasFocus;
 }
 
-int AView::getMinimumWidth()
+int AView::getMinimumWidth(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.x == 0 ? ((glm::max)(getContentMinimumWidth(), mMinSize.x) + mPadding.horizontal()) : mFixedSize.x);
+    return (mFixedSize.x == 0 ? ((glm::max)(getContentMinimumWidth(layout), mMinSize.x) + mPadding.horizontal()) : mFixedSize.x);
 }
 
-int AView::getMinimumHeight()
+int AView::getMinimumHeight(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.y == 0 ? ((glm::max)(getContentMinimumHeight(), mMinSize.y) + mPadding.vertical()) : mFixedSize.y);
+    return (mFixedSize.y == 0 ? ((glm::max)(getContentMinimumHeight(layout), mMinSize.y) + mPadding.vertical()) : mFixedSize.y);
 }
 
 void AView::getTransform(glm::mat4& transform) const
@@ -248,25 +272,23 @@ AFontStyle& AView::getFontStyle()
 
 void AView::pack()
 {
-    setSize(getMinimumWidth(), getMinimumHeight());
-}
-
-const ADeque<AString>& AView::getCssNames() const
-{
-    return mAssNames;
+    setSize({getMinimumWidth(parentLayoutDirection()), getMinimumHeight(parentLayoutDirection())});
 }
 
 void AView::addAssName(const AString& assName)
 {
     mAssNames << assName;
     assert(("empty ass name" && !assName.empty()));
-    mAssHelper = nullptr;
+    invalidateAssHelper();
 }
+
+void AView::invalidateAssHelper() { mAssHelper = nullptr; }
+
 void AView::removeAssName(const AString& assName)
 {
-    mAssNames.removeFirst(assName);
+    mAssNames >> assName;
     assert(("empty ass name" && !assName.empty()));
-    mAssHelper = nullptr;
+    invalidateAssHelper();
 }
 
 void AView::ensureAssUpdated()
@@ -280,9 +302,9 @@ void AView::ensureAssUpdated()
         {
             mAssHelper = nullptr;
         });
-        connect(mAssHelper->invalidateStateAss, me::updateAssState);
+        connect(mAssHelper->invalidateStateAss, me::invalidateStateStyles);
 
-        recompileAss();
+        invalidateAllStyles();
     }
 }
 
@@ -318,16 +340,18 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
     if (auto w = AWindow::current())
     {
         if (w != this) {
-            connect(w->mouseReleased, this, [&]()
+            connect(w->mouseReleased, this, [&, button]()
                 {
                     auto selfHolder = sharedPtr();
-                    AThread::current()->enqueue([&, selfHolder = std::move(selfHolder)]()
-                        {
-                            // to be sure that isPressed will be false.
-                            if (mPressed) {
-                                onMouseReleased(pos, button);
-                            }
-                        });
+                    if (!selfHolder) return;
+                    AThread::current()->enqueue([this, button, selfHolder = std::move(selfHolder)]() {
+                        // to be sure that isPressed will be false.
+                        if (mPressed) {
+                            auto w = getWindow();
+                            if (!w) return;
+                            onMouseReleased(w->getMousePos() - getPositionInWindow(), button);
+                        }
+                    });
                     disconnect();
                 });
         }
@@ -347,6 +371,17 @@ void AView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
             emit clickedRight();
             break;
     }
+
+    if (button == AInput::RBUTTON) {
+        auto menuModel = composeContextMenu();
+        if (!menuModel.empty()) {
+            AMenu::show(menuModel);
+        }
+    }
+}
+
+AMenuModel AView::composeContextMenu() {
+    return {};
 }
 
 void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
@@ -354,13 +389,14 @@ void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
     emit doubleClicked(button);
 }
 
-void AView::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
-
+void AView::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
+    emit mouseScrolled(delta);
 }
 
 void AView::onKeyDown(AInput::Key key)
 {
-    if (key == AInput::TAB) {
+    emit keyPressed(key);
+    if (key == AInput::TAB && mFocusNextViewOnTab) {
         AWindow::current()->focusNextView();
     }
 }
@@ -371,6 +407,7 @@ void AView::onKeyRepeat(AInput::Key key)
 
 void AView::onKeyUp(AInput::Key key)
 {
+    emit keyReleased(key);
 }
 
 void AView::onFocusAcquired()
@@ -421,10 +458,10 @@ glm::ivec2 AView::getPositionInWindow() const {
 }
 
 
-void AView::setPosition(const glm::ivec2& position) {
+void AView::setPosition(glm::ivec2 position) {
     mPosition = position;
 }
-void AView::setSize(int width, int height)
+void AView::setSize(glm::ivec2 size)
 {
     /*
     int minWidth = getContentMinimumWidth();
@@ -440,7 +477,7 @@ void AView::setSize(int width, int height)
     }
     else
     {
-        mSize.x = width;
+        mSize.x = size.x;
         if (mMinSize.x != 0)
             mSize.x = glm::max(mMinSize.x, mSize.x);
     }
@@ -450,7 +487,7 @@ void AView::setSize(int width, int height)
     }
     else
     {
-        mSize.y = height;
+        mSize.y = size.y;
         if (mMinSize.y != 0)
             mSize.y = glm::max(mMinSize.y, mSize.y);
     }
@@ -459,17 +496,29 @@ void AView::setSize(int width, int height)
 
 void AView::setGeometry(int x, int y, int width, int height) {
     setPosition({ x, y });
-    setSize(width, height);
+    setSize({width, height});
+
+    emit geometryChanged({x, y}, {width, height});
 }
 
 bool AView::consumesClick(const glm::ivec2& pos) {
     return true;
 }
 
+void AView::notifyParentChildFocused(const _<AView>& view) {
+    if (mParent == nullptr)
+        return;
+
+    emit mParent->childFocused(view);
+    mParent->notifyParentChildFocused(view);
+}
+
 void AView::focus() {
     // holding reference here
     auto mySharedPtr = sharedPtr();
     auto window = AWindow::current();
+
+    notifyParentChildFocused(mySharedPtr);
 
     try {
         auto windowSharedPtr = window->sharedPtr(); // may throw bad_weak
@@ -480,6 +529,10 @@ void AView::focus() {
     } catch (...) {
         window->setFocusedView(mySharedPtr);
     }
+}
+
+bool AView::capturesFocus() {
+    return true;
 }
 
 Visibility AView::getVisibilityRecursive() const {
@@ -533,12 +586,33 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
 }
 
 void AView::applyAssRule(const RuleWithoutSelector& rule) {
-    for (auto& d : rule.getDeclarations()) {
+    for (const auto& d : rule.getDeclarations()) {
         auto slot = d->getDeclarationSlot();
         if (slot != ass::decl::DeclarationSlot::NONE) {
-            mAss[int(slot)] = d->isNone() ? nullptr : d;
+            mAss[int(slot)] = d->isNone() ? nullptr : d.get();
         }
         d->applyFor(this);
     }
 }
 
+ALayoutDirection AView::parentLayoutDirection() const noexcept {
+    if (mParent == nullptr) return ALayoutDirection::NONE;
+    if (mParent->getLayout() == nullptr) return ALayoutDirection::NONE;
+    return mParent->getLayout()->getLayoutDirection();
+}
+
+void AView::setCustomStyle(RuleWithoutSelector rule) {
+    AUI_ASSERT_UI_THREAD_ONLY();
+    mCustomStyleRule = std::move(rule);
+    mAssHelper = nullptr;
+}
+
+
+bool AView::hasIndirectParent(const _<AView>& v) {
+    for (auto p = getParent(); p != nullptr; p = p->getParent()) {
+        if (p == v.get()) {
+            return true;
+        }
+    }
+    return false;
+}

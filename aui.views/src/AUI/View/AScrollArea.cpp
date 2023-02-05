@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2772 on 12/6/20.
@@ -38,20 +33,25 @@ public:
         addAssName(".scrollarea_inner");
     }
 
-    int getContentMinimumWidth() override {
+    int getContentMinimumWidth(ALayoutDirection layout) override {
         return 30_dp;
     }
 
     void updateLayout() override {
-        if (hasChild()) child()->setGeometry(0, -mScroll.y, getContentWidth(), getContentHeight() + mScroll.y);
+        if (hasChild()) child()->setGeometry(-mScroll.x, -mScroll.y, getContentWidth() + mScroll.x, getContentHeight() + mScroll.y);
     }
 
-    int getContentMinimumHeight() override {
+    int getContentMinimumHeight(ALayoutDirection layout) override {
         return 30_dp;
     }
 
     void setScrollY(unsigned scroll) {
         mScroll.y = scroll;
+        updateLayout();
+    }
+
+    void setScrollX(unsigned scroll) {
+        mScroll.x = scroll;
         updateLayout();
     }
 
@@ -84,13 +84,17 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
     mContentContainer = contentContainer;
     addView(contentContainer);
     if (!builder.mExternalVerticalScrollbar) {
-        addView(mVerticalScrollbar = _new<AScrollbar>(LayoutDirection::VERTICAL));
+        addView(mVerticalScrollbar = _new<AScrollbar>(ALayoutDirection::VERTICAL));
     } else {
         mVerticalScrollbar = builder.mExternalVerticalScrollbar;
     }
-    addView(mHorizontalScrollbar = _new<AScrollbar>(LayoutDirection::HORIZONTAL));
 
-    mHorizontalScrollbar->setVisibility(Visibility::GONE);
+    if (!builder.mExternalHorizontalScrollbar) {
+        addView(mHorizontalScrollbar = _new<AScrollbar>(ALayoutDirection::HORIZONTAL));
+    } else {
+        mHorizontalScrollbar = builder.mExternalHorizontalScrollbar;
+    }
+
     mContentContainer->setExpanding();
 
     if (builder.mContents) {
@@ -100,25 +104,48 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
     setExpanding();
 
     connect(mVerticalScrollbar->scrolled, slot(contentContainer)::setScrollY);
+    connect(mHorizontalScrollbar->scrolled, slot(contentContainer)::setScrollX);
 }
 
 AScrollArea::~AScrollArea() = default;
 
-void AScrollArea::setSize(int width, int height) {
-    AViewContainer::setSize(width, height);
+void AScrollArea::setSize(glm::ivec2 size) {
+    AViewContainer::setSize(size);
     if (mContentContainer->hasChild()) {
         mVerticalScrollbar->setScrollDimensions(
                 mContentContainer->getContentHeight() + mContentContainer->getTotalFieldVertical(),
-                mContentContainer->child()->getContentMinimumHeight());
+                mContentContainer->child()->getContentMinimumHeight(ALayoutDirection::NONE));
+
+        mHorizontalScrollbar->setScrollDimensions(
+                mContentContainer->getContentWidth() + mContentContainer->getTotalFieldHorizontal(),
+                mContentContainer->child()->getContentMinimumWidth(ALayoutDirection::NONE));
     }
+
+    adjustContentSize();
 }
 
-void AScrollArea::onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) {
+void AScrollArea::adjustContentSize() {
+    if (mScrollbarAppearance.getVertical() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
+        adjustVerticalSizeToContent();
+
+    if (mScrollbarAppearance.getHorizontal() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
+        adjustHorizontalSizeToContent();
+}
+
+void AScrollArea::adjustHorizontalSizeToContent() {
+    setFixedSize(glm::ivec2(0, getFixedSize().y));
+}
+
+void AScrollArea::adjustVerticalSizeToContent() {
+    setFixedSize(glm::ivec2(getFixedSize().x, 0));
+}
+
+void AScrollArea::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
     AViewContainer::onMouseWheel(pos, delta);
     mVerticalScrollbar->onMouseWheel(pos, delta);
 }
 
-int AScrollArea::getContentMinimumHeight() {
+int AScrollArea::getContentMinimumHeight(ALayoutDirection layout) {
     return 30;
 }
 
@@ -138,3 +165,4 @@ bool AScrollArea::onGesture(const glm::ivec2 &origin, const AGestureEvent &event
     }
     return AViewContainer::onGesture(origin, event);
 }
+

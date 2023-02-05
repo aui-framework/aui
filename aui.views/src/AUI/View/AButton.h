@@ -1,29 +1,26 @@
-﻿/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 #include "AView.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Render/Render.h"
-#include "AAbstractLabel.h"
+#include "AUI/Layout/AHorizontalLayout.h"
+#include "ALabel.h"
+#include "AViewContainer.h"
 #include "AUI/ASS/Selector/AAssSelector.h"
 
 /**
@@ -53,11 +50,28 @@ signals:
 	emits<> noLongerDefault;
 
 private:
-	AWatchable<bool> mDefault = AWatchable<bool>(defaultState, becameDefault, noLongerDefault);
+	AFieldSignalEmitter<bool> mDefault = AFieldSignalEmitter<bool>(defaultState, becameDefault, noLongerDefault);
 };
 
+/**
+ * @brief Unlike AButton, AButtonEx is a container which looks like a button.
+ */
+class AButtonEx: public AViewContainer {
+public:
+    AButtonEx() {
+        addAssName(".btn");
+    }
+};
 
-namespace ass::Button {
+namespace declarative {
+    struct Button: aui::ui_building::layouted_container_factory<AHorizontalLayout, AButtonEx> {
+        using aui::ui_building::layouted_container_factory<AHorizontalLayout, AButtonEx>::layouted_container_factory;
+        Button(AString text): layouted_container_factory<AHorizontalLayout, AButtonEx>({Label { std::move(text) }}) {}
+        Button(const char* text): layouted_container_factory<AHorizontalLayout, AButtonEx>({Label { std::move(text) }}) {}
+    };
+}
+
+namespace ass::button {
     struct Default: IAssSubSelector {
     private:
         _unique<IAssSubSelector> mWrapped;

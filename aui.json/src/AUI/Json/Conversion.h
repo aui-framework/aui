@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 #pragma once
 
 #include <AUI/Json/AJson.h>
@@ -5,6 +21,7 @@
 #include "AUI/Traits/parameter_pack.h"
 #include "AUI/Traits/members.h"
 #include <AUI/Util/EnumUtil.h>
+#include <AUI/Reflect/AEnumerate.h>
 #include <AUI/Traits/strings.h>
 
 /**
@@ -233,6 +250,16 @@ struct AJsonConv<float> {
 };
 
 template<>
+struct AJsonConv<double> {
+    static AJson toJson(double v) {
+        return v;
+    }
+    static void fromJson(const AJson& json, double& dst) {
+        dst = json.asNumber();
+    }
+};
+
+template<>
 struct AJsonConv<bool> {
     static AJson toJson(bool v) {
         return v;
@@ -308,6 +335,17 @@ struct AJsonConv<AVector<T>, typename std::enable_if_t<aui::has_json_converter<T
         for (const auto& elem : array) {
             dst << aui::from_json<T>(elem);
         }
+    }
+};
+
+
+template<typename T>
+struct AJsonConv<T, typename std::enable_if_t<std::is_enum_v<T>>> {
+    static AJson toJson(const T& v) {
+        return AEnumerate<T>::names()[v];
+    }
+    static void fromJson(const AJson& json, T& dst) {
+        dst = AEnumerate<T>::byName(json.asString());
     }
 };
 

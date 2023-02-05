@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by alex2 on 6/24/2021.
 //
@@ -9,6 +25,7 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AMap.h>
 #include <AUI/Traits/types.h>
+#include <fmt/format.h>
 
 template<typename enum_t>
 class AEnumerate {
@@ -53,7 +70,7 @@ public:
 
 
         for (size_t p; (p = result.find("::")) != AString::NPOS;) {
-            result = result.mid(p + 2);
+            result = result.substr(p + 2);
         }
 
 #endif
@@ -122,3 +139,11 @@ struct AEnumerateAllValues<enum_t>{         \
 };                                         \
 inline std::ostream& operator<<(std::ostream& o, enum_t v) { return o << AEnumerate<enum_t>::names()[v]; } \
 namespace std { inline AString to_wstring(enum_t v) { return AEnumerate<enum_t>::names()[v]; } }
+
+template <typename T> struct fmt::formatter<T, char, std::enable_if_t<aui::is_complete<AEnumerateAllValues<T>>>>: formatter<std::string> {
+    // parse is inherited from formatter<string_view>.
+    template <typename FormatContext>
+    auto format(T c, FormatContext& ctx) const {
+        return formatter<string_view>::format(AEnumerate<T>::names()[c].toStdString(), ctx);
+    }
+};
