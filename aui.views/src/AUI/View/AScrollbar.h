@@ -93,7 +93,7 @@ public:
         setScroll(mCurrentScroll + delta);
     }
 
-    void onScroll(glm::ivec2 pos, glm::ivec2 delta) override;
+    void onScroll(const AScrollEvent& event) override;
 
     /**
      * @brief Set stick to end.

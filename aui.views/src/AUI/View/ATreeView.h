@@ -52,7 +52,7 @@ public:
     ATreeView();
     ATreeView(const _<ITreeModel<AString>>& model);
     void setModel(const _<ITreeModel<AString>>& model);
-    void onScroll(glm::ivec2 pos, glm::ivec2 delta) override;
+    void onScroll(const AScrollEvent& event) override;
     void setSize(glm::ivec2 size) override;
     int getContentMinimumHeight(ALayoutDirection layout) override;
     void handleMouseMove(ItemView* pView);

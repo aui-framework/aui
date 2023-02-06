@@ -394,8 +394,8 @@ void AView::onMouseDoubleClicked(const APointerPressedEvent& event)
     emit doubleClicked(event.button);
 }
 
-void AView::onScroll(glm::ivec2 pos, glm::ivec2 delta) {
-    emit mouseScrolled(delta);
+void AView::onScroll(const AScrollEvent& event) {
+    emit mouseScrolled(event.delta);
 }
 
 void AView::onKeyDown(AInput::Key key)
@@ -576,7 +576,10 @@ bool AView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
 bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event) {
     return std::visit(aui::lambda_overloaded {
         [&](const AFingerDragEvent& e) {
-            onScroll(origin, e.delta);
+            onScroll({
+                .origin = origin,
+                .delta = e.delta,
+            });
             return true;
         },
         [&](const ALongPressEvent& e) {

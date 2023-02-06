@@ -140,9 +140,9 @@ void AScrollArea::adjustVerticalSizeToContent() {
     setFixedSize(glm::ivec2(getFixedSize().x, 0));
 }
 
-void AScrollArea::onScroll(glm::ivec2 pos, glm::ivec2 delta) {
-    AViewContainer::onScroll(pos, delta);
-    mVerticalScrollbar->onScroll(pos, delta);
+void AScrollArea::onScroll(const AScrollEvent& event) {
+    AViewContainer::onScroll(event);
+    mVerticalScrollbar->onScroll(event);
 }
 
 int AScrollArea::getContentMinimumHeight(ALayoutDirection layout) {
