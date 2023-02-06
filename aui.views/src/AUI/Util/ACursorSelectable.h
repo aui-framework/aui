@@ -107,9 +107,9 @@ protected:
     virtual void doRedraw() = 0;
 
 
-    void handleMouseDoubleClicked(const AMouseButtonEvent& event);
-    void handleMousePressed(const AMouseButtonEvent& event);
-    void handleMouseReleased(const AMouseButtonEvent& event);
+    void handleMouseDoubleClicked(const APointerPressedEvent& event);
+    void handleMousePressed(const APointerPressedEvent& event);
+    void handleMouseReleased(const APointerReleasedEvent& event);
     void handleMouseMove(const glm::ivec2& pos);
 
     /**

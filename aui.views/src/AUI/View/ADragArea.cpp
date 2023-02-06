@@ -76,7 +76,7 @@ std::tuple<ADragArea*, AViewContainer*> ADragArea::ADraggableHandle::getDragArea
     return {nullptr, potentionalDraggingView};
 }
 
-void ADragArea::ADraggableHandle::onMousePressed(const AMouseButtonEvent& event) {
+void ADragArea::ADraggableHandle::onMousePressed(const APointerPressedEvent& event) {
     AViewContainer::onMousePressed(event);
 
     if (mCheckForClickConsumption) {
@@ -106,7 +106,7 @@ void ADragArea::ADraggableHandle::onMousePressed(const AMouseButtonEvent& event)
             });
 }
 
-void ADragArea::ADraggableHandle::onMouseReleased(const AMouseButtonEvent& event) {
+void ADragArea::ADraggableHandle::onMouseReleased(const APointerReleasedEvent& event) {
     AViewContainer::onMouseReleased(event);
     if (mDragging) {
         mDragging = false;

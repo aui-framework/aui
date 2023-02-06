@@ -42,8 +42,8 @@ public:
     void render() override;
 
     void onMouseMove(glm::ivec2 pos) override;
-    void onMousePressed(const AMouseButtonEvent& event) override;
-    void onMouseReleased(const AMouseButtonEvent& event) override;
+    void onMousePressed(const APointerPressedEvent& event) override;
+    void onMouseReleased(const APointerReleasedEvent& event) override;
 
     void onFocusLost() override;
 
@@ -53,7 +53,7 @@ public:
 
     void onKeyDown(AInput::Key key) override;
 
-    void onMouseDoubleClicked(const AMouseButtonEvent& event) override;
+    void onMouseDoubleClicked(const APointerPressedEvent& event) override;
 
 protected:
     glm::ivec2 getMouseSelectionPadding() override;

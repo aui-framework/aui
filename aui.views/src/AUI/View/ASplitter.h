@@ -89,13 +89,13 @@ private:
 public:
     virtual ~ASplitter() = default;
 
-    void onMousePressed(const AMouseButtonEvent& event) override;
+    void onMousePressed(const APointerPressedEvent& event) override;
 
     void onMouseMove(glm::ivec2 pos) override;
 
     void setSize(glm::ivec2 size) override;
 
-    void onMouseReleased(const AMouseButtonEvent& event) override;
+    void onMouseReleased(const APointerReleasedEvent& event) override;
 
     using Vertical = Builder<AVerticalLayout>;
     using Horizontal = Builder<AHorizontalLayout>;

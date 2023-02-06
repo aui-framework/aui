@@ -36,7 +36,7 @@ unsigned ACursorSelectable::cursorIndexByPos(glm::ivec2 pos) {
                                                        getMouseSelectionFont());
 }
 
-void ACursorSelectable::handleMousePressed(const AMouseButtonEvent& event) {
+void ACursorSelectable::handleMousePressed(const APointerPressedEvent& event) {
     if (event.button == AInput::LBUTTON) {
         mCursorSelection = mCursorIndex = cursorIndexByPos(event.position);
     }
@@ -49,7 +49,7 @@ void ACursorSelectable::handleMouseMove(const glm::ivec2& pos) {
     }
 }
 
-void ACursorSelectable::handleMouseReleased(const AMouseButtonEvent& event) {
+void ACursorSelectable::handleMouseReleased(const APointerReleasedEvent& event) {
     if (event.button == AInput::LBUTTON)
     {
         mIgnoreSelection = false;
@@ -142,7 +142,7 @@ void ACursorSelectable::drawSelectionRects() {
     draw();
 }
 
-void ACursorSelectable::handleMouseDoubleClicked(const AMouseButtonEvent& event) {
+void ACursorSelectable::handleMouseDoubleClicked(const APointerPressedEvent& event) {
     mIgnoreSelection = true;
     auto text = getDisplayText();
 

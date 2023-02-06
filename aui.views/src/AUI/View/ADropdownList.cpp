@@ -82,7 +82,7 @@ int ADropdownList::getContentMinimumWidth(ALayoutDirection layout) {
     return AAbstractLabel::getContentMinimumWidth(ALayoutDirection::NONE) + 20;
 }
 
-void ADropdownList::onMouseReleased(const AMouseButtonEvent& event) {
+void ADropdownList::onMouseReleased(const APointerReleasedEvent& event) {
     AView::onMouseReleased(event);
 
     if (!mComboWindow.lock()) {

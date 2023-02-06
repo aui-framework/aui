@@ -87,7 +87,7 @@ void ASelectableLabel::onMouseMove(glm::ivec2 pos) {
     handleMouseMove(pos);
 }
 
-void ASelectableLabel::onMousePressed(const AMouseButtonEvent& event) {
+void ASelectableLabel::onMousePressed(const APointerPressedEvent& event) {
     clearSelection();
     AView::onMousePressed(event);
     auto position = event.position;
@@ -98,7 +98,7 @@ void ASelectableLabel::onMousePressed(const AMouseButtonEvent& event) {
     handleMousePressed({position, event.button});
  }
 
-void ASelectableLabel::onMouseReleased(const AMouseButtonEvent& event) {
+void ASelectableLabel::onMouseReleased(const APointerReleasedEvent& event) {
     AView::onMouseReleased(event);
     auto position = event.position;
     position.x -= mTextLeftOffset;
@@ -140,7 +140,7 @@ void ASelectableLabel::onFocusAcquired() {
 }
 
 
-void ASelectableLabel::onMouseDoubleClicked(const AMouseButtonEvent& event) {
+void ASelectableLabel::onMouseDoubleClicked(const APointerPressedEvent& event) {
     AView::onMouseDoubleClicked(event);
     ACursorSelectable::handleMouseDoubleClicked(event);
 }

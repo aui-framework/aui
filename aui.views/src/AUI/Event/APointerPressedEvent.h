@@ -18,8 +18,17 @@
 
 #include <glm/glm.hpp>
 
-struct AMouseButtonEvent {
+/**
+ * @brief Pointing method press event.
+ */
+struct APointerPressedEvent {
+    /**
+     * @brief Where does the event occurred.
+     */
     glm::ivec2 position;
-    AInput::Key button;
-    bool abortClick = false;
+
+    /**
+     * @brief Which button of the pointing device is triggered the event (AInput::LBUTTON if not present).
+     */
+    AInput::Key button = AInput::LBUTTON;
 };

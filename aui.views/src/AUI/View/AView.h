@@ -37,10 +37,12 @@
 #include <AUI/Enum/AOverflow.h>
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Enum/MouseCollisionPolicy.h>
-#include <AUI/Event/AGestureEvent.h>
 #include <AUI/Util/ALayoutDirection.h>
 #include <AUI/Action/AMenu.h>
-#include <AUI/Event/AMouseButtonEvent.h>
+
+#include <AUI/Event/AGestureEvent.h>
+#include <AUI/Event/APointerPressedEvent.h>
+#include <AUI/Event/APointerReleasedEvent.h>
 
 
 class Render;
@@ -740,9 +742,9 @@ public:
     virtual void onMouseLeave();
     virtual void onDpiChanged();
 
-    virtual void onMousePressed(const AMouseButtonEvent& event);
-    virtual void onMouseReleased(const AMouseButtonEvent& event);
-    virtual void onMouseDoubleClicked(const AMouseButtonEvent& event);
+    virtual void onMousePressed(const APointerPressedEvent& event);
+    virtual void onMouseReleased(const APointerReleasedEvent& event);
+    virtual void onMouseDoubleClicked(const APointerPressedEvent& event);
 
     /**
      * Handles mouse wheel events.

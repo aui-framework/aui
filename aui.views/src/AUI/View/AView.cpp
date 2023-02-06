@@ -328,7 +328,7 @@ void AView::onMouseLeave()
 }
 
 
-void AView::onMousePressed(const AMouseButtonEvent& event)
+void AView::onMousePressed(const APointerPressedEvent& event)
 {
     mPressed.set(this, true);
 
@@ -353,7 +353,7 @@ void AView::onMousePressed(const AMouseButtonEvent& event)
                             onMouseReleased({
                                 .position = w->getMousePos() - getPositionInWindow(),
                                 .button = button,
-                                .abortClick = true,
+                                .triggerClick = false,
                             });
                         }
                     });
@@ -363,10 +363,10 @@ void AView::onMousePressed(const AMouseButtonEvent& event)
     }
 }
 
-void AView::onMouseReleased(const AMouseButtonEvent& event)
+void AView::onMouseReleased(const APointerReleasedEvent& event)
 {
     mPressed.set(this, false);
-    if (!event.abortClick) {
+    if (event.triggerClick) {
         emit clickedButton(event.button);
         switch (event.button) {
             case AInput::LBUTTON:
@@ -389,7 +389,7 @@ AMenuModel AView::composeContextMenu() {
     return {};
 }
 
-void AView::onMouseDoubleClicked(const AMouseButtonEvent& event)
+void AView::onMouseDoubleClicked(const APointerPressedEvent& event)
 {
     emit doubleClicked(event.button);
 }

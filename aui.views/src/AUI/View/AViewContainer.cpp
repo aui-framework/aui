@@ -163,7 +163,7 @@ int AViewContainer::getContentMinimumHeight(ALayoutDirection layout) {
     return AView::getContentMinimumHeight(ALayoutDirection::NONE);
 }
 
-void AViewContainer::onMousePressed(const AMouseButtonEvent& event) {
+void AViewContainer::onMousePressed(const APointerPressedEvent& event) {
     AView::onMousePressed(event);
 
     auto p = getViewAt(event.position);
@@ -173,14 +173,14 @@ void AViewContainer::onMousePressed(const AMouseButtonEvent& event) {
     }
 }
 
-void AViewContainer::onMouseReleased(const AMouseButtonEvent& event) {
+void AViewContainer::onMouseReleased(const APointerReleasedEvent& event) {
     AView::onMouseReleased(event);
     auto p = getViewAt(event.position);
     if (p && p->isEnabled() && p->isMousePressed())
         p->onMouseReleased({event.position - p->getPosition(), event.button});
 }
 
-void AViewContainer::onMouseDoubleClicked(const AMouseButtonEvent& event) {
+void AViewContainer::onMouseDoubleClicked(const APointerPressedEvent& event) {
     AView::onMouseDoubleClicked(event);
 
     auto p = getViewAt(event.position);

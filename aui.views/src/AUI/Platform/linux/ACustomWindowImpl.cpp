@@ -29,7 +29,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
     setWindowStyle(WindowStyle::NO_DECORATORS);
 }
 
-void ACustomWindow::onMousePressed(const AMouseButtonEvent& event) {
+void ACustomWindow::onMousePressed(const APointerPressedEvent& event) {
     if (event.position.y < AUI_TITLE_HEIGHT && event.button == AInput::LBUTTON) {
         if (isCaptionAt(event.position)) {
             XClientMessageEvent xclient;
@@ -58,7 +58,7 @@ void ACustomWindow::onMousePressed(const AMouseButtonEvent& event) {
 }
 
 
-void ACustomWindow::onMouseReleased(const AMouseButtonEvent& event) {
+void ACustomWindow::onMouseReleased(const APointerReleasedEvent& event) {
     AViewContainer::onMouseReleased(event);
 }
 void ACustomWindow::handleXConfigureNotify() {

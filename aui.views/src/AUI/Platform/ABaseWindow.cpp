@@ -182,7 +182,7 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
     }
 }
 
-void ABaseWindow::onMousePressed(const AMouseButtonEvent& event) {
+void ABaseWindow::onMousePressed(const APointerPressedEvent& event) {
     closeOverlappingSurfacesOnClick();
     auto focusCopy = mFocusedView.lock();
     AViewContainer::onMousePressed(event);
@@ -216,7 +216,7 @@ void ABaseWindow::onMousePressed(const AMouseButtonEvent& event) {
     AMenu::close();
 }
 
-void ABaseWindow::onMouseReleased(const AMouseButtonEvent& event) {
+void ABaseWindow::onMouseReleased(const APointerReleasedEvent& event) {
     AViewContainer::onMouseReleased(event);
 }
 

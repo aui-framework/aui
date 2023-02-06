@@ -207,7 +207,7 @@ void AScrollbar::scrollBackward() {
     });
 }
 
-void AScrollbar::onMousePressed(const AMouseButtonEvent& event) {
+void AScrollbar::onMousePressed(const APointerPressedEvent& event) {
     AViewContainer::onMousePressed(event);
 }
 
@@ -242,7 +242,7 @@ void AScrollbarHandle::onMouseMove(glm::ivec2 pos) {
     }
 }
 
-void AScrollbarHandle::onMousePressed(const AMouseButtonEvent& event) {
+void AScrollbarHandle::onMousePressed(const APointerPressedEvent& event) {
     AView::onMousePressed(event);
     switch (mScrollbar.mDirection) {
         case ALayoutDirection::HORIZONTAL:
@@ -256,7 +256,7 @@ void AScrollbarHandle::onMousePressed(const AMouseButtonEvent& event) {
     mDragging = true;
 }
 
-void AScrollbarHandle::onMouseReleased(const AMouseButtonEvent& event) {
+void AScrollbarHandle::onMouseReleased(const APointerReleasedEvent& event) {
     AView::onMouseReleased(event);
     mDragging = false;
 }

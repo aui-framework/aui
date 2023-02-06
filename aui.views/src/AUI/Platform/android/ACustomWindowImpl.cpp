@@ -30,12 +30,12 @@ ACustomWindow::ACustomWindow(const AString &name, int width, int height) {
 
 }
 
-void ACustomWindow::onMousePressed(const AMouseButtonEvent& event) {
+void ACustomWindow::onMousePressed(const APointerPressedEvent& event) {
     ABaseWindow::onMousePressed(event);
 }
 
-void ACustomWindow::onMouseReleased(const AMouseButtonEvent& event) {
-    AViewContainer::onMouseReleased(event);
+void ACustomWindow::onMouseReleased(const APointerReleasedEvent& event) {
+    ABaseWindow::onMouseReleased(event);
 }
 
 

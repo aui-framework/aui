@@ -201,7 +201,7 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     ABaseWindow::onMousePressed(event);
 }
 
-void ACustomWindow::onMouseReleased(const AMouseButtonEvent& event) {
+void ACustomWindow::onMouseReleased(const APointerReleasedEvent& event) {
     AViewContainer::onMouseReleased(event);
 }
 
@@ -227,7 +227,7 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
 }
 
 
-void ACustomWindow::onMouseReleased(const AMouseButtonEvent& event) {
+void ACustomWindow::onMouseReleased(const APointerReleasedEvent& event) {
     AViewContainer::onMouseReleased(event);
 }
 void ACustomWindow::handleXConfigureNotify() {
@@ -278,7 +278,7 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
 }
 
 
-void ACustomWindow::onMouseReleased(const AMouseButtonEvent& event) {
+void ACustomWindow::onMouseReleased(const APointerReleasedEvent& event) {
     AViewContainer::onMouseReleased(event);
 }
 void ACustomWindow::handleXConfigureNotify() {

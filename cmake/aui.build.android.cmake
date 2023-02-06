@@ -59,7 +59,7 @@ function(_aui_android_app)
     string(REPLACE "." "/" _package_to_path ${APP_ANDROID_PACKAGE})
 
     configure_file(${AUI_BUILD_AUI_ROOT}/platform/android/settings.gradle.in ${_gradle_project_dir}/settings.gradle @ONLY)
-    configure_file(${AUI_BUILD_AUI_ROOT}/platform/android/MainActivity.java.in ${_main}/java/${_package_to_path}/MainActivity.java @ONLY)
+    configure_file(${AUI_BUILD_AUI_ROOT}/platform/android/MainActivity.kt.in ${_main}/java/${_package_to_path}/MainActivity.kt @ONLY)
     configure_file(${AUI_BUILD_AUI_ROOT}/platform/android/AndroidManifest.xml.in ${_main}/AndroidManifest.xml @ONLY)
     configure_file(${AUI_BUILD_AUI_ROOT}/platform/android/app_build.gradle.in ${_gradle_project_dir}/app/build.gradle @ONLY)
     file(WRITE ${_gradle_project_dir}/local.properties "sdk.dir=${AUI_ANDROID_SDK_ROOT}")

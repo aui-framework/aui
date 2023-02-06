@@ -61,7 +61,7 @@ public:
     void setSelectionId(int id);
     int getContentMinimumWidth(ALayoutDirection layout) override;
 
-    void onMouseReleased(const AMouseButtonEvent& event) override;
+    void onMouseReleased(const APointerReleasedEvent& event) override;
 
     void destroyWindow();
 

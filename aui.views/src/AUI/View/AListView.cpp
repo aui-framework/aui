@@ -102,13 +102,13 @@ protected:
 
 public:
 
-    void onMousePressed(const AMouseButtonEvent& event) override {
+    void onMousePressed(const APointerPressedEvent& event) override {
         AView::onMousePressed(event);
 
         dynamic_cast<AListView*>(getParent()->getParent())->handleMousePressed(this);
     }
 
-    void onMouseDoubleClicked(const AMouseButtonEvent& event) override {
+    void onMouseDoubleClicked(const APointerPressedEvent& event) override {
         AView::onMouseDoubleClicked(event);
 
         dynamic_cast<AListView*>(getParent()->getParent())->handleMouseDoubleClicked(this);
