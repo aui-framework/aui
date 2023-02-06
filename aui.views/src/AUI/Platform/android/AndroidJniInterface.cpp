@@ -19,6 +19,7 @@
 #include <AUI/Thread/AThread.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/kAUI.h>
+#include <AUI/Logging/ALogger.h>
 
 static void runOnGLThread(std::function<void()> callback) {
     AUI_NULLSAFE(AWindow::current())->getThread()->enqueue(std::move(callback));
@@ -39,10 +40,14 @@ Java_com_github_aui_android_MyGLSurfaceView_handleResize(JNIEnv *env, jclass cla
     });
 }
 
+static glm::ivec2 gestureOriginPos{0, 0};
+static glm::ivec2 scrollPrevValue{0, 0};
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonDown(JNIEnv *env, jclass clazz, jint x,
                                                            jint y) {
+    scrollPrevValue = gestureOriginPos = {x, y};
     runOnGLThread([=] {
         AUI_NULLSAFE(AWindow::current())->onMousePressed({{x, y}, AInput::LBUTTON});
     });
@@ -65,6 +70,24 @@ Java_com_github_aui_android_MyGLSurfaceView_handleMouseMove(JNIEnv *env, jclass 
     });
 }
 
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_aui_android_MyGLSurfaceView_handleKineticScroll(JNIEnv *env, jclass clazz, jint x, jint y) {
+    glm::ivec2 current = {x, y};
+
+    if (current == glm::ivec2(0)) return;
+
+    auto delta = scrollPrevValue - current;
+    scrollPrevValue = current;
+    ALogger::info("Test") << delta.x << ", " << delta.y;
+    AUI_NULLSAFE(AWindow::current())->onGesture(gestureOriginPos,
+                                                AFingerDragEvent{
+        .delta = delta,
+        .kinetic = true,
+    });
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleScroll(JNIEnv *env, jclass clazz,
@@ -73,6 +96,8 @@ Java_com_github_aui_android_MyGLSurfaceView_handleScroll(JNIEnv *env, jclass cla
                                                             jfloat velX,
                                                             jfloat velY) {
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onGesture({originX, originY}, AFingerDragEvent{ {velX, velY} });
+        AUI_NULLSAFE(AWindow::current())->onGesture({originX, originY}, AFingerDragEvent{
+            .delta = {velX, velY}
+        });
     });
 }

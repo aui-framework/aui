@@ -21,6 +21,8 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
+import android.widget.OverScroller
+import android.widget.Scroller
 import java.util.*
 import java.util.concurrent.LinkedBlockingDeque
 import javax.microedition.khronos.egl.EGLConfig
@@ -29,6 +31,7 @@ import javax.microedition.khronos.opengles.GL10
 class MyGLSurfaceView(context: Context) : GLSurfaceView(context), OnTouchListener {
     private val mGestureDetector: GestureDetector
     private var mRenderer: Renderer? = null
+    private val mScroller = Scroller(context)
 
     companion object {
         var ourCurrentSurface: MyGLSurfaceView? = null
@@ -42,6 +45,9 @@ class MyGLSurfaceView(context: Context) : GLSurfaceView(context), OnTouchListene
 
         @JvmStatic
         private external fun handleMouseMove(x: Int, y: Int)
+
+        @JvmStatic
+        private external fun handleKineticScroll(x: Int, y: Int)
 
         @JvmStatic
         private external fun handleScroll(originX: Int, originY: Int, velX: Float, velY: Float)
@@ -60,7 +66,8 @@ class MyGLSurfaceView(context: Context) : GLSurfaceView(context), OnTouchListene
         ourCurrentSurface = this
         mGestureDetector = GestureDetector(context, object : GestureDetector.OnGestureListener {
             override fun onDown(motionEvent: MotionEvent): Boolean {
-                return false
+                mScroller.forceFinished(true)
+                return true
             }
 
             override fun onShowPress(motionEvent: MotionEvent) {}
@@ -90,7 +97,10 @@ class MyGLSurfaceView(context: Context) : GLSurfaceView(context), OnTouchListene
                 velX: Float,
                 velY: Float
             ): Boolean {
-                println("Fling $velX, $velY")
+                mScroller.fling(start.x.toInt(), start.y.toInt(),
+                                velX.toInt(), velY.toInt(),
+                                0, 999999999,
+                                0, 999999999)
                 return false
             }
         })
@@ -108,7 +118,14 @@ class MyGLSurfaceView(context: Context) : GLSurfaceView(context), OnTouchListene
             }
 
             override fun onDrawFrame(gl: GL10) {
-                handleRedraw()
+                if (mScroller.computeScrollOffset()) {
+                    handleKineticScroll(mScroller.currX, mScroller.currY)
+
+                    handleRedraw()
+                    requestRender()
+                } else {
+                    handleRedraw()
+                }
             }
         }.also { mRenderer = it })
         renderMode = RENDERMODE_CONTINUOUSLY

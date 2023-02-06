@@ -579,6 +579,7 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
             onScroll({
                 .origin = origin,
                 .delta = e.delta,
+                .kinetic = e.kinetic,
             });
             return true;
         },
