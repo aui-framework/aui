@@ -214,7 +214,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
             SetCapture(mHandle);
             return 0;
         case WM_MOUSEWHEEL :
-            onMouseWheel(mapPosition(POS), {0, -(GET_WHEEL_DELTA_WPARAM(wParam))});
+            onScroll(mapPosition(POS), {0, -(GET_WHEEL_DELTA_WPARAM(wParam))});
             return 0;
         case WM_LBUTTONUP: {
             onMouseReleased({

@@ -232,9 +232,9 @@ void ATreeView::updateScrollbarDimensions() {
     }
 }
 
-void ATreeView::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
-    //AViewContainer::onMouseWheel(pos, delta);
-    mScrollbar->onMouseWheel(pos, delta);
+void ATreeView::onScroll(glm::ivec2 pos, glm::ivec2 delta) {
+    //AViewContainer::onScroll(pos, delta);
+    mScrollbar->onScroll(pos, delta);
     onMouseMove(pos); // update hover on scroll
 }
 

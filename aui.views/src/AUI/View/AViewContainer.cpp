@@ -188,11 +188,11 @@ void AViewContainer::onMouseDoubleClicked(const APointerPressedEvent& event) {
         p->onMouseDoubleClicked({event.position - p->getPosition(), event.button});
 }
 
-void AViewContainer::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
-    AView::onMouseWheel(pos, delta);
+void AViewContainer::onScroll(glm::ivec2 pos, glm::ivec2 delta) {
+    AView::onScroll(pos, delta);
     auto p = getViewAt(pos);
     if (p && p->isEnabled())
-        p->onMouseWheel(pos - p->getPosition(), delta);
+        p->onScroll(pos - p->getPosition(), delta);
 }
 
 bool AViewContainer::consumesClick(const glm::ivec2& pos) {

@@ -86,7 +86,7 @@ public:
 
     void onMouseReleased(const APointerReleasedEvent& event) override;
 
-    void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
+    void onScroll(glm::ivec2 pos, glm::ivec2 delta) override;
 
     bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 

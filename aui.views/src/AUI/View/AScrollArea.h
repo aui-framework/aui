@@ -55,7 +55,7 @@ public:
 
     bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
 
-    void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
+    void onScroll(glm::ivec2 pos, glm::ivec2 delta) override;
 
     void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) {
         mScrollbarAppearance = scrollbarAppearance;
