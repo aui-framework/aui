@@ -487,10 +487,16 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                             });
                             break;
                         case 4: // wheel down
-                            window->onScroll({ev.xbutton.x, ev.xbutton.y}, { 0, -120 });
-                            break;
-                        case 5: // wheel up
-                            window->onScroll({ev.xbutton.x, ev.xbutton.y}, { 0, 120 });
+                            window->onScroll({                     // TODO libinput
+                                .origin = {ev.xbutton.x, ev.xbutton.y},  //
+                                .delta = { 0, -120 }                     //
+                            });                                          //
+                            break;                                       //
+                        case 5: // wheel up                              //
+                            window->onScroll({                     //
+                                .origin = {ev.xbutton.x, ev.xbutton.y},  //
+                                .delta = { 0, 120 }                      //
+                            });                                          //
                             break;
                     }
                     break;
