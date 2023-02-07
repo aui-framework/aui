@@ -328,7 +328,7 @@ void AView::onMouseLeave()
 }
 
 
-void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
+void AView::onPointerPressed(const APointerPressedEvent& event)
 {
     mPressed.set(this, true);
 
@@ -340,7 +340,8 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
     if (auto w = AWindow::current())
     {
         if (w != this) {
-            connect(w->mouseReleased, this, [&, button]()
+            auto button = event.button;
+            connect(w->released, this, [&, button]()
                 {
                     auto selfHolder = sharedPtr();
                     if (!selfHolder) return;
@@ -349,7 +350,11 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
                         if (mPressed) {
                             auto w = getWindow();
                             if (!w) return;
-                            onMouseReleased(w->getMousePos() - getPositionInWindow(), button);
+                            onPointerReleased({
+                                .position = w->getMousePos() - getPositionInWindow(),
+                                .button = button,
+                                .triggerClick = false,
+                            });
                         }
                     });
                     disconnect();
@@ -358,24 +363,24 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
     }
 }
 
-void AView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
+void AView::onPointerReleased(const APointerReleasedEvent& event)
 {
     mPressed.set(this, false);
-    emit clickedButton(button);
-    switch (button)
-    {
-        case AInput::LBUTTON:
-            emit clicked();
-            break;
-        case AInput::RBUTTON:
-            emit clickedRight();
-            break;
-    }
+    if (event.triggerClick) {
+        emit clickedButton(event.button);
+        switch (event.button) {
+            case AInput::LBUTTON:
+                emit clicked();
+                break;
+            case AInput::RBUTTON:
+                emit clickedRight();
 
-    if (button == AInput::RBUTTON) {
-        auto menuModel = composeContextMenu();
-        if (!menuModel.empty()) {
-            AMenu::show(menuModel);
+                auto menuModel = composeContextMenu();
+                if (!menuModel.empty()) {
+                    AMenu::show(menuModel);
+                }
+
+                break;
         }
     }
 }
@@ -384,13 +389,13 @@ AMenuModel AView::composeContextMenu() {
     return {};
 }
 
-void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
+void AView::onPointerDoubleClicked(const APointerPressedEvent& event)
 {
-    emit doubleClicked(button);
+    emit doubleClicked(event.button);
 }
 
-void AView::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
-    emit mouseScrolled(delta);
+void AView::onScroll(const AScrollEvent& event) {
+    emit scrolled(event.delta);
 }
 
 void AView::onKeyDown(AInput::Key key)
@@ -571,12 +576,16 @@ bool AView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
 bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event) {
     return std::visit(aui::lambda_overloaded {
         [&](const AFingerDragEvent& e) {
-            onMouseWheel(origin, e.delta);
+            onScroll({
+                .origin = origin,
+                .delta = e.delta,
+                .kinetic = e.kinetic,
+            });
             return true;
         },
         [&](const ALongPressEvent& e) {
-            onMousePressed(origin, AInput::RBUTTON);
-            onMouseReleased(origin, AInput::RBUTTON);
+            onPointerPressed({ origin, AInput::RBUTTON });
+            onPointerReleased({ origin, AInput::RBUTTON });
             return true;
         },
         [&](const auto& e) {

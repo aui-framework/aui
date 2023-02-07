@@ -36,8 +36,8 @@ AScrollbar::AScrollbar(ALayoutDirection direction) :
     mForwardButton = _new<AScrollbarButton>();
     mBackwardButton = _new<AScrollbarButton>();
 
-    connect(mForwardButton->mousePressed, me::scrollForward);
-    connect(mBackwardButton->mousePressed, me::scrollBackward);
+    connect(mForwardButton->pressed, me::scrollForward);
+    connect(mBackwardButton->pressed, me::scrollBackward);
 
     switch (direction) {
         case ALayoutDirection::HORIZONTAL:
@@ -167,10 +167,10 @@ void AScrollbar::updateScrollHandleOffset(int max) {
     redraw();
 }
 
-void AScrollbar::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
-    AViewContainer::onMouseWheel(pos, delta);
+void AScrollbar::onScroll(const AScrollEvent& event) {
+    AViewContainer::onScroll(event);
     // scroll 3 lines of text
-    setScroll(mCurrentScroll + delta.y * 11_pt * 3 / 120);
+    setScroll(mCurrentScroll + event.delta.y * 11_pt * 3 / 120);
 }
 
 static int getButtonScrollSpeed() noexcept {
@@ -207,8 +207,8 @@ void AScrollbar::scrollBackward() {
     });
 }
 
-void AScrollbar::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMousePressed(pos, button);
+void AScrollbar::onPointerPressed(const APointerPressedEvent& event) {
+    AViewContainer::onPointerPressed(event);
 }
 
 void AScrollbar::handleScrollbar(int s) {
@@ -242,22 +242,22 @@ void AScrollbarHandle::onMouseMove(glm::ivec2 pos) {
     }
 }
 
-void AScrollbarHandle::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    AView::onMousePressed(pos, button);
+void AScrollbarHandle::onPointerPressed(const APointerPressedEvent& event) {
+    AView::onPointerPressed(event);
     switch (mScrollbar.mDirection) {
         case ALayoutDirection::HORIZONTAL:
-            mScrollOffset = pos.x;
+            mScrollOffset = event.position.x;
             break;
         case ALayoutDirection::VERTICAL:
-            mScrollOffset = pos.y;
+            mScrollOffset = event.position.y;
             break;
     }
 
     mDragging = true;
 }
 
-void AScrollbarHandle::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AView::onMouseReleased(pos, button);
+void AScrollbarHandle::onPointerReleased(const APointerReleasedEvent& event) {
+    AView::onPointerReleased(event);
     mDragging = false;
 }
 

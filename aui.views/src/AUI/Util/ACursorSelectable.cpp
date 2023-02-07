@@ -36,9 +36,9 @@ unsigned ACursorSelectable::cursorIndexByPos(glm::ivec2 pos) {
                                                        getMouseSelectionFont());
 }
 
-void ACursorSelectable::handleMousePressed(const glm::ivec2& pos, AInput::Key button) {
-    if (button == AInput::LBUTTON) {
-        mCursorSelection = mCursorIndex = cursorIndexByPos(pos);
+void ACursorSelectable::handleMousePressed(const APointerPressedEvent& event) {
+    if (event.button == AInput::LBUTTON) {
+        mCursorSelection = mCursorIndex = cursorIndexByPos(event.position);
     }
 }
 
@@ -49,8 +49,8 @@ void ACursorSelectable::handleMouseMove(const glm::ivec2& pos) {
     }
 }
 
-void ACursorSelectable::handleMouseReleased(const glm::ivec2& pos, AInput::Key button) {
-    if (button == AInput::LBUTTON)
+void ACursorSelectable::handleMouseReleased(const APointerReleasedEvent& event) {
+    if (event.button == AInput::LBUTTON)
     {
         mIgnoreSelection = false;
         if (mCursorSelection == mCursorIndex)
@@ -142,12 +142,12 @@ void ACursorSelectable::drawSelectionRects() {
     draw();
 }
 
-void ACursorSelectable::handleMouseDoubleClicked(const glm::ivec2& pos, AInput::Key button) {
+void ACursorSelectable::handleMouseDoubleClicked(const APointerPressedEvent& event) {
     mIgnoreSelection = true;
     auto text = getDisplayText();
 
     // select word
-    auto clickIndex = cursorIndexByPos(pos);
+    auto clickIndex = cursorIndexByPos(event.position);
 
 
     // determine the begin and end indices of the word

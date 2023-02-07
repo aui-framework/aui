@@ -139,12 +139,12 @@ namespace aui::impl::slot {
  * </table>
  */
 #define AUI_PERFORM_AS_MEMBER(object, lambda)                                                  \
-    struct __apply ## __FUNCTION__ ## __LINE__   : std::decay_t<decltype(object)>::stored_t { \
+    struct __apply ## __FUNCTION__ ## __LINE__   : std::decay_t<decltype(object)> { \
         void operator()() {                                                    \
             lambda;                                                            \
         }                                                                      \
     };                                                                         \
-    (reinterpret_cast<__apply ## __FUNCTION__ ## __LINE__ &>(object))()
+    (static_cast<__apply ## __FUNCTION__ ## __LINE__ &>(object))()
 
 /**
  * @brief Emits a signal of a foreign object.

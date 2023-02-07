@@ -139,14 +139,14 @@ public:
         emit customCssPropertyChanged;
     }
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override {
-        AViewContainer::onMousePressed(pos, button);
+    void onPointerPressed(const APointerPressedEvent& event) override {
+        AViewContainer::onPointerPressed(event);
 
         mTreeView->handleMousePressed(this);
     }
 
-    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override {
-        AViewContainer::onMouseDoubleClicked(pos, button);
+    void onPointerDoubleClicked(const APointerPressedEvent& event) override {
+        AViewContainer::onPointerDoubleClicked(event);
 
         mTreeView->handleMouseDoubleClicked(this);
     }
@@ -232,10 +232,10 @@ void ATreeView::updateScrollbarDimensions() {
     }
 }
 
-void ATreeView::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
-    //AViewContainer::onMouseWheel(pos, delta);
-    mScrollbar->onMouseWheel(pos, delta);
-    onMouseMove(pos); // update hover on scroll
+void ATreeView::onScroll(const AScrollEvent& event) {
+    //AViewContainer::onScroll(pos, delta);
+    mScrollbar->onScroll(event);
+    onMouseMove(event.origin); // update hover on scroll
 }
 
 

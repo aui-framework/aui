@@ -33,11 +33,11 @@ void onMouseMoved(AWindow* window, NSEvent* event) {
 }
 
 void onMouseButtonDown(AWindow* window, NSEvent* event, AInput::Key key) {
-    window->onMousePressed(pos(window, event), key);
+    window->onPointerPressed({pos(window, event), key});
 }
 
 void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
-    window->onMouseReleased(pos(window, event), key);
+    window->onPointerReleased({pos(window, event), key});
 }
 
 @implementation MainView {
@@ -150,6 +150,9 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
     CGFloat scale = mAWindow->getDpiRatio();
     deltaX *= scale;
     deltaY *= scale;
-    mAWindow->onMouseWheel(pos(mAWindow, event), glm::ivec2{ -deltaX, -deltaY });
+    mAWindow->onScroll({
+        .origin = pos(mAWindow, event),
+        .delta = glm::ivec2{ -deltaX, -deltaY }
+    });
 }
 @end

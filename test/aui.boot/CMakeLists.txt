@@ -29,7 +29,7 @@ endif()
 function(define_aui_boot_test NAME)
     add_test(NAME "aui.build.boot.${NAME}"
             COMMAND
-            ${CMAKE_COMMAND} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -DTARGET_GENERATOR=${CMAKE_GENERATOR} -P test.cmake
+            ${CMAKE_COMMAND} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -DTARGET_GENERATOR=Ninja -P test.cmake
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${NAME})
 
 endfunction()

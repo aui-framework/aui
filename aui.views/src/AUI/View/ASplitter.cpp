@@ -20,10 +20,10 @@
 ASplitter::ASplitter() {
 }
 
-void ASplitter::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMousePressed(pos, button);
-    if (getViewAt(pos) == nullptr) {
-        mHelper.beginDrag(pos);
+void ASplitter::onPointerPressed(const APointerPressedEvent& event) {
+    AViewContainer::onPointerPressed(event);
+    if (getViewAt(event.position) == nullptr) {
+        mHelper.beginDrag(event.position);
     }
 }
 
@@ -40,7 +40,7 @@ void ASplitter::onMouseMove(glm::ivec2 pos) {
     }
 }
 
-void ASplitter::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ASplitter::onPointerReleased(const APointerReleasedEvent& event) {
+    AViewContainer::onPointerReleased(event);
     mHelper.endDrag();
 }

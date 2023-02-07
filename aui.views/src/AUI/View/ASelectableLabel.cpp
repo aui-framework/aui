@@ -87,23 +87,25 @@ void ASelectableLabel::onMouseMove(glm::ivec2 pos) {
     handleMouseMove(pos);
 }
 
-void ASelectableLabel::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+void ASelectableLabel::onPointerPressed(const APointerPressedEvent& event) {
     clearSelection();
-    AView::onMousePressed(pos, button);
-    pos.x -= mTextLeftOffset;
+    AView::onPointerPressed(event);
+    auto position = event.position;
+    position.x -= mTextLeftOffset;
     if (getFontStyleLabel().align == TextAlign::CENTER) {
-        pos.x += mPrerendered->getWidth() / 2.f;
+        position.x += mPrerendered->getWidth() / 2.f;
     }
-    handleMousePressed(pos, button);
+    handleMousePressed({position, event.button});
  }
 
-void ASelectableLabel::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AView::onMouseReleased(pos, button);
-    pos.x -= mTextLeftOffset;
+void ASelectableLabel::onPointerReleased(const APointerReleasedEvent& event) {
+    AView::onPointerReleased(event);
+    auto position = event.position;
+    position.x -= mTextLeftOffset;
     if (getFontStyleLabel().align == TextAlign::CENTER) {
-        pos.x += mPrerendered->getWidth() / 2.f;
+        position.x += mPrerendered->getWidth() / 2.f;
     }
-    handleMouseReleased(pos, button);
+    handleMouseReleased({position, event.button});
 }
 
 void ASelectableLabel::onFocusLost() {
@@ -138,9 +140,9 @@ void ASelectableLabel::onFocusAcquired() {
 }
 
 
-void ASelectableLabel::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) {
-    AView::onMouseDoubleClicked(pos, button);
-    ACursorSelectable::handleMouseDoubleClicked(pos, button);
+void ASelectableLabel::onPointerDoubleClicked(const APointerPressedEvent& event) {
+    AView::onPointerDoubleClicked(event);
+    ACursorSelectable::handleMouseDoubleClicked(event);
 }
 
 size_t ASelectableLabel::textLength() const {

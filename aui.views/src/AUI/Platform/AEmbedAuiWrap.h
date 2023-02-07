@@ -69,7 +69,7 @@ public:
      * @param y y position
      * @param button mouse button
      */
-    void onMousePressed(int x, int y, AInput::Key button);
+    void onPointerPressed(int x, int y, AInput::Key button);
 
     /**
      * Handle mouse released in UI.
@@ -77,7 +77,7 @@ public:
      * @param y y position
      * @param button mouse button
      */
-    void onMouseReleased(int x, int y, AInput::Key button);
+    void onPointerReleased(int x, int y, AInput::Key button);
 
     /**
      * Handle mouse move in UI.

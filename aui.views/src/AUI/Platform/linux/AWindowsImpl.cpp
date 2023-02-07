@@ -481,14 +481,22 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         case 1:
                         case 2:
                         case 3:
-                            window->onMousePressed({ev.xbutton.x, ev.xbutton.y},
-                                                   (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1));
+                            window->onPointerPressed({
+                                .position = { ev.xbutton.x, ev.xbutton.y },
+                                .button = (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1)
+                            });
                             break;
                         case 4: // wheel down
-                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, { 0, -120 });
-                            break;
-                        case 5: // wheel up
-                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, { 0, 120 });
+                            window->onScroll({                     // TODO libinput
+                                .origin = {ev.xbutton.x, ev.xbutton.y},  //
+                                .delta = { 0, -120 }                     //
+                            });                                          //
+                            break;                                       //
+                        case 5: // wheel up                              //
+                            window->onScroll({                     //
+                                .origin = {ev.xbutton.x, ev.xbutton.y},  //
+                                .delta = { 0, 120 }                      //
+                            });                                          //
                             break;
                     }
                     break;
@@ -496,8 +504,10 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 case ButtonRelease: {
                     if (ev.xbutton.button < 4) {
                         window = locateWindow(ev.xbutton.window);
-                        window->onMouseReleased({ev.xbutton.x, ev.xbutton.y},
-                                                (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1));
+                        window->onPointerReleased({
+                             .position = { ev.xbutton.x, ev.xbutton.y },
+                             .button = (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1)
+                        });
                     }
                     break;
                 }
@@ -507,13 +517,11 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
                         auto maximized = window->isMaximized();
                         if (maximized != window->mWasMaximized) {
-                            AUI_PERFORM_AS_MEMBER(window, {
-                                if (mWasMaximized) {
-                                    emit restored();
-                                } else {
-                                    emit maximized();
-                                }
-                            });
+                            if (window->mWasMaximized) {
+                                AUI_EMIT_FOREIGN(window, restored);
+                            } else {
+                                AUI_EMIT_FOREIGN(window, maximized);
+                            }
                             window->mWasMaximized = maximized;
                         }
                     }

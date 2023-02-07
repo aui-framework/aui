@@ -56,8 +56,8 @@ public:
     ACustomWindow() = default;
     ~ACustomWindow() override = default;
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerPressed(const APointerPressedEvent& event) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
 
     virtual bool isCaptionAt(const glm::ivec2& pos);
 

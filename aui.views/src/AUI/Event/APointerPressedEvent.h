@@ -16,18 +16,19 @@
 
 #pragma once
 
-#include <AUI/Common/AObject.h>
+#include <glm/glm.hpp>
 
-template<aui::invocable Callback>
-class ARaiiHelper {
-public:
-    ARaiiHelper(Callback&& callback) noexcept: mCallback(std::forward<Callback>(callback)) {
+/**
+ * @brief Pointing method press event.
+ */
+struct APointerPressedEvent {
+    /**
+     * @brief Where does the event occurred.
+     */
+    glm::ivec2 position;
 
-    }
-    ~ARaiiHelper() {
-        mCallback();
-    }
-
-private:
-    std::decay_t<Callback> mCallback;
+    /**
+     * @brief Which button of the pointing device is triggered the event (AInput::LBUTTON if not present).
+     */
+    AInput::Key button = AInput::LBUTTON;
 };

@@ -65,7 +65,7 @@ public:
 	}
 
     void setSize(glm::ivec2 size) override;
-    void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
+    void onScroll(const AScrollEvent& event) override;
 
     void insertItem(size_t at, const AString& value) override;
     void updateItem(size_t at, const AString& value) override;
