@@ -19,6 +19,7 @@ package com.github.aui.android
 import android.os.Bundle
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import kotlin.system.exitProcess
 
 open class AuiActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,5 +31,11 @@ open class AuiActivity : AppCompatActivity() {
         AUI.ourContext = this
         val surfaceView = MyGLSurfaceView(this)
         setContentView(surfaceView)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        exitProcess(0) // force the process to finish properly
     }
 }
