@@ -328,7 +328,7 @@ void AView::onMouseLeave()
 }
 
 
-void AView::onMousePressed(const APointerPressedEvent& event)
+void AView::onPointerPressed(const APointerPressedEvent& event)
 {
     mPressed.set(this, true);
 
@@ -341,7 +341,7 @@ void AView::onMousePressed(const APointerPressedEvent& event)
     {
         if (w != this) {
             auto button = event.button;
-            connect(w->mouseReleased, this, [&, button]()
+            connect(w->released, this, [&, button]()
                 {
                     auto selfHolder = sharedPtr();
                     if (!selfHolder) return;
@@ -350,7 +350,7 @@ void AView::onMousePressed(const APointerPressedEvent& event)
                         if (mPressed) {
                             auto w = getWindow();
                             if (!w) return;
-                            onMouseReleased({
+                            onPointerReleased({
                                 .position = w->getMousePos() - getPositionInWindow(),
                                 .button = button,
                                 .triggerClick = false,
@@ -363,7 +363,7 @@ void AView::onMousePressed(const APointerPressedEvent& event)
     }
 }
 
-void AView::onMouseReleased(const APointerReleasedEvent& event)
+void AView::onPointerReleased(const APointerReleasedEvent& event)
 {
     mPressed.set(this, false);
     if (event.triggerClick) {
@@ -389,13 +389,13 @@ AMenuModel AView::composeContextMenu() {
     return {};
 }
 
-void AView::onMouseDoubleClicked(const APointerPressedEvent& event)
+void AView::onPointerDoubleClicked(const APointerPressedEvent& event)
 {
     emit doubleClicked(event.button);
 }
 
 void AView::onScroll(const AScrollEvent& event) {
-    emit mouseScrolled(event.delta);
+    emit scrolled(event.delta);
 }
 
 void AView::onKeyDown(AInput::Key key)
@@ -584,8 +584,8 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
             return true;
         },
         [&](const ALongPressEvent& e) {
-            onMousePressed({ origin, AInput::RBUTTON });
-            onMouseReleased({ origin, AInput::RBUTTON });
+            onPointerPressed({ origin, AInput::RBUTTON });
+            onPointerReleased({ origin, AInput::RBUTTON });
             return true;
         },
         [&](const auto& e) {

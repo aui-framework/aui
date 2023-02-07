@@ -344,9 +344,9 @@ void AAbstractTypeableView::onFocusLost()
 
 }
 
-void AAbstractTypeableView::onMousePressed(const APointerPressedEvent& event)
+void AAbstractTypeableView::onPointerPressed(const APointerPressedEvent& event)
 {
-    AView::onMousePressed(event);
+    AView::onPointerPressed(event);
     ACursorSelectable::handleMousePressed(event);
     updateCursorBlinking();
 }
@@ -361,9 +361,9 @@ bool AAbstractTypeableView::isLButtonPressed() {
     return isMousePressed();
 }
 
-void AAbstractTypeableView::onMouseReleased(const APointerReleasedEvent& event)
+void AAbstractTypeableView::onPointerReleased(const APointerReleasedEvent& event)
 {
-    AView::onMouseReleased(event);
+    AView::onPointerReleased(event);
 
     if (event.button != AInput::RBUTTON) {
         ACursorSelectable::handleMouseReleased(event);
@@ -393,8 +393,8 @@ void AAbstractTypeableView::updateSelectionOnTextSet(const AString& t) {
     mCursorSelection = 0;
 }
 
-void AAbstractTypeableView::onMouseDoubleClicked(const APointerPressedEvent& event) {
-    AView::onMouseDoubleClicked(event);
+void AAbstractTypeableView::onPointerDoubleClicked(const APointerPressedEvent& event) {
+    AView::onPointerDoubleClicked(event);
     ACursorSelectable::handleMouseDoubleClicked(event);
     updateCursorBlinking();
 }

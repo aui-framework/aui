@@ -49,7 +49,7 @@ Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonDown(JNIEnv *env, j
                                                            jint y) {
     scrollPrevValue = gestureOriginPos = {x, y};
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onMousePressed({{x, y}, AInput::LBUTTON});
+        AUI_NULLSAFE(AWindow::current())->onPointerPressed({{x, y}, AInput::LBUTTON});
     });
 }
 extern "C"
@@ -57,7 +57,7 @@ JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonUp(JNIEnv *env, jclass clazz, jint x,
                                                            jint y) {
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onMouseReleased({{x, y}, AInput::LBUTTON});
+        AUI_NULLSAFE(AWindow::current())->onPointerReleased({{x, y}, AInput::LBUTTON});
     });
 }
 
@@ -80,7 +80,6 @@ Java_com_github_aui_android_MyGLSurfaceView_handleKineticScroll(JNIEnv *env, jcl
 
     auto delta = scrollPrevValue - current;
     scrollPrevValue = current;
-    ALogger::info("Test") << delta.x << ", " << delta.y;
     AUI_NULLSAFE(AWindow::current())->onGesture(gestureOriginPos,
                                                 AFingerDragEvent{
         .delta = delta,

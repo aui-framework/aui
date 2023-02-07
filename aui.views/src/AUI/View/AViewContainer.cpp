@@ -163,29 +163,29 @@ int AViewContainer::getContentMinimumHeight(ALayoutDirection layout) {
     return AView::getContentMinimumHeight(ALayoutDirection::NONE);
 }
 
-void AViewContainer::onMousePressed(const APointerPressedEvent& event) {
-    AView::onMousePressed(event);
+void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
+    AView::onPointerPressed(event);
 
     auto p = getViewAt(event.position);
     if (p && p->isEnabled()) {
         if (p->capturesFocus()) p->focus();
-        p->onMousePressed({event.position - p->getPosition(), event.button});
+        p->onPointerPressed({event.position - p->getPosition(), event.button});
     }
 }
 
-void AViewContainer::onMouseReleased(const APointerReleasedEvent& event) {
-    AView::onMouseReleased(event);
+void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
+    AView::onPointerReleased(event);
     auto p = getViewAt(event.position);
     if (p && p->isEnabled() && p->isMousePressed())
-        p->onMouseReleased({event.position - p->getPosition(), event.button});
+        p->onPointerReleased({event.position - p->getPosition(), event.button});
 }
 
-void AViewContainer::onMouseDoubleClicked(const APointerPressedEvent& event) {
-    AView::onMouseDoubleClicked(event);
+void AViewContainer::onPointerDoubleClicked(const APointerPressedEvent& event) {
+    AView::onPointerDoubleClicked(event);
 
     auto p = getViewAt(event.position);
     if (p && p->isEnabled())
-        p->onMouseDoubleClicked({event.position - p->getPosition(), event.button});
+        p->onPointerDoubleClicked({event.position - p->getPosition(), event.button});
 }
 
 void AViewContainer::onScroll(const AScrollEvent& event) {

@@ -105,7 +105,7 @@ public:
     }
 
     void setFocusedView(const _<AView>& view);
-    void onMousePressed(const APointerPressedEvent& event) override;
+    void onPointerPressed(const APointerPressedEvent& event) override;
 
     void onMouseMove(glm::ivec2 pos) override;
 
@@ -195,7 +195,7 @@ public:
 
     void onFocusLost() override;
     void render() override;
-    void onMouseReleased(const APointerReleasedEvent& event) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
 
     /**
      * @brief Called when the user holds a drag-n-drop object over the window.

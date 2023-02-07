@@ -54,8 +54,8 @@ public:
     public:
         ADraggableHandle(bool checkForClickConsumption = false) : mCheckForClickConsumption(checkForClickConsumption) {}
 
-        void onMousePressed(const APointerPressedEvent& event) override;
-        void onMouseReleased(const APointerReleasedEvent& event) override;
+        void onPointerPressed(const APointerPressedEvent& event) override;
+        void onPointerReleased(const APointerReleasedEvent& event) override;
 
     signals:
         emits<glm::ivec2> mouseMove;

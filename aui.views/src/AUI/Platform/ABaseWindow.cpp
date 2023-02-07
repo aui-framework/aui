@@ -182,10 +182,10 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
     }
 }
 
-void ABaseWindow::onMousePressed(const APointerPressedEvent& event) {
+void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     closeOverlappingSurfacesOnClick();
     auto focusCopy = mFocusedView.lock();
-    AViewContainer::onMousePressed(event);
+    AViewContainer::onPointerPressed(event);
     if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
         if (focusCopy->hasFocus()) {
             focusCopy->onFocusLost();
@@ -204,7 +204,7 @@ void ABaseWindow::onMousePressed(const APointerPressedEvent& event) {
     auto delta = now - lastButtonPressedTime;
     if (delta < 500ms && lastPosition == event.position) {
         if (lastButtonPressed == event.button) {
-            onMouseDoubleClicked(event);
+            onPointerDoubleClicked(event);
 
             lastButtonPressedTime = 0ms;
         }
@@ -216,8 +216,8 @@ void ABaseWindow::onMousePressed(const APointerPressedEvent& event) {
     AMenu::close();
 }
 
-void ABaseWindow::onMouseReleased(const APointerReleasedEvent& event) {
-    AViewContainer::onMouseReleased(event);
+void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
+    AViewContainer::onPointerReleased(event);
 }
 
 void ABaseWindow::onMouseMove(glm::ivec2 pos) {

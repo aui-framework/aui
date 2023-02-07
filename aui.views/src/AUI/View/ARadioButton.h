@@ -72,7 +72,7 @@ public:
         emit ARadioButton::checked(checked);
     }
 
-    void onMouseReleased(const APointerReleasedEvent& event) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
 
     class API_AUI_VIEWS Group: public AObject {
     private:

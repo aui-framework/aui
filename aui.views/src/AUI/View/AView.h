@@ -743,9 +743,9 @@ public:
     virtual void onMouseLeave();
     virtual void onDpiChanged();
 
-    virtual void onMousePressed(const APointerPressedEvent& event);
-    virtual void onMouseReleased(const APointerReleasedEvent& event);
-    virtual void onMouseDoubleClicked(const APointerPressedEvent& event);
+    virtual void onPointerPressed(const APointerPressedEvent& event);
+    virtual void onPointerReleased(const APointerReleasedEvent& event);
+    virtual void onPointerDoubleClicked(const APointerPressedEvent& event);
 
     /**
      * Handles mouse wheel events.
@@ -835,8 +835,8 @@ signals:
     emits<> mouseLeave;
 
     emits<bool> pressedState;
-    emits<> mousePressed;
-    emits<> mouseReleased;
+    emits<> pressed;
+    emits<> released;
 
     emits<bool> enabledState;
     emits<> enabled;
@@ -858,9 +858,9 @@ signals:
     emits<glm::ivec2, glm::ivec2> geometryChanged;
 
     /**
-     * @brief Mouse scrolled.
+     * @brief Scroll event.
      */
-    emits<glm::ivec2> mouseScrolled;
+    emits<glm::ivec2> scrolled;
 
     /**
      * @brief Keyboard key pressed.
@@ -893,8 +893,8 @@ signals:
 
 private:
     AFieldSignalEmitter<bool> mHovered = AFieldSignalEmitter<bool>(hoveredState, mouseEnter, mouseLeave);
-    AFieldSignalEmitter<bool> mPressed = AFieldSignalEmitter<bool>(pressedState, mousePressed, mouseReleased);
-    //AWatchable<bool> mFocused = AWatchable<bool>(pressedState, mousePressed, mouseReleased);
+    AFieldSignalEmitter<bool> mPressed = AFieldSignalEmitter<bool>(pressedState, pressed, released);
+    //AWatchable<bool> mFocused = AWatchable<bool>(pressedState, pressed, released);
     AFieldSignalEmitter<bool> mEnabled = AFieldSignalEmitter<bool>(enabledState, enabled, disabled, true);
     bool mDirectlyEnabled = true;
     bool mParentEnabled = true;

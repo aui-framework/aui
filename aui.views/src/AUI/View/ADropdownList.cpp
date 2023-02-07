@@ -82,8 +82,8 @@ int ADropdownList::getContentMinimumWidth(ALayoutDirection layout) {
     return AAbstractLabel::getContentMinimumWidth(ALayoutDirection::NONE) + 20;
 }
 
-void ADropdownList::onMouseReleased(const APointerReleasedEvent& event) {
-    AView::onMouseReleased(event);
+void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
+    AView::onPointerReleased(event);
 
     if (!mComboWindow.lock()) {
         auto parentWindow = getWindow();

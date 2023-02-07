@@ -139,14 +139,14 @@ public:
         emit customCssPropertyChanged;
     }
 
-    void onMousePressed(const APointerPressedEvent& event) override {
-        AViewContainer::onMousePressed(event);
+    void onPointerPressed(const APointerPressedEvent& event) override {
+        AViewContainer::onPointerPressed(event);
 
         mTreeView->handleMousePressed(this);
     }
 
-    void onMouseDoubleClicked(const APointerPressedEvent& event) override {
-        AViewContainer::onMouseDoubleClicked(event);
+    void onPointerDoubleClicked(const APointerPressedEvent& event) override {
+        AViewContainer::onPointerDoubleClicked(event);
 
         mTreeView->handleMouseDoubleClicked(this);
     }

@@ -202,12 +202,12 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
         case WM_LBUTTONDOWN:
             if (isMousePressed()) {
                 // fix assert(!mPressed);
-                onMouseReleased({
+                onPointerReleased({
                     .position = POS,
                     .button = AInput::LBUTTON
                 });
             }
-            onMousePressed({
+            onPointerPressed({
                 .position = POS,
                 .button = AInput::LBUTTON
             });
@@ -220,7 +220,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
             });
             return 0;
         case WM_LBUTTONUP: {
-            onMouseReleased({
+            onPointerReleased({
                 .position = POS,
                 .button = AInput::LBUTTON
             });
@@ -228,14 +228,14 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
             return 0;
         }
         case WM_RBUTTONDOWN:
-            onMousePressed({
+            onPointerPressed({
                 .position = POS,
                 .button = AInput::LBUTTON
             });
             SetCapture(mHandle);
             return 0;
         case WM_RBUTTONUP:
-            onMouseReleased({
+            onPointerReleased({
                 .position = POS,
                 .button = AInput::LBUTTON
             });

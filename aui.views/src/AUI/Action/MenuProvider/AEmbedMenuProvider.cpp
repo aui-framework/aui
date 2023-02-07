@@ -58,7 +58,7 @@ public:
                         });
 
                         auto onAction = i.onAction;
-                        connect(view->mousePressed, [onAction] { onAction(); });
+                        connect(view->pressed, [onAction] { onAction(); });
                     } else {
                         view->disable();
                     }

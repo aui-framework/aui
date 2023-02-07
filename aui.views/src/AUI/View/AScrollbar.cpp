@@ -36,8 +36,8 @@ AScrollbar::AScrollbar(ALayoutDirection direction) :
     mForwardButton = _new<AScrollbarButton>();
     mBackwardButton = _new<AScrollbarButton>();
 
-    connect(mForwardButton->mousePressed, me::scrollForward);
-    connect(mBackwardButton->mousePressed, me::scrollBackward);
+    connect(mForwardButton->pressed, me::scrollForward);
+    connect(mBackwardButton->pressed, me::scrollBackward);
 
     switch (direction) {
         case ALayoutDirection::HORIZONTAL:
@@ -207,8 +207,8 @@ void AScrollbar::scrollBackward() {
     });
 }
 
-void AScrollbar::onMousePressed(const APointerPressedEvent& event) {
-    AViewContainer::onMousePressed(event);
+void AScrollbar::onPointerPressed(const APointerPressedEvent& event) {
+    AViewContainer::onPointerPressed(event);
 }
 
 void AScrollbar::handleScrollbar(int s) {
@@ -242,8 +242,8 @@ void AScrollbarHandle::onMouseMove(glm::ivec2 pos) {
     }
 }
 
-void AScrollbarHandle::onMousePressed(const APointerPressedEvent& event) {
-    AView::onMousePressed(event);
+void AScrollbarHandle::onPointerPressed(const APointerPressedEvent& event) {
+    AView::onPointerPressed(event);
     switch (mScrollbar.mDirection) {
         case ALayoutDirection::HORIZONTAL:
             mScrollOffset = event.position.x;
@@ -256,8 +256,8 @@ void AScrollbarHandle::onMousePressed(const APointerPressedEvent& event) {
     mDragging = true;
 }
 
-void AScrollbarHandle::onMouseReleased(const APointerReleasedEvent& event) {
-    AView::onMouseReleased(event);
+void AScrollbarHandle::onPointerReleased(const APointerReleasedEvent& event) {
+    AView::onPointerReleased(event);
     mDragging = false;
 }
 

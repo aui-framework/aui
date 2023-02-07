@@ -46,9 +46,9 @@ void ARadioButton::setText(const AString& text)
     mText->setText(text);
 }
 
-void ARadioButton::onMouseReleased(const APointerReleasedEvent& event)
+void ARadioButton::onPointerReleased(const APointerReleasedEvent& event)
 {
-    AView::onMouseReleased(event);
+    AView::onPointerReleased(event);
     if (!mChecked)
         emit checked(mChecked = true);
 }

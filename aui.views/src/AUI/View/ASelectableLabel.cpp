@@ -87,9 +87,9 @@ void ASelectableLabel::onMouseMove(glm::ivec2 pos) {
     handleMouseMove(pos);
 }
 
-void ASelectableLabel::onMousePressed(const APointerPressedEvent& event) {
+void ASelectableLabel::onPointerPressed(const APointerPressedEvent& event) {
     clearSelection();
-    AView::onMousePressed(event);
+    AView::onPointerPressed(event);
     auto position = event.position;
     position.x -= mTextLeftOffset;
     if (getFontStyleLabel().align == TextAlign::CENTER) {
@@ -98,8 +98,8 @@ void ASelectableLabel::onMousePressed(const APointerPressedEvent& event) {
     handleMousePressed({position, event.button});
  }
 
-void ASelectableLabel::onMouseReleased(const APointerReleasedEvent& event) {
-    AView::onMouseReleased(event);
+void ASelectableLabel::onPointerReleased(const APointerReleasedEvent& event) {
+    AView::onPointerReleased(event);
     auto position = event.position;
     position.x -= mTextLeftOffset;
     if (getFontStyleLabel().align == TextAlign::CENTER) {
@@ -140,8 +140,8 @@ void ASelectableLabel::onFocusAcquired() {
 }
 
 
-void ASelectableLabel::onMouseDoubleClicked(const APointerPressedEvent& event) {
-    AView::onMouseDoubleClicked(event);
+void ASelectableLabel::onPointerDoubleClicked(const APointerPressedEvent& event) {
+    AView::onPointerDoubleClicked(event);
     ACursorSelectable::handleMouseDoubleClicked(event);
 }
 

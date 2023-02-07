@@ -80,11 +80,11 @@ public:
 
     int getContentMinimumHeight(ALayoutDirection layout) override;
 
-    void onMousePressed(const APointerPressedEvent& event) override;
+    void onPointerPressed(const APointerPressedEvent& event) override;
 
-    void onMouseDoubleClicked(const APointerPressedEvent& event) override;
+    void onPointerDoubleClicked(const APointerPressedEvent& event) override;
 
-    void onMouseReleased(const APointerReleasedEvent& event) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
 
     void onScroll(const AScrollEvent& event) override;
 
