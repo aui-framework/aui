@@ -191,4 +191,6 @@ private:
 
 #define emit (*this)^
 
+#define AUI_EMIT_FOREIGN(object, signal, ...) (*object)^ object->signal(__VA_ARGS__)
+
 #include "SharedPtr.h"

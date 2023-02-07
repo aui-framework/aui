@@ -517,13 +517,11 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
                         auto maximized = window->isMaximized();
                         if (maximized != window->mWasMaximized) {
-                            AUI_PERFORM_AS_MEMBER(window, {
-                                if (mWasMaximized) {
-                                    emit restored();
-                                } else {
-                                    emit maximized();
-                                }
-                            });
+                            if (window->mWasMaximized) {
+                                AUI_EMIT_FOREIGN(window, restored);
+                            } else {
+                                AUI_EMIT_FOREIGN(window, maximized);
+                            }
                             window->mWasMaximized = maximized;
                         }
                     }
