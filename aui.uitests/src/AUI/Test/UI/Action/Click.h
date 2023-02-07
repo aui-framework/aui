@@ -29,7 +29,7 @@ struct ViewActionMousePress {
         auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
         AInput::overrideStateForTesting(AInput::LBUTTON, true);
-        window->onMousePressed(coords);
+        window->onPointerPressed({coords, AInput::LBUTTON});
         uitest::frame();
     }
 };
@@ -47,7 +47,7 @@ struct ViewActionMouseRelease {
         auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
         AInput::overrideStateForTesting(AInput::LBUTTON, false);
-        window->onMouseReleased(coords, AInput::LBUTTON);
+        window->onPointerReleased({coords, AInput::LBUTTON});
         uitest::frame();
     }
 };
@@ -63,10 +63,10 @@ struct ViewActionClick {
         auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
         AInput::overrideStateForTesting(AInput::LBUTTON, true);
-        window->onMousePressed(coords);
+        window->onPointerPressed({coords, AInput::LBUTTON});
         uitest::frame();
         AInput::overrideStateForTesting(AInput::LBUTTON, false);
-        window->onMouseReleased(coords, AInput::LBUTTON);
+        window->onPointerReleased({coords, AInput::LBUTTON});
         uitest::frame();
     }
 };
