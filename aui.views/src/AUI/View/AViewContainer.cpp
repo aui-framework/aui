@@ -122,15 +122,15 @@ void AViewContainer::onMouseEnter() {
     AView::onMouseEnter();
 }
 
-void AViewContainer::onMouseMove(glm::ivec2 pos) {
-    AView::onMouseMove(pos);
+void AViewContainer::onPointerMove(glm::ivec2 pos) {
+    AView::onPointerMove(pos);
 
     auto targetView = getViewAt(pos);
 
     if (targetView) {
         auto mousePos = pos - targetView->getPosition();
         targetView->onMouseEnter();
-        targetView->onMouseMove(mousePos);
+        targetView->onPointerMove(mousePos);
     }
 
     for (auto& v: mViews) {

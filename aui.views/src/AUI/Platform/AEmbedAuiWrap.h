@@ -84,7 +84,7 @@ public:
      * @param x x position
      * @param y y position
      */
-    void onMouseMove(int x, int y);
+    void onPointerMove(int x, int y);
 
     /**
      * Handle mouse move in UI.

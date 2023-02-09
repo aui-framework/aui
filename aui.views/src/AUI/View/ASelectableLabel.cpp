@@ -78,8 +78,8 @@ void ASelectableLabel::render() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void ASelectableLabel::onMouseMove(glm::ivec2 pos) {
-    AView::onMouseMove(pos);
+void ASelectableLabel::onPointerMove(glm::ivec2 pos) {
+    AView::onPointerMove(pos);
     pos.x -= mTextLeftOffset;
     if (getFontStyleLabel().align == TextAlign::CENTER) {
         pos.x += mPrerendered->getWidth() / 2.f;

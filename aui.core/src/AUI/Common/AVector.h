@@ -322,7 +322,7 @@ public:
      * @param transformer transformer function.
      * @return A new vector.
      */
-    template<aui::incrementable Iterator, aui::invocable<Iterator> UnaryOperation>
+    template<aui::incrementable Iterator, aui::invocable<decltype(*std::declval<Iterator>())> UnaryOperation>
     static auto fromRange(aui::range<Iterator> range, UnaryOperation&& transformer) -> AVector<decltype(transformer(range.first()))> {
         AVector<decltype(transformer(range.first()))> result;
         result.reserve(range.size());

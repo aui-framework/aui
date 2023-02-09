@@ -32,8 +32,8 @@ void ASplitter::setSize(glm::ivec2 size) {
     AViewContainer::setSize(size);
 }
 
-void ASplitter::onMouseMove(glm::ivec2 pos) {
-    AViewContainer::onMouseMove(pos);
+void ASplitter::onPointerMove(glm::ivec2 pos) {
+    AViewContainer::onPointerMove(pos);
     if (mHelper.mouseDrag(pos)) {
         updateLayout();
         redraw();

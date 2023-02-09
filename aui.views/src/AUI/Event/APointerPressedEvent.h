@@ -32,3 +32,6 @@ struct APointerPressedEvent {
      */
     AInput::Key button = AInput::LBUTTON;
 };
+
+
+using APointerDoubleClickedEvent = APointerPressedEvent;

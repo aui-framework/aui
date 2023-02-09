@@ -107,7 +107,7 @@ public:
     void setFocusedView(const _<AView>& view);
     void onPointerPressed(const APointerPressedEvent& event) override;
 
-    void onMouseMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos) override;
 
     void closeOverlappingSurfacesOnClick();
 

@@ -151,8 +151,8 @@ public:
         mTreeView->handleMouseDoubleClicked(this);
     }
 
-    void onMouseMove(glm::ivec2 pos) override {
-        AViewContainer::onMouseMove(pos);
+    void onPointerMove(glm::ivec2 pos) override {
+        AViewContainer::onPointerMove(pos);
         mTreeView->handleMouseMove(this);
     }
 
@@ -235,7 +235,7 @@ void ATreeView::updateScrollbarDimensions() {
 void ATreeView::onScroll(const AScrollEvent& event) {
     //AViewContainer::onScroll(pos, delta);
     mScrollbar->onScroll(event);
-    onMouseMove(event.origin); // update hover on scroll
+    onPointerMove(event.origin); // update hover on scroll
 }
 
 

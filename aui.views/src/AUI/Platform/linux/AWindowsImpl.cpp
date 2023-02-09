@@ -472,7 +472,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
 
                 case MotionNotify: {
                     window = locateWindow(ev.xmotion.window);
-                    window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
+                    window->onPointerMove({ev.xmotion.x, ev.xmotion.y});
                     break;
                 }
                 case ButtonPress: {

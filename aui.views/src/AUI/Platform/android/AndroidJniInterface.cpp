@@ -66,7 +66,7 @@ JNIEXPORT void JNICALL
 Java_com_github_aui_android_MyGLSurfaceView_handleMouseMove(JNIEnv *env, jclass clazz, jint x,
                                                            jint y) {
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onMouseMove({x, y});
+        AUI_NULLSAFE(AWindow::current())->onPointerMove({x, y});
     });
 }
 

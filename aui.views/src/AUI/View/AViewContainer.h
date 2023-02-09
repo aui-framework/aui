@@ -69,7 +69,7 @@ public:
 
     void onMouseEnter() override;
 
-    void onMouseMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos) override;
 
     void onMouseLeave() override;
 

@@ -316,7 +316,7 @@ void AView::onMouseEnter()
 }
 
 
-void AView::onMouseMove(glm::ivec2 pos)
+void AView::onPointerMove(glm::ivec2 pos)
 {
 }
 

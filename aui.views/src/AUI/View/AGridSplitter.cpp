@@ -71,8 +71,8 @@ void AGridSplitter::onPointerPressed(const APointerPressedEvent& event) {
     }
 }
 
-void AGridSplitter::onMouseMove(glm::ivec2 pos) {
-    AViewContainer::onMouseMove(pos);
+void AGridSplitter::onPointerMove(glm::ivec2 pos) {
+    AViewContainer::onPointerMove(pos);
     mVerticalHelper.mouseDrag(pos);
     mHorizontalHelper.mouseDrag(pos);
 

@@ -739,7 +739,7 @@ public:
     virtual bool onGesture(const glm::ivec2& origin, const AGestureEvent& event);
 
     virtual void onMouseEnter();
-    virtual void onMouseMove(glm::ivec2 pos);
+    virtual void onPointerMove(glm::ivec2 pos);
     virtual void onMouseLeave();
     virtual void onDpiChanged();
 

@@ -137,7 +137,7 @@ extern int(* _gEntry)(AStringVector);
     float scale = (float)self.view.contentScaleFactor;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self.view];
-        auiWindow()->onMouseMove(glm::ivec2{location.x * scale, location.y * scale});
+        auiWindow()->onPointerMove(glm::ivec2{location.x * scale, location.y * scale});
     }
 }
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {

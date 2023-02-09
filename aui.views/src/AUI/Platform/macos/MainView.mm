@@ -29,7 +29,7 @@ glm::ivec2 pos(AWindow* window, NSEvent* event) {
 }
 
 void onMouseMoved(AWindow* window, NSEvent* event) {
-    window->onMouseMove(pos(window, event));
+    window->onPointerMove(pos(window, event));
 }
 
 void onMouseButtonDown(AWindow* window, NSEvent* event, AInput::Key key) {

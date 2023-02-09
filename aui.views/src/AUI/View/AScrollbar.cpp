@@ -228,8 +228,8 @@ float AScrollbar::getAvailableSpaceForSpacer() {
     return 0;
 }
 
-void AScrollbarHandle::onMouseMove(glm::ivec2 pos) {
-    AView::onMouseMove(pos);
+void AScrollbarHandle::onPointerMove(glm::ivec2 pos) {
+    AView::onPointerMove(pos);
     if (mDragging) {
         switch (mScrollbar.mDirection) {
             case ALayoutDirection::HORIZONTAL:

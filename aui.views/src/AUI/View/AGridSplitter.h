@@ -79,7 +79,7 @@ public:
 
     void onPointerPressed(const APointerPressedEvent& event) override;
 
-    void onMouseMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos) override;
 
     void onPointerReleased(const APointerReleasedEvent& event) override;
 

@@ -220,9 +220,9 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     AViewContainer::onPointerReleased(event);
 }
 
-void ABaseWindow::onMouseMove(glm::ivec2 pos) {
+void ABaseWindow::onPointerMove(glm::ivec2 pos) {
     mMousePos = pos;
-    AViewContainer::onMouseMove(pos);
+    AViewContainer::onPointerMove(pos);
     _<AView> v;
     mCursor = ACursor::DEFAULT;
 
@@ -236,7 +236,7 @@ void ABaseWindow::onMouseMove(glm::ivec2 pos) {
     if (!AWindow::shouldDisplayHoverAnimations()) {
         if (auto focused = mFocusedView.lock()) {
             if (focused != v) {
-                focused->onMouseMove(pos - focused->getPositionInWindow());
+                focused->onPointerMove(pos - focused->getPositionInWindow());
             }
         }
     }

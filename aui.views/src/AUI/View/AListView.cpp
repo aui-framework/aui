@@ -166,7 +166,7 @@ void AListView::onScroll(const AScrollEvent& event) {
     if (!mScrollbar) return;
     //AViewContainer::onScroll(pos, delta);
     mScrollbar->onScroll(event);
-    onMouseMove(event.origin); // update hover on scroll
+    onPointerMove(event.origin); // update hover on scroll
 }
 
 void AListView::handleMousePressed(AListItem* item) {
