@@ -18,7 +18,7 @@ if (NOT TARGET aui::views)
     include(../../aui.boot.cmake)
 
     auib_import(AUI ../../
-                COMPONENTS core views)
+                COMPONENTS core views audio)
 
 
 endif()
@@ -27,7 +27,7 @@ aui_executable(aui.example.views)
 aui_compile_assets(aui.example.views)
 
 
-aui_link(aui.example.views PRIVATE aui::core aui::views)
+aui_link(aui.example.views PRIVATE aui::core aui::views aui::audio)
 
 
 aui_app(TARGET aui.example.views

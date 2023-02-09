@@ -22,11 +22,14 @@
 #pragma once
 
 #include <AUI/Platform/AWindow.h>
+#include "AUI/Audio/Platform/win32/AudioInterface.h"
 
 class ExampleWindow: public AWindow {
 private:
 	ADeque<_<AWindow>> mWindows;
-	
+    std::shared_ptr<AudioInterface> mWavAudio;
+    std::shared_ptr<AudioInterface> mOggAudio;
+
 public:
 	ExampleWindow();
 };
