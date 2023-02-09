@@ -197,8 +197,7 @@ public:
     }
 
     template<typename ModelField>
-    void setValue(ModelField(Model::*field), ModelField value) {
-        mModel->*field = std::move(value);
+    void notifyUpdate(ModelField(Model::*field)) {
         union converter {
             unsigned i;
             decltype(field) p;
@@ -207,11 +206,24 @@ public:
         notifyUpdate(nullptr, c.i);
     }
 
-    void addObserver(const Observer& applier) {
-        mLinkObservers << applier;
+    template<typename ModelField>
+    void setValue(ModelField(Model::*field), ModelField value) {
+        mModel->*field = std::move(value);
+        notifyUpdate(field);
+    }
+
+    void addObserver(Observer applier) {
+        mLinkObservers << std::move(applier);
         if (mModel) {
             mLinkObservers.last()(*mModel, -1);
         }
+    }
+
+    template<aui::invocable T>
+    void addObserver(T&& applier) {
+        addObserver([applier = std::forward<T>(applier)](const Model&, unsigned) {
+            applier();
+        });
     }
 
     template<typename ModelField, typename FieldObserver>

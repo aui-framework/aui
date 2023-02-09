@@ -72,7 +72,7 @@ struct AStringFormatHelper {
 };
 
 /**
- * @brief String literal format caller (see example).
+ * @brief String literal format caller (see example) (https://fmt.dev/latest/syntax.html)
  * @ingroup core
  * @details
  * @code{cpp}
