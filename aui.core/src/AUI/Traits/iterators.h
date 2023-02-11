@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -26,6 +21,8 @@
 #include <cstdint>
 #include <iterator>
 #include "parameter_pack.h"
+#include "macros.h"
+
 
 namespace aui {
 
@@ -61,99 +58,81 @@ namespace aui {
     public:
         range(Iterator mBegin, Iterator mEnd) : mBegin(mBegin), mEnd(mEnd) {}
 
+        ~range() {
+            AUI_NO_OPTIMIZE_OUT(range::size)
+        }
 
         template<typename Container>
         range(Container& c): mBegin(c.begin()), mEnd(c.end()) {
 
         }
 
-        Iterator& begin() {
+
+        template<typename Container>
+        range(const Container& c): mBegin(c.begin()), mEnd(c.end()) {
+
+        }
+
+        [[nodiscard]]
+        bool empty() const noexcept {
+            return mBegin == mEnd;
+        }
+
+        [[nodiscard]]
+        std::size_t size() const noexcept {
+            return std::distance(mBegin, mEnd);
+        }
+
+        [[nodiscard]]
+        Iterator& begin() noexcept {
             return mBegin;
         }
 
-        Iterator& end() {
+        [[nodiscard]]
+        Iterator& end() noexcept {
             return mEnd;
         }
-    };
 
-    template<typename...Items>
-    struct joined_range {
-    private:
-        std::tuple<Items*...> mItems;
-
-    public:
-        joined_range(const std::tuple<Items*...>& items) : mItems(items) {}
-
-    public:
-        using joined_range_t = joined_range<Items...>;
-
-        struct my_iterator {
-        friend joined_range_t;
-        private:
-            joined_range_t& mJoinedRange;
-            std::variant<typename Items::iterator...> mIterator;
-            std::size_t mIndex = 0;
-
-        public:
-            my_iterator(joined_range_t& mJoinedRange) :
-                mJoinedRange(mJoinedRange),
-                mIterator(std::get<0>(mJoinedRange.mItems)->begin()),
-                mIndex(0)
-                {}
-
-            my_iterator& operator++()
-            {
-                std::visit([](auto&& arg){
-                    ++arg;
-                }, mIterator);
-                return *this;
-            }
-
-            bool operator!=(const my_iterator& other) const
-            {
-                return mIterator != other.mIterator;
-            }
-            bool operator==(const my_iterator& other) const
-            {
-                return mIterator == other.mIterator;
-            }
-
-            auto operator->()
-            {
-                return std::visit([](auto&& arg){
-                    return &*arg;
-                }, mIterator);
-            }
-            auto operator*()
-            {
-                return *this;
-            }
-
-            auto operator*() const
-            {
-                return *this;
-            }
-        };
-
-        my_iterator begin() {
-            return my_iterator{*this };
+        [[nodiscard]]
+        Iterator& begin() const noexcept {
+            return mBegin;
         }
-        my_iterator end() {
-            return my_iterator{*this };
+
+        [[nodiscard]]
+        Iterator& end() const noexcept {
+            return mEnd;
+        }
+
+        [[nodiscard]]
+        const auto& first() const {
+            return *mBegin;
+        }
+
+        [[nodiscard]]
+        const auto& last() const {
+            return *std::prev(mEnd);
         }
     };
+
+    template<typename Container>
+    range(Container& c) -> range<decltype(c.begin())>;
+
+    template<typename Container>
+    range(const Container& c) -> range<decltype(c.begin())>;
 
     /**
-     * Converts a sequence of containers to a single iterator range.
+     * @brief If Container is const, Container::const_iterator is aliased; Container::iterator otherwise.
      */
-    template<typename... Items>
-    joined_range<Items...> join(Items... items) {
-        return { (&items)... };
-    }
+    template<typename Container>
+    using const_iterator_if_const = std::conditional_t<std::is_const_v<Container>,
+                                                       typename Container::const_iterator,
+                                                       typename Container::iterator>;
+
 
     /**
-     * Allows to iterate multiple containers in parallel.
-     * @example
+     * @brief Iterates multiple containers in parallel.
+     * @ingroup useful_templates
+     * @details
      * @code{cpp}
      * std::array<int, 3> ints = { 1, 2, 3 };
      * std::array<std::string, 3> strings = { "one", "two", "three" };
@@ -183,9 +162,7 @@ namespace aui {
 
             iterator& operator++() noexcept {
                 std::apply([](auto&&... v) {
-                    aui::parameter_pack::for_each([](auto& i) {
-                        ++i;
-                    }, v...);
+                    (++v, ...);
                 }, iterators_);
                 return *this;
             }
@@ -227,13 +204,15 @@ namespace aui {
 
     /**
      * @brief Reverses iterator direction (i.e. converts iterator to reverse_iterator, reverse_iterator to iterators).
-     *
-     * A reversed iterator points to the same element of the container.
-     *
-     * Works on AVector.
+     * @ingroup useful_macros
      * @tparam Iterator iterator
      * @param iterator iterator
      * @return same iterator but reverse direction
+     *
+     * @details
+     * A reversed iterator points to the same element of the container.
+     *
+     * Works on AVector.
      */
     template<typename Iterator>
     auto reverse_iterator_direction(Iterator iterator) noexcept ->

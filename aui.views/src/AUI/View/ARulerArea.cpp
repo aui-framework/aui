@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by alex2772 on 6/27/21.
 //
@@ -31,11 +47,11 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
             Vertical {
                 _container<AAdvancedGridLayout>({
                     _new<ALabel>("dp") << ".arulerarea-unit",
-                    mHorizontalRuler = _new<ARulerView>(LayoutDirection::HORIZONTAL),
-                    mVerticalRuler = _new<ARulerView>(LayoutDirection::VERTICAL),
-                    wrapper with_style { Overflow::HIDDEN },
+                    mHorizontalRuler = _new<ARulerView>(ALayoutDirection::HORIZONTAL),
+                    mVerticalRuler = _new<ARulerView>(ALayoutDirection::VERTICAL),
+                    wrapper with_style {AOverflow::HIDDEN },
                 }, 2, 2) with_style { Expanding { 2, 2 } },
-                _new<AScrollbar>(LayoutDirection::HORIZONTAL),
+                _new<AScrollbar>(ALayoutDirection::HORIZONTAL),
 
             } with_style { Expanding { 2, 2 } },
             _new<AScrollbar>(),
@@ -45,12 +61,14 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
     setExpanding({10, 10});
 
 
-    mWrappedView->setSize(mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight());
+    mWrappedView->setSize({mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight(
+            ALayoutDirection::NONE)});
 }
 
-void ARulerArea::setSize(int width, int height) {
-    AViewContainer::setSize(width, height);
-    mWrappedView->setSize(mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight());
+void ARulerArea::setSize(glm::ivec2 size) {
+    AViewContainer::setSize(size);
+    mWrappedView->setSize({mWrappedView->getMinimumWidth(), mWrappedView->getMinimumHeight(
+            ALayoutDirection::NONE)});
     updatePosition();
 }
 

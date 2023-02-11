@@ -24,22 +24,26 @@ project(AUI)
 # AUI_BUILD_AUI_ROOT intended for pulling resources by aui.build.cmake (cmake scripts, ios storyboards, etc...)
 set(AUI_BUILD_AUI_ROOT ${CMAKE_CURRENT_SOURCE_DIR} CACHE PATH "AUI src location" FORCE)
 
-if(AUI_BOOT_COMPONENTS)
+if (MINGW)
+    message(FATAL_ERROR "MinGW is not supported")
+endif()
+
+if(AUIB_COMPONENTS)
     # adding required dependencies to the components
-    list(APPEND AUI_BOOT_COMPONENTS core)
-    if (views IN_LIST AUI_BOOT_COMPONENTS)
-        list(APPEND AUI_BOOT_COMPONENTS xml image)
+    list(APPEND AUIB_COMPONENTS core)
+    if (views IN_LIST AUIB_COMPONENTS)
+        list(APPEND AUIB_COMPONENTS xml image)
         if (NOT CMAKE_CROSSCOMPILING)
-            list(APPEND AUI_BOOT_COMPONENTS crypt toolbox)
+            list(APPEND AUIB_COMPONENTS crypt toolbox)
         endif()
-    elseif (toolbox IN_LIST AUI_BOOT_COMPONENTS AND NOT CMAKE_CROSSCOMPILING)
-        list(APPEND AUI_BOOT_COMPONENTS crypt)
+    elseif (toolbox IN_LIST AUIB_COMPONENTS AND NOT CMAKE_CROSSCOMPILING)
+        list(APPEND AUIB_COMPONENTS crypt)
     endif()
-    if (curl IN_LIST AUI_BOOT_COMPONENTS)
-        list(APPEND AUI_BOOT_COMPONENTS crypt)
+    if (curl IN_LIST AUIB_COMPONENTS)
+        list(APPEND AUIB_COMPONENTS crypt)
     endif()
 endif()
-list(REMOVE_DUPLICATES AUI_BOOT_COMPONENTS)
+list(REMOVE_DUPLICATES AUIB_COMPONENTS)
 
 include(aui.boot.cmake)
 
@@ -47,11 +51,13 @@ include(aui.boot.cmake)
 cmake_policy(SET CMP0091 NEW)
 include(cmake/aui.build.cmake)
 
+
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
+auib_mark_var_forwardable(AUI_BUILD_EXAMPLES)
 
 function(define_aui_component AUI_COMPONENT_NAME)
-    if (AUI_BOOT_COMPONENTS)
-        if (NOT ${AUI_COMPONENT_NAME} IN_LIST AUI_BOOT_COMPONENTS)
+    if (AUIB_COMPONENTS)
+        if (NOT ${AUI_COMPONENT_NAME} IN_LIST AUIB_COMPONENTS)
             return()
         endif()
         message(STATUS "[+] ${AUI_COMPONENT_NAME}")
@@ -59,6 +65,7 @@ function(define_aui_component AUI_COMPONENT_NAME)
     add_subdirectory("aui.${AUI_COMPONENT_NAME}")
 endfunction()
 
+auib_import(ZLIB https://github.com/aui-framework/zlib)
 
 # define all components
 define_aui_component(core)
@@ -67,8 +74,8 @@ if (NOT ANDROID AND NOT IOS)
     # define_aui_component(data) -- outdated; need reworking
     define_aui_component(mysql)
     # define_aui_component(data) -- outdated; need reworking
-    define_aui_component(network)
 endif()
+define_aui_component(network)
 define_aui_component(crypt)
 define_aui_component(curl)
 define_aui_component(image)
@@ -81,7 +88,7 @@ if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
 endif()
 
-if(NOT ANDROID AND AUI_BUILD_EXAMPLES)
+if(AUI_BUILD_EXAMPLES)
     add_subdirectory(examples/AUI.Example.Views)
     #add_subdirectory(examples/AUI.Example.Fractal)
     #add_subdirectory(examples/AUI.Example.Minesweeper)
@@ -94,8 +101,6 @@ if (NOT AUI_NO_TESTS)
         set_property(GLOBAL PROPERTY TESTS_SRCS "")
         set_property(GLOBAL PROPERTY TESTS_DEPS "")
         _aui_import_gtest()
-    else()
-        aui_enable_tests()
     endif()
 endif()
 
@@ -119,31 +124,37 @@ set(AUI_ALL_COMPONENTS core
         )
 
 
-if(NOT AUI_BOOT_COMPONENTS)
+if(NOT AUIB_COMPONENTS)
     # adding all components
-    set(AUI_BOOT_COMPONENTS ${AUI_ALL_COMPONENTS})
+    set(AUIB_COMPONENTS ${AUI_ALL_COMPONENTS})
 
     # remove unexisting modules from module list (i.e. toolbox)
-    foreach(_module ${AUI_BOOT_COMPONENTS})
+    foreach(_module ${AUIB_COMPONENTS})
         if (NOT TARGET "aui.${_module}")
-            list(REMOVE_ITEM AUI_BOOT_COMPONENTS ${_module})
+            list(REMOVE_ITEM AUIB_COMPONENTS ${_module})
         endif()
     endforeach()
 else()
     # remove executables from module list (i.e. toolbox)
-    foreach(_module ${AUI_BOOT_COMPONENTS})
+    foreach(_module ${AUIB_COMPONENTS})
+        if (NOT TARGET "aui.${_module}")
+            list(REMOVE_ITEM AUIB_COMPONENTS ${_module})
+            message(WARNING "aui.${_module} is either disabled or not exists")
+            continue()
+        endif()
+
         get_target_property(_type "aui.${_module}" TYPE)
         if (_type STREQUAL "EXECUTABLE")
-            list(REMOVE_ITEM AUI_BOOT_COMPONENTS ${_module})
+            list(REMOVE_ITEM AUIB_COMPONENTS ${_module})
         endif()
     endforeach()
 endif()
 
-set(AUI_CONFIG_VARS "set(AUI_ALL_COMPONENTS ${AUI_ALL_COMPONENTS})\nset(AUI_AVAILABLE_COMPONENTS ${AUI_BOOT_COMPONENTS})\n")
+set(AUI_CONFIG_VARS "set(AUI_ALL_COMPONENTS ${AUI_ALL_COMPONENTS})\nset(AUI_AVAILABLE_COMPONENTS ${AUIB_COMPONENTS})\n")
 get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
 # forward AUI's dependencies
 set(AUI_CONFIG_VARS "${AUI_CONFIG_VARS}\nset(AUI_BOOT_ROOT_ENTRIES ${AUI_BOOT_ROOT_ENTRIES})\n")
-foreach(_module ${AUI_BOOT_COMPONENTS})
+foreach(_module ${AUIB_COMPONENTS})
     set(_target "aui.${_module}")
     get_target_property(_compile_definitions ${_target} INTERFACE_COMPILE_DEFINITIONS)
     get_target_property(_link_libs ${_target} INTERFACE_LINK_LIBRARIES)
@@ -182,14 +193,15 @@ endif()
 
 configure_file(cmake/aui-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake @ONLY)
 #install(EXPORT AUI DESTINATION cmake/)
-install(
-        FILES
+install(FILES
         ${CMAKE_CURRENT_BINARY_DIR}/aui-config.cmake
         DESTINATION ".")
 
-file(GLOB_RECURSE _cmake_dir cmake/*)
+install(DIRECTORY cmake/
+        DESTINATION cmake)
 
-install(
-        FILES
-        ${_cmake_dir}
-        DESTINATION "cmake/")
+install(DIRECTORY platform/
+        DESTINATION platform)
+
+auib_precompiled_binary()
+enable_testing()

@@ -1,23 +1,18 @@
-﻿/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2772 on 25.07.2018.
@@ -28,10 +23,19 @@
 #include <cstdint>
 #include <glm/glm.hpp>
 #include <AUI/Common/AVector.h>
+#include <AUI/Common/AByteBuffer.h>
 #include <AUI/Util/Cache.h>
 #include <AUI/Url/AUrl.h>
 #include <AUI/IO/APath.h>
+#include "AUI/Common/AColor.h"
+#include "AImageFormat.h"
 
+/**
+ * @brief Image representation.
+ * @ingroup image
+ * @details
+ * TODO refactor!
+ */
 class API_AUI_IMAGE AImage {
 private:
     class Cache;
@@ -44,30 +48,37 @@ private:
         _<AImage> load(const AUrl& key) override;
     };
 
-public:
-    AImage(uint32_t width, uint32_t height, int format);
+    void setPixelAt(std::uint32_t index, glm::ivec4 color);
 
-    enum Format : unsigned {
-        UNKNOWN = 0,
-        R = 1,
-        RG = 2,
-        RGB = 3,
-        RGBA = 4,
-        FLOAT = 8,
-        BYTE = 16
-    };
 private:
-    AVector<uint8_t> mData;
+    AByteBuffer mData;
     uint32_t mWidth;
     uint32_t mHeight;
-    unsigned mFormat = UNKNOWN;
+    AImageFormat mFormat = AImageFormat::UNKNOWN;
+
+
+    std::size_t coordToIndex(glm::uvec2 coords) const noexcept {
+        return mWidth * glm::clamp(coords.y, static_cast<uint32_t>(0), mHeight - 1) + glm::clamp(
+                coords.x, static_cast<uint32_t>(0), mWidth - 1);
+    }
 
 public:
+
     AImage();
 
-    AImage(unsigned int format) : mFormat(format) {}
+    AImage(AImageFormat format) : mFormat(format) {}
 
-    AImage(AVector<uint8_t> mData, uint32_t mWidth, uint32_t mHeight, int mFormat);
+
+    AImage(uint32_t width, uint32_t height, AImageFormat format);
+
+    AImage(AByteBuffer data,
+           uint32_t width,
+           uint32_t height,
+           AImageFormat format):
+            mData(std::move(data)),
+            mWidth(width),
+            mHeight(height),
+            mFormat(format) {}
 
     void allocate() {
         mData.resize(mWidth * mHeight * getBytesPerPixel());
@@ -78,21 +89,31 @@ public:
         allocate();
     }
 
-    AVector<uint8_t>& getData() {
+    void fillColor(glm::ivec4 c);
+
+    [[nodiscard]]
+    AByteBuffer imageDataOfFormat(unsigned format) const;
+
+    [[nodiscard]]
+    AByteBuffer& getData() {
         return mData;
     }
 
-    const AVector<uint8_t>& getData() const {
+    [[nodiscard]]
+    const AByteBuffer& getData() const {
         return mData;
     }
 
-    [[nodiscard]] inline uint32_t getWidth() const {
+    [[nodiscard]]
+    inline uint32_t getWidth() const {
         return mWidth;
     }
-    [[nodiscard]] inline uint32_t getHeight() const {
+    [[nodiscard]]
+    inline uint32_t getHeight() const {
         return mHeight;
     }
 
+    [[nodiscard]]
     inline unsigned getFormat() const {
         return mFormat;
     }
@@ -100,9 +121,13 @@ public:
     /**
      * @return bytes per pixel.
      */
-    uint8_t getBytesPerPixel() const;
+    [[nodiscard]]
+    uint8_t getBytesPerPixel() const {
+        return mFormat.getBytesPerPixel();
+    }
 
 
+    [[nodiscard]]
     inline glm::ivec2 getSize() const {
         return {getWidth(), getHeight()};
     }
@@ -111,23 +136,47 @@ public:
     AImage sub(uint32_t x, uint32_t y, uint32_t width, uint32_t height) const;
 
     [[nodiscard]]
-    glm::ivec4 getPixelAt(uint32_t x, uint32_t y) const;
+    AImage sub(glm::ivec2 position, glm::ivec2 size) const {
+        return sub(position.x, position.y, size.x, size.y);
+    }
+
     void setPixelAt(uint32_t x, uint32_t y, const glm::ivec4& val);
 
-    static AImage addAlpha(const AImage& AImage);
+    template<auto imageFormat = AImageFormat::RGBA | AImageFormat::BYTE>
+    typename aui::image_format::traits<imageFormat>::pixel_t getPixelAt(glm::uvec2 coords) const noexcept {
+        return aui::image_format::convert<imageFormat>(mFormat, (std::uint8_t*)mData.data() + getBytesPerPixel() * coordToIndex(coords));
+    }
+
+    void mirrorVertically();
+
+
+    [[nodiscard]]
     static AImage resize(const AImage& src, uint32_t width, uint32_t height);
+
+    [[nodiscard]]
     static AImage resizeLinearDownscale(const AImage& src, uint32_t width, uint32_t height);
     static void copy(const AImage& src, AImage& dst, uint32_t x, uint32_t y);
 
+    [[nodiscard]]
     uint8_t& at(uint32_t x, uint32_t y) {
-        return mData[(y * getWidth() + x) * getBytesPerPixel()];
-    }
-    const uint8_t& at(uint32_t x, uint32_t y) const {
-        return mData[(y * getWidth() + x) * getBytesPerPixel()];
+        return mData.at<std::uint8_t>((y * getWidth() + x) * getBytesPerPixel());
     }
 
+    [[nodiscard]]
+    const uint8_t& at(uint32_t x, uint32_t y) const {
+        return mData.at<std::uint8_t>((y * getWidth() + x) * getBytesPerPixel());
+    }
+
+    [[nodiscard]]
+    AColor averageColor() const noexcept;
+
+    [[nodiscard]]
     static _<AImage> fromUrl(const AUrl& url);
+
+    [[nodiscard]]
     static _<AImage> fromFile(const APath& path);
+
+    [[nodiscard]]
     static _<AImage> fromBuffer(AByteBufferView buffer);
 };
 

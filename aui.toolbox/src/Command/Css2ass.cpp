@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2 on 07.01.2021.
@@ -108,15 +103,15 @@ void Css2ass::run(Toolbox& t) {
 
                             AString subClass;
                             if (colonIndex != AString::NPOS) {
-                                subClass = subSelectorCss.mid(colonIndex + 1);
-                                subSelectorCss = subSelectorCss.mid(0, colonIndex);
+                                subClass = subSelectorCss.substr(colonIndex + 1);
+                                subSelectorCss = subSelectorCss.substr(0, colonIndex);
                             }
 
                             // selector routine
                             if (subSelectorCss.startsWith(".") || subSelectorCss.startsWith("#")) {
                                 // css class or id
                                 currentSubSelectorAss += "class_of(\"";
-                                currentSubSelectorAss += subSelectorCss.mid(1);
+                                currentSubSelectorAss += subSelectorCss.substr(1);
                                 currentSubSelectorAss += "\")";
                             } else {
                                 // some type
@@ -191,12 +186,12 @@ void Css2ass::run(Toolbox& t) {
                     // now we in the rule body
                     // key: arguments;
                     for (;;) {
-                        AString line = t.readStringUntilUnescaped({';', '\n'}).trim();
+                        AString line = AString(t.readStringUntilUnescaped({';', '\n'})).trim();
 
                         auto colonIndex = line.find(':');
                         if (colonIndex != AString::NPOS) {
-                            AString property = line.mid(0, colonIndex);
-                            AString value = line.mid(colonIndex + 1).trim();
+                            AString property = line.substr(0, colonIndex);
+                            AString value = line.substr(colonIndex + 1).trim();
 
                             try {
                                 processRule(code, property, value);
@@ -229,7 +224,7 @@ void Css2ass::run(Toolbox& t) {
         fos << "\n"
                "struct Style" << randomToken << " {\n"
                "    Style" << randomToken << "() {\n"
-               "        AStylesheet::inst().addRules({\n";
+               "        AStylesheet::global().addRules({\n";
 
         for (auto& line : code) {
             fos << "        " << line << '\n';
@@ -268,9 +263,9 @@ public:
 
     AString property(const AString& value) override {
         if (value.startsWith("url")) {
-            return "\"" + value.mid(5, value.length() - 6) + "\"";
+            return "\"" + value.substr(5, value.length() - 6) + "\"";
         }
-        return "\"" + value.mid(1, value.length() - 2) + "\"";
+        return "\"" + value.substr(1, value.length() - 2) + "\"";
     }
 };
 struct Common: PropertyWrapper {
@@ -286,7 +281,7 @@ public:
                 continue;
             if (arg.startsWith("#")) {
                 // it's possibly color
-                arg = arg.mid(1);
+                arg = arg.substr(1);
                 switch (arg.length()) {
                     case 3: // #fff
                         result << ("0x" + AString(arg[0]) + "0" + arg[1] + "0" + arg[2] + "0" + "_rgb");
@@ -295,10 +290,10 @@ public:
                         result << ("0x" + AString(arg[3]) + "0" + arg[0] + "0" + arg[1] + "0" + arg[2] + "0" + "_argb");
                         break;
                     case 6: // #ffffff
-                        result << ("0x" + arg.mid(0, 2) + arg.mid(2, 2) + arg.mid(4, 2) + "_rgb");
+                        result << ("0x" + arg.substr(0, 2) + arg.substr(2, 2) + arg.substr(4, 2) + "_rgb");
                         break;
                     case 8: // #ffffffff
-                        result << ("0x" + arg.mid(6, 2) + arg.mid(0, 2) + arg.mid(2, 2) + arg.mid(4, 2) + "_argb");
+                        result << ("0x" + arg.substr(6, 2) + arg.substr(0, 2) + arg.substr(2, 2) + arg.substr(4, 2) + "_argb");
                         break;
 
                     default:
@@ -310,11 +305,11 @@ public:
                 if (arg.length() >= 3) {
                     // it's possibly contains literal suffix (px, em, dp)
                     if (isalpha(arg.last())) {
-                        suffix = arg.mid(arg.length() - 2, 2);
+                        suffix = arg.substr(arg.length() - 2, 2);
                         if (suffix == "em")
                             suffix = "dp";
                         suffix = "_" + suffix;
-                        arg = arg.mid(0, arg.length() - 2);
+                        arg = arg.substr(0, arg.length() - 2);
                     }
                 }
                 if (arg == "0")

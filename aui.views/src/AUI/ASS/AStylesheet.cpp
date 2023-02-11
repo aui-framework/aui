@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2 on 29.12.2020.
@@ -33,7 +28,7 @@
 #include <AUI/View/ANumberPicker.h>
 #include <AUI/View/ACheckBox.h>
 #include <AUI/View/ARadioButton.h>
-#include <AUI/View/AComboBox.h>
+#include <AUI/View/ADropdownList.h>
 #include <AUI/View/AListView.h>
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/AVDividerView.h>
@@ -48,6 +43,7 @@
 #include "AStylesheet.h"
 #include "ASS.h"
 #include "AUI/View/ASpinner.h"
+#include "AUI/View/AGroupBox.h"
 
 
 AStylesheet::AStylesheet() {
@@ -128,17 +124,27 @@ AStylesheet::AStylesheet() {
             BackgroundSolid{0xfafafa_rgb},
         },
         {
-            { debug_selector(), Button::Default(t<AButton>()), c(".btn_default")},
+            t<AButtonEx>(),
+            LayoutSpacing { 2_dp },
+            MinSize { 2_dp },
+        },
+        {
+            t<AButtonEx>() > t<ALabel>(),
+            Margin { 0 },
+            Padding { 0 },
+        },
+        {
+            { debug_selector(), button::Default(t<AButton>()), c(".btn_default")},
             FontRendering::ANTIALIASING,
             BackgroundGradient {getOsThemeColor().lighter(0.15f),
                                 getOsThemeColor().darker(0.15f),
-                                LayoutDirection::VERTICAL },
+                                ALayoutDirection::VERTICAL },
             BoxShadow { 0, 1_dp, 3_dp, -1_dp, getOsThemeColor() },
             Border { nullptr },
             TextColor { 0xffffff_rgb },
         },
         {
-            { Button::Default(t<AButton>::hover()), c::hover(".btn_default")},
+            { button::Default(t<AButton>::hover()), c::hover(".btn_default")},
             BoxShadow { 0, 1_dp, 6_dp, -1_dp, getOsThemeColor() },
         },
         {
@@ -147,13 +153,13 @@ AStylesheet::AStylesheet() {
             BoxShadow { nullptr },
         },
         {
-            { Button::Default(t<AButton>::hover()), c::hover(".btn_default")},
+            { button::Default(t<AButton>::hover()), c::hover(".btn_default")},
             BackgroundGradient {getOsThemeColor().lighter(0.2f),
                                 getOsThemeColor().darker(0.15f),
-                                LayoutDirection::VERTICAL },
+                                ALayoutDirection::VERTICAL },
         },
         {
-            { Button::Default(t<AButton>::active()), c::active(".btn_default")},
+            { button::Default(t<AButton>::active()), c::active(".btn_default")},
             BackgroundSolid { getOsThemeColor() }
         },
         {
@@ -172,13 +178,13 @@ AStylesheet::AStylesheet() {
         },
         {
             class_of(".input-field"),
-            TextColor { 0_rgb },
-            BackgroundSolid { 0xffffff_rgb },
+                TextColor { 0_rgb },
+                BackgroundSolid { 0xffffff_rgb },
             Border { 1_dp, 0xa0a0a0_rgb },
-            BorderRadius { 4_dp },
-            Margin { 2_dp, 4_dp },
+                BorderRadius { 4_dp },
+                Margin { 2_dp, 4_dp },
             MinSize { 100_dp, 17_dp },
-            Overflow::HIDDEN
+                AOverflow::HIDDEN
         },
         {
             class_of::hover(".input-field"),
@@ -198,9 +204,9 @@ AStylesheet::AStylesheet() {
 
         // ANumberPicker
         {
-            t<ANumberPicker>(),
+            c(".number-picker"),
             MinSize { 60_dp, {} },
-            Overflow::HIDDEN,
+            AOverflow::HIDDEN,
         },
         {
             class_of(".up-down-wrapper"),
@@ -210,7 +216,7 @@ AStylesheet::AStylesheet() {
             //BackgroundSolid { 0xf0f0f0_rgb }
         },
         {
-            t<ANumberPicker>() >> t<AButton>(),
+            c(".number-picker") >> t<AButton>(),
             Padding { 3_dp, 0 },
             FixedSize { 19_dp, 10_dp },
             MinSize { {}, 3_dp },
@@ -221,52 +227,40 @@ AStylesheet::AStylesheet() {
             BackgroundImage {{}, getOsThemeColor().readableBlackOrWhite().opacify(0.7f), {}, Sizing::FIT_PADDING },
         },
         {
-            t<ANumberPicker>() >> c(".up"),
+            c(".number-picker") >> c(".up"),
             BackgroundImage { ":uni/svg/up.svg", {} },
         },
         {
-            t<ANumberPicker>() >> c(".down"),
+            c(".number-picker") >> c(".down"),
             BackgroundImage { ":uni/svg/down.svg", {} },
         },
 
         // ACheckBox
         {
             t<ACheckBox>(),
-            Margin { 1_dp, 4_dp },
-        },
-        {
-            t<ACheckBox>() > t<AAbstractLabel>(),
-            Margin { 1_dp, 4_dp },
-        },
-        {
-            t<ACheckBoxInner>(),
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 1_dp, 1_dp, 1_dp, 4_dp },
+            Margin { 1_dp, 1_dp, 1_dp, 0 },
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
             BackgroundImage {0x333333_rgb },
         },
         {
-            t<ACheckBoxInner>::hover(),
+            t<ACheckBox>::hover(),
             Border { 1_dp, 0x0078d7_rgb },
             BackgroundImage {0x0078d7_rgb },
         },
         {
-            t<ACheckBoxInner>::hover(),
+            t<ACheckBox>::active(),
             BackgroundSolid { 0xcce4f7_rgb },
             Border { 1_dp, 0x005499_rgb },
             BackgroundImage {0x005499_rgb },
         },
         {
-            Selected(t<ACheckBox>()) >> t<ACheckBoxInner>(),
+            Selected(t<ACheckBox>()),
             BackgroundImage {":uni/svg/checkbox.svg" },
         },
         {
-            t<ACheckBox>::disabled() > t<AAbstractLabel>(),
-            TextColor { 0xa0a0a0_rgb },
-        },
-        {
-            t<ACheckBox>::disabled() >> t<ACheckBoxInner>(),
+            t<ACheckBox>::disabled(),
             BackgroundSolid { 0xe5e5e5_rgb },
             BackgroundImage { 0xa0a0a0_rgb },
             Border { 1_px, 0xa0a0a0_rgb },
@@ -275,11 +269,11 @@ AStylesheet::AStylesheet() {
         // ARulerView
         {
             t<ARulerView>(),
-            MinSize { 16_dp },
-            BackgroundSolid { 0x20000000_argb },
+                MinSize { 16_dp },
+                BackgroundSolid { 0x20000000_argb },
             TextColor { 0x40000000_argb },
-            Overflow::HIDDEN,
-            FontSize { 8_pt },
+                AOverflow::HIDDEN,
+                FontSize { 8_pt },
         },
         {
             c(".arulerarea-content"),
@@ -307,7 +301,7 @@ AStylesheet::AStylesheet() {
         {
             t<ARadioButtonInner>(),
             BackgroundSolid { 0xffffff_rgb },
-            Margin { 3_dp, 1_dp, 1_dp, 4_dp },
+            Margin { 3_dp, 1_dp, 1_dp, 0 },
             Border { 1_dp, 0x333333_rgb },
             FixedSize { 13_dp, 13_dp },
             BorderRadius { 6_dp },
@@ -339,22 +333,22 @@ AStylesheet::AStylesheet() {
             Border { 1_dp, 0xa0a0a0_rgb },
         },
 
-        // AComboBox
+        // ADropdownList
         {
-            t<AComboBox>(),
+            t<ADropdownList>(),
             TextAlign::LEFT,
         },
 
         // AListView
         {
             {t<AListView>(), t<ATreeView>()},
-            BackgroundSolid { 0xffffff_rgb },
-            Border { 1_dp, 0x828790_rgb },
+                BackgroundSolid { 0xffffff_rgb },
+                Border { 1_dp, 0x828790_rgb },
             Padding { 2_dp },
-            Margin {2_dp, 4_dp},
-            Expanding { 0, 1 },
+                Margin {2_dp, 4_dp},
+                Expanding { 0, 1 },
             MinSize { 120_dp, 80_dp },
-            Overflow::HIDDEN,
+                AOverflow::HIDDEN,
         },
         {
             t<ATreeView>() > t<AViewContainer>() > c(".list-item") > t<AAbstractLabel>(),
@@ -389,13 +383,13 @@ AStylesheet::AStylesheet() {
         // ADividerView
         {
             t<AHDividerView>(),
-            FixedSize { {}, 2_dp },
+            FixedSize { {}, 1_px },
             Margin { 0, 2_dp },
             BackgroundSolid { 0x808080_rgb },
         },
         {
             t<AVDividerView>(),
-            FixedSize { 2_dp, {} },
+            FixedSize { 1_px, {} },
             Margin { 2_dp, 0 },
             BackgroundSolid { 0x808080_rgb },
         },
@@ -478,7 +472,7 @@ AStylesheet::AStylesheet() {
         // scroll area
         {
             c(".scrollarea_inner"),
-            Overflow::HIDDEN
+                AOverflow::HIDDEN
         },
         // scrollbar
         {
@@ -602,6 +596,34 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { getOsThemeColor() },
             BorderRadius { 4_dp },
         },
+
+        {
+            t<ADrawableView>(),
+            MinSize { 12_dp },
+        },
+
+        // AGroupBox
+        {
+            c(".agroupbox-title"),
+            Margin { {}, 4_dp },
+        },
+        {
+            c(".agroupbox-title") > t<AView>(),
+            Padding { {}, 4_dp },
+        },
+        {
+            c(".agroupbox-inner"),
+            Border { 2_dp, 0x30808080_argb },
+            BorderRadius { 4_dp },
+            Padding { 8_dp, 6_dp },
+            Margin { 0, 4_dp},
+            AOverflow::HIDDEN,
+        },
+        {
+            c(".modal-scaffold-dim"),
+            BackgroundSolid { 0x40000000_argb },
+            Expanding{},
+        },
     });
 }
 
@@ -628,11 +650,11 @@ AColor AStylesheet::getOsThemeColor() {
 #endif
 }
 
-AStylesheet& AStylesheet::inst() {
-    return *instStorage();
+AStylesheet& AStylesheet::global() {
+    return *globalStorage();
 }
 
-_<AStylesheet>& AStylesheet::instStorage() {
+_<AStylesheet>& AStylesheet::globalStorage() {
     static _<AStylesheet> s = _new<AStylesheet>();
     return s;
 }

@@ -19,6 +19,7 @@ permissions:
 
 jobs:
   doxygen:
+    if: github.event_name != 'pull_request'
     name: Doxygen
     runs-on: ubuntu-latest
     steps:
@@ -62,43 +63,36 @@ jobs:
   #      run: ./gradlew assembleDebug
 
   build-desktop:
-    name: ${{ matrix.config.name }}
-    runs-on: ${{ matrix.config.os }}
+    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        config:
-          - {
-            name: "Windows Latest MSVC x86 shared", artifact: "aui_windows-msvc-x86-shared.tar.xz",
-            os: windows-latest,
-            build_type: "Release", generator: "Visual Studio 17 2022", additional_cmake_flags: "-A Win32"
-          }
-          - {
-            name: "Windows Latest MSVC x86_64 shared", artifact: "aui_windows-msvc-x86_64-shared.tar.xz",
-            os: windows-latest,
-            build_type: "Release", generator: "Visual Studio 17 2022", additional_cmake_flags: "-A x64"
-          }
-          - {
-            name: "Windows Latest MSVC x86 static", artifact: "aui_windows-msvc-x86-static.tar.xz",
-            os: windows-latest,
-            build_type: "Release", generator: "Visual Studio 17 2022", additional_cmake_flags: "-A Win32 -DBUILD_SHARED_LIBS=OFF"
-          }
-          - {
-            name: "Windows Latest MSVC x86_64 static", artifact: "aui_windows-msvc-x86_64-static.tar.xz",
-            os: windows-latest,
-            build_type: "Release", generator: "Visual Studio 17 2022", additional_cmake_flags: "-A x64 -DBUILD_SHARED_LIBS=OFF"
-          }
+        os: [windows-latest, ubuntu-latest]
+        debug_or_release: [Debug, Release]
+        shared_or_static: [shared, static]
+        is32bit: [false]
+        include:
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A Win32'
+            debug_or_release: Debug
+            shared_or_static: shared
+            is32bit: true
 
-          - {
-            name: "Ubuntu Latest GCC shared", artifact: "aui_ubuntu-x86_64-shared.tar.xz",
-            os: ubuntu-latest,
-            build_type: "Release", generator: "Unix Makefiles", additional_cmake_flags: ""
-          }
-          - {
-            name: "Ubuntu Latest GCC static", artifact: "aui_ubuntu-x86_64-static.tar.xz",
-            os: ubuntu-latest,
-            build_type: "Release", generator: "Unix Makefiles", additional_cmake_flags: "-DBUILD_SHARED_LIBS=OFF"
-          }
+          - os: windows-latest
+            generator: "Visual Studio 17 2022"
+            additional_cmake_flags: '-A x64'
+
+          - os: ubuntu-latest
+            generator: "Unix Makefiles"
+            additional_cmake_flags: ''
+
+          - os: ubuntu-latest
+            generator: "Unix Makefiles"
+            additional_cmake_flags: ''
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
 
     steps:
       - uses: actions/checkout@v2
@@ -106,37 +100,35 @@ jobs:
           submodules: true
 
       - name: Install Linux dependencies
-        if: matrix.config.os == 'ubuntu-latest'
+        if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libfontconfig-dev
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -G "${{ matrix.config.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.config.build_type}} ${{matrix.config.additional_cmake_flags}}
+        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}}
 
       - name: Build project
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}}
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}}
 
       - name: Build tests
         # Build your program with the given configuration
-        run: cmake --build ${{github.workspace}}/build --config ${{matrix.config.build_type}} --target Tests
+        run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
 
       - name: Test
         # Build your program with the given configuration
-        run: cd ${{github.workspace}}/build && ctest .  -C ${{matrix.config.build_type}} --output-on-failure
-
-      - name: Install Strip
-        run: cmake --install build --prefix instdir --strip
+        working-directory: ${{github.workspace}}/build
+        run: ctest . -C ${{matrix.debug_or_release}} --output-on-failure
 
       - name: Pack
-        working-directory: instdir
-        run: cmake -E tar cJfv ../${{ matrix.config.artifact }} .
+        working-directory: ${{github.workspace}}/build
+        run: cpack . -C ${{ matrix.debug_or_release }}
 
       - name: Upload
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v3
         with:
-          path: ./${{ matrix.config.artifact }}
-          name: ${{ matrix.config.artifact }}
+          path: ${{github.workspace}}/build/*.tar.gz
+          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
 
   release:
     if: contains(github.ref, 'tags/v')
@@ -146,7 +138,7 @@ jobs:
     steps:
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1.0.0
+        uses: actions/create-release@v1.1.4
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -159,31 +151,25 @@ jobs:
 
   publish:
     if: contains(github.ref, 'tags/v')
-    name: ${{ matrix.config.name }}
-    runs-on: ${{ matrix.config.os }}
+    name: Publish ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        config:
-          - {
-            name: "Windows Latest MSVC x86", artifact: "aui_windows-msvc-x86.tar.xz",
-            os: windows-2019
-          }
-          - {
-            name: "Windows Latest MSVC x86_64", artifact: "aui_windows-msvc-x86_64.tar.xz",
-            os: windows-2019
-          }
-          - {
-            name: "Ubuntu Latest GCC", artifact: "aui_ubuntu-x86_64.tar.xz",
-            os: ubuntu-latest
-          }
+        os: [windows-latest, ubuntu-latest]
+        debug_or_release: [Debug, Release]
+        shared_or_static: [shared, static]
+
     needs: release
     steps:
       - name: Download artifact
         uses: actions/download-artifact@v1
         with:
-          name: ${{ matrix.config.artifact }}
           path: ./
+          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{matrix.debug_or_release }}
+
+      - id: getfilename
+        run: echo "::set-output name=file::$(ls *.tar.gz)"
 
       - name: Upload to Release
         id: upload_to_release
@@ -192,6 +178,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ needs.release.outputs.upload_url }}
-          asset_path: ./${{ matrix.config.artifact }}
-          asset_name: ${{ matrix.config.artifact }}
+          asset_path: ${{ steps.getfilename.outputs.file }}
+          asset_name: ${{ steps.getfilename.outputs.file }}
           asset_content_type: application/x-gtar

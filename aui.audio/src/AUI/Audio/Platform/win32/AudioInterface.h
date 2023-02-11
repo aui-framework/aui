@@ -40,7 +40,7 @@ struct DirectSoundInstance {
     DirectSoundInstance(const DirectSoundInstance&) = delete;
 
     ~DirectSoundInstance() {
-        nullsafe(mDirectSound)->Release();
+        AUI_NULLSAFE(mDirectSound)->Release();
     }
 };
 

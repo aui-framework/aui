@@ -1,27 +1,43 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 #pragma once
 
 
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Util/ALayoutDirection.h>
 #include <AUI/View/AView.h>
 
 class ASplitterHelper {
     friend class ASplitter;
 private:
-    LayoutDirection mDirection; // will be initialized in the Builder
+    ALayoutDirection mDirection; // will be initialized in the Builder
     size_t mDraggingDividerIndex = -1;
     int mDragOffset; // may be uninitialized
     AVector<_<AView>> mItems;
 
     float getTotalOccupiedSizeOf(const _<AView>& view) {
-        return mDirection == LayoutDirection::VERTICAL ? view->getTotalOccupiedHeight() : view->getTotalOccupiedWidth();
+        return mDirection == ALayoutDirection::VERTICAL ? view->getTotalOccupiedHeight() : view->getTotalOccupiedWidth();
     }
 
     template<typename T>
     [[nodiscard]]
     T& getAxisValue(glm::tvec2<T>& v) {
         switch (mDirection) {
-            case LayoutDirection::VERTICAL  : return v.y;
-            case LayoutDirection::HORIZONTAL: return v.x;
+            case ALayoutDirection::VERTICAL  : return v.y;
+            case ALayoutDirection::HORIZONTAL: return v.x;
         }
         throw;
     }
@@ -29,8 +45,8 @@ private:
     [[nodiscard]]
     T getAxisValue(const glm::tvec2<T>& v) {
         switch (mDirection) {
-            case LayoutDirection::VERTICAL  : return v.y;
-            case LayoutDirection::HORIZONTAL: return v.x;
+            case ALayoutDirection::VERTICAL  : return v.y;
+            case ALayoutDirection::HORIZONTAL: return v.x;
         }
         throw;
     }
@@ -38,9 +54,9 @@ private:
 
 public:
     ASplitterHelper() = default;
-    ASplitterHelper(LayoutDirection direction) : mDirection(direction) {}
+    ASplitterHelper(ALayoutDirection direction) : mDirection(direction) {}
 
-    void setDirection(LayoutDirection direction) {
+    void setDirection(ALayoutDirection direction) {
         mDirection = direction;
     }
 

@@ -1,23 +1,18 @@
-﻿/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -31,6 +26,7 @@
 #include <AUI/Thread/AThread.h>
 #include <AUI/Util/kAUI.h>
 #include <glm/glm.hpp>
+#include <utility>
 
 template<typename T>
 class AFuture;
@@ -128,17 +124,26 @@ public:
     template<typename Iterator, typename Functor>
     auto parallel(Iterator begin, Iterator end, Functor&& functor);
 
-    template <typename Callable>
+    template <std::invocable Callable>
     [[nodiscard]]
     inline auto operator*(Callable fun)
     {
         using Value = std::invoke_result_t<Callable>;
         AFuture<Value> future(std::move(fun));
-        run([innerWeak = future.inner()->wrapped.weak()]()
+        run([innerWeak = future.inner().weak()]()
             {
-                auto innerUnsafePointer = innerWeak.lock().get(); // using .get() here in order to bypass null check in
-                                                                  // operator->
-                innerUnsafePointer->tryExecute(innerWeak);
+                /*
+                 * Avoid holding a strong reference - we need to keep future cancellation on reference count exceeding
+                 * even while actual future execution.
+                 */
+                if (auto lock = innerWeak.lock()) {
+                    auto innerUnsafePointer = lock->ptr().get(); // using .get() here in order to bypass
+                                                                 // null check in operator->
+
+                    lock = nullptr;                              // destroy strong ref
+
+                    innerUnsafePointer->tryExecute(innerWeak);   // there's a check inside tryExecute to check its validity
+                }
             }, AThreadPool::PRIORITY_LOWEST);
         return future;
     }
@@ -159,6 +164,8 @@ public:
  */
 template<typename T = void>
 class AFutureSet: public AVector<AFuture<T>> {
+private:
+    using super = AVector<AFuture<T>>;
 public:
     using AVector<AFuture<T>>::AVector;
 
@@ -166,7 +173,8 @@ public:
      * @brief Wait for the result of every AFuture.
      */
     void waitForAll() const {
-        for (const AFuture<T>& v : *this) {
+        // wait from the end to avoid idling (see AFuture::wait for details)
+        for (const AFuture<T>& v : aui::reverse_iterator_wrap(*this)) {
             v.operator*();
         }
     }

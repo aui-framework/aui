@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2 on 6/6/2021.
@@ -39,13 +34,44 @@ private:
     bool mRequiresRedraw = false;
     bool mRequiresLayoutUpdate = false;
 
+    unsigned mFrameMillis = 1;
+
 public:
     EmbedWindow(AEmbedAuiWrap* theWrap): mTheWrap(theWrap) {
         currentWindowStorage() = this;
     }
 
+    unsigned int frameMillis() const noexcept override {
+        return mFrameMillis;
+    }
+
+    void setFrameMillis(unsigned int frameMillis) {
+        mFrameMillis = frameMillis;
+    }
+
     _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override {
-        auto container = _new<AOverlappingSurface>();
+        class MyOverlappingSurface: public AOverlappingSurface {
+        public:
+            void setOverlappingSurfacePosition(glm::ivec2 position) override {
+                emit positionSet(position);
+            }
+
+            void setOverlappingSurfaceSize(glm::ivec2 size) override {
+                emit sizeSet(size);
+            }
+
+        signals:
+            emits<glm::ivec2> positionSet;
+            emits<glm::ivec2> sizeSet;
+        };
+
+        auto container = _new<MyOverlappingSurface>();
+        connect(container->positionSet, [container = container.get()](glm::ivec2 p) {
+            container->setPosition(p);
+        });
+        connect(container->sizeSet, [container = container.get()](glm::ivec2 p) {
+            container->setSize(p);
+        });
         addViewCustomLayout(container);
 
         auto windowSize = getSize();
@@ -97,10 +123,10 @@ void AEmbedAuiWrap::windowRender() {
         mContainer->mRequiresLayoutUpdate = false;
         mContainer->updateLayout();
     }
-    nullsafe(mContainer->getRenderingContext())->beginPaint(*mContainer);
+    AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
     mContainer->render();
-    nullsafe(mContainer->getRenderingContext())->endPaint(*mContainer);
+    AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 
 void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
@@ -115,9 +141,9 @@ void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
 void AEmbedAuiWrap::setViewportSize(int width, int height) {
     mContainer->makeCurrent();
     mSize = { width, height };
-    nullsafe(mContainer->getRenderingContext())->beginResize(*mContainer);
-    mContainer->setSize(width, height);
-    nullsafe(mContainer->getRenderingContext())->endResize(*mContainer);
+    AUI_NULLSAFE(mContainer->getRenderingContext())->beginResize(*mContainer);
+    mContainer->setSize({width, height});
+    AUI_NULLSAFE(mContainer->getRenderingContext())->endResize(*mContainer);
     mContainer->mRequiresRedraw = true;
 }
 

@@ -1,23 +1,18 @@
-﻿/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include <ft2build.h>
 #include <freetype/freetype.h>
@@ -103,7 +98,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
 		
 		int height = g->bitmap.rows;
 
-		AVector<uint8_t> data;
+		AByteBuffer data;
 
 		if (fr == FontRendering::NEAREST) {
 		    // when nearest, freetype renders glyphs into the 1bit-depth image but OpenGL required at least8bit-depth,
@@ -113,7 +108,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
             for (unsigned r = 0; r < g->bitmap.rows; ++r) {
                 unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
                 for (unsigned c = 0; c < g->bitmap.width; ++c) {
-                    data[c + r * g->bitmap.width] = (bufPtr[c / 8] & (0b10000000 >> (c % 8))) ? 255 : 0;
+                    data.at<std::uint8_t>(c + r * g->bitmap.width) = (bufPtr[c / 8] & (0b10000000 >> (c % 8))) ? 255 : 0;
                 }
             }
         } else {
@@ -121,15 +116,15 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
 
             for (unsigned r = 0; r < g->bitmap.rows; ++r) {
                 unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
-                data.insert(data.end(), bufPtr, bufPtr + g->bitmap.width);
+                data.write(reinterpret_cast<const char*>(bufPtr), g->bitmap.width);
             }
 		}
 
-		int imageFormat = AImage::BYTE;
+		int imageFormat = AImageFormat::BYTE;
 		if (fr == FontRendering::SUBPIXEL)
-			imageFormat |= AImage::RGB;
+			imageFormat |= AImageFormat::RGB;
 		else
-			imageFormat |= AImage::R;
+			imageFormat |= AImageFormat::R;
 
 		return Character {
             _new<AImage>(data, width, height, imageFormat),
@@ -163,25 +158,7 @@ AFont::Character& AFont::getCharacter(const FontEntry& charset, long glyph) {
 
 float AFont::length(const FontEntry& charset, const AString& text)
 {
-    int size = charset.first.size;
-	int advance = 0;
-
-	for (AString::const_iterator i = text.begin(); i != text.end(); i++) {
-		if (*i == ' ')
-			advance += getSpaceWidth(size);
-		else if (*i == '\n')
-		    advance = 0;
-		else {
-			Character& ch = getCharacter(charset, *i);
-			if (!ch.empty()) {
-                advance += ch.advanceX;
-                advance = glm::floor(advance);
-            }
-			else
-				advance += getSpaceWidth(size);
-		}
-	}
-	return advance;
+    return length(charset, text.begin(), text.end());
 }
 
 bool AFont::isHasKerning()

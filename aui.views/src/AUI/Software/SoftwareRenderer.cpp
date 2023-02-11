@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by Alex2772 on 12/5/2021.
 //
@@ -34,17 +50,17 @@ struct BrushHelper {
             // slower method
             auto rawPixelPos = glm::vec2{x, y};
             auto surfaceUvCoords = (rawPixelPos - position) / (end - position);
-            auto uv1 = brush.uv1.value_or(glm::ivec2{0, 0});
-            auto uv2 = brush.uv2.value_or(glm::ivec2{0, 0});
+            auto uv1 = brush.uv1.valueOr(glm::ivec2{0, 0});
+            auto uv2 = brush.uv2.valueOr(glm::ivec2{0, 0});
             auto uv = glm::vec2{ glm::mix(uv1.x, uv2.x, surfaceUvCoords.x), glm::mix(uv1.y, uv2.y, surfaceUvCoords.y) };
             auto& image = textureHelper->texture->getImage();
             auto imagePixelCoords = glm::ivec2{glm::vec2(image->getSize()) * uv};
 
-            auto color = AColor(image->getPixelAt(imagePixelCoords.x, imagePixelCoords.y)) / 255.f;
+            auto color = AColor(image->getPixelAt({imagePixelCoords.x, imagePixelCoords.y})) / 255.f;
             renderer->putPixel({ x, y }, renderer->getColor() * color);
         } else {
             // faster method
-            auto color = AColor(textureHelper->texture->getImage()->getPixelAt(x - position.x, y - position.y)) / 255.f;
+            auto color = AColor(textureHelper->texture->getImage()->getPixelAt(glm::uvec2{ x, y } - glm::uvec2(position))) / 255.f;
             renderer->putPixel({ x, y }, renderer->getColor() * color);
         }
     }
@@ -58,12 +74,15 @@ struct BrushHelper {
         renderer->putPixel({ x, y }, renderer->getColor() * color);
     }
 
+    void operator()(const ACustomShaderBrush& brush) noexcept {
+    }
+
 private:
     struct TextureHelper {
         bool slowMethod;
         SoftwareTexture* texture;
     };
-    std::optional<TextureHelper> textureHelper;
+    AOptional<TextureHelper> textureHelper;
 
     [[nodiscard]]
     glm::vec2 calculateUv() const noexcept {
@@ -300,13 +319,6 @@ void SoftwareRenderer::drawBoxShadow(const glm::vec2& position,
     }
 }
 
-void SoftwareRenderer::drawString(const glm::vec2& position,
-                                  const AString& string,
-                                  const AFontStyle& fs) {
-
-}
-
-
 void SoftwareRenderer::setBlending(Blending blending) {
     mBlending = blending;
 }
@@ -367,7 +379,7 @@ public:
                     auto size = entry.image->getSize();
                     for (int y = 0; y < size.y; ++y) {
                         for (int x = 0; x < size.x; ++x) {
-                            auto color = glm::vec4(glm::vec3(glm::ivec3(entry.image->getPixelAt(x, y))) / 255.f, 1.f);
+                            auto color = glm::vec4(glm::vec3(glm::ivec3(entry.image->getPixelAt({x, y}))) / 255.f, 1.f);
                             
                             mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, AColor{ color.r, color.g, color.b, color.a * finalColor.a }, Blending::INVERSE_SRC);
                             mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, color * finalColor, Blending::ADDITIVE);
@@ -381,7 +393,7 @@ public:
                     auto size = entry.image->getSize();
                     for (int y = 0; y < size.y; ++y) {
                         for (int x = 0; x < size.x; ++x) {
-                            mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, { finalColor.r, finalColor.g, finalColor.b, finalColor.a * (entry.image->getPixelAt(x, y).x / 255.f) });
+                            mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, { finalColor.r, finalColor.g, finalColor.b, finalColor.a * (entry.image->getPixelAt({x, y}).x / 255.f) });
                         }
                     }
                 }
@@ -421,7 +433,7 @@ public:
         int prevWidth = -1;
 
         int advanceX = position.x;
-        int advanceY = position.y;
+        int advanceY = position.y - mFontStyle.font->getDescenderHeight(mFontStyle.size);
         size_t counter = 0;
         int advance = advanceX;
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
@@ -478,6 +490,15 @@ public:
                                                mFontStyle.fontRendering);
     }
 };
+
+
+void SoftwareRenderer::drawString(const glm::vec2& position,
+                                  const AString& string,
+                                  const AFontStyle& fs) {
+    SoftwareMultiStringCanvas c(this, fs);
+    c.addString(position, string);
+    c.finalize()->draw();
+}
 
 _<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(const glm::vec2& position,
                                                                    const AString& text,

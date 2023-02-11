@@ -1,27 +1,19 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
-
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
 //
-// Created by alex2 on 31.08.2020.
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
 //
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 
 #include <gtest/gtest.h>
 #include <AUI/Traits/algorithms.h>
@@ -38,10 +30,10 @@ void performSearchOn(const AVector<int>::const_iterator& begin, const AVector<in
         auto resultToCheck = aui::binary_search(begin, end, [&](const AVector<int>::const_iterator& it) {
             ++calledTimes;
             if (*it == searchingFor) {
-                return 0;
+                return aui::BinarySearchResult::MATCH;
             }
-            if (*it > searchingFor) return -1;
-            return 1;
+            if (*it > searchingFor) return aui::BinarySearchResult::LEFT;
+            return aui::BinarySearchResult::RIGHT;
         });
 
         // perform result check
@@ -55,8 +47,8 @@ void performSearchOn(const AVector<int>::const_iterator& begin, const AVector<in
     }
 
     // also check if we search for *unexisting* value the algorithm results end arg
-    ASSERT_TRUE((aui::binary_search(begin, end, [](const AVector<int>::const_iterator& it) { return -1; }) == end)) << "binary_search found unexisting element (wtf?)";
-    ASSERT_TRUE((aui::binary_search(begin, end, [](const AVector<int>::const_iterator& it) { return  1; }) == end)) << "binary_search found unexisting element (wtf?)";
+    ASSERT_TRUE((aui::binary_search(begin, end, [](const AVector<int>::const_iterator& it) { return aui::BinarySearchResult::LEFT;  }) == end)) << "binary_search found unexisting element (wtf?)";
+    ASSERT_TRUE((aui::binary_search(begin, end, [](const AVector<int>::const_iterator& it) { return aui::BinarySearchResult::RIGHT; }) == end)) << "binary_search found unexisting element (wtf?)";
 }
 
 void performSearchOn(const AVector<int>& v) {
@@ -78,5 +70,36 @@ TEST(Algorithms, BinarySearch1) {
 
     // try to confuse binary search algorithm
     dataset[0] = 228;
-    ASSERT_TRUE(aui::binary_search(dataset.begin(), dataset.end(), [](const AVector<int>::const_iterator& it) { return -1; }) == dataset.end()) << "binary_search found unexisting element (wtf?)";
+    ASSERT_TRUE(aui::binary_search(dataset.begin(), dataset.end(), [](const AVector<int>::const_iterator& it) { return aui::BinarySearchResult::LEFT; }) == dataset.end()) << "binary_search found unexisting element (wtf?)";
+}
+
+TEST(Algorithms, BinarySearchNearestToZero) {
+    AVector<int> dataset = { 1, 4, 7, 9, 11, 21, 33, 64, 96, 102, 299, 412414, 58989129, 58989131, 58989153 };
+
+    // search for all elements
+    for (const auto& value : dataset) {
+        auto result = aui::binary_search(dataset.begin(),
+                                         dataset.end(),
+                                         aui::BinarySearchNearestToZero([&](const AVector<int>::iterator& iterator) {
+                                             return *iterator - value;
+                                         }, aui::range(dataset)));
+        ASSERT_FALSE(result == dataset.end());
+        ASSERT_EQ(value, *result);
+    }
+}
+TEST(Algorithms, BinarySearchNearestToZeroWithOffset) {
+    AVector<int> dataset = { 1, 4, 7, 11, 21, 33, 64, 96, 102, 299, 412414, 58989129, 58989153 };
+
+    // search for all elements
+    for (const auto& value : dataset) {
+        for (auto offset : { -1, 1 }) { // simulate value is unknown; a small offset to the predicate
+            auto result = aui::binary_search(dataset.begin(),
+                                             dataset.end(),
+                                             aui::BinarySearchNearestToZero([&](const AVector<int>::iterator& iterator) {
+                                                 return *iterator - (value + offset);
+                                             }, aui::range(dataset)));
+            ASSERT_FALSE(result == dataset.end());
+            ASSERT_EQ(value, *result);
+        }
+    }
 }

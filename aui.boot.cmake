@@ -21,11 +21,15 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-option(AUI_BOOT_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
+option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
         FULL_DOCS "Global list of imported targets (since CMake 3.21)")
+
+define_property(GLOBAL PROPERTY AUIB_FORWARDABLE_VARS
+        BRIEF_DOCS "Global list of forwarded vars"
+        FULL_DOCS "Global list of forwarded vars")
 
 # fix "Failed to get the hash for HEAD" error
 if(EXISTS ${CMAKE_CURRENT_BINARY_DIR}/aui.boot-deps)
@@ -85,10 +89,10 @@ endif()
 
 if (ANDROID_ABI)
     set(AUI_TARGET_ARCH_NAME "android-${ANDROID_ABI}")
-    set(AUI_TARGET_ABI "${AUI_TARGET_ARCH_NAME}" CACHE STRING "COMPILER-PROCESSOR pair")
+    set(AUI_TARGET_ABI "${AUI_TARGET_ARCH_NAME}" CACHE INTERNAL "COMPILER-PROCESSOR pair")
 elseif (IOS)
     set(AUI_TARGET_ARCH_NAME "ios-${CMAKE_SYSTEM_PROCESSOR}")
-    set(AUI_TARGET_ABI "${AUI_TARGET_ARCH_NAME}" CACHE STRING "COMPILER-PROCESSOR pair")
+    set(AUI_TARGET_ABI "${AUI_TARGET_ARCH_NAME}" CACHE INTERNAL "COMPILER-PROCESSOR pair")
 else()
     if (NOT CMAKE_SYSTEM_PROCESSOR)
         message(FATAL_ERROR "CMAKE_SYSTEM_PROCESSOR is not set")
@@ -103,7 +107,7 @@ else()
         set(AUI_TARGET_ARCH_NAME ${CMAKE_SYSTEM_PROCESSOR})
     endif()
     string(TOLOWER "${CMAKE_CXX_COMPILER_ID}-${AUI_TARGET_ARCH_NAME}" _tmp)
-    set(AUI_TARGET_ABI "${_tmp}" CACHE STRING "COMPILER-PROCESSOR pair")
+    set(AUI_TARGET_ABI "${_tmp}" CACHE INTERNAL "COMPILER-PROCESSOR pair")
 endif()
 
 set(AUI_CACHE_DIR ${HOME_DIR}/.aui CACHE PATH "Path to AUI.Boot cache")
@@ -132,6 +136,56 @@ if (NOT EXISTS ${AUI_CACHE_DIR}/repo)
 endif()
 
 
+macro(_auib_copy_runtime_dependencies)
+    # create links to runtime dependencies
+    if (WIN32)
+        set(LIB_EXT dll)
+    elseif(APPLE)
+        set(LIB_EXT dylib)
+    else()
+        set(LIB_EXT so*)
+    endif()
+    file(GLOB_RECURSE DEP_RUNTIME LIST_DIRECTORIES false ${DEP_INSTALL_PREFIX}/*.${LIB_EXT})
+
+    if (WIN32)
+        # sometimes it's empty
+        if (NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
+            set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
+        endif()
+
+        set(DESTINATION_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
+    else()
+        # sometimes it's empty
+        if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+            set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
+        endif()
+
+        set(DESTINATION_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
+    endif()
+
+    if (NOT EXISTS ${DESTINATION_DIR})
+        file(MAKE_DIRECTORY ${DESTINATION_DIR})
+    endif()
+    foreach(_item ${DEP_RUNTIME})
+        get_filename_component(FILENAME ${_item} NAME)
+        if (CMAKE_CONFIGURATION_TYPES)
+            foreach(_config ${CMAKE_CONFIGURATION_TYPES})
+                set(_copy ${DESTINATION_DIR}/${_config}/${FILENAME})
+                if (NOT EXISTS ${_copy})
+                    message(STATUS "[AUI.BOOT] ${_item} -> ${DESTINATION_DIR}/${_config}/${FILENAME}")
+                    file(MAKE_DIRECTORY ${DESTINATION_DIR}/${_config})
+                    file(COPY ${_item} DESTINATION ${DESTINATION_DIR}/${_config})
+                endif()
+            endforeach()
+        else()
+            if (NOT EXISTS ${DESTINATION_DIR}/${FILENAME})
+                message(STATUS "[AUI.BOOT] ${_item} -> ${DESTINATION_DIR}/${FILENAME}")
+                file(COPY ${_item} DESTINATION ${DESTINATION_DIR})
+            endif()
+        endif()
+    endforeach()
+endmacro()
+
 macro(_auib_update_imported_targets_list) # used for displaying imported target names
     get_property(_imported_targets_before GLOBAL PROPERTY AUIB_IMPORTED_TARGETS)
     get_property(_imported_targets_after DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY IMPORTED_TARGETS)
@@ -147,9 +201,108 @@ function(_auib_import_subdirectory DEP_SOURCE_DIR AUI_MODULE_NAME) # helper func
     add_subdirectory(${DEP_SOURCE_DIR} "aui.boot-build-${AUI_MODULE_NAME}")
 endfunction()
 
+function(_auib_precompiled_archive_name _output_var _project_name)
+    if (NOT DEFINED _build_shared_libs)
+        set(_build_shared_libs ${BUILD_SHARED_LIBS})
+    endif()
+    if (_build_shared_libs)
+        set(SHARED_OR_STATIC shared)
+    else()
+        set(SHARED_OR_STATIC static)
+    endif()
+    set(_tmp "${_project_name}_${CMAKE_SYSTEM_NAME}-${AUI_TARGET_ABI}-${SHARED_OR_STATIC}-${CMAKE_BUILD_TYPE}")
+    string(TOLOWER ${_tmp} _tmp)
+    set(${_output_var} ${_tmp} PARENT_SCOPE)
+endfunction()
+
+macro(_auib_try_find)
+    set(_mode CONFIG)
+    while(TRUE)
+        if (AUIB_IMPORT_COMPONENTS)
+            find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} ${FINDPACKAGE_QUIET} ${_mode})
+        else()
+            find_package(${AUI_MODULE_NAME} ${FINDPACKAGE_QUIET} ${_mode})
+        endif()
+        if (NOT (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND))
+            if (_mode STREQUAL MODULE)
+                break()
+            endif()
+            if (AUIB_IMPORT_CONFIG_ONLY)
+                break()
+            else()
+                set(_mode MODULE)
+            endif()
+        else()
+            foreach(_component ${AUIB_IMPORT_COMPONENTS})
+                if (NOT ${AUI_MODULE_NAME}_${_component}_FOUND AND NOT ${AUI_MODULE_NAME_UPPER}_${_component}_FOUND)
+                    message(STATUS "Component ${_component} of module ${AUI_MODULE_NAME} is not found")
+                    set(${AUI_MODULE_NAME}_FOUND FALSE)
+                    set(${AUI_MODULE_NAME_UPPER}_FOUND FALSE)
+                endif()
+            endforeach()
+            break()
+        endif()
+    endwhile()
+    unset(_mode)
+    # expose result ignoring case sensitivity
+    if (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND)
+        set(${AUI_MODULE_NAME}_FOUND TRUE)
+    else()
+        set(${AUI_MODULE_NAME}_FOUND FALSE)
+    endif()
+endmacro()
+
+function(_auib_try_download_precompiled_binary)
+    _auib_precompiled_archive_name(_archive_name ${AUI_MODULE_NAME})
+    if (AUIB_IMPORT_PRECOMPILED_URL_PREFIX)
+        set(_binary_download_urls "${AUIB_IMPORT_PRECOMPILED_URL_PREFIX}/${_archive_name}.tar.gz")
+        message(STATUS "Checking for precompiled binary...")
+    else()
+        if (TAG_OR_HASH STREQUAL "latest")
+            set(TAG_OR_HASH master)
+        endif()
+        set(_binary_download_urls "${URL}/releases/download/${TAG_OR_HASH}/${_archive_name}.tar.gz" "${URL}/releases/download/refs%2Fheads%2F${TAG_OR_HASH}/${_archive_name}.tar.gz")
+        message(STATUS "GitHub detected, checking for precompiled binary...")
+    endif()
+
+    foreach(_binary_download_url ${_binary_download_urls})
+        if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.19)
+            # since CMake 3.19 there's a way to check for file existence
+
+            file(DOWNLOAD ${_binary_download_url} STATUS _status)
+            list(GET _status 0 _status)
+            if (NOT _status STREQUAL 0)
+                continue()
+            endif()
+        endif()
+
+        file(DOWNLOAD ${_binary_download_url} ${CMAKE_CURRENT_BINARY_DIR}/binary.tar.gz SHOW_PROGRESS STATUS _status)
+        list(GET _status 0 _status)
+        if (NOT _status STREQUAL 0)
+            continue()
+        endif()
+
+        message(STATUS "Unpacking precompiled binary for ${AUI_MODULE_NAME}...")
+        file(MAKE_DIRECTORY ${DEP_INSTALL_PREFIX})
+        execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_BINARY_DIR}/binary.tar.gz
+                        WORKING_DIRECTORY ${DEP_INSTALL_PREFIX})
+
+        _auib_try_find()
+
+        file(REMOVE ${CMAKE_CURRENT_BINARY_DIR}/binary.tar.gz)
+
+        if (${AUI_MODULE_NAME}_FOUND)
+            set(_skip_compilation TRUE PARENT_SCOPE)
+            file(TOUCH ${DEP_INSTALLED_FLAG})
+            return()
+        endif()
+    endforeach()
+    message(STATUS "Precompiled binary for ${AUI_MODULE_NAME} is not available")
+endfunction()
+
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
-    if (AUI_BOOT_DISABLE)
+    if (AUIB_DISABLE)
         if (AUIB_IMPORT_COMPONENTS)
             find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} REQUIRED)
         else()
@@ -194,9 +347,10 @@ function(auib_import AUI_MODULE_NAME URL)
         set(ONLY_CMAKE_FIND_ROOT_PATH TRUE)
     endif()
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH FALSE)
+    set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
 
-    set(options ADD_SUBDIRECTORY ARCHIVE)
-    set(oneValueArgs VERSION CMAKE_WORKING_DIR)
+    set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY)
+    set(oneValueArgs VERSION CMAKE_WORKING_DIR CMAKELISTS_CUSTOM PRECOMPILED_URL_PREFIX LINK)
     set(multiValueArgs CMAKE_ARGS COMPONENTS)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
@@ -205,27 +359,17 @@ function(auib_import AUI_MODULE_NAME URL)
         message(FATAL_ERROR "ARCHIVE and VERSION arguments are incompatible")
     endif()
 
-    if (AUIB_${AUI_MODULE_NAME_UPPER}_AS OR AUIB_ALL_AS)
+    if (AUIB_${AUI_MODULE_NAME_UPPER}_AS OR AUIB_ALL_AS OR AUIB_IMPORT_ADD_SUBDIRECTORY)
         set(DEP_ADD_SUBDIRECTORY TRUE)
     else()
         set(DEP_ADD_SUBDIRECTORY FALSE)
     endif()
-    if (_local_repo)
-        set(URL_PATH ${AUI_MODULE_NAME_LOWER})
-    else()
-        # find url path by removing url protocol section (i.e. http://)
-        string(REGEX REPLACE "[a-z]+:\\/\\/" "" URL_PATH ${URL})
-    endif()
 
-    # we need only last dir name from URL_PATH (i.e. aui-framework/aui -> aui)
-    string(FIND "${URL_PATH}" "/" _t REVERSE)
-    math(EXPR _t "${_t} + 1") # t += 1
-    string(SUBSTRING ${URL_PATH} ${_t} -1 URL_PATH)
-
+    set(AUI_MODULE_PREFIX ${AUI_MODULE_NAME_LOWER})
 
     set(TAG_OR_HASH latest)
     if (AUIB_IMPORT_ARCHIVE)
-        set(TAG_OR_HASH ${URL_PATH})
+        set(TAG_OR_HASH ${AUI_MODULE_PREFIX})
     elseif (AUIB_IMPORT_HASH)
         set(TAG_OR_HASH ${AUIB_IMPORT_HASH})
     elseif(AUIB_IMPORT_VERSION)
@@ -246,10 +390,26 @@ function(auib_import AUI_MODULE_NAME URL)
         # default it to ON
         set(BUILD_SHARED_LIBS ON)
     endif()
-    if (BUILD_SHARED_LIBS)
+
+    # process LINK argument
+    if (AUIB_IMPORT_LINK)
+        if (AUIB_IMPORT_LINK STREQUAL "STATIC")
+            set(_build_shared_libs FALSE)
+        elseif (AUIB_IMPORT_LINK STREQUAL "SHARED")
+            set(_build_shared_libs TRUE)
+        else()
+            message(FATAL_ERROR "invalid value \"${AUIB_IMPORT_LINK}\" for LINK argument")
+        endif()
+    else()
+        set(_build_shared_libs ${BUILD_SHARED_LIBS})
+    endif()
+
+
+    if (_build_shared_libs)
         set(SHARED_OR_STATIC shared)
     else()
         set(SHARED_OR_STATIC static)
+        set(CMAKE_POSITION_INDEPENDENT_CODE ON) # -fPIC required on linux
     endif()
     set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_GENERATOR}")
 
@@ -272,46 +432,43 @@ function(auib_import AUI_MODULE_NAME URL)
 
     if (DEP_ADD_SUBDIRECTORY)
         # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project's name
-        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME_LOWER}")
+        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}/${AUI_MODULE_NAME_LOWER}")
     else()
-        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/src")
+        set(DEP_SOURCE_DIR "${AUI_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
     endif()
-    set(DEP_BINARY_DIR "${AUI_CACHE_DIR}/repo/${URL_PATH}/build/${BUILD_SPECIFIER}")
+    set(DEP_BINARY_DIR "${AUI_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
+
+    # invalidate all previous values.
+    foreach(_v2 FOUND
+            INCLUDE_DIR
+            LIBRARY
+            LIBRARY_DEBUG
+            LIBRARY_RELEASE
+            ROOT
+            DIR)
+        foreach(_v1 ${AUI_MODULE_NAME} ${AUI_MODULE_NAME_UPPER})
+            unset(${_v1}_${_v2} PARENT_SCOPE)
+            unset(${_v1}_${_v2} CACHE)
+        endforeach()
+    endforeach()
+
+    # variable is CACHE here in order to make it as global as possible.
     set(${AUI_MODULE_NAME}_ROOT ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
+    set(${AUI_MODULE_NAME}_ROOT_DIR ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
     # creating uppercase variables in order to ease the case insensitive checks
     set(${AUI_MODULE_NAME}_DIR ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
     set(${AUI_MODULE_NAME_UPPER}_DIR ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
     set(${AUI_MODULE_NAME_UPPER}_ROOT ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
+    set(${AUI_MODULE_NAME_UPPER}_ROOT_DIR ${DEP_INSTALL_PREFIX} PARENT_SCOPE)
+    set(${AUI_MODULE_NAME_UPPER}_ROOT_DIR ${DEP_INSTALL_PREFIX} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} provided by AUI.Boot.")
 
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
+
     if (NOT DEP_ADD_SUBDIRECTORY)
         # avoid compilation if we have existing installation
         if (EXISTS ${DEP_INSTALLED_FLAG})
-            # BEGIN: try find
-            while(TRUE)
-                if (AUIB_IMPORT_COMPONENTS)
-                    find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} ${FINDPACKAGE_QUIET})
-                else()
-                    find_package(${AUI_MODULE_NAME} ${FINDPACKAGE_QUIET})
-                endif()
-                if (NOT (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND))
-                    if (CMAKE_FIND_PACKAGE_PREFER_CONFIG)
-                        break()
-                    endif()
-                    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
-                else()
-                    break()
-                endif()
-            endwhile()
-            unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG)
-            # expose result ignoring case sensitivity
-            if (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND)
-                set(${AUI_MODULE_NAME}_FOUND TRUE)
-            else()
-                set(${AUI_MODULE_NAME}_FOUND FALSE)
-            endif()
-            # END: try find
+            _auib_try_find()
         endif()
     endif()
     if ((NOT EXISTS ${DEP_INSTALLED_FLAG} OR NOT ${AUI_MODULE_NAME}_FOUND AND NOT DEP_ADD_SUBDIRECTORY) OR ((NOT EXISTS ${DEP_SOURCE_DIR}/CMakeLists.txt) AND DEP_ADD_SUBDIRECTORY))
@@ -329,11 +486,13 @@ function(auib_import AUI_MODULE_NAME URL)
             endif()
         endif()
 
+        set(${AUI_MODULE_NAME}_FOUND FALSE) # reset the FOUND flag; in some cases it may have been TRUE here
+
         # TODO add protocol check
         if(AUI_BOOT_SOURCEDIR_COMPAT)
             unset(SOURCE_BINARY_DIRS_ARG)
         else()
-            if (NOT AUI_BOOT) # recursive deadlock fix
+            if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT) # recursive deadlock fix
                 if (NOT _locked)
                     set(_locked TRUE)
                     message(STATUS "Waiting for repository...")
@@ -352,242 +511,270 @@ function(auib_import AUI_MODULE_NAME URL)
             get_filename_component(DEP_SOURCE_DIR ${URL} ABSOLUTE)
             message(STATUS "Using local: ${DEP_SOURCE_DIR}")
         else()
-            include(FetchContent)
+            unset(_skip_compilation) # set by _auib_try_download_precompiled_binary
 
-            if (AUIB_IMPORT_ARCHIVE)
-                set(_import_type URL)
-            else()
-                set(_import_type GIT_REPOSITORY)
+            # check for GitHub Release
+            if ((URL MATCHES "^https://github.com/" OR AUIB_IMPORT_PRECOMPILED_URL_PREFIX) AND NOT AUIB_NO_PRECOMPILED)
+                _auib_try_download_precompiled_binary()
             endif()
 
-            FetchContent_Declare(${AUI_MODULE_NAME}_FC
-                    PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
-                    ${_import_type} "${URL}"
-                    GIT_TAG ${AUIB_IMPORT_VERSION}
-                    GIT_PROGRESS TRUE # show progress of download
-                    USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
-                    USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
-                    ${SOURCE_BINARY_DIRS_ARG}
-                    )
+            if (NOT _skip_compilation)
+                include(FetchContent)
 
-            FetchContent_Populate(${AUI_MODULE_NAME}_FC)
+                if (AUIB_IMPORT_ARCHIVE)
+                    set(_import_type URL)
+                else()
+                    set(_import_type GIT_REPOSITORY)
+                endif()
+
+                FetchContent_Declare(${AUI_MODULE_NAME}_FC
+                        PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
+                        ${_import_type} "${URL}"
+                        GIT_TAG ${AUIB_IMPORT_VERSION}
+                        GIT_PROGRESS TRUE # show progress of download
+                        USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
+                        USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
+                        ${SOURCE_BINARY_DIRS_ARG}
+                        )
+
+                FetchContent_Populate(${AUI_MODULE_NAME}_FC)
 
 
-            FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
-                    BINARY_DIR DEP_BINARY_DIR
-                    SOURCE_DIR DEP_SOURCE_DIR
-                    )
-            message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+                FetchContent_GetProperties(${AUI_MODULE_NAME}_FC
+                        BINARY_DIR DEP_BINARY_DIR
+                        SOURCE_DIR DEP_SOURCE_DIR
+                        )
+                message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+            else()
+                if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
+                    if (NOT AUI_BOOT) # recursive deadlock fix
+                        file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+                    endif()
+                endif()
+            endif()
         endif()
 
-        if (NOT DEP_ADD_SUBDIRECTORY)
-            message(STATUS "Compiling ${AUI_MODULE_NAME}")
+        if (NOT _skip_compilation)
             if (AUIB_IMPORT_CMAKE_WORKING_DIR)
                 set(DEP_SOURCE_DIR "${DEP_SOURCE_DIR}/${AUIB_IMPORT_CMAKE_WORKING_DIR}")
             endif()
 
-            get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
-            unset(FORWARDED_LIBS)
-            foreach (_entry ${AUI_BOOT_ROOT_ENTRIES})
-                list(APPEND FORWARDED_LIBS "-D${_entry}")
-            endforeach()
-            set(FINAL_CMAKE_ARGS
-                    -DAUI_BOOT=TRUE
-                    ${FORWARDED_LIBS}
-                    ${AUIB_IMPORT_CMAKE_ARGS}
-                    -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
-                    -G "${CMAKE_GENERATOR}")
-
-            if (AUIB_IMPORT_COMPONENTS)
-                list(JOIN AUIB_IMPORT_COMPONENTS "\\\;" TMP_LIST)
-                set(FINAL_CMAKE_ARGS
-                        ${FINAL_CMAKE_ARGS}
-                        -DAUI_BOOT_COMPONENTS=${TMP_LIST})
-            endif()
-
-            if(ANDROID)
-                set(ANDROID_VARS
-                        CMAKE_SYSTEM_NAME
-                        CMAKE_EXPORT_COMPILE_COMMANDS
-                        CMAKE_SYSTEM_VERSION
-                        ANDROID_PLATFORM
-                        ANDROID_ABI
-                        CMAKE_ANDROID_ARCH_ABI
-                        ANDROID_NDK
-                        CMAKE_ANDROID_NDK
-                        )
-            endif()
-
-
-            if(MSVC)
-                # force msvc compiler to parallel build
-                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
-                set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
-            endif()
-
-            if (IOS)
-                # fix multiple definitions on ios
-                set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error-implicit-function-declaration")
-            endif()
-
-            # forward all necessary variables to child cmake build
-            foreach(_varname
-                    AUI_CACHE_DIR
-                    CMAKE_C_FLAGS
-                    CMAKE_CXX_FLAGS
-                    CMAKE_GENERATOR_PLATFORM
-                    CMAKE_VS_PLATFORM_NAME
-                    CMAKE_BUILD_TYPE
-                    CMAKE_CROSSCOMPILING
-                    CMAKE_MACOSX_RPATH
-                    CMAKE_INSTALL_NAME_DIR
-                    CMAKE_INSTALL_RPATH
-                    CMAKE_MAKE_PROGRAM
-                    CMAKE_MSVC_RUNTIME_LIBRARY
-                    CMAKE_FIND_PACKAGE_PREFER_CONFIG
-                    CMAKE_FIND_ROOT_PATH_MODE_PROGRAM
-                    CMAKE_FIND_ROOT_PATH_MODE_LIBRARY
-                    CMAKE_FIND_ROOT_PATH_MODE_INCLUDE
-                    CMAKE_FIND_ROOT_PATH_MODE_PACKAGE
-                    ONLY_CMAKE_FIND_ROOT_PATH
-                    ${ANDROID_VARS})
-
-                # ${_varname} can be possibly false (e.g. -DBUILD_SHARED_LIBS=FALSE) so using STREQUAL check instead for
-                # emptiness
-                if (NOT ${_varname} STREQUAL "")
-                    list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
+            if (NOT DEP_ADD_SUBDIRECTORY)
+                if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
+                    configure_file(${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${DEP_SOURCE_DIR}/CMakeLists.txt COPYONLY)
                 endif()
-            endforeach()
-            if (CMAKE_TOOLCHAIN_FILE) # resolve absolute path to the toolchain file - it's possibly relative thus invalid
-                get_filename_component(_toolchain ${CMAKE_TOOLCHAIN_FILE} ABSOLUTE)
-                list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_TOOLCHAIN_FILE=${_toolchain}")
-            endif()
-            list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS}")
 
-            message("Configuring CMake ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
-            execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
-                    WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                    RESULT_VARIABLE STATUS_CODE)
+                message(STATUS "Compiling ${AUI_MODULE_NAME}")
 
-            if (NOT STATUS_CODE EQUAL 0)
-                message(STATUS "Dependency CMake configure failed, clearing dir and trying again...")
-                file(REMOVE_RECURSE ${DEP_BINARY_DIR})
-                file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
+                get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
+                unset(FORWARDED_LIBS)
+                foreach (_entry ${AUI_BOOT_ROOT_ENTRIES})
+                    list(APPEND FORWARDED_LIBS "-D${_entry}")
+                endforeach()
+                set(FINAL_CMAKE_ARGS
+                        -DAUI_BOOT=TRUE
+                        ${FORWARDED_LIBS}
+                        ${AUIB_IMPORT_CMAKE_ARGS}
+                        -DCMAKE_INSTALL_PREFIX:PATH=${DEP_INSTALL_PREFIX}
+                        -G "${CMAKE_GENERATOR}")
+
+                if (AUIB_IMPORT_COMPONENTS)
+                    list(JOIN AUIB_IMPORT_COMPONENTS "\\\;" TMP_LIST)
+                    set(FINAL_CMAKE_ARGS
+                            ${FINAL_CMAKE_ARGS}
+                            -DAUIB_COMPONENTS=${TMP_LIST})
+                endif()
+
+                unset(_forwardable_vars)
+                get_property(_forwardable_vars GLOBAL PROPERTY AUIB_FORWARDABLE_VARS)
+                if(ANDROID)
+                    list(APPEND _forwardable_vars
+                            CMAKE_SYSTEM_NAME
+                            CMAKE_EXPORT_COMPILE_COMMANDS
+                            CMAKE_SYSTEM_VERSION
+                            ANDROID_PLATFORM
+                            ANDROID_ABI
+                            CMAKE_ANDROID_ARCH_ABI
+                            ANDROID_NDK
+                            CMAKE_ANDROID_NDK
+                            )
+                endif()
+
+                get_cmake_property(CACHE_VARS CACHE_VARIABLES)
+
+                foreach(CACHE_VAR ${CACHE_VARS})
+                    if(_forwardable)
+                        list(APPEND _forwardable_vars ${CACHE_VAR})
+                    endif()
+                endforeach()
+
+
+                if(MSVC)
+                    # force msvc compiler to parallel build
+                    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /MP")
+                    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /MP")
+                endif()
+
+                if (IOS)
+                    # fix multiple definitions on ios
+                    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error-implicit-function-declaration")
+                endif()
+
+                # forward all necessary variables to child cmake build
+                foreach(_varname
+                        AUIB_NO_PRECOMPILED
+                        AUIB_SKIP_REPOSITORY_WAIT
+                        AUI_CACHE_DIR
+                        CMAKE_C_FLAGS
+                        CMAKE_CXX_FLAGS
+                        CMAKE_GENERATOR_PLATFORM
+                        CMAKE_VS_PLATFORM_NAME
+                        CMAKE_BUILD_TYPE
+                        CMAKE_CROSSCOMPILING
+                        CMAKE_MACOSX_RPATH
+                        CMAKE_INSTALL_NAME_DIR
+                        CMAKE_INSTALL_RPATH
+                        CMAKE_MAKE_PROGRAM
+                        CMAKE_MSVC_RUNTIME_LIBRARY
+                        CMAKE_FIND_PACKAGE_PREFER_CONFIG
+                        CMAKE_FIND_ROOT_PATH_MODE_PROGRAM
+                        CMAKE_FIND_ROOT_PATH_MODE_LIBRARY
+                        CMAKE_FIND_ROOT_PATH_MODE_INCLUDE
+                        CMAKE_FIND_ROOT_PATH_MODE_PACKAGE
+                        ONLY_CMAKE_FIND_ROOT_PATH
+                        PLATFORM
+                        CMAKE_OSX_ARCHITECTURES
+                        XCODE_VERSION
+                        SDK_VERSION
+                        APPLE_TARGET_TRIPLE
+                        CMAKE_POSITION_INDEPENDENT_CODE
+                        ${_forwardable_vars})
+
+                    # ${_varname} can be possibly false (e.g. -DBUILD_SHARED_LIBS=FALSE) so using STREQUAL check instead for
+                    # emptiness
+                    if (NOT ${_varname} STREQUAL "")
+                        list(APPEND FINAL_CMAKE_ARGS "-D${_varname}=${${_varname}}")
+                    endif()
+                endforeach()
+                if (CMAKE_TOOLCHAIN_FILE) # resolve absolute path to the toolchain file - it's possibly relative thus invalid
+                    get_filename_component(_toolchain ${CMAKE_TOOLCHAIN_FILE} ABSOLUTE)
+                    list(APPEND FINAL_CMAKE_ARGS "-DCMAKE_TOOLCHAIN_FILE=${_toolchain}")
+                endif()
+                list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${_build_shared_libs}")
+
+                message("Configuring CMake ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
                 execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE STATUS_CODE)
+
                 if (NOT STATUS_CODE EQUAL 0)
-                    message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}")
+                    message(STATUS "Dependency CMake configure failed, clearing dir and trying again...")
+                    file(REMOVE_RECURSE ${DEP_BINARY_DIR})
+                    file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
+                    execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
+                            WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                            RESULT_VARIABLE STATUS_CODE)
+                    if (NOT STATUS_CODE EQUAL 0)
+                        message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}")
+                    endif()
                 endif()
+
+                message(STATUS "Building ${AUI_MODULE_NAME}")
+
+                set(_flags "")
+                if (NOT MSVC)
+                    LIST(APPEND _flags "--parallel") # --parallel breaks multithread build for MSVC
+                endif()
+
+                execute_process(COMMAND
+                        ${CMAKE_COMMAND}
+                        --build ${DEP_BINARY_DIR} ${_flags}
+                        --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
+
+                        WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                        RESULT_VARIABLE ERROR_CODE)
+
+                if (NOT STATUS_CODE EQUAL 0)
+                    message(FATAL_ERROR "Dependency build failed: ${AUI_MODULE_NAME}")
+                endif()
+
+                message(STATUS "Installing ${AUI_MODULE_NAME}")
+                execute_process(COMMAND
+                        ${CMAKE_COMMAND}
+                        --install .
+                        --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
+
+                        WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                        RESULT_VARIABLE ERROR_CODE)
+
+                if (NOT STATUS_CODE EQUAL 0)
+                    message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
+                endif()
+                if (NOT EXISTS ${DEP_INSTALL_PREFIX})
+                    message(FATAL_ERROR "Dependency failed to install: ${AUI_MODULE_NAME} - check the compilation and installation logs above")
+                endif()
+                file(TOUCH ${DEP_INSTALLED_FLAG})
             endif()
-
-            message(STATUS "Building ${AUI_MODULE_NAME}")
-
-            set(_flags "")
-            if (NOT MSVC)
-                LIST(APPEND _flags "--parallel") # --parallel breaks multithread build for MSVC
-            endif()
-
-            execute_process(COMMAND
-                    ${CMAKE_COMMAND}
-                    --build ${DEP_BINARY_DIR} ${_flags}
-                    --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
-
-                    WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                    RESULT_VARIABLE ERROR_CODE)
-
-            if (NOT STATUS_CODE EQUAL 0)
-                message(FATAL_ERROR "Dependency build failed: ${AUI_MODULE_NAME}")
-            endif()
-
-            message(STATUS "Installing ${AUI_MODULE_NAME}")
-            execute_process(COMMAND
-                    ${CMAKE_COMMAND}
-                    --install .
-                    --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
-
-                    WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                    RESULT_VARIABLE ERROR_CODE)
-
-            if (NOT STATUS_CODE EQUAL 0)
-                message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
-            endif()
-            file(TOUCH ${DEP_INSTALLED_FLAG})
-            if (NOT EXISTS ${DEP_INSTALLED_FLAG})
-                message(FATAL_ERROR "Dependency failed to install: ${AUI_MODULE_NAME} - check the compilation and installation logs above")
-            endif()
-        endif()
-        if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
-            if (NOT AUI_BOOT) # recursive deadlock fix
-                file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+            if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
+                if (NOT AUI_BOOT) # recursive deadlock fix
+                    file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
+                endif()
             endif()
         endif()
     endif()
     if (DEP_ADD_SUBDIRECTORY)
         set(${AUI_MODULE_NAME}_ROOT ${DEP_SOURCE_DIR})
+        if (AUIB_IMPORT_CMAKELISTS_CUSTOM)
+            configure_file(${AUIB_IMPORT_CMAKELISTS_CUSTOM} ${DEP_SOURCE_DIR}/CMakeLists.txt COPYONLY)
+        endif()
         _auib_import_subdirectory(${DEP_SOURCE_DIR} ${AUI_MODULE_NAME})
         message(STATUS "${AUI_MODULE_NAME} imported as a subdirectory: ${DEP_SOURCE_DIR}")
-    else()
-        # BEGIN: try find
-        while(TRUE)
-            if (AUIB_IMPORT_COMPONENTS)
-                find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} ${FINDPACKAGE_QUIET})
-            else()
-                find_package(${AUI_MODULE_NAME} ${FINDPACKAGE_QUIET})
-            endif()
-            if (NOT (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND))
-                if (CMAKE_FIND_PACKAGE_PREFER_CONFIG)
-                    break()
-                endif()
-                set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
-            else()
-                break()
-            endif()
-        endwhile()
-        unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG)
-        # expose result ignoring case sensitivity
-        if (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND)
-            set(${AUI_MODULE_NAME}_FOUND TRUE)
-        else()
-            set(${AUI_MODULE_NAME}_FOUND FALSE)
-        endif()
-        # END: try find
+    elseif(NOT ${AUI_MODULE_NAME}_FOUND)
+        _auib_try_find()
+
         if (NOT ${AUI_MODULE_NAME}_FOUND)
             # print verbosely find procedure
 
             set(CMAKE_FIND_DEBUG_MODE TRUE)
-            # BEGIN: try find
+
+            # a slight modified _auib_try_find macro to verbosely print debug info
+            set(_mode CONFIG)
             message("[AUI.BOOT] Verbose output:")
             while(TRUE)
                 if (AUIB_IMPORT_COMPONENTS)
-                    find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} ${FINDPACKAGE_QUIET})
+                    find_package(${AUI_MODULE_NAME} COMPONENTS ${AUIB_IMPORT_COMPONENTS} ${FINDPACKAGE_QUIET} ${_mode})
                 else()
-                    find_package(${AUI_MODULE_NAME} ${FINDPACKAGE_QUIET})
+                    find_package(${AUI_MODULE_NAME} ${FINDPACKAGE_QUIET} ${_mode})
                 endif()
                 if (NOT (${AUI_MODULE_NAME}_FOUND OR ${AUI_MODULE_NAME_UPPER}_FOUND))
-                    if (CMAKE_FIND_PACKAGE_PREFER_CONFIG)
+                    if (_mode STREQUAL MODULE)
                         message("[AUI.BOOT] Dependency not found - giving up")
                         break()
                     endif()
-                    set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
+                    if (AUIB_IMPORT_CONFIG_ONLY)
+                        break()
+                    else()
+                        set(_mode MODULE)
+                    endif()
                     message("[AUI.BOOT] Using config instead")
                 else()
                     break()
                 endif()
             endwhile()
-            unset(CMAKE_FIND_PACKAGE_PREFER_CONFIG)
+            unset(_mode)
 
             # list possible find_package names if available
             file(GLOB_RECURSE _find "${DEP_INSTALL_PREFIX}/*onfig.cmake")
             unset(possible_names)
             foreach(_i ${_find})
                 get_filename_component(_name ${_i} NAME)
-                string(REGEX REPLACE "([Cc]onfig)\\.cmake" "" _name ${_name})
-                list(APPEND possible_names "${_name}")
+                string(REGEX REPLACE "-?([Cc]onfig)\\.cmake" "" _name ${_name})
+                list(APPEND possible_names "\"${_name}\"")
             endforeach()
 
             # construct error message
             set(error_message "AUI.Boot could not resolve dependency: ${AUI_MODULE_NAME} (see verbose find output above)")
+            set(error_message "${error_message}\nnote: package names are case sensitive")
             if (possible_names)
                 string(JOIN " or " possible_names_joined ${possible_names})
                 set(error_message "${error_message}\nnote: did you mean " ${possible_names_joined} ?)
@@ -596,54 +783,9 @@ function(auib_import AUI_MODULE_NAME URL)
             endif()
             message(FATAL_ERROR ${error_message})
         endif()
-
-        # create links to runtime dependencies
-        if (WIN32)
-            set(LIB_EXT dll)
-        elseif(APPLE)
-            set(LIB_EXT dylib)
-        else()
-            set(LIB_EXT so*)
-        endif()
-        file(GLOB_RECURSE DEP_RUNTIME LIST_DIRECTORIES false ${DEP_INSTALL_PREFIX}/*.${LIB_EXT})
-
-        if (WIN32)
-            # sometimes it's empty
-            if (NOT CMAKE_RUNTIME_OUTPUT_DIRECTORY)
-                set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
-            endif()
-
-            set(DESTINATION_DIR ${CMAKE_RUNTIME_OUTPUT_DIRECTORY})
-        else()
-            # sometimes it's empty
-            if (NOT CMAKE_LIBRARY_OUTPUT_DIRECTORY)
-                set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-            endif()
-
-            set(DESTINATION_DIR ${CMAKE_LIBRARY_OUTPUT_DIRECTORY})
-        endif()
-
-        if (NOT EXISTS ${DESTINATION_DIR})
-            file(MAKE_DIRECTORY ${DESTINATION_DIR})
-        endif()
-        foreach(_item ${DEP_RUNTIME})
-            get_filename_component(FILENAME ${_item} NAME)
-            if (CMAKE_CONFIGURATION_TYPES)
-                foreach(_config ${CMAKE_CONFIGURATION_TYPES})
-                    set(_copy ${DESTINATION_DIR}/${_config}/${FILENAME})
-                    if (NOT EXISTS ${_copy})
-                        file(MAKE_DIRECTORY ${DESTINATION_DIR}/${_config})
-                        file(COPY ${_item} DESTINATION ${DESTINATION_DIR}/${_config})
-                    endif()
-                endforeach()
-            else()
-                if (NOT EXISTS ${DESTINATION_DIR}/${FILENAME})
-                    message(VERBOSE "[AUI.BOOT] ${_item} -> ${DESTINATION_DIR}/${FILENAME}")
-                    file(COPY ${_item} DESTINATION ${DESTINATION_DIR})
-                endif()
-            endif()
-        endforeach()
     endif()
+
+    _auib_copy_runtime_dependencies()
 
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
@@ -662,8 +804,24 @@ endfunction()
 macro(auib_use_system_libs_begin)
     set(AUIB_PREV_CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${CMAKE_FIND_USE_CMAKE_SYSTEM_PATH})
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH TRUE)
+    set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH TRUE)
 endmacro()
 
 macro(auib_use_system_libs_end)
     set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ${AUIB_PREV_CMAKE_FIND_USE_CMAKE_SYSTEM_PATH})
+    set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
+endmacro()
+
+macro(auib_precompiled_binary)
+    set(CPACK_GENERATOR "TGZ")
+    _auib_precompiled_archive_name(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME})
+    message(STATUS "[AUI.BOOT] Output precompiled archive name: ${CPACK_PACKAGE_FILE_NAME}")
+    set(CPACK_VERBATIM_VARIABLES YES)
+    set(CPACK_INCLUDE_TOPLEVEL_DIRECTORY OFF)
+    include(CPack)
+endmacro()
+
+
+macro(auib_mark_var_forwardable VAR)
+    set_property(GLOBAL APPEND PROPERTY AUIB_FORWARDABLE_VARS ${VAR})
 endmacro()

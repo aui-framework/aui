@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2772 on 9/10/20.
@@ -72,7 +67,7 @@ static APath safePathFromRawString(const char* rawString, Callback&& throwExcept
 APath APath::parent() const {
     auto c = ensureNonSlashEnding().rfind(L'/');
     if (c != NPOS) {
-        return mid(0, c);
+        return substr(0, c);
     }
     return {};
 }
@@ -82,7 +77,7 @@ AString APath::filename() const {
      if (i == NPOS) {
          return *this;
      }
-    return mid(i + 1);
+    return substr(i + 1);
 }
 
 AString APath::filenameWithoutExtension() const {
@@ -91,7 +86,7 @@ AString APath::filenameWithoutExtension() const {
     if (it == NPOS) {
         return name;
     }
-    return name.mid(0, it);
+    return name.substr(0, it);
 }
 
 APath APath::file(const AString& fileName) const {
@@ -107,7 +102,7 @@ APath APath::ensureSlashEnding() const {
 
 APath APath::ensureNonSlashEnding() const {
     if (endsWith("/")) {
-        return mid(0, length() - 1);
+        return substr(0, length() - 1);
     }
     return *this;
 }
@@ -116,12 +111,12 @@ AString APath::relativelyTo(const APath& dir) const {
     if (isAbsolute() == dir.isAbsolute()) {
         auto f = dir.ensureSlashEnding();
         assert(startsWith(f));
-        return mid(f.length());
+        return substr(f.length());
     }
     auto meButAbsolute = absolute();
     auto f = dir.absolute().ensureSlashEnding();
     assert(meButAbsolute.startsWith(f));
-    return meButAbsolute.mid(f.length());
+    return meButAbsolute.substr(f.length());
 }
 bool APath::exists() const {
     return stat().st_mode & (S_IFDIR | S_IFREG);
@@ -205,9 +200,9 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
             for (auto& file : childDir.listDir(f)) {
                 if (file.startsWith(childDir)) {
                     // absolute path
-                    auto p = file.mid(childDir.length());
+                    auto p = file.substr(childDir.length());
                     if (p.startsWith("/")) {
-                        p = p.mid(1);
+                        p = p.substr(1);
                     }
                     list << childDir.file(p);
                 } else {
@@ -337,7 +332,7 @@ APath APath::withoutUppermostFolder() const {
     auto r = AString::find('/');
     if (r == NPOS)
         return *this;
-    return mid(r + 1);
+    return substr(r + 1);
 }
 
 APath APath::workingDir() {
@@ -362,9 +357,9 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
     switch (path) {
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
         case APPDATA:
-            return APath(".").absolute()["__aui_appdata"];
+            return APath(".").absolute() / "__aui_appdata";
         case TEMP:
-            return APath(".").absolute()["__aui_tmp"];
+            return APath(".").absolute() / "__aui_tmp";
 #else
         case APPDATA:
             return getDefaultPath(HOME) / ".local/share";

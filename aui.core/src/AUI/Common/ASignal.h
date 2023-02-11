@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -42,16 +37,22 @@ class ASignal final: public AAbstractSignal
     friend class AWatchable;
 public:
     using func_t = std::function<void(Args...)>;
+    using args_t = std::tuple<Args...>;
 
 private:
     struct slot
     {
         AObject* object; // TODO replace with weak_ptr
         func_t func;
+
+        [[nodiscard]]
+        bool operator==(const slot& rhs) const noexcept {
+            return object == rhs.object && func.target_type() == rhs.func.target_type();
+        }
     };
 
-    AMutex mSlotsLock;
-    ADeque<slot> mSlots;
+    std::recursive_mutex mSlotsLock;
+    AVector<slot> mSlots;
 
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
 
@@ -201,9 +202,9 @@ public:
     {
         clearAllConnectionsIf([](const auto&){ return true; });
     }
-    void clearAllConnectionsWith(AObject* object) noexcept override
+    void clearAllConnectionsWith(aui::no_escape<AObject> object) noexcept override
     {
-        clearAllConnectionsIf([&](const slot& p){ return p.object == object; });
+        clearAllConnectionsIf([&](const slot& p){ return p.object == object.ptr(); });
     }
 
 private:
@@ -245,10 +246,11 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
     }
 
     std::unique_lock lock(mSlotsLock);
-    for (auto i = mSlots.begin(); i != mSlots.end();)
+    auto slots = std::move(mSlots); // needed to safely unlock the mutex
+    for (auto i = slots.begin(); i != slots.end();)
     {
         auto receiverWeakPtr = weakPtrFromObject(i->object);
-        if (i->object->getThread() != AThread::current())
+        if (i->object->isSlotsCallsOnlyOnMyThread() && i->object->getThread() != AThread::current())
         {
             // perform crossthread call; should make weak ptr to the object and queue call to thread message queue
 
@@ -269,6 +271,8 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
                         if (AAbstractSignal::isDisconnected()) {
                             std::unique_lock lock(mSlotsLock);
                             unlinkSlot(receiverPtr.get());
+                            slot s = { receiverPtr.get(), func };
+                            mSlots.removeFirst(s);
                         }
                     }
                 });
@@ -286,14 +290,21 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
             (std::apply)(i->func, args);
             if (AAbstractSignal::isDisconnected()) {
                 unlinkSlot(i->object);
-                i = mSlots.erase(i);
-                continue;
+                i = slots.erase(i);
+            } else {
+                ++i;
             }
-            ++i;
         }
     }
-    (void)emitterPtr;  // silence "unused variable" warning
-    (void)receiverPtr; //
+    AUI_MARK_AS_USED(emitterPtr);
+    AUI_MARK_AS_USED(receiverPtr);
+
+    if (mSlots.empty()) {
+        mSlots = std::move(slots);
+    } else {
+        mSlots.insert(mSlots.begin(), std::make_move_iterator(slots.begin()), std::make_move_iterator(slots.end()));
+    }
+
     AAbstractSignal::isDisconnected() = false;
 }
 

@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2772 on 11/6/20.
@@ -44,7 +39,7 @@ void Pack::run(Toolbox& t) {
 
         APath entry(t.args[2]);
         AString assetPath = APath(t.args[1]).absolute();
-        assetPath = assetPath.mid(APath(t.args[0]).absolute().length() + 1);
+        assetPath = assetPath.substr(APath(t.args[0]).absolute().length() + 1);
         assetPath = assetPath.replacedAll("\\", '/');
         doPacking(t.args[1], assetPath, entry);
     }
@@ -96,7 +91,7 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
             AString actualBeginning = t.readString(desiredBeginning.length());
             if (actualBeginning == desiredBeginning) {
                 // our client.
-                auto targetFileName = t.readStringUntilUnescaped('\n');
+                auto targetFileName = AString(t.readStringUntilUnescaped('\n'));
                 if (targetFileName != assetPath) {
                     std::cout << "command line input file path " << assetPath << " does not match with the "
                                                                                  "file path stored in " << outputCpp << "; please use another file name for cpp in "
@@ -110,7 +105,7 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
             actualBeginning = t.readString(desiredBeginning.length());
             if (actualBeginning == desiredBeginning) {
                 // our client.
-                auto targetFileHash = t.readStringUntilUnescaped('\n');
+                auto targetFileHash = AString(t.readStringUntilUnescaped('\n'));
                 if (targetFileHash == fileHash) {
                     std::cout << "skipped " << assetPath << std::endl;
                     return;
@@ -135,14 +130,25 @@ void Pack::doPacking(const AString& inputFile, const AString& assetPath, const A
                                                                              "#include \"AUI/Common/AByteBuffer.h\"\n"
                                                                              "#include \"AUI/Util/ABuiltinFiles.h\"\n"
                                                                              "const static unsigned char AUI_PACKED_asset" << cppObjectName
-             << "[] = {";
+             << "[] = ";
+
+#if AUI_PLATFORM_WIN
+        out << "{";
         for (uint8_t c : packed) {
             char buf[32];
             sprintf(buf, "0x%02x,", c);
             out << std::string(buf);
         }
         out << "};\n";
-
+#else
+        out << "\"";
+        for (uint8_t c : packed) {
+            char buf[32];
+            sprintf(buf, "\\x%02x", c);
+            out << std::string(buf);
+        }
+        out << "\";\n";
+#endif
 
         out << "struct Assets" << cppObjectName << " {\n"
              << "    Assets" << cppObjectName << "(){\n"

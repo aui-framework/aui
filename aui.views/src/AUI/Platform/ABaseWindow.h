@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by alex2 on 6/9/2021.
 //
@@ -7,6 +23,7 @@
 #include <AUI/View/AViewContainer.h>
 #include "AWindowManager.h"
 #include "AOverlappingSurface.h"
+#include "ADragNDrop.h"
 #include <optional>
 
 namespace testing {
@@ -18,38 +35,42 @@ class API_AUI_VIEWS ABaseWindow: public AViewContainer {
     friend class SoftwareRenderer;
     friend class testing::UITest;
     friend struct IRenderingContext::Init;
-private:
-    _weak<AView> mFocusedView;
-    _weak<AView> mProfiledView;
-    float mDpiRatio = 1.f;
-
-
-    glm::ivec2 mMousePos;
-    ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
-
-protected:
-    bool mIsFocused = true;
-    _unique<IRenderingContext> mRenderingContext;
-
-    static ABaseWindow*& currentWindowStorage();
-
-    /**
-     * @see ABaseWindow::createOverlappingSurface
-     */
-    virtual _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
-    virtual void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) = 0;
-
-    virtual void createDevtoolsWindow();
-
-    static _unique<AWindowManager>& getWindowManagerImpl();
-
-    virtual float fetchDpiFromSystem() const;
 
 public:
 
     ABaseWindow();
 
+
+    /**
+     * @brief Enables or disables user input for this window.
+     * @param blockUserInput whether block user input or not.
+     * @details
+     * Visually nothing changes, but when the user tries to interact with the window, nothing happens with the window
+     * and on some platforms a system sound played notifying the user that the window is blocked.
+     *
+     * It is userful when you open a modal window and you want the user to complete the action in the modal window first
+     * in order to continue interacting with the parent window.
+     *
+     * @note
+     * When displaying a modal dialog and has blocked the parent window, the application must unblock the parent window
+     * before the modal dialog destroyed, otherwise, another window will receive the keyboard focus and be activated.
+     */
+    virtual void blockUserInput(bool blockUserInput = true);
+
     virtual ~ABaseWindow();
+
+
+    /**
+     * @brief Returns previous frame's rendering duration in millis.
+     * @details
+     * Returns previous frame's rendering duration in millis, including native rendering preparation and buffer
+     * swapping. The value does not include the elapsed time between frames.
+     *
+     * The value is updated after native buffer swap.
+     */
+    [[nodiscard]]
+    virtual unsigned frameMillis() const noexcept = 0;
+
     static AWindowManager& getWindowManager() {
         return *getWindowManagerImpl();
     }
@@ -84,8 +105,6 @@ public:
     }
 
     void setFocusedView(const _<AView>& view);
-    void focusNextView();
-
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
 
     void onMouseMove(glm::ivec2 pos) override;
@@ -101,15 +120,12 @@ public:
         return mMousePos;
     }
 
-
     void onKeyDown(AInput::Key key) override;
 
+
+    virtual void focusNextView();
     virtual void flagRedraw();
     virtual void flagUpdateLayout();
-
-    void onKeyUp(AInput::Key key) override;
-
-    void onCharEntered(wchar_t c) override;
 
     void makeCurrent() {
         currentWindowStorage() = this;
@@ -128,7 +144,7 @@ public:
     _<AOverlappingSurface> createOverlappingSurface(const glm::ivec2& position,
                                                     const glm::ivec2& size,
                                                     bool closeOnClick = true) {
-        return createOverlappingSurface([&](unsigned attempt) -> std::optional<glm::ivec2> {
+        return createOverlappingSurface([&](unsigned attempt) -> AOptional<glm::ivec2> {
             switch (attempt) {
                 case 0: return position;
                 case 1: return glm::clamp(position, {0, 0}, {getSize() - size});
@@ -147,14 +163,14 @@ public:
      *        dropdown and context menus.
      * @return a new surface.
      */
-    _<AOverlappingSurface> createOverlappingSurface(const std::function<std::optional<glm::ivec2>(unsigned)>& positionFactory,
+    _<AOverlappingSurface> createOverlappingSurface(const std::function<AOptional<glm::ivec2>(unsigned)>& positionFactory,
                                                     const glm::ivec2& size,
                                                     bool closeOnClick = true) {
         glm::ivec2 position = {0, 0};
         auto maxPos = getSize() - size;
         for (unsigned index = 0; ; ++index) {
             auto optionalPosition = positionFactory(index);
-            if (optionalPosition.has_value()) {
+            if (optionalPosition) {
                 position = *optionalPosition;
 
                 if (position.x >= 0 && position.y >= 0 && glm::all(glm::lessThan(position, maxPos))) {
@@ -166,7 +182,7 @@ public:
         }
 
         auto tmp = createOverlappingSurfaceImpl(position, size);
-        tmp->mWindow = this;
+        tmp->mParentWindow = this;
         tmp->mCloseOnClick = closeOnClick;
         mOverlappingSurfaces << tmp;
         return tmp;
@@ -178,16 +194,87 @@ public:
     }
 
     void onFocusLost() override;
-
     void render() override;
-
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+
+    /**
+     * @brief Called when the user holds a drag-n-drop object over the window.
+     * @param event event data.
+     * @return true, if the application accepts the contents of the event, false otherwise.
+     * @details
+     * This event handler decides does the application accepts the supplied data. If true, the data supplied to the
+     * onDragDrop() method will be the same.
+     *
+     * onDragLeave() method will be called even if the application rejects the event.
+     *
+     * It's guaranteed that onDragDrop method will not be called when onDragEnter rejects the same data.
+     */
+    virtual bool onDragEnter(const ADragNDrop::EnterEvent& event);
+    virtual void onDragLeave();
+    virtual void onDragDrop(const ADragNDrop::DropEvent& event);
+
+    /**
+     * @brief On a mobile touchscreen device, shows system virtual keyboard.
+     * @details
+     * On a desktop device does nothing.
+     */
+    virtual void requestTouchscreenKeyboard();
+
+    /**
+     * @brief Hides virtual keyboard if visible
+     */
+    virtual void hideTouchscreenKeyboard();
 
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
     emits<AInput::Key> keyDown;
 
+protected:
+    bool mIsFocused = true;
+    _unique<IRenderingContext> mRenderingContext;
+
+    static ABaseWindow*& currentWindowStorage();
+
+    /**
+     * @see ABaseWindow::createOverlappingSurface
+     */
+    virtual _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
+    virtual void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) = 0;
+
+    virtual void createDevtoolsWindow();
+
+    static _unique<AWindowManager>& getWindowManagerImpl();
+
+    virtual float fetchDpiFromSystem() const;
+
+
+private:
+    _weak<AView> mFocusedView;
+    _weak<AView> mProfiledView;
+    float mDpiRatio = 1.f;
+
+
+    glm::ivec2 mMousePos;
+    ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
+
+    void updateFocusChain();
 };
 
+
+/**
+ * @brief Asserts that the macro invocation has been performed in the UI thread.
+ * @ingroup useful_macros
+ * @details
+ *
+ */
+#define AUI_ASSERT_UI_THREAD_ONLY() { assert(("this method should be used in ui thread only.", (AWindow::current() ? AThread::current() == AWindow::current()->getThread() : AThread::current() == getThread()))); }
+
+/**
+ * @brief Asserts that the macro invocation has not been performed in the UI thread.
+ * @ingroup useful_macros
+ * @details
+ *
+ */
+#define AUI_ASSERT_WORKER_THREAD_ONLY() { assert(("this method should be used in worker thread only.", AThread::current() != AWindow::current()->getThread())); }
 

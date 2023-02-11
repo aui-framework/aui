@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 //  AUIViewController.m
 //  Cube
@@ -39,7 +55,7 @@ std::string ios_get_path_in_bundle() {
     return controller;
 }
 
-extern int(* _gEntry)(const AStringVector&);
+extern int(* _gEntry)(AStringVector);
 
 - (void)viewDidLoad
 {
@@ -89,7 +105,7 @@ extern int(* _gEntry)(const AStringVector&);
 - (void)viewDidLayoutSubviews {
     CGSize size = self.view.bounds.size;
     float scale = (float)self.view.contentScaleFactor;
-    auiWindow()->setSize(size.width * scale, size.height * scale);
+    auiWindow()->setSize({size.width * scale, size.height * scale});
 }
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     float scale = (float)self.view.contentScaleFactor;

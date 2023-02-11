@@ -82,6 +82,11 @@ void loginButtonClicked() {
 
 It's hard to say which functionality can be called 'STL-like'. Commonly, any iterator-based algorithm (i.e. `aui::binary_search`), global functions, trait structs are STL-like functionality. The final goal is to avoid mixed-style expressions like `AString::const_iterator` which hurts the eyes.
 
-# Template metaprogramming
+# Template metaprogramming and macros
 
-C++ template instantiation mechanism is Turing complete. However writing and understanding C++ template metaprogramming (TMP) code requires expert knowledge of C++ and a lot of time to understand. Use TMP deliberately.
+Both C++ template instantiation mechanism and macro preprocessor are Turing complete. However, writing and understanding
+C++ template metaprogramming (TMP) and macro preprocessor code requires expert knowledge of C++ and a lot of time to
+understand. Use TMP deliberately.
+
+Since TMP and macros often evolve custom syntax and usage scenarios, consider writing especially well documentation with
+examples when defining public API templates and macros.

@@ -1,29 +1,26 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
 #include <type_traits>
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Common/ASignal.h>
+#include <AUI/Traits/members.h>
+#include <AUI/Util/AFieldObservable.h>
 
 
 template<typename View, typename FieldType>
@@ -114,8 +111,8 @@ public:
 template <typename Model>
 class ADataBinding: public AObject {
 private:
-    using Applier = std::function<void(const Model& model, unsigned)>;
-    ADeque<Applier> mLinkAppliers;
+    using Observer = std::function<void(const Model& model, unsigned)>;
+    ADeque<Observer> mLinkObservers;
 
     Model* mModel = nullptr;
     bool mOwning = false;
@@ -158,9 +155,14 @@ public:
     ADataBindingLinker2<Model, Data> operator()(Data(Model::*field)) {
         return ADataBindingLinker2<Model, Data>(this, field);
     }
-    const Model& getModel() const {
+    const Model& getModel() const noexcept {
         return *mModel;
     }
+
+    Model const * operator->() const noexcept {
+        return &getModel();
+    }
+
     Model& getEditableModel() {
         return *mModel;
     }
@@ -170,7 +172,7 @@ public:
         }
         mOwning = true;
         mModel = new Model(model);
-        update();
+        notifyUpdate();
     }
 
     void setModel(Model* model) {
@@ -179,27 +181,56 @@ public:
         }
         mOwning = false;
         mModel = model;
-        update();
+        notifyUpdate();
     }
 
     const void* getExclusion() const {
         return mExcept;
     }
 
-    void update(void* except = nullptr, unsigned field = -1) {
+    void notifyUpdate(void* except = nullptr, unsigned field = -1) {
         mExcept = except;
-        for (auto& applier : mLinkAppliers) {
+        for (auto& applier : mLinkObservers) {
             applier(*mModel, field);
         }
         emit modelChanged;
     }
 
-    void addApplier(const Applier& applier) {
-        mLinkAppliers << applier;
+    template<typename ModelField>
+    void setValue(ModelField(Model::*field), ModelField value) {
+        mModel->*field = std::move(value);
+        union converter {
+            unsigned i;
+            decltype(field) p;
+        } c;
+        c.p = field;
+        notifyUpdate(nullptr, c.i);
+    }
+
+    void addObserver(const Observer& applier) {
+        mLinkObservers << applier;
         if (mModel) {
-            mLinkAppliers.last()(*mModel, -1);
+            mLinkObservers.last()(*mModel, -1);
         }
     }
+
+    template<typename ModelField, typename FieldObserver>
+    void addObserver(ModelField(Model::*field), FieldObserver&& observer) {
+        mLinkObservers << [observer = std::forward<FieldObserver>(observer), field] (const Model& model, unsigned index) {
+            union converter {
+                unsigned i;
+                decltype(field) p;
+            } c;
+            c.p = field;
+            if (c.i == index || index == -1) {
+                observer(model.*field);
+            }
+        };
+        if (mModel) {
+            mLinkObservers.last()(*mModel, -1);
+        }
+    }
+
 
 signals:
     /**
@@ -221,13 +252,13 @@ _<Klass1> operator&&(const _<Klass1>& object, const ADataBindingLinker<Model, Kl
             linker.getBinder()->getEditableModel().*(linker.getField()) = data;
             converter c;
             c.p = linker.getField();
-            linker.getBinder()->update(object.get(), c.i);
+            linker.getBinder()->notifyUpdate(object.get(), c.i);
             object->setSignalsEnabled(true);
         });
     }
 
     if (linker.getSetterFunc()) {
-        linker.getBinder()->addApplier([object, linker](const Model& model, unsigned field) {
+        linker.getBinder()->addObserver([object, linker](const Model& model, unsigned field) {
             converter c;
             c.p = linker.getField();
             if (c.i == field || field == -1) {
@@ -241,11 +272,49 @@ _<Klass1> operator&&(const _<Klass1>& object, const ADataBindingLinker<Model, Kl
     return object;
 }
 
+
+namespace aui::detail {
+    template<typename ForcedClazz, typename Type>
+    struct pointer_to_member {
+        template<typename... Args>
+        static Type(ForcedClazz::*with_args(aui::type_list<Args...>))(Args...) {
+            return nullptr;
+        }
+    };
+}
+
 template<typename View, typename Model, typename Data>
 _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>& linker) {
     ADataBindingDefault<View, Data>::setup(object);
+
+    using setter = aui::member<decltype(ADataBindingDefault<View, Data>::getSetter())>;
+
+    using setter_ret = typename setter::type;
+    using setter_args = typename setter::args;
+
+    using my_pointer_to_member = typename aui::detail::pointer_to_member<View, setter_ret>;
+
+    using pointer_to_setter = decltype( my_pointer_to_member::with_args(std::declval<setter_args>()));
+
     object && (*linker.getBinder())(linker.getField(),
-                                    ADataBindingDefault<View, Data>::getGetter(),
-                                    ADataBindingDefault<View, Data>::getSetter());
+                                    static_cast<ASignal<Data>(View::*)>(ADataBindingDefault<View, Data>::getGetter()),
+                                    static_cast<pointer_to_setter>(ADataBindingDefault<View, Data>::getSetter()));
+    return object;
+}
+
+template<typename View, typename Data>
+_<View> operator&&(const _<View>& object, AFieldObservable<Data>& observable) {
+    typename std::decay_t<decltype(observable)>::ObserverHandle observerHandle = nullptr;
+    if (ADataBindingDefault<View, Data>::getSetter()) {
+        observerHandle = observable << [object = object.get()](Data newValue) {
+            (object->*ADataBindingDefault<View, Data>::getSetter())(std::move(newValue));
+        };
+    }
+    if (auto getter = ADataBindingDefault<View, Data>::getGetter()) {
+        AObject::connect(object.get()->*getter, object, [&observable, observerHandle](Data newValue) {
+            observable.setValue(std::move(newValue), observerHandle);
+        });
+    }
+
     return object;
 }

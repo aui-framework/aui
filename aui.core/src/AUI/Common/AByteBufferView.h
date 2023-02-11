@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 #pragma once
 
 #include <AUI/Traits/serializable.h>
@@ -16,7 +32,25 @@ private:
 public:
     AByteBufferView() noexcept: mBuffer(nullptr), mSize(0) {}
     AByteBufferView(const char* buffer, size_t size) noexcept: mBuffer(buffer), mSize(size) {}
+    explicit AByteBufferView(const std::string& string) noexcept: mBuffer(string.data()), mSize(string.size()) {}
+    explicit AByteBufferView(std::string_view string) noexcept: mBuffer(string.data()), mSize(string.size()) {}
 
+    /**
+     * @brief Gets value of specified type by byte index relative to the beginning of internal buffer.
+     * @tparam T data type
+     * @param byteIndex byte offset realtive to the beginning of internal buffer
+     * @return data
+     */
+    template <typename T>
+    const T& at(size_t byteIndex)
+    {
+        return *reinterpret_cast<const T*>(mBuffer + byteIndex);
+    }
+
+    [[nodiscard]]
+    AByteBufferView slice(std::size_t offset) const noexcept {
+        return slice(offset, size() - offset);
+    }
 
     [[nodiscard]]
     AByteBufferView slice(std::size_t offset, std::size_t size) const noexcept {
@@ -45,6 +79,9 @@ public:
 
     [[nodiscard]]
     AString toHexString() const;
+
+    [[nodiscard]]
+    AString toBase64String() const;
 
     template<typename T>
     [[nodiscard]]

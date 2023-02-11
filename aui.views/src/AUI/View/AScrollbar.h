@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2 on 06.12.2020.
@@ -25,10 +20,12 @@
 
 #pragma once
 
-#include <AUI/Util/LayoutDirection.h>
+#include <AUI/Util/ALayoutDirection.h>
 #include <AUI/Common/ATimer.h>
 #include "AViewContainer.h"
-#include "ASpacer.h"
+#include "ASpacerExpanding.h"
+
+class API_AUI_VIEWS AScrollbar;
 
 class AScrollbarButton: public AView {
 public:
@@ -37,32 +34,38 @@ public:
     }
 };
 class AScrollbarHandle: public AView {
+friend class API_AUI_VIEWS AScrollbar;
 private:
     int mScrollOffset = 0;
     bool mDragging = false;
 
 public:
-    AScrollbarHandle() {
-
-    }
-
+    void setSize(glm::ivec2 size) override;
     void onMouseMove(glm::ivec2 pos) override;
-
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
-
     void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void setOverridenSize(int overridenSize) {
+        mOverridenSize = overridenSize;
+    }
+
+private:
+    explicit AScrollbarHandle(AScrollbar& scrollbar) : mScrollbar(scrollbar) {}
+
+    AScrollbar& mScrollbar;
+    int mOverridenSize;
 };
-class AScrollbarOffsetSpacer: public ASpacer {
+
+class AScrollbarOffsetSpacer: public ASpacerExpanding {
 public:
-    AScrollbarOffsetSpacer(): ASpacer(0, 0) {
+    AScrollbarOffsetSpacer(): ASpacerExpanding(0, 0) {
 
     }
 
-    int getMinimumWidth() override {
+    int getMinimumWidth(ALayoutDirection) override {
         return 0;
     }
 
-    int getMinimumHeight() override {
+    int getMinimumHeight(ALayoutDirection) override {
         return 0;
     }
 };
@@ -74,29 +77,9 @@ public:
  */
 class API_AUI_VIEWS AScrollbar: public AViewContainer {
     friend class AScrollbarHandle;
-private:
-    LayoutDirection mDirection;
-    _<ASpacer> mOffsetSpacer;
-    _<AScrollbarHandle> mHandle;
-    _<AScrollbarButton> mForwardButton;
-    _<AScrollbarButton> mBackwardButton;
-    _<ATimer> mScrollButtonTimer;
-
-    size_t mViewportSize = 0, mFullSize = 0;
-    int mCurrentScroll = 0;
-
-    void setOffset(size_t o);
-
-    void scrollForward();
-    void scrollBackward();
-
-    void handleScrollbar(int s);
-
-    int getMaxScroll();
-
 public:
 
-    explicit AScrollbar(LayoutDirection direction = LayoutDirection::VERTICAL);
+    explicit AScrollbar(ALayoutDirection direction = ALayoutDirection::VERTICAL);
 
     [[nodiscard]] int getCurrentScroll() const {
         return mCurrentScroll;
@@ -110,7 +93,34 @@ public:
         setScroll(mCurrentScroll + delta);
     }
 
-    void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
+    void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
+
+    /**
+     * @brief Set stick to end.
+     * @param stickToEnd
+     * @details
+     * When scroll area dimensions is updated (an element added to scroll area) if the scrollbar was scrolled to the end
+     * (bottom) the scrollbar automatically scrolls to the ends, keeping the scroll position in place.
+     */
+    void setStickToEnd(bool stickToEnd) {
+        mStickToEnd = stickToEnd;
+        if (stickToEnd) {
+            scrollToEnd();
+        }
+    }
+
+    void setAppearance(ScrollbarAppearance::AxisValue appearance) {
+        mAppearance = appearance;
+    }
+
+    void scrollToStart() {
+        setScroll(0);
+    }
+
+    void scrollToEnd() {
+        setScroll(getMaxScroll());
+    }
+
 signals:
 
     emits<int> scrolled;
@@ -120,6 +130,38 @@ signals:
     void updateScrollHandleOffset(int max);
 
     void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+
+    void setSize(glm::ivec2 size) override;
+
+protected:
+    ALayoutDirection mDirection;
+    _<ASpacerExpanding> mOffsetSpacer;
+    _<AScrollbarHandle> mHandle;
+    _<AScrollbarButton> mForwardButton;
+    _<AScrollbarButton> mBackwardButton;
+    static _<ATimer> ourScrollButtonTimer;
+
+    size_t mViewportSize = 0, mFullSize = 0;
+    int mCurrentScroll = 0;
+
+    void setOffset(size_t o);
+
+    void scrollForward();
+    void scrollBackward();
+
+    void handleScrollbar(int s);
+
+    std::size_t getMaxScroll() const noexcept {
+        if (mFullSize <= mViewportSize) {
+            return 0;
+        }
+
+        return mFullSize - mViewportSize;
+    }
+
+private:
+    bool mStickToEnd = false;
+    ScrollbarAppearance::AxisValue mAppearance = ScrollbarAppearance::INVISIBLE;
 };
 
 

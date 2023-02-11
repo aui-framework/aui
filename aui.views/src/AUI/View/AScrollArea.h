@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -35,34 +30,50 @@ class API_AUI_VIEWS AScrollArea: public AViewContainer {
 public:
     class Builder;
 
-private:
-    _<AScrollAreaContainer> mContentContainer;
-    _<AScrollbar> mVerticalScrollbar;
-    _<AScrollbar> mHorizontalScrollbar;
-
-    explicit AScrollArea(const Builder& builder);
 public:
     AScrollArea();
     virtual ~AScrollArea();
 
     _<AViewContainer> getContentContainer() const;
-    int getContentMinimumHeight() override;
-    void setSize(int width, int height) override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
+    void setSize(glm::ivec2 size) override;
     void setContents(const _<AViewContainer>& container);
 
+    /**
+     * @brief Set stick to end.
+     * @see AScrollbar::setStickToEnd
+     */
+    void setStickToEnd(bool stickToEnd) {
+        AUI_NULLSAFE(mHorizontalScrollbar)->setStickToEnd(stickToEnd);
+        AUI_NULLSAFE(mVerticalScrollbar)->setStickToEnd(stickToEnd);
+    }
+
     void scroll(int deltaByX, int deltaByY) noexcept {
-        nullsafe(mHorizontalScrollbar)->scroll(deltaByX);
-        nullsafe(mVerticalScrollbar)->scroll(deltaByY);
+        AUI_NULLSAFE(mHorizontalScrollbar)->scroll(deltaByX);
+        AUI_NULLSAFE(mVerticalScrollbar)->scroll(deltaByY);
     }
 
     bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
 
-    void onMouseWheel(const glm::ivec2& pos, const glm::ivec2& delta) override;
+    void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
+
+    void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) {
+        mScrollbarAppearance = scrollbarAppearance;
+        AUI_NULLSAFE(mHorizontalScrollbar)->setAppearance(scrollbarAppearance.getHorizontal());
+        AUI_NULLSAFE(mVerticalScrollbar)->setAppearance(scrollbarAppearance.getVertical());
+
+        adjustContentSize();
+    }
+
+    void adjustContentSize();
+    void adjustHorizontalSizeToContent();
+    void adjustVerticalSizeToContent();
 
     class Builder {
     friend class AScrollArea;
     private:
         _<AScrollbar> mExternalVerticalScrollbar;
+        _<AScrollbar> mExternalHorizontalScrollbar;
         _<AViewContainer> mContents;
         bool mExpanding = false;
 
@@ -73,6 +84,12 @@ public:
             mExternalVerticalScrollbar = std::move(externalVerticalScrollbar);
             return *this;
         }
+
+        Builder& withExternalHorizontalScrollbar(_<AScrollbar> externalHorizontalScrollbar) {
+            mExternalHorizontalScrollbar = std::move(externalHorizontalScrollbar);
+            return *this;
+        }
+
         Builder& withContents(_<AViewContainer> contents) {
             mContents = std::move(contents);
             return *this;
@@ -82,7 +99,6 @@ public:
             mExpanding = true;
             return *this;
         }
-
 
         _<AScrollArea> build() {
             return aui::ptr::manage(new AScrollArea(*this));
@@ -95,5 +111,14 @@ public:
             return build();
         }
     };
+
+
+private:
+    _<AScrollAreaContainer> mContentContainer;
+    _<AScrollbar> mVerticalScrollbar;
+    _<AScrollbar> mHorizontalScrollbar;
+    ScrollbarAppearance mScrollbarAppearance;
+
+    explicit AScrollArea(const Builder& builder);
 };
 

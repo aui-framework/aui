@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstring>
 #include "AString.h"
@@ -43,6 +38,7 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
                 t <<= 6;
                 t |= *(str++) & 0b111111;
                 destination.push_back(t);
+                length -= 2;
             } else
             {
                 // 2-byte symbol
@@ -50,6 +46,7 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
                 t <<= 6;
                 t |= *(str++) & 0b111111;
                 destination.push_back(t);
+                length -= 1;
             }
         } else
         {
@@ -59,14 +56,19 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
     }
 }
 
-AString::AString(const char* str) noexcept
+AString::AString(const char* utf8) noexcept
 {
-    fromUtf8_impl(*this, str, strlen(str));
+    fromUtf8_impl(*this, utf8, std::strlen(utf8));
 }
 
-AString::AString(const std::string& str) noexcept
+AString::AString(std::string_view utf8) noexcept
 {
-    fromUtf8_impl(*this, str.c_str(), str.length());
+    fromUtf8_impl(*this, utf8.data(), utf8.length());
+}
+
+AString::AString(const std::string& utf8) noexcept
+{
+    fromUtf8_impl(*this, utf8.c_str(), utf8.length());
 }
 
 AString AString::fromUtf8(const AByteBufferView& buffer) {
@@ -159,9 +161,54 @@ AString AString::trimRight(wchar_t symbol) const noexcept
     return {};
 }
 
-AString AString::replacedAll(const AString& from, const AString& to) const noexcept
+AString& AString::replaceAll(wchar_t from, wchar_t to) noexcept {
+    for (auto& s : *this) {
+        if (s == from)
+            s = to;
+    }
+    return *this;
+}
+
+AString& AString::replaceAll(const AString& from, const AString& to) {
+    for (size_type pos = 0;;)
+    {
+        auto next = find(from, pos);
+        if (next == NPOS)
+        {
+            return *this;
+        }
+
+        auto fromLength = from.length();
+        auto toLength = to.length();
+
+        if (fromLength == toLength) {
+            for (auto c : to) {
+                *(begin() + next++) = c;
+            }
+        } else if (fromLength < toLength) {
+            const auto diff = toLength - fromLength;
+            for (auto c : aui::range(to.begin(), to.end() - diff)) {
+                *(begin() + next++) = c;
+            }
+            insert(begin() + next, to.begin() + fromLength, to.end());
+            next += diff;
+        } else {
+            for (auto c : to) {
+                *(begin() + next++) = c;
+            }
+            const auto diff = fromLength - toLength;
+            erase(begin() + next, begin() + next + diff);
+        }
+    }
+    return *this;
+}
+
+AString AString::replacedAll(const AString& from, const AString& to) const
 {
     AString result;
+
+    result.reserve(size());
+
     for (size_type pos = 0;;)
     {
         auto next = find(from, pos);
@@ -170,69 +217,14 @@ AString AString::replacedAll(const AString& from, const AString& to) const noexc
             result.insert(result.end(), begin() + pos, end());
             return result;
         }
+
         result.insert(result.end(), begin() + pos, begin() + next);
         result.insert(result.end(), to.begin(), to.end());
+
         pos = next + from.length();
     }
-}
 
-float AString::toFloat() const noexcept
-{
-    try {
-        return std::stof(*this);
-    } catch (...)
-    {
-        return 0.f;
-    }
-}
-
-double AString::toDouble() const noexcept
-{
-    try {
-        return std::stod(*this);
-    }
-    catch (...)
-    {
-        return 0.0;
-    }
-}
-
-int AString::toInt() const noexcept
-{
-    try
-    {
-        if (length() >= 2) {
-            if ((*this)[1] == 'x' || (*this)[1] == 'X') {
-                // hex
-                return std::stoi(AString{begin() + 2, end()}, nullptr, 16);
-            }
-        }
-        return std::stoi(*this);
-    } catch (...)
-    {
-        return 0;
-    }
-}
-unsigned AString::toUInt() const noexcept
-{
-    try
-    {
-        if (length() >= 2) {
-            if ((*this)[1] == 'x' || (*this)[1] == 'X') {
-                // hex
-                return std::stoul(AString{begin() + 2, end()}, nullptr, 16);
-            }
-        }
-        return std::stoul(*this);
-    } catch (...)
-    {
-        return 0;
-    }
-}
-
-bool AString::toBool() const noexcept
-{
-    return *this == "true";
+    return result;
 }
 
 AString AString::fromLatin1(const AByteBuffer& buffer)
@@ -1091,14 +1083,6 @@ AString AString::lowercase() const {
     return buf;
 }
 
-AString& AString::replaceAll(wchar_t from, wchar_t to) noexcept {
-    for (auto& s : *this) {
-        if (s == from)
-            s = to;
-    }
-    return *this;
-}
-
 void AString::resizeToNullTerminator() {
     wchar_t* i;
     for (i = data(); *i; ++i);
@@ -1107,7 +1091,7 @@ void AString::resizeToNullTerminator() {
 
 AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
     if (length() > s) {
-        return mid(0, s) + stringAtEnd;
+        return substr(0, s) + stringAtEnd;
     }
     return *this;
 }
@@ -1160,4 +1144,104 @@ AString AString::excessSpacesRemoved() const noexcept {
         s << c;
     }
     return s;
+}
+
+template<typename T>
+AOptional<T> AString::toNumberImpl() const noexcept {
+    if (empty()) return std::nullopt;
+    T value = 0;
+    T prevValue = 0;
+    bool negative = false;
+
+    if constexpr (std::is_integral_v<T>) {
+        if (startsWith("0x") || startsWith("0X")) {
+            // hex
+            for (auto c : substr(2)) {
+                value *= 16;
+                if (value < prevValue) { // overflow check
+                    return std::nullopt;
+                }
+                prevValue = value;
+                if (c >= '0' && c <= '9') {
+                    value += c - '0';
+                } else if (c >= 'a' && c <= 'f') {
+                    value += (c - 'a') + 10;
+                } else if (c >= 'A' && c <= 'F') {
+                    value += (c - 'A') + 10;
+                } else {
+                    return std::nullopt;
+                }
+            }
+        } else {
+            auto i = begin();
+            if (*i == '-') {
+                negative = true;
+                ++i;
+            }
+            for (; i != end(); ++i) {
+                value *= 10;
+                if (value < prevValue) { // overflow check
+                    return std::nullopt;
+                }
+                prevValue = value;
+                auto c = *i;
+                if (c >= '0' && c <= '9') {
+                    value += c - '0';
+                } else {
+                    return std::nullopt;
+                }
+            }
+        }
+    } else if constexpr (std::is_floating_point_v<T>) {
+        bool fractionalPart = false;
+        double fractionalPower = 0.1;
+
+        auto i = begin();
+        if (*i == '-') {
+            negative = true;
+            ++i;
+        }
+        for (; i != end(); ++i) {
+            auto c = *i;
+            if (c >= '0' && c <= '9') {
+                T digitValue = c - '0';
+                if (fractionalPart) {
+                    value += digitValue * fractionalPower;
+                    fractionalPower *= 0.1;
+                } else {
+                    value *= 10;
+                    value += digitValue;
+                }
+            } else if (c == '.') {
+                if (fractionalPart) {
+                    return std::nullopt;
+                }
+                fractionalPart = true;
+            } else {
+                return std::nullopt;
+            }
+        }
+    }
+
+    return negative ? -value : value;
+}
+
+AOptional<int> AString::toInt() const noexcept {
+    return toNumberImpl<int>();
+}
+
+AOptional<int64_t> AString::toLongInt() const noexcept {
+    return toNumberImpl<int64_t>();
+}
+
+AOptional<unsigned> AString::toUInt() const noexcept {
+    return toNumberImpl<unsigned>();
+}
+
+AOptional<double> AString::toDouble() const noexcept {
+    return toNumberImpl<double>();
+}
+
+AOptional<float> AString::toFloat() const noexcept {
+    return toNumberImpl<float>();
 }

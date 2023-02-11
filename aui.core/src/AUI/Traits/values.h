@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -27,6 +22,7 @@
 #include <functional>
 #include <optional>
 #include <AUI/Common/SharedPtrTypes.h>
+#include <AUI/Common/AOptional.h>
 #include <AUI/Thread/AMutex.h>
 
 namespace aui {
@@ -64,7 +60,9 @@ namespace aui {
 
         template<typename AnyType>
         operator AnyType() noexcept {
-            assert(("value is used when null" && mValue != nullptr));
+            if constexpr(!std::is_same_v<AnyType, bool>) {
+                assert(("value is used when null" && mValue != nullptr));
+            }
             return AnyType(mValue);
         }
 
@@ -130,24 +128,43 @@ namespace aui {
         T* value;
 
     public:
-        no_escape(T& value): value(&value) {}
-        no_escape(T&& value): value(&value) {}
-        no_escape(T* value): value(value) {}
+        no_escape(T& value): value(&value) {
+            assert(("the argument could not be null", no_escape::value != nullptr));
+        }
+        no_escape(T&& value): value(&value) {
+            assert(("the argument could not be null", no_escape::value != nullptr));
+        }
+        no_escape(T* value): value(value) {
+            assert(("the argument could not be null", no_escape::value != nullptr));
+        }
 
-        no_escape(const _<T>& value): value(&*value) {}
-        no_escape(const _unique<T>& value): value(&*value) {}
+        no_escape(const _<T>& value): value(&*value) {
+            assert(("the argument could not be null", no_escape::value != nullptr));
+        }
+        no_escape(const _unique<T>& value): value(&*value) {
+            assert(("the argument could not be null", no_escape::value != nullptr));
+        }
 
         template<typename DerivedFromT, std::enable_if_t<std::is_base_of_v<T, DerivedFromT> && !std::is_same_v<DerivedFromT, T>, bool> = true>
-        no_escape(const _<DerivedFromT>& value): value(&*value) {}
+        no_escape(const _<DerivedFromT>& value): value(&*value) {
+            assert(("the argument could not be null", no_escape::value != nullptr));
+        }
 
         template<typename DerivedFromT, std::enable_if_t<std::is_base_of_v<T, DerivedFromT> && !std::is_same_v<DerivedFromT, T>, bool> = true>
-        no_escape(const _unique<DerivedFromT>& value): value(&*value) {}
+        no_escape(const _unique<DerivedFromT>& value): value(&*value) {
+            assert(("the argument could not be null", no_escape::value != nullptr));
+        }
 
-        T* operator->() const {
+        [[nodiscard]]
+        T* ptr() const noexcept {
             return value;
         }
 
-        T& operator*() const {
+        T* operator->() const noexcept {
+            return value;
+        }
+
+        T& operator*() const noexcept {
             return *value;
         }
     };
@@ -156,10 +173,10 @@ namespace aui {
      * @brief A value that initializes when accessed for the first time.
      * @tparam T
      */
-    template<typename T>
+    template<typename T = void>
     struct lazy {
     private:
-        mutable std::optional<T> value;
+        mutable AOptional<T> value;
         std::function<T()> initializer;
     public:
         template<typename Factory, std::enable_if_t<std::is_invocable_r_v<T, Factory>, bool> = true>
@@ -213,8 +230,52 @@ namespace aui {
         }
 
         [[nodiscard]]
-        bool has_value() const noexcept {
-            return value.has_value();
+        bool hasValue() const noexcept {
+            return value.hasValue();
+        }
+    };
+
+    /**
+     * @brief A value that initializes when accessed for the first time.
+     * @tparam T
+     */
+    template<>
+    struct lazy<void> {
+    private:
+        mutable bool value = false;
+        std::function<void()> initializer;
+    public:
+        template<typename Factory, std::enable_if_t<std::is_invocable_r_v<void, Factory>, bool> = true>
+        lazy(Factory&& initializer) noexcept : initializer(std::forward<Factory>(initializer)) {}
+
+        lazy(const lazy<void>& other) noexcept: value(other.value), initializer(other.initializer) {}
+        lazy(lazy<void>&& other) noexcept: value(other.value), initializer(std::move(other.initializer)) {}
+
+        void get() {
+            if (!value) {
+                value = true;
+                initializer();
+            }
+        }
+        void get() const {
+            return const_cast<lazy<void>*>(this)->get();
+        }
+
+        void operator*() {
+            return get();
+        }
+        const void operator*() const {
+            return get();
+        }
+
+
+        void reset() {
+            value = false;
+        }
+
+        [[nodiscard]]
+        bool hasValue() const noexcept {
+            return value;
         }
     };
 
@@ -227,7 +288,7 @@ namespace aui {
     struct atomic_lazy {
     private:
         mutable AMutex sync;
-        mutable std::optional<T> value;
+        mutable AOptional<T> value;
         std::function<T()> initializer;
     public:
         template<typename Factory, std::enable_if_t<std::is_invocable_r_v<T, Factory>, bool> = true>
@@ -296,17 +357,18 @@ namespace aui {
         }
 
         [[nodiscard]]
-        bool has_value() const noexcept {
+        bool hasValue() const noexcept {
             std::unique_lock lock(sync);
-            return value.has_value();
+            return value.hasValue();
         }
     };
 
     namespace promise {
         /**
-         * Forbids copy of the wrapped value.
-         * The caller can be sure his value wouldn't be copied.
+         * @brief Avoids copy of the wrapped value, pointing to a reference.
          * @tparam T
+         * @details
+         * The caller can be sure his value wouldn't be copied.
          */
         template<typename T>
         class no_copy {
@@ -326,6 +388,44 @@ namespace aui {
             }
             T* operator->() const {                    // allow pointer-style calls
                 return value;
+            }
+        };
+
+        /**
+         * @brief Wraps the object forbidding copy.
+         * @tparam T
+         * @details
+         * The caller can be sure his value wouldn't be copied even if copy constructor allows to do so.
+         */
+        template<typename T>
+        class move_only {
+        private:
+            T value;
+
+        public:
+            move_only(T&& rhs): value(std::move(rhs)) {
+
+            }
+            move_only(move_only&& rhs): value(std::move(rhs.value)) {
+
+            }
+            move_only(const move_only&) = delete;
+
+            operator const T&() const {
+                return value;
+            }
+            operator T&() {
+                return value;
+            }
+
+            const T& operator*() const {
+                return value;
+            }
+            const T* operator->() const {
+                return &value;
+            }
+            T* operator->() {
+                return &value;
             }
         };
     }

@@ -1,25 +1,21 @@
-﻿/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ADesktop.h"
+#include <AUI/Util/ARaiiHelper.h>
 
 #ifdef __MINGW32__
 // Explicitly setting NTDDI version, this is necessary for the MinGW compiler
@@ -30,14 +26,18 @@
 
 #if AUI_PLATFORM_WIN
 
+#include "AWindow.h"
 #include "ADesktop.h"
 #include "ACursor.h"
-#include "AWindow.h"
+#include "AUI/Platform/win32/Ole.h"
+#include "AUI/Util/AImageDrawable.h"
+#include "AUI/Platform/win32/Win32Util.h"
 #include <windows.h>
 #include <shlobj.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Logging/ALogger.h>
+#include <AUI/Thread/ACutoffSignal.h>
 
 glm::ivec2 ADesktop::getMousePosition() {
     POINT p;
@@ -50,19 +50,27 @@ void ADesktop::setMousePos(const glm::ivec2& pos) {
 }
 
 
-AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
-    return async {
+AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& startingLocation) {
+    AUI_NULLSAFE(parent)->blockUserInput();
+    return async noexcept {
         APath result;
-        OleInitialize(0);
-        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-        assert(SUCCEEDED(hr));
+        Ole::inst();
         IFileOpenDialog *pFileOpen;
 
         // Create the FileOpenDialog object.
-        hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+        auto hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
                               IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
 
         assert(SUCCEEDED(hr));
+
+
+        ARaiiHelper d = [&] {
+            AUI_NULLSAFE(parent)->getThread()->enqueue([parent, pFileOpen] {
+                parent->blockUserInput(false);
+
+                pFileOpen->Release();
+            });
+        };
 
         pFileOpen->SetOptions(FOS_PICKFOLDERS);
         {
@@ -79,7 +87,15 @@ AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
             }
         }
 
-        hr = pFileOpen->Show(NULL);
+
+        HWND nativeParentWindow;
+        if (auto d = dynamic_cast<AWindow*>(parent)) {
+            nativeParentWindow = d->nativeHandle();
+        } else {
+            nativeParentWindow = nullptr;
+        }
+
+        hr = pFileOpen->Show(nativeParentWindow);
 
         // Get the file name from the dialog box.
         if (SUCCEEDED(hr))
@@ -100,24 +116,30 @@ AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
                 pItem->Release();
             }
         }
-        pFileOpen->Release();
-        CoUninitialize();
-        OleUninitialize();
+
         return result;
     };
 }
 
-AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVector<FileExtension>& extensions) {
-    return async {
+AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
+    AUI_NULLSAFE(parent)->blockUserInput();
+    return async noexcept {
         APath result;
-        OleInitialize(0);
-        HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
-        assert(SUCCEEDED(hr));
+        Ole::inst();
         IFileOpenDialog *pFileOpen;
 
         // Create the FileOpenDialog object.
-        hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
+        auto hr = CoCreateInstance(CLSID_FileOpenDialog, NULL, CLSCTX_ALL,
                               IID_IFileOpenDialog, reinterpret_cast<void**>(&pFileOpen));
+
+
+        ARaiiHelper d = [&] {
+            AUI_NULLSAFE(parent)->getThread()->enqueue([parent, pFileOpen] {
+                parent->blockUserInput(false);
+
+                pFileOpen->Release();
+            });
+        };
 
         assert(SUCCEEDED(hr));
         AVector<COMDLG_FILTERSPEC> filter;
@@ -149,7 +171,14 @@ AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVec
             }
         }
 
-        hr = pFileOpen->Show(NULL);
+        HWND nativeParentWindow;
+        if (auto d = dynamic_cast<AWindow*>(parent)) {
+            nativeParentWindow = d->nativeHandle();
+        } else {
+            nativeParentWindow = nullptr;
+        }
+
+        hr = pFileOpen->Show(nativeParentWindow);
 
         // Get the file name from the dialog box.
         if (SUCCEEDED(hr))
@@ -170,9 +199,8 @@ AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVec
                 pItem->Release();
             }
         }
-        pFileOpen->Release();
-        CoUninitialize();
-        OleUninitialize();
+
+
         return result;
     };
 }
@@ -180,6 +208,15 @@ void ADesktop::openUrl(const AString& url) {
     ShellExecute(nullptr, L"open", url.c_str(), nullptr, nullptr, SW_NORMAL);
 }
 
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    SHFILEINFO info;
+    if (SUCCEEDED(SHGetFileInfo(file.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES))) {
+
+        ARaiiHelper destroyer = [&]{ DestroyIcon(info.hIcon); };
+        return _new<AImageDrawable>(_new<AImage>(aui::win32::iconToImage(info.hIcon)));
+    }
+    return nullptr;
+}
 
 #elif AUI_PLATFORM_ANDROID
 
@@ -191,14 +228,17 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
 
 }
 
-AFuture<APath> ADesktop::browseForDir(const APath &startingLocation) {
+AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent,
+                                      const APath& startingLocation)  {
     return async {
         return APath();
     };
 }
 
 AFuture<APath>
-ADesktop::browseForFile(const APath &startingLocation, const AVector <FileExtension> &extensions) {
+ADesktop::browseForFile(ABaseWindow* parent,
+                        const APath& startingLocation,
+                        const AVector<FileExtension>& extensions) {
     return async {
         return APath();
     };
@@ -208,8 +248,14 @@ void ADesktop::openUrl(const AString &url) {
 
 }
 
+
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    return nullptr;
+}
+
 #elif AUI_PLATFORM_APPLE
 
+#include "AWindow.h"
 // TODO apple
 glm::ivec2 ADesktop::getMousePosition() {
     return glm::ivec2();
@@ -219,11 +265,11 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
 
 }
 
-AFuture<APath> ADesktop::browseForDir(const APath &startingLocation) {
+AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath &startingLocation) {
     return AFuture<APath>();
 }
 
-AFuture<APath> ADesktop::browseForFile(const APath &startingLocation, const AVector<FileExtension> &extensions) {
+AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath &startingLocation, const AVector<FileExtension> &extensions) {
     return AFuture<APath>();
 }
 
@@ -231,9 +277,11 @@ void ADesktop::openUrl(const AString &url) {
 
 }
 
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    return nullptr;
+}
 #else
 
-#include <gtk/gtk.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/keysymdef.h>
@@ -243,6 +291,9 @@ void ADesktop::openUrl(const AString &url) {
 #include "ACursor.h"
 #include "AWindow.h"
 #include "CommonRenderingContext.h"
+#include "AWindow.h"
+#undef signals
+#include <gtk/gtk.h>
 
 void aui_gtk_init() {
     do_once {
@@ -279,8 +330,14 @@ void ADesktop::openUrl(const AString& url) {
     system(s.c_str());
 }
 
-AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVector<FileExtension>& extensions) {
+AFuture<APath> ADesktop::browseForFile(ABaseWindow* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
+    parent->blockUserInput();
     return async {
+        ARaiiHelper windowUnblocker = [&] {
+            parent->getThread()->enqueue([parent] {
+                parent->blockUserInput(false);
+            });
+        };
         aui_gtk_init();
         GtkWidget *dialog;
         GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_OPEN;
@@ -326,8 +383,14 @@ AFuture<APath> ADesktop::browseForFile(const APath& startingLocation, const AVec
     };
 }
 
-AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
-    return async {
+AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent, const APath& startingLocation) {
+    parent->blockUserInput();
+    return async  {
+        ARaiiHelper windowUnblocker = [&] {
+            parent->getThread()->enqueue([parent] {
+                parent->blockUserInput(false);
+            });
+        };
         aui_gtk_init();
         GtkWidget *dialog;
         GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER;
@@ -373,4 +436,7 @@ AFuture<APath> ADesktop::browseForDir(const APath& startingLocation) {
     };
 }
 
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    return nullptr;
+}
 #endif

@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -133,7 +128,7 @@ namespace aui::impl::slot {
  *       };
  *       ...
  *       auto worker = _new<Worker>();
- *       perform_as_member(worker, {
+ *       AUI_PERFORM_AS_MEMBER(*worker, {
  *         buildHouse();
  *         plantTree();
  *         raiseSon();
@@ -143,13 +138,50 @@ namespace aui::impl::slot {
  *   </tr>
  * </table>
  */
-#define perform_as_member(object, lambda)                                                  \
+#define AUI_PERFORM_AS_MEMBER(object, lambda)                                                  \
     struct __apply ## __FUNCTION__ ## __LINE__   : std::decay_t<decltype(object)>::stored_t { \
         void operator()() {                                                    \
             lambda;                                                            \
         }                                                                      \
     };                                                                         \
-    (*reinterpret_cast<__apply ## __FUNCTION__ ## __LINE__ *>(object.get()))()
+    (reinterpret_cast<__apply ## __FUNCTION__ ## __LINE__ &>(object))()
+
+/**
+ * @brief Emits a signal of a foreign object.
+ * @details
+ * <table>
+ *   <tr>
+ *     <td>without</td>
+ *     <td>with</td>
+ *   </tr>
+ *   <tr>
+ *     <td>
+ *       @code{cpp}
+ *       class SomeObject {
+ *       public:
+ *         emits<> someSignal;
+ *       };
+ *       ...
+ *       auto obj = _new<SomeObject>();
+ *       (*obj) ^ obj->someSignal();
+ *       @endcode
+ *     </td>
+ *     <td>
+ *       @code{cpp}
+ *       class SomeObject {
+ *       public:
+ *         emits<> someSignal;
+ *       };
+ *       ...
+ *       auto obj = _new<SomeObject>();
+ *       AUI_EMIT_FOREIGN_SIGNAL(obj)->someSignal();
+ *       @endcode
+ *     </td>
+ *   </tr>
+ * </table>
+ */
+#define AUI_EMIT_FOREIGN_SIGNAL(object) (*object) ^ object
+
 
 /**
  * @brief Performs multiple operations on a single object without repeating its name (in place)
@@ -257,6 +289,18 @@ namespace aui::impl::slot {
  * };
  * int status = *futureStatus;
  * @endcode
+ *
+ * Lambda operators are supported:
+ * @code{cpp}
+ * auto futureStatus = async mutable noexcept {
+ *   int status;
+ *   ...
+ *   AThread::sleep(1000); // a long task
+ *   ...
+ *   return status;
+ * };
+ * int status = *futureStatus;
+ * @endcode
  */
 #define async AThreadPool::global() * [=]()
 
@@ -320,7 +364,7 @@ namespace aui::impl::slot {
  *   </tr>
  * </table>
  */
-#define do_once static uint8_t _aui_once = 0; if(!_aui_once++)
+#define do_once if(static bool _aui_once = false; (!_aui_once && (_aui_once = true)))
 
 /**
  * @brief Executes lambda on current object's thread.

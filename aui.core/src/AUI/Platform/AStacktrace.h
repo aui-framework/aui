@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 #pragma once
 
 #include <AUI/Common/AString.h>
@@ -11,22 +27,22 @@ public:
         friend class AStacktrace;
     private:
         void* mPtr;
-        std::optional<AString> mFunctionName;
-        std::optional<AString> mFileName;
-        std::optional<unsigned> mLineNumber;
+        AOptional<AString> mFunctionName;
+        AOptional<AString> mFileName;
+        AOptional<unsigned> mLineNumber;
 
     public:
         explicit Entry(void* ptr) : mPtr(ptr), mFunctionName(std::nullopt) {}
 
-        const std::optional<AString>& functionName() const noexcept {
+        const AOptional<AString>& functionName() const noexcept {
             return mFunctionName;
         }
 
-        const std::optional<AString>& fileName() const noexcept {
+        const AOptional<AString>& fileName() const noexcept {
             return mFileName;
         }
 
-        std::optional<unsigned> lineNumber() const noexcept {
+        AOptional<unsigned> lineNumber() const noexcept {
             return mLineNumber;
         }
 

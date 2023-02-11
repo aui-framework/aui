@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2 on 5/23/2021.
@@ -37,19 +32,22 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/i18n/AI18n.h>
 
-ATimer& AAbstractTypeableView::blinkTimer()
+_<ATimer> AAbstractTypeableView::blinkTimer()
 {
-    static ATimer t(500);
-    if (!t.isStarted())
-    {
-        t.start();
+    using namespace std::chrono_literals;
+    static _weak<ATimer> t;
+    if (auto l = t.lock()) {
+        return l;
     }
-    return t;
+    auto timer = _new<ATimer>(500ms);
+    timer->start();
+    t = timer;
+    return timer;
 }
 
 void AAbstractTypeableView::updateCursorBlinking()
 {
-    blinkTimer().restart();
+    mBlinkTimer->restart();
     mCursorBlinkVisible = true;
     mCursorBlinkCount = 0;
     redraw();
@@ -57,7 +55,7 @@ void AAbstractTypeableView::updateCursorBlinking()
 
 void AAbstractTypeableView::updateCursorPos()
 {
-    auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().mid(0, mCursorIndex)));
+    auto absoluteCursorPos = -mHorizontalScroll + int(getFontStyle().getWidth(getDisplayText().substr(0, mCursorIndex)));
 
     const int SCROLL_ADVANCEMENT = getContentWidth() * 4 / 10;
 
@@ -76,7 +74,7 @@ void AAbstractTypeableView::updateCursorPos()
 
 AAbstractTypeableView::AAbstractTypeableView()
 {
-    connect(blinkTimer().fired, this, [&]()
+    connect(mBlinkTimer->fired, this, [&]()
     {
         if (hasFocus() && mCursorBlinkCount < 60) {
             mCursorBlinkVisible = !mCursorBlinkVisible;
@@ -100,7 +98,7 @@ bool AAbstractTypeableView::handlesNonMouseNavigation() {
     return true;
 }
 
-int AAbstractTypeableView::getContentMinimumHeight()
+int AAbstractTypeableView::getContentMinimumHeight(ALayoutDirection layout)
 {
     return getFontStyle().size;
 }
@@ -131,7 +129,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
     {
         case AInput::DEL:
             if (hasSelection()) {
-                auto sel = getSelection();
+                auto sel = selection();
                 typeableErase(sel.begin, sel.end);
                 invalidatePrerenderedString();
                 mCursorSelection = -1;
@@ -214,7 +212,7 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
     }
 
     if (textChanging) {
-        emit textChanging(getText());
+        emit textChanging(text());
     }
 
     updateCursorPos();
@@ -225,10 +223,10 @@ void AAbstractTypeableView::onKeyRepeat(AInput::Key key)
 
 void AAbstractTypeableView::pasteFromClipboard() {
     auto pastePos = mCursorIndex;
-    std::optional<AString> prevContents;
+    AOptional<AString> prevContents;
     if (mCursorSelection != -1) {
-        prevContents = getText();
-        auto sel = getSelection();
+        prevContents = text();
+        auto sel = selection();
         pastePos = sel.begin;
         typeableErase(sel.begin, sel.end);
     }
@@ -251,15 +249,23 @@ void AAbstractTypeableView::pasteFromClipboard() {
 }
 
 void AAbstractTypeableView::cutToClipboard() {
-    auto sel = getSelection();
-    AClipboard::copyToClipboard(getSelectedText());
+    if (!mIsCopyable)
+        return;
+
+    auto sel = selection();
+    AClipboard::copyToClipboard(selectedText());
     typeableErase(sel.begin, sel.end);
     mCursorIndex = sel.begin;
     mCursorSelection = -1;
     invalidatePrerenderedString();
 }
 
-void AAbstractTypeableView::copyToClipboard() const { AClipboard::copyToClipboard(getSelectedText()); }
+void AAbstractTypeableView::copyToClipboard() const {
+    if (!mIsCopyable)
+        return;
+
+    AClipboard::copyToClipboard(selectedText());
+}
 
 void AAbstractTypeableView::selectAll() { ACursorSelectable::selectAll(); }
 
@@ -278,7 +284,7 @@ void AAbstractTypeableView::enterChar(wchar_t c)
     auto cursorIndexCopy = mCursorIndex;
 
     if (hasSelection()) {
-        auto sel = getSelection();
+        auto sel = selection();
         typeableErase(sel.begin, sel.end);
 
         switch (c)
@@ -332,7 +338,7 @@ void AAbstractTypeableView::onFocusLost()
     {
         mTextChangedFlag = false;
         if (textChanged) {
-            emit textChanged(getText());
+            emit textChanged(text());
         }
     }
 
@@ -359,18 +365,19 @@ void AAbstractTypeableView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
 {
     AView::onMouseReleased(pos, button);
 
-    if (button == AInput::RBUTTON) {
-        AMenu::show({
-                            { "aui.cut"_i18n, [&]{cutToClipboard();}, AInput::LCONTROL + AInput::X, hasSelection() },
-                            { "aui.copy"_i18n, [&]{copyToClipboard();}, AInput::LCONTROL + AInput::C, hasSelection() },
-                            { "aui.paste"_i18n, [&]{pasteFromClipboard();}, AInput::LCONTROL + AInput::V, !AClipboard::isEmpty() },
-                            AMenu::SEPARATOR,
-                            { "aui.select_all"_i18n, [&]{selectAll();}, AInput::LCONTROL + AInput::A, !getText().empty() }
-                    });
-    } else {
+    if (button != AInput::RBUTTON) {
         ACursorSelectable::handleMouseReleased(pos, button);
     }
 }
+
+AMenuModel AAbstractTypeableView::composeContextMenu() {
+    return { { "aui.cut"_i18n, [&]{cutToClipboard();}, AInput::LCONTROL + AInput::X, hasSelection() },
+             { "aui.copy"_i18n, [&]{copyToClipboard();}, AInput::LCONTROL + AInput::C, hasSelection() },
+             { "aui.paste"_i18n, [&]{pasteFromClipboard();}, AInput::LCONTROL + AInput::V, !AClipboard::isEmpty() },
+             AMenu::SEPARATOR,
+             { "aui.select_all"_i18n, [&]{selectAll();}, AInput::LCONTROL + AInput::A, !text().empty() } };
+}
+
 void AAbstractTypeableView::setText(const AString& t)
 {
     mHorizontalScroll = 0;
@@ -393,7 +400,7 @@ void AAbstractTypeableView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key but
 }
 
 glm::ivec2 AAbstractTypeableView::getMouseSelectionPadding() {
-    return {mPadding.left, mPadding.top};
+    return {mPadding.left, mPadding.top + getVerticalAlignmentOffset() };
 }
 
 glm::ivec2 AAbstractTypeableView::getMouseSelectionScroll() {
@@ -405,7 +412,7 @@ AFontStyle AAbstractTypeableView::getMouseSelectionFont() {
 }
 
 AString AAbstractTypeableView::getDisplayText() {
-    return getText();
+    return text();
 }
 
 

@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2772 on 12/9/20.
@@ -26,6 +21,11 @@
 #include "FractalView.h"
 #include <AUI/Render/Render.h>
 #include <glm/gtc/matrix_transform.hpp>
+
+static gl::Shader::Uniform UNIFORM_TR("tr");
+static gl::Shader::Uniform UNIFORM_SQ("sq");
+static gl::Shader::Uniform UNIFORM_RATIO("ratio");
+static gl::Shader::Uniform UNIFORM_ITERATIONS("iterations");
 
 FractalView::FractalView():
     mTransform(1.f)
@@ -73,11 +73,11 @@ FractalView::FractalView():
                  "}", {"pos", "uv"}, "400");
     mShader.compile();
     mShader.use();
-    mShader.set("tr", mTransform);
-    mShader.set("sq", 1.f);
+    mShader.set(UNIFORM_TR, mTransform);
+    mShader.set(UNIFORM_SQ, 1.f);
 
     mTexture = _new<gl::Texture2D>();
-    mTexture->tex2D(AImage::fromUrl(":img/color_scheme_wikipedia.png"));
+    mTexture->tex2D(*AImage::fromUrl(":img/color_scheme_wikipedia.png"));
 }
 
 void FractalView::render() {
@@ -85,26 +85,26 @@ void FractalView::render() {
 
     mShader.use();
     mTexture->bind();
-    Render::drawRect(0, 0, getWidth(), getHeight());
+    Render::rect(ACustomShaderBrush{}, {0, 0}, getSize());
 }
 
-void FractalView::setSize(int width, int height) {
-    AView::setSize(width, height);
+void FractalView::setSize(glm::ivec2 size) {
+    AView::setSize(size);
     mShader.use();
-    mShader.set("ratio", mAspectRatio = float(width) / float(height));
+    mShader.set(UNIFORM_RATIO, mAspectRatio = float(size.x) / float(size.y));
 }
 
 void FractalView::setIterations(unsigned it) {
     mShader.use();
-    mShader.set("iterations", int(it));
+    mShader.set(UNIFORM_ITERATIONS, int(it));
 }
 
-void FractalView::onMouseWheel(glm::ivec2 pos, int delta) {
+void FractalView::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
     AView::onMouseWheel(pos, delta);
     auto projectedPos = (glm::dvec2(pos) / glm::dvec2(getSize()) - glm::dvec2(0.5)) * 2.0;
     projectedPos.x *= mAspectRatio;
     mTransform = glm::translate(mTransform, glm::dvec3{projectedPos, 0.0});
-    mTransform = glm::scale(mTransform, glm::dvec3(1.0 - delta / 1000.0));
+    mTransform = glm::scale(mTransform, glm::dvec3(1.0 - delta.y / 1000.0));
     mTransform = glm::translate(mTransform, -glm::dvec3{projectedPos, 0.0});
 
     handleMatrixUpdated();
@@ -120,7 +120,7 @@ void FractalView::reset() {
 
 void FractalView::handleMatrixUpdated() {
     mShader.use();
-    mShader.set("tr", mTransform);
+    mShader.set(UNIFORM_TR, mTransform);
     emit centerPosChanged(getPlotPosition(), getPlotScale());
 }
 
@@ -145,10 +145,10 @@ void FractalView::onKeyRepeat(AInput::Key key) {
         case AInput::RIGHT:
             mTransform = glm::translate(mTransform, {SPEED, 0, 0});
             break;
-        case AInput::PageDown:
+        case AInput::PAGEDOWN:
             mTransform = glm::scale(mTransform, glm::dvec3{0.99});
             break;
-        case AInput::PageUp:
+        case AInput::PAGEUP:
             mTransform = glm::scale(mTransform, glm::dvec3{1.01});
             break;
 

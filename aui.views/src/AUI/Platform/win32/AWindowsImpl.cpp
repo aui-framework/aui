@@ -1,23 +1,18 @@
-/*
- * =====================================================================================================================
- * Copyright (c) 2021 Alex2772
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
- * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
- * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
- * permit persons to whom the Software is furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the
- * Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE
- * WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
- * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- 
- * Original code located at https://github.com/aui-framework/aui
- * =====================================================================================================================
- */
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include "AUI/GL/gl.h"
@@ -32,6 +27,8 @@
 #include "AUI/Util/ARandom.h"
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
+#include "Ole.h"
+#include "Win32Util.h"
 #include <AUI/Platform/Platform.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/AWindowManager.h>
@@ -57,9 +54,9 @@
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/Platform/AMessageBox.h>
+#include <AUI/Platform/win32/AComBase.h>
 
-
-LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
 #define POS glm::ivec2(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))
@@ -70,6 +67,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
     currentWindowStorage() = this;
 
+    /*
     if (uMsg != WM_PAINT) {
         if (!mRedrawFlag) {
             // REMIND VINDOVWS ABOUT MY VINDOW I WANT TO REDRAW!!!
@@ -80,7 +78,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         //bool ok = wglMakeCurrent(GetDC(mHandle), AWindow::context.hrc);
         //assert(ok);
     }
-
+*/
 
     switch (uMsg) {
 /*
@@ -112,9 +110,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 
         case WM_PAINT: {
-            // process thread messages because queue freezes when window is frequently redrawn
-            AThread::processMessages();
-
+            AThread::processMessages(); // process thread messages because queue freezes when window is frequently redrawn
             //if (!painter::painting)
             {
                 redraw();
@@ -156,9 +152,9 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 RECT windowRect, clientRect;
                 GetWindowRect(mHandle, &windowRect);
                 GetClientRect(mHandle, &clientRect);
-                nullsafe(mRenderingContext)->beginResize(*this);
+                AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
                 emit resized(LOWORD(lParam), HIWORD(lParam));
-                AViewContainer::setSize(LOWORD(lParam), HIWORD(lParam));
+                AViewContainer::setSize({LOWORD(lParam), HIWORD(lParam)});
 
                 switch (wParam) {
                     case SIZE_MAXIMIZED:
@@ -171,7 +167,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                         emit restored();
                         break;
                 }
-                nullsafe(mRenderingContext)->endResize(*this);
+                AUI_NULLSAFE(mRenderingContext)->endResize(*this);
             }
             return 0;
         }
@@ -192,23 +188,8 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
         case WM_SETCURSOR: {
             if (LOWORD(lParam) == HTCLIENT) {
-                switch (mCursor) {
-                    case ACursor::DEFAULT: {
-                        static auto cursor = LoadCursor(nullptr, IDC_ARROW);
-                        SetCursor(cursor);
-                        return true;
-                    }
-                    case ACursor::POINTER: {
-                        static auto cursor = LoadCursor(nullptr, IDC_HAND);
-                        SetCursor(cursor);
-                        return true;
-                    }
-                    case ACursor::TEXT: {
-                        static auto cursor = LoadCursor(nullptr, IDC_IBEAM);
-                        SetCursor(cursor);
-                        return true;
-                    }
-                }
+                AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
+                return true;
             }
             break;
         }
@@ -246,7 +227,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case WM_DPICHANGED: {
             auto prevDpi = getDpiRatio();
             updateDpi();
-            setSize(getWidth() * getDpiRatio() / prevDpi, getHeight() * getDpiRatio() / prevDpi);
+            setSize({getWidth() * getDpiRatio() / prevDpi, getHeight() * getDpiRatio() / prevDpi});
             return 0;
         }
 
@@ -271,17 +252,18 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
 
 void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(_cast<AWindow>(sharedPtr()));
+
+    getWindowManager().mWindows.removeFirst(mSelfHolder);
+    mViews.clear();
+    setLayout(nullptr);
 
     // parent window should be activated BEFORE child is closed.
     if (mHandle) {
         if (mParentWindow) {
             EnableWindow(mParentWindow->mHandle, true);
+            BringWindowToTop(mParentWindow->mHandle);
         }
-        ShowWindow(mHandle, SW_HIDE);
     }
-    mViews.clear();
-    setLayout(nullptr);
 
     AThread::current()->enqueue([s = std::move(mSelfHolder)]() mutable noexcept {
         s = nullptr;
@@ -290,6 +272,7 @@ void AWindow::quit() {
 
 
 AWindow::~AWindow() {
+    ShowWindow(mHandle, SW_HIDE);
     mRenderingContext->destroyNativeWindow(*this);
 }
 
@@ -381,19 +364,21 @@ glm::ivec2 AWindow::getWindowPosition() const {
 
 void AWindow::flagRedraw() {
     if (mRedrawFlag && mHandle) {
-        InvalidateRect(mHandle, nullptr, true);
+        getThread()->enqueue([handle = mHandle] {
+            InvalidateRect(handle, nullptr, true);
+        });
         mRedrawFlag = false;
     }
 }
 
 
-void AWindow::setSize(int width, int height) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, width, height);
+void AWindow::setSize(glm::ivec2 size) {
+    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
-    AViewContainer::setSize(width, height);
+    AViewContainer::setSize({width, height});
 
     if (!mHandle) return;
 
@@ -435,50 +420,21 @@ void AWindow::show() {
 }
 void AWindow::setIcon(const AImage& image) {
     if (!mHandle) return;
-    assert(image.getFormat() & AImage::BYTE);
+    assert(image.getFormat() & AImageFormat::BYTE);
 
     if (mIcon) {
         DestroyIcon(mIcon);
     }
 
-    HDC hdcScreen = GetDC(nullptr);
 
-    HDC hdcMemColor = CreateCompatibleDC(hdcScreen);
-    HBITMAP hbmpColor = CreateCompatibleBitmap(hdcScreen, image.getWidth(), image.getHeight());
-    auto hbmpOldColor = (HBITMAP)SelectObject(hdcMemColor, hbmpColor);
-
-    HDC hdcMemMask = CreateCompatibleDC(hdcScreen);
-    HBITMAP hbmpMask = CreateCompatibleBitmap(hdcMemMask, image.getWidth(), image.getHeight());
-    auto hbmpOldMask = (HBITMAP)SelectObject(hdcMemMask, hbmpMask);
-
-    for (int y = 0; y < image.getHeight(); ++y) {
-        for (int x = 0; x < image.getWidth(); ++x) {
-            const uint8_t* color = &image.at(x, y);
-            if (image.getFormat() & AImage::RGBA) {
-                uint8_t a = 0xffu - color[3];
-                SetPixel(hdcMemMask, x, y, RGB(a, a, a));
-            }
-            SetPixel(hdcMemColor, x, y, RGB(color[0], color[1], color[2]));
-        }
-    }
-
-    SelectObject(hdcMemColor, hbmpOldColor);
-    DeleteObject(hdcMemColor);
-    SelectObject(hdcMemMask, hbmpOldMask);
-    DeleteObject(hdcMemMask);
+    auto bmpColor = aui::win32::imageRgbToBitmap(image);
+    auto bmpMask = aui::win32::imageRgbToBitmap(image, aui::win32::BitmapMode::A);
 
     ICONINFO ii;
     ii.fIcon = TRUE;
-    ii.hbmMask = hbmpMask;
-    ii.hbmColor = hbmpColor;
+    ii.hbmMask = bmpMask;
+    ii.hbmColor = bmpColor;
     mIcon = CreateIconIndirect(&ii);
-    DeleteObject(hbmpColor);
-
-    // Clean-up.
-    SelectObject(hdcMemColor, hbmpOldColor);
-    DeleteObject(hbmpColor);
-    DeleteDC(hdcMemColor);
-    ReleaseDC(NULL, hdcScreen);
 
     SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon);
 }
@@ -511,4 +467,63 @@ void AWindowManager::loop() {
         DispatchMessage(&msg);
         AThread::processMessages();
     }
+}
+
+void AWindow::blockUserInput(bool blockUserInput) {
+    EnableWindow(mHandle, !blockUserInput);
+}
+
+void AWindow::allowDragNDrop() {
+    class DropTarget: public AComBase<DropTarget, IDropTarget> {
+    public:
+        DropTarget(ABaseWindow* window) : mWindow(window) {}
+
+        HRESULT __stdcall DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
+            auto effect = DROPEFFECT_NONE;
+            mMimed = Ole::toMime(pDataObj);
+            if (mWindow->onDragEnter({ mMimed, { pt.x, pt.y } })) {
+                if (*pdwEffect & DROPEFFECT_COPY) {
+                    effect = DROPEFFECT_COPY;
+                } else {
+                    effect = DROPEFFECT_MOVE;
+                }
+            }
+            *pdwEffect = mOleEffect = effect;
+            return S_OK;
+        }
+
+        HRESULT __stdcall DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
+            *pdwEffect = mOleEffect;
+            return S_OK;
+        }
+
+        HRESULT __stdcall DragLeave() override {
+            mWindow->onDragLeave();
+            mMimed.clear();
+            return S_OK;
+        }
+
+        HRESULT __stdcall Drop(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
+            *pdwEffect = mOleEffect;
+            mWindow->onDragDrop({ mMimed, { pt.x, pt.y} });
+            return S_OK;
+        }
+
+    private:
+        AMimedData mMimed;
+        ABaseWindow* mWindow;
+        DWORD mOleEffect;
+    };
+    Ole::inst();
+
+    auto r = RegisterDragDrop(mHandle, new DropTarget(this));
+    assert(r == S_OK);
+}
+
+void AWindow::requestTouchscreenKeyboard() {
+    ABaseWindow::requestTouchscreenKeyboard();
+}
+
+void AWindow::hideTouchscreenKeyboard() {
+    ABaseWindow::hideTouchscreenKeyboard();
 }

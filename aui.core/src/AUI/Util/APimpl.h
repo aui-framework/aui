@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 #pragma once
 
 #include <cstdint>
@@ -6,15 +22,15 @@
 
 namespace aui {
     /**
-     * Utility wrapper implementing the stack-allocated (fast) pimpl idiom.
+     * @brief Utility wrapper implementing the stack-allocated (fast) pimpl idiom.
+     * @ingroup useful_templates
      * @note the following functions can be called only if <code>T</code> is a complete type:
      * <ul>
      *   <li>ctor</li>
      *   <li>dtor</li>
-     *   <li>dtor</li>
      * </ul>
      *
-     * @see https://youtu.be/mkPTreWiglk?t=157 (Russian)
+     * See https://youtu.be/mkPTreWiglk?t=157 (Russian)
      */
     template<typename T, std::size_t storageSize, std::size_t storageAlignment = alignof(int)>
     struct fast_pimpl {

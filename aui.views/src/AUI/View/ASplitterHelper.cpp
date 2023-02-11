@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by Alex2772 on 11/11/2021.
 //
@@ -44,24 +60,25 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
              i += direction) {
             auto& currentItem = mItems[i];
 
+            const auto prevSize = currentItem->getFixedSize();
             currentItem->setFixedSize({0, 0});
 
             // check if current view can handle us all free space
-            int minSize = mDirection == LayoutDirection::VERTICAL
+            int minSize = mDirection == ALayoutDirection::VERTICAL
                           ? currentItem->getMinimumHeight()
                           : currentItem->getMinimumWidth();
             int currentSize = getAxisValue(currentItem->getSize());
             int currentDelta = currentSize - minSize;
             if (currentDelta >= amountToShrink) {
                 // best case. current view handled all free space
-                glm::ivec2 fixedSize = {0, 0};
+                glm::ivec2 fixedSize = prevSize;
                 getAxisValue(fixedSize) = currentSize - amountToShrink;
                 currentItem->setFixedSize(fixedSize);
                 amountToShrink = 0;
                 break;
             } else if (currentDelta != 0) {
                 // worse case. current view partially handled free space, so we have to spread it to the next elements
-                glm::ivec2 fixedSize = {0, 0};
+                glm::ivec2 fixedSize = prevSize;
                 getAxisValue(fixedSize) = currentSize - currentDelta;
                 currentItem->setFixedSize(fixedSize);
                 amountToShrink -= currentDelta;

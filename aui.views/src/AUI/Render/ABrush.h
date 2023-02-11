@@ -1,3 +1,19 @@
+// AUI Framework - Declarative UI toolkit for modern C++20
+// Copyright (C) 2020-2023 Alex2772
+//
+// This library is free software; you can redistribute it and/or
+// modify it under the terms of the GNU Lesser General Public
+// License as published by the Free Software Foundation; either
+// version 2 of the License, or (at your option) any later version.
+//
+// This library is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+// Lesser General Public License for more details.
+//
+// You should have received a copy of the GNU Lesser General Public
+// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+
 //
 // Created by Alex2772 on 11/18/2021.
 //
@@ -16,6 +32,14 @@
  */
 struct ASolidBrush {
     AColor solidColor = AColor::WHITE;
+};
+
+
+/**
+ * The brush used with a custom graphics API shaders.
+ */
+struct ACustomShaderBrush {
+
 };
 
 
@@ -44,7 +68,7 @@ struct ATexturedBrush {
      *     <dd>When set, on software renderer it produces extra CPU costs.</dd>
      * </dl>
      */
-    std::optional<glm::vec2> uv1;
+    AOptional<glm::vec2> uv1;
 
     /**
      * Optional. Top left UV coords of the texture.
@@ -53,7 +77,7 @@ struct ATexturedBrush {
      *     <dd>When set, on software renderer it produces extra CPU costs.</dd>
      * </dl>
      */
-    std::optional<glm::vec2> uv2;
+    AOptional<glm::vec2> uv2;
 
     /**
      * Optional. Controls how does the image is scaled.
@@ -76,4 +100,5 @@ struct ATexturedBrush {
  */
 using ABrush = std::variant<ASolidBrush,
                             ALinearGradientBrush,
-                            ATexturedBrush>;
+                            ATexturedBrush,
+                            ACustomShaderBrush>;
