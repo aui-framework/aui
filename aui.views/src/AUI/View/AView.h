@@ -232,7 +232,7 @@ protected:
     /**
      * @brief defines if the next view must be focused on tab button pressed
      */
-    bool mFocusNextViewOnTab = true;
+    bool mFocusNextViewOnTab = false;
 
     void requestLayoutUpdate();
 
