@@ -61,7 +61,7 @@ public:
     void setSelectionId(int id);
     int getContentMinimumWidth(ALayoutDirection layout) override;
 
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
 
     void destroyWindow();
 

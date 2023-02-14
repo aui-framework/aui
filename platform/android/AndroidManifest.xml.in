@@ -14,7 +14,7 @@
         <activity
                 android:name="@APP_ANDROID_PACKAGE@.MainActivity"
                 android:exported="true"
-                android:screenOrientation="landscape"
+                android:screenOrientation="portrait"
         >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

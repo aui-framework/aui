@@ -22,6 +22,7 @@
 #include "AUI/Traits/values.h"
 #include <AUI/Thread/AMutex.h>
 #include <AUI/Traits/members.h>
+#include <AUI/Traits/concepts.h>
 
 class AString;
 class AAbstractSignal;
@@ -82,7 +83,7 @@ public:
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
-	template<AAnySignal Signal, std::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
+	template<AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
 	static void connect(Signal& signal, Object* object, Function&& function)
 	{
         signal.connect(object, std::forward<Function>(function));
@@ -98,7 +99,7 @@ public:
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
-    template<AAnySignal Signal, std::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
+    template<AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
 	static void connect(Signal& signal, Object& object, Function&& function)
 	{
         signal.connect(&object, std::forward<Function>(function));
@@ -129,7 +130,7 @@ public:
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
-    template<AAnySignal Signal, std::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
+    template<AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
 	static void connect(Signal& signal, _<Object> object, Function&& function)
 	{
         signal.connect(object.get(), std::forward<Function>(function));
@@ -189,5 +190,7 @@ private:
 };
 
 #define emit (*this)^
+
+#define AUI_EMIT_FOREIGN(object, signal, ...) (*object)^ object->signal(__VA_ARGS__)
 
 #include "SharedPtr.h"

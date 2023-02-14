@@ -182,10 +182,10 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
     }
 }
 
-void ABaseWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     closeOverlappingSurfacesOnClick();
     auto focusCopy = mFocusedView.lock();
-    AViewContainer::onMousePressed(pos, button);
+    AViewContainer::onPointerPressed(event);
     if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
         if (focusCopy->hasFocus()) {
             focusCopy->onFocusLost();
@@ -202,27 +202,27 @@ void ABaseWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     auto now = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
     auto delta = now - lastButtonPressedTime;
-    if (delta < 500ms && lastPosition == pos) {
-        if (lastButtonPressed == button) {
-            onMouseDoubleClicked(pos, button);
+    if (delta < 500ms && lastPosition == event.position) {
+        if (lastButtonPressed == event.button) {
+            onPointerDoubleClicked(event);
 
             lastButtonPressedTime = 0ms;
         }
     } else {
         lastButtonPressedTime = now;
-        lastButtonPressed = button;
-        lastPosition = pos;
+        lastButtonPressed = event.button;
+        lastPosition = event.position;
     }
     AMenu::close();
 }
 
-void ABaseWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
+    AViewContainer::onPointerReleased(event);
 }
 
-void ABaseWindow::onMouseMove(glm::ivec2 pos) {
+void ABaseWindow::onPointerMove(glm::ivec2 pos) {
     mMousePos = pos;
-    AViewContainer::onMouseMove(pos);
+    AViewContainer::onPointerMove(pos);
     _<AView> v;
     mCursor = ACursor::DEFAULT;
 
@@ -236,7 +236,7 @@ void ABaseWindow::onMouseMove(glm::ivec2 pos) {
     if (!AWindow::shouldDisplayHoverAnimations()) {
         if (auto focused = mFocusedView.lock()) {
             if (focused != v) {
-                focused->onMouseMove(pos - focused->getPositionInWindow());
+                focused->onPointerMove(pos - focused->getPositionInWindow());
             }
         }
     }

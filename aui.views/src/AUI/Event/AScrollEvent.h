@@ -16,18 +16,14 @@
 
 #pragma once
 
-#include <AUI/Common/AObject.h>
+#include <glm/glm.hpp>
 
-template<aui::invocable Callback>
-class ARaiiHelper {
-public:
-    ARaiiHelper(Callback&& callback) noexcept: mCallback(std::forward<Callback>(callback)) {
+struct AScrollEvent {
+    glm::ivec2 origin;
+    glm::ivec2 delta;
 
-    }
-    ~ARaiiHelper() {
-        mCallback();
-    }
-
-private:
-    std::decay_t<Callback> mCallback;
+    /**
+     * @brief Whether the event simulated by kinetic scroll feature or not.
+     */
+    bool kinetic = false;
 };

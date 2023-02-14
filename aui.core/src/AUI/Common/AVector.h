@@ -322,7 +322,7 @@ public:
      * @param transformer transformer function.
      * @return A new vector.
      */
-    template<std::incrementable Iterator, std::invocable<Iterator> UnaryOperation>
+    template<aui::incrementable Iterator, aui::invocable<decltype(*std::declval<Iterator>())> UnaryOperation>
     static auto fromRange(aui::range<Iterator> range, UnaryOperation&& transformer) -> AVector<decltype(transformer(range.first()))> {
         AVector<decltype(transformer(range.first()))> result;
         result.reserve(range.size());
@@ -330,7 +330,7 @@ public:
         return result;
     }
 
-    template<std::invocable<const StoredType&> UnaryOperation>
+    template<aui::invocable<const StoredType&> UnaryOperation>
     auto map(UnaryOperation&& transformer) const -> AVector<decltype(transformer(std::declval<StoredType>()))> {
         AVector<decltype(transformer(std::declval<StoredType>()))> result;
         result.reserve(p::size());
@@ -338,21 +338,21 @@ public:
         return result;
     }
 
-    template<std::invocable<const StoredType&> UnaryOperation>
+    template<aui::invocable<const StoredType&> UnaryOperation>
     [[nodiscard]]
     auto toMap(UnaryOperation&& transformer) const -> AMap<decltype(transformer(std::declval<StoredType>()).first),
                                                            decltype(transformer(std::declval<StoredType>()).second)> {
         return aui::container::to_map(p::begin(), p::end(), transformer);
     }
 
-    template<std::invocable<StoredType&> UnaryOperation>
+    template<aui::invocable<StoredType&> UnaryOperation>
     [[nodiscard]]
     auto toMap(UnaryOperation&& transformer) -> AMap<decltype(transformer(std::declval<StoredType>()).first),
                                                      decltype(transformer(std::declval<StoredType>()).second)> {
         return aui::container::to_map(p::begin(), p::end(), transformer);
     }
 
-    template<std::predicate<const StoredType&> Predicate>
+    template<aui::predicate<const StoredType&> Predicate>
     AVector filter(Predicate&& predicate) {
         AVector result;
         result.reserve(p::size());

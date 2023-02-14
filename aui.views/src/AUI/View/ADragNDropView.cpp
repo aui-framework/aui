@@ -30,8 +30,8 @@ ADragNDropView::ADragNDropView() {
     });
 }
 
-void ADragNDropView::onMouseMove(glm::ivec2 pos) {
-    AViewContainer::onMouseMove(pos);
+void ADragNDropView::onPointerMove(glm::ivec2 pos) {
+    AViewContainer::onPointerMove(pos);
 
     if (AInput::isKeyDown(AInput::LBUTTON)) {
         if (!mDnDInProgress) {

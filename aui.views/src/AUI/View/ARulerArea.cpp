@@ -123,8 +123,8 @@ void ARulerArea::render() {
     glEnable(GL_STENCIL_TEST);
 }
 
-void ARulerArea::onMouseMove(glm::ivec2 pos) {
-    AViewContainer::onMouseMove(pos);
+void ARulerArea::onPointerMove(glm::ivec2 pos) {
+    AViewContainer::onPointerMove(pos);
     mMousePos = pos;
     redraw();
 }

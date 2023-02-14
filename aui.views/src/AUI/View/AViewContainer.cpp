@@ -122,15 +122,15 @@ void AViewContainer::onMouseEnter() {
     AView::onMouseEnter();
 }
 
-void AViewContainer::onMouseMove(glm::ivec2 pos) {
-    AView::onMouseMove(pos);
+void AViewContainer::onPointerMove(glm::ivec2 pos) {
+    AView::onPointerMove(pos);
 
     auto targetView = getViewAt(pos);
 
     if (targetView) {
         auto mousePos = pos - targetView->getPosition();
         targetView->onMouseEnter();
-        targetView->onMouseMove(mousePos);
+        targetView->onPointerMove(mousePos);
     }
 
     for (auto& v: mViews) {
@@ -163,36 +163,39 @@ int AViewContainer::getContentMinimumHeight(ALayoutDirection layout) {
     return AView::getContentMinimumHeight(ALayoutDirection::NONE);
 }
 
-void AViewContainer::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    AView::onMousePressed(pos, button);
+void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
+    AView::onPointerPressed(event);
 
-    auto p = getViewAt(pos);
+    auto p = getViewAt(event.position);
     if (p && p->isEnabled()) {
         if (p->capturesFocus()) p->focus();
-        p->onMousePressed(pos - p->getPosition(), button);
+        p->onPointerPressed({event.position - p->getPosition(), event.button});
     }
 }
 
-void AViewContainer::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AView::onMouseReleased(pos, button);
-    auto p = getViewAt(pos);
+void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
+    AView::onPointerReleased(event);
+    auto p = getViewAt(event.position);
     if (p && p->isEnabled() && p->isMousePressed())
-        p->onMouseReleased(pos - p->getPosition(), button);
+        p->onPointerReleased({event.position - p->getPosition(), event.button});
 }
 
-void AViewContainer::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) {
-    AView::onMouseDoubleClicked(pos, button);
+void AViewContainer::onPointerDoubleClicked(const APointerPressedEvent& event) {
+    AView::onPointerDoubleClicked(event);
 
-    auto p = getViewAt(pos);
+    auto p = getViewAt(event.position);
     if (p && p->isEnabled())
-        p->onMouseDoubleClicked(pos - p->getPosition(), button);
+        p->onPointerDoubleClicked({event.position - p->getPosition(), event.button});
 }
 
-void AViewContainer::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
-    AView::onMouseWheel(pos, delta);
-    auto p = getViewAt(pos);
-    if (p && p->isEnabled())
-        p->onMouseWheel(pos - p->getPosition(), delta);
+void AViewContainer::onScroll(const AScrollEvent& event) {
+    AView::onScroll(event);
+    auto p = getViewAt(event.origin);
+    if (p && p->isEnabled()) {
+        auto eventCopy = event;
+        eventCopy.origin -= p->getPosition();
+        p->onScroll(event);
+    }
 }
 
 bool AViewContainer::consumesClick(const glm::ivec2& pos) {

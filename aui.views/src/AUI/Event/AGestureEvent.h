@@ -24,6 +24,7 @@ struct ALongPressEvent {
 
 struct AFingerDragEvent {
     glm::vec2 delta;
+    bool kinetic = false;
 };
 
 

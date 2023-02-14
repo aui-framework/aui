@@ -69,7 +69,7 @@ public:
 
     void onMouseEnter() override;
 
-    void onMouseMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos) override;
 
     void onMouseLeave() override;
 
@@ -80,13 +80,13 @@ public:
 
     int getContentMinimumHeight(ALayoutDirection layout) override;
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerPressed(const APointerPressedEvent& event) override;
 
-    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerDoubleClicked(const APointerPressedEvent& event) override;
 
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
 
-    void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
+    void onScroll(const AScrollEvent& event) override;
 
     bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 

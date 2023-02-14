@@ -99,8 +99,8 @@ void FractalView::setIterations(unsigned it) {
     mShader.set(UNIFORM_ITERATIONS, int(it));
 }
 
-void FractalView::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
-    AView::onMouseWheel(pos, delta);
+void FractalView::onScroll(glm::ivec2 pos, glm::ivec2 delta) {
+    AView::onScroll(pos, delta);
     auto projectedPos = (glm::dvec2(pos) / glm::dvec2(getSize()) - glm::dvec2(0.5)) * 2.0;
     projectedPos.x *= mAspectRatio;
     mTransform = glm::translate(mTransform, glm::dvec3{projectedPos, 0.0});

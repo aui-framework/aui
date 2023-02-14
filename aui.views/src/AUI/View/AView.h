@@ -37,9 +37,13 @@
 #include <AUI/Enum/AOverflow.h>
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Enum/MouseCollisionPolicy.h>
-#include <AUI/Event/AGestureEvent.h>
 #include <AUI/Util/ALayoutDirection.h>
 #include <AUI/Action/AMenu.h>
+
+#include <AUI/Event/AScrollEvent.h>
+#include <AUI/Event/AGestureEvent.h>
+#include <AUI/Event/APointerPressedEvent.h>
+#include <AUI/Event/APointerReleasedEvent.h>
 
 
 class Render;
@@ -735,20 +739,20 @@ public:
     virtual bool onGesture(const glm::ivec2& origin, const AGestureEvent& event);
 
     virtual void onMouseEnter();
-    virtual void onMouseMove(glm::ivec2 pos);
+    virtual void onPointerMove(glm::ivec2 pos);
     virtual void onMouseLeave();
     virtual void onDpiChanged();
 
-    virtual void onMousePressed(glm::ivec2 pos, AInput::Key button);
-    virtual void onMouseReleased(glm::ivec2 pos, AInput::Key button);
-    virtual void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button);
+    virtual void onPointerPressed(const APointerPressedEvent& event);
+    virtual void onPointerReleased(const APointerReleasedEvent& event);
+    virtual void onPointerDoubleClicked(const APointerPressedEvent& event);
 
     /**
      * Handles mouse wheel events.
      * @param pos mouse cursor position.
      * @param delta the distance mouse wheel scrolled. 120 = mouse scroll down, -120 = mouse scroll up.
      */
-    virtual void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta);
+    virtual void onScroll(const AScrollEvent& event);
     virtual void onKeyDown(AInput::Key key);
     virtual void onKeyRepeat(AInput::Key key);
     virtual void onKeyUp(AInput::Key key);
@@ -831,8 +835,8 @@ signals:
     emits<> mouseLeave;
 
     emits<bool> pressedState;
-    emits<> mousePressed;
-    emits<> mouseReleased;
+    emits<> pressed;
+    emits<> released;
 
     emits<bool> enabledState;
     emits<> enabled;
@@ -854,9 +858,9 @@ signals:
     emits<glm::ivec2, glm::ivec2> geometryChanged;
 
     /**
-     * @brief Mouse scrolled.
+     * @brief Scroll event.
      */
-    emits<glm::ivec2> mouseScrolled;
+    emits<glm::ivec2> scrolled;
 
     /**
      * @brief Keyboard key pressed.
@@ -889,8 +893,8 @@ signals:
 
 private:
     AFieldSignalEmitter<bool> mHovered = AFieldSignalEmitter<bool>(hoveredState, mouseEnter, mouseLeave);
-    AFieldSignalEmitter<bool> mPressed = AFieldSignalEmitter<bool>(pressedState, mousePressed, mouseReleased);
-    //AWatchable<bool> mFocused = AWatchable<bool>(pressedState, mousePressed, mouseReleased);
+    AFieldSignalEmitter<bool> mPressed = AFieldSignalEmitter<bool>(pressedState, pressed, released);
+    //AWatchable<bool> mFocused = AWatchable<bool>(pressedState, pressed, released);
     AFieldSignalEmitter<bool> mEnabled = AFieldSignalEmitter<bool>(enabledState, enabled, disabled, true);
     bool mDirectlyEnabled = true;
     bool mParentEnabled = true;
