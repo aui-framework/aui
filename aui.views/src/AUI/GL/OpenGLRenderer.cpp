@@ -281,7 +281,7 @@ OpenGLRenderer::OpenGLRenderer() {
             "varying vec2 pass_uv;"
             "uniform sampler2D tex;"
             "uniform vec4 color;"
-            "void main(void) {float sample = pow(texture2D(tex, pass_uv).r, 1.0 / 1.2); gl_FragColor = vec4(color.rgb, color.a * sample);}",
+            "void main(void) {float sample = texture2D(tex, pass_uv).r; gl_FragColor = vec4(color.rgb, color.a * sample);}",
             {"pos", "uv"});
 
     mSymbolShaderSubPixel.load(
@@ -295,7 +295,7 @@ OpenGLRenderer::OpenGLRenderer() {
             "varying vec2 pass_uv;"
             "uniform sampler2D tex;"
             "uniform vec4 color;"
-            "void main(void) {vec3 sample = pow(texture2D(tex, pass_uv).rgb, vec3(1.0 / 1.2)); gl_FragColor = vec4(sample * color.rgb * color.a, 1);}",
+            "void main(void) {vec3 sample = texture2D(tex, pass_uv).rgb; gl_FragColor = vec4(sample * color.rgb * color.a, 1);}",
             {"pos", "uv"});
 
     mTempVao.bind();
