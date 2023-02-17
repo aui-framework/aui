@@ -101,7 +101,6 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                     drawableDrawWrapper(size);
                     break;
                 }
-
                 case Sizing::FIT_PADDING: {
                     RenderHints::PushMatrix m;
                     Render::setTransform(
