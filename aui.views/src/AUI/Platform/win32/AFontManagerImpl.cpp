@@ -21,7 +21,7 @@
 
 #include <Windows.h>
 #include <AUI/Platform/AFontManager.h>
-#include "AUI/Render/FreeType.h"
+#include "AUI/Font/FreeType.h"
 #include <AUI/IO/APath.h>
 
 AFontManager::AFontManager() :

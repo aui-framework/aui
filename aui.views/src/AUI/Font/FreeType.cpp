@@ -16,15 +16,19 @@
 
 #include "FreeType.h"
 #include <freetype/ftlcdfil.h>
+#include <freetype/ftdriver.h>
+#include <freetype/ftmodapi.h>
 
 
 FreeType::FreeType() {
 	FT_Init_FreeType(&ft);
 
-	//FT_Library_SetLcdFilter(ft, FT_LCD_FILTER_LEGACY);
-	//unsigned char vals[] = { 0x02, 0x50, 0x7f, 0x50, 0x02 };
-	unsigned char vals[] = { 0x03, 0x21, 0x92, 0x21, 0x03 };
-	FT_Library_SetLcdFilterWeights(ft, vals);
+    FT_UInt     hinting_engine = FT_HINTING_ADOBE;
+
+
+
+    FT_Property_Set( ft, "cff",
+                     "hinting-engine", &hinting_engine );
 }
 
 FreeType::~FreeType() {

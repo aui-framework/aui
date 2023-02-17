@@ -23,7 +23,7 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Util/ATokenizer.h>
-#include "AUI/Render/FreeType.h"
+#include "AUI/Font/FreeType.h"
 
 AFontManager::AFontManager() :
         mFreeType(_new<FreeType>())

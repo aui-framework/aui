@@ -230,14 +230,14 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
         case WM_RBUTTONDOWN:
             onPointerPressed({
                 .position = POS,
-                .button = AInput::LBUTTON
+                .button = AInput::RBUTTON
             });
             SetCapture(mHandle);
             return 0;
         case WM_RBUTTONUP:
             onPointerReleased({
                 .position = POS,
-                .button = AInput::LBUTTON
+                .button = AInput::RBUTTON
             });
             ReleaseCapture();
             return 0;

@@ -17,7 +17,7 @@
 #include <ft2build.h>
 #include <freetype/freetype.h>
 #include <freetype/ftsnames.h>
-#include "AUI/Render/FreeType.h"
+#include "AUI/Font/FreeType.h"
 #include "AUI/Platform/AFontManager.h"
 #include <fstream>
 #include <string>
