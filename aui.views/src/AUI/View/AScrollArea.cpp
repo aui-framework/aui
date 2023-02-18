@@ -121,23 +121,7 @@ void AScrollArea::setSize(glm::ivec2 size) {
                 mContentContainer->child()->getContentMinimumWidth(ALayoutDirection::NONE));
     }
 
-    adjustContentSize();
-}
-
-void AScrollArea::adjustContentSize() {
-    if (mScrollbarAppearance.getVertical() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
-        adjustVerticalSizeToContent();
-
-    if (mScrollbarAppearance.getHorizontal() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
-        adjustHorizontalSizeToContent();
-}
-
-void AScrollArea::adjustHorizontalSizeToContent() {
-    setFixedSize(glm::ivec2(0, getFixedSize().y));
-}
-
-void AScrollArea::adjustVerticalSizeToContent() {
-    setFixedSize(glm::ivec2(getFixedSize().x, 0));
+    AViewContainer::adjustContentSize();
 }
 
 void AScrollArea::onScroll(const AScrollEvent& event) {
