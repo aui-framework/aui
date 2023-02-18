@@ -57,17 +57,11 @@ public:
 
     void onScroll(const AScrollEvent& event) override;
 
-    void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) {
-        mScrollbarAppearance = scrollbarAppearance;
+    void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) override {
+        AViewContainer::setScrollbarAppearance(scrollbarAppearance);
         AUI_NULLSAFE(mHorizontalScrollbar)->setAppearance(scrollbarAppearance.getHorizontal());
         AUI_NULLSAFE(mVerticalScrollbar)->setAppearance(scrollbarAppearance.getVertical());
-
-        adjustContentSize();
     }
-
-    void adjustContentSize();
-    void adjustHorizontalSizeToContent();
-    void adjustVerticalSizeToContent();
 
     class Builder {
     friend class AScrollArea;
@@ -117,7 +111,6 @@ private:
     _<AScrollAreaContainer> mContentContainer;
     _<AScrollbar> mVerticalScrollbar;
     _<AScrollbar> mHorizontalScrollbar;
-    ScrollbarAppearance mScrollbarAppearance;
 
     explicit AScrollArea(const Builder& builder);
 };

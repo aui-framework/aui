@@ -23,6 +23,7 @@
 #include <glm/glm.hpp>
 
 #include <AUI/ASS/Declaration/IDeclaration.h>
+#include <AUI/ASS/Declaration/ScrollbarAppearance.h>
 #include "AUI/Common/ABoxFields.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/AObject.h"

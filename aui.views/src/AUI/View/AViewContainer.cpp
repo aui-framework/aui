@@ -272,6 +272,7 @@ _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos) {
 void AViewContainer::setSize(glm::ivec2 size) {
     mSizeSet = true;
     AView::setSize(size);
+    adjustContentSize();
     updateLayout();
 }
 
@@ -380,4 +381,20 @@ void AViewContainer::onKeyUp(AInput::Key key) {
 void AViewContainer::onCharEntered(wchar_t c) {
     AView::onCharEntered(c);
     AUI_NULLSAFE(focusChainTarget())->onCharEntered(c);
+}
+
+void AViewContainer::adjustContentSize() {
+    if (mScrollbarAppearance.getVertical() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
+        adjustVerticalSizeToContent();
+
+    if (mScrollbarAppearance.getHorizontal() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
+        adjustHorizontalSizeToContent();
+}
+
+void AViewContainer::adjustHorizontalSizeToContent() {
+    setFixedSize(glm::ivec2(0, getFixedSize().y));
+}
+
+void AViewContainer::adjustVerticalSizeToContent() {
+    setFixedSize(glm::ivec2(getFixedSize().x, 0));
 }

@@ -96,6 +96,12 @@ public:
 
     void setEnabled(bool enabled = true) override;
 
+    void adjustContentSize();
+
+    void adjustHorizontalSizeToContent();
+
+    void adjustVerticalSizeToContent();
+
     auto begin() const {
         return mViews.cbegin();
     }
@@ -209,8 +215,14 @@ public:
 
     bool capturesFocus() override;
 
+    virtual void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) {
+        mScrollbarAppearance = scrollbarAppearance;
+        emit scrollbarAppearanceSet(scrollbarAppearance);
+    }
+
 protected:
     AVector<_<AView>> mViews;
+    ScrollbarAppearance mScrollbarAppearance;
 
     void drawView(const _<AView>& view);
 
@@ -230,7 +242,6 @@ protected:
      */
     virtual void updateParentsLayoutIfNecessary();
 
-
     /**
      * @brief Moves (like via std::move) all children and layout of the specified container to this container.
      * @param container container. Must be pure AViewContainer (cannot be a derivative from AViewContainer).
@@ -238,6 +249,9 @@ protected:
      * should use ALayoutInflater::inflate instead.
      */
     void setContents(const _<AViewContainer>& container);
+
+signals:
+    emits<ScrollbarAppearance> scrollbarAppearanceSet;
 
 private:
     _<ALayout> mLayout;

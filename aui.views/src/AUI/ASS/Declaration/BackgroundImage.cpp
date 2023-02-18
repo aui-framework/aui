@@ -81,6 +81,10 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                 case Sizing::CONTAIN: {
                     RenderHints::PushMatrix m;
                     glm::ivec2 viewSize = view->getSize();
+                    if (viewSize.x == 0 || viewSize.y == 0) {
+                        break;
+                    }
+
                     glm::ivec2 imageSize = drawable->getSizeHint();
                     glm::ivec2 sizeDelta = viewSize - imageSize;
                     glm::ivec2 size;
