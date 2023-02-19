@@ -126,14 +126,6 @@ void AView::popStencilIfNeeded() {
 }
 void AView::render()
 {
-    // stencil
-    if (mOverflow == AOverflow::HIDDEN)
-    {
-        RenderHints::pushMask([&]() {
-            drawStencilMask();
-        });
-    }
-
     if (mAnimator)
         mAnimator->animate(this);
 
@@ -149,10 +141,17 @@ void AView::render()
         }
     }
 
+    // stencil
+    if (mOverflow == AOverflow::HIDDEN)
+    {
+        RenderHints::pushMask([&]() {
+            drawStencilMask();
+        });
+    }
+
     if (auto w = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)]) {
         w->renderFor(this);
     }
-
     mRedrawRequested = false;
 }
 
