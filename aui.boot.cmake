@@ -22,6 +22,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
+option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
@@ -110,7 +111,13 @@ else()
     set(AUI_TARGET_ABI "${_tmp}" CACHE INTERNAL "COMPILER-PROCESSOR pair")
 endif()
 
-set(AUI_CACHE_DIR ${HOME_DIR}/.aui CACHE PATH "Path to AUI.Boot cache")
+
+set(_tmp ${HOME_DIR}/.aui)
+if(AUIB_LOCAL_CACHE)
+    set(_tmp ${CMAKE_BINARY_DIR}/aui.boot)
+endif()
+
+set(AUI_CACHE_DIR ${_tmp} CACHE PATH "Path to AUI.Boot cache")
 message(STATUS "AUI.Boot cache: ${AUI_CACHE_DIR}")
 message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_ABI}")
 
