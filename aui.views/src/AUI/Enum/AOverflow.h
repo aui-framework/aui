@@ -29,7 +29,8 @@
  */
 enum class AOverflow {
     VISIBLE,
-    HIDDEN
+    HIDDEN,
+    HIDDEN_FROM_THIS
 };
 
 /**
