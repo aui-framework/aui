@@ -144,6 +144,8 @@ void AAbstractLabel::processTextOverflow(AString& text) {
         overflowingWidth = std::min(getMaxSize().x, getFixedSize().x);
     }
 
+    overflowingWidth = std::min(overflowingWidth, mSize.x);
+
     mIsTextTooLarge = getFontStyleLabel().getWidth(text) > overflowingWidth;
     if (!mIsTextTooLarge)
         return;
