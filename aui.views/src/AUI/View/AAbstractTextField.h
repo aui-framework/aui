@@ -87,4 +87,6 @@ public:
     void onCharEntered(wchar_t c) override;
     void invalidateFont() override;
 
+    void onFocusLost() override;
+
 };

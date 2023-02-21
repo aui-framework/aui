@@ -36,6 +36,11 @@ void AAbstractTextField::onFocusAcquired() {
     updateCursorBlinking();
 }
 
+void AAbstractTextField::onFocusLost() {
+    AAbstractTypeableView::onFocusLost();
+    AUI_NULLSAFE(getWindow())->hideTouchscreenKeyboard();
+}
+
 AAbstractTextField::~AAbstractTextField()
 {
 }
