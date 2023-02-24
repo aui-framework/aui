@@ -485,12 +485,12 @@ AStylesheet::AStylesheet() {
             FixedSize { 6_dp, {} },
             BorderRadius { 3_dp },
 #else
-            FixedSize { 15_dp, {} },
+            FixedSize {{},{} },
 #endif
 
-            MinSize { {}, 40_dp },
+            MinSize { 15_dp, 15_dp },
             BackgroundSolid { 0xcccccc_rgb },
-            Margin {1_px, 0},
+            Margin {1_px, 1_px },
         },
         {
             t<AScrollbar>::disabled() > t<AScrollbarHandle>(),

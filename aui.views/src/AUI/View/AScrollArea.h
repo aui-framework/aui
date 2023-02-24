@@ -80,7 +80,7 @@ public:
         }
 
         Builder& withExternalHorizontalScrollbar(_<AScrollbar> externalHorizontalScrollbar) {
-            mExternalHorizontalScrollbar = std::move(externalHorizontalScrollbar);
+                mExternalHorizontalScrollbar = std::move(externalHorizontalScrollbar);
             return *this;
         }
 

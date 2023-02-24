@@ -264,11 +264,11 @@ void AScrollbarHandle::onPointerReleased(const APointerReleasedEvent& event) {
 void AScrollbarHandle::setSize(glm::ivec2 size) {
     switch (mScrollbar.mDirection) {
         case ALayoutDirection::VERTICAL:
-            size.y = mOverridenSize;
+            size = {15_dp, mOverridenSize};
             break;
 
         case ALayoutDirection::HORIZONTAL:
-            size.x = mOverridenSize;
+            size = {mOverridenSize, 15_dp};
             break;
     }
 

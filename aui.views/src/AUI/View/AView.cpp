@@ -111,7 +111,7 @@ void AView::postRender() {
 }
 
 void AView::popStencilIfNeeded() {
-    if (getOverflow() == AOverflow::HIDDEN)
+    if (getOverflow() == AOverflow::HIDDEN || getOverflow() == AOverflow::HIDDEN_FROM_THIS)
     {
         /*
          * If the AView's Overflow set to Overflow::HIDDEN AView pushed it's mask into the stencil buffer but AView
@@ -126,6 +126,14 @@ void AView::popStencilIfNeeded() {
 }
 void AView::render()
 {
+    //draw before drawing this element
+    if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
+    {
+        RenderHints::pushMask([&]() {
+            drawStencilMask();
+        });
+    }
+
     if (mAnimator)
         mAnimator->animate(this);
 
@@ -141,7 +149,7 @@ void AView::render()
         }
     }
 
-    // stencil
+    //draw stencil before drawing children elements
     if (mOverflow == AOverflow::HIDDEN)
     {
         RenderHints::pushMask([&]() {
