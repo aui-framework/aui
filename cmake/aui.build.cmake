@@ -619,7 +619,8 @@ endmacro()
 
 
 function(aui_compile_assets AUI_MODULE_NAME)
-    cmake_parse_arguments(ASSETS "" "" "EXCLUDE" ${ARGN})
+    set(oneValueArgs DIR)
+    cmake_parse_arguments(ASSETS "" "${oneValueArgs}" "EXCLUDE" ${ARGN})
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
 
     if(CMAKE_CROSSCOMPILING)
@@ -628,9 +629,13 @@ function(aui_compile_assets AUI_MODULE_NAME)
         get_target_property(TARGET_DIR ${AUI_MODULE_NAME} ARCHIVE_OUTPUT_DIRECTORY)
     endif()
 
+    if (NOT ASSETS_DIR)
+        set(ASSETS_DIR "assets")
+    endif()
 
+    get_filename_component(ASSETS_DIR "${ASSETS_DIR}" ABSOLUTE)
     get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-    file(GLOB_RECURSE ASSETS RELATIVE ${SELF_DIR} "assets/*")
+    file(GLOB_RECURSE ASSETS RELATIVE ${SELF_DIR} "${ASSETS_DIR}/*")
 
     if (ASSETS_EXCLUDE)
         foreach(_item ${ASSETS})
@@ -661,7 +666,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
         set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
         add_custom_command(
                 OUTPUT ${OUTPUT_PATH}
-                COMMAND ${AUI_TOOLBOX_EXE} pack ${SELF_DIR}/assets ${SELF_DIR}/${ASSET_PATH} ${OUTPUT_PATH}
+                COMMAND ${AUI_TOOLBOX_EXE} pack ${ASSETS_DIR} ${SELF_DIR}/${ASSET_PATH} ${OUTPUT_PATH}
                 DEPENDS ${SELF_DIR}/${ASSET_PATH}
         )
         target_sources(${AUI_MODULE_NAME} PRIVATE ${OUTPUT_PATH})
