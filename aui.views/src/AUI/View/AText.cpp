@@ -266,3 +266,9 @@ Float AText::CharEntry::getFloat() const {
 void AText::invalidateFont() {
     mPrerenderedString.reset();
 }
+
+void AText::clearContent() {
+    mWordEntries.clear();
+    mCharEntries.clear();
+    removeAllViews();
+}
