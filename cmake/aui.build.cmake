@@ -473,7 +473,7 @@ endfunction(aui_deploy_library)
 function(aui_executable AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
+    file(GLOB_RECURSE SRCS
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
@@ -490,7 +490,6 @@ function(aui_executable AUI_MODULE_NAME)
         list(FILTER SRCS EXCLUDE REGEX "(.*\\/)?Platform/${PLATFORM_NAME}\\/.*")
     endforeach()
 
-    #message("ASSDIR ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp")
     if(ANDROID)
         add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
     else()
@@ -812,7 +811,7 @@ function(aui_module AUI_MODULE_NAME)
     endif()
 
 
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
+    file(GLOB_RECURSE SRCS
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.manifest
