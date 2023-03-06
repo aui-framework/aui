@@ -105,9 +105,9 @@ void AAbstractTextField::setText(const AString& t)
 	mContents = t;
     if (t.empty()) {
         clearSelection();
-        mCursorIndex = 0;
     }
 
+    mCursorIndex = t.size();
 	updateCursorBlinking();
 
     invalidatePrerenderedString();
