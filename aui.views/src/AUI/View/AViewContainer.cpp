@@ -60,6 +60,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
     for (const auto& view: views) {
         view->mParent = this;
         AUI_NULLSAFE(mLayout)->addView(-1, view);
+        emit view->addedToContainer();
     }
 
     if (mViews.empty()) {
@@ -73,12 +74,14 @@ void AViewContainer::addView(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(-1, view);
+    emit view->addedToContainer();
 }
 
 void AViewContainer::addViewCustomLayout(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
     view->setSize(view->getMinimumSize());
+    emit view->addedToContainer();
 }
 
 void AViewContainer::addView(size_t index, const _<AView>& view) {
@@ -86,6 +89,7 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
     view->mParent = this;
     if (mLayout)
         mLayout->addView(index, view);
+    emit view->addedToContainer();
 }
 
 void AViewContainer::removeView(const _<AView>& view) {

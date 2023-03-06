@@ -831,6 +831,8 @@ public:
 
 
 signals:
+    emits<> addedToContainer;
+
     emits<bool> hoveredState;
     emits<> mouseEnter;
     emits<> mouseLeave;
