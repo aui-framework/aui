@@ -88,6 +88,9 @@ protected:
     void translateToCenter();
     void translateToCorner();
 
+    static void translateToCenter(AView* view);
+    static void translateToCorner(AView* view);
+
 public:
 
     void setCurve(const std::function<float(float)>& curve) {
@@ -114,7 +117,5 @@ public:
         mView = view;
     }
 
-
     static _<AAnimator> combine(const AVector<_<AAnimator>>& animators);
 };
-
