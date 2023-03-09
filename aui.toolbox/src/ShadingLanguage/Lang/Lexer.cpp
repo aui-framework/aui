@@ -247,8 +247,8 @@ AVector<AnyToken> Lexer::performLexAnalysis() {
                             auto[i, isHex] = mTokenizer.readUIntX();
                             if (mTokenizer.readChar() == '.') {
                                 // float
-                                AString d10 = mTokenizer.readStringWhile([](char c) { return isdigit(c); });
-                                auto v = (AString::number(i) + "." + d10).toDouble();
+                                AString d10 = mTokenizer.readStringWhile([](char c) -> bool { return isdigit(c); });
+                                auto v = (AString::number(i) + "." + d10).toDouble().valueOrException();
                                 result << FloatToken{v};
 
                                 if (mTokenizer.readChar() != 'f') {

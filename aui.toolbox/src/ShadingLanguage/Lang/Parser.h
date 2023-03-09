@@ -35,7 +35,7 @@ private:
     AVector<AnyToken> mTokens;
     AVector<AnyToken>::iterator mIterator = mTokens.begin();
 
-    void skipUntilSemicolon();
+    void skipUntilSemicolonOrNewLine();
 
     bool parseUsing();
     void reportUnexpectedErrorAndSkip(const AString& string);

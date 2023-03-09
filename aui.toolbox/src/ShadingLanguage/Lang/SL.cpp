@@ -19,3 +19,9 @@ _<ExpressionNode> aui::sl::parseExpression(const AString& text) {
     auto parser = _new<Parser>(l.performLexAnalysis());
     return _<ExpressionNode>(parser->parseExpression());
 }
+
+AVector<_<INode>> aui::sl::parseCodeBlock(const AString& text) {
+    Lexer l(_new<AStringStream>(text));
+    auto parser = _new<Parser>(l.performLexAnalysis());
+    return parser->parse();
+}

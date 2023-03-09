@@ -51,7 +51,7 @@ constexpr size_t got = index_of<AnyToken , type>::value;
 AVector<_<INode>> Parser::parse() {
     AVector<_<INode>> nodes;
     try {
-        for (; mIterator != mTokens.end(); ++mIterator) {
+        for (; mIterator != mTokens.end(); [&] { if (mIterator != mTokens.end()) ++mIterator; }()) {
             try {
                 // here we should find #includes and function definitions
                 switch (mIterator->index()) {
@@ -114,9 +114,13 @@ AVector<_<INode>> Parser::parse() {
 
                                 switch (mIterator->index()) {
                                     case got<SemicolonToken>:
+                                        nodes << _new<VariableDeclarationNode>(false, false, name1, name2, 0, false);
+                                        break;
+
                                     case got<EqualToken>:
-                                        // variable definition which we not interested in
-                                        skipUntilSemicolon();
+                                        ++mIterator;
+                                        nodes << _new<VariableDeclarationNode>(false, false, name1, name2, 0, false,
+                                                                               parseExpression());
                                         break;
 
                                     case got<LParToken>:
@@ -249,7 +253,7 @@ AVector<_<INode>> Parser::parseCodeBlock() {
                         break;
 
                     case KeywordToken::USING:
-                        skipUntilSemicolon();
+                        skipUntilSemicolonOrNewLine();
                         break;
 
                     case KeywordToken::IF: {
@@ -331,7 +335,7 @@ _<ExpressionNode> Parser::parseExpression(RequiredPriority requiredPriority) {
 
                     case KeywordToken::USING:
                         // we are not interested in using, skip until ;
-                        skipUntilSemicolon();
+                        skipUntilSemicolonOrNewLine();
                         break;
 
                     default:
@@ -700,9 +704,9 @@ _<VariableDeclarationNode> Parser::parseVariableDeclaration() {
     throw AException{};
 }
 
-void Parser::skipUntilSemicolon() {
+void Parser::skipUntilSemicolonOrNewLine() {
     for (; mIterator != mTokens.end(); ++mIterator) {
-        if (std::holds_alternative<SemicolonToken>(*mIterator)) {
+        if (std::holds_alternative<SemicolonToken>(*mIterator) || std::holds_alternative<NewLineToken>(*mIterator)) {
             return;
         }
     }
@@ -712,7 +716,7 @@ bool Parser::parseUsing() {
     auto& nameToken = std::get<KeywordToken>(*mIterator);
     if (nameToken.getType() == KeywordToken::USING) {
         // using definition, skip it
-        skipUntilSemicolon();
+        skipUntilSemicolonOrNewLine();
         return true;
     }
     return false;
@@ -720,7 +724,7 @@ bool Parser::parseUsing() {
 
 void Parser::reportUnexpectedErrorAndSkip(const AString& string) {
     reportError(string + ", got "_as + getTokenName());
-    skipUntilSemicolon();
+    skipUntilSemicolonOrNewLine();
 }
 
 AString Parser::getTokenName() {
@@ -733,7 +737,7 @@ AString Parser::getTokenName() {
 
 void Parser::reportUnexpectedEof() {
     reportError("unexpected end of file");
-    skipUntilSemicolon();
+    skipUntilSemicolonOrNewLine();
 }
 
 void Parser::reportError(const AString& message) {

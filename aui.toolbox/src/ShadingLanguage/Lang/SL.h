@@ -12,6 +12,7 @@
 namespace aui::sl {
     _<AST> parseCode(_<IInputStream> p);
     _<ExpressionNode> parseExpression(const AString& text);
+    AVector<_<INode>> parseCodeBlock(const AString& text);
 };
 
 

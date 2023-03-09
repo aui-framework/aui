@@ -8,6 +8,7 @@
 #include <AUI/Common/AString.h>
 #include "INode.h"
 #include "ExpressionNode.h"
+#include "AUI/Common/SharedPtrTypes.h"
 
 /**
  * A node describing variable declaration
@@ -20,14 +21,16 @@ private:
     AString mVariableName;
     unsigned mPointerCount;
     bool mIsReference;
+    _<ExpressionNode> mInitializer;
 
 public:
-    VariableDeclarationNode(bool isConst, bool isStatic, const AString& typeName, const AString& variableName,
-                            unsigned int pointerCount, bool isReference) : mIsConst(isConst), mIsStatic(isStatic),
-                                                                           mTypeName(typeName),
-                                                                           mVariableName(variableName),
+    VariableDeclarationNode(bool isConst, bool isStatic, AString typeName, AString variableName,
+                            unsigned int pointerCount, bool isReference, _<ExpressionNode> initializer = nullptr) : mIsConst(isConst), mIsStatic(isStatic),
+                                                                           mTypeName(std::move(typeName)),
+                                                                           mVariableName(std::move(variableName)),
                                                                            mPointerCount(pointerCount),
-                                                                           mIsReference(isReference) {}
+                                                                           mIsReference(isReference),
+                                                                           mInitializer(std::move(initializer)) {}
 
     void acceptVisitor(INodeVisitor& v) override;
 
@@ -39,20 +42,24 @@ public:
         return mIsStatic;
     }
 
-    const AString& getTypeName() const {
+    const AString& typeName() const {
         return mTypeName;
     }
 
-    const AString& getVariableName() const {
+    const AString& variableName() const {
         return mVariableName;
     }
 
-    unsigned int getPointerCount() const {
+    unsigned int pointerCount() const {
         return mPointerCount;
     }
 
     bool isReference() const {
         return mIsReference;
+    }
+
+    const _<ExpressionNode>& initializer() const {
+        return mInitializer;
     }
 };
 

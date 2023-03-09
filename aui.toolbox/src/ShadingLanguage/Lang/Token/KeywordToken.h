@@ -74,7 +74,11 @@ public:
         REINTERPRET_CAST,
         THROW,
         TYPENAME,
-        NULLPTR
+        NULLPTR,
+
+        INPUT,
+        OUTPUT,
+        UNIFORM,
     };
 
 private:
