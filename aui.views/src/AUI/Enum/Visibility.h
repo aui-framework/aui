@@ -24,6 +24,12 @@
  * @brief Controls the visibility of AView.
  * @ingroup ass
  * @ingroup views
+ *
+ * Enum      | Visibility | Consumes space | Consumes click
+ * ----------+------------+----------------+---------------
+ * VISIBLE   | +          | +              | +
+ * INVISIBLE | -          | +              | +
+ * GONE      | -          | -              | -
  */
 enum class Visibility {
 
