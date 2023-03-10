@@ -195,6 +195,12 @@ public:
         });
         return result;
     }
+
+    AVector<std::tuple<KeyType, ValueType>> toVector() const {
+        return toVector([](const KeyType& k, const ValueType& v) {
+            return std::make_tuple(k, v);
+        });
+    }
 };
 
 

@@ -270,13 +270,15 @@ public:
     }
 
 
-    void sort() noexcept {
+    AVector<StoredType>& sort() noexcept {
         std::sort(p::begin(), p::end());
+        return *this;
     }
 
     template<typename Comparator>
-    void sort(Comparator&& comparator) noexcept {
+    AVector<StoredType>& sort(Comparator&& comparator) noexcept {
         std::sort(p::begin(), p::end(), std::forward<Comparator>(comparator));
+        return *this;
     }
 
     /**

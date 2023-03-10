@@ -24,6 +24,7 @@
 #include <ShadingLanguage/Lang/AST/TemplateOperatorTypenameNode.h>
 #include <ShadingLanguage/Lang/AST/FloatNode.h>
 #include "Parser.h"
+#include "ShadingLanguage/Lang/AST/IndexedAttributeDeclarationNode.h"
 
 class Terminated {};
 template<typename variant, typename type>
@@ -55,14 +56,14 @@ AVector<_<INode>> Parser::parse() {
             try {
                 // here we should find #includes and function definitions
                 switch (mIterator->index()) {
-                    case got<PreprocessorDirectiveToken>: {
+                    case got<NewLineToken>:
+                    case got<PreprocessorDirectiveToken>:
+                    case got<SemicolonToken>:
                         break;
-                    }
-                    case got<SemicolonToken>: {
-                        break;
-                    }
+
                     case got<KeywordToken>: {
-                        switch (std::get<KeywordToken>(*mIterator).getType()) {
+                        const auto keywordType = std::get<KeywordToken>(*mIterator).getType();
+                        switch (keywordType) {
                             case KeywordToken::USING:
                                 parseUsing();
                                 break;
@@ -74,6 +75,14 @@ AVector<_<INode>> Parser::parse() {
                                 break;
                             }
 
+                            case KeywordToken::INPUT:
+                                nodes << _new<IndexedAttributeDeclarationNode>(keywordType, parseIndexedAttributes());
+                                break;
+
+                            case KeywordToken::ENTRY:
+                                nextTokenAndCheckEof();
+                                nodes << parseEntry();
+                                break;
                         }
                         break;
                     }
@@ -146,6 +155,49 @@ AVector<_<INode>> Parser::parse() {
         }
     } catch (Terminated) {}
     return nodes;
+}
+
+IndexedAttributeDeclarationNode::Fields Parser::parseIndexedAttributes() {
+    nextTokenAndCheckEof();
+    expect<LCurlyBracketToken>();
+
+    IndexedAttributeDeclarationNode::Fields result;
+
+    for (;;) {
+        nextTokenAndCheckEof();
+        switch (mIterator->index()) {
+            case got<NewLineToken>:
+                break;
+
+            case got<RCurlyBracketToken>:
+                return result;
+
+            case got<LSquareBracketToken>: {
+                // indexed attribute declaration
+                nextTokenAndCheckEof();
+                const auto index = int(expect<IntegerToken>().value());
+                if (result.contains(index)) {
+                    reportError("index {} is already defined"_format(index));
+                    skipUntilSemicolonOrNewLine();
+                }
+                nextTokenAndCheckEof();
+                expect<RSquareBracketToken>();
+                nextTokenAndCheckEof();
+                result[index] = parseVariableDeclaration();
+                break;
+            }
+
+            default:
+                reportUnexpectedErrorAndSkip("expected attribute declaration");
+        }
+    }
+}
+
+void Parser::nextTokenAndCheckEof() {
+    ++mIterator;
+    if (mIterator == mTokens.end()) {
+        reportError("unexpected <eof>");
+    }
 }
 
 AVector<_<VariableDeclarationNode>> Parser::parseFunctionDeclarationArgs() {
@@ -235,6 +287,7 @@ AVector<_<INode>> Parser::parseCodeBlock() {
                 break;
             }
 
+            case got<NewLineToken>:
             case got<SemicolonToken>:
                 ++mIterator;
                 break;
@@ -336,6 +389,21 @@ _<ExpressionNode> Parser::parseExpression(RequiredPriority requiredPriority) {
                     case KeywordToken::USING:
                         // we are not interested in using, skip until ;
                         skipUntilSemicolonOrNewLine();
+                        break;
+
+                    case KeywordToken::INPUT:
+                        result = _new<VariableReferenceNode>("input");
+                        ++mIterator;
+                        break;
+
+                    case KeywordToken::UNIFORM:
+                        result = _new<VariableReferenceNode>("uniform");
+                        ++mIterator;
+                        break;
+
+                    case KeywordToken::OUTPUT:
+                        result = _new<VariableReferenceNode>("output");
+                        ++mIterator;
                         break;
 
                     default:
@@ -951,4 +1019,8 @@ AString Parser::parseTypename() {
         }
     }
     return r;
+}
+
+_<INode> Parser::parseEntry() {
+    return aui::ptr::manage(new FunctionDeclarationNode("void", "entry", {}, parseCodeBlock()));
 }

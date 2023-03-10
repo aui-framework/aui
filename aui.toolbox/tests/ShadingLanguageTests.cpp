@@ -17,7 +17,7 @@
 #include <gmock/gmock.h>
 #include "AUI/Common/AString.h"
 #include "AUI/IO/AStringStream.h"
-#include "ShadingLanguage/Lang/Compiler/CppCompiler.h"
+#include "ShadingLanguage/Lang/Frontend/CppFrontend.h"
 #include "ShadingLanguage/Lang/SL.h"
 
 
@@ -26,7 +26,7 @@ protected:
 
     AString codeBlockToCpp(const AString& input) {
         auto s = _new<AStringStream>();
-        CppCompiler compiler(s);
+        CppFrontend compiler(s);
         for (const auto& v : aui::sl::parseCodeBlock(input)) {
             v->acceptVisitor(compiler);
         }
@@ -34,8 +34,8 @@ protected:
     }
     AString vertexToCpp(const AString& input) {
         auto s = _new<AStringStream>();
-        CppCompiler compiler(s);
-        compiler.vertex(aui::sl::parseCode(_new<AStringStream>(input)));
+        CppFrontend compiler(s);
+        compiler.parseShader(aui::sl::parseCode(_new<AStringStream>(input)));
         return s->str();
     }
 };
@@ -53,7 +53,7 @@ input {
 }
 
 entry {
-  sl_position = pos
+  sl_position = input.pos
 }
-)"), "glm::vec4 kek = glm::vec4(1.0f,2.0f,3.0f,4.0f);glm::vec4 kek2 = glm::vec4(4.0f,5.0f,6.0f,7.0f);");
+)"), "struct Input{/* 0 */glm::vec4 pos;};struct Output{glm::vec4 __vertexOutput;};Output entry(Input input){Output output;output.__vertexOutput=input.pos;return output;}");
 }

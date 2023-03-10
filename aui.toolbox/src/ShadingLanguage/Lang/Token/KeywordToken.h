@@ -79,6 +79,7 @@ public:
         INPUT,
         OUTPUT,
         UNIFORM,
+        ENTRY,
     };
 
 private:

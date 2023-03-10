@@ -7,6 +7,7 @@
 
 #include <AUI/Common/AVector.h>
 #include "AnyToken.h"
+#include "ShadingLanguage/Lang/AST/IndexedAttributeDeclarationNode.h"
 #include <AUI/Reflect/AClass.h>
 #include <ShadingLanguage/Lang/AST/VariableDeclarationNode.h>
 #include <ShadingLanguage/Lang/AST/ExpressionNode.h>
@@ -52,7 +53,9 @@ private:
         throw ::AException();
     }
 
+    void nextTokenAndCheckEof();
 
+    IndexedAttributeDeclarationNode::Fields parseIndexedAttributes();
     _<ExpressionNode> parseMemberAccess();
     _<ExpressionNode> parseLambda();
     _<ExpressionNode> parseIdentifier();
@@ -99,6 +102,8 @@ public:
     _<ExpressionNode> parseExpression(RequiredPriority requiredPriority = RequiredPriority::ANY);
 
     unsigned getCurrentLineNumber();
+
+    _<INode> parseEntry();
 };
 
 

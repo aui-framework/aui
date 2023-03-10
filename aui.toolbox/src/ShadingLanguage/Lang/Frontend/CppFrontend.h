@@ -21,9 +21,9 @@
 #include "AUI/IO/IOutputStream.h"
 #include "ShadingLanguage/Lang/AST/AST.h"
 
-class CppCompiler: public INodeVisitor {
+class CppFrontend: public INodeVisitor {
 public:
-    explicit CppCompiler(_<IOutputStream> output) : mOutput(std::move(output)) {}
+    explicit CppFrontend(_<IOutputStream> output) : mOutput(std::move(output)) {}
 
     void visitNode(const EqualsOperatorNode& node) override;
     void visitNode(const NotEqualsOperatorNode& node) override;
@@ -68,10 +68,24 @@ public:
     void visitNode(const ArrayAccessOperatorNode& node) override;
     void visitNode(const FloatNode& node) override;
 
-    void vertex(const _<AST>& ast);
+    void parseShader(const _<AST>& ast);
+
+    void visitNode(const IndexedAttributeDeclarationNode& node) override;
 
 private:
     _<IOutputStream> mOutput;
 
     AString mapType(const AString& type);
+
+    bool isVertex();
+
+    void emitBinaryOperator(const AString& symbol, const BinaryOperatorNode& binaryOperator);
+
+    bool mInputDefined = false;
+    bool mOutputDefined = false;
+    bool mUniformDefined = false;
+
+    void reportError(const INode& node, const AString& message);
+
+    AOptional<AVector<_<INode>>> mEntry;
 };

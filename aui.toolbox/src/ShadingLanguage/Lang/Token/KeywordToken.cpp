@@ -62,7 +62,12 @@ KeywordToken::Type KeywordToken::fromName(const AString& name) {
             { "reinterpret_cast", REINTERPRET_CAST },
             { "throw",            THROW },
             { "typename",         TYPENAME },
-            { "nullptr",         NULLPTR },
+            { "nullptr",          NULLPTR },
+
+            { "input",            INPUT },
+            { "output",           OUTPUT },
+            { "uniform",          UNIFORM },
+            { "entry",            ENTRY },
     };
 
     if (auto c = map.contains(name)) {
