@@ -129,7 +129,7 @@ public:
 
             if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x &&
                 targetPos.y < view->getSize().y) {
-                if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
+                if (!ignoreGone || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
                     if (callback(view))
                         return true;
                     if (auto container = _cast<AViewContainer>(view)) {
@@ -147,7 +147,7 @@ public:
     bool getViewRecursive(const Callback& callback, bool ignoreGone = true) {
         for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
             auto view = *it;
-            if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
+            if (!ignoreGone || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
                 if (callback(view))
                     return true;
                 if (auto container = _cast<AViewContainer>(view)) {

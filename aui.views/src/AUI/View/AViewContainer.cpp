@@ -26,7 +26,7 @@
 
 
 void AViewContainer::drawView(const _<AView>& view) {
-    if (view->getVisibility() == Visibility::VISIBLE) {
+    if (view->getVisibility() == Visibility::VISIBLE || view->getVisibility() == Visibility::UNREACHABLE) {
         RenderHints::PushState s;
         glm::mat4 t(1.f);
         view->getTransform(t);
@@ -247,7 +247,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone) {
         }
 
         if (hitTest) {
-            if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
+            if (!ignoreGone || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
                 if (!possibleOutput) {
                     possibleOutput = view;
                 }
