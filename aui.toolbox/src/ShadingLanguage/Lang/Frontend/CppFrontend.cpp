@@ -300,7 +300,7 @@ void CppFrontend::parseShader(const _<AST>& ast) {
         c->acceptVisitor(*this);
         mOutput << ";";
     }
-    mOutput;
+    mOutput << "return output;}";
 }
 
 void CppFrontend::visitNode(const IndexedAttributeDeclarationNode& node) {
