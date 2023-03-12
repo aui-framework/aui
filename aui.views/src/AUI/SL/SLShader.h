@@ -16,32 +16,12 @@
 
 #pragma once
 
+#include <AUI/Common/AObject.h>
 
-#include "INode.h"
-#include "ShadingLanguage/Lang/Token/KeywordToken.h"
-#include "VariableDeclarationNode.h"
-#include "AUI/Common/AMap.h"
-
-class IndexedAttributeDeclarationNode: public INode {
+/**
+ * @brief AUI SL shader base.
+ */
+class API_AUI_VIEWS SLShader {
 public:
-    using Fields = AMap<int, _<VariableDeclarationNode>>;
-    IndexedAttributeDeclarationNode(KeywordToken type, Fields fields) :
-        mType(type),
-        mFields(std::move(fields)) {}
-
-    ~IndexedAttributeDeclarationNode() override = default;
-
-    void acceptVisitor(INodeVisitor& v) override;
-
-    KeywordToken::Type type() const {
-        return mType.getType();
-    }
-
-    const Fields& fields() const {
-        return mFields;
-    }
-
-private:
-    KeywordToken mType;
-    Fields mFields;
+    virtual ~SLShader();
 };

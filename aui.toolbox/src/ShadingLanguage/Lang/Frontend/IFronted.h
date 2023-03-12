@@ -16,32 +16,11 @@
 
 #pragma once
 
+#include "ShadingLanguage/Lang/AST/AST.h"
 
-#include "INode.h"
-#include "ShadingLanguage/Lang/Token/KeywordToken.h"
-#include "VariableDeclarationNode.h"
-#include "AUI/Common/AMap.h"
-
-class IndexedAttributeDeclarationNode: public INode {
+class IFrontend {
 public:
-    using Fields = AMap<int, _<VariableDeclarationNode>>;
-    IndexedAttributeDeclarationNode(KeywordToken type, Fields fields) :
-        mType(type),
-        mFields(std::move(fields)) {}
+    virtual ~IFrontend() = default;
 
-    ~IndexedAttributeDeclarationNode() override = default;
-
-    void acceptVisitor(INodeVisitor& v) override;
-
-    KeywordToken::Type type() const {
-        return mType.getType();
-    }
-
-    const Fields& fields() const {
-        return mFields;
-    }
-
-private:
-    KeywordToken mType;
-    Fields mFields;
+    virtual void parseShader(const _<AST>& ast) = 0;
 };

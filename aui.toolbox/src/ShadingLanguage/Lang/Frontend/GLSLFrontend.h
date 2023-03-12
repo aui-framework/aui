@@ -17,31 +17,27 @@
 #pragma once
 
 
-#include "INode.h"
-#include "ShadingLanguage/Lang/Token/KeywordToken.h"
-#include "VariableDeclarationNode.h"
-#include "AUI/Common/AMap.h"
+#include "CBasedFrontend.h"
+#include "ShadingLanguage/Lang/AST/INodeVisitor.h"
+#include "AUI/IO/IOutputStream.h"
+#include "ShadingLanguage/Lang/AST/AST.h"
+#include "IFronted.h"
 
-class IndexedAttributeDeclarationNode: public INode {
+class GLSLFrontend: public CBasedFrontend {
 public:
-    using Fields = AMap<int, _<VariableDeclarationNode>>;
-    IndexedAttributeDeclarationNode(KeywordToken type, Fields fields) :
-        mType(type),
-        mFields(std::move(fields)) {}
+    using CBasedFrontend::CBasedFrontend;
 
-    ~IndexedAttributeDeclarationNode() override = default;
+    void visitNode(const IndexedAttributeDeclarationNode& node) override;
 
-    void acceptVisitor(INodeVisitor& v) override;
+    void parseShader(const _<AST>& ast) override;
 
-    KeywordToken::Type type() const {
-        return mType.getType();
-    }
+    void visitNode(const MemberAccessOperatorNode& node) override;
+    void visitNode(const VariableReferenceNode& node) override;
 
-    const Fields& fields() const {
-        return mFields;
-    }
+protected:
+    AString mapType(const AString& type) override;
 
-private:
-    KeywordToken mType;
-    Fields mFields;
+    void emitBeforeEntryCode() override;
+
+    void emitAfterEntryCode() override;
 };

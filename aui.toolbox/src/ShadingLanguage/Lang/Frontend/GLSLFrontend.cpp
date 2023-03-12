@@ -15,22 +15,23 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
-// Created by Alex2772 on 3/5/2023.
+// Created by Alex2772 on 3/12/2023.
 //
 
+#include "CBasedFrontend.h"
 #include "CppFrontend.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/Logging/ALogger.h"
-#include "CBasedFrontend.h"
+#include "GLSLFrontend.h"
 
-AString CppFrontend::mapType(const AString& type) {
+AString GLSLFrontend::mapType(const AString& type) {
     const AMap<AString, AString> mapping = {
-            {"vec2",   "glm::vec2"},
-            {"vec3",   "glm::vec3"},
-            {"vec4",   "glm::vec4"},
-            {"mat2",   "glm::mat2"},
-            {"mat3",   "glm::mat3"},
-            {"mat4",   "glm::mat4"},
+            {"vec2",   "vec2"},
+            {"vec3",   "vec3"},
+            {"vec4",   "vec4"},
+            {"mat2",   "mat2"},
+            {"mat3",   "mat3"},
+            {"mat4",   "mat4"},
             {"float",  "float"},
             {"double", "double"},
             {"int",    "int"},
@@ -41,50 +42,67 @@ AString CppFrontend::mapType(const AString& type) {
     throw AException("unsupported type: {}"_format(type));
 }
 
-void CppFrontend::visitNode(const IndexedAttributeDeclarationNode& node) {
+void GLSLFrontend::visitNode(const IndexedAttributeDeclarationNode& node) {
     CBasedFrontend::visitNode(node);
-    mOutput << "struct ";
-
+    AString keyword;
     switch (node.type()) {
         case KeywordToken::INPUT:
-            mOutput << "Input";
-            break;
-
+            if (isVertex()) {
+                keyword = "attribute";
+                break;
+            }
+            // fallthrough
         case KeywordToken::OUTPUT:
-            mOutput << "Output";
+            keyword = "varying";
             break;
-
         case KeywordToken::UNIFORM:
-            mOutput << "Uniform";
+            keyword = "uniform";
             break;
 
         default:
             assert(0);
     }
 
-    mOutput << "{";
-    if (isVertex() && node.type() == KeywordToken::OUTPUT) {
-        mOutput << "glm::vec4 __vertexOutput;";
-    }
     const auto decls = node.fields().toVector().sort([](const auto& l, const auto& r) {
         return std::get<int>(l) < std::get<int>(r);
     });
     for (const auto& [index, declaration]: decls) {
-        mOutput << "/* " << AString::number(index) << " */";
+        mOutput << "/* " << AString::number(index) << " */ " << keyword << " ";
         static_cast<INodeVisitor*>(this)->visitNode(*declaration);
     }
-    mOutput << "};";
 }
 
-void CppFrontend::emitAfterEntryCode() { mOutput << "return output;}"; }
+void GLSLFrontend::parseShader(const _<AST>& ast) {
+    mOutput << "#version 120\n";
+    CBasedFrontend::parseShader(ast);
+}
 
-void CppFrontend::emitBeforeEntryCode() { mOutput << "Output entry(Input input){Output output;"; }
+void GLSLFrontend::emitBeforeEntryCode() {
+    mOutput << "void main(){";
+}
 
-void CppFrontend::visitNode(const VariableReferenceNode& node) {
+void GLSLFrontend::emitAfterEntryCode() {
+    mOutput << "}";
+}
 
+void GLSLFrontend::visitNode(const MemberAccessOperatorNode& node) {
+    if (auto var = _cast<VariableReferenceNode>(node.getLeft())) {
+        if (var->getVariableName() == "input" ||
+            var->getVariableName() == "output" ||
+            var->getVariableName() == "uniform") {
+            // skip input, output, uniform accessors
+            node.getRight()->acceptVisitor(*this);
+            return;
+        }
+    }
+    CBasedFrontend::visitNode(node);
+}
+
+void GLSLFrontend::visitNode(const VariableReferenceNode& node) {
     if (node.getVariableName() == "sl_position") {
-        mOutput << "output.__vertexOutput";
+        mOutput << "gl_Position";
     } else {
         CBasedFrontend::visitNode(node);
     }
 }
+

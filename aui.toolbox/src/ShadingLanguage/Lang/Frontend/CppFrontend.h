@@ -17,75 +17,21 @@
 #pragma once
 
 
-#include "ShadingLanguage/Lang/AST/INodeVisitor.h"
 #include "AUI/IO/IOutputStream.h"
 #include "ShadingLanguage/Lang/AST/AST.h"
+#include "CBasedFrontend.h"
+#include "ShadingLanguage/Lang/AST/INodeVisitor.h"
+#include "IFronted.h"
 
-class CppFrontend: public INodeVisitor {
+class CppFrontend: public CBasedFrontend {
 public:
-    explicit CppFrontend(_<IOutputStream> output) : mOutput(std::move(output)) {}
-
-    void visitNode(const EqualsOperatorNode& node) override;
-    void visitNode(const NotEqualsOperatorNode& node) override;
-    void visitNode(const ConstructorDeclarationNode& node) override;
-    void visitNode(const LShiftOperatorNode& node) override;
-    void visitNode(const RShiftOperatorNode& node) override;
-    void visitNode(const MemberAccessOperatorNode& node) override;
-    void visitNode(const StaticMemberAccessOperatorNode& node) override;
-    void visitNode(const AssignmentOperatorNode& node) override;
-    void visitNode(const ExplicitInitializerListCtorNode& node) override;
-    void visitNode(const ImplicitInitializerListCtorNode& node) override;
-    void visitNode(const FunctionDeclarationNode& node) override;
-    void visitNode(const LambdaNode& node) override;
-    void visitNode(const MethodDeclarationNode& node) override;
-    void visitNode(const NullptrNode& node) override;
-    void visitNode(const IntegerNode& node) override;
-    void visitNode(const OperatorCallNode& node) override;
-    void visitNode(const OperatorLiteralNode& node) override;
-    void visitNode(const StringNode& node) override;
-    void visitNode(const TemplateOperatorCallNode& node) override;
-    void visitNode(const TernaryOperatorNode& node) override;
-    void visitNode(const ThisNode& node) override;
-    void visitNode(const ReturnOperatorNode& node) override;
-    void visitNode(const LogicalNotOperatorNode& node) override;
-    void visitNode(const PointerDereferenceOperatorNode& node) override;
-    void visitNode(const PointerCreationOperatorNode& node) override;
-    void visitNode(const VariableDeclarationNode& node) override;
-    void visitNode(const VariableReferenceNode& node) override;
-    void visitNode(const LogicalAndOperatorNode& node) override;
-    void visitNode(const LogicalOrOperatorNode& node) override;
-    void visitNode(const BitwiseOrOperatorNode& node) override;
-    void visitNode(const ModOperatorNode& node) override;
-    void visitNode(const BinaryMinusOperatorNode& node) override;
-    void visitNode(const BinaryPlusOperatorNode& node) override;
-    void visitNode(const UnaryMinusOperatorNode& node) override;
-    void visitNode(const IfOperatorNode& node) override;
-    void visitNode(const StructClassDefinition& node) override;
-    void visitNode(const GreaterOperatorNode& node) override;
-    void visitNode(const LessOperatorNode& node) override;
-    void visitNode(const BoolNode& node) override;
-    void visitNode(const TemplateOperatorTypenameNode& node) override;
-    void visitNode(const ArrayAccessOperatorNode& node) override;
-    void visitNode(const FloatNode& node) override;
-
-    void parseShader(const _<AST>& ast);
+    using CBasedFrontend::CBasedFrontend;
 
     void visitNode(const IndexedAttributeDeclarationNode& node) override;
+    void visitNode(const VariableReferenceNode& node) override;
 
-private:
-    _<IOutputStream> mOutput;
-
-    AString mapType(const AString& type);
-
-    bool isVertex();
-
-    void emitBinaryOperator(const AString& symbol, const BinaryOperatorNode& binaryOperator);
-
-    bool mInputDefined = false;
-    bool mOutputDefined = false;
-    bool mUniformDefined = false;
-
-    void reportError(const INode& node, const AString& message);
-
-    AOptional<AVector<_<INode>>> mEntry;
+protected:
+    AString mapType(const AString& type) override;
+    void emitBeforeEntryCode() override;
+    void emitAfterEntryCode() override;
 };
