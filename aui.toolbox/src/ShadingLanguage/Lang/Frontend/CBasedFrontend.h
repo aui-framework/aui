@@ -71,14 +71,20 @@ public:
     void visitNode(const TemplateOperatorTypenameNode& node) override;
     void visitNode(const ArrayAccessOperatorNode& node) override;
     void visitNode(const FloatNode& node) override;
-    void visitNode(const IndexedAttributeDeclarationNode& node) override;
+    void visitNode(const IndexedAttributesDeclarationNode& node) override;
+    void visitNode(const NonIndexedAttributesDeclarationNode& node) override;
 
     AString shaderCode() override;
 
+    ~CBasedFrontend() override = default;
+
+    void writeCpp(const APath& destination) override;
+
 protected:
-    void emitBinaryOperator(const AString& symbol, const BinaryOperatorNode& binaryOperator);
+    virtual void emitBinaryOperator(const AString& symbol, const BinaryOperatorNode& binaryOperator);
     void reportError(const INode& node, const AString& message);
-    bool isVertex();
+    virtual void emitHeaderDefinition(aui::no_escape<IOutputStream> os) const;
+    virtual void emitHelperFunctionsCpp(aui::no_escape<IOutputStream> os) const;
 
     virtual AString mapType(const AString& type) = 0;
     virtual void emitBeforeEntryCode() = 0;
@@ -87,7 +93,9 @@ protected:
     bool mInputDefined = false;
     bool mOutputDefined = false;
     bool mUniformDefined = false;
+    bool mInterDefined = false;
 
     AOptional<AVector<_<INode>>> mEntry;
     AStringStream mShaderOutput;
+
 };

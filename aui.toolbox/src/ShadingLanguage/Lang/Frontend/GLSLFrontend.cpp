@@ -42,19 +42,22 @@ AString GLSLFrontend::mapType(const AString& type) {
     throw AException("unsupported type: {}"_format(type));
 }
 
-void GLSLFrontend::visitNode(const IndexedAttributeDeclarationNode& node) {
+void GLSLFrontend::visitNode(const IndexedAttributesDeclarationNode& node) {
     CBasedFrontend::visitNode(node);
     AString keyword;
     switch (node.type()) {
         case KeywordToken::INPUT:
-            if (isVertex()) {
-                keyword = "attribute";
-                break;
-            }
-            // fallthrough
+            keyword = "attribute";
+            break;
+
         case KeywordToken::OUTPUT:
+            keyword = "out";
+            break;
+
+        case KeywordToken::INTER:
             keyword = "varying";
             break;
+
         case KeywordToken::UNIFORM:
             keyword = "uniform";
             break;

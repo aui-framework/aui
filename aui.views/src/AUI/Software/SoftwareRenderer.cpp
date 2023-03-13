@@ -21,6 +21,7 @@
 #include <AUI/Traits/callables.h>
 #include "SoftwareRenderer.h"
 #include "SoftwareTexture.h"
+#include <AUISL/Generated/solid.fsh.software.h>
 
 struct BrushHelper {
     SoftwareRenderer* renderer;
@@ -35,7 +36,11 @@ struct BrushHelper {
                 glm::ivec2& position) : renderer(renderer), x(x), y(y), end(end), position(position) {}
 
     void operator()(const ASolidBrush& brush) noexcept {
-        renderer->putPixel({x, y}, renderer->getColor() * brush.solidColor);
+        using namespace aui::sl_gen::solid::fsh::software;
+
+        renderer->putPixel({x, y}, Shader::entry({}, Shader::Uniform {
+                .color = renderer->getColor() * brush.solidColor
+        }).albedo);
     }
 
     void operator()(const ATexturedBrush& brush) noexcept {

@@ -14,13 +14,34 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-//
-// Created by Alex2772 on 3/10/2023.
-//
+#pragma once
 
-#include "IndexedAttributeDeclarationNode.h"
-#include "INodeVisitor.h"
 
-void IndexedAttributeDeclarationNode::acceptVisitor(INodeVisitor& v) {
-    v.visitNode(*this);
-}
+#include "INode.h"
+#include "ShadingLanguage/Lang/Token/KeywordToken.h"
+#include "VariableDeclarationNode.h"
+#include "AUI/Common/AMap.h"
+
+class IndexedAttributesDeclarationNode: public INode {
+public:
+    using Fields = AMap<int, _<VariableDeclarationNode>>;
+    IndexedAttributesDeclarationNode(KeywordToken type, Fields fields) :
+        mType(type),
+        mFields(std::move(fields)) {}
+
+    ~IndexedAttributesDeclarationNode() override = default;
+
+    void acceptVisitor(INodeVisitor& v) override;
+
+    KeywordToken::Type type() const {
+        return mType.getType();
+    }
+
+    const Fields& fields() const {
+        return mFields;
+    }
+
+private:
+    KeywordToken mType;
+    Fields mFields;
+};

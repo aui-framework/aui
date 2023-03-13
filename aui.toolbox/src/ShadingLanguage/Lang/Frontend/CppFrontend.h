@@ -27,11 +27,23 @@ class CppFrontend: public CBasedFrontend {
 public:
     using CBasedFrontend::CBasedFrontend;
 
-    void visitNode(const IndexedAttributeDeclarationNode& node) override;
+    void visitNode(const IndexedAttributesDeclarationNode& node) override;
+    void visitNode(const NonIndexedAttributesDeclarationNode& node) override;
     void visitNode(const VariableReferenceNode& node) override;
 
 protected:
     AString mapType(const AString& type) override;
     void emitBeforeEntryCode() override;
     void emitAfterEntryCode() override;
+
+    void emitHeaderDefinition(aui::no_escape<IOutputStream> os) const override;
+
+    void emitHelperFunctionsCpp(aui::no_escape<IOutputStream> os) const override;
+
+private:
+    void emitAttributeKeyword(KeywordToken::Type type);
+
+    AStringStream mHeaderOutput;
+
+    void emitAttributeDeclarationField(_<VariableDeclarationNode> node);
 };

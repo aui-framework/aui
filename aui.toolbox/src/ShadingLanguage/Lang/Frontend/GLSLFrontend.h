@@ -27,7 +27,7 @@ class GLSLFrontend: public CBasedFrontend {
 public:
     using CBasedFrontend::CBasedFrontend;
 
-    void visitNode(const IndexedAttributeDeclarationNode& node) override;
+    void visitNode(const IndexedAttributesDeclarationNode& node) override;
 
     void parseShader(const _<AST>& ast) override;
 

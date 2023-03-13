@@ -28,7 +28,8 @@
 #include "TemplateOperatorTypenameNode.h"
 #include "FloatNode.h"
 #include "AUI/Reflect/AClass.h"
-#include "IndexedAttributeDeclarationNode.h"
+#include "IndexedAttributesDeclarationNode.h"
+#include "NonIndexedAttributesDeclarationNode.h"
 
 class INodeVisitor {
 public:
@@ -77,7 +78,8 @@ public:
     virtual void visitNode(const TemplateOperatorTypenameNode& node) {};
     virtual void visitNode(const ArrayAccessOperatorNode& node) {};
     virtual void visitNode(const FloatNode& node) {};
-    virtual void visitNode(const IndexedAttributeDeclarationNode& node) {};
+    virtual void visitNode(const IndexedAttributesDeclarationNode& node) {};
+    virtual void visitNode(const NonIndexedAttributesDeclarationNode& node) {};
 
     template<class T>
     static _<T> assume(const _<INode>& n) {

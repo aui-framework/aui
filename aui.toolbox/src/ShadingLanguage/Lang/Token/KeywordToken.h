@@ -77,6 +77,7 @@ public:
         NULLPTR,
 
         INPUT,
+        INTER,
         OUTPUT,
         UNIFORM,
         ENTRY,

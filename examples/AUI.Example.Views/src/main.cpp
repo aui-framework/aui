@@ -21,6 +21,7 @@
 
 AUI_ENTRY
 {
+
     //Stylesheet::inst().load(AUrl(":views/style.css").open());
 	auto w = _new<ExampleWindow>();
 	w->show();

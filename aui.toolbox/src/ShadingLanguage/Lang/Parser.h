@@ -7,7 +7,8 @@
 
 #include <AUI/Common/AVector.h>
 #include "AnyToken.h"
-#include "ShadingLanguage/Lang/AST/IndexedAttributeDeclarationNode.h"
+#include "ShadingLanguage/Lang/AST/IndexedAttributesDeclarationNode.h"
+#include "ShadingLanguage/Lang/AST/NonIndexedAttributesDeclarationNode.h"
 #include <AUI/Reflect/AClass.h>
 #include <ShadingLanguage/Lang/AST/VariableDeclarationNode.h>
 #include <ShadingLanguage/Lang/AST/ExpressionNode.h>
@@ -55,7 +56,9 @@ private:
 
     void nextTokenAndCheckEof();
 
-    IndexedAttributeDeclarationNode::Fields parseIndexedAttributes();
+    IndexedAttributesDeclarationNode::Fields parseIndexedAttributes();
+    NonIndexedAttributesDeclarationNode::Fields parseNonIndexedAttributes();
+
     _<ExpressionNode> parseMemberAccess();
     _<ExpressionNode> parseLambda();
     _<ExpressionNode> parseIdentifier();

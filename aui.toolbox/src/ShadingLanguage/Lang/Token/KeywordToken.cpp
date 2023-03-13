@@ -66,6 +66,7 @@ KeywordToken::Type KeywordToken::fromName(const AString& name) {
 
             { "input",            INPUT },
             { "output",           OUTPUT },
+            { "inter",            INTER },
             { "uniform",          UNIFORM },
             { "entry",            ENTRY },
     };

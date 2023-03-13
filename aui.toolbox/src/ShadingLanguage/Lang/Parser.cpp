@@ -23,8 +23,9 @@
 #include <ShadingLanguage/Lang/AST/BoolNode.h>
 #include <ShadingLanguage/Lang/AST/TemplateOperatorTypenameNode.h>
 #include <ShadingLanguage/Lang/AST/FloatNode.h>
+#include "ShadingLanguage/Lang/AST/IndexedAttributesDeclarationNode.h"
+#include "ShadingLanguage/Lang/AST/NonIndexedAttributesDeclarationNode.h"
 #include "Parser.h"
-#include "ShadingLanguage/Lang/AST/IndexedAttributeDeclarationNode.h"
 
 class Terminated {};
 template<typename variant, typename type>
@@ -76,7 +77,13 @@ AVector<_<INode>> Parser::parse() {
                             }
 
                             case KeywordToken::INPUT:
-                                nodes << _new<IndexedAttributeDeclarationNode>(keywordType, parseIndexedAttributes());
+                            case KeywordToken::OUTPUT:
+                                nodes << _new<IndexedAttributesDeclarationNode>(keywordType, parseIndexedAttributes());
+                                break;
+
+                            case KeywordToken::INTER:
+                            case KeywordToken::UNIFORM:
+                                nodes << _new<NonIndexedAttributesDeclarationNode>(keywordType, parseNonIndexedAttributes());
                                 break;
 
                             case KeywordToken::ENTRY:
@@ -157,11 +164,11 @@ AVector<_<INode>> Parser::parse() {
     return nodes;
 }
 
-IndexedAttributeDeclarationNode::Fields Parser::parseIndexedAttributes() {
+IndexedAttributesDeclarationNode::Fields Parser::parseIndexedAttributes() {
     nextTokenAndCheckEof();
     expect<LCurlyBracketToken>();
 
-    IndexedAttributeDeclarationNode::Fields result;
+    IndexedAttributesDeclarationNode::Fields result;
 
     for (;;) {
         nextTokenAndCheckEof();
@@ -193,13 +200,38 @@ IndexedAttributeDeclarationNode::Fields Parser::parseIndexedAttributes() {
     }
 }
 
+NonIndexedAttributesDeclarationNode::Fields Parser::parseNonIndexedAttributes() {
+    nextTokenAndCheckEof();
+    expect<LCurlyBracketToken>();
+
+    NonIndexedAttributesDeclarationNode::Fields result;
+
+    for (;;) {
+        nextTokenAndCheckEof();
+        switch (mIterator->index()) {
+            case got<NewLineToken>:
+                break;
+
+            case got<RCurlyBracketToken>:
+                return result;
+
+            case got<IdentifierToken>: {
+                result.push_back(parseVariableDeclaration());
+                break;
+            }
+
+            default:
+                reportUnexpectedErrorAndSkip("expected attribute declaration");
+        }
+    }
+}
+
 void Parser::nextTokenAndCheckEof() {
     ++mIterator;
     if (mIterator == mTokens.end()) {
         reportError("unexpected <eof>");
     }
 }
-
 AVector<_<VariableDeclarationNode>> Parser::parseFunctionDeclarationArgs() {
     expect<LParToken>();
     AVector<_<VariableDeclarationNode>> result;
@@ -251,6 +283,7 @@ AVector<_<ExpressionNode>> Parser::parseCallArgs() {
     reportUnexpectedEof();
     throw AException{};
 }
+
 AVector<_<ExpressionNode>> Parser::parseCurlyBracketsArgs() {
     expect<LCurlyBracketToken>();
     AVector<_<ExpressionNode>> result;
@@ -336,6 +369,13 @@ AVector<_<INode>> Parser::parseCodeBlock() {
                         break;
                     }
 
+                    case KeywordToken::INPUT:
+                    case KeywordToken::OUTPUT:
+                    case KeywordToken::UNIFORM:
+                    case KeywordToken::INTER:
+                        mIterator--;
+                        // fallthrough
+
                     default:
                         result << parseExpression();
                 }
@@ -398,6 +438,12 @@ _<ExpressionNode> Parser::parseExpression(RequiredPriority requiredPriority) {
 
                     case KeywordToken::UNIFORM:
                         result = _new<VariableReferenceNode>("uniform");
+                        ++mIterator;
+                        break;
+
+
+                    case KeywordToken::INTER:
+                        result = _new<VariableReferenceNode>("inter");
                         ++mIterator;
                         break;
 

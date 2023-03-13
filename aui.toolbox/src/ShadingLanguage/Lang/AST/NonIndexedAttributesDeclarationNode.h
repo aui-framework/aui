@@ -16,33 +16,32 @@
 
 #pragma once
 
-#include "ShadingLanguage/Lang/AST/AST.h"
 
-enum class ShaderType {
-    VERTEX,
-    FRAGMENT, // or pixel
-};
+#include "INode.h"
+#include "ShadingLanguage/Lang/Token/KeywordToken.h"
+#include "VariableDeclarationNode.h"
+#include "AUI/Common/AMap.h"
 
-class IFrontend {
+class NonIndexedAttributesDeclarationNode: public INode {
 public:
-    virtual ~IFrontend() = default;
+    using Fields = AVector<_<VariableDeclarationNode>>;
+    NonIndexedAttributesDeclarationNode(KeywordToken type, Fields fields) :
+            mType(type),
+            mFields(std::move(fields)) {}
 
-    /**
-     * @brief Shader code for tests
-     */
-    virtual AString shaderCode() = 0;
-    virtual void parseShader(const _<AST>& ast) = 0;
+    ~NonIndexedAttributesDeclarationNode() override = default;
 
-    virtual void writeCpp(const APath& destination) = 0;
+    void acceptVisitor(INodeVisitor& v) override;
 
-    ShaderType shaderType() const {
-        return mShaderType;
+    KeywordToken::Type type() const {
+        return mType.getType();
     }
 
-    void setShaderType(ShaderType shaderType) {
-        mShaderType = shaderType;
+    const Fields& fields() const {
+        return mFields;
     }
 
 private:
-    ShaderType mShaderType;
+    KeywordToken mType;
+    Fields mFields;
 };

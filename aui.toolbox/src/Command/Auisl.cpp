@@ -27,6 +27,7 @@
 #include "ShadingLanguage/Lang/Frontend/CppFrontend.h"
 #include "ShadingLanguage/Lang/Frontend/GLSLFrontend.h"
 #include "AUI/IO/AStringStream.h"
+#include "ShadingLanguage/Lang/SL.h"
 #include <AUI/Traits/strings.h>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/IO/AFileOutputStream.h>
@@ -77,7 +78,10 @@ void Auisl::run(Toolbox& t) {
     auto frontend = targetPlatforms()[targetPlatform]();
 
     APath input = t.args[1];
-    const auto& output = t.args[2];
-    APath(output).touch();
+    APath output = t.args[2];
+
+    frontend->setShaderType(input.endsWith(".vsh") ? ShaderType::VERTEX : ShaderType::FRAGMENT);
+    frontend->parseShader(aui::sl::parseCode(_new<AFileInputStream>(input)));
+    frontend->writeCpp(output);
 
 }

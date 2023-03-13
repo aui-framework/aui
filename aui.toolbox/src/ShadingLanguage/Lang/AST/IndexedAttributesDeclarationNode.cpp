@@ -14,35 +14,13 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by Alex2772 on 3/10/2023.
+//
 
-#include "ShadingLanguage/Lang/AST/AST.h"
+#include "IndexedAttributesDeclarationNode.h"
+#include "INodeVisitor.h"
 
-enum class ShaderType {
-    VERTEX,
-    FRAGMENT, // or pixel
-};
-
-class IFrontend {
-public:
-    virtual ~IFrontend() = default;
-
-    /**
-     * @brief Shader code for tests
-     */
-    virtual AString shaderCode() = 0;
-    virtual void parseShader(const _<AST>& ast) = 0;
-
-    virtual void writeCpp(const APath& destination) = 0;
-
-    ShaderType shaderType() const {
-        return mShaderType;
-    }
-
-    void setShaderType(ShaderType shaderType) {
-        mShaderType = shaderType;
-    }
-
-private:
-    ShaderType mShaderType;
-};
+void IndexedAttributesDeclarationNode::acceptVisitor(INodeVisitor& v) {
+    v.visitNode(*this);
+}
