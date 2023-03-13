@@ -14,17 +14,26 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+//
+// Created by alex2 on 07.01.2021.
+//
+
+
 #pragma once
 
-#include "ShadingLanguage/Lang/AST/AST.h"
 
-class IFrontend {
+#include "ICommand.h"
+
+class Auisl: public ICommand {
+private:
+    static void processRule(AVector<AString>& code, const AString& property, const AString& value);
+
 public:
-    virtual ~IFrontend() = default;
+    ~Auisl() override = default;
 
-    /**
-     * @brief Shader code for tests
-     */
-    virtual AString shaderCode() = 0;
-    virtual void parseShader(const _<AST>& ast) = 0;
+    AString getName() override;
+    AString getSignature() override;
+    AString getDescription() override;
+
+    void run(Toolbox& t) override;
 };

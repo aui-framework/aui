@@ -67,22 +67,22 @@ void GLSLFrontend::visitNode(const IndexedAttributeDeclarationNode& node) {
         return std::get<int>(l) < std::get<int>(r);
     });
     for (const auto& [index, declaration]: decls) {
-        mOutput << "/* " << AString::number(index) << " */ " << keyword << " ";
+        mShaderOutput << "/* " << AString::number(index) << " */ " << keyword << " ";
         static_cast<INodeVisitor*>(this)->visitNode(*declaration);
     }
 }
 
 void GLSLFrontend::parseShader(const _<AST>& ast) {
-    mOutput << "#version 120\n";
+    mShaderOutput << "#version 120\n";
     CBasedFrontend::parseShader(ast);
 }
 
 void GLSLFrontend::emitBeforeEntryCode() {
-    mOutput << "void main(){";
+    mShaderOutput << "void main(){";
 }
 
 void GLSLFrontend::emitAfterEntryCode() {
-    mOutput << "}";
+    mShaderOutput << "}";
 }
 
 void GLSLFrontend::visitNode(const MemberAccessOperatorNode& node) {
@@ -100,7 +100,7 @@ void GLSLFrontend::visitNode(const MemberAccessOperatorNode& node) {
 
 void GLSLFrontend::visitNode(const VariableReferenceNode& node) {
     if (node.getVariableName() == "sl_position") {
-        mOutput << "gl_Position";
+        mShaderOutput << "gl_Position";
     } else {
         CBasedFrontend::visitNode(node);
     }

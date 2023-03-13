@@ -896,6 +896,36 @@ function(aui_module AUI_MODULE_NAME)
     endif()
 endfunction(aui_module)
 
+# links the auisl shader located in shaders/<NAME>
+function(auisl_shader TARGET NAME)
+    set(_path ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${NAME})
+    if (NOT EXISTS ${_path})
+        message(FATAL_ERROR "shader not exists: ${_path}")
+    endif()
+
+    if (NOT TARGET ${TARGET})
+        message(FATAL_ERROR "no such target: ${TARGET}")
+    endif()
+
+    set(_compiled_shader_dir ${CMAKE_CURRENT_BINARY_DIR}/shaders/AUISL/Generated)
+    file(MAKE_DIRECTORY ${_compiled_shader_dir})
+
+    set(_targets software glsl120)
+
+    foreach(_target ${_targets})
+        set(_output "${_compiled_shader_dir}/${NAME}.${_target}.cpp")
+
+        add_custom_command(
+                OUTPUT ${_output}
+                COMMAND ${AUI_TOOLBOX_EXE}
+                ARGS auisl ${_target} ${_path} ${_output}
+        )
+        target_sources(${TARGET} PRIVATE ${_output})
+    endforeach()
+
+    target_include_directories(${TARGET} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/shaders)
+endfunction()
+
 macro(aui_app)
     _aui_find_root()
 

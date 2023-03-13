@@ -43,47 +43,47 @@ AString CppFrontend::mapType(const AString& type) {
 
 void CppFrontend::visitNode(const IndexedAttributeDeclarationNode& node) {
     CBasedFrontend::visitNode(node);
-    mOutput << "struct ";
+    mShaderOutput << "struct ";
 
     switch (node.type()) {
         case KeywordToken::INPUT:
-            mOutput << "Input";
+            mShaderOutput << "Input";
             break;
 
         case KeywordToken::OUTPUT:
-            mOutput << "Output";
+            mShaderOutput << "Output";
             break;
 
         case KeywordToken::UNIFORM:
-            mOutput << "Uniform";
+            mShaderOutput << "Uniform";
             break;
 
         default:
             assert(0);
     }
 
-    mOutput << "{";
+    mShaderOutput << "{";
     if (isVertex() && node.type() == KeywordToken::OUTPUT) {
-        mOutput << "glm::vec4 __vertexOutput;";
+        mShaderOutput << "glm::vec4 __vertexOutput;";
     }
     const auto decls = node.fields().toVector().sort([](const auto& l, const auto& r) {
         return std::get<int>(l) < std::get<int>(r);
     });
     for (const auto& [index, declaration]: decls) {
-        mOutput << "/* " << AString::number(index) << " */";
+        mShaderOutput << "/* " << AString::number(index) << " */";
         static_cast<INodeVisitor*>(this)->visitNode(*declaration);
     }
-    mOutput << "};";
+    mShaderOutput << "};";
 }
 
-void CppFrontend::emitAfterEntryCode() { mOutput << "return output;}"; }
+void CppFrontend::emitAfterEntryCode() { mShaderOutput << "return output;}"; }
 
-void CppFrontend::emitBeforeEntryCode() { mOutput << "Output entry(Input input){Output output;"; }
+void CppFrontend::emitBeforeEntryCode() { mShaderOutput << "Output entry(Input input){Output output;"; }
 
 void CppFrontend::visitNode(const VariableReferenceNode& node) {
 
     if (node.getVariableName() == "sl_position") {
-        mOutput << "output.__vertexOutput";
+        mShaderOutput << "output.__vertexOutput";
     } else {
         CBasedFrontend::visitNode(node);
     }

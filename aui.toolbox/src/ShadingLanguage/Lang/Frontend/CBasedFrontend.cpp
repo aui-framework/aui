@@ -29,7 +29,7 @@ bool CBasedFrontend::isVertex() {
 
 void CBasedFrontend::emitBinaryOperator(const AString& symbol, const BinaryOperatorNode& binaryOperator) {
     binaryOperator.getLeft()->acceptVisitor(*this);
-    mOutput << symbol;
+    mShaderOutput << symbol;
     binaryOperator.getRight()->acceptVisitor(*this);
 }
 
@@ -88,22 +88,22 @@ void CBasedFrontend::visitNode(const FunctionDeclarationNode& node) {
         mEntry = node.getCode();
         return;
     }
-    mOutput << mapType(node.getReturnType()) << " " << node.getName() << "(";
+    mShaderOutput << mapType(node.getReturnType()) << " " << node.getName() << "(";
     bool first = true;
     for (const auto& v: node.getArgs()) {
         if (first) {
             first = false;
         } else {
-            mOutput << ",";
+            mShaderOutput << ",";
         }
         visitNode(*v);
     }
-    mOutput << "){";
+    mShaderOutput << "){";
     for (const auto& v: node.getCode()) {
         v->acceptVisitor(*this);
-        mOutput << ";";
+        mShaderOutput << ";";
     }
-    mOutput << "}";
+    mShaderOutput << "}";
 }
 
 void CBasedFrontend::visitNode(const LambdaNode& node) {
@@ -120,7 +120,7 @@ void CBasedFrontend::visitNode(const NullptrNode& node) {
 
 void CBasedFrontend::visitNode(const IntegerNode& node) {
     INodeVisitor::visitNode(node);
-    mOutput << node.toString() << ".0f";
+    mShaderOutput << node.toString() << ".0f";
 }
 
 void CBasedFrontend::visitNode(const OperatorCallNode& node) {
@@ -136,17 +136,17 @@ void CBasedFrontend::visitNode(const OperatorCallNode& node) {
     };
 
     if (auto i = mInternalFunctions.contains(node.getCallee())) {
-        mOutput << i->second << "(";
+        mShaderOutput << i->second << "(";
         bool first = true;
         for (const auto& arg: node.getArgs()) {
             if (first) {
                 first = false;
             } else {
-                mOutput << ",";
+                mShaderOutput << ",";
             }
             arg->acceptVisitor(*this);
         }
-        mOutput << ")";
+        mShaderOutput << ")";
     }
 }
 
@@ -188,12 +188,12 @@ void CBasedFrontend::visitNode(const PointerCreationOperatorNode& node) {
 
 void CBasedFrontend::visitNode(const VariableDeclarationNode& node) {
     INodeVisitor::visitNode(node);
-    mOutput << mapType(node.typeName()) << " " << node.variableName();
+    mShaderOutput << mapType(node.typeName()) << " " << node.variableName();
     if (const auto& init = node.initializer()) {
-        mOutput << " = ";
+        mShaderOutput << " = ";
         init->acceptVisitor(*this);
     }
-    mOutput << ";";
+    mShaderOutput << ";";
 }
 
 void CBasedFrontend::visitNode(const LogicalAndOperatorNode& node) {
@@ -228,7 +228,7 @@ void CBasedFrontend::visitNode(const BinaryPlusOperatorNode& node) {
 
 void CBasedFrontend::visitNode(const UnaryMinusOperatorNode& node) {
     INodeVisitor::visitNode(node);
-    mOutput << "-";
+    mShaderOutput << "-";
 }
 
 void CBasedFrontend::visitNode(const IfOperatorNode& node) {
@@ -251,7 +251,7 @@ void CBasedFrontend::visitNode(const LessOperatorNode& node) {
 
 void CBasedFrontend::visitNode(const BoolNode& node) {
     INodeVisitor::visitNode(node);
-    mOutput << AString::number(node.getValue());
+    mShaderOutput << AString::number(node.getValue());
 }
 
 void CBasedFrontend::visitNode(const TemplateOperatorTypenameNode& node) {
@@ -264,7 +264,7 @@ void CBasedFrontend::visitNode(const ArrayAccessOperatorNode& node) {
 
 void CBasedFrontend::visitNode(const FloatNode& node) {
     INodeVisitor::visitNode(node);
-    mOutput << "{}f"_format(node.getNumber());
+    mShaderOutput << "{}f"_format(node.getNumber());
 }
 
 void CBasedFrontend::parseShader(const _<AST>& ast) {
@@ -285,7 +285,7 @@ void CBasedFrontend::parseShader(const _<AST>& ast) {
     emitBeforeEntryCode();
     for (const auto& c: *mEntry) {
         c->acceptVisitor(*this);
-        mOutput << ";";
+        mShaderOutput << ";";
     }
     emitAfterEntryCode();
 }
@@ -321,6 +321,10 @@ void CBasedFrontend::visitNode(const IndexedAttributeDeclarationNode& node) {
 
 void CBasedFrontend::visitNode(const VariableReferenceNode& node) {
     INodeVisitor::visitNode(node);
-    mOutput << node.getVariableName();
+    mShaderOutput << node.getVariableName();
+}
+
+AString CBasedFrontend::shaderCode() {
+    return mShaderOutput.str();
 }
 

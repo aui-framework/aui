@@ -58,6 +58,8 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 		aui_compile_assets(aui.views EXCLUDE uni/font/Roboto.ttf)
 	endif()
 
+	auisl_shader(aui.views solid.vsh)
+
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
 
 	aui_link(aui.views PUBLIC aui::core aui::image)

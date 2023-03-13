@@ -21,11 +21,11 @@
 #include "AUI/IO/IOutputStream.h"
 #include "ShadingLanguage/Lang/AST/AST.h"
 #include "IFronted.h"
+#include "AUI/IO/AStringStream.h"
 
 class CBasedFrontend: public IFrontend, public INodeVisitor {
 public:
     using INodeVisitor::visitNode;
-    explicit CBasedFrontend(_<IOutputStream> output) : mOutput(std::move(output)) {}
 
     void parseShader(const _<AST>& ast) override;
 
@@ -73,6 +73,8 @@ public:
     void visitNode(const FloatNode& node) override;
     void visitNode(const IndexedAttributeDeclarationNode& node) override;
 
+    AString shaderCode() override;
+
 protected:
     void emitBinaryOperator(const AString& symbol, const BinaryOperatorNode& binaryOperator);
     void reportError(const INode& node, const AString& message);
@@ -87,5 +89,5 @@ protected:
     bool mUniformDefined = false;
 
     AOptional<AVector<_<INode>>> mEntry;
-    _<IOutputStream> mOutput;
+    AStringStream mShaderOutput;
 };

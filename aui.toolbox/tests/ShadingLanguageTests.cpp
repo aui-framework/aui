@@ -26,20 +26,18 @@ class ShadingLanguage : public ::testing::Test {
 protected:
 
     AString codeBlockToCpp(const AString& input) {
-        auto s = _new<AStringStream>();
-        CppFrontend compiler(s);
+        CppFrontend compiler;
         for (const auto& v : aui::sl::parseCodeBlock(input)) {
             v->acceptVisitor(compiler);
         }
-        return s->str();
+        return compiler.shaderCode();
     }
 
     template<aui::derived_from<IFrontend> T>
     AString vertexTo(const AString& input) {
-        auto s = _new<AStringStream>();
-        T compiler(s);
+        T compiler;
         compiler.parseShader(aui::sl::parseCode(_new<AStringStream>(input)));
-        return s->str();
+        return compiler.shaderCode();
     }
 };
 
@@ -60,5 +58,6 @@ entry {
 }
 )";
     EXPECT_EQ(vertexTo<CppFrontend>(code), "struct Input{/* 0 */glm::vec4 pos;};struct Output{glm::vec4 __vertexOutput;};Output entry(Input input){Output output;output.__vertexOutput=input.pos;return output;}");
-    EXPECT_EQ(vertexTo<GLSLFrontend>(code), "#version 120\nattribute vec4 pos;void main(){gl_Position=pos;}");
+    EXPECT_EQ(vertexTo<GLSLFrontend>(code), "#version 120\n"
+                                            "/* 0 */ attribute vec4 pos;void main(){gl_Position=pos;}");
 }
