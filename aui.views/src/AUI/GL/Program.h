@@ -29,12 +29,12 @@
 class AString;
 
 namespace gl {
-	class API_AUI_VIEWS Shader {
+	class API_AUI_VIEWS Program {
 	private:
 		uint32_t mProgram;
 		uint32_t mVertex = 0;
 		uint32_t mFragment = 0;
-		uint32_t load(const AString&, uint32_t type);
+		uint32_t load(const AString&, uint32_t type, bool raw);
         mutable int32_t mUniforms[64];
 
         class UniformState {
@@ -73,31 +73,32 @@ namespace gl {
             }
         };
 
-		Shader();
+		Program();
 		void load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs = {}, const AString& version = {});
+		void loadRaw(const AString& vertex, const AString& fragment);
 		void compile();
 		void bindAttribute(uint32_t index, const AString& name);
 		void use() const;
-		~Shader();
-		Shader(const Shader&) = delete;
+		~Program();
+		Program(const Program&) = delete;
 
         int32_t getLocation(const Uniform& uniform) const;
 
-		void set(const gl::Shader::Uniform& uniform, int value) const;
-		void set(const gl::Shader::Uniform& uniform, float value) const;
-		void set(const gl::Shader::Uniform& uniform, double value) const;
-		void set(const gl::Shader::Uniform& uniform, glm::mat4 value) const;
-		void set(const gl::Shader::Uniform& uniform, glm::dmat4 value) const;
-		void set(const gl::Shader::Uniform& uniform, glm::vec2 value) const;
-		void set(const gl::Shader::Uniform& uniform, glm::vec3 value) const;
-		void set(const gl::Shader::Uniform& uniform, glm::vec4 value) const;
+		void set(const gl::Program::Uniform& uniform, int value) const;
+		void set(const gl::Program::Uniform& uniform, float value) const;
+		void set(const gl::Program::Uniform& uniform, double value) const;
+		void set(const gl::Program::Uniform& uniform, glm::mat4 value) const;
+		void set(const gl::Program::Uniform& uniform, glm::dmat4 value) const;
+		void set(const gl::Program::Uniform& uniform, glm::vec2 value) const;
+		void set(const gl::Program::Uniform& uniform, glm::vec3 value) const;
+		void set(const gl::Program::Uniform& uniform, glm::vec4 value) const;
 
-		void setArray(const gl::Shader::Uniform& uniform, const AVector<float>& value) const;
+		void setArray(const gl::Program::Uniform& uniform, const AVector<float>& value) const;
 
-		static gl::Shader*& currentShader()
+		static gl::Program*& currentShader()
 		{
-			static gl::Shader* c;
+			static gl::Program* c;
 			return c;
 		}
-	};
+    };
 }

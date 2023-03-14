@@ -23,6 +23,19 @@
 #include "AUI/Logging/ALogger.h"
 #include "CBasedFrontend.h"
 
+const AMap<AString, AString>& CppFrontend::internalFunctions() {
+    static AMap<AString, AString> internalFunctions = {
+            {"vec2", "glm::vec2"},
+            {"vec3", "glm::vec3"},
+            {"vec4", "glm::vec4"},
+            {"sin",  "glm::sin"},
+            {"cos",  "glm::cos"},
+            {"tan",  "glm::tan"},
+            {"atan", "glm::atan"},
+    };
+    return internalFunctions;
+}
+
 AString CppFrontend::mapType(const AString& type) {
     const AMap<AString, AString> mapping = {
             {"vec2",   "glm::vec2"},
@@ -136,7 +149,7 @@ void CppFrontend::visitNode(const VariableReferenceNode& node) {
 }
 
 void CppFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) const {
-    *os << "struct Shader: SLShader {";
+    *os << "struct Shader {";
     *os << mHeaderOutput.str();
     if (shaderType() == ShaderType::VERTEX) {
         *os << "\nstatic Inter entry(const Input& input, const Uniform& uniform);";
@@ -146,8 +159,8 @@ void CppFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) const {
     *os << "};\n";
 }
 
-void CppFrontend::emitHelperFunctionsCpp(aui::no_escape<IOutputStream> os) const {
-    CBasedFrontend::emitHelperFunctionsCpp(os);
+void CppFrontend::emitCppCreateShader(aui::no_escape<IOutputStream> os) const {
+    CBasedFrontend::emitCppCreateShader(os);
     if (shaderType() == ShaderType::VERTEX) {
         *os << "\nShader::Inter Shader::entry(const Shader::Input& input, const Shader::Uniform& uniform){";
     } else {

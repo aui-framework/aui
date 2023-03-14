@@ -14,25 +14,25 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include <AUI/GL/Shader.h>
+#include <AUI/GL/Program.h>
 
 namespace aui::ShaderUniforms {
-    extern gl::Shader::Uniform COLOR;
-    extern gl::Shader::Uniform TRANSFORM;
-    extern gl::Shader::Uniform SIZE;
-    extern gl::Shader::Uniform MAT;
-    extern gl::Shader::Uniform UV_SCALE;
-    extern gl::Shader::Uniform SIGMA;
-    extern gl::Shader::Uniform LOWER;
-    extern gl::Shader::Uniform UPPER;
-    extern gl::Shader::Uniform OUTER_SIZE;
-    extern gl::Shader::Uniform INNER_SIZE;
-    extern gl::Shader::Uniform INNER_TEXEL_SIZE;
-    extern gl::Shader::Uniform OUTER_TEXEL_SIZE;
-    extern gl::Shader::Uniform OUTER_TO_INNER;
+    extern gl::Program::Uniform COLOR;
+    extern gl::Program::Uniform TRANSFORM;
+    extern gl::Program::Uniform SIZE;
+    extern gl::Program::Uniform MAT;
+    extern gl::Program::Uniform UV_SCALE;
+    extern gl::Program::Uniform SIGMA;
+    extern gl::Program::Uniform LOWER;
+    extern gl::Program::Uniform UPPER;
+    extern gl::Program::Uniform OUTER_SIZE;
+    extern gl::Program::Uniform INNER_SIZE;
+    extern gl::Program::Uniform INNER_TEXEL_SIZE;
+    extern gl::Program::Uniform OUTER_TEXEL_SIZE;
+    extern gl::Program::Uniform OUTER_TO_INNER;
 
-    extern gl::Shader::Uniform COLOR_TL;
-    extern gl::Shader::Uniform COLOR_TR;
-    extern gl::Shader::Uniform COLOR_BL;
-    extern gl::Shader::Uniform COLOR_BR;
+    extern gl::Program::Uniform COLOR_TL;
+    extern gl::Program::Uniform COLOR_TR;
+    extern gl::Program::Uniform COLOR_BL;
+    extern gl::Program::Uniform COLOR_BR;
 }

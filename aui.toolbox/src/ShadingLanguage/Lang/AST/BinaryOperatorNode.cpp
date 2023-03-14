@@ -68,3 +68,7 @@ void StaticMemberAccessOperatorNode::acceptVisitor(INodeVisitor& v) {
 void ArrayAccessOperatorNode::acceptVisitor(INodeVisitor& v) {
     v.visitNode(*this);
 }
+
+void BinaryAsteriskOperatorNode::acceptVisitor(INodeVisitor& v) {
+    v.visitNode(*this);
+}

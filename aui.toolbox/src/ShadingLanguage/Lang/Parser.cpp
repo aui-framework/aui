@@ -643,10 +643,12 @@ _<ExpressionNode> Parser::parseExpression(RequiredPriority requiredPriority) {
                 break;
             }
 
-            case got<AsteriskToken>: { // pointer dereference
+            case got<AsteriskToken>: { // pointer dereference or multiply
+                if (requiredPriority > RequiredPriority::HIGH_PRIORITY) {
+                    return result;
+                }
                 ++mIterator;
-                result = _new<PointerDereferenceOperatorNode>(parseExpression(RequiredPriority::UNARY));
-                break;
+                return _new<BinaryAsteriskOperatorNode>(result, parseExpression());
             }
 
             case got<AmpersandToken>: { // variable pointer creation

@@ -28,6 +28,7 @@ public:
     using CBasedFrontend::CBasedFrontend;
 
     void visitNode(const IndexedAttributesDeclarationNode& node) override;
+    void visitNode(const NonIndexedAttributesDeclarationNode& node) override;
 
     void parseShader(const _<AST>& ast) override;
 
@@ -40,4 +41,12 @@ protected:
     void emitBeforeEntryCode() override;
 
     void emitAfterEntryCode() override;
+
+    void emitHeaderDefinition(aui::no_escape<IOutputStream> os) const override;
+
+    void emitCppCreateShader(aui::no_escape<IOutputStream> os) const override;
+
+    const AMap<AString, AString>& internalFunctions() override;
+
+    AVector<_<VariableDeclarationNode>> mOutputs;
 };

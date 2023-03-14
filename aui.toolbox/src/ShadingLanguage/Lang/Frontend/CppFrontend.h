@@ -38,7 +38,9 @@ protected:
 
     void emitHeaderDefinition(aui::no_escape<IOutputStream> os) const override;
 
-    void emitHelperFunctionsCpp(aui::no_escape<IOutputStream> os) const override;
+    void emitCppCreateShader(aui::no_escape<IOutputStream> os) const override;
+
+    const AMap<AString, AString>& internalFunctions() override;
 
 private:
     void emitAttributeKeyword(KeywordToken::Type type);

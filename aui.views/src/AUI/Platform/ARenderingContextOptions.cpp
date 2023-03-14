@@ -23,7 +23,7 @@
 ARenderingContextOptions& ARenderingContextOptions::inst() {
     static ARenderingContextOptions o = {
         {
-            //OpenGL {},
+            OpenGL {},
             Software {},
         },
     };

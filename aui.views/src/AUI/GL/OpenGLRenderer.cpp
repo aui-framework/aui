@@ -26,6 +26,8 @@
 #include <AUI/GL/Vbo.h>
 #include <AUI/GL/State.h>
 #include <AUI/Platform/ABaseWindow.h>
+#include <AUISL/Generated/solid.vsh.glsl120.h>
+#include <AUISL/Generated/solid.fsh.glsl120.h>
 
 
 class OpenGLTexture2D: public ITexture {
@@ -53,9 +55,9 @@ struct UnsupportedBrushHelper {
 };
 
 struct GradientShaderHelper {
-    gl::Shader& shader;
+    gl::Program& shader;
 
-    GradientShaderHelper(gl::Shader& shader) : shader(shader) {}
+    GradientShaderHelper(gl::Program& shader) : shader(shader) {}
 
     void operator()(const ALinearGradientBrush& brush) const {
         shader.use();
@@ -68,9 +70,9 @@ struct GradientShaderHelper {
 };
 
 struct SolidShaderHelper {
-    gl::Shader& shader;
+    gl::Program& shader;
 
-    SolidShaderHelper(gl::Shader& shader) : shader(shader) {}
+    SolidShaderHelper(gl::Program& shader) : shader(shader) {}
 
     void operator()(const ASolidBrush& brush) const {
         shader.use();
@@ -87,10 +89,10 @@ struct CustomShaderHelper {
 };
 
 struct TexturedShaderHelper {
-    gl::Shader& shader;
+    gl::Program& shader;
     gl::Vao& tempVao;
 
-    TexturedShaderHelper(gl::Shader& shader, gl::Vao& tempVao) : shader(shader), tempVao(tempVao) {}
+    TexturedShaderHelper(gl::Program& shader, gl::Vao& tempVao) : shader(shader), tempVao(tempVao) {}
 
     void operator()(const ATexturedBrush& brush) const {
         shader.use();
@@ -120,12 +122,20 @@ struct TexturedShaderHelper {
 
 
 std::string put_if(bool value, const char* str) { if (value) return str; return ""; }
+
+
+
+#define USE_AUISL_SHADER(shaderObj, namespaceName)                                             \
+    shaderObj.loadRaw(aui::sl_gen:: namespaceName ::vsh::glsl120::code(), aui::sl_gen:: namespaceName ::fsh::glsl120::code()); \
+    aui::sl_gen:: namespaceName ::vsh::glsl120::setup();                                       \
+    aui::sl_gen:: namespaceName ::fsh::glsl120::setup();                                       \
+    shaderObj.compile();
+
 OpenGLRenderer::OpenGLRenderer() {
-    mSolidShader.load(
-            "attribute vec3 pos;"
-            "void main(void) {gl_Position = vec4(pos, 1);}",
-            "uniform vec4 color;"
-            "void main(void) {gl_FragColor = color;}");
+    aui::sl_gen::solid::fsh::glsl120::code();
+
+    USE_AUISL_SHADER(mSolidShader, solid)
+
     mBoxShadowShader.load(
             "attribute vec3 pos;"
             "uniform mat4 transform;"
@@ -181,7 +191,7 @@ OpenGLRenderer::OpenGLRenderer() {
                 "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
                 "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
                 "}");
-        auto produceRoundedAntialiasedShader = [](gl::Shader& shader, const AString& uniforms, const AString& color, bool isBorder) {
+        auto produceRoundedAntialiasedShader = [](gl::Program& shader, const AString& uniforms, const AString& color, bool isBorder) {
             shader.load(
                     "attribute vec3 pos;"
                     "attribute vec2 uv;"
@@ -314,7 +324,7 @@ glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
 }
 
 void OpenGLRenderer::uploadToShaderCommon() {
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
 }
 
 AVector<glm::vec3> OpenGLRenderer::getVerticesForRect(const glm::vec2& position, const glm::vec2& size)
@@ -386,10 +396,10 @@ void OpenGLRenderer::drawRoundedRectAntialiased(const ABrush& brush,
 
     uploadToShaderCommon();
 
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, glm::vec2{0, 0});
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, glm::vec2{0});
+    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, glm::vec2{0, 0});
+    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, glm::vec2{0});
 
     drawRectImpl(position, size);
     endDraw(brush);
@@ -453,12 +463,12 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     glm::vec2 innerSize = { size.x - borderWidth * 2,
                             size.y - borderWidth * 2 };
 
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::INNER_SIZE, 2.f * (radius - borderWidth) / innerSize);
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, size / innerSize);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::INNER_SIZE, 2.f * (radius - borderWidth) / innerSize);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, size / innerSize);
 
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, 2.f / 5.f / innerSize);
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, 2.f / 5.f / innerSize);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
 
     drawRectImpl(position, size);
     endDraw(brush);

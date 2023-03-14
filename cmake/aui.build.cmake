@@ -917,6 +917,7 @@ function(auisl_shader TARGET NAME)
 
         add_custom_command(
                 OUTPUT ${_output}
+                DEPENDS ${_path}
                 COMMAND ${AUI_TOOLBOX_EXE}
                 ARGS auisl ${_target} ${_path} ${_output}
         )

@@ -24,6 +24,19 @@
 #include "AUI/Logging/ALogger.h"
 #include "GLSLFrontend.h"
 
+const AMap<AString, AString>& GLSLFrontend::internalFunctions() {
+    static AMap<AString, AString> internalFunctions = {
+            {"vec2", "vec2"},
+            {"vec3", "vec3"},
+            {"vec4", "vec4"},
+            {"sin",  "sin"},
+            {"cos",  "cos"},
+            {"tan",  "tan"},
+            {"atan", "atan"},
+    };
+    return internalFunctions;
+}
+
 AString GLSLFrontend::mapType(const AString& type) {
     const AMap<AString, AString> mapping = {
             {"vec2",   "vec2"},
@@ -43,16 +56,34 @@ AString GLSLFrontend::mapType(const AString& type) {
 }
 
 void GLSLFrontend::visitNode(const IndexedAttributesDeclarationNode& node) {
+    const auto byKey = [](const auto& l, const auto& r) {
+        return std::get<0>(l) < std::get<0>(r);
+    };
+    CBasedFrontend::visitNode(node);
+    switch (node.type()) {
+        case KeywordToken::INPUT: {
+            const auto decls = node.fields().toVector().sort(byKey);
+            for (const auto& [index, declaration]: decls) {
+                mShaderOutput << "/* " << AString::number(index) << " */ attribute ";
+                static_cast<INodeVisitor*>(this)->visitNode(*declaration);
+            }
+            break;
+        }
+
+        case KeywordToken::OUTPUT: {
+            mOutputs = node.fields().toVector().sort(byKey).map([](const auto& t) { return std::get<1>(t); });
+            break;
+        }
+
+        default:
+            assert(0);
+    }
+
+}
+void GLSLFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
     CBasedFrontend::visitNode(node);
     AString keyword;
     switch (node.type()) {
-        case KeywordToken::INPUT:
-            keyword = "attribute";
-            break;
-
-        case KeywordToken::OUTPUT:
-            keyword = "out";
-            break;
 
         case KeywordToken::INTER:
             keyword = "varying";
@@ -66,11 +97,8 @@ void GLSLFrontend::visitNode(const IndexedAttributesDeclarationNode& node) {
             assert(0);
     }
 
-    const auto decls = node.fields().toVector().sort([](const auto& l, const auto& r) {
-        return std::get<int>(l) < std::get<int>(r);
-    });
-    for (const auto& [index, declaration]: decls) {
-        mShaderOutput << "/* " << AString::number(index) << " */ " << keyword << " ";
+    for (const auto& declaration: node.fields()) {
+        mShaderOutput << keyword << " ";
         static_cast<INodeVisitor*>(this)->visitNode(*declaration);
     }
 }
@@ -91,10 +119,27 @@ void GLSLFrontend::emitAfterEntryCode() {
 void GLSLFrontend::visitNode(const MemberAccessOperatorNode& node) {
     if (auto var = _cast<VariableReferenceNode>(node.getLeft())) {
         if (var->getVariableName() == "input" ||
-            var->getVariableName() == "output" ||
-            var->getVariableName() == "uniform") {
+            var->getVariableName() == "uniform" ||
+            var->getVariableName() == "inter") {
             // skip input, output, uniform accessors
             node.getRight()->acceptVisitor(*this);
+            return;
+        }
+        if (var->getVariableName() == "output") {
+            // skip input, output, uniform accessors
+            if (auto c = _cast<VariableReferenceNode>(node.getRight())) {
+                if (auto it = mOutputs.findIf([&](const auto& v) {
+                    return v->variableName() == c->getVariableName();
+                }); it != mOutputs.end()) {
+                    if (mOutputs.begin() == it) {
+                        mShaderOutput << "gl_FragColor";
+                    } else {
+                        mShaderOutput << "gl_FragData[" << AString::number(std::distance(mOutputs.begin(), it)) << "]";
+                    }
+                }
+            } else {
+                node.getRight()->acceptVisitor(*this);
+            }
             return;
         }
     }
@@ -109,3 +154,16 @@ void GLSLFrontend::visitNode(const VariableReferenceNode& node) {
     }
 }
 
+
+void GLSLFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) const {
+    *os << "const char* code();"
+           "void setup();";
+}
+
+void GLSLFrontend::emitCppCreateShader(aui::no_escape<IOutputStream> os) const {
+    CBasedFrontend::emitCppCreateShader(os);
+
+    *os << "const char* " << namespaceName() <<  "::code() { return R\"(" << mShaderOutput.str() << " )\";}"
+           "void " << namespaceName() <<  "::setup() {"
+           "}";
+}

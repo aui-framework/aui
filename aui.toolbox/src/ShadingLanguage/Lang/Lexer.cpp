@@ -281,8 +281,6 @@ AVector<AnyToken> Lexer::performLexAnalysis() {
         }
     } catch (const AEOFException& e) {}
 
-    ALogger::info("Lexer done, " + AString::number(result.size()) + " token(s)");
-
     return result;
 }
 

@@ -77,6 +77,7 @@ public:
     virtual void visitNode(const BoolNode& node) {};
     virtual void visitNode(const TemplateOperatorTypenameNode& node) {};
     virtual void visitNode(const ArrayAccessOperatorNode& node) {};
+    virtual void visitNode(const BinaryAsteriskOperatorNode& node) {};
     virtual void visitNode(const FloatNode& node) {};
     virtual void visitNode(const IndexedAttributesDeclarationNode& node) {};
     virtual void visitNode(const NonIndexedAttributesDeclarationNode& node) {};

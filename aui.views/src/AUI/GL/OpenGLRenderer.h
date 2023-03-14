@@ -17,7 +17,7 @@
 #pragma once
 
 
-#include <AUI/GL/Shader.h>
+#include <AUI/GL/Program.h>
 #include <AUI/GL/Vao.h>
 #include "AUI/Render/IRenderer.h"
 
@@ -32,17 +32,17 @@ public:
     };
 
 private:
-    gl::Shader mSolidShader;
-    gl::Shader mGradientShader;
-    gl::Shader mRoundedSolidShader;
-    gl::Shader mRoundedSolidShaderAntialiased;
-    gl::Shader mRoundedSolidShaderAntialiasedBorder;
-    gl::Shader mRoundedGradientShaderAntialiased;
-    gl::Shader mSolidTransformShader;
-    gl::Shader mBoxShadowShader;
-    gl::Shader mTexturedShader;
-    gl::Shader mSymbolShader;
-    gl::Shader mSymbolShaderSubPixel;
+    gl::Program mSolidShader;
+    gl::Program mGradientShader;
+    gl::Program mRoundedSolidShader;
+    gl::Program mRoundedSolidShaderAntialiased;
+    gl::Program mRoundedSolidShaderAntialiasedBorder;
+    gl::Program mRoundedGradientShaderAntialiased;
+    gl::Program mSolidTransformShader;
+    gl::Program mBoxShadowShader;
+    gl::Program mTexturedShader;
+    gl::Program mSymbolShader;
+    gl::Program mSymbolShaderSubPixel;
     gl::Vao mTempVao;
 
 

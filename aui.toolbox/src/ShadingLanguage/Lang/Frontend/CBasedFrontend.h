@@ -62,6 +62,7 @@ public:
     void visitNode(const ModOperatorNode& node) override;
     void visitNode(const BinaryMinusOperatorNode& node) override;
     void visitNode(const BinaryPlusOperatorNode& node) override;
+    void visitNode(const BinaryAsteriskOperatorNode& node) override;
     void visitNode(const UnaryMinusOperatorNode& node) override;
     void visitNode(const IfOperatorNode& node) override;
     void visitNode(const StructClassDefinition& node) override;
@@ -84,7 +85,7 @@ protected:
     virtual void emitBinaryOperator(const AString& symbol, const BinaryOperatorNode& binaryOperator);
     void reportError(const INode& node, const AString& message);
     virtual void emitHeaderDefinition(aui::no_escape<IOutputStream> os) const;
-    virtual void emitHelperFunctionsCpp(aui::no_escape<IOutputStream> os) const;
+    virtual void emitCppCreateShader(aui::no_escape<IOutputStream> os) const;
 
     virtual AString mapType(const AString& type) = 0;
     virtual void emitBeforeEntryCode() = 0;
@@ -98,4 +99,12 @@ protected:
     AOptional<AVector<_<INode>>> mEntry;
     AStringStream mShaderOutput;
 
+    const AString& namespaceName() const {
+        return mNamespaceName;
+    }
+
+    virtual const AMap<AString, AString>& internalFunctions() = 0;
+
+private:
+    AString mNamespaceName;
 };

@@ -16,12 +16,4 @@
 
 #pragma once
 
-#include <AUI/Common/AObject.h>
-
-/**
- * @brief AUI SL shader base.
- */
-class API_AUI_VIEWS SLShader {
-public:
-    virtual ~SLShader();
-};
+#include <glm/glm.hpp>

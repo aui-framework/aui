@@ -104,6 +104,13 @@ public:
     void acceptVisitor(INodeVisitor& v) override;
 };
 
+class BinaryAsteriskOperatorNode: public BinaryOperatorNode {
+public:
+    using BinaryOperatorNode::BinaryOperatorNode;
+
+    void acceptVisitor(INodeVisitor& v) override;
+};
+
 class EqualsOperatorNode: public BinaryOperatorNode {
 public:
     using BinaryOperatorNode::BinaryOperatorNode;

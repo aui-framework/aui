@@ -18,7 +18,7 @@
 // Created by alex2772 on 25.07.2018.
 //
 
-#include "Shader.h"
+#include "Program.h"
 #include "State.h"
 
 #include <glm/gtc/type_ptr.hpp>
@@ -26,7 +26,7 @@
 #include <AUI/Logging/ALogger.h>
 
 
-gl::Shader::Shader() {
+gl::Program::Program() {
     for (int32_t& uniform : mUniforms)
     {
         uniform = UniformState::UNINITIALIZED;
@@ -34,7 +34,7 @@ gl::Shader::Shader() {
 	mProgram = glCreateProgram();
 }
 
-void gl::Shader::load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs, const AString& version)
+void gl::Program::load(const AString& vertex, const AString& fragment, const AVector<AString>& attribs, const AString& version)
 {
 #if AUI_PLATFORM_ANDROID
 	AString prefix = "precision mediump float;"
@@ -50,8 +50,8 @@ void gl::Shader::load(const AString& vertex, const AString& fragment, const AVec
         prefix = "#version " + version + "\n";
     }
 #endif
-	mVertex = load(prefix + vertex, GL_VERTEX_SHADER);
-	mFragment = load(prefix + fragment, GL_FRAGMENT_SHADER);
+	mVertex = load(prefix + vertex, GL_VERTEX_SHADER, false);
+	mFragment = load(prefix + fragment, GL_FRAGMENT_SHADER, false);
 
 	unsigned index = 0;
 	for (auto& s : attribs)
@@ -59,8 +59,13 @@ void gl::Shader::load(const AString& vertex, const AString& fragment, const AVec
 	
 	compile();
 }
+void gl::Program::loadRaw(const AString& vertex, const AString& fragment)
+{
+	mVertex = load(vertex, GL_VERTEX_SHADER, true);
+	mFragment = load(fragment, GL_FRAGMENT_SHADER, true);
+}
 
-gl::Shader::~Shader() {
+gl::Program::~Program() {
 	glDetachShader(mProgram, mVertex);
 	glDetachShader(mProgram, mFragment);
 	glDeleteShader(mVertex);
@@ -69,83 +74,87 @@ gl::Shader::~Shader() {
 }
 
 
-uint32_t gl::Shader::load(const AString& data, uint32_t type) {
-	uint32_t shader = glCreateShader(type);
+uint32_t gl::Program::load(const AString& data, uint32_t type, bool raw) {
 	std::string code = data.toStdString();
 	assert(!code.empty());
 
+    if (!raw) {
 #if AUI_PLATFORM_APPLE
-    if (type == GL_VERTEX_SHADER) {
+        if (type == GL_VERTEX_SHADER) {
 
-        code =
-"#define attribute in\n"
-"#define varying out\n"
-+ code;
-    } else {
-        code =
-"#define varying in\n"
-"out vec4 resultColor;\n"
-"#define gl_FragColor resultColor\n"
-"#define texture2D texture\n"
-+ code;
-    }
+            code =
+    "#define attribute in\n"
+    "#define varying out\n"
+    + code;
+        } else {
+            code =
+    "#define varying in\n"
+    "out vec4 resultColor;\n"
+    "#define gl_FragColor resultColor\n"
+    "#define texture2D texture\n"
+    + code;
+        }
 #endif
 
 #if AUI_PLATFORM_IOS
-    code = "#version 300 es\n"
-            "precision mediump float;\n"
-            "precision mediump int;\n"
-                     + code;
+        code = "#version 300 es\n"
+                "precision mediump float;\n"
+                "precision mediump int;\n"
+                         + code;
 #elif AUI_PLATFORM_MACOS
-    code = "#version 150\n" + code;
+        code = "#version 150\n" + code;
 #endif
+    }
 
-	const char* c = code.c_str();
-	glShaderSource(shader, 1, &c, nullptr);
-	glCompileShader(shader);
-	int st;
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &st);
+    uint32_t shader = glCreateShader(type);
+    assert(!code.empty());
+    const char* c = code.c_str();
+    glShaderSource(shader, 1, &c, nullptr);
+    glCompileShader(shader);
+    int st;
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &st);
 
-	{
-		char buf[8192];
-		GLsizei len;
-		glGetShaderInfoLog(shader, sizeof(buf), &len, buf);
-		if (len) {
-			ALogger::warn("OpenGL") << "Shader compile message: " << buf;
-		}
-	}
-	if (!st) {
-		throw AException("Failed to compile shader:\n" + code);
-	}
+    {
+        char buf[8192];
+        GLsizei len;
+        glGetShaderInfoLog(shader, sizeof(buf), &len, buf);
+        if (len) {
+            ALogger::warn("OpenGL") << "Shader compile message: " << buf;
+        }
+    }
+    if (!st) {
+        throw AException("Failed to compile shader:\n" + code);
+    }
 
-	return shader;
+    return shader;
+
 }
 
-void gl::Shader::compile() {
+void gl::Program::compile() {
 	glAttachShader(mProgram, mVertex);
 	glAttachShader(mProgram, mFragment);
 	glLinkProgram(mProgram);
 }
 
-void gl::Shader::use() const {
+void gl::Program::use() const {
 	gl::State::useProgram(mProgram);
-	currentShader() = const_cast<gl::Shader*>(this);
+	currentShader() = const_cast<gl::Program*>(this);
 }
 
-void gl::Shader::bindAttribute(uint32_t index, const AString& name) {
+void gl::Program::bindAttribute(uint32_t index, const AString& name) {
     if (name.empty())
         return;
 	glBindAttribLocation(mProgram, index, name.toStdString().c_str());
 }
 
 
-void gl::Shader::set(const gl::Shader::Uniform& uniform, glm::mat4 value) const {
+void gl::Program::set(const gl::Program::Uniform& uniform, glm::mat4 value) const {
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniformMatrix4fv(loc, 1, GL_FALSE, &(value[0][0]));
 }
 
-void gl::Shader::set(const gl::Shader::Uniform& uniform, glm::dmat4 value) const {
+void gl::Program::set(const gl::Program::Uniform& uniform, glm::dmat4 value) const {
 	auto loc = getLocation(uniform);
 	if (loc >= 0) {
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
@@ -157,37 +166,37 @@ void gl::Shader::set(const gl::Shader::Uniform& uniform, glm::dmat4 value) const
 	}
 }
 
-void gl::Shader::set(const gl::Shader::Uniform& uniform, float value) const {
+void gl::Program::set(const gl::Program::Uniform& uniform, float value) const {
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniform1f(loc, value);
 }
 
-void gl::Shader::set(const gl::Shader::Uniform& uniform, glm::vec2 value) const {
+void gl::Program::set(const gl::Program::Uniform& uniform, glm::vec2 value) const {
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniform2f(loc, value.x, value.y);
 }
 
-void gl::Shader::set(const gl::Shader::Uniform& uniform, glm::vec3 value) const {
+void gl::Program::set(const gl::Program::Uniform& uniform, glm::vec3 value) const {
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniform3f(loc, value.x, value.y, value.z);
 }
 
-void gl::Shader::set(const gl::Shader::Uniform& uniform, glm::vec4 value) const {
+void gl::Program::set(const gl::Program::Uniform& uniform, glm::vec4 value) const {
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniform4f(loc, value.x, value.y, value.z, value.a);
 }
 
-void gl::Shader::set(const gl::Shader::Uniform& uniform, int value) const {
+void gl::Program::set(const gl::Program::Uniform& uniform, int value) const {
 	auto loc = getLocation(uniform);
 	if (loc >= 0)
 		glUniform1i(loc, value);
 }
 
-void gl::Shader::set(const gl::Shader::Uniform& uniform, double value) const {
+void gl::Program::set(const gl::Program::Uniform& uniform, double value) const {
     auto loc = getLocation(uniform);
     if (loc >= 0) {
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
@@ -198,7 +207,7 @@ void gl::Shader::set(const gl::Shader::Uniform& uniform, double value) const {
 	}
 }
 
-int32_t gl::Shader::getLocation(const gl::Shader::Uniform& uniform) const {
+int32_t gl::Program::getLocation(const gl::Program::Uniform& uniform) const {
     int32_t& location = mUniforms[uniform.getId()];
     if (location == UniformState::UNINITIALIZED) {
         location = glGetUniformLocation(mProgram, uniform.getUniformName());
@@ -213,7 +222,7 @@ void gl::Shader::setArray(const gl::Shader::Uniform& uniform, const Vector<float
 		set(uniform + "[" + AString::number(i) + "]", value[i]);
 	}
 }*/
-unsigned gl::Shader::Uniform::next() {
+unsigned gl::Program::Uniform::next() {
     static unsigned id = 0;
     return id++;
 }
