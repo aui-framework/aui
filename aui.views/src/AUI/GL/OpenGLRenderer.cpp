@@ -26,7 +26,7 @@
 #include <AUI/GL/Vbo.h>
 #include <AUI/GL/State.h>
 #include <AUI/Platform/ABaseWindow.h>
-#include <AUISL/Generated/solid.vsh.glsl120.h>
+#include <AUISL/Generated/basic.vsh.glsl120.h>
 #include <AUISL/Generated/solid.fsh.glsl120.h>
 
 
@@ -124,17 +124,24 @@ struct TexturedShaderHelper {
 std::string put_if(bool value, const char* str) { if (value) return str; return ""; }
 
 
+template<typename C>
+concept AuiSLShader = requires(C&& c) {
+    { C::code() } -> std::same_as<const char*>;
+    C::setup();
+};
 
-#define USE_AUISL_SHADER(shaderObj, namespaceName)                                             \
-    shaderObj.loadRaw(aui::sl_gen:: namespaceName ::vsh::glsl120::code(), aui::sl_gen:: namespaceName ::fsh::glsl120::code()); \
-    aui::sl_gen:: namespaceName ::vsh::glsl120::setup();                                       \
-    aui::sl_gen:: namespaceName ::fsh::glsl120::setup();                                       \
-    shaderObj.compile();
+template<AuiSLShader Vertex, AuiSLShader Fragment>
+static void useAuislShader(gl::Program& out) {
+    out.loadRaw(Vertex::code(), Fragment::code());
+    Vertex::setup();
+    Fragment::setup();
+    out.compile();
+}
 
 OpenGLRenderer::OpenGLRenderer() {
-    aui::sl_gen::solid::fsh::glsl120::code();
 
-    USE_AUISL_SHADER(mSolidShader, solid)
+    useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader,
+                   aui::sl_gen::solid::fsh::glsl120::Shader>(mSolidShader);
 
     mBoxShadowShader.load(
             "attribute vec3 pos;"

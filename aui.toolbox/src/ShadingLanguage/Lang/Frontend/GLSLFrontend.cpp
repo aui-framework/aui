@@ -156,14 +156,16 @@ void GLSLFrontend::visitNode(const VariableReferenceNode& node) {
 
 
 void GLSLFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) const {
-    *os << "const char* code();"
-           "void setup();";
+    *os << "struct Shader {"
+           "  static const char* code();"
+           "  static void setup();"
+           "};";
 }
 
 void GLSLFrontend::emitCppCreateShader(aui::no_escape<IOutputStream> os) const {
     CBasedFrontend::emitCppCreateShader(os);
 
-    *os << "const char* " << namespaceName() <<  "::code() { return R\"(" << mShaderOutput.str() << " )\";}"
-           "void " << namespaceName() <<  "::setup() {"
+    *os << "const char* " << namespaceName() <<  "::Shader::code() { return R\"(" << mShaderOutput.str() << " )\";}"
+           "void " << namespaceName() <<  "::Shader::setup() {"
            "}";
 }
