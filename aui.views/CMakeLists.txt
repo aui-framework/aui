@@ -58,7 +58,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 		aui_compile_assets(aui.views EXCLUDE uni/font/Roboto.ttf)
 	endif()
 
-	auisl_shader(aui.views solid.vsh)
+	auisl_shader(aui.views basic.vsh)
 	auisl_shader(aui.views solid.fsh)
 
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
