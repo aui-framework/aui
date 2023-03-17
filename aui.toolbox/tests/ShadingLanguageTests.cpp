@@ -166,3 +166,19 @@ TEST_F(ShadingLanguage, Math3) {
         }
     }
 }
+
+TEST_F(ShadingLanguage, MemberAccess) {
+    Lexer l(_new<AStringStream>("output.albedo.a = output.albedo.a + 1\n"));
+    Parser p(l.performLexAnalysis());
+    auto expr = p.parseExpression();
+
+    auto eq = _cast<AssignmentOperatorNode>(expr);
+    ASSERT_TRUE(eq);
+
+    auto b = _cast<BinaryPlusOperatorNode>(eq->getRight());
+    ASSERT_TRUE(b);
+
+    auto i = _cast<IntegerNode>(b->getRight());
+    ASSERT_TRUE(i);
+    ASSERT_EQ(i->getNumber(), 1);
+}

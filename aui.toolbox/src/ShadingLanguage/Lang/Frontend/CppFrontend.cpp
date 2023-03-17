@@ -34,6 +34,8 @@ const AMap<AString, AString>& CppFrontend::internalFunctions() {
             {"cos",  "glm::cos"},
             {"tan",  "glm::tan"},
             {"atan", "glm::atan"},
+            {"sqrt", "glm::sqrt"},
+            {"clamp", "glm::clamp"},
     };
     return internalFunctions;
 }
@@ -135,6 +137,11 @@ void CppFrontend::emitAfterEntryCode() {
 
 void CppFrontend::emitBeforeEntryCode() {
     if (shaderType() == ShaderType::VERTEX) {
+        mShaderOutput << "\nShader::Inter Shader::entry(const Shader::Input& input, const Shader::Uniform& uniform){";
+    } else {
+        mShaderOutput << "\nShader::Output Shader::entry(const Shader::Inter& inter, const Shader::Uniform& uniform){";
+    }
+    if (shaderType() == ShaderType::VERTEX) {
         mShaderOutput << "Shader::Inter inter;";
     } else {
         mShaderOutput << "Shader::Output output;";
@@ -163,17 +170,12 @@ void CppFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) const {
 
 void CppFrontend::emitCppCreateShader(aui::no_escape<IOutputStream> os) const {
     CBasedFrontend::emitCppCreateShader(os);
-    if (shaderType() == ShaderType::VERTEX) {
-        *os << "\nShader::Inter Shader::entry(const Shader::Input& input, const Shader::Uniform& uniform){";
-    } else {
-        *os << "\nShader::Output Shader::entry(const Shader::Inter& inter, const Shader::Uniform& uniform){";
-    }
     *os << mShaderOutput.str();
     *os << "}\n";
 }
 
 static bool isSwizzling(const AString& v) {
-    if (v.length() < 2 && v.length() > 4) {
+    if (v.length() < 2 || v.length() > 4) {
         return false;
     }
 

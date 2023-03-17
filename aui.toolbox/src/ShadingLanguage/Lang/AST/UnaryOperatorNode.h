@@ -13,6 +13,10 @@ private:
 
 public:
     UnaryOperatorNode(const _<ExpressionNode>& child) : mChild(child) {}
+
+    const _<ExpressionNode>& child() const {
+        return mChild;
+    }
 };
 
 

@@ -141,11 +141,18 @@ AVector<_<INode>> Parser::parse() {
                                                                                parseExpression());
                                         break;
 
-                                    case got<LParToken>:
-                                        // function definition
-                                        parseFunctionDeclarationArgs();
-                                        break;
+                                    case got<LParToken>: {
+                                        // function definition or declaration
+                                        auto args = parseFunctionDeclarationArgs();
 
+                                        if (mIterator->index() == got<LCurlyBracketToken>) {
+                                            // function definition
+                                            nodes << _new<FunctionDeclarationNode>(name1, name2, std::move(args), parseCodeBlock());
+                                        } else {
+                                            nodes << _new<FunctionDeclarationNode>(name1, name2, std::move(args), AVector<_<INode>>{});
+                                        }
+                                        break;
+                                    }
                                     case got<DoubleColonToken>:
                                         // class constructor definition
 
@@ -325,7 +332,32 @@ AVector<_<INode>> Parser::parseCodeBlock() {
         switch (mIterator->index()) {
             case got<IdentifierToken>: {
                 // variable declaration, variable assignment or function call
-                result << parseExpression();
+                auto name1 = std::get<IdentifierToken>(*mIterator).value();
+                nextTokenAndCheckEof();
+                if (mIterator->index() == got<IdentifierToken>) {
+                    // variable definition
+                    auto name2 = std::get<IdentifierToken>(*mIterator).value();
+
+                    nextTokenAndCheckEof();
+                    _<ExpressionNode> initializer;
+                    if (mIterator->index() == got<EqualToken>) {
+                        // with initializer
+                        nextTokenAndCheckEof();
+                        initializer = parseExpression();
+                    }
+                    result << _new<VariableDeclarationNode>(false,
+                                                            false,
+                                                            std::move(name1),
+                                                            std::move(name2),
+                                                            0,
+                                                            false,
+                                                            std::move(initializer));
+
+                } else {
+                    // whoops; it's an expression. rollback a little bit
+                    --mIterator;
+                    result << parseExpression();
+                }
                 break;
             }
 
@@ -408,7 +440,7 @@ _<ExpressionNode> Parser::parseExpression() {
 
     struct BinaryOperatorAndItsPriority {
         _<BinaryOperatorNode> op;
-        int priority;
+        int priority = -1;
     };
 
     AVector<BinaryOperatorAndItsPriority> binaryOperators;
@@ -440,11 +472,12 @@ _<ExpressionNode> Parser::parseExpression() {
     };
 
     enum class Priority {
-        COMPARISON,
         ASSIGNMENT,
+        COMPARISON,
         BINARY_SHIFT,
         PLUS_MINUS,
         ASTERISK_SLASH,
+        MEMBER_ACCESS,
     };
 
     auto handleBinaryOperator = [&]<aui::derived_from<BinaryOperatorNode> T>(Priority p) {
@@ -467,11 +500,19 @@ _<ExpressionNode> Parser::parseExpression() {
                 o.op->mRight = currentOperator;
 
                 binaryOperators << BinaryOperatorAndItsPriority{
-                    .op = currentOperator,
-                    .priority = std::move(currentPriority),
+                    .op = std::move(currentOperator),
+                    .priority = currentPriority,
                 };
                 return;
             }
+        }
+        if (!binaryOperators.empty()) {
+            binaryOperators << BinaryOperatorAndItsPriority{
+                    .op = _new<T>(binaryOperators.first().op, nullptr),
+                    .priority = currentPriority,
+            };
+            assert(value == nullptr);
+            return;
         }
 
         reportUnexpectedErrorAndSkip("no left-hand statement");
@@ -566,8 +607,7 @@ _<ExpressionNode> Parser::parseExpression() {
             case got<PointerFieldAccessToken>:
             case got<FieldAccessToken>: {
                 // variable access or method call
-                nextTokenAndCheckEof();
-                putValue(_new<MemberAccessOperatorNode>(takeValue(), parseMemberAccess()));
+                handleBinaryOperator.operator()<MemberAccessOperatorNode>(Priority::MEMBER_ACCESS);
 
                 break;
             }
@@ -674,7 +714,9 @@ _<ExpressionNode> Parser::parseExpression() {
                     throw AException{};
                 }
                 if (!binaryOperators.empty()) {
-                    return binaryOperators.first().op;
+                    return std::ranges::min_element(binaryOperators, [](const auto& l, const auto& r) {
+                        return l.priority < r.priority;
+                    })->op;
                 }
                 if (value) {
                     return value;

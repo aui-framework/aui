@@ -122,20 +122,22 @@ void CBasedFrontend::visitNode(const IntegerNode& node) {
 void CBasedFrontend::visitNode(const OperatorCallNode& node) {
     INodeVisitor::visitNode(node);
 
-
     if (auto i = internalFunctions().contains(node.getCallee())) {
-        mShaderOutput << i->second << "(";
-        bool first = true;
-        for (const auto& arg: node.getArgs()) {
-            if (first) {
-                first = false;
-            } else {
-                mShaderOutput << ",";
-            }
-            arg->acceptVisitor(*this);
-        }
-        mShaderOutput << ")";
+        mShaderOutput << i->second;
+    } else {
+        mShaderOutput << node.getCallee();
     }
+    mShaderOutput << "(";
+    bool first = true;
+    for (const auto& arg: node.getArgs()) {
+        if (first) {
+            first = false;
+        } else {
+            mShaderOutput << ",";
+        }
+        arg->acceptVisitor(*this);
+    }
+    mShaderOutput << ")";
 }
 
 void CBasedFrontend::visitNode(const OperatorLiteralNode& node) {
@@ -160,6 +162,8 @@ void CBasedFrontend::visitNode(const ThisNode& node) {
 
 void CBasedFrontend::visitNode(const ReturnOperatorNode& node) {
     INodeVisitor::visitNode(node);
+    mShaderOutput << "return ";
+    node.child()->acceptVisitor(*this);
 }
 
 void CBasedFrontend::visitNode(const LogicalNotOperatorNode& node) {
@@ -181,7 +185,6 @@ void CBasedFrontend::visitNode(const VariableDeclarationNode& node) {
         mShaderOutput << " = ";
         init->acceptVisitor(*this);
     }
-    mShaderOutput << ";";
 }
 
 void CBasedFrontend::visitNode(const LogicalAndOperatorNode& node) {
@@ -211,23 +214,31 @@ void CBasedFrontend::visitNode(const BinaryMinusOperatorNode& node) {
 
 void CBasedFrontend::visitNode(const BinaryPlusOperatorNode& node) {
     INodeVisitor::visitNode(node);
+    mShaderOutput << "(";
     emitBinaryOperator("+", node);
+    mShaderOutput << ")";
 }
 
 void CBasedFrontend::visitNode(const BinaryAsteriskOperatorNode& node) {
     INodeVisitor::visitNode(node);
+    mShaderOutput << "(";
     emitBinaryOperator("*", node);
+    mShaderOutput << ")";
 }
 
 void CBasedFrontend::visitNode(const BinaryDivideOperatorNode& node) {
     INodeVisitor::visitNode(node);
+    mShaderOutput << "(";
     emitBinaryOperator("/", node);
+    mShaderOutput << ")";
 }
 
 
 void CBasedFrontend::visitNode(const UnaryMinusOperatorNode& node) {
     INodeVisitor::visitNode(node);
+    mShaderOutput << "(";
     mShaderOutput << "-";
+    mShaderOutput << ")";
 }
 
 
@@ -264,7 +275,12 @@ void CBasedFrontend::visitNode(const ArrayAccessOperatorNode& node) {
 
 void CBasedFrontend::visitNode(const FloatNode& node) {
     INodeVisitor::visitNode(node);
-    mShaderOutput << "{}f"_format(node.getNumber());
+    auto str = "{:.9}f"_format(node.getNumber());
+    if (!str.contains('.')) {
+        str.pop_back();
+        str += ".f";
+    }
+    mShaderOutput << str;
 }
 
 void CBasedFrontend::parseShader(const _<AST>& ast) {

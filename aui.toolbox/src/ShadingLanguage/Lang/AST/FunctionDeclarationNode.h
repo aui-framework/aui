@@ -7,6 +7,8 @@
 
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AVector.h>
+
+#include <utility>
 #include "INode.h"
 #include "VariableDeclarationNode.h"
 
@@ -21,10 +23,14 @@ private:
     AVector<_<INode>> mCode;
 
 public:
-    FunctionDeclarationNode(const AString& returnType, const AString& name,
-                            const AVector<_<VariableDeclarationNode>>& args,
-                            const AVector<_<INode>>& code) : mReturnType(returnType), mName(name),
-                                                                               mArgs(args), mCode(code) {}
+    FunctionDeclarationNode(AString returnType,
+                            AString name,
+                            AVector<_<VariableDeclarationNode>> args,
+                            AVector<_<INode>> code):
+                            mReturnType(std::move(returnType)),
+                            mName(std::move(name)),
+                            mArgs(std::move(args)),
+                            mCode(std::move(code)) {}
     ~FunctionDeclarationNode() override = default;
 
     void acceptVisitor(INodeVisitor& v) override;
