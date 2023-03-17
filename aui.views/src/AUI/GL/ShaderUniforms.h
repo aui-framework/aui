@@ -20,12 +20,13 @@ namespace aui::ShaderUniforms {
     extern gl::Program::Uniform COLOR;
     extern gl::Program::Uniform SL_UNIFORM_COLOR;
     extern gl::Program::Uniform TRANSFORM;
+    extern gl::Program::Uniform SL_UNIFORM_TRANSFORM;
     extern gl::Program::Uniform SIZE;
     extern gl::Program::Uniform MAT;
     extern gl::Program::Uniform UV_SCALE;
-    extern gl::Program::Uniform SIGMA;
-    extern gl::Program::Uniform LOWER;
-    extern gl::Program::Uniform UPPER;
+    extern gl::Program::Uniform SL_UNIFORM_SIGMA;
+    extern gl::Program::Uniform SL_UNIFORM_LOWER;
+    extern gl::Program::Uniform SL_UNIFORM_UPPER;
     extern gl::Program::Uniform OUTER_SIZE;
     extern gl::Program::Uniform INNER_SIZE;
     extern gl::Program::Uniform INNER_TEXEL_SIZE;

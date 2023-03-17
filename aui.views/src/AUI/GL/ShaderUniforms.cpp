@@ -20,12 +20,13 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform COLOR("color");
     gl::Program::Uniform SL_UNIFORM_COLOR("SL_uniform_color");
     gl::Program::Uniform TRANSFORM("transform");
+    gl::Program::Uniform SL_UNIFORM_TRANSFORM("SL_uniform_transform");
     gl::Program::Uniform SIZE("size");
     gl::Program::Uniform MAT("mat");
     gl::Program::Uniform UV_SCALE("uv_scale");
-    gl::Program::Uniform SIGMA("sigma");
-    gl::Program::Uniform LOWER("lower");
-    gl::Program::Uniform UPPER("upper");
+    gl::Program::Uniform SL_UNIFORM_SIGMA("SL_uniform_sigma");
+    gl::Program::Uniform SL_UNIFORM_LOWER("SL_uniform_lower");
+    gl::Program::Uniform SL_UNIFORM_UPPER("SL_uniform_upper");
     gl::Program::Uniform OUTER_SIZE("outerSize");
     gl::Program::Uniform INNER_SIZE("innerSize");
     gl::Program::Uniform INNER_TEXEL_SIZE("innerTexelSize");

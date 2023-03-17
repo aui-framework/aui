@@ -87,14 +87,16 @@ void GLSLFrontend::visitNode(const IndexedAttributesDeclarationNode& node) {
 void GLSLFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
     CBasedFrontend::visitNode(node);
     AString keyword;
+    AString prefix;
     switch (node.type()) {
 
         case KeywordToken::INTER:
             keyword = "varying";
+            prefix = "inter";
             break;
 
         case KeywordToken::UNIFORM:
-            keyword = "uniform";
+            prefix = keyword = "uniform";
             break;
 
         default:
@@ -103,7 +105,7 @@ void GLSLFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
 
     for (const auto& declaration: node.fields()) {
         mShaderOutput << keyword << " ";
-        mShaderOutput << declaration->typeName() << " SL_" << keyword << "_" << declaration->variableName() << ";";
+        mShaderOutput << declaration->typeName() << " SL_" << prefix << "_" << declaration->variableName() << ";";
     }
 }
 

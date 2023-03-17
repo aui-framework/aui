@@ -28,6 +28,8 @@
 #include <AUI/Platform/ABaseWindow.h>
 #include <AUISL/Generated/basic.vsh.glsl120.h>
 #include <AUISL/Generated/solid.fsh.glsl120.h>
+#include <AUISL/Generated/shadow.vsh.glsl120.h>
+#include <AUISL/Generated/shadow.fsh.glsl120.h>
 
 
 class OpenGLTexture2D: public ITexture {
@@ -144,30 +146,9 @@ OpenGLRenderer::OpenGLRenderer() {
     useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader,
                    aui::sl_gen::solid::fsh::glsl120::Shader>(mSolidShader);
 
-    mBoxShadowShader.load(
-            "attribute vec3 pos;"
-            "uniform mat4 transform;"
-            "varying vec2 pass_uv;"
-            "void main(void) {gl_Position = transform * vec4(pos, 1); pass_uv = pos.xy;}",
-            "varying vec2 pass_uv;"
-            "uniform vec4 color;"
-            "uniform vec2 lower;"
-            "uniform vec2 upper;"
-            "uniform float sigma;"
-            "vec4 erf(vec4 x) {"
-            "vec4 s = sign(x), a = abs(x);"
-            "x = 1.0 + (0.278393 + (0.230389 + 0.078108 * (a * a)) * a) * a;"
-            "x *= x;"
-            "return s - s / (x * x);"
-            "}"
-            "void main(void) {"
-            "gl_FragColor = color;"
+    useAuislShader<aui::sl_gen::shadow::vsh::glsl120::Shader,
+                   aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
 
-            "vec4 query = vec4(pass_uv - vec2(lower), pass_uv - vec2(upper));"
-            "vec4 integral = 0.5 + 0.5 * erf(query * (sqrt(0.5) / sigma));"
-            "gl_FragColor.a *= clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0);"
-            //"gl_FragColor.a = query.x + query.y;"
-            "}");
     /*
 
     if (glewGetExtension("ARB_multisample")) {
@@ -487,11 +468,11 @@ void OpenGLRenderer::drawBoxShadow(const glm::vec2& position,
                                    float blurRadius,
                                    const AColor& color) {
     mBoxShadowShader.use();
-    mBoxShadowShader.set(aui::ShaderUniforms::SIGMA, blurRadius / 2.f);
-    mBoxShadowShader.set(aui::ShaderUniforms::LOWER, position + size);
-    mBoxShadowShader.set(aui::ShaderUniforms::UPPER, position);
-    mBoxShadowShader.set(aui::ShaderUniforms::TRANSFORM, mTransform);
-    mBoxShadowShader.set(aui::ShaderUniforms::COLOR, mColor * color);
+    mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, blurRadius / 2.f);
+    mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_LOWER, position + size);
+    mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_UPPER, position);
+    mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_TRANSFORM, mTransform);
+    mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_COLOR, mColor * color);
 
     mTempVao.bind();
 
