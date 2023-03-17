@@ -209,7 +209,9 @@ void CBasedFrontend::visitNode(const ModOperatorNode& node) {
 
 void CBasedFrontend::visitNode(const BinaryMinusOperatorNode& node) {
     INodeVisitor::visitNode(node);
+    mShaderOutput << "(";
     emitBinaryOperator("-", node);
+    mShaderOutput << ")";
 }
 
 void CBasedFrontend::visitNode(const BinaryPlusOperatorNode& node) {

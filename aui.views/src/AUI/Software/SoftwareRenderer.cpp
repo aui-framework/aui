@@ -22,6 +22,7 @@
 #include "SoftwareRenderer.h"
 #include "SoftwareTexture.h"
 #include <AUISL/Generated/solid.fsh.software.h>
+#include <AUISL/Generated/shadow.fsh.software.h>
 
 struct BrushHelper {
     SoftwareRenderer* renderer;
@@ -286,40 +287,38 @@ void SoftwareRenderer::drawRectBorder(const ABrush& brush,
     }
 }
 
-glm::vec4 erf(glm::vec4 x) {
-    glm::vec4 s = glm::sign(x), a = glm::abs(x);
-    x = 1.0f + (0.278393f + (0.230389f + 0.078108f * (a * a)) * a) * a;
-    x *= x;
-    return s - s / (x * x);
-}
-
 void SoftwareRenderer::drawBoxShadow(const glm::vec2& position,
                                      const glm::vec2& size,
                                      float blurRadius,
                                      const AColor& color) {
 
     auto transformedPos = glm::vec2(mTransform * glm::vec4(position, 1.f, 1.f));
-    float sigma = blurRadius / 2.f;
-    glm::vec2 lower = transformedPos + size;
-    glm::vec2 upper = transformedPos;
-    auto finalColor = mColor * color;
 
-    transformedPos -= blurRadius;
+    //transformedPos -= blurRadius;
     glm::ivec2 iTransformedPos(transformedPos);
-    auto eSize = size + blurRadius * 2.f;
-    auto iSize = glm::ivec2(eSize);
+    auto iSize = glm::ivec2(size + blurRadius * 2.f);
 
 
-    auto ePos = transformedPos;
+    using namespace aui::sl_gen::shadow::fsh::software;
+    const Shader::Uniform uniform{
+        .color = mColor * color,
+        .lower = transformedPos + size,
+        .upper = transformedPos,
+        .sigma = blurRadius / 2.f,
+    };
 
     for (int y = 0; y < iSize.y; ++y) { 
         for (int x = 0; x < iSize.x; ++x) {
-            glm::vec2 pass_uv = transformedPos + glm::vec2{x, y};
+            const auto result = Shader::entry(Shader::Inter {
+                .uv = transformedPos + glm::vec2{x, y},
+            }, uniform).albedo;
+
+            /*
             glm::vec4 query = glm::vec4(pass_uv - glm::vec2(lower), pass_uv - glm::vec2(upper));
             glm::vec4 integral = 0.5f + 0.5f * erf(query * (glm::sqrt(0.5f) / sigma));
             float alpha = glm::clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0f, 1.0f);
-
-            putPixel(iTransformedPos + glm::ivec2{ x, y }, { finalColor.r, finalColor.g, finalColor.b, finalColor.a * alpha });
+*/
+            putPixel(iTransformedPos + glm::ivec2{ x, y }, result);
         }
     }
 }
