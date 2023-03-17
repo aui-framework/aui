@@ -20,6 +20,8 @@
 #include "ShadingLanguage/Lang/Frontend/CppFrontend.h"
 #include "ShadingLanguage/Lang/SL.h"
 #include "ShadingLanguage/Lang/Frontend/GLSLFrontend.h"
+#include "ShadingLanguage/Lang/Lexer.h"
+#include "ShadingLanguage/Lang/Parser.h"
 
 
 class ShadingLanguage : public ::testing::Test {
@@ -60,4 +62,15 @@ entry {
     EXPECT_EQ(vertexTo<CppFrontend>(code), "struct Input{/* 0 */glm::vec4 pos;};struct Output{glm::vec4 __vertexOutput;};Output entry(Input input){Output output;output.__vertexOutput=input.pos;return output;}");
     EXPECT_EQ(vertexTo<GLSLFrontend>(code), "#version 120\n"
                                             "/* 0 */ attribute vec4 pos;void main(){gl_Position=pos;}");
+}
+TEST_F(ShadingLanguage, Math1) {
+    Lexer l(_new<AStringStream>("x = 1 + 2 * 3"));
+    Parser p(l.performLexAnalysis());
+    auto expr = p.parseExpression();
+}
+
+TEST_F(ShadingLanguage, Math2) {
+    Lexer l(_new<AStringStream>("x = 1.0 + (0.278393 + (0.230389 + 0.078108 * (a * a)) * a) * a\n"));
+    Parser p(l.performLexAnalysis());
+    auto expr = p.parseExpression();
 }

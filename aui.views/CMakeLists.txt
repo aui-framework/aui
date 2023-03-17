@@ -59,6 +59,8 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 	endif()
 
 	auisl_shader(aui.views basic.vsh)
+	auisl_shader(aui.views shadow.vsh)
+	auisl_shader(aui.views shadow.fsh)
 	auisl_shader(aui.views solid.fsh)
 
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)

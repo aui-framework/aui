@@ -63,6 +63,7 @@ public:
     void visitNode(const BinaryMinusOperatorNode& node) override;
     void visitNode(const BinaryPlusOperatorNode& node) override;
     void visitNode(const BinaryAsteriskOperatorNode& node) override;
+    void visitNode(const BinaryDivideOperatorNode& node) override;
     void visitNode(const UnaryMinusOperatorNode& node) override;
     void visitNode(const IfOperatorNode& node) override;
     void visitNode(const StructClassDefinition& node) override;

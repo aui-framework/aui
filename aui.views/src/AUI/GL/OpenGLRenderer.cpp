@@ -76,6 +76,7 @@ struct SolidShaderHelper {
 
     void operator()(const ASolidBrush& brush) const {
         shader.use();
+        shader.set(aui::ShaderUniforms::SL_UNIFORM_COLOR, Render::getColor() * brush.solidColor);
         shader.set(aui::ShaderUniforms::COLOR, Render::getColor() * brush.solidColor);
     }
 };

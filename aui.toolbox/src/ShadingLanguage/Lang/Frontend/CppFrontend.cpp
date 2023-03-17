@@ -29,6 +29,8 @@ const AMap<AString, AString>& CppFrontend::internalFunctions() {
             {"vec3", "glm::vec3"},
             {"vec4", "glm::vec4"},
             {"sin",  "glm::sin"},
+            {"sign",  "glm::sign"},
+            {"abs",  "glm::abs"},
             {"cos",  "glm::cos"},
             {"tan",  "glm::tan"},
             {"atan", "glm::atan"},
@@ -168,4 +170,38 @@ void CppFrontend::emitCppCreateShader(aui::no_escape<IOutputStream> os) const {
     }
     *os << mShaderOutput.str();
     *os << "}\n";
+}
+
+static bool isSwizzling(const AString& v) {
+    if (v.length() < 2 && v.length() > 4) {
+        return false;
+    }
+
+    return std::all_of(v.begin(), v.end(), [](auto c) {
+        switch (c) {
+            case 'x':
+            case 'y':
+            case 'z':
+            case 'w':
+            case 'r':
+            case 'g':
+            case 'b':
+            case 'a':
+                return true;
+
+            default:
+                return false;
+        }
+    });
+
+}
+
+void CppFrontend::visitNode(const MemberAccessOperatorNode& node) {
+    CBasedFrontend::visitNode(node);
+
+    if (auto c = _cast<VariableReferenceNode>(node.getRight())) {
+        if (isSwizzling(c->getVariableName())) {
+            mShaderOutput << "()";
+        }
+    }
 }

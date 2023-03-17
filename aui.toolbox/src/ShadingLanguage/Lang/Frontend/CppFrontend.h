@@ -30,6 +30,7 @@ public:
     void visitNode(const IndexedAttributesDeclarationNode& node) override;
     void visitNode(const NonIndexedAttributesDeclarationNode& node) override;
     void visitNode(const VariableReferenceNode& node) override;
+    void visitNode(const MemberAccessOperatorNode& node) override;
 
 protected:
     AString mapType(const AString& type) override;

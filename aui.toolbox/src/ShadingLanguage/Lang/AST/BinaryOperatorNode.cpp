@@ -72,3 +72,7 @@ void ArrayAccessOperatorNode::acceptVisitor(INodeVisitor& v) {
 void BinaryAsteriskOperatorNode::acceptVisitor(INodeVisitor& v) {
     v.visitNode(*this);
 }
+
+void BinaryDivideOperatorNode::acceptVisitor(INodeVisitor& v) {
+    v.visitNode(*this);
+}

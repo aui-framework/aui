@@ -102,7 +102,7 @@ public:
     Parser(const AVector<AnyToken>& tokens) : mTokens(tokens) {}
 
     AVector<_<INode>> parse();
-    _<ExpressionNode> parseExpression(RequiredPriority requiredPriority = RequiredPriority::ANY);
+    _<ExpressionNode> parseExpression(RequiredPriority requiredPriority = RequiredPriority::ANY, _<ExpressionNode> lhs = nullptr);
 
     unsigned getCurrentLineNumber();
 

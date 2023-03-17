@@ -65,7 +65,11 @@ void GLSLFrontend::visitNode(const IndexedAttributesDeclarationNode& node) {
             const auto decls = node.fields().toVector().sort(byKey);
             for (const auto& [index, declaration]: decls) {
                 mShaderOutput << "/* " << AString::number(index) << " */ attribute ";
-                static_cast<INodeVisitor*>(this)->visitNode(*declaration);
+                if (auto c = _cast<VariableDeclarationNode>(declaration)) {
+                    mShaderOutput << c->typeName() << " SL_input_" << c->variableName() << ";";
+                } else {
+                    declaration->acceptVisitor(*this);
+                }
             }
             break;
         }
@@ -99,7 +103,7 @@ void GLSLFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
 
     for (const auto& declaration: node.fields()) {
         mShaderOutput << keyword << " ";
-        static_cast<INodeVisitor*>(this)->visitNode(*declaration);
+        mShaderOutput << declaration->typeName() << " SL_" << keyword << "_" << declaration->variableName() << ";";
     }
 }
 
@@ -121,8 +125,11 @@ void GLSLFrontend::visitNode(const MemberAccessOperatorNode& node) {
         if (var->getVariableName() == "input" ||
             var->getVariableName() == "uniform" ||
             var->getVariableName() == "inter") {
-            // skip input, output, uniform accessors
-            node.getRight()->acceptVisitor(*this);
+            if (auto c = _cast<VariableReferenceNode>(node.getRight())) {
+                mShaderOutput << "SL_" << var->getVariableName() << "_" << c->getVariableName();
+            } else {
+                node.getRight()->acceptVisitor(*this);
+            }
             return;
         }
         if (var->getVariableName() == "output") {
