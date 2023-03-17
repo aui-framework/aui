@@ -9,12 +9,13 @@
 #include <AUI/Common/SharedPtrTypes.h>
 
 class BinaryOperatorNode: public ExpressionNode {
+    friend class Parser;
 private:
     _<ExpressionNode> mLeft;
     _<ExpressionNode> mRight;
 
 public:
-    BinaryOperatorNode(const _<ExpressionNode>& left, const _<ExpressionNode>& right) : mLeft(left), mRight(right) {}
+    BinaryOperatorNode(_<ExpressionNode> left, const _<ExpressionNode> right) : mLeft(left), mRight(right) {}
 
 
     const _<ExpressionNode>& getLeft() const {

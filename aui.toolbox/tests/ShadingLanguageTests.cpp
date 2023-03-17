@@ -63,14 +63,106 @@ entry {
     EXPECT_EQ(vertexTo<GLSLFrontend>(code), "#version 120\n"
                                             "/* 0 */ attribute vec4 pos;void main(){gl_Position=pos;}");
 }
+
 TEST_F(ShadingLanguage, Math1) {
-    Lexer l(_new<AStringStream>("x = 1 + 2 * 3"));
+    Lexer l(_new<AStringStream>("x = 1 + 2 * 3\n"));
     Parser p(l.performLexAnalysis());
     auto expr = p.parseExpression();
+
+    auto eq = _cast<AssignmentOperatorNode>(expr);
+    ASSERT_TRUE(eq);
+
+    auto sum = _cast<BinaryPlusOperatorNode>(eq->getRight());
+    ASSERT_TRUE(sum);
+
+    auto one = _cast<IntegerNode>(sum->getLeft());
+    ASSERT_TRUE(one);
+    ASSERT_EQ(one->getNumber(), 1);
+
+    auto mul = _cast<BinaryAsteriskOperatorNode>(sum->getRight());
+    ASSERT_TRUE(mul);
+
+    auto two = _cast<IntegerNode>(mul->getLeft());
+    ASSERT_TRUE(two);
+    ASSERT_EQ(two->getNumber(), 2);
+
+    auto three = _cast<IntegerNode>(mul->getRight());
+    ASSERT_TRUE(three);
+    ASSERT_EQ(three->getNumber(), 3);
 }
 
 TEST_F(ShadingLanguage, Math2) {
-    Lexer l(_new<AStringStream>("x = 1.0 + (0.278393 + (0.230389 + 0.078108 * (a * a)) * a) * a\n"));
+    Lexer l(_new<AStringStream>("x = 1 * 2 + 3\n"));
     Parser p(l.performLexAnalysis());
     auto expr = p.parseExpression();
+
+    auto eq = _cast<AssignmentOperatorNode>(expr);
+    ASSERT_TRUE(eq);
+
+    auto sum = _cast<BinaryPlusOperatorNode>(eq->getRight());
+    ASSERT_TRUE(sum);
+
+    auto mul = _cast<BinaryAsteriskOperatorNode>(sum->getLeft());
+    ASSERT_TRUE(mul);
+
+    auto one = _cast<IntegerNode>(mul->getLeft());
+    ASSERT_TRUE(one);
+    ASSERT_EQ(one->getNumber(), 1);
+
+    auto two = _cast<IntegerNode>(mul->getRight());
+    ASSERT_TRUE(two);
+    ASSERT_EQ(two->getNumber(), 2);
+
+    auto three = _cast<IntegerNode>(sum->getRight());
+    ASSERT_TRUE(three);
+    ASSERT_EQ(three->getNumber(), 3);
+
+}
+
+TEST_F(ShadingLanguage, Math3) {
+    //                                b1   b3   b5  b6   b7    b4   b2
+    Lexer l(_new<AStringStream>("x = 1 + (2 + (3 + 4 * (5 * 6)) * 7) * 8\n"));
+    Parser p(l.performLexAnalysis());
+    auto expr = p.parseExpression();
+
+    auto eq = _cast<AssignmentOperatorNode>(expr);
+    ASSERT_TRUE(eq);
+
+    auto b1 = _cast<BinaryPlusOperatorNode>(eq->getRight());
+    ASSERT_TRUE(b1);
+
+    {
+        auto one = _cast<IntegerNode>(b1->getLeft());
+        ASSERT_TRUE(one);
+        ASSERT_EQ(one->getNumber(), 1);
+    }
+    {
+        auto b2 = _cast<BinaryAsteriskOperatorNode>(b1->getRight());
+        ASSERT_TRUE(b2);
+
+        {
+            auto eight = _cast<IntegerNode>(b2->getRight());
+            ASSERT_TRUE(eight);
+            ASSERT_EQ(eight->getNumber(), 8);
+        }
+        {
+            auto b3 = _cast<BinaryPlusOperatorNode>(b2->getLeft());
+            ASSERT_TRUE(b3);
+
+            {
+                auto i = _cast<IntegerNode>(b3->getLeft());
+                ASSERT_TRUE(i);
+                ASSERT_EQ(i->getNumber(), 2);
+            }
+            {
+                auto b4 = _cast<BinaryAsteriskOperatorNode>(b3->getRight());
+                ASSERT_TRUE(b4);
+                {
+                    auto i = _cast<IntegerNode>(b4->getRight());
+                    ASSERT_TRUE(i);
+                    ASSERT_EQ(i->getNumber(), 7);
+                }
+            }
+        }
+    }
 }

@@ -9,26 +9,13 @@
 #include "AnyToken.h"
 #include "ShadingLanguage/Lang/AST/IndexedAttributesDeclarationNode.h"
 #include "ShadingLanguage/Lang/AST/NonIndexedAttributesDeclarationNode.h"
+#include "AUI/Util/ABitField.h"
 #include <AUI/Reflect/AClass.h>
 #include <ShadingLanguage/Lang/AST/VariableDeclarationNode.h>
 #include <ShadingLanguage/Lang/AST/ExpressionNode.h>
 #include <AUI/Util/EnumUtil.h>
 #include <AUI/Common/AException.h>
 
-AUI_ENUM_INT(RequiredPriority) {
-    ANY,
-
-    COMPARE_OPERATORS, // ==, !=, <=, >=, <, >
-
-    LOW_PRIORITY, // for +, -, |, ||
-    HIGH_PRIORITY, // for *, /, &, &&
-
-    /**
-     * Parse expressions only with highest priority (unary operators, member access, functions call, etc...)
-     */
-    UNARY,
-
-};
 
 class Parser {
 private:
@@ -102,7 +89,7 @@ public:
     Parser(const AVector<AnyToken>& tokens) : mTokens(tokens) {}
 
     AVector<_<INode>> parse();
-    _<ExpressionNode> parseExpression(RequiredPriority requiredPriority = RequiredPriority::ANY, _<ExpressionNode> lhs = nullptr);
+    _<ExpressionNode> parseExpression();
 
     unsigned getCurrentLineNumber();
 

@@ -27,6 +27,7 @@
 #include "ShadingLanguage/Lang/AST/NonIndexedAttributesDeclarationNode.h"
 #include "Parser.h"
 #include "AUI/Util/ARaiiHelper.h"
+#include <range/v3/view.hpp>
 
 class Terminated {};
 template<typename variant, typename type>
@@ -402,46 +403,113 @@ AVector<_<INode>> Parser::parseCodeBlock() {
     return result;
 }
 
-_<ExpressionNode> Parser::parseExpression(RequiredPriority requiredPriority, _<ExpressionNode> lhs) {
-    bool expectingRPar = false;
-    if (mIterator->index() == got<LParToken>) {
-        nextTokenAndCheckEof();
-        expectingRPar = true;
-    }
-    ARaiiHelper defer = [&] {
-        if (expectingRPar) {
-            expect<RParToken>();
-            nextTokenAndCheckEof();
-        }
+_<ExpressionNode> Parser::parseExpression() {
+    _<ExpressionNode> value;
+
+    struct BinaryOperatorAndItsPriority {
+        _<BinaryOperatorNode> op;
+        int priority;
     };
+
+    AVector<BinaryOperatorAndItsPriority> binaryOperators;
+
+    auto putValue = [&](_<ExpressionNode> node) {
+        if (value) {
+            reportUnexpectedErrorAndSkip("value is already set");
+            throw AException{};
+        }
+        if (!binaryOperators.empty()) {
+            if (binaryOperators.last().op->mRight) {
+                reportUnexpectedErrorAndSkip("value is already set");
+                throw AException{};
+            }
+            binaryOperators.last().op->mRight = std::move(node);
+            return;
+        }
+        value = std::move(node);
+    };
+
+    auto takeValue = [&] {
+        if (!value) {
+            reportUnexpectedErrorAndSkip("value is empty");
+            throw AException{};
+        }
+        auto v = std::move(value);
+        value = nullptr; // to be sure
+        return v;
+    };
+
+    enum class Priority {
+        COMPARISON,
+        ASSIGNMENT,
+        BINARY_SHIFT,
+        PLUS_MINUS,
+        ASTERISK_SLASH,
+    };
+
+    auto handleBinaryOperator = [&]<aui::derived_from<BinaryOperatorNode> T>(Priority p) {
+        nextTokenAndCheckEof();
+        const int currentPriority = int(p);
+
+        if (value) {
+            binaryOperators << BinaryOperatorAndItsPriority{
+                .op = _new<T>(std::move(value), nullptr),
+                .priority = currentPriority,
+            };
+            assert(value == nullptr);
+            return;
+        }
+
+        for (const auto& o : binaryOperators | ranges::view::reverse) {
+            if (o.priority < currentPriority && o.op->mRight) {
+                // steal rhs
+                auto currentOperator = _new<T>(std::move(o.op->mRight), nullptr);
+                o.op->mRight = currentOperator;
+
+                binaryOperators << BinaryOperatorAndItsPriority{
+                    .op = currentOperator,
+                    .priority = std::move(currentPriority),
+                };
+                return;
+            }
+        }
+
+        reportUnexpectedErrorAndSkip("no left-hand statement");
+        throw AException{};
+    };
+
+    auto handleUnaryOperator = [&]<aui::derived_from<ExpressionNode> T>() {
+
+    };
+
     for (; mIterator != mTokens.end(); ) {
         switch (mIterator->index()) {
             case got<KeywordToken>: {
                 auto keyword = std::get<KeywordToken>(*mIterator);
                 switch (keyword.getType()) {
                     case KeywordToken::THIS:
-                        lhs = _new<ThisNode>();
-                        ++mIterator;
+                        putValue(_new<ThisNode>());
+                        nextTokenAndCheckEof();
                         break;
 
                     case KeywordToken::NULLPTR:
-                        lhs = _new<NullptrNode>();
-                        ++mIterator;
+                        putValue(_new<NullptrNode>());
+                        nextTokenAndCheckEof();
                         break;
 
                     case KeywordToken::CONST:
                     case KeywordToken::AUTO:
-                        lhs = parseVariableDeclaration();
+                        putValue(parseVariableDeclaration());
                         break;
 
                     case KeywordToken::TRUE:
-                        lhs = _new<BoolNode>(true);
-                        ++mIterator;
+                        putValue(_new<BoolNode>(true));
+                        nextTokenAndCheckEof();
                         break;
 
                     case KeywordToken::FALSE:
-                        lhs = _new<BoolNode>(false);
-                        ++mIterator;
+                        putValue(_new<BoolNode>(false));
+                        nextTokenAndCheckEof();
                         break;
 
                     case KeywordToken::USING:
@@ -450,24 +518,24 @@ _<ExpressionNode> Parser::parseExpression(RequiredPriority requiredPriority, _<E
                         break;
 
                     case KeywordToken::INPUT:
-                        lhs = _new<VariableReferenceNode>("input");
-                        ++mIterator;
+                        putValue(_new<VariableReferenceNode>("input"));
+                        nextTokenAndCheckEof();
                         break;
 
                     case KeywordToken::UNIFORM:
-                        lhs = _new<VariableReferenceNode>("uniform");
-                        ++mIterator;
+                        putValue(_new<VariableReferenceNode>("uniform"));
+                        nextTokenAndCheckEof();
                         break;
 
 
                     case KeywordToken::INTER:
-                        lhs = _new<VariableReferenceNode>("inter");
-                        ++mIterator;
+                        putValue(_new<VariableReferenceNode>("inter"));
+                        nextTokenAndCheckEof();
                         break;
 
                     case KeywordToken::OUTPUT:
-                        lhs = _new<VariableReferenceNode>("output");
-                        ++mIterator;
+                        putValue(_new<VariableReferenceNode>("output"));
+                        nextTokenAndCheckEof();
                         break;
 
                     default:
@@ -477,239 +545,146 @@ _<ExpressionNode> Parser::parseExpression(RequiredPriority requiredPriority, _<E
                 break;
             }
             case got<TernaryToken>: { // ternary operator
-                lhs = parseTernary(lhs);
+                putValue(parseTernary(takeValue()));
                 break;
             }
             case got<IdentifierToken>: {
-                auto name1 = std::get<IdentifierToken>(*mIterator).value();
-                if (lhs == nullptr) {
-                    // variable reference
-                    lhs = parseIdentifier();
-                } else {
-                    // operator literal
-                    lhs = _new<OperatorLiteralNode>(name1, lhs);
-                    ++mIterator;
-                }
+                putValue(parseIdentifier());
                 break;
             }
 
             case got<PlusToken>: {
-                if (requiredPriority > RequiredPriority::LOW_PRIORITY) {
-                    return lhs;
-                }
-                ++mIterator;
-                auto expr = parseExpression();
-                if (mIterator->index() == got<AsteriskToken> || mIterator->index() == got<DivideToken>) {
-                    // higher-priority token; expr is lhs to it
-                    expr = parseExpression(RequiredPriority::ANY, std::move(expr));
-                }
-                lhs = _new<BinaryPlusOperatorNode>(lhs, std::move(expr));
+                handleBinaryOperator.operator()<BinaryPlusOperatorNode>(Priority::PLUS_MINUS);
                 break;
             }
 
             case got<MinusToken>: {
-                if (requiredPriority > RequiredPriority::LOW_PRIORITY) {
-                    return lhs;
-                }
-                ++mIterator;
-                if (lhs) {
-                    auto expr = parseExpression();
-                    if (mIterator->index() == got<AsteriskToken> || mIterator->index() == got<DivideToken>) {
-                        // higher-priority token; expr is lhs to it
-                        expr = parseExpression(RequiredPriority::ANY, std::move(expr));
-                    }
-                    return _new<BinaryMinusOperatorNode>(lhs, std::move(expr));
-                }
-                return _new<UnaryMinusOperatorNode>(parseExpression());
-            }
-
-            case got<DoubleColonToken>: {
-                // variable access or method call
-                ++mIterator;
-                if (lhs == nullptr) {
-                    reportError("field access requires object");
-                    throw AException{};
-                }
-
-                lhs = _new<StaticMemberAccessOperatorNode>(lhs, parseMemberAccess());
+                handleBinaryOperator.operator()<BinaryMinusOperatorNode>(Priority::PLUS_MINUS);
                 break;
             }
+
             case got<PointerFieldAccessToken>:
             case got<FieldAccessToken>: {
                 // variable access or method call
-                ++mIterator;
-                if (lhs == nullptr) {
-                    reportError("field access requires object");
-                    throw AException{};
-                }
-
-                lhs = _new<MemberAccessOperatorNode>(lhs, parseMemberAccess());
+                nextTokenAndCheckEof();
+                putValue(_new<MemberAccessOperatorNode>(takeValue(), parseMemberAccess()));
 
                 break;
             }
 
             case got<StringToken>:
-                lhs = _new<StringNode>(std::get<StringToken>(*mIterator).value());
-                ++mIterator;
+                putValue(_new<StringNode>(std::get<StringToken>(*mIterator).value()));
+                nextTokenAndCheckEof();
                 break;
 
             case got<IntegerToken>: {
                 auto& token = std::get<IntegerToken>(*mIterator);
-                lhs = _new<IntegerNode>(token.value(), token.isHex());
-                ++mIterator;
+                putValue(_new<IntegerNode>(token.value(), token.isHex()));
+                nextTokenAndCheckEof();
                 break;
             }
 
             case got<FloatToken>:
-                lhs = _new<FloatNode>(std::get<FloatToken>(*mIterator).value());
-                ++mIterator;
+                putValue(_new<FloatNode>(std::get<FloatToken>(*mIterator).value()));
+                nextTokenAndCheckEof();
                 break;
 
             case got<LShiftToken>:
-                if (requiredPriority > RequiredPriority::HIGH_PRIORITY) {
-                    return lhs;
-                }
-                ++mIterator;
-                return _new<LShiftOperatorNode>(lhs, parseExpression());
+                nextTokenAndCheckEof();
+                handleBinaryOperator.operator()<LShiftOperatorNode>(Priority::BINARY_SHIFT);
+                break;
 
             case got<RShiftToken>:
-                if (requiredPriority > RequiredPriority::HIGH_PRIORITY) {
-                    return lhs;
-                }
-                ++mIterator;
-                return _new<RShiftOperatorNode>(lhs, parseExpression());
+                nextTokenAndCheckEof();
+                handleBinaryOperator.operator()<RShiftOperatorNode>(Priority::BINARY_SHIFT);
+                break;
 
             case got<LSquareBracketToken>: {
-                if (lhs == nullptr) {
-                    // lambda
-                    lhs = parseLambda();
-                } else {
-                    // array style [] access
-                    ++mIterator;
-                    lhs = _new<ArrayAccessOperatorNode>(lhs, parseExpression());
-                    expect<RSquareBracketToken>();
-                    ++mIterator;
-                }
+                // array style [] access
+                nextTokenAndCheckEof();
+                putValue(_new<ArrayAccessOperatorNode>(takeValue(), parseExpression()));
+                expect<RSquareBracketToken>();
+                nextTokenAndCheckEof();
                 break;
             }
 
             case got<EqualToken>: { // assignment
-                ++mIterator;
-                return _new<AssignmentOperatorNode>(lhs, parseExpression());
+                handleBinaryOperator.operator()<AssignmentOperatorNode>(Priority::ASSIGNMENT);
+                break;
             }
 
             case got<DoubleEqualToken>: { // == check operator
-                ++mIterator;
-                if (requiredPriority > RequiredPriority::COMPARE_OPERATORS) {
-                    return lhs;
-                }
-                return _new<EqualsOperatorNode>(lhs, parseExpression());
+                handleBinaryOperator.operator()<EqualsOperatorNode>(Priority::COMPARISON);
+                break;
             }
 
             case got<LAngleBracketToken>: { // < check operator
-                ++mIterator;
-                if (requiredPriority > RequiredPriority::COMPARE_OPERATORS) {
-                    return lhs;
-                }
-                return _new<LessOperatorNode>(lhs, parseExpression());
+                handleBinaryOperator.operator()<LessOperatorNode>(Priority::COMPARISON);
+                break;
             }
 
             case got<RAngleBracketToken>: { // > check operator
-                ++mIterator;
-                if (requiredPriority > RequiredPriority::COMPARE_OPERATORS) {
-                    return lhs;
-                }
-                return _new<GreaterOperatorNode>(lhs, parseExpression());
+                handleBinaryOperator.operator()<GreaterOperatorNode>(Priority::COMPARISON);
+                break;
             }
 
             case got<NotEqualToken>: { // != check operator
-                ++mIterator;
-                if (requiredPriority > RequiredPriority::COMPARE_OPERATORS) {
-                    return lhs;
-                }
-                return _new<NotEqualsOperatorNode>(lhs, parseExpression());
-            }
-
-            case got<ModToken>: {
-                if (requiredPriority > RequiredPriority::HIGH_PRIORITY) {
-                    return lhs;
-                }
-                ++mIterator;
-                return _new<ModOperatorNode>(lhs, parseExpression());
-            }
-
-            case got<BitwiseOrToken>: {
-                if (requiredPriority > RequiredPriority::HIGH_PRIORITY) {
-                    return lhs;
-                }
-                ++mIterator;
-                return _new<BitwiseOrOperatorNode>(lhs, parseExpression());
-            }
-
-            case got<LogicalOrToken>: {
-                if (requiredPriority > RequiredPriority::HIGH_PRIORITY) {
-                    return lhs;
-                }
-                ++mIterator;
-                return _new<LogicalOrOperatorNode>(lhs, parseExpression());
-            }
-
-            case got<LogicalAndToken>: {
-                if (requiredPriority > RequiredPriority::HIGH_PRIORITY) {
-                    return lhs;
-                }
-                ++mIterator;
-                return _new<LogicalAndOperatorNode>(lhs, parseExpression());
+                handleBinaryOperator.operator()<NotEqualsOperatorNode>(Priority::COMPARISON);
+                break;
             }
 
             case got<LogicalNotToken>: {
-                ++mIterator;
-                if (lhs != nullptr) {
-                    reportError("logical not is not a binary operator");
-                    throw AException{};
-                }
-                lhs = _new<LogicalNotOperatorNode>(parseExpression(RequiredPriority::UNARY));
+                handleUnaryOperator.operator()<LogicalNotOperatorNode>();
                 break;
             }
 
             case got<AsteriskToken>: { // pointer dereference or multiply
-                if (requiredPriority > RequiredPriority::HIGH_PRIORITY) {
-                    return lhs;
-                }
-                ++mIterator;
-                lhs = _new<BinaryAsteriskOperatorNode>(lhs, parseExpression());
+                handleBinaryOperator.operator()<BinaryAsteriskOperatorNode>(Priority::ASTERISK_SLASH);
                 break;
             }
             case got<DivideToken>: { // divide
-                if (requiredPriority > RequiredPriority::HIGH_PRIORITY) {
-                    return lhs;
-                }
-                ++mIterator;
-                lhs = _new<BinaryDivideOperatorNode>(lhs, parseExpression());
-                break;
-            }
-
-            case got<AmpersandToken>: { // variable pointer creation
-                ++mIterator;
-                lhs = _new<PointerCreationOperatorNode>(parseExpression(RequiredPriority::UNARY));
+                handleBinaryOperator.operator()<BinaryDivideOperatorNode>(Priority::ASTERISK_SLASH);
                 break;
             }
 
             case got<LCurlyBracketToken>: { // implicit initializer list initialization
-                lhs = _new<ImplicitInitializerListCtorNode>(parseCurlyBracketsArgs());
+                putValue(_new<ImplicitInitializerListCtorNode>(parseCurlyBracketsArgs()));
                 break;
             }
 
+            case got<LParToken>: {
+                nextTokenAndCheckEof();
+                putValue(parseExpression());
+                expect<RParToken>();
+                nextTokenAndCheckEof();
+                break;
+            }
+
+
             default:
-                if (lhs == nullptr) {
-                    reportUnexpectedErrorAndSkip("not an expression");
+                if (value && !binaryOperators.empty()) {
+                    // should assign it to some operator
+                    for (const auto& o : binaryOperators | ranges::view::reverse) {
+                        if (o.op->mRight == nullptr) {
+                            o.op->mRight = std::move(value);
+                            return binaryOperators.first().op;
+                        }
+                    }
+                    reportUnexpectedErrorAndSkip("excess value");
                     throw AException{};
                 }
-                return lhs;
+                if (!binaryOperators.empty()) {
+                    return binaryOperators.first().op;
+                }
+                if (value) {
+                    return value;
+                }
+                reportUnexpectedErrorAndSkip("not an expression");
+                throw AException{};
 
         }
     }
-    return lhs;
+    return {};
 }
 
 _<ExpressionNode> Parser::parseTernary(const _<ExpressionNode>& condition) {
