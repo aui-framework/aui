@@ -25,11 +25,15 @@ ACursor::~ACursor() {
 
 }
 
-ACursor::ACursor(_<IDrawable> drawable, int size): mValue(std::move(drawable)), mSize(size) {
-
+ACursor::ACursor(aui::non_null<_<IDrawable>> drawable, int size): mValue(std::move(drawable)), mSize(size) {
 }
 
-ACursor::ACursor(AUrl imageUrl, int size): mValue(IDrawable::fromUrl(imageUrl)), mSize(size) {
+ACursor::ACursor(AUrl imageUrl, int size): mValue([&] {
+    if (auto image = IDrawable::fromUrl(imageUrl)) {
+        return image;
+    }
+    throw AException("bad cursor url: {} (please check [Drawable] log)"_format(imageUrl.full()));
+}()), mSize(size) {
 
 }
 
