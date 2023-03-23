@@ -37,6 +37,7 @@
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ADragNDropView.h"
 #include "AUI/Util/ALayoutInflater.h"
+#include "AUI/View/ASlider.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
@@ -282,6 +283,12 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
             },
             Vertical::Expanding {
                 // fields
+                GroupBox {
+                    Label { "Other" },
+                    Vertical {
+                        _new<ASlider>(),
+                    }
+                },
                 GroupBox {
                     Label { "Fields" },
                     Vertical::Expanding {
