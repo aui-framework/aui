@@ -449,6 +449,7 @@ namespace aui {
     struct ranged_number {
     public:
         ranged_number(UnderlyingType value): value(glm::clamp(value, static_cast<UnderlyingType>(min), static_cast<UnderlyingType>(max))) {}
+        ranged_number(): value(min) {}
 
         operator UnderlyingType() { // make it possible to work with ranged_number like with the underlying type
             return value;
