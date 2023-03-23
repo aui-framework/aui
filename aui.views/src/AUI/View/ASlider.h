@@ -32,6 +32,9 @@ public:
     void onPointerMove(glm::ivec2 pos) override;
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
+    void updateLayout() override;
+    bool capturesFocus() override;
+
 
     void setValue(aui::float_within_0_1 value) {
         mProgress->setValue(value);
@@ -42,9 +45,15 @@ public:
         return mProgress->value();
     }
 
-    void updateLayout() override;
+    [[nodiscard]]
+    const _<Handle>& handle() const noexcept {
+        return mHandle;
+    }
 
-    bool capturesFocus() override;
+    [[nodiscard]]
+    const _<AProgressBar>& progressbar() const noexcept {
+        return mProgress;
+    }
 
 signals:
     emits<aui::float_within_0_1> valueChanging;
