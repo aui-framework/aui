@@ -47,6 +47,7 @@ public:
     bool capturesFocus() override;
 
 signals:
+    emits<aui::float_within_0_1> valueChanging;
     emits<aui::float_within_0_1> valueChanged;
 
 private:

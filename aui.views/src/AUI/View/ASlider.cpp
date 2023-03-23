@@ -33,7 +33,7 @@ ASlider::ASlider() {
     });
 
     connect(mProgress->valueChanged, [this](aui::float_within_0_1 v) {
-        emit valueChanged(v);
+        emit valueChanging(v); // we would emit ed signal in pointer release method
         updateHandlePosition();
     });
 
@@ -57,6 +57,8 @@ void ASlider::onPointerReleased(const APointerReleasedEvent& event) {
     AViewContainer::onPointerReleased(event);
     mDragging = false;
     updateSliderWithPosition(event.position);
+
+    emit valueChanged(value());
 }
 
 void ASlider::updateSliderWithPosition(glm::ivec2 pointerPosition) {
