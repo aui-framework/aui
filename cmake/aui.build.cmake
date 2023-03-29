@@ -598,7 +598,7 @@ macro(_aui_provide_toolbox_for_host)
     file(MAKE_DIRECTORY ${_workdir}/b)
     file(WRITE ${_workdir}/CMakeLists.txt [[
 cmake_minimum_required(VERSION 3.16)
-
+project(aui.toolbox_provider)
 file(
         DOWNLOAD
         https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
@@ -610,7 +610,7 @@ auib_import(aui https://github.com/aui-framework/aui
 ]])
     execute_process(COMMAND ${CMAKE_COMMAND} .. -DAUI_CACHE_DIR=${AUI_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=TRUE WORKING_DIRECTORY ${_workdir}/b RESULT_VARIABLE _r)
     if (NOT _r STREQUAL 0)
-        message(FATAL_ERROR "CMake subprocess failed")
+        message(FATAL_ERROR "Unable to build aui.toolbox for the host system")
     endif()
     _aui_try_find_toolbox()
     set(AUI_TOOLBOX_EXE ${AUI_TOOLBOX_EXE} CACHE FILEPATH "aui.toolbox location")
