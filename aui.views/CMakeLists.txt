@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 
 auib_use_system_libs_begin()
+cmake_policy(SET CMP0072 NEW)
 find_package(OpenGL)
 if (AUI_PLATFORM_LINUX)
 	find_package(X11 REQUIRED)
@@ -75,6 +76,11 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 	else()
 		aui_link(aui.views PRIVATE freetype)
 		aui_link(aui.views PRIVATE OpenGL::GL)
+
+		if (AUI_PLATFORM_LINUX)
+			# glew defines unwanted dependencies to OpenGL which may vary from distro to distro; silence them
+			set_target_properties(GLEW::GLEW PROPERTIES INTERFACE_LINK_LIBRARIES "")
+		endif()
 		aui_link(aui.views PUBLIC GLEW::GLEW)
 
 		if(WIN32)
@@ -86,6 +92,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 				aui_link(aui.views PRIVATE ZLIB::ZLIB)
 			endif()
 		elseif(AUI_PLATFORM_MACOS)
+			aui_link(aui.views PRIVATE OpenGL::GL)
 			target_link_libraries(aui.views PUBLIC "-framework AppKit"
 				                                   "-framework Cocoa"
 				                                   "-framework CoreData"

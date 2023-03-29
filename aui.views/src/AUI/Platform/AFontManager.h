@@ -57,7 +57,7 @@ private:
     _<AFontFamily> mDefaultFamily;
     _<AFont> mDefaultFont;
 
-	AString getPathToFont(const AString& font);
+	AString getPathToFont(const AString& family);
 
     _<AFont> loadFont(const AUrl& url);
 
