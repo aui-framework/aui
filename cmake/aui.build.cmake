@@ -593,7 +593,7 @@ endmacro()
 
 macro(_aui_provide_toolbox_for_host)
     message(STATUS "Compiling aui.toolbox for the host platform")
-    set(_workdir ${CMAKE_CURRENT_BINARY_DIR}/aui_toolbox_provider)
+    set(_workdir ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider)
     file(MAKE_DIRECTORY ${_workdir})
     file(MAKE_DIRECTORY ${_workdir}/b)
     file(WRITE ${_workdir}/CMakeLists.txt [[
@@ -608,9 +608,26 @@ include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core toolbox image)
 ]])
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -DAUI_CACHE_DIR=${AUI_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=TRUE WORKING_DIRECTORY ${_workdir}/b RESULT_VARIABLE _r)
+    set(_build_log ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider_log.txt)
+
+    # on android build, the host's compiler is overriden by CC and CXX environment variables, which we don't want.
+    # we should temporary unset these variables for aui.toolbox build.
+    set(_old_CC $ENV{CC})
+    set(_old_CXX $ENV{CXX})
+    unset(ENV{CC})
+    unset(ENV{CXX})
+
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -GNinja -DAUI_CACHE_DIR=${AUI_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=TRUE
+                    WORKING_DIRECTORY ${_workdir}/b
+                    RESULT_VARIABLE _r
+                    OUTPUT_FILE ${_build_log}
+                    ERROR_FILE ${_build_log})
+
+    set(ENV{CC} ${_old_CC})
+    set(ENV{CXX} ${_old_CXX})
+
     if (NOT _r STREQUAL 0)
-        message(FATAL_ERROR "Unable to build aui.toolbox for the host system")
+        message(FATAL_ERROR "Unable to build aui.toolbox for the host system (check ${_build_log})")
     endif()
     _aui_try_find_toolbox()
     set(AUI_TOOLBOX_EXE ${AUI_TOOLBOX_EXE} CACHE FILEPATH "aui.toolbox location")
