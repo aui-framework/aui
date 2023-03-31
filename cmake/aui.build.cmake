@@ -790,7 +790,7 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                         if (APPLE)
                             target_link_options(${AUI_MODULE_NAME} ${_public_visibility} "-Wl,-force_load,$<TARGET_FILE:${_link_target_file}>")
                         else()
-                            target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} -Wl,--whole-archive,--allow-multiple-definition,$<TARGET_FILE:${_link_target_file}> -Wl,--no-whole-archive)
+                            target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} -Wl,--whole-archive,--allow-multiple-definition,$<TARGET_FILE:${_link_target_file}>,--no-whole-archive)
                         endif()
                     endif()
                 endif()
