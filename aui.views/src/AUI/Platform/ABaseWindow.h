@@ -218,12 +218,12 @@ public:
      * @details
      * On a desktop device does nothing.
      */
-    virtual void requestTouchscreenKeyboard();
+    void requestTouchscreenKeyboard();
 
     /**
      * @brief Hides virtual keyboard if visible
      */
-    virtual void hideTouchscreenKeyboard();
+    void hideTouchscreenKeyboard();
 
 signals:
     emits<>            dpiChanged;
@@ -248,11 +248,14 @@ protected:
 
     virtual float fetchDpiFromSystem() const;
 
+    virtual void requestTouchscreenKeyboardImpl();
+    virtual void hideTouchscreenKeyboardImpl();
 
 private:
     _weak<AView> mFocusedView;
     _weak<AView> mProfiledView;
     float mDpiRatio = 1.f;
+    bool mIgnoreTouchscreenKeyboardRequests = false; // to avoid flickering
 
 
     glm::ivec2 mMousePos;

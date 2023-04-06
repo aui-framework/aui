@@ -270,6 +270,7 @@ void ABaseWindow::flagUpdateLayout() {
 
 void ABaseWindow::render() {
     AViewContainer::render();
+    mIgnoreTouchscreenKeyboardRequests = false;
 
     if (auto v = mProfiledView.lock()) {
         AViewProfiler::displayBoundsOn(*v);
@@ -317,9 +318,24 @@ void ABaseWindow::updateFocusChain() {
 }
 
 void ABaseWindow::requestTouchscreenKeyboard() {
-
+    if (mIgnoreTouchscreenKeyboardRequests) {
+        return;
+    }
+    mIgnoreTouchscreenKeyboardRequests = true;
+    requestTouchscreenKeyboardImpl();
 }
 
 void ABaseWindow::hideTouchscreenKeyboard() {
+    if (mIgnoreTouchscreenKeyboardRequests) {
+        return;
+    }
+    hideTouchscreenKeyboardImpl();
+}
 
+void ABaseWindow::requestTouchscreenKeyboardImpl() {
+    // stub
+}
+
+void ABaseWindow::hideTouchscreenKeyboardImpl() {
+    // stub
 }

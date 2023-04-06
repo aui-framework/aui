@@ -269,8 +269,8 @@ public:
     virtual void onCloseButtonClicked();
 
 
-    void requestTouchscreenKeyboard() override;
-    void hideTouchscreenKeyboard() override;
+    void requestTouchscreenKeyboardImpl() override;
+    void hideTouchscreenKeyboardImpl() override;
 
 signals:
     emits<> closed;
