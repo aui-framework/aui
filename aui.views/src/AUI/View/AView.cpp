@@ -372,8 +372,6 @@ void AView::onPointerPressed(const APointerPressedEvent& event)
         // also handle touchscreen keyboard visibility
         if (wantsTouchscreenKeyboard()) {
             w->requestTouchscreenKeyboard();
-        } else {
-            w->hideTouchscreenKeyboard();
         }
     }
 }

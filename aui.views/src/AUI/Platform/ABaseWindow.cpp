@@ -185,12 +185,17 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
 void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     closeOverlappingSurfacesOnClick();
     auto focusCopy = mFocusedView.lock();
+    mIgnoreTouchscreenKeyboardRequests = false;
     AViewContainer::onPointerPressed(event);
+
     if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
         if (focusCopy->hasFocus()) {
             focusCopy->onFocusLost();
         }
     }
+
+    hideTouchscreenKeyboard(); // would do hide only if show is not requested on this particular frame
+    mIgnoreTouchscreenKeyboardRequests = false;
 
     // check for double clicks
     using namespace std::chrono;
