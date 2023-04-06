@@ -77,8 +77,6 @@ define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
         BRIEF_DOCS "Global list of aui boot root entries"
         FULL_DOCS "Global list of aui boot root entries")
 
-set(CMAKE_POLICY_DEFAULT_CMP0074 NEW)
-
 # checking host system not by WIN32 because of cross compilation
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     set(HOME_DIR $ENV{USERPROFILE})
@@ -650,7 +648,6 @@ function(auib_import AUI_MODULE_NAME URL)
                         CMAKE_FIND_ROOT_PATH_MODE_LIBRARY
                         CMAKE_FIND_ROOT_PATH_MODE_INCLUDE
                         CMAKE_FIND_ROOT_PATH_MODE_PACKAGE
-                        CMAKE_POLICY_DEFAULT_CMP0074
                         ONLY_CMAKE_FIND_ROOT_PATH
                         CMAKE_POLICY_DEFAULT_CMP0074 # find_package uses *_ROOT variables
                         PLATFORM
