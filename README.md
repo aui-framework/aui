@@ -22,7 +22,7 @@ sudo apt install pkg-config libgtk-3-dev libfontconfig-dev libXcursor-devel glew
 
 ### Fedora
 ```bash
-sudo dnf install fontconfig-devel libXi lib
+sudo dnf install fontconfig-devel libXi libglvnd-devel gtk3-devel libstdc++-static glew-devel
 ```
 
 ## Your project CMake script
