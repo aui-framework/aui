@@ -829,6 +829,11 @@ public:
      */
     virtual void invalidateAssHelper();
 
+    /**
+     * @brief Returns true if view is textfield-like view which requires touchscreen keyboard when clicked.
+     */
+    [[nodiscard]]
+    virtual bool wantsTouchscreenKeyboard();
 
 signals:
     emits<> addedToContainer;

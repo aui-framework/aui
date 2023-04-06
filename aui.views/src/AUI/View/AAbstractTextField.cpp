@@ -26,9 +26,6 @@
 
 
 AAbstractTextField::AAbstractTextField() {
-    connect(clicked, [this] {
-        AUI_NULLSAFE(getWindow())->requestTouchscreenKeyboard();
-    });
 }
 
 void AAbstractTextField::onFocusAcquired() {
@@ -38,7 +35,6 @@ void AAbstractTextField::onFocusAcquired() {
 
 void AAbstractTextField::onFocusLost() {
     AAbstractTypeableView::onFocusLost();
-    AUI_NULLSAFE(getWindow())->hideTouchscreenKeyboard();
 }
 
 AAbstractTextField::~AAbstractTextField()
@@ -114,6 +110,9 @@ void AAbstractTextField::setText(const AString& t)
 	emit textChanged(t);
 }
 
+bool AAbstractTextField::wantsTouchscreenKeyboard() {
+    return true;
+}
 
 AString AAbstractTextField::getContentsPasswordWrap() {
     if (mIsPasswordTextField) {

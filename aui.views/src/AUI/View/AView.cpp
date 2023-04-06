@@ -368,6 +368,13 @@ void AView::onPointerPressed(const APointerPressedEvent& event)
                     disconnect();
                 });
         }
+
+        // also handle touchscreen keyboard visibility
+        if (wantsTouchscreenKeyboard()) {
+            w->requestTouchscreenKeyboard();
+        } else {
+            w->hideTouchscreenKeyboard();
+        }
     }
 }
 
@@ -631,5 +638,9 @@ bool AView::hasIndirectParent(const _<AView>& v) {
             return true;
         }
     }
+    return false;
+}
+
+bool AView::wantsTouchscreenKeyboard() {
     return false;
 }
