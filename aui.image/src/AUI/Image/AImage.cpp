@@ -69,23 +69,27 @@ AImage AImage::resizeLinearDownscale(const AImage& src, uint32_t width, uint32_t
 {
     AImage n(width, height, src.getFormat());
 
-    uint32_t deltaX = src.getWidth() / width;
-    uint32_t deltaY = src.getHeight() / height;
+    float xRatio = static_cast<float>(src.getWidth() - 1) / static_cast<float>(width);
+    float yRatio = static_cast<float>(src.getHeight() - 1) / static_cast<float>(height);
+    for (uint32_t i = 0; i < height; i++) {
+        for (uint32_t j = 0; j < width; j++) {
+            auto x = static_cast<uint32_t>(xRatio * static_cast<float>(j));
+            auto y = static_cast<uint32_t>(yRatio * static_cast<float>(i));
+            float xWeight = (xRatio * static_cast<float>(j)) - x;
+            float yWeight = (yRatio * static_cast<float>(i)) - y;
 
-    for (uint32_t y = 0; y < height; ++y)
-    {
-        for (uint32_t x = 0; x < width; ++x)
-        {
-            glm::ivec4 block(0.f);
-            for (uint32_t dy = 0; dy < deltaY; ++dy)
-            {
-                for (uint32_t dx = 0; dx < deltaX; ++dx)
-                {
-                    block += src.getPixelAt(glm::uvec2{x * deltaX + dx, y * deltaY + dy});
-                }
-            }
-            block /= deltaY * deltaX;
-            n.setPixelAt(x, y, block);
+            glm::vec4 c1 = src.getPixelAt(glm::uvec2 {x, y});
+            glm::vec4 c2 = src.getPixelAt(glm::uvec2 {x + 1, y});
+            glm::vec4 c3 = src.getPixelAt(glm::uvec2 {x, y + 1});
+            glm::vec4 c4 = src.getPixelAt(glm::uvec2 {x + 1, y + 1});
+
+            c1 *= (1. - xWeight) * (1. - yWeight);
+            c2 *= xWeight * (1. - yWeight);
+            c3 *= yWeight * (1. - xWeight);
+            c4 *= xWeight * yWeight;
+
+            glm::ivec4 color = c1 + c2 + c3 + c4;
+            n.setPixelAt(j, i, color);
         }
     }
 
