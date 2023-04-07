@@ -371,7 +371,8 @@ function(auib_import AUI_MODULE_NAME URL)
 
         # add it to AUI_BOOT_ROOT_ENTRIES if needed
         get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
-        if (NOT ${AUI_BOOT_ROOT_ENTRIES} MATCHES ".*${_dep_root}.*")
+        list(JOIN AUI_BOOT_ROOT_ENTRIES , AUI_BOOT_ROOT_ENTRIES)
+        if (NOT "${AUI_BOOT_ROOT_ENTRIES}" MATCHES ".*${_dep_root}.*")
             set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${_dep_root}=${${_dep_root}}")
         endif ()
     endforeach()
