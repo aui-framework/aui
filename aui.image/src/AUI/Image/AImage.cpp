@@ -75,8 +75,8 @@ AImage AImage::resizeLinearDownscale(const AImage& src, uint32_t width, uint32_t
         for (uint32_t j = 0; j < width; j++) {
             auto x = static_cast<uint32_t>(xRatio * static_cast<float>(j));
             auto y = static_cast<uint32_t>(yRatio * static_cast<float>(i));
-            float xWeight = (xRatio * static_cast<float>(j)) - x;
-            float yWeight = (yRatio * static_cast<float>(i)) - y;
+            float xWeight = (xRatio * static_cast<float>(j)) - static_cast<float>(x);
+            float yWeight = (yRatio * static_cast<float>(i)) - static_cast<float>(y);
 
             glm::vec4 c1 = src.getPixelAt(glm::uvec2 {x, y});
             glm::vec4 c2 = src.getPixelAt(glm::uvec2 {x + 1, y});
