@@ -64,6 +64,7 @@ AText::ParsedFlags AText::parseFlags(const AText::Flags& flags) {
 }
 
 void AText::setString(const AString& string, const Flags& flags) {
+    clearContent();
     auto parsedFlags = parseFlags(flags);
     mParsedFlags = parsedFlags;
     AVector<_<AWordWrappingEngine::Entry>> entries;
@@ -76,7 +77,9 @@ void AText::setString(const AString& string, const Flags& flags) {
     mEngine.setEntries(std::move(entries));
 }
 
+
 void AText::setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags) {
+    clearContent();
     auto parsedFlags = parseFlags(flags);
     mParsedFlags = parsedFlags;
     AVector<_<AWordWrappingEngine::Entry>> entries;
@@ -99,6 +102,7 @@ void AText::setItems(const AVector<std::variant<AString, _<AView>>>& init, const
 }
 
 void AText::setHtml(const AString& html, const Flags& flags) {
+    clearContent();
     auto parsedFlags = parseFlags(flags);
     AStringStream stringStream(html);
     struct CommonEntityVisitor: IXmlDocumentVisitor {
@@ -271,4 +275,5 @@ void AText::clearContent() {
     mWordEntries.clear();
     mCharEntries.clear();
     removeAllViews();
+    mPrerenderedString = nullptr;
 }

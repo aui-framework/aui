@@ -15,8 +15,14 @@ using modern C++20.
 
 If you are using Linux, install following dependencies:
 
+### Ubuntu
 ```bash
-sudo apt-get install pkg-config libgtk-3-dev libfontconfig-dev
+sudo apt install pkg-config libgtk-3-dev libfontconfig-dev libXcursor-devel glew-devel libstdc++-static gtk3-devel
+```
+
+### Fedora
+```bash
+sudo dnf install fontconfig-devel libXi libglvnd-devel gtk3-devel libstdc++-static glew-devel
 ```
 
 ## Your project CMake script

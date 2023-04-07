@@ -149,10 +149,10 @@ void AWindow::allowDragNDrop() {
 
 }
 
-void AWindow::requestTouchscreenKeyboard() {
+void AWindow::requestTouchscreenKeyboardImpl() {
 
 }
 
-void AWindow::hideTouchscreenKeyboard() {
+void AWindow::hideTouchscreenKeyboardImpl() {
 
 }

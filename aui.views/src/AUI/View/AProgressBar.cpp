@@ -48,3 +48,4 @@ void AProgressBar::updateInnerWidth() {
 void AProgressBar::render() {
     AViewContainer::render();
 }
+

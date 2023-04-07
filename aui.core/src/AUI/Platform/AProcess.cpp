@@ -40,9 +40,9 @@ AProcess::make(AString applicationFile, AString args, APath workingDirectory) {
 
 int AProcess::executeWaitForExit(AString applicationFile, AString args, APath workingDirectory) {
     AChildProcess p;
-    p.mApplicationFile = std::move(applicationFile);
+    p.mApplicationFile = APath(std::move(applicationFile)).absolute();
     p.mArgs = std::move(args);
-    p.mWorkingDirectory = std::move(workingDirectory);
+    p.mWorkingDirectory = APath(std::move(workingDirectory)).absolute();
     p.run();
 
     return p.waitForExitCode();

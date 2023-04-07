@@ -688,7 +688,7 @@ public:
                     if (ch.rendererData == nullptr) {
                         uv = texturePacker.insert(*ch.image);
 
-                        const float BIAS = 0.5f;
+                        const float BIAS = 0.1f;
                         uv.x += BIAS;
                         uv.y += BIAS;
                         uv.z -= BIAS;

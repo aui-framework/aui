@@ -89,4 +89,6 @@ public:
 
     void onFocusLost() override;
 
+    bool wantsTouchscreenKeyboard() override;
+
 };

@@ -47,6 +47,8 @@ public:
                 mCallback(mBuffer);
                 nextRead();
                 break;
+
+            case ERROR_OPERATION_ABORTED:
             case ERROR_BROKEN_PIPE:
                 mCallback(mBuffer);
                 break;

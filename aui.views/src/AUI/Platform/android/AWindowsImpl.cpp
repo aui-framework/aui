@@ -152,10 +152,10 @@ void AWindow::allowDragNDrop() {
 
 }
 
-void AWindow::requestTouchscreenKeyboard() {
+void AWindow::requestTouchscreenKeyboardImpl() {
     AAndroid::showVirtualKeyboard();
 }
 
-void AWindow::hideTouchscreenKeyboard() {
+void AWindow::hideTouchscreenKeyboardImpl() {
     AAndroid::hideVirtualKeyboard();
 }

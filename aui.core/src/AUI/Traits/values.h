@@ -21,9 +21,11 @@
 #include <utility>
 #include <functional>
 #include <optional>
+#include <glm/glm.hpp>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Common/AOptional.h>
 #include <AUI/Thread/AMutex.h>
+#include <AUI/Traits/concepts.h>
 
 namespace aui {
     /**
@@ -429,4 +431,33 @@ namespace aui {
             }
         };
     }
+
+
+
+    /**
+     * @brief Clamps the possible values for a number to the specified range: [min;max]
+     * @ingroup useful_templates
+     * @tparam UnderlyingType any arithmetic type
+     * @tparam min minimum possible value
+     * @tparam max maximum possible value
+     */
+    template<aui::arithmetic UnderlyingType,
+             auto /* UnderlyingType*/ min,
+             auto /* UnderlyingType*/ max> // min and max are defined auto because some static analyzers won't work with
+                                           // float value template arguments
+    requires aui::convertible_to<decltype(min), UnderlyingType> && aui::convertible_to<decltype(max), UnderlyingType>
+    struct ranged_number {
+    public:
+        ranged_number(UnderlyingType value): value(glm::clamp(value, static_cast<UnderlyingType>(min), static_cast<UnderlyingType>(max))) {}
+        ranged_number(): value(min) {}
+
+        operator UnderlyingType() const { // make it possible to work with ranged_number like with the underlying type
+            return value;
+        }
+
+    private:
+        UnderlyingType value;
+    };
+
+    using float_within_0_1 = ranged_number<float, 0, 1>;
 }

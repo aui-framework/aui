@@ -131,4 +131,10 @@ namespace aui {
     concept factory = requires(F&& f) {
         { std::invoke(f) } -> aui::convertible_to<ProducedObject>;
     };
+
+    /**
+     * @brief Concept shortcut to std::is_arithmetic_v
+     */
+    template<typename F>
+    concept arithmetic = requires(F&&) { std::is_arithmetic_v<F>; };
 }

@@ -162,11 +162,11 @@ void AWindow::allowDragNDrop() {
 
 }
 
-void AWindow::requestTouchscreenKeyboard() {
+void AWindow::requestTouchscreenKeyboardImpl() {
     ABaseWindow::requestTouchscreenKeyboard();
 }
 
 
-void AWindow::hideTouchscreenKeyboard() {
+void AWindow::hideTouchscreenKeyboardImpl() {
     ABaseWindow::hideTouchscreenKeyboard();
 }

@@ -56,7 +56,7 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/win32/AComBase.h>
 
-LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept {
+LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
 #define POS glm::ivec2(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))
@@ -538,10 +538,10 @@ void AWindow::allowDragNDrop() {
     assert(r == S_OK);
 }
 
-void AWindow::requestTouchscreenKeyboard() {
-    ABaseWindow::requestTouchscreenKeyboard();
+void AWindow::requestTouchscreenKeyboardImpl() {
+    ABaseWindow::requestTouchscreenKeyboardImpl();
 }
 
-void AWindow::hideTouchscreenKeyboard() {
-    ABaseWindow::hideTouchscreenKeyboard();
+void AWindow::hideTouchscreenKeyboardImpl() {
+    ABaseWindow::hideTouchscreenKeyboardImpl();
 }

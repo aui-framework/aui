@@ -24,6 +24,8 @@ cmake_minimum_required(VERSION 3.16)
 option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
 option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
 
+set(CMAKE_POLICY_DEFAULT_CMP0074 NEW) # allows find_package to use packages pulled by aui.boot
+
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
         FULL_DOCS "Global list of imported targets (since CMake 3.21)")
@@ -74,8 +76,6 @@ endif()
 define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
         BRIEF_DOCS "Global list of aui boot root entries"
         FULL_DOCS "Global list of aui boot root entries")
-
-set(CMAKE_POLICY_DEFAULT_CMP0074 NEW)
 
 # checking host system not by WIN32 because of cross compilation
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
@@ -292,7 +292,7 @@ function(_auib_try_download_precompiled_binary)
         message(STATUS "Unpacking precompiled binary for ${AUI_MODULE_NAME}...")
         file(MAKE_DIRECTORY ${DEP_INSTALL_PREFIX})
         execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_BINARY_DIR}/binary.tar.gz
-                        WORKING_DIRECTORY ${DEP_INSTALL_PREFIX})
+                WORKING_DIRECTORY ${DEP_INSTALL_PREFIX})
 
         _auib_try_find()
 
@@ -358,9 +358,23 @@ function(auib_import AUI_MODULE_NAME URL)
 
     set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY)
     set(oneValueArgs VERSION CMAKE_WORKING_DIR CMAKELISTS_CUSTOM PRECOMPILED_URL_PREFIX LINK)
-    set(multiValueArgs CMAKE_ARGS COMPONENTS)
+    set(multiValueArgs CMAKE_ARGS COMPONENTS REQUIRES)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
+
+    # check for dependencies
+    foreach (_dep ${AUIB_IMPORT_REQUIRES})
+        set(_dep_root ${AUIB_IMPORT_REQUIRES}_ROOT)
+        if (NOT EXISTS ${${_dep_root}})
+            message(FATAL_ERROR "${AUI_MODULE_NAME} requires ${_dep}, but it's not available (${_dep_root} is not set)")
+        endif()
+
+        # add it to AUI_BOOT_ROOT_ENTRIES if needed
+        get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
+        if (NOT ${AUI_BOOT_ROOT_ENTRIES} MATCHES ".*${_dep_root}.*")
+            set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${_dep_root}=${${_dep_root}}")
+        endif ()
+    endforeach()
 
     if (AUIB_IMPORT_ARCHIVE AND AUIB_IMPORT_VERSION)
         message(FATAL_ERROR "ARCHIVE and VERSION arguments are incompatible")
@@ -649,6 +663,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         CMAKE_FIND_ROOT_PATH_MODE_INCLUDE
                         CMAKE_FIND_ROOT_PATH_MODE_PACKAGE
                         ONLY_CMAKE_FIND_ROOT_PATH
+                        CMAKE_POLICY_DEFAULT_CMP0074 # find_package uses *_ROOT variables
                         PLATFORM
                         CMAKE_OSX_ARCHITECTURES
                         XCODE_VERSION
