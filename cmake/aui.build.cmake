@@ -651,6 +651,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
 
     get_filename_component(ASSETS_DIR "${ASSETS_DIR}" ABSOLUTE)
     get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+    get_filename_component(SELF_DIR "${SELF_DIR}" ABSOLUTE)
     file(GLOB_RECURSE ASSETS RELATIVE ${SELF_DIR} "${ASSETS_DIR}/*")
 
     if (ASSETS_EXCLUDE)
@@ -895,7 +896,7 @@ function(aui_module AUI_MODULE_NAME)
     endif()
 
     if (AUIE_COMPILE_ASSETS)
-        _aui_compile_assets(${AUI_MODULE_NAME})
+        aui_compile_assets(${AUI_MODULE_NAME})
         set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
     endif()
 
