@@ -20,6 +20,7 @@
 
 #include "ASegfaultException.h"
 #include "AUI/Traits/memory.h"
+#include "AUI/Logging/ALogger.h"
 
 
 #ifdef AUI_CATCH_SEGFAULT
@@ -53,16 +54,7 @@ static void unblock_signal(int signum __attribute__((__unused__)))
 #endif
 }
 static void onSegfault(int c, siginfo_t * info, void *_p __attribute__ ((__unused__))) {
-    switch (c) {
-    case SIGSEGV:
-        std::cout << "Caught SEGFAULT!";
-        break;
-
-    case SIGABRT:
-        std::cout << "Caught assertion fail!";
-        break;
-    }
-    std::cout << std::endl << AStacktrace::capture(3);
+    ALogger::err("SignalHandler") << "Caught signal: " << AStacktrace::capture(3);
 
     if (c == SIGSEGV) {
         unblock_signal(SIGSEGV);

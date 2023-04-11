@@ -28,6 +28,7 @@ target_compile_definitions(aui.core PRIVATE UNICODE=1)
 target_compile_definitions(aui.core PUBLIC NOMINMAX=1)
 if (AUI_CATCH_SEGFAULT)
     target_compile_definitions(aui.core PUBLIC AUI_CATCH_SEGFAULT=1)
+    set_target_properties(aui.core PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON) # required for signal handling auto register
 endif()
 
 if (NOT WIN32)
@@ -44,6 +45,14 @@ if (NOT WIN32)
     ]])
 
     try_compile(_use_backtrace ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test/b ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test.cpp OUTPUT_VARIABLE _tmp)
+
+    if (NOT _use_backtrace)
+        if (AUI_PLATFORM_LINUX)
+            auib_import(backtrace https://github.com/ianlancetaylor/libbacktrace
+                        CMAKELISTS_CUSTOM cmake/backtrace.cmake)
+            set(_use_backtrace TRUE)
+        endif ()
+    endif ()
 endif()
 
 if(_use_backtrace)
