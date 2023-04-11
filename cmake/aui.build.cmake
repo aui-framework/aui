@@ -681,9 +681,11 @@ function(aui_compile_assets AUI_MODULE_NAME)
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})
         set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
+        get_filename_component(_in "${SELF_DIR}/${ASSET_PATH}" ABSOLUTE)
+        get_filename_component(_out "${OUTPUT_PATH}" ABSOLUTE)
         add_custom_command(
                 OUTPUT ${OUTPUT_PATH}
-                COMMAND ${AUI_TOOLBOX_EXE} pack ${ASSETS_DIR} ${SELF_DIR}/${ASSET_PATH} ${OUTPUT_PATH}
+                COMMAND ${AUI_TOOLBOX_EXE} pack ${ASSETS_DIR} ${_in} ${_out}
                 DEPENDS ${SELF_DIR}/${ASSET_PATH}
         )
         target_sources(${AUI_MODULE_NAME} PRIVATE ${OUTPUT_PATH})
