@@ -213,9 +213,7 @@ int main(int argc, char **argv) {
 
             target_compile_definitions(${TESTS_MODULE_NAME} PUBLIC AUI_TESTS_MODULE=1)
 
-            if (TARGET aui.core)
-                aui_link(${TESTS_MODULE_NAME} PUBLIC aui.core)
-            else()
+            if (TARGET aui::core)
                 aui_link(${TESTS_MODULE_NAME} PUBLIC aui::core)
             endif()
 

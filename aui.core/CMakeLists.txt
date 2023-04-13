@@ -28,10 +28,13 @@ target_compile_definitions(aui.core PRIVATE UNICODE=1)
 target_compile_definitions(aui.core PUBLIC NOMINMAX=1)
 if (AUI_CATCH_SEGFAULT)
     target_compile_definitions(aui.core PUBLIC AUI_CATCH_SEGFAULT=1)
-    set_target_properties(aui.core PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON) # required for signal handling auto register
 endif()
 
 if (NOT WIN32)
+    if (AUI_CATCH_SEGFAULT)
+        set_target_properties(aui.core PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON) # required for signal handling auto register
+    endif()
+
     # probe for backtrace
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test)
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test.cpp [[

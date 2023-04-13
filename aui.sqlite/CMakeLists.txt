@@ -8,7 +8,7 @@ aui_module(aui.sqlite ADDITIONAL_SRCS ${SQLITE3_SRCS}
                       PLUGIN)
 target_include_directories(aui.sqlite PRIVATE 3rdparty/sqlite3)
 
-aui_link(aui.sqlite PUBLIC aui.core)
-aui_link(aui.sqlite PUBLIC aui.data)
+aui_link(aui.sqlite PUBLIC aui::core)
+aui_link(aui.sqlite PUBLIC aui::data)
 
 aui_enable_tests(aui.sqlite)

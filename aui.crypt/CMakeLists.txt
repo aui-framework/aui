@@ -22,7 +22,7 @@ endif()
 
 aui_module(aui.crypt EXPORT aui)
 aui_enable_tests(aui.crypt)
-aui_link(aui.crypt PUBLIC aui.core)
+aui_link(aui.crypt PUBLIC aui::core)
 target_include_directories(aui.crypt PRIVATE ${OPENSSL_INCLUDE_DIR})
 aui_link(aui.crypt PRIVATE OpenSSL::SSL OpenSSL::Crypto)
 if(WIN32 AND NOT BUILD_SHARED_LIBS)
