@@ -231,7 +231,7 @@ int AAdvancedGridLayout::getMinimumWidth()
     for (int x = 0; x < cellsX; ++x)
     {
         int minForColumn = 0;
-        for (auto& view : getRow(x))
+        for (auto& view : getColumn(x))
         {
             minForColumn = glm::max(int(view->getMinimumWidth() + view->getMargin().horizontal()), minForColumn);
         }
