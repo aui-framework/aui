@@ -11,14 +11,16 @@ execute_process(COMMAND bash "-c" "make"
 execute_process(COMMAND bash "-c" "make install"
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
-file(WRITE backtrace-config.cmake
-"if(TARGET backtrace)"
-"return()"
-"endif()"
-"add_library(backtrace STATIC IMPORTED)\n"
-"set_target_properties(backtrace PROPERTIES"
-"                      IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libbacktrace.a\n"
-"                      INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_INSTALL_PREFIX}/include\n)"
-)
+file(WRITE backtrace-config.cmake.in [[
+if(TARGET backtrace)
+  return()
+endif()
+add_library(backtrace STATIC IMPORTED)
+set_target_properties(backtrace PROPERTIES
+                      IMPORTED_LOCATION ${CMAKE_INSTALL_PREFIX}/lib/libbacktrace.a
+                      INTERFACE_INCLUDE_DIRECTORIES ${CMAKE_INSTALL_PREFIX}/include)
+]])
 
-install(FILES backtrace-config.cmake DESTINATION .)
+configure_file(backtrace-config.cmake.in ${CMAKE_BINARY_DIR}/backtrace-config.cmake @only)
+
+install(FILES ${CMAKE_BINARY_DIR}/backtrace-config.cmake DESTINATION .)
