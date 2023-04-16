@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(backtrace)
 
-execute_process(COMMAND bash "-c" "./configure --prefix=${CMAKE_INSTALL_PREFIX}"
+execute_process(COMMAND bash "-c" "./configure --prefix=${CMAKE_INSTALL_PREFIX} --with-pic"
                 WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 
 execute_process(COMMAND bash "-c" "make"
