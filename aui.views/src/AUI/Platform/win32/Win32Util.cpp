@@ -57,7 +57,7 @@ aui::win32::Bitmap aui::win32::imageRgbToBitmap(const AImage& image, BitmapMode 
     auto hbmpOldColor = (HBITMAP)SelectObject(hdcMemColor, hbmpColor);
 
     if (image.getFormat() == (AImageFormat::BGRA | AImageFormat::BYTE)) {
-        std::memcpy(data, image.getData().data(), bmi.bmiHeader.biSizeImage);
+        std::memcpy(data, image.buffer().data(), bmi.bmiHeader.biSizeImage);
     } else {
         for (int y = 0; y < image.getHeight(); ++y) {
             for (int x = 0; x < image.getWidth(); ++x) {

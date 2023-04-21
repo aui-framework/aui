@@ -41,7 +41,7 @@ _<AImage> StbImageLoader::getRasterImage(AByteBufferView buffer) {
             default:
                 assert(0);
         }
-        auto img = _new<AImage>(AByteBuffer(reinterpret_cast<const char*>(data), x * y * channels), x, y, format);
+        auto img = _new<AImage>(AByteBufferView(reinterpret_cast<const char*>(data), x * y * channels), glm::uvec2{x, y}, format);
 
         return img;
     }

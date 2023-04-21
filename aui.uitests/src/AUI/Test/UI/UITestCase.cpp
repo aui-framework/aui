@@ -32,7 +32,7 @@ private:
     static APath saveScreenshot(const AString& testFilePath, const AString& name) noexcept {
         if (!AWindow::current()) return {};
         auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
-        if (image.getData().empty()) return {};
+        if (image.buffer().empty()) return {};
         auto p = APath("reports") / APath(testFilePath).filenameWithoutExtension();
         p.makeDirs();
         p = p / name;

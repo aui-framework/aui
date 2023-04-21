@@ -20,36 +20,25 @@
 
 #include "SvgImageFactory.h"
 #include "AUI/Common/AByteBuffer.h"
-
-#define NANOSVG_IMPLEMENTATION
-#define NANOSVGRAST_IMPLEMENTATION
-#include <nanosvg.h>
-#include <nanosvgrast.h>
+#include <lunasvg.h>
 
 
 SvgImageFactory::SvgImageFactory(AByteBufferView buf) {
-    AByteBuffer copy;
-    copy << buf << '\0';
-    mNsvg = nsvgParse(copy.data(), "px", 96.f);
+    mImpl = lunasvg::Document::loadFromData(buf.data(), buf.size());
 }
 
 SvgImageFactory::~SvgImageFactory() {
-    nsvgDelete(static_cast<NSVGimage*>(mNsvg));
 }
 
+
 AImage SvgImageFactory::provideImage(const glm::ivec2& size) {
-    AImage image(size.x, size.y, AImageFormat::RGBA | AImageFormat::BYTE);
-    image.allocate();
-    auto rasterizer = nsvgCreateRasterizer();
-    assert(rasterizer);
-    auto svg = static_cast<NSVGimage*>(mNsvg);
-    nsvgRasterize(rasterizer, svg, 0, 0, glm::min(size.x / svg->width, size.y / svg->height),
-                  reinterpret_cast<unsigned char*>(image.getData().data()), size.x, size.y, size.x * 4);
-    nsvgDeleteRasterizer(rasterizer);
-    return image;
+    auto bitmap = mImpl->renderToBitmap(size.x, size.y, 0x00000000);
+    return AImageView(AByteBufferView(reinterpret_cast<const char*>(bitmap.data()), bitmap.stride() * size.y * 4),
+                      glm::uvec2(size),
+                      AImageFormat::BGRA | AImageFormat::BYTE)
+                      .convert(AImageFormat::RGBA | AImageFormat::BYTE);
 }
 
 glm::ivec2 SvgImageFactory::getSizeHint() {
-    auto svg = static_cast<NSVGimage*>(mNsvg);
-    return {svg->width, svg->height};
+    return {mImpl->box().w - mImpl->box().x, mImpl->box().h - mImpl->box().y};
 }

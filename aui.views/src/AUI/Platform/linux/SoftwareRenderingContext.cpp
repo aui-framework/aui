@@ -60,5 +60,5 @@ AImage SoftwareRenderingContext::makeScreenshot() {
     size_t s = mBitmapSize.x * mBitmapSize.y * 4;
     data.resize(s);
     std::memcpy(data.data(), mBitmapBlob.data(), s);
-    return {std::move(data), mBitmapSize.x, mBitmapSize.y, AImageFormat::RGBA | AImageFormat::BYTE};
+    return {std::move(data), mBitmapSize, AImageFormat::RGBA | AImageFormat::BYTE};
 }

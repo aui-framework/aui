@@ -82,34 +82,34 @@ void IcoImageLoader::save(aui::no_escape<IOutputStream> os, const AVector<AImage
     std::size_t offset = sizeof(header) + sizeof(IconEntry) * images.size();
 
     auto bitmaps = images.map([](const AImage& image) {
-        AByteBuffer buffer(image.getData().size() * 3);
+        AByteBuffer buffer(image.buffer().size() * 3);
         BitmapHeader bitmapHeader;
         bitmapHeader.sizeOfStructure = sizeof(bitmapHeader);
-        bitmapHeader.width = image.getWidth();
-        bitmapHeader.height = image.getHeight() * 2;
-        bitmapHeader.bitsPerPixel = image.getBytesPerPixel() * 8;
-        bitmapHeader.imageSize = image.getWidth() * image.getHeight() * 2;
+        bitmapHeader.width = image.width();
+        bitmapHeader.height = image.height() * 2;
+        bitmapHeader.bitsPerPixel = image.bytesPerPixel() * 8;
+        bitmapHeader.imageSize = image.width() * image.height() * 2;
 
         buffer << bitmapHeader;
 
-        auto data = image.imageDataOfFormat(AImageFormat::FLIP_Y | AImageFormat::BYTE | (image.getBytesPerPixel() == 4 ? AImageFormat::BGRA : AImageFormat::RGB));
+        auto converted = image.convert(AImageFormat::BYTE | (image.bytesPerPixel() == 4 ? AImageFormat::BGRA : AImageFormat::RGB));
+        converted.mirrorVertically();
+        buffer << converted.buffer();
 
-        buffer << AByteBufferView { (const char*)data.data(), data.size() };
-
-        AVector<std::uint8_t> mask(image.getWidth() * image.getHeight() / 8, 0xff);
+        AVector<std::uint8_t> mask(image.width() * image.height() / 8, 0xff);
         buffer << AByteBufferView { (const char*)mask.data(), mask.size() };
         return buffer;
     });
 
     for (const auto&[image, buffer] : aui::zip(images, bitmaps)) {
-        assert(("ico does not support images bigger than 256 px side", glm::all(glm::lessThanEqual(image.getSize(), glm::ivec2(256)))));
+        assert(("ico does not support images bigger than 256 px side", glm::all(glm::lessThanEqual(image.size(), glm::uvec2(256)))));
         IconEntry iconEntry {
-                static_cast<uint8_t>(image.getWidth() == 256 ? 0 : image.getWidth()),
-                static_cast<uint8_t>(image.getHeight() == 256 ? 0 : image.getHeight()),
+                static_cast<uint8_t>(image.width() == 256 ? 0 : image.width()),
+                static_cast<uint8_t>(image.height() == 256 ? 0 : image.height()),
                 0,
                 0,
                 1,
-                static_cast<uint16_t>(image.getBytesPerPixel() * 8),
+                static_cast<uint16_t>(image.bytesPerPixel() * 8),
                 static_cast<uint32_t>(buffer.size()),
                 static_cast<uint32_t>(offset)
         };

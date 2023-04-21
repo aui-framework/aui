@@ -42,7 +42,7 @@ struct BrushHelper {
         if (!textureHelper) {
             auto tex = dynamic_cast<SoftwareTexture*>(brush.texture.get());
             textureHelper = {
-                brush.uv1 || brush.uv2 || glm::ivec2(end - position) != tex->getImage()->getSize(),
+                brush.uv1 || brush.uv2 || glm::ivec2(end - position) != glm::ivec2(tex->getImage()->size()),
                 tex
             };
         }
@@ -54,13 +54,13 @@ struct BrushHelper {
             auto uv2 = brush.uv2.valueOr(glm::ivec2{0, 0});
             auto uv = glm::vec2{ glm::mix(uv1.x, uv2.x, surfaceUvCoords.x), glm::mix(uv1.y, uv2.y, surfaceUvCoords.y) };
             auto& image = textureHelper->texture->getImage();
-            auto imagePixelCoords = glm::ivec2{glm::vec2(image->getSize()) * uv};
+            auto imagePixelCoords = glm::ivec2{glm::vec2(image->size()) * uv};
 
-            auto color = AColor(image->getPixelAt({imagePixelCoords.x, imagePixelCoords.y})) / 255.f;
+            auto color = image->get({imagePixelCoords.x, imagePixelCoords.y});
             renderer->putPixel({ x, y }, renderer->getColor() * color);
         } else {
             // faster method
-            auto color = AColor(textureHelper->texture->getImage()->getPixelAt(glm::uvec2{ x, y } - glm::uvec2(position))) / 255.f;
+            auto color = textureHelper->texture->getImage()->get(glm::uvec2{ x, y } - glm::uvec2(position));
             renderer->putPixel({ x, y }, renderer->getColor() * color);
         }
     }
@@ -376,10 +376,10 @@ public:
             case FontRendering::SUBPIXEL:
                 for (const auto& entry : mCharEntries) {
                     auto transformedPosition = glm::ivec2(mRenderer->getTransform() * glm::vec4(entry.position, 1.f, 1.f));
-                    auto size = entry.image->getSize();
+                    auto size = entry.image->size();
                     for (int y = 0; y < size.y; ++y) {
                         for (int x = 0; x < size.x; ++x) {
-                            auto color = glm::vec4(glm::vec3(glm::ivec3(entry.image->getPixelAt({x, y}))) / 255.f, 1.f);
+                            auto color = entry.image->get({x, y});
                             
                             mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, AColor{ color.r, color.g, color.b, color.a * finalColor.a }, Blending::INVERSE_SRC);
                             mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, color * finalColor, Blending::ADDITIVE);
@@ -390,10 +390,10 @@ public:
             case FontRendering::ANTIALIASING:
                 for (const auto& entry : mCharEntries) {
                     auto transformedPosition = glm::ivec2(mRenderer->getTransform() * glm::vec4(entry.position, 1.f, 1.f));
-                    auto size = entry.image->getSize();
+                    auto size = entry.image->size();
                     for (int y = 0; y < size.y; ++y) {
                         for (int x = 0; x < size.x; ++x) {
-                            mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, { finalColor.r, finalColor.g, finalColor.b, finalColor.a * (entry.image->getPixelAt({x, y}).x / 255.f) });
+                            mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, { finalColor.r, finalColor.g, finalColor.b, finalColor.a * entry.image->get({x, y}).r });
                         }
                     }
                 }

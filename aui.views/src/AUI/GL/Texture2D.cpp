@@ -58,11 +58,11 @@ inline bool Result::operator==(const Result& rhs) const
 Result recognize(const AImage& image)
 {
 	Result res;
-	switch (image.getFormat() & AImageFormat::COMPONENT_BITS)
+	switch (image.format() & AImageFormat::COMPONENT_BITS)
 	{
 	case AImageFormat::R:
 		res.format = GL_RED;
-		switch (image.getFormat() & AImageFormat::TYPE_BITS)
+		switch (image.format() & AImageFormat::TYPE_BITS)
 		{
 		case AImageFormat::FLOAT:
 			res.internalformat = GL_R16F;
@@ -78,7 +78,7 @@ Result recognize(const AImage& image)
 		break;
 	case AImageFormat::RGB:
 		res.format = GL_RGB;
-		switch (image.getFormat() & AImageFormat::TYPE_BITS)
+		switch (image.format() & AImageFormat::TYPE_BITS)
 		{
 		case AImageFormat::FLOAT:
 			res.internalformat = GL_RGB16F;
@@ -94,7 +94,7 @@ Result recognize(const AImage& image)
 		break;
 	case AImageFormat::RGBA:
 		res.format = GL_RGBA;
-		switch (image.getFormat() & AImageFormat::TYPE_BITS)
+		switch (image.format() & AImageFormat::TYPE_BITS)
 		{
 		case AImageFormat::FLOAT:
 			res.internalformat = GL_RGBA16F;
@@ -119,6 +119,6 @@ void gl::Texture2D::tex2D(const AImage& image) {
 	Result types = recognize(image);
 
 	glGetError();
-	glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image.getWidth(), image.getHeight(), 0, types.format, types.type, image.getData().empty() ? nullptr : image.getData().data());
+	glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image.width(), image.height(), 0, types.format, types.type, image.buffer().empty() ? nullptr : image.buffer().data());
 	assert(glGetError() == 0);
 }

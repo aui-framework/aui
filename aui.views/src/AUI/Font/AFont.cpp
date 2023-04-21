@@ -127,7 +127,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
 			imageFormat |= AImageFormat::R;
 
 		return Character {
-            _new<AImage>(data, width, height, imageFormat),
+            _new<AImage>(data, glm::uvec2(width, height), imageFormat),
             int(g->metrics.horiAdvance * div),
             int(-(g->metrics.horiBearingY * div) + size),
             int(g->bitmap_left)

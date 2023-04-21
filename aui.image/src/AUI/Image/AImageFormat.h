@@ -23,26 +23,34 @@
 #include <cstdint>
 #include <cstddef>
 
-#include <glm/glm.hpp>
+#include <AUI/Common/AColor.h>
 
+/**
+ * @brief Image in-memory format descriptor (type, count and order of subpixel components).
+ */
 class AImageFormat {
 public:
     enum Value : std::uint32_t {
         UNKNOWN = 0,
         BYTE = 0b1,
         FLOAT = 0b10,
-        R    = 0b00100,
-        RG   = 0b01000,
-        RGB  = 0b01100,
-        RGBA = 0b10000,
-        ARGB = 0b10100,
-        BGRA = 0b11000,
+        R      = 0b000001'00,
+        RG     = 0b000011'00,
+        RGB    = 0b000111'00,
+        RGBA   = 0b001111'00,
+        ARGB   = 0b011111'00,
+        BGRA   = 0b111111'00,
 
+        RGB_BYTE = RGB | BYTE,
+        RGBA_BYTE = RGBA | BYTE,
+        RGBA_FLOAT = RGBA | FLOAT,
 
-        FLIP_Y = 0b10000000,
+        // WARNING! please handle AImageView::visit cases when adding new enum values
+
+        DEFAULT = RGBA | BYTE,
     };
 
-    static constexpr std::uint32_t COMPONENT_BITS = 0b111100;
+    static constexpr std::uint32_t COMPONENT_BITS = BGRA;
     static constexpr std::uint32_t TYPE_BITS = 0b11;
 
     constexpr AImageFormat(Value value) noexcept: mValue(value) {}
@@ -53,7 +61,7 @@ public:
     }
 
     [[nodiscard]]
-    uint8_t getBytesPerPixel() const noexcept {
+    uint8_t bytesPerPixel() const noexcept {
         std::uint8_t b;
         switch (static_cast<std::uint8_t>(mValue & COMPONENT_BITS)) {
             case R: b = 1;   break;
@@ -94,6 +102,9 @@ namespace aui::image_format {
         template<typename T> struct component_representation<T, AImageFormat::RGBA> {
             T r, g, b, a;
         };
+        template<          > struct component_representation<float, AImageFormat::RGBA>: AColor {
+            using AColor::AColor;
+        };
 
         template<typename T> struct component_representation<T, AImageFormat::BGRA> {
             T b, g, r, a;
@@ -121,6 +132,7 @@ namespace aui::image_format {
         struct type<AImageFormat::BYTE> {
             using value = std::uint8_t;
         };
+
     }
 
     template<std::uint32_t format>
@@ -129,76 +141,169 @@ namespace aui::image_format {
         static constexpr std::size_t COMPONENT_COUNT = detail::component_count<format & AImageFormat::COMPONENT_BITS>();
         using component_t = typename detail::type<format & AImageFormat::TYPE_BITS>::value;
 
-        using pixel_t = glm::vec<COMPONENT_COUNT, component_t>;
-        using representation_t = detail::component_representation<component_t, format & AImageFormat::COMPONENT_BITS>;
 
-        static_assert(sizeof(pixel_t) == sizeof(representation_t), "size of pixel_t and representation_t should match");
+    private:
+        using representation_t_impl = detail::component_representation<component_t, format & AImageFormat::COMPONENT_BITS>;
+
+
+
+    public:
+
+        struct representation_t: representation_t_impl {
+            using super = representation_t_impl;
+            explicit operator AColor() const noexcept;
+
+            component_t* begin() {
+                return reinterpret_cast<component_t*>(this);
+            }
+
+            const component_t* begin() const {
+                return reinterpret_cast<const component_t*>(this);
+            }
+
+            component_t* end() {
+                return begin() + COMPONENT_COUNT;
+            }
+
+            const component_t* end() const {
+                return begin() + COMPONENT_COUNT;
+            }
+
+            representation_t& operator+=(representation_t rhs) noexcept {
+                std::ranges::transform(*this, rhs, begin(), std::plus<component_t>{});
+                return *this;
+            }
+            representation_t& operator-=(representation_t rhs) noexcept {
+                std::ranges::transform(*this, rhs, begin(), std::minus<component_t>{});
+                return *this;
+            }
+            representation_t& operator*=(representation_t rhs) noexcept {
+                std::ranges::transform(*this, rhs, begin(), std::multiplies<component_t>{});
+                return *this;
+            }
+            representation_t& operator/=(representation_t rhs) noexcept {
+                std::ranges::transform(*this, rhs, begin(), std::divides<component_t>{});
+                return *this;
+            }
+
+            representation_t& operator+=(component_t rhs) noexcept {
+                std::ranges::transform(*this, begin(), [&](auto lhs) { return lhs + rhs; });
+                return *this;
+            }
+            representation_t& operator-=(component_t rhs) noexcept {
+                std::ranges::transform(*this, begin(), [&](auto lhs) { return lhs - rhs; });
+                return *this;
+            }
+            representation_t& operator*=(component_t rhs) noexcept {
+                std::ranges::transform(*this, begin(), [&](auto lhs) { return lhs * rhs; });
+                return *this;
+            }
+            representation_t& operator/=(component_t rhs) noexcept {
+                std::ranges::transform(*this, begin(), [&](auto lhs) { return lhs / rhs; });
+                return *this;
+            }
+
+            representation_t operator+(auto rhs) const noexcept {
+                representation_t copy = *this;
+                copy += rhs;
+                return copy;
+            }
+            representation_t operator-(auto rhs) const noexcept {
+                representation_t copy = *this;
+                copy -= rhs;
+                return copy;
+            }
+            representation_t operator*(auto rhs) const noexcept {
+                representation_t copy = *this;
+                copy *= rhs;
+                return copy;
+            }
+            representation_t operator/(auto rhs) const noexcept {
+                representation_t copy = *this;
+                copy /= rhs;
+                return copy;
+            }
+        };
     };
 
-    template<std::uint32_t from, std::uint32_t to>
-    inline typename aui::image_format::traits<to>::representation_t convert(typename aui::image_format::traits<from>::representation_t in) {
-        static constexpr std::size_t countFrom = aui::image_format::traits<from>::COMPONENT_COUNT;
-        static constexpr std::size_t countTo = aui::image_format::traits<to>::COMPONENT_COUNT;
+    template<typename From, typename To>
+    inline constexpr To convertComponent(From f) = delete;
 
-        typename aui::image_format::traits<to>::representation_t out;
+    template<typename From, typename To>
+    inline constexpr To convertComponent(From f) requires std::is_same_v<From, To> {
+        return f;
+    }
+
+    template<> inline constexpr float convertComponent(std::uint8_t f) {
+        return float(f) / 255.f;
+    }
+
+    template<> inline constexpr  std::uint8_t convertComponent(float f) {
+        return std::uint8_t(f * 255.f);
+    }
+
+    template<AImageFormat::Value from, AImageFormat::Value to>
+    inline typename aui::image_format::traits<to>::representation_t convert(typename aui::image_format::traits<from>::representation_t in) {
+        using traits_from = aui::image_format::traits<from>;
+        using traits_to = aui::image_format::traits<to>;
+        static constexpr std::size_t countFrom = traits_from::COMPONENT_COUNT;
+        static constexpr std::size_t countTo = traits_to::COMPONENT_COUNT;
+
+        typename traits_to::representation_t out;
+
+        static constexpr auto convertComponentFunc = convertComponent<typename traits_from::component_t, typename traits_to::component_t>;
 
         out.r = in.r;
         if constexpr(countTo > 1) {
             if constexpr(countFrom > 1) {
-                out.g = in.g;
+                out.g = convertComponentFunc(in.g);
             } else {
-                out.g = 0;
+                out.g = convertComponentFunc(0);
             }
         }
 
         if constexpr(countTo > 2) {
             if constexpr(countFrom > 2) {
-                out.b = in.b;
+                out.b = convertComponentFunc(in.b);
             } else {
-                out.b = 0;
+                out.b = convertComponentFunc(0);
             }
         }
 
         if constexpr(countTo > 3) {
             if constexpr(countFrom > 3) {
-                out.a = in.a;
+                out.a = convertComponentFunc(in.a);
             } else {
-                out.a = 0;
+                out.a = convertComponent<float, typename traits_to::component_t>(1);
             }
         }
 
         return out;
     }
 
-
-    template<typename Visitor>
-    inline void visit(AImageFormat::Value format, Visitor&& visitor, std::uint8_t* data) {
-#define __AUI_CASE(index) case index: visitor(aui::image_format::traits<index>{}, reinterpret_cast<traits<index>::representation_t*>(data)); break;
-
-        switch (format) {
-            __AUI_CASE((1 << 2 | 1))
-            __AUI_CASE((1 << 2 | 2))
-            __AUI_CASE((2 << 2 | 1))
-            __AUI_CASE((2 << 2 | 2))
-            __AUI_CASE((3 << 2 | 1))
-            __AUI_CASE((3 << 2 | 2))
-            __AUI_CASE((4 << 2 | 1))
-            __AUI_CASE((4 << 2 | 2))
-            __AUI_CASE((5 << 2 | 1))
-            __AUI_CASE((5 << 2 | 2))
-            __AUI_CASE((6 << 2 | 1))
-            __AUI_CASE((6 << 2 | 2))
-        }
-
-#undef __AUI_CASE
-    }
-
-    template<std::uint32_t to>
-    inline typename aui::image_format::traits<to>::pixel_t convert(AImageFormat::Value from, const std::uint8_t* data) {
-        typename aui::image_format::traits<to>::representation_t out;
-        visit(from, [&](auto trait, auto pData) {
-            out = convert<decltype(trait)::FORMAT, to>(*pData);
-        }, const_cast<std::uint8_t*>(data));
-        return reinterpret_cast<typename aui::image_format::traits<to>::pixel_t&>(out);
+    template<std::uint32_t format>
+    traits<format>::representation_t::operator AColor() const noexcept {
+        return convert<(AImageFormat::Value)format, (AImageFormat::Value)(AImageFormat::RGBA | AImageFormat::FLOAT)>(*this);
     }
 }
+
+
+
+/**
+ * @brief Unlike AColor, this type is not universal and has a format and thus may be used in performance critical code.
+ */
+template<auto imageFormat = AImageFormat::DEFAULT>
+using AFormattedColor = typename aui::image_format::traits<imageFormat>::representation_t;
+
+struct AFormattedColorConverter {
+public:
+    explicit AFormattedColorConverter(const AColor& mColor) : mColor(mColor) {}
+
+    template<typename T>
+    operator T() const noexcept {
+        return T{};//aui::image_format::convert<AImageFormat::RGBA | AImageFormat::FLOAT, format>(mColor);
+    }
+
+private:
+    AColor mColor;
+};
