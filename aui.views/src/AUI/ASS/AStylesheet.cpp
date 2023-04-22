@@ -229,11 +229,11 @@ AStylesheet::AStylesheet() {
         },
         {
             c(".number-picker") >> c(".up"),
-            BackgroundImage { ":uni/svg/up.svg", {} },
+            BackgroundImage { ":uni/svg/up.svg", {}, {}, Sizing::CENTER },
         },
         {
             c(".number-picker") >> c(".down"),
-            BackgroundImage { ":uni/svg/down.svg", {} },
+            BackgroundImage { ":uni/svg/down.svg", {}, {}, Sizing::CENTER },
         },
 
         // ACheckBox

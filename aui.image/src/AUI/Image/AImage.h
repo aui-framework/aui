@@ -224,15 +224,15 @@ public:
     }
 
     [[nodiscard]]
-    Color averageColor() const noexcept {
-        Color accumulator;
+    AColor averageColor() const noexcept {
+        AColor accumulator;
         aui::zero(accumulator);
 
         for (auto i = begin(); i != end(); ++i) {
-            accumulator += *i;
+            accumulator += AColor(*i);
         }
 
-        return accumulator / (width() * height());
+        return accumulator / float(width() * height());
     }
 };
 

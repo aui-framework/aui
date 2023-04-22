@@ -253,7 +253,7 @@ namespace aui::image_format {
 
         static constexpr auto convertComponentFunc = convertComponent<typename traits_from::component_t, typename traits_to::component_t>;
 
-        out.r = in.r;
+        out.r = convertComponentFunc(in.r);
         if constexpr(countTo > 1) {
             if constexpr(countFrom > 1) {
                 out.g = convertComponentFunc(in.g);

@@ -20,7 +20,7 @@
 
 #include "SvgImageFactory.h"
 #include "AUI/Common/AByteBuffer.h"
-#include <lunasvg.h>
+#include <lunasvg/lunasvg.h>
 
 
 SvgImageFactory::SvgImageFactory(AByteBufferView buf) {
@@ -40,5 +40,5 @@ AImage SvgImageFactory::provideImage(const glm::ivec2& size) {
 }
 
 glm::ivec2 SvgImageFactory::getSizeHint() {
-    return {mImpl->box().w - mImpl->box().x, mImpl->box().h - mImpl->box().y};
+    return {mImpl->width(), mImpl->height()};
 }
