@@ -438,7 +438,7 @@ void AWindow::show() {
 }
 void AWindow::setIcon(const AImage& image) {
     if (!mHandle) return;
-    assert(image.getFormat() & AImageFormat::BYTE);
+    assert(image.format() & APixelFormat::BYTE);
 
     if (mIcon) {
         DestroyIcon(mIcon);

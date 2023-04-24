@@ -26,8 +26,8 @@ public:
     Custom(const AImage& img) {
         const auto color = aui::win32::imageRgbToBitmap(img, aui::win32::BitmapMode::RGB);
 
-        AImage white(img.getWidth(), img.getHeight(), AImageFormat::RGBA | AImageFormat::BYTE);
-        white.fillColor({0, 0, 0, 255});
+        AImage white(img.size(), APixelFormat::RGBA | APixelFormat::BYTE);
+        white.fill(AColor::WHITE);
 
         const auto mask = aui::win32::imageRgbToBitmap(white, aui::win32::BitmapMode::A);
 

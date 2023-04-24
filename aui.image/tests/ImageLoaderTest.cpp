@@ -25,6 +25,6 @@ TEST(ImageLoader, Bmp) {
     ABuiltinFiles::load(AUI_PACKED_assettarget, sizeof(AUI_PACKED_assettarget));
     auto image = AImage::fromUrl(":target.bmp");
     ASSERT_TRUE(image != nullptr);
-    ASSERT_EQ(image->getWidth(), 64);
-    ASSERT_EQ(image->getHeight(), 64);
+    ASSERT_EQ(image->width(), 64);
+    ASSERT_EQ(image->height(), 64);
 }

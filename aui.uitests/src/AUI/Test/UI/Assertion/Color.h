@@ -31,7 +31,8 @@ struct ViewAssertionAverageColor {
     ViewAssertionAverageColor(const AColor& color, float inaccuracy = 0.1f) : mColor(color), mInaccuracy(inaccuracy) {}
 
     bool operator()(const _<AView>& v) {
-        auto d = glm::length2(glm::vec3(ScreenshotAnalyzer::makeScreenshot().clip(v).averageColor()) - glm::vec3(mColor)) / 3;
+        glm::vec3 average(ScreenshotAnalyzer::makeScreenshot().clip(v).averageColor());
+        auto d = glm::length2(average - glm::vec3(mColor)) / 3;
         return d <= mInaccuracy;
     }
 };

@@ -574,7 +574,7 @@ public:
         if (!img)
             return;
 
-        auto width = img->getWidth();
+        auto width = img->width();
 
         float uvScale = 1.f / float(width);
 
@@ -680,8 +680,8 @@ public:
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
 
                     int posX = advance + ch.bearingX;
-                    int width = ch.image->getWidth();
-                    int height = ch.image->getHeight();
+                    int width = ch.image->width();
+                    int height = ch.image->height();
 
                     glm::vec4 uv;
 

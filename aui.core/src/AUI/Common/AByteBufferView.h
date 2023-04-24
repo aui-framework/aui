@@ -42,9 +42,14 @@ public:
      * @return data
      */
     template <typename T>
-    const T& at(size_t byteIndex)
+    const T& at(size_t byteIndex) const noexcept
     {
         return *reinterpret_cast<const T*>(mBuffer + byteIndex);
+    }
+
+    [[nodiscard]]
+    bool empty() const noexcept {
+        return mSize == 0;
     }
 
     [[nodiscard]]

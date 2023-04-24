@@ -19,15 +19,20 @@
 #include "AUI/Image/IImageFactory.h"
 #include "AUI/Common/AByteBufferView.h"
 
+namespace lunasvg {
+    class Document;
+}
+
 class API_AUI_IMAGE SvgImageFactory: public IImageFactory {
-private:
-    void* mNsvg;
 public:
     SvgImageFactory(AByteBufferView buf);
     ~SvgImageFactory();
     AImage provideImage(const glm::ivec2& size) override;
 
     glm::ivec2 getSizeHint() override;
+
+private:
+    std::unique_ptr<lunasvg::Document> mImpl;
 };
 
 
