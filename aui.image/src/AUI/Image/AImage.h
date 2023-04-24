@@ -309,6 +309,7 @@ public:
 
     void insert(glm::uvec2 position, AImageView image);
 
+    void fill(Color color);
 
     void mirrorVertically();
 
@@ -383,6 +384,11 @@ public:
     [[nodiscard]]
     Color* end() noexcept {
         return reinterpret_cast<Color*>(AImage::modifiableBuffer().end());
+    }
+
+
+    void fill(Color color) {
+        std::fill(begin(), end(), color);
     }
 
     [[nodiscard]]

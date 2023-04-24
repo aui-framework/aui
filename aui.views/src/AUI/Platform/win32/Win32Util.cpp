@@ -43,8 +43,8 @@ aui::win32::Bitmap aui::win32::imageRgbToBitmap(const AImage& image, BitmapMode 
 
     BITMAPINFO bmi;
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = image.getWidth();
-    bmi.bmiHeader.biHeight = image.getHeight();
+    bmi.bmiHeader.biWidth = image.width();
+    bmi.bmiHeader.biHeight = image.height();
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
@@ -56,12 +56,12 @@ aui::win32::Bitmap aui::win32::imageRgbToBitmap(const AImage& image, BitmapMode 
     auto hbmpColor = CreateDIBSection(hdcMemColor, &bmi, DIB_RGB_COLORS, &data, nullptr, 0x0);
     auto hbmpOldColor = (HBITMAP)SelectObject(hdcMemColor, hbmpColor);
 
-    if (image.getFormat() == (AImageFormat::BGRA | AImageFormat::BYTE)) {
+    if (image.format() == (AImageFormat::BGRA | AImageFormat::BYTE)) {
         std::memcpy(data, image.buffer().data(), bmi.bmiHeader.biSizeImage);
     } else {
-        for (int y = 0; y < image.getHeight(); ++y) {
-            for (int x = 0; x < image.getWidth(); ++x) {
-                reinterpret_cast<glm::u8vec4*>(data)[y * image.getWidth() + x] = image.getPixelAt<AImageFormat::BGRA | AImageFormat::BYTE>({x, y});
+        for (int y = 0; y < image.height(); ++y) {
+            for (int x = 0; x < image.width(); ++x) {
+                reinterpret_cast<AFormattedColor<AImageFormat::BGRA | AImageFormat::BYTE>*>(data)[y * image.width() + x] = AFormattedColorConverter(image.get({x, y}));
             }
         }
     }
@@ -96,9 +96,7 @@ AImage aui::win32::bitmapToImage(HBITMAP hbitmap) {
     SelectObject(compatDC, oldBitmap);
 
     height = std::abs(height);
-    AImage image(std::move(pixels), width, height, AImageFormat::RGBA | AImageFormat::BYTE);
-    return {image.imageDataOfFormat(AImageFormat::BGRA | AImageFormat::BYTE | AImageFormat::FLIP_Y),
-            static_cast<uint32_t>(width),
-            static_cast<uint32_t>(height),
-            AImageFormat::RGBA | AImageFormat::BYTE };
+    AImage image(std::move(pixels), {width, height}, AImageFormat::BGRA | AImageFormat::BYTE);
+    image.mirrorVertically();
+    return image;
 }

@@ -151,6 +151,7 @@ namespace aui::image_format {
 
         struct representation_t: representation_t_impl {
             using super = representation_t_impl;
+            static constexpr std::size_t FORMAT = format;
             explicit operator AColor() const noexcept;
 
             component_t* begin() {
@@ -227,20 +228,29 @@ namespace aui::image_format {
     };
 
     template<typename From, typename To>
-    inline constexpr To convertComponent(From f) = delete;
+    struct component_converter;
 
-    template<typename From, typename To>
-    inline constexpr To convertComponent(From f) requires std::is_same_v<From, To> {
-        return f;
-    }
+    template<typename T>
+    struct component_converter<T, T> {
+        static constexpr T convert(T t) {
+            return t;
+        }
+    };
 
-    template<> inline constexpr float convertComponent(std::uint8_t f) {
-        return float(f) / 255.f;
-    }
+    template<>
+    struct component_converter<std::uint8_t, float> {
+        static constexpr float convert(std::uint8_t t) {
+            return float(t) / 255.f;
+        }
+    };
 
-    template<> inline constexpr  std::uint8_t convertComponent(float f) {
-        return std::uint8_t(f * 255.f);
-    }
+    template<>
+    struct component_converter<float, std::uint8_t> {
+        static constexpr std::uint8_t convert(float t) {
+            return std::uint8_t(t * 255.f);
+        }
+    };
+
 
     template<AImageFormat::Value from, AImageFormat::Value to>
     inline typename aui::image_format::traits<to>::representation_t convert(typename aui::image_format::traits<from>::representation_t in) {
@@ -251,30 +261,30 @@ namespace aui::image_format {
 
         typename traits_to::representation_t out;
 
-        static constexpr auto convertComponentFunc = convertComponent<typename traits_from::component_t, typename traits_to::component_t>;
+        using my_component_converter = component_converter<typename traits_from::component_t, typename traits_to::component_t>;
 
-        out.r = convertComponentFunc(in.r);
+        out.r = my_component_converter::convert(in.r);
         if constexpr(countTo > 1) {
             if constexpr(countFrom > 1) {
-                out.g = convertComponentFunc(in.g);
+                out.g = my_component_converter::convert(in.g);
             } else {
-                out.g = convertComponentFunc(0);
+                out.g = my_component_converter::convert(0);
             }
         }
 
         if constexpr(countTo > 2) {
             if constexpr(countFrom > 2) {
-                out.b = convertComponentFunc(in.b);
+                out.b = my_component_converter::convert(in.b);
             } else {
-                out.b = convertComponentFunc(0);
+                out.b = my_component_converter::convert(0);
             }
         }
 
         if constexpr(countTo > 3) {
             if constexpr(countFrom > 3) {
-                out.a = convertComponentFunc(in.a);
+                out.a = my_component_converter::convert(in.a);
             } else {
-                out.a = convertComponent<float, typename traits_to::component_t>(1);
+                out.a = component_converter<float, typename traits_to::component_t>::convert(1);
             }
         }
 
@@ -295,15 +305,24 @@ namespace aui::image_format {
 template<auto imageFormat = AImageFormat::DEFAULT>
 using AFormattedColor = typename aui::image_format::traits<imageFormat>::representation_t;
 
+template<typename Source>
 struct AFormattedColorConverter {
 public:
-    explicit AFormattedColorConverter(const AColor& mColor) : mColor(mColor) {}
+    explicit AFormattedColorConverter(const Source& color) : mColor(color) {}
 
-    template<typename T>
-    operator T() const noexcept {
-        return T{};//aui::image_format::convert<AImageFormat::RGBA | AImageFormat::FLOAT, format>(mColor);
+    template<typename Destination>
+    operator Destination() const noexcept {
+        static constexpr auto source = FORMAT<std::decay_t<Source>>;
+        return aui::image_format::convert<source, FORMAT<std::decay_t<Destination>>>(
+                reinterpret_cast<const aui::image_format::traits<source>::representation_t&>(mColor)
+                );
     }
 
 private:
-    AColor mColor;
+    Source mColor;
+
+    template<typename T>
+    static constexpr auto FORMAT = (AImageFormat)T::FORMAT;
+    template<>
+    static constexpr auto FORMAT<AColor> = AImageFormat::RGBA_FLOAT;
 };

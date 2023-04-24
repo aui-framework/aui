@@ -111,32 +111,30 @@ void AImage::set(glm::uvec2 position, AImageView::Color c) noexcept {
 AImage AImageView::resizedLinearDownscale(glm::uvec2 newSize) const
 {
     auto ratio = glm::vec2(size() - 1u) / glm::vec2(newSize);
-    return visit([this, &ratio, &newSize](const auto& self) -> AImage {
-        AFormattedImage<std::decay_t<decltype(self)>::FORMAT> n(size());
+    AImage n(size(), format());
 
-        for (uint32_t i = 0; i < newSize.y; i++) {
-            for (uint32_t j = 0; j < newSize.y; j++) {
-                auto x = static_cast<uint32_t>(ratio.x * static_cast<float>(j));
-                auto y = static_cast<uint32_t>(ratio.y * static_cast<float>(i));
-                float xWeight = (ratio.x * static_cast<float>(j)) - static_cast<float>(x);
-                float yWeight = (ratio.y * static_cast<float>(i)) - static_cast<float>(y);
+    for (uint32_t i = 0; i < newSize.y; i++) {
+        for (uint32_t j = 0; j < newSize.y; j++) {
+            auto x = static_cast<uint32_t>(ratio.x * static_cast<float>(j));
+            auto y = static_cast<uint32_t>(ratio.y * static_cast<float>(i));
+            float xWeight = (ratio.x * static_cast<float>(j)) - static_cast<float>(x);
+            float yWeight = (ratio.y * static_cast<float>(i)) - static_cast<float>(y);
 
-                auto c1 = self.get(glm::uvec2 {x, y});
-                auto c2 = self.get(glm::uvec2 {x + 1, y});
-                auto c3 = self.get(glm::uvec2 {x, y + 1});
-                auto c4 = self.get(glm::uvec2 {x + 1, y + 1});
+            auto c1 = get(glm::uvec2 {x, y});
+            auto c2 = get(glm::uvec2 {x + 1, y});
+            auto c3 = get(glm::uvec2 {x, y + 1});
+            auto c4 = get(glm::uvec2 {x + 1, y + 1});
 
-                c1 *= (1. - xWeight) * (1. - yWeight);
-                c2 *= xWeight * (1. - yWeight);
-                c3 *= yWeight * (1. - xWeight);
-                c4 *= xWeight * yWeight;
+            c1 *= (1. - xWeight) * (1. - yWeight);
+            c2 *= xWeight * (1. - yWeight);
+            c3 *= yWeight * (1. - xWeight);
+            c4 *= xWeight * yWeight;
 
-                auto color = c1 + c2 + c3 + c4;
-                n.set(glm::uvec2{j, i}, color);
-            }
+            auto color = c1 + c2 + c3 + c4;
+            n.set(glm::uvec2{j, i}, color);
         }
-        return n;
-    });
+    }
+    return n;
 }
 
 AImage AImageView::convert(AImageFormat format) const {
@@ -144,12 +142,13 @@ AImage AImageView::convert(AImageFormat format) const {
 
     visit([&](const auto& source) {
         image.visit([&](auto& destination) {
-            static constexpr auto sourceFormat      = (AImageFormat::Value)std::decay_t<decltype(source)>::FORMAT;
-            static constexpr auto destinationFormat = (AImageFormat::Value)std::decay_t<decltype(destination)>::FORMAT;
+            using source_image_t      = std::decay_t<decltype(source)>;
+            using destination_image_t = std::decay_t<decltype(destination)>;
 
-            std::ranges::transform(source, destination.begin(), [](auto pixel) {
-                return aui::image_format::convert<sourceFormat, destinationFormat>(pixel);
-            });
+            static constexpr auto sourceFormat      = (AImageFormat::Value)source_image_t::FORMAT;
+            static constexpr auto destinationFormat = (AImageFormat::Value)destination_image_t::FORMAT;
+
+            std::transform(source.begin(), source.end(), destination.begin(), aui::image_format::convert<sourceFormat, destinationFormat>);
         });
     });
 
@@ -181,5 +180,12 @@ void AImage::insert(glm::uvec2 position, AImageView image) {
                 }
             }
         });
+    });
+}
+
+void AImage::fill(AImageView::Color color) {
+    visit([&](auto& img) {
+        typename std::decay_t<decltype(img)>::Color convertedColor = AFormattedColorConverter(color);
+        img.fill(convertedColor);
     });
 }
