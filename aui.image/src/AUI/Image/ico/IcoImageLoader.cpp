@@ -92,7 +92,7 @@ void IcoImageLoader::save(aui::no_escape<IOutputStream> os, const AVector<AImage
 
         buffer << bitmapHeader;
 
-        auto converted = image.convert(AImageFormat::BYTE | (image.bytesPerPixel() == 4 ? AImageFormat::BGRA : AImageFormat::RGB));
+        auto converted = image.convert(APixelFormat::BYTE | (image.bytesPerPixel() == 4 ? APixelFormat::BGRA : APixelFormat::RGB));
         converted.mirrorVertically();
         buffer << converted.buffer();
 

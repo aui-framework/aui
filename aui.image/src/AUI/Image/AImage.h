@@ -29,33 +29,33 @@
 #include <AUI/IO/APath.h>
 #include "AUI/Common/AColor.h"
 #include "AUI/Traits/memory.h"
-#include "AImageFormat.h"
+#include "APixelFormat.h"
 
 
 class API_AUI_IMAGE AImage;
 class API_AUI_IMAGE AImageView;
 
-template<auto imageFormat = AImageFormat::DEFAULT>
+template<auto imageFormat = APixelFormat::DEFAULT>
 class AFormattedImageView;
 
-template<auto imageFormat = AImageFormat::DEFAULT>
+template<auto imageFormat = APixelFormat::DEFAULT>
 class AFormattedImage;
 
 template<typename T>
 concept AImageViewVisitor = requires(T t) {
-    t(std::declval<const AFormattedImageView<AImageFormat::RGB  | AImageFormat::BYTE>&>());
-    t(std::declval<const AFormattedImageView<AImageFormat::RGBA | AImageFormat::BYTE>&>());
-    t(std::declval<const AFormattedImageView<AImageFormat::RGB  | AImageFormat::FLOAT>&>());
-    t(std::declval<const AFormattedImageView<AImageFormat::RGBA | AImageFormat::FLOAT>&>());
+    t(std::declval<const AFormattedImageView<APixelFormat::RGB  | APixelFormat::BYTE>&>());
+    t(std::declval<const AFormattedImageView<APixelFormat::RGBA | APixelFormat::BYTE>&>());
+    t(std::declval<const AFormattedImageView<APixelFormat::RGB  | APixelFormat::FLOAT>&>());
+    t(std::declval<const AFormattedImageView<APixelFormat::RGBA | APixelFormat::FLOAT>&>());
     // etc...
 };
 
 template<typename T>
 concept AImageVisitor = requires(T t) {
-    t(std::declval<AFormattedImage<AImageFormat::RGB  | AImageFormat::BYTE>&>());
-    t(std::declval<AFormattedImage<AImageFormat::RGBA | AImageFormat::BYTE>&>());
-    t(std::declval<AFormattedImage<AImageFormat::RGB  | AImageFormat::FLOAT>&>());
-    t(std::declval<AFormattedImage<AImageFormat::RGBA | AImageFormat::FLOAT>&>());
+    t(std::declval<AFormattedImage<APixelFormat::RGB  | APixelFormat::BYTE>&>());
+    t(std::declval<AFormattedImage<APixelFormat::RGBA | APixelFormat::BYTE>&>());
+    t(std::declval<AFormattedImage<APixelFormat::RGB  | APixelFormat::FLOAT>&>());
+    t(std::declval<AFormattedImage<APixelFormat::RGBA | APixelFormat::FLOAT>&>());
     // etc...
 };
 
@@ -69,7 +69,7 @@ public:
     using Color = AColor;
 
     AImageView(): mSize(0, 0) {}
-    AImageView(AByteBufferView data, glm::uvec2 size, AImageFormat format) : mData(data), mSize(size), mFormat(format) {}
+    AImageView(AByteBufferView data, glm::uvec2 size, APixelFormat format) : mData(data), mSize(size), mFormat(format) {}
     AImageView(const AImage& v);
 
     /**
@@ -108,7 +108,7 @@ public:
      * @return Image pixel format.
      */
     [[nodiscard]]
-    AImageFormat format() const noexcept {
+    APixelFormat format() const noexcept {
         return mFormat;
     }
 
@@ -171,7 +171,7 @@ public:
     AImage resizedLinearDownscale(glm::uvec2 newSize) const;
 
     [[nodiscard]]
-    AImage convert(AImageFormat format) const;
+    AImage convert(APixelFormat format) const;
 
 
     /**
@@ -185,7 +185,7 @@ public:
 protected:
     AByteBufferView mData;
     glm::uvec2 mSize;
-    AImageFormat mFormat = AImageFormat::UNKNOWN;
+    APixelFormat mFormat = APixelFormat::UNKNOWN;
 };
 
 /**
@@ -240,18 +240,18 @@ public:
 template<AImageViewVisitor Visitor>
 auto AImageView::visit(Visitor&& visitor) const {
 #define AUI_CASE(v) case v: { \
-    switch(format() & AImageFormat::TYPE_BITS) { \
-    case AImageFormat::BYTE: return visitor(reinterpret_cast<const AFormattedImageView<v | AImageFormat::BYTE>&>(*this)); \
-    case AImageFormat::FLOAT: return visitor(reinterpret_cast<const AFormattedImageView<v | AImageFormat::FLOAT>&>(*this)); \
+    switch(format() & APixelFormat::TYPE_BITS) { \
+    case APixelFormat::BYTE: return visitor(reinterpret_cast<const AFormattedImageView<v | APixelFormat::BYTE>&>(*this)); \
+    case APixelFormat::FLOAT: return visitor(reinterpret_cast<const AFormattedImageView<v | APixelFormat::FLOAT>&>(*this)); \
                                }}
 
-    switch (format() & AImageFormat::COMPONENT_BITS) {
-        AUI_CASE(AImageFormat::R)
-        AUI_CASE(AImageFormat::RG)
-        AUI_CASE(AImageFormat::RGB)
-        AUI_CASE(AImageFormat::RGBA)
-        AUI_CASE(AImageFormat::ARGB)
-        AUI_CASE(AImageFormat::BGRA)
+    switch (format() & APixelFormat::COMPONENT_BITS) {
+        AUI_CASE(APixelFormat::R)
+        AUI_CASE(APixelFormat::RG)
+        AUI_CASE(APixelFormat::RGB)
+        AUI_CASE(APixelFormat::RGBA)
+        AUI_CASE(APixelFormat::ARGB)
+        AUI_CASE(APixelFormat::BGRA)
 
         default:
             throw AException("unknown color format");
@@ -284,13 +284,13 @@ public:
 
     explicit AImage(AImageView imageView): AImage(imageView.buffer(), imageView.size(), imageView.format()) {}
 
-    AImage(AByteBuffer buffer, glm::uvec2 size, AImageFormat format): mOwnedBuffer(std::move(buffer)) {
+    AImage(AByteBuffer buffer, glm::uvec2 size, APixelFormat format): mOwnedBuffer(std::move(buffer)) {
         mSize = size;
         mFormat = format;
         mData = mOwnedBuffer;
     }
 
-    AImage(glm::uvec2 size, AImageFormat format) {
+    AImage(glm::uvec2 size, APixelFormat format) {
         mSize = size;
         mFormat = format;
         allocate();

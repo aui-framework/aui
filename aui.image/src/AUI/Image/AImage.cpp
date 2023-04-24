@@ -137,7 +137,7 @@ AImage AImageView::resizedLinearDownscale(glm::uvec2 newSize) const
     return n;
 }
 
-AImage AImageView::convert(AImageFormat format) const {
+AImage AImageView::convert(APixelFormat format) const {
     AImage image(size(), format);
 
     visit([&](const auto& source) {
@@ -145,10 +145,10 @@ AImage AImageView::convert(AImageFormat format) const {
             using source_image_t      = std::decay_t<decltype(source)>;
             using destination_image_t = std::decay_t<decltype(destination)>;
 
-            static constexpr auto sourceFormat      = (AImageFormat::Value)source_image_t::FORMAT;
-            static constexpr auto destinationFormat = (AImageFormat::Value)destination_image_t::FORMAT;
+            static constexpr auto sourceFormat      = (APixelFormat::Value)source_image_t::FORMAT;
+            static constexpr auto destinationFormat = (APixelFormat::Value)destination_image_t::FORMAT;
 
-            std::transform(source.begin(), source.end(), destination.begin(), aui::image_format::convert<sourceFormat, destinationFormat>);
+            std::transform(source.begin(), source.end(), destination.begin(), aui::pixel_format::convert<sourceFormat, destinationFormat>);
         });
     });
 
@@ -162,8 +162,8 @@ AImageView::AImageView(const AImage& v): AImageView(v.mOwnedBuffer, v.mSize, v.m
 void AImage::insert(glm::uvec2 position, AImageView image) {
     visit([&](auto& destination) {
         image.visit([&](const auto& source) {
-            static constexpr auto sourceFormat      = (AImageFormat::Value)std::decay_t<decltype(source)>::FORMAT;
-            static constexpr auto destinationFormat = (AImageFormat::Value)std::decay_t<decltype(destination)>::FORMAT;
+            static constexpr auto sourceFormat      = (APixelFormat::Value)std::decay_t<decltype(source)>::FORMAT;
+            static constexpr auto destinationFormat = (APixelFormat::Value)std::decay_t<decltype(destination)>::FORMAT;
 
             for (unsigned y = 0; y < image.height(); ++y) {
                 auto targetPosY = position.y + y;
@@ -176,7 +176,7 @@ void AImage::insert(glm::uvec2 position, AImageView image) {
                         break;
                     }
 
-                    destination.set({targetPosX, targetPosY}, aui::image_format::convert<sourceFormat, destinationFormat>(source.get({x, y})));
+                    destination.set({targetPosX, targetPosY}, aui::pixel_format::convert<sourceFormat, destinationFormat>(source.get({x, y})));
                 }
             }
         });

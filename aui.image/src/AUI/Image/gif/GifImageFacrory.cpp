@@ -49,13 +49,13 @@ AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
         mCurrentFrameIndex = 0;
     }
 
-    unsigned format = AImageFormat::BYTE;
+    unsigned format = APixelFormat::BYTE;
     switch (mChannelsCount) {
         case 3:
-            format |= AImageFormat::RGB;
+            format |= APixelFormat::RGB;
             break;
         case 4:
-            format |= AImageFormat::RGBA;
+            format |= APixelFormat::RGBA;
             break;
         default:
             assert(0);

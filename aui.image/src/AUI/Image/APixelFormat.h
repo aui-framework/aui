@@ -26,9 +26,9 @@
 #include <AUI/Common/AColor.h>
 
 /**
- * @brief Image in-memory format descriptor (type, count and order of subpixel components).
+ * @brief Pixel in-memory format descriptor (type, count and order of subpixel components).
  */
-class AImageFormat {
+class APixelFormat {
 public:
     enum Value : std::uint32_t {
         UNKNOWN = 0,
@@ -53,8 +53,8 @@ public:
     static constexpr std::uint32_t COMPONENT_BITS = BGRA;
     static constexpr std::uint32_t TYPE_BITS = 0b11;
 
-    constexpr AImageFormat(Value value) noexcept: mValue(value) {}
-    constexpr AImageFormat(std::uint32_t value) noexcept: mValue((Value)value) {}
+    constexpr APixelFormat(Value value) noexcept: mValue(value) {}
+    constexpr APixelFormat(std::uint32_t value) noexcept: mValue((Value)value) {}
 
     constexpr operator Value() const noexcept {
         return mValue;
@@ -81,36 +81,36 @@ private:
     Value mValue;
 };
 
-namespace aui::image_format {
+namespace aui::pixel_format {
     namespace detail {
 
         template<typename T, std::uint32_t componentBits>
         struct component_representation;
 
-        template<typename T> struct component_representation<T, AImageFormat::R> {
+        template<typename T> struct component_representation<T, APixelFormat::R> {
             T r;
         };
 
-        template<typename T> struct component_representation<T, AImageFormat::RG> {
+        template<typename T> struct component_representation<T, APixelFormat::RG> {
             T r, g;
         };
 
-        template<typename T> struct component_representation<T, AImageFormat::RGB> {
+        template<typename T> struct component_representation<T, APixelFormat::RGB> {
             T r, g, b;
         };
 
-        template<typename T> struct component_representation<T, AImageFormat::RGBA> {
+        template<typename T> struct component_representation<T, APixelFormat::RGBA> {
             T r, g, b, a;
         };
-        template<          > struct component_representation<float, AImageFormat::RGBA>: AColor {
+        template<          > struct component_representation<float, APixelFormat::RGBA>: AColor {
             using AColor::AColor;
         };
 
-        template<typename T> struct component_representation<T, AImageFormat::BGRA> {
+        template<typename T> struct component_representation<T, APixelFormat::BGRA> {
             T b, g, r, a;
         };
 
-        template<typename T> struct component_representation<T, AImageFormat::ARGB> {
+        template<typename T> struct component_representation<T, APixelFormat::ARGB> {
             T a, r, g, b;
         };
 
@@ -124,31 +124,31 @@ namespace aui::image_format {
         struct type;
 
         template<>
-        struct type<AImageFormat::FLOAT> {
+        struct type<APixelFormat::FLOAT> {
             using value = float;
         };
 
         template<>
-        struct type<AImageFormat::BYTE> {
+        struct type<APixelFormat::BYTE> {
             using value = std::uint8_t;
         };
 
 
         template<typename T>
-        constexpr auto format_of = (AImageFormat)T::FORMAT;
+        constexpr auto format_of = (APixelFormat)T::FORMAT;
         template<>
-        constexpr auto format_of<AColor> = AImageFormat::RGBA_FLOAT;
+        constexpr auto format_of<AColor> = APixelFormat::RGBA_FLOAT;
     }
 
     template<std::uint32_t format>
     struct traits {
         static constexpr std::size_t FORMAT = format;
-        static constexpr std::size_t COMPONENT_COUNT = detail::component_count<format & AImageFormat::COMPONENT_BITS>();
-        using component_t = typename detail::type<format & AImageFormat::TYPE_BITS>::value;
+        static constexpr std::size_t COMPONENT_COUNT = detail::component_count<format & APixelFormat::COMPONENT_BITS>();
+        using component_t = typename detail::type<format & APixelFormat::TYPE_BITS>::value;
 
 
     private:
-        using representation_t_impl = detail::component_representation<component_t, format & AImageFormat::COMPONENT_BITS>;
+        using representation_t_impl = detail::component_representation<component_t, format & APixelFormat::COMPONENT_BITS>;
 
 
 
@@ -257,10 +257,10 @@ namespace aui::image_format {
     };
 
 
-    template<AImageFormat::Value from, AImageFormat::Value to>
-    inline typename aui::image_format::traits<to>::representation_t convert(typename aui::image_format::traits<from>::representation_t in) {
-        using traits_from = aui::image_format::traits<from>;
-        using traits_to = aui::image_format::traits<to>;
+    template<APixelFormat::Value from, APixelFormat::Value to>
+    inline typename aui::pixel_format::traits<to>::representation_t convert(typename aui::pixel_format::traits<from>::representation_t in) {
+        using traits_from = aui::pixel_format::traits<from>;
+        using traits_to = aui::pixel_format::traits<to>;
         static constexpr std::size_t countFrom = traits_from::COMPONENT_COUNT;
         static constexpr std::size_t countTo = traits_to::COMPONENT_COUNT;
 
@@ -298,7 +298,7 @@ namespace aui::image_format {
 
     template<std::uint32_t format>
     traits<format>::representation_t::operator AColor() const noexcept {
-        return convert<(AImageFormat::Value)format, (AImageFormat::Value)(AImageFormat::RGBA | AImageFormat::FLOAT)>(*this);
+        return convert<(APixelFormat::Value)format, (APixelFormat::Value)(APixelFormat::RGBA | APixelFormat::FLOAT)>(*this);
     }
 }
 
@@ -307,8 +307,8 @@ namespace aui::image_format {
 /**
  * @brief Unlike AColor, this type is not universal and has a format and thus may be used in performance critical code.
  */
-template<auto imageFormat = AImageFormat::DEFAULT>
-using AFormattedColor = typename aui::image_format::traits<imageFormat>::representation_t;
+template<auto pixelFormat = APixelFormat::DEFAULT>
+using AFormattedColor = typename aui::pixel_format::traits<pixelFormat>::representation_t;
 
 template<typename Source>
 struct AFormattedColorConverter {
@@ -317,9 +317,9 @@ public:
 
     template<typename Destination>
     operator Destination() const noexcept {
-        static constexpr auto source = aui::image_format::detail::format_of<std::decay_t<Source>>;
-        return aui::image_format::convert<source, aui::image_format::detail::format_of<std::decay_t<Destination>>>(
-                reinterpret_cast<const aui::image_format::traits<source>::representation_t&>(mColor)
+        static constexpr auto source = aui::pixel_format::detail::format_of<std::decay_t<Source>>;
+        return aui::pixel_format::convert<source, aui::pixel_format::detail::format_of<std::decay_t<Destination>>>(
+                reinterpret_cast<const aui::pixel_format::traits<source>::representation_t&>(mColor)
                 );
     }
 
