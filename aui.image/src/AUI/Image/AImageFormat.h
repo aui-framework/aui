@@ -133,6 +133,11 @@ namespace aui::image_format {
             using value = std::uint8_t;
         };
 
+
+        template<typename T>
+        constexpr auto format_of = (AImageFormat)T::FORMAT;
+        template<>
+        constexpr auto format_of<AColor> = AImageFormat::RGBA_FLOAT;
     }
 
     template<std::uint32_t format>
@@ -312,8 +317,8 @@ public:
 
     template<typename Destination>
     operator Destination() const noexcept {
-        static constexpr auto source = FORMAT<std::decay_t<Source>>;
-        return aui::image_format::convert<source, FORMAT<std::decay_t<Destination>>>(
+        static constexpr auto source = aui::image_format::detail::format_of<std::decay_t<Source>>;
+        return aui::image_format::convert<source, aui::image_format::detail::format_of<std::decay_t<Destination>>>(
                 reinterpret_cast<const aui::image_format::traits<source>::representation_t&>(mColor)
                 );
     }
@@ -321,8 +326,4 @@ public:
 private:
     Source mColor;
 
-    template<typename T>
-    static constexpr auto FORMAT = (AImageFormat)T::FORMAT;
-    template<>
-    static constexpr auto FORMAT<AColor> = AImageFormat::RGBA_FLOAT;
 };
