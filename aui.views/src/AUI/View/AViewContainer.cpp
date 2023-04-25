@@ -27,6 +27,8 @@
 
 void AViewContainer::drawView(const _<AView>& view) {
     if (view->getVisibility() == Visibility::VISIBLE || view->getVisibility() == Visibility::UNREACHABLE) {
+        const auto prevStencilLevel = Render::getRenderer()->getStencilDepth();
+
         RenderHints::PushState s;
         glm::mat4 t(1.f);
         view->getTransform(t);
@@ -41,6 +43,8 @@ void AViewContainer::drawView(const _<AView>& view) {
             view->postRender();
         }
         catch (...) {}
+
+        assert(Render::getRenderer()->getStencilDepth() == prevStencilLevel);
     }
 }
 

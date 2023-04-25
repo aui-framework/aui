@@ -445,6 +445,12 @@ public:
     {
         return mTransform;
     }
+
+    [[nodiscard]]
+    std::uint8_t getStencilDepth() const noexcept {
+        return mStencilDepth;
+    }
+
 };
 
 
