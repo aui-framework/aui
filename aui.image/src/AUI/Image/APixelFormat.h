@@ -319,7 +319,7 @@ public:
     operator Destination() const noexcept {
         static constexpr auto source = aui::pixel_format::detail::format_of<std::decay_t<Source>>;
         return aui::pixel_format::convert<source, aui::pixel_format::detail::format_of<std::decay_t<Destination>>>(
-                reinterpret_cast<const aui::pixel_format::traits<source>::representation_t&>(mColor)
+                reinterpret_cast<const typename aui::pixel_format::traits<source>::representation_t&>(mColor)
                 );
     }
 
