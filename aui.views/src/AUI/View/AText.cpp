@@ -177,7 +177,8 @@ int AText::getContentMinimumHeight(ALayoutDirection layout) {
     }
 
     auto height = mPrerenderedString ? mPrerenderedString->getHeight() : 0;
-    if (auto engineHeight = mEngine.getHeight()) {
+    auto engineHeight = mEngine.getHeight();
+    if (engineHeight.has_value()) {
         height = std::max(height, *engineHeight);
     }
 
