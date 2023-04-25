@@ -23,13 +23,26 @@
 #include <AUI/Reflect/AEnumerate.h>
 
 /**
- * @brief Controls visibility of the overflowed contents of AView.
+ * @brief Controls visibility of the overflowed contents of AView with AView::drawStencilMask.
  * @ingroup ass
  * @ingroup views
  */
 enum class AOverflow {
+    /**
+     * @brief Overflowed contents are visible.
+     */
     VISIBLE,
+
+    /**
+     * @brief Overflowed contents are hidden. Suitable for lists with scroll.
+     * @note On GPU accelerated renderer, HIDDEN does 2 extra draw calls thus decreasing performance a little bit.
+     * Prefer VISIBLE if possible.
+     */
     HIDDEN,
+
+    /**
+     * @brief Like HIDDEN, but view's ASS-styled background is also affected by mask.
+     */
     HIDDEN_FROM_THIS
 };
 
