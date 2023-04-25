@@ -84,12 +84,15 @@ void AView::drawStencilMask()
 {
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
+#if !AUI_PLATFORM_IOS // on ios stencil buffer does not work with discard as expected
             if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
                 Render::roundedRect(ASolidBrush{},
                                     {mPadding.left, mPadding.top},
                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
                                     mBorderRadius);
-            } else {
+            } else
+#endif
+            {
                 Render::rect(ASolidBrush{},
                              {mPadding.left, mPadding.top},
                              {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
