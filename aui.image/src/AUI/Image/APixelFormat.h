@@ -176,36 +176,36 @@ namespace aui::pixel_format {
             }
 
             representation_t& operator+=(representation_t rhs) noexcept {
-                std::ranges::transform(*this, rhs, begin(), std::plus<component_t>{});
+                std::transform(begin(), end(), rhs, begin(), std::plus<component_t>{});
                 return *this;
             }
             representation_t& operator-=(representation_t rhs) noexcept {
-                std::ranges::transform(*this, rhs, begin(), std::minus<component_t>{});
+                std::transform(begin(), end(), rhs, begin(), std::minus<component_t>{});
                 return *this;
             }
             representation_t& operator*=(representation_t rhs) noexcept {
-                std::ranges::transform(*this, rhs, begin(), std::multiplies<component_t>{});
+                std::transform(begin(), end(), rhs, begin(), std::multiplies<component_t>{});
                 return *this;
             }
             representation_t& operator/=(representation_t rhs) noexcept {
-                std::ranges::transform(*this, rhs, begin(), std::divides<component_t>{});
+                std::transform(begin(), end(), rhs, begin(), std::divides<component_t>{});
                 return *this;
             }
 
             representation_t& operator+=(component_t rhs) noexcept {
-                std::ranges::transform(*this, begin(), [&](auto lhs) { return lhs + rhs; });
+                std::transform(begin(), end(), begin(), [&](auto lhs) { return lhs + rhs; });
                 return *this;
             }
             representation_t& operator-=(component_t rhs) noexcept {
-                std::ranges::transform(*this, begin(), [&](auto lhs) { return lhs - rhs; });
+                std::transform(begin(), end(), begin(), [&](auto lhs) { return lhs - rhs; });
                 return *this;
             }
             representation_t& operator*=(component_t rhs) noexcept {
-                std::ranges::transform(*this, begin(), [&](auto lhs) { return lhs * rhs; });
+                std::transform(begin(), end(), begin(), [&](auto lhs) { return lhs * rhs; });
                 return *this;
             }
             representation_t& operator/=(component_t rhs) noexcept {
-                std::ranges::transform(*this, begin(), [&](auto lhs) { return lhs / rhs; });
+                std::transform(begin(), end(), begin(), [&](auto lhs) { return lhs / rhs; });
                 return *this;
             }
 
