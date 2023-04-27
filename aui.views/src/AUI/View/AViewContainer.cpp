@@ -202,7 +202,7 @@ void AViewContainer::onScroll(const AScrollEvent& event) {
     if (p && p->isEnabled()) {
         auto eventCopy = event;
         eventCopy.origin -= p->getPosition();
-        p->onScroll(event);
+        p->onScroll(eventCopy);
     }
 }
 
