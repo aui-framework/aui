@@ -62,8 +62,8 @@ AFontManager::AFontManager() :
 
                     // done!
                     auto url = AUrl::file(getPathToFont(fontName));
-                    ALogger::info(LOG_TAG) << "Using gtk theme font: " << fontName << " (" << url.full() << ")";
                     result = loadFont(std::move(url));
+                    ALogger::info(LOG_TAG) << "Using gtk theme font: " << fontName << " (" << url.full() << ")";
                     break;
                 } else {
                     // skip line 
@@ -87,7 +87,7 @@ AFontManager::AFontManager() :
 
         return result;
     }();
-    mDefaultFont = nullptr;
+
     if (mDefaultFont == nullptr) {
         // fallback to internal
         mDefaultFont = loadFont(":uni/font/Roboto.ttf");
