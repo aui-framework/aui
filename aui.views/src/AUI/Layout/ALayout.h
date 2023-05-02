@@ -118,6 +118,7 @@ protected:
 public:
 	ALayout() = default;
 	virtual ~ALayout() = default;
+    const ADeque<_<AView>>& getViews();
 	virtual void onResize(int x, int y, int width, int height) = 0;
 	virtual void addView(size_t index, const _<AView>& view);
 	virtual void removeView(size_t index, const _<AView>& view);
