@@ -43,6 +43,6 @@ ALayoutDirection ALayout::getLayoutDirection() {
     return ALayoutDirection::NONE;
 }
 
-const ADeque<_<AView>> &ALayout::getViews() {
+const ADeque<_<AView>>& ALayout::getViews() {
     return mViews;
 }
