@@ -123,8 +123,7 @@ public:
 
     template<aui::mapper<const _<AView>&, bool> Callback>
     bool getViewAtRecursive(glm::ivec2 pos, const Callback& callback, bool ignoreGone = true) {
-        for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
-            auto view = *it;
+        auto tryGetView = [&] (const _<AView>& view) {
             auto targetPos = pos - view->getPosition();
 
             if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x &&
@@ -139,7 +138,27 @@ public:
                     }
                 }
             }
+
+            return false;
+        };
+
+        if (mLayout) {
+            const auto& layoutViews = mLayout->getViews();
+            for (const auto& view : layoutViews) {
+                if (tryGetView(view)) {
+                    return true;
+                }
+            }
+
+            return false;
         }
+
+        for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
+            if (tryGetView(*it)) {
+                return true;
+            }
+        }
+
         return false;
     }
 
