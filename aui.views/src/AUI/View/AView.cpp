@@ -457,6 +457,10 @@ void AView::setEnabled(bool enabled)
 }
 void AView::updateEnableState()
 {
+    if (!mEnabled) {
+        onMouseLeave();
+    }
+
     mEnabled.set(this, mDirectlyEnabled && mParentEnabled);
     emit customCssPropertyChanged();
     setSignalsEnabled(mEnabled);
