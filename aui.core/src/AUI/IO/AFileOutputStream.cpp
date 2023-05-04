@@ -23,7 +23,7 @@ AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move
 {
 #if AUI_PLATFORM_WIN
 	// КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
-	_wfopen_s(&mFile, mPath.c_str(), append ? L"a+b" : L"wb");
+    mFile = _wfsopen(mPath.c_str(), append ? L"a+b" : L"wb", _SH_DENYWR);
 #else
 	mFile = fopen(mPath.toStdString().c_str(), append ? "a+b" : "wb");
 #endif
