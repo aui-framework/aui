@@ -179,6 +179,7 @@ void AAbstractTextField::invalidateFont() {
 }
 
 void AAbstractTextField::onCharEntered(wchar_t c) {
+    mCursorIndex = std::min(mCursorIndex, static_cast<unsigned int> (mContents.size()));
     if (c == '\n' || c == '\r')
         return;
     AView::onCharEntered(c);
