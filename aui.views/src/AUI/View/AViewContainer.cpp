@@ -227,7 +227,7 @@ _<ALayout> AViewContainer::getLayout() const {
 }
 
 
-_<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone) {
+_<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
     _<AView> possibleOutput = nullptr;
 
     for (auto view: aui::reverse_iterator_wrap(mViews)) {
@@ -251,7 +251,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone) {
         }
 
         if (hitTest) {
-            if (!ignoreGone || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
+            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
                 if (!possibleOutput) {
                     possibleOutput = view;
                 }
@@ -264,13 +264,13 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone) {
     return possibleOutput;
 }
 
-_<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos) {
-    _<AView> target = getViewAt(pos);
+_<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
+    _<AView> target = getViewAt(pos, flags);
     if (!target)
         return nullptr;
     while (auto parent = _cast<AViewContainer>(target)) {
         pos -= parent->getPosition();
-        target = parent->getViewAt(pos);
+        target = parent->getViewAt(pos, flags);
         if (!target)
             return parent;
     }

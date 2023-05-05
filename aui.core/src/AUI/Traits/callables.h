@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include "members.h"
+
 namespace aui {
     /**
      * That `<code>overloaded</code>` trick
@@ -32,4 +34,13 @@ namespace aui {
     // deduction guide
     template<class... Lambdas>
     lambda_overloaded(Lambdas...) -> lambda_overloaded<Lambdas...>;
+
+    template<typename Return, typename... Args>
+    struct callable_info;
+
+    template<typename Return, typename... Args>
+    struct callable_info<Return(Args...)> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
 }

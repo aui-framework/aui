@@ -289,7 +289,7 @@ namespace aui::detail {
     template<typename ForcedClazz, typename Type>
     struct pointer_to_member {
         template<typename... Args>
-        static Type(ForcedClazz::*with_args(aui::type_list<Args...>))(Args...) {
+        static Type(ForcedClazz::*with_args(std::tuple<Args...>))(Args...) {
             return nullptr;
         }
     };

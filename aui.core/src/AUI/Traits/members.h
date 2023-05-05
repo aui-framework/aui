@@ -20,10 +20,6 @@
 #include <tuple>
 
 namespace aui {
-
-    template<typename... Types>
-    struct type_list {};
-
     template<typename Type>
     struct member;
 
@@ -37,7 +33,7 @@ namespace aui {
     struct member<Type(Clazz::*)(Args...)> {
         using type = Type;
         using clazz = Clazz;
-        using args = type_list<Args...>;
+        using args = std::tuple<Args...>;
     };
 
 

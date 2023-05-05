@@ -94,7 +94,7 @@ public:
      * @return true if flag(s) set
      * @note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
      */
-    bool check(T flags) const {
+    bool test(T flags) const {
         return (mStorage & flags) == flags;
     }
 
@@ -105,7 +105,7 @@ public:
      * @note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
      */
     bool operator&(T flags) const {
-        return check(flags);
+        return test(flags);
     }
 
     void set(T flag, bool value) {

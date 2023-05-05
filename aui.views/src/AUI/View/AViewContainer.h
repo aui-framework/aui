@@ -19,11 +19,30 @@
 #include <AUI/Views.h>
 #include <AUI/View/AView.h>
 #include "AUI/Common/SharedPtr.h"
+#include "AUI/Util/ABitField.h"
 #include <glm/glm.hpp>
 #include "AUI/Layout/ALayout.h"
 #include "AUI/Common/AVector.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Render/RenderHints.h"
+
+
+AUI_ENUM_FLAG(AViewLookupFlags) {
+    NONE = 0,
+
+    /**
+     * @brief On AViewContainer::getViewAt*, ignores visibility flags.
+     */
+    IGNORE_VISIBILITY = 0b1,
+
+    /**
+     * @brief On AViewContainer::getViewAt* with callbacks, only the first view in the container is passed to callback.
+     * @details
+     * Basically this flag allows to replicate mouse click handling behaviour, which is useful in creating custom events
+     * (i.e. drag&drop).
+     */
+    ONLY_ONE_PER_CONTAINER = 0b1,
+};
 
 /**
  * @brief A view that represents a set of views.
@@ -117,24 +136,53 @@ public:
 
     _<ALayout> getLayout() const;
 
-    virtual _<AView> getViewAt(glm::ivec2 pos, bool ignoreGone = true);
+    /**
+     * @brief Finds first direct child view under position.
+     * @param pos position relative to this container
+     * @param flags see AViewLookupFlags
+     * @return found view or nullptr
+     * @details
+     * Some containers may implement getViewAt by it's own (i.e. AListView for performance reasons).
+     */
+    [[nodiscard]]
+    virtual _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
 
-    _<AView> getViewAtRecursive(glm::ivec2 pos);
+    /**
+     * @brief Acts as AViewContainer::getViewAt but recursively (may include non-direct child).
+     * @param pos position relative to this container
+     * @param flags see AViewLookupFlags
+     * @return found view or nullptr
+     */
+    [[nodiscard]]
+    _<AView> getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
 
-    template<aui::mapper<const _<AView>&, bool> Callback>
-    bool getViewAtRecursive(glm::ivec2 pos, const Callback& callback, bool ignoreGone = true) {
+    /**
+     * @brief Acts as AViewContainer::getViewAtRecursive but calls a callback instead of returning value.
+     * @param pos position relative to this container
+     * @param flags see AViewLookupFlags
+     * @return true if callback returned true; false otherwise
+     * @details
+     * The passed callback is a predicate. If predicate returns true, the execution of lookup is stopped and getViewAt
+     * returns true. If predicate returns false, the lookup continues.
+     */
+    template<aui::predicate<_<AView>> Callback>
+    bool getViewAtRecursive(glm::ivec2 pos, Callback&& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
         auto tryGetView = [&] (const _<AView>& view) {
             auto targetPos = pos - view->getPosition();
 
             if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x &&
                 targetPos.y < view->getSize().y) {
-                if (!ignoreGone || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
+                if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
                     if (callback(view))
                         return true;
                     if (auto container = _cast<AViewContainer>(view)) {
-                        if (container->getViewAtRecursive(targetPos, callback, ignoreGone)) {
+                        if (container->getViewAtRecursive(targetPos, callback, flags)) {
                             return true;
                         }
+                    }
+
+                    if (flags.test(AViewLookupFlags::ONLY_ONE_PER_CONTAINER)) {
+                        return false;
                     }
                 }
             }
@@ -162,27 +210,43 @@ public:
         return false;
     }
 
-    template<aui::mapper<const _<AView>&, bool> Callback>
-    bool getViewRecursive(const Callback& callback, bool ignoreGone = true) {
+    /**
+     * @brief
+     * @param pos position relative to this container
+     * @param flags see AViewLookupFlags
+     * @return found view or nullptr
+     */
+    template<aui::predicate<_<AView>> Callback>
+    bool visitsViewRecursive(Callback&& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
         for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
             auto view = *it;
-            if (!ignoreGone || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
+            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
                 if (callback(view))
                     return true;
                 if (auto container = _cast<AViewContainer>(view)) {
-                    if (container->getViewRecursive(callback, ignoreGone)) {
+                    if (container->visitsViewRecursive(callback, flags)) {
                         return true;
                     }
+                }
+                if (flags.test(AViewLookupFlags::ONLY_ONE_PER_CONTAINER)) {
+                    break;
                 }
             }
         }
         return false;
     }
 
+
+    /**
+     * @brief Acts as AViewContainer::getViewAtRecursive but finds a view castable to specified template type.
+     * @param pos position relative to this container
+     * @param flags see AViewLookupFlags
+     * @return found view or nullptr
+     */
     template<typename T>
-    _<T> getViewAtRecursiveOf(glm::ivec2 pos, bool ignoreGone = true) {
+    _<T> getViewAtRecursiveOfType(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
         _<T> result;
-        getViewAtRecursive(pos, [&] (const _<AView>& v) { return bool(result = _cast<T>(v)); }, ignoreGone);
+        getViewAtRecursive(pos, [&] (const _<AView>& v) { return bool(result = _cast<T>(v)); }, flags);
         return result;
     }
 

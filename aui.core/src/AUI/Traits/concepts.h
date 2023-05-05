@@ -20,6 +20,7 @@
 #include <utility>
 #include <functional>
 #include <type_traits>
+#include "callables.h"
 
 namespace aui {
 
@@ -28,10 +29,19 @@ namespace aui {
     concept derived_from = std::is_base_of_v<Base, Derived> &&
                            std::is_convertible_v<const volatile Derived*, const volatile Base*>;
 
+    /**
+     * @brief Invokable concept.
+     * @tparam Args argument types
+     * @details
+     * aui::invocable is replicated from STL's std::invocable.
+     *
+     * aui::invocable does not require return type. To specify excepted return type, use aui::callable instead.
+     */
     template<typename F, typename... Args>
     concept invocable = requires(F&& f, Args&&... args) {
         { std::invoke(f, std::forward<Args>(args)...) };
     };
+
     template <class From, class To>
     concept convertible_to = std::is_convertible_v<From, To> && requires {
         static_cast<To>(std::declval<From>());

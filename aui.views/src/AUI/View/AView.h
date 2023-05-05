@@ -430,6 +430,8 @@ public:
      * @brief Determines whether this AView processes this click or passes it thru.
      * @param pos mouse position
      * @return true if AView processes this click
+     * @details
+     * Used in AViewContainer::getViewAt method subset, thus affecting click event handling.
      */
     virtual bool consumesClick(const glm::ivec2& pos);
 
