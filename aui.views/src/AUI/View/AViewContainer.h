@@ -41,7 +41,7 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
      * Basically this flag allows to replicate mouse click handling behaviour, which is useful in creating custom events
      * (i.e. drag&drop).
      */
-    ONLY_ONE_PER_CONTAINER = 0b1,
+    ONLY_ONE_PER_CONTAINER = 0b10,
 };
 
 /**
