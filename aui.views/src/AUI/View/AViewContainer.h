@@ -172,17 +172,21 @@ public:
 
             if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x &&
                 targetPos.y < view->getSize().y) {
-                if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
-                    if (callback(view))
-                        return true;
-                    if (auto container = _cast<AViewContainer>(view)) {
-                        if (container->getViewAtRecursive(targetPos, callback, flags)) {
+                if (view->consumesClick(targetPos)) {
+                    if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE &&
+                                                                            view->getVisibility() !=
+                                                                            Visibility::UNREACHABLE)) {
+                        if (callback(view))
                             return true;
+                        if (auto container = _cast<AViewContainer>(view)) {
+                            if (container->getViewAtRecursive(targetPos, callback, flags)) {
+                                return true;
+                            }
                         }
-                    }
 
-                    if (flags.test(AViewLookupFlags::ONLY_ONE_PER_CONTAINER)) {
-                        return false;
+                        if (flags.test(AViewLookupFlags::ONLY_ONE_PER_CONTAINER)) {
+                            return false;
+                        }
                     }
                 }
             }
