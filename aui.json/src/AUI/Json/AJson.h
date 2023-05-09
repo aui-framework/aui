@@ -231,6 +231,8 @@ public:
         asArray().push_back(std::move(elem));
     }
 
+    AJson mergedWith(const AJson& other);
+
     [[nodiscard]] static API_AUI_JSON AString toString(const AJson& json);
     [[nodiscard]] static API_AUI_JSON AJson fromString(const AString& json);
     [[nodiscard]] static AJson fromStream(aui::no_escape<IInputStream> stream) {

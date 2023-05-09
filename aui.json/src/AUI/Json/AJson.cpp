@@ -33,3 +33,14 @@ AJson AJson::fromString(const AString& json) {
 AJson AJson::fromBuffer(AByteBufferView buffer) {
     return aui::deserialize<AJson>(AByteBufferInputStream(buffer));
 }
+
+AJson AJson::mergedWith(const AJson &other) {
+    auto& thisObject = as<Object>();
+    auto& otherObject = other.as<Object>();
+    Object thisCopy = thisObject;
+    for (const auto& [key, value] : otherObject) {
+        thisCopy[key] = value;
+    }
+
+    return thisCopy;
+}
