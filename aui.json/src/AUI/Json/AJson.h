@@ -233,7 +233,7 @@ public:
 
 
     /**
-     * @brief Merges other json into this
+     * @brief Merges other json object into this object.
      * @details
      * Let's say this json is:
      * @code{json}
