@@ -125,6 +125,10 @@ signals:
 
     emits<int> scrolled;
 
+    emits<int> updatedMaxScroll;
+
+    emits<> triggeredManually;
+
     float getAvailableSpaceForSpacer();
 
     void updateScrollHandleOffset(int max);
