@@ -231,6 +231,35 @@ public:
         asArray().push_back(std::move(elem));
     }
 
+
+    /**
+     * @brief Merges other json object into this object.
+     * @details
+     * Let's say this json is:
+     * @code{json}
+     * {
+     *      "key0": "val1",
+     *      "key1": "val1",
+     * }
+     * @endcode
+     * And other json is:
+     * @code{json}
+     * {
+     *      "key1": "val2",
+     *      "key2": "val2",
+     * }
+     * @endcode
+     * Then the result is:
+     * @code{json}
+     * {
+     *      "key0": "val1",
+     *      "key1": "val2",
+     *      "key2": "val2"
+     * }
+     * @endcode
+     */
+    AJson mergedWith(const AJson& other);
+
     [[nodiscard]] static API_AUI_JSON AString toString(const AJson& json);
     [[nodiscard]] static API_AUI_JSON AJson fromString(const AString& json);
     [[nodiscard]] static AJson fromStream(aui::no_escape<IInputStream> stream) {
