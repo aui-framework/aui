@@ -85,6 +85,8 @@ void AScrollbar::setScrollDimensions(size_t viewportSize, size_t fullSize) {
     if (shouldScrollToEnd) {
         scrollToEnd();
     }
+
+    emit updatedMaxScroll(getMaxScroll());
 }
 
 void AScrollbar::updateScrollHandleSize() {
@@ -170,6 +172,7 @@ void AScrollbar::updateScrollHandleOffset(int max) {
 void AScrollbar::onScroll(const AScrollEvent& event) {
     AViewContainer::onScroll(event);
     // scroll 3 lines of text
+    emit triggeredManually;
     setScroll(mCurrentScroll + event.delta.y * 11_pt * 3 / 120);
 }
 
@@ -192,6 +195,8 @@ void AScrollbar::scrollForward() {
             AObject::disconnect();
         }
     });
+
+    emit triggeredManually;
 }
 
 void AScrollbar::scrollBackward() {
@@ -205,6 +210,8 @@ void AScrollbar::scrollBackward() {
             AObject::disconnect();
         }
     });
+
+    emit triggeredManually;
 }
 
 void AScrollbar::onPointerPressed(const APointerPressedEvent& event) {
@@ -254,6 +261,7 @@ void AScrollbarHandle::onPointerPressed(const APointerPressedEvent& event) {
     }
 
     mDragging = true;
+    emit mScrollbar.triggeredManually;
 }
 
 void AScrollbarHandle::onPointerReleased(const APointerReleasedEvent& event) {

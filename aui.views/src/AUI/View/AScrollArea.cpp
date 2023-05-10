@@ -126,6 +126,10 @@ void AScrollArea::setSize(glm::ivec2 size) {
 
 void AScrollArea::onScroll(const AScrollEvent& event) {
     AViewContainer::onScroll(event);
+    if (!mIsWheelScrollable) {
+        return;
+    }
+
     mVerticalScrollbar->onScroll(event);
 }
 
