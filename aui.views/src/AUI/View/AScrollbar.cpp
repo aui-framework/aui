@@ -172,6 +172,7 @@ void AScrollbar::updateScrollHandleOffset(int max) {
 void AScrollbar::onScroll(const AScrollEvent& event) {
     AViewContainer::onScroll(event);
     // scroll 3 lines of text
+    emit triggeredManually;
     setScroll(mCurrentScroll + event.delta.y * 11_pt * 3 / 120);
 }
 
