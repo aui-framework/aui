@@ -137,7 +137,7 @@ namespace aui::pixel_format {
         template<typename T>
         constexpr auto format_of = (APixelFormat)T::FORMAT;
         template<>
-        constexpr auto format_of<AColor> = APixelFormat::RGBA_FLOAT;
+        inline constexpr auto format_of<AColor> = APixelFormat::RGBA_FLOAT;
     }
 
     template<std::uint32_t format>
