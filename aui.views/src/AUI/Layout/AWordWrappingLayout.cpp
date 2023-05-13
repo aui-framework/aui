@@ -20,18 +20,24 @@
 
 #include "AWordWrappingLayout.h"
 
-void AWordWrappingLayout::addView(size_t index, const _<AView>& view) {
-    ALayout::addView(index, view);
 
-    if (index >= mViewEntry.size()) {
-        mViewEntry.resize(index + 1);
+void AWordWrappingLayout::addView(const _<AView>& view, AOptional<size_t> index) {
+    ALinearLayout::addView(view, index);
+
+    if (index) {
+        mViewEntry[*index] = AViewEntry{ view };
+    } else {
+        mViewEntry << AViewEntry{ view };
     }
-    mViewEntry[index] = AViewEntry{ view };
 }
 
-void AWordWrappingLayout::removeView(size_t index, const _<AView>& view) {
+void AWordWrappingLayout::removeView(aui::no_escape<AView> view, size_t index) {
+    ALinearLayout::removeView(view, index);
+
     mViewEntry.removeAt(index);
 }
+
+
 
 int AWordWrappingLayout::getMinimumWidth() {
     return 0;
