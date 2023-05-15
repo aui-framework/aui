@@ -21,16 +21,7 @@
 
 AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move(path))
 {
-#if AUI_PLATFORM_WIN
-	// КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
-    mFile = _wfsopen(mPath.c_str(), append ? L"a+b" : L"wb", _SH_DENYWR);
-#else
-	mFile = fopen(mPath.toStdString().c_str(), append ? "a+b" : "wb");
-#endif
-	if (!mFile)
-	{
-        aui::impl::unix::lastErrorToException("AFileOutputStream: could not open {}"_format(mPath));
-	}
+    open(append);
 }
 
 AFileOutputStream::~AFileOutputStream()
@@ -56,5 +47,17 @@ void AFileOutputStream::close() {
     if (mFile) {
         fclose(mFile);
         mFile = nullptr;
+    }
+}
+
+void AFileOutputStream::open(bool append) {
+#if AUI_PLATFORM_WIN
+    mFile = _wfsopen(mPath.c_str(), append ? L"a+b" : L"wb", _SH_DENYWR);
+#else
+    mFile = fopen(mPath.toStdString().c_str(), append ? "a+b" : "wb");
+#endif
+    if (!mFile)
+    {
+        aui::impl::unix::lastErrorToException("AFileOutputStream: could not open {}"_format(mPath));
     }
 }

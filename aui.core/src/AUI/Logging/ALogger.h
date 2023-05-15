@@ -233,6 +233,18 @@ public:
         return global().mLogFile.path();
     }
 
+    template <aui::invocable Callable>
+    static void doLogFileAccessSafe(Callable action) {
+        if (!global().mLogFile.nativeHandle()) {
+            action();
+            return;
+        }
+
+        global().mLogFile.close();
+        action();
+        global().mLogFile.open(true);
+    }
+
     static LogWriter info(const AString& str)
     {
         return {global(), INFO, str};
