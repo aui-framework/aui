@@ -233,6 +233,25 @@ public:
         return global().mLogFile.path();
     }
 
+    /*
+     * @brief Allows to perform some action (access safely)
+     * on log file (which is opened all over the execution process)
+     * @details
+     * Useful when sending log file to remote server:
+     * @note Windows, for instance, doesn't allow to read the file when it's already opened
+     */
+    template <aui::invocable Callable>
+    static void doLogFileAccessSafe(Callable action) {
+        if (!global().mLogFile.nativeHandle()) {
+            action();
+            return;
+        }
+
+        global().mLogFile.close();
+        action();
+        global().mLogFile.open(true);
+    }
+
     static LogWriter info(const AString& str)
     {
         return {global(), INFO, str};
