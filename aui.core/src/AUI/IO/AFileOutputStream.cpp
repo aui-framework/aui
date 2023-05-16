@@ -19,7 +19,7 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/ErrorToException.h"
 
-AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move(path))
+AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move(path)), mFile(nullptr)
 {
     open(append);
 }
@@ -31,7 +31,10 @@ AFileOutputStream::~AFileOutputStream()
 
 void AFileOutputStream::write(const char* src, size_t size)
 {
-    assert(("file not open", mFile != nullptr));
+    if (mFile == nullptr) {
+        throw AIOException("Write attempt to not opened file: " + mPath);
+    }
+
     if (size == 0) return;
 	while (size) {
         auto v = fwrite(src, 1, size, mFile);
@@ -51,6 +54,10 @@ void AFileOutputStream::close() {
 }
 
 void AFileOutputStream::open(bool append) {
+    if (mFile != nullptr) {
+        throw AIOException("Trying to open already opened file: " + mPath);
+    }
+
 #if AUI_PLATFORM_WIN
     mFile = _wfsopen(mPath.c_str(), append ? L"a+b" : L"wb", _SH_DENYWR);
 #else
