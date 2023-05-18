@@ -517,7 +517,7 @@ function(aui_executable AUI_MODULE_NAME)
             aui_common(preview.${AUI_MODULE_NAME})
 
             add_dependencies(aui.preview preview.${AUI_MODULE_NAME})
-        elseif(IOS)
+        elseif(APPLE)
             add_executable(${AUI_MODULE_NAME} MACOSX_BUNDLE ${ADDITIONAL_SRCS} ${SRCS})
         elseif(WIN32 AND NOT AUIE_WIN32_SUBSYSTEM_CONSOLE)
             add_executable(${AUI_MODULE_NAME} WIN32 ${ADDITIONAL_SRCS} ${SRCS})
