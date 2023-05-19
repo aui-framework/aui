@@ -302,4 +302,8 @@ ass::decl::DeclarationSlot ass::decl::Declaration<ass::BackgroundImage>::getDecl
     return ass::decl::DeclarationSlot::BACKGROUND_IMAGE;
 }
 
+AString ass::decl::Declaration<ass::BackgroundImage>::toString() const {
+    return "BackgroundImage({})"_format(mInfo.url);
+}
+
 

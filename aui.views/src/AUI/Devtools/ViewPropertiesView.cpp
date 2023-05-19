@@ -28,6 +28,8 @@
 #include <AUI/View/AHDividerView.h>
 #include <AUI/Common/IStringable.h>
 #include <AUI/View/ACheckBox.h>
+#include <AUI/View/AButton.h>
+#include <AUI/Platform/AClipboard.h>
 
 using namespace ass;
 
@@ -48,8 +50,15 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     ADeque<ass::decl::IDeclarationBase*> applicableDeclarations;
 
     using namespace declarative;
-    auto dst = Vertical {
+    auto addressStr = "{}"_format((void*)targetView.get());
+    _<AViewContainer> dst = Vertical {
             _new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize {14_pt } },
+            Horizontal {
+                Label { addressStr },
+                Button { "Copy" }.clicked(this, [addressStr] {
+                    AClipboard::copyToClipboard(addressStr);
+                }),
+            },
             CheckBoxWrapper {
                 Label { "Enabled "},
             } let {
@@ -108,7 +117,7 @@ void ViewPropertiesView::displayApplicableRule(const _<AViewContainer>& dst,
 
     for (const auto& decl : rule->getDeclarations()) {
         applicableDeclarations.push_front(decl.get());
-        dst->addView(_new<ALabel>("<internal {}>"_format(AReflect::name(decl.get()))) with_style{ Opacity {0.7f } });
+        dst->addView(_new<ALabel>(IStringable::toString(decl)) with_style{ Opacity {0.7f } });
     }
     dst->addView(Horizontal {
             _new<ALabel>("},") << ".declaration_br",

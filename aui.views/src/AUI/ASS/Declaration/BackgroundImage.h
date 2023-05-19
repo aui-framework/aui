@@ -21,6 +21,7 @@
 #pragma once
 
 #include <AUI/Render/Render.h>
+#include <AUI/Common/IStringable.h>
 #include "IDeclaration.h"
 
 namespace ass {
@@ -116,7 +117,7 @@ namespace ass {
 
     namespace decl {
         template<>
-        struct API_AUI_VIEWS Declaration<BackgroundImage>: IDeclarationBase {
+        struct API_AUI_VIEWS Declaration<BackgroundImage>: IDeclarationBase, IStringable {
         private:
             BackgroundImage mInfo;
 
@@ -134,6 +135,9 @@ namespace ass {
             const auto& value() const noexcept {
                 return mInfo;
             }
+
+            AString toString() const override;
+
         };
 
     }
