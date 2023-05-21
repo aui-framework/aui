@@ -66,7 +66,8 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
                                          GTK_DIALOG_MODAL,
                                          (GtkMessageType)iconFlags,
                                          (GtkButtonsType)buttonFlags,
-                                         "%ls", message.c_str());
+                                         "%ls", title.c_str());
+    gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog), "%ls", message.c_str());
     gtk_window_set_keep_above(GTK_WINDOW(dialog), true);
     gtk_window_activate_focus(GTK_WINDOW(dialog));
     int resp = gtk_dialog_run(GTK_DIALOG(dialog));
