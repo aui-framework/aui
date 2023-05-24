@@ -25,9 +25,10 @@
  * @ingroup views
  * @brief CSS-like styling system
  * @details
- * AUI uses a CSS-like stylesheet domain specific language, ASS (stands for Aui Style Sheets). Like CSS, ASS is a list
+ * AUI uses CSS-like stylesheet domain specific language, ASS (stands for Aui Style Sheets). Like CSS, ASS is a list
  * of rules. A rule consists of a @ref ass_selector "selector" and a list of @ref ass_declaration "declarations".
- * Selector is a basic matcher that determines whether apply a rule to the specific @ref AView "view" or not.
+ * Selector is a basic matcher that determines whether apply a rule to the specific @ref AView "view" or not. Selector
+ * is the first statement in a rule and further statements are @ref ass_declaration "style declarations".
  * @ref ass_declaration "Declaration" controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
  * "call setFontSize(18_pt) for every matched view").
  * <table>
@@ -41,6 +42,7 @@
  *       @code{css}
  *       AButton {
  *         background: red;
+ *         color: white;
  *       }
  *       @endcode
  *     </td>
@@ -49,11 +51,12 @@
  *       {
  *         t<AButton>(),
  *         BackgroundColor { AColor::RED },
+ *         TextColor { AColor::WHITE },
  *       },
  *       @endcode
  *     </td>
  *     <td>
- *       Set all buttons' background to red
+ *       Set all buttons' background to red and text color to white
  *     </td>
  *   </tr>
  *   <tr>
@@ -77,6 +80,76 @@
  *     </td>
  *   </tr>
  * </table>
+ *
+ * ## Using global style
+ * Global stylesheet is applied to the whole program.
+ *
+ * Somewhere in your entry point, you may write:
+ * @code{cpp}
+ * AStylesheet::global().addRules({
+ *   {
+ *     t<ALabel>(),
+ *     BackgroundSolid { 0xff0000_rgb },
+ *     TextAlign::CENTER,
+ *   },
+ *   {
+ *     t<AButton>(),
+ *     BackgroundSolid { 0x000000_rgb },
+ *     TextAlign::CENTER,
+ *   },
+ * });
+ * @endcode
+ *
+ * ## Using container stylesheet
+ * Container stylesheet is applied only to children (both direct and indirect) of the container.
+ *
+ * @code{cpp}
+ * container->setExtraStylesheet({
+ *   {
+ *     t<ALabel>(),
+ *     BackgroundSolid { 0xff0000_rgb },
+ *     TextAlign::CENTER,
+ *   },
+ *   {
+ *     t<AButton>(),
+ *     BackgroundSolid { 0x000000_rgb },
+ *     TextAlign::CENTER,
+ *   },
+ * });
+ * @endcode
+ *
+ * ## Using with_style
+ * The code below draws "Hello" label with red background and centered alignment, and "World" label with blue background:
+ *
+ * @code{cpp}
+ * using namespace ass;
+ * setContents(Centered{
+ *   Label { "Hello" } with_style {
+ *     BackgroundSolid { 0xff0000_rgb },
+ *     TextAlign::CENTER,
+ *   },
+ *   Label { "World" } with_style {
+ *     BackgroundSolid { 0x0000ff_rgb },
+ *   },
+ * })
+ * @endcode
+ *
+ * ## Using setCustomStyle
+ * In case with_style is not applicable, you may use setCustomStyle instead.
+ *
+ * @code{cpp}
+ * using namespace ass;
+ *
+ * auto l = _new<ALabel>("Hello world");
+ * l->setCustomStyle({
+ *   BackgroundSolid { 0xff0000_rgb },
+ *   TextAlign::CENTER,
+ * }),
+ * setContents(Centered{ l });
+ * @endcode
+ *
+ * See below for BackgroundSolid and other declarations.
+ *
  */
 
 // Declarations

@@ -649,3 +649,8 @@ bool AView::hasIndirectParent(const _<AView>& v) {
 bool AView::wantsTouchscreenKeyboard() {
     return false;
 }
+
+void AView::setExtraStylesheet(AStylesheet&& extraStylesheet) {
+    mExtraStylesheet = _new<AStylesheet>(std::move(extraStylesheet));
+    invalidateAssHelper();
+}

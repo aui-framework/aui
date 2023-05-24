@@ -143,10 +143,16 @@ public:
 
     static const AColor BLACK;
     static const AColor WHITE;
+    static const AColor RED;
+    static const AColor GREEN;
+    static const AColor BLUE;
 };
 
 inline const AColor AColor::BLACK = {0.f, 0.f, 0.f, 1.f};
 inline const AColor AColor::WHITE = {1.f, 1.f, 1.f, 1.f};
+inline const AColor AColor::RED   = {1.f, 0.f, 0.f, 1.f};
+inline const AColor AColor::GREEN = {0.f, 1.f, 0.f, 1.f};
+inline const AColor AColor::BLUE  = {0.f, 0.f, 1.f, 1.f};
 
 
 inline std::ostream& operator<<(std::ostream& o, const AColor& color) {

@@ -339,6 +339,11 @@ public:
     /**
      * @see mExtraStylesheet
      */
+    void setExtraStylesheet(AStylesheet&& extraStylesheet);
+
+    /**
+     * @see mExtraStylesheet
+     */
     [[nodiscard]]
     const _<AStylesheet>& extraStylesheet() const noexcept {
         return mExtraStylesheet;
