@@ -177,9 +177,6 @@ public:
                 mBuffer.write(0); // null terminator
                 auto s = mBuffer.str();
                 mLogger.log(mLevel, mPrefix.toStdString().c_str(), s);
-                if (mLogger.mOnLogged) {
-                    mLogger.mOnLogged(mPrefix, s, mLevel);
-                }
             }
 
             template<typename T>
