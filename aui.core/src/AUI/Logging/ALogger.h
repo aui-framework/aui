@@ -235,7 +235,6 @@ public:
     static void onLogged(std::function<void(const AString&, const AString&, Level)> callback) {
         global().mOnLogged = std::move(callback);
     }
-
     /*
      * @brief Allows to perform some action (access safely)
      * on log file (which is opened all over the execution process)
@@ -281,7 +280,6 @@ public:
     {
         return {*this, level, prefix};
     }
-
 private:
 	ALogger();
 
