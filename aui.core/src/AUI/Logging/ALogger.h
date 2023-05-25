@@ -171,13 +171,15 @@ public:
                 mLogger(logger),
                 mLevel(level),
                 mPrefix(std::move(prefix)) {
-
             }
 
             ~LogWriter() {
                 mBuffer.write(0); // null terminator
                 auto s = mBuffer.str();
                 mLogger.log(mLevel, mPrefix.toStdString().c_str(), s);
+                if (mLogger.mOnLogged) {
+                    mLogger.mOnLogged(mPrefix, s, mLevel);
+                }
             }
 
             template<typename T>
@@ -233,6 +235,10 @@ public:
         return global().mLogFile.path();
     }
 
+    static void onLogged(std::function<void(const AString&, const AString&, Level)> callback) {
+        global().mOnLogged = std::move(callback);
+    }
+
     /*
      * @brief Allows to perform some action (access safely)
      * on log file (which is opened all over the execution process)
@@ -279,12 +285,12 @@ public:
         return {*this, level, prefix};
     }
 
-
 private:
 	ALogger();
 
     AFileOutputStream mLogFile;
     AMutex mLocalTimeMutex;
+    std::function<void(const AString&, const AString&, Level)> mOnLogged;
 
     bool mDebug = true;
 
