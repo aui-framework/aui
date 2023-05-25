@@ -171,6 +171,7 @@ public:
                 mLogger(logger),
                 mLevel(level),
                 mPrefix(std::move(prefix)) {
+
             }
 
             ~LogWriter() {
@@ -280,6 +281,8 @@ public:
     {
         return {*this, level, prefix};
     }
+
+
 private:
 	ALogger();
 
