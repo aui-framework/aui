@@ -233,7 +233,7 @@ public:
         return global().mLogFile.path();
     }
 
-    static void onLogged(std::function<void(const AString&, const AString&, Level)> callback) {
+    static void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
         global().mOnLogged = std::move(callback);
     }
     /*
@@ -288,7 +288,7 @@ private:
 
     AFileOutputStream mLogFile;
     AMutex mLocalTimeMutex;
-    std::function<void(const AString&, const AString&, Level)> mOnLogged;
+    std::function<void(const AString& prefix, const AString& message, Level level)> mOnLogged;
 
     bool mDebug = true;
 
