@@ -233,6 +233,9 @@ public:
         return global().mLogFile.path();
     }
 
+    static void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
+        global().mOnLogged = std::move(callback);
+    }
     /*
      * @brief Allows to perform some action (access safely)
      * on log file (which is opened all over the execution process)
@@ -285,6 +288,7 @@ private:
 
     AFileOutputStream mLogFile;
     AMutex mLocalTimeMutex;
+    std::function<void(const AString& prefix, const AString& message, Level level)> mOnLogged;
 
     bool mDebug = true;
 

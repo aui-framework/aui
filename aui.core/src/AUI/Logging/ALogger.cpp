@@ -42,6 +42,10 @@ ALogger& ALogger::global()
 
 void ALogger::log(Level level, std::string_view prefix, std::string_view message)
 {
+    if (mOnLogged) {
+        mOnLogged(prefix, message, level);
+    }
+
 #if AUI_PLATFORM_ANDROID
 
     int prio;
