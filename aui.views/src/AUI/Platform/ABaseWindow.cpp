@@ -26,7 +26,7 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
 #include <chrono>
-#include "Platform.h"
+#include "APlatform.h"
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Util/ALayoutInflater.h>
@@ -34,7 +34,7 @@
 #include <AUI/UITestState.h>
 
 ABaseWindow::ABaseWindow() {
-    mDpiRatio = Platform::getDpiRatio();
+    mDpiRatio = APlatform::getDpiRatio();
 }
 
 ABaseWindow::~ABaseWindow() {
@@ -44,7 +44,7 @@ ABaseWindow::~ABaseWindow() {
 }
 
 float ABaseWindow::fetchDpiFromSystem() const {
-    return Platform::getDpiRatio();
+    return APlatform::getDpiRatio();
 }
 
 void ABaseWindow::updateDpi() {

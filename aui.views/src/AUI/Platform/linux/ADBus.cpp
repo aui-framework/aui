@@ -14,23 +14,34 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by alex2772 on 5/28/23.
+//
 
-#include <AUI/Reflect/AEnumerate.h>
+#include "ADBus.h"
+#include "AUI/Util/ARaiiHelper.h"
 
-/**
- * @brief Controls the text alignment of AView.
- * @ingroup ass
- */
-enum class TextAlign {
-	LEFT,
-	CENTER,
-	RIGHT,
-    JUSTIFY,
-};
+ADBus& ADBus::inst() {
+    static ADBus d;
+    return d;
+}
 
-AUI_ENUM_VALUES(TextAlign, TextAlign::LEFT,
-                TextAlign::CENTER,
-                TextAlign::RIGHT,
-                TextAlign::JUSTIFY)
+
+template<aui::invocable Callback>
+void ADBus::throwExceptionOnError(Callback&& callback) {
+    callback();
+    if (dbus_error_is_set(mError.ptr())) {
+        throw ADBus::Exception(mError->name);
+    }
+}
+
+ADBus::ADBus() {
+    dbus_bus_get(DBUS_BUS_SESSION, mError.ptr());
+    throwExceptionOnError([&] { dbus_error_init(mError.ptr()); });
+    throwExceptionOnError([&] { mConnection = dbus_bus_get(DBUS_BUS_SESSION, mError.ptr()); });
+}
+
+ADBus::~ADBus() {
+    throwExceptionOnError([&] { dbus_error_free(mError.ptr()); });
+}
 

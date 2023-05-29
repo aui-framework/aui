@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "ACursor.h"
+#include <AUI/Platform/ACursor.h>
 #include "AUI/Traits/callables.h"
 #include "AUI/Image/IDrawable.h"
 #include "AUI/Platform/AWindow.h"

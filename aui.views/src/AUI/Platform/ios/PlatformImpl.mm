@@ -21,12 +21,16 @@
 #import <UIKit/UIKit.h>
 
 
-void Platform::playSystemSound(Sound s)
+void ADesktop::playSystemSound(SystemSound s)
 {
     // unsupported
 }
 
-float Platform::getDpiRatio()
+float APlatform::getDpiRatio()
 {
     return float([[UIScreen mainScreen] scale]);
+}
+
+void APlatform::openUrl(const AUrl &url) {
+
 }

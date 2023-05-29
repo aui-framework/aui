@@ -29,7 +29,7 @@
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
 #include "AUI/GL/OpenGLRenderer.h"
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/OpenGLRenderingContext.h"
 

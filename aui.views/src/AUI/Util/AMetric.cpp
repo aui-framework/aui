@@ -22,7 +22,7 @@
 #include "AUI/Common/AMap.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Platform/AWindow.h"
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 
 AMetric::AMetric(float value, Unit unit): mValue(value),
                                           mUnit(unit)
@@ -61,7 +61,7 @@ float AMetric::getValuePx() const
     if (AWindow::current())
         dpi = AWindow::current()->getDpiRatio();
     else
-        dpi = Platform::getDpiRatio();
+        dpi = APlatform::getDpiRatio();
 
     switch (mUnit)
     {
@@ -82,7 +82,7 @@ float AMetric::fromPxToMetric(float value, AMetric::Unit unit) {
     if (AWindow::current())
         dpi = AWindow::current()->getDpiRatio();
     else
-        dpi = Platform::getDpiRatio();
+        dpi = APlatform::getDpiRatio();
 
     switch (unit)
     {
@@ -103,7 +103,7 @@ float AMetric::getValueDp() const {
     if (AWindow::current())
         dpi = AWindow::current()->getDpiRatio();
     else
-        dpi = Platform::getDpiRatio();
+        dpi = APlatform::getDpiRatio();
 
     switch (mUnit)
     {

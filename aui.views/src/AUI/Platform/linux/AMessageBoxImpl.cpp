@@ -16,13 +16,12 @@
 
 #include "AUI/Platform/AMessageBox.h"
 #undef signals
-#include <gtk/gtk.h>
 #include <AUI/Util/kAUI.h>
 
-extern void aui_gtk_init();
 AMessageBox::ResultButton
 AMessageBox::show(AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,
                   AMessageBox::Button b) {
+    /*
     unsigned iconFlags = 0;
 
     aui_gtk_init();
@@ -38,7 +37,7 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
         case Icon::CRITICAL:
             iconFlags = GTK_MESSAGE_ERROR;
             break;
-}
+    }
 
     unsigned buttonFlags = 0;
 
@@ -83,4 +82,6 @@ AMessageBox::show(AWindow *parent, const AString &title, const AString &message,
             return ResultButton::YES;
     }
     return ResultButton::CANCEL;
+     */
+    return ResultButton::INVALID;
 }

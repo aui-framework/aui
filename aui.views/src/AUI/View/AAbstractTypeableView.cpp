@@ -23,7 +23,7 @@
 #include "AAbstractTypeableView.h"
 
 
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Render/RenderHints.h"
 #include "AUI/Util/ARaiiHelper.h"
