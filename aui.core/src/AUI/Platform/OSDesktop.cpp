@@ -21,6 +21,7 @@
 #include <AUI/Common/AException.h>
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Util/Util.h"
+#include "AUI/Util/kAUI.h"
 #include <AUI/Util/ACleanup.h>
 #include <AUI/Common/ATimer.h>
 
@@ -57,6 +58,18 @@ protected:
                     << "Execution of a task took " << time.count() << "us to execute which may cause UI lag.\n"
                     << f.stacktrace
                     << " - ...\n";
+            }
+        }
+
+        {
+            static std::size_t prevRecord = 1;
+            auto currentSize = mMessageQueue.size();
+            if (auto r = currentSize / 10000; r > prevRecord) {
+                prevRecord = r;
+                ALogger::warn("Performance") << currentSize << " tasks for UI thread?";
+            }
+            if (currentSize > 1'000'000) {
+                throw AException("{} tasks on UI thread - assuming application has frozen"_format(currentSize));
             }
         }
     }

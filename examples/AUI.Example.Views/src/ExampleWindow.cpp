@@ -191,7 +191,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                     Label { "System dialog" },
                     Vertical{
                         _new<AButton>("Show file chooser").connect(&AView::clicked, this, [&] {
-                            ADesktop::browseForFile(this).onSuccess([&](const APath& f) {
+                            mAsync << ADesktop::browseForFile(this).onSuccess([&](const APath& f) {
                                 if (f.empty()) {
                                     AMessageBox::show(this, "Result", "Cancelled");
                                 } else {
@@ -200,7 +200,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                             });
                         }),
                         _new<AButton>("Show folder chooser").connect(&AView::clicked, this, [&] {
-                            ADesktop::browseForDir(this).onSuccess([&](const APath& f) {
+                            mAsync << ADesktop::browseForDir(this).onSuccess([&](const APath& f) {
                                 if (f.empty()) {
                                     AMessageBox::show(this, "Result", "Cancelled");
                                 } else {

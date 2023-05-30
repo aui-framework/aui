@@ -22,12 +22,19 @@
 #include <AUI/Util/ARaiiHelper.h>
 #include "AUI/Common/AException.h"
 #include <dbus/dbus.h>
+#include <list>
 
 struct DBusError;
 struct DBusConnection;
 
 namespace aui::dbus {
-    using Variant = std::variant<
+    class ObjectPath: public std::string {
+        using std::string::string;
+    };
+
+    struct Unknown;
+
+    using VariantImpl = std::variant<
             std::nullopt_t,      // DBUS_TYPE_INVALID
             std::uint8_t,        // DBUS_TYPE_BYTE
             bool,                // DBUS_TYPE_BOOLEAN
@@ -38,8 +45,14 @@ namespace aui::dbus {
             std::int64_t,        // DBUS_TYPE_INT64
             std::uint64_t,       // DBUS_TYPE_UINT64
             double,              // DBUS_TYPE_DOUBLE
-            std::string          // DBUS_TYPE_STRING
+            std::string,         // DBUS_TYPE_STRING
+            ObjectPath,          // DBUS_TYPE_OBJECT_PATH
+            AVector<Unknown>     // DBUS_TYPE_ARRAY
     >;
+    struct Variant: VariantImpl {
+        using VariantImpl::variant;
+        Variant(): VariantImpl(std::nullopt) {}
+    };
 
     template<typename T>
     struct converter;
@@ -58,6 +71,10 @@ namespace aui::dbus {
     void iter_append(DBusMessageIter* iter, const T& value) {
         converter<T>::iter_append(iter, value);
     }
+    template<convertible T>
+    T iter_get(DBusMessageIter* iter) {
+        return converter<T>::iter_get(iter);
+    }
 
     namespace impl {
         template<typename T, char dbusType = DBUS_TYPE_INVALID>
@@ -66,6 +83,14 @@ namespace aui::dbus {
 
             static void iter_append(DBusMessageIter* iter, const T& t) {
                 dbus_message_iter_append_basic(iter, dbusType, &t);
+            }
+            static T iter_get(DBusMessageIter* iter) {
+                if (auto got = dbus_message_iter_get_arg_type(iter); got != dbusType) {
+                    throw AException("type error: expected '{:c}', got '{:c}'"_format(dbusType, got));
+                }
+                T t;
+                dbus_message_iter_get_basic(iter, &t);
+                return t;
             }
         };
     }
@@ -76,6 +101,13 @@ namespace aui::dbus {
         static void iter_append(DBusMessageIter* iter, std::nullopt_t) {
             int v = 0;
             dbus_message_iter_append_basic(iter, DBUS_TYPE_INVALID, &v);
+        }
+
+        static auto iter_get(DBusMessageIter* iter) {
+            if (auto got = dbus_message_iter_get_arg_type(iter); got != DBUS_TYPE_INVALID) {
+                throw AException("type error: expected '{:c}', got '{:c}'"_format(DBUS_TYPE_INVALID, got));
+            }
+            return std::nullopt;
         }
     };
 
@@ -93,11 +125,27 @@ namespace aui::dbus {
         static void iter_append(DBusMessageIter* iter, const std::string& t) {
             converter<const char*>::iter_append(iter, t.c_str());
         }
+        static std::string iter_get(DBusMessageIter* iter) {
+            return converter<const char*>::iter_get(iter);
+        }
     };
 
     template<> struct converter<AString>: converter<std::string> {
         static void iter_append(DBusMessageIter* iter, const AString& t) {
             converter<std::string>::iter_append(iter, t.toStdString());
+        }
+        static AString iter_get(DBusMessageIter* iter) {
+            return converter<const char*>::iter_get(iter);
+        }
+    };
+    template<> struct converter<ObjectPath>: impl::basic_converter<const char*, DBUS_TYPE_OBJECT_PATH> {
+        using super = impl::basic_converter<const char*, DBUS_TYPE_OBJECT_PATH>;
+        static void iter_append(DBusMessageIter* iter, const ObjectPath& t) {
+            super::iter_append(iter, t.c_str());
+        }
+
+        static ObjectPath iter_get(DBusMessageIter* iter) {
+            return super::iter_get(iter);
         }
     };
     template<std::size_t N> struct converter<char[N]>: converter<const char*> {};
@@ -105,7 +153,7 @@ namespace aui::dbus {
 
     template<convertible T>
     struct converter<AVector<T>> {
-        static inline std::string signature = fmt::format("a{}", converter<T>::signature);
+        static inline std::string signature = fmt::format("a", converter<T>::signature);
 
         static void iter_append(DBusMessageIter* iter, const AVector<T>& t) {
             DBusMessageIter sub;
@@ -121,32 +169,144 @@ namespace aui::dbus {
                 aui::dbus::iter_append(&sub, v);
             }
         }
+        static AVector<T> iter_get(DBusMessageIter* iter) {
+            if (auto got = dbus_message_iter_get_arg_type(iter); got != DBUS_TYPE_ARRAY) {
+                throw AException("type error: array expected, got '{:c}'"_format(got));
+            }
+            DBusMessageIter sub;
+            dbus_message_iter_recurse(iter, &sub);
+
+            AVector<T> result;
+            for (;;) {
+                result << aui::dbus::iter_get<T>(&sub);
+                if (!dbus_message_iter_next(&sub)) break;
+            }
+
+            return result;
+        }
     };
 
-    template<convertible... Types>
-    struct converter<std::tuple<Types...>> {
-        static inline std::string signature = "{" + (... + converter<Types>::signature) + "}";
+    template<convertible K, convertible V>
+    struct converter<AMap<K, V>> {
+        static inline std::string signature = fmt::format("a{{{}{}}}", converter<K>::signature, converter<V>::signature);
 
-        static void iter_append(DBusMessageIter* iter, const std::tuple<Types...>& t) {
+        static void iter_append(DBusMessageIter* iter, const AMap<K, V>& t) {
             DBusMessageIter sub;
-            if (!dbus_message_iter_open_container(iter, DBUS_TYPE_STRUCT, nullptr, &sub)) {
+            if (!dbus_message_iter_open_container(iter, DBUS_TYPE_ARRAY, fmt::format("{{{}{}}}", converter<K>::signature, converter<V>::signature).c_str(), &sub)) {
                 throw AException("dbus_message_iter_open_container failed");
             }
             ARaiiHelper h = [&] {
                 dbus_message_iter_close_container(iter, &sub);
             };
 
+            for (const auto&[k, v] : t) {
+                DBusMessageIter item;
+                dbus_message_iter_open_container(&sub, DBUS_TYPE_DICT_ENTRY, fmt::format("{}{}", converter<K>::signature, converter<V>::signature).c_str(), &item);
+                ARaiiHelper r = [&] {
+                    dbus_message_iter_close_container(&sub, &item);
+                };
+
+                aui::dbus::iter_append(&item, k);
+                aui::dbus::iter_append(&item, v);
+            }
+        }
+        static AMap<K, V> iter_get(DBusMessageIter* iter) {
+            if (auto got = dbus_message_iter_get_arg_type(iter); got != DBUS_TYPE_ARRAY) {
+                throw AException("type error: array expected, got '{:c}'"_format(got));
+            }
+            DBusMessageIter sub;
+            dbus_message_iter_recurse(iter, &sub);
+
+            AMap<K, V> result;
+            for (;;) {
+                assert(dbus_message_iter_get_arg_type(&sub) == DBUS_TYPE_DICT_ENTRY);
+                DBusMessageIter item;
+                dbus_message_iter_recurse(&sub, &item);
+                auto k = aui::dbus::iter_get<K>(&item);
+                if (!dbus_message_iter_next(&item)) {
+                    throw AException("bad dict");
+                }
+                auto v = aui::dbus::iter_get<V>(&item);
+                result[k] = v;
+                if (!dbus_message_iter_next(&sub)) break;
+            }
+
+            return result;
+        }
+    };
+
+    template<convertible... Types>
+    struct converter<std::tuple<Types...>> {
+        static inline std::string signature = "(" + (... + converter<Types>::signature) + ")";
+
+        static void iter_append(DBusMessageIter* iter, const std::tuple<Types...>& t) {
+            if (auto got = dbus_message_iter_get_arg_type(iter); got != DBUS_TYPE_STRUCT) {
+                throw AException("type error: struct expected, got '{:c}'"_format(got));
+            }
+
+            DBusMessageIter sub;
+            dbus_message_iter_recurse(iter, &sub);
+
             std::apply([&](const auto&... args){
                 (..., aui::dbus::iter_append(&sub, args));
             }, t);
         }
+
+        static std::tuple<Types...> iter_get(DBusMessageIter* iter) {
+            if (auto got = dbus_message_iter_get_arg_type(iter); got != DBUS_TYPE_STRUCT) {
+                throw AException("type error: struct expected, got '{:c}'"_format(got));
+            }
+
+            DBusMessageIter sub;
+            dbus_message_iter_recurse(iter, &sub);
+
+            bool hasNext = true;
+            return aui::tuple_visitor<std::tuple<Types...>>::for_each_make_tuple([&]<typename T>() {
+                if (!hasNext) {
+                    throw AException("too few arguments");
+                }
+                auto v = aui::dbus::iter_get<T>(&sub);
+                hasNext = dbus_message_iter_next(&sub);
+                return v;
+            });
+        }
     };
+
     template<>
-    struct converter<Variant> {
+    struct API_AUI_VIEWS converter<Variant> {
         static inline std::string signature = "v";
 
         static void iter_append(DBusMessageIter* iter, const Variant & t) {
+            // TODO
+            assert(0);
         }
+
+        static Variant iter_get(DBusMessageIter* iter);
+    };
+
+    struct Unknown {
+    public:
+        explicit Unknown(const DBusMessageIter& mIter) : mIter(mIter) {}
+
+        template<convertible T>
+        T as() {
+            return aui::dbus::iter_get<T>(&mIter);
+        }
+
+    private:
+        DBusMessageIter mIter;
+    };
+
+    template<>
+    struct API_AUI_VIEWS converter<Unknown> {
+        static inline std::string signature = "";
+
+        static void iter_append(DBusMessageIter* iter, const Unknown& t) {
+            // TODO
+            assert(0);
+        }
+
+        static Unknown iter_get(DBusMessageIter* iter);
     };
 }
 
@@ -215,19 +375,81 @@ public:
         }
 
         if constexpr (!std::is_void_v<Return>) {
-
+            if (!dbus_message_iter_init(msg.get(), &dbusArgs)) {
+                throw ADBus::Exception(formatError("dbus replied no arguments"));
+            }
+            return aui::dbus::iter_get<Return>(&dbusArgs);
         }
     }
 
+    template<aui::not_overloaded_lambda Callback>
+    void addSignalListener(aui::dbus::ObjectPath object, const AString& interface, const AString& signal, Callback&& callback) {
+        addListener([object = std::move(object),
+                     interface = interface.toStdString(),
+                     signal = signal.toStdString(),
+                     callback = std::forward<Callback>(callback)](DBusMessage* msg) {
+            if (dbus_message_is_signal(msg, DBUS_INTERFACE_LOCAL, "Disconnected")) {
+                return DBUS_HANDLER_RESULT_HANDLED;
+            }
+
+            if (!dbus_message_is_signal(msg, interface.c_str(), signal.c_str())) {
+                return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+            }
+
+            if (object != std::string_view(dbus_message_get_path(msg))) {
+                return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
+            }
+
+            using argz = typename aui::lambda_info<Callback>::args;
+            if constexpr (std::tuple_size_v<argz> > 0) {
+                DBusMessageIter dbusArgs;
+                if (!dbus_message_iter_init(msg, &dbusArgs)) {
+                    throw ADBus::Exception("dbus replied no arguments");
+                }
+
+                bool hasNext = true;
+                auto args = aui::tuple_visitor<argz>::for_each_make_tuple([&]<typename T>() {
+                    if (!hasNext) {
+                        throw ADBus::Exception("too few arguments");
+                    }
+                    auto v = aui::dbus::iter_get<T>(&dbusArgs);
+                    hasNext = dbus_message_iter_next(&dbusArgs);
+                    return v;
+                });
+
+                std::apply(callback, std::move(args));
+            } else {
+                callback();
+            }
+
+
+            return DBUS_HANDLER_RESULT_HANDLED;
+        });
+    }
+
+    void processMessages();
 
 private:
-
-    template<aui::invocable Callback>
-    void throwExceptionOnError(Callback&& callback);
+    struct RawMessageListener {
+        ADBus* parent;
+        using Callback = std::function<DBusHandlerResult(DBusMessage* message)>;
+        Callback function;
+    };
+    std::list<RawMessageListener> mListeners; // guarantees safe pointers to it's elements
+    aui::fast_pimpl<DBusError, sizeof(void*) * 3 + 20, alignof(void*)> mError;
+    DBusConnection* mConnection = nullptr;
+    std::atomic_bool mProcessingScheduled = false;
 
     ADBus();
     ~ADBus();
 
-    aui::fast_pimpl<DBusError, sizeof(void*) * 3 + 20, alignof(void*)> mError;
-    DBusConnection* mConnection = nullptr;
+    template<aui::invocable Callback>
+    void throwExceptionOnError(Callback&& callback);
+    void addListener(RawMessageListener::Callback listener);
+    static dbus_bool_t addWatch(DBusWatch* watch, void* data);
+
+    static DBusHandlerResult listener(DBusConnection     *connection,
+                                      DBusMessage        *message,
+                                      void               *user_data) noexcept;
+    static void deleter(void* userData) noexcept;
 };

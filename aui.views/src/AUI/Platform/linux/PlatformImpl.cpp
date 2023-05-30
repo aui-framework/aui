@@ -62,7 +62,7 @@ void APlatform::openUrl(const AUrl& url) {
                                    "OpenURI",                         // method
                                    "", // parent
                                    url.full(),
-                                   AVector<std::tuple<std::string, aui::dbus::Variant>>()
+                                   AMap<std::string, aui::dbus::Variant>()
         );
     } catch (const AException& e) {
         ALogger::err("APlatform") << "Failed to openUrl " << url.full() << ": " << e;

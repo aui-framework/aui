@@ -15,73 +15,67 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "AUI/Platform/AMessageBox.h"
-#undef signals
-#include <AUI/Util/kAUI.h>
+#include "AUI/Platform/AWindow.h"
+#include "AUI/Util/UIBuildingHelpers.h"
+#include "AUI/View/AText.h"
+#include "AUI/View/AButton.h"
+#include "AUI/Thread/AEventLoop.h"
+#include "AUI/Util/ARaiiHelper.h"
+
+
+namespace {
+    class MessageBox: public AWindow {
+    public:
+        MessageBox(AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,
+                   AMessageBox::Button b): AWindow(title, 300_dp, 200_dp, parent, WindowStyle::MODAL | WindowStyle::NO_MINIMIZE_MAXIMIZE | WindowStyle::NO_RESIZE) {
+            using namespace declarative;
+            setContents(Vertical {
+                AText::fromString(message),
+                Centered {
+                    [&]() -> _<AView> {
+                        switch (b) {
+                            case AMessageBox::Button::OK: return Button { "OK"_i18n }.clicked(me::onOk);
+                            case AMessageBox::Button::OK_CANCEL: return Horizontal {
+                                Button { "OK"_i18n }.clicked(me::onOk),
+                                Button { "Cancel"_i18n }.clicked(me::onCancel),
+                            };
+                            case AMessageBox::Button::YES_NO: return Horizontal {
+                                Button { "Yes"_i18n }.clicked(me::onYes),
+                                Button { "No"_i18n }.clicked(me::onNo),
+                            };
+                        }
+                    },
+                }
+            });
+        }
+    signals:
+        emits<AMessageBox::ResultButton /* result */> status;
+
+    private:
+        void onOk() {
+            emit status(AMessageBox::ResultButton::OK);
+        }
+        void onCancel() {
+            emit status(AMessageBox::ResultButton::CANCEL);
+        }
+        void onYes() {
+            emit status(AMessageBox::ResultButton::YES);
+        }
+        void onNo() {
+            emit status(AMessageBox::ResultButton::NO);
+        }
+    };
+}
 
 AMessageBox::ResultButton
 AMessageBox::show(AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,
                   AMessageBox::Button b) {
-    /*
-    unsigned iconFlags = 0;
 
-    aui_gtk_init();
+    auto a = _new<MessageBox>(parent, title, message, icon, b);
+    AObject::connect(a->status, a, [a = a.weak()](AMessageBox::ResultButton r) {
+        AUI_NULLSAFE(a.lock())->close();
+    });
+    a->show();
 
-    // Icons
-    switch (icon) {
-        case Icon::INFO:
-            iconFlags = GTK_MESSAGE_INFO;
-            break;
-        case Icon::WARNING:
-            iconFlags = GTK_MESSAGE_WARNING;
-            break;
-        case Icon::CRITICAL:
-            iconFlags = GTK_MESSAGE_ERROR;
-            break;
-    }
-
-    unsigned buttonFlags = 0;
-
-    // Flags
-    if (b == Button::OK) {
-    }
-    switch (b) {
-        case Button::OK:
-            buttonFlags = GTK_BUTTONS_OK;
-            break;
-        case Button::YES_NO:
-            buttonFlags = GTK_BUTTONS_YES_NO;
-            break;
-        case Button::OK_CANCEL:
-            buttonFlags = GTK_BUTTONS_CANCEL;
-            break;
-    }
-    if (b == Button::YES_NO) {
-        buttonFlags |= GTK_BUTTONS_YES_NO;
-    } else if (b == Button::OK_CANCEL) {
-        buttonFlags |= GTK_BUTTONS_CANCEL;
-    }
-
-    auto dialog = gtk_message_dialog_new(nullptr,
-                                         GTK_DIALOG_MODAL,
-                                         (GtkMessageType)iconFlags,
-                                         (GtkButtonsType)buttonFlags,
-                                         "%ls", title.c_str());
-    gtk_message_dialog_format_secondary_text(GTK_MESSAGE_DIALOG(dialog), "%ls", message.c_str());
-    gtk_window_set_keep_above(GTK_WINDOW(dialog), true);
-    gtk_window_activate_focus(GTK_WINDOW(dialog));
-    int resp = gtk_dialog_run(GTK_DIALOG(dialog));
-    gtk_widget_destroy(GTK_WIDGET(dialog));
-
-    while (gtk_events_pending()) {
-        gtk_main_iteration();
-    }
-    switch (resp) {
-        case GTK_RESPONSE_ACCEPT:
-            return ResultButton::OK;
-        case GTK_RESPONSE_YES:
-            return ResultButton::YES;
-    }
-    return ResultButton::CANCEL;
-     */
     return ResultButton::INVALID;
 }

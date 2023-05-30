@@ -170,9 +170,7 @@ void SoftwareRenderer::drawRect(const ABrush& brush,
 
     int x, y;
 
-    auto sw = aui::lambda_overloaded {
-            BrushHelper(this, x, y, end, transformedPosition),
-    };
+    auto sw = BrushHelper(this, x, y, end, transformedPosition);
 
     for (y = transformedPosition.y; y < end.y; ++y) {
         for (x = transformedPosition.x; x < end.x; ++x) {
@@ -190,9 +188,7 @@ void SoftwareRenderer::drawRoundedRect(const ABrush& brush,
 
     int x, y;
 
-    auto sw = aui::lambda_overloaded{
-            BrushHelper(this, x, y, end, r.transformedPosition),
-    };
+    auto sw = BrushHelper(this, x, y, end, r.transformedPosition);
 
     for (y = r.transformedPosition.y; y < end.y; ++y) {
         for (x = r.transformedPosition.x; x < end.x; ++x) {
@@ -214,9 +210,7 @@ void SoftwareRenderer::drawRoundedRectAntialiased(const ABrush& brush,
 
     int x, y;
 
-    auto sw = aui::lambda_overloaded{
-            BrushHelper(this, x, y, end, r.transformedPosition),
-    };
+    auto sw = BrushHelper(this, x, y, end, r.transformedPosition);
 
     for (y = r.transformedPosition.y; y < end.y; ++y) {
         for (x = r.transformedPosition.x; x < end.x; ++x) {
@@ -254,9 +248,7 @@ void SoftwareRenderer::drawRectBorder(const ABrush& brush,
 
     int x, y;
 
-    auto sw = aui::lambda_overloaded{
-            BrushHelper(this, x, y, end, outside.transformedPosition),
-    };
+    auto sw = BrushHelper(this, x, y, end, outside.transformedPosition);
 
     for (y = outside.transformedPosition.y; y < end.y; ++y) {
         for (x = outside.transformedPosition.x; x < end.x; ++x) {
