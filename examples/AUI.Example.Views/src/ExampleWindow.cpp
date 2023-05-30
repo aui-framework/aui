@@ -395,16 +395,13 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 ACursor{ ":img/logo.svg", 64 },
             },
             Horizontal {
-                Stacked {
-                    Label{"github.com/aui-framework/aui"}.clicked(this, [] {
-                        APlatform::openUrl("https://github.com/aui-framework/aui");
-                    }) with_style{
-                        TextColor{AColor::BLUE},
-                        BorderBottom{1_px, AColor::BLUE},
-                        ACursor::POINTER,
-                    },
-                    Button { "Ты пидор" },
-                }
+                Label{"github.com/aui-framework/aui"}.clicked(this, [] {
+                    APlatform::openUrl("https://github.com/aui-framework/aui");
+                }) with_style{
+                    TextColor{AColor::BLUE},
+                    BorderBottom{1_px, AColor::BLUE},
+                    ACursor::POINTER,
+                },
             }
 
         } let { it->setExpanding(); }, "Others");
