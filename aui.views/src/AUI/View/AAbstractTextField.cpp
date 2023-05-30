@@ -19,7 +19,8 @@
 #include "AAbstractTextField.h"
 
 
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
+#include "AUI/Platform/ADesktop.h"
 #include <AUI/Util/AMetric.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Render/RenderHints.h>
@@ -191,7 +192,7 @@ void AAbstractTextField::onCharEntered(wchar_t c) {
     {
         mContents = std::move(contentsCopy);
         mCursorIndex = cursorIndexCopy;
-        Platform::playSystemSound(Platform::S_ASTERISK);
+        ADesktop::playSystemSound(ADesktop::SystemSound::ASTERISK);
     }
     emit textChanging(mContents);
 }

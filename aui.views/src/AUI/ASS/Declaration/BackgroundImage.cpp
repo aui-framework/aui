@@ -21,7 +21,7 @@
 
 #include "BackgroundImage.h"
 #include <AUI/Platform/AWindow.h>
-#include <AUI/Platform/Platform.h>
+#include "AUI/Platform/APlatform.h"
 #include <AUI/Render/RenderHints.h>
 #include <AUI/ASS/AAssHelper.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -125,7 +125,7 @@ void ass::decl::Declaration<ass::BackgroundImage>::renderFor(AView* view) {
                     break;
                 }
                 case Sizing::SPLIT_2X2: {
-                    auto ratio = Platform::getDpiRatio() / info.dpiMargin.or_default(1.f);
+                    auto ratio = APlatform::getDpiRatio() / info.dpiMargin.or_default(1.f);
                     auto textureSize = glm::vec2(drawable->getSizeHint()) * ratio;
                     auto textureWidth = textureSize.x;
                     auto textureHeight = textureSize.y;

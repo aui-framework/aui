@@ -1,18 +1,18 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+//  AUI Framework - Declarative UI toolkit for modern C++20
+//  Copyright (C) 2020-2023 Alex2772
 //
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+//  Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include <AUI/View/ARadioButton.h>
 #include <AUI/View/ARadioGroup.h>
@@ -38,6 +38,7 @@
 #include "AUI/View/ADragNDropView.h"
 #include "AUI/Util/ALayoutInflater.h"
 #include "AUI/View/ASlider.h"
+#include "AUI/Platform/APlatform.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
@@ -190,7 +191,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                     Label { "System dialog" },
                     Vertical{
                         _new<AButton>("Show file chooser").connect(&AView::clicked, this, [&] {
-                            ADesktop::browseForFile(this).onSuccess([&](const APath& f) {
+                            mAsync << ADesktop::browseForFile(this).onSuccess([&](const APath& f) {
                                 if (f.empty()) {
                                     AMessageBox::show(this, "Result", "Cancelled");
                                 } else {
@@ -199,7 +200,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                             });
                         }),
                         _new<AButton>("Show folder chooser").connect(&AView::clicked, this, [&] {
-                            ADesktop::browseForDir(this).onSuccess([&](const APath& f) {
+                            mAsync << ADesktop::browseForDir(this).onSuccess([&](const APath& f) {
                                 if (f.empty()) {
                                     AMessageBox::show(this, "Result", "Cancelled");
                                 } else {
@@ -392,6 +393,14 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
             Label { "Custom cursor" } with_style {
                 ACursor{ ":img/logo.svg", 64 },
+            },
+            Centered {
+                Label{"github.com/aui-framework/aui"}.clicked(this, [] {
+                    APlatform::openUrl("https://github.com/aui-framework/aui");
+                }) with_style{
+                    TextColor{AColor::BLUE},
+                    BorderBottom{1_px, AColor::BLUE}
+                },
             }
 
         } let { it->setExpanding(); }, "Others");

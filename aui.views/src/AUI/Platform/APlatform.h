@@ -1,4 +1,4 @@
-//  AUI Framework - Declarative UI toolkit for modern C++20
+﻿//  AUI Framework - Declarative UI toolkit for modern C++20
 //  Copyright (C) 2020-2023 Alex2772
 //
 //  This library is free software; you can redistribute it and/or
@@ -16,21 +16,16 @@
 
 #pragma once
 
-#include <AUI/Reflect/AEnumerate.h>
+#include "AUI/Views.h"
+
+class AString;
 
 /**
- * @brief Controls the text alignment of AView.
- * @ingroup ass
+ * @brief System-specific functions.
  */
-enum class TextAlign {
-	LEFT,
-	CENTER,
-	RIGHT,
-    JUSTIFY,
+namespace APlatform
+{
+    API_AUI_VIEWS AString getFontPath(const AString& font);
+    API_AUI_VIEWS void openUrl(const AUrl& url);
+    API_AUI_VIEWS float getDpiRatio();
 };
-
-AUI_ENUM_VALUES(TextAlign, TextAlign::LEFT,
-                TextAlign::CENTER,
-                TextAlign::RIGHT,
-                TextAlign::JUSTIFY)
-

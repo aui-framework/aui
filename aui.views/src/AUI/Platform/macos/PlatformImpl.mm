@@ -22,12 +22,11 @@
 
 
 
-void Platform::playSystemSound(Sound s)
-{
-    // unsupported
-}
-
-float Platform::getDpiRatio()
+float APlatform::getDpiRatio()
 {
     return float([[NSScreen mainScreen] backingScaleFactor]);
+}
+
+void APlatform::openUrl(const AUrl &url) {
+
 }

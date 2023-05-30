@@ -14,23 +14,39 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+#include <AUI/Platform/ADesktop.h>
+#include <AUI/Util/ARaiiHelper.h>
 
-#include <AUI/Reflect/AEnumerate.h>
+glm::ivec2 ADesktop::getMousePosition() {
+    return {};
+}
 
-/**
- * @brief Controls the text alignment of AView.
- * @ingroup ass
- */
-enum class TextAlign {
-	LEFT,
-	CENTER,
-	RIGHT,
-    JUSTIFY,
-};
+void ADesktop::setMousePos(const glm::ivec2 &pos) {
 
-AUI_ENUM_VALUES(TextAlign, TextAlign::LEFT,
-                TextAlign::CENTER,
-                TextAlign::RIGHT,
-                TextAlign::JUSTIFY)
+}
 
+AFuture<APath> ADesktop::browseForDir(ABaseWindow* parent,
+                                      const APath& startingLocation)  {
+    return async {
+        return APath();
+    };
+}
+
+AFuture<APath>
+ADesktop::browseForFile(ABaseWindow* parent,
+                        const APath& startingLocation,
+                        const AVector<FileExtension>& extensions) {
+    return async {
+        return APath();
+    };
+}
+
+
+_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+    return nullptr;
+}
+
+void ADesktop::playSystemSound(ADesktop::SystemSound s)
+{
+    // unsupported
+}

@@ -1,6 +1,8 @@
 package com.github.aui.android
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import androidx.appcompat.app.AlertDialog
 
 object AUI {
@@ -28,6 +30,11 @@ object AUI {
     @JvmStatic
     private fun hideKeyboard() {
         // TODO
+    }
+    @JvmStatic
+    private fun openUrl(url: String) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+        MyGLSurfaceView.ourCurrentSurface?.context?.startActivity(intent)
     }
 
     @JvmStatic

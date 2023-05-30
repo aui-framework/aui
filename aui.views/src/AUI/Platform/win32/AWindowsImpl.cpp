@@ -29,7 +29,7 @@
 #include "AUI/Thread/AThread.h"
 #include "Ole.h"
 #include "Win32Util.h"
-#include <AUI/Platform/Platform.h>
+#include "AUI/Platform/APlatform.h"
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/AWindowManager.h>
 #include <AUI/Platform/ADesktop.h>
@@ -344,7 +344,7 @@ float AWindow::fetchDpiFromSystem() const {
         if (GetDpiForWindow) {
             return GetDpiForWindow(mHandle) / 96.f;
         } else {
-            return Platform::getDpiRatio();
+            return APlatform::getDpiRatio();
         }
     }
     return 1.f;
