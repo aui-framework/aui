@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Common/AString.h"
 #include "AUI/IO/APath.h"
 #include <AUI/Util/kAUI.h>
@@ -28,7 +28,9 @@ float APlatform::getDpiRatio()
 }
 
 void APlatform::openUrl(const AUrl &url) {
-    UIApplication *application = [UIApplication sharedApplication];
-    NSURL *URL = [NSURL URLWithString:url.full().c_str()];
-    [application openURL:URL options:@{} completionHandler:nil];
+    @autoreleasepool {
+        UIApplication *application = [UIApplication sharedApplication];
+        NSURL *URL = [NSURL URLWithString:[NSString stringWithUTF8String: url.full().toStdString().c_str()]];
+        [application openURL:URL options:@{} completionHandler:nil];
+    }
 }
