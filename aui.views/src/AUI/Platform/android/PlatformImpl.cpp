@@ -22,7 +22,7 @@
 
 
 
-void ADesktop::playSystemSound(SystemSound s)
+void ADesktop::playSystemSound(ADesktop::SystemSound s)
 {
     // unsupported
 }

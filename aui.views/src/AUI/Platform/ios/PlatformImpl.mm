@@ -21,7 +21,7 @@
 #import <UIKit/UIKit.h>
 
 
-void ADesktop::playSystemSound(SystemSound s)
+void ADesktop::playSystemSound(ADesktop::SystemSound s)
 {
     // unsupported
 }

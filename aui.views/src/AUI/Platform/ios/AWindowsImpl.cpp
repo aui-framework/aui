@@ -104,7 +104,7 @@ void AWindow::flagRedraw() {
 }
 
 float AWindow::fetchDpiFromSystem() const {
-    return Platform::getDpiRatio();
+    return APlatform::getDpiRatio();
 }
 
 

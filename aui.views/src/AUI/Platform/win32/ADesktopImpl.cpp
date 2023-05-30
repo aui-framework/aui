@@ -205,3 +205,18 @@ _<IDrawable> ADesktop::iconOfFile(const APath& file) {
     }
     return nullptr;
 }
+
+void ADesktop::playSystemSound(ADesktop::SystemSound s)
+{
+    switch (s)
+    {
+        case ADesktop::SystemSound::QUESTION:
+            PlaySound(L"SystemQuestion", nullptr, SND_ASYNC);
+            break;
+
+        case ADesktop::SystemSound::ASTERISK:
+            PlaySound(L"SystemAsterisk", nullptr, SND_ASYNC);
+            break;
+
+    }
+}

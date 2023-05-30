@@ -20,20 +20,6 @@
 #include <AUI/Util/kAUI.h>
 
 #include <Windows.h>
-void ADesktop::playSystemSound(SystemSound s)
-{
-    switch (s)
-    {
-    case S_QUESTION:
-        PlaySound(L"SystemQuestion", nullptr, SND_ASYNC);
-        break;
-
-    case S_ASTERISK:
-        PlaySound(L"SystemAsterisk", nullptr, SND_ASYNC);
-        break;
-
-    }
-}
 
 float APlatform::getDpiRatio()
 {
@@ -46,5 +32,5 @@ float APlatform::getDpiRatio()
 }
 
 void APlatform::openUrl(const AUrl& url) {
-    ShellExecute(nullptr, L"open", url.c_str(), nullptr, nullptr, SW_NORMAL);
+    ShellExecute(nullptr, L"open", url.full().c_str(), nullptr, nullptr, SW_NORMAL);
 }

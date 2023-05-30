@@ -53,7 +53,7 @@ namespace ADesktop
     /**
      * @brief Play system sound asynchronously.
      */
-    API_AUI_VIEWS void playSystemSound(SystemSound s);
+    API_AUI_VIEWS void playSystemSound(ADesktop::SystemSound s);
 
     /**
      * @brief Opens native browse for directory dialog.

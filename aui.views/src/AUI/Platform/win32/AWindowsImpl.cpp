@@ -344,7 +344,7 @@ float AWindow::fetchDpiFromSystem() const {
         if (GetDpiForWindow) {
             return GetDpiForWindow(mHandle) / 96.f;
         } else {
-            return Platform::getDpiRatio();
+            return APlatform::getDpiRatio();
         }
     }
     return 1.f;
