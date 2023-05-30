@@ -22,17 +22,11 @@
 
 
 
-void ADesktop::playSystemSound(ADesktop::SystemSound s)
-{
-    // unsupported
-}
-
-
 float APlatform::getDpiRatio()
 {
     return AAndroid::getDpiRatio();
 }
 
 void APlatform::openUrl(const AUrl &url) {
-
+    AAndroid::openUrl(url.full());
 }

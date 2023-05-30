@@ -22,6 +22,7 @@ namespace AAndroid {
     JNIEnv* getJNI();
     void setJavaVM(JavaVM* vm);
     float getDpiRatio();
+    void openUrl(const AString& url);
     void requestRedraw();
     void showVirtualKeyboard();
     void hideVirtualKeyboard();

@@ -44,3 +44,8 @@ ADesktop::browseForFile(ABaseWindow* parent,
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {
     return nullptr;
 }
+
+void ADesktop::playSystemSound(ADesktop::SystemSound s)
+{
+    // unsupported
+}

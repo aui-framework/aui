@@ -21,10 +21,6 @@
 #import <UIKit/UIKit.h>
 
 
-void ADesktop::playSystemSound(ADesktop::SystemSound s)
-{
-    // unsupported
-}
 
 float APlatform::getDpiRatio()
 {

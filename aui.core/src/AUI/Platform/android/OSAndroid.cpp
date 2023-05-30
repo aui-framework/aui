@@ -19,6 +19,7 @@
 #include "OSAndroid.h"
 #include <AUI/Platform/Entry.h>
 #include <unistd.h>
+#include <AUI/Common/AByteBuffer.h>
 
 JavaVM* _gVM;
 
@@ -73,6 +74,18 @@ float AAndroid::getDpiRatio() {
     }
     auto methodGetDpiRatio = j->GetStaticMethodID(_gClassAUI.clazz(), "getDpiRatio", "()F");
     return j->CallStaticFloatMethod(_gClassAUI.clazz(), methodGetDpiRatio);
+}
+void AAndroid::openUrl(const AString& url) {
+    auto j = getJNI();
+    if (!_gClassAUI) {
+        _gClassAUI = j->FindClass("com/github/aui/android/AUI");
+        if (!_gClassAUI) {
+            return;
+        }
+    }
+    auto methodOpenUrl = j->GetStaticMethodID(_gClassAUI.clazz(), "openUrl", "(Ljava/lang/String;)V");
+    std::u16string utf16 = { url.begin(), url.end() }; // TODO
+    j->CallStaticVoidMethod(_gClassAUI.clazz(), methodOpenUrl, j->NewString(reinterpret_cast<const jchar*>(utf16.c_str()), utf16.size()));
 }
 
 void AAndroid::requestRedraw() {

@@ -22,11 +22,6 @@
 
 
 
-void ADesktop::playSystemSound(ADesktop::SystemSound s)
-{
-    // unsupported
-}
-
 float APlatform::getDpiRatio()
 {
     return float([[NSScreen mainScreen] backingScaleFactor]);
