@@ -18,16 +18,101 @@
 #include "AUI/Traits/callables.h"
 #include "AUI/Image/IDrawable.h"
 #include "AUI/Platform/AWindow.h"
-
+#include "AUI/Platform/CommonRenderingContext.h"
+#include "AUI/Util/kAUI.h"
+#include "AUI/Util/ACleanup.h"
+#include <X11/X.h>
+#include <X11/cursorfont.h>
 
 struct ACursor::Custom {
 public:
+    Custom(const AImage& img) {
+    }
+
+    ~Custom() {
+    }
 
 private:
 };
 
-ACursor::ACursor(aui::no_escape<AImage> image, int size) : mValue(std::make_unique<ACursor::Custom>()), mSize(size) {}
+namespace {
+    class NativeCursorHandle: public aui::noncopyable{
+    public:
+        NativeCursorHandle(Cursor c): mHandle(c) {
 
-void ACursor::applyNativeCursor(AWindow* pWindow) {
+        }
 
+        ~NativeCursorHandle() {
+            XFreeCursor(CommonRenderingContext::ourDisplay, mHandle);
+        }
+
+        [[nodiscard]]
+        Cursor handle() const noexcept {
+            return mHandle;
+        }
+
+    private:
+        Cursor mHandle;
+    };
+
+
+    void setCursor(AWindow* window, Cursor cursorHandle) {
+        static Cursor prevCursor = -1;
+        if (prevCursor == cursorHandle) return;
+        prevCursor = cursorHandle;
+
+        XDefineCursor(CommonRenderingContext::ourDisplay, window->getNativeHandle(), cursorHandle);
+    }
+
+    void setFontCursor(AWindow* window, int cursor) {
+        static std::unordered_map<int, NativeCursorHandle> nativeCursors;
+        do_once {
+            ACleanup::afterEntry([&] {
+                nativeCursors.clear();
+            });
+        }
+
+        auto it = nativeCursors.find(cursor);
+        if (it == nativeCursors.end()) {
+            it = nativeCursors.emplace(cursor, XCreateFontCursor(CommonRenderingContext::ourDisplay, cursor)).first;
+        }
+        setCursor(window, it->second.handle());
+    }
+}
+
+ACursor::ACursor(aui::no_escape<AImage> image, int size) : mValue(std::make_unique<ACursor::Custom>(*image)), mSize(size) {}
+
+void ACursor::applyNativeCursor(AWindow* pWindow) const {
+
+    std::visit(aui::lambda_overloaded {
+            [&](System s) {
+                switch (s) {
+                    // https://tronche.com/gui/x/xlib/appendix/b/
+                    default: {
+                        setFontCursor(pWindow, XC_arrow);
+                        break;
+                    }
+                    case ACursor::POINTER: {
+                        setFontCursor(pWindow, XC_hand2);
+                        break;
+                    }
+                    case ACursor::TEXT: {
+                        setFontCursor(pWindow, XC_xterm);
+                        break;
+                    }
+                }
+            },
+            [](const _<Custom>& custom) {
+                //SetCursor(custom->cursor());
+            },
+            [&](const _<IDrawable>& drawable) {
+                static AMap<_<IDrawable>, AMap<int, _<Custom>>> cache;
+
+                auto custom = cache[drawable].getOrInsert(int(pWindow->getDpiRatio() * 10), [&] {
+                    return _new<Custom>(drawable->rasterize(glm::ivec2(mSize * pWindow->getDpiRatio())));
+                });
+
+                //SetCursor(custom->cursor());
+            }
+    }, mValue);
 }

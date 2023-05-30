@@ -166,49 +166,52 @@ public:
      * returns true. If predicate returns false, the lookup continues.
      */
     template<aui::predicate<_<AView>> Callback>
-    bool getViewAtRecursive(glm::ivec2 pos, Callback&& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
-        auto tryGetView = [&] (const _<AView>& view) {
-            auto targetPos = pos - view->getPosition();
-
-            if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x &&
-                targetPos.y < view->getSize().y) {
-                if (view->consumesClick(targetPos)) {
-                    if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE &&
-                                                                            view->getVisibility() !=
-                                                                            Visibility::UNREACHABLE)) {
-                        if (callback(view))
-                            return true;
-                        if (auto container = _cast<AViewContainer>(view)) {
-                            if (container->getViewAtRecursive(targetPos, callback, flags)) {
-                                return true;
-                            }
-                        }
-
-                        if (flags.test(AViewLookupFlags::ONLY_ONE_PER_CONTAINER)) {
-                            return false;
-                        }
-                    }
-                }
-            }
-
-            return false;
-        };
-
-        if (mLayout) {
-            const auto& layoutViews = mLayout->getViews();
-            for (const auto& view : layoutViews) {
-                if (tryGetView(view)) {
+    bool getViewAtRecursive(glm::ivec2 pos, const Callback& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
+        _<AView> possibleOutput; // for case if anyone does not consumesClick
+        auto process = [&](const _<AView>& view) {
+            if (callback(view))
+                return true;
+            if (auto container = _cast<AViewContainer>(view)) {
+                if (container->getViewAtRecursive(pos - view->getPosition(), callback, flags)) {
                     return true;
                 }
             }
-
             return false;
-        }
+        };
 
-        for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
-            if (tryGetView(*it)) {
-                return true;
+        for (const auto& view : aui::reverse_iterator_wrap(mViews)) {
+            auto targetPos = pos - view->getPosition();
+
+            if (targetPos.x < 0 || targetPos.y < 0 || targetPos.x >= view->getSize().x || targetPos.y >= view->getSize().y) {
+                continue;
             }
+            if (!flags.test(AViewLookupFlags::IGNORE_VISIBILITY)) {
+                if (view->getVisibility() == Visibility::GONE ||
+                    view->getVisibility() == Visibility::UNREACHABLE) {
+                    continue;
+                }
+            }
+
+            if (view->consumesClick(targetPos)) {
+                if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE &&
+                                                                        view->getVisibility() !=
+                                                                        Visibility::UNREACHABLE)) {
+                    if (process(view)) {
+                        return true;
+                    }
+
+                    if (flags.test(AViewLookupFlags::ONLY_ONE_PER_CONTAINER)) {
+                        return false;
+                    }
+                }
+            } else {
+                if (possibleOutput == nullptr) {
+                    possibleOutput = view;
+                }
+            }
+        }
+        if (possibleOutput) {
+            return process(possibleOutput);
         }
 
         return false;
