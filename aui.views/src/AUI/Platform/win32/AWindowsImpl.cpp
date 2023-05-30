@@ -322,7 +322,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
 
         if (!!(ws & WindowStyle::NO_RESIZE)) {
             SetWindowLongPtr(mHandle, GWL_STYLE,
-                             GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME | WS_THICKFRAME |
+                             GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME |
                                      WS_SYSMENU | WS_CAPTION);
         }
         if (!!(ws & WindowStyle::NO_DECORATORS)) {
