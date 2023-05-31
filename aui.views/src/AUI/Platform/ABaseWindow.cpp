@@ -237,7 +237,8 @@ void ABaseWindow::onPointerMove(glm::ivec2 pos) {
         }
         v = view;
         return false;
-    });
+    }, AViewLookupFlags::ONLY_ONE_PER_CONTAINER);
+
     if (!AWindow::shouldDisplayHoverAnimations()) {
         if (auto focused = mFocusedView.lock()) {
             if (focused != v) {

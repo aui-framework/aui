@@ -473,6 +473,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 case MotionNotify: {
                     window = locateWindow(ev.xmotion.window);
                     window->onPointerMove({ev.xmotion.x, ev.xmotion.y});
+                    AUI_NULLSAFE(window->getCursor())->applyNativeCursor(window.get());
                     break;
                 }
                 case ButtonPress: {

@@ -394,12 +394,13 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
             Label { "Custom cursor" } with_style {
                 ACursor{ ":img/logo.svg", 64 },
             },
-            Centered {
+            Horizontal {
                 Label{"github.com/aui-framework/aui"}.clicked(this, [] {
                     APlatform::openUrl("https://github.com/aui-framework/aui");
                 }) with_style{
                     TextColor{AColor::BLUE},
-                    BorderBottom{1_px, AColor::BLUE}
+                    BorderBottom{1_px, AColor::BLUE},
+                    ACursor::POINTER,
                 },
             }
 

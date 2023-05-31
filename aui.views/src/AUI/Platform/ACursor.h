@@ -58,7 +58,7 @@ public:
 
     ~ACursor();
 
-    void applyNativeCursor(AWindow* pWindow);
+    void applyNativeCursor(AWindow* pWindow) const;
 
 private:
     std::variant<System, _<Custom>, _<IDrawable>> mValue;
