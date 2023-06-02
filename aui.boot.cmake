@@ -358,22 +358,28 @@ function(auib_import AUI_MODULE_NAME URL)
 
     set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY)
     set(oneValueArgs VERSION CMAKE_WORKING_DIR CMAKELISTS_CUSTOM PRECOMPILED_URL_PREFIX LINK)
+
     set(multiValueArgs CMAKE_ARGS COMPONENTS REQUIRES)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
 
     # check for dependencies
     foreach (_dep ${AUIB_IMPORT_REQUIRES})
-        set(_dep_root ${AUIB_IMPORT_REQUIRES}_ROOT)
-        if (NOT EXISTS ${${_dep_root}})
-            message(FATAL_ERROR "${AUI_MODULE_NAME} requires ${_dep}, but it's not available (${_dep_root} is not set)")
+        set(_dep_root_var ${_dep}_ROOT)
+        if (NOT DEFINED ${_dep_root_var})
+            message(FATAL_ERROR "${AUI_MODULE_NAME} requires ${_dep}, but it's not available (${_dep_root_var} is not set)")
+        endif()
+        set(_dep_root_value ${${_dep_root_var}})
+        set(_dep_root_value_installed ${_dep_root_value}/INSTALLED)
+        if (NOT EXISTS ${_dep_root_value_installed})
+            message(FATAL_ERROR "${AUI_MODULE_NAME} requires ${_dep}, but it's not available (${_dep_root_value_installed} does not exist)")
         endif()
 
         # add it to AUI_BOOT_ROOT_ENTRIES if needed
         get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
         list(JOIN AUI_BOOT_ROOT_ENTRIES , AUI_BOOT_ROOT_ENTRIES)
-        if (NOT "${AUI_BOOT_ROOT_ENTRIES}" MATCHES ".*${_dep_root}.*")
-            set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${_dep_root}=${${_dep_root}}")
+        if (NOT "${AUI_BOOT_ROOT_ENTRIES}" MATCHES ".*${_dep_root_var}.*")
+            set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${_dep_root_var}=${_dep_root_value}")
         endif ()
     endforeach()
 
