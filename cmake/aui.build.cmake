@@ -544,6 +544,7 @@ function(aui_executable AUI_MODULE_NAME)
                 ARCHIVE       DESTINATION "lib"
                 LIBRARY       DESTINATION "lib"
                 RUNTIME       DESTINATION "bin"
+                BUNDLE        DESTINATION "bin"
         )
 
         install(
