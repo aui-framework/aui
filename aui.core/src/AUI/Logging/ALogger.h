@@ -245,6 +245,7 @@ public:
      */
     template <aui::invocable Callable>
     static void doLogFileAccessSafe(Callable action) {
+        std::unique_lock lock(global().mLocalTimeMutex);
         if (!global().mLogFile.nativeHandle()) {
             action();
             return;

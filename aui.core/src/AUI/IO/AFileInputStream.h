@@ -28,7 +28,7 @@ class AString;
 class API_AUI_CORE AFileInputStream: public IInputStream
 {
 private:
-    FILE* mFile;
+    FILE* mFile = nullptr;
 
 public:
     AFileInputStream(const AString& path);
