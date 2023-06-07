@@ -301,7 +301,7 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>
 
     using setter = aui::member<decltype(ADataBindingDefault<View, Data>::getSetter())>;
 
-    using setter_ret = typename setter::type;
+    using setter_ret = typename setter::return_t;
     using setter_args = typename setter::args;
 
     using my_pointer_to_member = typename aui::detail::pointer_to_member<View, setter_ret>;
