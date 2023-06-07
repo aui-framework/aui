@@ -65,6 +65,6 @@ void AFileOutputStream::open(bool append) {
 #endif
     if (!mFile)
     {
-        aui::impl::unix::lastErrorToException("AFileOutputStream: could not open {}"_format(mPath));
+        aui::impl::lastErrorToException("AFileOutputStream: could not open {}"_format(mPath));
     }
 }

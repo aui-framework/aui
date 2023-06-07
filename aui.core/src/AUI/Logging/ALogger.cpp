@@ -42,12 +42,12 @@ ALogger& ALogger::global()
 
 void ALogger::log(Level level, std::string_view prefix, std::string_view message)
 {
+    std::unique_lock lock(mSync);
     if (mOnLogged) {
         mOnLogged(prefix, message, level);
     }
 
 #if AUI_PLATFORM_ANDROID
-
     int prio;
     switch (level) {
         case INFO:

@@ -19,8 +19,11 @@
 #include <AUI/Core.h>
 #include <AUI/IO/IOutputStream.h>
 #include <AUI/Reflect/AReflect.h>
+#include <AUI/Util/ARaiiHelper.h>
 #include "AUI/Thread/AMutex.h"
 #include "AUI/IO/AFileOutputStream.h"
+#include <fmt/format.h>
+#include <fmt/chrono.h>
 
 class AString;
 
@@ -91,6 +94,8 @@ public:
                     mBuffer = std::move(h);
                 }
             public:
+                using value_type = char;
+
                 Buffer() noexcept: mBuffer({}) {
                     auto& sb = std::get<StackBuffer>(mBuffer);
                     sb.currentIterator = sb.buffer;
@@ -120,6 +125,10 @@ public:
                         switchToHeap();
                     }
                     std::get<HeapBuffer>(mBuffer).push_back(c);
+                }
+
+                void push_back(char c) { // for std::back_inserter
+                    write(c);
                 }
 
                 [[nodiscard]]
@@ -156,14 +165,7 @@ public:
             Buffer mBuffer;
 
             void writeTimestamp(const char* fmt, std::chrono::system_clock::time_point t) noexcept {
-                char buf[128];
-                auto inTimeT = std::chrono::system_clock::to_time_t(t);
-                std::size_t strLen;
-                {
-                    std::unique_lock lock(mLogger.mLocalTimeMutex);
-                    strLen = std::strftime(buf, sizeof(buf), fmt, std::localtime(&inTimeT));
-                }
-                mBuffer.write(buf, strLen);
+                fmt::format_to(std::back_inserter(mBuffer), "{}", t);
             }
 
         public:
@@ -219,22 +221,23 @@ public:
 
     static ALogger& global();
 
-    static void setDebugMode(bool debug) {
+    void setDebugMode(bool debug) {
         global().mDebug = debug;
     }
-    static bool isDebug() {
+    bool isDebug() {
         return global().mDebug;
     }
 
-    static void setLogFile(APath path) {
-        global().setLogFileImpl(std::move(path));
+    void setLogFile(APath path) {
+        setLogFileImpl(std::move(path));
     }
-    static const AString& logFile() {
-        return global().mLogFile.path();
+    const AString& logFile() {
+        return mLogFile.path();
     }
 
-    static void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
-        global().mOnLogged = std::move(callback);
+    void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
+        std::unique_lock lock(mSync);
+        mOnLogged = std::move(callback);
     }
     /*
      * @brief Allows to perform some action (access safely)
@@ -244,16 +247,27 @@ public:
      * @note Windows, for instance, doesn't allow to read the file when it's already opened
      */
     template <aui::invocable Callable>
-    static void doLogFileAccessSafe(Callable action) {
-        std::unique_lock lock(global().mLocalTimeMutex);
-        if (!global().mLogFile.nativeHandle()) {
+    void doLogFileAccessSafe(Callable action) {
+        std::unique_lock lock(mSync);
+        ARaiiHelper opener = [&] {
+            try {
+                lock.lock();
+                mLogFile.open(true);
+            } catch (const AException& e) {
+                lock.unlock();
+                log(ERR, "Logger", fmt::format("Unable to reopen file {}: {}", mLogFile.path(), e.getMessage()));
+            }
+        };
+        if (!mLogFile.nativeHandle()) {
+            lock.unlock();
             action();
             return;
         }
 
-        global().mLogFile.close();
+        mLogFile.close();
+        lock.unlock();
         action();
-        global().mLogFile.open(true);
+
     }
 
     static LogWriter info(const AString& str)
@@ -288,7 +302,7 @@ private:
 	ALogger();
 
     AFileOutputStream mLogFile;
-    AMutex mLocalTimeMutex;
+    AMutex mSync;
     std::function<void(const AString& prefix, const AString& message, Level level)> mOnLogged;
 
     bool mDebug = true;
@@ -304,7 +318,6 @@ private:
      */
     void log(Level level, std::string_view prefix, std::string_view message);
 };
-
 
 template<std::size_t L, typename T, glm::qualifier Q>
 inline std::ostream& operator<<(std::ostream& o, glm::vec<L, T, Q> vec) {
