@@ -331,6 +331,6 @@ inline std::ostream& operator<<(std::ostream& o, glm::vec<L, T, Q> vec) {
     return o;
 }
 
-#define ALOG_DEBUG(str) if (ALogger::isDebug()) ALogger::debug(str)
+#define ALOG_DEBUG(str) if (ALogger::global().isDebug()) ALogger::debug(str)
 
 #include <AUI/Traits/strings.h>

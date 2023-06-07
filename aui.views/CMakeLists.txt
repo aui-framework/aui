@@ -40,10 +40,8 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 		link_directories(${DBUS_LIBRARY_DIRS})
 
 		aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${DBUS_LIBRARIES})
-		if (NOT BUILD_SHARED_LIBS)
-			# link Freetype's deps
-			target_link_libraries(aui.views PUBLIC ${Fontconfig_LIBRARIES})
-		endif()
+		# link Freetype's deps
+		target_link_libraries(aui.views PUBLIC ${Fontconfig_LIBRARIES})
 	endif()
 
 	if (NOT AUI_PLATFORM_WINDOWS)
