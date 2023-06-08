@@ -366,7 +366,7 @@ void ABaseWindow::preventClickOnPointerRelease() {
         return;
     }
 
-    AUI_NULLSAFE(mFocusedView.lock())->onClickPrevented();
+    onClickPrevented();
 
     mPreventClickOnPointerRelease = true;
 }
