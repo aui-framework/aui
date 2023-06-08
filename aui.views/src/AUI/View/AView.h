@@ -751,7 +751,22 @@ public:
     virtual void onMouseLeave();
     virtual void onDpiChanged();
 
+    /**
+     * @brief Called on pointer (mouse) released event.
+     * @param event event
+     */
     virtual void onPointerPressed(const APointerPressedEvent& event);
+
+    /**
+     * @brief Called on pointer (mouse) released event.
+     * @param event event
+     * @details
+     * @note
+     * To handle clicks, you should use AView::clicked signal instead. View still receives pointer move and released
+     * events even if cursor goes outside the view boundaries, or other exclusive event appeared (i.e. scrollarea
+     * scroll). AView::clicked emitted only if release event occurred inside view and no other event has prevented
+     * click gesture. See APointerReleasedEvent::triggerClick.
+     */
     virtual void onPointerReleased(const APointerReleasedEvent& event);
     virtual void onPointerDoubleClicked(const APointerPressedEvent& event);
 
@@ -799,6 +814,11 @@ public:
     void operator+(RuleWithoutSelector rule) {
         setCustomStyle(std::move(rule));
     }
+
+    /**
+     * @brief Called on ABaseWindow::preventClickOnPointerRelease.
+     */
+    virtual void onClickPrevented();
 
 
     /**

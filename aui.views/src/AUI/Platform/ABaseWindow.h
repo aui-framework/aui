@@ -61,6 +61,39 @@ public:
 
 
     /**
+     * @brief Prevents click action on upcoming pointer release.
+     * @details
+     * Also disables hover and pressed animations.
+     *
+     * Used by AScrollArea when it's scroll is triggered.
+     *
+     * Calls AView::onClickPrevented() over focus chain.
+     */
+    void preventClickOnPointerRelease();
+
+    /**
+     * @see ABaseWindow::preventClickOnPointerRelease
+     */
+    [[nodiscard]]
+    bool isPreventingClickOnPointerRelease() const noexcept {
+        return mPreventClickOnPointerRelease;
+    }
+
+    /**
+     * @brief Iterates over focus chain, from parent to child.
+     */
+    template<aui::invocable<const _<AView>&> Callback>
+    void iterateOverFocusChain(Callback&& callback) {
+        for (auto view = mFocusedView.lock(); view;) {
+            callback(view);
+
+            auto container = _cast<AViewContainer>(view);
+            if (!container) return;
+            view = container->focusChainTarget();
+        }
+    }
+
+    /**
      * @brief Returns previous frame's rendering duration in millis.
      * @details
      * Returns previous frame's rendering duration in millis, including native rendering preparation and buffer
@@ -225,6 +258,13 @@ public:
      */
     void hideTouchscreenKeyboard();
 
+    /**
+     * @brief Determines whether views should display hover animations.
+     * @return false when any keyboard button is pressed
+     */
+    bool shouldDisplayHoverAnimations() const;
+
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
@@ -232,6 +272,12 @@ signals:
 
 protected:
     bool mIsFocused = true;
+
+    /**
+     * @see ABaseWindow::preventClickOnPointerRelease
+     */
+    bool mPreventClickOnPointerRelease = false;
+
     _unique<IRenderingContext> mRenderingContext;
 
     static ABaseWindow*& currentWindowStorage();

@@ -222,7 +222,10 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
 }
 
 void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
-    AViewContainer::onPointerReleased(event);
+    APointerReleasedEvent copy = event;
+    copy.triggerClick = !mPreventClickOnPointerRelease;
+    mPreventClickOnPointerRelease = false;
+    AViewContainer::onPointerReleased(copy);
 }
 
 void ABaseWindow::onPointerMove(glm::ivec2 pos) {
@@ -239,7 +242,7 @@ void ABaseWindow::onPointerMove(glm::ivec2 pos) {
         return false;
     }, AViewLookupFlags::ONLY_ONE_PER_CONTAINER);
 
-    if (!AWindow::shouldDisplayHoverAnimations()) {
+    if (!shouldDisplayHoverAnimations()) {
         if (auto focused = mFocusedView.lock()) {
             if (focused != v) {
                 focused->onPointerMove(pos - focused->getPositionInWindow());
@@ -338,10 +341,32 @@ void ABaseWindow::hideTouchscreenKeyboard() {
     hideTouchscreenKeyboardImpl();
 }
 
+bool ABaseWindow::shouldDisplayHoverAnimations() const {
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+    return false;
+#else
+    return isFocused() && !AInput::isKeyDown(AInput::LBUTTON)
+           && !AInput::isKeyDown(AInput::CBUTTON)
+           && !AInput::isKeyDown(AInput::RBUTTON)
+           && mPreventClickOnPointerRelease;
+#endif
+}
+
+
 void ABaseWindow::requestTouchscreenKeyboardImpl() {
     // stub
 }
 
 void ABaseWindow::hideTouchscreenKeyboardImpl() {
     // stub
+}
+
+void ABaseWindow::preventClickOnPointerRelease() {
+    if (mPreventClickOnPointerRelease) {
+        return;
+    }
+
+    AUI_NULLSAFE(mFocusedView.lock())->onClickPrevented();
+
+    mPreventClickOnPointerRelease = true;
 }

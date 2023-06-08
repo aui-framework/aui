@@ -94,6 +94,7 @@ public:
 
     void onDpiChanged() override;
 
+    void onClickPrevented() override;
 
     int getContentMinimumWidth(ALayoutDirection layout) override;
 
