@@ -236,12 +236,6 @@ public:
     static ABaseWindow* current();
 
     /**
-     * @brief Determines whether views should display hover animations.
-     * @return false when any keyboard button is pressed
-     */
-    static bool shouldDisplayHoverAnimations();
-
-    /**
      * @brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.
      * @param position coordinates in the space of this window
      * @param other other window

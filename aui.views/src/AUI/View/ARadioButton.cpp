@@ -49,7 +49,7 @@ void ARadioButton::setText(const AString& text)
 void ARadioButton::onPointerReleased(const APointerReleasedEvent& event)
 {
     AView::onPointerReleased(event);
-    if (!mChecked)
+    if (!mChecked && event.triggerClick)
         emit checked(mChecked = true);
 }
 

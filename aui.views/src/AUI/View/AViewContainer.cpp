@@ -177,23 +177,31 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
     auto p = getViewAt(event.position);
     if (p && p->isEnabled()) {
         if (p->capturesFocus()) p->focus();
-        p->onPointerPressed({event.position - p->getPosition(), event.button});
+        auto copy = event;
+        copy.position -= p->getPosition();
+        p->onPointerPressed(copy);
     }
 }
 
 void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
     AView::onPointerReleased(event);
     auto p = getViewAt(event.position);
-    if (p && p->isEnabled() && p->isMousePressed())
-        p->onPointerReleased({event.position - p->getPosition(), event.button});
+    if (p && p->isEnabled() && p->isMousePressed()) {
+        auto copy = event;
+        copy.position -= p->getPosition();
+        p->onPointerReleased(copy);
+    }
 }
 
 void AViewContainer::onPointerDoubleClicked(const APointerPressedEvent& event) {
     AView::onPointerDoubleClicked(event);
 
     auto p = getViewAt(event.position);
-    if (p && p->isEnabled())
-        p->onPointerDoubleClicked({event.position - p->getPosition(), event.button});
+    if (p && p->isEnabled()) {
+        auto copy = event;
+        copy.position -= p->getPosition();
+        p->onPointerDoubleClicked(copy);
+    }
 }
 
 void AViewContainer::onScroll(const AScrollEvent& event) {
@@ -405,4 +413,9 @@ void AViewContainer::adjustHorizontalSizeToContent() {
 
 void AViewContainer::adjustVerticalSizeToContent() {
     setFixedSize(glm::ivec2(getFixedSize().x, 0));
+}
+
+void AViewContainer::onClickPrevented() {
+    AView::onClickPrevented();
+    AUI_NULLSAFE(mFocusChainTarget.lock())->onClickPrevented();
 }

@@ -35,6 +35,10 @@ public:
     void updateLayout() override;
     bool capturesFocus() override;
 
+    [[nodiscard]]
+    bool isDragging() const noexcept {
+        return isMousePressed();
+    }
 
     void setValue(aui::float_within_0_1 value) {
         mProgress->setValue(value);
@@ -62,7 +66,6 @@ signals:
 private:
     _<Handle> mHandle;
     _<AProgressBar> mProgress;
-    bool mDragging = false;
 
     void updateSliderWithPosition(glm::ivec2 pointerPosition);
 

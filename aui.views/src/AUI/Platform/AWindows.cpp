@@ -152,17 +152,6 @@ ABaseWindow* AWindow::current() {
     return currentWindowStorage();
 }
 
-bool AWindow::shouldDisplayHoverAnimations() {
-#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
-    return false;
-#else
-    return current()->isFocused() && !AInput::isKeyDown(AInput::LBUTTON)
-                                  && !AInput::isKeyDown(AInput::CBUTTON)
-                                  && !AInput::isKeyDown(AInput::RBUTTON);
-#endif
-}
-
-
 void AWindow::flagUpdateLayout() {
     flagRedraw();
     mUpdateLayoutFlag = true;

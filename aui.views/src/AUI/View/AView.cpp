@@ -321,7 +321,7 @@ void AView::ensureAssUpdated()
 
 void AView::onMouseEnter()
 {
-    if (AWindow::shouldDisplayHoverAnimations()) {
+    if (AWindow::current()->shouldDisplayHoverAnimations()) {
         mHovered.set(this, true);
     }
 }
@@ -333,7 +333,7 @@ void AView::onPointerMove(glm::ivec2 pos)
 
 void AView::onMouseLeave()
 {
-    if (AWindow::shouldDisplayHoverAnimations()) {
+    if (AWindow::current()->shouldDisplayHoverAnimations()) {
         mHovered.set(this, false);
     }
 }
@@ -357,16 +357,13 @@ void AView::onPointerPressed(const APointerPressedEvent& event)
                     auto selfHolder = sharedPtr();
                     if (!selfHolder) return;
                     AThread::current()->enqueue([this, button, selfHolder = std::move(selfHolder)]() {
-                        // to be sure that isPressed will be false.
-                        if (mPressed) {
-                            auto w = getWindow();
-                            if (!w) return;
-                            onPointerReleased({
-                                .position = w->getMousePos() - getPositionInWindow(),
-                                .button = button,
-                                .triggerClick = false,
-                            });
-                        }
+                        auto w = getWindow();
+                        if (!w) return;
+                        onPointerReleased({
+                            .position = w->getMousePos() - getPositionInWindow(),
+                            .button = button,
+                            .triggerClick = false,
+                        });
                     });
                     disconnect();
                 });
@@ -653,4 +650,10 @@ bool AView::wantsTouchscreenKeyboard() {
 void AView::setExtraStylesheet(AStylesheet&& extraStylesheet) {
     mExtraStylesheet = _new<AStylesheet>(std::move(extraStylesheet));
     invalidateAssHelper();
+}
+
+void AView::onClickPrevented() {
+    if (mPressed) {
+        mPressed.set(this, false);
+    }
 }

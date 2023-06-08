@@ -364,6 +364,7 @@ bool AAbstractTypeableView::isLButtonPressed() {
 void AAbstractTypeableView::onPointerReleased(const APointerReleasedEvent& event)
 {
     AView::onPointerReleased(event);
+    if (!event.triggerClick) return;
 
     if (event.button != AInput::RBUTTON) {
         ACursorSelectable::handleMouseReleased(event);
