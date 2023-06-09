@@ -22,13 +22,105 @@
 #include "UnixEventFd.h"
 #include "AUI/Thread/ACutoffSignal.h"
 #include <AUI/Thread/IEventLoop.h>
-#include <AUI/Thread/AFuture.h>
 #include <sys/poll.h>
+#include <AUI/Thread/AFuture.h>
 
 UnixIoThread& UnixIoThread::inst() noexcept {
     static UnixIoThread s;
     return s;
 }
+
+#ifdef __linux
+
+#include <sys/epoll.h>
+#include <AUI/Platform/ErrorToException.h>
+
+
+class MyEventLoop: public IEventLoop {
+public:
+    MyEventLoop(UnixIoThread& parent) : mParent(parent) {
+    }
+
+    ~MyEventLoop() override {
+
+    }
+
+    void notifyProcessMessages() override {
+        mParent.mNotifyEvent.set();
+    }
+
+    void loop() override {
+        for (;;) {
+            AThread::processMessages();
+            epoll_event events[1024];
+            int count = epoll_wait(mParent.mEpollFd, events, std::size(events), -1);
+            if (count < 0) {
+                if (errno == EINTR) {
+                    continue;
+                }
+                aui::impl::unix_based::lastErrorToException("epoll_wait failed");
+            }
+            std::unique_lock lock (mParent.mSync);
+            for (int i = 0; i < count; ++i) {
+                auto it = mParent.mFdInfo.find(events[i].data.fd);
+                if (it == mParent.mFdInfo.end()) continue;
+                for (const auto& callback : it->second.callbacks) {
+                    if (!callback.mask.testAny(static_cast<UnixPollEvent>(events[i].events))) {
+                        continue;
+                    }
+                    callback.callback(static_cast<UnixPollEvent>(events[i].events));
+                }
+            }
+        }
+    }
+private:
+    UnixIoThread& mParent;
+};
+
+void UnixIoThread::registerCallback(int fd, ABitField<UnixPollEvent> flags, Callback callback) noexcept {
+    std::unique_lock lock(mSync);
+    mFdInfo[fd].callbacks << FDInfo::CallbackEntry { flags, std::move(callback) };
+    epoll_event e;
+    e.events = static_cast<uint32_t>(flags.value());
+    e.data.fd = fd;
+    if (epoll_ctl(mEpollFd, EPOLL_CTL_ADD, fd, &e) == -1) {
+        aui::impl::unix_based::lastErrorToException("epoll_ctl add failed");
+    }
+}
+
+void UnixIoThread::unregisterCallback(int fd) noexcept {
+    epoll_event e;
+    e.events = 0xffffffff;
+    e.data.fd = fd;
+    if (epoll_ctl(mEpollFd, EPOLL_CTL_DEL, fd, &e) == -1) {
+        aui::impl::unix_based::lastErrorToException("epoll_ctl del+ failed");
+    }
+    mThread->enqueue([this, fd] {
+        std::unique_lock lock (mSync);
+        mFdInfo.erase(fd);
+    });
+}
+
+UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
+    AThread::setName("AUI IO");
+    MyEventLoop loop(*this);
+    IEventLoop::Handle handle(&loop);
+    AThread::current()->getCurrentEventLoop()->loop();
+})), mEpollFd(epoll_create1(0)) {
+    registerCallback(mNotifyEvent.handle(), UnixPollEvent::IN, [this](ABitField<UnixPollEvent> f) {
+        mNotifyEvent.reset();
+    });
+
+    mThread->start();
+
+    ACutoffSignal cv;
+    mThread->enqueue([&] {
+        cv.makeSignal();
+    });
+    cv.waitForSignal();
+}
+
+#else
 
 class MyEventLoop: public IEventLoop {
 public:
@@ -60,21 +152,17 @@ private:
     UnixIoThread& mParent;
 };
 
-void UnixIoThread::registerCallback(int fd, int flags, Callback callback) noexcept {
-    AFuture<> ft;
-    mThread->enqueue([&, callback = std::move(callback)]() mutable {
+void UnixIoThread::registerCallback(int fd, ABitField<UnixPollEvent> flags, Callback callback) noexcept {
+    executeOnIoThreadBlocking([&]() mutable {
         mCallbacks << std::move(callback);
         mPollFd << pollfd {
-            fd, static_cast<short>(flags), 0
+            fd, static_cast<int>(flags.value()), 0
         };
-        ft.supplyResult();
     });
-    ft.wait();
 }
 
 void UnixIoThread::unregisterCallback(int fd) noexcept {
-    AFuture<> ft;
-    mThread->enqueue([&] {
+    executeOnIoThreadBlocking([&] {
         std::size_t index = 0;
         mPollFd.removeIf([&](const pollfd& p) {
             if (p.fd == fd) {
@@ -84,9 +172,7 @@ void UnixIoThread::unregisterCallback(int fd) noexcept {
             ++index;
             return false;
         });
-        ft.supplyResult();
     });
-    ft.wait();
 }
 
 UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
@@ -110,3 +196,4 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     });
     cv.waitForSignal();
 }
+#endif

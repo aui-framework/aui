@@ -39,7 +39,7 @@ void AFileOutputStream::write(const char* src, size_t size)
 	while (size) {
         auto v = fwrite(src, 1, size, mFile);
         if (v == 0) {
-            aui::impl::unix::lastErrorToException(mPath);
+            aui::impl::unix_based::lastErrorToException(mPath);
         }
         size -= v;
         src += v;

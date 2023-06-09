@@ -23,25 +23,73 @@
 #include <AUI/Thread/AThread.h>
 #include <sys/poll.h>
 #include "UnixEventFd.h"
+#include <AUI/Thread/ACutoffSignal.h>
+#include <AUI/Util/EnumUtil.h>
+#include <AUI/Util/ABitField.h>
+
+
+#ifdef __linux
+#include <sys/epoll.h>
+AUI_ENUM_FLAG(UnixPollEvent) {
+    IN  = EPOLLIN,
+    OUT = EPOLLOUT,
+};
+#else
+AUI_ENUM_FLAG(UnixPollEvent) {
+    IN  = POLLIN,
+    OUT = POLLOUT,
+};
+#endif
+
 
 class API_AUI_CORE UnixIoThread {
 public:
-    using Callback = std::function<void(int)>;
+    using Callback = std::function<void(ABitField<UnixPollEvent> triggeredFlags)>;
 
     static UnixIoThread& inst() noexcept;
 
-    void registerCallback(int fd, int flags, Callback callback) noexcept;
+    void registerCallback(int fd, ABitField<UnixPollEvent> flags, Callback callback) noexcept;
     void unregisterCallback(int fd) noexcept;
 
 private:
     friend class MyEventLoop;
     _<AThread> mThread;
     UnixEventFd mNotifyEvent;
+
+#ifdef __linux
+    int mEpollFd;
+    struct FDInfo {
+        struct CallbackEntry {
+            ABitField<UnixPollEvent> mask;
+            Callback callback;
+        };
+        AVector<CallbackEntry> callbacks;
+    };
+    AMutex mSync;
+    std::unordered_map<int /* fd */, FDInfo> mFdInfo;
+#else
     AVector<pollfd> mPollFd;
     AVector<Callback> mCallbacks;
+#endif
+
+    template<aui::invocable Callback>
+    void executeOnIoThreadBlocking(Callback&& callback) {
+        if (AThread::current() == mThread) {
+            callback();
+            return;
+        }
+
+        ACutoffSignal cv;
+        mThread->enqueue([&]() noexcept {
+            callback();
+            cv.makeSignal();
+        });
+        cv.waitForSignal();
+    }
 
     UnixIoThread() noexcept;
 };
+
 
 
 
