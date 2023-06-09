@@ -26,6 +26,7 @@
 #include <AUI/Thread/ACutoffSignal.h>
 #include <AUI/Util/EnumUtil.h>
 #include <AUI/Util/ABitField.h>
+#include <unordered_map>
 
 
 #ifdef __linux
