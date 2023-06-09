@@ -141,7 +141,7 @@ public:
             assert(r > 0);
             for (auto it = mParent.mPollFd.begin(); it != mParent.mPollFd.end() && r > 0; ++it) {
                 if (it->revents) {
-                    mParent.mCallbacks[it - mParent.mPollFd.begin()](it->revents);
+                    mParent.mCallbacks[it - mParent.mPollFd.begin()](static_cast<UnixPollEvent>(it->revents));
                     r -= 1;
                     it->revents = 0;
                 }
