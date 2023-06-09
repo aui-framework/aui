@@ -156,7 +156,7 @@ void UnixIoThread::registerCallback(int fd, ABitField<UnixPollEvent> flags, Call
     executeOnIoThreadBlocking([&]() mutable {
         mCallbacks << std::move(callback);
         mPollFd << pollfd {
-            fd, static_cast<int>(flags.value()), 0
+            fd, static_cast<short>(flags.value()), 0
         };
     });
 }
@@ -181,7 +181,7 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     IEventLoop::Handle handle(&loop);
     AThread::current()->getCurrentEventLoop()->loop();
 })) {
-    mCallbacks << [&](int){
+    mCallbacks << [&](ABitField<UnixPollEvent>){
         mNotifyEvent.reset();
     };
     mPollFd << pollfd {
