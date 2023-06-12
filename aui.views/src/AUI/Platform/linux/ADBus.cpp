@@ -41,15 +41,15 @@ void ADBus::throwExceptionOnError(Callback&& callback) {
 }
 dbus_bool_t ADBus::addWatch(DBusWatch* watch, void* data) {
     auto bus = reinterpret_cast<ADBus*>(data);
-    UnixIoThread::inst().registerCallback(dbus_watch_get_unix_fd(watch), POLLIN | POLLOUT, [=](int f) {
+    UnixIoThread::inst().registerCallback(dbus_watch_get_unix_fd(watch), UnixPollEvent::IN | UnixPollEvent::OUT, [=](ABitField<UnixPollEvent> f) {
         if (bus->mProcessingScheduled.exchange(true)) {
             return;
         }
         int dbusFlags = 0;
-        if (f & POLLIN) {
+        if (f.test(UnixPollEvent::IN)) {
             dbusFlags |= DBUS_WATCH_READABLE;
         }
-        if (f & POLLOUT) {
+        if (f.test(UnixPollEvent::OUT)) {
             dbusFlags |= DBUS_WATCH_WRITABLE;
         }
         auto process = [=] {

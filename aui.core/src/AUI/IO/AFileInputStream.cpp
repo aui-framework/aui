@@ -30,7 +30,7 @@ AFileInputStream::AFileInputStream(const AString& path)
 #endif
     if (!mFile)
     {
-        aui::impl::unix::lastErrorToException("unable to open {}"_format(path));
+        aui::impl::unix_based::lastErrorToException("unable to open {}"_format(path));
     }
 }
 
