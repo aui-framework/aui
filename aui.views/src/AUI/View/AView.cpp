@@ -350,26 +350,7 @@ void AView::onPointerPressed(const APointerPressedEvent& event)
      */
     if (auto w = AWindow::current())
     {
-        if (w != this) {
-            auto button = event.button;
-            connect(w->released, this, [&, button]()
-                {
-                    auto selfHolder = sharedPtr();
-                    if (!selfHolder) return;
-                    AThread::current()->enqueue([this, button, selfHolder = std::move(selfHolder)]() {
-                        auto w = getWindow();
-                        if (!w) return;
-                        onPointerReleased({
-                            .position = w->getMousePos() - getPositionInWindow(),
-                            .button = button,
-                            .triggerClick = false,
-                        });
-                    });
-                    disconnect();
-                });
-        }
-
-        // also handle touchscreen keyboard visibility
+        // handle touchscreen keyboard visibility
         if (wantsTouchscreenKeyboard()) {
             w->requestTouchscreenKeyboard();
         }

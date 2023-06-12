@@ -185,11 +185,13 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
 
 void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
     AView::onPointerReleased(event);
-    auto p = getViewAt(event.position);
-    if (p && p->isEnabled() && p->isMousePressed()) {
+    auto chainTarget = mFocusChainTarget.lock();
+
+    if (chainTarget && chainTarget->isEnabled() && chainTarget->isMousePressed()) {
         auto copy = event;
-        copy.position -= p->getPosition();
-        p->onPointerReleased(copy);
+        copy.position -= chainTarget->getPosition();
+        copy.triggerClick &= getViewAt(event.position) == chainTarget;
+        chainTarget->onPointerReleased(copy);
     }
 }
 
