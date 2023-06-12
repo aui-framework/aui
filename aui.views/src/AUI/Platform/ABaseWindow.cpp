@@ -348,7 +348,7 @@ bool ABaseWindow::shouldDisplayHoverAnimations() const {
     return isFocused() && !AInput::isKeyDown(AInput::LBUTTON)
            && !AInput::isKeyDown(AInput::CBUTTON)
            && !AInput::isKeyDown(AInput::RBUTTON)
-           && mPreventClickOnPointerRelease;
+           && !mPreventClickOnPointerRelease;
 #endif
 }
 
