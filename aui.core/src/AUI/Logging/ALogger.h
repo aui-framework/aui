@@ -24,6 +24,7 @@
 #include "AUI/IO/AFileOutputStream.h"
 #include <fmt/format.h>
 #include <fmt/chrono.h>
+#include <AUI/Thread/AMutexWrapper.h>
 
 class AString;
 
@@ -228,15 +229,33 @@ public:
         return global().mDebug;
     }
 
+    /**
+     * @brief Sets log file.
+     * @param path path to the log file.
+     * @details
+     * Log file is opened immediately in setLogFile.
+     * @note
+     * If you want to change the log file of ALogger::global(), consider using ALogger::setLogFileForGlobal instead.
+     * `ALogger::global().setLogFile(...)` expression would cause the default log file location to open and to close
+     * immediately, when opening a log file in the specified location, causing empty file and two `Log file:` entries.
+     */
     void setLogFile(APath path) {
         setLogFileImpl(std::move(path));
     }
+
+    /**
+     * @brief Sets log file for `ALogger::global()`.
+     * @param path path to the log file.
+     * @see ALogger::setLogFile
+     */
+    static void setLogFileForGlobal(APath path);
+
     const AString& logFile() {
         return mLogFile.path();
     }
 
     void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
-        std::unique_lock lock(mSync);
+        std::unique_lock lock(mOnLogged);
         mOnLogged = std::move(callback);
     }
     /*
@@ -248,7 +267,7 @@ public:
      */
     template <aui::invocable Callable>
     void doLogFileAccessSafe(Callable action) {
-        std::unique_lock lock(mSync);
+        std::unique_lock lock(mLogSync);
         ARaiiHelper opener = [&] {
             try {
                 lock.lock();
@@ -302,8 +321,8 @@ private:
 	ALogger();
 
     AFileOutputStream mLogFile;
-    AMutex mSync;
-    std::function<void(const AString& prefix, const AString& message, Level level)> mOnLogged;
+    AMutex mLogSync;
+    AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 
     bool mDebug = true;
 
@@ -317,6 +336,7 @@ private:
      * @param message log message. If empty, prefix used as a message
      */
     void log(Level level, std::string_view prefix, std::string_view message);
+
 };
 
 template<std::size_t L, typename T, glm::qualifier Q>

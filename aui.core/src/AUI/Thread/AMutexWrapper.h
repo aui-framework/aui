@@ -52,10 +52,10 @@ public:
     }
 
     void unlock() {
-        mMutex.unlock();
 #if AUI_DEBUG
-        mOwnerThread = std::this_thread::get_id();
+        mOwnerThread = static_cast<std::thread::id>(0);
 #endif
+        mMutex.unlock();
     }
 
     T& value() noexcept {

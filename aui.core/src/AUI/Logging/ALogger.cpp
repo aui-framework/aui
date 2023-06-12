@@ -34,17 +34,27 @@ ALogger::ALogger()
 #endif
 }
 
+static ALogger& globalImpl(AOptional<APath> path = std::nullopt) {
+    static ALogger l(std::move(path.valueOr(APath::getDefaultPath(APath::TEMP).makeDirs() / "aui.{}.log"_format(AProcess::self()->getPid()))));
+    return l;
+}
+
 ALogger& ALogger::global()
 {
-	static ALogger l;
-	return l;
+    return globalImpl();
+}
+
+void ALogger::setLogFileForGlobal(APath path) {
+    globalImpl(std::move(path));
 }
 
 void ALogger::log(Level level, std::string_view prefix, std::string_view message)
 {
-    std::unique_lock lock(mSync);
-    if (mOnLogged) {
-        mOnLogged(prefix, message, level);
+    {
+        std::unique_lock lock(mOnLogged);
+        if (mOnLogged.value()) {
+            mOnLogged.value()(prefix, message, level);
+        }
     }
 
 #if AUI_PLATFORM_ANDROID
@@ -95,12 +105,6 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
     char timebuf[64];
     std::strftime(timebuf, sizeof(timebuf), "%H:%M:%S", tm);
 
-    if (mLogFile.nativeHandle() == nullptr) {
-        lock.unlock();
-        setLogFileImpl(APath::getDefaultPath(APath::TEMP).makeDirs() / "aui.{}.log"_format(AProcess::self()->getPid()));
-        lock.lock();
-    }
-
     std::string threadName;
     if (auto currentThread = AThread::current()) {
         threadName = currentThread->threadName().toStdString();
@@ -108,6 +112,7 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
         threadName = "?";
     }
 
+    std::unique_lock lock(mLogSync);
     if (message.length() == 0) {
         printf("[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
         fprintf(mLogFile.nativeHandle(), "[%s][%s[%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
