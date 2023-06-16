@@ -747,6 +747,15 @@ public:
     virtual bool onGesture(const glm::ivec2& origin, const AGestureEvent& event);
 
     virtual void onMouseEnter();
+
+    /**
+     * @brief Handles pointer hover events
+     * @param pos event position
+     * @details
+     * @note
+     * If the view is pressed, it would still received move events. Use AView::isMouseHover to check is the pointer
+     * actually over view or not. See AView::onPointerReleased for more info.
+     */
     virtual void onPointerMove(glm::ivec2 pos);
     virtual void onMouseLeave();
     virtual void onDpiChanged();

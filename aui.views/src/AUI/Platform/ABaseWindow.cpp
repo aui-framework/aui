@@ -230,25 +230,9 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
 
 void ABaseWindow::onPointerMove(glm::ivec2 pos) {
     mMousePos = pos;
-    AViewContainer::onPointerMove(pos);
-    _<AView> v;
     mCursor = ACursor::DEFAULT;
+    AViewContainer::onPointerMove(pos);
 
-    getViewAtRecursive(pos, [&](const _<AView>& view) {
-        if (const auto& c = view->getCursor()) {
-            mCursor = c;
-        }
-        v = view;
-        return false;
-    }, AViewLookupFlags::ONLY_ONE_PER_CONTAINER);
-
-    if (!shouldDisplayHoverAnimations()) {
-        if (auto focused = mFocusedView.lock()) {
-            if (focused != v) {
-                focused->onPointerMove(pos - focused->getPositionInWindow());
-            }
-        }
-    }
     emit mouseMove(pos);
 }
 

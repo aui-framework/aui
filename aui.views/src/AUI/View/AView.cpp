@@ -329,6 +329,9 @@ void AView::onMouseEnter()
 
 void AView::onPointerMove(glm::ivec2 pos)
 {
+    if (isMouseHover() && mCursor) {
+        AWindow::current()->setCursor(mCursor);
+    }
 }
 
 void AView::onMouseLeave()
