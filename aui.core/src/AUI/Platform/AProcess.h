@@ -41,6 +41,13 @@
 
 class AChildProcess;
 
+AUI_ENUM_FLAG(ASubProcessExecutionFlags) {
+    TIE_STDERR = 0b100,
+    TIE_STDOUT = 0b10,
+    MERGE_STDOUT_STDERR = 0b1,
+    DEFAULT = 0
+};
+
 class AProcessException: public AException {
 public:
     AProcessException(const AString& message): AException(message) {}
@@ -97,7 +104,8 @@ public:
      */
     static int executeWaitForExit(AString applicationFile,
                                   AString args = {},
-                                  APath workingDirectory = {});
+                                  APath workingDirectory = {},
+                                  ASubProcessExecutionFlags flags = ASubProcessExecutionFlags::DEFAULT);
 
 
     /**
@@ -134,11 +142,6 @@ public:
     static _<AProcess> fromPid(uint32_t pid);
 
     void kill() const noexcept;
-};
-
-AUI_ENUM_FLAG(ASubProcessExecutionFlags) {
-    MERGE_STDOUT_STDERR = 0b1,
-    DEFAULT = 0
 };
 
 /**

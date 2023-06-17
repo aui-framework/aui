@@ -38,12 +38,13 @@ AProcess::make(AString applicationFile, AString args, APath workingDirectory) {
     return p;
 }
 
-int AProcess::executeWaitForExit(AString applicationFile, AString args, APath workingDirectory) {
+int AProcess::executeWaitForExit(AString applicationFile, AString args, APath workingDirectory,
+                                 ASubProcessExecutionFlags flags) {
     AChildProcess p;
     p.mApplicationFile = APath(std::move(applicationFile)).absolute();
     p.mArgs = std::move(args);
     p.mWorkingDirectory = APath(std::move(workingDirectory)).absolute();
-    p.run();
+    p.run(flags);
 
     return p.waitForExitCode();
 }
