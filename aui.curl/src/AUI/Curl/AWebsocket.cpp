@@ -132,9 +132,11 @@ std::size_t AWebsocket::onDataReceived(AByteBufferView data) {
                 case int(Opcode::CONTINUATION):
                     break;
 
-                case int(Opcode::CLOSE):
+                case int(Opcode::CLOSE): {
+                    emit websocketClosed(std::string_view(begin + 2, h.payload_len - 2));
                     close();
                     return 0;
+                }
 
                 case int(Opcode::PING):
                     writeMessage(Opcode::PONG, {});

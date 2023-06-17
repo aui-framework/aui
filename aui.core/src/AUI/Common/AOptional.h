@@ -242,35 +242,6 @@ public:
         }
     }
 
-    /**
-     * @brief value or alternative (either value or callback)
-     * @tparam F same as T or invocable returning T or invokable throwing a exception
-     * @param alternative
-     * @return
-     */
-    template<typename F>
-    T&& valueOr(F&& alternative) {
-        if (mInitialized) {
-            return std::move(value());
-        }
-        constexpr bool isSame = std::is_constructible_v<T, F>;
-        constexpr bool isInvocable = std::is_invocable_v<F>;
-
-        static_assert(isSame || isInvocable, "F is neither same as T nor invokable returning T nor invokable throwing a exception");
-
-        if constexpr (isSame) {
-            return std::forward<F>(alternative);
-        } else if constexpr(isInvocable) {
-            if constexpr (std::is_same_v<std::invoke_result_t<F>, void>) {
-                alternative();
-                assert(("should not have reached here", false));
-                throw std::runtime_error("should not have reached here"); // stub exception
-            } else {
-                return alternative();
-            }
-        }
-    }
-
     template<typename U>
     [[nodiscard]]
     bool operator==(const AOptional<U>& rhs) const noexcept {
