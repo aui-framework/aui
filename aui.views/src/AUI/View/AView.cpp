@@ -595,7 +595,7 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
     }, event);
 }
 
-void AView::applyAssRule(const RuleWithoutSelector& rule) {
+void AView::applyAssRule(const ass::PropertyList& rule) {
     for (const auto& d : rule.getDeclarations()) {
         auto slot = d->getPropertySlot();
         if (slot != ass::prop::PropertySlot::NONE) {
@@ -611,7 +611,7 @@ ALayoutDirection AView::parentLayoutDirection() const noexcept {
     return mParent->getLayout()->getLayoutDirection();
 }
 
-void AView::setCustomStyle(RuleWithoutSelector rule) {
+void AView::setCustomStyle(ass::PropertyList rule) {
     AUI_ASSERT_UI_THREAD_ONLY();
     mCustomStyleRule = std::move(rule);
     mAssHelper = nullptr;

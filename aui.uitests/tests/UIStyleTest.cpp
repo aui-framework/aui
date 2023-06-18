@@ -33,10 +33,9 @@ protected:
                                  Vertical {
                                          mView = _new<AView>() with_style {
                                              BackgroundSolid { AColor::BLACK },
-                                             /*
                                              on_state::Hovered {
                                                  BackgroundSolid { AColor::RED },
-                                             },*/
+                                             },
                                          },
                                          Label { "Some bullshit to complicate layout" },
                                  }

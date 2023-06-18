@@ -28,7 +28,9 @@
 #include "Property/BackgroundCropping.h"
 #include "Property/BackgroundImage.h"
 
-struct Rule;
+namespace ass {
+    struct Rule;
+}
 class IDrawable;
 
 /**
@@ -38,7 +40,7 @@ class AAssHelper: public AObject {
     friend class AView;
 
 private:
-    AVector<const Rule*> mPossiblyApplicableRules;
+    AVector<const ass::Rule*> mPossiblyApplicableRules;
 
 public:
     void onInvalidateFullAss() {
@@ -49,7 +51,7 @@ public:
     }
 
     [[nodiscard]]
-    const AVector<const Rule*>& getPossiblyApplicableRules() const {
+    const AVector<const ass::Rule*>& getPossiblyApplicableRules() const {
         return mPossiblyApplicableRules;
     }
 

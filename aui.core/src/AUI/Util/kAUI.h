@@ -273,7 +273,7 @@ namespace aui::impl::slot {
  * });
  * @endcode
  */
-#define with_style + RuleWithoutSelector
+#define with_style + ass::PropertyList
 
 /**
  * @brief Executes following {} block asynchronously in the @ref AThreadPool::global() "global" thread pool. Unlike

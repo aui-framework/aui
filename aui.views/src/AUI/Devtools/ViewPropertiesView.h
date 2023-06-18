@@ -28,7 +28,7 @@ public:
     explicit ViewPropertiesView(const _<AView>& targetView);
     void displayApplicableRule(const _<AViewContainer>& dst,
                                ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
+                               const ass::PropertyList* rule);
     void setTargetView(const _<AView>& targetView);
 };
 

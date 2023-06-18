@@ -113,7 +113,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
 void ViewPropertiesView::displayApplicableRule(const _<AViewContainer>& dst,
                                                ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                                               const RuleWithoutSelector* rule) {
+                                               const ass::PropertyList* rule) {
 
     for (const auto& decl : rule->getDeclarations()) {
         applicableDeclarations.push_front(decl.get());

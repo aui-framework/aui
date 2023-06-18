@@ -34,7 +34,7 @@
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Util/AFieldSignalEmitter.h"
 #include "AUI/Util/IBackgroundEffect.h"
-#include <AUI/ASS/RuleWithoutSelector.h>
+#include <AUI/ASS/PropertyList.h>
 #include <AUI/Enum/AOverflow.h>
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Enum/MouseCollisionPolicy.h>
@@ -177,7 +177,7 @@ protected:
     /**
      * @brief Custom ASS Rules
      */
-    RuleWithoutSelector mCustomStyleRule;
+    ass::PropertyList mCustomStyleRule;
 
     /**
      * @brief Determines shape which should pointer take when it's above this AView.
@@ -251,7 +251,7 @@ protected:
      */
     bool transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event);
 
-    void applyAssRule(const RuleWithoutSelector& rule);
+    void applyAssRule(const ass::PropertyList& rule);
 
     /**
      * @brief Produce context (right click) menu.
@@ -716,11 +716,11 @@ public:
         return mAssHelper;
     }
 
-    const RuleWithoutSelector& getCustomAss() const {
+    const ass::PropertyList& getCustomAss() const {
         return mCustomStyleRule;
     }
 
-    void setCustomStyle(RuleWithoutSelector rule);
+    void setCustomStyle(ass::PropertyList rule);
 
     void ensureAssUpdated();
 
@@ -820,7 +820,7 @@ public:
     /**
      * @brief Helper function for kAUI.h:with_style
      */
-    void operator+(RuleWithoutSelector rule) {
+    void operator+(ass::PropertyList rule) {
         setCustomStyle(std::move(rule));
     }
 
