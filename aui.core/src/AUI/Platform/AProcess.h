@@ -42,9 +42,9 @@
 class AChildProcess;
 
 AUI_ENUM_FLAG(ASubProcessExecutionFlags) {
-    TIE_STDERR = 0b100,
-    TIE_STDOUT = 0b10,
-    MERGE_STDOUT_STDERR = 0b1,
+    MERGE_STDOUT_STDERR = 0b001,
+    TIE_STDOUT = 0b010, ///if set, then subprocess will have the same stdout stream as the parent process
+    TIE_STDERR = 0b100, ///if set, then subprocess will have the same stdout stream as the parent process
     DEFAULT = 0
 };
 
