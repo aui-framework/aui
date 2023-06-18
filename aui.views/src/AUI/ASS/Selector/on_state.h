@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AUI/ASS/Rule.h>
+#include <AUI/ASS/PropertyListRecursive.h>
 
 namespace ass::on_state {
     namespace impl {
@@ -12,11 +13,11 @@ namespace ass::on_state {
         };
     }
 
-    struct Hovered: public Rule {
+    struct Hovered: public PropertyListRecursive::ConditionalPropertyList {
     public:
         template<typename... Declarations>
         Hovered(Declarations&&... declarations):
-            Rule(hovered<impl::OnStateSelector>{}, std::forward<Declarations>(declarations)...)
+                ConditionalPropertyList(hovered<impl::OnStateSelector>{}, std::forward<Declarations>(declarations)...)
         {}
     };
 }

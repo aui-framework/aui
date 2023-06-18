@@ -191,6 +191,8 @@
 #include "Property/TextOverflow.h"
 #include "Property/ScrollbarAppearance.h"
 
+#include <AUI/ASS/AAssHelper.h>
+
 // Selectors
 #include "AUI/ASS/Selector/AAssSelector.h"
 #include "Selector/ParentSelector.h"
@@ -207,6 +209,7 @@
 // Other
 #include "unset.h"
 #include "AStylesheet.h"
+#include "PropertyListRecursive.h"
 
 
 namespace declarative {

@@ -16,13 +16,39 @@
 
 #pragma once
 
-#include "IPropertyBase.h"
+#include <AUI/api.h>
 
+class API_AUI_VIEWS AView;
+class API_AUI_VIEWS AAssHelper;
 
 namespace ass::prop {
+    enum class PropertySlot {
+        NONE,
+
+        TRANSFORM_SCALE,
+        TRANSFORM_OFFSET,
+
+        SHADOW,
+        RENDER_OVERFLOW,
+        IMAGE_RENDERING,
+        BACKGROUND_SOLID,
+        BACKGROUND_IMAGE,
+        BACKGROUND_EFFECT,
+        BORDER,
+        TEXT_SHADOW,
+
+        COUNT,
+    };
+
+    struct API_AUI_VIEWS IPropertyBase {
+    public:
+        virtual void applyFor(AView* view) {};
+        virtual void renderFor(AView* view) {};
+        virtual bool isNone() { return false; }
+        [[nodiscard]] virtual PropertySlot getPropertySlot() const {
+            return PropertySlot::NONE;
+        }
+    };
     template<typename PropertyStruct>
     struct Property;
 }
-
-#include <AUI/ASS/unset.h>
-#include <AUI/View/AView.h>

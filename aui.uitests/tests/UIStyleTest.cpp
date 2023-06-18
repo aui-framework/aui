@@ -21,37 +21,45 @@
 #include "AUI/Util/ALayoutInflater.h"
 
 
-class UIStyleTest: public testing::UITest {
-public:
-protected:
-    void SetUp() override {
-        UITest::SetUp();
+namespace {
 
-        mWindow = _new<AWindow>();
-        using namespace declarative;
-        ALayoutInflater::inflate(mWindow,
-                                 Vertical {
-                                         mView = _new<AView>() with_style {
-                                             BackgroundSolid { AColor::BLACK },
-                                             on_state::Hovered {
-                                                 BackgroundSolid { AColor::RED },
+    class View : public AView {
+    };
+
+    class UIStyleTest : public testing::UITest {
+    public:
+    protected:
+        void SetUp() override {
+            UITest::SetUp();
+
+            mWindow = _new<AWindow>();
+            using namespace declarative;
+            ALayoutInflater::inflate(mWindow,
+                                     Vertical{
+                                             mView = _new<View>() with_style {
+                                                     MinSize { 10_dp },
+                                                     BackgroundSolid{AColor::BLACK},
+
+                                                     on_state::Hovered {
+                                                         BackgroundSolid{AColor::RED},
+                                                     },
                                              },
-                                         },
-                                         Label { "Some bullshit to complicate layout" },
-                                 }
-        );
-        mWindow->show();
-    }
+                                             Label{"Some bullshit to complicate layout"},
+                                     }
+            );
+            mWindow->show();
+        }
 
-    void TearDown() override {
-        mWindow = nullptr;
-        mView = nullptr;
-        UITest::TearDown();
-    }
+        void TearDown() override {
+            mWindow = nullptr;
+            mView = nullptr;
+            UITest::TearDown();
+        }
 
-    _<AWindow> mWindow;
-    _<AView> mView;
-};
+        _<AWindow> mWindow;
+        _<AView> mView;
+    };
+}
 
 /**
  * Checks mouse move events.
@@ -59,7 +67,11 @@ protected:
 TEST_F(UIStyleTest, MouseMoveNoClick) {
     testing::InSequence s;
 
+    By::type<View>().check(averageColor(AColor::BLACK));
 
     mWindow->onPointerMove({ 10, 10 }); // somewhere over the mView
+    By::type<View>().check(averageColor(AColor::RED));
+
     mWindow->onPointerMove({ 100, 100 }); // somewhere outside the mView
+    By::type<View>().check(averageColor(AColor::BLACK));
 }

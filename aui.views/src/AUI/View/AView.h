@@ -34,7 +34,7 @@
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Util/AFieldSignalEmitter.h"
 #include "AUI/Util/IBackgroundEffect.h"
-#include <AUI/ASS/PropertyList.h>
+#include <AUI/ASS/PropertyListRecursive.h>
 #include <AUI/Enum/AOverflow.h>
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Enum/MouseCollisionPolicy.h>
@@ -177,7 +177,7 @@ protected:
     /**
      * @brief Custom ASS Rules
      */
-    ass::PropertyList mCustomStyleRule;
+    ass::PropertyListRecursive mCustomStyleRule;
 
     /**
      * @brief Determines shape which should pointer take when it's above this AView.
@@ -716,11 +716,11 @@ public:
         return mAssHelper;
     }
 
-    const ass::PropertyList& getCustomAss() const {
+    const ass::PropertyListRecursive& getCustomAss() const {
         return mCustomStyleRule;
     }
 
-    void setCustomStyle(ass::PropertyList rule);
+    void setCustomStyle(ass::PropertyListRecursive rule);
 
     void ensureAssUpdated();
 
@@ -820,7 +820,7 @@ public:
     /**
      * @brief Helper function for kAUI.h:with_style
      */
-    void operator+(ass::PropertyList rule) {
+    void operator+(ass::PropertyListRecursive rule) {
         setCustomStyle(std::move(rule));
     }
 

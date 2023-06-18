@@ -20,31 +20,26 @@
 
 #pragma once
 
-#include "Property/IProperty.h"
+#include "PropertyList.h"
+#include "AUI/ASS/Selector/AAssSelector.h"
 
 
 namespace ass {
 
-    struct PropertyList {
+    struct PropertyListRecursive: public PropertyList {
     public:
+        struct ConditionalPropertyList;
+
         template<typename... Declarations>
-        PropertyList(Declarations&& ... declarations) {
+        PropertyListRecursive(Declarations&& ... declarations) {
             processDeclarations(std::forward<Declarations>(declarations)...);
         }
 
-        PropertyList() {
+        PropertyListRecursive() {
 
         }
 
-        [[nodiscard]] const AVector<_<ass::prop::IPropertyBase>>& getDeclarations() const noexcept {
-            return mProperties;
-        }
-
-        void addDeclaration(_<ass::prop::IPropertyBase> declaration) {
-            mProperties << std::move(declaration);
-        }
-
-    protected:
+    private:
         template<typename Declaration, typename... Declarations>
         void processDeclarations(Declaration&& declaration, Declarations&& ... declarations) {
             processDeclaration(std::forward<Declaration>(declaration));
@@ -54,18 +49,27 @@ namespace ass {
         }
 
         template<typename T>
-        void processDeclaration(T&& t) {
-            if constexpr (std::is_same_v<T, PropertyList>) {
-                mProperties = std::move(t.mProperties);
-            } else {
-                using declaration_t = ass::prop::Property<std::decay_t<T>>;
-                static_assert(aui::is_complete<declaration_t>,
-                              "ass::prop::Property template specialization is not defined for this declaration");
+        void processDeclaration(T&& t);
 
-                mProperties << _new<declaration_t>(t);
-            }
-        }
-
-        AVector<_<ass::prop::IPropertyBase>> mProperties;
+        AVector<ConditionalPropertyList> mConditionalPropertyLists;
     };
+
+    struct PropertyListRecursive::ConditionalPropertyList {
+        AAssSelector selector;
+        PropertyListRecursive list;
+    };
+
+
+    template<typename T>
+    void PropertyListRecursive::processDeclaration(T&& t) {
+        if constexpr (std::is_base_of_v<PropertyListRecursive::ConditionalPropertyList, T>) {
+
+        } else {
+            using declaration_t = ass::prop::Property<std::decay_t<T>>;
+            static_assert(aui::is_complete<declaration_t>,
+                          "ass::prop::Property template specialization is not defined for this property");
+
+            mProperties << _new<declaration_t>(t);
+        }
+    }
 }

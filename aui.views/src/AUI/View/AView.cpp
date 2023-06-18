@@ -611,7 +611,7 @@ ALayoutDirection AView::parentLayoutDirection() const noexcept {
     return mParent->getLayout()->getLayoutDirection();
 }
 
-void AView::setCustomStyle(ass::PropertyList rule) {
+void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     AUI_ASSERT_UI_THREAD_ONLY();
     mCustomStyleRule = std::move(rule);
     mAssHelper = nullptr;
