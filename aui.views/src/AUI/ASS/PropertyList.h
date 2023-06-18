@@ -45,9 +45,9 @@ namespace ass {
         }
 
     protected:
-        template<typename Declaration, typename... Declarations>
-        void processDeclarations(Declaration&& declaration, Declarations&& ... declarations) {
-            processDeclaration(std::forward<Declaration>(declaration));
+        template<typename Property, typename... Declarations>
+        void processDeclarations(Property&& declaration, Declarations&& ... declarations) {
+            processDeclaration(std::forward<Property>(declaration));
             if constexpr (sizeof...(Declarations) > 0) {
                 processDeclarations(std::forward<Declarations>(declarations)...);
             }

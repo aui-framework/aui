@@ -29,7 +29,7 @@
  * of rules. A rule consists of a @ref ass_selector "selector" and a list of @ref ass_property "properties".
  * Selector is a basic matcher that determines whether apply a rule to the specific @ref AView "view" or not. Selector
  * is the first statement in a rule and further statements are @ref ass_property "style properties".
- * @ref ass_property "Declaration" controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
+ * @ref ass_property "Property" controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
  * "call setFontSize(18_pt) for every matched view").
  * <table>
  *   <tr>
