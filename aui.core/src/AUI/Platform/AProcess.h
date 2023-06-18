@@ -41,10 +41,23 @@
 
 class AChildProcess;
 
+/**
+ * @brief Flag enum for AChildProcess::run
+ * @ingroup core
+ */
 AUI_ENUM_FLAG(ASubProcessExecutionFlags) {
+    /**
+     * @brief Merges stdin and stdout streams in a child process
+     */
     MERGE_STDOUT_STDERR = 0b001,
-    TIE_STDOUT = 0b010, ///if set, then subprocess will have the same stdout stream as the parent process
-    TIE_STDERR = 0b100, ///if set, then subprocess will have the same stdout stream as the parent process
+    /**
+     * @brief If set, child and parent processes have the same stdout stream
+     */
+    TIE_STDOUT = 0b010,
+    /**
+     * @brief If set, child and parent processes have the same stderr stream
+     */
+    TIE_STDERR = 0b100,
     DEFAULT = 0
 };
 
