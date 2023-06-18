@@ -36,7 +36,7 @@ namespace ass {
 
         }
 
-        [[nodiscard]] const AVector<_<ass::prop::IPropertyBase>>& getDeclarations() const noexcept {
+        [[nodiscard]] const AVector<_<ass::prop::IPropertyBase>>& declarations() const noexcept {
             return mProperties;
         }
 

@@ -251,7 +251,8 @@ protected:
      */
     bool transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event);
 
-    void applyAssRule(const ass::PropertyList& rule);
+    void applyAssRule(const ass::PropertyList& propertyList);
+    void applyAssRule(const ass::PropertyListRecursive& propertyList);
 
     /**
      * @brief Produce context (right click) menu.

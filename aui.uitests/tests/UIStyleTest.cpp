@@ -43,6 +43,10 @@ namespace {
                                                      on_state::Hovered {
                                                          BackgroundSolid{AColor::RED},
                                                      },
+
+                                                     on_state::Activated {
+                                                         BackgroundSolid{AColor::GREEN},
+                                                     },
                                              },
                                              Label{"Some bullshit to complicate layout"},
                                      }
@@ -73,5 +77,27 @@ TEST_F(UIStyleTest, MouseMoveNoClick) {
     By::type<View>().check(averageColor(AColor::RED));
 
     mWindow->onPointerMove({ 100, 100 }); // somewhere outside the mView
+    By::type<View>().check(averageColor(AColor::BLACK));
+}
+
+
+/**
+ * Checks click with release outside the view.
+ */
+TEST_F(UIStyleTest, MouseMoveWithClick) {
+    testing::InSequence s;
+
+    By::type<View>().check(averageColor(AColor::BLACK));
+
+    mWindow->onPointerMove({ 10, 10 }); // somewhere over the mView
+    By::type<View>().check(averageColor(AColor::RED));
+
+    mWindow->onPointerPressed({.position = { 10, 10 }, .button = AInput::LBUTTON }); // somewhere over the mView
+    By::type<View>().check(averageColor(AColor::GREEN));
+
+    mWindow->onPointerMove({ 100, 100 }); // somewhere outside the mView
+    By::type<View>().check(averageColor(AColor::GREEN));
+
+    mWindow->onPointerReleased({.position = { 100, 100 }, .button = AInput::LBUTTON, .triggerClick = false }); // somewhere outside the view
     By::type<View>().check(averageColor(AColor::BLACK));
 }

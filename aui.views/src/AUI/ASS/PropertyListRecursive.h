@@ -39,7 +39,15 @@ namespace ass {
 
         }
 
+
+        [[nodiscard]]
+        const AVector<ConditionalPropertyList>& conditionalPropertyLists() const noexcept {
+            return mConditionalPropertyLists;
+        }
+
     private:
+        AVector<ConditionalPropertyList> mConditionalPropertyLists;
+
         template<typename Declaration, typename... Declarations>
         void processDeclarations(Declaration&& declaration, Declarations&& ... declarations) {
             processDeclaration(std::forward<Declaration>(declaration));
@@ -51,7 +59,6 @@ namespace ass {
         template<typename T>
         void processDeclaration(T&& t);
 
-        AVector<ConditionalPropertyList> mConditionalPropertyLists;
     };
 
     struct PropertyListRecursive::ConditionalPropertyList {
@@ -63,7 +70,7 @@ namespace ass {
     template<typename T>
     void PropertyListRecursive::processDeclaration(T&& t) {
         if constexpr (std::is_base_of_v<PropertyListRecursive::ConditionalPropertyList, T>) {
-
+            mConditionalPropertyLists << std::forward<ConditionalPropertyList&&>(t);
         } else {
             using declaration_t = ass::prop::Property<std::decay_t<T>>;
             static_assert(aui::is_complete<declaration_t>,

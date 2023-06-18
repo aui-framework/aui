@@ -226,6 +226,9 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     copy.triggerClick = !mPreventClickOnPointerRelease;
     mPreventClickOnPointerRelease = false;
     AViewContainer::onPointerReleased(copy);
+
+    // AView::onPointerMove handles cursor shape; need extra call in order to flush
+    AViewContainer::onPointerMove(event.position);
 }
 
 void ABaseWindow::onPointerMove(glm::ivec2 pos) {

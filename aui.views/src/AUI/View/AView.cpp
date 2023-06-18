@@ -224,7 +224,7 @@ void AView::invalidateStateStyles() {
 
     for (auto& r : mAssHelper->mPossiblyApplicableRules) {
         if (r->getSelector().isStateApplicable(this)) {
-            applyAssRule(* r);
+            applyAssRule(*r);
         }
     }
     applyAssRule(mCustomStyleRule);
@@ -302,11 +302,24 @@ void AView::removeAssName(const AString& assName)
     invalidateAssHelper();
 }
 
+
+namespace {
+    void setupConnectionsCustomStyleRecursive(AView* view, const ass::PropertyListRecursive& propertyList) {
+        for (const auto& d : propertyList.conditionalPropertyLists()) {
+            d.selector.setupConnections(view, view->getAssHelper());
+            setupConnectionsCustomStyleRecursive(view, d.list);
+        }
+    }
+}
+
 void AView::ensureAssUpdated()
 {
     if (mAssHelper == nullptr)
     {
         mAssHelper = _new<AAssHelper>();
+
+        setupConnectionsCustomStyleRecursive(this, mCustomStyleRule);
+
         connect(customCssPropertyChanged, mAssHelper,
                 &AAssHelper::onInvalidateStateAss);
         connect(mAssHelper->invalidateFullAss, this, [&]()
@@ -595,8 +608,8 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
     }, event);
 }
 
-void AView::applyAssRule(const ass::PropertyList& rule) {
-    for (const auto& d : rule.getDeclarations()) {
+void AView::applyAssRule(const ass::PropertyList& propertyList) {
+    for (const auto& d : propertyList.declarations()) {
         auto slot = d->getPropertySlot();
         if (slot != ass::prop::PropertySlot::NONE) {
             mAss[int(slot)] = d->isNone() ? nullptr : d.get();
@@ -605,11 +618,22 @@ void AView::applyAssRule(const ass::PropertyList& rule) {
     }
 }
 
+void AView::applyAssRule(const ass::PropertyListRecursive& propertyList) {
+    applyAssRule(static_cast<const ass::PropertyList&>(propertyList));
+
+    for (const auto& d : propertyList.conditionalPropertyLists()) {
+        if (d.selector.isStateApplicable(this)) {
+            applyAssRule(d.list);
+        }
+    }
+}
+
 ALayoutDirection AView::parentLayoutDirection() const noexcept {
     if (mParent == nullptr) return ALayoutDirection::NONE;
     if (mParent->getLayout() == nullptr) return ALayoutDirection::NONE;
     return mParent->getLayout()->getLayoutDirection();
 }
+
 
 void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     AUI_ASSERT_UI_THREAD_ONLY();

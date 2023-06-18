@@ -143,7 +143,7 @@ void AViewContainer::onPointerMove(glm::ivec2 pos) {
     }
 
     for (auto& v: mViews) {
-        if (v->isMouseHover() && targetView != viewUnderCursor) {
+        if (v->isMouseHover() && v != viewUnderCursor) {
             v->onMouseLeave();
         }
     }

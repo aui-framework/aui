@@ -115,7 +115,7 @@ void ViewPropertiesView::displayApplicableRule(const _<AViewContainer>& dst,
                                                ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
                                                const ass::PropertyList* rule) {
 
-    for (const auto& decl : rule->getDeclarations()) {
+    for (const auto& decl : rule->declarations()) {
         applicableDeclarations.push_front(decl.get());
         dst->addView(_new<ALabel>(IStringable::toString(decl)) with_style{ Opacity {0.7f } });
     }

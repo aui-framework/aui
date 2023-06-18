@@ -15,7 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
-// Created by alex2 on 02.01.2021.
+// Created by alex2772 on 1/3/21.
 //
 
 #pragma once
@@ -23,22 +23,22 @@
 
 namespace ass {
     template<typename Base>
-    struct active: Base {
+    struct focused: Base {
         template<typename... Args>
-        active(Args&&... args):
-            Base(std::forward<Args>(args)...)
+        focused(Args&&... args):
+                Base(std::forward<Args>(args)...)
         {
 
         }
 
         bool isStateApplicable(AView* view) override {
-            return Base::isStateApplicable(view) && view->isMousePressed();
+            return Base::isStateApplicable(view) && view->hasFocus();
         }
 
         void setupConnections(AView* view, const _<AAssHelper>& helper) override {
             Base::setupConnections(view, helper);
-            view->pressedState.clearAllConnectionsWith(helper.get());
-            AObject::connect(view->pressedState, slot(helper)::onInvalidateStateAss);
+            view->focusState.clearAllConnectionsWith(helper.get());
+            AObject::connect(view->focusState, slot(helper)::onInvalidateStateAss);
         }
     };
 }
