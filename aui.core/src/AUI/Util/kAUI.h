@@ -67,6 +67,7 @@ namespace aui::impl::slot {
  *        function (see examples).
  * @ingroup useful_macros
  * @details
+ * Quick example:
  * <table>
  *   <tr>
  *     <td>without</td>
@@ -85,6 +86,8 @@ namespace aui::impl::slot {
  *     </td>
  *   </tr>
  * </table>
+ *
+ * @note If you are intended to reference this-> object, consider using @ref #me instead.
  */
 #define slot(v) v, &aui::impl::slot::decode_type_t<std::decay_t<decltype(v)>>
 
@@ -257,6 +260,16 @@ namespace aui::impl::slot {
  * ...
  * setContents(Centered {
  *   _new<ALabel>("Red text!") with_style { TextColor { AColor::RED } },
+ * });
+ * @endcode
+ *
+ * Also applicable to declarative-style views:
+ * @code{cpp}
+ * #include <AUI/ASS/ASS.h>
+ * using namespace ass;
+ * ...
+ * setContents(Centered {
+ *   Label { "Red text!" } with_style { TextColor { AColor::RED } },
  * });
  * @endcode
  */

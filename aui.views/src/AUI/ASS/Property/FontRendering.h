@@ -14,22 +14,33 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+//
+// Created by alex2 on 29.12.2020.
+//
+
 #pragma once
 
+#include "IProperty.h"
 
-#include <AUI/View/AScrollArea.h>
+namespace ass {
+    namespace prop {
+        template<>
+        struct API_AUI_VIEWS Property<FontRendering>: IPropertyBase {
+        private:
+            FontRendering mInfo;
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+        public:
+            Property(const FontRendering& info) : mInfo(info) {
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
+            }
 
+            void applyFor(AView* view) override;
 
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
+        };
+
+    }
+}

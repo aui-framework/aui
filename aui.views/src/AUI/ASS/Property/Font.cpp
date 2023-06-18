@@ -14,22 +14,16 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by alex2 on 01.01.2021.
+//
 
+#include "Font.h"
+#include <AUI/Platform/AFontManager.h>
 
-#include <AUI/View/AScrollArea.h>
-
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
-
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
-
-
+void ass::prop::Property<ass::Font>::applyFor(AView* view) {
+    auto font = AFontManager::inst().getFont(mInfo.url);
+    if (!font) font = AFontManager::inst().getDefaultFont();
+    view->getFontStyle().font = std::move(font);
+    view->invalidateFont();
+}

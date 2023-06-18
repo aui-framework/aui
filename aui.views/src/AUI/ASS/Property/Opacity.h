@@ -14,22 +14,43 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+
+
 #pragma once
 
 
-#include <AUI/View/AScrollArea.h>
+#include <AUI/Util/AMetric.h>
+#include "IProperty.h"
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+namespace ass {
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
+    /**
+     * @brief Controls the opacity of AView.
+     * @ingroup ass
+     */
+    struct Opacity {
+        float opacity;
 
+        explicit Opacity(float opacity) : opacity(opacity) {}
+    };
 
+    namespace prop {
+        template<>
+        struct API_AUI_VIEWS Property<Opacity>: IPropertyBase {
+        private:
+            Opacity mInfo;
+
+        public:
+            Property(const Opacity& info) : mInfo(info) {
+
+            }
+
+            void applyFor(AView* view) override;
+
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
+        };
+    }
+}

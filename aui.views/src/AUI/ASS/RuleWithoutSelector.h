@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include "Declaration/IDeclaration.h"
+#include "Property/IProperty.h"
 
 struct RuleWithoutSelector {
 public:
@@ -34,11 +34,11 @@ public:
 
     }
 
-    [[nodiscard]] const AVector<_<ass::decl::IDeclarationBase>>& getDeclarations() const noexcept {
+    [[nodiscard]] const AVector<_<ass::prop::IPropertyBase>>& getDeclarations() const noexcept {
         return mDeclarations;
     }
 
-    void addDeclaration(_<ass::decl::IDeclarationBase> declaration) {
+    void addDeclaration(_<ass::prop::IPropertyBase> declaration) {
         mDeclarations << std::move(declaration);
     }
 
@@ -56,13 +56,13 @@ private:
         if constexpr(std::is_same_v<T, RuleWithoutSelector>) {
             mDeclarations = std::move(t.mDeclarations);
         } else {
-            using declaration_t = ass::decl::Declaration<std::decay_t<T>>;
+            using declaration_t = ass::prop::Property<std::decay_t<T>>;
             static_assert(aui::is_complete<declaration_t>,
-                          "ass::decl::Declaration template specialization is not defined for this declaration");
+                          "ass::prop::Property template specialization is not defined for this declaration");
 
             mDeclarations << _new<declaration_t>(t);
         }
     }
 
-    AVector<_<ass::decl::IDeclarationBase>> mDeclarations;
+    AVector<_<ass::prop::IPropertyBase>> mDeclarations;
 };

@@ -14,22 +14,19 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by alex2 on 07.01.2021.
+//
 
 
-#include <AUI/View/AScrollArea.h>
+#include "TransformOffset.h"
+#include <AUI/Render/Render.h>
+#include <glm/gtc/matrix_transform.hpp>
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+void ass::prop::Property<ass::TransformOffset>::renderFor(AView* view) {
+    Render::setTransform(glm::translate(glm::mat4(1.f), glm::vec3{mInfo.offsetX, mInfo.offsetY, 0.0}));
+}
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
-
-
+ass::prop::PropertySlot ass::prop::Property<ass::TransformOffset>::getPropertySlot() const {
+    return ass::prop::PropertySlot::TRANSFORM_OFFSET;
+}

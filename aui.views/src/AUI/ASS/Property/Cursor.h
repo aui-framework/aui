@@ -16,20 +16,32 @@
 
 #pragma once
 
+#include <AUI/Platform/ACursor.h>
+#include <AUI/Util/AMetric.h>
+#include "IProperty.h"
 
-#include <AUI/View/AScrollArea.h>
+namespace ass {
+    namespace prop {
+        template<>
+        struct API_AUI_VIEWS Property<ACursor>: IPropertyBase {
+        private:
+            ACursor mInfo;
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+        public:
+            Property(const ACursor& info) : mInfo(info) {
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
+            }
 
+            void applyFor(AView* view) override;
 
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
+        };
+        template<>
+        struct API_AUI_VIEWS Property<ACursor::System>: Property<ACursor> {
+            using Property<ACursor>::Property;
+        };
+    }
+}

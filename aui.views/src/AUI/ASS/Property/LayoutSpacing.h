@@ -17,19 +17,37 @@
 #pragma once
 
 
-#include <AUI/View/AScrollArea.h>
+#include <AUI/Platform/ACursor.h>
+#include <AUI/Util/AMetric.h>
+#include "IProperty.h"
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+namespace ass {
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
+    /**
+     * @brief Controls the @ref ALayout::setSpacing "layout spacing" expanding of AViewContainer's layout.
+     * @ingroup ass
+     */
+    struct LayoutSpacing {
+        AMetric spacing;
+    };
 
+    namespace prop {
+        template<>
+        struct API_AUI_VIEWS Property<LayoutSpacing>: IPropertyBase {
+        private:
+            LayoutSpacing mInfo;
 
+        public:
+            Property(const LayoutSpacing& info) : mInfo(info) {
+
+            }
+
+            void applyFor(AView* view) override;
+
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
+        };
+    }
+}

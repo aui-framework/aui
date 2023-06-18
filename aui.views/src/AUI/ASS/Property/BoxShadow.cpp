@@ -14,22 +14,26 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by alex2 on 01.01.2021.
+//
+
+#include "BoxShadow.h"
+#include <AUI/Render/Render.h>
 
 
-#include <AUI/View/AScrollArea.h>
+void ass::prop::Property<ass::BoxShadow>::renderFor(AView* view) {
+    Render::boxShadow({mInfo.offsetX.getValuePx() - mInfo.spreadRadius.getValuePx(),
+                       mInfo.offsetY.getValuePx() - mInfo.spreadRadius.getValuePx()},
+                      glm::vec2(view->getSize()) + mInfo.spreadRadius.getValuePx() * 2.f,
+                      mInfo.blurRadius,
+                      mInfo.color);
+}
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+ass::prop::PropertySlot ass::prop::Property<ass::BoxShadow>::getPropertySlot() const {
+    return ass::prop::PropertySlot::SHADOW;
+}
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
-
-
+bool ass::prop::Property<ass::BoxShadow>::isNone() {
+    return mInfo.color.isFullyTransparent();
+}

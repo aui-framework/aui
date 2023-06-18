@@ -22,8 +22,8 @@
 
 #include <glm/glm.hpp>
 
-#include <AUI/ASS/Declaration/IDeclaration.h>
-#include <AUI/ASS/Declaration/ScrollbarAppearance.h>
+#include <AUI/ASS/Property/IProperty.h>
+#include <AUI/ASS/Property/ScrollbarAppearance.h>
 #include "AUI/Common/ABoxFields.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/AObject.h"
@@ -172,7 +172,7 @@ protected:
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
      */
-    std::array<ass::decl::IDeclarationBase*, int(ass::decl::DeclarationSlot::COUNT)> mAss;
+    std::array<ass::prop::IPropertyBase*, int(ass::prop::PropertySlot::COUNT)> mAss;
 
     /**
      * @brief Custom ASS Rules

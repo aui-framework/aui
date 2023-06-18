@@ -14,22 +14,26 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by alex2 on 01.01.2021.
+//
 
+#include "TextShadow.h"
+#include <AUI/View/AAbstractLabel.h>
+#include <AUI/Render/RenderHints.h>
 
-#include <AUI/View/AScrollArea.h>
+void ass::prop::Property<ass::TextShadow>::renderFor(AView* view) {
+    if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
+        RenderHints::PushColor c;
+        Render::setColor(mInfo.shadowColor);
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
-
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
-
-
+        {
+            RenderHints::PushMatrix m;
+            Render::translate({1, 1});
+            label->doRenderText();
+        }
+    }
+}
+ass::prop::PropertySlot ass::prop::Property<ass::TextShadow>::getPropertySlot() const {
+    return ass::prop::PropertySlot::TEXT_SHADOW;
+}

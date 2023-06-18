@@ -14,22 +14,27 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by alex2 on 08.01.2021.
+//
 
+#include <AUI/Render/RenderHints.h>
+#include "BorderLeft.h"
 
-#include <AUI/View/AScrollArea.h>
+void ass::prop::Property<ass::BorderLeft>::renderFor(AView* view) {
+    RenderHints::PushColor x;
+    int w = mInfo.width;
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+    Render::rect(ASolidBrush{mInfo.color},
+                 {0, 0},
+                 {w, view->getHeight()});
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
+}
 
+bool ass::prop::Property<ass::BorderLeft>::isNone() {
+    return mInfo.width <= 0.001f;
+}
 
+ass::prop::PropertySlot ass::prop::Property<ass::BorderLeft>::getPropertySlot() const {
+    return ass::prop::PropertySlot::BORDER;
+}

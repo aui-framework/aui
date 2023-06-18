@@ -14,22 +14,16 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by alex2 on 03.01.2021.
+//
+
+#include "Expanding.h"
 
 
-#include <AUI/View/AScrollArea.h>
-
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
-
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
-
-
+void ass::prop::Property<ass::Expanding>::applyFor(AView* view) {
+    view->setExpanding({
+                               mInfo.expandingX.or_default(view->getExpandingHorizontal()),
+                               mInfo.expandingY.or_default(view->getExpandingVertical()),
+    });
+}

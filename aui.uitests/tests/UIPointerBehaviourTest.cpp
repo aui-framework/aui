@@ -35,6 +35,16 @@ public:
             AView::onPointerReleased(a);
         });
 
+        ON_CALL(*this, onMouseEnter).WillByDefault([this]() {
+            AView::onMouseEnter();
+        });
+        ON_CALL(*this, onPointerMove).WillByDefault([this](const auto& a) {
+            AView::onPointerMove(a);
+        });
+        ON_CALL(*this, onMouseLeave).WillByDefault([this]() {
+            AView::onMouseLeave();
+        });
+
         connect(clicked, me::onClicked);
     }
 
@@ -42,6 +52,9 @@ public:
     MOCK_METHOD(void, onPointerReleased, (const APointerReleasedEvent& event), (override));
     MOCK_METHOD(void, onClicked, (), ());
 
+    MOCK_METHOD(void, onMouseEnter, (), (override));
+    MOCK_METHOD(void, onPointerMove, (glm::ivec2 pos), (override));
+    MOCK_METHOD(void, onMouseLeave, (), (override));
 
 };
 
@@ -53,7 +66,13 @@ protected:
         UITest::SetUp();
 
         mWindow = _new<AWindow>();
-        ALayoutInflater::inflate(mWindow, mView = _new<ViewMock>());
+        using namespace declarative;
+        ALayoutInflater::inflate(mWindow,
+            Vertical {
+              mView = _new<ViewMock>(),
+              Label { "Some bullshit to complicate layout" },
+            }
+            );
         mWindow->show();
     }
 
@@ -102,4 +121,22 @@ TEST_F(UIPointerBehaviour, ClickOutsideTest) {
         .position = { 100, 100 }, // somewhere outside the mView
         .button = AInput::LBUTTON,
     });
+}
+
+/**
+ * Checks mouse move events.
+ */
+TEST_F(UIPointerBehaviour, MouseMoveNoClick) {
+    testing::InSequence s;
+
+    EXPECT_CALL(*mView, onPointerPressed(testing::_)).Times(0);
+    EXPECT_CALL(*mView, onPointerReleased(testing::_)).Times(0);
+    EXPECT_CALL(*mView, onClicked()).Times(0);
+
+    EXPECT_CALL(*mView, onMouseEnter);
+    EXPECT_CALL(*mView, onPointerMove(testing::_)).Times(testing::AtLeast(1));
+    EXPECT_CALL(*mView, onMouseLeave);
+
+    mWindow->onPointerMove({ 10, 10 }); // somewhere over the mView
+    mWindow->onPointerMove({ 100, 100 }); // somewhere outside the mView
 }

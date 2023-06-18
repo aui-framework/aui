@@ -14,22 +14,23 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by alex2 on 29.12.2020.
+//
+
+#include <AUI/Render/RenderHints.h>
+#include "ImageRendering.h"
+#include "IProperty.h"
+#include <AUI/ASS/AAssHelper.h>
 
 
-#include <AUI/View/AScrollArea.h>
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+void ass::prop::Property<ImageRendering>::renderFor(AView* view) {
+    view->getAssHelper()->state.imageRendering = mInfo;
+}
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
+ass::prop::PropertySlot ass::prop::Property<ImageRendering>::getPropertySlot() const {
+    return ass::prop::PropertySlot::IMAGE_RENDERING;
+}
 
 

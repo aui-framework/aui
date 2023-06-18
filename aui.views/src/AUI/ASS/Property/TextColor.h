@@ -14,22 +14,42 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+//
+// Created by alex2 on 02.01.2021.
+//
+
 #pragma once
 
+#include "IProperty.h"
 
-#include <AUI/View/AScrollArea.h>
+namespace ass {
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
-
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
+    /**
+     * @brief Controls the text color of AView.
+     * @ingroup ass
+     */
+    struct TextColor {
+        AColor color;
+    };
 
 
+    namespace prop {
+        template<>
+        struct API_AUI_VIEWS Property<TextColor>: IPropertyBase {
+        private:
+            TextColor mInfo;
+
+        public:
+            Property(const TextColor& info) : mInfo(info) {
+
+            }
+
+            void applyFor(AView* view) override;
+
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
+        };
+    }
+}

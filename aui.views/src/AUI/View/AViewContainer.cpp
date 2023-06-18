@@ -219,8 +219,8 @@ void AViewContainer::onScroll(const AScrollEvent& event) {
 
 bool AViewContainer::consumesClick(const glm::ivec2& pos) {
     // has layout check
-    if (mAss[int(ass::decl::DeclarationSlot::BACKGROUND_SOLID)] ||
-        mAss[int(ass::decl::DeclarationSlot::BACKGROUND_IMAGE)])
+    if (mAss[int(ass::prop::PropertySlot::BACKGROUND_SOLID)] ||
+        mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)])
         return true;
     auto p = getViewAt(pos);
     if (p)

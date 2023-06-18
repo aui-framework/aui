@@ -14,22 +14,37 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+//
+// Created by alex2 on 29.12.2020.
+//
+
 #pragma once
 
+#include <AUI/Util/ALayoutDirection.h>
+#include "IProperty.h"
+#include <AUI/Enum/ImageRendering.h>
 
-#include <AUI/View/AScrollArea.h>
+namespace ass {
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+    namespace prop {
+        template<>
+        struct API_AUI_VIEWS Property<ImageRendering>: IPropertyBase {
+        private:
+            ImageRendering mInfo;
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
+        public:
+            Property(const ImageRendering& info) : mInfo(info) {
 
+            }
 
+            void renderFor(AView* view) override;
+            PropertySlot getPropertySlot() const override;
+
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
+        };
+
+    }
+}

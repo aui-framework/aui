@@ -14,22 +14,15 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by alex2 on 01.01.2021.
+//
 
+#include "MinSize.h"
 
-#include <AUI/View/AScrollArea.h>
-
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
-
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
-
-
+void ass::prop::Property<ass::MinSize>::applyFor(AView* view) {
+    view->setMinSize({
+                               mInfo.width ? mInfo.width->getValuePx() : view->getMinSize().x,
+                               mInfo.height ? mInfo.height->getValuePx() : view->getMinSize().y
+                       });
+}

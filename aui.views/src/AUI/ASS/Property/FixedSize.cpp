@@ -14,22 +14,16 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by alex2 on 03.01.2021.
+//
+
+#include "FixedSize.h"
 
 
-#include <AUI/View/AScrollArea.h>
-
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
-
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
-
-
+void ass::prop::Property<ass::FixedSize>::applyFor(AView* view) {
+    view->setFixedSize({
+                               mInfo.width ? mInfo.width->getValuePx() : view->getFixedSize().x,
+                               mInfo.height ? mInfo.height->getValuePx() : view->getFixedSize().y
+    });
+}

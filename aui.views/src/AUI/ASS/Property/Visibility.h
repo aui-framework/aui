@@ -16,20 +16,25 @@
 
 #pragma once
 
+#include "IProperty.h"
+#include <AUI/Enum/Visibility.h>
 
-#include <AUI/View/AScrollArea.h>
+namespace ass::prop {
+    template<>
+    struct API_AUI_VIEWS Property<Visibility>: IPropertyBase {
+    private:
+        Visibility mInfo;
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+    public:
+        Property(const Visibility& visibility) : mInfo(visibility) {
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
+        }
 
+        void applyFor(AView* view) override;
 
+        [[nodiscard]]
+        const auto& value() const noexcept {
+            return mInfo;
+        }
+    };
+}

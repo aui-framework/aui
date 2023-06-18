@@ -14,22 +14,19 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#pragma once
+//
+// Created by alex2 on 01.01.2021.
+//
 
+#include "Margin.h"
 
-#include <AUI/View/AScrollArea.h>
+void ass::prop::Property<ass::Margin>::applyFor(AView* view) {
+    auto margin = view->getMargin();
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+    mInfo.left.bind_to(margin.left);
+    mInfo.top.bind_to(margin.top);
+    mInfo.right.bind_to(margin.right);
+    mInfo.bottom.bind_to(margin.bottom);
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
-
-
+    view->setMargin(margin);
+}

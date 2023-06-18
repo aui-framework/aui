@@ -100,7 +100,7 @@ void AView::drawStencilMask()
             break;
 
         case AOverflowMask::BACKGROUND_IMAGE_ALPHA:
-            if (auto s = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_IMAGE)]) {
+            if (auto s = mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
                 s->renderFor(this);
             }
             break;
@@ -144,8 +144,8 @@ void AView::render()
         ensureAssUpdated();
 
         // draw list
-        for (unsigned i = 0; i < int(ass::decl::DeclarationSlot::COUNT); ++i) {
-            if (i == int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)) continue;
+        for (unsigned i = 0; i < int(ass::prop::PropertySlot::COUNT); ++i) {
+            if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
             if (auto w = mAss[i]) {
                 w->renderFor(this);
             }
@@ -160,7 +160,7 @@ void AView::render()
         });
     }
 
-    if (auto w = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)]) {
+    if (auto w = mAss[int(ass::prop::PropertySlot::BACKGROUND_EFFECT)]) {
         w->renderFor(this);
     }
     mRedrawRequested = false;
@@ -597,8 +597,8 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
 
 void AView::applyAssRule(const RuleWithoutSelector& rule) {
     for (const auto& d : rule.getDeclarations()) {
-        auto slot = d->getDeclarationSlot();
-        if (slot != ass::decl::DeclarationSlot::NONE) {
+        auto slot = d->getPropertySlot();
+        if (slot != ass::prop::PropertySlot::NONE) {
             mAss[int(slot)] = d->isNone() ? nullptr : d.get();
         }
         d->applyFor(this);

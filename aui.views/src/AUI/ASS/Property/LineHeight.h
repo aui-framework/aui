@@ -14,22 +14,41 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+//
+// Created by alex2 on 01.01.2021.
+//
+
 #pragma once
 
+#include <AUI/Util/AMetric.h>
+#include "IProperty.h"
 
-#include <AUI/View/AScrollArea.h>
+namespace ass {
+    /**
+     * @brief Controls line height multiplier of the font of the AView.
+     * @ingroup ass
+     */
+    struct LineHeight {
+        float spacing;
+    };
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+    namespace prop {
+        template<>
+        struct API_AUI_VIEWS Property<LineHeight>: IPropertyBase {
+        private:
+            LineHeight mInfo;
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
+        public:
+            Property(const LineHeight& info) : mInfo(info) {
 
+            }
 
+            void applyFor(AView* view) override;
+
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
+        };
+    }
+}

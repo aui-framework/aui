@@ -14,22 +14,44 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+//
+// Created by alex2 on 01.01.2021.
+//
+
 #pragma once
 
+#include <AUI/Util/AMetric.h>
+#include "IProperty.h"
 
-#include <AUI/View/AScrollArea.h>
+namespace ass {
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+    /**
+     * @brief Controls the text border of AView.
+     * @ingroup ass
+     */
+    struct TextBorder {
+        AColor borderColor;
+    };
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
+    namespace prop {
+        template<>
+        struct API_AUI_VIEWS Property<TextBorder>: IPropertyBase {
+        private:
+            TextBorder mInfo;
 
+        public:
+            Property(const TextBorder& info) : mInfo(info) {
 
+            }
+
+            void renderFor(AView* view) override;
+
+            PropertySlot getPropertySlot() const override;
+
+            [[nodiscard]]
+            const auto& value() const noexcept {
+                return mInfo;
+            }
+        };
+    }
+}

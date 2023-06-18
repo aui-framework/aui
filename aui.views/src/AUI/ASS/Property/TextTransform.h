@@ -14,22 +14,32 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+//
+// Created by alex2 on 07.01.2021.
+//
+
+
 #pragma once
 
+#include <AUI/Enum/TextTransform.h>
+#include "IProperty.h"
 
-#include <AUI/View/AScrollArea.h>
+namespace ass::prop {
+    template<>
+    struct API_AUI_VIEWS Property<TextTransform>: IPropertyBase {
+    private:
+        TextTransform mInfo;
 
-class ViewPropertiesView: public AScrollArea {
-private:
-    _weak<AView> mTargetView;
+    public:
+        Property(const TextTransform& info) : mInfo(info) {
 
-    void requestTargetUpdate();
-public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const RuleWithoutSelector* rule);
-    void setTargetView(const _<AView>& targetView);
-};
+        }
 
+        void applyFor(AView* view) override;
 
+        [[nodiscard]]
+        const auto& value() const noexcept {
+            return mInfo;
+        }
+    };
+}

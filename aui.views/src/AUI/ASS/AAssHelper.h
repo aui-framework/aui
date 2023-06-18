@@ -25,8 +25,8 @@
 #include <AUI/Common/AVector.h>
 #include <optional>
 
-#include "Declaration/BackgroundCropping.h"
-#include "Declaration/BackgroundImage.h"
+#include "Property/BackgroundCropping.h"
+#include "Property/BackgroundImage.h"
 
 struct Rule;
 class IDrawable;
