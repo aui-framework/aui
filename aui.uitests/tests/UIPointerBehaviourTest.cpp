@@ -51,6 +51,7 @@ public:
     MOCK_METHOD(void, onPointerPressed, (const APointerPressedEvent& event), (override));
     MOCK_METHOD(void, onPointerReleased, (const APointerReleasedEvent& event), (override));
     MOCK_METHOD(void, onClicked, (), ());
+    MOCK_METHOD(void, onDummyTest, (), ());
 
     MOCK_METHOD(void, onMouseEnter, (), (override));
     MOCK_METHOD(void, onPointerMove, (glm::ivec2 pos), (override));
@@ -69,8 +70,12 @@ protected:
         using namespace declarative;
         ALayoutInflater::inflate(mWindow,
             Vertical {
-              mView = _new<ViewMock>(),
-              Label { "Some bullshit to complicate layout" },
+              Centered {
+                mContainer = Vertical {
+                  mView = _new<ViewMock>(),
+                  Label { "Some bullshit to complicate layout" },
+                }
+              }
             }
             );
         mWindow->show();
@@ -83,6 +88,7 @@ protected:
     }
 
     _<AWindow> mWindow;
+    _<AViewContainer> mContainer;
     _<ViewMock> mView;
 };
 
@@ -94,8 +100,12 @@ TEST_F(UIPointerBehaviour, ClickTest) {
     testing::InSequence s;
 
     EXPECT_CALL(*mView, onPointerPressed(testing::_));
+    EXPECT_CALL(*mView, onDummyTest());
     EXPECT_CALL(*mView, onPointerReleased(testing::_));
     EXPECT_CALL(*mView, onClicked());
+
+    AObject::connect(mContainer->clicked, slot(mView)::onDummyTest);
+
     By::type<ViewMock>().perform(click());
 }
 

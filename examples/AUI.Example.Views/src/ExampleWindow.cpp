@@ -116,6 +116,12 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                         _new<AButton>("Common button"),
                         _new<AButton>("Default button") let { it->setDefault(); },
                         _new<AButton>("Disabled button") let { it->setDisabled(); },
+                        Button {
+                            Icon { ":img/logo.svg" },
+                            Label { "Button with icon" },
+                        }.clicked(this, [] {
+                            ALogger::info("Example") << "Button clicked";
+                        }),
                     },
                 },
 
