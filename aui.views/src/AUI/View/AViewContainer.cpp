@@ -181,6 +181,8 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
         auto copy = event;
         copy.position -= p->getPosition();
         p->onPointerPressed(copy);
+
+        mFocusChainTarget = std::move(p);
     }
 }
 

@@ -251,7 +251,7 @@ public:
     static void setLogFileForGlobal(APath path);
 
     const AString& logFile() {
-        return mLogFile.path();
+        return mLogFile.valueOrException().path();
     }
 
     void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
@@ -269,21 +269,24 @@ public:
     void doLogFileAccessSafe(Callable action) {
         std::unique_lock lock(mLogSync);
         ARaiiHelper opener = [&] {
+            if (!mLogFile) return;
             try {
                 lock.lock();
-                mLogFile.open(true);
+                mLogFile->open(true);
             } catch (const AException& e) {
+                auto path = mLogFile->path();
+                mLogFile.reset();
                 lock.unlock();
-                log(ERR, "Logger", fmt::format("Unable to reopen file {}: {}", mLogFile.path(), e.getMessage()));
+                log(ERR, "Logger", fmt::format("Unable to reopen file {}: {}", path, e.getMessage()));
             }
         };
-        if (!mLogFile.nativeHandle()) {
+        if (!mLogFile || !mLogFile->nativeHandle()) {
             lock.unlock();
             action();
             return;
         }
 
-        mLogFile.close();
+        mLogFile->close();
         lock.unlock();
         action();
 
@@ -320,7 +323,7 @@ public:
 private:
 	ALogger();
 
-    AFileOutputStream mLogFile;
+    AOptional<AFileOutputStream> mLogFile;
     AMutex mLogSync;
     AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 

@@ -69,10 +69,6 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
     mFocusedView = view;
 
     if (view) {
-        auto w = weak_from_this();
-        ui_threadX [this, self = w.lock()] {
-            updateFocusChain();
-        };
         if (!view->hasFocus()) {
             view->onFocusAcquired();
         }
@@ -303,15 +299,6 @@ void ABaseWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 
 }
 
-void ABaseWindow::updateFocusChain() {
-    if (auto focusedView = mFocusedView.lock()) {
-        _weak<AView> focusChainTarget = mFocusedView;
-        for (auto target = focusedView->getParent(); target != nullptr; target = target->getParent()) {
-            target->setFocusChainTarget(std::move(focusChainTarget));
-            focusChainTarget = target->weakPtr();
-        }
-    }
-}
 
 void ABaseWindow::requestTouchscreenKeyboard() {
     if (mIgnoreTouchscreenKeyboardRequests) {
