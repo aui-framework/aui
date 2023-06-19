@@ -41,6 +41,26 @@
 
 class AChildProcess;
 
+/**
+ * @brief Flag enum for AChildProcess::run
+ * @ingroup core
+ */
+AUI_ENUM_FLAG(ASubProcessExecutionFlags) {
+    /**
+     * @brief Merges stdin and stdout streams in a child process
+     */
+    MERGE_STDOUT_STDERR = 0b001,
+    /**
+     * @brief If set, child and parent processes have the same stdout stream
+     */
+    TIE_STDOUT = 0b010,
+    /**
+     * @brief If set, child and parent processes have the same stderr stream
+     */
+    TIE_STDERR = 0b100,
+    DEFAULT = 0
+};
+
 class AProcessException: public AException {
 public:
     AProcessException(const AString& message): AException(message) {}
@@ -97,7 +117,8 @@ public:
      */
     static int executeWaitForExit(AString applicationFile,
                                   AString args = {},
-                                  APath workingDirectory = {});
+                                  APath workingDirectory = {},
+                                  ASubProcessExecutionFlags flags = ASubProcessExecutionFlags::DEFAULT);
 
 
     /**
@@ -134,11 +155,6 @@ public:
     static _<AProcess> fromPid(uint32_t pid);
 
     void kill() const noexcept;
-};
-
-AUI_ENUM_FLAG(ASubProcessExecutionFlags) {
-    MERGE_STDOUT_STDERR = 0b1,
-    DEFAULT = 0
 };
 
 /**
