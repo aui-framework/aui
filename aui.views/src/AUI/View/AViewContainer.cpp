@@ -133,16 +133,17 @@ void AViewContainer::onMouseEnter() {
 void AViewContainer::onPointerMove(glm::ivec2 pos) {
     AView::onPointerMove(pos);
 
-    auto targetView = getViewAt(pos);
+    auto viewUnderCursor = getViewAt(pos);
+    auto targetView = isMousePressed() ? mFocusChainTarget.lock() : viewUnderCursor;
 
     if (targetView) {
         auto mousePos = pos - targetView->getPosition();
-        targetView->onMouseEnter();
+        if (!targetView->isMouseHover()) targetView->onMouseEnter();
         targetView->onPointerMove(mousePos);
     }
 
     for (auto& v: mViews) {
-        if (v->isMouseHover() && v != targetView) {
+        if (v->isMouseHover() && v != viewUnderCursor) {
             v->onMouseLeave();
         }
     }
@@ -151,7 +152,7 @@ void AViewContainer::onPointerMove(glm::ivec2 pos) {
 void AViewContainer::onMouseLeave() {
     AView::onMouseLeave();
     for (auto& view: mViews) {
-        if (view->isMouseHover() && view->isEnabled())
+        if (view->isMouseHover())
             view->onMouseLeave();
     }
 }
@@ -180,6 +181,8 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
         auto copy = event;
         copy.position -= p->getPosition();
         p->onPointerPressed(copy);
+
+        mFocusChainTarget = std::move(p);
     }
 }
 
@@ -218,8 +221,8 @@ void AViewContainer::onScroll(const AScrollEvent& event) {
 
 bool AViewContainer::consumesClick(const glm::ivec2& pos) {
     // has layout check
-    if (mAss[int(ass::decl::DeclarationSlot::BACKGROUND_SOLID)] ||
-        mAss[int(ass::decl::DeclarationSlot::BACKGROUND_IMAGE)])
+    if (mAss[int(ass::prop::PropertySlot::BACKGROUND_SOLID)] ||
+        mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)])
         return true;
     auto p = getViewAt(pos);
     if (p)

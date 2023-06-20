@@ -26,10 +26,10 @@
  * @brief CSS-like styling system
  * @details
  * AUI uses CSS-like stylesheet domain specific language, ASS (stands for Aui Style Sheets). Like CSS, ASS is a list
- * of rules. A rule consists of a @ref ass_selector "selector" and a list of @ref ass_declaration "declarations".
+ * of rules. A rule consists of a @ref ass_selector "selector" and a list of @ref ass_property "properties".
  * Selector is a basic matcher that determines whether apply a rule to the specific @ref AView "view" or not. Selector
- * is the first statement in a rule and further statements are @ref ass_declaration "style declarations".
- * @ref ass_declaration "Declaration" controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
+ * is the first statement in a rule and further statements are @ref ass_property "style properties".
+ * @ref ass_property "Property" controls the specific aspect of view's style (i.e. `FontSize { 18_pt }` equals
  * "call setFontSize(18_pt) for every matched view").
  * <table>
  *   <tr>
@@ -119,7 +119,8 @@
  * @endcode
  *
  * ## Using with_style
- * The code below draws "Hello" label with red background and centered alignment, and "World" label with blue background:
+ * The code below draws "Hello" label with red background and centered alignment, and "World" label with blue
+ * background, using with_style:
  *
  * @code{cpp}
  * using namespace ass;
@@ -153,58 +154,62 @@
  */
 
 // Declarations
-#include "Declaration/BackgroundImage.h"
-#include "Declaration/BackgroundSolid.h"
-#include "Declaration/BackgroundGradient.h"
-#include "Declaration/BackgroundEffect.h"
-#include "Declaration/Border.h"
-#include "Declaration/BorderBottom.h"
-#include "Declaration/BorderRadius.h"
-#include "Declaration/BorderLeft.h"
-#include "Declaration/BoxShadow.h"
-#include "Declaration/Cursor.h"
-#include "Declaration/Expanding.h"
-#include "Declaration/FixedSize.h"
-#include "Declaration/Font.h"
-#include "Declaration/FontFamily.h"
-#include "Declaration/FontRendering.h"
-#include "Declaration/FontSize.h"
-#include "Declaration/ImageRendering.h"
-#include "Declaration/LayoutSpacing.h"
-#include "Declaration/LineHeight.h"
-#include "Declaration/Margin.h"
-#include "Declaration/MaxSize.h"
-#include "Declaration/MinSize.h"
-#include "Declaration/Opacity.h"
-#include "Declaration/Overflow.h"
-#include "Declaration/Padding.h"
-#include "Declaration/TextAlign.h"
-#include "Declaration/TextBorder.h"
-#include "Declaration/TextColor.h"
-#include "Declaration/TextShadow.h"
-#include "Declaration/TextTransform.h"
-#include "Declaration/TransformOffset.h"
-#include "Declaration/TransformScale.h"
-#include "Declaration/VerticalAlign.h"
-#include "Declaration/Visibility.h"
-#include "Declaration/TextOverflow.h"
-#include "Declaration/ScrollbarAppearance.h"
+#include "Property/BackgroundImage.h"
+#include "Property/BackgroundSolid.h"
+#include "Property/BackgroundGradient.h"
+#include "Property/BackgroundEffect.h"
+#include "Property/Border.h"
+#include "Property/BorderBottom.h"
+#include "Property/BorderRadius.h"
+#include "Property/BorderLeft.h"
+#include "Property/BoxShadow.h"
+#include "Property/Cursor.h"
+#include "Property/Expanding.h"
+#include "Property/FixedSize.h"
+#include "Property/Font.h"
+#include "Property/FontFamily.h"
+#include "Property/FontRendering.h"
+#include "Property/FontSize.h"
+#include "Property/ImageRendering.h"
+#include "Property/LayoutSpacing.h"
+#include "Property/LineHeight.h"
+#include "Property/Margin.h"
+#include "Property/MaxSize.h"
+#include "Property/MinSize.h"
+#include "Property/Opacity.h"
+#include "Property/Overflow.h"
+#include "Property/Padding.h"
+#include "Property/TextAlign.h"
+#include "Property/TextBorder.h"
+#include "Property/TextColor.h"
+#include "Property/TextShadow.h"
+#include "Property/TextTransform.h"
+#include "Property/TransformOffset.h"
+#include "Property/TransformScale.h"
+#include "Property/VerticalAlign.h"
+#include "Property/Visibility.h"
+#include "Property/TextOverflow.h"
+#include "Property/ScrollbarAppearance.h"
+
+#include <AUI/ASS/AAssHelper.h>
 
 // Selectors
 #include "AUI/ASS/Selector/AAssSelector.h"
 #include "Selector/ParentSelector.h"
 #include "Selector/DirectParentSelector.h"
 #include "Selector/type_of.h"
-#include "Selector/active.h"
+#include "Selector/activated.h"
 #include "Selector/disabled.h"
 #include "Selector/debug_selector.h"
 #include "Selector/hovered.h"
 #include "Selector/class_of.h"
 #include "Selector/Selected.h"
+#include "Selector/on_state.h"
 
 // Other
 #include "unset.h"
 #include "AStylesheet.h"
+#include "PropertyListRecursive.h"
 
 
 namespace declarative {

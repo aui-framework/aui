@@ -323,8 +323,6 @@ private:
 
     glm::ivec2 mMousePos;
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
-
-    void updateFocusChain();
 };
 
 

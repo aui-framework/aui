@@ -25,8 +25,8 @@
 #include <AUI/ASS/AAssHelper.h>
 
 #include "hovered.h"
-#include "active.h"
-#include "focus.h"
+#include "activated.h"
+#include "focused.h"
 #include "disabled.h"
 
 namespace ass {
@@ -65,8 +65,8 @@ namespace ass {
         class_of(const AString& clazz) : ClassOf(clazz) {}
 
         using hover = ass::hovered<detail::ClassOf>;
-        using active = ass::active<detail::ClassOf>;
-        using focus = ass::focus<detail::ClassOf>;
+        using active = ass::activated<detail::ClassOf>;
+        using focus = ass::focused<detail::ClassOf>;
         using disabled = ass::disabled<detail::ClassOf>;
     };
 

@@ -26,8 +26,8 @@
 #include <AUI/ASS/AAssHelper.h>
 
 #include "hovered.h"
-#include "active.h"
-#include "focus.h"
+#include "activated.h"
+#include "focused.h"
 #include "disabled.h"
 
 namespace ass {
@@ -52,8 +52,8 @@ namespace ass {
         debug_selector() = default;
 
         using hover = ass::hovered<detail::debug_selector>;
-        using active = ass::active<detail::debug_selector>;
-        using focus = ass::focus<detail::debug_selector>;
+        using active = ass::activated<detail::debug_selector>;
+        using focus = ass::focused<detail::debug_selector>;
         using disabled = ass::disabled<detail::debug_selector>;
     };
 

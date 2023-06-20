@@ -115,20 +115,20 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
     std::unique_lock lock(mLogSync);
     if (message.length() == 0) {
         printf("[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
-        fprintf(mLogFile.nativeHandle(), "[%s][%s[%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
+        if (mLogFile) fprintf(mLogFile->nativeHandle(), "[%s][%s[%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
     } else {
         printf("[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
-        fprintf(mLogFile.nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
+        if (mLogFile) fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
     }
     fflush(stdout);
-    fflush(mLogFile.nativeHandle());
+    fflush(mLogFile->nativeHandle());
 #endif
 }
 
 
 void ALogger::setLogFileImpl(AString path) {
     mLogFile = AFileOutputStream(std::move(path));
-    log(INFO, "Logger",  ("Log file: " + mLogFile.path()).toStdString());
+    log(INFO, "Logger",  ("Log file: " + mLogFile->path()).toStdString());
 }
 
 ALogger::~ALogger() = default;

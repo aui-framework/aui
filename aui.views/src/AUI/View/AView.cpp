@@ -100,7 +100,7 @@ void AView::drawStencilMask()
             break;
 
         case AOverflowMask::BACKGROUND_IMAGE_ALPHA:
-            if (auto s = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_IMAGE)]) {
+            if (auto s = mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
                 s->renderFor(this);
             }
             break;
@@ -144,8 +144,8 @@ void AView::render()
         ensureAssUpdated();
 
         // draw list
-        for (unsigned i = 0; i < int(ass::decl::DeclarationSlot::COUNT); ++i) {
-            if (i == int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)) continue;
+        for (unsigned i = 0; i < int(ass::prop::PropertySlot::COUNT); ++i) {
+            if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
             if (auto w = mAss[i]) {
                 w->renderFor(this);
             }
@@ -160,7 +160,7 @@ void AView::render()
         });
     }
 
-    if (auto w = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)]) {
+    if (auto w = mAss[int(ass::prop::PropertySlot::BACKGROUND_EFFECT)]) {
         w->renderFor(this);
     }
     mRedrawRequested = false;
@@ -224,7 +224,7 @@ void AView::invalidateStateStyles() {
 
     for (auto& r : mAssHelper->mPossiblyApplicableRules) {
         if (r->getSelector().isStateApplicable(this)) {
-            applyAssRule(* r);
+            applyAssRule(*r);
         }
     }
     applyAssRule(mCustomStyleRule);
@@ -302,11 +302,24 @@ void AView::removeAssName(const AString& assName)
     invalidateAssHelper();
 }
 
+
+namespace {
+    void setupConnectionsCustomStyleRecursive(AView* view, const ass::PropertyListRecursive& propertyList) {
+        for (const auto& d : propertyList.conditionalPropertyLists()) {
+            d.selector.setupConnections(view, view->getAssHelper());
+            setupConnectionsCustomStyleRecursive(view, d.list);
+        }
+    }
+}
+
 void AView::ensureAssUpdated()
 {
     if (mAssHelper == nullptr)
     {
         mAssHelper = _new<AAssHelper>();
+
+        setupConnectionsCustomStyleRecursive(this, mCustomStyleRule);
+
         connect(customCssPropertyChanged, mAssHelper,
                 &AAssHelper::onInvalidateStateAss);
         connect(mAssHelper->invalidateFullAss, this, [&]()
@@ -329,6 +342,9 @@ void AView::onMouseEnter()
 
 void AView::onPointerMove(glm::ivec2 pos)
 {
+    if (isMouseHover() && mCursor) {
+        AWindow::current()->setCursor(mCursor);
+    }
 }
 
 void AView::onMouseLeave()
@@ -592,13 +608,23 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
     }, event);
 }
 
-void AView::applyAssRule(const RuleWithoutSelector& rule) {
-    for (const auto& d : rule.getDeclarations()) {
-        auto slot = d->getDeclarationSlot();
-        if (slot != ass::decl::DeclarationSlot::NONE) {
+void AView::applyAssRule(const ass::PropertyList& propertyList) {
+    for (const auto& d : propertyList.declarations()) {
+        auto slot = d->getPropertySlot();
+        if (slot != ass::prop::PropertySlot::NONE) {
             mAss[int(slot)] = d->isNone() ? nullptr : d.get();
         }
         d->applyFor(this);
+    }
+}
+
+void AView::applyAssRule(const ass::PropertyListRecursive& propertyList) {
+    applyAssRule(static_cast<const ass::PropertyList&>(propertyList));
+
+    for (const auto& d : propertyList.conditionalPropertyLists()) {
+        if (d.selector.isStateApplicable(this)) {
+            applyAssRule(d.list);
+        }
     }
 }
 
@@ -608,7 +634,8 @@ ALayoutDirection AView::parentLayoutDirection() const noexcept {
     return mParent->getLayout()->getLayoutDirection();
 }
 
-void AView::setCustomStyle(RuleWithoutSelector rule) {
+
+void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     AUI_ASSERT_UI_THREAD_ONLY();
     mCustomStyleRule = std::move(rule);
     mAssHelper = nullptr;

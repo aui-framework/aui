@@ -22,8 +22,8 @@
 
 #include <glm/glm.hpp>
 
-#include <AUI/ASS/Declaration/IDeclaration.h>
-#include <AUI/ASS/Declaration/ScrollbarAppearance.h>
+#include <AUI/ASS/Property/IProperty.h>
+#include <AUI/ASS/Property/ScrollbarAppearance.h>
 #include "AUI/Common/ABoxFields.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/AObject.h"
@@ -34,7 +34,7 @@
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Util/AFieldSignalEmitter.h"
 #include "AUI/Util/IBackgroundEffect.h"
-#include <AUI/ASS/RuleWithoutSelector.h>
+#include <AUI/ASS/PropertyListRecursive.h>
 #include <AUI/Enum/AOverflow.h>
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Enum/MouseCollisionPolicy.h>
@@ -172,12 +172,12 @@ protected:
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
      */
-    std::array<ass::decl::IDeclarationBase*, int(ass::decl::DeclarationSlot::COUNT)> mAss;
+    std::array<ass::prop::IPropertyBase*, int(ass::prop::PropertySlot::COUNT)> mAss;
 
     /**
      * @brief Custom ASS Rules
      */
-    RuleWithoutSelector mCustomStyleRule;
+    ass::PropertyListRecursive mCustomStyleRule;
 
     /**
      * @brief Determines shape which should pointer take when it's above this AView.
@@ -251,7 +251,8 @@ protected:
      */
     bool transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event);
 
-    void applyAssRule(const RuleWithoutSelector& rule);
+    void applyAssRule(const ass::PropertyList& propertyList);
+    void applyAssRule(const ass::PropertyListRecursive& propertyList);
 
     /**
      * @brief Produce context (right click) menu.
@@ -716,11 +717,11 @@ public:
         return mAssHelper;
     }
 
-    const RuleWithoutSelector& getCustomAss() const {
+    const ass::PropertyListRecursive& getCustomAss() const {
         return mCustomStyleRule;
     }
 
-    void setCustomStyle(RuleWithoutSelector rule);
+    void setCustomStyle(ass::PropertyListRecursive rule);
 
     void ensureAssUpdated();
 
@@ -747,6 +748,15 @@ public:
     virtual bool onGesture(const glm::ivec2& origin, const AGestureEvent& event);
 
     virtual void onMouseEnter();
+
+    /**
+     * @brief Handles pointer hover events
+     * @param pos event position
+     * @details
+     * @note
+     * If the view is pressed, it would still received move events. Use AView::isMouseHover to check is the pointer
+     * actually over view or not. See AView::onPointerReleased for more info.
+     */
     virtual void onPointerMove(glm::ivec2 pos);
     virtual void onMouseLeave();
     virtual void onDpiChanged();
@@ -811,7 +821,7 @@ public:
     /**
      * @brief Helper function for kAUI.h:with_style
      */
-    void operator+(RuleWithoutSelector rule) {
+    void operator+(ass::PropertyListRecursive rule) {
         setCustomStyle(std::move(rule));
     }
 

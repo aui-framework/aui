@@ -47,7 +47,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     mTargetView = targetView;
     if (!targetView) return;
 
-    ADeque<ass::decl::IDeclarationBase*> applicableDeclarations;
+    ADeque<ass::prop::IPropertyBase*> applicableDeclarations;
 
     using namespace declarative;
     auto addressStr = "{}"_format((void*)targetView.get());
@@ -112,10 +112,10 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 }
 
 void ViewPropertiesView::displayApplicableRule(const _<AViewContainer>& dst,
-                                               ADeque<ass::decl::IDeclarationBase*>& applicableDeclarations,
-                                               const RuleWithoutSelector* rule) {
+                                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
+                                               const ass::PropertyList* rule) {
 
-    for (const auto& decl : rule->getDeclarations()) {
+    for (const auto& decl : rule->declarations()) {
         applicableDeclarations.push_front(decl.get());
         dst->addView(_new<ALabel>(IStringable::toString(decl)) with_style{ Opacity {0.7f } });
     }

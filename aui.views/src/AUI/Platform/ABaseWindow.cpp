@@ -69,10 +69,6 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
     mFocusedView = view;
 
     if (view) {
-        auto w = weak_from_this();
-        ui_threadX [this, self = w.lock()] {
-            updateFocusChain();
-        };
         if (!view->hasFocus()) {
             view->onFocusAcquired();
         }
@@ -226,29 +222,16 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     copy.triggerClick = !mPreventClickOnPointerRelease;
     mPreventClickOnPointerRelease = false;
     AViewContainer::onPointerReleased(copy);
+
+    // AView::onPointerMove handles cursor shape; need extra call in order to flush
+    AViewContainer::onPointerMove(event.position);
 }
 
 void ABaseWindow::onPointerMove(glm::ivec2 pos) {
     mMousePos = pos;
-    AViewContainer::onPointerMove(pos);
-    _<AView> v;
     mCursor = ACursor::DEFAULT;
+    AViewContainer::onPointerMove(pos);
 
-    getViewAtRecursive(pos, [&](const _<AView>& view) {
-        if (const auto& c = view->getCursor()) {
-            mCursor = c;
-        }
-        v = view;
-        return false;
-    }, AViewLookupFlags::ONLY_ONE_PER_CONTAINER);
-
-    if (!shouldDisplayHoverAnimations()) {
-        if (auto focused = mFocusedView.lock()) {
-            if (focused != v) {
-                focused->onPointerMove(pos - focused->getPositionInWindow());
-            }
-        }
-    }
     emit mouseMove(pos);
 }
 
@@ -316,15 +299,6 @@ void ABaseWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 
 }
 
-void ABaseWindow::updateFocusChain() {
-    if (auto focusedView = mFocusedView.lock()) {
-        _weak<AView> focusChainTarget = mFocusedView;
-        for (auto target = focusedView->getParent(); target != nullptr; target = target->getParent()) {
-            target->setFocusChainTarget(std::move(focusChainTarget));
-            focusChainTarget = target->weakPtr();
-        }
-    }
-}
 
 void ABaseWindow::requestTouchscreenKeyboard() {
     if (mIgnoreTouchscreenKeyboardRequests) {
