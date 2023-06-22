@@ -227,6 +227,11 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     AViewContainer::onPointerMove(event.position);
 }
 
+void ABaseWindow::onScroll(const AScrollEvent& event) {
+    AViewContainer::onScroll(event);
+    AViewContainer::onPointerMove(mMousePos); // update hovers inside scrollarea
+}
+
 void ABaseWindow::onPointerMove(glm::ivec2 pos) {
     mMousePos = pos;
     mCursor = ACursor::DEFAULT;

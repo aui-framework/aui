@@ -342,16 +342,12 @@ void AView::onMouseEnter()
 
 void AView::onPointerMove(glm::ivec2 pos)
 {
-    if (isMouseHover() && mCursor) {
-        AWindow::current()->setCursor(mCursor);
-    }
+    AWindow::current()->setCursor(mCursor);
 }
 
 void AView::onMouseLeave()
 {
-    if (AWindow::current()->shouldDisplayHoverAnimations()) {
-        mHovered.set(this, false);
-    }
+    mHovered.set(this, false);
 }
 
 

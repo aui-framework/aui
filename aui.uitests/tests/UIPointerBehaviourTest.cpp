@@ -24,7 +24,7 @@ class ViewMock: public AView {
 public:
     ViewMock() {
         setCustomStyle({
-            ass::MinSize{ 16_dp },
+            ass::MinSize{ 32_dp },
             ass::BackgroundSolid{ AColor::RED },
         });
 
@@ -120,7 +120,7 @@ TEST_F(UIPointerBehaviour, ClickOutsideTest) {
     EXPECT_CALL(*mView, onPointerReleased(testing::_));
     EXPECT_CALL(*mView, onClicked()).Times(0);
     mWindow->onPointerPressed({
-        .position = { 10, 10 }, // somewhere over the mView
+        .position = mView->getCenterPointInWindow(), // somewhere over the mView
         .button = AInput::LBUTTON,
     });
 
@@ -147,6 +147,6 @@ TEST_F(UIPointerBehaviour, MouseMoveNoClick) {
     EXPECT_CALL(*mView, onPointerMove(testing::_)).Times(testing::AtLeast(1));
     EXPECT_CALL(*mView, onMouseLeave);
 
-    mWindow->onPointerMove({ 10, 10 }); // somewhere over the mView
+    mWindow->onPointerMove(mView->getCenterPointInWindow()); // somewhere over the mView
     mWindow->onPointerMove({ 100, 100 }); // somewhere outside the mView
 }

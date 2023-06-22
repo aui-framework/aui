@@ -301,7 +301,12 @@ public:
     }
 
     /**
-     * @return The center point position of the view relatively to top left corner of the window.
+     * @brief The center point position of the view relatively to top left corner of the window.
+     * @details
+     * Useful in UI tests:
+     * @code{cpp}
+     * mWindow->onPointerMove(mView->getCenterPointInWindow()); // triggers on pointer move over the view through window
+     * @endcode
      */
     [[nodiscard]]
     glm::ivec2 getCenterPointInWindow() const

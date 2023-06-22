@@ -281,6 +281,8 @@ public:
      */
     bool shouldDisplayHoverAnimations() const;
 
+    void onScroll(const AScrollEvent& event) override;
+
 
 signals:
     emits<>            dpiChanged;

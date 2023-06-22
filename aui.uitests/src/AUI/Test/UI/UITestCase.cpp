@@ -113,8 +113,7 @@ void testing::UITest::SetUp() {
 }
 
 void testing::UITest::TearDown() {
-    Test::TearDown();
-
+    for (const auto& w : AWindow::getWindowManager().getWindows()) w->close();
     AWindow::getWindowManager().removeAllWindows();
 
     // to process all ui messages
@@ -125,4 +124,5 @@ void testing::UITest::TearDown() {
     AWindow::destroyWindowManager();
     Render::setRenderer(nullptr);
 
+    Test::TearDown();
 }
