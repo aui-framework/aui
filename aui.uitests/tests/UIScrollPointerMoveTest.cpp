@@ -110,3 +110,42 @@ TEST_F(UIScrollPointerMove, MouseMoveScroll) {
     });
     By::type<ViewMock>().check(averageColor(AColor::BLACK), "view didn't become black");
 }
+
+
+/**
+ * Same as previous, but scrolls back again to check view's style still changing on hover.
+ */
+TEST_F(UIScrollPointerMove, MouseMoveScrollAndBack) {
+    testing::InSequence s;
+
+    EXPECT_CALL(*mView, onMouseEnter);
+    EXPECT_CALL(*mView, onPointerMove(testing::_)).Times(testing::AtLeast(1));
+    EXPECT_CALL(*mView, onMouseLeave);
+
+    EXPECT_CALL(*mView, onMouseEnter);
+    EXPECT_CALL(*mView, onPointerMove(testing::_)).Times(testing::AtLeast(1));
+    EXPECT_CALL(*mView, onMouseLeave);
+
+    By::type<ViewMock>().check(averageColor(AColor::BLACK));
+    mWindow->onPointerMove(mView->getCenterPointInWindow()); // somewhere over the mView
+    By::type<ViewMock>().check(averageColor(AColor::RED));
+    mWindow->onScroll(AScrollEvent {
+        .origin  = mView->getCenterPointInWindow(),
+        .delta   = { 0, 30 },
+        .kinetic = false,
+    });
+    By::type<ViewMock>().check(averageColor(AColor::BLACK), "view didn't become black");
+
+    mWindow->onScroll(AScrollEvent {
+        .origin  = mView->getCenterPointInWindow(),
+        .delta   = { 0, -30 },
+        .kinetic = false,
+    });
+
+    mWindow->onPointerMove(mView->getCenterPointInWindow()); // somewhere over the mView
+    By::type<ViewMock>().check(averageColor(AColor::RED), "view didn't become red after returning back");
+
+
+    mWindow->onPointerMove({100, 100}); // somewhere outside the mView
+    By::type<ViewMock>().check(averageColor(AColor::BLACK), "view didn't become black");
+}

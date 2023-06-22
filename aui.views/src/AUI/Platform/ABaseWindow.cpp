@@ -180,6 +180,7 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
 
 void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     closeOverlappingSurfacesOnClick();
+    mPreventClickOnPointerRelease.emplace(false);
     auto focusCopy = mFocusedView.lock();
     mIgnoreTouchscreenKeyboardRequests = false;
     AViewContainer::onPointerPressed(event);
@@ -219,8 +220,8 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
 
 void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     APointerReleasedEvent copy = event;
-    copy.triggerClick = !mPreventClickOnPointerRelease;
-    mPreventClickOnPointerRelease = false;
+    copy.triggerClick = !mPreventClickOnPointerRelease.value();
+    mPreventClickOnPointerRelease.reset();
     AViewContainer::onPointerReleased(copy);
 
     // AView::onPointerMove handles cursor shape; need extra call in order to flush
@@ -327,7 +328,7 @@ bool ABaseWindow::shouldDisplayHoverAnimations() const {
     return isFocused() && !AInput::isKeyDown(AInput::LBUTTON)
            && !AInput::isKeyDown(AInput::CBUTTON)
            && !AInput::isKeyDown(AInput::RBUTTON)
-           && !mPreventClickOnPointerRelease;
+           && !isPreventingClickOnPointerRelease();
 #endif
 }
 
@@ -341,7 +342,10 @@ void ABaseWindow::hideTouchscreenKeyboardImpl() {
 }
 
 void ABaseWindow::preventClickOnPointerRelease() {
-    if (mPreventClickOnPointerRelease) {
+    if (!mPreventClickOnPointerRelease) {
+        return;
+    }
+    if (mPreventClickOnPointerRelease.value()) {
         return;
     }
 

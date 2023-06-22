@@ -76,7 +76,7 @@ public:
      */
     [[nodiscard]]
     bool isPreventingClickOnPointerRelease() const noexcept {
-        return mPreventClickOnPointerRelease;
+        return mPreventClickOnPointerRelease.valueOr(false);
     }
 
     /**
@@ -295,7 +295,7 @@ protected:
     /**
      * @see ABaseWindow::preventClickOnPointerRelease
      */
-    bool mPreventClickOnPointerRelease = false;
+    AOptional<bool> mPreventClickOnPointerRelease;
 
     _unique<IRenderingContext> mRenderingContext;
 
