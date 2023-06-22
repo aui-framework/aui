@@ -31,17 +31,17 @@ namespace ass {
         struct ConditionalPropertyList;
 
         template<typename... Declarations>
-        PropertyListRecursive(Declarations&& ... declarations) {
+        PropertyListRecursive(Declarations&& ... declarations): PropertyListRecursive() {
             processDeclarations(std::forward<Declarations>(declarations)...);
         }
 
-        PropertyListRecursive() {
+        PropertyListRecursive(const PropertyListRecursive&);
+        PropertyListRecursive();
+        ~PropertyListRecursive();
 
-        }
 
-        PropertyListRecursive(const PropertyList& p) : PropertyList(p) {}
-        PropertyListRecursive(PropertyList&& p) : PropertyList(std::move(p)) {}
-
+        PropertyListRecursive(const PropertyList& p);
+        PropertyListRecursive(PropertyList&& p);
 
         [[nodiscard]]
         const AVector<ConditionalPropertyList>& conditionalPropertyLists() const noexcept {
@@ -69,11 +69,21 @@ namespace ass {
         PropertyListRecursive list;
     };
 
+    PropertyListRecursive::PropertyListRecursive() = default;
+    PropertyListRecursive::PropertyListRecursive(const PropertyList& p) : PropertyList(p) {}
+    PropertyListRecursive::PropertyListRecursive(PropertyList&& p) : PropertyList(std::move(p)) {}
+    PropertyListRecursive::PropertyListRecursive(const PropertyListRecursive&) = default;
+    PropertyListRecursive::~PropertyListRecursive() = default;
+
 
     template<typename T>
     void PropertyListRecursive::processDeclaration(T&& t) {
         if constexpr (std::is_base_of_v<PropertyListRecursive::ConditionalPropertyList, T>) {
             mConditionalPropertyLists << std::forward<ConditionalPropertyList&&>(t);
+        } else if constexpr (std::is_same_v<T, PropertyListRecursive>) {
+            // aka move constructor
+            mProperties = std::move(t.mProperties);
+            mConditionalPropertyLists = std::move(t.mConditionalPropertyLists);
         } else {
             using declaration_t = ass::prop::Property<std::decay_t<T>>;
             static_assert(aui::is_complete<declaration_t>,

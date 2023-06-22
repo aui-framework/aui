@@ -21,6 +21,8 @@
 #pragma once
 
 #include "Property/IProperty.h"
+#include <AUI/Common/AObject.h>
+#include <AUI/Traits/types.h>
 
 
 namespace ass {
