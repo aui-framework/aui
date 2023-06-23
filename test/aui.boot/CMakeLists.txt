@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
+
+list(APPEND TEST_CMAKE_ARGS "-G${CMAKE_GENERATOR}")
+
 foreach(_varname
         BUILD_SHARED_LIBS
         )
@@ -11,7 +14,7 @@ file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/helper.cmake "set(TEST_CMAKE_ARGS \"${TES
 
 file(REMOVE_RECURSE b)
 file(MAKE_DIRECTORY ${directory} b)
-execute_process(COMMAND ${CMAKE_COMMAND} -GNinja ../test_project ${TEST_CMAKE_ARGS}
+execute_process(COMMAND ${CMAKE_COMMAND} ../test_project ${TEST_CMAKE_ARGS}
                 WORKING_DIRECTORY b
                 RESULT_VARIABLE _r)
 if (NOT _r STREQUAL "0")
