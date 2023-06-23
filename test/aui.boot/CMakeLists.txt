@@ -11,7 +11,7 @@ file(WRITE ${CMAKE_CURRENT_SOURCE_DIR}/helper.cmake "set(TEST_CMAKE_ARGS \"${TES
 
 file(REMOVE_RECURSE b)
 file(MAKE_DIRECTORY ${directory} b)
-execute_process(COMMAND ${CMAKE_COMMAND} ../test_project ${TEST_CMAKE_ARGS}
+execute_process(COMMAND ${CMAKE_COMMAND} -GNinja ../test_project ${TEST_CMAKE_ARGS}
                 WORKING_DIRECTORY b
                 RESULT_VARIABLE _r)
 if (NOT _r STREQUAL "0")
@@ -29,7 +29,7 @@ endif()
 function(define_aui_boot_test NAME)
     add_test(NAME "aui.build.boot.${NAME}"
             COMMAND
-            ${CMAKE_COMMAND} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -DTARGET_GENERATOR=Ninja -P test.cmake
+            ${CMAKE_COMMAND} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -P test.cmake
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${NAME})
 
 endfunction()
