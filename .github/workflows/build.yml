@@ -115,10 +115,15 @@ jobs:
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
 
-      - name: Test
+      - name: Run CTest
         # Build your program with the given configuration
         working-directory: ${{github.workspace}}/build
-        run: ctest . -C ${{matrix.debug_or_release}} --output-on-failure
+        run: ctest . -C ${{matrix.debug_or_release}} -VV
+
+      - name: Run GTest
+        # Build your program with the given configuration
+        working-directory: ${{github.workspace}}/build
+        run: bin/Tests
 
       - name: Pack
         working-directory: ${{github.workspace}}/build
