@@ -69,11 +69,11 @@ namespace ass {
         PropertyListRecursive list;
     };
 
-    PropertyListRecursive::PropertyListRecursive() = default;
-    PropertyListRecursive::PropertyListRecursive(const PropertyList& p) : PropertyList(p) {}
-    PropertyListRecursive::PropertyListRecursive(PropertyList&& p) : PropertyList(std::move(p)) {}
-    PropertyListRecursive::PropertyListRecursive(const PropertyListRecursive&) = default;
-    PropertyListRecursive::~PropertyListRecursive() = default;
+    inline PropertyListRecursive::PropertyListRecursive() = default;
+    inline PropertyListRecursive::PropertyListRecursive(const PropertyList& p) : PropertyList(p) {}
+    inline PropertyListRecursive::PropertyListRecursive(PropertyList&& p) : PropertyList(std::move(p)) {}
+    inline PropertyListRecursive::PropertyListRecursive(const PropertyListRecursive&) = default;
+    inline PropertyListRecursive::~PropertyListRecursive() = default;
 
 
     template<typename T>
