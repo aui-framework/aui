@@ -277,7 +277,7 @@ public:
                 auto path = mLogFile->path();
                 mLogFile.reset();
                 lock.unlock();
-                log(ERR, "Logger", fmt::format("Unable to reopen file {}: {}", path, e.getMessage()));
+                log(WARN, "Logger", fmt::format("Unable to reopen file {}: {}", path, e.getMessage()));
             }
         };
         if (!mLogFile || !mLogFile->nativeHandle()) {
