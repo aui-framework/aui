@@ -493,6 +493,21 @@ function(auib_import AUI_MODULE_NAME URL)
 
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
 
+    # TODO add protocol check
+    if(AUI_BOOT_SOURCEDIR_COMPAT)
+        unset(SOURCE_BINARY_DIRS_ARG)
+    else()
+        if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT) # recursive deadlock fix
+            if (NOT _locked)
+                set(_locked TRUE)
+                message(STATUS "Waiting for repository...")
+                file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+            endif()
+        endif()
+        set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
+                BINARY_DIR ${DEP_BINARY_DIR})
+    endif()
+
     if (NOT DEP_ADD_SUBDIRECTORY)
         # avoid compilation if we have existing installation
         if (EXISTS ${DEP_INSTALLED_FLAG})
@@ -516,20 +531,6 @@ function(auib_import AUI_MODULE_NAME URL)
 
         set(${AUI_MODULE_NAME}_FOUND FALSE) # reset the FOUND flag; in some cases it may have been TRUE here
 
-        # TODO add protocol check
-        if(AUI_BOOT_SOURCEDIR_COMPAT)
-            unset(SOURCE_BINARY_DIRS_ARG)
-        else()
-            if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT) # recursive deadlock fix
-                if (NOT _locked)
-                    set(_locked TRUE)
-                    message(STATUS "Waiting for repository...")
-                    file(LOCK "${AUI_CACHE_DIR}/repo.lock")
-                endif()
-            endif()
-            set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
-                    BINARY_DIR ${DEP_BINARY_DIR})
-        endif()
         message(STATUS "Fetching ${AUI_MODULE_NAME} (${TAG_OR_HASH})")
 
         file(REMOVE_RECURSE ${DEP_SOURCE_DIR} ${DEP_BINARY_DIR})
@@ -573,12 +574,6 @@ function(auib_import AUI_MODULE_NAME URL)
                         SOURCE_DIR DEP_SOURCE_DIR
                         )
                 message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
-            else()
-                if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
-                    if (NOT AUI_BOOT) # recursive deadlock fix
-                        file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
-                    endif()
-                endif()
             endif()
         endif()
 
@@ -744,12 +739,11 @@ function(auib_import AUI_MODULE_NAME URL)
                 endif()
                 file(TOUCH ${DEP_INSTALLED_FLAG})
             endif()
-            if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
-                if (NOT AUI_BOOT) # recursive deadlock fix
-                    file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
-                endif()
-            endif()
         endif()
+    endif()
+    if (_locked)
+        set(_locked FALSE)
+        file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
     endif()
     if (DEP_ADD_SUBDIRECTORY)
         set(${AUI_MODULE_NAME}_ROOT ${DEP_SOURCE_DIR})
