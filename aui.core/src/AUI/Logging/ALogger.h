@@ -258,11 +258,10 @@ public:
         std::unique_lock lock(mOnLogged);
         mOnLogged = std::move(callback);
     }
-    /*
-     * @brief Allows to perform some action (access safely)
-     * on log file (which is opened all over the execution process)
+    /**
+     * @brief Allows to perform some action (access safely) on log file (which is opened all over the execution process)
      * @details
-     * Useful when sending log file to remote server:
+     * Useful when sending log file to remote server.
      * @note Windows, for instance, doesn't allow to read the file when it's already opened
      */
     template <aui::invocable Callable>
@@ -271,7 +270,6 @@ public:
         ARaiiHelper opener = [&] {
             if (!mLogFile) return;
             try {
-                lock.lock();
                 mLogFile->open(true);
             } catch (const AException& e) {
                 auto path = mLogFile->path();
@@ -281,15 +279,12 @@ public:
             }
         };
         if (!mLogFile || !mLogFile->nativeHandle()) {
-            lock.unlock();
             action();
             return;
         }
 
         mLogFile->close();
-        lock.unlock();
         action();
-
     }
 
     static LogWriter info(const AString& str)
