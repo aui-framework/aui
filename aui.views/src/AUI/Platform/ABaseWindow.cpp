@@ -220,12 +220,16 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
 
 void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     APointerReleasedEvent copy = event;
-    copy.triggerClick = !mPreventClickOnPointerRelease.value();
+    copy.triggerClick = !mPreventClickOnPointerRelease.valueOr(true);
     mPreventClickOnPointerRelease.reset();
     AViewContainer::onPointerReleased(copy);
 
     // AView::onPointerMove handles cursor shape; need extra call in order to flush
-    AViewContainer::onPointerMove(event.position);
+    forceUpdateCursor();
+}
+
+void ABaseWindow::forceUpdateCursor() {
+    AViewContainer::onPointerMove(mMousePos);
 }
 
 void ABaseWindow::onScroll(const AScrollEvent& event) {

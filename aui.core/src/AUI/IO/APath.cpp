@@ -220,6 +220,10 @@ ADeque<APath> APath::listDir(AFileListFlags f) const {
 }
 
 APath APath::absolute() const {
+    if (AString::empty()) {
+        return APath::workingDir();
+    }
+
     // *nix requires file existence but windows doesn't - unifying the behaviour
     if (!exists()) {
         throw AFileNotFoundException("could not find absolute file " +*this);

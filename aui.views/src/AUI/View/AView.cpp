@@ -661,3 +661,10 @@ void AView::onClickPrevented() {
         mPressed.set(this, false);
     }
 }
+
+void AView::setCursor(AOptional<ACursor> cursor) {
+    mCursor = std::move(cursor);
+    if (mParent) { // ABaseWindow does not have parent
+        AWindow::current()->forceUpdateCursor();
+    }
+}

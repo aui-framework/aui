@@ -262,6 +262,7 @@ public:
     void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) override;
     virtual void onCloseButtonClicked();
 
+    void forceUpdateCursor() override;
 
     void requestTouchscreenKeyboardImpl() override;
     void hideTouchscreenKeyboardImpl() override;

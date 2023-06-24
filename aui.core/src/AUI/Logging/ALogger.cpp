@@ -53,7 +53,9 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
     {
         std::unique_lock lock(mOnLogged);
         if (mOnLogged.value()) {
-            mOnLogged.value()(prefix, message, level);
+            auto onLogged = mOnLogged.value();
+            lock.unlock();
+            onLogged(prefix, message, level);
         }
     }
 
@@ -121,7 +123,7 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
         if (mLogFile) fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
     }
     fflush(stdout);
-    fflush(mLogFile->nativeHandle());
+    if (mLogFile) fflush(mLogFile->nativeHandle());
 #endif
 }
 
