@@ -251,6 +251,12 @@ void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
         c->close();
     }
 }
+
+void AWindow::forceUpdateCursor() {
+    ABaseWindow::forceUpdateCursor();
+    AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
+}
+
 void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
     for (const auto& graphicsApi : ARenderingContextOptions::get().initializationOrder) {
         try {

@@ -283,6 +283,10 @@ public:
 
     void onScroll(const AScrollEvent& event) override;
 
+    /**
+     * @brief Updates cursor by triggering onPointerMove on the same position (mMousePos).
+     */
+    virtual void forceUpdateCursor();
 
 signals:
     emits<>            dpiChanged;

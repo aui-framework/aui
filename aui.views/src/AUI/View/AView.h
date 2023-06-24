@@ -494,10 +494,7 @@ public:
     {
         return mCursor;
     }
-    void setCursor(AOptional<ACursor> cursor)
-    {
-        mCursor = std::move(cursor);
-    }
+    void setCursor(AOptional<ACursor> cursor);
 
     /**
      * @return minimal content-area width.
