@@ -691,10 +691,12 @@ function(auib_import AUI_MODULE_NAME URL)
                 endif()
                 list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${_build_shared_libs}")
 
+                file(MAKE_DIRECTORY ${DEP_INSTALL_PREFIX})
                 message("Configuring CMake ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
                 execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                        RESULT_VARIABLE STATUS_CODE)
+                        RESULT_VARIABLE STATUS_CODE
+                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(STATUS "Dependency CMake configure failed, clearing dir and trying again...")
@@ -702,7 +704,8 @@ function(auib_import AUI_MODULE_NAME URL)
                     file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
                     execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                             WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                            RESULT_VARIABLE STATUS_CODE)
+                            RESULT_VARIABLE STATUS_CODE
+                            OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log)
                     if (NOT STATUS_CODE EQUAL 0)
                         message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}")
                     endif()
@@ -721,7 +724,8 @@ function(auib_import AUI_MODULE_NAME URL)
                         --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                        RESULT_VARIABLE ERROR_CODE)
+                        RESULT_VARIABLE ERROR_CODE
+                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/build.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(FATAL_ERROR "Dependency build failed: ${AUI_MODULE_NAME}")
@@ -734,7 +738,8 @@ function(auib_import AUI_MODULE_NAME URL)
                         --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                        RESULT_VARIABLE ERROR_CODE)
+                        RESULT_VARIABLE ERROR_CODE
+                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/install.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
