@@ -35,24 +35,32 @@
 /**
  * @brief Defines getClassName and other useful methods required for Java class definition.
  * @ingroup jni
- * @param name path to Java class
+ * @param name name of cpp class
+ * @param path slash-style path to Java class (including name)
  * @details
  * Usage:
  * @code{cpp}
  * namespace com::github::aui::android {
- *     class AUI {
+ *     AUI_JNI_CLASS(com/github/aui/android/AUI, AUI) {
  *     public:
- *         AUI_JNI_CLASS(com/github/aui/android/AUI)
+ *         // class definition
+ *         AUI_JNI_STATIC_METHOD(void, callStaticMethod, ())
+ *         AUI_JNI_METHOD(void, CallNonStaticMethod, ())
  *     };
  * }
  * ..
  * com::github::aui::android::AUI::getClassName() -> "com/github/aui/android/AUI"
  * @endcode
  */
-#define AUI_JNI_CLASS(name) \
-    static constexpr auto JAVA_CLASS_NAME = #name _asl                        \
-    [[nodiscard]] static constexpr auto getClassName() noexcept { return #name; } \
-    [[nodiscard]] static auto getClass() noexcept { static ::aui::jni::GlobalRef t = ::aui::jni::env()->FindClass(getClassName()); assert(("no such class: " #name, t.asClass() != nullptr)); return t.asClass(); }
+#define AUI_JNI_CLASS(path, name) \
+class name ## _info: public ::aui::jni::GlobalRef { \
+public:                           \
+    static constexpr auto JAVA_CLASS_NAME = #path ## _asl;                        \
+    [[nodiscard]] static constexpr auto getClassName() noexcept { return #path; } \
+    [[nodiscard]] static auto getClass() noexcept { static ::aui::jni::GlobalRef t = ::aui::jni::env()->FindClass(getClassName()); assert(("no such class: " #path, t.asClass() != nullptr)); return t.asClass(); } \
+                                      \
+};                                \
+struct name: public name ## _info
 
 /**
  * @brief Defines static method C++ -> Java.
@@ -64,9 +72,8 @@
  * Usage:
  * @code{cpp}
  * namespace com::github::aui::android {
- *     class AUI {
+ *     AUI_JNI_CLASS(com/github/aui/android/AUI, AUI) {  // required for AUI_JNI_STATIC_METHOD
  *     public:
- *         AUI_JNI_CLASS(com/github/aui/android/AUI) // required for AUI_JNI_STATIC_METHOD
  *         AUI_JNI_STATIC_METHOD(float, getDpiRatio, ())
  *         AUI_JNI_STATIC_METHOD(void, openUrl, ((const AString&) url))
  *         AUI_JNI_STATIC_METHOD(void, test, ((int) x, (int) y))

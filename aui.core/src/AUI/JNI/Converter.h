@@ -21,7 +21,6 @@
 #include "GlobalRef.h"
 #include <string_view>
 
-
 namespace aui::jni {
     template<typename T>
     struct Converter;
