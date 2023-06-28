@@ -33,7 +33,7 @@ namespace aui::jni {
         if constexpr (std::is_void_v<Return>) {
             (e->*TypedMethods<Return>::CallStaticMethod)(clazz, methodId, toJni(args)...);
         } else {
-            return fromJni<Return>((e->*TypedMethods<Return>::CallStaticMethod)(clazz, methodId, toJni(args)...));
+            return fromJni<Return>((e->*TypedMethods<java_t_from_cpp_t<Return>>::CallStaticMethod)(clazz, methodId, toJni(args)...));
         }
     }
 }

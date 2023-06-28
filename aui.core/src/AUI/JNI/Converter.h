@@ -40,7 +40,7 @@ namespace aui::jni {
 
 
     template<convertible T>
-    auto toJni(const T& t) {
+    auto toJni(const T& t) -> decltype(Converter<T>::toJni(t)) {
         return Converter<T>::toJni(t);
     }
 
@@ -48,6 +48,9 @@ namespace aui::jni {
     T fromJni(const auto& t) {
         return Converter<T>::fromJni(t);
     }
+
+    template<typename CppType>
+    using java_t_from_cpp_t = decltype(aui::jni::toJni(std::declval<CppType>()));
 
     template <>
     struct Converter<std::string> {
@@ -119,6 +122,8 @@ namespace aui::jni {
     template<> struct Converter<jlong   >: ConverterPrimitive<jlong   , 'J'> {};
     template<> struct Converter<jfloat  >: ConverterPrimitive<jfloat  , 'F'> {};
     template<> struct Converter<jdouble >: ConverterPrimitive<jdouble , 'D'> {};
+
+    template<> struct Converter<bool>: Converter<jboolean> {};
     template<> struct Converter<void    > {
         static constexpr AStringLiteral<'V'> signature;
 
@@ -126,4 +131,35 @@ namespace aui::jni {
 
         }
     };
+
+/*
+    template<typename T>
+    concept ExposableClass = requires(T&& t) {
+        { T::JAVA_CLASS_NAME } -> ::aui::convertible_to<const char*>;
+    };
+
+    template<ExposableClass T> struct Converter<T> {
+        static constexpr auto signature = "L"_asl + T::JAVA_CLASS_NAME + ";"_asl;
+
+        static  fromJni(jobject val) {
+            if (val) {
+            }
+            return {};
+        }
+
+        static jstring toJni(std::string_view value) {
+            auto bytes = env()->NewByteArray(value.length());
+            if (!bytes) {
+                return nullptr;
+            }
+
+            env()->SetByteArrayRegion(bytes, 0, value.length(), reinterpret_cast<const jbyte*>(value.data()));
+
+            static jmethodID stringConstructor = env()->GetMethodID(stringClass(), "<init>", "([BLjava/lang/String;)V");
+            auto str = env()->NewObject(stringClass(), stringConstructor, bytes, env()->NewStringUTF("UTF-8"));
+            env()->DeleteLocalRef(bytes);
+            return static_cast<jstring>(str);
+        }
+
+    };*/
 }

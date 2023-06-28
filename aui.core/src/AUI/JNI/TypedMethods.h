@@ -49,6 +49,8 @@ namespace aui::jni {
         static constexpr auto SetArrayRegion       = &JNIEnv::SetBooleanArrayRegion;
     };
 
+    template <> struct TypedMethods<bool>: TypedMethods<jboolean> {};
+
     template <> struct TypedMethods<jbyte>
     {
         static constexpr auto CallMethod           = &JNIEnv::CallByteMethod;
@@ -159,6 +161,18 @@ namespace aui::jni {
         static constexpr auto ReleaseArrayElements = &JNIEnv::ReleaseDoubleArrayElements;
         static constexpr auto GetArrayRegion       = &JNIEnv::GetDoubleArrayRegion;
         static constexpr auto SetArrayRegion       = &JNIEnv::SetDoubleArrayRegion;
+    };
+
+    template <> struct TypedMethods<jobject>
+    {
+        static constexpr auto CallMethod           = &JNIEnv::CallObjectMethod;
+        static constexpr auto CallNonvirtualMethod = &JNIEnv::CallNonvirtualObjectMethod;
+        static constexpr auto GetField             = &JNIEnv::GetObjectField;
+        static constexpr auto SetField             = &JNIEnv::SetObjectField;
+        static constexpr auto CallStaticMethod     = &JNIEnv::CallStaticObjectMethod;
+        static constexpr auto GetStaticField       = &JNIEnv::GetStaticObjectField;
+        static constexpr auto SetStaticField       = &JNIEnv::SetStaticObjectField;
+        static constexpr auto NewArray             = &JNIEnv::NewObjectArray;
     };
 
     template <> struct TypedMethods<void>

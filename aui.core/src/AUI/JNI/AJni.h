@@ -22,11 +22,13 @@
 #include "Signature.h"
 #include "Env.h"
 #include <AUI/Util/APreprocessor.h>
+#include <AUI/Traits/strings.h>
+#include <AUI/Common/AException.h>
 
 /**
  * @defgroup jni aui::jni
  * @brief C++/Java bridge.
- * @details Used to work on Android.
+ * @details Used to make AUI work on Android.
  */
 
 
@@ -48,6 +50,7 @@
  * @endcode
  */
 #define AUI_JNI_CLASS(name) \
+    static constexpr auto JAVA_CLASS_NAME = #name _asl                        \
     [[nodiscard]] static constexpr auto getClassName() noexcept { return #name; } \
     [[nodiscard]] static auto getClass() noexcept { static ::aui::jni::GlobalRef t = ::aui::jni::env()->FindClass(getClassName()); assert(("no such class: " #name, t.asClass() != nullptr)); return t.asClass(); }
 
@@ -75,11 +78,14 @@
  */
 #define AUI_JNI_STATIC_METHOD(ret_t, name, args) \
     static ret_t name (AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES, _, args)) { \
-        static_assert(::aui::jni::convertible<ret_t>, "return type is required to be convertible") \
+        static_assert(::aui::jni::convertible<ret_t>, "return type is required to be convertible"); \
         auto clazz = getClass();                 \
         auto e = ::aui::jni::env();              \
         const char* signature = ::aui::jni::signature_v<ret_t (AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES, _, args))>; \
-        static auto methodId = e->GetStaticMethodID(clazz, #name, signature); \
+        static auto methodId = e->GetStaticMethodID(clazz, #name, signature);    \
+        if (methodId == 0) {                          \
+            throw AException("no such jni method: {} {}"_format(#name, signature)); \
+        }                                         \
         return ::aui::jni::callStaticMethod<ret_t>(clazz, methodId AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES_CONTENTS, _, args)); \
     }
 
