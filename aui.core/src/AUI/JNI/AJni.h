@@ -63,7 +63,10 @@
  * namespace com::github::aui::android {
  *     class AUI {
  *     public:
- *         AUI_JNI_CLASS(com/github/aui/android/AUI)
+ *         AUI_JNI_CLASS(com/github/aui/android/AUI) // required for AUI_JNI_STATIC_METHOD
+ *         AUI_JNI_STATIC_METHOD(float, getDpiRatio, ())
+ *         AUI_JNI_STATIC_METHOD(void, openUrl, ((const AString&) url))
+ *         AUI_JNI_STATIC_METHOD(void, test, ((int) x, (int) y))
  *     };
  * }
  * ..
@@ -71,7 +74,8 @@
  * @endcode
  */
 #define AUI_JNI_STATIC_METHOD(ret_t, name, args) \
-    [[nodiscard]] static ret_t name (AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES, _, args)) { \
+    static ret_t name (AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES, _, args)) { \
+        static_assert(::aui::jni::convertible<ret_t>, "return type is required to be convertible") \
         auto clazz = getClass();                 \
         auto e = ::aui::jni::env();              \
         const char* signature = ::aui::jni::signature_v<ret_t (AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES, _, args))>; \

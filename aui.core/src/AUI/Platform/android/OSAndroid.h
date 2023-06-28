@@ -22,7 +22,7 @@ namespace com::github::aui::android {
     public:
         AUI_JNI_CLASS(com/github/aui/android/AUI)
 
-        AUI_JNI_STATIC_METHOD(jfloat, getDpiRatio, ())
+        AUI_JNI_STATIC_METHOD(float, getDpiRatio, ())
         AUI_JNI_STATIC_METHOD(void, openUrl, ((const AString&) url))
         AUI_JNI_STATIC_METHOD(void, requestRedraw, ())
         AUI_JNI_STATIC_METHOD(void, showKeyboard, ())
