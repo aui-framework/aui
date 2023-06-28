@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -14,19 +14,22 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "AUI/Platform/APlatform.h"
-#include "AUI/Common/AString.h"
-#include "AUI/IO/APath.h"
-#include <AUI/Util/kAUI.h>
-#include <AUI/Platform/android/OSAndroid.h>
 
+#include <AUI/Common/AObject.h>
 
+struct JavaVM;
 
-float APlatform::getDpiRatio()
-{
-    return com::github::aui::android::AUI::getDpiRatio();
+namespace {
+    JavaVM* gJavaVM = nullptr;
 }
 
-void APlatform::openUrl(const AUrl &url) {
-    com::github::aui::android::AUI::openUrl(url.full());
+namespace aui::jni {
+    extern "C" API_AUI_CORE JavaVM* javaVM() {
+        assert(("java vm is not set", gJavaVM != nullptr));
+        return gJavaVM;
+    }
+
+    extern "C" API_AUI_CORE void setJavaVM(JavaVM* vm) {
+        gJavaVM = vm;
+    }
 }

@@ -15,18 +15,40 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include <AUI/JNI/AJni.h>
 
-namespace com::github::aui::android {
-    class AUI {
-    public:
-        AUI_JNI_CLASS(com/github/aui/android/AUI)
+#include <AUI/Common/AObject.h>
+#include <jni.h>
 
-        AUI_JNI_STATIC_METHOD(jfloat, getDpiRatio, ())
-        AUI_JNI_STATIC_METHOD(void, openUrl, ((const AString&) url))
-        AUI_JNI_STATIC_METHOD(void, requestRedraw, ())
-        AUI_JNI_STATIC_METHOD(void, showKeyboard, ())
-        AUI_JNI_STATIC_METHOD(void, hideKeyboard, ())
-    };
+
+namespace aui::jni {
+
+    /**
+     * @return Java VM pointer.
+     * @ingroup jni
+     */
+    extern "C" API_AUI_CORE JavaVM* javaVM();
+
+    /**
+     * @brief Sets global Java VM pointer.
+     * @ingroup jni
+     */
+    extern "C" API_AUI_CORE void setJavaVM(JavaVM* vm);
+
+
+
+    /**
+     * @return JNI Env pointer for the current thread.
+     * @ingroup jni
+     */
+    JNIEnv* env() {
+        thread_local JNIEnv* env = [] {
+            JNIEnv* env;
+            javaVM()->AttachCurrentThread(&env, nullptr);
+            javaVM()->GetEnv((void**)&env, JNI_VERSION_1_2);
+            assert(env);
+            return env;
+        }();
+
+        return env;
+    }
 }
-

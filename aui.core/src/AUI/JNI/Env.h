@@ -15,18 +15,25 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include <AUI/JNI/AJni.h>
 
-namespace com::github::aui::android {
-    class AUI {
-    public:
-        AUI_JNI_CLASS(com/github/aui/android/AUI)
+#include "Converter.h"
+#include "TypedMethods.h"
+#include "Signature.h"
 
-        AUI_JNI_STATIC_METHOD(jfloat, getDpiRatio, ())
-        AUI_JNI_STATIC_METHOD(void, openUrl, ((const AString&) url))
-        AUI_JNI_STATIC_METHOD(void, requestRedraw, ())
-        AUI_JNI_STATIC_METHOD(void, showKeyboard, ())
-        AUI_JNI_STATIC_METHOD(void, hideKeyboard, ())
-    };
+namespace aui::jni {
+    /**
+     * @brief Calls static method.
+     * @tparam Return return type.
+     * @tparam Args argument types.
+     * @return result
+     */
+    template<convertible Return = void, convertible... Args>
+    Return callStaticMethod(jclass clazz, jmethodID methodId, const Args&... args) {
+        auto e = env();
+        if constexpr (std::is_void_v<Return>) {
+            (e->*TypedMethods<Return>::CallStaticMethod)(clazz, methodId, toJni(args)...);
+        } else {
+            return fromJni<Return>((e->*TypedMethods<Return>::CallStaticMethod)(clazz, methodId, toJni(args)...));
+        }
+    }
 }
-
