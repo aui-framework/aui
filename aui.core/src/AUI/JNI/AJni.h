@@ -91,9 +91,43 @@ struct name: public name ## _info
         const char* signature = ::aui::jni::signature_v<ret_t (AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES, _, args))>; \
         static auto methodId = e->GetStaticMethodID(clazz, #name, signature);    \
         if (methodId == 0) {                          \
-            throw AException("no such jni method: {} {}"_format(#name, signature)); \
+            throw AException("no such static jni method: {} {}"_format(#name, signature)); \
         }                                         \
         return ::aui::jni::callStaticMethod<ret_t>(clazz, methodId AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES_CONTENTS, _, args)); \
+    }
+
+/**
+ * @brief Defines nonstatic method C++ -> Java.
+ * @ingroup jni
+ * @param ret_t return type.
+ * @param name static method's name.
+ * @param args arguments wrapped with braces. Types should be also wrapped in braces (see example).
+ * @details
+ * Usage:
+ * @code{cpp}
+ * namespace com::github::aui::android {
+ *     AUI_JNI_CLASS(com/github/aui/android/AUI, AUI) {  // required for AUI_JNI_STATIC_METHOD
+ *     public:
+ *         AUI_JNI_METHOD(float, getDpiRatio, ())
+ *         AUI_JNI_METHOD(void, openUrl, ((const AString&) url))
+ *         AUI_JNI_METHOD(void, test, ((int) x, (int) y))
+ *     };
+ * }
+ * ..
+ * com::github::aui::android::AUI::getClassName() -> "com/github/aui/android/AUI"
+ * @endcode
+ */
+#define AUI_JNI_METHOD(ret_t, name, args) \
+    ret_t name (AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES, _, args)) { \
+        static_assert(::aui::jni::convertible<ret_t>, "return type is required to be convertible"); \
+        auto clazz = getClass();                 \
+        auto e = ::aui::jni::env();              \
+        const char* signature = ::aui::jni::signature_v<ret_t (AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES, _, args))>; \
+        static auto methodId = e->GetMethodID(clazz, #name, signature);    \
+        if (methodId == 0) {                          \
+            throw AException("no such jni method: {} {}"_format(#name, signature)); \
+        }                                         \
+        return ::aui::jni::callMethod<ret_t>(this->asObject(), methodId AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES_CONTENTS, _, args)); \
     }
 
 #define AUI_JNI_INTERNAL_OMIT_BRACES(a, b, c) AUI_PP_IDENTITY c

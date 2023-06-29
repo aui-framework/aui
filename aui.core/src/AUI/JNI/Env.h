@@ -36,4 +36,20 @@ namespace aui::jni {
             return fromJni<Return>((e->*TypedMethods<java_t_from_cpp_t<Return>>::CallStaticMethod)(clazz, methodId, toJni(args)...));
         }
     }
+
+    /**
+     * @brief Calls nonstatic method.
+     * @tparam Return return type.
+     * @tparam Args argument types.
+     * @return result
+     */
+    template<convertible Return = void, convertible... Args>
+    Return callMethod(jobject thiz, jmethodID methodId, const Args&... args) {
+        auto e = env();
+        if constexpr (std::is_void_v<Return>) {
+            (e->*TypedMethods<Return>::CallMethod)(thiz, methodId, toJni(args)...);
+        } else {
+            return fromJni<Return>((e->*TypedMethods<java_t_from_cpp_t<Return>>::CallMethod)(thiz, methodId, toJni(args)...));
+        }
+    }
 }

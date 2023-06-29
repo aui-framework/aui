@@ -175,6 +175,8 @@ namespace aui::jni {
         static constexpr auto NewArray             = &JNIEnv::NewObjectArray;
     };
 
+    template <> struct TypedMethods<jstring>: TypedMethods<jobject> {};
+
     template <> struct TypedMethods<void>
     {
         static constexpr auto CallMethod           = &JNIEnv::CallVoidMethod;

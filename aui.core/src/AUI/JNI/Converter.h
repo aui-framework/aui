@@ -55,7 +55,7 @@ namespace aui::jni {
     struct Converter<std::string> {
         static constexpr auto signature = "Ljava/lang/String;"_asl;
 
-        static std::string fromJni(jstring val) {
+        static std::string fromJni(jobject val) {
             if (val) {
                 static GlobalRef stringClass = jni::env()->GetObjectClass(val);
                 static jmethodID getBytes = jni::env()->GetMethodID(stringClass.asClass(), "getBytes", "(Ljava/lang/String;)[B");
@@ -131,7 +131,7 @@ namespace aui::jni {
         }
     };
 
-/*
+
     template<typename T>
     concept ExposableClass = requires(T&& t) {
         { T::JAVA_CLASS_NAME } -> ::aui::convertible_to<const char*>;
@@ -140,25 +140,15 @@ namespace aui::jni {
     template<ExposableClass T> struct Converter<T> {
         static constexpr auto signature = "L"_asl + T::JAVA_CLASS_NAME + ";"_asl;
 
-        static  fromJni(jobject val) {
-            if (val) {
-            }
-            return {};
+        static T fromJni(jobject val) {
+            T t;
+            GlobalRef::assignLocalRef(t, val);
+            return t;
         }
 
-        static jstring toJni(std::string_view value) {
-            auto bytes = env()->NewByteArray(value.length());
-            if (!bytes) {
-                return nullptr;
-            }
-
-            env()->SetByteArrayRegion(bytes, 0, value.length(), reinterpret_cast<const jbyte*>(value.data()));
-
-            static jmethodID stringConstructor = env()->GetMethodID(stringClass(), "<init>", "([BLjava/lang/String;)V");
-            auto str = env()->NewObject(stringClass(), stringConstructor, bytes, env()->NewStringUTF("UTF-8"));
-            env()->DeleteLocalRef(bytes);
-            return static_cast<jstring>(str);
+        static jobject toJni(const T& value) {
+            return value.asObject();
         }
 
-    };*/
+    };
 }

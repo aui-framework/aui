@@ -28,6 +28,7 @@ namespace aui::jni {
     class GlobalRef {
     private:
         jobject mObject;
+        bool mLocal = false;
 
     public:
         GlobalRef():
@@ -43,8 +44,12 @@ namespace aui::jni {
 
         }
         ~GlobalRef() {
-            if (mObject)
+            if (!mObject) return;
+            if (mLocal) {
+                aui::jni::env()->DeleteLocalRef(mObject);
+            } else {
                 aui::jni::env()->DeleteGlobalRef(mObject);
+            }
         }
 
         bool operator!() const {
@@ -56,11 +61,20 @@ namespace aui::jni {
         }
 
 
-        jobject asObject() const {
+        [[nodiscard]]
+        jobject asObject() const noexcept {
             return mObject;
         }
-        jclass asClass() const {
+
+        [[nodiscard]]
+        jclass asClass() const noexcept {
             return (jclass)mObject;
+        }
+
+        static void assignLocalRef(GlobalRef& target, jobject value) {
+            assert(target.mObject == nullptr);
+            target.mObject = value;
+            target.mLocal = true;
         }
     };
 }
