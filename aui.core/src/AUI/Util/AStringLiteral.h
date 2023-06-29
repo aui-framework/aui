@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -14,19 +14,27 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "AUI/Platform/APlatform.h"
-#include "AUI/Common/AString.h"
-#include "AUI/IO/APath.h"
-#include <AUI/Util/kAUI.h>
-#include <AUI/Platform/android/OSAndroid.h>
+#pragma once
 
 
-
-float APlatform::getDpiRatio()
+/**
+ * @brief Compile-time string literal.
+ * @ingroup core
+ */
+template <char... chars>
+struct AStringLiteral
 {
-    return com::github::aui::android::AUI::getDpiRatio();
-}
+    operator const char *() const noexcept
+    {
+        static const char result[] = { chars..., 0 };
+        return result;
+    }
+};
 
-void APlatform::openUrl(const AUrl &url) {
-    com::github::aui::android::AUI::openUrl(url.full());
+
+template<char... chars1, char... chars2>
+constexpr AStringLiteral<chars1..., chars2...> operator+(AStringLiteral<chars1...>, AStringLiteral<chars2...>) {
+    return {};
 }
+template <typename T, T... chars>
+constexpr AStringLiteral<chars...> operator""_asl() { return { }; }

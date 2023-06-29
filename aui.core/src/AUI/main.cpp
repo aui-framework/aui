@@ -29,6 +29,7 @@
  * - reflection
  * - trait classes
  * - @ref AUrl "urls"
+ * - @ref jni "C++/Java JNI bridge"
  */
 
 
