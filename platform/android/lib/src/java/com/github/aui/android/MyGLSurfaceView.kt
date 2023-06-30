@@ -60,6 +60,9 @@ class MyGLSurfaceView(context: Context) : GLSurfaceView(context), OnTouchListene
 
         @JvmStatic
         private external fun handleResize(width: Int, height: Int)
+
+        @JvmStatic
+        private external fun handleLongPress(width: Int, height: Int)
     }
 
     init {
@@ -90,7 +93,9 @@ class MyGLSurfaceView(context: Context) : GLSurfaceView(context), OnTouchListene
                 return true
             }
 
-            override fun onLongPress(motionEvent: MotionEvent) {}
+            override fun onLongPress(event: MotionEvent) {
+                handleLongPress(event.x.toInt(), event.y.toInt())
+            }
             override fun onFling(
                 start: MotionEvent,
                 current: MotionEvent,

@@ -288,6 +288,8 @@ public:
      */
     virtual void forceUpdateCursor();
 
+    bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;

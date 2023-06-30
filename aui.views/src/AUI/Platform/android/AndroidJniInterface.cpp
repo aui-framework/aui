@@ -40,6 +40,14 @@ Java_com_github_aui_android_MyGLSurfaceView_handleResize(JNIEnv *env, jclass cla
     });
 }
 
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_aui_android_MyGLSurfaceView_handleLongPress(JNIEnv *env, jclass clazz, jint x, jint y) {
+    runOnGLThread([=] {
+        AUI_NULLSAFE(AWindow::current())->onGesture({x, y}, ALongPressEvent{});
+    });
+}
+
 static glm::ivec2 gestureOriginPos{0, 0};
 static glm::ivec2 scrollPrevValue{0, 0};
 

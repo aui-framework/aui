@@ -594,9 +594,12 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
             return true;
         },
         [&](const ALongPressEvent& e) {
-            onPointerPressed({ origin, AInput::RBUTTON });
-            onPointerReleased({ origin, AInput::RBUTTON });
-            return true;
+            auto menuModel = composeContextMenu();
+            if (!menuModel.empty()) {
+                AMenu::show(menuModel);
+                return true;
+            }
+            return false;
         },
         [&](const auto& e) {
             return false;

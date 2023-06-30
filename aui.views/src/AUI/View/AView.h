@@ -238,16 +238,17 @@ protected:
     void requestLayoutUpdate();
 
     /**
-     * Converts touch screen events to desktop.
+     * @brief Converts touch screen events to desktop.
+     * @param origin position where the event(s) started to occur from.
+     * @param event gesture event.
+     * @return true if consumed (handled).
+     * @details
      * <dl>
      *   <dt><b>AFingerDragEvent</b></dt>
      *   <dd>Emulates mouse wheel scroll</dd>
      *   <dt><b>ALongPressEvent</b></dt>
-     *   <dd>Emulates right click</dd>
+     *   <dd>Shows context menu (if exists)</dd>
      * </dl>
-     * @param origin position where the event(s) started to occur from.
-     * @param event gesture event.
-     * @return true if consumed
      */
     bool transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event);
 
@@ -745,7 +746,7 @@ public:
      * @note The standard implementation <code>AView::onGesture</code> emulates desktop events such as right click and
      *       scroll.
      * @see transformGestureEventsToDesktop
-     * @return true, if consumed
+     * @return true, if consumed (handled). True value prevents click.
      */
     virtual bool onGesture(const glm::ivec2& origin, const AGestureEvent& event);
 

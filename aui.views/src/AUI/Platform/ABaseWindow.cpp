@@ -357,3 +357,11 @@ void ABaseWindow::preventClickOnPointerRelease() {
 
     mPreventClickOnPointerRelease = true;
 }
+
+bool ABaseWindow::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
+    bool v = AViewContainer::onGesture(origin, event);
+    if (v) {
+        preventClickOnPointerRelease();
+    }
+    return v;
+}
