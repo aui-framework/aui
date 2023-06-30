@@ -18,24 +18,19 @@
 
 #include <AUI/Platform/AWindow.h>
 
-struct ViewActionType: ViewActionClick<> {
-    AString text;
 
-    explicit ViewActionType(const AString& text) : text(text) {}
+struct ViewActionGestureLongPress {
+    AOptional<glm::ivec2> position;
+    ViewActionGestureLongPress() = default;
+
+    ViewActionGestureLongPress(const glm::ivec2& position) : position(position) {}
 
     void operator()(const _<AView>& view) {
-        // click on it to acquire focus
-        ViewActionClick::operator()(view);
-
+        auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
-
+        window->onGesture(coords, ALongPressEvent{});
         uitest::frame();
-        // type
-        for (auto c : text) {
-            window->onCharEntered(c);
-            uitest::frame();
-        }
     }
 };
 
-using type = ViewActionType;
+using gestureLongPress = ViewActionGestureLongPress;

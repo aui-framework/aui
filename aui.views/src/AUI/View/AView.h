@@ -247,7 +247,7 @@ protected:
      *   <dt><b>AFingerDragEvent</b></dt>
      *   <dd>Emulates mouse wheel scroll</dd>
      *   <dt><b>ALongPressEvent</b></dt>
-     *   <dd>Shows context menu (if exists)</dd>
+     *   <dd>Shows context menu (if exists) or AView::clickedRightOrLongPressed</dd>
      * </dl>
      */
     bool transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event);
@@ -924,6 +924,11 @@ signals:
      * @brief Right mouse button clicked.
      */
     emits<> clickedRight;
+
+    /**
+     * @brief Right mouse button clicked or long press gesture applied.
+     */
+    emits<> clickedRightOrLongPressed;
 
     emits<AInput::Key> doubleClicked;
 

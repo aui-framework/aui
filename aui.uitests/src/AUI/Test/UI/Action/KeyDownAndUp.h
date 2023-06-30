@@ -18,7 +18,7 @@
 
 #include <AUI/Platform/AWindow.h>
 
-struct ViewActionKeyDownAndUp: ViewActionClick {
+struct ViewActionKeyDownAndUp: ViewActionClick<> {
     AInput::Key key;
 
     explicit ViewActionKeyDownAndUp(AInput::Key key) : key(key) {}

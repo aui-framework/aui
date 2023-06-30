@@ -379,7 +379,8 @@ void AView::onPointerReleased(const APointerReleasedEvent& event)
                 emit clicked();
                 break;
             case AInput::RBUTTON:
-                emit clickedRight();
+                emit clickedRight;
+                emit clickedRightOrLongPressed;
 
                 auto menuModel = composeContextMenu();
                 if (!menuModel.empty()) {
@@ -595,9 +596,14 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
         },
         [&](const ALongPressEvent& e) {
             auto menuModel = composeContextMenu();
+            bool result = false;
+            if (clickedRightOrLongPressed) {
+                emit clickedRightOrLongPressed;
+                result = true;
+            }
             if (!menuModel.empty()) {
                 AMenu::show(menuModel);
-                return true;
+                result = true;
             }
             return false;
         },
