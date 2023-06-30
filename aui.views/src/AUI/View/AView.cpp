@@ -605,7 +605,7 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
                 AMenu::show(menuModel);
                 result = true;
             }
-            return false;
+            return result;
         },
         [&](const auto& e) {
             return false;
