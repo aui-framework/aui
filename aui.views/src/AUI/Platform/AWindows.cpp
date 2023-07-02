@@ -80,9 +80,11 @@ void AWindow::redraw() {
         ARaiiHelper endPaintCaller = [&] {
             mRenderingContext->endPaint(*this);
         };
-        if (mUpdateLayoutFlag) {
-            mUpdateLayoutFlag = false;
-            updateLayout();
+        repeat(2) { // AText may trigger extra layout update
+            if (mUpdateLayoutFlag) {
+                mUpdateLayoutFlag = false;
+                updateLayout();
+            }
         }
 #if AUI_PLATFORM_WIN
         mRedrawFlag = true;
