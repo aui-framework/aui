@@ -54,3 +54,19 @@ UIMatcher By::name(const AString& text) {
     };
     return { _new<NameMatcher>(text) };
 }
+
+UIMatcher By::value(const _<AView>& value) {
+    class ValueMatcher: public IMatcher {
+    public:
+        explicit ValueMatcher(const _<AView>& value) : mValue(value) {}
+
+        bool matches(const _<AView>& view) override {
+            return mValue == view;
+        }
+
+    private:
+        _<AView> mValue;
+    };
+
+    return { _new<ValueMatcher>(value) };
+}
