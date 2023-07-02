@@ -26,6 +26,7 @@
 #include <AUI/Font/AFontStyle.h>
 #include <AUI/Render/ATextLayoutHelper.h>
 #include <AUI/Platform/AInput.h>
+#include <AUI/View/AView.h>
 
 class API_AUI_VIEWS ACursorSelectable {
 public:
@@ -106,9 +107,9 @@ protected:
     virtual void doRedraw() = 0;
 
 
-    void handleMouseDoubleClicked(const glm::ivec2& pos, AInput::Key key);
-    void handleMousePressed(const glm::ivec2& pos, AInput::Key button);
-    void handleMouseReleased(const glm::ivec2& pos, AInput::Key button);
+    void handleMouseDoubleClicked(const APointerPressedEvent& event);
+    void handleMousePressed(const APointerPressedEvent& event);
+    void handleMouseReleased(const APointerReleasedEvent& event);
     void handleMouseMove(const glm::ivec2& pos);
 
     /**

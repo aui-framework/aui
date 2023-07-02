@@ -17,7 +17,7 @@
 #pragma once
 
 #include "IRenderingContext.h"
-#include "AWindow.h"
+#include <AUI/Platform/AWindow.h>
 #include "AUI/Traits/values.h"
 #include "ARenderingContextOptions.h"
 

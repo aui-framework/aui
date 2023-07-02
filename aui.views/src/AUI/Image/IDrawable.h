@@ -85,5 +85,14 @@ public:
 	}
 
 
-    API_AUI_VIEWS static _<IDrawable> fromUrl(const AUrl& url);
+    /**
+     * @brief Creates a drawable from an url.
+     * @param url url to create a drawable from
+     * @return drawable instance or null
+     * @details
+     * If some kind of error occurs during loading the drawable, a log entry [Drawable] is outputted with detailed
+     * description of an error. The reason is we don't want to crash our application if we didn't loaded some graphics,
+     * which is usually pretty optional stuff. The user can still do his job with the application without fancy images.
+     */
+    API_AUI_VIEWS static _<IDrawable> fromUrl(const AUrl& url) noexcept;
 };

@@ -82,6 +82,17 @@ namespace aui::impl::future {
         using type = std::function<void(const T& value)>;
     };
 
+    template<typename T>
+    struct FutureReturnType {
+        using type = T&;
+    };
+
+    template<>
+    struct FutureReturnType<void> {
+        using type = void;
+    };
+
+
     template<>
     struct OnSuccessCallback<void> {
         using type = std::function<void()>;
@@ -315,7 +326,7 @@ namespace aui::impl::future {
             return (*mInner)->hasValue();
         }
 
-        void reportException() noexcept {
+        void reportException() const noexcept {
             (*mInner)->reportException();
         }
 
@@ -351,7 +362,7 @@ namespace aui::impl::future {
             (*mInner)->notifyOnSuccessCallback();
         }
 
-        template<typename Callback>
+        template<aui::invocable<const AException&> Callback>
         void onError(Callback&& callback) const noexcept {
             std::unique_lock lock((*mInner)->mutex);
 
@@ -404,7 +415,7 @@ namespace aui::impl::future {
          * </dl>
          * @return the object stored from the another thread.
          */
-        decltype(auto) get(AFutureWait flags = AFutureWait::DEFAULT) {
+        typename FutureReturnType<Value>::type get(AFutureWait flags = AFutureWait::DEFAULT) {
             AThread::interruptionPoint();
             (*mInner)->wait(mInner, flags);
             AThread::interruptionPoint();
@@ -419,6 +430,19 @@ namespace aui::impl::future {
             }
         }
 
+
+        /**
+         * @brief Returns the task result from the another thread. Sleeps if the task result is not currently available.
+         * <dl>
+         *   <dt><b>Sneaky exceptions</b></dt>
+         *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
+         * </dl>
+         * @return the object stored from the another thread.
+         */
+        typename FutureReturnType<Value>::type operator*() const {
+            return **const_cast<Future*>(this);
+        }
+
         /**
          * @brief Returns the supplyResult from the another thread. Sleeps if the supplyResult is not currently available.
          * <dl>
@@ -427,7 +451,7 @@ namespace aui::impl::future {
          * </dl>
          * @return the object stored from the another thread.
          */
-        decltype(auto) operator*() {
+        typename FutureReturnType<Value>::type operator*() {
             return get();
         }
 
@@ -454,19 +478,6 @@ namespace aui::impl::future {
         Value const * operator->() const {
             return &operator*();
         }
-
-        /**
-         * @brief Returns the task result from the another thread. Sleeps if the task result is not currently available.
-         * <dl>
-         *   <dt><b>Sneaky exceptions</b></dt>
-         *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
-         * </dl>
-         * @return the object stored from the another thread.
-         */
-        decltype(auto) operator*() const {
-            return **const_cast<Future*>(this);
-        }
-
     };
 
 }
@@ -487,7 +498,7 @@ namespace aui::impl::future {
  * cout << *theFuture; // 123
  * @endcode
  *
- * However, it can be default-constructed and the result can be supplied manually with the supplyResult() function:
+ * However, it can be default-constructed and the result can be supplied manually with the supplyResult() method:
  *
  * @code{cpp}
  * AFuture<int> theFuture;
@@ -504,14 +515,14 @@ namespace aui::impl::future {
  * AFuture is a shared_ptr-based wrapper so it can be easily copied, pointing to the same task.
  *
  * If all AFutures of the task are destroyed, the task is cancelled. If the task is executing when cancel() is
- * called, AFuture waits for the task, however, task's thread is still requested for interrupt. It's guarantees that
+ * called, AFuture waits for the task, however, task's thread is still requested for interrupt. It guarantees that
  * your task cannot be executed or be executing when AFuture destroyed and allows to efficiently utilize c++'s RAII
  * feature.
  *
  * To manage multiple AFutures, use AAsyncHolder and AFutureSet classes.
  *
- * When waiting for result, AFuture may execute the task on the caller thread instead of waiting. See AFuture::wait for
- * details.
+ * When waiting for result, AFuture may execute the task (if not default-constructed) on the caller thread instead of
+ * waiting. See AFuture::wait for details.
  */
 template<typename T = void>
 class AFuture final: public aui::impl::future::Future<T> {
@@ -524,6 +535,12 @@ public:
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
 
+    /**
+     * @brief Pushes the result to AFuture.
+     * @param v value
+     * @details
+     * After AFuture grabbed the value, supplyResult calls onSuccess listeners with the new value.
+     */
     void supplyResult(T v) const noexcept {
         auto& inner = (*super::mInner);
         assert(("task is already provided", inner->task == nullptr));
@@ -539,7 +556,6 @@ public:
      */
     void supplyException() const noexcept {
         auto& inner = (*super::mInner);
-        std::unique_lock lock(inner->mutex);
         inner->reportException();
     }
 
@@ -553,16 +569,73 @@ public:
         return super::mInner == r.mInner;
     }
 
-    template<typename Callback>
+    /**
+     * @brief Add onSuccess callback to the future.
+     * @details
+     * The callback will be called on the worker's thread when the async task is returned a result.
+     *
+     * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
+     *
+     * @note
+     * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
+     * Example:
+     * @code{cpp}
+     * ...
+     * private:
+     *   AAsyncHolder mAsync;
+     * ...
+     *
+     * mAsync << functionReturningFuture().onSuccess(...); // or onError
+     * @endcode
+     */
+    template<aui::invocable<const T&> Callback>
     const AFuture& onSuccess(Callback&& callback) const noexcept {
         super::onSuccess(std::forward<Callback>(callback));
         return *this;
     }
 
-    template<typename Callback>
+    /**
+     * @brief Add onError callback to the future.
+     * @details
+     * The callback will be called on the worker's thread when the async task is returned a result.
+     *
+     * onError does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
+     *
+     * @note
+     * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
+     * Example:
+     * @code{cpp}
+     * ...
+     * private:
+     *   AAsyncHolder mAsync;
+     * ...
+     *
+     * mAsync << functionReturningFuture().onSuccess(...); // or onError
+     * @endcode
+     */
+    template<aui::invocable<const AException&> Callback>
     const AFuture& onError(Callback&& callback) const noexcept {
         super::onError(std::forward<Callback>(callback));
         return *this;
+    }
+
+    /**
+     * @brief Maps this AFuture to another type of AFuture.
+     */
+    template<aui::invocable<const T&> Callback>
+    auto map(Callback&& callback) -> AFuture<decltype(callback(std::declval<T>()))> const {
+        AFuture<decltype(callback(std::declval<T>()))> result;
+        onSuccess([result, callback = std::forward<Callback>(callback)](const T& v) {
+            result.supplyResult(callback(v));
+        });
+        onError([result](const AException& v) {
+            try {
+                throw v;
+            } catch (...) {
+                result.reportException();
+            }
+        });
+        return result;
     }
 };
 
@@ -583,10 +656,14 @@ public:
      */
     void supplyException() const noexcept {
         auto& inner = (*super::mInner);
-        std::unique_lock lock(inner->mutex);
         inner->reportException();
     }
 
+    /**
+     * @brief Pushes "success" result.
+     * @details
+     * supplyResult calls onSuccess listeners with the new value.
+     */
     void supplyResult() const noexcept {
         auto& inner = (*super::mInner);
         assert(("task is already provided", inner->task == nullptr));
@@ -613,8 +690,20 @@ public:
      * The callback will be called on the worker's thread when the async task is returned a result.
      *
      * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
+     *
+     * @note
+     * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
+     * Example:
+     * @code{cpp}
+     * ...
+     * private:
+     *   AAsyncHolder mAsync;
+     * ...
+     *
+     * mAsync << functionReturningFuture().onSuccess(...); // or onError
+     * @endcode
      */
-    template<typename Callback>
+    template<aui::invocable Callback>
     const AFuture& onSuccess(Callback&& callback) const noexcept {
         super::onSuccess(std::forward<Callback>(callback));
         return *this;
@@ -626,8 +715,20 @@ public:
      * The callback will be called on the worker's thread when the async task is returned a result.
      *
      * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
+     *
+     * @note
+     * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
+     * Example:
+     * @code{cpp}
+     * ...
+     * private:
+     *   AAsyncHolder mAsync;
+     * ...
+     *
+     * mAsync << functionReturningFuture().onSuccess(...); // or onError
+     * @endcode
      */
-    template<typename Callback>
+    template<aui::invocable<const AException&> Callback>
     const AFuture& onError(Callback&& callback) const noexcept {
         super::onError(std::forward<Callback>(callback));
         return *this;

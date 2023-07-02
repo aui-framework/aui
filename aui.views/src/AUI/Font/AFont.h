@@ -95,23 +95,46 @@ public:
 	glm::vec2 getKerning(wchar_t left, wchar_t right);
 	AFont(const AFont&) = delete;
 	Character& getCharacter(const FontEntry& charset, long glyph);
-	float length(const FontEntry& charset, const AString& text);
-	bool isHasKerning();
+    float length(const FontEntry& charset, const AString& text);
 
+    template<class Iterator>
+    float length(const FontEntry &charset, Iterator begin, Iterator end) {
+        int size = charset.first.size;
+        int advance = 0;
+
+        for (Iterator i = begin; i != end; i++) {
+            if (*i == ' ')
+                advance += getSpaceWidth(size);
+            else if (*i == '\n')
+                advance = 0;
+            else {
+                Character& ch = getCharacter(charset, *i);
+                if (!ch.empty()) {
+                    advance += ch.advanceX;
+                    advance = glm::floor(advance);
+                }
+                else
+                    advance += getSpaceWidth(size);
+            }
+        }
+        return advance;
+    }
+
+
+	bool isHasKerning();
 
     [[nodiscard]]
     AString getFontFamilyName() const;
 
     [[nodiscard]]
     AFontFamily::Weight getFontWeight() const;
-
     int getAscenderHeight(unsigned size) const;
     int getDescenderHeight(unsigned size) const;
+
     int getSpaceWidth(unsigned size) {
         return size * 10 / 23;
     }
 
     [[nodiscard]]
     bool isItalic() const;
-
 };

@@ -22,7 +22,7 @@
 
 AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b) {
 
-    auto j = AAndroid::getJNI();
+    auto j = aui::jni::env();
     auto klazzAUI = j->FindClass("com/github/aui/android/AUI");
     auto methodShowMessageBox = j->GetStaticMethodID(klazzAUI, "showMessageBox", "(Ljava/lang/String;Ljava/lang/String;)V");
     auto strTitle = j->NewStringUTF(title.toStdString().c_str());

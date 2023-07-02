@@ -43,7 +43,7 @@
     float s = mWindow->getDpiRatio();
     const NSRect contentFrame = [[static_cast<NSWindow*>(mWindow->nativeHandle()) contentView] frame];
     mWindow->getRenderingContext()->beginResize(*mWindow);
-    mWindow->AViewContainer::setSize(contentFrame.size.width * s, contentFrame.size.height * s);
+    mWindow->AViewContainer::setSize({contentFrame.size.width * s, contentFrame.size.height * s});
     mWindow->getRenderingContext()->endResize(*mWindow);
 }
 

@@ -15,7 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "AWindow.h"
+#include <AUI/Platform/AWindow.h>
 
 #if AUI_PLATFORM_WIN
 
@@ -56,8 +56,8 @@ public:
     ACustomWindow() = default;
     ~ACustomWindow() override = default;
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerPressed(const APointerPressedEvent& event) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
 
     virtual bool isCaptionAt(const glm::ivec2& pos);
 

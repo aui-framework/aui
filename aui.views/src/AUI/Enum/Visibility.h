@@ -24,6 +24,13 @@
  * @brief Controls the visibility of AView.
  * @ingroup ass
  * @ingroup views
+ *
+ * Enum         | Visibility | Consumes space | Consumes click
+ * ---------------+------------+----------------+---------------
+ * VISIBLE      | +          | +              | +
+ * INVISIBLE    | -          | +              | +
+ * UNREACHABLE  | +          | +              | -
+ * GONE         | -          | -              | -
  */
 enum class Visibility {
 
@@ -38,9 +45,14 @@ enum class Visibility {
     INVISIBLE,
 
     /**
+     * AView is visible but not interacting to the mouse
+     */
+    UNREACHABLE,
+
+    /**
      * AView is invisible and does not interact with the mouse
      */
     GONE
 };
 
-AUI_ENUM_VALUES(Visibility, Visibility::VISIBLE, Visibility::INVISIBLE, Visibility::GONE)
+AUI_ENUM_VALUES(Visibility, Visibility::VISIBLE, Visibility::INVISIBLE, Visibility::UNREACHABLE, Visibility::GONE)

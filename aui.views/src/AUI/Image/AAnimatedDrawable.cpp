@@ -38,5 +38,5 @@ void AAnimatedDrawable::draw(const IDrawable::Params &params) {
 }
 
 glm::ivec2 AAnimatedDrawable::getSizeHint() {
-    return glm::ivec2();
+    return mFactory->getSizeHint();
 }

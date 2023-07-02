@@ -137,8 +137,8 @@ const AMap<enum_t, AString, typename AEnumerate<enum_t>::enum_less>& AEnumerate<
 struct AEnumerateAllValues<enum_t>{         \
     static inline constexpr AEnumerate<enum_t>::Values<__VA_ARGS__> get() {return {}; } \
 };                                         \
-inline std::ostream& operator<<(std::ostream& o, enum_t v) { return o << AEnumerate<enum_t>::names()[v]; } \
-namespace std { inline AString to_wstring(enum_t v) { return AEnumerate<enum_t>::names()[v]; } }
+namespace std { inline AString to_wstring(enum_t v) { return AEnumerate<enum_t>::names().optional(v).valueOr("<unknown enum value {}>"_format(int(v))); } } \
+inline std::ostream& operator<<(std::ostream& o, enum_t v) { return o << std::to_wstring(v); }
 
 template <typename T> struct fmt::formatter<T, char, std::enable_if_t<aui::is_complete<AEnumerateAllValues<T>>>>: formatter<std::string> {
     // parse is inherited from formatter<string_view>.

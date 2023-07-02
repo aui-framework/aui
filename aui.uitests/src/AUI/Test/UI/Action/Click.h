@@ -19,6 +19,7 @@
 #include <AUI/Platform/AWindow.h>
 
 
+template<AInput::Key Button = AInput::LBUTTON>
 struct ViewActionMousePress {
     AOptional<glm::ivec2> position;
     ViewActionMousePress() = default;
@@ -28,15 +29,13 @@ struct ViewActionMousePress {
     void operator()(const _<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
-        AInput::overrideStateForTesting(AInput::LBUTTON, true);
-        window->onMousePressed(coords, AInput::LBUTTON);
+        AInput::overrideStateForTesting(Button, true);
+        window->onPointerPressed({coords, Button});
         uitest::frame();
     }
 };
 
-using mousePress = ViewActionMousePress;
-
-
+template<AInput::Key Button = AInput::LBUTTON>
 struct ViewActionMouseRelease {
     AOptional<glm::ivec2> position;
     ViewActionMouseRelease() = default;
@@ -46,13 +45,14 @@ struct ViewActionMouseRelease {
     void operator()(const _<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
-        AInput::overrideStateForTesting(AInput::LBUTTON, false);
-        window->onMouseReleased(coords, AInput::LBUTTON);
+        AInput::overrideStateForTesting(Button, false);
+        window->onPointerReleased({coords, Button});
         uitest::frame();
     }
 };
 
 
+template<AInput::Key Button = AInput::LBUTTON>
 struct ViewActionClick {
     AOptional<glm::ivec2> position;
     ViewActionClick() = default;
@@ -62,15 +62,19 @@ struct ViewActionClick {
     void operator()(const _<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
         auto window = view->getWindow();
-        AInput::overrideStateForTesting(AInput::LBUTTON, true);
-        window->onMousePressed(coords, AInput::LBUTTON);
+        AInput::overrideStateForTesting(Button, true);
+        window->onPointerPressed({coords, Button});
         uitest::frame();
-        AInput::overrideStateForTesting(AInput::LBUTTON, false);
-        window->onMouseReleased(coords, AInput::LBUTTON);
+        AInput::overrideStateForTesting(Button, false);
+        window->onPointerReleased({coords, Button});
         uitest::frame();
     }
 };
 
-using click = ViewActionClick;
+using mousePress = ViewActionMousePress<>;
+using mouseRelease = ViewActionMouseRelease<>;
+using click = ViewActionClick<>;
 
-using mouseRelease = ViewActionMouseRelease;
+using mousePressRight = ViewActionMousePress<AInput::RBUTTON>;
+using mouseReleaseRight = ViewActionMouseRelease<AInput::RBUTTON>;
+using clickRight = ViewActionClick<AInput::RBUTTON>;

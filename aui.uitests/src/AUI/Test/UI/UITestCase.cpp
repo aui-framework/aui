@@ -32,7 +32,7 @@ private:
     static APath saveScreenshot(const AString& testFilePath, const AString& name) noexcept {
         if (!AWindow::current()) return {};
         auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
-        if (image.getData().empty()) return {};
+        if (image.buffer().empty()) return {};
         auto p = APath("reports") / APath(testFilePath).filenameWithoutExtension();
         p.makeDirs();
         p = p / name;
@@ -113,8 +113,7 @@ void testing::UITest::SetUp() {
 }
 
 void testing::UITest::TearDown() {
-    Test::TearDown();
-
+    for (const auto& w : AWindow::getWindowManager().getWindows()) w->close();
     AWindow::getWindowManager().removeAllWindows();
 
     // to process all ui messages
@@ -125,4 +124,5 @@ void testing::UITest::TearDown() {
     AWindow::destroyWindowManager();
     Render::setRenderer(nullptr);
 
+    Test::TearDown();
 }

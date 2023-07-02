@@ -1,18 +1,18 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+//  AUI Framework - Declarative UI toolkit for modern C++20
+//  Copyright (C) 2020-2023 Alex2772
 //
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+//  Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "AView.h"
 #include "AUI/Render/Render.h"
@@ -84,12 +84,15 @@ void AView::drawStencilMask()
 {
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
+#if !AUI_PLATFORM_IOS // on ios stencil buffer does not work with discard as expected
             if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
                 Render::roundedRect(ASolidBrush{},
                                     {mPadding.left, mPadding.top},
                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
                                     mBorderRadius);
-            } else {
+            } else
+#endif
+            {
                 Render::rect(ASolidBrush{},
                              {mPadding.left, mPadding.top},
                              {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
@@ -97,7 +100,7 @@ void AView::drawStencilMask()
             break;
 
         case AOverflowMask::BACKGROUND_IMAGE_ALPHA:
-            if (auto s = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_IMAGE)]) {
+            if (auto s = mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
                 s->renderFor(this);
             }
             break;
@@ -111,7 +114,7 @@ void AView::postRender() {
 }
 
 void AView::popStencilIfNeeded() {
-    if (getOverflow() == AOverflow::HIDDEN)
+    if (getOverflow() == AOverflow::HIDDEN || getOverflow() == AOverflow::HIDDEN_FROM_THIS)
     {
         /*
          * If the AView's Overflow set to Overflow::HIDDEN AView pushed it's mask into the stencil buffer but AView
@@ -126,6 +129,14 @@ void AView::popStencilIfNeeded() {
 }
 void AView::render()
 {
+    //draw before drawing this element
+    if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
+    {
+        RenderHints::pushMask([&]() {
+            drawStencilMask();
+        });
+    }
+
     if (mAnimator)
         mAnimator->animate(this);
 
@@ -133,15 +144,15 @@ void AView::render()
         ensureAssUpdated();
 
         // draw list
-        for (unsigned i = 0; i < int(ass::decl::DeclarationSlot::COUNT); ++i) {
-            if (i == int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)) continue;
+        for (unsigned i = 0; i < int(ass::prop::PropertySlot::COUNT); ++i) {
+            if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
             if (auto w = mAss[i]) {
                 w->renderFor(this);
             }
         }
     }
 
-    // stencil
+    //draw stencil before drawing children elements
     if (mOverflow == AOverflow::HIDDEN)
     {
         RenderHints::pushMask([&]() {
@@ -149,7 +160,7 @@ void AView::render()
         });
     }
 
-    if (auto w = mAss[int(ass::decl::DeclarationSlot::BACKGROUND_EFFECT)]) {
+    if (auto w = mAss[int(ass::prop::PropertySlot::BACKGROUND_EFFECT)]) {
         w->renderFor(this);
     }
     mRedrawRequested = false;
@@ -158,7 +169,7 @@ void AView::render()
 void AView::invalidateAllStyles()
 {
     assert(("invalidateAllStyles requires mAssHelper to be initialized", mAssHelper != nullptr));
-    mCursor = ACursor::DEFAULT;
+    mCursor.reset();
     mOverflow = AOverflow::VISIBLE;
     mMargin = {};
     mMinSize = {};
@@ -182,6 +193,10 @@ void AView::invalidateAllStyles()
 
     for (auto target = this; target != nullptr; target = target->getParent()) {
         if (target->mExtraStylesheet) {
+            if (mAssNames.contains("CellStyle")) {
+                printf("\n");
+            }
+
             viewTree.push(target);
         }
     }
@@ -207,10 +222,9 @@ void AView::invalidateStateStyles() {
     mAssHelper->state.backgroundUrl.sizing.reset();
     mAssHelper->state.backgroundUrl.url.reset();
 
-
     for (auto& r : mAssHelper->mPossiblyApplicableRules) {
         if (r->getSelector().isStateApplicable(this)) {
-            applyAssRule(* r);
+            applyAssRule(*r);
         }
     }
     applyAssRule(mCustomStyleRule);
@@ -288,11 +302,24 @@ void AView::removeAssName(const AString& assName)
     invalidateAssHelper();
 }
 
+
+namespace {
+    void setupConnectionsCustomStyleRecursive(AView* view, const ass::PropertyListRecursive& propertyList) {
+        for (const auto& d : propertyList.conditionalPropertyLists()) {
+            d.selector.setupConnections(view, view->getAssHelper());
+            setupConnectionsCustomStyleRecursive(view, d.list);
+        }
+    }
+}
+
 void AView::ensureAssUpdated()
 {
     if (mAssHelper == nullptr)
     {
         mAssHelper = _new<AAssHelper>();
+
+        setupConnectionsCustomStyleRecursive(this, mCustomStyleRule);
+
         connect(customCssPropertyChanged, mAssHelper,
                 &AAssHelper::onInvalidateStateAss);
         connect(mAssHelper->invalidateFullAss, this, [&]()
@@ -307,25 +334,24 @@ void AView::ensureAssUpdated()
 
 void AView::onMouseEnter()
 {
-    if (AWindow::shouldDisplayHoverAnimations()) {
+    if (AWindow::current()->shouldDisplayHoverAnimations()) {
         mHovered.set(this, true);
     }
 }
 
 
-void AView::onMouseMove(glm::ivec2 pos)
+void AView::onPointerMove(glm::ivec2 pos)
 {
+    AWindow::current()->setCursor(mCursor);
 }
 
 void AView::onMouseLeave()
 {
-    if (AWindow::shouldDisplayHoverAnimations()) {
-        mHovered.set(this, false);
-    }
+    mHovered.set(this, false);
 }
 
 
-void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
+void AView::onPointerPressed(const APointerPressedEvent& event)
 {
     mPressed.set(this, true);
 
@@ -336,43 +362,32 @@ void AView::onMousePressed(glm::ivec2 pos, AInput::Key button)
      */
     if (auto w = AWindow::current())
     {
-        if (w != this) {
-            connect(w->mouseReleased, this, [&]()
-                {
-                    auto selfHolder = sharedPtr();
-                    if (!selfHolder) return;
-                    AThread::current()->enqueue([this, button, selfHolder = std::move(selfHolder)]() {
-                        // to be sure that isPressed will be false.
-                        if (mPressed) {
-                            auto w = getWindow();
-                            if (!w) return;
-                            onMouseReleased(w->getMousePos() - getPositionInWindow(), button);
-                        }
-                    });
-                    disconnect();
-                });
+        // handle touchscreen keyboard visibility
+        if (wantsTouchscreenKeyboard()) {
+            w->requestTouchscreenKeyboard();
         }
     }
 }
 
-void AView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
+void AView::onPointerReleased(const APointerReleasedEvent& event)
 {
     mPressed.set(this, false);
-    emit clickedButton(button);
-    switch (button)
-    {
-        case AInput::LBUTTON:
-            emit clicked();
-            break;
-        case AInput::RBUTTON:
-            emit clickedRight();
-            break;
-    }
+    if (event.triggerClick) {
+        emit clickedButton(event.button);
+        switch (event.button) {
+            case AInput::LBUTTON:
+                emit clicked();
+                break;
+            case AInput::RBUTTON:
+                emit clickedRight;
+                emit clickedRightOrLongPressed;
 
-    if (button == AInput::RBUTTON) {
-        auto menuModel = composeContextMenu();
-        if (!menuModel.empty()) {
-            AMenu::show(menuModel);
+                auto menuModel = composeContextMenu();
+                if (!menuModel.empty()) {
+                    AMenu::show(menuModel);
+                }
+
+                break;
         }
     }
 }
@@ -381,13 +396,13 @@ AMenuModel AView::composeContextMenu() {
     return {};
 }
 
-void AView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button)
+void AView::onPointerDoubleClicked(const APointerPressedEvent& event)
 {
-    emit doubleClicked(button);
+    emit doubleClicked(event.button);
 }
 
-void AView::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
-    emit mouseScrolled(delta);
+void AView::onScroll(const AScrollEvent& event) {
+    emit scrolled(event.delta);
 }
 
 void AView::onKeyDown(AInput::Key key)
@@ -433,6 +448,10 @@ void AView::setEnabled(bool enabled)
 }
 void AView::updateEnableState()
 {
+    if (!mEnabled) {
+        onMouseLeave();
+    }
+
     mEnabled.set(this, mDirectlyEnabled && mParentEnabled);
     emit customCssPropertyChanged();
     setSignalsEnabled(mEnabled);
@@ -494,16 +513,28 @@ void AView::setSize(glm::ivec2 size)
 void AView::setGeometry(int x, int y, int width, int height) {
     setPosition({ x, y });
     setSize({width, height});
+
+    emit geometryChanged({x, y}, {width, height});
 }
 
 bool AView::consumesClick(const glm::ivec2& pos) {
     return true;
 }
 
+void AView::notifyParentChildFocused(const _<AView>& view) {
+    if (mParent == nullptr)
+        return;
+
+    emit mParent->childFocused(view);
+    mParent->notifyParentChildFocused(view);
+}
+
 void AView::focus() {
     // holding reference here
     auto mySharedPtr = sharedPtr();
     auto window = AWindow::current();
+
+    notifyParentChildFocused(mySharedPtr);
 
     try {
         auto windowSharedPtr = window->sharedPtr(); // may throw bad_weak
@@ -556,13 +587,25 @@ bool AView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
 bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event) {
     return std::visit(aui::lambda_overloaded {
         [&](const AFingerDragEvent& e) {
-            onMouseWheel(origin, e.delta);
+            onScroll({
+                .origin = origin,
+                .delta = e.delta,
+                .kinetic = e.kinetic,
+            });
             return true;
         },
         [&](const ALongPressEvent& e) {
-            onMousePressed(origin, AInput::RBUTTON);
-            onMouseReleased(origin, AInput::RBUTTON);
-            return true;
+            auto menuModel = composeContextMenu();
+            bool result = false;
+            if (clickedRightOrLongPressed) {
+                emit clickedRightOrLongPressed;
+                result = true;
+            }
+            if (!menuModel.empty()) {
+                AMenu::show(menuModel);
+                result = true;
+            }
+            return result;
         },
         [&](const auto& e) {
             return false;
@@ -570,13 +613,23 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
     }, event);
 }
 
-void AView::applyAssRule(const RuleWithoutSelector& rule) {
-    for (const auto& d : rule.getDeclarations()) {
-        auto slot = d->getDeclarationSlot();
-        if (slot != ass::decl::DeclarationSlot::NONE) {
+void AView::applyAssRule(const ass::PropertyList& propertyList) {
+    for (const auto& d : propertyList.declarations()) {
+        auto slot = d->getPropertySlot();
+        if (slot != ass::prop::PropertySlot::NONE) {
             mAss[int(slot)] = d->isNone() ? nullptr : d.get();
         }
         d->applyFor(this);
+    }
+}
+
+void AView::applyAssRule(const ass::PropertyListRecursive& propertyList) {
+    applyAssRule(static_cast<const ass::PropertyList&>(propertyList));
+
+    for (const auto& d : propertyList.conditionalPropertyLists()) {
+        if (d.selector.isStateApplicable(this)) {
+            applyAssRule(d.list);
+        }
     }
 }
 
@@ -586,7 +639,8 @@ ALayoutDirection AView::parentLayoutDirection() const noexcept {
     return mParent->getLayout()->getLayoutDirection();
 }
 
-void AView::setCustomStyle(RuleWithoutSelector rule) {
+
+void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     AUI_ASSERT_UI_THREAD_ONLY();
     mCustomStyleRule = std::move(rule);
     mAssHelper = nullptr;
@@ -600,4 +654,26 @@ bool AView::hasIndirectParent(const _<AView>& v) {
         }
     }
     return false;
+}
+
+bool AView::wantsTouchscreenKeyboard() {
+    return false;
+}
+
+void AView::setExtraStylesheet(AStylesheet&& extraStylesheet) {
+    mExtraStylesheet = _new<AStylesheet>(std::move(extraStylesheet));
+    invalidateAssHelper();
+}
+
+void AView::onClickPrevented() {
+    if (mPressed) {
+        mPressed.set(this, false);
+    }
+}
+
+void AView::setCursor(AOptional<ACursor> cursor) {
+    mCursor = std::move(cursor);
+    if (mParent) { // ABaseWindow does not have parent
+        AWindow::current()->forceUpdateCursor();
+    }
 }

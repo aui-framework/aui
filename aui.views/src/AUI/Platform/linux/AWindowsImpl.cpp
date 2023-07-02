@@ -28,7 +28,7 @@
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
 #include "AUI/GL/OpenGLRenderer.h"
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/OpenGLRenderingContext.h"
 #include "AUI/UITestState.h"
@@ -96,7 +96,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
 }
 
 float AWindow::fetchDpiFromSystem() const {
-    return Platform::getDpiRatio();
+    return APlatform::getDpiRatio();
 }
 
 void AWindow::restore() {
@@ -472,7 +472,8 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
 
                 case MotionNotify: {
                     window = locateWindow(ev.xmotion.window);
-                    window->onMouseMove({ev.xmotion.x, ev.xmotion.y});
+                    window->onPointerMove({ev.xmotion.x, ev.xmotion.y});
+                    AUI_NULLSAFE(window->getCursor())->applyNativeCursor(window.get());
                     break;
                 }
                 case ButtonPress: {
@@ -481,14 +482,22 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         case 1:
                         case 2:
                         case 3:
-                            window->onMousePressed({ev.xbutton.x, ev.xbutton.y},
-                                                   (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1));
+                            window->onPointerPressed({
+                                .position = { ev.xbutton.x, ev.xbutton.y },
+                                .button = (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1)
+                            });
                             break;
                         case 4: // wheel down
-                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, { 0, -120 });
-                            break;
-                        case 5: // wheel up
-                            window->onMouseWheel({ev.xbutton.x, ev.xbutton.y}, { 0, 120 });
+                            window->onScroll({                     // TODO libinput
+                                .origin = {ev.xbutton.x, ev.xbutton.y},  //
+                                .delta = { 0, -120 }                     //
+                            });                                          //
+                            break;                                       //
+                        case 5: // wheel up                              //
+                            window->onScroll({                     //
+                                .origin = {ev.xbutton.x, ev.xbutton.y},  //
+                                .delta = { 0, 120 }                      //
+                            });                                          //
                             break;
                     }
                     break;
@@ -496,8 +505,10 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 case ButtonRelease: {
                     if (ev.xbutton.button < 4) {
                         window = locateWindow(ev.xbutton.window);
-                        window->onMouseReleased({ev.xbutton.x, ev.xbutton.y},
-                                                (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1));
+                        window->onPointerReleased({
+                             .position = { ev.xbutton.x, ev.xbutton.y },
+                             .button = (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1)
+                        });
                     }
                     break;
                 }
@@ -507,13 +518,11 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                     if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
                         auto maximized = window->isMaximized();
                         if (maximized != window->mWasMaximized) {
-                            AUI_PERFORM_AS_MEMBER(window, {
-                                if (mWasMaximized) {
-                                    emit restored();
-                                } else {
-                                    emit maximized();
-                                }
-                            });
+                            if (window->mWasMaximized) {
+                                AUI_EMIT_FOREIGN(window, restored);
+                            } else {
+                                AUI_EMIT_FOREIGN(window, maximized);
+                            }
                             window->mWasMaximized = maximized;
                         }
                     }
@@ -676,3 +685,12 @@ void AWindow::blockUserInput(bool blockUserInput) {
 void AWindow::allowDragNDrop() {
 
 }
+
+void AWindow::requestTouchscreenKeyboardImpl() {
+    ABaseWindow::requestTouchscreenKeyboardImpl();
+}
+
+void AWindow::hideTouchscreenKeyboardImpl() {
+    ABaseWindow::hideTouchscreenKeyboardImpl();
+}
+

@@ -23,7 +23,7 @@ struct ViewActionScroll {
     ViewActionScroll(const glm::ivec2& delta) : delta(delta) {}
 
     void operator()(const _<AView>& view) {
-        view->onMouseWheel({0, 0}, delta);
+        view->onScroll({{0, 0}, delta});
         uitest::frame();
     }
 };

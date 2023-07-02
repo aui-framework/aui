@@ -81,8 +81,8 @@ if (AUI_ENABLE_MYSQL)
 
 		aui_module(aui.mysql EXPORT aui)
 
-		aui_link(AUI.Mysql PUBLIC aui.core)
-		aui_link(AUI.Mysql PUBLIC aui.data)
+		aui_link(AUI.Mysql PUBLIC aui::core)
+		aui_link(AUI.Mysql PUBLIC aui::data)
 
 
 		target_include_directories(AUI.Mysql PRIVATE ${MYSQL_INCLUDE_DIR})

@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -197,12 +197,12 @@ ACustomWindow::ACustomWindow(const AString &name, int width, int height) {
 
 }
 
-void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    ABaseWindow::onMousePressed(pos, button);
+void ACustomWindow::onPointerPressed(glm::ivec2 pos, AInput::Key button) {
+    ABaseWindow::onPointerPressed(event);
 }
 
-void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {
+    AViewContainer::onPointerReleased(event);
 }
 
 #elif AUI_PLATFORM_APPLE
@@ -213,28 +213,28 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
 
     setWindowStyle(WindowStyle::NO_DECORATORS);
 }
-void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    if (pos.y < AUI_TITLE_HEIGHT && button == AInput::LBUTTON) {
-        if (isCaptionAt(pos)) {
+void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
+    if (event.position.y < AUI_TITLE_HEIGHT && event.button == AInput::LBUTTON) {
+        if (isCaptionAt(event.position)) {
             // TODO apple
 
             mDragging = true;
-            mDragPos = pos;
-            emit dragBegin(pos);
+            mDragPos = event.position;
+            emit dragBegin(event.position);
         }
     }
-    AViewContainer::onMousePressed(pos, button);
+    AViewContainer::onPointerPressed(event);
 }
 
 
-void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {
+    AViewContainer::onPointerReleased(event);
 }
 void ACustomWindow::handleXConfigureNotify() {
     emit dragEnd();
 
     // x11 does not send release button event
-    AViewContainer::onMouseReleased(mDragPos, AInput::LBUTTON);
+    AViewContainer::onPointerReleased({mDragPos, AInput::LBUTTON});
 }
 
 
@@ -249,7 +249,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
     setWindowStyle(WindowStyle::NO_DECORATORS);
 }
 
-void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+void ACustomWindow::onPointerPressed(glm::ivec2 pos, AInput::Key button) {
     if (pos.y < AUI_TITLE_HEIGHT && button == AInput::LBUTTON) {
         if (isCaptionAt(pos)) {
             XClientMessageEvent xclient;
@@ -274,18 +274,18 @@ void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
             emit dragBegin(pos);
         }
     }
-    AViewContainer::onMousePressed(pos, button);
+    AViewContainer::onPointerPressed(event);
 }
 
 
-void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {
+    AViewContainer::onPointerReleased(event);
 }
 void ACustomWindow::handleXConfigureNotify() {
     emit dragEnd();
 
     // x11 does not send release button event
-    AViewContainer::onMouseReleased(mDragPos, AInput::LBUTTON);
+    AViewContainer::onPointerReleased(mDragPos, AInput::LBUTTON);
 }
 
 

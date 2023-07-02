@@ -15,7 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
-// Created by Alex2772 on 11/17/2021.
+// Created by Alex2772 on 11/20/2021.
 //
 
 #include "AMultilineTextRender.h"

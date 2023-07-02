@@ -39,4 +39,5 @@ public:
     ~GifImageFactory();
     AImage provideImage(const glm::ivec2& size) override;
     bool isNewImageAvailable() override;
+    glm::ivec2 getSizeHint() override;
 };

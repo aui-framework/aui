@@ -2,12 +2,11 @@ cmake_minimum_required(VERSION 3.10)
 
 
 auib_use_system_libs_begin()
+cmake_policy(SET CMP0072 NEW)
 find_package(OpenGL)
 if (AUI_PLATFORM_LINUX)
 	find_package(X11 REQUIRED)
-	if(BUILD_SHARED_LIBS)
-		find_package(Fontconfig REQUIRED)
-	endif()
+	find_package(Fontconfig REQUIRED)
 endif()
 auib_use_system_libs_end()
 
@@ -26,30 +25,19 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 	if(NOT ANDROID AND NOT IOS)
 		auib_import(GLEW https://github.com/aui-framework/glew-cmake
 				CMAKE_WORKING_DIR "build/cmake")
-
-		if (NOT WIN32 AND NOT APPLE)
-			FIND_PACKAGE(PkgConfig REQUIRED)
-			PKG_CHECK_MODULES(GTK gtk+-3.0)
-
-			if (NOT GTK_FOUND)
-				message(WARNING "Could not find GTK3; Disabling aui.views. Hint: install package libgtk-3-dev")
-				return()
-			endif()
-			link_directories(${GTK_LIBRARY_DIRS})
-			add_definitions(${GTK_CFLAGS_OTHER})
-		endif ()
 	endif()
 
 	aui_module(aui.views EXPORT aui)
 	aui_enable_tests(aui.views)
 
 	if (AUI_PLATFORM_LINUX)
-		target_include_directories(aui.views PRIVATE ${GTK_INCLUDE_DIRS})
-		aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${GTK_LIBRARIES})
-		if (NOT BUILD_SHARED_LIBS)
-			# link Freetype's deps
-			target_link_libraries(aui.views PUBLIC ${Fontconfig_LIBRARIES})
-		endif()
+		find_package(PkgConfig REQUIRED)
+
+		pkg_check_modules(DBUS REQUIRED dbus-1)
+		include_directories(${DBUS_INCLUDE_DIRS})
+		link_directories(${DBUS_LIBRARY_DIRS})
+
+		aui_link(aui.views PRIVATE X11::X11 X11::Xrandr X11::Xcursor X11::Xi ${DBUS_LIBRARIES} ${Fontconfig_LIBRARIES})
 	endif()
 
 	if (NOT AUI_PLATFORM_WINDOWS)
@@ -75,6 +63,11 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 	else()
 		aui_link(aui.views PRIVATE freetype)
 		aui_link(aui.views PRIVATE OpenGL::GL)
+
+		if (AUI_PLATFORM_LINUX)
+			# glew defines unwanted dependencies to OpenGL which may vary from distro to distro; silence them
+			set_target_properties(GLEW::GLEW PROPERTIES INTERFACE_LINK_LIBRARIES "")
+		endif()
 		aui_link(aui.views PUBLIC GLEW::GLEW)
 
 		if(WIN32)
@@ -86,6 +79,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 				aui_link(aui.views PRIVATE ZLIB::ZLIB)
 			endif()
 		elseif(AUI_PLATFORM_MACOS)
+			aui_link(aui.views PRIVATE OpenGL::GL)
 			target_link_libraries(aui.views PUBLIC "-framework AppKit"
 				                                   "-framework Cocoa"
 				                                   "-framework CoreData"

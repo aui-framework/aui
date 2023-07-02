@@ -49,13 +49,13 @@ AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
         mCurrentFrameIndex = 0;
     }
 
-    unsigned format = AImageFormat::BYTE;
+    unsigned format = APixelFormat::BYTE;
     switch (mChannelsCount) {
         case 3:
-            format |= AImageFormat::RGB;
+            format |= APixelFormat::RGB;
             break;
         case 4:
-            format |= AImageFormat::RGBA;
+            format |= APixelFormat::RGBA;
             break;
         default:
             assert(0);
@@ -65,8 +65,7 @@ AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
     mLastFrameStarted = std::chrono::system_clock::now();
     int frameBufferSize = mGifWidth * mGifHeight * mChannelsCount;
     int currentFrameOffset = frameBufferSize * mCurrentFrameIndex;
-    AByteBuffer buffer(reinterpret_cast<const char*>(mLoadedGifPixels + currentFrameOffset), frameBufferSize);
-    mCurrentFrame = _new<AImage>(buffer, mGifWidth, mGifHeight, format);
+    mCurrentFrame = _new<AImage>(AByteBufferView(reinterpret_cast<const char*>(mLoadedGifPixels + currentFrameOffset), frameBufferSize), glm::uvec2{mGifWidth, mGifHeight}, format);
     return *mCurrentFrame;
 }
 
@@ -74,4 +73,8 @@ bool GifImageFactory::isNewImageAvailable() {
     auto timeSinceLastFrame = std::chrono::system_clock::now() - mLastFrameStarted;
     auto millisecondsSinceFrame = std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceLastFrame);
     return !mCurrentFrame || millisecondsSinceFrame.count() >= mDelays[mCurrentFrameIndex];
+}
+
+glm::ivec2 GifImageFactory::getSizeHint() {
+    return { mGifWidth, mGifHeight };
 }

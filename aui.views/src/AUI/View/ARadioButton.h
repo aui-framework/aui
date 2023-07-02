@@ -72,7 +72,7 @@ public:
         emit ARadioButton::checked(checked);
     }
 
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
 
     class API_AUI_VIEWS Group: public AObject {
     private:

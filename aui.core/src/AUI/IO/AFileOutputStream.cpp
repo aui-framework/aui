@@ -19,18 +19,9 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/ErrorToException.h"
 
-AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move(path))
+AFileOutputStream::AFileOutputStream(AString path, bool append): mPath(std::move(path)), mFile(nullptr)
 {
-#if AUI_PLATFORM_WIN
-	// КАК ЖЕ ЗАКОЛЕБАЛА ЭТА ВЕНДА
-	_wfopen_s(&mFile, mPath.c_str(), append ? L"a+b" : L"wb");
-#else
-	mFile = fopen(mPath.toStdString().c_str(), append ? "a+b" : "wb");
-#endif
-	if (!mFile)
-	{
-        aui::impl::unix::lastErrorToException("AFileOutputStream: could not open {}"_format(mPath));
-	}
+    open(append);
 }
 
 AFileOutputStream::~AFileOutputStream()
@@ -40,12 +31,15 @@ AFileOutputStream::~AFileOutputStream()
 
 void AFileOutputStream::write(const char* src, size_t size)
 {
-    assert(("file not open", mFile != nullptr));
+    if (mFile == nullptr) {
+        throw AIOException("Write attempt to not opened file: " + mPath);
+    }
+
     if (size == 0) return;
 	while (size) {
         auto v = fwrite(src, 1, size, mFile);
         if (v == 0) {
-            aui::impl::unix::lastErrorToException(mPath);
+            aui::impl::unix_based::lastErrorToException(mPath);
         }
         size -= v;
         src += v;
@@ -56,5 +50,21 @@ void AFileOutputStream::close() {
     if (mFile) {
         fclose(mFile);
         mFile = nullptr;
+    }
+}
+
+void AFileOutputStream::open(bool append) {
+    if (mFile != nullptr) {
+        throw AIOException("Trying to open already opened file: " + mPath);
+    }
+
+#if AUI_PLATFORM_WIN
+    mFile = _wfsopen(mPath.c_str(), append ? L"a+b" : L"wb", _SH_DENYWR);
+#else
+    mFile = fopen(mPath.toStdString().c_str(), append ? "a+b" : "wb");
+#endif
+    if (!mFile)
+    {
+        aui::impl::lastErrorToException("AFileOutputStream: could not open {}"_format(mPath));
     }
 }

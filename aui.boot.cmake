@@ -22,6 +22,9 @@
 cmake_minimum_required(VERSION 3.16)
 
 option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
+option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
+
+set(CMAKE_POLICY_DEFAULT_CMP0074 NEW) # allows find_package to use packages pulled by aui.boot
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
@@ -74,8 +77,6 @@ define_property(GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES
         BRIEF_DOCS "Global list of aui boot root entries"
         FULL_DOCS "Global list of aui boot root entries")
 
-set(CMAKE_POLICY_DEFAULT_CMP0074 NEW)
-
 # checking host system not by WIN32 because of cross compilation
 if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
     set(HOME_DIR $ENV{USERPROFILE})
@@ -110,7 +111,13 @@ else()
     set(AUI_TARGET_ABI "${_tmp}" CACHE INTERNAL "COMPILER-PROCESSOR pair")
 endif()
 
-set(AUI_CACHE_DIR ${HOME_DIR}/.aui CACHE PATH "Path to AUI.Boot cache")
+
+set(_tmp ${HOME_DIR}/.aui)
+if(AUIB_LOCAL_CACHE)
+    set(_tmp ${CMAKE_BINARY_DIR}/aui.boot)
+endif()
+
+set(AUI_CACHE_DIR ${_tmp} CACHE PATH "Path to AUI.Boot cache")
 message(STATUS "AUI.Boot cache: ${AUI_CACHE_DIR}")
 message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_ABI}")
 
@@ -285,7 +292,7 @@ function(_auib_try_download_precompiled_binary)
         message(STATUS "Unpacking precompiled binary for ${AUI_MODULE_NAME}...")
         file(MAKE_DIRECTORY ${DEP_INSTALL_PREFIX})
         execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf ${CMAKE_CURRENT_BINARY_DIR}/binary.tar.gz
-                        WORKING_DIRECTORY ${DEP_INSTALL_PREFIX})
+                WORKING_DIRECTORY ${DEP_INSTALL_PREFIX})
 
         _auib_try_find()
 
@@ -351,9 +358,30 @@ function(auib_import AUI_MODULE_NAME URL)
 
     set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY)
     set(oneValueArgs VERSION CMAKE_WORKING_DIR CMAKELISTS_CUSTOM PRECOMPILED_URL_PREFIX LINK)
-    set(multiValueArgs CMAKE_ARGS COMPONENTS)
+
+    set(multiValueArgs CMAKE_ARGS COMPONENTS REQUIRES)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
+
+    # check for dependencies
+    foreach (_dep ${AUIB_IMPORT_REQUIRES})
+        set(_dep_root_var ${_dep}_ROOT)
+        if (NOT DEFINED ${_dep_root_var})
+            message(FATAL_ERROR "${AUI_MODULE_NAME} requires ${_dep}, but it's not available (${_dep_root_var} is not set)")
+        endif()
+        set(_dep_root_value ${${_dep_root_var}})
+        set(_dep_root_value_installed ${_dep_root_value}/INSTALLED)
+        if (NOT EXISTS ${_dep_root_value_installed})
+            message(FATAL_ERROR "${AUI_MODULE_NAME} requires ${_dep}, but it's not available (${_dep_root_value_installed} does not exist)")
+        endif()
+
+        # add it to AUI_BOOT_ROOT_ENTRIES if needed
+        get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
+        list(JOIN AUI_BOOT_ROOT_ENTRIES , AUI_BOOT_ROOT_ENTRIES)
+        if (NOT "${AUI_BOOT_ROOT_ENTRIES}" MATCHES ".*${_dep_root_var}.*")
+            set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${_dep_root_var}=${_dep_root_value}")
+        endif ()
+    endforeach()
 
     if (AUIB_IMPORT_ARCHIVE AND AUIB_IMPORT_VERSION)
         message(FATAL_ERROR "ARCHIVE and VERSION arguments are incompatible")
@@ -465,6 +493,21 @@ function(auib_import AUI_MODULE_NAME URL)
 
     set(DEP_INSTALLED_FLAG ${DEP_INSTALL_PREFIX}/INSTALLED)
 
+    # TODO add protocol check
+    if(AUI_BOOT_SOURCEDIR_COMPAT)
+        unset(SOURCE_BINARY_DIRS_ARG)
+    else()
+        if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT) # recursive deadlock fix
+            if (NOT _locked)
+                set(_locked TRUE)
+                message(STATUS "Waiting for repository...")
+                file(LOCK "${AUI_CACHE_DIR}/repo.lock")
+            endif()
+        endif()
+        set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
+                BINARY_DIR ${DEP_BINARY_DIR})
+    endif()
+
     if (NOT DEP_ADD_SUBDIRECTORY)
         # avoid compilation if we have existing installation
         if (EXISTS ${DEP_INSTALLED_FLAG})
@@ -488,20 +531,6 @@ function(auib_import AUI_MODULE_NAME URL)
 
         set(${AUI_MODULE_NAME}_FOUND FALSE) # reset the FOUND flag; in some cases it may have been TRUE here
 
-        # TODO add protocol check
-        if(AUI_BOOT_SOURCEDIR_COMPAT)
-            unset(SOURCE_BINARY_DIRS_ARG)
-        else()
-            if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT) # recursive deadlock fix
-                if (NOT _locked)
-                    set(_locked TRUE)
-                    message(STATUS "Waiting for repository...")
-                    file(LOCK "${AUI_CACHE_DIR}/repo.lock")
-                endif()
-            endif()
-            set(SOURCE_BINARY_DIRS_ARG SOURCE_DIR ${DEP_SOURCE_DIR}
-                    BINARY_DIR ${DEP_BINARY_DIR})
-        endif()
         message(STATUS "Fetching ${AUI_MODULE_NAME} (${TAG_OR_HASH})")
 
         file(REMOVE_RECURSE ${DEP_SOURCE_DIR} ${DEP_BINARY_DIR})
@@ -545,12 +574,6 @@ function(auib_import AUI_MODULE_NAME URL)
                         SOURCE_DIR DEP_SOURCE_DIR
                         )
                 message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
-            else()
-                if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
-                    if (NOT AUI_BOOT) # recursive deadlock fix
-                        file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
-                    endif()
-                endif()
             endif()
         endif()
 
@@ -642,6 +665,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         CMAKE_FIND_ROOT_PATH_MODE_INCLUDE
                         CMAKE_FIND_ROOT_PATH_MODE_PACKAGE
                         ONLY_CMAKE_FIND_ROOT_PATH
+                        CMAKE_POLICY_DEFAULT_CMP0074 # find_package uses *_ROOT variables
                         PLATFORM
                         CMAKE_OSX_ARCHITECTURES
                         XCODE_VERSION
@@ -662,10 +686,12 @@ function(auib_import AUI_MODULE_NAME URL)
                 endif()
                 list(APPEND FINAL_CMAKE_ARGS "-DBUILD_SHARED_LIBS=${_build_shared_libs}")
 
+                file(MAKE_DIRECTORY ${DEP_INSTALL_PREFIX})
                 message("Configuring CMake ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
                 execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                        RESULT_VARIABLE STATUS_CODE)
+                        RESULT_VARIABLE STATUS_CODE
+                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(STATUS "Dependency CMake configure failed, clearing dir and trying again...")
@@ -673,7 +699,8 @@ function(auib_import AUI_MODULE_NAME URL)
                     file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
                     execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                             WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                            RESULT_VARIABLE STATUS_CODE)
+                            RESULT_VARIABLE STATUS_CODE
+                            OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log)
                     if (NOT STATUS_CODE EQUAL 0)
                         message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}")
                     endif()
@@ -692,7 +719,8 @@ function(auib_import AUI_MODULE_NAME URL)
                         --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                        RESULT_VARIABLE ERROR_CODE)
+                        RESULT_VARIABLE ERROR_CODE
+                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/build.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(FATAL_ERROR "Dependency build failed: ${AUI_MODULE_NAME}")
@@ -705,7 +733,8 @@ function(auib_import AUI_MODULE_NAME URL)
                         --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
 
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                        RESULT_VARIABLE ERROR_CODE)
+                        RESULT_VARIABLE ERROR_CODE
+                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/install.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}")
@@ -715,12 +744,11 @@ function(auib_import AUI_MODULE_NAME URL)
                 endif()
                 file(TOUCH ${DEP_INSTALLED_FLAG})
             endif()
-            if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
-                if (NOT AUI_BOOT) # recursive deadlock fix
-                    file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
-                endif()
-            endif()
         endif()
+    endif()
+    if (_locked)
+        set(_locked FALSE)
+        file(LOCK "${AUI_CACHE_DIR}/repo.lock" RELEASE)
     endif()
     if (DEP_ADD_SUBDIRECTORY)
         set(${AUI_MODULE_NAME}_ROOT ${DEP_SOURCE_DIR})
@@ -793,9 +821,9 @@ function(auib_import AUI_MODULE_NAME URL)
     # display the imported targets (available since CMake 3.21)
     if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
         _auib_update_imported_targets_list()
-        message(STATUS "Imported: ${AUI_MODULE_NAME} (${_imported_targets_after}) (${${AUI_MODULE_NAME}_ROOT})")
+        message(STATUS "Imported: ${AUI_MODULE_NAME} (${_imported_targets_after}) (${${AUI_MODULE_NAME}_ROOT}) (version ${TAG_OR_HASH})")
     else()
-        message(STATUS "Imported: ${AUI_MODULE_NAME} (${${AUI_MODULE_NAME}_ROOT})")
+        message(STATUS "Imported: ${AUI_MODULE_NAME} (${${AUI_MODULE_NAME}_ROOT}) (version ${TAG_OR_HASH})")
     endif()
 
 endfunction()

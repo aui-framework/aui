@@ -73,8 +73,8 @@ if (NOT ANDROID AND NOT IOS)
     # define_aui_component(data) -- outdated; need reworking
     define_aui_component(mysql)
     # define_aui_component(data) -- outdated; need reworking
-    define_aui_component(network)
 endif()
+define_aui_component(network)
 define_aui_component(crypt)
 define_aui_component(curl)
 define_aui_component(image)
@@ -86,7 +86,7 @@ if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
 endif()
 
-if(AUI_BUILD_EXAMPLES)
+if (AUI_BUILD_EXAMPLES) 
     add_subdirectory(examples/AUI.Example.Views)
     #add_subdirectory(examples/AUI.Example.Fractal)
     #add_subdirectory(examples/AUI.Example.Minesweeper)

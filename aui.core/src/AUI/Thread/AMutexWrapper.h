@@ -16,6 +16,9 @@
 
 #pragma once
 
+#include <AUI/Traits/values.h>
+#include <AUI/Traits/memory.h>
+
 /**
  * @brief Wraps the object with mutex, providing thread-safety layer and a runtime check.
  * @ingroup core
@@ -50,10 +53,10 @@ public:
     }
 
     void unlock() {
-        mMutex.unlock();
 #if AUI_DEBUG
-        mOwnerThread = std::this_thread::get_id();
+        aui::zero(mOwnerThread);
 #endif
+        mMutex.unlock();
     }
 
     T& value() noexcept {

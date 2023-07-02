@@ -15,7 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include <AUI/Platform/AFontManager.h>
-#include <AUI/Render/FreeType.h>
+#include <AUI/Font/FreeType.h>
 
 AFontManager::AFontManager():
         mFreeType(_new<FreeType>()),

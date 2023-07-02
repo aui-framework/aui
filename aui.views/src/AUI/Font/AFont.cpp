@@ -17,7 +17,7 @@
 #include <ft2build.h>
 #include <freetype/freetype.h>
 #include <freetype/ftsnames.h>
-#include "AUI/Render/FreeType.h"
+#include "AUI/Font/FreeType.h"
 #include "AUI/Platform/AFontManager.h"
 #include <fstream>
 #include <string>
@@ -120,14 +120,14 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, long glyph) {
             }
 		}
 
-		int imageFormat = AImageFormat::BYTE;
+		int imageFormat = APixelFormat::BYTE;
 		if (fr == FontRendering::SUBPIXEL)
-			imageFormat |= AImageFormat::RGB;
+			imageFormat |= APixelFormat::RGB;
 		else
-			imageFormat |= AImageFormat::R;
+			imageFormat |= APixelFormat::R;
 
 		return Character {
-            _new<AImage>(data, width, height, imageFormat),
+            _new<AImage>(data, glm::uvec2(width, height), imageFormat),
             int(g->metrics.horiAdvance * div),
             int(-(g->metrics.horiBearingY * div) + size),
             int(g->bitmap_left)
@@ -158,25 +158,7 @@ AFont::Character& AFont::getCharacter(const FontEntry& charset, long glyph) {
 
 float AFont::length(const FontEntry& charset, const AString& text)
 {
-    int size = charset.first.size;
-	int advance = 0;
-
-	for (AString::const_iterator i = text.begin(); i != text.end(); i++) {
-		if (*i == ' ')
-			advance += getSpaceWidth(size);
-		else if (*i == '\n')
-		    advance = 0;
-		else {
-			Character& ch = getCharacter(charset, *i);
-			if (!ch.empty()) {
-                advance += ch.advanceX;
-                advance = glm::floor(advance);
-            }
-			else
-				advance += getSpaceWidth(size);
-		}
-	}
-	return advance;
+    return length(charset, text.begin(), text.end());
 }
 
 bool AFont::isHasKerning()

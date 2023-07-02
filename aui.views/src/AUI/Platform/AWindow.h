@@ -92,7 +92,7 @@ private:
 protected:
 #if AUI_PLATFORM_WIN
 	HICON mIcon = nullptr;
-    virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
+    virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #elif AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_APPLE
 #else
@@ -236,12 +236,6 @@ public:
     static ABaseWindow* current();
 
     /**
-     * @brief Determines whether views should display hover animations.
-     * @return false when any keyboard button is pressed
-     */
-    static bool shouldDisplayHoverAnimations();
-
-    /**
      * @brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.
      * @param position coordinates in the space of this window
      * @param other other window
@@ -267,6 +261,11 @@ public:
 
     void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) override;
     virtual void onCloseButtonClicked();
+
+    void forceUpdateCursor() override;
+
+    void requestTouchscreenKeyboardImpl() override;
+    void hideTouchscreenKeyboardImpl() override;
 
 signals:
     emits<> closed;
@@ -297,7 +296,7 @@ signals:
 
     bool consumesClick(const glm::ivec2& pos) override;
 
-    void onMouseMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos) override;
 
     void flagUpdateLayout() override;
 };

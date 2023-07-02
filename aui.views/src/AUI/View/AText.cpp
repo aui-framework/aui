@@ -64,6 +64,7 @@ AText::ParsedFlags AText::parseFlags(const AText::Flags& flags) {
 }
 
 void AText::setString(const AString& string, const Flags& flags) {
+    clearContent();
     auto parsedFlags = parseFlags(flags);
     mParsedFlags = parsedFlags;
     AVector<_<AWordWrappingEngine::Entry>> entries;
@@ -76,9 +77,10 @@ void AText::setString(const AString& string, const Flags& flags) {
     mEngine.setEntries(std::move(entries));
 }
 
-void AText::setItems(std::initializer_list<std::variant<AString, _<AView>>> init, const Flags& flags) {
+
+void AText::setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags) {
+    clearContent();
     auto parsedFlags = parseFlags(flags);
-    auto text = aui::ptr::manage(new AText);
     mParsedFlags = parsedFlags;
     AVector<_<AWordWrappingEngine::Entry>> entries;
     entries.reserve(init.size());
@@ -100,6 +102,7 @@ void AText::setItems(std::initializer_list<std::variant<AString, _<AView>>> init
 }
 
 void AText::setHtml(const AString& html, const Flags& flags) {
+    clearContent();
     auto parsedFlags = parseFlags(flags);
     AStringStream stringStream(html);
     struct CommonEntityVisitor: IXmlDocumentVisitor {
@@ -173,7 +176,13 @@ int AText::getContentMinimumHeight(ALayoutDirection layout) {
         prerenderString();
     }
 
-    return mPrerenderedString ? mPrerenderedString->getHeight() : 0;
+    auto height = mPrerenderedString ? mPrerenderedString->getHeight() : 0;
+    auto engineHeight = mEngine.getHeight();
+    if (engineHeight.has_value()) {
+        height = std::max(height, *engineHeight);
+    }
+
+    return height;
 }
 
 void AText::render() {
@@ -266,4 +275,11 @@ Float AText::CharEntry::getFloat() const {
 
 void AText::invalidateFont() {
     mPrerenderedString.reset();
+}
+
+void AText::clearContent() {
+    mWordEntries.clear();
+    mCharEntries.clear();
+    removeAllViews();
+    mPrerenderedString = nullptr;
 }

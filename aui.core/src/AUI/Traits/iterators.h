@@ -204,7 +204,6 @@ namespace aui {
 
     /**
      * @brief Reverses iterator direction (i.e. converts iterator to reverse_iterator, reverse_iterator to iterators).
-     * @ingroup useful_macros
      * @tparam Iterator iterator
      * @param iterator iterator
      * @return same iterator but reverse direction

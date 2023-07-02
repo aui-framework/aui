@@ -221,4 +221,6 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
     if (!currentRow->empty()) {
         flushRow(true);
     }
+
+    mHeight = currentY + int(float(currentRowHeight) * mLineHeight) + offset.y;
 }

@@ -14,19 +14,23 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Common/AString.h"
 #include "AUI/IO/APath.h"
 #include <AUI/Util/kAUI.h>
 #import <UIKit/UIKit.h>
 
 
-void Platform::playSystemSound(Sound s)
+
+float APlatform::getDpiRatio()
 {
-    // unsupported
+    return float([[UIScreen mainScreen] scale]);
 }
 
-float Platform::getDpiRatio()
-{
-    return float([[UIScreen mainScreen] scale]) * 1.2f;
+void APlatform::openUrl(const AUrl &url) {
+    @autoreleasepool {
+        UIApplication *application = [UIApplication sharedApplication];
+        NSURL *URL = [NSURL URLWithString:[NSString stringWithUTF8String: url.full().toStdString().c_str()]];
+        [application openURL:URL options:@{} completionHandler:nil];
+    }
 }

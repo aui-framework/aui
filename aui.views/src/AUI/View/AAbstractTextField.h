@@ -70,6 +70,7 @@ public:
 
     void setPasswordMode(bool isPasswordMode) {
         mIsPasswordTextField = isPasswordMode;
+        setCopyable(!isPasswordMode);
     }
 
 	bool isPasswordMode() const {
@@ -85,5 +86,9 @@ public:
 
     void onCharEntered(wchar_t c) override;
     void invalidateFont() override;
+
+    void onFocusLost() override;
+
+    bool wantsTouchscreenKeyboard() override;
 
 };

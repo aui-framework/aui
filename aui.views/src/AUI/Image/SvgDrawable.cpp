@@ -47,36 +47,14 @@ void AVectorDrawable::draw(const Params& params) {
     auto& size = params.size;
     auto key = asKey(size);
     auto doDraw = [&](const Render::Texture& texture) {
-        bool uvModifiedFlag = false;
-        glm::vec2 uv = {1, 1};
-
-        glm::vec2 pos;
-        auto sizeHint = glm::vec2(getSizeHint());
-        float scale = glm::min(size.x / sizeHint.x, size.y / sizeHint.y);
-
-        if (!!(params.repeat & Repeat::X)) {
-            uv.x = float(size.x) / getSizeHint().x;
-            uvModifiedFlag = true;
-            pos.x = 0;
-        } else {
-            pos.x = glm::round((size.x - sizeHint.x * scale) / 2.f);
-        }
-        if (!!(params.repeat & Repeat::Y)) {
-            uv.y = float(size.y) / getSizeHint().y;
-            uvModifiedFlag = true;
-            pos.y = 0;
-        } else {
-            pos.y = glm::round((size.y - sizeHint.y * scale) / 2.f);
-        }
-        pos += params.offset;
         Render::rect(ATexturedBrush{
                              texture,
                              std::nullopt,
-                             uvModifiedFlag ? static_cast<decltype(ATexturedBrush::uv1)>(uv) : std::nullopt,
+                             std::nullopt,
                              params.imageRendering,
                              params.repeat,
                      },
-                     pos,
+                     params.offset,
                      size);
     };
     for (auto& p : mRasterized) {
@@ -100,7 +78,7 @@ void AVectorDrawable::draw(const Params& params) {
 
     // rasterization
     auto texture = Render::getNewTexture();
-    texture->setImage(_new<AImage>(mFactory->provideImage(textureSize)));
+    texture->setImage(_new<AImage>(mFactory->provideImage(glm::max(textureSize, glm::ivec2(0)))));
     mRasterized.push_back({key, texture});
     doDraw(texture);
 }

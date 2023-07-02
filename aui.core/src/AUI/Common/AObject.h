@@ -21,10 +21,27 @@
 #include "AUI/Common/ASet.h"
 #include "AUI/Traits/values.h"
 #include <AUI/Thread/AMutex.h>
+#include <AUI/Traits/members.h>
+#include <AUI/Traits/concepts.h>
 
 class AString;
 class AAbstractSignal;
 class AAbstractThread;
+class API_AUI_CORE AObject;
+
+template<typename T>
+concept AAnySignal = requires(T) {
+    std::is_base_of_v<AAbstractSignal, T>;
+    typename T::args_t;
+};
+
+template<typename C>
+concept ASignalInvokable = requires(C&& c) {
+    c.invokeSignal(std::declval<AObject*>());
+};
+
+template<typename F, typename Signal>
+concept ACompatibleSlotFor = true; // TODO
 
 /**
  * @brief A base object class.
@@ -66,13 +83,10 @@ public:
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
-	template<class Signal, class Object, typename Function>
-	static void connect(Signal& signal, Object* object, Function function)
+	template<AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
+	static void connect(Signal& signal, Object* object, Function&& function)
 	{
-		static_assert(std::is_base_of_v<AObject, Object>, "the passed object should be a base of the AObject class (use class YourObject: public AObject)");
-		static_assert(std::is_base_of_v<AAbstractSignal, Signal>, "expected signal as first argument");
-
-        signal.connect(object, function);
+        signal.connect(object, std::forward<Function>(function));
 	}
 
     /**
@@ -85,13 +99,10 @@ public:
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
-	template<class Signal, class Object, typename Function>
-	static void connect(Signal& signal, Object& object, Function function)
+    template<AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
+	static void connect(Signal& signal, Object& object, Function&& function)
 	{
-		static_assert(std::is_base_of_v<AObject, Object>, "the passed object should be a base of the AObject class (use class YourObject: public AObject)");
-		static_assert(std::is_base_of_v<AAbstractSignal, Signal>, "expected signal as first argument");
-
-        signal.connect(&object, function);
+        signal.connect(&object, std::forward<Function>(function));
 	}
 
     /**
@@ -103,11 +114,10 @@ public:
      * @param signal signal
      * @param function slot. Can be lambda
      */
-	template<class Signal, typename Function>
-	void connect(Signal& signal, Function function)
+    template<AAnySignal Signal, ACompatibleSlotFor<Signal> Function>
+	void connect(Signal& signal, Function&& function)
 	{
-		static_assert(std::is_base_of_v<AAbstractSignal, Signal>, "expected signal as first argument");
-		signal.connect(this, function);
+		signal.connect(this, std::forward<Function>(function));
 	}
 
     /**
@@ -120,14 +130,10 @@ public:
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      */
-	template<class Signal, class Object, typename Function>
-	static void connect(Signal& signal, _<Object> object, Function function)
+    template<AAnySignal Signal, aui::derived_from<AObject> Object, ACompatibleSlotFor<Signal> Function>
+	static void connect(Signal& signal, _<Object> object, Function&& function)
 	{
-		static_assert(std::is_base_of_v<AObject, typename std::remove_pointer<Object>::type>, "the passed object should be a base of the AObject class (use class YourObject: public AObject)");
-		static_assert(std::is_base_of_v<AAbstractSignal, Signal>, "expected signal as first argument");
-		if constexpr (std::is_base_of_v<AObject, typename std::remove_pointer<Object>::type>) {
-			signal.connect(object.get(), function);
-		}
+        signal.connect(object.get(), std::forward<Function>(function));
 	}
 
 	void setSignalsEnabled(bool enabled)
@@ -135,7 +141,7 @@ public:
 		mSignalsEnabled = enabled;
 	}
 
-    template<typename T>
+    template<ASignalInvokable T>
 	void operator^(T&& t) {
 	    if (mSignalsEnabled) {
 	        t.invokeSignal(this);
@@ -184,5 +190,7 @@ private:
 };
 
 #define emit (*this)^
+
+#define AUI_EMIT_FOREIGN(object, signal, ...) (*object)^ object->signal(__VA_ARGS__)
 
 #include "SharedPtr.h"

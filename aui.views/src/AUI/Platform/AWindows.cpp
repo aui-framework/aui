@@ -95,7 +95,7 @@ void AWindow::redraw() {
         // measure frame time
         auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         unsigned millis = mFrameMillis = unsigned((after - before).count());
-        if (millis > 17) {
+        if (millis > 20) {
             static auto lastNotification = 0ms;
             if (after - lastNotification > 5min) {
                 lastNotification = after;
@@ -131,8 +131,8 @@ void AWindow::onFocusAcquired() {
     AViewContainer::onFocusAcquired();
 }
 
-void AWindow::onMouseMove(glm::ivec2 pos) {
-    ABaseWindow::onMouseMove(pos);
+void AWindow::onPointerMove(glm::ivec2 pos) {
+    ABaseWindow::onPointerMove(pos);
 }
 
 void AWindow::onFocusLost() {
@@ -151,17 +151,6 @@ void AWindow::onKeyRepeat(AInput::Key key) {
 ABaseWindow* AWindow::current() {
     return currentWindowStorage();
 }
-
-bool AWindow::shouldDisplayHoverAnimations() {
-#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
-    return false;
-#else
-    return current()->isFocused() && !AInput::isKeyDown(AInput::LBUTTON)
-                                  && !AInput::isKeyDown(AInput::CBUTTON)
-                                  && !AInput::isKeyDown(AInput::RBUTTON);
-#endif
-}
-
 
 void AWindow::flagUpdateLayout() {
     flagRedraw();
@@ -262,6 +251,12 @@ void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
         c->close();
     }
 }
+
+void AWindow::forceUpdateCursor() {
+    ABaseWindow::forceUpdateCursor();
+    AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
+}
+
 void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
     for (const auto& graphicsApi : ARenderingContextOptions::get().initializationOrder) {
         try {

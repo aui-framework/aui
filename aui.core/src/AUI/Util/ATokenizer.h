@@ -48,7 +48,7 @@ public:
      * @brief Reads string while pred(char) == true.
      * @return read string
      */
-    template<typename Callable>
+    template<aui::predicate<char> Callable>
     const std::string& readStringWhile(Callable pred) {
         mTemporaryStringBuffer.clear();
         char c;

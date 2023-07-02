@@ -1,18 +1,18 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+//  AUI Framework - Declarative UI toolkit for modern C++20
+//  Copyright (C) 2020-2023 Alex2772
 //
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+//  Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -22,7 +22,8 @@
 
 #include <glm/glm.hpp>
 
-#include <AUI/ASS/Declaration/IDeclaration.h>
+#include <AUI/ASS/Property/IProperty.h>
+#include <AUI/ASS/Property/ScrollbarAppearance.h>
 #include "AUI/Common/ABoxFields.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/AObject.h"
@@ -33,13 +34,17 @@
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Util/AFieldSignalEmitter.h"
 #include "AUI/Util/IBackgroundEffect.h"
-#include <AUI/ASS/RuleWithoutSelector.h>
+#include <AUI/ASS/PropertyListRecursive.h>
 #include <AUI/Enum/AOverflow.h>
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Enum/MouseCollisionPolicy.h>
-#include <AUI/Event/AGestureEvent.h>
 #include <AUI/Util/ALayoutDirection.h>
 #include <AUI/Action/AMenu.h>
+
+#include <AUI/Event/AScrollEvent.h>
+#include <AUI/Event/AGestureEvent.h>
+#include <AUI/Event/APointerPressedEvent.h>
+#include <AUI/Event/APointerReleasedEvent.h>
 
 
 class Render;
@@ -73,16 +78,10 @@ class API_AUI_VIEWS AView: public AObject
 {
     friend class AViewContainer;
 private:
-
     /**
      * @brief Animation.
      */
     _<AAnimator> mAnimator;
-
-    /**
-     * @brief Determines whether display graphics that go out of the bounds of this AView or not.
-     */
-    AOverflow mOverflow = AOverflow::VISIBLE;
 
     /**
      * @brief Controls how does the overflow (stencil) mask is produced.
@@ -118,6 +117,11 @@ private:
      * @brief opacity, specified in ASS.
      */
     float mOpacity = 1;
+
+    /**
+     * @brief Determines whether display graphics that go out of the bounds of this AView or not.
+     */
+    AOverflow mOverflow = AOverflow::VISIBLE;
 
     /**
      * @brief Extra stylesheet, specified by declarative::Style.
@@ -160,21 +164,25 @@ protected:
      */
     AViewContainer* mParent = nullptr;
 
+    /**
+     * @brief Determines how to display text that go out of the bounds.
+     */
+    TextOverflow mTextOverflow = TextOverflow::NONE;
 
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
      */
-    std::array<ass::decl::IDeclarationBase*, int(ass::decl::DeclarationSlot::COUNT)> mAss;
+    std::array<ass::prop::IPropertyBase*, int(ass::prop::PropertySlot::COUNT)> mAss;
 
     /**
      * @brief Custom ASS Rules
      */
-    RuleWithoutSelector mCustomStyleRule;
+    ass::PropertyListRecursive mCustomStyleRule;
 
     /**
      * @brief Determines shape which should pointer take when it's above this AView.
      */
-    ACursor mCursor = ACursor::DEFAULT;
+    AOptional<ACursor> mCursor = ACursor::DEFAULT;
 
     /**
      * @brief Top left corner's position relative to top left corner's position of the parent AView.
@@ -225,25 +233,27 @@ protected:
     /**
      * @brief defines if the next view must be focused on tab button pressed
      */
-    bool mFocusNextViewOnTab = true;
+    bool mFocusNextViewOnTab = false;
 
     void requestLayoutUpdate();
 
     /**
-     * Converts touch screen events to desktop.
+     * @brief Converts touch screen events to desktop.
+     * @param origin position where the event(s) started to occur from.
+     * @param event gesture event.
+     * @return true if consumed (handled).
+     * @details
      * <dl>
      *   <dt><b>AFingerDragEvent</b></dt>
      *   <dd>Emulates mouse wheel scroll</dd>
      *   <dt><b>ALongPressEvent</b></dt>
-     *   <dd>Emulates right click</dd>
+     *   <dd>Shows context menu (if exists) or AView::clickedRightOrLongPressed</dd>
      * </dl>
-     * @param origin position where the event(s) started to occur from.
-     * @param event gesture event.
-     * @return true if consumed
      */
     bool transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event);
 
-    void applyAssRule(const RuleWithoutSelector& rule);
+    void applyAssRule(const ass::PropertyList& propertyList);
+    void applyAssRule(const ass::PropertyListRecursive& propertyList);
 
     /**
      * @brief Produce context (right click) menu.
@@ -292,7 +302,12 @@ public:
     }
 
     /**
-     * @return The center point position of the view relatively to top left corner of the window.
+     * @brief The center point position of the view relatively to top left corner of the window.
+     * @details
+     * Useful in UI tests:
+     * @code{cpp}
+     * mWindow->onPointerMove(mView->getCenterPointInWindow()); // triggers on pointer move over the view through window
+     * @endcode
      */
     [[nodiscard]]
     glm::ivec2 getCenterPointInWindow() const
@@ -325,8 +340,13 @@ public:
      */
     void setExtraStylesheet(_<AStylesheet> extraStylesheet) {
         mExtraStylesheet = std::move(extraStylesheet);
-        if (mAssHelper) invalidateAllStyles();
+        invalidateAssHelper();
     }
+
+    /**
+     * @see mExtraStylesheet
+     */
+    void setExtraStylesheet(AStylesheet&& extraStylesheet);
 
     /**
      * @see mExtraStylesheet
@@ -346,6 +366,10 @@ public:
     void setOverflow(AOverflow overflow)
     {
         mOverflow = overflow;
+    }
+
+    void setTextOverflow(TextOverflow textOverflow) {
+        mTextOverflow = textOverflow;
     }
 
     /**
@@ -418,6 +442,8 @@ public:
      * @brief Determines whether this AView processes this click or passes it thru.
      * @param pos mouse position
      * @return true if AView processes this click
+     * @details
+     * Used in AViewContainer::getViewAt method subset, thus affecting click event handling.
      */
     virtual bool consumesClick(const glm::ivec2& pos);
 
@@ -465,14 +491,11 @@ public:
     /**
      * @brief Determines shape which should pointer take when it's above this AView.
      */
-    ACursor getCursor() const
+    const AOptional<ACursor>& getCursor() const
     {
         return mCursor;
     }
-    void setCursor(ACursor cursor)
-    {
-        mCursor = cursor;
-    }
+    void setCursor(AOptional<ACursor> cursor);
 
     /**
      * @return minimal content-area width.
@@ -697,11 +720,11 @@ public:
         return mAssHelper;
     }
 
-    const RuleWithoutSelector& getCustomAss() const {
+    const ass::PropertyListRecursive& getCustomAss() const {
         return mCustomStyleRule;
     }
 
-    void setCustomStyle(RuleWithoutSelector rule);
+    void setCustomStyle(ass::PropertyListRecursive rule);
 
     void ensureAssUpdated();
 
@@ -723,25 +746,49 @@ public:
      * @note The standard implementation <code>AView::onGesture</code> emulates desktop events such as right click and
      *       scroll.
      * @see transformGestureEventsToDesktop
-     * @return true, if consumed
+     * @return true, if consumed (handled). True value prevents click.
      */
     virtual bool onGesture(const glm::ivec2& origin, const AGestureEvent& event);
 
     virtual void onMouseEnter();
-    virtual void onMouseMove(glm::ivec2 pos);
+
+    /**
+     * @brief Handles pointer hover events
+     * @param pos event position
+     * @details
+     * @note
+     * If the view is pressed, it would still received move events. Use AView::isMouseHover to check is the pointer
+     * actually over view or not. See AView::onPointerReleased for more info.
+     */
+    virtual void onPointerMove(glm::ivec2 pos);
     virtual void onMouseLeave();
     virtual void onDpiChanged();
 
-    virtual void onMousePressed(glm::ivec2 pos, AInput::Key button);
-    virtual void onMouseReleased(glm::ivec2 pos, AInput::Key button);
-    virtual void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button);
+    /**
+     * @brief Called on pointer (mouse) released event.
+     * @param event event
+     */
+    virtual void onPointerPressed(const APointerPressedEvent& event);
+
+    /**
+     * @brief Called on pointer (mouse) released event.
+     * @param event event
+     * @details
+     * @note
+     * To handle clicks, you should use AView::clicked signal instead. View still receives pointer move and released
+     * events even if cursor goes outside the view boundaries, or other exclusive event appeared (i.e. scrollarea
+     * scroll). AView::clicked emitted only if release event occurred inside view and no other event has prevented
+     * click gesture. See APointerReleasedEvent::triggerClick.
+     */
+    virtual void onPointerReleased(const APointerReleasedEvent& event);
+    virtual void onPointerDoubleClicked(const APointerPressedEvent& event);
 
     /**
      * Handles mouse wheel events.
      * @param pos mouse cursor position.
      * @param delta the distance mouse wheel scrolled. 120 = mouse scroll down, -120 = mouse scroll up.
      */
-    virtual void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta);
+    virtual void onScroll(const AScrollEvent& event);
     virtual void onKeyDown(AInput::Key key);
     virtual void onKeyRepeat(AInput::Key key);
     virtual void onKeyUp(AInput::Key key);
@@ -777,9 +824,14 @@ public:
     /**
      * @brief Helper function for kAUI.h:with_style
      */
-    void operator+(RuleWithoutSelector rule) {
+    void operator+(ass::PropertyListRecursive rule) {
         setCustomStyle(std::move(rule));
     }
+
+    /**
+     * @brief Called on ABaseWindow::preventClickOnPointerRelease.
+     */
+    virtual void onClickPrevented();
 
 
     /**
@@ -817,15 +869,22 @@ public:
      */
     virtual void invalidateAssHelper();
 
+    /**
+     * @brief Returns true if view is textfield-like view which requires touchscreen keyboard when clicked.
+     */
+    [[nodiscard]]
+    virtual bool wantsTouchscreenKeyboard();
 
 signals:
+    emits<> addedToContainer;
+
     emits<bool> hoveredState;
     emits<> mouseEnter;
     emits<> mouseLeave;
 
     emits<bool> pressedState;
-    emits<> mousePressed;
-    emits<> mouseReleased;
+    emits<> pressed;
+    emits<> released;
 
     emits<bool> enabledState;
     emits<> enabled;
@@ -842,9 +901,14 @@ signals:
     emits<> clicked;
 
     /**
-     * @brief Mouse scrolled.
+     * @brief Geometry (position and size) changed.
      */
-    emits<glm::ivec2> mouseScrolled;
+    emits<glm::ivec2, glm::ivec2> geometryChanged;
+
+    /**
+     * @brief Scroll event.
+     */
+    emits<glm::ivec2> scrolled;
 
     /**
      * @brief Keyboard key pressed.
@@ -861,6 +925,11 @@ signals:
      */
     emits<> clickedRight;
 
+    /**
+     * @brief Right mouse button clicked or long press gesture applied.
+     */
+    emits<> clickedRightOrLongPressed;
+
     emits<AInput::Key> doubleClicked;
 
     emits<> customCssPropertyChanged;
@@ -873,12 +942,16 @@ signals:
     emits<> focusAcquired;
     emits<> focusLost;
 
+    emits<_<AView>> childFocused;
+
 private:
     AFieldSignalEmitter<bool> mHovered = AFieldSignalEmitter<bool>(hoveredState, mouseEnter, mouseLeave);
-    AFieldSignalEmitter<bool> mPressed = AFieldSignalEmitter<bool>(pressedState, mousePressed, mouseReleased);
-    //AWatchable<bool> mFocused = AWatchable<bool>(pressedState, mousePressed, mouseReleased);
+    AFieldSignalEmitter<bool> mPressed = AFieldSignalEmitter<bool>(pressedState, pressed, released);
+    //AWatchable<bool> mFocused = AWatchable<bool>(pressedState, pressed, released);
     AFieldSignalEmitter<bool> mEnabled = AFieldSignalEmitter<bool>(enabledState, enabled, disabled, true);
     bool mDirectlyEnabled = true;
     bool mParentEnabled = true;
     AFieldSignalEmitter<bool> mHasFocus = AFieldSignalEmitter<bool>(focusState, focusAcquired, focusLost, false);
+
+    void notifyParentChildFocused(const _<AView> &view);
 };

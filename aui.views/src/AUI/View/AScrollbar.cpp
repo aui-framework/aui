@@ -36,8 +36,8 @@ AScrollbar::AScrollbar(ALayoutDirection direction) :
     mForwardButton = _new<AScrollbarButton>();
     mBackwardButton = _new<AScrollbarButton>();
 
-    connect(mForwardButton->mousePressed, me::scrollForward);
-    connect(mBackwardButton->mousePressed, me::scrollBackward);
+    connect(mForwardButton->pressed, me::scrollForward);
+    connect(mBackwardButton->pressed, me::scrollBackward);
 
     switch (direction) {
         case ALayoutDirection::HORIZONTAL:
@@ -55,9 +55,9 @@ AScrollbar::AScrollbar(ALayoutDirection direction) :
     mHandle = aui::ptr::manage(new AScrollbarHandle(*this));
 
     addView(mBackwardButton);
-    addView(mOffsetSpacer = _new<AScrollbarOffsetSpacer>() let { it->setMinimumSize({0, 0}); });
+    addView(mOffsetSpacer = _new<AScrollbarOffsetSpacer>());
     addView(mHandle);
-    addView(_new<ASpacerExpanding>() let { it->setMinimumSize({0, 0}); });
+    addView(_new<ASpacerExpanding>());
     addView(mForwardButton);
 
     setScroll(0);
@@ -85,6 +85,8 @@ void AScrollbar::setScrollDimensions(size_t viewportSize, size_t fullSize) {
     if (shouldScrollToEnd) {
         scrollToEnd();
     }
+
+    emit updatedMaxScroll(getMaxScroll());
 }
 
 void AScrollbar::updateScrollHandleSize() {
@@ -103,14 +105,32 @@ void AScrollbar::updateScrollHandleSize() {
     int o = mFullSize > 0 ? scrollbarSpace * mViewportSize / mFullSize
                           : 0;
 
-    if (o < scrollbarSpace) {
-        setEnabled();
-        mHandle->setVisibility(Visibility::VISIBLE);
-        mHandle->setOverridenSize(o);
+    if (mAppearance == ScrollbarAppearance::NO_SCROLL_HIDE_CONTENT || mAppearance == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT) {
+        setVisibility(Visibility::GONE);
+        setEnabled(false);
     } else {
-        mHandle->setVisibility(Visibility::GONE);
-        emit scrolled(mCurrentScroll = 0);
-        setDisabled();
+        if (o < scrollbarSpace) {
+            setVisibility(Visibility::VISIBLE);
+            mHandle->setVisibility(Visibility::VISIBLE);
+            mHandle->setOverridenSize(o);
+            setEnabled();
+        } else {
+            switch (mAppearance) {
+                case ScrollbarAppearance::VISIBLE:
+                    mHandle->setVisibility(Visibility::VISIBLE);
+                    mHandle->setOverridenSize(scrollbarSpace);
+                    break;
+                case ScrollbarAppearance::INVISIBLE:
+                    mHandle->setVisibility(Visibility::GONE);
+                    break;
+                case ScrollbarAppearance::GONE:
+                    setVisibility(Visibility::GONE);
+                    mHandle->setVisibility(Visibility::GONE);
+                    break;
+            }
+
+            emit scrolled(mCurrentScroll = 0);
+        }
     }
 
     updateScrollHandleOffset(getMaxScroll());
@@ -149,10 +169,11 @@ void AScrollbar::updateScrollHandleOffset(int max) {
     redraw();
 }
 
-void AScrollbar::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
-    AViewContainer::onMouseWheel(pos, delta);
+void AScrollbar::onScroll(const AScrollEvent& event) {
+    AViewContainer::onScroll(event);
     // scroll 3 lines of text
-    setScroll(mCurrentScroll + delta.y * 11_pt * 3 / 120);
+    emit triggeredManually;
+    setScroll(mCurrentScroll + event.delta.y * 11_pt * 3 / 120);
 }
 
 static int getButtonScrollSpeed() noexcept {
@@ -174,6 +195,8 @@ void AScrollbar::scrollForward() {
             AObject::disconnect();
         }
     });
+
+    emit triggeredManually;
 }
 
 void AScrollbar::scrollBackward() {
@@ -187,10 +210,12 @@ void AScrollbar::scrollBackward() {
             AObject::disconnect();
         }
     });
+
+    emit triggeredManually;
 }
 
-void AScrollbar::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMousePressed(pos, button);
+void AScrollbar::onPointerPressed(const APointerPressedEvent& event) {
+    AViewContainer::onPointerPressed(event);
 }
 
 void AScrollbar::handleScrollbar(int s) {
@@ -210,32 +235,48 @@ float AScrollbar::getAvailableSpaceForSpacer() {
     return 0;
 }
 
-void AScrollbarHandle::onMouseMove(glm::ivec2 pos) {
-    AView::onMouseMove(pos);
+void AScrollbarHandle::onPointerMove(glm::ivec2 pos) {
+    AView::onPointerMove(pos);
     if (mDragging) {
-        mScrollbar.handleScrollbar(pos.y - mScrollOffset);
+        switch (mScrollbar.mDirection) {
+            case ALayoutDirection::HORIZONTAL:
+                mScrollbar.handleScrollbar(pos.x - mScrollOffset);
+                break;
+            case ALayoutDirection::VERTICAL:
+                mScrollbar.handleScrollbar(pos.y - mScrollOffset);
+                break;
+        }
     }
 }
 
-void AScrollbarHandle::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    AView::onMousePressed(pos, button);
-    mScrollOffset = pos.y;
+void AScrollbarHandle::onPointerPressed(const APointerPressedEvent& event) {
+    AView::onPointerPressed(event);
+    switch (mScrollbar.mDirection) {
+        case ALayoutDirection::HORIZONTAL:
+            mScrollOffset = event.position.x;
+            break;
+        case ALayoutDirection::VERTICAL:
+            mScrollOffset = event.position.y;
+            break;
+    }
+
     mDragging = true;
+    emit mScrollbar.triggeredManually;
 }
 
-void AScrollbarHandle::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AView::onMouseReleased(pos, button);
+void AScrollbarHandle::onPointerReleased(const APointerReleasedEvent& event) {
+    AView::onPointerReleased(event);
     mDragging = false;
 }
 
 void AScrollbarHandle::setSize(glm::ivec2 size) {
     switch (mScrollbar.mDirection) {
         case ALayoutDirection::VERTICAL:
-            size.y = mOverridenSize;
+            size = {15_dp, mOverridenSize};
             break;
 
         case ALayoutDirection::HORIZONTAL:
-            size.x = mOverridenSize;
+            size = {mOverridenSize, 15_dp};
             break;
     }
 

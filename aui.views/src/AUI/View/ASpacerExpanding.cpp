@@ -16,13 +16,6 @@
 
 #include "ASpacerExpanding.h"
 
-int ASpacerExpanding::getContentMinimumWidth(ALayoutDirection layout) {
-    return mMinimumSize.x;
-}
-
-int ASpacerExpanding::getContentMinimumHeight(ALayoutDirection layout) {
-    return mMinimumSize.y;
-}
 
 bool ASpacerExpanding::consumesClick(const glm::ivec2& pos) {
     return false;

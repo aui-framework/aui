@@ -41,6 +41,7 @@ private:
     bool mCursorBlinkVisible = true;
     bool mTextChangedFlag = false;
     bool mIsMultiline = false;
+    bool mIsCopyable = true;
 
 protected:
     int mHorizontalScroll = 0;
@@ -111,12 +112,12 @@ public:
     void onKeyRepeat(AInput::Key key) override;
 
     void onFocusLost() override;
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerPressed(const APointerPressedEvent& event) override;
 
-    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerDoubleClicked(const APointerPressedEvent& event) override;
 
-    void onMouseMove(glm::ivec2 pos) override;
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
 
     void clear() {
         setText({});
@@ -129,6 +130,9 @@ public:
         setText(text().trim());
     }
 
+    void setCopyable(bool isCopyable) {
+        mIsCopyable = isCopyable;
+    }
 
     virtual void setText(const AString& t);
 

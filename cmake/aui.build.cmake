@@ -40,6 +40,7 @@ set(CMAKE_POLICY_DEFAULT_CMP0087 NEW)
 set(AUI_BUILD_PREVIEW OFF CACHE BOOL "Enable aui.preview plugin target")
 set(AUI_BUILD_FOR "" CACHE STRING "Specifies target cross-compilation platform")
 set(AUI_INSTALL_RUNTIME_DEPENDENCIES ${AUI_BOOT} CACHE BOOL "Install runtime dependencies along with the project")
+set(CMAKE_CXX_STANDARD 20)
 
 cmake_policy(SET CMP0072 NEW)
 
@@ -176,7 +177,7 @@ macro(_aui_import_gtest)
     endif()
 endmacro()
 
-function(aui_enable_tests AUI_MODULE_NAME)
+macro(aui_enable_tests AUI_MODULE_NAME)
     _aui_import_gtest()
     if (NOT TARGET GTest::gtest)
         message(FATAL_ERROR "GTest::gtest not found!")
@@ -205,16 +206,14 @@ int main(int argc, char **argv) {
 }]])
             add_executable(${TESTS_MODULE_NAME} ${TESTS_SRCS} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
             include(GoogleTest)
-            gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
-            set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 17)
+            #gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
+            set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 20)
             target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
             target_link_libraries(${TESTS_MODULE_NAME} PUBLIC GTest::gmock)
 
             target_compile_definitions(${TESTS_MODULE_NAME} PUBLIC AUI_TESTS_MODULE=1)
 
-            if (TARGET aui.core)
-                aui_link(${TESTS_MODULE_NAME} PUBLIC aui.core)
-            else()
+            if (TARGET aui::core)
                 aui_link(${TESTS_MODULE_NAME} PUBLIC aui::core)
             endif()
 
@@ -249,18 +248,18 @@ int main(int argc, char **argv) {
                     target_compile_definitions(Tests PRIVATE ${_t})
                 endif()
                 get_target_property(_t ${AUI_MODULE_NAME} LINK_LIBRARIES)
-                target_link_libraries(Tests PRIVATE ${_t})
+                aui_link(Tests PRIVATE ${_t})
             else()
-                target_link_libraries(Tests PRIVATE ${AUI_MODULE_NAME})
+                aui_link(Tests PRIVATE ${AUI_MODULE_NAME})
             endif()
         endif()
     endif()
-endfunction()
+endmacro()
 
 function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES OUTPUT_NAME ${TARGET_NAME})
-    set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 17)
+    set_property(TARGET ${AUI_MODULE_NAME} PROPERTY CXX_STANDARD 20)
 
     if(NOT BUILD_SHARED_LIBS)
         target_compile_definitions(${AUI_MODULE_NAME} PUBLIC AUI_STATIC)
@@ -472,7 +471,7 @@ endfunction(aui_deploy_library)
 function(aui_executable AUI_MODULE_NAME)
     file(GLOB_RECURSE SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/tests/*.c)
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
+    file(GLOB_RECURSE SRCS
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.mm
@@ -489,7 +488,6 @@ function(aui_executable AUI_MODULE_NAME)
         list(FILTER SRCS EXCLUDE REGEX "(.*\\/)?Platform/${PLATFORM_NAME}\\/.*")
     endforeach()
 
-    #message("ASSDIR ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp")
     if(ANDROID)
         add_library(${AUI_MODULE_NAME} SHARED ${SRCS})
     else()
@@ -519,7 +517,7 @@ function(aui_executable AUI_MODULE_NAME)
             aui_common(preview.${AUI_MODULE_NAME})
 
             add_dependencies(aui.preview preview.${AUI_MODULE_NAME})
-        elseif(IOS)
+        elseif(APPLE)
             add_executable(${AUI_MODULE_NAME} MACOSX_BUNDLE ${ADDITIONAL_SRCS} ${SRCS})
         elseif(WIN32 AND NOT AUIE_WIN32_SUBSYSTEM_CONSOLE)
             add_executable(${AUI_MODULE_NAME} WIN32 ${ADDITIONAL_SRCS} ${SRCS})
@@ -546,6 +544,7 @@ function(aui_executable AUI_MODULE_NAME)
                 ARCHIVE       DESTINATION "lib"
                 LIBRARY       DESTINATION "lib"
                 RUNTIME       DESTINATION "bin"
+                BUNDLE        DESTINATION "bin"
         )
 
         install(
@@ -580,7 +579,7 @@ macro(_aui_try_find_toolbox)
     find_program(AUI_TOOLBOX_EXE aui.toolbox
             HINTS ${AUI_BUILD_AUI_ROOT}/bin)
     if (NOT AUI_TOOLBOX_EXE)
-        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/prefix/aui.toolbox.exe ${AUI_CACHE_DIR}/prefix/aui.toolbox)
+        file(GLOB_RECURSE AUI_TOOLBOX_EXE ${AUI_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox.exe ${AUI_CACHE_DIR}/crosscompile-host/prefix/aui.toolbox)
 
         if (AUI_TOOLBOX_EXE)
             list(GET AUI_TOOLBOX_EXE 0 AUI_TOOLBOX_EXE)
@@ -593,12 +592,12 @@ endmacro()
 
 macro(_aui_provide_toolbox_for_host)
     message(STATUS "Compiling aui.toolbox for the host platform")
-    set(_workdir ${CMAKE_CURRENT_BINARY_DIR}/aui_toolbox_provider)
+    set(_workdir ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider)
     file(MAKE_DIRECTORY ${_workdir})
     file(MAKE_DIRECTORY ${_workdir}/b)
     file(WRITE ${_workdir}/CMakeLists.txt [[
 cmake_minimum_required(VERSION 3.16)
-
+project(aui.toolbox_provider)
 file(
         DOWNLOAD
         https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
@@ -608,17 +607,39 @@ include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core toolbox image)
 ]])
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -DAUI_CACHE_DIR=${AUI_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=TRUE WORKING_DIRECTORY ${_workdir}/b RESULT_VARIABLE _r)
+    set(_build_log ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider_log.txt)
+
+    # on android build, the host's compiler is overriden by CC and CXX environment variables, which we don't want.
+    # we should temporary unset these variables for aui.toolbox build.
+    set(_old_CC $ENV{CC})
+    set(_old_CXX $ENV{CXX})
+    unset(ENV{CC})
+    unset(ENV{CXX})
+
+    # /crosscompile-host dir is needed to avoid repo deadlock when crosscompiling
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${CMAKE_GENERATOR} -DAUI_CACHE_DIR=${AUI_CACHE_DIR}/crosscompile-host
+                    WORKING_DIRECTORY ${_workdir}/b
+                    RESULT_VARIABLE _r
+                    OUTPUT_FILE ${_build_log}
+                    ERROR_FILE ${_build_log})
+
+    set(ENV{CC} ${_old_CC})
+    set(ENV{CXX} ${_old_CXX})
+
     if (NOT _r STREQUAL 0)
-        message(FATAL_ERROR "CMake subprocess failed")
+        message(FATAL_ERROR "Unable to build aui.toolbox for the host system (check ${_build_log})")
     endif()
     _aui_try_find_toolbox()
     set(AUI_TOOLBOX_EXE ${AUI_TOOLBOX_EXE} CACHE FILEPATH "aui.toolbox location")
+    if (NOT AUI_TOOLBOX_EXE)
+        message(FATAL_ERROR "Could not provide aui.toolbox (AUI_TOOLBOX_EXE) - giving up")
+    endif()
 endmacro()
 
 
 function(aui_compile_assets AUI_MODULE_NAME)
-    cmake_parse_arguments(ASSETS "" "" "EXCLUDE" ${ARGN})
+    set(oneValueArgs DIR)
+    cmake_parse_arguments(ASSETS "" "${oneValueArgs}" "EXCLUDE" ${ARGN})
     set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
 
     if(CMAKE_CROSSCOMPILING)
@@ -627,9 +648,14 @@ function(aui_compile_assets AUI_MODULE_NAME)
         get_target_property(TARGET_DIR ${AUI_MODULE_NAME} ARCHIVE_OUTPUT_DIRECTORY)
     endif()
 
+    if (NOT ASSETS_DIR)
+        set(ASSETS_DIR "assets")
+    endif()
 
+    get_filename_component(ASSETS_DIR "${ASSETS_DIR}" ABSOLUTE)
     get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
-    file(GLOB_RECURSE ASSETS RELATIVE ${SELF_DIR} "assets/*")
+    get_filename_component(SELF_DIR "${SELF_DIR}" ABSOLUTE)
+    file(GLOB_RECURSE ASSETS RELATIVE ${SELF_DIR} "${ASSETS_DIR}/*")
 
     if (ASSETS_EXCLUDE)
         foreach(_item ${ASSETS})
@@ -658,9 +684,11 @@ function(aui_compile_assets AUI_MODULE_NAME)
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})
         set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
+        get_filename_component(_in "${SELF_DIR}/${ASSET_PATH}" ABSOLUTE)
+        get_filename_component(_out "${OUTPUT_PATH}" ABSOLUTE)
         add_custom_command(
                 OUTPUT ${OUTPUT_PATH}
-                COMMAND ${AUI_TOOLBOX_EXE} pack ${SELF_DIR}/assets ${SELF_DIR}/${ASSET_PATH} ${OUTPUT_PATH}
+                COMMAND ${AUI_TOOLBOX_EXE} pack ${ASSETS_DIR} ${_in} ${_out}
                 DEPENDS ${SELF_DIR}/${ASSET_PATH}
         )
         target_sources(${AUI_MODULE_NAME} PRIVATE ${OUTPUT_PATH})
@@ -768,7 +796,7 @@ function(aui_link AUI_MODULE_NAME) # https://github.com/aui-framework/aui/issues
                         if (APPLE)
                             target_link_options(${AUI_MODULE_NAME} ${_public_visibility} "-Wl,-force_load,$<TARGET_FILE:${_link_target_file}>")
                         else()
-                            target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} -Wl,--whole-archive,--allow-multiple-definition,$<TARGET_FILE:${_link_target_file}> -Wl,--no-whole-archive)
+                            target_link_libraries(${AUI_MODULE_NAME} ${_public_visibility} -Wl,--whole-archive,--allow-multiple-definition,$<TARGET_FILE:${_link_target_file}>,--no-whole-archive)
                         endif()
                     endif()
                 endif()
@@ -806,7 +834,7 @@ function(aui_module AUI_MODULE_NAME)
     endif()
 
 
-    file(GLOB_RECURSE SRCS ${CMAKE_CURRENT_BINARY_DIR}/autogen/*.cpp
+    file(GLOB_RECURSE SRCS
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
             ${CMAKE_CURRENT_SOURCE_DIR}/src/*.manifest
@@ -873,7 +901,7 @@ function(aui_module AUI_MODULE_NAME)
     endif()
 
     if (AUIE_COMPILE_ASSETS)
-        _aui_compile_assets(${AUI_MODULE_NAME})
+        aui_compile_assets(${AUI_MODULE_NAME})
         set_target_properties(${AUI_MODULE_NAME} PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON)
     endif()
 

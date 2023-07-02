@@ -1,18 +1,18 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+﻿//  AUI Framework - Declarative UI toolkit for modern C++20
+//  Copyright (C) 2020-2023 Alex2772
 //
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+//  Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -27,6 +27,12 @@ class ACursor;
 class ABaseWindow;
 
 
+/**
+ * @brief Desktop-specific functions.
+ * @ingroup views
+ * @details
+ * These functions are intended to work only on desktop platforms; on mobile platforms functions filled with stubs.
+ */
 namespace ADesktop
 {
     struct FileExtension {
@@ -36,6 +42,18 @@ namespace ADesktop
 
 	API_AUI_VIEWS glm::ivec2 getMousePosition();
 	API_AUI_VIEWS void setMousePos(const glm::ivec2& pos);
+
+
+    enum class SystemSound
+    {
+        QUESTION,
+        ASTERISK
+    };
+
+    /**
+     * @brief Play system sound asynchronously.
+     */
+    API_AUI_VIEWS void playSystemSound(ADesktop::SystemSound s);
 
     /**
      * @brief Opens native browse for directory dialog.
@@ -64,7 +82,6 @@ namespace ADesktop
 	API_AUI_VIEWS AFuture<APath> browseForFile(ABaseWindow* parent,
                                                const APath& startingLocation = {},
                                                const AVector<FileExtension>& extensions = { {"All", "*"} });
-	API_AUI_VIEWS void openUrl(const AString& url);
 
     API_AUI_VIEWS _<IDrawable> iconOfFile(const APath& file);
 }

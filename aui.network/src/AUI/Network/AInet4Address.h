@@ -38,9 +38,9 @@ public:
 	AInet4Address();
 	AInet4Address(const sockaddr_in& other);
 	AInet4Address(const AInet4Address& other);
-	AInet4Address(uint8_t ip[4], uint16_t port);
-	AInet4Address(uint32_t ip, uint16_t port);
-	AInet4Address(const AString& addr, uint16_t port);
+	AInet4Address(uint8_t ip[4], uint16_t port = -1);
+	AInet4Address(uint32_t ip, uint16_t port = -1);
+	AInet4Address(const AString& addr, uint16_t port = -1);
 	
 	sockaddr_in addr() const;
 	bool operator>(const AInet4Address& r) const;

@@ -58,7 +58,8 @@ public:
         return v;
     }
 
-    void setItems(std::initializer_list<std::variant<AString, _<AView>>> init, const Flags& flags = {});
+    void setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags = {});
+    void clearContent();
     void setHtml(const AString& html, const Flags& flags = {});
     void setString(const AString& string, const Flags& flags = {});
 

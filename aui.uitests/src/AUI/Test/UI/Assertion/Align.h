@@ -92,15 +92,15 @@ namespace uitest::impl {
     };
 }
 
-using leftAligned = uitest::impl::align<ASide::LEFT>;
-using topAligned = uitest::impl::align<ASide::TOP>;
-using rightAligned = uitest::impl::align<ASide::RIGHT>;
-using bottomAligned = uitest::impl::align<ASide::BOTTOM>;
+using areLeftAligned = uitest::impl::align<ASide::LEFT>;
+using areTopAligned = uitest::impl::align<ASide::TOP>;
+using areRightAligned = uitest::impl::align<ASide::RIGHT>;
+using areBottomAligned = uitest::impl::align<ASide::BOTTOM>;
 
 
-using bottomAboveBottomOf = uitest::impl::less_of<ASide::BOTTOM>;
-using bottomBelowBottomOf = uitest::impl::greater_of<ASide::BOTTOM>;
+using isBottomAboveBottomOf = uitest::impl::less_of<ASide::BOTTOM>;
+using isBottomBelowBottomOf = uitest::impl::greater_of<ASide::BOTTOM>;
 
 
-using leftRightAligned = uitest::impl::both<uitest::impl::align<ASide::LEFT>, uitest::impl::align<ASide::RIGHT>>;
-using topBottomAligned = uitest::impl::both<uitest::impl::align<ASide::TOP>, uitest::impl::align<ASide::BOTTOM>>;
+using areLeftRightAligned = uitest::impl::both<uitest::impl::align<ASide::LEFT>, uitest::impl::align<ASide::RIGHT>>;
+using areTopBottomAligned = uitest::impl::both<uitest::impl::align<ASide::TOP>, uitest::impl::align<ASide::BOTTOM>>;

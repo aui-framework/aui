@@ -85,11 +85,11 @@ jobs:
             additional_cmake_flags: '-A x64'
 
           - os: ubuntu-latest
-            generator: "Unix Makefiles"
+            generator: "Ninja"
             additional_cmake_flags: ''
 
           - os: ubuntu-latest
-            generator: "Unix Makefiles"
+            generator: "Ninja"
             additional_cmake_flags: ''
             debug_or_release: RelWithDebInfo
             shared_or_static: static
@@ -101,11 +101,11 @@ jobs:
 
       - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libfontconfig-dev
+        run: sudo apt-get update && sudo apt-get install pkg-config libglew-dev zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libfontconfig-dev ninja-build
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
         # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
-        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}}
+        run: cmake -G "${{ matrix.generator }}" -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{matrix.debug_or_release}} -DBUILD_SHARED_LIBS=${{ matrix.shared_or_static == 'shared' && 'ON' || 'OFF' }} ${{matrix.additional_cmake_flags}} -DAUI_IGNORE_OPENSSL=TRUE
 
       - name: Build project
         # Build your program with the given configuration
@@ -115,10 +115,10 @@ jobs:
         # Build your program with the given configuration
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.debug_or_release}} --target Tests
 
-      - name: Test
+      - name: Run tests
         # Build your program with the given configuration
         working-directory: ${{github.workspace}}/build
-        run: ctest . -C ${{matrix.debug_or_release}} --output-on-failure
+        run: ctest . -C ${{matrix.debug_or_release}} -VV
 
       - name: Pack
         working-directory: ${{github.workspace}}/build

@@ -22,8 +22,7 @@
 #include <AUI/IO/AIOException.h>
 #include <AUI/Platform/ErrorToException.h>
 
-aui::impl::Error aui::impl::lastError() {
-    int errorCode = GetLastError();
+aui::impl::Error aui::impl::formatSystemError(int errorCode) {
     if(errorCode == 0)
         return {}; //No error message has been recorded
 
@@ -38,18 +37,25 @@ aui::impl::Error aui::impl::lastError() {
 
     return { errorCode, message.trim().removeAll('\r').removeAll('\n') };
 }
+
+aui::impl::Error aui::impl::formatSystemError() {
+    return formatSystemError(GetLastError());
+}
+
 void aui::impl::lastErrorToException(AString message) {
-    auto[lastErrorCode, description] = lastError();
+    auto[lastErrorCode, description] = formatSystemError();
     message += ": ";
     message += description;
     switch (lastErrorCode) {
         case ERROR_FILE_NOT_FOUND:
             throw AFileNotFoundException(message);
+        case ERROR_PATH_NOT_FOUND:
+            throw AFileNotFoundException("{} (underlying directory does not exist)"_format(message));
         case ERROR_ACCESS_DENIED:
             throw AAccessDeniedException(message);
         case ERROR_ALREADY_EXISTS:
             break;
         default:
-            throw AIOException(message);
+            throw AIOException("{} (code {})"_format(message, lastErrorCode));
     }
 }

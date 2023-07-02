@@ -1,18 +1,18 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+//  AUI Framework - Declarative UI toolkit for modern C++20
+//  Copyright (C) 2020-2023 Alex2772
 //
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+//  Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include <AUI/Platform/AFontManager.h>
 
@@ -23,7 +23,10 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Util/ATokenizer.h>
-#include "AUI/Render/FreeType.h"
+#include "AUI/Font/FreeType.h"
+#include "AUI/Util/ARaiiHelper.h"
+
+static constexpr auto LOG_TAG = "FontManager";
 
 AFontManager::AFontManager() :
         mFreeType(_new<FreeType>())
@@ -58,10 +61,12 @@ AFontManager::AFontManager() :
                     auto fontName = t.readStringUntilUnescaped(',');
 
                     // done!
-                    result = loadFont(AUrl::file(getPathToFont(fontName)));
+                    auto url = AUrl::file(getPathToFont(fontName));
+                    result = loadFont(std::move(url));
+                    ALogger::info(LOG_TAG) << "Using gtk theme font: " << fontName << " (" << url.full() << ")";
                     break;
                 } else {
-                    // skip line
+                    // skip line 
                     t.skipUntil('\n');
                 }
             }
@@ -72,8 +77,9 @@ AFontManager::AFontManager() :
             // fallback to something default
             for (auto& d : {"Ubuntu", "Serif", "FreeSans", "Monospace"}) {
                 try {
-                    result = loadFont(AUrl::file(getPathToFont(d)));
-                    ALogger::info("Using fallback font: {}"_format(d));
+                    auto url = AUrl::file(getPathToFont(d));
+                    ALogger::info(LOG_TAG) << "Using system default font: " << d << "(" << url.full() << ")";
+                    result = loadFont(std::move(url));
                     break;
                 } catch (...) {}
             }
@@ -81,24 +87,72 @@ AFontManager::AFontManager() :
 
         return result;
     }();
+
     if (mDefaultFont == nullptr) {
         // fallback to internal
         mDefaultFont = loadFont(":uni/font/Roboto.ttf");
+        ALogger::info(LOG_TAG) << "Using fallback internal font";
     }
 }
 
-AString AFontManager::getPathToFont(const AString& font) {
-    if (APath(font.toStdString()).isRegularFileExists())
-        return font;
+namespace {
+    namespace pattern {
+        template<typename T>
+        T get(FcPattern* pattern, const char *object, int n = 0) = delete;
+
+        template<>
+        AString get(FcPattern* pattern, const char *object, int n) {
+            FcChar8 *str;
+            FcPatternGetString(pattern, object, n, &str);
+            return reinterpret_cast<const char *>(str);
+        }
+
+        template<>
+        int get(FcPattern* pattern, const char *object, int n) {
+            int i;
+            FcPatternGetInteger(pattern, object, n, &i);
+            return i;
+        }
+    }
+    struct Pattern: aui::noncopyable {
+    public:
+        Pattern(FcPattern *pattern) : pattern(pattern) {}
+
+        ~Pattern() {
+            FcPatternDestroy(pattern);
+        }
+
+        operator FcPattern*() const noexcept {
+            return pattern;
+        }
+
+        template<typename T>
+        T get(const char *object, int n = 0) {
+            return pattern::get<T>(pattern, object, n);
+        }
+
+    private:
+        FcPattern* pattern;
+    };
+}
+
+
+AString AFontManager::getPathToFont(const AString& family) {
+    if (APath(family.toStdString()).isRegularFileExists())
+        return family;
 
     // reference: qt ./qtbase/src/gui/text/unix/qfontconfigdatabase.cpp
 
-    FcPattern *pattern = FcPatternCreate();
-    auto tmp = font.toStdString();
+    Pattern pattern = FcPatternCreate();
+    auto tmp = family.toStdString();
     //FcDefaultSubstitute(pattern);
-    auto os = FcObjectSetBuild (FC_FILE, nullptr);
+    auto os = FcObjectSetBuild (FC_FILE,
+                                FC_WIDTH,
+                                FC_STYLE,
+                                nullptr);
     FcPatternAddString(pattern, FC_FAMILY, reinterpret_cast<const FcChar8*>(tmp.c_str()));
     FcPatternAddString(pattern, FC_STYLE, reinterpret_cast<const FcChar8*>("Regular"));
+    FcPatternAddInteger(pattern, FC_WIDTH, FC_WIDTH_NORMAL);
 
     struct FcFontSetWrap {
         FcFontSet* value;
@@ -119,12 +173,7 @@ AString AFontManager::getPathToFont(const AString& font) {
     FcFontSetWrap fs(FcFontList(nullptr, pattern, os));
     FcObjectSetDestroy(os);
     if (fs && fs->nfont > 0) {
-        auto f = fs->fonts[0];
-        FcChar8* str;
-        FcPatternGetString(f, FC_FILE, 0, &str);
-        AString result = (const char*)str;
-        FcPatternDestroy(pattern);
-        return result;
+        return pattern::get<AString>(fs->fonts[0], FC_FILE);
     } else {
         return {};
     }

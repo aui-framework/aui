@@ -55,7 +55,7 @@ public:
 
 TEST(SharedPtrs, Builder1) {
     auto builder = _new<SomeBuilderClass>();
-    AUI_PERFORM_AS_MEMBER(builder, {
+    AUI_PERFORM_AS_MEMBER(*builder, {
        setUsername("John");
        setAge(23);
     });
@@ -101,7 +101,7 @@ TEST(SharedPtrs, ConnectBuilder) {
             .connect(&SendObject::someSignal, receiver, &ReceiverObject::receiveSignal);
 
 
-    AUI_PERFORM_AS_MEMBER(sender, {
+    AUI_PERFORM_AS_MEMBER(*sender, {
         invokeSignal();
     });
 

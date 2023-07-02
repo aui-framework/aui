@@ -26,7 +26,7 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
 #include <chrono>
-#include "Platform.h"
+#include "APlatform.h"
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Util/ALayoutInflater.h>
@@ -34,7 +34,7 @@
 #include <AUI/UITestState.h>
 
 ABaseWindow::ABaseWindow() {
-    mDpiRatio = Platform::getDpiRatio();
+    mDpiRatio = APlatform::getDpiRatio();
 }
 
 ABaseWindow::~ABaseWindow() {
@@ -44,7 +44,7 @@ ABaseWindow::~ABaseWindow() {
 }
 
 float ABaseWindow::fetchDpiFromSystem() const {
-    return Platform::getDpiRatio();
+    return APlatform::getDpiRatio();
 }
 
 void ABaseWindow::updateDpi() {
@@ -69,10 +69,6 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
     mFocusedView = view;
 
     if (view) {
-        auto w = weak_from_this();
-        ui_threadX [this, self = w.lock()] {
-            updateFocusChain();
-        };
         if (!view->hasFocus()) {
             view->onFocusAcquired();
         }
@@ -182,15 +178,21 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
     }
 }
 
-void ABaseWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
+void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     closeOverlappingSurfacesOnClick();
+    mPreventClickOnPointerRelease.emplace(false);
     auto focusCopy = mFocusedView.lock();
-    AViewContainer::onMousePressed(pos, button);
+    mIgnoreTouchscreenKeyboardRequests = false;
+    AViewContainer::onPointerPressed(event);
+
     if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
         if (focusCopy->hasFocus()) {
             focusCopy->onFocusLost();
         }
     }
+
+    hideTouchscreenKeyboard(); // would do hide only if show is not requested on this particular frame
+    mIgnoreTouchscreenKeyboardRequests = false;
 
     // check for double clicks
     using namespace std::chrono;
@@ -202,38 +204,44 @@ void ABaseWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
     auto now = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
     auto delta = now - lastButtonPressedTime;
-    if (delta < 500ms && lastPosition == pos) {
-        if (lastButtonPressed == button) {
-            onMouseDoubleClicked(pos, button);
+    if (delta < 500ms && lastPosition == event.position) {
+        if (lastButtonPressed == event.button) {
+            onPointerDoubleClicked(event);
 
             lastButtonPressedTime = 0ms;
         }
     } else {
         lastButtonPressedTime = now;
-        lastButtonPressed = button;
-        lastPosition = pos;
+        lastButtonPressed = event.button;
+        lastPosition = event.position;
     }
     AMenu::close();
 }
 
-void ABaseWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
+    APointerReleasedEvent copy = event;
+    copy.triggerClick = !mPreventClickOnPointerRelease.valueOr(true);
+    mPreventClickOnPointerRelease.reset();
+    AViewContainer::onPointerReleased(copy);
+
+    // AView::onPointerMove handles cursor shape; need extra call in order to flush
+    forceUpdateCursor();
 }
 
-void ABaseWindow::onMouseMove(glm::ivec2 pos) {
+void ABaseWindow::forceUpdateCursor() {
+    AViewContainer::onPointerMove(mMousePos);
+}
+
+void ABaseWindow::onScroll(const AScrollEvent& event) {
+    AViewContainer::onScroll(event);
+    AViewContainer::onPointerMove(mMousePos); // update hovers inside scrollarea
+}
+
+void ABaseWindow::onPointerMove(glm::ivec2 pos) {
     mMousePos = pos;
-    AViewContainer::onMouseMove(pos);
-    auto v = getViewAtRecursive(pos);
-    if (v) {
-        mCursor = v->getCursor();
-    }
-    if (!AWindow::shouldDisplayHoverAnimations()) {
-        if (auto focused = mFocusedView.lock()) {
-            if (focused != v) {
-                focused->onMouseMove(pos - focused->getPositionInWindow());
-            }
-        }
-    }
+    mCursor = ACursor::DEFAULT;
+    AViewContainer::onPointerMove(pos);
+
     emit mouseMove(pos);
 }
 
@@ -264,6 +272,7 @@ void ABaseWindow::flagUpdateLayout() {
 
 void ABaseWindow::render() {
     AViewContainer::render();
+    mIgnoreTouchscreenKeyboardRequests = false;
 
     if (auto v = mProfiledView.lock()) {
         AViewProfiler::displayBoundsOn(*v);
@@ -300,12 +309,59 @@ void ABaseWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 
 }
 
-void ABaseWindow::updateFocusChain() {
-    if (auto focusedView = mFocusedView.lock()) {
-        _weak<AView> focusChainTarget = mFocusedView;
-        for (auto target = focusedView->getParent(); target != nullptr; target = target->getParent()) {
-            target->setFocusChainTarget(std::move(focusChainTarget));
-            focusChainTarget = target->weakPtr();
-        }
+
+void ABaseWindow::requestTouchscreenKeyboard() {
+    if (mIgnoreTouchscreenKeyboardRequests) {
+        return;
     }
+    mIgnoreTouchscreenKeyboardRequests = true;
+    requestTouchscreenKeyboardImpl();
+}
+
+void ABaseWindow::hideTouchscreenKeyboard() {
+    if (mIgnoreTouchscreenKeyboardRequests) {
+        return;
+    }
+    hideTouchscreenKeyboardImpl();
+}
+
+bool ABaseWindow::shouldDisplayHoverAnimations() const {
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+    return false;
+#else
+    return isFocused() && !AInput::isKeyDown(AInput::LBUTTON)
+           && !AInput::isKeyDown(AInput::CBUTTON)
+           && !AInput::isKeyDown(AInput::RBUTTON)
+           && !isPreventingClickOnPointerRelease();
+#endif
+}
+
+
+void ABaseWindow::requestTouchscreenKeyboardImpl() {
+    // stub
+}
+
+void ABaseWindow::hideTouchscreenKeyboardImpl() {
+    // stub
+}
+
+void ABaseWindow::preventClickOnPointerRelease() {
+    if (!mPreventClickOnPointerRelease) {
+        return;
+    }
+    if (mPreventClickOnPointerRelease.value()) {
+        return;
+    }
+
+    onClickPrevented();
+
+    mPreventClickOnPointerRelease = true;
+}
+
+bool ABaseWindow::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
+    bool v = AViewContainer::onGesture(origin, event);
+    if (v) {
+        preventClickOnPointerRelease();
+    }
+    return v;
 }

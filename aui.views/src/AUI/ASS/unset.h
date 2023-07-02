@@ -24,6 +24,8 @@
 #include <algorithm>
 #include <ostream>
 
+#include <fmt/core.h>
+
 namespace ass {
 
     template<typename T>
@@ -125,6 +127,22 @@ namespace ass {
     }
 
 }
+
+template <typename T> struct fmt::formatter<ass::unset_wrap<T>> {
+    template<typename ParseContext>
+    constexpr auto parse(ParseContext& ctx)
+    {
+        return ctx.begin();
+    }
+
+    auto format(ass::unset_wrap<T> c, format_context& ctx) const {
+        if (c) {
+            return fmt::format_to(ctx.out(), "{}", *c);
+        } else {
+            return fmt::format_to(ctx.out(), "<unset>");
+        }
+    }
+};
 
 template<typename T>
 std::ostream& operator<<(std::ostream& o, const ass::unset_wrap<T>& wrap) {

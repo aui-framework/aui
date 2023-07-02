@@ -131,14 +131,27 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     aui::zero(startupInfo);
 
     bool mergeStdoutStderr = bool(flags & ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
+    bool tieStdout = bool(flags & ASubProcessExecutionFlags::TIE_STDOUT);
+    bool tieStderr = bool(flags & ASubProcessExecutionFlags::TIE_STDERR);
 
     Pipe pipeStdin;
     Pipe pipeStdout;
     Pipe pipeStderr;
 
 
-    startupInfo.hStdError = mergeStdoutStderr ? pipeStdout.in() : pipeStderr.in();
-    startupInfo.hStdOutput = pipeStdout.in();
+    if (tieStderr) {
+        startupInfo.hStdError = mergeStdoutStderr ?
+                GetStdHandle(STD_OUTPUT_HANDLE) : GetStdHandle(STD_ERROR_HANDLE);
+    }
+    else {
+        startupInfo.hStdError = mergeStdoutStderr ? pipeStdout.in() : pipeStderr.in();
+    }
+    if (tieStdout) {
+        startupInfo.hStdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+    }
+    else {
+        startupInfo.hStdOutput = pipeStdout.in();
+    }
     startupInfo.hStdInput = pipeStdin.out();
     startupInfo.dwFlags = STARTF_USESTDHANDLES;
     startupInfo.cb = sizeof(startupInfo);
@@ -173,7 +186,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
             message += " with args " + mArgs;
         if (!mWorkingDirectory.empty())
             message += " in " + mWorkingDirectory;
-        message += ": " + aui::impl::lastError().description;
+        message += ": " + aui::impl::formatSystemError().description;
         throw AProcessException(message);
     }
     mExitEvent.registerWaitForSingleObject(mProcessInformation.hProcess, [&] {

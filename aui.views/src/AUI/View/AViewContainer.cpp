@@ -26,7 +26,9 @@
 
 
 void AViewContainer::drawView(const _<AView>& view) {
-    if (view->getVisibility() == Visibility::VISIBLE) {
+    if (view->getVisibility() == Visibility::VISIBLE || view->getVisibility() == Visibility::UNREACHABLE) {
+        const auto prevStencilLevel = Render::getRenderer()->getStencilDepth();
+
         RenderHints::PushState s;
         glm::mat4 t(1.f);
         view->getTransform(t);
@@ -41,6 +43,8 @@ void AViewContainer::drawView(const _<AView>& view) {
             view->postRender();
         }
         catch (...) {}
+
+        assert(Render::getRenderer()->getStencilDepth() == prevStencilLevel);
     }
 }
 
@@ -60,6 +64,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
     for (const auto& view: views) {
         view->mParent = this;
         AUI_NULLSAFE(mLayout)->addView(-1, view);
+        emit view->addedToContainer();
     }
 
     if (mViews.empty()) {
@@ -73,12 +78,14 @@ void AViewContainer::addView(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(-1, view);
+    emit view->addedToContainer();
 }
 
 void AViewContainer::addViewCustomLayout(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
     view->setSize(view->getMinimumSize());
+    emit view->addedToContainer();
 }
 
 void AViewContainer::addView(size_t index, const _<AView>& view) {
@@ -86,6 +93,7 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
     view->mParent = this;
     if (mLayout)
         mLayout->addView(index, view);
+    emit view->addedToContainer();
 }
 
 void AViewContainer::removeView(const _<AView>& view) {
@@ -122,19 +130,20 @@ void AViewContainer::onMouseEnter() {
     AView::onMouseEnter();
 }
 
-void AViewContainer::onMouseMove(glm::ivec2 pos) {
-    AView::onMouseMove(pos);
+void AViewContainer::onPointerMove(glm::ivec2 pos) {
+    AView::onPointerMove(pos);
 
-    auto targetView = getViewAt(pos);
+    auto viewUnderCursor = getViewAt(pos);
+    auto targetView = isMousePressed() ? mFocusChainTarget.lock() : viewUnderCursor;
 
     if (targetView) {
         auto mousePos = pos - targetView->getPosition();
-        targetView->onMouseEnter();
-        targetView->onMouseMove(mousePos);
+        if (!targetView->isMouseHover()) targetView->onMouseEnter();
+        targetView->onPointerMove(mousePos);
     }
 
     for (auto& v: mViews) {
-        if (v->isMouseHover() && v != targetView) {
+        if (v->isMouseHover() && v != viewUnderCursor) {
             v->onMouseLeave();
         }
     }
@@ -143,7 +152,7 @@ void AViewContainer::onMouseMove(glm::ivec2 pos) {
 void AViewContainer::onMouseLeave() {
     AView::onMouseLeave();
     for (auto& view: mViews) {
-        if (view->isMouseHover() && view->isEnabled())
+        if (view->isMouseHover())
             view->onMouseLeave();
     }
 }
@@ -163,42 +172,57 @@ int AViewContainer::getContentMinimumHeight(ALayoutDirection layout) {
     return AView::getContentMinimumHeight(ALayoutDirection::NONE);
 }
 
-void AViewContainer::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    AView::onMousePressed(pos, button);
+void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
+    AView::onPointerPressed(event);
 
-    auto p = getViewAt(pos);
+    auto p = getViewAt(event.position);
     if (p && p->isEnabled()) {
         if (p->capturesFocus()) p->focus();
-        p->onMousePressed(pos - p->getPosition(), button);
+        auto copy = event;
+        copy.position -= p->getPosition();
+        p->onPointerPressed(copy);
+
+        mFocusChainTarget = std::move(p);
     }
 }
 
-void AViewContainer::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AView::onMouseReleased(pos, button);
-    auto p = getViewAt(pos);
-    if (p && p->isEnabled() && p->isMousePressed())
-        p->onMouseReleased(pos - p->getPosition(), button);
+void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
+    AView::onPointerReleased(event);
+    auto chainTarget = mFocusChainTarget.lock();
+
+    if (chainTarget && chainTarget->isEnabled() && chainTarget->isMousePressed()) {
+        auto copy = event;
+        copy.position -= chainTarget->getPosition();
+        copy.triggerClick &= getViewAt(event.position) == chainTarget;
+        chainTarget->onPointerReleased(copy);
+    }
 }
 
-void AViewContainer::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) {
-    AView::onMouseDoubleClicked(pos, button);
+void AViewContainer::onPointerDoubleClicked(const APointerPressedEvent& event) {
+    AView::onPointerDoubleClicked(event);
 
-    auto p = getViewAt(pos);
-    if (p && p->isEnabled())
-        p->onMouseDoubleClicked(pos - p->getPosition(), button);
+    auto p = getViewAt(event.position);
+    if (p && p->isEnabled()) {
+        auto copy = event;
+        copy.position -= p->getPosition();
+        p->onPointerDoubleClicked(copy);
+    }
 }
 
-void AViewContainer::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
-    AView::onMouseWheel(pos, delta);
-    auto p = getViewAt(pos);
-    if (p && p->isEnabled())
-        p->onMouseWheel(pos - p->getPosition(), delta);
+void AViewContainer::onScroll(const AScrollEvent& event) {
+    AView::onScroll(event);
+    auto p = getViewAt(event.origin);
+    if (p && p->isEnabled()) {
+        auto eventCopy = event;
+        eventCopy.origin -= p->getPosition();
+        p->onScroll(eventCopy);
+    }
 }
 
 bool AViewContainer::consumesClick(const glm::ivec2& pos) {
     // has layout check
-    if (mAss[int(ass::decl::DeclarationSlot::BACKGROUND_SOLID)] ||
-        mAss[int(ass::decl::DeclarationSlot::BACKGROUND_IMAGE)])
+    if (mAss[int(ass::prop::PropertySlot::BACKGROUND_SOLID)] ||
+        mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)])
         return true;
     auto p = getViewAt(pos);
     if (p)
@@ -216,7 +240,7 @@ _<ALayout> AViewContainer::getLayout() const {
 }
 
 
-_<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone) {
+_<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
     _<AView> possibleOutput = nullptr;
 
     for (auto view: aui::reverse_iterator_wrap(mViews)) {
@@ -240,7 +264,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone) {
         }
 
         if (hitTest) {
-            if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
+            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
                 if (!possibleOutput) {
                     possibleOutput = view;
                 }
@@ -253,13 +277,13 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, bool ignoreGone) {
     return possibleOutput;
 }
 
-_<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos) {
-    _<AView> target = getViewAt(pos);
+_<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
+    _<AView> target = getViewAt(pos, flags);
     if (!target)
         return nullptr;
     while (auto parent = _cast<AViewContainer>(target)) {
         pos -= parent->getPosition();
-        target = parent->getViewAt(pos);
+        target = parent->getViewAt(pos, flags);
         if (!target)
             return parent;
     }
@@ -269,6 +293,7 @@ _<AView> AViewContainer::getViewAtRecursive(glm::ivec2 pos) {
 void AViewContainer::setSize(glm::ivec2 size) {
     mSizeSet = true;
     AView::setSize(size);
+    adjustContentSize();
     updateLayout();
 }
 
@@ -377,4 +402,25 @@ void AViewContainer::onKeyUp(AInput::Key key) {
 void AViewContainer::onCharEntered(wchar_t c) {
     AView::onCharEntered(c);
     AUI_NULLSAFE(focusChainTarget())->onCharEntered(c);
+}
+
+void AViewContainer::adjustContentSize() {
+    if (mScrollbarAppearance.getVertical() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
+        adjustVerticalSizeToContent();
+
+    if (mScrollbarAppearance.getHorizontal() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
+        adjustHorizontalSizeToContent();
+}
+
+void AViewContainer::adjustHorizontalSizeToContent() {
+    setFixedSize(glm::ivec2(0, getFixedSize().y));
+}
+
+void AViewContainer::adjustVerticalSizeToContent() {
+    setFixedSize(glm::ivec2(getFixedSize().x, 0));
+}
+
+void AViewContainer::onClickPrevented() {
+    AView::onClickPrevented();
+    AUI_NULLSAFE(mFocusChainTarget.lock())->onClickPrevented();
 }

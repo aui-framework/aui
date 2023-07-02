@@ -197,8 +197,7 @@ public:
     }
 
     template<typename ModelField>
-    void setValue(ModelField(Model::*field), ModelField value) {
-        mModel->*field = std::move(value);
+    void notifyUpdate(ModelField(Model::*field)) {
         union converter {
             unsigned i;
             decltype(field) p;
@@ -207,11 +206,24 @@ public:
         notifyUpdate(nullptr, c.i);
     }
 
-    void addObserver(const Observer& applier) {
-        mLinkObservers << applier;
+    template<typename ModelField>
+    void setValue(ModelField(Model::*field), ModelField value) {
+        mModel->*field = std::move(value);
+        notifyUpdate(field);
+    }
+
+    void addObserver(Observer applier) {
+        mLinkObservers << std::move(applier);
         if (mModel) {
             mLinkObservers.last()(*mModel, -1);
         }
+    }
+
+    template<aui::invocable T>
+    void addObserver(T&& applier) {
+        addObserver([applier = std::forward<T>(applier)](const Model&, unsigned) {
+            applier();
+        });
     }
 
     template<typename ModelField, typename FieldObserver>
@@ -277,7 +289,7 @@ namespace aui::detail {
     template<typename ForcedClazz, typename Type>
     struct pointer_to_member {
         template<typename... Args>
-        static Type(ForcedClazz::*with_args(aui::type_list<Args...>))(Args...) {
+        static Type(ForcedClazz::*with_args(std::tuple<Args...>))(Args...) {
             return nullptr;
         }
     };
@@ -289,7 +301,7 @@ _<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data>
 
     using setter = aui::member<decltype(ADataBindingDefault<View, Data>::getSetter())>;
 
-    using setter_ret = typename setter::type;
+    using setter_ret = typename setter::return_t;
     using setter_args = typename setter::args;
 
     using my_pointer_to_member = typename aui::detail::pointer_to_member<View, setter_ret>;

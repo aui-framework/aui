@@ -124,7 +124,7 @@ public:
     template<typename Iterator, typename Functor>
     auto parallel(Iterator begin, Iterator end, Functor&& functor);
 
-    template <typename Callable>
+    template <aui::invocable Callable>
     [[nodiscard]]
     inline auto operator*(Callable fun)
     {
