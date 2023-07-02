@@ -106,7 +106,11 @@ auib_import(fmt https://github.com/fmtlib/fmt
             VERSION 9.1.0
             CMAKE_ARGS -DFMT_TEST=FALSE -DFMT_DOC=FALSE)
 
-aui_link(aui.core PUBLIC fmt::fmt-header-only)
+auib_import(range-v3 https://github.com/ericniebler/range-v3
+        VERSION 0.12.0
+        CMAKE_ARGS -DRANGE_V3_DOCS=OFF -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_PERF=OFF -DRANGE_V3_HEADER_CHECKS=OFF)
+
+aui_link(aui.core PUBLIC fmt::fmt-header-only range-v3::range-v3)
 
 if (AUI_PLATFORM_ANDROID)
     target_include_directories(aui.core PUBLIC 3rdparty/cpp_java_glue)

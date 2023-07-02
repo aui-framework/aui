@@ -18,9 +18,11 @@
 // Created by Alex2772 on 11/11/2021.
 //
 
+#include <range/v3/range.hpp>
 #include <AUI/View/ALabel.h>
 #include "ViewPropertiesView.h"
 #include "Devtools.h"
+#include "AUI/View/AText.h"
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Traits/iterators.h>
@@ -68,7 +70,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                     requestTargetUpdate();
                 });
             },
-
+            AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
             CheckBoxWrapper {
                 Label {"Expanding"},
             } let {
