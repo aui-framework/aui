@@ -598,6 +598,7 @@ macro(_aui_provide_toolbox_for_host)
     file(WRITE ${_workdir}/CMakeLists.txt [[
 cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
+set(CMAKE_CXX_STANDARD 20)
 file(
         DOWNLOAD
         https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
