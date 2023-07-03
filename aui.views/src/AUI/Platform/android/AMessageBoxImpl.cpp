@@ -21,17 +21,7 @@
 #include <AUI/Platform/AMessageBox.h>
 
 AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b) {
-
-    auto j = aui::jni::env();
-    auto klazzAUI = j->FindClass("com/github/aui/android/AUI");
-    auto methodShowMessageBox = j->GetStaticMethodID(klazzAUI, "showMessageBox", "(Ljava/lang/String;Ljava/lang/String;)V");
-    auto strTitle = j->NewStringUTF(title.toStdString().c_str());
-    auto strMessage = j->NewStringUTF(message.toStdString().c_str());
-
-    j->CallStaticVoidMethod(klazzAUI, methodShowMessageBox, strTitle, strMessage);
-
-    j->DeleteLocalRef(strTitle);
-    j->DeleteLocalRef(strMessage);
+    com::github::aui::android::AUI::showMessageBox(title, message);
 
     return AMessageBox::ResultButton::INVALID;
 }

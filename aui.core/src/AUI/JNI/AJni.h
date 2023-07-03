@@ -130,6 +130,6 @@ struct name: public name ## _info
         return ::aui::jni::callMethod<ret_t>(this->asObject(), methodId AUI_PP_FOR_EACH(AUI_JNI_INTERNAL_OMIT_BRACES_CONTENTS, _, args)); \
     }
 
-#define AUI_JNI_INTERNAL_OMIT_BRACES(a, b, c) AUI_PP_IDENTITY c
+#define AUI_JNI_INTERNAL_OMIT_BRACES(i, b, c) AUI_PP_COMMA_IF(i) AUI_PP_IDENTITY c
 
 #define AUI_JNI_INTERNAL_OMIT_BRACES_CONTENTS(i, b, c) , AUI_PP_EMPTY c

@@ -119,8 +119,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                         Button {
                             Icon { ":img/logo.svg" },
                             Label { "Button with icon" },
-                        }.clicked(this, [] {
-                            ALogger::info("Example") << "Button clicked";
+                        }.clicked(this, [&] {
+                            AMessageBox::show(this, "Title", "Message");
                         }),
                     },
                 },

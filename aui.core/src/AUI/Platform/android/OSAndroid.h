@@ -24,6 +24,7 @@ namespace com::github::aui::android {
         AUI_JNI_STATIC_METHOD(void, requestRedraw, ())
         AUI_JNI_STATIC_METHOD(void, showKeyboard, ())
         AUI_JNI_STATIC_METHOD(void, hideKeyboard, ())
+        AUI_JNI_STATIC_METHOD(void, showMessageBox, ((const AString&) title, (const AString&) message))
     };
 }
 
