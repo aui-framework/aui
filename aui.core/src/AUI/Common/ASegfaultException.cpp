@@ -23,6 +23,11 @@
 #include "AUI/Logging/ALogger.h"
 
 
+ASegfaultException::Handler& ASegfaultException::handler() {
+    static Handler h;
+    return h;
+}
+
 #ifdef AUI_CATCH_SEGFAULT
 
 #if AUI_PLATFORM_WIN

@@ -28,15 +28,13 @@
  * @details
  * Your application may handle ASegfaultException and continue normal execution.
  */
-class ASegfaultException: public AException {
-private:
-    inline static std::function<void(ASegfaultException*)> handler;
-    void* mAddress;
-
+class API_AUI_CORE ASegfaultException: public AException {
 public:
+    using Handler = std::function<void(ASegfaultException*)>;
+
     explicit ASegfaultException(void* address) : mAddress(address) {
-        if (handler)
-            handler(this);
+        if (handler())
+            handler()(this);
     }
 
     AString getMessage() const noexcept override {
@@ -49,7 +47,12 @@ public:
         return mAddress;
     }
 
-    static void setGlobalHandler(std::function<void(ASegfaultException*)> globalHandler) {
-        handler = std::move(globalHandler);
+    static void setGlobalHandler(Handler globalHandler) {
+        handler() = std::move(globalHandler);
     }
+
+private:
+    void* mAddress;
+
+    static Handler& handler();
 };
