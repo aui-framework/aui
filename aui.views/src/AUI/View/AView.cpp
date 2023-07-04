@@ -129,6 +129,11 @@ void AView::popStencilIfNeeded() {
 }
 void AView::render()
 {
+    if (mAnimator)
+        mAnimator->animate(this);
+
+    ensureAssUpdated();
+
     //draw before drawing this element
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
     {
@@ -137,18 +142,11 @@ void AView::render()
         });
     }
 
-    if (mAnimator)
-        mAnimator->animate(this);
-
-    {
-        ensureAssUpdated();
-
-        // draw list
-        for (unsigned i = 0; i < int(ass::prop::PropertySlot::COUNT); ++i) {
-            if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
-            if (auto w = mAss[i]) {
-                w->renderFor(this);
-            }
+    // draw list
+    for (unsigned i = 0; i < int(ass::prop::PropertySlot::COUNT); ++i) {
+        if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
+        if (auto w = mAss[i]) {
+            w->renderFor(this);
         }
     }
 

@@ -44,7 +44,8 @@ void AViewContainer::drawView(const _<AView>& view) {
         }
         catch (...) {}
 
-        assert(Render::getRenderer()->getStencilDepth() == prevStencilLevel);
+        auto currentStencilLevel = Render::getRenderer()->getStencilDepth();
+        assert(currentStencilLevel == prevStencilLevel);
     }
 }
 
