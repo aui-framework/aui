@@ -122,7 +122,7 @@ void AWindow::hide() {
 }
 
 void AWindowManager::notifyProcessMessages() {
-    com::github::aui::android::AUI::requestRedraw();
+    com::github::aui::android::Platform::requestRedraw();
 }
 
 void AWindowManager::loop() {
@@ -153,9 +153,9 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::requestTouchscreenKeyboardImpl() {
-    com::github::aui::android::AUI::showKeyboard();
+    com::github::aui::android::Platform::showKeyboard();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
-    com::github::aui::android::AUI::hideKeyboard();
+    com::github::aui::android::Platform::hideKeyboard();
 }

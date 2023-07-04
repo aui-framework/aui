@@ -18,7 +18,7 @@
 #include <AUI/JNI/AJni.h>
 
 namespace com::github::aui::android {
-    AUI_JNI_CLASS(com/github/aui/android/AUI, AUI) {
+    AUI_JNI_CLASS(com/github/aui/android/Platform, Platform) {
         AUI_JNI_STATIC_METHOD(float, getDpiRatio, ())
         AUI_JNI_STATIC_METHOD(void, openUrl, ((const AString&) url))
         AUI_JNI_STATIC_METHOD(void, requestRedraw, ())

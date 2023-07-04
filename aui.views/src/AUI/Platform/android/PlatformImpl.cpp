@@ -24,9 +24,9 @@
 
 float APlatform::getDpiRatio()
 {
-    return com::github::aui::android::AUI::getDpiRatio();
+    return com::github::aui::android::Platform::getDpiRatio();
 }
 
 void APlatform::openUrl(const AUrl &url) {
-    com::github::aui::android::AUI::openUrl(url.full());
+    com::github::aui::android::Platform::openUrl(url.full());
 }

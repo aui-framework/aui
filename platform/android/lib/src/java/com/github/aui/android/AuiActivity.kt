@@ -28,8 +28,8 @@ open class AuiActivity : AppCompatActivity() {
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
             WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
         )
-        AUI.ourContext = this
-        val surfaceView = MyGLSurfaceView(this)
+        Platform.ourContext = this
+        val surfaceView = AuiView(this)
         setContentView(surfaceView)
     }
 

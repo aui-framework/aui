@@ -5,7 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.appcompat.app.AlertDialog
 
-object AUI {
+object Platform {
     @JvmField
     var ourContext: Activity? = null
 
@@ -19,7 +19,7 @@ object AUI {
 
     @JvmStatic
     private fun requestRedraw() {
-        MyGLSurfaceView.ourCurrentSurface?.requestRender()
+        AuiView.ourCurrentSurface?.requestRender()
     }
 
     @JvmStatic
@@ -34,7 +34,7 @@ object AUI {
     @JvmStatic
     private fun openUrl(url: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-        MyGLSurfaceView.ourCurrentSurface?.context?.startActivity(intent)
+        AuiView.ourCurrentSurface?.context?.startActivity(intent)
     }
 
     @JvmStatic

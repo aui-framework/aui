@@ -21,20 +21,17 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
-import android.widget.OverScroller
 import android.widget.Scroller
-import java.util.*
-import java.util.concurrent.LinkedBlockingDeque
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class MyGLSurfaceView(context: Context) : GLSurfaceView(context), OnTouchListener {
+class AuiView(context: Context) : GLSurfaceView(context), OnTouchListener {
     private val mGestureDetector: GestureDetector
     private var mRenderer: Renderer? = null
     private val mScroller = Scroller(context)
 
     companion object {
-        var ourCurrentSurface: MyGLSurfaceView? = null
+        var ourCurrentSurface: AuiView? = null
 
 
         @JvmStatic

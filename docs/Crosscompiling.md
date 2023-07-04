@@ -62,11 +62,12 @@ and link AUI as a library.
    framework (unrecommended because you will experience difficulties when compiling for other platforms).
 3. Copy & paste AUI's [native Java code](https://github.com/aui-framework/aui/tree/master/platform/android) for Android
    to your project. You may also want to adjust your `app.gradle` and `AndroidManifest.xml`.
-4. To draw AUI, you should use `GLSurfaceView` and [pass rendering routines](https://github.com/aui-framework/aui/blob/master/platform/android/lib/src/java/com/github/aui/android/MyGLSurfaceView.kt)
-   to AUI. Also, take care of handling user input.
+4. To draw AUI, you should use `GLSurfaceView` and [pass rendering routines](https://github.com/aui-framework/aui/blob/master/platform/android/lib/src/java/com/github/aui/android/AuiView.kt)
+   to AUI. Also, take care of handling user input. Also, you can inflate [AuiView](https://github.com/aui-framework/aui/blob/master/platform/android/lib/src/java/com/github/aui/android/AuiView.kt)
+   to your own Android layout.
 
 ## iOS
 1. Create new Xcode project.
-2. Since Xcode does not support CMake, you will have to compile AUI (and your C++ AUI application) by yourself (by'
+2. Since Xcode does not support CMake, you will have to compile AUI (and your C++ AUI application) by yourself (by
    creating Xcode rules or manually dropping compiled binaries to Xcode project).
 3. [Take a look](https://github.com/aui-framework/aui/blob/master/aui.views/src/AUI/Platform/ios/AUIViewController.mm) on how does AUI handles its routines on iOS and implement them by yourself in your project.

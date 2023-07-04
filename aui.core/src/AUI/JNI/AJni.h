@@ -41,7 +41,7 @@
  * Usage:
  * @code{cpp}
  * namespace com::github::aui::android {
- *     AUI_JNI_CLASS(com/github/aui/android/AUI, AUI) {
+ *     AUI_JNI_CLASS(com/github/aui/android/Platform, AUI) {
  *     public:
  *         // class definition
  *         AUI_JNI_STATIC_METHOD(void, callStaticMethod, ())
@@ -49,7 +49,7 @@
  *     };
  * }
  * ..
- * com::github::aui::android::AUI::getClassName() -> "com/github/aui/android/AUI"
+ * com::github::aui::android::Platform::getClassName() -> "com/github/aui/android/Platform"
  * @endcode
  */
 #define AUI_JNI_CLASS(path, name) \
@@ -72,7 +72,7 @@ struct name: public name ## _info
  * Usage:
  * @code{cpp}
  * namespace com::github::aui::android {
- *     AUI_JNI_CLASS(com/github/aui/android/AUI, AUI) {  // required for AUI_JNI_STATIC_METHOD
+ *     AUI_JNI_CLASS(com/github/aui/android/Platform, Platform) {  // required for AUI_JNI_STATIC_METHOD
  *     public:
  *         AUI_JNI_STATIC_METHOD(float, getDpiRatio, ())
  *         AUI_JNI_STATIC_METHOD(void, openUrl, ((const AString&) url))
@@ -80,7 +80,7 @@ struct name: public name ## _info
  *     };
  * }
  * ..
- * com::github::aui::android::AUI::getClassName() -> "com/github/aui/android/AUI"
+ * com::github::aui::android::Platform::getClassName() -> "com/github/aui/android/Platform"
  * @endcode
  */
 #define AUI_JNI_STATIC_METHOD(ret_t, name, args) \
@@ -106,7 +106,7 @@ struct name: public name ## _info
  * Usage:
  * @code{cpp}
  * namespace com::github::aui::android {
- *     AUI_JNI_CLASS(com/github/aui/android/AUI, AUI) {  // required for AUI_JNI_STATIC_METHOD
+ *     AUI_JNI_CLASS(com/github/aui/android/Platform, Platform) {  // required for AUI_JNI_STATIC_METHOD
  *     public:
  *         AUI_JNI_METHOD(float, getDpiRatio, ())
  *         AUI_JNI_METHOD(void, openUrl, ((const AString&) url))
@@ -114,7 +114,7 @@ struct name: public name ## _info
  *     };
  * }
  * ..
- * com::github::aui::android::AUI::getClassName() -> "com/github/aui/android/AUI"
+ * com::github::aui::android::Platform::getClassName() -> "com/github/aui/android/Platform"
  * @endcode
  */
 #define AUI_JNI_METHOD(ret_t, name, args) \

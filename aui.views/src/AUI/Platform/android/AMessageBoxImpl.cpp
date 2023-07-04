@@ -21,7 +21,7 @@
 #include <AUI/Platform/AMessageBox.h>
 
 AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b) {
-    com::github::aui::android::AUI::showMessageBox(title, message);
+    com::github::aui::android::Platform::showMessageBox(title, message);
 
     return AMessageBox::ResultButton::INVALID;
 }
