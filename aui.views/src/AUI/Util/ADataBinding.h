@@ -92,6 +92,7 @@ public:
 
 /**
  * @brief Data binding implementation.
+ * @tparam Model Your model type.
  * @details
  * <p>
  * If const reference of your model passed, ADataBinding will create and manage its own copy of your model.
@@ -109,6 +110,7 @@ public:
  *
  * <p>Another example:</p>
  * <img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/Screenshot_20230705_173329.png">
+ * <img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/Recording_20230705_at_17.51.14.gif">
  * @code{cpp}
  * class MyWindow: public AWindow {
  * public:
@@ -147,9 +149,8 @@ public:
  * };
  * @endcode
  * <p>Here, we use getEditableModel() in order to change data in our model and notifyUpdate() to notify.</p>
- * <p>Also, we use @def let construction to define custom format for label.</p>
+ * <p>Also, we use @ref #let construction to define custom format for label.</p>
  *
- * @tparam Model Your model type.
  */
 template <typename Model>
 class ADataBinding: public AObject {
