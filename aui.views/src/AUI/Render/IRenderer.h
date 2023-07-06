@@ -451,6 +451,9 @@ public:
         return mStencilDepth;
     }
 
+    void setStencilDepth(uint8_t stencilDepth) {
+        mStencilDepth = stencilDepth;
+    }
 };
 
 
