@@ -23,24 +23,19 @@
 #include "AException.h"
 
 /**
- * @brief An exception that thrown when access violation (segfault) occurs.
+ * @brief An exception that thrown when access violation (segfault), or abort occurs.
  * @ingroup core
  * @details
- * Your application may handle ASegfaultException and continue normal execution.
+ * Your application may handle AFatalException and continue normal execution.
  */
-class API_AUI_CORE ASegfaultException: public AException {
+class API_AUI_CORE AFatalException: public AException {
 public:
-    using Handler = std::function<void(ASegfaultException*)>;
+    using Handler = std::function<void(AFatalException*)>;
 
-    explicit ASegfaultException(void* address) : mAddress(address) {
+    explicit AFatalException(void* address, std::string_view signalName):
+        AException("{} at address {}"_format(signalName, address)), mAddress(address) {
         if (handler())
             handler()(this);
-    }
-
-    AString getMessage() const noexcept override {
-        char buf[128];
-        std::sprintf(buf, "segmentation fault at address %p", mAddress);
-        return buf;
     }
 
     void* getAddress() const {

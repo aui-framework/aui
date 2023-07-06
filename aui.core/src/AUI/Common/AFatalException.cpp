@@ -18,12 +18,12 @@
 // Created by alex2772 on 1/14/22.
 //
 
-#include "ASegfaultException.h"
+#include "AFatalException.h"
 #include "AUI/Traits/memory.h"
 #include "AUI/Logging/ALogger.h"
 
 
-ASegfaultException::Handler& ASegfaultException::handler() {
+AFatalException::Handler& AFatalException::handler() {
     static Handler h;
     return h;
 }
@@ -49,7 +49,7 @@ extern "C" {
 void restoreRt() {
     printf("restoreRt");
 }
-static void unblock_signal(int signum __attribute__((__unused__)))
+static void unblockSignal(int signum __attribute__((__unused__)))
 {
 #ifdef _POSIX_VERSION
     sigset_t sigs;
@@ -58,12 +58,15 @@ static void unblock_signal(int signum __attribute__((__unused__)))
     sigprocmask(SIG_UNBLOCK, &sigs, NULL);
 #endif
 }
-static void onSegfault(int c, siginfo_t * info, void *_p __attribute__ ((__unused__))) {
-    ALogger::err("SignalHandler") << "Caught signal: " << AStacktrace::capture(3);
+static void onSignal(int c, siginfo_t * info, void *_p __attribute__ ((__unused__))) {
+    const char* signalName = strsignal(c);
+    if (!signalName) signalName = "unknown signal";
 
-    if (c == SIGSEGV) {
-        unblock_signal(SIGSEGV);
-        throw ASegfaultException(info->si_addr);
+    ALogger::err("SignalHandler") << "Caught signal: " << signalName << "(" << c << ")\n" << AStacktrace::capture(3);
+
+    if (c == SIGSEGV || c == SIGABRT) {
+        unblockSignal(c);
+        throw AFatalException(info->si_addr, signalName);
     }
 }
 
@@ -71,7 +74,7 @@ struct segfault_handler_registrar {
     segfault_handler_registrar() noexcept {
         struct sigaction act;
         aui::zero(act);
-        act.sa_sigaction = onSegfault;
+        act.sa_sigaction = onSignal;
         sigemptyset (&act.sa_mask);
         act.sa_flags = SA_SIGINFO|0x4000000;
         act.sa_restorer = restoreRt;
