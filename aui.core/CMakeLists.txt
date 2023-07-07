@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
 
-option(AUI_CATCH_SEGFAULT "Catch segfault" ON)
+option(AUI_CATCH_UNHANDLED "Catch segfault" ON)
 
 aui_module(aui.core EXPORT aui)
 aui_enable_tests(aui.core)
 
 
 # segfault functionality
-if (NOT MSVC AND AUI_CATCH_SEGFAULT)
+if (NOT MSVC AND AUI_CATCH_UNHANDLED)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -fnon-call-exceptions")
 endif()
 
@@ -26,12 +26,12 @@ target_include_directories(aui.core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>
 
 target_compile_definitions(aui.core PRIVATE UNICODE=1)
 target_compile_definitions(aui.core PUBLIC NOMINMAX=1)
-if (AUI_CATCH_SEGFAULT)
-    target_compile_definitions(aui.core PUBLIC AUI_CATCH_SEGFAULT=1)
+if (AUI_CATCH_UNHANDLED)
+    target_compile_definitions(aui.core PUBLIC AUI_CATCH_UNHANDLED=1)
 endif()
 
 if (NOT WIN32)
-    if (AUI_CATCH_SEGFAULT)
+    if (AUI_CATCH_UNHANDLED)
         set_target_properties(aui.core PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON) # required for signal handling auto register
     endif()
 

@@ -32,7 +32,7 @@ AString AFatalException::getMessage() const noexcept {
     return "{} at address {}"_format(mSignalName, mAddress);
 }
 
-#ifdef AUI_CATCH_SEGFAULT
+#ifdef AUI_CATCH_UNHANDLED
 
 extern "C" {
 #include <signal.h>
@@ -41,48 +41,7 @@ extern "C" {
 #include <string.h>
 }
 
-static void __cdecl onSignal(int c) {
-    const char* signalName = "unknown signal";
-
-    switch (c) {
-        case SIGILL:
-            signalName = "Illegal instruction";
-            break;
-        case SIGFPE:
-            signalName = "floating point exception";
-            break;
-        case SIGSEGV:
-            signalName = "access violation";
-            break;
-        case SIGABRT:
-            signalName = "abort";
-            break;
-    }
-
-    ALogger::err("SignalHandler") << "Caught signal: " << signalName << "(" << c << ")\n" << AStacktrace::capture(3);
-    void* addr = 0;
-    auto e = AStacktrace::capture(c == SIGABRT ? 5 : 7, 1).entries();
-    if (!e.empty()) {
-        addr = e.first().ptr();
-    }
-
-    throw AFatalException(addr, signalName);
-}
-
-struct segfault_handler_registrar {
-    segfault_handler_registrar() noexcept {
-        signal(SIGILL, onSignal);
-        signal(SIGFPE, onSignal);
-        signal(SIGSEGV, onSignal);
-        signal(SIGABRT, onSignal); // for assertions
-
-    }
-} my_segfault_handler_registrar;
-
-#if AUI_PLATFORM_WIN
-// unimplemented
-
-#elif AUI_PLATFORM_LINUX
+#ifdef __linux
 
 extern "C" {
 #include <signal.h>
@@ -117,8 +76,40 @@ static void onSignal(int c, siginfo_t * info, void *_p __attribute__ ((__unused_
     throw AFatalException(info->si_addr, signalName);
 }
 
+#else
+
+static void __cdecl onSignal(int c) {
+    const char* signalName = "unknown signal";
+
+    switch (c) {
+        case SIGILL:
+            signalName = "Illegal instruction";
+            break;
+        case SIGFPE:
+            signalName = "floating point exception";
+            break;
+        case SIGSEGV:
+            signalName = "access violation";
+            break;
+        case SIGABRT:
+            signalName = "abort";
+            break;
+    }
+
+    ALogger::err("SignalHandler") << "Caught signal: " << signalName << "(" << c << ")\n" << AStacktrace::capture(3);
+    void* addr = 0;
+    auto e = AStacktrace::capture(c == SIGABRT ? 5 : 7, 1).entries();
+    if (!e.empty()) {
+        addr = e.first().ptr();
+    }
+
+    throw AFatalException(addr, signalName);
+}
+#endif
+
 struct segfault_handler_registrar {
     segfault_handler_registrar() noexcept {
+#ifdef __linux
         struct sigaction act;
         aui::zero(act);
         act.sa_sigaction = onSignal;
@@ -131,9 +122,14 @@ struct segfault_handler_registrar {
         sigaction(SIGFPE, &act, nullptr);
         sigaction(SIGSEGV, &act, nullptr);
         sigaction(SIGABRT, &act, nullptr); // for assertions
+#else
 
+        signal(SIGILL, onSignal);
+        signal(SIGFPE, onSignal);
+        signal(SIGSEGV, onSignal);
+        signal(SIGABRT, onSignal); // for assertions
+#endif
     }
 } my_segfault_handler_registrar;
 
-#endif
 #endif
