@@ -41,23 +41,40 @@ extern "C" {
 #include <string.h>
 }
 
-static void __cdecl onSignal(int c, void* addr) {
-    const char* signalName = nullptr;
-    if (!signalName) signalName = "unknown signal";
+static void __cdecl onSignal(int c) {
+    const char* signalName = "unknown signal";
+
+    switch (c) {
+        case SIGILL:
+            signalName = "Illegal instruction";
+            break;
+        case SIGFPE:
+            signalName = "floating point exception";
+            break;
+        case SIGSEGV:
+            signalName = "access violation";
+            break;
+        case SIGABRT:
+            signalName = "abort";
+            break;
+    }
 
     ALogger::err("SignalHandler") << "Caught signal: " << signalName << "(" << c << ")\n" << AStacktrace::capture(3);
-
-    if (c == SIGSEGV || c == SIGABRT) {
-        throw AFatalException(addr, signalName);
+    void* addr = 0;
+    auto e = AStacktrace::capture(c == SIGABRT ? 5 : 7, 1).entries();
+    if (!e.empty()) {
+        addr = e.first().ptr();
     }
+
+    throw AFatalException(addr, signalName);
 }
 
 struct segfault_handler_registrar {
     segfault_handler_registrar() noexcept {
-        signal(SIGILL, reinterpret_cast<_crt_signal_t>(onSignal));
-        signal(SIGFPE, reinterpret_cast<_crt_signal_t>(onSignal));
-        signal(SIGSEGV, reinterpret_cast<_crt_signal_t>(onSignal));
-        signal(SIGABRT, reinterpret_cast<_crt_signal_t>(onSignal)); // for assertions
+        signal(SIGILL, onSignal);
+        signal(SIGFPE, onSignal);
+        signal(SIGSEGV, onSignal);
+        signal(SIGABRT, onSignal); // for assertions
 
     }
 } my_segfault_handler_registrar;
@@ -96,10 +113,8 @@ static void onSignal(int c, siginfo_t * info, void *_p __attribute__ ((__unused_
 
     ALogger::err("SignalHandler") << "Caught signal: " << signalName << "(" << c << ")\n" << AStacktrace::capture(3);
 
-    if (c == SIGSEGV || c == SIGABRT) {
-        unblockSignal(c);
-        throw AFatalException(info->si_addr, signalName);
-    }
+    unblockSignal(c);
+    throw AFatalException(info->si_addr, signalName);
 }
 
 struct segfault_handler_registrar {
