@@ -23,7 +23,7 @@
 #include "AException.h"
 
 /**
- * @brief An exception that thrown when non-c++ unhandler error occurs (i.e. access violation).
+ * @brief An exception that thrown when non-c++ unhandled error occurs (i.e. access violation).
  * @ingroup core
  * @details
  * @note AFatalException::setGlobalHandler is supported on all platforms, but translation to AFatalError is not as it
