@@ -72,6 +72,9 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
         if (!view->hasFocus()) {
             view->onFocusAcquired();
         }
+        for (auto p = view.get(); p->getParent(); p = p->getParent()) {
+            (p->getParent())->setFocusChainTarget(p->weakPtr());
+        }
     }
 }
 
