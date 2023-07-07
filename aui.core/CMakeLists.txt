@@ -8,7 +8,9 @@ aui_enable_tests(aui.core)
 
 # segfault functionality
 if (NOT MSVC AND AUI_CATCH_UNHANDLED)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -fnon-call-exceptions")
+    if (AUI_COMPILER_GCC)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -fnon-call-exceptions")
+    endif ()
 endif()
 
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
@@ -92,7 +94,12 @@ foreach(_var AUI_PLATFORM_WIN
              AUI_PLATFORM_MACOS
              AUI_PLATFORM_IOS
              AUI_PLATFORM_ANDROID
-             AUI_PLATFORM_UNIX)
+             AUI_PLATFORM_UNIX
+
+             AUI_COMPILER_CLANG
+             AUI_COMPILER_GCC
+             AUI_COMPILER_MSVC
+        )
     target_compile_definitions(aui.core PUBLIC ${_var}=${${_var}})
 endforeach()
 

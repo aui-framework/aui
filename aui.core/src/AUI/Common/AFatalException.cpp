@@ -77,7 +77,9 @@ static void onSignal(int c, siginfo_t * info, void *_p __attribute__ ((__unused_
         case SIGSEGV:
         case SIGABRT:
             unblockSignal(c);
-#if !AUI_COMPILER_CLANG
+#if AUI_COMPILER_CLANG
+            AFatalException e(info->si_addr, signalName); // calls setGlobalHandler
+#else
             throw AFatalException(info->si_addr, signalName);
 #endif
     }

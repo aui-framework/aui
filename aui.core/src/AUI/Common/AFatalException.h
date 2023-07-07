@@ -23,10 +23,22 @@
 #include "AException.h"
 
 /**
- * @brief An exception that thrown when access violation (segfault), or abort occurs.
+ * @brief An exception that thrown when non-c++ unhandler error occurs (i.e. access violation).
  * @ingroup core
  * @details
  * Your application may handle AFatalException and continue normal execution.
+ *
+ * @note AFatalException::setGlobalHandler is supported on all platforms, but translation to AFatalError is not. See
+ * @ref "Platform support" for further info.
+ *
+ * # Platform support
+ * | Platform | Translation to throwing AFatalException | setGlobalHandler |
+ * |----------|-----------------------------------------|------------------|
+ * | Windows  | MSVC                                    | +                |
+ * | Linux    | GCC                                     | +                |
+ * | macOS    | -                                       | +                |
+ * | Android  | GCC                                     | +                |
+ * | iOS      | -                                       | +                |
  */
 class API_AUI_CORE AFatalException: public AException {
 public:

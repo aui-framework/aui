@@ -1,9 +1,14 @@
-# Platform checks
+# Writing platform dependent code
+
+AUI provides set of `AUI_PLATFORM_*` and `AUI_COMPILER_*` definitions for platform and compiler checking to use in both CMake and C++.
+
+## Platform checks
 
 <table>
    <tr>
      <th>Platform</th>
-     <th>#if check</th>
+     <th>C++</th>
+     <th>CMake</th>
      <th>Platform specific dir</th>
    </tr>
    <tr>
@@ -13,8 +18,15 @@
      <td>
        @code{cpp}
         #if AUI_PLATFORM_WIN
-        // ...
+          // ...
         #endif
+       @endcode
+     </td>
+     <td>
+       @code{cmake}
+        if(AUI_PLATFORM_WIN)
+          # ...
+        endif()
        @endcode
      </td>
      <td>
@@ -29,8 +41,15 @@
      <td>
        @code{cpp}
         #if AUI_PLATFORM_LINUX
-        // ...
+          // ...
         #endif
+       @endcode
+     </td>
+     <td>
+       @code{cmake}
+        if(AUI_PLATFORM_LINUX)
+          # ...
+        endif()
        @endcode
      </td>
      <td>
@@ -45,8 +64,15 @@
      <td>
        @code{cpp}
         #if AUI_PLATFORM_MACOS
-        // ...
+          // ...
         #endif
+       @endcode
+     </td>
+     <td>
+       @code{cmake}
+        if(AUI_PLATFORM_MACOS)
+          # ...
+        endif()
        @endcode
      </td>
      <td>
@@ -61,8 +87,15 @@
      <td>
        @code{cpp}
         #if AUI_PLATFORM_ANDROID
-        // ...
+          // ...
         #endif
+       @endcode
+     </td>
+     <td>
+       @code{cmake}
+        if(AUI_PLATFORM_ANDROID)
+          # ...
+        endif()
        @endcode
      </td>
      <td>
@@ -77,8 +110,15 @@
      <td>
        @code{cpp}
         #if AUI_PLATFORM_IOS
-        // ...
+          // ...
         #endif
+       @endcode
+     </td>
+     <td>
+       @code{cmake}
+        if(AUI_PLATFORM_IOS)
+          # ...
+        endif()
        @endcode
      </td>
      <td>
@@ -93,8 +133,15 @@
      <td>
        @code{cpp}
         #if AUI_PLATFORM_APPLE
-        // ...
+          // ...
         #endif
+       @endcode
+     </td>
+     <td>
+       @code{cmake}
+        if(AUI_PLATFORM_APPLE)
+          # ...
+        endif()
        @endcode
      </td>
      <td>
@@ -109,19 +156,95 @@
      <td>
        @code{cpp}
         #if AUI_PLATFORM_UNIX
-        // ...
+          // ...
         #endif
+       @endcode
+     </td>
+     <td>
+       @code{cmake}
+        if(AUI_PLATFORM_UNIX)
+          # ...
+        endif()
        @endcode
      </td>
      <td>
        `Platform/unix`
      </td>
    </tr>
- </table>
+</table>
 
 
-# Platform specific sources
+### Platform specific sources
 
 With AUI, the platform dependent code can be placed in `src/Platform/<PLATFORM_NAME>` dir, where `<PLATFORM_NAME>` is
 one of the supported platforms (see the table above).
 
+
+## Compiler checks
+
+<table>
+   <tr>
+     <th>Compiler</th>
+     <th>C++</th>
+     <th>CMake</th>
+   </tr>
+   <tr>
+     <td>
+       MSVC
+     </td>
+     <td>
+       @code{cpp}
+        #if AUI_COMPILER_MSVC
+          // ...
+        #endif
+       @endcode
+     </td>
+     <td>
+       @code{cmake}
+        if(AUI_COMPILER_MSVC)
+          # ...
+        endif()
+       @endcode
+     </td>
+   </tr>
+
+   <tr>
+     <td>
+       GCC (including MinGW)
+     </td>
+     <td>
+       @code{cpp}
+        #if AUI_COMPILER_GCC
+          // ...
+        #endif
+       @endcode
+     </td>
+     <td>
+       @code{cmake}
+        if(AUI_COMPILER_GCC)
+          # ...
+        endif()
+       @endcode
+     </td>
+   </tr>
+
+   <tr>
+     <td>
+       CLANG
+     </td>
+     <td>
+       @code{cpp}
+        #if AUI_COMPILER_CLANG
+          // ...
+        #endif
+       @endcode
+     </td>
+     <td>
+       @code{cmake}
+        if(AUI_COMPILER_CLANG)
+          # ...
+        endif()
+       @endcode
+     </td>
+   </tr>
+</table>
