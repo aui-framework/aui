@@ -30,7 +30,7 @@
  * uses compiler-specific flags and hacks. See @ref "Platform support" for further info.
  *
  * Translation to throwing AFatalException recovers the application from crashed state, providing you ability to handle
- * such errosr and continue normal application execution. However, still recommended to handle such errors with
+ * such errors and continue normal application execution. However, still recommended to handle such errors with
  * setGlobalHandler() to at least save user data.
  *
  * # Platform support
