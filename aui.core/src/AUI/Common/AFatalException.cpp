@@ -28,7 +28,39 @@ AFatalException::Handler& AFatalException::handler() {
     return h;
 }
 
+AString AFatalException::getMessage() const noexcept {
+    return "{} at address {}"_format(mSignalName, mAddress);
+}
+
 #ifdef AUI_CATCH_SEGFAULT
+
+extern "C" {
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+}
+
+static void __cdecl onSignal(int c, void* addr) {
+    const char* signalName = nullptr;
+    if (!signalName) signalName = "unknown signal";
+
+    ALogger::err("SignalHandler") << "Caught signal: " << signalName << "(" << c << ")\n" << AStacktrace::capture(3);
+
+    if (c == SIGSEGV || c == SIGABRT) {
+        throw AFatalException(addr, signalName);
+    }
+}
+
+struct segfault_handler_registrar {
+    segfault_handler_registrar() noexcept {
+        signal(SIGILL, reinterpret_cast<_crt_signal_t>(onSignal));
+        signal(SIGFPE, reinterpret_cast<_crt_signal_t>(onSignal));
+        signal(SIGSEGV, reinterpret_cast<_crt_signal_t>(onSignal));
+        signal(SIGABRT, reinterpret_cast<_crt_signal_t>(onSignal)); // for assertions
+
+    }
+} my_segfault_handler_registrar;
 
 #if AUI_PLATFORM_WIN
 // unimplemented
@@ -80,6 +112,8 @@ struct segfault_handler_registrar {
         act.sa_restorer = restoreRt;
         //auto r = syscall(SYS_rt_sigaction, SIGSEGV, &act, nullptr, _NSIG / 8);
         //assert(r == 0);
+        sigaction(SIGILL, &act, nullptr);
+        sigaction(SIGFPE, &act, nullptr);
         sigaction(SIGSEGV, &act, nullptr);
         sigaction(SIGABRT, &act, nullptr); // for assertions
 

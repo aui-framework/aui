@@ -33,21 +33,40 @@ public:
     using Handler = std::function<void(AFatalException*)>;
 
     explicit AFatalException(void* address, std::string_view signalName):
-        AException("{} at address {}"_format(signalName, address)), mAddress(address) {
+        mAddress(address), mSignalName(signalName) // avoiding unrecommended operations as much as possible
+        {
         if (handler())
             handler()(this);
     }
+
+    AString getMessage() const noexcept override;
 
     void* getAddress() const {
         return mAddress;
     }
 
+    /**
+     * @brief Sets handler for fatal exceptions.
+     * @param globalHandler handler
+     * @details
+     * The handler is called inside OS's signal callback, thus, it's not recommended to use the following operations
+     * during callback execution:
+     * <ul>
+     *   <li>I/O (printf, logging, fopen, fread, fwrite, etc...)</li>
+     *   <li>Heap routines (malloc, free, new, delete), including heap-based containers (std::vector, std::list,
+     *   std::queue, etc...)</li>
+     *   <li>System calls (time, getcwd, etc...)</li>
+     * </ul>
+     * Basically, you may want to define global AOptional&lt;AFatalException&gt; and store the copy of exception in
+     * order to process it outside of the callback.
+     */
     static void setGlobalHandler(Handler globalHandler) {
         handler() = std::move(globalHandler);
     }
 
 private:
     void* mAddress;
+    std::string_view mSignalName;
 
     static Handler& handler();
 };
