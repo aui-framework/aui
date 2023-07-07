@@ -26,19 +26,21 @@
  * @brief An exception that thrown when non-c++ unhandler error occurs (i.e. access violation).
  * @ingroup core
  * @details
- * Your application may handle AFatalException and continue normal execution.
+ * @note AFatalException::setGlobalHandler is supported on all platforms, but translation to AFatalError is not as it
+ * uses compiler-specific flags and hacks. See @ref "Platform support" for further info.
  *
- * @note AFatalException::setGlobalHandler is supported on all platforms, but translation to AFatalError is not. See
- * @ref "Platform support" for further info.
+ * Translation to throwing AFatalException recovers the application from crashed state, providing you ability to handle
+ * such errosr and continue normal application execution. However, still recommended to handle such errors with
+ * setGlobalHandler() to at least save user data.
  *
  * # Platform support
- * | Platform | Translation to throwing AFatalException | setGlobalHandler |
- * |----------|-----------------------------------------|------------------|
- * | Windows  | MSVC                                    | +                |
- * | Linux    | GCC                                     | +                |
- * | macOS    | -                                       | +                |
- * | Android  | GCC                                     | +                |
- * | iOS      | -                                       | +                |
+ * | Platform | Translation to throwing AFatalException | setGlobalHandler() |
+ * |----------|-----------------------------------------|--------------------|
+ * | Windows  | MSVC                                    | +                  |
+ * | Linux    | GCC                                     | +                  |
+ * | macOS    | -                                       | +                  |
+ * | Android  | GCC                                     | +                  |
+ * | iOS      | -                                       | +                  |
  */
 class API_AUI_CORE AFatalException: public AException {
 public:
@@ -53,6 +55,9 @@ public:
 
     AString getMessage() const noexcept override;
 
+    /**
+     * @return Address where does the fatal exception occurred.
+     */
     void* getAddress() const {
         return mAddress;
     }
@@ -71,6 +76,9 @@ public:
      * </ul>
      * Basically, you may want to define global AOptional&lt;AFatalException&gt; and store the copy of exception in
      * order to process it outside of the callback.
+     *
+     * The callback may be used for handling and sending telemetry data (however, be aware of using unrecommended
+     * operations).
      */
     static void setGlobalHandler(Handler globalHandler) {
         handler() = std::move(globalHandler);
