@@ -72,13 +72,17 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
         if (!view->hasFocus()) {
             view->onFocusAcquired();
         }
+        for (auto curView = view.get(); curView->getParent(); curView = curView->getParent()) {
+            auto parent = curView->getParent();
+            if (parent->focusChainTarget().get() == curView) {
+                break;
+            }
+            parent->setFocusChainTarget(curView->weakPtr());
+        }
     }
 }
 
 void ABaseWindow::focusNextView() {
-    if (!mFocusNextViewOnTab)
-        return;
-
     AView* beginPoint = getFocusedView().get();
 
     bool triedToSearchFromBeginning = false;
@@ -149,18 +153,7 @@ void ABaseWindow::focusNextView() {
     }
 
     if (target != this) {
-        if (mFocusedView.lock().get() == target) {
-            return;
-        }
-        if (auto c = mFocusedView.lock()) {
-            c->onFocusLost();
-        }
-        mFocusedView = target->sharedPtr();
-        if (target) {
-            if (!target->hasFocus()) {
-                target->onFocusAcquired();
-            }
-        }
+        setFocusedView(target->sharedPtr());
     }
 }
 

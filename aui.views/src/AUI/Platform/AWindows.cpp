@@ -145,6 +145,13 @@ void AWindow::onFocusLost() {
     }
 }
 
+void AWindow::onKeyDown(AInput::Key key) {
+    ABaseWindow::onKeyDown(key);
+    if (mFocusNextViewOnTab && key == AInput::Key::TAB) {
+        focusNextView();
+    }
+}
+
 void AWindow::onKeyRepeat(AInput::Key key) {
     if (auto v = getFocusedView())
         v->onKeyRepeat(key);
