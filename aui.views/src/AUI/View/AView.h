@@ -230,11 +230,6 @@ protected:
      */
     ASet<AString> mAssNames;
 
-    /**
-     * @brief defines if the next view must be focused on tab button pressed
-     */
-    bool mFocusNextViewOnTab = false;
-
     void requestLayoutUpdate();
 
     /**
@@ -804,10 +799,6 @@ public:
 
     void setDisabled(bool disabled = true) {
         setEnabled(!disabled);
-    }
-
-    void setFocusNextViewOnTab(bool value) {
-        mFocusNextViewOnTab = value;
     }
 
     void updateEnableState();

@@ -120,6 +120,11 @@ protected:
     void createDevtoolsWindow() override;
     float fetchDpiFromSystem() const override;
 
+    /**
+     * @brief defines if the next view must be focused on tab button pressed
+     */
+    bool mFocusNextViewOnTab = false;
+
 public:
     AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
         windowNativePreInit(name, width, height, parent, ws);
@@ -220,7 +225,12 @@ public:
     void onFocusAcquired() override;
     void onFocusLost() override;
 
+    void onKeyDown(AInput::Key key) override;
     void onKeyRepeat(AInput::Key key) override;
+
+    void setFocusNextViewOnTab(bool value) {
+        mFocusNextViewOnTab = value;
+    }
 
     /**
      * Wraps your AView to window.

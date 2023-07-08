@@ -406,9 +406,6 @@ void AView::onScroll(const AScrollEvent& event) {
 void AView::onKeyDown(AInput::Key key)
 {
     emit keyPressed(key);
-    if (key == AInput::TAB && mFocusNextViewOnTab) {
-        AWindow::current()->focusNextView();
-    }
 }
 
 void AView::onKeyRepeat(AInput::Key key)
