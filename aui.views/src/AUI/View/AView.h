@@ -663,8 +663,10 @@ public:
 
     /**
      * @brief Requests focus for this AView.
+     * @param needFocusChainUpdate if true, focus chain for new focused view will be updated
+     * @note if needFocusChainUpdate is false you need to control focus chain targets outside the focus function
      */
-     void focus();
+     void focus(bool needFocusChainUpdate = true);
 
      /**
       * @return Can this view capture focus.
