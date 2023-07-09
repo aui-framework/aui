@@ -178,10 +178,13 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
 
     auto p = getViewAt(event.position);
     if (p && p->isEnabled()) {
-        if (p->capturesFocus()) p->focus();
+        if (p->capturesFocus()) {
+            p->focus(false);
+        }
         auto copy = event;
         copy.position -= p->getPosition();
         p->onPointerPressed(copy);
+        mFocusChainTarget = p;
     }
 }
 

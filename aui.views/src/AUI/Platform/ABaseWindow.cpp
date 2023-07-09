@@ -72,12 +72,15 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
         if (!view->hasFocus()) {
             view->onFocusAcquired();
         }
-        for (auto curView = view.get(); curView->getParent(); curView = curView->getParent()) {
-            auto parent = curView->getParent();
-            if (parent->focusChainTarget().get() == curView) {
-                break;
-            }
-            parent->setFocusChainTarget(curView->weakPtr());
+    }
+}
+
+void ABaseWindow::updateFocusChain() {
+    if (auto focusedView = mFocusedView.lock()) {
+        _weak<AView> focusChainTarget = mFocusedView;
+        for (auto target = focusedView->getParent(); target != nullptr; target = target->getParent()) {
+            target->setFocusChainTarget(std::move(focusChainTarget));
+            focusChainTarget = target->weakPtr();
         }
     }
 }
