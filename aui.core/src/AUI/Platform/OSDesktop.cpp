@@ -123,6 +123,11 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
         args << argv[i];
     }
     int r = -1;
+
+#ifdef AUI_CATCH_UNHANDLED
+    extern void aui_init_signal_handler();
+    aui_init_signal_handler();
+#endif
     try {
         r = aui_entry(std::move(args));
         if (auto el = AThread::current()->getCurrentEventLoop()) {

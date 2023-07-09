@@ -6,13 +6,6 @@ aui_module(aui.core EXPORT aui)
 aui_enable_tests(aui.core)
 
 
-# segfault functionality
-if (NOT MSVC AND AUI_CATCH_UNHANDLED)
-    if (AUI_COMPILER_GCC)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -fnon-call-exceptions")
-    endif ()
-endif()
-
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 if (GLM_INCLUDE_DIR)
     message(STATUS "Using custom GLM_INCLUDE_DIR: ${GLM_INCLUDE_DIR}")
@@ -121,4 +114,11 @@ aui_link(aui.core PUBLIC fmt::fmt-header-only range-v3::range-v3)
 
 if (AUI_PLATFORM_ANDROID)
     target_include_directories(aui.core PUBLIC 3rdparty/cpp_java_glue)
+endif()
+
+# segfault functionality
+if (NOT MSVC AND AUI_CATCH_UNHANDLED)
+    if (AUI_COMPILER_GCC)
+        target_compile_options(aui.core PUBLIC -fexceptions -fnon-call-exceptions)
+    endif ()
 endif()

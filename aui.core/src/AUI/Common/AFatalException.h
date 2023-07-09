@@ -46,20 +46,29 @@ class API_AUI_CORE AFatalException: public AException {
 public:
     using Handler = std::function<void(AFatalException*)>;
 
-    explicit AFatalException(void* address, std::string_view signalName):
-        mAddress(address), mSignalName(signalName) // avoiding unrecommended operations as much as possible
-        {
-        if (handler())
-            handler()(this);
-    }
+    explicit AFatalException(std::string_view signalName, int nativeSignalId);
 
     AString getMessage() const noexcept override;
 
     /**
      * @return Address where does the fatal exception occurred.
      */
-    void* getAddress() const {
+    void* address() const {
         return mAddress;
+    }
+
+    /**
+     * @return Native signal id.
+     */
+    int nativeSignalId() const {
+        return mNativeSignalId;
+    }
+
+    /**
+     * @return Signal name.
+     */
+    std::string_view signalName() const {
+        return mSignalName;
     }
 
     /**
@@ -87,6 +96,7 @@ public:
 private:
     void* mAddress;
     std::string_view mSignalName;
+    int mNativeSignalId;
 
     static Handler& handler();
 };

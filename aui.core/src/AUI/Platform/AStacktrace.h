@@ -50,7 +50,25 @@ public:
             return mPtr;
         }
     };
-public:
+
+    using iterator = AVector<Entry>::iterator;
+
+    AStacktrace(aui::range<iterator> range): mEntries(range.begin(), range.end()) {}
+
+    /**
+     * @brief Tries to find the function pointer in stacktrace and strips stacktrace until function frame.
+     * @param pFunction pointer to function.
+     * @param maxAllowedOffsetInBytes max offset error in bytes.
+     * @return itself (modified)
+     * @details
+     * If stripBeforeFunctionCall fails to find pFunction, it leaves AStacktrace unmodified and returns itself.
+     *
+     * stripBeforeFunctionCall strips the end of stacktrace, excluding the passed function.
+     *
+     * maxAllowedOffsetInBytes is intended to find stack frame, which is not in exact location of function pointer.
+     */
+    aui::range<iterator> stripBeforeFunctionCall(void* pFunction, int maxAllowedOffsetInBytes = 50);
+
     AStacktrace(const AStacktrace&) = default;
     AStacktrace(AStacktrace&&) noexcept = default;
 
@@ -69,6 +87,16 @@ public:
     [[nodiscard]]
     auto end() const noexcept {
         return mEntries.end();
+    }
+
+    [[nodiscard]]
+    auto rbegin() const noexcept {
+        return mEntries.rbegin();
+    }
+
+    [[nodiscard]]
+    auto rend() const noexcept {
+        return mEntries.rend();
     }
 
     /**

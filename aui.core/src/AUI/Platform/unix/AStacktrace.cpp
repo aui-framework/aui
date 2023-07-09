@@ -104,3 +104,14 @@ AStacktrace AStacktrace::capture(unsigned int skipFrames, unsigned maxFrames) no
 }
 
 #endif
+
+
+aui::range<AStacktrace::iterator> AStacktrace::stripBeforeFunctionCall(void* pFunction, int maxAllowedOffsetInBytes) {
+    auto it = std::find_if(rbegin(), rend(), [&](const Entry& e) {
+        return (reinterpret_cast<std::uintptr_t>(e.ptr()) - reinterpret_cast<std::uintptr_t>(pFunction)) <= maxAllowedOffsetInBytes;
+    });
+    if (it != rend()) {
+        return { begin(), (it.base() + 1) };
+    }
+    return *this;
+}

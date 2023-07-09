@@ -66,6 +66,7 @@ static void unblockSignal(int signum __attribute__((__unused__)))
 static void onSignal(int c, siginfo_t * info, void *_p __attribute__ ((__unused__))) {
     const char* signalName = strsignal(c);
     if (!signalName) signalName = "unknown signal";
+    AFatalException e(signalName, c);
 
     ALogger::err("SignalHandler") << "Caught signal: " << signalName << "(" << c << ")\n" << AStacktrace::capture(3);
 
@@ -77,10 +78,8 @@ static void onSignal(int c, siginfo_t * info, void *_p __attribute__ ((__unused_
         case SIGSEGV:
         case SIGABRT:
             unblockSignal(c);
-#if AUI_COMPILER_CLANG
-            AFatalException e(info->si_addr, signalName); // calls setGlobalHandler
-#else
-            throw AFatalException(info->si_addr, signalName);
+#if !AUI_COMPILER_CLANG
+            throw e;
 #endif
     }
 }
@@ -104,43 +103,58 @@ static void __cdecl onSignal(int c) {
             signalName = "abort";
             break;
     }
+    AFatalException e(signalName, c);
 
     ALogger::err("SignalHandler") << "Caught signal: " << signalName << "(" << c << ")\n" << AStacktrace::capture(3);
-    void* addr = 0;
-    auto e = AStacktrace::capture(c == SIGABRT ? 5 : 7, 1).entries();
-    if (!e.empty()) {
-        addr = e.first().ptr();
-    }
 
-    throw AFatalException(addr, signalName);
+    throw e;
 }
 #endif
 
-struct segfault_handler_registrar {
-    segfault_handler_registrar() noexcept {
+void aui_init_signal_handler() {
 #if !AUI_PLATFORM_WIN
-        struct sigaction act;
-        aui::zero(act);
-        act.sa_sigaction = onSignal;
-        sigemptyset (&act.sa_mask);
-        act.sa_flags = SA_SIGINFO|0x4000000;
+    struct sigaction act;
+    aui::zero(act);
+    act.sa_sigaction = onSignal;
+    sigemptyset (&act.sa_mask);
+    act.sa_flags = SA_SIGINFO|0x4000000;
 #ifdef __linux
-        act.sa_restorer = restoreRt;
+    act.sa_restorer = restoreRt;
 #endif
-        //auto r = syscall(SYS_rt_sigaction, SIGSEGV, &act, nullptr, _NSIG / 8);
-        //assert(r == 0);
-        sigaction(SIGILL, &act, nullptr);
-        sigaction(SIGFPE, &act, nullptr);
-        sigaction(SIGSEGV, &act, nullptr);
-        sigaction(SIGABRT, &act, nullptr); // for assertions
+    //auto r = syscall(SYS_rt_sigaction, SIGSEGV, &act, nullptr, _NSIG / 8);
+    //assert(r == 0);
+    sigaction(SIGILL, &act, nullptr);
+    sigaction(SIGFPE, &act, nullptr);
+    sigaction(SIGSEGV, &act, nullptr);
+    sigaction(SIGABRT, &act, nullptr); // for assertions
 #else
 
-        signal(SIGILL, onSignal);
-        signal(SIGFPE, onSignal);
-        signal(SIGSEGV, onSignal);
-        signal(SIGABRT, onSignal); // for assertions
+    signal(SIGILL, onSignal);
+    signal(SIGFPE, onSignal);
+    signal(SIGSEGV, onSignal);
+    signal(SIGABRT, onSignal); // for assertions
 #endif
-    }
-} my_segfault_handler_registrar;
+}
 
 #endif
+
+
+AFatalException::AFatalException(std::string_view signalName, int nativeSignalId) :
+        AException(AStacktrace::capture(3)
+#ifdef AUI_CATCH_UNHANDLED
+    .stripBeforeFunctionCall(reinterpret_cast<void*>(onSignal))
+#endif
+        ),
+        mSignalName(signalName), mNativeSignalId(nativeSignalId) // avoiding unrecommended operations as much as possible
+{
+    mAddress = [&]() -> void* {
+        const auto& e = stacktrace().entries();
+        if (e.empty()) {
+            return nullptr;
+        }
+        return e.first().ptr();
+    }();
+
+    if (handler())
+        handler()(this);
+}

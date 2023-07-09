@@ -37,6 +37,9 @@ public:
 	AException(): mStacktrace(AStacktrace::capture(2)) {
 
     }
+	AException(AStacktrace stacktrace): mStacktrace(std::move(stacktrace)) {
+
+    }
 
 	AException(const AString& message)
 		: AException()

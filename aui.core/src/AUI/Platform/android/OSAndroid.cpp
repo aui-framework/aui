@@ -38,5 +38,9 @@ Java_com_github_aui_android_AuiView_handleInit(JNIEnv *env, jclass clazz, jstrin
     chdir(internalStoragePath);
     env->ReleaseStringUTFChars(internalStoragePathR, internalStoragePath);
 
+#ifdef AUI_CATCH_UNHANDLED
+    extern void aui_init_signal_handler();
+    aui_init_signal_handler();
+#endif
     _gEntry({});
 }
