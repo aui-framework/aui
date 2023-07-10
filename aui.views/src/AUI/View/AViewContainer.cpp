@@ -22,8 +22,11 @@
 
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/AMetric.h"
+#include "AUI/Logging/ALogger.h"
 #include <AUI/Traits/iterators.h>
 
+
+static constexpr auto LOG_TAG = "AViewContainer";
 
 void AViewContainer::drawView(const _<AView>& view) {
     if (view->getVisibility() == Visibility::VISIBLE || view->getVisibility() == Visibility::UNREACHABLE) {
@@ -38,14 +41,26 @@ void AViewContainer::drawView(const _<AView>& view) {
         try {
             view->render();
         }
-        catch (...) {}
+        catch (const AException& e) {
+            ALogger::err(LOG_TAG) << "Unable to render view: " << e;
+            goto fixStencilDepth;
+        }
         try {
             view->postRender();
         }
-        catch (...) {}
+        catch (const AException& e) {
+            ALogger::err(LOG_TAG) << "Unable to post render view: " << e;
+            goto fixStencilDepth;
+        }
 
-        auto currentStencilLevel = Render::getRenderer()->getStencilDepth();
-        assert(currentStencilLevel == prevStencilLevel);
+        {
+            auto currentStencilLevel = Render::getRenderer()->getStencilDepth();
+            assert(currentStencilLevel == prevStencilLevel);
+            return;
+        }
+
+        fixStencilDepth:
+        Render::getRenderer()->setStencilDepth(prevStencilLevel);
     }
 }
 

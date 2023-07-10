@@ -65,6 +65,7 @@ else()
     set(AUI_DEBUG FALSE)
 endif()
 
+# platforms
 if (WIN32)
     set(AUI_PLATFORM_WIN 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS win32)
@@ -111,6 +112,25 @@ if (UNIX)
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS unix)
 else()
     set(AUI_PLATFORM_UNIX 0 CACHE INTERNAL "Platform")
+endif()
+
+# compilers
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(AUI_COMPILER_CLANG 1 CACHE INTERNAL "Compiler")
+else()
+    set(AUI_COMPILER_CLANG 0 CACHE INTERNAL "Compiler")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    set(AUI_COMPILER_GCC 1 CACHE INTERNAL "Compiler")
+else()
+    set(AUI_COMPILER_GCC 0 CACHE INTERNAL "Compiler")
+endif()
+
+if (MSVC)
+    set(AUI_COMPILER_MSVC 1 CACHE INTERNAL "Compiler")
+else()
+    set(AUI_COMPILER_MSVC 0 CACHE INTERNAL "Compiler")
 endif()
 
 set(AUI_EXCLUDE_PLATFORMS ${AUI_EXCLUDE_PLATFORMS} CACHE INTERNAL "")

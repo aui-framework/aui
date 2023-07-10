@@ -4,7 +4,7 @@ message("\n"
         "     # AUI runs in iOS build mode which means that AUI will generate iOS Xcode project.            #\n"
         "     # Define your application with aui_app command.                                               #\n"
         "     # To build an app, run the apps target.                                                       #\n"
-        "     # To develop in Xcode environment, build the apps target and open the gradle project dir      #\n"
+        "     # To develop in Xcode environment, build the apps target and open the Xcode project dir       #\n"
         "     # (path is below).                                                                            #\n"
         "     ###############################################################################################\n"
         )

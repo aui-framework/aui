@@ -220,6 +220,13 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                         _new<AButton>("Cause assertion fail").connect(&AView::clicked, this, [&] {
                             assert(("assertion fail", false));
                         }),
+                        _new<AButton>("Cause access violation").connect(&AView::clicked, this, [&] {
+                            try {
+                                *((int*)0) = 123;
+                            } catch (const AException& e) {
+                                ALogger::info("Example") << "Successfully caught access violation: " << e;
+                            }
+                        }),
                     }
                 },
 
