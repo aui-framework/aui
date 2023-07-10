@@ -18,6 +18,7 @@
 // Created by alex2772 on 1/14/22.
 //
 
+#include <AUI/Platform/AProgramModule.h>
 #include "AFatalException.h"
 #include "AUI/Traits/memory.h"
 #include "AUI/Logging/ALogger.h"
@@ -142,7 +143,11 @@ void aui_init_signal_handler() {
 AFatalException::AFatalException(std::string_view signalName, int nativeSignalId) :
         AException(AStacktrace::capture(3)
 #ifdef AUI_CATCH_UNHANDLED
+#if AUI_PLATFORM_WIN
+    .stripBeforeFunctionCall(reinterpret_cast<void*>(AProgramModule::load("ntdll")->getProcAddressRawPtr("KiUserExceptionDispatcher")), 0x100)
+#else
     .stripBeforeFunctionCall(reinterpret_cast<void*>(onSignal))
+#endif
 #endif
         ),
         mSignalName(signalName), mNativeSignalId(nativeSignalId) // avoiding unrecommended operations as much as possible

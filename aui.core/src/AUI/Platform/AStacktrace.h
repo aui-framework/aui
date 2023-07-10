@@ -21,8 +21,20 @@
 #include <variant>
 #include <optional>
 
+
+/**
+ * @brief Stacktrace consisting of a collection of stack function frames.
+ * @ingroup core
+ * @details
+ * The first element of the collection represents the top of the stack, which is the last function invocation.
+ * Typically, this is the point at which this stacktrace was created (unless skipFrames is zero). The last element of
+ * the collection represents the bottom of the stack (typically entrypoint).
+ */
 class API_AUI_CORE AStacktrace {
 public:
+    /**
+     * @brief Stacktrace entry.
+     */
     class Entry {
         friend class AStacktrace;
     private:
@@ -34,14 +46,23 @@ public:
     public:
         explicit Entry(void* ptr) : mPtr(ptr), mFunctionName(std::nullopt) {}
 
+        /**
+         * @see AStacktrace::resolveSymbolsIfNeeded()
+         */
         const AOptional<AString>& functionName() const noexcept {
             return mFunctionName;
         }
 
+        /**
+         * @see AStacktrace::resolveSymbolsIfNeeded()
+         */
         const AOptional<AString>& fileName() const noexcept {
             return mFileName;
         }
 
+        /**
+         * @see AStacktrace::resolveSymbolsIfNeeded()
+         */
         AOptional<unsigned> lineNumber() const noexcept {
             return mLineNumber;
         }
@@ -72,6 +93,11 @@ public:
     AStacktrace(const AStacktrace&) = default;
     AStacktrace(AStacktrace&&) noexcept = default;
 
+    /**
+     * @brief Invokes function name resolution with function pointers.
+     * @details
+     * Must be called before using AStacktrace::Entry::functionName() and similar functions.
+     */
     void resolveSymbolsIfNeeded() const noexcept;
 
     [[nodiscard]]
