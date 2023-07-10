@@ -307,6 +307,15 @@ function(_auib_try_download_precompiled_binary)
     message(STATUS "Precompiled binary for ${AUI_MODULE_NAME} is not available")
 endfunction()
 
+function(_auib_dump_with_prefix PREFIX PATH)
+    file(READ ${PATH} contents)
+    STRING(REPLACE ";" "\\\\;" contents "${contents}")
+    STRING(REPLACE "\n" ";" contents "${contents}")
+    foreach (line ${contents})
+        message("${PREFIX} ${line}")
+    endforeach ()
+endfunction()
+
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
     if (AUIB_DISABLE)
@@ -691,7 +700,9 @@ function(auib_import AUI_MODULE_NAME URL)
                 execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE STATUS_CODE
-                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log)
+                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log
+                        OUTPUT_QUIET)
+                _auib_dump_with_prefix("[Configuring ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/configure.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(STATUS "Dependency CMake configure failed, clearing dir and trying again...")
@@ -700,7 +711,9 @@ function(auib_import AUI_MODULE_NAME URL)
                     execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                             WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                             RESULT_VARIABLE STATUS_CODE
-                            OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log)
+                            OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log
+                            OUTPUT_QUIET)
+                    _auib_dump_with_prefix("[Configuring ${AUI_MODULE_NAME} (2)]" ${DEP_INSTALL_PREFIX}/configure.log)
                     if (NOT STATUS_CODE EQUAL 0)
                         message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
                     endif()
@@ -720,7 +733,9 @@ function(auib_import AUI_MODULE_NAME URL)
 
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE ERROR_CODE
-                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/build.log)
+                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/build.log
+                        OUTPUT_QUIET)
+                _auib_dump_with_prefix("[Building ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/build.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(FATAL_ERROR "Dependency build failed: ${AUI_MODULE_NAME}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
@@ -734,7 +749,9 @@ function(auib_import AUI_MODULE_NAME URL)
 
                         WORKING_DIRECTORY "${DEP_BINARY_DIR}"
                         RESULT_VARIABLE ERROR_CODE
-                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/install.log)
+                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/install.log
+                        OUTPUT_QUIET)
+                _auib_dump_with_prefix("[Installing ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/install.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
@@ -743,6 +760,9 @@ function(auib_import AUI_MODULE_NAME URL)
                     message(FATAL_ERROR "Dependency failed to install: ${AUI_MODULE_NAME}\nnote: check build logs in ${DEP_INSTALL_PREFIX}")
                 endif()
                 file(TOUCH ${DEP_INSTALLED_FLAG})
+
+                message(STATUS "Cleaning up build directory")
+                file(REMOVE_RECURSE ${DEP_BINARY_DIR})
             endif()
         endif()
     endif()
