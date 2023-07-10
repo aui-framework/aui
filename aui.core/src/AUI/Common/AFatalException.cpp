@@ -140,16 +140,22 @@ void aui_init_signal_handler() {
 #endif
 
 
-AFatalException::AFatalException(std::string_view signalName, int nativeSignalId) :
-        AException(AStacktrace::capture(3)
+static AStacktrace makeFatalExceptionStacktrace() {
+    auto r = AStacktrace::capture(1);
 #ifdef AUI_CATCH_UNHANDLED
 #if AUI_PLATFORM_WIN
-    .stripBeforeFunctionCall(reinterpret_cast<void*>(AProgramModule::load("ntdll")->getProcAddressRawPtr("KiUserExceptionDispatcher")), 0x100)
+    return r.stripBeforeFunctionCall(reinterpret_cast<void*>(AProgramModule::load("ntdll")->getProcAddressRawPtr("KiUserExceptionDispatcher")), 0x100);
 #else
-    .stripBeforeFunctionCall(reinterpret_cast<void*>(onSignal))
+    auto range = r.stripBeforeFunctionCall(reinterpret_cast<void*>(onSignal), 0x100);
+    return decltype(range)(range.begin() + 1, range.end());
 #endif
+#else
+    return r;
 #endif
-        ),
+}
+
+AFatalException::AFatalException(std::string_view signalName, int nativeSignalId) :
+        AException(makeFatalExceptionStacktrace()),
         mSignalName(signalName), mNativeSignalId(nativeSignalId) // avoiding unrecommended operations as much as possible
 {
     mAddress = [&]() -> void* {

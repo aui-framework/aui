@@ -369,7 +369,11 @@ void AWindowManager::notifyProcessMessages() {
 void AWindowManager::loop() {
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
-        xProcessEvent(ev);
+        try {
+            xProcessEvent(ev);
+        } catch (const AException& e) {
+            ALogger::err("AUI") << "Uncaught exception in window proc: " << e;
+        }
     }
 }
 

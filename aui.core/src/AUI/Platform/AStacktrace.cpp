@@ -9,7 +9,7 @@ aui::range<AStacktrace::iterator> AStacktrace::stripBeforeFunctionCall(void* pFu
         return (reinterpret_cast<std::uintptr_t>(e.ptr()) - reinterpret_cast<std::uintptr_t>(pFunction)) <= maxAllowedOffsetInBytes;
     });
     if (it != end()) {
-        return { it + 1, end() };
+        return { std::next(it), end() };
     }
     return *this;
 }
