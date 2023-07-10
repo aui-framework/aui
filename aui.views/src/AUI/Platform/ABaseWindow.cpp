@@ -179,7 +179,6 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
 }
 
 void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
-    *((int*)0) = 0;
     closeOverlappingSurfacesOnClick();
     mPreventClickOnPointerRelease.emplace(false);
     auto focusCopy = mFocusedView.lock();
