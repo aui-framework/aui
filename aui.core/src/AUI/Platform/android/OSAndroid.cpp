@@ -21,6 +21,7 @@
 #include <unistd.h>
 #include <AUI/Common/AByteBuffer.h>
 
+extern void aui_init_signal_handler();
 
 int(*_gEntry)(AStringVector);
 
@@ -39,7 +40,6 @@ Java_com_github_aui_android_AuiView_handleInit(JNIEnv *env, jclass clazz, jstrin
     env->ReleaseStringUTFChars(internalStoragePathR, internalStoragePath);
 
 #ifdef AUI_CATCH_UNHANDLED
-    extern void aui_init_signal_handler();
     aui_init_signal_handler();
 #endif
     _gEntry({});

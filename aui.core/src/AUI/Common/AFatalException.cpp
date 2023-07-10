@@ -81,6 +81,8 @@ static void onSignal(int c, siginfo_t * info, void *_p __attribute__ ((__unused_
             unblockSignal(c);
 #if !AUI_COMPILER_CLANG
             throw e;
+#else
+            std::exit(-1);
 #endif
     }
 }
@@ -142,12 +144,19 @@ void aui_init_signal_handler() {
 
 static AStacktrace makeFatalExceptionStacktrace() {
     auto r = AStacktrace::capture(1);
+    if (r.entries().empty()) {
+        return r;
+    }
 #ifdef AUI_CATCH_UNHANDLED
 #if AUI_PLATFORM_WIN
     return r.stripBeforeFunctionCall(reinterpret_cast<void*>(AProgramModule::load("ntdll")->getProcAddressRawPtr("KiUserExceptionDispatcher")), 0x100);
 #else
     auto range = r.stripBeforeFunctionCall(reinterpret_cast<void*>(onSignal), 0x100);
+#if AUI_PLATFORM_ANDROID
+    return decltype(range)(range.begin() + 2, range.end());
+#else
     return decltype(range)(range.begin() + 1, range.end());
+#endif
 #endif
 #else
     return r;
