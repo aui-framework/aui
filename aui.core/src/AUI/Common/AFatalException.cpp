@@ -154,6 +154,8 @@ static AStacktrace makeFatalExceptionStacktrace() {
     auto range = r.stripBeforeFunctionCall(reinterpret_cast<void*>(onSignal), 0x100);
 #if AUI_PLATFORM_ANDROID
     return decltype(range)(range.begin() + 2, range.end());
+#elif AUI_PLATFORM_APPLE
+    return range;
 #else
     return decltype(range)(range.begin() + 1, range.end());
 #endif
