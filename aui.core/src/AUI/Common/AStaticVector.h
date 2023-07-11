@@ -1,56 +1,222 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+//  AUI Framework - Declarative UI toolkit for modern C++20
+//  Copyright (C) 2020-2023 Alex2772
 //
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+//  Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
-#include <AUI/Core.h>
-#include <vector>
-#include <cassert>
-#include "SharedPtrTypes.h"
-#include <algorithm>
-#include <ostream>
-#include "ASet.h"
-#include <AUI/Traits/containers.h>
-#include <AUI/Traits/iterators.h>
-#include "AContainerPrototypes.h"
-#include "AUI/Traits/concepts.h"
-#include <concepts>
+#include "AVector.h"
+#include "AException.h"
+#include <utility>
 
 
-namespace aui::impl {
-    API_AUI_CORE void outOfBoundsException();
-}
+#define AUI_ASSERT_MY_ITERATOR(it) assert(("foreign iterator", (this->begin() <= it && it <= this->end())))
 
 /**
- * @brief A std::vector with AUI extensions.
+ * @brief Vector-like container up to maxSize elements inplace.
+ * @tparam T stored type
+ * @tparam maxSize maximum vector size
  * @ingroup core
+ *
+ * @details
+ * Vector-like container optimized for the case when it contains up to maxSize in place, avoiding dynamic
+ * allocation. AStaticVector could not contain more than maxSize elements.
  */
-template <class StoredType, class Allocator>
-class AVector: public std::vector<StoredType, Allocator>
-{
-protected:
-	using super = std::vector<StoredType, Allocator>;
-	using self = AVector<StoredType, Allocator>;
-
+template<typename StoredType, std::size_t MaxSize>
+class AStaticVector {
 public:
-    using super::super;
-    using iterator = typename super::iterator;
+    using iterator = StoredType*;
+    using const_iterator = const StoredType*;
+    using self = AStaticVector;
+    using super = AStaticVector;
 
-    template<typename Iterator>
-    explicit AVector(aui::range<Iterator> range): AVector(range.begin(), range.end()) {}
+    constexpr AStaticVector() noexcept {}
+    constexpr ~AStaticVector() {
+        for (auto& v : *this) {
+            v.~StoredType();
+        }
+    }
+
+    [[nodiscard]]
+    constexpr StoredType* data() noexcept {
+        return reinterpret_cast<StoredType*>(&mStorage);
+    }
+    [[nodiscard]]
+    constexpr const StoredType* data() const noexcept {
+        return reinterpret_cast<const StoredType*>(&mStorage);
+    }
+
+    [[nodiscard]]
+    constexpr iterator begin() noexcept {
+        return data();
+    }
+    [[nodiscard]]
+    constexpr const_iterator begin() const noexcept {
+        return data();
+    }
+
+    [[nodiscard]]
+    constexpr iterator end() noexcept {
+        return data() + mSize;
+    }
+
+    [[nodiscard]]
+    constexpr const_iterator end() const noexcept {
+        return data() + mSize;
+    }
+
+    [[nodiscard]]
+    constexpr StoredType& front() noexcept {
+        return *begin();
+    }
+
+    [[nodiscard]]
+    constexpr StoredType& back() noexcept {
+        return *(begin() + (mSize - 1));
+    }
+
+    [[nodiscard]]
+    constexpr const StoredType& front() const noexcept {
+        return *begin();
+    }
+
+    [[nodiscard]]
+    constexpr const StoredType& back() const noexcept {
+        return *(begin() + (mSize - 1));
+    }
+
+    constexpr void push_back(StoredType value) noexcept {
+        assert(("insufficient size in AStaticVector", mSize + 1 <= MaxSize));
+        new (data() + mSize++) StoredType(std::move(value));
+    }
+
+    constexpr void push_front(StoredType value) noexcept {
+        assert(("insufficient size in AStaticVector", mSize + 1 <= MaxSize));
+        insert(begin(), std::move(value));
+    }
+
+    constexpr void pop_back() noexcept {
+        assert(("AStaticVector is empty", mSize > 0));
+        erase(std::prev(end()));
+    }
+    constexpr void pop_front() noexcept {
+        assert(("AStaticVector is empty", mSize > 0));
+        erase(begin());
+    }
+
+    [[nodiscard]]
+    constexpr StoredType& operator[](std::size_t index) noexcept {
+        assert(("out of bounds", index < mSize));
+        return *(data() + index);
+    }
+
+    [[nodiscard]]
+    constexpr StoredType& operator[](std::size_t index) const noexcept {
+        return const_cast<AStaticVector*>(this)->operator[](index);
+    }
+
+    [[nodiscard]]
+    constexpr bool empty() const noexcept {
+        return begin() == end();
+    }
+
+    constexpr void clear() noexcept {
+        for (auto& v : *this) {
+            v.~StoredType();
+        }
+        mSize = 0;
+    }
+
+    [[nodiscard]]
+    constexpr std::size_t size() const noexcept {
+        return mSize;
+    }
+
+    template<typename OtherIterator>
+    constexpr iterator insert(iterator at, OtherIterator begin, OtherIterator end) {
+        auto distance = std::distance(begin, end);
+        assert(("out of bounds", mSize + distance <= MaxSize));
+        AUI_ASSERT_MY_ITERATOR(at);
+
+        aui::range insertTargetRange(at, at + distance);
+
+        // shift elements to the right
+        aui::range shiftRange(std::prev(insertTargetRange.end()), this->end());
+        if (!shiftRange.empty()) {
+            auto shiftFrom = std::prev(shiftRange.end());
+            auto shiftTo = shiftFrom + distance;
+            for (; shiftFrom >= shiftRange.begin(); --shiftFrom, --shiftTo) {
+                if (shiftTo >= this->end()) {
+                    new (shiftTo) StoredType(std::move(*shiftFrom));
+                } else {
+                    *shiftTo = std::move(*shiftFrom);
+                }
+            }
+        }
+
+        auto it = at;
+        for (; it < this->end() && begin != end; ++it, ++begin) {
+            *it = *begin;
+        }
+
+        for (; begin != end; ++it, ++begin) {
+            new (it) StoredType(*begin);
+        }
+
+        mSize += distance;
+        return at;
+    }
+
+    constexpr iterator insert(iterator at, StoredType value) {
+        AUI_ASSERT_MY_ITERATOR(at);
+        return insert(at, std::make_move_iterator(&value), std::make_move_iterator(&value + 1));
+    }
+
+    constexpr iterator erase(iterator at) {
+        return erase(at, std::next(at));
+    }
+
+    constexpr iterator erase(iterator begin, iterator end) {
+        AUI_ASSERT_MY_ITERATOR(begin);
+        AUI_ASSERT_MY_ITERATOR(end);
+
+        if (begin == end) {
+            return std::prev(this->end());
+        }
+
+        auto eraseIt = begin;
+        auto remainingValueIt = end;
+
+        // move values to the left of erase range
+        for (; remainingValueIt != this->end(); ++eraseIt, ++remainingValueIt) {
+            *eraseIt = std::move(*remainingValueIt);
+        }
+        // destruct remaining values
+        std::size_t destructedValuesCounter = 0;
+        for (; eraseIt != this->end(); ++eraseIt, ++destructedValuesCounter) {
+            eraseIt->~StoredType();
+        }
+        mSize -= destructedValuesCounter;
+
+        return begin;
+    }
+
+    void reserve(std::size_t) {
+        // does nothing - just for std::vector compatibility
+    }
+
+    // AUI extensions - see AVector for reference
 
 
     /**
@@ -302,16 +468,6 @@ public:
         super::erase(std::remove_if(super::begin(), super::end(), std::forward<Predicate>(predicate)), super::end());
     }
 
-    template<aui::mapper<std::size_t, StoredType> Callable>
-    inline static AVector<StoredType, Allocator> generate(size_t size, Callable&& callable) noexcept {
-        AVector<StoredType, Allocator> s;
-        s.reserve(size);
-        for (size_t i = 0; i < size; ++i) {
-            s << callable(i);
-        }
-        return s;
-    }
-
     ASet<StoredType> toSet() const noexcept {
         return ASet<StoredType>(super::begin(), super::end());
     }
@@ -341,14 +497,14 @@ public:
     template<aui::invocable<const StoredType&> UnaryOperation>
     [[nodiscard]]
     auto toMap(UnaryOperation&& transformer) const -> AMap<decltype(transformer(std::declval<StoredType>()).first),
-                                                           decltype(transformer(std::declval<StoredType>()).second)> {
+            decltype(transformer(std::declval<StoredType>()).second)> {
         return aui::container::to_map(super::begin(), super::end(), transformer);
     }
 
     template<aui::invocable<StoredType&> UnaryOperation>
     [[nodiscard]]
     auto toMap(UnaryOperation&& transformer) -> AMap<decltype(transformer(std::declval<StoredType>()).first),
-                                                     decltype(transformer(std::declval<StoredType>()).second)> {
+            decltype(transformer(std::declval<StoredType>()).second)> {
         return aui::container::to_map(super::begin(), super::end(), transformer);
     }
 
@@ -363,21 +519,9 @@ public:
         }
         return result;
     }
+
+
+private:
+    std::size_t mSize = 0;
+    std::aligned_storage_t<sizeof(StoredType) * MaxSize, alignof(StoredType)> mStorage;
 };
-
-
-template<typename T>
-inline std::ostream& operator<<(std::ostream& o, const AVector<T>& v) {
-    if (v.empty()) {
-        o << "[empty]";
-    } else {
-        o << "[ " << v.first();
-        for (auto it = v.begin() + 1; it != v.end(); ++it) {
-            o << ", " << *it;
-        }
-        o << " ]";
-    }
-
-    return o;
-}
-
