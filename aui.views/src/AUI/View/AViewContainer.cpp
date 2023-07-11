@@ -40,27 +40,16 @@ void AViewContainer::drawView(const _<AView>& view) {
 
         try {
             view->render();
-        }
-        catch (const AException& e) {
-            ALogger::err(LOG_TAG) << "Unable to render view: " << e;
-            goto fixStencilDepth;
-        }
-        try {
             view->postRender();
         }
         catch (const AException& e) {
-            ALogger::err(LOG_TAG) << "Unable to post render view: " << e;
-            goto fixStencilDepth;
-        }
-
-        {
-            auto currentStencilLevel = Render::getRenderer()->getStencilDepth();
-            assert(currentStencilLevel == prevStencilLevel);
+            ALogger::err(LOG_TAG) << "Unable to render view: " << e;
+            Render::getRenderer()->setStencilDepth(prevStencilLevel);
             return;
         }
 
-        fixStencilDepth:
-        Render::getRenderer()->setStencilDepth(prevStencilLevel);
+        auto currentStencilLevel = Render::getRenderer()->getStencilDepth();
+        assert(currentStencilLevel == prevStencilLevel);
     }
 }
 
