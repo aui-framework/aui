@@ -18,6 +18,8 @@
 
 #include <glm/glm.hpp>
 
+#include "APointerIndex.h"
+
 /**
  * @brief Pointing method press event.
  */
@@ -28,9 +30,9 @@ struct APointerPressedEvent {
     glm::ivec2 position;
 
     /**
-     * @brief Which button of the pointing device is triggered the event (AInput::LBUTTON if not present).
+     * @brief Which button of the pointing device is triggered the event (AInput::LBUTTON if not present) or finger.
      */
-    AInput::Key button = AInput::LBUTTON;
+    APointerIndex pointerIndex;
 };
 
 

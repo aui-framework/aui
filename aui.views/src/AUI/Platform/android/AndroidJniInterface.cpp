@@ -57,7 +57,7 @@ Java_com_github_aui_android_AuiView_handleMouseButtonDown(JNIEnv *env, jclass cl
                                                           jint y) {
     scrollPrevValue = gestureOriginPos = {x, y};
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onPointerPressed({{x, y}, AInput::LBUTTON});
+        AUI_NULLSAFE(AWindow::current())->onPointerPressed({{x, y}, APointerIndex::finger(0)});
     });
 }
 extern "C"
@@ -65,7 +65,7 @@ JNIEXPORT void JNICALL
 Java_com_github_aui_android_AuiView_handleMouseButtonUp(JNIEnv *env, jclass clazz, jint x,
                                                         jint y) {
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onPointerReleased({{x, y}, AInput::LBUTTON});
+        AUI_NULLSAFE(AWindow::current())->onPointerReleased({{x, y}, APointerIndex::finger(0)});
     });
 }
 

@@ -139,7 +139,7 @@ void AViewContainer::onPointerMove(glm::ivec2 pos) {
     AView::onPointerMove(pos);
 
     auto viewUnderCursor = getViewAt(pos);
-    auto targetView = isMousePressed() ? mFocusChainTarget.lock() : viewUnderCursor;
+    auto targetView = isPressed() ? mFocusChainTarget.lock() : viewUnderCursor;
 
     if (targetView) {
         auto mousePos = pos - targetView->getPosition();
@@ -196,7 +196,7 @@ void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
     AView::onPointerReleased(event);
     auto chainTarget = mFocusChainTarget.lock();
 
-    if (chainTarget && chainTarget->isEnabled() && chainTarget->isMousePressed()) {
+    if (chainTarget && chainTarget->isEnabled() && chainTarget->isPressed()) {
         auto copy = event;
         copy.position -= chainTarget->getPosition();
         copy.triggerClick &= getViewAt(event.position) == chainTarget;

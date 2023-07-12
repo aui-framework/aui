@@ -40,10 +40,13 @@
 template<typename StoredType>
 class ADynamicVector {
 public:
-    using iterator = StoredType*;
-    using const_iterator = const StoredType*;
     using self = ADynamicVector;
     using super = ADynamicVector;
+    using iterator = StoredType*;
+    using const_iterator = const StoredType*;
+    using reference = StoredType&;
+    using const_reference = const StoredType&;
+    using value = StoredType;
 
     constexpr ADynamicVector() noexcept {}
     constexpr ADynamicVector(const ADynamicVector& rhs): ADynamicVector() {

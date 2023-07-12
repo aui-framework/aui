@@ -36,10 +36,13 @@
 template<typename StoredType, std::size_t MaxSize>
 class AStaticVector {
 public:
-    using iterator = StoredType*;
-    using const_iterator = const StoredType*;
     using self = AStaticVector;
     using super = AStaticVector;
+    using iterator = StoredType*;
+    using const_iterator = const StoredType*;
+    using reference = StoredType&;
+    using const_reference = const StoredType&;
+    using value = StoredType;
 
     constexpr AStaticVector() noexcept: mBegin(reinterpret_cast<StoredType*>(&mStorage)), mEnd(mBegin) {}
     constexpr AStaticVector(const AStaticVector& rhs): AStaticVector() {

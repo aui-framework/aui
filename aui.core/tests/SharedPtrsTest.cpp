@@ -109,9 +109,9 @@ TEST(SharedPtrs, ConnectBuilder) {
 }
 
 TEST(SharedPtrs, Performance1) {
-    repeat (1'000) {
+    AUI_REPEAT (1'000) {
         AByteBuffer buffer;
-        repeat (10'000) {
+        AUI_REPEAT (10'000) {
             buffer << uint8_t(228);
         }
         _<AByteBuffer> shared_ptr = _new<AByteBuffer>(buffer);

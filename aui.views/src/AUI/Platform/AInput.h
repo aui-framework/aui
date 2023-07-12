@@ -23,7 +23,12 @@ namespace AInput
 	enum Key {
         /* Based on SFML */
 		UNKNOWN = -1, ///< Unhandled key
-		A = 0,        ///< The A key
+        LBUTTON = 0,      /// Left Mouse Button
+        CBUTTON = 1,      /// Center Mouse Button
+        RBUTTON = 2,      /// Right Mouse Button
+        /* check APointerIndex for index values */
+
+		A = 'A',        ///< The A key
 		B,            ///< The B key
 		C,            ///< The C key
 		D,            ///< The D key
@@ -124,9 +129,6 @@ namespace AInput
 		F14,          ///< The F14 key
 		F15,          ///< The F15 key
 		PAUSE,        ///< The Pause key
-		LBUTTON,      /// Left Mouse Button
-		CBUTTON,      /// Center Mouse Button
-		RBUTTON,      /// Right Mouse Button
 		KEYCOUNT      ///< Keep last -- the total number of keyboard keys
 	};
 	API_AUI_VIEWS Key fromNative(int w);

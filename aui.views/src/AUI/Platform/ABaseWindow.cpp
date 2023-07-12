@@ -194,21 +194,21 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     using namespace std::chrono;
     using namespace std::chrono_literals;
     static milliseconds lastButtonPressedTime = 0ms;
-    static AInput::Key lastButtonPressed = AInput::UNKNOWN;
+    static AOptional<APointerIndex> lastButtonPressed;
     static glm::ivec2 lastPosition = {0, 0};
 
     auto now = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
     auto delta = now - lastButtonPressedTime;
     if (delta < 500ms && lastPosition == event.position) {
-        if (lastButtonPressed == event.button) {
+        if (lastButtonPressed == event.pointerIndex) {
             onPointerDoubleClicked(event);
 
             lastButtonPressedTime = 0ms;
         }
     } else {
         lastButtonPressedTime = now;
-        lastButtonPressed = event.button;
+        lastButtonPressed = event.pointerIndex;
         lastPosition = event.position;
     }
     AMenu::close();
