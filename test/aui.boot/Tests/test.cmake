@@ -9,7 +9,7 @@ execute_process(COMMAND ${CMAKE_COMMAND} --build . --target Tests
         RESULT_VARIABLE _r)
 
 if (NOT _r STREQUAL "0")
-    message(FATAL_ERROR "Test program failed")
+    message(FATAL_ERROR "Build failed")
 endif()
 
 find_program(_test_project Tests PATHS b/bin b/bin/Debug REQUIRED)
