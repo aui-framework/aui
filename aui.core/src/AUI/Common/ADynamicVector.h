@@ -50,7 +50,7 @@ public:
         insert(mBegin, rhs.begin(), rhs.end());
     }
     constexpr ADynamicVector(ADynamicVector&& rhs) noexcept: ADynamicVector() {
-        insert(mBegin, std::make_move_iterator(rhs.begin()), std::make_move_iterator(rhs.end()));
+        operator=(std::move(rhs));
     }
     constexpr ~ADynamicVector() {
         deallocate();
@@ -168,7 +168,7 @@ public:
             return aui::container::vector_impl::insert_no_growth(mEnd, at, begin, end);
         }
         ADynamicVector temp;
-        temp.reserve(ceilPower2(distance + size()));
+        temp.reserve(aui::container::vector_impl::ceilPower2(distance + size()));
         aui::container::vector_impl::insert_no_growth(temp.mEnd, temp.mEnd,
                                                       std::make_move_iterator(mBegin), std::make_move_iterator(at));
 
@@ -540,39 +540,7 @@ public:
     }
 
 
-private:
     iterator mBegin = nullptr;
     iterator mEnd = nullptr;
     iterator mBufferEnd = nullptr;
-
-
-    /**
-     * @brief Corrects size so it's aligned to power of 2.
-     */
-    static constexpr std::size_t ceilPower2(std::size_t size) {
-        switch (size) {
-            case 0: return 0;
-            case 1: return 1;
-            default: break;
-        }
-
-        size -= 1;
-        std::size_t power = 1;
-        while (size != 0) {
-            size >>= 1;
-
-            if (size == 0) {
-                break;
-            }
-            ++power;
-        }
-        return std::size_t(1) << power;
-    }
-
-    static_assert(ceilPower2(228) == 256, "check ceilPower2");
-    static_assert(ceilPower2(256) == 256, "check ceilPower2");
-    static_assert(ceilPower2(512) == 512, "check ceilPower2");
-    static_assert(ceilPower2(0) == 0, "check ceilPower2");
-    static_assert(ceilPower2(1) == 1, "check ceilPower2");
-    static_assert(ceilPower2(2) == 2, "check ceilPower2");
 };

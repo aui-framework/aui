@@ -33,6 +33,37 @@
 namespace aui::container {
 
     namespace vector_impl { // basic vector implementation
+
+        /**
+         * @brief Corrects size so it's aligned to power of 2.
+         */
+        static constexpr std::size_t ceilPower2(std::size_t size) {
+            switch (size) {
+                case 0: return 0;
+                case 1: return 1;
+                default: break;
+            }
+
+            size -= 1;
+            std::size_t power = 1;
+            while (size != 0) {
+                size >>= 1;
+
+                if (size == 0) {
+                    break;
+                }
+                ++power;
+            }
+            return std::size_t(1) << power;
+        }
+
+        static_assert(ceilPower2(228) == 256, "check ceilPower2");
+        static_assert(ceilPower2(256) == 256, "check ceilPower2");
+        static_assert(ceilPower2(512) == 512, "check ceilPower2");
+        static_assert(ceilPower2(0) == 0, "check ceilPower2");
+        static_assert(ceilPower2(1) == 1, "check ceilPower2");
+        static_assert(ceilPower2(2) == 2, "check ceilPower2");
+
         template<typename T, typename OtherIterator>
         auto insert_no_growth(T*& vectorEnd, T* at, OtherIterator begin, OtherIterator end) {
             auto distance = std::distance(begin, end);

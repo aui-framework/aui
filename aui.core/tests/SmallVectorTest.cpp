@@ -19,42 +19,152 @@
 #include <AUI/Common/ASmallVector.h>
 
 class SmallVector: public ::testing::Test {
-protected:
-    ASmallVector<std::unique_ptr<int>, 4> mVector;
 };
 
 
-TEST_F(SmallVector, Hack) {
-    struct VectorHack {
-        int* v0;
-        int* v1;
-        int* v2;
-        int* v3;
-        int* v4;
-        int* v5;
-        std::size_t size;
-    };
-    std::vector<int> data = { 1, 2, 3, 4, 5 };
+TEST_F(SmallVector, PushBack) {
+    ASmallVector<std::unique_ptr<int>, 2> vector;
 
-    auto p = reinterpret_cast<VectorHack*>(&data);
-    auto v = std::distance(p->v0, p->v1);
-    EXPECT_EQ(p->size, 5);
+    for (int i = 0; i < 4; ++i) {
+        vector.push_back(std::make_unique<int>(i));
+    }
 
-    data.pop_back();
-    EXPECT_EQ(p->size, 4);
+    EXPECT_EQ(*vector[0], 0);
+    EXPECT_EQ(*vector[1], 1);
+    EXPECT_EQ(*vector[2], 2);
+    EXPECT_EQ(*vector[3], 3);
 
-    data.pop_back();
-    EXPECT_EQ(p->size, 3);
 
-    data.pop_back();
-    EXPECT_EQ(p->size, 2);
+    vector.pop_back();
+    EXPECT_DEATH({ vector[3];}, "");
 
-    data.pop_back();
-    EXPECT_EQ(p->size, 1);
+    vector.pop_back();
+    vector.pop_back();
+    vector.pop_back();
 
-    data.pop_back();
-    EXPECT_EQ(p->size, 0);
+    EXPECT_DEATH({ vector.pop_back(); }, "");
 }
 
-TEST_F(SmallVector, PushBack) {
+TEST_F(SmallVector, Deallocation) {
+    _weak<int> v0, v1, v2, v3;
+    {
+        ASmallVector<_<int>, 2> vector;
+        for (int i = 0; i < 4; ++i) {
+            vector.push_back(std::make_shared<int>(i));
+        }
+
+        v0 = vector[0].weak();
+        v1 = vector[1].weak();
+        v2 = vector[2].weak();
+        v3 = vector[3].weak();
+
+        vector.pop_back();
+        EXPECT_EQ(vector.size(), 3);
+        EXPECT_FALSE(v0.expired());
+        EXPECT_FALSE(v1.expired());
+        EXPECT_FALSE(v2.expired());
+        EXPECT_TRUE(v3.expired());
+    }
+    EXPECT_TRUE(v0.expired());
+    EXPECT_TRUE(v1.expired());
+    EXPECT_TRUE(v2.expired());
+    EXPECT_TRUE(v3.expired());
+}
+
+
+TEST_F(SmallVector, PopFront) {
+    _weak<int> v0, v1, v2, v3;
+    {
+        ASmallVector<_<int>, 2> vector;
+        for (int i = 0; i < 4; ++i) {
+            vector.push_back(std::make_shared<int>(i));
+        }
+
+        v0 = vector[0].weak();
+        v1 = vector[1].weak();
+        v2 = vector[2].weak();
+        v3 = vector[3].weak();
+
+        vector.pop_front();
+        EXPECT_EQ(vector.size(), 3);
+        EXPECT_TRUE(v0.expired());
+        EXPECT_FALSE(v1.expired());
+        EXPECT_FALSE(v2.expired());
+        EXPECT_FALSE(v3.expired());
+
+        EXPECT_EQ(*vector[0], 1);
+        EXPECT_EQ(*vector[1], 2);
+        EXPECT_EQ(*vector[2], 3);
+    }
+    EXPECT_TRUE(v0.expired());
+    EXPECT_TRUE(v1.expired());
+    EXPECT_TRUE(v2.expired());
+    EXPECT_TRUE(v3.expired());
+}
+
+
+TEST_F(SmallVector, InsertMiddle) {
+    ASmallVector<std::unique_ptr<int>, 2> vector;
+
+    for (int i = 0; i < 3; ++i) {
+        vector.push_back(std::make_unique<int>(i));
+    }
+
+    vector.insert(vector.begin() + 1, std::make_unique<int>(228));
+
+    EXPECT_EQ(*vector[0], 0);
+    EXPECT_EQ(*vector[1], 228);
+    EXPECT_EQ(*vector[2], 1);
+    EXPECT_EQ(*vector[3], 2);
+}
+
+TEST_F(SmallVector, InsertEnd) {
+    ASmallVector<std::unique_ptr<int>, 2> vector;
+
+    for (int i = 0; i < 3; ++i) {
+        vector.push_back(std::make_unique<int>(i));
+    }
+
+    vector.insert(vector.end(), std::make_unique<int>(228));
+
+    EXPECT_EQ(*vector[0], 0);
+    EXPECT_EQ(*vector[1], 1);
+    EXPECT_EQ(*vector[2], 2);
+    EXPECT_EQ(*vector[3], 228);
+}
+
+
+TEST_F(SmallVector, PushFront) {
+    ASmallVector<std::unique_ptr<int>, 2> vector;
+
+    for (int i = 0; i < 3; ++i) {
+        vector.push_back(std::make_unique<int>(i));
+    }
+
+    vector.push_front(std::make_unique<int>(228));
+
+    EXPECT_EQ(*vector[0], 228);
+    EXPECT_EQ(*vector[1], 0);
+    EXPECT_EQ(*vector[2], 1);
+    EXPECT_EQ(*vector[3], 2);
+}
+
+TEST_F(SmallVector, EraseFromMiddle) {
+    ASmallVector<std::unique_ptr<int>, 2> vector;
+
+    for (int i = 0; i < 4; ++i) {
+        vector.push_back(std::make_unique<int>(i));
+    }
+
+    EXPECT_EQ(*vector[0], 0);
+    EXPECT_EQ(*vector[1], 1);
+    EXPECT_EQ(*vector[2], 2);
+    EXPECT_EQ(*vector[3], 3);
+
+    vector.erase(vector.begin() + 1);
+
+    EXPECT_EQ(vector.size(), 3);
+    EXPECT_EQ(*vector[0], 0);
+    EXPECT_EQ(*vector[1], 2);
+    EXPECT_EQ(*vector[2], 3);
 }

@@ -42,44 +42,44 @@ protected:
     using DynamicVector = ADynamicVector<StoredType>;
 
 public:
-    /*
+    using iterator = StoredType*;
+    using const_iterator = const StoredType*;
+
     ASmallVector() noexcept {
-        new (inplace()) StaticVector();
+        new (&mBase.inplace) StaticVector();
     }
 
     ~ASmallVector() noexcept {
-        if (isInplaceAllocated()) {
-            inplace()->~StaticVector();
-        }
+        deallocate();
     }
 
 
     [[nodiscard]]
     constexpr StoredType* data() noexcept {
-        return reinterpret_cast<StoredType*>(&mStorage);
+        return reinterpret_cast<StoredType*>(mBase.common.begin);
     }
     [[nodiscard]]
     constexpr const StoredType* data() const noexcept {
-        return reinterpret_cast<const StoredType*>(&mStorage);
+        return reinterpret_cast<const StoredType*>(mBase.common.begin);
     }
 
     [[nodiscard]]
     constexpr iterator begin() noexcept {
-        return data();
+        return mBase.common.begin;
     }
     [[nodiscard]]
     constexpr const_iterator begin() const noexcept {
-        return data();
+        return mBase.common.begin;
     }
 
     [[nodiscard]]
     constexpr iterator end() noexcept {
-        return data() + mSize;
+        return mBase.common.end;
     }
 
     [[nodiscard]]
     constexpr const_iterator end() const noexcept {
-        return data() + mSize;
+        return mBase.common.end;
     }
 
     [[nodiscard]]
@@ -89,7 +89,7 @@ public:
 
     [[nodiscard]]
     constexpr StoredType& back() noexcept {
-        return *(begin() + (mSize - 1));
+        return *(begin() + (size() - 1));
     }
 
     [[nodiscard]]
@@ -99,37 +99,35 @@ public:
 
     [[nodiscard]]
     constexpr const StoredType& back() const noexcept {
-        return *(begin() + (mSize - 1));
+        return *(begin() + (size() - 1));
     }
 
     constexpr void push_back(StoredType value) noexcept {
-        assert(("insufficient size in AStaticVector", mSize + 1 <= MaxSize));
-        new (data() + mSize++) StoredType(std::move(value));
+        insert(end(), std::move(value));
     }
 
     constexpr void push_front(StoredType value) noexcept {
-        assert(("insufficient size in AStaticVector", mSize + 1 <= MaxSize));
         insert(begin(), std::move(value));
     }
 
     constexpr void pop_back() noexcept {
-        assert(("AStaticVector is empty", mSize > 0));
+        assert(("ASmallVector is empty", size() > 0));
         erase(std::prev(end()));
     }
     constexpr void pop_front() noexcept {
-        assert(("AStaticVector is empty", mSize > 0));
+        assert(("ASmallVector is empty", size() > 0));
         erase(begin());
     }
 
     [[nodiscard]]
     constexpr StoredType& operator[](std::size_t index) noexcept {
-        assert(("out of bounds", index < mSize));
+        assert(("out of bounds", index < size()));
         return *(data() + index);
     }
 
     [[nodiscard]]
     constexpr StoredType& operator[](std::size_t index) const noexcept {
-        return const_cast<AStaticVector*>(this)->operator[](index);
+        return const_cast<ASmallVector*>(this)->operator[](index);
     }
 
     [[nodiscard]]
@@ -138,18 +136,16 @@ public:
     }
 
     constexpr void clear() noexcept {
-        for (auto& v : *this) {
-            v.~StoredType();
-        }
-        mSize = 0;
+        deallocate();
+        new (inplace()) StaticVector();
     }
-*/
+
     /**
      * @return Size of the container.
      */
     [[nodiscard]]
     std::size_t size() const noexcept {
-        return mBase.safe.validElementCount;
+        return std::distance(begin(), end());
     }
 
 
@@ -158,19 +154,97 @@ public:
         return size() <= StaticVectorSize;
     }
 
-private:
 
-    StaticVector* inplace() {
-        return reinterpret_cast<StaticVector*>(&mBase.inplace);
+    template<typename OtherIterator>
+    constexpr iterator insert(iterator at, OtherIterator begin, OtherIterator end) {
+        AUI_ASSERT_MY_ITERATOR(at);
+        auto distance = std::distance(begin, end);
+
+        if (distance + size() <= StaticVectorSize) {
+            return inplace()->insert(at, begin, end);
+        }
+        if (!isInplaceAllocated()) {
+            return dynamic()->insert(at, begin, end);
+        }
+
+        // switch from static to dynamic
+        DynamicVector temp;
+        temp.reserve(aui::container::vector_impl::ceilPower2(distance + size()));
+
+        aui::container::vector_impl::insert_no_growth(temp.mEnd, temp.mEnd,
+                                                      std::make_move_iterator(this->begin()), std::make_move_iterator(at));
+
+        auto result = aui::container::vector_impl::insert_no_growth(temp.mEnd, temp.mEnd,
+                                                                    begin, end);
+
+        aui::container::vector_impl::insert_no_growth(temp.mEnd, temp.mEnd,
+                                                      std::make_move_iterator(at), std::make_move_iterator(this->end()));
+
+        inplace()->~StaticVector();
+        new (&mBase.dynamic) DynamicVector(std::move(temp));
+
+        return result;
     }
 
+    constexpr iterator erase(iterator begin, iterator end) noexcept {
+        AUI_ASSERT_MY_ITERATOR(begin);
+        AUI_ASSERT_MY_ITERATOR(end);
+
+        if (isInplaceAllocated()) {
+            return inplace()->erase(begin, end);
+        }
+
+        if (size() - std::distance(begin, end) > StaticVectorSize) {
+            return dynamic()->erase(begin, end);
+        }
+
+        auto index = std::distance(this->begin(), begin);
+
+        // switch from dynamic to static
+        auto temp = std::move(*dynamic());
+        temp.erase(begin, end);
+        new (inplace()) StaticVector();
+        inplace()->insert(inplace()->end(), std::make_move_iterator(temp.begin()), std::make_move_iterator(temp.end()));
+        return this->begin() + index;
+    }
+
+    constexpr iterator insert(iterator at, StoredType value) {
+        AUI_ASSERT_MY_ITERATOR(at);
+        return insert(at, std::make_move_iterator(&value), std::make_move_iterator(&value + 1));
+    }
+
+    constexpr iterator erase(iterator at) {
+        return erase(at, std::next(at));
+    }
+
+
+private:
     union {
         struct {
             StoredType* begin;
             StoredType* end;
-        } safe;
+        } common;
 
         std::aligned_storage_t<sizeof(StaticVector), alignof(StaticVector)> inplace;
         std::aligned_storage_t<sizeof(DynamicVector), alignof(DynamicVector)> dynamic;
     } mBase;
+
+
+    StaticVector* inplace() {
+        assert(isInplaceAllocated());
+        return reinterpret_cast<StaticVector*>(&mBase.inplace);
+    }
+
+    DynamicVector * dynamic() {
+        assert(!isInplaceAllocated());
+        return reinterpret_cast<DynamicVector*>(&mBase.dynamic);
+    }
+
+    void deallocate() {
+        if (isInplaceAllocated()) {
+            inplace()->~StaticVector();
+        } else {
+            dynamic()->~DynamicVector();
+        }
+    }
 };
