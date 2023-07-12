@@ -16,42 +16,44 @@
 
 #pragma once
 
+#include <utility>
+#include <cmath>
+
+#include <glm/glm.hpp>
+#include <glm/gtc/integer.hpp>
+
 #include "AVector.h"
 #include "AException.h"
-#include <utility>
 
 
 #define AUI_ASSERT_MY_ITERATOR(it) assert(("foreign iterator", (this->begin() <= it && it <= this->end())))
 
 /**
- * @brief Vector-like container up to maxSize elements inplace.
+ * @brief Vector implementation for ASmallVector.
  * @tparam T stored type
- * @tparam maxSize maximum vector size
- * @ingroup core
  *
  * @details
- * Vector-like container optimized for the case when it contains up to maxSize in place, avoiding dynamic
- * allocation. AStaticVector could not contain more than maxSize elements.
+ * @note
+ * This vector implementation is indented to use only by ASmallVector. If it's not your case, consider using AVector
+ * instead.
  */
-template<typename StoredType, std::size_t MaxSize>
-class AStaticVector {
+template<typename StoredType>
+class ADynamicVector {
 public:
     using iterator = StoredType*;
     using const_iterator = const StoredType*;
-    using self = AStaticVector;
-    using super = AStaticVector;
+    using self = ADynamicVector;
+    using super = ADynamicVector;
 
-    constexpr AStaticVector() noexcept: mBegin(reinterpret_cast<StoredType*>(&mStorage)), mEnd(mBegin) {}
-    constexpr AStaticVector(const AStaticVector& rhs): AStaticVector() {
+    constexpr ADynamicVector() noexcept {}
+    constexpr ADynamicVector(const ADynamicVector& rhs): ADynamicVector() {
         insert(mBegin, rhs.begin(), rhs.end());
     }
-    constexpr AStaticVector(AStaticVector&& rhs) noexcept: AStaticVector() {
+    constexpr ADynamicVector(ADynamicVector&& rhs) noexcept: ADynamicVector() {
         insert(mBegin, std::make_move_iterator(rhs.begin()), std::make_move_iterator(rhs.end()));
     }
-    constexpr ~AStaticVector() {
-        for (auto& v : *this) {
-            v.~StoredType();
-        }
+    constexpr ~ADynamicVector() {
+        deallocate();
     }
 
     [[nodiscard]]
@@ -103,21 +105,19 @@ public:
     }
 
     constexpr void push_back(StoredType value) noexcept {
-        assert(("insufficient size in AStaticVector", size() + 1 <= MaxSize));
-        new (mEnd++) StoredType(std::move(value));
+        insert(end(), std::move(value));
     }
 
     constexpr void push_front(StoredType value) noexcept {
-        assert(("insufficient size in AStaticVector", size() + 1 <= MaxSize));
         insert(begin(), std::move(value));
     }
 
     constexpr void pop_back() noexcept {
-        assert(("AStaticVector is empty", size() > 0));
+        assert(("ADynamicVector is empty", size() > 0));
         erase(std::prev(end()));
     }
     constexpr void pop_front() noexcept {
-        assert(("AStaticVector is empty", size() > 0));
+        assert(("ADynamicVector is empty", size() > 0));
         erase(begin());
     }
 
@@ -129,7 +129,7 @@ public:
 
     [[nodiscard]]
     constexpr StoredType& operator[](std::size_t index) const noexcept {
-        return const_cast<AStaticVector*>(this)->operator[](index);
+        return const_cast<ADynamicVector*>(this)->operator[](index);
     }
 
     [[nodiscard]]
@@ -138,10 +138,15 @@ public:
     }
 
     constexpr void clear() noexcept {
+        deallocate();
+        mBegin = mEnd = mBufferEnd = nullptr;
+    }
+
+    void deallocate() {
         for (auto& v : *this) {
             v.~StoredType();
         }
-        mEnd = mBegin;
+        operator delete[](mBegin);
     }
 
     [[nodiscard]]
@@ -149,13 +154,33 @@ public:
         return mEnd - mBegin;
     }
 
+    [[nodiscard]]
+    constexpr std::size_t reserved() const noexcept {
+        return mBufferEnd - mBegin;
+    }
+
     template<typename OtherIterator>
     constexpr iterator insert(iterator at, OtherIterator begin, OtherIterator end) {
         AUI_ASSERT_MY_ITERATOR(at);
         auto distance = std::distance(begin, end);
-        assert(("out of bounds", size() + distance <= MaxSize));
 
-        return aui::container::vector_impl::insert_no_growth(mEnd, at, begin, end);
+        if (size() + distance <= reserved()) {
+            return aui::container::vector_impl::insert_no_growth(mEnd, at, begin, end);
+        }
+        ADynamicVector temp;
+        temp.reserve(ceilPower2(distance + size()));
+        aui::container::vector_impl::insert_no_growth(temp.mEnd, temp.mEnd,
+                                                      std::make_move_iterator(mBegin), std::make_move_iterator(at));
+
+        auto result = aui::container::vector_impl::insert_no_growth(temp.mEnd, temp.mEnd,
+                                                                    begin, end);
+
+        aui::container::vector_impl::insert_no_growth(temp.mEnd, temp.mEnd,
+                                                      std::make_move_iterator(at), std::make_move_iterator(mEnd));
+        operator=(std::move(temp));
+
+        return result;
+
     }
 
     constexpr iterator insert(iterator at, StoredType value) {
@@ -174,8 +199,40 @@ public:
         return aui::container::vector_impl::erase(mBegin, mEnd, begin, end);
     }
 
-    void reserve(std::size_t) {
-        // does nothing - just for std::vector compatibility
+    void reserve(std::size_t newSize) {
+        if (reserved() == newSize) {
+            return;
+        }
+
+        auto newBuffer = static_cast<StoredType*>(operator new[](newSize * sizeof(StoredType)));
+        auto newBufferEnd = newBuffer;
+        try {
+            auto elementsToMove = std::min(newSize, size());
+            auto moveFrom = begin();
+            for (std::size_t i = 0; i < elementsToMove; ++newBufferEnd, ++moveFrom) {
+                new (newBufferEnd) StoredType(std::move(*moveFrom));
+            }
+            deallocate();
+            mBegin = newBuffer;
+            mEnd = newBufferEnd;
+            mBufferEnd = newBuffer + newSize;
+        } catch (...) { // unlikely; but just in case
+            delete[] newBuffer;
+            throw;
+        }
+    }
+
+    ADynamicVector& operator=(ADynamicVector&& rhs) noexcept {
+        deallocate();
+        mBegin     = rhs.mBegin;
+        mEnd       = rhs.mEnd;
+        mBufferEnd = rhs.mBufferEnd;
+
+        rhs.mBegin     = nullptr;
+        rhs.mEnd       = nullptr;
+        rhs.mBufferEnd = nullptr;
+
+        return *this;
     }
 
     // AUI extensions - see AVector for reference
@@ -484,7 +541,38 @@ public:
 
 
 private:
-    iterator mBegin;
-    iterator mEnd;
-    std::aligned_storage_t<sizeof(StoredType) * MaxSize, alignof(StoredType)> mStorage;
+    iterator mBegin = nullptr;
+    iterator mEnd = nullptr;
+    iterator mBufferEnd = nullptr;
+
+
+    /**
+     * @brief Corrects size so it's aligned to power of 2.
+     */
+    static constexpr std::size_t ceilPower2(std::size_t size) {
+        switch (size) {
+            case 0: return 0;
+            case 1: return 1;
+            default: break;
+        }
+
+        size -= 1;
+        std::size_t power = 1;
+        while (size != 0) {
+            size >>= 1;
+
+            if (size == 0) {
+                break;
+            }
+            ++power;
+        }
+        return std::size_t(1) << power;
+    }
+
+    static_assert(ceilPower2(228) == 256, "check ceilPower2");
+    static_assert(ceilPower2(256) == 256, "check ceilPower2");
+    static_assert(ceilPower2(512) == 512, "check ceilPower2");
+    static_assert(ceilPower2(0) == 0, "check ceilPower2");
+    static_assert(ceilPower2(1) == 1, "check ceilPower2");
+    static_assert(ceilPower2(2) == 2, "check ceilPower2");
 };

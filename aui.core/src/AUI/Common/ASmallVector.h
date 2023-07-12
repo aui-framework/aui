@@ -19,6 +19,7 @@
 #include <cstddef>
 
 #include "AStaticVector.h"
+#include "ADynamicVector.h"
 
 /**
  * @brief Vector-like container consisting of few elements on stack and switches to dynamic allocation vector if needed.
@@ -38,6 +39,7 @@ protected:
     using self = ASmallVector;
     using super = self;
     using StaticVector = AStaticVector<StoredType, StaticVectorSize>;
+    using DynamicVector = ADynamicVector<StoredType>;
 
 public:
     /*
@@ -164,15 +166,11 @@ private:
 
     union {
         struct {
-            std::size_t validElementCount;
+            StoredType* begin;
+            StoredType* end;
         } safe;
 
-        struct {
-            std::size_t validElementCount;
-            std::size_t reservedElementCount;
-            StoredType* buffer;
-        } dynamic;
-
         std::aligned_storage_t<sizeof(StaticVector), alignof(StaticVector)> inplace;
+        std::aligned_storage_t<sizeof(DynamicVector), alignof(DynamicVector)> dynamic;
     } mBase;
 };
