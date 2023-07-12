@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <compare>
 #include <AUI/Platform/AInput.h>
 
 /**
@@ -34,7 +35,7 @@ public:
     }
 
     static constexpr APointerIndex finger(unsigned fingerIndex) {
-        return APointerIndex(fingerIndex + MAX_BUTTON_VALUE);
+        return APointerIndex(fingerIndex + MAX_BUTTON_VALUE + 1);
     }
 
 
@@ -71,7 +72,7 @@ public:
         if (!isFinger()) {
             return std::nullopt;
         }
-        return mValue - MAX_BUTTON_VALUE;
+        return mValue - MAX_BUTTON_VALUE - 1;
     }
 
     /**
