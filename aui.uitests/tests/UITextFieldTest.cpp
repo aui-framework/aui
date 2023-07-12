@@ -50,6 +50,7 @@ protected:
         };
 
         _new<TestWindow>()->show();
+        uitest::frame();
     }
 
     void TearDown() override {

@@ -79,6 +79,7 @@ protected:
             }
             );
         mWindow->show();
+        uitest::frame();
     }
 
     void TearDown() override {
@@ -119,6 +120,7 @@ TEST_F(UIPointerBehaviour, ClickOutsideTest) {
     EXPECT_CALL(*mView, onPointerPressed(testing::_));
     EXPECT_CALL(*mView, onPointerReleased(testing::_));
     EXPECT_CALL(*mView, onClicked()).Times(0);
+
     mWindow->onPointerPressed({
         .position = mView->getCenterPointInWindow(), // somewhere over the mView
         .button = AInput::LBUTTON,
@@ -149,4 +151,32 @@ TEST_F(UIPointerBehaviour, MouseMoveNoClick) {
 
     mWindow->onPointerMove(mView->getCenterPointInWindow()); // somewhere over the mView
     mWindow->onPointerMove({ 100, 100 }); // somewhere outside the mView
+}
+
+
+/**
+ * Checks multiple button pointerPressed/Released behaviour.
+ */
+TEST_F(UIPointerBehaviour, MultiplePointerPressedReleased) {
+    testing::InSequence s;
+
+    EXPECT_CALL(*mView, onPointerPressed(testing::_)).Times(2);
+    EXPECT_CALL(*mView, onPointerReleased(testing::_)).Times(2);
+
+    mWindow->onPointerPressed({
+      .position = mView->getCenterPointInWindow(), // somewhere over the mView
+      .button = AInput::LBUTTON,
+    });
+    mWindow->onPointerPressed({
+      .position = mView->getCenterPointInWindow(), // somewhere over the mView
+      .button = AInput::RBUTTON,
+    });
+    mWindow->onPointerReleased({
+      .position = mView->getCenterPointInWindow(), // somewhere over the mView
+      .button = AInput::RBUTTON,
+    });
+    mWindow->onPointerReleased({
+      .position = mView->getCenterPointInWindow(), // somewhere over the mView
+      .button = AInput::LBUTTON,
+    });
 }
