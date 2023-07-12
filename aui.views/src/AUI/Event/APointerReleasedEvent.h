@@ -28,9 +28,9 @@ struct APointerReleasedEvent {
     glm::ivec2 position;
 
     /**
-     * @brief Which button of the pointing device is triggered the event (AInput::LBUTTON if not present).
+     * @brief Which button of the pointing device is triggered the event (AInput::LBUTTON if not present) or finger.
      */
-    AInput::Key button = AInput::LBUTTON;
+    APointerIndex pointerIndex;
 
     /**
      * @brief Whether the pointer release event triggers click event or not.

@@ -123,7 +123,6 @@ TEST_F(UIPointerBehaviour, ClickOutsideTest) {
 
     mWindow->onPointerPressed({
         .position = mView->getCenterPointInWindow(), // somewhere over the mView
-        .button = AInput::LBUTTON,
     });
 
     mWindow->onPointerMove(
@@ -131,7 +130,6 @@ TEST_F(UIPointerBehaviour, ClickOutsideTest) {
     );
     mWindow->onPointerReleased({
         .position = { 100, 100 }, // somewhere outside the mView
-        .button = AInput::LBUTTON,
     });
 }
 
@@ -165,18 +163,18 @@ TEST_F(UIPointerBehaviour, MultiplePointerPressedReleased) {
 
     mWindow->onPointerPressed({
       .position = mView->getCenterPointInWindow(), // somewhere over the mView
-      .button = AInput::LBUTTON,
+      .pointerIndex = APointerIndex::button(AInput::LBUTTON),
     });
     mWindow->onPointerPressed({
       .position = mView->getCenterPointInWindow(), // somewhere over the mView
-      .button = AInput::RBUTTON,
+      .pointerIndex = APointerIndex::button(AInput::RBUTTON),
     });
     mWindow->onPointerReleased({
       .position = mView->getCenterPointInWindow(), // somewhere over the mView
-      .button = AInput::RBUTTON,
+      .pointerIndex = APointerIndex::button(AInput::RBUTTON),
     });
     mWindow->onPointerReleased({
       .position = mView->getCenterPointInWindow(), // somewhere over the mView
-      .button = AInput::LBUTTON,
+      .pointerIndex = APointerIndex::button(AInput::LBUTTON),
     });
 }

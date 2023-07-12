@@ -249,7 +249,7 @@ TEST_F(SignalSlot, ObjectDestroySlaveInSignalHandler) {
 
 TEST_F(SignalSlot, ObjectRemovalMultithread) {
 
-    repeat(100) {
+    AUI_REPEAT(100) {
 
         class Slave2 : public AObject {
         public:
@@ -283,7 +283,7 @@ TEST_F(SignalSlot, ObjectRemovalMultithread) {
         }
 
         task = async {
-            repeat(10000) master->broadcastMessage("hello");
+            AUI_REPEAT(10000) master->broadcastMessage("hello");
         };
         task.wait();
         slave2 = nullptr; // delete slave; check for crash

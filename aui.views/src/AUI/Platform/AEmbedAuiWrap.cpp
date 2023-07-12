@@ -151,20 +151,20 @@ void AEmbedAuiWrap::setViewportSize(int width, int height) {
 }
 
 
-void AEmbedAuiWrap::onPointerPressed(int x, int y, AInput::Key button) {
+void AEmbedAuiWrap::onPointerPressed(int x, int y, APointerIndex pointerIndex) {
     mContainer->makeCurrent();
     AThread::processMessages();
     mContainer->onPointerPressed({
         .position = glm::ivec2{x, y},
-        .button = button
+        .pointerIndex = pointerIndex,
     });
 }
 
-void AEmbedAuiWrap::onPointerReleased(int x, int y, AInput::Key button) {
+void AEmbedAuiWrap::onPointerReleased(int x, int y, APointerIndex pointerIndex) {
     mContainer->makeCurrent();
     mContainer->onPointerReleased({
         .position = glm::ivec2{x, y},
-        .button = button
+        .pointerIndex = pointerIndex,
     });
 }
 

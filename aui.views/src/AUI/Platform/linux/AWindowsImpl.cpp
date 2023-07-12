@@ -488,7 +488,8 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         case 3:
                             window->onPointerPressed({
                                 .position = { ev.xbutton.x, ev.xbutton.y },
-                                .button = (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1)
+                                .pointerIndex = APointerIndex::button(
+                                        static_cast<AInput::Key>(AInput::LBUTTON + ev.xbutton.button - 1))
                             });
                             break;
                         case 4: // wheel down
@@ -511,7 +512,8 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         window = locateWindow(ev.xbutton.window);
                         window->onPointerReleased({
                              .position = { ev.xbutton.x, ev.xbutton.y },
-                             .button = (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1)
+                             .pointerIndex = APointerIndex::button(
+                                     static_cast<AInput::Key>(AInput::LBUTTON + ev.xbutton.button - 1))
                         });
                     }
                     break;

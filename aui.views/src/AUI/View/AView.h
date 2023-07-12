@@ -22,6 +22,7 @@
 
 #include <glm/glm.hpp>
 
+#include "AUI/Common/ASmallVector.h"
 #include <AUI/ASS/Property/IProperty.h>
 #include <AUI/ASS/Property/ScrollbarAppearance.h>
 #include "AUI/Common/ABoxFields.h"
@@ -606,16 +607,26 @@ public:
         mFixedSize = size;
     }
 
-    bool isMouseHover() const
+    [[nodiscard]]
+    bool isMouseHover() const noexcept
     {
         return mHovered;
     }
 
-    bool isMousePressed() const
+    [[nodiscard]]
+    bool isPressed() const noexcept
     {
-        return mPressed;
+        return !mPressed.empty();
     }
-    bool isEnabled() const
+
+    [[nodiscard]]
+    bool isPressed(APointerIndex index) const noexcept
+    {
+        return mPressed.contains(index);
+    }
+
+    [[nodiscard]]
+    bool isEnabled() const noexcept
     {
         return mEnabled;
     }
@@ -652,7 +663,7 @@ public:
      * Simulates click on the view. Useful then you want to call clicked() slots of this view.
      */
     void click() {
-        emit clickedButton(AInput::LBUTTON);
+        emit clickedButton(APointerIndex::button(AInput::LBUTTON));
         emit clicked();
     }
 
@@ -875,9 +886,9 @@ signals:
     emits<> mouseEnter;
     emits<> mouseLeave;
 
-    emits<bool> pressedState;
-    emits<> pressed;
-    emits<> released;
+    emits<bool, APointerIndex> pressedState;
+    emits<APointerIndex> pressed;
+    emits<APointerIndex> released;
 
     emits<bool> enabledState;
     emits<> enabled;
@@ -886,7 +897,7 @@ signals:
     /**
      * @brief Some mouse button clicked.
      */
-    emits<AInput::Key> clickedButton;
+    emits<APointerIndex> clickedButton;
 
     /**
      * @brief Left mouse button clicked.
@@ -923,7 +934,7 @@ signals:
      */
     emits<> clickedRightOrLongPressed;
 
-    emits<AInput::Key> doubleClicked;
+    emits<APointerIndex> doubleClicked;
 
     emits<> customCssPropertyChanged;
 
@@ -939,7 +950,7 @@ signals:
 
 private:
     AFieldSignalEmitter<bool> mHovered = AFieldSignalEmitter<bool>(hoveredState, mouseEnter, mouseLeave);
-    AFieldSignalEmitter<bool> mPressed = AFieldSignalEmitter<bool>(pressedState, pressed, released);
+    ASmallVector<APointerIndex, 1> mPressed;
     //AWatchable<bool> mFocused = AWatchable<bool>(pressedState, pressed, released);
     AFieldSignalEmitter<bool> mEnabled = AFieldSignalEmitter<bool>(enabledState, enabled, disabled, true);
     bool mDirectlyEnabled = true;
