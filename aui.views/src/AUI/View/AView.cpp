@@ -379,7 +379,7 @@ void AView::onPointerReleased(const APointerReleasedEvent& event)
 
     if (event.triggerClick) {
         emit clickedButton(event.pointerIndex);
-        if (event.pointerIndex.canBeConsideredAsLeftButton()) {
+        if (event.asButton == AInput::LBUTTON) {
             emit clicked();
         }
         switch (event.pointerIndex.rawValue()) {
