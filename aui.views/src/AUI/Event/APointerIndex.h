@@ -75,14 +75,6 @@ public:
         return mValue - MAX_BUTTON_VALUE - 1;
     }
 
-    /**
-     * @return true if APointerIndex is finger index or LBUTTON.
-     */
-    [[nodiscard]]
-    bool canBeConsideredAsLeftButton() const noexcept {
-        return isFinger() || *this == APointerIndex::button(AInput::LBUTTON);
-    }
-
     [[nodiscard]]
     auto operator<=>(const APointerIndex& rhs) const noexcept = default;
 

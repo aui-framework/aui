@@ -33,6 +33,13 @@ struct APointerPressedEvent {
      * @brief Which button of the pointing device is triggered the event (AInput::LBUTTON if not present) or finger.
      */
     APointerIndex pointerIndex;
+
+    /**
+     * @brief pointerIndex treated as mouse button.
+     * @details
+     * = LBUTTON if finger event, pointerIndex.button() otherwise.
+     */
+    AInput::Key asButton = pointerIndex.button().valueOr(AInput::LBUTTON);
 };
 
 

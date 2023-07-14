@@ -36,4 +36,12 @@ struct APointerReleasedEvent {
      * @brief Whether the pointer release event triggers click event or not.
      */
     bool triggerClick = true;
+
+
+    /**
+     * @brief pointerIndex treated as mouse button.
+     * @details
+     * = LBUTTON if finger event, pointerIndex.button() otherwise.
+     */
+    AInput::Key asButton = pointerIndex.button().valueOr(AInput::LBUTTON);
 };

@@ -30,7 +30,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height) :
 }
 
 void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
-    if (event.position.y < AUI_TITLE_HEIGHT && event.pointerIndex.canBeConsideredAsLeftButton()) {
+    if (event.position.y < AUI_TITLE_HEIGHT && event.asButton == AInput::LBUTTON) {
         if (isCaptionAt(event.position)) {
             XClientMessageEvent xclient;
             memset(&xclient, 0, sizeof(XClientMessageEvent));
