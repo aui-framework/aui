@@ -20,10 +20,20 @@
 
 #include "AAssSelector.h"
 #include <AUI/View/AView.h>
+#include <AUI/ASS/AAssHelper.h>
 
 bool ass::IAssSubSelector::isStateApplicable(AView* view) {
     return true;
 }
 
 void ass::IAssSubSelector::setupConnections(AView* view, const _<AAssHelper>& helper) {
+}
+
+void ass::AAssSelector::setupConnections(AView* view, const _<AAssHelper>& helper) const {
+    for (const auto& s : mSubSelectors) {
+        if (s->isPossiblyApplicable(view)) {
+            s->setupConnections(view, helper);
+            break;
+        }
+    }
 }

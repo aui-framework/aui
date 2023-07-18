@@ -368,8 +368,8 @@ public:
     }
 
     template<aui::predicate<const StoredType&> Predicate>
-    AVector filter(Predicate&& predicate) {
-        AVector result;
+    self filter(Predicate&& predicate) {
+        self result;
         result.reserve(super::size());
         for (const auto& element : *this) {
             if (predicate(element)) {

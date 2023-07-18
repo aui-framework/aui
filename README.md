@@ -17,12 +17,12 @@ If you are using Linux, install following dependencies:
 
 ### Ubuntu
 ```bash
-sudo apt install pkg-config libgtk-3-dev libfontconfig-dev libXcursor-devel glew-devel libstdc++-static gtk3-devel
+sudo apt install pkg-config libgtk-3-dev libfontconfig-dev libXcursor-devel glew-devel libstdc++-static
 ```
 
 ### Fedora
 ```bash
-sudo dnf install fontconfig-devel libXi libglvnd-devel gtk3-devel libstdc++-static glew-devel
+sudo dnf install fontconfig-devel libXi libglvnd-devel libstdc++-static glew-devel
 ```
 
 ## Your project CMake script

@@ -68,6 +68,11 @@ namespace aui {
             return AnyType(mValue);
         }
 
+        [[nodiscard]]
+        T value() const noexcept {
+            return mValue;
+        }
+
         template<typename AnyType>
         bool operator==(const AnyType& v) const noexcept {
             return mValue == v;

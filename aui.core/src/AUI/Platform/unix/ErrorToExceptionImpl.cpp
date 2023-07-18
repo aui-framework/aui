@@ -23,9 +23,9 @@
 
 
 void aui::impl::lastErrorToException(AString message) {
-    aui::impl::unix::lastErrorToException(std::move(message));
+    aui::impl::unix_based::lastErrorToException(std::move(message));
 }
 
 aui::impl::Error aui::impl::formatSystemError() {
-    return aui::impl::unix::formatSystemError();
+    return aui::impl::unix_based::formatSystemError();
 }

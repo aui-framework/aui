@@ -22,7 +22,7 @@
 #include <AUI/Platform/ErrorToException.h>
 
 
-void aui::impl::unix::lastErrorToException(AString message) {
+void aui::impl::unix_based::lastErrorToException(AString message) {
     message += ": ";
     message += formatSystemError().description;
     switch (errno) {
@@ -40,6 +40,6 @@ void aui::impl::unix::lastErrorToException(AString message) {
     }
 }
 
-aui::impl::Error aui::impl::unix::formatSystemError() {
+aui::impl::Error aui::impl::unix_based::formatSystemError() {
     return { errno, strerror(errno) };
 }

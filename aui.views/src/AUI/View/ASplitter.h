@@ -97,6 +97,8 @@ public:
 
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
+    void onClickPrevented() override;
+
     using Vertical = Builder<AVerticalLayout>;
     using Horizontal = Builder<AHorizontalLayout>;
 

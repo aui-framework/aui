@@ -15,7 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "AWindow.h"
+#include <AUI/Platform/AWindow.h>
 
 #if AUI_PLATFORM_WIN
 

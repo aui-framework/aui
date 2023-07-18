@@ -1,5 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 
+
+list(APPEND TEST_CMAKE_ARGS "-G${CMAKE_GENERATOR}")
+
 foreach(_varname
         BUILD_SHARED_LIBS
         )
@@ -29,7 +32,7 @@ endif()
 function(define_aui_boot_test NAME)
     add_test(NAME "aui.build.boot.${NAME}"
             COMMAND
-            ${CMAKE_COMMAND} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -DTARGET_GENERATOR=Ninja -P test.cmake
+            ${CMAKE_COMMAND} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -P test.cmake
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/${NAME})
 
 endfunction()

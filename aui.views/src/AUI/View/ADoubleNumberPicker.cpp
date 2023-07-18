@@ -18,7 +18,8 @@
 #include "AUI/Layout/AHorizontalLayout.h"
 #include "AUI/Layout/AVerticalLayout.h"
 #include "AButton.h"
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
+#include "AUI/Platform/ADesktop.h"
 #include <AUI/Util/kAUI.h>
 
 bool ADoubleNumberPicker::ADoubleNumberPickerField::isValidText(const AString& text)
@@ -74,11 +75,11 @@ ADoubleNumberPicker::ADoubleNumberPicker()
         if (v < mMin)
         {
             v = mMin;
-            Platform::playSystemSound(Platform::S_ASTERISK);
+            ADesktop::playSystemSound(ADesktop::SystemSound::ASTERISK);
         } else if (v > mMax)
         {
             v = mMax;
-            Platform::playSystemSound(Platform::S_ASTERISK);
+            ADesktop::playSystemSound(ADesktop::SystemSound::ASTERISK);
         } else
         {
             emit valueChanged(v);

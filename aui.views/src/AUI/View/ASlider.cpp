@@ -42,20 +42,18 @@ ASlider::ASlider() {
 
 void ASlider::onPointerPressed(const APointerPressedEvent& event) {
     AView::onPointerPressed(event); // we do not want to gain focus to some of our childs; so calling AView directly
-    mDragging = true;
     updateSliderWithPosition(event.position);
 }
 
 void ASlider::onPointerMove(glm::ivec2 pos) {
     AViewContainer::onPointerMove(pos);
-    if (mDragging) {
+    if (isDragging()) {
         updateSliderWithPosition(pos);
     }
 }
 
 void ASlider::onPointerReleased(const APointerReleasedEvent& event) {
     AViewContainer::onPointerReleased(event);
-    mDragging = false;
     updateSliderWithPosition(event.position);
 
     emit valueChanged(value());

@@ -55,9 +55,9 @@ AScrollbar::AScrollbar(ALayoutDirection direction) :
     mHandle = aui::ptr::manage(new AScrollbarHandle(*this));
 
     addView(mBackwardButton);
-    addView(mOffsetSpacer = _new<AScrollbarOffsetSpacer>() let { it->setMinimumSize({0, 0}); });
+    addView(mOffsetSpacer = _new<AScrollbarOffsetSpacer>());
     addView(mHandle);
-    addView(_new<ASpacerExpanding>() let { it->setMinimumSize({0, 0}); });
+    addView(_new<ASpacerExpanding>());
     addView(mForwardButton);
 
     setScroll(0);

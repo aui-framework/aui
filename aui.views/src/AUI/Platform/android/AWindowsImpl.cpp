@@ -29,7 +29,7 @@
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
 #include "AUI/GL/OpenGLRenderer.h"
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/OpenGLRenderingContext.h"
 
@@ -91,7 +91,7 @@ void AWindow::flagRedraw() {
 }
 
 float AWindow::fetchDpiFromSystem() const {
-    return Platform::getDpiRatio();
+    return APlatform::getDpiRatio();
 }
 
 
@@ -122,7 +122,7 @@ void AWindow::hide() {
 }
 
 void AWindowManager::notifyProcessMessages() {
-    AAndroid::requestRedraw();
+    com::github::aui::android::Platform::requestRedraw();
 }
 
 void AWindowManager::loop() {
@@ -153,9 +153,9 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::requestTouchscreenKeyboardImpl() {
-    AAndroid::showVirtualKeyboard();
+    com::github::aui::android::Platform::showKeyboard();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
-    AAndroid::hideVirtualKeyboard();
+    com::github::aui::android::Platform::hideKeyboard();
 }

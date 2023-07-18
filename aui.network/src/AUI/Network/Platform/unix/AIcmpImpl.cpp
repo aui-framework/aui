@@ -49,7 +49,17 @@ public:
 #endif
     }
 
-    IcmpImpl(const AInet4Address& mDestination) : mDestination(mDestination) {}
+    IcmpImpl(const AInet4Address& mDestination) : mDestination(mDestination) {
+        setUid();
+        setEUid();
+        constexpr int SOCKET_TYPE = SOCK_DGRAM;
+        mSocket = socket(AF_INET, SOCKET_TYPE, IPPROTO_ICMP);
+        setUid();
+
+        if (mSocket < 0) {
+            throw AIOException(aui::impl::formatSystemError().description);
+        }
+    }
 
     static inline void tvsub(struct timeval *out, struct timeval *in)
     {
@@ -155,16 +165,7 @@ public:
             if (from->sin_addr.s_addr != mDestination.addr().sin_addr.s_addr)
                 return 0;
 
-            const uint8_t *ptr = reinterpret_cast<uint8_t*>(icp + 8);
-            if (cc >= (8 + sizeof(timeval))) {
-                struct timeval tmp_tv;
-                memcpy(&tmp_tv, ptr, sizeof(tmp_tv));
-
-                tvsub(tv, &tmp_tv);
-                auto tripTime = tv->tv_sec * 1000000 + tv->tv_usec;
-                mResult.supplyResult(std::chrono::milliseconds(tripTime));
-            }
-
+            mResult.supplyResult(std::chrono::floor<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - mTime));
         }
 
         return 0;
@@ -172,16 +173,6 @@ public:
 
     AFuture<std::chrono::high_resolution_clock::duration> send(std::chrono::milliseconds timeout) {
         try {
-            setUid();
-            setEUid();
-            constexpr int SOCKET_TYPE = SOCK_DGRAM;
-            mSocket = socket(AF_INET, SOCKET_TYPE, IPPROTO_ICMP);
-            setUid();
-
-            if (mSocket < 0) {
-                throw AIOException(aui::impl::formatSystemError().description);
-            }
-
             {
                 int hold = 1;
                 setsockopt(mSocket, SOL_IP, IP_RECVERR, &hold, sizeof(hold));
@@ -230,6 +221,7 @@ public:
 
                 r = sendto(mSocket, data, sizeof(data), 0, reinterpret_cast<const sockaddr*>(&socketAddress),
                            sizeof(socketAddress));
+                mTime = std::chrono::high_resolution_clock::now();
                 if (r != sizeof(data)) {
                     throw AIOException("ping send error: {}"_format(aui::impl::formatSystemError().description));
                 }
@@ -291,6 +283,8 @@ private:
     char mIovBuffer[192];
     char mAddressBuffer[128];
     char mAnsData[4096];
+
+    std::chrono::high_resolution_clock::time_point mTime;
 };
 
 #endif
@@ -302,7 +296,7 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
 #else
     auto impl = _new<IcmpImpl>(destination);
 
-    UnixIoThread::inst().registerCallback(impl->mSocket, POLLIN, [impl](int v) mutable {
+    UnixIoThread::inst().registerCallback(impl->mSocket, UnixPollEvent::IN, [impl](ABitField<UnixPollEvent>) mutable {
         if (impl->receive()) {
             UnixIoThread::inst().unregisterCallback(impl->mSocket);
         }

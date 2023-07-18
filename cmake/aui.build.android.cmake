@@ -4,7 +4,8 @@ message("\n"
         "     # AUI runs in Android build mode which means that AUI will generate Android Gradle project.   #\n"
         "     # Define your application with aui_app command.                                               #\n"
         "     # To build an apk, run the apps target.                                                       #\n"
-        "     # To develop in Android Studio environment, open the gradle project dir (path is below).      #\n"
+        "     # To develop in Android Studio environment, build the apps target and open the gradle project #\n"
+        "     # dir (path is below).                                                                        #\n"
         "     ###############################################################################################\n"
         )
 message(STATUS "Android gradle project dir: ${_gradle_project_dir}")

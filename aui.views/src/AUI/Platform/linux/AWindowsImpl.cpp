@@ -28,7 +28,7 @@
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
 #include "AUI/GL/OpenGLRenderer.h"
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/OpenGLRenderingContext.h"
 #include "AUI/UITestState.h"
@@ -96,7 +96,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
 }
 
 float AWindow::fetchDpiFromSystem() const {
-    return Platform::getDpiRatio();
+    return APlatform::getDpiRatio();
 }
 
 void AWindow::restore() {
@@ -369,7 +369,11 @@ void AWindowManager::notifyProcessMessages() {
 void AWindowManager::loop() {
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
-        xProcessEvent(ev);
+        try {
+            xProcessEvent(ev);
+        } catch (const AException& e) {
+            ALogger::err("AUI") << "Uncaught exception in window proc: " << e;
+        }
     }
 }
 
@@ -473,6 +477,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 case MotionNotify: {
                     window = locateWindow(ev.xmotion.window);
                     window->onPointerMove({ev.xmotion.x, ev.xmotion.y});
+                    AUI_NULLSAFE(window->getCursor())->applyNativeCursor(window.get());
                     break;
                 }
                 case ButtonPress: {

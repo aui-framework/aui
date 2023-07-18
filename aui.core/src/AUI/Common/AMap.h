@@ -139,17 +139,28 @@ public:
 	    return it->second;
 	}
 
-	const_contains_iterator contains(const KeyType& key) const
+    [[nodiscard]]
+	const_contains_iterator contains(const KeyType& key) const noexcept
 	{
 		auto it = parent::find(key);
 		return const_contains_iterator(it, it != parent::end());
 	}
 
-    contains_iterator contains(const KeyType& key)
+    [[nodiscard]]
+    contains_iterator contains(const KeyType& key) noexcept
 	{
 		auto it = parent::find(key);
 		return contains_iterator(it, it != parent::end());
 	}
+
+    [[nodiscard]]
+    AOptional<ValueType> optional(const KeyType& key) const noexcept {
+        auto it = parent::find(key);
+        if (it == parent::end()) {
+            return std::nullopt;
+        }
+        return it->second;
+    }
 
 	AVector<KeyType> keyVector() {
         AVector<KeyType> r;

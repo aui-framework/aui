@@ -17,15 +17,18 @@
 #pragma once
 
 #include <AUI/Platform/AWindow.h>
+#include "AUI/Thread/AAsyncHolder.h"
 
 class ExampleWindow: public AWindow {
-private:
-	ADeque<_<AWindow>> mWindows;
-	
+
 public:
 	ExampleWindow();
 
     void onDragDrop(const ADragNDrop::DropEvent& event) override;
 
     bool onDragEnter(const ADragNDrop::EnterEvent& event) override;
+
+private:
+    ADeque<_<AWindow>> mWindows;
+    AAsyncHolder mAsync;
 };

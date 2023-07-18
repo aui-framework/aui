@@ -19,7 +19,13 @@
 #include <glm/glm.hpp>
 #include <variant>
 
+/**
+ * @brief Long press event.
+ * @details
+ * When handled, causes haptic feedback on some systems.
+ */
 struct ALongPressEvent {
+    mutable bool handled = false;
 };
 
 struct AFingerDragEvent {

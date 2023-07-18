@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "CommonRenderingContext.h"
+#include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Platform/AWindow.h>
 
 class API_AUI_VIEWS SoftwareRenderingContext: public CommonRenderingContext {

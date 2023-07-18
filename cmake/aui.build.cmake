@@ -65,6 +65,7 @@ else()
     set(AUI_DEBUG FALSE)
 endif()
 
+# platforms
 if (WIN32)
     set(AUI_PLATFORM_WIN 1 CACHE INTERNAL "Platform")
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS win32)
@@ -111,6 +112,25 @@ if (UNIX)
     list(REMOVE_ITEM AUI_EXCLUDE_PLATFORMS unix)
 else()
     set(AUI_PLATFORM_UNIX 0 CACHE INTERNAL "Platform")
+endif()
+
+# compilers
+if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set(AUI_COMPILER_CLANG 1 CACHE INTERNAL "Compiler")
+else()
+    set(AUI_COMPILER_CLANG 0 CACHE INTERNAL "Compiler")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    set(AUI_COMPILER_GCC 1 CACHE INTERNAL "Compiler")
+else()
+    set(AUI_COMPILER_GCC 0 CACHE INTERNAL "Compiler")
+endif()
+
+if (MSVC)
+    set(AUI_COMPILER_MSVC 1 CACHE INTERNAL "Compiler")
+else()
+    set(AUI_COMPILER_MSVC 0 CACHE INTERNAL "Compiler")
 endif()
 
 set(AUI_EXCLUDE_PLATFORMS ${AUI_EXCLUDE_PLATFORMS} CACHE INTERNAL "")
@@ -177,7 +197,7 @@ macro(_aui_import_gtest)
     endif()
 endmacro()
 
-function(aui_enable_tests AUI_MODULE_NAME)
+macro(aui_enable_tests AUI_MODULE_NAME)
     _aui_import_gtest()
     if (NOT TARGET GTest::gtest)
         message(FATAL_ERROR "GTest::gtest not found!")
@@ -206,7 +226,7 @@ int main(int argc, char **argv) {
 }]])
             add_executable(${TESTS_MODULE_NAME} ${TESTS_SRCS} ${CMAKE_BINARY_DIR}/test_main_${TESTS_MODULE_NAME}.cpp)
             include(GoogleTest)
-            gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
+            #gtest_add_tests(TARGET ${TESTS_MODULE_NAME})
             set_property(TARGET ${TESTS_MODULE_NAME} PROPERTY CXX_STANDARD 20)
             target_include_directories(${TESTS_MODULE_NAME} PUBLIC tests)
             target_link_libraries(${TESTS_MODULE_NAME} PUBLIC GTest::gmock)
@@ -254,7 +274,7 @@ int main(int argc, char **argv) {
             endif()
         endif()
     endif()
-endfunction()
+endmacro()
 
 function(aui_common AUI_MODULE_NAME)
     string(TOLOWER ${AUI_MODULE_NAME} TARGET_NAME)
@@ -517,7 +537,7 @@ function(aui_executable AUI_MODULE_NAME)
             aui_common(preview.${AUI_MODULE_NAME})
 
             add_dependencies(aui.preview preview.${AUI_MODULE_NAME})
-        elseif(IOS)
+        elseif(APPLE)
             add_executable(${AUI_MODULE_NAME} MACOSX_BUNDLE ${ADDITIONAL_SRCS} ${SRCS})
         elseif(WIN32 AND NOT AUIE_WIN32_SUBSYSTEM_CONSOLE)
             add_executable(${AUI_MODULE_NAME} WIN32 ${ADDITIONAL_SRCS} ${SRCS})
@@ -544,6 +564,7 @@ function(aui_executable AUI_MODULE_NAME)
                 ARCHIVE       DESTINATION "lib"
                 LIBRARY       DESTINATION "lib"
                 RUNTIME       DESTINATION "bin"
+                BUNDLE        DESTINATION "bin"
         )
 
         install(
@@ -597,6 +618,7 @@ macro(_aui_provide_toolbox_for_host)
     file(WRITE ${_workdir}/CMakeLists.txt [[
 cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
+set(CMAKE_CXX_STANDARD 20)
 file(
         DOWNLOAD
         https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake

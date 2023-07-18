@@ -20,6 +20,7 @@
 
 #include <AUI/Layout/AStackedLayout.h>
 #include "ALayoutInflater.h"
+#include <AUI/Platform/ABaseWindow.h>
 
 void ALayoutInflater::inflate(aui::no_escape<AViewContainer> root, const _<AView>& view) {
     root->setLayout(_new<AStackedLayout>());
@@ -27,5 +28,5 @@ void ALayoutInflater::inflate(aui::no_escape<AViewContainer> root, const _<AView
         view->setExpanding();
         root->addView(view);
     }
-    root->updateLayout();
+    AUI_NULLSAFE(root->getWindow())->flagUpdateLayout();
 }

@@ -34,7 +34,7 @@ class API_AUI_CORE AStacktrace;
 
 namespace aui::impl::shared_ptr {
     struct InstancesDict {
-        std::mutex sync;
+        std::recursive_mutex sync;
         std::map<void*, std::set<void*>> map;
     };
 
@@ -67,12 +67,23 @@ public:
     }
 };
 
-template<typename T>
-using _unique = std::unique_ptr<T>;
+template<typename T, typename Deleter = std::default_delete<T>>
+using _unique = std::unique_ptr<T, Deleter>;
 
 
 namespace aui {
+
     struct ptr {
+        /**
+         * @brief Creates unique_ptr from raw pointer and a deleter.
+         * @details
+         * `unique_ptr` could not deduce T and Deleter by itself. Use this function to avoid this restriction.
+         */
+        template<typename T, typename Deleter = std::default_delete<T>>
+        static _unique<T, Deleter> make_unique_with_deleter(T* ptr, Deleter deleter) {
+            return { ptr, std::move(deleter) };
+        }
+
         /**
          * Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is returned
          * @tparam T any type

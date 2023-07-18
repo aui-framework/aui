@@ -57,6 +57,14 @@ public:
         return mWindows;
     }
 
+    void start() {
+        mLoopRunning = true;
+    }
+    void stop() {
+        mLoopRunning = false;
+        notifyProcessMessages();
+    }
+
     virtual void initNativeWindow(const IRenderingContext::Init& init);
 
     template<typename T>

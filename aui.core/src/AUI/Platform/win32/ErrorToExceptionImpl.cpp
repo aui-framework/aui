@@ -49,11 +49,13 @@ void aui::impl::lastErrorToException(AString message) {
     switch (lastErrorCode) {
         case ERROR_FILE_NOT_FOUND:
             throw AFileNotFoundException(message);
+        case ERROR_PATH_NOT_FOUND:
+            throw AFileNotFoundException("{} (underlying directory does not exist)"_format(message));
         case ERROR_ACCESS_DENIED:
             throw AAccessDeniedException(message);
         case ERROR_ALREADY_EXISTS:
             break;
         default:
-            throw AIOException(message);
+            throw AIOException("{} (code {})"_format(message, lastErrorCode));
     }
 }

@@ -27,16 +27,24 @@ static void runOnGLThread(std::function<void()> callback) {
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_MyGLSurfaceView_handleRedraw(JNIEnv *env, jclass clazz) {
+Java_com_github_aui_android_AuiView_handleRedraw(JNIEnv *env, jclass clazz) {
     AUI_NULLSAFE(AThread::current()->getCurrentEventLoop())->loop();
     AUI_NULLSAFE(dynamic_cast<AWindow*>(AWindow::current()))->AWindow::redraw();
 }
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_MyGLSurfaceView_handleResize(JNIEnv *env, jclass clazz, jint width, jint height) {
+Java_com_github_aui_android_AuiView_handleResize(JNIEnv *env, jclass clazz, jint width, jint height) {
     runOnGLThread([=] {
         AUI_NULLSAFE(AWindow::current())->setSize({width, height});
+    });
+}
+
+extern "C"
+JNIEXPORT void JNICALL
+Java_com_github_aui_android_AuiView_handleLongPress(JNIEnv *env, jclass clazz, jint x, jint y) {
+    runOnGLThread([=] {
+        AUI_NULLSAFE(AWindow::current())->onGesture({x, y}, ALongPressEvent{});
     });
 }
 
@@ -45,8 +53,8 @@ static glm::ivec2 scrollPrevValue{0, 0};
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonDown(JNIEnv *env, jclass clazz, jint x,
-                                                           jint y) {
+Java_com_github_aui_android_AuiView_handleMouseButtonDown(JNIEnv *env, jclass clazz, jint x,
+                                                          jint y) {
     scrollPrevValue = gestureOriginPos = {x, y};
     runOnGLThread([=] {
         AUI_NULLSAFE(AWindow::current())->onPointerPressed({{x, y}, AInput::LBUTTON});
@@ -54,8 +62,8 @@ Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonDown(JNIEnv *env, j
 }
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonUp(JNIEnv *env, jclass clazz, jint x,
-                                                           jint y) {
+Java_com_github_aui_android_AuiView_handleMouseButtonUp(JNIEnv *env, jclass clazz, jint x,
+                                                        jint y) {
     runOnGLThread([=] {
         AUI_NULLSAFE(AWindow::current())->onPointerReleased({{x, y}, AInput::LBUTTON});
     });
@@ -63,8 +71,8 @@ Java_com_github_aui_android_MyGLSurfaceView_handleMouseButtonUp(JNIEnv *env, jcl
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_MyGLSurfaceView_handleMouseMove(JNIEnv *env, jclass clazz, jint x,
-                                                           jint y) {
+Java_com_github_aui_android_AuiView_handleMouseMove(JNIEnv *env, jclass clazz, jint x,
+                                                    jint y) {
     runOnGLThread([=] {
         AUI_NULLSAFE(AWindow::current())->onPointerMove({x, y});
     });
@@ -73,7 +81,7 @@ Java_com_github_aui_android_MyGLSurfaceView_handleMouseMove(JNIEnv *env, jclass 
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_MyGLSurfaceView_handleKineticScroll(JNIEnv *env, jclass clazz, jint x, jint y) {
+Java_com_github_aui_android_AuiView_handleKineticScroll(JNIEnv *env, jclass clazz, jint x, jint y) {
     glm::ivec2 current = {x, y};
 
     if (current == glm::ivec2(0)) return;
@@ -89,11 +97,11 @@ Java_com_github_aui_android_MyGLSurfaceView_handleKineticScroll(JNIEnv *env, jcl
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_MyGLSurfaceView_handleScroll(JNIEnv *env, jclass clazz,
-                                                            jint originX,
-                                                            jint originY,
-                                                            jfloat velX,
-                                                            jfloat velY) {
+Java_com_github_aui_android_AuiView_handleScroll(JNIEnv *env, jclass clazz,
+                                                 jint originX,
+                                                 jint originY,
+                                                 jfloat velX,
+                                                 jfloat velY) {
     runOnGLThread([=] {
         AUI_NULLSAFE(AWindow::current())->onGesture({originX, originY}, AFingerDragEvent{
             .delta = {velX, velY}

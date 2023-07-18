@@ -26,7 +26,7 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
 #include <chrono>
-#include "Platform.h"
+#include "APlatform.h"
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Util/ALayoutInflater.h>
@@ -34,7 +34,7 @@
 #include <AUI/UITestState.h>
 
 ABaseWindow::ABaseWindow() {
-    mDpiRatio = Platform::getDpiRatio();
+    mDpiRatio = APlatform::getDpiRatio();
 }
 
 ABaseWindow::~ABaseWindow() {
@@ -44,7 +44,7 @@ ABaseWindow::~ABaseWindow() {
 }
 
 float ABaseWindow::fetchDpiFromSystem() const {
-    return Platform::getDpiRatio();
+    return APlatform::getDpiRatio();
 }
 
 void ABaseWindow::updateDpi() {
@@ -69,20 +69,23 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
     mFocusedView = view;
 
     if (view) {
-        auto w = weak_from_this();
-        ui_threadX [this, self = w.lock()] {
-            updateFocusChain();
-        };
         if (!view->hasFocus()) {
             view->onFocusAcquired();
         }
     }
 }
 
-void ABaseWindow::focusNextView() {
-    if (!mFocusNextViewOnTab)
-        return;
+void ABaseWindow::updateFocusChain() {
+    if (auto focusedView = mFocusedView.lock()) {
+        _weak<AView> focusChainTarget = mFocusedView;
+        for (auto target = focusedView->getParent(); target != nullptr; target = target->getParent()) {
+            target->setFocusChainTarget(std::move(focusChainTarget));
+            focusChainTarget = target->weakPtr();
+        }
+    }
+}
 
+void ABaseWindow::focusNextView() {
     AView* beginPoint = getFocusedView().get();
 
     bool triedToSearchFromBeginning = false;
@@ -153,18 +156,7 @@ void ABaseWindow::focusNextView() {
     }
 
     if (target != this) {
-        if (mFocusedView.lock().get() == target) {
-            return;
-        }
-        if (auto c = mFocusedView.lock()) {
-            c->onFocusLost();
-        }
-        mFocusedView = target->sharedPtr();
-        if (target) {
-            if (!target->hasFocus()) {
-                target->onFocusAcquired();
-            }
-        }
+        setFocusedView(target->sharedPtr());
     }
 }
 
@@ -184,6 +176,7 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
 
 void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     closeOverlappingSurfacesOnClick();
+    mPreventClickOnPointerRelease.emplace(false);
     auto focusCopy = mFocusedView.lock();
     mIgnoreTouchscreenKeyboardRequests = false;
     AViewContainer::onPointerPressed(event);
@@ -222,29 +215,29 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
 }
 
 void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
-    AViewContainer::onPointerReleased(event);
+    APointerReleasedEvent copy = event;
+    copy.triggerClick = !mPreventClickOnPointerRelease.valueOr(true);
+    mPreventClickOnPointerRelease.reset();
+    AViewContainer::onPointerReleased(copy);
+
+    // AView::onPointerMove handles cursor shape; need extra call in order to flush
+    forceUpdateCursor();
+}
+
+void ABaseWindow::forceUpdateCursor() {
+    AViewContainer::onPointerMove(mMousePos);
+}
+
+void ABaseWindow::onScroll(const AScrollEvent& event) {
+    AViewContainer::onScroll(event);
+    AViewContainer::onPointerMove(mMousePos); // update hovers inside scrollarea
 }
 
 void ABaseWindow::onPointerMove(glm::ivec2 pos) {
     mMousePos = pos;
-    AViewContainer::onPointerMove(pos);
-    _<AView> v;
     mCursor = ACursor::DEFAULT;
+    AViewContainer::onPointerMove(pos);
 
-    getViewAtRecursive(pos, [&](const _<AView>& view) {
-        if (const auto& c = view->getCursor()) {
-            mCursor = c;
-        }
-        v = view;
-        return false;
-    });
-    if (!AWindow::shouldDisplayHoverAnimations()) {
-        if (auto focused = mFocusedView.lock()) {
-            if (focused != v) {
-                focused->onPointerMove(pos - focused->getPositionInWindow());
-            }
-        }
-    }
     emit mouseMove(pos);
 }
 
@@ -312,15 +305,6 @@ void ABaseWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 
 }
 
-void ABaseWindow::updateFocusChain() {
-    if (auto focusedView = mFocusedView.lock()) {
-        _weak<AView> focusChainTarget = mFocusedView;
-        for (auto target = focusedView->getParent(); target != nullptr; target = target->getParent()) {
-            target->setFocusChainTarget(std::move(focusChainTarget));
-            focusChainTarget = target->weakPtr();
-        }
-    }
-}
 
 void ABaseWindow::requestTouchscreenKeyboard() {
     if (mIgnoreTouchscreenKeyboardRequests) {
@@ -337,10 +321,43 @@ void ABaseWindow::hideTouchscreenKeyboard() {
     hideTouchscreenKeyboardImpl();
 }
 
+bool ABaseWindow::shouldDisplayHoverAnimations() const {
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+    return false;
+#else
+    return isFocused() && !AInput::isKeyDown(AInput::LBUTTON)
+           && !AInput::isKeyDown(AInput::CBUTTON)
+           && !AInput::isKeyDown(AInput::RBUTTON)
+           && !isPreventingClickOnPointerRelease();
+#endif
+}
+
+
 void ABaseWindow::requestTouchscreenKeyboardImpl() {
     // stub
 }
 
 void ABaseWindow::hideTouchscreenKeyboardImpl() {
     // stub
+}
+
+void ABaseWindow::preventClickOnPointerRelease() {
+    if (!mPreventClickOnPointerRelease) {
+        return;
+    }
+    if (mPreventClickOnPointerRelease.value()) {
+        return;
+    }
+
+    onClickPrevented();
+
+    mPreventClickOnPointerRelease = true;
+}
+
+bool ABaseWindow::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
+    bool v = AViewContainer::onGesture(origin, event);
+    if (v) {
+        preventClickOnPointerRelease();
+    }
+    return v;
 }

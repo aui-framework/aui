@@ -18,7 +18,7 @@
 
 #include <AUI/Platform/AWindow.h>
 
-struct ViewActionType: ViewActionClick {
+struct ViewActionType: ViewActionClick<> {
     AString text;
 
     explicit ViewActionType(const AString& text) : text(text) {}

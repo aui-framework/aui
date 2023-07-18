@@ -130,7 +130,11 @@ void AScrollArea::onScroll(const AScrollEvent& event) {
         return;
     }
 
+    auto prevScroll = mVerticalScrollbar->getCurrentScroll();
     mVerticalScrollbar->onScroll(event);
+    if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
+        AWindow::current()->preventClickOnPointerRelease();
+    }
 }
 
 int AScrollArea::getContentMinimumHeight(ALayoutDirection layout) {

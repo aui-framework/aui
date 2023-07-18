@@ -80,9 +80,11 @@ void AWindow::redraw() {
         ARaiiHelper endPaintCaller = [&] {
             mRenderingContext->endPaint(*this);
         };
-        if (mUpdateLayoutFlag) {
-            mUpdateLayoutFlag = false;
-            updateLayout();
+        repeat(2) { // AText may trigger extra layout update
+            if (mUpdateLayoutFlag) {
+                mUpdateLayoutFlag = false;
+                updateLayout();
+            }
         }
 #if AUI_PLATFORM_WIN
         mRedrawFlag = true;
@@ -143,6 +145,13 @@ void AWindow::onFocusLost() {
     }
 }
 
+void AWindow::onKeyDown(AInput::Key key) {
+    ABaseWindow::onKeyDown(key);
+    if (mFocusNextViewOnTab && key == AInput::Key::TAB) {
+        focusNextView();
+    }
+}
+
 void AWindow::onKeyRepeat(AInput::Key key) {
     if (auto v = getFocusedView())
         v->onKeyRepeat(key);
@@ -151,17 +160,6 @@ void AWindow::onKeyRepeat(AInput::Key key) {
 ABaseWindow* AWindow::current() {
     return currentWindowStorage();
 }
-
-bool AWindow::shouldDisplayHoverAnimations() {
-#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
-    return false;
-#else
-    return current()->isFocused() && !AInput::isKeyDown(AInput::LBUTTON)
-                                  && !AInput::isKeyDown(AInput::CBUTTON)
-                                  && !AInput::isKeyDown(AInput::RBUTTON);
-#endif
-}
-
 
 void AWindow::flagUpdateLayout() {
     flagRedraw();
@@ -262,6 +260,12 @@ void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
         c->close();
     }
 }
+
+void AWindow::forceUpdateCursor() {
+    ABaseWindow::forceUpdateCursor();
+    AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
+}
+
 void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
     for (const auto& graphicsApi : ARenderingContextOptions::get().initializationOrder) {
         try {

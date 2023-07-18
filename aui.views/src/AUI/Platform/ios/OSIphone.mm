@@ -27,5 +27,9 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
     //AThread::setThreadName("UI thread");
     NSString * appDelegateClassName = appDelegateClassName = NSStringFromClass([AppDelegate class]);;
 
+#ifdef AUI_CATCH_UNHANDLED
+    extern void aui_init_signal_handler();
+    aui_init_signal_handler();
+#endif
     return UIApplicationMain(argc, argv, nil, appDelegateClassName);
 }

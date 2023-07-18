@@ -21,7 +21,7 @@
 #pragma once
 
 
-#include "CommonRenderingContext.h"
+#include <AUI/Platform/CommonRenderingContext.h>
 #include "ARenderingContextOptions.h"
 
 class OpenGLRenderingContext: public CommonRenderingContext {

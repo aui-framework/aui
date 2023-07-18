@@ -498,7 +498,7 @@ namespace aui::impl::future {
  * cout << *theFuture; // 123
  * @endcode
  *
- * However, it can be default-constructed and the result can be supplied manually with the supplyResult() function:
+ * However, it can be default-constructed and the result can be supplied manually with the supplyResult() method:
  *
  * @code{cpp}
  * AFuture<int> theFuture;
@@ -535,6 +535,12 @@ public:
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;
 
+    /**
+     * @brief Pushes the result to AFuture.
+     * @param v value
+     * @details
+     * After AFuture grabbed the value, supplyResult calls onSuccess listeners with the new value.
+     */
     void supplyResult(T v) const noexcept {
         auto& inner = (*super::mInner);
         assert(("task is already provided", inner->task == nullptr));
@@ -563,12 +569,50 @@ public:
         return super::mInner == r.mInner;
     }
 
+    /**
+     * @brief Add onSuccess callback to the future.
+     * @details
+     * The callback will be called on the worker's thread when the async task is returned a result.
+     *
+     * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
+     *
+     * @note
+     * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
+     * Example:
+     * @code{cpp}
+     * ...
+     * private:
+     *   AAsyncHolder mAsync;
+     * ...
+     *
+     * mAsync << functionReturningFuture().onSuccess(...); // or onError
+     * @endcode
+     */
     template<aui::invocable<const T&> Callback>
     const AFuture& onSuccess(Callback&& callback) const noexcept {
         super::onSuccess(std::forward<Callback>(callback));
         return *this;
     }
 
+    /**
+     * @brief Add onError callback to the future.
+     * @details
+     * The callback will be called on the worker's thread when the async task is returned a result.
+     *
+     * onError does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
+     *
+     * @note
+     * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
+     * Example:
+     * @code{cpp}
+     * ...
+     * private:
+     *   AAsyncHolder mAsync;
+     * ...
+     *
+     * mAsync << functionReturningFuture().onSuccess(...); // or onError
+     * @endcode
+     */
     template<aui::invocable<const AException&> Callback>
     const AFuture& onError(Callback&& callback) const noexcept {
         super::onError(std::forward<Callback>(callback));
@@ -615,6 +659,11 @@ public:
         inner->reportException();
     }
 
+    /**
+     * @brief Pushes "success" result.
+     * @details
+     * supplyResult calls onSuccess listeners with the new value.
+     */
     void supplyResult() const noexcept {
         auto& inner = (*super::mInner);
         assert(("task is already provided", inner->task == nullptr));
@@ -641,6 +690,18 @@ public:
      * The callback will be called on the worker's thread when the async task is returned a result.
      *
      * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
+     *
+     * @note
+     * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
+     * Example:
+     * @code{cpp}
+     * ...
+     * private:
+     *   AAsyncHolder mAsync;
+     * ...
+     *
+     * mAsync << functionReturningFuture().onSuccess(...); // or onError
+     * @endcode
      */
     template<aui::invocable Callback>
     const AFuture& onSuccess(Callback&& callback) const noexcept {
@@ -654,6 +715,18 @@ public:
      * The callback will be called on the worker's thread when the async task is returned a result.
      *
      * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
+     *
+     * @note
+     * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
+     * Example:
+     * @code{cpp}
+     * ...
+     * private:
+     *   AAsyncHolder mAsync;
+     * ...
+     *
+     * mAsync << functionReturningFuture().onSuccess(...); // or onError
+     * @endcode
      */
     template<aui::invocable<const AException&> Callback>
     const AFuture& onError(Callback&& callback) const noexcept {
