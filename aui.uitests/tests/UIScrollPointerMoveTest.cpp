@@ -172,7 +172,7 @@ TEST_F(UIScrollPointerMove, MouseDownMoveAndBack) {
         testing::InSequence s;
         APointerPressedEvent event;
         event.position = mView->getCenterPointInWindow();
-        event.button =AInput::LBUTTON;
+        event.asButton = AInput::LBUTTON;
         mWindow->onPointerPressed(event);
         EXPECT_CALL(*mView, onMouseLeave);
         mWindow->onPointerMove(posOutOfView);
@@ -196,7 +196,7 @@ TEST_F(UIScrollPointerMove, MouseDownMoveAndBack) {
 
         APointerReleasedEvent event;
         event.position = mView->getCenterPointInWindow();
-        event.button = AInput::LBUTTON;
+        event.asButton = AInput::LBUTTON;
         mWindow->onPointerReleased(event);
     }
 
