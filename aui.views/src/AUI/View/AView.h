@@ -158,6 +158,13 @@ private:
      */
     bool mRedrawRequested = false;
 
+
+    /**
+     * @brief True if last called function among onMouseEnter and onMouseLeave is onMouseEnter, false otherwise
+     * @note This flag is used to avoid extra calls of onMouseEnter and onMouseLeave when hover is disabled
+     */
+    bool mHasMouseEntered = false;
+
 protected:
     /**
      * @brief Parent AView.
@@ -651,6 +658,10 @@ public:
 
     void setMouseCollisionPolicy(MouseCollisionPolicy mouseCollisionPolicy) {
         mMouseCollisionPolicy = mouseCollisionPolicy;
+    }
+
+    bool hasMouseEntered() const {
+        return mHasMouseEntered;
     }
 
     /**
