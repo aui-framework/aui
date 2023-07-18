@@ -304,7 +304,7 @@ public:
     }
 
     /**
-     * Removes first element if predicate(container[i]) == true.
+     * Removes only the first element if predicate(container[i]) == true.
      * @param predicate predicate
      */
     template<aui::predicate<StoredType> Predicate>
