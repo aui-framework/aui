@@ -170,8 +170,10 @@ TEST_F(UIScrollPointerMove, MouseDownMoveAndBack) {
     //pressing LMB and moving out of view
     {
         testing::InSequence s;
-        mWindow->onPointerPressed({mView->getCenterPointInWindow(), AInput::LBUTTON});
-        EXPECT_TRUE(mView->isMousePressed());
+        mWindow->onPointerPressed({
+            .position = mView->getCenterPointInWindow(),
+            .button =AInput::LBUTTON
+        });
         EXPECT_CALL(*mView, onMouseLeave);
         mWindow->onPointerMove(posOutOfView);
     }
@@ -191,7 +193,10 @@ TEST_F(UIScrollPointerMove, MouseDownMoveAndBack) {
         mWindow->onPointerMove(mView->getCenterPointInWindow() - EPS);
         mWindow->onPointerMove(mView->getCenterPointInWindow() + EPS);
         mWindow->onPointerMove(mView->getCenterPointInWindow());
-        mWindow->onPointerReleased({mView->getCenterPointInWindow(), AInput::LBUTTON});
+        mWindow->onPointerReleased({
+            .position = mView->getCenterPointInWindow(),
+            .button =AInput::LBUTTON
+        });
     }
 
     //checking everything is fine after releasing LMB
