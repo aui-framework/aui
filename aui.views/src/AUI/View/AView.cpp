@@ -351,7 +351,11 @@ void AView::onMouseLeave()
 
 void AView::onPointerPressed(const APointerPressedEvent& event)
 {
-    mPressed.set(this, true);
+    if (!mPressed.contains(event.pointerIndex)) {
+        mPressed << event.pointerIndex;
+        emit pressedState(true, event.pointerIndex);
+        emit pressed(event.pointerIndex);
+    }
 
     /**
      * If button is pressed on this view, we want to know when the mouse will be released even if mouse outside
@@ -369,13 +373,16 @@ void AView::onPointerPressed(const APointerPressedEvent& event)
 
 void AView::onPointerReleased(const APointerReleasedEvent& event)
 {
-    mPressed.set(this, false);
+    mPressed.removeAll(event.pointerIndex);
+    emit pressedState(false, event.pointerIndex);
+    emit released(event.pointerIndex);
+
     if (event.triggerClick) {
-        emit clickedButton(event.button);
-        switch (event.button) {
-            case AInput::LBUTTON:
-                emit clicked();
-                break;
+        emit clickedButton(event.pointerIndex);
+        if (event.asButton == AInput::LBUTTON) {
+            emit clicked();
+        }
+        switch (event.pointerIndex.rawValue()) {
             case AInput::RBUTTON:
                 emit clickedRight;
                 emit clickedRightOrLongPressed;
@@ -396,7 +403,7 @@ AMenuModel AView::composeContextMenu() {
 
 void AView::onPointerDoubleClicked(const APointerPressedEvent& event)
 {
-    emit doubleClicked(event.button);
+    emit doubleClicked(event.pointerIndex);
 }
 
 void AView::onScroll(const AScrollEvent& event) {
@@ -667,9 +674,11 @@ void AView::setExtraStylesheet(AStylesheet&& extraStylesheet) {
 }
 
 void AView::onClickPrevented() {
-    if (mPressed) {
-        mPressed.set(this, false);
+    for (auto v : mPressed) {
+        emit pressedState(false, v);
+        emit released(v);
     }
+    mPressed.clear();
 }
 
 void AView::setCursor(AOptional<ACursor> cursor) {

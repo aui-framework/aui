@@ -40,7 +40,7 @@ TEST(Uuid, Raw) {
 }
 TEST(Uuid, Random) {
     ARandom r;
-    repeat(100) {
+    AUI_REPEAT(100) {
         auto u = r.nextUuid();
         AUuid(u.toString());
         AUuid(u.toRawString());

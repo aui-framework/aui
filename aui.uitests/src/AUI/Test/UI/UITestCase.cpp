@@ -117,7 +117,7 @@ void testing::UITest::TearDown() {
     AWindow::getWindowManager().removeAllWindows();
 
     // to process all ui messages
-    repeat (10) {
+    AUI_REPEAT (10) {
         uitest::frame();
     };
 

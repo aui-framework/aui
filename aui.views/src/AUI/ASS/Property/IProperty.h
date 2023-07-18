@@ -24,6 +24,6 @@ namespace ass::prop {
     struct Property;
 }
 
+#include <AUI/View/AView.h>
 #include <AUI/ASS/PropertyListRecursive.h>
 #include <AUI/ASS/unset.h>
-#include <AUI/View/AView.h>

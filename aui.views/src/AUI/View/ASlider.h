@@ -37,7 +37,7 @@ public:
 
     [[nodiscard]]
     bool isDragging() const noexcept {
-        return isMousePressed();
+        return isPressed();
     }
 
     void setValue(aui::float_within_0_1 value) {
