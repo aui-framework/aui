@@ -332,7 +332,7 @@ void AView::ensureAssUpdated()
 
 void AView::onMouseEnter()
 {
-    mHasMouseEntered = true;
+    mMouseEntered = true;
     if (AWindow::current()->shouldDisplayHoverAnimations()) {
         mHovered.set(this, true);
     }
@@ -346,7 +346,7 @@ void AView::onPointerMove(glm::ivec2 pos)
 
 void AView::onMouseLeave()
 {
-    mHasMouseEntered = false;
+    mMouseEntered = false;
     mHovered.set(this, false);
 }
 
