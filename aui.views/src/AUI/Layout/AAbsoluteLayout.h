@@ -16,29 +16,36 @@
 
 #pragma once
 
-
-#include <AUI/Util/AViewEntry.h>
 #include "ALinearLayout.h"
 
+namespace aui::detail {
+    struct AbsoluteLayoutCell {
+        aui::non_null<_<AView>> view;
+        AMetric pivotX = 0, pivotY = 0;
+        AOptional<AMetric> sizeX, sizeY;
+
+        operator _<AView>() const {
+            return view;
+        }
+    };
+}
+
 /**
- * @brief Imitates behaviour of word wrapping, but uses @ref AView "views" instead words
+ * @brief Absolute positioning layout. Allows to explicitly set your own coordinates.
  * @ingroup layout_managers
  */
-class API_AUI_VIEWS AWordWrappingLayout: public ALinearLayout<> {
-private:
-    AVector<AViewEntry> mViewEntry;
-
+class API_AUI_VIEWS AAbsoluteLayout: public ALinearLayout<aui::detail::AbsoluteLayoutCell> {
 public:
     void onResize(int x, int y, int width, int height) override;
 
-    int getMinimumWidth() override;
-
-    int getMinimumHeight() override;
+    void add(aui::detail::AbsoluteLayoutCell cell);
 
     void addView(const _<AView>& view, AOptional<size_t> index) override;
 
-    void removeView(aui::no_escape<AView> view, size_t index) override;
+    int getMinimumWidth() override;
+    int getMinimumHeight() override;
 
+private:
+    using ViewInfo = aui::detail::AbsoluteLayoutCell;
 };
-
 

@@ -24,14 +24,15 @@
 #include <AUI/Platform/AWindow.h>
 
 namespace {
-    class DragAreaLayout: public ALayout {
+    class DragAreaLayout: public ALinearLayout<> {
     public:
-        void addView(size_t index, const _<AView>& view) override {
+        void addView(const _<AView>& view, AOptional<size_t> index) override {
+            ALinearLayout::addView(view, index);
             markViewToBeCentered(*view);
         }
 
-        void removeView(size_t index, const _<AView>& view) override {
-
+        void removeView(aui::no_escape<AView> view, size_t index) override {
+            LinearLayoutImpl::removeView(view, index);
         }
 
         void onResize(int x, int y, int width, int height) override {

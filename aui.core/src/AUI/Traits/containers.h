@@ -26,7 +26,7 @@
 #include <iterator>
 #include <algorithm>
 #include <cassert>
-
+#include <AUI/Common/AOptional.h>
 #include <AUI/Traits/iterators.h>
 
 
@@ -184,13 +184,18 @@ namespace aui::container {
     /**
      * @brief Removes first occurrence of <code>value</code>.
      * @ingroup core
+     * @return If the item is removed, it's index returned.
      */
     template<typename Container>
-    void remove_first(Container& container, typename Container::const_reference value) noexcept {
-        auto it = std::find(container.begin(), container.end(), value);
-        if (it != container.end()) {
-            container.erase(it);
+    AOptional<std::size_t> remove_first(Container& container, typename Container::const_reference value) noexcept {
+        std::size_t counter = 0;
+        for (auto it = container.begin(); it != container.end(); ++it, ++counter) {
+            if (*it == value) {
+                container.erase(it);
+                return counter;
+            }
         }
+        return {};
     }
 
     /**

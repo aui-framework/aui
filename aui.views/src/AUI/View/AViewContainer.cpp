@@ -68,7 +68,7 @@ AViewContainer::~AViewContainer() {
 void AViewContainer::addViews(AVector<_<AView>> views) {
     for (const auto& view: views) {
         view->mParent = this;
-        AUI_NULLSAFE(mLayout)->addView(-1, view);
+        AUI_NULLSAFE(mLayout)->addView(view);
         emit view->addedToContainer();
     }
 
@@ -82,7 +82,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
 void AViewContainer::addView(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
-    AUI_NULLSAFE(mLayout)->addView(-1, view);
+    AUI_NULLSAFE(mLayout)->addView(view);
     emit view->addedToContainer();
 }
 
@@ -97,14 +97,25 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
     mViews.insert(mViews.begin() + index, view);
     view->mParent = this;
     if (mLayout)
-        mLayout->addView(index, view);
+        mLayout->addView(view, index);
     emit view->addedToContainer();
 }
 
+void AViewContainer::setLayout(_<ALayout> layout) {
+    mViews.clear();
+    mLayout = std::move(layout);
+    mViews = mLayout->getAllViews();
+    for (const auto& v : mViews) {
+        v->mParent = this;
+        emit v->addedToContainer();
+    }
+}
+
 void AViewContainer::removeView(const _<AView>& view) {
-    mViews.removeFirst(view);
-    if (mLayout)
-        mLayout->removeView(-1, view);
+    auto index = mViews.removeFirst(view);
+    if (!index) return;
+    if (!mLayout) return;
+    mLayout->removeView(view, *index);
 }
 
 void AViewContainer::removeView(AView* view) {
@@ -112,8 +123,9 @@ void AViewContainer::removeView(AView* view) {
     if (it != mViews.end()) {
         if (mLayout) {
             auto sharedPtr = *it;
+            auto index = std::distance(mViews.begin(), it);
             mViews.erase(it);
-            mLayout->removeView(-1, sharedPtr);
+            mLayout->removeView(sharedPtr, index);
         } else {
             mViews.erase(it);
         }
@@ -121,9 +133,10 @@ void AViewContainer::removeView(AView* view) {
 }
 
 void AViewContainer::removeView(size_t index) {
+    auto view = std::move(mViews[index]);
     mViews.removeAt(index);
     if (mLayout)
-        mLayout->removeView(index, nullptr);
+        mLayout->removeView(view, index);
 }
 
 void AViewContainer::render() {
@@ -239,11 +252,6 @@ bool AViewContainer::consumesClick(const glm::ivec2& pos) {
     return false;
 }
 
-void AViewContainer::setLayout(_<ALayout> layout) {
-    mViews.clear();
-    mLayout = std::move(layout);
-}
-
 _<ALayout> AViewContainer::getLayout() const {
     return mLayout;
 }
@@ -326,8 +334,9 @@ void AViewContainer::updateLayout() {
 
 void AViewContainer::removeAllViews() {
     if (mLayout) {
-        for (auto& x: getViews()) {
-            mLayout->removeView(0, x);
+        // using reverse iterator wrap here as vector is not efficient in removing first elements
+        for (auto& x: aui::reverse_iterator_wrap(getViews())) {
+            mLayout->removeView(x, 0);
         }
     }
     mViews.clear();

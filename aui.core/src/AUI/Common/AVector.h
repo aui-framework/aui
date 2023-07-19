@@ -115,10 +115,11 @@ public:
     /**
      * Removes first occurrence of <code>item</code>.
      * @param item element to remove.
+     * @return If the item is removed, it's index returned.
      */
-    void removeFirst(const StoredType& item) noexcept
+    AOptional<std::size_t> removeFirst(const StoredType& item) noexcept
     {
-        aui::container::remove_first(*this, item);
+        return aui::container::remove_first(*this, item);
     }
 
 
@@ -296,10 +297,24 @@ public:
      * Removes element if predicate(container[i]) == true.
      * @param predicate predicate
      */
-    template<typename Predicate>
+    template<aui::predicate<StoredType> Predicate>
     void removeIf(Predicate&& predicate) noexcept
     {
         super::erase(std::remove_if(super::begin(), super::end(), std::forward<Predicate>(predicate)), super::end());
+    }
+
+    /**
+     * Removes only the first element if predicate(container[i]) == true.
+     * @param predicate predicate
+     */
+    template<aui::predicate<StoredType> Predicate>
+    void removeIfFirst(Predicate&& predicate) noexcept
+    {
+        auto i = std::find_if(super::begin(), super::end(), std::forward<Predicate>(predicate));
+        if (i == super::end()) {
+            return;
+        }
+        super::erase(i);
     }
 
     template<aui::mapper<std::size_t, StoredType> Callable>

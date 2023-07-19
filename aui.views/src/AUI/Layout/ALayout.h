@@ -120,10 +120,34 @@ public:
 	virtual ~ALayout() = default;
     const ADeque<_<AView>>& getViews();
 	virtual void onResize(int x, int y, int width, int height) = 0;
-	virtual void addView(size_t index, const _<AView>& view);
-	virtual void removeView(size_t index, const _<AView>& view);
+
+    /**
+     * @brief Attaches view to the layout.
+     * @param view view to attach.
+     * @param index index to insert at. If not specified, when the view is inserted at the end.
+     * @details
+     * See ABasicLayout for basic implementation of this method.
+     */
+	virtual void addView(const _<AView>& view, AOptional<size_t> index = std::nullopt) = 0;
+
+    /**
+     * @brief Detaches view from the layout.
+     * @param view view to detach.
+     * @param index index of the view in the container. This value is indented for optimization purposes in most cases;
+     *        the value may be ignored safely.
+     *
+     * @details
+     * See ABasicLayout for basic implementation of this method.
+     */
+	virtual void removeView(aui::no_escape<AView> view, size_t index) = 0;
+
 	virtual int getMinimumWidth() = 0;
 	virtual int getMinimumHeight() = 0;
+
+    /**
+     * @brief Visits all views in the layout.
+     */
+    virtual AVector<_<AView>> getAllViews() = 0;
 
     virtual ALayoutDirection getLayoutDirection();
 

@@ -32,6 +32,7 @@
 #include <AUI/Layout/AStackedLayout.h>
 #include <AUI/Layout/AGridLayout.h>
 #include <AUI/Layout/AAdvancedGridLayout.h>
+#include <AUI/Layout/AAbsoluteLayout.h>
 #include <AUI/Image/AImageLoaderRegistry.h>
 #include <AUI/i18n/AI18n.h>
 #include <AUI/ASS/ASS.h>
@@ -111,6 +112,7 @@ using Stacked = aui::ui_building::layouted_container_factory<AStackedLayout>;
 
 /**
  * Does not actually set the layout. The views' geometry is determined manually.
+ * @deprecated Use AAbsoluteLayout instead.
  * <p>
  *  <dl>
  *    <dt><b>View:</b> AViewContainer</dt>
@@ -119,6 +121,8 @@ using Stacked = aui::ui_building::layouted_container_factory<AStackedLayout>;
  * </p>
  */
 using CustomLayout = aui::ui_building::layouted_container_factory<std::nullopt_t>;
+
+
 
 /**
  * <p>

@@ -31,6 +31,10 @@ private:
     struct GridCell {
         _<AView> view;
         int x, y;
+
+        operator _<AView>() const {
+            return view;
+        }
     };
     AVector<GridCell> mCells;
     AVector<int> mIndices;
@@ -56,16 +60,19 @@ public:
     }
 
     void onResize(int x, int y, int width, int height) override;
-    void addView(size_t index, const _<AView>& view) override;
-
     void addView(const _<AView>& view, int x, int y);
-    void removeView(size_t index, const _<AView>& view) override;
+
+    void addView(const _<AView>& view, AOptional<size_t> index) override;
+
+    void removeView(aui::no_escape<AView> view, size_t index) override;
 
     int getMinimumWidth() override;
 
     int getMinimumHeight() override;
 
     int indexOf(_<AView> view);
+
+    AVector<_<AView>> getAllViews() override;
 
 };
 

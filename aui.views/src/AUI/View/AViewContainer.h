@@ -71,7 +71,7 @@ public:
         for (const auto& view: mViews) {
             view->mParent = this;
             if (mLayout)
-                mLayout->addView(-1, view);
+                mLayout->addView(view);
         }
     }
 
