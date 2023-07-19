@@ -38,7 +38,7 @@ class API_AUI_VIEWS AAbsoluteLayout: public ALinearLayout<aui::detail::AbsoluteL
 public:
     void onResize(int x, int y, int width, int height) override;
 
-    void addView(aui::detail::AbsoluteLayoutCell cell);
+    void add(aui::detail::AbsoluteLayoutCell cell);
 
     void addView(const _<AView>& view, AOptional<size_t> index) override;
 

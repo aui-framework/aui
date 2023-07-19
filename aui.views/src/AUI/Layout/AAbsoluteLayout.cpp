@@ -49,7 +49,7 @@ int AAbsoluteLayout::getMinimumHeight() {
     return v;
 }
 
-void AAbsoluteLayout::addView(aui::detail::AbsoluteLayoutCell cell) {
+void AAbsoluteLayout::add(aui::detail::AbsoluteLayoutCell cell) {
     mViews << std::move(cell);
 }
 
