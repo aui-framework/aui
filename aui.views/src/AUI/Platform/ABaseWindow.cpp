@@ -78,6 +78,10 @@ void ABaseWindow::setFocusedView(const _<AView>& view) {
 void ABaseWindow::updateFocusChain() {
     if (auto focusedView = mFocusedView.lock()) {
         _weak<AView> focusChainTarget = mFocusedView;
+        if (auto container = _cast<AViewContainer>(focusedView)) {
+            container->setFocusChainTarget({});
+        }
+
         for (auto target = focusedView->getParent(); target != nullptr; target = target->getParent()) {
             target->setFocusChainTarget(std::move(focusChainTarget));
             focusChainTarget = target->weakPtr();

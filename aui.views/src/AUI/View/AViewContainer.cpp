@@ -104,10 +104,12 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
 void AViewContainer::setLayout(_<ALayout> layout) {
     mViews.clear();
     mLayout = std::move(layout);
-    mViews = mLayout->getAllViews();
-    for (const auto& v : mViews) {
-        v->mParent = this;
-        emit v->addedToContainer();
+    if (mLayout) {
+        mViews = mLayout->getAllViews();
+        for (const auto& v : mViews) {
+            v->mParent = this;
+            emit v->addedToContainer();
+        }
     }
 }
 
@@ -196,15 +198,27 @@ int AViewContainer::getContentMinimumHeight(ALayoutDirection layout) {
 void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
     AView::onPointerPressed(event);
 
+    //discard focus chain target for proper updating of focus chain targets when moving from child to parent
+    mFocusChainTarget.reset();
+
     auto p = getViewAt(event.position);
     if (p && p->isEnabled()) {
         if (p->capturesFocus()) {
             p->focus(false);
+
+            //updating focus chain targets for views between p and first (maybe indirect) parent view of p that captures focus
+            auto childView = p;
+            for (auto view = p->getParent(); view; view = view->getParent()) {
+                if (view->focusChainTarget() == childView) {
+                    break;
+                }
+                view->setFocusChainTarget(childView);
+                childView = view->sharedPtr();
+            }
         }
         auto copy = event;
         copy.position -= p->getPosition();
         p->onPointerPressed(copy);
-        mFocusChainTarget = p;
     }
 }
 
