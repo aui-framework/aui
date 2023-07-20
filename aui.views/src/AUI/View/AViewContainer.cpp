@@ -335,8 +335,9 @@ void AViewContainer::updateLayout() {
 void AViewContainer::removeAllViews() {
     if (mLayout) {
         // using reverse iterator wrap here as vector is not efficient in removing first elements
+        std::size_t i = getViews().size();
         for (auto& x: aui::reverse_iterator_wrap(getViews())) {
-            mLayout->removeView(x, 0);
+            mLayout->removeView(x, --i);
         }
     }
     mViews.clear();
