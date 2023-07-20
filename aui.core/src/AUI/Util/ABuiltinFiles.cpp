@@ -61,3 +61,7 @@ void ABuiltinFiles::load(const unsigned char* data, size_t size) {
     AByteBuffer b(data, size);
     inst().loadBuffer(b);
 }
+
+bool ABuiltinFiles::contains(const AString& file) {
+    return inst().mBuffers.contains(file);
+}

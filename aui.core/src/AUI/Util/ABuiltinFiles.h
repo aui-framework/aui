@@ -38,4 +38,5 @@ public:
 	static void load(const unsigned char* data, size_t size);
 	static _<IInputStream> open(const AString& file);
     static AOptional<AByteBufferView> getBuffer(const AString& file);
+    static bool contains(const AString& file);
 };
