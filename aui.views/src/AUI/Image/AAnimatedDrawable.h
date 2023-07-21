@@ -22,16 +22,20 @@
 #include "IDrawable.h"
 #include "AUI/Image/IImageFactory.h"
 #include "AUI/Render/Render.h"
+#include "AUI/Common/ASignal.h"
 
-class AAnimatedDrawable : public IDrawable {
+class AAnimatedDrawable : public IDrawable, public AObject {
 private:
     _<IImageFactory> mFactory;
     _<ITexture> mTexture;
 public:
-    explicit AAnimatedDrawable(_<IImageFactory> factory): mFactory (std::move(factory)) {}
-    ~AAnimatedDrawable() = default;
+    explicit AAnimatedDrawable(_<IImageFactory> factory);
+    ~AAnimatedDrawable() override = default;
 
     void draw(const Params &params) override;
     glm::ivec2 getSizeHint() override;
+
+signals:
+    emits<> animationFinished;
 };
 

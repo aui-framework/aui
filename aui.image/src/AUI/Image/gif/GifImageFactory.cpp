@@ -22,6 +22,7 @@
 #include "AUI/Image/AImage.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
+#include "AUI/Util/ARaiiHelper.h"
 
 GifImageFactory::GifImageFactory(AByteBufferView buf) {
     mCurrentFrameIndex = 0;
@@ -48,6 +49,11 @@ AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
     if (mCurrentFrameIndex >= mFramesCount) {
         mCurrentFrameIndex = 0;
     }
+    ARaiiHelper helper = [this, frameIndex = mCurrentFrameIndex](){
+        if (frameIndex == 0 && mOnAnimationFinished) {
+            mOnAnimationFinished();
+        }
+    };
 
     unsigned format = APixelFormat::BYTE;
     switch (mChannelsCount) {
