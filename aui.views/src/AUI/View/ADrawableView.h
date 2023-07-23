@@ -29,7 +29,7 @@
  * @ingroup useful_views
  */
 class API_AUI_VIEWS ADrawableView: public AView {
-private:
+protected:
     _<IDrawable> mDrawable;
 
 public:
@@ -41,9 +41,6 @@ public:
         mDrawable = drawable;
         redraw();
     }
-
-protected:
-
 };
 
 
