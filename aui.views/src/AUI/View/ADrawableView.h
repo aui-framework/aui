@@ -29,9 +29,6 @@
  * @ingroup useful_views
  */
 class API_AUI_VIEWS ADrawableView: public AView {
-protected:
-    _<IDrawable> mDrawable;
-
 public:
     explicit ADrawableView(const AUrl& url);
     explicit ADrawableView(const _<IDrawable>& drawable);
@@ -41,6 +38,14 @@ public:
         mDrawable = drawable;
         redraw();
     }
+
+    [[nodiscard]]
+    const _<IDrawable>& getDrawable() const noexcept {
+        return mDrawable;
+    }
+
+private:
+    _<IDrawable> mDrawable;
 };
 
 
