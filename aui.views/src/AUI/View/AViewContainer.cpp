@@ -153,11 +153,11 @@ void AViewContainer::onMouseEnter() {
 void AViewContainer::onPointerMove(glm::ivec2 pos) {
     AView::onPointerMove(pos);
 
-    auto viewUnderCursor = getViewAt(pos);
-    auto targetView = isPressed() ? mFocusChainTarget.lock() : viewUnderCursor;
+    auto viewUnderPointer = getViewAt(pos);
+    auto targetView = isPressed() ? mFocusChainTarget.lock() : viewUnderPointer;
 
-    if (viewUnderCursor && !viewUnderCursor->isMouseEntered()) {
-        viewUnderCursor->onMouseEnter();
+    if (viewUnderPointer && !viewUnderPointer->isMouseEntered()) {
+        viewUnderPointer->onMouseEnter();
     }
 
     if (targetView) {
@@ -166,7 +166,7 @@ void AViewContainer::onPointerMove(glm::ivec2 pos) {
     }
 
     for (auto& v: mViews) {
-        if (v->isMouseEntered() && v != viewUnderCursor) {
+        if (v->isMouseEntered() && v != viewUnderPointer) {
             v->onMouseLeave();
         }
     }
@@ -224,13 +224,17 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
 
 void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
     AView::onPointerReleased(event);
-    auto chainTarget = mFocusChainTarget.lock();
+    auto viewUnderPointer = getViewAt(event.position);
+    auto targetView = mFocusChainTarget.lock();
+    if (!targetView) {
+        targetView = viewUnderPointer;
+    }
 
-    if (chainTarget && chainTarget->isEnabled() && chainTarget->isPressed()) {
+    if (targetView && targetView->isEnabled() && targetView->isPressed()) {
         auto copy = event;
-        copy.position -= chainTarget->getPosition();
-        copy.triggerClick &= getViewAt(event.position) == chainTarget;
-        chainTarget->onPointerReleased(copy);
+        copy.position -= targetView->getPosition();
+        copy.triggerClick &= viewUnderPointer == targetView;
+        targetView->onPointerReleased(copy);
     }
 }
 
