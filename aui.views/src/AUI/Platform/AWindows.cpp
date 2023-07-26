@@ -33,8 +33,8 @@
 
 
 
-bool AWindow::consumesClick(const glm::ivec2& pos) {
-    return AViewContainer::consumesClick(pos);
+bool AWindow::consumesClick() {
+    return AViewContainer::consumesClick();
 }
 
 void AWindow::onClosed() {

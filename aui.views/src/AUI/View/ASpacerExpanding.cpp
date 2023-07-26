@@ -17,6 +17,6 @@
 #include "ASpacerExpanding.h"
 
 
-bool ASpacerExpanding::consumesClick(const glm::ivec2& pos) {
+bool ASpacerExpanding::consumesClick() {
     return false;
 }

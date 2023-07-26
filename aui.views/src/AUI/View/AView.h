@@ -448,7 +448,7 @@ public:
      * @details
      * Used in AViewContainer::getViewAt method subset, thus affecting click event handling.
      */
-    virtual bool consumesClick(const glm::ivec2& pos);
+    virtual bool consumesClick();
 
     /**
      * @brief Returns the @ref AView::mPadding "padding".

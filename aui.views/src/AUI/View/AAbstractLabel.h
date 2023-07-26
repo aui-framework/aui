@@ -98,7 +98,7 @@ public:
 
     void doPrerender();
 
-    bool consumesClick(const glm::ivec2& pos) override;
+    bool consumesClick() override;
 
     void onDpiChanged() override;
 

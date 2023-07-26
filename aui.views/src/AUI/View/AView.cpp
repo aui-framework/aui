@@ -341,6 +341,7 @@ void AView::onMouseEnter()
 
 void AView::onPointerMove(glm::ivec2 pos)
 {
+    ALogger::info("Test") << "onPointerMove " << pos.x << ", " << pos.y;
     AWindow::current()->setCursor(mCursor);
 }
 
@@ -521,7 +522,7 @@ void AView::setGeometry(int x, int y, int width, int height) {
     emit geometryChanged({x, y}, {width, height});
 }
 
-bool AView::consumesClick(const glm::ivec2& pos) {
+bool AView::consumesClick() {
     return true;
 }
 

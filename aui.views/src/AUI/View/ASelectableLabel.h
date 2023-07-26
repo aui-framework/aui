@@ -47,7 +47,7 @@ public:
 
     void onFocusLost() override;
 
-    bool consumesClick(const glm::ivec2& pos) override;
+    bool consumesClick() override;
 
     void onFocusAcquired() override;
 

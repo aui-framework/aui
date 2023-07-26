@@ -169,7 +169,7 @@ void AEmbedAuiWrap::onPointerReleased(int x, int y, APointerIndex pointerIndex) 
 }
 
 bool AEmbedAuiWrap::isUIConsumesMouseAt(int x, int y) {
-    return mContainer->consumesClick(glm::ivec2{ x, y });
+    return mContainer->consumesClick();
 }
 
 void AEmbedAuiWrap::onPointerMove(int x, int y) {

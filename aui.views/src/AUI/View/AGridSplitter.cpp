@@ -107,6 +107,6 @@ void AGridSplitter::updateSplitterItems() {
     mHorizontalHelper.setItems(std::move(horizontal));
 }
 
-bool AGridSplitter::consumesClick(const glm::ivec2& pos) {
+bool AGridSplitter::consumesClick() {
     return true;
 }

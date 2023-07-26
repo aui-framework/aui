@@ -259,15 +259,9 @@ void AViewContainer::onScroll(const AScrollEvent& event) {
     }
 }
 
-bool AViewContainer::consumesClick(const glm::ivec2& pos) {
-    // has layout check
-    if (mAss[int(ass::prop::PropertySlot::BACKGROUND_SOLID)] ||
-        mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)])
-        return true;
-    auto p = getViewAt(pos);
-    if (p)
-        return p->consumesClick(pos - p->getPosition());
-    return false;
+bool AViewContainer::consumesClick() {
+    return mAss[int(ass::prop::PropertySlot::BACKGROUND_SOLID)] ||
+           mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)];
 }
 
 _<ALayout> AViewContainer::getLayout() const {
@@ -303,7 +297,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> f
                 if (!possibleOutput) {
                     possibleOutput = view;
                 }
-                if (view->consumesClick(targetPos)) {
+                if (view->consumesClick()) {
                     return view;
                 }
             }

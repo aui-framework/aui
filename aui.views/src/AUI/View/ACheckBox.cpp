@@ -25,7 +25,7 @@ ACheckBox::ACheckBox()
 }
 
 
-bool ACheckBox::consumesClick(const glm::ivec2& pos) {
+bool ACheckBox::consumesClick() {
     return true;
 }
 

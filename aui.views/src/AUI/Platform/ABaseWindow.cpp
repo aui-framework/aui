@@ -27,6 +27,7 @@
 #include <AUI/Util/kAUI.h>
 #include <chrono>
 #include "APlatform.h"
+#include "AUI/Logging/ALogger.h"
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Util/ALayoutInflater.h>
@@ -240,7 +241,9 @@ void ABaseWindow::onScroll(const AScrollEvent& event) {
 void ABaseWindow::onPointerMove(glm::ivec2 pos) {
     mMousePos = pos;
     mCursor = ACursor::DEFAULT;
+    ALogger::info("Test") << "------------------------------";
     AViewContainer::onPointerMove(pos);
+    ALogger::info("Test") << "------------------------------";
 
     emit mouseMove(pos);
 }

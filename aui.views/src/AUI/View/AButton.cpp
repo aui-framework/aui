@@ -36,6 +36,6 @@ void AButton::setDefault(bool isDefault) {
 
 }
 
-bool AButton::consumesClick(const glm::ivec2& pos) {
+bool AButton::consumesClick() {
     return true;
 }

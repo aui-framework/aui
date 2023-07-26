@@ -294,6 +294,14 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                         return _new<ATreeView>(model);
                     }(),
                 },
+
+                // tree view
+                GroupBox {
+                    Label { "A lot of views" },
+                    _new<AListView>(_new<AListModel<AString>>((AVector<AString>::generate(1000, [](std::size_t i) -> AString {
+                        return AString::number(i);
+                    })))),
+                },
             },
             Vertical::Expanding {
                 // fields

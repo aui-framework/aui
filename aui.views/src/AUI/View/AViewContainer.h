@@ -110,7 +110,7 @@ public:
 
     bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 
-    bool consumesClick(const glm::ivec2& pos) override;
+    bool consumesClick() override;
 
     void setSize(glm::ivec2 size) override;
 
@@ -193,7 +193,7 @@ public:
                 }
             }
 
-            if (view->consumesClick(targetPos)) {
+            if (view->consumesClick()) {
                 if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE &&
                                                                         view->getVisibility() !=
                                                                         Visibility::UNREACHABLE)) {

@@ -83,7 +83,7 @@ void ADragArea::ADraggableHandle::onPointerPressed(const APointerPressedEvent& e
     if (mCheckForClickConsumption) {
         auto p = getViewAt(event.position);
         if (p) {
-            if (p->consumesClick(event.position - p->getPosition())) {
+            if (p->consumesClick()) {
                 return;
             }
         }

@@ -131,7 +131,7 @@ void ASelectableLabel::onKeyDown(AInput::Key key) {
     }
 }
 
-bool ASelectableLabel::consumesClick(const glm::ivec2& pos) {
+bool ASelectableLabel::consumesClick() {
     return true;
 }
 

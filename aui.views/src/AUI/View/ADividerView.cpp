@@ -24,7 +24,7 @@ ADividerView::ADividerView() {
 
 }
 
-bool ADividerView::consumesClick(const glm::ivec2& pos) {
+bool ADividerView::consumesClick() {
     return false;
 }
 

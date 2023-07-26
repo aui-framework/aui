@@ -26,6 +26,6 @@ int ASpacerFixed::getContentMinimumHeight(ALayoutDirection layout) {
     return 0;
 }
 
-bool ASpacerFixed::consumesClick(const glm::ivec2& pos) {
+bool ASpacerFixed::consumesClick() {
     return false;
 }

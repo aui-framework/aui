@@ -280,7 +280,7 @@ glm::ivec2 AAbstractLabel::getIconSize() const {
     return {};
 }
 
-bool AAbstractLabel::consumesClick(const glm::ivec2& pos) {
+bool AAbstractLabel::consumesClick() {
     return false;
 }
 
