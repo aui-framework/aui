@@ -41,7 +41,7 @@ void ass::prop::Property<ass::BackgroundSolid>::renderFor(AView* view) {
 }
 
 bool ass::prop::Property<ass::BackgroundSolid>::isNone() {
-    return mInfo.color.isFullyTransparent();
+    return false;
 }
 ass::prop::PropertySlot ass::prop::Property<ass::BackgroundSolid>::getPropertySlot() const {
     return ass::prop::PropertySlot::BACKGROUND_SOLID;
