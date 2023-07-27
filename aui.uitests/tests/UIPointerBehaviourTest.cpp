@@ -74,10 +74,13 @@ protected:
                 mContainer = Vertical {
                   mView = _new<ViewMock>(),
                   Label { "Some bullshit to complicate layout" },
-                }
+                },
+                mOverlay = Vertical::Expanding {
+                  SpacerExpanding{},
+                  Button { "Another bullshit" }
+                },
               }
-            }
-            );
+            });
         mWindow->show();
         uitest::frame();
     }
@@ -90,6 +93,7 @@ protected:
 
     _<AWindow> mWindow;
     _<AViewContainer> mContainer;
+    _<AViewContainer> mOverlay;
     _<ViewMock> mView;
 };
 
@@ -177,4 +181,39 @@ TEST_F(UIPointerBehaviour, MultiplePointerPressedReleased) {
       .position = mView->getCenterPointInWindow(), // somewhere over the mView
       .pointerIndex = APointerIndex::button(AInput::LBUTTON),
     });
+}
+
+
+/**
+ * Checks that "Another bullshit" button is pressed.
+ */
+TEST_F(UIPointerBehaviour, FrontLayerClickTest) {
+    testing::InSequence s;
+
+    EXPECT_CALL(*mView, onPointerPressed(testing::_)).Times(0);
+    EXPECT_CALL(*mView, onPointerReleased(testing::_)).Times(0);
+    EXPECT_CALL(*mView, onDummyTest()).Times(1);
+
+    auto anotherBullshit = By::text("Another bullshit");
+    AObject::connect(anotherBullshit.one()->clicked, slot(mView)::onDummyTest);
+
+    anotherBullshit.perform(click());
+}
+
+
+/**
+ * Checks that ViewMock is not reachable as there's overlay in front of it.
+ */
+TEST_F(UIPointerBehaviour, ClickOverlayTest) {
+    testing::InSequence s;
+
+    EXPECT_CALL(*mView, onPointerPressed(testing::_)).Times(0);
+    EXPECT_CALL(*mView, onPointerReleased(testing::_)).Times(0);
+    EXPECT_CALL(*mView, onClicked()).Times(0);
+
+    mOverlay->setCustomStyle({
+        ass::BackgroundSolid(AColor::WHITE)
+    });
+
+    By::type<ViewMock>().perform(click());
 }
