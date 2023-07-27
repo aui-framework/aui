@@ -180,6 +180,7 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
 }
 
 void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
+    mMousePos = event.position;
     closeOverlappingSurfacesOnClick();
     mPreventClickOnPointerRelease.emplace(false);
     auto focusCopy = mFocusedView.lock();
