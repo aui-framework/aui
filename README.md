@@ -17,7 +17,7 @@ If you are using Linux, install following dependencies:
 
 ### Ubuntu
 ```bash
-sudo apt install pkg-config libgtk-3-dev libfontconfig-dev libXcursor-devel glew-devel libstdc++-static
+sudo apt install pkg-config libfontconfig-dev libxcursor-dev libxi-dev libxrandr-dev glew-devel libstdc++-static
 ```
 
 ### Fedora
