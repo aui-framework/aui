@@ -80,7 +80,8 @@ static void onSignal(int c, siginfo_t * info, void *_p __attribute__ ((__unused_
         case SIGABRT:
             unblockSignal(c);
 #if !AUI_COMPILER_CLANG
-            throw e;
+            std::exit(-1);
+            //throw e;
 #else
             std::exit(-1);
 #endif
