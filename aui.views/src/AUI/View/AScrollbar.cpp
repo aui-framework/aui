@@ -28,7 +28,11 @@
 
 
 using namespace std::chrono_literals;
-_<ATimer> AScrollbar::ourScrollButtonTimer = _new<ATimer>(100ms);
+
+const _<ATimer>& AScrollbar::buttonTimer() {
+    static _<ATimer> timer = _new<ATimer>(100ms);
+    return timer;
+}
 
 AScrollbar::AScrollbar(ALayoutDirection direction) :
     mDirection(direction) {
@@ -186,12 +190,12 @@ static int getButtonScrollSpeed() noexcept {
 
 void AScrollbar::scrollForward() {
     setScroll(mCurrentScroll + getButtonScrollSpeed());
-    ourScrollButtonTimer->start();
-    connect(ourScrollButtonTimer->fired, this, [&] {
+    buttonTimer()->start();
+    connect(buttonTimer()->fired, this, [&] {
         if (AInput::isKeyDown(AInput::LBUTTON)) {
             setScroll(mCurrentScroll + getButtonScrollSpeed());
         } else {
-            ourScrollButtonTimer->stop();
+            buttonTimer()->stop();
             AObject::disconnect();
         }
     });
@@ -201,12 +205,12 @@ void AScrollbar::scrollForward() {
 
 void AScrollbar::scrollBackward() {
     setScroll(mCurrentScroll - getButtonScrollSpeed());
-    ourScrollButtonTimer->start();
-    connect(ourScrollButtonTimer->fired, this, [&] {
+    buttonTimer()->start();
+    connect(buttonTimer()->fired, this, [&] {
         if (AInput::isKeyDown(AInput::LBUTTON)) {
             setScroll(mCurrentScroll - getButtonScrollSpeed());
         } else {
-            ourScrollButtonTimer->stop();
+            buttonTimer()->stop();
             AObject::disconnect();
         }
     });

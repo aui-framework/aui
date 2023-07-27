@@ -30,9 +30,10 @@ std::ostream& operator<<(std::ostream& o, const ACursorSelectable::Selection& e)
     return o;
 }
 
-
 class UITextField: public testing::UITest {
 public:
+    ~UITextField() override = default;
+
 protected:
     void SetUp() override {
         UITest::SetUp();

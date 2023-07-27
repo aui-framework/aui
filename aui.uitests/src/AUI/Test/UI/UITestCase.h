@@ -61,6 +61,8 @@ public:
 namespace testing {
     class API_AUI_UITESTS UITest : public testing::Test {
     public:
+        ~UITest() override = default;
+
     protected:
         void SetUp() override;
 
