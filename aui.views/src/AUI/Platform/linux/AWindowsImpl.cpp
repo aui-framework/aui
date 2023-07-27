@@ -56,7 +56,9 @@ void AWindow::quit() {
         return p.get() == this;
     });
 
-    XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
+    if (CommonRenderingContext::ourDisplay) {
+        XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
+    }
 
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;

@@ -117,7 +117,9 @@ private:
 ACursor::ACursor(aui::no_escape<AImage> image, int size) : mValue(std::make_unique<ACursor::Custom>(*image)), mSize(size) {}
 
 void ACursor::applyNativeCursor(AWindow* pWindow) const {
-
+    if (!bool(CommonRenderingContext::ourDisplay)) {
+        return;
+    }
     std::visit(aui::lambda_overloaded {
             [&](System s) {
                 switch (s) {

@@ -37,31 +37,6 @@
 #else
 #include <dirent.h>
 #include <cstring>
-
-
-/**
- * @brief Creates APath object from rawString with guaranteed exception safety. rawString is freed.
- * @param rawString raw string which should be converted to path
- * @param throwExceptionCallback called then rawString is null (error has occurred)
- * @return APath object
- */
-template<typename Callback>
-static APath safePathFromRawString(const char* rawString, Callback&& throwExceptionCallback) {
-    if (rawString == nullptr) {
-        throwExceptionCallback();
-    }
-
-    try {
-        auto result = APath(rawString);
-        delete [] rawString;
-        return result;
-    } catch (...) {
-        delete [] rawString;
-        throw;
-    }
-}
-
-
 #endif
 
 APath APath::parent() const {
@@ -236,9 +211,11 @@ APath APath::absolute() const {
 
     return APath(buf);
 #else
-    return safePathFromRawString(realpath(toStdString().c_str(), nullptr), [&] {
+    auto rawPath = aui::ptr::make_unique_with_deleter(realpath(toStdString().c_str(), nullptr), free);
+    if (!rawPath) {
         aui::impl::lastErrorToException("could not find absolute file " + *this);
-    });
+    }
+    return rawPath.get();
 #endif
 }
 
@@ -352,9 +329,11 @@ APath APath::workingDir() {
 #include <pwd.h>
 
 APath APath::workingDir() {
-    return safePathFromRawString(getcwd(nullptr, 0), [] {
+    auto cwd = aui::ptr::make_unique_with_deleter(getcwd(nullptr, 0), free);
+    if (!cwd) {
         aui::impl::lastErrorToException("could not find workingDir");
-    });
+    }
+    return cwd.get();
 }
 
 APath APath::getDefaultPath(APath::DefaultPath path) {

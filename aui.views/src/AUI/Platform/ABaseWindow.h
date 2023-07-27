@@ -330,7 +330,7 @@ private:
     bool mIgnoreTouchscreenKeyboardRequests = false; // to avoid flickering
 
 
-    glm::ivec2 mMousePos;
+    glm::ivec2 mMousePos = {0, 0};
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
 };
 

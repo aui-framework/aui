@@ -23,7 +23,7 @@ inline static void fromUtf8_impl(AString& destination, const char* str, size_t l
     destination.reserve(length);
 
     // parse utf8
-    for (; *str && length; --length)
+    for (; length && *str; --length)
     {
         if (*str & 0x80)
         {

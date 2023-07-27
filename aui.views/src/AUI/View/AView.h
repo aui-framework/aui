@@ -195,12 +195,12 @@ protected:
     /**
      * @brief Top left corner's position relative to top left corner's position of the parent AView.
      */
-    glm::ivec2 mPosition;
+    glm::ivec2 mPosition = { 0, 0 };
 
     /**
      * @brief Size, including content area, border and padding.
      */
-    glm::ivec2 mSize = glm::ivec2(20, 20);
+    glm::ivec2 mSize = { 20, 20 };
 
     /**
      * @brief Expansion coefficient. Hints layout manager how much this AView should be extended relative to other

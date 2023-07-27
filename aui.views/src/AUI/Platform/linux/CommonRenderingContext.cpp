@@ -23,6 +23,8 @@
 #include <X11/extensions/sync.h>
 #include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Util/kAUI.h"
+#include "AUI/Logging/ALogger.h"
+#include <AUI/UITestState.h>
 
 aui::assert_not_used_when_null<Display*> CommonRenderingContext::ourDisplay = nullptr;
 Screen* CommonRenderingContext::ourScreen = nullptr;
@@ -33,12 +35,15 @@ int xerrorhandler(Display* dsp, XErrorEvent* error) {
     if (CommonRenderingContext::ourDisplay == dsp) {
         char errorstring[0x100];
         XGetErrorText(dsp, error->error_code, errorstring, sizeof(errorstring));
-        printf("X Error: %s\n", errorstring);
+        ALogger::info("X11") << "Error: " << errorstring << "\n" << AStacktrace::capture(2);
     }
     return 0;
 }
 
 void CommonRenderingContext::ensureXLibInitialized() {
+    if (UITestState::isTesting()) {
+        return;
+    }
     struct DisplayInstance {
 
     public:

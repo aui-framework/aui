@@ -137,13 +137,14 @@ signals:
 
     void setSize(glm::ivec2 size) override;
 
+    static const _<ATimer>& buttonTimer();
+
 protected:
     ALayoutDirection mDirection;
     _<ASpacerExpanding> mOffsetSpacer;
     _<AScrollbarHandle> mHandle;
     _<AScrollbarButton> mForwardButton;
     _<AScrollbarButton> mBackwardButton;
-    static _<ATimer> ourScrollButtonTimer;
 
     size_t mViewportSize = 0, mFullSize = 0;
     int mCurrentScroll = 0;
