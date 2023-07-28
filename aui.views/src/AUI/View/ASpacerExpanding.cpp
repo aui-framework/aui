@@ -16,7 +16,3 @@
 
 #include "ASpacerExpanding.h"
 
-
-bool ASpacerExpanding::consumesClick() {
-    return false;
-}

@@ -64,9 +64,6 @@ public:
         setChecked(!unchecked);
     }
 
-    bool consumesClick() override;
-
-
 signals:
     emits<bool> checked;
 };

@@ -98,8 +98,6 @@ public:
 
     void doPrerender();
 
-    bool consumesClick() override;
-
     void onDpiChanged() override;
 
     void setText(AString newText) {

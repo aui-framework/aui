@@ -36,6 +36,3 @@ void AButton::setDefault(bool isDefault) {
 
 }
 
-bool AButton::consumesClick() {
-    return true;
-}

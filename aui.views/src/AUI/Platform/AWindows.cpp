@@ -32,11 +32,6 @@
 #include <AUI/Platform/SoftwareRenderingContext.h>
 
 
-
-bool AWindow::consumesClick() {
-    return AViewContainer::consumesClick();
-}
-
 void AWindow::onClosed() {
     quit();
 }

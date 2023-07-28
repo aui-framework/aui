@@ -259,11 +259,6 @@ void AViewContainer::onScroll(const AScrollEvent& event) {
     }
 }
 
-bool AViewContainer::consumesClick() {
-    return mAss[int(ass::prop::PropertySlot::BACKGROUND_SOLID)] ||
-           mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)];
-}
-
 _<ALayout> AViewContainer::getLayout() const {
     return mLayout;
 }
@@ -296,9 +291,6 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> f
             if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
                 if (!possibleOutput) {
                     possibleOutput = view;
-                }
-                if (view->consumesClick()) {
-                    return view;
                 }
             }
         }

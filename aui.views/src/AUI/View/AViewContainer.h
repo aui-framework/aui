@@ -110,8 +110,6 @@ public:
 
     bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 
-    bool consumesClick() override;
-
     void setSize(glm::ivec2 size) override;
 
     void setEnabled(bool enabled = true) override;
@@ -193,22 +191,8 @@ public:
                 }
             }
 
-            if (view->consumesClick()) {
-                if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE &&
-                                                                        view->getVisibility() !=
-                                                                        Visibility::UNREACHABLE)) {
-                    if (process(view)) {
-                        return true;
-                    }
-
-                    if (flags.test(AViewLookupFlags::ONLY_ONE_PER_CONTAINER)) {
-                        return false;
-                    }
-                }
-            } else {
-                if (possibleOutput == nullptr) {
-                    possibleOutput = view;
-                }
+            if (possibleOutput == nullptr) {
+                possibleOutput = view;
             }
         }
         if (possibleOutput) {

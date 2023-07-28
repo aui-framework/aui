@@ -26,6 +26,3 @@ int ASpacerFixed::getContentMinimumHeight(ALayoutDirection layout) {
     return 0;
 }
 
-bool ASpacerFixed::consumesClick() {
-    return false;
-}

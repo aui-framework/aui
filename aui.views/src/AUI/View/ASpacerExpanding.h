@@ -33,8 +33,6 @@ public:
 		setExpanding({ w, h });
 	}
 	virtual ~ASpacerExpanding() = default;
-
-    bool consumesClick() override;
 };
 
 

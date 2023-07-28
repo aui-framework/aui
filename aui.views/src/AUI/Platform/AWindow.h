@@ -304,8 +304,6 @@ signals:
      */
     emits<> restored;
 
-    bool consumesClick() override;
-
     void onPointerMove(glm::ivec2 pos) override;
 
     void flagUpdateLayout() override;

@@ -522,10 +522,6 @@ void AView::setGeometry(int x, int y, int width, int height) {
     emit geometryChanged({x, y}, {width, height});
 }
 
-bool AView::consumesClick() {
-    return true;
-}
-
 void AView::notifyParentChildFocused(const _<AView>& view) {
     if (mParent == nullptr)
         return;

@@ -24,8 +24,4 @@ ADividerView::ADividerView() {
 
 }
 
-bool ADividerView::consumesClick() {
-    return false;
-}
-
 ADividerView::~ADividerView() = default;

@@ -24,11 +24,6 @@ ACheckBox::ACheckBox()
     connect(clicked, me::toggle);
 }
 
-
-bool ACheckBox::consumesClick() {
-    return true;
-}
-
 bool ACheckBox::selectableIsSelectedImpl() {
     return mChecked;
 }

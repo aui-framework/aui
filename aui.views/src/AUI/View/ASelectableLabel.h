@@ -47,8 +47,6 @@ public:
 
     void onFocusLost() override;
 
-    bool consumesClick() override;
-
     void onFocusAcquired() override;
 
     void onKeyDown(AInput::Key key) override;

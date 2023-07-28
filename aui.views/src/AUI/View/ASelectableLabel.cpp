@@ -131,10 +131,6 @@ void ASelectableLabel::onKeyDown(AInput::Key key) {
     }
 }
 
-bool ASelectableLabel::consumesClick() {
-    return true;
-}
-
 void ASelectableLabel::onFocusAcquired() {
     AView::onFocusAcquired();
 }

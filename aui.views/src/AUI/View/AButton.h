@@ -42,8 +42,6 @@ public:
 
 	void setDefault(bool isDefault = true);
 
-    bool consumesClick() override;
-
 signals:
 	emits<bool> defaultState;
 	emits<> becameDefault;

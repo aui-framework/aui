@@ -82,8 +82,6 @@ public:
     void onPointerMove(glm::ivec2 pos) override;
 
     void onPointerReleased(const APointerReleasedEvent& event) override;
-
-    bool consumesClick() override;
 };
 
 

@@ -30,8 +30,6 @@ class API_AUI_VIEWS ADividerView: public AView {
 public:
     ADividerView();
     ~ADividerView() override;
-
-    bool consumesClick() override;
 };
 
 

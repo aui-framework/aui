@@ -280,10 +280,6 @@ glm::ivec2 AAbstractLabel::getIconSize() const {
     return {};
 }
 
-bool AAbstractLabel::consumesClick() {
-    return false;
-}
-
 AString AAbstractLabel::toString() const {
     return mText;
 }
