@@ -371,5 +371,5 @@ private:
     _weak<AView> mFocusChainTarget;
 
     void notifyParentEnabledStateChanged(bool enabled) override;
-    void onViewsListUpdated();
+    void invalidateCaches();
 };
