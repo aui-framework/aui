@@ -536,25 +536,19 @@ void AView::notifyParentChildFocused(const _<AView>& view) {
 void AView::focus(bool needFocusChainUpdate) {
     // holding reference here
     auto mySharedPtr = sharedPtr();
-    auto window = AWindow::current();
 
     notifyParentChildFocused(mySharedPtr);
 
-    try {
-        auto windowSharedPtr = window->sharedPtr(); // may throw bad_weak
-
-        ui_threadX [window, mySharedPtr = std::move(mySharedPtr), windowSharedPtr = std::move(windowSharedPtr), needFocusChainUpdate]() {
-            window->setFocusedView(mySharedPtr);
-            if (needFocusChainUpdate) {
-                window->updateFocusChain();
-            }
-        };
-    } catch (...) {
+    ui_threadX [mySharedPtr = std::move(mySharedPtr), needFocusChainUpdate]() {
+        auto window = mySharedPtr->getWindow();
+        if (!window) {
+            return;
+        }
         window->setFocusedView(mySharedPtr);
         if (needFocusChainUpdate) {
             window->updateFocusChain();
         }
-    }
+    };
 }
 
 bool AView::capturesFocus() {
