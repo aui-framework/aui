@@ -349,7 +349,18 @@ private:
     bool mSizeSet = false;
     glm::ivec2 mPreviousSize = mSize;
 
-    void notifyParentEnabledStateChanged(bool enabled) override;
+    struct ConsumesClickCache {
+        glm::ivec2 position;
+        bool value;
+    };
+
+    /**
+     * @brief Temporary cache for consumesClick().
+     * @details
+     * AUI does several view graph visits for a single event in order to call virtual methods properly.
+     * AViewContainer::consumesClick() is expensive method. Thus, we can cache it's result with given arguments.
+     */
+    AOptional<ConsumesClickCache> mConsumesClickCache;
 
     /**
      * @brief Focus chain target.
@@ -358,4 +369,7 @@ private:
      * The focus chaining mechanism allows to catch such events and process them in the containers.
      */
     _weak<AView> mFocusChainTarget;
+
+    void notifyParentEnabledStateChanged(bool enabled) override;
+    void onViewsListUpdated();
 };

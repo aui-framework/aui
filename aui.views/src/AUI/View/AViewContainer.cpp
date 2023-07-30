@@ -77,6 +77,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
     } else {
         mViews.insertAll(std::move(views));
     }
+    onViewsListUpdated();
 }
 
 void AViewContainer::addView(const _<AView>& view) {
@@ -84,6 +85,7 @@ void AViewContainer::addView(const _<AView>& view) {
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view);
     emit view->addedToContainer();
+    onViewsListUpdated();
 }
 
 void AViewContainer::addViewCustomLayout(const _<AView>& view) {
@@ -91,6 +93,7 @@ void AViewContainer::addViewCustomLayout(const _<AView>& view) {
     view->mParent = this;
     view->setSize(view->getMinimumSize());
     emit view->addedToContainer();
+    onViewsListUpdated();
 }
 
 void AViewContainer::addView(size_t index, const _<AView>& view) {
@@ -99,6 +102,7 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
     if (mLayout)
         mLayout->addView(view, index);
     emit view->addedToContainer();
+    onViewsListUpdated();
 }
 
 void AViewContainer::setLayout(_<ALayout> layout) {
@@ -111,6 +115,7 @@ void AViewContainer::setLayout(_<ALayout> layout) {
             emit v->addedToContainer();
         }
     }
+    onViewsListUpdated();
 }
 
 void AViewContainer::removeView(const _<AView>& view) {
@@ -118,6 +123,7 @@ void AViewContainer::removeView(const _<AView>& view) {
     if (!index) return;
     if (!mLayout) return;
     mLayout->removeView(view, *index);
+    onViewsListUpdated();
 }
 
 void AViewContainer::removeView(AView* view) {
@@ -132,6 +138,7 @@ void AViewContainer::removeView(AView* view) {
             mViews.erase(it);
         }
     }
+    onViewsListUpdated();
 }
 
 void AViewContainer::removeView(size_t index) {
@@ -139,6 +146,7 @@ void AViewContainer::removeView(size_t index) {
     mViews.removeAt(index);
     if (mLayout)
         mLayout->removeView(view, index);
+    onViewsListUpdated();
 }
 
 void AViewContainer::render() {
@@ -260,15 +268,29 @@ void AViewContainer::onScroll(const AScrollEvent& event) {
 }
 
 bool AViewContainer::consumesClick(const glm::ivec2& pos) {
+    if (mConsumesClickCache) {
+        if (mConsumesClickCache->position == pos) {
+            return mConsumesClickCache->value;
+        }
+    }
+
     AView::consumesClick(pos);
+
+    bool result = false;
+    ARaiiHelper onExit = [&] {
+        mConsumesClickCache = ConsumesClickCache{
+            .position = pos,
+            .value = result,
+        };
+    };
+
     // has layout check
     if (mAss[int(ass::prop::PropertySlot::BACKGROUND_SOLID)] ||
-        mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)])
-        return true;
+        mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
+        return result = true;
+    }
     auto p = getViewAt(pos);
-    if (p)
-        return p->consumesClick(pos - p->getPosition());
-    return false;
+    return result = (p != nullptr);
 }
 
 _<ALayout> AViewContainer::getLayout() const {
@@ -360,6 +382,7 @@ void AViewContainer::removeAllViews() {
         }
     }
     mViews.clear();
+    onViewsListUpdated();
 }
 
 void AViewContainer::updateParentsLayoutIfNecessary() {
@@ -461,4 +484,8 @@ void AViewContainer::adjustVerticalSizeToContent() {
 void AViewContainer::onClickPrevented() {
     AView::onClickPrevented();
     AUI_NULLSAFE(mFocusChainTarget.lock())->onClickPrevented();
+}
+
+void AViewContainer::onViewsListUpdated() {
+    mConsumesClickCache.reset();
 }
