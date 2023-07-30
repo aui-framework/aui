@@ -134,7 +134,9 @@ void AWindow::onFocusAcquired() {
 }
 
 void AWindow::onPointerMove(glm::ivec2 pos) {
+    ALogger::info("Pidor") << "----------------------------";
     ABaseWindow::onPointerMove(pos);
+    ALogger::info("Pidor") << "----------------------------";
 }
 
 void AWindow::onFocusLost() {
