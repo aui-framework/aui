@@ -686,3 +686,7 @@ void AView::setCursor(AOptional<ACursor> cursor) {
         AWindow::current()->forceUpdateCursor();
     }
 }
+
+bool AView::consumesPointerEvents() {
+    return true;
+}

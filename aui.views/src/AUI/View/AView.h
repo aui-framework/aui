@@ -749,6 +749,8 @@ public:
         return _weak<AView>(sharedPtr());
     }
 
+    virtual bool consumesPointerEvents();
+
     /**
      * Handles touch screen gesture event.
      * @param origin position where the event(s) started to occur from.

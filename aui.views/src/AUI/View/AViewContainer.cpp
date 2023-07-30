@@ -146,40 +146,6 @@ void AViewContainer::render() {
     drawViews(mViews.begin(), mViews.end());
 }
 
-void AViewContainer::onMouseEnter() {
-    AView::onMouseEnter();
-}
-
-void AViewContainer::onPointerMove(glm::ivec2 pos) {
-    AView::onPointerMove(pos);
-
-    auto viewUnderPointer = getViewAt(pos);
-    auto targetView = isPressed() ? mFocusChainTarget.lock() : viewUnderPointer;
-
-    if (viewUnderPointer && !viewUnderPointer->isMouseEntered()) {
-        viewUnderPointer->onMouseEnter();
-    }
-
-    if (targetView) {
-        auto mousePos = pos - targetView->getPosition();
-        targetView->onPointerMove(mousePos);
-    }
-
-    for (auto& v: mViews) {
-        if (v->isMouseEntered() && v != viewUnderPointer) {
-            v->onMouseLeave();
-        }
-    }
-}
-
-void AViewContainer::onMouseLeave() {
-    AView::onMouseLeave();
-    for (auto& view: mViews) {
-        if (view->isMouseHover())
-            view->onMouseLeave();
-    }
-}
-
 int AViewContainer::getContentMinimumWidth(ALayoutDirection layout) {
     if (mLayout) {
         return (glm::max)(mLayout->getMinimumWidth(), AView::getContentMinimumWidth(ALayoutDirection::NONE));
@@ -193,70 +159,6 @@ int AViewContainer::getContentMinimumHeight(ALayoutDirection layout) {
         return (glm::max)(mLayout->getMinimumHeight(), AView::getContentMinimumHeight(ALayoutDirection::NONE));
     }
     return AView::getContentMinimumHeight(ALayoutDirection::NONE);
-}
-
-void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
-    AView::onPointerPressed(event);
-
-    //discard focus chain target for proper updating of focus chain targets when moving from child to parent
-    mFocusChainTarget.reset();
-
-    auto p = getViewAt(event.position);
-    if (p && p->isEnabled()) {
-        if (p->capturesFocus()) {
-            p->focus(false);
-
-            //updating focus chain targets for views between p and first (maybe indirect) parent view of p that captures focus
-            auto childView = p;
-            for (auto view = p->getParent(); view; view = view->getParent()) {
-                if (view->focusChainTarget() == childView) {
-                    break;
-                }
-                view->setFocusChainTarget(childView);
-                childView = view->sharedPtr();
-            }
-        }
-        auto copy = event;
-        copy.position -= p->getPosition();
-        p->onPointerPressed(copy);
-    }
-}
-
-void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
-    AView::onPointerReleased(event);
-    auto viewUnderPointer = getViewAt(event.position);
-    auto targetView = mFocusChainTarget.lock();
-    if (!targetView) {
-        targetView = viewUnderPointer;
-    }
-
-    if (targetView && targetView->isEnabled() && targetView->isPressed()) {
-        auto copy = event;
-        copy.position -= targetView->getPosition();
-        copy.triggerClick &= viewUnderPointer == targetView;
-        targetView->onPointerReleased(copy);
-    }
-}
-
-void AViewContainer::onPointerDoubleClicked(const APointerPressedEvent& event) {
-    AView::onPointerDoubleClicked(event);
-
-    auto p = getViewAt(event.position);
-    if (p && p->isEnabled()) {
-        auto copy = event;
-        copy.position -= p->getPosition();
-        p->onPointerDoubleClicked(copy);
-    }
-}
-
-void AViewContainer::onScroll(const AScrollEvent& event) {
-    AView::onScroll(event);
-    auto p = getViewAt(event.origin);
-    if (p && p->isEnabled()) {
-        auto eventCopy = event;
-        eventCopy.origin -= p->getPosition();
-        p->onScroll(eventCopy);
-    }
 }
 
 _<ALayout> AViewContainer::getLayout() const {
@@ -391,13 +293,6 @@ void AViewContainer::notifyParentEnabledStateChanged(bool enabled) {
 
 bool AViewContainer::capturesFocus() {
     return false; // we don't want every single container to catch focus.
-}
-
-bool AViewContainer::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
-    auto p = getViewAt(origin);
-    if (p && p->isEnabled())
-        return p->onGesture(origin - p->getPosition(), event);
-    return false;
 }
 
 void AViewContainer::invalidateAssHelper() {

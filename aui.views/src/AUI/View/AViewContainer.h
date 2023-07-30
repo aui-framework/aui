@@ -86,29 +86,12 @@ public:
 
     void render() override;
 
-    void onMouseEnter() override;
-
-    void onPointerMove(glm::ivec2 pos) override;
-
-    void onMouseLeave() override;
-
     void onDpiChanged() override;
 
     void onClickPrevented() override;
 
     int getContentMinimumWidth(ALayoutDirection layout) override;
-
     int getContentMinimumHeight(ALayoutDirection layout) override;
-
-    void onPointerPressed(const APointerPressedEvent& event) override;
-
-    void onPointerDoubleClicked(const APointerPressedEvent& event) override;
-
-    void onPointerReleased(const APointerReleasedEvent& event) override;
-
-    void onScroll(const AScrollEvent& event) override;
-
-    bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 
     void setSize(glm::ivec2 size) override;
 
@@ -164,19 +147,20 @@ public:
      * The passed callback is a predicate. If predicate returns true, the execution of lookup is stopped and getViewAt
      * returns true. If predicate returns false, the lookup continues.
      */
-    template<aui::predicate<_<AView>> Callback>
+    template<aui::predicate<_<AView> /* view*/, glm::ivec2 /* viewLocalPos */> Callback>
     bool getViewAtRecursive(glm::ivec2 pos, const Callback& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
-        _<AView> possibleOutput; // for case if anyone does not consumesClick
-        auto process = [&](const _<AView>& view) {
-            if (callback(view))
+        auto process = [&](const _<AView>& view, glm::ivec2 viewLocalPos) {
+            if (callback(view, viewLocalPos))
                 return true;
             if (auto container = _cast<AViewContainer>(view)) {
-                if (container->getViewAtRecursive(pos - view->getPosition(), callback, flags)) {
+                if (container->getViewAtRecursive(viewLocalPos, callback, flags)) {
                     return true;
                 }
             }
             return false;
         };
+        _<AView> possibleOutput; // for case if anyone does not consumesClick
+        glm::ivec2 possibleOutputPos;
 
         for (const auto& view : aui::reverse_iterator_wrap(mViews)) {
             auto targetPos = pos - view->getPosition();
@@ -191,12 +175,27 @@ public:
                 }
             }
 
-            if (possibleOutput == nullptr) {
-                possibleOutput = view;
+            if (view->consumesPointerEvents()) {
+                if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE &&
+                                                                        view->getVisibility() !=
+                                                                        Visibility::UNREACHABLE)) {
+                    if (process(view, targetPos)) {
+                        return true;
+                    }
+
+                    if (flags.test(AViewLookupFlags::ONLY_ONE_PER_CONTAINER)) {
+                        return false;
+                    }
+                }
+            } else {
+                if (possibleOutput == nullptr) {
+                    possibleOutput = view;
+                    possibleOutputPos = targetPos;
+                }
             }
         }
         if (possibleOutput) {
-            return process(possibleOutput);
+            return process(possibleOutput, possibleOutputPos);
         }
 
         return false;
