@@ -522,7 +522,6 @@ void AView::setGeometry(int x, int y, int width, int height) {
 }
 
 bool AView::consumesClick(const glm::ivec2& pos) {
-    ALogger::info("Pidor") << this << pos.x << " " << pos.y;
     return true;
 }
 
