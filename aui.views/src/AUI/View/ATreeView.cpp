@@ -235,11 +235,14 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
 
 void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView) {
     container->addView(itemView);
+
+    // always add wrapper (even if isGroup = false) to simplify view walkthrough
+    auto wrapper = _container<AVerticalLayout>({});
+    wrapper->setVisibility(Visibility::GONE);
+    wrapper << ".list-item-group";
+    container->addView(wrapper);
+
     if (isGroup) {
-        auto wrapper = _container<AVerticalLayout>({});
-        wrapper->setVisibility(Visibility::GONE);
-        wrapper << ".list-item-group";
-        container->addView(wrapper);
         fillViewsRecursively(wrapper, childIndex);
         itemView->setChildrenContainer(wrapper);
 
