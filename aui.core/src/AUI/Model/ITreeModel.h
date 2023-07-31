@@ -25,6 +25,7 @@
 #include <any>
 #include <utility>
 #include "AModelRange.h"
+#include "AUI/Common/AException.h"
 
 class ATreeIndex {
 public:

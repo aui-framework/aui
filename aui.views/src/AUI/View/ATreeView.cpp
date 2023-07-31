@@ -28,7 +28,7 @@
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 
-class ATreeView::ContainerView: public AViewContainer {
+class ATreeView::ContainerView final: public AViewContainer {
 private:
     int mScrollY = 0;
     size_t mIndex = -1;
@@ -36,6 +36,10 @@ private:
 public:
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
+        updateLayout();
+    }
+
+    void updateLayout() override {
         if (getLayout())
             getLayout()->onResize(mPadding.left, mPadding.top - mScrollY,
                                   getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
@@ -78,6 +82,8 @@ public:
         if (hasChildren) {
             connect(mDisplay->doubleClicked, me::toggleCollapseRecursive);
         }
+
+        connect(clicked, me::select);
     }
 
     void toggleCollapse() {
@@ -132,8 +138,19 @@ public:
 
     void setSelected(const bool selected)
     {
+        if (selected) {
+            AUI_NULLSAFE(mTreeView->mPrevSelection.lock())->setSelected(false);
+            mTreeView->mPrevSelection = _cast<ItemView>(AView::sharedPtr());
+            mTreeView->handleSelected(this);
+        } else {
+            mTreeView->mPrevSelection.reset();
+        }
         mSelected = selected;
         emit customCssPropertyChanged;
+    }
+
+    void select() {
+        setSelected(true);
     }
 
     void onPointerPressed(const APointerPressedEvent& event) override {
@@ -269,6 +286,10 @@ void ATreeView::handleMouseDoubleClicked(ATreeView::ItemView* v) {
     emit itemMouseDoubleClicked(v->getIndex());
 }
 
+void ATreeView::handleSelected(ATreeView::ItemView* v) {
+    emit itemSelected(v->getIndex());
+}
+
 void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATreeIndex& index) {
     for (size_t i = 0; i < mModel->childrenCount(index); ++i) {
         auto childIndex = mModel->indexOfChild(i, 0, index);
@@ -290,7 +311,6 @@ void ATreeView::handleMouseMove(ATreeView::ItemView* pView) {
 template<aui::invocable<std::size_t /* row */> Callable>
 static void findRoot(const Callable& callable, const _<ITreeModel<AString>>& model, const ATreeIndex& indexToSelect) {
     if (!indexToSelect.hasValue()) {
-        callable(0);
         return;
     }
     findRoot(callable, model, model->parent(indexToSelect));
@@ -301,8 +321,13 @@ void ATreeView::select(const ATreeIndex& indexToSelect) {
     try {
         auto currentTarget = _cast<AViewContainer>(mContent);
         _<ATreeView::ItemView> itemView;
+        bool ignore = true;
         findRoot([&](std::size_t row) {
             if (!currentTarget) {
+                return;
+            }
+            if (ignore) {
+                ignore = false;
                 return;
             }
             auto c = _cast<ATreeView::ItemView>(currentTarget->getViews().at(row * 2));
@@ -323,6 +348,7 @@ void ATreeView::select(const ATreeIndex& indexToSelect) {
         mScrollbar->scroll(targetPositionInWindow.y - myPositionInWindow.y);
 
     } catch (const AException& e) {
-        ALogger::err("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
+        ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
     }
 }
+

@@ -38,6 +38,7 @@ private:
     _<ITreeModel<AString>> mModel;
     _<ContainerView> mContent;
     _<AScrollbar> mScrollbar;
+    _weak<ItemView> mPrevSelection;
 
     std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeIndex& index)> mViewFactory;
 
@@ -45,6 +46,7 @@ private:
     void updateScrollbarDimensions();
     void handleMousePressed(ItemView* v);
     void handleMouseDoubleClicked(ItemView* v);
+    void handleSelected(ItemView* v);
 
     void fillViewsRecursively(const _<AViewContainer>& content, const ATreeIndex& index);
     void makeElement(const _<AViewContainer>& container, const ATreeIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView);
@@ -64,6 +66,7 @@ public:
     void select(const ATreeIndex& indexToSelect);
 
 signals:
+    emits<ATreeIndex> itemSelected;
     emits<ATreeIndex> itemMouseClicked;
     emits<ATreeIndex> itemMouseDoubleClicked;
     emits<ATreeIndex> itemMouseHover;

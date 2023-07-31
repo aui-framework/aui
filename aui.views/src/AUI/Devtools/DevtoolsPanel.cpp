@@ -74,7 +74,9 @@ DevtoolsPanel::DevtoolsPanel(ABaseWindow* targetWindow):
 
     setContents(Vertical {
             Horizontal {
-                    Button { "Force layout update" }.clicked(me::forceLayoutUpdate)
+                    Button { "Force layout update" }.clicked(me::forceLayoutUpdate),
+                    SpacerExpanding{},
+                    Label { "Use CTRL to hit test views" },
             },
             ASplitter::Horizontal().withItems({
                                                       mViewHierarchyTree = _new<ATreeView>() with_style { ass::MinSize{ 300_dp } },
@@ -83,12 +85,11 @@ DevtoolsPanel::DevtoolsPanel(ABaseWindow* targetWindow):
     });
     auto model = _new<ViewHierarchyTreeModel>(aui::ptr::fake(targetWindow));
     mViewHierarchyTree->setModel(model);
-    connect(mViewHierarchyTree->itemMouseClicked, [this](const ATreeIndex& index) {
+    connect(mViewHierarchyTree->itemSelected, [this](const ATreeIndex& index) {
         mViewPropertiesView->setTargetView(index.as<_<AView>>());
     });
     connect(mViewHierarchyTree->itemMouseHover, [this](const ATreeIndex& index) {
-        mTargetWindow->setProfiledView(index.as<_<AView>>());
-        mTargetWindow->redraw();
+        mViewPropertiesView->setTargetView(index.as<_<AView>>());
     });
     connect(mouseLeave, [this] {
         mTargetWindow->setProfiledView(nullptr);
