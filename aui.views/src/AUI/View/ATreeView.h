@@ -61,6 +61,8 @@ public:
         mViewFactory = viewFactory;
     }
 
+    void select(const ATreeIndex& indexToSelect);
+
 signals:
     emits<ATreeIndex> itemMouseClicked;
     emits<ATreeIndex> itemMouseDoubleClicked;
