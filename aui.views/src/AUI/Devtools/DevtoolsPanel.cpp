@@ -73,15 +73,15 @@ DevtoolsPanel::DevtoolsPanel(ABaseWindow* targetWindow):
     using namespace declarative;
 
     setContents(Vertical {
-            Horizontal {
-                    Button { "Force layout update" }.clicked(me::forceLayoutUpdate),
-                    SpacerExpanding{},
-                    Label { "Use CTRL to hit test views" },
-            },
-            ASplitter::Horizontal().withItems({
-                                                      mViewHierarchyTree = _new<ATreeView>() with_style { ass::MinSize{ 300_dp } },
-                                                      mViewPropertiesView = _new<ViewPropertiesView>(nullptr)
-                                              }).build() with_style { ass::Expanding{} },
+        Horizontal {
+            Button { "Force layout update" }.clicked(me::forceLayoutUpdate),
+            SpacerExpanding{},
+            Label { "Use CTRL to hit test views" },
+        },
+        Horizontal::Expanding{
+            mViewHierarchyTree = _new<ATreeView>() with_style{ass::MinSize{300_dp}, ass::Expanding{}},
+            mViewPropertiesView = _new<ViewPropertiesView>(nullptr),
+        },
     });
     auto model = _new<ViewHierarchyTreeModel>(aui::ptr::fake(targetWindow));
     mViewHierarchyTree->setModel(model);
