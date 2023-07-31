@@ -70,8 +70,8 @@ void AImage::mirrorVertically() {
 }
 
 AImage AImageView::cropped(glm::uvec2 position, glm::uvec2 size) const {
-    assert(position.x + size.x < width());
-    assert(position.y + size.y < height());
+    assert(position.x + size.x <= width());
+    assert(position.y + size.y <= height());
     AImage image(size, format());
 
     for (uint32_t sourceY = 0; sourceY < size.y; ++sourceY) {

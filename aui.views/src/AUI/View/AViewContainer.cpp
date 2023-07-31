@@ -92,6 +92,7 @@ void AViewContainer::addViewCustomLayout(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
     view->setSize(view->getMinimumSize());
+    AUI_NULLSAFE(mLayout)->addView(view);
     emit view->addedToContainer();
     invalidateCaches();
 }
@@ -99,8 +100,7 @@ void AViewContainer::addViewCustomLayout(const _<AView>& view) {
 void AViewContainer::addView(size_t index, const _<AView>& view) {
     mViews.insert(mViews.begin() + index, view);
     view->mParent = this;
-    if (mLayout)
-        mLayout->addView(view, index);
+    AUI_NULLSAFE(mLayout)->addView(view, index);
     emit view->addedToContainer();
     invalidateCaches();
 }

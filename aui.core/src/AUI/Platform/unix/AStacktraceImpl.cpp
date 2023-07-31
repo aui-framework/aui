@@ -18,9 +18,6 @@
 // Created by Alex2772 on 3/7/2022.
 //
 
-#define AUI_USE_BACKTRACE 0
-#define AUI_USE_UNWIND 1
-
 #if AUI_USE_BACKTRACE
 #include <AUI/Platform/AStacktrace.h>
 #include <AUI/Platform/AProcess.h>

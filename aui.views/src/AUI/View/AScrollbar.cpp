@@ -79,17 +79,14 @@ void AScrollbar::setOffset(size_t o) {
 }
 
 void AScrollbar::setScrollDimensions(size_t viewportSize, size_t fullSize) {
-    bool shouldScrollToEnd = mStickToEnd && mFullSize < fullSize && mCurrentScroll == getMaxScroll();
-
     mViewportSize = viewportSize;
     mFullSize = fullSize;
 
     updateScrollHandleSize();
 
-    if (shouldScrollToEnd) {
+    if (mStickToEnd && mStickToEnd->locked) {
         scrollToEnd();
     }
-
     emit updatedMaxScroll(getMaxScroll());
 }
 
@@ -133,7 +130,7 @@ void AScrollbar::updateScrollHandleSize() {
                     break;
             }
 
-            emit scrolled(mCurrentScroll = 0);
+            emit scrolled;
         }
     }
 
@@ -149,8 +146,11 @@ void AScrollbar::setScroll(int scroll) {
 
         updateScrollHandleOffset(max);
 
-
         emit scrolled(mCurrentScroll);
+    }
+    const bool scrolledToEnd = newScroll == max;
+    if (mStickToEnd) {
+        mStickToEnd->locked = scrolledToEnd;
     }
 }
 
@@ -290,4 +290,9 @@ void AScrollbarHandle::setSize(glm::ivec2 size) {
 void AScrollbar::setSize(glm::ivec2 size) {
     AViewContainer::setSize(size);
     updateScrollHandleSize();
+}
+
+void AScrollbar::scrollToEnd() {
+    setScroll(getMaxScroll());
+    assert(mCurrentScroll == getMaxScroll());
 }
