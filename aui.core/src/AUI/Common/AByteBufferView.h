@@ -102,6 +102,9 @@ public:
     static AByteBufferView fromRaw(const T& data) noexcept {
         return { reinterpret_cast<const char*>(&data), sizeof(data) };
     }
+
+
+    _<IInputStream> toStream() const;
 };
 
 template<>

@@ -21,6 +21,7 @@
 #include "Converter.h"
 #include "Signature.h"
 #include "Env.h"
+#include "ArrayView.h"
 #include <AUI/Util/APreprocessor.h>
 #include <AUI/Traits/strings.h>
 #include <AUI/Common/AException.h>

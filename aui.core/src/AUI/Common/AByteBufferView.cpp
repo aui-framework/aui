@@ -18,6 +18,7 @@
 // Created by Alex2772 on 4/18/2022.
 //
 
+#include <AUI/IO/AByteBufferInputStream.h>
 #include "AByteBufferView.h"
 
 AString AByteBufferView::toHexString() const {
@@ -30,4 +31,23 @@ AString AByteBufferView::toHexString() const {
         result += buf;
     }
     return result;
+}
+
+_<IInputStream> AByteBufferView::toStream() const {
+    class ByteBufferStream: public IInputStream {
+    private:
+        AByteBuffer mData;
+        AByteBufferInputStream mIs;
+
+    public:
+        ByteBufferStream(AByteBufferView view): mData(view), mIs(mData) {
+
+        }
+
+        size_t read(char* dst, size_t size) override {
+            return mIs.read(dst, size);
+        }
+    };
+
+    return _new<ByteBufferStream>(*this);
 }
