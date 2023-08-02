@@ -671,11 +671,11 @@ void AView::setExtraStylesheet(AStylesheet&& extraStylesheet) {
 }
 
 void AView::onClickPrevented() {
-    for (auto v : mPressed) {
+    auto pressed = std::move(mPressed);
+    for (auto v : pressed) {
         emit pressedState(false, v);
         emit released(v);
     }
-    mPressed.clear();
 }
 
 void AView::setCursor(AOptional<ACursor> cursor) {

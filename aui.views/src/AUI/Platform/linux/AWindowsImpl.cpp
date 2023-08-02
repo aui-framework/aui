@@ -364,7 +364,7 @@ void AWindow::xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) 
 
 void AWindowManager::notifyProcessMessages() {
     if (!mWindows.empty()) {
-        XClearArea(CommonRenderingContext::ourDisplay, mWindows.first()->mHandle, 0, 0, 1, 1, true);
+        if (CommonRenderingContext::ourDisplay) XClearArea(CommonRenderingContext::ourDisplay, mWindows.first()->mHandle, 0, 0, 1, 1, true);
         mXNotifyCV.notify_all();
     }
 }
