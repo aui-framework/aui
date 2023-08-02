@@ -364,6 +364,7 @@ void AWindow::xSendEventToWM(Atom atom, long a, long b, long c, long d, long e) 
 
 void AWindowManager::notifyProcessMessages() {
     if (!mWindows.empty()) {
+        XClearArea(CommonRenderingContext::ourDisplay, mWindows.first()->mHandle, 0, 0, 1, 1, true);
         mXNotifyCV.notify_all();
     }
 }
@@ -395,6 +396,18 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
             XNextEvent(CommonRenderingContext::ourDisplay, &ev);
             _<AWindow> window;
             switch (ev.type) {
+                case Expose: {
+                    window = locateWindow(ev.xexpose.window);
+                    window->mRedrawFlag = false;
+                    window->redraw();
+                    XSyncValue syncValue;
+                    XSyncIntsToValue(&syncValue,
+                                     window->mXsyncRequestCounter.lo,
+                                     window->mXsyncRequestCounter.hi);
+                    XSyncSetCounter(CommonRenderingContext::ourDisplay, window->mXsyncRequestCounter.counter, syncValue);
+
+                    break;
+                }
                 case ClientMessage: {
                     if (ev.xclient.message_type == CommonRenderingContext::ourAtoms.wmProtocols) {
                         auto window = locateWindow(ev.xclient.window);
@@ -602,7 +615,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
 
         {
             std::unique_lock lock(mXNotifyLock);
-            mXNotifyCV.wait_for(lock, std::chrono::microseconds(500));
+            mXNotifyCV.wait_for(lock, std::chrono::microseconds(10000));
         }
         AThread::processMessages();
         if (AWindow::isRedrawWillBeEfficient()) {
