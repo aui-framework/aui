@@ -591,12 +591,13 @@ bool AView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
 bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event) {
     return std::visit(aui::lambda_overloaded {
         [&](const AFingerDragEvent& e) {
-            onScroll({
+            AScrollEvent scrollEvent {
                 .origin = origin,
                 .delta = e.delta,
                 .kinetic = e.kinetic,
-            });
-            return true;
+            };
+            onScroll(scrollEvent);
+            return glm::ivec2(e.delta) != scrollEvent.delta;
         },
         [&](const ALongPressEvent& e) {
             auto menuModel = composeContextMenu();

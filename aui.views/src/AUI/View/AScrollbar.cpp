@@ -177,7 +177,11 @@ void AScrollbar::onScroll(const AScrollEvent& event) {
     AViewContainer::onScroll(event);
     // scroll 3 lines of text
     emit triggeredManually;
-    setScroll(mCurrentScroll + event.delta.y * 11_pt * 3 / 120);
+    auto prevScroll = getCurrentScroll();
+    const auto MULTIPLIER = 11_pt * 3.f / 120.f;
+    setScroll(mCurrentScroll + event.delta.y * MULTIPLIER);
+    auto delta = getCurrentScroll() - prevScroll;
+    event.delta.y -= delta / MULTIPLIER;
 }
 
 static int getButtonScrollSpeed() noexcept {
