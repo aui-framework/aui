@@ -289,8 +289,8 @@ bool AViewContainer::consumesClick(const glm::ivec2& pos) {
         mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
         return result = true;
     }
-    if (auto p = getViewAt(pos)) {
-        return result = p->consumesClick(pos);
+    if (auto p = getViewAt(pos, AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {
+        return result = true;
     }
     return false;
 }
@@ -325,7 +325,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> f
 
         if (hitTest) {
             if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
-                if (!possibleOutput) {
+                if (!possibleOutput && !flags.test(AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {
                     possibleOutput = view;
                 }
                 if (view->consumesClick(targetPos)) {

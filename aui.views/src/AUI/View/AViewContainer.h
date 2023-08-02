@@ -42,6 +42,14 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
      * (i.e. drag&drop).
      */
     ONLY_ONE_PER_CONTAINER = 0b10,
+
+    /**
+     * @brief Match views only by consumesClick() property.
+     * @details
+     * By default, getViewAt returns the first hit view, if neither view of the container have not passed
+     * consumesClick test. This flag disables that behaviour, returning nullptr instead.
+     */
+    ONLY_THAT_CONSUMES_CLICK = 0b100,
 };
 
 /**
