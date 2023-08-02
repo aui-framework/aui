@@ -25,6 +25,9 @@ void AWordWrappingLayout::addView(const _<AView>& view, AOptional<size_t> index)
     ALinearLayout::addView(view, index);
 
     if (index) {
+        if (mViewEntry.size() <= *index) {
+            mViewEntry.resize(*index + 1);
+        }
         mViewEntry[*index] = AViewEntry{ view };
     } else {
         mViewEntry << AViewEntry{ view };

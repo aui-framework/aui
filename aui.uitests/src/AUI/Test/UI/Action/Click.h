@@ -27,7 +27,7 @@ struct ViewActionMousePress {
     ViewActionMousePress(const glm::ivec2& position) : position(position) {}
 
     void operator()(const _<AView>& view) {
-        auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
+        auto coords = view->getPositionInWindow() + (position ? *position : (view->getSize() / 2));
         auto window = view->getWindow();
         AInput::overrideStateForTesting(Button, true);
         window->onPointerPressed({coords, APointerIndex::button(Button)});
@@ -43,7 +43,7 @@ struct ViewActionMouseRelease {
     ViewActionMouseRelease(const glm::ivec2& position) : position(position) {}
 
     void operator()(const _<AView>& view) {
-        auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
+        auto coords = view->getPositionInWindow() + (position ? *position : (view->getSize() / 2));
         auto window = view->getWindow();
         AInput::overrideStateForTesting(Button, false);
         window->onPointerReleased({coords, APointerIndex::button(Button)});
@@ -60,7 +60,7 @@ struct ViewActionClick {
     ViewActionClick(const glm::ivec2& position) : position(position) {}
 
     void operator()(const _<AView>& view) {
-        auto coords = view->getPositionInWindow() + (position ? *position : view->getSize() / 2);
+        auto coords = view->getPositionInWindow() + (position ? *position : (view->getSize() / 2));
         auto window = view->getWindow();
         AInput::overrideStateForTesting(Button, true);
         window->onPointerPressed({coords, APointerIndex::button(Button)});

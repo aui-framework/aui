@@ -42,6 +42,14 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
      * (i.e. drag&drop).
      */
     ONLY_ONE_PER_CONTAINER = 0b10,
+
+    /**
+     * @brief Match views only by consumesClick() property.
+     * @details
+     * By default, getViewAt returns the first hit view, if neither view of the container have not passed
+     * consumesClick test. This flag disables that behaviour, returning nullptr instead.
+     */
+    ONLY_THAT_CONSUMES_CLICK = 0b100,
 };
 
 /**
@@ -349,7 +357,18 @@ private:
     bool mSizeSet = false;
     glm::ivec2 mPreviousSize = mSize;
 
-    void notifyParentEnabledStateChanged(bool enabled) override;
+    struct ConsumesClickCache {
+        glm::ivec2 position;
+        bool value;
+    };
+
+    /**
+     * @brief Temporary cache for consumesClick().
+     * @details
+     * AUI does several view graph visits for a single event in order to call virtual methods properly.
+     * AViewContainer::consumesClick() is expensive method. Thus, we can cache it's result with given arguments.
+     */
+    AOptional<ConsumesClickCache> mConsumesClickCache;
 
     /**
      * @brief Focus chain target.
@@ -358,4 +377,7 @@ private:
      * The focus chaining mechanism allows to catch such events and process them in the containers.
      */
     _weak<AView> mFocusChainTarget;
+
+    void notifyParentEnabledStateChanged(bool enabled) override;
+    void invalidateCaches();
 };

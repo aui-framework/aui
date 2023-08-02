@@ -536,25 +536,19 @@ void AView::notifyParentChildFocused(const _<AView>& view) {
 void AView::focus(bool needFocusChainUpdate) {
     // holding reference here
     auto mySharedPtr = sharedPtr();
-    auto window = AWindow::current();
 
     notifyParentChildFocused(mySharedPtr);
 
-    try {
-        auto windowSharedPtr = window->sharedPtr(); // may throw bad_weak
-
-        ui_threadX [window, mySharedPtr = std::move(mySharedPtr), windowSharedPtr = std::move(windowSharedPtr), needFocusChainUpdate]() {
-            window->setFocusedView(mySharedPtr);
-            if (needFocusChainUpdate) {
-                window->updateFocusChain();
-            }
-        };
-    } catch (...) {
+    ui_threadX [mySharedPtr = std::move(mySharedPtr), needFocusChainUpdate]() {
+        auto window = mySharedPtr->getWindow();
+        if (!window) {
+            return;
+        }
         window->setFocusedView(mySharedPtr);
         if (needFocusChainUpdate) {
             window->updateFocusChain();
         }
-    }
+    };
 }
 
 bool AView::capturesFocus() {
@@ -597,12 +591,13 @@ bool AView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
 bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event) {
     return std::visit(aui::lambda_overloaded {
         [&](const AFingerDragEvent& e) {
-            onScroll({
+            AScrollEvent scrollEvent {
                 .origin = origin,
                 .delta = e.delta,
                 .kinetic = e.kinetic,
-            });
-            return true;
+            };
+            onScroll(scrollEvent);
+            return glm::ivec2(e.delta) != scrollEvent.delta;
         },
         [&](const ALongPressEvent& e) {
             auto menuModel = composeContextMenu();
@@ -676,11 +671,11 @@ void AView::setExtraStylesheet(AStylesheet&& extraStylesheet) {
 }
 
 void AView::onClickPrevented() {
-    for (auto v : mPressed) {
+    auto pressed = std::move(mPressed);
+    for (auto v : pressed) {
         emit pressedState(false, v);
         emit released(v);
     }
-    mPressed.clear();
 }
 
 void AView::setCursor(AOptional<ACursor> cursor) {

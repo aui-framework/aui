@@ -50,6 +50,7 @@ public:
     }
     constexpr AStaticVector(AStaticVector&& rhs) noexcept: AStaticVector() {
         insert(mBegin, std::make_move_iterator(rhs.begin()), std::make_move_iterator(rhs.end()));
+        rhs.clear();
     }
     constexpr ~AStaticVector() {
         for (auto& v : *this) {
