@@ -1,15 +1,10 @@
 cmake_minimum_required(VERSION 3.16)
 
-option(AUI_CATCH_SEGFAULT "Catch segfault" ON)
+option(AUI_CATCH_UNHANDLED "Catch segfault" ON)
 
 aui_module(aui.core EXPORT aui)
 aui_enable_tests(aui.core)
 
-
-# segfault functionality
-if (NOT MSVC AND AUI_CATCH_SEGFAULT)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fexceptions -fnon-call-exceptions")
-endif()
 
 get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 if (GLM_INCLUDE_DIR)
@@ -26,11 +21,15 @@ target_include_directories(aui.core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>
 
 target_compile_definitions(aui.core PRIVATE UNICODE=1)
 target_compile_definitions(aui.core PUBLIC NOMINMAX=1)
-if (AUI_CATCH_SEGFAULT)
-    target_compile_definitions(aui.core PUBLIC AUI_CATCH_SEGFAULT=1)
+if (AUI_CATCH_UNHANDLED)
+    target_compile_definitions(aui.core PUBLIC AUI_CATCH_UNHANDLED=1)
 endif()
 
 if (NOT WIN32)
+    if (AUI_CATCH_UNHANDLED)
+        set_target_properties(aui.core PROPERTIES INTERFACE_AUI_WHOLEARCHIVE ON) # required for signal handling auto register
+    endif()
+
     # probe for backtrace
     file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test)
     file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test.cpp [[
@@ -44,12 +43,50 @@ if (NOT WIN32)
     ]])
 
     try_compile(_use_backtrace ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test/b ${CMAKE_CURRENT_BINARY_DIR}/backtrace_test.cpp OUTPUT_VARIABLE _tmp)
+
+    if (NOT _use_backtrace)
+        if (AUI_PLATFORM_LINUX)
+            auib_import(backtrace https://github.com/ianlancetaylor/libbacktrace
+                        CMAKELISTS_CUSTOM cmake/backtrace.cmake)
+            set(_use_backtrace TRUE)
+        else()
+
+            # probe for unwind
+            file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/unwind_test)
+            file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/unwind_test.cpp [[
+#include <dlfcn.h>
+#include <unwind.h>
+
+static _Unwind_Reason_Code unwindCallback(struct _Unwind_Context* context, void* arg)
+{
+    uintptr_t pc = _Unwind_GetIP(context);
+    return _URC_NO_REASON;
+}
+
+size_t captureBacktrace(void** buffer, size_t max)
+{
+    _Unwind_Backtrace(unwindCallback, nullptr);
+
+    return 0;
+}
+int main() {
+    captureBacktrace(nullptr, 0);
+    return 0;
+}
+            ]])
+
+            try_compile(_use_unwind ${CMAKE_CURRENT_BINARY_DIR}/unwind_test/b ${CMAKE_CURRENT_BINARY_DIR}/unwind_test.cpp OUTPUT_VARIABLE _tmp)
+        endif ()
+    endif ()
 endif()
 
 if(_use_backtrace)
     message(STATUS "Stacktrace backend: backtrace")
     aui_link(aui.core PRIVATE backtrace)
     target_compile_definitions(aui.core PRIVATE AUI_USE_BACKTRACE=1)
+elseif(_use_unwind)
+    message(STATUS "Stacktrace backend: unwind")
+    target_compile_definitions(aui.core PRIVATE AUI_USE_UNWIND=1)
 elseif(WIN32)
     aui_link(aui.core PRIVATE dbghelp)
     message(STATUS "Stacktrace backend: dbghelp")
@@ -80,7 +117,12 @@ foreach(_var AUI_PLATFORM_WIN
              AUI_PLATFORM_MACOS
              AUI_PLATFORM_IOS
              AUI_PLATFORM_ANDROID
-             AUI_PLATFORM_UNIX)
+             AUI_PLATFORM_UNIX
+
+             AUI_COMPILER_CLANG
+             AUI_COMPILER_GCC
+             AUI_COMPILER_MSVC
+        )
     target_compile_definitions(aui.core PUBLIC ${_var}=${${_var}})
 endforeach()
 
@@ -95,11 +137,18 @@ auib_import(fmt https://github.com/fmtlib/fmt
             CMAKE_ARGS -DFMT_TEST=FALSE -DFMT_DOC=FALSE)
 
 auib_import(range-v3 https://github.com/ericniebler/range-v3
-            VERSION 0.12.0
-            CMAKE_ARGS -DRANGE_V3_DOCS=OFF -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_PERF=OFF -DRANGE_V3_HEADER_CHECKS=OFF)
+        VERSION 0.12.0
+        CMAKE_ARGS -DRANGE_V3_DOCS=OFF -DRANGE_V3_TESTS=OFF -DRANGE_V3_EXAMPLES=OFF -DRANGE_V3_PERF=OFF -DRANGE_V3_HEADER_CHECKS=OFF)
 
 aui_link(aui.core PUBLIC fmt::fmt-header-only range-v3::range-v3)
 
 if (AUI_PLATFORM_ANDROID)
     target_include_directories(aui.core PUBLIC 3rdparty/cpp_java_glue)
+endif()
+
+# segfault functionality
+if (NOT MSVC AND AUI_CATCH_UNHANDLED)
+    if (AUI_COMPILER_GCC)
+        target_compile_options(aui.core PUBLIC -fexceptions -fnon-call-exceptions)
+    endif ()
 endif()

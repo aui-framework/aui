@@ -1,18 +1,18 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+﻿//  AUI Framework - Declarative UI toolkit for modern C++20
+//  Copyright (C) 2020-2023 Alex2772
 //
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+//  Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
@@ -143,10 +143,16 @@ public:
 
     static const AColor BLACK;
     static const AColor WHITE;
+    static const AColor RED;
+    static const AColor GREEN;
+    static const AColor BLUE;
 };
 
 inline const AColor AColor::BLACK = {0.f, 0.f, 0.f, 1.f};
 inline const AColor AColor::WHITE = {1.f, 1.f, 1.f, 1.f};
+inline const AColor AColor::RED   = {1.f, 0.f, 0.f, 1.f};
+inline const AColor AColor::GREEN = {0.f, 1.f, 0.f, 1.f};
+inline const AColor AColor::BLUE  = {0.f, 0.f, 1.f, 1.f};
 
 
 inline std::ostream& operator<<(std::ostream& o, const AColor& color) {

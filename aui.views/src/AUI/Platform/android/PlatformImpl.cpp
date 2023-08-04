@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Common/AString.h"
 #include "AUI/IO/APath.h"
 #include <AUI/Util/kAUI.h>
@@ -22,13 +22,11 @@
 
 
 
-void Platform::playSystemSound(Sound s)
+float APlatform::getDpiRatio()
 {
-    // unsupported
+    return com::github::aui::android::Platform::getDpiRatio();
 }
 
-
-float Platform::getDpiRatio()
-{
-    return AAndroid::getDpiRatio();
+void APlatform::openUrl(const AUrl &url) {
+    com::github::aui::android::Platform::openUrl(url.full());
 }

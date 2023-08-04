@@ -28,7 +28,7 @@
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
 #include "AUI/GL/OpenGLRenderer.h"
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/OpenGLRenderingContext.h"
 #include "AUI/UITestState.h"
@@ -56,7 +56,9 @@ void AWindow::quit() {
         return p.get() == this;
     });
 
-    XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
+    if (CommonRenderingContext::ourDisplay) {
+        XUnmapWindow(CommonRenderingContext::ourDisplay, mHandle);
+    }
 
     AThread::current()->enqueue([&]() {
         mSelfHolder = nullptr;
@@ -96,7 +98,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
 }
 
 float AWindow::fetchDpiFromSystem() const {
-    return Platform::getDpiRatio();
+    return APlatform::getDpiRatio();
 }
 
 void AWindow::restore() {
@@ -369,7 +371,11 @@ void AWindowManager::notifyProcessMessages() {
 void AWindowManager::loop() {
     XEvent ev;
     for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
-        xProcessEvent(ev);
+        try {
+            xProcessEvent(ev);
+        } catch (const AException& e) {
+            ALogger::err("AUI") << "Uncaught exception in window proc: " << e;
+        }
     }
 }
 
@@ -473,6 +479,7 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 case MotionNotify: {
                     window = locateWindow(ev.xmotion.window);
                     window->onPointerMove({ev.xmotion.x, ev.xmotion.y});
+                    AUI_NULLSAFE(window->getCursor())->applyNativeCursor(window.get());
                     break;
                 }
                 case ButtonPress: {
@@ -483,7 +490,8 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         case 3:
                             window->onPointerPressed({
                                 .position = { ev.xbutton.x, ev.xbutton.y },
-                                .button = (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1)
+                                .pointerIndex = APointerIndex::button(
+                                        static_cast<AInput::Key>(AInput::LBUTTON + ev.xbutton.button - 1))
                             });
                             break;
                         case 4: // wheel down
@@ -506,7 +514,8 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         window = locateWindow(ev.xbutton.window);
                         window->onPointerReleased({
                              .position = { ev.xbutton.x, ev.xbutton.y },
-                             .button = (AInput::Key) (AInput::LBUTTON + ev.xbutton.button - 1)
+                             .pointerIndex = APointerIndex::button(
+                                     static_cast<AInput::Key>(AInput::LBUTTON + ev.xbutton.button - 1))
                         });
                     }
                     break;
@@ -685,11 +694,11 @@ void AWindow::allowDragNDrop() {
 
 }
 
-void AWindow::requestTouchscreenKeyboard() {
-    ABaseWindow::requestTouchscreenKeyboard();
+void AWindow::requestTouchscreenKeyboardImpl() {
+    ABaseWindow::requestTouchscreenKeyboardImpl();
 }
 
-void AWindow::hideTouchscreenKeyboard() {
-    ABaseWindow::hideTouchscreenKeyboard();
+void AWindow::hideTouchscreenKeyboardImpl() {
+    ABaseWindow::hideTouchscreenKeyboardImpl();
 }
 

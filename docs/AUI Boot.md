@@ -49,7 +49,8 @@ auib_import(<PackageName> <URL>
             [COMPONENTS components...]
             [PRECOMPILED_URL_PREFIX <PrecompiledUrlPrefix>]
             [ADD_SUBDIRECTORY]
-            [LINK <STATIC|SHARED>])
+            [LINK <STATIC|SHARED>]
+            [REQUIRES dependencies...])
 ```
 
 ### PackageName
@@ -81,6 +82,14 @@ Specifies url prefix where the precompiled binaries downloaded from.
 ### LINK
 
 Overrides `BUILD_SHARED_LIBS` of the dependency, specifying `SHARED` or `STATIC` linking.
+
+### REQUIRES
+
+List of the package dependencies. Every dependency's root variable (${DEPENDENCY}_ROOT) is checked for existence and
+validness, then it passed directly to `auib_import`ed target (via ${DEPENDENCY}_ROOT).
+
+It is useful when some package root is implicitly defined in your project somewhere and aui.boot does not know about it,
+thus does not forward.
 
 # Using same dependencies
 ## Case 1

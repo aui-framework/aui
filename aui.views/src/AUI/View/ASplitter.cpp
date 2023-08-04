@@ -44,3 +44,8 @@ void ASplitter::onPointerReleased(const APointerReleasedEvent& event) {
     AViewContainer::onPointerReleased(event);
     mHelper.endDrag();
 }
+
+void ASplitter::onClickPrevented() {
+    AViewContainer::onClickPrevented();
+    mHelper.endDrag();
+}

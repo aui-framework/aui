@@ -27,18 +27,20 @@ Util::SimpleTexturePacker::~SimpleTexturePacker() {
 
 void Util::SimpleTexturePacker::onResize(AImage& data, Util::dim side) {
 	if (mImage) {
-		mImage = AImage::resize(*mImage, static_cast<uint16_t>(side), static_cast<uint16_t>(side));
+        AImage newImage(glm::uvec2(side, side), data.format());
+        newImage.insert({0, 0}, *mImage);
+		mImage = std::move(newImage);
 	}
 	else {
-		mImage = AImage(side, side, data.getFormat());
+		mImage = AImage(glm::uvec2(side, side), data.format());
 	}
 }
 
 void Util::SimpleTexturePacker::onInsert(AImage& data, const Util::dim& x, const Util::dim& y) {
-	AImage::copy(data, *mImage, x, y);
+    mImage->insert({x, y}, data);
 }
 
 glm::vec4 Util::SimpleTexturePacker::insert(AImage& data) {
-	return TexturePacker::insert(data, (dim)data.getWidth(), (dim)data.getHeight());
+	return TexturePacker::insert(data, (dim)data.width(), (dim)data.height());
 }
 

@@ -54,19 +54,26 @@ void AAnimator::pause() {
 }
 
 void AAnimator::translateToCenter() {
-    Render::setTransform(
-            glm::translate(glm::mat4(1.f),
-                           glm::vec3(glm::vec2(mView->getSize().x,
-                                                mView->getSize().y + mView->getTotalFieldVertical() - 1) / 2.f, 0.f)));
+    translateToCenter(mView);
 }
 
 void AAnimator::translateToCorner() {
-    Render::setTransform(
-            glm::translate(glm::mat4(1.f),
-                           glm::vec3(-glm::vec2(mView->getSize().x,
-                                   mView->getSize().y + mView->getTotalFieldVertical() - 1) / 2.f, 0.f)));
+    translateToCorner(mView);
 }
 
+void AAnimator::translateToCenter(AView* view) {
+    Render::setTransform(
+            glm::translate(glm::mat4(1.f),
+                           glm::vec3(glm::vec2(view->getSize().x,
+                                               view->getSize().y + view->getTotalFieldVertical() - 1) / 2.f, 0.f)));
+}
+
+void AAnimator::translateToCorner(AView* view) {
+    Render::setTransform(
+            glm::translate(glm::mat4(1.f),
+                           glm::vec3(-glm::vec2(view->getSize().x,
+                                                view->getSize().y + view->getTotalFieldVertical() - 1) / 2.f, 0.f)));
+}
 
 _<AAnimator> AAnimator::combine(const AVector<_<AAnimator>>& animators) {
     class ACombiningAnimator: public AAnimator {

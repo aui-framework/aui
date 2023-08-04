@@ -18,13 +18,13 @@
 
 
 #include <AUI/Util/AViewEntry.h>
-#include "ALayout.h"
+#include "ALinearLayout.h"
 
 /**
  * @brief Imitates behaviour of word wrapping, but uses @ref AView "views" instead words
  * @ingroup layout_managers
  */
-class API_AUI_VIEWS AWordWrappingLayout: public ALayout {
+class API_AUI_VIEWS AWordWrappingLayout: public ALinearLayout<> {
 private:
     AVector<AViewEntry> mViewEntry;
 
@@ -35,9 +35,10 @@ public:
 
     int getMinimumHeight() override;
 
-    void addView(size_t index, const _<AView>& view) override;
+    void addView(const _<AView>& view, AOptional<size_t> index) override;
 
-    void removeView(size_t index, const _<AView>& view) override;
+    void removeView(aui::no_escape<AView> view, size_t index) override;
+
 };
 
 

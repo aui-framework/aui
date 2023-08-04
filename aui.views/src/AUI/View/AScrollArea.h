@@ -63,6 +63,10 @@ public:
         AUI_NULLSAFE(mVerticalScrollbar)->setAppearance(scrollbarAppearance.getVertical());
     }
 
+    void setWheelScrollable(bool value) {
+        mIsWheelScrollable = value;
+    }
+
     class Builder {
     friend class AScrollArea;
     private:
@@ -111,6 +115,7 @@ private:
     _<AScrollAreaContainer> mContentContainer;
     _<AScrollbar> mVerticalScrollbar;
     _<AScrollbar> mHorizontalScrollbar;
+    bool mIsWheelScrollable = true;
 
     explicit AScrollArea(const Builder& builder);
 };

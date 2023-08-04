@@ -21,7 +21,7 @@
 #include "CustomCaptionWindowImplWin32.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Common/Plugin.h>
-#include <AUI/ASS/Declaration/BackgroundImage.h>
+#include <AUI/ASS/Property/BackgroundImage.h>
 
 void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool stacked, AViewContainer* to) {
     auto caption = _new<AViewContainer>();

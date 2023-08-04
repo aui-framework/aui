@@ -126,7 +126,15 @@ void AScrollArea::setSize(glm::ivec2 size) {
 
 void AScrollArea::onScroll(const AScrollEvent& event) {
     AViewContainer::onScroll(event);
+    if (!mIsWheelScrollable) {
+        return;
+    }
+
+    auto prevScroll = mVerticalScrollbar->getCurrentScroll();
     mVerticalScrollbar->onScroll(event);
+    if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
+        AWindow::current()->preventClickOnPointerRelease();
+    }
 }
 
 int AScrollArea::getContentMinimumHeight(ALayoutDirection layout) {

@@ -95,7 +95,7 @@ void ASelectableLabel::onPointerPressed(const APointerPressedEvent& event) {
     if (getFontStyleLabel().align == TextAlign::CENTER) {
         position.x += mPrerendered->getWidth() / 2.f;
     }
-    handleMousePressed({position, event.button});
+    handleMousePressed({position, event.pointerIndex});
  }
 
 void ASelectableLabel::onPointerReleased(const APointerReleasedEvent& event) {
@@ -105,7 +105,7 @@ void ASelectableLabel::onPointerReleased(const APointerReleasedEvent& event) {
     if (getFontStyleLabel().align == TextAlign::CENTER) {
         position.x += mPrerendered->getWidth() / 2.f;
     }
-    handleMouseReleased({position, event.button});
+    handleMouseReleased({position, event.pointerIndex});
 }
 
 void ASelectableLabel::onFocusLost() {

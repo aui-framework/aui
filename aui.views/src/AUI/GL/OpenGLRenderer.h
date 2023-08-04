@@ -25,10 +25,15 @@ class OpenGLRenderer: public IRenderer {
 friend class OpenGLPrerenderedString;
 friend class OpenGLMultiStringCanvas;
 public:
-    struct FontEntryData {
+    struct FontEntryData: aui::noncopyable {
         Util::SimpleTexturePacker texturePacker;
         gl::Texture2D texture;
         bool isTextureInvalid = true;
+
+        FontEntryData() {
+            texture.bind();
+            gl::Texture2D::setupNearest();
+        }
     };
 
 private:

@@ -82,21 +82,21 @@ TEST(Bitfield, Check) {
     ABitField<Flags> f;
     f << Flags::FLAG1;
 
-    ASSERT_TRUE(!!((f.check(Flags::FLAG1) && (f & Flags::FLAG1))));
-    ASSERT_TRUE(!f.check(Flags::FLAG2));
-    ASSERT_TRUE(!f.check(Flags::FLAG3));
+    ASSERT_TRUE(!!((f.test(Flags::FLAG1) && (f & Flags::FLAG1))));
+    ASSERT_TRUE(!f.test(Flags::FLAG2));
+    ASSERT_TRUE(!f.test(Flags::FLAG3));
 
     f << Flags::FLAG2;
 
-    ASSERT_TRUE(f.check(Flags::FLAG1));
-    ASSERT_TRUE(f.check(Flags::FLAG2));
-    ASSERT_TRUE(!f.check(Flags::FLAG3));
+    ASSERT_TRUE(f.test(Flags::FLAG1));
+    ASSERT_TRUE(f.test(Flags::FLAG2));
+    ASSERT_TRUE(!f.test(Flags::FLAG3));
 
     f >> Flags::FLAG3;
     f >> Flags::FLAG1;
 
-    ASSERT_TRUE(!f.check(Flags::FLAG1));
-    ASSERT_TRUE(f.check(Flags::FLAG2));
-    ASSERT_TRUE(!f.check(Flags::FLAG3));
+    ASSERT_TRUE(!f.test(Flags::FLAG1));
+    ASSERT_TRUE(f.test(Flags::FLAG2));
+    ASSERT_TRUE(!f.test(Flags::FLAG3));
 }
 

@@ -41,34 +41,42 @@
 class UIClick: public testing::UITest {
 public:
 protected:
+
+    class TestWindow: public AWindow {
+    private:
+        _<ALabel> mHelloLabel;
+
+    public:
+        bool mClickedRightOrLongPressed = false;
+        TestWindow() {
+            setContents(Centered {
+                    Vertical {
+                            _new<AButton>("Say hello").connect(&AView::clicked, this, [&] {
+                                mHelloLabel->setVisibility(Visibility::VISIBLE);
+                            }).connect(&AView::clickedRightOrLongPressed, this, [&] {
+                                mClickedRightOrLongPressed = true;
+                            }) let { it->setDefault(); },
+                            mHelloLabel = _new<ALabel>("Hello!") let { it->setVisibility(Visibility::INVISIBLE); }
+                    }
+            });
+
+            pack();
+        }
+    };
+
     void SetUp() override {
         UITest::SetUp();
 
-        class TestWindow: public AWindow {
-        private:
-            _<ALabel> mHelloLabel;
-
-        public:
-            TestWindow() {
-                setContents(Centered {
-                        Vertical {
-                                _new<AButton>("Say hello").connect(&AView::clicked, this, [&] {
-                                    mHelloLabel->setVisibility(Visibility::VISIBLE);
-                                }) let { it->setDefault(); },
-                                mHelloLabel = _new<ALabel>("Hello!") let { it->setVisibility(Visibility::INVISIBLE); }
-                        }
-                });
-
-                pack();
-            }
-        };
-
-        _new<TestWindow>()->show();
+        mTestWindow = _new<TestWindow>();
+        mTestWindow->show();
     }
 
     void TearDown() override {
+        mTestWindow = nullptr;
         UITest::TearDown();
     }
+
+    _<TestWindow> mTestWindow;
 };
 
 
@@ -90,4 +98,26 @@ TEST_F(UIClick, HelloAppearsAfterClick) {
 
     // check label is appeared
     By::text("Hello!").check(visible(), "label is not appeared");
+}
+
+/**
+ * Checks clickedRightOrLongPressed by right clicking.
+ */
+TEST_F(UIClick, RightClick) {
+    // press the button
+    By::text("Say hello").perform(clickRight());
+
+    // check flag is set
+    EXPECT_TRUE(mTestWindow->mClickedRightOrLongPressed);
+}
+
+/**
+ * Checks clickedRightOrLongPressed by right clicking.
+ */
+TEST_F(UIClick, LongPress) {
+    // press the button
+    By::text("Say hello").perform(gestureLongPress());
+
+    // check flag is set
+    EXPECT_TRUE(mTestWindow->mClickedRightOrLongPressed);
 }

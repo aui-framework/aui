@@ -20,16 +20,39 @@
 
 #pragma once
 
+#include "members.h"
+
 namespace aui {
+
+    template<typename F>
+    concept not_overloaded_lambda = requires(F&& f) {
+        { &F::operator() };
+    };
+
+    static_assert(not_overloaded_lambda<decltype([]{})>, "aui::not_overloaded_lambda failed");
+    static_assert(not_overloaded_lambda<decltype([](int v){})>, "aui::not_overloaded_lambda failed");
+
     /**
      * That `<code>overloaded</code>` trick
      */
-    template<class... Lambdas>
+    template<typename... Lambdas>
     struct lambda_overloaded : Lambdas... {
         using Lambdas::operator()...;
     };
 
     // deduction guide
-    template<class... Lambdas>
+    template<typename... Lambdas>
     lambda_overloaded(Lambdas...) -> lambda_overloaded<Lambdas...>;
+
+    template<typename Return, typename... Args>
+    struct function_info;
+
+    template<typename Return, typename... Args>
+    struct function_info<Return(Args...)> {
+        using return_t = Return;
+        using args = std::tuple<Args...>;
+    };
+
+    template<not_overloaded_lambda Lambda>
+    using lambda_info = member<decltype(&Lambda::operator())>;
 }

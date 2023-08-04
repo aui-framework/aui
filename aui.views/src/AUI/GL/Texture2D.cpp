@@ -58,17 +58,17 @@ inline bool Result::operator==(const Result& rhs) const
 Result recognize(const AImage& image)
 {
 	Result res;
-	switch (image.getFormat() & AImageFormat::COMPONENT_BITS)
+	switch (image.format() & APixelFormat::COMPONENT_BITS)
 	{
-	case AImageFormat::R:
+	case APixelFormat::R:
 		res.format = GL_RED;
-		switch (image.getFormat() & AImageFormat::TYPE_BITS)
+		switch (image.format() & APixelFormat::TYPE_BITS)
 		{
-		case AImageFormat::FLOAT:
+		case APixelFormat::FLOAT:
 			res.internalformat = GL_R16F;
 			res.type = GL_FLOAT;
 			break;
-		case AImageFormat::BYTE:
+		case APixelFormat::BYTE:
 			res.internalformat = GL_R8;
 			res.type = GL_UNSIGNED_BYTE;
 			break;
@@ -76,15 +76,15 @@ Result recognize(const AImage& image)
 			assert(0);
 		}
 		break;
-	case AImageFormat::RGB:
+	case APixelFormat::RGB:
 		res.format = GL_RGB;
-		switch (image.getFormat() & AImageFormat::TYPE_BITS)
+		switch (image.format() & APixelFormat::TYPE_BITS)
 		{
-		case AImageFormat::FLOAT:
+		case APixelFormat::FLOAT:
 			res.internalformat = GL_RGB16F;
 			res.type = GL_FLOAT;
 			break;
-		case AImageFormat::BYTE:
+		case APixelFormat::BYTE:
 			res.internalformat = GL_RGB;
 			res.type = GL_UNSIGNED_BYTE;
 			break;
@@ -92,15 +92,15 @@ Result recognize(const AImage& image)
 			assert(0);
 		}
 		break;
-	case AImageFormat::RGBA:
+	case APixelFormat::RGBA:
 		res.format = GL_RGBA;
-		switch (image.getFormat() & AImageFormat::TYPE_BITS)
+		switch (image.format() & APixelFormat::TYPE_BITS)
 		{
-		case AImageFormat::FLOAT:
+		case APixelFormat::FLOAT:
 			res.internalformat = GL_RGBA16F;
 			res.type = GL_FLOAT;
 			break;
-		case AImageFormat::BYTE:
+		case APixelFormat::BYTE:
 			res.internalformat = GL_RGBA;
 			res.type = GL_UNSIGNED_BYTE;
 			break;
@@ -119,6 +119,6 @@ void gl::Texture2D::tex2D(const AImage& image) {
 	Result types = recognize(image);
 
 	glGetError();
-	glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image.getWidth(), image.getHeight(), 0, types.format, types.type, image.getData().empty() ? nullptr : image.getData().data());
+	glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image.width(), image.height(), 0, types.format, types.type, image.buffer().empty() ? nullptr : image.buffer().data());
 	assert(glGetError() == 0);
 }

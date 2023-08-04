@@ -37,7 +37,7 @@ unsigned ACursorSelectable::cursorIndexByPos(glm::ivec2 pos) {
 }
 
 void ACursorSelectable::handleMousePressed(const APointerPressedEvent& event) {
-    if (event.button == AInput::LBUTTON) {
+    if (event.pointerIndex != APointerIndex::button(AInput::RBUTTON)) {
         mCursorSelection = mCursorIndex = cursorIndexByPos(event.position);
     }
 }
@@ -50,7 +50,7 @@ void ACursorSelectable::handleMouseMove(const glm::ivec2& pos) {
 }
 
 void ACursorSelectable::handleMouseReleased(const APointerReleasedEvent& event) {
-    if (event.button == AInput::LBUTTON)
+    if (event.pointerIndex != APointerIndex::button(AInput::RBUTTON))
     {
         mIgnoreSelection = false;
         if (mCursorSelection == mCursorIndex)

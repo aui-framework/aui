@@ -42,12 +42,12 @@ template <class StoredType, class Allocator>
 class AVector: public std::vector<StoredType, Allocator>
 {
 protected:
-	using p = std::vector<StoredType, Allocator>;
+	using super = std::vector<StoredType, Allocator>;
 	using self = AVector<StoredType, Allocator>;
 
 public:
-    using p::p;
-    using iterator = typename p::iterator;
+    using super::super;
+    using iterator = typename super::iterator;
 
     template<typename Iterator>
     explicit AVector(aui::range<Iterator> range): AVector(range.begin(), range.end()) {}
@@ -61,7 +61,7 @@ public:
      */
     template<typename OtherContainer>
     iterator insertAll(const OtherContainer& c) noexcept {
-        return insertAll(p::end(), c);
+        return insertAll(super::end(), c);
     }
 
 
@@ -73,7 +73,7 @@ public:
      */
     template<typename OtherContainer>
     iterator insertAll(OtherContainer&& c) noexcept {
-        return insertAll(p::end(), std::forward<OtherContainer>(c));
+        return insertAll(super::end(), std::forward<OtherContainer>(c));
     }
 
 
@@ -86,7 +86,7 @@ public:
      */
     template<typename OtherContainer>
     iterator insertAll(iterator at, const OtherContainer& c) noexcept {
-        return p::insert(at, c.begin(), c.end());
+        return super::insert(at, c.begin(), c.end());
     }
 
 
@@ -99,7 +99,7 @@ public:
      */
     template<typename OtherContainer>
     iterator insertAll(iterator at, OtherContainer&& c) noexcept {
-        return p::insert(at, std::make_move_iterator(c.begin()), std::make_move_iterator(c.end()));
+        return super::insert(at, std::make_move_iterator(c.begin()), std::make_move_iterator(c.end()));
     }
 
 
@@ -115,10 +115,11 @@ public:
     /**
      * Removes first occurrence of <code>item</code>.
      * @param item element to remove.
+     * @return If the item is removed, it's index returned.
      */
-    void removeFirst(const StoredType& item) noexcept
+    AOptional<std::size_t> removeFirst(const StoredType& item) noexcept
     {
-        aui::container::remove_first(*this, item);
+        return aui::container::remove_first(*this, item);
     }
 
 
@@ -140,23 +141,23 @@ public:
 
     [[nodiscard]]
     std::size_t sizeInBytes() const noexcept {
-        return p::size() * sizeof(StoredType);
+        return super::size() * sizeof(StoredType);
     }
 
     [[nodiscard]]
     StoredType& at(std::size_t index) {
-        if (index >= p::size()) {
+        if (index >= super::size()) {
             aui::impl::outOfBoundsException();
         }
-        return p::operator[](index);
+        return super::operator[](index);
     }
 
     [[nodiscard]]
     const StoredType& at(std::size_t index) const {
-        if (index >= p::size()) {
+        if (index >= super::size()) {
             aui::impl::outOfBoundsException();
         }
-        return p::operator[](index);
+        return super::operator[](index);
     }
 
 
@@ -167,7 +168,7 @@ public:
      */
     self& operator<<(const StoredType& rhs) noexcept
     {
-        p::push_back(rhs);
+        super::push_back(rhs);
         return *this;
     }
 
@@ -178,7 +179,7 @@ public:
      */
     self& operator<<(StoredType&& rhs) noexcept
     {
-        p::push_back(std::forward<StoredType>(rhs));
+        super::push_back(std::forward<StoredType>(rhs));
         return *this;
     }
 
@@ -216,8 +217,8 @@ public:
      */
     StoredType& first() noexcept
     {
-        assert(("empty container could not have the first element" && !p::empty()));
-        return p::front();
+        assert(("empty container could not have the first element" && !super::empty()));
+        return super::front();
     }
 
     /**
@@ -229,8 +230,8 @@ public:
      */
     const StoredType& first() const noexcept
     {
-        assert(("empty container could not have the first element" && !p::empty()));
-        return p::front();
+        assert(("empty container could not have the first element" && !super::empty()));
+        return super::front();
     }
 
     /**
@@ -242,8 +243,8 @@ public:
      */
     StoredType& last() noexcept
     {
-        assert(("empty container could not have the last element" && !p::empty()));
-        return p::back();
+        assert(("empty container could not have the last element" && !super::empty()));
+        return super::back();
     }
 
     /**
@@ -255,8 +256,8 @@ public:
      */
     const StoredType& last() const noexcept
     {
-        assert(("empty container could not have the last element" && !p::empty()));
-        return p::back();
+        assert(("empty container could not have the last element" && !super::empty()));
+        return super::back();
     }
 
     /**
@@ -271,13 +272,13 @@ public:
 
 
     AVector<StoredType>& sort() noexcept {
-        std::sort(p::begin(), p::end());
+        std::sort(super::begin(), super::end());
         return *this;
     }
 
     template<typename Comparator>
     AVector<StoredType>& sort(Comparator&& comparator) noexcept {
-        std::sort(p::begin(), p::end(), std::forward<Comparator>(comparator));
+        std::sort(super::begin(), super::end(), std::forward<Comparator>(comparator));
         return *this;
     }
 
@@ -298,10 +299,24 @@ public:
      * Removes element if predicate(container[i]) == true.
      * @param predicate predicate
      */
-    template<typename Predicate>
+    template<aui::predicate<StoredType> Predicate>
     void removeIf(Predicate&& predicate) noexcept
     {
-        p::erase(std::remove_if(p::begin(), p::end(), std::forward<Predicate>(predicate)), p::end());
+        super::erase(std::remove_if(super::begin(), super::end(), std::forward<Predicate>(predicate)), super::end());
+    }
+
+    /**
+     * Removes only the first element if predicate(container[i]) == true.
+     * @param predicate predicate
+     */
+    template<aui::predicate<StoredType> Predicate>
+    void removeIfFirst(Predicate&& predicate) noexcept
+    {
+        auto i = std::find_if(super::begin(), super::end(), std::forward<Predicate>(predicate));
+        if (i == super::end()) {
+            return;
+        }
+        super::erase(i);
     }
 
     template<aui::mapper<std::size_t, StoredType> Callable>
@@ -315,7 +330,7 @@ public:
     }
 
     ASet<StoredType> toSet() const noexcept {
-        return ASet<StoredType>(p::begin(), p::end());
+        return ASet<StoredType>(super::begin(), super::end());
     }
 
     /**
@@ -335,8 +350,8 @@ public:
     template<aui::invocable<const StoredType&> UnaryOperation>
     auto map(UnaryOperation&& transformer) const -> AVector<decltype(transformer(std::declval<StoredType>()))> {
         AVector<decltype(transformer(std::declval<StoredType>()))> result;
-        result.reserve(p::size());
-        std::transform(p::begin(), p::end(), std::back_inserter(result), std::forward<UnaryOperation>(transformer));
+        result.reserve(super::size());
+        std::transform(super::begin(), super::end(), std::back_inserter(result), std::forward<UnaryOperation>(transformer));
         return result;
     }
 
@@ -344,20 +359,20 @@ public:
     [[nodiscard]]
     auto toMap(UnaryOperation&& transformer) const -> AMap<decltype(transformer(std::declval<StoredType>()).first),
                                                            decltype(transformer(std::declval<StoredType>()).second)> {
-        return aui::container::to_map(p::begin(), p::end(), transformer);
+        return aui::container::to_map(super::begin(), super::end(), transformer);
     }
 
     template<aui::invocable<StoredType&> UnaryOperation>
     [[nodiscard]]
     auto toMap(UnaryOperation&& transformer) -> AMap<decltype(transformer(std::declval<StoredType>()).first),
                                                      decltype(transformer(std::declval<StoredType>()).second)> {
-        return aui::container::to_map(p::begin(), p::end(), transformer);
+        return aui::container::to_map(super::begin(), super::end(), transformer);
     }
 
     template<aui::predicate<const StoredType&> Predicate>
-    AVector filter(Predicate&& predicate) {
-        AVector result;
-        result.reserve(p::size());
+    self filter(Predicate&& predicate) {
+        self result;
+        result.reserve(super::size());
         for (const auto& element : *this) {
             if (predicate(element)) {
                 result.push_back(element);
@@ -367,8 +382,8 @@ public:
     }
 
     template<aui::predicate<const StoredType&> Predicate>
-    p::iterator findIf(Predicate&& predicate) {
-        return std::find_if(p::begin(), p::end(), std::forward<Predicate>(predicate));
+    super::iterator findIf(Predicate&& predicate) {
+        return std::find_if(super::begin(), super::end(), std::forward<Predicate>(predicate));
     }
 };
 

@@ -187,8 +187,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
     }
 }
 
-void AAdvancedGridLayout::addView(size_t index, const _<AView>& view)
-{
+void AAdvancedGridLayout::addView(const _<AView>& view, AOptional<size_t> index) {
     if (mCurrentIndex < mIndices.size())
     {
         addView(view, mCurrentIndex % cellsX, mCurrentIndex / cellsX);
@@ -207,12 +206,7 @@ void AAdvancedGridLayout::addView(const _<AView>& view, int x, int y)
     mCells << GridCell{view, x, y};
 }
 
-void AAdvancedGridLayout::removeView(size_t index, const _<AView>& view)
-{
-    if (index == -1) {
-        index = indexOf(view);
-    }
-
+void AAdvancedGridLayout::removeView(aui::no_escape<AView> view, size_t index) {
     if (index != -1) {
         for (auto& i : mIndices)
         {
@@ -231,7 +225,7 @@ int AAdvancedGridLayout::getMinimumWidth()
     for (int x = 0; x < cellsX; ++x)
     {
         int minForColumn = 0;
-        for (auto& view : getRow(x))
+        for (auto& view : getColumn(x))
         {
             minForColumn = glm::max(int(view->getMinimumWidth() + view->getMargin().horizontal()), minForColumn);
         }
@@ -253,4 +247,8 @@ int AAdvancedGridLayout::getMinimumHeight()
         min += minForRow + mSpacing;
     }
     return min;
+}
+
+AVector<_<AView>> AAdvancedGridLayout::getAllViews() {
+    return { mCells.begin(), mCells.end() };
 }

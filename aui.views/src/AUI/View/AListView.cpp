@@ -26,7 +26,7 @@
 class AListViewContainer: public AViewContainer {
 private:
     int mScrollY = 0;
-    size_t mIndex = -1;
+    mutable std::size_t mIndex = -1;
 
 public:
     void updateLayout() override {
@@ -36,12 +36,12 @@ public:
         updateParentsLayoutIfNecessary();
     }
 
-    _<AView> getViewAt(glm::ivec2 pos, bool ignoreGone) override {
+    _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept override {
         switch (mViews.size()) {
             case 0:
                 return nullptr;
             case 1: {
-                auto v = AViewContainer::getViewAt(pos, ignoreGone);
+                auto v = AViewContainer::getViewAt(pos, flags);
                 mIndex = v ? 0 : -1;
                 return v;
             }

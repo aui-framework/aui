@@ -67,6 +67,7 @@ namespace aui::impl::slot {
  *        function (see examples).
  * @ingroup useful_macros
  * @details
+ * Quick example:
  * <table>
  *   <tr>
  *     <td>without</td>
@@ -85,6 +86,8 @@ namespace aui::impl::slot {
  *     </td>
  *   </tr>
  * </table>
+ *
+ * @note If you are intended to reference this-> object, consider using @ref #me instead.
  */
 #define slot(v) v, &aui::impl::slot::decode_type_t<std::decay_t<decltype(v)>>
 
@@ -259,8 +262,18 @@ namespace aui::impl::slot {
  *   _new<ALabel>("Red text!") with_style { TextColor { AColor::RED } },
  * });
  * @endcode
+ *
+ * Also applicable to declarative-style views:
+ * @code{cpp}
+ * #include <AUI/ASS/ASS.h>
+ * using namespace ass;
+ * ...
+ * setContents(Centered {
+ *   Label { "Red text!" } with_style { TextColor { AColor::RED } },
+ * });
+ * @endcode
  */
-#define with_style + RuleWithoutSelector
+#define with_style + ass::PropertyListRecursive
 
 /**
  * @brief Executes following {} block asynchronously in the @ref AThreadPool::global() "global" thread pool. Unlike
@@ -375,5 +388,5 @@ namespace aui::impl::slot {
  * @brief Executes lambda on current object's thread. Allows to determine lambda's capture.
  */
 #define ui_threadX (*getThread()) *
-#define repeat(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex)
-#define repeat_async(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex) AThreadPool::global() << [=]()
+#define AUI_REPEAT(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex)
+#define AUI_REPEAT_ASYNC(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex) AThreadPool::global() << [=]()

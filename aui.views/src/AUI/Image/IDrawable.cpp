@@ -21,7 +21,7 @@
 #include <AUI/Util/AImageDrawable.h>
 
 
-_<IDrawable> IDrawable::fromUrl(const AUrl& url) {
+_<IDrawable> IDrawable::fromUrl(const AUrl& url) noexcept {
     return Cache::get(url);
 }
 
@@ -44,7 +44,7 @@ _<IDrawable> IDrawable::Cache::load(const AUrl& key)
 
 
     } catch (const AException& e) {
-        ALogger::err("Could not load image: " + key.full() + ": " + e.getMessage());
+        ALogger::err("Drawable") << "Could not load image: " + key.full() + ": " << e;
     }
     return nullptr;
 }

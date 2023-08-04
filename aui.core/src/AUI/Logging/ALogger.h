@@ -19,8 +19,12 @@
 #include <AUI/Core.h>
 #include <AUI/IO/IOutputStream.h>
 #include <AUI/Reflect/AReflect.h>
+#include <AUI/Util/ARaiiHelper.h>
 #include "AUI/Thread/AMutex.h"
 #include "AUI/IO/AFileOutputStream.h"
+#include <fmt/format.h>
+#include <fmt/chrono.h>
+#include <AUI/Thread/AMutexWrapper.h>
 
 class AString;
 
@@ -91,6 +95,8 @@ public:
                     mBuffer = std::move(h);
                 }
             public:
+                using value_type = char;
+
                 Buffer() noexcept: mBuffer({}) {
                     auto& sb = std::get<StackBuffer>(mBuffer);
                     sb.currentIterator = sb.buffer;
@@ -120,6 +126,10 @@ public:
                         switchToHeap();
                     }
                     std::get<HeapBuffer>(mBuffer).push_back(c);
+                }
+
+                void push_back(char c) { // for std::back_inserter
+                    write(c);
                 }
 
                 [[nodiscard]]
@@ -156,14 +166,7 @@ public:
             Buffer mBuffer;
 
             void writeTimestamp(const char* fmt, std::chrono::system_clock::time_point t) noexcept {
-                char buf[128];
-                auto inTimeT = std::chrono::system_clock::to_time_t(t);
-                std::size_t strLen;
-                {
-                    std::unique_lock lock(mLogger.mLocalTimeMutex);
-                    strLen = std::strftime(buf, sizeof(buf), fmt, std::localtime(&inTimeT));
-                }
-                mBuffer.write(buf, strLen);
+                fmt::format_to(std::back_inserter(mBuffer), "{}", t);
             }
 
         public:
@@ -219,18 +222,69 @@ public:
 
     static ALogger& global();
 
-    static void setDebugMode(bool debug) {
+    void setDebugMode(bool debug) {
         global().mDebug = debug;
     }
-    static bool isDebug() {
+    bool isDebug() {
         return global().mDebug;
     }
 
-    static void setLogFile(APath path) {
-        global().setLogFileImpl(std::move(path));
+    /**
+     * @brief Sets log file.
+     * @param path path to the log file.
+     * @details
+     * Log file is opened immediately in setLogFile.
+     * @note
+     * If you want to change the log file of ALogger::global(), consider using ALogger::setLogFileForGlobal instead.
+     * `ALogger::global().setLogFile(...)` expression would cause the default log file location to open and to close
+     * immediately, when opening a log file in the specified location, causing empty file and two `Log file:` entries.
+     */
+    void setLogFile(APath path) {
+        setLogFileImpl(std::move(path));
     }
-    static const AString& logFile() {
-        return global().mLogFile.path();
+
+    /**
+     * @brief Sets log file for `ALogger::global()`.
+     * @param path path to the log file.
+     * @see ALogger::setLogFile
+     */
+    static void setLogFileForGlobal(APath path);
+
+    const AString& logFile() {
+        return mLogFile.valueOrException().path();
+    }
+
+    void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
+        std::unique_lock lock(mOnLogged);
+        mOnLogged = std::move(callback);
+    }
+    /**
+     * @brief Allows to perform some action (access safely) on log file (which is opened all over the execution process)
+     * @details
+     * Useful when sending log file to remote server.
+     * @note Windows, for instance, doesn't allow to read the file when it's already opened
+     */
+    template <aui::invocable Callable>
+    void doLogFileAccessSafe(Callable action) {
+        std::unique_lock lock(mLogSync);
+        ARaiiHelper opener = [&] {
+            if (!mLogFile) return;
+            try {
+                mLogFile->open(true);
+            } catch (const AException& e) {
+                auto path = mLogFile->path();
+                mLogFile.reset();
+                lock.unlock();
+                log(WARN, "Logger", fmt::format("Unable to reopen file {}: {}", path, e.getMessage()));
+            }
+        };
+        if (!mLogFile || !mLogFile->nativeHandle()) {
+            action();
+            return;
+        }
+
+        mLogFile->close();
+        action();
     }
 
     static LogWriter info(const AString& str)
@@ -264,8 +318,9 @@ public:
 private:
 	ALogger();
 
-    AFileOutputStream mLogFile;
-    AMutex mLocalTimeMutex;
+    AOptional<AFileOutputStream> mLogFile;
+    AMutex mLogSync;
+    AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 
     bool mDebug = true;
 
@@ -279,8 +334,8 @@ private:
      * @param message log message. If empty, prefix used as a message
      */
     void log(Level level, std::string_view prefix, std::string_view message);
-};
 
+};
 
 template<std::size_t L, typename T, glm::qualifier Q>
 inline std::ostream& operator<<(std::ostream& o, glm::vec<L, T, Q> vec) {
@@ -294,6 +349,6 @@ inline std::ostream& operator<<(std::ostream& o, glm::vec<L, T, Q> vec) {
     return o;
 }
 
-#define ALOG_DEBUG(str) if (ALogger::isDebug()) ALogger::debug(str)
+#define ALOG_DEBUG(str) if (ALogger::global().isDebug()) ALogger::debug(str)
 
 #include <AUI/Traits/strings.h>

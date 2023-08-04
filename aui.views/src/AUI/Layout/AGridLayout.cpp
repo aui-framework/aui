@@ -110,8 +110,7 @@ void AGridLayout::onResize(int x, int y, int width, int height)
 	}
 }
 
-void AGridLayout::addView(size_t index, const _<AView>& view)
-{
+void AGridLayout::addView(const _<AView>& view, AOptional<size_t> index) {
 	if (mCurrentIndex < mIndices.size())
 	{
 		addView(view, mCurrentIndex % mCellsX, mCurrentIndex / mCellsX);
@@ -130,21 +129,14 @@ void AGridLayout::addView(const _<AView>& view, int x, int y)
 	mCells << GridCell{view, x, y};
 }
 
-void AGridLayout::removeView(size_t index, const _<AView>& view)
-{
-	if (index == -1) {
-        index = indexOf(view);
+void AGridLayout::removeView(aui::no_escape<AView> view, size_t index) {
+    for (auto& i : mIndices)
+    {
+        if (i == index)
+        {
+            i = -1;
+        }
     }
-
-	if (index != -1) {
-		for (auto& i : mIndices)
-		{
-			if (i == index)
-			{
-				i = -1;
-			}
-		}
-	}
 	mCells.removeAt(index);
 }
 
@@ -176,4 +168,8 @@ int AGridLayout::getMinimumHeight()
 		min = glm::max(minForColumn * mCellsY, min);
 	}
 	return min;
+}
+
+AVector<_<AView>> AGridLayout::getAllViews() {
+    return { mCells.begin(), mCells.end() };
 }

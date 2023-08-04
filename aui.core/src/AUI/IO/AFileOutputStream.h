@@ -39,6 +39,7 @@ public:
 
     void write(const char* src, size_t size) override;
     void close();
+    void open(bool append = false);
 
 
     AFileOutputStream(AFileOutputStream&& rhs) noexcept {

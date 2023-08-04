@@ -30,6 +30,10 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
             return window->winProc(hwnd, uMsg, wParam, lParam);
     } catch (const AException& e) {
         ALogger::err("AUI") << "Uncaught exception in window proc: " << e;
+    } catch (const std::exception& e) {
+        ALogger::err("AUI") << "Uncaught exception in window proc: " << e.what();
+    } catch (...) {
+        ALogger::err("AUI") << "Uncaught exception in window proc (unknown type)";
     }
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }

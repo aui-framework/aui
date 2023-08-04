@@ -110,6 +110,8 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     }
 
     bool mergeStdoutStderr = bool(flags & ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
+    bool tieStdout = bool(flags & ASubProcessExecutionFlags::TIE_STDOUT);
+    bool tieStderr = bool(flags & ASubProcessExecutionFlags::TIE_STDERR);
 
     AVector<std::string> argsStdString;
     {
@@ -137,8 +139,12 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
     auto pid = fork();
     if (pid == 0) {
         while ((dup2(pipeStdin.out(), STDIN_FILENO) == -1) && (errno == EINTR)) {}
-        while ((dup2(pipeStdout.in(), STDOUT_FILENO) == -1) && (errno == EINTR)) {}
-        while ((dup2(mergeStdoutStderr ? pipeStdout.in() : pipeStderr.in(), STDERR_FILENO) == -1) && (errno == EINTR)) {}
+        if (!tieStdout) {
+            while ((dup2(pipeStdout.in(), STDOUT_FILENO) == -1) && (errno == EINTR)) {}
+        }
+        if (!tieStderr) {
+            while ((dup2(mergeStdoutStderr ? pipeStdout.in() : pipeStderr.in(), STDERR_FILENO) == -1) && (errno == EINTR)) {}
+        }
 
         //ipeStdin.closeIn();
         //ipeStdout.closeOut();

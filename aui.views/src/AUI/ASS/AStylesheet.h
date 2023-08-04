@@ -25,26 +25,26 @@
 
 class API_AUI_VIEWS AStylesheet {
 private:
-    AVector<Rule> mRules;
+    AVector<ass::Rule> mRules;
     bool mIgnoreRules = false;
 
 public:
     AStylesheet();
-    AStylesheet(std::initializer_list<Rule> rules) {
+    AStylesheet(std::initializer_list<ass::Rule> rules) {
         addRules(rules);
     }
 
-    void addRules(std::initializer_list<Rule> rules) {
+    void addRules(std::initializer_list<ass::Rule> rules) {
         if (mIgnoreRules) {
             return;
         }
         for (auto& constRule : rules) {
-            auto& rule = const_cast<Rule&>(constRule);
+            auto& rule = const_cast<ass::Rule&>(constRule);
             mRules << std::move(rule);
         }
     }
 
-    void addRule(const Rule& r) {
+    void addRule(const ass::Rule& r) {
         if (mIgnoreRules) {
             return;
         }
@@ -52,11 +52,11 @@ public:
     }
 
 
-    void addRule(Rule&& r) {
+    void addRule(ass::Rule&& r) {
         if (mIgnoreRules) {
             return;
         }
-        mRules << std::forward<Rule>(r);
+        mRules << std::forward<ass::Rule>(r);
     }
 
     void setIgnoreRules(bool ignoreRules) {
@@ -64,7 +64,7 @@ public:
     }
 
 
-    [[nodiscard]] const AVector<Rule>& getRules() const {
+    [[nodiscard]] const AVector<ass::Rule>& getRules() const {
         return mRules;
     }
 
@@ -72,7 +72,7 @@ public:
 
     static AStylesheet& global();
 
-    void setRules(AVector<Rule> rules) {
+    void setRules(AVector<ass::Rule> rules) {
         mRules = std::move(rules);
     }
 

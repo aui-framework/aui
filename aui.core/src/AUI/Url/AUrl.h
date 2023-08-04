@@ -30,13 +30,9 @@
  */
 class API_AUI_CORE AUrl
 {
-private:
-	AString mSchema;
-	AString mPath;
-
-    static AMap<AString, std::function<_<IInputStream>(const AUrl&)>>& resolvers();
-
 public:
+	using Resolver = std::function<_<IInputStream>(const AUrl&)>;
+
 	AUrl(AString full);
 	inline AUrl(const char* full): AUrl(AString(full)) {}
 
@@ -70,7 +66,13 @@ public:
         return full() < u.full();
     }
 
-	static void registerResolver(const AString& protocol, const std::function<_<IInputStream>(const AUrl&)>& factory);
+	static void registerResolver(const AString& protocol, Resolver resolver);
+
+private:
+	AString mSchema;
+	AString mPath;
+
+	static AMap<AString, AVector<AUrl::Resolver>>& resolvers();
 };
 
 

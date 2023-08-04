@@ -23,7 +23,7 @@
 #include "AAbstractTypeableView.h"
 
 
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Render/RenderHints.h"
 #include "AUI/Util/ARaiiHelper.h"
@@ -358,14 +358,15 @@ void AAbstractTypeableView::onPointerMove(glm::ivec2 pos)
 }
 
 bool AAbstractTypeableView::isLButtonPressed() {
-    return isMousePressed();
+    return isPressed();
 }
 
 void AAbstractTypeableView::onPointerReleased(const APointerReleasedEvent& event)
 {
     AView::onPointerReleased(event);
+    if (!event.triggerClick) return;
 
-    if (event.button != AInput::RBUTTON) {
+    if (event.pointerIndex != APointerIndex::button(AInput::RBUTTON)) {
         ACursorSelectable::handleMouseReleased(event);
     }
 }

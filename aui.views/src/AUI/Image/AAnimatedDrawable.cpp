@@ -19,6 +19,15 @@
 //
 
 #include "AAnimatedDrawable.h"
+#include "AUI/Image/gif/GifImageFactory.h"
+
+AAnimatedDrawable::AAnimatedDrawable(_<IImageFactory> factory) : mFactory (std::move(factory)) {
+    if (auto gifImageFactory = _cast<GifImageFactory>(mFactory)) {
+        gifImageFactory->setOnAnimationFinished([this]() {
+            emit animationFinished;
+        });
+    }
+}
 
 void AAnimatedDrawable::draw(const IDrawable::Params &params) {
     if (!mTexture)

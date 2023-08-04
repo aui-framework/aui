@@ -30,7 +30,8 @@ public:
         mFileHandle = fileHandle;
         auto self = shared_from_this();
         mBuffer.reserve(0x1000);
-        UnixIoThread::inst().registerCallback(fileHandle, POLLIN, [&](int) {
+        UnixIoThread::inst().registerCallback(fileHandle, UnixPollEvent::IN, [&](ABitField<UnixPollEvent>) {
+            assert(mBuffer.data() != nullptr);
             auto r = read(mFileHandle, mBuffer.data(), mBuffer.capacity());
             assert(r >= 0);
             mBuffer.setSize(r);

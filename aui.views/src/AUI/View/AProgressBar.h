@@ -17,6 +17,7 @@
 #pragma once
 
 #include <AUI/View/AViewContainer.h>
+#include <AUI/Traits/values.h>
 
 /**
  * @brief A progress bar.
@@ -37,12 +38,22 @@ public:
      * Set progress bar value.
      * @param value progress value, where `0.0f` = 0%, `1.0f` = 100%
      */
-    void setValue(float value) {
+    void setValue(aui::float_within_0_1 value) {
         mValue = value;
         updateInnerWidth();
         redraw();
 
         emit valueChanged(value);
+    }
+
+    [[nodiscard]]
+    aui::float_within_0_1 value() const noexcept {
+        return mValue;
+    }
+
+    [[nodiscard]]
+    const _<Inner>& innerView() const noexcept {
+        return mInner;
     }
 
 public:
@@ -52,13 +63,13 @@ public:
     void render() override;
 
 private:
-    float mValue = 0.f;
+    aui::float_within_0_1 mValue = 0.f;
     void updateInnerWidth();
     _<Inner> mInner;
 
 
 signals:
-    emits<float> valueChanged;
+    emits<aui::float_within_0_1> valueChanged;
 };
 
 
