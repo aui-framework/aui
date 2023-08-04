@@ -35,9 +35,9 @@ namespace gl {
         /**
          * @brief Creates VBO
          * @param index index in VAO
-         * @param data parseShader data
-         * @param dataSize parseShader data size in bytes
-         * @param vertexSize count of floats per parseShader
+         * @param data vertex data
+         * @param dataSize vertex data size in bytes
+         * @param vertexSize count of floats per vertex
          */
 		void insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType);
 
@@ -45,9 +45,9 @@ namespace gl {
         /**
          * @brief Creates integer VBO
          * @param index index in VAO
-         * @param data parseShader data
-         * @param dataSize parseShader data size in bytes
-         * @param vertexSize count of integers per parseShader
+         * @param data vertex data
+         * @param dataSize vertex data size in bytes
+         * @param vertexSize count of integers per vertex
          */
 		void insertInteger(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType);
 
