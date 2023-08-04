@@ -334,6 +334,8 @@ protected:
 
     void invalidateAllStyles() override;
 
+    void onViewGraphSubtreeChanged() override;
+
     void invalidateAssHelper() override;
 
     /**

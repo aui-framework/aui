@@ -191,10 +191,6 @@ void AView::invalidateAllStyles()
 
     for (auto target = this; target != nullptr; target = target->getParent()) {
         if (target->mExtraStylesheet) {
-            if (mAssNames.contains("CellStyle")) {
-                printf("\n");
-            }
-
             viewTree.push(target);
         }
     }
@@ -683,4 +679,9 @@ void AView::setCursor(AOptional<ACursor> cursor) {
     if (mParent) { // ABaseWindow does not have parent
         AWindow::current()->forceUpdateCursor();
     }
+}
+
+void AView::onViewGraphSubtreeChanged() {
+    invalidateAssHelper();
+    emit viewGraphSubtreeChanged;
 }

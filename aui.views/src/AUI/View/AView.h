@@ -264,6 +264,17 @@ protected:
      */
     virtual AMenuModel composeContextMenu();
 
+
+    /**
+     * @brief Called when direct or indirect parent has changed.
+     * @details
+     * The method is mostly intended to invalidate styles in order to respond to stylesheet rules (mExtraStylesheet) of
+     * the new (in)direct parent.
+     *
+     * Emits viewGraphSubtreeChanged signal.
+     */
+    virtual void onViewGraphSubtreeChanged();
+
 public:
     AView();
     virtual ~AView() = default;
@@ -891,7 +902,10 @@ public:
     virtual bool wantsTouchscreenKeyboard();
 
 signals:
-    emits<> addedToContainer;
+    /**
+     * @see onViewGraphSubtreeChanged()
+     */
+    emits<> viewGraphSubtreeChanged;
 
     emits<bool> hoveredState;
     emits<> mouseEnter;

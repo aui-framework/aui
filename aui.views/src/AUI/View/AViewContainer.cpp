@@ -69,7 +69,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
     for (const auto& view: views) {
         view->mParent = this;
         AUI_NULLSAFE(mLayout)->addView(view);
-        emit view->addedToContainer();
+        view->onViewGraphSubtreeChanged();
     }
 
     if (mViews.empty()) {
@@ -84,7 +84,7 @@ void AViewContainer::addView(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view);
-    emit view->addedToContainer();
+    view->onViewGraphSubtreeChanged();
     invalidateCaches();
 }
 
@@ -93,7 +93,7 @@ void AViewContainer::addViewCustomLayout(const _<AView>& view) {
     view->mParent = this;
     view->setSize(view->getMinimumSize());
     AUI_NULLSAFE(mLayout)->addView(view);
-    emit view->addedToContainer();
+    view->onViewGraphSubtreeChanged();
     invalidateCaches();
 }
 
@@ -101,7 +101,7 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
     mViews.insert(mViews.begin() + index, view);
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view, index);
-    emit view->addedToContainer();
+    view->onViewGraphSubtreeChanged();
     invalidateCaches();
 }
 
@@ -112,7 +112,7 @@ void AViewContainer::setLayout(_<ALayout> layout) {
         mViews = mLayout->getAllViews();
         for (const auto& v : mViews) {
             v->mParent = this;
-            emit v->addedToContainer();
+            v->onViewGraphSubtreeChanged();
         }
     }
     invalidateCaches();
@@ -491,4 +491,11 @@ void AViewContainer::onClickPrevented() {
 
 void AViewContainer::invalidateCaches() {
     mConsumesClickCache.reset();
+}
+
+void AViewContainer::onViewGraphSubtreeChanged() {
+    AView::onViewGraphSubtreeChanged();
+    for (const auto& v : mViews) {
+        v->onViewGraphSubtreeChanged();
+    }
 }
