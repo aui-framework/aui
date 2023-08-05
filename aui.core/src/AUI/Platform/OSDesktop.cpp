@@ -84,10 +84,13 @@ void afterEntryCleanup() {
     ACleanup::inst().afterEntryPerform();
 }
 
-ACommandLineArgs args;
+static ACommandLineArgs& argsImpl() {
+    static ACommandLineArgs args;
+    return args;
+}
 
 const ACommandLineArgs& aui::args() noexcept {
-    return ::args;
+    return argsImpl();
 }
 
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
@@ -126,7 +129,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
     }
 #endif
     for (int i = 0; i < argc; ++i) {
-        args << argv[i];
+        argsImpl() << argv[i];
     }
     int r = -1;
 
@@ -135,7 +138,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
     aui_init_signal_handler();
 #endif
     try {
-        r = aui_entry(args);
+        r = aui_entry(argsImpl());
         if (auto el = AThread::current()->getCurrentEventLoop()) {
             el->loop();
         }
