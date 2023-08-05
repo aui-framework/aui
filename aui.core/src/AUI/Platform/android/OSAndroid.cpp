@@ -25,7 +25,7 @@ extern void aui_init_signal_handler();
 
 int(*_gEntry)(AStringVector);
 
-AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(AStringVector)) {
+AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(const AStringVector&)) {
     aui::jni::setJavaVM(vm);
     _gEntry = aui_entry;
     return 0;
