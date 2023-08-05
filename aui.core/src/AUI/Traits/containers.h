@@ -188,11 +188,11 @@ namespace aui::container {
      */
     template<typename Container>
     AOptional<std::size_t> remove_first(Container& container, typename Container::const_reference value) noexcept {
-        std::size_t counter = 0;
-        for (auto it = container.begin(); it != container.end(); ++it, ++counter) {
+        for (auto it = container.begin(); it != container.end(); ++it) {
             if (*it == value) {
+                auto index = std::distance(container.begin(), it);
                 container.erase(it);
-                return counter;
+                return index;
             }
         }
         return {};

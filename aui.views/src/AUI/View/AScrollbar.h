@@ -103,9 +103,13 @@ public:
      * (bottom) the scrollbar automatically scrolls to the ends, keeping the scroll position in place.
      */
     void setStickToEnd(bool stickToEnd) {
-        mStickToEnd = stickToEnd;
         if (stickToEnd) {
+            mStickToEnd = StickToEnd{
+                .locked = true,
+            };
             scrollToEnd();
+        } else {
+            mStickToEnd.reset();
         }
     }
 
@@ -117,9 +121,7 @@ public:
         setScroll(0);
     }
 
-    void scrollToEnd() {
-        setScroll(getMaxScroll());
-    }
+    void scrollToEnd();
 
 signals:
 
@@ -165,7 +167,20 @@ protected:
     }
 
 private:
-    bool mStickToEnd = false;
+    struct StickToEnd {
+        /**
+         * @brief The stick-to-end behaviour is not overridden by the user.
+         */
+        bool locked = true;
+    };
+    /**
+     * @brief Stick-to-end behaviour enabled or not.
+     * @details
+     * Empty = disabled.
+     *
+     * @see AScrollbar::setStickToEnd()
+     */
+    AOptional<StickToEnd> mStickToEnd;
     ScrollbarAppearance::AxisValue mAppearance = ScrollbarAppearance::INVISIBLE;
 };
 

@@ -31,8 +31,8 @@ private:
 public:
     ViewHierarchyTreeModel(const _<AView>& root) : mRoot(root) {}
 
-    size_t childrenCount(const ATreeIndex& parent) override {
-        auto c = dynamic_cast<AViewContainer*>(parent.getUserData<_<AView>>()->get());
+    size_t childrenCount(const ATreeIndex& vertex) override {
+        auto c = _cast<AViewContainer>(vertex.as<_<AView>>());
         if (c) {
             return c->getViews().size();
         }
@@ -40,17 +40,31 @@ public:
     }
 
     AString itemAt(const ATreeIndex& index) override {
-        return Devtools::prettyViewName(index.getUserData<_<AView>>()->get());
+        return Devtools::prettyViewName(index.as<_<AView>>().get());
     }
 
-    ATreeIndex indexOfChild(size_t row, size_t column, const ATreeIndex& parent) override {
-        auto ptr = const_cast<_<AView>*>(&dynamic_cast<AViewContainer*>(parent.getUserData<_<AView>>()->get())->getViews()[row]);
-        return ATreeIndex(ptr);
+    ATreeIndex indexOfChild(size_t row, size_t column, const ATreeIndex& vertex) override {
+        auto c = _cast<AViewContainer>(vertex.as<_<AView>>());
+        if (!c) {
+            throw AException("invalid index");
+        }
+        return ATreeIndex(row, column, c->getViews().at(row));
     }
 
-protected:
-    void* rootUserData() override {
-        return &mRoot;
+    ATreeIndex parent(const ATreeIndex& ofChild) override {
+        auto view = ofChild.as<_<AView>>();
+        auto parent = view->getParent();
+        if (!parent) {
+            return {};
+        }
+
+        auto parentOfParent = parent->getParent();
+
+        return ATreeIndex{ parentOfParent ? parentOfParent->getViews().indexOf(parent->sharedPtr()) : 0, 0, parent->sharedPtr() };
+    }
+
+    ATreeIndex root() override {
+        return ATreeIndex(0, 0, mRoot);
     }
 };
 
@@ -59,25 +73,44 @@ DevtoolsPanel::DevtoolsPanel(ABaseWindow* targetWindow):
     using namespace declarative;
 
     setContents(Vertical {
-            Horizontal {
-                    Button { "Force layout update" }.clicked(me::forceLayoutUpdate)
-            },
-            ASplitter::Horizontal().withItems({
-                                                      mViewHierarchyTree = _new<ATreeView>() with_style { ass::MinSize{ 300_dp } },
-                                                      mViewPropertiesView = _new<ViewPropertiesView>(nullptr)
-                                              }).build() with_style { ass::Expanding{} },
+        Horizontal {
+            Button { "Force layout update" }.clicked(me::forceLayoutUpdate),
+            SpacerExpanding{},
+            Label { "Use CTRL to hit test views" },
+        },
+        Horizontal::Expanding{
+            mViewHierarchyTree = _new<ATreeView>() with_style{ass::MinSize{300_dp}, ass::Expanding{}},
+            mViewPropertiesView = _new<ViewPropertiesView>(nullptr),
+        },
     });
-    mViewHierarchyTree->setModel(_new<ViewHierarchyTreeModel>(aui::ptr::fake(targetWindow)));
-    connect(mViewHierarchyTree->itemMouseClicked, [this](const ATreeIndex& index) {
-        mViewPropertiesView->setTargetView(*index.getUserData<_<AView>>());
+    auto model = _new<ViewHierarchyTreeModel>(aui::ptr::fake(targetWindow));
+    mViewHierarchyTree->setModel(model);
+    connect(mViewHierarchyTree->itemSelected, [this](const ATreeIndex& index) {
+        mViewPropertiesView->setTargetView(index.as<_<AView>>());
     });
     connect(mViewHierarchyTree->itemMouseHover, [this](const ATreeIndex& index) {
-        mTargetWindow->setProfiledView(*index.getUserData<_<AView>>());
-        mTargetWindow->redraw();
+        mViewPropertiesView->setTargetView(index.as<_<AView>>());
     });
     connect(mouseLeave, [this] {
         mTargetWindow->setProfiledView(nullptr);
         mTargetWindow->redraw();
+    });
+    connect(targetWindow->mouseMove, [this, targetWindow, model](glm::ivec2 position) {
+        if (!AInput::isKeyDown(AInput::LCONTROL)) {
+            return;
+        }
+        auto mouseOverView = targetWindow->getViewAtRecursive(position);
+        if (!mouseOverView) {
+            return;
+        }
+
+        mViewPropertiesView->setTargetView(mouseOverView);
+        auto indexToSelect = model->find([&](const ATreeIndex& index) {
+            return index.as<_<AView>>() == mouseOverView;
+        });
+        if (indexToSelect) {
+            mViewHierarchyTree->select(*indexToSelect);
+        }
     });
 }
 

@@ -46,6 +46,12 @@ ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
 }
 
 void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
+    if (!targetView) {
+        return;
+    }
+    AUI_NULLSAFE(targetView->getWindow())->setProfiledView(targetView);
+    AUI_NULLSAFE(targetView->getWindow())->redraw();
+
     mTargetView = targetView;
     if (!targetView) return;
 

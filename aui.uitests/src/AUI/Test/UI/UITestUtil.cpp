@@ -24,7 +24,7 @@
 void uitest::frame() {
     for (auto& w : AWindow::getWindowManager().getWindows()) {
         w->getRenderingContext()->beginResize(*w);
-        w->setGeometry(0, 0, w->getWidth(), w->getHeight()); // update min size
+        w->pack();
         w->getRenderingContext()->endResize(*w);
         w->redraw();
     }

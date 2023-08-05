@@ -69,7 +69,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
     for (const auto& view: views) {
         view->mParent = this;
         AUI_NULLSAFE(mLayout)->addView(view);
-        emit view->addedToContainer();
+        view->onViewGraphSubtreeChanged();
     }
 
     if (mViews.empty()) {
@@ -77,28 +77,32 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
     } else {
         mViews.insertAll(std::move(views));
     }
+    invalidateCaches();
 }
 
 void AViewContainer::addView(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view);
-    emit view->addedToContainer();
+    view->onViewGraphSubtreeChanged();
+    invalidateCaches();
 }
 
 void AViewContainer::addViewCustomLayout(const _<AView>& view) {
     mViews << view;
     view->mParent = this;
     view->setSize(view->getMinimumSize());
-    emit view->addedToContainer();
+    AUI_NULLSAFE(mLayout)->addView(view);
+    view->onViewGraphSubtreeChanged();
+    invalidateCaches();
 }
 
 void AViewContainer::addView(size_t index, const _<AView>& view) {
     mViews.insert(mViews.begin() + index, view);
     view->mParent = this;
-    if (mLayout)
-        mLayout->addView(view, index);
-    emit view->addedToContainer();
+    AUI_NULLSAFE(mLayout)->addView(view, index);
+    view->onViewGraphSubtreeChanged();
+    invalidateCaches();
 }
 
 void AViewContainer::setLayout(_<ALayout> layout) {
@@ -108,9 +112,10 @@ void AViewContainer::setLayout(_<ALayout> layout) {
         mViews = mLayout->getAllViews();
         for (const auto& v : mViews) {
             v->mParent = this;
-            emit v->addedToContainer();
+            v->onViewGraphSubtreeChanged();
         }
     }
+    invalidateCaches();
 }
 
 void AViewContainer::removeView(const _<AView>& view) {
@@ -118,6 +123,7 @@ void AViewContainer::removeView(const _<AView>& view) {
     if (!index) return;
     if (!mLayout) return;
     mLayout->removeView(view, *index);
+    invalidateCaches();
 }
 
 void AViewContainer::removeView(AView* view) {
@@ -132,6 +138,7 @@ void AViewContainer::removeView(AView* view) {
             mViews.erase(it);
         }
     }
+    invalidateCaches();
 }
 
 void AViewContainer::removeView(size_t index) {
@@ -139,6 +146,7 @@ void AViewContainer::removeView(size_t index) {
     mViews.removeAt(index);
     if (mLayout)
         mLayout->removeView(view, index);
+    invalidateCaches();
 }
 
 void AViewContainer::render() {
@@ -260,13 +268,30 @@ void AViewContainer::onScroll(const AScrollEvent& event) {
 }
 
 bool AViewContainer::consumesClick(const glm::ivec2& pos) {
+    if (mConsumesClickCache) {
+        if (mConsumesClickCache->position == pos) {
+            return mConsumesClickCache->value;
+        }
+    }
+
+    AView::consumesClick(pos);
+
+    bool result = false;
+    ARaiiHelper onExit = [&] {
+        mConsumesClickCache = ConsumesClickCache{
+            .position = pos,
+            .value = result,
+        };
+    };
+
     // has layout check
     if (mAss[int(ass::prop::PropertySlot::BACKGROUND_SOLID)] ||
-        mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)])
-        return true;
-    auto p = getViewAt(pos);
-    if (p)
-        return p->consumesClick(pos - p->getPosition());
+        mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
+        return result = true;
+    }
+    if (auto p = getViewAt(pos, AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {
+        return result = true;
+    }
     return false;
 }
 
@@ -300,7 +325,7 @@ _<AView> AViewContainer::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> f
 
         if (hitTest) {
             if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
-                if (!possibleOutput) {
+                if (!possibleOutput && !flags.test(AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {
                     possibleOutput = view;
                 }
                 if (view->consumesClick(targetPos)) {
@@ -348,6 +373,7 @@ void AViewContainer::updateLayout() {
     if (mLayout)
         mLayout->onResize(mPadding.left, mPadding.top,
                           getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+    invalidateCaches();
 }
 
 void AViewContainer::removeAllViews() {
@@ -359,6 +385,7 @@ void AViewContainer::removeAllViews() {
         }
     }
     mViews.clear();
+    invalidateCaches();
 }
 
 void AViewContainer::updateParentsLayoutIfNecessary() {
@@ -460,4 +487,15 @@ void AViewContainer::adjustVerticalSizeToContent() {
 void AViewContainer::onClickPrevented() {
     AView::onClickPrevented();
     AUI_NULLSAFE(mFocusChainTarget.lock())->onClickPrevented();
+}
+
+void AViewContainer::invalidateCaches() {
+    mConsumesClickCache.reset();
+}
+
+void AViewContainer::onViewGraphSubtreeChanged() {
+    AView::onViewGraphSubtreeChanged();
+    for (const auto& v : mViews) {
+        v->onViewGraphSubtreeChanged();
+    }
 }

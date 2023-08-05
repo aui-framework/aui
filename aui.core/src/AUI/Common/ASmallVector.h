@@ -52,10 +52,19 @@ public:
         new (&mBase.inplace) StaticVector();
     }
 
+    ASmallVector(ASmallVector&& rhs) noexcept {
+        if (rhs.isInplaceAllocated()) {
+            new (&mBase.inplace) StaticVector(*rhs.inplace());
+        } else {
+            new (&mBase.dynamic) DynamicVector(*rhs.dynamic());
+        }
+
+        new (&rhs.mBase.inplace) StaticVector();
+    }
+
     ~ASmallVector() noexcept {
         deallocate();
     }
-
 
     [[nodiscard]]
     constexpr StoredType* data() noexcept {

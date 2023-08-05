@@ -28,7 +28,7 @@
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 
-class ATreeView::ContainerView: public AViewContainer {
+class ATreeView::ContainerView final: public AViewContainer {
 private:
     int mScrollY = 0;
     size_t mIndex = -1;
@@ -36,6 +36,10 @@ private:
 public:
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
+        updateLayout();
+    }
+
+    void updateLayout() override {
         if (getLayout())
             getLayout()->onResize(mPadding.left, mPadding.top - mScrollY,
                                   getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
@@ -53,20 +57,9 @@ public:
         return 40;
     }
 };
+
 class ATreeView::ItemView: public AViewContainer, public ass::ISelectable
 {
-private:
-    bool mSelected = false;
-    bool mExpanded = false;
-    _<AView> mDisplay;
-    _<ADrawableView> mCollapseDisplay;
-    ATreeIndex mIndex;
-    ATreeView* mTreeView;
-protected:
-    bool selectableIsSelectedImpl() override {
-        return mSelected;
-    }
-
 public:
     ItemView(ATreeView* treeView, const _<AView>& display, bool hasChildren, const ATreeIndex& index)
             : mDisplay(display),
@@ -89,6 +82,8 @@ public:
         if (hasChildren) {
             connect(mDisplay->doubleClicked, me::toggleCollapseRecursive);
         }
+
+        connect(clicked, me::select);
     }
 
     void toggleCollapse() {
@@ -127,6 +122,14 @@ public:
         emit expandStateChanged(mExpanded);
     }
 
+    void expand() {
+        setExpanded(true);
+    }
+
+    void collapse() {
+        setExpanded(true);
+    }
+
     virtual ~ItemView() = default;
 
     const ATreeIndex& getIndex() const {
@@ -135,8 +138,19 @@ public:
 
     void setSelected(const bool selected)
     {
+        if (selected) {
+            AUI_NULLSAFE(mTreeView->mPrevSelection.lock())->setSelected(false);
+            mTreeView->mPrevSelection = _cast<ItemView>(AView::sharedPtr());
+            mTreeView->handleSelected(this);
+        } else {
+            mTreeView->mPrevSelection.reset();
+        }
         mSelected = selected;
         emit customCssPropertyChanged;
+    }
+
+    void select() {
+        setSelected(true);
     }
 
     void onPointerPressed(const APointerPressedEvent& event) override {
@@ -156,8 +170,32 @@ public:
         mTreeView->handleMouseMove(this);
     }
 
+    void setChildrenContainer(_<AViewContainer> childrenContainer) {
+        mChildrenContainer = childrenContainer;
+    }
+
+    [[nodiscard]]
+    const _<AViewContainer>& childrenContainer() const {
+        return mChildrenContainer;
+    }
+
 signals:
     emits<bool> expandStateChanged;
+
+protected:
+    bool selectableIsSelectedImpl() override {
+        return mSelected;
+    }
+
+private:
+    _<AViewContainer> mChildrenContainer;
+
+    bool mSelected = false;
+    bool mExpanded = false;
+    _<AView> mDisplay;
+    _<ADrawableView> mCollapseDisplay;
+    ATreeIndex mIndex;
+    ATreeView* mTreeView;
 };
 
 
@@ -197,14 +235,18 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
 
 void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView) {
     container->addView(itemView);
-    if (isGroup) {
-        auto wrapper = _container<AVerticalLayout>({});
-        wrapper->setVisibility(Visibility::GONE);
-        wrapper << ".list-item-group";
-        container->addView(wrapper);
-        fillViewsRecursively(wrapper, childIndex);
 
-        connect(itemView->expandStateChanged, wrapper, [&, wrapper](bool expanded) {
+    // always add wrapper (even if isGroup = false) to simplify view walkthrough
+    auto wrapper = _container<AVerticalLayout>({});
+    wrapper->setVisibility(Visibility::GONE);
+    wrapper << ".list-item-group";
+    container->addView(wrapper);
+
+    if (isGroup) {
+        fillViewsRecursively(wrapper, childIndex);
+        itemView->setChildrenContainer(wrapper);
+
+        connect(itemView->expandStateChanged, wrapper, [this, wrapper](bool expanded) {
             if (expanded) {
                 wrapper->setVisibility(Visibility::VISIBLE);
             } else {
@@ -247,6 +289,10 @@ void ATreeView::handleMouseDoubleClicked(ATreeView::ItemView* v) {
     emit itemMouseDoubleClicked(v->getIndex());
 }
 
+void ATreeView::handleSelected(ATreeView::ItemView* v) {
+    emit itemSelected(v->getIndex());
+}
+
 void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATreeIndex& index) {
     for (size_t i = 0; i < mModel->childrenCount(index); ++i) {
         auto childIndex = mModel->indexOfChild(i, 0, index);
@@ -264,3 +310,48 @@ int ATreeView::getContentMinimumHeight(ALayoutDirection layout) {
 void ATreeView::handleMouseMove(ATreeView::ItemView* pView) {
     emit itemMouseHover(pView->getIndex());
 }
+
+template<aui::invocable<std::size_t /* row */> Callable>
+static void findRoot(const Callable& callable, const _<ITreeModel<AString>>& model, const ATreeIndex& indexToSelect) {
+    if (!indexToSelect.hasValue()) {
+        return;
+    }
+    findRoot(callable, model, model->parent(indexToSelect));
+    callable(indexToSelect.row());
+}
+
+void ATreeView::select(const ATreeIndex& indexToSelect) {
+    try {
+        auto currentTarget = _cast<AViewContainer>(mContent);
+        _<ATreeView::ItemView> itemView;
+        bool ignore = true;
+        findRoot([&](std::size_t row) {
+            if (!currentTarget) {
+                return;
+            }
+            if (ignore) {
+                ignore = false;
+                return;
+            }
+            auto c = _cast<ATreeView::ItemView>(currentTarget->getViews().at(row * 2));
+            if (!c) {
+                throw AException("bad item view");
+            }
+            itemView = c;
+            c->expand();
+            currentTarget = c->childrenContainer();
+        }, mModel, indexToSelect);
+
+        itemView->focus();
+        itemView->setSelected(true);
+
+        auto myPositionInWindow = getPositionInWindow();
+        auto targetPositionInWindow = itemView->getPositionInWindow();
+
+        mScrollbar->scroll(targetPositionInWindow.y - myPositionInWindow.y);
+
+    } catch (const AException& e) {
+        ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
+    }
+}
+

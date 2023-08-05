@@ -20,7 +20,7 @@
 
 struct AScrollEvent {
     glm::ivec2 origin;
-    glm::ivec2 delta;
+    mutable glm::ivec2 delta; // mutable to be consumable
 
     /**
      * @brief Whether the event simulated by kinetic scroll feature or not.
