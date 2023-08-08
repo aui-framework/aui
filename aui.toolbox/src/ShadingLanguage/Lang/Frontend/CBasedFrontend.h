@@ -82,6 +82,10 @@ public:
 
     void writeCpp(const APath& destination) override;
 
+    void visitCodeBlock(const AVector<_<INode>>& codeBlock);
+
+    void writeCppHeader(aui::no_escape<IOutputStream> os) const;
+    void writeCppCpp(const APath& headerPath, aui::no_escape<IOutputStream> os) const;
 protected:
     virtual void emitBinaryOperator(const AString& symbol, const BinaryOperatorNode& binaryOperator);
     void reportError(const INode& node, const AString& message);

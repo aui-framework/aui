@@ -27,8 +27,8 @@
 #include <AUI/GL/State.h>
 #include <AUI/Platform/ABaseWindow.h>
 #include <AUISL/Generated/basic.vsh.glsl120.h>
+#include <AUISL/Generated/basic_uv.vsh.glsl120.h>
 #include <AUISL/Generated/solid.fsh.glsl120.h>
-#include <AUISL/Generated/shadow.vsh.glsl120.h>
 #include <AUISL/Generated/shadow.fsh.glsl120.h>
 
 
@@ -134,7 +134,7 @@ concept AuiSLShader = requires(C&& c) {
 };
 
 template<AuiSLShader Vertex, AuiSLShader Fragment>
-static void useAuislShader(gl::Program& out) {
+inline void useAuislShader(gl::Program& out) {
     out.loadRaw(Vertex::code(), Fragment::code());
     Vertex::setup();
     Fragment::setup();
@@ -146,7 +146,7 @@ OpenGLRenderer::OpenGLRenderer() {
     useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader,
                    aui::sl_gen::solid::fsh::glsl120::Shader>(mSolidShader);
 
-    useAuislShader<aui::sl_gen::shadow::vsh::glsl120::Shader,
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
 
     /*
@@ -236,13 +236,6 @@ OpenGLRenderer::OpenGLRenderer() {
                                         false);
     }
 
-    mSolidTransformShader.load(
-            "attribute vec3 pos;"
-            "uniform mat4 transform;"
-            "void main(void) {gl_Position = transform * vec4(pos, 1);}",
-            "uniform vec4 color;"
-            "void main(void) {gl_FragColor = color;}");
-
     mTexturedShader.load(
             "attribute vec3 pos;"
             "attribute vec2 uv;"
@@ -325,10 +318,10 @@ AVector<glm::vec3> OpenGLRenderer::getVerticesForRect(const glm::vec2& position,
 
     return
             {
-                    glm::vec3(mTransform * glm::vec4{ x, h, 1, 1 }),
-                    glm::vec3(mTransform * glm::vec4{ w, h, 1, 1 }),
-                    glm::vec3(mTransform * glm::vec4{ x, y, 1, 1 }),
-                    glm::vec3(mTransform * glm::vec4{ w, y, 1, 1 }),
+                    glm::vec3(glm::vec4{ x, h, 1, 1 }),
+                    glm::vec3(glm::vec4{ w, h, 1, 1 }),
+                    glm::vec3(glm::vec4{ x, y, 1, 1 }),
+                    glm::vec3(glm::vec4{ w, y, 1, 1 }),
             };
 }
 void OpenGLRenderer::drawRect(const ABrush& brush, const glm::vec2& position, const glm::vec2& size) {
@@ -349,7 +342,6 @@ void OpenGLRenderer::drawRectImpl(const glm::vec2& position, const glm::vec2& si
     mTempVao.bind();
 
     mTempVao.insert(0, getVerticesForRect(position, size));
-
     mTempVao.indices(RECT_INDICES);
     mTempVao.drawElements();
 }

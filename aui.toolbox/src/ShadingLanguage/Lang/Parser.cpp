@@ -726,7 +726,7 @@ _<ExpressionNode> Parser::parseExpression() {
 
         }
     }
-    return {};
+    return value;
 }
 
 _<ExpressionNode> Parser::parseTernary(const _<ExpressionNode>& condition) {

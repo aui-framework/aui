@@ -19,7 +19,7 @@
 namespace aui::ShaderUniforms {
     gl::Program::Uniform COLOR("color");
     gl::Program::Uniform SL_UNIFORM_COLOR("SL_uniform_color");
-    gl::Program::Uniform TRANSFORM("transform");
+    gl::Program::Uniform TRANSFORM("SL_uniform_transform");
     gl::Program::Uniform SL_UNIFORM_TRANSFORM("SL_uniform_transform");
     gl::Program::Uniform SIZE("size");
     gl::Program::Uniform MAT("mat");

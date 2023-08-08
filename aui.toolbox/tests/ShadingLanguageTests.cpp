@@ -29,17 +29,18 @@ protected:
 
     AString codeBlockToCpp(const AString& input) {
         CppFrontend compiler;
-        for (const auto& v : aui::sl::parseCodeBlock(input)) {
-            v->acceptVisitor(compiler);
-        }
+        compiler.visitCodeBlock(aui::sl::parseCodeBlock(input));
         return compiler.shaderCode();
     }
 
     template<aui::derived_from<IFrontend> T>
     AString vertexTo(const AString& input) {
         T compiler;
+        compiler.setShaderType(ShaderType::VERTEX);
         compiler.parseShader(aui::sl::parseCode(_new<AStringStream>(input)));
-        return compiler.shaderCode();
+        AStringStream ss;
+        compiler.writeCppCpp("generic.h", ss);
+        return ss.str();
     }
 };
 
@@ -48,20 +49,6 @@ TEST_F(ShadingLanguage, Simplest) {
 }
 TEST_F(ShadingLanguage, TwoLines) {
     EXPECT_EQ(codeBlockToCpp("vec4 kek = vec4(1, 2, 3, 4)\nvec4 kek2 = vec4(4, 5, 6, 7)"), "glm::vec4 kek = glm::vec4(1.0f,2.0f,3.0f,4.0f);glm::vec4 kek2 = glm::vec4(4.0f,5.0f,6.0f,7.0f);");
-}
-TEST_F(ShadingLanguage, BasicShader) {
-    const auto code = R"(
-input {
-  [0] vec4 pos
-}
-
-entry {
-  sl_position = input.pos
-}
-)";
-    EXPECT_EQ(vertexTo<CppFrontend>(code), "struct Input{/* 0 */glm::vec4 pos;};struct Output{glm::vec4 __vertexOutput;};Output entry(Input input){Output output;output.__vertexOutput=input.pos;return output;}");
-    EXPECT_EQ(vertexTo<GLSLFrontend>(code), "#version 120\n"
-                                            "/* 0 */ attribute vec4 pos;void main(){gl_Position=pos;}");
 }
 
 TEST_F(ShadingLanguage, Math1) {

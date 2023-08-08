@@ -43,7 +43,6 @@ private:
     gl::Program mRoundedSolidShaderAntialiased;
     gl::Program mRoundedSolidShaderAntialiasedBorder;
     gl::Program mRoundedGradientShaderAntialiased;
-    gl::Program mSolidTransformShader;
     gl::Program mBoxShadowShader;
     gl::Program mTexturedShader;
     gl::Program mSymbolShader;
