@@ -22,6 +22,10 @@
 #include "AUI/Common/AMap.h"
 #include "AUI/Util/ABuiltinFiles.h"
 
+
+#include "AUI/Common/AByteBuffer.h"
+#include "AUI/IO/AStringStream.h"
+
 AUrl::AUrl(AString full)
 {
 	auto posColon = full.find(':');
@@ -53,6 +57,10 @@ AMap<AString, AVector<AUrl::Resolver>>& AUrl::resolvers() {
         }}},
         {"file",    {[](const AUrl& u) {
             return _new<AFileInputStream>(u.path());
+        }}},
+        {"base64", {[](const AUrl& u) {
+            auto decoded = AByteBuffer::fromBase64String(u.path());
+            return _new<AStringStream>(std::string(decoded.data(), decoded.size()));
         }}},
     };
     return storage;

@@ -31,6 +31,7 @@ private:
 
 public:
     AStringStream();
+    AStringStream(std::string string);
 	explicit AStringStream(const AString& string);
 	virtual ~AStringStream() = default;
 
