@@ -69,6 +69,7 @@ KeywordToken::Type KeywordToken::fromName(const AString& name) {
             { "inter",            INTER },
             { "uniform",          UNIFORM },
             { "entry",            ENTRY },
+            { "texture",          TEXTURE },
     };
 
     if (auto c = map.contains(name)) {

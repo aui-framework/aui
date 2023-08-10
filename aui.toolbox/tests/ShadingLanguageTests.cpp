@@ -40,7 +40,24 @@ protected:
         compiler.parseShader(aui::sl::parseCode(_new<AStringStream>(input)));
         AStringStream ss;
         compiler.writeCppCpp("generic.h", ss);
-        return ss.str();
+        auto n = ss.str().find("{");
+        if (n == std::string::npos) {
+            return ss.str();
+        }
+        return ss.str().substr(n);
+    }
+    template<aui::derived_from<IFrontend> T>
+    AString fragmentTo(const AString& input) {
+        T compiler;
+        compiler.setShaderType(ShaderType::FRAGMENT);
+        compiler.parseShader(aui::sl::parseCode(_new<AStringStream>(input)));
+        AStringStream ss;
+        compiler.writeCppCpp("generic.h", ss);
+        auto n = ss.str().find("{");
+        if (n == std::string::npos) {
+            return ss.str();
+        }
+        return ss.str().substr(n);
     }
 };
 
@@ -49,6 +66,36 @@ TEST_F(ShadingLanguage, Simplest) {
 }
 TEST_F(ShadingLanguage, TwoLines) {
     EXPECT_EQ(codeBlockToCpp("vec4 kek = vec4(1, 2, 3, 4)\nvec4 kek2 = vec4(4, 5, 6, 7)"), "glm::vec4 kek = glm::vec4(1.0f,2.0f,3.0f,4.0f);glm::vec4 kek2 = glm::vec4(4.0f,5.0f,6.0f,7.0f);");
+}
+TEST_F(ShadingLanguage, BasicShader) {
+    const auto code = R"(
+input {
+  [0] vec4 pos
+}
+
+entry {
+  sl_position = input.pos
+}
+)";
+    EXPECT_STREQ(vertexTo<CppFrontend>(code).toStdString().c_str(), "{Shader::Inter inter;inter.__vertexOutput=input.pos;return inter;}\n");
+    EXPECT_STREQ(vertexTo<GLSLFrontend>(code).toStdString().c_str(), "{ return R\"(#version 120\n/* 0 */ attribute vec4 SL_input_pos;void main(){gl_Position=SL_input_pos;} )\";}void ::Shader::setup() {}");
+}
+
+TEST_F(ShadingLanguage, Texture) {
+    const auto code = R"(
+output {
+  [0] vec4 albedo
+}
+texture {
+  2D albedo
+}
+
+entry {
+  output.albedo = texture.albedo[vec2(0, 0)]
+}
+)";
+    EXPECT_STREQ(fragmentTo<CppFrontend>(code).toStdString().c_str(), "{Shader::Inter inter;inter.__vertexOutput=input.pos;return inter;}\n");
+    EXPECT_STREQ(fragmentTo<GLSLFrontend>(code).toStdString().c_str(), "{ return R\"(#version 120\n/* 0 */ attribute vec4 SL_input_pos;void main(){gl_Position=SL_input_pos;} )\";}void ::Shader::setup() {}");
 }
 
 TEST_F(ShadingLanguage, Math1) {

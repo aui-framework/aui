@@ -81,6 +81,7 @@ public:
         OUTPUT,
         UNIFORM,
         ENTRY,
+        TEXTURE,
     };
 
 private:

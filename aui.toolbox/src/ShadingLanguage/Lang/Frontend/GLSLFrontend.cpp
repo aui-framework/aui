@@ -48,6 +48,7 @@ AString GLSLFrontend::mapType(const AString& type) {
             {"float",  "float"},
             {"double", "double"},
             {"int",    "int"},
+            {"2D",     "sampler2D"},
     };
     if (auto c = mapping.contains(type)) {
         return c->second;
@@ -95,6 +96,7 @@ void GLSLFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
             prefix = "inter";
             break;
 
+        case KeywordToken::TEXTURE:
         case KeywordToken::UNIFORM:
             prefix = keyword = "uniform";
             break;

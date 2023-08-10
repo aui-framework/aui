@@ -100,6 +100,7 @@ protected:
     bool mOutputDefined = false;
     bool mUniformDefined = false;
     bool mInterDefined = false;
+    bool mTextureDefined = false;
 
     AOptional<AVector<_<INode>>> mEntry;
     AStringStream mShaderOutput;

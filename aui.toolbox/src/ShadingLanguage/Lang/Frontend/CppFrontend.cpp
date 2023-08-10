@@ -51,6 +51,7 @@ AString CppFrontend::mapType(const AString& type) {
             {"float",  "float"},
             {"double", "double"},
             {"int",    "int"},
+            {"2D",     "Texture2D"},
     };
     if (auto c = mapping.contains(type)) {
         return c->second;
@@ -90,8 +91,14 @@ void CppFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
     if (shaderType() == ShaderType::VERTEX && node.type() == KeywordToken::INTER) {
         mHeaderOutput << "glm::vec4 __vertexOutput;";
     }
-    for (const auto& node: node.fields()) {
-        emitAttributeDeclarationField(node);
+    for (const auto& n: node.fields()) {
+        if (node.type() == KeywordToken::TEXTURE) {
+            const ASet<AString> ALLOWED_TYPE_NAMES = { "2D" };
+            if (!ALLOWED_TYPE_NAMES.contains(n->typeName())) {
+                reportError(*n, "'{}' type is not allowed in texture {{ ... }} declaration"_format(n->typeName()));
+            }
+        }
+        emitAttributeDeclarationField(n);
     }
     mHeaderOutput << "};";
 }
@@ -120,6 +127,10 @@ void CppFrontend::emitAttributeKeyword(KeywordToken::Type type) {
 
         case KeywordToken::INTER:
             mHeaderOutput << "Inter";
+            break;
+
+        case KeywordToken::TEXTURE:
+            mHeaderOutput << "Texture";
             break;
 
         default:

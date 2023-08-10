@@ -245,7 +245,20 @@ AVector<AnyToken> Lexer::performLexAnalysis() {
                             // number
                             mTokenizer.reverseByte();
                             auto[i, isHex] = mTokenizer.readUIntX();
-                            if (mTokenizer.readChar() == '.') {
+
+                            {
+                                // handle 2D and 3D keywords
+                                mTokenizer.reverseByte();
+                                auto n = mTokenizer.readChar();
+                                if (n == 'D') {
+                                    result << IdentifierToken{AString{wchar_t(c), wchar_t('D')}};
+                                    break;
+                                }
+                                mTokenizer.reverseByte();
+                            }
+
+                            auto n = mTokenizer.readChar();
+                            if (n == '.') {
                                 // float
                                 AString d10 = mTokenizer.readStringWhile([](char c) -> bool { return isdigit(c); });
                                 auto v = (AString::number(i) + "." + d10).toDouble().valueOrException();

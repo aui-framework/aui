@@ -365,6 +365,13 @@ void CBasedFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) 
             mInterDefined = true;
             break;
 
+        case KeywordToken::TEXTURE:
+            if (mTextureDefined) {
+                reportError(node, "texture is already defined");
+            }
+            mTextureDefined = true;
+            break;
+
         default:
             throw AException("internal compiler error");
     }

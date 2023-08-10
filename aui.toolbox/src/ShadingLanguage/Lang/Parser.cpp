@@ -85,6 +85,7 @@ AVector<_<INode>> Parser::parse() {
 
                             case KeywordToken::INTER:
                             case KeywordToken::UNIFORM:
+                            case KeywordToken::TEXTURE:
                                 nodes << _new<NonIndexedAttributesDeclarationNode>(keywordType, parseNonIndexedAttributes());
                                 break;
 
@@ -414,6 +415,7 @@ AVector<_<INode>> Parser::parseCodeBlock() {
                     case KeywordToken::OUTPUT:
                     case KeywordToken::UNIFORM:
                     case KeywordToken::INTER:
+                    case KeywordToken::TEXTURE:
                         mIterator--;
                         // fallthrough
 
@@ -472,6 +474,7 @@ _<ExpressionNode> Parser::parseExpression() {
     };
 
     enum class Priority {
+        ARRAY_ACCESS,
         ASSIGNMENT,
         COMPARISON,
         BINARY_SHIFT,
@@ -485,12 +488,13 @@ _<ExpressionNode> Parser::parseExpression() {
         const int currentPriority = int(p);
 
         if (value) {
+            auto out = _new<T>(std::move(value), nullptr);
             binaryOperators << BinaryOperatorAndItsPriority{
-                .op = _new<T>(std::move(value), nullptr),
+                .op = out,
                 .priority = currentPriority,
             };
             assert(value == nullptr);
-            return;
+            return out;
         }
 
         for (const auto& o : binaryOperators | ranges::view::reverse) {
@@ -500,19 +504,20 @@ _<ExpressionNode> Parser::parseExpression() {
                 o.op->mRight = currentOperator;
 
                 binaryOperators << BinaryOperatorAndItsPriority{
-                    .op = std::move(currentOperator),
+                    .op = currentOperator,
                     .priority = currentPriority,
                 };
-                return;
+                return currentOperator;
             }
         }
         if (!binaryOperators.empty()) {
+            auto out = _new<T>(binaryOperators.first().op, nullptr);
             binaryOperators << BinaryOperatorAndItsPriority{
-                    .op = _new<T>(binaryOperators.first().op, nullptr),
+                    .op = out,
                     .priority = currentPriority,
             };
             assert(value == nullptr);
-            return;
+            return out;
         }
 
         reportUnexpectedErrorAndSkip("no left-hand statement");
@@ -568,7 +573,6 @@ _<ExpressionNode> Parser::parseExpression() {
                         nextTokenAndCheckEof();
                         break;
 
-
                     case KeywordToken::INTER:
                         putValue(_new<VariableReferenceNode>("inter"));
                         nextTokenAndCheckEof();
@@ -576,6 +580,11 @@ _<ExpressionNode> Parser::parseExpression() {
 
                     case KeywordToken::OUTPUT:
                         putValue(_new<VariableReferenceNode>("output"));
+                        nextTokenAndCheckEof();
+                        break;
+
+                    case KeywordToken::TEXTURE:
+                        putValue(_new<VariableReferenceNode>("texture"));
                         nextTokenAndCheckEof();
                         break;
 
@@ -641,8 +650,9 @@ _<ExpressionNode> Parser::parseExpression() {
 
             case got<LSquareBracketToken>: {
                 // array style [] access
-                nextTokenAndCheckEof();
-                putValue(_new<ArrayAccessOperatorNode>(takeValue(), parseExpression()));
+                auto arrayAccessNode = handleBinaryOperator.operator()<ArrayAccessOperatorNode>(Priority::ARRAY_ACCESS);
+                assert(arrayAccessNode->mRight == nullptr);
+                arrayAccessNode->mRight = parseExpression();
                 expect<RSquareBracketToken>();
                 nextTokenAndCheckEof();
                 break;
