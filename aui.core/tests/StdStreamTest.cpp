@@ -25,7 +25,7 @@
 
 
 TEST(StdStream, Input) {
-    AStdIStream is(_new<AStringStream>("hello world"));
+    AStdIStream is(_new<AStringStream>("hello world"_as));
 
     std::string v;
     is >> v;
