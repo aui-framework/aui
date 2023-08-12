@@ -548,7 +548,7 @@ public:
         std::unique_lock lock(inner->mutex);
         inner->value = std::move(v);
         inner->cv.notify_all();
-        AUI_NULLSAFE(inner->onSuccess)(*inner->value);
+        inner->notifyOnSuccessCallback();
     }
 
     /**
@@ -671,7 +671,7 @@ public:
         std::unique_lock lock(inner->mutex);
         inner->value = true;
         inner->cv.notify_all();
-        AUI_NULLSAFE(inner->onSuccess)();
+        inner->notifyOnSuccessCallback();
     }
 
     AFuture& operator=(std::nullptr_t) noexcept {
