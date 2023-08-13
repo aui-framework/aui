@@ -103,6 +103,14 @@ void CppFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
     mHeaderOutput << "};";
 }
 
+void CppFrontend::visitNode(const ArrayAccessOperatorNode& node) {
+    INodeVisitor::visitNode(node);
+    node.getLeft()->acceptVisitor(*this);
+    mShaderOutput << "[";
+    node.getRight()->acceptVisitor(*this);
+    mShaderOutput << "]";
+}
+
 void CppFrontend::emitAttributeDeclarationField(_<VariableDeclarationNode> node) {
     mHeaderOutput << mapType(node->typeName()) << " " << node->variableName();
     if (const auto& init = node->initializer()) {

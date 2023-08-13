@@ -32,6 +32,8 @@ public:
     void visitNode(const VariableReferenceNode& node) override;
     void visitNode(const MemberAccessOperatorNode& node) override;
 
+    void visitNode(const ArrayAccessOperatorNode& node) override;
+
 protected:
     AString mapType(const AString& type) override;
     void emitBeforeEntryCode() override;

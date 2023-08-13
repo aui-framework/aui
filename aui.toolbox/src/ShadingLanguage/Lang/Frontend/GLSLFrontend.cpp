@@ -97,6 +97,10 @@ void GLSLFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
             break;
 
         case KeywordToken::TEXTURE:
+            keyword = "uniform";
+            prefix = "texture";
+            break;
+
         case KeywordToken::UNIFORM:
             prefix = keyword = "uniform";
             break;
@@ -107,7 +111,7 @@ void GLSLFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
 
     for (const auto& declaration: node.fields()) {
         mShaderOutput << keyword << " ";
-        mShaderOutput << declaration->typeName() << " SL_" << prefix << "_" << declaration->variableName() << ";";
+        mShaderOutput << mapType(declaration->typeName()) << " SL_" << prefix << "_" << declaration->variableName() << ";";
     }
 }
 

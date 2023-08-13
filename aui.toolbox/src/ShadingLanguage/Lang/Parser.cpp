@@ -474,12 +474,12 @@ _<ExpressionNode> Parser::parseExpression() {
     };
 
     enum class Priority {
-        ARRAY_ACCESS,
         ASSIGNMENT,
         COMPARISON,
         BINARY_SHIFT,
         PLUS_MINUS,
         ASTERISK_SLASH,
+        ARRAY_ACCESS,
         MEMBER_ACCESS,
     };
 

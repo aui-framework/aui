@@ -277,6 +277,12 @@ void CBasedFrontend::visitNode(const TemplateOperatorTypenameNode& node) {
 
 void CBasedFrontend::visitNode(const ArrayAccessOperatorNode& node) {
     INodeVisitor::visitNode(node);
+    mShaderOutput << "texture2D(";
+    node.getLeft()->acceptVisitor(*this);
+    mShaderOutput << ",";
+    node.getRight()->acceptVisitor(*this);
+    mShaderOutput << ")";
+
 }
 
 void CBasedFrontend::visitNode(const FloatNode& node) {

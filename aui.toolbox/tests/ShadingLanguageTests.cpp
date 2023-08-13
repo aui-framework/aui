@@ -94,8 +94,8 @@ entry {
   output.albedo = texture.albedo[vec2(0, 0)]
 }
 )";
-    EXPECT_STREQ(fragmentTo<CppFrontend>(code).toStdString().c_str(), "{Shader::Inter inter;inter.__vertexOutput=input.pos;return inter;}\n");
-    EXPECT_STREQ(fragmentTo<GLSLFrontend>(code).toStdString().c_str(), "{ return R\"(#version 120\n/* 0 */ attribute vec4 SL_input_pos;void main(){gl_Position=SL_input_pos;} )\";}void ::Shader::setup() {}");
+    EXPECT_STREQ(fragmentTo<CppFrontend>(code).toStdString().c_str(), "{Shader::Output output;output.albedo=texture.albedo[glm::vec2(0.0f,0.0f)];return output;}\n");
+    EXPECT_STREQ(fragmentTo<GLSLFrontend>(code).toStdString().c_str(), R"({ return R\"(#version 120\nuniform sampler2D SL_texture_albedo;void main(){gl_FragColor=texture2D(texture.albedo,vec2(0.0f,0.0f));} )\";}void ::Shader::setup() {})");
 }
 
 TEST_F(ShadingLanguage, Math1) {
