@@ -17,6 +17,7 @@ package com.github.aui.android
 
 import android.content.Context
 import android.opengl.GLSurfaceView
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
@@ -25,29 +26,25 @@ import android.widget.Scroller
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-class AuiView(context: Context) : GLSurfaceView(context), OnTouchListener {
+class AuiView(context: Context) : GLSurfaceView(context) {
     private val mGestureDetector: GestureDetector
     private var mRenderer: Renderer? = null
-    private val mScroller = Scroller(context)
 
     companion object {
         var ourCurrentSurface: AuiView? = null
 
 
         @JvmStatic
-        private external fun handleMouseButtonDown(x: Int, y: Int)
+        private external fun handlePointerButtonDown(x: Int, y: Int, pointerId: Int)
 
         @JvmStatic
-        private external fun handleMouseButtonUp(x: Int, y: Int)
+        private external fun handlePointerButtonUp(x: Int, y: Int, pointerId: Int)
 
         @JvmStatic
-        private external fun handleMouseMove(x: Int, y: Int)
+        private external fun handlePointerMove(x: Int, y: Int, pointerId: Int)
 
         @JvmStatic
         private external fun handleKineticScroll(x: Int, y: Int)
-
-        @JvmStatic
-        private external fun handleScroll(originX: Int, originY: Int, velX: Float, velY: Float)
 
         @JvmStatic
         private external fun handleInit(internalStoragePath: String)
@@ -66,7 +63,6 @@ class AuiView(context: Context) : GLSurfaceView(context), OnTouchListener {
         ourCurrentSurface = this
         mGestureDetector = GestureDetector(context, object : GestureDetector.OnGestureListener {
             override fun onDown(motionEvent: MotionEvent): Boolean {
-                mScroller.forceFinished(true)
                 return true
             }
 
@@ -81,12 +77,6 @@ class AuiView(context: Context) : GLSurfaceView(context), OnTouchListener {
                 velX: Float,
                 velY: Float
             ): Boolean {
-                handleScroll(
-                    motionEvent.x.toInt(),
-                    motionEvent.y.toInt(),
-                    velX,
-                    velY
-                )
                 return true
             }
 
@@ -99,10 +89,6 @@ class AuiView(context: Context) : GLSurfaceView(context), OnTouchListener {
                 velX: Float,
                 velY: Float
             ): Boolean {
-                mScroller.fling(start.x.toInt(), start.y.toInt(),
-                                velX.toInt(), velY.toInt(),
-                                0, 999999999,
-                                0, 999999999)
                 return false
             }
         })
@@ -120,30 +106,27 @@ class AuiView(context: Context) : GLSurfaceView(context), OnTouchListener {
             }
 
             override fun onDrawFrame(gl: GL10) {
-                if (mScroller.computeScrollOffset()) {
-                    handleKineticScroll(mScroller.currX, mScroller.currY)
-
-                    handleRedraw()
-                    requestRender()
-                } else {
-                    handleRedraw()
-                }
+                handleRedraw()
             }
         }.also { mRenderer = it })
         renderMode = RENDERMODE_CONTINUOUSLY
-        setOnTouchListener(this)
     }
 
-    override fun onTouch(v: View, event: MotionEvent): Boolean {
-        val x = event.x.toInt()
-        val y = event.y.toInt()
+    override fun onTouchEvent(event: MotionEvent?): Boolean {
+        if (event == null) {
+            return true
+        }
+        val index = event.actionIndex
         when (event.action) {
-            MotionEvent.ACTION_DOWN -> handleMouseButtonDown(x, y)
-            MotionEvent.ACTION_MOVE -> handleMouseMove(x, y)
-            MotionEvent.ACTION_UP -> handleMouseButtonUp(x, y)
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> handlePointerButtonDown(event.getX(index).toInt(), event.getY(index).toInt(), index)
+            MotionEvent.ACTION_MOVE -> {
+                for (i in 0 until event.pointerCount) {
+                    handlePointerMove(event.getX(i).toInt(), event.getY(i).toInt(), i)
+                }
+            }
+            MotionEvent.ACTION_UP -> handlePointerButtonUp(event.getX(index).toInt(), event.getY(index).toInt(), index)
         }
         mGestureDetector.onTouchEvent(event)
         return true
     }
-
 }

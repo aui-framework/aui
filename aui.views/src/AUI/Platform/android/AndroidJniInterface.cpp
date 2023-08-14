@@ -53,8 +53,9 @@ static glm::ivec2 scrollPrevValue{0, 0};
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_AuiView_handleMouseButtonDown(JNIEnv *env, jclass clazz, jint x,
-                                                          jint y) {
+Java_com_github_aui_android_AuiView_handlePointerButtonDown(JNIEnv *env, jclass clazz, jint x,
+                                                          jint y, jint pointerId) {
+    ALogger::info("Test") << "down " << x << ", " << y << " " << pointerId;
     scrollPrevValue = gestureOriginPos = {x, y};
     runOnGLThread([=] {
         AUI_NULLSAFE(AWindow::current())->onPointerPressed({{x, y}, APointerIndex::finger(0)});
@@ -62,8 +63,9 @@ Java_com_github_aui_android_AuiView_handleMouseButtonDown(JNIEnv *env, jclass cl
 }
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_AuiView_handleMouseButtonUp(JNIEnv *env, jclass clazz, jint x,
-                                                        jint y) {
+Java_com_github_aui_android_AuiView_handlePointerButtonUp(JNIEnv *env, jclass clazz, jint x,
+                                                        jint y, jint pointerId) {
+    ALogger::info("Test") << "up " << x << ", " << y << " " << pointerId;
     runOnGLThread([=] {
         AUI_NULLSAFE(AWindow::current())->onPointerReleased({{x, y}, APointerIndex::finger(0)});
     });
@@ -71,8 +73,9 @@ Java_com_github_aui_android_AuiView_handleMouseButtonUp(JNIEnv *env, jclass claz
 
 extern "C"
 JNIEXPORT void JNICALL
-Java_com_github_aui_android_AuiView_handleMouseMove(JNIEnv *env, jclass clazz, jint x,
-                                                    jint y) {
+Java_com_github_aui_android_AuiView_handlePointerMove(JNIEnv *env, jclass clazz, jint x,
+                                                    jint y, jint pointerId) {
+    ALogger::info("Test") << "move " << x << ", " << y << " " << pointerId;
     runOnGLThread([=] {
         AUI_NULLSAFE(AWindow::current())->onPointerMove({x, y});
     });
@@ -101,7 +104,9 @@ Java_com_github_aui_android_AuiView_handleScroll(JNIEnv *env, jclass clazz,
                                                  jint originX,
                                                  jint originY,
                                                  jfloat velX,
-                                                 jfloat velY) {
+                                                 jfloat velY,
+                                                 jint pointerId) {
+    ALogger::info("Test") << "scroll " << pointerId;
     runOnGLThread([=] {
         AUI_NULLSAFE(AWindow::current())->onGesture({originX, originY}, AFingerDragEvent{
             .delta = {velX, velY}
