@@ -30,7 +30,6 @@ namespace testing {
     class UITest;
 }
 
-
 class API_AUI_VIEWS ABaseWindow: public AViewContainer {
     friend class SoftwareRenderer;
     friend class testing::UITest;
@@ -303,6 +302,10 @@ protected:
      * @see ABaseWindow::preventClickOnPointerRelease
      */
     AOptional<bool> mPreventClickOnPointerRelease;
+
+    std::chrono::milliseconds mLastButtonPressedTime = std::chrono::milliseconds::zero();
+    AOptional<APointerIndex> mLastButtonPressed;
+    glm::ivec2 mLastPosition = {0, 0};
 
     _unique<IRenderingContext> mRenderingContext;
 

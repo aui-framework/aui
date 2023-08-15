@@ -198,23 +198,18 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     // check for double clicks
     using namespace std::chrono;
     using namespace std::chrono_literals;
-    static milliseconds lastButtonPressedTime = 0ms;
-    static AOptional<APointerIndex> lastButtonPressed;
-    static glm::ivec2 lastPosition = {0, 0};
-
     auto now = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-
-    auto delta = now - lastButtonPressedTime;
-    if (delta < 500ms && lastPosition == event.position) {
-        if (lastButtonPressed == event.pointerIndex) {
+    auto delta = now - mLastButtonPressedTime;
+    if (delta < 500ms && mLastPosition == event.position) {
+        if (mLastButtonPressed == event.pointerIndex) {
             onPointerDoubleClicked(event);
             mPreventClickOnPointerRelease = true;
-            lastButtonPressedTime = 0ms;
+            mLastButtonPressedTime = 0ms;
         }
     } else {
-        lastButtonPressedTime = now;
-        lastButtonPressed = event.pointerIndex;
-        lastPosition = event.position;
+        mLastButtonPressedTime = now;
+        mLastButtonPressed = event.pointerIndex;
+        mLastPosition = event.position;
     }
     AMenu::close();
 }
