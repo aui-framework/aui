@@ -181,7 +181,7 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
 void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     mMousePos = event.position;
     closeOverlappingSurfacesOnClick();
-    mPreventClickOnPointerRelease.emplace(false);
+    mPreventClickOnPointerRelease = false;
     auto focusCopy = mFocusedView.lock();
     mIgnoreTouchscreenKeyboardRequests = false;
     AViewContainer::onPointerPressed(event);
@@ -208,7 +208,7 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     if (delta < 500ms && lastPosition == event.position) {
         if (lastButtonPressed == event.pointerIndex) {
             onPointerDoubleClicked(event);
-
+            mPreventClickOnPointerRelease = true;
             lastButtonPressedTime = 0ms;
         }
     } else {
