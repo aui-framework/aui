@@ -308,6 +308,8 @@ protected:
      */
     AOptional<bool> mPreventClickOnPointerRelease;
 
+    bool mPerformDoubleClickOnPointerRelease = false;
+
     std::chrono::milliseconds mLastButtonPressedTime = std::chrono::milliseconds::zero();
     AOptional<APointerIndex> mLastButtonPressed;
     glm::ivec2 mLastPosition = {0, 0};

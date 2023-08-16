@@ -182,6 +182,7 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     mMousePos = event.position;
     closeOverlappingSurfacesOnClick();
     mPreventClickOnPointerRelease = false;
+    mPerformDoubleClickOnPointerRelease = false;
     auto focusCopy = mFocusedView.lock();
     mIgnoreTouchscreenKeyboardRequests = false;
     AViewContainer::onPointerPressed(event);
@@ -202,8 +203,7 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     auto delta = now - mLastButtonPressedTime;
     if (delta < timeForDoubleClick && mLastPosition == event.position) {
         if (mLastButtonPressed == event.pointerIndex) {
-            onPointerDoubleClicked(event);
-            mPreventClickOnPointerRelease = true;
+            mPerformDoubleClickOnPointerRelease = true;
             mLastButtonPressedTime = 0ms;
         }
     } else {
@@ -219,6 +219,14 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     copy.triggerClick = !mPreventClickOnPointerRelease.valueOr(true);
     mPreventClickOnPointerRelease.reset();
     AViewContainer::onPointerReleased(copy);
+    if (mPerformDoubleClickOnPointerRelease) {
+        onPointerDoubleClicked({
+            .position = event.position,
+            .pointerIndex = event.pointerIndex,
+            .asButton = event.asButton
+        });
+    }
+    mPerformDoubleClickOnPointerRelease = false;
 
     // AView::onPointerMove handles cursor shape; need extra call in order to flush
     forceUpdateCursor();

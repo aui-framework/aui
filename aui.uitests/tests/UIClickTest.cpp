@@ -151,7 +151,9 @@ TEST_F(UIClick, Click) {
  * Checks if double click signal will be emitted after two onPointerPressed and onPointerReleased
  */
 TEST_F(UIClick, DoubleClickEmit) {
-    EXPECT_CALL(*mTestWindow, onButtonClicked).Times(1);
+    testing::InSequence s;
+
+    EXPECT_CALL(*mTestWindow, onButtonClicked).Times(2);
     EXPECT_CALL(*mTestWindow, onButtonDoubleClicked).Times(1);
 
     mTestWindow->onPointerPressed({
