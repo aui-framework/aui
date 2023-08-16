@@ -79,7 +79,7 @@ TEST_F(UIScrollTest, ContainedViewExpanded) {
     // scroll a little to see whether container view expanded properly
     mTestWindow->updateLayout();
     By::type<AScrollArea>().perform(scroll({0, 500}));
-    By::name(".container").check(uitest::impl::not$(bottomAboveBottomOf(By::type<AScrollArea>())));
+    By::name(".container").check(isBottomAboveBottomOf(By::type<AScrollArea>()));
 
 
 }

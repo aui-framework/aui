@@ -48,7 +48,7 @@ public:
 
     template<enum_t value>
     static AString valueName() {
-#ifdef _MSC_VER
+#if AUI_COMPILER_MSVC
         AString s = __FUNCSIG__;
         AString::iterator end = s.begin() + s.rfind('>');
         AString::iterator begin = (std::find_if(std::make_reverse_iterator(end), s.rend(), [](wchar_t c) {
@@ -58,7 +58,11 @@ public:
         AString result(begin, end);
 #else
         AString s = __PRETTY_FUNCTION__;
+#if AUI_COMPILER_CLANG
+        auto end = s.rfind(']');
+#else
         auto end = s.rfind(';');
+#endif
         size_t begin;
         begin = s.rfind("value =", end);
         if (begin == AString::NPOS) {
@@ -137,8 +141,8 @@ const AMap<enum_t, AString, typename AEnumerate<enum_t>::enum_less>& AEnumerate<
 struct AEnumerateAllValues<enum_t>{         \
     static inline constexpr AEnumerate<enum_t>::Values<__VA_ARGS__> get() {return {}; } \
 };                                         \
-inline std::ostream& operator<<(std::ostream& o, enum_t v) { return o << AEnumerate<enum_t>::names()[v]; } \
-namespace std { inline AString to_wstring(enum_t v) { return AEnumerate<enum_t>::names()[v]; } }
+namespace std { inline AString to_wstring(enum_t v) { return AEnumerate<enum_t>::names().optional(v).valueOr("<unknown enum value {}>"_format(int(v))); } } \
+inline std::ostream& operator<<(std::ostream& o, enum_t v) { return o << std::to_wstring(v); }
 
 template <typename T> struct fmt::formatter<T, char, std::enable_if_t<aui::is_complete<AEnumerateAllValues<T>>>>: formatter<std::string> {
     // parse is inherited from formatter<string_view>.

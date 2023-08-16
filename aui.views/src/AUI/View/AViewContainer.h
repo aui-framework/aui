@@ -1,29 +1,56 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+﻿//  AUI Framework - Declarative UI toolkit for modern C++20
+//  Copyright (C) 2020-2023 Alex2772
 //
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+//  Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
 
 #include <AUI/Views.h>
 #include <AUI/View/AView.h>
 #include "AUI/Common/SharedPtr.h"
+#include "AUI/Util/ABitField.h"
 #include <glm/glm.hpp>
 #include "AUI/Layout/ALayout.h"
 #include "AUI/Common/AVector.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Render/RenderHints.h"
+
+
+AUI_ENUM_FLAG(AViewLookupFlags) {
+    NONE = 0,
+
+    /**
+     * @brief On AViewContainer::getViewAt*, ignores visibility flags.
+     */
+    IGNORE_VISIBILITY = 0b1,
+
+    /**
+     * @brief On AViewContainer::getViewAt* with callbacks, only the first view in the container is passed to callback.
+     * @details
+     * Basically this flag allows to replicate mouse click handling behaviour, which is useful in creating custom events
+     * (i.e. drag&drop).
+     */
+    ONLY_ONE_PER_CONTAINER = 0b10,
+
+    /**
+     * @brief Match views only by consumesClick() property.
+     * @details
+     * By default, getViewAt returns the first hit view, if neither view of the container have not passed
+     * consumesClick test. This flag disables that behaviour, returning nullptr instead.
+     */
+    ONLY_THAT_CONSUMES_CLICK = 0b100,
+};
 
 /**
  * @brief A view that represents a set of views.
@@ -52,7 +79,7 @@ public:
         for (const auto& view: mViews) {
             view->mParent = this;
             if (mLayout)
-                mLayout->addView(-1, view);
+                mLayout->addView(view);
         }
     }
 
@@ -69,24 +96,25 @@ public:
 
     void onMouseEnter() override;
 
-    void onMouseMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos) override;
 
     void onMouseLeave() override;
 
     void onDpiChanged() override;
 
+    void onClickPrevented() override;
 
     int getContentMinimumWidth(ALayoutDirection layout) override;
 
     int getContentMinimumHeight(ALayoutDirection layout) override;
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerPressed(const APointerPressedEvent& event) override;
 
-    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerDoubleClicked(const APointerPressedEvent& event) override;
 
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
 
-    void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
+    void onScroll(const AScrollEvent& event) override;
 
     bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 
@@ -95,6 +123,12 @@ public:
     void setSize(glm::ivec2 size) override;
 
     void setEnabled(bool enabled = true) override;
+
+    void adjustContentSize();
+
+    void adjustHorizontalSizeToContent();
+
+    void adjustVerticalSizeToContent();
 
     auto begin() const {
         return mViews.cbegin();
@@ -111,53 +145,124 @@ public:
 
     _<ALayout> getLayout() const;
 
-    virtual _<AView> getViewAt(glm::ivec2 pos, bool ignoreGone = true);
+    /**
+     * @brief Finds first direct child view under position.
+     * @param pos position relative to this container
+     * @param flags see AViewLookupFlags
+     * @return found view or nullptr
+     * @details
+     * Some containers may implement getViewAt by it's own (i.e. AListView for performance reasons).
+     */
+    [[nodiscard]]
+    virtual _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
 
-    _<AView> getViewAtRecursive(glm::ivec2 pos);
+    /**
+     * @brief Acts as AViewContainer::getViewAt but recursively (may include non-direct child).
+     * @param pos position relative to this container
+     * @param flags see AViewLookupFlags
+     * @return found view or nullptr
+     */
+    [[nodiscard]]
+    _<AView> getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
 
-    template<aui::mapper<const _<AView>&, bool> Callback>
-    bool getViewAtRecursive(glm::ivec2 pos, const Callback& callback, bool ignoreGone = true) {
-        for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
-            auto view = *it;
+    /**
+     * @brief Acts as AViewContainer::getViewAtRecursive but calls a callback instead of returning value.
+     * @param pos position relative to this container
+     * @param flags see AViewLookupFlags
+     * @return true if callback returned true; false otherwise
+     * @details
+     * The passed callback is a predicate. If predicate returns true, the execution of lookup is stopped and getViewAt
+     * returns true. If predicate returns false, the lookup continues.
+     */
+    template<aui::predicate<_<AView>> Callback>
+    bool getViewAtRecursive(glm::ivec2 pos, const Callback& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
+        _<AView> possibleOutput; // for case if anyone does not consumesClick
+        auto process = [&](const _<AView>& view) {
+            if (callback(view))
+                return true;
+            if (auto container = _cast<AViewContainer>(view)) {
+                if (container->getViewAtRecursive(pos - view->getPosition(), callback, flags)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        for (const auto& view : aui::reverse_iterator_wrap(mViews)) {
             auto targetPos = pos - view->getPosition();
 
-            if (targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x &&
-                targetPos.y < view->getSize().y) {
-                if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
-                    if (callback(view))
+            if (targetPos.x < 0 || targetPos.y < 0 || targetPos.x >= view->getSize().x || targetPos.y >= view->getSize().y) {
+                continue;
+            }
+            if (!flags.test(AViewLookupFlags::IGNORE_VISIBILITY)) {
+                if (view->getVisibility() == Visibility::GONE ||
+                    view->getVisibility() == Visibility::UNREACHABLE) {
+                    continue;
+                }
+            }
+
+            if (view->consumesClick(targetPos)) {
+                if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE &&
+                                                                        view->getVisibility() !=
+                                                                        Visibility::UNREACHABLE)) {
+                    if (process(view)) {
                         return true;
-                    if (auto container = _cast<AViewContainer>(view)) {
-                        if (container->getViewAtRecursive(targetPos, callback, ignoreGone)) {
-                            return true;
-                        }
                     }
+
+                    if (flags.test(AViewLookupFlags::ONLY_ONE_PER_CONTAINER)) {
+                        return false;
+                    }
+                }
+            } else {
+                if (possibleOutput == nullptr) {
+                    possibleOutput = view;
                 }
             }
         }
+        if (possibleOutput) {
+            return process(possibleOutput);
+        }
+
         return false;
     }
 
-    template<aui::mapper<const _<AView>&, bool> Callback>
-    bool getViewRecursive(const Callback& callback, bool ignoreGone = true) {
+    /**
+     * @brief
+     * @param pos position relative to this container
+     * @param flags see AViewLookupFlags
+     * @return found view or nullptr
+     */
+    template<aui::predicate<_<AView>> Callback>
+    bool visitsViewRecursive(Callback&& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
         for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
             auto view = *it;
-            if (!ignoreGone || view->getVisibility() != Visibility::GONE) {
+            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || (view->getVisibility() != Visibility::GONE && view->getVisibility() != Visibility::UNREACHABLE)) {
                 if (callback(view))
                     return true;
                 if (auto container = _cast<AViewContainer>(view)) {
-                    if (container->getViewRecursive(callback, ignoreGone)) {
+                    if (container->visitsViewRecursive(callback, flags)) {
                         return true;
                     }
+                }
+                if (flags.test(AViewLookupFlags::ONLY_ONE_PER_CONTAINER)) {
+                    break;
                 }
             }
         }
         return false;
     }
 
+
+    /**
+     * @brief Acts as AViewContainer::getViewAtRecursive but finds a view castable to specified template type.
+     * @param pos position relative to this container
+     * @param flags see AViewLookupFlags
+     * @return found view or nullptr
+     */
     template<typename T>
-    _<T> getViewAtRecursiveOf(glm::ivec2 pos, bool ignoreGone = true) {
+    _<T> getViewAtRecursiveOfType(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
         _<T> result;
-        getViewAtRecursive(pos, [&] (const _<AView>& v) { return bool(result = _cast<T>(v)); }, ignoreGone);
+        getViewAtRecursive(pos, [&] (const _<AView>& v) { return bool(result = _cast<T>(v)); }, flags);
         return result;
     }
 
@@ -209,8 +314,14 @@ public:
 
     bool capturesFocus() override;
 
+    virtual void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) {
+        mScrollbarAppearance = scrollbarAppearance;
+        emit scrollbarAppearanceSet(scrollbarAppearance);
+    }
+
 protected:
     AVector<_<AView>> mViews;
+    ScrollbarAppearance mScrollbarAppearance;
 
     void drawView(const _<AView>& view);
 
@@ -223,13 +334,14 @@ protected:
 
     void invalidateAllStyles() override;
 
+    void onViewGraphSubtreeChanged() override;
+
     void invalidateAssHelper() override;
 
     /**
      * @brief Updates layout of the parent AViewContainer if size of this AViewContainer was changed.
      */
     virtual void updateParentsLayoutIfNecessary();
-
 
     /**
      * @brief Moves (like via std::move) all children and layout of the specified container to this container.
@@ -239,12 +351,26 @@ protected:
      */
     void setContents(const _<AViewContainer>& container);
 
+signals:
+    emits<ScrollbarAppearance> scrollbarAppearanceSet;
+
 private:
     _<ALayout> mLayout;
     bool mSizeSet = false;
     glm::ivec2 mPreviousSize = mSize;
 
-    void notifyParentEnabledStateChanged(bool enabled) override;
+    struct ConsumesClickCache {
+        glm::ivec2 position;
+        bool value;
+    };
+
+    /**
+     * @brief Temporary cache for consumesClick().
+     * @details
+     * AUI does several view graph visits for a single event in order to call virtual methods properly.
+     * AViewContainer::consumesClick() is expensive method. Thus, we can cache it's result with given arguments.
+     */
+    AOptional<ConsumesClickCache> mConsumesClickCache;
 
     /**
      * @brief Focus chain target.
@@ -253,4 +379,7 @@ private:
      * The focus chaining mechanism allows to catch such events and process them in the containers.
      */
     _weak<AView> mFocusChainTarget;
+
+    void notifyParentEnabledStateChanged(bool enabled) override;
+    void invalidateCaches();
 };

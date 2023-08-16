@@ -121,28 +121,20 @@ void AScrollArea::setSize(glm::ivec2 size) {
                 mContentContainer->child()->getContentMinimumWidth(ALayoutDirection::NONE));
     }
 
-    adjustContentSize();
+    AViewContainer::adjustContentSize();
 }
 
-void AScrollArea::adjustContentSize() {
-    if (mScrollbarAppearance.getVertical() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
-        adjustVerticalSizeToContent();
+void AScrollArea::onScroll(const AScrollEvent& event) {
+    AViewContainer::onScroll(event);
+    if (!mIsWheelScrollable) {
+        return;
+    }
 
-    if (mScrollbarAppearance.getHorizontal() == ScrollbarAppearance::NO_SCROLL_SHOW_CONTENT)
-        adjustHorizontalSizeToContent();
-}
-
-void AScrollArea::adjustHorizontalSizeToContent() {
-    setFixedSize(glm::ivec2(0, getFixedSize().y));
-}
-
-void AScrollArea::adjustVerticalSizeToContent() {
-    setFixedSize(glm::ivec2(getFixedSize().x, 0));
-}
-
-void AScrollArea::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
-    AViewContainer::onMouseWheel(pos, delta);
-    mVerticalScrollbar->onMouseWheel(pos, delta);
+    auto prevScroll = mVerticalScrollbar->getCurrentScroll();
+    mVerticalScrollbar->onScroll(event);
+    if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
+        AWindow::current()->preventClickOnPointerRelease();
+    }
 }
 
 int AScrollArea::getContentMinimumHeight(ALayoutDirection layout) {

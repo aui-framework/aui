@@ -33,6 +33,7 @@ private:
     int mFramesCount;
     int mChannelsCount;
     int mCurrentFrameIndex;
+    std::function<void()> mOnAnimationFinished;
 
 public:
     explicit GifImageFactory(AByteBufferView buf);
@@ -40,4 +41,7 @@ public:
     AImage provideImage(const glm::ivec2& size) override;
     bool isNewImageAvailable() override;
     glm::ivec2 getSizeHint() override;
+    void setOnAnimationFinished(std::function<void()> callback) {
+        mOnAnimationFinished = std::move(callback);
+    }
 };

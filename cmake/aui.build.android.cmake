@@ -4,7 +4,8 @@ message("\n"
         "     # AUI runs in Android build mode which means that AUI will generate Android Gradle project.   #\n"
         "     # Define your application with aui_app command.                                               #\n"
         "     # To build an apk, run the apps target.                                                       #\n"
-        "     # To develop in Android Studio environment, open the gradle project dir (path is below).      #\n"
+        "     # To develop in Android Studio environment, build the apps target and open the gradle project #\n"
+        "     # dir (path is below).                                                                        #\n"
         "     ###############################################################################################\n"
         )
 message(STATUS "Android gradle project dir: ${_gradle_project_dir}")
@@ -59,7 +60,7 @@ function(_aui_android_app)
     string(REPLACE "." "/" _package_to_path ${APP_ANDROID_PACKAGE})
 
     configure_file(${AUI_BUILD_AUI_ROOT}/platform/android/settings.gradle.in ${_gradle_project_dir}/settings.gradle @ONLY)
-    configure_file(${AUI_BUILD_AUI_ROOT}/platform/android/MainActivity.java.in ${_main}/java/${_package_to_path}/MainActivity.java @ONLY)
+    configure_file(${AUI_BUILD_AUI_ROOT}/platform/android/MainActivity.kt.in ${_main}/java/${_package_to_path}/MainActivity.kt @ONLY)
     configure_file(${AUI_BUILD_AUI_ROOT}/platform/android/AndroidManifest.xml.in ${_main}/AndroidManifest.xml @ONLY)
     configure_file(${AUI_BUILD_AUI_ROOT}/platform/android/app_build.gradle.in ${_gradle_project_dir}/app/build.gradle @ONLY)
     file(WRITE ${_gradle_project_dir}/local.properties "sdk.dir=${AUI_ANDROID_SDK_ROOT}")
@@ -77,6 +78,7 @@ function(_aui_android_app)
     endforeach()
     file(WRITE ${_main}/CMakeLists.txt "cmake_minimum_required(VERSION 3.16)\n"
             "project(${APP_ANDROID_PACKAGE})\n"
+            "set(CMAKE_CXX_STANDARD 20)\n"
             ${ALL_CMAKE_ARGS}
             "add_subdirectory(${CMAKE_SOURCE_DIR} build)")
 

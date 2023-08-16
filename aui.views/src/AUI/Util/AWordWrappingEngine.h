@@ -50,6 +50,7 @@ private:
     AVector<_<Entry>> mEntries;
     float mLineHeight = 1.f;
     TextAlign mTextAlign = TextAlign::LEFT;
+    std::optional<int> mHeight;
 
 public:
     void setLineHeight(float lineHeight) {
@@ -62,6 +63,10 @@ public:
 
     void setEntries(AVector<_<Entry>> entries) {
         mEntries = std::move(entries);
+    }
+
+    std::optional<int> getHeight() {
+        return mHeight;
     }
 
     void performLayout(const glm::ivec2& offset, const glm::ivec2& size);

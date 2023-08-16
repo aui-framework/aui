@@ -89,13 +89,22 @@ public:
     }
 
     /**
-     * @brief Determines whether flag(s) set or not.
+     * @brief Determines whether flag (or all flags) set or not.
      * @param flags flag(s)
      * @return true if flag(s) set
      * @note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
      */
-    bool check(T flags) const {
+    bool test(T flags) const {
         return (mStorage & flags) == flags;
+    }
+    /**
+     * @brief Determines whether flag (or one of the flags flags) set or not.
+     * @param flags flag(s)
+     * @return true if flag(s) set
+     * @note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
+     */
+    bool testAny(T flags) const {
+        return bool(mStorage & flags);
     }
 
     /**
@@ -105,7 +114,7 @@ public:
      * @note This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
      */
     bool operator&(T flags) const {
-        return check(flags);
+        return test(flags);
     }
 
     void set(T flag, bool value) {

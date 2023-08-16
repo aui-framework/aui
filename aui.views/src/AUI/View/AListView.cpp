@@ -26,7 +26,7 @@
 class AListViewContainer: public AViewContainer {
 private:
     int mScrollY = 0;
-    size_t mIndex = -1;
+    mutable std::size_t mIndex = -1;
 
 public:
     void updateLayout() override {
@@ -36,12 +36,12 @@ public:
         updateParentsLayoutIfNecessary();
     }
 
-    _<AView> getViewAt(glm::ivec2 pos, bool ignoreGone) override {
+    _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept override {
         switch (mViews.size()) {
             case 0:
                 return nullptr;
             case 1: {
-                auto v = AViewContainer::getViewAt(pos, ignoreGone);
+                auto v = AViewContainer::getViewAt(pos, flags);
                 mIndex = v ? 0 : -1;
                 return v;
             }
@@ -102,14 +102,14 @@ protected:
 
 public:
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override {
-        AView::onMousePressed(pos, button);
+    void onPointerPressed(const APointerPressedEvent& event) override {
+        AView::onPointerPressed(event);
 
         dynamic_cast<AListView*>(getParent()->getParent())->handleMousePressed(this);
     }
 
-    void onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) override {
-        AView::onMouseDoubleClicked(pos, button);
+    void onPointerDoubleClicked(const APointerPressedEvent& event) override {
+        AView::onPointerDoubleClicked(event);
 
         dynamic_cast<AListView*>(getParent()->getParent())->handleMouseDoubleClicked(this);
     }
@@ -162,11 +162,11 @@ void AListView::updateScrollbarDimensions() {
             ALayoutDirection::NONE));
 }
 
-void AListView::onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) {
+void AListView::onScroll(const AScrollEvent& event) {
     if (!mScrollbar) return;
-    //AViewContainer::onMouseWheel(pos, delta);
-    mScrollbar->onMouseWheel(pos, delta);
-    onMouseMove(pos); // update hover on scroll
+    //AViewContainer::onScroll(pos, delta);
+    mScrollbar->onScroll(event);
+    onPointerMove(event.origin); // update hover on scroll
 }
 
 void AListView::handleMousePressed(AListItem* item) {

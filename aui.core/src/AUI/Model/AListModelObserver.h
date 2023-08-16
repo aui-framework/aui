@@ -41,7 +41,9 @@ private:
     IListModelListener* mListener;
 
 public:
-    explicit AListModelObserver(IListModelListener* listener) : mListener(listener) {}
+    explicit AListModelObserver(IListModelListener* listener) : mListener(listener) {
+        setSlotsCallsOnlyOnMyThread(true);
+    }
 
 
     void setModel(const _<IListModel<T>>& model) {

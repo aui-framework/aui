@@ -30,7 +30,7 @@ namespace RenderHints
      *       wrapper class instead.
      * @param maskRenderer function - mask renderer
      */
-    template<std::invocable Callable>
+    template<aui::invocable Callable>
     static void pushMask(Callable&& maskRenderer) {
         Render::getRenderer()->pushMaskBefore();
         maskRenderer();
@@ -43,14 +43,14 @@ namespace RenderHints
      *       wrapper class instead.
      * @param maskRenderer function - mask renderer
      */
-    template<std::invocable Callable>
+    template<aui::invocable Callable>
     static void popMask(Callable&& maskRenderer) {
         Render::getRenderer()->popMaskBefore();
         maskRenderer();
         Render::getRenderer()->popMaskAfter();
     }
 
-    template<std::invocable Callable>
+    template<aui::invocable Callable>
     class PushMask
     {
     private:

@@ -67,24 +67,24 @@ public:
      * Handle mouse pressed in UI.
      * @param x x position
      * @param y y position
-     * @param button mouse button
+     * @param pointerIndex mouse button or finger index
      */
-    void onMousePressed(int x, int y, AInput::Key button);
+    void onPointerPressed(int x, int y, APointerIndex pointerIndex);
 
     /**
      * Handle mouse released in UI.
      * @param x x position
      * @param y y position
-     * @param button mouse button
+     * @param pointerIndex mouse button or finger index
      */
-    void onMouseReleased(int x, int y, AInput::Key button);
+    void onPointerReleased(int x, int y, APointerIndex pointerIndex);
 
     /**
      * Handle mouse move in UI.
      * @param x x position
      * @param y y position
      */
-    void onMouseMove(int x, int y);
+    void onPointerMove(int x, int y);
 
     /**
      * Handle mouse move in UI.

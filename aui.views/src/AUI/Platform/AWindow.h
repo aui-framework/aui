@@ -92,7 +92,7 @@ private:
 protected:
 #if AUI_PLATFORM_WIN
 	HICON mIcon = nullptr;
-    virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept;
+    virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #elif AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_APPLE
 #else
@@ -119,6 +119,11 @@ protected:
 
     void createDevtoolsWindow() override;
     float fetchDpiFromSystem() const override;
+
+    /**
+     * @brief defines if the next view must be focused on tab button pressed
+     */
+    bool mFocusNextViewOnTab = false;
 
 public:
     AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
@@ -220,7 +225,12 @@ public:
     void onFocusAcquired() override;
     void onFocusLost() override;
 
+    void onKeyDown(AInput::Key key) override;
     void onKeyRepeat(AInput::Key key) override;
+
+    void setFocusNextViewOnTab(bool value) {
+        mFocusNextViewOnTab = value;
+    }
 
     /**
      * Wraps your AView to window.
@@ -234,12 +244,6 @@ public:
      * @return Current window for current thread.
      */
     static ABaseWindow* current();
-
-    /**
-     * @brief Determines whether views should display hover animations.
-     * @return false when any keyboard button is pressed
-     */
-    static bool shouldDisplayHoverAnimations();
 
     /**
      * @brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.
@@ -268,9 +272,17 @@ public:
     void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) override;
     virtual void onCloseButtonClicked();
 
+    void forceUpdateCursor() override;
 
-    void requestTouchscreenKeyboard() override;
-    void hideTouchscreenKeyboard() override;
+    void requestTouchscreenKeyboardImpl() override;
+    void hideTouchscreenKeyboardImpl() override;
+
+    /**
+     * @brief Moves the window to the center of monitor.
+     * @details
+     * When using in series with setSize(), do the setSize() first, when moveToCenter().
+     */
+    void moveToCenter();
 
 signals:
     emits<> closed;
@@ -301,7 +313,7 @@ signals:
 
     bool consumesClick(const glm::ivec2& pos) override;
 
-    void onMouseMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos) override;
 
     void flagUpdateLayout() override;
 };

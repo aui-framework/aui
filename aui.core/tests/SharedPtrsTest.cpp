@@ -55,7 +55,7 @@ public:
 
 TEST(SharedPtrs, Builder1) {
     auto builder = _new<SomeBuilderClass>();
-    AUI_PERFORM_AS_MEMBER(builder, {
+    AUI_PERFORM_AS_MEMBER(*builder, {
        setUsername("John");
        setAge(23);
     });
@@ -101,7 +101,7 @@ TEST(SharedPtrs, ConnectBuilder) {
             .connect(&SendObject::someSignal, receiver, &ReceiverObject::receiveSignal);
 
 
-    AUI_PERFORM_AS_MEMBER(sender, {
+    AUI_PERFORM_AS_MEMBER(*sender, {
         invokeSignal();
     });
 
@@ -109,9 +109,9 @@ TEST(SharedPtrs, ConnectBuilder) {
 }
 
 TEST(SharedPtrs, Performance1) {
-    repeat (1'000) {
+    AUI_REPEAT (1'000) {
         AByteBuffer buffer;
-        repeat (10'000) {
+        AUI_REPEAT (10'000) {
             buffer << uint8_t(228);
         }
         _<AByteBuffer> shared_ptr = _new<AByteBuffer>(buffer);

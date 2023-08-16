@@ -43,12 +43,12 @@ public:
 	{
 	}
 
-	AStringVector(p::size_type _Count, const std::allocator<AString>& allocator)
+	AStringVector(super::size_type _Count, const std::allocator<AString>& allocator)
 		: AVector<AString>(_Count, allocator)
 	{
 	}
 
-	AStringVector(p::size_type _Count, const AString& _Val, const std::allocator<AString>& allocator)
+	AStringVector(super::size_type _Count, const AString& _Val, const std::allocator<AString>& allocator)
 		: AVector<AString>(_Count, _Val, allocator)
 	{
 	}

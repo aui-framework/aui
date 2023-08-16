@@ -20,10 +20,6 @@
 #include <tuple>
 
 namespace aui {
-
-    template<typename... Types>
-    struct type_list {};
-
     template<typename Type>
     struct member;
 
@@ -34,11 +30,24 @@ namespace aui {
     };
 
     template<typename Type, typename Clazz, typename... Args>
-    struct member<Type(Clazz::*)(Args...)> {
-        using type = Type;
+    struct member<Type(Clazz::*)(Args...) const> {
+        using return_t = Type;
         using clazz = Clazz;
-        using args = type_list<Args...>;
+        /**
+         * @brief Argument types.
+         * @see aui::tuple_visitor
+         */
+        using args = std::tuple<Args...>;
     };
 
-
+    template<typename Type, typename Clazz, typename... Args>
+    struct member<Type(Clazz::*)(Args...)> {
+        using return_t = Type;
+        using clazz = Clazz;
+        /**
+         * @brief Argument types.
+         * @see aui::tuple_visitor
+         */
+        using args = std::tuple<Args...>;
+    };
 }

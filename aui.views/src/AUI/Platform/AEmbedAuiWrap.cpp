@@ -104,7 +104,10 @@ protected:
 };
 
 void AEmbedAuiWrap::onMouseScroll(int mouseX, int mouseY, int scrollX, int scrollY) {
-    mContainer->onMouseWheel({mouseX, mouseY}, {scrollX, scrollY});
+    mContainer->onScroll({
+        .origin = { mouseX, mouseY },
+        .delta = { scrollX, scrollY },
+    });
 }
 
 AEmbedAuiWrap::AEmbedAuiWrap():
@@ -148,24 +151,30 @@ void AEmbedAuiWrap::setViewportSize(int width, int height) {
 }
 
 
-void AEmbedAuiWrap::onMousePressed(int x, int y, AInput::Key button) {
+void AEmbedAuiWrap::onPointerPressed(int x, int y, APointerIndex pointerIndex) {
     mContainer->makeCurrent();
     AThread::processMessages();
-    mContainer->onMousePressed(glm::ivec2{ x, y }, button);
+    mContainer->onPointerPressed({
+        .position = glm::ivec2{x, y},
+        .pointerIndex = pointerIndex,
+    });
 }
 
-void AEmbedAuiWrap::onMouseReleased(int x, int y, AInput::Key button) {
+void AEmbedAuiWrap::onPointerReleased(int x, int y, APointerIndex pointerIndex) {
     mContainer->makeCurrent();
-    mContainer->onMouseReleased(glm::ivec2{ x, y }, button);
+    mContainer->onPointerReleased({
+        .position = glm::ivec2{x, y},
+        .pointerIndex = pointerIndex,
+    });
 }
 
 bool AEmbedAuiWrap::isUIConsumesMouseAt(int x, int y) {
     return mContainer->consumesClick(glm::ivec2{ x, y });
 }
 
-void AEmbedAuiWrap::onMouseMove(int x, int y) {
+void AEmbedAuiWrap::onPointerMove(int x, int y) {
     mContainer->makeCurrent();
-    mContainer->onMouseMove(glm::ivec2{ x, y });
+    mContainer->onPointerMove(glm::ivec2{ x, y });
 }
 
 

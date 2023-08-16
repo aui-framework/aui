@@ -29,6 +29,15 @@
 #include <AUI/GL/State.h>
 
 
+/* Typedef for the GL 3.0 context creation function */
+typedef GLXContext (*PFNGLXCREATECONTEXTATTRIBSARBPROC)(Display *dpy,
+                                                        GLXFBConfig config,
+                                                        GLXContext
+                                                        share_context,
+                                                        Bool direct,
+                                                        const int
+                                                        *attrib_list);
+static PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = nullptr;
 
 
 GLXContext OpenGLRenderingContext::ourContext = nullptr;
@@ -38,6 +47,8 @@ void OpenGLRenderingContext::init(const Init& init) {
     static XSetWindowAttributes swa;
     static XVisualInfo* vi;
     if (ourContext == nullptr) {
+        glXCreateContextAttribsARB = reinterpret_cast<PFNGLXCREATECONTEXTATTRIBSARBPROC>(glXGetProcAddress(reinterpret_cast<const GLubyte*>("glXCreateContextAttribsARB")));
+
         GLint att[] = {GLX_X_RENDERABLE, True, // 1
                        GLX_DRAWABLE_TYPE, GLX_WINDOW_BIT, // 3
                        GLX_RENDER_TYPE, GLX_RGBA_BIT, // 5
@@ -118,8 +129,18 @@ void OpenGLRenderingContext::init(const Init& init) {
         swa.colormap = cmap;
         swa.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask
                          | PointerMotionMask | StructureNotifyMask | PropertyChangeMask | StructureNotifyMask;
-        ourContext = glXCreateContext(ourDisplay, vi, nullptr, true);
-
+        if (glXCreateContextAttribsARB) {
+            int attribList[] = {
+                GLX_CONTEXT_MAJOR_VERSION_ARB, 3,
+                GLX_CONTEXT_MINOR_VERSION_ARB, 3,
+                GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_COMPATIBILITY_PROFILE_BIT_ARB,
+                None,
+            };
+            ourContext = glXCreateContextAttribsARB(ourDisplay, bestFbc, nullptr, true, attribList);
+        } else {
+            ALogger::warn("OpenGLRenderingContext") << "glXCreateContextAttribsARB is not available";
+            ourContext = glXCreateContext(ourDisplay, vi, nullptr, true);
+        }
     }
     initX11Window(init, swa, vi);
     glXMakeCurrent(ourDisplay, init.window.mHandle, ourContext);

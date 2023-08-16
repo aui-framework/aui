@@ -55,19 +55,17 @@ public:
 
     bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
 
-    void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
+    void onScroll(const AScrollEvent& event) override;
 
-    void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) {
-        mScrollbarAppearance = scrollbarAppearance;
+    void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) override {
+        AViewContainer::setScrollbarAppearance(scrollbarAppearance);
         AUI_NULLSAFE(mHorizontalScrollbar)->setAppearance(scrollbarAppearance.getHorizontal());
         AUI_NULLSAFE(mVerticalScrollbar)->setAppearance(scrollbarAppearance.getVertical());
-
-        adjustContentSize();
     }
 
-    void adjustContentSize();
-    void adjustHorizontalSizeToContent();
-    void adjustVerticalSizeToContent();
+    void setWheelScrollable(bool value) {
+        mIsWheelScrollable = value;
+    }
 
     class Builder {
     friend class AScrollArea;
@@ -86,7 +84,7 @@ public:
         }
 
         Builder& withExternalHorizontalScrollbar(_<AScrollbar> externalHorizontalScrollbar) {
-            mExternalHorizontalScrollbar = std::move(externalHorizontalScrollbar);
+                mExternalHorizontalScrollbar = std::move(externalHorizontalScrollbar);
             return *this;
         }
 
@@ -117,7 +115,7 @@ private:
     _<AScrollAreaContainer> mContentContainer;
     _<AScrollbar> mVerticalScrollbar;
     _<AScrollbar> mHorizontalScrollbar;
-    ScrollbarAppearance mScrollbarAppearance;
+    bool mIsWheelScrollable = true;
 
     explicit AScrollArea(const Builder& builder);
 };

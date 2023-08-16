@@ -27,9 +27,6 @@
  */
 class API_AUI_VIEWS ASpacerExpanding: public AView
 {
-private:
-    glm::ivec2 mMinimumSize = {20, 20};
-
 public:
 	ASpacerExpanding(int w = 4, int h = 4)
 	{
@@ -37,14 +34,7 @@ public:
 	}
 	virtual ~ASpacerExpanding() = default;
 
-    void setMinimumSize(const glm::ivec2& minimumSize) {
-        mMinimumSize = minimumSize;
-    }
-
     bool consumesClick(const glm::ivec2& pos) override;
-
-    int getContentMinimumWidth(ALayoutDirection layout) override;
-    int getContentMinimumHeight(ALayoutDirection layout) override;
 };
 
 

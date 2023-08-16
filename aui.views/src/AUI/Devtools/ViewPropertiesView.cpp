@@ -18,9 +18,11 @@
 // Created by Alex2772 on 11/11/2021.
 //
 
+#include <range/v3/range.hpp>
 #include <AUI/View/ALabel.h>
 #include "ViewPropertiesView.h"
 #include "Devtools.h"
+#include "AUI/View/AText.h"
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Traits/iterators.h>
@@ -28,6 +30,8 @@
 #include <AUI/View/AHDividerView.h>
 #include <AUI/Common/IStringable.h>
 #include <AUI/View/ACheckBox.h>
+#include <AUI/View/AButton.h>
+#include <AUI/Platform/AClipboard.h>
 
 using namespace ass;
 
@@ -42,14 +46,27 @@ ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
 }
 
 void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
+    if (!targetView) {
+        return;
+    }
+    AUI_NULLSAFE(targetView->getWindow())->setProfiledView(targetView);
+    AUI_NULLSAFE(targetView->getWindow())->redraw();
+
     mTargetView = targetView;
     if (!targetView) return;
 
-    ADeque<ass::decl::IDeclarationBase*> applicableDeclarations;
+    ADeque<ass::prop::IPropertyBase*> applicableDeclarations;
 
     using namespace declarative;
-    auto dst = Vertical {
+    auto addressStr = "{}"_format((void*)targetView.get());
+    _<AViewContainer> dst = Vertical {
             _new<ALabel>(Devtools::prettyViewName(targetView.get())) with_style { FontSize {14_pt } },
+            Horizontal {
+                Label { addressStr },
+                Button { "Copy" }.clicked(this, [addressStr] {
+                    AClipboard::copyToClipboard(addressStr);
+                }),
+            },
             CheckBoxWrapper {
                 Label { "Enabled "},
             } let {
@@ -59,7 +76,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
                     requestTargetUpdate();
                 });
             },
-
+            AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
             CheckBoxWrapper {
                 Label {"Expanding"},
             } let {
@@ -103,12 +120,12 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 }
 
 void ViewPropertiesView::displayApplicableRule(const _<AViewContainer>& dst,
-                                               ADeque<ass::decl::IDeclarationBase*>& applicableDeclarations,
-                                               const RuleWithoutSelector* rule) {
+                                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
+                                               const ass::PropertyList* rule) {
 
-    for (const auto& decl : rule->getDeclarations()) {
+    for (const auto& decl : rule->declarations()) {
         applicableDeclarations.push_front(decl.get());
-        dst->addView(_new<ALabel>("<internal {}>"_format(AReflect::name(decl.get()))) with_style{ Opacity {0.7f } });
+        dst->addView(_new<ALabel>(IStringable::toString(decl)) with_style{ Opacity {0.7f } });
     }
     dst->addView(Horizontal {
             _new<ALabel>("},") << ".declaration_br",

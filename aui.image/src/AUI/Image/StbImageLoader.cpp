@@ -30,18 +30,18 @@ _<AImage> StbImageLoader::getRasterImage(AByteBufferView buffer) {
                                               &x, &y, &channels, 4)) {
         ARaiiHelper dealloc = [&] { stbi_image_free(data); };
         channels = 4;
-        unsigned format = AImageFormat::BYTE;
+        unsigned format = APixelFormat::BYTE;
         switch (channels) {
             case 3:
-                format |= AImageFormat::RGB;
+                format |= APixelFormat::RGB;
                 break;
             case 4:
-                format |= AImageFormat::RGBA;
+                format |= APixelFormat::RGBA;
                 break;
             default:
                 assert(0);
         }
-        auto img = _new<AImage>(AByteBuffer(reinterpret_cast<const char*>(data), x * y * channels), x, y, format);
+        auto img = _new<AImage>(AByteBufferView(reinterpret_cast<const char*>(data), x * y * channels), glm::uvec2{x, y}, format);
 
         return img;
     }

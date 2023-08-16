@@ -14,28 +14,14 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Common/AString.h"
 #include "AUI/IO/APath.h"
 #include <AUI/Util/kAUI.h>
 
 #include <Windows.h>
-void Platform::playSystemSound(Sound s)
-{
-    switch (s)
-    {
-    case S_QUESTION:
-        PlaySound(L"SystemQuestion", nullptr, SND_ASYNC);
-        break;
 
-    case S_ASTERISK:
-        PlaySound(L"SystemAsterisk", nullptr, SND_ASYNC);
-        break;
-
-    }
-}
-
-float Platform::getDpiRatio()
+float APlatform::getDpiRatio()
 {
     typedef UINT(WINAPI *GetDpiForSystem_t)();
     static auto GetDpiForSystem = (GetDpiForSystem_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForSystem");
@@ -43,4 +29,8 @@ float Platform::getDpiRatio()
         return GetDpiForSystem() / 96.f;
     }
     return 1.f;
+}
+
+void APlatform::openUrl(const AUrl& url) {
+    ShellExecute(nullptr, L"open", url.full().c_str(), nullptr, nullptr, SW_NORMAL);
 }

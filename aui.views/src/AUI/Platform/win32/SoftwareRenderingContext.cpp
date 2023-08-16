@@ -89,5 +89,5 @@ AImage SoftwareRenderingContext::makeScreenshot() {
         data.at<std::uint8_t>(i + 2) = ptr[0];
         data.at<std::uint8_t>(i + 3) = ptr[3];
     }
-    return {std::move(data), mBitmapSize.x, mBitmapSize.y, AImageFormat::RGBA | AImageFormat::BYTE};
+    return {std::move(data), mBitmapSize, APixelFormat::RGBA | APixelFormat::BYTE};
 }

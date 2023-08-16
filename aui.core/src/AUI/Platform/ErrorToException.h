@@ -32,7 +32,7 @@ namespace aui::impl {
     API_AUI_CORE Error formatSystemError();
     API_AUI_CORE Error formatSystemError(int status);
 
-    namespace unix {
+    namespace unix_based {
         API_AUI_CORE void lastErrorToException(AString message); // unix errors are suitable under windows
         API_AUI_CORE Error formatSystemError();
     }

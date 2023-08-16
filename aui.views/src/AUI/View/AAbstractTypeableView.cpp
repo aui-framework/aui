@@ -23,7 +23,7 @@
 #include "AAbstractTypeableView.h"
 
 
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
 #include "AUI/Render/Render.h"
 #include "AUI/Render/RenderHints.h"
 #include "AUI/Util/ARaiiHelper.h"
@@ -344,29 +344,30 @@ void AAbstractTypeableView::onFocusLost()
 
 }
 
-void AAbstractTypeableView::onMousePressed(glm::ivec2 pos, AInput::Key button)
+void AAbstractTypeableView::onPointerPressed(const APointerPressedEvent& event)
 {
-    AView::onMousePressed(pos, button);
-    ACursorSelectable::handleMousePressed(pos, button);
+    AView::onPointerPressed(event);
+    ACursorSelectable::handleMousePressed(event);
     updateCursorBlinking();
 }
 
-void AAbstractTypeableView::onMouseMove(glm::ivec2 pos)
+void AAbstractTypeableView::onPointerMove(glm::ivec2 pos)
 {
-    AView::onMouseMove(pos);
+    AView::onPointerMove(pos);
     ACursorSelectable::handleMouseMove(pos);
 }
 
 bool AAbstractTypeableView::isLButtonPressed() {
-    return isMousePressed();
+    return isPressed();
 }
 
-void AAbstractTypeableView::onMouseReleased(glm::ivec2 pos, AInput::Key button)
+void AAbstractTypeableView::onPointerReleased(const APointerReleasedEvent& event)
 {
-    AView::onMouseReleased(pos, button);
+    AView::onPointerReleased(event);
+    if (!event.triggerClick) return;
 
-    if (button != AInput::RBUTTON) {
-        ACursorSelectable::handleMouseReleased(pos, button);
+    if (event.pointerIndex != APointerIndex::button(AInput::RBUTTON)) {
+        ACursorSelectable::handleMouseReleased(event);
     }
 }
 
@@ -393,9 +394,9 @@ void AAbstractTypeableView::updateSelectionOnTextSet(const AString& t) {
     mCursorSelection = 0;
 }
 
-void AAbstractTypeableView::onMouseDoubleClicked(glm::ivec2 pos, AInput::Key button) {
-    AView::onMouseDoubleClicked(pos, button);
-    ACursorSelectable::handleMouseDoubleClicked(pos, button);
+void AAbstractTypeableView::onPointerDoubleClicked(const APointerPressedEvent& event) {
+    AView::onPointerDoubleClicked(event);
+    ACursorSelectable::handleMouseDoubleClicked(event);
     updateCursorBlinking();
 }
 

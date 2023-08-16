@@ -15,56 +15,16 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include <jni.h>
+#include <AUI/JNI/AJni.h>
 
-
-namespace AAndroid {
-    JNIEnv* getJNI();
-    void setJavaVM(JavaVM* vm);
-    float getDpiRatio();
-    void requestRedraw();
-    void showVirtualKeyboard();
-    void hideVirtualKeyboard();
-
-    class Ref {
-    private:
-        jobject mObject;
-
-    public:
-        Ref():
-            mObject(nullptr) {
-
-        }
-        Ref(const jobject object):
-            mObject(object ? AAndroid::getJNI()->NewGlobalRef(object) : nullptr) {
-
-        }
-        Ref(const Ref& object):
-            mObject(object.mObject ? AAndroid::getJNI()->NewGlobalRef(object.mObject) : nullptr) {
-
-        }
-        ~Ref() {
-            if (mObject)
-                AAndroid::getJNI()->DeleteGlobalRef(mObject);
-        }
-
-        Ref& operator=(jobject object);
-
-        bool operator!() const {
-            return !mObject;
-        }
-
-        operator bool() const {
-            return mObject;
-        }
-
-
-        jobject object() const {
-            return mObject;
-        }
-        jclass clazz() const {
-            return (jclass)mObject;
-        }
+namespace com::github::aui::android {
+    AUI_JNI_CLASS(com/github/aui/android/Platform, Platform) {
+        AUI_JNI_STATIC_METHOD(float, getDpiRatio, ())
+        AUI_JNI_STATIC_METHOD(void, openUrl, ((const AString&) url))
+        AUI_JNI_STATIC_METHOD(void, requestRedraw, ())
+        AUI_JNI_STATIC_METHOD(void, showKeyboard, ())
+        AUI_JNI_STATIC_METHOD(void, hideKeyboard, ())
+        AUI_JNI_STATIC_METHOD(void, showMessageBox, ((const AString&) title, (const AString&) message))
     };
-};
+}
 

@@ -24,14 +24,15 @@
 #include <AUI/Platform/AWindow.h>
 
 namespace {
-    class DragAreaLayout: public ALayout {
+    class DragAreaLayout: public ALinearLayout<> {
     public:
-        void addView(size_t index, const _<AView>& view) override {
+        void addView(const _<AView>& view, AOptional<size_t> index) override {
+            ALinearLayout::addView(view, index);
             markViewToBeCentered(*view);
         }
 
-        void removeView(size_t index, const _<AView>& view) override {
-
+        void removeView(aui::no_escape<AView> view, size_t index) override {
+            LinearLayoutImpl::removeView(view, index);
         }
 
         void onResize(int x, int y, int width, int height) override {
@@ -76,13 +77,13 @@ std::tuple<ADragArea*, AViewContainer*> ADragArea::ADraggableHandle::getDragArea
     return {nullptr, potentionalDraggingView};
 }
 
-void ADragArea::ADraggableHandle::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMousePressed(pos, button);
+void ADragArea::ADraggableHandle::onPointerPressed(const APointerPressedEvent& event) {
+    AViewContainer::onPointerPressed(event);
 
     if (mCheckForClickConsumption) {
-        auto p = getViewAt(pos);
+        auto p = getViewAt(event.position);
         if (p) {
-            if (p->consumesClick(pos - p->getPosition())) {
+            if (p->consumesClick(event.position - p->getPosition())) {
                 return;
             }
         }
@@ -106,8 +107,8 @@ void ADragArea::ADraggableHandle::onMousePressed(glm::ivec2 pos, AInput::Key but
             });
 }
 
-void ADragArea::ADraggableHandle::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ADragArea::ADraggableHandle::onPointerReleased(const APointerReleasedEvent& event) {
+    AViewContainer::onPointerReleased(event);
     if (mDragging) {
         mDragging = false;
         auto[dragArea, _] = getDragAreaAndDraggingView();

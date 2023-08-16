@@ -1,18 +1,18 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+﻿//  AUI Framework - Declarative UI toolkit for modern C++20
+//  Copyright (C) 2020-2023 Alex2772
 //
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+//  Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 
 #include <utility>
@@ -21,123 +21,6 @@
 #include "AImageLoaderRegistry.h"
 #include <stdexcept>
 #include <AUI/Traits/memory.h>
-
-AImage::AImage()
-{
-}
-
-AImage::AImage(uint32_t width, uint32_t height, AImageFormat format):
-        mWidth(width),
-        mHeight(height),
-        mFormat(format)
-{
-    mData.resize(mWidth * mHeight * getBytesPerPixel());
-}
-
-
-AImage AImage::resize(const AImage& src, uint32_t width, uint32_t height)
-{
-    AImage n(width, height, src.getFormat());
-    n.getData().resize(width * height * n.getBytesPerPixel());
-    copy(src, n, 0, 0);
-    return n;
-}
-
-
-void AImage::setPixelAt(std::uint32_t index, glm::ivec4 color) {
-    std::uint8_t* dataPtr = &mData.at<std::uint8_t>(index * getBytesPerPixel());
-    switch (getBytesPerPixel())
-    {
-        case 4:
-            dataPtr[3] = color.w;
-        case 3:
-            dataPtr[2] = color.z;
-        case 2:
-            dataPtr[1] = color.y;
-        case 1:
-            dataPtr[0] = color.x;
-    }
-}
-
-void AImage::setPixelAt(uint32_t x, uint32_t y, const glm::ivec4& val)
-{
-    setPixelAt(mWidth * glm::clamp(y, static_cast<uint32_t>(0), mHeight - 1) + glm::clamp(
-            x, static_cast<uint32_t>(0), mWidth - 1), val);
-}
-
-AImage AImage::resizeLinearDownscale(const AImage& src, uint32_t width, uint32_t height)
-{
-    AImage n(width, height, src.getFormat());
-
-    uint32_t deltaX = src.getWidth() / width;
-    uint32_t deltaY = src.getHeight() / height;
-
-    for (uint32_t y = 0; y < height; ++y)
-    {
-        for (uint32_t x = 0; x < width; ++x)
-        {
-            glm::ivec4 block(0.f);
-            for (uint32_t dy = 0; dy < deltaY; ++dy)
-            {
-                for (uint32_t dx = 0; dx < deltaX; ++dx)
-                {
-                    block += src.getPixelAt(glm::uvec2{x * deltaX + dx, y * deltaY + dy});
-                }
-            }
-            block /= deltaY * deltaX;
-            n.setPixelAt(x, y, block);
-        }
-    }
-
-    return n;
-}
-
-void AImage::copy(const AImage& src, AImage& dst, uint32_t x, uint32_t y)
-{
-    assert(src.getFormat() == dst.getFormat());
-
-    // https://stackoverflow.com/questions/9900854/opengl-creating-texture-atlas-at-run-time
-    for (uint32_t sourceY = 0; sourceY < (glm::min)(src.mHeight, dst.mHeight); ++sourceY)
-    {
-        for (uint32_t sourceX = 0; sourceX < (glm::min)(src.mWidth, dst.mWidth); ++sourceX)
-        {
-            uint32_t from = (sourceY * src.mWidth * src.getBytesPerPixel()) + (sourceX * src.getBytesPerPixel());
-            // 4 bytes per pixel (assuming RGBA)
-            uint32_t to = ((y + sourceY) * dst.mWidth * dst.getBytesPerPixel()) + ((x + sourceX) * dst.getBytesPerPixel());
-            // same format as source
-
-            for (uint32_t channel = 0; channel < dst.getBytesPerPixel(); ++channel)
-            {
-                dst.mData.at<std::uint8_t>(to + channel) = src.mData.at<std::uint8_t>(from + channel);
-            }
-        }
-    }
-}
-
-AImage AImage::sub(uint32_t x, uint32_t y, uint32_t width, uint32_t height) const
-{
-    assert(x + width <= mWidth);
-    assert(y + height <= mHeight);
-    AImage image(width, height, getFormat());
-
-
-    for (uint32_t sourceY = 0; sourceY < height; ++sourceY)
-    {
-        for (uint32_t sourceX = 0; sourceX < width; ++sourceX)
-        {
-            uint32_t from = ((y + sourceY) * mWidth + (x + sourceX)) * getBytesPerPixel();
-            uint32_t to = (sourceY * width + sourceX) * getBytesPerPixel();
-
-            for (uint32_t channel = 0; channel < getBytesPerPixel(); ++channel)
-            {
-                image.mData.at<std::uint8_t>(to + channel) = mData.at<std::uint8_t>(from + channel);
-            }
-        }
-    }
-
-    return image;
-}
-
 
 _<AImage> AImage::fromUrl(const AUrl& url) {
     return Cache::get(url);
@@ -175,102 +58,135 @@ AImage::Cache& AImage::Cache::inst() {
     return s;
 }
 
-
-AColor AImage::averageColor() const noexcept {
-    if (mWidth == 0 || mHeight == 0) {
-        return AColor::BLACK;
-    }
-
-    glm::ivec4 accumulator;
-    aui::zero(accumulator);
-
-    for (uint32_t y = 0; y < mHeight; ++y) {
-        for (uint32_t x = 0; x < mWidth; ++x) {
-            accumulator += getPixelAt({x, y});
-        }
-    }
-
-    accumulator /= mWidth * mHeight;
-
-    return glm::vec4(accumulator) / 255.f;
-}
-
-AByteBuffer AImage::imageDataOfFormat(unsigned format) const {
-    assert(("unsupported", (format & AImageFormat::BYTE)));
-
-    bool flipY = format & AImageFormat::FLIP_Y;
-    format &= ~AImageFormat::FLIP_Y;
-
-    AByteBuffer output;
-    for (std::uint32_t iY = 0; iY < getHeight(); ++iY) {
-        int y;
-        if (flipY) {
-            y = getHeight() - iY - 1;
-        } else {
-            y = iY;
-        }
-
-        for (std::uint32_t x = 0; x < getWidth(); ++x) {
-            auto color = getPixelAt({x, y});
-            switch (format & ~AImageFormat::BYTE) {
-                case AImageFormat::R:
-                    output << std::uint8_t(color.r);
-                    break;
-
-                case AImageFormat::RG:
-                    output << std::uint8_t(color.r);
-                    output << std::uint8_t(color.g);
-                    break;
-
-                case AImageFormat::RGB:
-                    output << std::uint8_t(color.r);
-                    output << std::uint8_t(color.g);
-                    output << std::uint8_t(color.b);
-                    break;
-
-                case AImageFormat::RGBA:
-                    output << std::uint8_t(color.r);
-                    output << std::uint8_t(color.g);
-                    output << std::uint8_t(color.b);
-                    output << std::uint8_t(color.a);
-                    break;
-
-                case AImageFormat::BGRA:
-                    output << std::uint8_t(color.b);
-                    output << std::uint8_t(color.g);
-                    output << std::uint8_t(color.r);
-                    output << std::uint8_t(color.a);
-                    break;
-
-                case AImageFormat::ARGB:
-                    output << std::uint8_t(color.a);
-                    output << std::uint8_t(color.r);
-                    output << std::uint8_t(color.g);
-                    output << std::uint8_t(color.b);
-                    break;
-
-                default:
-                    assert(0);
-            }
-        }
-    }
-    return output;
-}
-
 void AImage::mirrorVertically() {
-    for (std::uint32_t y = 0; y < getHeight() / 2; ++y) {
-        auto mirroredY = getHeight() - y - 1;
-        auto l1 = getData().begin() + getBytesPerPixel() * getWidth() * y;
-        auto l2 = getData().begin() + getBytesPerPixel() * getHeight() * mirroredY;
-        for (std::uint32_t x = 0; x < getWidth() * getBytesPerPixel(); ++x, ++l1, ++l2) {
+    for (std::uint32_t y = 0; y < height() / 2; ++y) {
+        auto mirroredY = height() - y - 1;
+        auto l1 = modifiableBuffer().begin() + bytesPerPixel() * width() * y;
+        auto l2 = modifiableBuffer().begin() + bytesPerPixel() * height() * mirroredY;
+        for (std::uint32_t x = 0; x < width() * bytesPerPixel(); ++x, ++l1, ++l2) {
             std::swap(*l1, *l2);
         }
     }
 }
 
-void AImage::fillColor(glm::ivec4 c) {
-    const auto s = mData.size() / getBytesPerPixel();
-    for (std::size_t i = 0; i < s; ++i) {
-        setPixelAt(i, c);
+AImage AImageView::cropped(glm::uvec2 position, glm::uvec2 size) const {
+    assert(position.x + size.x <= width());
+    assert(position.y + size.y <= height());
+    AImage image(size, format());
+
+    for (uint32_t sourceY = 0; sourceY < size.y; ++sourceY) {
+        for (uint32_t sourceX = 0; sourceX < size.x; ++sourceX) {
+            uint32_t from = ((position.y + sourceY) * width() + (position.x + sourceX)) * bytesPerPixel();
+            uint32_t to = (sourceY * size.x + sourceX) * bytesPerPixel();
+
+            for (uint32_t channel = 0; channel < bytesPerPixel(); ++channel)
+            {
+                image.mOwnedBuffer.at<std::uint8_t>(to + channel) = mData.at<std::uint8_t>(from + channel);
+            }
+        }
     }
+
+    return image;
+}
+
+AImageView::Color AImageView::get(glm::uvec2 position) const noexcept {
+    return visit([&](const auto& i) { return AColor(i.get(position)); });
+}
+
+AImageView::Color AImageView::averageColor() const noexcept {
+    return visit([&](const auto& i) { return AColor(i.averageColor()); });
+}
+
+
+AImage AImageView::mirroredVertically() const {
+    AImage copy(*this);
+    copy.mirrorVertically();
+    return copy;
+}
+
+void AImage::set(glm::uvec2 position, AImageView::Color c) noexcept {
+    visit([&](auto& i) { i.set(position, AFormattedColorConverter(c)); });
+}
+
+AImage AImageView::resizedLinearDownscale(glm::uvec2 newSize) const
+{
+    auto ratio = glm::vec2(size() - 1u) / glm::vec2(newSize);
+    AImage n(size(), format());
+    n.fill(0x0_argb);
+
+    for (uint32_t i = 0; i < newSize.y; i++) {
+        for (uint32_t j = 0; j < newSize.y; j++) {
+            auto x = static_cast<uint32_t>(ratio.x * static_cast<float>(j));
+            auto y = static_cast<uint32_t>(ratio.y * static_cast<float>(i));
+            float xWeight = (ratio.x * static_cast<float>(j)) - static_cast<float>(x);
+            float yWeight = (ratio.y * static_cast<float>(i)) - static_cast<float>(y);
+
+            auto c1 = get(glm::uvec2 {x, y});
+            auto c2 = get(glm::uvec2 {x + 1, y});
+            auto c3 = get(glm::uvec2 {x, y + 1});
+            auto c4 = get(glm::uvec2 {x + 1, y + 1});
+
+            c1 *= (1. - xWeight) * (1. - yWeight);
+            c2 *= xWeight * (1. - yWeight);
+            c3 *= yWeight * (1. - xWeight);
+            c4 *= xWeight * yWeight;
+
+            auto color = c1 + c2 + c3 + c4;
+            n.set(glm::uvec2{j, i}, color);
+        }
+    }
+    return n;
+}
+
+AImage AImageView::convert(APixelFormat format) const {
+    AImage image(size(), format);
+
+    visit([&](const auto& source) {
+        image.visit([&](auto& destination) {
+            using source_image_t      = std::decay_t<decltype(source)>;
+            using destination_image_t = std::decay_t<decltype(destination)>;
+
+            static constexpr auto sourceFormat      = (APixelFormat::Value)source_image_t::FORMAT;
+            static constexpr auto destinationFormat = (APixelFormat::Value)destination_image_t::FORMAT;
+
+            std::transform(source.begin(), source.end(), destination.begin(), aui::pixel_format::convert<sourceFormat, destinationFormat>);
+        });
+    });
+
+    return image;
+}
+
+AImageView::AImageView(const AImage& v): AImageView(v.mOwnedBuffer, v.mSize, v.mFormat) {
+
+}
+
+void AImage::insert(glm::uvec2 position, AImageView image) {
+    visit([&](auto& destination) {
+        image.visit([&](const auto& source) {
+            static constexpr auto sourceFormat      = (APixelFormat::Value)std::decay_t<decltype(source)>::FORMAT;
+            static constexpr auto destinationFormat = (APixelFormat::Value)std::decay_t<decltype(destination)>::FORMAT;
+
+            for (unsigned y = 0; y < image.height(); ++y) {
+                auto targetPosY = position.y + y;
+                if (targetPosY >= height()) {
+                    break;
+                }
+                for (unsigned x = 0; x < image.width(); ++x) {
+                    auto targetPosX = position.x + x;
+                    if (targetPosX >= width()) {
+                        break;
+                    }
+
+                    destination.set({targetPosX, targetPosY}, aui::pixel_format::convert<sourceFormat, destinationFormat>(source.get({x, y})));
+                }
+            }
+        });
+    });
+}
+
+void AImage::fill(AImageView::Color color) {
+    visit([&](auto& img) {
+        typename std::decay_t<decltype(img)>::Color convertedColor = AFormattedColorConverter(color);
+        img.fill(convertedColor);
+    });
 }

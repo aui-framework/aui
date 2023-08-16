@@ -15,7 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "ALayout.h"
+#include "ALinearLayout.h"
 
 
 /**
@@ -32,7 +32,7 @@
  *
  * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/stacked2.jpg">
  */
-class API_AUI_VIEWS AStackedLayout: public ALayout
+class API_AUI_VIEWS AStackedLayout: public ALinearLayout<>
 {
 public:
 	AStackedLayout()

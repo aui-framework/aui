@@ -19,21 +19,23 @@
 #include "AAbstractTextField.h"
 
 
-#include "AUI/Platform/Platform.h"
+#include "AUI/Platform/APlatform.h"
+#include "AUI/Platform/ADesktop.h"
 #include <AUI/Util/AMetric.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Render/RenderHints.h>
 
 
 AAbstractTextField::AAbstractTextField() {
-    connect(clicked, [this] {
-        AUI_NULLSAFE(getWindow())->requestTouchscreenKeyboard();
-    });
 }
 
 void AAbstractTextField::onFocusAcquired() {
     AView::onFocusAcquired();
     updateCursorBlinking();
+}
+
+void AAbstractTextField::onFocusLost() {
+    AAbstractTypeableView::onFocusLost();
 }
 
 AAbstractTextField::~AAbstractTextField()
@@ -100,15 +102,18 @@ void AAbstractTextField::setText(const AString& t)
 	mContents = t;
     if (t.empty()) {
         clearSelection();
-        mCursorIndex = 0;
     }
 
+    mCursorIndex = t.size();
 	updateCursorBlinking();
 
     invalidatePrerenderedString();
 	emit textChanged(t);
 }
 
+bool AAbstractTextField::wantsTouchscreenKeyboard() {
+    return true;
+}
 
 AString AAbstractTextField::getContentsPasswordWrap() {
     if (mIsPasswordTextField) {
@@ -175,6 +180,7 @@ void AAbstractTextField::invalidateFont() {
 }
 
 void AAbstractTextField::onCharEntered(wchar_t c) {
+    mCursorIndex = std::min(mCursorIndex, static_cast<unsigned int> (mContents.size()));
     if (c == '\n' || c == '\r')
         return;
     AView::onCharEntered(c);
@@ -186,7 +192,7 @@ void AAbstractTextField::onCharEntered(wchar_t c) {
     {
         mContents = std::move(contentsCopy);
         mCursorIndex = cursorIndexCopy;
-        Platform::playSystemSound(Platform::S_ASTERISK);
+        ADesktop::playSystemSound(ADesktop::SystemSound::ASTERISK);
     }
     emit textChanging(mContents);
 }

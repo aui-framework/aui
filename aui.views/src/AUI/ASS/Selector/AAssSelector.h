@@ -21,13 +21,11 @@
 #pragma once
 
 #include <AUI/Common/AVector.h>
-#include <AUI/View/AView.h>
-#include <AUI/ASS/AAssHelper.h>
 #include <AUI/Util/kAUI.h>
 #include <utility>
 
 class AView;
-
+class AAssHelper;
 
 namespace ass {
 
@@ -39,7 +37,7 @@ namespace ass {
         virtual ~IAssSubSelector() = default;
     };
 
-    class AAssSelector {
+    class API_AUI_VIEWS AAssSelector {
     private:
         AVector<_<IAssSubSelector>> mSubSelectors;
 
@@ -94,14 +92,7 @@ namespace ass {
             }
             return false;
         }
-        void setupConnections(AView* view, const _<AAssHelper>& helper) const {
-            for (const auto& s : mSubSelectors) {
-                if (s->isPossiblyApplicable(view)) {
-                    s->setupConnections(view, helper);
-                    break;
-                }
-            }
-        }
+        void setupConnections(AView* view, const _<AAssHelper>& helper) const;
         template<typename SubSelector, std::enable_if_t<!std::is_pointer_v<SubSelector>, bool> = true>
         void addSubSelector(SubSelector&& subSelector) {
             processSubSelector(std::forward<SubSelector>(subSelector));

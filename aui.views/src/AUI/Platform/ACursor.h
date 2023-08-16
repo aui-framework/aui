@@ -53,12 +53,12 @@ public:
 
     ACursor(System systemCursor): mValue(systemCursor) {}
     explicit ACursor(aui::no_escape<AImage> image, int size = 16);
-    explicit ACursor(_<IDrawable> drawable, int size = 16);
+    explicit ACursor(aui::non_null<_<IDrawable>> drawable, int size = 16);
     explicit ACursor(AUrl imageUrl, int size = 16);
 
     ~ACursor();
 
-    void applyNativeCursor(AWindow* pWindow);
+    void applyNativeCursor(AWindow* pWindow) const;
 
 private:
     std::variant<System, _<Custom>, _<IDrawable>> mValue;

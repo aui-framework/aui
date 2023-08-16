@@ -38,6 +38,7 @@ private:
     _<ITreeModel<AString>> mModel;
     _<ContainerView> mContent;
     _<AScrollbar> mScrollbar;
+    _weak<ItemView> mPrevSelection;
 
     std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeIndex& index)> mViewFactory;
 
@@ -45,6 +46,7 @@ private:
     void updateScrollbarDimensions();
     void handleMousePressed(ItemView* v);
     void handleMouseDoubleClicked(ItemView* v);
+    void handleSelected(ItemView* v);
 
     void fillViewsRecursively(const _<AViewContainer>& content, const ATreeIndex& index);
     void makeElement(const _<AViewContainer>& container, const ATreeIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView);
@@ -52,7 +54,7 @@ public:
     ATreeView();
     ATreeView(const _<ITreeModel<AString>>& model);
     void setModel(const _<ITreeModel<AString>>& model);
-    void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
+    void onScroll(const AScrollEvent& event) override;
     void setSize(glm::ivec2 size) override;
     int getContentMinimumHeight(ALayoutDirection layout) override;
     void handleMouseMove(ItemView* pView);
@@ -61,7 +63,10 @@ public:
         mViewFactory = viewFactory;
     }
 
+    void select(const ATreeIndex& indexToSelect);
+
 signals:
+    emits<ATreeIndex> itemSelected;
     emits<ATreeIndex> itemMouseClicked;
     emits<ATreeIndex> itemMouseDoubleClicked;
     emits<ATreeIndex> itemMouseHover;

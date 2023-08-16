@@ -105,6 +105,7 @@ private:
 signals:
     emits<> connected;
     emits<AByteBuffer> received;
+    emits<AString /* message */> websocketClosed;
 };
 
 AUI_ENUM_VALUES(AWebsocket::Opcode,

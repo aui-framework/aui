@@ -29,7 +29,7 @@
 #include "AUI/Thread/AThread.h"
 #include "Ole.h"
 #include "Win32Util.h"
-#include <AUI/Platform/Platform.h>
+#include "AUI/Platform/APlatform.h"
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/AWindowManager.h>
 #include <AUI/Platform/ADesktop.h>
@@ -56,7 +56,7 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/win32/AComBase.h>
 
-LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noexcept {
+LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAM(lp)    ((int)(short)HIWORD(lp))
 #define POS glm::ivec2(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam))
@@ -172,7 +172,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
             return 0;
         }
         case WM_MOUSEMOVE: {
-            onMouseMove(POS);
+            onPointerMove(POS);
 
             TRACKMOUSEEVENT tme;
             tme.cbSize = sizeof(tme);
@@ -200,27 +200,45 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) noe
             return 0;
 
         case WM_LBUTTONDOWN:
-            if (isMousePressed()) {
+            if (isPressed(APointerIndex::button(AInput::LBUTTON))) {
                 // fix assert(!mPressed);
-                onMouseReleased(POS, AInput::LBUTTON);
+                onPointerReleased({
+                    .position = POS,
+                    .pointerIndex = APointerIndex::button(AInput::LBUTTON)
+                });
             }
-            onMousePressed(POS, AInput::LBUTTON);
+            onPointerPressed({
+                .position = POS,
+                .pointerIndex = APointerIndex::button(AInput::LBUTTON)
+            });
             SetCapture(mHandle);
             return 0;
         case WM_MOUSEWHEEL :
-            onMouseWheel(mapPosition(POS), {0, -(GET_WHEEL_DELTA_WPARAM(wParam))});
+            onScroll({
+                .origin = mapPosition(POS),
+                .delta = {0, -(GET_WHEEL_DELTA_WPARAM(wParam)) },
+            });
             return 0;
         case WM_LBUTTONUP: {
-            onMouseReleased(POS, AInput::LBUTTON);
+            onPointerReleased({
+                .position = POS,
+                .pointerIndex = APointerIndex::button(AInput::LBUTTON)
+            });
             ReleaseCapture();
             return 0;
         }
         case WM_RBUTTONDOWN:
-            onMousePressed(POS, AInput::RBUTTON);
+            onPointerPressed({
+                .position = POS,
+                .pointerIndex = APointerIndex::button(AInput::RBUTTON)
+            });
             SetCapture(mHandle);
             return 0;
         case WM_RBUTTONUP:
-            onMouseReleased(POS, AInput::RBUTTON);
+            onPointerReleased({
+                .position = POS,
+                .pointerIndex = APointerIndex::button(AInput::RBUTTON)
+            });
             ReleaseCapture();
             return 0;
 
@@ -304,7 +322,7 @@ void AWindow::setWindowStyle(WindowStyle ws) {
 
         if (!!(ws & WindowStyle::NO_RESIZE)) {
             SetWindowLongPtr(mHandle, GWL_STYLE,
-                             GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME | WS_THICKFRAME |
+                             GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME |
                                      WS_SYSMENU | WS_CAPTION);
         }
         if (!!(ws & WindowStyle::NO_DECORATORS)) {
@@ -326,7 +344,7 @@ float AWindow::fetchDpiFromSystem() const {
         if (GetDpiForWindow) {
             return GetDpiForWindow(mHandle) / 96.f;
         } else {
-            return Platform::getDpiRatio();
+            return APlatform::getDpiRatio();
         }
     }
     return 1.f;
@@ -420,7 +438,7 @@ void AWindow::show() {
 }
 void AWindow::setIcon(const AImage& image) {
     if (!mHandle) return;
-    assert(image.getFormat() & AImageFormat::BYTE);
+    assert(image.format() & APixelFormat::BYTE);
 
     if (mIcon) {
         DestroyIcon(mIcon);
@@ -520,10 +538,20 @@ void AWindow::allowDragNDrop() {
     assert(r == S_OK);
 }
 
-void AWindow::requestTouchscreenKeyboard() {
-    ABaseWindow::requestTouchscreenKeyboard();
+void AWindow::requestTouchscreenKeyboardImpl() {
+    ABaseWindow::requestTouchscreenKeyboardImpl();
 }
 
-void AWindow::hideTouchscreenKeyboard() {
-    ABaseWindow::hideTouchscreenKeyboard();
+void AWindow::hideTouchscreenKeyboardImpl() {
+    ABaseWindow::hideTouchscreenKeyboardImpl();
+}
+
+void AWindow::moveToCenter() {
+    auto m = MonitorFromWindow(mHandle, MONITOR_DEFAULTTOPRIMARY);
+    MONITORINFO info;
+    info.cbSize = sizeof(info);
+    GetMonitorInfo(m, &info);
+    glm::ivec2 topLeft = { info.rcMonitor.left, info.rcMonitor.top };
+    glm::ivec2 bottomRight = { info.rcMonitor.right, info.rcMonitor.bottom };
+    setPosition(topLeft + (bottomRight - topLeft - getSize()) / 2);
 }

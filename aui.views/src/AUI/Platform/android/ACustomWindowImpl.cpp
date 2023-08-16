@@ -30,12 +30,12 @@ ACustomWindow::ACustomWindow(const AString &name, int width, int height) {
 
 }
 
-void ACustomWindow::onMousePressed(glm::ivec2 pos, AInput::Key button) {
-    ABaseWindow::onMousePressed(pos, button);
+void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
+    ABaseWindow::onPointerPressed(event);
 }
 
-void ACustomWindow::onMouseReleased(glm::ivec2 pos, AInput::Key button) {
-    AViewContainer::onMouseReleased(pos, button);
+void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {
+    ABaseWindow::onPointerReleased(event);
 }
 
 

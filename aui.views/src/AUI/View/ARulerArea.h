@@ -42,7 +42,7 @@ protected:
 public:
     ARulerArea(const _<AView>& wrappedView);
     void setSize(glm::ivec2 size) override;
-    void onMouseMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos) override;
     void render() override;
 };
 

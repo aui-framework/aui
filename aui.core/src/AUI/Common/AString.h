@@ -22,6 +22,7 @@
 #include <AUI/Common/ASet.h>
 #include <optional>
 #include <AUI/Common/AOptional.h>
+#include <fmt/core.h>
 
 class API_AUI_CORE AStringVector;
 class API_AUI_CORE AByteBuffer;
@@ -671,6 +672,15 @@ namespace std
         }
     };
 }
+
+template <> struct fmt::detail::is_string<AString>: std::false_type {};
+
+template <> struct fmt::formatter<AString>: fmt::formatter<std::string> {
+    auto format(const AString& s, format_context& ctx) const {
+        return fmt::formatter<std::string>::format(s.toStdString(), ctx);
+    }
+};
+
 
 // gtest printer for AString
 inline void PrintTo(const AString& s, std::ostream* stream) {

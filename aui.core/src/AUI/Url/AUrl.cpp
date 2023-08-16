@@ -22,6 +22,10 @@
 #include "AUI/Common/AMap.h"
 #include "AUI/Util/ABuiltinFiles.h"
 
+
+#include "AUI/Common/AByteBuffer.h"
+#include "AUI/IO/AStringStream.h"
+
 AUrl::AUrl(AString full)
 {
 	auto posColon = full.find(':');
@@ -46,26 +50,32 @@ AUrl::AUrl(AString full)
 	}
 }
 
-AMap<AString, std::function<_<IInputStream>(const AUrl&)>>& AUrl::resolvers() {
-    static AMap<AString, std::function<_<IInputStream>(const AUrl&)>> storage = {
-        {"builtin", [](const AUrl& u) {
+AMap<AString, AVector<AUrl::Resolver>>& AUrl::resolvers() {
+    static AMap<AString, AVector<Resolver>> storage = {
+        {"builtin", {[](const AUrl& u) {
             return ABuiltinFiles::open(u.path());
-        }},
-        {"file",    [](const AUrl& u) {
+        }}},
+        {"file",    {[](const AUrl& u) {
             return _new<AFileInputStream>(u.path());
-        }},
+        }}},
+        {"base64", {[](const AUrl& u) {
+            auto decoded = AByteBuffer::fromBase64String(u.path());
+            return _new<AStringStream>(std::string(decoded.data(), decoded.size()));
+        }}},
     };
     return storage;
 }
 _<IInputStream> AUrl::open() const {
-	if (auto c = resolvers().contains(mSchema)) {
-		if (auto is = c->second(*this))
-			return is;
+	if (const auto& resolverSet = resolvers().contains(mSchema)) {
+		for (const auto& resolver : aui::reverse_iterator_wrap(resolverSet->second)) {
+			if (auto is = resolver(*this))
+				return is;
+		}
 	}
 	throw AIOException("could not open url: " + full());
 }
 
 
-void AUrl::registerResolver(const AString& protocol, const std::function<_<IInputStream>(const AUrl&)>& factory) {
-    resolvers()[protocol] = factory;
+void AUrl::registerResolver(const AString& protocol, Resolver resolver) {
+    resolvers()[protocol] << std::move(resolver);
 }

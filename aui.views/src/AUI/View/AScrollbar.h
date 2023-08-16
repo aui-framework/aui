@@ -41,9 +41,9 @@ private:
 
 public:
     void setSize(glm::ivec2 size) override;
-    void onMouseMove(glm::ivec2 pos) override;
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerPressed(const APointerPressedEvent& event) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
     void setOverridenSize(int overridenSize) {
         mOverridenSize = overridenSize;
     }
@@ -93,7 +93,7 @@ public:
         setScroll(mCurrentScroll + delta);
     }
 
-    void onMouseWheel(glm::ivec2 pos, glm::ivec2 delta) override;
+    void onScroll(const AScrollEvent& event) override;
 
     /**
      * @brief Set stick to end.
@@ -103,9 +103,13 @@ public:
      * (bottom) the scrollbar automatically scrolls to the ends, keeping the scroll position in place.
      */
     void setStickToEnd(bool stickToEnd) {
-        mStickToEnd = stickToEnd;
         if (stickToEnd) {
+            mStickToEnd = StickToEnd{
+                .locked = true,
+            };
             scrollToEnd();
+        } else {
+            mStickToEnd.reset();
         }
     }
 
@@ -117,21 +121,25 @@ public:
         setScroll(0);
     }
 
-    void scrollToEnd() {
-        setScroll(getMaxScroll());
-    }
+    void scrollToEnd();
 
 signals:
 
     emits<int> scrolled;
 
+    emits<int> updatedMaxScroll;
+
+    emits<> triggeredManually;
+
     float getAvailableSpaceForSpacer();
 
     void updateScrollHandleOffset(int max);
 
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerPressed(const APointerPressedEvent& event) override;
 
     void setSize(glm::ivec2 size) override;
+
+    static const _<ATimer>& buttonTimer();
 
 protected:
     ALayoutDirection mDirection;
@@ -139,7 +147,6 @@ protected:
     _<AScrollbarHandle> mHandle;
     _<AScrollbarButton> mForwardButton;
     _<AScrollbarButton> mBackwardButton;
-    static _<ATimer> ourScrollButtonTimer;
 
     size_t mViewportSize = 0, mFullSize = 0;
     int mCurrentScroll = 0;
@@ -160,7 +167,20 @@ protected:
     }
 
 private:
-    bool mStickToEnd = false;
+    struct StickToEnd {
+        /**
+         * @brief The stick-to-end behaviour is not overridden by the user.
+         */
+        bool locked = true;
+    };
+    /**
+     * @brief Stick-to-end behaviour enabled or not.
+     * @details
+     * Empty = disabled.
+     *
+     * @see AScrollbar::setStickToEnd()
+     */
+    AOptional<StickToEnd> mStickToEnd;
     ScrollbarAppearance::AxisValue mAppearance = ScrollbarAppearance::INVISIBLE;
 };
 

@@ -33,7 +33,7 @@ WinIoThread& WinIoThread::inst() noexcept {
 namespace {
     class MyEventLoop: public IEventLoop {
     public:
-        MyEventLoop(): mNotifyHandle(CreateEvent(nullptr, false, false, L"WinIoThread::MyEventLoop")) {
+        MyEventLoop(): mNotifyHandle(CreateEvent(nullptr, false, false, nullptr)) {
             assert(mNotifyHandle != nullptr);
         }
 

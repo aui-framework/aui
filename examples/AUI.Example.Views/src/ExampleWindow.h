@@ -18,17 +18,19 @@
 
 #include <AUI/Platform/AWindow.h>
 #include "AUI/Audio/Platform/win32/AudioInterface.h"
+#include "AUI/Thread/AAsyncHolder.h"
 
 class ExampleWindow: public AWindow {
-private:
-	ADeque<_<AWindow>> mWindows;
-    std::shared_ptr<AudioInterface> mWavAudio;
-    std::shared_ptr<AudioInterface> mOggAudio;
-
 public:
 	ExampleWindow();
 
     void onDragDrop(const ADragNDrop::DropEvent& event) override;
 
     bool onDragEnter(const ADragNDrop::EnterEvent& event) override;
+
+private:
+    ADeque<_<AWindow>> mWindows;
+    AAsyncHolder mAsync;
+    std::shared_ptr<AudioInterface> mWavAudio;
+    std::shared_ptr<AudioInterface> mOggAudio;
 };

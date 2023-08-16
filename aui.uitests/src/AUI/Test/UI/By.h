@@ -26,6 +26,7 @@
 namespace By {
     API_AUI_UITESTS UIMatcher text(const AString& text);
     API_AUI_UITESTS UIMatcher name(const AString& name);
+    API_AUI_UITESTS UIMatcher value(const _<AView>& value);
 
     template<typename T>
     UIMatcher type() {

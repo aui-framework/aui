@@ -16,8 +16,8 @@
 
 #include <AUI/Url/AUrl.h>
 #include "AFontManager.h"
-#include "AUI/Platform/Platform.h"
-#include "AUI/Render/FreeType.h"
+#include "AUI/Platform/APlatform.h"
+#include "AUI/Font/FreeType.h"
 
 
 

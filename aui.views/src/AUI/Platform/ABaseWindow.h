@@ -30,7 +30,6 @@ namespace testing {
     class UITest;
 }
 
-
 class API_AUI_VIEWS ABaseWindow: public AViewContainer {
     friend class SoftwareRenderer;
     friend class testing::UITest;
@@ -59,6 +58,39 @@ public:
 
     virtual ~ABaseWindow();
 
+
+    /**
+     * @brief Prevents click action on upcoming pointer release.
+     * @details
+     * Also disables hover and pressed animations.
+     *
+     * Used by AScrollArea when it's scroll is triggered.
+     *
+     * Calls AView::onClickPrevented() over focus chain.
+     */
+    void preventClickOnPointerRelease();
+
+    /**
+     * @see ABaseWindow::preventClickOnPointerRelease
+     */
+    [[nodiscard]]
+    bool isPreventingClickOnPointerRelease() const noexcept {
+        return mPreventClickOnPointerRelease.valueOr(false);
+    }
+
+    /**
+     * @brief Iterates over focus chain, from parent to child.
+     */
+    template<aui::invocable<const _<AView>&> Callback>
+    void iterateOverFocusChain(Callback&& callback) {
+        for (auto view = mFocusedView.lock(); view;) {
+            callback(view);
+
+            auto container = _cast<AViewContainer>(view);
+            if (!container) return;
+            view = container->focusChainTarget();
+        }
+    }
 
     /**
      * @brief Returns previous frame's rendering duration in millis.
@@ -105,9 +137,10 @@ public:
     }
 
     void setFocusedView(const _<AView>& view);
-    void onMousePressed(glm::ivec2 pos, AInput::Key button) override;
+    void updateFocusChain();
+    void onPointerPressed(const APointerPressedEvent& event) override;
 
-    void onMouseMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos) override;
 
     void closeOverlappingSurfacesOnClick();
 
@@ -140,6 +173,23 @@ public:
      * @param closeOnClick when true, overlapped surface is automatically closed when mouse clicked. It's usable for
      *        dropdown and context menus.
      * @return a new surface.
+     * @details
+     * @code{cpp}
+     * auto surfaceContainer = AWindow::current()->createOverlappingSurface({0, 0}, {100, 100});
+     *
+     * ALayoutInflater::inflate(surfaceContainer, Vertical {
+     *     Button { "Item1" },
+     *     Button { "Item2" },
+     *     Button { "Item3" },
+     * });
+     *
+     * surfaceContainer->pack();
+     * @endcode
+     *
+     * To create overlapping surface below some `view`, use AView::getPositionInWindow:
+     * @code{cpp}
+     * auto surfaceContainer = AWindow::current()->createOverlappingSurface(view->getPositionInWindow() + view->getSize(), {100, 100});
+     * @endcode
      */
     _<AOverlappingSurface> createOverlappingSurface(const glm::ivec2& position,
                                                     const glm::ivec2& size,
@@ -195,7 +245,7 @@ public:
 
     void onFocusLost() override;
     void render() override;
-    void onMouseReleased(glm::ivec2 pos, AInput::Key button) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
 
     /**
      * @brief Called when the user holds a drag-n-drop object over the window.
@@ -218,12 +268,32 @@ public:
      * @details
      * On a desktop device does nothing.
      */
-    virtual void requestTouchscreenKeyboard();
+    void requestTouchscreenKeyboard();
 
     /**
      * @brief Hides virtual keyboard if visible
      */
-    virtual void hideTouchscreenKeyboard();
+    void hideTouchscreenKeyboard();
+
+    /**
+     * @brief Determines whether views should display hover animations.
+     * @return false when any keyboard button is pressed
+     */
+    bool shouldDisplayHoverAnimations() const;
+
+    void onScroll(const AScrollEvent& event) override;
+
+    /**
+     * @brief Updates cursor by triggering onPointerMove on the same position (mMousePos).
+     */
+    virtual void forceUpdateCursor();
+
+    bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
+
+    /**
+     * @brief double click will be captured only if time elapsed since the previous click is less than timeForDoubleClick
+     */
+    static constexpr std::chrono::milliseconds timeForDoubleClick = std::chrono::milliseconds(500);
 
 signals:
     emits<>            dpiChanged;
@@ -232,6 +302,18 @@ signals:
 
 protected:
     bool mIsFocused = true;
+
+    /**
+     * @see ABaseWindow::preventClickOnPointerRelease
+     */
+    AOptional<bool> mPreventClickOnPointerRelease;
+
+    bool mPerformDoubleClickOnPointerRelease = false;
+
+    std::chrono::milliseconds mLastButtonPressedTime = std::chrono::milliseconds::zero();
+    AOptional<APointerIndex> mLastButtonPressed;
+    glm::ivec2 mLastPosition = {0, 0};
+
     _unique<IRenderingContext> mRenderingContext;
 
     static ABaseWindow*& currentWindowStorage();
@@ -248,17 +330,18 @@ protected:
 
     virtual float fetchDpiFromSystem() const;
 
+    virtual void requestTouchscreenKeyboardImpl();
+    virtual void hideTouchscreenKeyboardImpl();
 
 private:
     _weak<AView> mFocusedView;
     _weak<AView> mProfiledView;
     float mDpiRatio = 1.f;
+    bool mIgnoreTouchscreenKeyboardRequests = false; // to avoid flickering
 
 
-    glm::ivec2 mMousePos;
+    glm::ivec2 mMousePos = {0, 0};
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
-
-    void updateFocusChain();
 };
 
 

@@ -80,11 +80,11 @@ TEST(Threading, ConditionVariableInterruption) {
 TEST(Threading, Future1) {
     ADeque<AFuture<double>> taskList;
     auto time = util::measureExecutionTime<std::chrono::milliseconds>([&]() {
-        repeat(1000)
+        AUI_REPEAT(1000)
         {
             taskList << async{
                     double i = 2.0;
-                    repeat(1000)
+                    AUI_REPEAT(1000)
                     {
                         i *= 2;
                     }
@@ -279,7 +279,7 @@ TEST(Threading, FutureInterruptionCascade) {
 
 TEST(Threading, FutureOnDone) {
 
-    repeat(100) {
+    AUI_REPEAT(100) {
         AThreadPool localThreadPool(1);
         localThreadPool.run([] {
             AThread::sleep(10ms); // long tamssk

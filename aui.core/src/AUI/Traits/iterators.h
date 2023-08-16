@@ -56,60 +56,60 @@ namespace aui {
         Iterator mBegin;
         Iterator mEnd;
     public:
-        range(Iterator mBegin, Iterator mEnd) : mBegin(mBegin), mEnd(mEnd) {}
+        constexpr range(Iterator mBegin, Iterator mEnd) : mBegin(mBegin), mEnd(mEnd) {}
 
-        ~range() {
+        constexpr ~range() {
             AUI_NO_OPTIMIZE_OUT(range::size)
         }
 
         template<typename Container>
-        range(Container& c): mBegin(c.begin()), mEnd(c.end()) {
+        constexpr range(Container& c): mBegin(c.begin()), mEnd(c.end()) {
 
         }
 
 
         template<typename Container>
-        range(const Container& c): mBegin(c.begin()), mEnd(c.end()) {
+        constexpr range(const Container& c): mBegin(c.begin()), mEnd(c.end()) {
 
         }
 
         [[nodiscard]]
-        bool empty() const noexcept {
+        constexpr bool empty() const noexcept {
             return mBegin == mEnd;
         }
 
         [[nodiscard]]
-        std::size_t size() const noexcept {
+        constexpr std::size_t size() const noexcept {
             return std::distance(mBegin, mEnd);
         }
 
         [[nodiscard]]
-        Iterator& begin() noexcept {
+        constexpr Iterator& begin() noexcept {
             return mBegin;
         }
 
         [[nodiscard]]
-        Iterator& end() noexcept {
+        constexpr Iterator& end() noexcept {
             return mEnd;
         }
 
         [[nodiscard]]
-        Iterator& begin() const noexcept {
+        constexpr Iterator& begin() const noexcept {
             return mBegin;
         }
 
         [[nodiscard]]
-        Iterator& end() const noexcept {
+        constexpr Iterator& end() const noexcept {
             return mEnd;
         }
 
         [[nodiscard]]
-        const auto& first() const {
+        constexpr const auto& first() const {
             return *mBegin;
         }
 
         [[nodiscard]]
-        const auto& last() const {
+        constexpr const auto& last() const {
             return *std::prev(mEnd);
         }
     };
@@ -204,7 +204,6 @@ namespace aui {
 
     /**
      * @brief Reverses iterator direction (i.e. converts iterator to reverse_iterator, reverse_iterator to iterators).
-     * @ingroup useful_macros
      * @tparam Iterator iterator
      * @param iterator iterator
      * @return same iterator but reverse direction

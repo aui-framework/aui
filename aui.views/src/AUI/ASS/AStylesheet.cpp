@@ -1,18 +1,18 @@
-// AUI Framework - Declarative UI toolkit for modern C++20
-// Copyright (C) 2020-2023 Alex2772
+//  AUI Framework - Declarative UI toolkit for modern C++20
+//  Copyright (C) 2020-2023 Alex2772
 //
-// This library is free software; you can redistribute it and/or
-// modify it under the terms of the GNU Lesser General Public
-// License as published by the Free Software Foundation; either
-// version 2 of the License, or (at your option) any later version.
+//  This library is free software; you can redistribute it and/or
+//  modify it under the terms of the GNU Lesser General Public
+//  License as published by the Free Software Foundation; either
+//  version 2 of the License, or (at your option) any later version.
 //
-// This library is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
-// Lesser General Public License for more details.
+//  This library is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.	 See the GNU
+//  Lesser General Public License for more details.
 //
-// You should have received a copy of the GNU Lesser General Public
-// License along with this library. If not, see <http://www.gnu.org/licenses/>.
+//  You should have received a copy of the GNU Lesser General Public
+//  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
 // Created by alex2 on 29.12.2020.
@@ -44,6 +44,7 @@
 #include "ASS.h"
 #include "AUI/View/ASpinner.h"
 #include "AUI/View/AGroupBox.h"
+#include "AUI/View/ASlider.h"
 
 
 AStylesheet::AStylesheet() {
@@ -228,11 +229,11 @@ AStylesheet::AStylesheet() {
         },
         {
             c(".number-picker") >> c(".up"),
-            BackgroundImage { ":uni/svg/up.svg", {} },
+            BackgroundImage { ":uni/svg/up.svg", {}, {}, Sizing::CENTER },
         },
         {
             c(".number-picker") >> c(".down"),
-            BackgroundImage { ":uni/svg/down.svg", {} },
+            BackgroundImage { ":uni/svg/down.svg", {}, {}, Sizing::CENTER },
         },
 
         // ACheckBox
@@ -485,12 +486,12 @@ AStylesheet::AStylesheet() {
             FixedSize { 6_dp, {} },
             BorderRadius { 3_dp },
 #else
-            FixedSize { 15_dp, {} },
+            FixedSize {{},{} },
 #endif
 
-            MinSize { {}, 40_dp },
+            MinSize { 15_dp, 15_dp },
             BackgroundSolid { 0xcccccc_rgb },
-            Margin {1_px, 0},
+            Margin {1_px, 1_px },
         },
         {
             t<AScrollbar>::disabled() > t<AScrollbarHandle>(),
@@ -588,7 +589,7 @@ AStylesheet::AStylesheet() {
             t<AProgressBar>(),
             BackgroundSolid { 0xd0d0d0_rgb },
             BorderRadius { 4_dp },
-            FixedSize { {}, 8_dp },
+            MinSize { 40_dp, 8_dp },
             Margin { 2_dp, 4_dp },
         },
         {
@@ -623,6 +624,21 @@ AStylesheet::AStylesheet() {
             c(".modal-scaffold-dim"),
             BackgroundSolid { 0x40000000_argb },
             Expanding{},
+        },
+        {
+            t<ASlider::Handle>(),
+            BackgroundSolid { getOsThemeColor() },
+            FixedSize { 8_dp },
+            BorderRadius { 4_dp },
+        },
+        {
+            t<ASlider>() > t<AProgressBar>(),
+            BorderRadius { 2_dp },
+            FixedSize { {}, 4_dp }
+        },
+        {
+            t<ASlider>() >> t<AProgressBar::Inner>(),
+            BorderRadius { 2_dp },
         },
     });
 }
