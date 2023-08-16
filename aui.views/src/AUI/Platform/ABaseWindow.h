@@ -290,6 +290,11 @@ public:
 
     bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 
+    /**
+     * @brief double click will be captured only if time elapsed since the previous click is less than timeForDoubleClick
+     */
+    static constexpr std::chrono::milliseconds timeForDoubleClick = std::chrono::milliseconds(500);
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;

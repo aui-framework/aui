@@ -200,7 +200,7 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     using namespace std::chrono_literals;
     auto now = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
     auto delta = now - mLastButtonPressedTime;
-    if (delta < 500ms && mLastPosition == event.position) {
+    if (delta < timeForDoubleClick && mLastPosition == event.position) {
         if (mLastButtonPressed == event.pointerIndex) {
             onPointerDoubleClicked(event);
             mPreventClickOnPointerRelease = true;
