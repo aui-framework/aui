@@ -30,7 +30,6 @@ namespace testing {
     class UITest;
 }
 
-
 class API_AUI_VIEWS ABaseWindow: public AViewContainer {
     friend class SoftwareRenderer;
     friend class testing::UITest;
@@ -291,6 +290,11 @@ public:
 
     bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 
+    /**
+     * @brief double click will be captured only if time elapsed since the previous click is less than timeForDoubleClick
+     */
+    static constexpr std::chrono::milliseconds timeForDoubleClick = std::chrono::milliseconds(500);
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
@@ -303,6 +307,12 @@ protected:
      * @see ABaseWindow::preventClickOnPointerRelease
      */
     AOptional<bool> mPreventClickOnPointerRelease;
+
+    bool mPerformDoubleClickOnPointerRelease = false;
+
+    std::chrono::milliseconds mLastButtonPressedTime = std::chrono::milliseconds::zero();
+    AOptional<APointerIndex> mLastButtonPressed;
+    glm::ivec2 mLastPosition = {0, 0};
 
     _unique<IRenderingContext> mRenderingContext;
 

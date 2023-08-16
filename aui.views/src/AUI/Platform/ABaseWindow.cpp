@@ -181,7 +181,8 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
 void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     mMousePos = event.position;
     closeOverlappingSurfacesOnClick();
-    mPreventClickOnPointerRelease.emplace(false);
+    mPreventClickOnPointerRelease = false;
+    mPerformDoubleClickOnPointerRelease = false;
     auto focusCopy = mFocusedView.lock();
     mIgnoreTouchscreenKeyboardRequests = false;
     AViewContainer::onPointerPressed(event);
@@ -198,23 +199,17 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     // check for double clicks
     using namespace std::chrono;
     using namespace std::chrono_literals;
-    static milliseconds lastButtonPressedTime = 0ms;
-    static AOptional<APointerIndex> lastButtonPressed;
-    static glm::ivec2 lastPosition = {0, 0};
-
     auto now = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-
-    auto delta = now - lastButtonPressedTime;
-    if (delta < 500ms && lastPosition == event.position) {
-        if (lastButtonPressed == event.pointerIndex) {
-            onPointerDoubleClicked(event);
-
-            lastButtonPressedTime = 0ms;
+    auto delta = now - mLastButtonPressedTime;
+    if (delta < timeForDoubleClick && mLastPosition == event.position) {
+        if (mLastButtonPressed == event.pointerIndex) {
+            mPerformDoubleClickOnPointerRelease = true;
+            mLastButtonPressedTime = 0ms;
         }
     } else {
-        lastButtonPressedTime = now;
-        lastButtonPressed = event.pointerIndex;
-        lastPosition = event.position;
+        mLastButtonPressedTime = now;
+        mLastButtonPressed = event.pointerIndex;
+        mLastPosition = event.position;
     }
     AMenu::close();
 }
@@ -224,6 +219,14 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     copy.triggerClick = !mPreventClickOnPointerRelease.valueOr(true);
     mPreventClickOnPointerRelease.reset();
     AViewContainer::onPointerReleased(copy);
+    if (mPerformDoubleClickOnPointerRelease) {
+        onPointerDoubleClicked({
+            .position = event.position,
+            .pointerIndex = event.pointerIndex,
+            .asButton = event.asButton
+        });
+    }
+    mPerformDoubleClickOnPointerRelease = false;
 
     // AView::onPointerMove handles cursor shape; need extra call in order to flush
     forceUpdateCursor();
