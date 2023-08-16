@@ -545,3 +545,13 @@ void AWindow::requestTouchscreenKeyboardImpl() {
 void AWindow::hideTouchscreenKeyboardImpl() {
     ABaseWindow::hideTouchscreenKeyboardImpl();
 }
+
+void AWindow::moveToCenter() {
+    auto m = MonitorFromWindow(mHandle, MONITOR_DEFAULTTOPRIMARY);
+    MONITORINFO info;
+    info.cbSize = sizeof(info);
+    GetMonitorInfo(m, &info);
+    glm::ivec2 topLeft = { info.rcMonitor.left, info.rcMonitor.top };
+    glm::ivec2 bottomRight = { info.rcMonitor.right, info.rcMonitor.bottom };
+    setPosition(topLeft + (bottomRight - topLeft - getSize()) / 2);
+}
