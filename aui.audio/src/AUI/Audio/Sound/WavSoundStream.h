@@ -1,71 +1,45 @@
 #pragma once
 
+#include "AUI/IO/AFileInputStream.h"
 #include "AUI/Common/AByteBuffer.h"
-#include "Sound.h"
-#include "AUI/Audio/Stream/FileStream.h"
+#include "ISoundStream.h"
 
-typedef struct wavfile_header_s
-{
-    char    ChunkID[4];     /*  4   */
-    int32_t ChunkSize;      /*  4   */
-    char    Format[4];      /*  4   */
-
-    char    Subchunk1ID[4]; /*  4   */
-    int32_t Subchunk1Size;  /*  4   */
-    int16_t AudioFormat;    /*  2   */
-    int16_t NumChannels;    /*  2   */
-    int32_t SampleRate;     /*  4   */
-    int32_t ByteRate;       /*  4   */
-    int16_t BlockAlign;     /*  2   */
-    int16_t BitsPerSample;  /*  2   */
-
-    char    Subchunk2ID[4];
-    int32_t Subchunk2Size;
-} wavfile_header_t;
-
-class WavSoundStream: public Audio::SoundStream {
-private:
-    std::shared_ptr<IFileStream> mFis;
-    wavfile_header_t mHeader;
-    size_t mChunkReadPos = 0; // до mHeader.ChunkSize
+class WavSoundStream: public ISoundStream {
 public:
-    WavSoundStream(std::shared_ptr<IFileStream> is): mFis(std::move(is)) {
-        mFis->read(reinterpret_cast<char*>(&mHeader), sizeof(mHeader));
+    WavSoundStream(_<AFileInputStream> is);
 
-        if (std::memcmp(mHeader.ChunkID, "RIFF", 4) != 0 ||
-            std::memcmp(mHeader.Format, "WAVE", 4) != 0 ||
-            std::memcmp(mHeader.Subchunk1ID, "fmt ", 4) != 0) {
-            throw std::runtime_error("not a wav file");
-        }
+    AAudioFormat info() override;
+
+    void rewind() override;
+
+    size_t read(char* dst, size_t size) override;
+
+    static _<ISoundStream> load(_<AFileInputStream> is) {
+        return _new<WavSoundStream>(std::move(is));
     }
 
-    AAudioFormat info() override {
-        return AAudioFormat {
-                static_cast<unsigned int>(mHeader.ByteRate * 2),
-                static_cast<uint8_t>(mHeader.NumChannels),
-                static_cast<unsigned int>(mHeader.SampleRate),
-                static_cast<uint8_t>(mHeader.BitsPerSample)
-        };
-    }
+private:
+    struct WavfileHeader {
+        char    chunkID[4];
+        int32_t chunkSize;
+        char    format[4];
 
-    bool isEof() override {
-        return false;
-    }
+        char    subchunk1ID[4];
+        int32_t subchunk1Size;
+        int16_t audioFormat;
+        int16_t numChannels;
+        int32_t sampleRate;
+        int32_t byteRate;
+        int16_t blockAlign;
+        int16_t bitsPerSample;
 
-    void rewind() override {
-        mChunkReadPos = 0;
-        mFis->seek(sizeof(mHeader), std::ios::beg);
-    }
+        char    subchunk2ID[4];
+        int32_t subchunk2Size;
+    };
 
-    size_t read(char* dst, size_t size) override {
-        auto remaining = mHeader.ChunkSize - mChunkReadPos;
-        if (remaining == 0) return 0;
-        size_t r = mFis->read(dst, std::min(size, remaining));
-        mChunkReadPos += r;
-        return r;
-    }
-
-    static std::shared_ptr<Audio::SoundStream> load(std::shared_ptr<IFileStream> is) {
-        return std::make_shared<WavSoundStream>(std::move(is));
-    }
+    _<AFileInputStream> mFis;
+    WavfileHeader mHeader;
+    size_t mChunkReadPos = 0; // до mHeader.ChunkSize
 };
+
+//TODO replace AFileInputStream with abstract stream with seek() and tell() methods

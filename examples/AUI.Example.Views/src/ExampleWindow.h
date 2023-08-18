@@ -31,6 +31,6 @@ public:
 private:
     ADeque<_<AWindow>> mWindows;
     AAsyncHolder mAsync;
-    std::shared_ptr<AudioInterface> mWavAudio;
-    std::shared_ptr<AudioInterface> mOggAudio;
+    _<AudioInterface> mWavAudio;
+    _<AudioInterface> mOggAudio;
 };

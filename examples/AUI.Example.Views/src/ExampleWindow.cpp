@@ -111,13 +111,11 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
     _<ATabView> tabView;
 
-    auto wavFilestream = FileStream::open(":sound/sound1.wav");
-    auto wavSoundStream = WavSoundStream::load(std::move(wavFilestream));
-    mWavAudio = std::make_shared<AudioInterface>(std::move(wavSoundStream));
+    auto wavSoundStream = WavSoundStream::load(_new<AFileInputStream>("sound/sound1.wav"));
+    mWavAudio = _new<AudioInterface>(std::move(wavSoundStream));
 
-    auto oggFilestream = FileStream::open(":sound/sound1.ogg");
-    auto oggSoundStream = OggSoundStream::load(std::move(oggFilestream));
-    mOggAudio = std::make_shared<AudioInterface>(std::move(oggSoundStream));
+    auto oggSoundStream = OggSoundStream::load(_new<AFileInputStream>("sound/sound1.ogg"));
+    mOggAudio = _new<AudioInterface>(std::move(oggSoundStream));
 
     addView(tabView = _new<ATabView>() let {
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {

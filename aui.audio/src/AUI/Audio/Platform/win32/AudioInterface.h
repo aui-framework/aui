@@ -2,9 +2,9 @@
 // Created by Alex2772 on 2/9/2022.
 //
 
-#include "AUI/Platform/AProgramModule.h"
-
 #pragma once
+
+#include "AUI/Platform/AProgramModule.h"
 #pragma comment(lib,"dsound.lib")
 #pragma comment(lib, "dxguid.lib")
 #pragma comment( lib, "Winmm" )
@@ -15,7 +15,7 @@
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Thread/AFuture.h"
 #include "SDL_Audio_Base.h"
-#include "AUI/Audio/Sound/Sound.h"
+#include "AUI/Audio/Sound/ISoundStream.h"
 
 #define ASSERT_OK AssertOkHelper{} +
 struct AssertOkHelper {
@@ -51,7 +51,7 @@ static IDirectSound8* getDirectSound() {
 
 class AudioInterface: public SDL_Audio_Base {
 public:
-    AudioInterface(std::shared_ptr<Audio::SoundStream> sound) : mSound(std::move(sound)){
+    AudioInterface(_<ISoundStream> sound) : mSound(std::move(sound)){
         setupSecondaryBuffer();
     }
 
@@ -121,11 +121,11 @@ public:
         return status;
     }
 
-    bool is_playing() override {
+    bool isPlaying() override {
         return mIsPlaying;
     }
 
-    bool is_paused() override {
+    bool isPaused() override {
         return !mIsPlaying;
     }
 
@@ -140,7 +140,7 @@ private:
 
     IDirectSoundBuffer8* mSoundBufferInterface;
     IDirectSoundNotify8* mNotifyInterface;
-    std::shared_ptr<Audio::SoundStream> mSound;
+    _<ISoundStream> mSound;
 
     bool mIsPlaying = false;
     int bytesPerSecond;

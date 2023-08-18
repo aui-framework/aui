@@ -2,6 +2,8 @@
 // Created by dervisdev on 2/6/2023.
 //
 
+#pragma once
+
 #include <fstream>
 #include <filesystem>
 #include "AUI/IO/IInputStream.h"
@@ -9,9 +11,6 @@
 #include "AUI/Util/ABuiltinFiles.h"
 #include <sstream>
 #include "IStream.h"
-
-
-#pragma once
 
 using ByteBuffer = std::vector<std::uint8_t>;
 
