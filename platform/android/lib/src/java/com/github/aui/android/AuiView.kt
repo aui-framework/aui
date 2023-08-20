@@ -71,7 +71,7 @@ class AuiView(context: Context) : GLSurfaceView(context) {
                 return false
             }
 
-            override fun onScroll(
+            override fun onMouseScroll(
                 motionEvent: MotionEvent,
                 motionEvent1: MotionEvent,
                 velX: Float,

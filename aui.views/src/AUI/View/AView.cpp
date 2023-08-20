@@ -404,7 +404,7 @@ void AView::onPointerDoubleClicked(const APointerPressedEvent& event)
     emit doubleClicked(event.pointerIndex);
 }
 
-void AView::onScroll(const AScrollEvent& event) {
+void AView::onMouseScroll(const AScrollEvent& event) {
     emit scrolled(event.delta);
 }
 
@@ -592,7 +592,7 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
                 .delta = e.delta,
                 .kinetic = e.kinetic,
             };
-            onScroll(scrollEvent);
+            onMouseScroll(scrollEvent);
             return glm::ivec2(e.delta) != scrollEvent.delta;
         },
         [&](const ALongPressEvent& e) {

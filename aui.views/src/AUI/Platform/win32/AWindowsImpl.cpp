@@ -214,7 +214,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             SetCapture(mHandle);
             return 0;
         case WM_MOUSEWHEEL :
-            onScroll({
+            onMouseScroll({
                 .origin = mapPosition(POS),
                 .delta = {0, -(GET_WHEEL_DELTA_WPARAM(wParam)) },
             });

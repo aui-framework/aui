@@ -233,8 +233,8 @@ void ABaseWindow::forceUpdateCursor() {
     AViewContainer::onPointerMove(mMousePos);
 }
 
-void ABaseWindow::onScroll(const AScrollEvent& event) {
-    AViewContainer::onScroll(event);
+void ABaseWindow::onMouseScroll(const AScrollEvent& event) {
+    AViewContainer::onMouseScroll(event);
     AViewContainer::onPointerMove(mMousePos); // update hovers inside scrollarea
 }
 

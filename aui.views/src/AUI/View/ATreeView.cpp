@@ -274,9 +274,9 @@ void ATreeView::updateScrollbarDimensions() {
     }
 }
 
-void ATreeView::onScroll(const AScrollEvent& event) {
-    //AViewContainer::onScroll(pos, delta);
-    mScrollbar->onScroll(event);
+void ATreeView::onMouseScroll(const AScrollEvent& event) {
+    //AViewContainer::onMouseScroll(pos, delta);
+    mScrollbar->onMouseScroll(event);
     onPointerMove(event.origin); // update hover on scroll
 }
 

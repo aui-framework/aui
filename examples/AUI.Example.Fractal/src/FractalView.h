@@ -43,7 +43,7 @@ public:
 
     void onKeyRepeat(AInput::Key key) override;
 
-    void onScroll(glm::ivec2 pos, glm::ivec2 delta) override;
+    void onMouseScroll(glm::ivec2 pos, glm::ivec2 delta) override;
 
     void setSize(glm::ivec2 size) override;
 

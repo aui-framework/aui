@@ -374,8 +374,8 @@ int ATextArea::getContentMinimumHeight(ALayoutDirection layout) {
     return 80_dp;
 }
 
-void ATextArea::onScroll(const AScrollEvent& event) {
-    //AViewContainer::onScroll(pos, delta);
-    mScrollbar->onScroll(event);
+void ATextArea::onMouseScroll(const AScrollEvent& event) {
+    //AViewContainer::onMouseScroll(pos, delta);
+    mScrollbar->onMouseScroll(event);
 }
 

@@ -104,7 +104,7 @@ protected:
 };
 
 void AEmbedAuiWrap::onMouseScroll(int mouseX, int mouseY, int scrollX, int scrollY) {
-    mContainer->onScroll({
+    mContainer->onMouseScroll({
         .origin = { mouseX, mouseY },
         .delta = { scrollX, scrollY },
     });

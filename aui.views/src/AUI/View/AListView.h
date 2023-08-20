@@ -65,7 +65,7 @@ public:
 	}
 
     void setSize(glm::ivec2 size) override;
-    void onScroll(const AScrollEvent& event) override;
+    void onMouseScroll(const AScrollEvent& event) override;
 
     void insertItem(size_t at, const AString& value) override;
     void updateItem(size_t at, const AString& value) override;

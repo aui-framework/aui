@@ -93,7 +93,7 @@ public:
         setScroll(mCurrentScroll + delta);
     }
 
-    void onScroll(const AScrollEvent& event) override;
+    void onMouseScroll(const AScrollEvent& event) override;
 
     /**
      * @brief Set stick to end.

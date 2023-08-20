@@ -816,9 +816,12 @@ public:
     /**
      * Handles mouse wheel events.
      * @param pos mouse cursor position.
-     * @param delta the distance mouse wheel scrolled. 120 = mouse scroll down, -120 = mouse scroll up.
+     * @param delta the distance mouse wheel scrolled.
+     * @details
+     * By default, 120 is single mouse wheel click.
+     * 120 = mouse scroll down, -120 = mouse scroll up.
      */
-    virtual void onScroll(const AScrollEvent& event);
+    virtual void onMouseScroll(const AScrollEvent& event);
     virtual void onKeyDown(AInput::Key key);
     virtual void onKeyRepeat(AInput::Key key);
     virtual void onKeyUp(AInput::Key key);

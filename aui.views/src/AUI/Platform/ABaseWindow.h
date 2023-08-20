@@ -282,7 +282,7 @@ public:
      */
     bool shouldDisplayHoverAnimations() const;
 
-    void onScroll(const AScrollEvent& event) override;
+    void onMouseScroll(const AScrollEvent& event) override;
 
     /**
      * @brief Updates cursor by triggering onPointerMove on the same position (mMousePos).
