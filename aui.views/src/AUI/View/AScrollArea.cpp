@@ -158,3 +158,11 @@ bool AScrollArea::onGesture(const glm::ivec2 &origin, const AGestureEvent &event
     return AViewContainer::onGesture(origin, event);
 }
 
+void AScrollArea::onPointerPressed(const APointerPressedEvent& event) {
+    AViewContainer::onPointerPressed(event);
+}
+
+void AScrollArea::onPointerReleased(const APointerReleasedEvent& event) {
+    AViewContainer::onPointerReleased(event);
+}
+
