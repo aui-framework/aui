@@ -61,6 +61,7 @@
 #include <AUI/View/AText.h>
 #include <AUI/View/ADrawableView.h>
 #include <AUI/Traits/platform.h>
+#include <dlfcn.h>
 
 using namespace declarative;
 
@@ -170,6 +171,18 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 }
                 ).withExpanding(),
     });
+
+
+    ALogger::info("Pidor") << "dlopen() = " << dlopen("/usr/lib64/libSDL-1.2.so.0", RTLD_NOW);
+
+    auto fp = fopen("/proc/self/maps", "rt");
+
+    char buf[0x1000];
+    while (fgets(buf, sizeof buf, fp)) {
+        ALogger::info("Pidor") << buf;
+    }
+
+    fclose(fp);
 }
 
 bool ExampleWindow::onDragEnter(const ADragNDrop::EnterEvent& event) {

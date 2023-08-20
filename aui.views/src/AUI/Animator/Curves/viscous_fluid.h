@@ -43,10 +43,10 @@ namespace aui::animation_curves {
     float ViscousFluid::operator()(float input) {
 
         // must be set to 1.0 (used in viscousFluid())
-        constexpr float VISCOUS_FLUID_NORMALIZE = 1.0f / viscousFluid(1.0f);
+        const float VISCOUS_FLUID_NORMALIZE = 1.0f / viscousFluid(1.0f);
 
         // account for very small floating-point error
-        constexpr float VISCOUS_FLUID_OFFSET = 1.0f - VISCOUS_FLUID_NORMALIZE * viscousFluid(1.0f);
+        const float VISCOUS_FLUID_OFFSET = 1.0f - VISCOUS_FLUID_NORMALIZE * viscousFluid(1.0f);
 
         float interpolated = VISCOUS_FLUID_NORMALIZE * viscousFluid(input);
         if (interpolated > 0) {
