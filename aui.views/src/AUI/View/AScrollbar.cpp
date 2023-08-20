@@ -178,10 +178,9 @@ void AScrollbar::onMouseScroll(const AScrollEvent& event) {
     // scroll 3 lines of text
     emit triggeredManually;
     auto prevScroll = getCurrentScroll();
-    const auto MULTIPLIER = 11_pt * 3.f / 120.f;
-    setScroll(mCurrentScroll + event.delta.y * MULTIPLIER);
+    setScroll(mCurrentScroll + event.delta.y);
     auto delta = getCurrentScroll() - prevScroll;
-    event.delta.y -= delta / MULTIPLIER;
+    event.delta.y -= delta;
 }
 
 static int getButtonScrollSpeed() noexcept {
@@ -243,8 +242,8 @@ float AScrollbar::getAvailableSpaceForSpacer() {
     return 0;
 }
 
-void AScrollbarHandle::onPointerMove(glm::ivec2 pos) {
-    AView::onPointerMove(pos);
+void AScrollbarHandle::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) {
+    AView::onPointerMove(pos, event);
     if (mDragging) {
         switch (mScrollbar.mDirection) {
             case ALayoutDirection::HORIZONTAL:

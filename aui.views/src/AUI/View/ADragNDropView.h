@@ -23,7 +23,7 @@ class API_AUI_VIEWS ADragNDropView: public AViewContainer {
 public:
     ADragNDropView();
 
-    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) override;
 
 private:
     bool mDnDInProgress = false;

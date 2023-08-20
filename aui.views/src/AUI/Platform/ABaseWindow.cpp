@@ -243,6 +243,18 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     APointerReleasedEvent copy = event;
     copy.triggerClick = !mPreventClickOnPointerRelease.valueOr(true);
     mPreventClickOnPointerRelease.reset();
+
+    // handle touchscreen scroll
+    if (event.pointerIndex.isFinger()) {
+        if (auto it = std::find_if(mScrollers.begin(), mScrollers.end(), [&](const Scroller& scroller) {
+                return event.pointerIndex == scroller.pointer;
+            }); it != mScrollers.end()) {
+            it->scroller.handlePointerReleased(event);
+        } else {
+            ALogger::warn(LOG_TAG) << "ABaseWindow::onPointerReleased is unable to find finger " << event.pointerIndex;
+        }
+    }
+
     AViewContainer::onPointerReleased(copy);
 
     // AView::onPointerMove handles cursor shape; need extra call in order to flush
@@ -250,15 +262,15 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
 }
 
 void ABaseWindow::forceUpdateCursor() {
-    AViewContainer::onPointerMove(mMousePos);
+    AViewContainer::onPointerMove(mMousePos, {});
 }
 
 void ABaseWindow::onMouseScroll(const AScrollEvent& event) {
     AViewContainer::onMouseScroll(event);
-    AViewContainer::onPointerMove(mMousePos); // update hovers inside scrollarea
+    AViewContainer::onPointerMove(mMousePos, {event.pointerIndex}); // update hovers inside scrollarea
 }
 
-void ABaseWindow::onPointerMove(glm::ivec2 pos) {
+void ABaseWindow::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) {
     mMousePos = pos;
     mCursor = ACursor::DEFAULT;
 
@@ -267,18 +279,21 @@ void ABaseWindow::onPointerMove(glm::ivec2 pos) {
         if (auto it = std::find_if(mScrollers.begin(), mScrollers.end(), [&](const Scroller& scroller) {
                 return event.pointerIndex == scroller.pointer;
             }); it != mScrollers.end()) {
-            ALogger::warn(LOG_TAG) << "Previous ABaseWindow::onPointerPressed was not cancelled with release event for this finder! " << it->pointer;
-            mScrollers.erase(it);
+            auto d = it->scroller.handlePointerMove(pos);
+            if (d != glm::ivec2(0, 0)) {
+                onMouseScroll(AScrollEvent {
+                    .origin       = it->scroller.origin(),
+                    .delta        = d,
+                    .kinetic      = false,
+                    .pointerIndex = event.pointerIndex,
+                });
+            }
+        } else {
+            ALogger::warn(LOG_TAG) << "ABaseWindow::onPointerMove is unable to find finger " << event.pointerIndex;
         }
-        ATouchScroller scroller;
-        scroller.handlePointerPressed(event);
-        mScrollers.push_back({
-                                     .pointer = event.pointerIndex,
-                                     .scroller = std::move(scroller),
-                             });
     }
 
-    AViewContainer::onPointerMove(pos);
+    AViewContainer::onPointerMove(pos, event);
 
     emit mouseMove(pos);
 }

@@ -174,7 +174,7 @@ bool AEmbedAuiWrap::isUIConsumesMouseAt(int x, int y) {
 
 void AEmbedAuiWrap::onPointerMove(int x, int y) {
     mContainer->makeCurrent();
-    mContainer->onPointerMove(glm::ivec2{ x, y });
+    mContainer->onPointerMove(glm::ivec2{ x, y }, {APointerIndex::button(AInput::LBUTTON)});
 }
 
 

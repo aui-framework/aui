@@ -15,16 +15,53 @@
 //  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ATouchScroller.h"
+#include <glm/gtx/norm.hpp>
 
 void ATouchScroller::handlePointerPressed(const APointerPressedEvent& e) {
     assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
+    mState = WaitingForThresholdState {
+        .pointer = e.pointerIndex,
+        .origin  = e.position,
+    };
 }
 
 void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
     assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
+    mState = std::nullopt;
 }
 
 glm::ivec2 ATouchScroller::handlePointerMove(glm::ivec2 pos) {
-    return glm::ivec2();
+    if (std::holds_alternative<std::nullopt_t>(mState)) {
+        return {0, 0};
+    }
+
+    if (auto s = std::get_if<WaitingForThresholdState>(&mState)) {
+        if (glm::distance2(glm::vec2(s->origin), glm::vec2(pos)) < std::pow(THRESHOLD.getValuePx(), 2)) {
+            return {0, 0};
+        }
+        mState = ScrollingState{
+            .pointer          = s->pointer,
+            .origin           = s->origin,
+            .previousPosition = s->origin,
+        };
+    }
+
+    auto& s = std::get<ScrollingState>(mState);
+    auto delta = s.previousPosition - pos;
+    s.previousPosition = pos;
+    
+    return delta;
+}
+
+glm::ivec2 ATouchScroller::origin() const noexcept {
+    return std::visit(aui::lambda_overloaded {
+        [](const auto& r) -> glm::ivec2 {
+            return r.origin;
+        },
+        [](std::nullopt_t) -> glm::ivec2 {
+            assert((0, "ATouchScroller::origin is called in invalid state"));
+            return {0, 0};
+        },
+    }, mState);
 }
 

@@ -29,7 +29,7 @@ public:
     class Handle: public AView {}; // embed class for styling
 
     ASlider();
-    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) override;
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
     void updateLayout() override;

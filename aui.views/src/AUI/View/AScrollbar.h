@@ -41,7 +41,7 @@ private:
 
 public:
     void setSize(glm::ivec2 size) override;
-    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) override;
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
     void setOverridenSize(int overridenSize) {

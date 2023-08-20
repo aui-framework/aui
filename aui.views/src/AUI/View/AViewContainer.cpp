@@ -158,8 +158,8 @@ void AViewContainer::onMouseEnter() {
     AView::onMouseEnter();
 }
 
-void AViewContainer::onPointerMove(glm::ivec2 pos) {
-    AView::onPointerMove(pos);
+void AViewContainer::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) {
+    AView::onPointerMove(pos, event);
 
     auto viewUnderPointer = getViewAt(pos);
     auto targetView = isPressed() ? mFocusChainTarget.lock() : viewUnderPointer;
@@ -170,7 +170,7 @@ void AViewContainer::onPointerMove(glm::ivec2 pos) {
 
     if (targetView) {
         auto mousePos = pos - targetView->getPosition();
-        targetView->onPointerMove(mousePos);
+        targetView->onPointerMove(mousePos, event);
     }
 
     for (auto& v: mViews) {

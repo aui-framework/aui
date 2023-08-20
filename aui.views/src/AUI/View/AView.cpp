@@ -335,7 +335,7 @@ void AView::onMouseEnter()
 }
 
 
-void AView::onPointerMove(glm::ivec2 pos)
+void AView::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event)
 {
     AWindow::current()->setCursor(mCursor);
 }
@@ -586,15 +586,6 @@ bool AView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
 }
 bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event) {
     return std::visit(aui::lambda_overloaded {
-        [&](const AFingerDragEvent& e) {
-            AScrollEvent scrollEvent {
-                .origin = origin,
-                .delta = e.delta,
-                .kinetic = e.kinetic,
-            };
-            onMouseScroll(scrollEvent);
-            return glm::ivec2(e.delta) != scrollEvent.delta;
-        },
         [&](const ALongPressEvent& e) {
             auto menuModel = composeContextMenu();
             bool result = false;

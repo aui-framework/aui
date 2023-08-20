@@ -20,6 +20,7 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Logging/ALogger.h>
+#include <unordered_map>
 
 static void runOnGLThread(std::function<void()> callback) {
     AUI_NULLSAFE(AWindow::current())->getThread()->enqueue(std::move(callback));
@@ -48,15 +49,10 @@ Java_com_github_aui_android_AuiView_handleLongPress(JNIEnv *env, jclass clazz, j
     });
 }
 
-static glm::ivec2 gestureOriginPos{0, 0};
-static glm::ivec2 scrollPrevValue{0, 0};
-
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_AuiView_handlePointerButtonDown(JNIEnv *env, jclass clazz, jint x,
                                                           jint y, jint pointerId) {
-    ALogger::info("Test") << "down " << x << ", " << y << " " << pointerId;
-    scrollPrevValue = gestureOriginPos = {x, y};
     runOnGLThread([=] {
         AUI_NULLSAFE(AWindow::current())->onPointerPressed({{x, y}, APointerIndex::finger(pointerId)});
     });
@@ -65,7 +61,6 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_AuiView_handlePointerButtonUp(JNIEnv *env, jclass clazz, jint x,
                                                         jint y, jint pointerId) {
-    ALogger::info("Test") << "up " << x << ", " << y << " " << pointerId;
     runOnGLThread([=] {
         AUI_NULLSAFE(AWindow::current())->onPointerReleased({{x, y}, APointerIndex::finger(pointerId)});
     });
@@ -75,8 +70,15 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_AuiView_handlePointerMove(JNIEnv *env, jclass clazz, jint x,
                                                     jint y, jint pointerId) {
-    ALogger::info("Test") << "move " << x << ", " << y << " " << pointerId;
+    // android sends move events for all fingers even if just one finger moved.
+    static std::unordered_map<jint /* pointerIndex */, glm::ivec2> prevValues;
+    glm::ivec2 currentValue{x, y};
+    if (prevValues[pointerId] == currentValue) {
+        return;
+    }
+    prevValues[pointerId] = currentValue;
+
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onPointerMove({x, y}, APointerIndex::finger(pointerId));
+        AUI_NULLSAFE(AWindow::current())->onPointerMove(currentValue, {APointerIndex::finger(pointerId)});
     });
 }

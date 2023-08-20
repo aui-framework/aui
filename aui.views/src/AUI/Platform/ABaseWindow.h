@@ -142,7 +142,7 @@ public:
     void updateFocusChain();
     void onPointerPressed(const APointerPressedEvent& event) override;
 
-    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) override;
 
     void closeOverlappingSurfacesOnClick();
 

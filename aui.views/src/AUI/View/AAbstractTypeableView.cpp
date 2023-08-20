@@ -351,9 +351,9 @@ void AAbstractTypeableView::onPointerPressed(const APointerPressedEvent& event)
     updateCursorBlinking();
 }
 
-void AAbstractTypeableView::onPointerMove(glm::ivec2 pos)
+void AAbstractTypeableView::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event)
 {
-    AView::onPointerMove(pos);
+    AView::onPointerMove(pos, event);
     ACursorSelectable::handleMouseMove(pos);
 }
 

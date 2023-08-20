@@ -46,6 +46,7 @@
 #include <AUI/Event/AGestureEvent.h>
 #include <AUI/Event/APointerPressedEvent.h>
 #include <AUI/Event/APointerReleasedEvent.h>
+#include <AUI/Event/APointerMoveEvent.h>
 
 
 class Render;
@@ -790,7 +791,7 @@ public:
      * If the view is pressed, it would still received move events. Use AView::isMouseHover to check is the pointer
      * actually over view or not. See AView::onPointerReleased for more info.
      */
-    virtual void onPointerMove(glm::ivec2 pos);
+    virtual void onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event);
     virtual void onMouseLeave();
     virtual void onDpiChanged();
 

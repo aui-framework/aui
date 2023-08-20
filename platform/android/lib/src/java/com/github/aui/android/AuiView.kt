@@ -114,7 +114,7 @@ class AuiView(context: Context) : GLSurfaceView(context) {
             return true
         }
         val index = event.actionIndex
-        when (event.action) {
+        when (event.action and MotionEvent.ACTION_MASK) {
             MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> handlePointerButtonDown(event.getX(index).toInt(), event.getY(index).toInt(), index)
             MotionEvent.ACTION_MOVE -> {
                 for (i in 0 until event.pointerCount) {

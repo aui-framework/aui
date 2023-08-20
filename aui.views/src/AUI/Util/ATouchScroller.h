@@ -30,7 +30,7 @@
  * To use this class, you have to pass APointerPressedEvent APointerReleasedEvent to handlePointerPressed and handlePointerReleased
  * methods accordingly. To receive scroll value, use handlePointerMove method.
  */
-class ATouchScroller {
+class API_AUI_VIEWS ATouchScroller {
 public:
     /**
      * @brief Distance that pointer have to pass in order to treat pointer move events as scroll events.
@@ -55,6 +55,9 @@ public:
      * @return the amount of scroll in pixels.
      */
     glm::ivec2 handlePointerMove(glm::ivec2 pos);
+
+    [[nodiscard]]
+    glm::ivec2 origin() const noexcept;
 
 private:
     struct WaitingForThresholdState {
