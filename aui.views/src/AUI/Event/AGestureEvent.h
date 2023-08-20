@@ -28,10 +28,5 @@ struct ALongPressEvent {
     mutable bool handled = false;
 };
 
-struct AFingerDragEvent {
-    glm::vec2 delta;
-    bool kinetic = false;
-};
 
-
-using AGestureEvent = std::variant<ALongPressEvent, AFingerDragEvent>;
+using AGestureEvent = std::variant<ALongPressEvent>;

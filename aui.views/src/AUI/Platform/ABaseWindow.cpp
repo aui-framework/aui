@@ -27,11 +27,14 @@
 #include <AUI/Util/kAUI.h>
 #include <chrono>
 #include "APlatform.h"
+#include "AUI/Logging/ALogger.h"
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Util/ALayoutInflater.h>
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/UITestState.h>
+
+static constexpr auto LOG_TAG = "ABaseWindow";
 
 ABaseWindow::ABaseWindow() {
     mDpiRatio = APlatform::getDpiRatio();
@@ -184,6 +187,23 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     mPreventClickOnPointerRelease.emplace(false);
     auto focusCopy = mFocusedView.lock();
     mIgnoreTouchscreenKeyboardRequests = false;
+
+    // handle touchscreen scroll
+    if (event.pointerIndex.isFinger()) {
+        if (auto it = std::find_if(mScrollers.begin(), mScrollers.end(), [&](const Scroller& scroller) {
+                return event.pointerIndex == scroller.pointer;
+            }); it != mScrollers.end()) {
+            ALogger::warn(LOG_TAG) << "Previous ABaseWindow::onPointerPressed was not cancelled with release event for this finder! " << it->pointer;
+            mScrollers.erase(it);
+        }
+        ATouchScroller scroller;
+        scroller.handlePointerPressed(event);
+        mScrollers.push_back({
+            .pointer = event.pointerIndex,
+            .scroller = std::move(scroller),
+        });
+    }
+
     AViewContainer::onPointerPressed(event);
 
     if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
@@ -241,6 +261,23 @@ void ABaseWindow::onMouseScroll(const AScrollEvent& event) {
 void ABaseWindow::onPointerMove(glm::ivec2 pos) {
     mMousePos = pos;
     mCursor = ACursor::DEFAULT;
+
+    // handle touchscreen scroll
+    if (event.pointerIndex.isFinger()) {
+        if (auto it = std::find_if(mScrollers.begin(), mScrollers.end(), [&](const Scroller& scroller) {
+                return event.pointerIndex == scroller.pointer;
+            }); it != mScrollers.end()) {
+            ALogger::warn(LOG_TAG) << "Previous ABaseWindow::onPointerPressed was not cancelled with release event for this finder! " << it->pointer;
+            mScrollers.erase(it);
+        }
+        ATouchScroller scroller;
+        scroller.handlePointerPressed(event);
+        mScrollers.push_back({
+                                     .pointer = event.pointerIndex,
+                                     .scroller = std::move(scroller),
+                             });
+    }
+
     AViewContainer::onPointerMove(pos);
 
     emit mouseMove(pos);

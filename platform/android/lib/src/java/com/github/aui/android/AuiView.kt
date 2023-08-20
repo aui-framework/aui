@@ -44,9 +44,6 @@ class AuiView(context: Context) : GLSurfaceView(context) {
         private external fun handlePointerMove(x: Int, y: Int, pointerId: Int)
 
         @JvmStatic
-        private external fun handleKineticScroll(x: Int, y: Int)
-
-        @JvmStatic
         private external fun handleInit(internalStoragePath: String)
 
         @JvmStatic
@@ -66,18 +63,18 @@ class AuiView(context: Context) : GLSurfaceView(context) {
                 return true
             }
 
+            override fun onScroll(
+                e1: MotionEvent?,
+                e2: MotionEvent?,
+                distanceX: Float,
+                distanceY: Float
+            ): Boolean {
+                return true
+            }
+
             override fun onShowPress(motionEvent: MotionEvent) {}
             override fun onSingleTapUp(motionEvent: MotionEvent): Boolean {
                 return false
-            }
-
-            override fun onMouseScroll(
-                motionEvent: MotionEvent,
-                motionEvent1: MotionEvent,
-                velX: Float,
-                velY: Float
-            ): Boolean {
-                return true
             }
 
             override fun onLongPress(event: MotionEvent) {

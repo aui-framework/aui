@@ -89,3 +89,29 @@ private:
 
     explicit constexpr APointerIndex(unsigned value) : mValue(value) {}
 };
+
+
+inline std::ostream& operator<<(std::ostream& o, const APointerIndex& color) {
+    o << "APointerIndex{";
+    if (auto b = color.button()) {
+        o << "button=";
+        switch (*b) {
+            case AInput::LBUTTON:
+                o << "l";
+                break;
+            case AInput::RBUTTON:
+                o << "r";
+                break;
+            case AInput::CBUTTON:
+                o << "c";
+                break;
+            default:
+                o << (int)*b;
+                break;
+        }
+    } else if (auto b = color.finger()) {
+        o << "finder=" << *b;
+    }
+    o << "}";
+    return o;
+}

@@ -17,17 +17,14 @@
 #include "ATouchScroller.h"
 
 void ATouchScroller::handlePointerPressed(const APointerPressedEvent& e) {
-    if (!e.pointerIndex.isFinger()) {
-        return;
-    }
+    assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
 }
 
 void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
-    if (!e.pointerIndex.isFinger()) {
-        return;
-    }
+    assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
 }
 
 glm::ivec2 ATouchScroller::handlePointerMove(glm::ivec2 pos) {
-
+    return glm::ivec2();
 }
+

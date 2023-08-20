@@ -24,6 +24,7 @@
 #include "AWindowManager.h"
 #include "AOverlappingSurface.h"
 #include "ADragNDrop.h"
+#include "AUI/Util/ATouchScroller.h"
 #include <optional>
 
 namespace testing {
@@ -332,6 +333,16 @@ private:
 
     glm::ivec2 mMousePos = {0, 0};
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
+
+    struct Scroller {
+        APointerIndex pointer;
+        ATouchScroller scroller;
+    };
+
+    /**
+     * @brief Helper structs to handle touchscreen scroll events.
+     */
+    ASmallVector<Scroller, 4> mScrollers;
 };
 
 

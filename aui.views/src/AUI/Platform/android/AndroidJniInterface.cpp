@@ -58,7 +58,7 @@ Java_com_github_aui_android_AuiView_handlePointerButtonDown(JNIEnv *env, jclass 
     ALogger::info("Test") << "down " << x << ", " << y << " " << pointerId;
     scrollPrevValue = gestureOriginPos = {x, y};
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onPointerPressed({{x, y}, APointerIndex::finger(0)});
+        AUI_NULLSAFE(AWindow::current())->onPointerPressed({{x, y}, APointerIndex::finger(pointerId)});
     });
 }
 extern "C"
@@ -67,7 +67,7 @@ Java_com_github_aui_android_AuiView_handlePointerButtonUp(JNIEnv *env, jclass cl
                                                         jint y, jint pointerId) {
     ALogger::info("Test") << "up " << x << ", " << y << " " << pointerId;
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onPointerReleased({{x, y}, APointerIndex::finger(0)});
+        AUI_NULLSAFE(AWindow::current())->onPointerReleased({{x, y}, APointerIndex::finger(pointerId)});
     });
 }
 
@@ -77,39 +77,6 @@ Java_com_github_aui_android_AuiView_handlePointerMove(JNIEnv *env, jclass clazz,
                                                     jint y, jint pointerId) {
     ALogger::info("Test") << "move " << x << ", " << y << " " << pointerId;
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onPointerMove({x, y});
-    });
-}
-
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_github_aui_android_AuiView_handleKineticScroll(JNIEnv *env, jclass clazz, jint x, jint y) {
-    glm::ivec2 current = {x, y};
-
-    if (current == glm::ivec2(0)) return;
-
-    auto delta = scrollPrevValue - current;
-    scrollPrevValue = current;
-    AUI_NULLSAFE(AWindow::current())->onGesture(gestureOriginPos,
-                                                AFingerDragEvent{
-        .delta = delta,
-        .kinetic = true,
-    });
-}
-
-extern "C"
-JNIEXPORT void JNICALL
-Java_com_github_aui_android_AuiView_handleScroll(JNIEnv *env, jclass clazz,
-                                                 jint originX,
-                                                 jint originY,
-                                                 jfloat velX,
-                                                 jfloat velY,
-                                                 jint pointerId) {
-    ALogger::info("Test") << "scroll " << pointerId;
-    runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onGesture({originX, originY}, AFingerDragEvent{
-            .delta = {velX, velY}
-        });
+        AUI_NULLSAFE(AWindow::current())->onPointerMove({x, y}, APointerIndex::finger(pointerId));
     });
 }

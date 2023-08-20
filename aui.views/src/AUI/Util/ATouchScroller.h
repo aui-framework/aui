@@ -21,6 +21,7 @@
 #include "AUI/Event/APointerPressedEvent.h"
 #include "AUI/Event/APointerReleasedEvent.h"
 #include "AMetric.h"
+#include "AUI/Event/AScrollEvent.h"
 
 /**
  * @brief Utility object that helps with touchscreen scroll events.
@@ -35,6 +36,8 @@ public:
      * @brief Distance that pointer have to pass in order to treat pointer move events as scroll events.
      */
     static constexpr AMetric THRESHOLD = 8_dp;
+
+    ATouchScroller() = default;
 
     /**
      * @brief Handles pointer pressed events.
@@ -64,5 +67,5 @@ private:
         glm::ivec2 previousPosition; // to calculate velocity
     };
 
-    std::variant<std::nullopt_t, WaitingForThresholdState, ScrollingState> mState;
+    std::variant<std::nullopt_t, WaitingForThresholdState, ScrollingState> mState = std::nullopt;
 };
