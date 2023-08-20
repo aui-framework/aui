@@ -129,6 +129,160 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                           "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
                                           "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
                                 TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
                 }
                 ).withExpanding(),
         AScrollArea::Builder().withContents(
@@ -168,21 +322,93 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                           "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
                                           "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
                                 TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
+                        AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style{
+                                TextAlign::JUSTIFY},
                 }
                 ).withExpanding(),
     });
-
-
-    ALogger::info("Pidor") << "dlopen() = " << dlopen("/usr/lib64/libSDL-1.2.so.0", RTLD_NOW);
-
-    auto fp = fopen("/proc/self/maps", "rt");
-
-    char buf[0x1000];
-    while (fgets(buf, sizeof buf, fp)) {
-        ALogger::info("Pidor") << buf;
-    }
-
-    fclose(fp);
 }
 
 bool ExampleWindow::onDragEnter(const ADragNDrop::EnterEvent& event) {

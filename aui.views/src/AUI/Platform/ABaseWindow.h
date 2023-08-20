@@ -334,7 +334,7 @@ private:
     glm::ivec2 mMousePos = {0, 0};
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
 
-    struct Scroller {
+    struct Scroll {
         APointerIndex pointer;
         ATouchScroller scroller;
     };
@@ -342,7 +342,7 @@ private:
     /**
      * @brief Helper structs to handle touchscreen scroll events.
      */
-    ASmallVector<Scroller, 4> mScrollers;
+    ASmallVector<Scroll, 10 /* typical max number of fingers */> mScrolls;
 };
 
 

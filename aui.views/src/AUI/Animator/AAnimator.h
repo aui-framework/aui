@@ -25,6 +25,8 @@
 
 class AView;
 
+using AAnimationCurve = std::function<float(float)>;
+
 class API_AUI_VIEWS AAnimator {
 private:
     AView* mView = nullptr;
@@ -37,7 +39,7 @@ private:
 
     std::chrono::milliseconds mLastFrameTime = std::chrono::milliseconds(0);
 
-    std::function<float(float)> mCurve = aui::animation_curves::Standard();
+    AAnimationCurve mCurve = aui::animation_curves::Standard();
 
 protected:
     /**

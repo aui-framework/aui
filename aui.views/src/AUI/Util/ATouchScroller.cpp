@@ -27,11 +27,20 @@ void ATouchScroller::handlePointerPressed(const APointerPressedEvent& e) {
 
 void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
     assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
-    mState = std::nullopt;
+    if (auto s = std::get_if<ScrollingState>(&mState)) {
+        mState = KineticScrollingState{
+            .pointer = e.pointerIndex,
+            .origin = s->origin,
+            .distance = glm::vec2(s->previousPosition2 - e.position) * 60.f,
+        };
+    }
 }
 
 glm::ivec2 ATouchScroller::handlePointerMove(glm::ivec2 pos) {
     if (std::holds_alternative<std::nullopt_t>(mState)) {
+        return {0, 0};
+    }
+    if (std::holds_alternative<KineticScrollingState>(mState)) {
         return {0, 0};
     }
 
@@ -48,6 +57,7 @@ glm::ivec2 ATouchScroller::handlePointerMove(glm::ivec2 pos) {
 
     auto& s = std::get<ScrollingState>(mState);
     auto delta = s.previousPosition - pos;
+    s.previousPosition2 = s.previousPosition;
     s.previousPosition = pos;
     
     return delta;
@@ -63,5 +73,22 @@ glm::ivec2 ATouchScroller::origin() const noexcept {
             return {0, 0};
         },
     }, mState);
+}
+
+glm::ivec2 ATouchScroller::gatherKineticScrollValue() {
+    using namespace std::chrono;
+
+    if (auto s = std::get_if<KineticScrollingState>(&mState)) {
+        const auto now = high_resolution_clock::now();
+        const auto timeDelta = duration_cast<milliseconds>(now - s->beginTime);
+        if (timeDelta >= DURATION) {
+            return {0, 0};
+        }
+        auto newDistance = s->distance * s->curve(float(timeDelta.count()) / float(DURATION.count()));
+        auto result = newDistance - s->prevDistance;
+        s->prevDistance = newDistance;
+        return result;
+    }
+    return {0, 0};
 }
 

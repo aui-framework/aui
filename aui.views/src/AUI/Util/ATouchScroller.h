@@ -22,6 +22,7 @@
 #include "AUI/Event/APointerReleasedEvent.h"
 #include "AMetric.h"
 #include "AUI/Event/AScrollEvent.h"
+#include "AUI/Animator/Curves/linear.h"
 
 /**
  * @brief Utility object that helps with touchscreen scroll events.
@@ -32,6 +33,9 @@
  */
 class API_AUI_VIEWS ATouchScroller {
 public:
+    using AnimationCurve = aui::animation_curves::Linear;
+    static constexpr auto DURATION = std::chrono::milliseconds(2500);
+
     /**
      * @brief Distance that pointer have to pass in order to treat pointer move events as scroll events.
      */
@@ -59,6 +63,14 @@ public:
     [[nodiscard]]
     glm::ivec2 origin() const noexcept;
 
+    /**
+     * @return Value for kinetic scroll.
+     * @details
+     * This method should be called every render frame in order to make continuous kinetic scroll.
+     */
+    [[nodiscard]]
+    glm::ivec2 gatherKineticScrollValue();
+
 private:
     struct WaitingForThresholdState {
         APointerIndex pointer;
@@ -68,7 +80,17 @@ private:
         APointerIndex pointer;
         glm::ivec2 origin;
         glm::ivec2 previousPosition; // to calculate velocity
+        glm::ivec2 previousPosition2 = glm::ivec2(0, 0);
     };
 
-    std::variant<std::nullopt_t, WaitingForThresholdState, ScrollingState> mState = std::nullopt;
+    struct KineticScrollingState {
+        APointerIndex pointer;
+        glm::ivec2 origin;
+        glm::vec2 distance;
+        glm::vec2 prevDistance = glm::vec2(0, 0);
+        AnimationCurve curve;
+        std::chrono::high_resolution_clock::time_point beginTime = std::chrono::high_resolution_clock::now();
+    };
+
+    std::variant<std::nullopt_t, WaitingForThresholdState, ScrollingState, KineticScrollingState> mState = std::nullopt;
 };

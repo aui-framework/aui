@@ -190,15 +190,15 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
 
     // handle touchscreen scroll
     if (event.pointerIndex.isFinger()) {
-        if (auto it = std::find_if(mScrollers.begin(), mScrollers.end(), [&](const Scroller& scroller) {
-                return event.pointerIndex == scroller.pointer;
-            }); it != mScrollers.end()) {
+        if (auto it = std::find_if(mScrolls.begin(), mScrolls.end(), [&](const Scroll& scroll) {
+                return event.pointerIndex == scroll.pointer;
+            }); it != mScrolls.end()) {
             ALogger::warn(LOG_TAG) << "Previous ABaseWindow::onPointerPressed was not cancelled with release event for this finder! " << it->pointer;
-            mScrollers.erase(it);
+            mScrolls.erase(it);
         }
         ATouchScroller scroller;
         scroller.handlePointerPressed(event);
-        mScrollers.push_back({
+        mScrolls.push_back({
             .pointer = event.pointerIndex,
             .scroller = std::move(scroller),
         });
@@ -246,9 +246,9 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
 
     // handle touchscreen scroll
     if (event.pointerIndex.isFinger()) {
-        if (auto it = std::find_if(mScrollers.begin(), mScrollers.end(), [&](const Scroller& scroller) {
+        if (auto it = std::find_if(mScrolls.begin(), mScrolls.end(), [&](const Scroll& scroller) {
                 return event.pointerIndex == scroller.pointer;
-            }); it != mScrollers.end()) {
+            }); it != mScrolls.end()) {
             it->scroller.handlePointerReleased(event);
         } else {
             ALogger::warn(LOG_TAG) << "ABaseWindow::onPointerReleased is unable to find finger " << event.pointerIndex;
@@ -276,9 +276,9 @@ void ABaseWindow::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) 
 
     // handle touchscreen scroll
     if (event.pointerIndex.isFinger()) {
-        if (auto it = std::find_if(mScrollers.begin(), mScrollers.end(), [&](const Scroller& scroller) {
+        if (auto it = std::find_if(mScrolls.begin(), mScrolls.end(), [&](const Scroll& scroller) {
                 return event.pointerIndex == scroller.pointer;
-            }); it != mScrollers.end()) {
+            }); it != mScrolls.end()) {
             auto d = it->scroller.handlePointerMove(pos);
             if (d != glm::ivec2(0, 0)) {
                 onMouseScroll(AScrollEvent {
@@ -324,6 +324,18 @@ void ABaseWindow::flagUpdateLayout() {
 }
 
 void ABaseWindow::render() {
+    for (auto& scroll : mScrolls) {
+        if (auto delta = scroll.scroller.gatherKineticScrollValue(); delta != glm::ivec2(0, 0)) {
+            onMouseScroll(AScrollEvent {
+                .origin       = scroll.scroller.origin(),
+                .delta        = delta,
+                .kinetic      = true,
+                .pointerIndex = scroll.pointer,
+            });
+            flagRedraw();
+        }
+    }
+
     AViewContainer::render();
     mIgnoreTouchscreenKeyboardRequests = false;
 
