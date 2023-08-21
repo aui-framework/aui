@@ -132,23 +132,20 @@ AByteBuffer ACurl::Builder::toByteBuffer() {
 }
 
 ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AString>>& params) {
-    mUrl.reserve(std::accumulate(params.begin(), params.end(), mUrl.size() + 1, [](std::size_t l, const std::pair<AString, AString>& p) {
+    AString paramsString;
+    paramsString.reserve(std::accumulate(params.begin(), params.end(), 1, [](std::size_t l, const std::pair<AString, AString>& p) {
         return l + p.first.size() + p.second.size() + 2;
     }));
 
-    bool first = true;
-
     for (const auto&[key, value] : params) {
-        if (first) {
-            mUrl += '?';
-            first = false;
-        } else {
-            mUrl += '&';
+        if (!paramsString.empty()) {
+            paramsString += '&';
         }
-        mUrl += key;
-        mUrl += "=";
-        mUrl += value;
+        paramsString += key;
+        paramsString += "=";
+        paramsString += value;
     }
+    mParams = std::move(paramsString);
 
     return *this;
 }
@@ -171,10 +168,31 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
     builder.mCURL = nullptr;
 
 
-    auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
-    assert(res == 0);
+    switch (builder.mMethod) {
+        case Method::GET: {
+            std::string url = builder.mUrl.toStdString();
+            if (!builder.mParams.empty()) {
+                url += '?';
+                url += builder.mParams.toStdString();
+            }
+            auto res = curl_easy_setopt(mCURL, CURLOPT_URL, url.c_str());
+            assert(res == 0);
+            break;
+        }
 
-	res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
+        case Method::POST: {
+            auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
+            assert(res == 0);
+            res = curl_easy_setopt(mCURL, CURLOPT_POST, true);
+            assert(res == 0);
+            mPostFieldsStorage = builder.mParams.toStdString();
+            res = curl_easy_setopt(mCURL, CURLOPT_POSTFIELDS, mPostFieldsStorage.c_str());
+            assert(res == 0);
+            break;
+        }
+    }
+
+	auto res = curl_easy_setopt(mCURL, CURLOPT_ERRORBUFFER, mErrorBuffer);
     assert(res == 0);
     res = curl_easy_setopt(mCURL, CURLOPT_WRITEDATA, this);
 	assert(res == 0);

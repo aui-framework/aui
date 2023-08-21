@@ -104,6 +104,11 @@ public:
         /* don't forget to update AUI_ENUM_VALUES at the bottom */
     };
 
+    enum class Method {
+        GET,
+        POST,
+    };
+
 
     struct ErrorDescription {
         int curlStatus;
@@ -166,7 +171,8 @@ public:
         HeaderCallback mHeaderCallback;
         bool mThrowExceptionOnError = false;
         AVector<AString> mHeaders;
-        AString mUrl;
+        AString mUrl, mParams;
+        Method mMethod = Method::GET;
 
     public:
         explicit Builder(AString url);
@@ -232,9 +238,29 @@ public:
 
 
         /**
-         * @brief Appends HTTP GET params to the url.
+         * @brief Sets HTTP method to the query.
+         * @details
+         * GET is by default.
          */
-        Builder& withParams(const AVector<std::pair<AString, AString>>& params);
+        Builder& withMethod(Method method) noexcept {
+            mMethod = method;
+            return *this;
+        };
+
+
+        /**
+         * @brief Sets HTTP params to the query.
+         * @param params params map in key,value pairs.
+         */
+        Builder& withParams(const AVector<std::pair<AString /* key */, AString /* value */>>& params);
+
+        /**
+         * @brief Sets HTTP params to the query.
+         */
+        Builder& withParams(AString params) noexcept {
+            mParams = std::move(params);
+            return *this;
+        };
 
         Builder& withHeaders(AVector<AString> headers) {
             mHeaders = std::move(headers);
@@ -311,6 +337,7 @@ private:
     struct curl_slist* mCurlHeaders = nullptr;
     char mErrorBuffer[256];
     bool mCloseRequested = false;
+    std::string mPostFieldsStorage;
 
     static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
     static size_t readCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;

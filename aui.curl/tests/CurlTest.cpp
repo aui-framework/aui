@@ -20,6 +20,7 @@
 
 #include <gtest/gtest.h>
 #include "AUI/Curl/ACurl.h"
+#include "AUI/Json/AJson.h"
 #include "AUI/IO/AFileOutputStream.h"
 #include "AUI/IO/AFileInputStream.h"
 #include "AUI/Curl/AWebsocket.h"
@@ -32,6 +33,13 @@
 TEST(CurlTest, ToByteBuffer) {
     AByteBuffer buffer = ACurl::Builder("https://github.com").toByteBuffer();
     ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
+}
+
+TEST(CurlTest, Post) {
+    auto buffer = AJson::fromBuffer(ACurl::Builder("https://httpbin.org/post")
+            .withMethod(ACurl::Method::POST)
+            .withParams("hello=world").toByteBuffer());
+    EXPECT_STREQ(buffer["form"]["hello"].asString().toStdString().c_str(), "world");
 }
 
 TEST(CurlTest, ToStream) {
