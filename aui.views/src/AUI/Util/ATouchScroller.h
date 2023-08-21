@@ -80,7 +80,7 @@ private:
         APointerIndex pointer;
         glm::ivec2 origin;
         glm::ivec2 previousPosition; // to calculate velocity
-        glm::ivec2 previousPosition2 = glm::ivec2(0, 0);
+        glm::ivec2 currentVelocity;
     };
 
     struct KineticScrollingState {

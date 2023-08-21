@@ -31,7 +31,7 @@ void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
         mState = KineticScrollingState{
             .pointer = e.pointerIndex,
             .origin = s->origin,
-            .distance = glm::vec2(s->previousPosition2 - e.position) * 60.f,
+            .distance = glm::vec2(s->currentVelocity) * 60.f,
         };
     }
 }
@@ -57,7 +57,7 @@ glm::ivec2 ATouchScroller::handlePointerMove(glm::ivec2 pos) {
 
     auto& s = std::get<ScrollingState>(mState);
     auto delta = s.previousPosition - pos;
-    s.previousPosition2 = s.previousPosition;
+    s.currentVelocity = delta;
     s.previousPosition = pos;
     
     return delta;
