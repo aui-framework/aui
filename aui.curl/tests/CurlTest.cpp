@@ -35,11 +35,28 @@ TEST(CurlTest, ToByteBuffer) {
     ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
 }
 
-TEST(CurlTest, Post) {
+TEST(CurlTest, Post1) {
     auto buffer = AJson::fromBuffer(ACurl::Builder("https://httpbin.org/post")
             .withMethod(ACurl::Method::POST)
             .withParams("hello=world").toByteBuffer());
-    EXPECT_STREQ(buffer["form"]["hello"].asString().toStdString().c_str(), "world");
+    try {
+        EXPECT_STREQ(buffer["form"]["hello"].asString().toStdString().c_str(), "world") << AJson::toString(buffer);
+    } catch (...) {
+        FAIL() << "Whoops! " << AJson::toString(buffer);
+    }
+}
+TEST(CurlTest, Post2) {
+    auto buffer = AJson::fromBuffer(ACurl::Builder("https://httpbin.org/post")
+            .withMethod(ACurl::Method::POST)
+            .withHeaders({
+                "Content-Type: application/json; charset=utf-8"
+            })
+            .withBody("[\"hello\"]").toByteBuffer());
+    try {
+        EXPECT_STREQ(buffer["data"].asString().toStdString().c_str(), "[\"hello\"]") << AJson::toString(buffer);
+    } catch (...) {
+        FAIL() << "Whoops! " << AJson::toString(buffer);
+    }
 }
 
 TEST(CurlTest, ToStream) {
