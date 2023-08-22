@@ -184,10 +184,13 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
             auto res = curl_easy_setopt(mCURL, CURLOPT_URL, builder.mUrl.toStdString().c_str());
             assert(res == 0);
             res = curl_easy_setopt(mCURL, CURLOPT_POST, true);
+
             assert(res == 0);
-            mPostFieldsStorage = builder.mParams.toStdString();
-            res = curl_easy_setopt(mCURL, CURLOPT_POSTFIELDS, mPostFieldsStorage.c_str());
-            assert(res == 0);
+            if (!builder.mParams.empty()) {
+                mPostFieldsStorage = builder.mParams.toStdString();
+                res = curl_easy_setopt(mCURL, CURLOPT_POSTFIELDS, mPostFieldsStorage.c_str());
+                assert(res == 0);
+            }
             break;
         }
     }
@@ -198,8 +201,10 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
 	assert(res == 0);
 
     if (mReadCallback) {
-        curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
-        curl_easy_setopt(mCURL, CURLOPT_READFUNCTION, readCallback);
+        res = curl_easy_setopt(mCURL, CURLOPT_READDATA, this);
+        assert(res == 0);
+        res = curl_easy_setopt(mCURL, CURLOPT_READFUNCTION, readCallback);
+        assert(res == 0);
     }
 
     if (!builder.mHeaders.empty()) {
@@ -216,6 +221,12 @@ ACurl& ACurl::operator=(Builder&& builder) noexcept {
         assert(res == CURLE_OK);
         res = curl_easy_setopt(mCURL, CURLOPT_HEADERFUNCTION, ACurl::headerCallback);
         assert(res == CURLE_OK);
+    }
+
+    if (builder.mOnSuccess) {
+        connect(success, [this, success = std::move(builder.mOnSuccess)]() {
+            success(*this);
+        });
     }
 
     return *this;
@@ -336,6 +347,10 @@ Ret ACurl::getInfo(int curlInfo) const {
 
 int64_t ACurl::getContentLength() const {
     return getInfo<curl_off_t>(CURLINFO_CONTENT_LENGTH_DOWNLOAD_T);
+}
+
+AString ACurl::getContentType() const {
+    return getInfo<const char*>(CURLINFO_CONTENT_TYPE);
 }
 
 ACurl::ResponseCode ACurl::getResponseCode() const {
