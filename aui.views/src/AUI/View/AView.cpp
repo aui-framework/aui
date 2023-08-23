@@ -404,7 +404,7 @@ void AView::onPointerDoubleClicked(const APointerPressedEvent& event)
     emit doubleClicked(event.pointerIndex);
 }
 
-void AView::onMouseScroll(const AScrollEvent& event) {
+void AView::onScroll(const AScrollEvent& event) {
     emit scrolled(event.delta);
 }
 

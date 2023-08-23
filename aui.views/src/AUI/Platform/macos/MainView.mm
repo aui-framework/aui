@@ -150,7 +150,7 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
     CGFloat scale = mAWindow->getDpiRatio();
     deltaX *= scale;
     deltaY *= scale;
-    mAWindow->onMouseScroll({
+    mAWindow->onScroll({
         .origin = pos(mAWindow, event),
         .delta = glm::ivec2{ -deltaX, -deltaY }
     });

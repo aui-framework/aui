@@ -257,13 +257,13 @@ void AViewContainer::onPointerDoubleClicked(const APointerPressedEvent& event) {
     }
 }
 
-void AViewContainer::onMouseScroll(const AScrollEvent& event) {
-    AView::onMouseScroll(event);
+void AViewContainer::onScroll(const AScrollEvent& event) {
+    AView::onScroll(event);
     auto p = getViewAt(event.origin);
     if (p && p->isEnabled()) {
         auto eventCopy = event;
         eventCopy.origin -= p->getPosition();
-        p->onMouseScroll(eventCopy);
+        p->onScroll(eventCopy);
     }
 }
 

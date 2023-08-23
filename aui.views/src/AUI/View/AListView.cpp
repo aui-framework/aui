@@ -162,10 +162,10 @@ void AListView::updateScrollbarDimensions() {
             ALayoutDirection::NONE));
 }
 
-void AListView::onMouseScroll(const AScrollEvent& event) {
+void AListView::onScroll(const AScrollEvent& event) {
     if (!mScrollbar) return;
-    //AViewContainer::onMouseScroll(pos, delta);
-    mScrollbar->onMouseScroll(event);
+    //AViewContainer::onScroll(pos, delta);
+    mScrollbar->onScroll(event);
     onPointerMove(event.origin, {event.pointerIndex}); // update hover on scroll
 }
 

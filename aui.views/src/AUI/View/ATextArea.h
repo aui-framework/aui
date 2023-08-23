@@ -45,7 +45,7 @@ public:
 
     int getContentMinimumHeight(ALayoutDirection layout) override;
 
-    void onMouseScroll(const AScrollEvent& event) override;
+    void onScroll(const AScrollEvent& event) override;
 };
 
 

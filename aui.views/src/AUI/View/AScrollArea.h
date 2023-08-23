@@ -59,7 +59,7 @@ public:
 
     bool onGesture(const glm::ivec2 &origin, const AGestureEvent &event) override;
 
-    void onMouseScroll(const AScrollEvent& event) override;
+    void onScroll(const AScrollEvent& event) override;
 
     void setScrollbarAppearance(ScrollbarAppearance scrollbarAppearance) override {
         AViewContainer::setScrollbarAppearance(scrollbarAppearance);

@@ -173,8 +173,8 @@ void AScrollbar::updateScrollHandleOffset(int max) {
     redraw();
 }
 
-void AScrollbar::onMouseScroll(const AScrollEvent& event) {
-    AViewContainer::onMouseScroll(event);
+void AScrollbar::onScroll(const AScrollEvent& event) {
+    AViewContainer::onScroll(event);
     // scroll 3 lines of text
     emit triggeredManually;
     auto prevScroll = getCurrentScroll();

@@ -102,7 +102,7 @@ TEST_F(UIScrollPointerMove, MouseMoveScroll) {
     By::type<ViewMock>().check(averageColor(AColor::BLACK));
     mWindow->onPointerMove(mView->getCenterPointInWindow()); // somewhere over the mView
     By::type<ViewMock>().check(averageColor(AColor::RED));
-    mWindow->onMouseScroll(AScrollEvent {
+    mWindow->onScroll(AScrollEvent {
         .origin  = mView->getCenterPointInWindow(),
         .delta   = { 0, 30 },
         .kinetic = false,
@@ -128,14 +128,14 @@ TEST_F(UIScrollPointerMove, MouseMoveScrollAndBack) {
     By::type<ViewMock>().check(averageColor(AColor::BLACK));
     mWindow->onPointerMove(mView->getCenterPointInWindow()); // somewhere over the mView
     By::type<ViewMock>().check(averageColor(AColor::RED));
-    mWindow->onMouseScroll(AScrollEvent {
+    mWindow->onScroll(AScrollEvent {
         .origin  = mView->getCenterPointInWindow(),
         .delta   = { 0, 30 },
         .kinetic = false,
     });
     By::type<ViewMock>().check(averageColor(AColor::BLACK), "view didn't become black");
 
-    mWindow->onMouseScroll(AScrollEvent {
+    mWindow->onScroll(AScrollEvent {
         .origin  = mView->getCenterPointInWindow(),
         .delta   = { 0, -30 },
         .kinetic = false,

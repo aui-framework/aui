@@ -265,8 +265,8 @@ void ABaseWindow::forceUpdateCursor() {
     AViewContainer::onPointerMove(mMousePos, {});
 }
 
-void ABaseWindow::onMouseScroll(const AScrollEvent& event) {
-    AViewContainer::onMouseScroll(event);
+void ABaseWindow::onScroll(const AScrollEvent& event) {
+    AViewContainer::onScroll(event);
     AViewContainer::onPointerMove(mMousePos, {event.pointerIndex}); // update hovers inside scrollarea
 }
 
@@ -281,7 +281,7 @@ void ABaseWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
             }); it != mScrolls.end()) {
             auto d = it->scroller.handlePointerMove(pos);
             if (d != glm::ivec2(0, 0)) {
-                onMouseScroll(AScrollEvent {
+                onScroll(AScrollEvent {
                     .origin       = it->scroller.origin(),
                     .delta        = d,
                     .kinetic      = false,
@@ -326,7 +326,7 @@ void ABaseWindow::flagUpdateLayout() {
 void ABaseWindow::render() {
     for (auto& scroll : mScrolls) {
         if (auto delta = scroll.scroller.gatherKineticScrollValue(); delta != glm::ivec2(0, 0)) {
-            onMouseScroll(AScrollEvent {
+            onScroll(AScrollEvent {
                 .origin       = scroll.scroller.origin(),
                 .delta        = delta,
                 .kinetic      = true,

@@ -124,14 +124,14 @@ void AScrollArea::setSize(glm::ivec2 size) {
     AViewContainer::adjustContentSize();
 }
 
-void AScrollArea::onMouseScroll(const AScrollEvent& event) {
-    AViewContainer::onMouseScroll(event);
+void AScrollArea::onScroll(const AScrollEvent& event) {
+    AViewContainer::onScroll(event);
     if (!mIsWheelScrollable) {
         return;
     }
 
     auto prevScroll = mVerticalScrollbar->getCurrentScroll();
-    mVerticalScrollbar->onMouseScroll(event);
+    mVerticalScrollbar->onScroll(event);
     if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
         AWindow::current()->preventClickOnPointerRelease();
     }

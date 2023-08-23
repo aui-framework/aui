@@ -114,7 +114,7 @@ public:
 
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
-    void onMouseScroll(const AScrollEvent& event) override;
+    void onScroll(const AScrollEvent& event) override;
 
     bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 

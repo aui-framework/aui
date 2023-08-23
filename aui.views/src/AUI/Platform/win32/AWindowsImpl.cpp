@@ -216,7 +216,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case WM_MOUSEWHEEL: {
             const auto SCROLL = 11_pt * 3.f / 120.f;
 
-            onMouseScroll({
+            onScroll({
                 .origin = mapPosition(POS),
                 .delta = {0, -float(GET_WHEEL_DELTA_WPARAM(wParam) * SCROLL) },
             });
