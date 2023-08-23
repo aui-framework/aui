@@ -27,11 +27,14 @@
 #include <AUI/Util/kAUI.h>
 #include <chrono>
 #include "APlatform.h"
+#include "AUI/Logging/ALogger.h"
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Util/ALayoutInflater.h>
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/UITestState.h>
+
+static constexpr auto LOG_TAG = "ABaseWindow";
 
 ABaseWindow::ABaseWindow() {
     mDpiRatio = APlatform::getDpiRatio();
@@ -219,7 +222,7 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     static constexpr auto DOUBLECLICK_RANGE2 = 10_dp;
     auto now = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
     auto delta = now - mLastButtonPressedTime;
-    if (delta < timeForDoubleClick && glm::distance2(mLastPosition, event.position) <= DOUBLECLICK_RANGE2.getValuePx()) {
+    if (delta < DOUBLECLICK_MAX_DURATION && glm::distance2(mLastPosition, event.position) <= DOUBLECLICK_RANGE2.getValuePx()) {
         if (mLastButtonPressed == event.pointerIndex) {
             mPerformDoubleClickOnPointerRelease = true;
             mLastButtonPressedTime = 0ms;

@@ -292,9 +292,9 @@ public:
     bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 
     /**
-     * @brief double click will be captured only if time elapsed since the previous click is less than timeForDoubleClick
+     * @brief double click will be captured only if time elapsed since the previous click is less than DOUBLECLICK_MAX_DURATION
      */
-    static constexpr std::chrono::milliseconds timeForDoubleClick = std::chrono::milliseconds(500);
+    static constexpr std::chrono::milliseconds DOUBLECLICK_MAX_DURATION = std::chrono::milliseconds(500);
 
 signals:
     emits<>            dpiChanged;
@@ -313,7 +313,7 @@ protected:
 
     std::chrono::milliseconds mLastButtonPressedTime = std::chrono::milliseconds::zero();
     AOptional<APointerIndex> mLastButtonPressed;
-    glm::ivec2 mLastPosition = {0, 0};
+    glm::vec2 mLastPosition = {0, 0};
 
     _unique<IRenderingContext> mRenderingContext;
 
