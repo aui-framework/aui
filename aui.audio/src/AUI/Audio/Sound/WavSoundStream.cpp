@@ -39,6 +39,6 @@ size_t WavSoundStream::read(char* dst, size_t size) {
     return r;
 }
 
-//_<WavSoundStream> WavSoundStream::load(const AUrl& url) {
-//    return _new<WavSoundStream>(std::move(is));
-//}
+_<ISoundStream> WavSoundStream::load(_<IFileStream> is) {
+    return _new<WavSoundStream>(std::move(is));
+}

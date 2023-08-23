@@ -15,7 +15,7 @@ public:
 
     size_t read(char* dst, size_t size) override;
 
-//    static _<WavSoundStream> load(const AUrl& url);
+    static _<ISoundStream> load(_<IFileStream> is);
 
 private:
     struct WavFileHeader {

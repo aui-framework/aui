@@ -69,3 +69,18 @@ private:
     void stopImpl();
 
 };
+
+
+#if AUI_PLATFORM_WIN
+void AAudioPlayer::playImpl() {
+
+}
+
+void AAudioPlayer::pauseImpl() {
+
+}
+
+void AAudioPlayer::stopImpl() {
+
+}
+#endif

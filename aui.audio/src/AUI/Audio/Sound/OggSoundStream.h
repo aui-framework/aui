@@ -21,7 +21,7 @@ public:
 
     void rewind() override;
 
-//    static _<OggSoundStream> load(_<AFileInputStream> is);
+    static _<OggSoundStream> load(_<IFileStream> is);
 
 private:
     _<IFileStream> mFis;

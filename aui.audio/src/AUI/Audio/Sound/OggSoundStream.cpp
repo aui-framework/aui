@@ -25,7 +25,7 @@ OggSoundStream::OggSoundStream(_<IFileStream> fis) : mFis(std::move(fis)) {
             [](void *datasource, ogg_int64_t offset, int whence) -> int { // seek
                 auto b = reinterpret_cast<OggSoundStream*>(datasource);
                 switch (whence) {
-                    case SEEK_SET: b->mFis->seek(offset, std::ios::cur); break;
+                    case SEEK_SET: b->mFis->seek(offset, std::ios::beg); break;
                     case SEEK_END: b->mFis->seek(offset, std::ios::end); break;
                     case SEEK_CUR: b->mFis->seek(offset, std::ios::cur); break;
                     default: assert(0);
@@ -81,6 +81,6 @@ void OggSoundStream::rewind() {
     ov_time_seek(&mVorbisFile, 0);
 }
 
-//_<OggSoundStream> OggSoundStream::load(_<AFileInputStream> is) {
-//    return _new<OggSoundStream>(std::move(is));
-//}
+_<OggSoundStream> OggSoundStream::load(_<IFileStream> is) {
+    return _new<OggSoundStream>(std::move(is));
+}

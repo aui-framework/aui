@@ -15,7 +15,3 @@ AudioSessionsManager::~AudioSessionsManager() {
     AUI_NULLSAFE(mOutputDevice)->Release();
     AUI_NULLSAFE(mDeviceEnumerator)->Release();
 }
-
-_<AudioSession> AudioSessionsManager::createNewSession(_<ISoundStream> stream) {
-
-}
