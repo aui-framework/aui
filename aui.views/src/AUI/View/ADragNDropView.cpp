@@ -30,7 +30,7 @@ ADragNDropView::ADragNDropView() {
     });
 }
 
-void ADragNDropView::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) {
+void ADragNDropView::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     AViewContainer::onPointerMove(pos, event);
 
     if (AInput::isKeyDown(AInput::LBUTTON)) {

@@ -158,7 +158,7 @@ void AViewContainer::onMouseEnter() {
     AView::onMouseEnter();
 }
 
-void AViewContainer::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) {
+void AViewContainer::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     AView::onPointerMove(pos, event);
 
     auto viewUnderPointer = getViewAt(pos);
@@ -169,7 +169,7 @@ void AViewContainer::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& even
     }
 
     if (targetView) {
-        auto mousePos = pos - targetView->getPosition();
+        auto mousePos = pos - glm::vec2(targetView->getPosition());
         targetView->onPointerMove(mousePos, event);
     }
 

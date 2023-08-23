@@ -242,7 +242,7 @@ float AScrollbar::getAvailableSpaceForSpacer() {
     return 0;
 }
 
-void AScrollbarHandle::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) {
+void AScrollbarHandle::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     AView::onPointerMove(pos, event);
     if (mDragging) {
         switch (mScrollbar.mDirection) {

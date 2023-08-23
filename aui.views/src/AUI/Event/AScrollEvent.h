@@ -30,14 +30,14 @@ struct AScrollEvent {
      *
      * For touchscreen, it's the origin point where the scroll gesture started.
      */
-    glm::ivec2 origin;
+    glm::vec2 origin;
 
     /**
      * @brief The amount of scroll
      * @details
      * This field is mutable in order to be consumable.
      */
-    mutable glm::ivec2 delta;
+    mutable glm::vec2 delta;
 
     /**
      * @brief Whether the event simulated by kinetic scroll feature or not.

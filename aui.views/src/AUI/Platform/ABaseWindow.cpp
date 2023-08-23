@@ -220,12 +220,12 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     using namespace std::chrono_literals;
     static milliseconds lastButtonPressedTime = 0ms;
     static AOptional<APointerIndex> lastButtonPressed;
-    static glm::ivec2 lastPosition = {0, 0};
-
+    static glm::vec2 lastPosition = {0, 0};
+    static constexpr auto DOUBLECLICK_RANGE2 = 10_dp;
     auto now = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
 
     auto delta = now - lastButtonPressedTime;
-    if (delta < 500ms && lastPosition == event.position) {
+    if (delta < 500ms && glm::distance2(lastPosition, event.position) <= DOUBLECLICK_RANGE2.getValuePx()) {
         if (lastButtonPressed == event.pointerIndex) {
             onPointerDoubleClicked(event);
 
@@ -270,7 +270,7 @@ void ABaseWindow::onMouseScroll(const AScrollEvent& event) {
     AViewContainer::onPointerMove(mMousePos, {event.pointerIndex}); // update hovers inside scrollarea
 }
 
-void ABaseWindow::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) {
+void ABaseWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     mMousePos = pos;
     mCursor = ACursor::DEFAULT;
 

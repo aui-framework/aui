@@ -45,7 +45,7 @@ void ASlider::onPointerPressed(const APointerPressedEvent& event) {
     updateSliderWithPosition(event.position);
 }
 
-void ASlider::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) {
+void ASlider::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     AViewContainer::onPointerMove(pos, event);
     if (isDragging()) {
         updateSliderWithPosition(pos);

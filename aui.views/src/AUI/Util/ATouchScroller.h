@@ -22,7 +22,7 @@
 #include "AUI/Event/APointerReleasedEvent.h"
 #include "AMetric.h"
 #include "AUI/Event/AScrollEvent.h"
-#include "AUI/Animator/Curves/linear.h"
+#include "AUI/Animator/Curves/bezier.h"
 
 /**
  * @brief Utility object that helps with touchscreen scroll events.
@@ -33,8 +33,8 @@
  */
 class API_AUI_VIEWS ATouchScroller {
 public:
-    using AnimationCurve = aui::animation_curves::Linear;
-    static constexpr auto DURATION = std::chrono::milliseconds(2500);
+    static constexpr auto FRICTION = 2.f;
+
 
     /**
      * @brief Distance that pointer have to pass in order to treat pointer move events as scroll events.
@@ -58,7 +58,7 @@ public:
      * @param pos position of the event in relation to view that used ATouchScroller.
      * @return the amount of scroll in pixels.
      */
-    glm::ivec2 handlePointerMove(glm::ivec2 pos);
+    glm::ivec2 handlePointerMove(glm::vec2 pos);
 
     [[nodiscard]]
     glm::ivec2 origin() const noexcept;
@@ -74,22 +74,24 @@ public:
 private:
     struct WaitingForThresholdState {
         APointerIndex pointer;
-        glm::ivec2 origin;
+        glm::vec2 origin;
     };
     struct ScrollingState {
         APointerIndex pointer;
-        glm::ivec2 origin;
-        glm::ivec2 previousPosition; // to calculate velocity
-        glm::ivec2 currentVelocity;
+        glm::vec2 origin;
+        glm::vec2 previousPosition = {0.f, 0.f}; // to calculate velocity
+        glm::vec2 currentVelocity = {0.f, 0.f};
+        glm::vec2 prevVelocity = {0.f, 0.f};
+        std::chrono::microseconds timeBetweenFrames;
+        AOptional<std::chrono::high_resolution_clock::time_point> lastFrameTime;
     };
 
     struct KineticScrollingState {
         APointerIndex pointer;
-        glm::ivec2 origin;
-        glm::vec2 distance;
-        glm::vec2 prevDistance = glm::vec2(0, 0);
-        AnimationCurve curve;
-        std::chrono::high_resolution_clock::time_point beginTime = std::chrono::high_resolution_clock::now();
+        glm::vec2 origin;
+        glm::vec2 velocity;
+
+        std::chrono::high_resolution_clock::time_point lastFrameTime = std::chrono::high_resolution_clock::now();
     };
 
     std::variant<std::nullopt_t, WaitingForThresholdState, ScrollingState, KineticScrollingState> mState = std::nullopt;

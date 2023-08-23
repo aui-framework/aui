@@ -791,7 +791,7 @@ public:
      * If the view is pressed, it would still received move events. Use AView::isMouseHover to check is the pointer
      * actually over view or not. See AView::onPointerReleased for more info.
      */
-    virtual void onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event);
+    virtual void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event);
     virtual void onMouseLeave();
     virtual void onDpiChanged();
 

@@ -15,7 +15,12 @@
 //  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ATouchScroller.h"
+#include "AUI/Logging/ALogger.h"
+#include "AUI/Platform/AWindow.h"
 #include <glm/gtx/norm.hpp>
+
+using namespace std::chrono;
+using namespace std::chrono_literals;
 
 void ATouchScroller::handlePointerPressed(const APointerPressedEvent& e) {
     assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
@@ -28,15 +33,18 @@ void ATouchScroller::handlePointerPressed(const APointerPressedEvent& e) {
 void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
     assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
     if (auto s = std::get_if<ScrollingState>(&mState)) {
+        auto velocity = glm::normalize(s->currentVelocity) * glm::max(glm::length(s->prevVelocity), glm::length(s->currentVelocity));
+
+        ALogger::info("ATouchScroller") << velocity;
         mState = KineticScrollingState{
             .pointer = e.pointerIndex,
             .origin = s->origin,
-            .distance = glm::vec2(s->currentVelocity) * 60.f,
+            .velocity = velocity,
         };
     }
 }
 
-glm::ivec2 ATouchScroller::handlePointerMove(glm::ivec2 pos) {
+glm::ivec2 ATouchScroller::handlePointerMove(glm::vec2 pos) {
     if (std::holds_alternative<std::nullopt_t>(mState)) {
         return {0, 0};
     }
@@ -56,8 +64,22 @@ glm::ivec2 ATouchScroller::handlePointerMove(glm::ivec2 pos) {
     }
 
     auto& s = std::get<ScrollingState>(mState);
+
+    auto now = high_resolution_clock::now();
+    s.timeBetweenFrames = duration_cast<microseconds>(now - s.lastFrameTime.valueOr(now));
+    s.lastFrameTime = now;
+
     auto delta = s.previousPosition - pos;
-    s.currentVelocity = delta;
+    s.prevVelocity = s.currentVelocity;
+    s.currentVelocity = delta * (s.timeBetweenFrames.count() > 0
+                                 ? float(duration_cast<microseconds>(1s).count()) / float(s.timeBetweenFrames.count())
+                                 : (1000.f / 16.f));
+
+    if (glm::abs(s.currentVelocity.x) >= 10000) {
+        printf("\n");
+    }
+    ALogger::info("ATouchScroller") << s.currentVelocity;
+
     s.previousPosition = pos;
     
     return delta;
@@ -76,17 +98,18 @@ glm::ivec2 ATouchScroller::origin() const noexcept {
 }
 
 glm::ivec2 ATouchScroller::gatherKineticScrollValue() {
-    using namespace std::chrono;
 
     if (auto s = std::get_if<KineticScrollingState>(&mState)) {
         const auto now = high_resolution_clock::now();
-        const auto timeDelta = duration_cast<milliseconds>(now - s->beginTime);
-        if (timeDelta >= DURATION) {
+        if (glm::length2(s->velocity) < 0.01f) {
             return {0, 0};
         }
-        auto newDistance = s->distance * s->curve(float(timeDelta.count()) / float(DURATION.count()));
-        auto result = newDistance - s->prevDistance;
-        s->prevDistance = newDistance;
+        const auto timeDelta = duration_cast<microseconds>(now - s->lastFrameTime);
+        s->lastFrameTime = now;
+        const float currentFrameRatio = float(timeDelta.count()) / float(duration_cast<microseconds>(1s).count());
+        auto result = s->velocity * currentFrameRatio;
+        s->velocity *= glm::clamp(1.f - currentFrameRatio * FRICTION, 0.001f, 0.999f);
+
         return result;
     }
     return {0, 0};

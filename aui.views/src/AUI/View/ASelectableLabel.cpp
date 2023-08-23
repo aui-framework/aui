@@ -78,7 +78,7 @@ void ASelectableLabel::render() {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void ASelectableLabel::onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) {
+void ASelectableLabel::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     AView::onPointerMove(pos, event);
     pos.x -= mTextLeftOffset;
     if (getFontStyleLabel().align == TextAlign::CENTER) {

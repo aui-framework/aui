@@ -35,13 +35,13 @@ class AuiView(context: Context) : GLSurfaceView(context) {
 
 
         @JvmStatic
-        private external fun handlePointerButtonDown(x: Int, y: Int, pointerId: Int)
+        private external fun handlePointerButtonDown(x: Float, y: Float, pointerId: Int)
 
         @JvmStatic
-        private external fun handlePointerButtonUp(x: Int, y: Int, pointerId: Int)
+        private external fun handlePointerButtonUp(x: Float, y: Float, pointerId: Int)
 
         @JvmStatic
-        private external fun handlePointerMove(x: Int, y: Int, pointerId: Int)
+        private external fun handlePointerMove(x: Float, y: Float, pointerId: Int)
 
         @JvmStatic
         private external fun handleInit(internalStoragePath: String)
@@ -115,13 +115,13 @@ class AuiView(context: Context) : GLSurfaceView(context) {
         }
         val index = event.actionIndex
         when (event.action and MotionEvent.ACTION_MASK) {
-            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> handlePointerButtonDown(event.getX(index).toInt(), event.getY(index).toInt(), index)
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> handlePointerButtonDown(event.getX(index), event.getY(index), index)
             MotionEvent.ACTION_MOVE -> {
                 for (i in 0 until event.pointerCount) {
-                    handlePointerMove(event.getX(i).toInt(), event.getY(i).toInt(), i)
+                    handlePointerMove(event.getX(i), event.getY(i), i)
                 }
             }
-            MotionEvent.ACTION_UP -> handlePointerButtonUp(event.getX(index).toInt(), event.getY(index).toInt(), index)
+            MotionEvent.ACTION_UP -> handlePointerButtonUp(event.getX(index), event.getY(index), index)
         }
         mGestureDetector.onTouchEvent(event)
         return true

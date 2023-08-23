@@ -41,7 +41,7 @@ public:
 
     void render() override;
 
-    void onPointerMove(glm::ivec2 pos, const APointerMoveEvent& event) override;
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
