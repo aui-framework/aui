@@ -159,3 +159,7 @@ void AWindow::requestTouchscreenKeyboardImpl() {
 void AWindow::hideTouchscreenKeyboardImpl() {
     com::github::aui::android::Platform::hideKeyboard();
 }
+
+void AWindow::moveToCenter() {
+
+}

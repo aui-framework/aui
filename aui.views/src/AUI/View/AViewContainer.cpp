@@ -81,6 +81,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
 }
 
 void AViewContainer::addView(const _<AView>& view) {
+    AUI_NULLSAFE(view->mParent)->removeView(view);
     mViews << view;
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view);

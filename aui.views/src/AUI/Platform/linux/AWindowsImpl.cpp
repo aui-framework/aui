@@ -718,3 +718,6 @@ void AWindow::hideTouchscreenKeyboardImpl() {
     ABaseWindow::hideTouchscreenKeyboardImpl();
 }
 
+void AWindow::moveToCenter() {
+
+}

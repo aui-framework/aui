@@ -104,6 +104,11 @@ public:
         /* don't forget to update AUI_ENUM_VALUES at the bottom */
     };
 
+    enum class Method {
+        GET,
+        POST,
+    };
+
 
     struct ErrorDescription {
         int curlStatus;
@@ -166,24 +171,71 @@ public:
         HeaderCallback mHeaderCallback;
         bool mThrowExceptionOnError = false;
         AVector<AString> mHeaders;
-        AString mUrl;
+        AString mUrl, mParams;
+        Method mMethod = Method::GET;
+        std::function<void(ACurl&)> mOnSuccess;
 
     public:
         explicit Builder(AString url);
         Builder(const Builder&) = delete;
         ~Builder();
 
+        /**
+         * @brief Called on server -> client data received (download).
+         * @param callback callback to call.
+         * @return this
+         * @see withDestinationBuffer
+         */
         Builder& withWriteCallback(WriteCallback callback) {
             assert(("write callback already set" && mWriteCallback == nullptr));
             mWriteCallback = std::move(callback);
             return *this;
         }
-        Builder& withReadCallback(ReadCallback callback) {
+
+        /**
+         * @brief Called on client -> server data requested (upload).
+         * @param callback callback to call.
+         * @return this
+         */
+        Builder& withBody(ReadCallback callback) {
             assert(("write callback already set" && mReadCallback == nullptr));
             mReadCallback = std::move(callback);
             return *this;
         }
 
+        /**
+         * @brief Like withBody with callback, but wrapped with string.
+         */
+        Builder& withBody(std::string contents) {
+            assert(("write callback already set" && mReadCallback == nullptr));
+
+            struct Body {
+                explicit Body(std::string b) : contents(std::move(b)), i(contents.begin()) {}
+
+                std::string contents;
+                std::string::iterator i;
+            };
+            auto b = _new<Body>(std::move(contents));
+
+            mReadCallback = [body = std::move(b)](char* dst, std::size_t length) mutable {
+                if (body->i == body->contents.end()) {
+                    throw AEOFException();
+                }
+                std::size_t remaining = std::distance(body->i, body->contents.end());
+                length = glm::min(length, remaining);
+                std::memcpy(dst, &*body->i, length);
+                body->i += length;
+                return length;
+            };
+
+            return *this;
+        }
+
+        /**
+         * @brief Called on header received.
+         * @param headerCallback callback to call.
+         * @return this
+         */
         Builder& withHeaderCallback(HeaderCallback headerCallback) {
             mHeaderCallback = std::move(headerCallback);
             return *this;
@@ -229,12 +281,36 @@ public:
         Builder& withHttpVersion(Http version);
         Builder& withUpload(bool upload);
         Builder& withCustomRequest(const AString& v);
+        Builder& withOnSuccess(std::function<void(ACurl&)> onSuccess) {
+            mOnSuccess = std::move(onSuccess);
+            return *this;
+        }
 
 
         /**
-         * @brief Appends HTTP GET params to the url.
+         * @brief Sets HTTP method to the query.
+         * @details
+         * GET is by default.
          */
-        Builder& withParams(const AVector<std::pair<AString, AString>>& params);
+        Builder& withMethod(Method method) noexcept {
+            mMethod = method;
+            return *this;
+        };
+
+
+        /**
+         * @brief Sets HTTP params to the query.
+         * @param params params map in key,value pairs.
+         */
+        Builder& withParams(const AVector<std::pair<AString /* key */, AString /* value */>>& params);
+
+        /**
+         * @brief Sets HTTP params to the query.
+         */
+        Builder& withParams(AString params) noexcept {
+            mParams = std::move(params);
+            return *this;
+        };
 
         Builder& withHeaders(AVector<AString> headers) {
             mHeaders = std::move(headers);
@@ -274,6 +350,7 @@ public:
     ACurl& operator=(ACurl&& o) noexcept;
 
 	int64_t getContentLength() const;
+	AString getContentType() const;
 
     void run();
 
@@ -311,6 +388,7 @@ private:
     struct curl_slist* mCurlHeaders = nullptr;
     char mErrorBuffer[256];
     bool mCloseRequested = false;
+    std::string mPostFieldsStorage;
 
     static size_t writeCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;
     static size_t readCallback(char* ptr, size_t size, size_t nmemb, void* userdata) noexcept;

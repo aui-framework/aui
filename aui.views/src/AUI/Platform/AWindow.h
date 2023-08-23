@@ -277,6 +277,13 @@ public:
     void requestTouchscreenKeyboardImpl() override;
     void hideTouchscreenKeyboardImpl() override;
 
+    /**
+     * @brief Moves the window to the center of monitor.
+     * @details
+     * When using in series with setSize(), do the setSize() first, when moveToCenter().
+     */
+    void moveToCenter();
+
 signals:
     emits<> closed;
     emits<int, int> resized;
