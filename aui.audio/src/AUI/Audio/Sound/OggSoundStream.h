@@ -11,7 +11,7 @@
 
 class OggSoundStream: public ISoundStream {
 public:
-    OggSoundStream(_<AFileInputStream> fis);
+    explicit OggSoundStream(_<AFileInputStream> fis);
 
     ~OggSoundStream() override;
 
@@ -21,9 +21,7 @@ public:
 
     void rewind() override;
 
-    static _<ISoundStream> load(_<AFileInputStream> is) {
-        return _new<OggSoundStream>(std::move(is));
-    }
+    static _<OggSoundStream> load(_<AFileInputStream> is);
 
 private:
     _<AFileInputStream> mFis;

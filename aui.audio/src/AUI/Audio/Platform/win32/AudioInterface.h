@@ -5,16 +5,16 @@
 #pragma once
 
 #include "AUI/Platform/AProgramModule.h"
-#pragma comment(lib,"dsound.lib")
+#pragma comment(lib, "dsound.lib")
 #pragma comment(lib, "dxguid.lib")
-#pragma comment( lib, "Winmm" )
+#pragma comment(lib, "Winmm" )
 
 #include <utility>
 #include <dsound.h>
 #include "AUI/Traits/memory.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Thread/AFuture.h"
-#include "SDL_Audio_Base.h"
+#include "AUI/Audio/AAuidoPlayer.h"
 #include "AUI/Audio/Sound/ISoundStream.h"
 
 #define ASSERT_OK AssertOkHelper{} +
@@ -24,45 +24,46 @@ struct AssertOkHelper {
     }
 };
 
-struct DirectSoundInstance {
-    IDirectSound8* mDirectSound;
-    DirectSoundInstance() {
-        if (DirectSoundCreate8(nullptr, &mDirectSound, nullptr) != 0) {
-            mDirectSound = nullptr;
-            return;
-        }
+class DirectSound {
+public:
+    static IDirectSound* instance() {
+        static DirectSound ds;
+        return ds.mDirectSound;
+    }
 
+private:
+    DirectSound() {
+        ASSERT_OK DirectSoundCreate8(nullptr, &mDirectSound, nullptr);
         auto w = dynamic_cast<AWindow*>(AWindow::current());
         auto handle = w->nativeHandle();
         ASSERT_OK mDirectSound->SetCooperativeLevel(handle, DSSCL_PRIORITY);
     }
 
-    DirectSoundInstance(const DirectSoundInstance&) = delete;
-
-    ~DirectSoundInstance() {
+    ~DirectSound() {
         AUI_NULLSAFE(mDirectSound)->Release();
     }
+
+    IDirectSound8* mDirectSound;
 };
 
-static IDirectSound8* getDirectSound() {
-    static DirectSoundInstance ds;
-    return ds.mDirectSound;
-}
 
-class AudioInterface: public SDL_Audio_Base {
+
+class AudioInterface {
 public:
     AudioInterface(_<ISoundStream> sound) : mSound(std::move(sound)){
         setupSecondaryBuffer();
     }
 
-    bool release() override {
+    bool release() {
         mSoundBufferInterface->Release();
         mNotifyInterface->Release();
         return true;
     }
 
-    bool play() override {
-        stop();
+    bool play() {
+        if (mIsPlaying) {
+            stop();
+        }
         setupReachPointEvents();
         setupBufferThread();
         uploadNextBlock(BUFFER_DURATION_SEC);
@@ -71,15 +72,7 @@ public:
         return true;
     }
 
-    bool fadeIn(int ms) override {
-        return true;
-    }
-
-    bool fadeOut(int ms) override {
-        return true;
-    }
-
-    bool stop() override {
+    bool stop() {
         ASSERT_OK mSoundBufferInterface->Stop();
 
         while (mThreadIsActive) {
@@ -97,36 +90,22 @@ public:
         return true;
     }
 
-    bool pause() override {
+    bool pause() {
         ASSERT_OK mSoundBufferInterface->Stop();
         mIsPlaying = false;
         return true;
     }
 
-    bool resume() override {
+    bool resume() {
         ASSERT_OK mSoundBufferInterface->Play(0, 0, DSBPLAY_LOOPING);
         mIsPlaying = true;
         return true;
     }
 
-    bool rewind() override {
+    bool rewind() {
         ASSERT_OK mSoundBufferInterface->SetCurrentPosition(0);
         mSound->rewind();
         return true;
-    }
-
-    DWORD status() const {
-        DWORD status;
-        ASSERT_OK mSoundBufferInterface->GetStatus(&status);
-        return status;
-    }
-
-    bool isPlaying() override {
-        return mIsPlaying;
-    }
-
-    bool isPaused() override {
-        return !mIsPlaying;
     }
 
 private:
@@ -143,12 +122,12 @@ private:
     _<ISoundStream> mSound;
 
     bool mIsPlaying = false;
-    int bytesPerSecond;
+    int mBytesPerSecond;
 
     void uploadNextBlock(DWORD reachedPointIndex) {
         LPVOID buffer;
-        DWORD bufferSize = bytesPerSecond;
-        DWORD offset = ((reachedPointIndex + 1) % BUFFER_DURATION_SEC) * bytesPerSecond;
+        DWORD bufferSize = mBytesPerSecond;
+        DWORD offset = ((reachedPointIndex + 1) % BUFFER_DURATION_SEC) * mBytesPerSecond;
 
         HRESULT result = mSoundBufferInterface->Lock(offset, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
         if (result == DSERR_BUFFERLOST) {
@@ -159,16 +138,16 @@ private:
         bufferSize = mSound->read(static_cast<char*>(buffer), bufferSize);
         ASSERT_OK mSoundBufferInterface->Unlock(buffer, bufferSize, nullptr, 0);
         if (bufferSize == 0) {
-            std::memset(buffer, 0, bytesPerSecond - bufferSize);
+            std::memset(buffer, 0, mBytesPerSecond - bufferSize);
             stop();
-        } else if (bufferSize < bytesPerSecond) {
+        } else if (bufferSize < mBytesPerSecond) {
             stop();
         }
     }
 
     void clearBuffer() {
         LPVOID buffer;
-        DWORD bufferSize = BUFFER_DURATION_SEC * bytesPerSecond;
+        DWORD bufferSize = BUFFER_DURATION_SEC * mBytesPerSecond;
         ASSERT_OK mSoundBufferInterface->Lock(0, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
         std::memset(buffer, 0, bufferSize);
         ASSERT_OK mSoundBufferInterface->Unlock(buffer, bufferSize, nullptr, 0);
@@ -214,7 +193,7 @@ private:
         for (int i = 0; i < BUFFER_DURATION_SEC; i++) {
             mEvents[i] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
             mNotifyPositions[i].hEventNotify = mEvents[i];
-            mNotifyPositions[i].dwOffset = i * bytesPerSecond + bytesPerSecond / 2;
+            mNotifyPositions[i].dwOffset = i * mBytesPerSecond + mBytesPerSecond / 2;
         }
 
         ASSERT_OK (mNotifyInterface->SetNotificationPositions(BUFFER_DURATION_SEC, mNotifyPositions));
@@ -233,17 +212,17 @@ private:
         waveFormat.nSamplesPerSec = info.sampleRate;
         waveFormat.nBlockAlign = waveFormat.nChannels * (waveFormat.wBitsPerSample / 8);
 
-        bytesPerSecond = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
-        waveFormat.nAvgBytesPerSec = bytesPerSecond;
+        mBytesPerSecond = waveFormat.nSamplesPerSec * waveFormat.nBlockAlign;
+        waveFormat.nAvgBytesPerSec = mBytesPerSecond;
 
         aui::zero(format);
         format.dwSize = sizeof(format);
         format.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS | DSBCAPS_CTRLPOSITIONNOTIFY;
-        format.dwBufferBytes = BUFFER_DURATION_SEC * bytesPerSecond;
+        format.dwBufferBytes = BUFFER_DURATION_SEC * mBytesPerSecond;
         format.lpwfxFormat = &waveFormat;
 
-        ASSERT_OK getDirectSound()->CreateSoundBuffer(&format, &buffer, nullptr);
-        ASSERT_OK buffer->QueryInterface(IID_IDirectSoundBuffer8, (void**) &mSoundBufferInterface);
+        ASSERT_OK DirectSound::instance()->CreateSoundBuffer(&format, &buffer, nullptr);
+        ASSERT_OK buffer->QueryInterface(IID_IDirectSoundBuffer8, reinterpret_cast<void**>(&mSoundBufferInterface));
         buffer->Release();
     }
 };

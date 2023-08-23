@@ -6,7 +6,7 @@
 
 class WavSoundStream: public ISoundStream {
 public:
-    WavSoundStream(_<AFileInputStream> is);
+    explicit WavSoundStream(_<AFileInputStream> is);
 
     AAudioFormat info() override;
 
@@ -14,12 +14,10 @@ public:
 
     size_t read(char* dst, size_t size) override;
 
-    static _<ISoundStream> load(_<AFileInputStream> is) {
-        return _new<WavSoundStream>(std::move(is));
-    }
+    static _<WavSoundStream> load(_<AFileInputStream> is);
 
 private:
-    struct WavfileHeader {
+    struct WavFileHeader {
         char    chunkID[4];
         int32_t chunkSize;
         char    format[4];
@@ -38,7 +36,7 @@ private:
     };
 
     _<AFileInputStream> mFis;
-    WavfileHeader mHeader;
+    WavFileHeader mHeader;
     size_t mChunkReadPos = 0; // до mHeader.ChunkSize
 };
 

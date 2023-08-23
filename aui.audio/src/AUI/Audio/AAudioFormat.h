@@ -1,7 +1,5 @@
 #pragma once
 
-#include <AUI/Common/AObject.h>
-
 /**
  * @brief Audio format descriptor.
  * @ingroup audio

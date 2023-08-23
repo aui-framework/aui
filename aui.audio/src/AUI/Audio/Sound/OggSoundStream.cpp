@@ -4,7 +4,6 @@
 
 #include "OggSoundStream.h"
 #include "ogg/ogg.h"
-#include "ogg/os_types.h"
 
 OggSoundStream::OggSoundStream(_<AFileInputStream> fis) : mFis(std::move(fis)) {
     OggVorbis_File vorbisFile;
@@ -79,4 +78,8 @@ size_t OggSoundStream::read(char* dst, size_t size) {
 
 void OggSoundStream::rewind() {
     ov_time_seek(&mVorbisFile, 0);
+}
+
+_<OggSoundStream> OggSoundStream::load(_<AFileInputStream> is) {
+    return _new<OggSoundStream>(std::move(is));
 }

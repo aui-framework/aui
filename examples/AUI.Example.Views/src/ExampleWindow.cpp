@@ -34,9 +34,13 @@
 #include "DemoTreeModel.h"
 #include "AUI/View/ASpinner.h"
 #include "DemoGraphView.h"
+
 #include "AUI/Audio/Sound/WavSoundStream.h"
-#include "AUI/Audio/Platform/win32/AudioInterface.h"
+#include "AUI/Audio/Sound/WavSoundStream.cpp"
 #include "AUI/Audio/Sound/OggSoundStream.h"
+#include "AUI/Audio/Sound/OggSoundStream.cpp"
+
+#include "AUI/Audio/Platform/win32/AudioInterface.h"
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ADragNDropView.h"
 #include "AUI/Util/ALayoutInflater.h"
@@ -111,11 +115,13 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
     _<ATabView> tabView;
 
-    auto wavSoundStream = WavSoundStream::load(_new<AFileInputStream>("sound/sound1.wav"));
-    mWavAudio = _new<AudioInterface>(std::move(wavSoundStream));
-
-    auto oggSoundStream = OggSoundStream::load(_new<AFileInputStream>("sound/sound1.ogg"));
-    mOggAudio = _new<AudioInterface>(std::move(oggSoundStream));
+//    auto wavSoundStream = WavSoundStream::load(_new<AFileInputStream>("sound/sound1.wav"));
+//    mWavAudio = _new<AudioInterface>(std::move(wavSoundStream));
+//
+//    auto oggSoundStream = OggSoundStream::load(_new<AFileInputStream>("sound/sound1.ogg"));
+//    mOggAudio = _new<AudioInterface>(std::move(oggSoundStream));
+    AAudioPlayer player;
+    player.play();
 
     addView(tabView = _new<ATabView>() let {
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {
