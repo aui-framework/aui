@@ -36,16 +36,16 @@
 #include "DemoGraphView.h"
 
 #include "AUI/Audio/Sound/WavSoundStream.h"
-#include "AUI/Audio/Sound/WavSoundStream.cpp"
+//#include "AUI/Audio/Sound/WavSoundStream.cpp"
 #include "AUI/Audio/Sound/OggSoundStream.h"
-#include "AUI/Audio/Sound/OggSoundStream.cpp"
+//#include "AUI/Audio/Sound/OggSoundStream.cpp"
 
-#include "AUI/Audio/Platform/win32/AudioInterface.h"
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ADragNDropView.h"
 #include "AUI/Util/ALayoutInflater.h"
 #include "AUI/View/ASlider.h"
 #include "AUI/Platform/APlatform.h"
+#include "AUI/IO/AByteBufferInputStream.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
@@ -115,13 +115,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
     _<ATabView> tabView;
 
-//    auto wavSoundStream = WavSoundStream::load(_new<AFileInputStream>("sound/sound1.wav"));
-//    mWavAudio = _new<AudioInterface>(std::move(wavSoundStream));
-//
-//    auto oggSoundStream = OggSoundStream::load(_new<AFileInputStream>("sound/sound1.ogg"));
-//    mOggAudio = _new<AudioInterface>(std::move(oggSoundStream));
-    AAudioPlayer player;
-    player.play();
+//    mWavAudio = _new<AAudioPlayer>(_new<WavSoundStream>(FileStream::open(":sound/sound1.wav")));
+//    mOggAudio = _new<AAudioPlayer>(_new<OggSoundStream>(FileStream::open(":sound/sound1.ogg")));
 
     addView(tabView = _new<ATabView>() let {
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {
@@ -345,6 +340,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 } with_style { Expanding{} }
             }
         }), "Common");
+
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
                 Horizontal {
                         Vertical{
@@ -357,10 +353,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 }),
                                 _new<AButton>("Pause .wav music").connect(&AButton::clicked, this, [&] {
                                     mWavAudio->pause();
-                                }),
-                                _new<AButton>("Resume .wav music").connect(&AButton::clicked, this, [&] {
-                                    mWavAudio->resume();
-                                }),
+                                })
                         },
                         Vertical{
                                 _new<ALabel>("Play music using AUI!"),
@@ -372,10 +365,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 }),
                                 _new<AButton>("Pause .ogg music").connect(&AButton::clicked, this, [&] {
                                     mOggAudio->pause();
-                                }),
-                                _new<AButton>("Resume .ogg music").connect(&AButton::clicked, this, [&] {
-                                    mOggAudio->resume();
-                                }),
+                                })
                         }
                 }
         }), "Sounds");

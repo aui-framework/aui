@@ -23,3 +23,5 @@
 * @defgroup audio aui::audio
 * @brief Audio recording and playback library.
 */
+
+#include "AUI/Audio/Mixer/AAudioMixer.h"

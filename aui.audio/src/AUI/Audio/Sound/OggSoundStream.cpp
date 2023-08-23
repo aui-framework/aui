@@ -4,8 +4,9 @@
 
 #include "OggSoundStream.h"
 #include "ogg/ogg.h"
+#include "AUI/Audio/Stream/FileStream.h"
 
-OggSoundStream::OggSoundStream(_<AFileInputStream> fis) : mFis(std::move(fis)) {
+OggSoundStream::OggSoundStream(_<IFileStream> fis) : mFis(std::move(fis)) {
     OggVorbis_File vorbisFile;
     ov_callbacks callbacks = {
             [](void *ptr, size_t size, size_t nmemb, void *datasource) -> size_t { // read
@@ -24,9 +25,9 @@ OggSoundStream::OggSoundStream(_<AFileInputStream> fis) : mFis(std::move(fis)) {
             [](void *datasource, ogg_int64_t offset, int whence) -> int { // seek
                 auto b = reinterpret_cast<OggSoundStream*>(datasource);
                 switch (whence) {
-                    case SEEK_SET: b->mFis->seek(offset, AFileInputStream::Seek::BEGIN); break;
-                    case SEEK_END: b->mFis->seek(offset, AFileInputStream::Seek::END); break;
-                    case SEEK_CUR: b->mFis->seek(offset, AFileInputStream::Seek::CURRENT); break;
+                    case SEEK_SET: b->mFis->seek(offset, std::ios::cur); break;
+                    case SEEK_END: b->mFis->seek(offset, std::ios::end); break;
+                    case SEEK_CUR: b->mFis->seek(offset, std::ios::cur); break;
                     default: assert(0);
                 }
                 return 0;
@@ -80,6 +81,6 @@ void OggSoundStream::rewind() {
     ov_time_seek(&mVorbisFile, 0);
 }
 
-_<OggSoundStream> OggSoundStream::load(_<AFileInputStream> is) {
-    return _new<OggSoundStream>(std::move(is));
-}
+//_<OggSoundStream> OggSoundStream::load(_<AFileInputStream> is) {
+//    return _new<OggSoundStream>(std::move(is));
+//}

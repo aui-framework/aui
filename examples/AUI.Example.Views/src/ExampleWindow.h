@@ -17,8 +17,8 @@
 #pragma once
 
 #include <AUI/Platform/AWindow.h>
-#include "AUI/Audio/Platform/win32/AudioInterface.h"
 #include "AUI/Thread/AAsyncHolder.h"
+#include "AUI/Audio/AAuidoPlayer.h"
 
 class ExampleWindow: public AWindow {
 public:
@@ -31,6 +31,6 @@ public:
 private:
     ADeque<_<AWindow>> mWindows;
     AAsyncHolder mAsync;
-    _<AudioInterface> mWavAudio;
-    _<AudioInterface> mOggAudio;
+    _<AAudioPlayer> mWavAudio;
+    _<AAudioPlayer> mOggAudio;
 };
