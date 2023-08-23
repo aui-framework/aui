@@ -121,7 +121,7 @@ class AuiView(context: Context) : GLSurfaceView(context) {
                     handlePointerMove(event.getX(i), event.getY(i), i)
                 }
             }
-            MotionEvent.ACTION_UP -> handlePointerButtonUp(event.getX(index), event.getY(index), index)
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> handlePointerButtonUp(event.getX(index), event.getY(index), index)
         }
         mGestureDetector.onTouchEvent(event)
         return true

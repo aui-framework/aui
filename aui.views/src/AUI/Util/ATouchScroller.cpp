@@ -75,11 +75,6 @@ glm::ivec2 ATouchScroller::handlePointerMove(glm::vec2 pos) {
                                  ? float(duration_cast<microseconds>(1s).count()) / float(s.timeBetweenFrames.count())
                                  : (1000.f / 16.f));
 
-    if (glm::abs(s.currentVelocity.x) >= 10000) {
-        printf("\n");
-    }
-    ALogger::info("ATouchScroller") << s.currentVelocity;
-
     s.previousPosition = pos;
     
     return delta;
