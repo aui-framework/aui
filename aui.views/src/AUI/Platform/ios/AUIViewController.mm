@@ -51,6 +51,7 @@ std::string ios_get_path_in_bundle() {
     glm::ivec2 originPoint;
     glm::ivec2 prevReportedScrollPoint;
     GLKView* view;
+    NSMutableArray<UITouch*>* trackedTouches;
 }
 
 + (AUIViewController*)instance {
@@ -63,6 +64,7 @@ extern int(* _gEntry)(AStringVector);
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    trackedTouches = [[NSMutableArray<UITouch*> alloc] init];
 
     view = (GLKView*)self.view;
     view.context = [[EAGLContext alloc] initWithAPI:
@@ -107,7 +109,7 @@ extern int(* _gEntry)(AStringVector);
     
     //CGPoint v = {prevTransation.x - t.x, prevTransation.y - t.y};
     //prevTransation = t;
-    auiWindow()->onGesture(originPoint, AFingerDragEvent{delta});
+    //auiWindow()->onGesture(originPoint, AFingerDragEvent{delta});
 }
 
 
@@ -129,7 +131,8 @@ extern int(* _gEntry)(AStringVector);
         CGPoint location = [touch locationInView:self.view];
         auto vec = glm::ivec2{location.x * scale, location.y * scale};
         originPoint = prevReportedScrollPoint = vec;
-        auiWindow()->onPointerPressed({vec, APointerIndex::finger(0)});
+        auiWindow()->onPointerPressed({vec, APointerIndex::finger([trackedTouches count])});
+        [trackedTouches addObject:touch];
     }
 }
 - (void)touchesMoved:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
@@ -137,7 +140,7 @@ extern int(* _gEntry)(AStringVector);
     float scale = (float)self.view.contentScaleFactor;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self.view];
-        auiWindow()->onPointerMove(glm::ivec2{location.x * scale, location.y * scale});
+        auiWindow()->onPointerMove(glm::vec2{location.x * scale, location.y * scale}, APointerMoveEvent{APointerIndex::finger([trackedTouches indexOfObject:touch])});
     }
 }
 - (void)touchesEnded:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
@@ -145,7 +148,8 @@ extern int(* _gEntry)(AStringVector);
     float scale = (float)self.view.contentScaleFactor;
     for (UITouch* touch in touches) {
         CGPoint location = [touch locationInView:self.view];
-        auiWindow()->onPointerReleased({glm::ivec2{location.x * scale, location.y * scale}, APointerIndex::finger(0)});
+        auiWindow()->onPointerReleased({glm::ivec2{location.x * scale, location.y * scale}, APointerIndex::finger([trackedTouches indexOfObject:touch])});
+        [trackedTouches removeObject:touch];
     }
 }
 

@@ -40,7 +40,7 @@ namespace aui::animation_curves {
         }
     };
 
-    float ViscousFluid::operator()(float input) {
+    inline float ViscousFluid::operator()(float input) {
 
         // must be set to 1.0 (used in viscousFluid())
         const float VISCOUS_FLUID_NORMALIZE = 1.0f / viscousFluid(1.0f);
