@@ -18,18 +18,24 @@ public:
     };
 
     void play() {
-        playImpl();
-        mPlaybackStatus = PlaybackStatus::PLAYING;
+        if (mPlaybackStatus != PlaybackStatus::PLAYING) {
+            playImpl();
+            mPlaybackStatus = PlaybackStatus::PLAYING;
+        }
     }
 
     void pause() {
-        pauseImpl();
-        mPlaybackStatus = PlaybackStatus::PAUSED;
+        if (mPlaybackStatus == PlaybackStatus::PLAYING) {
+            pauseImpl();
+            mPlaybackStatus = PlaybackStatus::PAUSED;
+        }
     }
 
     void stop() {
-        stopImpl();
-        mPlaybackStatus = PlaybackStatus::STOPPED;
+        if (mPlaybackStatus != PlaybackStatus::STOPPED) {
+            stopImpl();
+            mPlaybackStatus = PlaybackStatus::STOPPED;
+        }
     }
 
     PlaybackStatus getPlaybackStatus() {
@@ -37,7 +43,9 @@ public:
     }
 
     void setSource(_<ISoundStream> src) {
-        stop();
+        if (mPlaybackStatus != PlaybackStatus::STOPPED) {
+            stop();
+        }
         mSource = std::move(src);
 #if AUI_PLATFORM_ANDROID
         mCommitter = _new<SampleCommitter>(mSource);

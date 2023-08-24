@@ -10,22 +10,14 @@ enum class SampleFormat {
 };
 
 namespace {
-    namespace detail {
-        template<int power, typename T>
-        constexpr T mul_by_2_power(T value) {
-            if constexpr(power > 0) {
-                return value << power;
-            } else {
-                return value >> -power;
-            }
+    template<int power, typename T>
+    constexpr T mul_by_2_power(T value) {
+        if constexpr(power > 0) {
+            return value << power;
+        } else {
+            return value >> -power;
         }
     }
-
-#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_APPLE
-    constexpr SampleFormat OUTPUT_FORMAT = SampleFormat::I16;
-#else
-    constexpr SampleFormat OUTPUT_FORMAT = SampleFormat::I24;
-#endif
 
     template<SampleFormat f>
     struct sample_type;
@@ -53,7 +45,7 @@ namespace {
 
     template<SampleFormat f>
     constexpr sample_type_t<f> max_value() {
-        return detail::mul_by_2_power<sample_type<f>::size_bits>(sample_type_t<f>(1)) - 1;
+        return mul_by_2_power<sample_type<f>::size_bits>(sample_type_t<f>(1)) - 1;
     }
 
 #pragma pack(push, 1)
@@ -72,6 +64,15 @@ private:
     char* mDestinationBufferIt;
 
 public:
+
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_APPLE
+    static constexpr SampleFormat OUTPUT_FORMAT = SampleFormat::I16;
+#else
+    static constexpr SampleFormat OUTPUT_FORMAT = SampleFormat::I24;
+#endif
+
+    static constexpr uint32_t MAX_VALUE = mul_by_2_power<sample_type<OUTPUT_FORMAT>::size_bits>(1) - 1;
+
     SampleConsumer(char* destinationBufferBegin,
                    char* destinationBufferEnd):
             mDestinationBufferBegin(destinationBufferBegin),
@@ -82,14 +83,12 @@ public:
     inline void commitSample(sample_type_t<f> sample) {
         assert(("buffer overrun", mDestinationBufferIt <= mDestinationBufferEnd));
         using output_t = sample_type<OUTPUT_FORMAT>;
-        output_t::type sampleResampled = detail::mul_by_2_power<output_t::size_bits - sample_type<f>::size_bits>(sample);
+        output_t::type sampleResampled = mul_by_2_power<output_t::size_bits - sample_type<f>::size_bits>(sample);
 
         auto& pAccessor = *reinterpret_cast<packed_accessor<OUTPUT_FORMAT>*>(mDestinationBufferIt);
-
         // избегаю здесь memcpy чтобы записывать 3 байта одной инструкцией, вместо 10 которые были бы при memcpy
         // сбрасываю биты, на место которых буду писать
         pAccessor.value = uint32_t(pAccessor.value) + uint32_t(sampleResampled);
-
         mDestinationBufferIt += size_bytes<OUTPUT_FORMAT>();
     }
 
@@ -188,7 +187,7 @@ public:
                                             mSoundSources.end(),
                                             i), mSoundSources.end());
         }
-        return size;
+        return result;
     }
 };
 
