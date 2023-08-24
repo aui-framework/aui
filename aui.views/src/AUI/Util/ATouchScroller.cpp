@@ -35,7 +35,6 @@ void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
     if (auto s = std::get_if<ScrollingState>(&mState)) {
         auto velocity = glm::normalize(s->currentVelocity) * glm::max(glm::length(s->prevVelocity), glm::length(s->currentVelocity));
 
-        ALogger::info("ATouchScroller") << velocity;
         mState = KineticScrollingState{
             .pointer = e.pointerIndex,
             .origin = s->origin,

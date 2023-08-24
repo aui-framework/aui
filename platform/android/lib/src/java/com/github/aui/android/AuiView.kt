@@ -115,13 +115,13 @@ class AuiView(context: Context) : GLSurfaceView(context) {
         }
         val index = event.actionIndex
         when (event.action and MotionEvent.ACTION_MASK) {
-            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> handlePointerButtonDown(event.getX(index), event.getY(index), index)
+            MotionEvent.ACTION_DOWN, MotionEvent.ACTION_POINTER_DOWN -> handlePointerButtonDown(event.getX(index), event.getY(index), event.getPointerId(index))
             MotionEvent.ACTION_MOVE -> {
                 for (i in 0 until event.pointerCount) {
-                    handlePointerMove(event.getX(i), event.getY(i), i)
+                    handlePointerMove(event.getX(i), event.getY(i), event.getPointerId(i))
                 }
             }
-            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> handlePointerButtonUp(event.getX(index), event.getY(index), index)
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_POINTER_UP -> handlePointerButtonUp(event.getX(index), event.getY(index), event.getPointerId(index))
         }
         mGestureDetector.onTouchEvent(event)
         return true
