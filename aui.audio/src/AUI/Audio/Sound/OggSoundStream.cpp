@@ -4,9 +4,9 @@
 
 #include "OggSoundStream.h"
 #include "ogg/ogg.h"
-#include "AUI/Audio/Stream/FileStream.h"
+#include "AUI/IO/AStrongByteBufferInputStream.h"
 
-OggSoundStream::OggSoundStream(_<IFileStream> fis) : mFis(std::move(fis)) {
+OggSoundStream::OggSoundStream(_<ISeekableInputStream> fis) : mFis(std::move(fis)) {
     OggVorbis_File vorbisFile;
     ov_callbacks callbacks = {
             [](void *ptr, size_t size, size_t nmemb, void *datasource) -> size_t { // read
@@ -81,6 +81,6 @@ void OggSoundStream::rewind() {
     ov_time_seek(&mVorbisFile, 0);
 }
 
-_<OggSoundStream> OggSoundStream::load(_<IFileStream> is) {
+_<OggSoundStream> OggSoundStream::load(_<ISeekableInputStream> is) {
     return _new<OggSoundStream>(std::move(is));
 }

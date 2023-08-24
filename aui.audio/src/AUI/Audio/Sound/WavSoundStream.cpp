@@ -4,7 +4,7 @@
 
 #include "WavSoundStream.h"
 
-WavSoundStream::WavSoundStream(_<IFileStream> is) : mFis(std::move(is)) {
+WavSoundStream::WavSoundStream(_<ISeekableInputStream> is) : mFis(std::move(is)) {
     mFis->read(reinterpret_cast<char*>(&mHeader), sizeof(mHeader));
 
     if (std::memcmp(mHeader.chunkID, "RIFF", 4) != 0 ||
@@ -39,6 +39,6 @@ size_t WavSoundStream::read(char* dst, size_t size) {
     return r;
 }
 
-_<ISoundStream> WavSoundStream::load(_<IFileStream> is) {
+_<ISoundStream> WavSoundStream::load(_<ISeekableInputStream> is) {
     return _new<WavSoundStream>(std::move(is));
 }

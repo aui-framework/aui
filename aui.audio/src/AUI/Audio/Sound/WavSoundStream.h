@@ -3,11 +3,11 @@
 #include "AUI/IO/AFileInputStream.h"
 #include "AUI/Common/AByteBuffer.h"
 #include "ISoundStream.h"
-#include "AUI/Audio/Stream/FileStream.h"
+#include "AUI/IO/AStrongByteBufferInputStream.h"
 
 class WavSoundStream: public ISoundStream {
 public:
-    explicit WavSoundStream(_<IFileStream> is);
+    explicit WavSoundStream(_<ISeekableInputStream> is);
 
     AAudioFormat info() override;
 
@@ -15,7 +15,7 @@ public:
 
     size_t read(char* dst, size_t size) override;
 
-    static _<ISoundStream> load(_<IFileStream> is);
+    static _<ISoundStream> load(_<ISeekableInputStream> is);
 
 private:
     struct WavFileHeader {
@@ -38,7 +38,7 @@ private:
 
     static_assert(sizeof(WavFileHeader) == 44);
 
-    _<IFileStream> mFis;
+    _<ISeekableInputStream> mFis;
     WavFileHeader mHeader;
     size_t mChunkReadPos = 0; // до mHeader.ChunkSize
 };

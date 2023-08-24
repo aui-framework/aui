@@ -6,12 +6,13 @@
 
 #include "ISoundStream.h"
 #include "vorbis/vorbisfile.h"
-#include "AUI/Audio/Stream/FileStream.h"
 #include "AUI/IO/AFileInputStream.h"
+
+class ISeekableInputStream;
 
 class OggSoundStream: public ISoundStream {
 public:
-    explicit OggSoundStream(_<IFileStream> fis);
+    explicit OggSoundStream(_<ISeekableInputStream> fis);
 
     ~OggSoundStream() override;
 
@@ -21,10 +22,10 @@ public:
 
     void rewind() override;
 
-    static _<OggSoundStream> load(_<IFileStream> is);
+    static _<OggSoundStream> load(_<ISeekableInputStream> is);
 
 private:
-    _<IFileStream> mFis;
+    _<ISeekableInputStream> mFis;
     OggVorbis_File mVorbisFile;
 };
 
