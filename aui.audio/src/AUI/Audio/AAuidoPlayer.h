@@ -3,6 +3,10 @@
 #include "AUI/Audio/Sound/ISoundStream.h"
 #include "AUI/Audio/Mixer/AAudioMixer.h"
 
+#if AUI_PLATFORM_ANDROID
+#include "AUI/Audio/Mixer/ASampleCommitter.h"
+#endif
+
 class AAudioPlayer {
 public:
     AAudioPlayer() = default;
@@ -48,7 +52,7 @@ public:
         }
         mSource = std::move(src);
 #if AUI_PLATFORM_ANDROID
-        mCommitter = _new<SampleCommitter>(mSource);
+        mCommitter = _new<ASampleCommitter>(mSource);
 #endif
     }
 
@@ -67,7 +71,7 @@ private:
     float mVolume = 1.f;
 
 #if AUI_PLATFORM_ANDROID
-    _<SampleCommitter> mCommitter;
+    _<ASampleCommitter> mCommitter;
 #endif
 
     void playImpl();
@@ -77,18 +81,3 @@ private:
     void stopImpl();
 
 };
-
-
-#if AUI_PLATFORM_WIN
-void AAudioPlayer::playImpl() {
-
-}
-
-void AAudioPlayer::pauseImpl() {
-
-}
-
-void AAudioPlayer::stopImpl() {
-
-}
-#endif

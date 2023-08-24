@@ -1,5 +1,6 @@
 #include "AUI/Audio/AAuidoPlayer.h"
 #include "AUI/Audio/Mixer/AAudioMixer.h"
+#include "AUI/Audio/Mixer/ASampleCommitter.h"
 #include <oboe/Oboe.h>
 
 class OboeSound : public oboe::AudioStreamDataCallback  {
@@ -10,15 +11,15 @@ public:
     }
 
     void addSource(_<ISoundSource> source) {
-        mLoop->addSoundSource(std::move(source));
+        mMixer->addSoundSource(std::move(source));
     }
 
     void removeSource(const _<ISoundSource>& source) {
-        mLoop->removeSoundSource(source);
+        mMixer->removeSoundSource(source);
     }
 
 private:
-    OboeSound() : mLoop(_new<Loop>()) {
+    OboeSound() : mMixer(_new<AAudioMixer>()) {
         oboe::AudioStreamBuilder builder;
         builder.setPerformanceMode(oboe::PerformanceMode::LowLatency)
                 ->setSharingMode(oboe::SharingMode::Exclusive)
@@ -34,7 +35,7 @@ private:
     oboe::DataCallbackResult onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames) override {
         size_t bytesToRead = numFrames * 2 * 2;
         auto dst = static_cast<char *>(audioData);
-        size_t r = mLoop->requestSoundData(dst, bytesToRead);
+        size_t r = mMixer->requestSoundData(dst, bytesToRead);
         if (r < bytesToRead) {
             std::memset(dst + r, 0, bytesToRead - r);
         }
@@ -42,7 +43,7 @@ private:
     }
 
     _<oboe::AudioStream> mStream;
-    _<Loop> mLoop;
+    _<AAudioMixer> mMixer;
 };
 
 void AAudioPlayer::playImpl() {
