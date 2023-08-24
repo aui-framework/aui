@@ -512,10 +512,7 @@ _<AView> AViewContainer::pointerEventsMapping(APointerIndex index) {
         return v.pointerIndex == index;
     });
     if (it == mPointerEventsMapping.end()) {
-        return mFocusChainTarget.lock();
+        return nullptr;
     }
-    if (auto v = it->targetView.lock()) {
-        return v;
-    }
-    return mFocusChainTarget.lock();
+    return it->targetView.lock();
 }

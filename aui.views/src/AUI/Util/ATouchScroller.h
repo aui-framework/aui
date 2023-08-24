@@ -64,12 +64,13 @@ public:
     glm::ivec2 origin() const noexcept;
 
     /**
-     * @return Value for kinetic scroll.
+     * @return std::nullopt if ATouchScroller is not in kinetic scroll state; value for kinetic
+     * scroll otherwise.
      * @details
      * This method should be called every render frame in order to make continuous kinetic scroll.
      */
     [[nodiscard]]
-    glm::ivec2 gatherKineticScrollValue();
+    AOptional<glm::ivec2> gatherKineticScrollValue();
 
 private:
     struct WaitingForThresholdState {

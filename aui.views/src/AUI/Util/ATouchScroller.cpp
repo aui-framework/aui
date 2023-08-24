@@ -92,21 +92,22 @@ glm::ivec2 ATouchScroller::origin() const noexcept {
     }, mState);
 }
 
-glm::ivec2 ATouchScroller::gatherKineticScrollValue() {
-
-    if (auto s = std::get_if<KineticScrollingState>(&mState)) {
-        const auto now = high_resolution_clock::now();
-        if (glm::length2(s->velocity) < 0.01f) {
-            return {0, 0};
-        }
-        const auto timeDelta = duration_cast<microseconds>(now - s->lastFrameTime);
-        s->lastFrameTime = now;
-        const float currentFrameRatio = float(timeDelta.count()) / float(duration_cast<microseconds>(1s).count());
-        auto result = s->velocity * currentFrameRatio;
-        s->velocity *= glm::clamp(1.f - currentFrameRatio * FRICTION, 0.001f, 0.999f);
-
-        return result;
+AOptional<glm::ivec2> ATouchScroller::gatherKineticScrollValue() {
+    auto s = std::get_if<KineticScrollingState>(&mState);
+    if (!s) {
+        return std::nullopt;
     }
-    return {0, 0};
+
+    const auto now = high_resolution_clock::now();
+    if (glm::length2(s->velocity) < 0.01f) {
+        return glm::ivec2{0, 0};
+    }
+    const auto timeDelta = duration_cast<microseconds>(now - s->lastFrameTime);
+    s->lastFrameTime = now;
+    const float currentFrameRatio = float(timeDelta.count()) / float(duration_cast<microseconds>(1s).count());
+    auto result = s->velocity * currentFrameRatio;
+    s->velocity *= glm::clamp(1.f - currentFrameRatio * FRICTION, 0.001f, 0.999f);
+
+    return result;
 }
 

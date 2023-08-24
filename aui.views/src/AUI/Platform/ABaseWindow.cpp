@@ -194,7 +194,6 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
         if (auto it = std::find_if(mScrolls.begin(), mScrolls.end(), [&](const Scroll& scroll) {
                 return event.pointerIndex == scroll.pointer;
             }); it != mScrolls.end()) {
-            ALogger::warn(LOG_TAG) << "Previous ABaseWindow::onPointerPressed was not cancelled with release event for this finder! " << it->pointer;
             mScrolls.erase(it);
         }
         ATouchScroller scroller;
@@ -328,17 +327,23 @@ void ABaseWindow::flagUpdateLayout() {
 }
 
 void ABaseWindow::render() {
-    for (auto& scroll : mScrolls) {
-        if (auto delta = scroll.scroller.gatherKineticScrollValue(); delta != glm::ivec2(0, 0)) {
-            onScroll(AScrollEvent {
+    mScrolls.erase(std::remove_if(mScrolls.begin(), mScrolls.end(), [&](Scroll& scroll) {
+        auto delta = scroll.scroller.gatherKineticScrollValue();
+        if (!delta) {
+            return false;
+        }
+        if (*delta == glm::ivec2(0, 0)) {
+            return true;
+        }
+        onScroll(AScrollEvent {
                 .origin       = scroll.scroller.origin(),
-                .delta        = delta,
+                .delta        = *delta,
                 .kinetic      = true,
                 .pointerIndex = scroll.pointer,
-            });
-            flagRedraw();
-        }
-    }
+        });
+        flagRedraw();
+        return false;
+    }), mScrolls.end());
 
     AViewContainer::render();
     mIgnoreTouchscreenKeyboardRequests = false;
