@@ -110,7 +110,7 @@ inline std::ostream& operator<<(std::ostream& o, const APointerIndex& color) {
                 break;
         }
     } else if (auto b = color.finger()) {
-        o << "finder=" << *b;
+        o << "finger=" << *b;
     }
     o << "}";
     return o;
