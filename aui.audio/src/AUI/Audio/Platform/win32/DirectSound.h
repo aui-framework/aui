@@ -1,5 +1,9 @@
 #pragma once
 
+#pragma comment(lib, "dsound.lib")
+#pragma comment(lib, "dxguid.lib")
+#pragma comment(lib, "Winmm" )
+
 #include "AUI/Platform/AWindow.h"
 #include <cassert>
 #include <dsound.h>
