@@ -143,3 +143,11 @@ Check the `examples/` folder.
 
 ![Minesweeper](https://sun9-10.userapi.com/impf/AW9aUF7nuKdkiOfEz7WtsKqhYARlwVaFb_qV0g/0EGtNBty3NI.jpg?size=392x481&quality=96&proxy=1&sign=adbaf47dada836ab25868abf8db9b9d5&type=album)
 
+# Contributing
+You are always free to contribute to this project and add yourself to the authors list :)
+## Workflow
+`master` branch contains code of the release candidate. Code of this branch must compile without errors and should pass
+all tests on all supported platforms.
+Each feature of the framework is created in a separate branch in the `feat/` folder. Pulling changes from your branch to
+`master` is possible only if the merge with your branch does not generate merge conflicts and does not break the build
+and tests.
