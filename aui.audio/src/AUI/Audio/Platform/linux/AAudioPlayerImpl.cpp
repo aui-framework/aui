@@ -11,3 +11,7 @@ void AAudioPlayer::pauseImpl() {
 void AAudioPlayer::stopImpl() {
 
 }
+
+void AAudioPlayer::setSourceImpl() {
+
+}
