@@ -58,3 +58,7 @@ void AAudioPlayer::stopImpl() {
     OboeSound::instance().removeSource(mCommitter);
     mSource->rewind();
 }
+
+void AAudioPlayer::setSourceImpl() {
+    mCommitter = _new<ASampleCommitter>(mSource);
+}

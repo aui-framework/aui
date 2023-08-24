@@ -128,3 +128,7 @@ void AAudioPlayer::setupSecondaryBuffer() {
     ASSERT_OK buffer->QueryInterface(IID_IDirectSoundBuffer8, reinterpret_cast<void**>(&mSoundBufferInterface));
     buffer->Release();
 }
+
+void AAudioPlayer::setSourceImpl() {
+    setupSecondaryBuffer();
+}

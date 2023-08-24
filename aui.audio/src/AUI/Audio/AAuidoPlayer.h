@@ -53,9 +53,7 @@ public:
             stop();
         }
         mSource = std::move(src);
-#if AUI_PLATFORM_ANDROID
-        mCommitter = _new<ASampleCommitter>(mSource);
-#endif
+        setSourceImpl();
     }
 
     void setLoop(bool loop) {
@@ -122,5 +120,7 @@ private:
     void pauseImpl();
 
     void stopImpl();
+
+    void setSourceImpl();
 
 };
