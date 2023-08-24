@@ -79,11 +79,11 @@ class AllViewsWindow: public AWindow {
 public:
     AllViewsWindow(): AWindow("All views", 300_dp, 500_dp, nullptr, WindowStyle::MODAL) {
         setContents(Centered {
-            AScrollArea::Builder().withContents(Vertical {
-                Centered { _new<ALabel>("ALabel") },
-                Centered { _new<AButton>("AButton") },
-                Centered { _new<ATextField>() let { it->setText("ATextField"); } },
-            } << ".all_views_wrap").withExpanding()
+                AScrollArea::Builder().withContents(Vertical {
+                        Centered { _new<ALabel>("ALabel") },
+                        Centered { _new<AButton>("AButton") },
+                        Centered { _new<ATextField>() let { it->setText("ATextField"); } },
+                } << ".all_views_wrap").withExpanding()
         });
     }
 };
@@ -94,328 +94,328 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
     setLayout(_new<AVerticalLayout>());
     AStylesheet::global().addRules({
-         {
-             c(".all_views_wrap") > t<AViewContainer>(),
-             Padding { 16_dp },
-         }
-    });
+                                           {
+                                                   c(".all_views_wrap") > t<AViewContainer>(),
+                                                   Padding { 16_dp },
+                                           }
+                                   });
 
     addView(Horizontal {
-        _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) with_style { FixedSize { 32_dp } },
-        AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") with_style { Expanding{} },
+            _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) with_style { FixedSize { 32_dp } },
+            AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") with_style { Expanding{} },
     });
 
     _<ATabView> tabView;
     addView(tabView = _new<ATabView>() let {
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {
-            Vertical {
-                // buttons
-                GroupBox {
-                    Label { "Buttons" },
-                    Vertical {
-                        _new<AButton>("Common button"),
-                        _new<AButton>("Default button") let { it->setDefault(); },
-                        _new<AButton>("Disabled button") let { it->setDisabled(); },
-                        Button {
-                            Icon { ":img/logo.svg" },
-                            Label { "Button with icon" },
-                        }.clicked(this, [&] {
-                            AMessageBox::show(this, "Title", "Message");
-                        }),
-                    },
-                },
-
-                // checkboxes
-                GroupBox {
-                    CheckBoxWrapper { Label { "Checkboxes" } } let { it->setChecked(true); },
-                    Vertical {
-                        CheckBoxWrapper { Label { "Unchecked checkbox" } },
-                        CheckBoxWrapper { Label { "Selected checkbox" } } let { it->setChecked(true); },
-                        CheckBoxWrapper { Label { "Disabled checkbox" } } let { it->setDisabled(); },
-                    },
-                },
-
-                // radiobuttons
-                GroupBox {
-                    Label { "Radiobuttons" },
-                    RadioGroup {
-                        RadioButton { "Radiobutton 1" } let { it->setChecked(true); },
-                        RadioButton { "Radiobutton 2" },
-                        RadioButton { "Radiobutton 3" },
-                        RadioButton { "Disabled radiobutton" } let { it->disable(); },
-                    },
-                },
-
-                // comboboxes
-                GroupBox {
-                    Label  { "Comboboxes" },
-                    Vertical {
-                        _new<ADropdownList>(AListModel<AString>::make({
-                                                                          "Combobox 1",
-                                                                          "Combobox 2",
-                                                                          "Combobox 3",
-                                                                          "Combobox 4",
-                                                                          "Combobox 5",
-                                                                          "Combobox 6",
-                                                                  })),
-                        _new<ADropdownList>(AListModel<AString>::make({"Disabled combobox"})) let { it->setDisabled(); },
-                    },
-                },
-                GroupBox {
-                    Label { "Drag area" },
-
-                    _new<ADragArea>() let {
-                        it with_style {
-                                MinSize { 100_dp },
-                                Border { 1_px, 0x0_rgb, },
-                        };
-                        it->addView(ADragArea::convertToDraggable(_new<AButton>("Drag me!"), false));
-                    },
-                } with_style { Expanding{} },
-            },
-            Vertical {
-                GroupBox {
-                    Label { "Window factory" },
-                    Vertical {
-                        CheckBoxWrapper { Label { "Resizeable" } },
-                        _new<AButton>("Show window").connect(&AButton::clicked, this, [&] {
-                            auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
-                            fillWindow(w);
-                            w->show();
-                            w->setWindowStyle(WindowStyle::MODAL);
-                            mWindows << w;
-                        }),
-                        _new<AButton>("Close all windows").connect(&AButton::clicked, this, [&] {
-                            for (auto& w : mWindows)
-                                w->close();
-                            mWindows.clear();
-                        }),
-                    }
-                },
-
-                GroupBox {
-                    Label { "System dialog" },
-                    Vertical{
-                        _new<AButton>("Show file chooser").connect(&AView::clicked, this, [&] {
-                            mAsync << ADesktop::browseForFile(this).onSuccess([&](const APath& f) {
-                                if (f.empty()) {
-                                    AMessageBox::show(this, "Result", "Cancelled");
-                                } else {
-                                    AMessageBox::show(this, "Result", "File: {}"_format(f));
-                                }
-                            });
-                        }),
-                        _new<AButton>("Show folder chooser").connect(&AView::clicked, this, [&] {
-                            mAsync << ADesktop::browseForDir(this).onSuccess([&](const APath& f) {
-                                if (f.empty()) {
-                                    AMessageBox::show(this, "Result", "Cancelled");
-                                } else {
-                                    AMessageBox::show(this, "Result", "Folder: {}"_format(f));
-                                }
-                            });
-                        }),
-                        _new<AButton>("Message box").connect(&AView::clicked, this, [&] {
-                            AMessageBox::show(this, "Title", "Message", AMessageBox::Icon::INFO);
-                        }),
-                        _new<AButton>("Cause assertion fail").connect(&AView::clicked, this, [&] {
-                            assert(("assertion fail", false));
-                        }),
-                        _new<AButton>("Cause access violation").connect(&AView::clicked, this, [&] {
-                            try {
-                                *((int*)0) = 123;
-                            } catch (const AException& e) {
-                                ALogger::info("Example") << "Successfully caught access violation: " << e;
-                            }
-                        }),
-                    }
-                },
-
-                // list view
-                GroupBox {
-                    Label { "List view" },
-                    [] { // lambda style inlining
-                        auto model = _new<DemoListModel>();
-
-                        return Vertical {
-                                Horizontal {
-                                        _new<AButton>("Add").connect(&AButton::clicked, slot(model)::addItem),
-                                        _new<AButton>("Remove").connect(&AButton::clicked, slot(model)::removeItem),
-                                        _new<ASpacerExpanding>(),
-                                },
-                                _new<AListView>(model)
-                        };
-                    }(),
-                },
-
-                // foreach
-                GroupBox {
-                    Label { "AForEachUI" },
-                    [this] { // lambda style inlining
-                        auto model = _new<AListModel<MyModel>>();
-
-                        return Vertical {
-                                Horizontal {
-                                        _new<AButton>("Add").connect(&AButton::clicked, this, [model] {
-                                            static std::default_random_engine re;
-                                            do_once {
-                                            re.seed(std::time(nullptr));
-                                        };
-                                            static std::uniform_real_distribution<float> d(0.f, 1.f);
-                                            model->push_back({ AColor(d(re), d(re), d(re), 1.f) });
+                Vertical {
+                        // buttons
+                        GroupBox {
+                                Label { "Buttons" },
+                                Vertical {
+                                        _new<AButton>("Common button"),
+                                        _new<AButton>("Default button") let { it->setDefault(); },
+                                        _new<AButton>("Disabled button") let { it->setDisabled(); },
+                                        Button {
+                                                Icon { ":img/logo.svg" },
+                                                Label { "Button with icon" },
+                                        }.clicked(this, [&] {
+                                            AMessageBox::show(this, "Title", "Message");
                                         }),
-                                        _new<AButton>("Remove").connect(&AButton::clicked, this, [model] {
-                                            if (!model->empty()) {
-                                                model->pop_back();
+                                },
+                        },
+
+                        // checkboxes
+                        GroupBox {
+                                CheckBoxWrapper { Label { "Checkboxes" } } let { it->setChecked(true); },
+                                Vertical {
+                                        CheckBoxWrapper { Label { "Unchecked checkbox" } },
+                                        CheckBoxWrapper { Label { "Selected checkbox" } } let { it->setChecked(true); },
+                                        CheckBoxWrapper { Label { "Disabled checkbox" } } let { it->setDisabled(); },
+                                },
+                        },
+
+                        // radiobuttons
+                        GroupBox {
+                                Label { "Radiobuttons" },
+                                RadioGroup {
+                                        RadioButton { "Radiobutton 1" } let { it->setChecked(true); },
+                                        RadioButton { "Radiobutton 2" },
+                                        RadioButton { "Radiobutton 3" },
+                                        RadioButton { "Disabled radiobutton" } let { it->disable(); },
+                                },
+                        },
+
+                        // comboboxes
+                        GroupBox {
+                                Label  { "Comboboxes" },
+                                Vertical {
+                                        _new<ADropdownList>(AListModel<AString>::make({
+                                                                                              "Combobox 1",
+                                                                                              "Combobox 2",
+                                                                                              "Combobox 3",
+                                                                                              "Combobox 4",
+                                                                                              "Combobox 5",
+                                                                                              "Combobox 6",
+                                                                                      })),
+                                        _new<ADropdownList>(AListModel<AString>::make({"Disabled combobox"})) let { it->setDisabled(); },
+                                },
+                        },
+                        GroupBox {
+                                Label { "Drag area" },
+
+                                _new<ADragArea>() let {
+                                    it with_style {
+                                            MinSize { 100_dp },
+                                            Border { 1_px, 0x0_rgb, },
+                                    };
+                                    it->addView(ADragArea::convertToDraggable(_new<AButton>("Drag me!"), false));
+                                },
+                        } with_style { Expanding{} },
+                },
+                Vertical {
+                        GroupBox {
+                                Label { "Window factory" },
+                                Vertical {
+                                        CheckBoxWrapper { Label { "Resizeable" } },
+                                        _new<AButton>("Show window").connect(&AButton::clicked, this, [&] {
+                                            auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
+                                            fillWindow(w);
+                                            w->show();
+                                            w->setWindowStyle(WindowStyle::MODAL);
+                                            mWindows << w;
+                                        }),
+                                        _new<AButton>("Close all windows").connect(&AButton::clicked, this, [&] {
+                                            for (auto& w : mWindows)
+                                                w->close();
+                                            mWindows.clear();
+                                        }),
+                                }
+                        },
+
+                        GroupBox {
+                                Label { "System dialog" },
+                                Vertical{
+                                        _new<AButton>("Show file chooser").connect(&AView::clicked, this, [&] {
+                                            mAsync << ADesktop::browseForFile(this).onSuccess([&](const APath& f) {
+                                                if (f.empty()) {
+                                                    AMessageBox::show(this, "Result", "Cancelled");
+                                                } else {
+                                                    AMessageBox::show(this, "Result", "File: {}"_format(f));
+                                                }
+                                            });
+                                        }),
+                                        _new<AButton>("Show folder chooser").connect(&AView::clicked, this, [&] {
+                                            mAsync << ADesktop::browseForDir(this).onSuccess([&](const APath& f) {
+                                                if (f.empty()) {
+                                                    AMessageBox::show(this, "Result", "Cancelled");
+                                                } else {
+                                                    AMessageBox::show(this, "Result", "Folder: {}"_format(f));
+                                                }
+                                            });
+                                        }),
+                                        _new<AButton>("Message box").connect(&AView::clicked, this, [&] {
+                                            AMessageBox::show(this, "Title", "Message", AMessageBox::Icon::INFO);
+                                        }),
+                                        _new<AButton>("Cause assertion fail").connect(&AView::clicked, this, [&] {
+                                            assert(("assertion fail", false));
+                                        }),
+                                        _new<AButton>("Cause access violation").connect(&AView::clicked, this, [&] {
+                                            try {
+                                                *((int*)0) = 123;
+                                            } catch (const AException& e) {
+                                                ALogger::info("Example") << "Successfully caught access violation: " << e;
                                             }
                                         }),
-                                        _new<ASpacerExpanding>(),
-                                },
-                                ui_for (i, model, AWordWrappingLayout) {
-                                    return Horizontal {
-                                            _new<ALabel>(i.color.toString()) with_style {
-                                                    TextColor { i.color.readableBlackOrWhite() },
-                                            }
-                                    } with_style {
-                                                   BackgroundSolid { i.color },
-                                                   BorderRadius { 6_pt },
-                                                   Margin { 2_dp, 4_dp },
-                                           };
                                 }
-                        };
-                    }(),
-                },
+                        },
 
-                // tree view
-                GroupBox {
-                    Label { "Tree view" },
-                    [] { // lambda style inlining
-                        auto model = _new<DemoTreeModel>();
+                        // list view
+                        GroupBox {
+                                Label { "List view" },
+                                [] { // lambda style inlining
+                                    auto model = _new<DemoListModel>();
 
-                        return _new<ATreeView>(model);
-                    }(),
-                },
-            },
-            Vertical::Expanding {
-                // fields
-                GroupBox {
-                    Label { "Other" },
-                    Vertical {
-                        _new<ASlider>(),
-                    }
-                },
-                GroupBox {
-                    Label { "Fields" },
-                    Vertical::Expanding {
-                        Label { "Text field" },
-                        _new<ATextField>() let { it->focus(); },
-                        Label { "Number picker" },
-                        _new<ANumberPicker>(),
-                        _new<ADoubleNumberPicker>(),
-                        Label { "Text area" },
-                        _new<ATextArea>("Copyright (c) 2021 Alex2772\n\n"
-                                        "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated "
-                                        "documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the "
-                                        "rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to "
-                                        "permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\n"
+                                    return Vertical {
+                                            Horizontal {
+                                                    _new<AButton>("Add").connect(&AButton::clicked, slot(model)::addItem),
+                                                    _new<AButton>("Remove").connect(&AButton::clicked, slot(model)::removeItem),
+                                                    _new<ASpacerExpanding>(),
+                                            },
+                                            _new<AListView>(model)
+                                    };
+                                }(),
+                        },
 
-                                        "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the "
-                                        "Software.\n\n"
-                                        "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE "
-                                        "WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR "
-                                        "COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
-                                        "OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.) ") let { it->setExpanding(); },
-                    }
-                } with_style { Expanding{} }
-            }
+                        // foreach
+                        GroupBox {
+                                Label { "AForEachUI" },
+                                [this] { // lambda style inlining
+                                    auto model = _new<AListModel<MyModel>>();
+
+                                    return Vertical {
+                                            Horizontal {
+                                                    _new<AButton>("Add").connect(&AButton::clicked, this, [model] {
+                                                        static std::default_random_engine re;
+                                                        do_once {
+                                                            re.seed(std::time(nullptr));
+                                                        };
+                                                        static std::uniform_real_distribution<float> d(0.f, 1.f);
+                                                        model->push_back({ AColor(d(re), d(re), d(re), 1.f) });
+                                                    }),
+                                                    _new<AButton>("Remove").connect(&AButton::clicked, this, [model] {
+                                                        if (!model->empty()) {
+                                                            model->pop_back();
+                                                        }
+                                                    }),
+                                                    _new<ASpacerExpanding>(),
+                                            },
+                                            ui_for (i, model, AWordWrappingLayout) {
+                                                return Horizontal {
+                                                        _new<ALabel>(i.color.toString()) with_style {
+                                                                TextColor { i.color.readableBlackOrWhite() },
+                                                        }
+                                                } with_style {
+                                                               BackgroundSolid { i.color },
+                                                               BorderRadius { 6_pt },
+                                                               Margin { 2_dp, 4_dp },
+                                                       };
+                                            }
+                                    };
+                                }(),
+                        },
+
+                        // tree view
+                        GroupBox {
+                                Label { "Tree view" },
+                                [] { // lambda style inlining
+                                    auto model = _new<DemoTreeModel>();
+
+                                    return _new<ATreeView>(model);
+                                }(),
+                        },
+                },
+                Vertical::Expanding {
+                        // fields
+                        GroupBox {
+                                Label { "Other" },
+                                Vertical {
+                                        _new<ASlider>(),
+                                }
+                        },
+                        GroupBox {
+                                Label { "Fields" },
+                                Vertical::Expanding {
+                                        Label { "Text field" },
+                                        _new<ATextField>() let { it->focus(); },
+                                        Label { "Number picker" },
+                                        _new<ANumberPicker>(),
+                                        _new<ADoubleNumberPicker>(),
+                                        Label { "Text area" },
+                                        _new<ATextArea>("Copyright (c) 2021 Alex2772\n\n"
+                                                        "Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated "
+                                                        "documentation files (the \"Software\"), to deal in the Software without restriction, including without limitation the "
+                                                        "rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to "
+                                                        "permit persons to whom the Software is furnished to do so, subject to the following conditions:\n\n"
+
+                                                        "The above copyright notice and this permission notice shall be included in all copies or substantial portions of the "
+                                                        "Software.\n\n"
+                                                        "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE "
+                                                        "WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR "
+                                                        "COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR "
+                                                        "OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.) ") let { it->setExpanding(); },
+                                }
+                        } with_style { Expanding{} }
+                }
         }), "Common");
 
         it->addTab(Vertical {
-            _new<ALabel>("Horizontal splitter"),
-            ASplitter::Horizontal().withItems({_new<AButton>("One"),
-                                               _new<AButton>("Two"),
-                                               _new<AButton>("Three"),
-                                               _new<AButton>("Four"),
-                                               _new<AButton>("Five")}),
-            _new<ALabel>("Vertical splitter"),
-            ASplitter::Vertical().withItems({_new<AButton>("One"),
-                                             _new<AButton>("Two"),
-                                             _new<AButton>("Three"),
-                                             _new<AButton>("Four"),
-                                             _new<AButton>("Five")}).build() let { it->setExpanding(); },
-            _new<ALabel>("Grid splitter"),
-            AGridSplitter::Builder().withItems(AVector<AVector<_<AView>>>::generate(5, [](size_t y) {
-               return AVector<_<AView>>::generate(5, [&](size_t x) {
-                   return _new<AButton>("{}x{}"_format(x, y));
-               });
-            }))
+                _new<ALabel>("Horizontal splitter"),
+                ASplitter::Horizontal().withItems({_new<AButton>("One"),
+                                                   _new<AButton>("Two"),
+                                                   _new<AButton>("Three"),
+                                                   _new<AButton>("Four"),
+                                                   _new<AButton>("Five")}),
+                _new<ALabel>("Vertical splitter"),
+                ASplitter::Vertical().withItems({_new<AButton>("One"),
+                                                 _new<AButton>("Two"),
+                                                 _new<AButton>("Three"),
+                                                 _new<AButton>("Four"),
+                                                 _new<AButton>("Five")}).build() let { it->setExpanding(); },
+                _new<ALabel>("Grid splitter"),
+                AGridSplitter::Builder().withItems(AVector<AVector<_<AView>>>::generate(5, [](size_t y) {
+                    return AVector<_<AView>>::generate(5, [&](size_t x) {
+                        return _new<AButton>("{}x{}"_format(x, y));
+                    });
+                }))
         } let { it->setExpanding(); }, "Splitters");
 
         it->addTab(AScrollArea::Builder().withContents(Vertical {
-            ASplitter::Horizontal().withItems({
-                Vertical::Expanding {
-                    _new<ALabel>("Default"),
-                    AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
-                                      "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-                                      "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
-                                      "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
-                                      "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
-                                      "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style { TextAlign::JUSTIFY },
+                ASplitter::Horizontal().withItems({
+                                                          Vertical::Expanding {
+                                                                  _new<ALabel>("Default"),
+                                                                  AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                                                                    "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                                                                    "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                                                                    "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                                                                    "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                                                                    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style { TextAlign::JUSTIFY },
+                                                          },
+                                                          Vertical::Expanding {
+                                                                  _new<ALabel>("Word breaking"),
+                                                                  AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                                                                                    "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                                                                                    "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                                                                                    "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                                                                                    "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                                                                                    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
+                                                                                    { WordBreak::BREAK_ALL })
+                                                          },
+                                                  }),
+                Horizontal {
+                        _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style { FixedSize { 100_dp } }, // gif from https://tenor.com/view/cat-gif-26024730
+                        AText::fromString("Add animated gif images!") with_style { Expanding{} },
                 },
-                Vertical::Expanding {
-                    _new<ALabel>("Word breaking"),
-                    AText::fromString("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
-                                      "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-                                      "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
-                                      "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
-                                      "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
-                                      "proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
-                                      { WordBreak::BREAK_ALL })
-                },
-            }),
-            Horizontal {
-                    _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style { FixedSize { 100_dp } }, // gif from https://tenor.com/view/cat-gif-26024730
-                    AText::fromString("Add animated gif images!") with_style { Expanding{} },
-            },
-            [] {
-                _<AViewContainer> v1 = Vertical {};
-                _<AViewContainer> v2 = Vertical {};
-                for (int i = 0; i <= 9; ++i) {
-                    v1->addView(Horizontal {
-                        _new<ALabel>("{} px"_format(i + 6)),
-                        _new<ALabel>("Hello! [] .~123`") with_style { FontSize { AMetric(i + 6, AMetric::T_PX) } }
-                    });
-                    v2->addView(Horizontal {
-                        _new<ALabel>("{} px"_format(i + 16)),
-                        _new<ALabel>("Hello! [] .~123`") with_style { FontSize { AMetric(i + 16, AMetric::T_PX) } }
-                    });
-                }
-                return Horizontal { v1, v2 };
-            }(),
+                [] {
+                    _<AViewContainer> v1 = Vertical {};
+                    _<AViewContainer> v2 = Vertical {};
+                    for (int i = 0; i <= 9; ++i) {
+                        v1->addView(Horizontal {
+                                _new<ALabel>("{} px"_format(i + 6)),
+                                _new<ALabel>("Hello! [] .~123`") with_style { FontSize { AMetric(i + 6, AMetric::T_PX) } }
+                        });
+                        v2->addView(Horizontal {
+                                _new<ALabel>("{} px"_format(i + 16)),
+                                _new<ALabel>("Hello! [] .~123`") with_style { FontSize { AMetric(i + 16, AMetric::T_PX) } }
+                        });
+                    }
+                    return Horizontal { v1, v2 };
+                }(),
         } let { it->setExpanding(); }), "Text");
 
         it->addTab(Vertical {
-            // Rulers
-            _new<ALabel>("ARulerArea"),
-            _new<ARulerArea>(_new<AView>() with_style { MinSize { 100_dp, 100_dp },
-                                                        BackgroundGradient { 0x0_rgb, 0x404040_rgb, ALayoutDirection::VERTICAL },
-                                                        MaxSize { {}, 300_dp },
-                                                        Expanding{}, }) with_style { Expanding{} },
+                // Rulers
+                _new<ALabel>("ARulerArea"),
+                _new<ARulerArea>(_new<AView>() with_style { MinSize { 100_dp, 100_dp },
+                                                            BackgroundGradient { 0x0_rgb, 0x404040_rgb, ALayoutDirection::VERTICAL },
+                                                            MaxSize { {}, 300_dp },
+                                                            Expanding{}, }) with_style { Expanding{} },
 
-            _new<DemoGraphView>(),
-            _new<ADragNDropView>(),
+                _new<DemoGraphView>(),
+                _new<ADragNDropView>(),
 
-            Label { "Custom cursor" } with_style {
-                ACursor{ ":img/logo.svg", 64 },
-            },
-            Horizontal {
-                Label{"github.com/aui-framework/aui"}.clicked(this, [] {
-                    APlatform::openUrl("https://github.com/aui-framework/aui");
-                }) with_style{
-                    TextColor{AColor::BLUE},
-                    BorderBottom{1_px, AColor::BLUE},
-                    ACursor::POINTER,
+                Label { "Custom cursor" } with_style {
+                        ACursor{ ":img/logo.svg", 64 },
                 },
-            }
+                Horizontal {
+                        Label{"github.com/aui-framework/aui"}.clicked(this, [] {
+                            APlatform::openUrl("https://github.com/aui-framework/aui");
+                        }) with_style{
+                                TextColor{AColor::BLUE},
+                                BorderBottom{1_px, AColor::BLUE},
+                                ACursor::POINTER,
+                        },
+                }
 
         } let { it->setExpanding(); }, "Others");
 
@@ -423,23 +423,23 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
     });
 
     addView(Horizontal{
-        Centered {
-            _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] {
-                _new<AllViewsWindow>()->show();
-            })
-        },
-        _new<ASpacerExpanding>(),
-        _new<ASpinner>(),
-        CheckBoxWrapper {
-            Label { "Enabled" },
-        } let {
-            it->setChecked();
-            connect(it->checked, slot(tabView)::setEnabled);
-        },
-        _new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") let {
-            it << "#copyright";
-            it->setEnabled(false);
-        }
+            Centered {
+                    _new<AButton>("Show all views...").connect(&AButton::clicked, this, [] {
+                        _new<AllViewsWindow>()->show();
+                    })
+            },
+            _new<ASpacerExpanding>(),
+            _new<ASpinner>(),
+            CheckBoxWrapper {
+                    Label { "Enabled" },
+            } let {
+                it->setChecked();
+                connect(it->checked, slot(tabView)::setEnabled);
+            },
+            _new<ALabel>("\u00a9 Alex2772, 2021, alex2772.ru") let {
+                it << "#copyright";
+                it->setEnabled(false);
+            }
     });
 }
 
@@ -452,20 +452,20 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 
     auto surface = createOverlappingSurface({0, 0}, {100, 100}, false);
     _<AViewContainer> popup = Vertical {
-        Label { "Drop event" } with_style { FontSize { 18_pt }, TextAlign::CENTER, },
-        [&]() -> _<AView> {
-            if (auto u = event.data.urls()) {
-                auto url = u->first();
-                if (auto icon = ADesktop::iconOfFile(url.path())) {
-                    return Centered { _new<ADrawableView>(icon) with_style { FixedSize { 64_dp } } };
+            Label { "Drop event" } with_style { FontSize { 18_pt }, TextAlign::CENTER, },
+            [&]() -> _<AView> {
+                if (auto u = event.data.urls()) {
+                    auto url = u->first();
+                    if (auto icon = ADesktop::iconOfFile(url.path())) {
+                        return Centered { _new<ADrawableView>(icon) with_style { FixedSize { 64_dp } } };
+                    }
                 }
-            }
-            return nullptr;
-        }(),
-        AText::fromString("Caught drop event. See the logger output for contents.") with_style { TextAlign::CENTER, MinSize { 100_dp, 40_dp } },
-        Centered { Button { "OK" }.clicked(this, [surface] {
-            surface->close();
-        }) }
+                return nullptr;
+            }(),
+            AText::fromString("Caught drop event. See the logger output for contents.") with_style { TextAlign::CENTER, MinSize { 100_dp, 40_dp } },
+            Centered { Button { "OK" }.clicked(this, [surface] {
+                surface->close();
+            }) }
     };
     ALayoutInflater::inflate(surface, popup);
     popup->pack();

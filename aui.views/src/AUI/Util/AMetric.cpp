@@ -24,11 +24,6 @@
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/APlatform.h"
 
-AMetric::AMetric(float value, Unit unit): mValue(value),
-                                          mUnit(unit)
-{
-}
-
 AMetric::AMetric(const AString& text)
 {
     ATokenizer p(_new<AStringStream>(text));

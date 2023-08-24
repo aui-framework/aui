@@ -133,8 +133,8 @@ void AWindow::onFocusAcquired() {
     AViewContainer::onFocusAcquired();
 }
 
-void AWindow::onPointerMove(glm::ivec2 pos) {
-    ABaseWindow::onPointerMove(pos);
+void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
+    ABaseWindow::onPointerMove(pos, event);
 }
 
 void AWindow::onFocusLost() {

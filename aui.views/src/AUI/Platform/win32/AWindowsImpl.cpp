@@ -172,7 +172,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
         case WM_MOUSEMOVE: {
-            onPointerMove(POS);
+            onPointerMove(POS, {});
 
             TRACKMOUSEEVENT tme;
             tme.cbSize = sizeof(tme);
@@ -213,12 +213,15 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             });
             SetCapture(mHandle);
             return 0;
-        case WM_MOUSEWHEEL :
+        case WM_MOUSEWHEEL: {
+            const auto SCROLL = 11_pt * 3.f / 120.f;
+
             onScroll({
                 .origin = mapPosition(POS),
-                .delta = {0, -(GET_WHEEL_DELTA_WPARAM(wParam)) },
+                .delta = {0, -float(GET_WHEEL_DELTA_WPARAM(wParam) * SCROLL) },
             });
             return 0;
+        }
         case WM_LBUTTONUP: {
             onPointerReleased({
                 .position = POS,

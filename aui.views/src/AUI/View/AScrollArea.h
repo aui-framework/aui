@@ -39,6 +39,10 @@ public:
     void setSize(glm::ivec2 size) override;
     void setContents(const _<AViewContainer>& container);
 
+    void onPointerPressed(const APointerPressedEvent& event) override;
+
+    void onPointerReleased(const APointerReleasedEvent& event) override;
+
     /**
      * @brief Set stick to end.
      * @see AScrollbar::setStickToEnd
@@ -63,6 +67,9 @@ public:
         AUI_NULLSAFE(mVerticalScrollbar)->setAppearance(scrollbarAppearance.getVertical());
     }
 
+    /**
+     * @see mIsWheelScrollable
+     */
     void setWheelScrollable(bool value) {
         mIsWheelScrollable = value;
     }
@@ -115,6 +122,10 @@ private:
     _<AScrollAreaContainer> mContentContainer;
     _<AScrollbar> mVerticalScrollbar;
     _<AScrollbar> mHorizontalScrollbar;
+
+    /**
+     * @brief Determines whether AScrollArea can be scrolled with mouse wheel or can be scrolled with touch only.
+     */
     bool mIsWheelScrollable = true;
 
     explicit AScrollArea(const Builder& builder);

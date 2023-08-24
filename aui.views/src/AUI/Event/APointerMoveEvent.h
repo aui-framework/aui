@@ -16,21 +16,16 @@
 
 #pragma once
 
-#include <AUI/Platform/AWindow.h>
+#include <glm/glm.hpp>
 
-struct ViewActionMouseMove {
-    AOptional<glm::ivec2> position;
-    ViewActionMouseMove() = default;
+#include "APointerIndex.h"
 
-    ViewActionMouseMove(const glm::ivec2& position) : position(position) {}
-
-    void operator()(const _<AView>& view) {
-        uitest::frame();
-        auto coords = view->getPositionInWindow() + (position ? *position : (view->getSize() / 2));
-        auto window = view->getWindow();
-        window->onPointerMove(coords, {});
-        uitest::frame();
-    }
+/**
+ * @brief Pointing method move event.
+ */
+struct APointerMoveEvent {
+    /**
+     * @brief Pointer index for touchscreen; LBUTTON for mouse cursor.
+     */
+    APointerIndex pointerIndex = APointerIndex::button(AInput::LBUTTON);
 };
-
-using mouseMove = ViewActionMouseMove;

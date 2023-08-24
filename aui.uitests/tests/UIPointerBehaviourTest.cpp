@@ -38,8 +38,8 @@ public:
         ON_CALL(*this, onMouseEnter).WillByDefault([this]() {
             AView::onMouseEnter();
         });
-        ON_CALL(*this, onPointerMove).WillByDefault([this](const auto& a) {
-            AView::onPointerMove(a);
+        ON_CALL(*this, onPointerMove).WillByDefault([this](const auto&... a) {
+            AView::onPointerMove(a...);
         });
         ON_CALL(*this, onMouseLeave).WillByDefault([this]() {
             AView::onMouseLeave();
@@ -54,7 +54,7 @@ public:
     MOCK_METHOD(void, onDummyTest, (), ());
 
     MOCK_METHOD(void, onMouseEnter, (), (override));
-    MOCK_METHOD(void, onPointerMove, (glm::ivec2 pos), (override));
+    MOCK_METHOD(void, onPointerMove, (glm::vec2 pos, const APointerMoveEvent& e), (override));
     MOCK_METHOD(void, onMouseLeave, (), (override));
 
 };
@@ -131,7 +131,7 @@ TEST_F(UIPointerBehaviour, ClickOutsideTest) {
 
     mWindow->onPointerMove(
         { 100, 100 } // somewhere outside the mView
-    );
+    , {});
     mWindow->onPointerReleased({
         .position = { 100, 100 }, // somewhere outside the mView
     });
@@ -148,11 +148,11 @@ TEST_F(UIPointerBehaviour, MouseMoveNoClick) {
     EXPECT_CALL(*mView, onClicked()).Times(0);
 
     EXPECT_CALL(*mView, onMouseEnter);
-    EXPECT_CALL(*mView, onPointerMove(testing::_)).Times(testing::AtLeast(1));
+    EXPECT_CALL(*mView, onPointerMove(testing::_, testing::_)).Times(testing::AtLeast(1));
     EXPECT_CALL(*mView, onMouseLeave);
 
-    mWindow->onPointerMove(mView->getCenterPointInWindow()); // somewhere over the mView
-    mWindow->onPointerMove({ 100, 100 }); // somewhere outside the mView
+    mWindow->onPointerMove(mView->getCenterPointInWindow(), {}); // somewhere over the mView
+    mWindow->onPointerMove({ 100, 100 }, {}); // somewhere outside the mView
 }
 
 

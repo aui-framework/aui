@@ -313,7 +313,7 @@ signals:
 
     bool consumesClick(const glm::ivec2& pos) override;
 
-    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
     void flagUpdateLayout() override;
 };
