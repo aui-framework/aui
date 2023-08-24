@@ -24,13 +24,13 @@ namespace {
 
     template<>
     struct sample_type<SampleFormat::I16> {
-        using type = uint16_t;
+        using type = int16_t;
         constexpr static int size_bits = 16;
     };
 
     template<>
     struct sample_type<SampleFormat::I24> {
-        using type = uint32_t;
+        using type = int32_t;
         constexpr static int size_bits = 24;
     };
 
@@ -41,12 +41,6 @@ namespace {
 
     template<SampleFormat f>
     using sample_type_t = typename sample_type<f>::type;
-
-
-    template<SampleFormat f>
-    constexpr sample_type_t<f> max_value() {
-        return mul_by_2_power<sample_type<f>::size_bits>(sample_type_t<f>(1)) - 1;
-    }
 
 #pragma pack(push, 1)
     template<SampleFormat f>
@@ -71,7 +65,10 @@ public:
     static constexpr SampleFormat OUTPUT_FORMAT = SampleFormat::I24;
 #endif
 
-    static constexpr uint32_t MAX_VALUE = mul_by_2_power<sample_type<OUTPUT_FORMAT>::size_bits>(1) - 1;
+    using output_t = sample_type<OUTPUT_FORMAT>;
+
+    static constexpr int32_t MIN_VAL = -mul_by_2_power<output_t::size_bits - 1>(1);
+    static constexpr int32_t MAX_VAL = mul_by_2_power<output_t::size_bits - 1>(1) - 1;
 
     SampleConsumer(char* destinationBufferBegin,
                    char* destinationBufferEnd):
@@ -82,13 +79,9 @@ public:
     template<SampleFormat f>
     inline void commitSample(sample_type_t<f> sample) {
         assert(("buffer overrun", mDestinationBufferIt <= mDestinationBufferEnd));
-        using output_t = sample_type<OUTPUT_FORMAT>;
         output_t::type sampleResampled = mul_by_2_power<output_t::size_bits - sample_type<f>::size_bits>(sample);
-
-        auto& pAccessor = *reinterpret_cast<packed_accessor<OUTPUT_FORMAT>*>(mDestinationBufferIt);
-        // избегаю здесь memcpy чтобы записывать 3 байта одной инструкцией, вместо 10 которые были бы при memcpy
-        // сбрасываю биты, на место которых буду писать
-        pAccessor.value = uint32_t(pAccessor.value) + uint32_t(sampleResampled);
+        auto& accessor = *reinterpret_cast<packed_accessor<OUTPUT_FORMAT>*>(mDestinationBufferIt);
+        accessor.value = glm::clamp(int32_t(accessor.value) + int32_t(sampleResampled), MIN_VAL, MAX_VAL);
         mDestinationBufferIt += size_bytes<OUTPUT_FORMAT>();
     }
 
@@ -100,7 +93,11 @@ public:
     template<SampleFormat f>
     inline void commitAllSamples(const _<ISoundStream>& is) {
         char buf[0x1000 * 3];
-        for (size_t r; (r = is->read(buf, std::min(size_t(remainingSampleCount() * size_bytes<f>()), sizeof(buf)))) && remainingSampleCount() > 0;) {
+        while (remainingSampleCount() > 0) {
+            size_t r = is->read(buf, std::min(size_t(remainingSampleCount() * size_bytes<f>()), sizeof(buf)));
+            if (r == 0) {
+                break;
+            }
             char* end = buf + r;
             for (char* it = buf; it + size_bytes<f>() <= end; it += size_bytes<f>()) {
                 auto value = *reinterpret_cast<packed_accessor<f>*>(it);
