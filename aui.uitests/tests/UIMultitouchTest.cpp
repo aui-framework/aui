@@ -40,6 +40,11 @@
  * that's it.
  */
 
+class SliderMock: public ASlider {
+public:
+    MOCK_METHOD(void, onPointerMove, (glm::vec2 pos, const APointerMoveEvent& e), (override));
+};
+
 class UIMultitouchTest: public testing::UITest {
 public:
 protected:
@@ -47,12 +52,12 @@ protected:
     class TestWindow: public AWindow {
     public:
         _<ASlider> mSlider1;
-        _<ASlider> mSlider2;
+        _<SliderMock> mSlider2;
         TestWindow() {
             using namespace declarative;
             setContents(Vertical {
                 mSlider1 = _new<ASlider>(),
-                mSlider2 = _new<ASlider>(),
+                mSlider2 = _new<SliderMock>(),
             } with_style { MinSize { 200_dp, {} } });
 
             pack();
@@ -97,12 +102,22 @@ TEST_F(UIMultitouchTest, Single) {
  * Checks that multi touch works correctly.
  */
 TEST_F(UIMultitouchTest, Multi) {
+    auto matcher = [&](glm::vec2 v) {
+        return glm::distance(glm::vec2(mTestWindow->mSlider2->getSize()) / 2.f, v) <= 20.f;
+    };
+    EXPECT_CALL(*mTestWindow->mSlider2, onPointerMove(testing::Truly(matcher), testing::_)).Times(testing::AtLeast(1));
+
+    ON_CALL(*mTestWindow->mSlider2, onPointerMove).WillByDefault([&](const auto&... a) {
+        mTestWindow->mSlider2->ASlider::onPointerMove(a...);
+    });
+
     By::value(mTestWindow->mSlider1).perform(pointerPress {
         .pointerIndex = APointerIndex::finger(0),
     });
     By::value(mTestWindow->mSlider2).perform(pointerPress {
         .pointerIndex = APointerIndex::finger(1),
     });
+    std::cout << "Size: " << mTestWindow->mSlider2->getSize() << '\n';
 
     By::value(mTestWindow->mSlider1).perform(pointerMove {
         .position = mTestWindow->mSlider1->getSize() - glm::ivec2(2, 2),
