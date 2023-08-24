@@ -73,7 +73,7 @@ public:
 
 class FileStream: public IFileStream {
 private:
-    AByteBufferView mRef;
+    AByteBuffer mRef;
     size_t mReadPos = 0;
     FileStream() {}
 
@@ -83,12 +83,8 @@ public:
     }
 
     static std::shared_ptr<IFileStream> open(const AUrl& url) noexcept {
-        auto buffer = AByteBuffer::fromStream(AUrl(url).open());
-        auto data = new char[buffer.size()];
-        memcpy(data, buffer.data(), buffer.size());
-        auto is = AByteBufferView(data, buffer.size());
         auto fileStream = std::shared_ptr<FileStream>(new FileStream);
-        fileStream->mRef = is;
+        fileStream->mRef = AByteBuffer::fromStream(AUrl(url).open());
         return fileStream;
     }
 

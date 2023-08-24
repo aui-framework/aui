@@ -36,6 +36,8 @@ private:
         int32_t subchunk2Size;
     };
 
+    static_assert(sizeof(WavFileHeader) == 44);
+
     _<IFileStream> mFis;
     WavFileHeader mHeader;
     size_t mChunkReadPos = 0; // до mHeader.ChunkSize
