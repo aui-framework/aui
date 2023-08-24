@@ -4,10 +4,10 @@
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/IO/AStrongByteBufferInputStream.h"
 
-class RawSoundStream : public ISoundStream {
+class ARawSoundStream : public ISoundStream {
 public:
-    RawSoundStream(AAudioFormat format, AByteBuffer data) : mFormat(std::move(format)),
-                                                            mStream(_new<AStrongByteBufferInputStream>(std::move(data))) { }
+    ARawSoundStream(AAudioFormat format, AByteBuffer data) : mFormat(std::move(format)),
+                                                             mStream(_new<AStrongByteBufferInputStream>(std::move(data))) { }
 
     size_t read(char* dst, size_t size) override {
         return mStream->read(dst, size);

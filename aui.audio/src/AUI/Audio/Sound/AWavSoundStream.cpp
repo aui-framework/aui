@@ -2,11 +2,11 @@
 // Created by dervisdev on 2/9/2023.
 //
 
-#include "WavSoundStream.h"
+#include "AWavSoundStream.h"
 #include "AUI/IO/AStrongByteBufferInputStream.h"
 #include "AUI/Url/AUrl.h"
 
-WavSoundStream::WavSoundStream(_<ISeekableInputStream> is) : mStream(std::move(is)) {
+AWavSoundStream::AWavSoundStream(_<ISeekableInputStream> is) : mStream(std::move(is)) {
     mStream->read(reinterpret_cast<char*>(&mHeader), sizeof(mHeader));
 
     if (std::memcmp(mHeader.chunkID, "RIFF", 4) != 0 ||
@@ -16,7 +16,7 @@ WavSoundStream::WavSoundStream(_<ISeekableInputStream> is) : mStream(std::move(i
     }
 }
 
-AAudioFormat WavSoundStream::info() {
+AAudioFormat AWavSoundStream::info() {
     return AAudioFormat {
         .bitRate = static_cast<unsigned int>(mHeader.byteRate * 2),
         .channelCount = static_cast<uint8_t>(mHeader.numChannels),
@@ -25,12 +25,12 @@ AAudioFormat WavSoundStream::info() {
     };
 }
 
-void WavSoundStream::rewind() {
+void AWavSoundStream::rewind() {
     mChunkReadPos = 0;
     mStream->seek(sizeof(mHeader), std::ios::beg);
 }
 
-size_t WavSoundStream::read(char* dst, size_t size) {
+size_t AWavSoundStream::read(char* dst, size_t size) {
     auto remaining = mHeader.chunkSize - mChunkReadPos;
     if (remaining == 0) {
         return 0;
@@ -41,10 +41,10 @@ size_t WavSoundStream::read(char* dst, size_t size) {
     return r;
 }
 
-_<ISoundStream> WavSoundStream::load(_<ISeekableInputStream> is) {
-    return _new<WavSoundStream>(std::move(is));
+_<ISoundStream> AWavSoundStream::load(_<ISeekableInputStream> is) {
+    return _new<AWavSoundStream>(std::move(is));
 }
 
-_<WavSoundStream> WavSoundStream::fromUrl(const AUrl& url) {
-    return _new<WavSoundStream>(AStrongByteBufferInputStream::fromUrl(url));
+_<AWavSoundStream> AWavSoundStream::fromUrl(const AUrl& url) {
+    return _new<AWavSoundStream>(AStrongByteBufferInputStream::fromUrl(url));
 }

@@ -5,9 +5,9 @@
 class ISeekableInputStream;
 class AUrl;
 
-class WavSoundStream: public ISoundStream {
+class AWavSoundStream: public ISoundStream {
 public:
-    explicit WavSoundStream(_<ISeekableInputStream> is);
+    explicit AWavSoundStream(_<ISeekableInputStream> is);
 
     AAudioFormat info() override;
 
@@ -16,7 +16,7 @@ public:
     size_t read(char* dst, size_t size) override;
 
     static _<ISoundStream> load(_<ISeekableInputStream> is);
-    static _<WavSoundStream> fromUrl(const AUrl& url);
+    static _<AWavSoundStream> fromUrl(const AUrl& url);
 
 private:
     struct WavFileHeader {

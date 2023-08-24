@@ -11,11 +11,11 @@
 class AUrl;
 class ISeekableInputStream;
 
-class OggSoundStream: public ISoundStream {
+class AOggSoundStream: public ISoundStream {
 public:
-    explicit OggSoundStream(_<ISeekableInputStream> fis);
+    explicit AOggSoundStream(_<ISeekableInputStream> fis);
 
-    ~OggSoundStream() override;
+    ~AOggSoundStream() override;
 
     AAudioFormat info() override;
 
@@ -23,8 +23,8 @@ public:
 
     void rewind() override;
 
-    static _<OggSoundStream> load(_<ISeekableInputStream> is);
-    static _<OggSoundStream> fromUrl(const AUrl& url);
+    static _<AOggSoundStream> load(_<ISeekableInputStream> is);
+    static _<AOggSoundStream> fromUrl(const AUrl& url);
 
 private:
     _<ISeekableInputStream> mStream;

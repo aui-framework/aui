@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AUI/Audio/Sound/RawSoundStream.h"
+#include "AUI/Audio/Sound/ARawSoundStream.h"
 
 class AAudioRecorder {
 public:
@@ -16,7 +16,7 @@ public:
         }
     }
 
-    _<RawSoundStream> stop() {
+    _<ARawSoundStream> stop() {
         if (mStatus != RecordingStatus::RECORDING) {
             return nullptr;
         }
@@ -35,5 +35,5 @@ private:
 
     void startImpl();
 
-    _<RawSoundStream> stopImpl();
+    _<ARawSoundStream> stopImpl();
 };

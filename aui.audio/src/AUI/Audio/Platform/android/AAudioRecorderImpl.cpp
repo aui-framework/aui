@@ -1,5 +1,5 @@
 #include "AUI/Audio/AAudioRecorder.h"
-#include "AUI/Audio/Sound/RawSoundStream.h"
+#include "AUI/Audio/Sound/ARawSoundStream.h"
 #include "AUI/Platform/AMessageBox.h"
 #include "AUI/Platform/AWindow.h"
 #include <oboe/Oboe.h>
@@ -25,9 +25,9 @@ public:
         mStream->requestStart();
     }
 
-    _<RawSoundStream> stopRecording() {
+    _<ARawSoundStream> stopRecording() {
         mStream->requestStop();
-        return _new<RawSoundStream>(OUTPUT_FORMAT, std::move(mRecordedRawData));
+        return _new<ARawSoundStream>(OUTPUT_FORMAT, std::move(mRecordedRawData));
     }
 
 private:
@@ -56,6 +56,6 @@ void AAudioRecorder::startImpl() {
     OboeSoundInput::instance().startRecording();
 }
 
-_<RawSoundStream> AAudioRecorder::stopImpl() {
+_<ARawSoundStream> AAudioRecorder::stopImpl() {
     return OboeSoundInput::instance().stopRecording();
 }

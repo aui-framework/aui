@@ -37,8 +37,8 @@
 
 #include "AUI/Audio/AAudioPlayer.h"
 
-#include "AUI/Audio/Sound/WavSoundStream.h"
-#include "AUI/Audio/Sound/OggSoundStream.h"
+#include "AUI/Audio/Sound/AWavSoundStream.h"
+#include "AUI/Audio/Sound/AOggSoundStream.h"
 
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ADragNDropView.h"
@@ -339,8 +339,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
         }), "Common");
 
 
-        mWavAudio = _new<AAudioPlayer>(WavSoundStream::fromUrl(":sound/sound1.wav"));
-        mOggAudio = _new<AAudioPlayer>(OggSoundStream::fromUrl(":sound/sound1.ogg"));
+        mWavAudio = _new<AAudioPlayer>(AWavSoundStream::fromUrl(":sound/sound1.wav"));
+        mOggAudio = _new<AAudioPlayer>(AOggSoundStream::fromUrl(":sound/sound1.ogg"));
 
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
                 Horizontal {
