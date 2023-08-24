@@ -62,8 +62,18 @@ public:
         mLoop = loop;
     }
 
+    [[nodiscard]]
+    bool getLoop() const noexcept {
+        return mLoop;
+    }
+
     void setVolume(float volume) {
         mVolume = volume;
+    }
+
+    [[nodiscard]]
+    float getVolume() const noexcept {
+        return mVolume;
     }
 
 private:
