@@ -4,7 +4,7 @@
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/Audio/Stream/FileStream.h"
 
-class RawSoundStream : ISoundStream {
+class RawSoundStream : public ISoundStream {
 public:
     RawSoundStream(AAudioFormat format, AByteBuffer data) : mFormat(std::move(format)),
                                                             mStream(_new<FileStream>(std::move(data))) { }

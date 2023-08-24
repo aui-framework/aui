@@ -1,12 +1,15 @@
+#include "AUI/Audio/AAudioRecorder.h"
+#include "AUI/Audio/Sound/RawSoundStream.h"
+#include "AUI/Platform/AMessageBox.h"
+#include "AUI/Platform/AWindow.h"
 #include <oboe/Oboe.h>
 #include <cassert>
-#include "AUI/Audio/Sound/RawSoundStream.h"
 
 class OboeSoundInput : public oboe::AudioStreamDataCallback  {
 public:
     static constexpr AAudioFormat OUTPUT_FORMAT = {
-            .bitRate = 176400,
-            .channelCount = 2,
+            .bitRate = 88200,
+            .channelCount = 1,
             .sampleRate = 44100,
             .bitsPerSample = 16
     };
@@ -30,13 +33,11 @@ public:
 private:
     OboeSoundInput() {
         oboe::AudioStreamBuilder builder;
-        builder.setPerformanceMode(oboe::PerformanceMode::LowLatency)
-                ->setSharingMode(oboe::SharingMode::Exclusive)
+        builder.setDirection(oboe::Direction::Input)
                 ->setDataCallback(this)
-                ->setChannelCount(2)
+                ->setChannelCount(1)
                 ->setSampleRate(44100)
-                ->setFormat(oboe::AudioFormat::I16)
-                ->setDirection(oboe::Direction::Input);
+                ->setFormat(oboe::AudioFormat::I16);
         auto r = builder.openStream(mStream);
         assert(r == oboe::Result::OK);
     }
@@ -44,6 +45,7 @@ private:
     oboe::DataCallbackResult onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames) override {
         size_t bytesToRead = numFrames * 2 * 2;
         mRecordedRawData.write(reinterpret_cast<char*>(audioData), bytesToRead);
+        return oboe::DataCallbackResult::Continue;
     }
 
     _<oboe::AudioStream> mStream;
@@ -55,5 +57,5 @@ void AAudioRecorder::startImpl() {
 }
 
 _<RawSoundStream> AAudioRecorder::stopImpl() {
-    return OboeSoundInput::instamce().stopRecording();
+    return OboeSoundInput::instance().stopRecording();
 }

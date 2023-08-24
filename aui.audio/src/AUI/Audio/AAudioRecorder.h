@@ -10,16 +10,22 @@ public:
     };
 
     void start() {
-        startImpl();
-        mStatus = RecordingStatus::RECORDING;
+        if (mStatus != RecordingStatus::RECORDING) {
+            startImpl();
+            mStatus = RecordingStatus::RECORDING;
+        }
     }
 
     _<RawSoundStream> stop() {
+        if (mStatus != RecordingStatus::RECORDING) {
+            return nullptr;
+        }
         auto res = stopImpl();
         mStatus = RecordingStatus::STOPPED;
         return res;
     }
 
+    [[nodiscard]]
     RecordingStatus getStatus() const noexcept {
         return mStatus;
     }
