@@ -38,9 +38,7 @@
 #include "AUI/Audio/AAuidoPlayer.h"
 
 #include "AUI/Audio/Sound/WavSoundStream.h"
-#include "AUI/Audio/Sound/WavSoundStream.cpp"
 #include "AUI/Audio/Sound/OggSoundStream.h"
-#include "AUI/Audio/Sound/OggSoundStream.cpp"
 
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ADragNDropView.h"

@@ -3,7 +3,9 @@
 #include "AUI/Audio/Sound/ISoundStream.h"
 #include "AUI/Audio/Mixer/AAudioMixer.h"
 
-#if AUI_PLATFORM_ANDROID
+#if AUI_PLATFORM_WIN
+#include "AUI/Audio/Platform/win32/DirectSound.h"
+#elif AUI_PLATFORM_ANDROID
 #include "AUI/Audio/Mixer/ASampleCommitter.h"
 #endif
 
@@ -70,9 +72,40 @@ private:
     bool mLoop = false;
     float mVolume = 1.f;
 
-#if AUI_PLATFORM_ANDROID
+#if AUI_PLATFORM_WIN
+    static constexpr int BUFFER_DURATION_SEC = 2;
+    static_assert(BUFFER_DURATION_SEC >= 2 && "Buffer duration assumes to be greater than 1");
+
+    HANDLE mEvents[BUFFER_DURATION_SEC + 1];
+    DSBPOSITIONNOTIFY mNotifyPositions[BUFFER_DURATION_SEC];
+    HANDLE mThread;
+    bool mThreadIsActive = false;
+
+    IDirectSoundBuffer8* mSoundBufferInterface;
+    IDirectSoundNotify8* mNotifyInterface;
+
+    bool mIsPlaying = false;
+    int mBytesPerSecond;
+
+    void uploadNextBlock(DWORD reachedPointIndex);
+
+    void clearBuffer();
+
+    void setupBufferThread();
+
+    [[noreturn]]
+    static DWORD WINAPI bufferThread(void *lpParameter);
+
+    void onAudioReachCallbackPoint();
+
+    void setupReachPointEvents();
+
+    void setupSecondaryBuffer();
+
+#elif AUI_PLATFORM_ANDROID
     _<ASampleCommitter> mCommitter;
 #endif
+
 
     void playImpl();
 
