@@ -172,7 +172,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
         case WM_MOUSEMOVE: {
-            onPointerMove(POS);
+            onPointerMove(POS, {});
 
             TRACKMOUSEEVENT tme;
             tme.cbSize = sizeof(tme);
