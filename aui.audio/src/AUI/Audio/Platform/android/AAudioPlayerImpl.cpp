@@ -1,12 +1,12 @@
-#include "AUI/Audio/AAuidoPlayer.h"
+#include "AUI/Audio/AAudioPlayer.h"
 #include "AUI/Audio/Mixer/AAudioMixer.h"
 #include "AUI/Audio/Mixer/ASampleCommitter.h"
 #include <oboe/Oboe.h>
 
-class OboeSound : public oboe::AudioStreamDataCallback  {
+class OboeSoundOutput : public oboe::AudioStreamDataCallback  {
 public:
-    static OboeSound& instance() {
-        static OboeSound p;
+    static OboeSoundOutput& instance() {
+        static OboeSoundOutput p;
         return p;
     }
 
@@ -19,7 +19,7 @@ public:
     }
 
 private:
-    OboeSound() : mMixer(_new<AAudioMixer>()) {
+    OboeSoundOutput() : mMixer(_new<AAudioMixer>()) {
         oboe::AudioStreamBuilder builder;
         builder.setPerformanceMode(oboe::PerformanceMode::LowLatency)
                 ->setSharingMode(oboe::SharingMode::Exclusive)
@@ -47,15 +47,15 @@ private:
 };
 
 void AAudioPlayer::playImpl() {
-    OboeSound::instance().addSource(mCommitter);
+    OboeSoundOutput::instance().addSource(mCommitter);
 }
 
 void AAudioPlayer::pauseImpl() {
-    OboeSound::instance().removeSource(mCommitter);
+    OboeSoundOutput::instance().removeSource(mCommitter);
 }
 
 void AAudioPlayer::stopImpl() {
-    OboeSound::instance().removeSource(mCommitter);
+    OboeSoundOutput::instance().removeSource(mCommitter);
     mSource->rewind();
 }
 

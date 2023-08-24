@@ -13,7 +13,7 @@
 
 #include "AUI/Traits/memory.h"
 #include "AUI/Thread/AFuture.h"
-#include "AUI/Audio/AAuidoPlayer.h"
+#include "AUI/Audio/AAudioPlayer.h"
 #include "AUI/Audio/Sound/ISoundStream.h"
 
 class AudioInterface {

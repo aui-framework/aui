@@ -18,7 +18,7 @@
 
 #include <AUI/Platform/AWindow.h>
 #include "AUI/Thread/AAsyncHolder.h"
-#include "AUI/Audio/AAuidoPlayer.h"
+#include "AUI/Audio/AAudioPlayer.h"
 
 class ExampleWindow: public AWindow {
 public:

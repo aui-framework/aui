@@ -75,9 +75,13 @@ class FileStream: public IFileStream {
 private:
     AByteBuffer mRef;
     size_t mReadPos = 0;
-    FileStream() {}
+    FileStream() = default;
 
 public:
+    explicit FileStream(AByteBuffer buffer) : mRef(std::move(buffer)) {
+
+    }
+
     bool isEof() override {
         return mReadPos == mRef.size();
     }

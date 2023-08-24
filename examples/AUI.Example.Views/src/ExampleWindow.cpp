@@ -35,7 +35,7 @@
 #include "AUI/View/ASpinner.h"
 #include "DemoGraphView.h"
 
-#include "AUI/Audio/AAuidoPlayer.h"
+#include "AUI/Audio/AAudioPlayer.h"
 
 #include "AUI/Audio/Sound/WavSoundStream.h"
 #include "AUI/Audio/Sound/OggSoundStream.h"

@@ -44,7 +44,7 @@ public:
         }
     }
 
-    PlaybackStatus getPlaybackStatus() {
+    PlaybackStatus getStatus() const noexcept {
         return mPlaybackStatus;
     }
 
