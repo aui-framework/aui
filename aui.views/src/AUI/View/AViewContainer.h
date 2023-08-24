@@ -380,6 +380,22 @@ private:
      */
     _weak<AView> mFocusChainTarget;
 
+    struct PointerEventsMapping {
+        APointerIndex pointerIndex;
+        _weak<AView> targetView;
+    };
+
+    /**
+     * @brief Like focus chain target, but intended for pointer press -> move.. -> release event sequence on per-pointer
+     * (finger) basis.
+     */
+    ASmallVector<PointerEventsMapping, 1> mPointerEventsMapping;
+
     void notifyParentEnabledStateChanged(bool enabled) override;
     void invalidateCaches();
+
+    /**
+     * @see mPointerEventsMapping
+     */
+    _<AView> pointerEventsMapping(APointerIndex index);
 };
