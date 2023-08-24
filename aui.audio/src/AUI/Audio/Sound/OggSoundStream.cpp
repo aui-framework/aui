@@ -6,14 +6,14 @@
 #include "ogg/ogg.h"
 #include "AUI/IO/AStrongByteBufferInputStream.h"
 
-OggSoundStream::OggSoundStream(_<ISeekableInputStream> fis) : mFis(std::move(fis)) {
+OggSoundStream::OggSoundStream(_<ISeekableInputStream> fis) : mStream(std::move(fis)) {
     OggVorbis_File vorbisFile;
     ov_callbacks callbacks = {
             [](void *ptr, size_t size, size_t nmemb, void *datasource) -> size_t { // read
                 size_t readCount = 0;
                 try {
                     for (char* current = (char*) ptr; nmemb > 0; current += size, nmemb -= 1) {
-                        auto r = reinterpret_cast<OggSoundStream*>(datasource)->mFis->read(current, size);
+                        auto r = reinterpret_cast<OggSoundStream*>(datasource)->mStream->read(current, size);
                         if (r != size) break;
                         readCount += 1;
                     }
@@ -25,9 +25,9 @@ OggSoundStream::OggSoundStream(_<ISeekableInputStream> fis) : mFis(std::move(fis
             [](void *datasource, ogg_int64_t offset, int whence) -> int { // seek
                 auto b = reinterpret_cast<OggSoundStream*>(datasource);
                 switch (whence) {
-                    case SEEK_SET: b->mFis->seek(offset, std::ios::beg); break;
-                    case SEEK_END: b->mFis->seek(offset, std::ios::end); break;
-                    case SEEK_CUR: b->mFis->seek(offset, std::ios::cur); break;
+                    case SEEK_SET: b->mStream->seek(offset, std::ios::beg); break;
+                    case SEEK_END: b->mStream->seek(offset, std::ios::end); break;
+                    case SEEK_CUR: b->mStream->seek(offset, std::ios::cur); break;
                     default: assert(0);
                 }
                 return 0;
@@ -35,7 +35,7 @@ OggSoundStream::OggSoundStream(_<ISeekableInputStream> fis) : mFis(std::move(fis
             [](void*) { return 0; }, // close
             [](void* datasource) -> long { //tell
                 auto b = reinterpret_cast<OggSoundStream*>(datasource);
-                return b->mFis->tell();
+                return b->mStream->tell();
             }
     };
 
@@ -83,4 +83,8 @@ void OggSoundStream::rewind() {
 
 _<OggSoundStream> OggSoundStream::load(_<ISeekableInputStream> is) {
     return _new<OggSoundStream>(std::move(is));
+}
+
+_<OggSoundStream> OggSoundStream::fromUrl(const AUrl& url) {
+    return _new<OggSoundStream>(AStrongByteBufferInputStream::fromUrl(url));
 }

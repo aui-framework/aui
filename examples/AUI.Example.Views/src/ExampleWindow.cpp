@@ -338,13 +338,9 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
             }
         }), "Common");
 
-        auto wavFilestream = FileStream::open(":sound/sound1.wav");
-        auto wavSoundStream = WavSoundStream::load(std::move(wavFilestream));
-        mWavAudio = _new<AAudioPlayer>(std::move(wavSoundStream));
 
-        auto oggFilestream = FileStream::open(":sound/sound1.ogg");
-        auto oggSoundStream = OggSoundStream::load(std::move(oggFilestream));
-        mOggAudio = _new<AAudioPlayer>(std::move(oggSoundStream));
+        mWavAudio = _new<AAudioPlayer>(WavSoundStream::fromUrl(":sound/sound1.wav"));
+        mOggAudio = _new<AAudioPlayer>(OggSoundStream::fromUrl(":sound/sound1.ogg"));
 
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
                 Horizontal {

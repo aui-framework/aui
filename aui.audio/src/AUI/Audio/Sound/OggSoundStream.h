@@ -8,6 +8,7 @@
 #include "vorbis/vorbisfile.h"
 #include "AUI/IO/AFileInputStream.h"
 
+class AUrl;
 class ISeekableInputStream;
 
 class OggSoundStream: public ISoundStream {
@@ -23,11 +24,9 @@ public:
     void rewind() override;
 
     static _<OggSoundStream> load(_<ISeekableInputStream> is);
+    static _<OggSoundStream> fromUrl(const AUrl& url);
 
 private:
-    _<ISeekableInputStream> mFis;
+    _<ISeekableInputStream> mStream;
     OggVorbis_File mVorbisFile;
 };
-
-//TODO replace FileStream with abstract stream with seek() and tell() methods
-

@@ -11,7 +11,7 @@ private:
     AStrongByteBufferInputStream() = default;
 
 public:
-    static std::shared_ptr<ISeekableInputStream> fromUrl(const AUrl& url) noexcept;
+    static _<AStrongByteBufferInputStream> fromUrl(const AUrl& url) noexcept;
 
     explicit AStrongByteBufferInputStream(AByteBuffer buffer);
     ~AStrongByteBufferInputStream() override = default;

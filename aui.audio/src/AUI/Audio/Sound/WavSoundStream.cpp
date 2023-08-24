@@ -3,9 +3,11 @@
 //
 
 #include "WavSoundStream.h"
+#include "AUI/IO/AStrongByteBufferInputStream.h"
+#include "AUI/Url/AUrl.h"
 
-WavSoundStream::WavSoundStream(_<ISeekableInputStream> is) : mFis(std::move(is)) {
-    mFis->read(reinterpret_cast<char*>(&mHeader), sizeof(mHeader));
+WavSoundStream::WavSoundStream(_<ISeekableInputStream> is) : mStream(std::move(is)) {
+    mStream->read(reinterpret_cast<char*>(&mHeader), sizeof(mHeader));
 
     if (std::memcmp(mHeader.chunkID, "RIFF", 4) != 0 ||
         std::memcmp(mHeader.format, "WAVE", 4) != 0 ||
@@ -25,7 +27,7 @@ AAudioFormat WavSoundStream::info() {
 
 void WavSoundStream::rewind() {
     mChunkReadPos = 0;
-    mFis->seek(sizeof(mHeader), std::ios::beg);
+    mStream->seek(sizeof(mHeader), std::ios::beg);
 }
 
 size_t WavSoundStream::read(char* dst, size_t size) {
@@ -34,11 +36,15 @@ size_t WavSoundStream::read(char* dst, size_t size) {
         return 0;
     }
 
-    size_t r = mFis->read(dst, std::min(size, remaining));
+    size_t r = mStream->read(dst, std::min(size, remaining));
     mChunkReadPos += r;
     return r;
 }
 
 _<ISoundStream> WavSoundStream::load(_<ISeekableInputStream> is) {
     return _new<WavSoundStream>(std::move(is));
+}
+
+_<WavSoundStream> WavSoundStream::fromUrl(const AUrl& url) {
+    return _new<WavSoundStream>(AStrongByteBufferInputStream::fromUrl(url));
 }

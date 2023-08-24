@@ -1,9 +1,9 @@
 #pragma once
 
-#include "AUI/IO/AFileInputStream.h"
-#include "AUI/Common/AByteBuffer.h"
 #include "ISoundStream.h"
-#include "AUI/IO/AStrongByteBufferInputStream.h"
+
+class ISeekableInputStream;
+class AUrl;
 
 class WavSoundStream: public ISoundStream {
 public:
@@ -16,6 +16,7 @@ public:
     size_t read(char* dst, size_t size) override;
 
     static _<ISoundStream> load(_<ISeekableInputStream> is);
+    static _<WavSoundStream> fromUrl(const AUrl& url);
 
 private:
     struct WavFileHeader {
@@ -38,9 +39,7 @@ private:
 
     static_assert(sizeof(WavFileHeader) == 44);
 
-    _<ISeekableInputStream> mFis;
+    _<ISeekableInputStream> mStream;
     WavFileHeader mHeader;
     size_t mChunkReadPos = 0; // до mHeader.ChunkSize
 };
-
-//TODO replace FileStream with abstract stream with seek() and tell() methods
