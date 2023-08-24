@@ -5,6 +5,9 @@
 
 class AAudioPlayer;
 
+/**
+ * @brief Audio data committer that can be used as sound source for AAudioMixer
+ */
 class ASampleCommitter : public ISoundSource {
 public:
     explicit ASampleCommitter(_<ISoundStream> stream, PlaybackConfig config);

@@ -2,6 +2,9 @@
 
 #include "AUI/Audio/Sound/ARawSoundStream.h"
 
+/**
+ * @brief Interface for audio recording
+ */
 class AAudioRecorder {
 public:
     enum class RecordingStatus : int8_t {

@@ -9,6 +9,10 @@
 #include "AUI/Audio/Mixer/ISoundSource.h"
 #endif
 
+/**
+ * @brief Interface for audio playback
+ * @ingroup audio
+ */
 class AAudioPlayer {
 public:
     AAudioPlayer() = default;
@@ -17,12 +21,18 @@ public:
         setSource(std::move(stream));
     }
 
+    /**
+     * @brief Playback status depends on last called function among play(), pause(), stop()
+     */
     enum class PlaybackStatus : int8_t {
         PLAYING,
         PAUSED,
         STOPPED
     };
 
+    /**
+     * @brief Starts audio playback, if playback was previously paused, it will continue from where it was paused
+     */
     void play() {
         if (mPlaybackStatus != PlaybackStatus::PLAYING) {
             playImpl();
@@ -30,6 +40,9 @@ public:
         }
     }
 
+    /**
+     * @brief Pauses audio playback keeping playback progress
+     */
     void pause() {
         if (mPlaybackStatus == PlaybackStatus::PLAYING) {
             pauseImpl();
@@ -37,6 +50,9 @@ public:
         }
     }
 
+    /**
+     * @brief Pauses audio playback without keeping playback progress
+     */
     void stop() {
         if (mPlaybackStatus != PlaybackStatus::STOPPED) {
             stopImpl();
@@ -44,10 +60,17 @@ public:
         }
     }
 
+    /**
+     * @return Current playback status
+     */
     PlaybackStatus getStatus() const noexcept {
         return mPlaybackStatus;
     }
 
+    /**
+     * @brief Sets new source for playback
+     * @param src
+     */
     void setSource(_<ISoundStream> src) {
         if (mPlaybackStatus != PlaybackStatus::STOPPED) {
             stop();
@@ -56,19 +79,35 @@ public:
         setSourceImpl();
     }
 
+    /**
+     * @brief Set loop flag, is loop flag is true then audio playback wouldn't be stopped after it ends and
+     * sound stream would be rewind
+     * @param loop New loop flag
+     */
     void setLoop(bool loop) {
         mLoop = loop;
     }
 
+    /*
+     * @return Current loop flag
+     */
     [[nodiscard]]
     bool getLoop() const noexcept {
         return mLoop;
     }
 
+    /**
+     * @brief Set level of volume
+     * @param volume Float number from 0 to 1 inclusively
+     */
     void setVolume(float volume) {
+        assert(("volume must be a number from 0 to 1", 0.f <= volume && volume <= 1.f));
         mVolume = volume;
     }
 
+    /**
+     * @return Current volume level
+     */
     [[nodiscard]]
     float getVolume() const noexcept {
         return mVolume;

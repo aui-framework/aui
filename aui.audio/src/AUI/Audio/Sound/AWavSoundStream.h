@@ -5,6 +5,10 @@
 class ISeekableInputStream;
 class AUrl;
 
+/**
+ * @brief Sound stream for WAV format
+ * @ingroup audio
+ */
 class AWavSoundStream: public ISoundStream {
 public:
     explicit AWavSoundStream(_<ISeekableInputStream> is);

@@ -5,7 +5,7 @@ _<AStrongByteBufferInputStream> AStrongByteBufferInputStream::fromUrl(const AUrl
     return _new<AStrongByteBufferInputStream>(AByteBuffer::fromStream(AUrl(url).open()));
 }
 
-AStrongByteBufferInputStream::AStrongByteBufferInputStream(AByteBuffer buffer) : mRef(std::move(buffer)) {
+AStrongByteBufferInputStream::AStrongByteBufferInputStream(AByteBuffer&& buffer) : mRef(std::move(buffer)) {
 }
 
 bool AStrongByteBufferInputStream::isEof() {

@@ -46,6 +46,9 @@ namespace {
 #pragma pack(pop)
 }
 
+/**
+ * @brief Implements audio mixing, accepts destination buffer and writes mixed audio samples into it
+ */
 class ASampleConsumer {
 public:
     ASampleConsumer(char* destinationBufferBegin, char* destinationBufferEnd) :

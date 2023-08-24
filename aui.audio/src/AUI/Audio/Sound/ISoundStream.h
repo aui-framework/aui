@@ -3,6 +3,9 @@
 #include "AUI/IO/IInputStream.h"
 #include "AUI/Audio/AAudioFormat.h"
 
+/**
+ * @brief Base interface for representing sound input streams of different formats
+ */
 class ISoundStream: public IInputStream {
     public:
         /**

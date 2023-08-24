@@ -4,6 +4,10 @@
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/IO/AStrongByteBufferInputStream.h"
 
+/**
+ * @brief Sound stream for storing raw sound data, useful for storing recorded sound data
+ * @ingroup audio
+ */
 class ARawSoundStream : public ISoundStream {
 public:
     ARawSoundStream(AAudioFormat format, AByteBuffer data) : mFormat(std::move(format)),

@@ -11,6 +11,11 @@
 class AUrl;
 class ISeekableInputStream;
 
+
+/**
+ * @brief Sound stream for OGG format
+ * @ingroup audio
+ */
 class AOggSoundStream: public ISoundStream {
 public:
     explicit AOggSoundStream(_<ISeekableInputStream> fis);
