@@ -47,18 +47,21 @@ private:
 };
 
 void AAudioPlayer::playImpl() {
+    mCommitter = _new<ASampleCommitter>(mSource, PlaybackConfig{.loop = mLoop, .volume = mVolume});
     OboeSoundOutput::instance().addSource(mCommitter);
 }
 
 void AAudioPlayer::pauseImpl() {
     OboeSoundOutput::instance().removeSource(mCommitter);
+    mCommitter.reset();
 }
 
 void AAudioPlayer::stopImpl() {
     OboeSoundOutput::instance().removeSource(mCommitter);
     mSource->rewind();
+    mCommitter.reset();
 }
 
 void AAudioPlayer::setSourceImpl() {
-    mCommitter = _new<ASampleCommitter>(mSource);
+    //mCommitter = _new<ASampleCommitter>(mSource, PlaybackConfig{.loop = mLoop, .volume = mVolume});
 }

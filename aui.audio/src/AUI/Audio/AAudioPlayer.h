@@ -6,7 +6,7 @@
 #if AUI_PLATFORM_WIN
 #include "AUI/Audio/Platform/win32/DirectSound.h"
 #elif AUI_PLATFORM_ANDROID
-#include "AUI/Audio/Mixer/ASampleCommitter.h"
+#include "AUI/Audio/Mixer/ISoundSource.h"
 #endif
 
 class AAudioPlayer {
@@ -109,9 +109,8 @@ private:
     void setupReachPointEvents();
 
     void setupSecondaryBuffer();
-
 #elif AUI_PLATFORM_ANDROID
-    _<ASampleCommitter> mCommitter;
+    _<ISoundSource> mCommitter;
 #endif
 
 

@@ -1,4 +1,6 @@
 #include "AAudioMixer.h"
+#include "AUI/Audio/Mixer/ASampleCommitter.h"
+#include "AUI/Audio/Mixer/ISoundSource.h"
 
 void AAudioMixer::addSoundSource(_<ISoundSource> s) {
     std::unique_lock lock(mMutex);
@@ -20,7 +22,9 @@ size_t AAudioMixer::requestSoundData(char* dst, size_t size) {
     for (auto& source : mSoundSources) {
         size_t r = source->requestSoundData(dst, size);
         if (r == 0) {
-            itemsToRemove.push_back(source);
+            if (!source->getConfig().loop || !source->requestRewind()) {
+                itemsToRemove.push_back(source);
+            }
         }
         else {
             result = std::max(r, result);
