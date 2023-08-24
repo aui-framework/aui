@@ -73,10 +73,10 @@ TEST_F(UIStyleTest, MouseMoveNoClick) {
 
     By::type<View>().check(averageColor(AColor::BLACK));
 
-    mWindow->onPointerMove({ 10, 10 }); // somewhere over the mView
+    mWindow->onPointerMove({ 10, 10 }, {}); // somewhere over the mView
     By::type<View>().check(averageColor(AColor::RED));
 
-    mWindow->onPointerMove({ 100, 100 }); // somewhere outside the mView
+    mWindow->onPointerMove({ 100, 100 }, {}); // somewhere outside the mView
     By::type<View>().check(averageColor(AColor::BLACK));
 }
 
@@ -89,13 +89,13 @@ TEST_F(UIStyleTest, MouseMoveWithClick) {
 
     By::type<View>().check(averageColor(AColor::BLACK));
 
-    mWindow->onPointerMove({ 10, 10 }); // somewhere over the mView
+    mWindow->onPointerMove({ 10, 10 }, {}); // somewhere over the mView
     By::type<View>().check(averageColor(AColor::RED));
 
     mWindow->onPointerPressed({.position = { 10, 10 } }); // somewhere over the mView
     By::type<View>().check(averageColor(AColor::GREEN));
 
-    mWindow->onPointerMove({ 100, 100 }); // somewhere outside the mView
+    mWindow->onPointerMove({ 100, 100 }, {}); // somewhere outside the mView
     By::type<View>().check(averageColor(AColor::GREEN));
 
     mWindow->onPointerReleased({.position = { 100, 100 }, .triggerClick = false }); // somewhere outside the view
