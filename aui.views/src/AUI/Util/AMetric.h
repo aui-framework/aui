@@ -26,6 +26,7 @@ class AString;
 
 /**
  * @brief Stores dimensions in scalable units (dp, pt, etc...).
+ * @ingroup views
  * @details
  * It's highly recommended to use only Density-independent Pixel unit (`_dp`) to make your application correctly handle
  * systems with high DPI. In AUI, all units are density independent except `_px`. The only purpose of the `_px` unit is to

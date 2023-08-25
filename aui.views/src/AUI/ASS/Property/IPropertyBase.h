@@ -27,6 +27,7 @@ namespace ass::prop {
 
         TRANSFORM_SCALE,
         TRANSFORM_OFFSET,
+        TRANSFORM_ROTATE,
 
         SHADOW,
         RENDER_OVERFLOW,
