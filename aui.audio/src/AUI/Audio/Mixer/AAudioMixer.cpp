@@ -14,25 +14,22 @@ void AAudioMixer::removeSoundSource(const _<ISoundSource>& s) {
                                     s), mSoundSources.end());
 }
 
-size_t AAudioMixer::requestSoundData(char* dst, size_t size) {
-    std::memset(dst, 0, size);
+size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
+    std::memset(destination.data(), 0, destination.size());
     std::unique_lock lock(mMutex);
-    std::list<_<ISoundSource>> itemsToRemove;
+
     size_t result = 0;
-    for (auto& source : mSoundSources) {
-        size_t r = source->requestSoundData(dst, size);
+    mSoundSources.erase(std::remove_if(mSoundSources.begin(), mSoundSources.end(), [&](const _<ISoundSource>& source) {
+        size_t r = source->readSoundData(destination);
         if (r == 0) {
             if (!source->getConfig().loop || !source->requestRewind()) {
-                itemsToRemove.push_back(source);
+                return true; // remove item
             }
         }
         else {
             result = std::max(r, result);
         }
-    }
-    for (const auto& i : itemsToRemove) {
-        mSoundSources.erase(std::remove(mSoundSources.begin(), mSoundSources.end(), i),
-                            mSoundSources.end());
-    }
+        return false;
+    }), mSoundSources.end());
     return result;
 }

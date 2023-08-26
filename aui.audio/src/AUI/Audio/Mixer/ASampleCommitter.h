@@ -11,7 +11,7 @@ class AAudioPlayer;
 class ASampleCommitter : public ISoundSource {
 public:
     explicit ASampleCommitter(_<ISoundStream> stream, PlaybackConfig config);
-    size_t requestSoundData(char* dst, size_t size) override;
+    size_t readSoundData(std::span<std::byte> destination) override;
     bool requestRewind() override;
     PlaybackConfig getConfig() override;
 

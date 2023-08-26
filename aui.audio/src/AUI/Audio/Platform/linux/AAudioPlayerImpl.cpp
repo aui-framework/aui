@@ -1,4 +1,7 @@
 #include "AUI/Audio/AAudioPlayer.h"
+#include <pulse/simple.h>
+#include <pulse/pulseaudio.h>
+
 
 void AAudioPlayer::playImpl() {
 

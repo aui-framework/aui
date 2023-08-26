@@ -35,7 +35,7 @@ private:
     oboe::DataCallbackResult onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames) override {
         size_t bytesToRead = numFrames * 2 * 2;
         auto dst = static_cast<char *>(audioData);
-        size_t r = mMixer->requestSoundData(dst, bytesToRead);
+        size_t r = mMixer->readSoundData(dst, bytesToRead);
         if (r < bytesToRead) {
             std::memset(dst + r, 0, bytesToRead - r);
         }

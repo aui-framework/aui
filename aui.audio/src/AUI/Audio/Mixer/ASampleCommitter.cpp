@@ -7,8 +7,8 @@ ASampleCommitter::ASampleCommitter(_<ISoundStream> stream, PlaybackConfig config
     mFormat = mSoundStream->info();
 }
 
-size_t ASampleCommitter::requestSoundData(char* dst, size_t size) {
-    ASampleConsumer consumer(dst, dst + size);
+size_t ASampleCommitter::readSoundData(std::span<std::byte> destination) {
+    ASampleConsumer consumer((char*)destination.data(), (char*)(destination.data() + destination.size()));
     switch (mFormat.bitsPerSample) {
         case 16:
             consumer.commitAllSamples<SampleFormat::I16>(mSoundStream);

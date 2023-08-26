@@ -1,15 +1,18 @@
 #pragma once
 
-#include "AUI/Audio/Sound/ISoundStream.h"
 #include <list>
 #include <mutex>
+#include <span>
+
+#include <AUI/Audio/Sound/ISoundStream.h>
 
 class ISoundSource;
 
 /**
- * @brief Audio mixer, mixes several audio streams into one
+ * @brief Audio mixer, mixes several audio streams into one.
+ * @ingroup audio
  */
-class AAudioMixer {
+class API_AUI_AUDIO AAudioMixer {
 private:
     std::mutex mMutex;
     std::list<_<ISoundSource>> mSoundSources;
@@ -28,11 +31,11 @@ public:
     void removeSoundSource(const _<ISoundSource>& s);
 
     /**
-     * @brief Write mixed audio data into buffer dst
+     * @brief Write mixed audio data into buffer.
      * @param dst Buffer for writing into
      * @param size Size of mixed audio data for writing
      * @return Number of bytes written
      */
-    size_t requestSoundData(char* dst, size_t size);
+    std::size_t readSoundData(std::span<std::byte> destination);
 };
 

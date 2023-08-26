@@ -23,6 +23,8 @@
  * @ingroup core
  * @note don't use const reference of AByteBufferView. Passing by const reference forces compiler to use memory instead
  * of registers.
+ * @note AByteBufferView is intended for const access to memory data. As a function argument, consider to use
+ * `std::span<std::byte>` instead for non-const access.
  */
 class API_AUI_CORE AByteBufferView {
 private:
