@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AUI/Audio/Mixer/ISoundSource.h"
-#include "AUI/Audio/Sound/ISoundStream.h"
+#include "AUI/Audio/Sound/ISoundInputStream.h"
 
 class AAudioPlayer;
 
@@ -10,13 +10,13 @@ class AAudioPlayer;
  */
 class ASampleCommitter : public ISoundSource {
 public:
-    explicit ASampleCommitter(_<ISoundStream> stream, PlaybackConfig config);
+    explicit ASampleCommitter(_<ISoundInputStream> stream, PlaybackConfig config);
     size_t readSoundData(std::span<std::byte> destination) override;
     bool requestRewind() override;
     PlaybackConfig getConfig() override;
 
 private:
-    _<ISoundStream> mSoundStream;
+    _<ISoundInputStream> mSoundStream;
     AAudioFormat mFormat;
     PlaybackConfig mConfig;
 };

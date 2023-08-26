@@ -41,7 +41,7 @@ size_t AWavSoundStream::read(char* dst, size_t size) {
     return r;
 }
 
-_<ISoundStream> AWavSoundStream::load(_<ISeekableInputStream> is) {
+_<ISoundInputStream> AWavSoundStream::load(_<ISeekableInputStream> is) {
     return _new<AWavSoundStream>(std::move(is));
 }
 

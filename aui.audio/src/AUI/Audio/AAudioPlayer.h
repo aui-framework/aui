@@ -1,11 +1,11 @@
 #pragma once
 
-#include "AUI/Audio/Sound/ISoundStream.h"
+#include "AUI/Audio/Sound/ISoundInputStream.h"
 #include "AUI/Audio/Mixer/AAudioMixer.h"
 
 #if AUI_PLATFORM_WIN
 #include "AUI/Audio/Platform/win32/DirectSound.h"
-#elif AUI_PLATFORM_ANDROID
+#else
 #include "AUI/Audio/Mixer/ISoundSource.h"
 #endif
 
@@ -17,7 +17,7 @@ class AAudioPlayer {
 public:
     AAudioPlayer() = default;
 
-    explicit AAudioPlayer(_<ISoundStream> stream) {
+    explicit AAudioPlayer(_<ISoundInputStream> stream) {
         setSource(std::move(stream));
     }
 
@@ -71,7 +71,7 @@ public:
      * @brief Sets new source for playback
      * @param src
      */
-    void setSource(_<ISoundStream> src) {
+    void setSource(_<ISoundInputStream> src) {
         if (mPlaybackStatus != PlaybackStatus::STOPPED) {
             stop();
         }
@@ -114,7 +114,7 @@ public:
     }
 
 private:
-    _<ISoundStream> mSource;
+    _<ISoundInputStream> mSource;
     PlaybackStatus mPlaybackStatus = PlaybackStatus::STOPPED;
     bool mLoop = false;
     float mVolume = 1.f;
@@ -148,7 +148,7 @@ private:
     void setupReachPointEvents();
 
     void setupSecondaryBuffer();
-#elif AUI_PLATFORM_ANDROID
+#else
     _<ISoundSource> mCommitter;
 #endif
 

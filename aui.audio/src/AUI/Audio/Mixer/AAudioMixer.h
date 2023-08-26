@@ -4,7 +4,7 @@
 #include <mutex>
 #include <span>
 
-#include <AUI/Audio/Sound/ISoundStream.h>
+#include <AUI/Audio/Sound/ISoundInputStream.h>
 
 class ISoundSource;
 

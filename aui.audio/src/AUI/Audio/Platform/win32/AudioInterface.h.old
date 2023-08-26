@@ -14,7 +14,7 @@
 #include "AUI/Traits/memory.h"
 #include "AUI/Thread/AFuture.h"
 #include "AUI/Audio/AAudioPlayer.h"
-#include "AUI/Audio/Sound/ISoundStream.h"
+#include "AUI/Audio/Sound/ISoundInputStream.h"
 
 class AudioInterface {
 public:

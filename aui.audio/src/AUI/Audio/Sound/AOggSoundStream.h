@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include "ISoundStream.h"
+#include "ISoundInputStream.h"
 #include "vorbis/vorbisfile.h"
 #include "AUI/IO/AFileInputStream.h"
 
@@ -16,7 +16,7 @@ class ISeekableInputStream;
  * @brief Sound stream for OGG format
  * @ingroup audio
  */
-class AOggSoundStream: public ISoundStream {
+class AOggSoundStream: public ISoundInputStream {
 public:
     explicit AOggSoundStream(_<ISeekableInputStream> fis);
 

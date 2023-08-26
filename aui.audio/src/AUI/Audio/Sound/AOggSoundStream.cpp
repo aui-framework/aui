@@ -40,7 +40,7 @@ AOggSoundStream::AOggSoundStream(_<ISeekableInputStream> fis) : mStream(std::mov
     };
 
     if (ov_open_callbacks(this, &vorbisFile, nullptr, 0, callbacks) < 0) {
-        throw std::runtime_error("not a ogg stream");
+        throw AException("not a ogg stream");
     }
 
     mVorbisFile = vorbisFile;
@@ -67,7 +67,7 @@ size_t AOggSoundStream::read(char* dst, size_t size) {
         size_t len = end - begin;
         auto r = ov_read(&mVorbisFile, begin, len, false, 2, true, &currentSection);
         if (r < 0) {
-            throw std::runtime_error("ogg decode error");
+            throw AException("ogg decode error");
         }
         if (r == 0) {
             return dst - begin;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ISoundStream.h"
+#include "ISoundInputStream.h"
 
 class ISeekableInputStream;
 class AUrl;
@@ -9,7 +9,7 @@ class AUrl;
  * @brief Sound stream for WAV format
  * @ingroup audio
  */
-class AWavSoundStream: public ISoundStream {
+class AWavSoundStream: public ISoundInputStream {
 public:
     explicit AWavSoundStream(_<ISeekableInputStream> is);
 
@@ -19,7 +19,7 @@ public:
 
     size_t read(char* dst, size_t size) override;
 
-    static _<ISoundStream> load(_<ISeekableInputStream> is);
+    static _<ISoundInputStream> load(_<ISeekableInputStream> is);
     static _<AWavSoundStream> fromUrl(const AUrl& url);
 
 private:

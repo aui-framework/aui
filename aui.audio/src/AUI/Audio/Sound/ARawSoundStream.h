@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AUI/Audio/Sound/ISoundStream.h"
+#include "AUI/Audio/Sound/ISoundInputStream.h"
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/IO/AStrongByteBufferInputStream.h"
 
@@ -8,7 +8,7 @@
  * @brief Sound stream for storing raw sound data, useful for storing recorded sound data
  * @ingroup audio
  */
-class ARawSoundStream : public ISoundStream {
+class ARawSoundStream : public ISoundInputStream {
 public:
     ARawSoundStream(AAudioFormat format, AByteBuffer data) : mFormat(std::move(format)),
                                                              mStream(_new<AStrongByteBufferInputStream>(std::move(data))) { }

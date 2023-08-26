@@ -47,6 +47,7 @@ private:
 };
 
 void AAudioPlayer::playImpl() {
+    assert(mCommitter == nullptr);
     mCommitter = _new<ASampleCommitter>(mSource, PlaybackConfig{.loop = mLoop, .volume = mVolume});
     OboeSoundOutput::instance().addSource(mCommitter);
 }
