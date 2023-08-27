@@ -24,7 +24,7 @@ static void stream_request_cb(pa_stream *s, size_t length, void *userdata) {
 
     size_t nb = length;
     pa_stream_begin_write(s, (void**)&buf, &nb);
-    nb = loop().readSoundData({(std::byte*)buf, nb});
+    loop().readSoundData({(std::byte*)buf, nb});
     pa_stream_write(s, buf, nb, NULL, 0LL, PA_SEEK_RELATIVE);
 }
 
@@ -59,7 +59,7 @@ struct PulseAudioInstance {
         mSampleSpec.channels = 2;
         mSampleSpec.format = PA_SAMPLE_S24LE;
         mSampleSpec.rate = 44100;
-        mStream = pa_stream_new(mContext, "MagicSea Output Stream", &mSampleSpec, &mChannelMap);
+        mStream = pa_stream_new(mContext, "aui sink stream", &mSampleSpec, &mChannelMap);
         if (mStream == nullptr) {
             ALogger::err(LOG_TAG) << "Failed pa_stream_new";
             return;
