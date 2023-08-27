@@ -4,9 +4,9 @@
 #include <mutex>
 #include <span>
 
-#include <AUI/Audio/Sound/ISoundInputStream.h>
+#include <AUI/Common/AObject.h>
 
-class ISoundSource;
+class API_AUI_AUDIO AAudioPlayer;
 
 /**
  * @brief Audio mixer, mixes several audio streams into one.
@@ -15,20 +15,20 @@ class ISoundSource;
 class API_AUI_AUDIO AAudioMixer {
 private:
     std::mutex mMutex;
-    std::list<_<ISoundSource>> mSoundSources;
+    std::list<_<AAudioPlayer>> mPlayers;
 
 public:
     /**
      * @brief Add new sound source for mixing
      * @param s New sound source
      */
-    void addSoundSource(_<ISoundSource> s);
+    void addSoundSource(_<AAudioPlayer> s);
 
     /**
      * @brief Remove sound source if it is represented in list of added sound sources, otherwise do nothing
      * @param s Sound source to remove
      */
-    void removeSoundSource(const _<ISoundSource>& s);
+    void removeSoundSource(const _<AAudioPlayer>& s);
 
     /**
      * @brief Write mixed audio data into buffer.

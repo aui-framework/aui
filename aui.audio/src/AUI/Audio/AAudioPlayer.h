@@ -1,19 +1,20 @@
 #pragma once
 
+#include <AUI/Common/AObject.h>
+#include <AUI/Common/ASignal.h>
 #include "AUI/Audio/Sound/ISoundInputStream.h"
 #include "AUI/Audio/Mixer/AAudioMixer.h"
 
+#include "AUI/Audio/Sound/ISoundInputStream.h"
 #if AUI_PLATFORM_WIN
 #include "AUI/Audio/Platform/win32/DirectSound.h"
-#else
-#include "AUI/Audio/Mixer/ISoundSource.h"
 #endif
 
 /**
- * @brief Interface for audio playback
+ * @brief Interface for audio playback.
  * @ingroup audio
  */
-class AAudioPlayer {
+class API_AUI_AUDIO AAudioPlayer: public AObject {
 public:
     AAudioPlayer() = default;
 
@@ -22,7 +23,7 @@ public:
     }
 
     /**
-     * @brief Playback status depends on last called function among play(), pause(), stop()
+     * @brief Playback status depends on last called function among play(), pause(), stop().
      */
     enum class PlaybackStatus : int8_t {
         PLAYING,
@@ -31,7 +32,7 @@ public:
     };
 
     /**
-     * @brief Starts audio playback, if playback was previously paused, it will continue from where it was paused
+     * @brief Starts audio playback, if playback was previously paused, it will continue from where it was paused.
      */
     void play() {
         if (mPlaybackStatus != PlaybackStatus::PLAYING) {
@@ -41,7 +42,7 @@ public:
     }
 
     /**
-     * @brief Pauses audio playback keeping playback progress
+     * @brief Pauses audio playback keeping playback progress.
      */
     void pause() {
         if (mPlaybackStatus == PlaybackStatus::PLAYING) {
@@ -51,7 +52,7 @@ public:
     }
 
     /**
-     * @brief Pauses audio playback without keeping playback progress
+     * @brief Pauses audio playback without keeping playback progress.
      */
     void stop() {
         if (mPlaybackStatus != PlaybackStatus::STOPPED) {
@@ -61,14 +62,14 @@ public:
     }
 
     /**
-     * @return Current playback status
+     * @return Current playback status.
      */
     PlaybackStatus getStatus() const noexcept {
         return mPlaybackStatus;
     }
 
     /**
-     * @brief Sets new source for playback
+     * @brief Sets new source for playback.
      * @param src
      */
     void setSource(_<ISoundInputStream> src) {
@@ -80,8 +81,24 @@ public:
     }
 
     /**
+     * @brief Get source for playback.
+     */
+    [[nodiscard]]
+    const _<ISoundInputStream>& source() const noexcept {
+        return mSource;
+    }
+
+    /**
+     * @brief Get resampled stream for playback.
+     */
+    [[nodiscard]]
+    const _<ISoundInputStream>& resampledStream() const noexcept {
+        return mResampler;
+    }
+
+    /**
      * @brief Set loop flag, is loop flag is true then audio playback wouldn't be stopped after it ends and
-     * sound stream would be rewind
+     * sound stream would be rewind.
      * @param loop New loop flag
      */
     void setLoop(bool loop) {
@@ -97,7 +114,7 @@ public:
     }
 
     /**
-     * @brief Set level of volume
+     * @brief Set level of volume.
      * @param volume Float number from 0 to 1 inclusively
      */
     void setVolume(aui::float_within_0_1 volume) {
@@ -105,12 +122,18 @@ public:
     }
 
     /**
-     * @return Current volume level
+     * @return Current volume level.
      */
     [[nodiscard]]
     aui::float_within_0_1 volume() const noexcept {
         return mVolume;
     }
+
+signals:
+    /**
+     * @brief On playback finished.
+     */
+    emits<> finished;
 
 private:
     _<ISoundInputStream> mSource;
@@ -148,7 +171,7 @@ private:
 
     void setupSecondaryBuffer();
 #else
-    _<ISoundSource> mResampler;
+    _<ISoundInputStream> mResampler;
 #endif
 
 

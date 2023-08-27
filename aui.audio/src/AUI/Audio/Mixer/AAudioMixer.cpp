@@ -1,17 +1,16 @@
 #include "AAudioMixer.h"
-#include "AUI/Audio/Mixer/ASoundResampler.h"
-#include "AUI/Audio/Mixer/ISoundSource.h"
+#include <AUI/Audio/AAudioPlayer.h>
 
-void AAudioMixer::addSoundSource(_<ISoundSource> s) {
+void AAudioMixer::addSoundSource(_<AAudioPlayer> s) {
     std::unique_lock lock(mMutex);
-    mSoundSources.push_back(std::move(s));
+    mPlayers.push_back(std::move(s));
 }
 
-void AAudioMixer::removeSoundSource(const _<ISoundSource>& s) {
+void AAudioMixer::removeSoundSource(const _<AAudioPlayer>& s) {
     std::unique_lock lock(mMutex);
-    mSoundSources.erase(std::remove(mSoundSources.begin(),
-                                    mSoundSources.end(),
-                                    s), mSoundSources.end());
+    mPlayers.erase(std::remove(mPlayers.begin(),
+                               mPlayers.end(),
+                               s), mPlayers.end());
 }
 
 size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
@@ -19,18 +18,20 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
     std::unique_lock lock(mMutex);
 
     size_t result = 0;
-    mSoundSources.erase(std::remove_if(mSoundSources.begin(), mSoundSources.end(), [&](const _<ISoundSource>& source) {
-        size_t r = source->readSoundData(destination);
+    mPlayers.erase(std::remove_if(mPlayers.begin(), mPlayers.end(), [&](const _<AAudioPlayer>& player) {
+        size_t r = player->resampledStream()->read(destination);
         if (r == 0) {
-            //source->onPlaybackFinished();
-            if (!source->getConfig().loop || !source->requestRewind()) {
-                return true; // remove item
+            if (player->loop()) {
+                player->resampledStream()->rewind();
+                return false;
             }
+            AUI_EMIT_FOREIGN(player, finished);
+            return true; // remove item
         }
         else {
             result = std::max(r, result);
         }
         return false;
-    }), mSoundSources.end());
+    }), mPlayers.end());
     return result;
 }

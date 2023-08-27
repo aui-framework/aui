@@ -2,32 +2,53 @@
 #include "AUI/Audio/Mixer/details/ACompileTimeSoundResampler.h"
 #include "AUI/Audio/AAudioPlayer.h"
 
-ASoundResampler::ASoundResampler(_<ISoundInputStream> stream, APlaybackConfig config) :
-            mSoundStream(std::move(stream)), mConfig(config) {
-    mFormat = mSoundStream->info();
-}
 
-size_t ASoundResampler::readSoundData(std::span<std::byte> destination) {
-    switch (mFormat.bitsPerSample) {
-        case 16: {
-            ACompileTimeSoundResampler<ASampleFormat::I16, aui::audio::DEFAULT_OUTPUT_FORMAT> resampler(destination);
-            resampler.commitAllSamples(mSoundStream);
-            return resampler.writtenSize();
+size_t ASoundResampler::read(char* dst, size_t size) {
+    std::span<std::byte> destination((std::byte*)dst, size);
+    // todo some sort of helper in like: for_each_value<I16, I24>([]<ASampleFormat v>() {
+    //  })
+    switch (mFormat.sampleFormat) {
+        case ASampleFormat::I16: {
+            switch (mDestinationFormat) {
+                case ASampleFormat::I16: {
+                    ACompileTimeSoundResampler<ASampleFormat::I16, ASampleFormat::I16> resampler(destination);
+                    resampler.commitAllSamples(mSoundStream);
+                    return resampler.writtenSize();
+                }
+                case ASampleFormat::I24: {
+                    ACompileTimeSoundResampler<ASampleFormat::I16, ASampleFormat::I24> resampler(destination);
+                    resampler.commitAllSamples(mSoundStream);
+                    return resampler.writtenSize();
+                }
+            }
+            throw AException("invalid mDestinationFormat = {}"_format((int)mDestinationFormat));
         }
-        case 24: {
-            ACompileTimeSoundResampler<ASampleFormat::I24, aui::audio::DEFAULT_OUTPUT_FORMAT> resampler(destination);
-            resampler.commitAllSamples(mSoundStream);
-            return resampler.writtenSize();
+        case ASampleFormat::I24: {
+            switch (mDestinationFormat) {
+                case ASampleFormat::I16: {
+                    ACompileTimeSoundResampler<ASampleFormat::I24, ASampleFormat::I16> resampler(destination);
+                    resampler.commitAllSamples(mSoundStream);
+                    return resampler.writtenSize();
+                }
+                case ASampleFormat::I24: {
+                    ACompileTimeSoundResampler<ASampleFormat::I24, ASampleFormat::I24> resampler(destination);
+                    resampler.commitAllSamples(mSoundStream);
+                    return resampler.writtenSize();
+                }
+            }
+            throw AException("invalid mDestinationFormat = {}"_format((int)mDestinationFormat));
         }
     }
-    throw AException("invalid mFormat.bitsPerSample = {}"_format(mFormat.bitsPerSample));
+    throw AException("invalid mFormat.format = {}"_format((int)mFormat.sampleFormat));
 }
 
-bool ASoundResampler::requestRewind() {
+AAudioFormat ASoundResampler::info() {
+    auto i = mSoundStream->info();
+    i.sampleFormat = mDestinationFormat;
+    return i;
+}
+
+void ASoundResampler::rewind() {
     mSoundStream->rewind();
-    return true;
 }
 
-APlaybackConfig ASoundResampler::getConfig() {
-    return mConfig;
-}

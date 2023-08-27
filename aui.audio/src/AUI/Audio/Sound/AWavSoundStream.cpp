@@ -21,7 +21,7 @@ AAudioFormat AWavSoundStream::info() {
         .bitRate = static_cast<unsigned int>(mHeader.byteRate * 2),
         .channelCount = static_cast<uint8_t>(mHeader.numChannels),
         .sampleRate = static_cast<unsigned int>(mHeader.sampleRate),
-        .bitsPerSample = static_cast<uint8_t>(mHeader.bitsPerSample)
+        .sampleFormat = static_cast<uint8_t>(mHeader.bitsPerSample) == 24 ? ASampleFormat::I24 : ASampleFormat::I16,
     };
 }
 

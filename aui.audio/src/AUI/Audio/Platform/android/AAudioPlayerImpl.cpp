@@ -10,11 +10,11 @@ public:
         return p;
     }
 
-    void addSource(_<ISoundSource> source) {
+    void addSource(_<ISoundInputStream> source) {
         mMixer->addSoundSource(std::move(source));
     }
 
-    void removeSource(const _<ISoundSource>& source) {
+    void removeSource(const _<ISoundInputStream>& source) {
         mMixer->removeSoundSource(source);
     }
 
