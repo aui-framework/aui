@@ -2,7 +2,7 @@
 
 #include <cstdint>
 #include <span>
-#include "SampleFormat.h"
+#include "ASampleFormat.h"
 #include <AUI/Audio/Sound/ISoundInputStream.h>
 #include <AUI/Traits/platform.h>
 
@@ -12,8 +12,8 @@ namespace aui::audio {
      * @brief Default output format for the current platform.
      * @ingroup audio
      */
-    static constexpr SampleFormat DEFAULT_OUTPUT_FORMAT = aui::platform::current::is_mobile() ? SampleFormat::I16
-                                                                                              : SampleFormat::I24;
+    static constexpr ASampleFormat DEFAULT_OUTPUT_FORMAT = aui::platform::current::is_mobile() ? ASampleFormat::I16
+                                                                                               : ASampleFormat::I24;
 
     namespace impl {
         template<int power, typename T>
@@ -25,31 +25,31 @@ namespace aui::audio {
             }
         }
 
-        template<SampleFormat f>
+        template<ASampleFormat f>
         struct sample_type;
 
         template<>
-        struct sample_type<SampleFormat::I16> {
+        struct sample_type<ASampleFormat::I16> {
             using type = int16_t;
             constexpr static int size_bits = 16;
         };
 
         template<>
-        struct sample_type<SampleFormat::I24> {
+        struct sample_type<ASampleFormat::I24> {
             using type = int32_t;
             constexpr static int size_bits = 24;
         };
 
-        template<SampleFormat f>
+        template<ASampleFormat f>
         constexpr int size_bytes() {
             return sample_type<f>::size_bits / 8;
         }
 
-        template<SampleFormat f>
+        template<ASampleFormat f>
         using sample_type_t = typename sample_type<f>::type;
 
 #pragma pack(push, 1)
-        template<SampleFormat f>
+        template<ASampleFormat f>
         struct packed_accessor {
             sample_type_t<f> value: sample_type<f>::size_bits;
             unsigned _pad: (32 - sample_type<f>::size_bits);
@@ -59,12 +59,12 @@ namespace aui::audio {
 }
 
 /**
- * @brief Implements audio mixing and resampling.
+ * @brief Implements audio mixing and resampling for ASoundResampler in compile time.
  */
-template<SampleFormat in, SampleFormat out = aui::audio::DEFAULT_OUTPUT_FORMAT>
-class ASampleResampler {
+template<ASampleFormat in, ASampleFormat out = aui::audio::DEFAULT_OUTPUT_FORMAT>
+class ACompileTimeSoundResampler {
 public:
-    ASampleResampler(std::span<std::byte> destination) noexcept:
+    ACompileTimeSoundResampler(std::span<std::byte> destination) noexcept:
             mDestinationBufferBegin(destination.data()),
             mDestinationBufferEnd(destination.data() + destination.size()),
             mDestinationBufferIt(mDestinationBufferBegin)

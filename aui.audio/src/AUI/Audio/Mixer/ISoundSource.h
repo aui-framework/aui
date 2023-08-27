@@ -4,7 +4,7 @@
 #include <span>
 
 #include <AUI/Common/AObject.h>
-#include <AUI/Audio/Mixer/PlaybackConfig.h>
+#include <AUI/Audio/Mixer/APlaybackConfig.h>
 
 /**
  * @brief Base interface for sound sources that can be used as sound source for AAudioMixer.
@@ -26,5 +26,5 @@ public:
      * @return true if operation succeeded.
      */
     virtual bool requestRewind() = 0;
-    virtual PlaybackConfig getConfig() = 0;
+    virtual APlaybackConfig getConfig() = 0;
 };

@@ -1,9 +1,10 @@
 #pragma once
 
 /**
- * @brief Sample formats supported for mixing
+ * @brief Sample formats supported for mixing.
+ * @ingroup audio
  */
-enum class SampleFormat {
+enum class ASampleFormat {
     /**
      * @brief Signed 16-bit integer.
      */

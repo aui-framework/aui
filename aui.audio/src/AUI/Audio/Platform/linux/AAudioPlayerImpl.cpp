@@ -1,6 +1,6 @@
 #include "AUI/Audio/AAudioPlayer.h"
 #include "AUI/Logging/ALogger.h"
-#include "AUI/Audio/Mixer/ASampleCommitter.h"
+#include "AUI/Audio/Mixer/ASoundResampler.h"
 #include <pulse/simple.h>
 #include <pulse/pulseaudio.h>
 
@@ -125,7 +125,7 @@ static PulseAudioInstance& pulse() {
 
 void AAudioPlayer::playImpl() {
     assert(mCommitter == nullptr);
-    mCommitter = _new<ASampleCommitter>(mSource, PlaybackConfig{.loop = mLoop, .volume = mVolume});
+    mCommitter = _new<ASoundResampler>(mSource, APlaybackConfig{.loop = mLoop, .volume = mVolume});
     loop().addSoundSource(mCommitter);
     pulse();
 }

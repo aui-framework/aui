@@ -1,21 +1,21 @@
-#include "ASampleCommitter.h"
-#include "AUI/Audio/Mixer/details/ASampleResampler.h"
+#include "ASoundResampler.h"
+#include "AUI/Audio/Mixer/details/ACompileTimeSoundResampler.h"
 #include "AUI/Audio/AAudioPlayer.h"
 
-ASampleCommitter::ASampleCommitter(_<ISoundInputStream> stream, PlaybackConfig config) :
+ASoundResampler::ASoundResampler(_<ISoundInputStream> stream, APlaybackConfig config) :
             mSoundStream(std::move(stream)), mConfig(config) {
     mFormat = mSoundStream->info();
 }
 
-size_t ASampleCommitter::readSoundData(std::span<std::byte> destination) {
+size_t ASoundResampler::readSoundData(std::span<std::byte> destination) {
     switch (mFormat.bitsPerSample) {
         case 16: {
-            ASampleResampler<SampleFormat::I16, aui::audio::DEFAULT_OUTPUT_FORMAT> resampler(destination);
+            ACompileTimeSoundResampler<ASampleFormat::I16, aui::audio::DEFAULT_OUTPUT_FORMAT> resampler(destination);
             resampler.commitAllSamples(mSoundStream);
             return resampler.writtenSize();
         }
         case 24: {
-            ASampleResampler<SampleFormat::I24, aui::audio::DEFAULT_OUTPUT_FORMAT> resampler(destination);
+            ACompileTimeSoundResampler<ASampleFormat::I24, aui::audio::DEFAULT_OUTPUT_FORMAT> resampler(destination);
             resampler.commitAllSamples(mSoundStream);
             return resampler.writtenSize();
         }
@@ -23,11 +23,11 @@ size_t ASampleCommitter::readSoundData(std::span<std::byte> destination) {
     throw AException("invalid mFormat.bitsPerSample = {}"_format(mFormat.bitsPerSample));
 }
 
-bool ASampleCommitter::requestRewind() {
+bool ASoundResampler::requestRewind() {
     mSoundStream->rewind();
     return true;
 }
 
-PlaybackConfig ASampleCommitter::getConfig() {
+APlaybackConfig ASoundResampler::getConfig() {
     return mConfig;
 }

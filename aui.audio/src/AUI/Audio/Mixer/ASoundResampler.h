@@ -6,17 +6,18 @@
 class AAudioPlayer;
 
 /**
- * @brief Audio data committer that can be used as sound source for AAudioMixer
+ * @brief Implements audio mixing and resampling.
+ * @ingroup audio
  */
-class ASampleCommitter : public ISoundSource {
+class ASoundResampler : public ISoundSource {
 public:
-    explicit ASampleCommitter(_<ISoundInputStream> stream, PlaybackConfig config);
+    explicit ASoundResampler(_<ISoundInputStream> stream, APlaybackConfig config);
     size_t readSoundData(std::span<std::byte> destination) override;
     bool requestRewind() override;
-    PlaybackConfig getConfig() override;
+    APlaybackConfig getConfig() override;
 
 private:
     _<ISoundInputStream> mSoundStream;
     AAudioFormat mFormat;
-    PlaybackConfig mConfig;
+    APlaybackConfig mConfig;
 };

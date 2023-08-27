@@ -1,5 +1,5 @@
 #include "AAudioMixer.h"
-#include "AUI/Audio/Mixer/ASampleCommitter.h"
+#include "AUI/Audio/Mixer/ASoundResampler.h"
 #include "AUI/Audio/Mixer/ISoundSource.h"
 
 void AAudioMixer::addSoundSource(_<ISoundSource> s) {

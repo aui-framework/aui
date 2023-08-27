@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AUI/Audio/Mixer/details/ASampleFormat.h"
+
 /**
  * @brief Audio format descriptor.
  * @ingroup audio
@@ -24,6 +26,15 @@ struct AAudioFormat {
      * @brief Bits per sample (i.e. 16, 8).
      */
     std::uint32_t bitsPerSample;
+
+    [[nodiscard]]
+    ASampleFormat sampleFormat() const noexcept {
+        switch (bitsPerSample) {
+            case 16: return ASampleFormat::I16;
+            case 24: return ASampleFormat::I24;
+        }
+        throw AException("unable to find appropriate sample format");
+    }
 };
 
 
