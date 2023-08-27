@@ -14,13 +14,34 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "AAudioFormat.h"
+#pragma once
+
+#include "AUI/Audio/ISoundInputStream.h"
 #include "AUI/Audio/ACompileTimeSoundResampler.h"
 
-std::uint32_t AAudioFormat::bitsPerSample() const {
-    switch (sampleFormat) {
-        case ASampleFormat::I16: return aui::audio::impl::sample_type<ASampleFormat::I16>::size_bits;
-        case ASampleFormat::I24: return aui::audio::impl::sample_type<ASampleFormat::I24>::size_bits;
+class AAudioPlayer;
+
+/**
+ * @brief Implements audio mixing and resampling.
+ * @ingroup audio
+ */
+class API_AUI_AUDIO ASoundResampler : public ISoundInputStream {
+public:
+    ASoundResampler(_<ISoundInputStream> stream,
+                    ASampleFormat destinationFormat = aui::audio::DEFAULT_OUTPUT_FORMAT) noexcept:
+                    mSoundStream(std::move(stream)),
+                    mDestinationFormat(destinationFormat) {
+        mFormat = mSoundStream->info();
     }
-    throw AException("unable to find appropriate sample format");
-}
+
+    size_t read(char* dst, size_t size) override;
+
+    AAudioFormat info() override;
+
+    void rewind() override;
+
+private:
+    _<ISoundInputStream> mSoundStream;
+    ASampleFormat mDestinationFormat;
+    AAudioFormat mFormat;
+};

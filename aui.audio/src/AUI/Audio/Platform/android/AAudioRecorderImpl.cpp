@@ -1,5 +1,5 @@
 #include "AUI/Audio/AAudioRecorder.h"
-#include "AUI/Audio/Sound/ARawSoundStream.h"
+#include "AUI/Audio/ARawSoundStream.h"
 #include "AUI/Platform/AMessageBox.h"
 #include "AUI/Platform/AWindow.h"
 #include <oboe/Oboe.h>

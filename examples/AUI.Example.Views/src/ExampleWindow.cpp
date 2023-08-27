@@ -37,15 +37,14 @@
 
 #include "AUI/Audio/AAudioPlayer.h"
 
-#include "AUI/Audio/Sound/AWavSoundStream.h"
-#include "AUI/Audio/Sound/AOggSoundStream.h"
-
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ADragNDropView.h"
 #include "AUI/Util/ALayoutInflater.h"
 #include "AUI/View/ASlider.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/IO/AByteBufferInputStream.h"
+#include "AUI/Audio/Formats/AWavSoundStream.h"
+#include "AUI/Audio/Formats/AOggSoundStream.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
@@ -346,27 +345,15 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 Horizontal {
                         Vertical{
                                 _new<ALabel>("Play music using AUI!"),
-                                _new<AButton>("Play .wav music").connect(&AButton::clicked, this, [&] {
-                                    mWavAudio->play();
-                                }),
-                                _new<AButton>("Stop .wav music").connect(&AButton::clicked, this, [&] {
-                                    mWavAudio->stop();
-                                }),
-                                _new<AButton>("Pause .wav music").connect(&AButton::clicked, this, [&] {
-                                    mWavAudio->pause();
-                                })
+                                _new<AButton>("Play .wav music").connect(&AButton::clicked, slot(mWavAudio)::play),
+                                _new<AButton>("Stop .wav music").connect(&AButton::clicked, slot(mWavAudio)::stop),
+                                _new<AButton>("Pause .wav music").connect(&AButton::clicked, slot(mWavAudio)::pause),
                         },
                         Vertical{
                                 _new<ALabel>("Play music using AUI!"),
-                                _new<AButton>("Play .ogg music").connect(&AButton::clicked, this, [&] {
-                                    mOggAudio->play();
-                                }),
-                                _new<AButton>("Stop .ogg music").connect(&AButton::clicked, this, [&] {
-                                    mOggAudio->stop();
-                                }),
-                                _new<AButton>("Pause .ogg music").connect(&AButton::clicked, this, [&] {
-                                    mOggAudio->pause();
-                                })
+                                _new<AButton>("Play .ogg music").connect(&AButton::clicked, slot(mOggAudio)::play),
+                                _new<AButton>("Stop .ogg music").connect(&AButton::clicked, slot(mOggAudio)::stop),
+                                _new<AButton>("Pause .ogg music").connect(&AButton::clicked, slot(mOggAudio)::pause),
                         }
                 }
         }), "Sounds");

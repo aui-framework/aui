@@ -1,6 +1,6 @@
 #include "AUI/Audio/AAudioPlayer.h"
 #include "AUI/Logging/ALogger.h"
-#include "AUI/Audio/Mixer/ASoundResampler.h"
+#include "AUI/Audio/ASoundResampler.h"
 #include <pulse/simple.h>
 #include <pulse/pulseaudio.h>
 

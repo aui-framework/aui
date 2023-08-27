@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ISoundInputStream.h"
+#include "AUI/Audio/ISoundInputStream.h"
 
 class ISeekableInputStream;
 class AUrl;

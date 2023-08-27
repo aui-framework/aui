@@ -2,10 +2,10 @@
 
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/ASignal.h>
-#include "AUI/Audio/Sound/ISoundInputStream.h"
-#include "AUI/Audio/Mixer/AAudioMixer.h"
+#include "AUI/Audio/ISoundInputStream.h"
+#include "AUI/Audio/AAudioMixer.h"
 
-#include "AUI/Audio/Sound/ISoundInputStream.h"
+#include "AUI/Audio/ISoundInputStream.h"
 #if AUI_PLATFORM_WIN
 #include "AUI/Audio/Platform/win32/DirectSound.h"
 #endif

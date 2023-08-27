@@ -1,5 +1,5 @@
 #include "ASoundResampler.h"
-#include "AUI/Audio/Mixer/details/ACompileTimeSoundResampler.h"
+#include "AUI/Audio/ACompileTimeSoundResampler.h"
 #include "AUI/Audio/AAudioPlayer.h"
 
 

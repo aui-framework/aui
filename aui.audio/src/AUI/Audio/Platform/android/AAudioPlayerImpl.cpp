@@ -1,6 +1,6 @@
 #include "AUI/Audio/AAudioPlayer.h"
-#include "AUI/Audio/Mixer/AAudioMixer.h"
-#include "AUI/Audio/Mixer/ASoundResampler.h"
+#include "AUI/Audio/AAudioMixer.h"
+#include "AUI/Audio/ASoundResampler.h"
 #include <oboe/Oboe.h>
 
 class OboeSoundOutput : public oboe::AudioStreamDataCallback  {

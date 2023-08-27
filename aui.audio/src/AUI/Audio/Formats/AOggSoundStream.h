@@ -4,9 +4,9 @@
 
 #pragma once
 
-#include "ISoundInputStream.h"
 #include "vorbis/vorbisfile.h"
 #include "AUI/IO/AFileInputStream.h"
+#include "AUI/Audio/ISoundInputStream.h"
 
 class AUrl;
 class ISeekableInputStream;

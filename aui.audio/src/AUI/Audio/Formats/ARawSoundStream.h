@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AUI/Audio/Sound/ISoundInputStream.h"
+#include "AUI/Audio/ISoundInputStream.h"
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/IO/AStrongByteBufferInputStream.h"
 

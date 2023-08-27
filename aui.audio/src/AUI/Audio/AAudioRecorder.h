@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AUI/Audio/Sound/ARawSoundStream.h"
+#include "AUI/Audio/ARawSoundStream.h"
 
 /**
  * @brief Interface for audio recording

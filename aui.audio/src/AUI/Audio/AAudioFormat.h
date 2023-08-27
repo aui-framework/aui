@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AUI/Audio/Mixer/details/ASampleFormat.h"
+#include "AUI/Audio/ASampleFormat.h"
 #include "AUI/Common/AException.h"
 
 /**
@@ -9,7 +9,7 @@
  */
 struct API_AUI_AUDIO AAudioFormat {
     /**
-     * @Brief Bits per second
+     * @Brief Bits per second.
      */
     uint32_t bitRate;
 
