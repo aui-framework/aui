@@ -129,6 +129,6 @@ void AAudioPlayer::setupSecondaryBuffer() {
     buffer->Release();
 }
 
-void AAudioPlayer::setSourceImpl() {
+void AAudioPlayer::onSourceSet() {
     setupSecondaryBuffer();
 }

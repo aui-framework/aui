@@ -76,7 +76,7 @@ public:
             stop();
         }
         mSource = std::move(src);
-        setSourceImpl();
+        onSourceSet();
     }
 
     /**
@@ -149,7 +149,7 @@ private:
 
     void setupSecondaryBuffer();
 #else
-    _<ISoundSource> mCommitter;
+    _<ISoundSource> mResampler;
 #endif
 
 
@@ -159,6 +159,6 @@ private:
 
     void stopImpl();
 
-    void setSourceImpl();
+    void onSourceSet();
 
 };
