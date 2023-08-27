@@ -22,6 +22,7 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
     mSoundSources.erase(std::remove_if(mSoundSources.begin(), mSoundSources.end(), [&](const _<ISoundSource>& source) {
         size_t r = source->readSoundData(destination);
         if (r == 0) {
+            //source->onPlaybackFinished();
             if (!source->getConfig().loop || !source->requestRewind()) {
                 return true; // remove item
             }

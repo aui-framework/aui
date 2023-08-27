@@ -88,11 +88,11 @@ public:
         mLoop = loop;
     }
 
-    /*
+    /**
      * @return Current loop flag
      */
     [[nodiscard]]
-    bool getLoop() const noexcept {
+    bool loop() const noexcept {
         return mLoop;
     }
 
@@ -100,8 +100,7 @@ public:
      * @brief Set level of volume
      * @param volume Float number from 0 to 1 inclusively
      */
-    void setVolume(float volume) {
-        assert(("volume must be a number from 0 to 1", 0.f <= volume && volume <= 1.f));
+    void setVolume(aui::float_within_0_1 volume) {
         mVolume = volume;
     }
 
@@ -109,7 +108,7 @@ public:
      * @return Current volume level
      */
     [[nodiscard]]
-    float getVolume() const noexcept {
+    aui::float_within_0_1 volume() const noexcept {
         return mVolume;
     }
 
@@ -117,7 +116,7 @@ private:
     _<ISoundInputStream> mSource;
     PlaybackStatus mPlaybackStatus = PlaybackStatus::STOPPED;
     bool mLoop = false;
-    float mVolume = 1.f;
+    aui::float_within_0_1 mVolume = 1.f;
 
 #if AUI_PLATFORM_WIN
     static constexpr int BUFFER_DURATION_SEC = 2;

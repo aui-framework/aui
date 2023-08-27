@@ -28,7 +28,7 @@ struct AAudioFormat {
     std::uint32_t bitsPerSample;
 
     [[nodiscard]]
-    ASampleFormat sampleFormat() const noexcept {
+    ASampleFormat sampleFormat() const {
         switch (bitsPerSample) {
             case 16: return ASampleFormat::I16;
             case 24: return ASampleFormat::I24;

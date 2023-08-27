@@ -126,19 +126,19 @@ static PulseAudioInstance& pulse() {
 void AAudioPlayer::playImpl() {
     assert(mResampler == nullptr);
     mResampler = _new<ASoundResampler>(mSource, APlaybackConfig{.loop = mLoop, .volume = mVolume});
-    loop().addSoundSource(mResampler);
+    ::loop().addSoundSource(mResampler);
     pulse();
 }
 
 void AAudioPlayer::pauseImpl() {
     assert(mResampler != nullptr);
-    loop().removeSoundSource(mResampler);
+    ::loop().removeSoundSource(mResampler);
     mResampler.reset();
 }
 
 void AAudioPlayer::stopImpl() {
     assert(mResampler != nullptr);
-    loop().removeSoundSource(mResampler);
+    ::loop().removeSoundSource(mResampler);
     mSource->rewind();
     mResampler.reset();
 }

@@ -48,7 +48,7 @@ private:
 
 void AAudioPlayer::playImpl() {
     assert(mResampler == nullptr);
-    mResampler = _new<ASampleCommitter>(mSource, PlaybackConfig{.loop = mLoop, .volume = mVolume});
+    mResampler = _new<ASoundResampler>(mSource, APlaybackConfig{.loop = mLoop, .volume = mVolume});
     OboeSoundOutput::instance().addSource(mResampler);
 }
 
@@ -66,5 +66,5 @@ void AAudioPlayer::stopImpl() {
 }
 
 void AAudioPlayer::onSourceSet() {
-    //mResampler = _new<ASampleCommitter>(mSource, PlaybackConfig{.loop = mLoop, .volume = mVolume});
+    //mResampler = _new<ASoundResampler>(mSource, APlaybackConfig{.loop = mLoop, .volume = mVolume});
 }
