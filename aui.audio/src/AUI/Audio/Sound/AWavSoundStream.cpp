@@ -12,7 +12,7 @@ AWavSoundStream::AWavSoundStream(_<ISeekableInputStream> is) : mStream(std::move
     if (std::memcmp(mHeader.chunkID, "RIFF", 4) != 0 ||
         std::memcmp(mHeader.format, "WAVE", 4) != 0 ||
         std::memcmp(mHeader.subchunk1ID, "fmt ", 4) != 0) {
-        throw std::runtime_error("not a wav file");
+        throw AException("not a wav file");
     }
 }
 
