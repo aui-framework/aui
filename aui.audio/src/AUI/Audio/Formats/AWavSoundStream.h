@@ -9,7 +9,7 @@ class AUrl;
  * @brief Sound stream for WAV format
  * @ingroup audio
  */
-class AWavSoundStream: public ISoundInputStream {
+class API_AUI_AUDIO AWavSoundStream: public ISoundInputStream {
 public:
     explicit AWavSoundStream(_<ISeekableInputStream> is);
 

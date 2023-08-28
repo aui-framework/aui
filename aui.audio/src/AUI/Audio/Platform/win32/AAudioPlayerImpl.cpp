@@ -110,7 +110,7 @@ void AAudioPlayer::setupSecondaryBuffer() {
     auto info = mSource->info();
     waveFormat.cbSize = sizeof(waveFormat);
     waveFormat.wFormatTag = WAVE_FORMAT_PCM;
-    waveFormat.wBitsPerSample = info.bitsPerSample;
+    waveFormat.wBitsPerSample = info.bitsPerSample();
     waveFormat.nChannels = info.channelCount;
     waveFormat.nSamplesPerSec = info.sampleRate;
     waveFormat.nBlockAlign = waveFormat.nChannels * (waveFormat.wBitsPerSample / 8);

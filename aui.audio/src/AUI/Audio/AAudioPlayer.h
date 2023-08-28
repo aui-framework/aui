@@ -93,7 +93,7 @@ public:
      */
     [[nodiscard]]
     const _<ISoundInputStream>& resampledStream() const noexcept {
-        return mResampler;
+        return mResampler != nullptr ? mResampler : mSource;
     }
 
     /**
@@ -140,6 +140,7 @@ private:
     PlaybackStatus mPlaybackStatus = PlaybackStatus::STOPPED;
     bool mLoop = false;
     aui::float_within_0_1 mVolume = 1.f;
+    _<ISoundInputStream> mResampler;
 
 #if AUI_PLATFORM_WIN
     static constexpr int BUFFER_DURATION_SEC = 2;
@@ -170,8 +171,6 @@ private:
     void setupReachPointEvents();
 
     void setupSecondaryBuffer();
-#else
-    _<ISoundInputStream> mResampler;
 #endif
 
 

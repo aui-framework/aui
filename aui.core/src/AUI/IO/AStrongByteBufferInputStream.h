@@ -8,7 +8,7 @@
  * @brief Input stream based on AByteBuffer with memory control, clears byte buffer on destruction
  * @ingroup io
  */
-class AStrongByteBufferInputStream: public ISeekableInputStream {
+class API_AUI_CORE AStrongByteBufferInputStream: public ISeekableInputStream {
 private:
     AByteBuffer mRef;
     size_t mReadPos = 0;

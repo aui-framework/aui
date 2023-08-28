@@ -16,7 +16,7 @@ class ISeekableInputStream;
  * @brief Sound stream for OGG format
  * @ingroup audio
  */
-class AOggSoundStream: public ISoundInputStream {
+class API_AUI_AUDIO AOggSoundStream: public ISoundInputStream {
 public:
     explicit AOggSoundStream(_<ISeekableInputStream> fis);
 
