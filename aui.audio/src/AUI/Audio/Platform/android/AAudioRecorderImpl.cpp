@@ -11,7 +11,7 @@ public:
             .bitRate = 88200,
             .channelCount = 1,
             .sampleRate = 44100,
-            .bitsPerSample = 16
+            .sampleFormat = ASampleFormat::I16,
     };
 
     static OboeSoundInput& instance() {

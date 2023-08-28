@@ -10,11 +10,11 @@ public:
         return p;
     }
 
-    void addSource(_<ISoundInputStream> source) {
+    void addSource(_<AAudioPlayer> source) {
         mMixer->addSoundSource(std::move(source));
     }
 
-    void removeSource(const _<ISoundInputStream>& source) {
+    void removeSource(const _<AAudioPlayer>& source) {
         mMixer->removeSoundSource(source);
     }
 
@@ -34,10 +34,9 @@ private:
 
     oboe::DataCallbackResult onAudioReady(oboe::AudioStream *audioStream, void *audioData, int32_t numFrames) override {
         size_t bytesToRead = numFrames * 2 * 2;
-        auto dst = static_cast<char *>(audioData);
-        size_t r = mMixer->readSoundData(dst, bytesToRead);
+        size_t r = mMixer->readSoundData({(std::byte*)audioData, bytesToRead});
         if (r < bytesToRead) {
-            std::memset(dst + r, 0, bytesToRead - r);
+            std::memset((char*)audioData + r, 0, bytesToRead - r);
         }
         return oboe::DataCallbackResult::Continue;
     }
@@ -48,19 +47,19 @@ private:
 
 void AAudioPlayer::playImpl() {
     assert(mResampler == nullptr);
-    mResampler = _new<ASoundResampler>(mSource, APlaybackConfig{.loop = mLoop, .volume = mVolume});
-    OboeSoundOutput::instance().addSource(mResampler);
+    mResampler = _new<ASoundResampler>(mSource);
+    OboeSoundOutput::instance().addSource(_cast<AAudioPlayer>(sharedPtr()));
 }
 
 void AAudioPlayer::pauseImpl() {
     assert(mResampler != nullptr);
-    OboeSoundOutput::instance().removeSource(mResampler);
+    OboeSoundOutput::instance().removeSource(_cast<AAudioPlayer>(sharedPtr()));
     mResampler.reset();
 }
 
 void AAudioPlayer::stopImpl() {
     assert(mResampler != nullptr);
-    OboeSoundOutput::instance().removeSource(mResampler);
+    OboeSoundOutput::instance().removeSource(_cast<AAudioPlayer>(sharedPtr()));
     mSource->rewind();
     mResampler.reset();
 }
