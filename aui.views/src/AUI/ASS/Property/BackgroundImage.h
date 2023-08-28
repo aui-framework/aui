@@ -81,11 +81,46 @@ namespace ass {
      * @ingroup ass
      */
     struct BackgroundImage {
+        /**
+         * @brief Url to the image.
+         * @details
+         * In example, ":icon.svg" references to `icon.svg` file in your assets. See AUrl for more info.
+         */
         unset_wrap<AString> url;
+
+        /**
+         * @brief Multiply color filter to the image.
+         * @details
+         * It allows to replace the color of white icons to the specified overlayColor.
+         *
+         * Gray color multiplied by the specified one gives the darker color.
+         *
+         * Black color is not affected.
+         */
         unset_wrap<AColor> overlayColor;
+
+        /**
+         * @brief Repeating. See Repeat
+         */
         unset_wrap<Repeat> rep;
+
+        /**
+         * @brief Sizing. See ass::Sizing
+         */
         unset_wrap<Sizing> sizing;
+
+        /**
+         * @brief Scale of the image by x and y axis. Default is `{ 1.0, 1.0 }`.
+         */
         unset_wrap<glm::vec2> scale;
+
+        /**
+         * @brief DPI multiplier used to underscale or upperscale the icon.
+         * @details
+         * In example, you may use 64x64 png icons and set the dpiMargin to 2.0. They will be rendered as 32px icons on
+         * 100% scale (instead of 64px), and 64px on 200% scale, remaining crisp. On 300% scale, however, they will be
+         * rendered as 96px images, thus becoming blurry, hence usage of SVG icons is recommended.
+         */
         unset_wrap<float> dpiMargin;
 
         BackgroundImage() {}
