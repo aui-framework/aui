@@ -17,12 +17,12 @@ If you are using Linux, install following dependencies:
 
 ### Ubuntu
 ```bash
-sudo apt install pkg-config libfontconfig-dev libxcursor-dev libxi-dev libxrandr-dev glew-devel libstdc++-static
+sudo apt install pkg-config libfontconfig-dev libxcursor-dev libxi-dev libxrandr-dev glew-devel libstdc++-static libpulse-dev
 ```
 
 ### Fedora
 ```bash
-sudo dnf install fontconfig-devel libXi libglvnd-devel libstdc++-static glew-devel
+sudo dnf install fontconfig-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel
 ```
 
 ## Your project CMake script
