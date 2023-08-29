@@ -34,13 +34,20 @@
 #include "DemoTreeModel.h"
 #include "AUI/View/ASpinner.h"
 #include "DemoGraphView.h"
+
+#include "AUI/Audio/AAudioPlayer.h"
+
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ADragNDropView.h"
 #include "AUI/Util/ALayoutInflater.h"
 #include "AUI/View/ASlider.h"
 #include "AUI/Platform/APlatform.h"
+#include "AUI/IO/AByteBufferInputStream.h"
+#include "AUI/Audio/Formats/AWavSoundStream.h"
+#include "AUI/Audio/Formats/AOggSoundStream.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
+#include <AUI/i18n/AI18n.h>
 #include <AUI/i18n/AI18n.h>
 #include <AUI/ASS/ASS.h>
 #include <AUI/View/ASelectableLabel.h>
@@ -106,6 +113,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
     });
 
     _<ATabView> tabView;
+
     addView(tabView = _new<ATabView>() let {
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {
                 Vertical {
@@ -329,6 +337,26 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 }
         }), "Common");
 
+
+        mWavAudio = _new<AAudioPlayer>(AWavSoundStream::fromUrl(":sound/sound1.wav"));
+        mOggAudio = _new<AAudioPlayer>(AOggSoundStream::fromUrl(":sound/sound1.ogg"));
+
+        it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
+                Horizontal {
+                        Vertical{
+                                _new<ALabel>("Play music using AUI!"),
+                                _new<AButton>("Play .wav music").connect(&AButton::clicked, slot(mWavAudio)::play),
+                                _new<AButton>("Stop .wav music").connect(&AButton::clicked, slot(mWavAudio)::stop),
+                                _new<AButton>("Pause .wav music").connect(&AButton::clicked, slot(mWavAudio)::pause),
+                        },
+                        Vertical{
+                                _new<ALabel>("Play music using AUI!"),
+                                _new<AButton>("Play .ogg music").connect(&AButton::clicked, slot(mOggAudio)::play),
+                                _new<AButton>("Stop .ogg music").connect(&AButton::clicked, slot(mOggAudio)::stop),
+                                _new<AButton>("Pause .ogg music").connect(&AButton::clicked, slot(mOggAudio)::pause),
+                        }
+                }
+        }), "Sounds");
         it->addTab(Vertical {
                 _new<ALabel>("Horizontal splitter"),
                 ASplitter::Horizontal().withItems({_new<AButton>("One"),

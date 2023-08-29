@@ -67,6 +67,7 @@ endfunction()
 
 auib_import(ZLIB https://github.com/aui-framework/zlib)
 
+# define all components
 define_aui_component(core)
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(toolbox)
@@ -81,6 +82,7 @@ define_aui_component(image)
 define_aui_component(views)
 define_aui_component(xml)
 define_aui_component(json)
+define_aui_component(audio)
 
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
@@ -103,19 +105,22 @@ if (NOT AUI_NO_TESTS)
 endif()
 
 #install(EXPORT AUI DESTINATION "cmake/")
+
+# all components for exporting
 set(AUI_ALL_COMPONENTS core
-        crypt
-        curl
-        data
-        image
-        json
-        mysql
-        network
-        sqlite
-        views
-        xml
-        uitests
-        toolbox
+                       crypt
+                       curl
+                       data
+                       image
+                       json
+                       mysql
+                       network
+                       sqlite
+                       views
+                       xml
+                       uitests
+                       toolbox
+                       audio
         )
 
 
