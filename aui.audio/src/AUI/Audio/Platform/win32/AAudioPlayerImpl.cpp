@@ -41,10 +41,17 @@ void AAudioPlayer::uploadNextBlock(DWORD reachedPointIndex) {
     bufferSize = mSource->read(static_cast<char*>(buffer), bufferSize);
     ASSERT_OK mSoundBufferInterface->Unlock(buffer, bufferSize, nullptr, 0);
     if (bufferSize == 0) {
-        std::memset(buffer, 0, mBytesPerSecond - bufferSize);
-        stop();
+        if (mLoop) {
+            mSource->rewind();
+        }
+        else {
+            std::memset(buffer, 0, mBytesPerSecond - bufferSize);
+            stop();
+            emit finished;
+        }
     } else if (bufferSize < mBytesPerSecond) {
         stop();
+        emit finished;
     }
 }
 
