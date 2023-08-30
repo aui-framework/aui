@@ -4,12 +4,15 @@
 
 #pragma once
 
-#include "vorbis/vorbisfile.h"
 #include "AUI/IO/AFileInputStream.h"
 #include "AUI/Audio/ISoundInputStream.h"
+#include "AUI/Util/APimpl.h"
 
 class AUrl;
 class ISeekableInputStream;
+
+
+struct OggVorbis_File;
 
 
 /**
@@ -33,5 +36,5 @@ public:
 
 private:
     _<ISeekableInputStream> mStream;
-    OggVorbis_File mVorbisFile;
+    aui::fast_pimpl<OggVorbis_File, sizeof(void*) * (944 / 8), alignof(void*)> mVorbisFile;
 };

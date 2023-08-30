@@ -60,6 +60,11 @@ namespace aui {
             return *this;
         }
 
+        fast_pimpl& operator=(T&& other) noexcept {
+            new (ptr()) T(std::move(other));
+            return *this;
+        }
+
 
         ~fast_pimpl() {
             ptr()->~T();
