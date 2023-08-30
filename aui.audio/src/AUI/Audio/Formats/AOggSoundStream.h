@@ -36,5 +36,5 @@ public:
 
 private:
     _<ISeekableInputStream> mStream;
-    aui::fast_pimpl<OggVorbis_File, sizeof(void*) * (944 / 8), alignof(void*)> mVorbisFile;
+    aui::fast_pimpl<OggVorbis_File, 944, alignof(void*)> mVorbisFile;
 };
