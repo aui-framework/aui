@@ -5,8 +5,18 @@ add_subdirectory(3rdparty/ogg)
 aui_link(aui.audio PUBLIC aui::core aui::views)
 
 if (AUI_PLATFORM_ANDROID)
-    auib_import(oboe https://github.com/google/oboe VERSION main)
+    auib_import(oboe https://github.com/google/oboe ADD_SUBDIRECTORY VERSION main)
     aui_link(aui.audio PUBLIC oboe)
+
+    install(
+            TARGETS oboe
+            EXPORT aui
+            ARCHIVE       DESTINATION "aui.audio/lib"
+            LIBRARY       DESTINATION "aui.audio/lib"
+            RUNTIME       DESTINATION "aui.audio/bin"
+            PUBLIC_HEADER DESTINATION "aui.audio/include"
+            INCLUDES      DESTINATION "aui.audio/include"
+    )
 endif()
 
 if (AUI_PLATFORM_LINUX)
