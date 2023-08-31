@@ -1,14 +1,16 @@
 #pragma once
 
+#if AUI_PLATFORM_WIN
+#include <Windows.h>
+#endif
+
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/ASignal.h>
 #include "AUI/Audio/ISoundInputStream.h"
 #include "AUI/Audio/AAudioMixer.h"
 
 #include "AUI/Audio/ISoundInputStream.h"
-#if AUI_PLATFORM_WIN
-#include "AUI/Audio/Platform/win32/DirectSound.h"
-#endif
+#include "AUI/Util/APimpl.h"
 
 /**
  * @brief Interface for audio playback.
@@ -16,11 +18,10 @@
  */
 class API_AUI_AUDIO AAudioPlayer: public AObject {
 public:
-    AAudioPlayer() = default;
+    AAudioPlayer();
+    ~AAudioPlayer() override;
 
-    explicit AAudioPlayer(_<ISoundInputStream> stream) {
-        setSource(std::move(stream));
-    }
+    explicit AAudioPlayer(_<ISoundInputStream> stream);
 
     /**
      * @brief Playback status depends on last called function among play(), pause(), stop().
@@ -147,12 +148,11 @@ private:
     static_assert(BUFFER_DURATION_SEC >= 2 && "Buffer duration assumes to be greater than 1");
 
     HANDLE mEvents[BUFFER_DURATION_SEC + 1];
-    DSBPOSITIONNOTIFY mNotifyPositions[BUFFER_DURATION_SEC];
     HANDLE mThread;
     bool mThreadIsActive = false;
 
-    IDirectSoundBuffer8* mSoundBufferInterface;
-    IDirectSoundNotify8* mNotifyInterface;
+    struct Private;
+    aui::fast_pimpl<Private, (sizeof(void*) + sizeof(long)) * (2 + BUFFER_DURATION_SEC), alignof(void*)> mPrivate;
 
     bool mIsPlaying = false;
     int mBytesPerSecond;

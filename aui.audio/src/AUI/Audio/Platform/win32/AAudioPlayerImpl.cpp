@@ -1,18 +1,37 @@
 #include "AUI/Audio/AAudioPlayer.h"
+#include "DirectSound.h"
+
+struct AAudioPlayer::Private {
+    IDirectSoundBuffer8* mSoundBufferInterface;
+    IDirectSoundNotify8* mNotifyInterface;
+    DSBPOSITIONNOTIFY mNotifyPositions[BUFFER_DURATION_SEC];
+};
+
+
+AAudioPlayer::AAudioPlayer() {
+
+}
+
+AAudioPlayer::AAudioPlayer(_<ISoundInputStream> stream) {
+    setSource(std::move(stream));
+}
+AAudioPlayer::~AAudioPlayer() {
+}
+
 
 void AAudioPlayer::playImpl() {
     setupReachPointEvents();
     setupBufferThread();
     uploadNextBlock(BUFFER_DURATION_SEC);
-    ASSERT_OK mSoundBufferInterface->Play(0, 0, DSBPLAY_LOOPING);
+    ASSERT_OK mPrivate->mSoundBufferInterface->Play(0, 0, DSBPLAY_LOOPING);
 }
 
 void AAudioPlayer::pauseImpl() {
-    ASSERT_OK mSoundBufferInterface->Stop();
+    ASSERT_OK mPrivate->mSoundBufferInterface->Stop();
 }
 
 void AAudioPlayer::stopImpl() {
-    ASSERT_OK mSoundBufferInterface->Stop();
+    ASSERT_OK mPrivate->mSoundBufferInterface->Stop();
 
     while (mThreadIsActive) {
         for (int i = 0; i < BUFFER_DURATION_SEC; i++)
@@ -32,14 +51,14 @@ void AAudioPlayer::uploadNextBlock(DWORD reachedPointIndex) {
     DWORD bufferSize = mBytesPerSecond;
     DWORD offset = ((reachedPointIndex + 1) % BUFFER_DURATION_SEC) * mBytesPerSecond;
 
-    HRESULT result = mSoundBufferInterface->Lock(offset, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
+    HRESULT result = mPrivate->mSoundBufferInterface->Lock(offset, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
     if (result == DSERR_BUFFERLOST) {
-        mSoundBufferInterface->Restore();
-        ASSERT_OK mSoundBufferInterface->Lock(offset, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
+        mPrivate->mSoundBufferInterface->Restore();
+        ASSERT_OK mPrivate->mSoundBufferInterface->Lock(offset, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
     }
 
     bufferSize = mSource->read(static_cast<char*>(buffer), bufferSize);
-    ASSERT_OK mSoundBufferInterface->Unlock(buffer, bufferSize, nullptr, 0);
+    ASSERT_OK mPrivate->mSoundBufferInterface->Unlock(buffer, bufferSize, nullptr, 0);
     if (bufferSize == 0) {
         std::memset(buffer, 0, mBytesPerSecond - bufferSize);
         stop();
@@ -51,9 +70,9 @@ void AAudioPlayer::uploadNextBlock(DWORD reachedPointIndex) {
 void AAudioPlayer::clearBuffer() {
     LPVOID buffer;
     DWORD bufferSize = BUFFER_DURATION_SEC * mBytesPerSecond;
-    ASSERT_OK mSoundBufferInterface->Lock(0, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
+    ASSERT_OK mPrivate->mSoundBufferInterface->Lock(0, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
     std::memset(buffer, 0, bufferSize);
-    ASSERT_OK mSoundBufferInterface->Unlock(buffer, bufferSize, nullptr, 0);
+    ASSERT_OK mPrivate->mSoundBufferInterface->Unlock(buffer, bufferSize, nullptr, 0);
 }
 
 void AAudioPlayer::setupBufferThread() {
@@ -91,15 +110,15 @@ void AAudioPlayer::onAudioReachCallbackPoint() {
 }
 
 void AAudioPlayer::setupReachPointEvents() {
-    ASSERT_OK mSoundBufferInterface->QueryInterface(IID_IDirectSoundNotify8, (void**) &mNotifyInterface);
+    ASSERT_OK mPrivate->mSoundBufferInterface->QueryInterface(IID_IDirectSoundNotify8, (void**) &mPrivate->mNotifyInterface);
     mEvents[BUFFER_DURATION_SEC] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     for (int i = 0; i < BUFFER_DURATION_SEC; i++) {
         mEvents[i] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        mNotifyPositions[i].hEventNotify = mEvents[i];
-        mNotifyPositions[i].dwOffset = i * mBytesPerSecond + mBytesPerSecond / 2;
+        mPrivate->mNotifyPositions[i].hEventNotify = mEvents[i];
+        mPrivate->mNotifyPositions[i].dwOffset = i * mBytesPerSecond + mBytesPerSecond / 2;
     }
 
-    ASSERT_OK (mNotifyInterface->SetNotificationPositions(BUFFER_DURATION_SEC, mNotifyPositions));
+    ASSERT_OK (mPrivate->mNotifyInterface->SetNotificationPositions(BUFFER_DURATION_SEC, mPrivate->mNotifyPositions));
 }
 
 void AAudioPlayer::setupSecondaryBuffer() {
@@ -125,10 +144,9 @@ void AAudioPlayer::setupSecondaryBuffer() {
     format.lpwfxFormat = &waveFormat;
 
     ASSERT_OK DirectSound::instance()->CreateSoundBuffer(&format, &buffer, nullptr);
-    ASSERT_OK buffer->QueryInterface(IID_IDirectSoundBuffer8, reinterpret_cast<void**>(&mSoundBufferInterface));
+    ASSERT_OK buffer->QueryInterface(IID_IDirectSoundBuffer8, reinterpret_cast<void**>(&mPrivate->mSoundBufferInterface));
     buffer->Release();
 }
-
 void AAudioPlayer::onSourceSet() {
     setupSecondaryBuffer();
 }
