@@ -39,7 +39,7 @@ namespace aui {
         fast_pimpl(Args&&... args) {
             new (ptr()) T(std::forward<Args>(args)...);
             static_assert(storageSize >= sizeof(T), "not enough size");
-            static_assert(storageAlignment % sizeof(T) == 0, "alignment does not match");
+            static_assert(storageAlignment % alignof(T) == 0, "alignment does not match");
         }
 
         fast_pimpl(const fast_pimpl& other) {
