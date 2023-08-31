@@ -31,11 +31,10 @@ namespace ass {
      * @ingroup ass
      */
     struct TransformScale {
-        float scaleX;
-        float scaleY;
+        glm::vec2 scale;
 
-        TransformScale(float scaleX, float scaleY) : scaleX(scaleX), scaleY(scaleY) {}
-        explicit TransformScale(float scale) : scaleX(scale), scaleY(scale) {}
+        TransformScale(float scaleX, float scaleY) : scale(scaleX, scaleY) {}
+        explicit TransformScale(float scale) : scale(scale) {}
     };
 
 
