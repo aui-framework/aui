@@ -3,11 +3,20 @@ cmake_minimum_required(VERSION 3.10)
 aui_module(aui.audio WHOLEARCHIVE EXPORT aui)
 add_subdirectory(3rdparty/ogg)
 aui_link(aui.audio PUBLIC aui::core aui::views)
-aui_link(aui.audio PUBLIC ogg)
 
 if (AUI_PLATFORM_ANDROID)
     auib_import(oboe https://github.com/google/oboe ADD_SUBDIRECTORY VERSION main)
-    aui_link(aui.audio PUBLIC oboe)
+    aui_link(aui.audio PUBLIC oboe $<LINK_ONLY:log> $<LINK_ONLY:OpenSLES>)
+
+    install(
+            TARGETS oboe
+            EXPORT aui
+            ARCHIVE       DESTINATION "aui.audio/lib"
+            LIBRARY       DESTINATION "aui.audio/lib"
+            RUNTIME       DESTINATION "aui.audio/bin"
+            PUBLIC_HEADER DESTINATION "aui.audio/include"
+            INCLUDES      DESTINATION "aui.audio/include"
+    )
 endif()
 
 if (AUI_PLATFORM_LINUX)

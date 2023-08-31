@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.18)
-project(ogg)
+
 file(GLOB_RECURSE SRCS src/*.c)
-add_library(ogg STATIC ${SRCS})
-target_include_directories(ogg PUBLIC include)
-target_include_directories(ogg PRIVATE src)
-set_target_properties(ogg PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+
+target_include_directories(aui.audio PRIVATE include)
+target_include_directories(aui.audio PRIVATE src)
+target_sources(aui.audio PRIVATE ${SRCS})

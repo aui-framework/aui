@@ -118,6 +118,18 @@ static CoreAudioInstance& coreAudio() {
 }
 
 
+AAudioPlayer::AAudioPlayer() {
+
+}
+
+AAudioPlayer::~AAudioPlayer() {
+}
+
+AAudioPlayer::AAudioPlayer(_<ISoundInputStream> stream) {
+    setSource(std::move(stream));
+}
+
+
 void AAudioPlayer::playImpl() {
     assert(mResampler == nullptr);
     mResampler = _new<ASoundResampler>(mSource);

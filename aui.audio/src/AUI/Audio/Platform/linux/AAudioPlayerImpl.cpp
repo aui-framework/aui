@@ -122,6 +122,13 @@ static PulseAudioInstance& pulse() {
 }
 
 
+AAudioPlayer::AAudioPlayer(_<ISoundInputStream> stream) {
+    setSource(std::move(stream));
+}
+
+AAudioPlayer::~AAudioPlayer() {
+}
+
 
 void AAudioPlayer::playImpl() {
     assert(mResampler == nullptr);
