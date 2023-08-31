@@ -6,7 +6,7 @@ aui_link(aui.audio PUBLIC aui::core aui::views)
 
 if (AUI_PLATFORM_ANDROID)
     auib_import(oboe https://github.com/google/oboe ADD_SUBDIRECTORY VERSION main)
-    aui_link(aui.audio PUBLIC oboe)
+    aui_link(aui.audio PUBLIC oboe $<LINK_ONLY:log> $<LINK_ONLY:OpenSLES>)
 
     install(
             TARGETS oboe
