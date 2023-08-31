@@ -32,7 +32,7 @@ namespace aui {
      *
      * See https://youtu.be/mkPTreWiglk?t=157 (Russian)
      */
-    template<typename T, std::size_t storageSize, std::size_t storageAlignment = alignof(int)>
+    template<typename T, std::size_t storageSize, std::size_t storageAlignment = 8>
     struct fast_pimpl {
     public:
         template<typename... Args>
