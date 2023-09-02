@@ -171,6 +171,9 @@ public:
                 [](int v) -> double {
                     return v;
                 },
+                [](int64_t v) -> double {
+                    return v;
+                },
         }, (super)const_cast<AJson&>(*this));
     }
 

@@ -24,7 +24,6 @@
 #include <AUI/Common/AQueue.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Thread/AThread.h>
-#include <AUI/Util/kAUI.h>
 #include <glm/glm.hpp>
 #include <utility>
 

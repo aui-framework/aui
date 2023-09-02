@@ -26,8 +26,10 @@
 #include <AUI/Common/AByteBuffer.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Reflect/AEnumerate.h>
+#include <AUI/Thread/AFuture.h>
 
 class AString;
+class ACurlMulti;
 
 /**
  * @brief Easy curl instance.
@@ -107,6 +109,15 @@ public:
     enum class Method {
         GET,
         POST,
+    };
+
+    /**
+     * @brief Response struct for Builder::runBlocking() and Builder::runAsync()
+     */
+    struct Response {
+        ResponseCode responseCode;
+        AString contentType;
+        AByteBuffer body;
     };
 
 
@@ -250,7 +261,7 @@ public:
             return *this;
         }
 
-        Builder& withDestinationBuffer(aui::promise::no_copy<AByteBuffer> dst) {
+        Builder& withDestinationBuffer(aui::constraint::avoid_copy<AByteBuffer> dst) {
             return withWriteCallback([dst](AByteBufferView b) {
                 (*dst) << b;
                 return b.size();
@@ -286,6 +297,13 @@ public:
             return *this;
         }
 
+        template<aui::invocable OnSuccess>
+        Builder& withOnSuccess(OnSuccess&& onSuccess) {
+            mOnSuccess = [onSuccess = std::forward<OnSuccess>(onSuccess)](ACurl&) {
+                onSuccess();
+            };
+            return *this;
+        }
 
         /**
          * @brief Sets HTTP method to the query.
@@ -318,7 +336,7 @@ public:
         }
 
         /**
-         * Makes input stream from curl builder.
+         * @brief Makes input stream from curl builder.
          * @note creates async task where curl's loop lives in.
          * @throws AIOException
          * @return input stream
@@ -326,10 +344,24 @@ public:
         _<IInputStream> toInputStream();
 
         /**
-         * Makes bytebuffer from curl builder.
+         * @brief Constructs ACurl object and performs curl request in blocking mode. Use toFuture() instead if
+         * possible.
+         *
          * @throws AIOException
          */
-         AByteBuffer toByteBuffer();
+        Response runBlocking();
+
+         /**
+          * @brief Constructs ACurl object and performs curl request in global ACurlMulti.
+          * @return Response future.
+          */
+         AFuture<Response> runAsync();
+
+        /**
+         * @brief Constructs ACurl object and performs curl request in specified ACurlMulti.
+         * @return Response future.
+         */
+         AFuture<Response> runAsync(ACurlMulti& curlMulti);
     };
 
 	explicit ACurl(Builder& builder):

@@ -15,6 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ACurl.h"
+#include "ACurlMulti.h"
 
 
 #include <cassert>
@@ -120,16 +121,6 @@ _<IInputStream> ACurl::Builder::toInputStream() {
     return _new<CurlInputStream>(_new<ACurl>(*this));
 }
 
-AByteBuffer ACurl::Builder::toByteBuffer() {
-    AByteBuffer out;
-    mWriteCallback = [&](AByteBufferView buf) {
-        out << buf;
-        return buf.size();
-    };
-    ACurl r(*this);
-    r.run();
-    return out;
-}
 
 ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AString>>& params) {
     AString paramsString;
@@ -359,4 +350,45 @@ ACurl::ResponseCode ACurl::getResponseCode() const {
 
 void ACurl::ErrorDescription::throwException() const {
     throw ACurl::Exception(*this);
+}
+
+static ACurl::Response makeResponse(ACurl& r, AByteBuffer body) {
+    return {
+            .responseCode = r.getResponseCode(),
+            .contentType = r.getContentType(),
+            .body = std::move(body),
+    };
+}
+
+ACurl::Response ACurl::Builder::runBlocking() {
+    AByteBuffer out;
+    mWriteCallback = [&](AByteBufferView buf) {
+        out << buf;
+        return buf.size();
+    };
+    ACurl r(*this);
+    r.run();
+    return makeResponse(r, std::move(out));
+}
+
+AFuture<ACurl::Response> ACurl::Builder::runAsync() {
+    return runAsync(ACurlMulti::global());
+}
+
+AFuture<ACurl::Response> ACurl::Builder::runAsync(ACurlMulti& curlMulti) {
+    AFuture<ACurl::Response> result;
+    auto body = _new<AByteBuffer>();
+    withDestinationBuffer(*body);
+    withOnSuccess([result, body = std::move(body)](ACurl& c) {
+        result.supplyResult(makeResponse(c, std::move(*body)));
+    });
+    withErrorCallback([result](const ErrorDescription& error) {
+        try {
+            error.throwException();
+        } catch (...) {
+            result.supplyException();
+        }
+    });
+    curlMulti << _new<ACurl>(std::move(*this));
+    return result;
 }
