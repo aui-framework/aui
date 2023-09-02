@@ -110,7 +110,7 @@ static AJson read(ATokenizer& t) {
                     auto remainder = t.readLongInt();
                     auto digitCount = t.getColumn() - currentColumn;
                     auto integer = double(longInt);
-                    return integer + double(remainder) / std::pow(10.0, digitCount) * glm::sign(integer);
+                    return integer + double(remainder) / std::pow(10.0, digitCount - 1) * glm::sign(integer);
                 }
                 t.reverseByte();
                 int basicInt = longInt;
