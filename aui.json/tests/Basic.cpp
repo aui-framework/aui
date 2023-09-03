@@ -135,3 +135,12 @@ TEST(Json, Double)
 }
 
 
+
+TEST(Json, Double2)
+{
+    auto v = AJson::fromString(R"([0.0645069876039,-0.13864406])");
+    EXPECT_NEAR(v.asArray()[0].asNumber(), 0.0645069876039, 0.0001);
+    EXPECT_NEAR(v.asArray()[1].asNumber(), -0.13864406, 0.0001);
+}
+
+

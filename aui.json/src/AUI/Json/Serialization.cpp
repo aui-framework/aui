@@ -102,6 +102,7 @@ static AJson read(ATokenizer& t) {
             }
 
             if (isdigit(uint8_t(t.getLastCharacter())) || t.getLastCharacter() == '-') {
+                bool isMinus = t.getLastCharacter() == '-';
                 t.reverseByte();
                 auto longInt = t.readLongInt();
                 if (t.readChar() == '.') {
@@ -110,7 +111,9 @@ static AJson read(ATokenizer& t) {
                     auto remainder = t.readLongInt();
                     auto digitCount = t.getColumn() - currentColumn;
                     auto integer = double(longInt);
-                    return integer + double(remainder) / std::pow(10.0, digitCount - 1) * glm::sign(integer);
+                    double s = isMinus ? -1.0 : 1.0;
+
+                    return integer + double(remainder) / std::pow(10.0, digitCount - 1) * s;
                 }
                 t.reverseByte();
                 int basicInt = longInt;
