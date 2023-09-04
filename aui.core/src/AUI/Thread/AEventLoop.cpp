@@ -41,7 +41,7 @@ void AEventLoop::loop() {
 void AEventLoop::iteration() {
     AThread::processMessages();
     std::unique_lock lock(mMutex);
-    if (!mNotified) {
+    if (mNotified) {
         mNotified = false;
         mCV.wait(lock);
     }

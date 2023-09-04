@@ -26,6 +26,7 @@
 #include <AUI/Traits/strings.h>
 #include <AUI/UITest.h>
 #include <gmock/gmock.h>
+#include <AUI/Util/AStubWindowManager.h>
 
 class MyListener: public ::testing::EmptyTestEventListener {
 private:
@@ -108,7 +109,7 @@ void testing::UITest::SetUp() {
     UITestState::beginUITest();
     Test::SetUp();
     Render::setRenderer(std::make_unique<SoftwareRenderer>());
-    AWindow::setWindowManager<UITestWindowManager>();
+    AWindow::setWindowManager<AStubWindowManager>();
     ABaseWindow::currentWindowStorage() = nullptr;
 }
 

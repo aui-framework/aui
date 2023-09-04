@@ -48,7 +48,9 @@ bool AScheduler::iteration(ABitField<ASchedulerIteration> flag) {
         }
         auto callback = std::move(mTasks.front().callback);
         mTasks.pop_front();
+        lock.unlock();
         callback();
+        lock.lock();
     }
 
     return true;

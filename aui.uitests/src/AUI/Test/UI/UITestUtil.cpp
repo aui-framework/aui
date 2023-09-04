@@ -20,13 +20,8 @@
 
 #include "UITestUtil.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Util/AStubWindowManager.h"
 
 void uitest::frame() {
-    for (auto& w : AWindow::getWindowManager().getWindows()) {
-        w->getRenderingContext()->beginResize(*w);
-        w->pack();
-        w->getRenderingContext()->endResize(*w);
-        w->redraw();
-    }
-    AThread::processMessages();
+    AStubWindowManager::drawFrame();
 }

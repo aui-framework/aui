@@ -16,7 +16,9 @@ private:
 public:
     static _<AStrongByteBufferInputStream> fromUrl(const AUrl& url) noexcept;
 
-    explicit AStrongByteBufferInputStream(AByteBuffer&& buffer);
+    explicit AStrongByteBufferInputStream(AByteBuffer buffer) noexcept: mRef(std::move(buffer)) {
+
+    }
     ~AStrongByteBufferInputStream() override = default;
 
     bool isEof() override;

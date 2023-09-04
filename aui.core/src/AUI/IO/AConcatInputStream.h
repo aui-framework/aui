@@ -18,16 +18,28 @@
 // Created by alex2 on 13.11.2020.
 //
 
-#include "MultipleInputStream.h"
+#pragma once
 
-size_t MultipleInputStream::read(char* dst, size_t size) {
-    while (!mInputStreams.empty()) {
-        size_t r = mInputStreams.first()->read(dst, size);
-        if (r == 0) {
-            mInputStreams.pop_front();
-        } else {
-            return r;
-        }
+
+#include "IInputStream.h"
+#include <AUI/Common/AVector.h>
+
+/**
+ * @brief Concatenates multiple sequential input streams into one.
+ * @ingroup io
+ */
+class AConcatInputStream: public IInputStream {
+private:
+    ADeque<_<IInputStream>> mInputStreams;
+
+public:
+    explicit AConcatInputStream(ADeque<_<IInputStream>> inputStreams) noexcept: mInputStreams(std::move(inputStreams)) {
+
     }
-    return 0;
-}
+
+    ~AConcatInputStream() override = default;
+
+    size_t read(char* dst, size_t size) override;
+};
+
+

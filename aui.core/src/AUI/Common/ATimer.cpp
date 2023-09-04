@@ -37,7 +37,7 @@ void ATimer::restart()
 void ATimer::start()
 {
     if (!mTimer) {
-        ATimer::timerThread();
+        ATimer::scheduler();
         mTimer = scheduler().timer(mPeriod, [this] {
             emit fired;
         });
@@ -58,7 +58,6 @@ bool ATimer::isStarted()
 }
 
 _<AThread>& ATimer::timerThread() {
-    ATimer::scheduler();
     static _<AThread> thread = [] {
         auto t = _new<AThread>([&]()
             {
@@ -78,5 +77,6 @@ _<AThread>& ATimer::timerThread() {
 
 AScheduler& ATimer::scheduler() {
     static AScheduler scheduler;
+    ATimer::timerThread();
     return scheduler;
 }

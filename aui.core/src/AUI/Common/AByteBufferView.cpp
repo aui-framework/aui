@@ -27,8 +27,7 @@ AString AByteBufferView::toHexString() const {
     char buf[8];
 
     for (size_t i = 0; i < size(); ++i) {
-        sprintf(buf, "%02x", static_cast<unsigned>(mBuffer[i]) & 0xff);
-        result += buf;
+        result += std::string_view(buf, fmt::format_to(buf, "{:02x}", (std::uint8_t)mBuffer[i]));
     }
     return result;
 }

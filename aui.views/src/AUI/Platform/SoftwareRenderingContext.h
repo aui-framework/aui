@@ -20,18 +20,6 @@
 #include <AUI/Platform/AWindow.h>
 
 class API_AUI_VIEWS SoftwareRenderingContext: public CommonRenderingContext {
-private:
-#if AUI_PLATFORM_WIN
-    AByteBuffer mBitmapBlob;
-    BITMAPINFO* mBitmapInfo;
-#else
-    AByteBuffer mBitmapBlob;
-#endif
-
-protected:
-    AByteBuffer mStencilBlob;
-    glm::uvec2 mBitmapSize;
-
 public:
     SoftwareRenderingContext();
     ~SoftwareRenderingContext() override;
@@ -98,4 +86,18 @@ public:
 #endif
 
     void endResize(ABaseWindow& window) override;
+
+protected:
+    AByteBuffer mStencilBlob;
+    glm::uvec2 mBitmapSize;
+
+    void reallocateImageBuffers(const ABaseWindow& window);
+
+private:
+#if AUI_PLATFORM_WIN
+    AByteBuffer mBitmapBlob;
+    BITMAPINFO* mBitmapInfo;
+#else
+    AByteBuffer mBitmapBlob;
+#endif
 };

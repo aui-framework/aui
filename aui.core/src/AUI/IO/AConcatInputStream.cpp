@@ -18,24 +18,19 @@
 // Created by alex2 on 13.11.2020.
 //
 
-#pragma once
+#include "AConcatInputStream.h"
 
-
-#include "IInputStream.h"
-#include <AUI/Common/ADeque.h>
-
-class MultipleInputStream: public IInputStream {
-private:
-    ADeque<_<IInputStream>> mInputStreams;
-
-public:
-    explicit MultipleInputStream(const ADeque<_<IInputStream>>& inputStreams) : mInputStreams(inputStreams) {
-
+size_t AConcatInputStream::read(char* dst, size_t size) {
+    std::size_t result = 0;
+    while (!mInputStreams.empty() && size > 0) {
+        size_t r = mInputStreams.first()->read(dst, size);
+        if (r == 0) {
+            mInputStreams.pop_front();
+            continue;
+        }
+        dst += r;
+        size -= r;
+        result += r;
     }
-
-    ~MultipleInputStream() override = default;
-
-    size_t read(char* dst, size_t size) override;
-};
-
-
+    return result;
+}

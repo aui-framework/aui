@@ -94,7 +94,7 @@ public:
     void supplyException() {
         if (auto l = mFutureWeakReference.lock()) {
             auto& inner = *l;
-            inner->supplyException();
+            inner->reportException();
         }
     }
 

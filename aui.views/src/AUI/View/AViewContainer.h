@@ -351,6 +351,10 @@ protected:
      */
     void setContents(const _<AViewContainer>& container);
 
+    void renderChildren() {
+        drawViews(mViews.begin(), mViews.end());
+    }
+
 signals:
     emits<ScrollbarAppearance> scrollbarAppearanceSet;
 

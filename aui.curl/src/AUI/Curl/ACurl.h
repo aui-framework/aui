@@ -21,6 +21,7 @@
 
 #include "AUI/IO/IInputStream.h"
 #include "AUI/Traits/values.h"
+#include "AFormMultipart.h"
 #include <AUI/IO/APipe.h>
 #include <AUI/Common/AByteBufferView.h>
 #include <AUI/Common/AByteBuffer.h>
@@ -115,7 +116,7 @@ public:
      * @brief Response struct for Builder::runBlocking() and Builder::runAsync()
      */
     struct Response {
-        ResponseCode responseCode;
+        ResponseCode code;
         AString contentType;
         AByteBuffer body;
     };
@@ -204,6 +205,18 @@ public:
         }
 
         /**
+         * @brief Add multipart data.
+         * @details
+         * This function implies adding Content-Type: multipart and it's boundaries, setting withBody with multipart
+         * data.
+         */
+         Builder& withMultipart(const AFormMultipart& multipart) {
+            withInputStream(multipart.makeInputStream());
+            mHeaders.push_back("Content-Type: multipart/form-data; boundary={}"_format(multipart.boundary()));
+            return *this;
+         }
+
+        /**
          * @brief Called on client -> server data requested (upload).
          * @param callback callback to call.
          * @return this
@@ -211,6 +224,22 @@ public:
         Builder& withBody(ReadCallback callback) {
             assert(("write callback already set" && mReadCallback == nullptr));
             mReadCallback = std::move(callback);
+            return *this;
+        }
+
+        /**
+         * @brief Called on client -> server data requested (upload).
+         * @param callback callback to call.
+         * @return this
+         */
+        Builder& withInputStream(_<IInputStream> inputStream) {
+            withBody([inputStream = std::move(inputStream)](char* dst, std::size_t length) {
+                auto v = inputStream->read(dst, length);
+                if (v == 0) {
+                    throw AEOFException();
+                }
+                return v;
+            });
             return *this;
         }
 
@@ -319,11 +348,19 @@ public:
         /**
          * @brief Sets HTTP params to the query.
          * @param params params map in key,value pairs.
+         * @details
+         * In GET, the params are encoded and appended to the url.
+         *
+         * In POST, this value is used instead of readCallback (withBody).
          */
         Builder& withParams(const AVector<std::pair<AString /* key */, AString /* value */>>& params);
 
         /**
          * @brief Sets HTTP params to the query.
+         * @details
+         * In GET, the params are encoded and appended to the url.
+         *
+         * In POST, this value is used instead of readCallback (withBody).
          */
         Builder& withParams(AString params) noexcept {
             mParams = std::move(params);

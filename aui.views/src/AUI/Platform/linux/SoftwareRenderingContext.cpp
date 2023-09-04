@@ -47,9 +47,14 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     if (Render::getRenderer() == nullptr) {
         Render::setRenderer(std::make_unique<SoftwareRenderer>());
     }
+    SoftwareRenderingContext::endResize(init.window);
 }
 
 void SoftwareRenderingContext::endResize(ABaseWindow &window) {
+    reallocateImageBuffers(window);
+}
+
+void SoftwareRenderingContext::reallocateImageBuffers(const ABaseWindow& window) {
     mBitmapSize = window.getSize();
     mBitmapBlob.reallocate(mBitmapSize.x * mBitmapSize.y * 4);
     mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
