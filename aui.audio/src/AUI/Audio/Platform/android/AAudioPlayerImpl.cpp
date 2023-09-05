@@ -1,6 +1,7 @@
 #include "AUI/Audio/AAudioPlayer.h"
 #include "AUI/Audio/AAudioMixer.h"
 #include "AUI/Audio/ASoundResampler.h"
+#include "AUI/Audio/APlayerSoundStream.h"
 #include <oboe/Oboe.h>
 
 class OboeSoundOutput : public oboe::AudioStreamDataCallback  {
@@ -59,7 +60,7 @@ AAudioPlayer::AAudioPlayer(_<ISoundInputStream> stream) {
 
 void AAudioPlayer::playImpl() {
     assert(mResampler == nullptr);
-    mResampler = _new<ASoundResampler>(mSource);
+    mResampler = _new<ASoundResampler>(_new<APlayerSoundStream>(_cast<AAudioPlayer>(sharedPtr())));
     OboeSoundOutput::instance().addSource(_cast<AAudioPlayer>(sharedPtr()));
 }
 

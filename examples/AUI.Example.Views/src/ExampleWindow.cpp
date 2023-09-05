@@ -348,12 +348,16 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 _new<AButton>("Play .wav music").connect(&AButton::clicked, slot(mWavAudio)::play),
                                 _new<AButton>("Stop .wav music").connect(&AButton::clicked, slot(mWavAudio)::stop),
                                 _new<AButton>("Pause .wav music").connect(&AButton::clicked, slot(mWavAudio)::pause),
+                                _new<ALabel>("Volume control"),
+                                _new<ASlider>().connect(&ASlider::valueChanging, slot(mWavAudio)::setVolume)
                         },
                         Vertical{
                                 _new<ALabel>("Play music using AUI!"),
                                 _new<AButton>("Play .ogg music").connect(&AButton::clicked, slot(mOggAudio)::play),
                                 _new<AButton>("Stop .ogg music").connect(&AButton::clicked, slot(mOggAudio)::stop),
                                 _new<AButton>("Pause .ogg music").connect(&AButton::clicked, slot(mOggAudio)::pause),
+                                _new<ALabel>("Volume control"),
+                                _new<ASlider>().connect(&ASlider::valueChanging, slot(mOggAudio)::setVolume)
                         }
                 }
         }), "Sounds");

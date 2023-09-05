@@ -1,6 +1,7 @@
 #include "AUI/Audio/AAudioPlayer.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Audio/ASoundResampler.h"
+#include "AUI/Audio/APlayerSoundStream.h"
 #include <pulse/simple.h>
 #include <pulse/pulseaudio.h>
 
@@ -132,7 +133,7 @@ AAudioPlayer::~AAudioPlayer() {
 
 void AAudioPlayer::playImpl() {
     assert(mResampler == nullptr);
-    mResampler = _new<ASoundResampler>(mSource);
+    mResampler = _new<ASoundResampler>(_new<APlayerSoundStream>(_cast<AAudioPlayer>(sharedPtr())));
     ::loop().addSoundSource(_cast<AAudioPlayer>(sharedPtr()));
     pulse();
 }

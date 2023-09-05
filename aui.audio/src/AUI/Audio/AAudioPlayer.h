@@ -8,9 +8,9 @@
 #include <AUI/Common/ASignal.h>
 #include "AUI/Audio/ISoundInputStream.h"
 #include "AUI/Audio/AAudioMixer.h"
-
 #include "AUI/Audio/ISoundInputStream.h"
 #include "AUI/Util/APimpl.h"
+
 
 /**
  * @brief Interface for audio playback.
@@ -182,4 +182,19 @@ private:
 
     void onSourceSet();
 
+    /**
+     * @return callback that apply to audio sample the player's current volume level
+     */
+    auto getVolumeCallback() {
+        return [self = _cast<AAudioPlayer>(sharedPtr())](std::span<std::byte> rawSample) {
+            if (rawSample.size() != self->mSource->info().bitsPerSample() / 8) {
+                return;
+            }
+
+            int16_t sample = *(reinterpret_cast<int16_t*>(rawSample.data()));
+            float volume = self->volume();
+            sample = static_cast<int16_t>(volume * static_cast<float>(sample) /*+ (volume - 1) * 32768*/);
+            std::memcpy(rawSample.data(), &sample, 2);
+        };
+    }
 };
