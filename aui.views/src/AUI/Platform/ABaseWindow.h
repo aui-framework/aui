@@ -24,12 +24,12 @@
 #include "AWindowManager.h"
 #include "AOverlappingSurface.h"
 #include "ADragNDrop.h"
+#include "AUI/Util/ATouchScroller.h"
 #include <optional>
 
 namespace testing {
     class UITest;
 }
-
 
 class API_AUI_VIEWS ABaseWindow: public AViewContainer {
     friend class SoftwareRenderer;
@@ -141,7 +141,7 @@ public:
     void updateFocusChain();
     void onPointerPressed(const APointerPressedEvent& event) override;
 
-    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
     void closeOverlappingSurfacesOnClick();
 
@@ -291,6 +291,11 @@ public:
 
     bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 
+    /**
+     * @brief double click will be captured only if time elapsed since the previous click is less than DOUBLECLICK_MAX_DURATION
+     */
+    static constexpr std::chrono::milliseconds DOUBLECLICK_MAX_DURATION = std::chrono::milliseconds(500);
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
@@ -303,6 +308,12 @@ protected:
      * @see ABaseWindow::preventClickOnPointerRelease
      */
     AOptional<bool> mPreventClickOnPointerRelease;
+
+    bool mPerformDoubleClickOnPointerRelease = false;
+
+    std::chrono::milliseconds mLastButtonPressedTime = std::chrono::milliseconds::zero();
+    AOptional<APointerIndex> mLastButtonPressed;
+    glm::vec2 mLastPosition = {0, 0};
 
     _unique<IRenderingContext> mRenderingContext;
 
@@ -332,6 +343,16 @@ private:
 
     glm::ivec2 mMousePos = {0, 0};
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
+
+    struct Scroll {
+        APointerIndex pointer;
+        ATouchScroller scroller;
+    };
+
+    /**
+     * @brief Helper structs to handle touchscreen scroll events.
+     */
+    ASmallVector<Scroll, 10 /* typical max number of fingers */> mScrolls;
 };
 
 

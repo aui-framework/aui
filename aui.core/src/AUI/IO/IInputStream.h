@@ -15,6 +15,8 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
+
+#include <span>
 #include "AEOFException.h"
 #include <AUI/Traits/values.h>
 #include <glm/glm.hpp>
@@ -41,6 +43,20 @@ public:
      * @return number of read bytes (including 0)
      */
     virtual size_t read(char* dst, size_t size) = 0;
+
+    /**
+     * @brief Reads up to <code>destination.size()</code> bytes from stream. Blocking (waiting for new data) is allowed.
+     * <dl>
+     *   <dt><b>Sneaky exceptions</b></dt>
+     *   <dd>An implementation can throw any exception that subclasses <a href="#AIOException">AIOException</a>.</dd>
+     * </dl>
+     * @param dst destination buffer
+     * @param size destination buffer's size. > 0
+     * @return number of read bytes (including 0)
+     */
+    size_t read(std::span<std::byte> destination) {
+        return read((char*)destination.data(), destination.size());
+    }
 
     /**
      * @brief Reads exact <code>size</code> bytes from stream. Blocking (waiting for new data) is allowed.

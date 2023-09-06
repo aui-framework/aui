@@ -43,7 +43,7 @@ _<AImage> AImage::fromBuffer(AByteBufferView buffer) {
 _<AImage> AImage::Cache::load(const AUrl& key)
 {
     try {
-        auto buffer = AByteBuffer::fromStream(AUrl(key).open(), 0x100000);
+        auto buffer = AByteBuffer::fromStream(AUrl(key).open(), 0x10000000);
 
         if (auto raster = AImageLoaderRegistry::inst().loadRaster(buffer))
             return raster;

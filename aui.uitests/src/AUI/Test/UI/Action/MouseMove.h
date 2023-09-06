@@ -28,7 +28,7 @@ struct ViewActionMouseMove {
         uitest::frame();
         auto coords = view->getPositionInWindow() + (position ? *position : (view->getSize() / 2));
         auto window = view->getWindow();
-        window->onPointerMove(coords);
+        window->onPointerMove(coords, {});
         uitest::frame();
     }
 };

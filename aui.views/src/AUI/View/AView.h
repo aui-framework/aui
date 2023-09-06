@@ -46,6 +46,7 @@
 #include <AUI/Event/AGestureEvent.h>
 #include <AUI/Event/APointerPressedEvent.h>
 #include <AUI/Event/APointerReleasedEvent.h>
+#include <AUI/Event/APointerMoveEvent.h>
 
 
 class Render;
@@ -790,7 +791,7 @@ public:
      * If the view is pressed, it would still received move events. Use AView::isMouseHover to check is the pointer
      * actually over view or not. See AView::onPointerReleased for more info.
      */
-    virtual void onPointerMove(glm::ivec2 pos);
+    virtual void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event);
     virtual void onMouseLeave();
     virtual void onDpiChanged();
 
@@ -816,7 +817,10 @@ public:
     /**
      * Handles mouse wheel events.
      * @param pos mouse cursor position.
-     * @param delta the distance mouse wheel scrolled. 120 = mouse scroll down, -120 = mouse scroll up.
+     * @param delta the distance mouse wheel scrolled.
+     * @details
+     * By default, 120 is single mouse wheel click.
+     * 120 = mouse scroll down, -120 = mouse scroll up.
      */
     virtual void onScroll(const AScrollEvent& event);
     virtual void onKeyDown(AInput::Key key);

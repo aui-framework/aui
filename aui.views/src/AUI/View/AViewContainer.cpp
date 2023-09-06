@@ -81,6 +81,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
 }
 
 void AViewContainer::addView(const _<AView>& view) {
+    AUI_NULLSAFE(view->mParent)->removeView(view);
     mViews << view;
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view);
@@ -158,19 +159,19 @@ void AViewContainer::onMouseEnter() {
     AView::onMouseEnter();
 }
 
-void AViewContainer::onPointerMove(glm::ivec2 pos) {
-    AView::onPointerMove(pos);
+void AViewContainer::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
+    AView::onPointerMove(pos, event);
 
     auto viewUnderPointer = getViewAt(pos);
-    auto targetView = isPressed() ? mFocusChainTarget.lock() : viewUnderPointer;
+    auto targetView = isPressed() ? pointerEventsMapping(event.pointerIndex) : viewUnderPointer;
 
     if (viewUnderPointer && !viewUnderPointer->isMouseEntered()) {
         viewUnderPointer->onMouseEnter();
     }
 
     if (targetView) {
-        auto mousePos = pos - targetView->getPosition();
-        targetView->onPointerMove(mousePos);
+        auto mousePos = pos - glm::vec2(targetView->getPosition());
+        targetView->onPointerMove(mousePos, event);
     }
 
     for (auto& v: mViews) {
@@ -211,6 +212,7 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
 
     auto p = getViewAt(event.position);
     if (p && p->isEnabled()) {
+        mPointerEventsMapping.push_back({event.pointerIndex, p});
         if (p->capturesFocus()) {
             p->focus(false);
 
@@ -232,8 +234,9 @@ void AViewContainer::onPointerPressed(const APointerPressedEvent& event) {
 
 void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
     AView::onPointerReleased(event);
+
     auto viewUnderPointer = getViewAt(event.position);
-    auto targetView = mFocusChainTarget.lock();
+    auto targetView = pointerEventsMapping(event.pointerIndex);
     if (!targetView) {
         targetView = viewUnderPointer;
     }
@@ -244,6 +247,10 @@ void AViewContainer::onPointerReleased(const APointerReleasedEvent& event) {
         copy.triggerClick &= viewUnderPointer == targetView;
         targetView->onPointerReleased(copy);
     }
+
+    mPointerEventsMapping.erase(std::remove_if(mPointerEventsMapping.begin(), mPointerEventsMapping.end(), [&](const PointerEventsMapping& v) {
+        return v.pointerIndex == event.pointerIndex;
+    }), mPointerEventsMapping.end());
 }
 
 void AViewContainer::onPointerDoubleClicked(const APointerPressedEvent& event) {
@@ -498,4 +505,14 @@ void AViewContainer::onViewGraphSubtreeChanged() {
     for (const auto& v : mViews) {
         v->onViewGraphSubtreeChanged();
     }
+}
+
+_<AView> AViewContainer::pointerEventsMapping(APointerIndex index) {
+    auto it = std::find_if(mPointerEventsMapping.begin(), mPointerEventsMapping.end(), [&](const PointerEventsMapping& v) {
+        return v.pointerIndex == index;
+    });
+    if (it == mPointerEventsMapping.end()) {
+        return nullptr;
+    }
+    return it->targetView.lock();
 }

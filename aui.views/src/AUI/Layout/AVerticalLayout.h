@@ -64,6 +64,9 @@ public:
 	int getMinimumHeight() override;
 
 
+    /**
+     * @see @ref ass::LayoutSpacing "LayoutSpacing"
+     */
 	void setSpacing(int spacing) override;
 
     ALayoutDirection getLayoutDirection() override;

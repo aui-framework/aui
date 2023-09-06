@@ -166,7 +166,7 @@ void AListView::onScroll(const AScrollEvent& event) {
     if (!mScrollbar) return;
     //AViewContainer::onScroll(pos, delta);
     mScrollbar->onScroll(event);
-    onPointerMove(event.origin); // update hover on scroll
+    onPointerMove(event.origin, {event.pointerIndex}); // update hover on scroll
 }
 
 void AListView::handleMousePressed(AListItem* item) {
@@ -220,11 +220,6 @@ void AListView::selectItem(size_t i) {
 }
 
 bool AListView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
-    if (std::holds_alternative<AFingerDragEvent>(event)) {
-        if (transformGestureEventsToDesktop(origin, event)) {
-            return true;
-        }
-    }
     return AViewContainer::onGesture(origin, event);
 }
 

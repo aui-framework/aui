@@ -27,7 +27,7 @@ struct APointerPressedEvent {
     /**
      * @brief Where does the event occurred.
      */
-    glm::ivec2 position;
+    glm::vec2 position;
 
     /**
      * @brief Which button of the pointing device is triggered the event (AInput::LBUTTON if not present) or finger.

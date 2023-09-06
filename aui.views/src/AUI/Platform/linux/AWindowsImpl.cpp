@@ -493,12 +493,15 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
 
                 case MotionNotify: {
                     window = locateWindow(ev.xmotion.window);
-                    window->onPointerMove({ev.xmotion.x, ev.xmotion.y});
+                    window->onPointerMove({ev.xmotion.x, ev.xmotion.y}, {});
                     AUI_NULLSAFE(window->getCursor())->applyNativeCursor(window.get());
                     break;
                 }
                 case ButtonPress: {
                     window = locateWindow(ev.xbutton.window);
+
+                    const auto SCROLL = 11_pt * 3.f;
+
                     switch (ev.xbutton.button) {
                         case 1:
                         case 2:
@@ -512,13 +515,13 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         case 4: // wheel down
                             window->onScroll({                     // TODO libinput
                                 .origin = {ev.xbutton.x, ev.xbutton.y},  //
-                                .delta = { 0, -120 }                     //
+                                .delta = { 0, -SCROLL }                     //
                             });                                          //
                             break;                                       //
                         case 5: // wheel up                              //
                             window->onScroll({                     //
                                 .origin = {ev.xbutton.x, ev.xbutton.y},  //
-                                .delta = { 0, 120 }                      //
+                                .delta = { 0, SCROLL }                      //
                             });                                          //
                             break;
                     }
@@ -717,3 +720,6 @@ void AWindow::hideTouchscreenKeyboardImpl() {
     ABaseWindow::hideTouchscreenKeyboardImpl();
 }
 
+void AWindow::moveToCenter() {
+
+}

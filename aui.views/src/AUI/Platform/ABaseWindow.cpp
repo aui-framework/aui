@@ -27,11 +27,14 @@
 #include <AUI/Util/kAUI.h>
 #include <chrono>
 #include "APlatform.h"
+#include "AUI/Logging/ALogger.h"
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Util/ALayoutInflater.h>
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/UITestState.h>
+
+static constexpr auto LOG_TAG = "ABaseWindow";
 
 ABaseWindow::ABaseWindow() {
     mDpiRatio = APlatform::getDpiRatio();
@@ -181,9 +184,26 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
 void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     mMousePos = event.position;
     closeOverlappingSurfacesOnClick();
-    mPreventClickOnPointerRelease.emplace(false);
+    mPreventClickOnPointerRelease = false;
+    mPerformDoubleClickOnPointerRelease = false;
     auto focusCopy = mFocusedView.lock();
     mIgnoreTouchscreenKeyboardRequests = false;
+
+    // handle touchscreen scroll
+    if (event.pointerIndex.isFinger()) {
+        if (auto it = std::find_if(mScrolls.begin(), mScrolls.end(), [&](const Scroll& scroll) {
+                return event.pointerIndex == scroll.pointer;
+            }); it != mScrolls.end()) {
+            mScrolls.erase(it);
+        }
+        ATouchScroller scroller;
+        scroller.handlePointerPressed(event);
+        mScrolls.push_back({
+            .pointer = event.pointerIndex,
+            .scroller = std::move(scroller),
+        });
+    }
+
     AViewContainer::onPointerPressed(event);
 
     if (mFocusedView.lock() != focusCopy && focusCopy != nullptr) {
@@ -198,23 +218,18 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
     // check for double clicks
     using namespace std::chrono;
     using namespace std::chrono_literals;
-    static milliseconds lastButtonPressedTime = 0ms;
-    static AOptional<APointerIndex> lastButtonPressed;
-    static glm::ivec2 lastPosition = {0, 0};
-
+    static constexpr auto DOUBLECLICK_RANGE2 = 10_dp;
     auto now = duration_cast<milliseconds>(system_clock::now().time_since_epoch());
-
-    auto delta = now - lastButtonPressedTime;
-    if (delta < 500ms && lastPosition == event.position) {
-        if (lastButtonPressed == event.pointerIndex) {
-            onPointerDoubleClicked(event);
-
-            lastButtonPressedTime = 0ms;
+    auto delta = now - mLastButtonPressedTime;
+    if (delta < DOUBLECLICK_MAX_DURATION && glm::distance2(mLastPosition, event.position) <= DOUBLECLICK_RANGE2.getValuePx()) {
+        if (mLastButtonPressed == event.pointerIndex) {
+            mPerformDoubleClickOnPointerRelease = true;
+            mLastButtonPressedTime = 0ms;
         }
     } else {
-        lastButtonPressedTime = now;
-        lastButtonPressed = event.pointerIndex;
-        lastPosition = event.position;
+        mLastButtonPressedTime = now;
+        mLastButtonPressed = event.pointerIndex;
+        mLastPosition = event.position;
     }
     AMenu::close();
 }
@@ -223,25 +238,65 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     APointerReleasedEvent copy = event;
     copy.triggerClick = !mPreventClickOnPointerRelease.valueOr(true);
     mPreventClickOnPointerRelease.reset();
+
+    // handle touchscreen scroll
+    if (event.pointerIndex.isFinger()) {
+        if (auto it = std::find_if(mScrolls.begin(), mScrolls.end(), [&](const Scroll& scroller) {
+                return event.pointerIndex == scroller.pointer;
+            }); it != mScrolls.end()) {
+            it->scroller.handlePointerReleased(event);
+        } else {
+            ALogger::warn(LOG_TAG) << "ABaseWindow::onPointerReleased is unable to find finger " << event.pointerIndex;
+        }
+    }
+
     AViewContainer::onPointerReleased(copy);
+    if (mPerformDoubleClickOnPointerRelease) {
+        onPointerDoubleClicked({
+            .position = event.position,
+            .pointerIndex = event.pointerIndex,
+            .asButton = event.asButton
+        });
+    }
+    mPerformDoubleClickOnPointerRelease = false;
 
     // AView::onPointerMove handles cursor shape; need extra call in order to flush
     forceUpdateCursor();
 }
 
 void ABaseWindow::forceUpdateCursor() {
-    AViewContainer::onPointerMove(mMousePos);
+    AViewContainer::onPointerMove(mMousePos, {});
 }
 
 void ABaseWindow::onScroll(const AScrollEvent& event) {
     AViewContainer::onScroll(event);
-    AViewContainer::onPointerMove(mMousePos); // update hovers inside scrollarea
+    AViewContainer::onPointerMove(mMousePos, {event.pointerIndex}); // update hovers inside scrollarea
 }
 
-void ABaseWindow::onPointerMove(glm::ivec2 pos) {
+void ABaseWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     mMousePos = pos;
     mCursor = ACursor::DEFAULT;
-    AViewContainer::onPointerMove(pos);
+
+    // handle touchscreen scroll
+    if (event.pointerIndex.isFinger()) {
+        if (auto it = std::find_if(mScrolls.begin(), mScrolls.end(), [&](const Scroll& scroller) {
+                return event.pointerIndex == scroller.pointer;
+            }); it != mScrolls.end()) {
+            auto d = it->scroller.handlePointerMove(pos);
+            if (d != glm::ivec2(0, 0)) {
+                onScroll(AScrollEvent {
+                    .origin       = it->scroller.origin(),
+                    .delta        = d,
+                    .kinetic      = false,
+                    .pointerIndex = event.pointerIndex,
+                });
+            }
+        } else {
+            ALogger::warn(LOG_TAG) << "ABaseWindow::onPointerMove is unable to find finger " << event.pointerIndex;
+        }
+    }
+
+    AViewContainer::onPointerMove(pos, event);
 
     emit mouseMove(pos);
 }
@@ -272,6 +327,24 @@ void ABaseWindow::flagUpdateLayout() {
 }
 
 void ABaseWindow::render() {
+    mScrolls.erase(std::remove_if(mScrolls.begin(), mScrolls.end(), [&](Scroll& scroll) {
+        auto delta = scroll.scroller.gatherKineticScrollValue();
+        if (!delta) {
+            return false;
+        }
+        if (*delta == glm::ivec2(0, 0)) {
+            return true;
+        }
+        onScroll(AScrollEvent {
+                .origin       = scroll.scroller.origin(),
+                .delta        = *delta,
+                .kinetic      = true,
+                .pointerIndex = scroll.pointer,
+        });
+        flagRedraw();
+        return false;
+    }), mScrolls.end());
+
     AViewContainer::render();
     mIgnoreTouchscreenKeyboardRequests = false;
 

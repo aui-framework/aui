@@ -48,11 +48,11 @@ void AVectorDrawable::draw(const Params& params) {
     auto key = asKey(size);
     auto doDraw = [&](const Render::Texture& texture) {
         Render::rect(ATexturedBrush{
-                             texture,
-                             std::nullopt,
-                             std::nullopt,
-                             params.imageRendering,
-                             params.repeat,
+                         .texture = texture,
+                         .uv1 = params.cropUvTopLeft,
+                         .uv2 = params.cropUvBottomRight,
+                         .imageRendering = params.imageRendering,
+                         .repeat = params.repeat,
                      },
                      params.offset,
                      size);

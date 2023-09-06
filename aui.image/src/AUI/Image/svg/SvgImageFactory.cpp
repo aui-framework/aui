@@ -32,7 +32,7 @@ SvgImageFactory::~SvgImageFactory() {
 
 
 AImage SvgImageFactory::provideImage(const glm::ivec2& size) {
-    auto bitmap = mImpl->renderToBitmap(size.x, size.y, 0x00000000);
+    auto bitmap = mImpl->renderToBitmap(size.x, size.y);
     return AImageView(AByteBufferView(reinterpret_cast<const char*>(bitmap.data()), bitmap.stride() * size.y * 4),
                       glm::uvec2(size),
                       APixelFormat::BGRA | APixelFormat::BYTE)

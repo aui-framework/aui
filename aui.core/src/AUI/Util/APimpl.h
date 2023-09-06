@@ -32,14 +32,14 @@ namespace aui {
      *
      * See https://youtu.be/mkPTreWiglk?t=157 (Russian)
      */
-    template<typename T, std::size_t storageSize, std::size_t storageAlignment = alignof(int)>
+    template<typename T, std::size_t storageSize, std::size_t storageAlignment = 8>
     struct fast_pimpl {
     public:
         template<typename... Args>
         fast_pimpl(Args&&... args) {
             new (ptr()) T(std::forward<Args>(args)...);
             static_assert(storageSize >= sizeof(T), "not enough size");
-            static_assert(storageAlignment == alignof(T), "alignment does not match");
+            static_assert(storageAlignment % alignof(T) == 0, "alignment does not match");
         }
 
         fast_pimpl(const fast_pimpl& other) {
@@ -57,6 +57,11 @@ namespace aui {
 
         fast_pimpl& operator=(fast_pimpl&& other) noexcept {
             new (ptr()) T(std::move(other.value()));
+            return *this;
+        }
+
+        fast_pimpl& operator=(T&& other) noexcept {
+            new (ptr()) T(std::move(other));
             return *this;
         }
 

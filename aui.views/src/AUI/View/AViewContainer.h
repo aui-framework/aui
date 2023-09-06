@@ -96,7 +96,7 @@ public:
 
     void onMouseEnter() override;
 
-    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
     void onMouseLeave() override;
 
@@ -380,6 +380,22 @@ private:
      */
     _weak<AView> mFocusChainTarget;
 
+    struct PointerEventsMapping {
+        APointerIndex pointerIndex;
+        _weak<AView> targetView;
+    };
+
+    /**
+     * @brief Like focus chain target, but intended for pointer press -> move.. -> release event sequence on per-pointer
+     * (finger) basis.
+     */
+    ASmallVector<PointerEventsMapping, 1> mPointerEventsMapping;
+
     void notifyParentEnabledStateChanged(bool enabled) override;
     void invalidateCaches();
+
+    /**
+     * @see mPointerEventsMapping
+     */
+    _<AView> pointerEventsMapping(APointerIndex index);
 };

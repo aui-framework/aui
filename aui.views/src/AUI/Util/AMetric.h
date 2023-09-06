@@ -26,6 +26,7 @@ class AString;
 
 /**
  * @brief Stores dimensions in scalable units (dp, pt, etc...).
+ * @ingroup views
  * @details
  * It's highly recommended to use only Density-independent Pixel unit (`_dp`) to make your application correctly handle
  * systems with high DPI. In AUI, all units are density independent except `_px`. The only purpose of the `_px` unit is to
@@ -95,7 +96,7 @@ private:
     }
 
 public:
-    AMetric():
+    constexpr AMetric():
         AMetric(0, T_PX) {}
 
     /**
@@ -112,14 +113,17 @@ public:
      * @param value should be zero
      */
     template<typename T, typename std::enable_if_t<std::is_integral_v<T>, bool> = 0>
-    AMetric(T value):
+    constexpr AMetric(T value):
         AMetric(value, T_PX)
     {
         assert(("please use _px, _dp or _pt literal for AMetric initialisation. only zero allowed to initialise "
                 "AMetric without literal", value == 0));
     }
 
-    AMetric(float value, Unit unit);
+    constexpr AMetric(float value, Unit unit): mValue(value), mUnit(unit) {
+
+    }
+
     AMetric(const AString& text);
 
     [[nodiscard]] float getRawValue() const
@@ -179,15 +183,15 @@ public:
 };
 
 
-inline AMetric operator"" _px(unsigned long long v)
+constexpr inline AMetric operator"" _px(unsigned long long v)
 {
     return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PX);
 }
-inline AMetric operator"" _dp(unsigned long long v)
+constexpr inline AMetric operator"" _dp(unsigned long long v)
 {
     return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_DP);
 }
-inline AMetric operator"" _pt(unsigned long long v)
+constexpr inline AMetric operator"" _pt(unsigned long long v)
 {
     return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PT);
 }

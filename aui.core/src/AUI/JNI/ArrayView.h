@@ -42,6 +42,10 @@ namespace aui::jni {
     public:
         using GlobalRef::GlobalRef;
 
+        static ArrayView allocate(std::size_t size) {
+            return (aui::jni::env()->*TypedMethods<T>::NewArray)(size);
+        }
+
         std::size_t size() const noexcept {
             return aui::jni::env()->GetArrayLength((jarray)asObject());
         }
@@ -68,6 +72,10 @@ namespace aui::jni {
             };
 
             callback(std::span<T>(ptr, size()));
+        }
+
+        void set(std::span<const T> data, std::size_t at = 0) {
+            (aui::jni::env()->*TypedMethods<T>::SetArrayRegion)(detail::CastHelper{asObject()}, at, data.size(), data.data());
         }
     };
 

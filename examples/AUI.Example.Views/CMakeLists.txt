@@ -14,11 +14,10 @@ cmake_minimum_required(VERSION 3.15)
 #
 # using local repository instead in order to make checks easier in CI.
 
-
 aui_executable(aui.example.views)
 aui_compile_assets(aui.example.views)
 
-aui_link(aui.example.views PRIVATE aui::core aui::views)
+aui_link(aui.example.views PRIVATE aui::core aui::views aui::audio)
 
 aui_app(TARGET aui.example.views
         NAME "AUI Examples"

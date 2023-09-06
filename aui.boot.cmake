@@ -836,7 +836,10 @@ function(auib_import AUI_MODULE_NAME URL)
 
     _auib_copy_runtime_dependencies()
 
-    set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
+    if (NOT DEP_ADD_SUBDIRECTORY)
+        set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${AUI_MODULE_NAME}_ROOT=${${AUI_MODULE_NAME}_ROOT}")
+    endif()
+
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
 
     # display the imported targets (available since CMake 3.21)

@@ -200,6 +200,13 @@ public:
     void requestTouchscreenKeyboardImpl() override;
     void hideTouchscreenKeyboardImpl() override;
 
+    /**
+     * @brief Moves the window to the center of monitor.
+     * @details
+     * When using in series with setSize(), do the setSize() first, when moveToCenter().
+     */
+    void moveToCenter();
+
 signals:
     emits<> closed;
     emits<int, int> resized;
@@ -229,7 +236,7 @@ signals:
 
     bool consumesClick(const glm::ivec2& pos) override;
 
-    void onPointerMove(glm::ivec2 pos) override;
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
     void flagUpdateLayout() override;
 protected:

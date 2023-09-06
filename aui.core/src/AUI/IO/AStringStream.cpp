@@ -20,6 +20,10 @@
 AStringStream::AStringStream(const AString& string): mString(string.toStdString())
 {
 }
+
+AStringStream::AStringStream(std::string string) : mString(std::move(string)) {
+}
+
 AStringStream::AStringStream() = default;
 
 size_t AStringStream::read(char* dst, size_t size)

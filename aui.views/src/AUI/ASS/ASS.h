@@ -185,6 +185,7 @@
 #include "Property/TextShadow.h"
 #include "Property/TextTransform.h"
 #include "Property/TransformOffset.h"
+#include "Property/TransformRotate.h"
 #include "Property/TransformScale.h"
 #include "Property/VerticalAlign.h"
 #include "Property/Visibility.h"
