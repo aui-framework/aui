@@ -39,7 +39,7 @@
 #include <AUI/Image/png/PngImageLoader.h>
 #include <AUI/Image/AImageLoaderRegistry.h>
 #include <AUI/Image/svg/SvgImageLoader.h>
-
+#include <AUI/Image/webp/WebpImageLoader.h>
 
 struct AImageInit
 {
@@ -49,5 +49,6 @@ struct AImageInit
         AImageLoaderRegistry::inst().registerRasterLoader(_new<JpgImageLoader>());
         AImageLoaderRegistry::inst().registerRasterLoader(_new<BmpImageLoader>());
         AImageLoaderRegistry::inst().registerAnimatedLoader(_new<GifImageLoader>());
+        AImageLoaderRegistry::inst().registerAnimatedLoader(_new<WebpImageLoader>());
     }
 } _aimageinit;
