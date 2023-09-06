@@ -30,6 +30,7 @@
 #include <AUISL/Generated/basic_uv.vsh.glsl120.h>
 #include <AUISL/Generated/solid.fsh.glsl120.h>
 #include <AUISL/Generated/shadow.fsh.glsl120.h>
+#include <AUISL/Generated/rounded.fsh.glsl120.h>
 
 
 class OpenGLTexture2D: public ITexture {
@@ -149,6 +150,9 @@ OpenGLRenderer::OpenGLRenderer() {
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
 
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
+
     /*
 
     if (glewGetExtension("ARB_multisample")) {
@@ -167,6 +171,7 @@ OpenGLRenderer::OpenGLRenderer() {
                 "}");
     } else */ {
         // without antialiasing rounded borders look poorly. fix it
+        /*
         mRoundedSolidShader.load(
                 "attribute vec3 pos;"
                 "attribute vec2 uv;"
@@ -179,7 +184,7 @@ OpenGLRenderer::OpenGLRenderer() {
                 "if ((tmp.x - 1.0) * (size.y) / (-size.x) < tmp.y - (1.0 - size.y) &&"
                 "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
                 "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
-                "}");
+                "}");*/
         auto produceRoundedAntialiasedShader = [](gl::Program& shader, const AString& uniforms, const AString& color, bool isBorder) {
             shader.load(
                     "attribute vec3 pos;"
