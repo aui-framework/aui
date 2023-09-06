@@ -666,7 +666,7 @@ private:
 
 public:
     using Task = typename super::TaskCallback;
-    using Inner = decltype(std::declval<AFuture>().inner());
+    using Inner = decltype(std::declval<super>().inner());
 
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
     ~AFuture() = default;

@@ -64,6 +64,10 @@ void SoftwareRenderingContext::beginResize(ABaseWindow& window) {
 }
 
 void SoftwareRenderingContext::endResize(ABaseWindow& window) {
+    reallocateImageBuffers(window);
+}
+
+void SoftwareRenderingContext::reallocateImageBuffers(const ABaseWindow &window) {
     mBitmapSize = window.getSize();
     mBitmapBlob.reallocate(mBitmapSize.x * mBitmapSize.y * 4 + sizeof(*mBitmapInfo));
     mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
