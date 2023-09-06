@@ -169,8 +169,8 @@ glm::mat4 SoftwareRenderer::getProjectionMatrix() const {
 }
 
 void SoftwareRenderer::drawRect(const ABrush& brush,
-                                const glm::vec2& position,
-                                const glm::vec2& size) {
+                                glm::vec2 position,
+                                glm::vec2 size) {
     auto transformedPosition = glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f));
     auto end = transformedPosition + glm::ivec2(size);
 
@@ -186,8 +186,8 @@ void SoftwareRenderer::drawRect(const ABrush& brush,
 }
 
 void SoftwareRenderer::drawRoundedRect(const ABrush& brush,
-                                       const glm::vec2& position,
-                                       const glm::vec2& size,
+                                       glm::vec2 position,
+                                       glm::vec2 size,
                                        float radius) {
     RoundedRect r(int(radius), glm::ivec2(size), glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f)));
     auto end = r.transformedPosition + r.size;
@@ -206,35 +206,9 @@ void SoftwareRenderer::drawRoundedRect(const ABrush& brush,
     }
 }
 
-void SoftwareRenderer::drawRoundedRectAntialiased(const ABrush& brush,
-                                                  const glm::vec2& position,
-                                                  const glm::vec2& size,
-                                                  float radius) {
-
-    RoundedRect r(int(radius), glm::ivec2(size), glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f)));
-    auto end = r.transformedPosition + r.size;
-
-    int x, y;
-
-    auto sw = BrushHelper(this, x, y, end, r.transformedPosition);
-
-    for (y = r.transformedPosition.y; y < end.y; ++y) {
-        for (x = r.transformedPosition.x; x < end.x; ++x) {
-            int accumulator = r.test<true>(r.abs({x, y}));
-            if (accumulator != 0) {
-                float alphaCopy = mColor.a;
-                mColor.a *= accumulator;
-                mColor.a /= 25;
-                std::visit(sw, brush);
-                mColor.a = alphaCopy;
-            }
-        }
-    }
-}
-
 void SoftwareRenderer::drawRectBorder(const ABrush& brush,
-                                      const glm::vec2& position,
-                                      const glm::vec2& size,
+                                      glm::vec2 position,
+                                      glm::vec2 size,
                                       float lineWidth) {
     drawRect(brush, position, {size.x, lineWidth});
     drawRect(brush, position + glm::vec2{0, size.y - lineWidth}, { size.x, lineWidth });
@@ -243,8 +217,8 @@ void SoftwareRenderer::drawRectBorder(const ABrush& brush,
 }
 
 void SoftwareRenderer::drawRectBorder(const ABrush& brush,
-                                      const glm::vec2& position,
-                                      const glm::vec2& size,
+                                      glm::vec2 position,
+                                      glm::vec2 size,
                                       float radius,
                                       int borderWidth) {
     auto pos = glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f));
@@ -279,8 +253,8 @@ void SoftwareRenderer::drawRectBorder(const ABrush& brush,
     }
 }
 
-void SoftwareRenderer::drawBoxShadow(const glm::vec2& position,
-                                     const glm::vec2& size,
+void SoftwareRenderer::drawBoxShadow(glm::vec2 position,
+                                     glm::vec2 size,
                                      float blurRadius,
                                      const AColor& color) {
 
@@ -488,7 +462,7 @@ public:
 };
 
 
-void SoftwareRenderer::drawString(const glm::vec2& position,
+void SoftwareRenderer::drawString(glm::vec2 position,
                                   const AString& string,
                                   const AFontStyle& fs) {
     SoftwareMultiStringCanvas c(this, fs);
@@ -496,7 +470,7 @@ void SoftwareRenderer::drawString(const glm::vec2& position,
     c.finalize()->draw();
 }
 
-_<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(const glm::vec2& position,
+_<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 position,
                                                                    const AString& text,
                                                                    const AFontStyle& fs) {
     if (text.empty()) return nullptr;

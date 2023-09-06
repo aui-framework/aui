@@ -217,6 +217,7 @@ OpenGLRenderer::OpenGLRenderer() {
                     "gl_FragColor = vec4(fcolor.rgb, fcolor.a * alpha);"
                     "}", { "pos", "uv" });
         };
+        /*
         produceRoundedAntialiasedShader(mRoundedSolidShaderAntialiased,
                                         {},
                                         "vec4 fcolor = color;",
@@ -233,7 +234,7 @@ OpenGLRenderer::OpenGLRenderer() {
                                         "uniform vec4 color_bl;"
                                         "uniform vec4 color_br;",
                                         "vec4 fcolor = mix(mix(color_tl, color_tr, pass_uv.x), mix(color_bl, color_br, pass_uv.x), pass_uv.y) * color;",
-                                        false);
+                                        false);*/
     }
 
     mTexturedShader.load(
@@ -309,7 +310,7 @@ void OpenGLRenderer::uploadToShaderCommon() {
     gl::Program::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
 }
 
-AVector<glm::vec3> OpenGLRenderer::getVerticesForRect(const glm::vec2& position, const glm::vec2& size)
+AVector<glm::vec3> OpenGLRenderer::getVerticesForRect(glm::vec2 position, glm::vec2 size)
 {
     float x = position.x;
     float y = position.y;
@@ -324,7 +325,7 @@ AVector<glm::vec3> OpenGLRenderer::getVerticesForRect(const glm::vec2& position,
                     glm::vec3(glm::vec4{ w, y, 1, 1 }),
             };
 }
-void OpenGLRenderer::drawRect(const ABrush& brush, const glm::vec2& position, const glm::vec2& size) {
+void OpenGLRenderer::drawRect(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
     std::visit(aui::lambda_overloaded {
             GradientShaderHelper(mGradientShader),
             TexturedShaderHelper(mTexturedShader, mTempVao),
@@ -338,7 +339,7 @@ void OpenGLRenderer::drawRect(const ABrush& brush, const glm::vec2& position, co
     endDraw(brush);
 }
 
-void OpenGLRenderer::drawRectImpl(const glm::vec2& position, const glm::vec2& size) {
+void OpenGLRenderer::drawRectImpl(glm::vec2 position, glm::vec2 size) {
     mTempVao.bind();
 
     mTempVao.insert(0, getVerticesForRect(position, size));
@@ -347,8 +348,8 @@ void OpenGLRenderer::drawRectImpl(const glm::vec2& position, const glm::vec2& si
 }
 
 void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
-                                     const glm::vec2& position,
-                                     const glm::vec2& size,
+                                     glm::vec2 position,
+                                     glm::vec2 size,
                                      float radius) {
     std::visit(aui::lambda_overloaded {
             GradientShaderHelper(mRoundedGradientShader),
@@ -369,8 +370,8 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
 }
 
 void OpenGLRenderer::drawRectBorder(const ABrush& brush,
-                                    const glm::vec2& position,
-                                    const glm::vec2& size,
+                                    glm::vec2 position,
+                                    glm::vec2 size,
                                     float lineWidth) {
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
@@ -412,8 +413,8 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
 }
 
 void OpenGLRenderer::drawRectBorder(const ABrush& brush,
-                                    const glm::vec2& position,
-                                    const glm::vec2& size,
+                                    glm::vec2 position,
+                                    glm::vec2 size,
                                     float radius,
                                     int borderWidth) {
     std::visit(aui::lambda_overloaded {
@@ -437,8 +438,8 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     endDraw(brush);
 }
 
-void OpenGLRenderer::drawBoxShadow(const glm::vec2& position,
-                                   const glm::vec2& size,
+void OpenGLRenderer::drawBoxShadow(glm::vec2 position,
+                                   glm::vec2 size,
                                    float blurRadius,
                                    const AColor& color) {
     mBoxShadowShader.use();
@@ -472,7 +473,7 @@ void OpenGLRenderer::drawBoxShadow(const glm::vec2& position,
     mTempVao.drawElements();
 }
 
-void OpenGLRenderer::drawString(const glm::vec2& position,
+void OpenGLRenderer::drawString(glm::vec2 position,
                                 const AString& string,
                                 const AFontStyle& fs) {
     prerenderString(position, string, fs)->draw();
@@ -734,7 +735,7 @@ public:
     ~OpenGLMultiStringCanvas() override = default;
 };
 
-_<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(const glm::vec2& position,
+_<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position,
                                                                  const AString& text,
                                                                  const AFontStyle& fs) {
     if (text.empty()) return nullptr;

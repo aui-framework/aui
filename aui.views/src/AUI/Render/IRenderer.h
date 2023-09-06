@@ -248,8 +248,8 @@ public:
      * @param size rectangle size (px)
      */
     virtual void drawRect(const ABrush& brush,
-                          const glm::vec2& position,
-                          const glm::vec2& size) = 0;
+                          glm::vec2 position,
+                          glm::vec2 size) = 0;
 
 
     /**
@@ -260,8 +260,8 @@ public:
      * @param radius corner radius (px)
      */
     virtual void drawRoundedRect(const ABrush& brush,
-                                 const glm::vec2& position,
-                                 const glm::vec2& size,
+                                 glm::vec2 position,
+                                 glm::vec2 size,
                                  float radius) = 0;
 
     /**
@@ -272,8 +272,8 @@ public:
      * @param lineWidth border line width (px)
      */
     virtual void drawRectBorder(const ABrush& brush,
-                                const glm::vec2& position,
-                                const glm::vec2& size,
+                                glm::vec2 position,
+                                glm::vec2 size,
                                 float lineWidth = 1.f) = 0;
     /**
      * @brief Draws rounded rectangle's border.
@@ -284,8 +284,8 @@ public:
      * @param borderWidth border line width (px)
      */
     virtual void drawRectBorder(const ABrush& brush,
-                                const glm::vec2& position,
-                                const glm::vec2& size,
+                                glm::vec2 position,
+                                glm::vec2 size,
                                 float radius,
                                 int borderWidth) = 0;
 
@@ -297,8 +297,8 @@ public:
      * @param blurRadius blur radius
      * @param color shadow color
      */
-    virtual void drawBoxShadow(const glm::vec2& position,
-                               const glm::vec2& size,
+    virtual void drawBoxShadow(glm::vec2 position,
+                               glm::vec2 size,
                                float blurRadius,
                                const AColor& color) = 0;
 
@@ -319,7 +319,7 @@ public:
      *     </dd>
      * </dl>
      */
-    virtual void drawString(const glm::vec2& position,
+    virtual void drawString(glm::vec2 position,
                             const AString& string,
                             const AFontStyle& fs = {}) = 0;
 
@@ -331,7 +331,7 @@ public:
      * @param fs font style
      * @return an instance of IPrerenderedString
      */
-    virtual _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, const AFontStyle& fs) = 0;
+    virtual _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
 
 
 

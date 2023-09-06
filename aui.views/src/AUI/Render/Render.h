@@ -277,17 +277,17 @@ public:
     /**
      * @brief wrapper for setTransform applying matrix rotation along the specified axis.
      * @param axis axis
-     * @param angle angle to rotate (rad) -2pi;2pi
+     * @param angle angle to rotate
      */
     static void rotate(const glm::vec3& axis, AAngleRadians angle) {
-        ourRenderer->setTransformForced(glm::rotate(getTransform(), angle, axis));
+        ourRenderer->setTransformForced(glm::rotate(getTransform(), angle.radians(), axis));
     }
 
     /**
-     * Rotates matrix along Z axis.
-     * @param angle angle to rotate (rad) -2pi;2pi
+     * @brief wrapper for setTransform applying matrix rotation along z axis.
+     * @param angle angle to rotate
      */
-    static void rotate(float angle) {
+    static void rotate(AAngleRadians angle) {
         rotate({0.f, 0.f, 1.f}, angle);
     }
 };
