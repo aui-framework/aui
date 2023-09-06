@@ -281,6 +281,20 @@ public:
     }
 
     /**
+     * @brief Finds element by predicate
+     * @param predicate predicate
+     * @return Pointer to the value on which the predicate returned true, nullptr otherwise
+     */
+    template<aui::predicate<StoredType> Predicate>
+    StoredType* findIf(Predicate&& predicate) noexcept
+    {
+        if (auto i = std::find_if(super::begin(), super::end(), std::forward<Predicate>(predicate)); i != super::end()) {
+            return &*i;
+        }
+        return nullptr;
+    }
+
+    /**
      * Removes element at the specified index.
      * <dl>
      *   <dt><b>Sneaky assertions</b></dt>
