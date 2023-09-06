@@ -40,9 +40,8 @@ private:
     gl::Program mSolidShader;
     gl::Program mGradientShader;
     gl::Program mRoundedSolidShader;
-    gl::Program mRoundedSolidShaderAntialiased;
-    gl::Program mRoundedSolidShaderAntialiasedBorder;
-    gl::Program mRoundedGradientShaderAntialiased;
+    gl::Program mRoundedSolidShaderBorder;
+    gl::Program mRoundedGradientShader;
     gl::Program mBoxShadowShader;
     gl::Program mTexturedShader;
     gl::Program mSymbolShader;
@@ -81,11 +80,6 @@ public:
                          const glm::vec2& position,
                          const glm::vec2& size,
                          float radius) override;
-
-    void drawRoundedRectAntialiased(const ABrush& brush,
-                                    const glm::vec2& position,
-                                    const glm::vec2& size,
-                                    float radius) override;
 
     void drawRectBorder(const ABrush& brush,
                        const glm::vec2& position,
