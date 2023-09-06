@@ -31,24 +31,28 @@ public:
     void visitNode(const NonIndexedAttributesDeclarationNode& node) override;
     void visitNode(const VariableReferenceNode& node) override;
     void visitNode(const MemberAccessOperatorNode& node) override;
-
     void visitNode(const ArrayAccessOperatorNode& node) override;
+    void visitNode(const FunctionDeclarationNode& node) override;
 
 protected:
     AString mapType(const AString& type) override;
     void emitBeforeEntryCode() override;
     void emitAfterEntryCode() override;
 
-    void emitHeaderDefinition(aui::no_escape<IOutputStream> os) const override;
+    void emitHeaderDefinition(aui::no_escape<IOutputStream> os) override;
 
-    void emitCppCreateShader(aui::no_escape<IOutputStream> os) const override;
+    void emitCppCreateShader(aui::no_escape<IOutputStream> os) override;
 
     const AMap<AString, AString>& internalFunctions() override;
 
+    void emitFunctionDeclArguments(const FunctionDeclarationNode& node, bool first) override;
+
+    void emitFunctionCallArguments(const BuiltinOrDeclaredFunction& function, const AVector<_<ExpressionNode>>& args, bool first) override;
+
 private:
-    void emitAttributeKeyword(KeywordToken::Type type);
-
     AStringStream mHeaderOutput;
+    AVector<NonIndexedAttributesDeclarationNode> mHeaderNonIndexedAttributesDeclarations;
 
+    void emitAttributeKeyword(KeywordToken::Type type);
     void emitAttributeDeclarationField(_<VariableDeclarationNode> node);
 };

@@ -30,7 +30,7 @@
 #include <AUISL/Generated/basic_uv.vsh.glsl120.h>
 #include <AUISL/Generated/solid.fsh.glsl120.h>
 #include <AUISL/Generated/shadow.fsh.glsl120.h>
-#include <AUISL/Generated/rounded.fsh.glsl120.h>
+#include <AUISL/Generated/solid_rounded.fsh.glsl120.h>
 
 
 class OpenGLTexture2D: public ITexture {
@@ -151,7 +151,7 @@ OpenGLRenderer::OpenGLRenderer() {
                    aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
 
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-                   aui::sl_gen::rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
+                   aui::sl_gen::solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
 
     /*
 

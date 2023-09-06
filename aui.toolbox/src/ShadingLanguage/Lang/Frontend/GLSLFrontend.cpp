@@ -33,6 +33,10 @@ const AMap<AString, AString>& GLSLFrontend::internalFunctions() {
             {"cos",  "cos"},
             {"tan",  "tan"},
             {"atan", "atan"},
+            {"sign", "sign"},
+            {"abs",  "abs"},
+            {"sqrt", "sqrt"},
+            {"clamp","clamp"},
     };
     return internalFunctions;
 }
@@ -110,6 +114,12 @@ void GLSLFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
     }
 
     for (const auto& declaration: node.fields()) {
+        if (node.type() == KeywordToken::UNIFORM) {
+            if (mDefinedUniforms.contains(declaration->variableName())) {
+                continue;
+            }
+            mDefinedUniforms << declaration->variableName();
+        }
         mShaderOutput << keyword << " ";
         mShaderOutput << mapType(declaration->typeName()) << " SL_" << prefix << "_" << declaration->variableName() << ";";
     }
@@ -170,14 +180,14 @@ void GLSLFrontend::visitNode(const VariableReferenceNode& node) {
 }
 
 
-void GLSLFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) const {
+void GLSLFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) {
     *os << "struct Shader {"
            "  static const char* code();"
            "  static void setup();"
            "};";
 }
 
-void GLSLFrontend::emitCppCreateShader(aui::no_escape<IOutputStream> os) const {
+void GLSLFrontend::emitCppCreateShader(aui::no_escape<IOutputStream> os) {
     CBasedFrontend::emitCppCreateShader(os);
 
     *os << "const char* " << namespaceName() <<  "::Shader::code() { return R\"(" << mShaderOutput.str() << " )\";}"

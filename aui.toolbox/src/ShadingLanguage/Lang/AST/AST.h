@@ -14,7 +14,11 @@ private:
     AVector<_<INode>> mNodes;
 
 public:
-    AST(const AVector<_<INode>>& nodes) : mNodes(nodes) {}
+    AST(AVector<_<INode>> nodes) : mNodes(std::move(nodes)) {}
+
+    const AVector<_<INode>>& nodes() const {
+        return mNodes;
+    }
 
     void visit(INodeVisitor& visitor);
 

@@ -10,7 +10,7 @@
 #include <AUI/IO/IInputStream.h>
 
 namespace aui::sl {
-    _<AST> parseCode(_<IInputStream> p);
+    _<AST> parseCode(_<IInputStream> is, APath fileDir = APath::workingDir());
     _<ExpressionNode> parseExpression(const AString& text);
     AVector<_<INode>> parseCodeBlock(const AString& text);
 };

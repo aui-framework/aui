@@ -21,6 +21,7 @@
 enum class ShaderType {
     VERTEX,
     FRAGMENT, // or pixel
+    IMPORTED, // those which are imported with 'import' keyword
 };
 
 class IFrontend {
@@ -43,6 +44,16 @@ public:
         mShaderType = shaderType;
     }
 
+    bool hasErrors() const {
+        return mHasErrors;
+    }
+
+protected:
+    void setHasError() {
+        mHasErrors = true;
+    }
+
 private:
     ShaderType mShaderType;
+    bool mHasErrors = false;
 };

@@ -18,6 +18,7 @@
 // Created by Alex2772 on 3/5/2023.
 //
 
+#include <range/v3/view.hpp>
 #include "CppFrontend.h"
 #include "AUI/Common/AMap.h"
 #include "AUI/Logging/ALogger.h"
@@ -82,25 +83,7 @@ void CppFrontend::visitNode(const IndexedAttributesDeclarationNode& node) {
 
 void CppFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
     CBasedFrontend::visitNode(node);
-
-    mHeaderOutput << "struct ";
-
-    emitAttributeKeyword(node.type());
-
-    mHeaderOutput << "{";
-    if (shaderType() == ShaderType::VERTEX && node.type() == KeywordToken::INTER) {
-        mHeaderOutput << "glm::vec4 __vertexOutput;";
-    }
-    for (const auto& n: node.fields()) {
-        if (node.type() == KeywordToken::TEXTURE) {
-            const ASet<AString> ALLOWED_TYPE_NAMES = { "2D" };
-            if (!ALLOWED_TYPE_NAMES.contains(n->typeName())) {
-                reportError(*n, "'{}' type is not allowed in texture {{ ... }} declaration"_format(n->typeName()));
-            }
-        }
-        emitAttributeDeclarationField(n);
-    }
-    mHeaderOutput << "};";
+    mHeaderNonIndexedAttributesDeclarations << node;
 }
 
 void CppFrontend::visitNode(const ArrayAccessOperatorNode& node) {
@@ -176,7 +159,42 @@ void CppFrontend::visitNode(const VariableReferenceNode& node) {
     }
 }
 
-void CppFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) const {
+void CppFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) {
+    for (const auto& type : {KeywordToken::Type::UNIFORM, KeywordToken::Type::INTER}) {
+        auto range = mHeaderNonIndexedAttributesDeclarations
+                     | ranges::view::filter([&](const auto& n) { return n.type() == type; });
+        if (range.empty()) {
+            continue;
+        }
+
+        mHeaderOutput << "struct ";
+
+        emitAttributeKeyword(type);
+
+        mHeaderOutput << "{";
+        if (shaderType() == ShaderType::VERTEX && type == KeywordToken::INTER) {
+            mHeaderOutput << "glm::vec4 __vertexOutput;";
+        }
+
+        ASet<AString> definedFields;
+        for (const auto& node : range) {
+            for (const auto& n: node.fields()) {
+                if (node.type() == KeywordToken::TEXTURE) {
+                    const ASet<AString> ALLOWED_TYPE_NAMES = {"2D"};
+                    if (!ALLOWED_TYPE_NAMES.contains(n->typeName())) {
+                        reportError(*n,
+                                    "'{}' type is not allowed in texture {{ ... }} declaration"_format(n->typeName()));
+                    }
+                }
+                if (definedFields.contains(n->variableName())) {
+                    continue;
+                }
+                definedFields << n->variableName();
+                emitAttributeDeclarationField(n);
+            }
+        }
+        mHeaderOutput << "};";
+    }
     *os << "struct Shader {";
     *os << mHeaderOutput.str();
     if (shaderType() == ShaderType::VERTEX) {
@@ -187,7 +205,7 @@ void CppFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) const {
     *os << "};\n";
 }
 
-void CppFrontend::emitCppCreateShader(aui::no_escape<IOutputStream> os) const {
+void CppFrontend::emitCppCreateShader(aui::no_escape<IOutputStream> os) {
     CBasedFrontend::emitCppCreateShader(os);
     *os << mShaderOutput.str();
     *os << "}\n";
@@ -226,3 +244,25 @@ void CppFrontend::visitNode(const MemberAccessOperatorNode& node) {
         }
     }
 }
+
+void CppFrontend::visitNode(const FunctionDeclarationNode& node) {
+    if (node.getName() != "entry") {
+        mShaderOutput << "inline ";
+    }
+    CBasedFrontend::visitNode(node);
+}
+
+void CppFrontend::emitFunctionDeclArguments(const FunctionDeclarationNode& node, bool first) {
+    mShaderOutput << "const Shader::Uniform& uniform";
+    CBasedFrontend::emitFunctionDeclArguments(node, false);
+}
+
+void CppFrontend::emitFunctionCallArguments(const BuiltinOrDeclaredFunction& function, const AVector<_<ExpressionNode>>& args, bool first) {
+    if (std::holds_alternative<const FunctionDeclarationNode*>(function)) {
+        mShaderOutput << "uniform";
+        CBasedFrontend::emitFunctionCallArguments(function, args, false);
+    } else {
+        CBasedFrontend::emitFunctionCallArguments(function, args, first);
+    }
+}
+

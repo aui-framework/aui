@@ -30,6 +30,7 @@
 #include "AUI/Reflect/AClass.h"
 #include "IndexedAttributesDeclarationNode.h"
 #include "NonIndexedAttributesDeclarationNode.h"
+#include "ImportNode.h"
 
 class INodeVisitor {
 public:
@@ -82,6 +83,7 @@ public:
     virtual void visitNode(const FloatNode& node) {};
     virtual void visitNode(const IndexedAttributesDeclarationNode& node) {};
     virtual void visitNode(const NonIndexedAttributesDeclarationNode& node) {};
+    virtual void visitNode(const ImportNode& node) {};
 
     template<class T>
     static _<T> assume(const _<INode>& n) {

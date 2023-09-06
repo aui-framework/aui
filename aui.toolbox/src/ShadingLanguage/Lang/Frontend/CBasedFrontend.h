@@ -27,6 +27,8 @@ class CBasedFrontend: public IFrontend, public INodeVisitor {
 public:
     using INodeVisitor::visitNode;
 
+    using BuiltinOrDeclaredFunction = std::variant<AString, const FunctionDeclarationNode*>;
+
     void parseShader(const _<AST>& ast) override;
 
     void visitNode(const EqualsOperatorNode& node) override;
@@ -75,6 +77,7 @@ public:
     void visitNode(const FloatNode& node) override;
     void visitNode(const IndexedAttributesDeclarationNode& node) override;
     void visitNode(const NonIndexedAttributesDeclarationNode& node) override;
+    void visitNode(const ImportNode& node) override;
 
     AString shaderCode() override;
 
@@ -84,13 +87,15 @@ public:
 
     void visitCodeBlock(const AVector<_<INode>>& codeBlock);
 
-    void writeCppHeader(aui::no_escape<IOutputStream> os) const;
-    void writeCppCpp(const APath& headerPath, aui::no_escape<IOutputStream> os) const;
+    void writeCppHeader(aui::no_escape<IOutputStream> os);
+    void writeCppCpp(const APath& headerPath, aui::no_escape<IOutputStream> os);
 protected:
     virtual void emitBinaryOperator(const AString& symbol, const BinaryOperatorNode& binaryOperator);
     void reportError(const INode& node, const AString& message);
-    virtual void emitHeaderDefinition(aui::no_escape<IOutputStream> os) const;
-    virtual void emitCppCreateShader(aui::no_escape<IOutputStream> os) const;
+    virtual void emitHeaderDefinition(aui::no_escape<IOutputStream> os);
+    virtual void emitCppCreateShader(aui::no_escape<IOutputStream> os);
+    virtual void emitFunctionDeclArguments(const FunctionDeclarationNode& node, bool first = true);
+    virtual void emitFunctionCallArguments(const BuiltinOrDeclaredFunction& function, const AVector<_<ExpressionNode>>& args, bool first);
 
     virtual AString mapType(const AString& type) = 0;
     virtual void emitBeforeEntryCode() = 0;
@@ -113,4 +118,5 @@ protected:
 
 private:
     AString mNamespaceName;
+    AVector<FunctionDeclarationNode> mDeclaredFunctions;
 };

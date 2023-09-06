@@ -81,7 +81,9 @@ void Auisl::run(Toolbox& t) {
     APath output = t.args[2];
 
     frontend->setShaderType(input.endsWith(".vsh") ? ShaderType::VERTEX : ShaderType::FRAGMENT);
-    frontend->parseShader(aui::sl::parseCode(_new<AFileInputStream>(input)));
+    frontend->parseShader(aui::sl::parseCode(_new<AFileInputStream>(input), input.parent()));
     frontend->writeCpp(output);
-
+    if (frontend->hasErrors()) {
+        throw AException("frontend has errors");
+    }
 }

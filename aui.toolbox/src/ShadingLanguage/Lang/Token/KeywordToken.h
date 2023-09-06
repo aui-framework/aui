@@ -33,6 +33,7 @@ public:
         FOR,
         GOTO,
         IF,
+        IMPORT,
         RETURN,
         SIGNED,
         SIZEOF,

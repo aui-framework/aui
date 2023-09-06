@@ -27,6 +27,9 @@
 #include "ShadingLanguage/Lang/AST/NonIndexedAttributesDeclarationNode.h"
 #include "Parser.h"
 #include "AUI/Util/ARaiiHelper.h"
+#include "Lexer.h"
+#include "AUI/IO/AFileInputStream.h"
+#include "ShadingLanguage/Lang/AST/ImportNode.h"
 #include <range/v3/view.hpp>
 
 class Terminated {};
@@ -52,7 +55,7 @@ public:
 template<typename type>
 constexpr size_t got = index_of<AnyToken , type>::value;
 
-AVector<_<INode>> Parser::parse() {
+_<AST> Parser::parseShader() {
     AVector<_<INode>> nodes;
     try {
         for (; mIterator != mTokens.end(); [&] { if (mIterator != mTokens.end()) ++mIterator; }()) {
@@ -93,6 +96,17 @@ AVector<_<INode>> Parser::parse() {
                                 nextTokenAndCheckEof();
                                 nodes << parseEntry();
                                 break;
+                            case KeywordToken::IMPORT:
+                                if (!std::all_of(nodes.begin(), nodes.end(), [](const _<INode>& node) {
+                                    return _cast<ImportNode>(node) != nullptr;
+                                })) {
+                                    reportUnexpectedErrorAndSkip("unexpected import: all imports must be in the beginning of the shader");
+                                }
+                                nodes << parseImportStatement();
+                                break;
+
+                            default:
+                                reportUnexpectedErrorAndSkip("expected using, class, struct, input, output, inter, uniform, entry keywords"_format(keywordType));
                         }
                         break;
                     }
@@ -115,7 +129,7 @@ AVector<_<INode>> Parser::parse() {
                                         nodes << _new<ConstructorDeclarationNode>(name1, name2, args, name1,
                                                                                   initializerList, codeBlock);
                                         //break;
-                                        return nodes;
+                                        return _new<AST>(std::move(nodes));
                                     }
 
                                     default:
@@ -178,7 +192,7 @@ AVector<_<INode>> Parser::parse() {
             } catch (const AException&) {}
         }
     } catch (Terminated) {}
-    return nodes;
+    return _new<AST>(std::move(nodes));
 }
 
 IndexedAttributesDeclarationNode::Fields Parser::parseIndexedAttributes() {
@@ -1139,4 +1153,19 @@ AString Parser::parseTypename() {
 
 _<INode> Parser::parseEntry() {
     return aui::ptr::manage(new FunctionDeclarationNode("void", "entry", {}, parseCodeBlock()));
+}
+
+_<INode> Parser::parseImportStatement() {
+    ++mIterator;
+    auto& name = expect<IdentifierToken>();
+    auto filename = mFileDir / "{}.sl"_format(name.value());
+    try {
+        Lexer l(_new<AFileInputStream>(filename));
+        Parser p(l.performLexAnalysis(), mFileDir);
+        return _new<ImportNode>(p.parseShader());
+    } catch (const AIOException& e) {
+        ALogger::err("Parser") << "Unable to read " << filename << ": " << e;
+        reportUnexpectedErrorAndSkip("unable to read file, ignoring");
+        throw;
+    }
 }

@@ -42,11 +42,14 @@ protected:
 
     void emitAfterEntryCode() override;
 
-    void emitHeaderDefinition(aui::no_escape<IOutputStream> os) const override;
+    void emitHeaderDefinition(aui::no_escape<IOutputStream> os) override;
 
-    void emitCppCreateShader(aui::no_escape<IOutputStream> os) const override;
+    void emitCppCreateShader(aui::no_escape<IOutputStream> os) override;
 
     const AMap<AString, AString>& internalFunctions() override;
 
     AVector<_<VariableDeclarationNode>> mOutputs;
+
+private:
+    ASet<AString> mDefinedUniforms;
 };

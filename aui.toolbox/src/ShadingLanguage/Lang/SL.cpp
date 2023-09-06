@@ -8,20 +8,20 @@
 #include "Lexer.h"
 #include "Parser.h"
 
-_<AST> aui::sl::parseCode(_<IInputStream> p) {
-    Lexer l(std::move(p));
-    auto parser = _new<Parser>(l.performLexAnalysis());
-    return _new<AST>(parser->parse());
+_<AST> aui::sl::parseCode(_<IInputStream> is, APath fileDir) {
+    Lexer l(std::move(is));
+    auto parser = _new<Parser>(l.performLexAnalysis(), std::move(fileDir));
+    return parser->parseShader();
 }
 
 _<ExpressionNode> aui::sl::parseExpression(const AString& text) {
     Lexer l(_new<AStringStream>(text));
-    auto parser = _new<Parser>(l.performLexAnalysis());
+    auto parser = _new<Parser>(l.performLexAnalysis(), APath::workingDir());
     return _<ExpressionNode>(parser->parseExpression());
 }
 
 AVector<_<INode>> aui::sl::parseCodeBlock(const AString& text) {
     Lexer l(_new<AStringStream>(text));
-    auto parser = _new<Parser>(l.performLexAnalysis());
-    return parser->parse();
+    auto parser = _new<Parser>(l.performLexAnalysis(), APath::workingDir());
+    return parser->parseCodeBlock();
 }

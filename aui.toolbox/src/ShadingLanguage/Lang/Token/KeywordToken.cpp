@@ -22,6 +22,7 @@ KeywordToken::Type KeywordToken::fromName(const AString& name) {
             { "for",              FOR },
             { "goto",             GOTO },
             { "if",               IF },
+            { "import",           IMPORT },
             { "return",           RETURN },
             { "signed",           SIGNED },
             { "sizeof",           SIZEOF },
