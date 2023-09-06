@@ -28,7 +28,7 @@
  * @brief Concatenates multiple sequential input streams into one.
  * @ingroup io
  */
-class AConcatInputStream: public IInputStream {
+class API_AUI_CORE AConcatInputStream: public IInputStream {
 private:
     ADeque<_<IInputStream>> mInputStreams;
 
