@@ -48,15 +48,12 @@ WebpImageFactory::WebpImageFactory(AByteBufferView buffer) {
     //decoding and save frames
     int prevTimestamp = 0;
     while (WebPAnimDecoderHasMoreFrames(decoder)) {
-        auto start = std::chrono::high_resolution_clock::now();
         uint8_t* buf;
         int timestamp;
         WebPAnimDecoderGetNext(decoder, &buf, &timestamp);
         mFrames.push_back(AByteBuffer(buf, PIXEL_FORMAT.bytesPerPixel() * info.canvas_width * info.canvas_height));
         mDurations.push_back(timestamp - prevTimestamp);
         prevTimestamp = timestamp;
-        auto end = std::chrono::high_resolution_clock::now();
-        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
     }
 
     WebPAnimDecoderDelete(decoder);
