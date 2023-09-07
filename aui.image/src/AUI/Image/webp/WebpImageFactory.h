@@ -26,7 +26,6 @@ struct WebPBitstreamFeatures;
 class WebpImageFactory : public IImageFactory {
 public:
     explicit WebpImageFactory(AByteBufferView buffer);
-    WebpImageFactory(AByteBufferView buffer, const WebPBitstreamFeatures& features);
 
     AImage provideImage(const glm::ivec2& size) override;
 
@@ -35,19 +34,14 @@ public:
     glm::ivec2 getSizeHint() override;
 
 private:
-    int mWidth;
-    int mHeight;
-    int mFormat;
-
+    size_t mWidth;
+    size_t mHeight;
     size_t mCurrentFrame = 0;
     AVector<AByteBuffer> mFrames;
     AVector<int> mDurations;
-    APixelFormat mPixelFormat = APixelFormat(0);
     size_t mLoopCount;
     size_t mLoopsPassed = 0;
     std::chrono::time_point<std::chrono::system_clock> mLastTimeFrameStarted;
 
-    void loadFeatures(const WebPBitstreamFeatures& features);
-
-    void loadFrames(AByteBufferView buffer);
+    static constexpr APixelFormat PIXEL_FORMAT = APixelFormat(APixelFormat::RGBA_BYTE);
 };

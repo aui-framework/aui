@@ -28,7 +28,7 @@ _<IImageFactory> WebpImageLoader::getImageFactory(AByteBufferView buffer) {
     WebPBitstreamFeatures features;
     WebPGetFeatures(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size(), &features);
     if (features.has_animation) {
-        return _new<WebpImageFactory>(buffer, features);
+        return _new<WebpImageFactory>(buffer);
     }
 
     return nullptr;

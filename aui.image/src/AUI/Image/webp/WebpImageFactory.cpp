@@ -15,19 +15,51 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "WebpImageFactory.h"
+#include "AUI/Logging/ALogger.h"
 #include <webp/decode.h>
 #include <webp/demux.h>
 
-WebpImageFactory::WebpImageFactory(AByteBufferView buffer, const WebPBitstreamFeatures& features) {
-    loadFeatures(features);
-    loadFrames(buffer);
-}
-
 WebpImageFactory::WebpImageFactory(AByteBufferView buffer) {
-    WebPBitstreamFeatures features;
-    WebPGetFeatures(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size(), &features);
-    loadFeatures(features);
-    loadFrames(buffer);
+    WebPData data;
+    data.bytes = reinterpret_cast<const uint8_t*>(buffer.data());
+    data.size = buffer.size();
+
+    //configure animation decoder
+    WebPAnimDecoderOptions decoderOptions;
+    WebPAnimDecoderOptionsInit(&decoderOptions);
+    decoderOptions.color_mode = MODE_RGBA; //change if WebpImageFactory::PIXEL_FORMAT changes
+    decoderOptions.use_threads = false;
+
+    //creating decoder
+    WebPAnimDecoder* decoder = WebPAnimDecoderNew(&data, nullptr);
+
+    if (!decoder) {
+        ALogger::warn("image") << " Failed to decode webp image";
+        throw AException("webp decoding error");
+    }
+
+    //parsing info about animated webp
+    WebPAnimInfo info;
+    WebPAnimDecoderGetInfo(decoder, &info);
+    mWidth = info.canvas_width;
+    mHeight = info.canvas_height;
+    mLoopCount = info.loop_count;
+
+    //decoding and save frames
+    int prevTimestamp = 0;
+    while (WebPAnimDecoderHasMoreFrames(decoder)) {
+        auto start = std::chrono::high_resolution_clock::now();
+        uint8_t* buf;
+        int timestamp;
+        WebPAnimDecoderGetNext(decoder, &buf, &timestamp);
+        mFrames.push_back(AByteBuffer(buf, PIXEL_FORMAT.bytesPerPixel() * info.canvas_width * info.canvas_height));
+        mDurations.push_back(timestamp - prevTimestamp);
+        prevTimestamp = timestamp;
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
+    }
+
+    WebPAnimDecoderDelete(decoder);
 }
 
 AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
@@ -43,7 +75,7 @@ AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
 
     mLastTimeFrameStarted = std::chrono::system_clock::now();
 
-    return {mFrames[mCurrentFrame], {mWidth, mHeight}, mPixelFormat };
+    return {mFrames[mCurrentFrame], {mWidth, mHeight}, PIXEL_FORMAT };
 }
 
 bool WebpImageFactory::isNewImageAvailable() {
@@ -55,54 +87,6 @@ bool WebpImageFactory::isNewImageAvailable() {
     return std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() >= mDurations[mCurrentFrame];
 }
 
-void WebpImageFactory::loadFeatures(const WebPBitstreamFeatures& features) {
-    mWidth = features.width;
-    mHeight = features.height;
-    mFormat = features.format;
-    if (features.has_alpha) {
-        mPixelFormat = APixelFormat::RGB_BYTE;
-    }
-    else {
-        mPixelFormat = APixelFormat::RGBA_BYTE;
-    }
-}
-
 glm::ivec2 WebpImageFactory::getSizeHint() {
     return {mWidth, mHeight};
-}
-
-void WebpImageFactory::loadFrames(AByteBufferView buffer) {
-    WebPData data;
-    data.bytes = reinterpret_cast<const uint8_t*>(buffer.data());
-    data.size = buffer.size();
-
-    //configure animation decoder
-    WebPAnimDecoderOptions decoderOptions;
-    WebPAnimDecoderOptionsInit(&decoderOptions);
-    decoderOptions.color_mode = mPixelFormat == APixelFormat::RGBA_BYTE ? MODE_RGBA : MODE_RGB;
-    decoderOptions.use_threads = false;
-
-    //creating decoder
-    WebPAnimDecoder* decoder = WebPAnimDecoderNew(&data, &decoderOptions);
-
-    //parsing info about animated webp
-    WebPAnimInfo info;
-    WebPAnimDecoderGetInfo(decoder, &info);
-    mLoopCount = info.loop_count;
-
-    //decoding and save frames
-    int prevTimestamp = 0;
-    while (WebPAnimDecoderHasMoreFrames(decoder)) {
-        auto start = std::chrono::high_resolution_clock::now();
-        uint8_t* buf;
-        int timestamp;
-        WebPAnimDecoderGetNext(decoder, &buf, &timestamp);
-        mFrames.push_back(AByteBuffer(buf, mPixelFormat.bytesPerPixel() * info.canvas_width * info.canvas_height));
-        mDurations.push_back(timestamp - prevTimestamp);
-        prevTimestamp = timestamp;
-        auto end = std::chrono::high_resolution_clock::now();
-        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
-    }
-
-    WebPAnimDecoderDelete(decoder);
 }
