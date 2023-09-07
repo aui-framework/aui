@@ -20,12 +20,13 @@
 
 struct WebPBitstreamFeatures;
 
+/**
+ * @note Passed webp must have animation
+ */
 class WebpImageFactory : public IImageFactory {
 public:
     explicit WebpImageFactory(AByteBufferView buffer);
     WebpImageFactory(AByteBufferView buffer, const WebPBitstreamFeatures& features);
-
-    ~WebpImageFactory();
 
     AImage provideImage(const glm::ivec2& size) override;
 
@@ -36,14 +37,14 @@ public:
 private:
     int mWidth;
     int mHeight;
-    bool mHasAnimation;
     int mFormat;
 
     size_t mCurrentFrame = 0;
-    AVector<uint8_t*> mFrames;
+    AVector<AByteBuffer> mFrames;
     AVector<int> mDurations;
-    AVector<glm::uvec2> mSizes;
     APixelFormat mPixelFormat = APixelFormat(0);
+    size_t mLoopCount;
+    size_t mLoopsPassed = 0;
     std::chrono::time_point<std::chrono::system_clock> mLastTimeFrameStarted;
 
     void loadFeatures(const WebPBitstreamFeatures& features);

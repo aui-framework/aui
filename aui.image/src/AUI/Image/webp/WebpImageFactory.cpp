@@ -30,26 +30,27 @@ WebpImageFactory::WebpImageFactory(AByteBufferView buffer) {
     loadFrames(buffer);
 }
 
-WebpImageFactory::~WebpImageFactory() {
-    for (auto frame : mFrames) {
-        WebPFree(frame);
-    }
-}
-
 AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
     if (mLastTimeFrameStarted.time_since_epoch().count() != 0 && isNewImageAvailable()) {
-        mCurrentFrame = (mCurrentFrame + 1) % mFrames.size();
+        ++mCurrentFrame;
+        if (mCurrentFrame >= mFrames.size()) {
+            mCurrentFrame = 0;
+            if (mLoopCount > 0) {
+                ++mLoopsPassed;
+            }
+        }
     }
 
     mLastTimeFrameStarted = std::chrono::system_clock::now();
-    return {
-            AByteBuffer(mFrames[mCurrentFrame], mSizes[mCurrentFrame].x * mSizes[mCurrentFrame].y * mPixelFormat.bytesPerPixel()),
-            mSizes[mCurrentFrame],
-            mPixelFormat
-            };
+
+    return {mFrames[mCurrentFrame], {mWidth, mHeight}, mPixelFormat };
 }
 
 bool WebpImageFactory::isNewImageAvailable() {
+    if (mLoopCount > 0 && mLoopsPassed >= mLoopCount) {
+        return false;
+    }
+
     auto delta = std::chrono::system_clock::now() - mLastTimeFrameStarted;
     return std::chrono::duration_cast<std::chrono::milliseconds>(delta).count() >= mDurations[mCurrentFrame];
 }
@@ -57,13 +58,12 @@ bool WebpImageFactory::isNewImageAvailable() {
 void WebpImageFactory::loadFeatures(const WebPBitstreamFeatures& features) {
     mWidth = features.width;
     mHeight = features.height;
-    mHasAnimation = features.has_animation;
     mFormat = features.format;
     if (features.has_alpha) {
-        mPixelFormat = APixelFormat::RGBA_BYTE;
+        mPixelFormat = APixelFormat::RGB_BYTE;
     }
     else {
-        mPixelFormat = APixelFormat::RGB_BYTE;
+        mPixelFormat = APixelFormat::RGBA_BYTE;
     }
 }
 
@@ -75,42 +75,34 @@ void WebpImageFactory::loadFrames(AByteBufferView buffer) {
     WebPData data;
     data.bytes = reinterpret_cast<const uint8_t*>(buffer.data());
     data.size = buffer.size();
-    WebPDemuxer* demuxer = WebPDemux(&data);
 
-    WebPIterator iter;
-    if (WebPDemuxGetFrame(demuxer, 1, &iter)) {
-        mFrames.reserve(iter.num_frames);
-        mDurations.reserve(iter.num_frames);
-        mSizes.reserve(iter.num_frames);
-        do {
-            int width;
-            int height;
-            switch (mPixelFormat) {
-                case APixelFormat::RGB_BYTE:
-                    mFrames.push_back(WebPDecodeRGB(iter.fragment.bytes, iter.fragment.size, &width, &height));
-                    break;
-                case APixelFormat::RGBA_BYTE:
-                    {
-                        auto current = WebPDecodeRGBA(iter.fragment.bytes, iter.fragment.size, &width, &height);
-                        if (iter.blend_method == WEBP_MUX_BLEND) {
-                            assert(mFrames.size() >= 1);
-                            for (size_t i = 0; i < width * height; i++) {
-                                if (current[4 * i + 3] == 0) {
-                                    std::memcpy(current + 4 * i, mFrames.back() + 4 * i, 4);
-                                }
-                            }
-                        }
-                        mFrames.push_back(current);
-                    }
-                    break;
-                default:
-                    assert(0);
-            }
-            mDurations.push_back(iter.duration);
-            mSizes.emplace_back(width, height);
-        } while(WebPDemuxNextFrame(&iter));
+    //configure animation decoder
+    WebPAnimDecoderOptions decoderOptions;
+    WebPAnimDecoderOptionsInit(&decoderOptions);
+    decoderOptions.color_mode = mPixelFormat == APixelFormat::RGBA_BYTE ? MODE_RGBA : MODE_RGB;
+    decoderOptions.use_threads = false;
+
+    //creating decoder
+    WebPAnimDecoder* decoder = WebPAnimDecoderNew(&data, &decoderOptions);
+
+    //parsing info about animated webp
+    WebPAnimInfo info;
+    WebPAnimDecoderGetInfo(decoder, &info);
+    mLoopCount = info.loop_count;
+
+    //decoding and save frames
+    int prevTimestamp = 0;
+    while (WebPAnimDecoderHasMoreFrames(decoder)) {
+        auto start = std::chrono::high_resolution_clock::now();
+        uint8_t* buf;
+        int timestamp;
+        WebPAnimDecoderGetNext(decoder, &buf, &timestamp);
+        mFrames.push_back(AByteBuffer(buf, mPixelFormat.bytesPerPixel() * info.canvas_width * info.canvas_height));
+        mDurations.push_back(timestamp - prevTimestamp);
+        prevTimestamp = timestamp;
+        auto end = std::chrono::high_resolution_clock::now();
+        std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << std::endl;
     }
 
-    WebPDemuxReleaseIterator(&iter);
-    WebPDemuxDelete(demuxer);
+    WebPAnimDecoderDelete(decoder);
 }

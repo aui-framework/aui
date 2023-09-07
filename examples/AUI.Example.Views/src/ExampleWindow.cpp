@@ -357,6 +357,11 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                         }
                 }
         }), "Sounds");
+
+        it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
+                _new<ADrawableView>(AUrl(":img/static.webp")) with_style { FixedSize{640_px, 480_px} }
+        }), "Images");
+
         it->addTab(Vertical {
                 _new<ALabel>("Horizontal splitter"),
                 ASplitter::Horizontal().withItems({_new<AButton>("One"),

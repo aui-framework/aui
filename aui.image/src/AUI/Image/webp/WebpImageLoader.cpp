@@ -16,7 +16,9 @@
 
 #include "WebpImageLoader.h"
 #include "WebpImageFactory.h"
+#include "AUI/Util/ARaiiHelper.h"
 #include <webp/decode.h>
+#include <webp/demux.h>
 
 bool WebpImageLoader::matches(AByteBufferView buffer) {
     return WebPGetInfo(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size(), nullptr, nullptr);
@@ -25,9 +27,49 @@ bool WebpImageLoader::matches(AByteBufferView buffer) {
 _<IImageFactory> WebpImageLoader::getImageFactory(AByteBufferView buffer) {
     WebPBitstreamFeatures features;
     WebPGetFeatures(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size(), &features);
-    return _new<WebpImageFactory>(buffer, features);
+    if (features.has_animation) {
+        return _new<WebpImageFactory>(buffer, features);
+    }
+
+    return nullptr;
 }
 
 _<AImage> WebpImageLoader::getRasterImage(AByteBufferView buffer) {
+    WebPBitstreamFeatures features;
+    WebPGetFeatures(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size(), &features);
+    if (features.has_animation) {
+        return nullptr;
+    }
+
+    WebPData data;
+    data.bytes = reinterpret_cast<const uint8_t*>(buffer.data());
+    data.size = buffer.size();
+
+    WebPDemuxer* demux = WebPDemux(&data);
+
+    ARaiiHelper demuxHeloer = [demux]() {
+        WebPDemuxDelete(demux);
+    };
+
+    size_t width = WebPDemuxGetI(demux, WEBP_FF_CANVAS_WIDTH);
+    size_t height = WebPDemuxGetI(demux, WEBP_FF_CANVAS_HEIGHT);
+
+    WebPIterator iter;
+    if (WebPDemuxGetFrame(demux, 1, &iter)) {
+        constexpr auto PIXEL_FORMAT = APixelFormat(APixelFormat::RGBA_BYTE);
+        int w, h;
+        auto decodedBuffer = WebPDecodeRGBA(reinterpret_cast<const uint8_t *>(buffer.data()),
+                                            buffer.size(), &w, &h);
+        ARaiiHelper helper = [iter = &iter, decodedBuffer]() {
+            WebPDemuxReleaseIterator(iter);
+            WebPFree(decodedBuffer);
+        };
+
+        if (decodedBuffer) {
+            return _new<AImage>(AByteBuffer(decodedBuffer, PIXEL_FORMAT.bytesPerPixel() * width * height),
+                                glm::uvec2(width, height), PIXEL_FORMAT);
+        }
+    }
+
     return nullptr;
 }
