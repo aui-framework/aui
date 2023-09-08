@@ -56,8 +56,8 @@ WebpImageFactory::~WebpImageFactory() {
 
 AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
     if (isNewImageAvailable()) {
-        loadNextFrame();
         mLastTimeFrameStarted = std::chrono::system_clock::now();
+        loadNextFrame();
     }
 
     return {AByteBuffer(mDecodedFrameBuffer, PIXEL_FORMAT.bytesPerPixel() * mWidth * mHeight),
