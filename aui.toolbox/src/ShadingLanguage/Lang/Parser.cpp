@@ -744,7 +744,7 @@ _<ExpressionNode> Parser::parseExpression() {
                 }
                 if (!binaryOperators.empty()) {
                     return std::ranges::min_element(binaryOperators, [](const auto& l, const auto& r) {
-                        return l.priority < r.priority;
+                        return l.priority <= r.priority;
                     })->op;
                 }
                 if (temporaryValue) {

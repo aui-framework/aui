@@ -57,7 +57,7 @@ private:
     ADeque<FontEntryData> mFontEntryData;
 
 
-    AVector<glm::vec3> getVerticesForRect(glm::vec2 position,
+    std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position,
                                           glm::vec2 size);
 
     void uploadToShaderCommon();

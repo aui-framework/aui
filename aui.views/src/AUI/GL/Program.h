@@ -82,6 +82,10 @@ namespace gl {
 		~Program();
 		Program(const Program&) = delete;
 
+        uint32_t handle() const {
+            return mProgram;
+        }
+
         int32_t getLocation(const Uniform& uniform) const;
 
 		void set(const gl::Program::Uniform& uniform, int value) const;

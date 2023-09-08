@@ -37,6 +37,7 @@ const AMap<AString, AString>& GLSLFrontend::internalFunctions() {
             {"abs",  "abs"},
             {"sqrt", "sqrt"},
             {"clamp","clamp"},
+            {"step", "step"},
     };
     return internalFunctions;
 }
@@ -67,7 +68,7 @@ void GLSLFrontend::visitNode(const IndexedAttributesDeclarationNode& node) {
     CBasedFrontend::visitNode(node);
     switch (node.type()) {
         case KeywordToken::INPUT: {
-            const auto decls = node.fields().toVector().sort(byKey);
+            auto decls = node.fields().toVector().sort(byKey);
             for (const auto& [index, declaration]: decls) {
                 mShaderOutput << "/* " << AString::number(index) << " */ attribute ";
                 if (auto c = _cast<VariableDeclarationNode>(declaration)) {
@@ -76,6 +77,7 @@ void GLSLFrontend::visitNode(const IndexedAttributesDeclarationNode& node) {
                     declaration->acceptVisitor(*this);
                 }
             }
+            mInputs = std::move(decls);
             break;
         }
 
@@ -183,14 +185,18 @@ void GLSLFrontend::visitNode(const VariableReferenceNode& node) {
 void GLSLFrontend::emitHeaderDefinition(aui::no_escape<IOutputStream> os) {
     *os << "struct Shader {"
            "  static const char* code();"
-           "  static void setup();"
+           "  static void setup(uint32_t program);"
            "};";
 }
 
 void GLSLFrontend::emitCppCreateShader(aui::no_escape<IOutputStream> os) {
+    *os << "#include <AUI/GL/gl.h>\n";
     CBasedFrontend::emitCppCreateShader(os);
 
     *os << "const char* " << namespaceName() <<  "::Shader::code() { return R\"(" << mShaderOutput.str() << " )\";}"
-           "void " << namespaceName() <<  "::Shader::setup() {"
-           "}";
+           "void " << namespaceName() <<  "::Shader::setup(uint32_t program) {";
+    for (const auto& [index, input]  : mInputs) {
+      *os << "glBindAttribLocation(program, " << AString::number(index) << ", \"" << input->variableName() << "\");";
+    }
+    *os << "}";
 }

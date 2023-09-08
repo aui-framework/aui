@@ -52,4 +52,5 @@ protected:
 
 private:
     ASet<AString> mDefinedUniforms;
+    AVector<std::tuple<int, _<VariableDeclarationNode>>> mInputs;
 };

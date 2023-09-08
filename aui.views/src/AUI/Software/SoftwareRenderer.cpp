@@ -268,7 +268,7 @@ void SoftwareRenderer::drawBoxShadow(glm::vec2 position,
     using namespace aui::sl_gen::shadow::fsh::software;
     const Shader::Uniform uniform{
         .color = mColor * color,
-        .lower = transformedPos + size,
+        .lower = size,
         .upper = transformedPos,
         .sigma = blurRadius / 2.f,
     };
@@ -276,7 +276,7 @@ void SoftwareRenderer::drawBoxShadow(glm::vec2 position,
     for (int y = 0; y < iSize.y; ++y) { 
         for (int x = 0; x < iSize.x; ++x) {
             const auto result = Shader::entry(Shader::Inter {
-                .uv = transformedPos + glm::vec2{x, y},
+                .vertex = transformedPos + glm::vec2{x, y},
             }, uniform).albedo;
 
             /*

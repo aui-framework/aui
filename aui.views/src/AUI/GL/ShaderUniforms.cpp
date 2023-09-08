@@ -27,10 +27,10 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform SL_UNIFORM_SIGMA("SL_uniform_sigma");
     gl::Program::Uniform SL_UNIFORM_LOWER("SL_uniform_lower");
     gl::Program::Uniform SL_UNIFORM_UPPER("SL_uniform_upper");
-    gl::Program::Uniform OUTER_SIZE("outerSize");
-    gl::Program::Uniform INNER_SIZE("innerSize");
-    gl::Program::Uniform INNER_TEXEL_SIZE("innerTexelSize");
-    gl::Program::Uniform OUTER_TEXEL_SIZE("outerTexelSize");
+    gl::Program::Uniform OUTER_SIZE("SL_uniform_outerSize");
+    gl::Program::Uniform INNER_SIZE("SL_uniform_innerSize");
+    gl::Program::Uniform INNER_TEXEL_SIZE("SL_uniform_innerTexelSize");
+    gl::Program::Uniform OUTER_TEXEL_SIZE("SL_uniform_outerTexelSize");
     gl::Program::Uniform OUTER_TO_INNER("outer_to_inner");
 
     gl::Program::Uniform COLOR_TL("color_tl");

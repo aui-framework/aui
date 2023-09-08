@@ -131,14 +131,14 @@ std::string put_if(bool value, const char* str) { if (value) return str; return 
 template<typename C>
 concept AuiSLShader = requires(C&& c) {
     { C::code() } -> std::same_as<const char*>;
-    C::setup();
+    C::setup(0);
 };
 
 template<AuiSLShader Vertex, AuiSLShader Fragment>
 inline void useAuislShader(gl::Program& out) {
     out.loadRaw(Vertex::code(), Fragment::code());
-    Vertex::setup();
-    Fragment::setup();
+    Vertex::setup(out.handle());
+    Fragment::setup(out.handle());
     out.compile();
 }
 
@@ -315,7 +315,7 @@ void OpenGLRenderer::uploadToShaderCommon() {
     gl::Program::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
 }
 
-AVector<glm::vec3> OpenGLRenderer::getVerticesForRect(glm::vec2 position, glm::vec2 size)
+std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, glm::vec2 size)
 {
     float x = position.x;
     float y = position.y;
@@ -324,10 +324,10 @@ AVector<glm::vec3> OpenGLRenderer::getVerticesForRect(glm::vec2 position, glm::v
 
     return
             {
-                    glm::vec3(glm::vec4{ x, h, 1, 1 }),
-                    glm::vec3(glm::vec4{ w, h, 1, 1 }),
-                    glm::vec3(glm::vec4{ x, y, 1, 1 }),
-                    glm::vec3(glm::vec4{ w, y, 1, 1 }),
+                    glm::vec2{ x, h, },
+                    glm::vec2{ w, h, },
+                    glm::vec2{ x, y, },
+                    glm::vec2{ w, y, },
             };
 }
 void OpenGLRenderer::drawRect(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
@@ -349,6 +349,7 @@ void OpenGLRenderer::drawRectImpl(glm::vec2 position, glm::vec2 size) {
 
     mTempVao.insert(0, getVerticesForRect(position, size));
     mTempVao.indices(RECT_INDICES);
+    glEnableVertexAttribArray(1);
     mTempVao.drawElements();
 }
 
@@ -366,8 +367,8 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
     uploadToShaderCommon();
 
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-    gl::Program::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, glm::vec2{0, 0});
-    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
+    //gl::Program::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, glm::vec2{0, 0});
+    //gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, glm::vec2{0});
 
     drawRectImpl(position, size);
