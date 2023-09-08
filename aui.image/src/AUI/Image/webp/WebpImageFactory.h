@@ -17,8 +17,9 @@
 #pragma once
 
 #include "AUI/Image/IImageFactory.h"
+#include <webp/mux_types.h>
 
-struct WebPBitstreamFeatures;
+struct WebPAnimDecoder;
 
 /**
  * @note Passed webp must have animation
@@ -26,6 +27,8 @@ struct WebPBitstreamFeatures;
 class WebpImageFactory : public IImageFactory {
 public:
     explicit WebpImageFactory(AByteBufferView buffer);
+
+    ~WebpImageFactory();
 
     AImage provideImage(const glm::ivec2& size) override;
 
@@ -36,12 +39,24 @@ public:
 private:
     size_t mWidth;
     size_t mHeight;
-    size_t mCurrentFrame = 0;
-    AVector<AByteBuffer> mFrames;
+
+    /**
+     * @note mCurrentFrame will be equal to 0 after the first invoke of loadNextFrame()
+     */
+    size_t mCurrentFrame = -1;
+    size_t mFrameCount;
     AVector<int> mDurations;
-    size_t mLoopCount;
     size_t mLoopsPassed = 0;
+    size_t mLoopCount;
+
     std::chrono::time_point<std::chrono::system_clock> mLastTimeFrameStarted;
 
     static constexpr APixelFormat PIXEL_FORMAT = APixelFormat(APixelFormat::RGBA_BYTE);
+
+    void loadNextFrame();
+
+    WebPData mFileData;
+    WebPAnimDecoder* mDecoder = nullptr;
+    uint8_t* mDecodedFrameBuffer = nullptr;
+    int mDecodedFrameTimestamp = 0;
 };
