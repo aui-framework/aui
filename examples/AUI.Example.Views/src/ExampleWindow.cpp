@@ -401,7 +401,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                                                                     "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
                                                                                     "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
                                                                                     "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
-                                                                                    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style { TextAlign::JUSTIFY },
+                                                                                    "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") with_style {ATextAlign::JUSTIFY },
                                                           },
                                                           Vertical::Expanding {
                                                                   _new<ALabel>("Word breaking"),
@@ -490,7 +490,7 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 
     auto surface = createOverlappingSurface({0, 0}, {100, 100}, false);
     _<AViewContainer> popup = Vertical {
-            Label { "Drop event" } with_style { FontSize { 18_pt }, TextAlign::CENTER, },
+            Label { "Drop event" } with_style {FontSize { 18_pt }, ATextAlign::CENTER, },
             [&]() -> _<AView> {
                 if (auto u = event.data.urls()) {
                     auto url = u->first();
@@ -500,7 +500,7 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
                 }
                 return nullptr;
             }(),
-            AText::fromString("Caught drop event. See the logger output for contents.") with_style { TextAlign::CENTER, MinSize { 100_dp, 40_dp } },
+            AText::fromString("Caught drop event. See the logger output for contents.") with_style {ATextAlign::CENTER, MinSize {100_dp, 40_dp } },
             Centered { Button { "OK" }.clicked(this, [surface] {
                 surface->close();
             }) }

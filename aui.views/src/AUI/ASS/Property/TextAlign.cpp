@@ -22,7 +22,7 @@
 #include "TextAlign.h"
 
 
-void ass::prop::Property<TextAlign>::applyFor(AView* view) {
+void ass::prop::Property<ATextAlign>::applyFor(AView* view) {
     view->getFontStyle().align = mInfo;
     view->invalidateFont();
 }

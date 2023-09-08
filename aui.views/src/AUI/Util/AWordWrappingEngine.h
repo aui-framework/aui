@@ -20,7 +20,7 @@
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/AVector.h>
 #include <glm/glm.hpp>
-#include <AUI/Enum/TextAlign.h>
+#include <AUI/Enum/ATextAlign.h>
 #include <AUI/Enum/Float.h>
 
 class API_AUI_VIEWS AWordWrappingEngine {
@@ -49,7 +49,7 @@ public:
 private:
     AVector<_<Entry>> mEntries;
     float mLineHeight = 1.f;
-    TextAlign mTextAlign = TextAlign::LEFT;
+    ATextAlign mTextAlign = ATextAlign::LEFT;
     std::optional<int> mHeight;
 
 public:
@@ -57,7 +57,7 @@ public:
         mLineHeight = lineHeight;
     }
 
-    void setTextAlign(TextAlign textAlign) {
+    void setTextAlign(ATextAlign textAlign) {
         mTextAlign = textAlign;
     }
 

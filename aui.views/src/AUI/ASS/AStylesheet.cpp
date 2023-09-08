@@ -106,14 +106,14 @@ AStylesheet::AStylesheet() {
         // AButton
         {
             { t<AButton>(), c(".btn")},
-            BackgroundSolid {0xffffff_rgb},
+                BackgroundSolid {0xffffff_rgb},
             Padding {3_dp, 6_dp},
             Margin {2_dp, 4_dp},
             MinSize {60_dp, {} },
             Border { 1_dp, 0xcacaca_rgb },
             BorderRadius {4_dp},
-            TextAlign::CENTER,
-            VerticalAlign::MIDDLE,
+                ATextAlign::CENTER,
+                VerticalAlign::MIDDLE,
             BoxShadow {{}, 1_dp, 4_dp, -2_dp, 0x80000000_argb},
         },
         {
@@ -179,13 +179,13 @@ AStylesheet::AStylesheet() {
         },
         {
             class_of(".input-field"),
-                TextColor { 0_rgb },
-                BackgroundSolid { 0xffffff_rgb },
+            TextColor { 0_rgb },
+            BackgroundSolid { 0xffffff_rgb },
             Border { 1_dp, 0xa0a0a0_rgb },
-                BorderRadius { 4_dp },
-                Margin { 2_dp, 4_dp },
+            BorderRadius { 4_dp },
+            Margin { 2_dp, 4_dp },
             MinSize { 100_dp, 17_dp },
-                AOverflow::HIDDEN
+            AOverflow::HIDDEN,
         },
         {
             class_of::hover(".input-field"),
@@ -337,7 +337,7 @@ AStylesheet::AStylesheet() {
         // ADropdownList
         {
             t<ADropdownList>(),
-            TextAlign::LEFT,
+                ATextAlign::LEFT,
         },
 
         // AListView

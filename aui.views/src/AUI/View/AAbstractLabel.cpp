@@ -192,10 +192,10 @@ void AAbstractLabel::doRenderText() {
             alignLeft();
         } else {
             switch (getFontStyleLabel().align) {
-                case TextAlign::LEFT:
+                case ATextAlign::LEFT:
                     alignLeft();
                     break;
-                case TextAlign::CENTER:
+                case ATextAlign::CENTER:
                     mTextLeftOffset += (getContentWidth() - mPrerendered->getWidth()) / 2;
                     if (mIcon) {
                         mTextLeftOffset += requiredSpace.x / 2;
@@ -213,7 +213,7 @@ void AAbstractLabel::doRenderText() {
 
                     break;
 
-                case TextAlign::RIGHT:
+                case ATextAlign::RIGHT:
                     mTextLeftOffset += getContentWidth() - mPrerendered->getWidth();
                     if (mIcon) {
                         RenderHints::PushState s;
