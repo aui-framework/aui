@@ -452,7 +452,7 @@ AVector<_<INode>> Parser::parseCodeBlock() {
 }
 
 _<ExpressionNode> Parser::parseExpression() {
-    _<ExpressionNode> value;
+    _<ExpressionNode> temporaryValue; // storage for temporary non-binary nodes such ast constants, function calls, etc
 
     struct BinaryOperatorAndItsPriority {
         _<BinaryOperatorNode> op;
@@ -462,32 +462,33 @@ _<ExpressionNode> Parser::parseExpression() {
     AVector<BinaryOperatorAndItsPriority> binaryOperators;
 
     auto putValue = [&](_<ExpressionNode> node) {
-        if (value) {
-            reportUnexpectedErrorAndSkip("value is already set");
+        if (temporaryValue) {
+            reportUnexpectedErrorAndSkip("temporaryValue is already set");
             throw AException{};
         }
         if (!binaryOperators.empty()) {
             if (binaryOperators.last().op->mRight) {
-                reportUnexpectedErrorAndSkip("value is already set");
+                reportUnexpectedErrorAndSkip("temporaryValue is already set");
                 throw AException{};
             }
             binaryOperators.last().op->mRight = std::move(node);
             return;
         }
-        value = std::move(node);
+        temporaryValue = std::move(node);
     };
 
     auto takeValue = [&] {
-        if (!value) {
-            reportUnexpectedErrorAndSkip("value is empty");
+        if (!temporaryValue) {
+            reportUnexpectedErrorAndSkip("temporaryValue is empty");
             throw AException{};
         }
-        auto v = std::move(value);
-        value = nullptr; // to be sure
+        auto v = std::move(temporaryValue);
+        temporaryValue = nullptr; // to be sure
         return v;
     };
 
     enum class Priority {
+        // to do last
         ASSIGNMENT,
         COMPARISON,
         BINARY_SHIFT,
@@ -495,19 +496,20 @@ _<ExpressionNode> Parser::parseExpression() {
         ASTERISK_SLASH,
         ARRAY_ACCESS,
         MEMBER_ACCESS,
+        // to do first
     };
 
     auto handleBinaryOperator = [&]<aui::derived_from<BinaryOperatorNode> T>(Priority p) {
         nextTokenAndCheckEof();
         const int currentPriority = int(p);
 
-        if (value) {
-            auto out = _new<T>(std::move(value), nullptr);
+        if (temporaryValue) {
+            auto out = _new<T>(std::move(temporaryValue), nullptr);
             binaryOperators << BinaryOperatorAndItsPriority{
                 .op = out,
                 .priority = currentPriority,
             };
-            assert(value == nullptr);
+            assert(temporaryValue == nullptr);
             return out;
         }
 
@@ -525,12 +527,15 @@ _<ExpressionNode> Parser::parseExpression() {
             }
         }
         if (!binaryOperators.empty()) {
-            auto out = _new<T>(binaryOperators.first().op, nullptr);
+            auto root = std::min_element(binaryOperators.begin(), binaryOperators.end(), [](const BinaryOperatorAndItsPriority& lhs, const BinaryOperatorAndItsPriority& rhs) {
+                return lhs.priority < rhs.priority;
+            });
+            auto out = _new<T>(root->op, nullptr);
             binaryOperators << BinaryOperatorAndItsPriority{
                     .op = out,
                     .priority = currentPriority,
             };
-            assert(value == nullptr);
+            assert(temporaryValue == nullptr);
             return out;
         }
 
@@ -726,11 +731,11 @@ _<ExpressionNode> Parser::parseExpression() {
 
 
             default:
-                if (value && !binaryOperators.empty()) {
+                if (temporaryValue && !binaryOperators.empty()) {
                     // should assign it to some operator
                     for (const auto& o : binaryOperators | ranges::view::reverse) {
                         if (o.op->mRight == nullptr) {
-                            o.op->mRight = std::move(value);
+                            o.op->mRight = std::move(temporaryValue);
                             return binaryOperators.first().op;
                         }
                     }
@@ -742,15 +747,15 @@ _<ExpressionNode> Parser::parseExpression() {
                         return l.priority < r.priority;
                     })->op;
                 }
-                if (value) {
-                    return value;
+                if (temporaryValue) {
+                    return temporaryValue;
                 }
                 reportUnexpectedErrorAndSkip("not an expression");
                 throw AException{};
 
         }
     }
-    return value;
+    return temporaryValue;
 }
 
 _<ExpressionNode> Parser::parseTernary(const _<ExpressionNode>& condition) {
