@@ -357,6 +357,20 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                         }
                 }
         }), "Sounds");
+
+        it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
+                Horizontal {
+                    Vertical {
+                            _new<ALabel>("Gif support!"),
+                            _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style { FixedSize { 100_dp } }, // gif from https://tenor.com/view/cat-gif-26024730
+                    },
+                    Vertical {
+                        _new<ALabel>("Animated WebP support!"),
+                        _new<ADrawableView>(AUrl(":img/anim.webp")) with_style {FixedSize{320_px, 240_px}}
+                    }
+                }
+        }), "Images");
+
         it->addTab(Vertical {
                 _new<ALabel>("Horizontal splitter"),
                 ASplitter::Horizontal().withItems({_new<AButton>("One"),
@@ -400,10 +414,6 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                                                                     { WordBreak::BREAK_ALL })
                                                           },
                                                   }),
-                Horizontal {
-                        _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style { FixedSize { 100_dp } }, // gif from https://tenor.com/view/cat-gif-26024730
-                        AText::fromString("Add animated gif images!") with_style { Expanding{} },
-                },
                 [] {
                     _<AViewContainer> v1 = Vertical {};
                     _<AViewContainer> v2 = Vertical {};

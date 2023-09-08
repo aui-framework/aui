@@ -39,15 +39,18 @@
 #include <AUI/Image/png/PngImageLoader.h>
 #include <AUI/Image/AImageLoaderRegistry.h>
 #include <AUI/Image/svg/SvgImageLoader.h>
-
+#include <AUI/Image/webp/WebpImageLoader.h>
 
 struct AImageInit
 {
     AImageInit() {
+        auto webpLoader = _new<WebpImageLoader>();
         AImageLoaderRegistry::inst().registerVectorLoader(_new<SvgImageLoader>());
         AImageLoaderRegistry::inst().registerRasterLoader(_new<PngImageLoader>());
         AImageLoaderRegistry::inst().registerRasterLoader(_new<JpgImageLoader>());
         AImageLoaderRegistry::inst().registerRasterLoader(_new<BmpImageLoader>());
+        AImageLoaderRegistry::inst().registerRasterLoader(webpLoader);
         AImageLoaderRegistry::inst().registerAnimatedLoader(_new<GifImageLoader>());
+        AImageLoaderRegistry::inst().registerAnimatedLoader(webpLoader);
     }
 } _aimageinit;
