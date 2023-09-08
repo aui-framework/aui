@@ -19,18 +19,18 @@
 #include <AUI/Reflect/AEnumerate.h>
 
 /**
- * @brief Controls the text alignment of AView.
+ * @brief Controls the text alignment inside AView.
  * @ingroup ass
  */
-enum class TextAlign {
+enum class ATextAlign {
 	LEFT,
 	CENTER,
 	RIGHT,
     JUSTIFY,
 };
 
-AUI_ENUM_VALUES(TextAlign, TextAlign::LEFT,
-                TextAlign::CENTER,
-                TextAlign::RIGHT,
-                TextAlign::JUSTIFY)
+AUI_ENUM_VALUES(ATextAlign, ATextAlign::LEFT,
+                ATextAlign::CENTER,
+                ATextAlign::RIGHT,
+                ATextAlign::JUSTIFY)
 

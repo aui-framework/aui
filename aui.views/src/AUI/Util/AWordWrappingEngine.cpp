@@ -67,7 +67,7 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
     auto flushRow = [&](bool last) {
         int currentPos = 0;
         switch (mTextAlign) {
-            case TextAlign::JUSTIFY: {
+            case ATextAlign::JUSTIFY: {
                 if (!last) {
                     int actualRowWidth = 0;
                     int leftPadding = 0;
@@ -101,7 +101,7 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
                 }
                 // fallthrough
             }
-            case TextAlign::LEFT:
+            case ATextAlign::LEFT:
                 for (auto& i: leftFloat) {
                     currentPos += i.occupiedHorizontalSpace;
                 }
@@ -111,7 +111,7 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
                 }
                 break;
 
-            case TextAlign::CENTER: {
+            case ATextAlign::CENTER: {
                 int actualRowWidth = 0;
                 int leftPadding = 0;
                 int rightPadding = 0;
@@ -136,7 +136,7 @@ void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ive
                 break;
             }
 
-            case TextAlign::RIGHT:
+            case ATextAlign::RIGHT:
                 // calculate actual row width
                 int actualRowWidth = 0;
                 for (auto& i : *currentRow) actualRowWidth += i.occupiedHorizontalSpace;

@@ -189,7 +189,7 @@
 #include "Property/TransformScale.h"
 #include "Property/VerticalAlign.h"
 #include "Property/Visibility.h"
-#include "Property/TextOverflow.h"
+#include "Property/ATextOverflow.h"
 #include "Property/ScrollbarAppearance.h"
 
 #include <AUI/ASS/AAssHelper.h>

@@ -137,7 +137,7 @@ TEST(WordWrappingEngine, SimpleRight) {
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{70, 0}),
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{70, 15}),
     });
-    engine.setTextAlign(TextAlign::RIGHT);
+    engine.setTextAlign(ATextAlign::RIGHT);
     engine.performLayout({0, 0}, {100, 100});
 }
 TEST(WordWrappingEngine, SimpleCenter) {
@@ -148,7 +148,7 @@ TEST(WordWrappingEngine, SimpleCenter) {
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{60, 0}),
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{35, 15}),
     });
-    engine.setTextAlign(TextAlign::CENTER);
+    engine.setTextAlign(ATextAlign::CENTER);
     engine.performLayout({0, 0}, {100, 100});
 }
 TEST(WordWrappingEngine, SimpleJustify) {
@@ -159,6 +159,6 @@ TEST(WordWrappingEngine, SimpleJustify) {
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{70, 0}),
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{0, 15}),
     });
-    engine.setTextAlign(TextAlign::JUSTIFY);
+    engine.setTextAlign(ATextAlign::JUSTIFY);
     engine.performLayout({0, 0}, {100, 100});
 }
