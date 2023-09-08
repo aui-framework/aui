@@ -2,6 +2,7 @@ import rounded
 
 uniform {
   vec4 color
+  vec2 outerSize
 }
 
 inter {
@@ -13,5 +14,5 @@ output {
 }
 
 entry {
-    output.albedo = uniform.color * vec4(1, 1, 1, rounded(inter.uv))
+    output.albedo = uniform.color * vec4(1, 1, 1, rounded(abs(inter.uv * 2 - 1), uniform.outerSize))
 }

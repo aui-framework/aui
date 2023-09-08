@@ -51,6 +51,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 	auisl_shader(aui.views shadow.fsh)
 	auisl_shader(aui.views solid.fsh)
 	auisl_shader(aui.views solid_rounded.fsh)
+	auisl_shader(aui.views border_rounded.fsh)
 
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
 

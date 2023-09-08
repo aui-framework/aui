@@ -31,6 +31,7 @@
 #include <AUISL/Generated/solid.fsh.glsl120.h>
 #include <AUISL/Generated/shadow.fsh.glsl120.h>
 #include <AUISL/Generated/solid_rounded.fsh.glsl120.h>
+#include <AUISL/Generated/border_rounded.fsh.glsl120.h>
 
 
 class OpenGLTexture2D: public ITexture {
@@ -112,7 +113,6 @@ struct TexturedShaderHelper {
         glm::vec2 uv1 = brush.uv1 ? *brush.uv1 : glm::vec2{0, 0};
         glm::vec2 uv2 = brush.uv2 ? *brush.uv2 : glm::vec2{1, 1};
         tempVao.bind();
-        glEnableVertexAttribArray(1);
         const glm::vec2 uvs[] = {
             {uv1.x, uv2.y},
             {uv2.x, uv2.y},
@@ -152,6 +152,8 @@ OpenGLRenderer::OpenGLRenderer() {
 
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::border_rounded::fsh::glsl120::Shader>(mRoundedSolidShaderBorder);
 
     /*
 
@@ -349,7 +351,6 @@ void OpenGLRenderer::drawRectImpl(glm::vec2 position, glm::vec2 size) {
 
     mTempVao.insert(0, getVerticesForRect(position, size));
     mTempVao.indices(RECT_INDICES);
-    glEnableVertexAttribArray(1);
     mTempVao.drawElements();
 }
 
@@ -367,9 +368,6 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
     uploadToShaderCommon();
 
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-    //gl::Program::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, glm::vec2{0, 0});
-    //gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
-    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, glm::vec2{0});
 
     drawRectImpl(position, size);
     endDraw(brush);
@@ -436,10 +434,7 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
     gl::Program::currentShader()->set(aui::ShaderUniforms::INNER_SIZE, 2.f * (radius - borderWidth) / innerSize);
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, size / innerSize);
-
-    gl::Program::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, 2.f / 5.f / innerSize);
-    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
-
+    uploadToShaderCommon();
     drawRectImpl(position, size);
     endDraw(brush);
 }
@@ -598,7 +593,6 @@ public:
             mRenderer->mSymbolShader.set(aui::ShaderUniforms::COLOR, finalColor);
             mIndexBuffer.draw(GL_TRIANGLES);
         }
-        glDisableVertexAttribArray(1);
     }
 
     int getWidth() override {

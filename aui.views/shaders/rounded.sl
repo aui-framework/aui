@@ -1,13 +1,11 @@
-uniform {
-    vec2 outerSize;
-}
+float rounded(vec2 absolute, vec2 size) {
+    vec2 circleCenter = 1.0 - size;
+    vec2 rectangleShape = step(absolute, circleCenter)
 
-float rounded(vec2 uv) {
-    vec2 tmp = abs(uv * 2 - 1)
-    vec2 circleCenter = 1.0 - uniform.outerSize;
-    vec2 rectangleShape = step(tmp, circleCenter)
-
-    vec2 circle = (tmp - circleCenter) / (uniform.outerSize);
+    vec2 circle = (absolute - circleCenter) / (size);
     float circles = step(circle.x * circle.x + circle.y * circle.y, 1.0000001)
-    return clamp(rectangleShape.x + rectangleShape.y + circles, 0, 1)
+
+    vec2 rectCut = step(vec2(0), vec2(1.0) - absolute)
+
+    return clamp(rectangleShape.x + rectangleShape.y + circles, 0, 1) * rectCut.x * rectCut.y
 }
