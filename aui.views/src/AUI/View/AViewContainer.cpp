@@ -16,7 +16,7 @@
 
 #include "AViewContainer.h"
 #include "AView.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <utility>
 
@@ -30,13 +30,13 @@ static constexpr auto LOG_TAG = "AViewContainer";
 
 void AViewContainer::drawView(const _<AView>& view) {
     if (view->getVisibility() == Visibility::VISIBLE || view->getVisibility() == Visibility::UNREACHABLE) {
-        const auto prevStencilLevel = Render::getRenderer()->getStencilDepth();
+        const auto prevStencilLevel = ARender::getRenderer()->getStencilDepth();
 
         RenderHints::PushState s;
         glm::mat4 t(1.f);
         view->getTransform(t);
-        Render::setColor(AColor(1, 1, 1, view->getOpacity()));
-        Render::setTransform(t);
+        ARender::setColor(AColor(1, 1, 1, view->getOpacity()));
+        ARender::setTransform(t);
 
         try {
             view->render();
@@ -44,11 +44,11 @@ void AViewContainer::drawView(const _<AView>& view) {
         }
         catch (const AException& e) {
             ALogger::err(LOG_TAG) << "Unable to render view: " << e;
-            Render::getRenderer()->setStencilDepth(prevStencilLevel);
+            ARender::getRenderer()->setStencilDepth(prevStencilLevel);
             return;
         }
 
-        auto currentStencilLevel = Render::getRenderer()->getStencilDepth();
+        auto currentStencilLevel = ARender::getRenderer()->getStencilDepth();
         assert(currentStencilLevel == prevStencilLevel);
     }
 }

@@ -20,7 +20,7 @@
 
 #include <iostream>
 #include "ADrawableView.h"
-#include <AUI/Render/Render.h>
+#include <AUI/Render/ARender.h>
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/AImageDrawable.h>
 
@@ -30,7 +30,7 @@ ADrawableView::ADrawableView(const _<IDrawable>& drawable) : mDrawable(drawable)
 
 void ADrawableView::render() {
     AView::render();
-    Render::setColor(getAssHelper()->state.backgroundUrl.overlayColor.or_default(0xffffff_rgb));
+    ARender::setColor(getAssHelper()->state.backgroundUrl.overlayColor.or_default(0xffffff_rgb));
     if (mDrawable) {
         IDrawable::Params p;
         p.size = getSize();

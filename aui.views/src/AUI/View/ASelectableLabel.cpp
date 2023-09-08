@@ -61,14 +61,14 @@ void ASelectableLabel::render() {
         {
             RenderHints::PushMatrix m;
 
-            Render::setTransform(glm::translate(glm::mat4(1.f), {x, 0, 0}));
+            ARender::setTransform(glm::translate(glm::mat4(1.f), {x, 0, 0}));
             drawSelectionPre();
         }
         doRenderText();
 
         {
             RenderHints::PushMatrix m;
-            Render::setTransform(glm::translate(glm::mat4(1.f), {x, 0, 0}));
+            ARender::setTransform(glm::translate(glm::mat4(1.f), {x, 0, 0}));
             drawSelectionPost();
         }
     } else {

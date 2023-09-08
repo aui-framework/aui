@@ -27,7 +27,7 @@
  * @brief Rendering facade for IRenderer.
  * @ingroup views
  */
-class API_AUI_VIEWS Render
+class API_AUI_VIEWS ARender
 {
 private:
     static _unique<IRenderer> ourRenderer;
@@ -106,12 +106,12 @@ public:
      * @param radius corner radius (px)
      * @param borderWidth border line width (px)
      */
-    static void rectBorder(const ABrush& brush,
-                           const glm::vec2& position,
-                           const glm::vec2& size,
-                           float radius,
-                           int borderWidth) {
-        ourRenderer->drawRectBorder(brush, position, size, radius, borderWidth);
+    static void roundedRectBorder(const ABrush& brush,
+                                  const glm::vec2& position,
+                                  const glm::vec2& size,
+                                  float radius,
+                                  int borderWidth) {
+        ourRenderer->drawRoundedRectBorder(brush, position, size, radius, borderWidth);
     }
 
     /**

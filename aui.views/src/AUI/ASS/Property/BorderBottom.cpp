@@ -24,9 +24,9 @@
 void ass::prop::Property<ass::BorderBottom>::renderFor(AView* view) {
     RenderHints::PushColor x;
     int w = mInfo.width;
-    Render::rect(ASolidBrush{mInfo.color},
-                 {0, view->getHeight() - w},
-                 {view->getWidth(), w});
+    ARender::rect(ASolidBrush{mInfo.color},
+                  {0, view->getHeight() - w},
+                  {view->getWidth(), w});
 }
 
 bool ass::prop::Property<ass::BorderBottom>::isNone() {

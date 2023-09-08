@@ -17,7 +17,7 @@
 #include "CellView.h"
 
 #include "AUI/Image/Drawables.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 
 CellView::CellView(FieldCell& cell)
 	: mCell(cell), mCellValueCopy(cell)

@@ -202,7 +202,7 @@ void AText::prerenderString() {
     mEngine.setLineHeight(getFontStyle().lineSpacing);
     mEngine.performLayout({mPadding.left, mPadding.top }, getSize());
     {
-        auto multiStringCanvas = Render::newMultiStringCanvas(getFontStyle());
+        auto multiStringCanvas = ARender::newMultiStringCanvas(getFontStyle());
 
         if (mParsedFlags.wordBreak == WordBreak::NORMAL) {
             for (auto& wordEntry: mWordEntries) {

@@ -86,11 +86,11 @@ public:
                        glm::vec2 size,
                        float lineWidth) override;
 
-    void drawRectBorder(const ABrush& brush,
-                        glm::vec2 position,
-                        glm::vec2 size,
-                        float radius,
-                        int borderWidth) override;
+    void drawRoundedRectBorder(const ABrush& brush,
+                               glm::vec2 position,
+                               glm::vec2 size,
+                               float radius,
+                               int borderWidth) override;
 
     void drawBoxShadow(glm::vec2 position,
                        glm::vec2 size,

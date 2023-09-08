@@ -77,12 +77,12 @@ void AAbstractTextField::render()
             }
 
             auto p = getMouseSelectionPadding();
-            Render::rect(ASolidBrush{},
-                         {p.x + absoluteCursorPos, p.y - 1},
-                         {1, getMouseSelectionFont().size + 2});
+            ARender::rect(ASolidBrush{},
+                          {p.x + absoluteCursorPos, p.y - 1},
+                          {1, getMouseSelectionFont().size + 2});
         }
 
-        Render::setBlending(Blending::NORMAL);
+        ARender::setBlending(Blending::NORMAL);
     } else {
         doDrawString();
 	}
@@ -91,7 +91,7 @@ void AAbstractTextField::render()
 
 void AAbstractTextField::doDrawString() {
     RenderHints::PushMatrix m;
-    Render::translate({ mPadding.left - mHorizontalScroll, mPadding.top + getVerticalAlignmentOffset() });
+    ARender::translate({mPadding.left - mHorizontalScroll, mPadding.top + getVerticalAlignmentOffset() });
     if (mPrerenderedString) mPrerenderedString->draw();
 }
 
@@ -201,7 +201,7 @@ void AAbstractTextField::prerenderStringIfNeeded() {
     if (!mPrerenderedString) {
         auto text = getContentsPasswordWrap();
         if (!text.empty()) {
-            auto canvas = Render::newMultiStringCanvas(getFontStyle());
+            auto canvas = ARender::newMultiStringCanvas(getFontStyle());
             canvas->enableCachingForTextLayoutHelper();
             canvas->addString({ 0, 0 }, text);
             setTextLayoutHelper(canvas->getTextLayoutHelper());

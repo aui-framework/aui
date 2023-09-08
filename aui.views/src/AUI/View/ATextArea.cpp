@@ -32,7 +32,7 @@ private:
     ATextArea& mTextArea;
     struct Line {
         AString text;
-        Render::PrerenderedString prerendered;
+        ARender::PrerenderedString prerendered;
     };
 
     AVector<Line> mLines;
@@ -54,7 +54,7 @@ private:
                                                   mLines.size() * getFontStyle().getLineHeight());
     }
     void pushScrollMatrix() {
-        Render::setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
+        ARender::setTransform(glm::translate(glm::mat4(), glm::vec3(0, -mScroll, 0)));
     }
 
 public:
@@ -137,10 +137,10 @@ public:
                 }
 
                 if (!mLines[i].prerendered) {
-                    mLines[i].prerendered = Render::prerenderString({0, 0}, mLines[i].text, getFontStyle());
+                    mLines[i].prerendered = ARender::prerenderString({0, 0}, mLines[i].text, getFontStyle());
                 }
                 RenderHints::PushMatrix m;
-                Render::translate({ mPadding.left - mHorizontalScroll,
+                ARender::translate({mPadding.left - mHorizontalScroll,
                                     mPadding.top + i * getFontStyle().getLineHeight() - mScroll });
                 mLines[i].prerendered->draw();
             }
@@ -171,9 +171,9 @@ public:
                     redraw();
                 }
 
-                Render::rect(ASolidBrush{},
-                             {mPadding.left + absoluteCursorPos, mPadding.top},
-                             {glm::ceil(1_dp), getFontStyle().size + 3});
+                ARender::rect(ASolidBrush{},
+                              {mPadding.left + absoluteCursorPos, mPadding.top},
+                              {glm::ceil(1_dp), getFontStyle().size + 3});
             }
             // TODO STUB
             // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

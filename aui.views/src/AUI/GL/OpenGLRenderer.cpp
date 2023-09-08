@@ -20,7 +20,7 @@
 
 #include "OpenGLRenderer.h"
 #include "ShaderUniforms.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include <AUI/Traits/callables.h>
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/GL/Vbo.h>
@@ -65,7 +65,7 @@ struct GradientShaderHelper {
 
     void operator()(const ALinearGradientBrush& brush) const {
         shader.use();
-        shader.set(aui::ShaderUniforms::COLOR, Render::getColor());
+        shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
         shader.set(aui::ShaderUniforms::COLOR_TL, brush.topLeftColor);
         shader.set(aui::ShaderUniforms::COLOR_TR, brush.topRightColor);
         shader.set(aui::ShaderUniforms::COLOR_BL, brush.bottomLeftColor);
@@ -80,8 +80,8 @@ struct SolidShaderHelper {
 
     void operator()(const ASolidBrush& brush) const {
         shader.use();
-        shader.set(aui::ShaderUniforms::SL_UNIFORM_COLOR, Render::getColor() * brush.solidColor);
-        shader.set(aui::ShaderUniforms::COLOR, Render::getColor() * brush.solidColor);
+        shader.set(aui::ShaderUniforms::SL_UNIFORM_COLOR, ARender::getColor() * brush.solidColor);
+        shader.set(aui::ShaderUniforms::COLOR, ARender::getColor() * brush.solidColor);
     }
 };
 
@@ -109,7 +109,7 @@ struct TexturedShaderHelper {
                 gl::Texture2D::setupLinear();
                 break;
         }
-        shader.set(aui::ShaderUniforms::COLOR, Render::getColor());
+        shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
         glm::vec2 uv1 = brush.uv1 ? *brush.uv1 : glm::vec2{0, 0};
         glm::vec2 uv2 = brush.uv2 ? *brush.uv2 : glm::vec2{1, 1};
         tempVao.bind();
@@ -416,11 +416,11 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     endDraw(brush);
 }
 
-void OpenGLRenderer::drawRectBorder(const ABrush& brush,
-                                    glm::vec2 position,
-                                    glm::vec2 size,
-                                    float radius,
-                                    int borderWidth) {
+void OpenGLRenderer::drawRoundedRectBorder(const ABrush& brush,
+                                           glm::vec2 position,
+                                           glm::vec2 size,
+                                           float radius,
+                                           int borderWidth) {
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
@@ -569,7 +569,7 @@ public:
         glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(OpenGLPrerenderedString::Vertex), reinterpret_cast<const void*>(0));
         glVertexAttribPointer(1, 2, GL_FLOAT, false, sizeof(OpenGLPrerenderedString::Vertex), reinterpret_cast<const void*>(sizeof(glm::vec2)));
 
-        auto finalColor = Render::getColor() * mColor;
+        auto finalColor = ARender::getColor() * mColor;
         if (mFontRendering == FontRendering::SUBPIXEL) {
             mRenderer->mSymbolShaderSubPixel.use();
             mRenderer->mSymbolShaderSubPixel.set(aui::ShaderUniforms::UV_SCALE, uvScale);

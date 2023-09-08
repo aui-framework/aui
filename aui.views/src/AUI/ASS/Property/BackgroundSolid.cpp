@@ -26,14 +26,14 @@
 void ass::prop::Property<ass::BackgroundSolid>::renderFor(AView* view) {
     ASolidBrush brush = { mInfo.color };
     if (view->getBorderRadius() > 0) {
-        Render::roundedRect(brush,
-                                       {0, 0},
-                                       view->getSize(),
-                                       view->getBorderRadius());
+        ARender::roundedRect(brush,
+                             {0, 0},
+                             view->getSize(),
+                             view->getBorderRadius());
     } else  {
-        Render::rect(brush,
-                     {0, 0},
-                     view->getSize());
+        ARender::rect(brush,
+                      {0, 0},
+                      view->getSize());
 
     }
 

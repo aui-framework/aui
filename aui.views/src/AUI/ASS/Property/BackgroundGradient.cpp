@@ -41,9 +41,9 @@ void ass::prop::Property<ass::BackgroundGradient>::renderFor(AView* view) {
                                      mInfo.bottomRightColor};
     }
     if (view->getBorderRadius() > 0) {
-        Render::roundedRect(brush, {0, 0}, view->getSize(), view->getBorderRadius());
+        ARender::roundedRect(brush, {0, 0}, view->getSize(), view->getBorderRadius());
     } else  {
-        Render::rect(brush, {0, 0}, view->getSize());
+        ARender::rect(brush, {0, 0}, view->getSize());
     }
     IPropertyBase::renderFor(view);
 }

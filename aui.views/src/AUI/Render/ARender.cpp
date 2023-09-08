@@ -20,12 +20,12 @@
 
 #include <AUI/Util/ACleanup.h>
 #include <AUI/Util/kAUI.h>
-#include "Render.h"
+#include "ARender.h"
 
 
-_unique<IRenderer> Render::ourRenderer;
+_unique<IRenderer> ARender::ourRenderer;
 
-void Render::setRenderer(_unique<IRenderer> renderer) {
+void ARender::setRenderer(_unique<IRenderer> renderer) {
     ourRenderer = std::move(renderer);
     do_once ACleanup::afterEntry([] {
         ourRenderer = nullptr;

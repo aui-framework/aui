@@ -216,11 +216,11 @@ void SoftwareRenderer::drawRectBorder(const ABrush& brush,
     drawRect(brush, position + glm::vec2{ size.x - lineWidth, lineWidth }, { lineWidth, size.y - 2 * lineWidth });
 }
 
-void SoftwareRenderer::drawRectBorder(const ABrush& brush,
-                                      glm::vec2 position,
-                                      glm::vec2 size,
-                                      float radius,
-                                      int borderWidth) {
+void SoftwareRenderer::drawRoundedRectBorder(const ABrush& brush,
+                                             glm::vec2 position,
+                                             glm::vec2 size,
+                                             float radius,
+                                             int borderWidth) {
     auto pos = glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f));
     RoundedRect outside(int(radius), glm::ivec2(size), pos);
     RoundedRect inside(int(radius) - borderWidth, glm::ivec2(size) - glm::ivec2(borderWidth * 2), pos + glm::ivec2(borderWidth));

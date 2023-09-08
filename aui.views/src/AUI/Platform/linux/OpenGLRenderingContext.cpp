@@ -155,7 +155,7 @@ void OpenGLRenderingContext::init(const Init& init) {
             throw AException("glewInit failed");
         }
         ALogger::info("OpenGL context is ready");
-        Render::setRenderer(std::make_unique<OpenGLRenderer>());
+        ARender::setRenderer(std::make_unique<OpenGLRenderer>());
     }
 
     if (init.parent) {

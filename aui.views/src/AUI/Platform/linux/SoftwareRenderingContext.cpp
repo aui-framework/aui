@@ -94,8 +94,8 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     if (!mXImage) {
         throw AException("unable to create XImage");
     }
-    if (Render::getRenderer() == nullptr) {
-        Render::setRenderer(std::make_unique<SoftwareRenderer>());
+    if (ARender::getRenderer() == nullptr) {
+        ARender::setRenderer(std::make_unique<SoftwareRenderer>());
     }
 }
 

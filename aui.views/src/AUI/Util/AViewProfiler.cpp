@@ -28,7 +28,7 @@
 void AViewProfiler::displayBoundsOn(const AView& v) {
 
     RenderHints::PushMatrix m;
-    Render::setTransform(glm::translate(glm::mat4(1.f), glm::vec3{v.getPositionInWindow(), 0.f}));
+    ARender::setTransform(glm::translate(glm::mat4(1.f), glm::vec3{v.getPositionInWindow(), 0.f}));
     glEnable(GL_STENCIL_TEST);
     glStencilMask(0xff);
     glStencilOp(GL_INCR, GL_INCR, GL_INCR);
@@ -36,23 +36,23 @@ void AViewProfiler::displayBoundsOn(const AView& v) {
 
     // content
     {
-        Render::rect(ASolidBrush{0x7cb6c180u},
-                     {v.getPadding().left, v.getPadding().top},
-                     {v.getWidth() - v.getPadding().horizontal(), v.getHeight() - v.getPadding().vertical()});
+        ARender::rect(ASolidBrush{0x7cb6c180u},
+                      {v.getPadding().left, v.getPadding().top},
+                      {v.getWidth() - v.getPadding().horizontal(), v.getHeight() - v.getPadding().vertical()});
     }
 
     // padding
     {
-        Render::rect(ASolidBrush{0xbccf9180u},
-                     {0, 0},
-                     v.getSize());
+        ARender::rect(ASolidBrush{0xbccf9180u},
+                      {0, 0},
+                      v.getSize());
     }
 
     // margin
     {
-        Render::rect(ASolidBrush{0xffcca4a0u},
-                     {-v.getMargin().left, -v.getMargin().top},
-                     {v.getWidth() + v.getMargin().horizontal(), v.getHeight() + v.getMargin().vertical()});
+        ARender::rect(ASolidBrush{0xffcca4a0u},
+                      {-v.getMargin().left, -v.getMargin().top},
+                      {v.getWidth() + v.getMargin().horizontal(), v.getHeight() + v.getMargin().vertical()});
     }
 
     glDisable(GL_STENCIL_TEST);
@@ -66,15 +66,15 @@ void AViewProfiler::displayBoundsOn(const AView& v) {
         fs.fontRendering = FontRendering::ANTIALIASING;
         fs.size = 9_pt;
 
-        auto s = Render::prerenderString({ x + 2_dp, y + 1_dp },
+        auto s = ARender::prerenderString({x + 2_dp, y + 1_dp },
                                          v.getAssNames().empty()
                                          ? typeid(v).name()
                                          : *v.getAssNames().begin() + "\n"_as + AString::number(v.getSize().x) + "x"_as + AString::number(v.getSize().y), fs);
 
         {
-            Render::rect(ASolidBrush{0x00000070u},
-                         {x, y},
-                         {s->getWidth() + 4_dp, fs.size * 2.5 + 2_dp});
+            ARender::rect(ASolidBrush{0x00000070u},
+                          {x, y},
+                          {s->getWidth() + 4_dp, fs.size * 2.5 + 2_dp});
         }
         s->draw();
     }

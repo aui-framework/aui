@@ -140,7 +140,7 @@ enum class Blending {
 };
 
 /**
- * @brief Base class for rendering (for drawing use Render facade instead).
+ * @brief Base class for rendering (for drawing use ARender facade instead).
  * @ingroup views
  */
 class IRenderer {
@@ -283,11 +283,11 @@ public:
      * @param radius corner radius (px)
      * @param borderWidth border line width (px)
      */
-    virtual void drawRectBorder(const ABrush& brush,
-                                glm::vec2 position,
-                                glm::vec2 size,
-                                float radius,
-                                int borderWidth) = 0;
+    virtual void drawRoundedRectBorder(const ABrush& brush,
+                                       glm::vec2 position,
+                                       glm::vec2 size,
+                                       float radius,
+                                       int borderWidth) = 0;
 
 
     /**
