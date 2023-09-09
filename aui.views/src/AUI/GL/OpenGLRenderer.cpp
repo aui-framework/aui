@@ -35,6 +35,9 @@
 #include <AUISL/Generated/rect_gradient_rounded.fsh.glsl120.h>
 #include <AUISL/Generated/rect_textured.fsh.glsl120.h>
 #include <AUISL/Generated/border_rounded.fsh.glsl120.h>
+#include <AUISL/Generated/symbol.vsh.glsl120.h>
+#include <AUISL/Generated/symbol.fsh.glsl120.h>
+#include <AUISL/Generated/symbol_sub.fsh.glsl120.h>
 
 
 class OpenGLTexture2D: public ITexture {
@@ -69,7 +72,7 @@ struct GradientShaderHelper {
 
     void operator()(const ALinearGradientBrush& brush) const {
         shader.use();
-        shader.set(aui::ShaderUniforms::SL_UNIFORM_COLOR, ARender::getColor());
+        shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
         ASmallVector<glm::u8vec4, 8> colors;
         for (const auto& c : brush.colors) {
             colors.push_back(glm::uvec4(c.color * 255.f));
@@ -86,7 +89,7 @@ struct SolidShaderHelper {
 
     void operator()(const ASolidBrush& brush) const {
         shader.use();
-        shader.set(aui::ShaderUniforms::SL_UNIFORM_COLOR, ARender::getColor() * brush.solidColor);
+        shader.set(aui::ShaderUniforms::COLOR, ARender::getColor() * brush.solidColor);
         shader.set(aui::ShaderUniforms::COLOR, ARender::getColor() * brush.solidColor);
     }
 };
@@ -115,7 +118,7 @@ struct TexturedShaderHelper {
                 gl::Texture2D::setupLinear();
                 break;
         }
-        shader.set(aui::ShaderUniforms::SL_UNIFORM_COLOR, ARender::getColor());
+        shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
         glm::vec2 uv1 = brush.uv1 ? *brush.uv1 : glm::vec2{0, 0};
         glm::vec2 uv2 = brush.uv2 ? *brush.uv2 : glm::vec2{1, 1};
         tempVao.bind();
@@ -168,123 +171,11 @@ OpenGLRenderer::OpenGLRenderer() {
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
 
-    /*
 
-    if (glewGetExtension("ARB_multisample")) {
-        mRoundedSolidShader.load(
-                "attribute vec3 pos;"
-                "attribute vec2 uv;"
-                "varying vec2 pass_uv;"
-                "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
-                "uniform vec2 size;"
-                "varying vec2 pass_uv;"
-                "void main(void) {"
-                "vec2 tmp = abs(pass_uv);"
-                "if ((tmp.x - 1.0) * (size.y) / (-size.x) < tmp.y - (1.0 - size.y) &&"
-                "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
-                "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
-                "}");
-    } else */ {
-        // without antialiasing rounded borders look poorly. fix it
-        /*
-        mRoundedSolidShader.load(
-                "attribute vec3 pos;"
-                "attribute vec2 uv;"
-                "varying vec2 pass_uv;"
-                "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
-                "uniform vec2 size;"
-                "varying vec2 pass_uv;"
-                "void main(void) {"
-                "vec2 tmp = abs(pass_uv);"
-                "if ((tmp.x - 1.0) * (size.y) / (-size.x) < tmp.y - (1.0 - size.y) &&"
-                "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
-                "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
-                "}");*/
-        auto produceRoundedAntialiasedShader = [](gl::Program& shader, const AString& uniforms, const AString& color, bool isBorder) {
-            shader.load(
-                    "attribute vec3 pos;"
-                    "attribute vec2 uv;"
-                    "attribute vec2 outer_to_inner;"
-                    "varying vec2 pass_uv;"
-                    "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
-                    "uniform vec2 outerSize;"
-                    "uniform vec2 innerSize;"
-                    "uniform vec2 innerTexelSize;"
-                    "uniform vec2 outerTexelSize;"
-                    "uniform vec2 outer_to_inner;"
-                    + uniforms +
-                    "uniform vec4 color;"
-                    "varying vec2 pass_uv;"
-                    "bool is_outside(vec2 tmp, vec2 size) {"
-                    "if (tmp.x >= 1.0 || tmp.y >= 1.0) return true;"
-                    "return (tmp.x - 1.0) * (size.y) / (-size.x) <= tmp.y - (1.0 - size.y) &&"
-                    "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
-                    "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) >= 1.0;"
-                    "}"
-                    "void main(void) {"
-                    "vec2 outer_uv = abs(pass_uv);"
-                    "vec2 inner_uv = outer_uv * outer_to_inner;"
-                    "float alpha = 1.0;"
-                    "ivec2 i;"
-                    "for (i.x = -2; i.x <= 2; ++i.x) {"
-                    "for (i.y = -2; i.y <= 2; ++i.y) {"
-                    "alpha -= (" + put_if(isBorder, "is_outside(inner_uv + innerTexelSize * vec2(i), innerSize)"
-                    " == ") + "is_outside(outer_uv + outerTexelSize * vec2(i), outerSize)"
-                    ") ? (1.0 / 25.0) : 0.0;"
-                    "}"
-                    "}"
-                    + color +
-                    "gl_FragColor = vec4(fcolor.rgb, fcolor.a * alpha);"
-                    "}", { "pos", "uv" });
-        };
-        /*
-        produceRoundedAntialiasedShader(mRoundedSolidShaderAntialiased,
-                                        {},
-                                        "vec4 fcolor = color;",
-                                        false);
-
-        produceRoundedAntialiasedShader(mRoundedSolidShaderAntialiasedBorder,
-                                        {},
-                                        "vec4 fcolor = color;",
-                                        true);
-
-        produceRoundedAntialiasedShader(mRoundedGradientShaderAntialiased,
-                                        "uniform vec4 color_tl;"
-                                        "uniform vec4 color_tr;"
-                                        "uniform vec4 color_bl;"
-                                        "uniform vec4 color_br;",
-                                        "vec4 fcolor = mix(mix(color_tl, color_tr, pass_uv.x), mix(color_bl, color_br, pass_uv.x), pass_uv.y) * color;",
-                                        false);*/
-    }
-
-
-    mSymbolShader.load(
-            "attribute vec2 pos;"
-            "attribute vec2 uv;"
-            "varying vec2 pass_uv;"
-            "uniform mat4 mat;"
-            "uniform float uv_scale;"
-
-            "void main(void) {gl_Position = mat * vec4(pos, 1, 1); pass_uv = uv * uv_scale;}",
-            "varying vec2 pass_uv;"
-            "uniform sampler2D tex;"
-            "uniform vec4 color;"
-            "void main(void) {float sample = texture2D(tex, pass_uv).r; gl_FragColor = vec4(color.rgb, color.a * sample);}",
-            {"pos", "uv"});
-
-    mSymbolShaderSubPixel.load(
-            "attribute vec2 pos;"
-            "attribute vec2 uv;"
-            "varying vec2 pass_uv;"
-            "uniform mat4 mat;"
-            "uniform float uv_scale;"
-
-            "void main(void) {gl_Position = mat * vec4(pos, 1, 1); pass_uv = uv * uv_scale;}",
-            "varying vec2 pass_uv;"
-            "uniform sampler2D tex;"
-            "uniform vec4 color;"
-            "void main(void) {vec3 sample = texture2D(tex, pass_uv).rgb; gl_FragColor = vec4(sample * color.rgb * color.a, 1);}",
-            {"pos", "uv"});
+    useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
+                   aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
+    useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
+                   aui::sl_gen::symbol_sub::fsh::glsl120::Shader>(mSymbolShaderSubPixel);
 
     mTempVao.bind();
 
@@ -436,7 +327,7 @@ void OpenGLRenderer::drawBoxShadow(glm::vec2 position,
     mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_LOWER, position + size);
     mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_UPPER, position);
     mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_TRANSFORM, mTransform);
-    mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_COLOR, mColor * color);
+    mBoxShadowShader.set(aui::ShaderUniforms::COLOR, mColor * color);
 
     mTempVao.bind();
 
@@ -561,7 +452,7 @@ public:
         if (mFontRendering == FontRendering::SUBPIXEL) {
             mRenderer->mSymbolShaderSubPixel.use();
             mRenderer->mSymbolShaderSubPixel.set(aui::ShaderUniforms::UV_SCALE, uvScale);
-            mRenderer->mSymbolShaderSubPixel.set(aui::ShaderUniforms::MAT, mRenderer->getTransform());
+            mRenderer->mSymbolShaderSubPixel.set(aui::ShaderUniforms::TRANSFORM, mRenderer->getTransform());
             mRenderer->mSymbolShaderSubPixel.set(aui::ShaderUniforms::COLOR, glm::vec4(1, 1, 1, finalColor.a));
             glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
             mIndexBuffer.draw(GL_TRIANGLES);
@@ -577,7 +468,7 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             mRenderer->mSymbolShader.use();
             mRenderer->mSymbolShader.set(aui::ShaderUniforms::UV_SCALE, uvScale);
-            mRenderer->mSymbolShader.set(aui::ShaderUniforms::MAT, mRenderer->getTransform());
+            mRenderer->mSymbolShader.set(aui::ShaderUniforms::TRANSFORM, mRenderer->getTransform());
             mRenderer->mSymbolShader.set(aui::ShaderUniforms::COLOR, finalColor);
             mIndexBuffer.draw(GL_TRIANGLES);
         }

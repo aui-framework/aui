@@ -17,13 +17,10 @@
 #include "ShaderUniforms.h"
 
 namespace aui::ShaderUniforms {
-    gl::Program::Uniform COLOR("color");
-    gl::Program::Uniform SL_UNIFORM_COLOR("SL_uniform_color");
+    gl::Program::Uniform COLOR("SL_uniform_color");
     gl::Program::Uniform TRANSFORM("SL_uniform_transform");
     gl::Program::Uniform SL_UNIFORM_TRANSFORM("SL_uniform_transform");
-    gl::Program::Uniform SIZE("size");
-    gl::Program::Uniform MAT("mat");
-    gl::Program::Uniform UV_SCALE("uv_scale");
+    gl::Program::Uniform UV_SCALE("SL_uniform_uvScale");
     gl::Program::Uniform SL_UNIFORM_SIGMA("SL_uniform_sigma");
     gl::Program::Uniform SL_UNIFORM_LOWER("SL_uniform_lower");
     gl::Program::Uniform SL_UNIFORM_UPPER("SL_uniform_upper");

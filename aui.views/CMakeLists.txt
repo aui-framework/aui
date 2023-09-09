@@ -55,6 +55,9 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 	auisl_shader(aui.views rect_gradient.fsh)
 	auisl_shader(aui.views rect_gradient_rounded.fsh)
 	auisl_shader(aui.views border_rounded.fsh)
+	auisl_shader(aui.views symbol.vsh)
+	auisl_shader(aui.views symbol.fsh)
+	auisl_shader(aui.views symbol_sub.fsh)
 
 	target_compile_definitions(aui.views PRIVATE UNICODE=1)
 
