@@ -23,6 +23,7 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include "ARenderingContextOptions.h"
+#include "AUI/GL/OpenGLRenderer.h"
 
 class OpenGLRenderingContext: public CommonRenderingContext {
 public:
@@ -41,6 +42,7 @@ public:
 
 private:
     ARenderingContextOptions::OpenGL mConfig;
+    _<OpenGLRenderer> mRenderer;
 
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;

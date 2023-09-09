@@ -107,7 +107,7 @@ void testing::UITest::SetUp() {
     }
     UITestState::beginUITest();
     Test::SetUp();
-    ARender::setRenderer(std::make_unique<SoftwareRenderer>());
+    ARender::setRenderer(_new<SoftwareRenderer>());
     AWindow::setWindowManager<UITestWindowManager>();
     ABaseWindow::currentWindowStorage() = nullptr;
 }

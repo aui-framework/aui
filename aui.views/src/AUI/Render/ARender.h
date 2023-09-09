@@ -30,15 +30,15 @@
 class API_AUI_VIEWS ARender
 {
 private:
-    static _unique<IRenderer> ourRenderer;
+    static _<IRenderer> ourRenderer;
 
 public:
     using PrerenderedString = _<IRenderer::IPrerenderedString>;
     using Texture = _<ITexture>;
 
-    static void setRenderer(_unique<IRenderer> renderer);
+    static void setRenderer(_<IRenderer> renderer);
 
-    static const _unique<IRenderer>& getRenderer() {
+    static const _<IRenderer>& getRenderer() {
         return ourRenderer;
     }
 

@@ -18,6 +18,7 @@
 
 
 #include <AUI/GL/Program.h>
+#include <AUI/GL/Framebuffer.h>
 #include <AUI/GL/Vao.h>
 #include "AUI/Render/IRenderer.h"
 
@@ -48,6 +49,8 @@ private:
     gl::Program mSymbolShaderSubPixel;
     gl::Vao mTempVao;
     gl::Texture2D mGradientTexture;
+
+    struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
 
 
     struct CharacterData {
@@ -122,6 +125,9 @@ public:
     void pushMaskAfter() override;
     void popMaskBefore() override;
     void popMaskAfter() override;
+
+    void beginPaint(glm::uvec2 windowSize);
+    void endPaint();
 };
 
 

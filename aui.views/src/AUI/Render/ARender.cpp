@@ -23,9 +23,9 @@
 #include "ARender.h"
 
 
-_unique<IRenderer> ARender::ourRenderer;
+_<IRenderer> ARender::ourRenderer;
 
-void ARender::setRenderer(_unique<IRenderer> renderer) {
+void ARender::setRenderer(_<IRenderer> renderer) {
     ourRenderer = std::move(renderer);
     do_once ACleanup::afterEntry([] {
         ourRenderer = nullptr;

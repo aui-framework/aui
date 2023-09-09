@@ -27,6 +27,7 @@
 
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/GL/State.h>
+#include <GL/glx.h>
 
 
 /* Typedef for the GL 3.0 context creation function */
@@ -41,6 +42,9 @@ static PFNGLXCREATECONTEXTATTRIBSARBPROC glXCreateContextAttribsARB = nullptr;
 
 
 GLXContext OpenGLRenderingContext::ourContext = nullptr;
+
+OpenGLRenderingContext::~OpenGLRenderingContext() {
+}
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
@@ -61,8 +65,8 @@ void OpenGLRenderingContext::init(const Init& init) {
                        GLX_STENCIL_SIZE, 8,
                        GLX_DOUBLEBUFFER, true,
                        GLX_STENCIL_SIZE, 8,
-                       GLX_SAMPLE_BUFFERS  , 1,
-                       GLX_SAMPLES         , 16,
+                       GLX_SAMPLE_BUFFERS  , 0,
+                       GLX_SAMPLES         , 0,
                        None};
 
         int fbcount;
@@ -155,7 +159,7 @@ void OpenGLRenderingContext::init(const Init& init) {
             throw AException("glewInit failed");
         }
         ALogger::info("OpenGL context is ready");
-        ARender::setRenderer(std::make_unique<OpenGLRenderer>());
+        ARender::setRenderer(mRenderer = _new<OpenGLRenderer>());
     }
 
     if (init.parent) {
@@ -182,47 +186,28 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         glXMakeCurrent(ourDisplay, w->mHandle, ourContext);
     }
-    gl::State::activeTexture(0);
-    gl::State::bindTexture(GL_TEXTURE_2D, 0);
-    gl::State::bindVertexArray(0);
-    gl::State::useProgram(0);
+    mRenderer->beginPaint(window.getSize());
+}
 
-    glViewport(0, 0, window.getWidth(), window.getHeight());
+void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
+    CommonRenderingContext::endPaint(window);
 
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_MULTISAMPLE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // stencil
-    glClearStencil(0);
-    glStencilMask(0xff);
-    glDisable(GL_SCISSOR_TEST);
-    glClear(GL_STENCIL_BUFFER_BIT);
-    glEnable(GL_STENCIL_TEST);
-    glStencilMask(0x00);
-    glStencilFunc(GL_EQUAL, 0, 0xff);
+    if (auto w = dynamic_cast<AWindow*>(&window)) {
+        glXSwapBuffers(ourDisplay, w->mHandle);
+    }
+    mRenderer->endPaint();
 }
 
 void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
+    if (auto w = dynamic_cast<AWindow*>(&window)) {
+        glXMakeCurrent(ourDisplay, w->mHandle, ourContext);
+    }
 }
 
 void OpenGLRenderingContext::endResize(ABaseWindow& window) {
 
 }
 
-void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
-    if (auto w = dynamic_cast<AWindow*>(&window)) {
-        glXSwapBuffers(ourDisplay, w->mHandle);
-    }
-    CommonRenderingContext::endPaint(window);
-}
-
-OpenGLRenderingContext::~OpenGLRenderingContext() {
-}
-
 AImage OpenGLRenderingContext::makeScreenshot() {
-    // stub
     return AImage();
 }

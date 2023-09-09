@@ -54,7 +54,10 @@ inline bool Result::operator==(const Result& rhs) const
 {
 	return memcmp(this, &rhs, sizeof(rhs)) == 0;
 }
-
+void gl::Texture2D::framebufferTex2D(glm::u32vec2 size, gl::Type type) {
+    bind();
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, static_cast<GLenum>(type), nullptr);
+}
 static Result recognize(AImageView image)
 {
 	Result res;

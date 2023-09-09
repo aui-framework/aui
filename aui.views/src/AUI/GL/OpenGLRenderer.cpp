@@ -19,13 +19,19 @@
 //
 
 #include "OpenGLRenderer.h"
+#include "AUI/Common/AException.h"
+#include "AUI/GL/Framebuffer.h"
+#include "AUI/GL/GLEnums.h"
 #include "ShaderUniforms.h"
 #include "AUI/Render/ARender.h"
+#include "glm/fwd.hpp"
 #include <AUI/Traits/callables.h>
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/GL/Vbo.h>
 #include <AUI/GL/State.h>
+#include <AUI/GL/RenderTarget/RenderbufferRenderTarget.h>
 #include <AUI/Platform/ABaseWindow.h>
+#include <AUI/Logging/ALogger.h>
 #include <AUISL/Generated/basic.vsh.glsl120.h>
 #include <AUISL/Generated/basic_uv.vsh.glsl120.h>
 #include <AUISL/Generated/shadow.fsh.glsl120.h>
@@ -39,6 +45,7 @@
 #include <AUISL/Generated/symbol.fsh.glsl120.h>
 #include <AUISL/Generated/symbol_sub.fsh.glsl120.h>
 
+static constexpr auto LOG_TAG = "OpenGLRenderer";
 
 class OpenGLTexture2D: public ITexture {
 private:
@@ -185,7 +192,7 @@ OpenGLRenderer::OpenGLRenderer() {
         {0, 0},
         {1, 0}
     };
-    mTempVao.insert(1, uvs);
+    mTempVao.insert(1, uvs); 
 }
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
@@ -746,3 +753,62 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
     endDraw(brush);
 }
 
+void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
+    if (std::get_if<NotTried>(&mFramebuffer)) {
+        try {
+            gl::Framebuffer framebuffer;
+            framebuffer.resize(windowSize);
+            auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8>>();
+            framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
+            mFramebuffer.emplace<gl::Framebuffer>(std::move(framebuffer));
+        } catch (const AException& e) {
+            ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: " << e;
+            mFramebuffer = Failed{};
+        }
+    }
+    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+        if (fb->size() != windowSize) {
+            fb->resize(windowSize);
+        }
+        fb->bind();
+    }
+    gl::State::activeTexture(0);
+    gl::State::bindTexture(GL_TEXTURE_2D, 0);
+    gl::State::bindVertexArray(0);
+    gl::State::useProgram(0);
+
+    glViewport(0, 0, windowSize.x, windowSize.y);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+#if !(AUI_PLATFORM_ANDROID)
+    glEnable(GL_MULTISAMPLE);
+#else
+    glClearColor(1.f, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+#endif
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // stencil
+    glClearStencil(0);
+    glStencilMask(0xff);
+    glDisable(GL_SCISSOR_TEST);
+    glClear(GL_STENCIL_BUFFER_BIT);
+    glEnable(GL_STENCIL_TEST);
+    glStencilMask(0x00);
+    glStencilFunc(GL_EQUAL, 0, 0xff);
+}
+
+void OpenGLRenderer::endPaint() {
+    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        glBlitFramebuffer(0, 0,                       // src pos
+                          fb->size().x, fb->size().y, // src size
+                          0, 0,                       // dst pos
+                          fb->size().x, fb->size().y, // dst size
+                          GL_COLOR_BUFFER_BIT,        // mask
+                          GL_NEAREST);                // filter
+        gl::Framebuffer::unbind();
+    }
+}
