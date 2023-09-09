@@ -31,9 +31,4 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform INNER_SIZE("SL_uniform_innerSize");
     gl::Program::Uniform OUTER_TO_INNER("SL_uniform_outerToInner");
 
-    gl::Program::Uniform COLOR_TL("color_tl");
-    gl::Program::Uniform COLOR_TR("color_tr");
-    gl::Program::Uniform COLOR_BL("color_bl");
-    gl::Program::Uniform COLOR_BR("color_br");
-
 }

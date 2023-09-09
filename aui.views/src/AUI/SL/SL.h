@@ -17,3 +17,16 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <AUI/Render/ITexture.h>
+
+namespace aui::sl_gen {
+    struct Texture2D {
+    public:
+        glm::vec4 operator[](glm::vec2 uv) const {
+            return mTexture.get(glm::clamp(glm::ivec2(uv * glm::vec2(mTexture.size())), glm::ivec2(0), glm::ivec2(mTexture.size())));
+        }
+
+    private:
+        AImageView mTexture;
+    };
+}

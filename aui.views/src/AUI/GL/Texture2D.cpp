@@ -55,7 +55,7 @@ inline bool Result::operator==(const Result& rhs) const
 	return memcmp(this, &rhs, sizeof(rhs)) == 0;
 }
 
-Result recognize(const AImage& image)
+static Result recognize(AImageView image)
 {
 	Result res;
 	switch (image.format() & APixelFormat::COMPONENT_BITS)
@@ -114,7 +114,7 @@ Result recognize(const AImage& image)
 	return res;
 }
 
-void gl::Texture2D::tex2D(const AImage& image) {
+void gl::Texture2D::tex2D(AImageView image) {
 	bind();
 	Result types = recognize(image);
 

@@ -21,7 +21,7 @@
 #include <AUI/Traits/callables.h>
 #include "SoftwareRenderer.h"
 #include "SoftwareTexture.h"
-#include <AUISL/Generated/solid.fsh.software.h>
+#include <AUISL/Generated/rect_solid.fsh.software.h>
 #include <AUISL/Generated/shadow.fsh.software.h>
 
 struct BrushHelper {
@@ -37,7 +37,7 @@ struct BrushHelper {
                 glm::ivec2& position) : renderer(renderer), x(x), y(y), end(end), position(position) {}
 
     void operator()(const ASolidBrush& brush) noexcept {
-        using namespace aui::sl_gen::solid::fsh::software;
+        using namespace aui::sl_gen::rect_solid::fsh::software;
 
         renderer->putPixel({x, y}, Shader::entry({}, Shader::Uniform {
                 .color = renderer->getColor() * brush.solidColor
@@ -73,11 +73,12 @@ struct BrushHelper {
 
 
     void operator()(const ALinearGradientBrush& brush) noexcept {
+        /*
         auto d = calculateUv();
         auto color = glm::mix(glm::mix(glm::vec4(brush.topLeftColor), glm::vec4(brush.topRightColor), d.x),
                               glm::mix(glm::vec4(brush.bottomLeftColor), glm::vec4(brush.bottomRightColor), d.x),
                               d.y);
-        renderer->putPixel({ x, y }, renderer->getColor() * color);
+        renderer->putPixel({ x, y }, renderer->getColor() * color);*/
     }
 
     void operator()(const ACustomShaderBrush& brush) noexcept {

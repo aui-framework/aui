@@ -28,9 +28,11 @@
 #include <AUI/Platform/ABaseWindow.h>
 #include <AUISL/Generated/basic.vsh.glsl120.h>
 #include <AUISL/Generated/basic_uv.vsh.glsl120.h>
-#include <AUISL/Generated/solid.fsh.glsl120.h>
 #include <AUISL/Generated/shadow.fsh.glsl120.h>
-#include <AUISL/Generated/solid_rounded.fsh.glsl120.h>
+#include <AUISL/Generated/rect_solid.fsh.glsl120.h>
+#include <AUISL/Generated/rect_solid_rounded.fsh.glsl120.h>
+#include <AUISL/Generated/rect_gradient.fsh.glsl120.h>
+#include <AUISL/Generated/rect_gradient_rounded.fsh.glsl120.h>
 #include <AUISL/Generated/border_rounded.fsh.glsl120.h>
 
 
@@ -60,16 +62,19 @@ struct UnsupportedBrushHelper {
 
 struct GradientShaderHelper {
     gl::Program& shader;
+    gl::Texture2D& tex;
 
-    GradientShaderHelper(gl::Program& shader) : shader(shader) {}
+    GradientShaderHelper(gl::Program& shader, gl::Texture2D& tex) : shader(shader), tex(tex) {}
 
     void operator()(const ALinearGradientBrush& brush) const {
         shader.use();
-        shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
-        shader.set(aui::ShaderUniforms::COLOR_TL, brush.topLeftColor);
-        shader.set(aui::ShaderUniforms::COLOR_TR, brush.topRightColor);
-        shader.set(aui::ShaderUniforms::COLOR_BL, brush.bottomLeftColor);
-        shader.set(aui::ShaderUniforms::COLOR_BR, brush.bottomRightColor);
+        shader.set(aui::ShaderUniforms::SL_UNIFORM_COLOR, ARender::getColor());
+        ASmallVector<glm::u8vec4, 8> colors;
+        for (const auto& c : brush.colors) {
+            colors.push_back(glm::uvec4(c.color * 255.f));
+        }
+
+        tex.tex2D(AImageView({(const char*)colors.data(), colors.sizeInBytes()}, { colors.size(), 1 }, APixelFormat::RGBA_BYTE));
     }
 };
 
@@ -143,17 +148,22 @@ inline void useAuislShader(gl::Program& out) {
 }
 
 OpenGLRenderer::OpenGLRenderer() {
-
+    mGradientTexture.bind();
+    mGradientTexture.setupLinear();
     useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader,
-                   aui::sl_gen::solid::fsh::glsl120::Shader>(mSolidShader);
+                   aui::sl_gen::rect_solid::fsh::glsl120::Shader>(mSolidShader);
 
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
 
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-                   aui::sl_gen::solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
+                   aui::sl_gen::rect_solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::border_rounded::fsh::glsl120::Shader>(mRoundedSolidShaderBorder);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::rect_gradient::fsh::glsl120::Shader>(mGradientShader);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::rect_gradient_rounded::fsh::glsl120::Shader>(mRoundedGradientShader);
 
     /*
 
@@ -334,7 +344,7 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
 }
 void OpenGLRenderer::drawRect(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mGradientShader),
+            GradientShaderHelper(mGradientShader, mGradientTexture),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
             CustomShaderHelper{},
@@ -359,7 +369,7 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
                                      glm::vec2 size,
                                      float radius) {
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mRoundedGradientShader),
+            GradientShaderHelper(mRoundedGradientShader, mGradientTexture),
             UnsupportedBrushHelper<ATexturedBrush>(),
             SolidShaderHelper(mRoundedSolidShader),
             CustomShaderHelper{},
@@ -798,7 +808,7 @@ void OpenGLRenderer::popMaskAfter() {
 
 void OpenGLRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mGradientShader),
+            GradientShaderHelper(mGradientShader, mGradientTexture),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
             CustomShaderHelper{},
@@ -820,7 +830,7 @@ void OpenGLRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
 void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points) {
     if (points.size() < 2) return;
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mGradientShader),
+            GradientShaderHelper(mGradientShader, mGradientTexture),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
             CustomShaderHelper{},
@@ -844,7 +854,7 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points
 
 void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) {
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mGradientShader),
+            GradientShaderHelper(mGradientShader, mGradientTexture),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
             CustomShaderHelper{},

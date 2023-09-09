@@ -32,9 +32,4 @@ namespace aui::ShaderUniforms {
     extern gl::Program::Uniform INNER_TEXEL_SIZE;
     extern gl::Program::Uniform OUTER_TEXEL_SIZE;
     extern gl::Program::Uniform OUTER_TO_INNER;
-
-    extern gl::Program::Uniform COLOR_TL;
-    extern gl::Program::Uniform COLOR_TR;
-    extern gl::Program::Uniform COLOR_BL;
-    extern gl::Program::Uniform COLOR_BR;
 }

@@ -47,6 +47,7 @@ private:
     gl::Program mSymbolShader;
     gl::Program mSymbolShaderSubPixel;
     gl::Vao mTempVao;
+    gl::Texture2D mGradientTexture;
 
 
     struct CharacterData {

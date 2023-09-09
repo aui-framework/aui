@@ -28,6 +28,7 @@ void EffectShimmer::draw(AView* view) {
 
     const auto transparent = AColor(glm::vec4(glm::vec3(mColor), 0.f));
 
+    /*
     ARender::rect(ALinearGradientBrush {
         transparent,
         mColor,
@@ -41,7 +42,7 @@ void EffectShimmer::draw(AView* view) {
         transparent,
         mColor,
         transparent,
-    }, {(t * 4 - 1) * view->getSize().x, 0}, view->getSize());
+    }, {(t * 4 - 1) * view->getSize().x, 0}, view->getSize());*/
 
     view->redraw();
 }

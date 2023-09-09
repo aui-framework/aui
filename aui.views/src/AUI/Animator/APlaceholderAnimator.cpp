@@ -42,6 +42,7 @@ void APlaceholderAnimator::doPostRender(AView* view, float theta) {
     const float WIDTH = 200;
     float posX = theta * (view->getWidth() + WIDTH * 2.f) - WIDTH;
 
+    /*
     ARender::rect(
             ALinearGradientBrush{
                     0x00ffffff_argb, BRIGHT_COLOR,
@@ -56,5 +57,5 @@ void APlaceholderAnimator::doPostRender(AView* view, float theta) {
                     BRIGHT_COLOR, 0x00ffffff_argb
             },
             {posX + WIDTH / 2, 0},
-            {WIDTH / 2, view->getHeight()});
+            {WIDTH / 2, view->getHeight()});*/
 }

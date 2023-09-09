@@ -133,4 +133,6 @@ void ALogger::setLogFileImpl(AString path) {
     log(INFO, "Logger",  ("Log file: " + mLogFile->path()).toStdString());
 }
 
-ALogger::~ALogger() = default;
+ALogger::~ALogger() {
+    mLogFile.reset();
+}

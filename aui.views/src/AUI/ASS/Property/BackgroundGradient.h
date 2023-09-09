@@ -29,15 +29,7 @@ namespace ass {
      * @ingroup ass
      */
     struct BackgroundGradient {
-        bool null = false;
-        AColor topLeftColor;
-        AColor bottomRightColor;
-        ALayoutDirection direction;
-
-        BackgroundGradient(const AColor& topLeftColor, const AColor& bottomRightColor, ALayoutDirection direction)
-                : topLeftColor(topLeftColor), bottomRightColor(bottomRightColor), direction(direction) {}
-
-        BackgroundGradient(std::nullptr_t): null(true) {}
+        AOptional<ALinearGradientBrush> gradient;
     };
 
     namespace prop {
