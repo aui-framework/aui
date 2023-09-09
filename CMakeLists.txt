@@ -83,6 +83,7 @@ define_aui_component(views)
 define_aui_component(xml)
 define_aui_component(json)
 define_aui_component(audio)
+define_aui_component(video)
 
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
@@ -121,6 +122,7 @@ set(AUI_ALL_COMPONENTS core
                        uitests
                        toolbox
                        audio
+                       video
         )
 
 
