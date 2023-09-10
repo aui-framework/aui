@@ -31,7 +31,7 @@
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
-    Render::setRenderer(std::make_unique<OpenGLRenderer>());
+    ARender::setRenderer(std::make_unique<OpenGLRenderer>());
 }
 
 void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {

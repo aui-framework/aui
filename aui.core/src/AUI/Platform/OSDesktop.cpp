@@ -114,7 +114,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
 
                 case ' ':
                     if (!wrappedWithQuots) {
-                        args << std::move(currentArg);
+                        argsImpl() << std::move(currentArg);
                         currentArg = {};
                         assert(currentArg.empty());
                         break;
@@ -124,7 +124,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
             }
         }
         if (!currentArg.empty()) {
-            args << std::move(currentArg);
+            argsImpl() << std::move(currentArg);
         }
     }
 #endif

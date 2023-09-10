@@ -44,8 +44,8 @@ void SoftwareRenderingContext::beginResize(ABaseWindow &window) {
 
 void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     CommonRenderingContext::init(init);
-    if (Render::getRenderer() == nullptr) {
-        Render::setRenderer(std::make_unique<SoftwareRenderer>());
+    if (ARender::getRenderer() == nullptr) {
+        ARender::setRenderer(std::make_unique<SoftwareRenderer>());
     }
 }
 

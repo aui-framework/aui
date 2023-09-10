@@ -122,7 +122,7 @@ public:
      * @details
      * <dl>
      *   <dt><b>Performance note</b></dt>
-     *   <dd>if you want to drawElements multiple lines, consider using <code>Render::lines</code> function instead.</dd>
+     *   <dd>if you want to drawElements multiple lines, consider using <code>ARender::lines</code> function instead.</dd>
      * </dl>
      */
     static void line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {

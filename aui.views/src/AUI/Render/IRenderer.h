@@ -196,7 +196,7 @@ public:
         /**
          * @brief Bakes multi string canvas to IPrerenderedString which can be used for drawing text.
          * @note invalidates IMultiStringCanvas which speeds up some implementations of IMultiStringCanvas.
-         * @return instance of <code>Render::PrerenderedString</code> to drawElements with.
+         * @return instance of <code>ARender::PrerenderedString</code> to drawElements with.
          */
         virtual _<IRenderer::IPrerenderedString> finalize() noexcept = 0;
 
@@ -343,7 +343,7 @@ public:
      * @details
      * <dl>
      *   <dt><b>Performance note</b></dt>
-     *   <dd>if you want to drawElements multiple lines, consider using <code>Render::lines</code> function instead.</dd>
+     *   <dd>if you want to drawElements multiple lines, consider using <code>ARender::lines</code> function instead.</dd>
      * </dl>
      */
     virtual void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) = 0;

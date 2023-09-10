@@ -94,7 +94,7 @@ void OpenGLRenderingContext::init(const Init& init) {
             throw AException("glewInit failed");
         }
     }
-    Render::setRenderer(mRenderer = _new<OpenGLRenderer>());
+    ARender::setRenderer(mRenderer = _new<OpenGLRenderer>());
     ALogger::info("OpenGL context is ready");
     mContext = context;
     //assert(("no stencil bits" && stencilBits > 0));

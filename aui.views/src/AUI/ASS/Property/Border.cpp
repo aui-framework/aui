@@ -26,7 +26,7 @@
 void ass::prop::Property<ass::Border>::renderFor(AView* view) {
     /*
     if (view->getBorderRadius() < 0.1f) {
-        Render::drawRectBorder(ASolidBrush{mInfo.color},
+        ARender::drawRectBorder(ASolidBrush{mInfo.color},
                                {0, 0},
                                view->getSize(),
                                mInfo.width);
