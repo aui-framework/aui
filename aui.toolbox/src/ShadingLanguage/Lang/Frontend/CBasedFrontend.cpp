@@ -126,7 +126,7 @@ void CBasedFrontend::visitNode(const NullptrNode& node) {
 
 void CBasedFrontend::visitNode(const IntegerNode& node) {
     INodeVisitor::visitNode(node);
-    mShaderOutput << node.toString() << ".0f";
+    mShaderOutput << node.toString() << ".0";
 }
 
 void CBasedFrontend::visitNode(const OperatorCallNode& node) {
@@ -308,10 +308,10 @@ void CBasedFrontend::visitNode(const ArrayAccessOperatorNode& node) {
 
 void CBasedFrontend::visitNode(const FloatNode& node) {
     INodeVisitor::visitNode(node);
-    auto str = "{:.9}f"_format(node.getNumber());
+    auto str = "{:0.9}"_format(node.getNumber());
     if (!str.contains('.')) {
         str.pop_back();
-        str += ".f";
+        str += ".0";
     }
     mShaderOutput << str;
 }

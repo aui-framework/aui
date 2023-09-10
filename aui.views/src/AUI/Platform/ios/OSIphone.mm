@@ -22,6 +22,10 @@
 
 int(* _gEntry)(AStringVector);
 
+const ACommandLineArgs& aui::args() noexcept {
+    return {}; 
+}
+
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
     _gEntry = aui_entry;
     //AThread::setThreadName("UI thread");

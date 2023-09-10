@@ -382,7 +382,7 @@ public:
     }
 
     template<aui::predicate<const StoredType&> Predicate>
-    super::iterator findIf(Predicate&& predicate) {
+    typename super::iterator findIf(Predicate&& predicate) {
         return std::find_if(super::begin(), super::end(), std::forward<Predicate>(predicate));
     }
 };

@@ -266,4 +266,17 @@ void CppFrontend::emitFunctionCallArguments(const BuiltinOrDeclaredFunction& fun
         CBasedFrontend::emitFunctionCallArguments(function, args, first);
     }
 }
+void CppFrontend::visitNode(const FloatNode& node) {
+    INodeVisitor::visitNode(node);
+    auto str = "{:0.9}f"_format(node.getNumber());
+    if (!str.contains('.')) {
+        str.pop_back();
+        str += ".f";
+    }
+    mShaderOutput << str;
+}
 
+void CppFrontend::visitNode(const IntegerNode& node) {
+    INodeVisitor::visitNode(node);
+    mShaderOutput << node.toString() << ".0f";
+}

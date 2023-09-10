@@ -33,6 +33,8 @@ public:
     void visitNode(const MemberAccessOperatorNode& node) override;
     void visitNode(const ArrayAccessOperatorNode& node) override;
     void visitNode(const FunctionDeclarationNode& node) override;
+    void visitNode(const FloatNode& node) override;
+    void visitNode(const IntegerNode& node) override;
 
 protected:
     AString mapType(const AString& type) override;

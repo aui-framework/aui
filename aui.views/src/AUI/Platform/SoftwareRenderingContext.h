@@ -24,12 +24,14 @@ private:
 #if AUI_PLATFORM_WIN
     AByteBuffer mBitmapBlob;
     BITMAPINFO* mBitmapInfo;
-#else
+#elif AUI_PLATFORM_LINUX
     std::uint8_t* mBitmapBlob = nullptr;
     _<XImage> mXImage;
     std::unique_ptr<_XGC, void(*)(GC)> mGC = {nullptr, nullptr};
 
     void reallocate();
+#else
+    std::uint8_t* mBitmapBlob = nullptr;
 #endif
 
 protected:

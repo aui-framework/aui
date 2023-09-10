@@ -158,13 +158,17 @@ inline void useAuislShader(gl::Program& out) {
 
 struct UseMultisample {
     UseMultisample() {
+#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_IOS
         glEnable(GL_MULTISAMPLE);
         glEnable(GL_SAMPLE_SHADING_ARB);
+#endif
     }
     
     ~UseMultisample() {
+#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_IOS
         glDisable(GL_MULTISAMPLE);
         glDisable(GL_SAMPLE_SHADING_ARB);
+#endif
     }
 };
 

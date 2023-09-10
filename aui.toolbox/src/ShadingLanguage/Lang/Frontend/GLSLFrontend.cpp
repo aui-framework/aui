@@ -128,7 +128,10 @@ void GLSLFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
 }
 
 void GLSLFrontend::parseShader(const _<AST>& ast) {
-    mShaderOutput << "#version 120\n";
+    mShaderOutput << "#version 100\n"
+                     "precision mediump float;\n"
+                     "precision mediump int;\n"
+                     ;
     CBasedFrontend::parseShader(ast);
 }
 
