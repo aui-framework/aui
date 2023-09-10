@@ -626,7 +626,8 @@ file(
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
 auib_import(aui https://github.com/aui-framework/aui
-            COMPONENTS core toolbox image)
+            COMPONENTS core toolbox image
+            VERSION 0f3b9cb7)
 ]])
     set(_build_log ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider_log.txt)
 
