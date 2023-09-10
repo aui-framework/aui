@@ -21,7 +21,7 @@
 #import <UIKit/UIKit.h>
 #import "AppDelegate.h"
 
-int(* _gEntry)(AStringVector);
+int(* _gEntry)(const AStringVector&);
 
 const ACommandLineArgs& aui::args() noexcept {
     static ACommandLineArgs args;
