@@ -6,7 +6,6 @@
 
 
 #include "INode.h"
-#include "IndexedAttributesDeclarationNode.h"
 #include <AUI/Common/SharedPtr.h>
 
 class AST {

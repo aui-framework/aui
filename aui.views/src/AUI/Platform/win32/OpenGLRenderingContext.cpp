@@ -91,10 +91,6 @@ void OpenGLRenderingContext::init(const Init& init) {
         ALogger::info(LOG_TAG) << ("Initialized temporary context");
 
         if (!glewExperimental) {
-            ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_VERSION));
-            ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_VENDOR));
-            ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_RENDERER));
-            ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_EXTENSIONS));
             glewExperimental = true;
             if (glewInit() != GLEW_OK) {
                 AMessageBox::show(nullptr, "OpenGL", "Could not initialize context");

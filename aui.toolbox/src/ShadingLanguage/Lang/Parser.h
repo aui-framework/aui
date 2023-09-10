@@ -78,6 +78,7 @@ private:
     void reportUnexpectedEof();
     void reportError(const AString& message);
     AString getTokenName();
+    _<INode> handlePreprocessor();
 
     template<typename T>
     T& expect() {

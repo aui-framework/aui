@@ -175,6 +175,10 @@ struct UseMultisample {
 }
 
 OpenGLRenderer::OpenGLRenderer() {
+    ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_VERSION));
+    ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_VENDOR));
+    ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_RENDERER));
+    ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_EXTENSIONS));
     mGradientTexture.bind();
     mGradientTexture.setupLinear();
     useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader,
@@ -212,7 +216,7 @@ OpenGLRenderer::OpenGLRenderer() {
 }
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
-    return glm::ortho(0.f, static_cast<float>(mWindow->getWidth()), static_cast<float>(mWindow->getHeight()), 0.f);
+    return glm::ortho(0.f - 0.000001f, static_cast<float>(mWindow->getWidth()) + 0.000001f, static_cast<float>(mWindow->getHeight()) + 0.000001f, 0.f - 0.000001f);
 }
 
 void OpenGLRenderer::uploadToShaderCommon() {
@@ -225,6 +229,11 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
     float y = position.y;
     float w = x + size.x;
     float h = y + size.y;
+
+    x += 0.01f;
+    y += 0.01f;
+    w -= 0.01f;
+    h -= 0.01f;
 
     return
             {
@@ -782,7 +791,7 @@ void OpenGLRenderer::tryEnableFramebuffer(glm::uvec2 windowSize) {
     try {
         gl::Framebuffer framebuffer;
         framebuffer.resize(windowSize);
-        auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::ENABLED>>();
+        auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
         framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
         mFramebuffer.emplace<gl::Framebuffer>(std::move(framebuffer));
     } catch (const AException& e) {

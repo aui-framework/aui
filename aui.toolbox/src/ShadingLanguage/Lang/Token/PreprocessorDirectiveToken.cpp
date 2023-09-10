@@ -14,6 +14,8 @@ PreprocessorDirectiveToken::Type PreprocessorDirectiveToken::typeFromName(const 
         return ENDIF;
     } else if (name == "pragma") {
         return PRAGMA;
+    } else if (name == "flag") {
+        return FLAG;
     }
     throw AException("invalid preprocessor directive: " + name);
 }

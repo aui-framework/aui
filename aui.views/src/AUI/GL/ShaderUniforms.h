@@ -24,6 +24,7 @@ namespace aui::ShaderUniforms {
     extern gl::Program::Uniform SL_UNIFORM_SIGMA;
     extern gl::Program::Uniform SL_UNIFORM_LOWER;
     extern gl::Program::Uniform SL_UNIFORM_UPPER;
+    extern gl::Program::Uniform PIXEL_TO_UV;
     extern gl::Program::Uniform OUTER_SIZE;
     extern gl::Program::Uniform INNER_SIZE;
     extern gl::Program::Uniform INNER_TEXEL_SIZE;

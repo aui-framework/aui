@@ -25,6 +25,7 @@
 #include <ShadingLanguage/Lang/AST/FloatNode.h>
 #include "ShadingLanguage/Lang/AST/IndexedAttributesDeclarationNode.h"
 #include "ShadingLanguage/Lang/AST/NonIndexedAttributesDeclarationNode.h"
+#include "ShadingLanguage/Lang/AST/FlagDirectiveNode.h"
 #include "Parser.h"
 #include "AUI/Util/ARaiiHelper.h"
 #include "Lexer.h"
@@ -63,10 +64,12 @@ _<AST> Parser::parseShader() {
                 // here we should find #includes and function definitions
                 switch (mIterator->index()) {
                     case got<NewLineToken>:
-                    case got<PreprocessorDirectiveToken>:
                     case got<SemicolonToken>:
                         break;
 
+                    case got<PreprocessorDirectiveToken>:
+                        nodes << handlePreprocessor();
+                        break;
                     case got<KeywordToken>: {
                         const auto keywordType = std::get<KeywordToken>(*mIterator).getType();
                         switch (keywordType) {
@@ -439,6 +442,9 @@ AVector<_<INode>> Parser::parseCodeBlock() {
 
                 break;
             }
+            case got<PreprocessorDirectiveToken>:
+                result << handlePreprocessor();
+                break;
 
             default:
                 reportUnexpectedErrorAndSkip("code block expects identifier or semicolon");
@@ -449,6 +455,19 @@ AVector<_<INode>> Parser::parseCodeBlock() {
 
     reportUnexpectedEof();
     return result;
+}
+
+_<INode> Parser::handlePreprocessor() {
+    auto& token = expect<PreprocessorDirectiveToken>();
+    auto args = token.args();
+    auto spaceIndex = args.find(" ");
+
+    auto name = args.substr(0, spaceIndex);
+    auto content = args.substr(spaceIndex);
+
+    nextTokenAndCheckEof();
+
+    return _new<FlagDirectiveNode>(std::move(name), std::move(content));
 }
 
 _<ExpressionNode> Parser::parseExpression() {

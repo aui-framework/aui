@@ -93,7 +93,7 @@ TEST_F(ShadingLanguage, Math3) {
     Lexer l(_new<AStringStream>(std::string("x = 1 + (2 + (3 + 4 * (5 * 6)) * 7) * 8\n")));
     Parser p(l.performLexAnalysis(), "");
     auto expr = p.parseExpression();
-    EXPECT_STREQ("x=(1.0f+((2.0f+((3.0f+(4.0f*(5.0f*6.0f)))*7.0f))*8.0f))", toGlslExpression(expr).toStdString().c_str());
+    EXPECT_STREQ("x=(1.0+((2.0+((3.0+(4.0*(5.0*6.0)))*7.0))*8.0))", toGlslExpression(expr).toStdString().c_str());
 
     auto eq = _cast<AssignmentOperatorNode>(expr);
     ASSERT_TRUE(eq);
@@ -142,14 +142,28 @@ TEST_F(ShadingLanguage, Math4) {
     Lexer l(_new<AStringStream>(std::string("step(0.001, circle.x * circle.x + circle.y * circle.y)\n")));
     Parser p(l.performLexAnalysis(), "");
     auto expr = p.parseExpression();
-    EXPECT_STREQ("step(0.001f,((circle.x*circle.x)+(circle.y*circle.y)))", toGlslExpression(expr).toStdString().c_str());
+    EXPECT_STREQ("step(0.001,((circle.x*circle.x)+(circle.y*circle.y)))", toGlslExpression(expr).toStdString().c_str());
 }
 TEST_F(ShadingLanguage, Math5) {
     Lexer l(_new<AStringStream>(std::string("clamp(val1 + val2 + val3, 0, 1)\n")));
     Parser p(l.performLexAnalysis(), "");
     auto expr = p.parseExpression();
-    EXPECT_STREQ("clamp(((val1+val2)+val3),0.0f,1.0f)", toGlslExpression(expr).toStdString().c_str());
+    EXPECT_STREQ("clamp(((val1+val2)+val3),0.0,1.0)", toGlslExpression(expr).toStdString().c_str());
 }
+
+TEST_F(ShadingLanguage, IfDef) {
+    Lexer l(_new<AStringStream>(std::string(R"(
+{
+#if test
+  as is
+#endif
+}
+    )")));
+    Parser p(l.performLexAnalysis(), "");
+    auto expr = p.parseExpression();
+    EXPECT_STREQ("clamp(((val1+val2)+val3),0.0,1.0)", toGlslExpression(expr).toStdString().c_str());
+}
+
 
 TEST_F(ShadingLanguage, MemberAccess) {
     Lexer l(_new<AStringStream>(std::string("output.albedo.a = output.albedo.a + 1\n")));

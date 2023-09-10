@@ -78,6 +78,7 @@ public:
     void visitNode(const IndexedAttributesDeclarationNode& node) override;
     void visitNode(const NonIndexedAttributesDeclarationNode& node) override;
     void visitNode(const ImportNode& node) override;
+    void visitNode(const FlagDirectiveNode& node) override;
 
     AString shaderCode() override;
 

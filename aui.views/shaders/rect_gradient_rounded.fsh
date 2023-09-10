@@ -5,7 +5,7 @@ inter {
   vec2 uv
 }
 
-uniform {
+uniform {  
   vec4 color
   vec2 outerSize
 }

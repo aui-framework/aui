@@ -27,7 +27,7 @@ namespace gl {
         void storage(glm::u32vec2 size, InternalFormat internalFormat) {
             bind();
             if constexpr (multisampling == Multisampling::ENABLED) {
-                glRenderbufferStorageMultisample(GL_RENDERBUFFER, 8, (int)internalFormat, size.x, size.y);
+                glRenderbufferStorageMultisample(GL_RENDERBUFFER, 4, (int)internalFormat, size.x, size.y);
             } else {
                 glRenderbufferStorage(GL_RENDERBUFFER, (int)internalFormat, size.x, size.y);
             }

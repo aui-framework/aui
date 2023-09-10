@@ -14,7 +14,8 @@ public:
         INCLUDE,
         PRAGMA,
         IF,
-        ENDIF
+        ENDIF,
+        FLAG,
     };
 private:
     Type mType;
@@ -24,6 +25,11 @@ public:
     PreprocessorDirectiveToken(Type type, const AString& args) : mType(type), mArgs(args) {}
 
     const char* getName() override;
+
+    [[nodiscard]]
+    const AString& args() const noexcept {
+        return mArgs;
+    }
 
     static Type typeFromName(const AString& name);
 };

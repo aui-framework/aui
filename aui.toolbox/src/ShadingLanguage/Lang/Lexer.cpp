@@ -151,10 +151,11 @@ AVector<AnyToken> Lexer::performLexAnalysis() {
                     case '#': {
                         // preprocessor directive
                         auto directiveName = mTokenizer.readString();
+                        mTokenizer.readChar();
                         auto directiveArg = mTokenizer.readStringUntilUnescaped('\n');
                         directiveArg.erase(std::remove_if(directiveArg.begin(), directiveArg.end(), [](wchar_t c) {
-                            return c == '\r' || c == ' ';
-                        }));
+                            return c == '\r';
+                        }), directiveArg.end());
                         result << PreprocessorDirectiveToken{
                                 PreprocessorDirectiveToken::typeFromName(directiveName),
                                 directiveArg};

@@ -31,6 +31,7 @@
 #include "IndexedAttributesDeclarationNode.h"
 #include "NonIndexedAttributesDeclarationNode.h"
 #include "ImportNode.h"
+#include "FlagDirectiveNode.h"
 
 class INodeVisitor {
 public:
@@ -84,6 +85,7 @@ public:
     virtual void visitNode(const IndexedAttributesDeclarationNode& node) {};
     virtual void visitNode(const NonIndexedAttributesDeclarationNode& node) {};
     virtual void visitNode(const ImportNode& node) {};
+    virtual void visitNode(const FlagDirectiveNode& node) {};
 
     template<class T>
     static _<T> assume(const _<INode>& n) {
