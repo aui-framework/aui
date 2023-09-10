@@ -191,11 +191,10 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
 
 void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
     CommonRenderingContext::endPaint(window);
-
+    mRenderer->endPaint();
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         glXSwapBuffers(ourDisplay, w->mHandle);
     }
-    mRenderer->endPaint();
 }
 
 void OpenGLRenderingContext::beginResize(ABaseWindow& window) {

@@ -2,6 +2,11 @@
 #include <AUI/GL/gl.h>
 
 namespace gl {
+    enum class Multisampling {
+        DISABLED,
+        ENABLED,
+    };
+
     enum class InternalFormat {
         DEPTH_COMPONENT   = 6402,
         DEPTH_COMPONENT24 = 33190,

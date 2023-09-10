@@ -30,3 +30,6 @@ namespace aui::sl_gen {
         AImageView mTexture;
     };
 }
+
+    inline glm::vec2 gl_SamplePosition = {0, 0};
+

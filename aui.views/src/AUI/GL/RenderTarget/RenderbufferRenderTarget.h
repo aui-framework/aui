@@ -9,7 +9,9 @@
 
 namespace gl {
 
-    template<InternalFormat internalFormat /* = GL_DEPTH_COMPONENT24 */>
+
+    template<InternalFormat internalFormat /* = GL_DEPTH_COMPONENT24 */,
+             Multisampling multisampling = Multisampling::DISABLED>
     class RenderbufferRenderTarget final: public Framebuffer::IRenderTarget {
     public:
         RenderbufferRenderTarget() {
@@ -34,6 +36,6 @@ namespace gl {
         }
 
     private:
-        Renderbuffer mRenderbuffer;
+        Renderbuffer<multisampling> mRenderbuffer;
     };
 }

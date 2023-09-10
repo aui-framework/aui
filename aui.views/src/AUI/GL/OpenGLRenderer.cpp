@@ -63,6 +63,7 @@ public:
 
 static constexpr GLuint RECT_INDICES[] = {0, 1, 2, 2, 1, 3 };
 
+namespace {
 
 template<typename Brush>
 struct UnsupportedBrushHelper {
@@ -141,9 +142,6 @@ struct TexturedShaderHelper {
 };
 
 
-std::string put_if(bool value, const char* str) { if (value) return str; return ""; }
-
-
 template<typename C>
 concept AuiSLShader = requires(C&& c) {
     { C::code() } -> std::same_as<const char*>;
@@ -156,6 +154,20 @@ inline void useAuislShader(gl::Program& out) {
     Vertex::setup(out.handle());
     Fragment::setup(out.handle());
     out.compile();
+}
+
+struct UseMultisample {
+    UseMultisample() {
+        glEnable(GL_MULTISAMPLE);
+        glEnable(GL_SAMPLE_SHADING_ARB);
+    }
+    
+    ~UseMultisample() {
+        glDisable(GL_MULTISAMPLE);
+        glDisable(GL_SAMPLE_SHADING_ARB);
+    }
+};
+
 }
 
 OpenGLRenderer::OpenGLRenderer() {
@@ -244,6 +256,7 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
                                      glm::vec2 position,
                                      glm::vec2 size,
                                      float radius) {
+    UseMultisample temp;
     std::visit(aui::lambda_overloaded {
             GradientShaderHelper(mRoundedGradientShader, mGradientTexture),
             UnsupportedBrushHelper<ATexturedBrush>(),
@@ -307,6 +320,7 @@ void OpenGLRenderer::drawRoundedRectBorder(const ABrush& brush,
                                            glm::vec2 size,
                                            float radius,
                                            int borderWidth) {
+    UseMultisample temp;
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
@@ -753,18 +767,29 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
     endDraw(brush);
 }
 
+void OpenGLRenderer::tryEnableFramebuffer(glm::uvec2 windowSize) {
+#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_IOS
+    if (glewIsSupported("ARB_sample_shading")) {
+        ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: ARB_sample_shading is not present";
+        mFramebuffer = Failed{};
+        return;
+    }
+#endif
+    try {
+        gl::Framebuffer framebuffer;
+        framebuffer.resize(windowSize);
+        auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::ENABLED>>();
+        framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
+        mFramebuffer.emplace<gl::Framebuffer>(std::move(framebuffer));
+    } catch (const AException& e) {
+        ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: " << e;
+        mFramebuffer = Failed{};
+    }
+}
+
 void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     if (std::get_if<NotTried>(&mFramebuffer)) {
-        try {
-            gl::Framebuffer framebuffer;
-            framebuffer.resize(windowSize);
-            auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8>>();
-            framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
-            mFramebuffer.emplace<gl::Framebuffer>(std::move(framebuffer));
-        } catch (const AException& e) {
-            ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: " << e;
-            mFramebuffer = Failed{};
-        }
+        tryEnableFramebuffer(windowSize);
     }
     if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
         if (fb->size() != windowSize) {

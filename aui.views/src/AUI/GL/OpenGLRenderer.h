@@ -67,6 +67,7 @@ private:
     void uploadToShaderCommon();
 
     void endDraw(const ABrush& brush);
+    void tryEnableFramebuffer(glm::uvec2 windowSize);
     FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 protected:
     ITexture* createNewTexture() override;
