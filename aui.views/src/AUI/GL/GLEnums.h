@@ -11,6 +11,8 @@ namespace gl {
         DEPTH_COMPONENT   = 6402,
         DEPTH_COMPONENT24 = 33190,
         DEPTH_COMPONENT16 = 33189,
+        DEPTH24_STENCIL8 = 0x88F0,
+        STENCIL8 = 0x8D48,
         RGBA8 = GL_RGBA8,
         RGBA = GL_RGBA,
     };
