@@ -15,14 +15,16 @@ AAudioPlayer::AAudioPlayer() {
 AAudioPlayer::AAudioPlayer(_<ISoundInputStream> stream) {
     setSource(std::move(stream));
 }
+
 AAudioPlayer::~AAudioPlayer() {
+    stop();
 }
 
 
 void AAudioPlayer::playImpl() {
     setupReachPointEvents();
     setupBufferThread();
-    uploadNextBlock(BUFFER_DURATION_SEC);
+    uploadBlock(0);
     ASSERT_OK mPrivate->mSoundBufferInterface->Play(0, 0, DSBPLAY_LOOPING);
 }
 
@@ -46,10 +48,10 @@ void AAudioPlayer::stopImpl() {
     mSource->rewind();
 }
 
-void AAudioPlayer::uploadNextBlock(DWORD reachedPointIndex) {
+void AAudioPlayer::uploadBlock(DWORD pointIndex) {
     LPVOID buffer;
     DWORD bufferSize = mBytesPerSecond;
-    DWORD offset = ((reachedPointIndex + 1) % BUFFER_DURATION_SEC) * mBytesPerSecond;
+    DWORD offset = pointIndex * mBytesPerSecond;
 
     HRESULT result = mPrivate->mSoundBufferInterface->Lock(offset, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
     if (result == DSERR_BUFFERLOST) {
@@ -105,7 +107,7 @@ void AAudioPlayer::onAudioReachCallbackPoint() {
     while(waitResult != WAIT_FAILED) {
         DWORD eventIndex = waitResult - WAIT_OBJECT_0;
         if (eventIndex != BUFFER_DURATION_SEC) {
-            uploadNextBlock(eventIndex);
+            uploadBlock((eventIndex + 1) % BUFFER_DURATION_SEC);
             waitResult = WaitForMultipleObjects(BUFFER_DURATION_SEC, mEvents, FALSE, INFINITE);
             continue;
         }
