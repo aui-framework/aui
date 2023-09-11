@@ -65,7 +65,7 @@ public:
     /**
      * @return Current playback status.
      */
-    PlaybackStatus getStatus() const noexcept {
+    PlaybackStatus status() const noexcept {
         return mPlaybackStatus;
     }
 
@@ -157,7 +157,7 @@ private:
     bool mIsPlaying = false;
     int mBytesPerSecond;
 
-    void uploadNextBlock(DWORD reachedPointIndex);
+    void uploadBlock(DWORD pointIndex);
 
     void clearBuffer();
 
