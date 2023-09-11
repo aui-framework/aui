@@ -792,9 +792,14 @@ void OpenGLRenderer::tryEnableFramebuffer(glm::uvec2 windowSize) {
         gl::Framebuffer framebuffer;
         framebuffer.resize(windowSize);
         auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
-        auto stencil = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::STENCIL8, gl::Multisampling::DISABLED>>();
         framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
-        framebuffer.attach(stencil, GL_STENCIL_ATTACHMENT);
+        if constexpr (true) {
+            auto depth = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
+            framebuffer.attach(depth, 0x84F9 /* GL_DEPTH_STENCIL */);
+        } else {
+            auto stencil = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::STENCIL8, gl::Multisampling::DISABLED>>();
+            framebuffer.attach(stencil, GL_STENCIL_ATTACHMENT);
+        }
         mFramebuffer.emplace<gl::Framebuffer>(std::move(framebuffer));
     } catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: " << e;
