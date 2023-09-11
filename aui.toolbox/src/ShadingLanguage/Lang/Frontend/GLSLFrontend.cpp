@@ -213,7 +213,7 @@ void GLSLFrontend::emitCppCreateShader(aui::no_escape<IOutputStream> os) {
     *os << "const char* " << namespaceName() <<  "::Shader::code() { return R\"(" << mShaderOutput.str() << " )\";}"
            "void " << namespaceName() <<  "::Shader::setup(uint32_t program) {";
     for (const auto& [index, input]  : mInputs) {
-      *os << "glBindAttribLocation(program, " << AString::number(index) << ", \"" << input->variableName() << "\");";
+      *os << "glBindAttribLocation(program, " << AString::number(index) << ", \"SL_input_" << input->variableName() << "\");";
     }
     *os << "}";
 }
