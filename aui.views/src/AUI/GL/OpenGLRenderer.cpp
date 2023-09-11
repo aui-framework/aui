@@ -158,6 +158,7 @@ inline void useAuislShader(gl::Program& out) {
 
 struct UseMultisample {
     UseMultisample() {
+        glEnable(GL_ALPHA_TEST);
 #if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_IOS
         glEnable(GL_MULTISAMPLE);
         glEnable(GL_SAMPLE_SHADING_ARB);
@@ -165,6 +166,7 @@ struct UseMultisample {
     }
     
     ~UseMultisample() {
+        glDisable(GL_ALPHA_TEST);
 #if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_IOS
         glDisable(GL_MULTISAMPLE);
         glDisable(GL_SAMPLE_SHADING_ARB);
@@ -830,6 +832,7 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glAlphaFunc(GL_GREATER, 0.5f);
 
     // stencil
     glClearStencil(0);
