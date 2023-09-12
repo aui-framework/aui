@@ -1,7 +1,10 @@
 uniform {
   2D gradientMap
+  mat3 matUv
 }
 
 vec4 gradient(vec2 uv) {
-  return uniform.gradientMap[uv.yx]
+  vec3 transformedUv = uniform.matUv * vec3(uv, 1)
+  vec4 c = uniform.gradientMap[vec2(transformedUv.x, 0)]
+  return c
 }

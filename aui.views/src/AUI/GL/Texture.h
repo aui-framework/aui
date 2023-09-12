@@ -33,6 +33,7 @@ namespace gl {
         virtual ~Texture();
         static void setupNearest();
         static void setupLinear();
+        static void setupClampToEdge();
         static void setupMirroredRepeat();
         Texture(const Texture&) = delete;
 

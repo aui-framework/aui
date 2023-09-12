@@ -18,6 +18,7 @@
 
 namespace aui::ShaderUniforms {
     gl::Program::Uniform COLOR("SL_uniform_color");
+    gl::Program::Uniform GRADIENT_MAT_UV("SL_uniform_matUv");
     gl::Program::Uniform TRANSFORM("SL_uniform_transform");
     gl::Program::Uniform SL_UNIFORM_TRANSFORM("SL_uniform_transform");
     gl::Program::Uniform UV_SCALE("SL_uniform_uvScale");

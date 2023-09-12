@@ -44,6 +44,7 @@
 #include <AUISL/Generated/symbol.vsh.glsl120.h>
 #include <AUISL/Generated/symbol.fsh.glsl120.h>
 #include <AUISL/Generated/symbol_sub.fsh.glsl120.h>
+#include <glm/gtx/matrix_transform_2d.hpp>
 
 static constexpr auto LOG_TAG = "OpenGLRenderer";
 
@@ -85,7 +86,20 @@ struct GradientShaderHelper {
         for (const auto& c : brush.colors) {
             colors.push_back(glm::uvec4(c.color * 255.f));
         }
+        float actualEdgeUvPosition = 0.5f / float(colors.size());
 
+        float rotationRadians = brush.rotation.radians();
+
+        float s = glm::sin(rotationRadians) * actualEdgeUvPosition;
+        float c = glm::cos(rotationRadians) * actualEdgeUvPosition;
+        glm::mat3 mat3 = {
+                s * 0.5, 0.f, 0.f,
+                c * 0.5, 0.f, 0.f,
+                glm::clamp(-s - c, 0.f, 1.f) + actualEdgeUvPosition, 0.f, 0.f,
+        };
+
+
+        shader.set(aui::ShaderUniforms::GRADIENT_MAT_UV, mat3);
         tex.tex2D(AImageView({(const char*)colors.data(), colors.sizeInBytes()}, { colors.size(), 1 }, APixelFormat::RGBA_BYTE));
     }
 };
@@ -183,6 +197,7 @@ OpenGLRenderer::OpenGLRenderer() {
     ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_EXTENSIONS));
     mGradientTexture.bind();
     mGradientTexture.setupLinear();
+    mGradientTexture.setupClampToEdge();
     useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader,
                    aui::sl_gen::rect_solid::fsh::glsl120::Shader>(mSolidShader);
 
@@ -832,7 +847,7 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glAlphaFunc(GL_GREATER, 0.5f);
+    //glAlphaFunc(GL_GREATER, 0.5f);
 
     // stencil
     glClearStencil(0);

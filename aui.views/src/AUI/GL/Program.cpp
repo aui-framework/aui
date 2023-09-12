@@ -154,6 +154,12 @@ void gl::Program::set(const gl::Program::Uniform& uniform, glm::mat4 value) cons
 		glUniformMatrix4fv(loc, 1, GL_FALSE, &(value[0][0]));
 }
 
+void gl::Program::set(const gl::Program::Uniform& uniform, glm::mat3 value) const {
+    auto loc = getLocation(uniform);
+    if (loc >= 0)
+        glUniformMatrix3fv(loc, 1, GL_FALSE, &(value[0][0]));
+}
+
 void gl::Program::set(const gl::Program::Uniform& uniform, glm::dmat4 value) const {
 	auto loc = getLocation(uniform);
 	if (loc >= 0) {

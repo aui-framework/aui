@@ -29,6 +29,8 @@ const AMap<AString, AString>& GLSLFrontend::internalFunctions() {
             {"vec2", "vec2"},
             {"vec3", "vec3"},
             {"vec4", "vec4"},
+            {"mat3", "mat3"},
+            {"mat4", "mat4"},
             {"sin",  "sin"},
             {"cos",  "cos"},
             {"tan",  "tan"},
@@ -38,6 +40,7 @@ const AMap<AString, AString>& GLSLFrontend::internalFunctions() {
             {"sqrt", "sqrt"},
             {"clamp","clamp"},
             {"step", "step"},
+            {"mix",  "mix"},
     };
     return internalFunctions;
 }

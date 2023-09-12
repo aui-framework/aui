@@ -29,6 +29,8 @@ const AMap<AString, AString>& CppFrontend::internalFunctions() {
             {"vec2", "glm::vec2"},
             {"vec3", "glm::vec3"},
             {"vec4", "glm::vec4"},
+            {"mat3", "glm::mat3"},
+            {"mat4", "glm::mat4"},
             {"sin",  "glm::sin"},
             {"sign", "glm::sign"},
             {"abs",  "glm::abs"},
@@ -38,6 +40,7 @@ const AMap<AString, AString>& CppFrontend::internalFunctions() {
             {"sqrt", "glm::sqrt"},
             {"clamp", "glm::clamp"},
             {"step",  "glm::step"},
+            {"mix",   "glm::mix"},
     };
     return internalFunctions;
 }
