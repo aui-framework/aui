@@ -807,6 +807,7 @@ void OpenGLRenderer::tryEnableFramebuffer(glm::uvec2 windowSize) {
 #endif
     try {
         gl::Framebuffer framebuffer;
+        framebuffer.setOversamplingRatio(2);
         framebuffer.resize(windowSize);
         auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
         framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
@@ -867,7 +868,7 @@ void OpenGLRenderer::endPaint() {
                           0, 0,                       // dst pos
                           fb->size().x, fb->size().y, // dst size
                           GL_COLOR_BUFFER_BIT,        // mask
-                          GL_NEAREST);                // filter
+                          GL_LINEAR);                // filter
         gl::Framebuffer::unbind();
     }
 }

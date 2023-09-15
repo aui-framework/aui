@@ -20,6 +20,7 @@
 #include "AUI/Traits/values.h"
 #include "glm/fwd.hpp"
 #include <AUI/Common/AString.h>
+#include <cstdint>
 #include <glm/glm.hpp>
 #include <AUI/Common/AMap.h>
 #include <AUI/Common/AVector.h>
@@ -42,7 +43,8 @@ namespace gl {
         Framebuffer();
         Framebuffer(Framebuffer&& rhs) noexcept: mHandle(rhs.mHandle),
                                                  mSize(rhs.mSize),
-                                                 mAttachedTargets(std::move(rhs.mAttachedTargets)) {
+                                                 mAttachedTargets(std::move(rhs.mAttachedTargets)),
+                                                 mOversamplingRatio(rhs.mOversamplingRatio) {
             rhs.mHandle = 0;            
         }
         virtual ~Framebuffer();
@@ -52,6 +54,20 @@ namespace gl {
         void bindForWrite();
         static void unbind();
         void resize(glm::u32vec2 newSize);
+
+        [[nodiscard]]
+        std::uint32_t oversamlingRatio() const noexcept {
+            return mOversamplingRatio;
+        }
+
+        void setOversamplingRatio(std::uint32_t ratio) noexcept {
+            mOversamplingRatio = ratio;
+        }
+
+        [[nodiscard]]
+        glm::u32vec2 oversampledSize() const noexcept {
+            return mSize * mOversamplingRatio;
+        }
 
         [[nodiscard]]
         glm::u32vec2 size() const noexcept {
@@ -77,12 +93,14 @@ namespace gl {
             }
             std::swap(mHandle, rhs.mHandle);
             mSize = rhs.mSize;
+            mOversamplingRatio = rhs.mOversamplingRatio;
             mAttachedTargets = std::move(rhs.mAttachedTargets);
             return *this;
         }
 
     private:
         uint32_t mHandle = 0;
+        std::uint32_t mOversamplingRatio = 1; 
         glm::u32vec2 mSize;
         AVector<_<IRenderTarget>> mAttachedTargets;
     };

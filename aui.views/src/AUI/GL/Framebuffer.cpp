@@ -37,9 +37,10 @@ void gl::Framebuffer::resize(glm::u32vec2 newSize) {
     assert(newSize.y != 0);
     mSize = newSize;
     bind();
+    auto o = oversampledSize();
     for (auto& t : mAttachedTargets)
     {
-        t->onFramebufferResize(newSize);
+        t->onFramebufferResize(o);
     }
 }
 
