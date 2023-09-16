@@ -60,7 +60,7 @@ AAudioPlayer::AAudioPlayer(_<ISoundInputStream> stream) {
 
 void AAudioPlayer::playImpl() {
     assert(mResampler == nullptr);
-    mResampler = _new<ASoundResampler>(_new<APlayerSoundStream>(_cast<AAudioPlayer>(sharedPtr())));
+    mResampler = _new<ASoundResampler>(_new<APlayerSoundStream>(this));
     OboeSoundOutput::instance().addSource(_cast<AAudioPlayer>(sharedPtr()));
 }
 

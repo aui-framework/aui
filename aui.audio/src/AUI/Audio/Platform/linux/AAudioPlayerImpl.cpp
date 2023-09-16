@@ -133,7 +133,7 @@ AAudioPlayer::~AAudioPlayer() {
 
 void AAudioPlayer::playImpl() {
     assert(mResampler == nullptr);
-    mResampler = _new<ASoundResampler>(_new<APlayerSoundStream>(_cast<AAudioPlayer>(sharedPtr())));
+    mResampler = _new<ASoundResampler>(_new<APlayerSoundStream>(this));
     ::loop().addSoundSource(_cast<AAudioPlayer>(sharedPtr()));
     pulse();
 }

@@ -11,7 +11,7 @@ class AAudioPlayer;
  */
 class APlayerSoundStream : public ISoundInputStream {
 public:
-    explicit APlayerSoundStream(_weak<AAudioPlayer> player);
+    explicit APlayerSoundStream(AAudioPlayer* player);
 
     size_t read(char* dst, size_t size) override;
 
@@ -20,7 +20,7 @@ public:
     void rewind() override;
 
 private:
-    _weak<AAudioPlayer> mPlayer;
+    AAudioPlayer* mPlayer;
 
 
     static constexpr size_t BUFFER_SIZE = 0x3000;
