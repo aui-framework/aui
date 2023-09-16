@@ -69,7 +69,7 @@ public:
             }
             std::byte* end = buf + r;
             for (std::byte* it = buf; it + aui::audio::util::size_bytes<in>() <= end; it += aui::audio::util::size_bytes<in>()) {
-                commitSample(resampler(aui::audio::util::extractSample<in>(it)));
+                commitSample(aui::audio::util::extractSample<in>(it));
             }
         }
     }
