@@ -20,7 +20,7 @@ size_t APlayerSoundStream::read(char* dst, size_t size) {
                 break;
             }
 
-            auto volumeLevel = player->volume();
+            VolumeLevel volumeLevel = static_cast<int32_t>(256 * player->volume());
             for (std::byte* it = buffer; it < buffer + currentRead; it += bytesPerSample) {
                 switch (sampleFormat) {
                     case ASampleFormat::I16: {
@@ -59,9 +59,8 @@ void APlayerSoundStream::rewind() {
 }
 
 template<ASampleFormat format>
-void APlayerSoundStream::processSample(std::byte *src, std::byte* &dst, aui::float_within_0_1 volumeLevel) {
+void APlayerSoundStream::processSample(std::byte *src, std::byte* &dst, VolumeLevel volumeLevel) {
     auto sample = aui::audio::util::extractSample<format>(src);
-    sample = static_cast<decltype(sample)>(static_cast<float>(sample) * volumeLevel);
-    aui::audio::util::pushSample<format>(sample, reinterpret_cast<std::byte*>(dst));
+    aui::audio::util::pushSample<format>((static_cast<int32_t>(sample) * volumeLevel) / MAX_VOLUME_LEVEL, reinterpret_cast<std::byte*>(dst));
     dst += aui::audio::util::size_bytes<format>();
 }

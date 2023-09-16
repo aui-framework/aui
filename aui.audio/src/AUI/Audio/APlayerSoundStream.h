@@ -22,8 +22,11 @@ public:
 private:
     _weak<AAudioPlayer> mPlayer;
 
-    template<ASampleFormat format>
-    void processSample(std::byte* src, std::byte* &dst, aui::float_within_0_1 volumeLevel);
 
     static constexpr size_t BUFFER_SIZE = 0x3000;
+    static constexpr int32_t MAX_VOLUME_LEVEL = 256;
+    using VolumeLevel = aui::ranged_number<int32_t, 0, 256>;
+
+    template<ASampleFormat format>
+    void processSample(std::byte* src, std::byte* &dst, VolumeLevel volumeLevel);
 };
