@@ -160,8 +160,6 @@ void AAudioPlayer::onSourceSet() {
 }
 
 void AAudioPlayer::onVolumeSet() {
-    constexpr float MIN_VALUE_DB = DSBVOLUME_MIN;
-    constexpr float VIRTUAL_MIN_VALUE_DB = 7000.f;
     AUI_NULLSAFE(mPrivate->mSoundBufferInterface)->SetVolume(
             static_cast<LONG>(glm::clamp(VIRTUAL_MIN_VALUE_DB * log10(mVolume), MIN_VALUE_DB, 0.f)));
 }

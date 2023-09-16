@@ -147,6 +147,8 @@ private:
 #if AUI_PLATFORM_WIN
     static constexpr int BUFFER_DURATION_SEC = 2;
     static_assert(BUFFER_DURATION_SEC >= 2 && "Buffer duration assumes to be greater than 1");
+    constexpr float MIN_VALUE_DB = -10000;
+    constexpr float VIRTUAL_MIN_VALUE_DB = 7000;
 
     HANDLE mEvents[BUFFER_DURATION_SEC + 1];
     HANDLE mThread;
