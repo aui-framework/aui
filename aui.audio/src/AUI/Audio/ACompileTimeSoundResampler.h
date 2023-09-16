@@ -31,17 +31,10 @@ namespace aui::audio {
                                                                                                : ASampleFormat::I24;
 }
 
-template<ASampleFormat format>
-struct DefaultResampler {
-    constexpr aui::audio::util::sample_type_t<format> operator()(aui::audio::util::sample_type_t<format> sample) const {
-        return sample;
-    }
-};
-
 /**
  * @brief Implements audio mixing and resampling for ASoundResampler in compile time.
  */
-template<ASampleFormat in, ASampleFormat out = aui::audio::DEFAULT_OUTPUT_FORMAT, typename Resampler = DefaultResampler<in>>
+template<ASampleFormat in, ASampleFormat out = aui::audio::DEFAULT_OUTPUT_FORMAT>
 class ACompileTimeSoundResampler {
 public:
     explicit ACompileTimeSoundResampler(std::span<std::byte> destination) noexcept:
@@ -103,5 +96,4 @@ private:
     std::byte* mDestinationBufferBegin;
     std::byte* mDestinationBufferEnd;
     std::byte* mDestinationBufferIt;
-    Resampler resampler;
 };
