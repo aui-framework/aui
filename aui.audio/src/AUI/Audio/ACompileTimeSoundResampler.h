@@ -67,7 +67,7 @@ public:
     }
 
     inline void commitAllSamples(const _<ISoundInputStream>& is) {
-        std::byte buf[0x1000 * 3];
+        std::byte buf[BUFFER_SIZE];
         while (remainingSampleCount() > 0) {
             auto toRead = std::min(size_t(remainingSampleCount() * aui::audio::util::size_bytes<in>()), sizeof(buf));
             size_t r = is->read(reinterpret_cast<char*>(buf), toRead);
@@ -97,6 +97,7 @@ public:
 
     static constexpr int64_t MIN_VAL = std::numeric_limits<typename output_t::type>::min();
     static constexpr int64_t MAX_VAL = std::numeric_limits<typename output_t::type>::max();
+    static constexpr size_t BUFFER_SIZE = 0x3000;
 
 private:
     std::byte* mDestinationBufferBegin;
