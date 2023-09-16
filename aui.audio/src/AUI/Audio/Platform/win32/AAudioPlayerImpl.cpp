@@ -146,9 +146,10 @@ void AAudioPlayer::setupSecondaryBuffer() {
 
     aui::zero(format);
     format.dwSize = sizeof(format);
-    format.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS | DSBCAPS_CTRLPOSITIONNOTIFY;
+    format.dwFlags = DSBCAPS_GETCURRENTPOSITION2 | DSBCAPS_GLOBALFOCUS | DSBCAPS_CTRLPOSITIONNOTIFY | DSBCAPS_CTRLVOLUME;
     format.dwBufferBytes = BUFFER_DURATION_SEC * mBytesPerSecond;
     format.lpwfxFormat = &waveFormat;
+
 
     ASSERT_OK DirectSound::instance()->CreateSoundBuffer(&format, &buffer, nullptr);
     ASSERT_OK buffer->QueryInterface(IID_IDirectSoundBuffer8, reinterpret_cast<void**>(&mPrivate->mSoundBufferInterface));
@@ -156,4 +157,9 @@ void AAudioPlayer::setupSecondaryBuffer() {
 }
 void AAudioPlayer::onSourceSet() {
     setupSecondaryBuffer();
+}
+
+void AAudioPlayer::onVolumeSet() {
+    AUI_NULLSAFE(mPrivate->mSoundBufferInterface)->SetVolume(
+            static_cast<LONG>(glm::clamp(7000.f * log10(mVolume), -10000.f, 0.f)));
 }

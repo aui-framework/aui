@@ -155,3 +155,7 @@ void AAudioPlayer::stopImpl() {
 void AAudioPlayer::onSourceSet() {
 
 }
+
+void AAudioPlayer::onVolumeSet() {
+
+}

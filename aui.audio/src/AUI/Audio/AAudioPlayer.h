@@ -120,6 +120,7 @@ public:
      */
     void setVolume(aui::float_within_0_1 volume) {
         mVolume = volume;
+        onVolumeSet();
     }
 
     /**
@@ -181,4 +182,6 @@ private:
     void stopImpl();
 
     void onSourceSet();
+
+    void onVolumeSet();
 };

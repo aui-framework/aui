@@ -78,5 +78,9 @@ void AAudioPlayer::stopImpl() {
 }
 
 void AAudioPlayer::onSourceSet() {
-    //mResampler = _new<ASoundResampler>(mSource, APlaybackConfig{.loop = mLoop, .volume = mVolume});
+
+}
+
+void AAudioPlayer::onVolumeSet() {
+
 }
