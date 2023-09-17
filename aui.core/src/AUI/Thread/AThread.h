@@ -115,6 +115,9 @@ public:
         return mThreadName;
     }
 
+	[[nodiscard]]
+    bool messageQueueEmpty() noexcept;
+
 protected:
     /**
      * @brief Thread ID.

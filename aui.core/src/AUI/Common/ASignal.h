@@ -44,15 +44,11 @@ private:
     {
         AObject* object; // TODO replace with weak_ptr
         func_t func;
-
-        [[nodiscard]]
-        bool operator==(const slot& rhs) const noexcept {
-            return object == rhs.object && func.target_type() == rhs.func.target_type();
-        }
+        bool isDisconnected = false;
     };
 
     std::recursive_mutex mSlotsLock;
-    AVector<slot> mSlots;
+    AVector<_<slot>> mSlots;
 
     void invokeSignal(AObject* emitter, const std::tuple<Args...>& args = {});
 
@@ -157,7 +153,7 @@ private:
         static_assert(std::is_class_v<Lambda>, "the lambda should be a class");
 
         std::unique_lock lock(mSlotsLock);
-        mSlots.push_back({ object, argument_ignore_helper<decltype(&Lambda::operator())>(lambda) });
+        mSlots.push_back(_new<slot>(slot{ object, argument_ignore_helper<decltype(&Lambda::operator())>(lambda) }));
 
         linkSlot(object);
     }
@@ -183,9 +179,9 @@ public:
     virtual ~ASignal() noexcept
     {
         std::unique_lock lock(mSlotsLock);
-        for (slot& slot : mSlots)
+        for (const _<slot>& slot : mSlots)
         {
-            unlinkSlot(slot.object);
+            unlinkSlot(slot->object);
         }
     }
 
@@ -204,7 +200,7 @@ public:
     }
     void clearAllConnectionsWith(aui::no_escape<AObject> object) noexcept override
     {
-        clearAllConnectionsIf([&](const slot& p){ return p.object == object.ptr(); });
+        clearAllConnectionsIf([&](const _<slot>& p){ return p->object == object.ptr(); });
     }
 
 private:
@@ -219,9 +215,9 @@ private:
 
         std::unique_lock lock(mSlotsLock);
         slotsToRemove.reserve(mSlots.size());
-        mSlots.removeIf([&slotsToRemove, predicate = std::move(predicate)](const slot& p) {
+        mSlots.removeIf([&slotsToRemove, predicate = std::move(predicate)](const _<slot>& p) {
             if (predicate(p)) {
-                slotsToRemove << std::move(p.func);
+                slotsToRemove << std::move(p->func);
                 return true;
             }
             return false;
@@ -249,8 +245,9 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
     auto slots = std::move(mSlots); // needed to safely unlock the mutex
     for (auto i = slots.begin(); i != slots.end();)
     {
-        auto receiverWeakPtr = weakPtrFromObject(i->object);
-        if (i->object->isSlotsCallsOnlyOnMyThread() && i->object->getThread() != AThread::current())
+        slot& slot = **i;
+        auto receiverWeakPtr = weakPtrFromObject(slot.object);
+        if (slot.object->isSlotsCallsOnlyOnMyThread() && slot.object->getThread() != AThread::current())
         {
             // perform crossthread call; should make weak ptr to the object and queue call to thread message queue
 
@@ -261,18 +258,21 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
              * by shared_ptr but have not reached clearSignals() yet.
              */
             if (receiverWeakPtr.lock() != nullptr) {
-                i->object->getThread()->enqueue([this,
+                slot.object->getThread()->enqueue([this,
                                                  receiverWeakPtr = std::move(receiverWeakPtr),
-                                                 func = i->func,
+                                                 slot = *i,
                                                  args = args]() {
+                    if (slot->isDisconnected) {
+                        return;
+                    }
                     if (auto receiverPtr = receiverWeakPtr.lock()) {
                         AAbstractSignal::isDisconnected() = false;
-                        (std::apply)(func, args);
+                        (std::apply)(slot->func, args);
                         if (AAbstractSignal::isDisconnected()) {
                             std::unique_lock lock(mSlotsLock);
                             unlinkSlot(receiverPtr.get());
-                            slot s = { receiverPtr.get(), func };
-                            mSlots.removeFirst(s);
+                            slot->isDisconnected = true;
+                            mSlots.removeFirst(slot);
                         }
                     }
                 });
@@ -287,9 +287,9 @@ void ASignal<Args...>::invokeSignal(AObject* emitter, const std::tuple<Args...>&
                 receiverPtr = std::move(sharedPtr);
             }
 
-            (std::apply)(i->func, args);
+            (std::apply)(slot.func, args);
             if (AAbstractSignal::isDisconnected()) {
-                unlinkSlot(i->object);
+                unlinkSlot(slot.object);
                 i = slots.erase(i);
             } else {
                 ++i;

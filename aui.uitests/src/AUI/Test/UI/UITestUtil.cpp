@@ -24,4 +24,5 @@
 
 void uitest::frame() {
     AStubWindowManager::drawFrame();
+    AThread::processMessage();
 }

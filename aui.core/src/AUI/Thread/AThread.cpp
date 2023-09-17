@@ -244,3 +244,8 @@ AThread::AThread(std::function<void()> functor)
         : mFunctor(std::move(functor))
 {
 }
+
+bool AAbstractThread::messageQueueEmpty() noexcept {
+	std::unique_lock lock(mQueueLock);
+	return mMessageQueue.empty();
+}

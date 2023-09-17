@@ -43,6 +43,8 @@ void AEventLoop::iteration() {
     std::unique_lock lock(mMutex);
     if (mNotified) {
         mNotified = false;
+    } else if (AThread::current()->messageQueueEmpty()) {
+        mNotified = true;
         mCV.wait(lock);
     }
 }

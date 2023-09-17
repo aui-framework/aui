@@ -43,7 +43,6 @@ void AStubWindowManager::drawFrame() {
         w->getRenderingContext()->endResize(*w);
         w->redraw();
     }
-    AThread::processMessages();
 }
 
 AImage AStubWindowManager::makeScreenshot(aui::no_escape<AWindow> window) {

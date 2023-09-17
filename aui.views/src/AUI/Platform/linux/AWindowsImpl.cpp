@@ -260,10 +260,10 @@ void AWindow::show() {
     } catch (...) {
         mSelfHolder = nullptr;
     }
-    AThread::current() << [&]() {
-        redraw();
-    };
     if (bool(CommonRenderingContext::ourDisplay) && mHandle) {
+        AThread::current() << [&]() {
+            redraw();
+        };
         XMapWindow(CommonRenderingContext::ourDisplay, mHandle);
     }
 
