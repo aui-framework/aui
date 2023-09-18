@@ -45,6 +45,7 @@
 #include "AUI/IO/AByteBufferInputStream.h"
 #include "AUI/Audio/Formats/AWavSoundStream.h"
 #include "AUI/Audio/Formats/AOggSoundStream.h"
+#include "AUI/Image/AAnimatedDrawable.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
@@ -68,6 +69,8 @@
 #include <AUI/View/AText.h>
 #include <AUI/View/ADrawableView.h>
 #include <AUI/Traits/platform.h>
+
+#include "AUI/Video/webm/AWebmFramesFactory.h"
 
 using namespace declarative;
 
@@ -358,19 +361,19 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 }
         }), "Sounds");
 
+
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
                 Horizontal {
-                    Vertical {
-                            _new<ALabel>("Gif support!"),
-                            _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style { FixedSize { 100_dp } }, // gif from https://tenor.com/view/cat-gif-26024730
-                    },
-                    Vertical {
-                        _new<ALabel>("Animated WebP support!"),
-                        _new<ADrawableView>(AUrl(":img/anim.webp")) with_style {FixedSize{320_px, 240_px}}
-                    }
+                        Vertical {
+                                _new<ALabel>("Gif support!"),
+                                _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) with_style { FixedSize { 100_dp } }, // gif from https://tenor.com/view/cat-gif-26024730
+                        },
+                        Vertical {
+                                _new<ALabel>("Animated WebP support!"),
+                                _new<ADrawableView>(_new<AAnimatedDrawable>(_new<AWebmFramesFactory>(AUrl(":img/test.webm").open()))) with_style {FixedSize{704_px, 432_px}}
+                        }
                 }
         }), "Images");
-
         it->addTab(Vertical {
                 _new<ALabel>("Horizontal splitter"),
                 ASplitter::Horizontal().withItems({_new<AButton>("One"),

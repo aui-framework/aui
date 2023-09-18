@@ -15,7 +15,7 @@ public:
 
     void enqueueFrame(AFrame frame);
 
-    AOptional<int32_t> currentTimecode();
+    AOptional<int32_t> nextFrameTimecode();
 
 private:
     AQueue<AFrame> mFrameBuffer;

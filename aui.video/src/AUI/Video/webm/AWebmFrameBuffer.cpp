@@ -25,7 +25,7 @@ void AWebmFrameBuffer::enqueueFrame(AFrame frame) {
     mFrameBuffer.push(std::move(frame));
 }
 
-AOptional<int32_t> AWebmFrameBuffer::currentTimecode() {
+AOptional<int32_t> AWebmFrameBuffer::nextFrameTimecode() {
     std::unique_lock lock(mMutex);
     if (mFrameBuffer.empty()) {
         return std::nullopt;

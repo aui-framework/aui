@@ -9,11 +9,14 @@ namespace webm {
 }
 class MyWebmReader;
 class MyWebmCallback;
-class vpx_codec_ctx;
+typedef struct vpx_codec_ctx vpx_codec_ctx_t;
+typedef struct VpxInterface VpxInterface;
 
 class AWebmFramesFactory : public IImageFactory {
 public:
     explicit AWebmFramesFactory(_<IInputStream> stream);
+
+    ~AWebmFramesFactory();
 
     AImage provideImage(const glm::ivec2& size) override;
 
@@ -23,12 +26,18 @@ public:
 
 private:
     std::chrono::time_point<std::chrono::system_clock> mPlaybackStarted;
-
-
     AWebmFrameBuffer mFrameBuffer;
+
     _<MyWebmReader> mReader;
     _<MyWebmCallback> mCallback;
     _<webm::WebmParser> mParser;
-    _<vpx_codec_ctx> mContext;
 
+    _<vpx_codec_ctx> mContext;
+    const VpxInterface* mDecoder = nullptr;
+
+    void onFrameLoaded(AByteBuffer buffer, int16_t timecode);
+
+    void onVideoTrackInfoParsed(std::string_view codecName);
+
+    friend class MyWebmCallback;
 };

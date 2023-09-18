@@ -23,10 +23,10 @@
 
 AUI_ENTRY
 {
-    AWebmFramesFactory factory(nullptr);
+//    AWebmFramesFactory factory(AUrl(":img/test.webm").open());
 
 //    Stylesheet::inst().load(AUrl(":views/style.css").open());
-//	auto w = _new<ExampleWindow>();
-//	w->show();
+	auto w = _new<ExampleWindow>();
+	w->show();
 	return 0;
 }

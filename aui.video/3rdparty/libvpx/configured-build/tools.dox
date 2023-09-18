@@ -1,0 +1,4 @@
+/*!\page tools Tools
+    This SDK includes a number of tools/utilities. The following tools are included: 
+     - \subpage tools_tiny_ssim Generate SSIM/PSNR from raw .yuv files
+*/
