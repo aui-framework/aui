@@ -38,16 +38,22 @@ public:
             return webm::Callback::OnFrame(metadata, reader, bytesRemaining);
         }
 
-        mEncodedFrameBuffer.ensureReserved(*bytesRemaining);
-        uint64_t actuallyRead;
-        reader->Read(*bytesRemaining, reinterpret_cast<uint8_t*>(mEncodedFrameBuffer.end()), &actuallyRead);
-        mEncodedFrameBuffer.increaseSize(actuallyRead);
-        (*bytesRemaining) -= actuallyRead;
-        if (*bytesRemaining == 0) {
-            //we've got full coded frame
-            mParser->onFrameParsed(std::move(mEncodedFrameBuffer), mBlockTimecode + mClusterTimecode);
-            mEncodedFrameBuffer.clear();
-            return webm::Status(webm::Status::kOkCompleted);
+        while (*bytesRemaining > 0) {
+            mEncodedFrameBuffer.ensureReserved(*bytesRemaining);
+            uint64_t actuallyRead;
+            auto status = reader->Read(*bytesRemaining, reinterpret_cast<uint8_t*>(mEncodedFrameBuffer.end()), &actuallyRead);
+            if (status.code == webm::Status::kEndOfFile) {
+                break;
+            }
+
+            mEncodedFrameBuffer.increaseSize(actuallyRead);
+            (*bytesRemaining) -= actuallyRead;
+            if (*bytesRemaining == 0) {
+                //we've got full coded frame
+                mParser->onFrameParsed(std::move(mEncodedFrameBuffer), mBlockTimecode + mClusterTimecode);
+                mEncodedFrameBuffer.clear();
+                return webm::Status(webm::Status::kOkCompleted);
+            }
         }
 
         return webm::Status(webm::Status::kOkPartial);
