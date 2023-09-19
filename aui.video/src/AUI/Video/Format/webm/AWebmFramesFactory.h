@@ -20,6 +20,8 @@ public:
 private:
     AOptional<AFrame> mFrame;
     std::chrono::time_point<std::chrono::system_clock> mPlaybackStarted;
+    std::chrono::time_point<std::chrono::system_clock> mLastTimeProvided;
+    int64_t mLastTimecode;
     _<AAsyncVideoProcessor> mProcessor;
     friend class MyWebmCallback;
 };

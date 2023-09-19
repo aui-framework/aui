@@ -11,10 +11,14 @@ AWebmFramesFactory::AWebmFramesFactory(_<IInputStream> stream) {
 AImage AWebmFramesFactory::provideImage(const glm::ivec2 &size) {
     ARaiiHelper helper = [this]() {
         mFrame.reset();
-        if (!mPlaybackStarted.time_since_epoch().count()) {
-            mPlaybackStarted = std::chrono::system_clock::now();
-        }
     };
+
+    if (!mPlaybackStarted.time_since_epoch().count()) {
+        mPlaybackStarted = std::chrono::system_clock::now();
+    }
+
+    mLastTimeProvided = std::chrono::system_clock::now();
+    mLastTimecode = (*mFrame).timecode;
 
     return std::move((*mFrame).image);
 }
@@ -28,7 +32,7 @@ bool AWebmFramesFactory::isNewImageAvailable() {
     }
 
     using namespace std::chrono;
-    return mFrame.value().timecode <= duration_cast<milliseconds>(system_clock::now() - mPlaybackStarted).count();
+    return mFrame.value().timecode - mLastTimecode <= duration_cast<milliseconds>(system_clock::now() - mLastTimeProvided).count();
 }
 
 glm::ivec2 AWebmFramesFactory::getSizeHint() {
