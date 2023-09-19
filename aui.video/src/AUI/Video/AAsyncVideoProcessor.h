@@ -62,7 +62,7 @@ private:
     _<AThread> mParserThread;
     _<AThread> mDecoderThread;
 
-    std::atomic_bool mHasFinished = false;
+    bool mHasFinished = false;
 
     void setupCallbacks();
 };
