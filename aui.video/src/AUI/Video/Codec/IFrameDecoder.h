@@ -2,13 +2,7 @@
 
 #include "AUI/Video/AFrame.h"
 #include "AUI/Video/ACodedFrame.h"
-
-namespace aui::video {
-    enum class Codec {
-        VP8,
-        VP9
-    };
-}
+#include "AUI/Video/Codec/Codec.h"
 
 class IFrameDecoder {
 public:

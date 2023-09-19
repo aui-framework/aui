@@ -1,13 +1,9 @@
-//
-// Created by ilyazavalov on 9/19/23.
-//
-
-#include "WebmParser.h"
+#include "AWebmParser.h"
 #include "webm/webm_parser.h"
 
 class MyWebmCallback : public webm::Callback {
 public:
-    explicit MyWebmCallback(WebmParser* parser) : mParser(parser) {
+    explicit MyWebmCallback(AWebmParser* parser) : mParser(parser) {
         assert(parser != nullptr);
     }
 
@@ -43,7 +39,6 @@ public:
         }
 
         mEncodedFrameBuffer.ensureReserved(*bytesRemaining);
-
         uint64_t actuallyRead;
         reader->Read(*bytesRemaining, reinterpret_cast<uint8_t*>(mEncodedFrameBuffer.end()), &actuallyRead);
         mEncodedFrameBuffer.increaseSize(actuallyRead);
@@ -58,6 +53,12 @@ public:
         return webm::Status(webm::Status::kOkPartial);
     }
 
+
+    webm::Status OnSegmentEnd(const webm::ElementMetadata &metadata) override {
+        mParser->onFinished();
+        return webm::Status(webm::Status::kOkCompleted);
+    }
+
 private:
     bool mIsVideoFrame = false;
     int16_t mClusterTimecode = 0;
@@ -65,7 +66,7 @@ private:
 
     uint64_t mVideoTrackNumber = -1;
     AByteBuffer mEncodedFrameBuffer;
-    WebmParser* mParser;
+    AWebmParser* mParser;
 };
 
 class MyWebmReader : public webm::Reader {
@@ -108,36 +109,42 @@ private:
     uint8_t mStub[0x4000];
 };
 
-WebmParser::WebmParser(_<IInputStream> stream) {
+AWebmParser::AWebmParser(_<IInputStream> stream) {
     setSource(std::move(stream));
 }
 
-void WebmParser::setSource(_<IInputStream> source) {
+void AWebmParser::setSource(_<IInputStream> source) {
     mSource = std::move(source);
 }
 
-void WebmParser::run() {
+void AWebmParser::run() {
     webm::WebmParser parser;
     MyWebmCallback callback(this);
     MyWebmReader reader(mSource);
     parser.Feed(&callback, &reader);
 }
 
-void WebmParser::onVideoTrackParsed(const webm::TrackEntry& info) {
+void AWebmParser::onVideoTrackParsed(const webm::TrackEntry& info) {
     const auto& video = info.video.value();
     emit infoParsed({
         .width = video.display_width.value(),
         .height = video.display_height.value()
     });
+    if (info.codec_id.value() == "V_VP8") {
+        emit codecParsed(aui::video::Codec::VP8);
+    }
+    else if (info.codec_id.value() == "V_VP9") {
+        emit codecParsed(aui::video::Codec::VP9);
+    }
 }
 
-void WebmParser::onFrameParsed(AByteBuffer&& buffer, int64_t timecode) {
+void AWebmParser::onFrameParsed(AByteBuffer&& buffer, int64_t timecode) {
     emit frameParsed({
         .frameData = std::move(buffer),
         .timecode = timecode
     });
 }
 
-void WebmParser::onFinished() {
+void AWebmParser::onFinished() {
     emit finished();
 }

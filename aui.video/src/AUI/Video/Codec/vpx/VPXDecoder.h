@@ -14,6 +14,8 @@ public:
 
     explicit VPXDecoder(Codec codec);
 
+    ~VPXDecoder();
+
     AFrame decode(const ACodedFrame& codedFrame) override;
 
 private:

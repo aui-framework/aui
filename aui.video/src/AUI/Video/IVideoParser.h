@@ -4,6 +4,7 @@
 #include "AUI/Common/ASignal.h"
 #include "AUI/Video/ACodedFrame.h"
 #include "AVideoInfo.h"
+#include "AUI/Video/Codec/Codec.h"
 
 class IVideoParser : public AObject {
 public:
@@ -11,6 +12,7 @@ public:
 
 signals:
     emits<AVideoInfo> infoParsed;
+    emits<aui::video::Codec> codecParsed;
     emits<ACodedFrame> frameParsed;
     emits<> finished;
 };

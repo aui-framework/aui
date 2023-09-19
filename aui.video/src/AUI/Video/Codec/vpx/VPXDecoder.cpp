@@ -4,6 +4,11 @@
 #include "tools_common.h"
 #include "libyuv/convert_from.h"
 
+//we must define usage_exit due to include tools_common.h
+void usage_exit(void) {
+    exit(-1);
+}
+
 namespace aui::video::impl {
     AImage convertToRGBA(vpx_image_t* image) {
         AByteBuffer buffer;
@@ -52,6 +57,10 @@ VPXDecoder::VPXDecoder(Codec codec) {
     }
 }
 
+VPXDecoder::~VPXDecoder() {
+    vpx_codec_destroy(mContext.ptr());
+}
+
 AFrame VPXDecoder::decode(const ACodedFrame& codedFrame) {
     if (auto code = vpx_codec_decode(mContext.ptr(),
                                  reinterpret_cast<const uint8_t*>(codedFrame.frameData.data()), codedFrame.frameData.size(),
@@ -62,10 +71,10 @@ AFrame VPXDecoder::decode(const ACodedFrame& codedFrame) {
     vpx_codec_iter_t iter = nullptr;
 
     if (auto image = vpx_codec_get_frame(mContext.ptr(), &iter)) {
-//        return AFrame {
-//            .image = impl::convertToRGBA(image),
-//            .timecode = codedFrame.timecode
-//        };
+        return AFrame {
+            .image = aui::video::impl::convertToRGBA(image),
+            .timecode = codedFrame.timecode
+        };
     }
 
     throw AException("(VPX) failed to get decoded frame, error code");

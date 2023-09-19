@@ -5,10 +5,10 @@
 _<IFrameDecoder> IFrameDecoder::fromCodec(aui::video::Codec codec) {
     switch (codec) {
         case aui::video::Codec::VP8:
-            return _new<VPXDecoder>(VPX::Codec::VP8);
+            return _new<VPXDecoder>(VPXDecoder::Codec::VP8);
 
         case aui::video::Codec::VP9:
-            return _new<VPXDecoder>(VPX::Codec::VP9);
+            return _new<VPXDecoder>(VPXDecoder::Codec::VP9);
     }
 
     return nullptr;

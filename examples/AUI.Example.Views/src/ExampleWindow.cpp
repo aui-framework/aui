@@ -70,7 +70,7 @@
 #include <AUI/View/ADrawableView.h>
 #include <AUI/Traits/platform.h>
 
-#include "AUI/Video/webm/AWebmFramesFactory.h"
+#include "AUI/Video/Format/webm/AWebmFramesFactory.h"
 
 using namespace declarative;
 

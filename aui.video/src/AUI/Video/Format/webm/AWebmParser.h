@@ -6,9 +6,9 @@ namespace webm {
     struct TrackEntry;
 }
 
-class WebmParser : public IVideoParser {
+class AWebmParser : public IVideoParser {
 public:
-    explicit WebmParser(_<IInputStream> source);
+    explicit AWebmParser(_<IInputStream> source);
 
     void setSource(_<IInputStream> source);
 
