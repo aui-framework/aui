@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AUI/Video/AFrameBuffer.h"
+#include "AUI/Video/AFrame.h"
 #include "AUI/Image/IImageFactory.h"
 #include "AUI/Util/APimpl.h"
 #include "AUI/Thread/AFuture.h"
