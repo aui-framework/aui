@@ -377,7 +377,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
                 Horizontal {
                         Vertical {
-                                _new<ALabel>("Animated webm support!"),
+                                _new<ALabel>("Webm support!"),
                                 _new<ADrawableView>(_new<AAnimatedDrawable>(_new<AWebmFramesFactory>(AUrl(":video/test.webm").open()))) with_style {FixedSize{640_px, 360_px}}
                         }
                 }

@@ -1,5 +1,7 @@
 #include "AAsyncVideoProcessor.h"
 #include "AUI/Logging/ALogger.h"
+#include "AUI/Thread/IEventLoop.h"
+#include "AUI/Thread/AEventLoop.h"
 
 AAsyncVideoProcessor::AAsyncVideoProcessor(_<IVideoParser> parser, _<IFrameDecoder> decoder) :
             mParser(std::move(parser)), mDecoder(std::move(decoder)) {
@@ -12,38 +14,34 @@ void AAsyncVideoProcessor::run() {
     mParserThread = _new<AThread>([self = sharedPtr()]() {
          self->mParser->run();
     });
-
     mParserThread->start();
+
+    mDecoderThread = _new<AThread>([self = sharedPtr()]() {
+          AEventLoop loop;
+          IEventLoop::Handle handle(&loop);
+          AThread::current()->getCurrentEventLoop()->loop();
+    });
+    mDecoderThread->start();
 }
 
 AOptional<AFrame> AAsyncVideoProcessor::nextFrame() {
-    if (mDecodingTasks.empty() || !mDecoder) {
-        return std::nullopt;
-    }
-
-    try {
-        mDecodingTasks.processSingle();
-        return *mFrameFuture;
-    }
-    catch (const AException& e) {
-        ALogger::err("webm") << "Failed to decode frame : " << e.what();
-    }
-    catch(...) { }
-
-    return std::nullopt;
+    return mReadyFrames.pop();
 }
 
 void AAsyncVideoProcessor::setupCallbacks() {
     AObject::connect(mParser->frameParsed, [self = sharedPtr()](ACodedFrame frame) {
-         self->mDecodingTasks << [self = std::move(self), frame = std::move(frame)]() {
-              self->mFrameFuture = asyncX [self = std::move(self), frame = std::move(frame)] {
-                  return self->mDecoder->decode(frame);
-              };
-         };
+        self->mDecoderThread->enqueue([self, frame = std::move(frame)]() {
+            try {
+                self->mReadyFrames.push(self->mDecoder->decode(frame));
+            }
+            catch(...) { }
+        });
+        self->mDecoderThread->getCurrentEventLoop()->notifyProcessMessages();
     });
 
     AObject::connect(mParser->finished, [self = sharedPtr()]() {
         self->mHasFinished = true;
+        static_cast<AEventLoop*>(self->mDecoderThread->getCurrentEventLoop())->stop();
     });
 
     if (!mDecoder) {
