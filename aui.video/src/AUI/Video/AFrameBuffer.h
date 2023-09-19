@@ -7,7 +7,7 @@
 
 class AFrame;
 
-class AWebmFrameBuffer {
+class AFrameBuffer {
 public:
     bool isFrameAvailable();
 
@@ -15,7 +15,7 @@ public:
 
     void enqueueFrame(AFrame frame);
 
-    AOptional<int32_t> nextFrameTimecode();
+    AOptional<int16_t> nextFrameTimecode();
 
 private:
     AQueue<AFrame> mFrameBuffer;

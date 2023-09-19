@@ -4,5 +4,5 @@
 
 struct AFrame {
     AImage image;
-    int16_t timecode = 0;
+    int64_t timecode = 0;
 };

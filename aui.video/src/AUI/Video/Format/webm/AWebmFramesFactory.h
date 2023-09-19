@@ -1,14 +1,10 @@
 #pragma once
 
-#include "AWebmFrameBuffer.h"
+#include "AUI/Video/AFrameBuffer.h"
 #include "AUI/Image/IImageFactory.h"
 #include "AUI/Util/APimpl.h"
+#include "AUI/Thread/AFuture.h"
 
-namespace webm {
-    class WebmParser;
-}
-class MyWebmReader;
-class MyWebmCallback;
 typedef struct vpx_codec_ctx vpx_codec_ctx_t;
 typedef struct VpxInterface VpxInterface;
 
@@ -25,17 +21,12 @@ public:
     glm::ivec2 getSizeHint() override;
 
 private:
+    AFuture<> mProcessingFuture;
     std::chrono::time_point<std::chrono::system_clock> mPlaybackStarted;
-    AWebmFrameBuffer mFrameBuffer;
+    AFrameBuffer mFrameBuffer;
+    aui::fast_pimpl<vpx_codec_ctx_t, 5 * sizeof(void*) + 2 * sizeof(long), std::max(sizeof(void*), sizeof(long))> mContext;
 
-    _<MyWebmReader> mReader;
-    _<MyWebmCallback> mCallback;
-    _<webm::WebmParser> mParser;
-
-    _<vpx_codec_ctx> mContext;
-    const VpxInterface* mDecoder = nullptr;
-
-    void onFrameLoaded(AByteBuffer buffer, int16_t timecode);
+    void onFrameLoaded(AByteBufferView buffer, int16_t timecode);
 
     void onVideoTrackInfoParsed(std::string_view codecName);
 

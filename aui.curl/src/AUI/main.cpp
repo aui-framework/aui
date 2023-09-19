@@ -28,14 +28,13 @@
  * @brief aui::curl is a http(s)/ftp driver based on cURL.
  */
 
-/*
-struct main {
-    main() {
+struct ACurlInit {
+    ACurlInit() {
         AUrl::registerResolver("http", [](const AUrl& u) {
-            return _new<ACurl>(u.getFull());
+            return ACurl::Builder(u.full()).toInputStream();
         });
         AUrl::registerResolver("https", [](const AUrl& u) {
-            return _new<ACurl>(u.getFull());
+            return ACurl::Builder(u.full()).toInputStream();
         });
     }
-} m;*/
+} _acurlinit;
