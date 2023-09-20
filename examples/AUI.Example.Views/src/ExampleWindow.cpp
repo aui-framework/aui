@@ -349,7 +349,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 _new<AButton>("Stop .wav music").connect(&AButton::clicked, slot(mWavAudio)::stop),
                                 _new<AButton>("Pause .wav music").connect(&AButton::clicked, slot(mWavAudio)::pause),
                                 _new<ALabel>("Volume control"),
-                                _new<ASlider>().connect(&ASlider::valueChanging, [player = mWavAudio](aui::float_within_0_1 value) {
+                                _new<ASlider>().connect(&ASlider::valueChanging, this, [player = mWavAudio](aui::float_within_0_1 value) {
                                     player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
                                 })
                         },
@@ -359,7 +359,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 _new<AButton>("Stop .ogg music").connect(&AButton::clicked, slot(mOggAudio)::stop),
                                 _new<AButton>("Pause .ogg music").connect(&AButton::clicked, slot(mOggAudio)::pause),
                                 _new<ALabel>("Volume control"),
-                                _new<ASlider>().connect(&ASlider::valueChanging, [player = mOggAudio](aui::float_within_0_1 value) {
+                                _new<ASlider>().connect(&ASlider::valueChanging, this, [player = mOggAudio](aui::float_within_0_1 value) {
                                     player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
                                 })
                         }

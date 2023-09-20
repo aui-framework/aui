@@ -3,6 +3,12 @@
 #include "AUI/Audio/ASoundResampler.h"
 #include <oboe/Oboe.h>
 
+_<IAudioPlayer> IAudioPlayer::fromSoundStream(_<ISoundInputStream> stream) {
+    auto result = _new<AOboeAudioPlayer>();
+    result->setSource(std::move(stream));
+    return result;
+}
+
 class OboeSoundOutput : public oboe::AudioStreamDataCallback  {
 public:
     static OboeSoundOutput& instance() {

@@ -1,36 +1,36 @@
-#include "AUI/Audio/AAudioPlayer.h"
+#include "ADirectSoundAudioPlayer.h"
+#include "AUI/Audio/ISoundInputStream.h"
 #include "DirectSound.h"
 
-struct AAudioPlayer::Private {
+_<IAudioPlayer> IAudioPlayer::fromSoundStream(_<ISoundInputStream> stream) {
+    auto result = _new<ADirectSoundAudioPlayer>();
+    result->setSource(std::move(stream));
+    return result;
+}
+
+struct ADirectSoundAudioPlayer::Private {
     IDirectSoundBuffer8* mSoundBufferInterface;
     IDirectSoundNotify8* mNotifyInterface;
     DSBPOSITIONNOTIFY mNotifyPositions[BUFFER_DURATION_SEC];
 };
 
-
-AAudioPlayer::AAudioPlayer() {
-
-}
-
-AAudioPlayer::AAudioPlayer(_<ISoundInputStream> stream) {
-    setSource(std::move(stream));
-}
-AAudioPlayer::~AAudioPlayer() {
+ADirectSoundAudioPlayer::~ADirectSoundAudioPlayer() {
+    stop();
 }
 
 
-void AAudioPlayer::playImpl() {
+void ADirectSoundAudioPlayer::playImpl() {
     setupReachPointEvents();
     setupBufferThread();
     uploadNextBlock(BUFFER_DURATION_SEC);
     ASSERT_OK mPrivate->mSoundBufferInterface->Play(0, 0, DSBPLAY_LOOPING);
 }
 
-void AAudioPlayer::pauseImpl() {
+void ADirectSoundAudioPlayer::pauseImpl() {
     ASSERT_OK mPrivate->mSoundBufferInterface->Stop();
 }
 
-void AAudioPlayer::stopImpl() {
+void ADirectSoundAudioPlayer::stopImpl() {
     ASSERT_OK mPrivate->mSoundBufferInterface->Stop();
 
     while (mThreadIsActive) {
@@ -43,10 +43,10 @@ void AAudioPlayer::stopImpl() {
         CloseHandle(mEvent);
     CloseHandle(mThread);
     clearBuffer();
-    mSource->rewind();
+    source()->rewind();
 }
 
-void AAudioPlayer::uploadNextBlock(DWORD reachedPointIndex) {
+void ADirectSoundAudioPlayer::uploadNextBlock(DWORD reachedPointIndex) {
     LPVOID buffer;
     DWORD bufferSize = mBytesPerSecond;
     DWORD offset = ((reachedPointIndex + 1) % BUFFER_DURATION_SEC) * mBytesPerSecond;
@@ -57,11 +57,11 @@ void AAudioPlayer::uploadNextBlock(DWORD reachedPointIndex) {
         ASSERT_OK mPrivate->mSoundBufferInterface->Lock(offset, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
     }
 
-    bufferSize = mSource->read(static_cast<char*>(buffer), bufferSize);
+    bufferSize = source()->read(static_cast<char*>(buffer), bufferSize);
     ASSERT_OK mPrivate->mSoundBufferInterface->Unlock(buffer, bufferSize, nullptr, 0);
     if (bufferSize == 0) {
-        if (mLoop) {
-            mSource->rewind();
+        if (loop()) {
+            source()->rewind();
         }
         else {
             std::memset(buffer, 0, mBytesPerSecond - bufferSize);
@@ -74,7 +74,7 @@ void AAudioPlayer::uploadNextBlock(DWORD reachedPointIndex) {
     }
 }
 
-void AAudioPlayer::clearBuffer() {
+void ADirectSoundAudioPlayer::clearBuffer() {
     LPVOID buffer;
     DWORD bufferSize = BUFFER_DURATION_SEC * mBytesPerSecond;
     ASSERT_OK mPrivate->mSoundBufferInterface->Lock(0, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
@@ -82,7 +82,7 @@ void AAudioPlayer::clearBuffer() {
     ASSERT_OK mPrivate->mSoundBufferInterface->Unlock(buffer, bufferSize, nullptr, 0);
 }
 
-void AAudioPlayer::setupBufferThread() {
+void ADirectSoundAudioPlayer::setupBufferThread() {
     DWORD threadId;
     mThread = CreateThread(nullptr,
                            0,
@@ -92,14 +92,14 @@ void AAudioPlayer::setupBufferThread() {
                            &threadId);
 }
 
-DWORD WINAPI AAudioPlayer::bufferThread(void *lpParameter) {
-    auto audio = reinterpret_cast<AAudioPlayer*>(lpParameter);
+DWORD WINAPI ADirectSoundAudioPlayer::bufferThread(void *lpParameter) {
+    auto audio = reinterpret_cast<ADirectSoundAudioPlayer*>(lpParameter);
     while(true) {
         audio->onAudioReachCallbackPoint();
     }
 }
 
-void AAudioPlayer::onAudioReachCallbackPoint() {
+void ADirectSoundAudioPlayer::onAudioReachCallbackPoint() {
     DWORD waitResult;
     waitResult = WaitForMultipleObjects(BUFFER_DURATION_SEC, mEvents, FALSE, INFINITE);
     while(waitResult != WAIT_FAILED) {
@@ -116,7 +116,7 @@ void AAudioPlayer::onAudioReachCallbackPoint() {
     }
 }
 
-void AAudioPlayer::setupReachPointEvents() {
+void ADirectSoundAudioPlayer::setupReachPointEvents() {
     ASSERT_OK mPrivate->mSoundBufferInterface->QueryInterface(IID_IDirectSoundNotify8, (void**) &mPrivate->mNotifyInterface);
     mEvents[BUFFER_DURATION_SEC] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     for (int i = 0; i < BUFFER_DURATION_SEC; i++) {
@@ -128,12 +128,12 @@ void AAudioPlayer::setupReachPointEvents() {
     ASSERT_OK (mPrivate->mNotifyInterface->SetNotificationPositions(BUFFER_DURATION_SEC, mPrivate->mNotifyPositions));
 }
 
-void AAudioPlayer::setupSecondaryBuffer() {
+void ADirectSoundAudioPlayer::setupSecondaryBuffer() {
     DSBUFFERDESC format;
     WAVEFORMATEX waveFormat;
     IDirectSoundBuffer* buffer;
 
-    auto info = mSource->info();
+    auto info = source()->info();
     waveFormat.cbSize = sizeof(waveFormat);
     waveFormat.wFormatTag = WAVE_FORMAT_PCM;
     waveFormat.wBitsPerSample = info.bitsPerSample();
@@ -155,11 +155,14 @@ void AAudioPlayer::setupSecondaryBuffer() {
     ASSERT_OK buffer->QueryInterface(IID_IDirectSoundBuffer8, reinterpret_cast<void**>(&mPrivate->mSoundBufferInterface));
     buffer->Release();
 }
-void AAudioPlayer::onSourceSet() {
+void ADirectSoundAudioPlayer::onSourceSet() {
     setupSecondaryBuffer();
 }
 
-void AAudioPlayer::onVolumeSet() {
+void ADirectSoundAudioPlayer::onLoopSet() {
+}
+
+void ADirectSoundAudioPlayer::onVolumeSet() {
     AUI_NULLSAFE(mPrivate->mSoundBufferInterface)->SetVolume(
-            static_cast<LONG>(glm::clamp(VIRTUAL_MIN_VALUE_DB * log10(mVolume), MIN_VALUE_DB, 0.f)));
+            static_cast<LONG>(glm::clamp(AMPLITUDE_DB * std::log10(float(volume()) / 256.f), MIN_VALUE_DB, 0.f)));
 }

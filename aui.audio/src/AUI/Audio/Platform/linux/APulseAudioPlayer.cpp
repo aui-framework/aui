@@ -5,6 +5,12 @@
 #include <pulse/simple.h>
 #include <pulse/pulseaudio.h>
 
+_<IAudioPlayer> IAudioPlayer::fromSoundStream(_<ISoundInputStream> stream) {
+    auto result = _new<APulseAudioPlayer>();
+    result->setSource(std::move(stream));
+    return result;
+}
+
 static constexpr auto LOG_TAG = "Pulseaudio";
 
 static AAudioMixer& loop() {
