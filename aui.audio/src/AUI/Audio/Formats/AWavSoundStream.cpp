@@ -6,14 +6,13 @@
 #include "AUI/IO/AStrongByteBufferInputStream.h"
 #include "AUI/Url/AUrl.h"
 
-AWavSoundStream::AWavSoundStream(_<ISeekableInputStream> is) : mStream(std::move(is)) {
-    mStream->read(reinterpret_cast<char*>(&mHeader), sizeof(mHeader));
+AWavSoundStream::AWavSoundStream(AUrl url) : mUrl(std::move(url)) {
+    mStream = mUrl->open();
+    readHeader();
+}
 
-    if (std::memcmp(mHeader.chunkID, "RIFF", 4) != 0 ||
-        std::memcmp(mHeader.format, "WAVE", 4) != 0 ||
-        std::memcmp(mHeader.subchunk1ID, "fmt ", 4) != 0) {
-        throw AException("not a wav file");
-    }
+AWavSoundStream::AWavSoundStream(_<IInputStream> stream) : mStream(std::move(stream)) {
+
 }
 
 AAudioFormat AWavSoundStream::info() {
@@ -26,8 +25,14 @@ AAudioFormat AWavSoundStream::info() {
 }
 
 void AWavSoundStream::rewind() {
-    mChunkReadPos = 0;
-    mStream->seek(sizeof(mHeader), std::ios::beg);
+    if (mUrl) {
+        mChunkReadPos = 0;
+        mStream.reset();
+        mStream = mUrl->open();
+        if (mStream) {
+            readHeader();
+        }
+    }
 }
 
 size_t AWavSoundStream::read(char* dst, size_t size) {
@@ -41,10 +46,15 @@ size_t AWavSoundStream::read(char* dst, size_t size) {
     return r;
 }
 
-_<ISoundInputStream> AWavSoundStream::load(_<ISeekableInputStream> is) {
-    return _new<AWavSoundStream>(std::move(is));
+_<AWavSoundStream> AWavSoundStream::fromUrl(AUrl url) {
+    return _new<AWavSoundStream>(std::move(url));
 }
 
-_<AWavSoundStream> AWavSoundStream::fromUrl(const AUrl& url) {
-    return _new<AWavSoundStream>(AStrongByteBufferInputStream::fromUrl(url));
+void AWavSoundStream::readHeader() {
+    mStream->read(reinterpret_cast<char*>(&mHeader), sizeof(mHeader));
+    if (std::memcmp(mHeader.chunkID, "RIFF", 4) != 0 ||
+        std::memcmp(mHeader.format, "WAVE", 4) != 0 ||
+        std::memcmp(mHeader.subchunk1ID, "fmt ", 4) != 0) {
+        throw AException("not a wav file");
+    }
 }
