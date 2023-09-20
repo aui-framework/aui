@@ -124,7 +124,7 @@ public:
             mDestinationBufferIt(mDestinationBufferBegin)
     { }
 
-    void setVolume(uint32_t volume) {
+    void setVolume(IAudioPlayer::VolumeLevel volume) {
         mVolumeLevel = volume;
     }
 
@@ -134,7 +134,7 @@ public:
         int64_t newSample = int64_t(aui::audio::impl::sample_cast<out, in>(sample)) +
                             int64_t(aui::audio::impl::extractSample<out>(mDestinationBufferIt));
         if (mVolumeLevel) {
-            newSample = (*mVolumeLevel * newSample) / 256;
+            newSample = (*mVolumeLevel * newSample) / IAudioPlayer::VolumeLevel::MAX;
         }
         newSample = glm::clamp(newSample, MIN_VAL, MAX_VAL);
         aui::audio::impl::pushSample<out>(newSample, mDestinationBufferIt);
@@ -184,5 +184,5 @@ private:
     std::byte* mDestinationBufferBegin;
     std::byte* mDestinationBufferEnd;
     std::byte* mDestinationBufferIt;
-    AOptional<uint32_t> mVolumeLevel;
+    AOptional<IAudioPlayer::VolumeLevel> mVolumeLevel;
 };
