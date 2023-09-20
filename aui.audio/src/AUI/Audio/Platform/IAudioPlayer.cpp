@@ -4,6 +4,9 @@
 #if AUI_PLATFORM_LINUX
 #include "linux/APulseAudioPlayer.h"
 using PlatformPlayerType = APulseAudioPlayer;
+#elif AUI_PLATFORM_ANDROID
+#include "android/AOboeAudioPlayer.h"
+using PlatformPlayerType = AOboeAudioPlayer;
 #endif
 
 //_<IAudioPlayer> IAudioPlayer::fromUrl(const AUrl& url) {

@@ -1,4 +1,4 @@
-#include "AUI/Audio/AAudioPlayer.h"
+#include "AOboeAudioPlayer.h"
 #include "AUI/Audio/AAudioMixer.h"
 #include "AUI/Audio/ASoundResampler.h"
 #include <oboe/Oboe.h>
@@ -10,11 +10,11 @@ public:
         return p;
     }
 
-    void addSource(_<AAudioPlayer> source) {
+    void addSource(_<AOboeAudioPlayer> source) {
         mMixer->addSoundSource(std::move(source));
     }
 
-    void removeSource(const _<AAudioPlayer>& source) {
+    void removeSource(const _<AOboeAudioPlayer>& source) {
         mMixer->removeSoundSource(source);
     }
 
@@ -45,41 +45,31 @@ private:
     _<AAudioMixer> mMixer;
 };
 
+void AOboeAudioPlayer::playImpl() {
+    assert(mResampled == nullptr);
+    mResampled = _new<ASoundResampler>(this, aui::audio::DEFAULT_OUTPUT_FORMAT);
+    OboeSoundOutput::instance().addSource(_cast<AOboeAudioPlayer>(sharedPtr()));
+}
 
-AAudioPlayer::AAudioPlayer() {
+void AOboeAudioPlayer::pauseImpl() {
+    OboeSoundOutput::instance().removeSource(_cast<AOboeAudioPlayer>(sharedPtr()));
+    mResampled.reset();
+}
+
+void AOboeAudioPlayer::stopImpl() {
+    OboeSoundOutput::instance().removeSource(_cast<AOboeAudioPlayer>(sharedPtr()));
+    source()->rewind();
+    mResampled.reset();
+}
+
+void AOboeAudioPlayer::onSourceSet() {
 
 }
 
-AAudioPlayer::~AAudioPlayer() {
+void AOboeAudioPlayer::onLoopSet() {
+
 }
 
-AAudioPlayer::AAudioPlayer(_<ISoundInputStream> stream) {
-    setSource(std::move(stream));
-}
-
-void AAudioPlayer::playImpl() {
-    assert(mResampler == nullptr);
-    mResampler = _new<ASoundResampler>(mSource);
-    OboeSoundOutput::instance().addSource(_cast<AAudioPlayer>(sharedPtr()));
-}
-
-void AAudioPlayer::pauseImpl() {
-    assert(mResampler != nullptr);
-    OboeSoundOutput::instance().removeSource(_cast<AAudioPlayer>(sharedPtr()));
-    mResampler.reset();
-}
-
-void AAudioPlayer::stopImpl() {
-    assert(mResampler != nullptr);
-    OboeSoundOutput::instance().removeSource(_cast<AAudioPlayer>(sharedPtr()));
-    mSource->rewind();
-    mResampler.reset();
-}
-
-void AAudioPlayer::onSourceSet() {
-    //mResampler = _new<ASoundResampler>(mSource, APlaybackConfig{.loop = mLoop, .volume = mVolume});
-}
-
-void AAudioPlayer::onVolumeSet() {
+void AOboeAudioPlayer::onVolumeSet() {
 
 }
