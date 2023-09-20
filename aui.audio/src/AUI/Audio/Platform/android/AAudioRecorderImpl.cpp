@@ -1,5 +1,5 @@
 #include "AUI/Audio/AAudioRecorder.h"
-#include "AUI/Audio/ARawSoundStream.h"
+#include "AUI/Audio/Formats/ARawSoundStream.h"
 #include "AUI/Platform/AMessageBox.h"
 #include "AUI/Platform/AWindow.h"
 #include <oboe/Oboe.h>
@@ -8,7 +8,6 @@
 class OboeSoundInput : public oboe::AudioStreamDataCallback  {
 public:
     static constexpr AAudioFormat OUTPUT_FORMAT = {
-            .bitRate = 88200,
             .channelCount = 1,
             .sampleRate = 44100,
             .sampleFormat = ASampleFormat::I16,

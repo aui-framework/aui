@@ -29,6 +29,86 @@ namespace aui::audio {
      */
     static constexpr ASampleFormat DEFAULT_OUTPUT_FORMAT = aui::platform::current::is_mobile() ? ASampleFormat::I16
                                                                                                : ASampleFormat::I24;
+
+    namespace impl {
+        template<int power, typename T>
+        constexpr T multByPowerOf2(T value) {
+            if constexpr (power > 0) {
+                return value << power;
+            } else {
+                return value >> -power;
+            }
+        }
+
+        template<int shift, typename T>
+        constexpr T logicalShift(T value) {
+            if constexpr (shift > 0) {
+                return static_cast<T>(static_cast<std::make_unsigned_t<T>>(value) << shift);
+            } else {
+                return static_cast<T>(static_cast<std::make_unsigned_t<T>>(value) >> -shift);
+            }
+        }
+
+        template<ASampleFormat f>
+        struct sample_type;
+
+        template<>
+        struct sample_type<ASampleFormat::I16> {
+            using type = int16_t;
+            constexpr static int size_bits = 16;
+        };
+
+        template<>
+        struct sample_type<ASampleFormat::I24> {
+            using type = int32_t;
+            constexpr static int size_bits = 24;
+        };
+
+        template<ASampleFormat f>
+        constexpr int size_bytes() {
+            return sample_type<f>::size_bits / 8;
+        }
+
+        template<ASampleFormat f>
+        using sample_type_t = typename sample_type<f>::type;
+
+        template<ASampleFormat f>
+        constexpr int type_size() {
+            return sizeof(sample_type_t<f>);
+        }
+
+        template<ASampleFormat f>
+        constexpr int type_size_bits() {
+            return type_size<f>() * 8;
+        }
+
+        template<ASampleFormat to, ASampleFormat from>
+        constexpr sample_type_t<to> sample_cast(sample_type_t<from> sample) {
+            if constexpr (type_size<to>() > type_size<from>()) {
+                return logicalShift<type_size_bits<to>() - type_size_bits<from>()>(static_cast<sample_type_t<to>>(sample));
+            }
+            return logicalShift<type_size_bits<to>() - type_size_bits<from>()>(sample);
+        }
+
+#pragma pack(push, 1)
+        template<ASampleFormat f>
+        struct packed_accessor {
+            sample_type_t<f> value: sample_type<f>::size_bits;
+            unsigned _pad: (32 - sample_type<f>::size_bits);
+        };
+#pragma pack(pop)
+
+        template<ASampleFormat f>
+        sample_type_t<f> extractSample(std::byte* src) {
+            return logicalShift<type_size_bits<f>() - sample_type<f>::size_bits>(reinterpret_cast<packed_accessor<f>*>(src)->value);
+        }
+
+        template<ASampleFormat f>
+        void pushSample(sample_type_t<f> sample, std::byte* dst) {
+            reinterpret_cast<packed_accessor<f>*>(dst)->value = logicalShift<sample_type<f>::size_bits - type_size_bits<f>()>(sample);
+        }
+    }
+
 }
 
 /**
@@ -43,33 +123,33 @@ public:
             mDestinationBufferIt(mDestinationBufferBegin)
     { }
 
-    inline void commitSample(aui::audio::util::sample_type_t<in> sample) {
+    inline void commitSample(aui::audio::impl::sample_type_t<in> sample) {
         assert(("buffer overrun", mDestinationBufferIt <= mDestinationBufferEnd));
         //use int64_t for overflow preverting
-        int64_t newSample = int64_t(aui::audio::util::sample_cast<out, in>(sample)) +
-                            int64_t(aui::audio::util::extractSample<out>(mDestinationBufferIt));
+        int64_t newSample = int64_t(aui::audio::impl::sample_cast<out, in>(sample)) +
+                            int64_t(aui::audio::impl::extractSample<out>(mDestinationBufferIt));
         newSample = glm::clamp(newSample, MIN_VAL, MAX_VAL);
-        aui::audio::util::pushSample<out>(newSample, mDestinationBufferIt);
-        mDestinationBufferIt += aui::audio::util::size_bytes<out>();
+        aui::audio::impl::pushSample<out>(newSample, mDestinationBufferIt);
+        mDestinationBufferIt += aui::audio::impl::size_bytes<out>();
     }
 
 
     [[nodiscard]]
     size_t remainingSampleCount() const {
-        return (mDestinationBufferEnd - mDestinationBufferIt) / aui::audio::util::size_bytes<out>();
+        return (mDestinationBufferEnd - mDestinationBufferIt) / aui::audio::impl::size_bytes<out>();
     }
 
     inline void commitAllSamples(const _<ISoundInputStream>& is) {
         std::byte buf[BUFFER_SIZE];
         while (remainingSampleCount() > 0) {
-            auto toRead = std::min(size_t(remainingSampleCount() * aui::audio::util::size_bytes<in>()), sizeof(buf));
+            auto toRead = std::min(size_t(remainingSampleCount() * aui::audio::impl::size_bytes<in>()), sizeof(buf));
             size_t r = is->read(reinterpret_cast<char*>(buf), toRead);
             if (r == 0) {
                 break;
             }
             std::byte* end = buf + r;
-            for (std::byte* it = buf; it + aui::audio::util::size_bytes<in>() <= end; it += aui::audio::util::size_bytes<in>()) {
-                commitSample(aui::audio::util::extractSample<in>(it));
+            for (std::byte* it = buf; it + aui::audio::impl::size_bytes<in>() <= end; it += aui::audio::impl::size_bytes<in>()) {
+                commitSample(aui::audio::impl::extractSample<in>(it));
             }
         }
     }
@@ -85,8 +165,8 @@ public:
     }
 
 
-    using input_t = aui::audio::util::sample_type<in>;
-    using output_t = aui::audio::util::sample_type<out>;
+    using input_t = aui::audio::impl::sample_type<in>;
+    using output_t = aui::audio::impl::sample_type<out>;
 
     static constexpr int64_t MIN_VAL = std::numeric_limits<typename output_t::type>::min();
     static constexpr int64_t MAX_VAL = std::numeric_limits<typename output_t::type>::max();

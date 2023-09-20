@@ -9,11 +9,6 @@
  */
 struct API_AUI_AUDIO AAudioFormat {
     /**
-     * @Brief Bits per second.
-     */
-    uint32_t bitRate;
-
-    /**
      * @brief Channel count.
      */
     std::uint8_t channelCount;
