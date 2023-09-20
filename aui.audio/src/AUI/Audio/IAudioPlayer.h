@@ -4,6 +4,7 @@
 #include <AUI/Common/ASignal.h>
 
 class ISoundInputStream;
+class AUrl;
 
 /**
  * @brief Interface for audio playback.
@@ -11,6 +12,11 @@ class ISoundInputStream;
  */
 class API_AUI_AUDIO IAudioPlayer: public AObject {
 public:
+
+    static _<IAudioPlayer> fromUrl(const AUrl& url);
+
+    static _<IAudioPlayer> fromSoundStream(_<ISoundInputStream>);
+
     /**
      * @brief Playback status depends on last called function among play(), pause(), stop().
      */
@@ -53,7 +59,7 @@ public:
     /**
      * @return Current playback status.
      */
-    PlaybackStatus getStatus() const noexcept {
+    PlaybackStatus playbackStatus() const noexcept {
         return mPlaybackStatus;
     }
 
@@ -75,6 +81,14 @@ public:
     [[nodiscard]]
     const _<ISoundInputStream>& source() const noexcept {
         return mSource;
+    }
+
+    /**
+     * @brief Get resampled stream for playback.
+     */
+    [[nodiscard]]
+    const _<ISoundInputStream>& resampledStream() const noexcept {
+        return mResampled != nullptr ? mResampled : mSource;
     }
 
     /**
@@ -114,11 +128,19 @@ public:
         return mVolume;
     }
 
+    void rewind() {
+        stop();
+        play();
+    }
+
 signals:
     /**
      * @brief On playback finished.
      */
     emits<> finished;
+
+protected:
+    _<ISoundInputStream> mResampled;
 
 private:
     _<ISoundInputStream> mSource;
@@ -134,14 +156,7 @@ private:
     virtual void pauseImpl() = 0;
     virtual void stopImpl() = 0;
 
-    virtual void onSourceSet() {
-
-    }
-    virtual void onVolumeSet() {
-
-    }
-
-    virtual void onLoopSet() {
-
-    }
+    virtual void onSourceSet() { }
+    virtual void onVolumeSet() { }
+    virtual void onLoopSet() { }
 };

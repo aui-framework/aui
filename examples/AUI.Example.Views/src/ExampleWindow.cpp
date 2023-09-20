@@ -35,7 +35,7 @@
 #include "AUI/View/ASpinner.h"
 #include "DemoGraphView.h"
 
-#include "AUI/Audio/AAudioPlayer.h"
+#include "AUI/Audio/IAudioPlayer.h"
 
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ADragNDropView.h"
@@ -338,8 +338,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
         }), "Common");
 
 
-        mWavAudio = _new<AAudioPlayer>(AWavSoundStream::fromUrl(":sound/sound1.wav"));
-        mOggAudio = _new<AAudioPlayer>(AOggSoundStream::fromUrl(":sound/sound1.ogg"));
+        mWavAudio = IAudioPlayer::fromSoundStream(AWavSoundStream::fromUrl(":sound/sound1.wav"));
+        mOggAudio = IAudioPlayer::fromSoundStream(AOggSoundStream::fromUrl(":sound/sound1.ogg"));
 
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
                 Horizontal {
@@ -349,7 +349,9 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 _new<AButton>("Stop .wav music").connect(&AButton::clicked, slot(mWavAudio)::stop),
                                 _new<AButton>("Pause .wav music").connect(&AButton::clicked, slot(mWavAudio)::pause),
                                 _new<ALabel>("Volume control"),
-                                _new<ASlider>().connect(&ASlider::valueChanging, slot(mWavAudio)::setVolume)
+                                _new<ASlider>().connect(&ASlider::valueChanging, [player = mWavAudio](aui::float_within_0_1 value) {
+                                    player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
+                                })
                         },
                         Vertical{
                                 _new<ALabel>("Play music using AUI!"),
@@ -357,7 +359,9 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 _new<AButton>("Stop .ogg music").connect(&AButton::clicked, slot(mOggAudio)::stop),
                                 _new<AButton>("Pause .ogg music").connect(&AButton::clicked, slot(mOggAudio)::pause),
                                 _new<ALabel>("Volume control"),
-                                _new<ASlider>().connect(&ASlider::valueChanging, slot(mOggAudio)::setVolume)
+                                _new<ASlider>().connect(&ASlider::valueChanging, [player = mOggAudio](aui::float_within_0_1 value) {
+                                    player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
+                                })
                         }
                 }
         }), "Sounds");

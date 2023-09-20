@@ -453,6 +453,9 @@ namespace aui {
     requires aui::convertible_to<decltype(min), UnderlyingType> && aui::convertible_to<decltype(max), UnderlyingType>
     struct ranged_number {
     public:
+         static constexpr auto MIN = min;
+         static constexpr auto MAX = max;
+
         ranged_number(UnderlyingType value): value(glm::clamp(value, static_cast<UnderlyingType>(min), static_cast<UnderlyingType>(max))) {}
         ranged_number(): value(min) {}
 

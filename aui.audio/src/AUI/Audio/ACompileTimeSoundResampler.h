@@ -19,8 +19,9 @@
 #include <cstdint>
 #include <span>
 #include "ASampleFormat.h"
-#include <AUI/Audio/ISoundInputStream.h>
-#include <AUI/Traits/platform.h>
+#include "AUI/Audio/IAudioPlayer.h"
+#include "AUI/Audio/ISoundInputStream.h"
+#include "AUI/Traits/platform.h"
 
 namespace aui::audio {
     /**
@@ -123,11 +124,18 @@ public:
             mDestinationBufferIt(mDestinationBufferBegin)
     { }
 
+    void setVolume(uint32_t volume) {
+        mVolumeLevel = volume;
+    }
+
     inline void commitSample(aui::audio::impl::sample_type_t<in> sample) {
         assert(("buffer overrun", mDestinationBufferIt <= mDestinationBufferEnd));
         //use int64_t for overflow preverting
         int64_t newSample = int64_t(aui::audio::impl::sample_cast<out, in>(sample)) +
                             int64_t(aui::audio::impl::extractSample<out>(mDestinationBufferIt));
+        if (mVolumeLevel) {
+            newSample = (*mVolumeLevel * newSample) / 256;
+        }
         newSample = glm::clamp(newSample, MIN_VAL, MAX_VAL);
         aui::audio::impl::pushSample<out>(newSample, mDestinationBufferIt);
         mDestinationBufferIt += aui::audio::impl::size_bytes<out>();
@@ -176,4 +184,5 @@ private:
     std::byte* mDestinationBufferBegin;
     std::byte* mDestinationBufferEnd;
     std::byte* mDestinationBufferIt;
+    AOptional<uint32_t> mVolumeLevel;
 };
