@@ -2,11 +2,6 @@
 #include "AUI/Audio/ACompileTimeSoundResampler.h"
 #include "AUI/Audio/IAudioPlayer.h"
 
-
-namespace  {
-
-}
-
 ASoundResampler::ASoundResampler(IAudioPlayer *player, ASampleFormat destinationFormat) noexcept:
         mParentPlayer(player), mDestinationFormat(destinationFormat) {
     assert(player != nullptr);
