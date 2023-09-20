@@ -1,7 +1,7 @@
 #pragma once
 
 #include "AUI/Video/IVideoParser.h"
-#include "AUI/Video/Codec/IFrameDecoder.h"
+#include "IFrameDecoder.h"
 #include "AUI/Util/AFunctionQueue.h"
 #include "AUI/Thread/AFuture.h"
 #include "AUI/Util/ARaiiHelper.h"

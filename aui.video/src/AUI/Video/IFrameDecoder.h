@@ -2,7 +2,7 @@
 
 #include "AUI/Video/AFrame.h"
 #include "AUI/Video/ACodedFrame.h"
-#include "AUI/Video/Codec/Codec.h"
+#include "Codec.h"
 
 class IFrameDecoder {
 public:

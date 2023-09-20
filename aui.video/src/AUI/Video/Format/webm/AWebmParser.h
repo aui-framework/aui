@@ -22,7 +22,11 @@ private:
     //functions for MyWebmCallback
     void onVideoTrackParsed(const webm::TrackEntry& info);
 
-    void onFrameParsed(AByteBuffer&& buffer, int64_t timecode);
+    void onAudioTrackParsed(const webm::TrackEntry& info);
+
+    void onVideoFrameParsed(AByteBuffer buffer, int64_t timecode);
+
+    void onAudioFrameParsed(AByteBuffer buffer,  int64_t timecode);
 
     void onFinished();
 

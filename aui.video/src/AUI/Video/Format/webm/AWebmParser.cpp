@@ -1,5 +1,10 @@
 #include "AWebmParser.h"
 #include "webm/webm_parser.h"
+#include "AUI/IO/AFileOutputStream.h"
+#include "AUI/Audio/AAudioPlayer.h"
+#include "AUI/Audio/Formats/AOpusSoundStream.h"
+#include "AUI/IO/AStrongByteBufferInputStream.h"
+#include "AUI/IO/ARandomInputStream.h"
 
 class MyWebmCallback : public webm::Callback {
 public:
@@ -15,6 +20,7 @@ public:
 
     webm::Status OnBlockBegin(const webm::ElementMetadata& metadata, const webm::Block& block, webm::Action* action) override {
         mIsVideoFrame = block.track_number == mVideoTrackNumber;
+        mIsAudioFrame = block.track_number == mAudioTrackNumber;
         *action = webm::Action::kRead;
         mBlockTimecode = block.timecode;
         return webm::Status(webm::Status::kOkCompleted);
@@ -30,11 +36,16 @@ public:
             mVideoTrackNumber = trackEntry.track_number.value();
         }
 
+        if (trackEntry.track_type.value() == webm::TrackType::kAudio) {
+            mParser->onAudioTrackParsed(trackEntry);
+            mAudioTrackNumber = trackEntry.track_number.value();
+        }
+
         return webm::Status(webm::Status::kOkCompleted);
     }
 
     webm::Status OnFrame(const webm::FrameMetadata& metadata, webm::Reader* reader, std::uint64_t* bytesRemaining) override {
-        if (!mIsVideoFrame) {
+        if (!mIsVideoFrame && !mIsAudioFrame) {
             return webm::Callback::OnFrame(metadata, reader, bytesRemaining);
         }
 
@@ -50,7 +61,12 @@ public:
             (*bytesRemaining) -= actuallyRead;
             if (*bytesRemaining == 0) {
                 //we've got full coded frame
-                mParser->onFrameParsed(std::move(mEncodedFrameBuffer), mBlockTimecode + mClusterTimecode);
+                if (mIsVideoFrame) {
+                    mParser->onVideoFrameParsed(std::move(mEncodedFrameBuffer), mBlockTimecode + mClusterTimecode);
+                }
+                else if (mIsAudioFrame) {
+                    mParser->onAudioFrameParsed(std::move(mEncodedFrameBuffer), mBlockTimecode + mClusterTimecode);
+                }
                 mEncodedFrameBuffer.clear();
                 return webm::Status(webm::Status::kOkCompleted);
             }
@@ -67,10 +83,13 @@ public:
 
 private:
     bool mIsVideoFrame = false;
+    bool mIsAudioFrame = false;
     int16_t mClusterTimecode = 0;
     int16_t mBlockTimecode = 0;
 
     uint64_t mVideoTrackNumber = -1;
+    uint64_t mAudioTrackNumber = -1;
+
     AByteBuffer mEncodedFrameBuffer;
     AWebmParser* mParser;
 };
@@ -132,25 +151,46 @@ void AWebmParser::run() {
 
 void AWebmParser::onVideoTrackParsed(const webm::TrackEntry& info) {
     const auto& video = info.video.value();
-    emit infoParsed({
+    emit videoInfoParsed({
         .width = video.display_width.value(),
         .height = video.display_height.value()
     });
     if (info.codec_id.value() == "V_VP8") {
-        emit codecParsed(aui::video::Codec::VP8);
+        emit videoCodecParsed(aui::video::Codec::VP8);
     }
     else if (info.codec_id.value() == "V_VP9") {
-        emit codecParsed(aui::video::Codec::VP9);
+        emit videoCodecParsed(aui::video::Codec::VP9);
     }
 }
 
-void AWebmParser::onFrameParsed(AByteBuffer&& buffer, int64_t timecode) {
-    emit frameParsed({
+void AWebmParser::onVideoFrameParsed(AByteBuffer buffer, int64_t timecode) {
+    emit videoFrameParsed({
         .frameData = std::move(buffer),
         .timecode = timecode
     });
 }
 
+void AWebmParser::onAudioTrackParsed(const webm::TrackEntry &info) {
+    if (info.codec_id.value() == "A_VORBIS") {
+        emit audioCodecParsed(aui::audio::Codec::VORBIS);
+    }
+    if (info.codec_id.value() == "A_OPUS") {
+        emit audioCodecParsed(aui::audio::Codec::OPUS);
+    }
+}
+
 void AWebmParser::onFinished() {
     emit finished();
+}
+
+void AWebmParser::onAudioFrameParsed(AByteBuffer buffer, int64_t timecode) {
+    _<AAudioPlayer> player = _new<AAudioPlayer>(_new<AOpusSoundStream>(_new<AStrongByteBufferInputStream>(std::move(buffer))));
+    bool val = false;
+    AObject::connect(player->finished, [&val]() {
+        val = true;
+    });
+    player->finished;
+    player->play();
+
+    while (!val) {}
 }
