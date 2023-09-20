@@ -45,7 +45,9 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 }
 
 - (MainView*)initWithWindow:(AWindow*)window {
+    [super init];
     mAWindow = window;
+    
     return self;
 }
 
