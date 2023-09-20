@@ -20,7 +20,7 @@ private:
     static constexpr int BUFFER_DURATION_SEC = 2;
     static_assert(BUFFER_DURATION_SEC >= 2 && "Buffer duration assumes to be greater than 1");
     static constexpr float MIN_VALUE_DB = -10000;
-    static constexpr float AMPLITUDE_DB = 2000;
+    static constexpr float AMPLITUDE_DB = 5000;
 
     HANDLE mEvents[BUFFER_DURATION_SEC + 1];
     HANDLE mThread;
