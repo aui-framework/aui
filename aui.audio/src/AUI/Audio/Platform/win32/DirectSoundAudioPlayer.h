@@ -32,7 +32,7 @@ private:
     bool mIsPlaying = false;
     int mBytesPerSecond;
 
-    void uploadNextBlock(DWORD reachedPointIndex);
+    void uploadBlock(DWORD blockIndex);
 
     void clearBuffer();
 
