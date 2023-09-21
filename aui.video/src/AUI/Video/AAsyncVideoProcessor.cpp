@@ -29,7 +29,7 @@ AOptional<AFrame> AAsyncVideoProcessor::nextFrame() {
 }
 
 void AAsyncVideoProcessor::setupCallbacks() {
-    AObject::connect(mParser->frameParsed, [self = sharedPtr()](ACodedFrame frame) {
+    AObject::connect(mParser->videoFrameParsed, [self = sharedPtr()](ACodedFrame frame) {
         self->mDecoderThread->enqueue([self, frame = std::move(frame)]() {
             try {
                 self->mReadyFrames.push(self->mDecoder->decode(frame));
@@ -45,7 +45,7 @@ void AAsyncVideoProcessor::setupCallbacks() {
     });
 
     if (!mDecoder) {
-        AObject::connect(mParser->codecParsed, [self = sharedPtr()](aui::video::Codec codec) {
+        AObject::connect(mParser->videoCodecParsed, [self = sharedPtr()](aui::video::Codec codec) {
             if (!self->mDecoder) {
                 self->mDecoder = IFrameDecoder::fromCodec(codec);
             }

@@ -385,7 +385,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 Horizontal {
                         Vertical {
                                 _new<ALabel>("Webm support!"),
-                                _new<ADrawableView>(_new<AAnimatedDrawable>(_new<AWebmFramesFactory>(AUrl(":video/test.webm").open()))) with_style {FixedSize{640_px, 360_px}}
+                                _new<ADrawableView>(_new<AAnimatedDrawable>(_new<AWebmFramesFactory>(AUrl(":video/opus.webm").open()))) with_style {FixedSize{640_px, 360_px}}
                         }
                 }
         }), "Video"),

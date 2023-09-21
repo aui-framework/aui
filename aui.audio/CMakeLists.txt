@@ -29,3 +29,6 @@ if (AUI_PLATFORM_IOS OR AUI_PLATFORM_MACOS)
     find_library(AudioToolbox AudioToolbox REQUIRED)
     aui_link(aui.audio PUBLIC ${CoreAudio} ${AVFoundation} ${AudioToolbox})
 endif()
+
+auib_import(Opus https://github.com/xiph/opus.git VERSION v1.4)
+aui_link(aui.audio PUBLIC Opus::opus)

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AUI/Video/Codec/IFrameDecoder.h"
+#include "AUI/Video/IFrameDecoder.h"
 #include "AUI/Util/APimpl.h"
 
 typedef struct vpx_codec_ctx vpx_codec_ctx_t;
