@@ -22,7 +22,7 @@ DirectSoundAudioPlayer::~DirectSoundAudioPlayer() {
 void DirectSoundAudioPlayer::playImpl() {
     setupReachPointEvents();
     setupBufferThread();
-    uploadNextBlock(BUFFER_DURATION_SEC);
+    uploadNextBlock(-1);
     ASSERT_OK mPrivate->mSoundBufferInterface->Play(0, 0, DSBPLAY_LOOPING);
 }
 
