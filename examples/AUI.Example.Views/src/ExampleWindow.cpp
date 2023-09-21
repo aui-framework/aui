@@ -43,8 +43,6 @@
 #include "AUI/View/ASlider.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/IO/AByteBufferInputStream.h"
-#include "AUI/Audio/Formats/AWavSoundStream.h"
-#include "AUI/Audio/Formats/AOggSoundStream.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
@@ -338,8 +336,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
         }), "Common");
 
 
-        mWavAudio = IAudioPlayer::fromSoundStream(AWavSoundStream::fromUrl(":sound/sound1.wav"));
-        mOggAudio = IAudioPlayer::fromSoundStream(AOggSoundStream::fromUrl(":sound/sound1.ogg"));
+        mWavAudio = IAudioPlayer::fromUrl(":sound/sound1.wav");
+        mOggAudio = IAudioPlayer::fromUrl(":sound/sound1.ogg");
 
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
                 Horizontal {

@@ -2,7 +2,7 @@
 #include "AUI/Audio/ACompileTimeSoundResampler.h"
 #include "AUI/Audio/IAudioPlayer.h"
 
-ASoundResampler::ASoundResampler(IAudioPlayer *player, ASampleFormat destinationFormat) noexcept:
+ASoundResampler::ASoundResampler(const _<IAudioPlayer>& player, ASampleFormat destinationFormat) noexcept:
         mParentPlayer(player), mDestinationFormat(destinationFormat) {
     assert(player != nullptr);
     mSoundStream = player->source();
@@ -50,8 +50,8 @@ void ASoundResampler::rewind() {
 template<ASampleFormat in, ASampleFormat out>
 size_t ASoundResampler::commitSamples(std::span<std::byte> dst) {
     ACompileTimeSoundResampler<in, out> resampler(dst);
-    if (mParentPlayer->volume() != IAudioPlayer::VolumeLevel::MAX) {
-        resampler.setVolume(mParentPlayer->volume());
+    if (auto player = mParentPlayer.lock(); player && player->volume() != IAudioPlayer::VolumeLevel::MAX) {
+        resampler.setVolume(player->volume());
     }
 
     resampler.commitAllSamples(mSoundStream);

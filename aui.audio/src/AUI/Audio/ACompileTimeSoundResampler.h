@@ -131,11 +131,11 @@ public:
     inline void commitSample(aui::audio::impl::sample_type_t<in> sample) {
         assert(("buffer overrun", mDestinationBufferIt <= mDestinationBufferEnd));
         //use int64_t for overflow preverting
-        int64_t newSample = int64_t(aui::audio::impl::sample_cast<out, in>(sample)) +
-                            int64_t(aui::audio::impl::extractSample<out>(mDestinationBufferIt));
+        int64_t newSample = int64_t(aui::audio::impl::sample_cast<out, in>(sample));
         if (mVolumeLevel) {
             newSample = (*mVolumeLevel * newSample) / IAudioPlayer::VolumeLevel::MAX;
         }
+        newSample += int64_t(aui::audio::impl::extractSample<out>(mDestinationBufferIt));
         newSample = glm::clamp(newSample, MIN_VAL, MAX_VAL);
         aui::audio::impl::pushSample<out>(newSample, mDestinationBufferIt);
         mDestinationBufferIt += aui::audio::impl::size_bytes<out>();

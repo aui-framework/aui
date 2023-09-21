@@ -27,7 +27,7 @@ class IAudioPlayer;
  */
 class API_AUI_AUDIO ASoundResampler : public ISoundInputStream {
 public:
-    explicit ASoundResampler(IAudioPlayer* player, ASampleFormat destinationFormat = aui::audio::DEFAULT_OUTPUT_FORMAT) noexcept;
+    explicit ASoundResampler(const _<IAudioPlayer>& player, ASampleFormat destinationFormat = aui::audio::DEFAULT_OUTPUT_FORMAT) noexcept;
 
     size_t read(char* dst, size_t size) override;
 
@@ -36,7 +36,7 @@ public:
     void rewind() override;
 
 private:
-    IAudioPlayer* mParentPlayer;
+    _weak<IAudioPlayer> mParentPlayer;
     _<ISoundInputStream> mSoundStream;
     ASampleFormat mDestinationFormat;
     AAudioFormat mFormat;

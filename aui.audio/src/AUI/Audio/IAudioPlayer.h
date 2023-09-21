@@ -12,11 +12,9 @@ class AUrl;
  */
 class API_AUI_AUDIO IAudioPlayer: public AObject {
 public:
-
-    static _<IAudioPlayer> fromUrl(const AUrl& url);
-
     static _<IAudioPlayer> fromSoundStream(_<ISoundInputStream>);
 
+    static _<IAudioPlayer> fromUrl(const AUrl& url);
     /**
      * @brief Playback status depends on last called function among play(), pause(), stop().
      */

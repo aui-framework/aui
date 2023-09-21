@@ -9,7 +9,7 @@
 class API_AUI_AUDIO IAudioPlayer;
 
 /**
- * @brief Audio mixer, mixes several audio streams into one.
+ * @brief Manages audio players and mixes them into one sound stream.
  * @ingroup audio
  */
 class API_AUI_AUDIO AAudioMixer {
