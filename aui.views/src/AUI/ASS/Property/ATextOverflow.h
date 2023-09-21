@@ -11,12 +11,12 @@
 namespace ass {
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<TextOverflow>: IPropertyBase {
+        struct API_AUI_VIEWS Property<ATextOverflow>: IPropertyBase {
         private:
-            TextOverflow mInfo;
+            ATextOverflow mInfo;
 
         public:
-            Property(const TextOverflow& info) : mInfo(info) {
+            Property(const ATextOverflow& info) : mInfo(info) {
 
             }
 

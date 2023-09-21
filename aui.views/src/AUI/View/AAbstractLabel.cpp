@@ -42,7 +42,7 @@ void AAbstractLabel::render()
 
 int AAbstractLabel::getContentMinimumWidth(ALayoutDirection layout)
 {
-    if (mTextOverflow != TextOverflow::NONE)
+    if (mTextOverflow != ATextOverflow::NONE)
         return 0;
 
 	if (!mPrerendered) {
@@ -122,7 +122,7 @@ int AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
 template < class Iterator >
 void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
     int firstOverflowedIndex = findFirstOverflowedIndex(begin, end, overflowingWidth);
-    if (mTextOverflow == TextOverflow::ELLIPSIS) {
+    if (mTextOverflow == ATextOverflow::ELLIPSIS) {
         if (firstOverflowedIndex != 0) {
             std::fill(begin + firstOverflowedIndex - 3, begin + firstOverflowedIndex, '.');
         } else {
@@ -134,7 +134,7 @@ void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overf
 }
 
 void AAbstractLabel::processTextOverflow(AString& text) {
-    if (mTextOverflow == TextOverflow::NONE)
+    if (mTextOverflow == ATextOverflow::NONE)
         return;
 
     int overflowingWidth;
@@ -192,10 +192,10 @@ void AAbstractLabel::doRenderText() {
             alignLeft();
         } else {
             switch (getFontStyleLabel().align) {
-                case TextAlign::LEFT:
+                case ATextAlign::LEFT:
                     alignLeft();
                     break;
-                case TextAlign::CENTER:
+                case ATextAlign::CENTER:
                     mTextLeftOffset += (getContentWidth() - mPrerendered->getWidth()) / 2;
                     if (mIcon) {
                         mTextLeftOffset += requiredSpace.x / 2;
@@ -213,7 +213,7 @@ void AAbstractLabel::doRenderText() {
 
                     break;
 
-                case TextAlign::RIGHT:
+                case ATextAlign::RIGHT:
                     mTextLeftOffset += getContentWidth() - mPrerendered->getWidth();
                     if (mIcon) {
                         RenderHints::PushState s;

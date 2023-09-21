@@ -14,15 +14,15 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-//
-// Created by alex2 on 01.01.2021.
-//
+#pragma once
 
-#include <AUI/View/AText.h>
-#include "TextAlign.h"
+#include "AUI/Image/IImageLoader.h"
 
+class WebpImageLoader : public IImageLoader {
+public:
+    bool matches(AByteBufferView buffer) override;
 
-void ass::prop::Property<ATextAlign>::applyFor(AView* view) {
-    view->getFontStyle().align = mInfo;
-    view->invalidateFont();
-}
+    _<IImageFactory> getImageFactory(AByteBufferView buffer) override;
+
+    _<AImage> getRasterImage(AByteBufferView buffer) override;
+};

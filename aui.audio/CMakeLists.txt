@@ -23,7 +23,7 @@ if (AUI_PLATFORM_LINUX)
     aui_link(aui.audio PUBLIC pulse)
 endif()
 
-if (AUI_PLATFORM_IOS)
+if (AUI_PLATFORM_IOS OR AUI_PLATFORM_MACOS)
     find_library(CoreAudio CoreAudio REQUIRED)
     find_library(AVFoundation AVFoundation REQUIRED)
     find_library(AudioToolbox AudioToolbox REQUIRED)

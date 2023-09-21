@@ -15,7 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #pragma once
-#include "AUI/Enum/TextAlign.h"
+#include "AUI/Enum/ATextAlign.h"
 #include "AFont.h"
 #include "AUI/Render/FontRendering.h"
 #include "AUI/Common/AColor.h"
@@ -28,7 +28,7 @@ struct API_AUI_VIEWS AFontStyle {
 	mutable _<AFont> font;
 	unsigned size = 12;
 	bool formatting = false;
-	TextAlign align = TextAlign::LEFT;
+	ATextAlign align = ATextAlign::LEFT;
 	AColor color;
     bool bold = false;
     bool italic = false;

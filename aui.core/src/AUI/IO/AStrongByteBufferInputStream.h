@@ -14,7 +14,7 @@ private:
     size_t mReadPos = 0;
 
 public:
-    static _<AStrongByteBufferInputStream> fromUrl(const AUrl& url) noexcept;
+    static _<AStrongByteBufferInputStream> fromUrl(const AUrl& url);
 
     explicit AStrongByteBufferInputStream(AByteBuffer&& buffer);
     ~AStrongByteBufferInputStream() override = default;
