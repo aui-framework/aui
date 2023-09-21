@@ -10,16 +10,6 @@ AOpusSoundStream::AOpusSoundStream(_<IInputStream> is) {
         opus_decoder_destroy(mDecoder);
         throw AException("Failed to initialize opus decoder, error code: {}"_format(error));
     }
-
-    auto buffer = AByteBuffer::fromStream(is, 4096);
-    opus_int16 decoded[2 * 5760];
-    auto samples = opus_decode(mDecoder,
-                               reinterpret_cast<const unsigned char*>(buffer.data()), static_cast<opus_int32>(buffer.size()),
-                               decoded, sizeof(decoded), 0);
-    ALogger::info("opus") << "opus decode: " << samples;
-    mBuffer.resize(samples * 4);
-    std::memcpy(mBuffer.data(), reinterpret_cast<char*>(decoded), mBuffer.size());
-
 }
 
 AOpusSoundStream::~AOpusSoundStream() {

@@ -9,7 +9,7 @@ AAsyncVideoProcessor::AAsyncVideoProcessor(_<IVideoParser> parser, _<IFrameDecod
 }
 
 void AAsyncVideoProcessor::run() {
-    assert(("shouldn't be run in the second time", mParserThread == nullptr));
+    assert(("shouldn't be ran in the second time", mParserThread == nullptr));
     setupCallbacks();
     mParserThread = _new<AThread>([self = sharedPtr()]() {
          self->mParser->run();
