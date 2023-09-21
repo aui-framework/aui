@@ -1,6 +1,7 @@
 #include "ISoundInputStream.h"
 #include "Formats/AWavSoundStream.h"
 #include "Formats/AOggSoundStream.h"
+#include <vorbis/vorbisfile.h>
 
 _<ISoundInputStream> ISoundInputStream::fromUrl(const AUrl& url) {
     try {
