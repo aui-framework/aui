@@ -340,7 +340,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
         mWavAudio = _new<AAudioPlayer>(AWavSoundStream::fromUrl(":sound/sound1.wav"));
         mOggAudio = _new<AAudioPlayer>(AOggSoundStream::fromUrl(":sound/sound1.ogg"));
-
+        mWavAudio->setLoop(true);
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
                 Horizontal {
                         Vertical{
