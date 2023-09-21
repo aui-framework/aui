@@ -74,24 +74,27 @@ struct CoreAudioInstance {
         
     }
     
+    [[nodiscard]]
+    const _<AThread> thread() const noexcept {
+        return mThread;
+    }
+    
     CoreAudioInstance(const CoreAudioInstance&) = delete;
     
     ~CoreAudioInstance() {
     }
     
     void enqueueIfNot() {
-        mThread->enqueue([this] {
-            while (!mEmptyBuffers.empty()) {
-                auto buffer = mEmptyBuffers.front();
-                buffer->mAudioDataByteSize = loop().readSoundData({(std::byte*)buffer->mAudioData, buffer->mAudioDataBytesCapacity});
-                if (buffer->mAudioDataByteSize == 0) {
-                    break;
-                }
-                AudioQueueEnqueueBuffer(mAudioQueue, buffer, 0, nullptr);
-                
-                mEmptyBuffers.pop();
+        while (!mEmptyBuffers.empty()) {
+            auto buffer = mEmptyBuffers.front();
+            buffer->mAudioDataByteSize = loop().readSoundData({(std::byte*)buffer->mAudioData, buffer->mAudioDataBytesCapacity});
+            if (buffer->mAudioDataByteSize == 0) {
+                break;
             }
-        });
+            AudioQueueEnqueueBuffer(mAudioQueue, buffer, 0, nullptr);
+            
+            mEmptyBuffers.pop();
+        }
     }
     
 private:
@@ -105,6 +108,7 @@ private:
         buffer->mAudioDataByteSize = loop().readSoundData({(std::byte*)buffer->mAudioData, buffer->mAudioDataBytesCapacity});
         if (buffer->mAudioDataByteSize > 0) {
             AudioQueueEnqueueBuffer(thiz->mAudioQueue, buffer, 0, nullptr);
+            thiz->enqueueIfNot();
         } else {
             thiz->mEmptyBuffers << buffer;
         }
@@ -134,7 +138,10 @@ void AAudioPlayer::playImpl() {
     assert(mResampler == nullptr);
     mResampler = _new<ASoundResampler>(mSource);
     ::loop().addSoundSource(_cast<AAudioPlayer>(sharedPtr()));
-    coreAudio().enqueueIfNot();
+    
+    coreAudio().thread()->enqueue([this] {
+        coreAudio().enqueueIfNot();
+    });
 }
 
 void AAudioPlayer::pauseImpl() {

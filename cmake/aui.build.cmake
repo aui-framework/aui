@@ -624,6 +624,7 @@ macro(_aui_provide_toolbox_for_host)
 cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
 set(CMAKE_CXX_STANDARD 20)
+set(BUILD_SHARED_LIBS FALSE)
 file(
         DOWNLOAD
         https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
