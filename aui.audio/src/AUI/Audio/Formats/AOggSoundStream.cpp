@@ -22,7 +22,6 @@ AOggSoundStream::~AOggSoundStream() {
 
 AAudioFormat AOggSoundStream::info() {
     return {
-        .bitRate = static_cast<unsigned int>(mVorbisFile->vi->bitrate_nominal),
         .channelCount =static_cast<uint8_t>(mVorbisFile->vi->channels),
         .sampleRate = static_cast<unsigned int>(mVorbisFile->vi->rate),
         .sampleFormat = ASampleFormat::I16,

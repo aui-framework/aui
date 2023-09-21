@@ -1,8 +1,15 @@
-#include "AUI/Audio/AAudioPlayer.h"
+#include "PulseAudioPlayer.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Audio/ASoundResampler.h"
+#include "AUI/Audio/AAudioMixer.h"
 #include <pulse/simple.h>
 #include <pulse/pulseaudio.h>
+
+_<IAudioPlayer> IAudioPlayer::fromSoundStream(_<ISoundInputStream> stream) {
+    auto result = _new<PulseAudioPlayer>();
+    result->setSource(std::move(stream));
+    return result;
+}
 
 static constexpr auto LOG_TAG = "Pulseaudio";
 
@@ -121,35 +128,34 @@ static PulseAudioInstance& pulse() {
     return p;
 }
 
-
-AAudioPlayer::AAudioPlayer(_<ISoundInputStream> stream) {
-    setSource(std::move(stream));
-}
-
-AAudioPlayer::~AAudioPlayer() {
-}
-
-
-void AAudioPlayer::playImpl() {
-    assert(mResampler == nullptr);
-    mResampler = _new<ASoundResampler>(mSource);
-    ::loop().addSoundSource(_cast<AAudioPlayer>(sharedPtr()));
+void PulseAudioPlayer::playImpl() {
+    assert(mResampled == nullptr);
+    mResampled = _new<ASoundResampler>(_cast<PulseAudioPlayer>(sharedPtr()), aui::audio::DEFAULT_OUTPUT_FORMAT);
+    ::loop().addSoundSource(_cast<PulseAudioPlayer>(sharedPtr()));
     pulse();
 }
 
-void AAudioPlayer::pauseImpl() {
-    assert(mResampler != nullptr);
-    ::loop().removeSoundSource(_cast<AAudioPlayer>(sharedPtr()));
-    mResampler.reset();
+void PulseAudioPlayer::pauseImpl() {
+    assert(mResampled != nullptr);
+    ::loop().removeSoundSource(_cast<PulseAudioPlayer>(sharedPtr()));
+    mResampled.reset();
 }
 
-void AAudioPlayer::stopImpl() {
-    assert(mResampler != nullptr);
-    ::loop().removeSoundSource(_cast<AAudioPlayer>(sharedPtr()));
-    mResampler.reset();
+void PulseAudioPlayer::stopImpl() {
+    assert(mResampled != nullptr);
+    ::loop().removeSoundSource(_cast<PulseAudioPlayer>(sharedPtr()));
+    mResampled.reset();
+    source()->rewind();
 }
 
+void PulseAudioPlayer::onSourceSet() {
 
-void AAudioPlayer::onSourceSet() {
+}
+
+void PulseAudioPlayer::onLoopSet() {
+
+}
+
+void PulseAudioPlayer::onVolumeSet() {
 
 }

@@ -1,15 +1,25 @@
-#import <AVFoundation/AVFoundation.h>
+#if AUI_PLATFORM_IOS
 #import <UIKit/UIApplication.h>
+#endif
+#import <AVFoundation/AVFoundation.h>
 #include <AudioToolbox/AudioToolbox.h>
 #include <AudioUnit/AudioUnit.h>
 
 #include "AUI/Common/AQueue.h"
-#include "AUI/Audio/AAudioPlayer.h"
+#include "CoreAudioPlayer.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Audio/ASoundResampler.h"
+#include "AUI/Audio/AAudioMixer.h"
 
 
 static constexpr auto LOG_TAG = "CoreAudio";
+
+_<IAudioPlayer> IAudioPlayer::fromSoundStream(_<ISoundInputStream> stream) {
+    auto result = _new<CoreAudioPlayer>();
+    result->setSource(std::move(stream));
+    return result;
+}
+
 
 namespace {
 static AAudioMixer& loop() {
@@ -74,24 +84,27 @@ struct CoreAudioInstance {
         
     }
     
+    [[nodiscard]]
+    const _<AThread> thread() const noexcept {
+        return mThread;
+    }
+    
     CoreAudioInstance(const CoreAudioInstance&) = delete;
     
     ~CoreAudioInstance() {
     }
     
     void enqueueIfNot() {
-        mThread->enqueue([this] {
-            while (!mEmptyBuffers.empty()) {
-                auto buffer = mEmptyBuffers.front();
-                buffer->mAudioDataByteSize = loop().readSoundData({(std::byte*)buffer->mAudioData, buffer->mAudioDataBytesCapacity});
-                if (buffer->mAudioDataByteSize == 0) {
-                    break;
-                }
-                AudioQueueEnqueueBuffer(mAudioQueue, buffer, 0, nullptr);
-                
-                mEmptyBuffers.pop();
+        while (!mEmptyBuffers.empty()) {
+            auto buffer = mEmptyBuffers.front();
+            buffer->mAudioDataByteSize = loop().readSoundData({(std::byte*)buffer->mAudioData, buffer->mAudioDataBytesCapacity});
+            if (buffer->mAudioDataByteSize == 0) {
+                break;
             }
-        });
+            AudioQueueEnqueueBuffer(mAudioQueue, buffer, 0, nullptr);
+            
+            mEmptyBuffers.pop();
+        }
     }
     
 private:
@@ -105,6 +118,7 @@ private:
         buffer->mAudioDataByteSize = loop().readSoundData({(std::byte*)buffer->mAudioData, buffer->mAudioDataBytesCapacity});
         if (buffer->mAudioDataByteSize > 0) {
             AudioQueueEnqueueBuffer(thiz->mAudioQueue, buffer, 0, nullptr);
+            thiz->enqueueIfNot();
         } else {
             thiz->mEmptyBuffers << buffer;
         }
@@ -118,39 +132,38 @@ static CoreAudioInstance& coreAudio() {
 }
 
 
-AAudioPlayer::AAudioPlayer() {
-
+void CoreAudioPlayer::playImpl() {
+    assert(mResampled == nullptr);
+    mResampled = _new<ASoundResampler>(_cast<CoreAudioPlayer>(sharedPtr()));
+    ::loop().addSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
+    
+    coreAudio().thread()->enqueue([this] {
+        coreAudio().enqueueIfNot();
+    });
 }
 
-AAudioPlayer::~AAudioPlayer() {
+void CoreAudioPlayer::pauseImpl() {
+    assert(mResampled != nullptr);
+    ::loop().removeSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
+    mResampled.reset();
 }
 
-AAudioPlayer::AAudioPlayer(_<ISoundInputStream> stream) {
-    setSource(std::move(stream));
-}
-
-
-void AAudioPlayer::playImpl() {
-    assert(mResampler == nullptr);
-    mResampler = _new<ASoundResampler>(mSource);
-    ::loop().addSoundSource(_cast<AAudioPlayer>(sharedPtr()));
-    coreAudio().enqueueIfNot();
-}
-
-void AAudioPlayer::pauseImpl() {
-    assert(mResampler != nullptr);
-    ::loop().removeSoundSource(_cast<AAudioPlayer>(sharedPtr()));
-    mResampler.reset();
-}
-
-void AAudioPlayer::stopImpl() {
-    assert(mResampler != nullptr);
-    mSource->rewind();
-    ::loop().removeSoundSource(_cast<AAudioPlayer>(sharedPtr()));
-    mResampler.reset();
+void CoreAudioPlayer::stopImpl() {
+    assert(mResampled != nullptr);
+    source()->rewind();
+    ::loop().removeSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
+    mResampled.reset();
 }
 
 
-void AAudioPlayer::onSourceSet() {
+void CoreAudioPlayer::onSourceSet() {
+
+}
+
+void CoreAudioPlayer::onVolumeSet() {
+
+}
+
+void CoreAudioPlayer::onLoopSet() {
 
 }

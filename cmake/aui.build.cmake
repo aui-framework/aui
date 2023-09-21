@@ -476,6 +476,11 @@ function(aui_common AUI_MODULE_NAME)
             endif()
         ]])
     endif()
+    if (CMAKE_GENERATOR STREQUAL "Xcode")
+        if (BUILD_SHARED_LIBS)
+            message(WARNING "With Xcode and BUILD_SHARED_LIBS=TRUE you may be required to sign the frameworks.")
+        endif()
+    endif()
 endfunction(aui_common)
 
 
@@ -619,6 +624,7 @@ macro(_aui_provide_toolbox_for_host)
 cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
 set(CMAKE_CXX_STANDARD 20)
+set(BUILD_SHARED_LIBS FALSE)
 file(
         DOWNLOAD
         https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake

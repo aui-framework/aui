@@ -6,29 +6,29 @@
 
 #include <AUI/Common/AObject.h>
 
-class API_AUI_AUDIO AAudioPlayer;
+class API_AUI_AUDIO IAudioPlayer;
 
 /**
- * @brief Audio mixer, mixes several audio streams into one.
+ * @brief Manages audio players and mixes them into one sound stream.
  * @ingroup audio
  */
 class API_AUI_AUDIO AAudioMixer {
 private:
     std::mutex mMutex;
-    std::list<_<AAudioPlayer>> mPlayers;
+    std::list<_<IAudioPlayer>> mPlayers;
 
 public:
     /**
      * @brief Add new sound source for mixing
      * @param s New sound source
      */
-    void addSoundSource(_<AAudioPlayer> s);
+    void addSoundSource(_<IAudioPlayer> s);
 
     /**
      * @brief Remove sound source if it is represented in list of added sound sources, otherwise do nothing
      * @param s Sound source to remove
      */
-    void removeSoundSource(const _<AAudioPlayer>& s);
+    void removeSoundSource(const _<IAudioPlayer>& s);
 
     /**
      * @brief Write mixed audio data into buffer.

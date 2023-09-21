@@ -18,7 +18,8 @@
 
 #include <AUI/Platform/AWindow.h>
 #include "AUI/Thread/AAsyncHolder.h"
-#include "AUI/Audio/AAudioPlayer.h"
+
+class IAudioPlayer;
 
 class ExampleWindow: public AWindow {
 public:
@@ -31,6 +32,6 @@ public:
 private:
     ADeque<_<AWindow>> mWindows;
     AAsyncHolder mAsync;
-    _<AAudioPlayer> mWavAudio;
-    _<AAudioPlayer> mOggAudio;
+    _<IAudioPlayer> mWavAudio;
+    _<IAudioPlayer> mOggAudio;
 };
