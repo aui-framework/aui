@@ -1,10 +1,10 @@
-#include "AOboeAudioPlayer.h"
+#include "OboeAudioPlayer.h"
 #include "AUI/Audio/AAudioMixer.h"
 #include "AUI/Audio/ASoundResampler.h"
 #include <oboe/Oboe.h>
 
 _<IAudioPlayer> IAudioPlayer::fromSoundStream(_<ISoundInputStream> stream) {
-    auto result = _new<AOboeAudioPlayer>();
+    auto result = _new<OboeAudioPlayer>();
     result->setSource(std::move(stream));
     return result;
 }
@@ -16,11 +16,11 @@ public:
         return p;
     }
 
-    void addSource(_<AOboeAudioPlayer> source) {
+    void addSource(_<OboeAudioPlayer> source) {
         mMixer->addSoundSource(std::move(source));
     }
 
-    void removeSource(const _<AOboeAudioPlayer>& source) {
+    void removeSource(const _<OboeAudioPlayer>& source) {
         mMixer->removeSoundSource(source);
     }
 
@@ -51,31 +51,31 @@ private:
     _<AAudioMixer> mMixer;
 };
 
-void AOboeAudioPlayer::playImpl() {
+void OboeAudioPlayer::playImpl() {
     assert(mResampled == nullptr);
     mResampled = _new<ASoundResampler>(this, aui::audio::DEFAULT_OUTPUT_FORMAT);
-    OboeSoundOutput::instance().addSource(_cast<AOboeAudioPlayer>(sharedPtr()));
+    OboeSoundOutput::instance().addSource(_cast<OboeAudioPlayer>(sharedPtr()));
 }
 
-void AOboeAudioPlayer::pauseImpl() {
-    OboeSoundOutput::instance().removeSource(_cast<AOboeAudioPlayer>(sharedPtr()));
+void OboeAudioPlayer::pauseImpl() {
+    OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(sharedPtr()));
     mResampled.reset();
 }
 
-void AOboeAudioPlayer::stopImpl() {
-    OboeSoundOutput::instance().removeSource(_cast<AOboeAudioPlayer>(sharedPtr()));
+void OboeAudioPlayer::stopImpl() {
+    OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(sharedPtr()));
     source()->rewind();
     mResampled.reset();
 }
 
-void AOboeAudioPlayer::onSourceSet() {
+void OboeAudioPlayer::onSourceSet() {
 
 }
 
-void AOboeAudioPlayer::onLoopSet() {
+void OboeAudioPlayer::onLoopSet() {
 
 }
 
-void AOboeAudioPlayer::onVolumeSet() {
+void OboeAudioPlayer::onVolumeSet() {
 
 }

@@ -4,9 +4,9 @@
 #include "AUI/Util/APimpl.h"
 #include <Windows.h>
 
-class ADirectSoundAudioPlayer : public IAudioPlayer {
+class DirectSoundAudioPlayer : public IAudioPlayer {
 public :
-    ~ADirectSoundAudioPlayer() override;
+    ~DirectSoundAudioPlayer() override;
 
 private:
     void playImpl() override;

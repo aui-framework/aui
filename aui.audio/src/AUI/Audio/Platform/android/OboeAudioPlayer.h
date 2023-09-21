@@ -2,7 +2,9 @@
 
 #include "AUI/Audio/IAudioPlayer.h"
 
-class APulseAudioPlayer : public IAudioPlayer {
+class OboeAudioPlayer : public IAudioPlayer {
+public:
+
 private:
     void playImpl() override;
     void pauseImpl() override;
