@@ -61,7 +61,7 @@ VPXDecoder::~VPXDecoder() {
     vpx_codec_destroy(mContext.ptr());
 }
 
-AFrame VPXDecoder::decode(const ACodedFrame& codedFrame) {
+AVideoFrame VPXDecoder::decode(const ACodedFrame& codedFrame) {
     if (auto code = vpx_codec_decode(mContext.ptr(),
                                  reinterpret_cast<const uint8_t*>(codedFrame.frameData.data()), codedFrame.frameData.size(),
                                 nullptr, 0)) {
@@ -71,7 +71,7 @@ AFrame VPXDecoder::decode(const ACodedFrame& codedFrame) {
     vpx_codec_iter_t iter = nullptr;
 
     if (auto image = vpx_codec_get_frame(mContext.ptr(), &iter)) {
-        return AFrame {
+        return AVideoFrame {
             .image = aui::video::impl::convertToRGBA(image),
             .timecode = codedFrame.timecode
         };

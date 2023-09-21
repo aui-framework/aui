@@ -6,7 +6,8 @@
 typedef struct OpusDecoder OpusDecoder;
 
 /**
- * @brief Sound stream for OPUS format, could be useful in webm playback
+ * @brief Sound stream for OPUS format
+ * @note Not intended for decoding OggOpus format
  */
 class AOpusSoundStream : public ISoundInputStream {
 public:

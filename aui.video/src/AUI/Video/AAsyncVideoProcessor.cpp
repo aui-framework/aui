@@ -24,7 +24,7 @@ void AAsyncVideoProcessor::run() {
     mDecoderThread->start();
 }
 
-AOptional<AFrame> AAsyncVideoProcessor::nextFrame() {
+AOptional<AVideoFrame> AAsyncVideoProcessor::nextFrame() {
     return mReadyFrames.pop();
 }
 

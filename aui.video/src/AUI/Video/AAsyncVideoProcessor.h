@@ -20,13 +20,13 @@ public:
         return mHasFinished;
     }
 
-    AOptional<AFrame> nextFrame();
+    AOptional<AVideoFrame> nextFrame();
 
 private:
     static constexpr size_t READY_FRAMES_MAX_SIZE = 10;
     class ReadyFramesQueue {
     public:
-        AOptional<AFrame> pop() {
+        AOptional<AVideoFrame> pop() {
             std::unique_lock lock(mSync);
 
             if (mReadyFrames.empty()) {
@@ -37,10 +37,10 @@ private:
                 mCV.notify_all();
             };
 
-            return mReadyFrames.popOrGenerate([]() -> AFrame { return {}; });
+            return mReadyFrames.popOrGenerate([]() -> AVideoFrame { return {}; });
         }
 
-        void push(AFrame frame) {
+        void push(AVideoFrame frame) {
             std::unique_lock lock(mSync);
 
             if (mReadyFrames.size() >= READY_FRAMES_MAX_SIZE) {
@@ -53,7 +53,7 @@ private:
     private:
         AConditionVariable mCV;
         AMutex mSync;
-        AQueue<AFrame> mReadyFrames;
+        AQueue<AVideoFrame> mReadyFrames;
     };
 
     ReadyFramesQueue mReadyFrames;

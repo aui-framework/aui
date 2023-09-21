@@ -6,9 +6,9 @@ namespace webm {
     struct TrackEntry;
 }
 
-class AWebmParser : public IVideoParser {
+class WebmParser : public IVideoParser {
 public:
-    explicit AWebmParser(_<IInputStream> source);
+    explicit WebmParser(_<IInputStream> source);
 
     void setSource(_<IInputStream> source);
 
@@ -26,7 +26,7 @@ private:
 
     void onVideoFrameParsed(AByteBuffer buffer, int64_t timecode);
 
-    void onAudioFrameParsed(AByteBuffer buffer,  int64_t timecode);
+    void onAudioFrameParsed(AByteBuffer buffer, int64_t timecode);
 
     void onFinished();
 

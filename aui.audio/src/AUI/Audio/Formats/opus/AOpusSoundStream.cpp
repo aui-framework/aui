@@ -35,7 +35,6 @@ size_t AOpusSoundStream::read(char *dst, size_t size) {
 
 AAudioFormat AOpusSoundStream::info() {
     return AAudioFormat {
-        .bitRate = 16 * SAMPLE_RATE,
         .channelCount = CHANNEL_COUNT,
         .sampleRate = SAMPLE_RATE,
         .sampleFormat = ASampleFormat::I16

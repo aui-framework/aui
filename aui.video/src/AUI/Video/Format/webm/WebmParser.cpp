@@ -1,14 +1,9 @@
-#include "AWebmParser.h"
+#include "WebmParser.h"
 #include "webm/webm_parser.h"
-#include "AUI/IO/AFileOutputStream.h"
-#include "AUI/Audio/AAudioPlayer.h"
-#include "AUI/Audio/Formats/AOpusSoundStream.h"
-#include "AUI/IO/AStrongByteBufferInputStream.h"
-#include "AUI/IO/ARandomInputStream.h"
 
 class MyWebmCallback : public webm::Callback {
 public:
-    explicit MyWebmCallback(AWebmParser* parser) : mParser(parser) {
+    explicit MyWebmCallback(WebmParser* parser) : mParser(parser) {
         assert(parser != nullptr);
     }
 
@@ -91,7 +86,7 @@ private:
     uint64_t mAudioTrackNumber = -1;
 
     AByteBuffer mEncodedFrameBuffer;
-    AWebmParser* mParser;
+    WebmParser* mParser;
 };
 
 class MyWebmReader : public webm::Reader {
@@ -134,22 +129,22 @@ private:
     uint8_t mStub[0x4000];
 };
 
-AWebmParser::AWebmParser(_<IInputStream> stream) {
+WebmParser::WebmParser(_<IInputStream> stream) {
     setSource(std::move(stream));
 }
 
-void AWebmParser::setSource(_<IInputStream> source) {
+void WebmParser::setSource(_<IInputStream> source) {
     mSource = std::move(source);
 }
 
-void AWebmParser::run() {
+void WebmParser::run() {
     webm::WebmParser parser;
     MyWebmCallback callback(this);
     MyWebmReader reader(mSource);
     parser.Feed(&callback, &reader);
 }
 
-void AWebmParser::onVideoTrackParsed(const webm::TrackEntry& info) {
+void WebmParser::onVideoTrackParsed(const webm::TrackEntry& info) {
     const auto& video = info.video.value();
     emit videoInfoParsed({
         .width = video.display_width.value(),
@@ -163,14 +158,7 @@ void AWebmParser::onVideoTrackParsed(const webm::TrackEntry& info) {
     }
 }
 
-void AWebmParser::onVideoFrameParsed(AByteBuffer buffer, int64_t timecode) {
-    emit videoFrameParsed({
-        .frameData = std::move(buffer),
-        .timecode = timecode
-    });
-}
-
-void AWebmParser::onAudioTrackParsed(const webm::TrackEntry &info) {
+void WebmParser::onAudioTrackParsed(const webm::TrackEntry &info) {
     if (info.codec_id.value() == "A_VORBIS") {
         emit audioCodecParsed(aui::audio::Codec::VORBIS);
     }
@@ -179,18 +167,20 @@ void AWebmParser::onAudioTrackParsed(const webm::TrackEntry &info) {
     }
 }
 
-void AWebmParser::onFinished() {
-    emit finished();
+void WebmParser::onVideoFrameParsed(AByteBuffer buffer, int64_t timecode) {
+    emit videoFrameParsed({
+        .frameData = std::move(buffer),
+        .timecode = timecode
+    });
 }
 
-void AWebmParser::onAudioFrameParsed(AByteBuffer buffer, int64_t timecode) {
-    _<AAudioPlayer> player = _new<AAudioPlayer>(_new<AOpusSoundStream>(_new<AStrongByteBufferInputStream>(std::move(buffer))));
-    bool val = false;
-    AObject::connect(player->finished, [&val]() {
-        val = true;
+void WebmParser::onAudioFrameParsed(AByteBuffer buffer, int64_t timecode) {
+    emit audioFrameParsed({
+        .frameData = std::move(buffer),
+        .timecode = timecode
     });
-    player->finished;
-    player->play();
+}
 
-    while (!val) {}
+void WebmParser::onFinished() {
+    emit finished();
 }

@@ -16,6 +16,6 @@ signals:
     emits<aui::video::Codec> videoCodecParsed;
     emits<aui::audio::Codec> audioCodecParsed;
     emits<ACodedFrame> videoFrameParsed;
-    emits<AByteBuffer> audioFrameParsed;
+    emits<ACodedFrame> audioFrameParsed;
     emits<> finished;
 };

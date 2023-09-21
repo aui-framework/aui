@@ -2,7 +2,7 @@
 
 #include "AUI/Image/AImage.h"
 
-struct AFrame {
+struct AVideoFrame {
     AImage image;
     int64_t timecode = 0;
 };

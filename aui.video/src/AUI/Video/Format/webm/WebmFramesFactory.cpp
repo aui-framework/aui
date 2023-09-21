@@ -1,14 +1,14 @@
-#include "AWebmFramesFactory.h"
+#include "WebmFramesFactory.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Video/AAsyncVideoProcessor.h"
-#include "AWebmParser.h"
+#include "WebmParser.h"
 
-AWebmFramesFactory::AWebmFramesFactory(_<IInputStream> stream) {
-    mProcessor = _new<AAsyncVideoProcessor>(_new<AWebmParser>(std::move(stream)), nullptr);
+WebmFramesFactory::WebmFramesFactory(_<IInputStream> stream) {
+    mProcessor = _new<AAsyncVideoProcessor>(_new<WebmParser>(std::move(stream)), nullptr);
     mProcessor->run();
 }
 
-AImage AWebmFramesFactory::provideImage(const glm::ivec2 &size) {
+AImage WebmFramesFactory::provideImage(const glm::ivec2 &size) {
     ARaiiHelper helper = [this]() {
         mFrame.reset();
     };
@@ -23,7 +23,7 @@ AImage AWebmFramesFactory::provideImage(const glm::ivec2 &size) {
     return std::move((*mFrame).image);
 }
 
-bool AWebmFramesFactory::isNewImageAvailable() {
+bool WebmFramesFactory::isNewImageAvailable() {
     if (!mFrame) {
         mFrame = mProcessor->nextFrame();
         if (!mFrame) {
@@ -35,6 +35,6 @@ bool AWebmFramesFactory::isNewImageAvailable() {
     return mFrame.value().timecode - mLastTimecode <= duration_cast<milliseconds>(system_clock::now() - mLastTimeProvided).count();
 }
 
-glm::ivec2 AWebmFramesFactory::getSizeHint() {
+glm::ivec2 WebmFramesFactory::getSizeHint() {
     return IImageFactory::getSizeHint();
 }

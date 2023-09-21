@@ -16,7 +16,7 @@ public:
 
     ~VPXDecoder();
 
-    AFrame decode(const ACodedFrame& codedFrame) override;
+    AVideoFrame decode(const ACodedFrame& codedFrame) override;
 
 private:
     aui::fast_pimpl<vpx_codec_ctx_t, 5 * sizeof(void*) + 2 * sizeof(long), std::max(sizeof(void*), sizeof(long))> mContext;

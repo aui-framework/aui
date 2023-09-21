@@ -5,7 +5,7 @@
 #include "AOggSoundStream.h"
 #include "ogg/ogg.h"
 #include "AUI/IO/AStrongByteBufferInputStream.h"
-#include <vorbis/vorbisfile.h>
+#include "vorbis/vorbisfile.h"
 
 AOggSoundStream::AOggSoundStream(AUrl url) : mUrl(std::move(url)) {
     mStream = mUrl->open();

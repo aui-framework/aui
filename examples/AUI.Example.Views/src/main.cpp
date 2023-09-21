@@ -19,7 +19,6 @@
 #include <AUI/Platform/Entry.h>
 #include <AUI/i18n/AI18n.h>
 #include <AUI/ASS/AStylesheet.h>
-#include "AUI/Audio/Formats/AOpusSoundStream.h"
 
 AUI_ENTRY
 {
