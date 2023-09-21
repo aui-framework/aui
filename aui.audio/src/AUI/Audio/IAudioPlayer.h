@@ -150,46 +150,9 @@ private:
      */
     VolumeLevel mVolume = 256;
 
-<<<<<<< HEAD:aui.audio/src/AUI/Audio/IAudioPlayer.h
     virtual void playImpl() = 0;
     virtual void pauseImpl() = 0;
     virtual void stopImpl() = 0;
-=======
-    HANDLE mEvents[BUFFER_DURATION_SEC + 1];
-    HANDLE mThread;
-    bool mThreadIsActive = false;
-
-    struct Private;
-    aui::fast_pimpl<Private, (sizeof(void*) + sizeof(long)) * (2 + BUFFER_DURATION_SEC), alignof(void*)> mPrivate;
-
-    bool mIsPlaying = false;
-    int mBytesPerSecond;
-
-    void uploadBlock(DWORD pointIndex);
-
-    void clearBuffer();
-
-    void setupBufferThread();
-
-    [[noreturn]]
-    static DWORD WINAPI bufferThread(void *lpParameter);
-
-    void onAudioReachCallbackPoint();
-
-    void setupReachPointEvents();
-
-    void setupSecondaryBuffer();
-#endif
-
-
-    void playImpl();
-
-    void pauseImpl();
-
-    void stopImpl();
-
-    void onSourceSet();
->>>>>>> origin/develop:aui.audio/src/AUI/Audio/AAudioPlayer.h
 
     virtual void onSourceSet() { }
     virtual void onVolumeSet() { }
