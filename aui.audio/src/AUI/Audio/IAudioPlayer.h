@@ -1,28 +1,20 @@
 #pragma once
 
-#if AUI_PLATFORM_WIN
-#include <Windows.h>
-#endif
-
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/ASignal.h>
-#include "AUI/Audio/ISoundInputStream.h"
-#include "AUI/Audio/AAudioMixer.h"
 
-#include "AUI/Audio/ISoundInputStream.h"
-#include "AUI/Util/APimpl.h"
+class ISoundInputStream;
+class AUrl;
 
 /**
  * @brief Interface for audio playback.
  * @ingroup audio
  */
-class API_AUI_AUDIO AAudioPlayer: public AObject {
+class API_AUI_AUDIO IAudioPlayer: public AObject {
 public:
-    AAudioPlayer();
-    ~AAudioPlayer() override;
+    static _<IAudioPlayer> fromSoundStream(_<ISoundInputStream>);
 
-    explicit AAudioPlayer(_<ISoundInputStream> stream);
-
+    static _<IAudioPlayer> fromUrl(const AUrl& url);
     /**
      * @brief Playback status depends on last called function among play(), pause(), stop().
      */
@@ -65,7 +57,7 @@ public:
     /**
      * @return Current playback status.
      */
-    PlaybackStatus status() const noexcept {
+    PlaybackStatus playbackStatus() const noexcept {
         return mPlaybackStatus;
     }
 
@@ -94,7 +86,7 @@ public:
      */
     [[nodiscard]]
     const _<ISoundInputStream>& resampledStream() const noexcept {
-        return mResampler != nullptr ? mResampler : mSource;
+        return mResampled != nullptr ? mResampled : mSource;
     }
 
     /**
@@ -104,6 +96,7 @@ public:
      */
     void setLoop(bool loop) {
         mLoop = loop;
+        onLoopSet();
     }
 
     /**
@@ -114,20 +107,28 @@ public:
         return mLoop;
     }
 
+    using VolumeLevel = aui::ranged_number<uint32_t, 0, 256>;
+
     /**
      * @brief Set level of volume.
      * @param volume Float number from 0 to 1 inclusively
      */
-    void setVolume(aui::float_within_0_1 volume) {
+    void setVolume(VolumeLevel volume) {
         mVolume = volume;
+        onVolumeSet();
     }
 
     /**
      * @return Current volume level.
      */
     [[nodiscard]]
-    aui::float_within_0_1 volume() const noexcept {
+    VolumeLevel volume() const noexcept {
         return mVolume;
+    }
+
+    void rewind() {
+        stop();
+        play();
     }
 
 signals:
@@ -136,50 +137,24 @@ signals:
      */
     emits<> finished;
 
+protected:
+    _<ISoundInputStream> mResampled;
+
 private:
     _<ISoundInputStream> mSource;
     PlaybackStatus mPlaybackStatus = PlaybackStatus::STOPPED;
     bool mLoop = false;
-    aui::float_within_0_1 mVolume = 1.f;
-    _<ISoundInputStream> mResampler;
 
-#if AUI_PLATFORM_WIN
-    static constexpr int BUFFER_DURATION_SEC = 2;
-    static_assert(BUFFER_DURATION_SEC >= 2 && "Buffer duration assumes to be greater than 1");
+    /**
+     * @brief Volume level, integer from 0 to 256, works linear
+     */
+    VolumeLevel mVolume = 256;
 
-    HANDLE mEvents[BUFFER_DURATION_SEC + 1];
-    HANDLE mThread;
-    bool mThreadIsActive = false;
+    virtual void playImpl() = 0;
+    virtual void pauseImpl() = 0;
+    virtual void stopImpl() = 0;
 
-    struct Private;
-    aui::fast_pimpl<Private, (sizeof(void*) + sizeof(long)) * (2 + BUFFER_DURATION_SEC), alignof(void*)> mPrivate;
-
-    bool mIsPlaying = false;
-    int mBytesPerSecond;
-
-    void uploadBlock(DWORD pointIndex);
-
-    void clearBuffer();
-
-    void setupBufferThread();
-
-    [[noreturn]]
-    static DWORD WINAPI bufferThread(void *lpParameter);
-
-    void onAudioReachCallbackPoint();
-
-    void setupReachPointEvents();
-
-    void setupSecondaryBuffer();
-#endif
-
-
-    void playImpl();
-
-    void pauseImpl();
-
-    void stopImpl();
-
-    void onSourceSet();
-
+    virtual void onSourceSet() { }
+    virtual void onVolumeSet() { }
+    virtual void onLoopSet() { }
 };

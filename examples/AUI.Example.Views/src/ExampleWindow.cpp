@@ -35,7 +35,7 @@
 #include "AUI/View/ASpinner.h"
 #include "DemoGraphView.h"
 
-#include "AUI/Audio/AAudioPlayer.h"
+#include "AUI/Audio/IAudioPlayer.h"
 
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ADragNDropView.h"
@@ -43,8 +43,6 @@
 #include "AUI/View/ASlider.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/IO/AByteBufferInputStream.h"
-#include "AUI/Audio/Formats/AWavSoundStream.h"
-#include "AUI/Audio/Formats/AOggSoundStream.h"
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/ADropdownList.h>
 #include <AUI/i18n/AI18n.h>
@@ -337,10 +335,9 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 }
         }), "Common");
 
+        mWavAudio = IAudioPlayer::fromUrl(":sound/sound1.wav");
+        mOggAudio = IAudioPlayer::fromUrl(":sound/sound1.ogg");
 
-        mWavAudio = _new<AAudioPlayer>(AWavSoundStream::fromUrl(":sound/sound1.wav"));
-        mOggAudio = _new<AAudioPlayer>(AOggSoundStream::fromUrl(":sound/sound1.ogg"));
-        mWavAudio->setLoop(true);
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal>{
                 Horizontal {
                         Vertical{
@@ -348,12 +345,20 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 _new<AButton>("Play .wav music").connect(&AButton::clicked, slot(mWavAudio)::play),
                                 _new<AButton>("Stop .wav music").connect(&AButton::clicked, slot(mWavAudio)::stop),
                                 _new<AButton>("Pause .wav music").connect(&AButton::clicked, slot(mWavAudio)::pause),
+                                _new<ALabel>("Volume control"),
+                                _new<ASlider>().connect(&ASlider::valueChanging, this, [player = mWavAudio](aui::float_within_0_1 value) {
+                                    player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
+                                })
                         },
                         Vertical{
                                 _new<ALabel>("Play music using AUI!"),
                                 _new<AButton>("Play .ogg music").connect(&AButton::clicked, slot(mOggAudio)::play),
                                 _new<AButton>("Stop .ogg music").connect(&AButton::clicked, slot(mOggAudio)::stop),
                                 _new<AButton>("Pause .ogg music").connect(&AButton::clicked, slot(mOggAudio)::pause),
+                                _new<ALabel>("Volume control"),
+                                _new<ASlider>().connect(&ASlider::valueChanging, this, [player = mOggAudio](aui::float_within_0_1 value) {
+                                    player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
+                                })
                         }
                 }
         }), "Sounds");
