@@ -26,12 +26,12 @@ public:
     }
 
     webm::Status OnTrackEntry(const webm::ElementMetadata &metadata, const webm::TrackEntry& trackEntry) override {
-        if (trackEntry.track_type.value() == webm::TrackType::kVideo) {
+        if (trackEntry.track_type.value() == webm::TrackType::kVideo && mVideoTrackNumber == -1) {
             mParser->onVideoTrackParsed(trackEntry);
             mVideoTrackNumber = trackEntry.track_number.value();
         }
 
-        if (trackEntry.track_type.value() == webm::TrackType::kAudio) {
+        if (trackEntry.track_type.value() == webm::TrackType::kAudio && mAudioTrackNumber == -1) {
             mParser->onAudioTrackParsed(trackEntry);
             mAudioTrackNumber = trackEntry.track_number.value();
         }

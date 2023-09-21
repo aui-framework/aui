@@ -14,4 +14,25 @@
 //  You should have received a copy of the GNU Lesser General Public
 //  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "ARawSoundStream.h"
+#pragma once
+
+#include "AUI/Audio/ISoundInputStream.h"
+
+/**
+ * @brief Sound stream that outputs raw samples
+ * @ingroup audio
+ */
+class ARawSoundStream : public ISoundInputStream {
+public:
+    ARawSoundStream(AAudioFormat format, _<IInputStream>);
+
+    size_t read(char* dst, size_t size) override;
+
+    AAudioFormat info() override;
+
+    void rewind() override;
+
+private:
+    AAudioFormat mFormat;
+    _<IInputStream> mStream;
+};
