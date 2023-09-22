@@ -45,22 +45,22 @@ jobs:
           publish_branch: main
           deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
 
-  # build-android:
-  #  name: "Android"
-  #  runs-on: ubuntu-latest
-  #  steps:
-  #    - uses: actions/checkout@v2
-  #      with:
-  #        submodules: true
-  #    - uses: actions/setup-java@v1
-  #      with: { java-version: '11' }
+  build-android:
+   name: "Android"
+   runs-on: ubuntu-latest
+   steps:
+     - uses: actions/checkout@v2
+       with:
+         submodules: true
+     - uses: actions/setup-java@v1
+       with: { java-version: '11' }
 
-  #    - name: Install ubuntu packages
-  #      run: sudo apt-get update && sudo apt-get install build-essential cmake ninja-build
+     - name: Install ubuntu packages
+       run: sudo apt-get update && sudo apt-get install build-essential cmake ninja-build
 
-  #    - name: Gradle build
-  #      working-directory: examples/AUI.Example.Views/android
-  #      run: ./gradlew assembleDebug
+     - name: Gradle build
+       working-directory: examples/AUI.Example.Views/android
+       run: ./gradlew assembleDebug
 
   build-desktop:
     name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
@@ -98,6 +98,12 @@ jobs:
             debug_or_release: RelWithDebInfo
             shared_or_static: static
 
+          - os: ubuntu-latest
+            generator: "Ninja"
+            additional_cmake_flags: '-DAUI_BUILD_FOR'
+            debug_or_release: RelWithDebInfo
+            shared_or_static: static
+            
     steps:
       - uses: actions/checkout@v2
         with:
