@@ -56,7 +56,7 @@ jobs:
        with: { java-version: '11' }
 
      - name: Install ubuntu packages
-       run: sudo apt-get update && sudo apt-get install build-essential cmake ninja-build
+       run: sudo apt-get update && sudo apt-get install build-essential cmake ninja-build bash
 
      - name: Gradle build
        working-directory: examples/AUI.Example.Views/android
