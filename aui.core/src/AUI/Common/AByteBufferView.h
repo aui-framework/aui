@@ -109,6 +109,17 @@ public:
     _<IInputStream> toStream() const;
 };
 
+inline std::ostream& operator<<(std::ostream& lhs, const AByteBufferView& rhs) {
+    lhs << "[";
+    for (const auto b : rhs) {
+        char buf[8];
+        lhs.write(buf, std::distance(std::begin(buf), fmt::format_to(buf, " {:02x}", b)));
+    }
+    lhs << " ]";
+
+    return lhs;
+}
+
 template<>
 struct ASerializable<AByteBufferView> {
     static void write(IOutputStream& os, AByteBufferView view) {
