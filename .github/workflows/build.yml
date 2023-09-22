@@ -88,6 +88,10 @@ jobs:
             generator: "Ninja"
             additional_cmake_flags: ''
 
+          - os: macos-13
+            generator: "Ninja"
+            additional_cmake_flags: ''
+
           - os: ubuntu-latest
             generator: "Ninja"
             additional_cmake_flags: ''
