@@ -23,7 +23,7 @@ AOpusSoundStream::~AOpusSoundStream() {
 }
 
 size_t AOpusSoundStream::read(char *dst, size_t size) {
-    if (auto bytesRead = mSamples.read(dst, size)) {
+    if (auto bytesRead = mDecodedSamples.read(dst, size)) {
         //ok, we have some samples to read
         return bytesRead;
     }
@@ -35,16 +35,20 @@ size_t AOpusSoundStream::read(char *dst, size_t size) {
         return 0;
     }
 
-    AByteBuffer samples;
-    samples.reserve(MAX_UNPACKED_SIZE);
+
     auto res = opus_decode(mDecoder,
                            reinterpret_cast<const unsigned char*>(mPacketBuffer), static_cast<opus_int32>(packetSize),
-                           reinterpret_cast<opus_int16*>(samples.data()), static_cast<int>(samples.capacity() / 4), 0);
+                           reinterpret_cast<opus_int16*>(mSampleBuffer), static_cast<int>(MAX_UNPACKED_SIZE / 4), 0);
     if (res > 0) {
-        //we got new data and can try read() one more time
-        samples.resize(2 * res);
-        mSamples << _new<AStrongByteBufferInputStream>(std::move(samples));
-        return mSamples.read(dst, size);
+        //we got new samples and can perform read()
+        size_t decodedSize = 2 * res;
+        size_t toWrite = std::min(decodedSize, size);
+        std::memcpy(dst, mSampleBuffer, toWrite);
+
+        //if some samples left, we save it for future read()
+        mDecodedSamples.write(dst + toWrite, decodedSize - toWrite);
+
+        return toWrite;
     }
 
     return 0;

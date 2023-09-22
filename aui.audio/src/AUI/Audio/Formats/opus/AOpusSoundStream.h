@@ -2,14 +2,15 @@
 
 #include "AUI/Audio/ISoundInputStream.h"
 #include "AUI/Common/AByteBuffer.h"
-#include "AUI/IO/APortionedMultipleStream.h"
 #include "AUI/IO/APipe.h"
+#include "AUI/IO/ADynamicPipe.h"
 
 typedef struct OpusDecoder OpusDecoder;
 
 /**
  * @brief Sound stream for OPUS format
- * @note Not intended for decoding OggOpus format
+ * @note Not intended for decoding OggOpus format; now works only with OPUS encoded audio in webm
+ *
  */
 class AOpusSoundStream : public ISoundInputStream {
 public:
@@ -46,9 +47,10 @@ private:
 
 
     _<IInputStream> mStream;
-    APortionedMultipleStream mSamples;
+    ADynamicPipe mDecodedSamples;
     OpusHead mHeader;
     char mPacketBuffer[PACKET_BUFFER_SIZE];
+    char mSampleBuffer[MAX_UNPACKED_SIZE];
     AByteBuffer mBuffer;
     OpusDecoder* mDecoder;
 };
