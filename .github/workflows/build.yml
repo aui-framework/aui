@@ -73,7 +73,7 @@ jobs:
         shared_or_static: [shared, static]
         is32bit: [false]
         include:
-    u     - os: windows-latest
+          - os: windows-latest
             generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A Win32'
             debug_or_release: Debug
