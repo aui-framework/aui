@@ -64,8 +64,8 @@ TEST_F(UILayoutTest, SmallCorner) {
 
     auto cornerLabel = _new<View>("26") with_style {
             ATextAlign::RIGHT,
-            FontSize(8_dp),
-            LineHeight(9.68),
+            FontSize{8_dp},
+            LineHeight{9.68},
             MinSize(12_dp,8_dp),
             Padding(0),
             Margin(0),
