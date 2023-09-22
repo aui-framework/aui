@@ -97,12 +97,6 @@ jobs:
             additional_cmake_flags: ''
             debug_or_release: RelWithDebInfo
             shared_or_static: static
-
-          - os: ubuntu-latest
-            generator: "Ninja"
-            additional_cmake_flags: '-DAUI_BUILD_FOR'
-            debug_or_release: RelWithDebInfo
-            shared_or_static: static
             
     steps:
       - uses: actions/checkout@v2
