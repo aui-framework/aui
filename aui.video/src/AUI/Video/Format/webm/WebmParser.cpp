@@ -129,6 +129,32 @@ private:
     uint8_t mStub[0x4000];
 };
 
+namespace {
+    aui::video::Codec videoCodecFromString(const std::string& str) {
+        if (str == "V_VP8") {
+            return aui::video::Codec::VP8;
+        }
+
+        if (str == "V_VP9") {
+            return aui::video::Codec::VP9;
+        }
+
+        return aui::video::Codec::UNKNOWN;
+    }
+
+    aui::audio::Codec audioCodecFromString(const std::string& str) {
+        if (str == "A_VORBIS") {
+            return aui::audio::Codec::VORBIS;
+        }
+
+        if (str == "A_OPUS") {
+            return aui::audio::Codec::OPUS;
+        }
+
+        return aui::audio::Codec::UNKNOWN;
+    }
+}
+
 WebmParser::WebmParser(_<IInputStream> stream) {
     setSource(std::move(stream));
 }
@@ -148,23 +174,17 @@ void WebmParser::onVideoTrackParsed(const webm::TrackEntry& info) {
     const auto& video = info.video.value();
     emit videoInfoParsed({
         .width = video.display_width.value(),
-        .height = video.display_height.value()
+        .height = video.display_height.value(),
+        .codec = info.codec_id.value() == "V_VP8" ? aui::video::Codec::VP8 : aui::video::Codec::VP9
     });
-    if (info.codec_id.value() == "V_VP8") {
-        emit videoCodecParsed(aui::video::Codec::VP8);
-    }
-    else if (info.codec_id.value() == "V_VP9") {
-        emit videoCodecParsed(aui::video::Codec::VP9);
-    }
 }
 
 void WebmParser::onAudioTrackParsed(const webm::TrackEntry &info) {
-    if (info.codec_id.value() == "A_VORBIS") {
-        emit audioCodecParsed(aui::audio::Codec::VORBIS);
-    }
-    if (info.codec_id.value() == "A_OPUS") {
-        emit audioCodecParsed(aui::audio::Codec::OPUS);
-    }
+    auto& codecPrivate = info.codec_private.value();
+    emit audioInfoParsed({
+       .header = AByteBuffer(codecPrivate.data(), codecPrivate.size()),
+       .codec = audioCodecFromString(info.codec_id.value())
+    });
 }
 
 void WebmParser::onVideoFrameParsed(AByteBuffer buffer, int64_t timecode) {

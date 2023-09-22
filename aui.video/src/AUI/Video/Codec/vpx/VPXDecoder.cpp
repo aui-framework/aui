@@ -61,10 +61,10 @@ VPXDecoder::~VPXDecoder() {
     vpx_codec_destroy(mContext.ptr());
 }
 
-AVideoFrame VPXDecoder::decode(const ACodedFrame& codedFrame) {
+AVideoFrame VPXDecoder::decode(const AEncodedFrame& encodedFrame) {
     if (auto code = vpx_codec_decode(mContext.ptr(),
-                                 reinterpret_cast<const uint8_t*>(codedFrame.frameData.data()), codedFrame.frameData.size(),
-                                nullptr, 0)) {
+                                     reinterpret_cast<const uint8_t*>(encodedFrame.frameData.data()), encodedFrame.frameData.size(),
+                                     nullptr, 0)) {
         throw AException("(VPX) failed to decode coded frame, error code: {}"_format(code));
     }
 
@@ -73,7 +73,7 @@ AVideoFrame VPXDecoder::decode(const ACodedFrame& codedFrame) {
     if (auto image = vpx_codec_get_frame(mContext.ptr(), &iter)) {
         return AVideoFrame {
             .image = aui::video::impl::convertToRGBA(image),
-            .timecode = codedFrame.timecode
+            .timecode = encodedFrame.timecode
         };
     }
 

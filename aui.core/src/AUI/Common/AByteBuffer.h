@@ -254,9 +254,8 @@ public:
             return *this;
         }
 
-        mBuffer = other.mBuffer;
-        mCapacity = other.mCapacity;
-        mSize = other.mSize;
+        resize(other.size());
+        std::memcpy(mBuffer, other.mBuffer, other.size());
 
         return *this;
     }

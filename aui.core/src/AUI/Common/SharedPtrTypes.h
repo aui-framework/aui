@@ -126,7 +126,7 @@ namespace aui {
 
 
 /**
- * @brief @brief An std::weak_ptr with AUI extensions.
+ * @brief @brief An std::shared_ptr with AUI extensions.
  * @note  Of course, it is not good tone to define a class with _ type but it significantly increases coding speed.
  *        Instead of writing every time std::shared_ptr you should write only the _ symbol.
  */

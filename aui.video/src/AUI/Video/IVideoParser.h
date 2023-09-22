@@ -2,10 +2,9 @@
 
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/ASignal.h"
-#include "AUI/Video/ACodedFrame.h"
+#include "AUI/Video/AEncodedFrame.h"
 #include "AVideoInfo.h"
-#include "Codec.h"
-#include "AUI/Audio/Codec.h"
+#include "AAudioInfo.h"
 
 class IVideoParser : public AObject {
 public:
@@ -13,9 +12,8 @@ public:
 
 signals:
     emits<AVideoInfo> videoInfoParsed;
-    emits<aui::video::Codec> videoCodecParsed;
-    emits<aui::audio::Codec> audioCodecParsed;
-    emits<ACodedFrame> videoFrameParsed;
-    emits<ACodedFrame> audioFrameParsed;
+    emits<AAudioInfo> audioInfoParsed;
+    emits<AEncodedFrame> videoFrameParsed;
+    emits<AEncodedFrame> audioFrameParsed;
     emits<> finished;
 };

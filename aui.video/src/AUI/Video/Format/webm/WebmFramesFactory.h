@@ -2,12 +2,12 @@
 
 #include "AUI/Video/AVideoFrame.h"
 #include "AUI/Image/IImageFactory.h"
-#include "AUI/Util/APimpl.h"
-#include "AUI/Thread/AFuture.h"
+#include "AUI/Video/IVideoFactory.h"
 
+class APortionedMultipleStream;
 class AAsyncVideoProcessor;
 
-class WebmFramesFactory : public IImageFactory {
+class WebmFramesFactory : public IVideoFactory {
 public:
     explicit WebmFramesFactory(_<IInputStream> stream);
 
@@ -23,5 +23,8 @@ private:
     std::chrono::time_point<std::chrono::system_clock> mLastTimeProvided;
     int64_t mLastTimecode;
     _<AAsyncVideoProcessor> mProcessor;
+    _<APortionedMultipleStream> mAudioSource;
     friend class MyWebmCallback;
+
+    void initialize();
 };

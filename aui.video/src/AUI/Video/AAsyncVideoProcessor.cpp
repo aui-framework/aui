@@ -1,6 +1,7 @@
 #include "AAsyncVideoProcessor.h"
 #include "AUI/Logging/ALogger.h"
-#include "AUI/Thread/IEventLoop.h"
+#include "AUI/Video/IVideoParser.h"
+#include "AUI/Video/IFrameDecoder.h"
 #include "AUI/Thread/AEventLoop.h"
 
 AAsyncVideoProcessor::AAsyncVideoProcessor(_<IVideoParser> parser, _<IFrameDecoder> decoder) :
@@ -24,31 +25,58 @@ void AAsyncVideoProcessor::run() {
     mDecoderThread->start();
 }
 
-AOptional<AVideoFrame> AAsyncVideoProcessor::nextFrame() {
-    return mReadyFrames.pop();
+AOptional<AVideoInfo> AAsyncVideoProcessor::videoInfo() {
+    return mVideoInfo;
+}
+
+AOptional<AAudioInfo> AAsyncVideoProcessor::audioInfo() {
+    return mAudioInfo;
+}
+
+AOptional<AVideoFrame> AAsyncVideoProcessor::nextVideoFrame() {
+    return mReadyVideoFrames.pop();
+}
+
+AOptional<AEncodedFrame> AAsyncVideoProcessor::nextAudioFrame() {
+    return mReadyAudioFrames.pop();
+}
+
+const AOptional<AVideoInfo>& AAsyncVideoProcessor::videoInfo() const {
+    return mVideoInfo;
+}
+
+const AOptional<AAudioInfo>& AAsyncVideoProcessor::audioInfo() const {
+    return mAudioInfo;
 }
 
 void AAsyncVideoProcessor::setupCallbacks() {
-    AObject::connect(mParser->videoFrameParsed, [self = sharedPtr()](ACodedFrame frame) {
+    AObject::connect(mParser->videoFrameParsed, [self = sharedPtr()](AEncodedFrame frame) {
         self->mDecoderThread->enqueue([self, frame = std::move(frame)]() {
             try {
-                self->mReadyFrames.push(self->mDecoder->decode(frame));
+                self->mReadyVideoFrames.push(self->mDecoder->decode(frame));
             }
             catch(...) { }
         });
         self->mDecoderThread->getCurrentEventLoop()->notifyProcessMessages();
     });
 
+    AObject::connect(mParser->audioInfoParsed, [self = sharedPtr()](AAudioInfo info) {
+        self->mAudioInfo = std::move(info);
+    });
+
+    AObject::connect(mParser->videoInfoParsed, [self = sharedPtr()](const AVideoInfo& info) {
+        self->mVideoInfo = info;
+        if (!self->mDecoder) {
+            self->mDecoder = IFrameDecoder::fromCodec(info.codec);
+        }
+    });
+
+    AObject::connect(mParser->audioFrameParsed, [self = sharedPtr()](AEncodedFrame frame) {
+        self->mReadyAudioFrames.push(std::move(frame));
+    });
+
     AObject::connect(mParser->finished, [self = sharedPtr()]() {
         self->mHasFinished = true;
         static_cast<AEventLoop*>(self->mDecoderThread->getCurrentEventLoop())->stop();
     });
-
-    if (!mDecoder) {
-        AObject::connect(mParser->videoCodecParsed, [self = sharedPtr()](aui::video::Codec codec) {
-            if (!self->mDecoder) {
-                self->mDecoder = IFrameDecoder::fromCodec(codec);
-            }
-        });
-    }
 }

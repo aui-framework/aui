@@ -2,7 +2,7 @@
 
 #include "AUI/Common/AByteBuffer.h"
 
-struct ACodedFrame {
+struct AEncodedFrame {
     AByteBuffer frameData;
-    int64_t timecode;
+    int64_t timecode = 0;
 };
