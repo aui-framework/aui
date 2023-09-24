@@ -17,7 +17,7 @@ AWavSoundStream::AWavSoundStream(_<IInputStream> stream) : mStream(std::move(str
 
 AAudioFormat AWavSoundStream::info() {
     return AAudioFormat {
-        .channelCount = static_cast<uint8_t>(mHeader.numChannels),
+        .channelCount = static_cast<AChannelFormat>(mHeader.numChannels),
         .sampleRate = static_cast<unsigned int>(mHeader.sampleRate),
         .sampleFormat = static_cast<uint8_t>(mHeader.bitsPerSample) == 24 ? ASampleFormat::I24 : ASampleFormat::I16,
     };

@@ -21,7 +21,7 @@ void AOpusSoundPipe::write(const char *src, size_t size) {
         }
 
         int error;
-        mDecoder = opus_decoder_create(SAMPLE_RATE, CHANNEL_COUNT, &error);
+        mDecoder = opus_decoder_create(SAMPLE_RATE, static_cast<int>(CHANNEL_COUNT), &error);
         if (error != OPUS_OK) {
             opus_decoder_destroy(mDecoder);
             ALogger::warn(LOG_TAG) << "Failed to create decoder";

@@ -92,7 +92,7 @@ size_t AVorbisSoundPipe::read(char *dst, size_t size) {
 
 AAudioFormat AVorbisSoundPipe::info() {
     return {
-        .channelCount = static_cast<uint8_t>(mInfo->channels),
+        .channelCount = static_cast<AChannelFormat>(mInfo->channels),
         .sampleRate = static_cast<uint32_t>(mInfo->rate),
         .sampleFormat = SAMPLE_FORMAT
     };

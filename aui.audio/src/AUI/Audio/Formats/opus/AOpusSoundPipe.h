@@ -12,7 +12,7 @@ typedef struct OpusDecoder OpusDecoder;
 class AOpusSoundPipe : public ISoundPipe {
 public:
     static constexpr uint32_t SAMPLE_RATE = 48000;
-    static constexpr uint8_t CHANNEL_COUNT = 2;
+    static constexpr AChannelFormat CHANNEL_COUNT = AChannelFormat::STEREO;
     static constexpr ASampleFormat SAMPLE_FORMAT = ASampleFormat::I16;
 
     ~AOpusSoundPipe() override;
