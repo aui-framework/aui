@@ -10,6 +10,7 @@ void usage_exit(void) {
 }
 
 namespace aui::video::impl {
+    //TODO add converting for all formats
     AImage convertToRGBA(vpx_image_t* image) {
         AByteBuffer buffer;
         buffer.resize(4 * image->r_w * image->r_h);
@@ -65,7 +66,7 @@ AVideoFrame VPXDecoder::decode(const AEncodedFrame& encodedFrame) {
     if (auto code = vpx_codec_decode(mContext.ptr(),
                                      reinterpret_cast<const uint8_t*>(encodedFrame.frameData.data()), encodedFrame.frameData.size(),
                                      nullptr, 0)) {
-        throw AException("(VPX) failed to decode coded frame, error code: {}"_format(code));
+        throw AException("(VPX) failed to decode encoded frame, error code: {}"_format(code));
     }
 
     vpx_codec_iter_t iter = nullptr;

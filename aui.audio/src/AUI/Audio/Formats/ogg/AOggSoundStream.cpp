@@ -24,7 +24,7 @@ AAudioFormat AOggSoundStream::info() {
     return {
         .channelCount =static_cast<uint8_t>(mVorbisFile->vi->channels),
         .sampleRate = static_cast<unsigned int>(mVorbisFile->vi->rate),
-        .sampleFormat = ASampleFormat::I16,
+        .sampleFormat = ASampleFormat::I16
     };
 }
 

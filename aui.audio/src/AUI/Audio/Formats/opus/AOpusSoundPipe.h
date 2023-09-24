@@ -1,36 +1,35 @@
 #pragma once
 
-#include "AUI/Audio/ISoundInputStream.h"
-#include "AUI/Common/AByteBuffer.h"
-#include "AUI/IO/APipe.h"
+#include "AUI/Audio/ISoundPipe.h"
 #include "AUI/IO/ADynamicPipe.h"
 
 typedef struct OpusDecoder OpusDecoder;
 
 /**
- * @brief Sound stream for OPUS format
- * @note Not intended for decoding OggOpus format; now works only with OPUS encoded audio in webm
- *
+ * @brief Sound pipe for OPUS format, decodes OPUS packets
+ * @note ready packets should be passed with write() method for proper work, header must precede the packets
  */
-class AOpusSoundStream : public ISoundInputStream {
+class AOpusSoundPipe : public ISoundPipe {
 public:
     static constexpr uint32_t SAMPLE_RATE = 48000;
     static constexpr uint8_t CHANNEL_COUNT = 2;
     static constexpr ASampleFormat SAMPLE_FORMAT = ASampleFormat::I16;
 
-    explicit AOpusSoundStream(_<IInputStream> stream);
+    ~AOpusSoundPipe() override;
 
-    ~AOpusSoundStream();
+    void write(const char *src, size_t size) override;
 
     size_t read(char* dst, size_t size) override;
 
     AAudioFormat info() override;
 
-    void rewind() override;
+    [[nodiscard]]
+    bool isLastWriteSuccessful() const {
+        return mLastWriteSuccessful;
+    }
 
 private:
-    static constexpr size_t HEADER_SIZE = 18;
-    static constexpr size_t PACKET_BUFFER_SIZE = 8192;
+    static constexpr size_t HEADER_SIZE = 19;
     static constexpr size_t MAX_UNPACKED_SIZE = 11520;
 
     struct OpusHead {
@@ -40,17 +39,20 @@ private:
         uint16_t preSkip; //TODO implement preskipping first samples
         uint32_t inputSampleRate;
         int16_t outputGain;
-        char _pad[2];
+        int8_t channelMap;
+        char _pad[1];
     };
 
     static_assert(sizeof(OpusHead) == 20);
 
 
-    _<IInputStream> mStream;
     ADynamicPipe mDecodedSamples;
+    bool mHeaderHasRead = false;
+    bool mLastWriteSuccessful = true;
+
     OpusHead mHeader;
-    char mPacketBuffer[PACKET_BUFFER_SIZE];
-    char mSampleBuffer[MAX_UNPACKED_SIZE];
-    AByteBuffer mBuffer;
     OpusDecoder* mDecoder;
+    char mSampleBuffer[MAX_UNPACKED_SIZE];
+    size_t mPreSkipped = 0;
+    AMutex mSync;
 };

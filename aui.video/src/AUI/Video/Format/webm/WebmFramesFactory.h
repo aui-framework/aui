@@ -23,8 +23,5 @@ private:
     std::chrono::time_point<std::chrono::system_clock> mLastTimeProvided;
     int64_t mLastTimecode;
     _<AAsyncVideoProcessor> mProcessor;
-    _<APortionedMultipleStream> mAudioSource;
     friend class MyWebmCallback;
-
-    void initialize();
 };

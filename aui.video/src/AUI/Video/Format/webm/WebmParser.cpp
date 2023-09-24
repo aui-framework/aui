@@ -8,7 +8,7 @@ public:
     }
 
     webm::Status OnClusterBegin(const webm::ElementMetadata &metadata, const webm::Cluster &cluster, webm::Action *action) override {
-        mClusterTimecode = cluster.timecode.value();
+        mClusterTimecode = static_cast<int64_t>(cluster.timecode.value());
         *action = webm::Action::kRead;
         return webm::Status(webm::Status::kOkCompleted);
     }
@@ -79,8 +79,8 @@ public:
 private:
     bool mIsVideoFrame = false;
     bool mIsAudioFrame = false;
-    int16_t mClusterTimecode = 0;
-    int16_t mBlockTimecode = 0;
+    int64_t mClusterTimecode = 0;
+    int64_t mBlockTimecode = 0;
 
     uint64_t mVideoTrackNumber = -1;
     uint64_t mAudioTrackNumber = -1;
@@ -119,6 +119,7 @@ public:
         return status;
     }
 
+    [[nodiscard]]
     std::uint64_t Position() const override {
         return mPos;
     }
@@ -175,7 +176,7 @@ void WebmParser::onVideoTrackParsed(const webm::TrackEntry& info) {
     emit videoInfoParsed({
         .width = video.display_width.value(),
         .height = video.display_height.value(),
-        .codec = info.codec_id.value() == "V_VP8" ? aui::video::Codec::VP8 : aui::video::Codec::VP9
+        .codec = videoCodecFromString(info.codec_id.value())
     });
 }
 

@@ -4,6 +4,8 @@
 #include "AUI/Video/AVideoFrame.h"
 #include "AUI/Video/AVideoInfo.h"
 #include "AUI/Video/AAudioInfo.h"
+#include "AUI/Audio/IAudioPlayer.h"
+#include "AUI/Audio/ISoundPipe.h"
 
 class IVideoParser;
 class IFrameDecoder;
@@ -35,6 +37,10 @@ public:
     const AOptional<AAudioInfo>& audioInfo() const;
 
     const AOptional<AVideoInfo>& videoInfo() const;
+
+    void playAudio() {
+        mPlayer->play(); //TODO temporary solution
+    }
 
 private:
     static constexpr size_t VIDEO_BUFFER_CAPACITY = 10;
@@ -82,6 +88,9 @@ private:
     _<IFrameDecoder> mDecoder;
     _<AThread> mParserThread;
     _<AThread> mDecoderThread;
+
+    _<IAudioPlayer> mPlayer;
+    _<ISoundPipe> mSoundSource;
 
     AOptional<AVideoInfo> mVideoInfo;
     AOptional<AAudioInfo> mAudioInfo;
