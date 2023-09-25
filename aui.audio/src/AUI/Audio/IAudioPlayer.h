@@ -131,6 +131,16 @@ public:
         play();
     }
 
+    /**
+     * @brief Called By AAudioMixer when the playback is finished.
+     * @details
+     * See IAudioPlayer::finished for listening for this event.
+     */
+    void onFinished() {
+        stop();
+        emit finished;
+    }
+
 signals:
     /**
      * @brief On playback finished.
