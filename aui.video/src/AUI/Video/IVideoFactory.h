@@ -8,7 +8,7 @@ class IAudioPlayer;
 
 class IVideoFactory : public IImageFactory {
 public:
-    const _<IAudioPlayer>& linkedAudioPlayer() const {
+    const _<IAudioPlayer>& relatedPlayer() const {
         return mPlayer;
     }
 

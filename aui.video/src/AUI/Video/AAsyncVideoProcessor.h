@@ -32,14 +32,12 @@ public:
 
     AOptional<AVideoFrame> nextVideoFrame();
 
-    AOptional<AEncodedFrame> nextAudioFrame();
-
     const AOptional<AAudioInfo>& audioInfo() const;
 
     const AOptional<AVideoInfo>& videoInfo() const;
 
-    void playAudio() {
-        mPlayer->play(); //TODO temporary solution
+    _<IAudioPlayer> relatedPlayer() {
+        return mPlayer;
     }
 
 private:
@@ -83,7 +81,6 @@ private:
     };
 
     ReadyFramesQueue<AVideoFrame, VIDEO_BUFFER_CAPACITY> mReadyVideoFrames;
-    ReadyFramesQueue<AEncodedFrame, 0> mReadyAudioFrames;
     _<IVideoParser> mParser;
     _<IFrameDecoder> mDecoder;
     _<AThread> mParserThread;

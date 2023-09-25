@@ -103,10 +103,6 @@ AOptional<AVideoFrame> AAsyncVideoProcessor::nextVideoFrame() {
     return mReadyVideoFrames.pop();
 }
 
-AOptional<AEncodedFrame> AAsyncVideoProcessor::nextAudioFrame() {
-    return mReadyAudioFrames.pop();
-}
-
 const AOptional<AVideoInfo>& AAsyncVideoProcessor::videoInfo() const {
     return mVideoInfo;
 }
@@ -144,7 +140,6 @@ void AAsyncVideoProcessor::setupCallbacks() {
     });
 
     AObject::connect(mParser->audioFrameParsed, [self = sharedPtr()](AEncodedFrame frame) {
-        //self->mReadyAudioFrames.push(std::move(frame));
         self->mSoundSource->write(frame.frameData.data(), frame.frameData.size());
     });
 

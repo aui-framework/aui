@@ -12,7 +12,10 @@ WebmFramesFactory::WebmFramesFactory(_<IInputStream> stream) {
 AImage WebmFramesFactory::provideImage(const glm::ivec2 &size) {
     if (!mPlaybackStarted.time_since_epoch().count()) {
         mPlaybackStarted = std::chrono::system_clock::now();
-        mProcessor->playAudio();
+        if (mProcessor->relatedPlayer()) {
+            mPlayer = mProcessor->relatedPlayer();
+            mPlayer->play();
+        }
     }
 
     mLastTimeProvided = std::chrono::system_clock::now();
