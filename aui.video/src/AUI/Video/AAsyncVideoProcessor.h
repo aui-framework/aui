@@ -88,7 +88,6 @@ private:
     _<IFrameDecoder> mDecoder;
     _<AThread> mParserThread;
     _<AThread> mDecoderThread;
-
     _<IAudioPlayer> mPlayer;
     _<ISoundPipe> mSoundSource;
 
