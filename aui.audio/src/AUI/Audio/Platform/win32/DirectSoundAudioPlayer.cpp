@@ -2,12 +2,6 @@
 #include "AUI/Audio/ISoundInputStream.h"
 #include "DirectSound.h"
 
-_<IAudioPlayer> IAudioPlayer::fromSoundStream(_<ISoundInputStream> stream) {
-    auto result = _new<DirectSoundAudioPlayer>();
-    result->setSource(std::move(stream));
-    return result;
-}
-
 struct DirectSoundAudioPlayer::Private {
     IDirectSoundBuffer8* mSoundBufferInterface;
     IDirectSoundNotify8* mNotifyInterface;

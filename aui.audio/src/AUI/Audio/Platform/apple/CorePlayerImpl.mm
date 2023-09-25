@@ -14,13 +14,6 @@
 
 static constexpr auto LOG_TAG = "CoreAudio";
 
-_<IAudioPlayer> IAudioPlayer::fromSoundStream(_<ISoundInputStream> stream) {
-    auto result = _new<CoreAudioPlayer>();
-    result->setSource(std::move(stream));
-    return result;
-}
-
-
 namespace {
 static AAudioMixer& loop() {
     static AAudioMixer l;
