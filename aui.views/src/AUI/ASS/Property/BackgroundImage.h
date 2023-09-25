@@ -63,6 +63,12 @@ namespace ass {
         CONTAIN,
 
         /**
+         * @brief Resize image to view's content area keeping aspect ratio and keeping space not covered by the image.
+         * Partially matches CSS background-size: contain
+         */
+        CONTAIN_PADDING,
+
+        /**
          * @brief Texture divided by 4 parts of the same size, keeping their original size. Useful for textured buttons
          * and inputs in games.
          * @details When the view is larger than the texture, the free space is covered by stretching the central row
