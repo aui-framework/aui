@@ -19,6 +19,7 @@
 //
 
 #include "AScrollArea.h"
+#include "AUI/View/AView.h"
 #include <AUI/Layout/AAdvancedGridLayout.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/Util/kAUI.h>
@@ -161,3 +162,6 @@ void AScrollArea::onPointerReleased(const APointerReleasedEvent& event) {
     AViewContainer::onPointerReleased(event);
 }
 
+void AScrollArea::scrollTo(const _<AView>& target) {
+    scroll(target->getPositionInWindow() - getPositionInWindow());
+}
