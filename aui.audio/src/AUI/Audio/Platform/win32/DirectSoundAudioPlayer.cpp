@@ -65,12 +65,10 @@ void DirectSoundAudioPlayer::uploadBlock(DWORD blockIndex) {
         }
         else {
             std::memset(buffer, 0, mBytesPerSecond - bufferSize);
-            stop();
-            emit finished;
+            onFinished();
         }
     } else if (bufferSize < mBytesPerSecond) {
-        stop();
-        emit finished;
+        onFinished();
     }
 }
 
