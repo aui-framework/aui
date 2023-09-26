@@ -40,7 +40,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<Sound>: IPropertyBase {
+        struct Property<Sound>: IPropertyBase {
         private:
             Sound mInfo;
 
