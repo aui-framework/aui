@@ -2,7 +2,12 @@
 #include "AUI/Audio/ISoundInputStream.h"
 #include "DirectSound.h"
 
+
 _<IAudioPlayer> IAudioPlayer::fromSoundStream(_<ISoundInputStream> stream) {
+    if (!stream) {
+        return nullptr;
+    }
+
     auto result = _new<DirectSoundAudioPlayer>();
     result->setSource(std::move(stream));
     return result;
