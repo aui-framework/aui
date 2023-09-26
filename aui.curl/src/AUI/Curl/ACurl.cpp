@@ -109,6 +109,12 @@ _<IInputStream> ACurl::Builder::toInputStream() {
                     mPipe << buf;
                     return buf.size();
                 };
+                AObject::connect(mCurl->success, mCurl.get(), [this]() {
+                    mPipe.close();
+                });
+                AObject::connect(mCurl->fail, mCurl.get(), [this]() {
+                    mPipe.close();
+                });
                 mCurl->run();
             };
         }
