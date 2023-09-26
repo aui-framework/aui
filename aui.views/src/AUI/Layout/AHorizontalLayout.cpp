@@ -34,7 +34,7 @@ void AHorizontalLayout::onResize(int x, int y, int width, int height)
 	cache.reserve(mViews.size());
 	
 	int sum = 0;
-	int availableSpace = width;
+	int availableSpace = width + mSpacing;
 	
 	for (auto& view : mViews)
 	{
