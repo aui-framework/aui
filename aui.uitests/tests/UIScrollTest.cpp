@@ -31,7 +31,7 @@ public:
 
         setContents(
             Vertical {
-                _new<ALabel>("Content") with_style { ass::MinSize{ {}, 300_dp } },
+                mBigContent = _new<ALabel>("Content") with_style { ass::MinSize{ {}, 300_dp } },
                 mBottomLabel = _new<ALabel>("Bottom"),
             }
         );
@@ -42,6 +42,7 @@ public:
     }
 
     MOCK_METHOD(void, setSize, (glm::ivec2), (override));
+    _<ALabel> mBigContent;
     _<ALabel> mBottomLabel;
 };
 
@@ -92,4 +93,12 @@ TEST_F(UIScrollTest, ScrollTo) {
     By::text("Bottom").check(uitest::impl::not$(isBottomAboveBottomOf(By::type<AScrollArea>())));
     mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBottomLabel);
     By::text("Bottom").check(isBottomAboveBottomOf(By::type<AScrollArea>()));
+}
+
+TEST_F(UIScrollTest, ScrollTo2) {
+    mTestWindow->updateLayout();
+    mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBottomLabel);
+    By::text("Content").check(isTopAboveTopOf(By::type<AScrollArea>()), "first check");
+    mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBigContent);
+    By::text("Content").check(uitest::impl::not$(isTopAboveTopOf(By::type<AScrollArea>())), "second check");
 }
