@@ -64,8 +64,15 @@ jobs:
      - name: Build 
        run: cmake --build ${{github.workspace}}/build -t apps
 
+     - name: Upload
+       uses: actions/upload-artifact@v3
+       with:
+         path: ${{github.workspace}}/build/app_project/app/build/intermediates/apk/debug/app-debug.apk
+         name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+
+
   build-ios:
-   name: "iOS"
+   name: "iOS Debug"
    runs-on: macos-latest
    steps:
      - uses: actions/checkout@v2
@@ -80,15 +87,18 @@ jobs:
 
      - name: Build 
        run: cmake --build ${{github.workspace}}/build -t apps
+ 
+     - name: Pack
+       working-directory: ${{github.workspace}}/build/app_project
+       run: cpack -G TGZ -C Debug . 
 
      - name: Upload
        uses: actions/upload-artifact@v3
        with:
-         path: ${{github.workspace}}/build/app_project/app/build/intermediates/apk/debug/app-debug.apk
+         path: ${{github.workspace}}/build/app_project/*.tar.gz
          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
 
-
-  build-desktop:
+ build-desktop:
     name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
     runs-on: ${{ matrix.os }}
     strategy:
