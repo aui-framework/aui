@@ -365,7 +365,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 Vertical {
                         _new<AButton>("Button produces sound when clicked") with_style {
                                 ass::on_state::Activated {
-                                        ass::Sound(IAudioPlayer::fromUrl(":sound/click.ogg")),
+                                        ass::Sound{IAudioPlayer::fromUrl(":sound/click.ogg")},
                                 }
                         }
                 }
