@@ -98,7 +98,7 @@ jobs:
          path: ${{github.workspace}}/build/app_project/*.tar.gz
          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
 
- build-desktop:
+  build-desktop:
     name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
     runs-on: ${{ matrix.os }}
     strategy:
