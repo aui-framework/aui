@@ -59,10 +59,25 @@ jobs:
        run: sudo apt-get update && sudo apt-get install build-essential cmake ninja-build bash
 
      - name: Configure CMake 
-       run: cmake -GNinja -B ${{github.workspace}}/build
+       run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=android
 
      - name: Build 
        run: cmake --build ${{github.workspace}}/build -t apps
+
+  build-ios:
+   name: "iOS"
+   runs-on: macos-latest
+   steps:
+     - uses: actions/checkout@v2
+       with:
+         submodules: true
+
+     - name: Configure CMake 
+       run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=ios
+
+     - name: Build 
+       run: cmake --build ${{github.workspace}}/build -t apps
+
 
   build-desktop:
     name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
