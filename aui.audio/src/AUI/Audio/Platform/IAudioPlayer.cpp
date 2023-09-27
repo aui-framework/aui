@@ -10,7 +10,7 @@ using DefaultSystemPlayer = DirectSoundAudioPlayer;
 #include "linux/PulseAudioPlayer.h"
 using DefaultSystemPlayer = PulseAudioPlayer;
 #elif AUI_PLATFORM_ANDROID
-#include "android/OboeAudioPlayer"
+#include "android/OboeAudioPlayer.h"
 using DefaultSystemPlayer = OboeAudioPlayer;
 #elif AUI_AUI_PLATFORM_APPLE
 #include "apple/CoreAudioPlayer.h"
