@@ -72,6 +72,10 @@ jobs:
        with:
          submodules: true
 
+     - name: Install macos dependencies
+       if: matrix.os == 'macos-latest'
+       run: brew install ninja 
+     
      - name: Configure CMake 
        run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=ios
 
