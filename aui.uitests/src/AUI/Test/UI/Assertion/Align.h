@@ -98,6 +98,8 @@ using areRightAligned = uitest::impl::align<ASide::RIGHT>;
 using areBottomAligned = uitest::impl::align<ASide::BOTTOM>;
 
 
+using isTopAboveTopOf = uitest::impl::less_of<ASide::TOP>;
+using isTopBelowTopOf = uitest::impl::greater_of<ASide::TOP>;
 using isBottomAboveBottomOf = uitest::impl::less_of<ASide::BOTTOM>;
 using isBottomBelowBottomOf = uitest::impl::greater_of<ASide::BOTTOM>;
 

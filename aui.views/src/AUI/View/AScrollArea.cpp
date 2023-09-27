@@ -19,6 +19,7 @@
 //
 
 #include "AScrollArea.h"
+#include "AUI/View/AView.h"
 #include <AUI/Layout/AAdvancedGridLayout.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/Util/kAUI.h>
@@ -161,3 +162,17 @@ void AScrollArea::onPointerReleased(const APointerReleasedEvent& event) {
     AViewContainer::onPointerReleased(event);
 }
 
+void AScrollArea::scrollTo(const _<AView>& target, bool nearestBorder) {
+    auto toBeginPoint = target->getPositionInWindow() - getPositionInWindow();
+    if (!nearestBorder) {
+        scroll(toBeginPoint);
+        return;
+    }
+
+    auto toEndPoint = toBeginPoint + getSize() - target->getSize();
+    auto delta = target->getCenterPointInWindow() - getCenterPointInWindow();
+    auto thresholdForDelta = getSize() / 2;
+    auto direction = glm::greaterThan(delta, glm::ivec2(0));
+    
+    scroll(glm::mix(toBeginPoint, toEndPoint, direction) * glm::ivec2(glm::greaterThan(glm::abs(delta), thresholdForDelta)));
+}

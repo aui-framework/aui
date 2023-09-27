@@ -101,6 +101,29 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                     drawableDrawWrapper(size);
                     break;
                 }
+                case Sizing::CONTAIN_PADDING: {
+                    RenderHints::PushMatrix m;
+                    glm::ivec2 viewSize = view->getSize() - view->getPadding().occupiedSize();
+                    if (viewSize.x == 0 || viewSize.y == 0) {
+                        break;
+                    }
+
+                    glm::ivec2 imageSize = drawable->getSizeHint();
+                    glm::ivec2 sizeDelta = viewSize - imageSize;
+                    glm::ivec2 size;
+                    if (viewSize.x * imageSize.y / viewSize.y < imageSize.x) {
+                        size.x = viewSize.x;
+                        size.y = size.x * imageSize.y / imageSize.x;
+                    } else {
+                        size.y = viewSize.y;
+                        size.x = size.y * imageSize.x / imageSize.y;
+                    }
+                    Render::setTransform(
+                            glm::translate(glm::mat4(1.f),
+                                           glm::vec3{glm::vec2(viewSize - size) / 2.f + glm::vec2(view->getPadding().leftTop()), 0.f}));
+                    drawableDrawWrapper(size);
+                    break;
+                }
                 case Sizing::FIT_PADDING: {
                     RenderHints::PushMatrix m;
                     Render::setTransform(

@@ -2,7 +2,12 @@
 #include "AUI/Audio/ISoundInputStream.h"
 #include "DirectSound.h"
 
+
 _<IAudioPlayer> IAudioPlayer::fromSoundStream(_<ISoundInputStream> stream) {
+    if (!stream) {
+        return nullptr;
+    }
+
     auto result = _new<DirectSoundAudioPlayer>();
     result->setSource(std::move(stream));
     return result;
@@ -65,12 +70,10 @@ void DirectSoundAudioPlayer::uploadBlock(DWORD blockIndex) {
         }
         else {
             std::memset(buffer, 0, mBytesPerSecond - bufferSize);
-            stop();
-            emit finished;
+            onFinished();
         }
     } else if (bufferSize < mBytesPerSecond) {
-        stop();
-        emit finished;
+        onFinished();
     }
 }
 

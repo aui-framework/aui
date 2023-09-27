@@ -52,6 +52,10 @@ public:
         AUI_NULLSAFE(mVerticalScrollbar)->setStickToEnd(stickToEnd);
     }
 
+    void scroll(glm::ivec2 by) noexcept {
+        scroll(by.x, by.y);
+    }
+
     void scroll(int deltaByX, int deltaByY) noexcept {
         AUI_NULLSAFE(mHorizontalScrollbar)->scroll(deltaByX);
         AUI_NULLSAFE(mVerticalScrollbar)->scroll(deltaByY);
@@ -67,6 +71,14 @@ public:
         AUI_NULLSAFE(mVerticalScrollbar)->setAppearance(scrollbarAppearance.getVertical());
     }
 
+    /**
+     * @brief Scrolls to the specified target view.
+     * @param target target view to scroll to. Must be direct or indirect child.
+     * @param nearestBorder if true, the scroll is performed up to the nearest border of scroll area, and if the target
+     *        is already fully visible, then the scroll is not performed at all.
+     */
+    void scrollTo(const _<AView>& target, bool nearestBorder = true);
+    
     /**
      * @see mIsWheelScrollable
      */

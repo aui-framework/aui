@@ -61,4 +61,10 @@ struct ABoxFields
     {
         return top + bottom;
     }
+    
+    [[nodiscard]]
+    glm::ivec2 occupiedSize() const noexcept {
+        return { horizontal(), vertical() };
+    }
+
 };
