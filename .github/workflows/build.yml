@@ -58,9 +58,11 @@ jobs:
      - name: Install ubuntu packages
        run: sudo apt-get update && sudo apt-get install build-essential cmake ninja-build bash
 
-     - name: Gradle build
-       working-directory: examples/AUI.Example.Views/android
-       run: ./gradlew assembleDebug
+     - name: Configure CMake 
+       run: cmake -GNinja -B ${{github.workspace}}/build
+
+     - name: Build 
+       run: cmake --build ${{github.workspace}}/build -t apps
 
   build-desktop:
     name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
