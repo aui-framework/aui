@@ -59,7 +59,7 @@ jobs:
        run: sudo apt-get update && sudo apt-get install build-essential cmake ninja-build bash
 
      - name: Configure CMake 
-       run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=android
+       run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=android -DAUI_BUILD_EXAMPLES=TRUE
 
      - name: Build 
        run: cmake --build ${{github.workspace}}/build -t apps
@@ -73,14 +73,19 @@ jobs:
          submodules: true
 
      - name: Install macos dependencies
-       if: matrix.os == 'macos-latest'
        run: brew install ninja 
      
      - name: Configure CMake 
-       run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=ios
+       run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=ios -DAUI_BUILD_EXAMPLES=TRUE
 
      - name: Build 
        run: cmake --build ${{github.workspace}}/build -t apps
+
+     - name: Upload
+       uses: actions/upload-artifact@v3
+       with:
+         path: ${{github.workspace}}/build/app_project/app/build/intermediates/apk/debug/app-debug.apk
+         name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
 
 
   build-desktop:
