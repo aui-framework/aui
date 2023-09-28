@@ -68,7 +68,7 @@ jobs:
      - name: Upload
        uses: actions/upload-artifact@v3
        with:
-         path: ${{github.workspace}}/build/app_project/app/build/intermediates/apk/debug/app-debug.apk
+         path: ${{github.workspace}}/build/app_project/app/build/outputs/apk/release/app-release-unsigned.apk
          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
 
 
