@@ -69,8 +69,7 @@ jobs:
        uses: actions/upload-artifact@v3
        with:
          path: ${{github.workspace}}/build/app_project/app/build/outputs/apk/release/app-release-unsigned.apk
-         name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
-
+         name: aui.example.views-release-unsigned.apk
 
   build-ios:
    name: "iOS Debug"

@@ -51,7 +51,7 @@ function(_aui_android_app)
     endif()
 
     add_custom_target(${APP_TARGET}.app
-            COMMAND ${_gradle_exe} build
+            COMMAND ${_gradle_exe} assembleRelease 
             WORKING_DIRECTORY ${_gradle_project_dir}
             )
 
