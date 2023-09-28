@@ -69,9 +69,23 @@ extern int(* _gEntry)(AStringVector);
     view = (GLKView*)self.view;
     view.context = [[EAGLContext alloc] initWithAPI:
             kEAGLRenderingAPIOpenGLES3];
-    view.drawableDepthFormat = GLKViewDrawableDepthFormat24;
-    view.drawableStencilFormat = GLKViewDrawableStencilFormat8;
     [EAGLContext setCurrentContext:view.context];
+    
+    // setup "default" framebuffer
+    GLuint defaultFb, colorBuffer;
+    glGenFramebuffers(1, &defaultFb);
+    glBindFramebuffer(GL_FRAMEBUFFER, defaultFb);
+    
+    assert(defaultFb == 1);
+    glGenRenderbuffers(1, &colorBuffer);
+    glBindRenderbuffer(GL_RENDERBUFFER, colorBuffer);
+    [view.context renderbufferStorage:GL_RENDERBUFFER fromDrawable:(CAEAGLLayer*)self.view.layer];
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, colorBuffer);
+    
+    assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+    
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
     self.preferredFramesPerSecond = 60;
     chdir(ios_get_path_in_bundle().c_str());
 
@@ -117,6 +131,8 @@ extern int(* _gEntry)(AStringVector);
     [EAGLContext setCurrentContext:view.context];
     AThread::processMessages();
     auiWindow()->redraw();
+    glBindRenderbuffer(GL_RENDERBUFFER, 1);
+    [view.context presentRenderbuffer:GL_RENDERBUFFER];
 }
 - (void)viewDidLayoutSubviews {
     [EAGLContext setCurrentContext:view.context];
