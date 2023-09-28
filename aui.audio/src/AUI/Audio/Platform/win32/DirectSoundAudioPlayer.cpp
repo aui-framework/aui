@@ -1,6 +1,7 @@
 #include "DirectSoundAudioPlayer.h"
 #include "AUI/Audio/ISoundInputStream.h"
 #include "DirectSound.h"
+#include "AUI/Traits/memory.h"
 
 
 _<IAudioPlayer> IAudioPlayer::fromSoundStream(_<ISoundInputStream> stream) {
