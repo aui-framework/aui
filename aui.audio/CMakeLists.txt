@@ -29,3 +29,10 @@ if (AUI_PLATFORM_IOS OR AUI_PLATFORM_MACOS)
     find_library(AudioToolbox AudioToolbox REQUIRED)
     aui_link(aui.audio PUBLIC ${CoreAudio} ${AVFoundation} ${AudioToolbox})
 endif()
+if (AUI_PLATFORM_MACOS)
+    target_link_libraries(aui.audio PUBLIC "-framework AppKit"
+					   "-framework Cocoa"
+					   "-framework CoreData"
+					   "-framework Foundation"
+					   "-framework QuartzCore")
+endif()

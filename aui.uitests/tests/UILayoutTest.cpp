@@ -99,7 +99,7 @@ TEST_F(UILayoutTest, LayoutSpacing1) {
     inflate(Horizontal::Expanding {
         Button { "1" } with_style { Expanding{} },
     } with_style {
-        LayoutSpacing(8_dp),
+        LayoutSpacing{8_dp},
         FixedSize(200_dp, {})
     });
     auto b = By::type<AButtonEx>().one();
@@ -113,7 +113,7 @@ TEST_F(UILayoutTest, LayoutSpacing2) {
         Button { "1" } with_style { Expanding{} },
         Button { "2" } with_style { Expanding{} },
     } with_style {
-        LayoutSpacing(8_dp),
+        LayoutSpacing{8_dp},
         FixedSize(200_dp, {})
     });
 
@@ -129,7 +129,7 @@ TEST_F(UILayoutTest, LayoutSpacing3) {
         Button { "3" } with_style { Expanding{} },
         Button { "4" } with_style { Expanding{} },
     } with_style {
-        LayoutSpacing(8_dp),
+        LayoutSpacing{8_dp},
         FixedSize(200_dp, {})
     });
 
