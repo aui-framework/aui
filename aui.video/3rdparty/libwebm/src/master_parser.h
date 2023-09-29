@@ -153,11 +153,11 @@ class MasterParser : public ElementParser {
   struct IdHash : StdHashId {
     // Type aliases for conforming to the std::hash interface.
     using argument_type = Id;
-    using result_type = StdHashId::result_type;
+    using result_type = size_t;
 
     // Returns the hash of the given id.
-    result_type operator()(argument_type id) const {
-      return StdHashId::operator()(static_cast<StdHashId::argument_type>(id));
+    auto operator()(argument_type id) const {
+      return StdHashId::operator()(static_cast<size_t>(id));
     }
   };
 

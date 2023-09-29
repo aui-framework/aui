@@ -111,7 +111,7 @@ public:
     }
 
     webm::Status Skip(std::uint64_t toSkip, std::uint64_t *actuallySkipped) override {
-        auto status = Read(std::min(toSkip, sizeof(mStub)), mStub, actuallySkipped);
+        auto status = Read(std::min<size_t>(toSkip, sizeof(mStub)), mStub, actuallySkipped);
         if (status.completed_ok() && sizeof(mStub) < toSkip) {
             return webm::Status(webm::Status::kOkPartial);
         }
@@ -174,8 +174,8 @@ void WebmParser::run() {
 void WebmParser::onVideoTrackParsed(const webm::TrackEntry& info) {
     const auto& video = info.video.value();
     emit videoInfoParsed({
-        .width = video.display_width.value(),
-        .height = video.display_height.value(),
+        .width = static_cast<size_t>(video.display_width.value()),
+        .height = static_cast<size_t>(video.display_height.value()),
         .codec = videoCodecFromString(info.codec_id.value())
     });
 }
