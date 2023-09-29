@@ -31,6 +31,8 @@ public:
 
 private:
     static constexpr int BUFFER_DURATION_SEC = 2;
+    static constexpr int UPLOADS_PER_SEC = 10;
+    static constexpr int EVENTS_CNT = BUFFER_DURATION_SEC * UPLOADS_PER_SEC;
     static_assert(BUFFER_DURATION_SEC >= 2 && "Buffer duration assumes to be greater than 1");
 
     DirectSound() {
@@ -49,9 +51,9 @@ private:
         ASSERT_OK mSoundBufferInterface->Stop();
 
         while (mThreadIsActive) {
-            for (int i = 0; i < BUFFER_DURATION_SEC; i++)
+            for (int i = 0; i < EVENTS_CNT; i++)
                 ResetEvent(mEvents[i]);
-            SetEvent(mEvents[BUFFER_DURATION_SEC]);
+            SetEvent(mEvents[EVENTS_CNT]);
         }
 
         for (auto& mEvent : mEvents)
@@ -63,14 +65,14 @@ private:
 
     void setupReachPointEvents() {
         ASSERT_OK mSoundBufferInterface->QueryInterface(IID_IDirectSoundNotify8, (void**) &mNotifyInterface);
-        mEvents[BUFFER_DURATION_SEC] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        for (int i = 0; i < BUFFER_DURATION_SEC; i++) {
+        mEvents[EVENTS_CNT] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        for (int i = 0; i < EVENTS_CNT; i++) {
             mEvents[i] = CreateEvent(nullptr, FALSE, FALSE, nullptr);
             mNotifyPositions[i].hEventNotify = mEvents[i];
-            mNotifyPositions[i].dwOffset = i * mBytesPerSecond + mBytesPerSecond / 2;
+            mNotifyPositions[i].dwOffset = i * mBytesPerSecond / UPLOADS_PER_SEC;
         }
 
-        ASSERT_OK (mNotifyInterface->SetNotificationPositions(BUFFER_DURATION_SEC, mNotifyPositions));
+        ASSERT_OK (mNotifyInterface->SetNotificationPositions(EVENTS_CNT, mNotifyPositions));
     }
 
     void setupBufferThread() {
@@ -93,8 +95,8 @@ private:
 
     void uploadBlock(DWORD blockIndex) {
         LPVOID buffer;
-        DWORD bufferSize = mBytesPerSecond;
-        DWORD offset = blockIndex * mBytesPerSecond;
+        DWORD bufferSize = mBytesPerSecond / UPLOADS_PER_SEC;
+        DWORD offset = blockIndex * mBytesPerSecond / UPLOADS_PER_SEC;
 
         HRESULT result = mSoundBufferInterface->Lock(offset, bufferSize, &buffer, &bufferSize, nullptr, nullptr, 0);
         if (result == DSERR_BUFFERLOST) {
@@ -108,12 +110,12 @@ private:
 
     void onAudioReachCallbackPoint() {
         DWORD waitResult;
-        waitResult = WaitForMultipleObjects(BUFFER_DURATION_SEC, mEvents, FALSE, INFINITE);
+        waitResult = WaitForMultipleObjects(EVENTS_CNT, mEvents, FALSE, INFINITE);
         while(waitResult != WAIT_FAILED) {
             DWORD eventIndex = waitResult - WAIT_OBJECT_0;
-            if (eventIndex != BUFFER_DURATION_SEC) {
-                uploadBlock((eventIndex + 1) % BUFFER_DURATION_SEC);
-                waitResult = WaitForMultipleObjects(BUFFER_DURATION_SEC, mEvents, FALSE, INFINITE);
+            if (eventIndex != EVENTS_CNT) {
+                uploadBlock((eventIndex + 1) % EVENTS_CNT);
+                waitResult = WaitForMultipleObjects(EVENTS_CNT, mEvents, FALSE, INFINITE);
                 continue;
             }
 
@@ -166,8 +168,8 @@ private:
     IDirectSound8* mDirectSound = nullptr;
     IDirectSoundBuffer8* mSoundBufferInterface = nullptr;
     IDirectSoundNotify8* mNotifyInterface = nullptr;
-    DSBPOSITIONNOTIFY mNotifyPositions[BUFFER_DURATION_SEC];
-    HANDLE mEvents[BUFFER_DURATION_SEC + 1];
+    DSBPOSITIONNOTIFY mNotifyPositions[EVENTS_CNT];
+    HANDLE mEvents[EVENTS_CNT + 1];
     HANDLE mThread;
     bool mThreadIsActive = false;
     bool mIsPlaying = false;
