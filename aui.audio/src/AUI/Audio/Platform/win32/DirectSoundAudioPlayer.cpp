@@ -176,16 +176,11 @@ private:
     DWORD mBytesPerSecond;
 };
 
-DirectSoundAudioPlayer::~DirectSoundAudioPlayer() {
-    stop();
-}
-
-
 void DirectSoundAudioPlayer::playImpl() {
     assert(mResampled == nullptr);
     mResampled = _new<ASoundResampler>(_cast<DirectSoundAudioPlayer>(sharedPtr()), aui::audio::DEFAULT_OUTPUT_FORMAT);
-    ::loop().addSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
     DirectSound::instance();
+    ::loop().addSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
 }
 
 void DirectSoundAudioPlayer::pauseImpl() {

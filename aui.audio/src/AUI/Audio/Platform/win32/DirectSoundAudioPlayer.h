@@ -4,9 +4,6 @@
 #include "AUI/Util/APimpl.h"
 
 class DirectSoundAudioPlayer : public IAudioPlayer {
-public :
-    ~DirectSoundAudioPlayer() override;
-
 private:
     void playImpl() override;
     void pauseImpl() override;
