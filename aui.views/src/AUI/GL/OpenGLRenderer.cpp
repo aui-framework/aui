@@ -299,14 +299,6 @@ OpenGLRenderer::OpenGLRenderer() {
             {"pos", "uv"});
 
     mTempVao.bind();
-
-    const glm::vec2 uvs[] = {
-        {0, 1},
-        {1, 1},
-        {0, 0},
-        {1, 0}
-    };
-    mTempVao.insert(1, uvs);
 }
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
@@ -350,6 +342,13 @@ void OpenGLRenderer::drawRectImpl(const glm::vec2& position, const glm::vec2& si
     mTempVao.bind();
 
     mTempVao.insert(0, getVerticesForRect(position, size));
+    const glm::vec2 uvs[] = {
+        {0, 1},
+        {1, 1},
+        {0, 0},
+        {1, 0}
+    };
+    mTempVao.insert(1, uvs);
 
     mTempVao.indices(RECT_INDICES);
     mTempVao.drawElements();
