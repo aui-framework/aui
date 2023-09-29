@@ -42,6 +42,7 @@ private:
         setupReachPointEvents();
         setupBufferThread();
         uploadBlock(0);
+        ASSERT_OK mSoundBufferInterface->Play(0, 0, DSBPLAY_LOOPING);
     }
 
     ~DirectSound() {
