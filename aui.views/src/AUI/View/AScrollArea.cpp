@@ -131,10 +131,19 @@ void AScrollArea::onScroll(const AScrollEvent& event) {
         return;
     }
 
-    auto prevScroll = mVerticalScrollbar->getCurrentScroll();
-    mVerticalScrollbar->onScroll(event);
-    if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
-        AWindow::current()->preventClickOnPointerRelease();
+    {
+        auto prevScroll = mVerticalScrollbar->getCurrentScroll();
+        mVerticalScrollbar->onScroll(event.delta.y);
+        if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
+            AWindow::current()->preventClickOnPointerRelease();
+        }
+    }
+    {
+        auto prevScroll = mHorizontalScrollbar->getCurrentScroll();
+        mHorizontalScrollbar->onScroll(event.delta.x);
+        if (prevScroll != mHorizontalScrollbar->getCurrentScroll()) {
+            AWindow::current()->preventClickOnPointerRelease();
+        }
     }
 }
 

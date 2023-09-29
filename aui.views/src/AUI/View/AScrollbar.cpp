@@ -173,14 +173,13 @@ void AScrollbar::updateScrollHandleOffset(int max) {
     redraw();
 }
 
-void AScrollbar::onScroll(const AScrollEvent& event) {
-    AViewContainer::onScroll(event);
+void AScrollbar::onScroll(float& delta) {
     // scroll 3 lines of text
-    emit triggeredManually;
-    auto prevScroll = getCurrentScroll();
-    setScroll(mCurrentScroll + event.delta.y);
-    auto delta = getCurrentScroll() - prevScroll;
-    event.delta.y -= delta;
+    emit this->triggeredManually;
+    auto prevScroll = this->getCurrentScroll();
+    this->setScroll(mCurrentScroll + delta);
+    auto newDelta = getCurrentScroll() - prevScroll;
+    delta -= float(newDelta);
 }
 
 static int getButtonScrollSpeed() noexcept {
@@ -298,4 +297,8 @@ void AScrollbar::setSize(glm::ivec2 size) {
 void AScrollbar::scrollToEnd() {
     setScroll(getMaxScroll());
     assert(mCurrentScroll == getMaxScroll());
+}
+
+void AScrollbar::onScroll(const AScrollEvent& event) {
+    AViewContainer::onScroll(event);
 }
