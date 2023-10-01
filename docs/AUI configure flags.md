@@ -30,7 +30,7 @@ When evaluates to `true`, libraries are built as shared, as static otherwise.
 
 When AUI_BUILD_FOR is set, `BUILD_SHARED_LIBS` is overwritten to `false` (see [cross-compiling](md)).
 
-## CODE_SIGNING_REQUIRED
+## AUI_IOS_CODE_SIGNING_REQUIRED
 Disables code signing step on iOS.
 
 # aui.boot

@@ -1236,8 +1236,8 @@ macro(aui_app)
         # Turn on ARC
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc")
 
-        if (NOT DEFINED CODE_SIGNING_REQUIRED)
-            set(CODE_SIGNING_REQUIRED YES)
+        if (NOT DEFINED AUI_IOS_CODE_SIGNING_REQUIRED)
+            set(AUI_IOS_CODE_SIGNING_REQUIRED YES)
         endif()
 
         # Create the app target
@@ -1255,7 +1255,7 @@ macro(aui_app)
                 XCODE_ATTRIBUTE_INSTALL_PATH "$(LOCAL_APPS_DIR)"
                 XCODE_ATTRIBUTE_ENABLE_TESTABILITY YES
                 XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES
-                XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED ${CODE_SIGNING_REQUIRED}
+                XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED ${AUI_IOS_CODE_SIGNING_REQUIRED}
                 )
 
         # Include framework headers, needed to make "Build" Xcode action work.
@@ -1325,7 +1325,7 @@ macro(aui_app)
         )
 
         # Codesign the framework in it's new spot
-        if (CODE_SIGNING_REQUIRED)
+        if (AUI_IOS_CODE_SIGNING_REQUIRED)
             add_custom_command(
                     TARGET
                     ${APP_TARGET}

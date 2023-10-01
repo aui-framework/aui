@@ -680,7 +680,7 @@ function(auib_import AUI_MODULE_NAME URL)
                         XCODE_VERSION
                         SDK_VERSION
                         APPLE_TARGET_TRIPLE
-                        CODE_SIGNING_REQUIRED
+                        AUI_IOS_CODE_SIGNING_REQUIRED
                         CMAKE_POSITION_INDEPENDENT_CODE
                         ${_forwardable_vars})
 
