@@ -131,10 +131,19 @@ void AScrollArea::onScroll(const AScrollEvent& event) {
         return;
     }
 
-    auto prevScroll = mVerticalScrollbar->getCurrentScroll();
-    mVerticalScrollbar->onScroll(event);
-    if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
-        AWindow::current()->preventClickOnPointerRelease();
+    {
+        auto prevScroll = mVerticalScrollbar->getCurrentScroll();
+        mVerticalScrollbar->onScroll(event.delta.y);
+        if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
+            AWindow::current()->preventClickOnPointerRelease();
+        }
+    }
+    {
+        auto prevScroll = mHorizontalScrollbar->getCurrentScroll();
+        mHorizontalScrollbar->onScroll(event.delta.x);
+        if (prevScroll != mHorizontalScrollbar->getCurrentScroll()) {
+            AWindow::current()->preventClickOnPointerRelease();
+        }
     }
 }
 
@@ -163,16 +172,23 @@ void AScrollArea::onPointerReleased(const APointerReleasedEvent& event) {
 }
 
 void AScrollArea::scrollTo(const _<AView>& target, bool nearestBorder) {
-    auto toBeginPoint = target->getPositionInWindow() - getPositionInWindow();
+    const auto targetBegin = target->getPositionInWindow();
+    const auto myBegin = getPositionInWindow();
+
+    const auto toBeginPoint = targetBegin - myBegin;
     if (!nearestBorder) {
         scroll(toBeginPoint);
         return;
     }
 
-    auto toEndPoint = toBeginPoint + getSize() - target->getSize();
-    auto delta = target->getCenterPointInWindow() - getCenterPointInWindow();
-    auto thresholdForDelta = getSize() / 2;
+    const auto targetEnd = targetBegin + target->getSize();
+    const auto myEnd = myBegin + getSize();
+
+    const auto toEndPoint = targetEnd - myEnd;
+
+    auto delta = (targetBegin + target->getSize() / 2) - (myBegin + getSize() / 2);
     auto direction = glm::greaterThan(delta, glm::ivec2(0));
-    
-    scroll(glm::mix(toBeginPoint, toEndPoint, direction) * glm::ivec2(glm::greaterThan(glm::abs(delta), thresholdForDelta)));
+    const auto toBeginPointConditional = toBeginPoint * glm::ivec2(glm::greaterThan(myBegin, targetBegin));
+    const auto toEndPointConditional = toEndPoint * glm::ivec2(glm::greaterThan(targetEnd, myEnd));
+    scroll(glm::mix(toBeginPointConditional, toEndPointConditional, direction));
 }
