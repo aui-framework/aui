@@ -71,7 +71,7 @@ jobs:
          path: ${{github.workspace}}/build/app_project/app/build/outputs/apk/release/app-release-unsigned.apk
          name: aui.example.views-release-unsigned.apk
 
-  build-ios:
+  build-ios-debug:
    name: "iOS Debug"
    runs-on: macos-latest
    steps:
@@ -83,20 +83,34 @@ jobs:
        run: brew install ninja 
      
      - name: Configure CMake 
-       run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=ios -DAUI_BUILD_EXAMPLES=TRUE
+       run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=ios -DAUI_BUILD_EXAMPLES=TRUE -DCODE_SIGNING_REQUIRED=FALSE
 
-     - name: Build 
+     - name: Build app 
        run: cmake --build ${{github.workspace}}/build -t apps
  
-     - name: Pack
+     - name: Build rest
+       working-directory: ${{github.workspace}}/build/app_project
+       run: cmake --build .
+     
+     - name: Pack framework
        working-directory: ${{github.workspace}}/build/app_project
        run: cpack -G TGZ -C Debug . 
 
-     - name: Upload
+     - name: Upload framework
        uses: actions/upload-artifact@v3
        with:
          path: ${{github.workspace}}/build/app_project/*.tar.gz
          name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+
+     - name: Pack app
+       working-directory: ${{github.workspace}}/build/app_project/bin/Debug
+       run: tar -cvf app.tar.gz aui.example.views.app 
+
+     - name: Upload app
+       uses: actions/upload-artifact@v3
+       with:
+         path: ${{github.workspace}}/build/app_project/bin/Debug/*.tar.gz
+         name: aui.example.views-debug-unsigned.app.tar.gz 
 
   build-desktop:
     name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }} ${{ matrix.additional_cmake_flags }}
