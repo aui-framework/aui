@@ -16,10 +16,10 @@
 
 #pragma once
 
-#include <AUI/Model/AModelSelection.h>
+#include <AUI/Model/AListModelSelection.h>
 #include <AUI/Model/AListModelObserver.h>
 #include "AViewContainer.h"
-#include "AUI/Model/AModelIndex.h"
+#include "AUI/Model/AListModelIndex.h"
 #include "AUI/Model/IListModel.h"
 #include "AScrollbar.h"
 
@@ -36,7 +36,7 @@ class API_AUI_VIEWS AListView: public AViewContainer, public AListModelObserver<
 private:
     _<AListViewContainer> mContent;
     _<AScrollbar> mScrollbar;
-	ASet<AModelIndex> mSelectionModel;
+	ASet<AListModelIndex> mSelectionModel;
 	_<AListModelObserver<AString>> mObserver;
     bool mAllowMultipleSelection = false;
 
@@ -60,8 +60,8 @@ public:
 
     void setAllowMultipleSelection(bool allowMultipleSelection);
 
-    [[nodiscard]] AModelSelection<AString> getSelectionModel() const {
-	    return AModelSelection<AString>(mSelectionModel, mObserver->getModel().get());
+    [[nodiscard]] AListModelSelection<AString> getSelectionModel() const {
+	    return AListModelSelection<AString>(mSelectionModel, mObserver->getModel());
 	}
 
     void setSize(glm::ivec2 size) override;
@@ -75,7 +75,7 @@ public:
     void onDataChanged() override;
 
 signals:
-	emits<AModelSelection<AString>> selectionChanged;
+	emits<AListModelSelection<AString>> selectionChanged;
 	emits<unsigned> itemDoubleClicked;
 
     void clearSelection();

@@ -21,25 +21,25 @@
 #include <tuple>
 #include <ostream>
 
-class AModelIndex
+class AListModelIndex
 {
 private:
     std::size_t mRow = -1;
     std::size_t mColumn = -1;
 
 public:
-    AModelIndex(std::size_t row, std::size_t column)
+    AListModelIndex(std::size_t row, std::size_t column)
         : mRow(row),
           mColumn(column)
     {
     }
 
-    AModelIndex(std::size_t row)
+    AListModelIndex(std::size_t row)
         : mRow(row)
     {
     }
 
-    AModelIndex() = default;
+    AListModelIndex() = default;
 
     std::size_t getRow() const
     {
@@ -51,15 +51,15 @@ public:
         return mColumn;
     }
 
-    bool operator==(const AModelIndex& rhs) const {
+    bool operator==(const AListModelIndex& rhs) const {
         return std::tie(mRow, mColumn) == std::tie(rhs.mRow, rhs.mColumn);
     }
 
-    bool operator!=(const AModelIndex& rhs) const {
+    bool operator!=(const AListModelIndex& rhs) const {
         return !(rhs == *this);
     }
 
-    inline bool operator<(const AModelIndex& other) const {
+    inline bool operator<(const AListModelIndex& other) const {
         return hash() < other.hash();
     }
 
@@ -72,7 +72,7 @@ public:
 
 };
 
-inline std::ostream& operator<<(std::ostream& o, const AModelIndex& index) {
+inline std::ostream& operator<<(std::ostream& o, const AListModelIndex& index) {
     o << "{ " << index.getRow();
     if (index.getColumn() != -1) {
         o << ", " << index.getColumn();

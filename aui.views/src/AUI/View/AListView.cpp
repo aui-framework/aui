@@ -174,7 +174,7 @@ void AListView::handleMousePressed(AListItem* item) {
     if (!AInput::isKeyDown(AInput::LCONTROL) || !mAllowMultipleSelection) {
         clearSelection();
     }
-    mSelectionModel << AModelIndex(mContent->getIndex());
+    mSelectionModel << AListModelIndex(mContent->getIndex());
     item->setSelected(true);
 
     emit selectionChanged(getSelectionModel());
@@ -215,7 +215,7 @@ void AListView::onDataChanged() {
 
 void AListView::selectItem(size_t i) {
     clearSelection();
-    mSelectionModel = { AModelIndex(i) };
+    mSelectionModel = { AListModelIndex(i) };
     _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
 }
 

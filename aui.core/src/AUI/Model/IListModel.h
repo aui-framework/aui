@@ -18,27 +18,29 @@
 
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/ASignal.h>
-#include <AUI/Model/AModelSelection.h>
-#include "AModelRange.h"
+#include <AUI/Model/AListModelSelection.h>
+#include <memory>
+#include "AListModelRange.h"
+#include "AUI/Common/AObject.h"
 
 template<typename T>
-class IListModel
+class IListModel: public AObject 
 {
 public:
     using value_type = T;
 	virtual ~IListModel() = default;
 
 	virtual size_t listSize() = 0;
-	virtual T listItemAt(const AModelIndex& index) = 0;
+	virtual T listItemAt(const AListModelIndex& index) = 0;
 
 	using stored_t = T;
 
-	AModelRange<T> range(const AModelIndex& begin, const AModelIndex& end) {
-        return AModelRange<T>(begin, end, this);
+	AListModelRange<T> range(const AListModelIndex& begin, const AListModelIndex& end) {
+        return AListModelRange<T>(begin, end, std::dynamic_pointer_cast<IListModel<T>>(this->shared_from_this()));
 	}
 
-	AModelRange<T> range(const AModelIndex& item) {
-        return AModelRange<T>(item, {item.getRow() + 1}, this);
+	AListModelRange<T> range(const AListModelIndex& item) {
+        return AListModelRange<T>(item, {item.getRow() + 1}, std::dynamic_pointer_cast<IListModel<T>>(this->shared_from_this()));
 	}
 
 
@@ -53,8 +55,8 @@ public:
     }
 
     template<typename Filter>
-    AVector<AModelRange<T>> rangesIncluding(Filter&& filter) {
-        AVector<AModelRange<T>> result;
+    AVector<AListModelRange<T>> rangesIncluding(Filter&& filter) {
+        AVector<AListModelRange<T>> result;
         size_t currentBeginning = 0;
         size_t s = listSize();
         bool prevValue = false;
@@ -83,15 +85,15 @@ signals:
     /**
      * @brief Model data was changed
      */
-    emits<AModelRange<T>> dataChanged;
+    emits<AListModelRange<T>> dataChanged;
 
     /**
      * @brief Model data was added
      */
-    emits<AModelRange<T>> dataInserted;
+    emits<AListModelRange<T>> dataInserted;
 
     /**
      * @brief Model data about to remove
      */
-    emits<AModelRange<T>> dataRemoved;
+    emits<AListModelRange<T>> dataRemoved;
 };

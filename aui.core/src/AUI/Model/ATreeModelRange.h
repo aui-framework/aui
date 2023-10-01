@@ -17,39 +17,36 @@
 #pragma once
 
 
-#include "AModelIndex.h"
+#include "ATreeModelIndex.h"
 #include <AUI/Common/SharedPtr.h>
 #include <cassert>
 
 
-template<typename T> class IListModel;
+template<typename T> class ITreeModel;
 
 template <typename T>
-class AModelRange {
+class ATreeModelRange {
 private:
-    AModelIndex mBegin;
-    AModelIndex mEnd;
-    IListModel<T>* mModel;
+    ATreeModelIndex mBegin;
+    ATreeModelIndex mEnd;
+    _<ITreeModel<T>> mModel;
 
 public:
-    AModelRange() = default;
-    AModelRange(const AModelIndex& begin, const AModelIndex& end, IListModel<T>* model) : mBegin(begin),
-                                                                                          mEnd(end),
-                                                                                          mModel(model) {}
-
-    bool operator==(const AModelRange& rhs) const {
+    ATreeModelRange() = default;
+    ATreeModelRange(const ATreeModelIndex& begin, const ATreeModelIndex& end, _<ITreeModel<T>> model); 
+    bool operator==(const ATreeModelRange& rhs) const {
         return std::tie(mBegin, mEnd, mModel) == std::tie(rhs.mBegin, rhs.mEnd, rhs.mModel);
     }
 
     class Iterator {
     private:
-        AModelIndex mIndex;
-        IListModel<T>* mModel;
+        ATreeModelIndex mIndex;
+        _<ITreeModel<T>> mModel;
 
 
     public:
-        Iterator(const AModelIndex& index, IListModel<T>* model):
-                mIndex(index), mModel(model) {}
+        Iterator(const ATreeModelIndex& index, _<ITreeModel<T>> model):
+                mIndex(index), mModel(std::move(model)) {}
 
         Iterator& operator*() {
             return *this;
@@ -77,37 +74,44 @@ public:
             return mIndex.getRow() == other.mIndex.getRow();
         }
 
-        [[nodiscard]] const AModelIndex& getIndex() const {
+        [[nodiscard]] const ATreeModelIndex& getIndex() const {
             return mIndex;
         }
     };
 
-    AModelRange<T>::Iterator begin() const {
+    ATreeModelRange<T>::Iterator begin() const {
         return {mBegin, mModel};
     }
-    AModelRange<T>::Iterator end() const {
+    ATreeModelRange<T>::Iterator end() const {
         return {mEnd, mModel};
     }
 
-    [[nodiscard]] const AModelIndex& getBegin() const {
+    [[nodiscard]] const ATreeModelIndex& getBegin() const {
         return mBegin;
     }
 
-    [[nodiscard]] const AModelIndex& getEnd() const {
+    [[nodiscard]] const ATreeModelIndex& getEnd() const {
         return mEnd;
     }
 
-    IListModel<T>* getModel() const {
+    const _<ITreeModel<T>>& getModel() const {
         return mModel;
     }
 };
 
 
 template<typename T>
-inline std::ostream& operator<<(std::ostream& o, const AModelRange<T>& range) {
+inline std::ostream& operator<<(std::ostream& o, const ATreeModelRange<T>& range) {
     o << "[ " << range.getBegin() << "; " << range.getEnd() << " )";
 
     return o;
 }
 
-#include "IListModel.h"
+#include "ITreeModel.h"
+
+template<typename T>
+ATreeModelRange::ATreeModelRange(ATreeModelIndex begin, ATreeModelIndex end, _<ITreeModel<T>> model): mBegin(std::move(begin)),
+                                                                                                      mEnd(std::move(end)),
+                                                                                                      mModel(std::move(model)) {
+    assert(mModel->parent(begin) == mModel->parent(end));
+}

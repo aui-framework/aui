@@ -18,7 +18,7 @@
 
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/ASignal.h>
-#include "AModelIndex.h"
+#include "AListModelIndex.h"
 #include "IMutableListModel.h"
 #include <AUI/Traits/strings.h>
 
@@ -27,8 +27,7 @@ namespace aui::detail {
 }
 
 template <typename StoredType>
-class AListModel: public AObject,
-                  public IRemovableListModel<StoredType>,
+class AListModel: public IRemovableListModel<StoredType>,
                   public IValueMutableListModel<StoredType> {
 private:
     AVector<StoredType> mVector;
@@ -46,7 +45,7 @@ public:
     AListModel(self&& s): mVector(std::move(s.mVector)) {}
     explicit AListModel(AVector<StoredType>&& vector): mVector(std::move(vector)) {}
 
-    void setItem(const AModelIndex& item, const StoredType& value) override {
+    void setItem(const AListModelIndex& item, const StoredType& value) override {
         mVector[item.getRow()] = value;
     }
 
@@ -65,9 +64,8 @@ public:
         return this->erase(begin, begin + 1);
     }
     iterator erase(iterator begin, iterator end) noexcept {
-        AModelRange range{AModelIndex{size_t(begin - mVector.begin())},
-                          AModelIndex{size_t(end   - mVector.begin())},
-                          this};
+        auto range = this->range(AListModelIndex{size_t(begin - mVector.begin())},
+                                 AListModelIndex{size_t(end   - mVector.begin())});
         auto it = mVector.erase(begin, end);
         emit this->dataRemoved(range);
 
@@ -77,25 +75,22 @@ public:
 
     void push_back(const StoredType& data) noexcept {
         mVector.push_back(data);
-        emit this->dataInserted(AModelRange{AModelIndex(mVector.size() - 1),
-                                            AModelIndex(mVector.size()    ),
-                                            this});
+        emit this->dataInserted(this->range(AListModelIndex(mVector.size() - 1),
+                                            AListModelIndex(mVector.size()    )));
     }
 
 
     void push_back(StoredType&& data) noexcept {
         mVector.push_back(std::forward<StoredType>(data));
-        emit this->dataInserted(AModelRange{AModelIndex(mVector.size() - 1),
-                                            AModelIndex(mVector.size()    ),
-                                            this});
+        emit this->dataInserted(this->range(AListModelIndex(mVector.size() - 1),
+                                            AListModelIndex(mVector.size()    )));
     }
 
 
     void pop_back() noexcept {
         mVector.pop_back();
-        emit this->dataRemoved(AModelRange{AModelIndex(mVector.size()    ),
-                                           AModelIndex(mVector.size() + 1),
-                                           this});
+        emit this->dataRemoved(this->range(AListModelIndex(mVector.size()    ),
+                                           AListModelIndex(mVector.size() + 1)));
     }
 
     AListModel& operator<<(const StoredType& data) noexcept {
@@ -111,22 +106,22 @@ public:
         return mVector.size();
     }
 
-    StoredType listItemAt(const AModelIndex& index) override {
+    StoredType listItemAt(const AListModelIndex& index) override {
         return mVector.at(index.getRow());
     }
     void invalidate(size_t index) {
-        emit this->dataChanged(AModelRange{AModelIndex(index), AModelIndex(index + 1u), this});
+        emit this->dataChanged(AListModelRange{AListModelIndex(index), AListModelIndex(index + 1u), this});
     }
 
     void clear() noexcept {
         erase(mVector.begin(), mVector.end());
     }
 
-    void removeItems(const AModelRange<StoredType>& items) override {
+    void removeItems(const AListModelRange<StoredType>& items) override {
         erase(mVector.begin() + items.begin().getIndex().getRow(), mVector.end() + items.begin().getIndex().getRow());
     }
 
-    void removeItem(const AModelIndex& item) override {
+    void removeItem(const AListModelIndex& item) override {
         erase(mVector.begin() + item.getRow());
     }
 

@@ -61,7 +61,7 @@ public:
 class ATreeView::ItemView: public AViewContainer, public ass::ISelectable
 {
 public:
-    ItemView(ATreeView* treeView, const _<AView>& display, bool hasChildren, const ATreeIndex& index)
+    ItemView(ATreeView* treeView, const _<AView>& display, bool hasChildren, const ATreeModelIndex& index)
             : mDisplay(display),
               mIndex(index),
               mTreeView(treeView)
@@ -132,7 +132,7 @@ public:
 
     virtual ~ItemView() = default;
 
-    const ATreeIndex& getIndex() const {
+    const ATreeModelIndex& getIndex() const {
         return mIndex;
     }
 
@@ -194,13 +194,13 @@ private:
     bool mExpanded = false;
     _<AView> mDisplay;
     _<ADrawableView> mCollapseDisplay;
-    ATreeIndex mIndex;
+    ATreeModelIndex mIndex;
     ATreeView* mTreeView;
 };
 
 
 ATreeView::ATreeView():
-    mViewFactory([](const _<ITreeModel<AString>>& model, const ATreeIndex& index) {
+    mViewFactory([](const _<ITreeModel<AString>>& model, const ATreeModelIndex& index) {
         return _new<ALabel>(model->itemAt(index));
     })
 {
@@ -233,7 +233,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     AWindow::current()->flagRedraw();
 }
 
-void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView) {
+void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView) {
     container->addView(itemView);
 
     // always add wrapper (even if isGroup = false) to simplify view walkthrough
@@ -293,7 +293,7 @@ void ATreeView::handleSelected(ATreeView::ItemView* v) {
     emit itemSelected(v->getIndex());
 }
 
-void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATreeIndex& index) {
+void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndex& index) {
     for (size_t i = 0; i < mModel->childrenCount(index); ++i) {
         auto childIndex = mModel->indexOfChild(i, 0, index);
         bool group = mModel->childrenCount(childIndex) != 0;
@@ -312,7 +312,7 @@ void ATreeView::handleMouseMove(ATreeView::ItemView* pView) {
 }
 
 template<aui::invocable<std::size_t /* row */> Callable>
-static void findRoot(const Callable& callable, const _<ITreeModel<AString>>& model, const ATreeIndex& indexToSelect) {
+static void findRoot(const Callable& callable, const _<ITreeModel<AString>>& model, const ATreeModelIndex& indexToSelect) {
     if (!indexToSelect.hasValue()) {
         return;
     }
@@ -320,7 +320,7 @@ static void findRoot(const Callable& callable, const _<ITreeModel<AString>>& mod
     callable(indexToSelect.row());
 }
 
-void ATreeView::select(const ATreeIndex& indexToSelect) {
+void ATreeView::select(const ATreeModelIndex& indexToSelect) {
     try {
         auto currentTarget = _cast<AViewContainer>(mContent);
         _<ATreeView::ItemView> itemView;

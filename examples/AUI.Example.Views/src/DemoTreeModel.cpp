@@ -23,22 +23,22 @@
 #include <AUI/Logging/ALogger.h>
 
 
-ATreeIndex DemoTreeModel::root() {
-    return ATreeIndex();
+ATreeModelIndex DemoTreeModel::root() {
+    return ATreeModelIndex();
 }
 
-size_t DemoTreeModel::childrenCount(const ATreeIndex& vertex) {
+size_t DemoTreeModel::childrenCount(const ATreeModelIndex& vertex) {
     return 0;
 }
 
-AString DemoTreeModel::itemAt(const ATreeIndex& index) {
+AString DemoTreeModel::itemAt(const ATreeModelIndex& index) {
     return AString();
 }
 
-ATreeIndex DemoTreeModel::indexOfChild(size_t row, size_t column, const ATreeIndex& vertex) {
-    return ATreeIndex();
+ATreeModelIndex DemoTreeModel::indexOfChild(size_t row, size_t column, const ATreeModelIndex& vertex) {
+    return ATreeModelIndex();
 }
 
-ATreeIndex DemoTreeModel::parent(const ATreeIndex& vertex) {
-    return ATreeIndex();
+ATreeModelIndex DemoTreeModel::parent(const ATreeModelIndex& vertex) {
+    return ATreeModelIndex();
 }

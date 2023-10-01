@@ -24,58 +24,10 @@
 #include <AUI/Common/ASignal.h>
 #include <any>
 #include <utility>
-#include "AModelRange.h"
+#include "AListModelRange.h"
 #include "AUI/Common/AException.h"
-
-class ATreeIndex {
-public:
-    class Exception: public AException {
-    public:
-        using AException::AException;
-    };
-
-    ATreeIndex() = default;
-
-    /**
-     * @param row row of the vertex relative to it's parent. If vertex is root, row should be 0.
-     * @param column column of the vertex relative to it's parent. If vertex is root, column should be 0.
-     * @param userdata the data stored in this vertex.
-     */
-    explicit ATreeIndex(std::size_t row, std::size_t column, std::any userdata) noexcept:
-        mRow(row),
-        mColumn(column),
-        mUserdata(std::move(userdata)) {}
-
-    template<typename T>
-    [[nodiscard]]
-    T as() const {
-        try {
-            return std::any_cast<T>(mUserdata);
-        } catch (...) {
-            throw Exception(
-                    "bad userdata type (expected {}, holds {})"_format(typeid(T).name(), mUserdata.type().name()));
-        }
-    }
-
-    [[nodiscard]]
-    bool hasValue() const noexcept {
-        return mUserdata.has_value();
-    }
-
-    [[nodiscard]]
-    std::size_t row() const {
-        return mRow;
-    }
-
-    [[nodiscard]]
-    std::size_t column() const {
-        return mColumn;
-    }
-
-private:
-    std::size_t mRow, mColumn;
-    std::any mUserdata;
-};
+#include "AUI/Traits/concepts.h"
+#include <AUI/Model/ATreeModelIndex.h>
 
 /**
  * @brief Tree model.
@@ -84,7 +36,7 @@ private:
  * Tree model representation, used for ATreeView.
  */
 template<typename T>
-class ITreeModel
+class ITreeModel 
 {
 public:
     virtual ~ITreeModel() = default;
@@ -94,45 +46,67 @@ public:
      * @details
      * ATreeView never calls itemAt() on root vertex.
      */
-    virtual ATreeIndex root() = 0;
+    virtual ATreeModelIndex root() = 0;
 
     /**
      * @brief Count of children of the vertex.
      */
-    virtual size_t childrenCount(const ATreeIndex& vertex) = 0;
+    virtual size_t childrenCount(const ATreeModelIndex& vertex) = 0;
 
     /**
      * @brief value representation, used by ATreeView.
      */
-    virtual T itemAt(const ATreeIndex& index) = 0;
+    virtual T itemAt(const ATreeModelIndex& index) = 0;
 
     /**
-     * @brief Creates valid ATreeIndex of the child.
+     * @brief Creates valid ATreeModelIndex of the child.
      * @param row child row (index)
      * @param column child column (typically 0)
      * @param vertex vertex
      */
-    virtual ATreeIndex indexOfChild(size_t row, size_t column, const ATreeIndex& vertex) = 0;
+    virtual ATreeModelIndex indexOfChild(size_t row, size_t column, const ATreeModelIndex& vertex) = 0;
 
     /**
      * @brief Creates valid index of parent.
      * @details
-     * If vertex is root() vertex, the method should return empty ATreeIndex (ATreeIndex{}).
+     * If vertex is root() vertex, the method should return empty ATreeModelIndex (ATreeModelIndex{}).
      */
-    virtual ATreeIndex parent(const ATreeIndex& vertex) = 0;
+    virtual ATreeModelIndex parent(const ATreeModelIndex& vertex) = 0;
 
     using stored_t = T;
 
-    template<aui::predicate<ATreeIndex> Predicate>
-    AOptional<ATreeIndex> find(const Predicate& predicate) {
+    template<aui::predicate<ATreeModelIndex> Predicate>
+    AOptional<ATreeModelIndex> find(const Predicate& predicate) {
         return visit(predicate, root());
     }
 
+    template<aui::invocable<ATreeModelIndex> Callback>
+    void forEachDirectChildOf(const ATreeModelIndex& vertex, Callback&& callback) {
+        auto s = childrenCount(vertex);
+        for (decltype(s) i = 0; i < s; ++i) {
+            callback(indexOfChild(i, 0, vertex));
+        }
+    }
+
 signals:
+    /**
+     * @brief Model data was changed
+     */
+    emits<ATreeModelIndex> dataChanged;
+
+    /**
+     * @brief Model data was added
+     */
+    emits<ATreeModelIndex> dataInserted;
+
+    /**
+     * @brief Model data about to remove
+     */
+    emits<ATreeModelIndex> dataRemoved;
 
 private:
-    template<aui::predicate<ATreeIndex> Predicate>
-    AOptional<ATreeIndex> visit(const Predicate& p, const ATreeIndex& vertex) {
+    template<aui::predicate<ATreeModelIndex> Predicate>
+    AOptional<ATreeModelIndex> visit(const Predicate& p, const ATreeModelIndex& vertex) {
         if (p(vertex)) {
             return vertex;
         }

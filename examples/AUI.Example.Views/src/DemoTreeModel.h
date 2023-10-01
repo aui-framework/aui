@@ -29,15 +29,15 @@ class DemoTreeModel: public ITreeModel<AString> {
 public:
     ~DemoTreeModel() override = default;
 
-    ATreeIndex root() override;
+    ATreeModelIndex root() override;
 
-    size_t childrenCount(const ATreeIndex& vertex) override;
+    size_t childrenCount(const ATreeModelIndex& vertex) override;
 
-    AString itemAt(const ATreeIndex& index) override;
+    AString itemAt(const ATreeModelIndex& index) override;
 
-    ATreeIndex indexOfChild(size_t row, size_t column, const ATreeIndex& vertex) override;
+    ATreeModelIndex indexOfChild(size_t row, size_t column, const ATreeModelIndex& vertex) override;
 
-    ATreeIndex parent(const ATreeIndex& vertex) override;
+    ATreeModelIndex parent(const ATreeModelIndex& vertex) override;
 
 };
 

@@ -42,13 +42,13 @@ public:
             mFilter(std::forward<Filter>(adapter)) {
         fill();
 
-        AObject::connect(other->dataChanged, this, [&](const AModelRange<T>& r){
+        AObject::connect(other->dataChanged, this, [&](const AListModelRange<T>& r){
             assert(("unimplemented" && 0));
         });
-        AObject::connect(other->dataInserted, this, [&](const AModelRange<T>& r){
+        AObject::connect(other->dataInserted, this, [&](const AListModelRange<T>& r){
             assert(("unimplemented" && 0));
         });
-        AObject::connect(other->dataRemoved, this, [&](const AModelRange<T>& r){
+        AObject::connect(other->dataRemoved, this, [&](const AListModelRange<T>& r){
             assert(("unimplemented" && 0));
         });
     }
@@ -60,7 +60,7 @@ public:
         return mMapping.size();
     }
 
-    T listItemAt(const AModelIndex& index) override {
+    T listItemAt(const AListModelIndex& index) override {
         return mOther->listItemAt(mMapping[index.getRow()]);
     }
 
@@ -94,7 +94,7 @@ public:
             return !mFilter(listItemAt(i));
         });
         int offset = 0;
-        for (const AModelRange<T>& r : ranges) {
+        for (const AListModelRange<T>& r : ranges) {
             mMapping.erase(mMapping.begin() + r.getBegin().getRow() - offset, mMapping.begin() + r.getEnd().getRow()) - offset;
             offset += r.getEnd().getRow() - r.getBegin().getRow();
         }

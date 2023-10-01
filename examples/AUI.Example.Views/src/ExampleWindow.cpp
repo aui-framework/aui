@@ -116,6 +116,17 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
     addView(tabView = _new<ATabView>() let {
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {
+                AScrollArea::Builder().withContents(Horizontal {
+                        _new<AButton>("Говно"),
+                        _new<AButton>("Говно"),
+                        _new<AButton>("Говно"),
+                        _new<AButton>("Говно"),
+                        _new<AButton>("Говно"),
+                        _new<AButton>("Говно"),
+                        _new<AButton>("Говно"),
+                        _new<AButton>("Говно"),
+                        _new<AButton>("Говно"),
+                }),
                 Vertical {
                         // buttons
                         GroupBox {
@@ -362,13 +373,6 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
                         })
                 },
-                Vertical {
-                        _new<AButton>("Button produces sound when clicked") with_style {
-                                ass::on_state::Activated {
-                                        ass::Sound(IAudioPlayer::fromUrl(":sound/click.ogg")),
-                                }
-                        }
-                }
             }
         }), "Sounds");
 
