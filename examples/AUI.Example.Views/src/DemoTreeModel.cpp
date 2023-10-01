@@ -20,25 +20,37 @@
 
 
 #include "DemoTreeModel.h"
+#include "AUI/Common/AStringVector.h"
 #include <AUI/Logging/ALogger.h>
+#include <optional>
 
+
+namespace {
+struct Node {
+    bool hasChildren;
+};
+}
 
 ATreeModelIndex DemoTreeModel::root() {
-    return ATreeModelIndex();
+    return ATreeModelIndex(0, 0, Node { .hasChildren = true });
 }
 
 size_t DemoTreeModel::childrenCount(const ATreeModelIndex& vertex) {
+    auto node = vertex.as<Node>();
+    if (node.hasChildren) {
+        return 3;
+    }
     return 0;
 }
 
 AString DemoTreeModel::itemAt(const ATreeModelIndex& index) {
-    return AString();
+    return AString::number(index.row());
 }
 
 ATreeModelIndex DemoTreeModel::indexOfChild(size_t row, size_t column, const ATreeModelIndex& vertex) {
-    return ATreeModelIndex();
+    return ATreeModelIndex(row, column, Node { .hasChildren = false });
 }
 
 ATreeModelIndex DemoTreeModel::parent(const ATreeModelIndex& vertex) {
-    return ATreeModelIndex();
+    return root(); 
 }

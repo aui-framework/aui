@@ -116,17 +116,6 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
 
     addView(tabView = _new<ATabView>() let {
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {
-                AScrollArea::Builder().withContents(Horizontal {
-                        _new<AButton>("Говно"),
-                        _new<AButton>("Говно"),
-                        _new<AButton>("Говно"),
-                        _new<AButton>("Говно"),
-                        _new<AButton>("Говно"),
-                        _new<AButton>("Говно"),
-                        _new<AButton>("Говно"),
-                        _new<AButton>("Говно"),
-                        _new<AButton>("Говно"),
-                }),
                 Vertical {
                         // buttons
                         GroupBox {

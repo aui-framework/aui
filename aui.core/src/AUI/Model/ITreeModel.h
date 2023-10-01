@@ -26,6 +26,7 @@
 #include <utility>
 #include "AListModelRange.h"
 #include "AUI/Common/AException.h"
+#include "AUI/Common/AObject.h"
 #include "AUI/Traits/concepts.h"
 #include <AUI/Model/ATreeModelIndex.h>
 
@@ -36,7 +37,7 @@
  * Tree model representation, used for ATreeView.
  */
 template<typename T>
-class ITreeModel 
+class ITreeModel: public AObject
 {
 public:
     virtual ~ITreeModel() = default;

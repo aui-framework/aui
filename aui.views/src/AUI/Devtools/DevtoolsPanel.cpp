@@ -28,7 +28,7 @@
 #include <AUI/View/AButton.h>
 
 
-class ViewHierarchyTreeModel: public AObject, public ITreeModel<AString> {
+class ViewHierarchyTreeModel: public ITreeModel<AString> {
 private:
     _<AView> mRoot;
 

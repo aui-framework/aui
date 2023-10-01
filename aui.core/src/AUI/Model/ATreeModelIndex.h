@@ -23,6 +23,9 @@ public:
         mColumn(column),
         mUserdata(std::move(userdata)) {}
 
+    /**
+     * @brief any_cast the external user data stored in this vertex.
+     */
     template<typename T>
     [[nodiscard]]
     T as() const {
@@ -39,18 +42,25 @@ public:
         return mUserdata.has_value();
     }
 
+    /**
+     * @brief row of the vertex relative to it's parent. If vertex is root, row should be 0.
+     */
     [[nodiscard]]
     std::size_t row() const {
         return mRow;
     }
 
+    /**
+     * @brief column of the vertex relative to it's parent. If vertex is root, column should be 0.
+     */
     [[nodiscard]]
     std::size_t column() const {
         return mColumn;
     }
 
 private:
-    std::size_t mRow, mColumn;
+    std::size_t mRow;
+    std::size_t mColumn;
     std::any mUserdata;
 };
 
