@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 
 aui_module(aui.audio WHOLEARCHIVE EXPORT aui)
 add_subdirectory(3rdparty/ogg)
-aui_link(aui.audio PUBLIC aui::core aui::views)
+aui_link(aui.audio PUBLIC aui::core)
 
 if (AUI_PLATFORM_ANDROID)
     auib_import(oboe https://github.com/google/oboe ADD_SUBDIRECTORY VERSION main)
@@ -28,4 +28,11 @@ if (AUI_PLATFORM_IOS OR AUI_PLATFORM_MACOS)
     find_library(AVFoundation AVFoundation REQUIRED)
     find_library(AudioToolbox AudioToolbox REQUIRED)
     aui_link(aui.audio PUBLIC ${CoreAudio} ${AVFoundation} ${AudioToolbox})
+endif()
+if (AUI_PLATFORM_MACOS)
+    target_link_libraries(aui.audio PUBLIC "-framework AppKit"
+					   "-framework Cocoa"
+					   "-framework CoreData"
+					   "-framework Foundation"
+					   "-framework QuartzCore")
 endif()

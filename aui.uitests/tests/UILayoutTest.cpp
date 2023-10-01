@@ -67,8 +67,8 @@ TEST_F(UILayoutTest, SmallCorner1) {
 
     auto cornerLabel = _new<View>("26") with_style {
             ATextAlign::RIGHT,
-            FontSize(8_dp),
-            LineHeight(9.68),
+            FontSize{8_dp},
+            LineHeight{9.68},
             MinSize(12_dp,8_dp),
             Padding(0),
             Margin(0),
@@ -99,7 +99,7 @@ TEST_F(UILayoutTest, LayoutSpacing1) {
     inflate(Horizontal::Expanding {
         Button { "1" } with_style { Expanding{} },
     } with_style {
-        LayoutSpacing(8_dp),
+        LayoutSpacing{8_dp},
         FixedSize(200_dp, {})
     });
     auto b = By::type<AButtonEx>().one();
@@ -113,7 +113,7 @@ TEST_F(UILayoutTest, LayoutSpacing2) {
         Button { "1" } with_style { Expanding{} },
         Button { "2" } with_style { Expanding{} },
     } with_style {
-        LayoutSpacing(8_dp),
+        LayoutSpacing{8_dp},
         FixedSize(200_dp, {})
     });
 
@@ -129,7 +129,7 @@ TEST_F(UILayoutTest, LayoutSpacing3) {
         Button { "3" } with_style { Expanding{} },
         Button { "4" } with_style { Expanding{} },
     } with_style {
-        LayoutSpacing(8_dp),
+        LayoutSpacing{8_dp},
         FixedSize(200_dp, {})
     });
 
