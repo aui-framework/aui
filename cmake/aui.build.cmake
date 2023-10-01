@@ -1257,7 +1257,6 @@ macro(aui_app)
                 XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES
                 XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED ${AUI_IOS_CODE_SIGNING_REQUIRED}
                 )
-
         # Include framework headers, needed to make "Build" Xcode action work.
         # "Archive" works fine just relying on default search paths as it has different
         # build product output directory.
@@ -1323,7 +1322,6 @@ macro(aui_app)
         exit 1 \;
         fi\"
         )
-
         # Codesign the framework in it's new spot
         if (AUI_IOS_CODE_SIGNING_REQUIRED)
             add_custom_command(
