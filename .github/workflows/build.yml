@@ -100,7 +100,7 @@ jobs:
        uses: actions/upload-artifact@v3
        with:
          path: ${{github.workspace}}/build/app_project/*.tar.gz
-         name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.debug_or_release }}
+         name: ios static Debug.tar.gz
 
      - name: Pack app
        working-directory: ${{github.workspace}}/build/app_project/bin/Debug
