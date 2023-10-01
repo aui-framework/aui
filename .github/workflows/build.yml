@@ -90,7 +90,7 @@ jobs:
  
      - name: Build rest
        working-directory: ${{github.workspace}}/build/app_project
-       run: cmake --build .
+       run: cmake --build . -- CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
      
      - name: Pack framework
        working-directory: ${{github.workspace}}/build/app_project
