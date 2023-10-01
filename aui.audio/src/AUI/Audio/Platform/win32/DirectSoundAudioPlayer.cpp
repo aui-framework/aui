@@ -1,8 +1,8 @@
 #include "DirectSoundAudioPlayer.h"
 #include "AUI/Audio/ISoundInputStream.h"
-#include "AUI/Platform/AWindow.h"
 #include "AUI/Audio/AAudioMixer.h"
 #include "AUI/Audio/ASoundResampler.h"
+#include "AUI/Traits/memory.h"
 #include <dsound.h>
 
 #pragma comment(lib, "dsound.lib")
@@ -37,9 +37,7 @@ private:
 
     DirectSound() {
         ASSERT_OK DirectSoundCreate8(nullptr, &mDirectSound, nullptr);
-        auto w = dynamic_cast<AWindow*>(AWindow::current());
-        auto handle = w->nativeHandle();
-        ASSERT_OK mDirectSound->SetCooperativeLevel(handle, DSSCL_PRIORITY);
+        ASSERT_OK mDirectSound->SetCooperativeLevel(GetDesktopWindow(), DSSCL_PRIORITY);
         setupSecondaryBuffer();
         setupReachPointEvents();
         setupBufferThread();
