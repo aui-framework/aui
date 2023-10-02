@@ -18,6 +18,7 @@
 
 #include "DevtoolsPanel.h"
 #include "AUI/Common/AObject.h"
+#include "AUI/Model/ATreeModelIndex.h"
 #include "AUI/Model/ITreeModel.h"
 #include "AUI/Traits/values.h"
 #include "AUI/View/ASplitter.h"
@@ -37,19 +38,39 @@ public:
         scan(mRoot);
     }
 
-    void scan(const _<AView>& view) {
-        auto asContainer = _cast<AViewContainer>(view);
-        if (asContainer) {
+    void scan(aui::no_escape<AView> view) {
+        auto asContainer = dynamic_cast<AViewContainer*>(view.ptr());
+        if (!asContainer) {
             return;
         }
-        connect(asContainer->childrenChanged, this, [this, container = asContainer.get()]() {
+        setupConnectionsIfNotPresent(asContainer);
+
+        for (const auto& v : asContainer->getViews()) {
+            scan(v);
+        }
+    }
+
+    void setupConnectionsIfNotPresent(aui::no_escape<AViewContainer> container) {
+        if (container->childrenChanged.hasConnectionsWith(this)) {
+            return;
+        }
+
+        struct ExtraData {
+            AVector<_<AView>> children;
+        };
+        
+        connect(container->childrenChanged, this, [this, container = container.ptr(), e = _new<ExtraData>(container->getViews())]() {
             auto containerIndex = makeIndex(container);
-            forEachDirectChildOf(containerIndex, [&](const ATreeModelIndex& i) {
-                emit dataRemoved(i);
-            });
+
+            for (std::size_t i = 0; i < e->children.size(); ++i) {
+                emit dataRemoved(ATreeModelIndex(0, 0, e->children[i]));
+            }
+            e->children = container->getViews();
+
             forEachDirectChildOf(containerIndex, [&](const ATreeModelIndex& i) {
                 emit dataInserted(i);
             });
+            scan(container);
         });
     }
 

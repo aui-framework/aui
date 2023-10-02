@@ -22,6 +22,7 @@
 #pragma once
 
 
+#include "AUI/Model/ATreeModelIndex.h"
 #include "AViewContainer.h"
 #include "AScrollbar.h"
 #include <AUI/Model/ITreeModel.h>
@@ -35,21 +36,6 @@ private:
     class ContainerView;
     class ItemView;
 
-    _<ITreeModel<AString>> mModel;
-    _<ContainerView> mContent;
-    _<AScrollbar> mScrollbar;
-    _weak<ItemView> mPrevSelection;
-
-    std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeModelIndex& index)> mViewFactory;
-
-
-    void updateScrollbarDimensions();
-    void handleMousePressed(ItemView* v);
-    void handleMouseDoubleClicked(ItemView* v);
-    void handleSelected(ItemView* v);
-
-    void fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndex& index);
-    void makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView);
 public:
     ATreeView();
     ATreeView(const _<ITreeModel<AString>>& model);
@@ -70,6 +56,24 @@ signals:
     emits<ATreeModelIndex> itemMouseClicked;
     emits<ATreeModelIndex> itemMouseDoubleClicked;
     emits<ATreeModelIndex> itemMouseHover;
+
+private:
+    _<ITreeModel<AString>> mModel;
+    _<ContainerView> mContent;
+    _<AScrollbar> mScrollbar;
+    _weak<ItemView> mPrevSelection;
+
+    std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeModelIndex& index)> mViewFactory;
+
+
+    void updateScrollbarDimensions();
+    void handleMousePressed(ItemView* v);
+    void handleMouseDoubleClicked(ItemView* v);
+    void handleSelected(ItemView* v);
+
+    void fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndex& index);
+    void makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView);
+    _<ItemView> indexToView(const ATreeModelIndex& target);
 };
 
 
