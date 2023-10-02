@@ -1,13 +1,8 @@
 #include "VPXDecoder.h"
 #include "AUI/Logging/ALogger.h"
+#include "vpx/vp8dx.h"
 #include "vpx/vpx_decoder.h"
-#include "tools_common.h"
 #include "libyuv/planar_functions.h"
-
-//we must define usage_exit due to include tools_common.h
-void usage_exit(void) {
-    exit(-1);
-}
 
 namespace aui::video::impl {
     AImage convertToRGBA(vpx_image_t* image) {
@@ -74,8 +69,17 @@ namespace aui::video::impl {
 }
 
 VPXDecoder::VPXDecoder(Codec codec) {
-    auto decoder = get_vpx_decoder_by_name(codec == Codec::VP8 ? "vp8" : "vp9");
-    if (auto code = vpx_codec_dec_init(mContext.ptr(), decoder->codec_interface(), nullptr, 0)) {
+    auto codecFactory = [codec]() {
+        switch (codec) {
+            case Codec::VP8:
+                return vpx_codec_vp8_dx;
+            case Codec::VP9:
+                return vpx_codec_vp9_dx;
+            default:
+                throw AException("VPX decoder: unknown codec");
+        }
+    }();
+    if (auto code = vpx_codec_dec_init(mContext.ptr(), codecFactory(), nullptr, 0)) {
         throw AException("Failed to initialize VPX codec, error code: {}"_format(code));
     }
 }
