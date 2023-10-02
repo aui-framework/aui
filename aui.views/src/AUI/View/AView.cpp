@@ -282,8 +282,11 @@ void AView::pack()
 
 void AView::addAssName(const AString& assName)
 {
-    mAssNames << assName;
     assert(("empty ass name" && !assName.empty()));
+    if (mAssNames.contains(assName)) {
+        return;
+    }
+    mAssNames << assName;
     invalidateAssHelper();
 }
 
@@ -291,8 +294,8 @@ void AView::invalidateAssHelper() { mAssHelper = nullptr; }
 
 void AView::removeAssName(const AString& assName)
 {
-    mAssNames >> assName;
     assert(("empty ass name" && !assName.empty()));
+    mAssNames.removeAll(assName);
     invalidateAssHelper();
 }
 

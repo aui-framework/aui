@@ -2,7 +2,9 @@ cmake_minimum_required(VERSION 3.10)
 
 aui_module(aui.audio WHOLEARCHIVE EXPORT aui)
 add_subdirectory(3rdparty/ogg)
-aui_link(aui.audio PUBLIC aui::core aui::views)
+aui_link(aui.audio PUBLIC aui::core)
+
+auib_import(Opus https://github.com/xiph/opus.git VERSION v1.4)
 
 if (AUI_PLATFORM_ANDROID)
     auib_import(oboe https://github.com/google/oboe ADD_SUBDIRECTORY VERSION main)
@@ -30,5 +32,10 @@ if (AUI_PLATFORM_IOS OR AUI_PLATFORM_MACOS)
     aui_link(aui.audio PUBLIC ${CoreAudio} ${AVFoundation} ${AudioToolbox})
 endif()
 
-auib_import(Opus https://github.com/xiph/opus.git VERSION v1.4)
-aui_link(aui.audio PUBLIC Opus::opus)
+if (AUI_PLATFORM_MACOS)
+    target_link_libraries(aui.audio PUBLIC "-framework AppKit"
+					   "-framework Cocoa"
+					   "-framework CoreData"
+					   "-framework Foundation"
+					   "-framework QuartzCore")
+endif()

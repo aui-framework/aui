@@ -4,7 +4,6 @@
 #pragma comment(lib, "dxguid.lib")
 #pragma comment(lib, "Winmm" )
 
-#include "AUI/Platform/AWindow.h"
 #include <cassert>
 #include <dsound.h>
 
@@ -25,9 +24,7 @@ public:
 private:
     DirectSound() {
         ASSERT_OK DirectSoundCreate8(nullptr, &mDirectSound, nullptr);
-        auto w = dynamic_cast<AWindow*>(AWindow::current());
-        auto handle = w->nativeHandle();
-        ASSERT_OK mDirectSound->SetCooperativeLevel(handle, DSSCL_PRIORITY);
+        ASSERT_OK mDirectSound->SetCooperativeLevel(GetDesktopWindow(), DSSCL_PRIORITY);
     }
 
     ~DirectSound() {

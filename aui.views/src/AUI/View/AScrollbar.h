@@ -93,6 +93,8 @@ public:
         setScroll(mCurrentScroll + delta);
     }
 
+    void onScroll(float& delta);
+
     void onScroll(const AScrollEvent& event) override;
 
     /**

@@ -15,36 +15,43 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
-// Created by alex2 on 01.01.2021.
+// Created by alex2 on 02.01.2021.
 //
 
 #pragma once
 
-#include <AUI/Util/AMetric.h>
-#include "IProperty.h"
+#include "AUI/Audio/IAudioPlayer.h"
+#include <AUI/ASS/ASS.h>
+#include <AUI/Audio/IAudioPlayer.h>
 
 namespace ass {
 
     /**
-     * @brief Controls the font size of AView.
+     * @brief Produces sound effect when the style applied.
      * @ingroup ass
      */
-    struct FontSize {
-        AMetric size;
+    struct Sound {
+        /**
+         * @brief Player of the sound effect.
+         */
+        _<IAudioPlayer> sound;
     };
+
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<FontSize>: IPropertyBase {
+        struct Property<Sound>: IPropertyBase {
         private:
-            FontSize mInfo;
+            Sound mInfo;
 
         public:
-            Property(FontSize info) : mInfo(info) {
+            Property(const Sound& info) : mInfo(info) {
 
             }
 
-            void applyFor(AView* view) override;
+            void applyFor(AView* view) override {
+                mInfo.sound->play();
+            }
 
             [[nodiscard]]
             const auto& value() const noexcept {

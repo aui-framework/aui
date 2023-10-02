@@ -18,6 +18,10 @@
 #include <AUI/UITest.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
+#include "AUI/ASS/Property/Expanding.h"
+#include "AUI/ASS/Property/FixedSize.h"
+#include "AUI/ASS/Property/LayoutSpacing.h"
+#include "AUI/Test/UI/By.h"
 #include "AUI/Util/ALayoutInflater.h"
 
 using namespace declarative;
@@ -49,9 +53,8 @@ namespace {
     };
 }
 
-
 // Checks for bug where cornerLabel goes outside of box.
-TEST_F(UILayoutTest, SmallCorner) {
+TEST_F(UILayoutTest, SmallCorner1) {
     class View: public ALabel {
     public:
         using ALabel::ALabel;
@@ -64,8 +67,8 @@ TEST_F(UILayoutTest, SmallCorner) {
 
     auto cornerLabel = _new<View>("26") with_style {
             ATextAlign::RIGHT,
-            FontSize(8_dp),
-            LineHeight(9.68),
+            FontSize{8_dp},
+            LineHeight{9.68},
             MinSize(12_dp,8_dp),
             Padding(0),
             Margin(0),
@@ -89,5 +92,48 @@ TEST_F(UILayoutTest, SmallCorner) {
     (By::value(cornerLabel) | By::value(box))
         .check(areRightAligned(), "box and label are not right aligned")
         .check(areBottomAligned(), "box and label are not bottom aligned")
+        ;
+}
+
+TEST_F(UILayoutTest, LayoutSpacing1) {
+    inflate(Horizontal::Expanding {
+        Button { "1" } with_style { Expanding{} },
+    } with_style {
+        LayoutSpacing{8_dp},
+        FixedSize(200_dp, {})
+    });
+    auto b = By::type<AButtonEx>().one();
+    
+    // checks the buttons margins are perfectly equal
+    auto parent = b->getParent();
+    EXPECT_EQ((parent->getSize() - b->getSize()) / 2, b->getPosition());
+}
+TEST_F(UILayoutTest, LayoutSpacing2) {
+    inflate(Horizontal::Expanding {
+        Button { "1" } with_style { Expanding{} },
+        Button { "2" } with_style { Expanding{} },
+    } with_style {
+        LayoutSpacing{8_dp},
+        FixedSize(200_dp, {})
+    });
+
+    By::type<AButtonEx>() 
+        .check(sameWidth(), "widths of the buttons are not equal")
+        ;
+}
+
+TEST_F(UILayoutTest, LayoutSpacing3) {
+    inflate(Horizontal::Expanding {
+        Button { "1" } with_style { Expanding{} },
+        Button { "2" } with_style { Expanding{} },
+        Button { "3" } with_style { Expanding{} },
+        Button { "4" } with_style { Expanding{} },
+    } with_style {
+        LayoutSpacing{8_dp},
+        FixedSize(200_dp, {})
+    });
+
+    By::type<AButtonEx>() 
+        .check(sameWidth(), "widths of the buttons are not equal")
         ;
 }

@@ -24,6 +24,7 @@
 
 #include "AUI/Common/AString.h"
 #include "AUI/Logging/ALogger.h"
+#include "ACurlMulti.h"
 
 
 #undef min
@@ -99,24 +100,28 @@ _<IInputStream> ACurl::Builder::toInputStream() {
     class CurlInputStream: public IInputStream {
     private:
         _<ACurl> mCurl;
-        AFuture<> mFuture;
         APipe mPipe;
 
     public:
         CurlInputStream(_<ACurl> curl) : mCurl(std::move(curl)) {
-            mFuture = async {
-                mCurl->mWriteCallback = [&](AByteBufferView buf) {
-                    mPipe << buf;
-                    return buf.size();
-                };
-                mCurl->run();
+            mCurl->mWriteCallback = [&](AByteBufferView buf) {
+                mPipe << buf;
+                return buf.size();
             };
+            AObject::connect(mCurl->success, mCurl.get(), [this]() {
+                mPipe.close();
+            });
+            AObject::connect(mCurl->fail, mCurl.get(), [this]() {
+                mPipe.close();
+            });
+            ACurlMulti::global() << mCurl;
         }
 
         size_t read(char* dst, size_t size) override {
             return mPipe.read(dst, size);
         }
     };
+
     return _new<CurlInputStream>(_new<ACurl>(*this));
 }
 
