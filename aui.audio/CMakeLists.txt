@@ -5,6 +5,7 @@ add_subdirectory(3rdparty/ogg)
 aui_link(aui.audio PUBLIC aui::core)
 
 auib_import(Opus https://github.com/xiph/opus.git VERSION v1.4)
+aui_link(aui.audio PRIVATE Opus::opus)
 
 if (AUI_PLATFORM_ANDROID)
     auib_import(oboe https://github.com/google/oboe ADD_SUBDIRECTORY VERSION main)
