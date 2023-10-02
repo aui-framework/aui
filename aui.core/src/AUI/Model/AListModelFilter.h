@@ -21,7 +21,7 @@
 #include <AUI/Common/AVector.h>
 
 template<typename T, typename Filter>
-class AListModelFilter: public IListModel<T>, public AObject {
+class AListModelFilter: public IListModel<T> {
 private:
     _<IListModel<T>> mOther;
     Filter mFilter;
