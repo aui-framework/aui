@@ -362,6 +362,13 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                 player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
                         })
                 },
+                Vertical {
+                        _new<AButton>("Button produces sound when clicked") with_style {
+                                ass::on_state::Activated {
+                                        ass::Sound{IAudioPlayer::fromUrl(":sound/click.ogg")},
+                                }
+                        }
+                }
             }
         }), "Sounds");
 
