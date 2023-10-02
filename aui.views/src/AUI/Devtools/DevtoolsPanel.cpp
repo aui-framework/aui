@@ -59,7 +59,7 @@ public:
             AVector<_<AView>> children;
         };
         
-        connect(container->childrenChanged, this, [this, container = container.ptr(), e = _new<ExtraData>(container->getViews())]() {
+        connect(container->childrenChanged, this, [this, container = container.ptr(), e = _new<ExtraData>(ExtraData{container->getViews()})]() {
             auto containerIndex = makeIndex(container);
 
             for (std::size_t i = 0; i < e->children.size(); ++i) {
