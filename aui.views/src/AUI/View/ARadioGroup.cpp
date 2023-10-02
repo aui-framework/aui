@@ -39,7 +39,7 @@ void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
             addView(r);
         }
 
-        connect(mModel->dataInserted, this, [&](const AModelRange<AString>& data) {
+        connect(mModel->dataInserted, this, [&](const AListModelRange<AString>& data) {
             for (const auto& row : data) {
                 auto r = _new<ARadioButton>(row.get());
                 mGroup->addRadioButton(r);

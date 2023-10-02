@@ -30,7 +30,7 @@ _<AListModel<int>> testModel() {
 TEST(Models, RangesIncluding) {
     auto model = testModel();
 
-    auto check = [](const AVector<AModelRange<int>>& v1, const AVector<AModelRange<int>>& v2) {
+    auto check = [](const AVector<AListModelRange<int>>& v1, const AVector<AListModelRange<int>>& v2) {
         ASSERT_EQ(v1, v2);
     };
 

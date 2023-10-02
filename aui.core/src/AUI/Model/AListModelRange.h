@@ -17,7 +17,7 @@
 #pragma once
 
 
-#include "AModelIndex.h"
+#include "AListModelIndex.h"
 #include <AUI/Common/SharedPtr.h>
 #include <cassert>
 
@@ -25,31 +25,31 @@
 template<typename T> class IListModel;
 
 template <typename T>
-class AModelRange {
+class AListModelRange {
 private:
-    AModelIndex mBegin;
-    AModelIndex mEnd;
-    IListModel<T>* mModel;
+    AListModelIndex mBegin;
+    AListModelIndex mEnd;
+    _<IListModel<T>> mModel;
 
 public:
-    AModelRange() = default;
-    AModelRange(const AModelIndex& begin, const AModelIndex& end, IListModel<T>* model) : mBegin(begin),
-                                                                                          mEnd(end),
-                                                                                          mModel(model) {}
+    AListModelRange() = default;
+    AListModelRange(const AListModelIndex& begin, const AListModelIndex& end, _<IListModel<T>> model) : mBegin(begin),
+                                                                                                mEnd(end),
+                                                                                                mModel(std::move(model)) {}
 
-    bool operator==(const AModelRange& rhs) const {
+    bool operator==(const AListModelRange& rhs) const {
         return std::tie(mBegin, mEnd, mModel) == std::tie(rhs.mBegin, rhs.mEnd, rhs.mModel);
     }
 
     class Iterator {
     private:
-        AModelIndex mIndex;
-        IListModel<T>* mModel;
+        AListModelIndex mIndex;
+        _<IListModel<T>> mModel;
 
 
     public:
-        Iterator(const AModelIndex& index, IListModel<T>* model):
-                mIndex(index), mModel(model) {}
+        Iterator(const AListModelIndex& index, _<IListModel<T>> model):
+                mIndex(index), mModel(std::move(model)) {}
 
         Iterator& operator*() {
             return *this;
@@ -77,34 +77,34 @@ public:
             return mIndex.getRow() == other.mIndex.getRow();
         }
 
-        [[nodiscard]] const AModelIndex& getIndex() const {
+        [[nodiscard]] const AListModelIndex& getIndex() const {
             return mIndex;
         }
     };
 
-    AModelRange<T>::Iterator begin() const {
+    AListModelRange<T>::Iterator begin() const {
         return {mBegin, mModel};
     }
-    AModelRange<T>::Iterator end() const {
+    AListModelRange<T>::Iterator end() const {
         return {mEnd, mModel};
     }
 
-    [[nodiscard]] const AModelIndex& getBegin() const {
+    [[nodiscard]] const AListModelIndex& getBegin() const {
         return mBegin;
     }
 
-    [[nodiscard]] const AModelIndex& getEnd() const {
+    [[nodiscard]] const AListModelIndex& getEnd() const {
         return mEnd;
     }
 
-    IListModel<T>* getModel() const {
+    const _<IListModel<T>>& getModel() const {
         return mModel;
     }
 };
 
 
 template<typename T>
-inline std::ostream& operator<<(std::ostream& o, const AModelRange<T>& range) {
+inline std::ostream& operator<<(std::ostream& o, const AListModelRange<T>& range) {
     o << "[ " << range.getBegin() << "; " << range.getEnd() << " )";
 
     return o;

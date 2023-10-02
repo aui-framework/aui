@@ -17,7 +17,12 @@
 //#ifdef _DEBUG
 
 #include "DevtoolsPanel.h"
+#include "AUI/Common/AObject.h"
+#include "AUI/Model/ATreeModelIndex.h"
+#include "AUI/Model/ITreeModel.h"
+#include "AUI/Traits/values.h"
 #include "AUI/View/ASplitter.h"
+#include "AUI/View/AViewContainer.h"
 #include "Devtools.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/ASS/ASS.h>
@@ -29,9 +34,55 @@ private:
     _<AView> mRoot;
 
 public:
-    ViewHierarchyTreeModel(const _<AView>& root) : mRoot(root) {}
+    ViewHierarchyTreeModel(_<AView> root) : mRoot(std::move(root)) {
+        scan(mRoot);
+    }
 
-    size_t childrenCount(const ATreeIndex& vertex) override {
+    void scan(aui::no_escape<AView> view) {
+        auto asContainer = dynamic_cast<AViewContainer*>(view.ptr());
+        if (!asContainer) {
+            return;
+        }
+        setupConnectionsIfNotPresent(asContainer);
+
+        for (const auto& v : asContainer->getViews()) {
+            scan(v);
+        }
+    }
+
+    void setupConnectionsIfNotPresent(aui::no_escape<AViewContainer> container) {
+        if (container->childrenChanged.hasConnectionsWith(this)) {
+            return;
+        }
+
+        struct ExtraData {
+            AVector<_<AView>> children;
+        };
+        
+        connect(container->childrenChanged, this, [this, container = container.ptr(), e = _new<ExtraData>(ExtraData{container->getViews()})]() {
+            auto containerIndex = makeIndex(container);
+
+            for (std::size_t i = 0; i < e->children.size(); ++i) {
+                emit dataRemoved(ATreeModelIndex(0, 0, e->children[i]));
+            }
+            e->children = container->getViews();
+
+            forEachDirectChildOf(containerIndex, [&](const ATreeModelIndex& i) {
+                emit dataInserted(i);
+            });
+            scan(container);
+        });
+    }
+
+    static ATreeModelIndex makeIndex(aui::no_escape<AView> view) {
+        std::size_t row = 0;
+        if (auto p = view->getParent()) {
+            row = p->getViews().indexOf(view->sharedPtr());
+        }
+        return ATreeModelIndex(row, 0, view->sharedPtr());
+    }
+
+    size_t childrenCount(const ATreeModelIndex& vertex) override {
         auto c = _cast<AViewContainer>(vertex.as<_<AView>>());
         if (c) {
             return c->getViews().size();
@@ -39,19 +90,19 @@ public:
         return 0;
     }
 
-    AString itemAt(const ATreeIndex& index) override {
+    AString itemAt(const ATreeModelIndex& index) override {
         return Devtools::prettyViewName(index.as<_<AView>>().get());
     }
 
-    ATreeIndex indexOfChild(size_t row, size_t column, const ATreeIndex& vertex) override {
+    ATreeModelIndex indexOfChild(size_t row, size_t column, const ATreeModelIndex& vertex) override {
         auto c = _cast<AViewContainer>(vertex.as<_<AView>>());
         if (!c) {
             throw AException("invalid index");
         }
-        return ATreeIndex(row, column, c->getViews().at(row));
+        return ATreeModelIndex(row, column, c->getViews().at(row));
     }
 
-    ATreeIndex parent(const ATreeIndex& ofChild) override {
+    ATreeModelIndex parent(const ATreeModelIndex& ofChild) override {
         auto view = ofChild.as<_<AView>>();
         auto parent = view->getParent();
         if (!parent) {
@@ -60,11 +111,11 @@ public:
 
         auto parentOfParent = parent->getParent();
 
-        return ATreeIndex{ parentOfParent ? parentOfParent->getViews().indexOf(parent->sharedPtr()) : 0, 0, parent->sharedPtr() };
+        return ATreeModelIndex{ parentOfParent ? parentOfParent->getViews().indexOf(parent->sharedPtr()) : 0, 0, parent->sharedPtr() };
     }
 
-    ATreeIndex root() override {
-        return ATreeIndex(0, 0, mRoot);
+    ATreeModelIndex root() override {
+        return ATreeModelIndex(0, 0, mRoot);
     }
 };
 
@@ -85,10 +136,10 @@ DevtoolsPanel::DevtoolsPanel(ABaseWindow* targetWindow):
     });
     auto model = _new<ViewHierarchyTreeModel>(aui::ptr::fake(targetWindow));
     mViewHierarchyTree->setModel(model);
-    connect(mViewHierarchyTree->itemSelected, [this](const ATreeIndex& index) {
+    connect(mViewHierarchyTree->itemSelected, [this](const ATreeModelIndex& index) {
         mViewPropertiesView->setTargetView(index.as<_<AView>>());
     });
-    connect(mViewHierarchyTree->itemMouseHover, [this](const ATreeIndex& index) {
+    connect(mViewHierarchyTree->itemMouseHover, [this](const ATreeModelIndex& index) {
         mViewPropertiesView->setTargetView(index.as<_<AView>>());
     });
     connect(mouseLeave, [this] {
@@ -105,7 +156,7 @@ DevtoolsPanel::DevtoolsPanel(ABaseWindow* targetWindow):
         }
 
         mViewPropertiesView->setTargetView(mouseOverView);
-        auto indexToSelect = model->find([&](const ATreeIndex& index) {
+        auto indexToSelect = model->find([&](const ATreeModelIndex& index) {
             return index.as<_<AView>>() == mouseOverView;
         });
         if (indexToSelect) {

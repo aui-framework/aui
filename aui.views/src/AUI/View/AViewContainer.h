@@ -353,6 +353,10 @@ protected:
 
 signals:
     emits<ScrollbarAppearance> scrollbarAppearanceSet;
+    /**
+     * @brief Emitted when addView(s)/removeView/setLayout was called.
+     */
+    emits<> childrenChanged;
 
 private:
     _<ALayout> mLayout;

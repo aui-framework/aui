@@ -21,8 +21,8 @@
 #pragma once
 
 
-#include "AModelIndex.h"
-#include "AModelRange.h"
+#include "AListModelIndex.h"
+#include "AListModelRange.h"
 #include <AUI/Common/ASet.h>
 #include <AUI/Common/AVector.h>
 #include <cassert>
@@ -30,25 +30,25 @@
 template<typename T> class IListModel;
 
 template <typename T>
-class AModelSelection {
+class AListModelSelection {
 private:
-    ASet<AModelIndex> mIndices;
-    IListModel<T>* mModel;
+    ASet<AListModelIndex> mIndices;
+    _<IListModel<T>> mModel;
 
 public:
-    AModelSelection() = default;
-    AModelSelection(const ASet<AModelIndex>& indices, IListModel<T>* model) : mIndices(indices),
-                                                                              mModel(model) {}
+    AListModelSelection() = default;
+    AListModelSelection(const ASet<AListModelIndex>& indices, _<IListModel<T>> model) : mIndices(indices),
+                                                                                    mModel(std::move(model)) {}
 
     class Iterator {
     private:
-        ASet<AModelIndex>::iterator mIterator;
-        IListModel<T>* mModel;
+        ASet<AListModelIndex>::iterator mIterator;
+        _<IListModel<T>> mModel;
 
 
     public:
-        Iterator(const ASet<AModelIndex>::iterator& iterator, IListModel<T>* model):
-            mIterator(iterator), mModel(model) {}
+        Iterator(const ASet<AListModelIndex>::iterator& iterator, _<IListModel<T>> model):
+            mIterator(iterator), mModel(std::move(model)) {}
 
 
         Iterator& operator*() {
@@ -78,15 +78,15 @@ public:
         }
 
         [[nodiscard]]
-        const AModelIndex& getIndex() const {
+        const AListModelIndex& getIndex() const {
             return *mIterator;
         }
     };
 
-    AModelSelection<T>::Iterator begin() const {
+    AListModelSelection<T>::Iterator begin() const {
         return {mIndices.begin(), mModel};
     }
-    AModelSelection<T>::Iterator end() const {
+    AListModelSelection<T>::Iterator end() const {
         return {mIndices.end(), mModel};
     }
 
@@ -97,26 +97,26 @@ public:
         return mIndices.empty();
     }
 
-    IListModel<T>* getModel() const {
+    const _<IListModel<T>>& getModel() const {
         return mModel;
     }
 
-    const ASet<AModelIndex>& getIndices() const {
+    const ASet<AListModelIndex>& getIndices() const {
         return mIndices;
     }
 
-    AModelIndex one() {
+    AListModelIndex first() {
         assert(("selection model is empty" && mIndices.begin() != mIndices.end()));
         return *mIndices.begin();
     }
 
-    AVector<AModelRange<T>> ranges() const noexcept;
+    AVector<AListModelRange<T>> ranges() const noexcept;
 };
 
 #include "IListModel.h"
 
 template<typename T>
-AVector<AModelRange<T>> AModelSelection<T>::ranges() const noexcept {
+AVector<AListModelRange<T>> AListModelSelection<T>::ranges() const noexcept {
     return mModel->rangesIncluding([&](size_t i) {
         return mIndices.contains(i);
     });
