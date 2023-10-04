@@ -19,7 +19,10 @@
 //
 
 #include "AScrollArea.h"
+#include "AUI/Logging/ALogger.h"
 #include "AUI/View/AView.h"
+#include "AUI/View/AViewContainer.h"
+#include "glm/fwd.hpp"
 #include <AUI/Layout/AAdvancedGridLayout.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/Util/kAUI.h>
@@ -34,16 +37,8 @@ public:
         addAssName(".scrollarea_inner");
     }
 
-    int getContentMinimumWidth(ALayoutDirection layout) override {
-        return 30_dp;
-    }
-
     void updateLayout() override {
         if (hasChild()) child()->setGeometry(-mScroll.x, -mScroll.y, getContentWidth() + mScroll.x, getContentHeight() + mScroll.y);
-    }
-
-    int getContentMinimumHeight(ALayoutDirection layout) override {
-        return 30_dp;
     }
 
     void setScrollY(unsigned scroll) {

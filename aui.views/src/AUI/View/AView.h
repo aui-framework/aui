@@ -619,6 +619,7 @@ public:
 
     /**
      * @brief Fixed size.
+     * @return Fixed size. {0, 0} if unspecified.
      */
     const glm::ivec2& getFixedSize() {
         return mFixedSize;
