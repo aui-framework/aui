@@ -25,6 +25,9 @@ class AScrollAreaContainer;
 /**
  * @brief A container with vertical and horizontal scrollbars.
  * @ingroup useful_views
+ * @details
+ * AScrollArea or some of it's parents should have expanding, or fixed size, or max size to be set, otherwise it would
+ * not work as expected.
  */
 class API_AUI_VIEWS AScrollArea: public AViewContainer {
 public:

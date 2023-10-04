@@ -63,7 +63,7 @@ public:
     }
 
     void onDataCountChanged() override {
-        updateLayout();
+        AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
     }
 
     void onDataChanged() override {
