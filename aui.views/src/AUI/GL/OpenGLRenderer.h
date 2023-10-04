@@ -63,6 +63,7 @@ private:
                                           const glm::vec2& size);
 
     void uploadToShaderCommon();
+    void identityUv();
 
     void endDraw(const ABrush& brush);
     FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
