@@ -19,10 +19,18 @@
 #include <cassert>
 #include <AUI/Common/AException.h>
 #include <AUI/Common/AString.h>
+#include <AUI/Common/AMap.h>
 #include <AUI/Logging/ALogger.h>
 
+#include "AUI/Platform/AStacktrace.h"
+#include "AUI/Thread/AFuture.h"
+#include "AUI/Thread/AMutexWrapper.h"
 #include "IEventLoop.h"
 #include <AUI/Thread/AConditionVariable.h>
+#include <functional>
+#include <mutex>
+#include <pthread.h>
+#include <thread>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
@@ -54,8 +62,26 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
         s(handle, name.c_str());
     }
 }
+#else
+#include <signal.h>
+#include <execinfo.h>
+#include <pthread.h>
 #endif
-
+namespace aui::impl::AThread {
+		static AMutexWrapper<AMap<std::thread::id, std::function<void()>>>& payloads() {
+				static AMutexWrapper<AMap<std::thread::id, std::function<void()>>> d;
+				return d;
+		}
+		void executeForcedPayload() {
+				std::unique_lock lock(payloads());
+				if (auto it = payloads()->contains(std::this_thread::get_id())) {
+					  if (it->second) {
+							  it->second();
+								it->second = {};
+						}
+				}
+		}
+}
 class CurrentThread: public AAbstractThread {
 public:
     using AAbstractThread::AAbstractThread;
@@ -63,6 +89,24 @@ public:
 
 AAbstractThread::AAbstractThread(const id& id) noexcept: mId(id)
 {
+}
+
+
+AStacktrace AAbstractThread::threadStacktrace() const {
+	  if (std::this_thread::get_id() == mId) {
+			  return AStacktrace::capture(1);
+		}
+		auto& payloads = aui::impl::AThread::payloads();
+		std::unique_lock lock(payloads);
+		AFuture<AStacktrace> future;
+		payloads.value()[mId] = [future] {
+			  future.supplyResult(AStacktrace::capture(6));
+		};
+		lock.unlock();
+		if (pthread_kill(reinterpret_cast<const pthread_t&>(mId), SIGUSR1) != 0) {
+			  throw AException("unable to acquire other thread stacktrace: pthread_kill failed");
+		}
+		return *future;
 }
 
 _<AAbstractThread>& AAbstractThread::threadStorage()

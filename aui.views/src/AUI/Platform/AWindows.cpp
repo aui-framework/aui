@@ -188,7 +188,8 @@ AWindowManager::AWindowManager(): mHandle(this) {
     mHangTimer = _new<ATimer>(10s);
     AObject::connect(mHangTimer->fired, mHangTimer, [&, thread = AThread::current()] {
         if (mWatchdog.isHang()) {
-            ALogger::err("ANR") << "UI hang detected: " << thread->threadName();
+            ALogger::err("ANR") << "UI hang detected:\n" << thread->threadStacktrace();
+            std::exit(-1);
         }
     });
     mHangTimer->start();
