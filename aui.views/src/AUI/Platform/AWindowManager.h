@@ -16,6 +16,8 @@
 
 #pragma once
 #include <AUI/Thread/IEventLoop.h>
+#include "AUI/Common/ATimer.h"
+#include "AUI/Util/AWatchdog.h"
 #include "IRenderingContext.h"
 
 class AWindow;
@@ -25,6 +27,10 @@ typedef union _XEvent XEvent;
 class API_AUI_VIEWS AWindowManager: public IEventLoop {
     friend class AWindow;
     friend class AClipboard;
+private:
+    AWatchdog mWatchdog;
+    _<ATimer> mHangTimer;
+
 protected:
     IEventLoop::Handle mHandle;
     ADeque<_<AWindow>> mWindows;

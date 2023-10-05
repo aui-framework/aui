@@ -393,227 +393,229 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
     };
     try {
         while (XPending(CommonRenderingContext::ourDisplay)) {
-            XNextEvent(CommonRenderingContext::ourDisplay, &ev);
-            _<AWindow> window;
-            switch (ev.type) {
-                case Expose: {
-                    window = locateWindow(ev.xexpose.window);
-                    window->mRedrawFlag = false;
-                    window->redraw();
-                    XSyncValue syncValue;
-                    XSyncIntsToValue(&syncValue,
-                                     window->mXsyncRequestCounter.lo,
-                                     window->mXsyncRequestCounter.hi);
-                    XSyncSetCounter(CommonRenderingContext::ourDisplay, window->mXsyncRequestCounter.counter, syncValue);
+            mWatchdog.runOperation([&] {
+                XNextEvent(CommonRenderingContext::ourDisplay, &ev);
+                _<AWindow> window;
+                switch (ev.type) {
+                    case Expose: {
+                        window = locateWindow(ev.xexpose.window);
+                        window->mRedrawFlag = false;
+                        window->redraw();
+                        XSyncValue syncValue;
+                        XSyncIntsToValue(&syncValue,
+                                        window->mXsyncRequestCounter.lo,
+                                        window->mXsyncRequestCounter.hi);
+                        XSyncSetCounter(CommonRenderingContext::ourDisplay, window->mXsyncRequestCounter.counter, syncValue);
 
-                    break;
-                }
-                case ClientMessage: {
-                    if (ev.xclient.message_type == CommonRenderingContext::ourAtoms.wmProtocols) {
-                        auto window = locateWindow(ev.xclient.window);
-                        if(ev.xclient.data.l[0] == CommonRenderingContext::ourAtoms.wmDeleteWindow) {
-                            // close button clicked
-                            window->onCloseButtonClicked();
-                        } else if (ev.xclient.data.l[0] == CommonRenderingContext::ourAtoms.netWmSyncRequest) {
-                            // flicker-fix sync on resize
-                            window->mXsyncRequestCounter.lo = ev.xclient.data.l[2];
-                            window->mXsyncRequestCounter.hi = ev.xclient.data.l[3];
+                        break;
+                    }
+                    case ClientMessage: {
+                        if (ev.xclient.message_type == CommonRenderingContext::ourAtoms.wmProtocols) {
+                            auto window = locateWindow(ev.xclient.window);
+                            if(ev.xclient.data.l[0] == CommonRenderingContext::ourAtoms.wmDeleteWindow) {
+                                // close button clicked
+                                window->onCloseButtonClicked();
+                            } else if (ev.xclient.data.l[0] == CommonRenderingContext::ourAtoms.netWmSyncRequest) {
+                                // flicker-fix sync on resize
+                                window->mXsyncRequestCounter.lo = ev.xclient.data.l[2];
+                                window->mXsyncRequestCounter.hi = ev.xclient.data.l[3];
+                            }
                         }
+                        break;
                     }
-                    break;
-                }
-                case KeyPress: {
-                    window = locateWindow(ev.xkey.window);
-                    int count = 0;
-                    KeySym keysym = 0;
-                    char buf[0x20];
-                    Status status = 0;
-                    count = Xutf8LookupString((XIC)window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
-                                              &status);
+                    case KeyPress: {
+                        window = locateWindow(ev.xkey.window);
+                        int count = 0;
+                        KeySym keysym = 0;
+                        char buf[0x20];
+                        Status status = 0;
+                        count = Xutf8LookupString((XIC)window->mIC, (XKeyPressedEvent*) &ev, buf, sizeof(buf), &keysym,
+                                                &status);
 
-                    // delete key
-                    if (buf[0] != 127) {
-                        if (count) {
-                            AString s(buf);
-                            assert(!s.empty());
-                            window->onCharEntered(s[0]);
+                        // delete key
+                        if (buf[0] != 127) {
+                            if (count) {
+                                AString s(buf);
+                                assert(!s.empty());
+                                window->onCharEntered(s[0]);
+                            }
                         }
+                        window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
+                        break;
                     }
-                    window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
-                    break;
-                }
-                case KeyRelease:
-                    if (XEventsQueued(CommonRenderingContext::ourDisplay, QueuedAfterReading)) // check for key repeat
-                    {
-                        XEvent nextEvent;
-                        XPeekEvent(CommonRenderingContext::ourDisplay, &nextEvent);
+                    case KeyRelease:
+                        if (XEventsQueued(CommonRenderingContext::ourDisplay, QueuedAfterReading)) // check for key repeat
+                        {
+                            XEvent nextEvent;
+                            XPeekEvent(CommonRenderingContext::ourDisplay, &nextEvent);
 
-                        if (nextEvent.type == KeyPress &&
-                            nextEvent.xkey.time == ev.xkey.time &&
-                            nextEvent.xkey.keycode == ev.xkey.keycode) {
-                            // key wasn't actually released
+                            if (nextEvent.type == KeyPress &&
+                                nextEvent.xkey.time == ev.xkey.time &&
+                                nextEvent.xkey.keycode == ev.xkey.keycode) {
+                                // key wasn't actually released
 
-                            XNextEvent(CommonRenderingContext::ourDisplay, &nextEvent); // consume the event from queue
+                                XNextEvent(CommonRenderingContext::ourDisplay, &nextEvent); // consume the event from queue
 
-                            break;
+                                break;
+                            }
                         }
+
+                        window = locateWindow(ev.xkey.window);
+                        window->onKeyUp(AInput::fromNative(ev.xkey.keycode));
+                        break;
+
+                    case ConfigureNotify: {
+                        window = locateWindow(ev.xconfigure.window);
+                        glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
+                        if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
+                            AUI_EMIT_FOREIGN_SIGNAL(window)->resized(size.x, size.y);
+                            window->AViewContainer::setSize(size);
+                        }
+                        if (auto w = _cast<ACustomWindow>(window)) {
+                            w->handleXConfigureNotify();
+                        }
+                        window->mRedrawFlag = false;
+                        window->redraw();
+
+                        XSyncValue syncValue;
+                        XSyncIntsToValue(&syncValue,
+                                        window->mXsyncRequestCounter.lo,
+                                        window->mXsyncRequestCounter.hi);
+                        XSyncSetCounter(CommonRenderingContext::ourDisplay, window->mXsyncRequestCounter.counter, syncValue);
+
+                        break;
                     }
 
-                    window = locateWindow(ev.xkey.window);
-                    window->onKeyUp(AInput::fromNative(ev.xkey.keycode));
-                    break;
+                    case MappingNotify:
+                        XRefreshKeyboardMapping(&ev.xmapping);
+                        break;
 
-                case ConfigureNotify: {
-                    window = locateWindow(ev.xconfigure.window);
-                    glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
-                    if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
-                        AUI_EMIT_FOREIGN_SIGNAL(window)->resized(size.x, size.y);
-                        window->AViewContainer::setSize(size);
+                    case MotionNotify: {
+                        window = locateWindow(ev.xmotion.window);
+                        window->onPointerMove({ev.xmotion.x, ev.xmotion.y}, {});
+                        AUI_NULLSAFE(window->getCursor())->applyNativeCursor(window.get());
+                        break;
                     }
-                    if (auto w = _cast<ACustomWindow>(window)) {
-                        w->handleXConfigureNotify();
+                    case ButtonPress: {
+                        window = locateWindow(ev.xbutton.window);
+
+                        const auto SCROLL = 11_pt * 3.f;
+
+                        switch (ev.xbutton.button) {
+                            case 1:
+                            case 2:
+                            case 3:
+                                window->onPointerPressed({
+                                    .position = { ev.xbutton.x, ev.xbutton.y },
+                                    .pointerIndex = APointerIndex::button(
+                                            static_cast<AInput::Key>(AInput::LBUTTON + ev.xbutton.button - 1))
+                                });
+                                break;
+                            case 4: // wheel down
+                                window->onScroll({                     // TODO libinput
+                                    .origin = {ev.xbutton.x, ev.xbutton.y},  //
+                                    .delta = { 0, -SCROLL }                     //
+                                });                                          //
+                                break;                                       //
+                            case 5: // wheel up                              //
+                                window->onScroll({                     //
+                                    .origin = {ev.xbutton.x, ev.xbutton.y},  //
+                                    .delta = { 0, SCROLL }                      //
+                                });                                          //
+                                break;
+                        }
+                        break;
                     }
-                    window->mRedrawFlag = false;
-                    window->redraw();
-
-                    XSyncValue syncValue;
-                    XSyncIntsToValue(&syncValue,
-                                     window->mXsyncRequestCounter.lo,
-                                     window->mXsyncRequestCounter.hi);
-                    XSyncSetCounter(CommonRenderingContext::ourDisplay, window->mXsyncRequestCounter.counter, syncValue);
-
-                    break;
-                }
-
-                case MappingNotify:
-                    XRefreshKeyboardMapping(&ev.xmapping);
-                    break;
-
-                case MotionNotify: {
-                    window = locateWindow(ev.xmotion.window);
-                    window->onPointerMove({ev.xmotion.x, ev.xmotion.y}, {});
-                    AUI_NULLSAFE(window->getCursor())->applyNativeCursor(window.get());
-                    break;
-                }
-                case ButtonPress: {
-                    window = locateWindow(ev.xbutton.window);
-
-                    const auto SCROLL = 11_pt * 3.f;
-
-                    switch (ev.xbutton.button) {
-                        case 1:
-                        case 2:
-                        case 3:
-                            window->onPointerPressed({
+                    case ButtonRelease: {
+                        if (ev.xbutton.button < 4) {
+                            window = locateWindow(ev.xbutton.window);
+                            window->onPointerReleased({
                                 .position = { ev.xbutton.x, ev.xbutton.y },
                                 .pointerIndex = APointerIndex::button(
                                         static_cast<AInput::Key>(AInput::LBUTTON + ev.xbutton.button - 1))
                             });
-                            break;
-                        case 4: // wheel down
-                            window->onScroll({                     // TODO libinput
-                                .origin = {ev.xbutton.x, ev.xbutton.y},  //
-                                .delta = { 0, -SCROLL }                     //
-                            });                                          //
-                            break;                                       //
-                        case 5: // wheel up                              //
-                            window->onScroll({                     //
-                                .origin = {ev.xbutton.x, ev.xbutton.y},  //
-                                .delta = { 0, SCROLL }                      //
-                            });                                          //
-                            break;
-                    }
-                    break;
-                }
-                case ButtonRelease: {
-                    if (ev.xbutton.button < 4) {
-                        window = locateWindow(ev.xbutton.window);
-                        window->onPointerReleased({
-                             .position = { ev.xbutton.x, ev.xbutton.y },
-                             .pointerIndex = APointerIndex::button(
-                                     static_cast<AInput::Key>(AInput::LBUTTON + ev.xbutton.button - 1))
-                        });
-                    }
-                    break;
-                }
-
-                case PropertyNotify: {
-                    window = locateWindow(ev.xproperty.window);
-                    if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
-                        auto maximized = window->isMaximized();
-                        if (maximized != window->mWasMaximized) {
-                            if (window->mWasMaximized) {
-                                AUI_EMIT_FOREIGN(window, restored);
-                            } else {
-                                AUI_EMIT_FOREIGN(window, maximized);
-                            }
-                            window->mWasMaximized = maximized;
                         }
-                    }
-                    break;
-                }
-
-                case SelectionClear: {
-                    // lost clipboard ownership -> clean up
-                    mXClipboardText.clear();
-                    break;
-                }
-
-                case SelectionRequest: {
-                    if (ev.xselectionrequest.property == None) {
                         break;
                     }
 
-
-                    char* targetName = XGetAtomName(CommonRenderingContext::ourDisplay, ev.xselectionrequest.target);
-                    char* propertyName = XGetAtomName(CommonRenderingContext::ourDisplay, ev.xselectionrequest.property);
-                    ALogger::info("{}: {}"_format(targetName, propertyName));
-                    XFree(targetName);
-                    XFree(propertyName);
-                    if (ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.utf8String ||
-                        ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.textPlain ||
-                        ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.textPlainUtf8) { // check for UTF8_STRING
-                        XChangeProperty(CommonRenderingContext::ourDisplay,
-                                        ev.xselectionrequest.requestor,
-                                        ev.xselectionrequest.property,
-                                        ev.xselectionrequest.target,
-                                        8,
-                                        PropModeReplace,
-                                        (unsigned char*) mXClipboardText.c_str(),
-                                        mXClipboardText.length());
-                    } else if (ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.targets) { // data type request
-                        Atom atoms[] = {
-                                XInternAtom(CommonRenderingContext::ourDisplay, "TIMESTAMP", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "TARGETS", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "SAVE_TARGETS", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "MULTIPLE", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "STRING", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "UTF8_STRING", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "text/plain", false),
-                                XInternAtom(CommonRenderingContext::ourDisplay, "text/plain;charset=utf-8", false),
-                        };
-                        XChangeProperty(CommonRenderingContext::ourDisplay,
-                                        ev.xselectionrequest.requestor,
-                                        ev.xselectionrequest.property,
-                                        ev.xselectionrequest.target,
-                                        8,
-                                        PropModeReplace,
-                                        (unsigned char*) atoms,
-                                        sizeof(atoms));
+                    case PropertyNotify: {
+                        window = locateWindow(ev.xproperty.window);
+                        if (ev.xproperty.atom == CommonRenderingContext::ourAtoms.netWmState) {
+                            auto maximized = window->isMaximized();
+                            if (maximized != window->mWasMaximized) {
+                                if (window->mWasMaximized) {
+                                    AUI_EMIT_FOREIGN(window, restored);
+                                } else {
+                                    AUI_EMIT_FOREIGN(window, maximized);
+                                }
+                                window->mWasMaximized = maximized;
+                            }
+                        }
+                        break;
                     }
 
-                    XSelectionEvent ssev;
-                    ssev.type = SelectionNotify;
-                    ssev.requestor = ev.xselectionrequest.requestor;
-                    ssev.selection = ev.xselectionrequest.selection;
-                    ssev.target = ev.xselectionrequest.target;
-                    ssev.property = ev.xselectionrequest.property;
-                    ssev.time = ev.xselectionrequest.time;
+                    case SelectionClear: {
+                        // lost clipboard ownership -> clean up
+                        mXClipboardText.clear();
+                        break;
+                    }
 
-                    XSendEvent(CommonRenderingContext::ourDisplay, ev.xselectionrequest.requestor, True, NoEventMask, (XEvent *)&ssev);
-                    break;
+                    case SelectionRequest: {
+                        if (ev.xselectionrequest.property == None) {
+                            break;
+                        }
+
+
+                        char* targetName = XGetAtomName(CommonRenderingContext::ourDisplay, ev.xselectionrequest.target);
+                        char* propertyName = XGetAtomName(CommonRenderingContext::ourDisplay, ev.xselectionrequest.property);
+                        ALogger::info("{}: {}"_format(targetName, propertyName));
+                        XFree(targetName);
+                        XFree(propertyName);
+                        if (ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.utf8String ||
+                            ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.textPlain ||
+                            ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.textPlainUtf8) { // check for UTF8_STRING
+                            XChangeProperty(CommonRenderingContext::ourDisplay,
+                                            ev.xselectionrequest.requestor,
+                                            ev.xselectionrequest.property,
+                                            ev.xselectionrequest.target,
+                                            8,
+                                            PropModeReplace,
+                                            (unsigned char*) mXClipboardText.c_str(),
+                                            mXClipboardText.length());
+                        } else if (ev.xselectionrequest.target == CommonRenderingContext::ourAtoms.targets) { // data type request
+                            Atom atoms[] = {
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "TIMESTAMP", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "TARGETS", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "SAVE_TARGETS", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "MULTIPLE", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "STRING", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "UTF8_STRING", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "text/plain", false),
+                                    XInternAtom(CommonRenderingContext::ourDisplay, "text/plain;charset=utf-8", false),
+                            };
+                            XChangeProperty(CommonRenderingContext::ourDisplay,
+                                            ev.xselectionrequest.requestor,
+                                            ev.xselectionrequest.property,
+                                            ev.xselectionrequest.target,
+                                            8,
+                                            PropModeReplace,
+                                            (unsigned char*) atoms,
+                                            sizeof(atoms));
+                        }
+
+                        XSelectionEvent ssev;
+                        ssev.type = SelectionNotify;
+                        ssev.requestor = ev.xselectionrequest.requestor;
+                        ssev.selection = ev.xselectionrequest.selection;
+                        ssev.target = ev.xselectionrequest.target;
+                        ssev.property = ev.xselectionrequest.property;
+                        ssev.time = ev.xselectionrequest.time;
+
+                        XSendEvent(CommonRenderingContext::ourDisplay, ev.xselectionrequest.requestor, True, NoEventMask, (XEvent *)&ssev);
+                        break;
+                    }
                 }
-            }
+            });
         }
 
         {
@@ -626,7 +628,9 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                 if (window->mRedrawFlag) {
                     window->mRedrawFlag = false;
                     AWindow::currentWindowStorage() = window.get();
-                    window->redraw();
+                    mWatchdog.runOperation([&] {
+                        window->redraw();
+                    });
                 }
             }
         }
