@@ -133,6 +133,18 @@ else()
     set(AUI_COMPILER_MSVC 0 CACHE INTERNAL "Compiler")
 endif()
 
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)")
+    set(AUI_ARCH_X86 1 CACHE INTERNAL "Arch")
+else()
+    set(AUI_ARCH_X86 0 CACHE INTERNAL "Arch")
+endif()
+
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(amd64)|(AMD64)")
+    set(AUI_ARCH_X86_64 1 CACHE INTERNAL "Arch")
+else()
+    set(AUI_ARCH_X86_64 0 CACHE INTERNAL "Arch")
+endif()
+
 set(AUI_EXCLUDE_PLATFORMS ${AUI_EXCLUDE_PLATFORMS} CACHE INTERNAL "")
 
 # determine compiler home dir for mingw when crosscompiling

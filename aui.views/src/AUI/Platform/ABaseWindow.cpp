@@ -182,6 +182,9 @@ void ABaseWindow::closeOverlappingSurfacesOnClick() {
 }
 
 void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
+#if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
+    AWindow::getWindowManager().watchdog().runOperation([&] {
+#endif
     mMousePos = event.position;
     closeOverlappingSurfacesOnClick();
     mPreventClickOnPointerRelease = false;
@@ -232,9 +235,15 @@ void ABaseWindow::onPointerPressed(const APointerPressedEvent& event) {
         mLastPosition = event.position;
     }
     AMenu::close();
+#if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
+    });
+#endif
 }
 
 void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
+#if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
+    AWindow::getWindowManager().watchdog().runOperation([&] {
+#endif
     APointerReleasedEvent copy = event;
     copy.triggerClick = !mPreventClickOnPointerRelease.valueOr(true);
     mPreventClickOnPointerRelease.reset();
@@ -262,6 +271,9 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
 
     // AView::onPointerMove handles cursor shape; need extra call in order to flush
     forceUpdateCursor();
+#if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
+    });
+#endif
 }
 
 void ABaseWindow::forceUpdateCursor() {
@@ -274,6 +286,9 @@ void ABaseWindow::onScroll(const AScrollEvent& event) {
 }
 
 void ABaseWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
+#if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
+    AWindow::getWindowManager().watchdog().runOperation([&] {
+#endif
     mMousePos = pos;
     mCursor = ACursor::DEFAULT;
 
@@ -299,6 +314,9 @@ void ABaseWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     AViewContainer::onPointerMove(pos, event);
 
     emit mouseMove(pos);
+#if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
+    });
+#endif
 }
 
 void ABaseWindow::onKeyDown(AInput::Key key) {
@@ -327,6 +345,9 @@ void ABaseWindow::flagUpdateLayout() {
 }
 
 void ABaseWindow::render() {
+#if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
+    AWindow::getWindowManager().watchdog().runOperation([&] {
+#endif
     mScrolls.erase(std::remove_if(mScrolls.begin(), mScrolls.end(), [&](Scroll& scroll) {
         auto delta = scroll.scroller.gatherKineticScrollValue();
         if (!delta) {
@@ -351,6 +372,9 @@ void ABaseWindow::render() {
     if (auto v = mProfiledView.lock()) {
         AViewProfiler::displayBoundsOn(*v);
     }
+#if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
+    });
+#endif
 }
 
 ABaseWindow*& ABaseWindow::currentWindowStorage() {
