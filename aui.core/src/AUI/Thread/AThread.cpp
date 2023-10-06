@@ -21,7 +21,6 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AMap.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/Platform/win32/WinHandle.h>
 #include "AUI/Platform/AStacktrace.h"
 #include "AUI/Thread/AFuture.h"
 #include "AUI/Thread/AMutexWrapper.h"
@@ -29,15 +28,14 @@
 #include <AUI/Thread/AConditionVariable.h>
 #include <cstdint>
 #include <functional>
-#include <minwindef.h>
 #include <mutex>
-#include <processthreadsapi.h>
 #include <thread>
-#include <winnt.h>
 
 #if AUI_PLATFORM_WIN
 #include <Windows.h>
+#include <processthreadsapi.h>
 #include <AUI/Platform/ErrorToException.h>
+#include <AUI/Platform/win32/WinHandle.h>
 
 
 void setThreadNameImpl(HANDLE handle, const AString& name) {
