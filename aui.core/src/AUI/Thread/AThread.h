@@ -115,12 +115,6 @@ public:
         return mThreadName;
     }
 
-     /**
-     * @brief Retrieve stacktrace of the thread.
-     */
-   [[nodiscard]]
-   AStacktrace threadStacktrace() const;
-        
 protected:
     /**
      * @brief Thread ID.

@@ -20,7 +20,6 @@
 
 #include <AUI/Platform/AProgramModule.h>
 #include "AFatalException.h"
-#include "AUI/Thread/AThread.h"
 #include "AUI/Traits/memory.h"
 #include "AUI/Logging/ALogger.h"
 
@@ -65,18 +64,7 @@ static void unblockSignal(int signum __attribute__((__unused__)))
     sigaddset(&sigs, signum);
     sigprocmask(SIG_UNBLOCK, &sigs, NULL);
 }
-
-namespace aui::impl::AThread {
-    void executeForcedPayload();
-}
-
 static void onSignal(int c, siginfo_t * info, void *_p __attribute__ ((__unused__))) {
-    if (c == SIGUSR1) {
-        // custom payload execution (AThread::threadStacktrace())
-        aui::impl::AThread::executeForcedPayload();
-        unblockSignal(SIGUSR1);
-        return;
-    }
     const char* signalName = strsignal(c);
     if (!signalName) signalName = "unknown signal";
     AFatalException e(signalName, c);
@@ -143,7 +131,6 @@ void aui_init_signal_handler() {
     sigaction(SIGFPE, &act, nullptr);
     sigaction(SIGSEGV, &act, nullptr);
     sigaction(SIGABRT, &act, nullptr); // for assertions
-    sigaction(SIGUSR1, &act, nullptr); // custom payloads, such as AThread::threadStacktrace
 #else
 
     signal(SIGILL, onSignal);
