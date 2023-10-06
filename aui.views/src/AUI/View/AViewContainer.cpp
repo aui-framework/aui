@@ -160,7 +160,7 @@ void AViewContainer::removeView(size_t index) {
 
 void AViewContainer::render() {
     AView::render();
-    drawViews(mViews.begin(), mViews.end());
+    renderChildren();
 }
 
 void AViewContainer::onMouseEnter() {

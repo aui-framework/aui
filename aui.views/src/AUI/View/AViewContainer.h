@@ -94,6 +94,10 @@ public:
 
     void render() override;
 
+    void renderChildren() {
+        drawViews(mViews.begin(), mViews.end());
+    }
+
     void onMouseEnter() override;
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
