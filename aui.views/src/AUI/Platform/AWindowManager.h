@@ -51,6 +51,9 @@ public:
     AWindowManager();
     ~AWindowManager() override;
 
+    AWatchdog& watchdog() noexcept {
+        return mWatchdog;
+    }
 
     void removeAllWindows() {
         mWindows.clear();

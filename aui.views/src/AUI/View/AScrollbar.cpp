@@ -130,7 +130,7 @@ void AScrollbar::updateScrollHandleSize() {
                     break;
             }
 
-            emit scrolled;
+            emit scrolled(mCurrentScroll);
         }
     }
 

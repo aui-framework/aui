@@ -25,6 +25,9 @@ class AScrollAreaContainer;
 /**
  * @brief A container with vertical and horizontal scrollbars.
  * @ingroup useful_views
+ * @details
+ * AScrollArea or some of it's parents should have expanding, or fixed size, or max size to be set, otherwise it would
+ * not work as expected.
  */
 class API_AUI_VIEWS AScrollArea: public AViewContainer {
 public:
@@ -78,7 +81,7 @@ public:
      *        is already fully visible, then the scroll is not performed at all.
      */
     void scrollTo(const _<AView>& target, bool nearestBorder = true);
-    
+
     /**
      * @see mIsWheelScrollable
      */
@@ -103,7 +106,7 @@ public:
         }
 
         Builder& withExternalHorizontalScrollbar(_<AScrollbar> externalHorizontalScrollbar) {
-                mExternalHorizontalScrollbar = std::move(externalHorizontalScrollbar);
+            mExternalHorizontalScrollbar = std::move(externalHorizontalScrollbar);
             return *this;
         }
 
@@ -129,6 +132,16 @@ public:
         }
     };
 
+    const _<AScrollbar>& verticalScrollbar() const {
+        return mVerticalScrollbar;
+    }
+
+    const _<AScrollbar>& horizontalScrollbar() const {
+        return mHorizontalScrollbar;
+    }
+
+protected:
+    explicit AScrollArea(const Builder& builder);
 
 private:
     _<AScrollAreaContainer> mContentContainer;
@@ -139,7 +152,5 @@ private:
      * @brief Determines whether AScrollArea can be scrolled with mouse wheel or can be scrolled with touch only.
      */
     bool mIsWheelScrollable = true;
-
-    explicit AScrollArea(const Builder& builder);
 };
 

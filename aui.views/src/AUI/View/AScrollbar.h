@@ -33,8 +33,7 @@ public:
 
     }
 };
-class AScrollbarHandle: public AView {
-friend class API_AUI_VIEWS AScrollbar;
+class AScrollbarHandle: public AView {friend class API_AUI_VIEWS AScrollbar;
 private:
     int mScrollOffset = 0;
     bool mDragging = false;
@@ -125,14 +124,6 @@ public:
 
     void scrollToEnd();
 
-signals:
-
-    emits<int> scrolled;
-
-    emits<int> updatedMaxScroll;
-
-    emits<> triggeredManually;
-
     float getAvailableSpaceForSpacer();
 
     void updateScrollHandleOffset(int max);
@@ -142,6 +133,14 @@ signals:
     void setSize(glm::ivec2 size) override;
 
     static const _<ATimer>& buttonTimer();
+
+signals:
+
+    emits<int> scrolled;
+
+    emits<int> updatedMaxScroll;
+
+    emits<> triggeredManually;
 
 protected:
     ALayoutDirection mDirection;

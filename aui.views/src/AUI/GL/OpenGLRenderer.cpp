@@ -64,6 +64,7 @@ struct GradientShaderHelper {
         shader.set(aui::ShaderUniforms::COLOR_TR, brush.topRightColor);
         shader.set(aui::ShaderUniforms::COLOR_BL, brush.bottomLeftColor);
         shader.set(aui::ShaderUniforms::COLOR_BR, brush.bottomRightColor);
+        
     }
 };
 
@@ -342,6 +343,13 @@ void OpenGLRenderer::drawRectImpl(const glm::vec2& position, const glm::vec2& si
     mTempVao.bind();
 
     mTempVao.insert(0, getVerticesForRect(position, size));
+    
+
+    mTempVao.indices(RECT_INDICES);
+    mTempVao.drawElements();
+}
+
+void OpenGLRenderer::identityUv() {
     const glm::vec2 uvs[] = {
         {0, 1},
         {1, 1},
@@ -349,9 +357,6 @@ void OpenGLRenderer::drawRectImpl(const glm::vec2& position, const glm::vec2& si
         {1, 0}
     };
     mTempVao.insert(1, uvs);
-
-    mTempVao.indices(RECT_INDICES);
-    mTempVao.drawElements();
 }
 
 void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
@@ -365,6 +370,7 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
             CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
+    identityUv();
 
     mRoundedSolidShader.use();
     mRoundedSolidShader.set(aui::ShaderUniforms::SIZE, 2.f * radius / size);
@@ -384,6 +390,7 @@ void OpenGLRenderer::drawRoundedRectAntialiased(const ABrush& brush,
     }, brush);
 
     uploadToShaderCommon();
+    identityUv();
 
     gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
     gl::Shader::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, glm::vec2{0, 0});
@@ -405,6 +412,7 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
             CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
+    identityUv();
     mTempVao.bind();
 
     //rect.insert(0, getVerticesForRect(x + 0.25f + lineWidth * 0.5f, y + 0.25f + lineWidth * 0.5f, width - (0.25f + lineWidth * 0.5f), height - (0.75f + lineWidth * 0.5f)));
@@ -449,6 +457,7 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
             CustomShaderHelper{},
     }, brush);
 
+    identityUv();
     glm::vec2 innerSize = { size.x - borderWidth * 2,
                             size.y - borderWidth * 2 };
 
@@ -467,6 +476,7 @@ void OpenGLRenderer::drawBoxShadow(const glm::vec2& position,
                                    const glm::vec2& size,
                                    float blurRadius,
                                    const AColor& color) {
+    identityUv();
     mBoxShadowShader.use();
     mBoxShadowShader.set(aui::ShaderUniforms::SIGMA, blurRadius / 2.f);
     mBoxShadowShader.set(aui::ShaderUniforms::LOWER, position + size);
