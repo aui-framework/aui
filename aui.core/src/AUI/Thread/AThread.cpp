@@ -21,19 +21,23 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AMap.h>
 #include <AUI/Logging/ALogger.h>
-
+#include <AUI/Platform/win32/WinHandle.h>
 #include "AUI/Platform/AStacktrace.h"
 #include "AUI/Thread/AFuture.h"
 #include "AUI/Thread/AMutexWrapper.h"
 #include "IEventLoop.h"
 #include <AUI/Thread/AConditionVariable.h>
+#include <cstdint>
 #include <functional>
+#include <minwindef.h>
 #include <mutex>
-#include <pthread.h>
+#include <processthreadsapi.h>
 #include <thread>
+#include <winnt.h>
 
 #if AUI_PLATFORM_WIN
-#include <windows.h>
+#include <Windows.h>
+#include <AUI/Platform/ErrorToException.h>
 
 
 void setThreadNameImpl(HANDLE handle, const AString& name) {
@@ -100,12 +104,53 @@ AStacktrace AAbstractThread::threadStacktrace() const {
 		std::unique_lock lock(payloads);
 		AFuture<AStacktrace> future;
 		payloads.value()[mId] = [future] {
+#if AUI_PLATFORM_WIN
+			  future.supplyResult(AStacktrace::capture(1));
+#else
 			  future.supplyResult(AStacktrace::capture(6));
+#endif
 		};
 		lock.unlock();
+#if AUI_PLATFORM_WIN
+		aui::win32::Handle h = OpenThread(THREAD_SUSPEND_RESUME | THREAD_GET_CONTEXT | THREAD_SET_CONTEXT, false, reinterpret_cast<const DWORD&>(mId));
+		if (!h) {
+        aui::impl::lastErrorToException("OpenThread returned null handle");
+		}
+		if (SuspendThread(h) == -1) {
+        aui::impl::lastErrorToException("SuspendThread failed");
+		}
+		CONTEXT context;
+		aui::zero(context);
+		context.ContextFlags = CONTEXT_FULL;
+		if (GetThreadContext(h, &context) == 0) {
+        aui::impl::lastErrorToException("GetThreadContext failed");
+		}
+		ARaiiHelper contextReturner = [&] {
+				SetThreadContext(h, &context);
+		};
+#if AUI_ARCH_X86_64
+	#define REG_SP Rsp
+	#define REG_IP Rip
+#else
+  #define REG_SP Esp
+	#define REG_IP Eip
+#endif    
+		{
+			  auto contextCopy = context;
+				auto& stackPointer = (reinterpret_cast<std::uintptr_t*&>(contextCopy. REG_SP));
+				*(--stackPointer) = contextCopy. REG_IP;
+				contextCopy. REG_IP = reinterpret_cast<const decltype(contextCopy. REG_IP)>(&aui::impl::AThread::executeForcedPayload);
+				SetThreadContext(h, &contextCopy);
+				if (ResumeThread(h) == -1) {
+					aui::impl::lastErrorToException("ResumeThread failed");
+				}
+		}	
+//		SuspendThread()
+#else
 		if (pthread_kill(reinterpret_cast<const pthread_t&>(mId), SIGUSR1) != 0) {
 			  throw AException("unable to acquire other thread stacktrace: pthread_kill failed");
 		}
+#endif
 		return *future;
 }
 
@@ -143,7 +188,6 @@ void AThread::start()
 		auto f = std::move(mFunctor);
 		mFunctor = nullptr;
 		mId = std::this_thread::get_id();
-
 		try {
 			f();
 		} catch (const AException& e) {

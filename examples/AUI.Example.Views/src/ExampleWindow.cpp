@@ -229,12 +229,7 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                                             assert(("assertion fail", false));
                                         }),
                                         _new<AButton>("Cause hang").connect(&AView::clicked, this, [&] {
-                                            auto v = _new<AMutex>();
-                                            auto f = async {
-                                                v->lock();
-                                            };
-                                            *f;
-                                            v->lock();
+                                            for (;;);
                                         }),
                                         _new<AButton>("Cause access violation").connect(&AView::clicked, this, [&] {
                                             try {

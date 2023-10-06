@@ -150,7 +150,6 @@ void aui_init_signal_handler() {
     signal(SIGFPE, onSignal);
     signal(SIGSEGV, onSignal);
     signal(SIGABRT, onSignal); // for assertions
-    signal(SIGUSR1, onSignal); // custom payloads, such as AThread::threadStacktrace
 #endif
 }
 
