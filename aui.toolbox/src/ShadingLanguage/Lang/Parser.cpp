@@ -32,6 +32,8 @@
 #include "AUI/IO/AFileInputStream.h"
 #include "ShadingLanguage/Lang/AST/ImportNode.h"
 #include <range/v3/view.hpp>
+#include <range/v3/algorithm.hpp>
+
 
 class Terminated {};
 template<typename variant, typename type>
@@ -762,7 +764,7 @@ _<ExpressionNode> Parser::parseExpression() {
                     throw AException{};
                 }
                 if (!binaryOperators.empty()) {
-                    return std::ranges::min_element(binaryOperators, [](const auto& l, const auto& r) {
+                    return ranges::min_element(binaryOperators, [](const auto& l, const auto& r) {
                         return l.priority <= r.priority;
                     })->op;
                 }
