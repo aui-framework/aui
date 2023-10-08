@@ -23,7 +23,6 @@
 #include "ARenderingContextOptions.h"
 #include "AUI/Traits/callables.h"
 #include "AUI/Util/ARaiiHelper.h"
-#include "AUI/Platform/Entry.h"
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Action/AMenu.h>
@@ -193,7 +192,9 @@ AWindowManager::AWindowManager(): mHandle(this) {
             std::exit(-1);
         }
     });
+#if !AUI_DEBUG
     mHangTimer->start();
+#endif
 }
 
 
@@ -280,46 +281,27 @@ void AWindow::forceUpdateCursor() {
 }
 
 void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
-    auto commandLineRenderer = aui::args().value("aui-renderer");
     for (const auto& graphicsApi : ARenderingContextOptions::get().initializationOrder) {
         try {
-            bool v = std::visit(aui::lambda_overloaded{
-                    [&](const ARenderingContextOptions::DirectX11&) {
+            std::visit(aui::lambda_overloaded{
+                    [](const ARenderingContextOptions::DirectX11&) {
                         throw AException("DirectX is not supported");
-
-                        if (commandLineRenderer && *commandLineRenderer != "dx11") {
-                            return false;
-                        }
-                        return true;
                     },
                     [&](const ARenderingContextOptions::OpenGL& config) {
-                        if (commandLineRenderer && *commandLineRenderer != "gl") {
-                            return false;
-                        }
-
                         auto context = std::make_unique<OpenGLRenderingContext>(config);
                         context->init(init);
                         init.setRenderingContext(std::move(context));
-                        return true;
                     },
                     [&](const ARenderingContextOptions::Software&) {
-                        if (commandLineRenderer && *commandLineRenderer != "soft") {
-                            return false;
-                        }
-
                         auto context = std::make_unique<SoftwareRenderingContext>();
                         context->init(init);
                         init.setRenderingContext(std::move(context));
-                        return true;
                     },
             }, graphicsApi);
-            if (v) return;
+            return;
         } catch (const AException& e) {
             ALogger::warn("AWindowManager") << "Unable to initialize graphics API:" << e;
         }
-    }
-    if (commandLineRenderer) {
-        throw AException("unable to initialize graphics (--aui-renderer={})"_format(*commandLineRenderer));
     }
     throw AException("unable to initialize graphics");
 }

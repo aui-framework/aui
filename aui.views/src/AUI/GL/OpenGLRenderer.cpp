@@ -796,7 +796,7 @@ void OpenGLRenderer::tryEnableFramebuffer(glm::uvec2 windowSize) {
         framebuffer.resize(windowSize);
         auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
         framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
-        if constexpr (true) {
+        if constexpr (false) {
             auto depth = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
             framebuffer.attach(depth, 0x84F9 /* GL_DEPTH_STENCIL */);
         } else {
@@ -819,13 +819,15 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
             fb->resize(windowSize);
         }
         fb->bind();
+        glViewport(0, 0, fb->supersampledSize().x, fb->supersampledSize().y);
+    } else {
+        glViewport(0, 0, windowSize.x, windowSize.y);
     }
     gl::State::activeTexture(0);
     gl::State::bindTexture(GL_TEXTURE_2D, 0);
     gl::State::bindVertexArray(0);
     gl::State::useProgram(0);
 
-    glViewport(0, 0, windowSize.x, windowSize.y);
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
@@ -849,7 +851,7 @@ void OpenGLRenderer::endPaint() {
     if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
         glBlitFramebuffer(0, 0,                       // src pos
-                          fb->size().x, fb->size().y, // src size
+                          fb->supersampledSize().x, fb->supersampledSize().y, // src size
                           0, 0,                       // dst pos
                           fb->size().x, fb->size().y, // dst size
                           GL_COLOR_BUFFER_BIT,        // mask

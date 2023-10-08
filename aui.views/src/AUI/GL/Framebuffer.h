@@ -65,7 +65,7 @@ namespace gl {
         }
 
         [[nodiscard]]
-        glm::u32vec2 oversampledSize() const noexcept {
+        glm::u32vec2 supersampledSize() const noexcept {
             return mSize * mSupersamplingRatio;
         }
 
