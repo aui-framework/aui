@@ -169,7 +169,14 @@ inline void useAuislShader(gl::Program& out) {
     Fragment::setup(out.handle());
     out.compile();
 }
-
+struct UseRoundedRect {
+    UseRoundedRect() {
+        glEnable(GL_ALPHA_TEST);
+    }
+    ~UseRoundedRect() {
+        glDisable(GL_ALPHA_TEST);
+    }
+};
 }
 
 OpenGLRenderer::OpenGLRenderer() {
@@ -207,7 +214,7 @@ OpenGLRenderer::OpenGLRenderer() {
 }
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
-    return glm::ortho(0.f - 0.000001f, static_cast<float>(mWindow->getWidth()) + 0.000001f, static_cast<float>(mWindow->getHeight()) + 0.000001f, 0.f - 0.000001f);
+    return glm::ortho(0.1f, static_cast<float>(mWindow->getWidth()) - 0.2f, static_cast<float>(mWindow->getHeight()) - 0.2f, 0.1f);
 }
 
 void OpenGLRenderer::uploadToShaderCommon() {
@@ -220,11 +227,6 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
     float y = position.y;
     float w = x + size.x;
     float h = y + size.y;
-
-    x += 0.01f;
-    y += 0.01f;
-    w -= 0.01f;
-    h -= 0.01f;
 
     return
             {
@@ -271,6 +273,7 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
                                      glm::vec2 position,
                                      glm::vec2 size,
                                      float radius) {
+    UseRoundedRect r;
     std::visit(aui::lambda_overloaded {
             GradientShaderHelper(mRoundedGradientShader, mGradientTexture),
             UnsupportedBrushHelper<ATexturedBrush>(),
@@ -334,6 +337,7 @@ void OpenGLRenderer::drawRoundedRectBorder(const ABrush& brush,
                                            glm::vec2 size,
                                            float radius,
                                            int borderWidth) {
+    UseRoundedRect r;
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
@@ -796,9 +800,9 @@ void OpenGLRenderer::tryEnableFramebuffer(glm::uvec2 windowSize) {
         framebuffer.resize(windowSize);
         auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
         framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
-        if constexpr (false) {
+        if constexpr (true) {
             auto depth = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
-            framebuffer.attach(depth, 0x84F9 /* GL_DEPTH_STENCIL */);
+            framebuffer.attach(depth, GL_DEPTH_STENCIL_ATTACHMENT /* 0x84F9*/ /* GL_DEPTH_STENCIL */);
         } else {
             auto stencil = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::STENCIL8, gl::Multisampling::DISABLED>>();
             framebuffer.attach(stencil, GL_STENCIL_ATTACHMENT);
@@ -835,7 +839,7 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    //glAlphaFunc(GL_GREATER, 0.5f);
+    glAlphaFunc(GL_GREATER, 0.01f);
 
     // stencil
     glClearStencil(0);
