@@ -214,7 +214,7 @@ OpenGLRenderer::OpenGLRenderer() {
 }
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
-    return glm::ortho(0.1f, static_cast<float>(mWindow->getWidth()) - 0.2f, static_cast<float>(mWindow->getHeight()) - 0.2f, 0.1f);
+    return glm::ortho(0.0f, static_cast<float>(mWindow->getWidth()) - 0.0f, static_cast<float>(mWindow->getHeight()) - 0.0f, 0.0f, -1.f, 1.f);
 }
 
 void OpenGLRenderer::uploadToShaderCommon() {
@@ -839,7 +839,7 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glAlphaFunc(GL_GREATER, 0.01f);
+    // glAlphaFunc(GL_GREATER, 0.01f); // unsupported by renderdoc
 
     // stencil
     glClearStencil(0);

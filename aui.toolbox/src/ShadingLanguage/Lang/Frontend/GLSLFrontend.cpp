@@ -50,8 +50,8 @@ void GLSLFrontend::ensurePrecisionInserted() {
         // shitty compilers like adreno very do want extension definitions before any other tokens for no actual reason
         mPrecisionInsterted = true;
         mShaderOutput <<
-                     "precision mediump float;\n"
-                     "precision mediump int;\n"
+                     "precision highp float;\n"
+                     "precision highp int;\n"
                      ;
     }
 }
