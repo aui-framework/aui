@@ -14,8 +14,27 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-//
-// Created by alex2 on 04.09.2020.
-//
+#pragma once
 
-#include "AModelSelection.h"
+#include <Windows.h>
+#include "AUI/Thread/AThread.h"
+
+namespace aui::win32 {
+class Handle: public aui::noncopyable {
+public:
+    Handle(HANDLE handle): mHandle(handle) {}
+    ~Handle() {
+       CloseHandle(mHandle);
+    }
+ 
+    [[nodiscard]] 
+    operator HANDLE() const noexcept {
+        return mHandle; 
+    }
+    
+
+private:
+    HANDLE mHandle;
+
+};
+}

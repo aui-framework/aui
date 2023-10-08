@@ -18,6 +18,7 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "AListView.h"
 #include "ALabel.h"
+#include "AUI/Common/SharedPtrTypes.h"
 #include "AUI/Layout/AVerticalLayout.h"
 #include "AUI/Platform/AWindow.h"
 
@@ -65,10 +66,6 @@ public:
     size_t getIndex() const {
         return mIndex;
     }
-
-    int getContentMinimumHeight(ALayoutDirection layout) override {
-        return 40;
-    }
 };
 
 class AListItem: public ALabel, public ass::ISelectable
@@ -114,14 +111,6 @@ public:
         dynamic_cast<AListView*>(getParent()->getParent())->handleMouseDoubleClicked(this);
     }
 };
-
-
-
-int AListView::getContentMinimumHeight(ALayoutDirection layout)
-{
-	return 40;
-}
-
 
 AListView::~AListView()
 {
@@ -174,7 +163,7 @@ void AListView::handleMousePressed(AListItem* item) {
     if (!AInput::isKeyDown(AInput::LCONTROL) || !mAllowMultipleSelection) {
         clearSelection();
     }
-    mSelectionModel << AModelIndex(mContent->getIndex());
+    mSelectionModel << AListModelIndex(mContent->getIndex());
     item->setSelected(true);
 
     emit selectionChanged(getSelectionModel());
@@ -205,7 +194,7 @@ void AListView::removeItem(size_t at) {
 }
 
 void AListView::onDataCountChanged() {
-    updateLayout();
+    AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
     updateScrollbarDimensions();
 }
 
@@ -215,7 +204,7 @@ void AListView::onDataChanged() {
 
 void AListView::selectItem(size_t i) {
     clearSelection();
-    mSelectionModel = { AModelIndex(i) };
+    mSelectionModel = { AListModelIndex(i) };
     _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
 }
 

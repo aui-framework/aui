@@ -39,6 +39,7 @@
 #include "AUI/Util/AMetric.h"
 #include "AUI/Util/Factory.h"
 #include "ALabel.h"
+#include "glm/common.hpp"
 
 // windows.h
 #undef max
@@ -255,13 +256,13 @@ bool AView::hasFocus() const
 int AView::getMinimumWidth(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.x == 0 ? ((glm::max)(getContentMinimumWidth(layout), mMinSize.x) + mPadding.horizontal()) : mFixedSize.x);
+    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumWidth(layout), mMinSize.x, mMaxSize.x) + mPadding.horizontal()) : mFixedSize.x);
 }
 
 int AView::getMinimumHeight(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.y == 0 ? ((glm::max)(getContentMinimumHeight(layout), mMinSize.y) + mPadding.vertical()) : mFixedSize.y);
+    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumHeight(layout), mMinSize.y, mMaxSize.y) + mPadding.vertical()) : mFixedSize.y);
 }
 
 void AView::getTransform(glm::mat4& transform) const
@@ -282,8 +283,11 @@ void AView::pack()
 
 void AView::addAssName(const AString& assName)
 {
-    mAssNames << assName;
     assert(("empty ass name" && !assName.empty()));
+    if (mAssNames.contains(assName)) {
+        return;
+    }
+    mAssNames << assName;
     invalidateAssHelper();
 }
 
@@ -291,8 +295,8 @@ void AView::invalidateAssHelper() { mAssHelper = nullptr; }
 
 void AView::removeAssName(const AString& assName)
 {
-    mAssNames >> assName;
     assert(("empty ass name" && !assName.empty()));
+    mAssNames.removeAll(assName);
     invalidateAssHelper();
 }
 

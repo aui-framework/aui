@@ -236,8 +236,10 @@ protected:
 
     /**
      * @brief ASS class names.
+     * @details
+     * Needs keeping order.
      */
-    ASet<AString> mAssNames;
+    AVector<AString> mAssNames;
 
     void requestLayoutUpdate();
 
@@ -303,7 +305,7 @@ public:
     void popStencilIfNeeded();
 
     [[nodiscard]]
-    const ASet<AString>& getAssNames() const noexcept {
+    const AVector<AString>& getAssNames() const noexcept {
         return mAssNames;
     }
 
@@ -617,6 +619,7 @@ public:
 
     /**
      * @brief Fixed size.
+     * @return Fixed size. {0, 0} if unspecified.
      */
     const glm::ivec2& getFixedSize() {
         return mFixedSize;

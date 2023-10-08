@@ -78,6 +78,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
         mViews.insertAll(std::move(views));
     }
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::addView(const _<AView>& view) {
@@ -87,6 +88,7 @@ void AViewContainer::addView(const _<AView>& view) {
     AUI_NULLSAFE(mLayout)->addView(view);
     view->onViewGraphSubtreeChanged();
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::addViewCustomLayout(const _<AView>& view) {
@@ -96,6 +98,7 @@ void AViewContainer::addViewCustomLayout(const _<AView>& view) {
     AUI_NULLSAFE(mLayout)->addView(view);
     view->onViewGraphSubtreeChanged();
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::addView(size_t index, const _<AView>& view) {
@@ -104,6 +107,7 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
     AUI_NULLSAFE(mLayout)->addView(view, index);
     view->onViewGraphSubtreeChanged();
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::setLayout(_<ALayout> layout) {
@@ -117,6 +121,7 @@ void AViewContainer::setLayout(_<ALayout> layout) {
         }
     }
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::removeView(const _<AView>& view) {
@@ -125,6 +130,7 @@ void AViewContainer::removeView(const _<AView>& view) {
     if (!mLayout) return;
     mLayout->removeView(view, *index);
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::removeView(AView* view) {
@@ -140,6 +146,7 @@ void AViewContainer::removeView(AView* view) {
         }
     }
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::removeView(size_t index) {
@@ -148,11 +155,12 @@ void AViewContainer::removeView(size_t index) {
     if (mLayout)
         mLayout->removeView(view, index);
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::render() {
     AView::render();
-    drawViews(mViews.begin(), mViews.end());
+    renderChildren();
 }
 
 void AViewContainer::onMouseEnter() {

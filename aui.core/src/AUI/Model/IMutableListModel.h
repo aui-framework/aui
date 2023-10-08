@@ -17,21 +17,21 @@
 #pragma once
 
 #include <AUI/Common/ASignal.h>
-#include <AUI/Model/AModelSelection.h>
-#include "AModelRange.h"
+#include <AUI/Model/AListModelSelection.h>
+#include "AListModelRange.h"
 
 template<typename T>
 class IRemovableListModel: public virtual IListModel<T>
 {
 public:
     virtual ~IRemovableListModel() = default;
-    virtual void removeItems(const AModelRange<T>& items) = 0;
-    virtual void removeItems(const AModelSelection<T>& items) {
+    virtual void removeItems(const AListModelRange<T>& items) = 0;
+    virtual void removeItems(const AListModelSelection<T>& items) {
         for (const auto& r : items.ranges()) {
             removeItems(r);
         }
     }
-    virtual void removeItem(const AModelIndex& item) = 0;
+    virtual void removeItem(const AListModelIndex& item) = 0;
 
 };
 
@@ -41,6 +41,6 @@ class IValueMutableListModel: public virtual IListModel<T>
 {
 public:
     virtual ~IValueMutableListModel() = default;
-    virtual void setItem(const AModelIndex& index, const T& value) = 0;
+    virtual void setItem(const AListModelIndex& index, const T& value) = 0;
 
 };

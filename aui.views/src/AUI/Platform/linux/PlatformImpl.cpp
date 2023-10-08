@@ -37,6 +37,9 @@ float APlatform::getDpiRatio()
     char *type = NULL;
     float dpi = 1.f;
 
+    if (!resourceString) {
+        return dpi;
+    }
     do_once {
         XrmInitialize();
     };

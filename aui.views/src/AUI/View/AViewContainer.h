@@ -94,6 +94,10 @@ public:
 
     void render() override;
 
+    void renderChildren() {
+        drawViews(mViews.begin(), mViews.end());
+    }
+
     void onMouseEnter() override;
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
@@ -353,6 +357,10 @@ protected:
 
 signals:
     emits<ScrollbarAppearance> scrollbarAppearanceSet;
+    /**
+     * @brief Emitted when addView(s)/removeView/setLayout was called.
+     */
+    emits<> childrenChanged;
 
 private:
     _<ALayout> mLayout;

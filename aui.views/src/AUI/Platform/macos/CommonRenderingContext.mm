@@ -41,16 +41,19 @@ void CommonRenderingContext::init(const Init& init) {
     window.updateDpi();
     [nsWindow setContentSize:NSMakeSize(init.width / window.getDpiRatio(), init.height / window.getDpiRatio())];
 
-    auto view = [[MainView alloc] initWithWindow:&window];
-
-    [nsWindow setContentView:view];
-    [nsWindow makeFirstResponder:view];
-    [nsWindow setDelegate:delegate];
-    [nsWindow setAcceptsMouseMovedEvents:YES];
-    [nsWindow setRestorable:NO];
-    [nsWindow setTitle: [NSString stringWithUTF8String:(init.name.toStdString().c_str())]];
-    [view release];
-
+    @try {
+        auto view = [[MainView alloc] initWithWindow:&window];
+        [nsWindow setContentView:view];
+        [nsWindow makeFirstResponder:view];
+        [nsWindow setDelegate:delegate];
+        [nsWindow setAcceptsMouseMovedEvents:YES];
+        [nsWindow setRestorable:NO];
+        [nsWindow setTitle: [NSString stringWithUTF8String:(init.name.toStdString().c_str())]];
+        [view release];
+    } @catch (NSException* e) {
+        throw AException([[e reason] UTF8String]);
+    }
+    
     mWindow = &window;
 
 

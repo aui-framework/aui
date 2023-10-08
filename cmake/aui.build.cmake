@@ -133,6 +133,16 @@ else()
     set(AUI_COMPILER_MSVC 0 CACHE INTERNAL "Compiler")
 endif()
 
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
+    if (CMAKE_SIZEOF_VOID_P STREQUAL 8)
+        set(AUI_ARCH_X86_64 1 CACHE INTERNAL "Arch")
+        set(AUI_ARCH_X86 0 CACHE INTERNAL "Arch")
+    else()
+        set(AUI_ARCH_X86_64 0 CACHE INTERNAL "Arch")
+        set(AUI_ARCH_X86 1 CACHE INTERNAL "Arch")
+    endif()
+endif()
+
 set(AUI_EXCLUDE_PLATFORMS ${AUI_EXCLUDE_PLATFORMS} CACHE INTERNAL "")
 
 # determine compiler home dir for mingw when crosscompiling
@@ -476,6 +486,11 @@ function(aui_common AUI_MODULE_NAME)
             endif()
         ]])
     endif()
+    if (CMAKE_GENERATOR STREQUAL "Xcode")
+        if (BUILD_SHARED_LIBS)
+            message(WARNING "With Xcode and BUILD_SHARED_LIBS=TRUE you may be required to sign the frameworks.")
+        endif()
+    endif()
 endfunction(aui_common)
 
 
@@ -619,6 +634,7 @@ macro(_aui_provide_toolbox_for_host)
 cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
 set(CMAKE_CXX_STANDARD 20)
+set(BUILD_SHARED_LIBS FALSE)
 file(
         DOWNLOAD
         https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake
@@ -1264,6 +1280,10 @@ macro(aui_app)
         # Turn on ARC
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fobjc-arc")
 
+        if (NOT DEFINED AUI_IOS_CODE_SIGNING_REQUIRED)
+            set(AUI_IOS_CODE_SIGNING_REQUIRED YES)
+        endif()
+
         # Create the app target
         set_target_properties(${APP_TARGET} PROPERTIES
                 XCODE_ATTRIBUTE_DEBUG_INFORMATION_FORMAT "dwarf-with-dsym"
@@ -1279,8 +1299,8 @@ macro(aui_app)
                 XCODE_ATTRIBUTE_INSTALL_PATH "$(LOCAL_APPS_DIR)"
                 XCODE_ATTRIBUTE_ENABLE_TESTABILITY YES
                 XCODE_ATTRIBUTE_GCC_SYMBOLS_PRIVATE_EXTERN YES
+                XCODE_ATTRIBUTE_CODE_SIGNING_REQUIRED ${AUI_IOS_CODE_SIGNING_REQUIRED}
                 )
-
         # Include framework headers, needed to make "Build" Xcode action work.
         # "Archive" works fine just relying on default search paths as it has different
         # build product output directory.
@@ -1346,30 +1366,32 @@ macro(aui_app)
         exit 1 \;
         fi\"
         )
-
         # Codesign the framework in it's new spot
-        add_custom_command(
-                TARGET
-                ${APP_TARGET}
-                POST_BUILD COMMAND /bin/sh -c
-                \"COMMAND_DONE=0 \;
-                if codesign --force --verbose
-                ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
-                --sign ${APP_APPLE_SIGN_IDENTITY}
-        \&\>/dev/null \; then
-        COMMAND_DONE=1 \;
-        fi \;
-        if codesign --force --verbose
-        \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
-        --sign ${APP_APPLE_SIGN_IDENTITY}
-        \&\>/dev/null \; then
-        COMMAND_DONE=1 \;
-        fi \;
-        if [ \\$$COMMAND_DONE -eq 0 ] \; then
-        echo Framework codesign failed \;
-        exit 1 \;
-        fi\"
-        )
+        if (AUI_IOS_CODE_SIGNING_REQUIRED)
+            add_custom_command(
+                    TARGET
+                    ${APP_TARGET}
+                    POST_BUILD COMMAND /bin/sh -c
+                    \"COMMAND_DONE=0 \;
+                    if codesign --force --verbose
+                    ${_current_app_build_files}/\${CONFIGURATION}\${EFFECTIVE_PLATFORM_NAME}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+                    --sign ${APP_APPLE_SIGN_IDENTITY}
+            \&\>/dev/null \; then
+            COMMAND_DONE=1 \;
+            fi \;
+            if codesign --force --verbose
+            \${BUILT_PRODUCTS_DIR}/${APP_TARGET}.app/Frameworks/${FRAMEWORK_NAME}.framework
+            --sign ${APP_APPLE_SIGN_IDENTITY}
+            \&\>/dev/null \; then
+            COMMAND_DONE=1 \;
+            fi \;
+            if [ \\$$COMMAND_DONE -eq 0 ] \; then
+            echo Framework codesign failed \;
+            exit 1 \;
+            fi\"
+            )
+
+        endif()
 
         # Add a "PlugIns" folder as a kludge fix for how the XcTest package generates paths
         add_custom_command(

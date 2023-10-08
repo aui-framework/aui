@@ -67,6 +67,11 @@ namespace ass {
     struct PropertyListRecursive::ConditionalPropertyList {
         AAssSelector selector;
         PropertyListRecursive list;
+
+        template<typename... Declarations>
+        ConditionalPropertyList(AAssSelector selector, Declarations&&... declarations):
+                selector(std::move(selector)), list(std::forward<Declarations>(declarations)...)
+        {}
     };
 
     inline PropertyListRecursive::PropertyListRecursive() = default;

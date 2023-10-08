@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -14,4 +14,17 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-#include "AModelIndex.h"
+#pragma once
+#include "AWatchdog.h"
+
+bool AWatchdog::isHang() const noexcept {
+    // check without mutex lock is safe
+    if (!mBeginPoint) {
+        return false;
+    }
+    std::unique_lock lock(mSync);
+    if (!mBeginPoint) {
+        return false;
+    }
+    return std::chrono::high_resolution_clock::now() - *mBeginPoint >= mHangDuration;
+} 

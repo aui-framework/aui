@@ -484,9 +484,11 @@ void AWindowManager::loop() {
         if (GetMessage(&msg, nullptr, 0, 0) == 0) {
             break;
         }
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-        AThread::processMessages();
+        mWatchdog.runOperation([&] {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+            AThread::processMessages();
+        });
     }
 }
 

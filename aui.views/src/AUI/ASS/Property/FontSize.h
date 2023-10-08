@@ -40,7 +40,7 @@ namespace ass {
             FontSize mInfo;
 
         public:
-            Property(const FontSize& info) : mInfo(info) {
+            Property(FontSize info) : mInfo(info) {
 
             }
 

@@ -65,6 +65,7 @@ private:
                                           glm::vec2 size);
 
     void uploadToShaderCommon();
+    void identityUv();
 
     void endDraw(const ABrush& brush);
     void tryEnableFramebuffer(glm::uvec2 windowSize);

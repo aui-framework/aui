@@ -19,6 +19,10 @@
 //
 
 #include "AScrollArea.h"
+#include "AUI/Logging/ALogger.h"
+#include "AUI/View/AView.h"
+#include "AUI/View/AViewContainer.h"
+#include "glm/fwd.hpp"
 #include <AUI/Layout/AAdvancedGridLayout.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/Util/kAUI.h>
@@ -33,16 +37,8 @@ public:
         addAssName(".scrollarea_inner");
     }
 
-    int getContentMinimumWidth(ALayoutDirection layout) override {
-        return 30_dp;
-    }
-
     void updateLayout() override {
         if (hasChild()) child()->setGeometry(-mScroll.x, -mScroll.y, getContentWidth() + mScroll.x, getContentHeight() + mScroll.y);
-    }
-
-    int getContentMinimumHeight(ALayoutDirection layout) override {
-        return 30_dp;
     }
 
     void setScrollY(unsigned scroll) {
@@ -130,10 +126,19 @@ void AScrollArea::onScroll(const AScrollEvent& event) {
         return;
     }
 
-    auto prevScroll = mVerticalScrollbar->getCurrentScroll();
-    mVerticalScrollbar->onScroll(event);
-    if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
-        AWindow::current()->preventClickOnPointerRelease();
+    {
+        auto prevScroll = mVerticalScrollbar->getCurrentScroll();
+        mVerticalScrollbar->onScroll(event.delta.y);
+        if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
+            AWindow::current()->preventClickOnPointerRelease();
+        }
+    }
+    {
+        auto prevScroll = mHorizontalScrollbar->getCurrentScroll();
+        mHorizontalScrollbar->onScroll(event.delta.x);
+        if (prevScroll != mHorizontalScrollbar->getCurrentScroll()) {
+            AWindow::current()->preventClickOnPointerRelease();
+        }
     }
 }
 
@@ -161,3 +166,24 @@ void AScrollArea::onPointerReleased(const APointerReleasedEvent& event) {
     AViewContainer::onPointerReleased(event);
 }
 
+void AScrollArea::scrollTo(const _<AView>& target, bool nearestBorder) {
+    const auto targetBegin = target->getPositionInWindow();
+    const auto myBegin = getPositionInWindow();
+
+    const auto toBeginPoint = targetBegin - myBegin;
+    if (!nearestBorder) {
+        scroll(toBeginPoint);
+        return;
+    }
+
+    const auto targetEnd = targetBegin + target->getSize();
+    const auto myEnd = myBegin + getSize();
+
+    const auto toEndPoint = targetEnd - myEnd;
+
+    auto delta = (targetBegin + target->getSize() / 2) - (myBegin + getSize() / 2);
+    auto direction = glm::greaterThan(delta, glm::ivec2(0));
+    const auto toBeginPointConditional = toBeginPoint * glm::ivec2(glm::greaterThan(myBegin, targetBegin));
+    const auto toEndPointConditional = toEndPoint * glm::ivec2(glm::greaterThan(targetEnd, myEnd));
+    scroll(glm::mix(toBeginPointConditional, toEndPointConditional, direction));
+}
