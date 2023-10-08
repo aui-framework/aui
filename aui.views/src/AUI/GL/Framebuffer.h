@@ -44,7 +44,7 @@ namespace gl {
         Framebuffer(Framebuffer&& rhs) noexcept: mHandle(rhs.mHandle),
                                                  mSize(rhs.mSize),
                                                  mAttachedTargets(std::move(rhs.mAttachedTargets)),
-                                                 mOversamplingRatio(rhs.mOversamplingRatio) {
+                                                 mSupersamplingRatio(rhs.mSupersamplingRatio) {
             rhs.mHandle = 0;            
         }
         virtual ~Framebuffer();
@@ -56,17 +56,17 @@ namespace gl {
         void resize(glm::u32vec2 newSize);
 
         [[nodiscard]]
-        std::uint32_t oversamlingRatio() const noexcept {
-            return mOversamplingRatio;
+        std::uint32_t supersamlingRatio() const noexcept {
+            return mSupersamplingRatio;
         }
 
-        void setOversamplingRatio(std::uint32_t ratio) noexcept {
-            mOversamplingRatio = ratio;
+        void setSupersamplingRatio(std::uint32_t ratio) noexcept {
+            mSupersamplingRatio = ratio;
         }
 
         [[nodiscard]]
         glm::u32vec2 oversampledSize() const noexcept {
-            return mSize * mOversamplingRatio;
+            return mSize * mSupersamplingRatio;
         }
 
         [[nodiscard]]
@@ -93,14 +93,14 @@ namespace gl {
             }
             std::swap(mHandle, rhs.mHandle);
             mSize = rhs.mSize;
-            mOversamplingRatio = rhs.mOversamplingRatio;
+            mSupersamplingRatio = rhs.mSupersamplingRatio;
             mAttachedTargets = std::move(rhs.mAttachedTargets);
             return *this;
         }
 
     private:
         uint32_t mHandle = 0;
-        std::uint32_t mOversamplingRatio = 1; 
+        std::uint32_t mSupersamplingRatio = 1; 
         glm::u32vec2 mSize;
         AVector<_<IRenderTarget>> mAttachedTargets;
     };

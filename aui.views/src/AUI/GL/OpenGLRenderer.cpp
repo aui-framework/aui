@@ -170,24 +170,6 @@ inline void useAuislShader(gl::Program& out) {
     out.compile();
 }
 
-struct UseMultisample {
-    UseMultisample() {
-        glEnable(GL_ALPHA_TEST);
-#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_IOS
-        glEnable(GL_MULTISAMPLE);
-        glEnable(GL_SAMPLE_SHADING_ARB);
-#endif
-    }
-    
-    ~UseMultisample() {
-        glDisable(GL_ALPHA_TEST);
-#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_IOS
-        glDisable(GL_MULTISAMPLE);
-        glDisable(GL_SAMPLE_SHADING_ARB);
-#endif
-    }
-};
-
 }
 
 OpenGLRenderer::OpenGLRenderer() {
@@ -289,7 +271,6 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
                                      glm::vec2 position,
                                      glm::vec2 size,
                                      float radius) {
-    UseMultisample temp;
     std::visit(aui::lambda_overloaded {
             GradientShaderHelper(mRoundedGradientShader, mGradientTexture),
             UnsupportedBrushHelper<ATexturedBrush>(),
@@ -353,7 +334,6 @@ void OpenGLRenderer::drawRoundedRectBorder(const ABrush& brush,
                                            glm::vec2 size,
                                            float radius,
                                            int borderWidth) {
-    UseMultisample temp;
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
@@ -812,7 +792,7 @@ void OpenGLRenderer::tryEnableFramebuffer(glm::uvec2 windowSize) {
 #endif
     try {
         gl::Framebuffer framebuffer;
-        framebuffer.setOversamplingRatio(2);
+        framebuffer.setSupersamplingRatio(2);
         framebuffer.resize(windowSize);
         auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
         framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
