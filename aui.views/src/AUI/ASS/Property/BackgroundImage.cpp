@@ -118,7 +118,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                         size.y = viewSize.y;
                         size.x = size.y * imageSize.x / imageSize.y;
                     }
-                    Render::setTransform(
+                    ARender::setTransform(
                             glm::translate(glm::mat4(1.f),
                                            glm::vec3{glm::vec2(viewSize - size) / 2.f + glm::vec2(view->getPadding().leftTop()), 0.f}));
                     drawableDrawWrapper(size);

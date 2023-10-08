@@ -299,28 +299,7 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
     uploadToShaderCommon();
     identityUv();
 
-    mRoundedSolidShader.use();
-    mRoundedSolidShader.set(aui::ShaderUniforms::SIZE, 2.f * radius / size);
-    drawRectImpl(position, size);
-    endDraw(brush);
-}
-
-void OpenGLRenderer::drawRoundedRectAntialiased(const ABrush& brush,
-                                                const glm::vec2& position,
-                                                const glm::vec2& size,
-                                                float radius) {
-    std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mRoundedGradientShaderAntialiased),
-            UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(mRoundedSolidShaderAntialiased),
-            CustomShaderHelper{},
-    }, brush);
-
-    uploadToShaderCommon();
-    identityUv();
-
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-
     drawRectImpl(position, size);
     endDraw(brush);
 }
