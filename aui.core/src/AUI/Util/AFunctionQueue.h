@@ -43,6 +43,17 @@ public:
         }
     }
 
+    void processSingle() {
+        std::unique_lock l(mLock);
+        if (!mQueue.empty()) {
+            auto f = std::move(mQueue.front());
+            mQueue.pop();
+            l.unlock();
+            f();
+            l.lock();
+        }
+    }
+
     [[nodiscard]]
     bool empty() noexcept {
         std::unique_lock l(mLock);

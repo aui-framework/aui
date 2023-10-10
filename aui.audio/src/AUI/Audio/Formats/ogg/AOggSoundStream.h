@@ -7,10 +7,10 @@
 #include "AUI/IO/AFileInputStream.h"
 #include "AUI/Audio/ISoundInputStream.h"
 #include "AUI/Util/APimpl.h"
+#include "AUI/IO/AStrongByteBufferInputStream.h"
 
-class AUrl;
 class ISeekableInputStream;
-
+class AUrl;
 
 struct OggVorbis_File;
 
@@ -21,7 +21,9 @@ struct OggVorbis_File;
  */
 class API_AUI_AUDIO AOggSoundStream: public ISoundInputStream {
 public:
-    explicit AOggSoundStream(_<ISeekableInputStream> fis);
+    explicit AOggSoundStream(AUrl url);
+
+    explicit AOggSoundStream(_<IInputStream> stream);
 
     ~AOggSoundStream() override;
 
@@ -31,10 +33,12 @@ public:
 
     void rewind() override;
 
-    static _<AOggSoundStream> load(_<ISeekableInputStream> is);
-    static _<AOggSoundStream> fromUrl(const AUrl& url);
+    static _<AOggSoundStream> fromUrl(AUrl url);
 
 private:
-    _<ISeekableInputStream> mStream;
+    void initialize();
+
+    AOptional<AUrl> mUrl;
+    _<IInputStream> mStream;
     aui::fast_pimpl<OggVorbis_File, 944> mVorbisFile;
 };

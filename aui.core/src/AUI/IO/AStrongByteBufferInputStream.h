@@ -10,7 +10,7 @@
  */
 class API_AUI_CORE AStrongByteBufferInputStream: public ISeekableInputStream {
 private:
-    AByteBuffer mRef;
+    AByteBuffer mBuffer;
     size_t mReadPos = 0;
 
 public:

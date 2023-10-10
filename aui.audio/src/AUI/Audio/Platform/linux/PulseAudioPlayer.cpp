@@ -124,7 +124,7 @@ static PulseAudioInstance& pulse() {
 
 void PulseAudioPlayer::playImpl() {
     assert(mResampled == nullptr);
-    mResampled = _new<ASoundResampler>(_cast<PulseAudioPlayer>(sharedPtr()), aui::audio::DEFAULT_OUTPUT_FORMAT);
+    mResampled = _new<ASoundResampler>(_cast<PulseAudioPlayer>(sharedPtr()));
     ::loop().addSoundSource(_cast<PulseAudioPlayer>(sharedPtr()));
     pulse();
 }

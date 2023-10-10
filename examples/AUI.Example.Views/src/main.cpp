@@ -15,13 +15,14 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ExampleWindow.h"
+#include "AUI/IO/AFileInputStream.h"
 #include <AUI/Platform/Entry.h>
 #include <AUI/i18n/AI18n.h>
 #include <AUI/ASS/AStylesheet.h>
 
 AUI_ENTRY
 {
-    //Stylesheet::inst().load(AUrl(":views/style.css").open());
+   //    Stylesheet::inst().load(AUrl(":views/style.css").open());
 	auto w = _new<ExampleWindow>();
 	w->show();
 	return 0;

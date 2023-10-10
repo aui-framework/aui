@@ -15,3 +15,18 @@
 //  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ARawSoundStream.h"
+
+ARawSoundStream::ARawSoundStream(AAudioFormat format, _<IInputStream> stream) : mStream(std::move(stream)), mFormat(format) {
+}
+
+size_t ARawSoundStream::read(char *dst, size_t size) {
+    return mStream->read(dst, size);
+}
+
+AAudioFormat ARawSoundStream::info() {
+    return mFormat;
+}
+
+void ARawSoundStream::rewind() {
+    //no-op
+}
