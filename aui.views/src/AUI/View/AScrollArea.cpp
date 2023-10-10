@@ -60,6 +60,17 @@ public:
         return !getViews().empty();
     }
 
+
+    int getMinimumWidth(ALayoutDirection direction) override {
+        if (!hasChild()) return AViewContainer::getMinimumWidth(direction);
+        return child()->getMinimumWidth(direction);
+    }
+
+    int getMinimumHeight(ALayoutDirection direction) override {
+        if (!hasChild()) return AViewContainer::getMinimumHeight(direction);
+        return child()->getMinimumHeight(direction);
+    }
+
     [[nodiscard]]
     const _<AView>& child() const noexcept {
         assert(("no scrollarea child specified", !getViews().empty()));
