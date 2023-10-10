@@ -28,8 +28,10 @@ namespace aui::audio {
      * @brief Default output format for the current platform.
      * @ingroup audio
      */
-    static constexpr ASampleFormat DEFAULT_OUTPUT_FORMAT = aui::platform::current::is_mobile() ? ASampleFormat::I16
-                                                                                               : ASampleFormat::I24;
+    static constexpr AChannelFormat DEFAULT_OUTPUT_CHANNELS_COUNT = AChannelFormat::STEREO;
+    static constexpr ASampleFormat DEFAULT_OUTPUT_SAMPLE_FORMAT =
+            aui::platform::current::is_mobile() ? ASampleFormat::I16 : ASampleFormat::I24;
+    static constexpr uint32_t DEFAULT_OUTPUT_SAMPLE_RATE = 44100;
 
     namespace impl {
         template<int power, typename T>
@@ -112,10 +114,12 @@ namespace aui::audio {
 
 }
 
+
 /**
  * @brief Implements audio mixing and resampling for ASoundResampler in compile time.
  */
-template<ASampleFormat in, ASampleFormat out = aui::audio::DEFAULT_OUTPUT_FORMAT>
+template<ASampleFormat sample_in, AChannelFormat channels_in,
+        ASampleFormat sample_out = aui::audio::DEFAULT_OUTPUT_SAMPLE_FORMAT, AChannelFormat channels_out = aui::audio::DEFAULT_OUTPUT_CHANNELS_COUNT>
 class ACompileTimeSoundResampler {
 public:
     explicit ACompileTimeSoundResampler(std::span<std::byte> destination) noexcept:
@@ -128,36 +132,61 @@ public:
         mVolumeLevel = volume;
     }
 
-    inline void commitSample(aui::audio::impl::sample_type_t<in> sample) {
+    inline void commitSample(aui::audio::impl::sample_type_t<sample_in> sample) {
         assert(("buffer overrun", mDestinationBufferIt <= mDestinationBufferEnd));
         //use int64_t for overflow preverting
-        int64_t newSample = int64_t(aui::audio::impl::sample_cast<out, in>(sample));
+        int64_t newSample = int64_t(aui::audio::impl::sample_cast<sample_out, sample_in>(sample));
         if (mVolumeLevel) {
             newSample = (*mVolumeLevel * newSample) / IAudioPlayer::VolumeLevel::MAX;
         }
-        newSample += int64_t(aui::audio::impl::extractSample<out>(mDestinationBufferIt));
+        newSample += int64_t(aui::audio::impl::extractSample<sample_out>(mDestinationBufferIt));
         newSample = glm::clamp(newSample, MIN_VAL, MAX_VAL);
-        aui::audio::impl::pushSample<out>(newSample, mDestinationBufferIt);
-        mDestinationBufferIt += aui::audio::impl::size_bytes<out>();
+        aui::audio::impl::pushSample<sample_out>(newSample, mDestinationBufferIt);
+        mDestinationBufferIt += aui::audio::impl::size_bytes<sample_out>();
     }
 
 
     [[nodiscard]]
     size_t remainingSampleCount() const {
-        return (mDestinationBufferEnd - mDestinationBufferIt) / aui::audio::impl::size_bytes<out>();
+        return (mDestinationBufferEnd - mDestinationBufferIt) / aui::audio::impl::size_bytes<sample_out>();
+    }
+
+    constexpr size_t canReadSamples(size_t canPushSamples) {
+        return (canPushSamples / size_t(channels_out)) * size_t(channels_in);
     }
 
     inline void commitAllSamples(const _<ISoundInputStream>& is) {
         std::byte buf[BUFFER_SIZE];
         while (remainingSampleCount() > 0) {
-            auto toRead = std::min(size_t(remainingSampleCount() * aui::audio::impl::size_bytes<in>()), sizeof(buf));
+            auto toRead = std::min(
+                    size_t(canReadSamples(remainingSampleCount()) * aui::audio::impl::size_bytes<sample_in>()),
+                    sizeof(buf)
+            );
+
             size_t r = is->read(reinterpret_cast<char*>(buf), toRead);
             if (r == 0) {
                 break;
             }
+
             std::byte* end = buf + r;
-            for (std::byte* it = buf; it + aui::audio::impl::size_bytes<in>() <= end; it += aui::audio::impl::size_bytes<in>()) {
-                commitSample(aui::audio::impl::extractSample<in>(it));
+            static constexpr auto stepSize = static_cast<int>(channels_in) * aui::audio::impl::size_bytes<sample_in>();
+            for (std::byte* it = buf; it + stepSize <= end; it += stepSize) {
+                if constexpr (channels_in == channels_out) {
+                    for (size_t i = 0; i < static_cast<size_t>(channels_in); i++) {
+                        commitSample(aui::audio::impl::extractSample<sample_in>(it + i * aui::audio::impl::size_bytes<sample_in>()));
+                    }
+                }
+                else {
+                    if constexpr (channels_in == AChannelFormat::MONO) {
+                        //mono to stereo resampling
+                        auto sample = aui::audio::impl::extractSample<sample_in>(it);
+                        commitSample(sample);
+                        commitSample(sample);
+                    }
+                    else {
+                        //TODO implement stereo to mono resampling
+                    }
+                }
             }
         }
     }
@@ -173,8 +202,8 @@ public:
     }
 
 
-    using input_t = aui::audio::impl::sample_type<in>;
-    using output_t = aui::audio::impl::sample_type<out>;
+    using input_t = aui::audio::impl::sample_type<sample_in>;
+    using output_t = aui::audio::impl::sample_type<sample_out>;
 
     static constexpr int64_t MIN_VAL = std::numeric_limits<typename output_t::type>::min();
     static constexpr int64_t MAX_VAL = std::numeric_limits<typename output_t::type>::max();

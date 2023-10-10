@@ -27,7 +27,16 @@ class IAudioPlayer;
  */
 class API_AUI_AUDIO ASoundResampler : public ISoundInputStream {
 public:
-    explicit ASoundResampler(const _<IAudioPlayer>& player, ASampleFormat destinationFormat = aui::audio::DEFAULT_OUTPUT_FORMAT) noexcept;
+    static constexpr AAudioFormat DEFAULT_OUTPUT_FORMAT = {
+            .channelCount = aui::audio::DEFAULT_OUTPUT_CHANNELS_COUNT,
+            .sampleRate = aui::audio::DEFAULT_OUTPUT_SAMPLE_RATE,
+            .sampleFormat = aui::audio::DEFAULT_OUTPUT_SAMPLE_FORMAT
+    };
+
+    explicit ASoundResampler(const _<IAudioPlayer>& player) noexcept;
+
+    //unimplemented
+    //explicit ASoundResampler(const _<IAudioPlayer>& player, AAudioFormat format) noexcept;
 
     size_t read(char* dst, size_t size) override;
 
@@ -38,9 +47,9 @@ public:
 private:
     _weak<IAudioPlayer> mParentPlayer;
     _<ISoundInputStream> mSoundStream;
-    ASampleFormat mDestinationFormat;
-    AAudioFormat mFormat;
+//    AAudioFormat mOutputFormat;
+    AAudioFormat mInputFormat;
 
-    template<ASampleFormat in, ASampleFormat out>
+    template<ASampleFormat inputSampleFormat, AChannelFormat inputChannelsFormat>
     size_t commitSamples(std::span<std::byte> dst);
 };
