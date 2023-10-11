@@ -192,7 +192,9 @@ void AViewContainer::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event
 void AViewContainer::onMouseLeave() {
     AView::onMouseLeave();
     for (auto& view: mViews) {
-        view->onMouseLeave();
+        if (view->isMouseEntered()) {
+            view->onMouseLeave();
+        }
     }
 }
 
