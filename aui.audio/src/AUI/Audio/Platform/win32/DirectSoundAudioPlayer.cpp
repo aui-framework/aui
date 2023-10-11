@@ -176,7 +176,7 @@ private:
 
 void DirectSoundAudioPlayer::playImpl() {
     assert(mResampled == nullptr);
-    mResampled = _new<ASoundResampler>(_cast<DirectSoundAudioPlayer>(sharedPtr());
+    mResampled = _new<ASoundResampler>(_cast<DirectSoundAudioPlayer>(sharedPtr()));
     DirectSound::instance();
     ::loop().addSoundSource(_cast<DirectSoundAudioPlayer>(sharedPtr()));
 }
