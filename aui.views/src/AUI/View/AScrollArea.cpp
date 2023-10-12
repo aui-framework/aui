@@ -70,7 +70,7 @@ int AScrollArea::getContentMinimumWidth(ALayoutDirection layout) {
     if (getExpandingHorizontal() != 0) return 0;
     int result = 0;
     if (contents()) {
-        result += contents()->getTotalFieldHorizontal();
+        result += contents()->getMinimumWidth(layout);
     }
     if (mVerticalScrollbar) {
         return result += mVerticalScrollbar->getTotalOccupiedWidth();
