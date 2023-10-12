@@ -186,6 +186,7 @@ glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) 
 
 AWindowManager::AWindowManager(): mHandle(this) {
     mHangTimer = _new<ATimer>(10s);
+    return;
     AObject::connect(mHangTimer->fired, mHangTimer, [&, thread = AThread::current()] {
         if (mWatchdog.isHang()) {
             ALogger::err("ANR") << "UI hang detected:\n" << thread->threadStacktrace();
