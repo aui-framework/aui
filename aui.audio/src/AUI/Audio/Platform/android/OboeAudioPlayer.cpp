@@ -58,8 +58,8 @@ void OboeAudioPlayer::pauseImpl() {
 
 void OboeAudioPlayer::stopImpl() {
     OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(sharedPtr()));
-    source()->rewind();
     mResampled.reset();
+    source()->rewind();
 }
 
 void OboeAudioPlayer::onSourceSet() {

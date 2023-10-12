@@ -8,11 +8,11 @@
 
 AWavSoundStream::AWavSoundStream(AUrl url) : mUrl(std::move(url)) {
     mStream = mUrl->open();
+    assert(mStream != nullptr);
     readHeader();
 }
 
-AWavSoundStream::AWavSoundStream(_<IInputStream> stream) : mStream(std::move(stream)) {
-
+AWavSoundStream::AWavSoundStream(aui::non_null<_<IInputStream>> stream) : mStream(std::move(stream)) {
 }
 
 AAudioFormat AWavSoundStream::info() {

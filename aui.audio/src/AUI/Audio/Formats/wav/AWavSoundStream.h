@@ -13,7 +13,7 @@ class API_AUI_AUDIO AWavSoundStream: public ISoundInputStream {
 public:
     explicit AWavSoundStream(AUrl url);
 
-    explicit AWavSoundStream(_<IInputStream> stream);
+    explicit AWavSoundStream(aui::non_null<_<IInputStream>> stream);
 
     AAudioFormat info() override;
 
