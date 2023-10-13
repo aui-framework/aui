@@ -665,11 +665,7 @@ public:
     }
     Visibility getVisibilityRecursive() const;
 
-    void setVisibility(Visibility visibility) noexcept
-    {
-        mVisibility = visibility;
-        redraw();
-    }
+    void setVisibility(Visibility visibility) noexcept;
 
     void setVisible(bool visible) noexcept
     {

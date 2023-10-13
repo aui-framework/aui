@@ -26,7 +26,7 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
         auto margins = v->getMargin();
 		if (v->getExpandingHorizontal() == 0)
 		{
-			finalWidth = v->getMinimumWidth() + margins.horizontal();
+			finalWidth = glm::min(v->getMinimumWidth() + margins.horizontal(), width);
 			finalX = (width - finalWidth) / 2;
 		} else
 		{
@@ -35,7 +35,7 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
 		}
 		if (v->getExpandingVertical() == 0)
 		{
-			finalHeight = v->getMinimumHeight() + margins.vertical();
+			finalHeight = glm::min(v->getMinimumHeight() + margins.vertical(), width);
 			finalY = (height - finalHeight) / 2;
 		} else
 		{
