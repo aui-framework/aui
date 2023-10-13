@@ -9,6 +9,9 @@
 
 AOggSoundStream::AOggSoundStream(AUrl url) : mUrl(std::move(url)) {
     mStream = mUrl->open();
+    if (mStream == nullptr) {
+        throw AException("Failed to get input source for ogg file from {}"_format(mUrl->full()));
+    }
     initialize();
 }
 
@@ -49,7 +52,7 @@ void AOggSoundStream::rewind() {
     if (mUrl) {
         ov_clear(mVorbisFile.ptr());
         mStream.reset();
-        mStream = mUrl->open();
+        mStream = getInputStream(*mUrl);
         if (mStream) {
             initialize();
         }
