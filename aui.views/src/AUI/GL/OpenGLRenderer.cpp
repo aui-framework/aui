@@ -171,10 +171,14 @@ inline void useAuislShader(gl::Program& out) {
 }
 struct UseRoundedRect {
     UseRoundedRect() {
+#if !AUI_PLATFORM_IOS && !AUI_PLATFORM_ANDROID
         glEnable(GL_ALPHA_TEST);
+#endif
     }
     ~UseRoundedRect() {
+#if !AUI_PLATFORM_IOS && !AUI_PLATFORM_ANDROID
         glDisable(GL_ALPHA_TEST);
+#endif
     }
 };
 }
@@ -183,7 +187,7 @@ OpenGLRenderer::OpenGLRenderer() {
     ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_VERSION));
     ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_VENDOR));
     ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_RENDERER));
-    ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_EXTENSIONS));
+    //ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_EXTENSIONS));
     mGradientTexture.bind();
     mGradientTexture.setupLinear();
     mGradientTexture.setupClampToEdge();
@@ -853,7 +857,8 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
 
 void OpenGLRenderer::endPaint() {
     if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+        fb->bindForRead();
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
         glBlitFramebuffer(0, 0,                       // src pos
                           fb->supersampledSize().x, fb->supersampledSize().y, // src size
                           0, 0,                       // dst pos

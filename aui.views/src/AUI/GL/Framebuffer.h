@@ -30,6 +30,13 @@
 namespace gl {
     class API_AUI_VIEWS Framebuffer: public aui::noncopyable {
     public:
+        
+#if AUI_PLATFORM_APPLE
+        static constexpr auto DEFAULT_FB = 1;
+#else
+        static constexpr auto DEFAULT_FB = 0;
+#endif
+
         class IRenderTarget {
         friend class Framebuffer;
         public:

@@ -25,7 +25,7 @@
 #include "gl.h"
 #include "AUI/Views.h"
 
-#define SO_STATE
+//#define SO_STATE
 
 namespace gl {
 	/**

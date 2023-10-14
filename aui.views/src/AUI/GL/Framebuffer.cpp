@@ -29,7 +29,7 @@ void gl::Framebuffer::bindForWrite()
 
 void gl::Framebuffer::unbind()
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, DEFAULT_FB);
 }
 
 void gl::Framebuffer::resize(glm::u32vec2 newSize) {

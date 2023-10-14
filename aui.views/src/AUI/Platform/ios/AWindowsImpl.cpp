@@ -136,8 +136,10 @@ void AWindow::blockUserInput(bool blockUserInput) {
 
 }
 
-void AWindowManager::notifyProcessMessages() {
+extern "C" void _aui_ios_redraw();
 
+void AWindowManager::notifyProcessMessages() {
+    _aui_ios_redraw();
 }
 
 void AWindowManager::loop() {

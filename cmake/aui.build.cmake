@@ -643,7 +643,7 @@ include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
 auib_import(aui https://github.com/aui-framework/aui
             COMPONENTS core toolbox image
-            VERSION 0f3b9cb7)
+            VERSION ba4a8faa07f6c4c41e1722c7f9b03b168ee65cc5)
 ]])
     set(_build_log ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider_log.txt)
 
@@ -1246,11 +1246,9 @@ macro(aui_app)
         message(STATUS XCTestFound:${XCTest_FOUND})
 
         set(RESOURCES
-                ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard
                 ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
                 )
 
-        configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
         configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
 
         target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
@@ -1258,8 +1256,8 @@ macro(aui_app)
 
         # Locate system libraries on iOS
         find_library(UIKIT UIKit REQUIRED)
+        find_library(COREANIMATION QuartzCore REQUIRED)
         find_library(OPENGL OpenGLES REQUIRED)
-        find_library(GLKIT GLKit REQUIRED)
         find_library(FOUNDATION Foundation REQUIRED)
         find_library(MOBILECORESERVICES MobileCoreServices REQUIRED)
         find_library(CFNETWORK CFNetwork REQUIRED)
@@ -1270,10 +1268,10 @@ macro(aui_app)
                 PRIVATE
                 ${OPENGL}
                 ${UIKIT}
-                ${GLKIT}
                 ${FOUNDATION}
                 ${MOBILECORESERVICES}
                 ${CFNETWORK}
+                ${COREANIMATION}
                 ${SYSTEMCONFIGURATION})
 
 
