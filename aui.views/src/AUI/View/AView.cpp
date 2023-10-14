@@ -682,6 +682,9 @@ void AView::onViewGraphSubtreeChanged() {
 }
 void AView::setVisibility(Visibility visibility) noexcept
 {
+    if (mVisibility == visibility) {
+        return;
+    }
     mVisibility = visibility;
     AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }
