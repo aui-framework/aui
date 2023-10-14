@@ -14,29 +14,25 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-//
-// Created by alex2 on 24.10.2020.
-//
+#include "AScrollAreaInner.h"
+#include "AUI/Common/SharedPtrTypes.h"
+#include "AUI/Render/RenderHints.h"
+#include "AUI/View/AView.h"
 
-#include <AUI/Layout/AStackedLayout.h>
-#include "APageView.h"
-#include <AUI/Platform/AWindow.h>
-#include <AUI/Logging/ALogger.h>
-
-APageView::APageView() {
-    setLayout(_new<AStackedLayout>());
+void AScrollAreaInner::setContents(_<AView> content) {
+    if (mContents) {
+        removeView(mContents);
+    }
+    content->setPosition({0, 0});
+    if (content) addView(content);
+    mContents = std::move(content);
+    updateContentsScroll();
 }
 
-void APageView::setPageId(unsigned int pageId) {
-    assert(pageId < getViews().size());
-    emit pageChanging(pageId);
-    getViews()[mPageId]->setVisibility(Visibility::GONE);
-    getViews()[pageId]->setVisibility(Visibility::VISIBLE);
-    mPageId = pageId;
-    emit pageChanged();
+void AScrollAreaInner::updateLayout() {
+    AViewContainer::updateLayout();
+    AUI_NULLSAFE(mContents)->setSize(glm::max(mContents->getMinimumSize(), getSize()));
 }
-
-void APageView::addPage(const _<AView>& view) {
-    view->setVisibility(mPageId == getViews().size() ? Visibility::VISIBLE : Visibility::GONE);
-    addView(view);
+void AScrollAreaInner::updateContentsScroll() {
+    AUI_NULLSAFE(mContents)->setPosition(-glm::ivec2(mScroll));
 }

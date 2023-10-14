@@ -47,7 +47,7 @@ private:
 
 void OboeAudioPlayer::playImpl() {
     assert(mResampled == nullptr);
-    mResampled = _new<ASoundResampler>(_cast<OboeAudioPlayer>(sharedPtr()), aui::audio::DEFAULT_OUTPUT_FORMAT);
+    mResampled = _new<ASoundResampler>(_cast<OboeAudioPlayer>(sharedPtr()));
     OboeSoundOutput::instance().addSource(_cast<OboeAudioPlayer>(sharedPtr()));
 }
 
@@ -58,8 +58,8 @@ void OboeAudioPlayer::pauseImpl() {
 
 void OboeAudioPlayer::stopImpl() {
     OboeSoundOutput::instance().removeSource(_cast<OboeAudioPlayer>(sharedPtr()));
-    source()->rewind();
     mResampled.reset();
+    source()->rewind();
 }
 
 void OboeAudioPlayer::onSourceSet() {

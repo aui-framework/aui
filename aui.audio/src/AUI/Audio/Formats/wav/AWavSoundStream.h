@@ -1,9 +1,9 @@
 #pragma once
 
 #include "AUI/Audio/ISoundInputStream.h"
+#include "AUI/Url/AUrl.h"
 
 class ISeekableInputStream;
-class AUrl;
 
 /**
  * @brief Sound stream for WAV format
@@ -11,7 +11,9 @@ class AUrl;
  */
 class API_AUI_AUDIO AWavSoundStream: public ISoundInputStream {
 public:
-    explicit AWavSoundStream(_<ISeekableInputStream> is);
+    explicit AWavSoundStream(AUrl url);
+
+    explicit AWavSoundStream(aui::non_null<_<IInputStream>> stream);
 
     AAudioFormat info() override;
 
@@ -19,8 +21,7 @@ public:
 
     size_t read(char* dst, size_t size) override;
 
-    static _<ISoundInputStream> load(_<ISeekableInputStream> is);
-    static _<AWavSoundStream> fromUrl(const AUrl& url);
+    static _<AWavSoundStream> fromUrl(AUrl url);
 
 private:
     struct WavFileHeader {
@@ -43,7 +44,10 @@ private:
 
     static_assert(sizeof(WavFileHeader) == 44);
 
-    _<ISeekableInputStream> mStream;
+    _<IInputStream> mStream;
+    AOptional<AUrl> mUrl;
     WavFileHeader mHeader;
-    size_t mChunkReadPos = 0; // до mHeader.ChunkSize
+    size_t mChunkReadPos = 0;
+
+    void readHeader();
 };

@@ -680,3 +680,8 @@ void AView::onViewGraphSubtreeChanged() {
     invalidateAssHelper();
     emit viewGraphSubtreeChanged;
 }
+void AView::setVisibility(Visibility visibility) noexcept
+{
+    mVisibility = visibility;
+    AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
+}

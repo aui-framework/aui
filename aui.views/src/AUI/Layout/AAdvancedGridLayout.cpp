@@ -227,6 +227,7 @@ int AAdvancedGridLayout::getMinimumWidth()
         int minForColumn = 0;
         for (auto& view : getColumn(x))
         {
+            if (view->getVisibility() == Visibility::GONE) continue;
             minForColumn = glm::max(int(view->getMinimumWidth() + view->getMargin().horizontal()), minForColumn);
         }
         min += minForColumn + mSpacing;
@@ -242,6 +243,7 @@ int AAdvancedGridLayout::getMinimumHeight()
         int minForRow = 0;
         for (auto& view : getRow(y))
         {
+            if (view->getVisibility() == Visibility::GONE) continue;
             minForRow = glm::max(int(view->getMinimumHeight() + view->getMargin().vertical()), minForRow);
         }
         min += minForRow + mSpacing;

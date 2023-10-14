@@ -23,6 +23,9 @@ if (AUI_PLATFORM_LINUX)
     aui_link(aui.audio PUBLIC pulse)
 endif()
 
+auib_import(Opus https://github.com/xiph/opus.git VERSION v1.4)
+aui_link(aui.audio PRIVATE Opus::opus)
+
 if (AUI_PLATFORM_IOS OR AUI_PLATFORM_MACOS)
     auib_use_system_libs_begin()
     find_library(CoreAudio CoreAudio REQUIRED)

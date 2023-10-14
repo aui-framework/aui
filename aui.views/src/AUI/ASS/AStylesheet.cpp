@@ -18,6 +18,8 @@
 // Created by alex2 on 29.12.2020.
 //
 
+#include "AUI/Enum/AOverflow.h"
+#include "AUI/View/AScrollAreaInner.h"
 #if AUI_PLATFORM_WIN
 #include <dwmapi.h>
 #endif
@@ -475,13 +477,12 @@ AStylesheet::AStylesheet() {
             t<ATabButtonView>::hover(),
             BackgroundSolid {0xffffff_rgb },
         },
-
-        // scroll area
-        {
-            c(".scrollarea_inner"),
-                AOverflow::HIDDEN
-        },
         // scrollbar
+        {
+            t<AScrollAreaInner>(),
+            AOverflow::HIDDEN,
+            Expanding(),
+        },
         {
             t<AScrollbar>(),
             Margin { 0, 0, 0, 2_px },

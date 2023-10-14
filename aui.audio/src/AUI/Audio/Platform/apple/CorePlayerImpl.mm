@@ -143,8 +143,8 @@ void CoreAudioPlayer::pauseImpl() {
 
 void CoreAudioPlayer::stopImpl() {
     assert(mResampled != nullptr);
-    source()->rewind();
     ::loop().removeSoundSource(_cast<CoreAudioPlayer>(sharedPtr()));
+    source()->rewind();
     mResampled.reset();
 }
 
