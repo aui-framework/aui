@@ -3,17 +3,28 @@
 #include "AUI/Audio/Formats/ogg/AOggSoundStream.h"
 #include "AUI/IO/AByteBufferInputStream.h"
 #include <vorbis/vorbisfile.h>
+#include "AUI/Audio/ABadFormatException.h"
+#include "AUI/Logging/ALogger.h"
 
 _<ISoundInputStream> ISoundInputStream::fromUrl(const AUrl& url) {
     try {
         return AWavSoundStream::fromUrl(url);
     }
-    catch(...) { }
+    catch (const aui::audio::ABadFormatException&) {
+    }
+    catch(...) {
+        throw;
+    }
 
     try {
         return AOggSoundStream::fromUrl(url);
     }
-    catch(...) { }
+    catch (const aui::audio::ABadFormatException&) {
+    }
+    catch(...) {
+        throw;
+    }
+
 
     return nullptr;
 }
@@ -28,13 +39,7 @@ _<IInputStream> ISoundInputStream::getInputStream(const AUrl &key) {
         return _new<AByteBufferInputStream>(*result);
     }
 
-    try {
-        return key.open();
-    }
-    catch (...) {
-    }
-
-    return nullptr;
+    return key.open();
 }
 
 _<AByteBuffer> ISoundInputStream::Cache::load(const AUrl &key) {
