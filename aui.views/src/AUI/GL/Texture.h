@@ -38,6 +38,7 @@ namespace gl {
         Texture(const Texture&) = delete;
 
         void bind(uint8_t index = 0);
+        static void unbind(uint8_t index = 0);
 
         operator bool() const {
             return mTexture;

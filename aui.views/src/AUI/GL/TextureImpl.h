@@ -66,3 +66,8 @@ void gl::Texture<TEXTURE_TARGET>::bind(uint8_t index) {
     gl::State::bindTexture(TEXTURE_TARGET, mTexture);
 }
 
+template<unsigned int TEXTURE_TARGET>
+void gl::Texture<TEXTURE_TARGET>::unbind(uint8_t index) {
+    gl::State::activeTexture(index);
+    gl::State::bindTexture(TEXTURE_TARGET, 0);
+}

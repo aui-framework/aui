@@ -22,6 +22,7 @@
 #include "AUI/Common/AException.h"
 #include "AUI/GL/Framebuffer.h"
 #include "AUI/GL/GLEnums.h"
+#include "AUI/GL/Texture2D.h"
 #include "ShaderUniforms.h"
 #include "AUI/Render/ARender.h"
 #include "glm/fwd.hpp"
@@ -86,16 +87,39 @@ struct GradientShaderHelper {
         for (const auto& c : brush.colors) {
             colors.push_back(glm::uvec4(c.color * 255.f));
         }
-        float actualEdgeUvPosition = 0.5f / float(colors.size());
+        float actualEdgeUvPosition = (0.5f - 0.05f /* bias to make ideal color edge */) / float(colors.size());
 
         float rotationRadians = brush.rotation.radians();
 
-        float s = glm::sin(rotationRadians) * actualEdgeUvPosition;
-        float c = glm::cos(rotationRadians) * actualEdgeUvPosition;
+        float s = glm::sin(rotationRadians);
+        float c = -glm::cos(rotationRadians);
+        float bias = glm::max(-s, -c, 0.f);
+
+        auto probe = [&](glm::vec2 uv) {
+            return uv.x * s + uv.y * c + bias;
+        };
+        auto adjust = [&](glm::vec2 uv) {
+            float p = probe(uv);
+            if (p > 1.f) {
+                s /= p;
+                c /= p;
+                bias /= p;
+            }
+        };
+
+        if (auto p = probe({1, 1}); p < 0.f) {
+            bias += -p;
+        }
+
+        adjust({0, 0});
+        adjust({1, 0});
+        adjust({0, 1});
+        adjust({1, 1});
+
         glm::mat3 mat3 = {
-                s * 0.5, 0.f, 0.f,
-                c * 0.5, 0.f, 0.f,
-                glm::clamp(-s - c, 0.f, 1.f) + actualEdgeUvPosition, 0.f, 0.f,
+             /* uv.x */ s * (1.f - actualEdgeUvPosition * 2.f), 0.f, 0.f,
+             /* uv.y */ c * (1.f - actualEdgeUvPosition * 2.f), 0.f, 0.f,
+             /* 1    */ bias * (1.f - actualEdgeUvPosition * 2.f) + actualEdgeUvPosition, 0.f, 0.f,
         };
 
 
@@ -184,10 +208,15 @@ struct UseRoundedRect {
 }
 
 OpenGLRenderer::OpenGLRenderer() {
-    ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_VERSION));
-    ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_VENDOR));
-    ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_RENDERER));
-    //ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_EXTENSIONS));
+    ALogger::info(LOG_TAG) << "GL_VERSION = " << ((const char*) glGetString(GL_VERSION));
+    ALogger::info(LOG_TAG) << "GL_VENDOR = " << ((const char*) glGetString(GL_VENDOR));
+    ALogger::info(LOG_TAG) << "GL_RENDERER = " << ((const char*) glGetString(GL_RENDERER));
+    ALogger::info(LOG_TAG) << "GL_EXTENSIONS = " << [] {
+        if (auto ext = ((const char*) glGetString(GL_EXTENSIONS))) {
+            return ext;
+        } else {
+            return "null";
+        }}();
     mGradientTexture.bind();
     mGradientTexture.setupLinear();
     mGradientTexture.setupClampToEdge();
