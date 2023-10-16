@@ -2,7 +2,7 @@
 
 #include "AUI/IO/IInputStream.h"
 #include "AUI/Audio/AAudioFormat.h"
-
+#include "AUI/Util/Cache.h"
 
 class AUrl;
 
@@ -11,6 +11,19 @@ class AUrl;
  * @ingroup audio
  */
 class ISoundInputStream: public IInputStream {
+private:
+    static constexpr size_t MAX_FILE_SIZE_TO_CACHE = 1 << 24;
+
+class Cache : public ::Cache<AByteBuffer, Cache, AUrl> {
+public:
+    static Cache& inst();
+protected:
+    _<AByteBuffer> load(const AUrl& key) override;
+};
+
+protected:
+    static _<IInputStream> getInputStream(const AUrl& key);
+
 public:
     static _<ISoundInputStream> fromUrl(const AUrl& url);
 

@@ -49,6 +49,6 @@ public:
 	}
 
     static void cleanup() {
-        Container::inst(). mContainer.clear();
+        Container::inst().mContainer.clear();
     }
 };
