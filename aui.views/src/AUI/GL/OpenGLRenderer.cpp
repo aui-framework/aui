@@ -317,12 +317,17 @@ AVector<glm::vec3> OpenGLRenderer::getVerticesForRect(const glm::vec2& position,
     float w = x + size.x;
     float h = y + size.y;
 
+    auto apply = [&](glm::vec4 v) {
+        auto result = mTransform * v;
+        return glm::vec3(result) / result.w;
+    };
+
     return
             {
-                    glm::vec3(mTransform * glm::vec4{ x, h, 1, 1 }),
-                    glm::vec3(mTransform * glm::vec4{ w, h, 1, 1 }),
-                    glm::vec3(mTransform * glm::vec4{ x, y, 1, 1 }),
-                    glm::vec3(mTransform * glm::vec4{ w, y, 1, 1 }),
+                    apply(glm::vec4{ x, h, 0, 1 }),
+                    apply(glm::vec4{ w, h, 0, 1 }),
+                    apply(glm::vec4{ x, y, 0, 1 }),
+                    apply(glm::vec4{ w, y, 0, 1 }),
             };
 }
 void OpenGLRenderer::drawRect(const ABrush& brush, const glm::vec2& position, const glm::vec2& size) {
