@@ -20,4 +20,7 @@
 
 @interface AUIView : UIView 
     @property(nonatomic) EAGLContext *context;
+
+- (void) startAnimation;
+- (void) stopAnimation;
 @end
