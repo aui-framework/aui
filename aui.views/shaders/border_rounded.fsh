@@ -18,4 +18,5 @@ output {
 entry {
     vec2 absolute = abs(inter.uv * 2 - 1)
     output.albedo = uniform.color * vec4(1, 1, 1, rounded(absolute, uniform.outerSize) - rounded(absolute * uniform.outerToInner, uniform.innerSize))
+#flag glsl120 if (gl_FragColor.a < 0.1) discard;
 }

@@ -464,8 +464,8 @@ _<INode> Parser::handlePreprocessor() {
     auto args = token.args();
     auto spaceIndex = args.find(" ");
 
-    auto name = args.substr(0, spaceIndex);
-    auto content = args.substr(spaceIndex);
+    AString name = args.substr(0, spaceIndex);
+    AString content = spaceIndex == std::string::npos ? "" : args.substr(spaceIndex);
 
     nextTokenAndCheckEof();
 

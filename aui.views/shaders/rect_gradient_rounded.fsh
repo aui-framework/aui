@@ -16,4 +16,5 @@ output {
 
 entry {
     output.albedo = uniform.color * gradient(inter.uv) * vec4(1, 1, 1, rounded(abs(inter.uv * 2 - 1), uniform.outerSize))
+#flag glsl120 if (gl_FragColor.a < 0.1) discard;
 }

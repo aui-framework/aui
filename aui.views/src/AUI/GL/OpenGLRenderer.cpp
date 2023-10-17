@@ -193,18 +193,6 @@ inline void useAuislShader(gl::Program& out) {
     Fragment::setup(out.handle());
     out.compile();
 }
-struct UseRoundedRect {
-    UseRoundedRect() {
-#if !AUI_PLATFORM_IOS && !AUI_PLATFORM_ANDROID
-        glEnable(GL_ALPHA_TEST);
-#endif
-    }
-    ~UseRoundedRect() {
-#if !AUI_PLATFORM_IOS && !AUI_PLATFORM_ANDROID
-        glDisable(GL_ALPHA_TEST);
-#endif
-    }
-};
 }
 
 OpenGLRenderer::OpenGLRenderer() {
@@ -306,7 +294,6 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
                                      glm::vec2 position,
                                      glm::vec2 size,
                                      float radius) {
-    UseRoundedRect r;
     std::visit(aui::lambda_overloaded {
             GradientShaderHelper(mRoundedGradientShader, mGradientTexture),
             UnsupportedBrushHelper<ATexturedBrush>(),
@@ -370,7 +357,6 @@ void OpenGLRenderer::drawRoundedRectBorder(const ABrush& brush,
                                            glm::vec2 size,
                                            float radius,
                                            int borderWidth) {
-    UseRoundedRect r;
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
@@ -872,7 +858,6 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glAlphaFunc(GL_GREATER, 0.01f); // unsupported by renderdoc
 
     // stencil
     glClearStencil(0);
