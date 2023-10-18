@@ -67,7 +67,7 @@ void AVectorDrawable::draw(const Params& params) {
         mRasterized.pop_front();
     }
 
-    glm::ivec2 textureSize = size;
+    glm::ivec2 textureSize = params.renderingSize.valueOr(size);
 
     if (!!(params.repeat & Repeat::X)) {
         textureSize.x = getSizeHint().x;

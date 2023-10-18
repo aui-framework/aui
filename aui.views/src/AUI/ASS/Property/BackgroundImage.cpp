@@ -148,8 +148,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                     break;
                 }
                 case Sizing::SPLIT_2X2: {
-                    auto ratio = APlatform::getDpiRatio() / info.dpiMargin.or_default(1.f);
-                    auto textureSize = glm::vec2(drawable->getSizeHint()) * ratio;
+                    auto textureSize = glm::vec2(drawable->getSizeHint());
                     auto textureWidth = textureSize.x;
                     auto textureHeight = textureSize.y;
 
@@ -165,6 +164,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                         p.cropUvBottomRight = uv2;
                         p.size = {width, height};
                         p.imageRendering = imageRendering;
+                        p.renderingSize = {textureWidth, textureHeight};
                         drawable->draw(p);
                     };
 
