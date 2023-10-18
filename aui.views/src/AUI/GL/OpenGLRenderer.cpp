@@ -860,8 +860,8 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     // stencil
-    glClearStencil(0);
     glStencilMask(0xff);
+    glClearStencil(0);
     glDisable(GL_SCISSOR_TEST);
     glClear(GL_STENCIL_BUFFER_BIT);
     glEnable(GL_STENCIL_TEST);
