@@ -31,14 +31,14 @@ AAnimatedDrawable::AAnimatedDrawable(_<IImageFactory> factory) : mFactory (std::
 
 void AAnimatedDrawable::draw(const IDrawable::Params &params) {
     if (!mTexture)
-        mTexture = Render::getNewTexture();
+        mTexture = ARender::getNewTexture();
 
     if (mFactory->isNewImageAvailable()) {
         auto img = _new<AImage>(mFactory->provideImage(params.size));
         mTexture->setImage(img);
     }
 
-    Render::rect(ATexturedBrush{
+    ARender::rect(ATexturedBrush{
             mTexture,
             params.cropUvTopLeft,
             params.cropUvBottomRight,

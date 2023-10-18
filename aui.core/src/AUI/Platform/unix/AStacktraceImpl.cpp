@@ -42,6 +42,7 @@ struct BacktraceService {
     }
 };
 
+
 static BacktraceService& backtraceService() noexcept {
     static BacktraceService s;
     return s;

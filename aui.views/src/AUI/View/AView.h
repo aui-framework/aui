@@ -49,7 +49,7 @@
 #include <AUI/Event/APointerMoveEvent.h>
 
 
-class Render;
+class ARender;
 class AWindow;
 class ABaseWindow;
 class AViewContainer;

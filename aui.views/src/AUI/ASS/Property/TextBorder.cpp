@@ -25,26 +25,26 @@
 void ass::prop::Property<ass::TextBorder>::renderFor(AView* view) {
     if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
         RenderHints::PushColor c;
-        Render::setColor(mInfo.borderColor);
+        ARender::setColor(mInfo.borderColor);
 
         {
             RenderHints::PushMatrix m;
-            Render::translate({-1, 0});
+            ARender::translate({-1, 0});
             label->doRenderText();
         }
         {
             RenderHints::PushMatrix m;
-            Render::translate({1, 0});
+            ARender::translate({1, 0});
             label->doRenderText();
         }
         {
             RenderHints::PushMatrix m;
-            Render::translate({0, -1});
+            ARender::translate({0, -1});
             label->doRenderText();
         }
         {
             RenderHints::PushMatrix m;
-            Render::translate({0, 1});
+            ARender::translate({0, 1});
             label->doRenderText();
         }
     }

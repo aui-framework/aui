@@ -20,7 +20,7 @@
 
 
 #include "TransformRotate.h"
-#include <AUI/Render/Render.h>
+#include "AUI/Render/ARender.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 void ass::prop::Property<ass::TransformRotate>::renderFor(AView* view) {
@@ -29,7 +29,7 @@ void ass::prop::Property<ass::TransformRotate>::renderFor(AView* view) {
     m = glm::translate(m, glm::vec3(pivot, 0.f));
     m = glm::rotate(m, mInfo.angle.radians(), glm::vec3{0, 0, 1});
     m = glm::translate(m, glm::vec3(-pivot, 0.f));
-    Render::setTransform(m);
+    ARender::setTransform(m);
 }
 
 ass::prop::PropertySlot ass::prop::Property<ass::TransformRotate>::getPropertySlot() const {

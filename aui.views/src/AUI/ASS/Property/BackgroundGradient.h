@@ -29,15 +29,19 @@ namespace ass {
      * @ingroup ass
      */
     struct BackgroundGradient {
-        bool null = false;
-        AColor topLeftColor;
-        AColor bottomRightColor;
-        ALayoutDirection direction;
+        AOptional<ALinearGradientBrush> gradient;
 
-        BackgroundGradient(const AColor& topLeftColor, const AColor& bottomRightColor, ALayoutDirection direction)
-                : topLeftColor(topLeftColor), bottomRightColor(bottomRightColor), direction(direction) {}
+        BackgroundGradient(std::nullptr_t) noexcept {};
+        BackgroundGradient(ALinearGradientBrush brush) noexcept: gradient(std::move(brush)) {}
 
-        BackgroundGradient(std::nullptr_t): null(true) {}
+        BackgroundGradient(AColor begin, AColor end, AAngleRadians angle) noexcept: gradient(ALinearGradientBrush{
+                .colors = {
+                        {0.f, begin},
+                        {1.f, end},
+                },
+                .rotation = angle
+        }) {}
+        BackgroundGradient(AColor begin, AColor end, ALayoutDirection direction) noexcept: BackgroundGradient(begin, end, direction == ALayoutDirection::VERTICAL ? 180_deg : 90_deg) {}
     };
 
     namespace prop {

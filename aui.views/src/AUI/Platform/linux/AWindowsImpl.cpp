@@ -19,7 +19,7 @@
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -468,8 +468,10 @@ void AWindowManager::xProcessEvent(XEvent& ev) {
                         window = locateWindow(ev.xconfigure.window);
                         glm::ivec2 size = {ev.xconfigure.width, ev.xconfigure.height};
                         if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
+                            AUI_NULLSAFE(window->mRenderingContext)->beginResize(*window);
                             AUI_EMIT_FOREIGN_SIGNAL(window)->resized(size.x, size.y);
                             window->AViewContainer::setSize(size);
+                            AUI_NULLSAFE(window->mRenderingContext)->endResize(*window);
                         }
                         if (auto w = _cast<ACustomWindow>(window)) {
                             w->handleXConfigureNotify();

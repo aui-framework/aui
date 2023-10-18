@@ -20,11 +20,11 @@
 
 
 #include "TransformOffset.h"
-#include <AUI/Render/Render.h>
+#include "AUI/Render/ARender.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 void ass::prop::Property<ass::TransformOffset>::renderFor(AView* view) {
-    Render::setTransform(glm::translate(glm::mat4(1.f), glm::vec3{mInfo.offsetX, mInfo.offsetY, 0.0}));
+    ARender::setTransform(glm::translate(glm::mat4(1.f), glm::vec3{mInfo.offsetX, mInfo.offsetY, 0.0}));
 }
 
 ass::prop::PropertySlot ass::prop::Property<ass::TransformOffset>::getPropertySlot() const {

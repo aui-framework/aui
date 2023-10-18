@@ -15,7 +15,7 @@
 //  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "AView.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Url/AUrl.h"
@@ -85,18 +85,15 @@ void AView::drawStencilMask()
 {
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
-#if !AUI_PLATFORM_IOS // on ios stencil buffer does not work with discard as expected
             if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
-                Render::roundedRect(ASolidBrush{},
-                                    {mPadding.left, mPadding.top},
-                                    {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
-                                    mBorderRadius);
-            } else
-#endif
-            {
-                Render::rect(ASolidBrush{},
-                             {mPadding.left, mPadding.top},
-                             {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+                ARender::roundedRect(ASolidBrush{},
+                                     {mPadding.left, mPadding.top},
+                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
+                                     mBorderRadius);
+            } else {
+                ARender::rect(ASolidBrush{},
+                              {mPadding.left, mPadding.top},
+                              {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
             }
             break;
 
@@ -682,6 +679,9 @@ void AView::onViewGraphSubtreeChanged() {
 }
 void AView::setVisibility(Visibility visibility) noexcept
 {
+    if (mVisibility == visibility) {
+        return;
+    }
     mVisibility = visibility;
     AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }

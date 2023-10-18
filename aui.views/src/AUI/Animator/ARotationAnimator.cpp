@@ -19,12 +19,12 @@
 //
 
 #include "ARotationAnimator.h"
-#include <AUI/Render/Render.h>
+#include "AUI/Render/ARender.h"
 
 void ARotationAnimator::doAnimation(AView* view, float theta) {
 
     translateToCenter(view);
-    Render::setTransform(
+    ARender::setTransform(
             glm::rotate(glm::mat4(1.f), glm::mix(mBegin.radians(), mEnd.radians(), theta), glm::vec3{0.f, 0.f, 1.f}));
     translateToCorner(view);
 

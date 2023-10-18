@@ -642,7 +642,8 @@ file(
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
 auib_import(aui https://github.com/aui-framework/aui
-            COMPONENTS core toolbox image)
+            COMPONENTS core toolbox image
+            VERSION ba4a8faa07f6c4c41e1722c7f9b03b168ee65cc5)
 ]])
     set(_build_log ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider_log.txt)
 
@@ -673,6 +674,22 @@ auib_import(aui https://github.com/aui-framework/aui
     endif()
 endmacro()
 
+macro(_aui_check_toolbox)
+    if (NOT AUI_TOOLBOX_EXE)
+        if (CMAKE_CROSSCOMPILING)
+            # the worst case because we (possibly) have to compile aui.toolbox for the host system
+            _aui_try_find_toolbox()
+            if (NOT AUI_TOOLBOX_EXE)
+                _aui_provide_toolbox_for_host()
+            endif()
+        elseif (TARGET aui.toolbox)
+            set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox")
+        else()
+            set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox")
+        endif()
+        message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
+    endif()
+endmacro()
 
 function(aui_compile_assets AUI_MODULE_NAME)
     set(oneValueArgs DIR)
@@ -703,21 +720,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
         endforeach()
     endif()
 
-    if (NOT AUI_TOOLBOX_EXE)
-        if (CMAKE_CROSSCOMPILING)
-            # the worst case because we (possibly) have to compile aui.toolbox for the host system
-            _aui_try_find_toolbox()
-            if (NOT AUI_TOOLBOX_EXE)
-                _aui_provide_toolbox_for_host()
-            endif()
-        elseif (TARGET aui.toolbox)
-            set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox> CACHE FILEPATH "aui.toolbox")
-        else()
-            set(AUI_TOOLBOX_EXE ${AUI_DIR}/bin/aui.toolbox CACHE FILEPATH "aui.toolbox")
-        endif()
-    endif()
-
-    message(STATUS "aui.toolbox: ${AUI_TOOLBOX_EXE}")
+    _aui_check_toolbox()
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})
         set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
@@ -955,6 +958,37 @@ function(aui_module AUI_MODULE_NAME)
         endif()
     endif()
 endfunction(aui_module)
+
+# links the auisl shader located in shaders/<NAME>
+function(auisl_shader TARGET NAME)
+    set(_path ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${NAME})
+    if (NOT EXISTS ${_path})
+        message(FATAL_ERROR "shader not exists: ${_path}")
+    endif()
+
+    if (NOT TARGET ${TARGET})
+        message(FATAL_ERROR "no such target: ${TARGET}")
+    endif()
+
+    set(_compiled_shader_dir ${CMAKE_CURRENT_BINARY_DIR}/shaders/AUISL/Generated)
+    file(MAKE_DIRECTORY ${_compiled_shader_dir})
+
+    set(_targets software glsl120)
+    _aui_check_toolbox()
+    foreach(_target ${_targets})
+        set(_output "${_compiled_shader_dir}/${NAME}.${_target}.cpp")
+
+        add_custom_command(
+                OUTPUT ${_output}
+                DEPENDS ${_path}
+                COMMAND ${AUI_TOOLBOX_EXE}
+                ARGS auisl ${_target} ${_path} ${_output}
+        )
+        target_sources(${TARGET} PRIVATE ${_output})
+    endforeach()
+
+    target_include_directories(${TARGET} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/shaders)
+endfunction()
 
 macro(aui_app)
     _aui_find_root()
@@ -1212,11 +1246,9 @@ macro(aui_app)
         message(STATUS XCTestFound:${XCTest_FOUND})
 
         set(RESOURCES
-                ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard
                 ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard
                 )
 
-        configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/Main.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/Main.storyboard @ONLY)
         configure_file(${AUI_BUILD_AUI_ROOT}/platform/ios/LaunchScreen.storyboard.in ${CMAKE_CURRENT_BINARY_DIR}/LaunchScreen.storyboard @ONLY)
 
         target_sources(${APP_TARGET} PRIVATE ${RESOURCES})
@@ -1224,8 +1256,8 @@ macro(aui_app)
 
         # Locate system libraries on iOS
         find_library(UIKIT UIKit REQUIRED)
+        find_library(COREANIMATION QuartzCore REQUIRED)
         find_library(OPENGL OpenGLES REQUIRED)
-        find_library(GLKIT GLKit REQUIRED)
         find_library(FOUNDATION Foundation REQUIRED)
         find_library(MOBILECORESERVICES MobileCoreServices REQUIRED)
         find_library(CFNETWORK CFNetwork REQUIRED)
@@ -1236,10 +1268,10 @@ macro(aui_app)
                 PRIVATE
                 ${OPENGL}
                 ${UIKIT}
-                ${GLKIT}
                 ${FOUNDATION}
                 ${MOBILECORESERVICES}
                 ${CFNETWORK}
+                ${COREANIMATION}
                 ${SYSTEMCONFIGURATION})
 
 

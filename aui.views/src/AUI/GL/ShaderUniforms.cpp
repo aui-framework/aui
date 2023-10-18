@@ -17,23 +17,17 @@
 #include "ShaderUniforms.h"
 
 namespace aui::ShaderUniforms {
-    gl::Shader::Uniform COLOR("color");
-    gl::Shader::Uniform TRANSFORM("transform");
-    gl::Shader::Uniform SIZE("size");
-    gl::Shader::Uniform MAT("mat");
-    gl::Shader::Uniform UV_SCALE("uv_scale");
-    gl::Shader::Uniform SIGMA("sigma");
-    gl::Shader::Uniform LOWER("lower");
-    gl::Shader::Uniform UPPER("upper");
-    gl::Shader::Uniform OUTER_SIZE("outerSize");
-    gl::Shader::Uniform INNER_SIZE("innerSize");
-    gl::Shader::Uniform INNER_TEXEL_SIZE("innerTexelSize");
-    gl::Shader::Uniform OUTER_TEXEL_SIZE("outerTexelSize");
-    gl::Shader::Uniform OUTER_TO_INNER("outer_to_inner");
-
-    gl::Shader::Uniform COLOR_TL("color_tl");
-    gl::Shader::Uniform COLOR_TR("color_tr");
-    gl::Shader::Uniform COLOR_BL("color_bl");
-    gl::Shader::Uniform COLOR_BR("color_br");
+    gl::Program::Uniform COLOR("SL_uniform_color");
+    gl::Program::Uniform GRADIENT_MAT_UV("SL_uniform_matUv");
+    gl::Program::Uniform TRANSFORM("SL_uniform_transform");
+    gl::Program::Uniform SL_UNIFORM_TRANSFORM("SL_uniform_transform");
+    gl::Program::Uniform UV_SCALE("SL_uniform_uvScale");
+    gl::Program::Uniform SL_UNIFORM_SIGMA("SL_uniform_sigma");
+    gl::Program::Uniform SL_UNIFORM_LOWER("SL_uniform_lower");
+    gl::Program::Uniform SL_UNIFORM_UPPER("SL_uniform_upper");
+    gl::Program::Uniform PIXEL_TO_UV("SL_uniform_pixelToUv");
+    gl::Program::Uniform OUTER_SIZE("SL_uniform_outerSize");
+    gl::Program::Uniform INNER_SIZE("SL_uniform_innerSize");
+    gl::Program::Uniform OUTER_TO_INNER("SL_uniform_outerToInner");
 
 }

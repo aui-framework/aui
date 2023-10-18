@@ -62,14 +62,14 @@ void AAnimator::translateToCorner() {
 }
 
 void AAnimator::translateToCenter(AView* view) {
-    Render::setTransform(
+    ARender::setTransform(
             glm::translate(glm::mat4(1.f),
                            glm::vec3(glm::vec2(view->getSize().x,
                                                view->getSize().y + view->getTotalFieldVertical() - 1) / 2.f, 0.f)));
 }
 
 void AAnimator::translateToCorner(AView* view) {
-    Render::setTransform(
+    ARender::setTransform(
             glm::translate(glm::mat4(1.f),
                            glm::vec3(-glm::vec2(view->getSize().x,
                                                 view->getSize().y + view->getTotalFieldVertical() - 1) / 2.f, 0.f)));
