@@ -68,10 +68,6 @@ AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
     mLastFrameStarted = std::chrono::system_clock::now();
     int frameBufferSize = mGifWidth * mGifHeight * mChannelsCount;
     int currentFrameOffset = frameBufferSize * mCurrentFrameIndex;
-//    AImageView frame(
-//            AByteBufferView(reinterpret_cast<const char*>(mLoadedGifPixels + currentFrameOffset), frameBufferSize),
-//            glm::uvec2{mGifWidth, mGifHeight}, format);
-//    return frame.resizedLinearDownscale(size);
     mCurrentFrame = _new<AImage>(AByteBufferView(reinterpret_cast<const char*>(mLoadedGifPixels + currentFrameOffset), frameBufferSize), glm::uvec2{mGifWidth, mGifHeight}, format);
     return *mCurrentFrame;
 }

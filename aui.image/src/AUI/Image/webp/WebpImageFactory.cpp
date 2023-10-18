@@ -60,10 +60,6 @@ AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
         loadNextFrame();
     }
 
-//    AImageView frame(AByteBuffer(mDecodedFrameBuffer, PIXEL_FORMAT.bytesPerPixel() * mWidth * mHeight),
-//                     glm::uvec2(mWidth, mHeight), PIXEL_FORMAT);
-    //TODO implement scaling
-//    return frame.resizedLinearDownscale(size);
     return {AByteBuffer(mDecodedFrameBuffer, PIXEL_FORMAT.bytesPerPixel() * mWidth * mHeight),
                   glm::uvec2(mWidth, mHeight), PIXEL_FORMAT};
 }
