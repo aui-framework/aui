@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 auib_import(lunasvg https://github.com/aui-framework/lunasvg
-            VERSION 18d3898983a337e63b459e63c402a807d914cecb)
+            VERSION 272ceee)
 
 
 set(WEBP_COMPONENTS_TO_DISABLE ANIM_UTILS CWEBP DWEBP GIF2WEBP IMG2WEBP VWEBP WEBPINFO LIBWEBPMUX WEBPMUX EXTRAS)
