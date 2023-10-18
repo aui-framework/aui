@@ -168,7 +168,6 @@ static GLuint defaultFb, colorBuffer = 0;
     // tear down context
     if ([EAGLContext currentContext] == context)
         [EAGLContext setCurrentContext:nil];
-    [trackedTouches dealloc];
 }
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
     [EAGLContext setCurrentContext:context];
