@@ -60,8 +60,12 @@ AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
         loadNextFrame();
     }
 
+//    AImageView frame(AByteBuffer(mDecodedFrameBuffer, PIXEL_FORMAT.bytesPerPixel() * mWidth * mHeight),
+//                     glm::uvec2(mWidth, mHeight), PIXEL_FORMAT);
+    //TODO implement scaling
+//    return frame.resizedLinearDownscale(size);
     return {AByteBuffer(mDecodedFrameBuffer, PIXEL_FORMAT.bytesPerPixel() * mWidth * mHeight),
-            glm::uvec2(mWidth, mHeight), PIXEL_FORMAT};
+                  glm::uvec2(mWidth, mHeight), PIXEL_FORMAT};
 }
 
 bool WebpImageFactory::isNewImageAvailable() {
@@ -84,9 +88,11 @@ glm::ivec2 WebpImageFactory::getSizeHint() {
 
 void WebpImageFactory::loadNextFrame() {
     ++mCurrentFrame;
+    mAnimationFinished = false;
     if (!WebPAnimDecoderHasMoreFrames(mDecoder)) {
         ++mLoopsPassed;
         mCurrentFrame = 0;
+        mAnimationFinished = true;
         WebPAnimDecoderReset(mDecoder);
     }
 
@@ -95,4 +101,8 @@ void WebpImageFactory::loadNextFrame() {
     if (mDurations.size() < mFrameCount) {
         mDurations.push_back(mDecodedFrameTimestamp - prevFrameTimestamp);
     }
+}
+
+bool WebpImageFactory::hasAnimationFinished() {
+    return mAnimationFinished;
 }

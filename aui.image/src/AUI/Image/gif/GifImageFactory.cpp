@@ -27,13 +27,13 @@
 GifImageFactory::GifImageFactory(AByteBufferView buf) {
     mCurrentFrameIndex = 0;
     mLoadedGifPixels = stbi_load_gif_from_memory(reinterpret_cast<unsigned const char*>(buf.data()),
-                                                  buf.size(),
-                                                  &mDelays,
-                                                  &mGifWidth,
-                                                  &mGifHeight,
-                                                  &mFramesCount,
-                                                  &mChannelsCount,
-                                                  4);
+                                                 buf.size(),
+                                                 &mDelays,
+                                                 &mGifWidth,
+                                                 &mGifHeight,
+                                                 &mFramesCount,
+                                                 &mChannelsCount,
+                                                 4);
 }
 
 GifImageFactory::~GifImageFactory() {
@@ -46,14 +46,11 @@ AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
         return *mCurrentFrame;
 
     mCurrentFrameIndex++;
+    mAnimationFinished = false;
     if (mCurrentFrameIndex >= mFramesCount) {
         mCurrentFrameIndex = 0;
+        mAnimationFinished = true;
     }
-    ARaiiHelper helper = [this, frameIndex = mCurrentFrameIndex](){
-        if (frameIndex == 0 && mOnAnimationFinished) {
-            mOnAnimationFinished();
-        }
-    };
 
     unsigned format = APixelFormat::BYTE;
     switch (mChannelsCount) {
@@ -71,6 +68,10 @@ AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
     mLastFrameStarted = std::chrono::system_clock::now();
     int frameBufferSize = mGifWidth * mGifHeight * mChannelsCount;
     int currentFrameOffset = frameBufferSize * mCurrentFrameIndex;
+//    AImageView frame(
+//            AByteBufferView(reinterpret_cast<const char*>(mLoadedGifPixels + currentFrameOffset), frameBufferSize),
+//            glm::uvec2{mGifWidth, mGifHeight}, format);
+//    return frame.resizedLinearDownscale(size);
     mCurrentFrame = _new<AImage>(AByteBufferView(reinterpret_cast<const char*>(mLoadedGifPixels + currentFrameOffset), frameBufferSize), glm::uvec2{mGifWidth, mGifHeight}, format);
     return *mCurrentFrame;
 }
@@ -82,5 +83,9 @@ bool GifImageFactory::isNewImageAvailable() {
 }
 
 glm::ivec2 GifImageFactory::getSizeHint() {
-    return { mGifWidth, mGifHeight };
+    return {mGifWidth, mGifHeight};
+}
+
+bool GifImageFactory::hasAnimationFinished() {
+    return mAnimationFinished;
 }

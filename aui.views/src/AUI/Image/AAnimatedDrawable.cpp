@@ -23,9 +23,7 @@
 
 AAnimatedDrawable::AAnimatedDrawable(_<IImageFactory> factory) : mFactory (std::move(factory)) {
     if (auto gifImageFactory = _cast<GifImageFactory>(mFactory)) {
-        gifImageFactory->setOnAnimationFinished([this]() {
-            emit animationFinished;
-        });
+        
     }
 }
 
