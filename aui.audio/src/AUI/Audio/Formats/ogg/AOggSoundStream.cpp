@@ -6,9 +6,13 @@
 #include "ogg/ogg.h"
 #include "AUI/IO/AStrongByteBufferInputStream.h"
 #include "vorbis/vorbisfile.h"
+#include "AUI/Audio/ABadFormatException.h"
 
 AOggSoundStream::AOggSoundStream(AUrl url) : mUrl(std::move(url)) {
     mStream = mUrl->open();
+    if (mStream == nullptr) {
+        throw AException("Failed to get input source for ogg file from {}"_format(mUrl->full()));
+    }
     initialize();
 }
 
@@ -49,7 +53,7 @@ void AOggSoundStream::rewind() {
     if (mUrl) {
         ov_clear(mVorbisFile.ptr());
         mStream.reset();
-        mStream = mUrl->open();
+        mStream = getInputStream(*mUrl);
         if (mStream) {
             initialize();
         }
@@ -82,7 +86,7 @@ void AOggSoundStream::initialize() {
     };
 
     if (ov_open_callbacks(this, &vorbisFile, nullptr, 0, callbacks) < 0) {
-        throw AException("not a ogg stream");
+        throw aui::audio::ABadFormatException("not an ogg stream");
     }
 
     mVorbisFile = vorbisFile;

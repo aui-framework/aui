@@ -249,6 +249,11 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
     float w = x + size.x;
     float h = y + size.y;
 
+    auto apply = [&](glm::vec4 v) {
+        auto result = mTransform * v;
+        return glm::vec3(result) / result.w;
+    };
+
     return
             {
                     glm::vec2{ x, h, },

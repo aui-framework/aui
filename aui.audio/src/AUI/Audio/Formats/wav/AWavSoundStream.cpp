@@ -5,14 +5,18 @@
 #include "AWavSoundStream.h"
 #include "AUI/IO/AStrongByteBufferInputStream.h"
 #include "AUI/Url/AUrl.h"
+#include "AUI/Audio/ABadFormatException.h"
 
 AWavSoundStream::AWavSoundStream(AUrl url) : mUrl(std::move(url)) {
-    mStream = mUrl->open();
-    assert(mStream != nullptr);
+    mStream = getInputStream(*mUrl);
+    if (mStream == nullptr) {
+        throw AException("Failed to get input source for wav file from {}"_format(mUrl->full()));
+    }
     readHeader();
 }
 
 AWavSoundStream::AWavSoundStream(aui::non_null<_<IInputStream>> stream) : mStream(std::move(stream)) {
+    readHeader();
 }
 
 AAudioFormat AWavSoundStream::info() {
@@ -27,7 +31,7 @@ void AWavSoundStream::rewind() {
     if (mUrl) {
         mChunkReadPos = 0;
         mStream.reset();
-        mStream = mUrl->open();
+        mStream = getInputStream(*mUrl);
         if (mStream) {
             readHeader();
         }
@@ -54,6 +58,6 @@ void AWavSoundStream::readHeader() {
     if (std::memcmp(mHeader.chunkID, "RIFF", 4) != 0 ||
         std::memcmp(mHeader.format, "WAVE", 4) != 0 ||
         std::memcmp(mHeader.subchunk1ID, "fmt ", 4) != 0) {
-        throw AException("not a wav file");
+        throw aui::audio::ABadFormatException("not a wav file");
     }
 }

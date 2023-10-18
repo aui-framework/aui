@@ -43,9 +43,15 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
 			finalHeight = height;
 		}
 		v->setGeometry(finalX + x + margins.left,
-                       finalY + y + margins.top,
-                       finalWidth - margins.horizontal(),
-                       finalHeight - margins.vertical());
+                   finalY + y + margins.top,
+                   finalWidth - margins.horizontal(),
+                   finalHeight - margins.vertical());
+		// if view rejected the specified size, then we would recenter it
+		if (v->getSize() != glm::ivec2(finalWidth - margins.horizontal(), finalHeight - margins.vertical())) {
+			glm::ivec2 correctedSize = v->getSize() + margins.horizontal();
+			glm::ivec2 correctedPos = (glm::ivec2(width, height) - correctedSize) / 2;
+			v->setPosition(correctedPos + glm::ivec2(x + margins.left, y + margins.top));
+		}
 	}
 }
 int ::AStackedLayout::getMinimumWidth()
