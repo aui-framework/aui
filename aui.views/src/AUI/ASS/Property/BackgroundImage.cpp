@@ -148,7 +148,8 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                     break;
                 }
                 case Sizing::SPLIT_2X2: {
-                    auto textureSize = glm::vec2(drawable->getSizeHint());
+                    auto ratio = APlatform::getDpiRatio() / info.dpiMargin.or_default(1.f);
+                    auto textureSize = glm::vec2(drawable->getSizeHint()) * ratio;
                     auto textureWidth = textureSize.x;
                     auto textureHeight = textureSize.y;
 
