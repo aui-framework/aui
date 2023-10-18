@@ -21,10 +21,7 @@
 #include "AAnimatedDrawable.h"
 #include "AUI/Image/gif/GifImageFactory.h"
 
-AAnimatedDrawable::AAnimatedDrawable(_<IImageFactory> factory) : mFactory (std::move(factory)) {
-    if (auto gifImageFactory = _cast<GifImageFactory>(mFactory)) {
-        
-    }
+AAnimatedDrawable::AAnimatedDrawable(_<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
 }
 
 void AAnimatedDrawable::draw(const IDrawable::Params &params) {
@@ -33,6 +30,9 @@ void AAnimatedDrawable::draw(const IDrawable::Params &params) {
 
     if (mFactory->isNewImageAvailable()) {
         auto img = _new<AImage>(mFactory->provideImage(params.size));
+        if (mFactory->hasAnimationFinished()) {
+            emit animationFinished;
+        }
         mTexture->setImage(img);
     }
 

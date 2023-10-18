@@ -83,14 +83,14 @@ AImageLoaderRegistry& AImageLoaderRegistry::inst() {
     return a;
 }
 
-_<IImageFactory> AImageLoaderRegistry::loadAnimated(AByteBufferView buffer) {
+_<IAnimatedImageFactory> AImageLoaderRegistry::loadAnimated(AByteBufferView buffer) {
     for (auto& loader : mAnimatedLoaders)
     {
         try {
             bool matches = loader->matches(buffer);
             if (matches)
             {
-                if (auto imageFactory = loader->getImageFactory(buffer))
+                if (auto imageFactory = _cast<IAnimatedImageFactory>(loader->getImageFactory(buffer)))
                 {
                     return imageFactory;
                 }
