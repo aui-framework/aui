@@ -271,13 +271,15 @@ public:
     }
 
 
-    void sort() noexcept {
+    AVector<StoredType>& sort() noexcept {
         std::sort(super::begin(), super::end());
+        return *this;
     }
 
     template<typename Comparator>
-    void sort(Comparator&& comparator) noexcept {
+    AVector<StoredType>& sort(Comparator&& comparator) noexcept {
         std::sort(super::begin(), super::end(), std::forward<Comparator>(comparator));
+        return *this;
     }
 
     /**
@@ -377,6 +379,11 @@ public:
             }
         }
         return result;
+    }
+
+    template<aui::predicate<const StoredType&> Predicate>
+    typename super::iterator findIf(Predicate&& predicate) {
+        return std::find_if(super::begin(), super::end(), std::forward<Predicate>(predicate));
     }
 };
 

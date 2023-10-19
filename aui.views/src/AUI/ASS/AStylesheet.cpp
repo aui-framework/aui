@@ -139,9 +139,12 @@ AStylesheet::AStylesheet() {
         {
             { debug_selector(), button::Default(t<AButton>()), c(".btn_default")},
             FontRendering::ANTIALIASING,
-            BackgroundGradient {getOsThemeColor().lighter(0.15f),
-                                getOsThemeColor().darker(0.15f),
-                                ALayoutDirection::VERTICAL },
+            BackgroundGradient { ALinearGradientBrush{
+                    .colors = {
+                            {0.f, getOsThemeColor().lighter(0.15f)},
+                            {0.f, getOsThemeColor().darker(0.15f)},
+                    },
+            } },
             BoxShadow { 0, 1_dp, 3_dp, -1_dp, getOsThemeColor() },
             Border { nullptr },
             TextColor { 0xffffff_rgb },
@@ -157,9 +160,12 @@ AStylesheet::AStylesheet() {
         },
         {
             { button::Default(t<AButton>::hover()), c::hover(".btn_default")},
-            BackgroundGradient {getOsThemeColor().lighter(0.2f),
-                                getOsThemeColor().darker(0.15f),
-                                ALayoutDirection::VERTICAL },
+            BackgroundGradient { ALinearGradientBrush{
+                    .colors = {
+                            {0.f, getOsThemeColor().lighter(0.15f)},
+                            {0.f, getOsThemeColor().darker(0.15f)},
+                    },
+            } },
         },
         {
             { button::Default(t<AButton>::active()), c::active(".btn_default")},

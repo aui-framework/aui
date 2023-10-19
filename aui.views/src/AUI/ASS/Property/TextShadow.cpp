@@ -25,11 +25,11 @@
 void ass::prop::Property<ass::TextShadow>::renderFor(AView* view) {
     if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
         RenderHints::PushColor c;
-        Render::setColor(mInfo.shadowColor);
+        ARender::setColor(mInfo.shadowColor);
 
         {
             RenderHints::PushMatrix m;
-            Render::translate({1, 1});
+            ARender::translate({1, 1});
             label->doRenderText();
         }
     }

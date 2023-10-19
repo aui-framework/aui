@@ -15,19 +15,12 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 //
-// Created by Alex2772 on 11/19/2021.
+// Created by Alex2772 on 3/10/2023.
 //
 
-#include <AUI/Util/ACleanup.h>
-#include <AUI/Util/kAUI.h>
-#include "Render.h"
+#include "IndexedAttributesDeclarationNode.h"
+#include "INodeVisitor.h"
 
-
-_unique<IRenderer> Render::ourRenderer;
-
-void Render::setRenderer(_unique<IRenderer> renderer) {
-    ourRenderer = std::move(renderer);
-    do_once ACleanup::afterEntry([] {
-        ourRenderer = nullptr;
-    });
+void NonIndexedAttributesDeclarationNode::acceptVisitor(INodeVisitor& v) {
+    v.visitNode(*this);
 }

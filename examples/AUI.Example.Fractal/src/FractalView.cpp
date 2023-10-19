@@ -19,7 +19,7 @@
 //
 
 #include "FractalView.h"
-#include <AUI/Render/Render.h>
+#include "AUI/Render/ARender.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 static gl::Shader::Uniform UNIFORM_TR("tr");
@@ -85,7 +85,7 @@ void FractalView::render() {
 
     mShader.use();
     mTexture->bind();
-    Render::rect(ACustomShaderBrush{}, {0, 0}, getSize());
+    ARender::rect(ACustomShaderBrush{}, {0, 0}, getSize());
 }
 
 void FractalView::setSize(glm::ivec2 size) {

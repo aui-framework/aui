@@ -24,11 +24,11 @@
 #include <AUI/Image/IDrawable.h>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Image/AImage.h>
-#include <AUI/Render/Render.h>
+#include <AUI/Render/ARender.h>
 
 class AImageDrawable: public IDrawable {
 private:
-    Render::Texture mTexture;
+    ARender::Texture mTexture;
     glm::ivec2 mSize;
     _<AImage> mImage;
 

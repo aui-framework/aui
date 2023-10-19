@@ -47,7 +47,7 @@ APath APath::parent() const {
     return {};
 }
 
-AString APath::filename() const {
+APath APath::filename() const {
      auto i = rfind(L'/');
      if (i == NPOS) {
          return *this;
@@ -55,7 +55,7 @@ AString APath::filename() const {
     return substr(i + 1);
 }
 
-AString APath::filenameWithoutExtension() const {
+APath APath::filenameWithoutExtension() const {
     auto name = filename();
     auto it = name.rfind('.');
     if (it == NPOS) {
@@ -449,4 +449,12 @@ const APath& APath::chmod(int newMode) const {
         aui::impl::lastErrorToException("unable to chmod {}"_format(*this));
     }
     return *this;
+}
+
+APath APath::extensionChanged(const AString& newExtension) const {
+    auto it = rfind('.');
+    if (it == NPOS) {
+        return *this + "." + newExtension;
+    }
+    return substr(0, it) + "." + newExtension;
 }

@@ -19,12 +19,12 @@
 // Created by alex2 on 23.10.2020.
 //
 
-#include <AUI/Render/Render.h>
+#include "AUI/Render/ARender.h"
 #include "AImageDrawable.h"
 #include <AUI/Platform/AWindow.h>
 
 AImageDrawable::AImageDrawable(_<AImage> image): mSize(image->size()), mImage(std::move(image)) {
-    mTexture = Render::getNewTexture();
+    mTexture = ARender::getNewTexture();
     mTexture->setImage(mImage);
 }
 
@@ -38,7 +38,7 @@ glm::ivec2 AImageDrawable::getSizeHint() {
 
 
 void AImageDrawable::draw(const IDrawable::Params& params) {
-    Render::rect(ATexturedBrush{
+    ARender::rect(ATexturedBrush{
             mTexture,
             params.cropUvTopLeft,
             params.cropUvBottomRight,

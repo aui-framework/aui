@@ -113,7 +113,7 @@ void Lang::run(Toolbox& t) {
         auto langDir = APath(t.args[0]).absolute().file("assets/lang/");
         for (auto& l : langDir.listDir()) {
             auto filename = l.filename();
-            auto dotPos = filename.find('.');
+            auto dotPos = filename.AString::find('.');
             if (dotPos == AString::NPOS)
                 continue;
 

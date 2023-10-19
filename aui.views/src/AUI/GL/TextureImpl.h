@@ -54,6 +54,11 @@ void gl::Texture<TEXTURE_TARGET>::setupMirroredRepeat() {
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 }
+template<unsigned int TEXTURE_TARGET>
+void gl::Texture<TEXTURE_TARGET>::setupClampToEdge() {
+    glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+}
 
 template<unsigned int TEXTURE_TARGET>
 void gl::Texture<TEXTURE_TARGET>::bind(uint8_t index) {
@@ -61,3 +66,8 @@ void gl::Texture<TEXTURE_TARGET>::bind(uint8_t index) {
     gl::State::bindTexture(TEXTURE_TARGET, mTexture);
 }
 
+template<unsigned int TEXTURE_TARGET>
+void gl::Texture<TEXTURE_TARGET>::unbind(uint8_t index) {
+    gl::State::activeTexture(index);
+    gl::State::bindTexture(TEXTURE_TARGET, 0);
+}

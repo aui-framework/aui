@@ -20,7 +20,7 @@
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
 #include <AUI/Common/IStringable.h>
-#include <AUI/Render/Render.h>
+#include <AUI/Render/ARender.h>
 
 /**
  * @brief Text field implementation
@@ -66,7 +66,7 @@ public:
     void setSize(glm::ivec2 size) override;
 
 protected:
-    Render::PrerenderedString mPrerenderedString;
+    ARender::PrerenderedString mPrerenderedString;
     AString mContents;
     virtual bool isValidText(const AString& text);
 

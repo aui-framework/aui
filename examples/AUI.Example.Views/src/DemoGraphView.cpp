@@ -34,6 +34,6 @@ DemoGraphView::DemoGraphView()
 void DemoGraphView::render() {
     AView::render();
 
-    Render::lines(ASolidBrush{ 0xff0000_rgb }, mPoints);
+    ARender::lines(ASolidBrush{0xff0000_rgb }, mPoints);
 
 }

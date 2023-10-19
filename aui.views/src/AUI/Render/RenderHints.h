@@ -20,7 +20,7 @@
 #include <AUI/Views.h>
 #include <AUI/Common/AColor.h>
 #include <AUI/GL/gl.h>
-#include <AUI/Render/Render.h>
+#include "ARender.h"
 
 namespace RenderHints
 {
@@ -32,9 +32,9 @@ namespace RenderHints
      */
     template<aui::invocable Callable>
     static void pushMask(Callable&& maskRenderer) {
-        Render::getRenderer()->pushMaskBefore();
+        ARender::getRenderer()->pushMaskBefore();
         maskRenderer();
-        Render::getRenderer()->pushMaskAfter();
+        ARender::getRenderer()->pushMaskAfter();
     }
 
     /**
@@ -45,9 +45,9 @@ namespace RenderHints
      */
     template<aui::invocable Callable>
     static void popMask(Callable&& maskRenderer) {
-        Render::getRenderer()->popMaskBefore();
+        ARender::getRenderer()->popMaskBefore();
         maskRenderer();
-        Render::getRenderer()->popMaskAfter();
+        ARender::getRenderer()->popMaskAfter();
     }
 
     template<aui::invocable Callable>
@@ -74,10 +74,10 @@ namespace RenderHints
 		
 	public:
         inline PushMatrix() {
-            mStored = Render::getTransform();
+            mStored = ARender::getTransform();
 		}
 		inline ~PushMatrix() {
-            Render::setTransformForced(mStored);
+            ARender::setTransformForced(mStored);
 		}
 	};
 	class PushColor
@@ -87,10 +87,10 @@ namespace RenderHints
 		
 	public:
         inline PushColor() {
-            mStored = Render::getColor();
+            mStored = ARender::getColor();
 		}
 		inline ~PushColor() {
-            Render::setColorForced(mStored);
+            ARender::setColorForced(mStored);
 		}
 	};
 	class PushState: PushColor, PushMatrix

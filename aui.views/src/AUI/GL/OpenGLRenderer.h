@@ -17,7 +17,8 @@
 #pragma once
 
 
-#include <AUI/GL/Shader.h>
+#include <AUI/GL/Program.h>
+#include <AUI/GL/Framebuffer.h>
 #include <AUI/GL/Vao.h>
 #include "AUI/Render/IRenderer.h"
 
@@ -37,18 +38,19 @@ public:
     };
 
 private:
-    gl::Shader mSolidShader;
-    gl::Shader mGradientShader;
-    gl::Shader mRoundedSolidShader;
-    gl::Shader mRoundedSolidShaderAntialiased;
-    gl::Shader mRoundedSolidShaderAntialiasedBorder;
-    gl::Shader mRoundedGradientShaderAntialiased;
-    gl::Shader mSolidTransformShader;
-    gl::Shader mBoxShadowShader;
-    gl::Shader mTexturedShader;
-    gl::Shader mSymbolShader;
-    gl::Shader mSymbolShaderSubPixel;
+    gl::Program mSolidShader;
+    gl::Program mGradientShader;
+    gl::Program mRoundedSolidShader;
+    gl::Program mRoundedSolidShaderBorder;
+    gl::Program mRoundedGradientShader;
+    gl::Program mBoxShadowShader;
+    gl::Program mTexturedShader;
+    gl::Program mSymbolShader;
+    gl::Program mSymbolShaderSubPixel;
     gl::Vao mTempVao;
+    gl::Texture2D mGradientTexture;
+
+    struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
 
 
     struct CharacterData {
@@ -59,13 +61,14 @@ private:
     ADeque<FontEntryData> mFontEntryData;
 
 
-    AVector<glm::vec3> getVerticesForRect(const glm::vec2& position,
-                                          const glm::vec2& size);
+    std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position,
+                                          glm::vec2 size);
 
     void uploadToShaderCommon();
     void identityUv();
 
     void endDraw(const ABrush& brush);
+    void tryEnableFramebuffer(glm::uvec2 windowSize);
     FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 protected:
     ITexture* createNewTexture() override;
@@ -76,42 +79,37 @@ public:
     bool isVaoAvailable();
 
     void drawRect(const ABrush& brush,
-                  const glm::vec2& position,
-                  const glm::vec2& size) override;
+                  glm::vec2 position,
+                  glm::vec2 size) override;
 
     void drawRoundedRect(const ABrush& brush,
-                         const glm::vec2& position,
-                         const glm::vec2& size,
+                         glm::vec2 position,
+                         glm::vec2 size,
                          float radius) override;
 
-    void drawRoundedRectAntialiased(const ABrush& brush,
-                                    const glm::vec2& position,
-                                    const glm::vec2& size,
-                                    float radius) override;
-
     void drawRectBorder(const ABrush& brush,
-                       const glm::vec2& position,
-                       const glm::vec2& size,
+                       glm::vec2 position,
+                       glm::vec2 size,
                        float lineWidth) override;
 
-    void drawRectBorder(const ABrush& brush,
-                        const glm::vec2& position,
-                        const glm::vec2& size,
-                        float radius,
-                        int borderWidth) override;
+    void drawRoundedRectBorder(const ABrush& brush,
+                               glm::vec2 position,
+                               glm::vec2 size,
+                               float radius,
+                               int borderWidth) override;
 
-    void drawBoxShadow(const glm::vec2& position,
-                       const glm::vec2& size,
+    void drawBoxShadow(glm::vec2 position,
+                       glm::vec2 size,
                        float blurRadius,
                        const AColor& color) override;
 
-    void drawString(const glm::vec2& position,
+    void drawString(glm::vec2 position,
                     const AString& string,
                     const AFontStyle& fs) override;
 
-    _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, const AFontStyle& fs) override;
+    _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
 
-    void drawRectImpl(const glm::vec2& position, const glm::vec2& size);
+    void drawRectImpl(glm::vec2 position, glm::vec2 size);
 
     void setBlending(Blending blending) override;
 
@@ -129,6 +127,9 @@ public:
     void pushMaskAfter() override;
     void popMaskBefore() override;
     void popMaskAfter() override;
+
+    void beginPaint(glm::uvec2 windowSize);
+    void endPaint();
 };
 
 

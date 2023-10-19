@@ -15,14 +15,20 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 
+#include "AUI/Util/ACommandLineArgs.h"
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/Entry.h>
 #import <UIKit/UIKit.h>
 #import "AppDelegate.h"
 
-int(* _gEntry)(AStringVector);
+int(* _gEntry)(const AStringVector&);
 
-AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
+const ACommandLineArgs& aui::args() noexcept {
+    static ACommandLineArgs args;
+    return args; 
+}
+
+AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
     _gEntry = aui_entry;
     //AThread::setThreadName("UI thread");
     NSString * appDelegateClassName = appDelegateClassName = NSStringFromClass([AppDelegate class]);;

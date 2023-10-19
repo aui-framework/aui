@@ -17,7 +17,7 @@
 #include "CellView.h"
 
 #include "AUI/Image/Drawables.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 
 CellView::CellView(FieldCell& cell)
 	: mCell(cell), mCellValueCopy(cell)
@@ -83,7 +83,7 @@ void CellView::render()
 				break;
 			}
 			
-			Render::drawString(getWidth() / 2, (getHeight() - fs.size) / 2 - 3, AString::number(count), fs);
+			ARender::drawString(getWidth() / 2, (getHeight() - fs.size) / 2 - 3, AString::number(count), fs);
 		}
 	}
 }

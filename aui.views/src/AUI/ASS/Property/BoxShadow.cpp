@@ -19,15 +19,15 @@
 //
 
 #include "BoxShadow.h"
-#include <AUI/Render/Render.h>
+#include "AUI/Render/ARender.h"
 
 
 void ass::prop::Property<ass::BoxShadow>::renderFor(AView* view) {
-    Render::boxShadow({mInfo.offsetX.getValuePx() - mInfo.spreadRadius.getValuePx(),
+    ARender::boxShadow({mInfo.offsetX.getValuePx() - mInfo.spreadRadius.getValuePx(),
                        mInfo.offsetY.getValuePx() - mInfo.spreadRadius.getValuePx()},
                       glm::vec2(view->getSize()) + mInfo.spreadRadius.getValuePx() * 2.f,
-                      mInfo.blurRadius,
-                      mInfo.color);
+                       mInfo.blurRadius,
+                       mInfo.color);
 }
 
 ass::prop::PropertySlot ass::prop::Property<ass::BoxShadow>::getPropertySlot() const {

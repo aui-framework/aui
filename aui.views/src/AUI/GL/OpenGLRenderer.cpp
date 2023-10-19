@@ -19,14 +19,35 @@
 //
 
 #include "OpenGLRenderer.h"
+#include "AUI/Common/AException.h"
+#include "AUI/GL/Framebuffer.h"
+#include "AUI/GL/GLEnums.h"
+#include "AUI/GL/Texture2D.h"
 #include "ShaderUniforms.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
+#include "glm/fwd.hpp"
 #include <AUI/Traits/callables.h>
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/GL/Vbo.h>
 #include <AUI/GL/State.h>
+#include <AUI/GL/RenderTarget/RenderbufferRenderTarget.h>
 #include <AUI/Platform/ABaseWindow.h>
+#include <AUI/Logging/ALogger.h>
+#include <AUISL/Generated/basic.vsh.glsl120.h>
+#include <AUISL/Generated/basic_uv.vsh.glsl120.h>
+#include <AUISL/Generated/shadow.fsh.glsl120.h>
+#include <AUISL/Generated/rect_solid.fsh.glsl120.h>
+#include <AUISL/Generated/rect_solid_rounded.fsh.glsl120.h>
+#include <AUISL/Generated/rect_gradient.fsh.glsl120.h>
+#include <AUISL/Generated/rect_gradient_rounded.fsh.glsl120.h>
+#include <AUISL/Generated/rect_textured.fsh.glsl120.h>
+#include <AUISL/Generated/border_rounded.fsh.glsl120.h>
+#include <AUISL/Generated/symbol.vsh.glsl120.h>
+#include <AUISL/Generated/symbol.fsh.glsl120.h>
+#include <AUISL/Generated/symbol_sub.fsh.glsl120.h>
+#include <glm/gtx/matrix_transform_2d.hpp>
 
+static constexpr auto LOG_TAG = "OpenGLRenderer";
 
 class OpenGLTexture2D: public ITexture {
 private:
@@ -44,6 +65,7 @@ public:
 
 static constexpr GLuint RECT_INDICES[] = {0, 1, 2, 2, 1, 3 };
 
+namespace {
 
 template<typename Brush>
 struct UnsupportedBrushHelper {
@@ -53,29 +75,68 @@ struct UnsupportedBrushHelper {
 };
 
 struct GradientShaderHelper {
-    gl::Shader& shader;
+    gl::Program& shader;
+    gl::Texture2D& tex;
 
-    GradientShaderHelper(gl::Shader& shader) : shader(shader) {}
+    GradientShaderHelper(gl::Program& shader, gl::Texture2D& tex) : shader(shader), tex(tex) {}
 
     void operator()(const ALinearGradientBrush& brush) const {
         shader.use();
-        shader.set(aui::ShaderUniforms::COLOR, Render::getColor());
-        shader.set(aui::ShaderUniforms::COLOR_TL, brush.topLeftColor);
-        shader.set(aui::ShaderUniforms::COLOR_TR, brush.topRightColor);
-        shader.set(aui::ShaderUniforms::COLOR_BL, brush.bottomLeftColor);
-        shader.set(aui::ShaderUniforms::COLOR_BR, brush.bottomRightColor);
-        
+        shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
+        ASmallVector<glm::u8vec4, 8> colors;
+        for (const auto& c : brush.colors) {
+            colors.push_back(glm::uvec4(c.color * 255.f));
+        }
+        float actualEdgeUvPosition = (0.5f - 0.05f /* bias to make ideal color edge */) / float(colors.size());
+
+        float rotationRadians = brush.rotation.radians();
+
+        float s = glm::sin(rotationRadians);
+        float c = -glm::cos(rotationRadians);
+        float bias = glm::max(-s, -c, 0.f);
+
+        auto probe = [&](glm::vec2 uv) {
+            return uv.x * s + uv.y * c + bias;
+        };
+        auto adjust = [&](glm::vec2 uv) {
+            float p = probe(uv);
+            if (p > 1.f) {
+                s /= p;
+                c /= p;
+                bias /= p;
+            }
+        };
+
+        if (auto p = probe({1, 1}); p < 0.f) {
+            bias += -p;
+        }
+
+        adjust({0, 0});
+        adjust({1, 0});
+        adjust({0, 1});
+        adjust({1, 1});
+
+        glm::mat3 mat3 = {
+             /* uv.x */ s * (1.f - actualEdgeUvPosition * 2.f), 0.f, 0.f,
+             /* uv.y */ c * (1.f - actualEdgeUvPosition * 2.f), 0.f, 0.f,
+             /* 1    */ bias * (1.f - actualEdgeUvPosition * 2.f) + actualEdgeUvPosition, 0.f, 0.f,
+        };
+
+
+        shader.set(aui::ShaderUniforms::GRADIENT_MAT_UV, mat3);
+        tex.tex2D(AImageView({(const char*)colors.data(), colors.sizeInBytes()}, { colors.size(), 1 }, APixelFormat::RGBA_BYTE));
     }
 };
 
 struct SolidShaderHelper {
-    gl::Shader& shader;
+    gl::Program& shader;
 
-    SolidShaderHelper(gl::Shader& shader) : shader(shader) {}
+    SolidShaderHelper(gl::Program& shader) : shader(shader) {}
 
     void operator()(const ASolidBrush& brush) const {
         shader.use();
-        shader.set(aui::ShaderUniforms::COLOR, Render::getColor() * brush.solidColor);
+        shader.set(aui::ShaderUniforms::COLOR, ARender::getColor() * brush.solidColor);
+        shader.set(aui::ShaderUniforms::COLOR, ARender::getColor() * brush.solidColor);
     }
 };
 
@@ -88,10 +149,10 @@ struct CustomShaderHelper {
 };
 
 struct TexturedShaderHelper {
-    gl::Shader& shader;
+    gl::Program& shader;
     gl::Vao& tempVao;
 
-    TexturedShaderHelper(gl::Shader& shader, gl::Vao& tempVao) : shader(shader), tempVao(tempVao) {}
+    TexturedShaderHelper(gl::Program& shader, gl::Vao& tempVao) : shader(shader), tempVao(tempVao) {}
 
     void operator()(const ATexturedBrush& brush) const {
         shader.use();
@@ -103,11 +164,10 @@ struct TexturedShaderHelper {
                 gl::Texture2D::setupLinear();
                 break;
         }
-        shader.set(aui::ShaderUniforms::COLOR, Render::getColor());
+        shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
         glm::vec2 uv1 = brush.uv1 ? *brush.uv1 : glm::vec2{0, 0};
         glm::vec2 uv2 = brush.uv2 ? *brush.uv2 : glm::vec2{1, 1};
         tempVao.bind();
-        glEnableVertexAttribArray(1);
         const glm::vec2 uvs[] = {
             {uv1.x, uv2.y},
             {uv2.x, uv2.y},
@@ -120,214 +180,91 @@ struct TexturedShaderHelper {
 };
 
 
-std::string put_if(bool value, const char* str) { if (value) return str; return ""; }
+template<typename C>
+concept AuiSLShader = requires(C&& c) {
+    { C::code() } -> std::same_as<const char*>;
+    C::setup(0);
+};
+
+template<AuiSLShader Vertex, AuiSLShader Fragment>
+inline void useAuislShader(gl::Program& out) {
+    out.loadRaw(Vertex::code(), Fragment::code());
+    Vertex::setup(out.handle());
+    Fragment::setup(out.handle());
+    out.compile();
+}
+}
+
 OpenGLRenderer::OpenGLRenderer() {
-    mSolidShader.load(
-            "attribute vec3 pos;"
-            "void main(void) {gl_Position = vec4(pos, 1);}",
-            "uniform vec4 color;"
-            "void main(void) {gl_FragColor = color;}");
-    mBoxShadowShader.load(
-            "attribute vec3 pos;"
-            "uniform mat4 transform;"
-            "varying vec2 pass_uv;"
-            "void main(void) {gl_Position = transform * vec4(pos, 1); pass_uv = pos.xy;}",
-            "varying vec2 pass_uv;"
-            "uniform vec4 color;"
-            "uniform vec2 lower;"
-            "uniform vec2 upper;"
-            "uniform float sigma;"
-            "vec4 erf(vec4 x) {"
-            "vec4 s = sign(x), a = abs(x);"
-            "x = 1.0 + (0.278393 + (0.230389 + 0.078108 * (a * a)) * a) * a;"
-            "x *= x;"
-            "return s - s / (x * x);"
-            "}"
-            "void main(void) {"
-            "gl_FragColor = color;"
+    ALogger::info(LOG_TAG) << "GL_VERSION = " << ((const char*) glGetString(GL_VERSION));
+    ALogger::info(LOG_TAG) << "GL_VENDOR = " << ((const char*) glGetString(GL_VENDOR));
+    ALogger::info(LOG_TAG) << "GL_RENDERER = " << ((const char*) glGetString(GL_RENDERER));
+    ALogger::info(LOG_TAG) << "GL_EXTENSIONS = " << [] {
+        if (auto ext = ((const char*) glGetString(GL_EXTENSIONS))) {
+            return ext;
+        } else {
+            return "null";
+        }}();
+    mGradientTexture.bind();
+    mGradientTexture.setupLinear();
+    mGradientTexture.setupClampToEdge();
+    useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader,
+                   aui::sl_gen::rect_solid::fsh::glsl120::Shader>(mSolidShader);
 
-            "vec4 query = vec4(pass_uv - vec2(lower), pass_uv - vec2(upper));"
-            "vec4 integral = 0.5 + 0.5 * erf(query * (sqrt(0.5) / sigma));"
-            "gl_FragColor.a *= clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0);"
-            //"gl_FragColor.a = query.x + query.y;"
-            "}");
-    /*
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
 
-    if (glewGetExtension("ARB_multisample")) {
-        mRoundedSolidShader.load(
-                "attribute vec3 pos;"
-                "attribute vec2 uv;"
-                "varying vec2 pass_uv;"
-                "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
-                "uniform vec2 size;"
-                "varying vec2 pass_uv;"
-                "void main(void) {"
-                "vec2 tmp = abs(pass_uv);"
-                "if ((tmp.x - 1.0) * (size.y) / (-size.x) < tmp.y - (1.0 - size.y) &&"
-                "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
-                "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
-                "}");
-    } else */ {
-        // without antialiasing rounded borders look poorly. fix it
-        mRoundedSolidShader.load(
-                "attribute vec3 pos;"
-                "attribute vec2 uv;"
-                "varying vec2 pass_uv;"
-                "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
-                "uniform vec2 size;"
-                "varying vec2 pass_uv;"
-                "void main(void) {"
-                "vec2 tmp = abs(pass_uv);"
-                "if ((tmp.x - 1.0) * (size.y) / (-size.x) < tmp.y - (1.0 - size.y) &&"
-                "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
-                "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) > 1.0) discard;"
-                "}");
-        auto produceRoundedAntialiasedShader = [](gl::Shader& shader, const AString& uniforms, const AString& color, bool isBorder) {
-            shader.load(
-                    "attribute vec3 pos;"
-                    "attribute vec2 uv;"
-                    "attribute vec2 outer_to_inner;"
-                    "varying vec2 pass_uv;"
-                    "void main(void) {gl_Position = vec4(pos, 1.0); pass_uv = uv * 2.0 - vec2(1.0, 1.0);}",
-                    "uniform vec2 outerSize;"
-                    "uniform vec2 innerSize;"
-                    "uniform vec2 innerTexelSize;"
-                    "uniform vec2 outerTexelSize;"
-                    "uniform vec2 outer_to_inner;"
-                    + uniforms +
-                    "uniform vec4 color;"
-                    "varying vec2 pass_uv;"
-                    "bool is_outside(vec2 tmp, vec2 size) {"
-                    "if (tmp.x >= 1.0 || tmp.y >= 1.0) return true;"
-                    "return (tmp.x - 1.0) * (size.y) / (-size.x) <= tmp.y - (1.0 - size.y) &&"
-                    "(pow(tmp.x - (1.0 - size.x), 2.0) / pow(size.x, 2.0) +"
-                    "pow(tmp.y - (1.0 - size.y), 2.0) / pow(size.y, 2.0)) >= 1.0;"
-                    "}"
-                    "void main(void) {"
-                    "vec2 outer_uv = abs(pass_uv);"
-                    "vec2 inner_uv = outer_uv * outer_to_inner;"
-                    "float alpha = 1.0;"
-                    "ivec2 i;"
-                    "for (i.x = -2; i.x <= 2; ++i.x) {"
-                    "for (i.y = -2; i.y <= 2; ++i.y) {"
-                    "alpha -= (" + put_if(isBorder, "is_outside(inner_uv + innerTexelSize * vec2(i), innerSize)"
-                    " == ") + "is_outside(outer_uv + outerTexelSize * vec2(i), outerSize)"
-                    ") ? (1.0 / 25.0) : 0.0;"
-                    "}"
-                    "}"
-                    + color +
-                    "gl_FragColor = vec4(fcolor.rgb, fcolor.a * alpha);"
-                    "}", { "pos", "uv" });
-        };
-        produceRoundedAntialiasedShader(mRoundedSolidShaderAntialiased,
-                                        {},
-                                        "vec4 fcolor = color;",
-                                        false);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::rect_solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::border_rounded::fsh::glsl120::Shader>(mRoundedSolidShaderBorder);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::rect_gradient::fsh::glsl120::Shader>(mGradientShader);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::rect_gradient_rounded::fsh::glsl120::Shader>(mRoundedGradientShader);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
 
-        produceRoundedAntialiasedShader(mRoundedSolidShaderAntialiasedBorder,
-                                        {},
-                                        "vec4 fcolor = color;",
-                                        true);
 
-        produceRoundedAntialiasedShader(mRoundedGradientShaderAntialiased,
-                                        "uniform vec4 color_tl;"
-                                        "uniform vec4 color_tr;"
-                                        "uniform vec4 color_bl;"
-                                        "uniform vec4 color_br;",
-                                        "vec4 fcolor = mix(mix(color_tl, color_tr, pass_uv.x), mix(color_bl, color_br, pass_uv.x), pass_uv.y) * color;",
-                                        false);
-    }
-
-    mSolidTransformShader.load(
-            "attribute vec3 pos;"
-            "uniform mat4 transform;"
-            "void main(void) {gl_Position = transform * vec4(pos, 1);}",
-            "uniform vec4 color;"
-            "void main(void) {gl_FragColor = color;}");
-
-    mTexturedShader.load(
-            "attribute vec3 pos;"
-            "attribute vec2 uv;"
-            "varying vec2 pass_uv;"
-            "void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv;}",
-            "uniform sampler2D tex;"
-            "uniform vec4 color;"
-            "varying vec2 pass_uv;"
-            "void main(void) {gl_FragColor = texture2D(tex, pass_uv) * color; if (gl_FragColor.a < 0.01) discard;}",
-            {"pos", "uv"});
-
-    mGradientShader.load(
-            "attribute vec3 pos;"
-            "attribute vec2 uv;"
-            "varying vec2 pass_uv;"
-            "void main(void) {gl_Position = vec4(pos, 1); pass_uv = uv;}",
-            "uniform sampler2D tex;"
-            "uniform vec4 color;"
-            "uniform vec4 color_tl;"
-            "uniform vec4 color_tr;"
-            "uniform vec4 color_bl;"
-            "uniform vec4 color_br;"
-            "varying vec2 pass_uv;"
-            "void main(void) {gl_FragColor = mix(mix(color_tl, color_tr, pass_uv.x), mix(color_bl, color_br, pass_uv.x), pass_uv.y) * color;}",
-            {"pos", "uv"});
-
-    mSymbolShader.load(
-            "attribute vec2 pos;"
-            "attribute vec2 uv;"
-            "varying vec2 pass_uv;"
-            "uniform mat4 mat;"
-            "uniform float uv_scale;"
-
-            "void main(void) {gl_Position = mat * vec4(pos, 1, 1); pass_uv = uv * uv_scale;}",
-            "varying vec2 pass_uv;"
-            "uniform sampler2D tex;"
-            "uniform vec4 color;"
-            "void main(void) {float sample = texture2D(tex, pass_uv).r; gl_FragColor = vec4(color.rgb, color.a * sample);}",
-            {"pos", "uv"});
-
-    mSymbolShaderSubPixel.load(
-            "attribute vec2 pos;"
-            "attribute vec2 uv;"
-            "varying vec2 pass_uv;"
-            "uniform mat4 mat;"
-            "uniform float uv_scale;"
-
-            "void main(void) {gl_Position = mat * vec4(pos, 1, 1); pass_uv = uv * uv_scale;}",
-            "varying vec2 pass_uv;"
-            "uniform sampler2D tex;"
-            "uniform vec4 color;"
-            "void main(void) {vec3 sample = texture2D(tex, pass_uv).rgb; gl_FragColor = vec4(sample * color.rgb * color.a, 1);}",
-            {"pos", "uv"});
+    useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
+                   aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
+    useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
+                   aui::sl_gen::symbol_sub::fsh::glsl120::Shader>(mSymbolShaderSubPixel);
 
     mTempVao.bind();
 }
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
-    return glm::ortho(0.f, static_cast<float>(mWindow->getWidth()), static_cast<float>(mWindow->getHeight()), 0.f);
+    return glm::ortho(0.0f, static_cast<float>(mWindow->getWidth()) - 0.0f, static_cast<float>(mWindow->getHeight()) - 0.0f, 0.0f, -1.f, 1.f);
 }
 
 void OpenGLRenderer::uploadToShaderCommon() {
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
 }
 
-AVector<glm::vec3> OpenGLRenderer::getVerticesForRect(const glm::vec2& position, const glm::vec2& size)
+std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, glm::vec2 size)
 {
     float x = position.x;
     float y = position.y;
     float w = x + size.x;
     float h = y + size.y;
 
+    auto apply = [&](glm::vec4 v) {
+        auto result = mTransform * v;
+        return glm::vec3(result) / result.w;
+    };
+
     return
             {
-                    glm::vec3(mTransform * glm::vec4{ x, h, 1, 1 }),
-                    glm::vec3(mTransform * glm::vec4{ w, h, 1, 1 }),
-                    glm::vec3(mTransform * glm::vec4{ x, y, 1, 1 }),
-                    glm::vec3(mTransform * glm::vec4{ w, y, 1, 1 }),
+                    glm::vec2{ x, h, },
+                    glm::vec2{ w, h, },
+                    glm::vec2{ x, y, },
+                    glm::vec2{ w, y, },
             };
 }
-void OpenGLRenderer::drawRect(const ABrush& brush, const glm::vec2& position, const glm::vec2& size) {
+void OpenGLRenderer::drawRect(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mGradientShader),
+            GradientShaderHelper(mGradientShader, mGradientTexture),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
             CustomShaderHelper{},
@@ -339,11 +276,10 @@ void OpenGLRenderer::drawRect(const ABrush& brush, const glm::vec2& position, co
     endDraw(brush);
 }
 
-void OpenGLRenderer::drawRectImpl(const glm::vec2& position, const glm::vec2& size) {
+void OpenGLRenderer::drawRectImpl(glm::vec2 position, glm::vec2 size) {
     mTempVao.bind();
 
     mTempVao.insert(0, getVerticesForRect(position, size));
-    
 
     mTempVao.indices(RECT_INDICES);
     mTempVao.drawElements();
@@ -360,11 +296,11 @@ void OpenGLRenderer::identityUv() {
 }
 
 void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
-                                     const glm::vec2& position,
-                                     const glm::vec2& size,
+                                     glm::vec2 position,
+                                     glm::vec2 size,
                                      float radius) {
     std::visit(aui::lambda_overloaded {
-            UnsupportedBrushHelper<ALinearGradientBrush>(),
+            GradientShaderHelper(mRoundedGradientShader, mGradientTexture),
             UnsupportedBrushHelper<ATexturedBrush>(),
             SolidShaderHelper(mRoundedSolidShader),
             CustomShaderHelper{},
@@ -372,38 +308,14 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
     uploadToShaderCommon();
     identityUv();
 
-    mRoundedSolidShader.use();
-    mRoundedSolidShader.set(aui::ShaderUniforms::SIZE, 2.f * radius / size);
-    drawRectImpl(position, size);
-    endDraw(brush);
-}
-
-void OpenGLRenderer::drawRoundedRectAntialiased(const ABrush& brush,
-                                                const glm::vec2& position,
-                                                const glm::vec2& size,
-                                                float radius) {
-    std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mRoundedGradientShaderAntialiased),
-            UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(mRoundedSolidShaderAntialiased),
-            CustomShaderHelper{},
-    }, brush);
-
-    uploadToShaderCommon();
-    identityUv();
-
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, glm::vec2{0, 0});
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, glm::vec2{0});
-
+    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
     drawRectImpl(position, size);
     endDraw(brush);
 }
 
 void OpenGLRenderer::drawRectBorder(const ABrush& brush,
-                                    const glm::vec2& position,
-                                    const glm::vec2& size,
+                                    glm::vec2 position,
+                                    glm::vec2 size,
                                     float lineWidth) {
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
@@ -445,15 +357,15 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     endDraw(brush);
 }
 
-void OpenGLRenderer::drawRectBorder(const ABrush& brush,
-                                    const glm::vec2& position,
-                                    const glm::vec2& size,
-                                    float radius,
-                                    int borderWidth) {
+void OpenGLRenderer::drawRoundedRectBorder(const ABrush& brush,
+                                           glm::vec2 position,
+                                           glm::vec2 size,
+                                           float radius,
+                                           int borderWidth) {
     std::visit(aui::lambda_overloaded {
             UnsupportedBrushHelper<ALinearGradientBrush>(),
             UnsupportedBrushHelper<ATexturedBrush>(),
-            SolidShaderHelper(mRoundedSolidShaderAntialiasedBorder),
+            SolidShaderHelper(mRoundedSolidShaderBorder),
             CustomShaderHelper{},
     }, brush);
 
@@ -461,27 +373,24 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     glm::vec2 innerSize = { size.x - borderWidth * 2,
                             size.y - borderWidth * 2 };
 
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::INNER_SIZE, 2.f * (radius - borderWidth) / innerSize);
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, size / innerSize);
-
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::INNER_TEXEL_SIZE, 2.f / 5.f / innerSize);
-    gl::Shader::currentShader()->set(aui::ShaderUniforms::OUTER_TEXEL_SIZE, 2.f / 5.f / size);
-
+    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::INNER_SIZE, 2.f * (radius - borderWidth) / innerSize);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, size / innerSize);
+    uploadToShaderCommon();
     drawRectImpl(position, size);
     endDraw(brush);
 }
 
-void OpenGLRenderer::drawBoxShadow(const glm::vec2& position,
-                                   const glm::vec2& size,
+void OpenGLRenderer::drawBoxShadow(glm::vec2 position,
+                                   glm::vec2 size,
                                    float blurRadius,
                                    const AColor& color) {
     identityUv();
     mBoxShadowShader.use();
-    mBoxShadowShader.set(aui::ShaderUniforms::SIGMA, blurRadius / 2.f);
-    mBoxShadowShader.set(aui::ShaderUniforms::LOWER, position + size);
-    mBoxShadowShader.set(aui::ShaderUniforms::UPPER, position);
-    mBoxShadowShader.set(aui::ShaderUniforms::TRANSFORM, mTransform);
+    mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, blurRadius / 2.f);
+    mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_LOWER, position + size);
+    mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_UPPER, position);
+    mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_TRANSFORM, mTransform);
     mBoxShadowShader.set(aui::ShaderUniforms::COLOR, mColor * color);
 
     mTempVao.bind();
@@ -508,7 +417,7 @@ void OpenGLRenderer::drawBoxShadow(const glm::vec2& position,
     mTempVao.drawElements();
 }
 
-void OpenGLRenderer::drawString(const glm::vec2& position,
+void OpenGLRenderer::drawString(glm::vec2 position,
                                 const AString& string,
                                 const AFontStyle& fs) {
     prerenderString(position, string, fs)->draw();
@@ -603,11 +512,11 @@ public:
         glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(OpenGLPrerenderedString::Vertex), reinterpret_cast<const void*>(0));
         glVertexAttribPointer(1, 2, GL_FLOAT, false, sizeof(OpenGLPrerenderedString::Vertex), reinterpret_cast<const void*>(sizeof(glm::vec2)));
 
-        auto finalColor = Render::getColor() * mColor;
+        auto finalColor = ARender::getColor() * mColor;
         if (mFontRendering == FontRendering::SUBPIXEL) {
             mRenderer->mSymbolShaderSubPixel.use();
             mRenderer->mSymbolShaderSubPixel.set(aui::ShaderUniforms::UV_SCALE, uvScale);
-            mRenderer->mSymbolShaderSubPixel.set(aui::ShaderUniforms::MAT, mRenderer->getTransform());
+            mRenderer->mSymbolShaderSubPixel.set(aui::ShaderUniforms::TRANSFORM, mRenderer->getTransform());
             mRenderer->mSymbolShaderSubPixel.set(aui::ShaderUniforms::COLOR, glm::vec4(1, 1, 1, finalColor.a));
             glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
             mIndexBuffer.draw(GL_TRIANGLES);
@@ -623,11 +532,10 @@ public:
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             mRenderer->mSymbolShader.use();
             mRenderer->mSymbolShader.set(aui::ShaderUniforms::UV_SCALE, uvScale);
-            mRenderer->mSymbolShader.set(aui::ShaderUniforms::MAT, mRenderer->getTransform());
+            mRenderer->mSymbolShader.set(aui::ShaderUniforms::TRANSFORM, mRenderer->getTransform());
             mRenderer->mSymbolShader.set(aui::ShaderUniforms::COLOR, finalColor);
             mIndexBuffer.draw(GL_TRIANGLES);
         }
-        glDisableVertexAttribArray(1);
     }
 
     int getWidth() override {
@@ -770,7 +678,7 @@ public:
     ~OpenGLMultiStringCanvas() override = default;
 };
 
-_<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(const glm::vec2& position,
+_<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position,
                                                                  const AString& text,
                                                                  const AFontStyle& fs) {
     if (text.empty()) return nullptr;
@@ -833,7 +741,7 @@ void OpenGLRenderer::popMaskAfter() {
 
 void OpenGLRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mGradientShader),
+            GradientShaderHelper(mGradientShader, mGradientTexture),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
             CustomShaderHelper{},
@@ -855,7 +763,7 @@ void OpenGLRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
 void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points) {
     if (points.size() < 2) return;
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mGradientShader),
+            GradientShaderHelper(mGradientShader, mGradientTexture),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
             CustomShaderHelper{},
@@ -879,7 +787,7 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points
 
 void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) {
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mGradientShader),
+            GradientShaderHelper(mGradientShader, mGradientTexture),
             TexturedShaderHelper(mTexturedShader, mTempVao),
             SolidShaderHelper(mSolidShader),
             CustomShaderHelper{},
@@ -902,3 +810,80 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
     endDraw(brush);
 }
 
+void OpenGLRenderer::tryEnableFramebuffer(glm::uvec2 windowSize) {
+#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_IOS
+    if (glewIsSupported("ARB_sample_shading")) {
+        ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: ARB_sample_shading is not present";
+        mFramebuffer = Failed{};
+        return;
+    }
+#endif
+    try {
+        gl::Framebuffer framebuffer;
+        framebuffer.setSupersamplingRatio(2);
+        framebuffer.resize(windowSize);
+        auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
+        framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
+        if constexpr (true) {
+            auto depth = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
+            framebuffer.attach(depth, GL_DEPTH_STENCIL_ATTACHMENT /* 0x84F9*/ /* GL_DEPTH_STENCIL */);
+        } else {
+            auto stencil = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::STENCIL8, gl::Multisampling::DISABLED>>();
+            framebuffer.attach(stencil, GL_STENCIL_ATTACHMENT);
+        }
+        mFramebuffer.emplace<gl::Framebuffer>(std::move(framebuffer));
+    } catch (const AException& e) {
+        ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: " << e;
+        mFramebuffer = Failed{};
+    }
+}
+
+void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
+    if (std::get_if<NotTried>(&mFramebuffer)) {
+        tryEnableFramebuffer(windowSize);
+    }
+    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+        if (fb->size() != windowSize) {
+            fb->resize(windowSize);
+        }
+        fb->bind();
+        glViewport(0, 0, fb->supersampledSize().x, fb->supersampledSize().y);
+    } else {
+        glViewport(0, 0, windowSize.x, windowSize.y);
+    }
+    gl::State::activeTexture(0);
+    gl::State::bindTexture(GL_TEXTURE_2D, 0);
+    gl::State::bindVertexArray(0);
+    gl::State::useProgram(0);
+
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glClearColor(1.f, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    // stencil
+    glStencilMask(0xff);
+    glClearStencil(0);
+    glDisable(GL_SCISSOR_TEST);
+    glClear(GL_STENCIL_BUFFER_BIT);
+    glEnable(GL_STENCIL_TEST);
+    glStencilMask(0x00);
+    glStencilFunc(GL_EQUAL, 0, 0xff);
+}
+
+void OpenGLRenderer::endPaint() {
+    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+        fb->bindForRead();
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
+        glBlitFramebuffer(0, 0,                       // src pos
+                          fb->supersampledSize().x, fb->supersampledSize().y, // src size
+                          0, 0,                       // dst pos
+                          fb->size().x, fb->size().y, // dst size
+                          GL_COLOR_BUFFER_BIT,        // mask
+                          GL_LINEAR);                // filter
+        gl::Framebuffer::unbind();
+    }
+}

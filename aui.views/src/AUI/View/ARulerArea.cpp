@@ -92,32 +92,32 @@ void ARulerArea::render() {
 
         AFontStyle fs = getFontStyle();
         fs.color = 0x0_rgb;
-        auto prX = Render::prerenderString({ 0, 0 }, AString::number(int(operator ""_px(tp.x).getValueDp())), fs);
-        auto prY = Render::prerenderString({ 0, 0 }, AString::number(int(operator ""_px(tp.y).getValueDp())), fs);
+        auto prX = ARender::prerenderString({0, 0 }, AString::number(int(operator ""_px(tp.x).getValueDp())), fs);
+        auto prY = ARender::prerenderString({0, 0 }, AString::number(int(operator ""_px(tp.y).getValueDp())), fs);
 
         glm::vec2 maxNumbersPos = glm::vec2(getSize() - rulerOffset) - glm::vec2(prX->getWidth(), fs.size) - glm::vec2(4_dp);
 
         {
             RenderHints::PushMatrix m;
-            Render::translate({ glm::min(mMousePos.x + 2_dp, maxNumbersPos.x), 18_dp });
+            ARender::translate({glm::min(mMousePos.x + 2_dp, maxNumbersPos.x), 18_dp });
             prX->draw();
         }
         {
             RenderHints::PushMatrix m;
-            Render::translate({ 18_dp, glm::min(mMousePos.y + 2_dp, maxNumbersPos.y) });
+            ARender::translate({18_dp, glm::min(mMousePos.y + 2_dp, maxNumbersPos.y) });
             prY->draw();
         }
 
-        Render::setBlending(Blending::INVERSE_DST);
-        Render::rect(ASolidBrush{},
-                     {mMousePos.x, 0.f},
-                     {1, mMousePos.y});
-        Render::rect(ASolidBrush{},
-                     {0.f, mMousePos.y},
-                     {mMousePos.x, 1});
+        ARender::setBlending(Blending::INVERSE_DST);
+        ARender::rect(ASolidBrush{},
+                      {mMousePos.x, 0.f},
+                      {1, mMousePos.y});
+        ARender::rect(ASolidBrush{},
+                      {0.f, mMousePos.y},
+                      {mMousePos.x, 1});
 
 
-        Render::setBlending(Blending::NORMAL);
+        ARender::setBlending(Blending::NORMAL);
     }
 
     glEnable(GL_STENCIL_TEST);

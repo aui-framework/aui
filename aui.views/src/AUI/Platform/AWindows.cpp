@@ -93,7 +93,7 @@ void AWindow::redraw() {
 #elif AUI_PLATFORM_MACOS
         mRedrawFlag = false;
 #endif
-        Render::setWindow(this);
+        ARender::setWindow(this);
         doDrawWindow();
 
         // measure frame time
@@ -193,7 +193,9 @@ AWindowManager::AWindowManager(): mHandle(this) {
             std::exit(-1);
         }
     });
+#if !AUI_DEBUG
     mHangTimer->start();
+#endif
 }
 
 

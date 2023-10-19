@@ -72,6 +72,10 @@ constexpr inline AAngleRadians operator"" _deg(long double v)
 {
     return AAngleRadians(glm::radians(v));
 }
+constexpr inline AAngleRadians operator"" _deg(unsigned long long v)
+{
+    return AAngleRadians(glm::radians(float(v)));
+}
 
 inline std::ostream& operator<<(std::ostream& o, const AAngleRadians& value) {
     o << value.degrees() << "deg";

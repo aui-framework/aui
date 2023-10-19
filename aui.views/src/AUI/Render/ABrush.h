@@ -21,10 +21,14 @@
 #pragma once
 
 
+#include <span>
 #include <variant>
 #include <AUI/Common/AColor.h>
+#include <AUI/Common/ASmallVector.h>
 #include <AUI/Enum/Repeat.h>
 #include "AUI/Enum/ImageRendering.h"
+#include "AUI/Util/AAngleRadians.h"
+#include "AUI/Traits/values.h"
 
 
 /**
@@ -47,10 +51,20 @@ struct ACustomShaderBrush {
  * Brush which produces linear gradient by rectangle.
  */
 struct ALinearGradientBrush {
-    AColor topLeftColor = 1.f;
-    AColor topRightColor = 1.f;
-    AColor bottomLeftColor = 1.f;
-    AColor bottomRightColor = 1.f;
+    struct ColorEntry {
+        aui::float_within_0_1 position;
+        AColor color;
+    };
+    AVector<ColorEntry> colors;
+
+    /**
+     * @brief Clockwise gradient angle.
+     * @details
+     * When using an angle, 0_deg creates a vertical gradient running bottom to top, 90_deg creates a horizontal
+     * gradient running left to right, and so on in a clockwise direction. Negative angles run in the counterclockwise
+     * direction.
+     */
+    AAngleRadians rotation = 180_deg;
 };
 
 class ITexture;
