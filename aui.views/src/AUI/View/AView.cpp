@@ -522,6 +522,10 @@ bool AView::consumesClick(const glm::ivec2& pos) {
     return true;
 }
 
+bool AView::consumesScroll() {
+    return true;
+}
+
 void AView::notifyParentChildFocused(const _<AView>& view) {
     if (mParent == nullptr)
         return;
@@ -685,3 +689,5 @@ void AView::setVisibility(Visibility visibility) noexcept
     mVisibility = visibility;
     AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }
+
+

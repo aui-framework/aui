@@ -276,7 +276,7 @@ void AViewContainer::onPointerDoubleClicked(const APointerPressedEvent& event) {
 void AViewContainer::onScroll(const AScrollEvent& event) {
     AView::onScroll(event);
     auto p = getViewAt(event.origin);
-    if (p && p->isEnabled()) {
+    if (p && p->isEnabled() && p->consumesScroll()) {
         auto eventCopy = event;
         eventCopy.origin -= p->getPosition();
         p->onScroll(eventCopy);

@@ -465,6 +465,14 @@ public:
     virtual bool consumesClick(const glm::ivec2& pos);
 
     /**
+     * @brief Determines whether this AView processes scroll events ar ingores them.
+     * @return true if AView processes scroll events
+     * @details
+     * Useful for controlling scroll events on mobile platforms
+     */
+    virtual bool consumesScroll();
+
+    /**
      * @brief Returns the @ref AView::mPadding "padding".
      * @return padding
      */
