@@ -124,8 +124,6 @@ public:
 
     bool consumesClick(const glm::ivec2& pos) override;
 
-    bool consumesScroll(const glm::ivec2& pos) override;
-
     void setSize(glm::ivec2 size) override;
 
     void setEnabled(bool enabled = true) override;

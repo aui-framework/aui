@@ -311,27 +311,6 @@ bool AViewContainer::consumesClick(const glm::ivec2& pos) {
     return false;
 }
 
-bool AViewContainer::consumesScroll(const glm::ivec2& origin) {
-    if (mConsumesScrollCache) {
-        if (mConsumesScrollCache->origin == origin) {
-            return mConsumesScrollCache->value;
-        }
-    }
-
-    bool result = false;
-    ARaiiHelper onExit = [&] {
-        mConsumesScrollCache = ConsumesScrollCache{
-                .origin = origin,
-                .value = result,
-        };
-    };
-
-    if (auto p = getViewAt(origin); p && p->consumesScroll(origin)) {
-        return result = true;
-    }
-    return false;
-}
-
 _<ALayout> AViewContainer::getLayout() const {
     return mLayout;
 }
