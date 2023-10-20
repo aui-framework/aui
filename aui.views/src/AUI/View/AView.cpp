@@ -522,7 +522,7 @@ bool AView::consumesClick(const glm::ivec2& pos) {
     return true;
 }
 
-bool AView::consumesScroll() {
+bool AView::consumesScroll(const glm::ivec2& pos) {
     return true;
 }
 

@@ -124,6 +124,8 @@ public:
 
     bool consumesClick(const glm::ivec2& pos) override;
 
+    bool consumesScroll(const glm::ivec2& pos) override;
+
     void setSize(glm::ivec2 size) override;
 
     void setEnabled(bool enabled = true) override;
@@ -372,6 +374,11 @@ private:
         bool value;
     };
 
+    struct ConsumesScrollCache {
+        glm::ivec2 origin;
+        bool value;
+    };
+
     /**
      * @brief Temporary cache for consumesClick().
      * @details
@@ -379,6 +386,14 @@ private:
      * AViewContainer::consumesClick() is expensive method. Thus, we can cache it's result with given arguments.
      */
     AOptional<ConsumesClickCache> mConsumesClickCache;
+
+     /**
+     * @brief Temporary cache for consumesClick().
+     * @details
+     * AUI does several view graph visits for a single event in order to call virtual methods properly.
+     * AViewContainer::consumesClick() is expensive method. Thus, we can cache it's result with given arguments.
+     */
+    AOptional<ConsumesScrollCache> mConsumesScrollCache;
 
     /**
      * @brief Focus chain target.

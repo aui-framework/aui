@@ -466,11 +466,12 @@ public:
 
     /**
      * @brief Determines whether this AView processes scroll events ar ingores them.
+     * @param pos scroll origin position
      * @return true if AView processes scroll events
      * @details
-     * Useful for controlling scroll events on mobile platforms
+     * Can be used for controlling scroll events on mobile platforms
      */
-    virtual bool consumesScroll();
+    virtual bool consumesScroll(const glm::ivec2& pos);
 
     /**
      * @brief Returns the @ref AView::mPadding "padding".

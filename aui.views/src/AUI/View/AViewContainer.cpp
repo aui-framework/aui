@@ -276,7 +276,7 @@ void AViewContainer::onPointerDoubleClicked(const APointerPressedEvent& event) {
 void AViewContainer::onScroll(const AScrollEvent& event) {
     AView::onScroll(event);
     auto p = getViewAt(event.origin);
-    if (p && p->isEnabled() && p->consumesScroll()) {
+    if (p && p->isEnabled() && p->consumesScroll(event.origin)) {
         auto eventCopy = event;
         eventCopy.origin -= p->getPosition();
         p->onScroll(eventCopy);
@@ -306,6 +306,27 @@ bool AViewContainer::consumesClick(const glm::ivec2& pos) {
         return result = true;
     }
     if (auto p = getViewAt(pos, AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {
+        return result = true;
+    }
+    return false;
+}
+
+bool AViewContainer::consumesScroll(const glm::ivec2& origin) {
+    if (mConsumesScrollCache) {
+        if (mConsumesScrollCache->origin == origin) {
+            return mConsumesScrollCache->value;
+        }
+    }
+
+    bool result = false;
+    ARaiiHelper onExit = [&] {
+        mConsumesScrollCache = ConsumesScrollCache{
+                .origin = origin,
+                .value = result,
+        };
+    };
+
+    if (auto p = getViewAt(origin); p && p->consumesScroll(origin)) {
         return result = true;
     }
     return false;
