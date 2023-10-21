@@ -363,6 +363,20 @@ public:
     virtual void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) = 0;
 
     /**
+     * @brief Draws sector in rectangle shape. The sector is drawn clockwise from begin to end angles.
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @details
+     * The method can be used as mask to ARender::roundedRect, creating arc shape.
+     */
+    virtual void drawSquareSector(const ABrush& brush,
+                                  const glm::vec2& position,
+                                  const glm::vec2& size,
+                                  AAngleRadians begin,
+                                  AAngleRadians end) = 0;
+ 
+    /**
      * @brief Sets the color which is multiplied with any brush.
      * @param color color
      */

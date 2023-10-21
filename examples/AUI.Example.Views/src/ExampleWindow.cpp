@@ -24,9 +24,11 @@
 #include "AUI/View/AButton.h"
 #include "AUI/Layout/AHorizontalLayout.h"
 #include "AUI/Platform/ACustomCaptionWindow.h"
+#include "AUI/View/ACircleProgressBar.h"
 #include "AUI/View/ALabel.h"
 #include "AUI/Layout/AStackedLayout.h"
 #include "AUI/View/ACheckBox.h"
+#include "AUI/View/AProgressBar.h"
 #include "AUI/View/ATextField.h"
 #include "AUI/View/ANumberPicker.h"
 #include "AUI/View/ADoubleNumberPicker.h"
@@ -309,7 +311,14 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 Vertical::Expanding {
                         // fields
                         GroupBox {
-                                Label { "Other" },
+                                Label { "Progressbar" },
+                                Vertical {
+                                        _new<AProgressBar>(),
+                                        _new<ACircleProgressBar>(),
+                                }
+                        },
+                        GroupBox {
+                                Label { "Slider" },
                                 Vertical {
                                         _new<ASlider>(),
                                 }

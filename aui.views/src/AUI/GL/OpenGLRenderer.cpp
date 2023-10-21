@@ -45,6 +45,7 @@
 #include <AUISL/Generated/symbol.vsh.glsl120.h>
 #include <AUISL/Generated/symbol.fsh.glsl120.h>
 #include <AUISL/Generated/symbol_sub.fsh.glsl120.h>
+#include <AUISL/Generated/square_sector.fsh.glsl120.h>
 #include <glm/gtx/matrix_transform_2d.hpp>
 
 static constexpr auto LOG_TAG = "OpenGLRenderer";
@@ -224,7 +225,8 @@ OpenGLRenderer::OpenGLRenderer() {
                    aui::sl_gen::rect_gradient_rounded::fsh::glsl120::Shader>(mRoundedGradientShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
-
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::square_sector::fsh::glsl120::Shader>(mSquareSectorShader);
 
     useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
                    aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
@@ -806,6 +808,24 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
 
     mTempVao.insert(0, positions);
     mTempVao.drawArrays(GL_LINES, positions.size());
+
+    endDraw(brush);
+}
+
+void OpenGLRenderer::drawSquareSector(const ABrush& brush,
+                                      const glm::vec2& position,
+                                      const glm::vec2& size,
+                                      AAngleRadians begin,
+                                      AAngleRadians end) {
+    std::visit(aui::lambda_overloaded {
+            UnsupportedBrushHelper<ALinearGradientBrush>(),
+            UnsupportedBrushHelper<ATexturedBrush>(),
+            SolidShaderHelper(mSquareSectorShader),
+            CustomShaderHelper{},
+    }, brush);
+    uploadToShaderCommon();
+
+    drawRectImpl(position, size);
 
     endDraw(brush);
 }

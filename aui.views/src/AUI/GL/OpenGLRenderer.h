@@ -47,6 +47,7 @@ private:
     gl::Program mTexturedShader;
     gl::Program mSymbolShader;
     gl::Program mSymbolShaderSubPixel;
+    gl::Program mSquareSectorShader;
     gl::Vao mTempVao;
     gl::Texture2D mGradientTexture;
 
@@ -122,6 +123,12 @@ public:
     void drawLines(const ABrush& brush, AArrayView<glm::vec2> points) override;
 
     void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) override;
+
+    void drawSquareSector(const ABrush& brush,
+                          const glm::vec2& position,
+                          const glm::vec2& size,
+                          AAngleRadians begin,
+                          AAngleRadians end) override;
 
     void pushMaskBefore() override;
     void pushMaskAfter() override;
