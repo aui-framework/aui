@@ -38,6 +38,7 @@
 #include <AUISL/Generated/basic.vsh.glsl120.h>
 #include <AUISL/Generated/basic_uv.vsh.glsl120.h>
 #include <AUISL/Generated/shadow.fsh.glsl120.h>
+#include <AUISL/Generated/shadow_inner.fsh.glsl120.h>
 #include <AUISL/Generated/rect_solid.fsh.glsl120.h>
 #include <AUISL/Generated/rect_solid_rounded.fsh.glsl120.h>
 #include <AUISL/Generated/rect_gradient.fsh.glsl120.h>
@@ -218,6 +219,9 @@ OpenGLRenderer::OpenGLRenderer() {
                    aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
 
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::shadow_inner::fsh::glsl120::Shader>(mBoxShadowInnerShader);
+
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::rect_solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::border_rounded::fsh::glsl120::Shader>(mRoundedSolidShaderBorder);
@@ -389,6 +393,7 @@ void OpenGLRenderer::drawBoxShadow(glm::vec2 position,
                                    glm::vec2 size,
                                    float blurRadius,
                                    const AColor& color) {
+    assert(("blurRadius is expected to be non negative, use drawBoxShadowInner for inset shadows instead", blurRadius >= 0.f));
     identityUv();
     mBoxShadowShader.use();
     mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, blurRadius / 2.f);
@@ -421,6 +426,43 @@ void OpenGLRenderer::drawBoxShadow(glm::vec2 position,
     mTempVao.drawElements();
 }
 
+void OpenGLRenderer::drawBoxShadowInner(glm::vec2 position,
+                                        glm::vec2 size,
+                                        float blurRadius,
+                                        float spreadRadius,
+                                        float borderRadius,
+                                        const AColor& color,
+                                        glm::vec2 offset) {
+    assert(("blurRadius is expected to be non negative", blurRadius >= 0.f));
+    blurRadius *= -1.f;
+    identityUv();
+    mBoxShadowInnerShader.use();
+    mBoxShadowInnerShader.set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, blurRadius / 2.f);
+    mBoxShadowInnerShader.set(aui::ShaderUniforms::SL_UNIFORM_LOWER, position + offset + size - spreadRadius);
+    mBoxShadowInnerShader.set(aui::ShaderUniforms::SL_UNIFORM_UPPER, position + offset + spreadRadius);
+    mBoxShadowInnerShader.set(aui::ShaderUniforms::SL_UNIFORM_TRANSFORM, mTransform);
+    mBoxShadowInnerShader.set(aui::ShaderUniforms::COLOR, mColor * color);
+    
+    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * borderRadius / size);
+
+    mTempVao.bind();
+
+    float x = position.x;
+    float y = position.y;
+    float w = x + size.x;
+    float h = y + size.y;
+
+    const glm::vec2 uvs[] = {
+        { x, h },
+        { w, h },
+        { x, y },
+        { w, y },
+    };
+    mTempVao.insert(0, uvs);
+
+    mTempVao.indices(RECT_INDICES);
+    mTempVao.drawElements();
+}
 void OpenGLRenderer::drawString(glm::vec2 position,
                                 const AString& string,
                                 const AFontStyle& fs) {
