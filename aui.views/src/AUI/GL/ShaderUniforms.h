@@ -31,4 +31,7 @@ namespace aui::ShaderUniforms {
     extern gl::Program::Uniform INNER_TEXEL_SIZE;
     extern gl::Program::Uniform OUTER_TEXEL_SIZE;
     extern gl::Program::Uniform OUTER_TO_INNER;
+    extern gl::Program::Uniform WHICH_ALGO;
+    extern gl::Program::Uniform M1;
+    extern gl::Program::Uniform M2;
 }

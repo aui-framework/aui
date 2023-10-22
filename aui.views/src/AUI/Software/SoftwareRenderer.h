@@ -170,6 +170,11 @@ public:
 
     void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) override;
 
+    void drawSquareSector(const ABrush& brush,
+                          const glm::vec2& position,
+                          const glm::vec2& size,
+                          AAngleRadians begin,
+                          AAngleRadians end) override;
 protected:
     ITexture* createNewTexture() override;
 

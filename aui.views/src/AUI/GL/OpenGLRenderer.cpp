@@ -22,7 +22,9 @@
 #include "AUI/Common/AException.h"
 #include "AUI/GL/Framebuffer.h"
 #include "AUI/GL/GLEnums.h"
+#include "AUI/GL/Program.h"
 #include "AUI/GL/Texture2D.h"
+#include "AUI/Util/AAngleRadians.h"
 #include "ShaderUniforms.h"
 #include "AUI/Render/ARender.h"
 #include "glm/fwd.hpp"
@@ -46,6 +48,7 @@
 #include <AUISL/Generated/symbol.vsh.glsl120.h>
 #include <AUISL/Generated/symbol.fsh.glsl120.h>
 #include <AUISL/Generated/symbol_sub.fsh.glsl120.h>
+#include <AUISL/Generated/square_sector.fsh.glsl120.h>
 #include <glm/gtx/matrix_transform_2d.hpp>
 
 static constexpr auto LOG_TAG = "OpenGLRenderer";
@@ -228,7 +231,8 @@ OpenGLRenderer::OpenGLRenderer() {
                    aui::sl_gen::rect_gradient_rounded::fsh::glsl120::Shader>(mRoundedGradientShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
-
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::square_sector::fsh::glsl120::Shader>(mSquareSectorShader);
 
     useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
                    aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
@@ -848,6 +852,39 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
 
     mTempVao.insert(0, positions);
     mTempVao.drawArrays(GL_LINES, positions.size());
+
+    endDraw(brush);
+}
+
+void OpenGLRenderer::drawSquareSector(const ABrush& brush,
+                                      const glm::vec2& position,
+                                      const glm::vec2& size,
+                                      AAngleRadians begin,
+                                      AAngleRadians end) {
+    std::visit(aui::lambda_overloaded {
+            UnsupportedBrushHelper<ALinearGradientBrush>(),
+            UnsupportedBrushHelper<ATexturedBrush>(),
+            SolidShaderHelper(mSquareSectorShader),
+            CustomShaderHelper{},
+    }, brush);
+    uploadToShaderCommon();
+
+
+    auto calculateLineMatrix = [](AAngleRadians angle) {
+        auto s = glm::sin(angle.radians());
+        auto c = glm::cos(angle.radians());
+        return glm::mat3{c, 0, 0,
+                         s, 0, 0,
+                         -0.5f * (s + c), 0, 0};
+    };
+    auto m1 = calculateLineMatrix(begin + 180_deg);
+    auto m2 = calculateLineMatrix(end);
+    float whichAlgo = (end - begin).radians() >= glm::pi<float>();
+    gl::Program::currentShader()->set(aui::ShaderUniforms::WHICH_ALGO, whichAlgo);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::M1, m1);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::M2, m2);
+
+    drawRectImpl(position, size);
 
     endDraw(brush);
 }
