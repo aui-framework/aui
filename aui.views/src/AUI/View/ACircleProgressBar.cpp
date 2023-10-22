@@ -40,7 +40,7 @@ ACircleProgressBar::~ACircleProgressBar() {
 void ACircleProgressBar::render() {
     AView::render();
     RenderHints::PushMask mask([&] {
-        ARender::squareSector(ASolidBrush{}, {0, 0}, getSize(), 0_deg, operator""_deg(mValue * 360.0l));
+        ARender::squareSector(ASolidBrush{}, {0, 0}, getSize(), 0_deg, operator ""_deg(mValue * 360.0l));
 
     });
     AViewContainer::renderChildren();
