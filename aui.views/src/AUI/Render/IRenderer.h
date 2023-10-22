@@ -302,6 +302,24 @@ public:
                                float blurRadius,
                                const AColor& color) = 0;
 
+    /**
+     * @brief Draws inner (inset) rectangle-shaped shadow.
+     * @param position position
+     * @param size rectangle size
+     * @param blurRadius blur radius
+     * @param spreadRadius spread (offset) radius
+     * @param borderRadius border radius of the rectangle.
+     * @param color shadow color
+     * @param offset shadow offset. Unlike outer shadow (ARender::boxShadow), the offset is passed to the shader instead
+     *               of a simple rectangle position offset.
+     */
+    virtual void drawBoxShadowInner(glm::vec2 position,
+                                    glm::vec2 size,
+                                    float blurRadius,
+                                    float spreadRadius,
+                                    float borderRadius,
+                                    const AColor& color,
+                                    glm::vec2 offset) = 0;
 
     /**
      * @brief Draws string.

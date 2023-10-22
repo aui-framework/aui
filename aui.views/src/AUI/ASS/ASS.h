@@ -163,6 +163,7 @@
 #include "Property/BorderRadius.h"
 #include "Property/BorderLeft.h"
 #include "Property/BoxShadow.h"
+#include "Property/BoxShadowInner.h"
 #include "Property/Cursor.h"
 #include "Property/Expanding.h"
 #include "Property/FixedSize.h"

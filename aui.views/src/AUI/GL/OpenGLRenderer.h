@@ -44,6 +44,7 @@ private:
     gl::Program mRoundedSolidShaderBorder;
     gl::Program mRoundedGradientShader;
     gl::Program mBoxShadowShader;
+    gl::Program mBoxShadowInnerShader;
     gl::Program mTexturedShader;
     gl::Program mSymbolShader;
     gl::Program mSymbolShaderSubPixel;
@@ -102,6 +103,14 @@ public:
                        glm::vec2 size,
                        float blurRadius,
                        const AColor& color) override;
+        
+    void drawBoxShadowInner(glm::vec2 position,
+                            glm::vec2 size,
+                            float blurRadius,
+                            float spreadRadius,
+                            float borderRadius,
+                            const AColor& color,
+                            glm::vec2 offset) override;   
 
     void drawString(glm::vec2 position,
                     const AString& string,
