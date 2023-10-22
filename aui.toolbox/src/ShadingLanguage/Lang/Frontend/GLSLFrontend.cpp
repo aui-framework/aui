@@ -41,6 +41,7 @@ const AMap<AString, AString>& GLSLFrontend::internalFunctions() {
             {"clamp","clamp"},
             {"step", "step"},
             {"mix",  "mix"},
+            {"dot",  "dot"},
     };
     return internalFunctions;
 }

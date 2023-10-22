@@ -509,3 +509,11 @@ void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> poin
 void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) {
 
 }
+
+void SoftwareRenderer::drawSquareSector(const ABrush& brush,
+                                        const glm::vec2& position,
+                                        const glm::vec2& size,
+                                        AAngleRadians begin,
+                                        AAngleRadians end) {
+    
+}

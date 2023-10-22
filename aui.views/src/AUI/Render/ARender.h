@@ -198,6 +198,22 @@ public:
     }
 
     /**
+     * @brief Draws sector in rectangle shape. The sector is drawn clockwise from begin to end angles.
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @details
+     * The method can be used as mask to ARender::roundedRect, creating arc shape.
+     */
+    static void squareSector(const ABrush& brush,
+                             const glm::vec2& position,
+                             const glm::vec2& size,
+                             AAngleRadians begin,
+                             AAngleRadians end) {
+        ourRenderer->drawSquareSector(brush, position, size, begin, end);
+    }
+
+    /**
      * @brief Sets the color which is multiplied with any brush.
      * @param color color
      */

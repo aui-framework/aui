@@ -29,5 +29,7 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform OUTER_SIZE("SL_uniform_outerSize");
     gl::Program::Uniform INNER_SIZE("SL_uniform_innerSize");
     gl::Program::Uniform OUTER_TO_INNER("SL_uniform_outerToInner");
-
+    gl::Program::Uniform WHICH_ALGO("SL_uniform_whichAlgo");
+    gl::Program::Uniform M1("SL_uniform_m1");
+    gl::Program::Uniform M2("SL_uniform_m2");
 }
