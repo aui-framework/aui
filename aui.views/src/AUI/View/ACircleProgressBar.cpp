@@ -22,6 +22,7 @@
 #include "AUI/Layout/AStackedLayout.h"
 #include "AUI/Render/ABrush.h"
 #include "AUI/Render/RenderHints.h"
+#include "AUI/Util/AAngleRadians.h"
 
 ACircleProgressBar::ACircleProgressBar() : mInner(_new<Inner>()) {
     setLayout(_new<AStackedLayout>());
@@ -39,7 +40,8 @@ ACircleProgressBar::~ACircleProgressBar() {
 void ACircleProgressBar::render() {
     AView::render();
     RenderHints::PushMask mask([&] {
-        ARender::squareSector(ASolidBrush{}, {0, 0}, getSize(), 0_deg, 60_deg);
+        ARender::squareSector(ASolidBrush{}, {0, 0}, getSize(), 0_deg, operator""_deg(mValue * 360.0l));
+
     });
     AViewContainer::renderChildren();
 }

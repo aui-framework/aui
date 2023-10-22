@@ -22,7 +22,9 @@
 #include "AUI/Common/AException.h"
 #include "AUI/GL/Framebuffer.h"
 #include "AUI/GL/GLEnums.h"
+#include "AUI/GL/Program.h"
 #include "AUI/GL/Texture2D.h"
+#include "AUI/Util/AAngleRadians.h"
 #include "ShaderUniforms.h"
 #include "AUI/Render/ARender.h"
 #include "glm/fwd.hpp"
@@ -824,6 +826,21 @@ void OpenGLRenderer::drawSquareSector(const ABrush& brush,
             CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
+
+
+    auto calculateLineMatrix = [](AAngleRadians angle) {
+        auto s = glm::sin(angle.radians());
+        auto c = glm::cos(angle.radians());
+        return glm::mat3{c, 0, 0,
+                         s, 0, 0,
+                         -0.5f * (s + c), 0, 0};
+    };
+    auto m1 = calculateLineMatrix(begin + 180_deg);
+    auto m2 = calculateLineMatrix(end);
+    float whichAlgo = (end - begin).radians() >= glm::pi<float>();
+    gl::Program::currentShader()->set(aui::ShaderUniforms::WHICH_ALGO, whichAlgo);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::M1, m1);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::M2, m2);
 
     drawRectImpl(position, size);
 
