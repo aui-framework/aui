@@ -22,7 +22,9 @@
 #include "AUI/Common/AException.h"
 #include "AUI/GL/Framebuffer.h"
 #include "AUI/GL/GLEnums.h"
+#include "AUI/GL/Program.h"
 #include "AUI/GL/Texture2D.h"
+#include "AUI/Util/AAngleRadians.h"
 #include "ShaderUniforms.h"
 #include "AUI/Render/ARender.h"
 #include "glm/fwd.hpp"
@@ -36,6 +38,7 @@
 #include <AUISL/Generated/basic.vsh.glsl120.h>
 #include <AUISL/Generated/basic_uv.vsh.glsl120.h>
 #include <AUISL/Generated/shadow.fsh.glsl120.h>
+#include <AUISL/Generated/shadow_inner.fsh.glsl120.h>
 #include <AUISL/Generated/rect_solid.fsh.glsl120.h>
 #include <AUISL/Generated/rect_solid_rounded.fsh.glsl120.h>
 #include <AUISL/Generated/rect_gradient.fsh.glsl120.h>
@@ -45,6 +48,7 @@
 #include <AUISL/Generated/symbol.vsh.glsl120.h>
 #include <AUISL/Generated/symbol.fsh.glsl120.h>
 #include <AUISL/Generated/symbol_sub.fsh.glsl120.h>
+#include <AUISL/Generated/square_sector.fsh.glsl120.h>
 #include <glm/gtx/matrix_transform_2d.hpp>
 
 static constexpr auto LOG_TAG = "OpenGLRenderer";
@@ -215,6 +219,9 @@ OpenGLRenderer::OpenGLRenderer() {
                    aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
 
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::shadow_inner::fsh::glsl120::Shader>(mBoxShadowInnerShader);
+
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::rect_solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::border_rounded::fsh::glsl120::Shader>(mRoundedSolidShaderBorder);
@@ -224,7 +231,8 @@ OpenGLRenderer::OpenGLRenderer() {
                    aui::sl_gen::rect_gradient_rounded::fsh::glsl120::Shader>(mRoundedGradientShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
                    aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
-
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+                   aui::sl_gen::square_sector::fsh::glsl120::Shader>(mSquareSectorShader);
 
     useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
                    aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
@@ -385,6 +393,7 @@ void OpenGLRenderer::drawBoxShadow(glm::vec2 position,
                                    glm::vec2 size,
                                    float blurRadius,
                                    const AColor& color) {
+    assert(("blurRadius is expected to be non negative, use drawBoxShadowInner for inset shadows instead", blurRadius >= 0.f));
     identityUv();
     mBoxShadowShader.use();
     mBoxShadowShader.set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, blurRadius / 2.f);
@@ -417,6 +426,43 @@ void OpenGLRenderer::drawBoxShadow(glm::vec2 position,
     mTempVao.drawElements();
 }
 
+void OpenGLRenderer::drawBoxShadowInner(glm::vec2 position,
+                                        glm::vec2 size,
+                                        float blurRadius,
+                                        float spreadRadius,
+                                        float borderRadius,
+                                        const AColor& color,
+                                        glm::vec2 offset) {
+    assert(("blurRadius is expected to be non negative", blurRadius >= 0.f));
+    blurRadius *= -1.f;
+    identityUv();
+    mBoxShadowInnerShader.use();
+    mBoxShadowInnerShader.set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, blurRadius / 2.f);
+    mBoxShadowInnerShader.set(aui::ShaderUniforms::SL_UNIFORM_LOWER, position + offset + size - spreadRadius);
+    mBoxShadowInnerShader.set(aui::ShaderUniforms::SL_UNIFORM_UPPER, position + offset + spreadRadius);
+    mBoxShadowInnerShader.set(aui::ShaderUniforms::SL_UNIFORM_TRANSFORM, mTransform);
+    mBoxShadowInnerShader.set(aui::ShaderUniforms::COLOR, mColor * color);
+    
+    gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * borderRadius / size);
+
+    mTempVao.bind();
+
+    float x = position.x;
+    float y = position.y;
+    float w = x + size.x;
+    float h = y + size.y;
+
+    const glm::vec2 uvs[] = {
+        { x, h },
+        { w, h },
+        { x, y },
+        { w, y },
+    };
+    mTempVao.insert(0, uvs);
+
+    mTempVao.indices(RECT_INDICES);
+    mTempVao.drawElements();
+}
 void OpenGLRenderer::drawString(glm::vec2 position,
                                 const AString& string,
                                 const AFontStyle& fs) {
@@ -810,6 +856,39 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
     endDraw(brush);
 }
 
+void OpenGLRenderer::drawSquareSector(const ABrush& brush,
+                                      const glm::vec2& position,
+                                      const glm::vec2& size,
+                                      AAngleRadians begin,
+                                      AAngleRadians end) {
+    std::visit(aui::lambda_overloaded {
+            UnsupportedBrushHelper<ALinearGradientBrush>(),
+            UnsupportedBrushHelper<ATexturedBrush>(),
+            SolidShaderHelper(mSquareSectorShader),
+            CustomShaderHelper{},
+    }, brush);
+    uploadToShaderCommon();
+
+
+    auto calculateLineMatrix = [](AAngleRadians angle) {
+        auto s = glm::sin(angle.radians());
+        auto c = glm::cos(angle.radians());
+        return glm::mat3{c, 0, 0,
+                         s, 0, 0,
+                         -0.5f * (s + c), 0, 0};
+    };
+    auto m1 = calculateLineMatrix(begin + 180_deg);
+    auto m2 = calculateLineMatrix(end);
+    float whichAlgo = (end - begin).radians() >= glm::pi<float>();
+    gl::Program::currentShader()->set(aui::ShaderUniforms::WHICH_ALGO, whichAlgo);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::M1, m1);
+    gl::Program::currentShader()->set(aui::ShaderUniforms::M2, m2);
+
+    drawRectImpl(position, size);
+
+    endDraw(brush);
+}
+
 void OpenGLRenderer::tryEnableFramebuffer(glm::uvec2 windowSize) {
 #if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_IOS
     if (glewIsSupported("ARB_sample_shading")) {
@@ -886,4 +965,11 @@ void OpenGLRenderer::endPaint() {
                           GL_LINEAR);                // filter
         gl::Framebuffer::unbind();
     }
+}
+
+uint32_t OpenGLRenderer::getDefaultFb() const noexcept {
+    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+        return fb->getHandle();
+    }
+    return 0;
 }

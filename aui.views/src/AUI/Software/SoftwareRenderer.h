@@ -133,6 +133,14 @@ public:
                        glm::vec2 size,
                        float blurRadius,
                        const AColor& color) override;
+    
+    void drawBoxShadowInner(glm::vec2 position,
+                            glm::vec2 size,
+                            float blurRadius,
+                            float spreadRadius,
+                            float borderRadius,
+                            const AColor& color,
+                            glm::vec2 offset) override;   
 
     void drawString(glm::vec2 position,
                     const AString& string,
@@ -162,6 +170,11 @@ public:
 
     void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) override;
 
+    void drawSquareSector(const ABrush& brush,
+                          const glm::vec2& position,
+                          const glm::vec2& size,
+                          AAngleRadians begin,
+                          AAngleRadians end) override;
 protected:
     ITexture* createNewTexture() override;
 

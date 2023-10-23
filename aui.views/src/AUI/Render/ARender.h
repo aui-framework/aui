@@ -161,6 +161,27 @@ public:
         ourRenderer->drawBoxShadow(position, size, blurRadius, color);
     }
 
+    /**
+     * @brief Draws inner (inset) rectangle-shaped shadow.
+     * @param position position
+     * @param size rectangle size
+     * @param blurRadius blur radius
+     * @param spreadRadius spread (offset) radius
+     * @param borderRadius border radius of the rectangle.
+     * @param color shadow color
+     * @param offset shadow offset. Unlike outer shadow (ARender::boxShadow), the offset is passed to the shader instead
+     *               of a simple rectangle position offset.
+     */
+    static void boxShadowInner(glm::vec2 position,
+                               glm::vec2 size,
+                               float blurRadius,
+                               float spreadRadius,
+                               float borderRadius,
+                               const AColor& color,
+                               glm::vec2 offset) {
+        ourRenderer->drawBoxShadowInner(position, size, blurRadius, spreadRadius, borderRadius, color, offset);
+    }
+
 
     /**
      * @brief Draws string.
@@ -195,6 +216,22 @@ public:
     static _<IRenderer::IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, AFontStyle& fs) {
         assert(("empty string could not be prerendered" && !text.empty()));
         return ourRenderer->prerenderString(position, text, fs);
+    }
+
+    /**
+     * @brief Draws sector in rectangle shape. The sector is drawn clockwise from begin to end angles.
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @details
+     * The method can be used as mask to ARender::roundedRect, creating arc shape.
+     */
+    static void squareSector(const ABrush& brush,
+                             const glm::vec2& position,
+                             const glm::vec2& size,
+                             AAngleRadians begin,
+                             AAngleRadians end) {
+        ourRenderer->drawSquareSector(brush, position, size, begin, end);
     }
 
     /**

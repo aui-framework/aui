@@ -302,6 +302,24 @@ public:
                                float blurRadius,
                                const AColor& color) = 0;
 
+    /**
+     * @brief Draws inner (inset) rectangle-shaped shadow.
+     * @param position position
+     * @param size rectangle size
+     * @param blurRadius blur radius
+     * @param spreadRadius spread (offset) radius
+     * @param borderRadius border radius of the rectangle.
+     * @param color shadow color
+     * @param offset shadow offset. Unlike outer shadow (ARender::boxShadow), the offset is passed to the shader instead
+     *               of a simple rectangle position offset.
+     */
+    virtual void drawBoxShadowInner(glm::vec2 position,
+                                    glm::vec2 size,
+                                    float blurRadius,
+                                    float spreadRadius,
+                                    float borderRadius,
+                                    const AColor& color,
+                                    glm::vec2 offset) = 0;
 
     /**
      * @brief Draws string.
@@ -362,6 +380,20 @@ public:
      */
     virtual void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) = 0;
 
+    /**
+     * @brief Draws sector in rectangle shape. The sector is drawn clockwise from begin to end angles.
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @details
+     * The method can be used as mask to ARender::roundedRect, creating arc shape.
+     */
+    virtual void drawSquareSector(const ABrush& brush,
+                                  const glm::vec2& position,
+                                  const glm::vec2& size,
+                                  AAngleRadians begin,
+                                  AAngleRadians end) = 0;
+ 
     /**
      * @brief Sets the color which is multiplied with any brush.
      * @param color color

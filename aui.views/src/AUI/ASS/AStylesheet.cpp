@@ -42,6 +42,7 @@
 #include <AUI/View/ADrawableView.h>
 #include <AUI/View/AScrollArea.h>
 #include <AUI/View/AProgressBar.h>
+#include <AUI/View/ACircleProgressBar.h>
 #include "AStylesheet.h"
 #include "ASS.h"
 #include "AUI/View/ASpinner.h"
@@ -603,6 +604,21 @@ AStylesheet::AStylesheet() {
             t<AProgressBar::Inner>(),
             BackgroundSolid { getOsThemeColor() },
             BorderRadius { 4_dp },
+        },
+
+        // ACircleProgressBar
+        {
+            t<ACircleProgressBar>(),
+            Border { 4_dp, 0xd0d0d0_rgb },
+            BorderRadius { 8_dp },
+            FixedSize { 16_dp },
+            Margin { 2_dp, 4_dp },
+        },
+        {
+            t<ACircleProgressBar::Inner>(),
+            Border { 4_dp, getOsThemeColor() },
+            FixedSize { 16_dp },
+            BorderRadius { 8_dp },
         },
 
         {

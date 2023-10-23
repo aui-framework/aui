@@ -59,6 +59,23 @@ public:
         return glm::degrees(mValue);
     }
 
+
+    AAngleRadians operator+(AAngleRadians rhs) const noexcept {
+        return AAngleRadians(mValue + rhs.mValue);
+    }
+
+    AAngleRadians operator-(AAngleRadians rhs) const noexcept {
+        return AAngleRadians(mValue - rhs.mValue);
+    }
+
+    AAngleRadians operator*(float k) const noexcept {
+        return AAngleRadians(mValue * k);
+    }
+
+    AAngleRadians operator/(float k) const noexcept {
+        return AAngleRadians(mValue / k);
+    }
+
 private:
     float mValue = 0.f;
 };

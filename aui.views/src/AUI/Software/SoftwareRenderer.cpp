@@ -289,6 +289,45 @@ void SoftwareRenderer::drawBoxShadow(glm::vec2 position,
         }
     }
 }
+void SoftwareRenderer::drawBoxShadowInner(glm::vec2 position,
+                                          glm::vec2 size,
+                                          float blurRadius,
+                                          float spreadRadius,
+                                          float borderRadius,
+                                          const AColor& color,
+                                          glm::vec2 offset) {
+
+    auto transformedPos = glm::vec2(mTransform * glm::vec4(position, 1.f, 1.f));
+
+    //transformedPos -= blurRadius;
+    glm::ivec2 iTransformedPos(transformedPos);
+    auto iSize = glm::ivec2(size + blurRadius * 2.f);
+
+
+    using namespace aui::sl_gen::shadow::fsh::software;
+    const Shader::Uniform uniform{
+        .color = mColor * color,
+        .lower = size,
+        .upper = transformedPos,
+        .sigma = blurRadius / 2.f,
+    };
+
+    for (int y = 0; y < iSize.y; ++y) { 
+        for (int x = 0; x < iSize.x; ++x) {
+            const auto result = Shader::entry(Shader::Inter {
+                .vertex = transformedPos + glm::vec2{x, y},
+            }, uniform).albedo;
+
+            /*
+            glm::vec4 query = glm::vec4(pass_uv - glm::vec2(lower), pass_uv - glm::vec2(upper));
+            glm::vec4 integral = 0.5f + 0.5f * erf(query * (glm::sqrt(0.5f) / sigma));
+            float alpha = glm::clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0f, 1.0f);
+*/
+            putPixel(iTransformedPos + glm::ivec2{ x, y }, result);
+        }
+    }
+}
+
 
 void SoftwareRenderer::setBlending(Blending blending) {
     mBlending = blending;
@@ -508,4 +547,12 @@ void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> poin
 
 void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) {
 
+}
+
+void SoftwareRenderer::drawSquareSector(const ABrush& brush,
+                                        const glm::vec2& position,
+                                        const glm::vec2& size,
+                                        AAngleRadians begin,
+                                        AAngleRadians end) {
+    
 }

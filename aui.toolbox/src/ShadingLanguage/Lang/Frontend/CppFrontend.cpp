@@ -41,6 +41,7 @@ const AMap<AString, AString>& CppFrontend::internalFunctions() {
             {"clamp", "glm::clamp"},
             {"step",  "glm::step"},
             {"mix",   "glm::mix"},
+            {"dot",   "glm::dot"},
     };
     return internalFunctions;
 }

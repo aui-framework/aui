@@ -44,9 +44,11 @@ private:
     gl::Program mRoundedSolidShaderBorder;
     gl::Program mRoundedGradientShader;
     gl::Program mBoxShadowShader;
+    gl::Program mBoxShadowInnerShader;
     gl::Program mTexturedShader;
     gl::Program mSymbolShader;
     gl::Program mSymbolShaderSubPixel;
+    gl::Program mSquareSectorShader;
     gl::Vao mTempVao;
     gl::Texture2D mGradientTexture;
 
@@ -102,6 +104,14 @@ public:
                        glm::vec2 size,
                        float blurRadius,
                        const AColor& color) override;
+        
+    void drawBoxShadowInner(glm::vec2 position,
+                            glm::vec2 size,
+                            float blurRadius,
+                            float spreadRadius,
+                            float borderRadius,
+                            const AColor& color,
+                            glm::vec2 offset) override;   
 
     void drawString(glm::vec2 position,
                     const AString& string,
@@ -123,6 +133,12 @@ public:
 
     void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) override;
 
+    void drawSquareSector(const ABrush& brush,
+                          const glm::vec2& position,
+                          const glm::vec2& size,
+                          AAngleRadians begin,
+                          AAngleRadians end) override;
+
     void pushMaskBefore() override;
     void pushMaskAfter() override;
     void popMaskBefore() override;
@@ -130,6 +146,8 @@ public:
 
     void beginPaint(glm::uvec2 windowSize);
     void endPaint();
+    
+    uint32_t getDefaultFb() const noexcept;
 };
 
 

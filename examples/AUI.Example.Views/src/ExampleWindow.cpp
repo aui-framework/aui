@@ -24,9 +24,11 @@
 #include "AUI/View/AButton.h"
 #include "AUI/Layout/AHorizontalLayout.h"
 #include "AUI/Platform/ACustomCaptionWindow.h"
+#include "AUI/View/ACircleProgressBar.h"
 #include "AUI/View/ALabel.h"
 #include "AUI/Layout/AStackedLayout.h"
 #include "AUI/View/ACheckBox.h"
+#include "AUI/View/AProgressBar.h"
 #include "AUI/View/ATextField.h"
 #include "AUI/View/ANumberPicker.h"
 #include "AUI/View/ADoubleNumberPicker.h"
@@ -113,6 +115,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
     });
 
     _<ATabView> tabView;
+    _<AProgressBar> progressBar;
+    _<ACircleProgressBar> circleProgressBar;
 
     addView(tabView = _new<ATabView>() let {
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {
@@ -309,10 +313,18 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                 Vertical::Expanding {
                         // fields
                         GroupBox {
-                                Label { "Other" },
+                                Label { "Progressbar" },
                                 Vertical {
-                                        _new<ASlider>(),
-                                }
+                                        progressBar = _new<AProgressBar>(),
+                                        circleProgressBar = _new<ACircleProgressBar>(),
+                                        GroupBox {
+                                                Label { "Slider" },
+                                                Vertical {
+                                                        _new<ASlider>().connect(&ASlider::valueChanging, slot(progressBar)::setValue)
+                                                                       .connect(&ASlider::valueChanging, slot(circleProgressBar)::setValue),
+                                                }
+                                        },
+                                },
                         },
                         GroupBox {
                                 Label { "Fields" },
