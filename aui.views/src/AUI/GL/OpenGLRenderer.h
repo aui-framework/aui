@@ -146,6 +146,8 @@ public:
 
     void beginPaint(glm::uvec2 windowSize);
     void endPaint();
+    
+    uint32_t getDefaultFb() const noexcept;
 };
 
 

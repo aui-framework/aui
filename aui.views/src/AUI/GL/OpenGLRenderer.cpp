@@ -966,3 +966,10 @@ void OpenGLRenderer::endPaint() {
         gl::Framebuffer::unbind();
     }
 }
+
+uint32_t OpenGLRenderer::getDefaultFb() const noexcept {
+    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+        return fb->getHandle();
+    }
+    return 0;
+}
