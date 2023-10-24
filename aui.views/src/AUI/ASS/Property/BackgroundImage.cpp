@@ -165,6 +165,7 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view) {
                         p.cropUvBottomRight = uv2;
                         p.size = {width, height};
                         p.imageRendering = imageRendering;
+                        p.renderingSize = {textureWidth, textureHeight};
                         drawable->draw(p);
                     };
 

@@ -14,37 +14,18 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
-//
-// Created by dervisdev on 1/12/2023.
-//
 #pragma once
 
-#include "AUI/Common/AByteBufferView.h"
-#include "AUI/Image/IAnimatedImageFactory.h"
+#include "AUI/Image/IImageFactory.h"
 
-class GifImageFactory : public IAnimatedImageFactory {
-private:
-    std::chrono::time_point<std::chrono::system_clock> mLastFrameStarted;
-    unsigned char* mLoadedGifPixels;
-    _<AImage> mCurrentFrame;
-    int* mDelays;
-    int mGifWidth;
-    int mGifHeight;
-    int mFramesCount;
-    int mChannelsCount;
-    int mCurrentFrameIndex;
-    bool mAnimationFinished = false;
-
+/**
+ * @brief Produces images related to an animation
+ */
+class IAnimatedImageFactory : public IImageFactory {
 public:
-    explicit GifImageFactory(AByteBufferView buf);
 
-    ~GifImageFactory();
-
-    AImage provideImage(const glm::ivec2& size) override;
-
-    bool isNewImageAvailable() override;
-
-    glm::ivec2 getSizeHint() override;
-
-    bool hasAnimationFinished() override;
+    /**
+     * @brief Returns true, if last provided frame was last (within one cycle of animation)
+     */
+    virtual bool hasAnimationFinished() = 0;
 };

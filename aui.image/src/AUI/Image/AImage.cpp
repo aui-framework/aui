@@ -110,6 +110,10 @@ void AImage::set(glm::uvec2 position, AImageView::Color c) noexcept {
 
 AImage AImageView::resizedLinearDownscale(glm::uvec2 newSize) const
 {
+    if (mSize == newSize) {
+        return AImage(*this);
+    }
+
     auto ratio = glm::vec2(size() - 1u) / glm::vec2(newSize);
     AImage n(size(), format());
     n.fill(0x0_argb);

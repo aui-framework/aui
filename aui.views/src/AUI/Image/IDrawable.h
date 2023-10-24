@@ -52,6 +52,7 @@ public:
 
         Repeat repeat = Repeat::NONE;
         ImageRendering imageRendering;
+        AOptional<glm::vec2> renderingSize;
     };
 
     /**

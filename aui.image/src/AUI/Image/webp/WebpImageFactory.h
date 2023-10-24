@@ -16,7 +16,7 @@
 
 #pragma once
 
-#include "AUI/Image/IImageFactory.h"
+#include "AUI/Image/IAnimatedImageFactory.h"
 #include <webp/mux_types.h>
 
 struct WebPAnimDecoder;
@@ -24,7 +24,7 @@ struct WebPAnimDecoder;
 /**
  * @note Passed webp must have animation
  */
-class WebpImageFactory : public IImageFactory {
+class WebpImageFactory : public IAnimatedImageFactory {
 public:
     explicit WebpImageFactory(AByteBufferView buffer);
 
@@ -35,6 +35,8 @@ public:
     bool isNewImageAvailable() override;
 
     glm::ivec2 getSizeHint() override;
+
+    bool hasAnimationFinished() override;
 
 private:
     size_t mWidth;
@@ -48,7 +50,7 @@ private:
     AVector<int> mDurations;
     size_t mLoopsPassed = 0;
     size_t mLoopCount;
-
+    bool mAnimationFinished = false;
     std::chrono::time_point<std::chrono::system_clock> mLastTimeFrameStarted;
 
     static constexpr APixelFormat PIXEL_FORMAT = APixelFormat(APixelFormat::RGBA_BYTE);

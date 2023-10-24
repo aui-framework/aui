@@ -22,6 +22,7 @@
 #include "IImageLoader.h"
 #include "AUI/Common/ADeque.h"
 #include "AUI/Common/SharedPtr.h"
+#include "AUI/Image/IAnimatedImageFactory.h"
 
 /**
  * Image loader used for IDrawable::fromUrl and AImage::fromUrl
@@ -38,7 +39,7 @@ private:
     ADeque<_<IImageLoader>> mAnimatedLoaders;
 
     _<IImageFactory> loadVector(AByteBufferView buffer);
-    _<IImageFactory> loadAnimated(AByteBufferView buffer);
+    _<IAnimatedImageFactory> loadAnimated(AByteBufferView buffer);
     _<AImage> loadRaster(AByteBufferView buffer);
     inline _<IImageFactory> loadVector(const AUrl& url) {
         auto s = AByteBuffer::fromStream(url.open());
