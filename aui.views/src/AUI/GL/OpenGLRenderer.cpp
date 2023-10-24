@@ -160,14 +160,6 @@ struct TexturedShaderHelper {
 
     void operator()(const ATexturedBrush& brush) const {
         shader.use();
-        switch (brush.imageRendering) {
-            case ImageRendering::PIXELATED:
-                gl::Texture2D::setupNearest();
-                break;
-            case ImageRendering::SMOOTH:
-                gl::Texture2D::setupLinear();
-                break;
-        }
         shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
         glm::vec2 uv1 = brush.uv1 ? *brush.uv1 : glm::vec2{0, 0};
         glm::vec2 uv2 = brush.uv2 ? *brush.uv2 : glm::vec2{1, 1};
@@ -179,7 +171,16 @@ struct TexturedShaderHelper {
             {uv2.x, uv1.y},
         };
         tempVao.insert(1, uvs);
+
         _cast<OpenGLTexture2D>(brush.texture)->bind();
+        switch (brush.imageRendering) {
+            case ImageRendering::PIXELATED:
+                gl::Texture2D::setupNearest();
+                break;
+            case ImageRendering::SMOOTH:
+                gl::Texture2D::setupLinear();
+                break;
+        }
     }
 };
 

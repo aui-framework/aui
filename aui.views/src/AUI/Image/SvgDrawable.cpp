@@ -51,7 +51,7 @@ void AVectorDrawable::draw(const Params& params) {
                          .texture = texture,
                          .uv1 = params.cropUvTopLeft,
                          .uv2 = params.cropUvBottomRight,
-                         .imageRendering = params.imageRendering,
+                         .imageRendering = ImageRendering::PIXELATED,
                          .repeat = params.repeat,
                      },
                       params.offset,
