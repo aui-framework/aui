@@ -20,7 +20,7 @@
 
 #include "SvgImageFactory.h"
 #include "AUI/Common/AByteBuffer.h"
-#include <lunasvg/lunasvg.h>
+#include <lunasvg.h>
 
 
 SvgImageFactory::SvgImageFactory(AByteBufferView buf) {
@@ -34,7 +34,7 @@ SvgImageFactory::~SvgImageFactory() {
 AImage SvgImageFactory::provideImage(const glm::ivec2& size) {
     auto bitmap = mImpl->renderToBitmap(size.x, size.y);
     bitmap.convertToRGBA();
-    return {AByteBufferView(reinterpret_cast<const char*>(bitmap.data()), bitmap.stride() * size.y * 4),
+    return {AByteBufferView(reinterpret_cast<const char*>(bitmap.data()), bitmap.stride() * size.y),
                       glm::uvec2(size),
                       APixelFormat::RGBA_BYTE};
 }
