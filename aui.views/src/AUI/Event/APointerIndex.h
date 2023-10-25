@@ -31,10 +31,10 @@ public:
         assert((button == AInput::LBUTTON ||
                 button == AInput::RBUTTON ||
                 button == AInput::CBUTTON));
-        return APointerIndex((unsigned)button);
+        return APointerIndex((int)button);
     }
 
-    static constexpr APointerIndex finger(unsigned fingerIndex) {
+    static constexpr APointerIndex finger(int fingerIndex) {
         return APointerIndex(fingerIndex + MAX_BUTTON_VALUE + 1);
     }
 
@@ -68,7 +68,7 @@ public:
     /**
      * @return finger index, if it is.
      */
-    AOptional<unsigned> finger() const noexcept {
+    AOptional<int> finger() const noexcept {
         if (!isFinger()) {
             return std::nullopt;
         }
@@ -79,15 +79,15 @@ public:
     auto operator<=>(const APointerIndex& rhs) const noexcept = default;
 
     [[nodiscard]]
-    constexpr unsigned rawValue() const noexcept {
+    constexpr int rawValue() const noexcept {
         return mValue;
     }
 
 private:
-    unsigned mValue;
-    static constexpr unsigned MAX_BUTTON_VALUE = AInput::RBUTTON;
+    int mValue;
+    static constexpr int MAX_BUTTON_VALUE = AInput::RBUTTON;
 
-    explicit constexpr APointerIndex(unsigned value) : mValue(value) {}
+    explicit constexpr APointerIndex(int value) : mValue(value) {}
 };
 
 
