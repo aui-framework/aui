@@ -20,7 +20,7 @@
 
 #include "SvgImageFactory.h"
 #include "AUI/Common/AByteBuffer.h"
-#include <lunasvg.h>
+#include <lunasvg/lunasvg.h>
 
 
 SvgImageFactory::SvgImageFactory(AByteBufferView buf) {
