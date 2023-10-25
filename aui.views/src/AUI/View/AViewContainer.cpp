@@ -502,7 +502,12 @@ void AViewContainer::adjustVerticalSizeToContent() {
 
 void AViewContainer::onClickPrevented() {
     AView::onClickPrevented();
-    AUI_NULLSAFE(mFocusChainTarget.lock())->onClickPrevented();
+    auto pointerEvents = std::move(mPointerEventsMapping);
+    for (const auto& e : pointerEvents) {
+        if (auto v = e.targetView.lock(); v && v->isEnabled() && v->isPressed(e.pointerIndex)) {
+            v->onClickPrevented();
+        }
+    }
 }
 
 void AViewContainer::invalidateCaches() {

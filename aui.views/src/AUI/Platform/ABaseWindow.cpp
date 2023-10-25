@@ -450,9 +450,7 @@ void ABaseWindow::preventClickOnPointerRelease() {
     if (mPreventClickOnPointerRelease.value()) {
         return;
     }
-
-    onClickPrevented();
-
+    AViewContainer::onClickPrevented();
     mPreventClickOnPointerRelease = true;
 }
 
