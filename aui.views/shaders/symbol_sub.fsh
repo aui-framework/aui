@@ -12,7 +12,7 @@ output {
 }
 
 entry {
-    vec4 sample = uniform.albedo[inter.uv]
+    vec4 s = uniform.albedo[inter.uv]
     vec4 c = uniform.color
-    output.albedo = vec4(c.xyz * sample.xyz * c.a, 1)
+    output.albedo = vec4(c.xyz * s.xyz * c.a, 1)
 }
