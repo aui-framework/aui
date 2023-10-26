@@ -155,7 +155,7 @@ void OpenGLRenderingContext::init(const Init& init) {
         }
         ALogger::info(LOG_TAG) << ("Context is ready");
 
-        ARender::setRenderer(mRenderer = std::make_unique<OpenGLRenderer>());
+        ARender::setRenderer(mRenderer = ourRenderer());
 
         //makeCurrent(mDC);
     } else {
