@@ -110,7 +110,7 @@ public:
         return mVector.at(index.getRow());
     }
     void invalidate(size_t index) {
-        emit this->dataChanged(AListModelRange{AListModelIndex(index), AListModelIndex(index + 1u), this});
+        emit this->dataChanged(this->range(AListModelIndex(index), AListModelIndex(index + 1u)));
     }
 
     void clear() noexcept {
