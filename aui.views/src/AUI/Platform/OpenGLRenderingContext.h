@@ -44,6 +44,16 @@ private:
     ARenderingContextOptions::OpenGL mConfig;
     _<OpenGLRenderer> mRenderer;
 
+    static _<OpenGLRenderer> ourRenderer() {
+        static _weak<OpenGLRenderer> g;
+        if (auto v = g.lock()) {
+            return v;
+        }
+        auto temp = _new<OpenGLRenderer>();
+        g = temp;
+        return temp;
+    }
+
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;
     static void makeCurrent(HDC hdc) noexcept;

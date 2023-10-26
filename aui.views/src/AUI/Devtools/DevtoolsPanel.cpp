@@ -35,7 +35,7 @@ private:
 
 public:
     ViewHierarchyTreeModel(_<AView> root) : mRoot(std::move(root)) {
-        scan(mRoot);
+        // scan(mRoot); // crashes
     }
 
     void scan(aui::no_escape<AView> view) {
