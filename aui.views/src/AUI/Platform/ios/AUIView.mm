@@ -196,6 +196,15 @@ static GLuint defaultFb, colorBuffer = 0;
         [trackedTouches removeObject:touch];
     }
 }
+- (void)touchesCancelled:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {
+    [EAGLContext setCurrentContext:context];
+    float scale = (float)self.contentScaleFactor;
+    for (UITouch* touch in touches) {
+        CGPoint location = [touch locationInView:self];
+        auiWindow()->onPointerReleased({.position = glm::ivec2{location.x * scale, location.y * scale}, .pointerIndex = APointerIndex::finger([trackedTouches indexOfObject:touch]), .triggerClick = false});
+        [trackedTouches removeObject:touch];
+    }
+}
 
 extern "C" void _aui_ios_redraw() {
     dispatch_async(dispatch_get_main_queue(), ^{
