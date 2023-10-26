@@ -115,8 +115,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
     });
 
     _<ATabView> tabView;
-    _<AProgressBar> progressBar;
-    _<ACircleProgressBar> circleProgressBar;
+    _<AProgressBar> progressBar = _new<AProgressBar>();
+    _<ACircleProgressBar> circleProgressBar = _new<ACircleProgressBar>();
 
     addView(tabView = _new<ATabView>() let {
         it->addTab(AScrollArea::Builder().withContents(std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {
@@ -315,8 +315,8 @@ ExampleWindow::ExampleWindow(): AWindow("Examples", 800_dp, 700_dp)
                         GroupBox {
                                 Label { "Progressbar" },
                                 Vertical {
-                                        progressBar = _new<AProgressBar>(),
-                                        circleProgressBar = _new<ACircleProgressBar>(),
+                                        progressBar,
+                                        circleProgressBar,
                                         GroupBox {
                                                 Label { "Slider" },
                                                 Vertical {
