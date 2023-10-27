@@ -17,6 +17,7 @@
 #include "ATouchScroller.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Platform/APlatform.h"
 #include <glm/gtx/norm.hpp>
 
 using namespace std::chrono;
@@ -33,12 +34,15 @@ void ATouchScroller::handlePointerPressed(const APointerPressedEvent& e) {
 void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
     assert(("ATouchScroller is intended only for touchscreen events", e.pointerIndex.isFinger()));
     if (auto s = std::get_if<ScrollingState>(&mState)) {
-        auto velocity = glm::normalize(s->currentVelocity) * glm::max(glm::length(s->prevVelocity), glm::length(s->currentVelocity));
-
+        auto direction = glm::normalize(s->currentVelocity);
+        auto velocity = glm::max(glm::length(s->prevVelocity), glm::length(s->currentVelocity));
+        auto fps = static_cast<float>(AWindow::current()->getFps());
         mState = KineticScrollingState{
             .pointer = e.pointerIndex,
             .origin = s->origin,
             .velocity = velocity,
+            .averageTimeDelta = 1.f / fps,
+            .direction = direction,
         };
     }
 }
@@ -70,9 +74,7 @@ glm::ivec2 ATouchScroller::handlePointerMove(glm::vec2 pos) {
 
     auto delta = s.previousPosition - pos;
     s.prevVelocity = s.currentVelocity;
-    s.currentVelocity = delta * (s.timeBetweenFrames.count() > 0
-                                 ? float(duration_cast<microseconds>(1s).count()) / float(s.timeBetweenFrames.count())
-                                 : (1000.f / 16.f));
+    s.currentVelocity = delta * INITIAL_ACCELERATION_COEFFICIENT;
 
     s.previousPosition = pos;
     
@@ -98,15 +100,18 @@ AOptional<glm::ivec2> ATouchScroller::gatherKineticScrollValue() {
     }
 
     const auto now = high_resolution_clock::now();
-    if (glm::length2(s->velocity) < 0.01f) {
+    if (s->velocity < 0.001f) {
         return glm::ivec2{0, 0};
     }
+
     const auto timeDelta = duration_cast<microseconds>(now - s->lastFrameTime);
     s->lastFrameTime = now;
-    const float currentFrameRatio = float(timeDelta.count()) / float(duration_cast<microseconds>(1s).count());
-    auto result = s->velocity * currentFrameRatio;
-    s->velocity *= glm::clamp(1.f - currentFrameRatio * FRICTION, 0.001f, 0.999f);
-
+    glm::vec2 result = (s->velocity * s->averageTimeDelta) * s->direction;
+    s->velocity -= s->averageTimeDelta * deceleration();
     return result;
+}
+
+float ATouchScroller::deceleration() {
+    return BASE_DECELERATION * APlatform::getDpiRatio();
 }
 

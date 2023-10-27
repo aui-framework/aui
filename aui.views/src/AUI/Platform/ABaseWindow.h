@@ -25,6 +25,7 @@
 #include "AOverlappingSurface.h"
 #include "ADragNDrop.h"
 #include "AUI/Util/ATouchScroller.h"
+#include <chrono>
 #include <optional>
 
 namespace testing {
@@ -296,6 +297,14 @@ public:
      */
     static constexpr std::chrono::milliseconds DOUBLECLICK_MAX_DURATION = std::chrono::milliseconds(500);
 
+    /**
+     * @note FPS is captured every second
+     * @return Last captured FPS
+     */
+    size_t getFps() {
+        return mLastCapturedFps;
+    }
+
 signals:
     emits<>            dpiChanged;
     emits<glm::ivec2>  mouseMove;
@@ -353,6 +362,10 @@ private:
      * @brief Helper structs to handle touchscreen scroll events.
      */
     ASmallVector<Scroll, 10 /* typical max number of fingers */> mScrolls;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> mLastTimeFpsCaptured = std::chrono::high_resolution_clock::now();
+    size_t mFpsCounter = 0;
+    size_t mLastCapturedFps = 0;
 };
 
 

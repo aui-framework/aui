@@ -372,6 +372,17 @@ void ABaseWindow::render() {
     if (auto v = mProfiledView.lock()) {
         AViewProfiler::displayBoundsOn(*v);
     }
+
+    using namespace std::chrono;
+    using namespace std::chrono_literals;
+    auto now = high_resolution_clock::now();
+    ++mFpsCounter;
+    if (auto delta = duration_cast<microseconds>(now - mLastTimeFpsCaptured).count();
+        delta >= duration_cast<microseconds>(1s).count()) {
+        mLastCapturedFps = duration_cast<microseconds>(1s).count() * (mFpsCounter) / delta;
+        mFpsCounter = 0;
+        mLastTimeFpsCaptured = now;
+    }
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     });
 #endif
