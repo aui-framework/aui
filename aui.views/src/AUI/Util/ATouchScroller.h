@@ -33,8 +33,18 @@
  */
 class API_AUI_VIEWS ATouchScroller {
 public:
-    static constexpr auto FRICTION = 2.f;
+    /*
+     * @brief Deceleration for kinetic scroll
+     * @note Multiply by dpi ratio for proper work of kinetic scroll on all devices
+     */
+    static constexpr float BASE_DECELERATION = 1600.f;
 
+    /**
+     * @brief Initial acceleration after pointer released is defined by direction of pointer moving and this coefficient
+     */
+    static constexpr float INITIAL_ACCELERATION_COEFFICIENT = 60.f;
+
+    static float deceleration();
 
     /**
      * @brief Distance that pointer have to pass in order to treat pointer move events as scroll events.
@@ -90,7 +100,9 @@ private:
     struct KineticScrollingState {
         APointerIndex pointer;
         glm::vec2 origin;
-        glm::vec2 velocity;
+        float velocity;
+        float averageTimeDelta;
+        glm::vec2 direction;
 
         std::chrono::high_resolution_clock::time_point lastFrameTime = std::chrono::high_resolution_clock::now();
     };
