@@ -155,7 +155,6 @@ void OpenGLRenderingContext::init(const Init& init) {
         }
         ALogger::info(LOG_TAG) << ("Context is ready");
 
-        ARender::setRenderer(mRenderer = ourRenderer());
 
         //makeCurrent(mDC);
     } else {
@@ -163,6 +162,7 @@ void OpenGLRenderingContext::init(const Init& init) {
         assert(k);
     }
 
+    ARender::setRenderer(mRenderer = ourRenderer());
     makeCurrent(mWindowDC);
     // vsync
     wglSwapIntervalEXT(!(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));
