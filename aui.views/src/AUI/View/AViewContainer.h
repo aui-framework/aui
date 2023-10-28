@@ -1,4 +1,4 @@
-﻿//  AUI Framework - Declarative UI toolkit for modern C++20
+//  AUI Framework - Declarative UI toolkit for modern C++20
 //  Copyright (C) 2020-2023 Alex2772
 //
 //  This library is free software; you can redistribute it and/or
@@ -66,6 +66,11 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
  */
 class API_AUI_VIEWS AViewContainer : public AView {
 public:
+    struct PointerEventsMapping {
+        APointerIndex pointerIndex;
+        _weak<AView> targetView;
+    };
+
     AViewContainer();
 
     virtual ~AViewContainer();
@@ -323,6 +328,12 @@ public:
         emit scrollbarAppearanceSet(scrollbarAppearance);
     }
 
+    /**
+     * @see AViewContainer::mPointerEventsMapping
+     */
+    const ASmallVector<PointerEventsMapping, 1>& pointerEventsMapping() const noexcept {
+        return mPointerEventsMapping;
+    }
 protected:
     AVector<_<AView>> mViews;
     ScrollbarAppearance mScrollbarAppearance;
@@ -388,11 +399,6 @@ private:
      */
     _weak<AView> mFocusChainTarget;
 
-    struct PointerEventsMapping {
-        APointerIndex pointerIndex;
-        _weak<AView> targetView;
-    };
-
     /**
      * @brief Like focus chain target, but intended for pointer press -> move.. -> release event sequence on per-pointer
      * (finger) basis.
@@ -401,7 +407,9 @@ private:
 
     void notifyParentEnabledStateChanged(bool enabled) override;
     void invalidateCaches();
-
+    
+    void onChildrenChanged();
+    
     /**
      * @see mPointerEventsMapping
      */

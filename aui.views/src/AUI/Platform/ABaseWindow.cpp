@@ -344,6 +344,23 @@ void ABaseWindow::flagUpdateLayout() {
 
 }
 
+static void scanPointerEventsMapping(ASet<APointerIndex>& indicesToRemove, AViewContainer& v) {
+    for (const auto& p : v.pointerEventsMapping()) {
+        auto child = p.targetView.lock();
+        if (!child) {
+            continue;
+        }
+        if (v.getViewAt(child->getPosition() + child->getSize() / 2) != child) {
+            indicesToRemove << p.pointerIndex;
+            continue;
+        }
+        
+        if (auto asContainer = _cast<AViewContainer>(child)) {
+            scanPointerEventsMapping(indicesToRemove, *asContainer);
+        }
+    }
+}
+
 void ABaseWindow::render() {
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
@@ -365,6 +382,28 @@ void ABaseWindow::render() {
         flagRedraw();
         return false;
     }), mScrolls.end());
+    if (mFlagChildrenChanged) {
+        mFlagChildrenChanged = false;
+
+        /*
+         * We need to check pressed views for reachability. If some pressed view could not be reached with hittest,
+         * we should send onPointerReleased event (with .triggerClick = false), since user's ui have drastically changed
+         * (i.e. popup appeared), so we don't want to handle unwanted events to the old ui's, especially if they could
+         * not be reached anymore.
+         * 
+         * This is to avoid a bug when one finger pressed the button, and the other one trigger some kind of fullscreen
+         * popup, in such case we should cancel the first press state in order to avoid ambigous behaviour.
+         */
+        ASet<APointerIndex> indicesToRemove;
+        scanPointerEventsMapping(indicesToRemove, *this);
+        for (auto index : indicesToRemove) {
+            onPointerReleased(APointerReleasedEvent {
+                .position = {0, 0},
+                .pointerIndex = index,
+                .triggerClick = false,
+            });
+        }
+    }
 
     AViewContainer::render();
     mIgnoreTouchscreenKeyboardRequests = false;
