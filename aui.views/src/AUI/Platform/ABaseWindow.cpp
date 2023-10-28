@@ -245,7 +245,8 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
     APointerReleasedEvent copy = event;
-    copy.triggerClick = !mPreventClickOnPointerRelease.valueOr(true);
+    // in case of multitouch, we should not treat pointer release event as a click.
+    copy.triggerClick = pointerEventsMapping().size() < 2 && !mPreventClickOnPointerRelease.valueOr(true);
     mPreventClickOnPointerRelease.reset();
 
     // handle touchscreen scroll
