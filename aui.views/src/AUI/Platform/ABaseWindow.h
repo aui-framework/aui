@@ -162,13 +162,6 @@ public:
     virtual void flagRedraw();
     virtual void flagUpdateLayout();
 
-    /**
-     * @see mFlagChildrenChanged
-     */
-    void flagChildrenChanged() {
-        mFlagChildrenChanged = true;
-    }
-
     void makeCurrent() {
         currentWindowStorage() = this;
     }
@@ -356,13 +349,6 @@ private:
     float mDpiRatio = 1.f;
     bool mIgnoreTouchscreenKeyboardRequests = false; // to avoid flickering
 
-    /**
-     * @brief Indicates then some of AViewContainer's children count has changed.
-     * @details
-     * When this flag is raised, hittest checks are triggered for multitouch pressed views in order to determine whether
-     * they still reachable or not.
-     */
-    bool mFlagChildrenChanged = true;
 
     glm::ivec2 mMousePos = {0, 0};
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;

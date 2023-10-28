@@ -55,11 +55,7 @@ public:
     template<aui::invocable Operation>
     auto runOperation(Operation&& operation) -> decltype(operation()) {
         std::unique_lock lock(mSync);
-        if (mBeginPoint.hasValue()) {
-            // recursive?
-            lock.unlock();
-            return operation();
-        }
+        assert(!mBeginPoint.hasValue());
         mBeginPoint = std::chrono::high_resolution_clock::now();
         ARaiiHelper resetter = [&] {
             lock.lock();
