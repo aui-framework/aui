@@ -823,7 +823,7 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points
     positions.reserve(points.size());
 
     for (const auto& point : points) {
-        positions << mTransform * glm::vec4(point, 0, 1);
+        positions << glm::vec4(point, 0, 1);
     }
 
     mTempVao.insert(0, positions);
