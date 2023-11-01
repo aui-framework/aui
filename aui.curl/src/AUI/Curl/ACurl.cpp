@@ -145,7 +145,7 @@ ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AStr
                 paramsString += (char)c;
             } else {
                 char buf[128];
-                paramsString += std::string_view(buf, fmt::format_to(buf, "%{:02x}", c));
+                paramsString += std::string_view(buf, std::distance(std::begin(buf), fmt::format_to(std::begin(buf), "%{:02x}", c)));
             }
         }
     }
