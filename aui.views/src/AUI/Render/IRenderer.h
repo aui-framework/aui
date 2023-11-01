@@ -70,7 +70,8 @@ class ABaseWindow;
  */
 enum class Blending {
     /**
-     * <p>Normal blending.</p>
+     * @brief Normal blending.
+     * @details
      * <dl>
      *   <dt><b>Formula</b></dt>
      *   <dd><code>S.rgb * S.a + D.rgb * (1 - S.a)</code></dd>
@@ -87,7 +88,8 @@ enum class Blending {
 
 
     /**
-     * <p>Simply sums <code>S</code> and <code>D</code> colors.
+     * @brief Simply sums <code>S</code> and <code>D</code> colors.
+     * @details
      * <dl>
      *   <dt><b>Formula</b></dt>
      *   <dd><code>S.rgb + D.rgb</code></dd>
@@ -103,7 +105,8 @@ enum class Blending {
     ADDITIVE,
 
     /**
-     * <p>Inverses destination color and multiplies it with the source color.
+     * @brief Inverses destination color and multiplies it with the source color.
+     * @details
      * <dl>
      *   <dt><b>Formula</b></dt>
      *   <dd><code>S.rgb * (1 - D.rgb)</code></dd>
@@ -119,7 +122,8 @@ enum class Blending {
     INVERSE_DST,
 
     /**
-     * <p>Inverses source color and multiplies it with the destination color.
+     * @brief Inverses source color and multiplies it with the destination color.
+     * @details
      * <dl>
      *   <dt><b>Formula</b></dt>
      *   <dd><code>(1 - S.rgb) * D.rgb</code></dd>
@@ -135,6 +139,10 @@ enum class Blending {
     INVERSE_SRC,
 };
 
+/**
+ * @brief Base class for rendering (for drawing use ARender facade instead).
+ * @ingroup views
+ */
 class IRenderer {
 public:
     class IPrerenderedString {
@@ -151,9 +159,9 @@ public:
     protected:
 
         /**
-         * Notifies IMultiStringCanvas than a symbol was added used to construct a
-         * <a href="#ATextLayoutHelper">ATextLayoutHelper</a>.
-         * @note should be called by the implementation of <a href="#IMultiStringCanvas">IMultiStringCanvas</a>.
+         * @brief Notifies IMultiStringCanvas than a symbol was added used to construct a ATextLayoutHelper.
+         * @details
+         * @note should be called by the implementation of IMultiStringCanvas.
          * @param symbol symbol to add
          */
         void notifySymbolAdded(const ATextLayoutHelper::Symbol& symbol) noexcept {
@@ -164,7 +172,7 @@ public:
         virtual ~IMultiStringCanvas() = default;
 
         /**
-         * Notifies IMultiStringCanvas that <a href="#makeTextLayoutHelper">getTextLayoutHelper</a> will be used.
+         * @brief Notifies IMultiStringCanvas that getTextLayoutHelper() will be used.
          */
         void enableCachingForTextLayoutHelper() noexcept {
             mSymbols = ATextLayoutHelper::Symbols{};
@@ -172,31 +180,34 @@ public:
         }
 
         /**
-         * When caching for text layout helper is enabled, a new line added.
+         * @brief When caching for text layout helper is enabled, a new line added.
          */
         void nextLine() noexcept {
             if (mSymbols) mSymbols->push_back({});
         }
 
         /**
-         * Bake string with some position.
+         * @brief Bakes a string with some position.
          * @param position position
          * @param text text
          */
         virtual void addString(const glm::ivec2& position, const AString& text) noexcept = 0;
 
         /**
+         * @brief Bakes multi string canvas to IPrerenderedString which can be used for drawing text.
          * @note invalidates IMultiStringCanvas which speeds up some implementations of IMultiStringCanvas.
-         * @return instance of <code>Render::PrerenderedString</code> to drawElements with.
+         * @return instance of <code>ARender::PrerenderedString</code> to drawElements with.
          */
         virtual _<IRenderer::IPrerenderedString> finalize() noexcept = 0;
 
         /**
-         * @note call <a href="#enableCachingForTextLayoutHelper">enableCachingForTextLayoutHelper</a> before adding
-         *       strings.
-         * @note can be called only once.
+         * @brief Returns text layout helper.
          * @return an instance of <code>IRenderer::ITextLayoutHelper</code> constructed from
          * <code>IMultiStringCanvas</code>'s cache to efficiently map cursor position to the string index.
+         * @details
+         * @note call enableCachingForTextLayoutHelper before adding
+         *       strings.
+         * @note can be called only once.
          */
         ATextLayoutHelper getTextLayoutHelper() noexcept {
             assert(("call enableCachingForTextLayoutHelper() before using getTextLayoutHelper" && bool(mSymbols)));
@@ -217,150 +228,174 @@ public:
     IRenderer(): mTexturePool([this] { return createNewTexture(); }) {}
     virtual ~IRenderer() = default;
 
+    /**
+     * @brief Creates new texture (image representation optimized for GPU rendering).
+     */
     _<ITexture> getNewTexture() {
         return mTexturePool.get();
     }
 
     /**
-     * Canvas for batching multiple <code>prerender</code> string calls.
+     * @brief Creates new canvas for batching multiple <code>prerender</code> string calls.
      * @return a new instance of <code>IMultiStringCanvas</code>
      */
     virtual _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
 
     /**
-     * Draws simple rectangle.
+     * @brief Draws simple rectangle.
      * @param brush brush to use
      * @param position rectangle position (px)
      * @param size rectangle size (px)
      */
     virtual void drawRect(const ABrush& brush,
-                          const glm::vec2& position,
-                          const glm::vec2& size) = 0;
+                          glm::vec2 position,
+                          glm::vec2 size) = 0;
 
 
     /**
-     * Draws rounded rect (without antialiasing).
+     * @brief Draws rounded rect (with antialiasing, if msaa enabled).
      * @param brush brush to use
      * @param position rectangle position (px)
      * @param size rectangle size (px)
      * @param radius corner radius (px)
      */
     virtual void drawRoundedRect(const ABrush& brush,
-                                 const glm::vec2& position,
-                                 const glm::vec2& size,
+                                 glm::vec2 position,
+                                 glm::vec2 size,
                                  float radius) = 0;
 
     /**
-     * Draws rounded rect (with antialiasing).
-     * @param brush brush to use
-     * @param position rectangle position (px)
-     * @param size rectangle size (px)
-     * @param radius corner radius (px)
-     */
-    virtual void drawRoundedRectAntialiased(const ABrush& brush,
-                                            const glm::vec2& position,
-                                            const glm::vec2& size,
-                                            float radius) = 0;
-
-    /**
-     * Draws rectangle's border.
+     * @brief Draws rectangle's border.
      * @param brush brush to use
      * @param position rectangle position (px)
      * @param size rectangle size (px)
      * @param lineWidth border line width (px)
      */
     virtual void drawRectBorder(const ABrush& brush,
-                                const glm::vec2& position,
-                                const glm::vec2& size,
+                                glm::vec2 position,
+                                glm::vec2 size,
                                 float lineWidth = 1.f) = 0;
     /**
-     * Draws rectangle's border (with antialiasing).
+     * @brief Draws rounded rectangle's border.
      * @param brush brush to use
      * @param position rectangle position (px)
      * @param size rectangle size (px)
      * @param radius corner radius (px)
      * @param borderWidth border line width (px)
      */
-    virtual void drawRectBorder(const ABrush& brush,
-                                const glm::vec2& position,
-                                const glm::vec2& size,
-                                float radius,
-                                int borderWidth) = 0;
+    virtual void drawRoundedRectBorder(const ABrush& brush,
+                                       glm::vec2 position,
+                                       glm::vec2 size,
+                                       float radius,
+                                       int borderWidth) = 0;
 
 
     /**
-     * Draws a rectangle-shaped shadow.
+     * @brief Draws a rectangle-shaped shadow.
      * @param position position
      * @param size rectangle size
      * @param blurRadius blur radius
      * @param color shadow color
      */
-    virtual void drawBoxShadow(const glm::vec2& position,
-                               const glm::vec2& size,
+    virtual void drawBoxShadow(glm::vec2 position,
+                               glm::vec2 size,
                                float blurRadius,
                                const AColor& color) = 0;
 
+    /**
+     * @brief Draws inner (inset) rectangle-shaped shadow.
+     * @param position position
+     * @param size rectangle size
+     * @param blurRadius blur radius
+     * @param spreadRadius spread (offset) radius
+     * @param borderRadius border radius of the rectangle.
+     * @param color shadow color
+     * @param offset shadow offset. Unlike outer shadow (ARender::boxShadow), the offset is passed to the shader instead
+     *               of a simple rectangle position offset.
+     */
+    virtual void drawBoxShadowInner(glm::vec2 position,
+                                    glm::vec2 size,
+                                    float blurRadius,
+                                    float spreadRadius,
+                                    float borderRadius,
+                                    const AColor& color,
+                                    glm::vec2 offset) = 0;
 
     /**
-     * Draws string.
+     * @brief Draws string.
+     * @param position string's top left point
+     * @param string string to render
+     * @param fs font style (optional)
+     * @details
      * <dl>
      *     <dt><b>Warning!</b></dt>
      *     <dd>
      *         This function is dramatically inefficient since it does symbol lookup for every character is the
      *         <code>string</code> and does GPU buffer allocations. If you want to render the same string for several
-     *         times (frames), consider using the <a href="IRenderer::prerenderString">IRenderer::prerenderString</a>
-     *         function instead.
+     *         times (frames), consider using the IRenderer::prerenderString function or high level views (such as
+     *         ALabel) instead.
      *     </dd>
      * </dl>
-     * @param position string's top left point
-     * @param string string to render
-     * @param fs font style (optional)
      */
-    virtual void drawString(const glm::vec2& position,
+    virtual void drawString(glm::vec2 position,
                             const AString& string,
                             const AFontStyle& fs = {}) = 0;
 
     /**
-     * Analyzes string and creates an instance of <code>IRenderer::IPrerenderedString</code> which helps
+     * @brief Analyzes string and creates an instance of <code>IRenderer::IPrerenderedString</code> which helps
      * <code>IRenderer</code> to efficiently render the string.
      * @param position string's top left point
      * @param text string to prerender
      * @param fs font style
      * @return an instance of IPrerenderedString
      */
-    virtual _<IPrerenderedString> prerenderString(const glm::vec2& position, const AString& text, const AFontStyle& fs) = 0;
+    virtual _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
 
 
 
     /**
-     * Draws a line between <code>p1</code> and <code>p2</code>.
+     * @brief Draws a line between <code>p1</code> and <code>p2</code>.
      * @param brush brush
      * @param p1 first point
      * @param p2 second point
-     *
+     * @details
      * <dl>
      *   <dt><b>Performance note</b></dt>
-     *   <dd>if you want to drawElements multiple lines, consider using <code>Render::lines</code> function instead.</dd>
+     *   <dd>if you want to drawElements multiple lines, consider using <code>ARender::lines</code> function instead.</dd>
      * </dl>
      */
     virtual void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) = 0;
 
     /**
-     * Draws polyline (non-loop line strip).
+     * @brief Draws polyline (non-loop line strip).
      * @param brush brush
      * @param points polyline points
      */
     virtual void drawLines(const ABrush& brush, AArrayView<glm::vec2> points) = 0;
 
     /**
-     * Draws multiple individual lines in a batch.
+     * @brief Draws multiple individual lines in a batch.
      * @param brush brush
      * @param points line points
      */
     virtual void drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) = 0;
 
     /**
-     * Sets the color which is multiplied with any brush.
+     * @brief Draws sector in rectangle shape. The sector is drawn clockwise from begin to end angles.
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @details
+     * The method can be used as mask to ARender::roundedRect, creating arc shape.
+     */
+    virtual void drawSquareSector(const ABrush& brush,
+                                  const glm::vec2& position,
+                                  const glm::vec2& size,
+                                  AAngleRadians begin,
+                                  AAngleRadians end) = 0;
+ 
+    /**
+     * @brief Sets the color which is multiplied with any brush.
      * @param color color
      */
     void setColorForced(const AColor& color)
@@ -369,7 +404,7 @@ public:
     }
 
     /**
-     * Sets the color which is multiplied with any brush. Unlike <code>setColorForced</code>, the new color is multiplied
+     * @bruef Sets the color which is multiplied with any brush. Unlike <code>setColorForced</code>, the new color is multiplied
      * by the previous color.
      * @param color color
      */
@@ -384,7 +419,7 @@ public:
     }
 
     /**
-     * Sets the transform matrix which is applicable for any figure. Unlike <code>setTransformForced</code>, the new
+     * @brief Sets the transform matrix which is applicable for any figure. Unlike <code>setTransformForced</code>, the new
      * matrix is multiplied by the previous matrix.
      * @param transform transform matrix
      */
@@ -394,7 +429,7 @@ public:
     }
 
     /**
-     * Sets the transform matrix which is applicable for any figure.
+     * @brief Sets the transform matrix which is applicable for any figure.
      * @param transform transform matrix
      */
     void setTransformForced(const glm::mat4& transform)
@@ -403,34 +438,47 @@ public:
     }
 
     /**
-     * Switches drawing to the stencil buffer instead of color buffer.
+     * @brief witches drawing to the stencil buffer instead of color buffer.
+     * @details
      * Stencil pixel is increased by each affected pixel.
      * Should be called before the <code>pushMaskAfter</code> function.
      */
     virtual void pushMaskBefore() = 0;
 
     /**
-     * Switches drawing to the color buffer back from the stencil. Increases stencil depth.
+     * @brief Switches drawing to the color buffer back from the stencil. Increases stencil depth.
+     * @details
      * Stencil buffer should not be changed after calling this function.
      * Should be called after the <code>pushMaskBefore</code> function.
      */
     virtual void pushMaskAfter() = 0;
 
     /**
-    * Switches drawing to the stencil buffer instead of color buffer.
+    * @brief Switches drawing to the stencil buffer instead of color buffer.
+    * @details
     * Stencil pixel is decreased by each affected pixel.
     * Should be called before the <code>popMaskAfter</code> function.
     */
     virtual void popMaskBefore() = 0;
+
     /**
-     * Switches drawing to the color buffer back from the stencil. Decreases stencil depth.
+     * @brief Switches drawing to the color buffer back from the stencil. Decreases stencil depth.
+     * @details
      * Stencil buffer should not be changed after calling this function.
      * Should be called after the <code>popMaskBefore</code> function.
      */
     virtual void popMaskAfter() = 0;
 
+    /**
+     * @brief Sets blending mode.
+     * @param blending new blending mode
+     */
     virtual void setBlending(Blending blending) = 0;
 
+    /**
+     * @brief Sets the window to render on.
+     * @param window target window
+     */
     virtual void setWindow(ABaseWindow* window)
     {
         mWindow = window;

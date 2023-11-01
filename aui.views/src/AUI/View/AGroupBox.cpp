@@ -37,9 +37,9 @@ namespace {
 
             RenderHints::PushMatrix transform;
             auto d = mTitle->getPositionInWindow() - getPositionInWindow();
-            Render::rect(ASolidBrush{},
-                         d,
-                         mTitle->getSize());
+            ARender::rect(ASolidBrush{},
+                          d,
+                          mTitle->getSize());
         }
 
     private:

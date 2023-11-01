@@ -22,6 +22,8 @@
 #include <AUI/Traits/callables.h>
 #include "SoftwareRenderer.h"
 #include "SoftwareTexture.h"
+#include <AUISL/Generated/rect_solid.fsh.software.h>
+#include <AUISL/Generated/shadow.fsh.software.h>
 
 struct BrushHelper {
     SoftwareRenderer* renderer;
@@ -36,7 +38,11 @@ struct BrushHelper {
                 glm::ivec2& position) : renderer(renderer), x(x), y(y), end(end), position(position) {}
 
     void operator()(const ASolidBrush& brush) noexcept {
-        renderer->putPixel({x, y}, renderer->getColor() * brush.solidColor);
+        using namespace aui::sl_gen::rect_solid::fsh::software;
+
+        renderer->putPixel({x, y}, Shader::entry({}, Shader::Uniform {
+                .color = renderer->getColor() * brush.solidColor
+        }).albedo);
     }
 
     void operator()(const ATexturedBrush& brush) noexcept {
@@ -68,11 +74,12 @@ struct BrushHelper {
 
 
     void operator()(const ALinearGradientBrush& brush) noexcept {
+        /*
         auto d = calculateUv();
         auto color = glm::mix(glm::mix(glm::vec4(brush.topLeftColor), glm::vec4(brush.topRightColor), d.x),
                               glm::mix(glm::vec4(brush.bottomLeftColor), glm::vec4(brush.bottomRightColor), d.x),
                               d.y);
-        renderer->putPixel({ x, y }, renderer->getColor() * color);
+        renderer->putPixel({ x, y }, renderer->getColor() * color);*/
     }
 
     void operator()(const ACustomShaderBrush& brush) noexcept {
@@ -164,8 +171,8 @@ glm::mat4 SoftwareRenderer::getProjectionMatrix() const {
 }
 
 void SoftwareRenderer::drawRect(const ABrush& brush,
-                                const glm::vec2& position,
-                                const glm::vec2& size) {
+                                glm::vec2 position,
+                                glm::vec2 size) {
     auto transformedPosition = glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f));
     auto end = transformedPosition + glm::ivec2(size);
 
@@ -181,8 +188,8 @@ void SoftwareRenderer::drawRect(const ABrush& brush,
 }
 
 void SoftwareRenderer::drawRoundedRect(const ABrush& brush,
-                                       const glm::vec2& position,
-                                       const glm::vec2& size,
+                                       glm::vec2 position,
+                                       glm::vec2 size,
                                        float radius) {
     RoundedRect r(int(radius), glm::ivec2(size), glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f)));
     auto end = r.transformedPosition + r.size;
@@ -201,35 +208,9 @@ void SoftwareRenderer::drawRoundedRect(const ABrush& brush,
     }
 }
 
-void SoftwareRenderer::drawRoundedRectAntialiased(const ABrush& brush,
-                                                  const glm::vec2& position,
-                                                  const glm::vec2& size,
-                                                  float radius) {
-
-    RoundedRect r(int(radius), glm::ivec2(size), glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f)));
-    auto end = r.transformedPosition + r.size;
-
-    int x, y;
-
-    auto sw = BrushHelper(this, x, y, end, r.transformedPosition);
-
-    for (y = r.transformedPosition.y; y < end.y; ++y) {
-        for (x = r.transformedPosition.x; x < end.x; ++x) {
-            int accumulator = r.test<true>(r.abs({x, y}));
-            if (accumulator != 0) {
-                float alphaCopy = mColor.a;
-                mColor.a *= accumulator;
-                mColor.a /= 25;
-                std::visit(sw, brush);
-                mColor.a = alphaCopy;
-            }
-        }
-    }
-}
-
 void SoftwareRenderer::drawRectBorder(const ABrush& brush,
-                                      const glm::vec2& position,
-                                      const glm::vec2& size,
+                                      glm::vec2 position,
+                                      glm::vec2 size,
                                       float lineWidth) {
     drawRect(brush, position, {size.x, lineWidth});
     drawRect(brush, position + glm::vec2{0, size.y - lineWidth}, { size.x, lineWidth });
@@ -237,11 +218,11 @@ void SoftwareRenderer::drawRectBorder(const ABrush& brush,
     drawRect(brush, position + glm::vec2{ size.x - lineWidth, lineWidth }, { lineWidth, size.y - 2 * lineWidth });
 }
 
-void SoftwareRenderer::drawRectBorder(const ABrush& brush,
-                                      const glm::vec2& position,
-                                      const glm::vec2& size,
-                                      float radius,
-                                      int borderWidth) {
+void SoftwareRenderer::drawRoundedRectBorder(const ABrush& brush,
+                                             glm::vec2 position,
+                                             glm::vec2 size,
+                                             float radius,
+                                             int borderWidth) {
     auto pos = glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f));
     RoundedRect outside(int(radius), glm::ivec2(size), pos);
     RoundedRect inside(int(radius) - borderWidth, glm::ivec2(size) - glm::ivec2(borderWidth * 2), pos + glm::ivec2(borderWidth));
@@ -274,43 +255,80 @@ void SoftwareRenderer::drawRectBorder(const ABrush& brush,
     }
 }
 
-glm::vec4 erf(glm::vec4 x) {
-    glm::vec4 s = glm::sign(x), a = glm::abs(x);
-    x = 1.0f + (0.278393f + (0.230389f + 0.078108f * (a * a)) * a) * a;
-    x *= x;
-    return s - s / (x * x);
-}
-
-void SoftwareRenderer::drawBoxShadow(const glm::vec2& position,
-                                     const glm::vec2& size,
+void SoftwareRenderer::drawBoxShadow(glm::vec2 position,
+                                     glm::vec2 size,
                                      float blurRadius,
                                      const AColor& color) {
 
     auto transformedPos = glm::vec2(mTransform * glm::vec4(position, 1.f, 1.f));
-    float sigma = blurRadius / 2.f;
-    glm::vec2 lower = transformedPos + size;
-    glm::vec2 upper = transformedPos;
-    auto finalColor = mColor * color;
 
-    transformedPos -= blurRadius;
+    //transformedPos -= blurRadius;
     glm::ivec2 iTransformedPos(transformedPos);
-    auto eSize = size + blurRadius * 2.f;
-    auto iSize = glm::ivec2(eSize);
+    auto iSize = glm::ivec2(size + blurRadius * 2.f);
 
 
-    auto ePos = transformedPos;
+    using namespace aui::sl_gen::shadow::fsh::software;
+    const Shader::Uniform uniform{
+        .color = mColor * color,
+        .lower = size,
+        .upper = transformedPos,
+        .sigma = blurRadius / 2.f,
+    };
 
     for (int y = 0; y < iSize.y; ++y) { 
         for (int x = 0; x < iSize.x; ++x) {
-            glm::vec2 pass_uv = transformedPos + glm::vec2{x, y};
+            const auto result = Shader::entry(Shader::Inter {
+                .vertex = transformedPos + glm::vec2{x, y},
+            }, uniform).albedo;
+
+            /*
             glm::vec4 query = glm::vec4(pass_uv - glm::vec2(lower), pass_uv - glm::vec2(upper));
             glm::vec4 integral = 0.5f + 0.5f * erf(query * (glm::sqrt(0.5f) / sigma));
             float alpha = glm::clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0f, 1.0f);
-
-            putPixel(iTransformedPos + glm::ivec2{ x, y }, { finalColor.r, finalColor.g, finalColor.b, finalColor.a * alpha });
+*/
+            putPixel(iTransformedPos + glm::ivec2{ x, y }, result);
         }
     }
 }
+void SoftwareRenderer::drawBoxShadowInner(glm::vec2 position,
+                                          glm::vec2 size,
+                                          float blurRadius,
+                                          float spreadRadius,
+                                          float borderRadius,
+                                          const AColor& color,
+                                          glm::vec2 offset) {
+
+    auto transformedPos = glm::vec2(mTransform * glm::vec4(position, 1.f, 1.f));
+
+    //transformedPos -= blurRadius;
+    glm::ivec2 iTransformedPos(transformedPos);
+    auto iSize = glm::ivec2(size + blurRadius * 2.f);
+
+
+    using namespace aui::sl_gen::shadow::fsh::software;
+    const Shader::Uniform uniform{
+        .color = mColor * color,
+        .lower = size,
+        .upper = transformedPos,
+        .sigma = blurRadius / 2.f,
+    };
+
+    for (int y = 0; y < iSize.y; ++y) { 
+        for (int x = 0; x < iSize.x; ++x) {
+            const auto result = Shader::entry(Shader::Inter {
+                .vertex = transformedPos + glm::vec2{x, y},
+            }, uniform).albedo;
+
+            /*
+            glm::vec4 query = glm::vec4(pass_uv - glm::vec2(lower), pass_uv - glm::vec2(upper));
+            glm::vec4 integral = 0.5f + 0.5f * erf(query * (glm::sqrt(0.5f) / sigma));
+            float alpha = glm::clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0f, 1.0f);
+*/
+            putPixel(iTransformedPos + glm::ivec2{ x, y }, result);
+        }
+    }
+}
+
 
 void SoftwareRenderer::setBlending(Blending blending) {
     mBlending = blending;
@@ -485,7 +503,7 @@ public:
 };
 
 
-void SoftwareRenderer::drawString(const glm::vec2& position,
+void SoftwareRenderer::drawString(glm::vec2 position,
                                   const AString& string,
                                   const AFontStyle& fs) {
     SoftwareMultiStringCanvas c(this, fs);
@@ -493,7 +511,7 @@ void SoftwareRenderer::drawString(const glm::vec2& position,
     c.finalize()->draw();
 }
 
-_<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(const glm::vec2& position,
+_<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 position,
                                                                    const AString& text,
                                                                    const AFontStyle& fs) {
     if (text.empty()) return nullptr;
@@ -545,4 +563,12 @@ void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::
     for (auto[p1, p2] : points) {
         drawLine(brush, p1, p2);
     }
+}
+
+void SoftwareRenderer::drawSquareSector(const ABrush& brush,
+                                        const glm::vec2& position,
+                                        const glm::vec2& size,
+                                        AAngleRadians begin,
+                                        AAngleRadians end) {
+    
 }

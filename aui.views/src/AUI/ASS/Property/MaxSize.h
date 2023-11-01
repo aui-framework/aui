@@ -21,6 +21,7 @@
 #pragma once
 
 #include <AUI/Util/AMetric.h>
+#include "AUI/Common/IStringable.h"
 #include "IProperty.h"
 
 namespace ass {
@@ -40,7 +41,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<MaxSize>: IPropertyBase {
+        struct API_AUI_VIEWS Property<MaxSize>: IPropertyBase, IStringable {
         private:
             MaxSize mInfo;
 
@@ -54,6 +55,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "MaxSize({}, {})"_format(mInfo.width, mInfo.height);
             }
         };
     }

@@ -91,10 +91,6 @@ void OpenGLRenderingContext::init(const Init& init) {
         ALogger::info(LOG_TAG) << ("Initialized temporary context");
 
         if (!glewExperimental) {
-            ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_VERSION));
-            ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_VENDOR));
-            ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_RENDERER));
-            ALogger::info(LOG_TAG) << ((const char*) glGetString(GL_EXTENSIONS));
             glewExperimental = true;
             if (glewInit() != GLEW_OK) {
                 AMessageBox::show(nullptr, "OpenGL", "Could not initialize context");
@@ -159,7 +155,6 @@ void OpenGLRenderingContext::init(const Init& init) {
         }
         ALogger::info(LOG_TAG) << ("Context is ready");
 
-        Render::setRenderer(std::make_unique<OpenGLRenderer>());
 
         //makeCurrent(mDC);
     } else {
@@ -167,6 +162,7 @@ void OpenGLRenderingContext::init(const Init& init) {
         assert(k);
     }
 
+    ARender::setRenderer(mRenderer = ourRenderer());
     makeCurrent(mWindowDC);
     // vsync
     wglSwapIntervalEXT(!(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));
@@ -191,29 +187,7 @@ void OpenGLRenderingContext::beginPaint(ABaseWindow& window) {
     CommonRenderingContext::beginPaint(window);
 
     makeCurrent(mSmoothResize ? mPainterDC : mWindowDC);
-
-
-    gl::State::activeTexture(0);
-    gl::State::bindTexture(GL_TEXTURE_2D, 0);
-    gl::State::bindVertexArray(0);
-    gl::State::useProgram(0);
-
-    glViewport(0, 0, window.getWidth(), window.getHeight());
-
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-    glEnable(GL_MULTISAMPLE);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    // stencil
-    glClearStencil(0);
-    glStencilMask(0xff);
-    glDisable(GL_SCISSOR_TEST);
-    glClear(GL_STENCIL_BUFFER_BIT);
-    glEnable(GL_STENCIL_TEST);
-    glStencilMask(0x00);
-    glStencilFunc(GL_EQUAL, 0, 0xff);
+    mRenderer->beginPaint(window.getSize());
 }
 
 void OpenGLRenderingContext::beginResize(ABaseWindow& window) {
@@ -225,6 +199,7 @@ void OpenGLRenderingContext::endResize(ABaseWindow& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ABaseWindow& window) {
+    mRenderer->endPaint();
     SwapBuffers(mSmoothResize ? mPainterDC : mWindowDC);
     if (mSmoothResize) {
         makeCurrent(nullptr);

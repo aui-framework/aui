@@ -193,7 +193,11 @@ public:
     void reallocate(size_t s) {
         if (mCapacity != s) {
             delete[] mBuffer;
-            mBuffer = new char[s];
+            if (s == 0) {
+                mBuffer = nullptr;
+            } else {
+                mBuffer = new char[s];
+            }
             mCapacity = s;
         }
         mSize = s;

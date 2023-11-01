@@ -1,7 +1,7 @@
 #include "AStrongByteBufferInputStream.h"
 
 
-_<AStrongByteBufferInputStream> AStrongByteBufferInputStream::fromUrl(const AUrl& url) noexcept {
+_<AStrongByteBufferInputStream> AStrongByteBufferInputStream::fromUrl(const AUrl& url) {
     return _new<AStrongByteBufferInputStream>(AByteBuffer::fromStream(AUrl(url).open()));
 }
 

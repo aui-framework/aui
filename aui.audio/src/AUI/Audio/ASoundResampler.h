@@ -19,7 +19,7 @@
 #include "AUI/Audio/ISoundInputStream.h"
 #include "AUI/Audio/ACompileTimeSoundResampler.h"
 
-class AAudioPlayer;
+class IAudioPlayer;
 
 /**
  * @brief Implements audio mixing and resampling.
@@ -27,12 +27,16 @@ class AAudioPlayer;
  */
 class API_AUI_AUDIO ASoundResampler : public ISoundInputStream {
 public:
-    ASoundResampler(_<ISoundInputStream> stream,
-                    ASampleFormat destinationFormat = aui::audio::DEFAULT_OUTPUT_FORMAT) noexcept:
-                    mSoundStream(std::move(stream)),
-                    mDestinationFormat(destinationFormat) {
-        mFormat = mSoundStream->info();
-    }
+    static constexpr AAudioFormat DEFAULT_OUTPUT_FORMAT = {
+            .channelCount = aui::audio::DEFAULT_OUTPUT_CHANNELS_COUNT,
+            .sampleRate = aui::audio::DEFAULT_OUTPUT_SAMPLE_RATE,
+            .sampleFormat = aui::audio::DEFAULT_OUTPUT_SAMPLE_FORMAT
+    };
+
+    explicit ASoundResampler(const _<IAudioPlayer>& player) noexcept;
+
+    //unimplemented
+    //explicit ASoundResampler(const _<IAudioPlayer>& player, AAudioFormat format) noexcept;
 
     size_t read(char* dst, size_t size) override;
 
@@ -41,7 +45,11 @@ public:
     void rewind() override;
 
 private:
+    _weak<IAudioPlayer> mParentPlayer;
     _<ISoundInputStream> mSoundStream;
-    ASampleFormat mDestinationFormat;
-    AAudioFormat mFormat;
+//    AAudioFormat mOutputFormat;
+    AAudioFormat mInputFormat;
+
+    template<ASampleFormat inputSampleFormat, AChannelFormat inputChannelsFormat>
+    size_t commitSamples(std::span<std::byte> dst);
 };

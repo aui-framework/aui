@@ -1,6 +1,7 @@
 #pragma once
 
 #include "AUI/Audio/ASampleFormat.h"
+#include "AUI/Audio/AChannelFormat.h"
 #include "AUI/Common/AException.h"
 
 /**
@@ -9,14 +10,9 @@
  */
 struct API_AUI_AUDIO AAudioFormat {
     /**
-     * @Brief Bits per second.
-     */
-    uint32_t bitRate;
-
-    /**
      * @brief Channel count.
      */
-    std::uint8_t channelCount;
+    AChannelFormat channelCount;
 
     /**
      * @brief Samples count per second (i.e. 48000, 44100).

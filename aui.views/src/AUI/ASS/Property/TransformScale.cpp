@@ -20,7 +20,7 @@
 
 
 #include "TransformScale.h"
-#include <AUI/Render/Render.h>
+#include "AUI/Render/ARender.h"
 #include <glm/gtc/matrix_transform.hpp>
 
 void ass::prop::Property<ass::TransformScale>::renderFor(AView* view) {
@@ -29,7 +29,7 @@ void ass::prop::Property<ass::TransformScale>::renderFor(AView* view) {
     m = glm::translate(m, glm::vec3(pivot, 0.f));
     m = glm::scale(m, glm::vec3(mInfo.scale, 1.0f));
     m = glm::translate(m, glm::vec3(-pivot, 0.f));
-    Render::setTransform(m);
+    ARender::setTransform(m);
 }
 
 ass::prop::PropertySlot ass::prop::Property<ass::TransformScale>::getPropertySlot() const {

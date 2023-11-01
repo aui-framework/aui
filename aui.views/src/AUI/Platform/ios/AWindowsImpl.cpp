@@ -19,7 +19,7 @@
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -136,8 +136,10 @@ void AWindow::blockUserInput(bool blockUserInput) {
 
 }
 
-void AWindowManager::notifyProcessMessages() {
+extern "C" void _aui_ios_redraw();
 
+void AWindowManager::notifyProcessMessages() {
+    _aui_ios_redraw();
 }
 
 void AWindowManager::loop() {

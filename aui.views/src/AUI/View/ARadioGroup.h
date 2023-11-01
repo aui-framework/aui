@@ -60,7 +60,7 @@ public:
     }
 
 signals:
-    emits<AModelIndex> selectionChanged;
+    emits<AListModelIndex> selectionChanged;
 };
 
 

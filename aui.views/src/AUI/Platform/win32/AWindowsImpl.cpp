@@ -19,7 +19,7 @@
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -484,9 +484,11 @@ void AWindowManager::loop() {
         if (GetMessage(&msg, nullptr, 0, 0) == 0) {
             break;
         }
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-        AThread::processMessages();
+        mWatchdog.runOperation([&] {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+            AThread::processMessages();
+        });
     }
 }
 

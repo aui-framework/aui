@@ -20,7 +20,7 @@
 
 #pragma once
 
-#include <AUI/Render/Render.h>
+#include <AUI/Render/ARender.h>
 #include <AUI/Common/IStringable.h>
 #include "IProperty.h"
 
@@ -61,6 +61,12 @@ namespace ass {
          * CSS background-size: contain
          */
         CONTAIN,
+
+        /**
+         * @brief Resize image to view's content area keeping aspect ratio and keeping space not covered by the image.
+         * Partially matches CSS background-size: contain
+         */
+        CONTAIN_PADDING,
 
         /**
          * @brief Texture divided by 4 parts of the same size, keeping their original size. Useful for textured buttons

@@ -19,7 +19,7 @@
 #include <AUI/Enum/VerticalAlign.h>
 #include <AUI/Enum/TextTransform.h>
 #include "AView.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Image/IDrawable.h"
 #include "AUI/Enum/WordBreak.h"
@@ -53,11 +53,11 @@ private:
     void processTextOverflow(Iterator begin, Iterator end, int overflowingWidth);
 
 protected:
-    Render::PrerenderedString mPrerendered;
+    ARender::PrerenderedString mPrerendered;
 
     AFontStyle getFontStyleLabel();
 
-    const Render::PrerenderedString& getPrerendered() {
+    const ARender::PrerenderedString& getPrerendered() {
         return mPrerendered;
     }
 

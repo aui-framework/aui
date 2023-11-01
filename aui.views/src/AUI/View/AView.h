@@ -49,7 +49,7 @@
 #include <AUI/Event/APointerMoveEvent.h>
 
 
-class Render;
+class ARender;
 class AWindow;
 class ABaseWindow;
 class AViewContainer;
@@ -176,7 +176,7 @@ protected:
     /**
      * @brief Determines how to display text that go out of the bounds.
      */
-    TextOverflow mTextOverflow = TextOverflow::NONE;
+    ATextOverflow mTextOverflow = ATextOverflow::NONE;
 
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
@@ -236,8 +236,10 @@ protected:
 
     /**
      * @brief ASS class names.
+     * @details
+     * Needs keeping order.
      */
-    ASet<AString> mAssNames;
+    AVector<AString> mAssNames;
 
     void requestLayoutUpdate();
 
@@ -303,7 +305,7 @@ public:
     void popStencilIfNeeded();
 
     [[nodiscard]]
-    const ASet<AString>& getAssNames() const noexcept {
+    const AVector<AString>& getAssNames() const noexcept {
         return mAssNames;
     }
 
@@ -383,7 +385,7 @@ public:
         mOverflow = overflow;
     }
 
-    void setTextOverflow(TextOverflow textOverflow) {
+    void setTextOverflow(ATextOverflow textOverflow) {
         mTextOverflow = textOverflow;
     }
 
@@ -617,6 +619,7 @@ public:
 
     /**
      * @brief Fixed size.
+     * @return Fixed size. {0, 0} if unspecified.
      */
     const glm::ivec2& getFixedSize() {
         return mFixedSize;
@@ -662,11 +665,7 @@ public:
     }
     Visibility getVisibilityRecursive() const;
 
-    void setVisibility(Visibility visibility) noexcept
-    {
-        mVisibility = visibility;
-        redraw();
-    }
+    void setVisibility(Visibility visibility) noexcept;
 
     void setVisible(bool visible) noexcept
     {

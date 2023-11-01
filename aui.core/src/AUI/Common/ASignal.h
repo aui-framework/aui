@@ -16,10 +16,13 @@
 
 #pragma once
 
+#include <algorithm>
 #include <functional>
 #include "AUI/Common/ADeque.h"
+#include "AUI/Common/AObject.h"
 #include "AUI/Thread/AMutex.h"
 #include "AAbstractSignal.h"
+#include "AUI/Traits/values.h"
 
 
 /**
@@ -201,6 +204,14 @@ public:
     void clearAllConnectionsWith(aui::no_escape<AObject> object) noexcept override
     {
         clearAllConnectionsIf([&](const _<slot>& p){ return p->object == object.ptr(); });
+    }
+
+    [[nodiscard]]
+    bool hasConnectionsWith(aui::no_escape<AObject> object) noexcept {
+        std::unique_lock lock(mSlotsLock);
+        return std::any_of(mSlots.begin(), mSlots.end(), [&](const _<slot>& s) {
+            return s->object == object.ptr();
+        });
     }
 
 private:

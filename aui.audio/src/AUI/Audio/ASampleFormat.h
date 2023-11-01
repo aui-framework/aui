@@ -1,5 +1,9 @@
 #pragma once
 
+#include <type_traits>
+#include <cstdint>
+#include <cstddef>
+
 /**
  * @brief Sample formats supported for mixing.
  * @ingroup audio

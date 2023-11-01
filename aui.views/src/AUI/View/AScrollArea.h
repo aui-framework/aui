@@ -18,13 +18,27 @@
 
 
 #include "AViewContainer.h"
+#include "AScrollAreaInner.h"
 #include "AScrollbar.h"
+#include "glm/fwd.hpp"
 
 class AScrollAreaContainer;
 
 /**
- * @brief A container with vertical and horizontal scrollbars.
+ * @brief A scrollable container with vertical and horizontal scrollbars.
  * @ingroup useful_views
+ * @details
+ * AScrollArea should have expanding, or fixed size, or max size to be set in order to define it's sizing rules, as it's
+ * size cannot be defined by it's contents for obvious reasons.
+ *
+ * FixedSize and Expanding stylesheet properties would work as expected. If neither of them is set, AScrollArea would
+ * occupy size by minimum size of it's contents, as a AViewContainer would do. In such case, you may restrict maximum
+ * size of AScrollArea with MaxSize property. AScrollArea will not exceed MaxSize, but also become actual scroll area,
+ * involving displaying scroll bars and handling scroll events.
+ *
+ * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
+ *
+ * @note Behaviour of vertical and horizontal axes are independent from each other.
  */
 class API_AUI_VIEWS AScrollArea: public AViewContainer {
 public:
@@ -32,16 +46,31 @@ public:
 
 public:
     AScrollArea();
-    virtual ~AScrollArea();
 
-    _<AViewContainer> getContentContainer() const;
-    int getContentMinimumHeight(ALayoutDirection layout) override;
     void setSize(glm::ivec2 size) override;
-    void setContents(const _<AViewContainer>& container);
+    void setContents(_<AView> content) {
+        mInner->setContents(std::move(content));
+    }
+
+    int getContentMinimumWidth(ALayoutDirection layout) override;
+    int getContentMinimumHeight(ALayoutDirection layout) override;
+
+    void updateLayout() override;
 
     void onPointerPressed(const APointerPressedEvent& event) override;
-
     void onPointerReleased(const APointerReleasedEvent& event) override;
+
+    void setScroll(glm::uvec2 scroll) {
+        mInner->setScroll(scroll); 
+    }
+
+    void setScrollX(unsigned scroll) {
+        mInner->setScrollX(scroll); 
+    }
+
+    void setScrollY(unsigned scroll) {
+        mInner->setScrollY(scroll); 
+    }
 
     /**
      * @brief Set stick to end.
@@ -50,6 +79,10 @@ public:
     void setStickToEnd(bool stickToEnd) {
         AUI_NULLSAFE(mHorizontalScrollbar)->setStickToEnd(stickToEnd);
         AUI_NULLSAFE(mVerticalScrollbar)->setStickToEnd(stickToEnd);
+    }
+
+    void scroll(glm::ivec2 by) noexcept {
+        scroll(by.x, by.y);
     }
 
     void scroll(int deltaByX, int deltaByY) noexcept {
@@ -68,6 +101,14 @@ public:
     }
 
     /**
+     * @brief Scrolls to the specified target view.
+     * @param target target view to scroll to. Must be direct or indirect child.
+     * @param nearestBorder if true, the scroll is performed up to the nearest border of scroll area, and if the target
+     *        is already fully visible, then the scroll is not performed at all.
+     */
+    void scrollTo(const _<AView>& target, bool nearestBorder = true);
+
+    /**
      * @see mIsWheelScrollable
      */
     void setWheelScrollable(bool value) {
@@ -79,7 +120,7 @@ public:
     private:
         _<AScrollbar> mExternalVerticalScrollbar;
         _<AScrollbar> mExternalHorizontalScrollbar;
-        _<AViewContainer> mContents;
+        _<AView> mContents;
         bool mExpanding = false;
 
     public:
@@ -91,11 +132,11 @@ public:
         }
 
         Builder& withExternalHorizontalScrollbar(_<AScrollbar> externalHorizontalScrollbar) {
-                mExternalHorizontalScrollbar = std::move(externalHorizontalScrollbar);
+            mExternalHorizontalScrollbar = std::move(externalHorizontalScrollbar);
             return *this;
         }
 
-        Builder& withContents(_<AViewContainer> contents) {
+        Builder& withContents(_<AView> contents) {
             mContents = std::move(contents);
             return *this;
         }
@@ -117,9 +158,30 @@ public:
         }
     };
 
+    [[nodiscard]]
+    const _<AView>& contents() const noexcept {
+        return mInner->contents();
+    }
+
+    [[nodiscard]]
+    const _<AScrollbar>& verticalScrollbar() const noexcept {
+        return mVerticalScrollbar;
+    }
+
+    [[nodiscard]]
+    const _<AScrollbar>& horizontalScrollbar() const noexcept {
+        return mHorizontalScrollbar;
+    }
+    
+    [[nodiscard]]
+    glm::uvec2 scroll() const noexcept {
+        return mInner->scroll();
+    }
+protected:
+    explicit AScrollArea(const Builder& builder);
 
 private:
-    _<AScrollAreaContainer> mContentContainer;
+    _<AScrollAreaInner> mInner;
     _<AScrollbar> mVerticalScrollbar;
     _<AScrollbar> mHorizontalScrollbar;
 
@@ -127,7 +189,5 @@ private:
      * @brief Determines whether AScrollArea can be scrolled with mouse wheel or can be scrolled with touch only.
      */
     bool mIsWheelScrollable = true;
-
-    explicit AScrollArea(const Builder& builder);
 };
 

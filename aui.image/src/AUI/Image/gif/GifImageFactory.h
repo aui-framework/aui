@@ -20,9 +20,9 @@
 #pragma once
 
 #include "AUI/Common/AByteBufferView.h"
-#include "AUI/Image/IImageFactory.h"
+#include "AUI/Image/IAnimatedImageFactory.h"
 
-class GifImageFactory : public IImageFactory {
+class GifImageFactory : public IAnimatedImageFactory {
 private:
     std::chrono::time_point<std::chrono::system_clock> mLastFrameStarted;
     unsigned char* mLoadedGifPixels;
@@ -33,15 +33,18 @@ private:
     int mFramesCount;
     int mChannelsCount;
     int mCurrentFrameIndex;
-    std::function<void()> mOnAnimationFinished;
+    bool mAnimationFinished = false;
 
 public:
     explicit GifImageFactory(AByteBufferView buf);
+
     ~GifImageFactory();
+
     AImage provideImage(const glm::ivec2& size) override;
+
     bool isNewImageAvailable() override;
+
     glm::ivec2 getSizeHint() override;
-    void setOnAnimationFinished(std::function<void()> callback) {
-        mOnAnimationFinished = std::move(callback);
-    }
+
+    bool hasAnimationFinished() override;
 };

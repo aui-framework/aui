@@ -38,97 +38,20 @@
 
 #endif
 
-class Render;
+class ARender;
 class AWindowManager;
 
 class API_AUI_VIEWS AWindow: public ABaseWindow
 {
     friend class OpenGLRenderingContext;
     friend class CommonRenderingContext;
+    friend class SoftwareRenderingContext;
     friend class AWindowManager;
     friend struct painter;
-private:
-#if AUI_PLATFORM_WIN
-
-#elif AUI_PLATFORM_ANDROID
-#elif AUI_PLATFORM_LINUX
-    /**
-     * _NET_WM_SYNC_REQUEST (resize flicker fix) update request counter
-     */
-    struct {
-        uint32_t lo = 0;
-        uint32_t hi = 0;
-        /* XID */ unsigned long counter;
-    } mXsyncRequestCounter;
-    bool mWasMaximized = false;
-#endif
-#ifdef AUI_PLATFORM_MACOS
-    bool mRedrawFlag = false;
-#else
-    bool mRedrawFlag = true;
-#endif
-    bool mUpdateLayoutFlag = true;
-    AString mWindowClass;
-    AWindow* mParentWindow;
-
-    unsigned mFrameMillis = 1;
-
-    /**
-     * @brief Handles self shared pointer.
-     */
-    _<AWindow> mSelfHolder;
-
-    AString mWindowTitle;
-
-#if AUI_PLATFORM_WIN
-    friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-#elif AUI_PLATFORM_ANDROID
-#elif AUI_PLATFORM_APPLE
-#else
-    unsigned long xGetWindowProperty(unsigned long property, unsigned long type, unsigned char** value) const;
-    void xSendEventToWM(unsigned long atom, long a, long b, long c, long d, long e) const;
-#endif
-
-protected:
-#if AUI_PLATFORM_WIN
-	HICON mIcon = nullptr;
-    virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-#elif AUI_PLATFORM_ANDROID
-#elif AUI_PLATFORM_APPLE
-#else
-    void* mIC;
-#endif
-    AWindowNativePtr mHandle = 0; // on linux AWindowNativePtr is not a pointer type so using zero here
-    WindowStyle mWindowStyle = WindowStyle::DEFAULT;
-
-    virtual void doDrawWindow();
-    virtual void onClosed();
-
-    void windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws);
-
-    /**
-     * @brief Enables drag-n-drop for this window.
-     */
-    void allowDragNDrop();
-
-    /**
-     * @brief Constructor for custom initialization logic
-     * @note Please call windowNativePreInit
-     */
-    AWindow(std::nullptr_t) {}
-
-    void createDevtoolsWindow() override;
-    float fetchDpiFromSystem() const override;
-
-    /**
-     * @brief defines if the next view must be focused on tab button pressed
-     */
-    bool mFocusNextViewOnTab = false;
-
 public:
     AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
         windowNativePreInit(name, width, height, parent, ws);
-        Render::setWindow(this);
+        ARender::setWindow(this);
     }
     virtual ~AWindow();
 
@@ -319,4 +242,82 @@ signals:
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
     void flagUpdateLayout() override;
+protected:
+#if AUI_PLATFORM_WIN
+    HICON mIcon = nullptr;
+    virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#elif AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_APPLE
+#endif
+    AWindowNativePtr mHandle = 0; // on linux AWindowNativePtr is not a pointer type so using zero here
+    WindowStyle mWindowStyle = WindowStyle::DEFAULT;
+
+    virtual void doDrawWindow();
+    virtual void onClosed();
+
+    void windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws);
+
+    /**
+     * @brief Enables drag-n-drop for this window.
+     */
+    void allowDragNDrop();
+
+    /**
+     * @brief Constructor for custom initialization logic
+     * @note Please call windowNativePreInit
+     */
+    AWindow(std::nullptr_t) {}
+
+    void createDevtoolsWindow() override;
+    float fetchDpiFromSystem() const override;
+
+    /**
+     * @brief defines if the next view must be focused on tab button pressed
+     */
+    bool mFocusNextViewOnTab = false;
+
+private:
+#if AUI_PLATFORM_WIN
+
+#elif AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_LINUX
+    /**
+     * _NET_WM_SYNC_REQUEST (resize flicker fix) update request counter
+     */
+    struct {
+        uint32_t lo = 0;
+        uint32_t hi = 0;
+        /* XID */ unsigned long counter;
+    } mXsyncRequestCounter;
+    bool mWasMaximized = false;
+
+    void* mIC = nullptr; // input context
+#endif
+#ifdef AUI_PLATFORM_MACOS
+    bool mRedrawFlag = false;
+#else
+    bool mRedrawFlag = true;
+#endif
+    bool mUpdateLayoutFlag = true;
+    AString mWindowClass;
+    AWindow* mParentWindow;
+
+    unsigned mFrameMillis = 1;
+
+    /**
+     * @brief Handles self shared pointer.
+     */
+    _<AWindow> mSelfHolder;
+
+    AString mWindowTitle;
+
+#if AUI_PLATFORM_WIN
+    friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+#elif AUI_PLATFORM_ANDROID
+#elif AUI_PLATFORM_APPLE
+#else
+    unsigned long xGetWindowProperty(unsigned long property, unsigned long type, unsigned char** value) const;
+    void xSendEventToWM(unsigned long atom, long a, long b, long c, long d, long e) const;
+#endif
+
 };

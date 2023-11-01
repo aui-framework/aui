@@ -26,7 +26,7 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
         auto margins = v->getMargin();
 		if (v->getExpandingHorizontal() == 0)
 		{
-			finalWidth = v->getMinimumWidth() + margins.horizontal();
+			finalWidth = glm::min(v->getMinimumWidth() + margins.horizontal(), width);
 			finalX = (width - finalWidth) / 2;
 		} else
 		{
@@ -35,7 +35,7 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
 		}
 		if (v->getExpandingVertical() == 0)
 		{
-			finalHeight = v->getMinimumHeight() + margins.vertical();
+			finalHeight = glm::min(v->getMinimumHeight() + margins.vertical(), width);
 			finalY = (height - finalHeight) / 2;
 		} else
 		{
@@ -43,9 +43,15 @@ void ::AStackedLayout::onResize(int x, int y, int width, int height)
 			finalHeight = height;
 		}
 		v->setGeometry(finalX + x + margins.left,
-                       finalY + y + margins.top,
-                       finalWidth - margins.horizontal(),
-                       finalHeight - margins.vertical());
+                   finalY + y + margins.top,
+                   finalWidth - margins.horizontal(),
+                   finalHeight - margins.vertical());
+		// if view rejected the specified size, then we would recenter it
+		if (v->getSize() != glm::ivec2(finalWidth - margins.horizontal(), finalHeight - margins.vertical())) {
+			glm::ivec2 correctedSize = v->getSize() + margins.horizontal();
+			glm::ivec2 correctedPos = (glm::ivec2(width, height) - correctedSize) / 2;
+			v->setPosition(correctedPos + glm::ivec2(x + margins.left, y + margins.top));
+		}
 	}
 }
 int ::AStackedLayout::getMinimumWidth()

@@ -19,11 +19,13 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Image/AImage.h"
 #include "Texture.h"
+#include "GLEnums.h"
 
 namespace gl {
 	class API_AUI_VIEWS Texture2D: public Texture<TEXTURE_2D> {
 	public:
-		void tex2D(const AImage& image);
-        virtual ~Texture2D() = default;
+      void tex2D(AImageView image);
+      virtual ~Texture2D() = default;
+      void framebufferTex2D(glm::u32vec2 size, gl::Type type);
 	};
 }

@@ -122,7 +122,7 @@ void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
                                                          _new<ASizeAnimator>(glm::ivec2{list->getWidth(), 0}) let { it->setDuration(0.15f); }
                                                  }));
         }
-        connect(list->selectionChanged, this, [&](const AModelSelection<AString>& s) {
+        connect(list->selectionChanged, this, [&](const AListModelSelection<AString>& s) {
             if (!s.getIndices().empty()) {
                 setSelectionId(s.getIndices().begin()->getRow());
             }

@@ -51,7 +51,7 @@ function(_aui_android_app)
     endif()
 
     add_custom_target(${APP_TARGET}.app
-            COMMAND ${_gradle_exe} build
+            COMMAND ${_gradle_exe} assembleRelease 
             WORKING_DIRECTORY ${_gradle_project_dir}
             )
 
@@ -71,6 +71,9 @@ function(_aui_android_app)
     foreach(CACHE_VAR ${_forwardable_vars})
         get_property(_type CACHE ${CACHE_VAR} PROPERTY TYPE)
         if(_type STREQUAL INTERNAL)
+            continue()
+        endif()
+        if(NOT _type)
             continue()
         endif()
         list(JOIN ${CACHE_VAR} "\;" _value)

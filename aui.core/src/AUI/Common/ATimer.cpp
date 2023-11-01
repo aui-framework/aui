@@ -70,7 +70,6 @@ _<AThread>& ATimer::timerThread() {
     }();
     std::atexit([] {
         thread->interrupt();
-        thread->join();
     });
     return thread;
 }

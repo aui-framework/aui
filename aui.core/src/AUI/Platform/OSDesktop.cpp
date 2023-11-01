@@ -24,6 +24,7 @@
 #include "AUI/Util/kAUI.h"
 #include <AUI/Util/ACleanup.h>
 #include <AUI/Common/ATimer.h>
+#include <AUI/Platform/Entry.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
@@ -87,8 +88,16 @@ void afterEntryCleanup() {
     ACleanup::inst().afterEntryPerform();
 }
 
-AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
-    AStringVector args;
+static ACommandLineArgs& argsImpl() {
+    static ACommandLineArgs args;
+    return args;
+}
+
+const ACommandLineArgs& aui::args() noexcept {
+    return argsImpl();
+}
+
+AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
 
     setupUIThread();
     ATimer::scheduler();
@@ -109,7 +118,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
 
                 case ' ':
                     if (!wrappedWithQuots) {
-                        args << std::move(currentArg);
+                        argsImpl() << std::move(currentArg);
                         currentArg = {};
                         assert(currentArg.empty());
                         break;
@@ -119,12 +128,12 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
             }
         }
         if (!currentArg.empty()) {
-            args << std::move(currentArg);
+            argsImpl() << std::move(currentArg);
         }
     }
 #endif
     for (int i = 0; i < argc; ++i) {
-        args << argv[i];
+        argsImpl() << argv[i];
     }
     int r = -1;
 
@@ -133,7 +142,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(AStringVector)) {
     aui_init_signal_handler();
 #endif
     try {
-        r = aui_entry(std::move(args));
+        r = aui_entry(argsImpl());
         if (auto el = AThread::current()->getCurrentEventLoop()) {
             el->loop();
         }

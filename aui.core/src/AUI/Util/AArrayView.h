@@ -22,6 +22,9 @@
 #include <cassert>
 #include <AUI/Common/AVector.h>
 
+/**
+ * @deprecated Use std::span instead.
+ */
 template<typename T>
 class AArrayView {
 public:

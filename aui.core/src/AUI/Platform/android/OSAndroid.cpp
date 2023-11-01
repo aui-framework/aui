@@ -23,12 +23,17 @@
 
 extern void aui_init_signal_handler();
 
-int(*_gEntry)(AStringVector);
+int(*_gEntry)(const AStringVector&);
 
-AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(AStringVector)) {
+AUI_EXPORT int aui_main(JavaVM* vm, int(*aui_entry)(const AStringVector&)) {
     aui::jni::setJavaVM(vm);
     _gEntry = aui_entry;
     return 0;
+}
+
+const ACommandLineArgs& aui::args() noexcept {
+    static ACommandLineArgs args;
+    return args; 
 }
 
 extern "C"

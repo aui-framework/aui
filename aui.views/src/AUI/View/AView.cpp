@@ -15,7 +15,7 @@
 //  License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "AView.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Url/AUrl.h"
@@ -39,6 +39,7 @@
 #include "AUI/Util/AMetric.h"
 #include "AUI/Util/Factory.h"
 #include "ALabel.h"
+#include "glm/common.hpp"
 
 // windows.h
 #undef max
@@ -84,18 +85,15 @@ void AView::drawStencilMask()
 {
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
-#if !AUI_PLATFORM_IOS // on ios stencil buffer does not work with discard as expected
             if (mBorderRadius > 0 && mPadding.horizontal() == 0 && mPadding.vertical() == 0) {
-                Render::roundedRect(ASolidBrush{},
-                                    {mPadding.left, mPadding.top},
-                                    {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
-                                    mBorderRadius);
-            } else
-#endif
-            {
-                Render::rect(ASolidBrush{},
-                             {mPadding.left, mPadding.top},
-                             {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+                ARender::roundedRect(ASolidBrush{},
+                                     {mPadding.left, mPadding.top},
+                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
+                                     mBorderRadius);
+            } else {
+                ARender::rect(ASolidBrush{},
+                              {mPadding.left, mPadding.top},
+                              {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
             }
             break;
 
@@ -255,13 +253,13 @@ bool AView::hasFocus() const
 int AView::getMinimumWidth(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.x == 0 ? ((glm::max)(getContentMinimumWidth(layout), mMinSize.x) + mPadding.horizontal()) : mFixedSize.x);
+    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumWidth(layout), mMinSize.x, mMaxSize.x) + mPadding.horizontal()) : mFixedSize.x);
 }
 
 int AView::getMinimumHeight(ALayoutDirection layout)
 {
     ensureAssUpdated();
-    return (mFixedSize.y == 0 ? ((glm::max)(getContentMinimumHeight(layout), mMinSize.y) + mPadding.vertical()) : mFixedSize.y);
+    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumHeight(layout), mMinSize.y, mMaxSize.y) + mPadding.vertical()) : mFixedSize.y);
 }
 
 void AView::getTransform(glm::mat4& transform) const
@@ -282,8 +280,11 @@ void AView::pack()
 
 void AView::addAssName(const AString& assName)
 {
-    mAssNames << assName;
     assert(("empty ass name" && !assName.empty()));
+    if (mAssNames.contains(assName)) {
+        return;
+    }
+    mAssNames << assName;
     invalidateAssHelper();
 }
 
@@ -291,8 +292,8 @@ void AView::invalidateAssHelper() { mAssHelper = nullptr; }
 
 void AView::removeAssName(const AString& assName)
 {
-    mAssNames >> assName;
     assert(("empty ass name" && !assName.empty()));
+    mAssNames.removeAll(assName);
     invalidateAssHelper();
 }
 
@@ -675,4 +676,12 @@ void AView::setCursor(AOptional<ACursor> cursor) {
 void AView::onViewGraphSubtreeChanged() {
     invalidateAssHelper();
     emit viewGraphSubtreeChanged;
+}
+void AView::setVisibility(Visibility visibility) noexcept
+{
+    if (mVisibility == visibility) {
+        return;
+    }
+    mVisibility = visibility;
+    AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }

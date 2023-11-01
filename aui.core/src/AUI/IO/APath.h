@@ -187,14 +187,14 @@ public:
      * \example <pre>/home/user/file.cpp -> file.cpp
      * @return file name
      */
-    [[nodiscard]] AString filename() const;
+    [[nodiscard]] APath filename() const;
 
     /**
      * @brief File name without extension.
      * \example <pre>/home/user/file.cpp -> file
      * @return file name without extension
      */
-    [[nodiscard]] AString filenameWithoutExtension() const;
+    [[nodiscard]] APath filenameWithoutExtension() const;
 
     /**
      * @brief Remove the uppermost folder from this path
@@ -259,6 +259,11 @@ public:
      * @return same path but without <code>dir</code>
      */
     AString relativelyTo(const APath& dir) const;
+
+    /**
+     * @brief Returns same path but with extension changed.
+     */
+    APath extensionChanged(const AString& newExtension) const;
 
     /**
      * @brief Checks whether path absolute or not.

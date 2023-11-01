@@ -15,8 +15,10 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 
+#include "AUI/Common/AObject.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Thread/AThread.h"
 #include "SoftwareRenderingContext.h"
 #include "ARenderingContextOptions.h"
 #include "AUI/Traits/callables.h"
@@ -94,7 +96,7 @@ void AWindow::redraw() {
 #elif AUI_PLATFORM_MACOS
         mRedrawFlag = false;
 #endif
-        Render::setWindow(this);
+        ARender::setWindow(this);
         doDrawWindow();
 
         // measure frame time
@@ -185,7 +187,20 @@ glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) 
 }
 
 
-AWindowManager::AWindowManager(): mHandle(this) {}
+AWindowManager::AWindowManager(): mHandle(this) {
+    mHangTimer = _new<ATimer>(10s);
+    return;
+    AObject::connect(mHangTimer->fired, mHangTimer, [&, thread = AThread::current()] {
+        if (mWatchdog.isHang()) {
+            ALogger::err("ANR") << "UI hang detected:\n" << thread->threadStacktrace();
+            std::exit(-1);
+        }
+    });
+#if !AUI_DEBUG
+    mHangTimer->start();
+#endif
+}
+
 
 AWindowManager::~AWindowManager() {
 

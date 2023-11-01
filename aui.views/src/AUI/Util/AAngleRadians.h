@@ -59,6 +59,23 @@ public:
         return glm::degrees(mValue);
     }
 
+
+    AAngleRadians operator+(AAngleRadians rhs) const noexcept {
+        return AAngleRadians(mValue + rhs.mValue);
+    }
+
+    AAngleRadians operator-(AAngleRadians rhs) const noexcept {
+        return AAngleRadians(mValue - rhs.mValue);
+    }
+
+    AAngleRadians operator*(float k) const noexcept {
+        return AAngleRadians(mValue * k);
+    }
+
+    AAngleRadians operator/(float k) const noexcept {
+        return AAngleRadians(mValue / k);
+    }
+
 private:
     float mValue = 0.f;
 };
@@ -71,6 +88,10 @@ constexpr inline AAngleRadians operator"" _rad(long double v)
 constexpr inline AAngleRadians operator"" _deg(long double v)
 {
     return AAngleRadians(glm::radians(v));
+}
+constexpr inline AAngleRadians operator"" _deg(unsigned long long v)
+{
+    return AAngleRadians(glm::radians(float(v)));
 }
 
 inline std::ostream& operator<<(std::ostream& o, const AAngleRadians& value) {

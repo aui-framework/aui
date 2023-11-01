@@ -25,25 +25,13 @@
 
 
 void ass::prop::Property<ass::BackgroundGradient>::renderFor(AView* view) {
-    if (mInfo.null) { return; }
+    if (!mInfo.gradient) { return; }
     RenderHints::PushColor x;
 
-    ABrush brush;
-    if (mInfo.direction == ALayoutDirection::VERTICAL) {
-        brush = ALinearGradientBrush{mInfo.topLeftColor,
-                                     mInfo.topLeftColor,
-                                     mInfo.bottomRightColor,
-                                     mInfo.bottomRightColor};
-    } else {
-        brush = ALinearGradientBrush{mInfo.topLeftColor,
-                                     mInfo.bottomRightColor,
-                                     mInfo.topLeftColor,
-                                     mInfo.bottomRightColor};
-    }
     if (view->getBorderRadius() > 0) {
-        Render::roundedRectAntialiased(brush, {0, 0}, view->getSize(), view->getBorderRadius());
+        ARender::roundedRect(ABrush(*mInfo.gradient), {0, 0}, view->getSize(), view->getBorderRadius());
     } else  {
-        Render::rect(brush, {0, 0}, view->getSize());
+        ARender::rect(ABrush(*mInfo.gradient), {0, 0}, view->getSize());
     }
     IPropertyBase::renderFor(view);
 }

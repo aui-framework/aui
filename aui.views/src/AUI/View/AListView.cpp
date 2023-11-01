@@ -18,6 +18,9 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "AListView.h"
 #include "ALabel.h"
+#include "AUI/ASS/Property/ScrollbarAppearance.h"
+#include "AUI/Common/SharedPtrTypes.h"
+#include "AUI/Enum/Visibility.h"
 #include "AUI/Layout/AVerticalLayout.h"
 #include "AUI/Platform/AWindow.h"
 
@@ -65,10 +68,6 @@ public:
     size_t getIndex() const {
         return mIndex;
     }
-
-    int getContentMinimumHeight(ALayoutDirection layout) override {
-        return 40;
-    }
 };
 
 class AListItem: public ALabel, public ass::ISelectable
@@ -115,14 +114,6 @@ public:
     }
 };
 
-
-
-int AListView::getContentMinimumHeight(ALayoutDirection layout)
-{
-	return 40;
-}
-
-
 AListView::~AListView()
 {
 }
@@ -133,15 +124,12 @@ AListView::AListView(const _<IListModel<AString>>& model) {
 }
 
 void AListView::setModel(const _<IListModel<AString>>& model) {
-    setLayout(_new<AHorizontalLayout>());
-
-    addView(mContent = _new<AListViewContainer>());
-    addView(mScrollbar = _new<AScrollbar>());
+    horizontalScrollbar()->setAppearance(ScrollbarAppearance::GONE);
+    setContents(mContent = _new<AListViewContainer>());
 
     mContent->setLayout(_new<AVerticalLayout>());
     mContent->setExpanding();
 
-    connect(mScrollbar->scrolled, mContent, &AListViewContainer::setScrollY);
     mObserver->setModel(model);
     if (model) {
         connect(model->dataRemoved, [&] {
@@ -150,31 +138,12 @@ void AListView::setModel(const _<IListModel<AString>>& model) {
     }
 }
 
-void AListView::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
-
-    updateScrollbarDimensions();
-}
-
-void AListView::updateScrollbarDimensions() {
-    if (!mScrollbar) return;
-    mScrollbar->setScrollDimensions(getHeight(), mContent->AViewContainer::getContentMinimumHeight(
-            ALayoutDirection::NONE));
-}
-
-void AListView::onScroll(const AScrollEvent& event) {
-    if (!mScrollbar) return;
-    //AViewContainer::onScroll(pos, delta);
-    mScrollbar->onScroll(event);
-    onPointerMove(event.origin, {event.pointerIndex}); // update hover on scroll
-}
-
 void AListView::handleMousePressed(AListItem* item) {
 
     if (!AInput::isKeyDown(AInput::LCONTROL) || !mAllowMultipleSelection) {
         clearSelection();
     }
-    mSelectionModel << AModelIndex(mContent->getIndex());
+    mSelectionModel << AListModelIndex(mContent->getIndex());
     item->setSelected(true);
 
     emit selectionChanged(getSelectionModel());
@@ -205,8 +174,7 @@ void AListView::removeItem(size_t at) {
 }
 
 void AListView::onDataCountChanged() {
-    updateLayout();
-    updateScrollbarDimensions();
+    AUI_NULLSAFE(AWindow::current())->flagUpdateLayout();
 }
 
 void AListView::onDataChanged() {
@@ -215,7 +183,7 @@ void AListView::onDataChanged() {
 
 void AListView::selectItem(size_t i) {
     clearSelection();
-    mSelectionModel = { AModelIndex(i) };
+    mSelectionModel = { AListModelIndex(i) };
     _cast<AListItem>(mContent->getViews()[i])->setSelected(true);
 }
 

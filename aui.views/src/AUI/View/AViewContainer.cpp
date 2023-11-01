@@ -16,7 +16,7 @@
 
 #include "AViewContainer.h"
 #include "AView.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Render/ARender.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <utility>
 
@@ -30,13 +30,13 @@ static constexpr auto LOG_TAG = "AViewContainer";
 
 void AViewContainer::drawView(const _<AView>& view) {
     if (view->getVisibility() == Visibility::VISIBLE || view->getVisibility() == Visibility::UNREACHABLE) {
-        const auto prevStencilLevel = Render::getRenderer()->getStencilDepth();
+        const auto prevStencilLevel = ARender::getRenderer()->getStencilDepth();
 
         RenderHints::PushState s;
         glm::mat4 t(1.f);
         view->getTransform(t);
-        Render::setColor(AColor(1, 1, 1, view->getOpacity()));
-        Render::setTransform(t);
+        ARender::setColor(AColor(1, 1, 1, view->getOpacity()));
+        ARender::setTransform(t);
 
         try {
             view->render();
@@ -44,11 +44,11 @@ void AViewContainer::drawView(const _<AView>& view) {
         }
         catch (const AException& e) {
             ALogger::err(LOG_TAG) << "Unable to render view: " << e;
-            Render::getRenderer()->setStencilDepth(prevStencilLevel);
+            ARender::getRenderer()->setStencilDepth(prevStencilLevel);
             return;
         }
 
-        auto currentStencilLevel = Render::getRenderer()->getStencilDepth();
+        auto currentStencilLevel = ARender::getRenderer()->getStencilDepth();
         assert(currentStencilLevel == prevStencilLevel);
     }
 }
@@ -78,6 +78,7 @@ void AViewContainer::addViews(AVector<_<AView>> views) {
         mViews.insertAll(std::move(views));
     }
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::addView(const _<AView>& view) {
@@ -87,6 +88,7 @@ void AViewContainer::addView(const _<AView>& view) {
     AUI_NULLSAFE(mLayout)->addView(view);
     view->onViewGraphSubtreeChanged();
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::addViewCustomLayout(const _<AView>& view) {
@@ -96,6 +98,7 @@ void AViewContainer::addViewCustomLayout(const _<AView>& view) {
     AUI_NULLSAFE(mLayout)->addView(view);
     view->onViewGraphSubtreeChanged();
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::addView(size_t index, const _<AView>& view) {
@@ -104,6 +107,7 @@ void AViewContainer::addView(size_t index, const _<AView>& view) {
     AUI_NULLSAFE(mLayout)->addView(view, index);
     view->onViewGraphSubtreeChanged();
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::setLayout(_<ALayout> layout) {
@@ -117,6 +121,7 @@ void AViewContainer::setLayout(_<ALayout> layout) {
         }
     }
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::removeView(const _<AView>& view) {
@@ -125,6 +130,7 @@ void AViewContainer::removeView(const _<AView>& view) {
     if (!mLayout) return;
     mLayout->removeView(view, *index);
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::removeView(AView* view) {
@@ -140,6 +146,7 @@ void AViewContainer::removeView(AView* view) {
         }
     }
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::removeView(size_t index) {
@@ -148,6 +155,7 @@ void AViewContainer::removeView(size_t index) {
     if (mLayout)
         mLayout->removeView(view, index);
     invalidateCaches();
+    emit childrenChanged;
 }
 
 void AViewContainer::render() {
@@ -184,8 +192,9 @@ void AViewContainer::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event
 void AViewContainer::onMouseLeave() {
     AView::onMouseLeave();
     for (auto& view: mViews) {
-        if (view->isMouseHover())
+        if (view->isMouseEntered()) {
             view->onMouseLeave();
+        }
     }
 }
 
@@ -493,7 +502,12 @@ void AViewContainer::adjustVerticalSizeToContent() {
 
 void AViewContainer::onClickPrevented() {
     AView::onClickPrevented();
-    AUI_NULLSAFE(mFocusChainTarget.lock())->onClickPrevented();
+    auto pointerEvents = std::move(mPointerEventsMapping);
+    for (const auto& e : pointerEvents) {
+        if (auto v = e.targetView.lock(); v && v->isEnabled() && v->isPressed(e.pointerIndex)) {
+            v->onClickPrevented();
+        }
+    }
 }
 
 void AViewContainer::invalidateCaches() {

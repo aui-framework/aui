@@ -42,7 +42,7 @@ void AAbstractLabel::render()
 
 int AAbstractLabel::getContentMinimumWidth(ALayoutDirection layout)
 {
-    if (mTextOverflow != TextOverflow::NONE)
+    if (mTextOverflow != ATextOverflow::NONE)
         return 0;
 
 	if (!mPrerendered) {
@@ -122,7 +122,7 @@ int AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
 template < class Iterator >
 void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
     int firstOverflowedIndex = findFirstOverflowedIndex(begin, end, overflowingWidth);
-    if (mTextOverflow == TextOverflow::ELLIPSIS) {
+    if (mTextOverflow == ATextOverflow::ELLIPSIS) {
         if (firstOverflowedIndex != 0) {
             std::fill(begin + firstOverflowedIndex - 3, begin + firstOverflowedIndex, '.');
         } else {
@@ -134,7 +134,7 @@ void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overf
 }
 
 void AAbstractLabel::processTextOverflow(AString& text) {
-    if (mTextOverflow == TextOverflow::NONE)
+    if (mTextOverflow == ATextOverflow::NONE)
         return;
 
     int overflowingWidth;
@@ -158,7 +158,7 @@ void AAbstractLabel::doPrerender() {
     if (!mText.empty()) {
         AString transformedText = getTransformedText();
         processTextOverflow(transformedText);
-        mPrerendered = Render::prerenderString({0, 0}, transformedText, fs);
+        mPrerendered = ARender::prerenderString({0, 0}, transformedText, fs);
     }
 }
 
@@ -178,9 +178,9 @@ void AAbstractLabel::doRenderText() {
             if (mIcon) {
                 requiredSpace *= getHeight() / requiredSpace.y;
                 RenderHints::PushState s;
-                Render::setColor(mIconColor);
-                Render::setTransform(glm::translate(glm::mat4(1.f),
-                                                    glm::vec3(mPadding.left + mTextLeftOffset, iconY, 0)));
+                ARender::setColor(mIconColor);
+                ARender::setTransform(glm::translate(glm::mat4(1.f),
+                                                     glm::vec3(mPadding.left + mTextLeftOffset, iconY, 0)));
                 IDrawable::Params p;
                 p.size = requiredSpace;
                 mIcon->draw(p);
@@ -192,17 +192,17 @@ void AAbstractLabel::doRenderText() {
             alignLeft();
         } else {
             switch (getFontStyleLabel().align) {
-                case TextAlign::LEFT:
+                case ATextAlign::LEFT:
                     alignLeft();
                     break;
-                case TextAlign::CENTER:
+                case ATextAlign::CENTER:
                     mTextLeftOffset += (getContentWidth() - mPrerendered->getWidth()) / 2;
                     if (mIcon) {
                         mTextLeftOffset += requiredSpace.x / 2;
                         RenderHints::PushState s;
-                        Render::setColor(mIconColor);
-                        Render::setTransform(glm::translate(glm::mat4(1.f),
-                                                            glm::vec3(mTextLeftOffset - (mPrerendered->getWidth()) / 2 -
+                        ARender::setColor(mIconColor);
+                        ARender::setTransform(glm::translate(glm::mat4(1.f),
+                                                             glm::vec3(mTextLeftOffset - (mPrerendered->getWidth()) / 2 -
                                                                       requiredSpace.x,
                                                                       iconY, 0)));
 
@@ -213,13 +213,13 @@ void AAbstractLabel::doRenderText() {
 
                     break;
 
-                case TextAlign::RIGHT:
+                case ATextAlign::RIGHT:
                     mTextLeftOffset += getContentWidth() - mPrerendered->getWidth();
                     if (mIcon) {
                         RenderHints::PushState s;
-                        Render::setColor(mIconColor);
-                        Render::setTransform(glm::translate(glm::mat4(1.f),
-                                                            glm::vec3(mPadding.left + mTextLeftOffset -
+                        ARender::setColor(mIconColor);
+                        ARender::setTransform(glm::translate(glm::mat4(1.f),
+                                                             glm::vec3(mPadding.left + mTextLeftOffset -
                                                                       (mPrerendered ? mPrerendered->getWidth() : 0) -
                                                                       requiredSpace.x / 2,
                                                                       iconY, 0)));
@@ -242,7 +242,7 @@ void AAbstractLabel::doRenderText() {
                 y = (glm::max)(y, y + int(glm::ceil((getContentHeight() - int(ascenderHeight + descenderHeight)) / 2.0)));
             }
             RenderHints::PushMatrix m;
-            Render::translate({ mTextLeftOffset + mPadding.left, y });
+            ARender::translate({mTextLeftOffset + mPadding.left, y });
             mPrerendered->draw();
         }
     }

@@ -38,7 +38,7 @@ public:
         _<IListModel<AString>> mModel;
         AString mTitle;
         std::function<void()> mNewCallback;
-        std::function<void(const AModelIndex&)> mModifyCallback;
+        std::function<void(const AListModelIndex&)> mModifyCallback;
 
     public:
         Builder(const _<IListModel<AString>>& model): mModel(model) {}
@@ -48,7 +48,7 @@ public:
             mNewCallback = onNew;
             return *this;
         }
-        Builder& withModifyButton(const std::function<void(const AModelIndex&)>& onModify) {
+        Builder& withModifyButton(const std::function<void(const AListModelIndex&)>& onModify) {
             mModifyCallback = onModify;
             return *this;
         }
@@ -71,7 +71,7 @@ public:
             list with_style { ass::MinSize { 200_dp, {} } };
 
             auto modifyButton = mModifyCallback ? _new<AButton>("Modify...").connect(&AView::clicked, c, [callback = mModifyCallback, list] {
-                callback(list->getSelectionModel().one());
+                callback(list->getSelectionModel().first());
             }) : nullptr;
 
             _<AButton> removeButton;

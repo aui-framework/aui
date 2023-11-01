@@ -37,15 +37,15 @@ AI18n::AI18n() {
     } catch (...) {
         try {
             loadFromLang("en-US");
-            ALogger::warn("User native language ({}) is not supported, using en-US"_format(userLanguage().toString()));
+            ALogger::warn("AI18n") << "User native language ({}) is not supported, using en-US"_format(userLanguage().toString());
         } catch (...) {
             if (userLanguage().toString() == "en-US") {
-                ALogger::err("US English (en-US) language file has not found! Please add at least en-US.lang file "
-                             "if you want to use AUI _i18n feature.");
+                ALogger::err("AI18n") << "US English (en-US) language file has not found! Please add at least en-US.lang file "
+                             "if you want to use AUI _i18n feature.";
             } else {
-                ALogger::err("Neither user native ({}) nor US English (en-US) language file have not found! Please"
+                ALogger::err("AI18n") << "Neither user native ({}) nor US English (en-US) language file have not found! Please"
                              "add at least en-US.lang file if you want to use AUI _i18n feature."_as
-                             .format(userLanguage().toString()));
+                             .format(userLanguage().toString());
             }
         }
     }

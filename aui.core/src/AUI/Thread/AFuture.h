@@ -246,17 +246,17 @@ namespace aui::impl::future {
                                 lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
                             }
                         }
-                    } catch (const AException&) {
-                        if (auto sharedPtrLock = innerWeak.lock()) {
-                            inner->reportException();
-                        }
-                        return false;
-                    } catch (...) {
+                    } catch (const AThread::Interrupted&) {
                         if (auto sharedPtrLock = innerWeak.lock()) {
                             inner->reportInterrupted();
                         }
                         throw;
-                    }
+                    } catch (...) {
+                        if (auto sharedPtrLock = innerWeak.lock()) {
+                            inner->reportException();
+                        }
+                        return false;
+                    } 
                 }
                 return true;
             }

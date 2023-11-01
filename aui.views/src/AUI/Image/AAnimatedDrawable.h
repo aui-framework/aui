@@ -20,16 +20,16 @@
 #pragma once
 
 #include "IDrawable.h"
-#include "AUI/Image/IImageFactory.h"
-#include "AUI/Render/Render.h"
+#include "AUI/Image/IAnimatedImageFactory.h"
+#include "AUI/Render/ARender.h"
 #include "AUI/Common/ASignal.h"
 
 class AAnimatedDrawable : public IDrawable, public AObject {
 private:
-    _<IImageFactory> mFactory;
+    _<IAnimatedImageFactory> mFactory;
     _<ITexture> mTexture;
 public:
-    explicit AAnimatedDrawable(_<IImageFactory> factory);
+    explicit AAnimatedDrawable(_<IAnimatedImageFactory> factory);
     ~AAnimatedDrawable() override = default;
 
     void draw(const Params &params) override;
