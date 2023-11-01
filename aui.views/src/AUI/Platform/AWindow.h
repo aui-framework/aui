@@ -120,6 +120,9 @@ public:
     void close();
     void hide();
 
+    [[nodiscard]]
+    bool isClosed() const noexcept;
+
 #if AUI_PLATFORM_WIN
     HWND getNativeHandle() { return mHandle; }
 #elif AUI_PLATFORM_ANDROID

@@ -15,6 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include "ACurl.h"
+#include "ACurlMulti.h"
 
 
 #include <cassert>
@@ -125,19 +126,9 @@ _<IInputStream> ACurl::Builder::toInputStream() {
     return _new<CurlInputStream>(_new<ACurl>(*this));
 }
 
-AByteBuffer ACurl::Builder::toByteBuffer() {
-    AByteBuffer out;
-    mWriteCallback = [&](AByteBufferView buf) {
-        out << buf;
-        return buf.size();
-    };
-    ACurl r(*this);
-    r.run();
-    return out;
-}
 
 ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AString>>& params) {
-    AString paramsString;
+    std::string paramsString;
     paramsString.reserve(std::accumulate(params.begin(), params.end(), 1, [](std::size_t l, const std::pair<AString, AString>& p) {
         return l + p.first.size() + p.second.size() + 2;
     }));
@@ -146,9 +137,17 @@ ACurl::Builder& ACurl::Builder::withParams(const AVector<std::pair<AString, AStr
         if (!paramsString.empty()) {
             paramsString += '&';
         }
-        paramsString += key;
+        paramsString += key.toStdString();
         paramsString += "=";
-        paramsString += value;
+
+        for (std::uint8_t c : value.toStdString()) {
+            if (std::isalnum(c)) {
+                paramsString += (char)c;
+            } else {
+                char buf[128];
+                paramsString += std::string_view(buf, std::distance(std::begin(buf), fmt::format_to(std::begin(buf), "%{:02x}", c)));
+            }
+        }
     }
     mParams = std::move(paramsString);
 
@@ -355,7 +354,8 @@ int64_t ACurl::getContentLength() const {
 }
 
 AString ACurl::getContentType() const {
-    return getInfo<const char*>(CURLINFO_CONTENT_TYPE);
+    auto v = getInfo<const char*>(CURLINFO_CONTENT_TYPE);
+    return v ? v : "";
 }
 
 ACurl::ResponseCode ACurl::getResponseCode() const {
@@ -364,4 +364,45 @@ ACurl::ResponseCode ACurl::getResponseCode() const {
 
 void ACurl::ErrorDescription::throwException() const {
     throw ACurl::Exception(*this);
+}
+
+static ACurl::Response makeResponse(ACurl& r, AByteBuffer body) {
+    return {
+            .code = r.getResponseCode(),
+            .contentType = r.getContentType(),
+            .body = std::move(body),
+    };
+}
+
+ACurl::Response ACurl::Builder::runBlocking() {
+    AByteBuffer out;
+    mWriteCallback = [&](AByteBufferView buf) {
+        out << buf;
+        return buf.size();
+    };
+    ACurl r(*this);
+    r.run();
+    return makeResponse(r, std::move(out));
+}
+
+AFuture<ACurl::Response> ACurl::Builder::runAsync() {
+    return runAsync(ACurlMulti::global());
+}
+
+AFuture<ACurl::Response> ACurl::Builder::runAsync(ACurlMulti& curlMulti) {
+    AFuture<ACurl::Response> result;
+    auto body = _new<AByteBuffer>();
+    withDestinationBuffer(*body);
+    withOnSuccess([result, body = std::move(body)](ACurl& c) {
+        result.supplyResult(makeResponse(c, std::move(*body)));
+    });
+    withErrorCallback([result](const ErrorDescription& error) {
+        try {
+            error.throwException();
+        } catch (...) {
+            result.supplyException();
+        }
+    });
+    curlMulti << _new<ACurl>(std::move(*this));
+    return result;
 }

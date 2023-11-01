@@ -97,9 +97,14 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     if (ARender::getRenderer() == nullptr) {
         ARender::setRenderer(std::make_unique<SoftwareRenderer>());
     }
+    SoftwareRenderingContext::endResize(init.window);
 }
 
 void SoftwareRenderingContext::endResize(ABaseWindow &window) {
+    reallocateImageBuffers(window);
+}
+
+void SoftwareRenderingContext::reallocateImageBuffers(const ABaseWindow& window) {
     mBitmapSize = window.getSize();
     reallocate();
 }
@@ -134,4 +139,3 @@ AImage SoftwareRenderingContext::makeScreenshot() {
     std::memcpy(data.data(), mBitmapBlob, s);
     return {std::move(data), mBitmapSize, APixelFormat::ARGB | APixelFormat::BYTE};
 }
-

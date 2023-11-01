@@ -146,12 +146,12 @@ void CBasedFrontend::visitNode(const OperatorCallNode& node) {
             return { i->second };
         } else {
             auto decl = mDeclaredFunctions.findIf([&](const FunctionDeclarationNode& n) { return n.getName() == node.getCallee(); });
-            if (decl == mDeclaredFunctions.end()) {
+            if (decl == nullptr) {
                 reportError(node, "no such function: {}"_format(node.getCallee()));
                 return std::nullopt;
             }
             mShaderOutput << node.getCallee();
-            return { &*decl };
+            return { decl };
         }
     }();
     if (!function) {

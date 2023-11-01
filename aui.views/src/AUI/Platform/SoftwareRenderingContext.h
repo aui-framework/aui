@@ -20,24 +20,6 @@
 #include <AUI/Platform/AWindow.h>
 
 class API_AUI_VIEWS SoftwareRenderingContext: public aui::noncopyable, public CommonRenderingContext {
-private:
-#if AUI_PLATFORM_WIN
-    AByteBuffer mBitmapBlob;
-    BITMAPINFO* mBitmapInfo;
-#elif AUI_PLATFORM_LINUX
-    std::uint8_t* mBitmapBlob = nullptr;
-    _<XImage> mXImage;
-    std::unique_ptr<_XGC, void(*)(GC)> mGC = {nullptr, nullptr};
-
-    void reallocate();
-#else
-    std::uint8_t* mBitmapBlob = nullptr;
-#endif
-
-protected:
-    AByteBuffer mStencilBlob;
-    glm::uvec2 mBitmapSize;
-
 public:
     SoftwareRenderingContext();
     ~SoftwareRenderingContext() override;
@@ -104,4 +86,24 @@ public:
 #endif
 
     void endResize(ABaseWindow& window) override;
+
+protected:
+    AByteBuffer mStencilBlob;
+    glm::uvec2 mBitmapSize;
+
+    void reallocateImageBuffers(const ABaseWindow& window);
+
+private:
+#if AUI_PLATFORM_WIN
+    AByteBuffer mBitmapBlob;
+    BITMAPINFO* mBitmapInfo;
+#elif AUI_PLATFORM_LINUX
+    std::uint8_t* mBitmapBlob = nullptr;
+    _<XImage> mXImage;
+    std::unique_ptr<_XGC, void(*)(GC)> mGC = {nullptr, nullptr};
+
+    void reallocate();
+#else
+    std::uint8_t* mBitmapBlob = nullptr;
+#endif
 };

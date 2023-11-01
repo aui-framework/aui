@@ -170,9 +170,9 @@ AString& AString::replaceAll(wchar_t from, wchar_t to) noexcept {
 }
 
 AString& AString::replaceAll(const AString& from, const AString& to) {
-    for (size_type pos = 0;;)
+    for (size_type next = 0;;)
     {
-        auto next = find(from, pos);
+        next = find(from, next);
         if (next == NPOS)
         {
             return *this;
@@ -190,8 +190,7 @@ AString& AString::replaceAll(const AString& from, const AString& to) {
             for (auto c : aui::range(to.begin(), to.end() - diff)) {
                 *(begin() + next++) = c;
             }
-            insert(begin() + next, to.begin() + fromLength, to.end());
-            next += diff;
+            next = std::distance(begin(), insert(begin() + next, to.begin() + fromLength, to.end())) + 1;
         } else {
             for (auto c : to) {
                 *(begin() + next++) = c;

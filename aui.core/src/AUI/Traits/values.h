@@ -370,7 +370,7 @@ namespace aui {
         }
     };
 
-    namespace promise {
+    namespace constraint {
         /**
          * @brief Avoids copy of the wrapped value, pointing to a reference.
          * @tparam T
@@ -378,12 +378,12 @@ namespace aui {
          * The caller can be sure his value wouldn't be copied.
          */
         template<typename T>
-        class no_copy {
+        class avoid_copy {
         private:
             T* value;
 
         public:
-            no_copy(T& value): value(&value) {          // implicit initializer
+            avoid_copy(T& value): value(&value) {          // implicit initializer
 
             }
             operator T&() const {                      // implicit conversion

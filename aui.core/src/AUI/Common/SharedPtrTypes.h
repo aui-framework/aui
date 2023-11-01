@@ -310,6 +310,18 @@ public:
         (*super::get()) + std::forward<Arg>(value);
         return *this;
     }
+
+    template<typename Arg>
+    const _<T>& operator*(Arg&& value) {
+        (*super::get()) * std::forward<Arg>(value);
+        return *this;
+    }
+
+    [[nodiscard]]
+    T& operator*() const noexcept {
+        return super::operator*();
+    }
+
     template<typename Arg>
     const _<T>& operator-(Arg&& value) const {
         (*super::get()) - std::forward<Arg>(value);

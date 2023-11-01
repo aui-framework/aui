@@ -77,6 +77,9 @@ bool AWindow::isRedrawWillBeEfficient() {
 }
 void AWindow::redraw() {
     {
+        if (isClosed()) {
+            return;
+        }
         auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         mRenderingContext->beginPaint(*this);
         ARaiiHelper endPaintCaller = [&] {
@@ -305,4 +308,8 @@ void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
         }
     }
     throw AException("unable to initialize graphics");
+}
+
+bool AWindow::isClosed() const noexcept {
+    return mSelfHolder == nullptr;
 }

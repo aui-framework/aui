@@ -178,11 +178,11 @@ void GLSLFrontend::visitNode(const MemberAccessOperatorNode& node) {
             if (auto c = _cast<VariableReferenceNode>(node.getRight())) {
                 if (auto it = mOutputs.findIf([&](const auto& v) {
                     return v->variableName() == c->getVariableName();
-                }); it != mOutputs.end()) {
-                    if (mOutputs.begin() == it) {
+                })) {
+                    if (&*mOutputs.begin() == it) {
                         mShaderOutput << "gl_FragColor";
                     } else {
-                        mShaderOutput << "gl_FragData[" << AString::number(std::distance(mOutputs.begin(), it)) << "]";
+                        mShaderOutput << "gl_FragData[" << AString::number(std::distance(&(*mOutputs.begin()), it)) << "]";
                     }
                 }
             } else {

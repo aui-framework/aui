@@ -18,6 +18,7 @@
 // Created by Alex2772 on 12/5/2021.
 //
 
+#include <range/v3/view.hpp>
 #include <AUI/Traits/callables.h>
 #include "SoftwareRenderer.h"
 #include "SoftwareTexture.h"
@@ -539,14 +540,29 @@ void SoftwareRenderer::setWindow(ABaseWindow* window) {
 
 void SoftwareRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
     // TODO
+    if (p1.x == p2.x || p1.y == p2.y) {
+        auto begin = glm::min(p1, p2);
+        drawRect(brush, begin, glm::max(p1, p2) - begin + glm::vec2(1));
+        return;
+    }
 }
 
 void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points) {
+    if (points.size() == 0) {
+        return;
+    }
 
+    auto prevPoint = points[0];
+    for (auto point : points | ranges::view::drop(1)) {
+        drawLine(brush, prevPoint, point);
+        prevPoint = point;
+    }
 }
 
 void SoftwareRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) {
-
+    for (auto[p1, p2] : points) {
+        drawLine(brush, p1, p2);
+    }
 }
 
 void SoftwareRenderer::drawSquareSector(const ABrush& brush,
