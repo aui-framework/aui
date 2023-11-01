@@ -927,8 +927,10 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
             fb->resize(windowSize);
         }
         fb->bind();
-        glViewport(0, 0, fb->supersampledSize().x, fb->supersampledSize().y);
+        mViewportSize = fb->supersampledSize();
+        glViewport(0, 0, mViewportSize.x, mViewportSize.y);
     } else {
+        mViewportSize = windowSize;
         glViewport(0, 0, windowSize.x, windowSize.y);
     }
     gl::State::activeTexture(0);
@@ -973,4 +975,8 @@ uint32_t OpenGLRenderer::getDefaultFb() const noexcept {
         return fb->getHandle();
     }
     return 0;
+}
+
+void OpenGLRenderer::bindViewport() const noexcept {
+    glViewport(0, 0, mViewportSize.x, mViewportSize.y);
 }

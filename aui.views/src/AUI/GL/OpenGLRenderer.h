@@ -52,6 +52,8 @@ private:
     gl::Vao mTempVao;
     gl::Texture2D mGradientTexture;
 
+    glm::uvec2 mViewportSize;
+
     struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
 
 
@@ -148,6 +150,7 @@ public:
     void endPaint();
     
     uint32_t getDefaultFb() const noexcept;
+    void bindViewport() const noexcept;
 };
 
 
