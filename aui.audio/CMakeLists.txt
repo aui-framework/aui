@@ -48,7 +48,7 @@ set(INCLUDE_INSTALL_DIR "aui.audio/include")
 set(DOC_INSTALL_DIR "aui.audio/doc")
 auib_import(soxr https://github.com/IlyaZavalov/soxr
             ADD_SUBDIRECTORY
-            VERSION 209abd0
+            VERSION 67a5e1f
             )
 unset(BIN_INSTALL_DIR)
 unset(LIB_INSTALL_DIR)
