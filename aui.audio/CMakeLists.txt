@@ -42,5 +42,8 @@ if (AUI_PLATFORM_MACOS)
 					   "-framework QuartzCore")
 endif()
 
-auib_import(soxr https://github.com/IlyaZavalov/soxr ADD_SUBDIRECTORY VERSION 209abd0)
+auib_import(soxr https://github.com/IlyaZavalov/soxr
+            ADD_SUBDIRECTORY
+            VERSION 209abd0
+            CMAKE_ARGS "-DBIN_INSTALL_DIR=aui.audio/bin -DLIB_INSTALL_DIR=aui.audio/lib -DINCLUDE_INSTALL_DIR=aui.audio/lib -DDOC_INSTALL_DIR=aui.audio/docs")
 target_link_libraries(aui.audio PRIVATE soxr)
