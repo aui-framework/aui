@@ -52,5 +52,7 @@ auib_import(soxr https://github.com/IlyaZavalov/soxr
             )
 unset(BIN_INSTALL_DIR)
 unset(LIB_INSTALL_DIR)
+unset(INCLUDE_INSTALL_DIR)
+unset(DOC_INSTALL_DIR)
 
 target_link_libraries(aui.audio PRIVATE soxr)
