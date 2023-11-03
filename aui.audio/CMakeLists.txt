@@ -41,3 +41,6 @@ if (AUI_PLATFORM_MACOS)
 					   "-framework Foundation"
 					   "-framework QuartzCore")
 endif()
+
+auib_import(soxr https://github.com/IlyaZavalov/soxr ADD_SUBDIRECTORY VERSION 209abd0)
+target_link_libraries(aui.audio PRIVATE soxr)

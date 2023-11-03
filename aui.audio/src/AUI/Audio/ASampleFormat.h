@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <cstdint>
 #include <cstddef>
+#include "AUI/Common/AException.h"
 
 /**
  * @brief Sample formats supported for mixing.
@@ -18,4 +19,26 @@ enum class ASampleFormat {
      * @brief Signed 24-bit integer.
      */
     I24,
+
+    /**
+     * @brief Signed 32-bit integer.
+     */
+    I32
 };
+
+namespace aui::audio {
+    constexpr size_t bytesPerSample(ASampleFormat format) {
+        switch (format) {
+            case ASampleFormat::I16:
+                return 2;
+
+            case ASampleFormat::I24:
+                return 3;
+
+            case ASampleFormat::I32:
+                return 4;
+        }
+
+        throw AException("Wrong sample format");
+    }
+}

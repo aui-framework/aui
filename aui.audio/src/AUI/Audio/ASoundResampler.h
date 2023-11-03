@@ -21,18 +21,19 @@
 
 class IAudioPlayer;
 
+namespace aui::audio::impl {
+    class ResamplerBase {
+    public:
+        virtual size_t resample(std::span<std::byte>, IAudioPlayer::VolumeLevel volume) = 0;
+    };
+}
+
 /**
  * @brief Implements audio mixing and resampling.
  * @ingroup audio
  */
 class API_AUI_AUDIO ASoundResampler : public ISoundInputStream {
 public:
-    static constexpr AAudioFormat DEFAULT_OUTPUT_FORMAT = {
-            .channelCount = aui::audio::DEFAULT_OUTPUT_CHANNELS_COUNT,
-            .sampleRate = aui::audio::DEFAULT_OUTPUT_SAMPLE_RATE,
-            .sampleFormat = aui::audio::DEFAULT_OUTPUT_SAMPLE_FORMAT
-    };
-
     explicit ASoundResampler(const _<IAudioPlayer>& player) noexcept;
 
     //unimplemented
@@ -49,7 +50,5 @@ private:
     _<ISoundInputStream> mSoundStream;
 //    AAudioFormat mOutputFormat;
     AAudioFormat mInputFormat;
-
-    template<ASampleFormat inputSampleFormat, AChannelFormat inputChannelsFormat>
-    size_t commitSamples(std::span<std::byte> dst);
+    _unique<aui::audio::impl::ResamplerBase> mResampler;
 };

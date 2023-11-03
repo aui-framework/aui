@@ -21,18 +21,10 @@
 #include "ASampleFormat.h"
 #include "AUI/Audio/IAudioPlayer.h"
 #include "AUI/Audio/ISoundInputStream.h"
-#include "AUI/Traits/platform.h"
+#include "AUI/Audio/Platform/RequestedAudioFormat.h"
+#include "ASampleRateConverter.h"
 
 namespace aui::audio {
-    /**
-     * @brief Default output format for the current platform.
-     * @ingroup audio
-     */
-    static constexpr AChannelFormat DEFAULT_OUTPUT_CHANNELS_COUNT = AChannelFormat::STEREO;
-    static constexpr ASampleFormat DEFAULT_OUTPUT_SAMPLE_FORMAT =
-            aui::platform::current::is_mobile() ? ASampleFormat::I16 : ASampleFormat::I24;
-    static constexpr uint32_t DEFAULT_OUTPUT_SAMPLE_RATE = 44100;
-
     namespace impl {
         template<int power, typename T>
         constexpr T multByPowerOf2(T value) {
@@ -67,6 +59,12 @@ namespace aui::audio {
             constexpr static int size_bits = 24;
         };
 
+        template<>
+        struct sample_type<ASampleFormat::I32> {
+            using type = int32_t;
+            constexpr static int size_bits = 32;
+        };
+
         template<ASampleFormat f>
         constexpr int size_bytes() {
             return sample_type<f>::size_bits / 8;
@@ -88,7 +86,8 @@ namespace aui::audio {
         template<ASampleFormat to, ASampleFormat from>
         constexpr sample_type_t<to> sample_cast(sample_type_t<from> sample) {
             if constexpr (type_size<to>() > type_size<from>()) {
-                return logicalShift<type_size_bits<to>() - type_size_bits<from>()>(static_cast<sample_type_t<to>>(sample));
+                return logicalShift<type_size_bits<to>() - type_size_bits<from>()>(
+                        static_cast<sample_type_t<to>>(sample));
             }
             return logicalShift<type_size_bits<to>() - type_size_bits<from>()>(sample);
         }
@@ -101,14 +100,21 @@ namespace aui::audio {
         };
 #pragma pack(pop)
 
+        template<>
+        struct packed_accessor<ASampleFormat::I32> {
+            sample_type_t<ASampleFormat::I32> value: sample_type<ASampleFormat::I32>::size_bits;
+        };
+
         template<ASampleFormat f>
-        sample_type_t<f> extractSample(std::byte* src) {
-            return logicalShift<type_size_bits<f>() - sample_type<f>::size_bits>(reinterpret_cast<packed_accessor<f>*>(src)->value);
+        sample_type_t<f> extractSample(std::byte *src) {
+            return logicalShift<type_size_bits<f>() - sample_type<f>::size_bits>(
+                    reinterpret_cast<packed_accessor<f> *>(src)->value);
         }
 
         template<ASampleFormat f>
-        void pushSample(sample_type_t<f> sample, std::byte* dst) {
-            reinterpret_cast<packed_accessor<f>*>(dst)->value = logicalShift<sample_type<f>::size_bits - type_size_bits<f>()>(sample);
+        void pushSample(sample_type_t<f> sample, std::byte *dst) {
+            reinterpret_cast<packed_accessor<f> *>(dst)->value = logicalShift<
+                    sample_type<f>::size_bits - type_size_bits<f>()>(sample);
         }
     }
 
@@ -119,14 +125,15 @@ namespace aui::audio {
  * @brief Implements audio mixing and resampling for ASoundResampler in compile time.
  */
 template<ASampleFormat sample_in, AChannelFormat channels_in,
-        ASampleFormat sample_out = aui::audio::DEFAULT_OUTPUT_SAMPLE_FORMAT, AChannelFormat channels_out = aui::audio::DEFAULT_OUTPUT_CHANNELS_COUNT>
+        ASampleFormat sample_out = aui::audio::platform::requested_sample_format,
+        AChannelFormat channels_out = aui::audio::platform::requested_channels_format>
 class ACompileTimeSoundResampler {
 public:
-    explicit ACompileTimeSoundResampler(std::span<std::byte> destination) noexcept:
-            mDestinationBufferBegin(destination.data()),
-            mDestinationBufferEnd(destination.data() + destination.size()),
-            mDestinationBufferIt(mDestinationBufferBegin)
-    { }
+    explicit ACompileTimeSoundResampler(_<ISoundInputStream> source) noexcept: mInputSampleRate(source->info().sampleRate),
+                                                                               mSampleRateConverter(
+                                                                                       aui::audio::platform::requested_sample_rate,
+                                                                                       std::move(source)) {
+    }
 
     void setVolume(IAudioPlayer::VolumeLevel volume) {
         mVolumeLevel = volume;
@@ -134,7 +141,7 @@ public:
 
     inline void commitSample(aui::audio::impl::sample_type_t<sample_in> sample) {
         assert(("buffer overrun", mDestinationBufferIt <= mDestinationBufferEnd));
-        //use int64_t for overflow preverting
+        //use int64_t for overflow preventing
         int64_t newSample = int64_t(aui::audio::impl::sample_cast<sample_out, sample_in>(sample));
         if (mVolumeLevel) {
             newSample = (*mVolumeLevel * newSample) / IAudioPlayer::VolumeLevel::MAX;
@@ -155,40 +162,51 @@ public:
         return (canPushSamples / size_t(channels_out)) * size_t(channels_in);
     }
 
-    inline void commitAllSamples(const _<ISoundInputStream>& is) {
+    inline void commitAllSamples() {
         std::byte buf[BUFFER_SIZE];
-        while (remainingSampleCount() > 0) {
-            auto toRead = std::min(
-                    size_t(canReadSamples(remainingSampleCount()) * aui::audio::impl::size_bytes<sample_in>()),
-                    sizeof(buf)
+        size_t maxBytesToRequest = std::min(sizeof(buf), sizeof(buf) * mInputSampleRate / aui::audio::platform::requested_sample_rate);
+        size_t needToProcessBytes = aui::audio::impl::size_bytes<sample_in>() *
+                                    remainingSampleCount() * aui::audio::platform::requested_sample_rate / mInputSampleRate;
+        //todo check requested sizes
+        needToProcessBytes -= needToProcessBytes % size_t(channels_out);
+        while (needToProcessBytes > 0) {
+            auto toProcess = std::min(
+                    needToProcessBytes,
+                    maxBytesToRequest
             );
 
-            size_t r = is->read(reinterpret_cast<char*>(buf), toRead);
+            size_t r = mSampleRateConverter.convert( toProcess, std::span<std::byte>(buf));
+            needToProcessBytes -= toProcess;
             if (r == 0) {
                 break;
             }
 
-            std::byte* end = buf + r;
+            std::byte *end = buf + r;
             static constexpr auto stepSize = static_cast<int>(channels_in) * aui::audio::impl::size_bytes<sample_in>();
-            for (std::byte* it = buf; it + stepSize <= end; it += stepSize) {
+            for (std::byte *it = buf; it + stepSize <= end; it += stepSize) {
                 if constexpr (channels_in == channels_out) {
                     for (size_t i = 0; i < static_cast<size_t>(channels_in); i++) {
-                        commitSample(aui::audio::impl::extractSample<sample_in>(it + i * aui::audio::impl::size_bytes<sample_in>()));
+                        commitSample(aui::audio::impl::extractSample<sample_in>(
+                                it + i * aui::audio::impl::size_bytes<sample_in>()));
                     }
-                }
-                else {
+                } else {
                     if constexpr (channels_in == AChannelFormat::MONO) {
                         //mono to stereo resampling
                         auto sample = aui::audio::impl::extractSample<sample_in>(it);
                         commitSample(sample);
                         commitSample(sample);
-                    }
-                    else {
+                    } else {
                         //TODO implement stereo to mono resampling
                     }
                 }
             }
         }
+    }
+
+    void setDestination(std::span<std::byte> dst) {
+        mDestinationBufferBegin = dst.data();
+        mDestinationBufferEnd = dst.data() + dst.size();
+        mDestinationBufferIt = mDestinationBufferBegin;
     }
 
     [[nodiscard]]
@@ -210,8 +228,10 @@ public:
     static constexpr size_t BUFFER_SIZE = 0x3000;
 
 private:
-    std::byte* mDestinationBufferBegin;
-    std::byte* mDestinationBufferEnd;
-    std::byte* mDestinationBufferIt;
+    std::byte *mDestinationBufferBegin = nullptr;
+    std::byte *mDestinationBufferEnd = nullptr;
+    std::byte *mDestinationBufferIt = nullptr;
+    std::uint32_t mInputSampleRate;
     AOptional<IAudioPlayer::VolumeLevel> mVolumeLevel;
+    ASampleRateConverter mSampleRateConverter;
 };
