@@ -125,6 +125,7 @@ foreach(_var AUI_PLATFORM_WIN
              
              AUI_ARCH_X86
              AUI_ARCH_X86_64
+             AUI_ARCH_ARM_64
         )
     target_compile_definitions(aui.core PUBLIC ${_var}=${${_var}})
 endforeach()
