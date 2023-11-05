@@ -129,20 +129,20 @@ template<ASampleFormat sample_in, AChannelFormat channels_in,
         AChannelFormat channels_out = aui::audio::platform::requested_channels_format>
 class ACompileTimeSoundResampler {
 public:
-    explicit ACompileTimeSoundResampler(_<ISoundInputStream> source) noexcept: mInputSampleRate(source->info().sampleRate),
-                                                                               mSampleRateConverter(
-                                                                                       aui::audio::platform::requested_sample_rate,
-                                                                                       std::move(source)) {
+    explicit ACompileTimeSoundResampler(_<ISoundInputStream> source) noexcept :
+            mInputSampleRate(source->info().sampleRate), mSource(source),
+            mConverter(aui::audio::platform::requested_sample_rate, std::move(source)) {
     }
 
     void setVolume(IAudioPlayer::VolumeLevel volume) {
         mVolumeLevel = volume;
     }
 
-    inline void commitSample(aui::audio::impl::sample_type_t<sample_in> sample) {
+    template<ASampleFormat format>
+    inline void commitSample(aui::audio::impl::sample_type_t<format> sample) {
         assert(("buffer overrun", mDestinationBufferIt <= mDestinationBufferEnd));
         //use int64_t for overflow preventing
-        int64_t newSample = int64_t(aui::audio::impl::sample_cast<sample_out, sample_in>(sample));
+        int64_t newSample = int64_t(aui::audio::impl::sample_cast<sample_out, format>(sample));
         if (mVolumeLevel) {
             newSample = (*mVolumeLevel * newSample) / IAudioPlayer::VolumeLevel::MAX;
         }
@@ -151,7 +151,6 @@ public:
         aui::audio::impl::pushSample<sample_out>(newSample, mDestinationBufferIt);
         mDestinationBufferIt += aui::audio::impl::size_bytes<sample_out>();
     }
-
 
     [[nodiscard]]
     size_t remainingSampleCount() const {
@@ -164,40 +163,44 @@ public:
 
     inline void commitAllSamples() {
         std::byte buf[BUFFER_SIZE];
-        size_t maxBytesToRequest = std::min(sizeof(buf), sizeof(buf) * mInputSampleRate / aui::audio::platform::requested_sample_rate);
-        size_t needToProcessBytes = aui::audio::impl::size_bytes<sample_in>() *
-                                    remainingSampleCount() * aui::audio::platform::requested_sample_rate / mInputSampleRate;
-        //todo check requested sizes
-        needToProcessBytes -= needToProcessBytes % size_t(channels_out);
-        while (needToProcessBytes > 0) {
-            auto toProcess = std::min(
-                    needToProcessBytes,
-                    maxBytesToRequest
-            );
+        while (auto remSampleCount = remainingSampleCount()) {
+            size_t samplesToRead = canReadSamples(remainingSampleCount());
+            size_t r;
+            if (mInputSampleRate == aui::audio::platform::requested_sample_rate) {
+                std::span dst(buf, std::min(aui::audio::impl::size_bytes<sample_in>() * samplesToRead, sizeof(buf)));
+                r = mSource->read(dst);
+                iterateOverBuffer<sample_in>(buf, buf + r);
+            }
+            else {
+                static constexpr auto conv_sample_format = ASampleRateConverter::outputSampleFormat();
+                std::span dst(buf, std::min(aui::audio::impl::size_bytes<conv_sample_format>() * samplesToRead, sizeof(buf)));
+                r = mConverter.convert(dst);
+                iterateOverBuffer<conv_sample_format>(buf, buf + r);
+            }
 
-            size_t r = mSampleRateConverter.convert( toProcess, std::span<std::byte>(buf));
-            needToProcessBytes -= toProcess;
             if (r == 0) {
                 break;
             }
+        }
+    }
 
-            std::byte *end = buf + r;
-            static constexpr auto stepSize = static_cast<int>(channels_in) * aui::audio::impl::size_bytes<sample_in>();
-            for (std::byte *it = buf; it + stepSize <= end; it += stepSize) {
-                if constexpr (channels_in == channels_out) {
-                    for (size_t i = 0; i < static_cast<size_t>(channels_in); i++) {
-                        commitSample(aui::audio::impl::extractSample<sample_in>(
-                                it + i * aui::audio::impl::size_bytes<sample_in>()));
-                    }
+    template <ASampleFormat format>
+    void iterateOverBuffer(std::byte* begin, std::byte* end) {
+        static constexpr size_t stepSize = static_cast<size_t>(channels_in) * aui::audio::impl::size_bytes<format>();
+        for (std::byte *it = begin; it + stepSize <= end; it += stepSize) {
+            if constexpr (channels_in == channels_out) {
+                for (size_t i = 0; i < static_cast<size_t>(channels_in); i++) {
+                    commitSample<format>(aui::audio::impl::extractSample<format>(
+                            it + i * aui::audio::impl::size_bytes<format>()));
+                }
+            } else {
+                if constexpr (channels_in == AChannelFormat::MONO) {
+                    //mono to stereo resampling
+                    auto sample = aui::audio::impl::extractSample<format>(it);
+                    commitSample<format>(sample);
+                    commitSample<format>(sample);
                 } else {
-                    if constexpr (channels_in == AChannelFormat::MONO) {
-                        //mono to stereo resampling
-                        auto sample = aui::audio::impl::extractSample<sample_in>(it);
-                        commitSample(sample);
-                        commitSample(sample);
-                    } else {
-                        //TODO implement stereo to mono resampling
-                    }
+                    //TODO implement stereo to mono resampling
                 }
             }
         }
@@ -219,7 +222,6 @@ public:
         return mDestinationBufferIt - mDestinationBufferBegin;
     }
 
-
     using input_t = aui::audio::impl::sample_type<sample_in>;
     using output_t = aui::audio::impl::sample_type<sample_out>;
 
@@ -232,6 +234,8 @@ private:
     std::byte *mDestinationBufferEnd = nullptr;
     std::byte *mDestinationBufferIt = nullptr;
     std::uint32_t mInputSampleRate;
+    _<ISoundInputStream> mSource;
+    ASampleRateConverter mConverter;
     AOptional<IAudioPlayer::VolumeLevel> mVolumeLevel;
-    ASampleRateConverter mSampleRateConverter;
+
 };

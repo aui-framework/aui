@@ -42,7 +42,7 @@ size_t AOggSoundStream::read(char* dst, size_t size) {
             throw AException("ogg decode error");
         }
         if (r == 0) {
-            return dst - begin;
+            return begin - dst;
         }
         begin += r;
     }

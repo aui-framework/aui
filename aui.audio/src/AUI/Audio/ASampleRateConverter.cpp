@@ -1,26 +1,8 @@
 #include "ASampleRateConverter.h"
+#include "AUI/Logging/ALogger.h"
 #include <soxr.h>
 
 namespace {
-    void int24ToInt32(uint32_t* dst, size_t size, const char* src) {
-        assert(size % 3 == 0);
-        auto ptr = reinterpret_cast<const uint32_t*>(src);
-        while (size >= 12) {
-            dst[0] = ptr[0] << 8;
-            dst[1] = ((ptr[0] >> 16) | (ptr[1] << 16)) & 0xffffff00;
-            dst[2] = ((ptr[1] >> 8) | (ptr[2] << 24)) & 0xffffff00;
-            dst[3] = ptr[2] & 0xffffff00;
-            dst += 4;
-            ptr += 3;
-            size -= 12;
-        }
-
-        for (int i = 0; i < size; i += 3) {
-            std::memcpy(reinterpret_cast<char*>(dst) + 4 * (i / 3) + 1, reinterpret_cast<const char*>(ptr) + i, 3);
-            size -= 3;
-        }
-    }
-
     size_t bytesToSamplesPerChannel(size_t bytes, AAudioFormat format) {
         return (bytes / aui::audio::bytesPerSample(format.sampleFormat)) / size_t(format.channelCount);
     }
@@ -32,77 +14,115 @@ namespace {
 
 ASampleRateConverter::ASampleRateConverter(size_t requestedSampleRate, _<ISoundInputStream> source) : mSource(std::move(source)) {
     mInputFormat = mSource->info();
+    mOutputFormat.sampleRate = requestedSampleRate;
+    mOutputFormat.channelCount = mInputFormat.channelCount;
+    mOutputFormat.sampleFormat = outputSampleFormat();
 
-    if (mInputFormat.sampleRate != requestedSampleRate) {
-        soxr_io_spec_t spec;
-        switch (mInputFormat.sampleFormat) {
-            case ASampleFormat::I16:
-                spec.itype = SOXR_INT16_I;
-                spec.otype = SOXR_INT16_I;
-                break;
-            case ASampleFormat::I24:
-            case ASampleFormat::I32:
-                spec.itype = SOXR_INT32_I;
-                spec.otype = SOXR_INT32_I;
-                break;
-        }
-        spec.scale = 1;
-        spec.e = nullptr;
-        spec.flags = 0;
-        mContext = soxr_create(double(mInputFormat.sampleRate), double(requestedSampleRate), unsigned(mInputFormat.channelCount),
-                               nullptr, &spec, nullptr, nullptr);
-        if (!mContext) {
-            throw AException("Failed to initialize sample rate converter context");
-        }
+    soxr_io_spec_t spec;
+    switch (mInputFormat.sampleFormat) {
+        case ASampleFormat::I16:
+            spec.itype = SOXR_INT16_I;
+            break;
+        case ASampleFormat::I24:
+        case ASampleFormat::I32:
+            spec.itype = SOXR_INT32_I;
+            break;
+    }
+    spec.otype = aui::platform::current::is_mobile() ? SOXR_INT16_I : SOXR_INT32_I;
+    spec.scale = 1;
+    spec.e = nullptr;
+    spec.flags = 0;
+    mContext = soxr_create(double(mInputFormat.sampleRate), double(requestedSampleRate), unsigned(mInputFormat.channelCount),
+                           nullptr, &spec, nullptr, nullptr);
+    if (!mContext) {
+        throw AException("(soxr) Failed to initialize sample rate converter context");
     }
 }
 
-size_t ASampleRateConverter::convert(size_t bytesToProcess, std::span<std::byte> dst) {
-    if (!mContext) {
-        return mSource->read(reinterpret_cast<char*>(dst.data()), bytesToProcess);
-    }
-
-    char buffer[BUFFER_SIZE];
-    size_t result = 0;
-    while (bytesToProcess > 0) {
-        size_t bytesRead = mSource->read(buffer, glm::min(bytesToProcess, sizeof(buffer)));
-        bytesToProcess -= bytesRead;
-        SoxrProcessResult processResult{};
-        if (mInputFormat.sampleFormat == ASampleFormat::I24) {
-            uint32_t auxBuffer[INT32_BUFFER_SIZE];
-            int24ToInt32(auxBuffer, bytesRead, buffer);
-            processResult = soxrProcess({reinterpret_cast<std::byte*>(auxBuffer), (bytesRead / 3) * 4}, dst);
-        }
-        else {
-            processResult = soxrProcess({reinterpret_cast<std::byte*>(buffer), bytesRead}, dst);
+size_t ASampleRateConverter::convert(std::span<std::byte> dst) {
+    size_t initialDestSize = dst.size();
+    while (!dst.empty()) {
+        if (mSourceBuffer.size() == 0) {
+            if (mInputFormat.sampleFormat == ASampleFormat::I24) {
+                mSourceBuffer.write(mSource, BUFFER_SIZE / 4 * 3);
+                mSourceBuffer.convertFormatToInt32();
+            }
+            else {
+                mSourceBuffer.write(mSource);
+            }
         }
 
-        dst = dst.subspan(processResult.bytesOut);
-        result += processResult.bytesOut;
+        auto result = soxrProcess(mSourceBuffer.span(), dst);
+        if (result.bytesOut == 0 && result.bytesInUsed == 0) {
+            break;
+        }
+        mSourceBuffer.begin += result.bytesInUsed;
+        dst = dst.subspan(result.bytesOut);
     }
 
-    return result;
+    return initialDestSize - dst.size();
 }
 
 ASampleRateConverter::~ASampleRateConverter() {
     soxr_delete(mContext);
 }
 
-ASampleFormat ASampleRateConverter::outputSampleFormat() const {
-    return mInputFormat.sampleFormat == ASampleFormat::I16 ? ASampleFormat::I16 : ASampleFormat::I32;
-}
-
 ASampleRateConverter::SoxrProcessResult ASampleRateConverter::soxrProcess(std::span<std::byte> src, std::span<std::byte> dst) {
-    SoxrProcessResult result;
+    size_t samplesInUsed;
+    size_t samplesOut;
     assert(src.size() % aui::audio::bytesPerSample(mInputFormat.sampleFormat) == 0);
-    assert(dst.size() % aui::audio::bytesPerSample(outputSampleFormat()) == 0);
     auto error = soxr_process(mContext,
-                              src.data(), bytesToSamplesPerChannel(src.size(), mInputFormat), &result.bytesInUsed,
-                              dst.data(), bytesToSamplesPerChannel(dst.size(), mInputFormat), &result.bytesOut);
+                              src.data(), bytesToSamplesPerChannel(src.size(), mInputFormat), &samplesInUsed,
+                              dst.data(), bytesToSamplesPerChannel(dst.size(), mOutputFormat), &samplesOut);
 
     if (error) {
         throw AException("(soxr) error occured during resampling: {}"_format(error));
     }
 
-    return result;
+    return {
+        .bytesInUsed = samplesPerChannelToBytes(samplesInUsed, mInputFormat),
+        .bytesOut = samplesPerChannelToBytes(samplesOut, mOutputFormat)
+    };
+}
+
+size_t ASampleRateConverter::AuxBuffer::read(char *dst, size_t size) {
+    size_t bytesToCopy = std::min(size, end - begin);
+    std::memcpy(dst, buffer, bytesToCopy);
+    begin += bytesToCopy;
+    return bytesToCopy;
+}
+
+void ASampleRateConverter::AuxBuffer::write(const _<IInputStream> &source, size_t bytesToRead) {
+    begin = 0;
+    end = source->read(buffer, std::min(BUFFER_SIZE, bytesToRead));
+}
+
+size_t ASampleRateConverter::AuxBuffer::size() const {
+    return end - begin;
+}
+
+std::span<std::byte> ASampleRateConverter::AuxBuffer::span() {
+    assert(0 <= begin && begin <= BUFFER_SIZE);
+    assert(0 <= end && end <= BUFFER_SIZE);
+    assert(begin <= end);
+    return {reinterpret_cast<std::byte*>(buffer) + begin, end - begin};
+}
+
+void ASampleRateConverter::AuxBuffer::convertFormatToInt32() {
+    assert(("convertFormatToInt32 must be called immedeatly after writing data to buffer", begin == 0));
+    assert(("wrong amount of data has been read or converting is not needed", size() % 3 == 0));
+    assert(("too much data has been read", 4 * size() / 3 <= BUFFER_SIZE));
+    if (size() == 0) {
+        return;
+    }
+
+    size_t sampleCount = size() / 3;
+    end = 4 * sampleCount;
+    uint32_t* outPtr = reinterpret_cast<uint32_t*>(buffer) + (sampleCount - 1);
+    char* inPtr = buffer + 3 * sampleCount;
+    while (inPtr != buffer) {
+        inPtr -= 3;
+        --outPtr;
+        *outPtr = (*reinterpret_cast<uint32_t*>(inPtr)) << 8;
+    }
 }
