@@ -24,6 +24,7 @@
 #include "AUI/GL/GLEnums.h"
 #include "AUI/GL/Program.h"
 #include "AUI/GL/Texture2D.h"
+#include "AUI/Render/Brush/Gradient.h"
 #include "AUI/Util/AAngleRadians.h"
 #include "ShaderUniforms.h"
 #include "AUI/Render/ARender.h"
@@ -87,48 +88,9 @@ struct GradientShaderHelper {
     void operator()(const ALinearGradientBrush& brush) const {
         shader.use();
         shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
-        ASmallVector<glm::u8vec4, 8> colors;
-        for (const auto& c : brush.colors) {
-            colors.push_back(glm::uvec4(c.color * 255.f));
-        }
-        float actualEdgeUvPosition = (0.5f - 0.05f /* bias to make ideal color edge */) / float(colors.size());
-
-        float rotationRadians = brush.rotation.radians();
-
-        float s = glm::sin(rotationRadians);
-        float c = -glm::cos(rotationRadians);
-        float bias = glm::max(-s, -c, 0.f);
-
-        auto probe = [&](glm::vec2 uv) {
-            return uv.x * s + uv.y * c + bias;
-        };
-        auto adjust = [&](glm::vec2 uv) {
-            float p = probe(uv);
-            if (p > 1.f) {
-                s /= p;
-                c /= p;
-                bias /= p;
-            }
-        };
-
-        if (auto p = probe({1, 1}); p < 0.f) {
-            bias += -p;
-        }
-
-        adjust({0, 0});
-        adjust({1, 0});
-        adjust({0, 1});
-        adjust({1, 1});
-
-        glm::mat3 mat3 = {
-             /* uv.x */ s * (1.f - actualEdgeUvPosition * 2.f), 0.f, 0.f,
-             /* uv.y */ c * (1.f - actualEdgeUvPosition * 2.f), 0.f, 0.f,
-             /* 1    */ bias * (1.f - actualEdgeUvPosition * 2.f) + actualEdgeUvPosition, 0.f, 0.f,
-        };
-
-
-        shader.set(aui::ShaderUniforms::GRADIENT_MAT_UV, mat3);
-        tex.tex2D(AImageView({(const char*)colors.data(), colors.sizeInBytes()}, { colors.size(), 1 }, APixelFormat::RGBA_BYTE));
+        aui::render::brush::gradient::Helper h(brush);
+        shader.set(aui::ShaderUniforms::GRADIENT_MAT_UV, h.matrix);
+        tex.tex2D(h.gradientMap());
     }
 };
 

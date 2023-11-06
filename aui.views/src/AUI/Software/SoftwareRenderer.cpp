@@ -21,9 +21,13 @@
 #include <range/v3/view.hpp>
 #include <AUI/Traits/callables.h>
 #include "SoftwareRenderer.h"
+#include "AUI/Enum/ImageRendering.h"
+#include "AUI/SL/SL.h"
 #include "SoftwareTexture.h"
+#include "AUI/Render/Brush/Gradient.h"
 #include <AUISL/Generated/rect_solid.fsh.software.h>
 #include <AUISL/Generated/shadow.fsh.software.h>
+#include <AUISL/Generated/rect_gradient.fsh.software.h>
 
 struct BrushHelper {
     SoftwareRenderer* renderer;
@@ -74,12 +78,16 @@ struct BrushHelper {
 
 
     void operator()(const ALinearGradientBrush& brush) noexcept {
-        /*
-        auto d = calculateUv();
-        auto color = glm::mix(glm::mix(glm::vec4(brush.topLeftColor), glm::vec4(brush.topRightColor), d.x),
-                              glm::mix(glm::vec4(brush.bottomLeftColor), glm::vec4(brush.bottomRightColor), d.x),
-                              d.y);
-        renderer->putPixel({ x, y }, renderer->getColor() * color);*/
+        using namespace aui::sl_gen::rect_gradient::fsh::software;
+
+        aui::render::brush::gradient::Helper h(brush);
+        const auto output = Shader::entry({.uv = calculateUv()},
+                                          {
+                                            .gradientMap = aui::sl_gen::Texture2D(h.gradientMap(), ImageRendering::SMOOTH),
+                                            .matUv = h.matrix,
+                                            .color = renderer->getColor()
+                                          });
+        renderer->putPixel({ x, y }, output.albedo);
     }
 
     void operator()(const ACustomShaderBrush& brush) noexcept {
@@ -200,10 +208,13 @@ void SoftwareRenderer::drawRoundedRect(const ABrush& brush,
 
     for (y = r.transformedPosition.y; y < end.y; ++y) {
         for (x = r.transformedPosition.x; x < end.x; ++x) {
-            if (r.test<false>(r.abs({x, y}))) {
-                continue;
+            if (int accumulator = r.test<true>(r.abs({x, y})); accumulator != 0) {
+                float alphaCopy = mColor.a;
+                mColor.a *= accumulator;
+                mColor.a /= 25;
+                std::visit(sw, brush);
+                mColor.a = alphaCopy;
             }
-            //std::visit(sw, brush);
         }
     }
 }
@@ -263,14 +274,14 @@ void SoftwareRenderer::drawBoxShadow(glm::vec2 position,
     auto transformedPos = glm::vec2(mTransform * glm::vec4(position, 1.f, 1.f));
 
     //transformedPos -= blurRadius;
-    glm::ivec2 iTransformedPos(transformedPos);
+    glm::ivec2 iTransformedPos(transformedPos - blurRadius);
     auto iSize = glm::ivec2(size + blurRadius * 2.f);
 
 
     using namespace aui::sl_gen::shadow::fsh::software;
     const Shader::Uniform uniform{
         .color = mColor * color,
-        .lower = size,
+        .lower = transformedPos + size,
         .upper = transformedPos,
         .sigma = blurRadius / 2.f,
     };
@@ -278,7 +289,7 @@ void SoftwareRenderer::drawBoxShadow(glm::vec2 position,
     for (int y = 0; y < iSize.y; ++y) { 
         for (int x = 0; x < iSize.x; ++x) {
             const auto result = Shader::entry(Shader::Inter {
-                .vertex = transformedPos + glm::vec2{x, y},
+                .vertex = iTransformedPos + glm::ivec2{x, y},
             }, uniform).albedo;
 
             /*

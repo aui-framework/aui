@@ -122,6 +122,11 @@ void gl::Texture2D::tex2D(AImageView image) {
 	Result types = recognize(image);
 
 	glGetError();
-	glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image.width(), image.height(), 0, types.format, types.type, image.buffer().empty() ? nullptr : image.buffer().data());
+	if (mSize == image.size()) {
+		glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image.width(), image.height(), types.format, types.type, image.buffer().data());
+	} else {
+		mSize = image.size();
+		glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image.width(), image.height(), 0, types.format, types.type, image.buffer().empty() ? nullptr : image.buffer().data());
+	}
 	assert(glGetError() == 0);
 }
