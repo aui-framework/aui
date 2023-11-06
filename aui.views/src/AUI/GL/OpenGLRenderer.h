@@ -151,6 +151,11 @@ public:
     
     uint32_t getDefaultFb() const noexcept;
     void bindViewport() const noexcept;
+
+    [[nodiscard]]
+    glm::uvec2 viewportSize() const noexcept {
+        return mViewportSize;
+    }
 };
 
 
