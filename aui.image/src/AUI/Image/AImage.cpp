@@ -65,7 +65,7 @@ void AImage::mirrorVertically() {
         auto l1 = modifiableBuffer().begin() + bpp * width() * y;
         auto l2 = modifiableBuffer().begin() + bpp * width() * mirroredY;
         for (std::uint32_t x = 0; x < width() * bpp; ++x, ++l1, ++l2) {
-            std::swap(l1, l2);
+            std::swap(*l1, *l2);
         }
     }
 }
