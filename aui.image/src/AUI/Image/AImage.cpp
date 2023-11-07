@@ -59,11 +59,12 @@ AImage::Cache& AImage::Cache::inst() {
 }
 
 void AImage::mirrorVertically() {
+    auto bpp = bytesPerPixel();
     for (std::uint32_t y = 0; y < height() / 2; ++y) {
         auto mirroredY = height() - y - 1;
-        auto l1 = modifiableBuffer().begin() + bytesPerPixel() * width() * y;
-        auto l2 = modifiableBuffer().begin() + bytesPerPixel() * height() * mirroredY;
-        for (std::uint32_t x = 0; x < width() * bytesPerPixel(); ++x, ++l1, ++l2) {
+        auto l1 = modifiableBuffer().begin() + bpp * width() * y;
+        auto l2 = modifiableBuffer().begin() + bpp * width() * mirroredY;
+        for (std::uint32_t x = 0; x < width() * bpp; ++x, ++l1, ++l2) {
             std::swap(*l1, *l2);
         }
     }
@@ -115,7 +116,7 @@ AImage AImageView::resizedLinearDownscale(glm::uvec2 newSize) const
     }
 
     auto ratio = glm::vec2(size() - 1u) / glm::vec2(newSize);
-    AImage n(size(), format());
+    AImage n(newSize, format());
     n.fill(0x0_argb);
 
     for (uint32_t i = 0; i < newSize.y; i++) {
