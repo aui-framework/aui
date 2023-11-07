@@ -69,11 +69,6 @@ _<AThread>& ATimer::timerThread() {
         t->start();
         return t;
     }();
-    do_once {
-        std::atexit([] {
-            thread->interrupt();
-        });
-    };
     return thread;
 }
 
