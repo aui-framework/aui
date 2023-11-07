@@ -16,7 +16,6 @@
 
 #include <AUI/Util/ACleanup.h>
 #include "ATimer.h"
-#include "AUI/Util/kAUI.h"
 
 ATimer::ATimer(std::chrono::milliseconds period):
 	mPeriod(period)
