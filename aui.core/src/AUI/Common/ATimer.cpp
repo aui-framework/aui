@@ -16,6 +16,7 @@
 
 #include <AUI/Util/ACleanup.h>
 #include "ATimer.h"
+#include "AUI/Util/kAUI.h"
 
 ATimer::ATimer(std::chrono::milliseconds period):
 	mPeriod(period)
@@ -68,9 +69,11 @@ _<AThread>& ATimer::timerThread() {
         t->start();
         return t;
     }();
-    std::atexit([] {
-        thread->interrupt();
-    });
+    do_once {
+        std::atexit([] {
+            thread->interrupt();
+        });
+    };
     return thread;
 }
 
