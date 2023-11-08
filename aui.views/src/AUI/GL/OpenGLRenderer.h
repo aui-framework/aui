@@ -153,6 +153,9 @@ public:
     void bindViewport() const noexcept;
 
     [[nodiscard]]
+    uint32_t getSupersamplingRatio() const noexcept;
+
+    [[nodiscard]]
     glm::uvec2 viewportSize() const noexcept {
         return mViewportSize;
     }

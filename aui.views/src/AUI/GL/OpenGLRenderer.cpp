@@ -939,6 +939,13 @@ uint32_t OpenGLRenderer::getDefaultFb() const noexcept {
     return 0;
 }
 
+uint32_t OpenGLRenderer::getSupersamplingRatio() const noexcept {
+    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+        return fb->supersamlingRatio();
+    }
+    return 1;
+}
+
 void OpenGLRenderer::bindViewport() const noexcept {
     glViewport(0, 0, mViewportSize.x, mViewportSize.y);
 }
