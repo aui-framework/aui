@@ -53,7 +53,7 @@ protected:
             mMessageQueue.pop_front();
             lock.unlock();
             auto time = util::measureExecutionTime<microseconds>(f.proc);
-            ALogger::debug("Performance")
+            ALOG_DEBUG("Performance")
                     << "Executing:\n"
                     << f.stacktrace
                     << " - ...\n";
