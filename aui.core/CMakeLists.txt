@@ -21,6 +21,11 @@ target_include_directories(aui.core PUBLIC $<BUILD_INTERFACE:${GLM_INCLUDE_DIR}>
 
 target_compile_definitions(aui.core PRIVATE UNICODE=1)
 target_compile_definitions(aui.core PUBLIC NOMINMAX=1)
+if(AUI_DEBUG)
+    target_compile_definitions(aui.core PUBLIC AUI_DEBUG=1)
+else()
+    target_compile_definitions(aui.core PUBLIC AUI_DEBUG=0)
+endif()
 if (AUI_CATCH_UNHANDLED)
     target_compile_definitions(aui.core PUBLIC AUI_CATCH_UNHANDLED=1)
 endif()
