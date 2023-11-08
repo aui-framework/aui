@@ -66,6 +66,11 @@ _<AThread>& ATimer::timerThread() {
                 ATimer::scheduler().loop();
             });
         t->start();
+#if !AUI_PLATFORM_WIN
+        std::atexit([] {
+            thread->interrupt();
+        });
+#endif
         return t;
     }();
     return thread;
