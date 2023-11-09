@@ -96,6 +96,5 @@ AAudioFormat ASoundResampler::info() {
 }
 
 void ASoundResampler::rewind() {
-    aui::audio::bytesPerSample(static_cast<ASampleFormat>(4));
     mSoundStream->rewind();
 }
