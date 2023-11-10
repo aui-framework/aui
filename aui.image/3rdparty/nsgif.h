@@ -15,7 +15,10 @@
 
 #ifndef NSNSGIF_H
 #define NSNSGIF_H
-
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 #include <stdint.h>
 #include <stdbool.h>
 #include <inttypes.h>
@@ -523,5 +526,7 @@ void nsgif_set_frame_delay_behaviour(
         nsgif_t *gif,
         uint16_t delay_min,
         uint16_t delay_default);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

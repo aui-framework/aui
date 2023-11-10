@@ -22,10 +22,7 @@
 #include "AUI/Image/AImage.h"
 #include "AUI/Util/ARaiiHelper.h"
 #include "AUI/Logging/ALogger.h"
-
-extern "C" {
 #include "nsgif.h"
-}
 
 static nsgif_bitmap_t* create_callback(int width, int height) {
     return new char[4 * width * height];
