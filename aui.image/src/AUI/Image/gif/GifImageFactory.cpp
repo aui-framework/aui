@@ -42,23 +42,23 @@ GifImageFactory::GifImageFactory(AByteBufferView buf) : mGifData(buf) {
     ops.create = create_callback;
     ops.destroy = destroy_callback;
     ops.get_buffer = get_buffer_callback;
-    auto error = nsgif_create(&ops, NSGIF_BITMAP_FMT_ABGR8888, &mImpl);
+    auto error = nsgif_create(&ops, NSGIF_BITMAP_FMT_ABGR8888, &mContext);
     if (error) {
         throw AException(nsgif_strerror(error));
     }
-    error = nsgif_data_scan(mImpl, buf.size(), reinterpret_cast<const uint8_t*>(mGifData.data()));
+    error = nsgif_data_scan(mContext, buf.size(), reinterpret_cast<const uint8_t*>(mGifData.data()));
     if (error) {
         throw AException(nsgif_strerror(error));
     }
-    nsgif_data_complete(mImpl);
-    auto info = nsgif_get_info(mImpl);
+    nsgif_data_complete(mContext);
+    auto info = nsgif_get_info(mContext);
     mWidth = info->width;
     mHeight = info->height;
     mFrameCount = info->frame_count;
 }
 
 GifImageFactory::~GifImageFactory() {
-    nsgif_destroy(mImpl);
+    nsgif_destroy(mContext);
 }
 
 AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
@@ -71,18 +71,18 @@ AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
     if (mCurrentFrameIndex == mFrameCount) {
         mAnimationFinished = true;
         mCurrentFrameIndex = 0;
-        nsgif_reset(mImpl);
+        nsgif_reset(mContext);
     }
     nsgif_rect_t area;
     uint32_t frame;
-    auto error = nsgif_frame_prepare(mImpl, &area, &mCurrentFrameLength, &frame);
+    auto error = nsgif_frame_prepare(mContext, &area, &mCurrentFrameLength, &frame);
     if (error) {
         throw AException(nsgif_strerror(error));
     }
 
     mCurrentFrameLength *= 10; //cs to ms
     nsgif_bitmap_t* buffer;
-    error = nsgif_frame_decode(mImpl, frame, &buffer);
+    error = nsgif_frame_decode(mContext, frame, &buffer);
     mLastFrameBuffer = static_cast<uint8_t*>(buffer);
     if (error) {
         throw AException(nsgif_strerror(error));

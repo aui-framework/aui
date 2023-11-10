@@ -47,7 +47,7 @@ private:
     size_t mHeight = 0;
     uint32_t mCurrentFrameLength;
     bool mAnimationFinished = false;
-    nsgif_t* mImpl;
+    nsgif_t* mContext;
     uint8_t* mLastFrameBuffer = nullptr;
 
     AImage fetchImage();
