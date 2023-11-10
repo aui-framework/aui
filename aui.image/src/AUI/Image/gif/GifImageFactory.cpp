@@ -20,68 +20,118 @@
 #include "GifImageFactory.h"
 #include "AUI/Common/AByteBufferView.h"
 #include "AUI/Image/AImage.h"
-#include "stb_image.h"
-#include "stb_image_write.h"
 #include "AUI/Util/ARaiiHelper.h"
+#include "AUI/Logging/ALogger.h"
 
-GifImageFactory::GifImageFactory(AByteBufferView buf) {
-    mCurrentFrameIndex = 0;
-    mLoadedGifPixels = stbi_load_gif_from_memory(reinterpret_cast<unsigned const char*>(buf.data()),
-                                                 buf.size(),
-                                                 &mDelays,
-                                                 &mGifWidth,
-                                                 &mGifHeight,
-                                                 &mFramesCount,
-                                                 &mChannelsCount,
-                                                 4);
+extern "C" {
+#include "nsgif.h"
+}
+
+static nsgif_bitmap_t* create_callback(int width, int height) {
+    return new char[4 * width * height];
+}
+
+static void destroy_callback(nsgif_bitmap_t* bitmap) {
+    delete [] reinterpret_cast<char*>(bitmap);
+}
+
+static uint8_t* get_buffer_callback(nsgif_bitmap_t* bitmap) {
+    return reinterpret_cast<uint8_t*>(bitmap);
+}
+
+struct TimeMeasure {
+    TimeMeasure() {
+        start = std::chrono::high_resolution_clock::now();
+    }
+
+    ~TimeMeasure() {
+        auto end = std::chrono::high_resolution_clock::now();
+        ALogger::info("TIME") << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    }
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> start;
+};
+
+GifImageFactory::GifImageFactory(AByteBufferView buf) : mGifData(buf) {
+    TimeMeasure tm;
+    nsgif_bitmap_cb_vt ops;
+    aui::zero(ops);
+    ops.create = create_callback;
+    ops.destroy = destroy_callback;
+    ops.get_buffer = get_buffer_callback;
+    auto error = nsgif_create(&ops, NSGIF_BITMAP_FMT_ABGR8888, &mImpl);
+    if (error) {
+        throw AException(nsgif_strerror(error));
+    }
+    error = nsgif_data_scan(mImpl, buf.size(), reinterpret_cast<const uint8_t*>(mGifData.data()));
+    if (error) {
+        throw AException(nsgif_strerror(error));
+    }
+    nsgif_data_complete(mImpl);
+    auto info = nsgif_get_info(mImpl);
+    mWidth = info->width;
+    mHeight = info->height;
+    mFrameCount = info->frame_count;
 }
 
 GifImageFactory::~GifImageFactory() {
-    stbi_image_free(mLoadedGifPixels);
-    delete mDelays;
+    nsgif_destroy(mImpl);
 }
 
 AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
-    if (!isNewImageAvailable())
-        return *mCurrentFrame;
-
-    mCurrentFrameIndex++;
-    mAnimationFinished = false;
-    if (mCurrentFrameIndex >= mFramesCount) {
-        mCurrentFrameIndex = 0;
-        mAnimationFinished = true;
+    if (!isNewImageAvailable()) {
+        return fetchImage();
     }
 
-    unsigned format = APixelFormat::BYTE;
-    switch (mChannelsCount) {
-        case 3:
-            format |= APixelFormat::RGB;
-            break;
-        case 4:
-            format |= APixelFormat::RGBA;
-            break;
-        default:
-            assert(0);
+    {
+        TimeMeasure tm;
+        mCurrentFrameIndex++;
+        mAnimationFinished = false;
+        if (mCurrentFrameIndex == mFrameCount) {
+            mAnimationFinished = true;
+            mCurrentFrameIndex = 0;
+            nsgif_reset(mImpl);
+        }
+
+        nsgif_rect_t area;
+        uint32_t frame;
+        auto error = nsgif_frame_prepare(mImpl, &area, &mCurrentFrameLength, &frame);
+        if (error) {
+            throw AException(nsgif_strerror(error));
+        }
+        mCurrentFrameLength *= 10; //cs to ms
+        nsgif_bitmap_t* buffer;
+        error = nsgif_frame_decode(mImpl, frame, &buffer);
+        mLastFrameBuffer = static_cast<uint8_t*>(buffer);
+        if (error) {
+            throw AException(nsgif_strerror(error));
+        }
+        mLastFrameStarted = std::chrono::high_resolution_clock::now();
     }
-
-
-    mLastFrameStarted = std::chrono::system_clock::now();
-    int frameBufferSize = mGifWidth * mGifHeight * mChannelsCount;
-    int currentFrameOffset = frameBufferSize * mCurrentFrameIndex;
-    mCurrentFrame = _new<AImage>(AByteBufferView(reinterpret_cast<const char*>(mLoadedGifPixels + currentFrameOffset), frameBufferSize), glm::uvec2{mGifWidth, mGifHeight}, format);
-    return *mCurrentFrame;
+    return fetchImage();
 }
 
 bool GifImageFactory::isNewImageAvailable() {
-    auto timeSinceLastFrame = std::chrono::system_clock::now() - mLastFrameStarted;
+    auto timeSinceLastFrame = std::chrono::high_resolution_clock::now() - mLastFrameStarted;
     auto millisecondsSinceFrame = std::chrono::duration_cast<std::chrono::milliseconds>(timeSinceLastFrame);
-    return !mCurrentFrame || millisecondsSinceFrame.count() >= mDelays[mCurrentFrameIndex];
+    return mLastFrameStarted.time_since_epoch().count() == 0 || millisecondsSinceFrame.count() >= mCurrentFrameLength - 10;
 }
 
 glm::ivec2 GifImageFactory::getSizeHint() {
-    return {mGifWidth, mGifHeight};
+    return {mWidth, mHeight};
 }
 
 bool GifImageFactory::hasAnimationFinished() {
     return mAnimationFinished;
+}
+
+AImage GifImageFactory::fetchImage() {
+    if (mLastFrameBuffer) {
+        AImage result({mLastFrameBuffer, 4 * mWidth * mHeight}, {mWidth, mHeight}, APixelFormat::RGBA_BYTE);
+        return result;
+    }
+
+    AImage result({mWidth, mHeight}, APixelFormat::RGBA_BYTE);
+    result.fill({0, 0, 0, 0});
+    return result;
 }
