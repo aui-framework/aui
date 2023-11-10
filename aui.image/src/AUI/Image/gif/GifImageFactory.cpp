@@ -62,12 +62,12 @@ GifImageFactory::~GifImageFactory() {
 }
 
 AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
+    mAnimationFinished = false;
     if (!isNewImageAvailable()) {
         return fetchImage();
     }
 
     mCurrentFrameIndex++;
-    mAnimationFinished = false;
     if (mCurrentFrameIndex == mFrameCount) {
         mAnimationFinished = true;
         mCurrentFrameIndex = 0;
