@@ -39,21 +39,7 @@ static uint8_t* get_buffer_callback(nsgif_bitmap_t* bitmap) {
     return reinterpret_cast<uint8_t*>(bitmap);
 }
 
-struct TimeMeasure {
-    TimeMeasure() {
-        start = std::chrono::high_resolution_clock::now();
-    }
-
-    ~TimeMeasure() {
-        auto end = std::chrono::high_resolution_clock::now();
-        ALogger::info("TIME") << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    }
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start;
-};
-
 GifImageFactory::GifImageFactory(AByteBufferView buf) : mGifData(buf) {
-    TimeMeasure tm;
     nsgif_bitmap_cb_vt ops;
     aui::zero(ops);
     ops.create = create_callback;
@@ -83,31 +69,29 @@ AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
         return fetchImage();
     }
 
-    {
-        TimeMeasure tm;
-        mCurrentFrameIndex++;
-        mAnimationFinished = false;
-        if (mCurrentFrameIndex == mFrameCount) {
-            mAnimationFinished = true;
-            mCurrentFrameIndex = 0;
-            nsgif_reset(mImpl);
-        }
-
-        nsgif_rect_t area;
-        uint32_t frame;
-        auto error = nsgif_frame_prepare(mImpl, &area, &mCurrentFrameLength, &frame);
-        if (error) {
-            throw AException(nsgif_strerror(error));
-        }
-        mCurrentFrameLength *= 10; //cs to ms
-        nsgif_bitmap_t* buffer;
-        error = nsgif_frame_decode(mImpl, frame, &buffer);
-        mLastFrameBuffer = static_cast<uint8_t*>(buffer);
-        if (error) {
-            throw AException(nsgif_strerror(error));
-        }
-        mLastFrameStarted = std::chrono::high_resolution_clock::now();
+    mCurrentFrameIndex++;
+    mAnimationFinished = false;
+    if (mCurrentFrameIndex == mFrameCount) {
+        mAnimationFinished = true;
+        mCurrentFrameIndex = 0;
+        nsgif_reset(mImpl);
     }
+    nsgif_rect_t area;
+    uint32_t frame;
+    auto error = nsgif_frame_prepare(mImpl, &area, &mCurrentFrameLength, &frame);
+    if (error) {
+        throw AException(nsgif_strerror(error));
+    }
+
+    mCurrentFrameLength *= 10; //cs to ms
+    nsgif_bitmap_t* buffer;
+    error = nsgif_frame_decode(mImpl, frame, &buffer);
+    mLastFrameBuffer = static_cast<uint8_t*>(buffer);
+    if (error) {
+        throw AException(nsgif_strerror(error));
+    }
+
+    mLastFrameStarted = std::chrono::high_resolution_clock::now();
     return fetchImage();
 }
 
