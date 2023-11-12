@@ -121,7 +121,7 @@ void SoftwareRenderingContext::reallocate() {
 
     mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
 
-    if (!ourDisplay.value()) {
+    if (!ourDisplay.value() || !vi) {
         return;
     }
     mXImage = aui::ptr::make_unique_with_deleter(XCreateImage(ourDisplay,
