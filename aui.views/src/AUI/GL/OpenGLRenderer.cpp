@@ -307,18 +307,18 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     float h = y + size.y;
 
     mTempVao.insert(0,
-                    AVector<glm::vec3>{
-                            glm::vec3(mTransform * glm::vec4{ x + lineWidth, y + lineDelta, 1, 1 }),
-                            glm::vec3(mTransform * glm::vec4{ w,             y + lineDelta, 1, 1 }),
+                    std::array<glm::vec3, 8>{
+                            glm::vec3(glm::vec4{ x + lineWidth, y + lineDelta, 1, 1 }),
+                            glm::vec3(glm::vec4{ w,             y + lineDelta, 1, 1 }),
 
-                            glm::vec3(mTransform * glm::vec4{ w - lineDelta, y + lineWidth, 1, 1 }),
-                            glm::vec3(mTransform * glm::vec4{ w - lineDelta, h            , 1, 1 }),
+                            glm::vec3(glm::vec4{ w - lineDelta, y + lineWidth, 1, 1 }),
+                            glm::vec3(glm::vec4{ w - lineDelta, h            , 1, 1 }),
 
-                            glm::vec3(mTransform * glm::vec4{ w - lineWidth, h - lineDelta - 0.15f, 1, 1 }),
-                            glm::vec3(mTransform * glm::vec4{ x            , h - lineDelta - 0.15f, 1, 1 }),
+                            glm::vec3(glm::vec4{ w - lineWidth, h - lineDelta - 0.15f, 1, 1 }),
+                            glm::vec3(glm::vec4{ x            , h - lineDelta - 0.15f, 1, 1 }),
 
-                            glm::vec3(mTransform * glm::vec4{ x + lineDelta, h - lineWidth - 0.15f, 1, 1 }),
-                            glm::vec3(mTransform * glm::vec4{ x + lineDelta, y            , 1, 1 }),
+                            glm::vec3(glm::vec4{ x + lineDelta, h - lineWidth - 0.15f, 1, 1 }),
+                            glm::vec3(glm::vec4{ x + lineDelta, y            , 1, 1 }),
                     });
 
     constexpr GLuint INDICES[] = { 0, 1, 2, 3, 4, 5, 6, 7};
@@ -809,8 +809,8 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
     positions.reserve(points.size() * 2);
 
     for (const auto& [p1, p2] : points) {
-        positions << mTransform * glm::vec4(p1, 0, 1);
-        positions << mTransform * glm::vec4(p2, 0, 1);
+        positions << glm::vec4(p1, 0, 1);
+        positions << glm::vec4(p2, 0, 1);
     }
 
     mTempVao.insert(0, positions);
