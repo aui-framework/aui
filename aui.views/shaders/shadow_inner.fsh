@@ -32,7 +32,7 @@ entry {
 
   vec4 query = vec4(inter.vertex - vec2(uniform.lower), inter.vertex - vec2(uniform.upper))
   vec4 integral = 0.5 + 0.5 * erf(query * (sqrt(0.5) / uniform.sigma))
-  result.a = 1 - result.a * clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0)
+  result.a = result.a * (1 - clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0))
   result.a = result.a * rounded(abs(inter.uv * 2 - 1), uniform.outerSize)
   output.albedo = result
 }
