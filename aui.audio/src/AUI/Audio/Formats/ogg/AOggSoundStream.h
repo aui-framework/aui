@@ -21,6 +21,8 @@ struct OggVorbis_File;
  */
 class API_AUI_AUDIO AOggSoundStream: public ISoundInputStream {
 public:
+    static constexpr ASampleFormat SAMPLE_FORMAT = ASampleFormat::I16;
+
     explicit AOggSoundStream(AUrl url);
 
     explicit AOggSoundStream(_<IInputStream> stream);

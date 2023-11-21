@@ -39,7 +39,8 @@ void AWavSoundStream::rewind() {
 }
 
 size_t AWavSoundStream::read(char* dst, size_t size) {
-    auto remaining = mHeader.chunkSize - mChunkReadPos;
+    size -= size % (mHeader.byteRate / mHeader.sampleRate);
+    auto remaining = mHeader.subchunk2Size - mChunkReadPos;
     if (remaining == 0) {
         return 0;
     }
