@@ -42,7 +42,7 @@ _<IDrawable> IDrawable::Cache::load(const AUrl& key)
             return _new<AImageDrawable>(raster);
         }
 
-
+        ALogger::err("Drawable") << "Could not recognize image: " << key.full();
     } catch (const AException& e) {
         ALogger::err("Drawable") << "Could not load image: " + key.full() + ": " << e;
     }
