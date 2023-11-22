@@ -51,6 +51,6 @@ struct AImageInit
         AImageLoaderRegistry::inst().registerRasterLoader(webpLoader, "webp");
         AImageLoaderRegistry::inst().registerVectorLoader(_new<SvgImageLoader>(), "svg");
         AImageLoaderRegistry::inst().registerAnimatedLoader(_new<GifImageLoader>(), "gif");
-        AImageLoaderRegistry::inst().registerAnimatedLoader(webpLoader, "");
+        AImageLoaderRegistry::inst().registerAnimatedLoader(webpLoader, "webp (animated)");
     }
 } _aimageinit;
