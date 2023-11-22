@@ -718,7 +718,7 @@ _<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFon
     return _new<OpenGLMultiStringCanvas>(this, style);
 }
 
-bool OpenGLRenderer::isVaoAvailable() {
+bool OpenGLRenderer::isVaoAvailable() const noexcept {
     return glBindVertexArray != nullptr;
 }
 
@@ -948,4 +948,11 @@ uint32_t OpenGLRenderer::getSupersamplingRatio() const noexcept {
 
 void OpenGLRenderer::bindViewport() const noexcept {
     glViewport(0, 0, mViewportSize.x, mViewportSize.y);
+}
+
+void OpenGLRenderer::bindTemporaryVao() const noexcept {
+    if (!isVaoAvailable()) {
+        return;
+    }
+    mTempVao.bind();
 }

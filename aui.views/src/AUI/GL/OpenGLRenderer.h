@@ -80,7 +80,7 @@ protected:
 public:
     OpenGLRenderer();
     ~OpenGLRenderer() override = default;
-    bool isVaoAvailable();
+    bool isVaoAvailable() const noexcept;
 
     void drawRect(const ABrush& brush,
                   glm::vec2 position,
@@ -151,6 +151,7 @@ public:
     
     uint32_t getDefaultFb() const noexcept;
     void bindViewport() const noexcept;
+    void bindTemporaryVao() const noexcept;
 
     [[nodiscard]]
     uint32_t getSupersamplingRatio() const noexcept;

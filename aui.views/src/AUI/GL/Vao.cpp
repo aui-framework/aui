@@ -43,7 +43,7 @@ const AVector<GLuint>& gl::Vao::getBuffers() const
 	return mBuffers;
 }
 
-void gl::Vao::bind() {
+void gl::Vao::bind() const noexcept {
 	gl::State::bindVertexArray(mHandle);
 }
 
