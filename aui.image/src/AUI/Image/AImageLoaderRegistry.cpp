@@ -18,17 +18,27 @@
 
 #include "AUI/Common/AByteBuffer.h"
 
-
-void AImageLoaderRegistry::registerRasterLoader(_<IImageLoader> imageLoader) {
-    mRasterLoaders << std::move(imageLoader);
+void AImageLoaderRegistry::registerLoader(ADeque<_<IImageLoader>> &d, _<IImageLoader> loader, AString name) {
+    d << std::move(loader);
+    if (!name.empty()) {
+        mSupportedFormats << std::move(name);
+    }
 }
 
-void AImageLoaderRegistry::registerVectorLoader(_<IImageLoader> imageLoader) {
-    mVectorLoaders << std::move(imageLoader);
+void AImageLoaderRegistry::registerRasterLoader(_<IImageLoader> imageLoader, AString formatName) {
+    registerLoader(mRasterLoaders, std::move(imageLoader), std::move(formatName));
 }
 
-void AImageLoaderRegistry::registerAnimatedLoader(_<IImageLoader> imageLoader) {
-    mAnimatedLoaders << std::move(imageLoader);
+void AImageLoaderRegistry::registerVectorLoader(_<IImageLoader> imageLoader, AString formatName) {
+    registerLoader(mVectorLoaders, std::move(imageLoader), std::move(formatName));
+}
+
+void AImageLoaderRegistry::registerAnimatedLoader(_<IImageLoader> imageLoader, AString formatName) {
+    registerLoader(mAnimatedLoaders, std::move(imageLoader), std::move(formatName));
+}
+
+const ADeque<AString>& AImageLoaderRegistry::supportedFormats() const noexcept {
+    return mSupportedFormats;
 }
 
 _<IImageFactory> AImageLoaderRegistry::loadVector(AByteBufferView buffer)
