@@ -45,12 +45,12 @@ struct AImageInit
 {
     AImageInit() {
         auto webpLoader = _new<WebpImageLoader>();
-        AImageLoaderRegistry::inst().registerVectorLoader(_new<SvgImageLoader>());
-        AImageLoaderRegistry::inst().registerRasterLoader(_new<PngImageLoader>());
-        AImageLoaderRegistry::inst().registerRasterLoader(_new<JpgImageLoader>());
-        AImageLoaderRegistry::inst().registerRasterLoader(_new<BmpImageLoader>());
-        AImageLoaderRegistry::inst().registerRasterLoader(webpLoader);
-        AImageLoaderRegistry::inst().registerAnimatedLoader(_new<GifImageLoader>());
-        AImageLoaderRegistry::inst().registerAnimatedLoader(webpLoader);
+        AImageLoaderRegistry::inst().registerRasterLoader(_new<BmpImageLoader>(), "bmp");
+        AImageLoaderRegistry::inst().registerRasterLoader(_new<PngImageLoader>(), "png");
+        AImageLoaderRegistry::inst().registerRasterLoader(_new<JpgImageLoader>(), "jpg");
+        AImageLoaderRegistry::inst().registerRasterLoader(webpLoader, "webp");
+        AImageLoaderRegistry::inst().registerVectorLoader(_new<SvgImageLoader>(), "svg");
+        AImageLoaderRegistry::inst().registerAnimatedLoader(_new<GifImageLoader>(), "gif");
+        AImageLoaderRegistry::inst().registerAnimatedLoader(webpLoader, "");
     }
 } _aimageinit;

@@ -37,6 +37,7 @@ private:
 	ADeque<_<IImageLoader>> mRasterLoaders;
     ADeque<_<IImageLoader>> mVectorLoaders;
     ADeque<_<IImageLoader>> mAnimatedLoaders;
+    ADeque<AString> mSupportedFormats;
 
     _<IImageFactory> loadVector(AByteBufferView buffer);
     _<IAnimatedImageFactory> loadAnimated(AByteBufferView buffer);
@@ -47,12 +48,16 @@ private:
     }
     _<AImage> loadImage(const AUrl& url);
 
+    void registerLoader(ADeque<_<IImageLoader>>& d, _<IImageLoader> loader, AString name);
+
 public:
 	AImageLoaderRegistry() = default;
 
-	void registerRasterLoader(_<IImageLoader> imageLoader);
-    void registerVectorLoader(_<IImageLoader> imageLoader);
-    void registerAnimatedLoader(_<IImageLoader> imageLoader);
+	void registerRasterLoader(_<IImageLoader> imageLoader, AString name = "");
+    void registerVectorLoader(_<IImageLoader> imageLoader, AString name = "");
+    void registerAnimatedLoader(_<IImageLoader> imageLoader, AString name = "");
+    [[nodiscard]]
+    const ADeque<AString>& supportedFormats() const noexcept;
 
 	static AImageLoaderRegistry& inst();
 };
