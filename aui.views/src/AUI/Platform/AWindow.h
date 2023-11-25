@@ -46,6 +46,7 @@ class API_AUI_VIEWS AWindow: public ABaseWindow
     friend class OpenGLRenderingContext;
     friend class CommonRenderingContext;
     friend class SoftwareRenderingContext;
+    friend class VulkanRenderingContext;
     friend class AWindowManager;
     friend struct painter;
 public:

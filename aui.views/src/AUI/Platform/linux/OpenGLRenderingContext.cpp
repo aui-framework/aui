@@ -154,9 +154,6 @@ void OpenGLRenderingContext::init(const Init& init) {
     }
 
     ARender::setRenderer(mRenderer = ourRenderer());
-    if (init.parent) {
-        XSetTransientForHint(ourDisplay, init.window.mHandle, init.parent->mHandle);
-    }
 
 #if defined(_DEBUG)
     gl::setupDebug();
