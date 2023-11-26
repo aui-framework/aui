@@ -18,6 +18,7 @@
 // Created by Alex2772 on 12/7/2021.
 //
 
+#include <range/v3/algorithm/contains.hpp>
 #include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/iterator/operations.hpp>
 #include <range/v3/view.hpp>
@@ -129,6 +130,31 @@ void VulkanRenderingContext::init(const Init& init) {
 
         if (!graphicsQueueIndex || !presentQueueIndex) {
             throw AException("unable to find graphics and/or present queue");
+        }
+
+        // temporary - we do not support different graphics and present queues
+        if (*graphicsQueueIndex != *presentQueueIndex) {
+            throw AException("graphics and present queue are different - we do not support that");
+        }
+    }
+
+    // pick a surface format
+    VkSurfaceFormatKHR selectedFormat; 
+    {
+        auto supportedFormats = instance.getPhysicalDeviceSurfaceFormatsKHR(targetDevice, surface);
+        selectedFormat = supportedFormats.first();
+
+        const VkFormat preferredFormats[] = {
+            VK_FORMAT_B8G8R8A8_UNORM,
+            VK_FORMAT_R8G8B8A8_UNORM, 
+            VK_FORMAT_A8B8G8R8_UNORM_PACK32 
+        };
+
+        for (const auto& supportedFormat : supportedFormats) {
+            if (ranges::contains(preferredFormats, supportedFormat.format)) {
+                selectedFormat = supportedFormat;
+                break;
+            }
         }
     }
 

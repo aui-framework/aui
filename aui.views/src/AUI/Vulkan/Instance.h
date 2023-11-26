@@ -40,6 +40,7 @@ namespace vk {
 
         AVector<VkPhysicalDevice> enumeratePhysicalDevices() const;
         AVector<VkQueueFamilyProperties> getPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice device) const;
+        AVector<VkSurfaceFormatKHR> getPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice device, VkSurfaceKHR surface) const;
 
 
         operator VkInstance() const noexcept {
@@ -64,6 +65,7 @@ namespace vk {
         DEF_PROC_VK(vkGetPhysicalDeviceProperties)
         DEF_PROC_VK(vkGetPhysicalDeviceQueueFamilyProperties)
         DEF_PROC_VK(vkGetPhysicalDeviceSurfaceSupportKHR)
+        DEF_PROC_VK(vkGetPhysicalDeviceSurfaceFormatsKHR)
 
 #undef DEF_PROC
     };

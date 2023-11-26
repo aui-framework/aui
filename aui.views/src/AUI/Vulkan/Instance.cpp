@@ -22,19 +22,35 @@
 
 static constexpr auto LOG_TAG = "Vulkan";
 
-template<typename Instance, typename T>
-static AVector<T> vectorGetter(Instance instance, VkResult(*func)(Instance instance, uint32_t* count, T* values) ) {
+template<typename Instance1, typename T>
+static AVector<T> vectorGetter(Instance1 instance1, VkResult(*func)(Instance1 instance, uint32_t* count, T* values) ) {
     std::uint32_t count;
-    if (auto r = func(instance, &count, nullptr); r != VK_SUCCESS) {
+    if (auto r = func(instance1, &count, nullptr); r != VK_SUCCESS) {
         throw AException("Vulkan enumerate failed");
     }
 
     AVector<T> result(count);
-    if (auto r = func(instance, &count, result.data()); r != VK_SUCCESS) {
+    if (auto r = func(instance1, &count, result.data()); r != VK_SUCCESS) {
         throw AException("Vulkan enumerate failed");
     }
     return result;
 }
+
+template<typename Instance1, typename Instance2, typename T>
+static AVector<T> vectorGetter(Instance1 instance1, Instance2 instance2, VkResult(*func)(Instance1, Instance2, uint32_t* count, T* values) ) {
+    std::uint32_t count;
+    if (auto r = func(instance1, instance2, &count, nullptr); r != VK_SUCCESS) {
+        throw AException("Vulkan enumerate failed");
+    }
+
+    AVector<T> result(count);
+    if (auto r = func(instance1, instance2, &count, result.data()); r != VK_SUCCESS) {
+        throw AException("Vulkan enumerate failed");
+    }
+    return result;
+}
+
+
 
 template<typename Instance, typename T>
 static AVector<T> vectorGetter(Instance instance, void(*func)(Instance instance, uint32_t* count, T* values) ) {
@@ -123,4 +139,8 @@ AVector<VkPhysicalDevice> vk::Instance::enumeratePhysicalDevices() const {
 
 AVector<VkQueueFamilyProperties> vk::Instance::getPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice device) const {
     return vectorGetter(device, vkGetPhysicalDeviceQueueFamilyProperties);
+}
+
+AVector<VkSurfaceFormatKHR> vk::Instance::getPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice device, VkSurfaceKHR surface) const {
+    return vectorGetter(device, surface, vkGetPhysicalDeviceSurfaceFormatsKHR);
 }
