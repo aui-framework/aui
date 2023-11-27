@@ -14,11 +14,18 @@
 // You should have received a copy of the GNU Lesser General Public
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
+#include <optional>
+#include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/indices.hpp>
 #include "AUI/Vulkan/Instance.h"
 #include "AUI/Common/AException.h"
+#include "AUI/Common/AOptional.h"
 #include "AUI/Logging/ALogger.h"
 #include <cstdint>
 #include <vulkan/vulkan_core.h>
+
+
+using namespace aui::vk;
 
 static constexpr auto LOG_TAG = "Vulkan";
 
@@ -50,8 +57,6 @@ static AVector<T> vectorGetter(Instance1 instance1, Instance2 instance2, VkResul
     return result;
 }
 
-
-
 template<typename Instance, typename T>
 static AVector<T> vectorGetter(Instance instance, void(*func)(Instance instance, uint32_t* count, T* values) ) {
     std::uint32_t count;
@@ -64,7 +69,7 @@ static AVector<T> vectorGetter(Instance instance, void(*func)(Instance instance,
 
 
 
-vk::Instance::Instance() {
+Instance::Instance() {
     std::uint32_t count;
     switch (auto r = vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr)) {
         case VK_ERROR_INCOMPATIBLE_DRIVER:
@@ -133,14 +138,38 @@ vk::Instance::Instance() {
 }
 
 
-AVector<VkPhysicalDevice> vk::Instance::enumeratePhysicalDevices() const {
+AVector<VkPhysicalDevice> Instance::enumeratePhysicalDevices() const {
     return vectorGetter(instance, vkEnumeratePhysicalDevices);
 }
 
-AVector<VkQueueFamilyProperties> vk::Instance::getPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice device) const {
+AVector<VkQueueFamilyProperties> Instance::getPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice device) const {
     return vectorGetter(device, vkGetPhysicalDeviceQueueFamilyProperties);
 }
 
-AVector<VkSurfaceFormatKHR> vk::Instance::getPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice device, VkSurfaceKHR surface) const {
+AVector<VkSurfaceFormatKHR> Instance::getPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice device, VkSurfaceKHR surface) const {
     return vectorGetter(device, surface, vkGetPhysicalDeviceSurfaceFormatsKHR);
+}
+
+
+AOptional<std::uint32_t> Instance::queryPhysicalDeviceQueueIndex(Instance::QueryPhysicalDeviceQueueIndexConfig config) {
+    AOptional<uint32_t> graphicsQueueIndex, presentQueueIndex;
+    auto queues = getPhysicalDeviceQueueFamilyProperties(config.targetDevice);
+
+    for (const auto&[i, queue] : queues | ranges::views::enumerate) {
+        if ((queue.queueFlags & config.queueFlags) != config.queueFlags) {
+            continue;
+        }
+
+        if (config.supportPresentationOnSurface) {
+            VkBool32 isPresent;
+            vkGetPhysicalDeviceSurfaceSupportKHR(config.targetDevice, i, *config.supportPresentationOnSurface, &isPresent);
+            
+            if (!isPresent) {
+                continue;
+            }
+        }
+        
+        return i;
+    }
+    return std::nullopt;
 }

@@ -26,6 +26,8 @@
 #include "AUI/Common/AOptional.h"
 #include "AUI/Platform/AProgramModule.h"
 #include "AUI/Platform/CommonRenderingContext.h"
+#include "AUI/Vulkan/CommandPool.h"
+#include "AUI/Vulkan/LogicalDevice.h"
 #include "AUI/Vulkan/Instance.h"
 #include <AUI/GL/gl.h>
 #include <AUI/Platform/VulkanRenderingContext.h>
@@ -33,8 +35,6 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/GL/GLDebug.h>
-#include <range/v3/view/enumerate.hpp>
-#include <range/v3/view/indices.hpp>
 #include <vulkan/vulkan_core.h>
 
 static constexpr auto LOG_TAG = "VulkanRenderingContext";
@@ -46,7 +46,7 @@ void VulkanRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
 
     // initialize VkInstance
-    vk::Instance instance;
+    aui::vk::Instance instance;
 
     // find applicable device (first by default)
     auto devices = instance.enumeratePhysicalDevices();
@@ -101,43 +101,6 @@ void VulkanRenderingContext::init(const Init& init) {
         throw AException("unable to create Vulkan surface");
     }
 
-    // find presentation and graphics queues
-
-    AOptional<uint32_t> graphicsQueueIndex, presentQueueIndex;
-    {
-        auto queues = instance.getPhysicalDeviceQueueFamilyProperties(targetDevice);
-
-        for (const auto&[i, queue] : queues | ranges::views::enumerate) {
-            bool isGraphics = (queue.queueFlags & VK_QUEUE_GRAPHICS_BIT) != 0;
-            VkBool32 isPresent;
-            instance.vkGetPhysicalDeviceSurfaceSupportKHR(targetDevice, i, surface, &isPresent);
-
-            if (isGraphics && isPresent) {
-                // found a queue that supports both - using it even if some index is already set
-                graphicsQueueIndex = i;
-                presentQueueIndex = i;
-                break;
-            }
-
-            if (isGraphics && !graphicsQueueIndex) {
-                graphicsQueueIndex = i;
-            }
-
-            if (isPresent  && !presentQueueIndex) {
-                presentQueueIndex = i;
-            }
-        }
-
-        if (!graphicsQueueIndex || !presentQueueIndex) {
-            throw AException("unable to find graphics and/or present queue");
-        }
-
-        // temporary - we do not support different graphics and present queues
-        if (*graphicsQueueIndex != *presentQueueIndex) {
-            throw AException("graphics and present queue are different - we do not support that");
-        }
-    }
-
     // pick a surface format
     VkSurfaceFormatKHR selectedFormat; 
     {
@@ -158,6 +121,12 @@ void VulkanRenderingContext::init(const Init& init) {
         }
     }
 
+    aui::vk::LogicalDevice logicalDevice(instance, targetDevice, {}, VK_QUEUE_GRAPHICS_BIT, surface);
+
+    /*
+    aui::vk::CommandPool commandPool(instance, targetDevice, {
+        
+    });*/
 
     ARender::setRenderer(mRenderer = ourRenderer());
 

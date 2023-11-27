@@ -17,6 +17,7 @@
 #pragma once
 
 #include "AUI/Platform/AProgramModule.h"
+#include "AUI/Traits/values.h"
 #include <vulkan/vulkan.h>
 #include <vulkan/vulkan_core.h>
 
@@ -26,14 +27,15 @@
 #include <vulkan/vulkan_xlib.h>
 #endif
 
-namespace vk {
+#define AUI_VK_THROW_ON_ERROR(expr) if (auto r = expr; r != VK_SUCCESS) throw AException(#expr " failed: {}"_format((int)r))
+namespace aui::vk {
 #ifdef __OpenBSD__
     static constexpr auto VULKAN_DEFAULT_PATH = "libvulkan.so";
 #else
     static constexpr auto VULKAN_DEFAULT_PATH = "libvulkan.so.1";
 #endif
 
-    struct Instance {
+    struct Instance: public aui::noncopyable {
     public:
         Instance();
         Instance(VkInstance instance): instance(instance) {} // updates function pointers, as instance is present
@@ -51,7 +53,12 @@ namespace vk {
 
         VkInstance instance = nullptr;
 
-        VkAllocationCallbacks allorator;
+        struct QueryPhysicalDeviceQueueIndexConfig {
+            VkPhysicalDevice targetDevice;
+            AOptional<VkSurfaceKHR> supportPresentationOnSurface;
+            VkQueueFlags queueFlags = VK_QUEUE_GRAPHICS_BIT;
+        };
+        AOptional<std::uint32_t> queryPhysicalDeviceQueueIndex(aui::vk::Instance::QueryPhysicalDeviceQueueIndexConfig config);
 
 #define DEF_PROC(name) PFN_ ## name name = (PFN_ ## name ) lib->getProcAddressRawPtr(#name);
 #define DEF_PROC_VK(name) PFN_ ## name name = (PFN_ ## name ) vkGetInstanceProcAddr(instance, #name);
@@ -66,6 +73,12 @@ namespace vk {
         DEF_PROC_VK(vkGetPhysicalDeviceQueueFamilyProperties)
         DEF_PROC_VK(vkGetPhysicalDeviceSurfaceSupportKHR)
         DEF_PROC_VK(vkGetPhysicalDeviceSurfaceFormatsKHR)
+
+        DEF_PROC_VK(vkCreateCommandPool)
+        DEF_PROC_VK(vkDestroyCommandPool)
+
+        DEF_PROC_VK(vkCreateDevice)
+        DEF_PROC_VK(vkDestroyDevice)
 
 #undef DEF_PROC
     };
