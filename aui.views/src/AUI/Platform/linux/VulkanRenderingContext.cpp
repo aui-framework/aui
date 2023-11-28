@@ -26,7 +26,9 @@
 #include "AUI/Common/AOptional.h"
 #include "AUI/Platform/AProgramModule.h"
 #include "AUI/Platform/CommonRenderingContext.h"
+#include "AUI/Vulkan/CommandBuffers.h"
 #include "AUI/Vulkan/CommandPool.h"
+#include "AUI/Vulkan/SwapChain.h"
 #include "AUI/Vulkan/LogicalDevice.h"
 #include "AUI/Vulkan/Instance.h"
 #include <AUI/GL/gl.h>
@@ -54,10 +56,10 @@ void VulkanRenderingContext::init(const Init& init) {
         throw AException("no compatible Vulkan device found");
     }
 
-    auto& targetDevice = devices.first();
+    auto& physicalDevice = devices.first();
     {
         VkPhysicalDeviceProperties deviceProperties;
-        (*instance.vkGetPhysicalDeviceProperties)(targetDevice, &deviceProperties);
+        (*instance.vkGetPhysicalDeviceProperties)(physicalDevice, &deviceProperties);
         ALogger::info(LOG_TAG) << "Using device: " << deviceProperties.deviceName;
     }
 
@@ -104,7 +106,7 @@ void VulkanRenderingContext::init(const Init& init) {
     // pick a surface format
     VkSurfaceFormatKHR selectedFormat; 
     {
-        auto supportedFormats = instance.getPhysicalDeviceSurfaceFormatsKHR(targetDevice, surface);
+        auto supportedFormats = instance.getPhysicalDeviceSurfaceFormatsKHR(physicalDevice, surface);
         selectedFormat = supportedFormats.first();
 
         const VkFormat preferredFormats[] = {
@@ -121,12 +123,21 @@ void VulkanRenderingContext::init(const Init& init) {
         }
     }
 
-    aui::vk::LogicalDevice logicalDevice(instance, targetDevice, {}, VK_QUEUE_GRAPHICS_BIT, surface);
-
-    /*
-    aui::vk::CommandPool commandPool(instance, targetDevice, {
-        
-    });*/
+    aui::vk::LogicalDevice logicalDevice(instance, physicalDevice, {}, VK_QUEUE_GRAPHICS_BIT, surface);
+    aui::vk::CommandPool commandPool(instance, logicalDevice, VkCommandPoolCreateInfo {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+        .queueFamilyIndex = logicalDevice.graphicsQueueIndex(),
+    });
+    aui::vk::SwapChain swapchain(instance, physicalDevice, logicalDevice, surface, selectedFormat, {init.width, init.height});
+    aui::vk::CommandBuffers commandBuffers(instance, logicalDevice, {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .pNext = nullptr,
+        .commandPool = commandPool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = static_cast<std::uint32_t>(swapchain.images().size()),
+    });
 
     ARender::setRenderer(mRenderer = ourRenderer());
 

@@ -173,3 +173,7 @@ AOptional<std::uint32_t> Instance::queryPhysicalDeviceQueueIndex(Instance::Query
     }
     return std::nullopt;
 }
+
+AVector<VkImage> Instance::getSwapchainImagesKHR(VkDevice device, VkSwapchainKHR swapChain) const {
+    return vectorGetter(device, swapChain, vkGetSwapchainImagesKHR);
+}

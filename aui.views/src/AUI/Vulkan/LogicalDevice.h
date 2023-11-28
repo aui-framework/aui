@@ -30,14 +30,14 @@ namespace aui::vk {
 
     struct LogicalDevice: public aui::noncopyable {
     public:
-        LogicalDevice(Instance& instance, VkDevice handle): instance(instance), handle(handle) {}
-        LogicalDevice(Instance &instance,
+        LogicalDevice(Instance& instance, VkDevice handle): mInstance(instance), mHandle(handle) {}
+        LogicalDevice(Instance& instance,
                       VkPhysicalDevice physicalDevice,
                       VkPhysicalDeviceFeatures enabledFeatures,
                       VkQueueFlags requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT,
                       AOptional<VkSurfaceKHR> surface = std::nullopt,
                       void* pNextChain = nullptr)
-            : instance(instance), handle([&] {
+            : mInstance(instance), mHandle([&] {
                 auto queueIndex = instance.queryPhysicalDeviceQueueIndex({
                     .targetDevice = physicalDevice,
                     .supportPresentationOnSurface = surface,
@@ -72,17 +72,17 @@ namespace aui::vk {
                 };
 
                 if (requestedQueueTypes & VK_QUEUE_GRAPHICS_BIT) {
-                    graphicsQueueIndex = queueIndex;
-                    putIfNotPresent(*graphicsQueueIndex);
+                    mGraphicsQueueIndex = queueIndex;
+                    putIfNotPresent(*mGraphicsQueueIndex);
                 }
                 if (requestedQueueTypes & VK_QUEUE_COMPUTE_BIT) {
-                    computeQueueIndex = queueIndex;
+                    mComputeQueueIndex = queueIndex;
 
-                    putIfNotPresent(*computeQueueIndex);
+                    putIfNotPresent(*mComputeQueueIndex);
                 }
                 if (surface) {
-                    presentationQueueIndex = queueIndex;
-                    putIfNotPresent(*presentationQueueIndex);
+                    mPresentationQueueIndex = queueIndex;
+                    putIfNotPresent(*mPresentationQueueIndex);
                 }
 
                 AVector<const char*> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
@@ -114,17 +114,22 @@ namespace aui::vk {
               }()) {}
 
         operator VkDevice() const noexcept {
-            return handle;
+            return mHandle;
         }
 
         ~LogicalDevice() {
-            instance.vkDestroyDevice(handle, nullptr);
+            mInstance.vkDestroyDevice(mHandle, nullptr);
+        }
+
+        [[nodiscard]]
+        std::uint32_t graphicsQueueIndex() const noexcept {
+            return *mGraphicsQueueIndex;
         }
 
     private:
-        Instance& instance;
-        VkDevice handle; 
-        AOptional<std::uint32_t> graphicsQueueIndex, computeQueueIndex, presentationQueueIndex;
+        Instance& mInstance;
+        AOptional<std::uint32_t> mGraphicsQueueIndex, mComputeQueueIndex, mPresentationQueueIndex;
+        VkDevice mHandle; 
         
     };
 }

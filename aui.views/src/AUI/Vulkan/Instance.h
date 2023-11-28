@@ -43,6 +43,7 @@ namespace aui::vk {
         AVector<VkPhysicalDevice> enumeratePhysicalDevices() const;
         AVector<VkQueueFamilyProperties> getPhysicalDeviceQueueFamilyProperties(VkPhysicalDevice device) const;
         AVector<VkSurfaceFormatKHR> getPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice device, VkSurfaceKHR surface) const;
+        AVector<VkImage> getSwapchainImagesKHR(VkDevice device, VkSwapchainKHR swapChain) const;
 
 
         operator VkInstance() const noexcept {
@@ -73,12 +74,23 @@ namespace aui::vk {
         DEF_PROC_VK(vkGetPhysicalDeviceQueueFamilyProperties)
         DEF_PROC_VK(vkGetPhysicalDeviceSurfaceSupportKHR)
         DEF_PROC_VK(vkGetPhysicalDeviceSurfaceFormatsKHR)
+        DEF_PROC_VK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR)
 
         DEF_PROC_VK(vkCreateCommandPool)
         DEF_PROC_VK(vkDestroyCommandPool)
 
         DEF_PROC_VK(vkCreateDevice)
         DEF_PROC_VK(vkDestroyDevice)
+
+        DEF_PROC_VK(vkCreateSwapchainKHR)
+        DEF_PROC_VK(vkDestroySwapchainKHR)
+        DEF_PROC_VK(vkGetSwapchainImagesKHR)
+
+        DEF_PROC_VK(vkCreateImageView)
+        DEF_PROC_VK(vkDestroyImageView)
+
+        DEF_PROC_VK(vkAllocateCommandBuffers)
+        DEF_PROC_VK(vkFreeCommandBuffers)
 
 #undef DEF_PROC
     };
