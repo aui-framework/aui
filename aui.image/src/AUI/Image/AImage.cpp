@@ -120,7 +120,7 @@ AImage AImageView::resizedLinearDownscale(glm::uvec2 newSize) const
     n.fill(0x0_argb);
 
     for (uint32_t i = 0; i < newSize.y; i++) {
-        for (uint32_t j = 0; j < newSize.y; j++) {
+        for (uint32_t j = 0; j < newSize.x; j++) {
             auto x = static_cast<uint32_t>(ratio.x * static_cast<float>(j));
             auto y = static_cast<uint32_t>(ratio.y * static_cast<float>(i));
             float xWeight = (ratio.x * static_cast<float>(j)) - static_cast<float>(x);
