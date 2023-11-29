@@ -19,12 +19,15 @@
 #include <AUI/Views.h>
 #include <AUI/View/AView.h>
 #include "AUI/Common/SharedPtr.h"
+#include "AUI/Enum/AOverflow.h"
 #include "AUI/Util/ABitField.h"
 #include <glm/glm.hpp>
 #include "AUI/Layout/ALayout.h"
 #include "AUI/Common/AVector.h"
 #include "AUI/Render/ARender.h"
 #include "AUI/Render/RenderHints.h"
+#include "AUI/Util/ClipOptimizationContext.h"
+#include "glm/fwd.hpp"
 
 
 AUI_ENUM_FLAG(AViewLookupFlags) {
@@ -97,10 +100,10 @@ public:
     void removeView(size_t index);
     void removeAllViews();
 
-    void render() override;
+    void render(ClipOptimizationContext context) override;
 
-    void renderChildren() {
-        drawViews(mViews.begin(), mViews.end());
+    void renderChildren(ClipOptimizationContext contextPassedToContainer) {
+        drawViews(mViews.begin(), mViews.end(), contextPassedToContainer);
     }
 
     void onMouseEnter() override;
@@ -339,12 +342,19 @@ protected:
     AVector<_<AView>> mViews;
     ScrollbarAppearance mScrollbarAppearance;
 
-    void drawView(const _<AView>& view);
+    void drawView(const _<AView>& view, ClipOptimizationContext contextOfTheContainer);
 
     template<typename Iterator>
-    void drawViews(Iterator begin, Iterator end) {
+    void drawViews(Iterator begin, Iterator end, ClipOptimizationContext contextPassedToContainer) {
+        switch (mOverflow) {
+            case AOverflow::VISIBLE: break;
+            case AOverflow::HIDDEN:
+            case AOverflow::HIDDEN_FROM_THIS:
+                contextPassedToContainer = { .position = glm::ivec2(0), .size = getSize() };
+        }
+        
         for (auto i = begin; i != end; ++i) {
-            drawView(*i);
+            drawView(*i, contextPassedToContainer);
         }
     }
 

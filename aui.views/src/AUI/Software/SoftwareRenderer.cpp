@@ -25,6 +25,7 @@
 #include "AUI/SL/SL.h"
 #include "SoftwareTexture.h"
 #include "AUI/Render/Brush/Gradient.h"
+#include "glm/vector_relational.hpp"
 #include <AUISL/Generated/rect_solid.fsh.software.h>
 #include <AUISL/Generated/shadow.fsh.software.h>
 #include <AUISL/Generated/rect_gradient.fsh.software.h>
@@ -66,6 +67,9 @@ struct BrushHelper {
             auto uv = glm::vec2{ glm::mix(uv1.x, uv2.x, surfaceUvCoords.x), glm::mix(uv1.y, uv2.y, surfaceUvCoords.y) };
             auto& image = textureHelper->texture->getImage();
             auto imagePixelCoords = glm::ivec2{glm::vec2(image->size()) * uv};
+            if (glm::any(glm::lessThan(imagePixelCoords, glm::ivec2(0)))) {
+                return;
+            }
 
             auto color = image->get({imagePixelCoords.x, imagePixelCoords.y});
             renderer->putPixel({ x, y }, renderer->getColor() * color);

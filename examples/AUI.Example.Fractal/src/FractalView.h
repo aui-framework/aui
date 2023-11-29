@@ -33,7 +33,7 @@ private:
 
 public:
     FractalView();
-    void render() override;
+    void render(ClipOptimizationContext context) override;
 
     void reset();
 

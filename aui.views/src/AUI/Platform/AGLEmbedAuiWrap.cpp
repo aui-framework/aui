@@ -22,7 +22,7 @@
 #include "AUI/GL/State.h"
 #include "AUI/GL/OpenGLRenderer.h"
 
-void AGLEmbedAuiWrap::render() {
+void AGLEmbedAuiWrap::render(ClipOptimizationContext context) {
     windowMakeCurrent();
     AThread::processMessages();
 

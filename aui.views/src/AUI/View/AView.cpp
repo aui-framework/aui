@@ -125,7 +125,7 @@ void AView::popStencilIfNeeded() {
         });
     }
 }
-void AView::render()
+void AView::render(ClipOptimizationContext context)
 {
     if (mAnimator)
         mAnimator->animate(this);
