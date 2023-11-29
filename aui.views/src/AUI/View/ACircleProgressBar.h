@@ -60,7 +60,7 @@ public:
 public:
     ACircleProgressBar();
 
-    void render() override;
+    void render(ClipOptimizationContext context) override;
 
 private:
     aui::float_within_0_1 mValue = 0.f;

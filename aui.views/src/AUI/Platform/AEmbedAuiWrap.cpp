@@ -21,6 +21,7 @@
 
 #include "AEmbedAuiWrap.h"
 #include "ABaseWindow.h"
+#include "glm/fwd.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <AUI/GL/State.h>
 #include <AUI/Platform/AWindow.h>
@@ -128,7 +129,7 @@ void AEmbedAuiWrap::windowRender() {
     }
     AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
-    mContainer->render();
+    mContainer->render({.position = glm::ivec2(0), .size = mContainer->getSize()});
     AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 

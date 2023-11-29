@@ -26,7 +26,7 @@ ASoftwareEmbedAuiWrap::ASoftwareEmbedAuiWrap() {
     ARender::setRenderer(std::make_unique<SoftwareRenderer>());
 }
 
-AImage ASoftwareEmbedAuiWrap::render() {
+AImage ASoftwareEmbedAuiWrap::render(ClipOptimizationContext context) {
     windowMakeCurrent();
     AThread::processMessages();
     windowRender();

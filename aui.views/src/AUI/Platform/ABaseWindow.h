@@ -246,7 +246,7 @@ public:
     }
 
     void onFocusLost() override;
-    void render() override;
+    void render(ClipOptimizationContext context) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
     /**

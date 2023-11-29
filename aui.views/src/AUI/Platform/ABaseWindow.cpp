@@ -345,7 +345,7 @@ void ABaseWindow::flagUpdateLayout() {
 
 }
 
-void ABaseWindow::render() {
+void ABaseWindow::render(ClipOptimizationContext context) {
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
@@ -367,7 +367,7 @@ void ABaseWindow::render() {
         return false;
     }), mScrolls.end());
 
-    AViewContainer::render();
+    AViewContainer::render(context);
     mIgnoreTouchscreenKeyboardRequests = false;
 
     if (auto v = mProfiledView.lock()) {

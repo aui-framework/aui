@@ -43,6 +43,6 @@ public:
     ARulerArea(const _<AView>& wrappedView);
     void setSize(glm::ivec2 size) override;
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
-    void render() override;
+    void render(ClipOptimizationContext context) override;
 };
 

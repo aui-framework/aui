@@ -32,7 +32,7 @@ class API_AUI_VIEWS ADrawableView: public AView {
 public:
     explicit ADrawableView(const AUrl& url);
     explicit ADrawableView(const _<IDrawable>& drawable);
-    void render() override;
+    void render(ClipOptimizationContext context) override;
 
     void setDrawable(const _<IDrawable>& drawable) {
         mDrawable = drawable;

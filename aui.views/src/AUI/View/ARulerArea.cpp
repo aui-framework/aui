@@ -78,8 +78,8 @@ void ARulerArea::setWrappedViewPosition(const glm::ivec2& pos) {
     mVerticalRuler->setOffsetPx(pos.y);
 }
 
-void ARulerArea::render() {
-    AViewContainer::render();
+void ARulerArea::render(ClipOptimizationContext context) {
+    AViewContainer::render(context);
 
 
     glDisable(GL_STENCIL_TEST);

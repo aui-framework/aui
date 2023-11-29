@@ -32,9 +32,9 @@ AAbstractLabel::AAbstractLabel()
 }
 
 
-void AAbstractLabel::render()
+void AAbstractLabel::render(ClipOptimizationContext context)
 {
-	AView::render();
+	AView::render(context);
 
 	doRenderText();
 }
