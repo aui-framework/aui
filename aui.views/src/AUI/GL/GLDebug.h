@@ -20,5 +20,6 @@
 #pragma once
 
 namespace gl {
+    extern bool silenceDebug;
     void setupDebug();
 }

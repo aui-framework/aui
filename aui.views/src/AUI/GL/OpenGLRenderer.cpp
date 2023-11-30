@@ -21,6 +21,7 @@
 #include "OpenGLRenderer.h"
 #include "AUI/Common/AException.h"
 #include "AUI/GL/Framebuffer.h"
+#include "AUI/GL/GLDebug.h"
 #include "AUI/GL/GLEnums.h"
 #include "AUI/GL/Program.h"
 #include "AUI/GL/Texture2D.h"
@@ -163,6 +164,7 @@ inline void useAuislShader(gl::Program& out) {
 }
 
 OpenGLRenderer::OpenGLRenderer() {
+    gl::setupDebug();
     ALogger::info(LOG_TAG) << "GL_VERSION = " << ((const char*) glGetString(GL_VERSION));
     ALogger::info(LOG_TAG) << "GL_VENDOR = " << ((const char*) glGetString(GL_VENDOR));
     ALogger::info(LOG_TAG) << "GL_RENDERER = " << ((const char*) glGetString(GL_RENDERER));
