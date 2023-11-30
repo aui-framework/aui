@@ -15,6 +15,7 @@
 // License along with this library. If not, see <http://www.gnu.org/licenses/>.
 
 #include <optional>
+#include <range/v3/iterator/operations.hpp>
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/indices.hpp>
 #include "AUI/Vulkan/Instance.h"
@@ -176,4 +177,39 @@ AOptional<std::uint32_t> Instance::queryPhysicalDeviceQueueIndex(Instance::Query
 
 AVector<VkImage> Instance::getSwapchainImagesKHR(VkDevice device, VkSwapchainKHR swapChain) const {
     return vectorGetter(device, swapChain, vkGetSwapchainImagesKHR);
+}
+
+AOptional<VkFormat> Instance::querySupportedFormat(VkPhysicalDevice physicalDevice, std::span<VkFormat> formats) const noexcept {
+    for (auto format: formats) {
+        VkFormatProperties formatProps;
+        vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &formatProps);
+        if (formatProps.optimalTilingFeatures & VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT) {
+            return format;
+        }
+    }
+    return std::nullopt;
+}
+AOptional<VkFormat> Instance::queryStencilOnlyFormat(VkPhysicalDevice physicalDevice) const noexcept {
+    VkFormat formats[] = {
+        VK_FORMAT_S8_UINT,
+        VK_FORMAT_D16_UNORM_S8_UINT,
+        VK_FORMAT_D24_UNORM_S8_UINT,
+        VK_FORMAT_D32_SFLOAT_S8_UINT,
+    };
+    return querySupportedFormat(physicalDevice, formats);
+}
+
+AOptional<uint32_t> Instance::getMemoryType(VkPhysicalDevice physicalDevice, VkSparseMemoryBindFlags typeBits, VkMemoryPropertyFlags properties) const noexcept {
+    VkPhysicalDeviceMemoryProperties memoryProperties;
+    vkGetPhysicalDeviceMemoryProperties(physicalDevice, &memoryProperties);
+
+    for (const auto& [index, memoryType] : std::span(memoryProperties.memoryTypes, memoryProperties.memoryTypeCount) | ranges::views::enumerate) {
+        if ((typeBits & 1) == 1) {
+            if ((memoryType.propertyFlags & properties) == properties) {
+                return index;
+            }
+        }
+        typeBits >>= 1;
+    }
+    return std::nullopt;
 }

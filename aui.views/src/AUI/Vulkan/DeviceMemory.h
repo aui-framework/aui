@@ -25,27 +25,30 @@
 
 namespace aui::vk {
 
-    struct CommandPool: public aui::noncopyable {
+    struct DeviceMemory: public aui::noncopyable {
     public:
-        CommandPool(Instance& instance, VkCommandPool handle): instance(instance), handle(handle) {} 
-        CommandPool(Instance& instance, VkDevice device, const VkCommandPoolCreateInfo& info): instance(instance), device(device), handle([&]{
-            VkCommandPool pool;
-            AUI_VK_THROW_ON_ERROR(instance.vkCreateCommandPool(device, &info, nullptr, &pool));
+        DeviceMemory(Instance& instance, VkDeviceMemory handle): instance(instance), handle(handle) {} 
+        DeviceMemory(Instance& instance, VkDevice device, const VkMemoryAllocateInfo& info): instance(instance), device(device), handle([&]{
+            VkDeviceMemory pool;
+            AUI_VK_THROW_ON_ERROR(instance.vkAllocateMemory(device, &info, nullptr, &pool));
             return pool;
         }()) {} 
 
-        operator VkCommandPool() const noexcept {
-            return handle;
+        DeviceMemory(DeviceMemory&& rhs) noexcept: instance(rhs.instance), device(rhs.device), handle(rhs.handle) {
+            rhs.handle = 0;
         }
 
-        ~CommandPool() {
-            instance.vkDestroyCommandPool(device, handle, nullptr);
+        ~DeviceMemory() {
+            if (handle != 0) instance.vkFreeMemory(device, handle, nullptr);
+        }
+
+        operator VkDeviceMemory() const noexcept {
+            return handle;
         }
 
     private:
         Instance& instance;
-        VkDevice device;
-        VkCommandPool handle; 
-        
+        VkDevice device; 
+        VkDeviceMemory handle; 
     };
 }

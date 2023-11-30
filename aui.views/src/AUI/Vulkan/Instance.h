@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include "AUI/Common/AOptional.h"
 #include "AUI/Platform/AProgramModule.h"
 #include "AUI/Traits/values.h"
 #include <vulkan/vulkan.h>
@@ -45,6 +46,34 @@ namespace aui::vk {
         AVector<VkSurfaceFormatKHR> getPhysicalDeviceSurfaceFormatsKHR(VkPhysicalDevice device, VkSurfaceKHR surface) const;
         AVector<VkImage> getSwapchainImagesKHR(VkDevice device, VkSwapchainKHR swapChain) const;
 
+        /**
+         * @brief Picks the supported depth stencil format.
+         * @param physicalDevice physical device
+         * @return applicable format, or nullopt if not found
+         */
+        AOptional<VkFormat> queryStencilOnlyFormat(VkPhysicalDevice physicalDevice) const noexcept;
+        
+        /**
+         * @brief Picks the supported depth stencil format from passed formats.
+         * @param physicalDevice physical device
+         * @param formats formats to pick from
+         * @return applicable format, or nullopt if not found
+         * @details
+         * Use queryStencilOnlyFormat or similar function to pick from the predefined formats.
+         */
+        AOptional<VkFormat> querySupportedFormat(VkPhysicalDevice physicalDevice, std::span<VkFormat> formats) const noexcept;
+
+        /**
+        * @brief Get the index of a memory type that has all the requested property bits set.
+        *
+        * @param physicalDevice physical device
+        * @param typeBits Bit mask with bits set for each memory type supported by the resource to request for (from VkMemoryRequirements)
+        * @param properties Bit mask of properties for the memory type to request
+        * 
+        * @return Index of the requested memory type, or nullopt if not found
+        */
+        AOptional<uint32_t> getMemoryType(VkPhysicalDevice physicalDevice, VkSparseMemoryBindFlags typeBits, VkMemoryPropertyFlags properties) const noexcept;
+       
 
         operator VkInstance() const noexcept {
             return instance;
@@ -75,6 +104,7 @@ namespace aui::vk {
         DEF_PROC_VK(vkGetPhysicalDeviceSurfaceSupportKHR)
         DEF_PROC_VK(vkGetPhysicalDeviceSurfaceFormatsKHR)
         DEF_PROC_VK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR)
+        DEF_PROC_VK(vkGetPhysicalDeviceMemoryProperties)
 
         DEF_PROC_VK(vkCreateCommandPool)
         DEF_PROC_VK(vkDestroyCommandPool)
@@ -91,6 +121,17 @@ namespace aui::vk {
 
         DEF_PROC_VK(vkAllocateCommandBuffers)
         DEF_PROC_VK(vkFreeCommandBuffers)
+
+        DEF_PROC_VK(vkCreateFence)
+        DEF_PROC_VK(vkDestroyFence)
+
+        DEF_PROC_VK(vkCreateImage)
+        DEF_PROC_VK(vkGetImageMemoryRequirements)
+        DEF_PROC_VK(vkDestroyImage)
+
+        DEF_PROC_VK(vkAllocateMemory)
+        DEF_PROC_VK(vkBindImageMemory)
+        DEF_PROC_VK(vkFreeMemory)
 
 #undef DEF_PROC
     };

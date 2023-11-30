@@ -25,27 +25,31 @@
 
 namespace aui::vk {
 
-    struct CommandPool: public aui::noncopyable {
+    struct Fence: public aui::noncopyable {
     public:
-        CommandPool(Instance& instance, VkCommandPool handle): instance(instance), handle(handle) {} 
-        CommandPool(Instance& instance, VkDevice device, const VkCommandPoolCreateInfo& info): instance(instance), device(device), handle([&]{
-            VkCommandPool pool;
-            AUI_VK_THROW_ON_ERROR(instance.vkCreateCommandPool(device, &info, nullptr, &pool));
+        Fence(Instance& instance, VkFence handle): instance(instance), handle(handle) {} 
+        Fence(Instance& instance, VkDevice device, const VkFenceCreateInfo& info): instance(instance), device(device), handle([&]{
+            VkFence pool;
+            AUI_VK_THROW_ON_ERROR(instance.vkCreateFence(device, &info, nullptr, &pool));
             return pool;
         }()) {} 
 
-        operator VkCommandPool() const noexcept {
-            return handle;
+        Fence(Fence&& rhs) noexcept: instance(rhs.instance), device(rhs.device), handle(rhs.handle) {
+            rhs.handle = 0;
         }
 
-        ~CommandPool() {
-            instance.vkDestroyCommandPool(device, handle, nullptr);
+        ~Fence() {
+            if (handle != 0) instance.vkDestroyFence(device, handle, nullptr);
+        }
+
+        operator VkFence() const noexcept {
+            return handle;
         }
 
     private:
         Instance& instance;
-        VkDevice device;
-        VkCommandPool handle; 
+        VkDevice device; 
+        VkFence handle; 
         
     };
 }

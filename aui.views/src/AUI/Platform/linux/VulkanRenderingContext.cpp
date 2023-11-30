@@ -18,6 +18,7 @@
 // Created by Alex2772 on 12/7/2021.
 //
 
+#include <cstdint>
 #include <range/v3/algorithm/contains.hpp>
 #include <range/v3/algorithm/find_if.hpp>
 #include <range/v3/iterator/operations.hpp>
@@ -28,6 +29,8 @@
 #include "AUI/Platform/CommonRenderingContext.h"
 #include "AUI/Vulkan/CommandBuffers.h"
 #include "AUI/Vulkan/CommandPool.h"
+#include "AUI/Vulkan/Fence.h"
+#include "AUI/Vulkan/Image.h"
 #include "AUI/Vulkan/SwapChain.h"
 #include "AUI/Vulkan/LogicalDevice.h"
 #include "AUI/Vulkan/Instance.h"
@@ -137,6 +140,26 @@ void VulkanRenderingContext::init(const Init& init) {
         .commandPool = commandPool,
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = static_cast<std::uint32_t>(swapchain.images().size()),
+    });
+
+    auto fences = AVector<aui::vk::Fence>::generate(commandBuffers.size(), [&](size_t i) {
+        return aui::vk::Fence(instance, logicalDevice, VkFenceCreateInfo {
+            .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+            .pNext = nullptr,
+            .flags = VK_FENCE_CREATE_SIGNALED_BIT,
+        });
+    });
+
+    aui::vk::Image stencil(instance, logicalDevice, {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .imageType = VK_IMAGE_TYPE_2D,
+        .format = instance.queryStencilOnlyFormat(physicalDevice).valueOrException("unable to find stencilFormat"),
+        .extent = { static_cast<std::uint32_t>(init.width), static_cast<std::uint32_t>(init.height), 1 },
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .tiling = VK_IMAGE_TILING_OPTIMAL,
+        .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
     });
 
     ARender::setRenderer(mRenderer = ourRenderer());
