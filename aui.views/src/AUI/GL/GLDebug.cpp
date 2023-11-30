@@ -85,9 +85,11 @@ static void GLAPIENTRY debugProc(GLenum source,
 }
 
 void gl::setupDebug() {
+#if !AUI_PLATFORM_IOS
     if (glDebugMessageCallback) {
         glEnable(GL_DEBUG_OUTPUT);
         glDebugMessageCallback(debugProc, nullptr);
     }
+#endif
 }
 
