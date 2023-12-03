@@ -27,8 +27,8 @@ namespace aui::vk {
 
     struct Fence: public aui::noncopyable {
     public:
-        Fence(Instance& instance, VkFence handle): instance(instance), handle(handle) {} 
-        Fence(Instance& instance, VkDevice device, const VkFenceCreateInfo& info): instance(instance), device(device), handle([&]{
+        Fence(const Instance& instance, VkFence handle): instance(instance), handle(handle) {} 
+        Fence(const Instance& instance, VkDevice device, const VkFenceCreateInfo& info): instance(instance), device(device), handle([&]{
             VkFence pool;
             AUI_VK_THROW_ON_ERROR(instance.vkCreateFence(device, &info, nullptr, &pool));
             return pool;
@@ -47,7 +47,7 @@ namespace aui::vk {
         }
 
     private:
-        Instance& instance;
+        const Instance& instance;
         VkDevice device; 
         VkFence handle; 
         

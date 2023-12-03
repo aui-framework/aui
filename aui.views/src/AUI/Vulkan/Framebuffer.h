@@ -27,8 +27,8 @@ namespace aui::vk {
 
     struct Framebuffer: public aui::noncopyable {
     public:
-        Framebuffer(Instance& instance, VkFramebuffer handle): instance(instance), handle(handle) {} 
-        Framebuffer(Instance& instance, VkDevice device, const VkFramebufferCreateInfo& info): instance(instance), device(device), handle([&]{
+        Framebuffer(const Instance& instance, VkFramebuffer handle): instance(instance), handle(handle) {} 
+        Framebuffer(const Instance& instance, VkDevice device, const VkFramebufferCreateInfo& info): instance(instance), device(device), handle([&]{
             VkFramebuffer pool;
             AUI_VK_THROW_ON_ERROR(instance.vkCreateFramebuffer(device, &info, nullptr, &pool));
             return pool;
@@ -47,7 +47,7 @@ namespace aui::vk {
         }
 
     private:
-        Instance& instance;
+        const Instance& instance;
         VkDevice device; 
         VkFramebuffer handle; 
         

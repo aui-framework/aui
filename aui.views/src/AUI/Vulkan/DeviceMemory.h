@@ -27,8 +27,8 @@ namespace aui::vk {
 
     struct DeviceMemory: public aui::noncopyable {
     public:
-        DeviceMemory(Instance& instance, VkDeviceMemory handle): instance(instance), handle(handle) {} 
-        DeviceMemory(Instance& instance, VkDevice device, const VkMemoryAllocateInfo& info): instance(instance), device(device), handle([&]{
+        DeviceMemory(const Instance& instance, VkDeviceMemory handle): instance(instance), handle(handle) {} 
+        DeviceMemory(const Instance& instance, VkDevice device, const VkMemoryAllocateInfo& info): instance(instance), device(device), handle([&]{
             VkDeviceMemory pool;
             AUI_VK_THROW_ON_ERROR(instance.vkAllocateMemory(device, &info, nullptr, &pool));
             return pool;
@@ -47,7 +47,7 @@ namespace aui::vk {
         }
 
     private:
-        Instance& instance;
+        const Instance& instance;
         VkDevice device; 
         VkDeviceMemory handle; 
     };

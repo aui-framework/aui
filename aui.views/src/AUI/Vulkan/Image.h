@@ -29,8 +29,8 @@ namespace aui::vk {
 
     struct Image: public aui::noncopyable {
     public:
-        Image(Instance& instance, VkImage handle): instance(instance), handle(handle) {} 
-        Image(Instance& instance, VkPhysicalDevice physicalDevice, VkDevice device, const VkImageCreateInfo& info): instance(instance), device(device), handle([&]{
+        Image(const Instance& instance, VkImage handle): instance(instance), handle(handle) {} 
+        Image(const Instance& instance, VkPhysicalDevice physicalDevice, VkDevice device, const VkImageCreateInfo& info): instance(instance), device(device), handle([&]{
             VkImage pool;
             AUI_VK_THROW_ON_ERROR(instance.vkCreateImage(device, &info, nullptr, &pool));
             return pool;
@@ -89,7 +89,7 @@ namespace aui::vk {
         }
 
     private:
-        Instance& instance;
+        const Instance& instance;
         VkDevice device; 
         VkImage handle; 
         AOptional<DeviceMemory> memory;

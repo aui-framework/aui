@@ -88,7 +88,7 @@ namespace aui::vk {
             AOptional<VkSurfaceKHR> supportPresentationOnSurface;
             VkQueueFlags queueFlags = VK_QUEUE_GRAPHICS_BIT;
         };
-        AOptional<std::uint32_t> queryPhysicalDeviceQueueIndex(aui::vk::Instance::QueryPhysicalDeviceQueueIndexConfig config);
+        AOptional<std::uint32_t> queryPhysicalDeviceQueueIndex(aui::vk::Instance::QueryPhysicalDeviceQueueIndexConfig config) const;
 
 #define DEF_PROC(name) PFN_ ## name name = (PFN_ ## name ) lib->getProcAddressRawPtr(#name);
 #define DEF_PROC_VK(name) PFN_ ## name name = (PFN_ ## name ) vkGetInstanceProcAddr(instance, #name);
@@ -106,6 +106,7 @@ namespace aui::vk {
         DEF_PROC_VK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR)
         DEF_PROC_VK(vkGetPhysicalDeviceMemoryProperties)
         DEF_PROC_VK(vkGetPhysicalDeviceFormatProperties)
+        DEF_PROC_VK(vkDestroySurfaceKHR)
 
         DEF_PROC_VK(vkCreateCommandPool)
         DEF_PROC_VK(vkDestroyCommandPool)

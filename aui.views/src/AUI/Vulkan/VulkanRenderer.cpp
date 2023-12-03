@@ -27,6 +27,7 @@
 #include "AUI/Render/Brush/Gradient.h"
 #include "AUI/Render/ITexture.h"
 #include "AUI/Util/AAngleRadians.h"
+#include "AUI/Vulkan/Instance.h"
 #include "glm/fwd.hpp"
 #include <AUI/Traits/callables.h>
 #include <AUI/Platform/AFontManager.h>
@@ -50,6 +51,7 @@
 #include <AUISL/Generated/symbol_sub.fsh.glsl120.h>
 #include <AUISL/Generated/square_sector.fsh.glsl120.h>
 #include <glm/gtx/matrix_transform_2d.hpp>
+#include <vulkan/vulkan_core.h>
 
 static constexpr auto LOG_TAG = "VulkanRenderer";
 
@@ -76,8 +78,31 @@ namespace {
     };
 }
 
-VulkanRenderer::VulkanRenderer() {
-}
+VulkanRenderer::VulkanRenderer()
+    : mPhysicalDevice([this] {
+        // find applicable device (first by default)
+        auto devices = mInstance.enumeratePhysicalDevices();
+        if (devices.empty()) {
+          throw AException("no compatible Vulkan device found");
+        }
+
+        auto &physicalDevice = devices.first();
+        {
+          VkPhysicalDeviceProperties deviceProperties;
+          (*mInstance.vkGetPhysicalDeviceProperties)(physicalDevice,
+                                                     &deviceProperties);
+          ALogger::info(LOG_TAG) << "Using device: " << deviceProperties.deviceName;
+        }
+        return physicalDevice;
+      }()),
+      mLogicalDevice(mInstance, mPhysicalDevice, {}, VK_QUEUE_GRAPHICS_BIT),
+      mCommandPool(mInstance, mLogicalDevice, VkCommandPoolCreateInfo {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+        .queueFamilyIndex = mLogicalDevice.graphicsQueueIndex(),
+      })
+       {}
 
 glm::mat4 VulkanRenderer::getProjectionMatrix() const {
     return glm::ortho(0.0f, static_cast<float>(mWindow->getWidth()) - 0.0f, static_cast<float>(mWindow->getHeight()) - 0.0f, 0.0f, -1.f, 1.f);

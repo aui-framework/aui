@@ -20,10 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <range/v3/algorithm/contains.hpp>
-#include <range/v3/algorithm/find_if.hpp>
-#include <range/v3/iterator/operations.hpp>
-#include <range/v3/view.hpp>
+#include "AUI/Vulkan/VulkanRenderer.h"
 #include "AUI/Common/AException.h"
 #include "AUI/Common/AOptional.h"
 #include "AUI/Platform/AProgramModule.h"
@@ -38,13 +35,13 @@
 #include "AUI/Vulkan/SwapChain.h"
 #include "AUI/Vulkan/LogicalDevice.h"
 #include "AUI/Vulkan/Instance.h"
+#include "AUI/Vulkan/Surface.h"
 #include <AUI/GL/gl.h>
 #include <AUI/Platform/VulkanRenderingContext.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/GL/GLDebug.h>
-#include <vulkan/vulkan_core.h>
 
 static constexpr auto LOG_TAG = "VulkanRenderingContext";
 
@@ -53,23 +50,6 @@ VulkanRenderingContext::~VulkanRenderingContext() {
 
 void VulkanRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
-
-    // initialize VkInstance
-    aui::vk::Instance instance;
-
-    // find applicable device (first by default)
-    auto devices = instance.enumeratePhysicalDevices();
-    if (devices.empty()) {
-        throw AException("no compatible Vulkan device found");
-    }
-
-    auto& physicalDevice = devices.first();
-    {
-        VkPhysicalDeviceProperties deviceProperties;
-        (*instance.vkGetPhysicalDeviceProperties)(physicalDevice, &deviceProperties);
-        ALogger::info(LOG_TAG) << "Using device: " << deviceProperties.deviceName;
-    }
-
 
     // initialize Xlib window
     static XSetWindowAttributes swa;
@@ -99,16 +79,24 @@ void VulkanRenderingContext::init(const Init& init) {
     }
     initX11Window(init, swa, vi);
 
+    ARender::setRenderer(mRenderer = ourRenderer());
+
+    auto& instance = mRenderer->instance();
+    auto& logicalDevice = mRenderer->logicalDevice();
+    auto physicalDevice = mRenderer->physicalDevice();
+
     // create VkSurface
-    VkXlibSurfaceCreateInfoKHR surfaceCreateInfo;
-    aui::zero(surfaceCreateInfo);
-    surfaceCreateInfo.dpy = CommonRenderingContext::ourDisplay;
-    surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
-    surfaceCreateInfo.window = init.window.mHandle; 
-    VkSurfaceKHR surface;
-    if (auto r = instance.vkCreateXlibSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface); r != VK_SUCCESS) {
-        throw AException("unable to create Vulkan surface");
-    }
+    aui::vk::SurfaceKHR surface(instance, [&] {
+        VkXlibSurfaceCreateInfoKHR surfaceCreateInfo;
+        aui::zero(surfaceCreateInfo);
+        surfaceCreateInfo.dpy = CommonRenderingContext::ourDisplay;
+        surfaceCreateInfo.sType = VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR;
+        surfaceCreateInfo.window = init.window.mHandle; 
+        VkSurfaceKHR surface;
+        AUI_VK_THROW_ON_ERROR(instance.vkCreateXlibSurfaceKHR(instance, &surfaceCreateInfo, nullptr, &surface));
+        return surface;
+    }());
+
 
     // pick a surface format
     VkSurfaceFormatKHR selectedFormat; 
@@ -129,19 +117,11 @@ void VulkanRenderingContext::init(const Init& init) {
             }
         }
     }
-
-    aui::vk::LogicalDevice logicalDevice(instance, physicalDevice, {}, VK_QUEUE_GRAPHICS_BIT, surface);
-    aui::vk::CommandPool commandPool(instance, logicalDevice, VkCommandPoolCreateInfo {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
-        .pNext = nullptr,
-        .flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
-        .queueFamilyIndex = logicalDevice.graphicsQueueIndex(),
-    });
     aui::vk::SwapChain swapchain(instance, physicalDevice, logicalDevice, surface, selectedFormat, {init.width, init.height});
     aui::vk::CommandBuffers commandBuffers(instance, logicalDevice, {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
         .pNext = nullptr,
-        .commandPool = commandPool,
+        .commandPool = mRenderer->commandPool(),
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = static_cast<std::uint32_t>(swapchain.images().size()),
     });
@@ -250,14 +230,6 @@ void VulkanRenderingContext::init(const Init& init) {
             .layers = 1,
         }));
     })));
-
-    ARender::setRenderer(mRenderer = ourRenderer());
-
-#if defined(_DEBUG)
-    gl::setupDebug();
-#endif
-    //assert(glGetError() == 0);
-
 }
 
 void VulkanRenderingContext::destroyNativeWindow(ABaseWindow& window) {
@@ -293,4 +265,14 @@ void VulkanRenderingContext::endResize(ABaseWindow& window) {
 
 AImage VulkanRenderingContext::makeScreenshot() {
     return AImage();
+}
+
+_<VulkanRenderer> VulkanRenderingContext::ourRenderer() {
+    static _weak<VulkanRenderer> g;
+    if (auto v = g.lock()) {
+        return v;
+    }
+    auto temp = _new<VulkanRenderer>();
+    g = temp;
+    return temp;
 }

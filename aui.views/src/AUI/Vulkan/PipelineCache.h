@@ -27,8 +27,8 @@ namespace aui::vk {
 
     struct PipelineCache: public aui::noncopyable {
     public:
-        PipelineCache(Instance& instance, VkPipelineCache handle): instance(instance), handle(handle) {} 
-        PipelineCache(Instance& instance, VkDevice device, const VkPipelineCacheCreateInfo& info): instance(instance), device(device), handle([&]{
+        PipelineCache(const Instance& instance, VkPipelineCache handle): instance(instance), handle(handle) {} 
+        PipelineCache(const Instance& instance, VkDevice device, const VkPipelineCacheCreateInfo& info): instance(instance), device(device), handle([&]{
             VkPipelineCache pool;
             AUI_VK_THROW_ON_ERROR(instance.vkCreatePipelineCache(device, &info, nullptr, &pool));
             return pool;
@@ -47,7 +47,7 @@ namespace aui::vk {
         }
 
     private:
-        Instance& instance;
+        const Instance& instance;
         VkDevice device; 
         VkPipelineCache handle; 
         

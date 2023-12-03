@@ -36,8 +36,8 @@ namespace aui::vk {
             VkImageView view;
         };
 
-        SwapChain(Instance& instance, VkDevice logicalDevice, VkSwapchainKHR handle): mInstance(instance), mLogicalDevice(logicalDevice), mHandle(handle) {}
-        SwapChain(Instance& instance,
+        SwapChain(const Instance& instance, VkDevice logicalDevice, VkSwapchainKHR handle): mInstance(instance), mLogicalDevice(logicalDevice), mHandle(handle) {}
+        SwapChain(const Instance& instance,
                   VkPhysicalDevice physicalDevice,
                   VkDevice logicalDevice,
                   VkSurfaceKHR surface,
@@ -142,7 +142,7 @@ namespace aui::vk {
         }
 
     private:
-        Instance& mInstance;
+        const Instance& mInstance;
         VkDevice mLogicalDevice;
         VkSwapchainKHR mHandle; 
         std::vector<Image> mImages;

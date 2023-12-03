@@ -25,27 +25,25 @@
 
 namespace aui::vk {
 
-    struct CommandPool: public aui::noncopyable {
+    struct SurfaceKHR: public aui::noncopyable {
     public:
-        CommandPool(const Instance& instance, VkCommandPool handle): instance(instance), handle(handle) {} 
-        CommandPool(const Instance& instance, VkDevice device, const VkCommandPoolCreateInfo& info): instance(instance), device(device), handle([&]{
-            VkCommandPool pool;
-            AUI_VK_THROW_ON_ERROR(instance.vkCreateCommandPool(device, &info, nullptr, &pool));
-            return pool;
-        }()) {} 
+        SurfaceKHR(const Instance& instance, VkSurfaceKHR handle): instance(instance), handle(handle) {} 
 
-        operator VkCommandPool() const noexcept {
-            return handle;
+        SurfaceKHR(SurfaceKHR&& rhs) noexcept: instance(rhs.instance), handle(rhs.handle) {
+            rhs.handle = 0;
         }
 
-        ~CommandPool() {
-            instance.vkDestroyCommandPool(device, handle, nullptr);
+        ~SurfaceKHR() {
+            if (handle != 0) instance.vkDestroySurfaceKHR(instance, handle, nullptr);
+        }
+
+        operator VkSurfaceKHR() const noexcept {
+            return handle;
         }
 
     private:
         const Instance& instance;
-        VkDevice device;
-        VkCommandPool handle; 
+        VkSurfaceKHR handle; 
         
     };
 }

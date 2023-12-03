@@ -22,9 +22,10 @@
 
 
 #include <AUI/Platform/CommonRenderingContext.h>
+#include <vulkan/vulkan_core.h>
 #include "ARenderingContextOptions.h"
-#include "AUI/Vulkan/VulkanRenderer.h"
 
+class VulkanRenderer;
 class VulkanRenderingContext: public CommonRenderingContext {
 public:
     VulkanRenderingContext(const ARenderingContextOptions::Vulkan& config) : mConfig(config) {}
@@ -44,15 +45,7 @@ private:
     ARenderingContextOptions::Vulkan mConfig;
     _<VulkanRenderer> mRenderer;
 
-    static _<VulkanRenderer> ourRenderer() {
-        static _weak<VulkanRenderer> g;
-        if (auto v = g.lock()) {
-            return v;
-        }
-        auto temp = _new<VulkanRenderer>();
-        g = temp;
-        return temp;
-    }
+    static _<VulkanRenderer> ourRenderer();
 
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;

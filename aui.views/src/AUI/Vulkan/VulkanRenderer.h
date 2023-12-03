@@ -16,8 +16,10 @@
 
 #pragma once
 
-
+#include "AUI/Vulkan/LogicalDevice.h"
+#include "AUI/Vulkan/CommandPool.h"
 #include "AUI/Render/IRenderer.h"
+#include "AUI/Vulkan/Instance.h"
 
 class VulkanRenderer: public IRenderer {
 friend class VulkanPrerenderedString;
@@ -33,29 +35,6 @@ public:
             gl::Texture2D::setupNearest();
         }
     };
-
-private:
-    glm::uvec2 mViewportSize;
-
-
-
-    struct CharacterData {
-        glm::vec4 uv;
-    };
-
-    ADeque<CharacterData> mCharData;
-    ADeque<FontEntryData> mFontEntryData;
-
-
-    std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position,
-                                          glm::vec2 size);
-
-    void uploadToShaderCommon();
-    void identityUv();
-
-    void endDraw(const ABrush& brush);
-    void tryEnableFramebuffer(glm::uvec2 windowSize);
-    FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 protected:
     ITexture* createNewTexture() override;
 
@@ -139,6 +118,51 @@ public:
     glm::uvec2 viewportSize() const noexcept {
         return mViewportSize;
     }
+
+    [[nodiscard]]
+    const aui::vk::Instance& instance() const noexcept {
+        return mInstance;
+    }
+
+    [[nodiscard]]
+    VkPhysicalDevice physicalDevice() const noexcept {
+        return mPhysicalDevice;
+    }
+
+    [[nodiscard]]
+    const aui::vk::LogicalDevice& logicalDevice() const noexcept {
+        return mLogicalDevice;
+    }
+
+    [[nodiscard]]
+    const aui::vk::CommandPool& commandPool() const noexcept {
+        return mCommandPool;
+    }
+
+private:
+    glm::uvec2 mViewportSize;
+    aui::vk::Instance mInstance;
+    VkPhysicalDevice mPhysicalDevice;
+    aui::vk::LogicalDevice mLogicalDevice;
+    aui::vk::CommandPool mCommandPool;
+
+    struct CharacterData {
+        glm::vec4 uv;
+    };
+
+    ADeque<CharacterData> mCharData;
+    ADeque<FontEntryData> mFontEntryData;
+
+
+    std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position,
+                                          glm::vec2 size);
+
+    void uploadToShaderCommon();
+    void identityUv();
+
+    void endDraw(const ABrush& brush);
+    void tryEnableFramebuffer(glm::uvec2 windowSize);
+    FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 };
 
 

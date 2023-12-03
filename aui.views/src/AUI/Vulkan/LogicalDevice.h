@@ -16,22 +16,27 @@
 
 #pragma once
 
+#include <optional>
+
+#include <range/v3/view.hpp>
+#include <range/v3/algorithm.hpp>
+
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_core.h>
+
 #include "AUI/Common/AException.h"
 #include "AUI/Common/AOptional.h"
 #include "AUI/Common/AStaticVector.h"
 #include "AUI/Traits/values.h"
 #include "AUI/Vulkan/Instance.h"
-#include <optional>
-#include <vulkan/vulkan.h>
-#include <vulkan/vulkan_core.h>
 
 
 namespace aui::vk {
 
     struct LogicalDevice: public aui::noncopyable {
     public:
-        LogicalDevice(Instance& instance, VkDevice handle): mInstance(instance), mHandle(handle) {}
-        LogicalDevice(Instance& instance,
+        LogicalDevice(const Instance& instance, VkDevice handle): mInstance(instance), mHandle(handle) {}
+        LogicalDevice(const Instance& instance,
                       VkPhysicalDevice physicalDevice,
                       VkPhysicalDeviceFeatures enabledFeatures,
                       VkQueueFlags requestedQueueTypes = VK_QUEUE_GRAPHICS_BIT,
@@ -127,7 +132,7 @@ namespace aui::vk {
         }
 
     private:
-        Instance& mInstance;
+        const Instance& mInstance;
         AOptional<std::uint32_t> mGraphicsQueueIndex, mComputeQueueIndex, mPresentationQueueIndex;
         VkDevice mHandle; 
         

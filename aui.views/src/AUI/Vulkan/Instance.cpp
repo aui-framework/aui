@@ -150,7 +150,7 @@ AVector<VkSurfaceFormatKHR> Instance::getPhysicalDeviceSurfaceFormatsKHR(VkPhysi
 }
 
 
-AOptional<std::uint32_t> Instance::queryPhysicalDeviceQueueIndex(Instance::QueryPhysicalDeviceQueueIndexConfig config) {
+AOptional<std::uint32_t> Instance::queryPhysicalDeviceQueueIndex(Instance::QueryPhysicalDeviceQueueIndexConfig config) const {
     AOptional<uint32_t> graphicsQueueIndex, presentQueueIndex;
     auto queues = getPhysicalDeviceQueueFamilyProperties(config.targetDevice);
 

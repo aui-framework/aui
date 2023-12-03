@@ -84,8 +84,8 @@ namespace aui::vk {
     public:
 
 
-        RenderPass(Instance& instance, VkRenderPass handle): instance(instance), handle(handle) {} 
-        RenderPass(Instance& instance, VkDevice device, const VkRenderPassCreateInfo& info): instance(instance), device(device), handle([&]{
+        RenderPass(const Instance& instance, VkRenderPass handle): instance(instance), handle(handle) {} 
+        RenderPass(const Instance& instance, VkDevice device, const VkRenderPassCreateInfo& info): instance(instance), device(device), handle([&]{
             VkRenderPass pool;
             AUI_VK_THROW_ON_ERROR(instance.vkCreateRenderPass(device, &info, nullptr, &pool));
             return pool;
@@ -104,7 +104,7 @@ namespace aui::vk {
         }
 
     private:
-        Instance& instance;
+        const Instance& instance;
         VkDevice device; 
         VkRenderPass handle; 
         

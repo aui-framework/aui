@@ -27,7 +27,7 @@ namespace aui::vk {
 
     struct CommandBuffers: public aui::noncopyable, public AVector<VkCommandBuffer> {
     public:
-        CommandBuffers(Instance& instance, VkDevice device, VkCommandBufferAllocateInfo info): mInstance(instance), mDevice(device), mCommandPool(info.commandPool) {
+        CommandBuffers(const Instance& instance, VkDevice device, VkCommandBufferAllocateInfo info): mInstance(instance), mDevice(device), mCommandPool(info.commandPool) {
             resize(info.commandBufferCount);
             AUI_VK_THROW_ON_ERROR(instance.vkAllocateCommandBuffers(device, &info, data()));  
         } 
@@ -36,7 +36,7 @@ namespace aui::vk {
         }
 
     private:
-        Instance& mInstance;
+        const Instance& mInstance;
         VkDevice mDevice;
         VkCommandPool mCommandPool;
         
