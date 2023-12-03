@@ -137,7 +137,7 @@ namespace aui::vk {
         }        
 
         [[nodiscard]]
-        const std::vector<Image> images() const noexcept {
+        const std::vector<Image>& images() const noexcept {
             return mImages;
         }
 

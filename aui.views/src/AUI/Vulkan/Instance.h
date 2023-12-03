@@ -105,6 +105,7 @@ namespace aui::vk {
         DEF_PROC_VK(vkGetPhysicalDeviceSurfaceFormatsKHR)
         DEF_PROC_VK(vkGetPhysicalDeviceSurfaceCapabilitiesKHR)
         DEF_PROC_VK(vkGetPhysicalDeviceMemoryProperties)
+        DEF_PROC_VK(vkGetPhysicalDeviceFormatProperties)
 
         DEF_PROC_VK(vkCreateCommandPool)
         DEF_PROC_VK(vkDestroyCommandPool)
@@ -132,6 +133,15 @@ namespace aui::vk {
         DEF_PROC_VK(vkAllocateMemory)
         DEF_PROC_VK(vkBindImageMemory)
         DEF_PROC_VK(vkFreeMemory)
+
+        DEF_PROC_VK(vkCreateRenderPass)
+        DEF_PROC_VK(vkDestroyRenderPass)
+
+        DEF_PROC_VK(vkCreatePipelineCache)
+        DEF_PROC_VK(vkDestroyPipelineCache)
+
+        DEF_PROC_VK(vkCreateFramebuffer)
+        DEF_PROC_VK(vkDestroyFramebuffer)
 
 #undef DEF_PROC
     };

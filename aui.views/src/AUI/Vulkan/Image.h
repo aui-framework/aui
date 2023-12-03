@@ -30,7 +30,7 @@ namespace aui::vk {
     struct Image: public aui::noncopyable {
     public:
         Image(Instance& instance, VkImage handle): instance(instance), handle(handle) {} 
-        Image(Instance& instance, VkDevice device, const VkImageCreateInfo& info): instance(instance), device(device), handle([&]{
+        Image(Instance& instance, VkPhysicalDevice physicalDevice, VkDevice device, const VkImageCreateInfo& info): instance(instance), device(device), handle([&]{
             VkImage pool;
             AUI_VK_THROW_ON_ERROR(instance.vkCreateImage(device, &info, nullptr, &pool));
             return pool;
@@ -42,10 +42,29 @@ namespace aui::vk {
                 .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
                 .pNext = nullptr,
                 .allocationSize = reqs.size,
-                .memoryTypeIndex = instance.getMemoryType(reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT).valueOrException("unable to pick memory format for an image storage"),
+                .memoryTypeIndex = instance.getMemoryType(physicalDevice, reqs.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT).valueOrException("unable to pick memory format for an image storage"),
             });
 
             AUI_VK_THROW_ON_ERROR(instance.vkBindImageMemory(device, handle, *memory, 0));
+
+
+            VkImageViewCreateInfo imageViewCI{};
+            imageViewCI.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            imageViewCI.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            imageViewCI.image = handle;
+            imageViewCI.format = info.format;
+            imageViewCI.subresourceRange.baseMipLevel = 0;
+            imageViewCI.subresourceRange.levelCount = 1;
+            imageViewCI.subresourceRange.baseArrayLayer = 0;
+            imageViewCI.subresourceRange.layerCount = 1;
+            imageViewCI.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+            // Stencil aspect should only be set on depth + stencil formats (VK_FORMAT_D16_UNORM_S8_UINT..VK_FORMAT_D32_SFLOAT_S8_UINT
+            if (info.format >= VK_FORMAT_D16_UNORM_S8_UINT) {
+                imageViewCI.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+            }
+            VkImageView imageView;
+            AUI_VK_THROW_ON_ERROR(instance.vkCreateImageView(device, &imageViewCI, nullptr, &imageView));
+            mImageView = imageView;
         } 
 
         Image(Image&& rhs) noexcept: instance(rhs.instance), device(rhs.device), handle(rhs.handle) {
@@ -54,7 +73,15 @@ namespace aui::vk {
 
         ~Image() {
             memory.reset();
+            if (mImageView) {
+                instance.vkDestroyImageView(device, *mImageView, nullptr);
+            }
             if (handle != 0) instance.vkDestroyImage(device, handle, nullptr);
+        }
+
+        [[nodiscard]]
+        VkImageView imageView() const noexcept {
+            return *mImageView;
         }
 
         operator VkImage() const noexcept {
@@ -66,6 +93,7 @@ namespace aui::vk {
         VkDevice device; 
         VkImage handle; 
         AOptional<DeviceMemory> memory;
+        AOptional<VkImageView> mImageView;
         
     };
 }

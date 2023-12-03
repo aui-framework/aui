@@ -17,6 +17,7 @@
 #pragma once
 
 #include <cstddef>
+#include <initializer_list>
 
 #include "ADynamicVector.h"
 #include "AStaticVector.h"
@@ -50,6 +51,10 @@ public:
 
     ASmallVector() noexcept {
         new (&mBase.inplace) StaticVector();
+    }
+    ASmallVector(std::initializer_list<StoredType> initializer) {
+        new (&mBase.inplace) StaticVector();
+        insert(end(), initializer.begin(), initializer.end());
     }
 
     ASmallVector(ASmallVector&& rhs) noexcept {

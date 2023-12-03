@@ -109,7 +109,7 @@ Instance::Instance() {
     instanceCreateInfo.ppEnabledExtensionNames = extensions.data();
     instanceCreateInfo.enabledExtensionCount = extensions.size();
 
-    if (true)
+    if (false)
     {
         const char* validationLayerName = "VK_LAYER_KHRONOS_validation";
         std::uint32_t instanceLayerCount;
@@ -131,9 +131,7 @@ Instance::Instance() {
             ALogger::warn(LOG_TAG) << "Validation layer VK_LAYER_KHRONOS_validation not present, validation is disabled";
         }
     }
-    if (auto r = vkCreateInstance(&instanceCreateInfo, nullptr, &instance); r != VK_SUCCESS) {
-        throw AException("failed vkCreateInstance");
-    }
+    AUI_VK_THROW_ON_ERROR(vkCreateInstance(&instanceCreateInfo, nullptr, &instance));
 
     *this = instance; // see Instance(VkInstance) ctor for details
 }

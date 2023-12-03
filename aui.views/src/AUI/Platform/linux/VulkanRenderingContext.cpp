@@ -18,6 +18,7 @@
 // Created by Alex2772 on 12/7/2021.
 //
 
+#include <cstddef>
 #include <cstdint>
 #include <range/v3/algorithm/contains.hpp>
 #include <range/v3/algorithm/find_if.hpp>
@@ -30,7 +31,10 @@
 #include "AUI/Vulkan/CommandBuffers.h"
 #include "AUI/Vulkan/CommandPool.h"
 #include "AUI/Vulkan/Fence.h"
+#include "AUI/Vulkan/Framebuffer.h"
 #include "AUI/Vulkan/Image.h"
+#include "AUI/Vulkan/PipelineCache.h"
+#include "AUI/Vulkan/RenderPass.h"
 #include "AUI/Vulkan/SwapChain.h"
 #include "AUI/Vulkan/LogicalDevice.h"
 #include "AUI/Vulkan/Instance.h"
@@ -150,10 +154,11 @@ void VulkanRenderingContext::init(const Init& init) {
         });
     });
 
-    aui::vk::Image stencil(instance, logicalDevice, {
+    const auto stencilFormat = instance.queryStencilOnlyFormat(physicalDevice).valueOrException("unable to find stencilFormat");
+    aui::vk::Image stencil(instance, physicalDevice, logicalDevice, {
         .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
         .imageType = VK_IMAGE_TYPE_2D,
-        .format = instance.queryStencilOnlyFormat(physicalDevice).valueOrException("unable to find stencilFormat"),
+        .format = stencilFormat,
         .extent = { static_cast<std::uint32_t>(init.width), static_cast<std::uint32_t>(init.height), 1 },
         .mipLevels = 1,
         .arrayLayers = 1,
@@ -161,6 +166,90 @@ void VulkanRenderingContext::init(const Init& init) {
         .tiling = VK_IMAGE_TILING_OPTIMAL,
         .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
     });
+
+    aui::vk::RenderPass renderPass(instance, logicalDevice, aui::vk::RenderPassCreateInfo{
+        .attachments = {
+            VkAttachmentDescription{
+                .format = selectedFormat.format,
+                .samples = VK_SAMPLE_COUNT_1_BIT,
+                .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+                .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+                .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+                .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+                .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+            },
+            VkAttachmentDescription{
+                .format = stencilFormat,
+                .samples = VK_SAMPLE_COUNT_1_BIT,
+                .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+                .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+                .stencilStoreOp = VK_ATTACHMENT_STORE_OP_STORE,
+                .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+                .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+            },
+        },
+        .subpasses = {
+            aui::vk::SubpassDescription{
+                .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS,
+                .colorAttachments = {
+                    {
+                        .attachment = 0,
+                        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+                    }
+                },
+                .depthStencilAttachment = {
+                    {
+                        .attachment = 1,
+                        .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+                    }
+                },
+            }
+        },
+        .dependencies = {
+            VkSubpassDependency {
+                .srcSubpass = VK_SUBPASS_EXTERNAL,
+                .dstSubpass = 0,
+                .srcStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                .dstStageMask = VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                .srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+                .dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT,
+                .dependencyFlags = 0,
+            },
+            VkSubpassDependency {
+                .srcSubpass = VK_SUBPASS_EXTERNAL,
+                .dstSubpass = 0,
+                .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+                .srcAccessMask = 0,
+                .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+                .dependencyFlags = 0,
+            },
+        }
+    });
+
+    aui::vk::PipelineCache pipelineCache(instance, logicalDevice, VkPipelineCacheCreateInfo {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_CACHE_CREATE_INFO,
+        .pNext = nullptr,
+        .flags = 0,
+        .initialDataSize = 0,
+        .pInitialData = 0,
+    });
+
+    auto framebuffers = AVector<aui::vk::Framebuffer>(aui::range(swapchain.images() | ranges::views::transform([&](const auto& image) {
+        const VkImageView attachments[] = { image.view, stencil.imageView() };
+        return std::move(aui::vk::Framebuffer(instance, logicalDevice, {
+            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .pNext = nullptr,
+            .renderPass = renderPass,
+            .attachmentCount = std::size(attachments),
+            .pAttachments = attachments,
+            .width = static_cast<uint32_t>(init.width),
+            .height = static_cast<uint32_t>(init.height),
+            .layers = 1,
+        }));
+    })));
 
     ARender::setRenderer(mRenderer = ourRenderer());
 
