@@ -25,6 +25,7 @@
 #include "AUI/GL/Program.h"
 #include "AUI/GL/Texture2D.h"
 #include "AUI/Render/Brush/Gradient.h"
+#include "AUI/Render/IRenderer.h"
 #include "AUI/Render/ITexture.h"
 #include "AUI/Util/AAngleRadians.h"
 #include "AUI/Vulkan/Instance.h"
@@ -203,7 +204,17 @@ ITexture* VulkanRenderer::createNewTexture() {
 }
 
 _<IRenderer::IMultiStringCanvas> VulkanRenderer::newMultiStringCanvas(const AFontStyle& style) {
-    return nullptr;
+    class VulkanMultiStringCanvas: public IRenderer::IMultiStringCanvas {
+    public:
+        void addString(const glm::ivec2& position, const AString& text) noexcept override {
+
+        }
+
+        _<IRenderer::IPrerenderedString> finalize() noexcept override {
+            return nullptr;
+        }
+    };
+    return _new<VulkanMultiStringCanvas>();
 }
 
 
