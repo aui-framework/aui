@@ -45,6 +45,20 @@
 
 static constexpr auto LOG_TAG = "VulkanRenderingContext";
 
+
+struct VulkanRenderingContext::VulkanObjects {
+    AOptional<aui::vk::SurfaceKHR> surface;
+    AOptional<aui::vk::SwapChain> swapchain;
+    AOptional<aui::vk::CommandBuffers> commandBuffers;
+    AVector<aui::vk::Fence> fences;
+    AOptional<aui::vk::Image> stencil;
+    AOptional<aui::vk::RenderPass> renderPass;
+    AOptional<aui::vk::PipelineCache> pipelineCache;
+    AVector<aui::vk::Framebuffer> framebuffers;
+};
+
+VulkanRenderingContext::VulkanRenderingContext(const ARenderingContextOptions::Vulkan& config) : mConfig(config) {}
+
 VulkanRenderingContext::~VulkanRenderingContext() {
 }
 
@@ -230,6 +244,16 @@ void VulkanRenderingContext::init(const Init& init) {
             .layers = 1,
         }));
     })));
+
+
+    mVulkan->surface = std::move(surface);
+    mVulkan->swapchain = std::move(swapchain);
+    mVulkan->commandBuffers = std::move(commandBuffers);
+    mVulkan->fences = std::move(fences);
+    mVulkan->stencil = std::move(stencil);
+    mVulkan->renderPass = std::move(renderPass);
+    mVulkan->pipelineCache = std::move(pipelineCache);
+    mVulkan->framebuffers = std::move(framebuffers);
 }
 
 void VulkanRenderingContext::destroyNativeWindow(ABaseWindow& window) {

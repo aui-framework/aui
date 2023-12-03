@@ -24,11 +24,12 @@
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <vulkan/vulkan_core.h>
 #include "ARenderingContextOptions.h"
+#include "AUI/Util/APimpl.h"
 
 class VulkanRenderer;
 class VulkanRenderingContext: public CommonRenderingContext {
 public:
-    VulkanRenderingContext(const ARenderingContextOptions::Vulkan& config) : mConfig(config) {}
+    VulkanRenderingContext(const ARenderingContextOptions::Vulkan& config);
 
     void init(const Init& init) override;
     ~VulkanRenderingContext() override;
@@ -44,6 +45,9 @@ public:
 private:
     ARenderingContextOptions::Vulkan mConfig;
     _<VulkanRenderer> mRenderer;
+
+    struct VulkanObjects;
+    aui::fast_pimpl<VulkanObjects, sizeof(void*) * 64> mVulkan;
 
     static _<VulkanRenderer> ourRenderer();
 

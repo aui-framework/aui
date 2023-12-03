@@ -30,8 +30,16 @@ namespace aui::vk {
         CommandBuffers(const Instance& instance, VkDevice device, VkCommandBufferAllocateInfo info): mInstance(instance), mDevice(device), mCommandPool(info.commandPool) {
             resize(info.commandBufferCount);
             AUI_VK_THROW_ON_ERROR(instance.vkAllocateCommandBuffers(device, &info, data()));  
-        } 
+        }
+        CommandBuffers(CommandBuffers&& rhs) noexcept
+            : mInstance(rhs.mInstance), mDevice(rhs.mDevice), mCommandPool(rhs.mCommandPool) {
+            rhs.mCommandPool = 0;
+        }
+
         ~CommandBuffers() {
+            if (mCommandPool == 0) {
+                return;
+            }
             mInstance.vkFreeCommandBuffers(mDevice, mCommandPool, size(), data()); 
         }
 

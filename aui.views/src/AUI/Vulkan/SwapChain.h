@@ -129,7 +129,18 @@ namespace aui::vk {
             return mHandle;
         }
 
+        SwapChain(SwapChain&& rhs) noexcept
+            : mInstance(rhs.mInstance),
+              mLogicalDevice(rhs.mLogicalDevice),
+              mHandle(rhs.mHandle),
+              mImages(std::move(rhs.mImages)) {
+            rhs.mHandle = 0;
+        }
+
         ~SwapChain() {
+            if (mHandle == 0) {
+                return;
+            }
             for (const auto& image : mImages) {
                 mInstance.vkDestroyImageView(mLogicalDevice, image.view, nullptr);
             }
