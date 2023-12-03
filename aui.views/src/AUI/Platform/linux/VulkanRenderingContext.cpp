@@ -20,6 +20,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include "AUI/Vulkan/VulkanRenderer.h"
 #include "AUI/Common/AException.h"
 #include "AUI/Common/AOptional.h"
@@ -33,6 +34,7 @@
 #include "AUI/Vulkan/PipelineCache.h"
 #include "AUI/Vulkan/RenderPass.h"
 #include "AUI/Vulkan/SwapChain.h"
+#include "AUI/Vulkan/Semaphore.h"
 #include "AUI/Vulkan/LogicalDevice.h"
 #include "AUI/Vulkan/Instance.h"
 #include "AUI/Vulkan/Surface.h"
@@ -42,19 +44,23 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/GL/GLDebug.h>
+#include <vulkan/vulkan_core.h>
 
 static constexpr auto LOG_TAG = "VulkanRenderingContext";
 
 
 struct VulkanRenderingContext::VulkanObjects {
-    AOptional<aui::vk::SurfaceKHR> surface;
-    AOptional<aui::vk::SwapChain> swapchain;
-    AOptional<aui::vk::CommandBuffers> commandBuffers;
+    aui::vk::SurfaceKHR surface;
+    aui::vk::SwapChain swapchain;
+    aui::vk::CommandBuffers commandBuffers;
     AVector<aui::vk::Fence> fences;
-    AOptional<aui::vk::Image> stencil;
-    AOptional<aui::vk::RenderPass> renderPass;
-    AOptional<aui::vk::PipelineCache> pipelineCache;
+    aui::vk::Image stencil;
+    aui::vk::RenderPass renderPass;
+    aui::vk::PipelineCache pipelineCache;
     AVector<aui::vk::Framebuffer> framebuffers;
+    aui::vk::Semaphore presentCompleteSemaphore;
+    aui::vk::Semaphore renderCompleteSemaphore;
+    VkQueue graphicsQueue;
 };
 
 VulkanRenderingContext::VulkanRenderingContext(const ARenderingContextOptions::Vulkan& config) : mConfig(config) {}
@@ -245,15 +251,26 @@ void VulkanRenderingContext::init(const Init& init) {
         }));
     })));
 
+    aui::vk::Semaphore presentCompleteSemaphore(instance, logicalDevice);
+    aui::vk::Semaphore renderCompleteSemaphore(instance, logicalDevice);
 
-    mVulkan->surface = std::move(surface);
-    mVulkan->swapchain = std::move(swapchain);
-    mVulkan->commandBuffers = std::move(commandBuffers);
-    mVulkan->fences = std::move(fences);
-    mVulkan->stencil = std::move(stencil);
-    mVulkan->renderPass = std::move(renderPass);
-    mVulkan->pipelineCache = std::move(pipelineCache);
-    mVulkan->framebuffers = std::move(framebuffers);
+    VkQueue graphicsQueue;
+    instance.vkGetDeviceQueue(logicalDevice, logicalDevice.graphicsQueueIndex(), 0, &graphicsQueue);
+
+    *mVulkan = VulkanObjects {
+        .surface = std::move(surface),
+        .swapchain = std::move(swapchain),
+        .commandBuffers = std::move(commandBuffers),
+        .fences = std::move(fences),
+        .stencil = std::move(stencil),
+        .renderPass = std::move(renderPass),
+        .pipelineCache = std::move(pipelineCache),
+        .framebuffers = std::move(framebuffers),
+        .presentCompleteSemaphore = std::move(presentCompleteSemaphore),
+        .renderCompleteSemaphore = std::move(renderCompleteSemaphore),
+        .graphicsQueue = graphicsQueue,
+    };
+
 }
 
 void VulkanRenderingContext::destroyNativeWindow(ABaseWindow& window) {
@@ -266,6 +283,28 @@ void VulkanRenderingContext::destroyNativeWindow(ABaseWindow& window) {
 void VulkanRenderingContext::beginPaint(ABaseWindow& window) {
     CommonRenderingContext::beginPaint(window);
 
+
+    // Acquires the next image in the swap chain.
+    // The function will always wait until the next image has been acquired by setting timeout to UINT64_MAX.
+    auto result = mRenderer->instance().vkAcquireNextImageKHR(mRenderer->logicalDevice(),
+                                                                        vulkan().swapchain,
+                                                                        std::numeric_limits<std::uint64_t>::max(),
+                                                                        vulkan().presentCompleteSemaphore,
+                                                                        nullptr,
+                                                                        &mImageIndex);
+
+    switch (result) {
+        case VK_ERROR_OUT_OF_DATE_KHR:
+        case VK_SUBOPTIMAL_KHR:
+            // Recreate the swapchain if it's no longer compatible with the surface (OUT_OF_DATE)
+            // SRS - If no longer optimal (VK_SUBOPTIMAL_KHR), wait until submitFrame() in case number of swapchain
+            // images will change on resize
+            recreateObjectsDueToResize();
+            break;
+        default:
+            AUI_VK_THROW_ON_ERROR(result);
+    }
+
     if (auto w = dynamic_cast<AWindow*>(&window)) {
     }
     mRenderer->beginPaint(window.getSize());
@@ -274,6 +313,36 @@ void VulkanRenderingContext::beginPaint(ABaseWindow& window) {
 void VulkanRenderingContext::endPaint(ABaseWindow& window) {
     CommonRenderingContext::endPaint(window);
     mRenderer->endPaint();
+
+    VkSwapchainKHR swapchain = vulkan().swapchain;
+    VkSemaphore waitSemaphore = vulkan().renderCompleteSemaphore;
+	VkPresentInfoKHR presentInfo = {};
+	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+	presentInfo.pNext = NULL;
+	presentInfo.swapchainCount = 1;
+	presentInfo.pSwapchains = &swapchain;
+	presentInfo.pImageIndices = &mImageIndex;
+	// Check if a wait semaphore has been specified to wait for before presenting the image
+	if (waitSemaphore != VK_NULL_HANDLE)
+	{
+		presentInfo.pWaitSemaphores = &waitSemaphore;
+		presentInfo.waitSemaphoreCount = 1;
+	}
+	
+    // Queue an image for presentation.
+    auto result = mRenderer->instance().vkQueuePresentKHR(vulkan().graphicsQueue, &presentInfo);
+    switch (result) {
+        case VK_ERROR_OUT_OF_DATE_KHR:
+        case VK_SUBOPTIMAL_KHR:
+            // Recreate the swapchain if it's no longer compatible with the surface (OUT_OF_DATE)
+            // SRS - If no longer optimal (VK_SUBOPTIMAL_KHR), wait until submitFrame() in case number of swapchain
+            // images will change on resize
+            recreateObjectsDueToResize();
+            break;
+        default:
+            AUI_VK_THROW_ON_ERROR(result);
+    }
+
     if (auto w = dynamic_cast<AWindow*>(&window)) {
     }
 }
@@ -300,3 +369,4 @@ _<VulkanRenderer> VulkanRenderingContext::ourRenderer() {
     g = temp;
     return temp;
 }
+const VulkanRenderingContext::VulkanObjects& VulkanRenderingContext::vulkan() const noexcept { return **mVulkan; }

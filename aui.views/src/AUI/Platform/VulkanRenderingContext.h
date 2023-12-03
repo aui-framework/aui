@@ -46,10 +46,19 @@ private:
     ARenderingContextOptions::Vulkan mConfig;
     _<VulkanRenderer> mRenderer;
 
+    /**
+     * @brief Image index that will be increased if the next image could be acquired.
+     */
+    uint32_t mImageIndex = 0;
+
     struct VulkanObjects;
-    aui::fast_pimpl<VulkanObjects, sizeof(void*) * 64> mVulkan;
+    aui::fast_pimpl<AOptional<VulkanObjects>, sizeof(void*) * 64> mVulkan;
+
+    const VulkanObjects& vulkan() const noexcept;
 
     static _<VulkanRenderer> ourRenderer();
+
+    void recreateObjectsDueToResize() {}
 
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;

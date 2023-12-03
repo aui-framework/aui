@@ -107,6 +107,12 @@ namespace aui::vk {
         DEF_PROC_VK(vkGetPhysicalDeviceMemoryProperties)
         DEF_PROC_VK(vkGetPhysicalDeviceFormatProperties)
         DEF_PROC_VK(vkDestroySurfaceKHR)
+        DEF_PROC_VK(vkAcquireNextImageKHR)
+        DEF_PROC_VK(vkQueuePresentKHR)
+        DEF_PROC_VK(vkGetDeviceQueue)
+
+        DEF_PROC_VK(vkCreateSemaphore)
+        DEF_PROC_VK(vkDestroySemaphore)
 
         DEF_PROC_VK(vkCreateCommandPool)
         DEF_PROC_VK(vkDestroyCommandPool)
