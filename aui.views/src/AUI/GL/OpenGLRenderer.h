@@ -70,9 +70,7 @@ private:
                                           glm::vec2 size);
 
     void uploadToShaderCommon();
-    void identityUv();
 
-    void endDraw(const ABrush& brush);
     void tryEnableFramebuffer(glm::uvec2 windowSize);
     FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 protected:
@@ -81,6 +79,7 @@ protected:
 public:
     OpenGLRenderer();
     ~OpenGLRenderer() override = default;
+    void identityUv();
     bool isVaoAvailable() const noexcept;
 
     void drawRect(const ABrush& brush,

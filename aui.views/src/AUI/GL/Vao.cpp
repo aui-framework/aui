@@ -54,7 +54,19 @@ void gl::Vao::drawArrays(GLenum type, GLsizei count) {
 	glDrawArrays(type, 0, count);
 }
 
-void gl::Vao::insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType) {
+void gl::Vao::insertIfKeyMismatches(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType, const char* key) {
+	if (mBuffers.size() <= index) {
+		goto goAhead;
+	}
+	if (mBuffers[index].lastModifierKey != key) {
+		goto goAhead;
+	}
+	return;
+
+	goAhead:
+	insert(index, data, dataSize, vertexSize, dataType, key);
+}
+void gl::Vao::insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType, const char* key) {
 	bind();
 	bool newFlag = true;
 	if (mBuffers.size() <= index) {
@@ -76,11 +88,12 @@ void gl::Vao::insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint
 	} else {
 		glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize, data);
 	}
+	mBuffers[index].lastModifierKey = key;
 
 	auto signature = uint32_t(vertexSize) ^ dataType;
 	if (newFlag || mBuffers[index].signature != signature) {
 		glEnableVertexAttribArray(index);
-		glVertexAttribPointer(index, vertexSize, dataType, GL_TRUE, 0, nullptr);
+		glVertexAttribPointer(index, vertexSize, dataType, GL_FALSE, 0, nullptr);
 		mBuffers[index].signature = signature;
 	}
 }
@@ -116,28 +129,10 @@ void gl::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize,
 	}
 }
 
-void gl::Vao::insert(GLuint index, AArrayView<float> data) {
-	insert(index, (const char*)data.data(), data.sizeInBytes(), 1, GL_FLOAT);
-}
-void gl::Vao::insert(GLuint index, AArrayView<glm::vec2> data) {
-	insert(index, (const char*)data.data(), data.sizeInBytes(), 2, GL_FLOAT);
-}
-
-void gl::Vao::insert(GLuint index, AArrayView<glm::vec3> data) {
-	insert(index, (const char*)data.data(), data.sizeInBytes(), 3, GL_FLOAT);
-}
-
-void gl::Vao::insert(GLuint index, AArrayView<glm::vec4> data) {
-	insert(index, (const char*)data.data(), data.sizeInBytes(), 4, GL_FLOAT);
-}
-void gl::Vao::insert(GLuint index, AArrayView<GLuint> data) {
-	insertInteger(index, (const char*)data.data(), data.sizeInBytes(), 1, GL_UNSIGNED_INT);
-}
-
 void gl::Vao::drawElements(GLenum type) {
 	assert(mIndicesBuffer);
 	bind();
- 	glDrawElements(type, mIndicesCount, GL_UNSIGNED_INT, 0);
+	glDrawElements(type, mIndicesCount, GL_UNSIGNED_INT, 0);
 }
 
 

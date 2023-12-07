@@ -29,6 +29,7 @@
 #include "AUI/GL/Vao.h"
 #include "AUI/Render/Brush/Gradient.h"
 #include "AUI/Util/AAngleRadians.h"
+#include "AUI/Util/AArrayView.h"
 #include "ShaderUniforms.h"
 #include "AUI/Render/ARender.h"
 #include "glm/fwd.hpp"
@@ -75,6 +76,11 @@ public:
     }
 };
 
+/**
+ * @brief UV bias used to perfectly align texture coordinates to the pixel grid, avoiding unwanted repeat clipping.
+ */
+static constexpr auto UV_BIAS = 0.001f;
+
 
 namespace {
 
@@ -86,10 +92,11 @@ struct UnsupportedBrushHelper {
 };
 
 struct GradientShaderHelper {
+    OpenGLRenderer& renderer;
     gl::Program& shader;
     gl::Texture2D& tex;
 
-    GradientShaderHelper(gl::Program& shader, gl::Texture2D& tex) : shader(shader), tex(tex) {}
+    GradientShaderHelper(OpenGLRenderer& renderer, gl::Program& shader, gl::Texture2D& tex) : renderer(renderer), shader(shader), tex(tex) {}
 
     void operator()(const ALinearGradientBrush& brush) const {
         shader.use();
@@ -97,6 +104,7 @@ struct GradientShaderHelper {
         aui::render::brush::gradient::Helper h(brush);
         shader.set(aui::ShaderUniforms::GRADIENT_MAT_UV, h.matrix);
         tex.tex2D(h.gradientMap());
+        renderer.identityUv();
     }
 };
 
@@ -107,7 +115,6 @@ struct SolidShaderHelper {
 
     void operator()(const ASolidBrush& brush) const {
         shader.use();
-        shader.set(aui::ShaderUniforms::COLOR, ARender::getColor() * brush.solidColor);
         shader.set(aui::ShaderUniforms::COLOR, ARender::getColor() * brush.solidColor);
     }
 };
@@ -121,24 +128,33 @@ struct CustomShaderHelper {
 };
 
 struct TexturedShaderHelper {
+    OpenGLRenderer& renderer;
     gl::Program& shader;
     gl::Vao& tempVao;
 
-    TexturedShaderHelper(gl::Program& shader, gl::Vao& tempVao) : shader(shader), tempVao(tempVao) {}
+    TexturedShaderHelper(OpenGLRenderer& renderer, gl::Program& shader, gl::Vao& tempVao) : renderer(renderer), shader(shader), tempVao(tempVao) {}
 
     void operator()(const ATexturedBrush& brush) const {
         shader.use();
         shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
-        glm::vec2 uv1 = brush.uv1 ? *brush.uv1 : glm::vec2{0, 0};
-        glm::vec2 uv2 = brush.uv2 ? *brush.uv2 : glm::vec2{1, 1};
-        tempVao.bind();
-        const glm::vec2 uvs[] = {
-            {uv1.x, uv2.y},
-            {uv2.x, uv2.y},
-            {uv1.x, uv1.y},
-            {uv2.x, uv1.y},
-        };
-        tempVao.insert(1, uvs);
+        if (brush.uv1 || brush.uv2) {
+            glm::vec2 uv1 = brush.uv1.valueOr(glm::vec2{0, 0});
+            glm::vec2 uv2 = brush.uv2.valueOr(glm::vec2{1, 1});
+
+            uv1.x += UV_BIAS;
+            uv1.y += UV_BIAS;
+            uv2.x -= UV_BIAS;
+            uv2.y -= UV_BIAS;
+            const glm::vec2 uvs[] = {
+                {uv1.x, uv2.y},
+                {uv2.x, uv2.y},
+                {uv1.x, uv1.y},
+                {uv2.x, uv1.y},
+            };
+            tempVao.insert(1, AArrayView(uvs), "TexturedShaderHelper");
+        } else {
+            renderer.identityUv();
+        }
 
         auto tex = _cast<OpenGLTexture2D>(brush.texture);
         tex->bind();
@@ -249,34 +265,32 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
 }
 void OpenGLRenderer::drawRect(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mGradientShader, mGradientTexture),
-            TexturedShaderHelper(mTexturedShader, mRectangleVao),
+            GradientShaderHelper(*this, mGradientShader, mGradientTexture),
+            TexturedShaderHelper(*this, mTexturedShader, mRectangleVao),
             SolidShaderHelper(mSolidShader),
             CustomShaderHelper{},
     }, brush);
     uploadToShaderCommon();
 
     drawRectImpl(position, size);
-
-    endDraw(brush);
 }
 
 void OpenGLRenderer::drawRectImpl(glm::vec2 position, glm::vec2 size) {
     mRectangleVao.bind();
 
-    mRectangleVao.insert(0, getVerticesForRect(position, size));
+    mRectangleVao.insert(0, AArrayView(getVerticesForRect(position, size)), "drawRectImpl");
 
     mRectangleVao.drawElements();
 }
 
 void OpenGLRenderer::identityUv() {
     const glm::vec2 uvs[] = {
-        {0, 1},
-        {1, 1},
-        {0, 0},
-        {1, 0}
+        {0 + UV_BIAS, 1 - UV_BIAS},
+        {1 - UV_BIAS, 1 - UV_BIAS},
+        {0 + UV_BIAS, 0 + UV_BIAS},
+        {1 - UV_BIAS, 0 + UV_BIAS}
     };
-    mRectangleVao.insert(1, uvs);
+    mRectangleVao.insertIfKeyMismatches(1, AArrayView(uvs), "identityUv");
 }
 
 void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
@@ -284,7 +298,7 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
                                      glm::vec2 size,
                                      float radius) {
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mRoundedGradientShader, mGradientTexture),
+            GradientShaderHelper(*this, mRoundedGradientShader, mGradientTexture),
             UnsupportedBrushHelper<ATexturedBrush>(),
             SolidShaderHelper(mRoundedSolidShader),
             CustomShaderHelper{},
@@ -294,7 +308,6 @@ void OpenGLRenderer::drawRoundedRect(const ABrush& brush,
 
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
     drawRectImpl(position, size);
-    endDraw(brush);
 }
 
 void OpenGLRenderer::drawRectBorder(const ABrush& brush,
@@ -319,7 +332,7 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
     float h = y + size.y;
 
     mRectangleVao.insert(0,
-                    std::array<glm::vec3, 8>{
+                    AArrayView(std::array<glm::vec3, 8>{
                             glm::vec3(glm::vec4{ x + lineWidth, y + lineDelta, 1, 1 }),
                             glm::vec3(glm::vec4{ w,             y + lineDelta, 1, 1 }),
 
@@ -331,11 +344,10 @@ void OpenGLRenderer::drawRectBorder(const ABrush& brush,
 
                             glm::vec3(glm::vec4{ x + lineDelta, h - lineWidth - 0.15f, 1, 1 }),
                             glm::vec3(glm::vec4{ x + lineDelta, y            , 1, 1 }),
-                    });
+                    }), "drawRectBorder");
 
     glLineWidth(lineWidth);
     mRectangleVao.drawElements(GL_LINES);
-    endDraw(brush);
 }
 
 void OpenGLRenderer::drawRoundedRectBorder(const ABrush& brush,
@@ -359,7 +371,6 @@ void OpenGLRenderer::drawRoundedRectBorder(const ABrush& brush,
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, size / innerSize);
     uploadToShaderCommon();
     drawRectImpl(position, size);
-    endDraw(brush);
 }
 
 void OpenGLRenderer::drawBoxShadow(glm::vec2 position,
@@ -393,7 +404,7 @@ void OpenGLRenderer::drawBoxShadow(glm::vec2 position,
         { x, y },
         { w, y },
     };
-    mRectangleVao.insert(0, uvs);
+    mRectangleVao.insert(0, AArrayView(uvs), "drawBoxShadow");
 
     mRectangleVao.drawElements();
 }
@@ -430,7 +441,7 @@ void OpenGLRenderer::drawBoxShadowInner(glm::vec2 position,
         { x, y },
         { w, y },
     };
-    mRectangleVao.insert(0, uvs);
+    mRectangleVao.insert(0, AArrayView(uvs), "drawBoxShadowInner");
 
     mRectangleVao.drawElements();
 }
@@ -438,12 +449,6 @@ void OpenGLRenderer::drawString(glm::vec2 position,
                                 const AString& string,
                                 const AFontStyle& fs) {
     prerenderString(position, string, fs)->draw();
-}
-
-
-void OpenGLRenderer::endDraw(const ABrush& brush) {
-    if (std::holds_alternative<ATexturedBrush>(brush)) {
-    }
 }
 
 void OpenGLRenderer::setBlending(Blending blending) {
@@ -766,8 +771,8 @@ void OpenGLRenderer::popMaskAfter() {
 
 void OpenGLRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mGradientShader, mGradientTexture),
-            TexturedShaderHelper(mTexturedShader, mRectangleVao),
+            GradientShaderHelper(*this, mGradientShader, mGradientTexture),
+            TexturedShaderHelper(*this, mTexturedShader, mRectangleVao),
             SolidShaderHelper(mSolidShader),
             CustomShaderHelper{},
     }, brush);
@@ -779,17 +784,15 @@ void OpenGLRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
         mTransform * glm::vec4(p1, 0, 1),
         mTransform * glm::vec4(p2, 0, 1),
     };
-    mRectangleVao.insert(0, positions);
+    mRectangleVao.insert(0, AArrayView(positions), "drawLine");
     mRectangleVao.drawArrays(GL_LINES, 2);
-
-    endDraw(brush);
 }
 
 void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points) {
     if (points.size() < 2) return;
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mGradientShader, mGradientTexture),
-            TexturedShaderHelper(mTexturedShader, mRectangleVao),
+            GradientShaderHelper(*this, mGradientShader, mGradientTexture),
+            TexturedShaderHelper(*this, mTexturedShader, mRectangleVao),
             SolidShaderHelper(mSolidShader),
             CustomShaderHelper{},
     }, brush);
@@ -804,16 +807,14 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<glm::vec2> points
         positions << glm::vec4(point, 0, 1);
     }
 
-    mRectangleVao.insert(0, positions);
+    mRectangleVao.insert(0, AArrayView(positions), "drawLines");
     mRectangleVao.drawArrays(GL_LINE_STRIP, points.size());
-
-    endDraw(brush);
 }
 
 void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) {
     std::visit(aui::lambda_overloaded {
-            GradientShaderHelper(mGradientShader, mGradientTexture),
-            TexturedShaderHelper(mTexturedShader, mRectangleVao),
+            GradientShaderHelper(*this, mGradientShader, mGradientTexture),
+            TexturedShaderHelper(*this, mTexturedShader, mRectangleVao),
             SolidShaderHelper(mSolidShader),
             CustomShaderHelper{},
     }, brush);
@@ -829,10 +830,8 @@ void OpenGLRenderer::drawLines(const ABrush& brush, AArrayView<std::pair<glm::ve
         positions << glm::vec4(p2, 0, 1);
     }
 
-    mRectangleVao.insert(0, positions);
+    mRectangleVao.insert(0, AArrayView(positions), "drawLines");
     mRectangleVao.drawArrays(GL_LINES, positions.size());
-
-    endDraw(brush);
 }
 
 void OpenGLRenderer::drawSquareSector(const ABrush& brush,
@@ -864,8 +863,6 @@ void OpenGLRenderer::drawSquareSector(const ABrush& brush,
     gl::Program::currentShader()->set(aui::ShaderUniforms::M2, m2);
 
     drawRectImpl(position, size);
-
-    endDraw(brush);
 }
 
 void OpenGLRenderer::tryEnableFramebuffer(glm::uvec2 windowSize) {
