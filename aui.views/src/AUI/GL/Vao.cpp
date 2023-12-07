@@ -18,6 +18,7 @@
 //
 
 #include "Vao.h"
+#include <cstdint>
 #include "State.h"
 
 
@@ -33,14 +34,11 @@ gl::Vao::~Vao() {
 
 	gl::State::bindVertexArray(handle);
 	glDeleteBuffers(1, &mIndicesBuffer);
-	glDeleteBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
+	for (auto v : buffers) {
+		glDeleteBuffers(1, &v.handle);
+	}
 	glDeleteVertexArrays(1, &handle);
 	gl::State::bindVertexArray(0);
-}
-
-const AVector<GLuint>& gl::Vao::getBuffers() const
-{
-	return mBuffers;
 }
 
 void gl::Vao::bind() const noexcept {
@@ -61,34 +59,61 @@ void gl::Vao::insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint
 	bool newFlag = true;
 	if (mBuffers.size() <= index) {
 		mBuffers.resize(index + 1);
-		glGenBuffers(1, &mBuffers[index]);
-		assert(mBuffers[index]);
-	} else if (mBuffers[index] == 0)
+		glGenBuffers(1, &mBuffers[index].handle);
+		assert(mBuffers[index].handle);
+	} else if (mBuffers[index].handle == 0)
 	{
-		glGenBuffers(1, &mBuffers[index]);
-		assert(mBuffers[index]);
+		glGenBuffers(1, &mBuffers[index].handle);
+		assert(mBuffers[index].handle);
 	} else
 	{
 		newFlag = false;
 	}
-	glBindBuffer(GL_ARRAY_BUFFER, mBuffers[index]);
-	glBufferData(GL_ARRAY_BUFFER, dataSize, data, newFlag ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
-
-	if (newFlag) {
-		glEnableVertexAttribArray(index);
+	glBindBuffer(GL_ARRAY_BUFFER, mBuffers[index].handle);
+	if (newFlag || mBuffers[index].size < dataSize) {
+		mBuffers[index].size = dataSize;
+		glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_DYNAMIC_DRAW);
+	} else {
+		glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize, data);
 	}
-    glVertexAttribPointer(index, vertexSize, dataType, GL_TRUE, 0, nullptr);
+
+	auto signature = uint32_t(vertexSize) ^ dataType;
+	if (newFlag || mBuffers[index].signature != signature) {
+		glEnableVertexAttribArray(index);
+		glVertexAttribPointer(index, vertexSize, dataType, GL_TRUE, 0, nullptr);
+		mBuffers[index].signature = signature;
+	}
 }
 
 void gl::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType) {
-	GLuint buffer;
 	bind();
-	glGenBuffers(1, &buffer);
-	glBindBuffer(GL_ARRAY_BUFFER, buffer);
-	glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(index);
-	glVertexAttribIPointer(index, vertexSize, dataType, 0, nullptr);
-	mBuffers.push_back(buffer);
+	bool newFlag = true;
+	if (mBuffers.size() <= index) {
+		mBuffers.resize(index + 1);
+		glGenBuffers(1, &mBuffers[index].handle);
+		assert(mBuffers[index].handle);
+	} else if (mBuffers[index].handle == 0)
+	{
+		glGenBuffers(1, &mBuffers[index].handle);
+		assert(mBuffers[index].handle);
+	} else
+	{
+		newFlag = false;
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, mBuffers[index].handle);
+	if (newFlag || mBuffers[index].size < dataSize) {
+		mBuffers[index].size = dataSize;
+		glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_DYNAMIC_DRAW);
+	} else {
+		glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize, data);
+	}
+
+	auto signature = uint32_t(vertexSize) ^ dataType;
+	if (newFlag || mBuffers[index].signature != signature) {
+		glEnableVertexAttribArray(index);
+		glVertexAttribIPointer(index, vertexSize, dataType, GL_TRUE, 0);
+		mBuffers[index].signature = signature;
+	}
 }
 
 void gl::Vao::insert(GLuint index, AArrayView<float> data) {
@@ -112,12 +137,12 @@ void gl::Vao::insert(GLuint index, AArrayView<GLuint> data) {
 void gl::Vao::drawElements(GLenum type) {
 	assert(mIndicesBuffer);
 	bind();
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndicesBuffer);
  	glDrawElements(type, mIndicesCount, GL_UNSIGNED_INT, 0);
 }
 
 
 void gl::Vao::indices(AArrayView<GLuint> data) {
+	bind();
 	GLenum drawType = GL_DYNAMIC_DRAW;
 	if (mIndicesBuffer == 0) {
 		glGenBuffers(1, &mIndicesBuffer);

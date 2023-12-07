@@ -24,40 +24,22 @@
 
 namespace gl {
 	class API_AUI_VIEWS Vao {
-	private:
-		GLuint mHandle;
-		AVector<GLuint> mBuffers;
-		GLuint mIndicesBuffer = 0;
-		GLsizei mIndicesCount = 0;
-
-
-
-        /**
-         * @brief Creates VBO
-         * @param index index in VAO
-         * @param data vertex data
-         * @param dataSize vertex data size in bytes
-         * @param vertexSize count of floats per vertex
-         */
-		void insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType);
-
-
-        /**
-         * @brief Creates integer VBO
-         * @param index index in VAO
-         * @param data vertex data
-         * @param dataSize vertex data size in bytes
-         * @param vertexSize count of integers per vertex
-         */
-		void insertInteger(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType);
-
 	public:
+		struct Buffer {
+			GLuint handle = 0;
+			uint32_t size = 0;
+			uint32_t signature = 0; // signature used for optimization
+		};
+
 		Vao();
 		~Vao();
 		Vao(const Vao&) = delete;
 
 
-		const AVector<GLuint>& getBuffers() const;
+		[[nodiscard]]
+		const AVector<Buffer>& getBuffers() const noexcept {
+			return mBuffers;
+		}
 
 		void bind() const noexcept;
 		static void unbind() noexcept;
@@ -81,5 +63,31 @@ namespace gl {
          * @param type Primitive type
          */
 		void drawElements(GLenum type = GL_TRIANGLES);
+
+	private:
+		GLuint mHandle;
+		AVector<Buffer> mBuffers;
+		GLuint mIndicesBuffer = 0;
+		GLsizei mIndicesCount = 0;
+
+
+        /**
+         * @brief Creates VBO
+         * @param index index in VAO
+         * @param data vertex data
+         * @param dataSize vertex data size in bytes
+         * @param vertexSize count of floats per vertex
+         */
+		void insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType);
+
+
+        /**
+         * @brief Creates integer VBO
+         * @param index index in VAO
+         * @param data vertex data
+         * @param dataSize vertex data size in bytes
+         * @param vertexSize count of integers per vertex
+         */
+		void insertInteger(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType);
 	};
 }

@@ -33,7 +33,7 @@ public:
 
         FontEntryData() {
             texture.bind();
-            gl::Texture2D::setupNearest();
+            texture.setupNearest();
         }
     };
 
@@ -49,7 +49,8 @@ private:
     gl::Program mSymbolShader;
     gl::Program mSymbolShaderSubPixel;
     gl::Program mSquareSectorShader;
-    gl::Vao mTempVao;
+    gl::Vao mRectangleVao;
+    gl::Vao mBorderVao;
     gl::Texture2D mGradientTexture;
 
     glm::uvec2 mViewportSize;

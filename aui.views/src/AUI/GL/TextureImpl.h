@@ -26,10 +26,8 @@ template<unsigned int TEXTURE_TARGET>
 gl::Texture<TEXTURE_TARGET>::Texture() {
     mTexture = gl::ResourcePool<gl::ResourceKind::TEXTURE>::get();
     gl::State::bindTexture(TEXTURE_TARGET, mTexture);
-    glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    setupLinear();
+    setupRepeat();
 }
 
 template<unsigned int TEXTURE_TARGET>
@@ -40,22 +38,54 @@ gl::Texture<TEXTURE_TARGET>::~Texture() {
 
 template<unsigned int TEXTURE_TARGET>
 void gl::Texture<TEXTURE_TARGET>::setupNearest() {
+    if (mFiltering == Filtering::NEAREST) {
+        return;
+    }
+    bind();
+    mFiltering = Filtering::NEAREST;
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 }
 template<unsigned int TEXTURE_TARGET>
 void gl::Texture<TEXTURE_TARGET>::setupLinear() {
+    if (mFiltering == Filtering::LINEAR) {
+        return;
+    }
+    bind();
+    mFiltering = Filtering::LINEAR;
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 }
 
 template<unsigned int TEXTURE_TARGET>
+void gl::Texture<TEXTURE_TARGET>::setupRepeat() {
+    if (mWrapping == Wrapping::REPEAT) {
+        return;
+    }
+    bind();
+    mWrapping = Wrapping::REPEAT;
+    glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_T, GL_REPEAT);
+}
+
+template<unsigned int TEXTURE_TARGET>
 void gl::Texture<TEXTURE_TARGET>::setupMirroredRepeat() {
+    if (mWrapping == Wrapping::MIRRORED_REPEAT) {
+        return;
+    }
+    bind();
+    mWrapping = Wrapping::MIRRORED_REPEAT;
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 }
+
 template<unsigned int TEXTURE_TARGET>
 void gl::Texture<TEXTURE_TARGET>::setupClampToEdge() {
+    if (mWrapping == Wrapping::CLAMP_TO_EDGE) {
+        return;
+    }
+    bind();
+    mWrapping = Wrapping::CLAMP_TO_EDGE;
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(TEXTURE_TARGET, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
