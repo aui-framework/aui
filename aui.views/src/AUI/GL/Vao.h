@@ -60,6 +60,7 @@ namespace gl {
 		const AVector<GLuint>& getBuffers() const;
 
 		void bind() const noexcept;
+		static void unbind() noexcept;
 
 		void insert(GLuint index, AArrayView<float> data);
 		void insert(GLuint index, AArrayView<glm::vec2> data);

@@ -20,11 +20,13 @@
 
 #include "OpenGLRenderer.h"
 #include "AUI/Common/AException.h"
+#include "AUI/Common/AOptional.h"
 #include "AUI/GL/Framebuffer.h"
 #include "AUI/GL/GLDebug.h"
 #include "AUI/GL/GLEnums.h"
 #include "AUI/GL/Program.h"
 #include "AUI/GL/Texture2D.h"
+#include "AUI/GL/Vao.h"
 #include "AUI/Render/Brush/Gradient.h"
 #include "AUI/Util/AAngleRadians.h"
 #include "ShaderUniforms.h"
@@ -459,6 +461,7 @@ public:
         glm::vec2 uv;
     };
     OpenGLRenderer* mRenderer;
+    AOptional<gl::Vao> mVao;
     gl::VertexBuffer mVertexBuffer;
     gl::IndexBuffer mIndexBuffer;
     int mTextWidth;
@@ -483,21 +486,20 @@ public:
             mEntryData(entryData),
             mColor(color),
             mFontRendering(fontRendering)
-    {}
+    {
+        if (mRenderer->isVaoAvailable()) {
+            mVao.emplace();
+            mVao->bind();
+            mVertexBuffer.bind();
+            mIndexBuffer.bind();
+            setupVertexAttribs();
+            gl::Vao::unbind();
+        }
+    }
 
 
     void draw() override {
         if (mIndexBuffer.count() == 0) return;
-
-        // TODO get rid of vao
-        if (mRenderer->isVaoAvailable()) {
-            static GLuint g = [] {
-                GLuint a;
-                glGenVertexArrays(1, &a);
-                return a;
-            }();
-            gl::State::bindVertexArray(g);
-        }
 
         decltype(auto) img = mEntryData->texturePacker.getImage();
         if (!img)
@@ -515,13 +517,13 @@ public:
         }
         gl::Texture2D::setupNearest();
 
-        mVertexBuffer.bind();
-
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-
-        glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(OpenGLPrerenderedString::Vertex), reinterpret_cast<const void*>(0));
-        glVertexAttribPointer(1, 2, GL_FLOAT, false, sizeof(OpenGLPrerenderedString::Vertex), reinterpret_cast<const void*>(sizeof(glm::vec2)));
+        if (mVao) {
+            mVao->bind();
+        } else {
+            mVertexBuffer.bind();
+            mIndexBuffer.bind();
+            setupVertexAttribs();
+        }
 
         auto finalColor = ARender::getColor() * mColor;
         if (mFontRendering == FontRendering::SUBPIXEL) {
@@ -530,11 +532,11 @@ public:
             mRenderer->mSymbolShaderSubPixel.set(aui::ShaderUniforms::TRANSFORM, mRenderer->getTransform());
             mRenderer->mSymbolShaderSubPixel.set(aui::ShaderUniforms::COLOR, glm::vec4(1, 1, 1, finalColor.a));
             glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
-            mIndexBuffer.draw(GL_TRIANGLES);
+            mIndexBuffer.drawWithoutBind(GL_TRIANGLES);
 
             mRenderer->mSymbolShaderSubPixel.set(aui::ShaderUniforms::COLOR, finalColor);
             glBlendFunc(GL_ONE, GL_ONE);
-            mIndexBuffer.draw(GL_TRIANGLES);
+            mIndexBuffer.drawWithoutBind(GL_TRIANGLES);
 
             // reset blending
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -545,7 +547,7 @@ public:
             mRenderer->mSymbolShader.set(aui::ShaderUniforms::UV_SCALE, uvScale);
             mRenderer->mSymbolShader.set(aui::ShaderUniforms::TRANSFORM, mRenderer->getTransform());
             mRenderer->mSymbolShader.set(aui::ShaderUniforms::COLOR, finalColor);
-            mIndexBuffer.draw(GL_TRIANGLES);
+            mIndexBuffer.drawWithoutBind(GL_TRIANGLES);
         }
     }
 
@@ -555,6 +557,15 @@ public:
 
     int getHeight() override {
         return mTextHeight;
+    }
+
+private:
+    static void setupVertexAttribs() {
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+
+        glVertexAttribPointer(0, 2, GL_FLOAT, false, sizeof(OpenGLPrerenderedString::Vertex), reinterpret_cast<const void*>(0));
+        glVertexAttribPointer(1, 2, GL_FLOAT, false, sizeof(OpenGLPrerenderedString::Vertex), reinterpret_cast<const void*>(sizeof(glm::vec2)));
     }
 };
 

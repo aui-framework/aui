@@ -47,6 +47,9 @@ void gl::Vao::bind() const noexcept {
 	gl::State::bindVertexArray(mHandle);
 }
 
+void gl::Vao::unbind() noexcept {
+	gl::State::bindVertexArray(0);
+}
 
 void gl::Vao::drawArrays(GLenum type, GLsizei count) {
 	bind();

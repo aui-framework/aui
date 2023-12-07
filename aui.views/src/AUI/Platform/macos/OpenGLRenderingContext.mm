@@ -81,7 +81,6 @@ void OpenGLRenderingContext::init(const Init& init) {
     auto contentView  = [static_cast<NSWindow*>(window.mHandle) contentView];
     [contentView setWantsBestResolutionOpenGLSurface:YES];
     [context setView:contentView];
-    //assert(glGetError() == 0);
 
     [context makeCurrentContext];
 
