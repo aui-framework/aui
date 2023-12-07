@@ -137,7 +137,7 @@ struct TexturedShaderHelper {
     void operator()(const ATexturedBrush& brush) const {
         shader.use();
         shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
-        if (brush.uv1 || brush.uv2) {
+        {
             glm::vec2 uv1 = brush.uv1.valueOr(glm::vec2{0, 0});
             glm::vec2 uv2 = brush.uv2.valueOr(glm::vec2{1, 1});
 
@@ -152,9 +152,7 @@ struct TexturedShaderHelper {
                 {uv2.x, uv1.y},
             };
             tempVao.insert(1, AArrayView(uvs), "TexturedShaderHelper");
-        } else {
-            renderer.identityUv();
-        }
+        } 
 
         auto tex = _cast<OpenGLTexture2D>(brush.texture);
         tex->bind();
@@ -285,10 +283,10 @@ void OpenGLRenderer::drawRectImpl(glm::vec2 position, glm::vec2 size) {
 
 void OpenGLRenderer::identityUv() {
     const glm::vec2 uvs[] = {
-        {0 + UV_BIAS, 1 - UV_BIAS},
-        {1 - UV_BIAS, 1 - UV_BIAS},
-        {0 + UV_BIAS, 0 + UV_BIAS},
-        {1 - UV_BIAS, 0 + UV_BIAS}
+        {0, 1},
+        {1, 1},
+        {0, 0},
+        {1, 0}
     };
     mRectangleVao.insertIfKeyMismatches(1, AArrayView(uvs), "identityUv");
 }

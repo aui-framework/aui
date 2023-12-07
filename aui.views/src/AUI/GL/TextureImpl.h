@@ -27,7 +27,7 @@ gl::Texture<TEXTURE_TARGET>::Texture() {
     mTexture = gl::ResourcePool<gl::ResourceKind::TEXTURE>::get();
     gl::State::bindTexture(TEXTURE_TARGET, mTexture);
     setupLinear();
-    setupRepeat();
+    setupMirroredRepeat();
 }
 
 template<unsigned int TEXTURE_TARGET>
