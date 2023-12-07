@@ -157,9 +157,6 @@ void OpenGLRenderingContext::init(const Init& init) {
     if (init.parent) {
         XSetTransientForHint(ourDisplay, init.window.mHandle, init.parent->mHandle);
     }
-
-    //assert(glGetError() == 0);
-
 }
 
 void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {
