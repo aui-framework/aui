@@ -674,6 +674,7 @@ public:
     }
 
     _<IRenderer::IPrerenderedString> finalize() noexcept override {
+        gl::Vao::unbind();
         gl::VertexBuffer vertexBuffer;
         vertexBuffer.set(mVertices);
 
