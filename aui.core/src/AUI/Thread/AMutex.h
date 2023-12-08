@@ -22,7 +22,7 @@ class AMutex: public std::mutex
 {
 public:
     using super = std::mutex;
-	
+/*	
 #if AUI_DEBUG
     void lock() {
         super::lock();
@@ -33,8 +33,8 @@ public:
         mOwnerThread[0] = 0;
         super::unlock();
     }
-private:
+private
     char mOwnerThread[64];
-#endif
+#endif*/
 
 };
