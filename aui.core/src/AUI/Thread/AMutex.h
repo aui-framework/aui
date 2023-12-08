@@ -16,9 +16,25 @@
 
 #pragma once
 #include <mutex>
+#include <thread>
 
 class AMutex: public std::mutex
 {
 public:
+    using super = std::mutex;
 	
+#if AUI_DEBUG
+    void lock() {
+        super::lock();
+        auto h = pthread_self();
+        pthread_getname_np(h, mOwnerThread, std::size(mOwnerThread));
+    }
+    void unlock() {
+        mOwnerThread[0] = 0;
+        super::unlock();
+    }
+private:
+    char mOwnerThread[64];
+#endif
+
 };

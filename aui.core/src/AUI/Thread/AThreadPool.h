@@ -1,4 +1,4 @@
-﻿// AUI Framework - Declarative UI toolkit for modern C++20
+// AUI Framework - Declarative UI toolkit for modern C++20
 // Copyright (C) 2020-2023 Alex2772
 //
 // This library is free software; you can redistribute it and/or
@@ -172,7 +172,7 @@ public:
      * @brief Wait for the result of every AFuture.
      * @deprecated use onAllComplete instead.
      */
-    void waitForAll() const {
+    void waitForAll() {
         // wait from the end to avoid idling (see AFuture::wait for details)
         for (const AFuture<T>& v : aui::reverse_iterator_wrap(*this)) {
             v.operator*();
