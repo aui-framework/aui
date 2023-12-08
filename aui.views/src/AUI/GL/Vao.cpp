@@ -82,12 +82,13 @@ void gl::Vao::insert(GLuint index, const char* data, GLsizeiptr dataSize, GLuint
 		newFlag = false;
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, mBuffers[index].handle);
-	if (newFlag || mBuffers[index].size < dataSize) {
-		mBuffers[index].size = dataSize;
-		glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_DYNAMIC_DRAW);
-	} else {
-		glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize, data);
-	}
+
+	// You can use the glBufferSubData function to update buffer contents, but doing so incurs a performance penalty
+	// because it flushes the command buffer and waits for all commands to complete.
+	//
+	// Complex UI tests showed better performance on glBufferData.
+	glBufferData(GL_ARRAY_BUFFER, dataSize, data, newFlag ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
+
 	mBuffers[index].lastModifierKey = key;
 
 	auto signature = uint32_t(vertexSize) ^ dataType;
@@ -114,12 +115,12 @@ void gl::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize,
 		newFlag = false;
 	}
 	glBindBuffer(GL_ARRAY_BUFFER, mBuffers[index].handle);
-	if (newFlag || mBuffers[index].size < dataSize) {
-		mBuffers[index].size = dataSize;
-		glBufferData(GL_ARRAY_BUFFER, dataSize, data, GL_DYNAMIC_DRAW);
-	} else {
-		glBufferSubData(GL_ARRAY_BUFFER, 0, dataSize, data);
-	}
+	
+	// You can use the glBufferSubData function to update buffer contents, but doing so incurs a performance penalty
+	// because it flushes the command buffer and waits for all commands to complete.
+	//
+	// Complex UI tests showed better performance on glBufferData.
+	glBufferData(GL_ARRAY_BUFFER, dataSize, data, newFlag ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
 
 	auto signature = uint32_t(vertexSize) ^ dataType;
 	if (newFlag || mBuffers[index].signature != signature) {

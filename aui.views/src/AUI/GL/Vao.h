@@ -27,7 +27,6 @@ namespace gl {
 	public:
 		struct Buffer {
 			GLuint handle = 0;
-			uint32_t size = 0;
 			uint32_t signature = 0; // signature used for optimization
 
 			/**

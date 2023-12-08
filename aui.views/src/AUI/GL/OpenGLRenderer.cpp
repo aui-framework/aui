@@ -137,14 +137,10 @@ struct TexturedShaderHelper {
     void operator()(const ATexturedBrush& brush) const {
         shader.use();
         shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
-        {
+        if (brush.uv1 || brush.uv2) {
             glm::vec2 uv1 = brush.uv1.valueOr(glm::vec2{0, 0});
             glm::vec2 uv2 = brush.uv2.valueOr(glm::vec2{1, 1});
 
-            uv1.x += UV_BIAS;
-            uv1.y += UV_BIAS;
-            uv2.x -= UV_BIAS;
-            uv2.y -= UV_BIAS;
             const glm::vec2 uvs[] = {
                 {uv1.x, uv2.y},
                 {uv2.x, uv2.y},
@@ -152,6 +148,8 @@ struct TexturedShaderHelper {
                 {uv2.x, uv1.y},
             };
             tempVao.insert(1, AArrayView(uvs), "TexturedShaderHelper");
+        } else {
+            renderer.identityUv();
         } 
 
         auto tex = _cast<OpenGLTexture2D>(brush.texture);
