@@ -31,8 +31,8 @@ DemoGraphView::DemoGraphView()
     }
 }
 
-void DemoGraphView::render() {
-    AView::render();
+void DemoGraphView::render(ClipOptimizationContext context) {
+    AView::render(context);
 
     ARender::lines(ASolidBrush{0xff0000_rgb }, mPoints);
 

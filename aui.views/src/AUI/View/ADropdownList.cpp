@@ -67,8 +67,8 @@ void ADropdownList::updateText() {
     }
     setText(mModel->listItemAt(mSelectionId));
 }
-void ADropdownList::render() {
-    AAbstractLabel::render();
+void ADropdownList::render(ClipOptimizationContext context) {
+    AAbstractLabel::render(context);
     if (auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg")) {
         auto size = arrow->getSizeHint();
         IDrawable::Params p;

@@ -33,7 +33,7 @@ public:
 
         FontEntryData() {
             texture.bind();
-            gl::Texture2D::setupNearest();
+            texture.setupNearest();
         }
     };
 
@@ -49,7 +49,8 @@ private:
     gl::Program mSymbolShader;
     gl::Program mSymbolShaderSubPixel;
     gl::Program mSquareSectorShader;
-    gl::Vao mTempVao;
+    gl::Vao mRectangleVao;
+    gl::Vao mBorderVao;
     gl::Texture2D mGradientTexture;
 
     glm::uvec2 mViewportSize;
@@ -69,9 +70,7 @@ private:
                                           glm::vec2 size);
 
     void uploadToShaderCommon();
-    void identityUv();
 
-    void endDraw(const ABrush& brush);
     void tryEnableFramebuffer(glm::uvec2 windowSize);
     FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 protected:
@@ -80,6 +79,7 @@ protected:
 public:
     OpenGLRenderer();
     ~OpenGLRenderer() override = default;
+    void identityUv();
     bool isVaoAvailable() const noexcept;
 
     void drawRect(const ABrush& brush,

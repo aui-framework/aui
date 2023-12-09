@@ -45,7 +45,7 @@ void AWindow::onClosed() {
 }
 
 void AWindow::doDrawWindow() {
-    render();
+    render({.position = glm::ivec2(0), .size = getSize()});
 }
 
 void AWindow::createDevtoolsWindow() {

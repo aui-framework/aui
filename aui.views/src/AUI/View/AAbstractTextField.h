@@ -36,7 +36,7 @@ public:
 	int getContentMinimumHeight(ALayoutDirection layout) override;
 	void setText(const AString& t) override;
 
-    void render() override;
+    void render(ClipOptimizationContext context) override;
 
     AString toString() const override;
 

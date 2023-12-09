@@ -167,15 +167,8 @@ void OpenGLRenderingContext::init(const Init& init) {
     // vsync
     wglSwapIntervalEXT(!(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));
 
-#if defined(_DEBUG)
-    gl::setupDebug();
-#endif
-    //assert(glGetError() == 0);
-
     GLint stencilBits = 0;
     glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
-    //assert(("no stencil bits" && stencilBits > 0));
-
 }
 
 void OpenGLRenderingContext::destroyNativeWindow(ABaseWindow& window) {

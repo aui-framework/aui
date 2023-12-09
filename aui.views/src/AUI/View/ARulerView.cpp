@@ -34,8 +34,8 @@ ARulerView::ARulerView(ALayoutDirection layoutDirection) : mLayoutDirection(layo
     }
 }
 
-void ARulerView::render() {
-    AView::render();
+void ARulerView::render(ClipOptimizationContext context) {
+    AView::render(context);
 
     if (mLayoutDirection == ALayoutDirection::VERTICAL) {
         ARender::setTransform(glm::translate(
