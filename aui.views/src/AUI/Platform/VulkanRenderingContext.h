@@ -51,6 +51,11 @@ private:
      */
     uint32_t mImageIndex = 0;
 
+    /**
+     * @brief Frame index used for synchronization primitives.
+     */
+    uint32_t mCurrentFrame = 0;
+
     struct VulkanObjects;
     aui::fast_pimpl<AOptional<VulkanObjects>, sizeof(void*) * 64> mVulkan;
 
@@ -58,7 +63,7 @@ private:
 
     static _<VulkanRenderer> ourRenderer();
 
-    void recreateObjectsDueToResize() {}
+    void recreateObjectsDueToResize();
 
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;

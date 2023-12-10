@@ -57,10 +57,15 @@ namespace aui::vk {
             imageViewCI.subresourceRange.levelCount = 1;
             imageViewCI.subresourceRange.baseArrayLayer = 0;
             imageViewCI.subresourceRange.layerCount = 1;
-            imageViewCI.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-            // Stencil aspect should only be set on depth + stencil formats (VK_FORMAT_D16_UNORM_S8_UINT..VK_FORMAT_D32_SFLOAT_S8_UINT
-            if (info.format >= VK_FORMAT_D16_UNORM_S8_UINT) {
+
+            if (info.format == VK_FORMAT_S8_UINT) {
                 imageViewCI.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+            } else {
+                imageViewCI.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+                // Stencil aspect should only be set on depth + stencil formats (VK_FORMAT_D16_UNORM_S8_UINT..VK_FORMAT_D32_SFLOAT_S8_UINT
+                if (info.format >= VK_FORMAT_D16_UNORM_S8_UINT) {
+                    imageViewCI.subresourceRange.aspectMask |= VK_IMAGE_ASPECT_STENCIL_BIT;
+                }
             }
             VkImageView imageView;
             AUI_VK_THROW_ON_ERROR(instance.vkCreateImageView(device, &imageViewCI, nullptr, &imageView));

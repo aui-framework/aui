@@ -63,8 +63,6 @@ public:
         } else {
             new (&mBase.dynamic) DynamicVector(*rhs.dynamic());
         }
-
-        new (&rhs.mBase.inplace) StaticVector();
     }
 
     ~ASmallVector() noexcept {

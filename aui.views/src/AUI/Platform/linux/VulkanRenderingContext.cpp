@@ -283,15 +283,23 @@ void VulkanRenderingContext::destroyNativeWindow(ABaseWindow& window) {
 void VulkanRenderingContext::beginPaint(ABaseWindow& window) {
     CommonRenderingContext::beginPaint(window);
 
+    const VkDevice device = mRenderer->logicalDevice();
+    const auto& instance = mRenderer->instance();
+
+    // Use a fence to wait until the command buffer has finished execution before using it again.
+    VkFence currentFence = vulkan().fences[mCurrentFrame];
+    AUI_VK_THROW_ON_ERROR(instance.vkWaitForFences(device, 1, &currentFence, VK_TRUE, UINT64_MAX));
 
     // Acquires the next image in the swap chain.
     // The function will always wait until the next image has been acquired by setting timeout to UINT64_MAX.
-    auto result = mRenderer->instance().vkAcquireNextImageKHR(mRenderer->logicalDevice(),
-                                                                        vulkan().swapchain,
-                                                                        std::numeric_limits<std::uint64_t>::max(),
-                                                                        vulkan().presentCompleteSemaphore,
-                                                                        nullptr,
-                                                                        &mImageIndex);
+    // Note that the implementation is free to return the images in any order, so we must use the acquire function and
+    // can't just cycle through the images.
+    auto result = instance.vkAcquireNextImageKHR(device,
+                                                           vulkan().swapchain,
+                                                           std::numeric_limits<std::uint64_t>::max(),
+                                                           vulkan().presentCompleteSemaphore,
+                                                           nullptr,
+                                                           &mImageIndex);
 
     switch (result) {
         case VK_ERROR_OUT_OF_DATE_KHR:
@@ -303,6 +311,49 @@ void VulkanRenderingContext::beginPaint(ABaseWindow& window) {
             break;
         default:
             AUI_VK_THROW_ON_ERROR(result);
+    }
+    
+    AUI_VK_THROW_ON_ERROR(instance.vkResetFences(device, 1, &currentFence));
+
+
+    // Build the command buffer
+    // Unlike in OpenGL all rendering commands are recorded into command buffers that are then submitted to the queue
+    // This allows to generate work upfront in a separate thread
+    // However AUI is mostly singlethread, so we not using such feature
+    const VkCommandBuffer currentCommandBuffer = vulkan().commandBuffers[0];
+    AUI_VK_THROW_ON_ERROR(instance.vkResetCommandBuffer(currentCommandBuffer, 0));
+
+
+    {
+		VkCommandBufferBeginInfo cmdBufInfo{};
+		cmdBufInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		AUI_VK_THROW_ON_ERROR(instance.vkBeginCommandBuffer(currentCommandBuffer, &cmdBufInfo));
+    }
+
+    {
+		// Set clear values for all framebuffer attachments with loadOp set to clear
+		// We use two attachments (color and depth) that are cleared at the start of the subpass and as such we need to
+        // set clear values for both
+		VkClearValue clearValues[2];
+        aui::zero(clearValues);
+		clearValues[0].color = { { 1.0f, 0.0f, 0.0f, 1.0f } };
+		clearValues[1].depthStencil = { 1.0f, 0 };
+
+		VkRenderPassBeginInfo renderPassBeginInfo;
+        aui::zero(renderPassBeginInfo);
+		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassBeginInfo.renderPass = vulkan().renderPass;
+		renderPassBeginInfo.renderArea.offset.x = 0;
+		renderPassBeginInfo.renderArea.offset.y = 0;
+		renderPassBeginInfo.renderArea.extent.width = window.getWidth();
+		renderPassBeginInfo.renderArea.extent.height = window.getHeight();
+		renderPassBeginInfo.clearValueCount = 2;
+		renderPassBeginInfo.pClearValues = clearValues;
+		renderPassBeginInfo.framebuffer = vulkan().framebuffers[mImageIndex];
+
+        // Start the first sub pass specified in our default render pass setup by the base class
+		// This will clear the color and depth attachment
+		instance.vkCmdBeginRenderPass(currentCommandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
     }
 
     if (auto w = dynamic_cast<AWindow*>(&window)) {
@@ -314,33 +365,72 @@ void VulkanRenderingContext::endPaint(ABaseWindow& window) {
     CommonRenderingContext::endPaint(window);
     mRenderer->endPaint();
 
-    VkSwapchainKHR swapchain = vulkan().swapchain;
-    VkSemaphore waitSemaphore = vulkan().renderCompleteSemaphore;
-	VkPresentInfoKHR presentInfo = {};
-	presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-	presentInfo.pNext = NULL;
-	presentInfo.swapchainCount = 1;
-	presentInfo.pSwapchains = &swapchain;
-	presentInfo.pImageIndices = &mImageIndex;
-	// Check if a wait semaphore has been specified to wait for before presenting the image
-	if (waitSemaphore != VK_NULL_HANDLE)
-	{
-		presentInfo.pWaitSemaphores = &waitSemaphore;
-		presentInfo.waitSemaphoreCount = 1;
-	}
-	
-    // Queue an image for presentation.
-    auto result = mRenderer->instance().vkQueuePresentKHR(vulkan().graphicsQueue, &presentInfo);
-    switch (result) {
-        case VK_ERROR_OUT_OF_DATE_KHR:
-        case VK_SUBOPTIMAL_KHR:
-            // Recreate the swapchain if it's no longer compatible with the surface (OUT_OF_DATE)
-            // SRS - If no longer optimal (VK_SUBOPTIMAL_KHR), wait until submitFrame() in case number of swapchain
-            // images will change on resize
-            recreateObjectsDueToResize();
-            break;
-        default:
-            AUI_VK_THROW_ON_ERROR(result);
+    const auto& instance = mRenderer->instance();
+    const VkCommandBuffer currentCommandBuffer = vulkan().commandBuffers[0];
+    instance.vkCmdEndRenderPass(currentCommandBuffer);
+
+    // Ending the render pass will add an implicit barrier transitioning the frame buffer color attachment to
+    // VK_IMAGE_LAYOUT_PRESENT_SRC_KHR for presenting it to the windowing system
+    AUI_VK_THROW_ON_ERROR(instance.vkEndCommandBuffer(currentCommandBuffer));
+
+    const VkSemaphore renderCompleteSemaphore = vulkan().renderCompleteSemaphore;
+    const VkSemaphore presentCompleteSemaphore = vulkan().presentCompleteSemaphore;
+
+	// Submit the command buffer to the graphics queue
+    {
+		// Pipeline stage at which the queue submission will wait (via renderCompleteSemaphores)
+		VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+
+		// The submit info structure specifies a command buffer queue submission batch
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.pWaitDstStageMask = &waitStageMask;      // Pointer to the list of pipeline stages that the semaphore waits will occur at
+		submitInfo.waitSemaphoreCount = 1;                  // One wait semaphore
+		submitInfo.signalSemaphoreCount = 1;                // One signal semaphore
+		submitInfo.pCommandBuffers = &currentCommandBuffer; // Command buffers(s) to execute in this batch (submission)
+		submitInfo.commandBufferCount = 1;                  // One command buffer
+
+		// Semaphore to wait upon before the submitted command buffer starts executing
+		submitInfo.pWaitSemaphores = &presentCompleteSemaphore; 
+		// Semaphore to be signaled when command buffers have completed
+		submitInfo.pSignalSemaphores = &renderCompleteSemaphore;
+
+		// Submit to the graphics queue passing a wait fence
+		AUI_VK_THROW_ON_ERROR(instance.vkQueueSubmit(vulkan().graphicsQueue, 1, &submitInfo, vulkan().fences[mCurrentFrame]));
+    }
+
+    {
+        const VkSwapchainKHR swapchain = vulkan().swapchain;
+        VkPresentInfoKHR presentInfo = {};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        presentInfo.pNext = NULL;
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = &swapchain;
+        presentInfo.pImageIndices = &mImageIndex;
+
+        // Check if a wait semaphore has been specified to wait for before presenting the image
+        if (renderCompleteSemaphore != VK_NULL_HANDLE)
+        {
+            presentInfo.pWaitSemaphores = &renderCompleteSemaphore;
+            presentInfo.waitSemaphoreCount = 1;
+        }
+
+        // Present the current frame buffer to the swap chain
+        // Pass the semaphore signaled by the command buffer submission from the submit info as the wait semaphore for
+        // swap chain presentation
+        // This ensures that the image is not presented to the windowing system until all commands have been submitted
+        auto result = mRenderer->instance().vkQueuePresentKHR(vulkan().graphicsQueue, &presentInfo);
+        switch (result) {
+            case VK_ERROR_OUT_OF_DATE_KHR:
+            case VK_SUBOPTIMAL_KHR:
+                // Recreate the swapchain if it's no longer compatible with the surface (OUT_OF_DATE)
+                // SRS - If no longer optimal (VK_SUBOPTIMAL_KHR), wait until submitFrame() in case number of swapchain
+                // images will change on resize
+                recreateObjectsDueToResize();
+                break;
+            default:
+                AUI_VK_THROW_ON_ERROR(result);
+        }
     }
 
     if (auto w = dynamic_cast<AWindow*>(&window)) {
@@ -369,4 +459,8 @@ _<VulkanRenderer> VulkanRenderingContext::ourRenderer() {
     g = temp;
     return temp;
 }
+void VulkanRenderingContext::recreateObjectsDueToResize() {
+    printf("\n");
+}
+
 const VulkanRenderingContext::VulkanObjects& VulkanRenderingContext::vulkan() const noexcept { return **mVulkan; }

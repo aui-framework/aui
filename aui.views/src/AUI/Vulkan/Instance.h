@@ -108,8 +108,9 @@ namespace aui::vk {
         DEF_PROC_VK(vkGetPhysicalDeviceFormatProperties)
         DEF_PROC_VK(vkDestroySurfaceKHR)
         DEF_PROC_VK(vkAcquireNextImageKHR)
-        DEF_PROC_VK(vkQueuePresentKHR)
         DEF_PROC_VK(vkGetDeviceQueue)
+        DEF_PROC_VK(vkQueuePresentKHR)
+        DEF_PROC_VK(vkQueueSubmit)
 
         DEF_PROC_VK(vkCreateSemaphore)
         DEF_PROC_VK(vkDestroySemaphore)
@@ -129,9 +130,14 @@ namespace aui::vk {
 
         DEF_PROC_VK(vkAllocateCommandBuffers)
         DEF_PROC_VK(vkFreeCommandBuffers)
+        DEF_PROC_VK(vkResetCommandBuffer)
+        DEF_PROC_VK(vkBeginCommandBuffer)
+        DEF_PROC_VK(vkEndCommandBuffer)
 
         DEF_PROC_VK(vkCreateFence)
         DEF_PROC_VK(vkDestroyFence)
+        DEF_PROC_VK(vkWaitForFences)
+        DEF_PROC_VK(vkResetFences)
 
         DEF_PROC_VK(vkCreateImage)
         DEF_PROC_VK(vkGetImageMemoryRequirements)
@@ -143,6 +149,8 @@ namespace aui::vk {
 
         DEF_PROC_VK(vkCreateRenderPass)
         DEF_PROC_VK(vkDestroyRenderPass)
+        DEF_PROC_VK(vkCmdBeginRenderPass)
+        DEF_PROC_VK(vkCmdEndRenderPass)
 
         DEF_PROC_VK(vkCreatePipelineCache)
         DEF_PROC_VK(vkDestroyPipelineCache)

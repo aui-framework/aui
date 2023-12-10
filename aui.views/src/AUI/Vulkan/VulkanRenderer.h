@@ -32,7 +32,6 @@ public:
 
         FontEntryData() {
             texture.bind();
-            gl::Texture2D::setupNearest();
         }
     };
 protected:
