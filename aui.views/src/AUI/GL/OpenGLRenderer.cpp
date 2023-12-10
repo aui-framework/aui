@@ -104,6 +104,8 @@ struct GradientShaderHelper {
         aui::render::brush::gradient::Helper h(brush);
         shader.set(aui::ShaderUniforms::GRADIENT_MAT_UV, h.matrix);
         tex.tex2D(h.gradientMap());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         renderer.identityUv();
     }
 };
