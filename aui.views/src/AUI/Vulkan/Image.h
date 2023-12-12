@@ -72,16 +72,19 @@ namespace aui::vk {
             mImageView = imageView;
         } 
 
-        Image(Image&& rhs) noexcept: instance(rhs.instance), device(rhs.device), handle(rhs.handle) {
+        Image(Image&& rhs) noexcept: instance(rhs.instance), device(rhs.device), handle(rhs.handle), memory(std::move(rhs.memory)), mImageView(std::move(rhs.mImageView)) {
             rhs.handle = 0;
         }
 
         ~Image() {
+            if (handle == 0) {
+                return;
+            }
             memory.reset();
             if (mImageView) {
                 instance.vkDestroyImageView(device, *mImageView, nullptr);
             }
-            if (handle != 0) instance.vkDestroyImage(device, handle, nullptr);
+            instance.vkDestroyImage(device, handle, nullptr);
         }
 
         [[nodiscard]]
