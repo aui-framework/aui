@@ -103,9 +103,20 @@ struct GradientShaderHelper {
         shader.set(aui::ShaderUniforms::COLOR, ARender::getColor());
         aui::render::brush::gradient::Helper h(brush);
         shader.set(aui::ShaderUniforms::GRADIENT_MAT_UV, h.matrix);
-        tex.tex2D(h.gradientMap());
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+        if (h.colors.size() == 2) {
+            // simple gradient can be used
+            shader.set(aui::ShaderUniforms::COLOR1, glm::vec4(h.colors[0]) / 255.f);
+            shader.set(aui::ShaderUniforms::COLOR2, glm::vec4(h.colors[1]) / 255.f);
+        } else {
+            // complex gradient needs a texture
+            // tex.tex2D(h.gradientMap());
+
+            // TODO complex shader is broken, use simple shader instead with first and last color
+            shader.set(aui::ShaderUniforms::COLOR1, glm::vec4(h.colors.first()) / 255.f);
+            shader.set(aui::ShaderUniforms::COLOR2, glm::vec4(h.colors.last()) / 255.f);
+        }
+
         renderer.identityUv();
     }
 };

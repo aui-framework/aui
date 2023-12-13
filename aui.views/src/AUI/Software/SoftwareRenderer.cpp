@@ -87,7 +87,9 @@ struct BrushHelper {
         aui::render::brush::gradient::Helper h(brush);
         const auto output = Shader::entry({.uv = calculateUv()},
                                           {
-                                            .gradientMap = aui::sl_gen::Texture2D(h.gradientMap(), ImageRendering::SMOOTH),
+                                            //.gradientMap = aui::sl_gen::Texture2D(h.gradientMap(), ImageRendering::SMOOTH),
+                                            .color1 = h.colors[0],
+                                            .color2 = h.colors[1],
                                             .matUv = h.matrix,
                                             .color = renderer->getColor()
                                           });
