@@ -22,6 +22,9 @@
 #include <stdexcept>
 #include <AUI/Traits/memory.h>
 
+
+static constexpr auto CACHE_SIZE_THRESHOLD = 1024 * 1024 * 10; // 10 MB
+
 _<AImage> AImage::fromUrl(const AUrl& url) {
     return Cache::get(url);
 }
@@ -194,4 +197,8 @@ void AImage::fill(AImageView::Color color) {
         typename std::decay_t<decltype(img)>::Color convertedColor = AFormattedColorConverter(color);
         img.fill(convertedColor);
     });
+}
+
+bool AImage::Cache::isShouldBeCached(const AUrl& key, const _<AImage>& image) {
+    return image->buffer().size() < CACHE_SIZE_THRESHOLD;
 }

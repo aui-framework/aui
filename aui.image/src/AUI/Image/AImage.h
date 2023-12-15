@@ -275,6 +275,7 @@ private:
         static Cache& inst();
     protected:
         _<AImage> load(const AUrl& key) override;
+        bool isShouldBeCached(const AUrl& key, const _<AImage>& image) override;
     };
 
     void setPixelAt(std::uint32_t index, glm::ivec4 color);
