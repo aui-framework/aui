@@ -270,8 +270,6 @@ void ABaseWindow::onPointerReleased(const APointerReleasedEvent& event) {
     }
     mPerformDoubleClickOnPointerRelease = false;
 
-    // AView::onPointerMove handles cursor shape; need extra call in order to flush
-    forceUpdateCursor();
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
     });
 #endif
