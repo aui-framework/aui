@@ -28,8 +28,8 @@
 
 class AImageDrawable: public IDrawable {
 private:
-    std::variant<ARender::Texture, _<AImage>> mStorage;
     glm::ivec2 mSize;
+    std::variant<ARender::Texture, _<AImage>> mStorage;
 
 public:
     explicit AImageDrawable(_<AImage> image);
