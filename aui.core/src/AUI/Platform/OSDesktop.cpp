@@ -53,10 +53,13 @@ protected:
             mMessageQueue.pop_front();
             lock.unlock();
             auto time = util::measureExecutionTime<microseconds>(f.proc);
+            // TODO dynamically enable/disable logging
+            /*
             ALOG_DEBUG("Performance")
                     << "Executing:\n"
                     << f.stacktrace
                     << " - ...\n";
+            */
 
             if (time >= 1ms) {
                 ALogger::warn("Performance")
