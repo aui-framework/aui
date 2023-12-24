@@ -13,7 +13,8 @@ namespace aui::render::brush::gradient {
             for (const auto& c : brush.colors) {
                 colors.push_back(glm::uvec4(c.color * 255.f));
             }
-            float actualEdgeUvPosition = (0.5f - 0.05f /* bias to make ideal color edge */) / float(colors.size());
+            //float actualEdgeUvPosition = (0.5f - 0.05f /* bias to make ideal color edge */) / float(colors.size());
+            float actualEdgeUvPosition = 0.f; // temporary
 
             float rotationRadians = brush.rotation.radians();
 

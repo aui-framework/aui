@@ -19,13 +19,14 @@
 // Created by alex2 on 23.10.2020.
 //
 
+#include "AUI/Common/AException.h"
 #include "AUI/Render/ARender.h"
 #include "AImageDrawable.h"
+#include "AUI/Render/ITexture.h"
 #include <AUI/Platform/AWindow.h>
+#include <variant>
 
-AImageDrawable::AImageDrawable(_<AImage> image): mSize(image->size()), mImage(std::move(image)) {
-    mTexture = ARender::getNewTexture();
-    mTexture->setImage(mImage);
+AImageDrawable::AImageDrawable(_<AImage> image): mSize(image->size()), mStorage(std::move(image)) {
 }
 
 AImageDrawable::~AImageDrawable() {
@@ -38,8 +39,15 @@ glm::ivec2 AImageDrawable::getSizeHint() {
 
 
 void AImageDrawable::draw(const IDrawable::Params& params) {
+    if (auto asImage = std::get_if<_<AImage>>(&mStorage)) {
+        auto texture = ARender::getNewTexture();
+        texture->setImage(*asImage);
+        mStorage = std::move(texture);
+    }
+    const auto& texture = std::get<_<ITexture>>(mStorage);
+
     ARender::rect(ATexturedBrush{
-            mTexture,
+            texture,
             params.cropUvTopLeft,
             params.cropUvBottomRight,
             params.imageRendering,
@@ -47,5 +55,8 @@ void AImageDrawable::draw(const IDrawable::Params& params) {
 }
 
 AImage AImageDrawable::rasterize(glm::ivec2 imageSize) {
-    return mImage->resizedLinearDownscale(imageSize);
+    if (auto asImage = std::get_if<_<AImage>>(&mStorage)) {
+        return (*asImage)->resizedLinearDownscale(imageSize);
+    }
+    throw AException("unimplemented");
 }

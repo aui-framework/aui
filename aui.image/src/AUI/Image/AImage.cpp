@@ -22,9 +22,9 @@
 #include <stdexcept>
 #include <AUI/Traits/memory.h>
 
-_<AImage> AImage::fromUrl(const AUrl& url) {
-    return Cache::get(url);
-}
+
+static constexpr auto CACHE_SIZE_THRESHOLD = 1024 * 1024 * 10; // 10 MB
+
 
 _<AImage> AImage::fromFile(const APath& path) {
     return fromUrl(AUrl("file://" + path));
@@ -40,23 +40,18 @@ _<AImage> AImage::fromBuffer(AByteBufferView buffer) {
     return nullptr;
 }
 
-_<AImage> AImage::Cache::load(const AUrl& key)
-{
+_<AImage> AImage::fromUrl(const AUrl& url) {
     try {
-        auto buffer = AByteBuffer::fromStream(AUrl(key).open(), 0x10000000);
+        auto buffer = AByteBuffer::fromStream(AUrl(url).open(), 0x10000000);
 
         if (auto raster = AImageLoaderRegistry::inst().loadRaster(buffer))
             return raster;
     } catch (const AException& e) {
-        ALogger::err("Could not load image: " + key.full() + ": " + e.getMessage());
+        ALogger::err("Could not load image: " + url.full() + ": " + e.getMessage());
     }
     return nullptr;
 }
 
-AImage::Cache& AImage::Cache::inst() {
-    static AImage::Cache s;
-    return s;
-}
 
 void AImage::mirrorVertically() {
     auto bpp = bytesPerPixel();

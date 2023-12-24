@@ -28,12 +28,11 @@
 
 class AImageDrawable: public IDrawable {
 private:
-    ARender::Texture mTexture;
+    std::variant<ARender::Texture, _<AImage>> mStorage;
     glm::ivec2 mSize;
-    _<AImage> mImage;
 
 public:
-    explicit AImageDrawable(const _<AImage> image);
+    explicit AImageDrawable(_<AImage> image);
     virtual ~AImageDrawable();
 
     void draw(const Params& params) override;

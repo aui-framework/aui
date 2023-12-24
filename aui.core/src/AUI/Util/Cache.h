@@ -28,6 +28,9 @@ private:
 
 protected:
     virtual _<T> load(const K& key) = 0;
+    virtual bool isShouldBeCached(const K& key, const _<T>& image) {
+		return true;
+	}
 
 public:
 	
@@ -39,7 +42,9 @@ public:
 		}
 		Cache& i = Container::inst();
 		auto value = i.load(key);
-		put(key, value);
+		if (i.isShouldBeCached(key, value)) {
+			put(key, value);
+		}
 		return value;
 	}
 	
