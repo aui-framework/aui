@@ -104,7 +104,8 @@ public:
      * @brief Scrolls to the specified target view.
      * @param target target view to scroll to. Must be direct or indirect child.
      * @param nearestBorder if true, the scroll is performed up to the nearest border of scroll area, and if the target
-     *        is already fully visible, then the scroll is not performed at all.
+     *        is already fully visible, then scrollTo does not take effect. If false, the scroll is performed up to the
+    *         top border of the target view.
      */
     void scrollTo(const _<AView>& target, bool nearestBorder = true);
 
