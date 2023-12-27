@@ -143,6 +143,10 @@ void CommonRenderingContext::initX11Window(const IRenderingContext::Init &init, 
 
     XSetWMProtocols(ourDisplay, window.mHandle, &ourAtoms.wmDeleteWindow, 1);
 
+    if (init.parent) {
+        XSetTransientForHint(ourDisplay, init.window.mHandle, init.parent->mHandle);
+    }
+
 }
 
 void CommonRenderingContext::init(const Init& init) {

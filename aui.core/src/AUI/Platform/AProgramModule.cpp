@@ -27,7 +27,7 @@
 
 #endif
 
-_<AProgramModule> AProgramModule::load(const AString& path)
+_<AProgramModule> AProgramModule::load(const AString& path, LoadConfig config)
 {
 #if AUI_PLATFORM_WIN
     auto fullname = path + "." + getDllExtension();
@@ -44,7 +44,7 @@ _<AProgramModule> AProgramModule::load(const AString& path)
     if (APath(path).isRegularFileExists()) {
         return doLoad(path);
     }
-    auto fullname = "lib" + path + "." + getDllExtension();
+    auto fullname = config.decorateName ? "lib" + path + "." + getDllExtension() : path;
 #endif
 #if AUI_PLATFORM_WIN
 	auto lib = LoadLibrary(fullname.c_str());
@@ -67,11 +67,14 @@ _<AProgramModule> AProgramModule::load(const AString& path)
 
 	APath paths[] = {
             ""_as,
+            "lib64/"_as,
             "lib/"_as,
             AString(buf) + "/",
+            AString(buf) + "/../lib64/",
             AString(buf) + "/../lib/",
             "/usr/local/lib/"_as,
             "/usr/lib/"_as,
+            "/lib64/"_as,
             "/lib/"_as,
     };
 

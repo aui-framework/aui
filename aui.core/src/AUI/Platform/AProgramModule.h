@@ -62,12 +62,29 @@ public:
 	{
 		return reinterpret_cast<Function*>(getProcAddressRawPtr(name));
 	}
+
+	struct LoadConfig {
+		/**
+		 * @brief See AProgramModule::load path argument
+		 */
+		bool decorateName = true;
+	};
 	
 	/**
 	 * @brief Loads a dynamic load library (shared object).
-	 * @param path Path to a dynamic load library without extension (extension is added based on current platform)
+	 * @param path Path to a dynamic load library without extension (extension is added based on current platform,
+	 *             disabled by LoadConfig::decorateName)
 	 */
-	static _<AProgramModule> load(const AString& path);
+	static _<AProgramModule> load(const AString& path, LoadConfig config);
+	
+	/**
+	 * @brief Loads a dynamic load library (shared object).
+	 * @param path Path to a dynamic load library without extension (extension is added based on current platform,
+	 *             disabled by LoadConfig::decorateName)
+	 */
+	static _<AProgramModule> load(const AString& path) {
+		return load(path, {});
+	}
 
 	/**
 	 * @brief Extension of a dynamic load library of current platform
