@@ -74,10 +74,10 @@ private:
     struct Task {
         std::chrono::high_resolution_clock::time_point executionTime;
         std::function<void()> callback;
-        Timer* timer;
+        _weak<Timer> timer;
     };
 public:
-    using TimerHandle = std::list<Timer>::iterator;
+    using TimerHandle = _weak<Timer>;
 
     AScheduler();
 
@@ -113,23 +113,22 @@ public:
     template<typename Duration>
     TimerHandle timer(Duration timeout, std::function<void()> callback) {
         auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
-        Timer asTimer = {
+        auto asTimer = std::make_shared<Timer>(
                 millis,
                 millis + currentTime(),
                 std::move(callback)
-        };
+        );
 
         std::unique_lock lock(mSync);
-        mTimers.push_back(std::move(asTimer));
-        auto t = std::prev(mTimers.end());
-        lock.unlock();
-        enqueueTimer(&*t);
-        return t;
+        mTimers.push_back(asTimer);
+        enqueueTimer(asTimer);
+        return asTimer;
     }
 
 
-    void removeTimer(TimerHandle t);
+    void removeTimer(const TimerHandle& t);
 
+    [[nodiscard]]
     bool emptyTasks() const noexcept {
         return mTasks.empty();
     }
@@ -140,36 +139,34 @@ private:
     AConditionVariable mCV;
 
     std::list<Task> mTasks;
-    std::list<Timer> mTimers;
+    std::list<_<Timer>> mTimers;
 
     static std::chrono::high_resolution_clock::time_point currentTime() noexcept {
         return std::chrono::high_resolution_clock::now();
     }
 
-    void enqueueTimer(Timer* timer) {
+    void enqueueTimer(const _<Timer>& timer) {
         Task t = {
-            timer->nextExecution,
-            [this, timer]() {
-                timer->callback();
-                enqueueTimer(timer);
-            },
-            timer
+                timer->nextExecution,
+                [this, timer]() {
+                    timer->callback();
+                    std::unique_lock lock(mSync);
+                    enqueueTimer(timer);
+                },
+                timer
         };
         timer->nextExecution += timer->timeout;
         enqueueTask(std::move(t));
     }
 
 
-    Task* enqueueTask(Task&& asTask) {
+    void enqueueTask(Task&& asTask) {
         auto whereToInsert = std::find_if(mTasks.begin(), mTasks.end(), [&](const Task& rhs) {
             return asTask.executionTime < rhs.executionTime;
         });
 
-        auto p = &*mTasks.insert(whereToInsert, std::move(asTask));
+        mTasks.insert(whereToInsert, std::move(asTask));
         mCV.notify_all();
-        return p;
     }
 
 };
-
-
