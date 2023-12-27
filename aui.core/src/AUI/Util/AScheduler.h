@@ -113,11 +113,12 @@ public:
     template<typename Duration>
     TimerHandle timer(Duration timeout, std::function<void()> callback) {
         auto millis = std::chrono::duration_cast<std::chrono::milliseconds>(timeout);
-        auto asTimer = std::make_shared<Timer>(
+        Timer t = {
                 millis,
                 millis + currentTime(),
                 std::move(callback)
-        );
+        };
+        auto asTimer = _new<Timer>(std::move(t));
 
         std::unique_lock lock(mSync);
         mTimers.push_back(asTimer);
