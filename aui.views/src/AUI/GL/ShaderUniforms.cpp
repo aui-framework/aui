@@ -34,4 +34,6 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform WHICH_ALGO("SL_uniform_whichAlgo");
     gl::Program::Uniform M1("SL_uniform_m1");
     gl::Program::Uniform M2("SL_uniform_m2");
+    gl::Program::Uniform DIVIDER("SL_uniform_divider");
+    gl::Program::Uniform THRESHOLD("SL_uniform_threshold");
 }

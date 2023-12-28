@@ -18,6 +18,8 @@
 
 #include <AUI/Reflect/AEnumerate.h>
 #include <AUI/Util/AArrayView.h>
+#include "AUI/Render/ABorderStyle.h"
+#include "AUI/Util/AMetric.h"
 #include "IRenderer.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -119,32 +121,39 @@ public:
      * @param brush brush
      * @param p1 first point
      * @param p2 second point
+     * @param style style
+     * @param width line width
      * @details
      * <dl>
      *   <dt><b>Performance note</b></dt>
      *   <dd>if you want to drawElements multiple lines, consider using <code>ARender::lines</code> function instead.</dd>
      * </dl>
      */
-    static void line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2) {
-        ourRenderer->drawLine(brush, p1, p2);
+    static void line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) {
+        glm::vec2 points[] = { p1, p2 };
+        ourRenderer->drawLines(brush, points, style, width);
     }
 
     /**
      * @brief Draws polyline (non-loop line strip).
      * @param brush brush
      * @param points polyline points
+     * @param style style
+     * @param width line width
      */
-    static void lines(const ABrush& brush, AArrayView<glm::vec2> points) {
-        ourRenderer->drawLines(brush, points);
+    static void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) {
+        ourRenderer->drawLines(brush, points, style, width);
     }
 
     /**
      * @brief Draws multiple individual lines in a batch.
      * @param brush brush
      * @param points line points
+     * @param style style
+     * @param width line width
      */
-    static void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points) {
-        ourRenderer->drawLines(brush, points);
+    static void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) {
+        ourRenderer->drawLines(brush, points, style, width);
     }
 
     /**
